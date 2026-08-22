@@ -46,7 +46,17 @@ html,body{margin:0;min-height:100%;background:#14332a;color:#f6ecce;font-family:
   const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
   const html=await new Response(stream).text();
   if(!html.toLowerCase().includes('<html')) throw new Error('Deck data did not expand into the app.');
-  document.open(); document.write(html); document.close();
+
+  const mobileMailPatch = '<script>(function(){'+
+    'var preview=window.openEmail;'+
+    'function mobile(){var u=navigator.userAgent||"";return /Android|iPhone|iPad|iPod/i.test(u)||(/Macintosh/i.test(u)&&navigator.maxTouchPoints>1);}'+
+    'function draft(){var t=window.picksText&&window.picksText();if(!t)return false;var u="mailto:robminor3@gmail.com?subject="+encodeURIComponent("My choices")+"&body="+encodeURIComponent(t);var a=document.createElement("a");a.href=u;a.style.display="none";document.body.appendChild(a);a.click();setTimeout(function(){if(a.parentNode)a.parentNode.removeChild(a);},0);return true;}'+
+    'window.openEmail=function(){if(mobile()&&window.picksText&&window.picksText()){draft();return;}return preview.apply(this,arguments);};'+
+    'window.sendEmail=draft;'+
+    '})();<\/script>';
+  const patchedHtml=html.replace(/<\/body>/i,mobileMailPatch+'</body>');
+
+  document.open(); document.write(patchedHtml); document.close();
  }catch(e){
   status.className='sub err';
   status.textContent='Could not start the Deck Matrix.';
