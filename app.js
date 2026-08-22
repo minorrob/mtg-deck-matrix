@@ -804,7 +804,7 @@
     root.onclick = (event) => {
       if (event.target.closest('[data-go="buy"]')) switchView("buy");
     };
-    if (["rarity", "themeSet"].includes(filters.groupBy)) ensureShopMetadata(allItems);
+    ensureShopMetadata(allItems);
   }
 
   function filterChip(group, value, label, filters) {
@@ -910,6 +910,13 @@
 
   function makeShopCard(item) {
     const found = Boolean(state.found[item.key]);
+    const metadata = cardMetadata[itemKey(item)] || {};
+    const rarity = item.category === "precon"
+      ? "Sealed product"
+      : metadata.rarity
+        ? metadata.rarity[0].toUpperCase() + metadata.rarity.slice(1)
+        : metadata.unavailable ? "Unavailable" : "Loading…";
+    const tableLocation = item.whereToBuy || (item.category === "precon" ? "Sealed product shelf" : "Ask vendor");
     const card = document.createElement("article");
     card.className = `shop-card${found ? " is-found" : ""}`;
     const categories = Array.from(item.categories);
@@ -920,7 +927,13 @@
       <div class="shop-main">
         <div class="shop-card-kicker">${icon(item.category === "precon" ? "▣" : "✦")}<span>${esc(item.category === "precon" ? "Sealed deck" : "Single card")}</span></div>
         <h3>${esc(item.name)}${item.quantity > 1 ? ` ×${item.quantity}` : ""}</h3>
-        <div class="shop-facts">${item.manaCost ? `<span>${esc(item.manaCost)}</span>` : ""}${item.typeLine ? `<span>${esc(item.typeLine)}</span>` : ""}<strong>${money(item.price)}</strong></div>
+        <div class="shop-facts">${item.manaCost ? `<span>${esc(item.manaCost)}</span>` : ""}${item.typeLine ? `<span>${esc(item.typeLine)}</span>` : ""}</div>
+        <div class="shop-buying-facts" aria-label="Buying guide">
+          <div>${icon("⌖")}<span><small>Table location</small><strong>${esc(tableLocation)}</strong></span></div>
+          <div>${icon("$")}<span><small>Target</small><strong>${money(item.price)}</strong></span></div>
+          <div>${icon("↑")}<span><small>Ceiling</small><strong>${item.ceiling ? money(item.ceiling) : "Not listed"}</strong></span></div>
+          <div>${icon("◇")}<span><small>Rarity</small><strong>${esc(rarity)}</strong></span></div>
+        </div>
         <p class="shop-purpose">${icon("→")}<span>${esc(item.purpose || item.replaces || "")}</span></p>
         <div class="shop-refs"><span>Needed by</span>${item.deckRefs.map((ref) => `<b>Deck ${ref.deckId}</b>`).join("")}</div>
         <div class="shop-bottom">
