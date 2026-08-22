@@ -58,6 +58,13 @@
     return match ? Number(match[1]) : null;
   }
 
+  function cardName(card) {
+    return String(card.querySelector(".shop-name-button")?.textContent || card.querySelector("h3")?.textContent || "")
+      .replace(/\s*[→›]\s*$/, "")
+      .replace(/\s*×\d+\s*$/, "")
+      .trim();
+  }
+
   function cardRarity(card) {
     const rarity = card.querySelector(".rarity-icon");
     const value = normalize(rarity?.getAttribute("alt") || rarity?.getAttribute("title"));
@@ -120,7 +127,7 @@
       price: ["Price", [["all", "All prices"], ["under3", "Under $3"], ["3to30", "$3–$30"], ["over30", "Over $30"]]],
       rarity: ["Rarity", [["all", "All rarities"], ["common", "Common"], ["uncommon", "Uncommon"], ["rare", "Rare"], ["mythic", "Mythic"], ["other", "Other / sealed"]]],
       location: ["Location", [["all", "All locations"], ...locations.map((location) => [location, location])]],
-      sort: ["Sort", [["default", "Default order"], ["lowHigh", "Price: Low → High"], ["highLow", "Price: High → Low"]]]
+      sort: ["Sort", [["default", "Default order"], ["az", "Name: A → Z"], ["za", "Name: Z → A"], ["lowHigh", "Price: Low → High"], ["highLow", "Price: High → Low"]]]
     };
 
     Object.entries(definitions).forEach(([key, [label, options]]) => {
@@ -129,6 +136,13 @@
         grid.insertAdjacentHTML("beforeend", selectMarkup(key, label, options));
         wrapper = grid.querySelector(`[data-extra-filter-wrap="${key}"]`);
       } else if (key === "location") {
+        const select = wrapper.querySelector("select");
+        const currentValues = Array.from(select.options).map((option) => option.value);
+        const nextValues = options.map(([value]) => value);
+        if (currentValues.join("\u0000") !== nextValues.join("\u0000")) {
+          wrapper.outerHTML = selectMarkup(key, label, options);
+        }
+      } else if (key === "sort") {
         const select = wrapper.querySelector("select");
         const currentValues = Array.from(select.options).map((option) => option.value);
         const nextValues = options.map(([value]) => value);
@@ -186,6 +200,11 @@
       const aOrder = originalOrder(a, 0);
       const bOrder = originalOrder(b, 0);
       if (filters.sort === "default") return aOrder - bOrder;
+
+      if (filters.sort === "az" || filters.sort === "za") {
+        const nameDelta = cardName(a).localeCompare(cardName(b), undefined, { sensitivity: "base", numeric: true });
+        return (filters.sort === "za" ? -nameDelta : nameDelta) || aOrder - bOrder;
+      }
 
       const aPrice = targetPrice(a);
       const bPrice = targetPrice(b);
