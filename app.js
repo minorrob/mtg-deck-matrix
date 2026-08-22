@@ -22,6 +22,34 @@
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
   const esc = (value) => String(value ?? "").replace(/[&<>"]/g, (char) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[char]));
   const icon = (glyph) => `<span class="ui-icon" aria-hidden="true">${esc(glyph)}</span>`;
+  const SECTION_ICONS = {
+    buildCost: "build_cost.png",
+    powerLevel: "power_level.png",
+    budget: "budget.png",
+    rarity: "rarity.png",
+    does: "does.png",
+    scoring: "scoring_profile.png",
+    fit: "fit.png",
+    engine: "engine_rating.png",
+    roomGrow: "room_grow.png",
+    value: "value.png",
+    roles: "roles.png",
+    buyLocation: "buy_location.png",
+    ceiling: "ceiling.png",
+    notes: "notes.png"
+  };
+  const sectionIcon = (name) => `<img class="section-icon" src="assets/icons/${SECTION_ICONS[name]}" alt="" aria-hidden="true">`;
+  const RARITY_ICONS = {
+    common: "common_rarity.png",
+    uncommon: "uncommon_rarity.png",
+    rare: "rare_rarity.png",
+    mythic: "mythic_rarity.png"
+  };
+  const rarityIcon = (rarity, label = rarity) => {
+    const key = String(rarity || "").toLowerCase();
+    const filename = RARITY_ICONS[key] || SECTION_ICONS.rarity;
+    return `<img class="rarity-icon" src="assets/icons/${filename}" alt="${esc(label || "Rarity")}" title="${esc(label || "Rarity")}">`;
+  };
   const money = (value) => Number.isFinite(Number(value)) && Number(value) > 0 ? `$${Number(value).toFixed(2)}` : "Price varies";
   const variantById = (id) => catalog.variants.find((variant) => variant.id === id);
 
@@ -286,18 +314,18 @@
       </div>
       <div class="stage-content">
         <div class="metric-grid">
-          <div class="metric-tile cost-metric">${icon("$")}<span>Build cost</span><strong>${esc(variant.costs[stage - 1] || "Varies")}</strong></div>
-          <div class="metric-tile bracket-metric">${icon("B")}<span>Power level</span><strong>${esc(bracket.label || "Profile")}</strong></div>
-          <div class="metric-tile budget-metric">${icon("✓")}<span>Budget</span><strong>${esc(facts.budget || "Varies")}</strong></div>
-          <div class="metric-tile rarity-metric" title="${esc(rarity.description || "")}">${icon("◇")}<span>Rarity</span><strong>${esc(rarity.percent || "—")} · ${esc(rarity.label || "")}</strong></div>
+          <div class="metric-tile cost-metric">${sectionIcon("buildCost")}<span>Build cost</span><strong>${esc(variant.costs[stage - 1] || "Varies")}</strong></div>
+          <div class="metric-tile bracket-metric">${sectionIcon("powerLevel")}<span>Power level</span><strong>${esc(bracket.label || "Profile")}</strong></div>
+          <div class="metric-tile budget-metric">${sectionIcon("budget")}<span>Budget</span><strong>${esc(facts.budget || "Varies")}</strong></div>
+          <div class="metric-tile rarity-metric" title="${esc(rarity.description || "")}">${sectionIcon("rarity")}<span>Rarity</span><strong>${esc(rarity.percent || "—")} · ${esc(rarity.label || "")}</strong></div>
         </div>
         <div class="availability-line">${icon("●")}<span>${esc(facts.availability || "Availability varies")}</span><b class="${bracket.gameChangers && !bracket.gameChangers.startsWith("0") ? "has-gc" : ""}">${esc(bracket.gameChangers || "0 GC")}</b></div>
         <section class="build-promise">
-          <h4>${icon("→")}What this build does</h4>
+          <h4>${sectionIcon("does")}What this build does</h4>
           <ul>${summary.map((item) => `<li>${esc(item)}</li>`).join("")}</ul>
         </section>
-        <p class="stage-note">${icon("i")}<span>${esc(variant.stageNotes[stage - 1] || bracket.description || "")}</span></p>
-        <div class="score-heading">${icon("✦")}<span>Scoring profile</span></div>
+        <p class="stage-note">${sectionIcon("notes")}<span>${esc(variant.stageNotes[stage - 1] || bracket.description || "")}</span></p>
+        <div class="score-heading">${sectionIcon("scoring")}<span>Scoring profile</span></div>
         <div class="score-columns">
           ${scorePanel("Your playstyle fit", playstyle)}
           ${scorePanel("Engine rating", engine)}
@@ -347,8 +375,8 @@
   }
 
   function scorePanel(title, rows, extraClass = "") {
-    const glyph = title.includes("playstyle") ? "♥" : title.includes("Engine") ? "⚙" : "↗";
-    return `<section class="score-panel ${extraClass}"><h4>${icon(glyph)}${esc(title)}</h4><div class="score-grid">${rows.map((row) => `
+    const iconName = title.includes("playstyle") ? "fit" : title.includes("Engine") ? "engine" : "roomGrow";
+    return `<section class="score-panel ${extraClass}"><h4>${sectionIcon(iconName)}${esc(title)}</h4><div class="score-grid">${rows.map((row) => `
       <div class="score-row" title="${esc(row.description || "")}">
         <span>${esc(row.label)}</span>
         <span class="score-dots" aria-label="${row.score} out of 5">${[1,2,3,4,5].map((dot) => `<i class="${dot <= row.score ? "is-on" : ""}"></i>`).join("")}</span>
@@ -776,9 +804,9 @@
       ${detailText("Why it is optional", item.whyOptional)}
       ${detailText("Alternate rationale", item.alternateReason)}
       ${detailText("Tradeoff", item.alternateTradeoff)}
-      ${(brief.power || brief.ease || brief.fun) ? `<section class="detail-block"><h3>Card scoring</h3><div class="brief-scores">
+      ${(brief.power || brief.ease || brief.fun) ? `<section class="detail-block"><h3>${sectionIcon("scoring")}Card scoring</h3><div class="brief-scores">
         ${briefScore("Power", brief.power)}${briefScore("Ease", brief.ease)}${briefScore("Fun", brief.fun)}
-      </div><div class="brief-insights">${brief.value ? `<p>${icon("$")}<span><b>Value</b>${esc(brief.value)}</span></p>` : ""}${brief.fit ? `<p>${icon("→")}<span><b>Fit</b>${esc(brief.fit)}</span></p>` : ""}</div></section>` : ""}
+      </div><div class="brief-insights">${brief.value ? `<p>${sectionIcon("value")}<span><b>Value</b>${esc(brief.value)}</span></p>` : ""}${brief.fit ? `<p>${sectionIcon("fit")}<span><b>Fit</b>${esc(brief.fit)}</span></p>` : ""}</div></section>` : ""}
       ${item.tags?.length ? `<section class="detail-block"><h3>Roles</h3><div class="variant-tags">${item.tags.map((tag) => `<span class="tag">${esc(tag)}</span>`).join("")}</div></section>` : ""}
       ${detailText("Where to buy", item.whereToBuy)}
       ${item.tcgplayerUrl ? `<p><a class="primary-button detail-link" href="${esc(item.tcgplayerUrl)}" target="_blank" rel="noopener">Search this card on TCGplayer</a></p>` : ""}`;
@@ -788,13 +816,13 @@
 
   function decorateRichContent(root, variant = null) {
     const sectionMap = [
-      [/commander/i, "♛", "forest"], [/rarity/i, "◇", "blue"], [/precon seed/i, "▣", "gold"],
-      [/key upgrades/i, "↗", "gold"], [/how it plays|how to play/i, "▶", "forest"], [/ratings|scoring/i, "✦", "blue"],
-      [/what keith said/i, "“", "gold"], [/room to grow/i, "↥", "forest"], [/bracket/i, "B", "red"],
-      [/buy order/i, "#", "gold"], [/trackers|counters needed/i, "◌", "blue"], [/pros/i, "+", "forest"],
-      [/cons/i, "−", "red"], [/strengths/i, "◆", "forest"], [/weaknesses/i, "!", "red"],
+      [/what this (build|card) does/i, "→", "forest", "does"], [/commander/i, "♛", "forest"], [/rarity/i, "◇", "blue", "rarity"], [/precon seed/i, "▣", "gold", "buildCost"],
+      [/key upgrades/i, "↗", "gold"], [/how it plays|how to play/i, "▶", "forest"], [/ratings|scoring/i, "✦", "blue", "scoring"],
+      [/what keith said/i, "“", "gold"], [/room to grow/i, "↥", "forest", "roomGrow"], [/bracket/i, "B", "red"],
+      [/buy order/i, "#", "gold"], [/trackers|counters needed/i, "◌", "blue"], [/notes/i, "◌", "blue", "notes"], [/pros/i, "+", "forest"],
+      [/cons/i, "−", "red"], [/strengths/i, "◆", "forest"], [/weaknesses/i, "!", "red"], [/value/i, "$", "gold", "value"], [/\bfit\b/i, "→", "blue", "fit"],
       [/stretch cards/i, "↗", "gold"], [/top of bracket/i, "✦", "red"], [/why/i, "→", "forest"],
-      [/replaces/i, "⇄", "blue"], [/tradeoff/i, "±", "gold"], [/roles/i, "◆", "blue"], [/(where|how) to buy/i, "$", "gold"]
+      [/replaces/i, "⇄", "blue"], [/tradeoff/i, "±", "gold"], [/roles/i, "◆", "blue", "roles"], [/(where|how) to buy/i, "$", "gold", "buyLocation"]
     ];
     $$(".blk, .legacy-plan .panel, .detail-block", root).forEach((section) => {
       const heading = $("h3, h4", section);
@@ -802,7 +830,7 @@
       const match = sectionMap.find(([pattern]) => pattern.test(heading.textContent));
       section.classList.add("rich-section");
       section.dataset.tone = match?.[2] || "neutral";
-      if (match && !$(".ui-icon", heading)) heading.insertAdjacentHTML("afterbegin", icon(match[1]));
+      if (match && !$(".ui-icon, .section-icon", heading)) heading.insertAdjacentHTML("afterbegin", match[3] ? sectionIcon(match[3]) : icon(match[1]));
     });
     $$(".method", root).forEach((paragraph) => paragraph.classList.add("info-note"));
     $$(".flag", root).forEach((flag) => flag.classList.add("warning-note"));
@@ -1115,28 +1143,37 @@
       : metadata.rarity
         ? metadata.rarity[0].toUpperCase() + metadata.rarity.slice(1)
         : metadata.unavailable ? "Unavailable" : "Loading…";
-    const tableLocation = item.whereToBuy || (item.category === "precon" ? "Sealed product shelf" : "Ask vendor");
+    const rarityKey = metadata.rarity || "";
+    const tableLocation = item.category === "precon"
+      ? "Precon / sealed product"
+      : item.whereToBuy || "Ask vendor";
     const card = document.createElement("article");
     card.className = `shop-card${found ? " is-found" : ""}`;
     const categories = Array.from(item.categories);
+    const levelLabels = {precon: "Precon", tuned: "Tuned", upgrade: "Upgrade", enhance: "Enhance", max: "Maxxed"};
+    const levelBadges = categories
+      .filter((category, index, values) => !(item.category === "precon" && category === "precon") && values.indexOf(category) === index)
+      .map((category) => `<span class="shop-badge ${esc(category)}">${esc(levelLabels[category] || category)}</span>`)
+      .join("");
+    const displayType = item.category === "precon" ? "Precon" : item.typeLine;
     card.innerHTML = `
       <button class="shop-image-button" aria-label="View a larger image of ${esc(item.name)}">
         <img class="shop-image" src="${esc(item.image)}" alt="${esc(item.name)} card" loading="lazy">
       </button>
       <div class="shop-main">
-        <div class="shop-card-kicker">${icon(item.category === "precon" ? "▣" : "✦")}<span>${esc(item.category === "precon" ? "Sealed deck" : "Single card")}</span></div>
+        <div class="shop-card-kicker">${icon(item.category === "precon" ? "▣" : "✦")}<span>${esc(item.category === "precon" ? "Precon" : "Single card")}</span>${rarityIcon(rarityKey, rarity)}${levelBadges}${item.gameChanger ? `<span class="shop-badge gc">GC</span>` : ""}</div>
         <h3>${esc(item.name)}${item.quantity > 1 ? ` ×${item.quantity}` : ""}</h3>
-        <div class="shop-facts">${item.manaCost ? `<span>${manaCostHtml(item.manaCost)}</span>` : ""}${item.typeLine ? `<span>${esc(item.typeLine)}</span>` : ""}</div>
+        <div class="shop-facts">${item.manaCost ? `<span>${manaCostHtml(item.manaCost)}</span>` : ""}${displayType ? `<span>${esc(displayType)}</span>` : ""}</div>
         <div class="shop-buying-facts" aria-label="Buying guide">
-          <div>${icon("⌖")}<span><small>Table location</small><strong>${esc(tableLocation)}</strong></span></div>
-          <div>${icon("$")}<span><small>Target</small><strong>${money(item.price)}</strong></span></div>
-          <div>${icon("↑")}<span><small>Ceiling</small><strong>${item.ceiling ? money(item.ceiling) : "Not listed"}</strong></span></div>
-          <div>${icon("◇")}<span><small>Rarity</small><strong>${esc(rarity)}</strong></span></div>
+          <div>${sectionIcon("buyLocation")}<span><small>Table location</small><strong>${esc(tableLocation)}</strong></span></div>
+          <div class="shop-price-fact">
+            <span class="shop-price-half">${sectionIcon("budget")}<span><small>Target</small><strong>${money(item.price)}</strong></span></span>
+            <span class="shop-price-half">${sectionIcon("ceiling")}<span><small>Ceiling</small><strong>${item.ceiling ? money(item.ceiling) : "Not listed"}</strong></span></span>
+          </div>
         </div>
-        <p class="shop-purpose">${icon("→")}<span>${esc(item.purpose || item.replaces || "")}</span></p>
+        <p class="shop-purpose">${sectionIcon("does")}<span>${esc(item.purpose || item.replaces || "")}</span></p>
         <div class="shop-refs"><span>Needed by</span>${item.deckRefs.map((ref) => `<b>Deck ${ref.deckId}</b>`).join("")}</div>
         <div class="shop-bottom">
-          <div class="shop-badges">${categories.map((category) => `<span class="shop-badge ${esc(category)}">${esc(category)}</span>`).join("")}${item.gameChanger ? `<span class="shop-badge gc">GC</span>` : ""}</div>
           <button class="found-button">${found ? "✓ Found" : "Mark found"}</button>
         </div>
       </div>`;

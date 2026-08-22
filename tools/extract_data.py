@@ -791,6 +791,7 @@ def extract_buy_plans() -> dict:
         assign_replacements(required + upgrade + enhance + max_options, starting_shell, retained_names)
         precon_name = clean_text(precon.get("name") or raw.get("deck_name") or "Deck shell")
         precon_price = precon.get("price") or precon.get("target_price")
+        shell_commander = next((card for card in starting_shell if card.get("isCommander")), {})
         precon_item = {
             "id": f"precon-{deck_id}",
             "name": precon_name,
@@ -800,8 +801,8 @@ def extract_buy_plans() -> dict:
             "category": "precon",
             "purpose": clean_text(summary.get("buy_why", ""))
             or f"Starting shell for {clean_text(raw.get('deck_name', 'this build'))}",
-            "typeLine": "Preconstructed deck / starting shell",
-            "manaCost": "",
+            "typeLine": "Precon",
+            "manaCost": shell_commander.get("manaCost", ""),
             "gameChanger": False,
             "why": clean_text(summary.get("buy_why", "")),
             "buyRank": summary.get("buy_rank"),
@@ -809,7 +810,7 @@ def extract_buy_plans() -> dict:
             "buyFirst": clean_text(summary.get("buy_first", "")),
             "allIn": summary.get("all_in"),
             "outOfPrint": bool(summary.get("oop")),
-            "whereToBuy": "Preconstructed deck / sealed product",
+            "whereToBuy": "Precon / sealed product",
             "tcgplayerUrl": clean_text(precon.get("tcgplayer_url", "")),
             "commanderNote": clean_text(
                 (cards.get(raw.get("commander_key")) or {}).get("why", "")

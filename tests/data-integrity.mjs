@@ -41,6 +41,8 @@ for (const [variantId, plan] of Object.entries(buyPlans.plans)) {
   assert(ids.has(variantId), `${variantId} must map to a Compare variant`);
   assert.equal(plan.variantId, variantId);
   assert.equal(plan.precon.category, "precon");
+  assert.equal(plan.precon.typeLine, "Precon", `${variantId} precon must use the compact type label`);
+  assert(plan.precon.manaCost, `${variantId} precon must carry its commander's mana cost`);
   assert(plan.planHtml.length > 1000, `${variantId} must retain its complete deck plan`);
   assert(plan.baseCards.length > 0, `${variantId} must retain its modeled starting list`);
   assert(plan.baseCards.reduce((sum, card) => sum + card.quantity, 0) > 70, `${variantId} starting list must be substantial enough for deck checks`);
