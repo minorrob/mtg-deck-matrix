@@ -379,9 +379,44 @@
     $("#detail-sheet-image").alt = `${variant.commander} card`;
     $("#detail-sheet-kicker").textContent = `Deck ${variant.deckId} · ${STAGES[stage - 1]} rank #${variant.ranks?.[stage - 1] || variant.order}`;
     $("#detail-sheet-title").textContent = variant.name;
+    $("#detail-sheet-context").innerHTML = "";
     $("#detail-sheet-body").innerHTML = variant.detailHtml || `<p>No extended report is available.</p>`;
     decorateRichContent($("#detail-sheet-body"), variant);
+    organizeVariantDetail($("#detail-sheet-body"), variant);
     dialog.showModal();
+  }
+
+  function detailSectionByHeading(root, pattern) {
+    return $$(".blk, .detail-block", root).find((section) => {
+      const heading = $("h3, h4", section);
+      if (!heading) return false;
+      const cleanHeading = heading.cloneNode(true);
+      $$(".ui-icon, .section-icon", cleanHeading).forEach((node) => node.remove());
+      return pattern.test(cleanHeading.textContent.trim());
+    });
+  }
+
+  function organizeVariantDetail(root, variant) {
+    const commanderSection = detailSectionByHeading(root, /^Commander$/i);
+    if (commanderSection) {
+      const cells = $$("tr.cmdr td", commanderSection);
+      const commanderName = cells[0]?.textContent.trim() || variant.commander;
+      const commanderCost = cells[1]?.innerHTML || manaCostHtml(variant.manaCost);
+      const commanderType = cells[2]?.textContent.trim() || variant.typeLine;
+      const commanderEffect = cells[3]?.textContent.trim() || "Open the card image to read the complete rules text.";
+      const commanderPrice = cells[4]?.textContent.trim() || "";
+      $("#detail-sheet-context").innerHTML = `<section class="detail-aside-commander"><h3>${icon("♛")}Commander</h3><strong>${esc(commanderName)}</strong><div class="aside-commander-meta"><span>${commanderCost}</span>${commanderPrice ? `<b>${esc(commanderPrice)}</b>` : ""}</div><small>${esc(commanderType)}</small><p>${esc(commanderEffect)}</p></section>`;
+      commanderSection.remove();
+    }
+
+    const raritySection = detailSectionByHeading(root, /^Deck rarity\s*[—–-]\s*by stage$/i);
+    const preconSection = detailSectionByHeading(root, /^Precon seed$/i);
+    if (raritySection && preconSection) {
+      const split = document.createElement("div");
+      split.className = "detail-summary-split";
+      raritySection.before(split);
+      split.append(raritySection, preconSection);
+    }
   }
 
   function selectVariant(variant) {
@@ -772,6 +807,7 @@
     $("#detail-sheet-image").alt = `${item.name} card`;
     $("#detail-sheet-kicker").textContent = `Deck ${variant.deckId} · ${kind === "tuned" ? "Tuned" : STAGES.includes(kind) ? kind : kind[0].toUpperCase() + kind.slice(1)}`;
     $("#detail-sheet-title").textContent = item.name;
+    $("#detail-sheet-context").innerHTML = "";
     $("#detail-sheet-body").innerHTML = kind === "precon" ? `
       <div class="precon-facts">
         <div><span>Buy order</span><strong>#${esc(item.buyRank || plan?.buyRank || "—")} of 6</strong></div>
