@@ -56,21 +56,28 @@
       toolbar = document.createElement("div");
       toolbar.className = "buy-purchased-toolbar";
       toolbar.setAttribute("aria-label", "Buy Picks purchase status");
+      toolbar.innerHTML = `
+        <button type="button" class="filter-chip" data-buy-purchased-mode="all">All</button>
+        <button type="button" class="filter-chip" data-buy-purchased-mode="purchased">Purchased</button>
+        <span class="purchase-count"></span>`;
+      toolbar.querySelectorAll("[data-buy-purchased-mode]").forEach((button) => {
+        button.addEventListener("click", () => {
+          mode = button.dataset.buyPurchasedMode;
+          localStorage.setItem(VIEW_STORAGE_KEY, mode);
+          apply(root);
+        });
+      });
       const intro = root.querySelector(".page-intro");
       if (intro) intro.insertAdjacentElement("afterend", toolbar);
       else root.prepend(toolbar);
     }
-    toolbar.innerHTML = `
-      <button type="button" class="filter-chip${mode === "all" ? " is-active" : ""}" data-buy-purchased-mode="all">All</button>
-      <button type="button" class="filter-chip${mode === "purchased" ? " is-active" : ""}" data-buy-purchased-mode="purchased">Purchased</button>
-      <span class="purchase-count">${purchasedCount}/${totalCount} purchased</span>`;
+
     toolbar.querySelectorAll("[data-buy-purchased-mode]").forEach((button) => {
-      button.addEventListener("click", () => {
-        mode = button.dataset.buyPurchasedMode;
-        localStorage.setItem(VIEW_STORAGE_KEY, mode);
-        apply(root);
-      });
+      button.classList.toggle("is-active", button.dataset.buyPurchasedMode === mode);
     });
+    const count = toolbar.querySelector(".purchase-count");
+    const nextCount = `${purchasedCount}/${totalCount} purchased`;
+    if (count && count.textContent !== nextCount) count.textContent = nextCount;
   }
 
   function updateBadges(rows, found) {
