@@ -306,6 +306,7 @@ def extract_buy_plans() -> dict:
 
     for deck_id in range(1, 7):
         raw = all_data[f"d{deck_id}"]
+        summary = summary_by_id.get(deck_id, {})
         cards = raw.get("cards", {})
         required = []
         enhance = []
@@ -348,10 +349,22 @@ def extract_buy_plans() -> dict:
             "price": precon_price,
             "ceiling": precon.get("ceiling") or raw.get("budget_ceiling"),
             "category": "precon",
-            "purpose": f"Starting shell for {clean_text(raw.get('deck_name', 'this build'))}",
+            "purpose": clean_text(summary.get("buy_why", ""))
+            or f"Starting shell for {clean_text(raw.get('deck_name', 'this build'))}",
             "typeLine": "Preconstructed deck / starting shell",
             "manaCost": "",
             "gameChanger": False,
+            "why": clean_text(summary.get("buy_why", "")),
+            "buyRank": summary.get("buy_rank"),
+            "buyStrategy": clean_text(summary.get("buy_strategy", "")),
+            "buyFirst": clean_text(summary.get("buy_first", "")),
+            "allIn": summary.get("all_in"),
+            "outOfPrint": bool(summary.get("oop")),
+            "whereToBuy": "Preconstructed deck / sealed product",
+            "tcgplayerUrl": clean_text(precon.get("tcgplayer_url", "")),
+            "commanderNote": clean_text(
+                (cards.get(raw.get("commander_key")) or {}).get("why", "")
+            ),
             "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy="
             + clean_text(raw.get("commander_name", "")).replace(" ", "+"),
         }
@@ -364,9 +377,14 @@ def extract_buy_plans() -> dict:
             "budgetLabel": clean_text(raw.get("budget_tier_label", "")),
             "bracketLabel": clean_text(raw.get("bracket_label", "")),
             "priorityLabel": clean_text(raw.get("priority_label", "")),
+            "buyRank": summary.get("buy_rank"),
+            "buyStrategy": clean_text(summary.get("buy_strategy", "")),
+            "buyWhy": clean_text(summary.get("buy_why", "")),
+            "buyFirst": clean_text(summary.get("buy_first", "")),
+            "allIn": summary.get("all_in"),
             "planHtml": safe_fragment(
                 html.fragment_fromstring(
-                    summary_by_id.get(deck_id, {}).get("info_html", "<div></div>"),
+                    summary.get("info_html", "<div></div>"),
                     create_parent="div",
                 ),
                 remove_images=True,

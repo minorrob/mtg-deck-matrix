@@ -41,6 +41,8 @@ for (const [variantId, plan] of Object.entries(buyPlans.plans)) {
   assert.equal(plan.variantId, variantId);
   assert.equal(plan.precon.category, "precon");
   assert(plan.planHtml.length > 1000, `${variantId} must retain its complete deck plan`);
+  assert(plan.precon.buyRank && plan.precon.buyStrategy && plan.precon.buyFirst, `${variantId} precon must retain its buying plan`);
+  assert(plan.precon.commanderNote && plan.precon.tcgplayerUrl, `${variantId} precon must retain commander and purchase detail`);
   assert(plan.required.every((item) => item.category === "upgrade"));
   assert(plan.enhance.every((item) => item.category === "enhance"));
   assert(plan.enhance.every((item) => !item.price || item.price <= 10), `${variantId} Enhance cards must stay at or below $10`);

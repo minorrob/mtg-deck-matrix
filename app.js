@@ -401,11 +401,29 @@
   function openBuyItemDetail(item, variant, kind) {
     const dialog = $("#detail-sheet");
     const brief = item.brief || {};
+    const plan = buyCatalog.plans[variant.id];
     $("#detail-sheet-image").src = item.image.replace("version=small", "version=normal");
     $("#detail-sheet-image").alt = `${item.name} card`;
     $("#detail-sheet-kicker").textContent = `Deck ${variant.deckId} · ${kind === "required" ? "Upgrade" : STAGES.includes(kind) ? kind : kind[0].toUpperCase() + kind.slice(1)}`;
     $("#detail-sheet-title").textContent = item.name;
-    $("#detail-sheet-body").innerHTML = `
+    $("#detail-sheet-body").innerHTML = kind === "precon" ? `
+      <div class="precon-facts">
+        <div><span>Buy order</span><strong>#${esc(item.buyRank || plan?.buyRank || "—")} of 6</strong></div>
+        <div><span>Strategy</span><strong>${esc(item.buyStrategy || plan?.buyStrategy || "Precon-first")}</strong></div>
+        <div><span>Box target</span><strong>${money(item.price)}</strong></div>
+        <div><span>Tuned total</span><strong>${money(item.allIn || plan?.allIn)}</strong></div>
+        <div><span>Bracket</span><strong>${esc(plan?.bracketLabel || "—")}</strong></div>
+        <div><span>Budget</span><strong>${esc(plan?.budgetLabel || "—")}</strong></div>
+      </div>
+      ${detailText("Why this deck", item.why || plan?.buyWhy || item.purpose)}
+      ${detailText("How to buy it", item.buyFirst || plan?.buyFirst)}
+      ${detailText("Commander note", item.commanderNote)}
+      <section class="precon-plan-source">
+        <div class="precon-plan-heading"><p>Complete source plan</p><h3>Everything from the original shopping guide</h3></div>
+        <div class="legacy-plan">${plan?.planHtml || "<p>No extended plan is available.</p>"}</div>
+      </section>
+      ${item.tcgplayerUrl ? `<p><a class="primary-button detail-link" href="${esc(item.tcgplayerUrl)}" target="_blank" rel="noopener">Find this precon on TCGplayer</a></p>` : ""}`
+      : `
       <div class="item-meta"><span>${esc(item.manaCost || "")}</span><span>${esc(item.typeLine || "")}</span><span>${money(item.price)}${item.ceiling ? ` · ceiling ${money(item.ceiling)}` : ""}</span></div>
       ${item.gameChanger ? `<p class="gc-callout">Game Changer · counts toward this deck’s limit of three in Bracket 3.</p>` : ""}
       ${item.replaces ? `<section class="detail-block"><h3>Replaces</h3><p>${esc(item.replaces)}</p></section>` : ""}
