@@ -311,12 +311,11 @@
       </div>
       <div class="stage-content">
         <div class="metric-grid">
-          <div class="metric-tile cost-metric">${sectionIcon("buildCost")}<span>Build cost</span><strong>${esc(variant.costs[stage - 1] || "Varies")}</strong></div>
+          <div class="metric-tile cost-metric cost-budget-metric">${sectionIcon("buildCost")}<span class="cost-budget-copy"><span><small>Build cost</small><strong>${esc(variant.costs[stage - 1] || "Varies")}</strong></span><span><small>Budget</small><strong>${esc(facts.budget || "Varies")}</strong></span></span></div>
           <div class="metric-tile bracket-metric">${sectionIcon("powerLevel")}<span>Power level</span><strong>${esc(bracket.label || "Profile")}</strong></div>
-          <div class="metric-tile budget-metric">${sectionIcon("budget")}<span>Budget</span><strong>${esc(facts.budget || "Varies")}</strong></div>
+          <div class="metric-tile budget-metric availability-metric">${sectionIcon("budget")}<span>Availability</span><strong><span>${esc(facts.availability || "Varies")}</span><b class="${bracket.gameChangers && !bracket.gameChangers.startsWith("0") ? "has-gc" : ""}">${esc(bracket.gameChangers || "0 GC")}</b></strong></div>
           <div class="metric-tile rarity-metric" title="${esc(rarity.description || "")}">${sectionIcon("rarity")}<span>Rarity</span><strong>${esc(rarity.percent || "—")} · ${esc(rarity.label || "")}</strong></div>
         </div>
-        <div class="availability-line">${icon("●")}<span>${esc(facts.availability || "Availability varies")}</span><b class="${bracket.gameChangers && !bracket.gameChangers.startsWith("0") ? "has-gc" : ""}">${esc(bracket.gameChangers || "0 GC")}</b></div>
         <section class="build-promise">
           <h4>${sectionIcon("does")}What this build does</h4>
           <ul>${summary.map((item) => `<li>${esc(item)}</li>`).join("")}</ul>
