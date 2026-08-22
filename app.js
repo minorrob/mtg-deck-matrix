@@ -16,6 +16,7 @@
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
   const esc = (value) => String(value ?? "").replace(/[&<>"]/g, (char) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[char]));
+  const icon = (glyph) => `<span class="ui-icon" aria-hidden="true">${esc(glyph)}</span>`;
   const money = (value) => Number.isFinite(Number(value)) && Number(value) > 0 ? `$${Number(value).toFixed(2)}` : "Price varies";
   const variantById = (id) => catalog.variants.find((variant) => variant.id === id);
 
@@ -196,16 +197,19 @@
         ${STAGES.map((label, index) => `<button class="stage-button${stage === index + 1 ? " is-active" : ""}" data-stage="${index + 1}">${label}</button>`).join("")}
       </div>
       <div class="stage-content">
-        <div class="stage-stats">
-          <span class="stat-pill">${esc(variant.costs[stage - 1] || "Cost varies")}</span>
-          <span class="stat-pill">${esc(facts.availability || "Availability varies")}</span>
-          <span class="stat-pill">${esc(facts.budget || "Budget varies")}</span>
-          <span class="stat-pill">${esc(bracket.label || "Bracket profile")}</span>
-          <span class="stat-pill${bracket.gameChangers && !bracket.gameChangers.startsWith("0") ? " gc" : ""}">${esc(bracket.gameChangers || "0 GC")}</span>
+        <div class="metric-grid">
+          <div class="metric-tile cost-metric">${icon("$")}<span>Build cost</span><strong>${esc(variant.costs[stage - 1] || "Varies")}</strong></div>
+          <div class="metric-tile bracket-metric">${icon("B")}<span>Power level</span><strong>${esc(bracket.label || "Profile")}</strong></div>
+          <div class="metric-tile budget-metric">${icon("✓")}<span>Budget</span><strong>${esc(facts.budget || "Varies")}</strong></div>
+          <div class="metric-tile rarity-metric" title="${esc(rarity.description || "")}">${icon("◇")}<span>Rarity</span><strong>${esc(rarity.percent || "—")} · ${esc(rarity.label || "")}</strong></div>
         </div>
-        <div class="rarity-line" title="${esc(rarity.description || "")}"><span>Rarity</span><strong>${esc(rarity.percent || "—")}</strong><span>${esc(rarity.label || "")}</span></div>
-        <ul>${summary.map((item) => `<li>${esc(item)}</li>`).join("")}</ul>
-        <p class="stage-note">${esc(variant.stageNotes[stage - 1] || bracket.description || "")}</p>
+        <div class="availability-line">${icon("●")}<span>${esc(facts.availability || "Availability varies")}</span><b class="${bracket.gameChangers && !bracket.gameChangers.startsWith("0") ? "has-gc" : ""}">${esc(bracket.gameChangers || "0 GC")}</b></div>
+        <section class="build-promise">
+          <h4>${icon("→")}What this build does</h4>
+          <ul>${summary.map((item) => `<li>${esc(item)}</li>`).join("")}</ul>
+        </section>
+        <p class="stage-note">${icon("i")}<span>${esc(variant.stageNotes[stage - 1] || bracket.description || "")}</span></p>
+        <div class="score-heading">${icon("✦")}<span>Scoring profile</span></div>
         <div class="score-columns">
           ${scorePanel("Your playstyle fit", playstyle)}
           ${scorePanel("Engine rating", engine)}
@@ -231,7 +235,8 @@
   }
 
   function scorePanel(title, rows, extraClass = "") {
-    return `<section class="score-panel ${extraClass}"><h4>${esc(title)}</h4><div class="score-grid">${rows.map((row) => `
+    const glyph = title.includes("playstyle") ? "♥" : title.includes("Engine") ? "⚙" : "↗";
+    return `<section class="score-panel ${extraClass}"><h4>${icon(glyph)}${esc(title)}</h4><div class="score-grid">${rows.map((row) => `
       <div class="score-row" title="${esc(row.description || "")}">
         <span>${esc(row.label)}</span>
         <span class="score-dots" aria-label="${row.score} out of 5">${[1,2,3,4,5].map((dot) => `<i class="${dot <= row.score ? "is-on" : ""}"></i>`).join("")}</span>
@@ -246,6 +251,7 @@
     $("#detail-sheet-kicker").textContent = `Deck ${variant.deckId} · ${STAGES[stage - 1]} rank #${variant.ranks?.[stage - 1] || variant.order}`;
     $("#detail-sheet-title").textContent = variant.name;
     $("#detail-sheet-body").innerHTML = variant.detailHtml || `<p>No extended report is available.</p>`;
+    decorateRichContent($("#detail-sheet-body"));
     dialog.showModal();
   }
 
@@ -346,7 +352,7 @@
 
     body.innerHTML = `
       <details class="plan-analysis">
-        <summary><span>Deck plan &amp; analysis</span><small>How to play, buy order, bracket placement, and tuning notes</small></summary>
+        <summary><span>${icon("☰")}Deck plan &amp; analysis</span><small>How to play, buy order, bracket placement, and tuning notes</small></summary>
         <div class="legacy-plan">${plan.planHtml || ""}</div>
       </details>
       ${buySection("Starting shell", "Included automatically", [plan.precon], "precon", current, variant.id)}
@@ -381,8 +387,9 @@
   function buySection(title, note, items, kind, current, variantId) {
     if (!items?.length) return "";
     const included = kind === "required" || kind === "precon";
+    const glyph = kind === "precon" ? "▣" : kind === "required" ? "✓" : kind === "enhance" ? "+" : "✦";
     return `<details class="buy-section" ${included ? "open" : ""}>
-      <summary><span>${esc(title)} <b>${items.length}</b></span><small>${esc(note)}</small></summary>
+      <summary><span>${icon(glyph)}${esc(title)} <b>${items.length}</b></span><small>${esc(note)}</small></summary>
       ${items.map((item) => {
         const required = included;
         const checked = required || (current[kind] || []).includes(item.id);
@@ -390,7 +397,11 @@
           ${required ? `<span class="required-check" aria-label="Included">✓</span>` : `<input type="checkbox" ${checked ? "checked" : ""} data-buy-kind="${esc(kind)}" data-item-id="${esc(item.id)}" data-variant-id="${esc(variantId)}">`}
           <button class="buy-item-detail" type="button" data-item-kind="${esc(kind)}" data-item-id="${esc(item.id)}">
             <img src="${esc(item.image)}" alt="" loading="lazy">
-            <span class="buy-copy"><strong>${esc(item.name)}${item.quantity > 1 ? ` ×${item.quantity}` : ""}</strong><small><span class="kind-label ${esc(kind)}">${esc(kind === "required" ? "upgrade" : kind)}</span>${esc(item.replaces || item.purpose || item.typeLine || "")}${item.gameChanger ? " · Game Changer" : ""}</small></span>
+            <span class="buy-copy">
+              <span class="buy-item-eyebrow"><span class="kind-label ${esc(kind)}">${esc(kind === "required" ? "upgrade" : kind)}</span>${item.gameChanger ? `<span class="gc-mini">✦ Game Changer</span>` : ""}</span>
+              <strong>${esc(item.name)}${item.quantity > 1 ? ` ×${item.quantity}` : ""}</strong>
+              <small>${esc(item.replaces || item.purpose || item.typeLine || "")}</small>
+            </span>
           </button>
           <span class="price">${money(item.price)}</span>
         </div>`;
@@ -433,11 +444,35 @@
       ${detailText("Tradeoff", item.alternateTradeoff)}
       ${(brief.power || brief.ease || brief.fun) ? `<section class="detail-block"><h3>Card scoring</h3><div class="brief-scores">
         ${briefScore("Power", brief.power)}${briefScore("Ease", brief.ease)}${briefScore("Fun", brief.fun)}
-      </div>${brief.value ? `<p><b>Value:</b> ${esc(brief.value)}</p>` : ""}${brief.fit ? `<p><b>Fit:</b> ${esc(brief.fit)}</p>` : ""}</section>` : ""}
+      </div><div class="brief-insights">${brief.value ? `<p>${icon("$")}<span><b>Value</b>${esc(brief.value)}</span></p>` : ""}${brief.fit ? `<p>${icon("→")}<span><b>Fit</b>${esc(brief.fit)}</span></p>` : ""}</div></section>` : ""}
       ${item.tags?.length ? `<section class="detail-block"><h3>Roles</h3><div class="variant-tags">${item.tags.map((tag) => `<span class="tag">${esc(tag)}</span>`).join("")}</div></section>` : ""}
       ${detailText("Where to buy", item.whereToBuy)}
       ${item.tcgplayerUrl ? `<p><a class="primary-button detail-link" href="${esc(item.tcgplayerUrl)}" target="_blank" rel="noopener">Search this card on TCGplayer</a></p>` : ""}`;
+    decorateRichContent($("#detail-sheet-body"));
     dialog.showModal();
+  }
+
+  function decorateRichContent(root) {
+    const sectionMap = [
+      [/commander/i, "♛", "forest"], [/rarity/i, "◇", "blue"], [/precon seed/i, "▣", "gold"],
+      [/key upgrades/i, "↗", "gold"], [/how it plays|how to play/i, "▶", "forest"], [/ratings|scoring/i, "✦", "blue"],
+      [/what keith said/i, "“", "gold"], [/room to grow/i, "↥", "forest"], [/bracket/i, "B", "red"],
+      [/buy order/i, "#", "gold"], [/trackers|counters needed/i, "◌", "blue"], [/pros/i, "+", "forest"],
+      [/cons/i, "−", "red"], [/strengths/i, "◆", "forest"], [/weaknesses/i, "!", "red"],
+      [/stretch cards/i, "↗", "gold"], [/top of bracket/i, "✦", "red"], [/why/i, "→", "forest"],
+      [/replaces/i, "⇄", "blue"], [/tradeoff/i, "±", "gold"], [/roles/i, "◆", "blue"], [/(where|how) to buy/i, "$", "gold"]
+    ];
+    $$(".blk, .legacy-plan .panel, .detail-block", root).forEach((section) => {
+      const heading = $("h3, h4", section);
+      if (!heading) return;
+      const match = sectionMap.find(([pattern]) => pattern.test(heading.textContent));
+      section.classList.add("rich-section");
+      section.dataset.tone = match?.[2] || "neutral";
+      if (match && !$(".ui-icon", heading)) heading.insertAdjacentHTML("afterbegin", icon(match[1]));
+    });
+    $$(".method", root).forEach((paragraph) => paragraph.classList.add("info-note"));
+    $$(".flag", root).forEach((flag) => flag.classList.add("warning-note"));
+    $$("ul", root).forEach((list) => list.classList.add("rich-list"));
   }
 
   function detailText(title, value) {
@@ -584,10 +619,11 @@
         <img class="shop-image" src="${esc(item.image)}" alt="${esc(item.name)} card" loading="lazy">
       </button>
       <div class="shop-main">
+        <div class="shop-card-kicker">${icon(item.category === "precon" ? "▣" : "✦")}<span>${esc(item.category === "precon" ? "Sealed deck" : "Single card")}</span></div>
         <h3>${esc(item.name)}${item.quantity > 1 ? ` ×${item.quantity}` : ""}</h3>
-        <p class="shop-meta">${esc([item.manaCost, item.typeLine, money(item.price)].filter(Boolean).join(" · "))}</p>
-        <p class="shop-purpose">${esc(item.purpose || item.replaces || "")}</p>
-        <p class="shop-refs">Needed by ${item.deckRefs.map((ref) => `Deck ${ref.deckId}`).join(" + ")}</p>
+        <div class="shop-facts">${item.manaCost ? `<span>${esc(item.manaCost)}</span>` : ""}${item.typeLine ? `<span>${esc(item.typeLine)}</span>` : ""}<strong>${money(item.price)}</strong></div>
+        <p class="shop-purpose">${icon("→")}<span>${esc(item.purpose || item.replaces || "")}</span></p>
+        <div class="shop-refs"><span>Needed by</span>${item.deckRefs.map((ref) => `<b>Deck ${ref.deckId}</b>`).join("")}</div>
         <div class="shop-bottom">
           <div class="shop-badges">${categories.map((category) => `<span class="shop-badge ${esc(category)}">${esc(category)}</span>`).join("")}${item.gameChanger ? `<span class="shop-badge gc">GC</span>` : ""}</div>
           <button class="found-button">${found ? "✓ Found" : "Mark found"}</button>
