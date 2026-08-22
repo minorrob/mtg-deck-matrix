@@ -41,6 +41,12 @@
     ward: "An opponent must pay the stated extra cost when targeting this permanent, or that spell or ability is stopped.",
     stampede: "This ability rewards attacking with a large group or a high-powered creature and turns that attack into an additional payoff."
   };
+  const CARD_COPY = {
+    "high-alert": {
+      effect: "Your creatures deal combat damage using toughness instead of power. Creatures with defender are allowed to attack. You can also pay three mana to untap one creature.",
+      fit: "High Alert turns the deck’s many high-toughness defenders into attackers and keeps that plan working if Arcades is unavailable."
+    }
+  };
 
   let catalog;
   let buyCatalog;
@@ -95,7 +101,7 @@
   }
 
   function tooltipHint() {
-    return `<span class="tip-hint" aria-hidden="true">?</span>`;
+    return "";
   }
 
   function applyTooltip(element, text, action = false) {
@@ -110,7 +116,6 @@
 
   function applyTooltipWithHint(element, text, action = false) {
     applyTooltip(element, text, action);
-    if (element && !$(".tip-hint", element)) element.insertAdjacentHTML("beforeend", tooltipHint());
   }
 
   function stageTooltip(stageIndex, variants) {
@@ -143,8 +148,12 @@
   function cardEffectHtml(value) {
     const text = plainLanguage(value).trim();
     if (!text) return "";
-    const points = text.split(/(?<=[.!?])\s+|\s+[—–]\s+|;\s+/).map((part) => part.trim()).filter(Boolean);
-    return `<ul class="card-effect-list">${points.map((point) => `<li>${esc(point)}</li>`).join("")}</ul>`;
+    const points = text.split(/(?<=[.!?])\s+|\s+[—–]\s+|;\s+|\n+/).map((part) => part.trim()).filter(Boolean);
+    return `<ul class="card-effect-list">${points.map((point) => {
+      const keyword = point.toLowerCase().replace(/[.:]+$/, "");
+      const definition = KEYWORD_DEFINITIONS[keyword];
+      return `<li>${esc(definition ? `${point.replace(/[.:]+$/, "")}: ${definition}` : point)}</li>`;
+    }).join("")}</ul>`;
   }
 
   function blankState() {
@@ -271,6 +280,18 @@
     document.addEventListener("scroll", hideInfoTooltip, true);
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape" && activeTooltipTarget) hideInfoTooltip();
+    });
+  }
+
+  function initializeDetailsControls() {
+    document.addEventListener("click", (event) => {
+      const summary = event.target.closest("summary");
+      const details = summary?.parentElement;
+      if (!summary || !(details instanceof HTMLDetailsElement)) return;
+      const interactiveChild = event.target.closest("button, a, input, select, textarea, [role='button']");
+      if (interactiveChild && interactiveChild !== summary) return;
+      event.preventDefault();
+      details.open = !details.open;
     });
   }
 
@@ -498,9 +519,9 @@
     const iconName = title.includes("playstyle") ? "fit" : title.includes("Engine") ? "engine" : "roomGrow";
     const definition = title.includes("playstyle") ? TOOLTIP_DEFINITIONS.playstyle : title.includes("Engine") ? TOOLTIP_DEFINITIONS.engine : TOOLTIP_DEFINITIONS.roomGrow;
     const rowDefinitions = rows.map((row) => `${row.label}: ${row.description || "No additional definition supplied."}`).join("\n");
-    return `<section class="score-panel ${extraClass}"><h4 ${tooltipAttributes(`${definition}\n\n${rowDefinitions}`)}>${sectionIcon(iconName)}${esc(title)}${tooltipHint()}</h4><div class="score-grid">${rows.map((row) => `
-      <div ${tooltipAttributes(`${row.label}: ${row.description || "This score is specific to the selected deck and stage."}`, "score-row")}>
-        <span>${esc(row.label)}</span>
+    return `<section class="score-panel ${extraClass}"><h4 ${tooltipAttributes(`${definition}\n\n${rowDefinitions}`)}>${sectionIcon(iconName)}${esc(title)}</h4><div class="score-grid">${rows.map((row) => `
+      <div class="score-row">
+        <span ${tooltipAttributes(`${row.label}: ${row.description || "This score is specific to the selected deck and stage."}`, "score-label")}>${esc(row.label)}</span>
         <span class="score-dots" aria-label="${row.score} out of 5">${[1,2,3,4,5].map((dot) => `<i class="${dot <= row.score ? "is-on" : ""}"></i>`).join("")}</span>
         ${row.extra ? `<b>${esc(row.extra)}</b>` : ""}
       </div>`).join("")}</div></section>`;
@@ -657,6 +678,7 @@
   function ensureBuyState(variantId) {
     const existing = state.buySelections[variantId] || {};
     state.buySelections[variantId] = {
+      shell: existing.shell || [],
       upgrade: [],
       enhance: Array.from(new Set([...(existing.upgrade || []), ...(existing.enhance || [])])),
       max: existing.max || []
@@ -673,7 +695,7 @@
       <div class="page-intro">
         <div>
           <h2 id="buy-title">Build the buy plan</h2>
-          <p>The 100-card Starting Shell and Tuned purchases are included automatically. Add optional Enhance or Maxxed choices as one-for-one swaps.</p>
+          <p>Precon Starting Shells and Tuned purchases are included automatically. For singles-built Starting Shells, check the cards you need. Add optional Enhance or Maxxed choices as one-for-one swaps.</p>
         </div>
         <div class="selection-meter"><strong>${readyCount}/${selected.length || 0}</strong><span>profiles ready</span></div>
       </div>
@@ -681,7 +703,11 @@
       ${selected.some((variant) => !buyCatalog.plans[variant.id]) ? `<div class="coverage-note"><h3>Selection needs attention</h3><p>One selected variant could not be loaded. Return to Compare and select it again.</p></div>` : ""}
       ${readyCount ? `<section class="buy-overview"><h3>Shopping plan summary</h3><div class="buy-overview-grid">${selected.filter((variant) => buyCatalog.plans[variant.id]).map((variant) => {
         const plan = buyCatalog.plans[variant.id];
-        return `<button class="buy-overview-card" data-open-buy-deck="${variant.deckId}"><b>Deck ${variant.deckId}</b><strong>${esc(variant.name)}</strong><span>${esc(plan.priorityLabel || plan.budgetLabel)} · ${plan.required.length} Tuned purchases</span></button>`;
+        const current = ensureBuyState(variant.id);
+        const namedShell = (plan.startingShell || []).filter((card) => !card.isFlexibleSlot);
+        const selectedShell = new Set(current.shell || []);
+        const shellSummary = isSinglesBuiltShell(plan) ? `${namedShell.filter((card) => selectedShell.has(card.id)).reduce((sum, card) => sum + Number(card.quantity || 1), 0)}/${namedShell.reduce((sum, card) => sum + Number(card.quantity || 1), 0)} shell cards · ` : "";
+        return `<button class="buy-overview-card" data-open-buy-deck="${variant.deckId}"><b>Deck ${variant.deckId}</b><strong>${esc(variant.name)}</strong><span>${shellSummary}${esc(plan.priorityLabel || plan.budgetLabel)} · ${plan.required.length} Tuned purchases</span></button>`;
       }).join("")}</div></section>` : ""}
       ${selected.length ? `<div class="action-row action-row-top"><button class="primary-button save-buys">Save Buys → Shop List</button><button class="secondary-button" data-go="compare">Back to Compare</button></div>` : ""}
       <div id="buy-decks"></div>
@@ -705,18 +731,22 @@
     const plan = buyCatalog.plans[variant.id];
     const current = plan ? ensureBuyState(variant.id) : null;
     const optionalCount = current ? (current.upgrade?.length || 0) + (current.enhance?.length || 0) + (current.max?.length || 0) : 0;
+    const shellCards = plan && isSinglesBuiltShell(plan) ? (plan.startingShell || []).filter((card) => !card.isFlexibleSlot) : [];
+    const selectedShellIds = new Set(current?.shell || []);
+    const shellCount = shellCards.filter((card) => selectedShellIds.has(card.id)).reduce((sum, card) => sum + Number(card.quantity || 1), 0);
+    const purchaseTotal = plan ? selectedPurchaseTotal(plan, current) : null;
     const details = document.createElement("details");
     details.className = "buy-deck";
     details.open = variant.deckId === openBuyDeckId;
     details.innerHTML = `
       <summary>
         <span class="deck-number">${variant.deckId}</span>
-        <span class="buy-deck-title"><strong>${esc(variant.name)}</strong><span>${plan ? `${plan.required.length} Tuned · ${optionalCount} optional picked` : esc(variant.commander)}</span></span>
-        <span class="${plan ? "profile-ready" : "profile-gap"}">${plan ? "Connected" : "Pending"}</span>
+        <span class="buy-deck-title"><strong>${esc(variant.name)}</strong><span>${plan ? `${shellCards.length ? `${shellCount} shell card${shellCount === 1 ? "" : "s"} selected · ` : ""}${plan.required.length} Tuned · ${optionalCount} optional picked` : esc(variant.commander)}</span></span>
+        ${plan ? buyTotalMarkup(purchaseTotal) : `<span class="profile-gap">Pending</span>`}
       </summary>
       <div class="buy-body"></div>`;
     details.addEventListener("toggle", () => {
-      if (!details.open) return;
+      if (!details.isConnected || !details.open) return;
       openBuyDeckId = variant.deckId;
       $$(".buy-deck", $("#buy-decks")).forEach((other) => {
         if (other !== details) other.open = false;
@@ -734,30 +764,33 @@
         <summary><span>${icon("☰")}Deck plan &amp; analysis</span><small>How to play, buy order, bracket placement, and tuning notes</small></summary>
         <div class="legacy-plan">${plan.planHtml || variant.detailHtml || ""}</div>
       </details>
-      ${startingShellSection(variant, plan)}
+      ${startingShellSection(variant, plan, current, variant.id)}
       ${buySection("Tuned", "Required purchases for the Tuned build", plan.required, "tuned", current, variant.id)}
       ${buySection("Enhance", "Optional improvements · same strategy · generally $10 or less", plan.enhance, "enhance", current, variant.id)}
       ${buySection("Maxxed", "Optional ceiling choices · up to 3 Game Changers", plan.max, "max", current, variant.id)}`;
     decorateRichContent(body, variant);
-    ensureShellMetadata(plan.startingShell || []);
+    if (details.open) ensureShopMetadata([...(plan.startingShell || []), ...(plan.required || []), ...(plan.enhance || []), ...(plan.max || [])]);
     $$('[data-shell-card-name]', body).forEach((button) => button.addEventListener("click", () => {
       const shellCard = (plan.startingShell || []).map(resolvedShellCard).find((card) => card.name === button.dataset.shellCardName);
       if (!shellCard) return;
+      const requiresPurchase = isSinglesBuiltShell(plan);
       openBuyItemDetail({
         ...shellCard,
-        purpose: shellCard.isFlexibleSlot ? "A modeled slot whose exact card was not named in the source guide." : "This card is already included in the 100-card Starting Shell.",
-        why: shellCard.isFlexibleSlot ? "The source guide confirms the slot but does not name the exact card." : "Included in the starting deck before any Tuned, Enhance, or Maxxed swaps.",
-        whereToBuy: "Already in the starting shell",
+        category: requiresPurchase ? "shell" : "starting shell",
+        purpose: shellCard.isFlexibleSlot ? "A modeled slot whose exact card was not named in the source guide." : shellCard.oracleText,
+        why: shellCard.isFlexibleSlot ? "The source guide confirms the slot but does not name the exact card." : "",
+        whereToBuy: requiresPurchase ? "Singles case" : "Already in the starting shell",
         brief: {},
-        price: null,
-        ceiling: null
-      }, variant, "starting shell");
+        price: shellCard.price,
+        ceiling: shellCard.ceiling
+      }, variant, requiresPurchase ? "starting shell single" : "starting shell");
     }));
     $$('input[data-buy-kind]', body).forEach((checkbox) => checkbox.addEventListener("change", () => {
       const kind = checkbox.dataset.buyKind;
       const itemId = checkbox.dataset.itemId;
       const choices = new Set(ensureBuyState(variant.id)[kind] || []);
-      const item = (plan[kind] || []).find((candidate) => candidate.id === itemId);
+      const collection = kind === "shell" ? (plan.startingShell || []).filter((candidate) => !candidate.isFlexibleSlot) : (plan[kind] || []);
+      const item = collection.find((candidate) => candidate.id === itemId);
       if (checkbox.checked && kind === "max" && item?.gameChanger) {
         const selectedGameChangers = plan.max.filter((candidate) => candidate.gameChanger && choices.has(candidate.id)).length;
         if (selectedGameChangers >= 3) {
@@ -769,13 +802,33 @@
       checkbox.checked ? choices.add(itemId) : choices.delete(itemId);
       ensureBuyState(variant.id)[kind] = Array.from(choices);
       saveState();
+      if (kind === "shell") {
+        renderBuy();
+        return;
+      }
       updateCompliancePanel(body, variant, plan);
+      updateBuyTotal(details, plan, ensureBuyState(variant.id));
     }));
-    $$(".buy-item-detail", body).forEach((button) => button.addEventListener("click", () => {
+    const selectAllShell = $('[data-select-shell-all]', body);
+    if (selectAllShell) {
+      const shellIds = (plan.startingShell || []).filter((card) => !card.isFlexibleSlot).map((card) => card.id);
+      const selectedShell = new Set(current.shell || []);
+      const partiallySelected = selectedShell.size > 0 && shellIds.some((id) => !selectedShell.has(id));
+      selectAllShell.setAttribute("aria-checked", partiallySelected ? "mixed" : String(selectAllShell.checked));
+      requestAnimationFrame(() => {
+        if (selectAllShell.isConnected) selectAllShell.indeterminate = partiallySelected;
+      });
+      selectAllShell.addEventListener("change", () => {
+        ensureBuyState(variant.id).shell = selectAllShell.checked ? shellIds : [];
+        saveState(selectAllShell.checked ? "Starting Shell selected" : "Starting Shell cleared");
+        renderBuy();
+      });
+    }
+    $$(".buy-item-detail:not([data-shell-card-name])", body).forEach((button) => button.addEventListener("click", () => {
       const kind = button.dataset.itemKind;
       const collection = kind === "tuned" ? plan.required : plan[kind];
       const item = kind === "precon" ? plan.precon : (collection || []).find((candidate) => candidate.id === button.dataset.itemId);
-      if (item) openBuyItemDetail(item, variant, kind);
+      if (item) openBuyItemDetail(resolvedBuyCard(item), variant, kind);
     }));
     body.addEventListener("click", (event) => {
       const status = event.target.closest("[data-compliance-tier]");
@@ -801,7 +854,46 @@
     return details;
   }
 
+  function selectedPurchaseTotal(plan, current) {
+    const selectedShell = new Set(current?.shell || []);
+    const selectedEnhance = new Set(current?.enhance || []);
+    const selectedUpgrade = new Set(current?.upgrade || []);
+    const selectedMax = new Set(current?.max || []);
+    const purchases = [
+      ...(isSinglesBuiltShell(plan)
+        ? (plan.startingShell || []).filter((item) => !item.isFlexibleSlot && selectedShell.has(item.id)).map(resolvedShellCard)
+        : plan.precon ? [plan.precon] : []),
+      ...(plan.required || []),
+      ...(plan.upgrade || []).filter((item) => selectedUpgrade.has(item.id)),
+      ...(plan.enhance || []).filter((item) => selectedEnhance.has(item.id)),
+      ...(plan.max || []).filter((item) => selectedMax.has(item.id))
+    ];
+    return purchases.reduce((summary, item) => {
+      const quantity = Math.max(1, Number(item.quantity || 1));
+      const metadataPrice = Number(cardMetadata[itemKey(item)]?.price);
+      const price = Number(item.price) || metadataPrice || 0;
+      if (price > 0) summary.total += price * quantity;
+      else summary.unpriced += quantity;
+      return summary;
+    }, {total: 0, unpriced: 0});
+  }
+
+  function buyTotalMarkup(summary) {
+    return `<span class="buy-total" data-buy-total><small>Selected total</small><strong>$${summary.total.toFixed(2)}</strong>${summary.unpriced ? `<em>+ ${summary.unpriced} unpriced</em>` : ""}</span>`;
+  }
+
+  function updateBuyTotal(deck, plan, current) {
+    const target = $("[data-buy-total]", deck);
+    if (!target) return;
+    const summary = selectedPurchaseTotal(plan, current);
+    target.innerHTML = `<small>Selected total</small><strong>$${summary.total.toFixed(2)}</strong>${summary.unpriced ? `<em>+ ${summary.unpriced} unpriced</em>` : ""}`;
+  }
+
   const BASIC_LANDS = new Set(["plains", "island", "swamp", "mountain", "forest", "wastes", "snow-covered plains", "snow-covered island", "snow-covered swamp", "snow-covered mountain", "snow-covered forest"]);
+
+  function isSinglesBuiltShell(plan) {
+    return /\bshell \(singles\)$/i.test(String(plan?.precon?.name || ""));
+  }
 
   function resolvedShellCard(card) {
     const metadata = cardMetadata[itemKey(card)] || {};
@@ -809,8 +901,63 @@
       ...card,
       manaCost: card.manaCost || metadata.manaCost || "",
       typeLine: card.typeLine || metadata.typeLine || "Unclassified card",
-      image: card.image || metadata.image || ""
+      image: card.image || metadata.image || "",
+      oracleText: card.oracleText || metadata.oracleText || "",
+      keywords: card.keywords || metadata.keywords || [],
+      price: Number(card.price || metadata.price) || null,
+      ceiling: Number(card.ceiling || metadata.ceiling) || null,
+      metadataUnavailable: Boolean(metadata.unavailable),
+      metadataLoaded: Boolean(metadata.loaded || metadata.price !== undefined)
     };
+  }
+
+  function resolvedBuyCard(card) {
+    const metadata = cardMetadata[itemKey(card)] || {};
+    return {
+      ...card,
+      manaCost: card.manaCost || metadata.manaCost || "",
+      typeLine: card.typeLine || metadata.typeLine || "",
+      image: metadata.image || card.image || "",
+      oracleText: card.oracleText || metadata.oracleText || "",
+      keywords: card.keywords || metadata.keywords || [],
+      price: Number(card.price || metadata.price) || null,
+      ceiling: Number(card.ceiling || metadata.ceiling) || null
+    };
+  }
+
+  function isInternalBuildNote(value) {
+    return /^From the (?:Base|Tuned|Maxed) build of\b/i.test(String(value || "").trim());
+  }
+
+  function usefulCardCopy(...values) {
+    return values.find((value) => String(value || "").trim() && !isInternalBuildNote(value)) || "";
+  }
+
+  function standaloneCardEffect(item) {
+    const curated = CARD_COPY[itemKey(item)]?.effect;
+    if (curated) return curated;
+    const authored = usefulCardCopy(item.whyPrimary, item.purpose, item.why, item.alternateReason, item.oracleText);
+    if (authored) return authored;
+    const type = String(item.typeLine || "card").split("—")[0].trim().toLowerCase() || "card";
+    return `${item.name} is a ${type}. Its exact rules text is not available yet; open the card image to read the printed abilities.`;
+  }
+
+  function standaloneCardFit(item, plan) {
+    const curated = CARD_COPY[itemKey(item)]?.fit;
+    if (curated) return curated;
+    const authored = usefulCardCopy(item.brief?.fit, item.whyOptional, item.alternateReason, item.purpose);
+    if (authored) return authored;
+    const oracle = plainLanguage(usefulCardCopy(item.oracleText, item.whyPrimary, item.why));
+    const effectParts = oracle.split(/(?<=[.!?])\s+|\n+/).map((part) => part.trim()).filter(Boolean);
+    const defenderCard = /\bdefender\b/i.test(oracle) || /\bWall\b/i.test(item.typeLine || "");
+    if (defenderCard) {
+      const draws = /draw (?:a|one) card/i.test(oracle);
+      return `${item.name} blocks early and can become an attacker when this deck enables its defenders${draws ? ", while also replacing itself by drawing a card" : ""}.`;
+    }
+    const effect = effectParts.find((part) => !KEYWORD_DEFINITIONS[part.toLowerCase().replace(/[.:]+$/, "")]);
+    if (effect) return `${item.name} supports this deck with this ability: ${effect}`;
+    const roles = (item.tags || []).filter(Boolean).join(", ");
+    return roles ? `Its role in this deck is ${roles}.` : `It is included because it supports the deck’s core game plan.`;
   }
 
   function shellType(card) {
@@ -820,11 +967,60 @@
 
   function shellCardRow(card) {
     const image = card.image ? `<img src="${esc(card.image)}" alt="" loading="lazy">` : `<span class="shell-placeholder" aria-hidden="true">?</span>`;
-    return `<button type="button" class="shell-card-row" data-shell-card-name="${esc(card.name)}">${image}<span><strong>${esc(card.name)}${card.quantity > 1 ? ` ×${card.quantity}` : ""}</strong><small>${manaCostHtml(card.manaCost)}${esc(card.typeLine)}</small></span></button>`;
+    return `<button type="button" class="shell-card-row" data-shell-card-name="${esc(card.name)}">${image}<span><strong>${esc(card.name)}${card.quantity > 1 ? ` ×${card.quantity}` : ""}</strong><small>${manaCostHtml(card.manaCost)}${esc(card.typeLine)}</small><em>View details →</em></span></button>`;
   }
 
-  function startingShellSection(variant, plan) {
+  function shellPurchaseRow(card, current, variantId) {
+    const image = card.image ? `<img src="${esc(card.image)}" alt="" loading="lazy">` : `<span class="shell-placeholder" aria-hidden="true">?</span>`;
+    const checked = (current.shell || []).includes(card.id);
+    return `<div class="buy-item constructed-shell-item">
+      <input type="checkbox" ${checked ? "checked" : ""} data-buy-kind="shell" data-item-id="${esc(card.id)}" data-variant-id="${esc(variantId)}" aria-label="Add ${esc(card.name)} to the Shop List">
+      <button class="buy-item-detail" type="button" data-shell-card-name="${esc(card.name)}">
+        ${image}
+        <span class="buy-copy">
+          <span class="buy-item-eyebrow"><span class="kind-label shell">Starting Shell</span>${card.isCommander ? `<span class="commander-mini">Commander</span>` : ""}</span>
+          <strong>${esc(card.name)}${card.quantity > 1 ? ` ×${card.quantity}` : ""}</strong>
+          <small>${manaCostHtml(card.manaCost)}${esc(card.typeLine)}</small>
+        </span>
+      </button>
+      <span class="price"><small>Target</small>${card.price ? money(card.price) : card.metadataLoaded ? "Not listed" : "Loading…"}</span>
+    </div>`;
+  }
+
+  function constructedShellSection(variant, plan, cards, current, variantId) {
+    const commander = cards.find((card) => card.isCommander) || cards[0];
+    const named = cards.filter((card) => !card.isFlexibleSlot);
+    const flexibleCount = cards.filter((card) => card.isFlexibleSlot).reduce((sum, card) => sum + Number(card.quantity || 1), 0);
+    const namedCount = named.reduce((sum, card) => sum + Number(card.quantity || 1), 0);
+    const groups = new Map();
+    named.filter((card) => card !== commander).forEach((card) => {
+      const type = shellType(card);
+      if (!groups.has(type)) groups.set(type, []);
+      groups.get(type).push(card);
+    });
+    const typeOrder = ["Creature", "Instant", "Sorcery", "Artifact", "Enchantment", "Planeswalker", "Battle", "Other", "Land"];
+    const typeGroups = typeOrder.filter((type) => groups.has(type)).map((type) => {
+      const group = groups.get(type);
+      const count = group.reduce((sum, card) => sum + Number(card.quantity || 1), 0);
+      return `<details class="constructed-shell-group shell-type-group" ${type === "Creature" ? "open" : ""}>
+        <summary><span>${esc(type)}</span><b>${count}</b></summary>
+        <div class="constructed-shell-list">${group.map((card) => shellPurchaseRow(card, current, variantId)).join("")}</div>
+      </details>`;
+    }).join("");
+    const selectedCount = named.filter((card) => (current.shell || []).includes(card.id)).reduce((sum, card) => sum + Number(card.quantity || 1), 0);
+    const allSelected = named.every((card) => (current.shell || []).includes(card.id));
+    return `<section class="starting-shell constructed-shell">
+      <div class="starting-shell-heading"><span>${icon("▣")}<strong>Starting Shell · Singles to buy</strong><b>${selectedCount}/${namedCount}</b></span><label class="shell-select-all"><input type="checkbox" data-select-shell-all ${allSelected ? "checked" : ""}><span>Select all</span></label></div>
+      <p class="shell-source-note constructed-shell-note">This is not a precon. Check the individual cards you need, or use Select all, to add them to the Shop List.</p>
+      <div class="constructed-shell-commander"><h4>Commander</h4>${shellPurchaseRow(commander, current, variantId)}</div>
+      <div class="constructed-shell-groups">${typeGroups}</div>
+      ${flexibleCount ? `<p class="shell-flex-note"><b>${flexibleCount} modeled slot${flexibleCount === 1 ? "" : "s"} still need exact card names.</b> They preserve the 100-card compliance model but are not added to the Shop List until a card is named.</p>` : ""}
+    </section>`;
+  }
+
+  function startingShellSection(variant, plan, current, variantId) {
     const cards = (plan.startingShell || []).map(resolvedShellCard);
+    if (isSinglesBuiltShell(plan)) return constructedShellSection(variant, plan, cards, current, variantId);
     const commander = cards.find((card) => card.isCommander) || cards[0];
     const remaining = cards.filter((card) => card !== commander);
     const remainingCount = remaining.reduce((sum, card) => sum + Number(card.quantity || 1), 0);
@@ -1020,7 +1216,7 @@
         const impact = kind === "enhance" ? enhancementImpact(item) : null;
         const replacement = item.replaces ? `<span class="replacement-line"><b${impact ? ` class="replace-impact impact-${impact.key}" title="${esc(impact.label)}" aria-label="Replaces — ${esc(impact.label)}"` : ""}>Replaces</b><span>${esc(item.replaces)}</span></span>` : "";
         return `<div class="buy-item">
-          ${required ? `<span class="required-check" aria-label="Included">✓</span>` : `<input type="checkbox" ${checked ? "checked" : ""} data-buy-kind="${esc(kind)}" data-item-id="${esc(item.id)}" data-variant-id="${esc(variantId)}">`}
+          ${required ? `<span class="required-check" aria-label="Included">✓</span>` : `<input type="checkbox" ${checked ? "checked" : ""} data-buy-kind="${esc(kind)}" data-item-id="${esc(item.id)}" data-variant-id="${esc(variantId)}" aria-label="Add ${esc(item.name)} to the Shop List">`}
           <button class="buy-item-detail" type="button" data-item-kind="${esc(kind)}" data-item-id="${esc(item.id)}">
             <img src="${esc(item.image)}" alt="" loading="lazy">
             <span class="buy-copy">
@@ -1036,6 +1232,7 @@
   }
 
   function openBuyItemDetail(item, variant, kind) {
+    item = resolvedBuyCard(item);
     const dialog = $("#detail-sheet");
     const brief = item.brief || {};
     const plan = buyCatalog.plans[variant.id];
@@ -1069,13 +1266,13 @@
         <section class="detail-quick-box info-tip" data-tooltip="${esc(TOOLTIP_DEFINITIONS.roles)}" tabindex="0" aria-describedby="info-tooltip">${sectionIcon("roles")}<span><b>Roles</b><small>${item.tags?.length ? esc(item.tags.join(" · ")) : "General deck support"}</small></span>${tooltipHint()}</section>
         <section class="detail-quick-box info-tip" data-tooltip="${esc(TOOLTIP_DEFINITIONS.whereBuy)}" tabindex="0" aria-describedby="info-tooltip">${sectionIcon("buyLocation")}<span><b>Where to buy</b><small>${esc(item.whereToBuy || "Ask vendor")}</small></span>${tooltipHint()}</section>
       </div>
-      ${detailEffect("What this card does", item.whyPrimary || item.why || item.purpose)}
-      ${detailText("Why it is optional", item.whyOptional)}
-      ${detailText("Alternate rationale", item.alternateReason)}
-      ${detailText("Tradeoff", item.alternateTradeoff)}
+      ${detailEffect("What this card does", standaloneCardEffect(item))}
+      ${detailText("Why it is optional", usefulCardCopy(item.whyOptional))}
+      ${detailText("Alternate rationale", usefulCardCopy(item.alternateReason))}
+      ${detailText("Tradeoff", usefulCardCopy(item.alternateTradeoff))}
       ${(brief.power || brief.ease || brief.fun) ? `<section class="detail-block"><h3 ${tooltipAttributes(TOOLTIP_DEFINITIONS.cardScoring)}>${sectionIcon("scoring")}Card scoring${tooltipHint()}</h3><div class="brief-scores">
         ${briefScore("Power", brief.power)}${briefScore("Ease", brief.ease)}${briefScore("Fun", brief.fun)}
-      </div><div class="brief-insights">${brief.value ? `<p ${tooltipAttributes(TOOLTIP_DEFINITIONS.value)}>${sectionIcon("value")}<span><b>Value</b>${esc(brief.value)}</span>${tooltipHint()}</p>` : ""}${brief.fit ? `<p ${tooltipAttributes(TOOLTIP_DEFINITIONS.fit)}>${sectionIcon("fit")}<span><b>Fit</b>${esc(brief.fit)}</span>${tooltipHint()}</p>` : ""}</div></section>` : ""}
+      </div><div class="brief-insights">${brief.value ? `<p ${tooltipAttributes(TOOLTIP_DEFINITIONS.value)}>${sectionIcon("value")}<span><b>Value</b>${esc(brief.value)}</span>${tooltipHint()}</p>` : ""}<p ${tooltipAttributes(TOOLTIP_DEFINITIONS.fit)}>${sectionIcon("fit")}<span><b>Fit</b>${esc(standaloneCardFit(item, plan))}</span>${tooltipHint()}</p></div></section>` : ""}
       ${item.tcgplayerUrl ? `<p><a class="primary-button detail-link" href="${esc(item.tcgplayerUrl)}" target="_blank" rel="noopener">Search this card on TCGplayer</a></p>` : ""}`;
     decorateRichContent($("#detail-sheet-body"), variant);
     $("[data-related-card]", $("#detail-sheet-body"))?.addEventListener("click", (event) => {
@@ -1134,10 +1331,11 @@
       applyTooltipWithHint(label, `${engine ? TOOLTIP_DEFINITIONS.engine : TOOLTIP_DEFINITIONS.playstyle}\n\n${definitions}`);
     });
     $$(".fr[title]", root).forEach((row) => {
-      const label = $(".fl", row)?.textContent.trim() || "Score";
+      const labelElement = $(".fl", row);
+      const label = labelElement?.textContent.trim() || "Score";
       const definition = row.getAttribute("title");
       row.removeAttribute("title");
-      applyTooltipWithHint(row, `${label}: ${definition}`);
+      applyTooltip(labelElement, `${label}: ${definition}`);
     });
 
     $$(".rich-section", root).forEach((section) => {
@@ -1224,7 +1422,7 @@
   function briefScore(label, value) {
     if (!value) return "";
     const definition = TOOLTIP_DEFINITIONS[label.toLowerCase()] || `${label} is scored for this card in the selected deck.`;
-    return `<div ${tooltipAttributes(definition)}><span>${esc(label)}</span><b>${esc(value)}/5</b><span class="score-dots">${[1,2,3,4,5].map((dot) => `<i class="${dot <= value ? "is-on" : ""}"></i>`).join("")}</span>${tooltipHint()}</div>`;
+    return `<div><span ${tooltipAttributes(definition, "score-label")}>${esc(label)}</span><b>${esc(value)}/5</b><span class="score-dots">${[1,2,3,4,5].map((dot) => `<i class="${dot <= value ? "is-on" : ""}"></i>`).join("")}</span></div>`;
   }
 
   function itemKey(item) {
@@ -1245,8 +1443,18 @@
       const selectedEnhance = new Set(current.enhance || []);
       const selectedUpgrade = new Set(current.upgrade || []);
       const selectedMax = new Set(current.max || []);
+      const selectedShell = new Set(current.shell || []);
+      const shellPurchases = isSinglesBuiltShell(plan)
+        ? (plan.startingShell || []).filter((item) => !item.isFlexibleSlot && selectedShell.has(item.id)).map((item) => ({
+            ...resolvedShellCard(item),
+            category: "shell",
+            stage: "Starting Shell",
+            purpose: "Required single for this constructed Starting Shell.",
+            whereToBuy: "Singles case"
+          }))
+        : [];
       const items = [
-        plan.precon,
+        ...(isSinglesBuiltShell(plan) ? shellPurchases : [plan.precon]),
         ...plan.required,
         ...(plan.upgrade || []).filter((item) => selectedUpgrade.has(item.id)),
         ...plan.enhance.filter((item) => selectedEnhance.has(item.id)),
@@ -1296,7 +1504,7 @@
             <summary>Filters${activeFilterCount ? ` <b>${activeFilterCount}</b>` : ""}</summary>
             <div class="filter-select-grid">
               ${selectFilter("type", "Items", [["all","All items"],["singles","Singles"],["precons","Precons"]], filters)}
-              ${selectFilter("category", "Level", [["all","All levels"],["tuned","Tuned"],["enhance","Enhance"],["maxxed","Maxxed"]], filters)}
+              ${selectFilter("category", "Level", [["all","All levels"],["shell","Starting Shell"],["tuned","Tuned"],["enhance","Enhance"],["maxxed","Maxxed"]], filters)}
               ${selectFilter("deck", "Deck", [["all","All decks"], ...selectedVariants().map((variant) => [String(variant.deckId), `Deck ${variant.deckId}`])], filters)}
               ${selectFilter("groupBy", "Group by", [["none","No grouping"],["where","Where to look"],["rarity","Rarity"],["price","Price range"],["typeLine","Card type"],["themeSet","Theme / set"],["deckCount","# of decks"]], filters)}
             </div>
@@ -1341,7 +1549,7 @@
     const allItems = derivedShopItems();
     const visible = allItems.filter((item) => matchesFilters(item, state.shopFilters));
     const foundCount = allItems.filter((item) => state.found[item.key]).length;
-    const remainingTotal = allItems.filter((item) => !state.found[item.key]).reduce((sum, item) => sum + (Number(item.price) || 0), 0);
+    const remainingTotal = allItems.filter((item) => !state.found[item.key]).reduce((sum, item) => sum + (Number(item.price) || 0) * Number(item.quantity || 1), 0);
     $("#shop-summary", root).innerHTML = `<span><strong>${visible.length}</strong> shown · ${allItems.length - foundCount} still needed</span><span>${money(remainingTotal)} target</span>`;
     const list = $("#shop-list", root);
     list.classList.toggle("is-grouped", state.shopFilters.groupBy !== "none");
@@ -1397,33 +1605,51 @@
   }
 
   async function ensureShopMetadata(items) {
-    const missing = items.filter((item) => {
+    const missingMap = new Map();
+    items.filter((item) => !item.isFlexibleSlot).forEach((item) => {
       const metadata = cardMetadata[itemKey(item)];
-      return item.category !== "precon" && (!metadata || (!item.typeLine && !metadata.typeLine && !metadata.unavailable));
+      if (item.category !== "precon" && (!metadata || metadata.price === undefined || ((!metadata.rarity || !metadata.oracleText) && !metadata.unavailable))) missingMap.set(itemKey(item), item);
     });
+    const missing = Array.from(missingMap.values());
     if (!missing.length || shopMetadataPromise) return shopMetadataPromise;
     shopMetadataPromise = (async () => {
-      for (const item of missing) {
+      const chunks = [];
+      for (let index = 0; index < missing.length; index += 70) chunks.push(missing.slice(index, index + 70));
+      for (const chunk of chunks) {
         try {
-          let response;
-          for (let attempt = 0; attempt < 2; attempt += 1) {
-            response = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(item.name)}`);
-            if (response.ok || response.status === 404) break;
-            await new Promise((resolve) => setTimeout(resolve, 280 * (attempt + 1)));
-          }
-          const card = response?.ok ? await response.json() : null;
-          cardMetadata[itemKey(item)] = card ? {
-            rarity: card.rarity,
-            setName: card.set_name,
-            setCode: card.set,
-            manaCost: card.mana_cost || "",
-            typeLine: card.type_line || "",
-            image: card.image_uris?.small || card.card_faces?.[0]?.image_uris?.small || item.image || ""
-          } : {unavailable: true};
+          const response = await fetch("https://api.scryfall.com/cards/collection", {
+            method: "POST",
+            headers: {"Accept": "application/json;q=0.9,*/*;q=0.8", "Content-Type": "application/json"},
+            body: JSON.stringify({identifiers: chunk.map((item) => ({name: item.name}))})
+          });
+          if (!response.ok) throw new Error(`Card lookup failed: ${response.status}`);
+          const result = await response.json();
+          const found = new Map((result.data || []).map((card) => [itemKey(card), card]));
+          chunk.forEach((item) => {
+            const card = found.get(itemKey(item));
+            if (!card) {
+              cardMetadata[itemKey(item)] = {unavailable: true, loaded: true, price: null, ceiling: null};
+              return;
+            }
+            const price = Number(card.prices?.usd || card.prices?.usd_foil) || null;
+            cardMetadata[itemKey(item)] = {
+              rarity: card.rarity,
+              setName: card.set_name,
+              setCode: card.set,
+              manaCost: card.mana_cost || "",
+              typeLine: card.type_line || "",
+              oracleText: card.oracle_text || card.card_faces?.map((face) => face.oracle_text).filter(Boolean).join("\n") || "",
+              keywords: card.keywords || [],
+              image: card.image_uris?.small || card.card_faces?.[0]?.image_uris?.small || item.image || "",
+              loaded: true,
+              price,
+              ceiling: price ? Math.round(Math.max(price * 1.25, price + .5) * 100) / 100 : null
+            };
+          });
         } catch (_) {
-          cardMetadata[itemKey(item)] = {unavailable: true};
+          chunk.forEach((item) => { cardMetadata[itemKey(item)] = {unavailable: true, loaded: true, price: null, ceiling: null}; });
         }
-        await new Promise((resolve) => setTimeout(resolve, 120));
+        await new Promise((resolve) => setTimeout(resolve, 140));
       }
       localStorage.setItem("mtg-card-metadata-v1", JSON.stringify(cardMetadata));
       shopMetadataPromise = null;
@@ -1465,7 +1691,7 @@
     const card = document.createElement("article");
     card.className = `shop-card${found ? " is-found" : ""}`;
     const categories = Array.from(item.categories);
-    const levelLabels = {precon: "Precon", tuned: "Tuned", upgrade: "Enhance", enhance: "Enhance", max: "Maxxed"};
+    const levelLabels = {precon: "Precon", shell: "Starting Shell", tuned: "Tuned", upgrade: "Enhance", enhance: "Enhance", max: "Maxxed"};
     const levelBadges = categories
       .filter((category, index, values) => !(item.category === "precon" && category === "precon") && values.indexOf(category) === index)
       .map((category) => `<span class="shop-badge ${esc(category)}">${esc(levelLabels[category] || category)}</span>`)
@@ -1509,7 +1735,7 @@
     $(".shop-name-button", card).addEventListener("click", () => {
       const variant = selectedVariants().find((candidate) => item.deckRefs.some((ref) => ref.deckId === candidate.deckId)) || selectedVariants()[0];
       if (!variant) return showToast("Choose a deck variant before opening card details.");
-      const kind = item.category === "precon" ? "precon" : item.category === "tuned" ? "tuned" : item.category === "max" ? "max" : "enhance";
+      const kind = item.category === "precon" ? "precon" : item.category === "shell" ? "starting shell single" : item.category === "tuned" ? "tuned" : item.category === "max" ? "max" : "enhance";
       openBuyItemDetail(item, variant, kind);
     });
     $(".found-button", card).addEventListener("click", () => {
@@ -1660,6 +1886,7 @@
       ]);
       state = loadState();
       initializeInfoTooltips();
+      initializeDetailsControls();
       renderCompare();
       $$(".main-tab").forEach((button) => button.addEventListener("click", () => switchView(button.dataset.view)));
       $("#reset-button").addEventListener("click", resetState);
