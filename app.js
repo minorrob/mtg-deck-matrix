@@ -5,6 +5,42 @@
   const LEGACY_PICKS_KEY = "mtg-variant-picks";
   const EMAIL_TO = "robminor3@gmail.com";
   const STAGES = ["Base", "Tuned", "Maxed"];
+  const STAGE_DEFINITIONS = [
+    "Base: the starting shell or preconstructed deck before targeted purchases. It shows the theme as it works straight out of the box.",
+    "Tuned: the recommended practical build after the listed core purchases. This is the level where the variant should deliver its strategy reliably.",
+    "Maxed: the full upgrade ceiling, including the advanced ladder and up to three Game Changers. It represents the top legal end of Bracket 3."
+  ];
+  const TOOLTIP_DEFINITIONS = {
+    playstyle: "Playstyle fit measures how closely the deck matches the experience you want: defending early, building resources, combining pieces, lasting late, staying table-friendly, and expressing the cards’ story.",
+    engine: "Engine rating measures how efficiently the deck works: effect per mana, card advantage, closing speed, interaction, recovery, and the likelihood that its core engine is assembled.",
+    roomGrow: "Room to Grow measures how many useful upgrades still fit without changing the strategy, and approximately how expensive that remaining path is.",
+    addComment: "Attach feedback directly to this variant. It stays on this device and is included when you email your selections.",
+    fullDetail: "Open the complete evidence for this variant, including its commander, rank reasoning, rarity, starting product, upgrades, play pattern, scoring, and bracket route.",
+    value: "Value compares the card’s likely contribution to the deck with its purchase price and how broadly useful it is.",
+    roles: "Roles are the jobs this card performs in the deck, such as drawing cards, protecting the board, adding counters, or finishing the game.",
+    whereBuy: "Where to buy identifies the most useful place or vendor-table area to search for this item.",
+    cardScoring: "Card scoring is a five-point review of how strongly the card helps this specific deck, how easy it is to use, and how enjoyable its play pattern is.",
+    power: "Power measures how much the card improves the deck’s ability to establish its plan, answer threats, or win.",
+    ease: "Ease measures how naturally the card works without complicated timing, narrow setup, or expert rules knowledge.",
+    fun: "Fun measures how satisfying and interactive the card is likely to feel for the player and the table.",
+    fit: "Fit explains how directly the card supports this deck’s commander, mechanics, and stated game plan."
+  };
+  const KEYWORD_DEFINITIONS = {
+    flying: "This creature can normally be blocked only by creatures with flying or reach.",
+    lifelink: "Damage this creature deals also gives you that much life.",
+    deathtouch: "Any amount of damage this creature deals to another creature is enough to destroy it.",
+    vigilance: "This creature does not tap when it attacks, so it remains available to block.",
+    trample: "Extra combat damage can carry over to the defending player after blockers take enough damage.",
+    reach: "This creature can block creatures with flying.",
+    haste: "This creature can attack and use tap abilities immediately after it enters play.",
+    menace: "This creature must be blocked by at least two creatures.",
+    defender: "This creature normally cannot attack.",
+    "first strike": "This creature deals combat damage before creatures without first strike.",
+    "double strike": "This creature deals combat damage twice: once early and once during normal combat damage.",
+    indestructible: "Effects that say destroy and lethal damage do not destroy this permanent.",
+    ward: "An opponent must pay the stated extra cost when targeting this permanent, or that spell or ability is stopped.",
+    stampede: "This ability rewards attacking with a large group or a high-powered creature and turns that attack into an additional payoff."
+  };
 
   let catalog;
   let buyCatalog;
@@ -14,6 +50,7 @@
   let openBuyDeckId = 1;
   let openCommentId = null;
   let tourState = null;
+  let activeTooltipTarget = null;
   let shopMetadataPromise = null;
   let cardMetadata = {};
   try { cardMetadata = JSON.parse(localStorage.getItem("mtg-card-metadata-v1") || "{}"); } catch (_) {}
@@ -52,6 +89,34 @@
   };
   const money = (value) => Number.isFinite(Number(value)) && Number(value) > 0 ? `$${Number(value).toFixed(2)}` : "Price varies";
   const variantById = (id) => catalog.variants.find((variant) => variant.id === id);
+
+  function tooltipAttributes(text, extraClass = "") {
+    return `class="info-tip${extraClass ? ` ${esc(extraClass)}` : ""}" data-tooltip="${esc(text)}" tabindex="0" aria-describedby="info-tooltip"`;
+  }
+
+  function tooltipHint() {
+    return `<span class="tip-hint" aria-hidden="true">?</span>`;
+  }
+
+  function applyTooltip(element, text, action = false) {
+    if (!element || !text) return;
+    element.classList.add("info-tip");
+    if (action) element.classList.add("tip-action");
+    element.dataset.tooltip = text;
+    element.setAttribute("aria-describedby", "info-tooltip");
+    if (!element.matches("button, a, input, select, textarea, [tabindex]")) element.tabIndex = 0;
+    if (action && !$(".tip-hint", element)) element.insertAdjacentHTML("beforeend", tooltipHint());
+  }
+
+  function applyTooltipWithHint(element, text, action = false) {
+    applyTooltip(element, text, action);
+    if (element && !$(".tip-hint", element)) element.insertAdjacentHTML("beforeend", tooltipHint());
+  }
+
+  function stageTooltip(stageIndex, variants) {
+    const notes = variants.map((variant) => `${variant.name}: ${variant.stageNotes?.[stageIndex] || "Uses this stage’s standard definition."}`);
+    return `${STAGE_DEFINITIONS[stageIndex]}\n\nHow the five variants use it:\n${notes.join("\n")}`;
+  }
 
   function manaCostHtml(cost) {
     const value = String(cost || "").trim();
@@ -142,6 +207,73 @@
     toastTimer = setTimeout(() => toast.classList.remove("is-visible"), 2800);
   }
 
+  function positionInfoTooltip(target) {
+    const tooltip = $("#info-tooltip");
+    if (!target || tooltip.hidden) return;
+    const rect = target.getBoundingClientRect();
+    const width = Math.min(360, window.innerWidth - 20);
+    tooltip.style.width = `${width}px`;
+    const left = Math.min(window.innerWidth - width - 10, Math.max(10, rect.left + rect.width / 2 - width / 2));
+    const preferredTop = rect.bottom + 9;
+    const aboveTop = rect.top - tooltip.offsetHeight - 9;
+    const top = preferredTop + tooltip.offsetHeight <= window.innerHeight - 10 ? preferredTop : Math.max(10, aboveTop);
+    Object.assign(tooltip.style, {left: `${left}px`, top: `${top}px`});
+  }
+
+  function showInfoTooltip(target) {
+    const text = target?.dataset.tooltip;
+    if (!text) return;
+    const tooltip = $("#info-tooltip");
+    activeTooltipTarget?.classList.remove("is-tip-open");
+    activeTooltipTarget = target;
+    target.classList.add("is-tip-open");
+    tooltip.textContent = text;
+    tooltip.hidden = false;
+    requestAnimationFrame(() => positionInfoTooltip(target));
+  }
+
+  function hideInfoTooltip() {
+    activeTooltipTarget?.classList.remove("is-tip-open");
+    activeTooltipTarget = null;
+    $("#info-tooltip").hidden = true;
+  }
+
+  function initializeInfoTooltips() {
+    const finePointer = () => window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    document.addEventListener("pointerover", (event) => {
+      const target = event.target.closest("[data-tooltip]");
+      if (target && finePointer()) showInfoTooltip(target);
+    });
+    document.addEventListener("pointerout", (event) => {
+      const target = event.target.closest("[data-tooltip]");
+      if (target && finePointer() && !target.contains(event.relatedTarget)) hideInfoTooltip();
+    });
+    document.addEventListener("focusin", (event) => {
+      const target = event.target.closest("[data-tooltip]");
+      if (target) showInfoTooltip(target);
+    });
+    document.addEventListener("focusout", (event) => {
+      const target = event.target.closest("[data-tooltip]");
+      if (target && !target.contains(event.relatedTarget)) hideInfoTooltip();
+    });
+    document.addEventListener("click", (event) => {
+      const target = event.target.closest("[data-tooltip]");
+      if (!target) return hideInfoTooltip();
+      const tappedHint = Boolean(event.target.closest(".tip-hint"));
+      if (target.classList.contains("tip-action") && !tappedHint) return;
+      if (!finePointer() || tappedHint) {
+        event.preventDefault();
+        event.stopPropagation();
+        activeTooltipTarget === target ? hideInfoTooltip() : showInfoTooltip(target);
+      }
+    });
+    window.addEventListener("resize", () => activeTooltipTarget && positionInfoTooltip(activeTooltipTarget));
+    document.addEventListener("scroll", hideInfoTooltip, true);
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && activeTooltipTarget) hideInfoTooltip();
+    });
+  }
+
   function selectedVariants() {
     return catalog.decks
       .map((deck) => variantById(state.compareSelections[deck.id]))
@@ -214,7 +346,7 @@
         <p class="deck-objective">${esc(deck.objective)} <span class="swipe-hint">Swipe cards sideways →</span></p>
         <div class="rank-order" role="group" aria-label="Sort Deck ${deck.id} variants by stage ranking">
           <span>Rank order</span>
-          ${STAGES.map((label, index) => `<button class="rank-order-button${rankStage === index + 1 ? " is-active" : ""}" data-rank-stage="${index + 1}">${label}</button>`).join("")}
+          ${STAGES.map((label, index) => `<button class="rank-order-button info-tip tip-action${rankStage === index + 1 ? " is-active" : ""}" data-rank-stage="${index + 1}" data-tooltip="${esc(stageTooltip(index, variants))}" aria-describedby="info-tooltip">${label}${tooltipHint()}</button>`).join("")}
         </div>
         <div class="variant-track">${variants.length ? "" : `<div class="variant-filter-empty">${icon("⌕")}<strong>No variants match this filter in Deck ${deck.id}</strong><span>Try another mechanic, play style, or search term.</span></div>`}</div>`;
       const track = $(".variant-track", details);
@@ -320,7 +452,6 @@
           <h4>${sectionIcon("does")}What this build does</h4>
           <ul>${summary.map((item) => `<li>${esc(item)}</li>`).join("")}</ul>
         </section>
-        <p class="stage-note">${sectionIcon("notes")}<span>${esc(variant.stageNotes[stage - 1] || bracket.description || "")}</span></p>
         <div class="score-heading">${sectionIcon("scoring")}<span>Scoring profile</span></div>
         <div class="score-columns">
           ${scorePanel("Your playstyle fit", playstyle)}
@@ -328,8 +459,8 @@
         </div>
         ${scorePanel("Room to grow", growth, "growth-panel")}
         <div class="variant-card-actions">
-          <button class="comment-toggle${state.comments[variant.id] ? " has-comment" : ""}" type="button" aria-expanded="${openCommentId === variant.id}">${icon(state.comments[variant.id] ? "✓" : "“")}<span>${state.comments[variant.id] ? "Comment saved" : "Add a comment"}</span></button>
-          <button class="detail-button" type="button">View full detail →</button>
+          <button class="comment-toggle tip-action info-tip${state.comments[variant.id] ? " has-comment" : ""}" type="button" aria-expanded="${openCommentId === variant.id}" data-tooltip="${esc(TOOLTIP_DEFINITIONS.addComment)}" aria-describedby="info-tooltip">${icon(state.comments[variant.id] ? "✓" : "“")}<span>${state.comments[variant.id] ? "Comment saved" : "Add a comment"}</span>${tooltipHint()}</button>
+          <button class="detail-button tip-action info-tip" type="button" data-tooltip="${esc(TOOLTIP_DEFINITIONS.fullDetail)}" aria-describedby="info-tooltip">View full detail →${tooltipHint()}</button>
         </div>
         <div class="comment-editor" ${openCommentId === variant.id ? "" : "hidden"}>
           <label for="comment-${esc(variant.id)}">Feedback on this variant</label>
@@ -365,8 +496,10 @@
 
   function scorePanel(title, rows, extraClass = "") {
     const iconName = title.includes("playstyle") ? "fit" : title.includes("Engine") ? "engine" : "roomGrow";
-    return `<section class="score-panel ${extraClass}"><h4>${sectionIcon(iconName)}${esc(title)}</h4><div class="score-grid">${rows.map((row) => `
-      <div class="score-row" title="${esc(row.description || "")}">
+    const definition = title.includes("playstyle") ? TOOLTIP_DEFINITIONS.playstyle : title.includes("Engine") ? TOOLTIP_DEFINITIONS.engine : TOOLTIP_DEFINITIONS.roomGrow;
+    const rowDefinitions = rows.map((row) => `${row.label}: ${row.description || "No additional definition supplied."}`).join("\n");
+    return `<section class="score-panel ${extraClass}"><h4 ${tooltipAttributes(`${definition}\n\n${rowDefinitions}`)}>${sectionIcon(iconName)}${esc(title)}${tooltipHint()}</h4><div class="score-grid">${rows.map((row) => `
+      <div ${tooltipAttributes(`${row.label}: ${row.description || "This score is specific to the selected deck and stage."}`, "score-row")}>
         <span>${esc(row.label)}</span>
         <span class="score-dots" aria-label="${row.score} out of 5">${[1,2,3,4,5].map((dot) => `<i class="${dot <= row.score ? "is-on" : ""}"></i>`).join("")}</span>
         ${row.extra ? `<b>${esc(row.extra)}</b>` : ""}
@@ -396,6 +529,62 @@
     });
   }
 
+  function plainCommanderAbility(text) {
+    return plainLanguage(text)
+      .replace(/^whenever\b/i, "Each time")
+      .replace(/^at the beginning of your end step\b/i, "At the end of your turn")
+      .replace(/^at your end step\b/i, "At the end of your turn")
+      .replace(/put \+1\/\+1 counters? on (?:a|target) creature equal to/gi, "make one creature permanently stronger by adding one +1/+1 counter for each")
+      .replace(/reanimate (?:a|target) creature/gi, "return a creature card from your graveyard directly to the battlefield")
+      .replace(/mana value/gi, "total mana cost")
+      .replace(/≤/g, "no more than")
+      .replace(/\bmill (\d+)\b/gi, "put the top $1 cards of the library into the graveyard")
+      .replace(/\bscry (\d+)\b/gi, "look at the top $1 cards and move unwanted ones to the bottom")
+      .replace(/\btoken(s)?\b/gi, "temporary card$1 represented by markers")
+      .replace(/\bpermanent(s)?\b/gi, "card$1 on the battlefield")
+      .replace(/\bexile\b/gi, "remove from the game")
+      .replace(/\bgraveyard\b/gi, "discard pile")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function commanderAbilityLabel(text) {
+    const named = text.match(/^([A-Z][A-Za-z' -]{2,24})\s*[:—–-]\s*/);
+    if (named) return named[1];
+    const lower = text.toLowerCase();
+    if (/\+1\/\+1 counter|counter/.test(lower)) return "Counters";
+    if (/reanimate|return.*graveyard|graveyard/.test(lower)) return "Graveyard recovery";
+    if (/gain.*life|lifegain|life gained/.test(lower)) return "Life gain";
+    if (/life lost|pay.*life/.test(lower)) return "Life-loss payoff";
+    if (/draw.*card/.test(lower)) return "Card draw";
+    if (/create.*token|token/.test(lower)) return "Creates helpers";
+    if (/sacrifice/.test(lower)) return "Sacrifice payoff";
+    if (/attack|combat/.test(lower)) return "Combat payoff";
+    if (/enter.*battlefield|enters/.test(lower)) return "Entry trigger";
+    if (/tap|untap/.test(lower)) return "Tap ability";
+    if (/damage/.test(lower)) return "Damage effect";
+    if (/end step|end of your turn/.test(lower)) return "End-of-turn payoff";
+    return "Card ability";
+  }
+
+  function commanderAbilitiesHtml(effect) {
+    const sentences = String(effect || "").split(/(?<=[.!?])\s+/).map((part) => part.trim()).filter(Boolean);
+    const rows = [];
+    sentences.forEach((sentence) => {
+      const keywordOnly = sentence.replace(/[.!]$/, "").split(/,\s*/).map((part) => part.trim().toLowerCase());
+      if (keywordOnly.length && keywordOnly.every((keyword) => KEYWORD_DEFINITIONS[keyword])) {
+        keywordOnly.forEach((keyword) => rows.push({label: keyword.replace(/\b\w/g, (char) => char.toUpperCase()), plain: KEYWORD_DEFINITIONS[keyword], original: sentence}));
+        return;
+      }
+      const named = sentence.match(/^([A-Z][A-Za-z' -]{2,24})\s*[:—–-]\s*(.+)$/);
+      const label = named?.[1] || commanderAbilityLabel(sentence);
+      const body = named?.[2] || sentence;
+      const keywordDefinition = KEYWORD_DEFINITIONS[label.toLowerCase()];
+      rows.push({label, plain: keywordDefinition || plainCommanderAbility(body), original: sentence});
+    });
+    return `<ul class="commander-ability-list">${rows.map((row) => `<li><button type="button" ${tooltipAttributes(`Original card wording: ${row.original}`, "commander-ability")}><b>${esc(row.label)}</b><span>${esc(row.plain)}</span>${tooltipHint()}</button></li>`).join("")}</ul>`;
+  }
+
   function organizeVariantDetail(root, variant) {
     const commanderSection = detailSectionByHeading(root, /^Commander$/i);
     if (commanderSection) {
@@ -405,17 +594,34 @@
       const commanderType = cells[2]?.textContent.trim() || variant.typeLine;
       const commanderEffect = cells[3]?.textContent.trim() || "Open the card image to read the complete rules text.";
       const commanderPrice = cells[4]?.textContent.trim() || "";
-      $("#detail-sheet-context").innerHTML = `<section class="detail-aside-commander"><h3>${icon("♛")}Commander</h3><strong>${esc(commanderName)}</strong><div class="aside-commander-meta"><span>${commanderCost}</span>${commanderPrice ? `<b>${esc(commanderPrice)}</b>` : ""}</div><small>${esc(commanderType)}</small><p>${esc(commanderEffect)}</p></section>`;
+      $("#detail-sheet-context").innerHTML = `<section class="detail-aside-commander"><h3>${icon("♛")}Commander</h3><strong>${esc(commanderName)}</strong><div class="aside-commander-meta"><span>${commanderCost}</span>${commanderPrice ? `<b>${esc(commanderPrice)}</b>` : ""}</div><small>${esc(commanderType)}</small>${commanderAbilitiesHtml(commanderEffect)}</section>`;
       commanderSection.remove();
     }
 
     const raritySection = detailSectionByHeading(root, /^Deck rarity\s*[—–-]\s*by stage$/i);
     const preconSection = detailSectionByHeading(root, /^Precon seed$/i);
+    const verdict = $(".verdict", root);
+    if (verdict) {
+      const verdictTitle = $(".vhead span", verdict);
+      if (verdictTitle) verdictTitle.textContent = "Rank";
+      $$("[aria-label], title", verdict).forEach((node) => {
+        if (node.hasAttribute("aria-label")) node.setAttribute("aria-label", "Rank");
+        if (node.tagName.toLowerCase() === "title") node.textContent = "Rank";
+      });
+      verdict.classList.add("detail-rank-summary");
+    }
     if (raritySection && preconSection) {
       const split = document.createElement("div");
       split.className = "detail-summary-split";
       raritySection.before(split);
       split.append(raritySection, preconSection);
+      if (verdict) split.before(verdict);
+      const rarityMethod = $(".method", raritySection);
+      const rarityHeading = $("h3, h4", raritySection);
+      if (rarityMethod && rarityHeading) {
+        applyTooltipWithHint(rarityHeading, rarityMethod.textContent.trim());
+        rarityMethod.hidden = true;
+      }
     }
   }
 
@@ -534,6 +740,19 @@
       ${buySection("Maxxed", "Optional ceiling choices · up to 3 Game Changers", plan.max, "max", current, variant.id)}`;
     decorateRichContent(body, variant);
     ensureShellMetadata(plan.startingShell || []);
+    $$('[data-shell-card-name]', body).forEach((button) => button.addEventListener("click", () => {
+      const shellCard = (plan.startingShell || []).map(resolvedShellCard).find((card) => card.name === button.dataset.shellCardName);
+      if (!shellCard) return;
+      openBuyItemDetail({
+        ...shellCard,
+        purpose: shellCard.isFlexibleSlot ? "A modeled slot whose exact card was not named in the source guide." : "This card is already included in the 100-card Starting Shell.",
+        why: shellCard.isFlexibleSlot ? "The source guide confirms the slot but does not name the exact card." : "Included in the starting deck before any Tuned, Enhance, or Maxxed swaps.",
+        whereToBuy: "Already in the starting shell",
+        brief: {},
+        price: null,
+        ceiling: null
+      }, variant, "starting shell");
+    }));
     $$('input[data-buy-kind]', body).forEach((checkbox) => checkbox.addEventListener("change", () => {
       const kind = checkbox.dataset.buyKind;
       const itemId = checkbox.dataset.itemId;
@@ -601,7 +820,7 @@
 
   function shellCardRow(card) {
     const image = card.image ? `<img src="${esc(card.image)}" alt="" loading="lazy">` : `<span class="shell-placeholder" aria-hidden="true">?</span>`;
-    return `<div class="shell-card-row">${image}<span><strong>${esc(card.name)}${card.quantity > 1 ? ` ×${card.quantity}` : ""}</strong><small>${manaCostHtml(card.manaCost)}${esc(card.typeLine)}</small></span></div>`;
+    return `<button type="button" class="shell-card-row" data-shell-card-name="${esc(card.name)}">${image}<span><strong>${esc(card.name)}${card.quantity > 1 ? ` ×${card.quantity}` : ""}</strong><small>${manaCostHtml(card.manaCost)}${esc(card.typeLine)}</small></span></button>`;
   }
 
   function startingShellSection(variant, plan) {
@@ -623,10 +842,10 @@
     }).join("");
     const lands = groups.get("Land") || [];
     const landCount = lands.reduce((sum, card) => sum + Number(card.quantity || 1), 0);
-    const landGroup = lands.length ? `<details class="shell-type-group shell-land-group"><summary><span>Lands</span><b>${landCount}</b></summary><div class="shell-land-grid">${lands.map((card) => `<div class="shell-land-tile"><div>${card.image ? `<img src="${esc(card.image)}" alt="${esc(card.name)} card" loading="lazy">` : `<span class="shell-placeholder">?</span>`}<b>×${card.quantity}</b></div><span>${esc(card.name)}</span></div>`).join("")}</div></details>` : "";
+    const landGroup = lands.length ? `<details class="shell-type-group shell-land-group"><summary><span>Lands</span><b>${landCount}</b></summary><div class="shell-land-grid">${lands.map((card) => `<button type="button" class="shell-land-tile" data-shell-card-name="${esc(card.name)}"><div>${card.image ? `<img src="${esc(card.image)}" alt="${esc(card.name)} card" loading="lazy">` : `<span class="shell-placeholder">?</span>`}<b>×${card.quantity}</b></div><span>${esc(card.name)}</span></button>`).join("")}</div></details>` : "";
     return `<section class="starting-shell">
       <div class="starting-shell-heading"><span>${icon("▣")}<strong>Starting Shell</strong><b>100 cards</b></span><small>Included automatically</small></div>
-      <div class="shell-commander"><img src="${esc(commander?.image || variant.image)}" alt="${esc(commander?.name || variant.commander)} card" loading="lazy"><span><small>Commander · always visible</small><strong>${esc(commander?.name || variant.commander)}</strong><span>${manaCostHtml(commander?.manaCost)}${esc(commander?.typeLine || "")}</span></span></div>
+      <button type="button" class="shell-commander" data-shell-card-name="${esc(commander?.name || variant.commander)}"><img src="${esc(commander?.image || variant.image)}" alt="${esc(commander?.name || variant.commander)} card" loading="lazy"><span><small>Commander · always visible · view details</small><strong>${esc(commander?.name || variant.commander)}</strong><span>${manaCostHtml(commander?.manaCost)}${esc(commander?.typeLine || "")}</span></span></button>
       <details class="shell-library"><summary><span>View remaining ${remainingCount} cards</span><small>Nested by card type; lands have their own visual tray</small></summary><div class="shell-library-body">
         ${plan.startingShellKind === "custom-shell" ? `<p class="shell-source-note">The source guide names the retained core; unspecified slots preserve an honest 100-card model without inventing card names.</p>` : `<p class="shell-source-note">Complete published preconstructed decklist${plan.startingShellSource ? ` · <a href="${esc(plan.startingShellSource)}" target="_blank" rel="noopener">official source</a>` : ""}</p>`}
         ${cardGroups}${landGroup}
@@ -773,6 +992,22 @@
     dialog.showModal();
   }
 
+  function enhancementImpact(item) {
+    const power = Number(item?.brief?.power);
+    const evidence = [item?.whyPrimary, item?.whyOptional, item?.why, item?.purpose, item?.brief?.fit, item?.brief?.value]
+      .filter(Boolean).join(" ").toLowerCase();
+    if (/no (meaningful |material )?improvement|sidegrade|personal preference|edge preference|flavou?r choice|alternate art|cosmetic|niche meta/.test(evidence)) {
+      return {key: "edge", label: "Preference-driven or no clear power improvement"};
+    }
+    if (power >= 4 || /biggest improvement|major improvement|core engine|primary finisher|doubles (every|all)|transformative upgrade/.test(evidence)) {
+      return {key: "big", label: "Big improvement"};
+    }
+    if (power === 3 || /strong improvement|meaningful improvement|reliable (draw|removal|protection|ramp|recursion)|excellent (draw|removal|protection|ramp|recursion)/.test(evidence)) {
+      return {key: "good", label: "Good improvement"};
+    }
+    return {key: "moderate", label: "Moderate or situational improvement"};
+  }
+
   function buySection(title, note, items, kind, current, variantId) {
     if (!items?.length) return "";
     const included = kind === "tuned" || kind === "precon";
@@ -782,7 +1017,8 @@
       ${items.map((item) => {
         const required = included;
         const checked = required || (current[kind] || []).includes(item.id);
-        const replacement = item.replaces ? `<span class="replacement-line"><b>Replaces</b><span>${esc(item.replaces)}</span></span>` : "";
+        const impact = kind === "enhance" ? enhancementImpact(item) : null;
+        const replacement = item.replaces ? `<span class="replacement-line"><b${impact ? ` class="replace-impact impact-${impact.key}" title="${esc(impact.label)}" aria-label="Replaces — ${esc(impact.label)}"` : ""}>Replaces</b><span>${esc(item.replaces)}</span></span>` : "";
         return `<div class="buy-item">
           ${required ? `<span class="required-check" aria-label="Included">✓</span>` : `<input type="checkbox" ${checked ? "checked" : ""} data-buy-kind="${esc(kind)}" data-item-id="${esc(item.id)}" data-variant-id="${esc(variantId)}">`}
           <button class="buy-item-detail" type="button" data-item-kind="${esc(kind)}" data-item-id="${esc(item.id)}">
@@ -803,7 +1039,7 @@
     const dialog = $("#detail-sheet");
     const brief = item.brief || {};
     const plan = buyCatalog.plans[variant.id];
-    $("#detail-sheet-image").src = item.image.replace("version=small", "version=normal");
+    $("#detail-sheet-image").src = (cardImageCandidates(item)[0] || variant.image).replace("version=small", "version=normal").replace("/small/", "/normal/");
     $("#detail-sheet-image").alt = `${item.name} card`;
     $("#detail-sheet-kicker").textContent = `Deck ${variant.deckId} · ${kind === "tuned" ? "Tuned" : STAGES.includes(kind) ? kind : kind[0].toUpperCase() + kind.slice(1)}`;
     $("#detail-sheet-title").textContent = item.name;
@@ -828,18 +1064,27 @@
       : `
       <div class="item-meta">${item.manaCost ? `<span>${manaCostHtml(item.manaCost)}</span>` : ""}<span>${esc(item.typeLine || "")}</span><span>${money(item.price)}${item.ceiling ? ` · ceiling ${money(item.ceiling)}` : ""}</span></div>
       ${item.gameChanger ? `<p class="gc-callout">Game Changer · counts toward this deck’s limit of three in Bracket 3.</p>` : ""}
-      ${item.replaces ? `<section class="detail-block"><h3>Replaces</h3><p>${esc(item.replaces)}</p></section>` : ""}
+      <div class="detail-quick-grid">
+        <section class="detail-quick-box">${sectionIcon("does")}<span><b>Replaces</b>${item.replaces ? `<button type="button" class="related-card-link" data-related-card="${esc(item.replaces)}">${esc(item.replaces)} →</button>` : `<small>No card replaced</small>`}</span></section>
+        <section class="detail-quick-box info-tip" data-tooltip="${esc(TOOLTIP_DEFINITIONS.roles)}" tabindex="0" aria-describedby="info-tooltip">${sectionIcon("roles")}<span><b>Roles</b><small>${item.tags?.length ? esc(item.tags.join(" · ")) : "General deck support"}</small></span>${tooltipHint()}</section>
+        <section class="detail-quick-box info-tip" data-tooltip="${esc(TOOLTIP_DEFINITIONS.whereBuy)}" tabindex="0" aria-describedby="info-tooltip">${sectionIcon("buyLocation")}<span><b>Where to buy</b><small>${esc(item.whereToBuy || "Ask vendor")}</small></span>${tooltipHint()}</section>
+      </div>
       ${detailEffect("What this card does", item.whyPrimary || item.why || item.purpose)}
       ${detailText("Why it is optional", item.whyOptional)}
       ${detailText("Alternate rationale", item.alternateReason)}
       ${detailText("Tradeoff", item.alternateTradeoff)}
-      ${(brief.power || brief.ease || brief.fun) ? `<section class="detail-block"><h3>${sectionIcon("scoring")}Card scoring</h3><div class="brief-scores">
+      ${(brief.power || brief.ease || brief.fun) ? `<section class="detail-block"><h3 ${tooltipAttributes(TOOLTIP_DEFINITIONS.cardScoring)}>${sectionIcon("scoring")}Card scoring${tooltipHint()}</h3><div class="brief-scores">
         ${briefScore("Power", brief.power)}${briefScore("Ease", brief.ease)}${briefScore("Fun", brief.fun)}
-      </div><div class="brief-insights">${brief.value ? `<p>${sectionIcon("value")}<span><b>Value</b>${esc(brief.value)}</span></p>` : ""}${brief.fit ? `<p>${sectionIcon("fit")}<span><b>Fit</b>${esc(brief.fit)}</span></p>` : ""}</div></section>` : ""}
-      ${item.tags?.length ? `<section class="detail-block"><h3>Roles</h3><div class="variant-tags">${item.tags.map((tag) => `<span class="tag">${esc(tag)}</span>`).join("")}</div></section>` : ""}
-      ${detailText("Where to buy", item.whereToBuy)}
+      </div><div class="brief-insights">${brief.value ? `<p ${tooltipAttributes(TOOLTIP_DEFINITIONS.value)}>${sectionIcon("value")}<span><b>Value</b>${esc(brief.value)}</span>${tooltipHint()}</p>` : ""}${brief.fit ? `<p ${tooltipAttributes(TOOLTIP_DEFINITIONS.fit)}>${sectionIcon("fit")}<span><b>Fit</b>${esc(brief.fit)}</span>${tooltipHint()}</p>` : ""}</div></section>` : ""}
       ${item.tcgplayerUrl ? `<p><a class="primary-button detail-link" href="${esc(item.tcgplayerUrl)}" target="_blank" rel="noopener">Search this card on TCGplayer</a></p>` : ""}`;
     decorateRichContent($("#detail-sheet-body"), variant);
+    $("[data-related-card]", $("#detail-sheet-body"))?.addEventListener("click", (event) => {
+      const replacementName = event.currentTarget.dataset.relatedCard;
+      const relatedItems = [...(plan?.startingShell || []), ...(plan?.required || []), ...(plan?.enhance || []), ...(plan?.max || [])];
+      const related = relatedItems.find((candidate) => itemKey(candidate) === itemKey({name: replacementName}));
+      if (related) openBuyItemDetail({...related, whereToBuy: related.whereToBuy || "Already in the starting shell"}, variant, "starting shell");
+      else showToast(`${replacementName} is not available in this modeled shell.`);
+    });
     dialog.showModal();
   }
 
@@ -864,6 +1109,36 @@
     $$(".method", root).forEach((paragraph) => paragraph.classList.add("info-note"));
     $$(".flag", root).forEach((flag) => flag.classList.add("warning-note"));
     $$("ul", root).forEach((list) => list.classList.add("rich-list"));
+
+    $$(".rich-section", root).forEach((section) => {
+      const heading = $("h3, h4", section);
+      if (!heading) return;
+      const headingText = heading.textContent.trim();
+      const standardDefinition = /room to grow/i.test(headingText) ? TOOLTIP_DEFINITIONS.roomGrow
+        : /card scoring/i.test(headingText) ? TOOLTIP_DEFINITIONS.cardScoring
+          : /^value$/i.test(headingText) ? TOOLTIP_DEFINITIONS.value
+            : /^roles$/i.test(headingText) ? TOOLTIP_DEFINITIONS.roles
+              : /(where|how) to buy/i.test(headingText) ? TOOLTIP_DEFINITIONS.whereBuy
+                : /^fit$/i.test(headingText) ? TOOLTIP_DEFINITIONS.fit : "";
+      if (!standardDefinition) return;
+      const method = $(".method", section);
+      applyTooltipWithHint(heading, method?.textContent.trim() || standardDefinition);
+      if (method && /room to grow/i.test(headingText)) method.hidden = true;
+    });
+
+    $$(".sclbl", root).forEach((label) => {
+      const fitGroup = label.nextElementSibling;
+      const rows = fitGroup ? $$(".fr[title]", fitGroup) : [];
+      const engine = label.classList.contains("eng") || /engine/i.test(label.textContent);
+      const definitions = rows.map((row) => `${$(".fl", row)?.textContent.trim() || "Score"}: ${row.getAttribute("title")}`).join("\n");
+      applyTooltipWithHint(label, `${engine ? TOOLTIP_DEFINITIONS.engine : TOOLTIP_DEFINITIONS.playstyle}\n\n${definitions}`);
+    });
+    $$(".fr[title]", root).forEach((row) => {
+      const label = $(".fl", row)?.textContent.trim() || "Score";
+      const definition = row.getAttribute("title");
+      row.removeAttribute("title");
+      applyTooltipWithHint(row, `${label}: ${definition}`);
+    });
 
     $$(".rich-section", root).forEach((section) => {
       const heading = $("h3, h4", section);
@@ -948,7 +1223,8 @@
 
   function briefScore(label, value) {
     if (!value) return "";
-    return `<div><span>${esc(label)}</span><b>${esc(value)}/5</b><span class="score-dots">${[1,2,3,4,5].map((dot) => `<i class="${dot <= value ? "is-on" : ""}"></i>`).join("")}</span></div>`;
+    const definition = TOOLTIP_DEFINITIONS[label.toLowerCase()] || `${label} is scored for this card in the selected deck.`;
+    return `<div ${tooltipAttributes(definition)}><span>${esc(label)}</span><b>${esc(value)}/5</b><span class="score-dots">${[1,2,3,4,5].map((dot) => `<i class="${dot <= value ? "is-on" : ""}"></i>`).join("")}</span>${tooltipHint()}</div>`;
   }
 
   function itemKey(item) {
@@ -1202,7 +1478,7 @@
       </button>
       <div class="shop-main">
         <div class="shop-card-kicker">${icon(item.category === "precon" ? "▣" : "✦")}<span>${esc(item.category === "precon" ? "Precon" : "Single card")}</span>${rarityIcon(rarityKey, rarity)}${levelBadges}${item.gameChanger ? `<span class="shop-badge gc">GC</span>` : ""}</div>
-        <h3>${esc(item.name)}${item.quantity > 1 ? ` ×${item.quantity}` : ""}</h3>
+        <h3><button type="button" class="shop-name-button">${esc(item.name)}${item.quantity > 1 ? ` ×${item.quantity}` : ""} →</button></h3>
         <div class="shop-facts">${item.manaCost ? `<span>${manaCostHtml(item.manaCost)}</span>` : ""}${displayType ? `<span>${esc(displayType)}</span>` : ""}</div>
         <div class="shop-buying-facts" aria-label="Buying guide">
           <div>${sectionIcon("buyLocation")}<span><small>Table location</small><strong>${esc(tableLocation)}</strong></span></div>
@@ -1230,6 +1506,12 @@
       cardImage.src = "og.png";
     });
     $(".shop-image-button", card).addEventListener("click", () => openCardPreview(item));
+    $(".shop-name-button", card).addEventListener("click", () => {
+      const variant = selectedVariants().find((candidate) => item.deckRefs.some((ref) => ref.deckId === candidate.deckId)) || selectedVariants()[0];
+      if (!variant) return showToast("Choose a deck variant before opening card details.");
+      const kind = item.category === "precon" ? "precon" : item.category === "tuned" ? "tuned" : item.category === "max" ? "max" : "enhance";
+      openBuyItemDetail(item, variant, kind);
+    });
     $(".found-button", card).addEventListener("click", () => {
       state.found[item.key] = !found;
       saveState(!found ? `${item.name} marked found` : `${item.name} returned to Need`);
@@ -1377,6 +1659,7 @@
         })
       ]);
       state = loadState();
+      initializeInfoTooltips();
       renderCompare();
       $$(".main-tab").forEach((button) => button.addEventListener("click", () => switchView(button.dataset.view)));
       $("#reset-button").addEventListener("click", resetState);
