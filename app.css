@@ -103,14 +103,15 @@ main { width: min(1180px, 100%); min-height: 70vh; margin: 0 auto; padding: 18px
 .variant-track { display: grid; grid-auto-flow: column; grid-auto-columns: min(88vw, 390px); gap: 12px; overflow-x: auto; padding: 13px; scroll-snap-type: x mandatory; scrollbar-color: #baa974 transparent; }
 .variant-card { position: relative; display: flex; flex-direction: column; min-height: 490px; border: 1px solid #d8cdb2; border-radius: 16px; overflow: hidden; background: #fffdf8; scroll-snap-align: center; }
 .variant-card.is-selected { border: 2px solid var(--gold); box-shadow: 0 0 0 3px rgba(198,151,53,.18); }
-.rank-badge { position: absolute; top: 8px; left: 8px; z-index: 3; min-width: 50px; padding: 5px 7px; border: 1px solid rgba(255,255,255,.72); border-radius: 9px; color: #3f2c09; background: linear-gradient(145deg,#f7dc7d,#c99b32); box-shadow: 0 3px 9px rgba(0,0,0,.28); text-align: center; }
-.rank-badge span { display: block; font: 900 16px/1 Georgia,serif; }
-.rank-badge small { display: block; margin-top: 2px; font-size: 7px; font-weight: 900; letter-spacing: .03em; text-transform: uppercase; }
+.rank-badge { width: 100%; display: flex; align-items: center; justify-content: center; gap: 3px; min-width: 0; padding: 3px 4px; border: 1px solid rgba(255,255,255,.72); border-radius: 6px; color: #3f2c09; background: linear-gradient(145deg,#f7dc7d,#c99b32); box-shadow: 0 2px 5px rgba(0,0,0,.2); text-align: center; }
+.rank-badge span { display: block; font: 900 12px/1 Georgia,serif; }
+.rank-badge small { display: block; margin: 0; font-size: 6px; font-weight: 900; letter-spacing: .02em; text-transform: uppercase; white-space: nowrap; }
 .rank-badge.rank-2 { background: linear-gradient(145deg,#f3f5f6,#aeb6bd); }
 .rank-badge.rank-3 { background: linear-gradient(145deg,#efc39f,#b16f43); }
 .rank-badge.rank-4, .rank-badge.rank-5 { color: #fff; background: linear-gradient(145deg,#7b8a89,#485652); }
 .variant-hero { display: grid; grid-template-columns: 82px 1fr; gap: 11px; padding: 12px; background: linear-gradient(120deg, #193d31, #29614d); color: #fff; }
-.variant-hero > div { min-width: 0; padding-right: 38px; }
+.variant-visual { min-width: 0; display: grid; align-content: start; gap: 4px; }
+.variant-copy { min-width: 0; padding-right: 38px; }
 .variant-hero img { width: 82px; aspect-ratio: .715; object-fit: cover; border-radius: 7px; background: #355a4d; box-shadow: 0 3px 9px rgba(0,0,0,.25); }
 .variant-hero h3 { margin: 2px 0 6px; font: 800 18px/1.12 Georgia, serif; }
 .commander { margin: 0; color: #e5d3a2; font-size: 12px; line-height: 1.35; }
@@ -162,11 +163,11 @@ main { width: min(1180px, 100%); min-height: 70vh; margin: 0 auto; padding: 18px
 .ui-icon { display: inline-grid; flex: 0 0 auto; place-items: center; width: 21px; height: 21px; border-radius: 7px; color: #fff; background: var(--forest-2); font: 900 11px/1 ui-sans-serif,sans-serif; }
 .section-icon { flex: 0 0 auto; width: 25px; height: 25px; display: block; border: 1px solid #bda97f; border-radius: 6px; object-fit: cover; background: #eadbb9; box-shadow: 0 1px 3px rgba(42,31,17,.18); }
 .metric-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; }
-.metric-tile { min-width: 0; display: grid; grid-template-columns: 25px minmax(0,1fr); grid-template-rows: auto auto; column-gap: 6px; row-gap: 1px; align-items: center; min-height: 53px; padding: 7px; border: 1px solid #ded4bd; border-radius: 10px; background: #f7f2e6; }
+.metric-tile { min-width: 0; display: grid; grid-template-columns: 23px minmax(0,1fr); grid-template-rows: auto auto; column-gap: 5px; row-gap: 0; align-items: center; min-height: 42px; padding: 4px 6px; border: 1px solid #ded4bd; border-radius: 10px; background: #f7f2e6; }
 .metric-tile .ui-icon, .metric-tile .section-icon { grid-row: 1/3; }
-.metric-tile .section-icon { width: 24px; height: 24px; }
-.metric-tile > span { color: var(--muted); font-size: 8px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; }
-.metric-tile > strong { min-width: 0; overflow: hidden; color: var(--forest); font-size: 11px; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
+.metric-tile .section-icon { width: 22px; height: 22px; }
+.metric-tile > span { align-self: end; color: var(--muted); font-size: 8px; line-height: 1.05; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; }
+.metric-tile > strong { min-width: 0; align-self: start; overflow: hidden; color: var(--forest); font-size: 11px; line-height: 1.05; text-overflow: ellipsis; white-space: nowrap; }
 .bracket-metric .ui-icon { background: var(--blue); }
 .rarity-metric .ui-icon { background: #6a4b85; }
 .cost-metric .ui-icon { color: #4c350e; background: var(--gold-soft); }
@@ -346,7 +347,7 @@ main { width: min(1180px, 100%); min-height: 70vh; margin: 0 auto; padding: 18px
 .shop-group-heading h3 { margin: 0; color: var(--forest); font: 800 18px/1.15 "Palatino Linotype",Palatino,Georgia,serif; }
 .shop-group-heading span { padding: 4px 7px; border-radius: 999px; color: var(--forest); background: #e3ece6; font-size: 9px; font-weight: 900; }
 .shop-group-grid { display: grid; gap: 9px; }
-.shop-card { display: grid; grid-template-columns: 120px minmax(0,1fr); gap: 10px; padding: 9px; border: 1px solid var(--line); border-radius: 15px; background: var(--surface); box-shadow: 0 4px 12px rgba(31,42,36,.08); }
+.shop-card { position: relative; display: grid; grid-template-columns: 120px minmax(0,1fr); gap: 10px; padding: 9px; border: 1px solid var(--line); border-radius: 15px; background: var(--surface); box-shadow: 0 4px 12px rgba(31,42,36,.08); }
 .shop-card.is-found { opacity: .58; background: #e7ebdf; }
 .shop-image-button { align-self: start; width: 120px; padding: 0; border: 0; border-radius: 9px; background: none; cursor: zoom-in; }
 .shop-image { display: block; width: 120px; aspect-ratio: .715; object-fit: cover; border-radius: 9px; background: #d5d0c2; }
@@ -590,6 +591,12 @@ footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px;
   .shop-image-button, .shop-image { width: 96px; }
   .shop-buying-facts { grid-template-columns: 1fr; }
   .shop-main h3 { font-size: 15px; }
+}
+
+@media (max-width: 620px) and (orientation: portrait) {
+  .shop-card { min-height: 205px; }
+  .shop-bottom { position: absolute; top: 152px; left: 9px; width: 96px; margin: 0; }
+  .shop-bottom .found-button { width: 100%; min-height: 44px; padding: 6px 4px; font-size: 10px; }
 }
 
 @media (max-height: 520px) and (orientation: landscape) {

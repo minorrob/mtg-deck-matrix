@@ -299,10 +299,12 @@
         <input type="checkbox" ${selected ? "checked" : ""} aria-label="Pick ${esc(variant.name)}">
         <span>${selected ? "Picked" : "Pick"}</span>
       </label>
-      <div class="rank-badge rank-${rank}" aria-label="Rank ${rank} of 5 for ${STAGES[rankStage - 1]}"><span>#${rank}</span><small>${STAGES[rankStage - 1]} rank</small></div>
       <div class="variant-hero">
-        <img src="${esc(variant.image)}" alt="${esc(variant.commander)} card" loading="lazy">
-        <div>
+        <div class="variant-visual">
+          <img src="${esc(variant.image)}" alt="${esc(variant.commander)} card" loading="lazy">
+          <div class="rank-badge rank-${rank}" aria-label="Rank ${rank} of 5 for ${STAGES[rankStage - 1]}"><span>#${rank}</span><small>${STAGES[rankStage - 1]} rank</small></div>
+        </div>
+        <div class="variant-copy">
           <div class="variant-tags">${variant.tags.map((tag) => `<span class="tag">${esc(tag)}</span>`).join("")}</div>
           <h3>${esc(variant.name)}</h3>
           <p class="commander">${esc(variant.commander)}<br><span class="mana">${manaCostHtml(variant.manaCost)}<span>${esc(variant.typeLine)}</span></span></p>
