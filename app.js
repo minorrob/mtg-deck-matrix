@@ -12,6 +12,10 @@
   let toastTimer;
   let openDeckId = 1;
   let openBuyDeckId = 1;
+  let openCommentId = null;
+  let shopMetadataPromise = null;
+  let cardMetadata = {};
+  try { cardMetadata = JSON.parse(localStorage.getItem("mtg-card-metadata-v1") || "{}"); } catch (_) {}
 
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
@@ -27,7 +31,9 @@
       rankStages: {},
       buySelections: {},
       found: {},
-      shopFilters: { status: "need", type: "all", category: "all", deck: "all", query: "" }
+      comments: {},
+      compareFilters: {query: "", mechanic: "all", playstyle: "all", profileStage: "2"},
+      shopFilters: { status: "need", type: "all", category: "all", deck: "all", groupBy: "none", query: "" }
     };
   }
 
@@ -44,6 +50,8 @@
           rankStages: saved.rankStages || {},
           buySelections: saved.buySelections || {},
           found: saved.found || {},
+          comments: saved.comments || {},
+          compareFilters: {...initial.compareFilters, ...(saved.compareFilters || {})},
           shopFilters: {...initial.shopFilters, ...(saved.shopFilters || {})}
         };
       }
@@ -102,6 +110,11 @@
   function renderCompare() {
     const root = $("#view-compare");
     const selected = selectedVariants();
+    const filters = state.compareFilters;
+    const mechanics = Array.from(new Set(catalog.variants.flatMap((variant) => variant.mechanics || []))).sort();
+    const playstyles = catalog.variants[0]?.scores?.playstyle?.[0]?.map((score) => score.label) || [];
+    const visibleTotal = catalog.variants.filter(matchesCompareFilters).length;
+    const activeFilterCount = [filters.mechanic, filters.playstyle].filter((value) => value !== "all").length + (filters.query ? 1 : 0);
     root.innerHTML = `
       <div class="page-intro">
         <div>
@@ -114,6 +127,15 @@
         <button class="primary-button" id="save-picks" ${selected.length ? "" : "disabled"}>Save Picks → Buy Picks</button>
         <button class="secondary-button" id="email-picks" ${selected.length ? "" : "disabled"}>Email selections</button>
       </div>
+      <section class="compare-filter-panel">
+        <div class="compare-filter-heading"><div>${icon("⌕")}<span><b>Find a variant</b><small>${visibleTotal} of 30 shown${activeFilterCount ? ` · ${activeFilterCount} active filters` : ""}</small></span></div>${activeFilterCount ? `<button id="clear-compare-filters">Clear</button>` : ""}</div>
+        <div class="compare-filter-grid">
+          <label class="compare-search"><span>Search</span><input id="compare-search" type="search" value="${esc(filters.query)}" placeholder="Commander, role, tag, or text…"></label>
+          ${compareSelect("mechanic", "Mechanic", [["all","All mechanics"], ...mechanics.map((value) => [value,value])], filters.mechanic)}
+          ${compareSelect("playstyle", "Play style", [["all","All play styles"], ...playstyles.map((value) => [value,`${value} · 4+`])], filters.playstyle)}
+          ${compareSelect("profileStage", "Score stage", [["1","Base"],["2","Tuned"],["3","Maxed"]], filters.profileStage)}
+        </div>
+      </section>
       <div id="deck-groups"></div>`;
 
     const groups = $("#deck-groups", root);
@@ -122,6 +144,7 @@
       const rankStage = Number(state.rankStages[deck.id] || 2);
       const variants = catalog.variants
         .filter((variant) => variant.deckId === deck.id)
+        .filter(matchesCompareFilters)
         .sort((a, b) => (a.ranks?.[rankStage - 1] || a.order) - (b.ranks?.[rankStage - 1] || b.order));
       const details = document.createElement("details");
       details.className = "deck-group";
@@ -129,7 +152,7 @@
       details.innerHTML = `
         <summary>
           <span class="deck-number">${deck.id}</span>
-          <span class="deck-summary-copy"><strong>${esc(deck.title)}</strong><span>${chosenId ? `Picked: ${esc(variantById(chosenId).name)}` : "Choose one of five variants"}</span></span>
+          <span class="deck-summary-copy"><strong>${esc(deck.title)}</strong><span>${chosenId ? `Picked: ${esc(variantById(chosenId).name)} · ` : ""}${variants.length} of 5 shown</span></span>
           <span class="deck-chevron" aria-hidden="true">›</span>
         </summary>
         <p class="deck-objective">${esc(deck.objective)} <span class="swipe-hint">Swipe cards sideways →</span></p>
@@ -137,7 +160,7 @@
           <span>Rank order</span>
           ${STAGES.map((label, index) => `<button class="rank-order-button${rankStage === index + 1 ? " is-active" : ""}" data-rank-stage="${index + 1}">${label}</button>`).join("")}
         </div>
-        <div class="variant-track"></div>`;
+        <div class="variant-track">${variants.length ? "" : `<div class="variant-filter-empty">${icon("⌕")}<strong>No variants match this filter in Deck ${deck.id}</strong><span>Try another mechanic, play style, or search term.</span></div>`}</div>`;
       const track = $(".variant-track", details);
       variants.forEach((variant) => track.appendChild(makeVariantCard(variant, rankStage)));
       $$(".rank-order-button", details).forEach((button) => button.addEventListener("click", () => {
@@ -163,6 +186,40 @@
       switchView("buy");
     });
     $("#email-picks", root).addEventListener("click", emailPicks);
+    $("#compare-search", root).addEventListener("input", (event) => {
+      state.compareFilters.query = event.target.value;
+      saveState();
+      renderCompare();
+      $("#compare-search")?.focus();
+    });
+    $$('[data-compare-filter]', root).forEach((select) => select.addEventListener("change", () => {
+      state.compareFilters[select.dataset.compareFilter] = select.value;
+      saveState();
+      renderCompare();
+    }));
+    $("#clear-compare-filters", root)?.addEventListener("click", () => {
+      state.compareFilters = {...blankState().compareFilters};
+      saveState();
+      renderCompare();
+    });
+  }
+
+  function compareSelect(field, label, options, value) {
+    return `<label><span>${esc(label)}</span><select data-compare-filter="${esc(field)}">${options.map(([option, text]) => `<option value="${esc(option)}" ${String(value) === String(option) ? "selected" : ""}>${esc(text)}</option>`).join("")}</select></label>`;
+  }
+
+  function matchesCompareFilters(variant) {
+    const filters = state.compareFilters;
+    const stageIndex = Number(filters.profileStage || 2) - 1;
+    if (filters.mechanic !== "all" && !(variant.mechanics || []).includes(filters.mechanic)) return false;
+    if (filters.playstyle !== "all") {
+      const score = (variant.scores?.playstyle?.[stageIndex] || []).find((item) => item.label === filters.playstyle);
+      if (!score || score.score < 4) return false;
+    }
+    const query = filters.query.trim().toLowerCase();
+    if (!query) return true;
+    const haystack = [variant.name, variant.commander, variant.typeLine, ...(variant.tags || []), ...(variant.mechanics || []), ...(variant.summaries || []).flat(), ...(variant.stageNotes || [])].join(" ").toLowerCase();
+    return haystack.includes(query);
   }
 
   function makeVariantCard(variant, rankStage = 2) {
@@ -191,6 +248,7 @@
           <div class="variant-tags">${variant.tags.map((tag) => `<span class="tag">${esc(tag)}</span>`).join("")}</div>
           <h3>${esc(variant.name)}</h3>
           <p class="commander">${esc(variant.commander)}<br><span class="mana">${esc(variant.manaCost)} · ${esc(variant.typeLine)}</span></p>
+          <div class="mechanic-tags">${(variant.mechanics || []).slice(0,3).map((mechanic) => `<span>${esc(mechanic)}</span>`).join("")}</div>
         </div>
       </div>
       <div class="stage-switch" role="group" aria-label="Investment level">
@@ -215,7 +273,15 @@
           ${scorePanel("Engine rating", engine)}
         </div>
         ${scorePanel("Room to grow", growth, "growth-panel")}
-        <button class="detail-button" type="button">View full detail →</button>
+        <div class="variant-card-actions">
+          <button class="comment-toggle${state.comments[variant.id] ? " has-comment" : ""}" type="button" aria-expanded="${openCommentId === variant.id}">${icon(state.comments[variant.id] ? "✓" : "“")}<span>${state.comments[variant.id] ? "Comment saved" : "Add a comment"}</span></button>
+          <button class="detail-button" type="button">View full detail →</button>
+        </div>
+        <div class="comment-editor" ${openCommentId === variant.id ? "" : "hidden"}>
+          <label for="comment-${esc(variant.id)}">Feedback on this variant</label>
+          <textarea id="comment-${esc(variant.id)}" maxlength="1200" placeholder="What do you like, dislike, or want changed?">${esc(state.comments[variant.id] || "")}</textarea>
+          <small>Saved on this device · included in email when this variant is selected</small>
+        </div>
       </div>`;
 
     $("img", card).addEventListener("error", (event) => {
@@ -224,6 +290,22 @@
     });
     $(".pick-control input", card).addEventListener("change", () => selectVariant(variant));
     $(".detail-button", card).addEventListener("click", () => openVariantDetail(variant, stage));
+    $(".comment-toggle", card).addEventListener("click", () => {
+      openCommentId = openCommentId === variant.id ? null : variant.id;
+      const editor = $(".comment-editor", card);
+      editor.hidden = openCommentId !== variant.id;
+      $(".comment-toggle", card).setAttribute("aria-expanded", String(!editor.hidden));
+      if (!editor.hidden) $("textarea", editor).focus();
+    });
+    $(".comment-editor textarea", card).addEventListener("input", (event) => {
+      const value = event.target.value;
+      if (value.trim()) state.comments[variant.id] = value;
+      else delete state.comments[variant.id];
+      saveState("Comment saved");
+      const toggle = $(".comment-toggle", card);
+      toggle.classList.toggle("has-comment", Boolean(value.trim()));
+      $("span:not(.ui-icon)", toggle).textContent = value.trim() ? "Comment saved" : "Add a comment";
+    });
     $$(".stage-button", card).forEach((button) => button.addEventListener("click", () => {
       state.stages[variant.id] = Number(button.dataset.stage);
       saveState();
@@ -276,7 +358,10 @@
     const body = [
       "Hey, here are the variants for each deck that I'd probably lean toward:",
       "",
-      ...picks.map((variant) => `${variant.deckId} - ${variant.name}`)
+      ...picks.flatMap((variant) => {
+        const comment = String(state.comments[variant.id] || "").trim();
+        return comment ? [`${variant.deckId} - ${variant.name}`, `Feedback: ${comment}`, ""] : [`${variant.deckId} - ${variant.name}`];
+      })
     ].join("\n");
     window.location.href = `mailto:${EMAIL_TO}?subject=${encodeURIComponent("My choices")}&body=${encodeURIComponent(body)}`;
   }
@@ -351,6 +436,7 @@
     }
 
     body.innerHTML = `
+      ${compliancePanel(variant, plan, current)}
       <details class="plan-analysis">
         <summary><span>${icon("☰")}Deck plan &amp; analysis</span><small>How to play, buy order, bracket placement, and tuning notes</small></summary>
         <div class="legacy-plan">${plan.planHtml || ""}</div>
@@ -375,13 +461,155 @@
       checkbox.checked ? choices.add(itemId) : choices.delete(itemId);
       ensureBuyState(variant.id)[kind] = Array.from(choices);
       saveState();
+      updateCompliancePanel(body, variant, plan);
     }));
     $$(".buy-item-detail", body).forEach((button) => button.addEventListener("click", () => {
       const kind = button.dataset.itemKind;
       const item = kind === "precon" ? plan.precon : (plan[kind] || []).find((candidate) => candidate.id === button.dataset.itemId);
       if (item) openBuyItemDetail(item, variant, kind);
     }));
+    body.addEventListener("click", (event) => {
+      const status = event.target.closest("[data-compliance-tier]");
+      if (status) openComplianceDetail(variant, evaluateDeckCompliance(plan, ensureBuyState(variant.id)), Number(status.dataset.complianceTier));
+      const composition = event.target.closest("[data-composition-detail]");
+      if (composition) openComplianceDetail(variant, evaluateDeckCompliance(plan, ensureBuyState(variant.id)), 0);
+    });
     return details;
+  }
+
+  const BASIC_LANDS = new Set(["plains", "island", "swamp", "mountain", "forest", "wastes", "snow-covered plains", "snow-covered island", "snow-covered swamp", "snow-covered mountain", "snow-covered forest"]);
+
+  function compliancePanel(variant, plan, current) {
+    const result = evaluateDeckCompliance(plan, current);
+    const tierButton = (tier) => {
+      const violations = result[`tier${tier}`];
+      const compliant = violations.length === 0;
+      return `<button class="compliance-status ${compliant ? "is-compliant" : "is-noncompliant"}" data-compliance-tier="${tier}">
+        <span>Tier ${tier}</span><strong>${compliant ? "✓ Compliant" : "! Non-Compliant"}</strong><small>${compliant ? "Tracked rules passed" : `${violations.length} issue${violations.length === 1 ? "" : "s"} · view details`}</small>
+      </button>`;
+    };
+    const countState = result.total === 100 ? "is-compliant" : "is-noncompliant";
+    const landPercent = result.total ? Math.min(100, Math.round((result.types.Land || 0) / result.total * 100)) : 0;
+    return `<section class="deck-compliance" data-compliance-panel>
+      <div class="compliance-heading"><div>${icon("✓")}<span><b>Commander deck check</b><small>Tracked 4-player construction and Tier 2–3 rules</small></span></div><span class="audit-note">Guideline check</span></div>
+      <div class="compliance-grid">
+        ${tierButton(2)}${tierButton(3)}
+        <button class="card-count-status ${countState}" data-composition-detail>
+          <span>Card count</span><strong>${result.total}<small>/100</small></strong><small>${result.total === 100 ? "Exact" : result.total < 100 ? `${100 - result.total} under` : `${result.total - 100} over`} · composition</small>
+        </button>
+      </div>
+      <button class="composition-strip" data-composition-detail aria-label="View deck composition details">
+        <span class="land-segment" style="width:${landPercent}%"></span><span class="other-segment" style="width:${100 - landPercent}%"></span>
+        <b>${result.types.Land || 0} lands</b><b>${result.total - (result.types.Land || 0)} other</b><em>View breakdown →</em>
+      </button>
+      ${result.compositionWarnings.length ? `<p class="composition-warning">${icon("!")}<span>${esc(result.compositionWarnings[0])}</span></p>` : ""}
+    </section>`;
+  }
+
+  function updateCompliancePanel(body, variant, plan) {
+    const existing = $("[data-compliance-panel]", body);
+    if (!existing) return;
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = compliancePanel(variant, plan, ensureBuyState(variant.id));
+    existing.replaceWith(wrapper.firstElementChild);
+  }
+
+  function evaluateDeckCompliance(plan, current) {
+    const cards = new Map();
+    const normalize = (value) => String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+    const addCard = (item, source) => {
+      const key = normalize(item.name);
+      const existing = cards.get(key);
+      const quantity = Number(item.quantity || 1);
+      if (existing) existing.quantity += quantity;
+      else cards.set(key, {
+        name: item.name,
+        quantity,
+        typeLine: item.typeLine || "Unknown",
+        tags: item.tags || [],
+        isCommander: Boolean(item.isCommander || (item.tags || []).some((tag) => String(tag).toLowerCase() === "commander")),
+        gameChanger: Boolean(item.gameChanger),
+        source
+      });
+    };
+    const removeCard = (target) => {
+      const key = normalize(target);
+      const existing = cards.get(key);
+      if (!existing) return false;
+      existing.quantity -= 1;
+      if (existing.quantity <= 0) cards.delete(key);
+      return true;
+    };
+    (plan.baseCards || []).forEach((card) => addCard(card, "original deck"));
+    (plan.required || []).forEach((card) => addCard(card, "required upgrade"));
+
+    const selected = [
+      ...(plan.enhance || []).filter((item) => (current.enhance || []).includes(item.id)),
+      ...(plan.max || []).filter((item) => (current.max || []).includes(item.id))
+    ];
+    const replacementUse = new Map();
+    const replacementIssues = [];
+    selected.forEach((item) => {
+      const target = String(item.replaces || "").replace(/^(replaces|swaps in for)\s+/i, "").trim();
+      if (target) {
+        const targetKey = normalize(target);
+        const prior = replacementUse.get(targetKey);
+        if (prior) replacementIssues.push({card: item.name, rule: `Both ${prior} and ${item.name} replace ${target}`, detail: "Choose only one replacement for that slot."});
+        replacementUse.set(targetKey, item.name);
+        if (!removeCard(target)) replacementIssues.push({card: item.name, rule: `Replacement target not found: ${target}`, detail: "The selected card adds a slot until a valid cut is chosen."});
+      }
+      addCard(item, "selected option");
+    });
+
+    const included = Array.from(cards.values());
+    const total = included.reduce((sum, card) => sum + card.quantity, 0);
+    const types = {};
+    const typeBucket = (line) => ["Land", "Creature", "Artifact", "Enchantment", "Instant", "Sorcery", "Planeswalker", "Battle"].find((type) => String(line).includes(type)) || "Other";
+    included.forEach((card) => {
+      const bucket = typeBucket(card.typeLine);
+      types[bucket] = (types[bucket] || 0) + card.quantity;
+    });
+    const common = [...replacementIssues];
+    if (total !== 100) common.push({card: "Deck list", rule: `Commander requires exactly 100 cards; this selection contains ${total}.`, detail: total < 100 ? `Add or restore ${100 - total} card${100 - total === 1 ? "" : "s"}.` : `Cut ${total - 100} card${total - 100 === 1 ? "" : "s"}.`});
+    const commanders = included.reduce((sum, card) => sum + (card.isCommander ? card.quantity : 0), 0);
+    if (commanders !== 1) common.push({card: "Commander slot", rule: `Exactly one commander is expected; ${commanders} are identified in the modeled list.`, detail: "Confirm the commander and partner/background configuration."});
+    included.filter((card) => card.quantity > 1 && !BASIC_LANDS.has(normalize(card.name))).forEach((card) => common.push({card: card.name, rule: `Singleton rule: ${card.quantity} copies are modeled.`, detail: "Only basic lands and cards with explicit exceptions may repeat."}));
+
+    const selectedGameChangers = included.filter((card) => card.gameChanger);
+    const tagsFor = (card) => (card.tags || []).map((tag) => String(tag).toLowerCase()).join(" ");
+    const massLand = included.filter((card) => /mass land|land destruction/.test(tagsFor(card)));
+    const extraTurns = included.filter((card) => /extra turn|turn loop/.test(tagsFor(card)));
+    const combos = included.filter((card) => /infinite combo|two.card combo/.test(tagsFor(card)));
+    const tier2 = [...common];
+    selectedGameChangers.forEach((card) => tier2.push({card: card.name, rule: "Tier 2 permits no Game Changers.", detail: "Remove it or evaluate the deck for Tier 3."}));
+    combos.forEach((card) => tier2.push({card: card.name, rule: "Tier 2 permits no intentional two-card infinite combo.", detail: "Remove the combo piece or use a higher tier."}));
+    massLand.forEach((card) => tier2.push({card: card.name, rule: "Tier 2 permits no mass land denial.", detail: "Replace this effect."}));
+    extraTurns.forEach((card) => tier2.push({card: card.name, rule: "Tier 2 should not chain or loop extra turns.", detail: "Keep extra-turn effects sparse and non-repeatable."}));
+    const tier3 = [...common];
+    if (selectedGameChangers.length > 3) selectedGameChangers.forEach((card) => tier3.push({card: card.name, rule: `Tier 3 allows up to three Game Changers; ${selectedGameChangers.length} are selected.`, detail: "Remove Game Changers until no more than three remain."}));
+    included.filter((card) => /early combo/.test(tagsFor(card))).forEach((card) => tier3.push({card: card.name, rule: "Tier 3 permits no intentional early-game two-card infinite combo.", detail: "Remove or slow the combo."}));
+    massLand.forEach((card) => tier3.push({card: card.name, rule: "Tier 3 permits no mass land denial.", detail: "Replace this effect."}));
+    extraTurns.forEach((card) => tier3.push({card: card.name, rule: "Tier 3 should not chain or loop extra turns.", detail: "Keep extra-turn effects sparse and non-repeatable."}));
+    const lands = types.Land || 0;
+    const compositionWarnings = [];
+    if (lands < 33) compositionWarnings.push(`${lands} lands is below the usual 33–42 starting range; review ramp, curve, and MDFCs before play.`);
+    if (lands > 42) compositionWarnings.push(`${lands} lands is above the usual 33–42 starting range; confirm the deck's land-matters plan needs it.`);
+    return {cards: included, total, types, tier2, tier3, compositionWarnings, selectedGameChangers};
+  }
+
+  function openComplianceDetail(variant, result, tier) {
+    const dialog = $("#compliance-dialog");
+    const violations = tier ? result[`tier${tier}`] : [];
+    $("#compliance-dialog-kicker").textContent = `Deck ${variant.deckId} · ${variant.name}`;
+    $("#compliance-dialog-title").textContent = tier ? `Tier ${tier} compliance details` : "Deck composition details";
+    const typeOrder = ["Land", "Creature", "Artifact", "Enchantment", "Instant", "Sorcery", "Planeswalker", "Battle", "Other"];
+    const breakdown = typeOrder.filter((type) => result.types[type]).map((type) => `<div><span>${esc(type)}</span><strong>${result.types[type]}</strong></div>`).join("");
+    $("#compliance-dialog-body").innerHTML = `
+      <div class="compliance-dialog-summary"><div><span>Total cards</span><strong>${result.total}/100</strong></div><div><span>Game Changers</span><strong>${result.selectedGameChangers.length}</strong></div><div><span>Land / other</span><strong>${result.types.Land || 0} / ${result.total - (result.types.Land || 0)}</strong></div></div>
+      ${tier ? `<section class="compliance-result-block ${violations.length ? "has-issues" : "passes"}"><h3>${violations.length ? "Non-Compliant on tracked rules" : "Compliant on tracked rules"}</h3>${violations.length ? `<ul>${violations.map((issue) => `<li><b>Deck ${variant.deckId} · ${esc(issue.card)}</b><span>${esc(issue.rule)}</span><small>${esc(issue.detail)}</small></li>`).join("")}</ul>` : `<p>No modeled card or deck-construction violations were found for Tier ${tier}.</p>`}</section>` : ""}
+      <section class="composition-breakdown"><h3>Deck composition</h3><div>${breakdown}</div>${result.compositionWarnings.map((warning) => `<p>${icon("!")}<span>${esc(warning)}</span></p>`).join("")}</section>
+      <section class="manual-checks"><h3>Manual checks still required</h3><ul><li>Commander color identity and the current banned list.</li><li>Untagged combo interactions, repeated extra turns, and mass-land-denial play patterns.</li><li>Whether the deck’s intent and likely win turn match the pod: about turn 8+ for Tier 2 or turn 6+ for Tier 3.</li></ul><p>The official bracket guidance emphasizes that intent and table expectations cannot be reduced to a card-count calculator.</p></section>`;
+    dialog.showModal();
   }
 
   function buySection(title, note, items, kind, current, variantId) {
@@ -505,7 +733,7 @@
       items.forEach((item) => {
         const key = itemKey(item);
         if (!merged.has(key)) {
-          merged.set(key, {...item, key, deckRefs: [], categories: new Set(), quantity: 0});
+          merged.set(key, {...item, key, deckRefs: [], categories: new Set(), levels: new Set(), quantity: 0});
         }
         const target = merged.get(key);
         if (!target.deckRefs.some((ref) => ref.deckId === variant.deckId)) {
@@ -513,6 +741,8 @@
           target.quantity += item.quantity || 1;
         }
         target.categories.add(item.category);
+        if (item.stage) target.levels.add(String(item.stage).toLowerCase());
+        target.levels.add(item.category === "max" ? "maxxed" : item.category);
       });
     });
     return Array.from(merged.values()).sort((a, b) => {
@@ -527,7 +757,7 @@
     const allItems = derivedShopItems();
     const filters = state.shopFilters;
     const foundCount = allItems.filter((item) => state.found[item.key]).length;
-    const activeFilterCount = [filters.type, filters.category, filters.deck].filter((value) => value !== "all").length;
+    const activeFilterCount = [filters.type, filters.category, filters.deck].filter((value) => value !== "all").length + (filters.groupBy !== "none" ? 1 : 0);
     root.innerHTML = `
       <div class="page-intro">
         <div>
@@ -544,8 +774,9 @@
             <summary>Filters${activeFilterCount ? ` <b>${activeFilterCount}</b>` : ""}</summary>
             <div class="filter-select-grid">
               ${selectFilter("type", "Items", [["all","All items"],["singles","Singles"],["precons","Precons"]], filters)}
-              ${selectFilter("category", "Level", [["all","All levels"],["upgrade","Upgrade"],["enhance","Enhance"],["max","Max"]], filters)}
+              ${selectFilter("category", "Level", [["all","All levels"],["tuned","Tuned"],["upgrade","Upgrade"],["enhance","Enhance"],["maxxed","Maxxed"]], filters)}
               ${selectFilter("deck", "Deck", [["all","All decks"], ...selectedVariants().map((variant) => [String(variant.deckId), `Deck ${variant.deckId}`])], filters)}
+              ${selectFilter("groupBy", "Group by", [["none","No grouping"],["where","Where to look"],["rarity","Rarity"],["price","Price range"],["typeLine","Card type"],["themeSet","Theme / set"],["deckCount","# of decks"]], filters)}
             </div>
           </details>
         </div>
@@ -573,6 +804,7 @@
     root.onclick = (event) => {
       if (event.target.closest('[data-go="buy"]')) switchView("buy");
     };
+    if (["rarity", "themeSet"].includes(filters.groupBy)) ensureShopMetadata(allItems);
   }
 
   function filterChip(group, value, label, filters) {
@@ -590,10 +822,77 @@
     const remainingTotal = allItems.filter((item) => !state.found[item.key]).reduce((sum, item) => sum + (Number(item.price) || 0), 0);
     $("#shop-summary", root).innerHTML = `<span><strong>${visible.length}</strong> shown · ${allItems.length - foundCount} still needed</span><span>${money(remainingTotal)} target</span>`;
     const list = $("#shop-list", root);
-    list.replaceChildren(...visible.map((item) => makeShopCard(item)));
+    list.classList.toggle("is-grouped", state.shopFilters.groupBy !== "none");
+    if (state.shopFilters.groupBy === "none") {
+      list.replaceChildren(...visible.map((item) => makeShopCard(item)));
+    } else {
+      const groups = groupShopItems(visible, state.shopFilters.groupBy);
+      list.replaceChildren(...groups.map((group) => {
+        const section = document.createElement("section");
+        section.className = "shop-group";
+        section.innerHTML = `<div class="shop-group-heading"><h3>${esc(group.label)}</h3><span>${group.items.length} item${group.items.length === 1 ? "" : "s"}</span></div><div class="shop-group-grid"></div>`;
+        $(".shop-group-grid", section).replaceChildren(...group.items.map((item) => makeShopCard(item)));
+        return section;
+      }));
+    }
     $("#shop-actions", root).innerHTML = allItems.length
       ? `<div class="action-row"><button class="secondary-button" data-go="buy">Adjust Buy Picks</button></div>`
       : `<div class="empty-state"><h3>Your field list is empty</h3><p>Select connected deck variants and save their Buy Picks first.</p><button class="primary-button" data-go="buy">Open Buy Picks</button></div>`;
+  }
+
+  function groupShopItems(items, mode) {
+    const groups = new Map();
+    items.forEach((item) => {
+      const metadata = cardMetadata[itemKey(item)] || {};
+      let label;
+      let order = 999;
+      if (mode === "where") label = item.whereToBuy || (item.category === "precon" ? "Sealed product shelf" : "Ask vendor / unknown");
+      if (mode === "rarity") {
+        label = item.category === "precon" ? "Sealed product / not applicable" : metadata.rarity ? metadata.rarity[0].toUpperCase() + metadata.rarity.slice(1) : "Rarity loading / unknown";
+        order = ["Common", "Uncommon", "Rare", "Mythic", "Special", "Bonus", "Sealed product / not applicable", "Rarity loading / unknown"].indexOf(label);
+      }
+      if (mode === "price") {
+        const price = Number(item.price);
+        if (!price) {
+          label = "Price unavailable";
+        } else {
+          const ranges = [[1,"Under $1"],[5,"$1–$5"],[10,"$5–$10"],[25,"$10–$25"],[50,"$25–$50"],[Infinity,"$50+"]];
+          order = ranges.findIndex(([ceiling]) => price < ceiling || ceiling === Infinity);
+          label = ranges[order][1];
+        }
+      }
+      if (mode === "typeLine") label = ["Land", "Creature", "Artifact", "Enchantment", "Instant", "Sorcery", "Planeswalker", "Battle"].find((type) => String(item.typeLine).includes(type)) || (item.category === "precon" ? "Preconstructed decks" : "Other");
+      if (mode === "themeSet") label = item.category === "precon" ? "Commander precon" : metadata.setName || item.tags?.[0] || "Theme / set loading or unknown";
+      if (mode === "deckCount") {
+        label = `Needed by ${item.deckRefs.length} deck${item.deckRefs.length === 1 ? "" : "s"}`;
+        order = -item.deckRefs.length;
+      }
+      label ||= "Other";
+      if (!groups.has(label)) groups.set(label, {label, order, items: []});
+      groups.get(label).items.push(item);
+    });
+    return Array.from(groups.values()).sort((a, b) => a.order - b.order || a.label.localeCompare(b.label));
+  }
+
+  async function ensureShopMetadata(items) {
+    const missing = items.filter((item) => !cardMetadata[itemKey(item)] && item.category !== "precon");
+    if (!missing.length || shopMetadataPromise) return shopMetadataPromise;
+    shopMetadataPromise = (async () => {
+      for (const item of missing) {
+        try {
+          const response = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(item.name)}`);
+          const card = response.ok ? await response.json() : null;
+          cardMetadata[itemKey(item)] = card ? {rarity: card.rarity, setName: card.set_name, setCode: card.set} : {unavailable: true};
+        } catch (_) {
+          cardMetadata[itemKey(item)] = {unavailable: true};
+        }
+        await new Promise((resolve) => setTimeout(resolve, 80));
+      }
+      localStorage.setItem("mtg-card-metadata-v1", JSON.stringify(cardMetadata));
+      shopMetadataPromise = null;
+      if ($("#view-shop")?.classList.contains("is-active")) renderShop();
+    })();
+    return shopMetadataPromise;
   }
 
   function matchesFilters(item, filters) {
@@ -602,7 +901,7 @@
     if (filters.status === "found" && !found) return false;
     if (filters.type === "singles" && item.category === "precon") return false;
     if (filters.type === "precons" && item.category !== "precon") return false;
-    if (filters.category !== "all" && !item.categories.has(filters.category)) return false;
+    if (filters.category !== "all" && !item.levels.has(filters.category)) return false;
     if (filters.deck !== "all" && !item.deckRefs.some((ref) => String(ref.deckId) === filters.deck)) return false;
     const query = filters.query.trim().toLowerCase();
     if (query && !`${item.name} ${item.typeLine} ${item.purpose} ${item.deckRefs.map((ref) => ref.name).join(" ")}`.toLowerCase().includes(query)) return false;
@@ -652,7 +951,7 @@
   }
 
   function resetState() {
-    if (!window.confirm("Reset all deck picks, optional buys, and Found checkmarks on this device?")) return;
+    if (!window.confirm("Reset all deck picks, comments, optional buys, filters, and Found checkmarks on this device?")) return;
     state = blankState();
     saveState("Picks reset");
     renderCompare();
@@ -682,6 +981,10 @@
       });
       $("#detail-sheet-close").addEventListener("click", () => $("#detail-sheet").close());
       $("#detail-sheet").addEventListener("click", (event) => {
+        if (event.target === event.currentTarget) event.currentTarget.close();
+      });
+      $("#compliance-dialog-close").addEventListener("click", () => $("#compliance-dialog").close());
+      $("#compliance-dialog").addEventListener("click", (event) => {
         if (event.target === event.currentTarget) event.currentTarget.close();
       });
     } catch (error) {

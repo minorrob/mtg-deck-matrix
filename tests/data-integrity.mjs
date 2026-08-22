@@ -29,6 +29,7 @@ for (const deck of variants.decks) {
 for (const variant of variants.variants) {
   assert(variant.detailHtml.length > 1000, `${variant.id} must retain its long-form report`);
   assert(!variant.detailHtml.includes("data:image"), `${variant.id} detail must use external card art`);
+  assert(variant.mechanics.length > 0, `${variant.id} must expose at least one filterable mechanic`);
   assert.equal(variant.scores.playstyle.length, 3);
   assert.equal(variant.scores.engine.length, 3);
   assert(variant.scores.playstyle.every((stage) => stage.length === 6), `${variant.id} must retain six playstyle scores per stage`);
@@ -41,6 +42,8 @@ for (const [variantId, plan] of Object.entries(buyPlans.plans)) {
   assert.equal(plan.variantId, variantId);
   assert.equal(plan.precon.category, "precon");
   assert(plan.planHtml.length > 1000, `${variantId} must retain its complete deck plan`);
+  assert(plan.baseCards.length > 0, `${variantId} must retain its modeled starting list`);
+  assert(plan.baseCards.reduce((sum, card) => sum + card.quantity, 0) > 70, `${variantId} starting list must be substantial enough for deck checks`);
   assert(plan.precon.buyRank && plan.precon.buyStrategy && plan.precon.buyFirst, `${variantId} precon must retain its buying plan`);
   assert(plan.precon.commanderNote && plan.precon.tcgplayerUrl, `${variantId} precon must retain commander and purchase detail`);
   assert(plan.required.every((item) => item.category === "upgrade"));

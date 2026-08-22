@@ -94,6 +94,34 @@ def safe_fragment(node, *, remove_images: bool = False) -> str:
     )
 
 
+MECHANIC_RULES = [
+    ("Counters / Proliferate", r"\bcounters?\b|proliferat"),
+    ("Lifegain", r"lifegain|life gain|gain life"),
+    ("Toughness / Defenders", r"toughness|defenders?|\bwalls?\b"),
+    ("Sacrifice / Aristocrats", r"sacrific|aristocrat|death triggers?|\bdies\b"),
+    ("Graveyard / Reanimator", r"graveyard|reanimat|recursion|self-mill|dredge"),
+    ("Tokens / Go-wide", r"\btokens?\b|go-wide|go wide"),
+    ("Lands / Landfall", r"landfall|lands? engine|lands? matter|land sacrifice"),
+    ("Artifacts", r"artifacts? matter|artifact engine|modular"),
+    ("Enchantments / Auras", r"enchantress|enchantments? matter|\bauras?\b"),
+    ("Spellslinger", r"spellslinger|instants? and sorceries|cast spells|noncreature spells"),
+    ("Combat / Voltron", r"voltron|combat damage|equipment|commander damage|attack triggers?"),
+    ("Control / Interaction", r"control deck|counterspells?|removal suite|interaction|edicts?|pillowfort"),
+    ("Ramp / Big Mana", r"big[ -]mana|mana engine|\bramp\b"),
+    ("Blink / ETB", r"\betb\b|enters the battlefield|blink|doubling triggers"),
+    ("Tribal / Typal", r"tribal|typal|dragons?|spirits?|fungus|treefolk|zombies?|elves?|angels?"),
+]
+
+
+def infer_mechanics(name: str, commander: str, summaries: list, notes: list) -> list[str]:
+    text = " ".join(
+        [name, commander]
+        + [item for stage in summaries for item in (stage or [])]
+        + [note or "" for note in notes]
+    ).lower()
+    return [label for label, pattern in MECHANIC_RULES if re.search(pattern, text)]
+
+
 def extract_compare() -> dict:
     document = html.parse(str(COMPARE_SOURCE))
     decks = []
@@ -235,6 +263,12 @@ def extract_compare() -> dict:
                         "engine": stage_scores[1] if len(stage_scores) > 1 else [[], [], []],
                         "growth": growth,
                     },
+                    "mechanics": infer_mechanics(
+                        first_text(cell, ".//h3[1]") or clean_text(checkbox.get("data-name", "")),
+                        commander_name,
+                        summaries,
+                        stage_notes,
+                    ),
                     "detailHtml": safe_fragment(detail_nodes[0], remove_images=True)
                     if detail_nodes
                     else "",
@@ -382,6 +416,21 @@ def extract_buy_plans() -> dict:
             "buyWhy": clean_text(summary.get("buy_why", "")),
             "buyFirst": clean_text(summary.get("buy_first", "")),
             "allIn": summary.get("all_in"),
+            "baseCards": [
+                {
+                    "id": key,
+                    "name": clean_text(card.get("name", key)),
+                    "quantity": card.get("qty", 1),
+                    "typeLine": clean_text(card.get("type_line", "")),
+                    "tags": [clean_text(tag) for tag in card.get("tags", [])],
+                    "isCommander": "commander" in [
+                        clean_text(tag).lower() for tag in card.get("tags", [])
+                    ],
+                    "gameChanger": bool(card.get("game_changer")),
+                }
+                for key, card in cards.items()
+                if not card.get("is_purchase_item")
+            ],
             "planHtml": safe_fragment(
                 html.fragment_fromstring(
                     summary.get("info_html", "<div></div>"),
