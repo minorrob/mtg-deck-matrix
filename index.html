@@ -17,18 +17,31 @@ html,body{margin:0;min-height:100%;background:#14332a;color:#f6ecce;font-family:
 <script>
 (async function(){
  const status=document.getElementById('status');
+ function decodeBase64(s){
+   const alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+   s=s.replace(/\s+/g,'').replace(/=+$/,'');
+   const out=new Uint8Array(Math.floor(s.length*3/4));
+   let buffer=0,bits=0,j=0;
+   for(let i=0;i<s.length;i++){
+     const v=alphabet.indexOf(s[i]);
+     if(v<0) throw new Error('Deck data contains an invalid character at position '+i+'.');
+     buffer=(buffer<<6)|v; bits+=6;
+     if(bits>=8){bits-=8;out[j++]=(buffer>>bits)&255;buffer&=(1<<bits)-1;}
+   }
+   return out.slice(0,j);
+ }
  try{
   if(!('DecompressionStream' in window)) throw new Error('This browser needs a newer Safari version.');
   const files=['01','02','03','04','05','06a','06b','07','08','09'];
-  const rs=await Promise.all(files.map(n=>fetch('./payload/part'+n+'.txt?v=4',{cache:'no-store'})));
+  const rs=await Promise.all(files.map(n=>fetch('./payload/part'+n+'.txt?v=6',{cache:'no-store'})));
   if(rs.some(r=>!r.ok)) throw new Error('Could not load the deck data.');
   const b64=(await Promise.all(rs.map(r=>r.text()))).join('').replace(/\s+/g,'');
-  if(b64.length!==130384) throw new Error('Deck data is incomplete.');
-  if(!b64.startsWith('H4sI') || /[^A-Za-z0-9+/=]/.test(b64)) throw new Error('Deck data failed integrity check.');
-  const raw=atob(b64); const bytes=new Uint8Array(raw.length);
-  for(let i=0;i<raw.length;i++) bytes[i]=raw.charCodeAt(i);
+  if(b64.length!==130384) throw new Error('Deck data is incomplete ('+b64.length+' of 130384 characters).');
+  if(!b64.startsWith('H4sI')) throw new Error('Deck data header failed integrity check.');
+  const bytes=decodeBase64(b64);
   const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
   const html=await new Response(stream).text();
+  if(!html.toLowerCase().includes('<html')) throw new Error('Deck data did not expand into the app.');
   document.open(); document.write(html); document.close();
  }catch(e){
   status.className='sub err'; status.textContent='Could not start the Deck Matrix: '+e.message;
