@@ -10,6 +10,6 @@ The source data is normalized from the two legacy HTML files kept in the parent 
 
 ## Current catalog coverage
 
-All 30 Compare variants are normalized. The six complete purchase profiles present in the original Shopping Guide are connected end-to-end: `1o`, `2c`, `3e`, `4c`, `5o`, and `6c`. Unmapped variants remain selectable but intentionally do not receive generic or mismatched shopping cards.
+All 30 Compare variants are normalized and connected to Buy Picks. The six complete profiles from the original Shopping Guide retain their audited shopping plans. The other variants promote their own published precon seed, key-upgrade table, upgrade ladder, and Bracket 3 route into variant-specific purchase profiles; verified shared precons reuse their full 100-card shell, while incomplete source lists remain visibly modeled rather than being presented as audited decklists.
 
 Run `node tests/data-integrity.mjs` to validate the catalog.

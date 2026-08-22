@@ -85,7 +85,6 @@
   function blankState() {
     return {
       compareSelections: {},
-      stages: {},
       rankStages: {},
       buySelections: {},
       found: {},
@@ -104,7 +103,6 @@
           ...initial,
           ...saved,
           compareSelections: saved.compareSelections || {},
-          stages: saved.stages || {},
           rankStages: saved.rankStages || {},
           buySelections: saved.buySelections || {},
           found: saved.found || {},
@@ -281,7 +279,7 @@
   }
 
   function makeVariantCard(variant, rankStage = 2) {
-    const stage = Number(state.stages[variant.id] || 2);
+    const stage = rankStage;
     const selected = state.compareSelections[variant.deckId] === variant.id;
     const bracket = variant.brackets[stage - 1] || {};
     const summary = variant.summaries[stage - 1] || [];
@@ -310,9 +308,6 @@
           <p class="commander">${esc(variant.commander)}<br><span class="mana">${manaCostHtml(variant.manaCost)}<span>${esc(variant.typeLine)}</span></span></p>
           <div class="mechanic-tags">${(variant.mechanics || []).slice(0,3).map((mechanic) => `<span>${esc(mechanic)}</span>`).join("")}</div>
         </div>
-      </div>
-      <div class="stage-switch" role="group" aria-label="Investment level">
-        ${STAGES.map((label, index) => `<button class="stage-button${stage === index + 1 ? " is-active" : ""}" data-stage="${index + 1}">${label}</button>`).join("")}
       </div>
       <div class="stage-content">
         <div class="metric-grid">
@@ -366,13 +361,6 @@
       toggle.classList.toggle("has-comment", Boolean(value.trim()));
       $("span:not(.ui-icon)", toggle).textContent = value.trim() ? "Comment saved" : "Add a comment";
     });
-    $$(".stage-button", card).forEach((button) => button.addEventListener("click", () => {
-      state.stages[variant.id] = Number(button.dataset.stage);
-      saveState();
-      renderCompare();
-      const refreshed = $(`[data-variant="${variant.id}"]`);
-      refreshed?.scrollIntoView({block: "nearest", inline: "center"});
-    }));
     return card;
   }
 
@@ -427,7 +415,12 @@
   }
 
   function ensureBuyState(variantId) {
-    state.buySelections[variantId] = {upgrade: [], enhance: [], max: [], ...(state.buySelections[variantId] || {})};
+    const existing = state.buySelections[variantId] || {};
+    state.buySelections[variantId] = {
+      upgrade: [],
+      enhance: Array.from(new Set([...(existing.upgrade || []), ...(existing.enhance || [])])),
+      max: existing.max || []
+    };
     return state.buySelections[variantId];
   }
 
@@ -440,12 +433,12 @@
       <div class="page-intro">
         <div>
           <h2 id="buy-title">Build the buy plan</h2>
-          <p>The 100-card Starting Shell and Tuned purchases are included automatically. Add optional Upgrades, Enhances, or Maxxed choices as one-for-one swaps.</p>
+          <p>The 100-card Starting Shell and Tuned purchases are included automatically. Add optional Enhance or Maxxed choices as one-for-one swaps.</p>
         </div>
         <div class="selection-meter"><strong>${readyCount}/${selected.length || 0}</strong><span>profiles ready</span></div>
       </div>
       ${selected.length ? "" : `<div class="empty-state"><h3>No deck picks yet</h3><p>Choose a variant in Compare first, then come back here.</p><button class="primary-button" data-go="compare">Choose decks</button></div>`}
-      ${selected.some((variant) => !buyCatalog.plans[variant.id]) ? `<div class="coverage-note"><h3>Catalog build in progress</h3><p>The original shopping guide contained six complete builds. Those are connected now; the remaining variant profiles are being normalized before they are offered as purchases.</p></div>` : ""}
+      ${selected.some((variant) => !buyCatalog.plans[variant.id]) ? `<div class="coverage-note"><h3>Selection needs attention</h3><p>One selected variant could not be loaded. Return to Compare and select it again.</p></div>` : ""}
       ${readyCount ? `<section class="buy-overview"><h3>Shopping plan summary</h3><div class="buy-overview-grid">${selected.filter((variant) => buyCatalog.plans[variant.id]).map((variant) => {
         const plan = buyCatalog.plans[variant.id];
         return `<button class="buy-overview-card" data-open-buy-deck="${variant.deckId}"><b>Deck ${variant.deckId}</b><strong>${esc(variant.name)}</strong><span>${esc(plan.priorityLabel || plan.budgetLabel)} · ${plan.required.length} Tuned purchases</span></button>`;
@@ -499,12 +492,11 @@
       ${compliancePanel(variant, plan, current)}
       <details class="plan-analysis">
         <summary><span>${icon("☰")}Deck plan &amp; analysis</span><small>How to play, buy order, bracket placement, and tuning notes</small></summary>
-        <div class="legacy-plan">${plan.planHtml || ""}</div>
+        <div class="legacy-plan">${plan.planHtml || variant.detailHtml || ""}</div>
       </details>
       ${startingShellSection(variant, plan)}
       ${buySection("Tuned", "Required purchases for the Tuned build", plan.required, "tuned", current, variant.id)}
-      ${buySection("Upgrade", "Optional primary improvements · generally $10 or less", plan.upgrade, "upgrade", current, variant.id)}
-      ${buySection("Enhance", "Optional · same strategy · generally $10 or less", plan.enhance, "enhance", current, variant.id)}
+      ${buySection("Enhance", "Optional improvements · same strategy · generally $10 or less", plan.enhance, "enhance", current, variant.id)}
       ${buySection("Maxxed", "Optional ceiling choices · up to 3 Game Changers", plan.max, "max", current, variant.id)}`;
     decorateRichContent(body, variant);
     ensureShellMetadata(plan.startingShell || []);
@@ -756,7 +748,7 @@
       ${items.map((item) => {
         const required = included;
         const checked = required || (current[kind] || []).includes(item.id);
-        const replacement = item.replaces ? `<span class="replacement-line"><b>Recommended cut</b><span>${esc(item.replaces)}</span></span>` : "";
+        const replacement = item.replaces ? `<span class="replacement-line"><b>Replaces</b><span>${esc(item.replaces)}</span></span>` : "";
         return `<div class="buy-item">
           ${required ? `<span class="required-check" aria-label="Included">✓</span>` : `<input type="checkbox" ${checked ? "checked" : ""} data-buy-kind="${esc(kind)}" data-item-id="${esc(item.id)}" data-variant-id="${esc(variantId)}">`}
           <button class="buy-item-detail" type="button" data-item-kind="${esc(kind)}" data-item-id="${esc(item.id)}">
@@ -795,7 +787,7 @@
       ${detailText("Commander note", item.commanderNote)}
       <section class="precon-plan-source">
         <div class="precon-plan-heading"><p>Complete source plan</p><h3>Everything from the original shopping guide</h3></div>
-        <div class="legacy-plan">${plan?.planHtml || "<p>No extended plan is available.</p>"}</div>
+        <div class="legacy-plan">${plan?.planHtml || variant.detailHtml || "<p>No extended plan is available.</p>"}</div>
       </section>
       ${item.tcgplayerUrl ? `<p><a class="primary-button detail-link" href="${esc(item.tcgplayerUrl)}" target="_blank" rel="noopener">Find this precon on TCGplayer</a></p>` : ""}`
       : `
@@ -928,6 +920,11 @@
     return item.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   }
 
+  function cardImageCandidates(item, metadata = cardMetadata[itemKey(item)] || {}) {
+    const named = (mode) => `https://api.scryfall.com/cards/named?format=image&version=small&${mode}=${encodeURIComponent(item.name)}`;
+    return Array.from(new Set([metadata.image, item.image, named("exact"), named("fuzzy")].filter(Boolean)));
+  }
+
   function derivedShopItems() {
     const merged = new Map();
     selectedVariants().forEach((variant) => {
@@ -988,7 +985,7 @@
             <summary>Filters${activeFilterCount ? ` <b>${activeFilterCount}</b>` : ""}</summary>
             <div class="filter-select-grid">
               ${selectFilter("type", "Items", [["all","All items"],["singles","Singles"],["precons","Precons"]], filters)}
-              ${selectFilter("category", "Level", [["all","All levels"],["tuned","Tuned"],["upgrade","Upgrade"],["enhance","Enhance"],["maxxed","Maxxed"]], filters)}
+              ${selectFilter("category", "Level", [["all","All levels"],["tuned","Tuned"],["enhance","Enhance"],["maxxed","Maxxed"]], filters)}
               ${selectFilter("deck", "Deck", [["all","All decks"], ...selectedVariants().map((variant) => [String(variant.deckId), `Deck ${variant.deckId}`])], filters)}
               ${selectFilter("groupBy", "Group by", [["none","No grouping"],["where","Where to look"],["rarity","Rarity"],["price","Price range"],["typeLine","Card type"],["themeSet","Theme / set"],["deckCount","# of decks"]], filters)}
             </div>
@@ -1051,7 +1048,7 @@
     }
     $("#shop-actions", root).innerHTML = allItems.length
       ? `<div class="action-row"><button class="secondary-button" data-go="buy">Adjust Buy Picks</button></div>`
-      : `<div class="empty-state"><h3>Your field list is empty</h3><p>Select connected deck variants and save their Buy Picks first.</p><button class="primary-button" data-go="buy">Open Buy Picks</button></div>`;
+      : `<div class="empty-state"><h3>Your field list is empty</h3><p>Select deck variants and save their Buy Picks first.</p><button class="primary-button" data-go="buy">Open Buy Picks</button></div>`;
   }
 
   function groupShopItems(items, mode) {
@@ -1097,8 +1094,13 @@
     shopMetadataPromise = (async () => {
       for (const item of missing) {
         try {
-          const response = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(item.name)}`);
-          const card = response.ok ? await response.json() : null;
+          let response;
+          for (let attempt = 0; attempt < 2; attempt += 1) {
+            response = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(item.name)}`);
+            if (response.ok || response.status === 404) break;
+            await new Promise((resolve) => setTimeout(resolve, 280 * (attempt + 1)));
+          }
+          const card = response?.ok ? await response.json() : null;
           cardMetadata[itemKey(item)] = card ? {
             rarity: card.rarity,
             setName: card.set_name,
@@ -1110,7 +1112,7 @@
         } catch (_) {
           cardMetadata[itemKey(item)] = {unavailable: true};
         }
-        await new Promise((resolve) => setTimeout(resolve, 80));
+        await new Promise((resolve) => setTimeout(resolve, 120));
       }
       localStorage.setItem("mtg-card-metadata-v1", JSON.stringify(cardMetadata));
       shopMetadataPromise = null;
@@ -1152,15 +1154,16 @@
     const card = document.createElement("article");
     card.className = `shop-card${found ? " is-found" : ""}`;
     const categories = Array.from(item.categories);
-    const levelLabels = {precon: "Precon", tuned: "Tuned", upgrade: "Upgrade", enhance: "Enhance", max: "Maxxed"};
+    const levelLabels = {precon: "Precon", tuned: "Tuned", upgrade: "Enhance", enhance: "Enhance", max: "Maxxed"};
     const levelBadges = categories
       .filter((category, index, values) => !(item.category === "precon" && category === "precon") && values.indexOf(category) === index)
       .map((category) => `<span class="shop-badge ${esc(category)}">${esc(levelLabels[category] || category)}</span>`)
       .join("");
     const displayType = item.category === "precon" ? "Precon" : item.typeLine;
+    const imageCandidates = cardImageCandidates(item, metadata);
     card.innerHTML = `
       <button class="shop-image-button" aria-label="View a larger image of ${esc(item.name)}">
-        <img class="shop-image" src="${esc(item.image)}" alt="${esc(item.name)} card" loading="lazy">
+        <img class="shop-image" src="${esc(imageCandidates[0] || "og.png")}" alt="${esc(item.name)} card" loading="lazy" decoding="async">
       </button>
       <div class="shop-main">
         <div class="shop-card-kicker">${icon(item.category === "precon" ? "▣" : "✦")}<span>${esc(item.category === "precon" ? "Precon" : "Single card")}</span>${rarityIcon(rarityKey, rarity)}${levelBadges}${item.gameChanger ? `<span class="shop-badge gc">GC</span>` : ""}</div>
@@ -1179,9 +1182,17 @@
           <button class="found-button">${found ? "✓ Found" : "Mark found"}</button>
         </div>
       </div>`;
-    $("img", card).addEventListener("error", (event) => {
-      event.currentTarget.alt = `${item.name} image unavailable`;
-      event.currentTarget.style.visibility = "hidden";
+    const cardImage = $(".shop-image", card);
+    cardImage.addEventListener("error", () => {
+      const currentIndex = Number(cardImage.dataset.retryIndex || 0) + 1;
+      cardImage.dataset.retryIndex = String(currentIndex);
+      const nextSource = imageCandidates[currentIndex];
+      if (nextSource) {
+        window.setTimeout(() => { cardImage.src = nextSource; }, 240 * currentIndex);
+        return;
+      }
+      cardImage.alt = `${item.name} image unavailable`;
+      cardImage.src = "og.png";
     });
     $(".shop-image-button", card).addEventListener("click", () => openCardPreview(item));
     $(".found-button", card).addEventListener("click", () => {
@@ -1194,7 +1205,7 @@
 
   function openCardPreview(item) {
     const dialog = $("#card-preview");
-    $("#card-preview-image").src = item.image.replace("version=small", "version=normal");
+    $("#card-preview-image").src = cardImageCandidates(item)[0].replace("version=small", "version=normal").replace("/small/", "/normal/");
     $("#card-preview-image").alt = `${item.name} card`;
     $("#card-preview-title").textContent = item.name;
     $("#card-preview-meta").innerHTML = `${manaCostHtml(item.manaCost)}${[item.typeLine, money(item.price)].filter(Boolean).map((value) => `<span>${esc(value)}</span>`).join("<b>·</b>")}`;
@@ -1211,7 +1222,7 @@
       {view: "compare", selectors: [".deck-group:first-of-type .comment-toggle"], title: "Leave feedback where it belongs", copy: "Attach a comment directly to a variant. When selections are emailed, the reviewer’s comments travel with them."},
       {view: "buy", selectors: [".buy-overview", ".page-intro"], title: "See the chosen plans together", copy: "Buy Picks carries over each selected variant and shows how many Tuned purchases and optional swaps are involved."},
       {view: "buy", selectors: [".deck-compliance", ".empty-state"], title: "Experiment without losing the rules", copy: "The compact check follows card count, composition, and tracked Tier 2–3 limits while you try different arrangements."},
-      {view: "buy", selectors: [".starting-shell", ".buy-section", ".empty-state"], title: "Build from a real 100-card shell", copy: "The commander stays visible. Expand the nested shell, then test Tuned, Upgrade, Enhance, and Maxxed one-for-one replacements."},
+      {view: "buy", selectors: [".starting-shell", ".buy-section", ".empty-state"], title: "Build from a real 100-card shell", copy: "The commander stays visible. Expand the nested shell, then test Tuned, Enhance, and Maxxed one-for-one replacements."},
       {view: "shop", selectors: [".shop-toolbar", ".empty-state"], title: "Finish with a vendor-table checklist", copy: "Search, filter, group, inspect larger card art, compare target and ceiling prices, and mark cards Found. You can restart a page-specific Tour here anytime."}
     ],
     buy: [
@@ -1220,7 +1231,7 @@
       {view: "buy", selectors: [".deck-compliance", ".empty-state"], title: "Keep the rules close", copy: "Tier 2, Tier 3, and exact card count stay compact; expand the check for composition and detailed issues."},
       {view: "buy", selectors: [".plan-analysis", ".empty-state"], title: "Read the full strategy", copy: "The analysis preserves how to play, buy order, bracket reasoning, stretch cards, and top-of-bracket options."},
       {view: "buy", selectors: [".starting-shell", ".empty-state"], title: "Inspect the 100-card foundation", copy: "The commander never collapses. The other 99 cards are nested by type, with lands in their own visual tray."},
-      {view: "buy", selectors: [".buy-section", ".empty-state"], title: "Try one-for-one changes", copy: "Tuned purchases are included; optional Upgrade, Enhance, and Maxxed cards each name the recommended cut they replace."}
+      {view: "buy", selectors: [".buy-section", ".empty-state"], title: "Try one-for-one changes", copy: "Tuned purchases are included; optional Enhance and Maxxed cards each name the card they replace."}
     ],
     shop: [
       {view: "shop", selectors: [".page-intro"], title: "Your table-ready list", copy: "Only purchases from the selected deck arrangements appear here, deduplicated across decks."},

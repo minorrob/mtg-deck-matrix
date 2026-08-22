@@ -10,6 +10,7 @@ import json
 import re
 from copy import deepcopy
 from pathlib import Path
+from urllib.parse import quote_plus
 
 from lxml import html
 
@@ -646,14 +647,18 @@ def shell_card(name: str, quantity: int, cards: dict, commander: str) -> dict:
         "snow covered mountain", "snow covered forest",
     }:
         type_line = type_line or "Basic Land"
+    is_commander = normalized_name(name) == normalized_name(commander)
+    tags = [clean_text(tag) for tag in raw_card.get("tags", []) if clean_text(tag).lower() != "commander"]
+    if is_commander:
+        tags.append("Commander")
     return {
         "id": f"shell-{raw_key}",
         "name": clean_text(name),
         "quantity": quantity,
         "manaCost": clean_text(raw_card.get("mana_cost", "")),
         "typeLine": type_line,
-        "tags": [clean_text(tag) for tag in raw_card.get("tags", [])],
-        "isCommander": normalized_name(name) == normalized_name(commander),
+        "tags": tags,
+        "isCommander": is_commander,
         "gameChanger": bool(raw_card.get("game_changer")),
         "isFlexibleSlot": False,
         "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy="
@@ -734,6 +739,208 @@ def assign_replacements(items: list[dict], starting_shell: list[dict], retained_
         if target:
             item["replaces"] = target["name"]
             used.add(normalized_name(target["name"]))
+
+
+def money_value(value: str | None) -> float | None:
+    match = re.search(r"\$\s*([0-9]+(?:\.[0-9]+)?)", clean_text(value or ""))
+    return float(match.group(1)) if match else None
+
+
+def detail_block(root, phrase: str):
+    for heading in root.xpath(".//h3 | .//h4"):
+        if phrase.lower() not in clean_text(" ".join(heading.itertext())).lower():
+            continue
+        blocks = heading.xpath(
+            "ancestor::*[contains(concat(' ', normalize-space(@class), ' '), ' blk ')][1]"
+        )
+        return blocks[0] if blocks else heading.getparent()
+    return None
+
+
+def card_image(name: str) -> str:
+    return (
+        "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy="
+        + quote_plus(clean_text(name))
+    )
+
+
+def detail_purchase_items(variant: dict) -> tuple[dict, list[dict], list[dict], list[dict]]:
+    """Promote a Compare report's published upgrade tables into Buy Picks data."""
+    root = html.fragment_fromstring(variant.get("detailHtml", "<div></div>"), create_parent="div")
+    variant_id = variant["id"]
+    tags = [clean_text(tag) for tag in variant.get("mechanics", [])[:3]]
+
+    precon = {"name": "", "set": "", "price": None, "outOfPrint": False}
+    precon_block = detail_block(root, "Precon seed")
+    if precon_block is not None:
+        boxes = precon_block.xpath(
+            ".//*[contains(concat(' ', normalize-space(@class), ' '), ' precon ')]"
+        )
+        if boxes:
+            box = boxes[0]
+            names = box.xpath("./b[1]")
+            precon["name"] = clean_text(" ".join(names[0].itertext())) if names else ""
+            plain_spans = box.xpath("./span[not(contains(@class,'pill')) and not(contains(@class,'cost'))]")
+            precon["set"] = clean_text(" ".join(plain_spans[0].itertext())) if plain_spans else ""
+            precon["price"] = money_value(" ".join(box.itertext()))
+            precon["outOfPrint"] = bool(box.xpath(".//*[contains(@class,'oop')]") )
+
+    def table_items(block, category: str, stage: str, game_changer: bool = False) -> list[dict]:
+        if block is None:
+            return []
+        tables = block.xpath(".//table[1]")
+        if not tables:
+            return []
+        items = []
+        for index, row in enumerate(tables[0].xpath(".//tr[td]"), start=1):
+            cells = row.xpath("./td")
+            if len(cells) < 2:
+                continue
+            name = clean_text(" ".join(cells[0].itertext()))
+            if not name:
+                continue
+            if game_changer and len(cells) == 3:
+                mana_cost = ""
+                type_line = ""
+                purpose = clean_text(" ".join(cells[2].itertext()))
+                price = money_value(" ".join(cells[1].itertext()))
+            else:
+                mana_cost = clean_text(" ".join(cells[1].itertext())) if len(cells) > 1 else ""
+                type_line = clean_text(" ".join(cells[2].itertext())) if len(cells) > 2 else ""
+                purpose = clean_text(" ".join(cells[3].itertext())) if len(cells) > 3 else ""
+                price = money_value(" ".join(cells[-1].itertext()))
+            items.append({
+                "id": f"{variant_id}-{category}-{index}-{normalized_name(name).replace(' ', '-')}",
+                "name": name,
+                "quantity": 1,
+                "price": price,
+                "ceiling": None,
+                "category": category,
+                "stage": stage,
+                "purpose": purpose,
+                "typeLine": type_line,
+                "manaCost": mana_cost,
+                "gameChanger": game_changer,
+                "why": purpose,
+                "whyPrimary": purpose,
+                "whyOptional": "",
+                "alternateReason": "",
+                "alternateTradeoff": "",
+                "replaces": "",
+                "tags": tags,
+                "whereToBuy": "Singles case",
+                "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=" + quote_plus(name) + "&view=grid",
+                "brief": {"power": None, "ease": None, "fun": None, "value": "", "fit": purpose},
+                "image": card_image(name),
+            })
+        return items
+
+    required = table_items(detail_block(root, "Key upgrades"), "tuned", "Tuned")
+    max_options = table_items(detail_block(root, "Where it sits on the Bracket"), "max", "Maxed", True)
+
+    upgrade = []
+    growth = detail_block(root, "Room to grow")
+    if growth is not None:
+        seen = {normalized_name(item["name"]) for item in required + max_options}
+        for index, node in enumerate(growth.xpath(".//*[contains(@class,'nextbuy')]//li"), start=1):
+            raw = clean_text(" ".join(node.itertext()))
+            name = re.split(r"\s+[—–-]\s+", raw, maxsplit=1)[0].strip()
+            if not name or normalized_name(name) in seen:
+                continue
+            seen.add(normalized_name(name))
+            purpose = raw[len(name):].lstrip(" —–-") or "Next card on this variant's published upgrade ladder."
+            upgrade.append({
+                "id": f"{variant_id}-upgrade-{index}-{normalized_name(name).replace(' ', '-')}",
+                "name": name,
+                "quantity": 1,
+                "price": None,
+                "ceiling": None,
+                "category": "upgrade",
+                "stage": "Upgrade",
+                "purpose": purpose,
+                "typeLine": "",
+                "manaCost": "",
+                "gameChanger": False,
+                "why": purpose,
+                "whyPrimary": purpose,
+                "whyOptional": "Published next-step upgrade; select it only when extending beyond Tuned.",
+                "alternateReason": "",
+                "alternateTradeoff": "",
+                "replaces": "",
+                "tags": tags,
+                "whereToBuy": "Singles case",
+                "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=" + quote_plus(name) + "&view=grid",
+                "brief": {"power": None, "ease": None, "fun": None, "value": "Price varies", "fit": purpose},
+                "image": card_image(name),
+            })
+    return precon, required, upgrade, max_options
+
+
+def modeled_variant_shell(variant: dict) -> list[dict]:
+    """Create an explicit 100-slot model when no audited precon list is available."""
+    commander = clean_text(variant.get("commander", "Commander"))
+    shell = [{
+        "id": f"shell-{variant['id']}-commander",
+        "name": commander,
+        "quantity": 1,
+        "manaCost": clean_text(variant.get("manaCost", "")),
+        "typeLine": clean_text(variant.get("typeLine", "Legendary Creature")),
+        "tags": ["Commander"],
+        "isCommander": True,
+        "gameChanger": False,
+        "isFlexibleSlot": False,
+        "image": clean_text(variant.get("image", "")) or card_image(commander),
+    }]
+    colors = [color for color in "WUBRG" if "{" + color + "}" in variant.get("manaCost", "")]
+    basics = {"W": "Plains", "U": "Island", "B": "Swamp", "R": "Mountain", "G": "Forest"}
+    colors = colors or ["W"]
+    for index, color in enumerate(colors):
+        quantity = 36 // len(colors) + (1 if index < 36 % len(colors) else 0)
+        shell.append(shell_card(basics[color], quantity, {}, commander))
+    modeled_total = sum(card["quantity"] for card in shell)
+    for slot in range(1, 101 - modeled_total):
+        shell.append({
+            "id": f"shell-{variant['id']}-flex-{slot}",
+            "name": f"Unspecified shell card {slot}",
+            "quantity": 1,
+            "manaCost": "",
+            "typeLine": "Unspecified card slot",
+            "tags": [],
+            "isCommander": False,
+            "gameChanger": False,
+            "isFlexibleSlot": True,
+            "image": "",
+        })
+    return shell
+
+
+def adapt_shell_commander(shell: list[dict], variant: dict) -> list[dict]:
+    shell = deepcopy(shell)
+    target = normalized_name(variant.get("commander", ""))
+    prior = next((card for card in shell if card.get("isCommander")), None)
+    match = next((card for card in shell if normalized_name(card.get("name", "")) == target), None)
+    for card in shell:
+        card["isCommander"] = False
+        card["tags"] = [tag for tag in card.get("tags", []) if clean_text(tag).lower() != "commander"]
+    if match:
+        match["isCommander"] = True
+        match["tags"] = [*match.get("tags", []), "Commander"]
+        match["manaCost"] = match.get("manaCost") or variant.get("manaCost", "")
+        match["typeLine"] = match.get("typeLine") or variant.get("typeLine", "")
+    elif prior:
+        prior.update({
+            "id": f"shell-{variant['id']}-commander",
+            "name": variant.get("commander", "Commander"),
+            "quantity": 1,
+            "manaCost": variant.get("manaCost", ""),
+            "typeLine": variant.get("typeLine", "Legendary Creature"),
+            "tags": ["Commander"],
+            "isCommander": True,
+            "gameChanger": False,
+            "isFlexibleSlot": False,
+            "image": variant.get("image", ""),
+        })
+    return shell
 
 
 def extract_buy_plans() -> dict:
@@ -821,6 +1028,7 @@ def extract_buy_plans() -> dict:
 
         plans[variant_map[deck_id]] = {
             "variantId": variant_map[deck_id],
+            "sourceKind": "original-shopping-guide",
             "deckId": deck_id,
             "deckName": clean_text(raw.get("deck_name", "")),
             "commander": clean_text(raw.get("commander_name", "")),
@@ -864,7 +1072,121 @@ def extract_buy_plans() -> dict:
             "max": max_options,
         }
 
-    return {"profileVariantIds": list(plans), "plans": plans}
+    compare_catalog = extract_compare()
+    for variant in compare_catalog["variants"]:
+        if variant["id"] in plans:
+            continue
+        precon_seed, required, upgrade, max_options = detail_purchase_items(variant)
+        seed_name = normalized_name(precon_seed.get("name", ""))
+        shell_source = next((
+            plan for plan in plans.values()
+            if seed_name and (
+                seed_name in normalized_name(plan["precon"]["name"])
+                or normalized_name(plan["precon"]["name"]) in seed_name
+            )
+        ), None)
+        if shell_source:
+            starting_shell = adapt_shell_commander(shell_source["startingShell"], variant)
+            starting_shell_kind = shell_source["startingShellKind"]
+            starting_shell_source = shell_source["startingShellSource"]
+            precon_item = deepcopy(shell_source["precon"])
+        else:
+            starting_shell = modeled_variant_shell(variant)
+            starting_shell_kind = "custom-shell"
+            starting_shell_source = ""
+            product_name = precon_seed.get("name") or f"{variant['commander']} starting shell"
+            if precon_seed.get("set"):
+                product_name += f" ({precon_seed['set']})"
+            precon_item = {
+                "id": f"precon-{variant['id']}",
+                "name": product_name,
+                "quantity": 1,
+                "price": precon_seed.get("price"),
+                "ceiling": None,
+                "category": "precon",
+                "purpose": variant.get("summaries", [[""]])[0][0],
+                "typeLine": "Precon" if precon_seed.get("name") else "Starting shell",
+                "manaCost": variant.get("manaCost", ""),
+                "gameChanger": False,
+                "why": variant.get("summaries", [[""]])[0][0],
+                "buyRank": variant.get("ranks", [None, None])[1],
+                "buyStrategy": (variant.get("tags") or ["Variant-specific"])[0],
+                "buyFirst": "Start with the named seed, then add the Tuned cards listed in this variant's published detail.",
+                "allIn": money_value((variant.get("costs") or [None, None])[1]),
+                "outOfPrint": precon_seed.get("outOfPrint", False),
+                "whereToBuy": "Precon / sealed product" if precon_seed.get("name") else "Singles case",
+                "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=" + quote_plus(product_name) + "&view=grid",
+                "commanderNote": variant.get("summaries", [[""]])[0][0],
+                "image": variant.get("image", "") or card_image(variant.get("commander", "")),
+            }
+        precon_item.update({
+            "id": f"precon-{variant['id']}",
+            "manaCost": variant.get("manaCost", ""),
+            "image": variant.get("image", "") or precon_item.get("image", ""),
+            "commanderNote": variant.get("summaries", [[""]])[0][0],
+            "buyRank": variant.get("ranks", [None, None])[1],
+            "buyStrategy": (variant.get("tags") or ["Variant-specific"])[0],
+            "allIn": money_value((variant.get("costs") or [None, None])[1]),
+        })
+        published_names = {normalized_name(item["name"]) for item in required + upgrade + max_options}
+        shell_names = {normalized_name(card.get("name", "")) for card in starting_shell}
+        required = [item for item in required if normalized_name(item["name"]) not in shell_names]
+        upgrade = [item for item in upgrade if normalized_name(item["name"]) not in shell_names]
+        max_options = [item for item in max_options if normalized_name(item["name"]) not in shell_names]
+        assign_replacements(required + upgrade + max_options, starting_shell, published_names)
+        tuned_cost = (variant.get("costs") or ["", ""])[1]
+        bracket = (variant.get("brackets") or [{}, {}])[1]
+        buy_first_names = [item["name"] for item in required[:3]]
+        plans[variant["id"]] = {
+            "variantId": variant["id"],
+            "sourceKind": "variant-detail-profile",
+            "deckId": variant["deckId"],
+            "deckName": variant["name"],
+            "commander": variant["commander"],
+            "budgetLabel": tuned_cost,
+            "bracketLabel": bracket.get("label", "Tier 2–3 review"),
+            "priorityLabel": f"{(variant.get('tags') or ['Variant-specific'])[0]} · Tuned rank #{variant.get('ranks', [0, 0])[1]}",
+            "buyRank": variant.get("ranks", [None, None])[1],
+            "buyStrategy": (variant.get("tags") or ["Variant-specific"])[0],
+            "buyWhy": variant.get("summaries", [[""], [""]])[1][0],
+            "buyFirst": ("Begin with " + ", ".join(buy_first_names) + ".") if buy_first_names else "Review the selected variant's published plan.",
+            "allIn": money_value(tuned_cost),
+            "startingShell": starting_shell,
+            "startingShellKind": starting_shell_kind,
+            "startingShellSource": starting_shell_source,
+            "baseCards": [{
+                "id": card["id"],
+                "name": card["name"],
+                "quantity": card["quantity"],
+                "typeLine": card["typeLine"],
+                "tags": card["tags"],
+                "isCommander": card["isCommander"],
+                "gameChanger": card["gameChanger"],
+            } for card in starting_shell],
+            "planHtml": "",
+            "precon": precon_item,
+            "required": required,
+            "upgrade": upgrade,
+            "enhance": [],
+            "max": max_options[:3],
+        }
+
+    for plan in plans.values():
+        merged_enhance = []
+        seen_enhance = set()
+        for item in [*plan.get("upgrade", []), *plan.get("enhance", [])]:
+            key = normalized_name(item.get("name", ""))
+            if key in seen_enhance:
+                continue
+            seen_enhance.add(key)
+            item["category"] = "enhance"
+            item["stage"] = "Enhance"
+            merged_enhance.append(item)
+        plan["upgrade"] = []
+        plan["enhance"] = merged_enhance
+
+    ordered_ids = [variant["id"] for variant in compare_catalog["variants"]]
+    return {"profileVariantIds": ordered_ids, "plans": {variant_id: plans[variant_id] for variant_id in ordered_ids}}
 
 
 def write_json(path: Path, data: dict) -> None:

@@ -9,6 +9,8 @@ assert.equal(variants.variants.length, 30, "expected thirty variants");
 
 const ids = new Set(variants.variants.map((variant) => variant.id));
 assert.equal(ids.size, 30, "variant IDs must be unique");
+assert.equal(Object.keys(buyPlans.plans).length, 30, "every Compare variant must have a Buy Picks profile");
+assert.deepEqual(new Set(buyPlans.profileVariantIds), ids, "Buy Picks coverage must match the Compare catalog");
 
 for (const deck of variants.decks) {
   const deckVariants = variants.variants.filter((variant) => variant.deckId === deck.id);
@@ -43,22 +45,23 @@ for (const [variantId, plan] of Object.entries(buyPlans.plans)) {
   assert.equal(plan.precon.category, "precon");
   assert.equal(plan.precon.typeLine, "Precon", `${variantId} precon must use the compact type label`);
   assert(plan.precon.manaCost, `${variantId} precon must carry its commander's mana cost`);
-  assert(plan.planHtml.length > 1000, `${variantId} must retain its complete deck plan`);
+  if (plan.sourceKind === "original-shopping-guide") assert(plan.planHtml.length > 1000, `${variantId} must retain its complete shopping-guide plan`);
+  else assert.equal(plan.sourceKind, "variant-detail-profile", `${variantId} must identify its profile source`);
   assert(plan.baseCards.length > 0, `${variantId} must retain its modeled starting list`);
   assert(plan.baseCards.reduce((sum, card) => sum + card.quantity, 0) > 70, `${variantId} starting list must be substantial enough for deck checks`);
   assert.equal(plan.startingShell.reduce((sum, card) => sum + card.quantity, 0), 100, `${variantId} must model exactly 100 starting cards`);
   assert.equal(plan.startingShell.filter((card) => card.isCommander).reduce((sum, card) => sum + card.quantity, 0), 1, `${variantId} must identify exactly one commander`);
+  assert.equal(plan.startingShell.filter((card) => card.isCommander || card.tags.some((tag) => String(tag).toLowerCase() === "commander")).reduce((sum, card) => sum + card.quantity, 0), 1, `${variantId} must expose exactly one commander to the compliance check`);
   if (plan.startingShellKind === "official-precon") assert(!plan.startingShell.some((card) => card.isFlexibleSlot), `${variantId} official precon may not contain unspecified slots`);
   assert(plan.precon.buyRank && plan.precon.buyStrategy && plan.precon.buyFirst, `${variantId} precon must retain its buying plan`);
   assert(plan.precon.commanderNote && plan.precon.tcgplayerUrl, `${variantId} precon must retain commander and purchase detail`);
   assert(plan.required.every((item) => item.category === "tuned"));
-  assert(plan.upgrade.every((item) => item.category === "upgrade"));
-  assert(plan.upgrade.every((item) => !item.price || item.price <= 10), `${variantId} Upgrade cards must stay at or below $10`);
+  assert.equal(plan.upgrade.length, 0, `${variantId} must merge legacy Upgrade cards into Enhance`);
   assert(plan.enhance.every((item) => item.category === "enhance"));
   assert(plan.enhance.every((item) => !item.price || item.price <= 10), `${variantId} Enhance cards must stay at or below $10`);
   assert(plan.max.every((item) => item.category === "max"));
   assert(plan.max.filter((item) => item.gameChanger).length <= 3, `${variantId} offers at most three Game Changers`);
-  assert([...plan.required, ...plan.upgrade, ...plan.enhance].every((item) => item.replaces), `${variantId} Tuned, Upgrade, and Enhance purchases must name a one-for-one cut`);
+  assert([...plan.required, ...plan.enhance].every((item) => item.replaces), `${variantId} Tuned and Enhance purchases must name a one-for-one cut`);
   const allItems = [plan.precon, ...plan.required, ...plan.upgrade, ...plan.enhance, ...plan.max];
   assert(allItems.every((item) => !String(item.image).startsWith("data:")), `${variantId} must not embed images`);
   assert([...plan.required, ...plan.upgrade, ...plan.enhance, ...plan.max].every((item) => item.brief && item.why !== undefined), `${variantId} purchases must retain detail fields`);
