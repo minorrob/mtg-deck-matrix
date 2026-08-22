@@ -32,7 +32,7 @@
         <p class="eyebrow">Commander field guide</p>
         <h1>Trey's Deck Matrix</h1>
       </div>
-      <span class="save-status" id="save-status" aria-live="polite">Saved on this device</span>
+      <div class="header-actions"><button class="tour-button" id="tour-button" type="button">▶ Tour</button><span class="save-status" id="save-status" aria-live="polite">Saved on this device</span></div>
     </div>
     <nav class="main-tabs" aria-label="Deck shopping flow">
       <button class="main-tab is-active" data-view="compare" aria-selected="true">
@@ -56,6 +56,16 @@
   </main>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="tour-layer" id="tour-layer" hidden>
+    <div class="tour-spotlight" id="tour-spotlight" aria-hidden="true"></div>
+    <section class="tour-popover" id="tour-popover" role="dialog" aria-modal="true" aria-labelledby="tour-title">
+      <button class="tour-close" id="tour-close" aria-label="Close tour">×</button>
+      <p id="tour-progress"></p>
+      <h2 id="tour-title"></h2>
+      <div id="tour-copy"></div>
+      <div class="tour-controls"><button id="tour-back" type="button">Back</button><button id="tour-next" type="button">Next</button></div>
+    </section>
+  </div>
   <dialog class="card-preview" id="card-preview">
     <button class="card-preview-close" id="card-preview-close" aria-label="Close card image">×</button>
     <img id="card-preview-image" alt="">

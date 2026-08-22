@@ -44,16 +44,22 @@ for (const [variantId, plan] of Object.entries(buyPlans.plans)) {
   assert(plan.planHtml.length > 1000, `${variantId} must retain its complete deck plan`);
   assert(plan.baseCards.length > 0, `${variantId} must retain its modeled starting list`);
   assert(plan.baseCards.reduce((sum, card) => sum + card.quantity, 0) > 70, `${variantId} starting list must be substantial enough for deck checks`);
+  assert.equal(plan.startingShell.reduce((sum, card) => sum + card.quantity, 0), 100, `${variantId} must model exactly 100 starting cards`);
+  assert.equal(plan.startingShell.filter((card) => card.isCommander).reduce((sum, card) => sum + card.quantity, 0), 1, `${variantId} must identify exactly one commander`);
+  if (plan.startingShellKind === "official-precon") assert(!plan.startingShell.some((card) => card.isFlexibleSlot), `${variantId} official precon may not contain unspecified slots`);
   assert(plan.precon.buyRank && plan.precon.buyStrategy && plan.precon.buyFirst, `${variantId} precon must retain its buying plan`);
   assert(plan.precon.commanderNote && plan.precon.tcgplayerUrl, `${variantId} precon must retain commander and purchase detail`);
-  assert(plan.required.every((item) => item.category === "upgrade"));
+  assert(plan.required.every((item) => item.category === "tuned"));
+  assert(plan.upgrade.every((item) => item.category === "upgrade"));
+  assert(plan.upgrade.every((item) => !item.price || item.price <= 10), `${variantId} Upgrade cards must stay at or below $10`);
   assert(plan.enhance.every((item) => item.category === "enhance"));
   assert(plan.enhance.every((item) => !item.price || item.price <= 10), `${variantId} Enhance cards must stay at or below $10`);
   assert(plan.max.every((item) => item.category === "max"));
   assert(plan.max.filter((item) => item.gameChanger).length <= 3, `${variantId} offers at most three Game Changers`);
-  const allItems = [plan.precon, ...plan.required, ...plan.enhance, ...plan.max];
+  assert([...plan.required, ...plan.upgrade, ...plan.enhance].every((item) => item.replaces), `${variantId} Tuned, Upgrade, and Enhance purchases must name a one-for-one cut`);
+  const allItems = [plan.precon, ...plan.required, ...plan.upgrade, ...plan.enhance, ...plan.max];
   assert(allItems.every((item) => !String(item.image).startsWith("data:")), `${variantId} must not embed images`);
-  assert([...plan.required, ...plan.enhance, ...plan.max].every((item) => item.brief && item.why !== undefined), `${variantId} purchases must retain detail fields`);
+  assert([...plan.required, ...plan.upgrade, ...plan.enhance, ...plan.max].every((item) => item.brief && item.why !== undefined), `${variantId} purchases must retain detail fields`);
 }
 
 console.log(`Validated ${variants.variants.length} variants and ${Object.keys(buyPlans.plans).length} connected buy profiles.`);

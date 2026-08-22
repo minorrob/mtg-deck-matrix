@@ -21,6 +21,234 @@ COMPARE_SOURCE = SOURCE_ROOT / "MtG - Side-by-Side.html"
 BUY_SOURCE = SOURCE_ROOT / "MtG - Deck Shopping Plan.html"
 
 
+def decklist(value: str) -> list[tuple[str, int]]:
+    """Parse the small audited decklists below without hiding card quantities."""
+    result = []
+    for line in value.strip().splitlines():
+        match = re.match(r"^(\d+)\s+(.+)$", line.strip())
+        result.append((match.group(2), int(match.group(1))) if match else (line.strip(), 1))
+    return result
+
+
+OFFICIAL_STARTING_SHELLS = {
+    1: {
+        "source": "https://magic.wizards.com/en/news/announcements/tarkir-dragonstorm-commander-decklists",
+        "cards": decklist("""
+Felothar the Steadfast
+Betor, Ancestor's Voice
+Protector of the Wastes
+Reunion of the House
+Jaws of Defeat
+Tip the Scales
+Will of the Abzan
+Arbor Adherent
+Canopy Gargantuan
+Rampart Architect
+Tree of Redemption
+Ikra Shidiqi, the Usurper
+Baldin, Century Herdmaster
+Expel the Interlopers
+Indomitable Ancients
+Rhox Faithmender
+Shalai, Voice of Plenty
+Wakestone Gargoyle
+Wall of Reverence
+Welcoming Vampire
+Zetalpa, Primal Dawn
+Arasta of the Endless Web
+Assault Formation
+Hornet Nest
+Seedborn Muse
+Sylvan Caryatid
+Towering Titan
+Anguished Unmaking
+Dragonlord Dromoka
+Faeburrow Elder
+Shadrix Silverquill
+Sidar Kondo of Jamuraa
+Colfenor's Urn
+Staff of Compleation
+Weathered Sentinels
+Canopy Vista
+Exotic Orchard
+Fortified Village
+Isolated Chapel
+Overgrown Farmland
+Sungrass Prairie
+Sunpetal Grove
+Temple of Malady
+Temple of Plenty
+Temple of Silence
+Twilight Mire
+Woodland Cemetery
+Arcane Signet
+Sol Ring
+Command Tower
+Nyx-Fleece Ram
+Slaughter the Strong
+Swords to Plowshares
+Wall of Omens
+Wingmantle Chaplain
+Behind the Scenes
+Blight Pile
+Feed the Swarm
+Infernal Grasp
+Wall of Limbs
+Arboreal Grazer
+Axebane Guardian
+Carven Caryatid
+Evolving Wilds
+Jaddi Offshoot
+Overgrown Battlement
+Sandsteppe Citadel
+Tower Defense
+Wall of Blossoms
+Wall of Roots
+Despark
+Indulging Patrician
+Crashing Drawbridge
+Orzhov Signet
+Selesnya Signet
+Swiftfoot Boots
+Walking Bulwark
+Access Tunnel
+Bojuka Bog
+Deceptive Landscape
+Path of Ancestry
+Radiant Grove
+6 Plains
+5 Swamp
+7 Forest
+"""),
+    },
+    5: {
+        "source": "https://magic.wizards.com/en/news/announcements/secrets-of-strixhaven-commander-decklists",
+        "cards": decklist("""
+Quintorius, History Chaser
+Excava, the Risen Past
+Lorehold Archivist
+Augusta, Order Returned
+Ceaseless Conflict
+Vanguard of the Restless
+Advanced Reconstruction
+Fateful Tempest
+Naktamun Lorespinner
+Relic Retriever
+Spirit of Resilience
+Turbulent Steppe
+Moonshaker Cavalry
+Staff of the Storyteller
+Wave of Reckoning
+Fabled Passage
+Angel of Indemnity
+Ao, the Dawn Sky
+Archaeomancer's Map
+Claim Jumper
+Drumbellower
+Guardian of Faith
+Guardian Scalelord
+Karmic Guide
+Monologue Tax
+Remorseful Cleric
+Selfless Spirit
+Serra Paragon
+Sevinne's Reclamation
+Skyclave Apparition
+Sun Titan
+Tocasia's Welcome
+Tragic Arrogance
+White Orchid Phantom
+Atsushi, the Blazing Sky
+Conspiracy Theorist
+Laelia, the Blade Reforged
+Balefire Liege
+Hofri Ghostforge
+Quintorius, Loremaster
+Venerable Warsinger
+Bitterthorn, Nissa's Animus
+Currency Converter
+Battlefield Forge
+Clifftop Retreat
+Emeria, the Sky Ruin
+Exotic Orchard
+Furycalm Snarl
+Glittering Massif
+Lotus Field
+Radiant Summit
+Rugged Prairie
+Sunscorched Divide
+Temple of Triumph
+Arcane Signet
+Sol Ring
+Command Tower
+Primary Research
+Seize the Spoils
+Kirol, History Buff
+Lorehold Charm
+Fields of Strife
+Terramorphic Expanse
+Kami of Ancient Law
+Path to Exile
+Secret Rendezvous
+Swords to Plowshares
+Teshar, Ancestor's Apostle
+Anger
+Faithless Looting
+Squee, Goblin Nabob
+Quintorius, Field Historian
+Rip Apart
+Containment Construct
+Fellwar Stone
+Millikin
+Mind Stone
+Patchwork Banner
+Perpetual Timepiece
+Lorehold Campus
+Mistveil Plains
+Sacred Peaks
+Study Hall
+11 Plains
+6 Mountain
+"""),
+    },
+}
+
+TYPE_LINE_HINTS = {
+    "felothar the steadfast": "Legendary Creature — Human Warrior",
+    "jaws of defeat": "Enchantment",
+    "tip the scales": "Sorcery",
+    "ikra shidiqi the usurper": "Legendary Creature — Snake Wizard",
+    "arasta of the endless web": "Legendary Enchantment Creature — Spider",
+    "hornet nest": "Creature — Insect",
+    "shadrix silverquill": "Legendary Creature — Elder Dragon",
+    "sidar kondo of jamuraa": "Legendary Creature — Human Knight",
+    "slaughter the strong": "Sorcery",
+    "blight pile": "Creature — Phyrexian",
+    "crashing drawbridge": "Artifact Creature — Wall",
+    "access tunnel": "Land",
+    "advanced reconstruction": "Sorcery",
+    "fateful tempest": "Instant",
+    "naktamun lorespinner": "Creature",
+    "staff of the storyteller": "Artifact",
+    "wave of reckoning": "Sorcery",
+    "ao the dawn sky": "Legendary Creature — Dragon Spirit",
+    "claim jumper": "Creature — Rabbit Warrior",
+    "monologue tax": "Enchantment",
+    "remorseful cleric": "Creature — Spirit Cleric",
+    "tocasia s welcome": "Enchantment",
+    "atsushi the blazing sky": "Legendary Creature — Dragon Spirit",
+    "conspiracy theorist": "Creature — Human Shaman",
+    "currency converter": "Artifact",
+    "primary research": "Sorcery",
+    "secret rendezvous": "Sorcery",
+    "anger": "Creature — Incarnation",
+    "squee goblin nabob": "Legendary Creature — Goblin",
+    "millikin": "Artifact Creature — Construct",
+    "patchwork banner": "Artifact",
+    "perpetual timepiece": "Artifact",
+}
+
+
 def clean_text(values) -> str:
     if not isinstance(values, str):
         values = " ".join(values)
@@ -146,7 +374,7 @@ def extract_compare() -> dict:
             mana_cost = first_text(commander_block, f".//*[{class_xpath('mc')}]")
             type_line = first_text(commander_block, f".//*[{class_xpath('ty')}]")
             tags = [
-                clean_text(node.xpath(".//text()"))
+                clean_text(node.xpath(".//text()")).replace("Keith's variant", "Base Variant")
                 for node in cell.xpath(f".//*[{class_xpath('ctag')}]")
             ]
 
@@ -269,13 +497,82 @@ def extract_compare() -> dict:
                         summaries,
                         stage_notes,
                     ),
-                    "detailHtml": safe_fragment(detail_nodes[0], remove_images=True)
-                    if detail_nodes
-                    else "",
+                    "detailHtml": (
+                        safe_fragment(detail_nodes[0], remove_images=True)
+                        .replace("Keith's variant", "Base Variant")
+                        .replace("Keith’s variant", "Base Variant")
+                        if detail_nodes else ""
+                    ),
                     "image": "https://api.scryfall.com/cards/named?format=image&version=normal&fuzzy="
                     + commander_name.replace(" ", "+"),
                 }
             )
+
+    # Felothar is a strictly more complete toughness-matters commander for the
+    # existing option 1b shell: the same damage conversion, defender permission,
+    # and an in-command-zone card-selection outlet. Keep Betor at #1, but make
+    # option 2 a genuine head-to-head challenger rather than a weaker Doran copy.
+    contender = next(variant for variant in variants if variant["id"] == "1b")
+    contender.update({
+        "name": "Abzan Toughness Fortress — Felothar",
+        "commander": "Felothar the Steadfast",
+        "manaCost": "{1}{W}{B}{G}",
+        "typeLine": "Legendary Creature — Human Warrior",
+        "image": "https://api.scryfall.com/cards/named?format=image&version=normal&fuzzy=Felothar+the+Steadfast",
+        "ranks": [2, 2, 2],
+        "costs": ["$45 total", "$50 total", "$318 total"],
+        "tags": ["Rebuild option", "Top challenger"],
+        "summaries": [[
+            "The precon's face commander turns every wall into an attacker",
+            "Felothar also turns spare high-toughness creatures into fresh cards",
+            "All three colors, the full defender package, and the commander are already in the box",
+        ]] * 3,
+    })
+    contender["mechanics"] = sorted(set(contender["mechanics"] + ["Defenders", "Toughness matters", "Card filtering"]))
+    contender["detailHtml"] = contender["detailHtml"].replace(
+        "Abzan Toughness Fortress — Doran", "Abzan Toughness Fortress — Felothar"
+    ).replace(
+        "Doran, the Siege Tower", "Felothar the Steadfast"
+    ).replace(
+        "{B}{G}{W}", "{1}{W}{B}{G}", 1
+    ).replace(
+        "Legendary Creature — Treefolk Shaman", "Legendary Creature — Human Warrior", 1
+    ).replace(
+        "Each creature assigns combat damage equal to its toughness rather than its power.",
+        "Your creatures deal combat damage using toughness instead of power, defenders may attack, and Felothar can turn a spare creature into new cards.",
+        1,
+    ).replace(
+        "$8.18", "in box"
+    ).replace(
+        "$58 total", "$50 total"
+    ).replace(
+        "Rewrites a rule of the game for everybody, in a deck where only you benefit. Your 0/5 walls hit for five. The board that was pure defence last turn is lethal this turn without adding a single creature.",
+        "Felothar puts the whole plan in the command zone: your walls deal damage with toughness, defenders can attack, and a spare high-toughness creature can be exchanged for a new hand. The defensive board becomes an attack without waiting to draw a separate enabler.",
+    ).replace(
+        "Doran's effect on an enchantment; also lets defenders attack.",
+        "A backup copy of Felothar's toughness-damage effect in case the commander is removed.",
+    ).replace(
+        "the turn Doran or Assault Formation lands", "the turn Felothar lands"
+    ).replace(
+        "Still a creature-board deck, so a wipe costs more than in 1A. Add the Unbreakable Formation and Sun Titan or it repeats the original's mistake.",
+        "Still a creature-board deck, so protect the wall before committing every defender. Felothar's card filtering improves recovery, but Unbreakable Formation and Sun Titan remain important.",
+    ).replace(
+        "Still the single most literal expression of the wall-that-swings-for-thirty fantasy, and still the cheapest rebuild here. It drops from first to second on one fact: the reworked 1o now does the same defensive job while drawing cards, and Doran's 14-card ladder is the shortest in the row — it gets to great fast and then has nowhere left to grow.",
+        "The real challenger to Betor: Felothar supplies the attack conversion, defender permission, and card filtering from the command zone while already sitting in the sealed deck. Betor remains first for the lifegain-and-reanimation ceiling; Felothar is now close enough to overtake it if reliable wall combat and simpler setup matter more than that ceiling.",
+    ).replace(
+        "Stage ranks — Base <b>#2</b> · Tuned <b>#2</b> · Maxed <b>#4</b>",
+        "Stage ranks — Base <b>#2</b> · Tuned <b>#2</b> · Maxed <b>#2</b>",
+    )
+    contender["detailHtml"] = contender["detailHtml"].replace(
+        '<div class="blk"><h4>Room to grow',
+        '<div class="blk"><h4>Why this can challenge #1</h4><ul><li><b>One-card setup:</b> Felothar supplies both toughness-based damage and permission for defenders to attack.</li><li><b>Built-in recovery:</b> sacrifice a high-toughness creature that has outlived its job to see more cards.</li><li><b>No commander purchase:</b> Felothar is the face commander already included in Abzan Armor.</li></ul><p class="method"><a href="https://magic.wizards.com/en/news/feature/tarkir-dragonstorm-release-notes" target="_blank" rel="noopener">Official Felothar rules text</a></p></div><div class="blk"><h4>Room to grow',
+        1,
+    )
+    previous_max_runner_up = next(variant for variant in variants if variant["id"] == "1e")
+    previous_max_runner_up["ranks"][2] = 4
+    previous_max_runner_up["detailHtml"] = previous_max_runner_up["detailHtml"].replace(
+        "Maxed <b>#2</b>", "Maxed <b>#4</b>"
+    )
 
     if len(decks) != 6 or len(variants) != 30:
         raise RuntimeError(
@@ -329,6 +626,116 @@ def card_view(key: str, card: dict, category: str) -> dict:
     }
 
 
+def normalized_name(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", clean_text(value).lower()).strip()
+
+
+def shell_card(name: str, quantity: int, cards: dict, commander: str) -> dict:
+    raw_key, raw_card = next(
+        (
+            (key, card)
+            for key, card in cards.items()
+            if normalized_name(card.get("name", key)) == normalized_name(name)
+        ),
+        (normalized_name(name).replace(" ", "-"), {}),
+    )
+    type_line = clean_text(raw_card.get("type_line", "")) or TYPE_LINE_HINTS.get(normalized_name(name), "")
+    if normalized_name(name) in {
+        "plains", "island", "swamp", "mountain", "forest", "wastes",
+        "snow covered plains", "snow covered island", "snow covered swamp",
+        "snow covered mountain", "snow covered forest",
+    }:
+        type_line = type_line or "Basic Land"
+    return {
+        "id": f"shell-{raw_key}",
+        "name": clean_text(name),
+        "quantity": quantity,
+        "manaCost": clean_text(raw_card.get("mana_cost", "")),
+        "typeLine": type_line,
+        "tags": [clean_text(tag) for tag in raw_card.get("tags", [])],
+        "isCommander": normalized_name(name) == normalized_name(commander),
+        "gameChanger": bool(raw_card.get("game_changer")),
+        "isFlexibleSlot": False,
+        "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy="
+        + clean_text(name).replace(" ", "+"),
+    }
+
+
+def make_starting_shell(deck_id: int, raw: dict, cards: dict) -> tuple[list[dict], str, str]:
+    commander = clean_text(raw.get("commander_name", ""))
+    official = OFFICIAL_STARTING_SHELLS.get(deck_id)
+    if official:
+        shell = [shell_card(name, quantity, cards, commander) for name, quantity in official["cards"]]
+        return shell, "official-precon", official["source"]
+
+    shell = [
+        {
+            "id": f"shell-{key}",
+            "name": clean_text(card.get("name", key)),
+            "quantity": card.get("qty", 1),
+            "manaCost": clean_text(card.get("mana_cost", "")),
+            "typeLine": clean_text(card.get("type_line", "")),
+            "tags": [clean_text(tag) for tag in card.get("tags", [])],
+            "isCommander": normalized_name(card.get("name", key)) == normalized_name(commander),
+            "gameChanger": bool(card.get("game_changer")),
+            "isFlexibleSlot": False,
+            "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy="
+            + clean_text(card.get("name", key)).replace(" ", "+"),
+        }
+        for key, card in cards.items()
+        if not card.get("is_purchase_item")
+    ]
+    if not any(card["isCommander"] for card in shell):
+        shell.append(shell_card(commander, 1, cards, commander))
+    modeled_total = sum(card["quantity"] for card in shell)
+    if modeled_total > 100:
+        raise RuntimeError(f"Deck {deck_id} modeled shell exceeds 100 cards")
+    for slot in range(1, 101 - modeled_total):
+        shell.append({
+            "id": f"flexible-shell-slot-{slot}",
+            "name": f"Unspecified shell card {slot}",
+            "quantity": 1,
+            "manaCost": "",
+            "typeLine": "Unspecified card slot",
+            "tags": [],
+            "isCommander": False,
+            "gameChanger": False,
+            "isFlexibleSlot": True,
+            "image": "",
+        })
+    return shell, "custom-shell", ""
+
+
+def assign_replacements(items: list[dict], starting_shell: list[dict], retained_names: set[str]) -> None:
+    """Give every purchase a deterministic one-for-one cut from the 100-card shell."""
+    def is_land(card: dict) -> bool:
+        name = normalized_name(card.get("name", ""))
+        return "land" in clean_text(card.get("typeLine", "")).lower() or name in {
+            "plains", "island", "swamp", "mountain", "forest", "wastes",
+            "snow covered plains", "snow covered island", "snow covered swamp",
+            "snow covered mountain", "snow covered forest",
+        }
+
+    candidates = [
+        card for card in starting_shell
+        if not card.get("isCommander") and not is_land(card) and not card.get("isFlexibleSlot")
+    ]
+    candidates.sort(key=lambda card: (normalized_name(card["name"]) in retained_names, card["name"]))
+    used = set()
+    for item in items:
+        existing = re.sub(r"^(replaces|swaps in for)\s+", "", clean_text(item.get("replaces", "")), flags=re.I)
+        if existing:
+            item["replaces"] = existing
+            used.add(normalized_name(existing))
+            continue
+        target = next((card for card in candidates if normalized_name(card["name"]) not in used), None)
+        if not target:
+            target = next((card for card in starting_shell if card.get("isFlexibleSlot") and normalized_name(card["name"]) not in used), None)
+        if target:
+            item["replaces"] = target["name"]
+            used.add(normalized_name(target["name"]))
+
+
 def extract_buy_plans() -> dict:
     source = BUY_SOURCE.read_text(encoding="utf-8", errors="replace")
     all_data = extract_all_data(source)
@@ -343,6 +750,7 @@ def extract_buy_plans() -> dict:
         summary = summary_by_id.get(deck_id, {})
         cards = raw.get("cards", {})
         required = []
+        upgrade = []
         enhance = []
         max_options = []
         seen = set()
@@ -356,9 +764,9 @@ def extract_buy_plans() -> dict:
             if card.get("stage") == "Maxed" or (card.get("optional") and price > 10):
                 max_options.append(card_view(key, card, "max"))
             elif card.get("optional"):
-                enhance.append(card_view(key, card, "enhance"))
+                upgrade.append(card_view(key, card, "upgrade"))
             else:
-                required.append(card_view(key, card, "upgrade"))
+                required.append(card_view(key, card, "tuned"))
 
         for base_key, alt_keys in raw.get("alternates", {}).items():
             for key in alt_keys:
@@ -374,6 +782,13 @@ def extract_buy_plans() -> dict:
                 (max_options if category == "max" else enhance).append(view)
 
         precon = raw.get("precon") or {}
+        starting_shell, starting_shell_kind, starting_shell_source = make_starting_shell(deck_id, raw, cards)
+        retained_names = {
+            normalized_name(card.get("name", key))
+            for key, card in cards.items()
+            if not card.get("is_purchase_item")
+        }
+        assign_replacements(required + upgrade + enhance + max_options, starting_shell, retained_names)
         precon_name = clean_text(precon.get("name") or raw.get("deck_name") or "Deck shell")
         precon_price = precon.get("price") or precon.get("target_price")
         precon_item = {
@@ -416,6 +831,9 @@ def extract_buy_plans() -> dict:
             "buyWhy": clean_text(summary.get("buy_why", "")),
             "buyFirst": clean_text(summary.get("buy_first", "")),
             "allIn": summary.get("all_in"),
+            "startingShell": starting_shell,
+            "startingShellKind": starting_shell_kind,
+            "startingShellSource": starting_shell_source,
             "baseCards": [
                 {
                     "id": key,
@@ -440,6 +858,7 @@ def extract_buy_plans() -> dict:
             ),
             "precon": precon_item,
             "required": required,
+            "upgrade": upgrade,
             "enhance": enhance,
             "max": max_options,
         }

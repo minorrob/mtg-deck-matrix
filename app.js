@@ -13,6 +13,7 @@
   let openDeckId = 1;
   let openBuyDeckId = 1;
   let openCommentId = null;
+  let tourState = null;
   let shopMetadataPromise = null;
   let cardMetadata = {};
   try { cardMetadata = JSON.parse(localStorage.getItem("mtg-card-metadata-v1") || "{}"); } catch (_) {}
@@ -23,6 +24,35 @@
   const icon = (glyph) => `<span class="ui-icon" aria-hidden="true">${esc(glyph)}</span>`;
   const money = (value) => Number.isFinite(Number(value)) && Number(value) > 0 ? `$${Number(value).toFixed(2)}` : "Price varies";
   const variantById = (id) => catalog.variants.find((variant) => variant.id === id);
+
+  function manaCostHtml(cost) {
+    const value = String(cost || "").trim();
+    if (!value) return "";
+    const symbols = Array.from(value.matchAll(/\{([^}]+)\}/g));
+    if (!symbols.length) return `<span class="mana-text">${esc(value)}</span>`;
+    return `<span class="mana-cost" aria-label="Mana cost ${esc(value)}">${symbols.map((match) => {
+      const token = match[1].toUpperCase().replaceAll("/", "").replace(/[^A-Z0-9∞]/g, "");
+      return `<img class="mana-symbol" src="https://svgs.scryfall.io/card-symbols/${encodeURIComponent(token)}.svg" alt="${esc(match[0])}" title="${esc(match[0])}">`;
+    }).join("")}</span>`;
+  }
+
+  function plainLanguage(value) {
+    return String(value || "")
+      .replace(/\bETB\b/gi, "when it enters the battlefield")
+      .replace(/\bboard wipe\b/gi, "spell that clears many cards from the battlefield")
+      .replace(/\bdraw engine\b/gi, "repeatable way to draw cards")
+      .replace(/\bramp\b/gi, "extra mana")
+      .replace(/\brecursion\b/gi, "bringing cards back from the graveyard")
+      .replace(/\bevasion\b/gi, "ways to get past blockers")
+      .replace(/\bsac(?:rifice)? outlet\b/gi, "repeatable way to sacrifice your own cards");
+  }
+
+  function cardEffectHtml(value) {
+    const text = plainLanguage(value).trim();
+    if (!text) return "";
+    const points = text.split(/(?<=[.!?])\s+|\s+[—–]\s+|;\s+/).map((part) => part.trim()).filter(Boolean);
+    return `<ul class="card-effect-list">${points.map((point) => `<li>${esc(point)}</li>`).join("")}</ul>`;
+  }
 
   function blankState() {
     return {
@@ -247,7 +277,7 @@
         <div>
           <div class="variant-tags">${variant.tags.map((tag) => `<span class="tag">${esc(tag)}</span>`).join("")}</div>
           <h3>${esc(variant.name)}</h3>
-          <p class="commander">${esc(variant.commander)}<br><span class="mana">${esc(variant.manaCost)} · ${esc(variant.typeLine)}</span></p>
+          <p class="commander">${esc(variant.commander)}<br><span class="mana">${manaCostHtml(variant.manaCost)}<span>${esc(variant.typeLine)}</span></span></p>
           <div class="mechanic-tags">${(variant.mechanics || []).slice(0,3).map((mechanic) => `<span>${esc(mechanic)}</span>`).join("")}</div>
         </div>
       </div>
@@ -333,7 +363,7 @@
     $("#detail-sheet-kicker").textContent = `Deck ${variant.deckId} · ${STAGES[stage - 1]} rank #${variant.ranks?.[stage - 1] || variant.order}`;
     $("#detail-sheet-title").textContent = variant.name;
     $("#detail-sheet-body").innerHTML = variant.detailHtml || `<p>No extended report is available.</p>`;
-    decorateRichContent($("#detail-sheet-body"));
+    decorateRichContent($("#detail-sheet-body"), variant);
     dialog.showModal();
   }
 
@@ -367,7 +397,7 @@
   }
 
   function ensureBuyState(variantId) {
-    if (!state.buySelections[variantId]) state.buySelections[variantId] = {enhance: [], max: []};
+    state.buySelections[variantId] = {upgrade: [], enhance: [], max: [], ...(state.buySelections[variantId] || {})};
     return state.buySelections[variantId];
   }
 
@@ -380,7 +410,7 @@
       <div class="page-intro">
         <div>
           <h2 id="buy-title">Build the buy plan</h2>
-          <p>Required tune-ups are included automatically. Add budget Enhances or deliberate Max options only when you want them.</p>
+          <p>The 100-card Starting Shell and Tuned purchases are included automatically. Add optional Upgrades, Enhances, or Maxxed choices as one-for-one swaps.</p>
         </div>
         <div class="selection-meter"><strong>${readyCount}/${selected.length || 0}</strong><span>profiles ready</span></div>
       </div>
@@ -388,7 +418,7 @@
       ${selected.some((variant) => !buyCatalog.plans[variant.id]) ? `<div class="coverage-note"><h3>Catalog build in progress</h3><p>The original shopping guide contained six complete builds. Those are connected now; the remaining variant profiles are being normalized before they are offered as purchases.</p></div>` : ""}
       ${readyCount ? `<section class="buy-overview"><h3>Shopping plan summary</h3><div class="buy-overview-grid">${selected.filter((variant) => buyCatalog.plans[variant.id]).map((variant) => {
         const plan = buyCatalog.plans[variant.id];
-        return `<button class="buy-overview-card" data-open-buy-deck="${variant.deckId}"><b>Deck ${variant.deckId}</b><strong>${esc(variant.name)}</strong><span>${esc(plan.priorityLabel || plan.budgetLabel)} · ${plan.required.length} required upgrades</span></button>`;
+        return `<button class="buy-overview-card" data-open-buy-deck="${variant.deckId}"><b>Deck ${variant.deckId}</b><strong>${esc(variant.name)}</strong><span>${esc(plan.priorityLabel || plan.budgetLabel)} · ${plan.required.length} Tuned purchases</span></button>`;
       }).join("")}</div></section>` : ""}
       ${selected.length ? `<div class="action-row action-row-top"><button class="primary-button save-buys">Save Buys → Shop List</button><button class="secondary-button" data-go="compare">Back to Compare</button></div>` : ""}
       <div id="buy-decks"></div>
@@ -411,14 +441,14 @@
   function makeBuyDeck(variant) {
     const plan = buyCatalog.plans[variant.id];
     const current = plan ? ensureBuyState(variant.id) : null;
-    const optionalCount = current ? (current.enhance?.length || 0) + (current.max?.length || 0) : 0;
+    const optionalCount = current ? (current.upgrade?.length || 0) + (current.enhance?.length || 0) + (current.max?.length || 0) : 0;
     const details = document.createElement("details");
     details.className = "buy-deck";
     details.open = variant.deckId === openBuyDeckId;
     details.innerHTML = `
       <summary>
         <span class="deck-number">${variant.deckId}</span>
-        <span class="buy-deck-title"><strong>${esc(variant.name)}</strong><span>${plan ? `${plan.required.length} required · ${optionalCount} optional picked` : esc(variant.commander)}</span></span>
+        <span class="buy-deck-title"><strong>${esc(variant.name)}</strong><span>${plan ? `${plan.required.length} Tuned · ${optionalCount} optional picked` : esc(variant.commander)}</span></span>
         <span class="${plan ? "profile-ready" : "profile-gap"}">${plan ? "Connected" : "Pending"}</span>
       </summary>
       <div class="buy-body"></div>`;
@@ -441,10 +471,13 @@
         <summary><span>${icon("☰")}Deck plan &amp; analysis</span><small>How to play, buy order, bracket placement, and tuning notes</small></summary>
         <div class="legacy-plan">${plan.planHtml || ""}</div>
       </details>
-      ${buySection("Starting shell", "Included automatically", [plan.precon], "precon", current, variant.id)}
-      ${buySection("Upgrade", "Required for the tuned build", plan.required, "required", current, variant.id)}
+      ${startingShellSection(variant, plan)}
+      ${buySection("Tuned", "Required purchases for the Tuned build", plan.required, "tuned", current, variant.id)}
+      ${buySection("Upgrade", "Optional primary improvements · generally $10 or less", plan.upgrade, "upgrade", current, variant.id)}
       ${buySection("Enhance", "Optional · same strategy · generally $10 or less", plan.enhance, "enhance", current, variant.id)}
-      ${buySection("Max", "Optional ceiling choices · up to 3 Game Changers", plan.max, "max", current, variant.id)}`;
+      ${buySection("Maxxed", "Optional ceiling choices · up to 3 Game Changers", plan.max, "max", current, variant.id)}`;
+    decorateRichContent(body, variant);
+    ensureShellMetadata(plan.startingShell || []);
     $$('input[data-buy-kind]', body).forEach((checkbox) => checkbox.addEventListener("change", () => {
       const kind = checkbox.dataset.buyKind;
       const itemId = checkbox.dataset.itemId;
@@ -465,53 +498,118 @@
     }));
     $$(".buy-item-detail", body).forEach((button) => button.addEventListener("click", () => {
       const kind = button.dataset.itemKind;
-      const item = kind === "precon" ? plan.precon : (plan[kind] || []).find((candidate) => candidate.id === button.dataset.itemId);
+      const collection = kind === "tuned" ? plan.required : plan[kind];
+      const item = kind === "precon" ? plan.precon : (collection || []).find((candidate) => candidate.id === button.dataset.itemId);
       if (item) openBuyItemDetail(item, variant, kind);
     }));
     body.addEventListener("click", (event) => {
       const status = event.target.closest("[data-compliance-tier]");
-      if (status) openComplianceDetail(variant, evaluateDeckCompliance(plan, ensureBuyState(variant.id)), Number(status.dataset.complianceTier));
+      if (status) {
+        event.preventDefault();
+        event.stopPropagation();
+        openComplianceDetail(variant, evaluateDeckCompliance(plan, ensureBuyState(variant.id)), Number(status.dataset.complianceTier));
+      }
       const composition = event.target.closest("[data-composition-detail]");
-      if (composition) openComplianceDetail(variant, evaluateDeckCompliance(plan, ensureBuyState(variant.id)), 0);
+      if (composition) {
+        event.preventDefault();
+        event.stopPropagation();
+        openComplianceDetail(variant, evaluateDeckCompliance(plan, ensureBuyState(variant.id)), 0);
+      }
+    });
+    body.addEventListener("keydown", (event) => {
+      const control = event.target.closest('[role="button"][data-compliance-tier], [role="button"][data-composition-detail]');
+      if (control && ["Enter", " "].includes(event.key)) {
+        event.preventDefault();
+        control.click();
+      }
     });
     return details;
   }
 
   const BASIC_LANDS = new Set(["plains", "island", "swamp", "mountain", "forest", "wastes", "snow-covered plains", "snow-covered island", "snow-covered swamp", "snow-covered mountain", "snow-covered forest"]);
 
+  function resolvedShellCard(card) {
+    const metadata = cardMetadata[itemKey(card)] || {};
+    return {
+      ...card,
+      manaCost: card.manaCost || metadata.manaCost || "",
+      typeLine: card.typeLine || metadata.typeLine || "Unclassified card",
+      image: card.image || metadata.image || ""
+    };
+  }
+
+  function shellType(card) {
+    if (card.isFlexibleSlot) return "Unspecified slots";
+    return ["Land", "Creature", "Artifact", "Enchantment", "Instant", "Sorcery", "Planeswalker", "Battle"].find((type) => String(card.typeLine).includes(type)) || "Other";
+  }
+
+  function shellCardRow(card) {
+    const image = card.image ? `<img src="${esc(card.image)}" alt="" loading="lazy">` : `<span class="shell-placeholder" aria-hidden="true">?</span>`;
+    return `<div class="shell-card-row">${image}<span><strong>${esc(card.name)}${card.quantity > 1 ? ` ×${card.quantity}` : ""}</strong><small>${manaCostHtml(card.manaCost)}${esc(card.typeLine)}</small></span></div>`;
+  }
+
+  function startingShellSection(variant, plan) {
+    const cards = (plan.startingShell || []).map(resolvedShellCard);
+    const commander = cards.find((card) => card.isCommander) || cards[0];
+    const remaining = cards.filter((card) => card !== commander);
+    const remainingCount = remaining.reduce((sum, card) => sum + Number(card.quantity || 1), 0);
+    const groups = new Map();
+    remaining.forEach((card) => {
+      const type = shellType(card);
+      if (!groups.has(type)) groups.set(type, []);
+      groups.get(type).push(card);
+    });
+    const typeOrder = ["Creature", "Instant", "Sorcery", "Artifact", "Enchantment", "Planeswalker", "Battle", "Other", "Unspecified slots"];
+    const cardGroups = typeOrder.filter((type) => groups.has(type)).map((type) => {
+      const group = groups.get(type);
+      const count = group.reduce((sum, card) => sum + Number(card.quantity || 1), 0);
+      return `<details class="shell-type-group"><summary><span>${esc(type)}</span><b>${count}</b></summary><div class="shell-card-list">${group.map(shellCardRow).join("")}</div></details>`;
+    }).join("");
+    const lands = groups.get("Land") || [];
+    const landCount = lands.reduce((sum, card) => sum + Number(card.quantity || 1), 0);
+    const landGroup = lands.length ? `<details class="shell-type-group shell-land-group"><summary><span>Lands</span><b>${landCount}</b></summary><div class="shell-land-grid">${lands.map((card) => `<div class="shell-land-tile"><div>${card.image ? `<img src="${esc(card.image)}" alt="${esc(card.name)} card" loading="lazy">` : `<span class="shell-placeholder">?</span>`}<b>×${card.quantity}</b></div><span>${esc(card.name)}</span></div>`).join("")}</div></details>` : "";
+    return `<section class="starting-shell">
+      <div class="starting-shell-heading"><span>${icon("▣")}<strong>Starting Shell</strong><b>100 cards</b></span><small>Included automatically</small></div>
+      <div class="shell-commander"><img src="${esc(commander?.image || variant.image)}" alt="${esc(commander?.name || variant.commander)} card" loading="lazy"><span><small>Commander · always visible</small><strong>${esc(commander?.name || variant.commander)}</strong><span>${manaCostHtml(commander?.manaCost)}${esc(commander?.typeLine || "")}</span></span></div>
+      <details class="shell-library"><summary><span>View remaining ${remainingCount} cards</span><small>Nested by card type; lands have their own visual tray</small></summary><div class="shell-library-body">
+        ${plan.startingShellKind === "custom-shell" ? `<p class="shell-source-note">The source guide names the retained core; unspecified slots preserve an honest 100-card model without inventing card names.</p>` : `<p class="shell-source-note">Complete published preconstructed decklist${plan.startingShellSource ? ` · <a href="${esc(plan.startingShellSource)}" target="_blank" rel="noopener">official source</a>` : ""}</p>`}
+        ${cardGroups}${landGroup}
+      </div></details>
+    </section>`;
+  }
+
   function compliancePanel(variant, plan, current) {
     const result = evaluateDeckCompliance(plan, current);
     const tierButton = (tier) => {
       const violations = result[`tier${tier}`];
       const compliant = violations.length === 0;
-      return `<button class="compliance-status ${compliant ? "is-compliant" : "is-noncompliant"}" data-compliance-tier="${tier}">
-        <span>Tier ${tier}</span><strong>${compliant ? "✓ Compliant" : "! Non-Compliant"}</strong><small>${compliant ? "Tracked rules passed" : `${violations.length} issue${violations.length === 1 ? "" : "s"} · view details`}</small>
-      </button>`;
+      return `<span class="compliance-status ${compliant ? "is-compliant" : "is-noncompliant"}" data-compliance-tier="${tier}" role="button" tabindex="0" title="View Tier ${tier} details">
+        <b>Tier ${tier}</b><strong>${compliant ? "✓ Compliant" : `! ${violations.length} issue${violations.length === 1 ? "" : "s"}`}</strong>
+      </span>`;
     };
     const countState = result.total === 100 ? "is-compliant" : "is-noncompliant";
     const landPercent = result.total ? Math.min(100, Math.round((result.types.Land || 0) / result.total * 100)) : 0;
-    return `<section class="deck-compliance" data-compliance-panel>
-      <div class="compliance-heading"><div>${icon("✓")}<span><b>Commander deck check</b><small>Tracked 4-player construction and Tier 2–3 rules</small></span></div><span class="audit-note">Guideline check</span></div>
-      <div class="compliance-grid">
-        ${tierButton(2)}${tierButton(3)}
-        <button class="card-count-status ${countState}" data-composition-detail>
-          <span>Card count</span><strong>${result.total}<small>/100</small></strong><small>${result.total === 100 ? "Exact" : result.total < 100 ? `${100 - result.total} under` : `${result.total - 100} over`} · composition</small>
-        </button>
-      </div>
+    return `<details class="deck-compliance" data-compliance-panel>
+      <summary class="compliance-heading"><span class="compliance-title">${icon("✓")}<span><b>Commander deck check</b><small>4-player construction · click to expand</small></span></span><span class="compliance-inline">${tierButton(2)}${tierButton(3)}<span class="card-count-status ${countState}" data-composition-detail role="button" tabindex="0"><b>${result.total}/100</b><small>${result.total === 100 ? "Exact" : result.total < 100 ? `${100 - result.total} under` : `${result.total - 100} over`}</small></span></span></summary>
+      <div class="compliance-details">
       <button class="composition-strip" data-composition-detail aria-label="View deck composition details">
         <span class="land-segment" style="width:${landPercent}%"></span><span class="other-segment" style="width:${100 - landPercent}%"></span>
         <b>${result.types.Land || 0} lands</b><b>${result.total - (result.types.Land || 0)} other</b><em>View breakdown →</em>
       </button>
       ${result.compositionWarnings.length ? `<p class="composition-warning">${icon("!")}<span>${esc(result.compositionWarnings[0])}</span></p>` : ""}
-    </section>`;
+      <p class="audit-note">Guideline check · open a Tier status for rule details</p></div>
+    </details>`;
   }
 
   function updateCompliancePanel(body, variant, plan) {
     const existing = $("[data-compliance-panel]", body);
     if (!existing) return;
+    const wasOpen = existing.open;
     const wrapper = document.createElement("div");
     wrapper.innerHTML = compliancePanel(variant, plan, ensureBuyState(variant.id));
-    existing.replaceWith(wrapper.firstElementChild);
+    const replacement = wrapper.firstElementChild;
+    replacement.open = wasOpen;
+    existing.replaceWith(replacement);
   }
 
   function evaluateDeckCompliance(plan, current) {
@@ -525,10 +623,11 @@
       else cards.set(key, {
         name: item.name,
         quantity,
-        typeLine: item.typeLine || "Unknown",
+        typeLine: item.typeLine || cardMetadata[itemKey(item)]?.typeLine || "Unknown",
         tags: item.tags || [],
         isCommander: Boolean(item.isCommander || (item.tags || []).some((tag) => String(tag).toLowerCase() === "commander")),
         gameChanger: Boolean(item.gameChanger),
+        isFlexibleSlot: Boolean(item.isFlexibleSlot),
         source
       });
     };
@@ -540,23 +639,29 @@
       if (existing.quantity <= 0) cards.delete(key);
       return true;
     };
-    (plan.baseCards || []).forEach((card) => addCard(card, "original deck"));
-    (plan.required || []).forEach((card) => addCard(card, "required upgrade"));
-
+    (plan.startingShell || plan.baseCards || []).forEach((card) => addCard(card, "starting shell"));
     const selected = [
+      ...(plan.required || []),
+      ...(plan.upgrade || []).filter((item) => (current.upgrade || []).includes(item.id)),
       ...(plan.enhance || []).filter((item) => (current.enhance || []).includes(item.id)),
       ...(plan.max || []).filter((item) => (current.max || []).includes(item.id))
     ];
+    const purchasesByName = new Map([...plan.required, ...(plan.upgrade || []), ...plan.enhance, ...plan.max].map((item) => [normalize(item.name), item]));
     const replacementUse = new Map();
     const replacementIssues = [];
     selected.forEach((item) => {
+      if (cards.has(normalize(item.name))) return;
       const target = String(item.replaces || "").replace(/^(replaces|swaps in for)\s+/i, "").trim();
       if (target) {
         const targetKey = normalize(target);
         const prior = replacementUse.get(targetKey);
         if (prior) replacementIssues.push({card: item.name, rule: `Both ${prior} and ${item.name} replace ${target}`, detail: "Choose only one replacement for that slot."});
         replacementUse.set(targetKey, item.name);
-        if (!removeCard(target)) replacementIssues.push({card: item.name, rule: `Replacement target not found: ${target}`, detail: "The selected card adds a slot until a valid cut is chosen."});
+        if (!removeCard(target)) {
+          const chained = purchasesByName.get(targetKey);
+          const chainedTarget = String(chained?.replaces || "").replace(/^(replaces|swaps in for)\s+/i, "").trim();
+          if (!chainedTarget || !removeCard(chainedTarget)) replacementIssues.push({card: item.name, rule: `Replacement target not found: ${target}`, detail: "The selected card adds a slot until a valid cut is chosen."});
+        }
       }
       addCard(item, "selected option");
     });
@@ -573,7 +678,7 @@
     if (total !== 100) common.push({card: "Deck list", rule: `Commander requires exactly 100 cards; this selection contains ${total}.`, detail: total < 100 ? `Add or restore ${100 - total} card${100 - total === 1 ? "" : "s"}.` : `Cut ${total - 100} card${total - 100 === 1 ? "" : "s"}.`});
     const commanders = included.reduce((sum, card) => sum + (card.isCommander ? card.quantity : 0), 0);
     if (commanders !== 1) common.push({card: "Commander slot", rule: `Exactly one commander is expected; ${commanders} are identified in the modeled list.`, detail: "Confirm the commander and partner/background configuration."});
-    included.filter((card) => card.quantity > 1 && !BASIC_LANDS.has(normalize(card.name))).forEach((card) => common.push({card: card.name, rule: `Singleton rule: ${card.quantity} copies are modeled.`, detail: "Only basic lands and cards with explicit exceptions may repeat."}));
+    included.filter((card) => card.quantity > 1 && !card.isFlexibleSlot && !BASIC_LANDS.has(normalize(card.name))).forEach((card) => common.push({card: card.name, rule: `Singleton rule: ${card.quantity} copies are modeled.`, detail: "Only basic lands and cards with explicit exceptions may repeat."}));
 
     const selectedGameChangers = included.filter((card) => card.gameChanger);
     const tagsFor = (card) => (card.tags || []).map((tag) => String(tag).toLowerCase()).join(" ");
@@ -614,21 +719,22 @@
 
   function buySection(title, note, items, kind, current, variantId) {
     if (!items?.length) return "";
-    const included = kind === "required" || kind === "precon";
-    const glyph = kind === "precon" ? "▣" : kind === "required" ? "✓" : kind === "enhance" ? "+" : "✦";
+    const included = kind === "tuned" || kind === "precon";
+    const glyph = kind === "precon" ? "▣" : kind === "tuned" ? "✓" : kind === "upgrade" ? "↗" : kind === "enhance" ? "+" : "✦";
     return `<details class="buy-section" ${included ? "open" : ""}>
       <summary><span>${icon(glyph)}${esc(title)} <b>${items.length}</b></span><small>${esc(note)}</small></summary>
       ${items.map((item) => {
         const required = included;
         const checked = required || (current[kind] || []).includes(item.id);
+        const replacement = item.replaces ? `<span class="replacement-line"><b>Recommended cut</b><span>${esc(item.replaces)}</span></span>` : "";
         return `<div class="buy-item">
           ${required ? `<span class="required-check" aria-label="Included">✓</span>` : `<input type="checkbox" ${checked ? "checked" : ""} data-buy-kind="${esc(kind)}" data-item-id="${esc(item.id)}" data-variant-id="${esc(variantId)}">`}
           <button class="buy-item-detail" type="button" data-item-kind="${esc(kind)}" data-item-id="${esc(item.id)}">
             <img src="${esc(item.image)}" alt="" loading="lazy">
             <span class="buy-copy">
-              <span class="buy-item-eyebrow"><span class="kind-label ${esc(kind)}">${esc(kind === "required" ? "upgrade" : kind)}</span>${item.gameChanger ? `<span class="gc-mini">✦ Game Changer</span>` : ""}</span>
+              <span class="buy-item-eyebrow"><span class="kind-label ${esc(kind)}">${esc(kind)}</span>${item.gameChanger ? `<span class="gc-mini">✦ Game Changer</span>` : ""}</span>
               <strong>${esc(item.name)}${item.quantity > 1 ? ` ×${item.quantity}` : ""}</strong>
-              <small>${esc(item.replaces || item.purpose || item.typeLine || "")}</small>
+              ${replacement}<small>${esc(item.purpose || item.typeLine || "")}</small>
             </span>
           </button>
           <span class="price">${money(item.price)}</span>
@@ -643,7 +749,7 @@
     const plan = buyCatalog.plans[variant.id];
     $("#detail-sheet-image").src = item.image.replace("version=small", "version=normal");
     $("#detail-sheet-image").alt = `${item.name} card`;
-    $("#detail-sheet-kicker").textContent = `Deck ${variant.deckId} · ${kind === "required" ? "Upgrade" : STAGES.includes(kind) ? kind : kind[0].toUpperCase() + kind.slice(1)}`;
+    $("#detail-sheet-kicker").textContent = `Deck ${variant.deckId} · ${kind === "tuned" ? "Tuned" : STAGES.includes(kind) ? kind : kind[0].toUpperCase() + kind.slice(1)}`;
     $("#detail-sheet-title").textContent = item.name;
     $("#detail-sheet-body").innerHTML = kind === "precon" ? `
       <div class="precon-facts">
@@ -663,10 +769,10 @@
       </section>
       ${item.tcgplayerUrl ? `<p><a class="primary-button detail-link" href="${esc(item.tcgplayerUrl)}" target="_blank" rel="noopener">Find this precon on TCGplayer</a></p>` : ""}`
       : `
-      <div class="item-meta"><span>${esc(item.manaCost || "")}</span><span>${esc(item.typeLine || "")}</span><span>${money(item.price)}${item.ceiling ? ` · ceiling ${money(item.ceiling)}` : ""}</span></div>
+      <div class="item-meta">${item.manaCost ? `<span>${manaCostHtml(item.manaCost)}</span>` : ""}<span>${esc(item.typeLine || "")}</span><span>${money(item.price)}${item.ceiling ? ` · ceiling ${money(item.ceiling)}` : ""}</span></div>
       ${item.gameChanger ? `<p class="gc-callout">Game Changer · counts toward this deck’s limit of three in Bracket 3.</p>` : ""}
       ${item.replaces ? `<section class="detail-block"><h3>Replaces</h3><p>${esc(item.replaces)}</p></section>` : ""}
-      ${detailText("Why this card", item.whyPrimary || item.why || item.purpose)}
+      ${detailEffect("What this card does", item.whyPrimary || item.why || item.purpose)}
       ${detailText("Why it is optional", item.whyOptional)}
       ${detailText("Alternate rationale", item.alternateReason)}
       ${detailText("Tradeoff", item.alternateTradeoff)}
@@ -676,11 +782,11 @@
       ${item.tags?.length ? `<section class="detail-block"><h3>Roles</h3><div class="variant-tags">${item.tags.map((tag) => `<span class="tag">${esc(tag)}</span>`).join("")}</div></section>` : ""}
       ${detailText("Where to buy", item.whereToBuy)}
       ${item.tcgplayerUrl ? `<p><a class="primary-button detail-link" href="${esc(item.tcgplayerUrl)}" target="_blank" rel="noopener">Search this card on TCGplayer</a></p>` : ""}`;
-    decorateRichContent($("#detail-sheet-body"));
+    decorateRichContent($("#detail-sheet-body"), variant);
     dialog.showModal();
   }
 
-  function decorateRichContent(root) {
+  function decorateRichContent(root, variant = null) {
     const sectionMap = [
       [/commander/i, "♛", "forest"], [/rarity/i, "◇", "blue"], [/precon seed/i, "▣", "gold"],
       [/key upgrades/i, "↗", "gold"], [/how it plays|how to play/i, "▶", "forest"], [/ratings|scoring/i, "✦", "blue"],
@@ -701,10 +807,86 @@
     $$(".method", root).forEach((paragraph) => paragraph.classList.add("info-note"));
     $$(".flag", root).forEach((flag) => flag.classList.add("warning-note"));
     $$("ul", root).forEach((list) => list.classList.add("rich-list"));
+
+    $$(".rich-section", root).forEach((section) => {
+      const heading = $("h3, h4", section);
+      if (!heading || !/how it plays|how to play/i.test(heading.textContent)) return;
+      $$("p", section).forEach((paragraph) => {
+        if (paragraph.textContent.trim().length < 120) return;
+        const steps = paragraph.textContent.trim().split(/(?<=[.!?])\s+/).filter(Boolean);
+        if (steps.length < 2) return;
+        const list = document.createElement("ol");
+        list.className = "play-steps";
+        list.innerHTML = steps.map((step) => `<li>${esc(step)}</li>`).join("");
+        paragraph.replaceWith(list);
+      });
+    });
+
+    if (variant) {
+      const plan = buyCatalog.plans[variant.id];
+      $$(".stretch-card, .b3-card", root).forEach((legacyCard) => {
+        const nameNode = $(".sc-name", legacyCard);
+        if (!nameNode || legacyCard.dataset.detailReady) return;
+        const name = nameNode.textContent.replace(/GAME CHANGER/gi, "").trim();
+        const allItems = [...(plan?.required || []), ...(plan?.upgrade || []), ...(plan?.enhance || []), ...(plan?.max || []), ...(plan?.startingShell || [])];
+        const source = allItems.find((item) => item.name.toLowerCase() === name.toLowerCase());
+        const fallback = {
+          id: `legacy-${itemKey({name})}`,
+          name,
+          quantity: 1,
+          image: `https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=${encodeURIComponent(name)}`,
+          purpose: $(".sc-why", legacyCard)?.textContent.trim() || "Open the card image and buying details.",
+          replaces: $(".sc-replaces", legacyCard)?.textContent.replace(/^(replaces|swaps in for)\s*:?\s*/i, "").trim() || "",
+          typeLine: "",
+          manaCost: "",
+          price: Number($(".sc-price", legacyCard)?.textContent.replace(/[^0-9.]/g, "")) || null,
+          tags: [],
+          brief: {}
+        };
+        const item = {...fallback, ...(source || {})};
+        legacyCard.dataset.detailReady = "true";
+        legacyCard.classList.add("legacy-card-link");
+        legacyCard.tabIndex = 0;
+        legacyCard.setAttribute("role", "button");
+        legacyCard.setAttribute("aria-label", `View ${name} card details`);
+        const open = (event) => {
+          if (event.target.closest("a")) return;
+          if (event.type === "keydown" && !["Enter", " "].includes(event.key)) return;
+          event.preventDefault();
+          openBuyItemDetail(item, variant, source?.category || (legacyCard.classList.contains("b3-card") ? "max" : "upgrade"));
+        };
+        legacyCard.addEventListener("click", open);
+        legacyCard.addEventListener("keydown", open);
+      });
+    }
+
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const manaNodes = [];
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      if (/\{[^}]+\}/.test(node.nodeValue) && !node.parentElement.closest(".mana-cost, script, style")) manaNodes.push(node);
+    }
+    manaNodes.forEach((node) => {
+      const fragment = document.createDocumentFragment();
+      let cursor = 0;
+      for (const match of node.nodeValue.matchAll(/\{[^}]+\}/g)) {
+        fragment.append(node.nodeValue.slice(cursor, match.index));
+        const holder = document.createElement("span");
+        holder.innerHTML = manaCostHtml(match[0]);
+        fragment.append(...holder.childNodes);
+        cursor = match.index + match[0].length;
+      }
+      fragment.append(node.nodeValue.slice(cursor));
+      node.replaceWith(fragment);
+    });
   }
 
   function detailText(title, value) {
     return value ? `<section class="detail-block"><h3>${esc(title)}</h3><p>${esc(value)}</p></section>` : "";
+  }
+
+  function detailEffect(title, value) {
+    return value ? `<section class="detail-block card-effect-block"><h3>${esc(title)}</h3>${cardEffectHtml(value)}</section>` : "";
   }
 
   function briefScore(label, value) {
@@ -723,10 +905,12 @@
       if (!plan) return;
       const current = ensureBuyState(variant.id);
       const selectedEnhance = new Set(current.enhance || []);
+      const selectedUpgrade = new Set(current.upgrade || []);
       const selectedMax = new Set(current.max || []);
       const items = [
         plan.precon,
         ...plan.required,
+        ...(plan.upgrade || []).filter((item) => selectedUpgrade.has(item.id)),
         ...plan.enhance.filter((item) => selectedEnhance.has(item.id)),
         ...plan.max.filter((item) => selectedMax.has(item.id))
       ];
@@ -875,14 +1059,24 @@
   }
 
   async function ensureShopMetadata(items) {
-    const missing = items.filter((item) => !cardMetadata[itemKey(item)] && item.category !== "precon");
+    const missing = items.filter((item) => {
+      const metadata = cardMetadata[itemKey(item)];
+      return item.category !== "precon" && (!metadata || (!item.typeLine && !metadata.typeLine && !metadata.unavailable));
+    });
     if (!missing.length || shopMetadataPromise) return shopMetadataPromise;
     shopMetadataPromise = (async () => {
       for (const item of missing) {
         try {
           const response = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(item.name)}`);
           const card = response.ok ? await response.json() : null;
-          cardMetadata[itemKey(item)] = card ? {rarity: card.rarity, setName: card.set_name, setCode: card.set} : {unavailable: true};
+          cardMetadata[itemKey(item)] = card ? {
+            rarity: card.rarity,
+            setName: card.set_name,
+            setCode: card.set,
+            manaCost: card.mana_cost || "",
+            typeLine: card.type_line || "",
+            image: card.image_uris?.small || card.card_faces?.[0]?.image_uris?.small || item.image || ""
+          } : {unavailable: true};
         } catch (_) {
           cardMetadata[itemKey(item)] = {unavailable: true};
         }
@@ -891,8 +1085,13 @@
       localStorage.setItem("mtg-card-metadata-v1", JSON.stringify(cardMetadata));
       shopMetadataPromise = null;
       if ($("#view-shop")?.classList.contains("is-active")) renderShop();
+      if ($("#view-buy")?.classList.contains("is-active")) renderBuy();
     })();
     return shopMetadataPromise;
+  }
+
+  function ensureShellMetadata(items) {
+    return ensureShopMetadata(items.filter((item) => !item.isFlexibleSlot));
   }
 
   function matchesFilters(item, filters) {
@@ -927,7 +1126,7 @@
       <div class="shop-main">
         <div class="shop-card-kicker">${icon(item.category === "precon" ? "▣" : "✦")}<span>${esc(item.category === "precon" ? "Sealed deck" : "Single card")}</span></div>
         <h3>${esc(item.name)}${item.quantity > 1 ? ` ×${item.quantity}` : ""}</h3>
-        <div class="shop-facts">${item.manaCost ? `<span>${esc(item.manaCost)}</span>` : ""}${item.typeLine ? `<span>${esc(item.typeLine)}</span>` : ""}</div>
+        <div class="shop-facts">${item.manaCost ? `<span>${manaCostHtml(item.manaCost)}</span>` : ""}${item.typeLine ? `<span>${esc(item.typeLine)}</span>` : ""}</div>
         <div class="shop-buying-facts" aria-label="Buying guide">
           <div>${icon("⌖")}<span><small>Table location</small><strong>${esc(tableLocation)}</strong></span></div>
           <div>${icon("$")}<span><small>Target</small><strong>${money(item.price)}</strong></span></div>
@@ -959,8 +1158,116 @@
     $("#card-preview-image").src = item.image.replace("version=small", "version=normal");
     $("#card-preview-image").alt = `${item.name} card`;
     $("#card-preview-title").textContent = item.name;
-    $("#card-preview-meta").textContent = [item.manaCost, item.typeLine, money(item.price)].filter(Boolean).join(" · ");
+    $("#card-preview-meta").innerHTML = `${manaCostHtml(item.manaCost)}${[item.typeLine, money(item.price)].filter(Boolean).map((value) => `<span>${esc(value)}</span>`).join("<b>·</b>")}`;
     dialog.showModal();
+  }
+
+  const TOUR_STEPS = {
+    compare: [
+      {view: "compare", selectors: [".main-tabs"], title: "A three-part review journey", copy: "Compare approaches, test a complete 100-card arrangement in Buy Picks, then turn the result into a table-ready Shop List."},
+      {view: "compare", selectors: [".compare-filter-panel"], title: "Find the kind of deck you want", copy: "Search or filter by mechanic and play style. Only matching variants remain visible inside each deck row."},
+      {view: "compare", selectors: [".deck-group:first-of-type > summary"], title: "Review one strategy at a time", copy: "Each row represents one deck role. Open it to see the objective and every competing arrangement."},
+      {view: "compare", selectors: [".deck-group:first-of-type .rank-order"], title: "Change the ranking lens", copy: "Rank cards left-to-right for Base, Tuned, or Maxed play. A reviewer can see whether a recommendation holds up as investment increases."},
+      {view: "compare", selectors: [".deck-group:first-of-type .variant-card"], title: "Explore the full evidence", copy: "Slide through the variants, change Base/Tuned/Maxed detail, inspect scores, and open the full report and commander art."},
+      {view: "compare", selectors: [".deck-group:first-of-type .comment-toggle"], title: "Leave feedback where it belongs", copy: "Attach a comment directly to a variant. When selections are emailed, the reviewer’s comments travel with them."},
+      {view: "buy", selectors: [".buy-overview", ".page-intro"], title: "See the chosen plans together", copy: "Buy Picks carries over each selected variant and shows how many Tuned purchases and optional swaps are involved."},
+      {view: "buy", selectors: [".deck-compliance", ".empty-state"], title: "Experiment without losing the rules", copy: "The compact check follows card count, composition, and tracked Tier 2–3 limits while you try different arrangements."},
+      {view: "buy", selectors: [".starting-shell", ".buy-section", ".empty-state"], title: "Build from a real 100-card shell", copy: "The commander stays visible. Expand the nested shell, then test Tuned, Upgrade, Enhance, and Maxxed one-for-one replacements."},
+      {view: "shop", selectors: [".shop-toolbar", ".empty-state"], title: "Finish with a vendor-table checklist", copy: "Search, filter, group, inspect larger card art, compare target and ceiling prices, and mark cards Found. You can restart a page-specific Tour here anytime."}
+    ],
+    buy: [
+      {view: "buy", selectors: [".page-intro"], title: "Test the selected arrangements", copy: "This page turns Compare selections into complete 100-card configurations and explicit purchases."},
+      {view: "buy", selectors: [".buy-overview", ".empty-state"], title: "Jump between deck plans", copy: "Use the summary to move quickly among selected decks and compare the size of each Tuned package."},
+      {view: "buy", selectors: [".deck-compliance", ".empty-state"], title: "Keep the rules close", copy: "Tier 2, Tier 3, and exact card count stay compact; expand the check for composition and detailed issues."},
+      {view: "buy", selectors: [".plan-analysis", ".empty-state"], title: "Read the full strategy", copy: "The analysis preserves how to play, buy order, bracket reasoning, stretch cards, and top-of-bracket options."},
+      {view: "buy", selectors: [".starting-shell", ".empty-state"], title: "Inspect the 100-card foundation", copy: "The commander never collapses. The other 99 cards are nested by type, with lands in their own visual tray."},
+      {view: "buy", selectors: [".buy-section", ".empty-state"], title: "Try one-for-one changes", copy: "Tuned purchases are included; optional Upgrade, Enhance, and Maxxed cards each name the recommended cut they replace."}
+    ],
+    shop: [
+      {view: "shop", selectors: [".page-intro"], title: "Your table-ready list", copy: "Only purchases from the selected deck arrangements appear here, deduplicated across decks."},
+      {view: "shop", selectors: [".shop-toolbar", ".empty-state"], title: "Search and filter quickly", copy: "Narrow by need/found status, purchase level, deck, or card type while walking a vendor floor."},
+      {view: "shop", selectors: [".more-filters", ".empty-state"], title: "Group the way you shop", copy: "Group by table location, rarity, price range, type, theme/set, or number of decks that need the card."},
+      {view: "shop", selectors: [".shop-card", ".empty-state"], title: "Use the complete buying card", copy: "Each card shows large art, table location, target and ceiling price, rarity, purpose, and the decks that need it."},
+      {view: "shop", selectors: [".found-button", ".empty-state"], title: "Mark progress as you go", copy: "Mark a card Found and the remaining target total updates. Everything stays private on this device."}
+    ]
+  };
+
+  function activeViewName() {
+    return $(".main-tab.is-active")?.dataset.view || "compare";
+  }
+
+  function closeTour() {
+    tourState = null;
+    $("#tour-layer").hidden = true;
+  }
+
+  function findTourTarget(step) {
+    for (const selector of step.selectors) {
+      const target = $(selector);
+      if (target) return target;
+    }
+    return null;
+  }
+
+  function positionTour(target) {
+    const spotlight = $("#tour-spotlight");
+    const popover = $("#tour-popover");
+    if (!target) {
+      Object.assign(spotlight.style, {left: "50%", top: "50%", width: "1px", height: "1px"});
+      Object.assign(popover.style, {left: `${Math.max(12, (innerWidth - Math.min(360, innerWidth - 24)) / 2)}px`, top: `${Math.max(12, (innerHeight - popover.offsetHeight) / 2)}px`});
+      return;
+    }
+    const rect = target.getBoundingClientRect();
+    if (rect.bottom < 0 || rect.top > innerHeight) {
+      Object.assign(spotlight.style, {left: "50%", top: "50%", width: "1px", height: "1px"});
+      Object.assign(popover.style, {left: `${Math.max(12, (innerWidth - Math.min(360, innerWidth - 24)) / 2)}px`, top: `${Math.max(12, (innerHeight - popover.offsetHeight) / 2)}px`});
+      return;
+    }
+    const pad = 7;
+    Object.assign(spotlight.style, {
+      left: `${Math.max(5, rect.left - pad)}px`,
+      top: `${Math.max(5, rect.top - pad)}px`,
+      width: `${Math.min(innerWidth - 10, rect.width + pad * 2)}px`,
+      height: `${Math.min(innerHeight - 10, rect.height + pad * 2)}px`
+    });
+    const width = Math.min(360, innerWidth - 24);
+    const left = Math.min(innerWidth - width - 12, Math.max(12, rect.left + rect.width / 2 - width / 2));
+    const below = rect.bottom + 14;
+    const above = rect.top - popover.offsetHeight - 14;
+    const top = below >= 12 && below + popover.offsetHeight <= innerHeight - 12 ? below : above >= 12 ? above : Math.max(12, innerHeight - popover.offsetHeight - 12);
+    Object.assign(popover.style, {left: `${left}px`, top: `${top}px`});
+  }
+
+  function showTourStep() {
+    if (!tourState) return;
+    const step = tourState.steps[tourState.index];
+    switchView(step.view, false);
+    $("#tour-progress").textContent = `Reviewer tour · ${tourState.index + 1} of ${tourState.steps.length}`;
+    $("#tour-title").textContent = step.title;
+    $("#tour-copy").innerHTML = `<p>${esc(step.copy)}</p>`;
+    $("#tour-back").disabled = tourState.index === 0;
+    $("#tour-next").textContent = tourState.index === tourState.steps.length - 1 ? "Finish" : "Next";
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const target = findTourTarget(step);
+      target?.scrollIntoView({behavior: "instant", block: "center", inline: "nearest"});
+      setTimeout(() => positionTour(target), 40);
+    }));
+  }
+
+  function startTour() {
+    const view = activeViewName();
+    tourState = {steps: TOUR_STEPS[view], index: 0};
+    $("#tour-layer").hidden = false;
+    showTourStep();
+  }
+
+  function moveTour(direction) {
+    if (!tourState) return;
+    const next = tourState.index + direction;
+    if (next < 0) return;
+    if (next >= tourState.steps.length) return closeTour();
+    tourState.index = next;
+    showTourStep();
   }
 
   function resetState() {
@@ -988,6 +1295,14 @@
       renderCompare();
       $$(".main-tab").forEach((button) => button.addEventListener("click", () => switchView(button.dataset.view)));
       $("#reset-button").addEventListener("click", resetState);
+      $("#tour-button").addEventListener("click", startTour);
+      $("#tour-close").addEventListener("click", closeTour);
+      $("#tour-back").addEventListener("click", () => moveTour(-1));
+      $("#tour-next").addEventListener("click", () => moveTour(1));
+      window.addEventListener("resize", () => tourState && positionTour(findTourTarget(tourState.steps[tourState.index])));
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && tourState) closeTour();
+      });
       $("#card-preview-close").addEventListener("click", () => $("#card-preview").close());
       $("#card-preview").addEventListener("click", (event) => {
         if (event.target === event.currentTarget) event.currentTarget.close();
