@@ -9,42 +9,52 @@
 <meta name="apple-mobile-web-app-title" content="MtG Deck Matrix">
 <title>MtG Deck Matrix</title>
 <style>
-html,body{margin:0;min-height:100%;background:#14332a;color:#f6ecce;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{min-height:70vh;display:grid;place-items:center;padding:24px;text-align:center}.card{max-width:420px}.mark{font:700 42px Georgia,serif;margin-bottom:12px}.sub{opacity:.8;font-size:14px;line-height:1.5}.err{color:#ffd7d7}
+html,body{margin:0;min-height:100%;background:#14332a;color:#f6ecce;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{min-height:70vh;display:grid;place-items:center;padding:24px;text-align:center}.card{max-width:440px}.mark{font:700 42px Georgia,serif;margin-bottom:12px}.sub{opacity:.82;font-size:14px;line-height:1.5}.err{color:#ffd7d7}.small{font-size:12px;opacity:.7;margin-top:10px;word-break:break-word}
 </style>
 </head>
 <body>
-<main><div class="card"><div class="mark">MtG Deck Matrix</div><div class="sub" id="status">Loading your decks…</div></div></main>
+<main><div class="card"><div class="mark">MtG Deck Matrix</div><div class="sub" id="status">Loading your decks…</div><div class="small" id="detail"></div></div></main>
 <script>
 (async function(){
  const status=document.getElementById('status');
- function decodeBase64(s){
-   const alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-   s=s.replace(/\s+/g,'').replace(/=+$/,'');
-   const out=new Uint8Array(Math.floor(s.length*3/4));
-   let buffer=0,bits=0,j=0;
-   for(let i=0;i<s.length;i++){
-     const v=alphabet.indexOf(s[i]);
-     if(v<0) throw new Error('Deck data contains an invalid character at position '+i+'.');
-     buffer=(buffer<<6)|v; bits+=6;
-     if(bits>=8){bits-=8;out[j++]=(buffer>>bits)&255;buffer&=(1<<bits)-1;}
-   }
-   return out.slice(0,j);
- }
+ const detail=document.getElementById('detail');
  try{
   if(!('DecompressionStream' in window)) throw new Error('This browser needs a newer Safari version.');
-  const files=['01','02','03','04','05','06a','06b','07','08','09'];
-  const rs=await Promise.all(files.map(n=>fetch('./payload/part'+n+'.txt?v=6',{cache:'no-store'})));
-  if(rs.some(r=>!r.ok)) throw new Error('Could not load the deck data.');
-  const b64=(await Promise.all(rs.map(r=>r.text()))).join('').replace(/\s+/g,'');
-  if(b64.length!==130384) throw new Error('Deck data is incomplete ('+b64.length+' of 130384 characters).');
+  const files=[
+   './payload_v3/part01.txt?v=7',
+   './payload_v3/part02.txt?v=7',
+   './payload_v3/part03.txt?v=7',
+   './payload_v3/part04.txt?v=7',
+   './payload/part04.txt?v=7',
+   './payload/part05.txt?v=7',
+   './payload/part06.txt?v=7',
+   './payload/part07.txt?v=7',
+   './app.gz.b64?v=7'
+  ];
+  status.textContent='Loading deck data…';
+  const texts=await Promise.all(files.map(async url=>{
+   const r=await fetch(url,{cache:'no-store'});
+   if(!r.ok) throw new Error('Could not load '+url+' (HTTP '+r.status+').');
+   return (await r.text()).replace(/\s+/g,'');
+  }));
+  // Verified slices: v3 parts 1–4 = chars 0–48000; legacy parts 4–7 =
+  // chars 48000–112000; app.gz.b64 starts at char 110385, so skip 1615.
+  const b64=texts.slice(0,8).join('')+texts[8].slice(1615);
+  if(b64.length!==130384) throw new Error('Deck data length mismatch ('+b64.length+' instead of 130384).');
   if(!b64.startsWith('H4sI')) throw new Error('Deck data header failed integrity check.');
-  const bytes=decodeBase64(b64);
+  if(!/^[A-Za-z0-9+/]*={0,2}$/.test(b64)) throw new Error('Deck data contains invalid Base64 characters.');
+  status.textContent='Starting Deck Matrix…';
+  const raw=atob(b64);
+  const bytes=new Uint8Array(raw.length);
+  for(let i=0;i<raw.length;i++) bytes[i]=raw.charCodeAt(i);
   const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
   const html=await new Response(stream).text();
-  if(!html.toLowerCase().includes('<html')) throw new Error('Deck data did not expand into the app.');
+  if(!html.toLowerCase().includes('<html')) throw new Error('Deck data decompressed, but the app document was not recognized.');
   document.open(); document.write(html); document.close();
  }catch(e){
-  status.className='sub err'; status.textContent='Could not start the Deck Matrix: '+e.message;
+  status.className='sub err';
+  status.textContent='Could not start the Deck Matrix.';
+  detail.textContent=e && e.message ? e.message : String(e);
  }
 })();
 </script>
