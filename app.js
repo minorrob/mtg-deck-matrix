@@ -10,6 +10,8 @@
   let buyCatalog;
   let state;
   let toastTimer;
+  let openDeckId = 1;
+  let openBuyDeckId = 1;
 
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
@@ -21,6 +23,7 @@
     return {
       compareSelections: {},
       stages: {},
+      rankStages: {},
       buySelections: {},
       found: {},
       shopFilters: { status: "need", type: "all", category: "all", deck: "all", query: "" }
@@ -37,6 +40,7 @@
           ...saved,
           compareSelections: saved.compareSelections || {},
           stages: saved.stages || {},
+          rankStages: saved.rankStages || {},
           buySelections: saved.buySelections || {},
           found: saved.found || {},
           shopFilters: {...initial.shopFilters, ...(saved.shopFilters || {})}
@@ -112,22 +116,44 @@
       <div id="deck-groups"></div>`;
 
     const groups = $("#deck-groups", root);
-    catalog.decks.forEach((deck, index) => {
+    catalog.decks.forEach((deck) => {
       const chosenId = state.compareSelections[deck.id];
-      const variants = catalog.variants.filter((variant) => variant.deckId === deck.id);
+      const rankStage = Number(state.rankStages[deck.id] || 2);
+      const variants = catalog.variants
+        .filter((variant) => variant.deckId === deck.id)
+        .sort((a, b) => (a.ranks?.[rankStage - 1] || a.order) - (b.ranks?.[rankStage - 1] || b.order));
       const details = document.createElement("details");
       details.className = "deck-group";
-      details.open = index === 0 || Boolean(chosenId);
+      details.open = deck.id === openDeckId;
       details.innerHTML = `
         <summary>
           <span class="deck-number">${deck.id}</span>
           <span class="deck-summary-copy"><strong>${esc(deck.title)}</strong><span>${chosenId ? `Picked: ${esc(variantById(chosenId).name)}` : "Choose one of five variants"}</span></span>
           <span class="deck-chevron" aria-hidden="true">›</span>
         </summary>
-        <p class="deck-objective">${esc(deck.objective)}</p>
+        <p class="deck-objective">${esc(deck.objective)} <span class="swipe-hint">Swipe cards sideways →</span></p>
+        <div class="rank-order" role="group" aria-label="Sort Deck ${deck.id} variants by stage ranking">
+          <span>Rank order</span>
+          ${STAGES.map((label, index) => `<button class="rank-order-button${rankStage === index + 1 ? " is-active" : ""}" data-rank-stage="${index + 1}">${label}</button>`).join("")}
+        </div>
         <div class="variant-track"></div>`;
       const track = $(".variant-track", details);
-      variants.forEach((variant) => track.appendChild(makeVariantCard(variant)));
+      variants.forEach((variant) => track.appendChild(makeVariantCard(variant, rankStage)));
+      $$(".rank-order-button", details).forEach((button) => button.addEventListener("click", () => {
+        state.rankStages[deck.id] = Number(button.dataset.rankStage);
+        openDeckId = deck.id;
+        saveState();
+        renderCompare();
+      }));
+      details.addEventListener("toggle", () => {
+        if (!details.open) return;
+        openDeckId = deck.id;
+        if (window.matchMedia("(max-width: 1079px)").matches) {
+          $$(".deck-group", groups).forEach((other) => {
+            if (other !== details) other.open = false;
+          });
+        }
+      });
       groups.appendChild(details);
     });
 
@@ -138,11 +164,17 @@
     $("#email-picks", root).addEventListener("click", emailPicks);
   }
 
-  function makeVariantCard(variant) {
+  function makeVariantCard(variant, rankStage = 2) {
     const stage = Number(state.stages[variant.id] || 2);
     const selected = state.compareSelections[variant.deckId] === variant.id;
     const bracket = variant.brackets[stage - 1] || {};
     const summary = variant.summaries[stage - 1] || [];
+    const rank = variant.ranks?.[rankStage - 1] || variant.order;
+    const facts = variant.facts?.[stage - 1] || {};
+    const rarity = variant.rarity?.[stage - 1] || {};
+    const playstyle = variant.scores?.playstyle?.[stage - 1] || [];
+    const engine = variant.scores?.engine?.[stage - 1] || [];
+    const growth = variant.scores?.growth || [];
     const card = document.createElement("article");
     card.className = `variant-card${selected ? " is-selected" : ""}`;
     card.dataset.variant = variant.id;
@@ -151,6 +183,7 @@
         <input type="checkbox" ${selected ? "checked" : ""} aria-label="Pick ${esc(variant.name)}">
         <span>${selected ? "Picked" : "Pick"}</span>
       </label>
+      <div class="rank-badge rank-${rank}" aria-label="Rank ${rank} of 5 for ${STAGES[rankStage - 1]}"><span>#${rank}</span><small>${STAGES[rankStage - 1]} rank</small></div>
       <div class="variant-hero">
         <img src="${esc(variant.image)}" alt="${esc(variant.commander)} card" loading="lazy">
         <div>
@@ -165,11 +198,20 @@
       <div class="stage-content">
         <div class="stage-stats">
           <span class="stat-pill">${esc(variant.costs[stage - 1] || "Cost varies")}</span>
+          <span class="stat-pill">${esc(facts.availability || "Availability varies")}</span>
+          <span class="stat-pill">${esc(facts.budget || "Budget varies")}</span>
           <span class="stat-pill">${esc(bracket.label || "Bracket profile")}</span>
           <span class="stat-pill${bracket.gameChangers && !bracket.gameChangers.startsWith("0") ? " gc" : ""}">${esc(bracket.gameChangers || "0 GC")}</span>
         </div>
+        <div class="rarity-line" title="${esc(rarity.description || "")}"><span>Rarity</span><strong>${esc(rarity.percent || "—")}</strong><span>${esc(rarity.label || "")}</span></div>
         <ul>${summary.map((item) => `<li>${esc(item)}</li>`).join("")}</ul>
         <p class="stage-note">${esc(variant.stageNotes[stage - 1] || bracket.description || "")}</p>
+        <div class="score-columns">
+          ${scorePanel("Your playstyle fit", playstyle)}
+          ${scorePanel("Engine rating", engine)}
+        </div>
+        ${scorePanel("Room to grow", growth, "growth-panel")}
+        <button class="detail-button" type="button">View full detail →</button>
       </div>`;
 
     $("img", card).addEventListener("error", (event) => {
@@ -177,6 +219,7 @@
       event.currentTarget.style.visibility = "hidden";
     });
     $(".pick-control input", card).addEventListener("change", () => selectVariant(variant));
+    $(".detail-button", card).addEventListener("click", () => openVariantDetail(variant, stage));
     $$(".stage-button", card).forEach((button) => button.addEventListener("click", () => {
       state.stages[variant.id] = Number(button.dataset.stage);
       saveState();
@@ -187,8 +230,28 @@
     return card;
   }
 
+  function scorePanel(title, rows, extraClass = "") {
+    return `<section class="score-panel ${extraClass}"><h4>${esc(title)}</h4><div class="score-grid">${rows.map((row) => `
+      <div class="score-row" title="${esc(row.description || "")}">
+        <span>${esc(row.label)}</span>
+        <span class="score-dots" aria-label="${row.score} out of 5">${[1,2,3,4,5].map((dot) => `<i class="${dot <= row.score ? "is-on" : ""}"></i>`).join("")}</span>
+        ${row.extra ? `<b>${esc(row.extra)}</b>` : ""}
+      </div>`).join("")}</div></section>`;
+  }
+
+  function openVariantDetail(variant, stage) {
+    const dialog = $("#detail-sheet");
+    $("#detail-sheet-image").src = variant.image;
+    $("#detail-sheet-image").alt = `${variant.commander} card`;
+    $("#detail-sheet-kicker").textContent = `Deck ${variant.deckId} · ${STAGES[stage - 1]} rank #${variant.ranks?.[stage - 1] || variant.order}`;
+    $("#detail-sheet-title").textContent = variant.name;
+    $("#detail-sheet-body").innerHTML = variant.detailHtml || `<p>No extended report is available.</p>`;
+    dialog.showModal();
+  }
+
   function selectVariant(variant) {
     const previous = state.compareSelections[variant.deckId];
+    openDeckId = variant.deckId;
     if (previous === variant.id) {
       delete state.compareSelections[variant.deckId];
       showToast(`Deck ${variant.deckId} pick cleared.`);
@@ -221,6 +284,7 @@
     const root = $("#view-buy");
     const selected = selectedVariants();
     const readyCount = selected.filter((variant) => buyCatalog.plans[variant.id]).length;
+    if (!selected.some((variant) => variant.deckId === openBuyDeckId)) openBuyDeckId = selected[0]?.deckId || 1;
     root.innerHTML = `
       <div class="page-intro">
         <div>
@@ -231,38 +295,60 @@
       </div>
       ${selected.length ? "" : `<div class="empty-state"><h3>No deck picks yet</h3><p>Choose a variant in Compare first, then come back here.</p><button class="primary-button" data-go="compare">Choose decks</button></div>`}
       ${selected.some((variant) => !buyCatalog.plans[variant.id]) ? `<div class="coverage-note"><h3>Catalog build in progress</h3><p>The original shopping guide contained six complete builds. Those are connected now; the remaining variant profiles are being normalized before they are offered as purchases.</p></div>` : ""}
+      ${readyCount ? `<section class="buy-overview"><h3>Shopping plan summary</h3><div class="buy-overview-grid">${selected.filter((variant) => buyCatalog.plans[variant.id]).map((variant) => {
+        const plan = buyCatalog.plans[variant.id];
+        return `<button class="buy-overview-card" data-open-buy-deck="${variant.deckId}"><b>Deck ${variant.deckId}</b><strong>${esc(variant.name)}</strong><span>${esc(plan.priorityLabel || plan.budgetLabel)} · ${plan.required.length} required upgrades</span></button>`;
+      }).join("")}</div></section>` : ""}
+      ${selected.length ? `<div class="action-row action-row-top"><button class="primary-button save-buys">Save Buys → Shop List</button><button class="secondary-button" data-go="compare">Back to Compare</button></div>` : ""}
       <div id="buy-decks"></div>
-      ${selected.length ? `<div class="action-row"><button class="primary-button" id="save-buys">Save Buys → Shop List</button><button class="secondary-button" data-go="compare">Back to Compare</button></div>` : ""}`;
+      ${selected.length ? `<div class="action-row"><button class="primary-button save-buys">Save Buys → Shop List</button><button class="secondary-button" data-go="compare">Back to Compare</button></div>` : ""}`;
 
     const decksRoot = $("#buy-decks", root);
     selected.forEach((variant) => decksRoot.appendChild(makeBuyDeck(variant)));
+    $$('[data-open-buy-deck]', root).forEach((button) => button.addEventListener("click", () => {
+      openBuyDeckId = Number(button.dataset.openBuyDeck);
+      renderBuy();
+      $(`.buy-deck[open]`, root)?.scrollIntoView({behavior: "smooth", block: "start"});
+    }));
     $$('[data-go="compare"]', root).forEach((button) => button.addEventListener("click", () => switchView("compare")));
-    $("#save-buys", root)?.addEventListener("click", () => {
+    $$(".save-buys", root).forEach((button) => button.addEventListener("click", () => {
       saveState();
       switchView("shop");
-    });
+    }));
   }
 
   function makeBuyDeck(variant) {
     const plan = buyCatalog.plans[variant.id];
+    const current = plan ? ensureBuyState(variant.id) : null;
+    const optionalCount = current ? (current.enhance?.length || 0) + (current.max?.length || 0) : 0;
     const details = document.createElement("details");
     details.className = "buy-deck";
-    details.open = Boolean(plan);
+    details.open = variant.deckId === openBuyDeckId;
     details.innerHTML = `
       <summary>
         <span class="deck-number">${variant.deckId}</span>
-        <span class="buy-deck-title"><strong>${esc(variant.name)}</strong><span>${esc(variant.commander)}</span></span>
+        <span class="buy-deck-title"><strong>${esc(variant.name)}</strong><span>${plan ? `${plan.required.length} required · ${optionalCount} optional picked` : esc(variant.commander)}</span></span>
         <span class="${plan ? "profile-ready" : "profile-gap"}">${plan ? "Connected" : "Pending"}</span>
       </summary>
       <div class="buy-body"></div>`;
+    details.addEventListener("toggle", () => {
+      if (!details.open) return;
+      openBuyDeckId = variant.deckId;
+      $$(".buy-deck", $("#buy-decks")).forEach((other) => {
+        if (other !== details) other.open = false;
+      });
+    });
     const body = $(".buy-body", details);
     if (!plan) {
       body.innerHTML = `<div class="empty-state"><h3>Purchase profile not published yet</h3><p>This variant remains selected, but it will not add generic or mismatched cards to your Shop List.</p></div>`;
       return details;
     }
 
-    const current = ensureBuyState(variant.id);
     body.innerHTML = `
+      <details class="plan-analysis">
+        <summary><span>Deck plan &amp; analysis</span><small>How to play, buy order, bracket placement, and tuning notes</small></summary>
+        <div class="legacy-plan">${plan.planHtml || ""}</div>
+      </details>
       ${buySection("Starting shell", "Included automatically", [plan.precon], "precon", current, variant.id)}
       ${buySection("Upgrade", "Required for the tuned build", plan.required, "required", current, variant.id)}
       ${buySection("Enhance", "Optional · same strategy · generally $10 or less", plan.enhance, "enhance", current, variant.id)}
@@ -284,23 +370,65 @@
       ensureBuyState(variant.id)[kind] = Array.from(choices);
       saveState();
     }));
+    $$(".buy-item-detail", body).forEach((button) => button.addEventListener("click", () => {
+      const kind = button.dataset.itemKind;
+      const item = kind === "precon" ? plan.precon : (plan[kind] || []).find((candidate) => candidate.id === button.dataset.itemId);
+      if (item) openBuyItemDetail(item, variant, kind);
+    }));
     return details;
   }
 
   function buySection(title, note, items, kind, current, variantId) {
     if (!items?.length) return "";
-    return `<section class="buy-section">
-      <h4>${esc(title)} <span>${esc(note)}</span></h4>
+    const included = kind === "required" || kind === "precon";
+    return `<details class="buy-section" ${included ? "open" : ""}>
+      <summary><span>${esc(title)} <b>${items.length}</b></span><small>${esc(note)}</small></summary>
       ${items.map((item) => {
-        const required = kind === "required" || kind === "precon";
+        const required = included;
         const checked = required || (current[kind] || []).includes(item.id);
-        return `<label class="buy-item">
-          <input type="checkbox" ${checked ? "checked" : ""} ${required ? "disabled" : ""} data-buy-kind="${esc(kind)}" data-item-id="${esc(item.id)}" data-variant-id="${esc(variantId)}">
-          <span class="buy-copy"><strong>${esc(item.name)}${item.quantity > 1 ? ` ×${item.quantity}` : ""}</strong><small><span class="kind-label ${esc(kind)}">${esc(kind === "required" ? "upgrade" : kind)}</span>${esc(item.replaces || item.purpose || item.typeLine || "")}${item.gameChanger ? " · Game Changer" : ""}</small></span>
+        return `<div class="buy-item">
+          ${required ? `<span class="required-check" aria-label="Included">✓</span>` : `<input type="checkbox" ${checked ? "checked" : ""} data-buy-kind="${esc(kind)}" data-item-id="${esc(item.id)}" data-variant-id="${esc(variantId)}">`}
+          <button class="buy-item-detail" type="button" data-item-kind="${esc(kind)}" data-item-id="${esc(item.id)}">
+            <img src="${esc(item.image)}" alt="" loading="lazy">
+            <span class="buy-copy"><strong>${esc(item.name)}${item.quantity > 1 ? ` ×${item.quantity}` : ""}</strong><small><span class="kind-label ${esc(kind)}">${esc(kind === "required" ? "upgrade" : kind)}</span>${esc(item.replaces || item.purpose || item.typeLine || "")}${item.gameChanger ? " · Game Changer" : ""}</small></span>
+          </button>
           <span class="price">${money(item.price)}</span>
-        </label>`;
+        </div>`;
       }).join("")}
-    </section>`;
+    </details>`;
+  }
+
+  function openBuyItemDetail(item, variant, kind) {
+    const dialog = $("#detail-sheet");
+    const brief = item.brief || {};
+    $("#detail-sheet-image").src = item.image.replace("version=small", "version=normal");
+    $("#detail-sheet-image").alt = `${item.name} card`;
+    $("#detail-sheet-kicker").textContent = `Deck ${variant.deckId} · ${kind === "required" ? "Upgrade" : STAGES.includes(kind) ? kind : kind[0].toUpperCase() + kind.slice(1)}`;
+    $("#detail-sheet-title").textContent = item.name;
+    $("#detail-sheet-body").innerHTML = `
+      <div class="item-meta"><span>${esc(item.manaCost || "")}</span><span>${esc(item.typeLine || "")}</span><span>${money(item.price)}${item.ceiling ? ` · ceiling ${money(item.ceiling)}` : ""}</span></div>
+      ${item.gameChanger ? `<p class="gc-callout">Game Changer · counts toward this deck’s limit of three in Bracket 3.</p>` : ""}
+      ${item.replaces ? `<section class="detail-block"><h3>Replaces</h3><p>${esc(item.replaces)}</p></section>` : ""}
+      ${detailText("Why this card", item.whyPrimary || item.why || item.purpose)}
+      ${detailText("Why it is optional", item.whyOptional)}
+      ${detailText("Alternate rationale", item.alternateReason)}
+      ${detailText("Tradeoff", item.alternateTradeoff)}
+      ${(brief.power || brief.ease || brief.fun) ? `<section class="detail-block"><h3>Card scoring</h3><div class="brief-scores">
+        ${briefScore("Power", brief.power)}${briefScore("Ease", brief.ease)}${briefScore("Fun", brief.fun)}
+      </div>${brief.value ? `<p><b>Value:</b> ${esc(brief.value)}</p>` : ""}${brief.fit ? `<p><b>Fit:</b> ${esc(brief.fit)}</p>` : ""}</section>` : ""}
+      ${item.tags?.length ? `<section class="detail-block"><h3>Roles</h3><div class="variant-tags">${item.tags.map((tag) => `<span class="tag">${esc(tag)}</span>`).join("")}</div></section>` : ""}
+      ${detailText("Where to buy", item.whereToBuy)}
+      ${item.tcgplayerUrl ? `<p><a class="primary-button detail-link" href="${esc(item.tcgplayerUrl)}" target="_blank" rel="noopener">Search this card on TCGplayer</a></p>` : ""}`;
+    dialog.showModal();
+  }
+
+  function detailText(title, value) {
+    return value ? `<section class="detail-block"><h3>${esc(title)}</h3><p>${esc(value)}</p></section>` : "";
+  }
+
+  function briefScore(label, value) {
+    if (!value) return "";
+    return `<div><span>${esc(label)}</span><b>${esc(value)}/5</b><span class="score-dots">${[1,2,3,4,5].map((dot) => `<i class="${dot <= value ? "is-on" : ""}"></i>`).join("")}</span></div>`;
   }
 
   function itemKey(item) {
@@ -345,8 +473,8 @@
     const root = $("#view-shop");
     const allItems = derivedShopItems();
     const filters = state.shopFilters;
-    const visible = allItems.filter((item) => matchesFilters(item, filters));
     const foundCount = allItems.filter((item) => state.found[item.key]).length;
+    const activeFilterCount = [filters.type, filters.category, filters.deck].filter((value) => value !== "all").length;
     root.innerHTML = `
       <div class="page-intro">
         <div>
@@ -357,40 +485,62 @@
       </div>
       <div class="shop-toolbar">
         <input class="search-input" id="shop-search" type="search" value="${esc(filters.query)}" placeholder="Search cards…" aria-label="Search shopping list">
-        <div class="filter-row" aria-label="Found status">
-          ${filterChip("status", "all", "All", filters)}${filterChip("status", "need", "Need", filters)}${filterChip("status", "found", "Found", filters)}
-        </div>
-        <div class="filter-row" aria-label="Item type and category">
-          ${filterChip("type", "all", "All items", filters)}${filterChip("type", "singles", "Singles", filters)}${filterChip("type", "precons", "Precons", filters)}
-          ${filterChip("category", "upgrade", "Upgrade", filters)}${filterChip("category", "enhance", "Enhance", filters)}${filterChip("category", "max", "Max", filters)}
-        </div>
-        <div class="filter-row" aria-label="Deck filter">
-          ${filterChip("deck", "all", "All decks", filters)}
-          ${selectedVariants().map((variant) => filterChip("deck", String(variant.deckId), `Deck ${variant.deckId}`, filters)).join("")}
+        <div class="quick-filter-row" aria-label="Found status">
+          <div class="status-chips">${filterChip("status", "all", "All", filters)}${filterChip("status", "need", "Need", filters)}${filterChip("status", "found", "Found", filters)}</div>
+          <details class="more-filters">
+            <summary>Filters${activeFilterCount ? ` <b>${activeFilterCount}</b>` : ""}</summary>
+            <div class="filter-select-grid">
+              ${selectFilter("type", "Items", [["all","All items"],["singles","Singles"],["precons","Precons"]], filters)}
+              ${selectFilter("category", "Level", [["all","All levels"],["upgrade","Upgrade"],["enhance","Enhance"],["max","Max"]], filters)}
+              ${selectFilter("deck", "Deck", [["all","All decks"], ...selectedVariants().map((variant) => [String(variant.deckId), `Deck ${variant.deckId}`])], filters)}
+            </div>
+          </details>
         </div>
       </div>
-      <div class="shop-summary"><span><strong>${visible.length}</strong> shown · ${allItems.length - foundCount} still needed</span><span>${money(allItems.filter((item) => !state.found[item.key]).reduce((sum, item) => sum + (Number(item.price) || 0), 0))} target</span></div>
+      <div class="shop-summary" id="shop-summary"></div>
       <div class="shop-list" id="shop-list"></div>
-      ${allItems.length ? `<div class="action-row"><button class="secondary-button" data-go="buy">Adjust Buy Picks</button></div>` : `<div class="empty-state"><h3>Your field list is empty</h3><p>Select connected deck variants and save their Buy Picks first.</p><button class="primary-button" data-go="buy">Open Buy Picks</button></div>`}`;
+      <div id="shop-actions"></div>`;
 
-    const list = $("#shop-list", root);
-    visible.forEach((item) => list.appendChild(makeShopCard(item)));
+    updateShopResults(root);
     $("#shop-search", root).addEventListener("input", (event) => {
       state.shopFilters.query = event.target.value;
       saveState();
-      clearTimeout(renderShop.searchTimer);
-      renderShop.searchTimer = setTimeout(renderShop, 120);
+      updateShopResults(root);
     });
     $$('[data-filter]', root).forEach((button) => button.addEventListener("click", () => {
       state.shopFilters[button.dataset.filter] = button.dataset.value;
       saveState();
       renderShop();
     }));
-    $$('[data-go="buy"]', root).forEach((button) => button.addEventListener("click", () => switchView("buy")));
+    $$('[data-filter-select]', root).forEach((select) => select.addEventListener("change", () => {
+      state.shopFilters[select.dataset.filterSelect] = select.value;
+      saveState();
+      renderShop();
+    }));
+    root.onclick = (event) => {
+      if (event.target.closest('[data-go="buy"]')) switchView("buy");
+    };
   }
 
   function filterChip(group, value, label, filters) {
     return `<button class="filter-chip${filters[group] === value ? " is-active" : ""}" data-filter="${esc(group)}" data-value="${esc(value)}">${esc(label)}</button>`;
+  }
+
+  function selectFilter(group, label, options, filters) {
+    return `<label class="filter-select"><span>${esc(label)}</span><select data-filter-select="${esc(group)}">${options.map(([value, text]) => `<option value="${esc(value)}" ${filters[group] === value ? "selected" : ""}>${esc(text)}</option>`).join("")}</select></label>`;
+  }
+
+  function updateShopResults(root) {
+    const allItems = derivedShopItems();
+    const visible = allItems.filter((item) => matchesFilters(item, state.shopFilters));
+    const foundCount = allItems.filter((item) => state.found[item.key]).length;
+    const remainingTotal = allItems.filter((item) => !state.found[item.key]).reduce((sum, item) => sum + (Number(item.price) || 0), 0);
+    $("#shop-summary", root).innerHTML = `<span><strong>${visible.length}</strong> shown · ${allItems.length - foundCount} still needed</span><span>${money(remainingTotal)} target</span>`;
+    const list = $("#shop-list", root);
+    list.replaceChildren(...visible.map((item) => makeShopCard(item)));
+    $("#shop-actions", root).innerHTML = allItems.length
+      ? `<div class="action-row"><button class="secondary-button" data-go="buy">Adjust Buy Picks</button></div>`
+      : `<div class="empty-state"><h3>Your field list is empty</h3><p>Select connected deck variants and save their Buy Picks first.</p><button class="primary-button" data-go="buy">Open Buy Picks</button></div>`;
   }
 
   function matchesFilters(item, filters) {
@@ -412,7 +562,9 @@
     card.className = `shop-card${found ? " is-found" : ""}`;
     const categories = Array.from(item.categories);
     card.innerHTML = `
-      <img class="shop-image" src="${esc(item.image)}" alt="${esc(item.name)} card" loading="lazy">
+      <button class="shop-image-button" aria-label="View a larger image of ${esc(item.name)}">
+        <img class="shop-image" src="${esc(item.image)}" alt="${esc(item.name)} card" loading="lazy">
+      </button>
       <div class="shop-main">
         <h3>${esc(item.name)}${item.quantity > 1 ? ` ×${item.quantity}` : ""}</h3>
         <p class="shop-meta">${esc([item.manaCost, item.typeLine, money(item.price)].filter(Boolean).join(" · "))}</p>
@@ -427,12 +579,22 @@
       event.currentTarget.alt = `${item.name} image unavailable`;
       event.currentTarget.style.visibility = "hidden";
     });
+    $(".shop-image-button", card).addEventListener("click", () => openCardPreview(item));
     $(".found-button", card).addEventListener("click", () => {
       state.found[item.key] = !found;
       saveState(!found ? `${item.name} marked found` : `${item.name} returned to Need`);
       renderShop();
     });
     return card;
+  }
+
+  function openCardPreview(item) {
+    const dialog = $("#card-preview");
+    $("#card-preview-image").src = item.image.replace("version=small", "version=normal");
+    $("#card-preview-image").alt = `${item.name} card`;
+    $("#card-preview-title").textContent = item.name;
+    $("#card-preview-meta").textContent = [item.manaCost, item.typeLine, money(item.price)].filter(Boolean).join(" · ");
+    dialog.showModal();
   }
 
   function resetState() {
@@ -460,6 +622,14 @@
       renderCompare();
       $$(".main-tab").forEach((button) => button.addEventListener("click", () => switchView(button.dataset.view)));
       $("#reset-button").addEventListener("click", resetState);
+      $("#card-preview-close").addEventListener("click", () => $("#card-preview").close());
+      $("#card-preview").addEventListener("click", (event) => {
+        if (event.target === event.currentTarget) event.currentTarget.close();
+      });
+      $("#detail-sheet-close").addEventListener("click", () => $("#detail-sheet").close());
+      $("#detail-sheet").addEventListener("click", (event) => {
+        if (event.target === event.currentTarget) event.currentTarget.close();
+      });
     } catch (error) {
       $("#view-compare").innerHTML = `<div class="empty-state"><h3>Could not start the Deck Matrix</h3><p>${esc(error.message)}</p></div>`;
     }

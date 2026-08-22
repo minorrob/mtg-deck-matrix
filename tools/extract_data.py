@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import re
+from copy import deepcopy
 from pathlib import Path
 
 from lxml import html
@@ -48,6 +49,49 @@ def stage_values(cell, class_name: str, extractor) -> list:
         )
         values.append(extractor(nodes[0]) if nodes else None)
     return values
+
+
+def score_rows(node) -> list[dict]:
+    rows = []
+    for row in node.xpath(f".//*[{class_xpath('fr')}]"):
+        label = first_text(row, f".//*[{class_xpath('fl')}]")
+        if not label:
+            continue
+        rows.append(
+            {
+                "label": label,
+                "score": len(
+                    row.xpath(
+                        f".//*[{class_xpath('d')} and {class_xpath('on')}]"
+                    )
+                ),
+                "extra": first_text(
+                    row,
+                    f".//*[{class_xpath('pct')} or {class_xpath('gx')}]",
+                ),
+                "description": clean_text(row.get("title", "")),
+            }
+        )
+    return rows
+
+
+def safe_fragment(node, *, remove_images: bool = False) -> str:
+    """Keep authored prose/tables while removing legacy scripts and handlers."""
+    fragment = deepcopy(node)
+    remove = ".//script | .//button"
+    if remove_images:
+        remove += " | .//img"
+    for child in fragment.xpath(remove):
+        parent = child.getparent()
+        if parent is not None:
+            parent.remove(child)
+    for element in fragment.iter():
+        for attr in list(element.attrib):
+            if attr.lower().startswith("on") or attr.lower() == "id":
+                del element.attrib[attr]
+    return html.tostring(fragment, encoding="unicode", method="html").replace(
+        "\ufffd", "—"
+    )
 
 
 def extract_compare() -> dict:
@@ -101,10 +145,77 @@ def extract_compare() -> dict:
                     "description": clean_text(node.get("title", "")),
                 },
             )
+            ranks = []
+            facts = []
+            rarity = []
+            for stage in (1, 2, 3):
+                ribbon_text = first_text(
+                    cell,
+                    f".//*[{class_xpath('picks')}]"
+                    f"//*[{class_xpath(f's{stage}')}]")
+                rank_match = re.search(r"\b([1-5])\b", ribbon_text)
+                ranks.append(int(rank_match.group(1)) if rank_match else order)
+
+                metaline = cell.xpath(
+                    f".//*[{class_xpath('metaline')} and {class_xpath(f's{stage}')}]"
+                )
+                fact = metaline[0] if metaline else None
+                facts.append(
+                    {
+                        "availability": first_text(
+                            fact, f".//*[{class_xpath('pill')}]"
+                        ) if fact is not None else "",
+                        "budget": first_text(
+                            fact, f".//*[{class_xpath('bud')}]"
+                        ) if fact is not None else "",
+                        "costNote": clean_text(
+                            (fact.xpath(f".//*[{class_xpath('cost')}]")[0].get("title", "")
+                             if fact is not None and fact.xpath(f".//*[{class_xpath('cost')}]")
+                             else "")
+                        ),
+                    }
+                )
+                rarity_nodes = cell.xpath(
+                    f".//*[{class_xpath('rarity')} and {class_xpath(f's{stage}')}]"
+                )
+                rarity_node = rarity_nodes[0] if rarity_nodes else None
+                rarity.append(
+                    {
+                        "percent": first_text(
+                            rarity_node, f".//*[{class_xpath('rpct')}]"
+                        ) if rarity_node is not None else "",
+                        "label": first_text(
+                            rarity_node, f".//*[{class_xpath('rtag')}]"
+                        ) if rarity_node is not None else "",
+                        "description": clean_text(
+                            rarity_node.get("title", "") if rarity_node is not None else ""
+                        ),
+                    }
+                )
+
+            score_blocks = cell.xpath(f".//*[{class_xpath('scoreblk')}]")
+            stage_scores = []
+            for block in score_blocks[:2]:
+                stage_scores.append(
+                    [
+                        score_rows(
+                            (block.xpath(
+                                f".//*[{class_xpath(f's{stage}')}]"
+                            ) or [block])[0]
+                        )
+                        for stage in (1, 2, 3)
+                    ]
+                )
+            growth = score_rows(score_blocks[2]) if len(score_blocks) > 2 else []
+
+            variant_id = checkbox.get("data-key")
+            detail_nodes = document.xpath(
+                f"//*[@id='m-{variant_id}']/*[{class_xpath('mbox')}][1]"
+            )
 
             variants.append(
                 {
-                    "id": checkbox.get("data-key"),
+                    "id": variant_id,
                     "deckId": int(checkbox.get("data-deck", deck_index)),
                     "order": order,
                     "name": first_text(cell, ".//h3[1]") or clean_text(checkbox.get("data-name", "")),
@@ -116,6 +227,17 @@ def extract_compare() -> dict:
                     "stageNotes": stage_notes,
                     "costs": costs,
                     "brackets": brackets,
+                    "ranks": ranks,
+                    "facts": facts,
+                    "rarity": rarity,
+                    "scores": {
+                        "playstyle": stage_scores[0] if stage_scores else [[], [], []],
+                        "engine": stage_scores[1] if len(stage_scores) > 1 else [[], [], []],
+                        "growth": growth,
+                    },
+                    "detailHtml": safe_fragment(detail_nodes[0], remove_images=True)
+                    if detail_nodes
+                    else "",
                     "image": "https://api.scryfall.com/cards/named?format=image&version=normal&fuzzy="
                     + commander_name.replace(" ", "+"),
                 }
@@ -153,6 +275,21 @@ def card_view(key: str, card: dict, category: str) -> dict:
         "replaces": clean_text(card.get("replaces_label", "")),
         "gameChanger": bool(card.get("game_changer")),
         "stage": clean_text(card.get("stage", "")),
+        "tags": [clean_text(tag) for tag in card.get("tags", [])],
+        "why": clean_text(card.get("why", "")),
+        "whyPrimary": clean_text(card.get("why_primary", "")),
+        "whyOptional": clean_text(card.get("why_optional", "")),
+        "alternateReason": clean_text(card.get("alt_why", "")),
+        "alternateTradeoff": clean_text(card.get("alt_why_not", "")),
+        "whereToBuy": clean_text(card.get("where_to_buy", "")),
+        "tcgplayerUrl": clean_text(card.get("tcgplayer_url", "")),
+        "brief": {
+            "power": (card.get("brief") or {}).get("power"),
+            "ease": (card.get("brief") or {}).get("ease"),
+            "fun": (card.get("brief") or {}).get("fun"),
+            "value": clean_text((card.get("brief") or {}).get("value", "")),
+            "fit": clean_text((card.get("brief") or {}).get("fit", "")),
+        },
         "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy="
         + clean_text(card.get("name", key)).replace(" ", "+"),
     }
@@ -163,6 +300,9 @@ def extract_buy_plans() -> dict:
     all_data = extract_all_data(source)
     variant_map = {1: "1o", 2: "2c", 3: "3e", 4: "4c", 5: "5o", 6: "6c"}
     plans = {}
+    summary_by_id = {
+        int(deck["id"]): deck for deck in all_data.get("summary", {}).get("decks", [])
+    }
 
     for deck_id in range(1, 7):
         raw = all_data[f"d{deck_id}"]
@@ -223,6 +363,14 @@ def extract_buy_plans() -> dict:
             "commander": clean_text(raw.get("commander_name", "")),
             "budgetLabel": clean_text(raw.get("budget_tier_label", "")),
             "bracketLabel": clean_text(raw.get("bracket_label", "")),
+            "priorityLabel": clean_text(raw.get("priority_label", "")),
+            "planHtml": safe_fragment(
+                html.fragment_fromstring(
+                    summary_by_id.get(deck_id, {}).get("info_html", "<div></div>"),
+                    create_parent="div",
+                ),
+                remove_images=True,
+            ),
             "precon": precon_item,
             "required": required,
             "enhance": enhance,

@@ -6,26 +6,31 @@
   <meta name="theme-color" content="#112b24">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="MtG Deck Matrix">
+  <meta name="apple-mobile-web-app-title" content="Trey's Deck Matrix">
   <meta name="description" content="Compare Commander deck variants, choose upgrades, and carry a focused card-shopping checklist.">
-  <meta property="og:title" content="MtG Deck Matrix">
+  <meta property="og:title" content="Trey's Deck Matrix">
   <meta property="og:description" content="Compare decks, choose buys, and shop from one mobile-friendly list.">
   <meta property="og:type" content="website">
   <meta property="og:image" content="https://minorrob.github.io/mtg-deck-matrix/og.png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="MtG Deck Matrix">
+  <meta name="twitter:title" content="Trey's Deck Matrix">
   <meta name="twitter:description" content="Compare decks, choose buys, and shop from one mobile-friendly list.">
   <meta name="twitter:image" content="https://minorrob.github.io/mtg-deck-matrix/og.png">
-  <title>MtG Deck Matrix</title>
+  <title>Trey's Deck Matrix</title>
   <link rel="stylesheet" href="app.css">
   <script src="app.js" defer></script>
 </head>
 <body>
   <header class="app-header">
+    <div class="banner-art" aria-hidden="true">
+      <img src="https://api.scryfall.com/cards/named?format=image&amp;version=art_crop&amp;fuzzy=Betor%2C+Ancestor%27s+Voice" alt="">
+      <img src="https://api.scryfall.com/cards/named?format=image&amp;version=art_crop&amp;fuzzy=Slinza%2C+the+Spiked+Stampede" alt="">
+      <img src="https://api.scryfall.com/cards/named?format=image&amp;version=art_crop&amp;fuzzy=Sauron%2C+the+Dark+Lord" alt="">
+    </div>
     <div class="brand-row">
       <div>
         <p class="eyebrow">Commander field guide</p>
-        <h1>Deck Matrix</h1>
+        <h1>Trey's Deck Matrix</h1>
       </div>
       <span class="save-status" id="save-status" aria-live="polite">Saved on this device</span>
     </div>
@@ -51,6 +56,23 @@
   </main>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <dialog class="card-preview" id="card-preview">
+    <button class="card-preview-close" id="card-preview-close" aria-label="Close card image">×</button>
+    <img id="card-preview-image" alt="">
+    <h2 id="card-preview-title"></h2>
+    <p id="card-preview-meta"></p>
+  </dialog>
+  <dialog class="detail-sheet" id="detail-sheet">
+    <button class="detail-sheet-close" id="detail-sheet-close" aria-label="Close detail panel">×</button>
+    <div class="detail-sheet-layout">
+      <aside class="detail-sheet-aside">
+        <img id="detail-sheet-image" alt="">
+        <p id="detail-sheet-kicker"></p>
+        <h2 id="detail-sheet-title"></h2>
+      </aside>
+      <div class="detail-sheet-body" id="detail-sheet-body"></div>
+    </div>
+  </dialog>
   <footer>
     <button class="text-button" id="reset-button">Reset my picks</button>
     <span>Private to this browser · no account needed</span>

@@ -15,6 +15,8 @@
       "commander": "Betor, Ancestor's Voice",
       "budgetLabel": "$40-110",
       "bracketLabel": "Bracket 2 — Core",
+      "priorityLabel": "Buy #1 of 6 — Precon-first",
+      "planHtml": "<div><div class=\"foot-grid\" style=\"margin-top:8px\">\n      <div class=\"panel\" style=\"grid-column:1/-1; border-left:4px solid #2f7d3c\">\n      <h3>Buy Order: <span class=\"buy-rank-inline\">#1 of 6</span> <span style=\"font-weight:400;color:var(--ink-muted);font-size:13px\">— Precon-first</span></h3>\n      <p style=\"font-size:13.5px; margin:6px 0\">In print, forgiving, and the deck the counters arc starts on.</p>\n      <p style=\"font-size:13px; color:var(--ink-muted); margin:6px 0 0\"><b>How to buy it:</b> Box now (~$45). First singles trip: Soul Warden, Pristine Talisman, Authority of the Consuls.</p>\n    </div>\n      <div class=\"panel\" style=\"grid-column:1/-1; border-left:4px solid var(--accent)\">\n      <h3>Bracket Placement: <span class=\"bkt bkt-2\">Bracket 2 — Core</span></h3>\n      <p style=\"font-size:13.5px; margin:6px 0\">Zero Game Changers, no two-card infinite combos, no mass land denial, no extra-turn chaining. Power sits at 'well-tuned precon': it wins through resilient combat math over many turns, not explosive ones. Same placement under the Felothar commander variant.</p>\n      <p style=\"font-size:13px; color:var(--ink-muted); margin:6px 0 0\"><b>Dialing it up:</b> This is the table's fair-and-forgiving deck — leave it at 2 for normal nights. The Top-of-Bracket-3 package below is the full send when you want it.</p>\n    </div>\n      <div class=\"panel\"><h3>How to Play This Deck</h3><p style=\"font-size:13.5px\">Ramp with mana dorks and walls (Faeburrow Elder, Sylvan Caryatid, Axebane Guardian) into a board of high-toughness defenders. Land Betor, then attack, take damage, and gain life through combat and your lifegain creatures - Betor's +1/+1 counters land at your END STEP based on total life gained that turn, so the counters always arrive AFTER combat. Sequence: attack -&gt; damage -&gt; life gain -&gt; end step -&gt; counters land. Multiply those counters with Branching Evolution, Hardened Scales, and Ozolith, then spread them with Conclave Mentor, Evolution Sage, Karn's Bastion, Contagion Clasp, and Nesting Grounds. Hold Inspiring Call to protect your board through a wrath. Close games with Cathars' Crusade triggering off every creature you cast, turning your wall of defenders into attackers that end the game in a swing or two. Zero-dragon option: the box's second legend, Felothar the Steadfast (Human Warrior), runs this exact 99 as a toughness-combat commander — every creature deals damage equal to its toughness and your defenders can attack, which the deck already supports with Assault Formation in the 99. You give up Betor's lifegain-to-counters engine but gain a faster clock, a sacrifice-for-cards outlet, and a table with no dragon overlap at all.</p></div>\n      <div class=\"panel\"><h3>Trackers &amp; Counters Needed</h3>\n      <table class=\"acc-table\"><tr><th>Type</th><th>Status</th><th>Notes</th></tr><tr class=\"\"><td>+1/+1 counters</td><td><span class=\"badge-used\">Needed</span></td><td style=\"font-size:12px\">Glass gem counters or a dedicated dice set</td></tr><tr class=\"not-used\"><td>-1/-1 counters</td><td><span class=\"badge-not-used\">Not Used</span></td><td style=\"font-size:12px\">Use a visually different counter set than +1/+1</td></tr><tr class=\"not-used\"><td>Poison / energy / experience</td><td><span class=\"badge-not-used\">Not Used</span></td><td style=\"font-size:12px\"></td></tr><tr class=\"not-used\"><td>Dry-erase life/commander-damage tracker</td><td><span class=\"badge-not-used\">Not Used</span></td><td style=\"font-size:12px\">Heavy +1/+1 counter use (Betor's own trigger, Branching Evolution, Hardened Scales, Ozolith, Conclave Mentor, Evolution Sage) - bring 40-60 standard +1/+1 counters. No -1/-1 counters or poison in this deck. Standard life tracking (dice/app/pad) covers the lifegain swings.</td></tr></table>\n      </div>\n      <div class=\"panel\"><h3>Pros</h3><ul><li>Very forgiving to pilot - the counters/lifegain engine runs almost on autopilot</li><li>Extremely resilient board of high-toughness defenders that blocks nearly anything on the ground</li><li>Strong lifegain buffer against aggressive tables</li></ul></div>\n      <div class=\"panel\"><h3>Cons</h3><ul><li>Can be slow to close games without Cathars' Crusade or a big finisher online</li><li>Losing Betor to removal before the engine is protected is a real tempo hit</li><li>Ground-bound - evasive flying damage goes right through the wall</li></ul></div>\n      <div class=\"panel\"><h3>Strengths</h3><ul><li>High-toughness walls block almost anything on the ground</li><li>Multiple proliferate sources make counters snowball fast</li><li>Lifegain buys time against aggressive pods</li></ul></div>\n      <div class=\"panel\"><h3>Weaknesses</h3><ul><li>Vulnerable to board wipes if counters aren't protected (hold Inspiring Call)</li><li>Flying damage from Dragon/Angel decks goes around the wall entirely</li><li>A lot of durdling can happen before Betor is online and protected</li></ul></div>\n      <div class=\"panel\" style=\"grid-column:1/-1\"><h3>Stretch Cards <span style=\"font-weight:400;color:var(--ink-muted);font-size:13px\">— would improve the deck, but break this budget; each is selectable on the deck tab (green rows)</span></h3>\n      <div class=\"stretch-list\"><div class=\"stretch-card\">\n          <div class=\"sc-name\">Phyrexian Arena</div>\n          <div class=\"sc-price\">$4.40</div>\n          <div class=\"sc-replaces\">Swaps in for: Well of Lost Dreams</div>\n          <div class=\"sc-why\">Draw a card and lose 1 life every upkeep — the life LOSS switches on Betor's reanimation half, which is otherwise dormant.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=Phyrexian%20Arena\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div><div class=\"stretch-card\">\n          <div class=\"sc-name\">The Ozolith</div>\n          <div class=\"sc-price\">$65.48</div>\n          <div class=\"sc-replaces\">Swaps in for: Inspiring Call</div>\n          <div class=\"sc-why\">Counters from dead creatures come back and move onto something new. Wipe insurance for a counters deck.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=The%20Ozolith\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div><div class=\"stretch-card\">\n          <div class=\"sc-name\">Innkeeper's Talent</div>\n          <div class=\"sc-price\">$8.36</div>\n          <div class=\"sc-replaces\">Swaps in for: Hardened Scales</div>\n          <div class=\"sc-why\">Doubles counter placement and eventually gives everything you control an activated-ability boost.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=Innkeeper%27s%20Talent\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div></div></div>\n      <div class=\"panel\" style=\"grid-column:1/-1; border:2px solid var(--accent)\">\n      <h3>Top of Bracket 3 — Max Legal Power <span style=\"font-weight:400;color:var(--ink-muted);font-size:13px\">— 3 Game Changers (cap is 3) · package $145.98</span></h3>\n      <p style=\"font-size:13px; color:var(--ink-muted)\">Exactly three Game Changers (the Bracket 3 legal maximum), taken verbatim from this variant's route in the deck variant matrix. Every card below is also selectable on the deck's own tab (dark-red rows in the alternates column) so it can go straight onto the shopping list.</p>\n      <div class=\"stretch-list\"><div class=\"stretch-card b3-card\">\n          <div class=\"sc-name\">Necropotence <span class=\"gc-badge\">GAME CHANGER</span></div>\n          <div class=\"sc-price\">$36.39</div>\n          <div class=\"sc-replaces\">Swaps in for: Well of Lost Dreams</div>\n          <div class=\"sc-why\">Pay life for a fistful of cards — and Betor reads life LOST, reanimating that much mana value at your end step. It powers both halves.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=Necropotence\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div><div class=\"stretch-card b3-card\">\n          <div class=\"sc-name\">Teferi's Protection <span class=\"gc-badge\">GAME CHANGER</span></div>\n          <div class=\"sc-price\">$47.93</div>\n          <div class=\"sc-replaces\">Swaps in for: Inspiring Call</div>\n          <div class=\"sc-why\">Phase out your whole board and life total. The single best answer to the wipe that would otherwise cost you every counter.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=Teferi%27s%20Protection\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div><div class=\"stretch-card b3-card\">\n          <div class=\"sc-name\">Smothering Tithe <span class=\"gc-badge\">GAME CHANGER</span></div>\n          <div class=\"sc-price\">$61.66</div>\n          <div class=\"sc-replaces\">Swaps in for: Pristine Talisman</div>\n          <div class=\"sc-why\">Every opponent draw either pays you or taxes them. Pure ramp, no targets, zero salt.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=Smothering%20Tithe\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div></div>\n      <p style=\"font-size:11.5px; color:var(--ink-muted); margin:8px 0 0\">Bracket 3 rules honored: at most three Game Changers, no mass land denial, no chained extra turns, no early-game two-card infinite combos.</p>\n    </div>\n    </div></div>",
       "precon": {
         "id": "precon-1",
         "name": "Abzan Armor (Tarkir: Dragonstorm Commander)",
@@ -42,6 +44,25 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [
+            "counters",
+            "toughness",
+            "payoff"
+          ],
+          "why": "Reads your whole wall at the end step: draw a card at 10+ total toughness, untap your team at 20+, and each opponent loses HALF their life at 40+ — this deck hits 20 easily and 40 is a real endgame. (Also a Spirit Dragon, if you're counting dragons at the table.)",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Betor%2C%20Kin%20to%20All&view=grid",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Fair trade at $4.15. Pays for itself in most games without warping the deck.",
+            "fit": "Reads your whole wall at the end step: draw a card at 10+ total toughness, untap your team at 20+, and each opponent loses HALF their life at 40+ — this deck hits 20 easily and 40 is a real endgame. (Also a Spirit Dragon, if you're counting dragons at the table.)"
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Betor,+Kin+to+All"
         },
         {
@@ -57,6 +78,25 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [
+            "counters",
+            "doubler",
+            "resilience"
+          ],
+          "why": "Counter doubler plus recursion if the creature it's on dies.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Ozolith%2C%20the%20Shattered%20Spire&view=grid",
+          "brief": {
+            "power": 4,
+            "ease": 4,
+            "fun": 4,
+            "value": "Strong value. Premium effect at $5.80, comfortably worth the slot.",
+            "fit": "Counter doubler plus recursion if the creature it's on dies."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Ozolith,+the+Shattered+Spire"
         },
         {
@@ -72,6 +112,25 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [
+            "counters",
+            "doubler",
+            "cheap"
+          ],
+          "why": "One mana, multiplies every +1/+1 counter you'd add.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Hardened%20Scales&view=grid",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 4,
+            "value": "Fair trade at $2.25. Pays for itself in most games without warping the deck.",
+            "fit": "One mana, multiplies every +1/+1 counter you'd add."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Hardened+Scales"
         },
         {
@@ -87,6 +146,24 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [
+            "lifegain",
+            "card-draw"
+          ],
+          "why": "Turns your lifegain into cards - fixes the deck's draw problem.",
+          "whyPrimary": "Turns your lifegain into cards - fixes the deck's draw problem.",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Well%20of%20Lost%20Dreams&view=grid",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Easy include at $0.99 — bulk-bin pricing for a card that pulls its weight.",
+            "fit": "Turns your lifegain into cards - fixes the deck's draw problem."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Well+of+Lost+Dreams"
         },
         {
@@ -102,6 +179,25 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [
+            "protection",
+            "card-draw",
+            "boardwipe-answer"
+          ],
+          "why": "Draw a card per creature plus indestructible - beats a board wipe.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Inspiring%20Call&view=grid",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Easy include at $0.20 — bulk-bin pricing for a card that pulls its weight.",
+            "fit": "Draw a card per creature plus indestructible - beats a board wipe."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Inspiring+Call"
         },
         {
@@ -117,6 +213,23 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [
+            "lifegain"
+          ],
+          "why": "Gain 1 life whenever any other creature enters — yours or theirs. Fires on every player's turn, so Betor's end-step trigger is live even when you do nothing.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Soul%20Warden",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Fair trade at $3.14. Pays for itself in most games without warping the deck.",
+            "fit": "Gain 1 life whenever any other creature enters — yours or theirs. Fires on every player's turn, so Betor's end-step trigger is live even when you do nothing."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Soul+Warden"
         },
         {
@@ -132,6 +245,23 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [
+            "lifegain"
+          ],
+          "why": "Opponents' creatures enter tapped AND you gain 1 life each. Blunts a rush and feeds Betor off the same card.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Authority%20of%20the%20Consuls",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Fair trade at $4.72. Pays for itself in most games without warping the deck.",
+            "fit": "Opponents' creatures enter tapped AND you gain 1 life each. Blunts a rush and feeds Betor off the same card."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Authority+of+the+Consuls"
         },
         {
@@ -147,6 +277,23 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [
+            "lifegain"
+          ],
+          "why": "Taps for mana and gains 1 life. Guaranteed lifegain every single turn with zero setup — this is the card that makes the trigger reliable.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Pristine%20Talisman",
+          "brief": {
+            "power": 2,
+            "ease": 4,
+            "fun": 3,
+            "value": "Cheap consistency at $0.34. Low ceiling, but it smooths the draws.",
+            "fit": "Taps for mana and gains 1 life. Guaranteed lifegain every single turn with zero setup — this is the card that makes the trigger reliable."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Pristine+Talisman"
         },
         {
@@ -162,6 +309,23 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [
+            "lifegain"
+          ],
+          "why": "Every lifegain event is a +1/+1 counter and a scry. A second Betor for two mana.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Trelasarra%2C%20Moon%20Dancer",
+          "brief": {
+            "power": 2,
+            "ease": 4,
+            "fun": 3,
+            "value": "Cheap consistency at $0.26. Low ceiling, but it smooths the draws.",
+            "fit": "Every lifegain event is a +1/+1 counter and a scry. A second Betor for two mana."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Trelasarra,+Moon+Dancer"
         },
         {
@@ -177,6 +341,23 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [
+            "lifegain"
+          ],
+          "why": "Turns lifegain into cards, and builds lifelink blockers with spare mana.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Dawn%20of%20Hope",
+          "brief": {
+            "power": 2,
+            "ease": 4,
+            "fun": 3,
+            "value": "Cheap consistency at $0.47. Low ceiling, but it smooths the draws.",
+            "fit": "Turns lifegain into cards, and builds lifelink blockers with spare mana."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Dawn+of+Hope"
         }
       ],
@@ -194,6 +375,24 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Tuned",
+          "tags": [
+            "counters",
+            "doubler"
+          ],
+          "why": "Doubles every counter Betor makes - the biggest single upgrade in the deck.",
+          "whyPrimary": "Doubles every counter Betor makes - the biggest single upgrade in the deck.",
+          "whyOptional": "The biggest counter multiplier in the deck at $6.43 — pure power. Betor now triggers reliably without it.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Branching%20Evolution&view=grid",
+          "brief": {
+            "power": 4,
+            "ease": 4,
+            "fun": 4,
+            "value": "Strong value. Premium effect at $6.43, comfortably worth the slot.",
+            "fit": "Doubles every counter Betor makes - the biggest single upgrade in the deck."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Branching+Evolution"
         },
         {
@@ -209,6 +408,25 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Tuned",
+          "tags": [
+            "counters",
+            "finisher",
+            "go-wide"
+          ],
+          "why": "Puts a counter on your whole board every time you cast a creature - the deck's finisher.",
+          "whyPrimary": "Puts a counter on your whole board every time you cast a creature - the deck's finisher.",
+          "whyOptional": "A five-mana finisher. Excellent when the board is wide, skippable while you are still learning the deck.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Cathars%27%20Crusade&view=grid",
+          "brief": {
+            "power": 4,
+            "ease": 4,
+            "fun": 5,
+            "value": "Strong value. Premium effect at $5.16, comfortably worth the slot.",
+            "fit": "Puts a counter on your whole board every time you cast a creature - the deck's finisher."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Cathars'+Crusade"
         },
         {
@@ -224,6 +442,23 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Tuned",
+          "tags": [
+            "lifegain"
+          ],
+          "why": "Drains on every death anywhere — and it can target you, so one death feeds both halves of Betor at once.",
+          "whyPrimary": "",
+          "whyOptional": "Strong synergy, but the six lifegain sources above already make the commander reliable. Buy it when you want the wipe insurance.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Blood%20Artist",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Fair trade at $3.09. Pays for itself in most games without warping the deck.",
+            "fit": "Drains on every death anywhere — and it can target you, so one death feeds both halves of Betor at once."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Blood+Artist"
         },
         {
@@ -239,6 +474,25 @@
           "replaces": "Replaces Branching Evolution",
           "gameChanger": false,
           "stage": "Tuned",
+          "tags": [
+            "counters",
+            "ramp",
+            "budget"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "Half the price, adds +1 to every batch of counters AND taps for mana equal to its power — from the current Secrets of Strixhaven commander set, so it's easy to find in person",
+          "alternateTradeoff": "Adds one counter per event instead of doubling them — noticeably weaker once the engine is big",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Kami%20of%20Whispered%20Hopes",
+          "brief": {
+            "power": 2,
+            "ease": 4,
+            "fun": 3,
+            "value": "Marginal at $3.25 — only worth it if you specifically want this effect.",
+            "fit": "Half the price, adds +1 to every batch of counters AND taps for mana equal to its power — from the current Secrets of Strixhaven commander set, so it's easy to find in person"
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Kami+of+Whispered+Hopes"
         },
         {
@@ -254,6 +508,25 @@
           "replaces": "Replaces Cathars' Crusade",
           "gameChanger": false,
           "stage": "Tuned",
+          "tags": [
+            "counters",
+            "tokens",
+            "budget"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "Cheaper board-wide counters keyed to land drops instead of creature casts, plus it can make 2/2 Cats",
+          "alternateTradeoff": "Slower than Crusade in a creature-heavy turn; one trigger a turn off your land drop",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Felidar%20Retreat",
+          "brief": {
+            "power": 2,
+            "ease": 4,
+            "fun": 4,
+            "value": "Cheap consistency at $1.35. Low ceiling, but it smooths the draws.",
+            "fit": "Cheaper board-wide counters keyed to land drops instead of creature casts, plus it can make 2/2 Cats"
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Felidar+Retreat"
         }
       ],
@@ -271,6 +544,24 @@
           "replaces": "Swaps in for Well of Lost Dreams",
           "gameChanger": true,
           "stage": "Maxed",
+          "tags": [
+            "b3",
+            "game changer"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "A Bracket-3 Game Changer — power, not function. The deck plays fine without it.",
+          "alternateReason": "Pay life for a fistful of cards — and Betor reads life LOST, reanimating that much mana value at your end step. It powers both halves.",
+          "alternateTradeoff": "Swaps in for Well of Lost Dreams. Official Game Changer — Bracket 3 allows at most three.",
+          "whereToBuy": "Big case — haggle",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Necropotence",
+          "brief": {
+            "power": 5,
+            "ease": 4,
+            "fun": 3,
+            "value": "Premium pick at $36.39. You're paying for the ceiling, so buy it when the budget allows.",
+            "fit": "Pay life for a fistful of cards — and Betor reads life LOST, reanimating that much mana value at your end step. It powers both halves."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Necropotence"
         },
         {
@@ -286,6 +577,23 @@
           "replaces": "Swaps in for Well of Lost Dreams",
           "gameChanger": false,
           "stage": "Maxed",
+          "tags": [
+            "stretch"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "Maxed-stage upgrade — raises the ceiling, but the Tuned build works without it.",
+          "alternateReason": "Draw a card and lose 1 life every upkeep — the life LOSS switches on Betor's reanimation half, which is otherwise dormant.",
+          "alternateTradeoff": "Swaps in for Well of Lost Dreams. Stretch upgrade — beyond this deck's base budget.",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Phyrexian%20Arena",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Fair trade at $4.40. Pays for itself in most games without warping the deck.",
+            "fit": "Draw a card and lose 1 life every upkeep — the life LOSS switches on Betor's reanimation half, which is otherwise dormant."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Phyrexian+Arena"
         },
         {
@@ -301,6 +609,24 @@
           "replaces": "Swaps in for Inspiring Call",
           "gameChanger": true,
           "stage": "Maxed",
+          "tags": [
+            "b3",
+            "game changer"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "A Bracket-3 Game Changer — power, not function. The deck plays fine without it.",
+          "alternateReason": "Phase out your whole board and life total. The single best answer to the wipe that would otherwise cost you every counter.",
+          "alternateTradeoff": "Swaps in for Inspiring Call. Official Game Changer — Bracket 3 allows at most three.",
+          "whereToBuy": "Big case — haggle",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Teferi%27s%20Protection",
+          "brief": {
+            "power": 5,
+            "ease": 4,
+            "fun": 3,
+            "value": "Premium pick at $47.93. You're paying for the ceiling, so buy it when the budget allows.",
+            "fit": "Phase out your whole board and life total. The single best answer to the wipe that would otherwise cost you every counter."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Teferi's+Protection"
         },
         {
@@ -316,6 +642,23 @@
           "replaces": "Swaps in for Inspiring Call",
           "gameChanger": false,
           "stage": "Maxed",
+          "tags": [
+            "stretch"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "Maxed-stage upgrade — raises the ceiling, but the Tuned build works without it.",
+          "alternateReason": "Counters from dead creatures come back and move onto something new. Wipe insurance for a counters deck.",
+          "alternateTradeoff": "Swaps in for Inspiring Call. Stretch upgrade — beyond this deck's base budget.",
+          "whereToBuy": "Big case — haggle",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=The%20Ozolith",
+          "brief": {
+            "power": 4,
+            "ease": 4,
+            "fun": 3,
+            "value": "Premium pick at $65.48. You're paying for the ceiling, so buy it when the budget allows.",
+            "fit": "Counters from dead creatures come back and move onto something new. Wipe insurance for a counters deck."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=The+Ozolith"
         },
         {
@@ -331,6 +674,24 @@
           "replaces": "Swaps in for Pristine Talisman",
           "gameChanger": true,
           "stage": "Maxed",
+          "tags": [
+            "b3",
+            "game changer"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "A Bracket-3 Game Changer — power, not function. The deck plays fine without it.",
+          "alternateReason": "Every opponent draw either pays you or taxes them. Pure ramp, no targets, zero salt.",
+          "alternateTradeoff": "Swaps in for Pristine Talisman. Official Game Changer — Bracket 3 allows at most three.",
+          "whereToBuy": "Big case — haggle",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Smothering%20Tithe",
+          "brief": {
+            "power": 5,
+            "ease": 4,
+            "fun": 3,
+            "value": "Premium pick at $61.66. You're paying for the ceiling, so buy it when the budget allows.",
+            "fit": "Every opponent draw either pays you or taxes them. Pure ramp, no targets, zero salt."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Smothering+Tithe"
         },
         {
@@ -346,6 +707,23 @@
           "replaces": "Swaps in for Hardened Scales",
           "gameChanger": false,
           "stage": "Maxed",
+          "tags": [
+            "stretch"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "Maxed-stage upgrade — raises the ceiling, but the Tuned build works without it.",
+          "alternateReason": "Doubles counter placement and eventually gives everything you control an activated-ability boost.",
+          "alternateTradeoff": "Swaps in for Hardened Scales. Stretch upgrade — beyond this deck's base budget.",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Innkeeper%27s%20Talent",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Fair trade at $8.36. Pays for itself in most games without warping the deck.",
+            "fit": "Doubles counter placement and eventually gives everything you control an activated-ability boost."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Innkeeper's+Talent"
         }
       ]
@@ -357,6 +735,8 @@
       "commander": "Atraxa, Praetors' Voice",
       "budgetLabel": "$40-110",
       "bracketLabel": "Bracket 2 — Core",
+      "priorityLabel": "Buy #5 of 6 — Commander-first",
+      "planHtml": "<div><div class=\"foot-grid\" style=\"margin-top:8px\">\n      <div class=\"panel\" style=\"grid-column:1/-1; border-left:4px solid #2f7d3c\">\n      <h3>Buy Order: <span class=\"buy-rank-inline\">#5 of 6</span> <span style=\"font-weight:400;color:var(--ink-muted);font-size:13px\">— Commander-first</span></h3>\n      <p style=\"font-size:13.5px; margin:6px 0\">Atraxa is the deck and a third of its cost — buy her when the budget breathes.</p>\n      <p style=\"font-size:13px; color:var(--ink-muted); margin:6px 0 0\"><b>How to buy it:</b> Atraxa (~$31) and Command Tower first. Second trip: Contagion Engine, Karn's Bastion, Flux Channeler.</p>\n    </div>\n      <div class=\"panel\" style=\"grid-column:1/-1; border-left:4px solid var(--accent)\">\n      <h3>Bracket Placement: <span class=\"bkt bkt-2\">Bracket 2 — Core</span></h3>\n      <p style=\"font-size:13.5px; margin:6px 0\">Zero Game Changers in the main list, no two-card infinite combos, no mass land denial. Proliferate is powerful but slow and entirely self-contained.</p>\n      <p style=\"font-size:13px; color:var(--ink-muted); margin:6px 0 0\"><b>Dialing it up:</b> Leave it here for normal nights. The Top-of-Bracket-3 package below is the dial when you want max power.</p>\n    </div>\n      <div class=\"panel\"><h3>How to Play This Deck</h3><p style=\"font-size:13.5px\">Ramp into Atraxa on turn four or five behind Fog Bank, Wall of Roots and Sylvan Caryatid. Land any counter source — a planeswalker, Forgotten Ancient, an Everflowing Chalice — and let the end-step proliferate compound it. Deepglow Skate is the convergence button: it doubles every counter on the board at once, which can ultimate a planeswalker out of nowhere. Karn's Bastion gives you a proliferate you can use even with Atraxa dead.</p></div>\n      <div class=\"panel\"><h3>Trackers &amp; Counters Needed</h3>\n      <table class=\"acc-table\"><tr><th>Type</th><th>Status</th><th>Notes</th></tr><tr class=\"\"><td>+1/+1 counters</td><td><span class=\"badge-used\">Needed</span></td><td style=\"font-size:12px\">Glass gem counters or a dedicated dice set</td></tr><tr class=\"not-used\"><td>-1/-1 counters</td><td><span class=\"badge-not-used\">Not Used</span></td><td style=\"font-size:12px\">Use a visually different counter set than +1/+1</td></tr><tr class=\"\"><td>Other tracking</td><td><span class=\"badge-used\">Needed</span></td><td style=\"font-size:12px\">charge counters</td></tr><tr class=\"\"><td>Other tracking</td><td><span class=\"badge-used\">Needed</span></td><td style=\"font-size:12px\">loyalty counters</td></tr><tr class=\"\"><td>Dry-erase life/commander-damage tracker</td><td><span class=\"badge-used\">Needed</span></td><td style=\"font-size:12px\">Heavy counter use of several kinds at once — bring +1/+1 counters, charge counters for Everflowing Chalice and Astral Cornucopia, and a dry-erase for planeswalker loyalty.</td></tr></table>\n      </div>\n      <div class=\"panel\"><h3>Pros</h3><ul><li>Every trigger is upside for you and touches nobody else's board</li><li>Four colours means access to the best removal in the game</li><li>Atraxa's 4/4 flying deathtouch lifelink body defends by itself</li></ul></div>\n      <div class=\"panel\"><h3>Cons</h3><ul><li>Atraxa is a $31 card and the mana base needs care</li><li>Four colours on a budget means slower, taplandy mana</li><li>Without a counter source in play the commander does nothing</li></ul></div>\n      <div class=\"panel\"><h3>Strengths</h3><ul><li>Deathtouch plus lifelink makes attacking you a bad idea</li><li>Proliferate scales with anything — it never becomes a dead effect</li><li>Deepglow Skate is a genuine one-card convergence turn</li></ul></div>\n      <div class=\"panel\"><h3>Weaknesses</h3><ul><li>Colour-screw is the real failure mode, not removal</li><li>Slow to start — nothing meaningful happens before turn four</li><li>A planeswalker-heavy board draws attacks from the whole table</li></ul></div>\n      <div class=\"panel\" style=\"grid-column:1/-1\"><h3>Stretch Cards <span style=\"font-weight:400;color:var(--ink-muted);font-size:13px\">— would improve the deck, but break this budget; each is selectable on the deck tab (green rows)</span></h3>\n      <div class=\"stretch-list\"><div class=\"stretch-card\">\n          <div class=\"sc-name\">Doubling Season</div>\n          <div class=\"sc-price\">$33.67</div>\n          <div class=\"sc-replaces\">Swaps in for: Contagion Engine</div>\n          <div class=\"sc-why\">Doubles every counter and every token you make. The most expensive way to make Atraxa unfair.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=Doubling%20Season\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div><div class=\"stretch-card\">\n          <div class=\"sc-name\">The Chain Veil</div>\n          <div class=\"sc-price\">$5.48</div>\n          <div class=\"sc-replaces\">Swaps in for: Karn's Bastion</div>\n          <div class=\"sc-why\">Activate every planeswalker again each turn — with proliferate refilling the loyalty.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=The%20Chain%20Veil\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div><div class=\"stretch-card\">\n          <div class=\"sc-name\">Vorinclex, Monstrous Raider</div>\n          <div class=\"sc-price\">$57.48</div>\n          <div class=\"sc-replaces\">Swaps in for: Flux Channeler</div>\n          <div class=\"sc-why\">Your counters double, theirs halve. A one-sided Doubling Season.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=Vorinclex%2C%20Monstrous%20Raider\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div></div></div>\n      <div class=\"panel\" style=\"grid-column:1/-1; border:2px solid var(--accent)\">\n      <h3>Top of Bracket 3 — Max Legal Power <span style=\"font-weight:400;color:var(--ink-muted);font-size:13px\">— 3 Game Changers (cap is 3) · package $149.05</span></h3>\n      <p style=\"font-size:13px; color:var(--ink-muted)\">Exactly three Game Changers (the Bracket 3 legal maximum), taken verbatim from this variant's route in the deck variant matrix. Each names the card it swaps in for. Every card below is also selectable on the deck's own tab (dark-red rows in the alternates column) so it can go straight onto the shopping list.</p>\n      <div class=\"stretch-list\"><div class=\"stretch-card b3-card\">\n          <div class=\"sc-name\">Teferi's Protection <span class=\"gc-badge\">GAME CHANGER</span></div>\n          <div class=\"sc-price\">$47.93</div>\n          <div class=\"sc-replaces\">Swaps in for: Wall of Omens</div>\n          <div class=\"sc-why\">Phase out your whole board — the answer to the wipe that would otherwise cost you twenty turns of counters.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=Teferi%27s%20Protection\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div><div class=\"stretch-card b3-card\">\n          <div class=\"sc-name\">Rhystic Study <span class=\"gc-badge\">GAME CHANGER</span></div>\n          <div class=\"sc-price\">$70.27</div>\n          <div class=\"sc-replaces\">Swaps in for: Inexorable Tide</div>\n          <div class=\"sc-why\">Turns the table's own spells into your card draw while you develop.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=Rhystic%20Study\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div><div class=\"stretch-card b3-card\">\n          <div class=\"sc-name\">Consecrated Sphinx <span class=\"gc-badge\">GAME CHANGER</span></div>\n          <div class=\"sc-price\">$30.85</div>\n          <div class=\"sc-replaces\">Swaps in for: Deepglow Skate</div>\n          <div class=\"sc-why\">Two cards per opponent draw step. Ends any grind on the spot.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=Consecrated%20Sphinx\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div></div>\n      <p style=\"font-size:11.5px; color:var(--ink-muted); margin:8px 0 0\">Bracket 3 rules honored: at most three Game Changers, no mass land denial, no chained extra turns, no early-game two-card infinite combos.</p>\n    </div>\n    </div></div>",
       "precon": {
         "id": "precon-2",
         "name": "Four-colour proliferate shell (singles)",
@@ -384,6 +764,23 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [
+            "commander"
+          ],
+          "why": "The deck. Atraxa's end-step proliferate advances every counter you own at once, and her 4/4 flying deathtouch lifelink body defends while it happens.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Big case — haggle",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Atraxa%2C%20Praetors%27%20Voice",
+          "brief": {
+            "power": 4,
+            "ease": 4,
+            "fun": 3,
+            "value": "Premium pick at $30.86. You're paying for the ceiling, so buy it when the budget allows.",
+            "fit": "The deck. Atraxa's end-step proliferate advances every counter you own at once, and her 4/4 flying deathtouch lifelink body defends while it happens."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Atraxa,+Praetors'+Voice"
         },
         {
@@ -399,6 +796,21 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [],
+          "why": "From the Tuned build of 2c — Proliferate Council — Atraxa.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Inexorable%20Tide",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Fair trade at $3.13. Pays for itself in most games without warping the deck.",
+            "fit": "From the Tuned build of 2c — Proliferate Council — Atraxa."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Inexorable+Tide"
         },
         {
@@ -414,6 +826,21 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [],
+          "why": "From the Tuned build of 2c — Proliferate Council — Atraxa.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Flux%20Channeler",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Fair trade at $3.58. Pays for itself in most games without warping the deck.",
+            "fit": "From the Tuned build of 2c — Proliferate Council — Atraxa."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Flux+Channeler"
         },
         {
@@ -429,6 +856,21 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [],
+          "why": "From the Tuned build of 2c — Proliferate Council — Atraxa.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Deepglow%20Skate",
+          "brief": {
+            "power": 2,
+            "ease": 4,
+            "fun": 3,
+            "value": "Cheap consistency at $0.29. Low ceiling, but it smooths the draws.",
+            "fit": "From the Tuned build of 2c — Proliferate Council — Atraxa."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Deepglow+Skate"
         },
         {
@@ -444,6 +886,21 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [],
+          "why": "From the Tuned build of 2c — Proliferate Council — Atraxa.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Karn%27s%20Bastion",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Fair trade at $2.44. Pays for itself in most games without warping the deck.",
+            "fit": "From the Tuned build of 2c — Proliferate Council — Atraxa."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Karn's+Bastion"
         }
       ],
@@ -461,6 +918,21 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Tuned",
+          "tags": [],
+          "why": "From the Tuned build of 2c — Proliferate Council — Atraxa.",
+          "whyPrimary": "",
+          "whyOptional": "A nice cheap blocker that replaces itself, but the deck already runs Fog Bank, Wall of Roots and Sylvan Caryatid.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Wall%20of%20Omens",
+          "brief": {
+            "power": 2,
+            "ease": 4,
+            "fun": 3,
+            "value": "Cheap consistency at $0.31. Low ceiling, but it smooths the draws.",
+            "fit": "From the Tuned build of 2c — Proliferate Council — Atraxa."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Wall+of+Omens"
         }
       ],
@@ -478,6 +950,21 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Tuned",
+          "tags": [],
+          "why": "From the Tuned build of 2c — Proliferate Council — Atraxa.",
+          "whyPrimary": "",
+          "whyOptional": "$13 for a second copy of an effect Karn's Bastion and Flux Channeler already provide. The engine runs without it.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Contagion%20Engine",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Fair trade at $13.56. Pays for itself in most games without warping the deck.",
+            "fit": "From the Tuned build of 2c — Proliferate Council — Atraxa."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Contagion+Engine"
         },
         {
@@ -493,6 +980,24 @@
           "replaces": "Swaps in for Wall of Omens",
           "gameChanger": true,
           "stage": "Maxed",
+          "tags": [
+            "b3",
+            "game changer"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "A Bracket-3 Game Changer — power, not function. The deck plays fine without it.",
+          "alternateReason": "Phase out your whole board — the answer to the wipe that would otherwise cost you twenty turns of counters.",
+          "alternateTradeoff": "Swaps in for Wall of Omens. Official Game Changer — Bracket 3 allows at most three.",
+          "whereToBuy": "Big case — haggle",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Teferi%27s%20Protection",
+          "brief": {
+            "power": 5,
+            "ease": 4,
+            "fun": 3,
+            "value": "Premium pick at $47.93. You're paying for the ceiling, so buy it when the budget allows.",
+            "fit": "Phase out your whole board — the answer to the wipe that would otherwise cost you twenty turns of counters."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Teferi's+Protection"
         },
         {
@@ -508,6 +1013,24 @@
           "replaces": "Swaps in for Inexorable Tide",
           "gameChanger": true,
           "stage": "Maxed",
+          "tags": [
+            "b3",
+            "game changer"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "A Bracket-3 Game Changer — power, not function. The deck plays fine without it.",
+          "alternateReason": "Turns the table's own spells into your card draw while you develop.",
+          "alternateTradeoff": "Swaps in for Inexorable Tide. Official Game Changer — Bracket 3 allows at most three.",
+          "whereToBuy": "Big case — haggle",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Rhystic%20Study",
+          "brief": {
+            "power": 5,
+            "ease": 4,
+            "fun": 3,
+            "value": "Premium pick at $70.27. You're paying for the ceiling, so buy it when the budget allows.",
+            "fit": "Turns the table's own spells into your card draw while you develop."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Rhystic+Study"
         },
         {
@@ -523,6 +1046,24 @@
           "replaces": "Swaps in for Deepglow Skate",
           "gameChanger": true,
           "stage": "Maxed",
+          "tags": [
+            "b3",
+            "game changer"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "A Bracket-3 Game Changer — power, not function. The deck plays fine without it.",
+          "alternateReason": "Two cards per opponent draw step. Ends any grind on the spot.",
+          "alternateTradeoff": "Swaps in for Deepglow Skate. Official Game Changer — Bracket 3 allows at most three.",
+          "whereToBuy": "Big case — haggle",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Consecrated%20Sphinx",
+          "brief": {
+            "power": 5,
+            "ease": 4,
+            "fun": 3,
+            "value": "Premium pick at $30.85. You're paying for the ceiling, so buy it when the budget allows.",
+            "fit": "Two cards per opponent draw step. Ends any grind on the spot."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Consecrated+Sphinx"
         },
         {
@@ -538,6 +1079,23 @@
           "replaces": "Swaps in for Contagion Engine",
           "gameChanger": false,
           "stage": "Maxed",
+          "tags": [
+            "stretch"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "Maxed-stage upgrade — raises the ceiling, but the Tuned build works without it.",
+          "alternateReason": "Doubles every counter and every token you make. The most expensive way to make Atraxa unfair.",
+          "alternateTradeoff": "Swaps in for Contagion Engine. Stretch upgrade — beyond this deck's base budget.",
+          "whereToBuy": "Big case — haggle",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Doubling%20Season",
+          "brief": {
+            "power": 4,
+            "ease": 4,
+            "fun": 3,
+            "value": "Premium pick at $33.67. You're paying for the ceiling, so buy it when the budget allows.",
+            "fit": "Doubles every counter and every token you make. The most expensive way to make Atraxa unfair."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Doubling+Season"
         },
         {
@@ -553,6 +1111,23 @@
           "replaces": "Swaps in for Karn's Bastion",
           "gameChanger": false,
           "stage": "Maxed",
+          "tags": [
+            "stretch"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "Maxed-stage upgrade — raises the ceiling, but the Tuned build works without it.",
+          "alternateReason": "Activate every planeswalker again each turn — with proliferate refilling the loyalty.",
+          "alternateTradeoff": "Swaps in for Karn's Bastion. Stretch upgrade — beyond this deck's base budget.",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=The%20Chain%20Veil",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Fair trade at $5.48. Pays for itself in most games without warping the deck.",
+            "fit": "Activate every planeswalker again each turn — with proliferate refilling the loyalty."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=The+Chain+Veil"
         },
         {
@@ -568,6 +1143,23 @@
           "replaces": "Swaps in for Flux Channeler",
           "gameChanger": false,
           "stage": "Maxed",
+          "tags": [
+            "stretch"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "Maxed-stage upgrade — raises the ceiling, but the Tuned build works without it.",
+          "alternateReason": "Your counters double, theirs halve. A one-sided Doubling Season.",
+          "alternateTradeoff": "Swaps in for Flux Channeler. Stretch upgrade — beyond this deck's base budget.",
+          "whereToBuy": "Big case — haggle",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Vorinclex%2C%20Monstrous%20Raider",
+          "brief": {
+            "power": 4,
+            "ease": 4,
+            "fun": 3,
+            "value": "Premium pick at $57.48. You're paying for the ceiling, so buy it when the budget allows.",
+            "fit": "Your counters double, theirs halve. A one-sided Doubling Season."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Vorinclex,+Monstrous+Raider"
         }
       ]
@@ -579,6 +1171,8 @@
       "commander": "The Gitrog Monster",
       "budgetLabel": "$40-110",
       "bracketLabel": "Bracket 2 — Core",
+      "priorityLabel": "Buy #4 of 6 — Singles-first",
+      "planHtml": "<div><div class=\"foot-grid\" style=\"margin-top:8px\">\n      <div class=\"panel\" style=\"grid-column:1/-1; border-left:4px solid #2f7d3c\">\n      <h3>Buy Order: <span class=\"buy-rank-inline\">#4 of 6</span> <span style=\"font-weight:400;color:var(--ink-muted);font-size:13px\">— Singles-first</span></h3>\n      <p style=\"font-size:13.5px; margin:6px 0\">A 56-cent commander and a cheap shell — build it any payday.</p>\n      <p style=\"font-size:13px; color:var(--ink-muted); margin:6px 0 0\"><b>How to buy it:</b> Gitrog plus Command Tower and the ramp package. Second trip: Ramunap Excavator, Life from the Loam.</p>\n    </div>\n      <div class=\"panel\" style=\"grid-column:1/-1; border-left:4px solid var(--accent)\">\n      <h3>Bracket Placement: <span class=\"bkt bkt-2\">Bracket 2 — Core</span></h3>\n      <p style=\"font-size:13.5px; margin:6px 0\">No Game Changers in the main list, no infinite combos, and no mass land denial — you sacrifice your own lands, never other people's.</p>\n      <p style=\"font-size:13px; color:var(--ink-muted); margin:6px 0 0\"><b>Dialing it up:</b> Leave it here for normal nights. The Top-of-Bracket-3 package below is the dial when you want max power.</p>\n    </div>\n      <div class=\"panel\"><h3>How to Play This Deck</h3><p style=\"font-size:13.5px\">Play lands. Gitrog's end-step sacrifice draws you a card every turn even when nothing else is happening, and with Ramunap Excavator that sacrificed land comes straight back out of the graveyard. Life from the Loam turns your draw step into three lands a turn. Splendid Reclamation is the convergence turn — return every land in your graveyard to the battlefield at once, which with Avenger of Zendikar is a lethal board from nowhere.</p></div>\n      <div class=\"panel\"><h3>Trackers &amp; Counters Needed</h3>\n      <table class=\"acc-table\"><tr><th>Type</th><th>Status</th><th>Notes</th></tr><tr class=\"not-used\"><td>+1/+1 counters</td><td><span class=\"badge-not-used\">Not Used</span></td><td style=\"font-size:12px\">Glass gem counters or a dedicated dice set</td></tr><tr class=\"not-used\"><td>-1/-1 counters</td><td><span class=\"badge-not-used\">Not Used</span></td><td style=\"font-size:12px\">Use a visually different counter set than +1/+1</td></tr><tr class=\"not-used\"><td>Poison / energy / experience</td><td><span class=\"badge-not-used\">Not Used</span></td><td style=\"font-size:12px\"></td></tr><tr class=\"not-used\"><td>Dry-erase life/commander-damage tracker</td><td><span class=\"badge-not-used\">Not Used</span></td><td style=\"font-size:12px\">No counters. Bring a large playmat — this deck sprawls sideways with lands and tokens more than any other in the lineup.</td></tr></table>\n      </div>\n      <div class=\"panel\"><h3>Pros</h3><ul><li>A 6/6 deathtouch body nobody attacks into, on a five-mana commander</li><li>Draws cards from the most reliable action in Magic</li><li>Black gives real removal the Naya landfall version never had</li></ul></div>\n      <div class=\"panel\"><h3>Cons</h3><ul><li>Gitrog's sacrifice clause genuinely hurts if you draw no way to use it</li><li>Two colours means no counterspells</li><li>A graveyard-hate piece slows Loam and Splendid Reclamation badly</li></ul></div>\n      <div class=\"panel\"><h3>Strengths</h3><ul><li>Deathtouch on a 6/6 is a wall the whole table respects</li><li>Card advantage that does not need a payoff card to show up</li><li>Splendid Reclamation is a genuine one-card convergence turn</li></ul></div>\n      <div class=\"panel\"><h3>Weaknesses</h3><ul><li>No answer to a resolved enchantment beyond Assassin's Trophy</li><li>Slow start — turns one to four are pure land drops</li><li>Loses value fast against Rest in Peace</li></ul></div>\n      <div class=\"panel\" style=\"grid-column:1/-1\"><h3>Stretch Cards <span style=\"font-weight:400;color:var(--ink-muted);font-size:13px\">— would improve the deck, but break this budget; each is selectable on the deck tab (green rows)</span></h3>\n      <div class=\"stretch-list\"><div class=\"stretch-card\">\n          <div class=\"sc-name\">Crucible of Worlds</div>\n          <div class=\"sc-price\">$34.97</div>\n          <div class=\"sc-replaces\">Swaps in for: Ramunap Excavator</div>\n          <div class=\"sc-why\">Play lands from your graveyard every turn — the permanent version of Ramunap Excavator.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=Crucible%20of%20Worlds\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div><div class=\"stretch-card\">\n          <div class=\"sc-name\">Dakmor Salvage</div>\n          <div class=\"sc-price\">$0.31</div>\n          <div class=\"sc-replaces\">Swaps in for: Wall of Blossoms</div>\n          <div class=\"sc-why\">A land that dredges itself back. Endless Gitrog draws.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=Dakmor%20Salvage\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div><div class=\"stretch-card\">\n          <div class=\"sc-name\">Titania, Protector of Argoth</div>\n          <div class=\"sc-price\">$0.32</div>\n          <div class=\"sc-replaces\">Swaps in for: Avenger of Zendikar</div>\n          <div class=\"sc-why\">Every land that dies makes a 5/3. Gitrog kills a land every turn by itself.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=Titania%2C%20Protector%20of%20Argoth\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div></div></div>\n      <div class=\"panel\" style=\"grid-column:1/-1; border:2px solid var(--accent)\">\n      <h3>Top of Bracket 3 — Max Legal Power <span style=\"font-weight:400;color:var(--ink-muted);font-size:13px\">— 3 Game Changers (cap is 3) · package $67.18</span></h3>\n      <p style=\"font-size:13px; color:var(--ink-muted)\">Exactly three Game Changers (the Bracket 3 legal maximum), taken verbatim from this variant's route in the deck variant matrix. Each names the card it swaps in for. Every card below is also selectable on the deck's own tab (dark-red rows in the alternates column) so it can go straight onto the shopping list.</p>\n      <div class=\"stretch-list\"><div class=\"stretch-card b3-card\">\n          <div class=\"sc-name\">Field of the Dead <span class=\"gc-badge\">GAME CHANGER</span></div>\n          <div class=\"sc-price\">$27.50</div>\n          <div class=\"sc-replaces\">Swaps in for: Splendid Reclamation</div>\n          <div class=\"sc-why\">A land that quietly builds an army — pure build-up, and this deck plays more lands than anyone.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=Field%20of%20the%20Dead\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div><div class=\"stretch-card b3-card\">\n          <div class=\"sc-name\">Crop Rotation <span class=\"gc-badge\">GAME CHANGER</span></div>\n          <div class=\"sc-price\">$3.29</div>\n          <div class=\"sc-replaces\">Swaps in for: Wall of Blossoms</div>\n          <div class=\"sc-why\">One mana turns any land into the exact land that matters.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=Crop%20Rotation\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div><div class=\"stretch-card b3-card\">\n          <div class=\"sc-name\">Necropotence <span class=\"gc-badge\">GAME CHANGER</span></div>\n          <div class=\"sc-price\">$36.39</div>\n          <div class=\"sc-replaces\">Swaps in for: Life from the Loam</div>\n          <div class=\"sc-why\">Pay life for a fistful of cards. A 6/6 deathtouch wall can afford the life.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=Necropotence\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div></div>\n      <p style=\"font-size:11.5px; color:var(--ink-muted); margin:8px 0 0\">Bracket 3 rules honored: at most three Game Changers, no mass land denial, no chained extra turns, no early-game two-card infinite combos.</p>\n    </div>\n    </div></div>",
       "precon": {
         "id": "precon-3",
         "name": "Golgari lands shell (singles)",
@@ -606,6 +1200,23 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [
+            "commander"
+          ],
+          "why": "A 6/6 deathtouch wall, a ramp engine and a draw engine on one five-mana card — for 56 cents.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=The%20Gitrog%20Monster",
+          "brief": {
+            "power": 2,
+            "ease": 4,
+            "fun": 3,
+            "value": "Cheap consistency at $0.56. Low ceiling, but it smooths the draws.",
+            "fit": "A 6/6 deathtouch wall, a ramp engine and a draw engine on one five-mana card — for 56 cents."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=The+Gitrog+Monster"
         },
         {
@@ -621,6 +1232,21 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [],
+          "why": "From the Tuned build of 3e — Golgari Land Engine — The Gitrog Monster.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Ramunap%20Excavator",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Fair trade at $5.28. Pays for itself in most games without warping the deck.",
+            "fit": "From the Tuned build of 3e — Golgari Land Engine — The Gitrog Monster."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Ramunap+Excavator"
         },
         {
@@ -636,6 +1262,21 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [],
+          "why": "From the Tuned build of 3e — Golgari Land Engine — The Gitrog Monster.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Splendid%20Reclamation",
+          "brief": {
+            "power": 2,
+            "ease": 4,
+            "fun": 3,
+            "value": "Cheap consistency at $0.39. Low ceiling, but it smooths the draws.",
+            "fit": "From the Tuned build of 3e — Golgari Land Engine — The Gitrog Monster."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Splendid+Reclamation"
         },
         {
@@ -651,6 +1292,21 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [],
+          "why": "From the Tuned build of 3e — Golgari Land Engine — The Gitrog Monster.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Life%20from%20the%20Loam",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Fair trade at $5.47. Pays for itself in most games without warping the deck.",
+            "fit": "From the Tuned build of 3e — Golgari Land Engine — The Gitrog Monster."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Life+from+the+Loam"
         }
       ],
@@ -668,6 +1324,21 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Tuned",
+          "tags": [],
+          "why": "From the Tuned build of 3e — Golgari Land Engine — The Gitrog Monster.",
+          "whyPrimary": "",
+          "whyOptional": "Cheap early defence that replaces itself — helpful, never essential.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Wall%20of%20Blossoms",
+          "brief": {
+            "power": 2,
+            "ease": 4,
+            "fun": 3,
+            "value": "Cheap consistency at $0.26. Low ceiling, but it smooths the draws.",
+            "fit": "From the Tuned build of 3e — Golgari Land Engine — The Gitrog Monster."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Wall+of+Blossoms"
         },
         {
@@ -683,6 +1354,21 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Tuned",
+          "tags": [],
+          "why": "From the Tuned build of 3e — Golgari Land Engine — The Gitrog Monster.",
+          "whyPrimary": "",
+          "whyOptional": "A big finisher, but the deck still draws and grinds without it. Buy it when you want the deck to actually close games.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Avenger%20of%20Zendikar",
+          "brief": {
+            "power": 2,
+            "ease": 4,
+            "fun": 3,
+            "value": "Cheap consistency at $0.28. Low ceiling, but it smooths the draws.",
+            "fit": "From the Tuned build of 3e — Golgari Land Engine — The Gitrog Monster."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Avenger+of+Zendikar"
         }
       ],
@@ -700,6 +1386,24 @@
           "replaces": "Swaps in for Splendid Reclamation",
           "gameChanger": true,
           "stage": "Maxed",
+          "tags": [
+            "b3",
+            "game changer"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "A Bracket-3 Game Changer — power, not function. The deck plays fine without it.",
+          "alternateReason": "A land that quietly builds an army — pure build-up, and this deck plays more lands than anyone.",
+          "alternateTradeoff": "Swaps in for Splendid Reclamation. Official Game Changer — Bracket 3 allows at most three.",
+          "whereToBuy": "Big case — haggle",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Field%20of%20the%20Dead",
+          "brief": {
+            "power": 5,
+            "ease": 4,
+            "fun": 3,
+            "value": "Premium pick at $27.50. You're paying for the ceiling, so buy it when the budget allows.",
+            "fit": "A land that quietly builds an army — pure build-up, and this deck plays more lands than anyone."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Field+of+the+Dead"
         },
         {
@@ -715,6 +1419,24 @@
           "replaces": "Swaps in for Wall of Blossoms",
           "gameChanger": true,
           "stage": "Maxed",
+          "tags": [
+            "b3",
+            "game changer"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "A Bracket-3 Game Changer — power, not function. The deck plays fine without it.",
+          "alternateReason": "One mana turns any land into the exact land that matters.",
+          "alternateTradeoff": "Swaps in for Wall of Blossoms. Official Game Changer — Bracket 3 allows at most three.",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Crop%20Rotation",
+          "brief": {
+            "power": 5,
+            "ease": 4,
+            "fun": 3,
+            "value": "Strong value. Premium effect at $3.29, comfortably worth the slot.",
+            "fit": "One mana turns any land into the exact land that matters."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Crop+Rotation"
         },
         {
@@ -730,6 +1452,24 @@
           "replaces": "Swaps in for Life from the Loam",
           "gameChanger": true,
           "stage": "Maxed",
+          "tags": [
+            "b3",
+            "game changer"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "A Bracket-3 Game Changer — power, not function. The deck plays fine without it.",
+          "alternateReason": "Pay life for a fistful of cards. A 6/6 deathtouch wall can afford the life.",
+          "alternateTradeoff": "Swaps in for Life from the Loam. Official Game Changer — Bracket 3 allows at most three.",
+          "whereToBuy": "Big case — haggle",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Necropotence",
+          "brief": {
+            "power": 5,
+            "ease": 4,
+            "fun": 3,
+            "value": "Premium pick at $36.39. You're paying for the ceiling, so buy it when the budget allows.",
+            "fit": "Pay life for a fistful of cards. A 6/6 deathtouch wall can afford the life."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Necropotence"
         },
         {
@@ -745,6 +1485,23 @@
           "replaces": "Swaps in for Ramunap Excavator",
           "gameChanger": false,
           "stage": "Maxed",
+          "tags": [
+            "stretch"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "Maxed-stage upgrade — raises the ceiling, but the Tuned build works without it.",
+          "alternateReason": "Play lands from your graveyard every turn — the permanent version of Ramunap Excavator.",
+          "alternateTradeoff": "Swaps in for Ramunap Excavator. Stretch upgrade — beyond this deck's base budget.",
+          "whereToBuy": "Big case — haggle",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Crucible%20of%20Worlds",
+          "brief": {
+            "power": 4,
+            "ease": 4,
+            "fun": 3,
+            "value": "Premium pick at $34.97. You're paying for the ceiling, so buy it when the budget allows.",
+            "fit": "Play lands from your graveyard every turn — the permanent version of Ramunap Excavator."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Crucible+of+Worlds"
         }
       ]
@@ -756,6 +1513,8 @@
       "commander": "Arcades, the Strategist",
       "budgetLabel": "$40-110",
       "bracketLabel": "Bracket 2 — Core",
+      "priorityLabel": "Buy #3 of 6 — Singles-first",
+      "planHtml": "<div><div class=\"foot-grid\" style=\"margin-top:8px\">\n      <div class=\"panel\" style=\"grid-column:1/-1; border-left:4px solid #2f7d3c\">\n      <h3>Buy Order: <span class=\"buy-rank-inline\">#3 of 6</span> <span style=\"font-weight:400;color:var(--ink-muted);font-size:13px\">— Singles-first</span></h3>\n      <p style=\"font-size:13.5px; margin:6px 0\">Cheapest all-in of the six and the strongest playstyle match.</p>\n      <p style=\"font-size:13px; color:var(--ink-muted); margin:6px 0 0\"><b>How to buy it:</b> Arcades (~$5) plus the wall package — Wall of Omens, Wall of Blossoms, Axebane Guardian.</p>\n    </div>\n      <div class=\"panel\" style=\"grid-column:1/-1; border-left:4px solid var(--accent)\">\n      <h3>Bracket Placement: <span class=\"bkt bkt-2\">Bracket 2 — Core</span></h3>\n      <p style=\"font-size:13.5px; margin:6px 0\">Zero Game Changers, no infinite combos, no land denial. A defensive deck that wins with combat damage on a clear board.</p>\n      <p style=\"font-size:13px; color:var(--ink-muted); margin:6px 0 0\"><b>Dialing it up:</b> Leave it here for normal nights. The Top-of-Bracket-3 package below is the dial when you want max power.</p>\n    </div>\n      <div class=\"panel\"><h3>How to Play This Deck</h3><p style=\"font-size:13.5px\">Deploy cheap walls every turn. Before Arcades they are pure defence; each one still replaces itself once he is down. Land Arcades and every 0/6 on the board becomes a 6-power attacker with vigilance-like safety, because they were never going to attack anyway. High Alert and Assault Formation are backup copies of the effect so a removal spell on Arcades does not turn the deck off. Unbreakable Formation protects the alpha strike.</p></div>\n      <div class=\"panel\"><h3>Trackers &amp; Counters Needed</h3>\n      <table class=\"acc-table\"><tr><th>Type</th><th>Status</th><th>Notes</th></tr><tr class=\"\"><td>+1/+1 counters</td><td><span class=\"badge-used\">Needed</span></td><td style=\"font-size:12px\">Glass gem counters or a dedicated dice set</td></tr><tr class=\"not-used\"><td>-1/-1 counters</td><td><span class=\"badge-not-used\">Not Used</span></td><td style=\"font-size:12px\">Use a visually different counter set than +1/+1</td></tr><tr class=\"not-used\"><td>Poison / energy / experience</td><td><span class=\"badge-not-used\">Not Used</span></td><td style=\"font-size:12px\"></td></tr><tr class=\"not-used\"><td>Dry-erase life/commander-damage tracker</td><td><span class=\"badge-not-used\">Not Used</span></td><td style=\"font-size:12px\">Light +1/+1 counter use from Sight of the Scalelords and High Alert-style pumps. A tall playmat helps — this deck ends up with fifteen-plus creatures.</td></tr></table>\n      </div>\n      <div class=\"panel\"><h3>Pros</h3><ul><li>Blocks essentially everything on the ground from turn two onward</li><li>Every wall replaces itself — you never run out of cards</li><li>The board goes from harmless to lethal in one commander cast</li></ul></div>\n      <div class=\"panel\"><h3>Cons</h3><ul><li>Very little happens on offence until Arcades resolves</li><li>Three colours on a budget means taplands</li><li>A wipe with Arcades out costs you an enormous amount of board</li></ul></div>\n      <div class=\"panel\"><h3>Strengths</h3><ul><li>The best pure fortress in the lineup</li><li>Card draw stapled to defence — no trade-off between the two</li><li>Three redundant copies of the make-defenders-attack effect</li></ul></div>\n      <div class=\"panel\"><h3>Weaknesses</h3><ul><li>Arcades is a four-mana legend that will be targeted</li><li>Little reach — everything happens on the ground</li><li>Flying threats go over the whole plan</li></ul></div>\n      <div class=\"panel\" style=\"grid-column:1/-1\"><h3>Stretch Cards <span style=\"font-weight:400;color:var(--ink-muted);font-size:13px\">— would improve the deck, but break this budget; each is selectable on the deck tab (green rows)</span></h3>\n      <div class=\"stretch-list\"><div class=\"stretch-card\">\n          <div class=\"sc-name\">Wall of Nets <span class=\"oop-pill oop-high\" title=\"1 printing, last 1998 (Exodus) — buy on sight (highest urgency)\">OOP!</span></div>\n          <div class=\"sc-price\">$5.78</div>\n          <div class=\"sc-replaces\">Swaps in for: Unbreakable Formation</div>\n          <div class=\"sc-why\">Exiles attacking creatures while it lives — the ultimate defensive wall.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=Wall%20of%20Nets\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div><div class=\"stretch-card\">\n          <div class=\"sc-name\">Dovin's Veto</div>\n          <div class=\"sc-price\">$3.55</div>\n          <div class=\"sc-replaces\">Swaps in for: Assault Formation</div>\n          <div class=\"sc-why\">Uncounterable counterspell to protect the turn Arcades lands.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=Dovin%27s%20Veto\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div><div class=\"stretch-card\">\n          <div class=\"sc-name\">Sight of the Scalelords</div>\n          <div class=\"sc-price\">$0.53</div>\n          <div class=\"sc-replaces\">Swaps in for: High Alert</div>\n          <div class=\"sc-why\">Your big-toughness team gets vigilance and +2/+2 every upkeep.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=Sight%20of%20the%20Scalelords\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div></div></div>\n      <div class=\"panel\" style=\"grid-column:1/-1; border:2px solid var(--accent)\">\n      <h3>Top of Bracket 3 — Max Legal Power <span style=\"font-weight:400;color:var(--ink-muted);font-size:13px\">— 3 Game Changers (cap is 3) · package $138.23</span></h3>\n      <p style=\"font-size:13px; color:var(--ink-muted)\">Exactly three Game Changers (the Bracket 3 legal maximum), taken verbatim from this variant's route in the deck variant matrix. Each names the card it swaps in for. Every card below is also selectable on the deck's own tab (dark-red rows in the alternates column) so it can go straight onto the shopping list.</p>\n      <div class=\"stretch-list\"><div class=\"stretch-card b3-card\">\n          <div class=\"sc-name\">Aura Shards <span class=\"gc-badge\">GAME CHANGER</span></div>\n          <div class=\"sc-price\">$28.64</div>\n          <div class=\"sc-replaces\">Swaps in for: Assault Formation</div>\n          <div class=\"sc-why\">Every creature you land — and you land a lot of them — destroys an artifact or enchantment.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=Aura%20Shards\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div><div class=\"stretch-card b3-card\">\n          <div class=\"sc-name\">Teferi's Protection <span class=\"gc-badge\">GAME CHANGER</span></div>\n          <div class=\"sc-price\">$47.93</div>\n          <div class=\"sc-replaces\">Swaps in for: Unbreakable Formation</div>\n          <div class=\"sc-why\">Phase out the whole wall board in response to the wipe that would otherwise end you.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=Teferi%27s%20Protection\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div><div class=\"stretch-card b3-card\">\n          <div class=\"sc-name\">Smothering Tithe <span class=\"gc-badge\">GAME CHANGER</span></div>\n          <div class=\"sc-price\">$61.66</div>\n          <div class=\"sc-replaces\">Swaps in for: Axebane Guardian</div>\n          <div class=\"sc-why\">Every opponent draw either pays you or taxes them. Ramp with no targets.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=Smothering%20Tithe\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div></div>\n      <p style=\"font-size:11.5px; color:var(--ink-muted); margin:8px 0 0\">Bracket 3 rules honored: at most three Game Changers, no mass land denial, no chained extra turns, no early-game two-card infinite combos.</p>\n    </div>\n    </div></div>",
       "precon": {
         "id": "precon-4",
         "name": "Bant defenders shell (singles)",
@@ -783,6 +1542,23 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [
+            "commander"
+          ],
+          "why": "Every defender you play draws a card, and they all attack for their toughness. Defence and card advantage become the same action.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Arcades%2C%20the%20Strategist",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Fair trade at $4.96. Pays for itself in most games without warping the deck.",
+            "fit": "Every defender you play draws a card, and they all attack for their toughness. Defence and card advantage become the same action."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Arcades,+the+Strategist"
         },
         {
@@ -798,6 +1574,21 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [],
+          "why": "From the Tuned build of 4c — Bant Walls — Arcades.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Wall%20of%20Omens",
+          "brief": {
+            "power": 2,
+            "ease": 4,
+            "fun": 3,
+            "value": "Cheap consistency at $0.31. Low ceiling, but it smooths the draws.",
+            "fit": "From the Tuned build of 4c — Bant Walls — Arcades."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Wall+of+Omens"
         },
         {
@@ -813,6 +1604,21 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [],
+          "why": "From the Tuned build of 4c — Bant Walls — Arcades.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Wall%20of%20Blossoms",
+          "brief": {
+            "power": 2,
+            "ease": 4,
+            "fun": 3,
+            "value": "Cheap consistency at $0.26. Low ceiling, but it smooths the draws.",
+            "fit": "From the Tuned build of 4c — Bant Walls — Arcades."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Wall+of+Blossoms"
         },
         {
@@ -828,6 +1634,21 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [],
+          "why": "From the Tuned build of 4c — Bant Walls — Arcades.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Axebane%20Guardian",
+          "brief": {
+            "power": 2,
+            "ease": 4,
+            "fun": 3,
+            "value": "Cheap consistency at $0.28. Low ceiling, but it smooths the draws.",
+            "fit": "From the Tuned build of 4c — Bant Walls — Arcades."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Axebane+Guardian"
         },
         {
@@ -843,6 +1664,21 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [],
+          "why": "From the Tuned build of 4c — Bant Walls — Arcades.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=High%20Alert",
+          "brief": {
+            "power": 2,
+            "ease": 4,
+            "fun": 3,
+            "value": "Cheap consistency at $0.39. Low ceiling, but it smooths the draws.",
+            "fit": "From the Tuned build of 4c — Bant Walls — Arcades."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=High+Alert"
         }
       ],
@@ -860,6 +1696,21 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Tuned",
+          "tags": [],
+          "why": "From the Tuned build of 4c — Bant Walls — Arcades.",
+          "whyPrimary": "",
+          "whyOptional": "The third copy of the make-walls-attack effect. Redundancy, not function — High Alert already backs up Arcades.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Assault%20Formation",
+          "brief": {
+            "power": 2,
+            "ease": 4,
+            "fun": 3,
+            "value": "Cheap consistency at $0.36. Low ceiling, but it smooths the draws.",
+            "fit": "From the Tuned build of 4c — Bant Walls — Arcades."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Assault+Formation"
         },
         {
@@ -875,6 +1726,21 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Tuned",
+          "tags": [],
+          "why": "From the Tuned build of 4c — Bant Walls — Arcades.",
+          "whyPrimary": "",
+          "whyOptional": "Protection for the turn you swing. Excellent, but the deck functions perfectly without it.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Unbreakable%20Formation",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Easy include at $1.42 — bulk-bin pricing for a card that pulls its weight.",
+            "fit": "From the Tuned build of 4c — Bant Walls — Arcades."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Unbreakable+Formation"
         }
       ],
@@ -892,6 +1758,24 @@
           "replaces": "Swaps in for Assault Formation",
           "gameChanger": true,
           "stage": "Maxed",
+          "tags": [
+            "b3",
+            "game changer"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "A Bracket-3 Game Changer — power, not function. The deck plays fine without it.",
+          "alternateReason": "Every creature you land — and you land a lot of them — destroys an artifact or enchantment.",
+          "alternateTradeoff": "Swaps in for Assault Formation. Official Game Changer — Bracket 3 allows at most three.",
+          "whereToBuy": "Big case — haggle",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Aura%20Shards",
+          "brief": {
+            "power": 5,
+            "ease": 4,
+            "fun": 3,
+            "value": "Premium pick at $28.64. You're paying for the ceiling, so buy it when the budget allows.",
+            "fit": "Every creature you land — and you land a lot of them — destroys an artifact or enchantment."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Aura+Shards"
         },
         {
@@ -907,6 +1791,23 @@
           "replaces": "Swaps in for Assault Formation",
           "gameChanger": false,
           "stage": "Maxed",
+          "tags": [
+            "stretch"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "Maxed-stage upgrade — raises the ceiling, but the Tuned build works without it.",
+          "alternateReason": "Uncounterable counterspell to protect the turn Arcades lands.",
+          "alternateTradeoff": "Swaps in for Assault Formation. Stretch upgrade — beyond this deck's base budget.",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Dovin%27s%20Veto",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Fair trade at $3.55. Pays for itself in most games without warping the deck.",
+            "fit": "Uncounterable counterspell to protect the turn Arcades lands."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Dovin's+Veto"
         },
         {
@@ -922,6 +1823,24 @@
           "replaces": "Swaps in for Unbreakable Formation",
           "gameChanger": true,
           "stage": "Maxed",
+          "tags": [
+            "b3",
+            "game changer"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "A Bracket-3 Game Changer — power, not function. The deck plays fine without it.",
+          "alternateReason": "Phase out the whole wall board in response to the wipe that would otherwise end you.",
+          "alternateTradeoff": "Swaps in for Unbreakable Formation. Official Game Changer — Bracket 3 allows at most three.",
+          "whereToBuy": "Big case — haggle",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Teferi%27s%20Protection",
+          "brief": {
+            "power": 5,
+            "ease": 4,
+            "fun": 3,
+            "value": "Premium pick at $47.93. You're paying for the ceiling, so buy it when the budget allows.",
+            "fit": "Phase out the whole wall board in response to the wipe that would otherwise end you."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Teferi's+Protection"
         },
         {
@@ -937,6 +1856,23 @@
           "replaces": "Swaps in for Unbreakable Formation",
           "gameChanger": false,
           "stage": "Maxed",
+          "tags": [
+            "stretch"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "Maxed-stage upgrade — raises the ceiling, but the Tuned build works without it.",
+          "alternateReason": "Exiles attacking creatures while it lives — the ultimate defensive wall.",
+          "alternateTradeoff": "Swaps in for Unbreakable Formation. Stretch upgrade — beyond this deck's base budget.",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Wall%20of%20Nets",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Fair trade at $5.78. Pays for itself in most games without warping the deck.",
+            "fit": "Exiles attacking creatures while it lives — the ultimate defensive wall."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Wall+of+Nets"
         },
         {
@@ -952,6 +1888,24 @@
           "replaces": "Swaps in for Axebane Guardian",
           "gameChanger": true,
           "stage": "Maxed",
+          "tags": [
+            "b3",
+            "game changer"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "A Bracket-3 Game Changer — power, not function. The deck plays fine without it.",
+          "alternateReason": "Every opponent draw either pays you or taxes them. Ramp with no targets.",
+          "alternateTradeoff": "Swaps in for Axebane Guardian. Official Game Changer — Bracket 3 allows at most three.",
+          "whereToBuy": "Big case — haggle",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Smothering%20Tithe",
+          "brief": {
+            "power": 5,
+            "ease": 4,
+            "fun": 3,
+            "value": "Premium pick at $61.66. You're paying for the ceiling, so buy it when the budget allows.",
+            "fit": "Every opponent draw either pays you or taxes them. Ramp with no targets."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Smothering+Tithe"
         },
         {
@@ -967,6 +1921,23 @@
           "replaces": "Swaps in for High Alert",
           "gameChanger": false,
           "stage": "Maxed",
+          "tags": [
+            "stretch"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "Maxed-stage upgrade — raises the ceiling, but the Tuned build works without it.",
+          "alternateReason": "Your big-toughness team gets vigilance and +2/+2 every upkeep.",
+          "alternateTradeoff": "Swaps in for High Alert. Stretch upgrade — beyond this deck's base budget.",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Sight%20of%20the%20Scalelords",
+          "brief": {
+            "power": 2,
+            "ease": 4,
+            "fun": 3,
+            "value": "Cheap consistency at $0.53. Low ceiling, but it smooths the draws.",
+            "fit": "Your big-toughness team gets vigilance and +2/+2 every upkeep."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Sight+of+the+Scalelords"
         }
       ]
@@ -978,6 +1949,8 @@
       "commander": "Quintorius, History Chaser",
       "budgetLabel": "$40-110",
       "bracketLabel": "Bracket 2 — Core",
+      "priorityLabel": "Buy #2 of 6 — Precon-first",
+      "planHtml": "<div><div class=\"foot-grid\" style=\"margin-top:8px\">\n      <div class=\"panel\" style=\"grid-column:1/-1; border-left:4px solid #2f7d3c\">\n      <h3>Buy Order: <span class=\"buy-rank-inline\">#2 of 6</span> <span style=\"font-weight:400;color:var(--ink-muted);font-size:13px\">— Precon-first</span></h3>\n      <p style=\"font-size:13.5px; margin:6px 0\">In print, Keith-endorsed, and the commander is in the box.</p>\n      <p style=\"font-size:13px; color:var(--ink-muted); margin:6px 0 0\"><b>How to buy it:</b> Box now (~$37). First singles trip: Bag of Holding, Containment Construct, Sevinne's Reclamation.</p>\n    </div>\n      <div class=\"panel\" style=\"grid-column:1/-1; border-left:4px solid var(--accent)\">\n      <h3>Bracket Placement: <span class=\"bkt bkt-2\">Bracket 2 — Core</span></h3>\n      <p style=\"font-size:13.5px; margin:6px 0\">Token recursion with efficient removal and zero Game Changers in the 99. Skullclamp is the strongest card here and it is deliberately NOT on the Game Changers list — powerful, but Core-legal.</p>\n      <p style=\"font-size:13px; color:var(--ink-muted); margin:6px 0 0\"><b>Dialing it up:</b> Careful when dialing up: BOTH the Farewell alternate (under Winds of Abandon) and Ancient Tomb in the stretch list are Game Changers. Bracket 3 allows three TOTAL — the package below plus either of those would exceed it, so choose.</p>\n    </div>\n      <div class=\"panel\"><h3>How to Play This Deck</h3><p style=\"font-size:13.5px\">1) Turns 1-3: ramp with Sol Ring, Arcane Signet, Mind Stone, Fellwar Stone, and Talisman of Conviction while dropping cheap value creatures (Charming Prince, Knight of the White Orchid) and holding up removal (Path to Exile, Swords to Plowshares, Portable Hole). 2) Turns 4-6: land Excava, the Risen Past (or Quintorius, History Chaser if you'd rather run the grindier value-engine build) and start attacking — every Excava swing reanimates a cheap creature/artifact/enchantment from your yard as an extra 1/1 flying Spirit, and Quintorius (kept in the 99 either way) turns any card leaving your graveyard into a 3/2 Spirit token, so your own recursion effects double as token generation. 3) Turns 7+: go wide in the air — Luminarch Ascension, Mentor of the Meek, and Elspeth, Sun's Champion keep the tokens and cards flowing, Lightning Greaves keeps your key pieces alive through removal, and Skullclamp turns any dying 1/1 Spirit into two fresh cards. Clear blockers with Winds of Abandon/Cast Out and win by out-flying the table — your opponents' removal spells mostly just feed the next Excava attack trigger.</p></div>\n      <div class=\"panel\"><h3>Trackers &amp; Counters Needed</h3>\n      <table class=\"acc-table\"><tr><th>Type</th><th>Status</th><th>Notes</th></tr><tr class=\"\"><td>+1/+1 counters</td><td><span class=\"badge-used\">Needed</span></td><td style=\"font-size:12px\">Glass gem counters or a dedicated dice set</td></tr><tr class=\"not-used\"><td>-1/-1 counters</td><td><span class=\"badge-not-used\">Not Used</span></td><td style=\"font-size:12px\">Use a visually different counter set than +1/+1</td></tr><tr class=\"\"><td>Other tracking</td><td><span class=\"badge-used\">Needed</span></td><td style=\"font-size:12px\">Finality counters (from Excava, the Risen Past — an exile-replacement marker, not a stat counter, placed on anything she reanimates)</td></tr><tr class=\"\"><td>Other tracking</td><td><span class=\"badge-used\">Needed</span></td><td style=\"font-size:12px\">Quest counters (from Luminarch Ascension, if added)</td></tr><tr class=\"not-used\"><td>Dry-erase life/commander-damage tracker</td><td><span class=\"badge-not-used\">Not Used</span></td><td style=\"font-size:12px\">This deck only lightly touches +1/+1 counters (Spirit of Resilience, Augusta, and Luminarch Ascension's quest counters) and uses Excava's 'finality counter' as a rules marker. A small mixed bag of generic counter tokens or spare dice/beads covers it fully — Trey does not need a dedicated +1/+1 counter set, poison dice, or energy/experience trackers for this deck, and standard life-total tracking (phone app, d20, or pen and paper) is all that's needed beyond that.</td></tr></table>\n      </div>\n      <div class=\"panel\"><h3>Pros</h3><ul><li>Removal-resistant value engine — your own creatures dying often helps you by fueling the graveyard</li><li>Evasive win condition (flying Spirit tokens) that dodges most ground stalls</li><li>Cheapest entry point of every comparable Boros build researched — about $87 all-in versus $80-95 just for the sealed product on the fan-favorite Voltron/Auras alternatives</li><li>Reads completely differently than any deck already at Trey's table</li></ul></div>\n      <div class=\"panel\"><h3>Cons</h3><ul><li>Graveyard hate (Rest in Peace, Bojuka Bog, etc.) can shut off multiple engine pieces (Excava, Quintorius, Advanced Reconstruction, Primary Research) at once</li><li>Card draw leans on Skullclamp and recursion — protect the Clamp, because the deck 'draws' through combat and the graveyard more than raw card advantage</li><li>Many payoffs are 1-toughness tokens that die to incidental damage or edicts</li></ul></div>\n      <div class=\"panel\"><h3>Strengths</h3><ul><li>Graveyard resilience/recursion</li><li>Evasion via flying tokens</li><li>Efficient, low-cost upgrade curve</li><li>Distinct table identity</li></ul></div>\n      <div class=\"panel\"><h3>Weaknesses</h3><ul><li>Vulnerable to dedicated graveyard hate</li><li>Thin raw card draw</li><li>Board wipes cost tempo (though the deck recovers faster than most)</li><li>Fragile 1-toughness token bodies</li></ul></div>\n      <div class=\"panel\" style=\"grid-column:1/-1\"><h3>Stretch Cards <span style=\"font-weight:400;color:var(--ink-muted);font-size:13px\">— would improve the deck, but break this budget; each is selectable on the deck tab (green rows)</span></h3>\n      <div class=\"stretch-list\"><div class=\"stretch-card\">\n          <div class=\"sc-name\">Sunforger</div>\n          <div class=\"sc-price\">$3.96</div>\n          <div class=\"sc-replaces\">Swaps in for: Goblin Bombardment</div>\n          <div class=\"sc-why\">Tutors an instant straight to the stack every combat — and the exiled card leaving the yard is another Spirit.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=Sunforger\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div><div class=\"stretch-card\">\n          <div class=\"sc-name\">Boros Charm</div>\n          <div class=\"sc-price\">in your box — $0</div>\n          <div class=\"sc-replaces\">Swaps in for: Charming Prince</div>\n          <div class=\"sc-why\">Four damage, indestructible for your team, or double strike. The cheapest protection Lorehold has.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=Boros%20Charm\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div><div class=\"stretch-card\">\n          <div class=\"sc-name\">Quintorius Kand</div>\n          <div class=\"sc-price\">$2.01</div>\n          <div class=\"sc-replaces\">Swaps in for: Skullclamp</div>\n          <div class=\"sc-why\">The Lost Caverns planeswalker version, in the 99: it drains two and gains two on every cast from exile.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=Quintorius%20Kand\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div></div></div>\n      <div class=\"panel\" style=\"grid-column:1/-1; border:2px solid var(--accent)\">\n      <h3>Top of Bracket 3 — Max Legal Power <span style=\"font-weight:400;color:var(--ink-muted);font-size:13px\">— 3 Game Changers (cap is 3) · package $119.93</span></h3>\n      <p style=\"font-size:13px; color:var(--ink-muted)\">Exactly three Game Changers (the Bracket 3 legal maximum), taken verbatim from this variant's route in the deck variant matrix. Every card below is also selectable on the deck's own tab (dark-red rows in the alternates column) so it can go straight onto the shopping list.</p>\n      <div class=\"stretch-list\"><div class=\"stretch-card b3-card\">\n          <div class=\"sc-name\">Underworld Breach <span class=\"gc-badge\">GAME CHANGER</span></div>\n          <div class=\"sc-price\">$10.34</div>\n          <div class=\"sc-replaces\">Swaps in for: Goblin Bombardment</div>\n          <div class=\"sc-why\">Every escape cast is a card leaving your graveyard — which is another Spirit. The most on-theme Game Changer in the format for this deck.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=Underworld%20Breach\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div><div class=\"stretch-card b3-card\">\n          <div class=\"sc-name\">Teferi's Protection <span class=\"gc-badge\">GAME CHANGER</span></div>\n          <div class=\"sc-price\">$47.93</div>\n          <div class=\"sc-replaces\">Swaps in for: Winds of Abandon</div>\n          <div class=\"sc-why\">Phase out the Spirit army in response to the wipe.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=Teferi%27s%20Protection\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div><div class=\"stretch-card b3-card\">\n          <div class=\"sc-name\">Smothering Tithe <span class=\"gc-badge\">GAME CHANGER</span></div>\n          <div class=\"sc-price\">$61.66</div>\n          <div class=\"sc-replaces\">Swaps in for: Luminarch Ascension</div>\n          <div class=\"sc-why\">Every opponent draw either pays you or taxes them.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=Smothering%20Tithe\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div></div>\n      <p style=\"font-size:11.5px; color:var(--ink-muted); margin:8px 0 0\">Bracket 3 rules honored: at most three Game Changers, no mass land denial, no chained extra turns, no early-game two-card infinite combos.</p>\n    </div>\n    </div></div>",
       "precon": {
         "id": "precon-5",
         "name": "Lorehold Spirit (Secrets of Strixhaven Commander)",
@@ -1005,6 +1978,24 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [
+            "removal",
+            "flexible"
+          ],
+          "why": "Flexible catch-all exile removal for any nonland permanent that cycles away for a card when it's dead in hand.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Cast%20Out&view=grid",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Easy include at $0.99 — bulk-bin pricing for a card that pulls its weight.",
+            "fit": "Flexible catch-all exile removal for any nonland permanent that cycles away for a card when it's dead in hand."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Cast+Out"
         },
         {
@@ -1020,6 +2011,24 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [
+            "removal",
+            "cheap"
+          ],
+          "why": "One-mana removal for early mana rocks, dorks, and cheap threats that keeps the deck's own curve low.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Portable%20Hole&view=grid",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Easy include at $0.59 — bulk-bin pricing for a card that pulls its weight.",
+            "fit": "One-mana removal for early mana rocks, dorks, and cheap threats that keeps the deck's own curve low."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Portable+Hole"
         },
         {
@@ -1035,6 +2044,24 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [
+            "ramp",
+            "catch-up"
+          ],
+          "why": "Free catch-up ramp that fetches a Plains straight to the battlefield against any opponent with more lands, and a cheap knight body that fits the flavor.",
+          "whyPrimary": "Free catch-up ramp that fetches a Plains straight to the battlefield against any opponent with more lands, and a cheap knight body that fits the flavor.",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Knight%20of%20the%20White%20Orchid&view=grid",
+          "brief": {
+            "power": 3,
+            "ease": 5,
+            "fun": 3,
+            "value": "Fair trade at $3.99. Pays for itself in most games without warping the deck.",
+            "fit": "Free catch-up ramp that fetches a Plains straight to the battlefield against any opponent with more lands, and a cheap knight body that fits the flavor."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Knight+of+the+White+Orchid"
         },
         {
@@ -1050,6 +2077,24 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [
+            "ramp",
+            "fixing"
+          ],
+          "why": "An always-on RW mana rock that smooths the curve into Excava or Quintorius a turn earlier than the precon's colorless rocks alone.",
+          "whyPrimary": "An always-on RW mana rock that smooths the curve into Excava or Quintorius a turn earlier than the precon's colorless rocks alone.",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Talisman%20of%20Conviction&view=grid",
+          "brief": {
+            "power": 2,
+            "ease": 5,
+            "fun": 2,
+            "value": "Cheap consistency at $0.69. Low ceiling, but it smooths the draws.",
+            "fit": "An always-on RW mana rock that smooths the curve into Excava or Quintorius a turn earlier than the precon's colorless rocks alone."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Talisman+of+Conviction"
         },
         {
@@ -1065,6 +2110,24 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [
+            "draw",
+            "graveyard"
+          ],
+          "why": "Turns discarding into delayed card advantage, dovetailing with the deck's graveyard-filling plan.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Bag%20of%20Holding&view=grid",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Easy include at $0.39 — bulk-bin pricing for a card that pulls its weight.",
+            "fit": "Turns discarding into delayed card advantage, dovetailing with the deck's graveyard-filling plan."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Bag+of+Holding"
         },
         {
@@ -1080,6 +2143,25 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [
+            "utility",
+            "graveyard",
+            "flexible"
+          ],
+          "why": "A flexible 2-mana value creature (blink, ramp, or life) that also happens to be an ideal cheap target for Excava to reanimate.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Charming%20Prince&view=grid",
+          "brief": {
+            "power": 2,
+            "ease": 3,
+            "fun": 3,
+            "value": "Cheap consistency at $0.99. Low ceiling, but it smooths the draws.",
+            "fit": "A flexible 2-mana value creature (blink, ramp, or life) that also happens to be an ideal cheap target for Excava to reanimate."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Charming+Prince"
         },
         {
@@ -1095,6 +2177,24 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [
+            "tutor",
+            "consistency"
+          ],
+          "why": "Tutors up Lightning Greaves, an aura, or any equipment on demand for extra consistency protecting the commander.",
+          "whyPrimary": "Tutors up Lightning Greaves, an aura, or any equipment on demand for extra consistency protecting the commander.",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Open%20the%20Armory&view=grid",
+          "brief": {
+            "power": 4,
+            "ease": 4,
+            "fun": 3,
+            "value": "Strong value. Premium effect at $4.99, comfortably worth the slot.",
+            "fit": "Tutors up Lightning Greaves, an aura, or any equipment on demand for extra consistency protecting the commander."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Open+the+Armory"
         },
         {
@@ -1110,6 +2210,24 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [
+            "removal",
+            "spirits"
+          ],
+          "why": "Cheap, repeatable enchantment removal on a Spirit-typed body that reinforces the tribal subtheme.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Nikko-Onna&view=grid",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Easy include at $0.49 — bulk-bin pricing for a card that pulls its weight.",
+            "fit": "Cheap, repeatable enchantment removal on a Spirit-typed body that reinforces the tribal subtheme."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Nikko-Onna"
         },
         {
@@ -1125,6 +2243,24 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [
+            "protection",
+            "equipment"
+          ],
+          "why": "Free equip protection and haste for Excava (or Quintorius) so the recursion engine survives removal and starts working the turn it lands.",
+          "whyPrimary": "Free equip protection and haste for Excava (or Quintorius) so the recursion engine survives removal and starts working the turn it lands.",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Lightning%20Greaves&view=grid",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Fair trade at $5.99. Pays for itself in most games without warping the deck.",
+            "fit": "Free equip protection and haste for Excava (or Quintorius) so the recursion engine survives removal and starts working the turn it lands."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Lightning+Greaves"
         },
         {
@@ -1140,6 +2276,25 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [
+            "tokens",
+            "planeswalker",
+            "finisher"
+          ],
+          "why": "A resilient planeswalker that builds its own evasive Soldier army every turn and can end the game outright with its ultimate.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Elspeth%2C%20Sun%27s%20Champion&view=grid",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 5,
+            "value": "Fair trade at $2.99. Pays for itself in most games without warping the deck.",
+            "fit": "A resilient planeswalker that builds its own evasive Soldier army every turn and can end the game outright with its ultimate."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Elspeth,+Sun's+Champion"
         },
         {
@@ -1155,6 +2310,24 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [
+            "graveyard",
+            "spirits"
+          ],
+          "why": "A second Bag of Holding: every discard exiles that card from your graveyard, which is another 3/2 Spirit — and you get to play the card that turn.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Containment%20Construct",
+          "brief": {
+            "power": 2,
+            "ease": 4,
+            "fun": 3,
+            "value": "Cheap consistency at $0.29. Low ceiling, but it smooths the draws.",
+            "fit": "A second Bag of Holding: every discard exiles that card from your graveyard, which is another 3/2 Spirit — and you get to play the card that turn."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Containment+Construct"
         },
         {
@@ -1170,6 +2343,24 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [
+            "graveyard",
+            "spirits"
+          ],
+          "why": "Returns a permanent from the yard (one Spirit) and copies itself when cast from the yard (another Spirit). The most efficient Quintorius trigger at this budget.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Sevinne%27s%20Reclamation",
+          "brief": {
+            "power": 2,
+            "ease": 4,
+            "fun": 3,
+            "value": "Cheap consistency at $0.37. Low ceiling, but it smooths the draws.",
+            "fit": "Returns a permanent from the yard (one Spirit) and copies itself when cast from the yard (another Spirit). The most efficient Quintorius trigger at this budget."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Sevinne's+Reclamation"
         },
         {
@@ -1185,6 +2376,24 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [
+            "graveyard",
+            "spirits"
+          ],
+          "why": "Discard two for two Spirits, then flash it back later for a third.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Faithless%20Looting",
+          "brief": {
+            "power": 2,
+            "ease": 4,
+            "fun": 3,
+            "value": "Cheap consistency at $0.51. Low ceiling, but it smooths the draws.",
+            "fit": "Discard two for two Spirits, then flash it back later for a third."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Faithless+Looting"
         },
         {
@@ -1200,6 +2409,24 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [
+            "graveyard",
+            "spirits"
+          ],
+          "why": "The other Quintorius, from the same box: Spirits get +1/+0 and it is a redundant second copy of the leave-the-graveyard trigger.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Quintorius%2C%20Field%20Historian",
+          "brief": {
+            "power": 2,
+            "ease": 4,
+            "fun": 3,
+            "value": "Cheap consistency at $0.23. Low ceiling, but it smooths the draws.",
+            "fit": "The other Quintorius, from the same box: Spirits get +1/+0 and it is a redundant second copy of the leave-the-graveyard trigger."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Quintorius,+Field+Historian"
         }
       ],
@@ -1217,6 +2444,24 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Tuned",
+          "tags": [
+            "removal",
+            "board-wipe"
+          ],
+          "why": "One-sided removal that exiles a single creature for 2 mana or, overloaded, wipes every creature your opponents control without touching yours.",
+          "whyPrimary": "One-sided removal that exiles a single creature for 2 mana or, overloaded, wipes every creature your opponents control without touching yours.",
+          "whyOptional": "A one-sided board wipe — powerful and expensive. The deck closes without it.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Winds%20of%20Abandon&view=grid",
+          "brief": {
+            "power": 4,
+            "ease": 4,
+            "fun": 3,
+            "value": "Strong value. Premium effect at $5.99, comfortably worth the slot.",
+            "fit": "One-sided removal that exiles a single creature for 2 mana or, overloaded, wipes every creature your opponents control without touching yours."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Winds+of+Abandon"
         },
         {
@@ -1232,6 +2477,25 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Tuned",
+          "tags": [
+            "draw",
+            "tokens",
+            "engine"
+          ],
+          "why": "The best draw engine this deck can possibly run: equip {1} to a 1-toughness Spirit token, it dies, you draw TWO — every token becomes two cards, directly fixing the deck's one stated weakness (thin card draw). Buy a classic printing (Darksteel or a Commander reprint), not the Marvel-crossover version, to keep the table's look consistent.",
+          "whyPrimary": "The best draw engine this deck can possibly run: equip {1} to a 1-toughness Spirit token, it dies, you draw TWO — every token becomes two cards, directly fixing the deck's one stated weakness (thin card draw). Buy a classic printing (Darksteel or a Commander reprint), not the Marvel-crossover version, to keep the table's look consistent.",
+          "whyOptional": "Weaker under Quintorius than under Excava: the tokens are 3/2s now, so Skullclamp makes them 4/1 instead of killing them for two cards. Keep it only if you run lots of other small creatures.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Skullclamp",
+          "brief": {
+            "power": 4,
+            "ease": 4,
+            "fun": 4,
+            "value": "Strong value. Premium effect at $7.99, comfortably worth the slot.",
+            "fit": "The best draw engine this deck can possibly run: equip {1} to a 1-toughness Spirit token, it dies, you draw TWO — every token becomes two cards, directly fixing the deck's one stated weakness (thin card draw). Buy a classic printing (Darksteel or a Commander reprint), not the Marvel-crossover version, to keep the table's look consistent."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Skullclamp"
         },
         {
@@ -1247,6 +2511,24 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Tuned",
+          "tags": [
+            "graveyard",
+            "spirits"
+          ],
+          "why": "A free sacrifice outlet that turns every Spirit into reach. Replaces Mentor of the Meek, which no longer triggers now that the tokens are 3/2s.",
+          "whyPrimary": "",
+          "whyOptional": "Reach and a sacrifice outlet — genuinely good, but the Spirit army wins on the ground without it.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Goblin%20Bombardment",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Fair trade at $2.51. Pays for itself in most games without warping the deck.",
+            "fit": "A free sacrifice outlet that turns every Spirit into reach. Replaces Mentor of the Meek, which no longer triggers now that the tokens are 3/2s."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Goblin+Bombardment"
         },
         {
@@ -1262,6 +2544,24 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Tuned",
+          "tags": [
+            "graveyard",
+            "spirits"
+          ],
+          "why": "The box's own face commander, now in the 99: on attack it reanimates a cheap permanent as a 1/1 Spirit — another card leaving the graveyard.",
+          "whyPrimary": "",
+          "whyOptional": "A bonus trigger from a card you already own in the box. Include it or not; nothing depends on it.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Excava%2C%20the%20Risen%20Past",
+          "brief": {
+            "power": 2,
+            "ease": 4,
+            "fun": 3,
+            "value": "Cheap consistency at $0.76. Low ceiling, but it smooths the draws.",
+            "fit": "The box's own face commander, now in the 99: on attack it reanimates a cheap permanent as a 1/1 Spirit — another card leaving the graveyard."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Excava,+the+Risen+Past"
         },
         {
@@ -1277,6 +2577,24 @@
           "replaces": "Replaces Winds of Abandon",
           "gameChanger": false,
           "stage": "Tuned",
+          "tags": [
+            "removal",
+            "board-wipe"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "full modal exile wrath",
+          "alternateTradeoff": "pricier, slower at 4 mana — and it's on the official Game Changers list, so running it counts toward Bracket 3's three-card cap",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Farewell&view=grid",
+          "brief": {
+            "power": 4,
+            "ease": 4,
+            "fun": 3,
+            "value": "Strong value. Premium effect at $6.99, comfortably worth the slot.",
+            "fit": "full modal exile wrath"
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Farewell"
         },
         {
@@ -1292,6 +2610,24 @@
           "replaces": "Replaces Knight of the White Orchid",
           "gameChanger": false,
           "stage": "Tuned",
+          "tags": [
+            "ramp",
+            "tutor"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "tutors any land type",
+          "alternateTradeoff": "no ramp on its own",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Weathered%20Wayfarer&view=grid",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Fair trade at $2.79. Pays for itself in most games without warping the deck.",
+            "fit": "tutors any land type"
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Weathered+Wayfarer"
         },
         {
@@ -1307,6 +2643,23 @@
           "replaces": "Replaces Talisman of Conviction",
           "gameChanger": false,
           "stage": "Tuned",
+          "tags": [
+            "ramp"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "untaps if you reveal a basic",
+          "alternateTradeoff": "needs a basic land in hand",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Coldsteel%20Heart&view=grid",
+          "brief": {
+            "power": 3,
+            "ease": 5,
+            "fun": 3,
+            "value": "Fair trade at $2.49. Pays for itself in most games without warping the deck.",
+            "fit": "untaps if you reveal a basic"
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Coldsteel+Heart"
         },
         {
@@ -1322,6 +2675,24 @@
           "replaces": "Replaces Open the Armory",
           "gameChanger": false,
           "stage": "Tuned",
+          "tags": [
+            "tutor",
+            "utility"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "tutors and casts an instant",
+          "alternateTradeoff": "needs cheap-instant density to shine",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Sunforger&view=grid",
+          "brief": {
+            "power": 4,
+            "ease": 4,
+            "fun": 3,
+            "value": "Strong value. Premium effect at $4.99, comfortably worth the slot.",
+            "fit": "tutors and casts an instant"
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Sunforger"
         },
         {
@@ -1337,6 +2708,25 @@
           "replaces": "Replaces Skullclamp",
           "gameChanger": false,
           "stage": "Tuned",
+          "tags": [
+            "ramp",
+            "draw",
+            "aggro"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "Treasures plus impulse-draw off every connecting attacker keeps both mana and gas flowing",
+          "alternateTradeoff": "Needs your attacks to actually connect; buy the Lost Caverns of Ixalan printing, not the Final Fantasy crossover art",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Professional%20Face-Breaker",
+          "brief": {
+            "power": 4,
+            "ease": 5,
+            "fun": 3,
+            "value": "Strong value. Premium effect at $8.49, comfortably worth the slot.",
+            "fit": "Treasures plus impulse-draw off every connecting attacker keeps both mana and gas flowing"
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Professional+Face-Breaker"
         },
         {
@@ -1352,6 +2742,24 @@
           "replaces": "Replaces Lightning Greaves",
           "gameChanger": false,
           "stage": "Tuned",
+          "tags": [
+            "protection",
+            "equipment"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "hexproof instead of shroud",
+          "alternateTradeoff": "costs 1 to equip, not free",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Swiftfoot%20Boots&view=grid",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Fair trade at $3.99. Pays for itself in most games without warping the deck.",
+            "fit": "hexproof instead of shroud"
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Swiftfoot+Boots"
         },
         {
@@ -1367,6 +2775,24 @@
           "replaces": "Replaces Lightning Greaves",
           "gameChanger": false,
           "stage": "Tuned",
+          "tags": [
+            "protection",
+            "equipment"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "true indestructible armor",
+          "alternateTradeoff": "no haste, no free equip",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Darksteel%20Plate&view=grid",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Fair trade at $6.49. Pays for itself in most games without warping the deck.",
+            "fit": "true indestructible armor"
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Darksteel+Plate"
         }
       ],
@@ -1384,6 +2810,26 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Tuned",
+          "tags": [
+            "value",
+            "tokens",
+            "defense",
+            "counters"
+          ],
+          "why": "A snowballing white value engine that quietly wins stalled boards by generating an army of flying Angel tokens if left unanswered.",
+          "whyPrimary": "",
+          "whyOptional": "$14 for a slow token engine the Spirit trigger already outpaces.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Luminarch%20Ascension&view=grid",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 4,
+            "value": "Fair trade at $13.99. Pays for itself in most games without warping the deck.",
+            "fit": "A snowballing white value engine that quietly wins stalled boards by generating an army of flying Angel tokens if left unanswered."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Luminarch+Ascension"
         },
         {
@@ -1399,6 +2845,24 @@
           "replaces": "Swaps in for Winds of Abandon",
           "gameChanger": true,
           "stage": "Maxed",
+          "tags": [
+            "b3",
+            "game changer"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "A Bracket-3 Game Changer — power, not function. The deck plays fine without it.",
+          "alternateReason": "Phase out the Spirit army in response to the wipe.",
+          "alternateTradeoff": "Swaps in for Winds of Abandon. Official Game Changer — Bracket 3 allows at most three.",
+          "whereToBuy": "Big case — haggle",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Teferi%27s%20Protection",
+          "brief": {
+            "power": 5,
+            "ease": 4,
+            "fun": 3,
+            "value": "Premium pick at $47.93. You're paying for the ceiling, so buy it when the budget allows.",
+            "fit": "Phase out the Spirit army in response to the wipe."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Teferi's+Protection"
         },
         {
@@ -1414,6 +2878,23 @@
           "replaces": "Swaps in for Skullclamp",
           "gameChanger": false,
           "stage": "Maxed",
+          "tags": [
+            "stretch"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "Maxed-stage upgrade — raises the ceiling, but the Tuned build works without it.",
+          "alternateReason": "The Lost Caverns planeswalker version, in the 99: it drains two and gains two on every cast from exile.",
+          "alternateTradeoff": "Swaps in for Skullclamp. Stretch upgrade — beyond this deck's base budget.",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Quintorius%20Kand",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Fair trade at $2.01. Pays for itself in most games without warping the deck.",
+            "fit": "The Lost Caverns planeswalker version, in the 99: it drains two and gains two on every cast from exile."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Quintorius+Kand"
         },
         {
@@ -1429,6 +2910,24 @@
           "replaces": "Swaps in for Goblin Bombardment",
           "gameChanger": true,
           "stage": "Maxed",
+          "tags": [
+            "b3",
+            "game changer"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "A Bracket-3 Game Changer — power, not function. The deck plays fine without it.",
+          "alternateReason": "Every escape cast is a card leaving your graveyard — which is another Spirit. The most on-theme Game Changer in the format for this deck.",
+          "alternateTradeoff": "Swaps in for Goblin Bombardment. Official Game Changer — Bracket 3 allows at most three.",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Underworld%20Breach",
+          "brief": {
+            "power": 5,
+            "ease": 4,
+            "fun": 3,
+            "value": "Strong value. Premium effect at $10.34, comfortably worth the slot.",
+            "fit": "Every escape cast is a card leaving your graveyard — which is another Spirit. The most on-theme Game Changer in the format for this deck."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Underworld+Breach"
         },
         {
@@ -1444,6 +2943,24 @@
           "replaces": "Swaps in for Luminarch Ascension",
           "gameChanger": true,
           "stage": "Maxed",
+          "tags": [
+            "b3",
+            "game changer"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "A Bracket-3 Game Changer — power, not function. The deck plays fine without it.",
+          "alternateReason": "Every opponent draw either pays you or taxes them.",
+          "alternateTradeoff": "Swaps in for Luminarch Ascension. Official Game Changer — Bracket 3 allows at most three.",
+          "whereToBuy": "Big case — haggle",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Smothering%20Tithe",
+          "brief": {
+            "power": 5,
+            "ease": 4,
+            "fun": 3,
+            "value": "Premium pick at $61.66. You're paying for the ceiling, so buy it when the budget allows.",
+            "fit": "Every opponent draw either pays you or taxes them."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Smothering+Tithe"
         },
         {
@@ -1459,6 +2976,23 @@
           "replaces": "Swaps in for Charming Prince",
           "gameChanger": false,
           "stage": "Maxed",
+          "tags": [
+            "stretch"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "Maxed-stage upgrade — raises the ceiling, but the Tuned build works without it.",
+          "alternateReason": "Four damage, indestructible for your team, or double strike. The cheapest protection Lorehold has.",
+          "alternateTradeoff": "Swaps in for Charming Prince. Stretch upgrade — beyond this deck's base budget.",
+          "whereToBuy": "In your box",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Boros%20Charm",
+          "brief": {
+            "power": null,
+            "ease": null,
+            "fun": null,
+            "value": "",
+            "fit": ""
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Boros+Charm"
         }
       ]
@@ -1470,6 +3004,8 @@
       "commander": "Nethroi, Apex of Death",
       "budgetLabel": "$165",
       "bracketLabel": "Bracket 3 — Upgraded",
+      "priorityLabel": "Buy #6 of 6 — Singles-first, staged",
+      "planHtml": "<div><div class=\"foot-grid\" style=\"margin-top:8px\">\n      <div class=\"panel\" style=\"grid-column:1/-1; border-left:4px solid #2f7d3c\">\n      <h3>Buy Order: <span class=\"buy-rank-inline\">#6 of 6</span> <span style=\"font-weight:400;color:var(--ink-muted);font-size:13px\">— Singles-first, staged</span></h3>\n      <p style=\"font-size:13.5px; margin:6px 0\">The Capstone and the graduation exam — build it last, enjoy it longest.</p>\n      <p style=\"font-size:13px; color:var(--ink-muted); margin:6px 0 0\"><b>How to buy it:</b> Nethroi, Buried Alive, Fauna Shaman and the mill package (~$45). Craterhoof, Elesh Norn and Vigor are later trips.</p>\n    </div>\n      <div class=\"panel\" style=\"grid-column:1/-1; border-left:4px solid var(--accent)\">\n      <h3>Bracket Placement: <span class=\"bkt bkt-3\">Bracket 3 — Upgraded</span></h3>\n      <p style=\"font-size:13.5px; margin:6px 0\">Craterhoof plus mass reanimation is a genuine game-ending turn, and the deck carries premium payoffs. Still zero Game Changers in the main list — the three in the package take it to the Bracket 3 ceiling.</p>\n      <p style=\"font-size:13px; color:var(--ink-muted); margin:6px 0 0\"><b>Dialing it up:</b> Leave it here for normal nights. The Top-of-Bracket-3 package below is the dial when you want max power.</p>\n    </div>\n      <div class=\"panel\"><h3>How to Play This Deck</h3><p style=\"font-size:13.5px\">Mill and trade for the first several turns: Stitcher's Supplier, Satyr Wayfinder and Grisly Salvage stock the graveyard while Wall of Blossoms and cheap removal keep you alive. Buried Alive puts exactly the three creatures you want in the yard. Then mutate Nethroi onto anything and return ten total power — Elesh Norn plus Karmic Guide plus a body, or Archon of Cruelty on its own. Craterhoof turns that returned board into lethal in the same turn.</p></div>\n      <div class=\"panel\"><h3>Trackers &amp; Counters Needed</h3>\n      <table class=\"acc-table\"><tr><th>Type</th><th>Status</th><th>Notes</th></tr><tr class=\"\"><td>+1/+1 counters</td><td><span class=\"badge-used\">Needed</span></td><td style=\"font-size:12px\">Glass gem counters or a dedicated dice set</td></tr><tr class=\"not-used\"><td>-1/-1 counters</td><td><span class=\"badge-not-used\">Not Used</span></td><td style=\"font-size:12px\">Use a visually different counter set than +1/+1</td></tr><tr class=\"\"><td>Other tracking</td><td><span class=\"badge-used\">Needed</span></td><td style=\"font-size:12px\">mutate order tracking</td></tr><tr class=\"\"><td>Dry-erase life/commander-damage tracker</td><td><span class=\"badge-used\">Needed</span></td><td style=\"font-size:12px\">Bring +1/+1 counters for Vigor, and a dry-erase card or sleeve marker to track which creature Nethroi is mutated onto and in what order.</td></tr></table>\n      </div>\n      <div class=\"panel\"><h3>Pros</h3><ul><li>One card converts twenty turns of quiet setup into a full board</li><li>White and green give the walls and clean answers Sultai never had</li><li>Luminous Broodmoth and Vigor make board wipes a bad trade for everyone else</li></ul></div>\n      <div class=\"panel\"><h3>Cons</h3><ul><li>Shares every graveyard deck's exposure to Rest in Peace</li><li>Nethroi mutating onto a creature can be answered in response</li><li>The most expensive deck of the six by a wide margin</li></ul></div>\n      <div class=\"panel\"><h3>Strengths</h3><ul><li>Deliberate setup — you choose what goes in the yard rather than hoping</li><li>Elesh Norn is both a payoff and a one-sided board wipe</li><li>Multiple mass-return effects, so Nethroi is not a single point of failure</li></ul></div>\n      <div class=\"panel\"><h3>Weaknesses</h3><ul><li>A single graveyard-hate permanent costs you the game plan</li><li>Very little pressure before the mutate turn</li><li>Three colours plus double-costed bombs is a demanding mana base</li></ul></div>\n      <div class=\"panel\" style=\"grid-column:1/-1\"><h3>Stretch Cards <span style=\"font-weight:400;color:var(--ink-muted);font-size:13px\">— would improve the deck, but break this budget; each is selectable on the deck tab (green rows)</span></h3>\n      <div class=\"stretch-list\"><div class=\"stretch-card\">\n          <div class=\"sc-name\">Grave Pact</div>\n          <div class=\"sc-price\">$34.94</div>\n          <div class=\"sc-replaces\">Swaps in for: Vigor</div>\n          <div class=\"sc-why\">Every creature you lose makes all three opponents sacrifice. Brutal alongside mass reanimation.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=Grave%20Pact\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div><div class=\"stretch-card\">\n          <div class=\"sc-name\">Emeria Shepherd</div>\n          <div class=\"sc-price\">$2.96</div>\n          <div class=\"sc-replaces\">Swaps in for: Genesis</div>\n          <div class=\"sc-why\">Every Plains you play returns a permanent from your graveyard.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=Emeria%20Shepherd\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div><div class=\"stretch-card\">\n          <div class=\"sc-name\">Sheoldred, Whispering One</div>\n          <div class=\"sc-price\">$21.71</div>\n          <div class=\"sc-replaces\">Swaps in for: Archon of Cruelty</div>\n          <div class=\"sc-why\">Reanimates on every one of your upkeeps and shrinks their board.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=Sheoldred%2C%20Whispering%20One\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div></div></div>\n      <div class=\"panel\" style=\"grid-column:1/-1; border:2px solid var(--accent)\">\n      <h3>Top of Bracket 3 — Max Legal Power <span style=\"font-weight:400;color:var(--ink-muted);font-size:13px\">— 3 Game Changers (cap is 3) · package $112.82</span></h3>\n      <p style=\"font-size:13px; color:var(--ink-muted)\">Exactly three Game Changers (the Bracket 3 legal maximum), taken verbatim from this variant's route in the deck variant matrix. Each names the card it swaps in for. Every card below is also selectable on the deck's own tab (dark-red rows in the alternates column) so it can go straight onto the shopping list.</p>\n      <div class=\"stretch-list\"><div class=\"stretch-card b3-card\">\n          <div class=\"sc-name\">Natural Order <span class=\"gc-badge\">GAME CHANGER</span></div>\n          <div class=\"sc-price\">$36.25</div>\n          <div class=\"sc-replaces\">Swaps in for: Craterhoof Behemoth</div>\n          <div class=\"sc-why\">Trade a spare token for Craterhoof or Archon directly onto the battlefield.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=Natural%20Order\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div><div class=\"stretch-card b3-card\">\n          <div class=\"sc-name\">Teferi's Protection <span class=\"gc-badge\">GAME CHANGER</span></div>\n          <div class=\"sc-price\">$47.93</div>\n          <div class=\"sc-replaces\">Swaps in for: Unbreakable Formation</div>\n          <div class=\"sc-why\">Phase out the board you just spent the whole game assembling.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=Teferi%27s%20Protection\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div><div class=\"stretch-card b3-card\">\n          <div class=\"sc-name\">Aura Shards <span class=\"gc-badge\">GAME CHANGER</span></div>\n          <div class=\"sc-price\">$28.64</div>\n          <div class=\"sc-replaces\">Swaps in for: Sun Titan</div>\n          <div class=\"sc-why\">Every reanimated creature destroys an artifact or enchantment — including the graveyard hate that beats you.</div>\n          <a href=\"https://www.tcgplayer.com/search/magic/product?productLineName=magic&amp;q=Aura%20Shards\" target=\"_blank\" rel=\"noopener\">TCGplayer →</a>\n        </div></div>\n      <p style=\"font-size:11.5px; color:var(--ink-muted); margin:8px 0 0\">Bracket 3 rules honored: at most three Game Changers, no mass land denial, no chained extra turns, no early-game two-card infinite combos.</p>\n    </div>\n    </div></div>",
       "precon": {
         "id": "precon-6",
         "name": "Abzan graveyard shell (singles)",
@@ -1497,6 +3033,23 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [
+            "commander"
+          ],
+          "why": "Mutate returns ten total power of creatures from your graveyard in one cast — a reanimation event, not a reanimation spell.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Nethroi%2C%20Apex%20of%20Death",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Fair trade at $2.70. Pays for itself in most games without warping the deck.",
+            "fit": "Mutate returns ten total power of creatures from your graveyard in one cast — a reanimation event, not a reanimation spell."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Nethroi,+Apex+of+Death"
         },
         {
@@ -1512,6 +3065,21 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [],
+          "why": "From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Wall%20of%20Blossoms",
+          "brief": {
+            "power": 2,
+            "ease": 4,
+            "fun": 3,
+            "value": "Cheap consistency at $0.26. Low ceiling, but it smooths the draws.",
+            "fit": "From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Wall+of+Blossoms"
         },
         {
@@ -1527,6 +3095,21 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [],
+          "why": "From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Sun%20Titan",
+          "brief": {
+            "power": 2,
+            "ease": 4,
+            "fun": 3,
+            "value": "Cheap consistency at $0.38. Low ceiling, but it smooths the draws.",
+            "fit": "From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Sun+Titan"
         },
         {
@@ -1542,6 +3125,21 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [],
+          "why": "From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Unbreakable%20Formation",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Easy include at $1.42 — bulk-bin pricing for a card that pulls its weight.",
+            "fit": "From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Unbreakable+Formation"
         },
         {
@@ -1557,6 +3155,21 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [],
+          "why": "From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Vindicate",
+          "brief": {
+            "power": 2,
+            "ease": 4,
+            "fun": 3,
+            "value": "Cheap consistency at $0.67. Low ceiling, but it smooths the draws.",
+            "fit": "From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Vindicate"
         },
         {
@@ -1572,6 +3185,21 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [],
+          "why": "From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Living%20Death",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Fair trade at $3.49. Pays for itself in most games without warping the deck.",
+            "fit": "From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Living+Death"
         },
         {
@@ -1587,6 +3215,21 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [],
+          "why": "From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Buried%20Alive",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Easy include at $1.50 — bulk-bin pricing for a card that pulls its weight.",
+            "fit": "From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Buried+Alive"
         },
         {
@@ -1602,6 +3245,21 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [],
+          "why": "From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Fauna%20Shaman",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Fair trade at $3.89. Pays for itself in most games without warping the deck.",
+            "fit": "From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Fauna+Shaman"
         },
         {
@@ -1617,6 +3275,21 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [],
+          "why": "From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Luminous%20Broodmoth",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Easy include at $1.61 — bulk-bin pricing for a card that pulls its weight.",
+            "fit": "From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Luminous+Broodmoth"
         },
         {
@@ -1632,6 +3305,21 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Core",
+          "tags": [],
+          "why": "From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi.",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Karmic%20Guide",
+          "brief": {
+            "power": 2,
+            "ease": 4,
+            "fun": 3,
+            "value": "Cheap consistency at $0.39. Low ceiling, but it smooths the draws.",
+            "fit": "From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Karmic+Guide"
         }
       ],
@@ -1649,6 +3337,21 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Tuned",
+          "tags": [],
+          "why": "From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi.",
+          "whyPrimary": "",
+          "whyOptional": "$8. The single best reanimation target here, and completely skippable at Tuned.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Archon%20of%20Cruelty",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Fair trade at $8.08. Pays for itself in most games without warping the deck.",
+            "fit": "From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Archon+of+Cruelty"
         },
         {
@@ -1664,6 +3367,21 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Tuned",
+          "tags": [],
+          "why": "From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi.",
+          "whyPrimary": "",
+          "whyOptional": "$8. A cheap early reanimation while you wait for the mutate. The deck has Living Death and Nethroi already.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Animate%20Dead",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Fair trade at $7.56. Pays for itself in most games without warping the deck.",
+            "fit": "From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Animate+Dead"
         },
         {
@@ -1679,6 +3397,21 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Tuned",
+          "tags": [],
+          "why": "From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi.",
+          "whyPrimary": "",
+          "whyOptional": "$9. Endless recursion from the graveyard. Nice-to-have grind insurance.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Genesis",
+          "brief": {
+            "power": 2,
+            "ease": 4,
+            "fun": 3,
+            "value": "Cheap consistency at $0.50. Low ceiling, but it smooths the draws.",
+            "fit": "From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Genesis"
         },
         {
@@ -1694,6 +3427,21 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Tuned",
+          "tags": [],
+          "why": "From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi.",
+          "whyPrimary": "",
+          "whyOptional": "Exiles a permanent coming and going, but at eight mana it is a luxury target.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Bulk bin",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Ashen%20Rider",
+          "brief": {
+            "power": 2,
+            "ease": 4,
+            "fun": 3,
+            "value": "Cheap consistency at $0.60. Low ceiling, but it smooths the draws.",
+            "fit": "From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Ashen+Rider"
         }
       ],
@@ -1711,6 +3459,21 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Tuned",
+          "tags": [],
+          "why": "From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi.",
+          "whyPrimary": "",
+          "whyOptional": "$20. A premium payoff and a one-sided wipe, but Nethroi returns plenty of power without her.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Big case — haggle",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Elesh%20Norn%2C%20Grand%20Cenobite",
+          "brief": {
+            "power": 4,
+            "ease": 4,
+            "fun": 3,
+            "value": "Premium pick at $20.14. You're paying for the ceiling, so buy it when the budget allows.",
+            "fit": "From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Elesh+Norn,+Grand+Cenobite"
         },
         {
@@ -1726,6 +3489,21 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Tuned",
+          "tags": [],
+          "why": "From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi.",
+          "whyPrimary": "",
+          "whyOptional": "$24 of pure finisher. The deck returns a board without it — it just does not immediately kill with that board.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Big case — haggle",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Craterhoof%20Behemoth",
+          "brief": {
+            "power": 4,
+            "ease": 4,
+            "fun": 3,
+            "value": "Premium pick at $23.77. You're paying for the ceiling, so buy it when the budget allows.",
+            "fit": "From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Craterhoof+Behemoth"
         },
         {
@@ -1741,6 +3519,21 @@
           "replaces": "",
           "gameChanger": false,
           "stage": "Tuned",
+          "tags": [],
+          "why": "From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi.",
+          "whyPrimary": "",
+          "whyOptional": "$12. Turns wipes and combat into counters. Powerful, entirely optional.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Vigor",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Fair trade at $12.21. Pays for itself in most games without warping the deck.",
+            "fit": "From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Vigor"
         },
         {
@@ -1756,6 +3549,24 @@
           "replaces": "Swaps in for Craterhoof Behemoth",
           "gameChanger": true,
           "stage": "Maxed",
+          "tags": [
+            "b3",
+            "game changer"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "A Bracket-3 Game Changer — power, not function. The deck plays fine without it.",
+          "alternateReason": "Trade a spare token for Craterhoof or Archon directly onto the battlefield.",
+          "alternateTradeoff": "Swaps in for Craterhoof Behemoth. Official Game Changer — Bracket 3 allows at most three.",
+          "whereToBuy": "Big case — haggle",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Natural%20Order",
+          "brief": {
+            "power": 5,
+            "ease": 4,
+            "fun": 3,
+            "value": "Premium pick at $36.25. You're paying for the ceiling, so buy it when the budget allows.",
+            "fit": "Trade a spare token for Craterhoof or Archon directly onto the battlefield."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Natural+Order"
         },
         {
@@ -1771,6 +3582,24 @@
           "replaces": "Swaps in for Unbreakable Formation",
           "gameChanger": true,
           "stage": "Maxed",
+          "tags": [
+            "b3",
+            "game changer"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "A Bracket-3 Game Changer — power, not function. The deck plays fine without it.",
+          "alternateReason": "Phase out the board you just spent the whole game assembling.",
+          "alternateTradeoff": "Swaps in for Unbreakable Formation. Official Game Changer — Bracket 3 allows at most three.",
+          "whereToBuy": "Big case — haggle",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Teferi%27s%20Protection",
+          "brief": {
+            "power": 5,
+            "ease": 4,
+            "fun": 3,
+            "value": "Premium pick at $47.93. You're paying for the ceiling, so buy it when the budget allows.",
+            "fit": "Phase out the board you just spent the whole game assembling."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Teferi's+Protection"
         },
         {
@@ -1786,6 +3615,24 @@
           "replaces": "Swaps in for Sun Titan",
           "gameChanger": true,
           "stage": "Maxed",
+          "tags": [
+            "b3",
+            "game changer"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "A Bracket-3 Game Changer — power, not function. The deck plays fine without it.",
+          "alternateReason": "Every reanimated creature destroys an artifact or enchantment — including the graveyard hate that beats you.",
+          "alternateTradeoff": "Swaps in for Sun Titan. Official Game Changer — Bracket 3 allows at most three.",
+          "whereToBuy": "Big case — haggle",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Aura%20Shards",
+          "brief": {
+            "power": 5,
+            "ease": 4,
+            "fun": 3,
+            "value": "Premium pick at $28.64. You're paying for the ceiling, so buy it when the budget allows.",
+            "fit": "Every reanimated creature destroys an artifact or enchantment — including the graveyard hate that beats you."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Aura+Shards"
         },
         {
@@ -1801,6 +3648,23 @@
           "replaces": "Swaps in for Vigor",
           "gameChanger": false,
           "stage": "Maxed",
+          "tags": [
+            "stretch"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "Maxed-stage upgrade — raises the ceiling, but the Tuned build works without it.",
+          "alternateReason": "Every creature you lose makes all three opponents sacrifice. Brutal alongside mass reanimation.",
+          "alternateTradeoff": "Swaps in for Vigor. Stretch upgrade — beyond this deck's base budget.",
+          "whereToBuy": "Big case — haggle",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Grave%20Pact",
+          "brief": {
+            "power": 4,
+            "ease": 4,
+            "fun": 3,
+            "value": "Premium pick at $34.94. You're paying for the ceiling, so buy it when the budget allows.",
+            "fit": "Every creature you lose makes all three opponents sacrifice. Brutal alongside mass reanimation."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Grave+Pact"
         },
         {
@@ -1816,6 +3680,23 @@
           "replaces": "Swaps in for Genesis",
           "gameChanger": false,
           "stage": "Maxed",
+          "tags": [
+            "stretch"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "Maxed-stage upgrade — raises the ceiling, but the Tuned build works without it.",
+          "alternateReason": "Every Plains you play returns a permanent from your graveyard.",
+          "alternateTradeoff": "Swaps in for Genesis. Stretch upgrade — beyond this deck's base budget.",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Emeria%20Shepherd",
+          "brief": {
+            "power": 3,
+            "ease": 4,
+            "fun": 3,
+            "value": "Fair trade at $2.96. Pays for itself in most games without warping the deck.",
+            "fit": "Every Plains you play returns a permanent from your graveyard."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Emeria+Shepherd"
         },
         {
@@ -1831,6 +3712,23 @@
           "replaces": "Swaps in for Archon of Cruelty",
           "gameChanger": false,
           "stage": "Maxed",
+          "tags": [
+            "stretch"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "Maxed-stage upgrade — raises the ceiling, but the Tuned build works without it.",
+          "alternateReason": "Reanimates on every one of your upkeeps and shrinks their board.",
+          "alternateTradeoff": "Swaps in for Archon of Cruelty. Stretch upgrade — beyond this deck's base budget.",
+          "whereToBuy": "Big case — haggle",
+          "tcgplayerUrl": "https://www.tcgplayer.com/search/magic/product?productLineName=magic&q=Sheoldred%2C%20Whispering%20One",
+          "brief": {
+            "power": 4,
+            "ease": 4,
+            "fun": 3,
+            "value": "Premium pick at $21.71. You're paying for the ceiling, so buy it when the budget allows.",
+            "fit": "Reanimates on every one of your upkeeps and shrinks their board."
+          },
           "image": "https://api.scryfall.com/cards/named?format=image&version=small&fuzzy=Sheoldred,+Whispering+One"
         }
       ]
