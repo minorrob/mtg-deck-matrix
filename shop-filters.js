@@ -2,7 +2,8 @@
   "use strict";
 
   const STORAGE_KEY = "mtg-shop-extra-filters-v1";
-  const DEFAULTS = { color: "all", price: "all", rarity: "all", location: "all" };
+  const DEFAULTS = { color: "all", price: "all", rarity: "all", location: "all", sort: "default" };
+  const FILTER_KEYS = ["color", "price", "rarity", "location"];
   const COLOR_LABELS = {
     all: "All colors",
     white: "White",
@@ -118,7 +119,8 @@
       color: ["Color", Object.entries(COLOR_LABELS)],
       price: ["Price", [["all", "All prices"], ["under3", "Under $3"], ["3to30", "$3–$30"], ["over30", "Over $30"]]],
       rarity: ["Rarity", [["all", "All rarities"], ["common", "Common"], ["uncommon", "Uncommon"], ["rare", "Rare"], ["mythic", "Mythic"], ["other", "Other / sealed"]]],
-      location: ["Location", [["all", "All locations"], ...locations.map((location) => [location, location])]]
+      location: ["Location", [["all", "All locations"], ...locations.map((location) => [location, location])]],
+      sort: ["Sort", [["default", "Default order"], ["lowHigh", "Price: Low → High"], ["highLow", "Price: High → Low"]]]
     };
 
     Object.entries(definitions).forEach(([key, [label, options]]) => {
@@ -150,7 +152,7 @@
   function updateFilterBadge(root) {
     const summary = root.querySelector(".more-filters > summary");
     if (!summary) return;
-    const activeExtra = Object.values(filters).filter((value) => value !== "all").length;
+    const activeExtra = FILTER_KEYS.filter((key) => filters[key] !== "all").length;
     let badge = summary.querySelector("[data-extra-filter-count]");
     if (!activeExtra) {
       badge?.remove();
@@ -166,6 +168,50 @@
     badge.title = `${activeExtra} additional Shop List filter${activeExtra === 1 ? "" : "s"} active`;
   }
 
+  function originalOrder(card, fallback) {
+    if (card.dataset.shopSortOrder === undefined) card.dataset.shopSortOrder = String(fallback);
+    return Number(card.dataset.shopSortOrder);
+  }
+
+  function sortContainer(container) {
+    if (!container) return;
+    const current = Array.from(container.children).filter((node) => node.classList?.contains("shop-card"));
+    if (current.length < 2) {
+      current.forEach((card, index) => originalOrder(card, index));
+      return;
+    }
+
+    current.forEach((card, index) => originalOrder(card, index));
+    const desired = [...current].sort((a, b) => {
+      const aOrder = originalOrder(a, 0);
+      const bOrder = originalOrder(b, 0);
+      if (filters.sort === "default") return aOrder - bOrder;
+
+      const aPrice = targetPrice(a);
+      const bPrice = targetPrice(b);
+      if (aPrice === null && bPrice === null) return aOrder - bOrder;
+      if (aPrice === null) return 1;
+      if (bPrice === null) return -1;
+
+      const priceDelta = filters.sort === "highLow" ? bPrice - aPrice : aPrice - bPrice;
+      return priceDelta || aOrder - bOrder;
+    });
+
+    if (!desired.some((card, index) => card !== current[index])) return;
+    const fragment = document.createDocumentFragment();
+    desired.forEach((card) => fragment.appendChild(card));
+    container.appendChild(fragment);
+  }
+
+  function applySort(root) {
+    const grouped = Array.from(root.querySelectorAll(".shop-group-grid"));
+    if (grouped.length) {
+      grouped.forEach(sortContainer);
+      return;
+    }
+    sortContainer(root.querySelector("#shop-list"));
+  }
+
   function applyFilters(root) {
     ensureControls(root);
     const cards = Array.from(root.querySelectorAll(".shop-card"));
@@ -179,6 +225,8 @@
     root.querySelectorAll(".shop-group").forEach((group) => {
       group.hidden = !Array.from(group.querySelectorAll(".shop-card")).some((card) => !card.hidden);
     });
+
+    applySort(root);
 
     const summary = root.querySelector("#shop-summary span:first-child strong");
     if (summary && summary.textContent !== String(shown)) summary.textContent = String(shown);
