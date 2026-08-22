@@ -1,68 +1,59 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#14332a">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="MtG Deck Matrix">
-<title>MtG Deck Matrix</title>
-<style>
-html,body{margin:0;min-height:100%;background:#14332a;color:#f6ecce;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{min-height:70vh;display:grid;place-items:center;padding:24px;text-align:center}.card{max-width:440px}.mark{font:700 42px Georgia,serif;margin-bottom:12px}.sub{opacity:.82;font-size:14px;line-height:1.5}.err{color:#ffd7d7}.small{font-size:12px;opacity:.72;margin-top:10px;word-break:break-word}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#112b24">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="MtG Deck Matrix">
+  <meta name="description" content="Compare Commander deck variants, choose upgrades, and carry a focused card-shopping checklist.">
+  <meta property="og:title" content="MtG Deck Matrix">
+  <meta property="og:description" content="Compare decks, choose buys, and shop from one mobile-friendly list.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://minorrob.github.io/mtg-deck-matrix/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="MtG Deck Matrix">
+  <meta name="twitter:description" content="Compare decks, choose buys, and shop from one mobile-friendly list.">
+  <meta name="twitter:image" content="https://minorrob.github.io/mtg-deck-matrix/og.png">
+  <title>MtG Deck Matrix</title>
+  <link rel="stylesheet" href="app.css">
+  <script src="app.js" defer></script>
 </head>
 <body>
-<main><div class="card"><div class="mark">MtG Deck Matrix</div><div class="sub" id="status">Loading your decks…</div><div class="small" id="detail"></div></div></main>
-<script>
-(async function(){
- const status=document.getElementById('status');
- const detail=document.getElementById('detail');
- function decodeBase64(s){
-   const alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-   s=s.replace(/\s+/g,'').replace(/=+$/,'');
-   const out=new Uint8Array(Math.floor(s.length*3/4)+3);
-   let buffer=0,bits=0,j=0;
-   for(let i=0;i<s.length;i++){
-     const v=alphabet.indexOf(s[i]);
-     if(v<0) throw new Error('Deck data contains an invalid character at position '+i+'.');
-     buffer=(buffer<<6)|v; bits+=6;
-     if(bits>=8){bits-=8;out[j++]=(buffer>>bits)&255;buffer&=(1<<bits)-1;}
-   }
-   return out.slice(0,j);
- }
- try{
-  if(!('DecompressionStream' in window)) throw new Error('This browser needs a newer Safari version.');
-  const names=['01','02','03','04','05','06a','06b','07','08','09'];
-  status.textContent='Loading deck data…';
-  const rs=await Promise.all(names.map(n=>fetch('./payload/part'+n+'.txt?v=8',{cache:'no-store'})));
-  for(let i=0;i<rs.length;i++) if(!rs[i].ok) throw new Error('Could not load payload part '+names[i]+' (HTTP '+rs[i].status+').');
-  const b64=(await Promise.all(rs.map(r=>r.text()))).join('').replace(/\s+/g,'');
-  if(b64.length!==130384) throw new Error('Deck data is incomplete ('+b64.length+' of 130384 characters).');
-  if(!b64.startsWith('H4sI')) throw new Error('Deck data header failed integrity check.');
-  if(!/^[A-Za-z0-9+/]*={0,2}$/.test(b64)) throw new Error('Deck data contains invalid Base64 characters.');
-  status.textContent='Starting Deck Matrix…';
-  const bytes=decodeBase64(b64);
-  const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
-  const html=await new Response(stream).text();
-  if(!html.toLowerCase().includes('<html')) throw new Error('Deck data did not expand into the app.');
+  <header class="app-header">
+    <div class="brand-row">
+      <div>
+        <p class="eyebrow">Commander field guide</p>
+        <h1>Deck Matrix</h1>
+      </div>
+      <span class="save-status" id="save-status" aria-live="polite">Saved on this device</span>
+    </div>
+    <nav class="main-tabs" aria-label="Deck shopping flow">
+      <button class="main-tab is-active" data-view="compare" aria-selected="true">
+        <span class="tab-step">1</span><span>Compare</span>
+      </button>
+      <button class="main-tab" data-view="buy" aria-selected="false">
+        <span class="tab-step">2</span><span>Buy Picks</span>
+      </button>
+      <button class="main-tab" data-view="shop" aria-selected="false">
+        <span class="tab-step">3</span><span>Shop List</span>
+      </button>
+    </nav>
+  </header>
 
-  const mobileMailPatch = '<script>(function(){'+
-    'var preview=window.openEmail;'+
-    'function mobile(){var u=navigator.userAgent||"";return /Android|iPhone|iPad|iPod/i.test(u)||(/Macintosh/i.test(u)&&navigator.maxTouchPoints>1);}'+
-    'function draft(){var t=window.picksText&&window.picksText();if(!t)return false;var u="mailto:robminor3@gmail.com?subject="+encodeURIComponent("My choices")+"&body="+encodeURIComponent(t);var a=document.createElement("a");a.href=u;a.style.display="none";document.body.appendChild(a);a.click();setTimeout(function(){if(a.parentNode)a.parentNode.removeChild(a);},0);return true;}'+
-    'window.openEmail=function(){if(mobile()&&window.picksText&&window.picksText()){draft();return;}return preview.apply(this,arguments);};'+
-    'window.sendEmail=draft;'+
-    '})();<\/script>';
-  const patchedHtml=html.replace(/<\/body>/i,mobileMailPatch+'</body>');
+  <main id="app" tabindex="-1">
+    <section class="view is-active" id="view-compare" aria-labelledby="compare-title">
+      <div class="loading-card">Loading the deck catalog…</div>
+    </section>
+    <section class="view" id="view-buy" aria-labelledby="buy-title"></section>
+    <section class="view" id="view-shop" aria-labelledby="shop-title"></section>
+  </main>
 
-  document.open(); document.write(patchedHtml); document.close();
- }catch(e){
-  status.className='sub err';
-  status.textContent='Could not start the Deck Matrix.';
-  detail.textContent=e && e.message ? e.message : String(e);
- }
-})();
-</script>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <footer>
+    <button class="text-button" id="reset-button">Reset my picks</button>
+    <span>Private to this browser · no account needed</span>
+  </footer>
 </body>
 </html>

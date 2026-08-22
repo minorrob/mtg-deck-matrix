@@ -1,0 +1,1746 @@
+{
+  "decks": [
+    {
+      "id": 1,
+      "title": "The Forgiving Fortress",
+      "objective": "The slot that has to survive turns 1-5 against a fast start, then convert everything it accumulated into a decisive finish. This is the deck you learn combat math on, so it should punish very few mistakes and reward patience."
+    },
+    {
+      "id": 2,
+      "title": "The Long Game",
+      "objective": "The high-ceiling slot — the deck you grow into over months. It should reward reading the table, answering only what genuinely needs answering, and out-lasting three opponents through accumulated advantage rather than a single explosive turn."
+    },
+    {
+      "id": 3,
+      "title": "The City Builder",
+      "objective": "The literal infrastructure deck — lands as the city. It should feel like every single turn advances the board, reward patience with compounding returns, and eventually produce an overwhelming position rather than a sudden kill."
+    },
+    {
+      "id": 4,
+      "title": "The Reactive Engine",
+      "objective": "The slot that reads three opponents and responds intelligently. It should hold the fort with cheap answers, accrue value passively while doing so, and eventually reach a position where the accumulated engine simply wins."
+    },
+    {
+      "id": 5,
+      "title": "The Immediate Engine",
+      "objective": "The fast-rhythm slot — something happens every turn from turn four onward. It should be the deck you reach for when you want action rather than patience, while still surviving a wipe."
+    },
+    {
+      "id": 6,
+      "title": "The Capstone",
+      "objective": "The flagship — the deck that out-resources three opponents and can win from behind. It should reward the most decisions per turn and be the one you graduate into once the other five feel automatic."
+    }
+  ],
+  "variants": [
+    {
+      "id": "1o",
+      "deckId": 1,
+      "order": 1,
+      "name": "Ancestral Bulwark — Betor",
+      "commander": "Betor, Ancestor's Voice",
+      "manaCost": "{3}{W}{B}{G}",
+      "typeLine": "Legendary Creature — Spirit Dragon",
+      "tags": [
+        "Keith's variant"
+      ],
+      "summaries": [
+        [
+          "Stock Abzan Armor: counters and toughness, but lifegain on only a handful of cards",
+          "Betor's end-step trigger sits dead most turns out of the box",
+          "In print — the safest Base buy in the lineup"
+        ],
+        [
+          "The current build, reworked around Keith's lifegain note",
+          "Six non-combat lifegain sources now feed Betor every turn",
+          "You never have to attack with the commander to grow the board"
+        ],
+        [
+          "Necropotence powers BOTH halves: pay life, draw a fist, reanimate at end step",
+          "Phyrexian Arena heads the ladder for the same double duty",
+          "Teferi's and Smothering Tithe make the fortress nearly wipe-proof"
+        ]
+      ],
+      "stageNotes": [
+        "Base · precon only · Straight out of the box. The theme is there, the support is not.",
+        "Tuned · 9 upgrade cards · The upgrades on this card. This is where the deck delivers its stated promise.",
+        "Maxed · 34 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
+      ],
+      "costs": [
+        "$45 total",
+        "$82 total",
+        "$473 total"
+      ],
+      "brackets": [
+        {
+          "label": "B2.4",
+          "gameChangers": "0 GC",
+          "description": "Base: bracket 2.35 on the 2-to-3 line - Core plus. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B2.6",
+          "gameChangers": "0 GC",
+          "description": "Tuned: bracket 2.57 on the 2-to-3 line - High Bracket 2. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B3.0",
+          "gameChangers": "3 GC",
+          "description": "Maxed: bracket 3.00 on the 2-to-3 line - Top of Bracket 3. 3 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        }
+      ],
+      "image": "https://api.scryfall.com/cards/named?format=image&version=normal&fuzzy=Betor,+Ancestor's+Voice"
+    },
+    {
+      "id": "1a",
+      "deckId": 1,
+      "order": 2,
+      "name": "Golgari Aristocrats — Slimefoot",
+      "commander": "Slimefoot, the Stowaway",
+      "manaCost": "{2}{B}{G}",
+      "typeLine": "Legendary Creature — Fungus",
+      "tags": [
+        "Rebuild option"
+      ],
+      "summaries": [
+        [
+          "Golgari box gives tokens and sac outlets on night one",
+          "Drains trickle — the aristocrats engine needs its cheap adds",
+          "Playable stock, but the least defensive Base here"
+        ],
+        [
+          "Board wipes become your best turn, not your worst",
+          "Drain damage ignores blockers entirely",
+          "Weakest early defence of the four — you trade bodies, you don't wall"
+        ],
+        [
+          "Tendershoot plus Doubling-style effects make the swarm exponential",
+          "Grave Pact on the ladder turns every dead Saproling into removal",
+          "Ceiling is real but stays third-tier for this profile"
+        ]
+      ],
+      "stageNotes": [
+        "Base · precon only · Straight out of the box. The theme is there, the support is not.",
+        "Tuned · 8 upgrade cards · The upgrades on this card. This is where the deck delivers its stated promise.",
+        "Maxed · 35 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
+      ],
+      "costs": [
+        "$30 total",
+        "$55 total",
+        "$431 total"
+      ],
+      "brackets": [
+        {
+          "label": "B2.3",
+          "gameChangers": "0 GC",
+          "description": "Base: bracket 2.33 on the 2-to-3 line - Core plus. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B2.6",
+          "gameChangers": "0 GC",
+          "description": "Tuned: bracket 2.63 on the 2-to-3 line - Upper Bracket 2. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B3.0",
+          "gameChangers": "3 GC",
+          "description": "Maxed: bracket 3.00 on the 2-to-3 line - Top of Bracket 3. 3 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        }
+      ],
+      "image": "https://api.scryfall.com/cards/named?format=image&version=normal&fuzzy=Slimefoot,+the+Stowaway"
+    },
+    {
+      "id": "1b",
+      "deckId": 1,
+      "order": 3,
+      "name": "Abzan Toughness Fortress — Doran",
+      "commander": "Doran, the Siege Tower",
+      "manaCost": "{B}{G}{W}",
+      "typeLine": "Legendary Creature — Treefolk Shaman",
+      "tags": [
+        "Rebuild option"
+      ],
+      "summaries": [
+        [
+          "Same Abzan Armor box — Doran himself is the only Base purchase",
+          "Assault Formation is already in the box, so the plan half-works stock",
+          "High toughness blocks fine; the swing-for-30 needs the upgrades"
+        ],
+        [
+          "The wall you spent five turns building suddenly swings for 30",
+          "Uses the box you were already buying — cheapest rebuild here",
+          "Assault Formation already comes in the precon"
+        ],
+        [
+          "Shortest ladder in the row — it maxes out fast and stays maxed",
+          "Teferi's Protection turns the one weakness (wipes) into a bluff",
+          "Aura Shards makes every wall replacement double as removal"
+        ]
+      ],
+      "stageNotes": [
+        "Base · precon only · Straight out of the box. The theme is there, the support is not.",
+        "Tuned · 7 upgrade cards · The upgrades on this card. This is where the deck delivers its stated promise.",
+        "Maxed · 24 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
+      ],
+      "costs": [
+        "$53 total",
+        "$58 total",
+        "$326 total"
+      ],
+      "brackets": [
+        {
+          "label": "B2.4",
+          "gameChangers": "0 GC",
+          "description": "Base: bracket 2.44 on the 2-to-3 line - Core plus. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B2.7",
+          "gameChangers": "0 GC",
+          "description": "Tuned: bracket 2.67 on the 2-to-3 line - Upper Bracket 2. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B3.0",
+          "gameChangers": "3 GC",
+          "description": "Maxed: bracket 3.00 on the 2-to-3 line - Top of Bracket 3. 3 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        }
+      ],
+      "image": "https://api.scryfall.com/cards/named?format=image&version=normal&fuzzy=Doran,+the+Siege+Tower"
+    },
+    {
+      "id": "1c",
+      "deckId": 1,
+      "order": 4,
+      "name": "Orzhov Lifegain Convergence — Liesa",
+      "commander": "Liesa, Shroud of Dusk",
+      "manaCost": "{2}{W}{W}{B}",
+      "typeLine": "Legendary Creature — Angel",
+      "tags": [
+        "Profile-tuned"
+      ],
+      "summaries": [
+        [
+          "Flexible Orzhov shell plus a $31 commander is a slow night-one",
+          "Drain pieces arrive one at a time; nothing loops stock",
+          "Worst Base in the row — this build is bought, not opened"
+        ],
+        [
+          "Lifelink walls make you a terrible target for an early rush",
+          "Your life total IS the resource you're building",
+          "Two harmless-looking enchantments abruptly kill all three opponents at once"
+        ],
+        [
+          "Exquisite Blood returns AT MAXED, clearly labelled: with Sanguine Bond it loops",
+          "Aetherflux Reservoir turns the life total itself into a cannon",
+          "Ceiling rivals the row's best — it just costs the most to reach"
+        ]
+      ],
+      "stageNotes": [
+        "Base · precon only · Straight out of the box. The theme is there, the support is not.",
+        "Tuned · 8 upgrade cards · The upgrades on this card. This is where the deck delivers its stated promise.",
+        "Maxed · 31 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
+      ],
+      "costs": [
+        "$31 total",
+        "$80 total",
+        "$526 total"
+      ],
+      "brackets": [
+        {
+          "label": "B2.4",
+          "gameChangers": "0 GC",
+          "description": "Base: bracket 2.37 on the 2-to-3 line - Core plus. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B2.6",
+          "gameChangers": "0 GC",
+          "description": "Tuned: bracket 2.60 on the 2-to-3 line - Upper Bracket 2. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B3.0",
+          "gameChangers": "3 GC",
+          "description": "Maxed: bracket 3.00 on the 2-to-3 line - Top of Bracket 3. 3 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        }
+      ],
+      "image": "https://api.scryfall.com/cards/named?format=image&version=normal&fuzzy=Liesa,+Shroud+of+Dusk"
+    },
+    {
+      "id": "1e",
+      "deckId": 1,
+      "order": 5,
+      "name": "Abzan Fungus Engine — Ghave",
+      "commander": "Ghave, Guru of Spores",
+      "manaCost": "{2}{B}{G}{W}",
+      "typeLine": "Legendary Creature — Fungus Shaman",
+      "tags": [
+        "Profile-tuned"
+      ],
+      "summaries": [
+        [
+          "Flexible shell: stock, it is Saprolings and hope",
+          "Ghave works from the command zone but has nothing to convert yet",
+          "Weakest Base in the row — buy the engine pieces early"
+        ],
+        [
+          "Freely converts counters into bodies and bodies back into counters",
+          "A wall of Saprolings that is also a combo engine",
+          "Same box as your current Deck 1 plan"
+        ],
+        [
+          "Longest ladder in the row: Ashnod's Altar, Earthcraft, Doubling Season",
+          "The counters-bodies loop becomes a true engine at the ceiling",
+          "Flirts with Bracket 4 — the Maxed list is combo-dense"
+        ]
+      ],
+      "stageNotes": [
+        "Base · precon only · Straight out of the box. The theme is there, the support is not.",
+        "Tuned · 5 upgrade cards · The upgrades on this card. This is where the deck delivers its stated promise.",
+        "Maxed · 34 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
+      ],
+      "costs": [
+        "$46 total",
+        "$79 total",
+        "$557 total"
+      ],
+      "brackets": [
+        {
+          "label": "B2.4",
+          "gameChangers": "0 GC",
+          "description": "Base: bracket 2.37 on the 2-to-3 line - Core plus. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B2.6",
+          "gameChangers": "0 GC",
+          "description": "Tuned: bracket 2.64 on the 2-to-3 line - Upper Bracket 2. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B3.0",
+          "gameChangers": "3 GC",
+          "description": "Maxed: bracket 3.00 on the 2-to-3 line - Top of Bracket 3. 3 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        }
+      ],
+      "image": "https://api.scryfall.com/cards/named?format=image&version=normal&fuzzy=Ghave,+Guru+of+Spores"
+    },
+    {
+      "id": "2o",
+      "deckId": 2,
+      "order": 1,
+      "name": "The Withering — The Reaper",
+      "commander": "The Reaper, King No More",
+      "manaCost": "{2/B}{2/R}{2/G}",
+      "typeLine": "Legendary Artifact Creature — Scarecrow",
+      "tags": [
+        "Keith's variant"
+      ],
+      "summaries": [
+        [
+          "Blight Curse box is a real, in-print counters deck on night one",
+          "The Reaper steals from the zone — the Base game is already fun",
+          "Best stock buy in the row"
+        ],
+        [
+          "Keith's favourite — and he was right about Bloodbriar",
+          "Necroskitter and Hapatra compound every counter, with no infinite loop",
+          "-1/-1 counters kill indestructible things, which is genuinely rare"
+        ],
+        [
+          "Blowfly Infestation unlocks HERE: with Hapatra or Nest it loops — labelled combo",
+          "Necropotence and Jeska's Will give it draw and burst it never had",
+          "Maxed, it kills tables; it also stops being the friendly deck"
+        ]
+      ],
+      "stageNotes": [
+        "Base · precon only · Straight out of the box. The theme is there, the support is not.",
+        "Tuned · 8 upgrade cards · The upgrades on this card. This is where the deck delivers its stated promise.",
+        "Maxed · 25 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
+      ],
+      "costs": [
+        "$28 total",
+        "$42 total",
+        "$330 total"
+      ],
+      "brackets": [
+        {
+          "label": "B2.4",
+          "gameChangers": "0 GC",
+          "description": "Base: bracket 2.36 on the 2-to-3 line - Core plus. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B2.5",
+          "gameChangers": "0 GC",
+          "description": "Tuned: bracket 2.55 on the 2-to-3 line - High Bracket 2. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B3.0",
+          "gameChangers": "3 GC",
+          "description": "Maxed: bracket 3.00 on the 2-to-3 line - Top of Bracket 3. 3 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        }
+      ],
+      "image": "https://api.scryfall.com/cards/named?format=image&version=normal&fuzzy=The+Reaper,+King+No+More"
+    },
+    {
+      "id": "2a",
+      "deckId": 2,
+      "order": 2,
+      "name": "Dimir Theft — Xanathar",
+      "commander": "Xanathar, Guild Kingpin",
+      "manaCost": "{5}{U}{B}",
+      "typeLine": "Legendary Creature — Beholder",
+      "tags": [
+        "Rebuild option"
+      ],
+      "summaries": [
+        [
+          "Mind Flayarrrs box plays fine stock — menace and mill",
+          "Xanathar online from the zone, but seven mana is a wait",
+          "OOP box: if you want this Base, buy it on sight"
+        ],
+        [
+          "Card advantage at a scale the original never reached",
+          "Counterspells — the only variant that can stop a Game Changer resolving",
+          "Directly conflicts with 'I don't like to sabotage people'"
+        ],
+        [
+          "Rhystic Study and Consecrated Sphinx bury the table in cards",
+          "The One Ring makes the theft engine nearly unkillable",
+          "Ceiling is huge; the salt scales right along with it"
+        ]
+      ],
+      "stageNotes": [
+        "Base · precon only · Straight out of the box. The theme is there, the support is not.",
+        "Tuned · 4 upgrade cards · The upgrades on this card. This is where the deck delivers its stated promise.",
+        "Maxed · 23 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
+      ],
+      "costs": [
+        "$42 total",
+        "$50 total",
+        "$524 total"
+      ],
+      "brackets": [
+        {
+          "label": "B2.6",
+          "gameChangers": "1 GC",
+          "description": "Base: bracket 2.63 on the 2-to-3 line - Upper Bracket 2. 1 Game Changer (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B2.8",
+          "gameChangers": "1 GC",
+          "description": "Tuned: bracket 2.81 on the 2-to-3 line - On the 2/3 line. 1 Game Changer (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B3.0",
+          "gameChangers": "3 GC",
+          "description": "Maxed: bracket 3.00 on the 2-to-3 line - Top of Bracket 3. 3 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        }
+      ],
+      "image": "https://api.scryfall.com/cards/named?format=image&version=normal&fuzzy=Xanathar,+Guild+Kingpin"
+    },
+    {
+      "id": "2b",
+      "deckId": 2,
+      "order": 3,
+      "name": "Mono-Black Edicts — Sheoldred",
+      "commander": "Sheoldred, Whispering One",
+      "manaCost": "{5}{B}{B}",
+      "typeLine": "Legendary Creature — Phyrexian Praetor",
+      "tags": [
+        "Rebuild option"
+      ],
+      "summaries": [
+        [
+          "Edicts ignore size, indestructible, hexproof and ward",
+          "Mono-black mana never stumbles",
+          "Grinding three opponents down every single turn is the definition of salt"
+        ],
+        [
+          "Edicts ignore size, indestructible, hexproof and ward",
+          "Mono-black mana never stumbles",
+          "Grinding three opponents down every single turn is the definition of salt"
+        ],
+        [
+          "Edicts ignore size, indestructible, hexproof and ward",
+          "Mono-black mana never stumbles",
+          "Grinding three opponents down every single turn is the definition of salt"
+        ]
+      ],
+      "stageNotes": [
+        "Base · precon only · Straight out of the box. The theme is there, the support is not.",
+        "Tuned · 3 upgrade cards · The upgrades on this card. This is where the deck delivers its stated promise.",
+        "Maxed · 26 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
+      ],
+      "costs": [
+        "$72 total",
+        "$94 total",
+        "$727 total"
+      ],
+      "brackets": [
+        {
+          "label": "B2.4",
+          "gameChangers": "0 GC",
+          "description": "Base: bracket 2.38 on the 2-to-3 line - Core plus. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B2.6",
+          "gameChangers": "0 GC",
+          "description": "Tuned: bracket 2.61 on the 2-to-3 line - Upper Bracket 2. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B3.0",
+          "gameChangers": "3 GC",
+          "description": "Maxed: bracket 3.00 on the 2-to-3 line - Top of Bracket 3. 3 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        }
+      ],
+      "image": "https://api.scryfall.com/cards/named?format=image&version=normal&fuzzy=Sheoldred,+Whispering+One"
+    },
+    {
+      "id": "2c",
+      "deckId": 2,
+      "order": 4,
+      "name": "Proliferate Council — Atraxa",
+      "commander": "Atraxa, Praetors' Voice",
+      "manaCost": "{G}{W}{U}{B}",
+      "typeLine": "Legendary Creature — Phyrexian Angel Horror",
+      "tags": [
+        "Profile-tuned"
+      ],
+      "summaries": [
+        [
+          "No box: Atraxa is the Base purchase, and she is most of it",
+          "A 4/4 flying deathtouch lifelink wall stabilises night one alone",
+          "Counters trickle until the proliferate package lands"
+        ],
+        [
+          "A 4/4 flying deathtouch lifelink body is a fortress on its own",
+          "Every counter on every permanent grows each turn, for free",
+          "Planeswalkers, creatures and artifacts all advance together toward simultaneous payoffs"
+        ],
+        [
+          "Doubling Season and Chain Veil turn walkers into ultimates on cast",
+          "Teferi's, Rhystic and Sphinx are the perfect fair-strong trio",
+          "The clear Maxed king of this row"
+        ]
+      ],
+      "stageNotes": [
+        "Base · precon only · Straight out of the box. The theme is there, the support is not.",
+        "Tuned · 6 upgrade cards · The upgrades on this card. This is where the deck delivers its stated promise.",
+        "Maxed · 37 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
+      ],
+      "costs": [
+        "$71 total",
+        "$94 total",
+        "$943 total"
+      ],
+      "brackets": [
+        {
+          "label": "B2.4",
+          "gameChangers": "0 GC",
+          "description": "Base: bracket 2.40 on the 2-to-3 line - Core plus. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B2.7",
+          "gameChangers": "0 GC",
+          "description": "Tuned: bracket 2.66 on the 2-to-3 line - Upper Bracket 2. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B3.0",
+          "gameChangers": "3 GC",
+          "description": "Maxed: bracket 3.00 on the 2-to-3 line - Top of Bracket 3. 3 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        }
+      ],
+      "image": "https://api.scryfall.com/cards/named?format=image&version=normal&fuzzy=Atraxa,+Praetors'+Voice"
+    },
+    {
+      "id": "2e",
+      "deckId": 2,
+      "order": 5,
+      "name": "Esper Pillowfort Longevity — Oloro",
+      "commander": "Oloro, Ageless Ascetic",
+      "manaCost": "{3}{W}{U}{B}",
+      "typeLine": "Legendary Creature — Giant Soldier",
+      "tags": [
+        "Profile-tuned"
+      ],
+      "summaries": [
+        [
+          "Flexible Esper shell: Oloro gains life from the zone even stock",
+          "Pillowfort pieces arrive piecemeal; stock defence is thin",
+          "Base is passive but never behind — Oloro pays you to wait"
+        ],
+        [
+          "Gains life every upkeep without ever being cast — free value from turn one",
+          "Taxing enchantments mean nobody can afford to attack you",
+          "Wins without combat at all, via three separate alternate win cards"
+        ],
+        [
+          "Smothering Tithe plus Rhystic make patience actively profitable",
+          "Approach of the Second Sun becomes a real, clean win route",
+          "The hard-lock ceiling can read unfun — deploy with judgement"
+        ]
+      ],
+      "stageNotes": [
+        "Base · precon only · Straight out of the box. The theme is there, the support is not.",
+        "Tuned · 6 upgrade cards · The upgrades on this card. This is where the deck delivers its stated promise.",
+        "Maxed · 31 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
+      ],
+      "costs": [
+        "$60 total",
+        "$91 total",
+        "$571 total"
+      ],
+      "brackets": [
+        {
+          "label": "B2.4",
+          "gameChangers": "0 GC",
+          "description": "Base: bracket 2.43 on the 2-to-3 line - Core plus. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B2.7",
+          "gameChangers": "0 GC",
+          "description": "Tuned: bracket 2.67 on the 2-to-3 line - Upper Bracket 2. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B3.0",
+          "gameChangers": "3 GC",
+          "description": "Maxed: bracket 3.00 on the 2-to-3 line - Top of Bracket 3. 3 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        }
+      ],
+      "image": "https://api.scryfall.com/cards/named?format=image&version=normal&fuzzy=Oloro,+Ageless+Ascetic"
+    },
+    {
+      "id": "3o",
+      "deckId": 3,
+      "order": 1,
+      "name": "Seismic Stampede — Obuun",
+      "commander": "Obuun, Mul Daya Ancestor",
+      "manaCost": "{2}{R}{G}{W}",
+      "typeLine": "Legendary Creature — Elf Spirit",
+      "tags": [
+        "Keith's variant"
+      ],
+      "summaries": [
+        [
+          "Land's Wrath box is a full landfall deck out of the box",
+          "Obuun animates lands from the zone — Base is genuinely playable",
+          "OOP box: the Base buy is the urgent one"
+        ],
+        [
+          "Keith signed off on this one — landfall is the strongest engine here",
+          "Removal no longer arms the player you just answered",
+          "Deep, redundant landfall payoffs — it rarely whiffs"
+        ],
+        [
+          "Field of the Dead builds an army from the land count you already have",
+          "Crop Rotation finds it; Necropotence refuels the aggression",
+          "Strong Maxed, but the row's engines scale harder"
+        ]
+      ],
+      "stageNotes": [
+        "Base · precon only · Straight out of the box. The theme is there, the support is not.",
+        "Tuned · 6 upgrade cards · The upgrades on this card. This is where the deck delivers its stated promise.",
+        "Maxed · 31 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
+      ],
+      "costs": [
+        "$55 total",
+        "$77 total",
+        "$576 total"
+      ],
+      "brackets": [
+        {
+          "label": "B2.4",
+          "gameChangers": "0 GC",
+          "description": "Base: bracket 2.41 on the 2-to-3 line - Core plus. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B2.6",
+          "gameChangers": "0 GC",
+          "description": "Tuned: bracket 2.62 on the 2-to-3 line - Upper Bracket 2. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B3.0",
+          "gameChangers": "3 GC",
+          "description": "Maxed: bracket 3.00 on the 2-to-3 line - Top of Bracket 3. 3 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        }
+      ],
+      "image": "https://api.scryfall.com/cards/named?format=image&version=normal&fuzzy=Obuun,+Mul+Daya+Ancestor"
+    },
+    {
+      "id": "3c",
+      "deckId": 3,
+      "order": 2,
+      "name": "Simic Landfall Longevity — Aesi",
+      "commander": "Aesi, Tyrant of Gyre Strait",
+      "manaCost": "{4}{G}{U}",
+      "typeLine": "Legendary Creature — Serpent",
+      "tags": [
+        "Profile-tuned"
+      ],
+      "summaries": [
+        [
+          "Flexible Simic shell: stock is ramp and little else",
+          "Aesi at six mana defines the Base problem this build now patches",
+          "Growth Spiral and Explore are the first singles to buy"
+        ],
+        [
+          "Draws a card on every land drop — you simply never run out",
+          "Blue gives the counterspells and fogs the Naya version can't have",
+          "A giant sea serpent guarding a growing island is a strong narrative"
+        ],
+        [
+          "Scute Swarm plus Ancient Greenwarden go exponential",
+          "Rhystic Study feeds the no-max-hand pile",
+          "Field-of-Dead-style inevitability without touching anyone"
+        ]
+      ],
+      "stageNotes": [
+        "Base · precon only · Straight out of the box. The theme is there, the support is not.",
+        "Tuned · 7 upgrade cards · The upgrades on this card. This is where the deck delivers its stated promise.",
+        "Maxed · 34 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
+      ],
+      "costs": [
+        "$51 total",
+        "$63 total",
+        "$564 total"
+      ],
+      "brackets": [
+        {
+          "label": "B2.4",
+          "gameChangers": "0 GC",
+          "description": "Base: bracket 2.44 on the 2-to-3 line - Core plus. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B2.6",
+          "gameChangers": "0 GC",
+          "description": "Tuned: bracket 2.61 on the 2-to-3 line - Upper Bracket 2. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B3.0",
+          "gameChangers": "3 GC",
+          "description": "Maxed: bracket 3.00 on the 2-to-3 line - Top of Bracket 3. 3 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        }
+      ],
+      "image": "https://api.scryfall.com/cards/named?format=image&version=normal&fuzzy=Aesi,+Tyrant+of+Gyre+Strait"
+    },
+    {
+      "id": "3d",
+      "deckId": 3,
+      "order": 3,
+      "name": "Selesnya Enchantress — Sythis",
+      "commander": "Sythis, Harvest's Hand",
+      "manaCost": "{G}{W}",
+      "typeLine": "Legendary Enchantment Creature — Nymph",
+      "tags": [
+        "Profile-tuned"
+      ],
+      "summaries": [
+        [
+          "Flexible Selesnya shell: enchantress needs its enchantments",
+          "Sythis draws cards stock, but the web builds slowly",
+          "Cheap Base, quick to come online with the first adds"
+        ],
+        [
+          "Your entire engine is enchantments — creature wipes do literally nothing to it",
+          "A two-mana commander that draws cards from turn two onward",
+          "Sigil of the Empty Throne converts the whole city into an angel army at once"
+        ],
+        [
+          "Enchantress's Presence stacking makes every spell a cantrip",
+          "Sigil of the Empty Throne converts the web into an angel army",
+          "Wipes never touch it — the most resilient Maxed in the row"
+        ]
+      ],
+      "stageNotes": [
+        "Base · precon only · Straight out of the box. The theme is there, the support is not.",
+        "Tuned · 5 upgrade cards · The upgrades on this card. This is where the deck delivers its stated promise.",
+        "Maxed · 34 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
+      ],
+      "costs": [
+        "$40 total",
+        "$58 total",
+        "$469 total"
+      ],
+      "brackets": [
+        {
+          "label": "B2.5",
+          "gameChangers": "0 GC",
+          "description": "Base: bracket 2.45 on the 2-to-3 line - High Bracket 2. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B2.7",
+          "gameChangers": "0 GC",
+          "description": "Tuned: bracket 2.68 on the 2-to-3 line - Upper Bracket 2. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B3.0",
+          "gameChangers": "3 GC",
+          "description": "Maxed: bracket 3.00 on the 2-to-3 line - Top of Bracket 3. 3 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        }
+      ],
+      "image": "https://api.scryfall.com/cards/named?format=image&version=normal&fuzzy=Sythis,+Harvest's+Hand"
+    },
+    {
+      "id": "3e",
+      "deckId": 3,
+      "order": 4,
+      "name": "Golgari Land Engine — The Gitrog Monster",
+      "commander": "The Gitrog Monster",
+      "manaCost": "{3}{B}{G}",
+      "typeLine": "Legendary Creature — Frog Horror",
+      "tags": [
+        "Profile-tuned"
+      ],
+      "summaries": [
+        [
+          "Flexible Golgari shell: Gitrog draws from turn five stock",
+          "A 6/6 deathtouch wall is a real Base body",
+          "Cheapest strong Base in the row"
+        ],
+        [
+          "A 6/6 deathtouch body nobody wants to attack into, for five mana",
+          "Draws a card off land going to the graveyard — an engine that never stops",
+          "Black adds the removal the Naya landfall version cannot access"
+        ],
+        [
+          "Field of the Dead plus Crop Rotation weaponise the land count",
+          "Necropotence on a deathtouch wall is obscene card flow",
+          "Titania and Crucible make every land a threat — top Maxed here"
+        ]
+      ],
+      "stageNotes": [
+        "Base · precon only · Straight out of the box. The theme is there, the support is not.",
+        "Tuned · 5 upgrade cards · The upgrades on this card. This is where the deck delivers its stated promise.",
+        "Maxed · 30 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
+      ],
+      "costs": [
+        "$36 total",
+        "$46 total",
+        "$564 total"
+      ],
+      "brackets": [
+        {
+          "label": "B2.5",
+          "gameChangers": "0 GC",
+          "description": "Base: bracket 2.49 on the 2-to-3 line - High Bracket 2. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B2.7",
+          "gameChangers": "0 GC",
+          "description": "Tuned: bracket 2.72 on the 2-to-3 line - On the 2/3 line. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B3.0",
+          "gameChangers": "3 GC",
+          "description": "Maxed: bracket 3.00 on the 2-to-3 line - Top of Bracket 3. 3 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        }
+      ],
+      "image": "https://api.scryfall.com/cards/named?format=image&version=normal&fuzzy=The+Gitrog+Monster"
+    },
+    {
+      "id": "3f",
+      "deckId": 3,
+      "order": 5,
+      "name": "Gruul Landfall Elementals — Omnath",
+      "commander": "Omnath, Locus of Rage",
+      "manaCost": "{3}{R}{R}{G}{G}",
+      "typeLine": "Legendary Creature — Elemental",
+      "tags": [
+        "Profile-tuned"
+      ],
+      "summaries": [
+        [
+          "Flexible Gruul shell: big bodies early, answers late",
+          "Omnath is the whole engine and he costs six",
+          "Decimate and Hull Breach are now the first singles to buy"
+        ],
+        [
+          "Every land drop is a free 5/5 — the fastest clock of any city-builder here",
+          "A board wipe turns your army into 30+ damage spread across the table",
+          "The most literal 'what I built becomes the killing blow' in the matrix"
+        ],
+        [
+          "Warstorm Surge turns every landfall body into burn",
+          "Scute Swarm goes wide enough to end games by itself",
+          "Ceiling is loud, fast and still the row's saltiest"
+        ]
+      ],
+      "stageNotes": [
+        "Base · precon only · Straight out of the box. The theme is there, the support is not.",
+        "Tuned · 6 upgrade cards · The upgrades on this card. This is where the deck delivers its stated promise.",
+        "Maxed · 27 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
+      ],
+      "costs": [
+        "$35 total",
+        "$61 total",
+        "$439 total"
+      ],
+      "brackets": [
+        {
+          "label": "B2.4",
+          "gameChangers": "0 GC",
+          "description": "Base: bracket 2.43 on the 2-to-3 line - Core plus. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B2.7",
+          "gameChangers": "0 GC",
+          "description": "Tuned: bracket 2.69 on the 2-to-3 line - Upper Bracket 2. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B3.0",
+          "gameChangers": "3 GC",
+          "description": "Maxed: bracket 3.00 on the 2-to-3 line - Top of Bracket 3. 3 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        }
+      ],
+      "image": "https://api.scryfall.com/cards/named?format=image&version=normal&fuzzy=Omnath,+Locus+of+Rage"
+    },
+    {
+      "id": "4o",
+      "deckId": 4,
+      "order": 1,
+      "name": "First Flight — Kangee",
+      "commander": "Kangee, Sky Warden",
+      "manaCost": "{3}{W}{U}",
+      "typeLine": "Legendary Creature — Bird Wizard",
+      "tags": [
+        "Keith's variant"
+      ],
+      "summaries": [
+        [
+          "First Flight box stock — Keith owns it: slow but functional",
+          "Kangee is a $0.29 single away from fixing the pace",
+          "Best Base in the row purely because the box exists"
+        ],
+        [
+          "Keith owns this precon: the stock deck is too slow, Kangee fixes it",
+          "Five-mana anthem beats a six-mana draw engine at this budget",
+          "Still the best interaction of the six — 11 removal, 6 counterspells"
+        ],
+        [
+          "Watcher of the Spheres and Sephara reward full flier commitment",
+          "Rhystic and Sphinx refill while the sky clock runs",
+          "Solid Maxed; the walls deck still converges harder"
+        ]
+      ],
+      "stageNotes": [
+        "Base · precon only · Straight out of the box. The theme is there, the support is not.",
+        "Tuned · 8 upgrade cards · The upgrades on this card. This is where the deck delivers its stated promise.",
+        "Maxed · 28 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
+      ],
+      "costs": [
+        "$23 total",
+        "$69 total",
+        "$440 total"
+      ],
+      "brackets": [
+        {
+          "label": "B2.4",
+          "gameChangers": "0 GC",
+          "description": "Base: bracket 2.38 on the 2-to-3 line - Core plus. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B2.6",
+          "gameChangers": "0 GC",
+          "description": "Tuned: bracket 2.65 on the 2-to-3 line - Upper Bracket 2. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B3.0",
+          "gameChangers": "3 GC",
+          "description": "Maxed: bracket 3.00 on the 2-to-3 line - Top of Bracket 3. 3 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        }
+      ],
+      "image": "https://api.scryfall.com/cards/named?format=image&version=normal&fuzzy=Kangee,+Sky+Warden"
+    },
+    {
+      "id": "4a",
+      "deckId": 4,
+      "order": 2,
+      "name": "Azorius Blink — Brago",
+      "commander": "Brago, King Eternal",
+      "manaCost": "{2}{W}{U}",
+      "typeLine": "Legendary Creature — Spirit Noble",
+      "tags": [
+        "Rebuild option"
+      ],
+      "summaries": [
+        [
+          "Phantom Premonition box blinks stock — the plan works night one",
+          "Brago dies to everything until the Boots arrive",
+          "OOP box, decent stock power"
+        ],
+        [
+          "Ephemerate turns removal into a value trigger",
+          "Every ETB creature becomes a repeatable machine",
+          "Agent of Treachery steals permanents — dial that back for your table"
+        ],
+        [
+          "Deadeye Navigator (Drake stays labelled on the ladder) re-buys any ETB",
+          "Strionic Resonator doubles Brago's own trigger",
+          "Maxed is strong and fragile in exactly the same place"
+        ]
+      ],
+      "stageNotes": [
+        "Base · precon only · Straight out of the box. The theme is there, the support is not.",
+        "Tuned · 6 upgrade cards · The upgrades on this card. This is where the deck delivers its stated promise.",
+        "Maxed · 35 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
+      ],
+      "costs": [
+        "$40 total",
+        "$54 total",
+        "$574 total"
+      ],
+      "brackets": [
+        {
+          "label": "B2.4",
+          "gameChangers": "0 GC",
+          "description": "Base: bracket 2.42 on the 2-to-3 line - Core plus. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B2.7",
+          "gameChangers": "0 GC",
+          "description": "Tuned: bracket 2.67 on the 2-to-3 line - Upper Bracket 2. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B3.0",
+          "gameChangers": "3 GC",
+          "description": "Maxed: bracket 3.00 on the 2-to-3 line - Top of Bracket 3. 3 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        }
+      ],
+      "image": "https://api.scryfall.com/cards/named?format=image&version=normal&fuzzy=Brago,+King+Eternal"
+    },
+    {
+      "id": "4b",
+      "deckId": 4,
+      "order": 3,
+      "name": "Azorius Artifacts — Shorikai",
+      "commander": "Shorikai, Genesis Engine",
+      "manaCost": "{2}{W}{U}",
+      "typeLine": "Legendary Artifact — Vehicle",
+      "tags": [
+        "Rebuild option"
+      ],
+      "summaries": [
+        [
+          "Buckle Up box is genuinely strong stock — highest Base floor here",
+          "Shorikai loots from the zone with no setup at all",
+          "OOP box worth grabbing on sight"
+        ],
+        [
+          "Your commander is a Vehicle — creature wipes cannot touch it",
+          "A free blocker and a card-filter every single turn",
+          "Fell the Mighty is a one-sided wipe against Dinos and Dragons"
+        ],
+        [
+          "Smothering Tithe funds the whole machine",
+          "Portal to Phyrexia is a one-card endgame",
+          "Second-best Maxed; still a machine, not a fantasy"
+        ]
+      ],
+      "stageNotes": [
+        "Base · precon only · Straight out of the box. The theme is there, the support is not.",
+        "Tuned · 4 upgrade cards · The upgrades on this card. This is where the deck delivers its stated promise.",
+        "Maxed · 33 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
+      ],
+      "costs": [
+        "$35 total",
+        "$99 total",
+        "$768 total"
+      ],
+      "brackets": [
+        {
+          "label": "B2.7",
+          "gameChangers": "1 GC",
+          "description": "Base: bracket 2.69 on the 2-to-3 line - Upper Bracket 2. 1 Game Changer (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B3.0",
+          "gameChangers": "1 GC",
+          "description": "Tuned: bracket 2.96 on the 2-to-3 line - Solid Bracket 3. 1 Game Changer (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B3.0",
+          "gameChangers": "3 GC",
+          "description": "Maxed: bracket 3.00 on the 2-to-3 line - Top of Bracket 3. 3 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        }
+      ],
+      "image": "https://api.scryfall.com/cards/named?format=image&version=normal&fuzzy=Shorikai,+Genesis+Engine"
+    },
+    {
+      "id": "4c",
+      "deckId": 4,
+      "order": 4,
+      "name": "Bant Walls — Arcades",
+      "commander": "Arcades, the Strategist",
+      "manaCost": "{1}{G}{W}{U}",
+      "typeLine": "Legendary Creature — Elder Dragon",
+      "tags": [
+        "Profile-tuned"
+      ],
+      "summaries": [
+        [
+          "Flexible Bant shell: walls block on night one, attack later",
+          "Arcades is the entire Base plan and he is $5",
+          "Cheapest Base in the row by far"
+        ],
+        [
+          "Every wall you play draws a card — defence and card advantage are the same action",
+          "Nobody attacks into a board of 0/6s, so you build unmolested",
+          "Arcades resolves and the whole passive board becomes lethal at once"
+        ],
+        [
+          "Aura Shards turns twenty defenders into twenty removal spells",
+          "Teferi's protects the alpha strike; Tithe pays for everything",
+          "The row's best Maxed — and still the best profile fit"
+        ]
+      ],
+      "stageNotes": [
+        "Base · precon only · Straight out of the box. The theme is there, the support is not.",
+        "Tuned · 6 upgrade cards · The upgrades on this card. This is where the deck delivers its stated promise.",
+        "Maxed · 27 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
+      ],
+      "costs": [
+        "$40 total",
+        "$42 total",
+        "$360 total"
+      ],
+      "brackets": [
+        {
+          "label": "B2.5",
+          "gameChangers": "0 GC",
+          "description": "Base: bracket 2.47 on the 2-to-3 line - High Bracket 2. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B2.7",
+          "gameChangers": "0 GC",
+          "description": "Tuned: bracket 2.73 on the 2-to-3 line - On the 2/3 line. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B3.0",
+          "gameChangers": "3 GC",
+          "description": "Maxed: bracket 3.00 on the 2-to-3 line - Top of Bracket 3. 3 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        }
+      ],
+      "image": "https://api.scryfall.com/cards/named?format=image&version=normal&fuzzy=Arcades,+the+Strategist"
+    },
+    {
+      "id": "4e",
+      "deckId": 4,
+      "order": 5,
+      "name": "Bant Blink Toolbox — Roon",
+      "commander": "Roon of the Hidden Realm",
+      "manaCost": "{2}{G}{W}{U}",
+      "typeLine": "Legendary Creature — Rhino Soldier",
+      "tags": [
+        "Profile-tuned"
+      ],
+      "summaries": [
+        [
+          "Flexible three-colour shell: the slowest stock start here",
+          "Roon needs mana and targets before he does anything",
+          "Base is the price of the toolbox"
+        ],
+        [
+          "A 4/4 rhino body plus a repeatable blink every single turn",
+          "Green adds the ramp and Heroic Intervention the Azorius version can't run",
+          "Blink is protection, recursion and removal from one mechanic"
+        ],
+        [
+          "Panharmonicon doubles every blink the deck already wanted",
+          "Eternal Witness loops answers forever",
+          "Strong Maxed, still mana-hungry"
+        ]
+      ],
+      "stageNotes": [
+        "Base · precon only · Straight out of the box. The theme is there, the support is not.",
+        "Tuned · 6 upgrade cards · The upgrades on this card. This is where the deck delivers its stated promise.",
+        "Maxed · 34 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
+      ],
+      "costs": [
+        "$35 total",
+        "$60 total",
+        "$567 total"
+      ],
+      "brackets": [
+        {
+          "label": "B2.4",
+          "gameChangers": "0 GC",
+          "description": "Base: bracket 2.43 on the 2-to-3 line - Core plus. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B2.7",
+          "gameChangers": "0 GC",
+          "description": "Tuned: bracket 2.69 on the 2-to-3 line - Upper Bracket 2. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B3.0",
+          "gameChangers": "3 GC",
+          "description": "Maxed: bracket 3.00 on the 2-to-3 line - Top of Bracket 3. 3 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        }
+      ],
+      "image": "https://api.scryfall.com/cards/named?format=image&version=normal&fuzzy=Roon+of+the+Hidden+Realm"
+    },
+    {
+      "id": "5o",
+      "deckId": 5,
+      "order": 1,
+      "name": "Lorehold Spirit — Quintorius",
+      "commander": "Quintorius, History Chaser",
+      "manaCost": "{2}{R}{W}",
+      "typeLine": "Legendary Planeswalker — Quintorius",
+      "tags": [
+        "Keith's variant"
+      ],
+      "summaries": [
+        [
+          "Lorehold Spirit box stock — Keith says it wins as-is",
+          "History Chaser is in the box: the Base deck IS the deck",
+          "Best Base in the row, in print, $37"
+        ],
+        [
+          "Keith's pick restored — the precon's planeswalker IS commander-legal",
+          "+1 discards, draws two and mills: it feeds its own Spirit trigger",
+          "−4 gives the Spirit army double strike — the finisher is built in"
+        ],
+        [
+          "Underworld Breach: every escape is a Spirit — the perfect GC",
+          "Teferi's and Tithe protect and fund the swarm",
+          "Top Maxed and top Tuned — the row is not close"
+        ]
+      ],
+      "stageNotes": [
+        "Base · precon only · Straight out of the box. The theme is there, the support is not.",
+        "Tuned · 8 upgrade cards · The upgrades on this card. This is where the deck delivers its stated promise.",
+        "Maxed · 29 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
+      ],
+      "costs": [
+        "$37 total",
+        "$91 total",
+        "$416 total"
+      ],
+      "brackets": [
+        {
+          "label": "B2.5",
+          "gameChangers": "0 GC",
+          "description": "Base: bracket 2.46 on the 2-to-3 line - High Bracket 2. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B2.7",
+          "gameChangers": "0 GC",
+          "description": "Tuned: bracket 2.74 on the 2-to-3 line - On the 2/3 line. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B3.0",
+          "gameChangers": "3 GC",
+          "description": "Maxed: bracket 3.00 on the 2-to-3 line - Top of Bracket 3. 3 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        }
+      ],
+      "image": "https://api.scryfall.com/cards/named?format=image&version=normal&fuzzy=Quintorius,+History+Chaser"
+    },
+    {
+      "id": "5c",
+      "deckId": 5,
+      "order": 2,
+      "name": "Mardu Knights — Syr Gwyn",
+      "commander": "Syr Gwyn, Hero of Ashvale",
+      "manaCost": "{3}{R}{W}{B}",
+      "typeLine": "Legendary Creature — Human Knight",
+      "tags": [
+        "Profile-tuned"
+      ],
+      "summaries": [
+        [
+          "Flexible Mardu shell: Knights arrive before their swords",
+          "Syr Gwyn does nothing until equipment shows up",
+          "Slowest Base in the row"
+        ],
+        [
+          "This is the Knights-of-the-Round-Table idea from your own example",
+          "Vigilance means your attackers are still blockers — offence and defence at once",
+          "Equipment is the 'city': each piece makes the whole order stronger"
+        ],
+        [
+          "Sword of Feast and Famine untaps into second main phases",
+          "Puresteel and Sigarda's Aid make equips free",
+          "Highest ceiling in the row when the steel is all in"
+        ]
+      ],
+      "stageNotes": [
+        "Base · precon only · Straight out of the box. The theme is there, the support is not.",
+        "Tuned · 5 upgrade cards · The upgrades on this card. This is where the deck delivers its stated promise.",
+        "Maxed · 32 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
+      ],
+      "costs": [
+        "$43 total",
+        "$55 total",
+        "$721 total"
+      ],
+      "brackets": [
+        {
+          "label": "B2.4",
+          "gameChangers": "0 GC",
+          "description": "Base: bracket 2.41 on the 2-to-3 line - Core plus. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B2.6",
+          "gameChangers": "0 GC",
+          "description": "Tuned: bracket 2.64 on the 2-to-3 line - Upper Bracket 2. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B3.0",
+          "gameChangers": "3 GC",
+          "description": "Maxed: bracket 3.00 on the 2-to-3 line - Top of Bracket 3. 3 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        }
+      ],
+      "image": "https://api.scryfall.com/cards/named?format=image&version=normal&fuzzy=Syr+Gwyn,+Hero+of+Ashvale"
+    },
+    {
+      "id": "5d",
+      "deckId": 5,
+      "order": 3,
+      "name": "Boros Angels — Aurelia",
+      "commander": "Aurelia, the Warleader",
+      "manaCost": "{2}{R}{R}{W}{W}",
+      "typeLine": "Legendary Creature — Angel",
+      "tags": [
+        "Profile-tuned"
+      ],
+      "summaries": [
+        [
+          "Flexible Boros shell: Angels are expensive stock",
+          "Aurelia herself is the plan and she is four colours of red-white mana",
+          "Base is thin — this build is mostly bought"
+        ],
+        [
+          "Lifelink flying blockers make you an unattractive early target",
+          "The extra-combat turn is the single biggest 'swing big' payoff available",
+          "Classic high-fantasy angels, no theme collision at your table"
+        ],
+        [
+          "Lyra and Giada make the sky lifelinked and cheap",
+          "Double combats with anthem support end games on the spot",
+          "Fast, clean Maxed — still the wrong profile"
+        ]
+      ],
+      "stageNotes": [
+        "Base · precon only · Straight out of the box. The theme is there, the support is not.",
+        "Tuned · 4 upgrade cards · The upgrades on this card. This is where the deck delivers its stated promise.",
+        "Maxed · 25 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
+      ],
+      "costs": [
+        "$40 total",
+        "$43 total",
+        "$593 total"
+      ],
+      "brackets": [
+        {
+          "label": "B2.4",
+          "gameChangers": "0 GC",
+          "description": "Base: bracket 2.42 on the 2-to-3 line - Core plus. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B2.6",
+          "gameChangers": "0 GC",
+          "description": "Tuned: bracket 2.58 on the 2-to-3 line - High Bracket 2. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B3.0",
+          "gameChangers": "3 GC",
+          "description": "Maxed: bracket 3.00 on the 2-to-3 line - Top of Bracket 3. 3 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        }
+      ],
+      "image": "https://api.scryfall.com/cards/named?format=image&version=normal&fuzzy=Aurelia,+the+Warleader"
+    },
+    {
+      "id": "5e",
+      "deckId": 5,
+      "order": 4,
+      "name": "Selesnya Populate — Trostani",
+      "commander": "Trostani, Selesnya's Voice",
+      "manaCost": "{G}{G}{W}{W}",
+      "typeLine": "Legendary Creature — Dryad",
+      "tags": [
+        "Profile-tuned"
+      ],
+      "summaries": [
+        [
+          "Flexible Selesnya shell: tokens from turn two stock",
+          "Trostani gains life immediately — Base is pleasant, not scary",
+          "Cheap to start, cheap to finish"
+        ],
+        [
+          "Every creature that enters gains you life — the fortress builds itself",
+          "Populate copies your best token over and over",
+          "Zero interaction with opponents' boards; it is purely constructive"
+        ],
+        [
+          "Anointed Procession returns AT MAXED where its $56 belongs",
+          "Parallel Lives stacks with it for four-for-one tokens",
+          "Populate at the ceiling doubles something enormous every turn"
+        ]
+      ],
+      "stageNotes": [
+        "Base · precon only · Straight out of the box. The theme is there, the support is not.",
+        "Tuned · 5 upgrade cards · The upgrades on this card. This is where the deck delivers its stated promise.",
+        "Maxed · 28 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
+      ],
+      "costs": [
+        "$39 total",
+        "$56 total",
+        "$444 total"
+      ],
+      "brackets": [
+        {
+          "label": "B2.4",
+          "gameChangers": "0 GC",
+          "description": "Base: bracket 2.37 on the 2-to-3 line - Core plus. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B2.6",
+          "gameChangers": "0 GC",
+          "description": "Tuned: bracket 2.61 on the 2-to-3 line - Upper Bracket 2. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B3.0",
+          "gameChangers": "3 GC",
+          "description": "Maxed: bracket 3.00 on the 2-to-3 line - Top of Bracket 3. 3 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        }
+      ],
+      "image": "https://api.scryfall.com/cards/named?format=image&version=normal&fuzzy=Trostani,+Selesnya's+Voice"
+    },
+    {
+      "id": "5f",
+      "deckId": 5,
+      "order": 5,
+      "name": "Orzhov Knights — Aryel",
+      "commander": "Aryel, Knight of Windgrace",
+      "manaCost": "{2}{W}{B}",
+      "typeLine": "Legendary Creature — Human Knight",
+      "tags": [
+        "Profile-tuned"
+      ],
+      "summaries": [
+        [
+          "Flexible Orzhov shell: Aryel works stock with any knights",
+          "A board wipe hurts less when the commander rebuilds the order",
+          "Second-best Base in the row at almost no cost"
+        ],
+        [
+          "Makes a 2/2 Knight every turn for free — the order literally assembles",
+          "Once you have enough Knights, Aryel removes creatures at no card cost",
+          "The cheapest commander in the matrix at 26 cents"
+        ],
+        [
+          "Knight Exemplar makes the order literally indestructible",
+          "Haakon loops knights from the graveyard",
+          "Maxed keeps the chess-club calm and gains real teeth"
+        ]
+      ],
+      "stageNotes": [
+        "Base · precon only · Straight out of the box. The theme is there, the support is not.",
+        "Tuned · 5 upgrade cards · The upgrades on this card. This is where the deck delivers its stated promise.",
+        "Maxed · 24 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
+      ],
+      "costs": [
+        "$35 total",
+        "$41 total",
+        "$377 total"
+      ],
+      "brackets": [
+        {
+          "label": "B2.5",
+          "gameChangers": "0 GC",
+          "description": "Base: bracket 2.45 on the 2-to-3 line - High Bracket 2. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B2.7",
+          "gameChangers": "0 GC",
+          "description": "Tuned: bracket 2.70 on the 2-to-3 line - Upper Bracket 2. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B3.0",
+          "gameChangers": "3 GC",
+          "description": "Maxed: bracket 3.00 on the 2-to-3 line - Top of Bracket 3. 3 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        }
+      ],
+      "image": "https://api.scryfall.com/cards/named?format=image&version=normal&fuzzy=Aryel,+Knight+of+Windgrace"
+    },
+    {
+      "id": "6o",
+      "deckId": 6,
+      "order": 1,
+      "name": "The Endless Harvest — Muldrotha",
+      "commander": "Muldrotha, the Gravetide",
+      "manaCost": "{3}{B}{G}{U}",
+      "typeLine": "Legendary Creature — Elemental Avatar",
+      "tags": [
+        "Keith's variant"
+      ],
+      "summaries": [
+        [
+          "Faceless Menace box stock plus a $2 Muldrotha — playable night one",
+          "Recursion loops start slow but start immediately",
+          "OOP box: the Base buy is urgent"
+        ],
+        [
+          "Keith signed off on it — unchanged except two restored $10+ staples",
+          "Four independent recursion engines running in parallel",
+          "Eight cards still fold to a single Rest in Peace"
+        ],
+        [
+          "Kokusho and Heroic Intervention are restored at the full brief",
+          "Life from the Loam and Crucible loop the land half too",
+          "Maxed is a grind monster; Rest in Peace is still the off switch"
+        ]
+      ],
+      "stageNotes": [
+        "Base · precon only · Straight out of the box. The theme is there, the support is not.",
+        "Tuned · 6 upgrade cards · The upgrades on this card. This is where the deck delivers its stated promise.",
+        "Maxed · 35 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
+      ],
+      "costs": [
+        "$52 total",
+        "$160 total",
+        "$701 total"
+      ],
+      "brackets": [
+        {
+          "label": "B2.5",
+          "gameChangers": "0 GC",
+          "description": "Base: bracket 2.45 on the 2-to-3 line - High Bracket 2. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B2.8",
+          "gameChangers": "0 GC",
+          "description": "Tuned: bracket 2.77 on the 2-to-3 line - On the 2/3 line. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B3.0",
+          "gameChangers": "3 GC",
+          "description": "Maxed: bracket 3.00 on the 2-to-3 line - Top of Bracket 3. 3 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        }
+      ],
+      "image": "https://api.scryfall.com/cards/named?format=image&version=normal&fuzzy=Muldrotha,+the+Gravetide"
+    },
+    {
+      "id": "6c",
+      "deckId": 6,
+      "order": 2,
+      "name": "Abzan Mass Reanimation — Nethroi",
+      "commander": "Nethroi, Apex of Death",
+      "manaCost": "{3}{W}{B}{G}",
+      "typeLine": "Legendary Creature — Cat Nightmare Beast",
+      "tags": [
+        "Profile-tuned"
+      ],
+      "summaries": [
+        [
+          "Flexible Abzan shell: mill and walls from night one",
+          "Nethroi needs a stocked yard before the mutate matters",
+          "Base is quiet by design — that is the plan working"
+        ],
+        [
+          "Your graveyard is the city — it fills quietly while you play defence",
+          "One card returns ten power of creatures simultaneously",
+          "White and green give the walls and removal Sultai can't"
+        ],
+        [
+          "Craterhoof turns the returned board into the kill",
+          "Elesh Norn makes the mutate one-sided",
+          "Best Maxed-per-dollar in the row after 6f"
+        ]
+      ],
+      "stageNotes": [
+        "Base · precon only · Straight out of the box. The theme is there, the support is not.",
+        "Tuned · 16 upgrade cards · The upgrades on this card. This is where the deck delivers its stated promise.",
+        "Maxed · 35 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
+      ],
+      "costs": [
+        "$43 total",
+        "$127 total",
+        "$540 total"
+      ],
+      "brackets": [
+        {
+          "label": "B2.4",
+          "gameChangers": "0 GC",
+          "description": "Base: bracket 2.44 on the 2-to-3 line - Core plus. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B2.8",
+          "gameChangers": "0 GC",
+          "description": "Tuned: bracket 2.77 on the 2-to-3 line - On the 2/3 line. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B3.0",
+          "gameChangers": "3 GC",
+          "description": "Maxed: bracket 3.00 on the 2-to-3 line - Top of Bracket 3. 3 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        }
+      ],
+      "image": "https://api.scryfall.com/cards/named?format=image&version=normal&fuzzy=Nethroi,+Apex+of+Death"
+    },
+    {
+      "id": "6d",
+      "deckId": 6,
+      "order": 3,
+      "name": "Simic Big-Mana Convergence — Kruphix",
+      "commander": "Kruphix, God of Horizons",
+      "manaCost": "{3}{G}{U}",
+      "typeLine": "Legendary Enchantment Creature — God",
+      "tags": [
+        "Profile-tuned"
+      ],
+      "summaries": [
+        [
+          "Flexible Simic shell: banking mana means little stock",
+          "Kruphix is indestructible but passive from turn one",
+          "Base is the slowest here — deliberately"
+        ],
+        [
+          "An indestructible enchantment commander that wipes cannot remove",
+          "Every unspent mana banks — patience literally accumulates",
+          "One turn, the entire stockpile converts into a game-ending sequence"
+        ],
+        [
+          "Finale of Devastation guarantees the payoff turn",
+          "Nyxbloom times Mana Reflection is six-times mana",
+          "Seedborn Muse on the ladder makes every turn yours"
+        ]
+      ],
+      "stageNotes": [
+        "Base · precon only · Straight out of the box. The theme is there, the support is not.",
+        "Tuned · 11 upgrade cards · The upgrades on this card. This is where the deck delivers its stated promise.",
+        "Maxed · 32 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
+      ],
+      "costs": [
+        "$39 total",
+        "$141 total",
+        "$690 total"
+      ],
+      "brackets": [
+        {
+          "label": "B2.4",
+          "gameChangers": "0 GC",
+          "description": "Base: bracket 2.42 on the 2-to-3 line - Core plus. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B2.7",
+          "gameChangers": "0 GC",
+          "description": "Tuned: bracket 2.74 on the 2-to-3 line - On the 2/3 line. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B3.0",
+          "gameChangers": "3 GC",
+          "description": "Maxed: bracket 3.00 on the 2-to-3 line - Top of Bracket 3. 3 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        }
+      ],
+      "image": "https://api.scryfall.com/cards/named?format=image&version=normal&fuzzy=Kruphix,+God+of+Horizons"
+    },
+    {
+      "id": "6e",
+      "deckId": 6,
+      "order": 4,
+      "name": "Golgari Chosen Graveyard — Old Stickfingers",
+      "commander": "Old Stickfingers",
+      "manaCost": "{X}{B}{G}",
+      "typeLine": "Legendary Creature — Horror",
+      "tags": [
+        "Profile-tuned"
+      ],
+      "summaries": [
+        [
+          "Flexible Golgari shell: Stickfingers stocks the yard on cast",
+          "Cheapest Base in the row — and it plays like it",
+          "Everything interesting waits on the reanimation package"
+        ],
+        [
+          "You choose how big your graveyard is — assembly is not left to luck",
+          "One mass-reanimation spell converts all of it at once",
+          "Cheapest possible commander for the most convergent effect in the matrix"
+        ],
+        [
+          "Mikaeus gives the whole yard undying at the ceiling",
+          "Living Death becomes a one-card army twice over",
+          "Maxed power is real; the Rest in Peace exposure never leaves"
+        ]
+      ],
+      "stageNotes": [
+        "Base · precon only · Straight out of the box. The theme is there, the support is not.",
+        "Tuned · 13 upgrade cards · The upgrades on this card. This is where the deck delivers its stated promise.",
+        "Maxed · 34 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
+      ],
+      "costs": [
+        "$35 total",
+        "$102 total",
+        "$416 total"
+      ],
+      "brackets": [
+        {
+          "label": "B2.4",
+          "gameChangers": "0 GC",
+          "description": "Base: bracket 2.41 on the 2-to-3 line - Core plus. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B2.7",
+          "gameChangers": "0 GC",
+          "description": "Tuned: bracket 2.73 on the 2-to-3 line - On the 2/3 line. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B3.0",
+          "gameChangers": "3 GC",
+          "description": "Maxed: bracket 3.00 on the 2-to-3 line - Top of Bracket 3. 3 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        }
+      ],
+      "image": "https://api.scryfall.com/cards/named?format=image&version=normal&fuzzy=Old+Stickfingers"
+    },
+    {
+      "id": "6f",
+      "deckId": 6,
+      "order": 5,
+      "name": "Sultai ETB Doubling — Yarok",
+      "commander": "Yarok, the Desecrated",
+      "manaCost": "{2}{B}{G}{U}",
+      "typeLine": "Legendary Creature — Elemental Horror",
+      "tags": [
+        "Profile-tuned"
+      ],
+      "summaries": [
+        [
+          "Same Faceless Menace box, Yarok as a $0.40 single",
+          "ETB doubling works stock on the box's own creatures",
+          "Best Base value in the row — one card upgrades everything"
+        ],
+        [
+          "Deathtouch and lifelink on the commander — a fortress body in its own right",
+          "Every enters-the-battlefield trigger you own fires twice",
+          "Uses the same box as your current Deck 6 plan"
+        ],
+        [
+          "Craterhoof doubled by Yarok is the cleanest kill in the matrix",
+          "Thassa blinks the best ETB free every end step",
+          "Top of the row at every single stage"
+        ]
+      ],
+      "stageNotes": [
+        "Base · precon only · Straight out of the box. The theme is there, the support is not.",
+        "Tuned · 13 upgrade cards · The upgrades on this card. This is where the deck delivers its stated promise.",
+        "Maxed · 36 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
+      ],
+      "costs": [
+        "$50 total",
+        "$141 total",
+        "$620 total"
+      ],
+      "brackets": [
+        {
+          "label": "B2.5",
+          "gameChangers": "0 GC",
+          "description": "Base: bracket 2.49 on the 2-to-3 line - High Bracket 2. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B2.8",
+          "gameChangers": "0 GC",
+          "description": "Tuned: bracket 2.82 on the 2-to-3 line - On the 2/3 line. 0 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        },
+        {
+          "label": "B3.0",
+          "gameChangers": "3 GC",
+          "description": "Maxed: bracket 3.00 on the 2-to-3 line - Top of Bracket 3. 3 Game Changers (Bracket 2 allows none, Bracket 3 allows up to three). Scored from effect-per-mana, clock, interaction, card advantage, resilience, turn-8 assembly odds and total spend."
+        }
+      ],
+      "image": "https://api.scryfall.com/cards/named?format=image&version=normal&fuzzy=Yarok,+the+Desecrated"
+    }
+  ]
+}
