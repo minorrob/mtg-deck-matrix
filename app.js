@@ -55,6 +55,7 @@
 
   let catalog;
   let buyCatalog;
+  let simulationSummary = null;
   let state;
   let toastTimer;
   let openDeckId = 1;
@@ -63,6 +64,9 @@
   let tourState = null;
   let activeTooltipTarget = null;
   let shopMetadataPromise = null;
+  // Which Compare cards are currently previewing their alt commander -- display-only and
+  // deliberately not part of `state`/localStorage: it never changes what Buy Picks seeds.
+  const altCommanderPreview = new Set();
   let cardMetadata = {};
   try { cardMetadata = JSON.parse(localStorage.getItem(CARD_METADATA_KEY) || "{}"); } catch (_) {}
 
@@ -560,6 +564,7 @@
           <div class="mechanic-tags">${(variant.mechanics || []).slice(0,3).map((mechanic) => `<span>${esc(mechanic)}</span>`).join("")}</div>
         </div>
       </div>
+      ${commanderCompareMarkup(variant, stage)}
       <div class="stage-content">
         <div class="metric-grid">
           <div class="metric-tile cost-metric cost-budget-metric">${sectionIcon("buildCost")}<span class="cost-budget-copy"><span><small>Build cost</small><strong>${esc(variant.costs[stage - 1] || "Varies")}</strong></span><span><small>Budget</small><strong>${esc(facts.budget || "Varies")}</strong></span></span></div>
@@ -594,6 +599,12 @@
     });
     $(".pick-control input", card).addEventListener("change", () => selectVariant(variant));
     $(".detail-button", card).addEventListener("click", () => openVariantDetail(variant, stage));
+    $$('[data-commander-preview]', card).forEach((button) => button.addEventListener("click", () => {
+      const previewing = button.dataset.previewMode === "alt";
+      if (previewing === altCommanderPreview.has(variant.id)) return;
+      if (previewing) altCommanderPreview.add(variant.id); else altCommanderPreview.delete(variant.id);
+      renderCompare();
+    }));
     $(".comment-toggle", card).addEventListener("click", () => {
       openCommentId = openCommentId === variant.id ? null : variant.id;
       const editor = $(".comment-editor", card);
@@ -611,6 +622,48 @@
       $("span:not(.ui-icon)", toggle).textContent = value.trim() ? "Comment saved" : "Add a comment";
     });
     return card;
+  }
+
+  // 1o/3e/5o only -- these three decks alone carry an alternative-commander exploration.
+  // Display-only, exactly like the plan requires: previewing the alt commander here never
+  // touches Buy Picks seeding or any stored selection, only what this one card shows. The
+  // real Score/Win% comparison and the caution paragraph both come straight from the
+  // workbook's own Summary sheet (data/simulation-summary.json) -- never fabricated.
+  function commanderCompareMarkup(variant, stage) {
+    const plan = buyCatalog?.plans?.[variant.id];
+    const altCommander = plan?.altTuned?.find((item) => item.isCommander);
+    if (!altCommander) return "";
+    const previewing = altCommanderPreview.has(variant.id);
+    const simCase = simulationSummary?.altCommanderCases?.[variant.id];
+    const thumb = (image, name, mode, active) => `<button type="button" class="commander-compare-thumb${active ? " is-active" : ""}" data-commander-preview="${esc(variant.id)}" data-preview-mode="${esc(mode)}" aria-pressed="${active}">
+      <img src="${esc(image)}" alt="" loading="lazy"><span>${mode === "alt" ? `${icon("◇")}` : ""}${esc(name)}</span>
+    </button>`;
+    let panel = "";
+    if (previewing) {
+      const altLadderKey = stage === 3 ? "altMax" : stage === 2 ? "altTuned" : null;
+      const altDeltas = altLadderKey === "altMax"
+        ? [...(plan.altTuned || []), ...(plan.altMax || [])].filter((item) => !item.isCommander)
+        : altLadderKey === "altTuned"
+          ? (plan.altTuned || []).filter((item) => !item.isCommander)
+          : [];
+      panel = `<div class="commander-preview-panel">
+        ${simCase ? `<p class="commander-preview-stats"><strong>${esc(simCase.currentCommander)}</strong> ${simCase.currentScore != null ? `${simCase.currentScore.toFixed(1)} pts · rank #${simCase.currentRank}` : "no score"} <b aria-hidden="true">→</b> <strong>${esc(simCase.altCommander)}</strong> ${simCase.altScore != null ? `${simCase.altScore.toFixed(1)} pts · rank #${simCase.altRank}` : "no score"}<small>${simCase.candidatesMeasured} alt commanders measured · ${simCase.gamesEach} games each</small></p>` : ""}
+        ${simCase?.honestRead ? `<p class="commander-preview-caution">${icon("!")}<span>${esc(simCase.honestRead)}</span></p>` : ""}
+        ${altDeltas.length
+          ? `<div class="commander-preview-deltas"><small>${esc(altLadderKey === "altMax" ? "Alt Max" : "Alt Tuned")} card-set changes at this stage · ${altDeltas.length}</small>
+              <ul>${altDeltas.slice(0, 6).map((item) => `<li>${esc(item.name)}${item.replaces ? ` <em>replaces ${esc(item.replaces)}</em>` : ""}</li>`).join("")}${altDeltas.length > 6 ? `<li>+ ${altDeltas.length - 6} more</li>` : ""}</ul>
+            </div>`
+          : `<p class="commander-preview-note">At Base, adopting ${esc(altCommander.name)} is just the commander swap itself -- no other cards change yet.</p>`}
+      </div>`;
+    }
+    return `<div class="commander-compare" data-ui-key="cmdr-compare-${esc(variant.id)}">
+      <div class="commander-compare-row">
+        ${thumb(variant.image, variant.commander, "current", !previewing)}
+        <span class="commander-compare-vs">vs</span>
+        ${thumb(altCommander.image, altCommander.name, "alt", previewing)}
+      </div>
+      ${panel}
+    </div>`;
   }
 
   function makeDeckOverviewCard(deck) {
@@ -787,11 +840,38 @@
       showToast(`Deck ${variant.deckId} pick cleared.`);
     } else {
       state.compareSelections[variant.deckId] = variant.id;
+      seedBuyStateForNewPick(variant);
       if (previous) showToast(`Deck ${variant.deckId} changed. Other Buy Picks were preserved.`);
       else showToast(`Deck ${variant.deckId} saved: ${variant.name}`);
     }
     saveState();
     renderCompare();
+  }
+
+  // Gives a freshly-picked variant a smarter Buy Picks starting point than the flat site
+  // default, using whichever Compare stage the pick was made at: Base, Tuned-2 (falling back
+  // to Tuned where a variant has no -2 data), or Maxxed-2 (falling back to Max). Never touches
+  // a variant that already has a stored Buy Picks selection -- the preset dropdown is the
+  // explicit re-apply mechanism for anything past the first pick, and switching stage chips
+  // alone (with no new pick) must never reseed either.
+  function selectionIdsSignature(selection) {
+    return Lineup.ARRAY_KEYS.map((key) => [...(selection?.[key] || [])].map(String).sort().join(",")).join("|");
+  }
+
+  function seedBuyStateForNewPick(variant) {
+    const plan = buyCatalog?.plans?.[variant.id];
+    if (!plan) return;
+    const existing = state.buySelections[variant.id];
+    // ensureBuyState/sanitizeGameChangerSelections already eagerly compute a flat
+    // Lineup.defaultSelection for every variant during init, long before the user ever picks
+    // anything in Compare -- so "state.buySelections already has an entry" is not a reliable
+    // signal that the user has actually seen or touched it. Comparing against a freshly
+    // computed flat default is: if it's still exactly that, nothing of the user's is at risk.
+    if (existing && selectionIdsSignature(existing) !== selectionIdsSignature(Lineup.defaultSelection(plan))) return;
+    const stage = Number(state.rankStages[variant.deckId] || 2);
+    const presetKey = stage === 1 ? "base" : stage === 3 ? (plan.max2?.length ? "max2" : "max") : (plan.tuned2?.length ? "tuned2" : "tuned");
+    const assembled = assemblePreset(plan, presetKey);
+    if (assembled) state.buySelections[variant.id] = assembled;
   }
 
   function emailPicks() {
@@ -1121,6 +1201,7 @@
 
     body.innerHTML = `
       ${compliancePanel(variant, plan, current)}
+      ${dynamicMetricsHeaderMarkup(plan, current, variant)}
       <details class="plan-analysis" data-ui-key="plan-${esc(variant.id)}">
         <summary><span>${icon("☰")}Deck plan &amp; analysis</span><small>How to play, buy order, bracket placement, and tuning notes</small></summary>
         <div class="legacy-plan">${plan.planHtml || variant.detailHtml || ""}</div>
@@ -1709,6 +1790,90 @@
         ${presets.map((preset) => `<option value="${esc(preset.key)}">${esc(preset.label)}</option>`).join("")}
       </select>
     </label>`;
+  }
+
+  // Which curated Compare-page score profile (stage 1/2/3) a preset's ratings are borrowed
+  // from -- the -2/Fun/Alt presets have no ratings authored for them specifically, so each
+  // inherits whichever original stage represents a comparable level of investment.
+  const PRESET_STAGE = {
+    base: 1, tuned: 2, max: 3,
+    tuned2: 2, enhance2: 3, max2: 3,
+    funTuned: 2, funMax: 3,
+    altTuned: 2, altMax: 3
+  };
+  const PRESET_BUILD_NAME = {
+    base: "Base", tuned: "Tuned", max: "Max",
+    tuned2: "Tuned-2", enhance2: "Enhance-2", max2: "Max-2",
+    funTuned: "Fun Tuned", funMax: "Fun Max",
+    altTuned: "Alt Tuned", altMax: "Alt Max"
+  };
+
+  function jaccardSimilarity(a, b) {
+    if (!a.size && !b.size) return 1;
+    let intersection = 0;
+    for (const id of a) if (b.has(id)) intersection++;
+    return intersection / (a.size + b.size - intersection);
+  }
+
+  // Finds which preset the deck's ACTUAL current picks most resemble, regardless of whether
+  // a preset was ever applied -- free-form editing means the live selection routinely isn't
+  // an exact match for any one preset, so this is a similarity search, not a lookup.
+  function nearestPresetMatch(plan, current) {
+    const currentIds = new Set(Lineup.selectedEntries(plan, current).map((entry) => entry.id));
+    const scored = deckPresets(plan).map((preset) => {
+      const presetSelection = assemblePreset(plan, preset.key);
+      const presetIds = new Set(Lineup.ARRAY_KEYS.flatMap((key) => presetSelection[key] || []));
+      return {preset, presetIds, similarity: jaccardSimilarity(currentIds, presetIds)};
+    });
+    const best = scored.sort((a, b) => b.similarity - a.similarity)[0];
+    let extra = 0, missing = 0;
+    for (const id of currentIds) if (!best.presetIds.has(id)) extra++;
+    for (const id of best.presetIds) if (!currentIds.has(id)) missing++;
+    return {...best, extra, missing};
+  }
+
+  // Piece 1 of the dynamic metrics header (the 12-metric strip Rob asked for, minus Growth):
+  // reuses the Compare page's own curated ratings, anchored to whichever stage the nearest-
+  // matching preset borrows from, and flags that borrowing plainly when it isn't an exact
+  // match for one of the three original stages.
+  function dynamicMetricsHeaderMarkup(plan, current, variant) {
+    const match = nearestPresetMatch(plan, current);
+    const stage = PRESET_STAGE[match.preset.key] || 2;
+    const inherited = !["base", "tuned", "max"].includes(match.preset.key);
+    const playstyle = variant.scores?.playstyle?.[stage - 1] || [];
+    const engine = variant.scores?.engine?.[stage - 1] || [];
+    const matchPct = Math.round(match.similarity * 100);
+    const deltaBits = [];
+    if (match.extra) deltaBits.push(`+${match.extra}`);
+    if (match.missing) deltaBits.push(`−${match.missing}`);
+    const buildName = PRESET_BUILD_NAME[match.preset.key];
+    const sim = simulationSummary?.builds?.[variant.id]?.[buildName];
+    return `<div class="dynamic-metrics" data-ui-key="dynmetrics-${esc(variant.id)}">
+      <details class="metric-strip-panel" data-ui-key="dynmetrics-strip-${esc(variant.id)}">
+        <summary><span>${icon("◎")}Estimated ratings</span><small>Nearest configuration: ${esc(match.preset.label)} (${matchPct}% match)${deltaBits.length ? ` · ${deltaBits.join(" / ")} vs that build` : ""}</small></summary>
+        ${inherited ? `<p class="dynamic-metrics-note">${esc(match.preset.label)} has no ratings authored for it yet -- these are inherited from ${stage === 3 ? "Maxxed" : "Tuned"}'s profile until real sim-derived ratings replace them.</p>` : ""}
+        <div class="metric-strip">
+          ${metricFamilyMarkup("playstyle", playstyle, `metric-playstyle-${variant.id}-buy`)}
+          ${metricFamilyMarkup("engine", engine, `metric-engine-${variant.id}-buy`)}
+        </div>
+      </details>
+      ${simulationReadoutMarkup(buildName, sim)}
+    </div>`;
+  }
+
+  // Piece 2, additive beyond what Rob explicitly asked for: the real simulated result for
+  // whichever build piece 1 just matched, straight from the workbook's Summary sheet. Kept
+  // visually separate from the metric strip above, and never renders a Score/Win% without
+  // its engine tag and the v1/v2.1 boundary note -- see data/simulation-summary.json.
+  function simulationReadoutMarkup(buildName, sim) {
+    if (!simulationSummary) return "";
+    if (!sim || sim.games == null) {
+      return `<p class="simulation-readout is-unsimulated">${icon("i")}<span><b>${esc(buildName)}</b> · published list — not independently simulated</span></p>`;
+    }
+    return `<div class="simulation-readout" data-engine="${esc(sim.engine || "")}">
+      <p><b>Simulated:</b> ${esc(buildName)} · ${sim.games.toLocaleString()} games (${sim.holdoutGames != null ? sim.holdoutGames.toLocaleString() : "?"} holdout) · ${sim.winPct != null ? `${(sim.winPct * 100).toFixed(1)}% win` : "win % n/a"} · ${esc(sim.verdict || "unverified")} · <span class="engine-tag">${esc(sim.engine || "engine n/a")} engine</span></p>
+      <p class="simulation-engine-note">${icon("!")}<span>${esc(simulationSummary.engineBoundaryNote || "")}</span></p>
+    </div>`;
   }
 
   const KIND_LABELS = {
@@ -3677,7 +3842,7 @@
 
   async function init() {
     try {
-      [catalog, buyCatalog] = await Promise.all([
+      [catalog, buyCatalog, simulationSummary] = await Promise.all([
         fetch("data/variants.json", {cache: "no-store"}).then((response) => {
           if (!response.ok) throw new Error("Variant catalog did not load");
           return response.json();
@@ -3685,7 +3850,11 @@
         fetch("data/buy-plans.json", {cache: "no-store"}).then((response) => {
           if (!response.ok) throw new Error("Buy catalog did not load");
           return response.json();
-        })
+        }),
+        // Additive: real simulation results for the new ladders. Never blocks startup --
+        // the commander-compare preview and Buy Picks simulation readout just render nothing
+        // extra if this is unavailable, same as any other optional metadata in this app.
+        fetch("data/simulation-summary.json", {cache: "no-store"}).then((response) => response.ok ? response.json() : null).catch(() => null)
       ]);
       state = loadState();
       migrateCheckedSelections();

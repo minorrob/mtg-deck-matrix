@@ -4,6 +4,7 @@ import {readFile} from "node:fs/promises";
 const variants = JSON.parse(await readFile(new URL("../data/variants.json", import.meta.url), "utf8"));
 const buyPlans = JSON.parse(await readFile(new URL("../data/buy-plans.json", import.meta.url), "utf8"));
 const cards = JSON.parse(await readFile(new URL("../data/cards.json", import.meta.url), "utf8"));
+const simulationSummary = JSON.parse(await readFile(new URL("../data/simulation-summary.json", import.meta.url), "utf8"));
 const appSource = await readFile(new URL("../app.js", import.meta.url), "utf8");
 const auditedByName = new Map(cards.cards.map((card) => [card.name.toLowerCase(), card]));
 for (const card of cards.cards) for (const face of card.name.split(" // ")) auditedByName.set(face.toLowerCase(), card);
@@ -212,5 +213,56 @@ for (const variantId of ["1o", "2c", "3e", "4c", "5o", "6f"]) {
   if (ALT_DECKS.has(variantId)) assert.equal(commanderCandidates.length, 1, `${variantId} must flag exactly one Alt Tuned item as the alternative commander`);
   else assert.equal(commanderCandidates.length, 0, `${variantId} has no alternative commander to flag`);
 }
+
+// Real simulation results (tools/import_summary_metrics.py), Phase 3's data source for the
+// Buy Picks header's additive readout and the Compare-page alt-commander preview. Base/
+// Enhance/Max are the site's own published lists and must stay unsimulated (no games/score);
+// everything else must carry a finite games/score/winPct and a recognized verdict, tagged
+// with the engine generation that actually measured it -- never inferred at render time.
+assert(simulationSummary.engineNotes?.v1 && simulationSummary.engineNotes?.["v2.1"], "simulation summary must document both engine generations");
+assert(typeof simulationSummary.engineBoundaryNote === "string" && simulationSummary.engineBoundaryNote.length > 0, "simulation summary must carry a v1/v2.1 boundary caveat");
+const UNSIMULATED_BUILDS = new Set(["Base", "Enhance", "Max"]);
+const SIMULATED_ENGINE = {
+  "Tuned": "v1", "Tuned-2": "v1", "Enhance-2": "v1", "Max-2": "v1",
+  "Fun Tuned": "v2.1", "Fun Max": "v2.1", "Alt Tuned": "v2.1", "Alt Max": "v2.1"
+};
+const VALID_VERDICTS = new Set(["confirmed", "within-noise", "not-confirmed", "no-change"]);
+assert.deepEqual(Object.keys(simulationSummary.builds).sort(), ["1o", "2c", "3e", "4c", "5o", "6f"], "simulation summary must cover exactly the six decks with new-ladder data");
+for (const [variantId, deckBuilds] of Object.entries(simulationSummary.builds)) {
+  const expectedBuilds = new Set(["Base", "Tuned", "Enhance", "Max", "Tuned-2", "Enhance-2", "Max-2", "Fun Tuned", "Fun Max"]);
+  if (ALT_DECKS.has(variantId)) { expectedBuilds.add("Alt Tuned"); expectedBuilds.add("Alt Max"); }
+  assert.deepEqual(new Set(Object.keys(deckBuilds)), expectedBuilds, `${variantId}: simulation summary must report exactly its expected builds`);
+  for (const [buildName, metrics] of Object.entries(deckBuilds)) {
+    if (UNSIMULATED_BUILDS.has(buildName)) {
+      assert.equal(metrics.games, null, `${variantId} ${buildName}: a published-only build must not carry a simulated game count`);
+      assert.equal(metrics.engine, null, `${variantId} ${buildName}: a published-only build must not carry an engine tag`);
+    } else {
+      assert(Number.isFinite(metrics.games) && metrics.games > 0, `${variantId} ${buildName}: a simulated build must report a positive game count`);
+      assert(Number.isFinite(metrics.score), `${variantId} ${buildName}: a simulated build must report a finite score`);
+      assert(Number.isFinite(metrics.winPct) && metrics.winPct > 0 && metrics.winPct < 1, `${variantId} ${buildName}: win rate must be a fraction between 0 and 1`);
+      assert(VALID_VERDICTS.has(metrics.verdict), `${variantId} ${buildName}: verdict must be one of the four documented outcomes, got ${metrics.verdict}`);
+      assert.equal(metrics.engine, SIMULATED_ENGINE[buildName], `${variantId} ${buildName}: engine tag must match the documented v1/v2.1 split`);
+    }
+  }
+}
+assert.deepEqual(Object.keys(simulationSummary.altCommanderCases).sort(), ["1o", "3e", "5o"], "alt-commander comparison cases must cover exactly the three alt-commander decks");
+for (const variantId of ["1o", "3e", "5o"]) {
+  const altCase = simulationSummary.altCommanderCases[variantId];
+  const plan = buyPlans.plans[variantId];
+  const shellCommander = plan.startingShell.find((card) => card.isCommander);
+  const altCommander = plan.altTuned.find((item) => item.isCommander);
+  assert.equal(altCase.currentCommander, shellCommander.name, `${variantId}: simulation summary's current commander must match the plan's own shell commander`);
+  assert.equal(altCase.altCommander, altCommander.name, `${variantId}: simulation summary's alternative commander must match the plan's own Alt Tuned commander`);
+  assert(altCase.honestRead.length > 40, `${variantId}: alt-commander case must carry a substantive caution paragraph, not a stub`);
+}
+assert.match(appSource, /function nearestPresetMatch/, "the Buy Picks header must compute which preset the live selection actually resembles");
+assert.match(appSource, /metricFamilyMarkup\("playstyle", playstyle, `metric-playstyle-\$\{variant\.id\}-buy`\)/, "the Buy Picks metric strip must reuse the Compare page's own playstyle scores");
+{
+  const start = appSource.indexOf("function dynamicMetricsHeaderMarkup");
+  const end = appSource.indexOf("function simulationReadoutMarkup", start);
+  assert(start > 0 && end > start, "dynamicMetricsHeaderMarkup and simulationReadoutMarkup must both be defined, in that order");
+  assert.doesNotMatch(appSource.slice(start, end), /metricFamilyMarkup\("growth"/, "the Buy Picks metric strip must exclude Growth, matching the Compare page's own instruction");
+}
+assert.match(appSource, /simulationSummary\.engineBoundaryNote/, "a rendered simulation result must always carry the v1\\/v2.1 engine-boundary caveat");
 
 console.log(`Validated ${variants.variants.length} variants and ${Object.keys(buyPlans.plans).length} connected buy profiles.`);
