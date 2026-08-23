@@ -26,7 +26,14 @@ for (const [variantId, plan] of Object.entries(plans.plans)) {
   const commander = (plan.startingShell || []).find((card) => card.isCommander);
   const commanderData = commander && byName.get(commander.name.toLocaleLowerCase());
   const identity = new Set(commanderData?.colorIdentity || []);
-  for (const collectionName of ["startingShell", "required", "enhance", "max"]) {
+  const altCommander = (plan.altTuned || []).find((card) => card.isCommander);
+  const altCommanderData = altCommander && byName.get(altCommander.name.toLocaleLowerCase());
+  const altIdentity = altCommanderData ? new Set(altCommanderData.colorIdentity || []) : identity;
+  for (const collectionName of [
+    "startingShell", "required", "enhance", "max",
+    "tuned2", "enhance2", "max2", "funTuned", "funMax", "altTuned", "altMax"
+  ]) {
+    const activeIdentity = collectionName === "altTuned" || collectionName === "altMax" ? altIdentity : identity;
     for (const card of plan[collectionName] || []) {
       if (card.isFlexibleSlot) continue;
       const replacementKey = `${variantId}|${card.id}`;
@@ -56,8 +63,8 @@ for (const [variantId, plan] of Object.entries(plans.plans)) {
         card.whyPrimary = STRATEGY_COPY[replacementKey];
         if (card.brief) card.brief.fit = STRATEGY_COPY[replacementKey];
       }
-      const offColor = data.colorIdentity.filter((color) => !identity.has(color));
-      if (data.legalities?.commander !== "legal" || offColor.length) illegal.push({variantId, commander: commander?.name, card: data.name, commanderLegal: data.legalities?.commander, offColor});
+      const offColor = data.colorIdentity.filter((color) => !activeIdentity.has(color));
+      if (data.legalities?.commander !== "legal" || offColor.length) illegal.push({variantId, commander: (collectionName === "altTuned" || collectionName === "altMax" ? altCommander?.name : commander?.name), card: data.name, commanderLegal: data.legalities?.commander, offColor});
     }
   }
 }

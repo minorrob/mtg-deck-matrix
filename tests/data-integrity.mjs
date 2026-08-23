@@ -186,4 +186,30 @@ for (const [variantId, collection, name] of [
   assert(buyPlans.plans[variantId][collection].find((card) => card.name === name)?.gameChanger, `${variantId} ${name} must consume a current Game Changer slot`);
 }
 
+// Win/Fun/Alt-commander ladders (tools/import_budget_plan.py), six target decks only --
+// the other 24 variants have no -2/Fun/Alt data and must not gain empty placeholder arrays
+// (lineup-model.js's `plan?.tuned2 || []` already degrades an absent key gracefully).
+const NEW_CATEGORIES = ["tuned2", "enhance2", "max2", "funTuned", "funMax", "altTuned", "altMax"];
+const ALT_DECKS = new Set(["1o", "3e", "5o"]);
+for (const variantId of ["1o", "2c", "3e", "4c", "5o", "6f"]) {
+  const plan = buyPlans.plans[variantId];
+  for (const category of NEW_CATEGORIES) {
+    if ((category === "altTuned" || category === "altMax") && !ALT_DECKS.has(variantId)) {
+      assert.equal((plan[category] || []).length, 0, `${variantId} has no alternative commander -- ${category} must stay empty`);
+      continue;
+    }
+    const items = plan[category];
+    assert(Array.isArray(items), `${variantId} must have a ${category} array, even if a given rung had no further changes`);
+    for (const item of items) {
+      assert.equal(item.category, category, `${variantId} ${item.name} (${category}) must self-report its own category`);
+      assert(Number.isFinite(item.price), `${variantId} ${item.name} (${category}) must have a finite price`);
+      assert(auditedByName.has(item.name.toLowerCase()), `${variantId} ${item.name} (${category}) must exist in the authoritative audit`);
+      assert.equal(auditedByName.get(item.name.toLowerCase()).legalities.commander, "legal", `${variantId} ${item.name} (${category}) must be Commander legal`);
+    }
+  }
+  const commanderCandidates = (plan.altTuned || []).filter((item) => item.isCommander);
+  if (ALT_DECKS.has(variantId)) assert.equal(commanderCandidates.length, 1, `${variantId} must flag exactly one Alt Tuned item as the alternative commander`);
+  else assert.equal(commanderCandidates.length, 0, `${variantId} has no alternative commander to flag`);
+}
+
 console.log(`Validated ${variants.variants.length} variants and ${Object.keys(buyPlans.plans).length} connected buy profiles.`);
