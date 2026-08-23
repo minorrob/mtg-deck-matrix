@@ -2644,7 +2644,14 @@
     const playstyle = variant.scores?.playstyle?.[profileIndex] || [];
     const engine = variant.scores?.engine?.[profileIndex] || [];
     const growth = variant.scores?.growth || [];
+    // Tier 2's rules are a strict superset of Tier 3's (same base checks, plus Tier 2 bans
+    // any Game Changer/combo where Tier 3 only bans over-3 GCs/early combos), so clearing
+    // Tier 2 always clears Tier 3 too. Report the tighter tier the deck actually qualifies
+    // for rather than a flat Tier 3 pass/fail.
+    const tier2Pass = compliance.tier2.length === 0;
     const tier3Pass = compliance.tier3.length === 0;
+    const gcTierClass = tier2Pass || tier3Pass ? "passes" : "has-issues";
+    const gcTierLabel = tier2Pass ? "Tier 2 ✓" : tier3Pass ? "Tier 3 ✓" : "Review";
     const totalCost = liveDeckTotalCost(cards);
     const priced = liveDeckPricedCount(cards);
     const compositionBody = `<span class="disclosure-chips">${typeChips}</span><span class="disclosure-note">${total}/100 active cards · ${compliance.types.Land || 0} land · ${esc(readiness.insight)}</span>`;
@@ -2663,7 +2670,7 @@
         <i><b>${boughtCount}/100</b><small>bought</small></i>
         <i><b>${total}/100</b><small>active</small></i>
         <i class="${toBuy ? "is-open" : ""}"><b>${toBuy}</b><small>to buy</small></i>
-        <i class="${tier3Pass ? "passes" : "has-issues"}"><b>${compliance.selectedGameChangers.length}/3 GC</b><small>${tier3Pass ? "Tier 3 ✓" : "Review"}</small></i>
+        <i class="${gcTierClass}"><b>${compliance.selectedGameChangers.length}/3 GC</b><small>${gcTierLabel}</small></i>
       </span>
       <span class="live-strategy"><b>Strategy</b><i>${esc(strategy)}</i></span>
       <span class="live-deck-disclosures">
