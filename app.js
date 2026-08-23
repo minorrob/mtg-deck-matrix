@@ -809,7 +809,14 @@
       next = Lineup.defaultSelection(plan);
       for (const id of legacyExclusions) next = Lineup.restoreChoice(plan, next, id);
     } else {
-      next = Lineup.canonicalizeSelection(plan, existing);
+      // Prune stale IDs the catalog no longer recognizes, but do not collapse to one choice
+      // per slot — checkboxes are independent now, so more than one pick in a former "slot"
+      // is a legitimate state, not something to silently fix on every read.
+      const model = Lineup.buildModel(plan);
+      next = Object.fromEntries(Lineup.ARRAY_KEYS.map((key) => [
+        key,
+        (Array.isArray(existing[key]) ? existing[key] : []).filter((id) => model.byId.has(String(id)))
+      ]));
     }
     state.buySelections[variantId] = next;
     return state.buySelections[variantId];
@@ -840,13 +847,6 @@
     saveState("Named 100-card lineups restored");
   }
 
-  function selectionHistory(variantId, slotId) {
-    state.lineupHistory ||= {};
-    state.lineupHistory[variantId] ||= {};
-    state.lineupHistory[variantId][slotId] ||= [];
-    return state.lineupHistory[variantId][slotId];
-  }
-
   function assignSelection(target, source) {
     for (const key of Lineup.ARRAY_KEYS) target[key] = [...(source[key] || [])];
   }
@@ -869,17 +869,6 @@
       if (substitute) next = Lineup.applyChoice(plan, next, substitute.id);
     }
     return next;
-  }
-
-  function acceptLineupChoice(variantId, candidateId, checked, next, previousId = null, restoredId = null) {
-    const plan = buyCatalog.plans[variantId];
-    const model = Lineup.buildModel(plan);
-    const candidate = model.byId.get(String(candidateId));
-    if (!candidate) return;
-    const history = selectionHistory(variantId, candidate.slotId);
-    if (checked && previousId && previousId !== candidate.id) history.push(previousId);
-    if (!checked && restoredId && history.at(-1) === restoredId) history.pop();
-    assignSelection(ensureBuyState(variantId), next);
   }
 
   function migrateOwnedExtras() {
@@ -1127,28 +1116,20 @@
         ceiling: shellCard.ceiling
       }, variant, requiresPurchase ? "starting shell single" : "starting shell");
     }));
+    // Every checkbox is its own independent switch: no slot exclusivity, no automatic swap
+    // elsewhere, no legality gate. Compliance is read back from whatever this produces; it
+    // never blocks or reverts a click.
     $$('input[data-buy-kind]', body).forEach((checkbox) => checkbox.addEventListener("change", () => {
-      const itemId = checkbox.dataset.itemId;
+      const itemId = String(checkbox.dataset.itemId);
+      const kind = checkbox.dataset.buyKind;
       const currentState = ensureBuyState(variant.id);
-      const model = Lineup.buildModel(plan);
-      const candidate = model.byId.get(String(itemId));
-      if (!candidate) return;
-      const active = Lineup.activeEntryForSlot(plan, currentState, candidate.slotId);
-      const history = selectionHistory(variant.id, candidate.slotId);
-      const preferredId = checkbox.checked ? null : history.at(-1) || null;
-      const tentative = tentativeLineupChoice(plan, currentState, itemId, checkbox.checked, preferredId);
-      const restored = Lineup.activeEntryForSlot(plan, tentative, candidate.slotId);
-      if (!checkbox.checked && restored?.id === candidate.id) {
-        showToast(`${candidate.item.name} stays active until you choose another card for this slot.`);
-        renderBuy();
-        return;
+      currentState[kind] = currentState[kind] || [];
+      if (checkbox.checked) {
+        if (!currentState[kind].includes(itemId)) currentState[kind].push(itemId);
+      } else {
+        currentState[kind] = currentState[kind].filter((id) => id !== itemId);
       }
-      const baseCompliance = evaluateDeckCompliance(plan, tentative);
-      const effectiveCompliance = evaluateDeckCompliance(plan, tentative, projectedEffectiveCards(variant, tentative));
-      const issue = baseCompliance.tier3[0] || effectiveCompliance.tier3[0];
-      if (issue) showToast(`Heads up — this makes the deck non-compliant: ${issue.rule}`);
-      acceptLineupChoice(variant.id, itemId, checkbox.checked, tentative, active?.id || null, preferredId);
-      saveState(checkbox.checked ? `${candidate.item.name} is active` : `${candidate.item.name} swapped out`);
+      saveState();
       renderBuy();
     }));
     const selectAllShell = $('[data-select-shell-all]', body);
@@ -1162,20 +1143,10 @@
       });
       selectAllShell.addEventListener("change", () => {
         const currentState = ensureBuyState(variant.id);
-        let tentative;
-        if (selectAllShell.checked) {
-          tentative = Lineup.canonicalizeSelection(plan, {shell: shellIds, tuned: [], upgrade: [], enhance: [], max: []});
-        } else {
-          tentative = {...currentState, shell: []};
-          tentative = Lineup.canonicalizeSelection(plan, tentative);
-        }
-        if (selectAllShell.checked) {
-          const baseIssue = evaluateDeckCompliance(plan, tentative).tier3[0];
-          const effectiveIssue = evaluateDeckCompliance(plan, tentative, projectedEffectiveCards(variant, tentative)).tier3[0];
-          if (baseIssue || effectiveIssue) showToast(`Heads up — the full shell is not Tier 3 compliant: ${(baseIssue || effectiveIssue).rule}`);
-        }
-        assignSelection(currentState, tentative);
-        state.lineupHistory[variant.id] = {};
+        const existing = new Set(currentState.shell || []);
+        currentState.shell = selectAllShell.checked
+          ? Array.from(new Set([...existing, ...shellIds]))
+          : (currentState.shell || []).filter((id) => !shellIds.includes(id));
         saveState(selectAllShell.checked ? "Full Starting Shell activated" : "Active Starting Shell cards cleared");
         renderBuy();
       });
@@ -1436,8 +1407,13 @@
     existing.replaceWith(replacement);
   }
 
+  // Literal, independent membership per category array — deliberately not Lineup's
+  // canonicalized one-per-slot view, since checkboxes no longer enforce that exclusivity.
+  // Whatever is actually checked is what gets counted, even multiple picks in one old slot.
   function selectedDeckCards(plan, current) {
-    return Lineup.selectedEntries(plan, current).map((entry) => ({
+    const model = Lineup.buildModel(plan);
+    const selected = Object.fromEntries(Lineup.ARRAY_KEYS.map((key) => [key, new Set((current[key] || []).map(String))]));
+    return model.entries.filter((entry) => selected[entry.arrayKey]?.has(entry.id)).map((entry) => ({
       ...resolvedBuyCard(entry.item),
       id: entry.id,
       quantity: Number(entry.item.quantity || 1),
@@ -1479,8 +1455,9 @@
       const bucket = typeBucket(card.typeLine);
       types[bucket] = (types[bucket] || 0) + card.quantity;
     });
+    const literalIds = new Set(literalCards.map((card) => card.id));
     const common = Lineup.unresolvedEntries(plan)
-      .filter((entry) => Lineup.selectedEntries(plan, current).some((selected) => selected.id === entry.id))
+      .filter((entry) => literalIds.has(entry.id))
       .map((entry) => ({card: entry.item.name, rule: `Replacement slot could not be resolved: ${entry.item.replaces || "no cut named"}.`, detail: "Choose an exact starting-shell card for this slot."}));
     if (total !== 100) common.push({card: "Deck list", rule: `Commander requires exactly 100 cards; this selection contains ${total}.`, detail: total < 100 ? `Add or restore ${100 - total} card${100 - total === 1 ? "" : "s"}.` : `Cut ${total - 100} card${total - 100 === 1 ? "" : "s"}.`});
     const commanders = included.reduce((sum, card) => sum + (card.isCommander ? card.quantity : 0), 0);
