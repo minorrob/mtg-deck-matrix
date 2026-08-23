@@ -5,7 +5,7 @@
   "maxIterations": 12,
   "maxSwapsPerIteration": 5,
   "maxTotalSimulations": 60000,
-  "maxLedgerSimulations": 2000000,
+  "maxLedgerSimulations": 5000000,
   "maxWallClockMs": 300000,
   "convergence": {
     "minScoreGain": 0.75,

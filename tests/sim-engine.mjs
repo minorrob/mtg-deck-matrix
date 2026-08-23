@@ -182,4 +182,33 @@ assert.match(lowered.stdout, /baseline for 5o/);
 
 await rm(scratch, {recursive: true, force: true});
 
+// ---------------------------------------------------------------------------
+// Page wiring: the Simulate screen and the skill that drives the loop
+// ---------------------------------------------------------------------------
+const appSource = await readFile(new URL("../app.js", import.meta.url), "utf8");
+const indexSource = await readFile(new URL("../index.html", import.meta.url), "utf8");
+const skill = await readFile(new URL("../.claude/skills/simulate-deck/SKILL.md", import.meta.url), "utf8");
+
+assert.match(indexSource, /<dialog class="sim-dialog" id="sim-dialog">/, "index.html must carry the simulation dialog");
+assert.match(appSource, /function openSimDialog\(variant\)/, "app.js must open a simulation dialog");
+assert.match(appSource, /class="simulate-button tip-action/, "every variant card must offer a Simulate button");
+assert.match(appSource, /data-live-simulate/, "Live Decks must offer a Simulate button too");
+assert.match(appSource, /Lineup\.defaultSelection\(plan\)/, "the request must be built from the plan's Tuned build, not the browser's tick boxes");
+assert.match(appSource, /cache: "no-store"/, "status polling must not be served from cache");
+assert.match(appSource, /SIM_STATUS_PATH\}\?t=\$\{Date\.now\(\)\}/, "status polling must bust the URL cache as well");
+assert.match(appSource, /forgetVariantSelection\(simDialogVariant\.id\)/, "applying an optimized list must drop the stale buy selection");
+assert.doesNotMatch(appSource, /api\.anthropic\.com|ANTHROPIC_API_KEY/, "the browser must never call an API to simulate");
+
+assert.match(skill, /never edit `sim\/config\.json`/i, "the skill must state that it cannot raise a cap");
+assert.match(skill, /\| 11 \|/, "the skill must document the cap exit code");
+for (const code of ["10", "11", "12", "13"]) {
+  assert.ok(skill.includes(`| ${code} |`), `the skill must document exit code ${code}`);
+}
+assert.match(skill, /only propose cards that are in this pool/i, "the skill must confine swaps to the candidate pool");
+assert.match(skill, /not-confirmed/, "the skill must report the unseen-seed verdict");
+
+const readme = await readFile(new URL("../README.md", import.meta.url), "utf8");
+assert.match(readme, /node tests\/sim-engine\.mjs/, "the README must list the simulation test");
+assert.match(readme, /run-batch\.mjs/, "the README must show how to run a simulation");
+
 console.log(`Simulation engine verified: deterministic under seed, discriminating between decks, and capped by the runner at ${tinyConfig.maxTotalSimulations} games.`);

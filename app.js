@@ -36,7 +36,8 @@
     power: "Power measures how much the card improves the deck’s ability to establish its plan, answer threats, or win.",
     ease: "Ease measures how naturally the card works without complicated timing, narrow setup, or expert rules knowledge.",
     fun: "Fun measures how satisfying and interactive the card is likely to feel for the player and the table.",
-    fit: "Fit explains how directly the card supports this deck’s commander, mechanics, and stated game plan."
+    fit: "Fit explains how directly the card supports this deck’s commander, mechanics, and stated game plan.",
+    simulate: "Play this exact 100-card build against randomised opponents thousands of times, find where it actually loses, and propose swaps that measurably fix it. The games run on your own computer."
   };
   const KEYWORD_DEFINITIONS = {
     flying: "This creature can normally be blocked only by creatures with flying or reach.",
@@ -815,6 +816,7 @@
         </div>
         <div class="variant-card-actions">
           <button class="comment-toggle tip-action info-tip${state.comments[variant.id] ? " has-comment" : ""}" type="button" aria-expanded="${openCommentId === variant.id}" data-tooltip="${esc(TOOLTIP_DEFINITIONS.addComment)}" aria-describedby="info-tooltip">${icon(state.comments[variant.id] ? "✓" : "“")}<span>${state.comments[variant.id] ? "Comment saved" : "Add a comment"}</span>${tooltipHint()}</button>
+          <button class="simulate-button tip-action info-tip" type="button" data-tooltip="${esc(TOOLTIP_DEFINITIONS.simulate)}" aria-describedby="info-tooltip">${icon("⟳")}<span>Simulate</span>${tooltipHint()}</button>
           <button class="detail-button tip-action info-tip" type="button" data-tooltip="${esc(TOOLTIP_DEFINITIONS.fullDetail)}" aria-describedby="info-tooltip">View full detail →${tooltipHint()}</button>
         </div>
         <div class="comment-editor" ${openCommentId === variant.id ? "" : "hidden"}>
@@ -830,6 +832,7 @@
     });
     $(".pick-control input", card).addEventListener("change", () => selectVariant(variant));
     $(".detail-button", card).addEventListener("click", () => openVariantDetail(variant, stage));
+    $(".simulate-button", card).addEventListener("click", () => openSimDialog(variant));
     $(".comment-toggle", card).addEventListener("click", () => {
       openCommentId = openCommentId === variant.id ? null : variant.id;
       const editor = $(".comment-editor", card);
@@ -1694,6 +1697,292 @@
       <section class="composition-breakdown"><h3>Deck composition</h3><div>${breakdown}</div>${result.compositionWarnings.map((warning) => `<p>${icon("!")}<span>${esc(warning)}</span></p>`).join("")}</section>
       <section class="manual-checks"><h3>Manual checks still required</h3><ul><li>Commander color identity and the current banned list.</li><li>Untagged combo interactions, repeated extra turns, and mass-land-denial play patterns.</li><li>Whether the deck’s intent and likely win turn match the pod: about turn 8+ for Tier 2 or turn 6+ for Tier 3.</li></ul><p>The official bracket guidance emphasizes that intent and table expectations cannot be reduced to a card-count calculator.</p></section>`;
     dialog.showModal();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Simulation
+  //
+  // No games are played in the browser and no API is called. The dialog builds a
+  // request for the deck, hands over the one command that runs the loop on this
+  // machine, watches sim/status.json while it runs, and applies the result as an
+  // overlay when it is done. Served from anywhere but localhost it degrades to
+  // instructions plus a file picker for the result.
+  // ---------------------------------------------------------------------------
+  const SIM_STATUS_PATH = "sim/status.json";
+  const SIM_POLL_MS = 2000;
+  let simDialogVariant = null;
+  let simPollTimer = null;
+  let simResult = null;
+  let simStatus = null;
+
+  const isLocalHost = () => ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname);
+
+  function simCards(variant) {
+    const plan = buyCatalog.plans[variant.id];
+    if (!plan) return [];
+    const current = Lineup.defaultSelection(plan);
+    return Lineup.selectedEntries(plan, current).map((entry) => {
+      const meta = cardMetadata[itemKey(entry.item)] || {};
+      return {
+        name: entry.item.name,
+        quantity: Math.max(1, Number(entry.item.quantity || 1)),
+        isCommander: Boolean(entry.item.isCommander),
+        typeLine: entry.item.typeLine || meta.typeLine || "",
+        manaCost: entry.item.manaCost || meta.manaCost || "",
+        oracleText: entry.item.oracleText || meta.oracleText || "",
+        colorIdentity: entry.item.colorIdentity || meta.colorIdentity || [],
+        commanderLegal: entry.item.commanderLegal !== false,
+        gameChanger: Boolean(entry.item.gameChanger),
+        price: Number(entry.item.price ?? meta.price ?? 0),
+        tags: entry.item.tags || []
+      };
+    });
+  }
+
+  function buildSimRequest(variant) {
+    const cards = simCards(variant);
+    const commander = cards.find((card) => card.isCommander);
+    const compliance = Compliance.evaluateCardList(cards.map((card) => ({...card, tags: [...(card.tags || []), ...Compliance.deriveComplianceTags(card)]})));
+    const lands = compliance.types.Land || 0;
+    return {
+      request: {
+        schemaVersion: 1,
+        id: `sim-${variant.id}-${new Date().toISOString().replace(/[-:]/g, "").replace(/\..+/, "").replace("T", "-")}`,
+        variantId: variant.id,
+        deckId: variant.deckId,
+        source: variant.isCustom ? "generated-tuned-build" : "baked-tuned-build",
+        stage: "Tuned",
+        createdAt: new Date().toISOString(),
+        name: variant.name,
+        commander: commander?.name || variant.commander,
+        table: "mixed-pod",
+        cards,
+        constraints: {
+          colorIdentity: commander?.colorIdentity || [],
+          tier: 3,
+          landFloor: Math.min(33, lands),
+          landCeiling: Math.max(42, lands),
+          maxSwapInPriceUsd: 60,
+          mustKeep: [commander?.name].filter(Boolean),
+          themes: variant.mechanics || [],
+          budgetTotalUsd: 0
+        }
+      },
+      compliance
+    };
+  }
+
+  function simMetricRow(label, baseline, final, format) {
+    const before = format(baseline);
+    const after = final === null || final === undefined ? "" : format(final);
+    return `<div class="sim-metric"><span>${esc(label)}</span><strong>${esc(before)}${after && after !== before ? ` → ${after}` : ""}</strong></div>`;
+  }
+
+  function simResultMarkup(result) {
+    const percent = (value) => `${(Number(value || 0) * 100).toFixed(1)}%`;
+    const turn = (value) => (value ? Number(value).toFixed(1) : "no wins");
+    const verdictClass = result.verdict === "confirmed" ? "is-confirmed" : result.verdict === "not-confirmed" ? "is-rejected" : "is-tentative";
+    const changes = (result.netChanges || []).filter((change) => change.out || change.in);
+    return `
+      <section class="sim-verdict ${verdictClass}">
+        <b>${esc(result.verdict.replace(/-/g, " "))}</b>
+        <p>${esc(result.recommendation || "")}</p>
+      </section>
+      <section class="sim-metrics">
+        <h3>Measured on ${result.holdoutMetrics?.games || result.finalMetrics.games} games the optimizer never saw</h3>
+        <div class="sim-metric-grid">
+          ${simMetricRow("Win rate", result.holdoutBaselineMetrics?.winRate ?? result.baselineMetrics?.winRate, result.holdoutMetrics?.winRate, percent)}
+          ${simMetricRow("Score", result.holdoutBaselineMetrics?.score ?? result.baselineMetrics?.score, result.holdoutMetrics?.score, (value) => Number(value || 0).toFixed(1))}
+          ${simMetricRow("Average win turn", result.baselineMetrics?.avgWinTurn, result.finalMetrics?.avgWinTurn, turn)}
+          ${simMetricRow("Mana screw", result.baselineMetrics?.screwPct, result.finalMetrics?.screwPct, percent)}
+          ${simMetricRow("Flood", result.baselineMetrics?.floodPct, result.finalMetrics?.floodPct, percent)}
+          ${simMetricRow("Answer in hand, turns 3-7", result.baselineMetrics?.interactionAvailability, result.finalMetrics?.interactionAvailability, percent)}
+        </div>
+      </section>
+      ${changes.length ? `<section class="sim-changes"><h3>${changes.length} change${changes.length === 1 ? "" : "s"} to make</h3><ol>${changes.map((change) => `
+        <li>
+          <div class="sim-change-line"><b class="sim-out">Cut</b><span>${esc(change.out || "—")}</span></div>
+          <div class="sim-change-line"><b class="sim-in">Add</b><span>${esc(change.in || "—")}</span><em>${change.priceDelta >= 0 ? "+" : ""}$${Number(change.priceDelta || 0).toFixed(2)}</em></div>
+          ${change.outStat ? `<small>Measured: cast in ${(change.outStat.castRate * 100).toFixed(0)}% of the games it was drawn, stranded in hand in ${(change.outStat.deadRate * 100).toFixed(0)}%, average cast on turn ${change.outStat.avgCastTurn.toFixed(1)}, and the games it was cast in were won ${(change.outStat.winRateWhenCast * 100).toFixed(0)}% of the time against a deck average of ${(result.baselineMetrics.winRate * 100).toFixed(0)}%.</small>` : ""}
+        </li>`).join("")}</ol></section>` : `<section class="sim-changes"><h3>No changes</h3><p>Nothing in the candidate pool beat the current list.</p></section>`}
+      ${result.gapsRemaining?.length ? `<section class="sim-gaps"><h3>What is still weak</h3><ul>${result.gapsRemaining.map((gap) => `<li><b>${esc(gap.key.replace(/-/g, " "))}</b><span>${esc(gap.observed)}</span><small>Target: ${esc(gap.target)}</small></li>`).join("")}</ul></section>` : ""}
+      <section class="sim-compliance ${result.compliance?.tier3Clean ? "passes" : "has-issues"}">
+        <h3>${result.compliance?.tier3Clean ? "The optimized list is still Tier 3 legal" : "The optimized list has compliance problems"}</h3>
+        <p>${result.compliance?.total} cards · ${result.compliance?.lands} lands · ${result.compliance?.gameChangers} Game Changers${result.compliance?.problems?.length ? ` · ${esc(result.compliance.problems.join(" "))}` : ""}</p>
+      </section>
+      <div class="sim-apply-row">
+        <button class="primary-button" type="button" data-sim-apply ${result.compliance?.tier3Clean ? "" : "disabled"}>Update variant</button>
+        ${Custom.overlayFor(customStore, simDialogVariant?.id) ? `<button class="secondary-button" type="button" data-sim-revert>Revert to the original list</button>` : ""}
+      </div>
+      <details class="sim-method"><summary>How this was measured, and what it cannot see</summary>
+        <p>Each list played ${result.gamesPerIteration} games per iteration against three opponent seats sampled from ${esc(result.table)}, then both the original and the optimized list played ${result.holdoutMetrics?.games || 0} more on seeds the optimizer never tuned against. Only that second comparison decides the verdict.</p>
+        <ul>${(result.simplifications || []).map((line) => `<li>${esc(line)}</li>`).join("")}</ul>
+      </details>`;
+  }
+
+  function simStatusMarkup() {
+    if (!isLocalHost()) return "";
+    if (!simStatus || simStatus.state === "idle") return `<p class="sim-status is-idle">${icon("○")}<span>No local run detected yet.</span></p>`;
+    const mine = simStatus.variantId === simDialogVariant?.id;
+    const progress = simStatus.gamesPerIteration
+      ? Math.round((Number(simStatus.gamesCompletedThisIteration || 0) / Number(simStatus.gamesPerIteration)) * 100)
+      : 0;
+    return `<p class="sim-status is-${esc(simStatus.state)}">${icon(simStatus.state === "done" ? "✓" : "◐")}<span><b>${esc(simStatus.state.replace(/-/g, " "))}${mine ? "" : ` · ${esc(simStatus.variantId || "another deck")}`}</b>${esc(simStatus.message || "")}</span></p>
+      ${simStatus.state === "simulating" ? `<div class="sim-progress"><i style="width:${progress}%"></i></div>` : ""}
+      ${simStatus.bestScore ? `<p class="sim-status-detail">Best score so far ${Number(simStatus.bestScore).toFixed(1)} at iteration ${simStatus.bestIteration} · ${simStatus.totalGamesUsed} of ${simStatus.maxTotalSimulations} games used</p>` : ""}`;
+  }
+
+  function renderSimDialog() {
+    const variant = simDialogVariant;
+    if (!variant) return;
+    const {request, compliance} = buildSimRequest(variant);
+    const command = variant.isCustom
+      ? `node tools/sim/run-sim.mjs --request sim/requests/${request.id}.json --init --auto`
+      : `node tools/sim/run-batch.mjs --variants ${variant.id}`;
+    const overlay = Custom.overlayFor(customStore, variant.id);
+    $("#sim-dialog-kicker").textContent = `Deck ${variant.deckId} · Tuned build · ${compliance.total} cards`;
+    $("#sim-dialog-title").textContent = variant.name;
+    $("#sim-dialog-body").innerHTML = `
+      <section class="sim-deck-summary">
+        <div><span>Commander</span><strong>${esc(request.commander)}</strong></div>
+        <div><span>Lands</span><strong>${compliance.types.Land || 0}</strong></div>
+        <div><span>Game Changers</span><strong>${compliance.selectedGameChangers.length}/3</strong></div>
+        <div><span>Tier 3</span><strong>${compliance.tier3.length ? `${compliance.tier3.length} issue${compliance.tier3.length === 1 ? "" : "s"}` : "clean"}</strong></div>
+      </section>
+      ${overlay ? `<p class="sim-overlay-note">${icon("✓")}<span>This variant is already showing an optimized list applied on ${esc(String(overlay.appliedAt).slice(0, 10) || "an earlier run")}.</span></p>` : ""}
+      <section class="sim-run">
+        <h3>Run it on your computer</h3>
+        <p>The games run locally in your checkout of this repository. Nothing is sent anywhere, and no API key is needed.</p>
+        ${variant.isCustom ? `<p>This is a generated deck, so download its request file into <code>sim/requests/</code> first.</p><button class="secondary-button" type="button" data-sim-download>Download the request file</button>` : ""}
+        <div class="sim-command"><code>${esc(command)}</code><button class="secondary-button" type="button" data-sim-copy>Copy</button></div>
+        <p class="sim-command-note">Or let a local Claude session drive the loop and pick the swaps: <code>claude "/simulate-deck ${esc(variant.isCustom ? `sim/requests/${request.id}.json` : variant.id)}"</code></p>
+        ${simStatusMarkup()}
+        ${isLocalHost() ? "" : `<p class="sim-status is-remote">${icon("!")}<span>This page is not being served from your computer, so it cannot watch a run. Run the command in your checkout, then load the result file it writes.</span></p>`}
+        <label class="sim-load"><span>Load a result file</span><input type="file" accept="application/json" data-sim-load></label>
+      </section>
+      <div id="sim-result-body">${simResult ? simResultMarkup(simResult) : ""}</div>`;
+
+    $("[data-sim-copy]", $("#sim-dialog-body"))?.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(command);
+        showToast("Command copied.");
+      } catch (error) {
+        showToast("Copy failed — select the command and copy it manually.");
+      }
+    });
+    $("[data-sim-download]", $("#sim-dialog-body"))?.addEventListener("click", () => {
+      const blob = new Blob([JSON.stringify(request, null, 2)], {type: "application/json"});
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `${request.id}.json`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+    });
+    $("[data-sim-load]", $("#sim-dialog-body"))?.addEventListener("change", (event) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          adoptSimResult(JSON.parse(String(reader.result)));
+        } catch (error) {
+          showToast("That file is not a simulation result.");
+        }
+      };
+      reader.readAsText(file);
+    });
+    $("[data-sim-apply]", $("#sim-dialog-body"))?.addEventListener("click", () => applySimResult());
+    $("[data-sim-revert]", $("#sim-dialog-body"))?.addEventListener("click", () => {
+      Custom.removeOverlay(customStore, variant.id);
+      forgetVariantSelection(variant.id);
+      persistCustom("Reverted to the original list.");
+      remergeCustom();
+      saveState();
+      renderCompare();
+      renderChoose();
+      renderSimDialog();
+    });
+  }
+
+  function adoptSimResult(result) {
+    if (!result?.finalCards?.length) {
+      showToast("That result file has no final deck list.");
+      return;
+    }
+    if (result.variantId && simDialogVariant && result.variantId !== simDialogVariant.id) {
+      showToast(`That result is for ${result.variantId}, not this variant.`);
+      return;
+    }
+    simResult = result;
+    renderSimDialog();
+  }
+
+  function applySimResult() {
+    if (!simResult || !simDialogVariant) return;
+    const cards = simResult.finalCards.map((card) => {
+      const meta = cardMetadata[itemKey(card)] || {};
+      return {...meta, ...card};
+    });
+    Custom.putCards(customStore, cards);
+    const applied = Custom.applyResultAsOverlay(customStore, simDialogVariant.id, {...simResult, finalCards: cards, appliedAt: new Date().toISOString()});
+    if (!applied.applied) {
+      showToast(applied.reason === "not-100" ? `That result has ${applied.total} cards, not 100.` : "That result could not be applied.");
+      return;
+    }
+    // The optimized list is a new set of shell ids, so any stored selection for
+    // this variant points at cards that no longer exist. Dropping it lets the
+    // buy state rebuild from the new plan's defaults.
+    forgetVariantSelection(simDialogVariant.id);
+    persistCustom(`${simDialogVariant.name} updated to the optimized list.`);
+    remergeCustom();
+    saveState();
+    renderCompare();
+    renderChoose();
+    renderSimDialog();
+  }
+
+  function forgetVariantSelection(variantId) {
+    delete state.buySelections[variantId];
+    delete state.lineupHistory[variantId];
+  }
+
+  async function pollSimStatus() {
+    if (!isLocalHost() || !simDialogVariant) return;
+    try {
+      const response = await fetch(`${SIM_STATUS_PATH}?t=${Date.now()}`, {cache: "no-store"});
+      if (!response.ok) return;
+      const status = await response.json();
+      const changed = JSON.stringify(status) !== JSON.stringify(simStatus);
+      simStatus = status;
+      if (status.state === "done" && status.resultPath && status.variantId === simDialogVariant.id && simResult?.id !== status.requestId) {
+        const resultResponse = await fetch(`${status.resultPath}?t=${Date.now()}`, {cache: "no-store"});
+        if (resultResponse.ok) {
+          adoptSimResult(await resultResponse.json());
+          return;
+        }
+      }
+      if (changed) renderSimDialog();
+    } catch (error) {
+      // A missing status file just means no run has been started here.
+    }
+  }
+
+  function openSimDialog(variant) {
+    simDialogVariant = variant;
+    simResult = null;
+    simStatus = null;
+    renderSimDialog();
+    $("#sim-dialog").showModal();
+    pollSimStatus();
+    clearInterval(simPollTimer);
+    simPollTimer = setInterval(pollSimStatus, SIM_POLL_MS);
+  }
+
+  function closeSimDialog() {
+    clearInterval(simPollTimer);
+    simPollTimer = null;
+    simDialogVariant = null;
+    $("#sim-dialog").close();
   }
 
   function enhancementImpact(item) {
@@ -2626,7 +2915,10 @@
     const extraCount = ["lineup", "source", "category", "cardType", "color", "price", "rarity", "location"].filter((field) => filters[field] !== "all").length + (filters.sort !== "default" ? 1 : 0);
     const subgroupOptions = LIVE_GROUP_OPTIONS.filter(([value]) => value === "none" || value !== filters.groupBy);
     return `<div class="live-toolbar" data-live-toolbar="${esc(variant.id)}">
-      <input class="search-input" type="search" value="${esc(filters.query)}" placeholder="Search this deck…" data-ui-focus="live-search-${esc(variant.id)}" aria-label="Search ${esc(variant.name)}">
+      <div class="live-toolbar-head">
+        <input class="search-input" type="search" value="${esc(filters.query)}" placeholder="Search this deck…" data-ui-focus="live-search-${esc(variant.id)}" aria-label="Search ${esc(variant.name)}">
+        <button class="secondary-button live-simulate" type="button" data-live-simulate="${esc(variant.id)}">${icon("⟳")}<span>Simulate</span></button>
+      </div>
       <div class="live-toolbar-row">
         <div class="status-chips" aria-label="Bought status">
           <button class="filter-chip${filters.status === "all" ? " is-active" : ""}" data-live-status="all">All</button>
@@ -3025,6 +3317,7 @@
         saveState();
         renderLiveResults(details, cards, filters, variant);
       });
+      $('[data-live-simulate]', details)?.addEventListener("click", () => openSimDialog(variant));
       $$('[data-live-status]', details).forEach((button) => button.addEventListener("click", () => {
         filters.status = button.dataset.liveStatus;
         saveState();
@@ -3708,6 +4001,14 @@
       $("#compliance-dialog-close").addEventListener("click", () => $("#compliance-dialog").close());
       $("#compliance-dialog").addEventListener("click", (event) => {
         if (event.target === event.currentTarget) event.currentTarget.close();
+      });
+      $("#sim-dialog-close").addEventListener("click", closeSimDialog);
+      $("#sim-dialog").addEventListener("click", (event) => {
+        if (event.target === event.currentTarget) closeSimDialog();
+      });
+      $("#sim-dialog").addEventListener("close", () => {
+        clearInterval(simPollTimer);
+        simPollTimer = null;
       });
     } catch (error) {
       $("#view-compare").innerHTML = `<div class="empty-state"><h3>Could not start the Deck Matrix</h3><p>${esc(error.message)}</p></div>`;

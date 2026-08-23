@@ -36,12 +36,18 @@ if (!opponents.tables[table]) throw new Error(`Unknown opponent table "${table}"
 
 const cards = tunedCards(plan, audited);
 const commander = cards.find((card) => card.isCommander);
-const check = validateList(cards, {landFloor: config.landFloor, landCeiling: config.landCeiling});
+// The land band constrains what a run may change, not which decks may be
+// measured: a lands-matter deck at 48 lands is a real deck and gets simulated.
+const check = validateList(cards);
 if (!check.ok) {
   console.error(`The Tuned build for ${variantId} does not validate:`);
   check.problems.forEach((problem) => console.error(`  - ${problem}`));
   process.exit(1);
 }
+const landCount = check.result.types.Land || 0;
+const landNote = landCount < config.landFloor || landCount > config.landCeiling
+  ? `outside the usual ${config.landFloor}-${config.landCeiling} band; the run may not push it further out`
+  : "";
 
 const stamp = stampNow();
 const id = requestIdFor(variantId, stamp);
@@ -60,8 +66,8 @@ const request = {
   constraints: {
     colorIdentity: commander?.colorIdentity || [],
     tier: 3,
-    landFloor: config.landFloor,
-    landCeiling: config.landCeiling,
+    landFloor: Math.min(config.landFloor, landCount),
+    landCeiling: Math.max(config.landCeiling, landCount),
     maxSwapInPriceUsd: Number(args["max-price"] || config.maxSwapInPriceUsd),
     mustKeep: [commander?.name].filter(Boolean),
     themes: variant?.mechanics || [],
@@ -73,6 +79,6 @@ const out = args.out ? path.resolve(ROOT, String(args.out)) : path.join(SIM_DIR,
 await writeJson(out, request);
 console.log(`${variantId} · ${request.name}`);
 console.log(`  commander     ${request.commander} (${(request.constraints.colorIdentity || []).join("") || "colorless"})`);
-console.log(`  tuned build   ${check.result.total} cards · ${check.result.types.Land || 0} lands · ${check.result.selectedGameChangers.length} Game Changers · Tier 3 clean`);
+console.log(`  tuned build   ${check.result.total} cards · ${landCount} lands${landNote ? ` (${landNote})` : ""} · ${check.result.selectedGameChangers.length} Game Changers · Tier 3 clean`);
 console.log(`  opponents     ${table}`);
 console.log(`  written to    ${relative(out)}`);

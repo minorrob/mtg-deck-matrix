@@ -191,9 +191,11 @@
     return store.overlays?.[variantId] || null;
   }
 
+  // Overlays are keyed by variant id alone, so an optimized list can sit on top
+  // of a baked variant as readily as a generated one. Nothing in data/*.json is
+  // touched either way.
   function applyResultAsOverlay(store, variantId, result) {
-    const variant = (store.variants || []).find((entry) => entry.id === variantId);
-    if (!variant) return {applied: false, reason: "unknown-variant"};
+    if (!variantId) return {applied: false, reason: "unknown-variant"};
     const cards = (result?.finalCards || result?.cards || []).map((card) => ({
       key: cardKey(card.name),
       quantity: Math.max(1, Number(card.quantity || 1)),
@@ -378,6 +380,38 @@
     return (store.slots || []).filter((slot) => slotVariants(store, slot.slotId).length > 0);
   }
 
+  // Rewrites a baked plan to the optimized 100. The ladders go: the simulator
+  // already resolved every slot it was allowed to touch, so there is nothing
+  // left to choose between.
+  function applyOverlayToPlan(store, plan, overlay) {
+    const startingShell = overlay.cards.map((ref, index) => shellEntry(store, plan.variantId, ref, index));
+    return {
+      ...plan,
+      startingShell,
+      startingShellKind: "custom-shell",
+      startingShellSource: `Optimized by simulation${overlay.appliedAt ? ` on ${String(overlay.appliedAt).slice(0, 10)}` : ""}`,
+      baseCards: startingShell.map((card) => ({
+        id: card.id,
+        name: card.name,
+        quantity: card.quantity,
+        typeLine: card.typeLine,
+        tags: card.tags,
+        isCommander: card.isCommander,
+        gameChanger: card.gameChanger
+      })),
+      precon: null,
+      required: [],
+      upgrade: [],
+      enhance: [],
+      max: []
+    };
+  }
+
+  function overlaidBakedIds(store, catalog) {
+    const custom = new Set((store.variants || []).map((variant) => variant.id));
+    return Object.keys(store.overlays || {}).filter((id) => !custom.has(id) && (catalog?.variants || []).some((variant) => variant.id === id));
+  }
+
   // The baked catalog stays untouched on disk; generated decks only ever exist in
   // the copies the app renders from, so the data files keep their asserted counts.
   function mergeIntoCatalogs(store, catalog, buyCatalog) {
@@ -396,19 +430,35 @@
         plans[variant.id] = toPlan(store, variant, slot);
       });
     });
+    const overlaidBaked = overlaidBakedIds(store, catalog);
+    const bakedVariants = (catalog?.variants || []).map((variant) => {
+      if (!overlaidBaked.includes(variant.id)) return variant;
+      const overlay = store.overlays[variant.id];
+      return {
+        ...variant,
+        tags: [...(variant.tags || []), `Optimized${overlay.appliedAt ? ` ${String(overlay.appliedAt).slice(0, 10)}` : ""}`],
+        optimized: true
+      };
+    });
+    const bakedPlans = {};
+    overlaidBaked.forEach((variantId) => {
+      const plan = buyCatalog?.plans?.[variantId];
+      if (plan) bakedPlans[variantId] = applyOverlayToPlan(store, plan, store.overlays[variantId]);
+    });
     return {
       catalog: {
         ...catalog,
         decks: [...decks, ...(catalog?.decks || [])],
-        variants: [...variants, ...(catalog?.variants || [])]
+        variants: [...variants, ...bakedVariants]
       },
       buyCatalog: {
         ...buyCatalog,
-        plans: {...(buyCatalog?.plans || {}), ...plans},
+        plans: {...(buyCatalog?.plans || {}), ...bakedPlans, ...plans},
         profileVariantIds: [...(buyCatalog?.profileVariantIds || []), ...Object.keys(plans)]
       },
       customDeckIds: decks.map((deck) => deck.id),
-      customVariantIds: variants.map((variant) => variant.id)
+      customVariantIds: variants.map((variant) => variant.id),
+      optimizedVariantIds: [...overlaidBaked, ...variants.filter((variant) => variant.optimized).map((variant) => variant.id)]
     };
   }
 
@@ -451,6 +501,8 @@
     toPlan,
     activeSlots,
     describeSlot,
+    applyOverlayToPlan,
+    overlaidBakedIds,
     mergeIntoCatalogs
   };
 });
