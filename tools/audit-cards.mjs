@@ -7,7 +7,11 @@ const floorPriceFallbacks = new Map([
 ]);
 const cards = new Map();
 for (const plan of Object.values(catalog.plans)) {
-  for (const card of [...(plan.startingShell || []), ...(plan.required || []), ...(plan.enhance || []), ...(plan.max || [])]) {
+  for (const card of [
+    ...(plan.startingShell || []), ...(plan.required || []), ...(plan.enhance || []), ...(plan.max || []),
+    ...(plan.tuned2 || []), ...(plan.enhance2 || []), ...(plan.max2 || []),
+    ...(plan.funTuned || []), ...(plan.funMax || []), ...(plan.altTuned || []), ...(plan.altMax || [])
+  ]) {
     if (!card.isFlexibleSlot && card.name) cards.set(card.name.toLocaleLowerCase(), card.name);
   }
 }

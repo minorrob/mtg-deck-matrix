@@ -9,6 +9,7 @@ const cards = JSON.parse(await readFile(new URL("../data/cards.json", import.met
 const appSource = await readFile(new URL("../app.js", import.meta.url), "utf8");
 const audited = new Map(cards.cards.map((card) => [Lineup.normalizeName(card.name), card]));
 const BASIC_NAMES = new Set(["plains", "island", "swamp", "mountain", "forest", "wastes", "snow covered plains", "snow covered island", "snow covered swamp", "snow covered mountain", "snow covered forest"]);
+const LADDER_PREREQS = {enhance2: ["tuned2"], max2: ["tuned2", "enhance2"], funMax: ["funTuned"], altMax: ["altTuned"]};
 const EARLY_COMBO_PAIRS = [
   ["Thassa's Oracle", "Demonic Consultation"],
   ["Thassa's Oracle", "Tainted Pact"],
@@ -109,7 +110,19 @@ for (const [variantId, plan] of Object.entries(buyPlans.plans)) {
 
   const model = Lineup.buildModel(plan);
   for (const entry of model.entries.filter((candidate) => candidate.kind !== "shell")) {
-    let tentative = Lineup.applyChoice(plan, defaults, entry.id);
+    // Rungs above the first in a newer ladder (enhance2/max2, funMax, altMax) are generated
+    // as deltas against their OWN immediate predecessor rung, not against bare defaults --
+    // exactly how assemblePreset will apply them (cumulatively, in ladder order). Testing
+    // such a rung cold, without first applying the rungs it was diffed against, can produce
+    // a spurious singleton: a card the predecessor rung already moved out of its native slot
+    // is still sitting there because that predecessor was never applied, so a later rung
+    // re-introducing that same card elsewhere reads as a duplicate. Apply the full
+    // predecessor chain for that item's own ladder first, matching real usage.
+    let baseline = defaults;
+    for (const priorCategory of LADDER_PREREQS[entry.kind] || []) {
+      for (const priorItem of plan[priorCategory] || []) baseline = Lineup.applyChoice(plan, baseline, priorItem.id);
+    }
+    let tentative = Lineup.applyChoice(plan, baseline, entry.id);
     tentative = sanitizeGameChangers(plan, tentative, entry.id);
     assert(Lineup.selectedEntries(plan, tentative).some((candidate) => candidate.id === entry.id), `${variantId}: ${entry.item.name} must be selectable`);
     assert.equal(Lineup.quantity(plan, tentative), 100, `${variantId}: ${entry.item.name} swap must stay at 100`);
@@ -132,6 +145,57 @@ const bant = buyPlans.plans["4c"];
 const bantGroups = Array.from(Lineup.buildModel(bant).groups.values()).map((group) => new Set(group.map((entry) => entry.item.name)));
 assert(bantGroups.some((group) => ["Cultivate", "Assault Formation", "Aura Shards", "Dovin's Veto"].every((name) => group.has(name))), "Bant Assault Formation alternatives must share one radio slot");
 assert(bantGroups.some((group) => ["Dispel", "Unbreakable Formation", "Teferi's Protection", "Wall of Nets"].every((name) => group.has(name))), "Bant protection alternatives must share one radio slot");
+
+// Win/Fun/Alt-commander ladders: every preset assembles to exactly the workbook's own
+// 100-card column (T2/T3 -- the authoritative guard against by-name mis-chaining), and the
+// alt-commander decks keep exactly one commander-slot occupant checked through every step
+// of applying a preset (T6). Fixture is tools/import_budget_plan.py's own by-column record
+// of the workbook it just read, so this re-derives fixture-equality from a live re-read
+// each run rather than trusting a stale committed fixture.
+const fixtures = JSON.parse(await readFile(new URL("../tests/fixtures/budget-plan-configs.json", import.meta.url), "utf8"));
+const PRESET_CHAINS = [
+  ["tuned2", "Tuned-2", ["required", "tuned2"]],
+  ["enhance2", "Enhance-2", ["required", "tuned2", "enhance2"]],
+  ["max2", "Max-2", ["required", "tuned2", "enhance2", "max2"]],
+  ["funTuned", "Fun Tuned", ["funTuned"]],
+  ["funMax", "Fun Max", ["funTuned", "funMax"]],
+  ["altTuned", "Alt Tuned", ["altTuned"]],
+  ["altMax", "Alt Max", ["altTuned", "altMax"]]
+];
+const BASIC_LAND_NAMES = new Set(["Forest", "Plains", "Island", "Swamp", "Mountain"]);
+for (const variantId of ["1o", "2c", "3e", "4c", "5o", "6f"]) {
+  const plan = buyPlans.plans[variantId];
+  const deckFixture = fixtures[variantId];
+  const isAltDeck = (plan.altTuned || []).length > 0;
+  for (const [presetKey, columnName, categoryOrder] of PRESET_CHAINS) {
+    const expectedColumn = deckFixture.columns[columnName];
+    if (!expectedColumn) continue; // Alt columns absent on decks without an alt commander
+
+    let selection = Lineup.emptySelection();
+    selection.shell = plan.startingShell.map((item) => String(item.id));
+    selection = Lineup.canonicalizeSelection(plan, selection);
+    for (const category of categoryOrder) for (const item of plan[category] || []) selection = Lineup.applyChoice(plan, selection, item.id);
+
+    const entries = Lineup.selectedEntries(plan, selection);
+    assert.equal(Lineup.quantity(plan, selection), 100, `${variantId}: assembled ${presetKey} preset must total 100`);
+    const actual = new Map();
+    for (const entry of entries) actual.set(entry.item.name, (actual.get(entry.item.name) || 0) + 1);
+    for (const [name, count] of Object.entries(expectedColumn)) {
+      if (BASIC_LAND_NAMES.has(name)) continue; // plan.startingShell doesn't enumerate individual basic lands the way the workbook's column does -- see plan §2
+      assert.equal(actual.get(name) || 0, count, `${variantId}: assembled ${presetKey} preset must include ${name} exactly as the workbook's ${columnName} column does`);
+    }
+    for (const [name, count] of actual) {
+      if (BASIC_LAND_NAMES.has(name)) continue;
+      assert.equal(count, expectedColumn[name] || 0, `${variantId}: assembled ${presetKey} preset must not include an unexpected copy of ${name}`);
+    }
+
+    if (isAltDeck && (presetKey === "altTuned" || presetKey === "altMax")) {
+      const commanderSlotId = Lineup.buildModel(plan).entries.find((entry) => entry.item.isCommander)?.slotId;
+      const commanderOccupants = entries.filter((entry) => entry.slotId === commanderSlotId);
+      assert.equal(commanderOccupants.length, 1, `${variantId}: exactly one commander-slot occupant must remain checked after assembling ${presetKey}`);
+    }
+  }
+}
 
 const dimirGenerated = generatedShellCards(buyPlans.plans["2a"]);
 const dimirCounterLeak = /\b(?:proliferate|infect|wither)\b|(?:\+1\/\+1|-1\/-1|charge|arrowhead) counters?|double the number of each kind of counter/;
