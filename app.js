@@ -1144,11 +1144,7 @@
       const baseCompliance = evaluateDeckCompliance(plan, tentative);
       const effectiveCompliance = evaluateDeckCompliance(plan, tentative, projectedEffectiveCards(variant, tentative));
       const issue = baseCompliance.tier3[0] || effectiveCompliance.tier3[0];
-      if (issue) {
-        showToast(`That choice is not Tier 3 compliant: ${issue.rule}`);
-        renderBuy();
-        return;
-      }
+      if (issue) showToast(`Heads up — this makes the deck non-compliant: ${issue.rule}`);
       acceptLineupChoice(variant.id, itemId, checkbox.checked, tentative, active?.id || null, preferredId);
       saveState(checkbox.checked ? `${candidate.item.name} is active` : `${candidate.item.name} swapped out`);
       renderBuy();
@@ -1174,11 +1170,7 @@
         if (selectAllShell.checked) {
           const baseIssue = evaluateDeckCompliance(plan, tentative).tier3[0];
           const effectiveIssue = evaluateDeckCompliance(plan, tentative, projectedEffectiveCards(variant, tentative)).tier3[0];
-          if (baseIssue || effectiveIssue) {
-            renderBuy();
-            showToast(`The full shell is not Tier 3 compliant: ${(baseIssue || effectiveIssue).rule}`);
-            return;
-          }
+          if (baseIssue || effectiveIssue) showToast(`Heads up — the full shell is not Tier 3 compliant: ${(baseIssue || effectiveIssue).rule}`);
         }
         assignSelection(currentState, tentative);
         state.lineupHistory[variant.id] = {};
@@ -2729,11 +2721,7 @@
       const clearsTargetTransfer = Boolean(transfersForVariant(variant.id)[card.lineupSlotId]);
       const effectiveCards = projectedEffectiveCards(variant, tentative, clearsTargetTransfer ? new Set([card.lineupSlotId]) : new Set());
       const projectedCompliance = evaluateDeckCompliance(plan, tentative, effectiveCards);
-      if (projectedCompliance.tier3.length) {
-        showToast(`That swap is not Tier 3 compliant: ${projectedCompliance.tier3[0].rule}`);
-        renderLiveDecks();
-        return;
-      }
+      if (projectedCompliance.tier3.length) showToast(`Heads up — this swap makes the deck non-compliant: ${projectedCompliance.tier3[0].rule}`);
       if (card.loanRecord) removePriorPhysicalTransfer("deck", variant.id, card.id, itemKey(card));
       acceptLineupChoice(variant.id, card.id, true, tentative, active?.id || null);
       delete transfersForVariant(variant.id)[card.lineupSlotId];
