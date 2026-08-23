@@ -136,7 +136,6 @@ assert(Object.values(buyPlans.plans).every((plan) => !plan.enhance.some((card) =
 assert(buyPlans.plans["5o"].max.filter((card) => card.gameChanger).length > 3, "Quintorius may offer more than three Game Changer alternatives");
 assert.match(appSource, /const baseCompliance = evaluateDeckCompliance\(plan, tentative\)/, "the checked-card UI must evaluate the full tentative deck before accepting a choice");
 assert.match(appSource, /projectedEffectiveCards\(variant, tentative\)/, "the checked-card UI must include temporary Live Deck assignments in Tier 3 validation");
-assert.match(appSource, /\$\{checkedCount\}\/100<\/b><small>checked/, "collapsed Live Deck headers must show the Buy Picks checked count");
 assert.match(appSource, /\$\{boughtCount\}\/100<\/b><small>bought/, "collapsed Live Deck headers must show the physically bought count");
 assert.match(appSource, /\$\{total\}\/100<\/b><small>active/, "collapsed Live Deck headers must show the active-lineup count");
 assert.match(appSource, /data-live-total="\$\{esc\(variant\.id\)\}"/, "collapsed Live Deck headers must show a committed Total Cost");

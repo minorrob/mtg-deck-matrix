@@ -178,7 +178,8 @@ assert.ok(roleCount(gruulDefault, "interaction", (card) => card.name === "Song o
 
 assert.match(appSource, /selectedDeckCards\(plan, ensureBuyState\(variant\.id\)\)/, "Buy Picks counters must use literal selected cards");
 assert.doesNotMatch(appSource, /card\.isFlexibleSlot \|\| selectedShell\.has/, "runtime may not force hidden flexible slots into compliance");
-assert.match(appSource, /type="radio" name="live-slot-/, "Live Deck rows must expose slot radios");
+assert.match(appSource, /<input type="checkbox" \$\{card\.lineupActive \? "checked"/, "Live Deck cards must be independent toggles, not a slot-exclusive radio group");
+assert.doesNotMatch(appSource, /type="radio" name="live-slot-/, "Live Deck cards must not be constrained back into slot-exclusive radio groups");
 assert.match(appSource, /Ready to play/, "Live Decks must calculate readiness");
 assert.match(appSource, /startingShellKind\s*!==\s*["']official-precon["']/, "Only verified official precons may unlock a whole shell as one bought item");
 
