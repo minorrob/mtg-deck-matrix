@@ -182,6 +182,18 @@ function cutRanking(cards, perCardStats, gaps, landCount, baseWinRate) {
     .sort((a, b) => a.value - b.value);
 }
 
+// A deck that already runs one board wipe may keep one; it may not drop to zero.
+// Reading the floor as an absolute would leave every deck that starts below it
+// unable to make any swap at all.
+function effectiveFloors(census) {
+  const floors = {...(config.roleFloors || {})};
+  floors.land = Math.min(floors.land ?? 33, request.constraints.landFloor ?? 33);
+  Object.keys(floors).forEach((role) => {
+    floors[role] = Math.min(floors[role], census[role] ?? floors[role]);
+  });
+  return floors;
+}
+
 function candidateRanking(pool, gaps, tried) {
   const severityByRole = new Map();
   gaps.forEach((gap) => gap.rolesToFix.forEach((role) => severityByRole.set(role, (severityByRole.get(role) || 0) + gap.severity)));
@@ -202,8 +214,8 @@ function proposeSwaps(cards, perCardStats, gaps, pool, tried, limit, baseWinRate
   const landCount = evaluateList(cards).types.Land || 0;
   const cuts = cutRanking(cards, perCardStats, gaps, landCount, baseWinRate);
   const adds = candidateRanking(pool, gaps, tried);
-  const floors = {...(config.roleFloors || {}), land: Math.min((config.roleFloors || {}).land ?? 33, request.constraints.landFloor ?? 33)};
   const census = roleCensus(cards);
+  const floors = effectiveFloors(census);
   const swaps = [];
   const usedCuts = new Set();
   for (const add of adds) {
@@ -359,8 +371,7 @@ async function finalize(state, reason, exitCode) {
   const finalCheck = validateList(best.cards, {
     landFloor: request.constraints.landFloor ?? config.landFloor,
     landCeiling: request.constraints.landCeiling ?? config.landCeiling,
-    mustKeep: request.constraints.mustKeep,
-    roleFloors: config.roleFloors
+    mustKeep: request.constraints.mustKeep
   });
   const result = {
     schemaVersion: 1,
@@ -486,7 +497,7 @@ if (args.apply) {
     process.exit(EXIT.INVALID_SWAPS);
   }
   const applied = applySwaps(state.best.cards, swaps, pool);
-  const check = validateList(applied.cards, {landFloor: request.constraints.landFloor ?? config.landFloor, landCeiling: request.constraints.landCeiling ?? config.landCeiling, mustKeep: request.constraints.mustKeep, roleFloors: config.roleFloors});
+  const check = validateList(applied.cards, {landFloor: request.constraints.landFloor ?? config.landFloor, landCeiling: request.constraints.landCeiling ?? config.landCeiling, mustKeep: request.constraints.mustKeep, roleFloors: effectiveFloors(roleCensus(state.best.cards))});
   if (applied.problems.length || !check.ok) {
     console.error("The proposed swaps were rejected:");
     [...applied.problems, ...check.problems].forEach((problem) => console.error(`  - ${problem}`));
@@ -538,7 +549,7 @@ if (args.auto) {
       process.exit(EXIT.CONVERGED);
     }
     const applied = applySwaps(state.best.cards, swaps, pool);
-    const check = validateList(applied.cards, {landFloor: request.constraints.landFloor ?? config.landFloor, landCeiling: request.constraints.landCeiling ?? config.landCeiling, mustKeep: request.constraints.mustKeep, roleFloors: config.roleFloors});
+    const check = validateList(applied.cards, {landFloor: request.constraints.landFloor ?? config.landFloor, landCeiling: request.constraints.landCeiling ?? config.landCeiling, mustKeep: request.constraints.mustKeep, roleFloors: effectiveFloors(roleCensus(state.best.cards))});
     swaps.forEach((swap) => state.tried.push(Lineup.normalizeName(swap.in)));
     if (applied.problems.length || !check.ok) {
       const note = [...applied.problems, ...check.problems].join(" ");
