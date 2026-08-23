@@ -242,7 +242,7 @@
         try {
           data = await request(path, {signal: searchOptions.signal});
         } catch (error) {
-          if (searchOptions.tolerant === false) throw error;
+          if (error?.name === "AbortError" || searchOptions.tolerant === false) throw error;
           break;
         }
         if (!data || !Array.isArray(data.data)) break;

@@ -17,7 +17,7 @@
   <meta name="twitter:description" content="Compare decks, choose buys, and shop from one mobile-friendly list.">
   <meta name="twitter:image" content="https://minorrob.github.io/mtg-deck-matrix/og.png">
   <title>Trey's Deck Matrix</title>
-  <link rel="stylesheet" href="app.css?v=12">
+  <link rel="stylesheet" href="app.css?v=13">
   <script src="lineup-model.js?v=1" defer></script>
   <script src="compliance-model.js?v=1" defer></script>
   <script src="scryfall-client.js?v=1" defer></script>
@@ -41,6 +41,9 @@
       <div class="header-actions"><button class="tour-button" id="tour-button" type="button">▶ Tour</button><span class="save-status visually-hidden" id="save-status" aria-live="polite">Saved on this device</span></div>
     </div>
     <nav class="main-tabs" aria-label="Deck shopping flow">
+      <button class="main-tab" data-view="choose" aria-selected="false">
+        <span class="tab-step">0</span><span>Choose</span>
+      </button>
       <button class="main-tab is-active" data-view="compare" aria-selected="true">
         <span class="tab-step">1</span><span>Compare</span>
       </button>
@@ -57,6 +60,7 @@
   </header>
 
   <main id="app" tabindex="-1">
+    <section class="view" id="view-choose" aria-labelledby="choose-title"></section>
     <section class="view is-active" id="view-compare" aria-labelledby="compare-title">
       <div class="loading-card">Loading the deck catalog…</div>
     </section>

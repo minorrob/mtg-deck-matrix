@@ -71,6 +71,17 @@
   };
   const THEME_ALIASES = {Defenders: "Toughness / Defenders", "Toughness matters": "Toughness / Defenders"};
 
+  // A stated play style moves the role mix before any lens shift is applied, so
+  // "Fortress" and "Flavor" on the same commander do not build the same deck.
+  const PLAYSTYLE_BIAS = {
+    Fortress: {protection: 3, removal: 2, wipe: 1, finisher: -3, theme: -3},
+    "Build-up": {ramp: 3, draw: 1, theme: 1, removal: -3, finisher: -2},
+    Convergence: {theme: 4, draw: 1, removal: -3, wipe: -2},
+    Longevity: {draw: 4, protection: 1, finisher: -2, theme: -3},
+    Friendly: {theme: 4, protection: 2, wipe: -3, removal: -3},
+    Flavor: {theme: 5, draw: -2, removal: -2, finisher: -1}
+  };
+
   const LENSES = [
     {key: "synergy-max", label: "Synergy maximiser", weights: {edhrec: 0.30, theme: 0.45, curve: 0.10, budget: 0.05, scarcity: 0.10}, quotaShift: {theme: 4, removal: -2, draw: -2}, offset: 0, priceCapFactor: 1, lands: 0, blurb: "Leans hardest into the theme you asked for."},
     {key: "budget-value", label: "Budget value", weights: {edhrec: 0.30, theme: 0.20, curve: 0.15, budget: 0.30, scarcity: 0.05}, quotaShift: {}, offset: 0, priceCapFactor: 0.45, lands: 0, blurb: "Spends the least per point of effect."},
@@ -206,15 +217,15 @@
     return [`legal:commander`, identityClause(Array.from(context.identity)), THEME_QUERIES[theme]?.query || "", "-type:land"].filter(Boolean).join(" ");
   }
 
-  async function resolveCommander(inputs, client, warnings) {
+  async function resolveCommander(inputs, client, warnings, signal) {
     if (inputs.commanderLink) {
-      const resolved = await client.resolveTcgplayerUrl(inputs.commanderLink);
+      const resolved = await client.resolveTcgplayerUrl(inputs.commanderLink, {signal});
       if (resolved.card && canBeCommander(resolved.card)) return {commander: resolved.card, source: `tcgplayer:${resolved.matchedBy}`};
       if (resolved.card) warnings.push(`${resolved.card.name} cannot lead a Commander deck, so the link was ignored.`);
       else warnings.push(resolved.error || "That commander link could not be resolved.");
     }
     if (inputs.commanderName) {
-      const card = await client.named(inputs.commanderName);
+      const card = await client.named(inputs.commanderName, {signal});
       if (card && canBeCommander(card)) return {commander: card, source: "typed-name"};
       if (card) warnings.push(`${card.name} cannot lead a Commander deck, so the typed name was ignored.`);
       else warnings.push(`No card matched "${inputs.commanderName}".`);
@@ -222,11 +233,11 @@
     const themes = normalizeThemes(inputs.themes);
     const themeClause = themes.length ? THEME_QUERIES[themes[0]].query : "";
     const query = ["is:commander", "legal:commander", identityClause(inputs.colors), themeClause].filter(Boolean).join(" ");
-    const results = await client.search(query, {maxPages: 1, order: "edhrec"});
+    const results = await client.search(query, {maxPages: 1, order: "edhrec", signal});
     const commander = results.find((card) => canBeCommander(card) && identityFits(card, new Set((inputs.colors || []).map((color) => String(color).toUpperCase()))) === (inputs.colors?.length ? true : true));
     if (commander) return {commander, source: "search"};
     if (themeClause) {
-      const broader = await client.search(["is:commander", "legal:commander", identityClause(inputs.colors)].join(" "), {maxPages: 1, order: "edhrec"});
+      const broader = await client.search(["is:commander", "legal:commander", identityClause(inputs.colors)].join(" "), {maxPages: 1, order: "edhrec", signal});
       const fallback = broader.find(canBeCommander);
       if (fallback) {
         warnings.push("No commander matched every theme, so the most-played commander in your colors was used.");
@@ -241,7 +252,7 @@
     for (const link of inputs.seedLinks || []) {
       const raw = String(link || "").trim();
       if (!raw) continue;
-      const resolved = await client.resolveTcgplayerUrl(raw);
+      const resolved = await client.resolveTcgplayerUrl(raw, {signal: context.signal});
       if (!resolved.card) {
         warnings.push(`${raw} — ${resolved.error || "no card matched"}.`);
         continue;
@@ -275,9 +286,9 @@
     const roles = [...ROLE_ORDER.filter((role) => role !== "theme"), "land"];
     for (const role of roles) {
       onProgress({phase: "pool", role, message: `Fetching ${role} options…`});
-      let cards = await client.search(buildRoleQuery(role, context, true), {maxPages: 1, order: "edhrec"});
+      let cards = await client.search(buildRoleQuery(role, context, true), {maxPages: 1, order: "edhrec", signal: context.signal});
       if (cards.length < MIN_ROLE_RESULTS) {
-        const fallback = await client.search(buildRoleQuery(role, context, false), {maxPages: 1, order: "edhrec"});
+        const fallback = await client.search(buildRoleQuery(role, context, false), {maxPages: 1, order: "edhrec", signal: context.signal});
         if (cards.length && !fallback.length) warnings.push(`The ${role} fallback search returned nothing; using ${cards.length} tagged results.`);
         cards = [...cards, ...fallback];
       }
@@ -285,7 +296,7 @@
     }
     for (const theme of context.themes) {
       onProgress({phase: "pool", role: theme, message: `Fetching ${theme} cards…`});
-      addCards(await client.search(buildThemeQuery(theme, context), {maxPages: 1, order: "edhrec"}), "theme");
+      addCards(await client.search(buildThemeQuery(theme, context), {maxPages: 1, order: "edhrec", signal: context.signal}), "theme");
     }
     context.seeds.forEach((seed) => {
       const key = cardKey(seed.name);
@@ -301,7 +312,7 @@
   async function fetchBasics(context, client) {
     const colors = Array.from(context.identity);
     const names = colors.length ? colors.map((color) => COLOR_BASICS[color]).filter(Boolean) : ["Wastes"];
-    const {cards} = await client.collection(names.map((name) => ({name})));
+    const {cards} = await client.collection(names.map((name) => ({name})), {signal: context.signal});
     const found = new Map(cards.map((card) => [card.name, card]));
     return names.map((name) => found.get(name) || {
       name,
@@ -329,10 +340,11 @@
     });
   }
 
-  function quotasFor(lens, spellCount) {
+  function quotasFor(lens, spellCount, playstyle = "") {
+    const bias = PLAYSTYLE_BIAS[playstyle] || {};
     const quotas = {};
     ROLE_ORDER.forEach((role) => {
-      quotas[role] = Math.max(0, ROLE_QUOTAS[role].quota + Number(lens.quotaShift?.[role] || 0));
+      quotas[role] = Math.max(0, ROLE_QUOTAS[role].quota + Number(lens.quotaShift?.[role] || 0) + Number(bias[role] || 0));
     });
     const total = ROLE_ORDER.reduce((sum, role) => sum + quotas[role], 0);
     quotas.theme = Math.max(0, quotas.theme + (spellCount - total));
@@ -456,7 +468,7 @@
   function buildBase(context, pool, basics, lens, usedCounts) {
     const landTarget = Math.max(33, Math.min(40, DEFAULT_LANDS + Number(lens.lands || 0) + (context.themes.includes("Lands / Landfall") ? 2 : 0)));
     const spellCount = DECK_SIZE - 1 - landTarget;
-    const quotas = quotasFor(lens, spellCount);
+    const quotas = quotasFor(lens, spellCount, context.inputs?.playstyle);
     const picked = new Map();
     const spend = {total: 0};
     const spells = [];
@@ -770,7 +782,7 @@
     const onProgress = options.onProgress || (() => {});
     const warnings = [];
     onProgress({phase: "commander", message: "Resolving the commander…"});
-    const resolved = await resolveCommander(inputs, client, warnings);
+    const resolved = await resolveCommander(inputs, client, warnings, options.signal);
     if (!resolved.commander) return {commander: null, variants: [], cards: [], warnings, error: resolved.error};
     const commander = resolved.commander;
     const identity = new Set((commander.colorIdentity || []).map((color) => String(color).toUpperCase()));
@@ -788,6 +800,7 @@
       perCardCap: Math.max(3, budgetUsd * 0.12),
       seeds: [],
       seedKeys: new Set(),
+      signal: options.signal,
       createdAt: options.createdAt || ""
     };
     onProgress({phase: "seeds", message: "Resolving your card links…"});
@@ -837,7 +850,9 @@
     ROLE_QUERIES,
     THEME_QUERIES,
     THEME_ALIASES,
+    PLAYSTYLE_BIAS,
     LENSES,
+    quotasFor,
     DECK_SIZE,
     classifyRoles,
     canBeCommander,

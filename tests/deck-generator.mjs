@@ -415,6 +415,26 @@ assert.deepEqual(Custom.load(fakeStorage()).variants, [], "an empty browser star
 assert.deepEqual(Custom.load({getItem: () => "{{{not json"}).variants, [], "a corrupted store must degrade to empty, never throw");
 
 // ---------------------------------------------------------------------------
+// Play style moves the role mix
+// ---------------------------------------------------------------------------
+const fortress = Generator.quotasFor(Generator.LENSES[0], 63, "Fortress");
+const flavor = Generator.quotasFor(Generator.LENSES[0], 63, "Flavor");
+const neutral = Generator.quotasFor(Generator.LENSES[0], 63, "");
+[fortress, flavor, neutral].forEach((quotas) => {
+  assert.equal(Generator.ROLE_ORDER.reduce((sum, role) => sum + quotas[role], 0), 63, "role quotas must always add up to the spell count");
+});
+assert.ok(fortress.protection > neutral.protection, "Fortress must ask for more protection");
+assert.ok(fortress.finisher < neutral.finisher, "Fortress must ask for fewer finishers");
+assert.ok(flavor.theme > fortress.theme, "Flavor must lean further into the theme than Fortress does");
+{
+  const {client: styleClient} = makeClient(fixture.data);
+  const styled = await Generator.generateForSlot({...inputs, variantCount: 1, seedLinks: [], playstyle: "Fortress"}, {client: styleClient});
+  const protectionCount = styled.builds[0].stages[0].filter((entry) => entry.role === "protection").length;
+  assert.ok(protectionCount >= 6, `a Fortress build must actually fill the extra protection slots (filled ${protectionCount})`);
+  assert.equal(Generator.evaluateEntries(styled.builds[0].stages[0]).total, 100);
+}
+
+// ---------------------------------------------------------------------------
 // Page wiring
 // ---------------------------------------------------------------------------
 for (const module of ["lineup-model.js", "compliance-model.js", "scryfall-client.js", "custom-model.js", "deck-generator.js"]) {
@@ -422,5 +442,28 @@ for (const module of ["lineup-model.js", "compliance-model.js", "scryfall-client
 }
 assert.ok(indexSource.indexOf("compliance-model.js") < indexSource.indexOf("deck-generator.js"), "the generator must load after the compliance model it depends on");
 assert.ok(indexSource.indexOf("deck-generator.js") < indexSource.indexOf("app.js?"), "generator modules must load before app.js");
+assert.match(indexSource, /<button class="main-tab" data-view="choose"/, "index.html must publish the Choose tab");
+assert.match(indexSource, /<section class="view" id="view-choose"/, "index.html must publish the Choose view");
+assert.ok(indexSource.indexOf('data-view="choose"') < indexSource.indexOf('data-view="compare"'), "Step 0 must sit in front of Compare");
+assert.ok(indexSource.indexOf('id="view-choose"') < indexSource.indexOf('id="view-compare"'), "the Choose section must precede the Compare section");
+
+const cssSource = await readFile(new URL("../app.css", import.meta.url), "utf8");
+assert.match(cssSource, /\.main-tabs \{[^}]*repeat\(5, minmax\(0, 1fr\)\)/, "the tab bar must make room for five steps");
+assert.doesNotMatch(cssSource, /\.main-tabs\{grid-template-columns:repeat\(4,minmax\(0,1fr\)\)\}/, "the narrow-screen tab bar must also fit five steps");
+assert.match(cssSource, /\.choose-grid \{/, "the Choose grid must be styled");
+assert.match(cssSource, /\.deck-group-divider \{/, "the generated-deck divider must be styled");
+
+const appSource = await readFile(new URL("../app.js", import.meta.url), "utf8");
+assert.match(appSource, /const Custom = window\.MtgCustomModel/, "app.js must bind the custom deck model");
+assert.match(appSource, /const Generator = window\.MtgDeckGenerator/, "app.js must bind the deck generator");
+assert.match(appSource, /function renderChoose\(\)/, "app.js must render the Choose view");
+assert.match(appSource, /if \(view === "choose"\) renderChoose\(\);/, "switchView must route the Choose tab");
+assert.match(appSource, /Custom\.mergeIntoCatalogs\(customStore, bakedCatalog, bakedBuyCatalog\)/, "generated decks must merge into copies of the baked catalog, never into the files");
+assert.match(appSource, /\$\{visibleTotal\} of \$\{catalog\.variants\.length\} shown/, "the Compare counter must follow the merged catalog");
+assert.match(appSource, /\$\{selected\.length\}\/\$\{catalog\.decks\.length\}/, "the Compare selection meter must follow the merged deck count");
+assert.match(appSource, /\$\{variants\.length\} of \$\{deckTotal\} shown/, "each deck row must count its own variants");
+assert.match(appSource, /deck-group-divider/, "generated decks must be separated from the curated ones");
+assert.match(appSource, /String\(item\?\.name \|\| ""\)/, "itemKey must tolerate plans that carry no precon");
+assert.match(appSource, /^\s{4}choose: \[/m, "the tour must define its own steps for the Choose view");
 
 console.log(`Generated ${generated.variants.length} compliant variants from ${fixture.data.length} fixture cards in ${calls.length} stubbed Scryfall calls.`);
