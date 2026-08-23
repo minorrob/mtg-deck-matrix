@@ -1061,7 +1061,16 @@
   function makeBuyDeck(variant) {
     const plan = buyCatalog.plans[variant.id];
     const current = plan ? ensureBuyState(variant.id) : null;
-    const optionalCount = current ? (current.upgrade?.length || 0) + (current.enhance?.length || 0) + (current.max?.length || 0) : 0;
+    // Every count here is filtered to what's actually checked in `current`, then summed by
+    // quantity — the same convention selectedDeckCards uses — so shell + tuned + optional
+    // always agrees with the compliance panel's total, instead of drifting when a category's
+    // array length no longer matches its full candidate list (e.g. a Tuned pick unchecked).
+    const tunedIds = new Set(current?.tuned || []);
+    const tunedCount = plan ? (plan.required || []).filter((item) => tunedIds.has(item.id)).reduce((sum, item) => sum + Number(item.quantity || 1), 0) : 0;
+    const optionalIds = new Set([...(current?.upgrade || []), ...(current?.enhance || []), ...(current?.max || [])]);
+    const optionalCount = plan
+      ? [...(plan.upgrade || []), ...(plan.enhance || []), ...(plan.max || [])].filter((item) => optionalIds.has(item.id)).reduce((sum, item) => sum + Number(item.quantity || 1), 0)
+      : 0;
     const shellCards = plan ? (plan.startingShell || []).filter((card) => !card.isFlexibleSlot) : [];
     const selectedShellIds = new Set(current?.shell || []);
     const shellCount = shellCards.filter((card) => selectedShellIds.has(card.id)).reduce((sum, card) => sum + Number(card.quantity || 1), 0);
@@ -1072,7 +1081,7 @@
     details.innerHTML = `
       <summary>
         <span class="deck-number">${variant.deckId}</span>
-        <span class="buy-deck-title"><strong>${esc(variant.name)}</strong><span>${plan ? `${shellCards.length ? `${shellCount} shell card${shellCount === 1 ? "" : "s"} selected · ` : ""}${plan.required.length} Tuned · ${optionalCount} optional picked` : esc(variant.commander)}</span></span>
+        <span class="buy-deck-title"><strong>${esc(variant.name)}</strong><span>${plan ? `${shellCards.length ? `${shellCount} shell card${shellCount === 1 ? "" : "s"} selected · ` : ""}${tunedCount} Tuned · ${optionalCount} optional picked` : esc(variant.commander)}</span></span>
         ${plan ? buyTotalMarkup(purchaseTotal) : `<span class="profile-gap">Pending</span>`}
       </summary>
       <div class="buy-body"></div>`;
