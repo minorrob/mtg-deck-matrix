@@ -1372,8 +1372,9 @@
     const typeGroups = typeOrder.filter((type) => groups.has(type)).map((type) => {
       const group = groups.get(type);
       const count = group.reduce((sum, card) => sum + Number(card.quantity || 1), 0);
+      const checkedCount = group.filter((card) => (current.shell || []).includes(card.id)).reduce((sum, card) => sum + Number(card.quantity || 1), 0);
       return `<details class="constructed-shell-group shell-type-group" data-ui-key="shellgrp-${esc(variantId)}-${esc(type)}" ${type === "Creature" ? "open" : ""}>
-        <summary><span>${esc(type)}</span><b>${count}</b></summary>
+        <summary><span>${esc(type)}</span><b title="${checkedCount} of ${count} checked to buy">${checkedCount}/${count}</b></summary>
         <div class="constructed-shell-list">${group.map((card) => shellPurchaseRow(card, current, variantId, purchasedAsSingles)).join("")}</div>
       </details>`;
     }).join("");
@@ -1481,8 +1482,9 @@
     if (!items?.length) return "";
     const included = kind === "precon";
     const glyph = kind === "precon" ? "▣" : kind === "tuned" ? "✓" : kind === "upgrade" ? "↗" : kind === "enhance" ? "+" : "✦";
+    const checkedCount = included ? items.length : items.filter((item) => (current[kind] || []).includes(item.id)).length;
     return `<details class="buy-section" data-ui-key="buysec-${esc(variantId)}-${esc(kind)}" ${included ? "open" : ""}>
-      <summary><span>${icon(glyph)}${esc(title)} <b>${items.length}</b></span><small>${esc(note)}</small></summary>
+      <summary><span>${icon(glyph)}${esc(title)} <b title="${checkedCount} of ${items.length} checked to buy">${checkedCount}/${items.length}</b></span><small>${esc(note)}</small></summary>
       ${items.map((item) => {
         const required = included;
         const checked = required || (current[kind] || []).includes(item.id);
