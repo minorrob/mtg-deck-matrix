@@ -8,6 +8,7 @@ for (const plan of Object.values(catalog.plans)) {
     if (!card.isFlexibleSlot && card.name) cards.set(card.name.toLocaleLowerCase(), card.name);
   }
 }
+for (const card of catalog.salvage || []) if (card.name) cards.set(card.name.toLocaleLowerCase(), card.name);
 
 const names = [...cards.values()].sort((a, b) => a.localeCompare(b));
 const records = [];

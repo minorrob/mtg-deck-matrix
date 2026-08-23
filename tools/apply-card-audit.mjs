@@ -60,11 +60,22 @@ for (const [variantId, plan] of Object.entries(plans.plans)) {
       if (data.legalities?.commander !== "legal" || offColor.length) illegal.push({variantId, commander: commander?.name, card: data.name, commanderLegal: data.legalities?.commander, offColor});
     }
   }
-  const overBudgetEnhance = (plan.enhance || []).filter((card) => Number(card.price) > 10);
-  if (overBudgetEnhance.length) {
-    plan.enhance = plan.enhance.filter((card) => Number(card.price) <= 10);
-    plan.max = [...(plan.max || []), ...overBudgetEnhance.map((card) => ({...card, category: "max", stage: "Maxxed"}))];
-  }
+}
+
+for (const card of plans.salvage || []) {
+  const data = byName.get(card.name.toLocaleLowerCase());
+  if (!data) continue;
+  card.name = data.name;
+  card.manaCost = data.manaCost;
+  card.typeLine = data.typeLine;
+  card.oracleText = data.oracleText;
+  card.keywords = data.keywords;
+  card.colorIdentity = data.colorIdentity;
+  card.image = data.image;
+  card.price = data.price;
+  card.priceUpdated = audited.generatedAt.slice(0, 10);
+  card.tcgplayerUrl = data.tcgplayerUrl;
+  card.commanderLegal = data.legalities?.commander === "legal";
 }
 
 plans.cardAudit = {source: audited.source, generatedAt: audited.generatedAt, cardsVerified: audited.cards.length, wrongTypesCorrected: wrongTypes.length, legalityIssues: illegal};

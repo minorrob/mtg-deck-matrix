@@ -8,7 +8,7 @@
   const STAGE_DEFINITIONS = [
     "Base: the starting shell or preconstructed deck before targeted purchases. It shows the theme as it works straight out of the box.",
     "Tuned: the recommended practical build after the listed core purchases. This is the level where the variant should deliver its strategy reliably.",
-    "Maxed: the full upgrade ceiling, including the advanced ladder and up to three Game Changers. It represents the top legal end of Bracket 3."
+    "Maxed: the strongest configuration that pushes the deck to the legal bounds of Tier 3 / Bracket 3 — Upgraded. It is based on capability and synergy, not card price, and permits no more than three selected Game Changers."
   ];
   const TOOLTIP_DEFINITIONS = {
     playstyle: "Playstyle fit measures how closely the deck matches the experience you want: defending early, building resources, combining pieces, lasting late, staying table-friendly, and expressing the cards’ story.",
@@ -710,6 +710,30 @@
     saveState();
   }
 
+  function migrateOwnedExtras() {
+    if (!localStorage.getItem("mtg-owned-quintorius-import-v1") || localStorage.getItem("mtg-owned-extras-import-v1")) return;
+    (buyCatalog.ownedExtras || []).forEach((name) => { state.found[itemKey({name})] = true; });
+    localStorage.setItem("mtg-owned-extras-import-v1", JSON.stringify({count: (buyCatalog.ownedExtras || []).length, importedAt: new Date().toISOString()}));
+    saveState("Owned extras added");
+  }
+
+  function sanitizeGameChangerSelections() {
+    let changed = false;
+    for (const [variantId, plan] of Object.entries(buyCatalog.plans || {})) {
+      const current = ensureBuyState(variantId);
+      for (const kind of ["max", "enhance"]) {
+        const collection = plan[kind] || [];
+        for (let index = current[kind].length - 1; index >= 0 && evaluateDeckCompliance(plan, current).selectedGameChangers.length > 3; index -= 1) {
+          const item = collection.find((candidate) => candidate.id === current[kind][index]);
+          if (!item?.gameChanger) continue;
+          current[kind].splice(index, 1);
+          changed = true;
+        }
+      }
+    }
+    if (changed) saveState("Tier 3 Game Changer selections updated");
+  }
+
   function renderBuy() {
     const root = $("#view-buy");
     const selected = selectedVariants();
@@ -719,7 +743,7 @@
       <div class="page-intro">
         <div>
           <h2 id="buy-title">Build the buy plan</h2>
-          <p>Every checked Starting Shell, Tuned, Enhance, and Maxxed card counts toward the final deck. Uncheck anything you own elsewhere or do not want.</p>
+          <p>Every checked card counts toward the final deck. Enhance options preserve the role and stay at $15 or less; Maxxed options push capability to the legal bounds of Tier 3 / Bracket 3 — Upgraded regardless of price.</p>
         </div>
         ${buyCheckedSummary(selected)}
       </div>
@@ -735,6 +759,7 @@
       }).join("")}</div></section>` : ""}
       ${selected.length ? `<div class="action-row action-row-top"><button class="primary-button save-buys">Save Buys → Shop List</button><button class="secondary-button" data-go="compare">Back to Compare</button></div>` : ""}
       <div id="buy-decks"></div>
+      ${salvageBuySection()}
       ${selected.length ? `<div class="action-row"><button class="primary-button save-buys">Save Buys → Shop List</button><button class="secondary-button" data-go="compare">Back to Compare</button></div>` : ""}`;
 
     const decksRoot = $("#buy-decks", root);
@@ -745,6 +770,10 @@
       $(`.buy-deck[open]`, root)?.scrollIntoView({behavior: "smooth", block: "start"});
     }));
     $$('[data-go="compare"]', root).forEach((button) => button.addEventListener("click", () => switchView("compare")));
+    $$('[data-salvage-id]', root).forEach((button) => button.addEventListener("click", () => {
+      const item = (buyCatalog.salvage || []).find((card) => card.id === button.dataset.salvageId);
+      if (item) openBuyItemDetail({...item, purpose: item.reason, why: item.reason, whereToBuy: "Already owned · Salvage shadow pile", brief: {fit: item.reason}}, {id: "salvage", deckId: "Salvage", image: item.image}, "salvage");
+    }));
     $$(".save-buys", root).forEach((button) => button.addEventListener("click", () => {
       saveState();
       switchView("shop");
@@ -763,6 +792,12 @@
     });
     const order = ["Creature", "Land", "Artifact", "Enchantment", "Instant", "Sorcery", "Planeswalker", "Battle", "Other"];
     return `<div class="buy-checked-meter"><div class="selection-meter"><strong>${checked}</strong><span>checked cards</span></div><div class="buy-type-counters" aria-label="Checked cards by type">${order.filter((type) => totals[type]).map((type) => `<span><b>${totals[type]}</b> ${esc(type)}</span>`).join("")}</div></div>`;
+  }
+
+  function salvageBuySection() {
+    const cards = buyCatalog.salvage || [];
+    if (!cards.length) return "";
+    return `<details class="salvage-pile"><summary><span>${icon("♲")}<strong>Salvage</strong><b>${cards.length}</b></span><small>Owned shadow pile · intentionally excluded from final decks</small></summary><div class="salvage-grid">${cards.map((card) => `<button type="button" data-salvage-id="${esc(card.id)}"><img src="${esc(card.image || cardImageCandidates(card)[0])}" alt="" loading="lazy"><span><strong>${esc(card.name)}</strong><small>${esc(card.reason)}</small></span></button>`).join("")}</div><p class="salvage-note">“On an Adventure” is a helper/reference card rather than a legal deck card, so it is not counted in Salvage or any final 100.</p></details>`;
   }
 
   function updateBuyCheckedSummary() {
@@ -812,8 +847,8 @@
       </details>
       ${startingShellSection(variant, plan, current, variant.id)}
       ${buySection("Tuned", "Required purchases for the Tuned build", plan.required, "tuned", current, variant.id)}
-      ${buySection("Enhance", "Optional improvements · same strategy · generally $10 or less", plan.enhance, "enhance", current, variant.id)}
-      ${buySection("Maxxed", "Optional ceiling choices · up to 3 Game Changers", plan.max, "max", current, variant.id)}`;
+      ${buySection("Enhance", "Role-preserving improvements and owned substitutions · $15 or less", plan.enhance, "enhance", current, variant.id)}
+      ${buySection("Maxxed", "Strongest Tier 3 / Bracket 3-legal capability · price is not the criterion", plan.max, "max", current, variant.id)}`;
     decorateRichContent(body, variant);
     if (details.open) ensureShopMetadata([...(plan.startingShell || []), ...(plan.required || []), ...(plan.enhance || []), ...(plan.max || [])]);
     $$('[data-shell-card-name]', body).forEach((button) => button.addEventListener("click", () => {
@@ -834,19 +869,25 @@
     $$('input[data-buy-kind]', body).forEach((checkbox) => checkbox.addEventListener("change", () => {
       const kind = checkbox.dataset.buyKind;
       const itemId = checkbox.dataset.itemId;
-      const choices = new Set(ensureBuyState(variant.id)[kind] || []);
-      const collection = kind === "shell" ? (plan.startingShell || []).filter((candidate) => !candidate.isFlexibleSlot) : (plan[kind] || []);
+      const currentState = ensureBuyState(variant.id);
+      const choices = new Set(currentState[kind] || []);
+      const collection = kind === "shell" ? (plan.startingShell || []).filter((candidate) => !candidate.isFlexibleSlot) : kind === "tuned" ? (plan.required || []) : (plan[kind] || []);
       const item = collection.find((candidate) => candidate.id === itemId);
-      if (checkbox.checked && kind === "max" && item?.gameChanger) {
-        const selectedGameChangers = plan.max.filter((candidate) => candidate.gameChanger && choices.has(candidate.id)).length;
-        if (selectedGameChangers >= 3) {
-          checkbox.checked = false;
-          showToast("Bracket 3 allows up to three Game Changers in this deck.");
-          return;
-        }
-      }
       checkbox.checked ? choices.add(itemId) : choices.delete(itemId);
-      ensureBuyState(variant.id)[kind] = Array.from(choices);
+      const tentative = {
+        ...currentState,
+        shell: [...currentState.shell],
+        tuned: [...currentState.tuned],
+        enhance: [...currentState.enhance],
+        max: [...currentState.max],
+        [kind]: Array.from(choices)
+      };
+      if (checkbox.checked && item?.gameChanger && evaluateDeckCompliance(plan, tentative).selectedGameChangers.length > 3) {
+        checkbox.checked = false;
+        showToast("Bracket 3 allows up to three selected Game Changers in the full deck.");
+        return;
+      }
+      currentState[kind] = tentative[kind];
       saveState();
       if (kind === "shell") {
         renderBuy();
@@ -866,7 +907,14 @@
         if (selectAllShell.isConnected) selectAllShell.indeterminate = partiallySelected;
       });
       selectAllShell.addEventListener("change", () => {
-        ensureBuyState(variant.id).shell = selectAllShell.checked ? shellIds : [];
+        const currentState = ensureBuyState(variant.id);
+        const tentative = {...currentState, shell: selectAllShell.checked ? shellIds : []};
+        if (selectAllShell.checked && evaluateDeckCompliance(plan, tentative).selectedGameChangers.length > 3) {
+          renderBuy();
+          showToast("Selecting the full shell would exceed three Game Changers. Uncheck another Game Changer first.");
+          return;
+        }
+        currentState.shell = tentative.shell;
         saveState(selectAllShell.checked ? "Starting Shell selected" : "Starting Shell cleared");
         renderBuy();
       });
@@ -1026,7 +1074,7 @@
       <button class="buy-item-detail" type="button" data-shell-card-name="${esc(card.name)}">
         ${image}
         <span class="buy-copy">
-          <span class="buy-item-eyebrow"><span class="kind-label shell">Starting Shell</span>${card.isCommander ? `<span class="commander-mini">Commander</span>` : ""}</span>
+          <span class="buy-item-eyebrow"><span class="kind-label shell">Starting Shell</span>${card.isCommander ? `<span class="commander-mini">Commander</span>` : ""}${card.gameChanger ? `<span class="gc-mini">✦ Game Changer</span>` : ""}</span>
           <strong>${esc(card.name)}${card.quantity > 1 ? ` ×${card.quantity}` : ""}</strong>
           <small>${manaCostHtml(card.manaCost)}${esc(card.typeLine)}</small>
         </span>
@@ -1240,14 +1288,15 @@
         const checked = required || (current[kind] || []).includes(item.id);
         const impact = kind === "enhance" ? enhancementImpact(item) : null;
         const replacement = item.replaces ? `<span class="replacement-line"><b${impact ? ` class="replace-impact impact-${impact.key}" title="${esc(impact.label)}" aria-label="Replaces — ${esc(impact.label)}"` : ""}>Replaces</b><span>${esc(item.replaces)}</span></span>` : "";
+        const summaryCopy = kind === "max" ? (item.maxReason || item.purpose || item.typeLine || "") : (item.purpose || item.typeLine || "");
         return `<div class="buy-item">
           ${required ? `<span class="required-check" aria-label="Included">✓</span>` : `<input type="checkbox" ${checked ? "checked" : ""} data-buy-kind="${esc(kind)}" data-item-id="${esc(item.id)}" data-variant-id="${esc(variantId)}" aria-label="Include ${esc(item.name)} in the final deck">`}
           <button class="buy-item-detail" type="button" data-item-kind="${esc(kind)}" data-item-id="${esc(item.id)}">
             <img src="${esc(item.image)}" alt="" loading="lazy">
             <span class="buy-copy">
-              <span class="buy-item-eyebrow"><span class="kind-label ${esc(kind)}">${esc(kind)}</span>${item.gameChanger ? `<span class="gc-mini">✦ Game Changer</span>` : ""}</span>
+              <span class="buy-item-eyebrow"><span class="kind-label ${esc(kind)}">${esc(kind)}</span>${item.ownedExtra ? `<span class="owned-mini">✓ Owned</span>` : ""}${item.temporaryUntil ? `<span class="temp-mini">Temp until ${esc(item.temporaryUntil)}</span>` : ""}${item.gameChanger ? `<span class="gc-mini">✦ Game Changer</span>` : ""}</span>
               <strong>${esc(item.name)}${item.quantity > 1 ? ` ×${item.quantity}` : ""}</strong>
-              ${replacement}<small>${esc(item.purpose || item.typeLine || "")}</small>
+              ${replacement}<small>${esc(summaryCopy)}</small>
             </span>
           </button>
           <span class="price">${money(item.price)}</span>
@@ -1286,6 +1335,9 @@
       : `
       <div class="item-meta">${item.manaCost ? `<span>${manaCostHtml(item.manaCost)}</span>` : ""}<span>${esc(item.typeLine || "")}</span><span>${money(item.price)}${item.ceiling ? ` · ceiling ${money(item.ceiling)}` : ""}</span></div>
       ${item.gameChanger ? `<p class="gc-callout">Game Changer · counts toward this deck’s limit of three in Bracket 3.</p>` : ""}
+      ${item.temporaryUntil ? `<p class="temp-callout"><b>Temporary slot.</b> Use this owned card until you find ${esc(item.temporaryUntil)}.</p>` : ""}
+      ${item.ownedExtra && !item.temporaryUntil ? `<p class="owned-callout">Already owned · this option costs nothing to test.</p>` : ""}
+      ${item.maxReason ? detailText("Why this is Maxxed", item.maxReason) : ""}
       <div class="detail-quick-grid">
         <section class="detail-quick-box">${sectionIcon("does")}<span><b>Replaces</b>${item.replaces ? `<button type="button" class="related-card-link" data-related-card="${esc(item.replaces)}">${esc(item.replaces)} →</button>` : `<small>No card replaced</small>`}</span></section>
         <section class="detail-quick-box info-tip" data-tooltip="${esc(TOOLTIP_DEFINITIONS.roles)}" tabindex="0" aria-describedby="info-tooltip">${sectionIcon("roles")}<span><b>Roles</b><small>${item.tags?.length ? esc(item.tags.join(" · ")) : "General deck support"}</small></span>${tooltipHint()}</section>
@@ -1537,6 +1589,7 @@
     if (!variants.length) {
       host.innerHTML = `<div class="empty-state"><h3>No live decks yet</h3><p>Select a deck in Compare and choose its final cards in Buy Picks.</p><button class="primary-button" data-go="compare">Choose decks</button></div>`;
       $("[data-go='compare']", host)?.addEventListener("click", () => switchView("compare"));
+      appendLiveSalvage(host);
       return;
     }
     variants.forEach((variant) => {
@@ -1563,6 +1616,24 @@
       });
       host.appendChild(details);
     });
+    appendLiveSalvage(host);
+  }
+
+  function appendLiveSalvage(host) {
+    const cards = buyCatalog.salvage || [];
+    if (!cards.length) return;
+    const details = document.createElement("details");
+    details.className = "live-deck salvage-live-deck";
+    details.innerHTML = `<summary><span class="deck-number">♲</span><span><strong>Salvage</strong><small>${cards.length} owned cards · no current final-deck role</small></span></summary><div class="live-card-list"></div>`;
+    const list = $(".live-card-list", details);
+    cards.forEach((card) => {
+      const row = document.createElement("article");
+      row.className = "live-card-row is-bought is-salvage";
+      row.innerHTML = `<button type="button" class="live-card-main"><img src="${esc(card.image || cardImageCandidates(card)[0])}" alt="" loading="lazy"><span><b>${esc(card.name)}</b><small>${manaCostHtml(card.manaCost)}${esc(card.typeLine || "")}</small><em>Salvage shadow pile</em></span></button><div class="live-card-status"><strong>Owned · excluded</strong><small>${esc(card.reason)}</small></div>`;
+      $(".live-card-main", row).addEventListener("click", () => openBuyItemDetail({...card, purpose: card.reason, why: card.reason, whereToBuy: "Already owned · Salvage shadow pile", brief: {fit: card.reason}}, {id: "salvage", deckId: "Salvage", image: card.image}, "salvage"));
+      list.appendChild(row);
+    });
+    host.appendChild(details);
   }
 
   function renderShop() {
@@ -1857,7 +1928,7 @@
       {view: "buy", selectors: [".deck-compliance", ".empty-state"], title: "Keep the rules close", copy: "Tier 2, Tier 3, and exact card count stay compact; expand the check for composition and detailed issues."},
       {view: "buy", selectors: [".plan-analysis", ".empty-state"], title: "Read the full strategy", copy: "The analysis preserves how to play, buy order, bracket reasoning, stretch cards, and top-of-bracket options."},
       {view: "buy", selectors: [".starting-shell", ".empty-state"], title: "Inspect the 100-card foundation", copy: "The commander never collapses. The other 99 cards are nested by type, with lands in their own visual tray."},
-      {view: "buy", selectors: [".buy-section", ".empty-state"], title: "Try one-for-one changes", copy: "Tuned purchases are included; optional Enhance and Maxxed cards each name the card they replace."}
+      {view: "buy", selectors: [".buy-section", ".empty-state"], title: "Try one-for-one changes", copy: "Enhance options are role-preserving choices at $15 or less. Maxxed choices are classified by Tier 3 capability rather than cost; each names the card it replaces."}
     ],
     shop: [
       {view: "shop", selectors: [".page-intro"], title: "Your table-ready list", copy: "Only purchases from the selected deck arrangements appear here, deduplicated across decks."},
@@ -1969,6 +2040,8 @@
       ]);
       state = loadState();
       migrateCheckedSelections();
+      migrateOwnedExtras();
+      sanitizeGameChangerSelections();
       initializeInfoTooltips();
       initializeDetailsControls();
       renderCompare();

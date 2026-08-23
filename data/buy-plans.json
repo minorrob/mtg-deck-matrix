@@ -555,7 +555,7 @@
           "typeLine": "Creature — Spirit",
           "tags": [],
           "isCommander": false,
-          "gameChanger": false,
+          "gameChanger": true,
           "isFlexibleSlot": false,
           "image": "https://cards.scryfall.io/small/front/7/6/76f58441-5674-4f1e-af9b-94e14ab7e619.jpg?1783907041",
           "oracleText": "Untap all permanents you control during each other player's untap step.",
@@ -2883,46 +2883,6 @@
       "upgrade": [],
       "enhance": [
         {
-          "id": "branching-evolution",
-          "name": "Branching Evolution",
-          "quantity": 1,
-          "manaCost": "{2}{G}",
-          "typeLine": "Enchantment",
-          "price": 7.44,
-          "ceiling": 8.5,
-          "category": "enhance",
-          "purpose": "Doubles every counter Betor makes - the biggest single upgrade in the deck.",
-          "replaces": "Tip the Scales",
-          "gameChanger": false,
-          "stage": "Enhance",
-          "tags": [
-            "counters",
-            "doubler"
-          ],
-          "why": "Doubles every counter Betor makes - the biggest single upgrade in the deck.",
-          "whyPrimary": "Doubles every counter Betor makes - the biggest single upgrade in the deck.",
-          "whyOptional": "The biggest counter multiplier in the deck at $6.43 — pure power. Betor now triggers reliably without it.",
-          "alternateReason": "",
-          "alternateTradeoff": "",
-          "whereToBuy": "Singles case",
-          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F553312%3Fpage%3D1",
-          "brief": {
-            "power": 4,
-            "ease": 4,
-            "fun": 4,
-            "value": "Strong value. Premium effect at $6.43, comfortably worth the slot.",
-            "fit": "Doubles every counter Betor makes - the biggest single upgrade in the deck."
-          },
-          "image": "https://cards.scryfall.io/small/front/c/0/c0f1a736-8b12-4f58-a031-bf1733f65c51.jpg?1783911212",
-          "oracleText": "If one or more +1/+1 counters would be put on a creature you control, twice that many +1/+1 counters are put on that creature instead.",
-          "keywords": [],
-          "colorIdentity": [
-            "G"
-          ],
-          "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
-        },
-        {
           "id": "cathars-crusade",
           "name": "Cathars' Crusade",
           "quantity": 1,
@@ -3126,7 +3086,8 @@
             "B"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "phyrexian-arena",
@@ -3165,7 +3126,8 @@
             "B"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Tier 3 capability choice: Draw a card and lose 1 life every upkeep — the life LOSS switches on Betor's reanimation half, which is otherwise dormant."
         },
         {
           "id": "teferi-s-protection",
@@ -3205,7 +3167,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "the-ozolith",
@@ -3242,7 +3205,8 @@
           "keywords": [],
           "colorIdentity": [],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Tier 3 capability choice: Counters from dead creatures come back and move onto something new. Wipe insurance for a counters deck."
         },
         {
           "id": "smothering-tithe",
@@ -3284,7 +3248,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "innkeeper-s-talent",
@@ -3323,7 +3288,49 @@
             "G"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Tier 3 capability choice: Doubles counter placement and eventually gives everything you control an activated-ability boost."
+        },
+        {
+          "id": "branching-evolution",
+          "name": "Branching Evolution",
+          "quantity": 1,
+          "manaCost": "{2}{G}",
+          "typeLine": "Enchantment",
+          "price": 7.44,
+          "ceiling": 8.5,
+          "category": "max",
+          "purpose": "Doubles every counter Betor makes - the biggest single upgrade in the deck.",
+          "replaces": "Tip the Scales",
+          "gameChanger": false,
+          "stage": "Maxxed",
+          "tags": [
+            "counters",
+            "doubler"
+          ],
+          "why": "Doubles every counter Betor makes - the biggest single upgrade in the deck.",
+          "whyPrimary": "Doubles every counter Betor makes - the biggest single upgrade in the deck.",
+          "whyOptional": "The biggest counter multiplier in the deck at $6.43 — pure power. Betor now triggers reliably without it.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F553312%3Fpage%3D1",
+          "brief": {
+            "power": 4,
+            "ease": 4,
+            "fun": 4,
+            "value": "Strong value. Premium effect at $6.43, comfortably worth the slot.",
+            "fit": "Doubles every counter Betor makes - the biggest single upgrade in the deck."
+          },
+          "image": "https://cards.scryfall.io/small/front/c/0/c0f1a736-8b12-4f58-a031-bf1733f65c51.jpg?1783911212",
+          "oracleText": "If one or more +1/+1 counters would be put on a creature you control, twice that many +1/+1 counters are put on that creature instead.",
+          "keywords": [],
+          "colorIdentity": [
+            "G"
+          ],
+          "commanderLegal": true,
+          "priceUpdated": "2026-08-23",
+          "maxReason": "The cleanest multiplier for Betor and every other +1/+1-counter source, doubling the deck's central resource rather than merely improving one slot."
         }
       ]
     },
@@ -5125,49 +5132,6 @@
       "upgrade": [],
       "enhance": [
         {
-          "id": "1a-upgrade-2-pitiless-plunderer",
-          "name": "Pitiless Plunderer",
-          "quantity": 1,
-          "price": 4.38,
-          "ceiling": 4.38,
-          "category": "enhance",
-          "stage": "Enhance",
-          "purpose": "Next card on this variant's published upgrade ladder.",
-          "typeLine": "Creature — Human Pirate",
-          "manaCost": "{3}{B}",
-          "gameChanger": false,
-          "why": "Next card on this variant's published upgrade ladder.",
-          "whyPrimary": "Next card on this variant's published upgrade ladder.",
-          "whyOptional": "Published next-step upgrade; select it only when extending beyond Tuned.",
-          "alternateReason": "",
-          "alternateTradeoff": "",
-          "replaces": "Unspecified shell card 9",
-          "tags": [
-            "Toughness / Defenders",
-            "Sacrifice / Aristocrats",
-            "Tokens / Go-wide"
-          ],
-          "whereToBuy": "Singles case",
-          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F525765%3Fpage%3D1",
-          "brief": {
-            "power": null,
-            "ease": null,
-            "fun": null,
-            "value": "Price varies",
-            "fit": "Next card on this variant's published upgrade ladder."
-          },
-          "image": "https://cards.scryfall.io/small/front/5/b/5b5cd187-857a-44dd-8595-a52857a0b753.jpg?1783913869",
-          "oracleText": "Whenever another creature you control dies, create a Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")",
-          "keywords": [
-            "Treasure"
-          ],
-          "colorIdentity": [
-            "B"
-          ],
-          "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
-        },
-        {
           "id": "1a-upgrade-4-mycoloth",
           "name": "Mycoloth",
           "quantity": 1,
@@ -5207,47 +5171,6 @@
           "colorIdentity": [
             "G"
           ],
-          "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
-        },
-        {
-          "id": "1a-upgrade-5-skullclamp",
-          "name": "Skullclamp",
-          "quantity": 1,
-          "price": 5.9,
-          "ceiling": 5.9,
-          "category": "enhance",
-          "stage": "Enhance",
-          "purpose": "Next card on this variant's published upgrade ladder.",
-          "typeLine": "Artifact — Equipment",
-          "manaCost": "{1}",
-          "gameChanger": false,
-          "why": "Next card on this variant's published upgrade ladder.",
-          "whyPrimary": "Next card on this variant's published upgrade ladder.",
-          "whyOptional": "Published next-step upgrade; select it only when extending beyond Tuned.",
-          "alternateReason": "",
-          "alternateTradeoff": "",
-          "replaces": "Unspecified shell card 12",
-          "tags": [
-            "Toughness / Defenders",
-            "Sacrifice / Aristocrats",
-            "Tokens / Go-wide"
-          ],
-          "whereToBuy": "Singles case",
-          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F698056%3Fpage%3D1",
-          "brief": {
-            "power": null,
-            "ease": null,
-            "fun": null,
-            "value": "Price varies",
-            "fit": "Next card on this variant's published upgrade ladder."
-          },
-          "image": "https://cards.scryfall.io/small/front/1/d/1d8b007b-3169-4ee3-80c7-781fc096fc7a.jpg?1783903215",
-          "oracleText": "Equipped creature gets +1/-1.\nWhenever equipped creature dies, draw two cards.\nEquip {1}",
-          "keywords": [
-            "Equip"
-          ],
-          "colorIdentity": [],
           "commanderLegal": true,
           "priceUpdated": "2026-08-23"
         }
@@ -5292,7 +5215,8 @@
             "B"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "1a-max-2-seedborn-muse",
@@ -5333,7 +5257,8 @@
             "G"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "1a-max-3-the-one-ring",
@@ -5374,7 +5299,8 @@
           ],
           "colorIdentity": [],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "1a-upgrade-3-grave-pact",
@@ -5415,7 +5341,8 @@
             "B"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Turns every expendable creature into repeatable, asymmetric creature control across all opponents."
         },
         {
           "id": "1a-upgrade-6-parallel-lives",
@@ -5456,7 +5383,94 @@
             "G"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Doubles the deck's central token engine and compounds every later token payoff."
+        },
+        {
+          "id": "1a-upgrade-2-pitiless-plunderer",
+          "name": "Pitiless Plunderer",
+          "quantity": 1,
+          "price": 4.38,
+          "ceiling": 4.38,
+          "category": "max",
+          "stage": "Maxxed",
+          "purpose": "Next card on this variant's published upgrade ladder.",
+          "typeLine": "Creature — Human Pirate",
+          "manaCost": "{3}{B}",
+          "gameChanger": false,
+          "why": "Next card on this variant's published upgrade ladder.",
+          "whyPrimary": "Next card on this variant's published upgrade ladder.",
+          "whyOptional": "Published next-step upgrade; select it only when extending beyond Tuned.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "replaces": "Unspecified shell card 9",
+          "tags": [
+            "Toughness / Defenders",
+            "Sacrifice / Aristocrats",
+            "Tokens / Go-wide"
+          ],
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F525765%3Fpage%3D1",
+          "brief": {
+            "power": null,
+            "ease": null,
+            "fun": null,
+            "value": "Price varies",
+            "fit": "Next card on this variant's published upgrade ladder."
+          },
+          "image": "https://cards.scryfall.io/small/front/5/b/5b5cd187-857a-44dd-8595-a52857a0b753.jpg?1783913869",
+          "oracleText": "Whenever another creature you control dies, create a Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")",
+          "keywords": [
+            "Treasure"
+          ],
+          "colorIdentity": [
+            "B"
+          ],
+          "commanderLegal": true,
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Every expendable Saproling becomes mana for Slimefoot's sacrifice engine, allowing the deck to compound deaths, tokens, and drain triggers in one turn."
+        },
+        {
+          "id": "1a-upgrade-5-skullclamp",
+          "name": "Skullclamp",
+          "quantity": 1,
+          "price": 5.9,
+          "ceiling": 5.9,
+          "category": "max",
+          "stage": "Maxxed",
+          "purpose": "Next card on this variant's published upgrade ladder.",
+          "typeLine": "Artifact — Equipment",
+          "manaCost": "{1}",
+          "gameChanger": false,
+          "why": "Next card on this variant's published upgrade ladder.",
+          "whyPrimary": "Next card on this variant's published upgrade ladder.",
+          "whyOptional": "Published next-step upgrade; select it only when extending beyond Tuned.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "replaces": "Unspecified shell card 12",
+          "tags": [
+            "Toughness / Defenders",
+            "Sacrifice / Aristocrats",
+            "Tokens / Go-wide"
+          ],
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F698056%3Fpage%3D1",
+          "brief": {
+            "power": null,
+            "ease": null,
+            "fun": null,
+            "value": "Price varies",
+            "fit": "Next card on this variant's published upgrade ladder."
+          },
+          "image": "https://cards.scryfall.io/small/front/1/d/1d8b007b-3169-4ee3-80c7-781fc096fc7a.jpg?1783903215",
+          "oracleText": "Equipped creature gets +1/-1.\nWhenever equipped creature dies, draw two cards.\nEquip {1}",
+          "keywords": [
+            "Equip"
+          ],
+          "colorIdentity": [],
+          "commanderLegal": true,
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Turns Slimefoot's 1/1 Saprolings into the strongest repeatable draw engine available to the deck."
         }
       ]
     },
@@ -5983,7 +5997,7 @@
           "typeLine": "Creature — Spirit",
           "tags": [],
           "isCommander": false,
-          "gameChanger": false,
+          "gameChanger": true,
           "isFlexibleSlot": false,
           "image": "https://cards.scryfall.io/small/front/7/6/76f58441-5674-4f1e-af9b-94e14ab7e619.jpg?1783907041",
           "oracleText": "Untap all permanents you control during each other player's untap step.",
@@ -8334,7 +8348,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "1b-max-2-aura-shards",
@@ -8376,7 +8391,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "1b-max-3-smothering-tithe",
@@ -8419,7 +8435,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         }
       ]
     },
@@ -10249,7 +10266,8 @@
             "B"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "1c-max-2-teferi-s-protection",
@@ -10289,7 +10307,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "1c-max-3-smothering-tithe",
@@ -10331,7 +10350,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "1c-upgrade-3-archangel-of-thune",
@@ -10374,47 +10394,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
-        },
-        {
-          "id": "1c-upgrade-5-exquisite-blood",
-          "name": "Exquisite Blood",
-          "quantity": 1,
-          "price": 37.78,
-          "ceiling": 37.78,
-          "category": "max",
-          "stage": "Maxxed",
-          "purpose": "Next card on this variant's published upgrade ladder.",
-          "typeLine": "Enchantment",
-          "manaCost": "{4}{B}",
-          "gameChanger": false,
-          "why": "Next card on this variant's published upgrade ladder.",
-          "whyPrimary": "Next card on this variant's published upgrade ladder.",
-          "whyOptional": "Published next-step upgrade; select it only when extending beyond Tuned.",
-          "alternateReason": "",
-          "alternateTradeoff": "",
-          "replaces": "Unspecified shell card 10",
-          "tags": [
-            "Lifegain",
-            "Toughness / Defenders"
-          ],
-          "whereToBuy": "Singles case",
-          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F525752%3Fpage%3D1",
-          "brief": {
-            "power": null,
-            "ease": null,
-            "fun": null,
-            "value": "Price varies",
-            "fit": "Next card on this variant's published upgrade ladder."
-          },
-          "image": "https://cards.scryfall.io/small/front/0/e/0e8ccfa7-4178-476a-a155-0ca1c98556c9.jpg?1783913874",
-          "oracleText": "Whenever an opponent loses life, you gain that much life.",
-          "keywords": [],
-          "colorIdentity": [
-            "B"
-          ],
-          "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Converts each lifegain event into team-wide permanent growth, creating a fast scaling finisher."
         }
       ]
     },
@@ -10938,7 +10919,7 @@
           "typeLine": "Creature — Spirit",
           "tags": [],
           "isCommander": false,
-          "gameChanger": false,
+          "gameChanger": true,
           "isFlexibleSlot": false,
           "image": "https://cards.scryfall.io/small/front/7/6/76f58441-5674-4f1e-af9b-94e14ab7e619.jpg?1783907041",
           "oracleText": "Untap all permanents you control during each other player's untap step.",
@@ -13282,7 +13263,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "1e-max-2-teferi-s-protection",
@@ -13323,7 +13305,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "1e-max-3-smothering-tithe",
@@ -13366,7 +13349,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "1e-upgrade-2-earthcraft",
@@ -13389,7 +13373,8 @@
           "tags": [
             "Counters / Proliferate",
             "Toughness / Defenders",
-            "Tribal / Typal"
+            "Tribal / Typal",
+            "Late three-card infinite combo"
           ],
           "whereToBuy": "Singles case",
           "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F5529%3Fpage%3D1",
@@ -13407,7 +13392,8 @@
             "G"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Converts the creature/token board into explosive mana; with Ghave and Cathars' Crusade it creates a late three-card infinite token-and-counter loop that must wait until turn seven or later."
         },
         {
           "id": "1e-upgrade-5-doubling-season",
@@ -13448,7 +13434,8 @@
             "G"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Doubles both token production and counter placement, maximizing two central engines at once."
         },
         {
           "id": "1e-upgrade-6-anointed-procession",
@@ -13489,7 +13476,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Doubles the primary token plan and compounds every sacrifice, populate, and go-wide payoff."
         }
       ]
     },
@@ -15247,45 +15235,6 @@
       "upgrade": [],
       "enhance": [
         {
-          "id": "2o-upgrade-1-blowfly-infestation",
-          "name": "Blowfly Infestation",
-          "quantity": 1,
-          "price": 0.31,
-          "ceiling": 0.31,
-          "category": "enhance",
-          "stage": "Enhance",
-          "purpose": "combo, see note",
-          "typeLine": "Enchantment",
-          "manaCost": "{2}{B}",
-          "gameChanger": false,
-          "why": "combo, see note",
-          "whyPrimary": "combo, see note",
-          "whyOptional": "Published next-step upgrade; select it only when extending beyond Tuned.",
-          "alternateReason": "",
-          "alternateTradeoff": "",
-          "replaces": "Unspecified shell card 9",
-          "tags": [
-            "Counters / Proliferate"
-          ],
-          "whereToBuy": "Singles case",
-          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F671130%3Fpage%3D1",
-          "brief": {
-            "power": null,
-            "ease": null,
-            "fun": null,
-            "value": "Price varies",
-            "fit": "combo, see note"
-          },
-          "image": "https://cards.scryfall.io/small/front/7/7/77e5dc0c-f4db-4540-b8d1-a07d7c96a374.jpg?1783911526",
-          "oracleText": "Whenever a creature dies, if it had a -1/-1 counter on it, put a -1/-1 counter on target creature.",
-          "keywords": [],
-          "colorIdentity": [
-            "B"
-          ],
-          "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
-        },
-        {
           "id": "2o-upgrade-2-grim-poppet",
           "name": "Grim Poppet",
           "quantity": 1,
@@ -15402,6 +15351,50 @@
           ],
           "commanderLegal": true,
           "priceUpdated": "2026-08-23"
+        },
+        {
+          "id": "2o-upgrade-4-black-market-connections",
+          "name": "Black Market Connections",
+          "quantity": 1,
+          "price": 10.25,
+          "ceiling": 10.25,
+          "category": "enhance",
+          "stage": "Enhance",
+          "purpose": "Next card on this variant's published upgrade ladder.",
+          "typeLine": "Enchantment",
+          "manaCost": "{2}{B}",
+          "gameChanger": false,
+          "why": "Next card on this variant's published upgrade ladder.",
+          "whyPrimary": "Next card on this variant's published upgrade ladder.",
+          "whyOptional": "Published next-step upgrade; select it only when extending beyond Tuned.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "replaces": "Unspecified shell card 12",
+          "tags": [
+            "Counters / Proliferate"
+          ],
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F698008%3Fpage%3D1",
+          "brief": {
+            "power": null,
+            "ease": null,
+            "fun": null,
+            "value": "Price varies",
+            "fit": "Next card on this variant's published upgrade ladder."
+          },
+          "image": "https://cards.scryfall.io/small/front/9/d/9d9ca869-e68a-4f53-9f52-85c714dac6f3.jpg?1783903238",
+          "oracleText": "At the beginning of your first main phase, choose one or more —\n• Sell Contraband — Create a Treasure token. You lose 1 life.\n• Buy Information — Draw a card. You lose 2 life.\n• Hire a Mercenary — Create a 3/2 colorless Shapeshifter creature token with changeling. You lose 3 life. (It is every creature type.)",
+          "keywords": [
+            "Hire a Mercenary",
+            "Treasure",
+            "Sell Contraband",
+            "Buy Information"
+          ],
+          "colorIdentity": [
+            "B"
+          ],
+          "commanderLegal": true,
+          "priceUpdated": "2026-08-23"
         }
       ],
       "max": [
@@ -15442,7 +15435,8 @@
             "B"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "2o-max-2-orcish-bowmasters",
@@ -15484,7 +15478,8 @@
             "B"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "2o-max-3-jeska-s-will",
@@ -15523,51 +15518,8 @@
             "R"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
-        },
-        {
-          "id": "2o-upgrade-4-black-market-connections",
-          "name": "Black Market Connections",
-          "quantity": 1,
-          "price": 10.25,
-          "ceiling": 10.25,
-          "category": "max",
-          "stage": "Maxxed",
-          "purpose": "Next card on this variant's published upgrade ladder.",
-          "typeLine": "Enchantment",
-          "manaCost": "{2}{B}",
-          "gameChanger": false,
-          "why": "Next card on this variant's published upgrade ladder.",
-          "whyPrimary": "Next card on this variant's published upgrade ladder.",
-          "whyOptional": "Published next-step upgrade; select it only when extending beyond Tuned.",
-          "alternateReason": "",
-          "alternateTradeoff": "",
-          "replaces": "Unspecified shell card 12",
-          "tags": [
-            "Counters / Proliferate"
-          ],
-          "whereToBuy": "Singles case",
-          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F698008%3Fpage%3D1",
-          "brief": {
-            "power": null,
-            "ease": null,
-            "fun": null,
-            "value": "Price varies",
-            "fit": "Next card on this variant's published upgrade ladder."
-          },
-          "image": "https://cards.scryfall.io/small/front/9/d/9d9ca869-e68a-4f53-9f52-85c714dac6f3.jpg?1783903238",
-          "oracleText": "At the beginning of your first main phase, choose one or more —\n• Sell Contraband — Create a Treasure token. You lose 1 life.\n• Buy Information — Draw a card. You lose 2 life.\n• Hire a Mercenary — Create a 3/2 colorless Shapeshifter creature token with changeling. You lose 3 life. (It is every creature type.)",
-          "keywords": [
-            "Hire a Mercenary",
-            "Treasure",
-            "Sell Contraband",
-            "Buy Information"
-          ],
-          "colorIdentity": [
-            "B"
-          ],
-          "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         }
       ]
     },
@@ -17157,7 +17109,7 @@
           "purpose": "You draw the cards instead of them.",
           "typeLine": "Creature — Human Rogue",
           "manaCost": "{2}{U}{B}",
-          "gameChanger": false,
+          "gameChanger": true,
           "why": "You draw the cards instead of them.",
           "whyPrimary": "You draw the cards instead of them.",
           "whyOptional": "",
@@ -17228,47 +17180,6 @@
           ],
           "colorIdentity": [
             "B",
-            "U"
-          ],
-          "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
-        },
-        {
-          "id": "2a-upgrade-3-hullbreaker-horror",
-          "name": "Hullbreaker Horror",
-          "quantity": 1,
-          "price": 5.91,
-          "ceiling": 5.91,
-          "category": "enhance",
-          "stage": "Enhance",
-          "purpose": "Next card on this variant's published upgrade ladder.",
-          "typeLine": "Creature — Kraken Horror",
-          "manaCost": "{5}{U}{U}",
-          "gameChanger": false,
-          "why": "Next card on this variant's published upgrade ladder.",
-          "whyPrimary": "Next card on this variant's published upgrade ladder.",
-          "whyOptional": "Published next-step upgrade; select it only when extending beyond Tuned.",
-          "alternateReason": "",
-          "alternateTradeoff": "",
-          "replaces": "Unspecified shell card 6",
-          "tags": [
-            "Control / Interaction"
-          ],
-          "whereToBuy": "Singles case",
-          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F609763%3Fpage%3D1",
-          "brief": {
-            "power": null,
-            "ease": null,
-            "fun": null,
-            "value": "Price varies",
-            "fit": "Next card on this variant's published upgrade ladder."
-          },
-          "image": "https://cards.scryfall.io/small/front/1/3/137acb70-a1fd-4ea9-a5d9-f4b438eb5e82.jpg?1783908162",
-          "oracleText": "Flash\nThis spell can't be countered.\nWhenever you cast a spell, choose up to one —\n• Return target spell you don't control to its owner's hand.\n• Return target nonland permanent to its owner's hand.",
-          "keywords": [
-            "Flash"
-          ],
-          "colorIdentity": [
             "U"
           ],
           "commanderLegal": true,
@@ -17355,7 +17266,8 @@
             "U"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "2a-max-2-consecrated-sphinx",
@@ -17396,7 +17308,8 @@
             "U"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "2a-max-3-the-one-ring",
@@ -17435,7 +17348,51 @@
           ],
           "colorIdentity": [],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
+        },
+        {
+          "id": "2a-upgrade-3-hullbreaker-horror",
+          "name": "Hullbreaker Horror",
+          "quantity": 1,
+          "price": 5.91,
+          "ceiling": 5.91,
+          "category": "max",
+          "stage": "Maxxed",
+          "purpose": "Next card on this variant's published upgrade ladder.",
+          "typeLine": "Creature — Kraken Horror",
+          "manaCost": "{5}{U}{U}",
+          "gameChanger": false,
+          "why": "Next card on this variant's published upgrade ladder.",
+          "whyPrimary": "Next card on this variant's published upgrade ladder.",
+          "whyOptional": "Published next-step upgrade; select it only when extending beyond Tuned.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "replaces": "Unspecified shell card 6",
+          "tags": [
+            "Control / Interaction",
+            "Late combo watch"
+          ],
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F609763%3Fpage%3D1",
+          "brief": {
+            "power": null,
+            "ease": null,
+            "fun": null,
+            "value": "Price varies",
+            "fit": "Next card on this variant's published upgrade ladder."
+          },
+          "image": "https://cards.scryfall.io/small/front/1/3/137acb70-a1fd-4ea9-a5d9-f4b438eb5e82.jpg?1783908162",
+          "oracleText": "Flash\nThis spell can't be countered.\nWhenever you cast a spell, choose up to one —\n• Return target spell you don't control to its owner's hand.\n• Return target nonland permanent to its owner's hand.",
+          "keywords": [
+            "Flash"
+          ],
+          "colorIdentity": [
+            "U"
+          ],
+          "commanderLegal": true,
+          "priceUpdated": "2026-08-23",
+          "maxReason": "A flash, uncounterable control engine that turns every later noncreature spell into protection or board control and supports late resource loops."
         }
       ]
     },
@@ -18990,45 +18947,7 @@
         }
       ],
       "upgrade": [],
-      "enhance": [
-        {
-          "id": "2b-upgrade-2-deserted-temple",
-          "name": "Deserted Temple",
-          "quantity": 1,
-          "price": 0.69,
-          "ceiling": 0.69,
-          "category": "enhance",
-          "stage": "Enhance",
-          "purpose": "Next card on this variant's published upgrade ladder.",
-          "typeLine": "Land",
-          "manaCost": "",
-          "gameChanger": false,
-          "why": "Next card on this variant's published upgrade ladder.",
-          "whyPrimary": "Next card on this variant's published upgrade ladder.",
-          "whyOptional": "Published next-step upgrade; select it only when extending beyond Tuned.",
-          "alternateReason": "",
-          "alternateTradeoff": "",
-          "replaces": "Unspecified shell card 5",
-          "tags": [
-            "Control / Interaction"
-          ],
-          "whereToBuy": "Singles case",
-          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F552268%3Fpage%3D1",
-          "brief": {
-            "power": null,
-            "ease": null,
-            "fun": null,
-            "value": "Price varies",
-            "fit": "Next card on this variant's published upgrade ladder."
-          },
-          "image": "https://cards.scryfall.io/small/front/f/d/fd51f8f0-779b-40bb-b65c-5907f816676e.jpg?1783911208",
-          "oracleText": "{T}: Add {C}.\n{1}, {T}: Untap target land.",
-          "keywords": [],
-          "colorIdentity": [],
-          "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
-        }
-      ],
+      "enhance": [],
       "max": [
         {
           "id": "2b-max-1-necropotence",
@@ -19067,7 +18986,8 @@
             "B"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "2b-max-2-demonic-tutor",
@@ -19106,7 +19026,8 @@
             "B"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "2b-max-3-the-one-ring",
@@ -19145,7 +19066,8 @@
           ],
           "colorIdentity": [],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "2b-upgrade-1-cabal-coffers",
@@ -19184,7 +19106,8 @@
             "B"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Provides the mana ceiling needed to cast and recur the deck's largest threats in the same turn cycle."
         },
         {
           "id": "2b-upgrade-3-grave-pact",
@@ -19223,7 +19146,8 @@
             "B"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Turns every expendable creature into repeatable, asymmetric creature control across all opponents."
         },
         {
           "id": "2b-upgrade-5-bitterblossom",
@@ -19262,7 +19186,46 @@
             "B"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Supplies a resilient body every upkeep for sacrifice, equipment, and attrition engines."
+        },
+        {
+          "id": "2b-upgrade-2-deserted-temple",
+          "name": "Deserted Temple",
+          "quantity": 1,
+          "price": 0.69,
+          "ceiling": 0.69,
+          "category": "max",
+          "stage": "Maxxed",
+          "purpose": "Next card on this variant's published upgrade ladder.",
+          "typeLine": "Land",
+          "manaCost": "",
+          "gameChanger": false,
+          "why": "Next card on this variant's published upgrade ladder.",
+          "whyPrimary": "Next card on this variant's published upgrade ladder.",
+          "whyOptional": "Published next-step upgrade; select it only when extending beyond Tuned.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "replaces": "Unspecified shell card 5",
+          "tags": [
+            "Control / Interaction"
+          ],
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F552268%3Fpage%3D1",
+          "brief": {
+            "power": null,
+            "ease": null,
+            "fun": null,
+            "value": "Price varies",
+            "fit": "Next card on this variant's published upgrade ladder."
+          },
+          "image": "https://cards.scryfall.io/small/front/f/d/fd51f8f0-779b-40bb-b65c-5907f816676e.jpg?1783911208",
+          "oracleText": "{T}: Add {C}.\n{1}, {T}: Untap target land.",
+          "keywords": [],
+          "colorIdentity": [],
+          "commanderLegal": true,
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Untapping Cabal Coffers compounds the mono-black mana engine and lets the deck convert one land package into its true big-mana ceiling."
         }
       ]
     },
@@ -22113,6 +22076,135 @@
           ],
           "commanderLegal": true,
           "priceUpdated": "2026-08-23"
+        },
+        {
+          "id": "2c-owned-gollum-riddle-master",
+          "name": "Gollum, Riddle Master",
+          "quantity": 1,
+          "price": 2.61,
+          "ceiling": null,
+          "category": "enhance",
+          "stage": "Enhance",
+          "purpose": "An owned, more interesting value creature: it can add a proliferatable +1/+1 counter, gain life, drain, or draw while keeping the slot useful at several stages of the game.",
+          "typeLine": "Legendary Creature — Halfling Horror",
+          "manaCost": "{1}{B}",
+          "gameChanger": false,
+          "why": "An owned, more interesting value creature: it can add a proliferatable +1/+1 counter, gain life, drain, or draw while keeping the slot useful at several stages of the game.",
+          "whyPrimary": "An owned, more interesting value creature: it can add a proliferatable +1/+1 counter, gain life, drain, or draw while keeping the slot useful at several stages of the game.",
+          "whyOptional": "Already owned; choose it only when it improves or temporarily completes this exact slot.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "replaces": "Wall of Omens",
+          "temporaryUntil": null,
+          "ownedExtra": true,
+          "tags": [
+            "Counters / Proliferate",
+            "Card filtering",
+            "Lifegain"
+          ],
+          "whereToBuy": "Already owned",
+          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F707048%3Fpage%3D1",
+          "brief": {
+            "power": null,
+            "ease": null,
+            "fun": null,
+            "value": "Already owned",
+            "fit": "An owned, more interesting value creature: it can add a proliferatable +1/+1 counter, gain life, drain, or draw while keeping the slot useful at several stages of the game."
+          },
+          "image": "https://cards.scryfall.io/small/front/b/b/bbdc7e37-c65a-497a-92b7-a30a6e369c71.jpg?1784376959",
+          "oracleText": "As Gollum enters, choose odd or even. (Zero is even.)\nWhenever an opponent casts a spell with mana value of the chosen quality, choose one that hasn't been chosen —\n• Put a +1/+1 counter on Gollum.\n• Each opponent loses 2 life and you gain 2 life.\n• Draw a card.",
+          "keywords": [],
+          "colorIdentity": [
+            "B"
+          ],
+          "commanderLegal": true,
+          "priceUpdated": "2026-08-23"
+        },
+        {
+          "id": "2c-owned-giants-boulder",
+          "name": "Giant's Boulder",
+          "quantity": 1,
+          "price": 0.12,
+          "ceiling": null,
+          "category": "enhance",
+          "stage": "Enhance",
+          "purpose": "Temporary four-color fixing you already own. It scries first and can bridge the mana base, but paying one each time makes it weaker than true fixing.",
+          "typeLine": "Artifact",
+          "manaCost": "{1}",
+          "gameChanger": false,
+          "why": "Temporary four-color fixing you already own. It scries first and can bridge the mana base, but paying one each time makes it weaker than true fixing.",
+          "whyPrimary": "Temporary four-color fixing you already own. It scries first and can bridge the mana base, but paying one each time makes it weaker than true fixing.",
+          "whyOptional": "Already owned; choose it only when it improves or temporarily completes this exact slot.",
+          "alternateReason": "",
+          "alternateTradeoff": "Temporary until Chromatic Lantern is found.",
+          "replaces": "Chromatic Lantern",
+          "temporaryUntil": "Chromatic Lantern",
+          "ownedExtra": true,
+          "tags": [
+            "Counters / Proliferate",
+            "Ramp / Big Mana"
+          ],
+          "whereToBuy": "Already owned",
+          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F709520%3Fpage%3D1",
+          "brief": {
+            "power": null,
+            "ease": null,
+            "fun": null,
+            "value": "Already owned",
+            "fit": "Temporary four-color fixing you already own. It scries first and can bridge the mana base, but paying one each time makes it weaker than true fixing."
+          },
+          "image": "https://cards.scryfall.io/small/front/c/e/ce254758-c928-4b43-a952-13fac1845668.jpg?1785497186",
+          "oracleText": "When this artifact enters, scry 2. (Look at the top two cards of your library, then put any number of them on the bottom and the rest on top in any order.)\n{1}, {T}: Add one mana of any color.\n{7}, {T}, Sacrifice this artifact: Destroy target permanent.",
+          "keywords": [
+            "Scry"
+          ],
+          "colorIdentity": [],
+          "commanderLegal": true,
+          "priceUpdated": "2026-08-23"
+        },
+        {
+          "id": "2c-owned-troll-negotiations",
+          "name": "Troll Negotiations",
+          "quantity": 1,
+          "price": 0.13,
+          "ceiling": null,
+          "category": "enhance",
+          "stage": "Enhance",
+          "purpose": "Temporary interaction that leaves two permanent +1/+1 counters for Atraxa to proliferate; slower and less reliable than unconditional removal.",
+          "typeLine": "Sorcery",
+          "manaCost": "{2}{G}{G}",
+          "gameChanger": false,
+          "why": "Temporary interaction that leaves two permanent +1/+1 counters for Atraxa to proliferate; slower and less reliable than unconditional removal.",
+          "whyPrimary": "Temporary interaction that leaves two permanent +1/+1 counters for Atraxa to proliferate; slower and less reliable than unconditional removal.",
+          "whyOptional": "Already owned; choose it only when it improves or temporarily completes this exact slot.",
+          "alternateReason": "",
+          "alternateTradeoff": "Temporary until Vraska's Contempt is found.",
+          "replaces": "Vraska's Contempt",
+          "temporaryUntil": "Vraska's Contempt",
+          "ownedExtra": true,
+          "tags": [
+            "Counters / Proliferate",
+            "Control / Interaction"
+          ],
+          "whereToBuy": "Already owned",
+          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F709633%3Fpage%3D1",
+          "brief": {
+            "power": null,
+            "ease": null,
+            "fun": null,
+            "value": "Already owned",
+            "fit": "Temporary interaction that leaves two permanent +1/+1 counters for Atraxa to proliferate; slower and less reliable than unconditional removal."
+          },
+          "image": "https://cards.scryfall.io/small/front/c/a/ca0f7bf4-b8a2-4ec4-ad7e-b639de9fa76a.jpg?1785496323",
+          "oracleText": "Put two +1/+1 counters on target creature you control. Then it fights target creature an opponent controls. (Each deals damage equal to its power to the other.)",
+          "keywords": [
+            "Fight"
+          ],
+          "colorIdentity": [
+            "G"
+          ],
+          "commanderLegal": true,
+          "priceUpdated": "2026-08-23"
         }
       ],
       "max": [
@@ -22151,7 +22243,8 @@
           ],
           "colorIdentity": [],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Tier 3 capability choice: From the Tuned build of 2c — Proliferate Council — Atraxa."
         },
         {
           "id": "teferi-s-protection",
@@ -22191,7 +22284,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "rhystic-study",
@@ -22231,7 +22325,8 @@
             "U"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "consecrated-sphinx",
@@ -22273,7 +22368,8 @@
             "U"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "doubling-season",
@@ -22312,7 +22408,8 @@
             "G"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Doubles both token production and counter placement, maximizing two central engines at once."
         },
         {
           "id": "the-chain-veil",
@@ -22349,7 +22446,8 @@
           "keywords": [],
           "colorIdentity": [],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Tier 3 capability choice: Activate every planeswalker again each turn — with proliferate refilling the loyalty."
         },
         {
           "id": "vorinclex-monstrous-raider",
@@ -22391,7 +22489,8 @@
             "G"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Tier 3 capability choice: Your counters double, theirs halve. A one-sided Doubling Season."
         }
       ]
     },
@@ -24198,7 +24297,8 @@
             "U"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "2e-max-2-teferi-s-protection",
@@ -24237,7 +24337,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "2e-max-3-smothering-tithe",
@@ -24278,7 +24379,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "2e-upgrade-4-alhammarret-s-archive",
@@ -24315,7 +24417,8 @@
           "keywords": [],
           "colorIdentity": [],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Doubles both Oloro's central life resource and every extra draw, compounding the two engines that define the deck's longevity ceiling."
         }
       ]
     },
@@ -26209,7 +26312,8 @@
           "keywords": [],
           "colorIdentity": [],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "3o-max-2-crop-rotation",
@@ -26248,7 +26352,8 @@
             "G"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "3o-max-3-teferi-s-protection",
@@ -26287,7 +26392,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "3o-upgrade-1-crucible-of-worlds",
@@ -26324,7 +26430,8 @@
           "keywords": [],
           "colorIdentity": [],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Turns fetches and sacrificed lands into a repeatable land engine instead of one-shot value."
         },
         {
           "id": "3o-upgrade-2-ancient-greenwarden",
@@ -26365,7 +26472,8 @@
             "G"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Obuun's counter trigger and every other landfall payoff fire twice while Greenwarden replays lands from the graveyard, defining the deck's capability ceiling."
         }
       ]
     },
@@ -28254,7 +28362,8 @@
           "keywords": [],
           "colorIdentity": [],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "3c-max-2-crop-rotation",
@@ -28295,7 +28404,8 @@
             "G"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "3c-max-3-rhystic-study",
@@ -28336,7 +28446,50 @@
             "U"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
+        },
+        {
+          "id": "3c-upgrade-5-exploration",
+          "name": "Exploration",
+          "quantity": 1,
+          "price": 31.7,
+          "ceiling": 31.7,
+          "category": "max",
+          "stage": "Maxxed",
+          "purpose": "Next card on this variant's published upgrade ladder.",
+          "typeLine": "Enchantment",
+          "manaCost": "{G}",
+          "gameChanger": false,
+          "why": "Next card on this variant's published upgrade ladder.",
+          "whyPrimary": "Next card on this variant's published upgrade ladder.",
+          "whyOptional": "Published next-step upgrade; select it only when extending beyond Tuned.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "replaces": "Unspecified shell card 11",
+          "tags": [
+            "Lands / Landfall",
+            "Control / Interaction",
+            "Ramp / Big Mana"
+          ],
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F457191%3Fpage%3D1",
+          "brief": {
+            "power": null,
+            "ease": null,
+            "fun": null,
+            "value": "Price varies",
+            "fit": "Next card on this variant's published upgrade ladder."
+          },
+          "image": "https://cards.scryfall.io/small/front/5/b/5b372045-a4a0-44c8-96ec-1e201d61ed26.jpg?1783918444",
+          "oracleText": "You may play an additional land on each of your turns.",
+          "keywords": [],
+          "colorIdentity": [
+            "G"
+          ],
+          "commanderLegal": true,
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Raises the land engine's velocity by converting extra land draws into immediate development."
         },
         {
           "id": "3c-upgrade-3-ancient-greenwarden",
@@ -28379,48 +28532,8 @@
             "G"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
-        },
-        {
-          "id": "3c-upgrade-5-exploration",
-          "name": "Exploration",
-          "quantity": 1,
-          "price": 31.7,
-          "ceiling": 31.7,
-          "category": "max",
-          "stage": "Maxxed",
-          "purpose": "Next card on this variant's published upgrade ladder.",
-          "typeLine": "Enchantment",
-          "manaCost": "{G}",
-          "gameChanger": false,
-          "why": "Next card on this variant's published upgrade ladder.",
-          "whyPrimary": "Next card on this variant's published upgrade ladder.",
-          "whyOptional": "Published next-step upgrade; select it only when extending beyond Tuned.",
-          "alternateReason": "",
-          "alternateTradeoff": "",
-          "replaces": "Unspecified shell card 11",
-          "tags": [
-            "Lands / Landfall",
-            "Control / Interaction",
-            "Ramp / Big Mana"
-          ],
-          "whereToBuy": "Singles case",
-          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F457191%3Fpage%3D1",
-          "brief": {
-            "power": null,
-            "ease": null,
-            "fun": null,
-            "value": "Price varies",
-            "fit": "Next card on this variant's published upgrade ladder."
-          },
-          "image": "https://cards.scryfall.io/small/front/5/b/5b372045-a4a0-44c8-96ec-1e201d61ed26.jpg?1783918444",
-          "oracleText": "You may play an additional land on each of your turns.",
-          "keywords": [],
-          "colorIdentity": [
-            "G"
-          ],
-          "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Aesi turns the extra landfall trigger into another commander draw while Greenwarden also replays lands from the graveyard, compounding both halves of the deck's engine."
         }
       ]
     },
@@ -30252,7 +30365,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "3d-max-2-aura-shards",
@@ -30293,7 +30407,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "3d-max-3-teferi-s-protection",
@@ -30333,7 +30448,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         }
       ]
     },
@@ -32705,6 +32821,49 @@
           ],
           "commanderLegal": true,
           "priceUpdated": "2026-08-23"
+        },
+        {
+          "id": "3e-owned-mirkwood",
+          "name": "Mirkwood",
+          "quantity": 1,
+          "price": 0.16,
+          "ceiling": null,
+          "category": "enhance",
+          "stage": "Enhance",
+          "purpose": "An owned Golgari land that can sacrifice itself when its creature condition is met, strictly improving the modeled Foul Orchard slot by giving Gitrog another way to put a land into the graveyard.",
+          "typeLine": "Land",
+          "manaCost": "",
+          "gameChanger": false,
+          "why": "An owned Golgari land that can sacrifice itself when its creature condition is met, strictly improving the modeled Foul Orchard slot by giving Gitrog another way to put a land into the graveyard.",
+          "whyPrimary": "An owned Golgari land that can sacrifice itself when its creature condition is met, strictly improving the modeled Foul Orchard slot by giving Gitrog another way to put a land into the graveyard.",
+          "whyOptional": "Already owned; choose it only when it improves or temporarily completes this exact slot.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "replaces": "Foul Orchard",
+          "temporaryUntil": null,
+          "ownedExtra": true,
+          "tags": [
+            "Lands / Landfall",
+            "Graveyard / Reanimator"
+          ],
+          "whereToBuy": "Already owned",
+          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F708824%3Fpage%3D1",
+          "brief": {
+            "power": null,
+            "ease": null,
+            "fun": null,
+            "value": "Already owned",
+            "fit": "An owned Golgari land that can sacrifice itself when its creature condition is met, strictly improving the modeled Foul Orchard slot by giving Gitrog another way to put a land into the graveyard."
+          },
+          "image": "https://cards.scryfall.io/small/front/6/1/612cf954-f86c-4629-99df-4874d56fded3.jpg?1785323344",
+          "oracleText": "This land enters tapped.\n{T}: Add {B} or {G}.\n{2}{B}{G}, {T}, Sacrifice this land: Put two +1/+1 counters on target Bear, Spider, or Wolf you control. Activate only as a sorcery.",
+          "keywords": [],
+          "colorIdentity": [
+            "B",
+            "G"
+          ],
+          "commanderLegal": true,
+          "priceUpdated": "2026-08-23"
         }
       ],
       "max": [
@@ -32744,7 +32903,8 @@
           "keywords": [],
           "colorIdentity": [],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "crop-rotation",
@@ -32784,7 +32944,8 @@
             "G"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "necropotence",
@@ -32824,7 +32985,8 @@
             "B"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "crucible-of-worlds",
@@ -32861,7 +33023,8 @@
           "keywords": [],
           "colorIdentity": [],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Turns fetches and sacrificed lands into a repeatable land engine instead of one-shot value."
         }
       ]
     },
@@ -34727,7 +34890,8 @@
           "keywords": [],
           "colorIdentity": [],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "3f-max-2-crop-rotation",
@@ -34766,7 +34930,8 @@
             "G"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "3f-max-3-seedborn-muse",
@@ -34805,7 +34970,8 @@
             "G"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         }
       ]
     },
@@ -36818,7 +36984,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "4o-max-2-rhystic-study",
@@ -36858,7 +37025,8 @@
             "U"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "4o-max-3-consecrated-sphinx",
@@ -36900,7 +37068,8 @@
             "U"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         }
       ]
     },
@@ -38615,86 +38784,6 @@
       "upgrade": [],
       "enhance": [
         {
-          "id": "4a-upgrade-3-peregrine-drake",
-          "name": "Peregrine Drake",
-          "quantity": 1,
-          "price": 0.25,
-          "ceiling": 0.25,
-          "category": "enhance",
-          "stage": "Enhance",
-          "purpose": "Next card on this variant's published upgrade ladder.",
-          "typeLine": "Creature — Drake",
-          "manaCost": "{4}{U}",
-          "gameChanger": false,
-          "why": "Next card on this variant's published upgrade ladder.",
-          "whyPrimary": "Next card on this variant's published upgrade ladder.",
-          "whyOptional": "Published next-step upgrade; select it only when extending beyond Tuned.",
-          "alternateReason": "",
-          "alternateTradeoff": "",
-          "replaces": "Unspecified shell card 7",
-          "tags": [
-            "Sacrifice / Aristocrats",
-            "Blink / ETB"
-          ],
-          "whereToBuy": "Singles case",
-          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F458178%3Fpage%3D1",
-          "brief": {
-            "power": null,
-            "ease": null,
-            "fun": null,
-            "value": "Price varies",
-            "fit": "Next card on this variant's published upgrade ladder."
-          },
-          "image": "https://cards.scryfall.io/small/front/6/1/611c8fa2-b53f-483b-9efa-759ac59dc30f.jpg?1783918487",
-          "oracleText": "Flying\nWhen this creature enters, untap up to five lands.",
-          "keywords": [
-            "Flying"
-          ],
-          "colorIdentity": [
-            "U"
-          ],
-          "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
-        },
-        {
-          "id": "4a-upgrade-4-strionic-resonator",
-          "name": "Strionic Resonator",
-          "quantity": 1,
-          "price": 8.63,
-          "ceiling": 8.63,
-          "category": "enhance",
-          "stage": "Enhance",
-          "purpose": "Next card on this variant's published upgrade ladder.",
-          "typeLine": "Artifact",
-          "manaCost": "{2}",
-          "gameChanger": false,
-          "why": "Next card on this variant's published upgrade ladder.",
-          "whyPrimary": "Next card on this variant's published upgrade ladder.",
-          "whyOptional": "Published next-step upgrade; select it only when extending beyond Tuned.",
-          "alternateReason": "",
-          "alternateTradeoff": "",
-          "replaces": "Unspecified shell card 8",
-          "tags": [
-            "Sacrifice / Aristocrats",
-            "Blink / ETB"
-          ],
-          "whereToBuy": "Singles case",
-          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F491665%3Fpage%3D1",
-          "brief": {
-            "power": null,
-            "ease": null,
-            "fun": null,
-            "value": "Price varies",
-            "fit": "Next card on this variant's published upgrade ladder."
-          },
-          "image": "https://cards.scryfall.io/small/front/b/9/b9edb215-f967-4968-905e-d1dc3b5d3424.jpg?1783917105",
-          "oracleText": "{2}, {T}: Copy target triggered ability you control. You may choose new targets for the copy. (A triggered ability uses the words \"when,\" \"whenever,\" or \"at.\")",
-          "keywords": [],
-          "colorIdentity": [],
-          "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
-        },
-        {
           "id": "4a-upgrade-5-mistmeadow-witch",
           "name": "Mistmeadow Witch",
           "quantity": 1,
@@ -38777,7 +38866,8 @@
             "U"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "4a-max-2-teferi-s-protection",
@@ -38817,7 +38907,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "4a-max-3-smothering-tithe",
@@ -38859,7 +38950,52 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
+        },
+        {
+          "id": "4a-upgrade-3-peregrine-drake",
+          "name": "Peregrine Drake",
+          "quantity": 1,
+          "price": 0.25,
+          "ceiling": 0.25,
+          "category": "max",
+          "stage": "Maxxed",
+          "purpose": "Next card on this variant's published upgrade ladder.",
+          "typeLine": "Creature — Drake",
+          "manaCost": "{4}{U}",
+          "gameChanger": false,
+          "why": "Next card on this variant's published upgrade ladder.",
+          "whyPrimary": "Next card on this variant's published upgrade ladder.",
+          "whyOptional": "Published next-step upgrade; select it only when extending beyond Tuned.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "replaces": "Unspecified shell card 7",
+          "tags": [
+            "Sacrifice / Aristocrats",
+            "Blink / ETB",
+            "Late two-card infinite combo"
+          ],
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F458178%3Fpage%3D1",
+          "brief": {
+            "power": null,
+            "ease": null,
+            "fun": null,
+            "value": "Price varies",
+            "fit": "Next card on this variant's published upgrade ladder."
+          },
+          "image": "https://cards.scryfall.io/small/front/6/1/611c8fa2-b53f-483b-9efa-759ac59dc30f.jpg?1783918487",
+          "oracleText": "Flying\nWhen this creature enters, untap up to five lands.",
+          "keywords": [
+            "Flying"
+          ],
+          "colorIdentity": [
+            "U"
+          ],
+          "commanderLegal": true,
+          "priceUpdated": "2026-08-23",
+          "maxReason": "With Deadeye Navigator this becomes a repeatable blink-and-mana engine. It belongs at the capability ceiling and must be played as a turn-seven-or-later line."
         }
       ]
     },
@@ -40453,7 +40589,7 @@
           "purpose": "Bracket-3 stretch: fuels Shorikai three times a turn.",
           "typeLine": "Enchantment",
           "manaCost": "{3}{W}",
-          "gameChanger": false,
+          "gameChanger": true,
           "why": "Bracket-3 stretch: fuels Shorikai three times a turn.",
           "whyPrimary": "Bracket-3 stretch: fuels Shorikai three times a turn.",
           "whyOptional": "",
@@ -40563,47 +40699,6 @@
           "colorIdentity": [],
           "commanderLegal": true,
           "priceUpdated": "2026-08-23"
-        },
-        {
-          "id": "4b-upgrade-5-cyberdrive-awakener",
-          "name": "Cyberdrive Awakener",
-          "quantity": 1,
-          "price": 1.9,
-          "ceiling": 1.9,
-          "category": "enhance",
-          "stage": "Enhance",
-          "purpose": "Next card on this variant's published upgrade ladder.",
-          "typeLine": "Artifact Creature — Construct",
-          "manaCost": "{5}{U}",
-          "gameChanger": false,
-          "why": "Next card on this variant's published upgrade ladder.",
-          "whyPrimary": "Next card on this variant's published upgrade ladder.",
-          "whyOptional": "Published next-step upgrade; select it only when extending beyond Tuned.",
-          "alternateReason": "",
-          "alternateTradeoff": "",
-          "replaces": "Unspecified shell card 8",
-          "tags": [
-            "Tribal / Typal"
-          ],
-          "whereToBuy": "Singles case",
-          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F642795%3Fpage%3D1",
-          "brief": {
-            "power": null,
-            "ease": null,
-            "fun": null,
-            "value": "Price varies",
-            "fit": "Next card on this variant's published upgrade ladder."
-          },
-          "image": "https://cards.scryfall.io/small/front/1/9/19bf6b74-b236-42eb-8c88-d715cece6357.jpg?1783906045",
-          "oracleText": "Flying\nOther artifact creatures you control have flying.\nWhen this creature enters, each noncreature artifact you control becomes a 4/4 artifact creature until end of turn.",
-          "keywords": [
-            "Flying"
-          ],
-          "colorIdentity": [
-            "U"
-          ],
-          "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
         }
       ],
       "max": [
@@ -40644,7 +40739,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "4b-max-2-rhystic-study",
@@ -40683,7 +40779,8 @@
             "U"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "4b-max-3-consecrated-sphinx",
@@ -40724,7 +40821,8 @@
             "U"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "4b-upgrade-4-portal-to-phyrexia",
@@ -40761,7 +40859,50 @@
           "keywords": [],
           "colorIdentity": [],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Combines a major sacrifice swing with a repeatable reanimation engine at the deck's top end."
+        },
+        {
+          "id": "4b-upgrade-5-cyberdrive-awakener",
+          "name": "Cyberdrive Awakener",
+          "quantity": 1,
+          "price": 1.9,
+          "ceiling": 1.9,
+          "category": "max",
+          "stage": "Maxxed",
+          "purpose": "Next card on this variant's published upgrade ladder.",
+          "typeLine": "Artifact Creature — Construct",
+          "manaCost": "{5}{U}",
+          "gameChanger": false,
+          "why": "Next card on this variant's published upgrade ladder.",
+          "whyPrimary": "Next card on this variant's published upgrade ladder.",
+          "whyOptional": "Published next-step upgrade; select it only when extending beyond Tuned.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "replaces": "Unspecified shell card 8",
+          "tags": [
+            "Tribal / Typal"
+          ],
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F642795%3Fpage%3D1",
+          "brief": {
+            "power": null,
+            "ease": null,
+            "fun": null,
+            "value": "Price varies",
+            "fit": "Next card on this variant's published upgrade ladder."
+          },
+          "image": "https://cards.scryfall.io/small/front/1/9/19bf6b74-b236-42eb-8c88-d715cece6357.jpg?1783906045",
+          "oracleText": "Flying\nOther artifact creatures you control have flying.\nWhen this creature enters, each noncreature artifact you control becomes a 4/4 artifact creature until end of turn.",
+          "keywords": [
+            "Flying"
+          ],
+          "colorIdentity": [
+            "U"
+          ],
+          "commanderLegal": true,
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Converts Shorikai's accumulated artifact board into an evasive one-card finishing attack, giving the engine a direct capability-ceiling payoff."
         }
       ]
     },
@@ -43451,7 +43592,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "dovin-s-veto",
@@ -43491,7 +43633,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Tier 3 capability choice: Uncounterable counterspell to protect the turn Arcades lands."
         },
         {
           "id": "teferi-s-protection",
@@ -43531,7 +43674,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "wall-of-nets",
@@ -43572,7 +43716,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Tier 3 capability choice: Exiles attacking creatures while it lives — the ultimate defensive wall."
         },
         {
           "id": "smothering-tithe",
@@ -43614,7 +43759,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "sight-of-the-scalelords",
@@ -43653,7 +43799,8 @@
             "G"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Tier 3 capability choice: Your big-toughness team gets vigilance and +2/+2 every upkeep."
         }
       ]
     },
@@ -45482,49 +45629,6 @@
           ],
           "commanderLegal": true,
           "priceUpdated": "2026-08-23"
-        },
-        {
-          "id": "4e-upgrade-3-deadeye-navigator",
-          "name": "Deadeye Navigator",
-          "quantity": 1,
-          "price": 3.02,
-          "ceiling": 3.02,
-          "category": "enhance",
-          "stage": "Enhance",
-          "purpose": "Next card on this variant's published upgrade ladder.",
-          "typeLine": "Creature — Spirit",
-          "manaCost": "{4}{U}{U}",
-          "gameChanger": false,
-          "why": "Next card on this variant's published upgrade ladder.",
-          "whyPrimary": "Next card on this variant's published upgrade ladder.",
-          "whyOptional": "Published next-step upgrade; select it only when extending beyond Tuned.",
-          "alternateReason": "",
-          "alternateTradeoff": "",
-          "replaces": "Unspecified shell card 9",
-          "tags": [
-            "Graveyard / Reanimator",
-            "Ramp / Big Mana",
-            "Blink / ETB"
-          ],
-          "whereToBuy": "Singles case",
-          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F596269%3Fpage%3D1",
-          "brief": {
-            "power": null,
-            "ease": null,
-            "fun": null,
-            "value": "Price varies",
-            "fit": "Next card on this variant's published upgrade ladder."
-          },
-          "image": "https://cards.scryfall.io/small/front/4/f/4f0791b5-fdb4-4378-8fd3-7e7367ffc05c.jpg?1783908166",
-          "oracleText": "Soulbond (You may pair this creature with another unpaired creature when either enters. They remain paired for as long as you control both of them.)\nAs long as Deadeye Navigator is paired with another creature, each of those creatures has \"{1}{U}: Exile this creature, then return it to the battlefield under your control.\"",
-          "keywords": [
-            "Soulbond"
-          ],
-          "colorIdentity": [
-            "U"
-          ],
-          "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
         }
       ],
       "max": [
@@ -45568,7 +45672,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "4e-max-2-consecrated-sphinx",
@@ -45611,7 +45716,8 @@
             "U"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "4e-max-3-teferi-s-protection",
@@ -45652,7 +45758,53 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
+        },
+        {
+          "id": "4e-upgrade-3-deadeye-navigator",
+          "name": "Deadeye Navigator",
+          "quantity": 1,
+          "price": 3.02,
+          "ceiling": 3.02,
+          "category": "max",
+          "stage": "Maxxed",
+          "purpose": "Next card on this variant's published upgrade ladder.",
+          "typeLine": "Creature — Spirit",
+          "manaCost": "{4}{U}{U}",
+          "gameChanger": false,
+          "why": "Next card on this variant's published upgrade ladder.",
+          "whyPrimary": "Next card on this variant's published upgrade ladder.",
+          "whyOptional": "Published next-step upgrade; select it only when extending beyond Tuned.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "replaces": "Unspecified shell card 9",
+          "tags": [
+            "Graveyard / Reanimator",
+            "Ramp / Big Mana",
+            "Blink / ETB",
+            "Combo watch"
+          ],
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F596269%3Fpage%3D1",
+          "brief": {
+            "power": null,
+            "ease": null,
+            "fun": null,
+            "value": "Price varies",
+            "fit": "Next card on this variant's published upgrade ladder."
+          },
+          "image": "https://cards.scryfall.io/small/front/4/f/4f0791b5-fdb4-4378-8fd3-7e7367ffc05c.jpg?1783908166",
+          "oracleText": "Soulbond (You may pair this creature with another unpaired creature when either enters. They remain paired for as long as you control both of them.)\nAs long as Deadeye Navigator is paired with another creature, each of those creatures has \"{1}{U}: Exile this creature, then return it to the battlefield under your control.\"",
+          "keywords": [
+            "Soulbond"
+          ],
+          "colorIdentity": [
+            "U"
+          ],
+          "commanderLegal": true,
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Repeatedly rebuying Roon's best enter-the-battlefield creatures is the blink deck's value ceiling; keep future Drake or Palinchron additions out of early-loop packages."
         }
       ]
     },
@@ -48595,47 +48747,6 @@
           "priceUpdated": "2026-08-23"
         },
         {
-          "id": "skullclamp",
-          "name": "Skullclamp",
-          "quantity": 1,
-          "manaCost": "{1}",
-          "typeLine": "Artifact — Equipment",
-          "price": 5.9,
-          "ceiling": 10.5,
-          "category": "enhance",
-          "purpose": "The best draw engine this deck can possibly run: equip {1} to a 1-toughness Spirit token, it dies, you draw TWO — every token becomes two cards, directly fixing the deck's one stated weakness (thin card draw). Buy a classic printing (Darksteel or a Commander reprint), not the Marvel-crossover version, to keep the table's look consistent.",
-          "replaces": "Perpetual Timepiece",
-          "gameChanger": false,
-          "stage": "Enhance",
-          "tags": [
-            "draw",
-            "tokens",
-            "engine"
-          ],
-          "why": "The best draw engine this deck can possibly run: equip {1} to a 1-toughness Spirit token, it dies, you draw TWO — every token becomes two cards, directly fixing the deck's one stated weakness (thin card draw). Buy a classic printing (Darksteel or a Commander reprint), not the Marvel-crossover version, to keep the table's look consistent.",
-          "whyPrimary": "The best draw engine this deck can possibly run: equip {1} to a 1-toughness Spirit token, it dies, you draw TWO — every token becomes two cards, directly fixing the deck's one stated weakness (thin card draw). Buy a classic printing (Darksteel or a Commander reprint), not the Marvel-crossover version, to keep the table's look consistent.",
-          "whyOptional": "Weaker under Quintorius than under Excava: the tokens are 3/2s now, so Skullclamp makes them 4/1 instead of killing them for two cards. Keep it only if you run lots of other small creatures.",
-          "alternateReason": "",
-          "alternateTradeoff": "",
-          "whereToBuy": "Singles case",
-          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F698056%3Fpage%3D1",
-          "brief": {
-            "power": 4,
-            "ease": 4,
-            "fun": 4,
-            "value": "Strong value. Premium effect at $7.99, comfortably worth the slot.",
-            "fit": "The best draw engine this deck can possibly run: equip {1} to a 1-toughness Spirit token, it dies, you draw TWO — every token becomes two cards, directly fixing the deck's one stated weakness (thin card draw). Buy a classic printing (Darksteel or a Commander reprint), not the Marvel-crossover version, to keep the table's look consistent."
-          },
-          "image": "https://cards.scryfall.io/small/front/1/d/1d8b007b-3169-4ee3-80c7-781fc096fc7a.jpg?1783903215",
-          "oracleText": "Equipped creature gets +1/-1.\nWhenever equipped creature dies, draw two cards.\nEquip {1}",
-          "keywords": [
-            "Equip"
-          ],
-          "colorIdentity": [],
-          "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
-        },
-        {
           "id": "goblin-bombardment",
           "name": "Goblin Bombardment",
           "quantity": 1,
@@ -48720,46 +48831,6 @@
           "priceUpdated": "2026-08-23"
         },
         {
-          "id": "farewell",
-          "name": "Farewell",
-          "quantity": 1,
-          "manaCost": "{4}{W}{W}",
-          "typeLine": "Sorcery",
-          "price": 5.9,
-          "ceiling": 9.5,
-          "category": "enhance",
-          "purpose": "full modal exile wrath",
-          "replaces": "Winds of Abandon",
-          "gameChanger": false,
-          "stage": "Enhance",
-          "tags": [
-            "removal",
-            "board-wipe"
-          ],
-          "why": "",
-          "whyPrimary": "",
-          "whyOptional": "",
-          "alternateReason": "full modal exile wrath",
-          "alternateTradeoff": "pricier, slower at 4 mana — and it's on the official Game Changers list, so running it counts toward Bracket 3's three-card cap",
-          "whereToBuy": "Singles case",
-          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F535709%3Fpage%3D1",
-          "brief": {
-            "power": 4,
-            "ease": 4,
-            "fun": 3,
-            "value": "Strong value. Premium effect at $6.99, comfortably worth the slot.",
-            "fit": "full modal exile wrath"
-          },
-          "image": "https://cards.scryfall.io/small/front/1/1/114d2180-093b-4838-97ad-badbc8ee50b0.jpg?1783913032",
-          "oracleText": "Choose one or more —\n• Exile all artifacts.\n• Exile all creatures.\n• Exile all enchantments.\n• Exile all graveyards.",
-          "keywords": [],
-          "colorIdentity": [
-            "W"
-          ],
-          "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
-        },
-        {
           "id": "weathered-wayfarer",
           "name": "Weathered Wayfarer",
           "quantity": 1,
@@ -48833,49 +48904,6 @@
           "oracleText": "This artifact enters tapped.\nAs this artifact enters, choose a color.\n{T}: Add one mana of the chosen color.",
           "keywords": [],
           "colorIdentity": [],
-          "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
-        },
-        {
-          "id": "sunforger",
-          "name": "Sunforger",
-          "quantity": 1,
-          "manaCost": "{3}",
-          "typeLine": "Artifact — Equipment",
-          "price": 4.06,
-          "ceiling": 6.5,
-          "category": "enhance",
-          "purpose": "tutors and casts an instant",
-          "replaces": "Open the Armory",
-          "gameChanger": false,
-          "stage": "Enhance",
-          "tags": [
-            "tutor",
-            "utility"
-          ],
-          "why": "",
-          "whyPrimary": "",
-          "whyOptional": "",
-          "alternateReason": "tutors and casts an instant",
-          "alternateTradeoff": "needs cheap-instant density to shine",
-          "whereToBuy": "Singles case",
-          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F227347%3Fpage%3D1",
-          "brief": {
-            "power": 4,
-            "ease": 4,
-            "fun": 3,
-            "value": "Strong value. Premium effect at $4.99, comfortably worth the slot.",
-            "fit": "tutors and casts an instant"
-          },
-          "image": "https://cards.scryfall.io/small/front/d/d/dd3e42ee-ab13-460b-90fd-86e677abce4f.jpg?1783928686",
-          "oracleText": "Equipped creature gets +4/+0.\n{R}{W}, Unattach this Equipment: Search your library for a red or white instant card with mana value 4 or less and cast that card without paying its mana cost. Then shuffle.\nEquip {3}",
-          "keywords": [
-            "Equip"
-          ],
-          "colorIdentity": [
-            "R",
-            "W"
-          ],
           "commanderLegal": true,
           "priceUpdated": "2026-08-23"
         },
@@ -49003,9 +49031,96 @@
           "colorIdentity": [],
           "commanderLegal": true,
           "priceUpdated": "2026-08-23"
+        },
+        {
+          "id": "5o-owned-ragged-short-spear",
+          "name": "Ragged Short Spear",
+          "quantity": 1,
+          "price": 0.17,
+          "ceiling": null,
+          "category": "enhance",
+          "stage": "Enhance",
+          "purpose": "Discard one, draw two feeds the graveyard plan; with Bag of Holding the discarded card leaves the graveyard and creates a Quintorius Spirit trigger.",
+          "typeLine": "Artifact — Equipment",
+          "manaCost": "{1}{R}",
+          "gameChanger": false,
+          "why": "Discard one, draw two feeds the graveyard plan; with Bag of Holding the discarded card leaves the graveyard and creates a Quintorius Spirit trigger.",
+          "whyPrimary": "Discard one, draw two feeds the graveyard plan; with Bag of Holding the discarded card leaves the graveyard and creates a Quintorius Spirit trigger.",
+          "whyOptional": "Already owned; choose it only when it improves or temporarily completes this exact slot.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "replaces": "Monologue Tax",
+          "temporaryUntil": null,
+          "ownedExtra": true,
+          "tags": [
+            "Graveyard / Reanimator",
+            "Card filtering",
+            "Tokens / Go-wide"
+          ],
+          "whereToBuy": "Already owned",
+          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F709507%3Fpage%3D1",
+          "brief": {
+            "power": null,
+            "ease": null,
+            "fun": null,
+            "value": "Already owned",
+            "fit": "Discard one, draw two feeds the graveyard plan; with Bag of Holding the discarded card leaves the graveyard and creates a Quintorius Spirit trigger."
+          },
+          "image": "https://cards.scryfall.io/small/front/7/b/7bf81a8b-52ad-49f5-a3d4-22613cad3a3d.jpg?1785497128",
+          "oracleText": "When this Equipment enters, you may discard a card. If you do, draw two cards.\nEquipped creature gets +2/+0.\nEquip {3} ({3}: Attach to target creature you control. Equip only as a sorcery.)",
+          "keywords": [
+            "Equip"
+          ],
+          "colorIdentity": [
+            "R"
+          ],
+          "commanderLegal": true,
+          "priceUpdated": "2026-08-23"
         }
       ],
       "max": [
+        {
+          "id": "underworld-breach",
+          "name": "Underworld Breach",
+          "quantity": 1,
+          "price": 10.41,
+          "ceiling": 13.5,
+          "category": "max",
+          "stage": "Maxxed",
+          "purpose": "Every fair escape cast is a card leaving your graveyard and another Quintorius Spirit trigger.",
+          "replaces": "Goblin Bombardment",
+          "gameChanger": true,
+          "tags": [
+            "Graveyard / Reanimator",
+            "Game Changer",
+            "Late combo watch"
+          ],
+          "why": "The most on-theme Game Changer available to the deck when used as a fair recursion engine.",
+          "whyPrimary": "The most on-theme Game Changer available to the deck when used as a fair recursion engine.",
+          "whyOptional": "Choose it as one of at most three selected Game Changers and avoid compact early-loop packages.",
+          "alternateReason": "Each escape cast advances both the graveyard and Spirit-token engines.",
+          "alternateTradeoff": "Swaps in for Goblin Bombardment; do not pair it with an intentional pre-turn-seven loop.",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F206642%3Fpage%3D1",
+          "brief": {
+            "power": 5,
+            "ease": 4,
+            "fun": 4,
+            "value": "High strategic value",
+            "fit": "Fair escape casts directly trigger Quintorius."
+          },
+          "image": "https://cards.scryfall.io/small/front/0/e/0e51d796-7279-4c06-87f0-37adbdaa41df.jpg?1783931543",
+          "oracleText": "Each nonland card in your graveyard has escape. The escape cost is equal to the card's mana cost plus exile three other cards from your graveyard. (You may cast cards from your graveyard for their escape cost.)\nAt the beginning of the end step, sacrifice this enchantment.",
+          "keywords": [],
+          "colorIdentity": [
+            "R"
+          ],
+          "commanderLegal": true,
+          "maxReason": "The deck's most synergistic recursion Game Changer; it maximizes Spirit production when selected as one of the three legal slots without an early-loop package.",
+          "manaCost": "{1}{R}",
+          "typeLine": "Enchantment",
+          "priceUpdated": "2026-08-23"
+        },
         {
           "id": "luminarch-ascension",
           "name": "Luminarch Ascension",
@@ -49046,7 +49161,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Tier 3 capability choice: A snowballing white value engine that quietly wins stalled boards by generating an army of flying Angel tokens if left unanswered."
         },
         {
           "id": "teferi-s-protection",
@@ -49086,7 +49202,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "quintorius-kand",
@@ -49128,47 +49245,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
-        },
-        {
-          "id": "underworld-breach",
-          "name": "Underworld Breach",
-          "quantity": 1,
-          "manaCost": "{1}{R}",
-          "typeLine": "Enchantment",
-          "price": 10.41,
-          "ceiling": 13.5,
-          "category": "max",
-          "purpose": "Every escape cast is a card leaving your graveyard — which is another Spirit. The most on-theme Game Changer in the format for this deck.",
-          "replaces": "Goblin Bombardment",
-          "gameChanger": true,
-          "stage": "Maxed",
-          "tags": [
-            "b3",
-            "game changer"
-          ],
-          "why": "",
-          "whyPrimary": "",
-          "whyOptional": "A Bracket-3 Game Changer — power, not function. The deck plays fine without it.",
-          "alternateReason": "Every escape cast is a card leaving your graveyard — which is another Spirit. The most on-theme Game Changer in the format for this deck.",
-          "alternateTradeoff": "Swaps in for Goblin Bombardment. Official Game Changer — Bracket 3 allows at most three.",
-          "whereToBuy": "Singles case",
-          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F206642%3Fpage%3D1",
-          "brief": {
-            "power": 5,
-            "ease": 4,
-            "fun": 3,
-            "value": "Strong value. Premium effect at $10.34, comfortably worth the slot.",
-            "fit": "Every escape cast is a card leaving your graveyard — which is another Spirit. The most on-theme Game Changer in the format for this deck."
-          },
-          "image": "https://cards.scryfall.io/small/front/0/e/0e51d796-7279-4c06-87f0-37adbdaa41df.jpg?1783931543",
-          "oracleText": "Each nonland card in your graveyard has escape. The escape cost is equal to the card's mana cost plus exile three other cards from your graveyard. (You may cast cards from your graveyard for their escape cost.)\nAt the beginning of the end step, sacrifice this enchantment.",
-          "keywords": [],
-          "colorIdentity": [
-            "R"
-          ],
-          "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Tier 3 capability choice: The Lost Caverns planeswalker version, in the 99: it drains two and gains two on every cast from exile."
         },
         {
           "id": "smothering-tithe",
@@ -49210,7 +49288,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "boros-charm",
@@ -49250,7 +49329,135 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Tier 3 capability choice: Four damage, indestructible for your team, or double strike. The cheapest protection Lorehold has."
+        },
+        {
+          "id": "farewell",
+          "name": "Farewell",
+          "quantity": 1,
+          "manaCost": "{4}{W}{W}",
+          "typeLine": "Sorcery",
+          "price": 5.9,
+          "ceiling": 9.5,
+          "category": "max",
+          "purpose": "full modal exile wrath",
+          "replaces": "Winds of Abandon",
+          "gameChanger": true,
+          "stage": "Maxxed",
+          "tags": [
+            "removal",
+            "board-wipe"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "full modal exile wrath",
+          "alternateTradeoff": "pricier, slower at 4 mana — and it's on the official Game Changers list, so running it counts toward Bracket 3's three-card cap",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F535709%3Fpage%3D1",
+          "brief": {
+            "power": 4,
+            "ease": 4,
+            "fun": 3,
+            "value": "Strong value. Premium effect at $6.99, comfortably worth the slot.",
+            "fit": "full modal exile wrath"
+          },
+          "image": "https://cards.scryfall.io/small/front/1/1/114d2180-093b-4838-97ad-badbc8ee50b0.jpg?1783913032",
+          "oracleText": "Choose one or more —\n• Exile all artifacts.\n• Exile all creatures.\n• Exile all enchantments.\n• Exile all graveyards.",
+          "keywords": [],
+          "colorIdentity": [
+            "W"
+          ],
+          "commanderLegal": true,
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Current Game Changer: a flexible, near-total exile reset that uses one of the three Bracket 3 slots."
+        },
+        {
+          "id": "skullclamp",
+          "name": "Skullclamp",
+          "quantity": 1,
+          "manaCost": "{1}",
+          "typeLine": "Artifact — Equipment",
+          "price": 5.9,
+          "ceiling": 10.5,
+          "category": "max",
+          "purpose": "The best draw engine this deck can possibly run: equip {1} to a 1-toughness Spirit token, it dies, you draw TWO — every token becomes two cards, directly fixing the deck's one stated weakness (thin card draw). Buy a classic printing (Darksteel or a Commander reprint), not the Marvel-crossover version, to keep the table's look consistent.",
+          "replaces": "Perpetual Timepiece",
+          "gameChanger": false,
+          "stage": "Maxxed",
+          "tags": [
+            "draw",
+            "tokens",
+            "engine"
+          ],
+          "why": "The best draw engine this deck can possibly run: equip {1} to a 1-toughness Spirit token, it dies, you draw TWO — every token becomes two cards, directly fixing the deck's one stated weakness (thin card draw). Buy a classic printing (Darksteel or a Commander reprint), not the Marvel-crossover version, to keep the table's look consistent.",
+          "whyPrimary": "The best draw engine this deck can possibly run: equip {1} to a 1-toughness Spirit token, it dies, you draw TWO — every token becomes two cards, directly fixing the deck's one stated weakness (thin card draw). Buy a classic printing (Darksteel or a Commander reprint), not the Marvel-crossover version, to keep the table's look consistent.",
+          "whyOptional": "Weaker under Quintorius than under Excava: the tokens are 3/2s now, so Skullclamp makes them 4/1 instead of killing them for two cards. Keep it only if you run lots of other small creatures.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F698056%3Fpage%3D1",
+          "brief": {
+            "power": 4,
+            "ease": 4,
+            "fun": 4,
+            "value": "Strong value. Premium effect at $7.99, comfortably worth the slot.",
+            "fit": "The best draw engine this deck can possibly run: equip {1} to a 1-toughness Spirit token, it dies, you draw TWO — every token becomes two cards, directly fixing the deck's one stated weakness (thin card draw). Buy a classic printing (Darksteel or a Commander reprint), not the Marvel-crossover version, to keep the table's look consistent."
+          },
+          "image": "https://cards.scryfall.io/small/front/1/d/1d8b007b-3169-4ee3-80c7-781fc096fc7a.jpg?1783903215",
+          "oracleText": "Equipped creature gets +1/-1.\nWhenever equipped creature dies, draw two cards.\nEquip {1}",
+          "keywords": [
+            "Equip"
+          ],
+          "colorIdentity": [],
+          "commanderLegal": true,
+          "priceUpdated": "2026-08-23",
+          "maxReason": "The best repeatable draw engine available to a deck built to produce and sacrifice small Spirit tokens."
+        },
+        {
+          "id": "sunforger",
+          "name": "Sunforger",
+          "quantity": 1,
+          "manaCost": "{3}",
+          "typeLine": "Artifact — Equipment",
+          "price": 4.06,
+          "ceiling": 6.5,
+          "category": "max",
+          "purpose": "tutors and casts an instant",
+          "replaces": "Open the Armory",
+          "gameChanger": false,
+          "stage": "Maxxed",
+          "tags": [
+            "tutor",
+            "utility"
+          ],
+          "why": "",
+          "whyPrimary": "",
+          "whyOptional": "",
+          "alternateReason": "tutors and casts an instant",
+          "alternateTradeoff": "needs cheap-instant density to shine",
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F227347%3Fpage%3D1",
+          "brief": {
+            "power": 4,
+            "ease": 4,
+            "fun": 3,
+            "value": "Strong value. Premium effect at $4.99, comfortably worth the slot.",
+            "fit": "tutors and casts an instant"
+          },
+          "image": "https://cards.scryfall.io/small/front/d/d/dd3e42ee-ab13-460b-90fd-86e677abce4f.jpg?1783928686",
+          "oracleText": "Equipped creature gets +4/+0.\n{R}{W}, Unattach this Equipment: Search your library for a red or white instant card with mana value 4 or less and cast that card without paying its mana cost. Then shuffle.\nEquip {3}",
+          "keywords": [
+            "Equip"
+          ],
+          "colorIdentity": [
+            "R",
+            "W"
+          ],
+          "commanderLegal": true,
+          "priceUpdated": "2026-08-23",
+          "maxReason": "With Mistveil Plains and the Boros instant suite, this becomes a reusable tutor, interaction, and protection engine rather than a one-shot equipment upgrade."
         }
       ]
     },
@@ -51030,7 +51237,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "5c-max-2-smothering-tithe",
@@ -51071,7 +51279,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "5c-max-3-necropotence",
@@ -51110,7 +51319,8 @@
             "B"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "5c-upgrade-1-sword-of-feast-and-famine",
@@ -51149,7 +51359,8 @@
           ],
           "colorIdentity": [],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Adds protection, combat pressure, hand disruption, and a full mana reset from one equipment slot."
         },
         {
           "id": "5c-upgrade-4-sigarda-s-aid",
@@ -51188,7 +51399,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Makes the equipment plan operate at instant speed and collapses equip costs when pieces enter."
         },
         {
           "id": "5c-upgrade-5-hammer-of-nazahn",
@@ -51227,7 +51439,8 @@
           ],
           "colorIdentity": [],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Auto-equips later pieces while granting indestructible, protecting and accelerating the Voltron threat."
         }
       ]
     },
@@ -53063,7 +53276,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "5d-max-2-smothering-tithe",
@@ -53104,7 +53318,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "5d-max-3-jeska-s-will",
@@ -53143,7 +53358,8 @@
             "R"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         }
       ]
     },
@@ -54809,49 +55025,7 @@
         }
       ],
       "upgrade": [],
-      "enhance": [
-        {
-          "id": "5e-upgrade-4-rhys-the-redeemed",
-          "name": "Rhys the Redeemed",
-          "quantity": 1,
-          "price": 5.92,
-          "ceiling": 5.92,
-          "category": "enhance",
-          "stage": "Enhance",
-          "purpose": "Next card on this variant's published upgrade ladder.",
-          "typeLine": "Legendary Creature — Elf Warrior",
-          "manaCost": "{G/W}",
-          "gameChanger": false,
-          "why": "Next card on this variant's published upgrade ladder.",
-          "whyPrimary": "Next card on this variant's published upgrade ladder.",
-          "whyOptional": "Published next-step upgrade; select it only when extending beyond Tuned.",
-          "alternateReason": "",
-          "alternateTradeoff": "",
-          "replaces": "Unspecified shell card 8",
-          "tags": [
-            "Tokens / Go-wide",
-            "Control / Interaction"
-          ],
-          "whereToBuy": "Singles case",
-          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F218325%3Fpage%3D1",
-          "brief": {
-            "power": null,
-            "ease": null,
-            "fun": null,
-            "value": "Price varies",
-            "fit": "Next card on this variant's published upgrade ladder."
-          },
-          "image": "https://cards.scryfall.io/small/front/b/9/b91dadcb-31e9-43b0-b425-c9311af3e9d7.jpg?1783930128",
-          "oracleText": "{2}{G/W}, {T}: Create a 1/1 green and white Elf Warrior creature token.\n{4}{G/W}{G/W}, {T}: For each creature token you control, create a token that's a copy of that creature.",
-          "keywords": [],
-          "colorIdentity": [
-            "G",
-            "W"
-          ],
-          "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
-        }
-      ],
+      "enhance": [],
       "max": [
         {
           "id": "5e-max-1-aura-shards",
@@ -54892,7 +55066,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "5e-max-2-teferi-s-protection",
@@ -54932,7 +55107,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "5e-max-3-smothering-tithe",
@@ -54974,7 +55150,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "5e-upgrade-1-parallel-lives",
@@ -55014,7 +55191,8 @@
             "G"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Doubles the deck's central token engine and compounds every later token payoff."
         },
         {
           "id": "5e-upgrade-2-anointed-procession",
@@ -55054,7 +55232,50 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Doubles the primary token plan and compounds every sacrifice, populate, and go-wide payoff."
+        },
+        {
+          "id": "5e-upgrade-4-rhys-the-redeemed",
+          "name": "Rhys the Redeemed",
+          "quantity": 1,
+          "price": 5.92,
+          "ceiling": 5.92,
+          "category": "max",
+          "stage": "Maxxed",
+          "purpose": "Next card on this variant's published upgrade ladder.",
+          "typeLine": "Legendary Creature — Elf Warrior",
+          "manaCost": "{G/W}",
+          "gameChanger": false,
+          "why": "Next card on this variant's published upgrade ladder.",
+          "whyPrimary": "Next card on this variant's published upgrade ladder.",
+          "whyOptional": "Published next-step upgrade; select it only when extending beyond Tuned.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "replaces": "Unspecified shell card 8",
+          "tags": [
+            "Tokens / Go-wide",
+            "Control / Interaction"
+          ],
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F218325%3Fpage%3D1",
+          "brief": {
+            "power": null,
+            "ease": null,
+            "fun": null,
+            "value": "Price varies",
+            "fit": "Next card on this variant's published upgrade ladder."
+          },
+          "image": "https://cards.scryfall.io/small/front/b/9/b91dadcb-31e9-43b0-b425-c9311af3e9d7.jpg?1783930128",
+          "oracleText": "{2}{G/W}, {T}: Create a 1/1 green and white Elf Warrior creature token.\n{4}{G/W}{G/W}, {T}: For each creature token you control, create a token that's a copy of that creature.",
+          "keywords": [],
+          "colorIdentity": [
+            "G",
+            "W"
+          ],
+          "commanderLegal": true,
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Provides repeatable token doubling from a one-mana body, directly maximizing Trostani's populate, lifegain, and go-wide engines."
         }
       ]
     },
@@ -56882,7 +57103,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "5f-max-2-smothering-tithe",
@@ -56923,7 +57145,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "5f-max-3-necropotence",
@@ -56962,46 +57185,8 @@
             "B"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
-        },
-        {
-          "id": "5f-upgrade-2-kinsbaile-cavalier",
-          "name": "Kinsbaile Cavalier",
-          "quantity": 1,
-          "price": 13.68,
-          "ceiling": 13.68,
-          "category": "max",
-          "stage": "Maxxed",
-          "purpose": "Next card on this variant's published upgrade ladder.",
-          "typeLine": "Creature — Kithkin Knight",
-          "manaCost": "{3}{W}",
-          "gameChanger": false,
-          "why": "Next card on this variant's published upgrade ladder.",
-          "whyPrimary": "Next card on this variant's published upgrade ladder.",
-          "whyOptional": "Published next-step upgrade; select it only when extending beyond Tuned.",
-          "alternateReason": "",
-          "alternateTradeoff": "",
-          "replaces": "Unspecified shell card 7",
-          "tags": [
-            "Graveyard / Reanimator"
-          ],
-          "whereToBuy": "Singles case",
-          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F46829%3Fpage%3D1",
-          "brief": {
-            "power": null,
-            "ease": null,
-            "fun": null,
-            "value": "Price varies",
-            "fit": "Next card on this variant's published upgrade ladder."
-          },
-          "image": "https://cards.scryfall.io/small/front/b/c/bcda21e6-f423-4dd9-a4a3-bacfa83612d0.jpg?1783941347",
-          "oracleText": "Knight creatures you control have double strike.",
-          "keywords": [],
-          "colorIdentity": [
-            "W"
-          ],
-          "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "5f-upgrade-5-sigarda-s-aid",
@@ -57040,7 +57225,48 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Makes the equipment plan operate at instant speed and collapses equip costs when pieces enter."
+        },
+        {
+          "id": "5f-upgrade-2-kinsbaile-cavalier",
+          "name": "Kinsbaile Cavalier",
+          "quantity": 1,
+          "price": 13.68,
+          "ceiling": 13.68,
+          "category": "max",
+          "stage": "Maxxed",
+          "purpose": "Next card on this variant's published upgrade ladder.",
+          "typeLine": "Creature — Kithkin Knight",
+          "manaCost": "{3}{W}",
+          "gameChanger": false,
+          "why": "Next card on this variant's published upgrade ladder.",
+          "whyPrimary": "Next card on this variant's published upgrade ladder.",
+          "whyOptional": "Published next-step upgrade; select it only when extending beyond Tuned.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "replaces": "Unspecified shell card 7",
+          "tags": [
+            "Graveyard / Reanimator"
+          ],
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F46829%3Fpage%3D1",
+          "brief": {
+            "power": null,
+            "ease": null,
+            "fun": null,
+            "value": "Price varies",
+            "fit": "Next card on this variant's published upgrade ladder."
+          },
+          "image": "https://cards.scryfall.io/small/front/b/c/bcda21e6-f423-4dd9-a4a3-bacfa83612d0.jpg?1783941347",
+          "oracleText": "Knight creatures you control have double strike.",
+          "keywords": [],
+          "colorIdentity": [
+            "W"
+          ],
+          "commanderLegal": true,
+          "priceUpdated": "2026-08-23",
+          "maxReason": "One removable tribal body doubles the combat damage of every Knight and Knight token, making it Aryel's direct go-wide finishing ceiling."
         }
       ]
     },
@@ -58976,7 +59202,8 @@
             "G"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "6o-max-2-rhystic-study",
@@ -59015,7 +59242,8 @@
             "U"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "6o-max-3-seedborn-muse",
@@ -59054,7 +59282,8 @@
             "G"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "6o-upgrade-3-crucible-of-worlds",
@@ -59091,7 +59320,8 @@
           "keywords": [],
           "colorIdentity": [],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Turns fetches and sacrificed lands into a repeatable land engine instead of one-shot value."
         }
       ]
     },
@@ -62118,6 +62348,137 @@
           ],
           "commanderLegal": true,
           "priceUpdated": "2026-08-23"
+        },
+        {
+          "id": "6c-owned-laketown-lookout",
+          "name": "Lake-town Lookout",
+          "quantity": 1,
+          "price": 0.12,
+          "ceiling": null,
+          "category": "enhance",
+          "stage": "Enhance",
+          "purpose": "A one-power body Nethroi reanimates cheaply; dying recruits for card filtering and can leave another useful body behind.",
+          "typeLine": "Creature — Human Scout",
+          "manaCost": "{W}",
+          "gameChanger": false,
+          "why": "A one-power body Nethroi reanimates cheaply; dying recruits for card filtering and can leave another useful body behind.",
+          "whyPrimary": "A one-power body Nethroi reanimates cheaply; dying recruits for card filtering and can leave another useful body behind.",
+          "whyOptional": "Already owned; choose it only when it improves or temporarily completes this exact slot.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "replaces": "Wall of Blossoms",
+          "temporaryUntil": null,
+          "ownedExtra": true,
+          "tags": [
+            "Graveyard / Reanimator",
+            "Card filtering"
+          ],
+          "whereToBuy": "Already owned",
+          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F709459%3Fpage%3D1",
+          "brief": {
+            "power": null,
+            "ease": null,
+            "fun": null,
+            "value": "Already owned",
+            "fit": "A one-power body Nethroi reanimates cheaply; dying recruits for card filtering and can leave another useful body behind."
+          },
+          "image": "https://cards.scryfall.io/small/front/1/7/178c4cf6-6b11-40e4-9673-c560d6818a6b.jpg?1785496946",
+          "oracleText": "When this creature dies, recruit. (Draw a card, then discard a card. If you discarded a nonland card, create a 1/1 white Human Soldier creature token.)",
+          "keywords": [
+            "Recruit"
+          ],
+          "colorIdentity": [
+            "W"
+          ],
+          "commanderLegal": true,
+          "priceUpdated": "2026-08-23"
+        },
+        {
+          "id": "6c-owned-stony-voiced-goblins",
+          "name": "Stony-Voiced Goblins",
+          "quantity": 1,
+          "price": 0.15,
+          "ceiling": null,
+          "category": "enhance",
+          "stage": "Enhance",
+          "purpose": "A more disruptive alternative for the same low-power Wall of Blossoms slot: Nethroi can repeatedly reanimate its each-opponent discard trigger.",
+          "typeLine": "Creature — Goblin Bard",
+          "manaCost": "{1}{B}",
+          "gameChanger": false,
+          "why": "A more disruptive alternative for the same low-power Wall of Blossoms slot: Nethroi can repeatedly reanimate its each-opponent discard trigger.",
+          "whyPrimary": "A more disruptive alternative for the same low-power Wall of Blossoms slot: Nethroi can repeatedly reanimate its each-opponent discard trigger.",
+          "whyOptional": "Already owned; choose it only when it improves or temporarily completes this exact slot.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "replaces": "Wall of Blossoms",
+          "temporaryUntil": null,
+          "ownedExtra": true,
+          "tags": [
+            "Graveyard / Reanimator",
+            "Control / Interaction"
+          ],
+          "whereToBuy": "Already owned",
+          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F709497%3Fpage%3D1",
+          "brief": {
+            "power": null,
+            "ease": null,
+            "fun": null,
+            "value": "Already owned",
+            "fit": "A more disruptive alternative for the same low-power Wall of Blossoms slot: Nethroi can repeatedly reanimate its each-opponent discard trigger."
+          },
+          "image": "https://cards.scryfall.io/small/front/6/f/6fcc3699-b475-4612-884d-81bd4f21e9c1.jpg?1785497106",
+          "oracleText": "When this creature enters, each opponent discards a card.",
+          "keywords": [],
+          "colorIdentity": [
+            "B"
+          ],
+          "commanderLegal": true,
+          "priceUpdated": "2026-08-23"
+        },
+        {
+          "id": "6c-owned-great-fierce-bee",
+          "name": "Great Fierce Bee",
+          "quantity": 1,
+          "price": 0.13,
+          "ceiling": null,
+          "category": "enhance",
+          "stage": "Enhance",
+          "purpose": "Temporary death-value support you already own. Its repeated scrying smooths draws, but it does not return creatures the way Luminous Broodmoth does.",
+          "typeLine": "Creature — Insect",
+          "manaCost": "{2}{B}",
+          "gameChanger": false,
+          "why": "Temporary death-value support you already own. Its repeated scrying smooths draws, but it does not return creatures the way Luminous Broodmoth does.",
+          "whyPrimary": "Temporary death-value support you already own. Its repeated scrying smooths draws, but it does not return creatures the way Luminous Broodmoth does.",
+          "whyOptional": "Already owned; choose it only when it improves or temporarily completes this exact slot.",
+          "alternateReason": "",
+          "alternateTradeoff": "Temporary until Luminous Broodmoth is found.",
+          "replaces": "Luminous Broodmoth",
+          "temporaryUntil": "Luminous Broodmoth",
+          "ownedExtra": true,
+          "tags": [
+            "Graveyard / Reanimator",
+            "Card filtering"
+          ],
+          "whereToBuy": "Already owned",
+          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F709491%3Fpage%3D1",
+          "brief": {
+            "power": null,
+            "ease": null,
+            "fun": null,
+            "value": "Already owned",
+            "fit": "Temporary death-value support you already own. Its repeated scrying smooths draws, but it does not return creatures the way Luminous Broodmoth does."
+          },
+          "image": "https://cards.scryfall.io/small/front/9/d/9d9ef88f-d208-4788-9553-cd672b3be1fe.jpg?1785497086",
+          "oracleText": "Flying\nWhenever one or more other creatures die, scry 1. (Look at the top card of your library. You may put that card on the bottom.)",
+          "keywords": [
+            "Scry",
+            "Flying"
+          ],
+          "colorIdentity": [
+            "B"
+          ],
+          "commanderLegal": true,
+          "priceUpdated": "2026-08-23"
         }
       ],
       "max": [
@@ -62158,7 +62519,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Tier 3 capability choice: From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi."
         },
         {
           "id": "craterhoof-behemoth",
@@ -62197,7 +62559,8 @@
             "G"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Tier 3 capability choice: From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi."
         },
         {
           "id": "vigor",
@@ -62236,7 +62599,8 @@
             "G"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Tier 3 capability choice: From the Tuned build of 6c — Abzan Mass Reanimation — Nethroi."
         },
         {
           "id": "natural-order",
@@ -62276,7 +62640,8 @@
             "G"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "teferi-s-protection",
@@ -62316,7 +62681,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "aura-shards",
@@ -62357,7 +62723,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "grave-pact",
@@ -62396,7 +62763,8 @@
             "B"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Turns every expendable creature into repeatable, asymmetric creature control across all opponents."
         },
         {
           "id": "emeria-shepherd",
@@ -62438,7 +62806,8 @@
             "W"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Tier 3 capability choice: Every Plains you play returns a permanent from your graveyard."
         },
         {
           "id": "sheoldred-whispering-one",
@@ -62480,7 +62849,8 @@
             "B"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Tier 3 capability choice: Reanimates on every one of your upkeeps and shrinks their board."
         }
       ]
     },
@@ -64546,7 +64916,8 @@
             "G"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "6d-max-2-consecrated-sphinx",
@@ -64587,7 +64958,8 @@
             "U"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "6d-max-3-rhystic-study",
@@ -64626,7 +64998,8 @@
             "U"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "6d-upgrade-5-kinnan-bonder-prodigy",
@@ -64666,7 +65039,8 @@
             "U"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Doubles the output of the deck's nonland mana sources and turns stored big mana into repeatable creature deployment, directly maximizing Kruphix's central engine."
         }
       ]
     },
@@ -66897,7 +67271,8 @@
             "B"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "6e-max-2-crop-rotation",
@@ -66936,7 +67311,8 @@
             "G"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "6e-max-3-bolas-s-citadel",
@@ -66975,7 +67351,8 @@
             "B"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         }
       ]
     },
@@ -69002,127 +69379,7 @@
         }
       ],
       "upgrade": [],
-      "enhance": [
-        {
-          "id": "6f-upgrade-1-peregrine-drake",
-          "name": "Peregrine Drake",
-          "quantity": 1,
-          "price": 0.25,
-          "ceiling": 0.25,
-          "category": "enhance",
-          "stage": "Enhance",
-          "purpose": "combo with Deadeye, see note",
-          "typeLine": "Creature — Drake",
-          "manaCost": "{4}{U}",
-          "gameChanger": false,
-          "why": "combo with Deadeye, see note",
-          "whyPrimary": "combo with Deadeye, see note",
-          "whyOptional": "Published next-step upgrade; select it only when extending beyond Tuned.",
-          "alternateReason": "",
-          "alternateTradeoff": "",
-          "replaces": "Unspecified shell card 14",
-          "tags": [
-            "Blink / ETB"
-          ],
-          "whereToBuy": "Singles case",
-          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F458178%3Fpage%3D1",
-          "brief": {
-            "power": null,
-            "ease": null,
-            "fun": null,
-            "value": "Price varies",
-            "fit": "combo with Deadeye, see note"
-          },
-          "image": "https://cards.scryfall.io/small/front/6/1/611c8fa2-b53f-483b-9efa-759ac59dc30f.jpg?1783918487",
-          "oracleText": "Flying\nWhen this creature enters, untap up to five lands.",
-          "keywords": [
-            "Flying"
-          ],
-          "colorIdentity": [
-            "U"
-          ],
-          "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
-        },
-        {
-          "id": "6f-upgrade-2-woodland-bellower",
-          "name": "Woodland Bellower",
-          "quantity": 1,
-          "price": 4.87,
-          "ceiling": 4.87,
-          "category": "enhance",
-          "stage": "Enhance",
-          "purpose": "Next card on this variant's published upgrade ladder.",
-          "typeLine": "Creature — Beast",
-          "manaCost": "{4}{G}{G}",
-          "gameChanger": false,
-          "why": "Next card on this variant's published upgrade ladder.",
-          "whyPrimary": "Next card on this variant's published upgrade ladder.",
-          "whyOptional": "Published next-step upgrade; select it only when extending beyond Tuned.",
-          "alternateReason": "",
-          "alternateTradeoff": "",
-          "replaces": "Unspecified shell card 15",
-          "tags": [
-            "Blink / ETB"
-          ],
-          "whereToBuy": "Singles case",
-          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F100216%3Fpage%3D1",
-          "brief": {
-            "power": null,
-            "ease": null,
-            "fun": null,
-            "value": "Price varies",
-            "fit": "Next card on this variant's published upgrade ladder."
-          },
-          "image": "https://cards.scryfall.io/small/front/a/7/a706d4bb-0b44-4e43-b340-7de799c086b8.jpg?1783938315",
-          "oracleText": "When this creature enters, you may search your library for a nonlegendary green creature card with mana value 3 or less, put it onto the battlefield, then shuffle.",
-          "keywords": [],
-          "colorIdentity": [
-            "G"
-          ],
-          "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
-        },
-        {
-          "id": "6f-upgrade-5-agent-of-treachery",
-          "name": "Agent of Treachery",
-          "quantity": 1,
-          "price": 5.27,
-          "ceiling": 5.27,
-          "category": "enhance",
-          "stage": "Enhance",
-          "purpose": "salty, optional",
-          "typeLine": "Creature — Human Rogue",
-          "manaCost": "{5}{U}{U}",
-          "gameChanger": false,
-          "why": "salty, optional",
-          "whyPrimary": "salty, optional",
-          "whyOptional": "Published next-step upgrade; select it only when extending beyond Tuned.",
-          "alternateReason": "",
-          "alternateTradeoff": "",
-          "replaces": "Unspecified shell card 18",
-          "tags": [
-            "Blink / ETB"
-          ],
-          "whereToBuy": "Singles case",
-          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F192629%3Fpage%3D1",
-          "brief": {
-            "power": null,
-            "ease": null,
-            "fun": null,
-            "value": "Price varies",
-            "fit": "salty, optional"
-          },
-          "image": "https://cards.scryfall.io/small/front/c/c/cc6686e6-4535-49be-b0b3-e76464656cd2.jpg?1783933017",
-          "oracleText": "When this creature enters, gain control of target permanent.\nAt the beginning of your end step, if you control three or more permanents you don't own, draw three cards.",
-          "keywords": [],
-          "colorIdentity": [
-            "U"
-          ],
-          "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
-        }
-      ],
+      "enhance": [],
       "max": [
         {
           "id": "6f-max-1-consecrated-sphinx",
@@ -69163,7 +69420,8 @@
             "U"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "6f-max-2-rhystic-study",
@@ -69202,7 +69460,8 @@
             "U"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "6f-max-3-seedborn-muse",
@@ -69241,7 +69500,8 @@
             "G"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Uses one of the deck's three Bracket 3 Game Changer slots to maximize its central strategy."
         },
         {
           "id": "6f-upgrade-3-cloudstone-curio",
@@ -69262,7 +69522,8 @@
           "alternateTradeoff": "",
           "replaces": "Unspecified shell card 16",
           "tags": [
-            "Blink / ETB"
+            "Blink / ETB",
+            "Late three-card infinite combo"
           ],
           "whereToBuy": "Singles case",
           "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F531190%3Fpage%3D1",
@@ -69278,7 +69539,8 @@
           "keywords": [],
           "colorIdentity": [],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "With Yarok, Peregrine Drake, and five ordinary one-mana lands it creates an infinite cast/ETB loop. That loop is mana-neutral unless another effect amplifies the lands, and it must wait until turn seven or later."
         },
         {
           "id": "6f-upgrade-4-toxrill-the-corrosive",
@@ -69318,16 +69580,364 @@
             "U"
           ],
           "commanderLegal": true,
-          "priceUpdated": "2026-08-23"
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Compresses board control, token production, and card draw into one late-game engine."
+        },
+        {
+          "id": "6f-upgrade-1-peregrine-drake",
+          "name": "Peregrine Drake",
+          "quantity": 1,
+          "price": 0.25,
+          "ceiling": 0.25,
+          "category": "max",
+          "stage": "Maxxed",
+          "purpose": "combo with Deadeye, see note",
+          "typeLine": "Creature — Drake",
+          "manaCost": "{4}{U}",
+          "gameChanger": false,
+          "why": "combo with Deadeye, see note",
+          "whyPrimary": "combo with Deadeye, see note",
+          "whyOptional": "Published next-step upgrade; select it only when extending beyond Tuned.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "replaces": "Unspecified shell card 14",
+          "tags": [
+            "Blink / ETB",
+            "Late two-card infinite combo"
+          ],
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F458178%3Fpage%3D1",
+          "brief": {
+            "power": null,
+            "ease": null,
+            "fun": null,
+            "value": "Price varies",
+            "fit": "combo with Deadeye, see note"
+          },
+          "image": "https://cards.scryfall.io/small/front/6/1/611c8fa2-b53f-483b-9efa-759ac59dc30f.jpg?1783918487",
+          "oracleText": "Flying\nWhen this creature enters, untap up to five lands.",
+          "keywords": [
+            "Flying"
+          ],
+          "colorIdentity": [
+            "U"
+          ],
+          "commanderLegal": true,
+          "priceUpdated": "2026-08-23",
+          "maxReason": "With Deadeye Navigator this becomes a repeatable blink-and-mana engine. It belongs at the capability ceiling and must be played as a turn-seven-or-later line."
+        },
+        {
+          "id": "6f-upgrade-5-agent-of-treachery",
+          "name": "Agent of Treachery",
+          "quantity": 1,
+          "price": 5.27,
+          "ceiling": 5.27,
+          "category": "max",
+          "stage": "Maxxed",
+          "purpose": "salty, optional",
+          "typeLine": "Creature — Human Rogue",
+          "manaCost": "{5}{U}{U}",
+          "gameChanger": false,
+          "why": "salty, optional",
+          "whyPrimary": "salty, optional",
+          "whyOptional": "Published next-step upgrade; select it only when extending beyond Tuned.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "replaces": "Unspecified shell card 18",
+          "tags": [
+            "Blink / ETB"
+          ],
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F192629%3Fpage%3D1",
+          "brief": {
+            "power": null,
+            "ease": null,
+            "fun": null,
+            "value": "Price varies",
+            "fit": "salty, optional"
+          },
+          "image": "https://cards.scryfall.io/small/front/c/c/cc6686e6-4535-49be-b0b3-e76464656cd2.jpg?1783933017",
+          "oracleText": "When this creature enters, gain control of target permanent.\nAt the beginning of your end step, if you control three or more permanents you don't own, draw three cards.",
+          "keywords": [],
+          "colorIdentity": [
+            "U"
+          ],
+          "commanderLegal": true,
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Yarok and the blink package turn one theft effect into repeatable permanent control, making this a true high-capability ceiling card."
+        },
+        {
+          "id": "6f-upgrade-2-woodland-bellower",
+          "name": "Woodland Bellower",
+          "quantity": 1,
+          "price": 4.87,
+          "ceiling": 4.87,
+          "category": "max",
+          "stage": "Maxxed",
+          "purpose": "Next card on this variant's published upgrade ladder.",
+          "typeLine": "Creature — Beast",
+          "manaCost": "{4}{G}{G}",
+          "gameChanger": false,
+          "why": "Next card on this variant's published upgrade ladder.",
+          "whyPrimary": "Next card on this variant's published upgrade ladder.",
+          "whyOptional": "Published next-step upgrade; select it only when extending beyond Tuned.",
+          "alternateReason": "",
+          "alternateTradeoff": "",
+          "replaces": "Unspecified shell card 15",
+          "tags": [
+            "Blink / ETB"
+          ],
+          "whereToBuy": "Singles case",
+          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F100216%3Fpage%3D1",
+          "brief": {
+            "power": null,
+            "ease": null,
+            "fun": null,
+            "value": "Price varies",
+            "fit": "Next card on this variant's published upgrade ladder."
+          },
+          "image": "https://cards.scryfall.io/small/front/a/7/a706d4bb-0b44-4e43-b340-7de799c086b8.jpg?1783938315",
+          "oracleText": "When this creature enters, you may search your library for a nonlegendary green creature card with mana value 3 or less, put it onto the battlefield, then shuffle.",
+          "keywords": [],
+          "colorIdentity": [
+            "G"
+          ],
+          "commanderLegal": true,
+          "priceUpdated": "2026-08-23",
+          "maxReason": "Yarok doubles its enter-the-battlefield trigger, tutoring two different green creatures of mana value three or less directly onto the battlefield."
         }
       ]
     }
   },
   "cardAudit": {
     "source": "Scryfall collection API",
-    "generatedAt": "2026-08-23T00:42:25.388Z",
-    "cardsVerified": 611,
-    "wrongTypesCorrected": 3,
+    "generatedAt": "2026-08-23T00:54:57.663Z",
+    "cardsVerified": 625,
+    "wrongTypesCorrected": 0,
     "legalityIssues": []
-  }
+  },
+  "salvage": [
+    {
+      "id": "salvage-1",
+      "name": "Bilbo Baggins, Burglar // Take a Glance",
+      "reason": "No current build has a slot where this cantrip body preserves an important engine role.",
+      "ownedExtra": true,
+      "category": "salvage",
+      "manaCost": "{2}{U} // {U}",
+      "typeLine": "Legendary Creature — Halfling Rogue // Sorcery — Adventure",
+      "oracleText": "When Bilbo Baggins enters, draw a card.\nScry 2. (Then exile this card. You may cast the creature later from exile.)",
+      "keywords": [
+        "Scry"
+      ],
+      "colorIdentity": [
+        "U"
+      ],
+      "image": "https://cards.scryfall.io/small/front/6/a/6a109b3e-9f5b-4625-abb7-6b992c10530b.jpg?1785323194",
+      "price": 0.13,
+      "priceUpdated": "2026-08-23",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F708801%3Fpage%3D1",
+      "commanderLegal": true
+    },
+    {
+      "id": "salvage-2",
+      "name": "Dwarven Mattock",
+      "reason": "Equipment package is below the efficiency and synergy needed by the selected decks.",
+      "ownedExtra": true,
+      "category": "salvage",
+      "manaCost": "{2}",
+      "typeLine": "Artifact — Equipment",
+      "oracleText": "When this Equipment enters, attach it to target Dwarf you control.\nEquipped creature gets +2/+2 and has ward {1}. (Whenever equipped creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays {1}.)\nEquip {3} ({3}: Attach to target creature you control. Equip only as a sorcery.)",
+      "keywords": [
+        "Equip"
+      ],
+      "colorIdentity": [],
+      "image": "https://cards.scryfall.io/small/front/9/2/92c6f09d-b525-4e8c-a87c-a74df9dc3b1e.jpg?1785412768",
+      "price": 0.18,
+      "priceUpdated": "2026-08-23",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F709081%3Fpage%3D1",
+      "commanderLegal": true
+    },
+    {
+      "id": "salvage-3",
+      "name": "Dwarven Mauler",
+      "reason": "Creature does not preserve a needed role in the current six-deck plans.",
+      "ownedExtra": true,
+      "category": "salvage",
+      "manaCost": "{R}",
+      "typeLine": "Creature — Dwarf Warrior",
+      "oracleText": "Equip abilities you activate that target this creature cost {2} less to activate.",
+      "keywords": [],
+      "colorIdentity": [
+        "R"
+      ],
+      "image": "https://cards.scryfall.io/small/front/b/d/bd0f0415-43af-4f5d-8999-853c5d42780d.jpg?1784895019",
+      "price": 0.26,
+      "priceUpdated": "2026-08-23",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F707739%3Fpage%3D1",
+      "commanderLegal": true
+    },
+    {
+      "id": "salvage-4",
+      "name": "Dwarven Shortsword",
+      "reason": "Equipment is too low-impact for the current combat and engine plans.",
+      "ownedExtra": true,
+      "category": "salvage",
+      "manaCost": "{3}{W}",
+      "typeLine": "Artifact — Equipment",
+      "oracleText": "When this Equipment enters, create a 2/2 red Dwarf creature token, then attach this Equipment to it.\nEquipped creature gets +1/+2.\nEquip {2} ({2}: Attach to target creature you control. Equip only as a sorcery.)",
+      "keywords": [
+        "Equip"
+      ],
+      "colorIdentity": [
+        "W"
+      ],
+      "image": "https://cards.scryfall.io/small/front/f/2/f2341cf3-4d2c-4a4f-9aea-8834104a8910.jpg?1785496931",
+      "price": 0.95,
+      "priceUpdated": "2026-08-23",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F709454%3Fpage%3D1",
+      "commanderLegal": true
+    },
+    {
+      "id": "salvage-5",
+      "name": "Gundabad Opportunist",
+      "reason": "No selected deck can exploit it enough to justify a final-100 slot.",
+      "ownedExtra": true,
+      "category": "salvage",
+      "manaCost": "{3}{R}",
+      "typeLine": "Creature — Goblin Rogue",
+      "oracleText": "When this creature enters, exile the top card of your library. Until the end of your next turn, you may play that card.",
+      "keywords": [],
+      "colorIdentity": [
+        "R"
+      ],
+      "image": "https://cards.scryfall.io/small/front/b/c/bc4a60b8-a5bb-4dbf-8d48-95caf757eac3.jpg?1785497118",
+      "price": 0.11,
+      "priceUpdated": "2026-08-23",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F709503%3Fpage%3D1",
+      "commanderLegal": true
+    },
+    {
+      "id": "salvage-6",
+      "name": "Guardian of the Halls",
+      "reason": "Defensive body does not outperform the dedicated defender or graveyard pieces already modeled.",
+      "ownedExtra": true,
+      "category": "salvage",
+      "manaCost": "{1}{G}",
+      "typeLine": "Creature — Elf Soldier",
+      "oracleText": "Trample\n{5}{G}{G}: Put three +1/+1 counters on this creature.",
+      "keywords": [
+        "Trample"
+      ],
+      "colorIdentity": [
+        "G"
+      ],
+      "image": "https://cards.scryfall.io/small/front/4/2/4265caec-8c28-44cd-8e6b-90b5af926d3c.jpg?1785497166",
+      "price": 0.11,
+      "priceUpdated": "2026-08-23",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F709553%3Fpage%3D1",
+      "commanderLegal": true
+    }
+  ],
+  "ownedExtras": [
+    "Gollum, Riddle Master",
+    "Giant's Boulder",
+    "Troll Negotiations",
+    "Mirkwood",
+    "Ragged Short Spear",
+    "Lake-town Lookout",
+    "Stony-Voiced Goblins",
+    "Great Fierce Bee",
+    "Bilbo Baggins, Burglar",
+    "Dwarven Mattock",
+    "Dwarven Mauler",
+    "Dwarven Shortsword",
+    "Gundabad Opportunist",
+    "Guardian of the Halls",
+    "Bilbo Baggins, Burglar // Take a Glance"
+  ],
+  "enhanceDefinition": "Optional, role-preserving improvements or owned substitutions costing no more than $15.",
+  "maxDefinition": "The strongest configuration that pushes the deck to the legal bounds of Commander Tier 3; classification is based on capability, synergy, and Tier 3 rules rather than card price.",
+  "tier3Excluded": [
+    {
+      "id": "2o-upgrade-1-blowfly-infestation",
+      "name": "Blowfly Infestation",
+      "quantity": 1,
+      "price": 0.31,
+      "ceiling": 0.31,
+      "category": "tier3-excluded",
+      "stage": "Enhance",
+      "purpose": "combo, see note",
+      "typeLine": "Enchantment",
+      "manaCost": "{2}{B}",
+      "gameChanger": false,
+      "why": "combo, see note",
+      "whyPrimary": "combo, see note",
+      "whyOptional": "Published next-step upgrade; select it only when extending beyond Tuned.",
+      "alternateReason": "",
+      "alternateTradeoff": "",
+      "replaces": "Unspecified shell card 9",
+      "tags": [
+        "Counters / Proliferate"
+      ],
+      "whereToBuy": "Singles case",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F671130%3Fpage%3D1",
+      "brief": {
+        "power": null,
+        "ease": null,
+        "fun": null,
+        "value": "Price varies",
+        "fit": "combo, see note"
+      },
+      "image": "https://cards.scryfall.io/small/front/7/7/77e5dc0c-f4db-4540-b8d1-a07d7c96a374.jpg?1783911526",
+      "oracleText": "Whenever a creature dies, if it had a -1/-1 counter on it, put a -1/-1 counter on target creature.",
+      "keywords": [],
+      "colorIdentity": [
+        "B"
+      ],
+      "commanderLegal": true,
+      "priceUpdated": "2026-08-23",
+      "variantId": "2o",
+      "reason": "The required -1/-1-counter package can turn this into a repeatable or forced death-and-token loop before turn seven."
+    },
+    {
+      "id": "4a-upgrade-4-strionic-resonator",
+      "name": "Strionic Resonator",
+      "quantity": 1,
+      "price": 8.63,
+      "ceiling": 8.63,
+      "category": "tier3-excluded",
+      "stage": "Enhance",
+      "purpose": "Next card on this variant's published upgrade ladder.",
+      "typeLine": "Artifact",
+      "manaCost": "{2}",
+      "gameChanger": false,
+      "why": "Next card on this variant's published upgrade ladder.",
+      "whyPrimary": "Next card on this variant's published upgrade ladder.",
+      "whyOptional": "Published next-step upgrade; select it only when extending beyond Tuned.",
+      "alternateReason": "",
+      "alternateTradeoff": "",
+      "replaces": "Unspecified shell card 8",
+      "tags": [
+        "Sacrifice / Aristocrats",
+        "Blink / ETB"
+      ],
+      "whereToBuy": "Singles case",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F491665%3Fpage%3D1",
+      "brief": {
+        "power": null,
+        "ease": null,
+        "fun": null,
+        "value": "Price varies",
+        "fit": "Next card on this variant's published upgrade ladder."
+      },
+      "image": "https://cards.scryfall.io/small/front/b/9/b9edb215-f967-4968-905e-d1dc3b5d3424.jpg?1783917105",
+      "oracleText": "{2}, {T}: Copy target triggered ability you control. You may choose new targets for the copy. (A triggered ability uses the words \"when,\" \"whenever,\" or \"at.\")",
+      "keywords": [],
+      "colorIdentity": [],
+      "commanderLegal": true,
+      "priceUpdated": "2026-08-23",
+      "variantId": "4a",
+      "reason": "Brago plus two mana from blinkable rocks can repeat the combat trigger around turn five, outside strict Bracket 3 intent."
+    }
+  ]
 }

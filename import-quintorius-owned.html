@@ -27,6 +27,8 @@
     "Terramorphic Expanse","Fields of Strife","Glittering Massif","Furycalm Snarl","Clifftop Retreat","Battlefield Forge","Rugged Prairie","Sunscorched Divide","Temple of Triumph","Radiant Summit","Emeria, the Sky Ruin","Turbulent Steppe","Lotus Field","Command Tower","Exotic Orchard","Fabled Passage",
     "Rip Apart","Faithless Looting","Secret Rendezvous","Seize the Spoils","Tragic Arrogance","Sevinne's Reclamation","Wave of Reckoning","Fellwar Stone","Arcane Signet","Sol Ring","Currency Converter","Archaeomancer's Map","Staff of the Storyteller","Mind Stone","Perpetual Timepiece","Swords to Plowshares","Path to Exile","Lorehold Charm",
     "Ceaseless Conflict","Fateful Tempest","Lorehold Archivist","Vanguard of the Restless","Augusta, Order Reformed","Advanced Reconstruction",
+    "Gollum, Riddle Master","Ragged Short Spear","Lake-town Lookout","Stony-Voiced Goblins","Great Fierce Bee","Mirkwood","Troll Negotiations","Giant's Boulder",
+    "Bilbo Baggins, Burglar","Dwarven Mattock","Dwarven Mauler","Dwarven Shortsword","Gundabad Opportunist","Guardian of the Halls",
     "Lorehold Spirit (Secrets of Strixhaven Commander)"
   ];
   const itemKey = (value) => String(value || "").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
@@ -34,6 +36,7 @@
   try { state = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}") || {}; } catch (_) {}
   state.found = state.found && typeof state.found === "object" ? state.found : {};
   names.forEach((name) => { state.found[itemKey(name)] = true; });
+  state.found[itemKey("Bilbo Baggins, Burglar // Take a Glance")] = true;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   localStorage.setItem(PURCHASED_VIEW_KEY, "purchased");
   localStorage.setItem("mtg-owned-quintorius-import-v1", JSON.stringify({count:names.length, importedAt:new Date().toISOString()}));

@@ -968,9 +968,11 @@ def extract_buy_plans() -> dict:
                 continue
             seen.add(key)
             price = card.get("price") or 0
-            if card.get("stage") == "Maxed" or (card.get("optional") and price > 10):
+            enhance_price = max(float(price), float(card.get("ceiling") or 0))
+            is_max_capability = card.get("stage") == "Maxed" or card.get("game_changer") or card.get("max_capability")
+            if is_max_capability:
                 max_options.append(card_view(key, card, "max"))
-            elif card.get("optional"):
+            elif card.get("optional") and enhance_price <= 15:
                 upgrade.append(card_view(key, card, "upgrade"))
             else:
                 required.append(card_view(key, card, "tuned"))
@@ -982,7 +984,11 @@ def extract_buy_plans() -> dict:
                     continue
                 seen.add(key)
                 price = card.get("price") or 0
-                category = "max" if card.get("game_changer") or price > 10 or card.get("stage") == "Maxed" else "enhance"
+                enhance_price = max(float(price), float(card.get("ceiling") or 0))
+                is_max_capability = card.get("game_changer") or card.get("max_capability") or card.get("stage") == "Maxed"
+                if not is_max_capability and enhance_price > 15:
+                    continue
+                category = "max" if is_max_capability else "enhance"
                 view = card_view(key, card, category)
                 if not view["replaces"] and base_key in cards:
                     view["replaces"] = "Replaces " + clean_text(cards[base_key].get("name", base_key))
