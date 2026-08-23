@@ -3,6 +3,24 @@ import {readFile, writeFile} from "node:fs/promises";
 const file = new URL("../data/buy-plans.json", import.meta.url);
 const catalog = JSON.parse(await readFile(file, "utf8"));
 
+// The photographed Quintorius cards plus the later additions. Keeping this
+// complete list in the catalog lets every browser recognize the user's real
+// inventory without depending on whether the one-time importer was opened.
+const PHOTO_OWNED_NAMES = [
+  "Selfless Spirit", "Serra Paragon", "Remorseful Cleric", "Karmic Guide", "Guardian Scalelord", "Guardian of Faith", "Drumbellower", "Angel of Indemnity", "Moonshaker Cavalry", "Naktamun Lorespinner",
+  "Anger", "Kami of Ancient Law", "Venerable Warsinger", "Balefire Liege", "Conspiracy Theorist", "White Orchid Phantom", "Sun Titan", "Skyclave Apparition", "Relic Retriever", "Spirit of Resilience",
+  "Patchwork Banner", "Ao, the Dawn Sky", "Claim Jumper", "Containment Construct", "Millikin", "Primary Research", "Tocasia's Welcome", "Monologue Tax", "Quintorius, Field Historian", "Squee, Goblin Nabob", "Teshar, Ancestor's Apostle", "Kirol, History Buff", "Quintorius, Loremaster", "Hofri Ghostforge", "Laelia, the Blade Reforged", "Atsushi, the Blazing Sky", "Excava, the Risen Past", "Bitterthorn, Nissa's Animus",
+  "Terramorphic Expanse", "Fields of Strife", "Glittering Massif", "Furycalm Snarl", "Clifftop Retreat", "Battlefield Forge", "Rugged Prairie", "Sunscorched Divide", "Temple of Triumph", "Radiant Summit", "Emeria, the Sky Ruin", "Turbulent Steppe", "Lotus Field", "Command Tower", "Exotic Orchard", "Fabled Passage",
+  "Rip Apart", "Faithless Looting", "Secret Rendezvous", "Seize the Spoils", "Tragic Arrogance", "Sevinne's Reclamation", "Wave of Reckoning", "Fellwar Stone", "Arcane Signet", "Sol Ring", "Currency Converter", "Archaeomancer's Map", "Staff of the Storyteller", "Mind Stone", "Perpetual Timepiece", "Swords to Plowshares", "Path to Exile", "Lorehold Charm",
+  "Ceaseless Conflict", "Fateful Tempest", "Lorehold Archivist", "Vanguard of the Restless", "Augusta, Order Returned", "Advanced Reconstruction",
+  "Gollum, Riddle Master", "Ragged Short Spear", "Lake-town Lookout", "Stony-Voiced Goblins", "Great Fierce Bee", "Mirkwood", "Troll Negotiations", "Giant's Boulder",
+  "Bilbo Baggins, Burglar", "Dwarven Mattock", "Dwarven Mauler", "Dwarven Shortsword", "Gundabad Opportunist", "Guardian of the Halls",
+  "Lorehold Spirit (Secrets of Strixhaven Commander)"
+];
+
+const normalizedName = (value) => String(value || "").split(" // ")[0].toLocaleLowerCase();
+const ownedCardNames = new Set(PHOTO_OWNED_NAMES.filter((name) => !name.startsWith("Lorehold Spirit (")).map(normalizedName));
+
 const extras = [
   {
     variantId: "2c", id: "2c-owned-gollum-riddle-master", name: "Gollum, Riddle Master", replaces: "Wall of Omens",
@@ -45,6 +63,9 @@ const extras = [
     tags: ["Graveyard / Reanimator", "Card filtering"]
   }
 ];
+
+// Correct the earlier image transcription before inserting the audited card.
+catalog.plans["5o"].enhance = (catalog.plans["5o"].enhance || []).filter((card) => !["5o-owned-augusta-order-reformed", "5o-owned-augusta-order-returned", "excava-the-risen-past"].includes(card.id) && card.name !== "Augusta, Order Reformed");
 
 for (const extra of extras) {
   const plan = catalog.plans[extra.variantId];
@@ -246,10 +267,25 @@ catalog.salvage = [
   ["Guardian of the Halls", "Defensive body does not outperform the dedicated defender or graveyard pieces already modeled."]
 ].map(([name, reason], index) => ({id: `salvage-${index + 1}`, name, reason, ownedExtra: true, category: "salvage"}));
 
+// Existing appearances are already legal, role-mapped choices (or starting-shell
+// cards). Flag them as owned instead of duplicating a card into a second slot,
+// which would make a singleton lineup invalid.
+for (const plan of Object.values(catalog.plans)) {
+  for (const collection of [plan.startingShell || [], plan.required || [], plan.upgrade || [], plan.enhance || [], plan.max || []]) {
+    for (const card of collection) {
+      if (!ownedCardNames.has(normalizedName(card.name))) continue;
+      card.ownedExtra = true;
+      card.whereToBuy = "Already owned";
+    }
+  }
+}
+
 catalog.ownedExtras = [...new Set([
-  ...extras.map((item) => item.name),
-  ...catalog.salvage.map((item) => item.name),
-  "Bilbo Baggins, Burglar // Take a Glance"
+  ...PHOTO_OWNED_NAMES,
+  "Bilbo Baggins, Burglar // Take a Glance",
+  "Naktamun Lorespinner // Wheel of Fortune",
+  "Kirol, History Buff // Pack a Punch",
+  "Lorehold Archivist // Restore Relic"
 ])];
 catalog.enhanceDefinition = "Optional, role-preserving improvements or owned substitutions costing no more than $15.";
 catalog.maxDefinition = "The strongest configuration that pushes the deck to the legal bounds of Commander Tier 3; classification is based on capability, synergy, and Tier 3 rules rather than card price.";

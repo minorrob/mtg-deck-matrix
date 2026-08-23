@@ -58,7 +58,7 @@
       toolbar.setAttribute("aria-label", "Buy Picks purchase status");
       toolbar.innerHTML = `
         <button type="button" class="filter-chip" data-buy-purchased-mode="all">All</button>
-        <button type="button" class="filter-chip" data-buy-purchased-mode="purchased">Purchased</button>
+        <button type="button" class="filter-chip" data-buy-purchased-mode="purchased">Bought</button>
         <span class="purchase-count"></span>`;
       toolbar.querySelectorAll("[data-buy-purchased-mode]").forEach((button) => {
         button.addEventListener("click", () => {
@@ -76,7 +76,7 @@
       button.classList.toggle("is-active", button.dataset.buyPurchasedMode === mode);
     });
     const count = toolbar.querySelector(".purchase-count");
-    const nextCount = `${purchasedCount}/${totalCount} purchased`;
+    const nextCount = `${purchasedCount}/${totalCount} bought`;
     if (count && count.textContent !== nextCount) count.textContent = nextCount;
   }
 
@@ -93,7 +93,7 @@
       if (!badge) {
         badge = document.createElement("span");
         badge.className = "buy-item-purchased-badge";
-        badge.textContent = "✓ Purchased";
+        badge.textContent = "✓ Bought";
         const name = row.querySelector(".buy-copy strong, .buy-item-detail strong, strong");
         if (name) name.insertAdjacentElement("afterend", badge);
         else row.appendChild(badge);
@@ -110,7 +110,7 @@
     if (!empty) {
       empty = document.createElement("div");
       empty.className = "buy-purchased-empty";
-      empty.innerHTML = "<strong>No purchased items yet.</strong><span>Mark a card Bought in Shop List and it will appear here automatically.</span>";
+      empty.innerHTML = "<strong>No bought items yet.</strong><span>Mark a card Bought in Shop List and it will appear here automatically.</span>";
       const toolbar = root.querySelector(".buy-purchased-toolbar");
       toolbar?.insertAdjacentElement("afterend", empty);
     }

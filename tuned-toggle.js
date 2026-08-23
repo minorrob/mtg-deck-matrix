@@ -168,7 +168,7 @@
     const meter = root.querySelector(".page-intro .selection-meter");
     if (meter) {
       const found = visibleCards.length - stillNeeded.length;
-      meter.innerHTML = `<strong>${found}/${visibleCards.length}</strong><span>items found</span>`;
+      meter.innerHTML = `<strong>${found}/${visibleCards.length}</strong><span>items bought</span>`;
     }
   }
 

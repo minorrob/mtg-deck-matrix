@@ -65,10 +65,13 @@ for (const [variantId, plan] of Object.entries(buyPlans.plans)) {
   assert(plan.enhance.every((item) => !item.price || item.price <= 15), `${variantId} Enhance cards must stay at or below $15`);
   assert(plan.enhance.every((item) => !item.ceiling || item.ceiling <= 15), `${variantId} Enhance ceiling prices must stay at or below $15`);
   assert([...plan.required, ...plan.upgrade, ...plan.enhance, ...plan.max].every((item) => Number.isFinite(item.price)), `${variantId} purchase options must have a current floor price`);
+  assert([plan.precon, ...plan.startingShell, ...plan.required, ...plan.upgrade, ...plan.enhance, ...plan.max].every((item) => !Number.isFinite(Number(item.ceiling)) || Number(item.ceiling) <= 0 || Number(item.price) <= Number(item.ceiling)), `${variantId} floor prices may not exceed user-supplied ceilings`);
   assert(plan.max.every((item) => item.category === "max"));
   assert(plan.max.every((item) => item.maxReason && !/market price|purchase cost|card price|dollar/i.test(item.maxReason)), `${variantId} Max cards must have capability-based rationale`);
   assert([...plan.required, ...plan.enhance].every((item) => item.replaces), `${variantId} Tuned and Enhance purchases must name a one-for-one cut`);
   const allItems = [plan.precon, ...plan.required, ...plan.upgrade, ...plan.enhance, ...plan.max];
+  const singletonChoiceNames = [...plan.startingShell, ...plan.required, ...plan.enhance, ...plan.max].map((item) => item.name.split(" // ")[0].toLowerCase());
+  assert.equal(new Set(singletonChoiceNames).size, singletonChoiceNames.length, `${variantId} may not offer the same singleton card in two lineup slots`);
   assert(allItems.every((item) => !String(item.image).startsWith("data:")), `${variantId} must not embed images`);
   assert([...plan.required, ...plan.upgrade, ...plan.enhance, ...plan.max].every((item) => item.brief && item.why !== undefined), `${variantId} purchases must retain detail fields`);
   const commander = plan.startingShell.find((card) => card.isCommander);
@@ -103,6 +106,7 @@ for (const [name, [variantId, replaces]] of expectedOwnedEnhance) {
   assert(item?.ownedExtra, `${name} must be an owned Enhance option in ${variantId}`);
   assert.equal(item.replaces, replaces, `${name} must replace ${replaces}`);
 }
+assert(buyPlans.plans["5o"].startingShell.find((card) => card.name === "Augusta, Order Returned")?.ownedExtra, "Augusta, Order Returned is already in the official Quintorius shell and must be marked owned without creating an illegal duplicate option");
 for (const name of ["Giant's Boulder", "Troll Negotiations", "Great Fierce Bee"]) {
   const item = Object.values(buyPlans.plans).flatMap((plan) => plan.enhance).find((card) => card.name === name);
   assert(item?.temporaryUntil, `${name} must identify its temporary-until target`);
@@ -111,11 +115,31 @@ const salvageNames = new Set((buyPlans.salvage || []).flatMap((card) => [card.na
 for (const name of ["Bilbo Baggins, Burglar", "Dwarven Mattock", "Dwarven Mauler", "Dwarven Shortsword", "Gundabad Opportunist", "Guardian of the Halls"]) assert(salvageNames.has(name), `${name} must be in Salvage`);
 assert((buyPlans.salvage || []).every((card) => card.reason && card.image && card.typeLine), "Salvage cards must retain an audited reason and card data");
 assert(buyPlans.ownedExtras.includes("Bilbo Baggins, Burglar // Take a Glance"), "owned import must include Bilbo's canonical Adventure name");
+for (const name of ["Naktamun Lorespinner // Wheel of Fortune", "Kirol, History Buff // Pack a Punch", "Lorehold Archivist // Restore Relic"]) assert(buyPlans.ownedExtras.includes(name), `${name} must use its canonical ownership key`);
+assert(buyPlans.ownedExtras.length >= 93, "the complete photographed ownership table must be present");
+const selectedLiveVariantIds = ["1b", "2c", "3e", "4b", "5o", "6c"];
+const normalizeOwnedName = (value) => String(value || "").split(" // ")[0].toLowerCase();
+const visibleOwnedCards = new Map();
+for (const variantId of selectedLiveVariantIds) {
+  const plan = buyPlans.plans[variantId];
+  for (const item of [...plan.startingShell, ...plan.required, ...plan.enhance, ...plan.max]) {
+    if (item.ownedExtra) visibleOwnedCards.set(normalizeOwnedName(item.name), item);
+  }
+}
+for (const item of buyPlans.salvage || []) if (item.ownedExtra) visibleOwnedCards.set(normalizeOwnedName(item.name), item);
+for (const name of buyPlans.ownedExtras.filter((item) => !item.startsWith("Lorehold Spirit ("))) {
+  assert(visibleOwnedCards.has(normalizeOwnedName(name)), `${name} must be a visible owned choice in a selected Live Deck or Salvage`);
+}
 const farewells = Object.values(buyPlans.plans).flatMap((plan) => plan.max).filter((card) => card.name === "Farewell");
 assert(farewells.length > 0 && farewells.every((card) => card.gameChanger), "Farewell must be a Max Game Changer under the current list");
 assert(Object.values(buyPlans.plans).every((plan) => !plan.enhance.some((card) => card.name === "Farewell")), "Farewell may not remain in Enhance");
 assert(buyPlans.plans["5o"].max.filter((card) => card.gameChanger).length > 3, "Quintorius may offer more than three Game Changer alternatives");
-assert.match(appSource, /evaluateDeckCompliance\(plan, tentative\)\.selectedGameChangers\.length > 3/, "the checked-card UI must count the full tentative deck before accepting a Game Changer");
+assert.match(appSource, /const baseCompliance = evaluateDeckCompliance\(plan, tentative\)/, "the checked-card UI must evaluate the full tentative deck before accepting a choice");
+assert.match(appSource, /projectedEffectiveCards\(variant, tentative\)/, "the checked-card UI must include temporary Live Deck assignments in Tier 3 validation");
+assert.match(appSource, /\$\{checkedCount\}\/100 checked/, "collapsed Live Deck headers must show the Buy Picks checked count");
+assert.match(appSource, /\$\{boughtCount\}\/100 bought/, "collapsed Live Deck headers must show the physically bought count");
+assert.match(appSource, /\$\{total\}\/100 active/, "collapsed Live Deck headers must show the active-lineup count");
+assert.match(appSource, /mtg-owned-extras-import-v3/, "the complete known inventory must migrate onto each browser once");
 assert.doesNotMatch(appSource, /plan\.max\.filter\(\(candidate\) => candidate\.gameChanger && choices\.has/, "the Game Changer guard may not count Max options only");
 assert(!buyPlans.plans["1c"].max.some((card) => card.name === "Exquisite Blood"), "Exquisite Blood must stay outside the Liesa Tier 3 pool because of redundant early two-card wins");
 for (const variantId of ["4a", "6f"]) {

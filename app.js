@@ -1,8 +1,13 @@
 (() => {
   "use strict";
 
+  const Lineup = window.MtgLineupModel;
+  if (!Lineup) throw new Error("Lineup model did not load");
+
   const STORAGE_KEY = "mtg-deck-matrix-state-v1";
   const LEGACY_PICKS_KEY = "mtg-variant-picks";
+  const CARD_METADATA_KEY = "mtg-card-metadata-v2";
+  const CARD_METADATA_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
   const EMAIL_TO = "robminor3@gmail.com";
   const STAGES = ["Base", "Tuned", "Maxed"];
   const STAGE_DEFINITIONS = [
@@ -59,7 +64,7 @@
   let activeTooltipTarget = null;
   let shopMetadataPromise = null;
   let cardMetadata = {};
-  try { cardMetadata = JSON.parse(localStorage.getItem("mtg-card-metadata-v1") || "{}"); } catch (_) {}
+  try { cardMetadata = JSON.parse(localStorage.getItem(CARD_METADATA_KEY) || "{}"); } catch (_) {}
 
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
@@ -158,14 +163,21 @@
 
   function blankState() {
     return {
-      selectionSchema: 2,
+      selectionSchema: 3,
+      ownershipSchema: 2,
       compareSelections: {},
       rankStages: {},
       buySelections: {},
       found: {},
+      boughtQuantities: {},
       comments: {},
       compareFilters: {query: "", mechanic: "all", playstyle: "all", profileStage: "2"},
-      shopFilters: { status: "need", type: "all", category: "all", deck: "all", groupBy: "none", query: "" }
+      shopFilters: { status: "need", type: "all", category: "all", deck: "all", groupBy: "none", query: "" },
+      liveFilters: {},
+      liveOpenDecks: {},
+      lineupHistory: {},
+      liveTransfers: {},
+      liveSalvage: {}
     };
   }
 
@@ -178,13 +190,20 @@
           ...initial,
           ...saved,
           selectionSchema: saved.selectionSchema || 1,
+          ownershipSchema: saved.ownershipSchema || 1,
           compareSelections: saved.compareSelections || {},
           rankStages: saved.rankStages || {},
           buySelections: saved.buySelections || {},
           found: saved.found || {},
+          boughtQuantities: saved.boughtQuantities || {},
           comments: saved.comments || {},
           compareFilters: {...initial.compareFilters, ...(saved.compareFilters || {})},
-          shopFilters: {...initial.shopFilters, ...(saved.shopFilters || {})}
+          shopFilters: {...initial.shopFilters, ...(saved.shopFilters || {})},
+          liveFilters: saved.liveFilters || {},
+          liveOpenDecks: saved.liveOpenDecks || {},
+          lineupHistory: saved.lineupHistory || {},
+          liveTransfers: saved.liveTransfers || {},
+          liveSalvage: saved.liveSalvage || {}
         };
       }
     } catch (_) {}
@@ -679,42 +698,117 @@
   }
 
   function ensureBuyState(variantId) {
-    const existing = state.buySelections[variantId] || {};
     const plan = buyCatalog?.plans?.[variantId];
+    if (!plan) return {shell: [], tuned: [], upgrade: [], enhance: [], max: []};
+    const hasStored = Object.prototype.hasOwnProperty.call(state.buySelections, variantId);
+    const existing = state.buySelections[variantId] || {};
     const legacyExclusions = (() => {
       try { return new Set(JSON.parse(localStorage.getItem("mtg-tuned-exclusions-v1") || "{}")[variantId] || []); }
       catch (_) { return new Set(); }
     })();
-    const defaultShell = (plan?.startingShell || []).filter((card) => !card.isFlexibleSlot).map((card) => card.id);
-    const defaultTuned = (plan?.required || []).map((card) => card.id).filter((id) => !legacyExclusions.has(id));
-    state.buySelections[variantId] = {
-      shell: Array.isArray(existing.shell) ? existing.shell : defaultShell,
-      tuned: Array.isArray(existing.tuned) ? existing.tuned : defaultTuned,
-      upgrade: [],
-      enhance: Array.from(new Set([...(existing.upgrade || []), ...(existing.enhance || [])])),
-      max: existing.max || []
-    };
+    let next;
+    if (!hasStored) {
+      next = Lineup.defaultSelection(plan);
+      for (const id of legacyExclusions) next = Lineup.restoreChoice(plan, next, id);
+    } else {
+      next = Lineup.canonicalizeSelection(plan, existing);
+    }
+    state.buySelections[variantId] = next;
     return state.buySelections[variantId];
   }
 
   function migrateCheckedSelections() {
-    if (state.selectionSchema >= 2) return;
+    if (state.selectionSchema >= 3) return;
+    const previousSchema = Number(state.selectionSchema || 1);
     Object.entries(buyCatalog.plans || {}).forEach(([variantId, plan]) => {
-      const existing = state.buySelections[variantId] || {};
-      if (!isSinglesBuiltShell(plan)) existing.shell = (plan.startingShell || []).filter((card) => !card.isFlexibleSlot).map((card) => card.id);
-      const exclusions = (() => { try { return new Set(JSON.parse(localStorage.getItem("mtg-tuned-exclusions-v1") || "{}")[variantId] || []); } catch (_) { return new Set(); } })();
-      existing.tuned = (plan.required || []).map((card) => card.id).filter((id) => !exclusions.has(id));
-      state.buySelections[variantId] = existing;
+      const existing = state.buySelections[variantId];
+      if (!existing) {
+        state.buySelections[variantId] = Lineup.defaultSelection(plan);
+        return;
+      }
+      if (previousSchema < 2) {
+        let migrated = Lineup.defaultSelection(plan);
+        for (const key of ["upgrade", "enhance", "max"]) {
+          for (const id of existing[key] || []) migrated = Lineup.applyChoice(plan, migrated, id);
+        }
+        const exclusions = (() => { try { return new Set(JSON.parse(localStorage.getItem("mtg-tuned-exclusions-v1") || "{}")[variantId] || []); } catch (_) { return new Set(); } })();
+        for (const id of exclusions) migrated = Lineup.restoreChoice(plan, migrated, id);
+        state.buySelections[variantId] = migrated;
+      } else {
+        state.buySelections[variantId] = Lineup.canonicalizeSelection(plan, existing, {restoreResolvedFlexible: true});
+      }
     });
-    state.selectionSchema = 2;
-    saveState();
+    state.selectionSchema = 3;
+    saveState("Named 100-card lineups restored");
+  }
+
+  function selectionHistory(variantId, slotId) {
+    state.lineupHistory ||= {};
+    state.lineupHistory[variantId] ||= {};
+    state.lineupHistory[variantId][slotId] ||= [];
+    return state.lineupHistory[variantId][slotId];
+  }
+
+  function assignSelection(target, source) {
+    for (const key of Lineup.ARRAY_KEYS) target[key] = [...(source[key] || [])];
+  }
+
+  function tentativeLineupChoice(plan, current, candidateId, checked, preferredId = null) {
+    if (!checked) return Lineup.restoreChoice(plan, current, candidateId, preferredId);
+    const model = Lineup.buildModel(plan);
+    const candidate = model.byId.get(String(candidateId));
+    let next = Lineup.applyChoice(plan, current, candidateId);
+    if (!candidate) return next;
+    const sameName = Lineup.normalizeName(candidate.item.name);
+    const duplicates = Lineup.selectedEntries(plan, next).filter((entry) => entry.id !== candidate.id && Lineup.normalizeName(entry.item.name) === sameName);
+    for (const duplicate of duplicates) {
+      let substitute = duplicate.kind === "shell" ? null : model.byId.get(duplicate.predecessorId);
+      if (!substitute || Lineup.normalizeName(substitute.item.name) === sameName) {
+        substitute = (model.groups.get(duplicate.slotId) || []).find((entry) => entry.kind === "tuned" && Lineup.normalizeName(entry.item.name) !== sameName)
+          || (model.groups.get(duplicate.slotId) || []).find((entry) => entry.kind !== "shell" && Lineup.normalizeName(entry.item.name) !== sameName)
+          || null;
+      }
+      if (substitute) next = Lineup.applyChoice(plan, next, substitute.id);
+    }
+    return next;
+  }
+
+  function acceptLineupChoice(variantId, candidateId, checked, next, previousId = null, restoredId = null) {
+    const plan = buyCatalog.plans[variantId];
+    const model = Lineup.buildModel(plan);
+    const candidate = model.byId.get(String(candidateId));
+    if (!candidate) return;
+    const history = selectionHistory(variantId, candidate.slotId);
+    if (checked && previousId && previousId !== candidate.id) history.push(previousId);
+    if (!checked && restoredId && history.at(-1) === restoredId) history.pop();
+    assignSelection(ensureBuyState(variantId), next);
   }
 
   function migrateOwnedExtras() {
-    if (!localStorage.getItem("mtg-owned-quintorius-import-v1") || localStorage.getItem("mtg-owned-extras-import-v1")) return;
-    (buyCatalog.ownedExtras || []).forEach((name) => { state.found[itemKey({name})] = true; });
-    localStorage.setItem("mtg-owned-extras-import-v1", JSON.stringify({count: (buyCatalog.ownedExtras || []).length, importedAt: new Date().toISOString()}));
-    saveState("Owned extras added");
+    const migrationKey = "mtg-owned-extras-import-v3";
+    if (localStorage.getItem(migrationKey)) return;
+    state.boughtQuantities ||= {};
+    (buyCatalog.ownedExtras || []).forEach((name) => {
+      const key = itemKey({name});
+      state.found[key] = true;
+      state.boughtQuantities[key] = Math.max(1, Number(state.boughtQuantities[key] || 0));
+    });
+    localStorage.setItem(migrationKey, JSON.stringify({count: (buyCatalog.ownedExtras || []).length, importedAt: new Date().toISOString()}));
+    saveState("Owned card inventory added");
+  }
+
+  function migrateBoughtQuantities() {
+    if (state.ownershipSchema >= 2) return;
+    state.boughtQuantities ||= {};
+    const ownedExtras = new Set((buyCatalog.ownedExtras || []).map((name) => itemKey({name})));
+    const precons = new Set(Object.values(buyCatalog.plans || {}).map((plan) => itemKey(plan.precon)).filter(Boolean));
+    const shoppingQuantities = new Map(derivedShopItems().map((item) => [item.key, Math.max(1, Number(item.quantity || 1))]));
+    Object.entries(state.found || {}).forEach(([key, bought]) => {
+      if (!bought || state.boughtQuantities[key]) return;
+      state.boughtQuantities[key] = ownedExtras.has(key) || precons.has(key) ? 1 : shoppingQuantities.get(key) || 1;
+    });
+    state.ownershipSchema = 2;
+    saveState("Owned copy counts updated");
   }
 
   function sanitizeGameChangerSelections() {
@@ -726,7 +820,7 @@
         for (let index = current[kind].length - 1; index >= 0 && evaluateDeckCompliance(plan, current).selectedGameChangers.length > 3; index -= 1) {
           const item = collection.find((candidate) => candidate.id === current[kind][index]);
           if (!item?.gameChanger) continue;
-          current[kind].splice(index, 1);
+          assignSelection(current, Lineup.restoreChoice(plan, current, item.id));
           changed = true;
         }
       }
@@ -771,7 +865,7 @@
     }));
     $$('[data-go="compare"]', root).forEach((button) => button.addEventListener("click", () => switchView("compare")));
     $$('[data-salvage-id]', root).forEach((button) => button.addEventListener("click", () => {
-      const item = (buyCatalog.salvage || []).find((card) => card.id === button.dataset.salvageId);
+      const item = allSalvageCards().find((card) => card.id === button.dataset.salvageId);
       if (item) openBuyItemDetail({...item, purpose: item.reason, why: item.reason, whereToBuy: "Already owned · Salvage shadow pile", brief: {fit: item.reason}}, {id: "salvage", deckId: "Salvage", image: item.image}, "salvage");
     }));
     $$(".save-buys", root).forEach((button) => button.addEventListener("click", () => {
@@ -786,18 +880,31 @@
     variants.forEach((variant) => {
       const plan = buyCatalog.plans[variant.id];
       if (!plan) return;
-      const result = evaluateDeckCompliance(plan, ensureBuyState(variant.id));
-      checked += result.total;
-      Object.entries(result.types).forEach(([type, count]) => { totals[type] = (totals[type] || 0) + count; });
+      const literal = selectedDeckCards(plan, ensureBuyState(variant.id));
+      checked += literal.reduce((sum, card) => sum + Number(card.quantity || 1), 0);
+      literal.forEach((card) => {
+        const type = shellType(card);
+        totals[type] = (totals[type] || 0) + Number(card.quantity || 1);
+      });
     });
     const order = ["Creature", "Land", "Artifact", "Enchantment", "Instant", "Sorcery", "Planeswalker", "Battle", "Other"];
     return `<div class="buy-checked-meter"><div class="selection-meter"><strong>${checked}</strong><span>checked cards</span></div><div class="buy-type-counters" aria-label="Checked cards by type">${order.filter((type) => totals[type]).map((type) => `<span><b>${totals[type]}</b> ${esc(type)}</span>`).join("")}</div></div>`;
   }
 
   function salvageBuySection() {
-    const cards = buyCatalog.salvage || [];
+    const cards = allSalvageCards();
     if (!cards.length) return "";
     return `<details class="salvage-pile"><summary><span>${icon("♲")}<strong>Salvage</strong><b>${cards.length}</b></span><small>Owned shadow pile · intentionally excluded from final decks</small></summary><div class="salvage-grid">${cards.map((card) => `<button type="button" data-salvage-id="${esc(card.id)}"><img src="${esc(card.image || cardImageCandidates(card)[0])}" alt="" loading="lazy"><span><strong>${esc(card.name)}</strong><small>${esc(card.reason)}</small></span></button>`).join("")}</div><p class="salvage-note">“On an Adventure” is a helper/reference card rather than a legal deck card, so it is not counted in Salvage or any final 100.</p></details>`;
+  }
+
+  function allSalvageCards() {
+    const cards = new Map((buyCatalog.salvage || []).map((card) => [itemKey(card), card]));
+    Object.values(state.liveSalvage || {}).forEach((record) => cards.set(itemKey(record.card), {
+      ...record.card,
+      id: record.card.id || `salvage-${itemKey(record.card)}`,
+      reason: record.reason || "Moved to the Salvage shadow pile."
+    }));
+    return Array.from(cards.values()).sort((a, b) => a.name.localeCompare(b.name));
   }
 
   function updateBuyCheckedSummary() {
@@ -867,35 +974,32 @@
       }, variant, requiresPurchase ? "starting shell single" : "starting shell");
     }));
     $$('input[data-buy-kind]', body).forEach((checkbox) => checkbox.addEventListener("change", () => {
-      const kind = checkbox.dataset.buyKind;
       const itemId = checkbox.dataset.itemId;
       const currentState = ensureBuyState(variant.id);
-      const choices = new Set(currentState[kind] || []);
-      const collection = kind === "shell" ? (plan.startingShell || []).filter((candidate) => !candidate.isFlexibleSlot) : kind === "tuned" ? (plan.required || []) : (plan[kind] || []);
-      const item = collection.find((candidate) => candidate.id === itemId);
-      checkbox.checked ? choices.add(itemId) : choices.delete(itemId);
-      const tentative = {
-        ...currentState,
-        shell: [...currentState.shell],
-        tuned: [...currentState.tuned],
-        enhance: [...currentState.enhance],
-        max: [...currentState.max],
-        [kind]: Array.from(choices)
-      };
-      if (checkbox.checked && item?.gameChanger && evaluateDeckCompliance(plan, tentative).selectedGameChangers.length > 3) {
-        checkbox.checked = false;
-        showToast("Bracket 3 allows up to three selected Game Changers in the full deck.");
-        return;
-      }
-      currentState[kind] = tentative[kind];
-      saveState();
-      if (kind === "shell") {
+      const model = Lineup.buildModel(plan);
+      const candidate = model.byId.get(String(itemId));
+      if (!candidate) return;
+      const active = Lineup.activeEntryForSlot(plan, currentState, candidate.slotId);
+      const history = selectionHistory(variant.id, candidate.slotId);
+      const preferredId = checkbox.checked ? null : history.at(-1) || null;
+      const tentative = tentativeLineupChoice(plan, currentState, itemId, checkbox.checked, preferredId);
+      const restored = Lineup.activeEntryForSlot(plan, tentative, candidate.slotId);
+      if (!checkbox.checked && restored?.id === candidate.id) {
+        showToast(`${candidate.item.name} stays active until you choose another card for this slot.`);
         renderBuy();
         return;
       }
-      updateCompliancePanel(body, variant, plan);
-      updateBuyTotal(details, plan, ensureBuyState(variant.id));
-      updateBuyCheckedSummary();
+      const baseCompliance = evaluateDeckCompliance(plan, tentative);
+      const effectiveCompliance = evaluateDeckCompliance(plan, tentative, projectedEffectiveCards(variant, tentative));
+      const issue = baseCompliance.tier3[0] || effectiveCompliance.tier3[0];
+      if (issue) {
+        showToast(`That choice is not Tier 3 compliant: ${issue.rule}`);
+        renderBuy();
+        return;
+      }
+      acceptLineupChoice(variant.id, itemId, checkbox.checked, tentative, active?.id || null, preferredId);
+      saveState(checkbox.checked ? `${candidate.item.name} is active` : `${candidate.item.name} swapped out`);
+      renderBuy();
     }));
     const selectAllShell = $('[data-select-shell-all]', body);
     if (selectAllShell) {
@@ -908,14 +1012,25 @@
       });
       selectAllShell.addEventListener("change", () => {
         const currentState = ensureBuyState(variant.id);
-        const tentative = {...currentState, shell: selectAllShell.checked ? shellIds : []};
-        if (selectAllShell.checked && evaluateDeckCompliance(plan, tentative).selectedGameChangers.length > 3) {
-          renderBuy();
-          showToast("Selecting the full shell would exceed three Game Changers. Uncheck another Game Changer first.");
-          return;
+        let tentative;
+        if (selectAllShell.checked) {
+          tentative = Lineup.canonicalizeSelection(plan, {shell: shellIds, tuned: [], upgrade: [], enhance: [], max: []});
+        } else {
+          tentative = {...currentState, shell: []};
+          tentative = Lineup.canonicalizeSelection(plan, tentative);
         }
-        currentState.shell = tentative.shell;
-        saveState(selectAllShell.checked ? "Starting Shell selected" : "Starting Shell cleared");
+        if (selectAllShell.checked) {
+          const baseIssue = evaluateDeckCompliance(plan, tentative).tier3[0];
+          const effectiveIssue = evaluateDeckCompliance(plan, tentative, projectedEffectiveCards(variant, tentative)).tier3[0];
+          if (baseIssue || effectiveIssue) {
+            renderBuy();
+            showToast(`The full shell is not Tier 3 compliant: ${(baseIssue || effectiveIssue).rule}`);
+            return;
+          }
+        }
+        assignSelection(currentState, tentative);
+        state.lineupHistory[variant.id] = {};
+        saveState(selectAllShell.checked ? "Full Starting Shell activated" : "Active Starting Shell cards cleared");
         renderBuy();
       });
     }
@@ -966,8 +1081,7 @@
     ];
     return purchases.reduce((summary, item) => {
       const quantity = Math.max(1, Number(item.quantity || 1));
-      const metadataPrice = Number(cardMetadata[itemKey(item)]?.price);
-      const price = Number(item.price) || metadataPrice || 0;
+      const price = Number(cardPriceBounds(item, cardMetadata[itemKey(item)] || {}).price) || 0;
       if (price > 0) summary.total += price * quantity;
       else summary.unpriced += quantity;
       return summary;
@@ -985,14 +1099,30 @@
     target.innerHTML = `<small>Selected total</small><strong>$${summary.total.toFixed(2)}</strong>${summary.unpriced ? `<em>+ ${summary.unpriced} unpriced</em>` : ""}`;
   }
 
-  const BASIC_LANDS = new Set(["plains", "island", "swamp", "mountain", "forest", "wastes", "snow-covered plains", "snow-covered island", "snow-covered swamp", "snow-covered mountain", "snow-covered forest"]);
+  const BASIC_LANDS = new Set(["plains", "island", "swamp", "mountain", "forest", "wastes", "snow covered plains", "snow covered island", "snow covered swamp", "snow covered mountain", "snow covered forest"]);
+  const TIER3_EARLY_COMBO_PAIRS = [
+    ["Thassa's Oracle", "Demonic Consultation"],
+    ["Thassa's Oracle", "Tainted Pact"],
+    ["Heliod, Sun-Crowned", "Walking Ballista"],
+    ["Isochron Scepter", "Dramatic Reversal"],
+    ["Devoted Druid", "Vizier of Remedies"],
+    ["Bloodchief Ascension", "Mindcrank"],
+    ["Iona, Shield of Emeria", "Painter's Servant"]
+  ];
 
   function isSinglesBuiltShell(plan) {
-    return /\bshell \(singles\)$/i.test(String(plan?.precon?.name || ""));
+    return plan?.startingShellKind !== "official-precon";
+  }
+
+  function cardPriceBounds(card, metadata) {
+    const current = Number(metadata?.price ?? card?.price) || null;
+    const ceiling = Number(card?.ceiling ?? metadata?.ceiling) || null;
+    return {price: current && ceiling ? Math.min(current, ceiling) : current, ceiling};
   }
 
   function resolvedShellCard(card) {
     const metadata = cardMetadata[itemKey(card)] || {};
+    const bounds = cardPriceBounds(card, metadata);
     return {
       ...card,
       manaCost: card.manaCost || metadata.manaCost || "",
@@ -1000,8 +1130,8 @@
       image: card.image || metadata.image || "",
       oracleText: card.oracleText || metadata.oracleText || "",
       keywords: card.keywords || metadata.keywords || [],
-      price: Number(card.price || metadata.price) || null,
-      ceiling: Number(card.ceiling || metadata.ceiling) || null,
+      price: bounds.price,
+      ceiling: bounds.ceiling,
       metadataUnavailable: Boolean(metadata.unavailable),
       metadataLoaded: Boolean(metadata.loaded || metadata.price !== undefined)
     };
@@ -1009,6 +1139,7 @@
 
   function resolvedBuyCard(card) {
     const metadata = cardMetadata[itemKey(card)] || {};
+    const bounds = cardPriceBounds(card, metadata);
     return {
       ...card,
       manaCost: card.manaCost || metadata.manaCost || "",
@@ -1016,8 +1147,13 @@
       image: metadata.image || card.image || "",
       oracleText: card.oracleText || metadata.oracleText || "",
       keywords: card.keywords || metadata.keywords || [],
-      price: Number(card.price || metadata.price) || null,
-      ceiling: Number(card.ceiling || metadata.ceiling) || null
+      colorIdentity: card.colorIdentity || metadata.colorIdentity || [],
+      legalities: card.legalities || metadata.legalities || {},
+      commanderLegal: card.commanderLegal ?? metadata.commanderLegal,
+      rarity: card.rarity || metadata.rarity || "",
+      setName: card.setName || metadata.setName || "",
+      price: bounds.price,
+      ceiling: bounds.ceiling
     };
   }
 
@@ -1154,9 +1290,20 @@
     existing.replaceWith(replacement);
   }
 
-  function evaluateDeckCompliance(plan, current) {
+  function selectedDeckCards(plan, current) {
+    return Lineup.selectedEntries(plan, current).map((entry) => ({
+      ...resolvedBuyCard(entry.item),
+      id: entry.id,
+      quantity: Number(entry.item.quantity || 1),
+      lineupKind: entry.kind,
+      lineupSlotId: entry.slotId,
+      lineupSlotName: entry.root?.name || entry.item.name
+    }));
+  }
+
+  function evaluateDeckCompliance(plan, current, cardOverride = null) {
     const cards = new Map();
-    const normalize = (value) => String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+    const normalize = Lineup.normalizeName;
     const addCard = (item, source) => {
       const key = normalize(item.name);
       const existing = cards.get(key);
@@ -1170,45 +1317,13 @@
         isCommander: Boolean(item.isCommander || (item.tags || []).some((tag) => String(tag).toLowerCase() === "commander")),
         gameChanger: Boolean(item.gameChanger),
         isFlexibleSlot: Boolean(item.isFlexibleSlot),
+        colorIdentity: item.colorIdentity || cardMetadata[itemKey(item)]?.colorIdentity || [],
+        commanderLegal: item.legalities?.commander || (item.commanderLegal === false ? "not_legal" : "legal"),
         source
       });
     };
-    const removeCard = (target) => {
-      const key = normalize(target);
-      const existing = cards.get(key);
-      if (!existing) return false;
-      existing.quantity -= 1;
-      if (existing.quantity <= 0) cards.delete(key);
-      return true;
-    };
-    const selectedShell = new Set(current.shell || []);
-    (plan.startingShell || plan.baseCards || []).filter((card) => card.isFlexibleSlot || selectedShell.has(card.id)).forEach((card) => addCard(card, "starting shell"));
-    const selectedTuned = new Set(current.tuned || []);
-    const selected = [
-      ...(plan.required || []).filter((item) => selectedTuned.has(item.id)),
-      ...(plan.upgrade || []).filter((item) => (current.upgrade || []).includes(item.id)),
-      ...(plan.enhance || []).filter((item) => (current.enhance || []).includes(item.id)),
-      ...(plan.max || []).filter((item) => (current.max || []).includes(item.id))
-    ];
-    const purchasesByName = new Map([...plan.required, ...(plan.upgrade || []), ...plan.enhance, ...plan.max].map((item) => [normalize(item.name), item]));
-    const replacementUse = new Map();
-    const replacementIssues = [];
-    selected.forEach((item) => {
-      if (cards.has(normalize(item.name))) return;
-      const target = String(item.replaces || "").replace(/^(replaces|swaps in for)\s+/i, "").trim();
-      if (target) {
-        const targetKey = normalize(target);
-        const prior = replacementUse.get(targetKey);
-        if (prior) replacementIssues.push({card: item.name, rule: `Both ${prior} and ${item.name} replace ${target}`, detail: "Choose only one replacement for that slot."});
-        replacementUse.set(targetKey, item.name);
-        if (!removeCard(target)) {
-          const chained = purchasesByName.get(targetKey);
-          const chainedTarget = String(chained?.replaces || "").replace(/^(replaces|swaps in for)\s+/i, "").trim();
-          if (!chainedTarget || !removeCard(chainedTarget)) replacementIssues.push({card: item.name, rule: `Replacement target not found: ${target}`, detail: "The selected card adds a slot until a valid cut is chosen."});
-        }
-      }
-      addCard(item, "selected option");
-    });
+    const literalCards = cardOverride || selectedDeckCards(plan, current);
+    literalCards.forEach((item) => addCard(item, item.lineupKind === "shell" ? "starting shell" : "selected option"));
 
     const included = Array.from(cards.values());
     const total = included.reduce((sum, card) => sum + card.quantity, 0);
@@ -1218,25 +1333,35 @@
       const bucket = typeBucket(card.typeLine);
       types[bucket] = (types[bucket] || 0) + card.quantity;
     });
-    const common = [...replacementIssues];
+    const common = Lineup.unresolvedEntries(plan)
+      .filter((entry) => Lineup.selectedEntries(plan, current).some((selected) => selected.id === entry.id))
+      .map((entry) => ({card: entry.item.name, rule: `Replacement slot could not be resolved: ${entry.item.replaces || "no cut named"}.`, detail: "Choose an exact starting-shell card for this slot."}));
     if (total !== 100) common.push({card: "Deck list", rule: `Commander requires exactly 100 cards; this selection contains ${total}.`, detail: total < 100 ? `Add or restore ${100 - total} card${100 - total === 1 ? "" : "s"}.` : `Cut ${total - 100} card${total - 100 === 1 ? "" : "s"}.`});
     const commanders = included.reduce((sum, card) => sum + (card.isCommander ? card.quantity : 0), 0);
     if (commanders !== 1) common.push({card: "Commander slot", rule: `Exactly one commander is expected; ${commanders} are identified in the modeled list.`, detail: "Confirm the commander and partner/background configuration."});
-    included.filter((card) => card.quantity > 1 && !card.isFlexibleSlot && !BASIC_LANDS.has(normalize(card.name))).forEach((card) => common.push({card: card.name, rule: `Singleton rule: ${card.quantity} copies are modeled.`, detail: "Only basic lands and cards with explicit exceptions may repeat."}));
+    included.filter((card) => card.quantity > 1 && !card.isFlexibleSlot && !/\bBasic Land\b/i.test(card.typeLine) && !BASIC_LANDS.has(normalize(card.name))).forEach((card) => common.push({card: card.name, rule: `Singleton rule: ${card.quantity} copies are modeled.`, detail: "Only basic lands and cards with explicit exceptions may repeat."}));
+    const commander = included.find((card) => card.isCommander);
+    const commanderIdentity = new Set((commander?.colorIdentity || []).map((color) => String(color).toUpperCase()));
+    included.filter((card) => card.commanderLegal !== "legal").forEach((card) => common.push({card: card.name, rule: "This card is not Commander legal.", detail: "Replace it with a Commander-legal card."}));
+    included.filter((card) => (card.colorIdentity || []).some((color) => !commanderIdentity.has(String(color).toUpperCase()))).forEach((card) => common.push({card: card.name, rule: "Color identity falls outside the commander's colors.", detail: "Choose a card whose full color identity fits the commander."}));
 
     const selectedGameChangers = included.filter((card) => card.gameChanger);
     const tagsFor = (card) => (card.tags || []).map((tag) => String(tag).toLowerCase()).join(" ");
     const massLand = included.filter((card) => /mass land|land destruction/.test(tagsFor(card)));
     const extraTurns = included.filter((card) => /extra turn|turn loop/.test(tagsFor(card)));
     const combos = included.filter((card) => /infinite combo|two.card combo/.test(tagsFor(card)));
+    const includedNames = new Set(included.map((card) => normalize(card.name)));
+    const earlyPairs = TIER3_EARLY_COMBO_PAIRS.filter((pair) => pair.every((name) => includedNames.has(normalize(name))));
     const tier2 = [...common];
     selectedGameChangers.forEach((card) => tier2.push({card: card.name, rule: "Tier 2 permits no Game Changers.", detail: "Remove it or evaluate the deck for Tier 3."}));
     combos.forEach((card) => tier2.push({card: card.name, rule: "Tier 2 permits no intentional two-card infinite combo.", detail: "Remove the combo piece or use a higher tier."}));
     massLand.forEach((card) => tier2.push({card: card.name, rule: "Tier 2 permits no mass land denial.", detail: "Replace this effect."}));
     extraTurns.forEach((card) => tier2.push({card: card.name, rule: "Tier 2 should not chain or loop extra turns.", detail: "Keep extra-turn effects sparse and non-repeatable."}));
+    earlyPairs.forEach((pair) => tier2.push({card: pair.join(" + "), rule: "Tier 2 permits no intentional two-card combo package.", detail: "Remove one of these paired pieces."}));
     const tier3 = [...common];
     if (selectedGameChangers.length > 3) selectedGameChangers.forEach((card) => tier3.push({card: card.name, rule: `Tier 3 allows up to three Game Changers; ${selectedGameChangers.length} are selected.`, detail: "Remove Game Changers until no more than three remain."}));
     included.filter((card) => /early combo/.test(tagsFor(card))).forEach((card) => tier3.push({card: card.name, rule: "Tier 3 permits no intentional early-game two-card infinite combo.", detail: "Remove or slow the combo."}));
+    earlyPairs.forEach((pair) => tier3.push({card: pair.join(" + "), rule: "Tier 3 permits no intentional early-game two-card combo package.", detail: "Remove one of these paired pieces."}));
     massLand.forEach((card) => tier3.push({card: card.name, rule: "Tier 3 permits no mass land denial.", detail: "Replace this effect."}));
     extraTurns.forEach((card) => tier3.push({card: card.name, rule: "Tier 3 should not chain or loop extra turns.", detail: "Keep extra-turn effects sparse and non-repeatable."}));
     const lands = types.Land || 0;
@@ -1299,10 +1424,119 @@
               ${replacement}<small>${esc(summaryCopy)}</small>
             </span>
           </button>
-          <span class="price">${money(item.price)}</span>
+          <span class="price">${money(cardPriceBounds(item, cardMetadata[itemKey(item)] || {}).price)}</span>
         </div>`;
       }).join("")}
     </details>`;
+  }
+
+  function transferCardSnapshot(card) {
+    const keys = ["name", "manaCost", "typeLine", "oracleText", "keywords", "colorIdentity", "legalities", "commanderLegal", "rarity", "setName", "image", "price", "ceiling", "tcgplayerUrl", "tags", "purpose", "why", "whyPrimary", "brief", "gameChanger", "ownedExtra", "temporaryUntil"];
+    return Object.fromEntries(keys.filter((key) => card[key] !== undefined).map((key) => [key, card[key]]));
+  }
+
+  function salvageMoveOption(card, sourceVariant) {
+    if (!sourceVariant?.id || sourceVariant.id === "salvage" || card.isCommander || card.transferRecord || card.loanedTo || !cardAvailableFromSource(card, sourceVariant)) return null;
+    const plan = buyCatalog.plans[sourceVariant.id];
+    if (!plan) return null;
+    const current = ensureBuyState(sourceVariant.id);
+    const model = Lineup.buildModel(plan);
+    const entry = model.byId.get(String(card.id)) || model.entries.find((candidate) => Lineup.normalizeName(candidate.item.name) === Lineup.normalizeName(card.name));
+    if (!entry) return null;
+    const active = Lineup.activeEntryForSlot(plan, current, entry.slotId);
+    if (active?.id !== entry.id) return {entry, replacement: null, next: current, wasActive: false};
+    let replacement = entry.kind === "shell" ? null : model.byId.get(entry.predecessorId);
+    if (!replacement || replacement.id === entry.id || Number(replacement.item.quantity || 1) !== Number(entry.item.quantity || 1)) {
+      const priorities = {tuned: 0, shell: 1, enhance: 2, upgrade: 2, max: 3};
+      replacement = (model.groups.get(entry.slotId) || [])
+        .filter((candidate) => candidate.id !== entry.id && Number(candidate.item.quantity || 1) === Number(entry.item.quantity || 1))
+        .sort((a, b) => (priorities[a.kind] ?? 9) - (priorities[b.kind] ?? 9) || a.item.name.localeCompare(b.item.name))[0] || null;
+    }
+    if (!replacement) return null;
+    const next = tentativeLineupChoice(plan, current, replacement.id, true);
+    if (evaluateDeckCompliance(plan, next).tier3.length) return null;
+    return {entry, replacement, next, wasActive: true};
+  }
+
+  function moveCardToSalvage(card, sourceVariant, option) {
+    if (!option) return;
+    if (option.wasActive) assignSelection(ensureBuyState(sourceVariant.id), option.next);
+    removePriorPhysicalTransfer("deck", sourceVariant.id, option.entry.id, itemKey(card));
+    state.liveSalvage ||= {};
+    state.liveSalvage[itemKey(card)] = {
+      card: transferCardSnapshot(card),
+      reason: `Moved from Deck ${sourceVariant.deckId} · ${sourceVariant.name}`,
+      sourceVariantId: sourceVariant.id,
+      sourceEntryId: option.entry.id,
+      movedAt: new Date().toISOString()
+    };
+    saveState(`${card.name} moved to Salvage`);
+    showToast(option.wasActive ? `${card.name} moved to Salvage; ${option.replacement.item.name} is active instead.` : `${card.name} moved to Salvage.`);
+  }
+
+  function removePriorPhysicalTransfer(sourceKind, sourceVariantId, sourceEntryId, sourceCardKey) {
+    Object.entries(state.liveTransfers || {}).forEach(([targetVariantId, records]) => {
+      Object.entries(records || {}).forEach(([slotId, record]) => {
+        const samePhysicalName = sourceCardKey && record.sourceCardKey === sourceCardKey;
+        const same = samePhysicalName || (sourceKind === "salvage"
+          ? record.sourceKind === "salvage" && record.sourceCardKey === sourceCardKey
+          : record.sourceKind === "deck" && record.sourceVariantId === sourceVariantId && record.sourceEntryId === sourceEntryId);
+        if (same) delete state.liveTransfers[targetVariantId][slotId];
+      });
+    });
+  }
+
+  function assignLiveTransfer(card, sourceVariant, option) {
+    const sourceKind = sourceVariant?.id === "salvage" ? "salvage" : "deck";
+    const sourceCardKey = itemKey(card);
+    const sourceCards = sourceKind === "deck" ? configuredDeckCards(sourceVariant) : [];
+    const sourceEntry = sourceCards.find((candidate) => candidate.id === card.id) || sourceCards.find((candidate) => itemKey(candidate) === sourceCardKey && candidate.lineupActive) || null;
+    const sourceEntryId = sourceEntry?.id || card.id || sourceCardKey;
+    removePriorPhysicalTransfer(sourceKind, sourceVariant?.id, sourceEntryId, sourceCardKey);
+    const record = {
+      id: `transfer-${option.targetVariant.id}-${option.targetSlotId}-${sourceCardKey}`,
+      card: transferCardSnapshot(card),
+      sourceKind,
+      sourceVariantId: sourceKind === "deck" ? sourceVariant.id : null,
+      sourceEntryId,
+      sourceCardKey,
+      sourceWasActive: Boolean(sourceEntry?.lineupActive),
+      sourceOwned: true,
+      replacesName: option.slotName,
+      targetSlotId: option.targetSlotId,
+      fitScore: option.fit.score,
+      fitLabel: option.label,
+      createdAt: new Date().toISOString()
+    };
+    transfersForVariant(option.targetVariant.id)[option.targetSlotId] = record;
+    saveState(`${card.name} assigned to ${option.targetVariant.name}`);
+    showToast(`${card.name} now fills ${option.slotName} in Deck ${option.targetVariant.deckId}.`);
+  }
+
+  function removeLiveTransfer(record, targetVariantId) {
+    if (!record) return;
+    const records = transfersForVariant(targetVariantId);
+    const slot = Object.keys(records).find((slotId) => records[slotId]?.id === record.id) || record.targetSlotId;
+    if (slot) delete records[slot];
+    saveState(`${record.card.name} returned to ${record.sourceKind === "salvage" ? "Salvage" : "its source deck"}`);
+    showToast(`${record.card.name} returned; the prior lineup card is active again.`);
+  }
+
+  function livePlacementMarkup(item, sourceVariant) {
+    if (item.isCommander) return "";
+    if (item.transferRecord) {
+      return `<section class="detail-block live-placement-panel"><h3>Temporary assignment</h3><p>This card is filling the ${esc(item.lineupSlotName || item.transferRecord.replacesName)} slot from ${item.transferRecord.sourceKind === "salvage" ? "Salvage" : "another Live Deck"}.</p><button type="button" class="secondary-button" data-return-live-transfer="${esc(item.transferRecord.id)}">Return card and restore prior lineup choice</button></section>`;
+    }
+    if (item.loanRecord) {
+      return `<section class="detail-block live-placement-panel"><h3>Loaned physical card</h3><p>This copy is assigned to ${esc(item.loanedTo || "another Live Deck")}. Return it before activating or assigning it elsewhere.</p><button type="button" class="secondary-button" data-return-live-transfer="${esc(item.loanRecord.id)}">Return this card to its source</button></section>`;
+    }
+    const owned = cardAvailableFromSource(item, sourceVariant);
+    const options = owned ? transferCompatibility(item, sourceVariant) : [];
+    const salvageOption = owned ? salvageMoveOption(item, sourceVariant) : null;
+    const salvageAction = salvageOption ? `<button type="button" class="secondary-button" data-move-live-salvage>${salvageOption.wasActive ? `Move to Salvage · activate ${esc(salvageOption.replacement.item.name)}` : "Move this unused card to Salvage"}</button>` : "";
+    if (!owned) return `<section class="detail-block live-placement-panel"><h3>Use in another Live Deck</h3><p>Mark this card Bought first; only physically available cards can be assigned or loaned.</p></section>`;
+    if (!options.length) return `<section class="detail-block live-placement-panel"><h3>Use in another Live Deck</h3><p>No other selected deck has a legal, singleton-safe, Tier 3-clean one-for-one slot for this card right now.</p>${salvageAction}</section>`;
+    return `<section class="detail-block live-placement-panel"><h3>Use in another Live Deck</h3><p>Suggestions are deterministic: Commander legality and colors first, then role, strategy, card type, mana value, physical availability, and whether the swap covers an unowned active card.</p><label class="live-placement-select"><span>Best compatible destination per deck</span><select data-live-placement-select>${options.map((option) => `<option value="${esc(`${option.targetVariant.id}|${option.targetSlotId}`)}">Deck ${option.targetVariant.deckId} · ${esc(option.cut ? `replace ${option.cut.name}` : `fill vacant ${option.slotName}`)} · ${esc(option.label)} ${option.fit.score}${option.wouldBeReady ? " · target ready after swap" : ""}${option.sourceWasActive ? " · source loses this copy" : ""}</option>`).join("")}</select></label><div class="live-placement-reasons" data-live-placement-reasons></div><div class="live-placement-actions"><button type="button" class="primary-button" data-assign-live-transfer>Assign temporarily</button>${salvageAction}</div></section>`;
   }
 
   function openBuyItemDetail(item, variant, kind) {
@@ -1310,6 +1544,7 @@
     const dialog = $("#detail-sheet");
     const brief = item.brief || {};
     const plan = buyCatalog.plans[variant.id];
+    const placementMarkup = kind === "precon" ? "" : livePlacementMarkup(item, variant);
     $("#detail-sheet-image").src = (cardImageCandidates(item)[0] || variant.image).replace("version=small", "version=normal").replace("/small/", "/normal/");
     $("#detail-sheet-image").alt = `${item.name} card`;
     $("#detail-sheet-kicker").textContent = `Deck ${variant.deckId} · ${kind === "tuned" ? "Tuned" : STAGES.includes(kind) ? kind : kind[0].toUpperCase() + kind.slice(1)}`;
@@ -1350,6 +1585,7 @@
       ${(brief.power || brief.ease || brief.fun) ? `<section class="detail-block"><h3 ${tooltipAttributes(TOOLTIP_DEFINITIONS.cardScoring)}>${sectionIcon("scoring")}Card scoring${tooltipHint()}</h3><div class="brief-scores">
         ${briefScore("Power", brief.power)}${briefScore("Ease", brief.ease)}${briefScore("Fun", brief.fun)}
       </div><div class="brief-insights">${brief.value ? `<p ${tooltipAttributes(TOOLTIP_DEFINITIONS.value)}>${sectionIcon("value")}<span><b>Value</b>${esc(brief.value)}</span>${tooltipHint()}</p>` : ""}<p ${tooltipAttributes(TOOLTIP_DEFINITIONS.fit)}>${sectionIcon("fit")}<span><b>Fit</b>${esc(standaloneCardFit(item, plan))}</span>${tooltipHint()}</p></div></section>` : ""}
+      ${placementMarkup}
       ${item.tcgplayerUrl ? `<p><a class="primary-button detail-link" href="${esc(item.tcgplayerUrl)}" target="_blank" rel="noopener">Search this card on TCGplayer</a></p>` : ""}`;
     decorateRichContent($("#detail-sheet-body"), variant);
     $("[data-related-card]", $("#detail-sheet-body"))?.addEventListener("click", (event) => {
@@ -1358,6 +1594,48 @@
       const related = relatedItems.find((candidate) => itemKey(candidate) === itemKey({name: replacementName}));
       if (related) openBuyItemDetail({...related, whereToBuy: related.whereToBuy || "Already in the starting shell"}, variant, "starting shell");
       else showToast(`${replacementName} is not available in this modeled shell.`);
+    });
+    const placementSelect = $("[data-live-placement-select]", $("#detail-sheet-body"));
+    const placementButton = $("[data-assign-live-transfer]", $("#detail-sheet-body"));
+    if (placementSelect && placementButton) {
+      const options = transferCompatibility(item, variant);
+      const selectedOption = () => {
+        const [targetId, slotId] = placementSelect.value.split("|");
+        return options.find((option) => option.targetVariant.id === targetId && option.targetSlotId === slotId);
+      };
+      const updateReasons = () => {
+        const option = selectedOption();
+        const reasons = $("[data-live-placement-reasons]", $("#detail-sheet-body"));
+        if (!option || !reasons) return;
+        const roleCopy = option.fit.sharedRoles.length ? `${option.fit.sharedRoles.slice(0, 3).join(" + ")} role match` : "broad support role";
+        reasons.innerHTML = `<span>Commander legal + color legal</span><span>${esc(roleCopy)}</span><span>${esc(option.fit.cardType)} → ${esc(option.fit.cutType)}</span><span>Mana value ${manaValueEstimate(item)} → ${option.cut ? manaValueEstimate(option.cut) : "vacancy"}</span>${option.cut && !option.cut.bought ? "<span>Covers an unowned active card</span>" : ""}${option.sourceWasActive ? "<span>Source deck must replace this copy</span>" : ""}${option.wouldBeReady ? "<span>Target becomes ready to play</span>" : `<span>${option.projectedReadiness.purchaseItems} target purchase item${option.projectedReadiness.purchaseItems === 1 ? "" : "s"} still needed</span>`}`;
+        placementButton.textContent = option.cut ? `Assign · replace ${option.cut.name}` : `Assign · fill ${option.slotName}`;
+      };
+      placementSelect.addEventListener("change", updateReasons);
+      placementButton.addEventListener("click", () => {
+        const option = selectedOption();
+        if (!option) return;
+        assignLiveTransfer(item, variant, option);
+        dialog.close();
+        if ($("#view-live")?.classList.contains("is-active")) renderLiveDecks();
+      });
+      updateReasons();
+    }
+    $("[data-return-live-transfer]", $("#detail-sheet-body"))?.addEventListener("click", () => {
+      const record = item.transferRecord || item.loanRecord;
+      removeLiveTransfer(record, item.transferRecord ? variant.id : record?.targetVariantId);
+      dialog.close();
+      if ($("#view-live")?.classList.contains("is-active")) renderLiveDecks();
+    });
+    $("[data-move-live-salvage]", $("#detail-sheet-body"))?.addEventListener("click", () => {
+      const option = salvageMoveOption(item, variant);
+      if (!option) {
+        showToast("Choose a same-slot replacement before moving this active card to Salvage.");
+        return;
+      }
+      moveCardToSalvage(item, variant, option);
+      dialog.close();
+      if ($("#view-live")?.classList.contains("is-active")) renderLiveDecks();
     });
     dialog.showModal();
   }
@@ -1568,51 +1846,726 @@
     return "Bin";
   }
 
-  function configuredDeckCards(variant) {
+  const LIVE_FILTER_DEFAULTS = {
+    query: "",
+    status: "all",
+    lineup: "all",
+    source: "all",
+    category: "all",
+    cardType: "all",
+    color: "all",
+    price: "all",
+    rarity: "all",
+    location: "all",
+    sort: "default",
+    groupBy: "status",
+    subgroupBy: "typeLine"
+  };
+  const LIVE_TYPE_ORDER = ["Commander", "Land", "Creature", "Artifact", "Enchantment", "Instant", "Sorcery", "Planeswalker", "Battle", "Other"];
+  const LIVE_GROUP_OPTIONS = [
+    ["none", "No grouping"],
+    ["status", "Bought / To Buy"],
+    ["lineup", "Active / Bench"],
+    ["where", "Where to look"],
+    ["rarity", "Rarity"],
+    ["price", "Price range"],
+    ["typeLine", "Card type"],
+    ["themeSet", "Theme / set"],
+    ["deckCount", "# of decks"],
+    ["level", "Build level"]
+  ];
+
+  function ensureLiveFilters(variantId) {
+    state.liveFilters ||= {};
+    state.liveFilters[variantId] = {...LIVE_FILTER_DEFAULTS, ...(state.liveFilters[variantId] || {})};
+    if (state.liveFilters[variantId].groupBy === state.liveFilters[variantId].subgroupBy) state.liveFilters[variantId].subgroupBy = "none";
+    return state.liveFilters[variantId];
+  }
+
+  function transfersForVariant(variantId) {
+    state.liveTransfers ||= {};
+    state.liveTransfers[variantId] ||= {};
+    return state.liveTransfers[variantId];
+  }
+
+  function liveTransferItems(variantId) {
+    return Object.values(transfersForVariant(variantId)).map((record) => ({
+      ...record.card,
+      id: record.id,
+      replaces: record.replacesName,
+      transferRecord: record,
+      quantity: 1,
+      category: "transfer"
+    }));
+  }
+
+  function allLiveTransfers() {
+    return Object.entries(state.liveTransfers || {}).flatMap(([targetVariantId, records]) => Object.values(records || {}).map((record) => ({...record, targetVariantId})));
+  }
+
+  function configuredDeckCards(variant, selectionOverride = null, excludedTransferSlots = new Set()) {
     const plan = buyCatalog.plans[variant.id];
     if (!plan) return [];
-    const current = ensureBuyState(variant.id);
-    const result = evaluateDeckCompliance(plan, current);
-    const sources = [...(plan.startingShell || []), ...(plan.required || []), ...(plan.enhance || []), ...(plan.max || [])];
-    return result.cards.filter((card) => !card.isFlexibleSlot).map((card) => {
-      const source = sources.find((item) => itemKey(item) === itemKey(card)) || card;
-      const resolved = resolvedBuyCard(source);
-      return {...resolved, quantity: card.quantity, typeLine: card.typeLine || resolved.typeLine, isCommander: card.isCommander};
-    }).sort((a, b) => Number(b.isCommander) - Number(a.isCommander) || shellType(a).localeCompare(shellType(b)) || a.name.localeCompare(b.name));
+    const current = selectionOverride || ensureBuyState(variant.id);
+    const transferItems = liveTransferItems(variant.id).filter((item) => !excludedTransferSlots.has(item.transferRecord?.targetSlotId));
+    const model = Lineup.buildModel(plan, transferItems);
+    const activeIds = new Set(Lineup.selectedEntries(plan, current).map((entry) => entry.id));
+    const transferSlots = new Set(model.entries.filter((entry) => entry.kind === "transfer").map((entry) => entry.slotId));
+    const levelByKind = {
+      shell: ["shell", "Starting Shell"],
+      tuned: ["tuned", "Tuned"],
+      upgrade: ["enhance", "Enhance"],
+      enhance: ["enhance", "Enhance"],
+      max: ["maxxed", "Maxxed"],
+      transfer: ["transfer", "Temporary loan"]
+    };
+    return model.entries.filter((entry) => !entry.item.isFlexibleSlot).map((entry) => {
+      const [level, label] = levelByKind[entry.kind] || ["shell", "Starting Shell"];
+      const resolved = resolvedBuyCard(entry.item);
+      return {
+        ...resolved,
+        id: entry.id,
+        quantity: Number(entry.item.quantity || 1),
+        typeLine: entry.item.typeLine || resolved.typeLine,
+        isCommander: Boolean(entry.item.isCommander),
+        fromShell: entry.kind === "shell",
+        liveLevel: level,
+        liveLevelLabel: label,
+        lineupActive: entry.kind === "transfer" ? true : activeIds.has(entry.id) && !transferSlots.has(entry.slotId),
+        lineupSlotId: entry.slotId,
+        lineupSlotName: entry.root?.name || entry.item.name,
+        lineupPredecessorId: entry.predecessorId,
+        transferRecord: entry.item.transferRecord || null,
+        colorIdentity: resolved.colorIdentity || entry.item.colorIdentity || []
+      };
+    }).sort((a, b) => Number(b.lineupActive) - Number(a.lineupActive) || Number(b.isCommander) - Number(a.isCommander) || shellType(a).localeCompare(shellType(b)) || a.name.localeCompare(b.name));
+  }
+
+  function pruneOrphanTransfers() {
+    const selectedIds = new Set(selectedVariants().map((variant) => variant.id));
+    let changed = false;
+    Object.keys(state.liveTransfers || {}).forEach((targetVariantId) => {
+      if (!selectedIds.has(targetVariantId)) {
+        delete state.liveTransfers[targetVariantId];
+        changed = true;
+      }
+    });
+    if (changed) saveState("Loans to inactive variants returned");
+  }
+
+  function liveInventoryCounts(entries) {
+    const loose = new Map();
+    Object.entries(state.found || {}).forEach(([key, bought]) => {
+      if (!bought) return;
+      loose.set(key, Math.max(1, Number(state.boughtQuantities?.[key] || 1)));
+    });
+    (buyCatalog.ownedExtras || []).forEach((name) => {
+      const key = itemKey({name});
+      loose.set(key, Math.max(1, loose.get(key) || 0));
+    });
+    const boxes = new Map();
+    entries.forEach(({plan}) => {
+      if (isSinglesBuiltShell(plan) || !state.found[itemKey(plan.precon)]) return;
+      (plan.startingShell || []).filter((card) => !card.isFlexibleSlot).forEach((card) => {
+        const key = itemKey(card);
+        boxes.set(key, (boxes.get(key) || 0) + Math.max(1, Number(card.quantity || 1)));
+      });
+    });
+    const inventory = new Map(loose);
+    boxes.forEach((quantity, key) => inventory.set(key, Math.max(quantity, inventory.get(key) || 0)));
+    return inventory;
+  }
+
+  function buildLiveEntries() {
+    pruneOrphanTransfers();
+    const entries = selectedVariants().map((variant) => ({variant, plan: buyCatalog.plans[variant.id], cards: configuredDeckCards(variant)})).filter((entry) => entry.plan);
+    const sharedDecks = new Map();
+    entries.forEach(({variant, cards}) => {
+      new Set(cards.filter((card) => card.lineupActive).map((card) => itemKey(card))).forEach((key) => {
+        if (!sharedDecks.has(key)) sharedDecks.set(key, new Set());
+        sharedDecks.get(key).add(variant.id);
+      });
+    });
+    entries.forEach(({variant, plan, cards}) => cards.forEach((card) => {
+      const bounds = cardPriceBounds(card, cardMetadata[itemKey(card)] || {});
+      card.price = bounds.price;
+      card.ceiling = bounds.ceiling;
+      card.variantId = variant.id;
+      card.deckId = variant.deckId;
+      card.inSalvage = Boolean(state.liveSalvage?.[itemKey(card)] && state.liveSalvage[itemKey(card)].sourceVariantId === plan.variantId);
+      card.sharedDeckCount = sharedDecks.get(itemKey(card))?.size || (card.lineupActive ? 1 : 0);
+    }));
+
+    const inventory = liveInventoryCounts(entries);
+    const remaining = new Map(inventory);
+    const shopDestinations = new Map(derivedShopItems().map((item) => [item.key, new Set(item.deckRefs.map((ref) => Number(ref.deckId)))]));
+    const allocationPriority = ({variant, plan, card}) => {
+      if (card.transferRecord) return 0;
+      if (card.fromShell && !isSinglesBuiltShell(plan) && state.found[itemKey(plan.precon)]) return 1;
+      if (shopDestinations.get(itemKey(card))?.has(Number(variant.deckId))) return 2;
+      return 3;
+    };
+    const activeCards = entries.flatMap(({variant, plan, cards}) => cards.filter((card) => card.lineupActive).map((card) => ({variant, plan, card})))
+      .sort((a, b) => allocationPriority(a) - allocationPriority(b) || Number(a.variant.deckId) - Number(b.variant.deckId) || a.card.name.localeCompare(b.card.name));
+    activeCards.forEach(({card}) => {
+      const key = itemKey(card);
+      const needed = Math.max(1, Number(card.quantity || 1));
+      const available = Math.min(needed, remaining.get(key) || 0);
+      card.availableQuantity = available;
+      card.bought = available >= needed;
+      remaining.set(key, Math.max(0, (remaining.get(key) || 0) - available));
+    });
+    entries.forEach(({cards}) => cards.filter((card) => !card.lineupActive).forEach((card) => {
+      const needed = Math.max(1, Number(card.quantity || 1));
+      card.availableQuantity = Math.min(needed, remaining.get(itemKey(card)) || 0);
+      card.bought = card.availableQuantity >= needed;
+    }));
+
+    const sourceRows = new Map(entries.flatMap(({variant, cards}) => cards.map((card) => [`${variant.id}:${card.id}`, {variant, card}])));
+    const targetRows = new Map(entries.flatMap(({variant, cards}) => cards.filter((card) => card.transferRecord).map((card) => [card.transferRecord.id, {variant, card}])));
+    allLiveTransfers().forEach((record) => {
+      if (record.sourceKind !== "deck") return;
+      const source = sourceRows.get(`${record.sourceVariantId}:${record.sourceEntryId}`)
+        || entries.find(({variant}) => variant.id === record.sourceVariantId)?.cards.find((card) => itemKey(card) === record.sourceCardKey);
+      const target = targetRows.get(record.id);
+      if (!source) return;
+      source.card.loanRecord = {...record, targetVariantId: record.targetVariantId};
+      source.card.loanedTo = target ? `Deck ${target.variant.deckId} · ${target.variant.name}` : "another deck";
+      source.card.loanBlocksSource = Boolean(source.card.lineupActive && !source.card.bought);
+    });
+    return entries;
+  }
+
+  function projectedEffectiveCards(variant, selection, excludedTransferSlots = new Set()) {
+    return activeLiveCards(configuredDeckCards(variant, selection, excludedTransferSlots));
+  }
+
+  function liveColorKey(card) {
+    const identity = new Set((card.colorIdentity || []).map((value) => String(value).toUpperCase()));
+    if (!identity.size) {
+      for (const match of String(card.manaCost || "").matchAll(/\{([^}]+)\}/g)) {
+        for (const color of ["W", "U", "B", "R", "G"]) if (match[1].toUpperCase().includes(color)) identity.add(color);
+      }
+    }
+    if (identity.size > 1) return "multicolor";
+    return ({W: "white", U: "blue", B: "black", R: "red", G: "green"})[[...identity][0]] || "colorless";
+  }
+
+  function liveLocationKey(card) {
+    const price = Number(cardPriceBounds(card, cardMetadata[itemKey(card)] || {}).price) || 0;
+    if (price > 15) return "case";
+    if (price >= 5) return "binder";
+    if (price > 1) return "sleeves";
+    return "bin";
+  }
+
+  function livePriceBand(card) {
+    const price = Number(cardPriceBounds(card, cardMetadata[itemKey(card)] || {}).price) || 0;
+    if (!price) return "unpriced";
+    if (price <= 1) return "bin";
+    if (price < 5) return "sleeves";
+    if (price <= 15) return "binder";
+    return "case";
+  }
+
+  function liveCardType(card) {
+    if (card.isCommander) return "Commander";
+    return ["Land", "Creature", "Artifact", "Enchantment", "Instant", "Sorcery", "Planeswalker", "Battle"].find((type) => String(card.typeLine || "").includes(type)) || "Other";
+  }
+
+  const LIVE_ROLE_PATTERNS = {
+    ramp: /add .*mana|search your library for .*land|treasure token|mana rock|extra mana/i,
+    draw: /draw (?:a|one|two|three|that many|cards)|card advantage|look at the top/i,
+    removal: /destroy target|exile target|counter target|deals? .*damage|return target .* hand|board wipe/i,
+    protection: /hexproof|indestructible|phase out|protection from|can't be countered|ward/i,
+    recursion: /return .* from your graveyard|cast .* from your graveyard|reanimate|reclamation/i,
+    sacrifice: /sacrifice|dies|death trigger|aristocrat/i,
+    lifegain: /gain .*life|lifelink|life total/i,
+    counters: /\+1\/\+1 counter|-1\/-1 counter|proliferate|counter on/i,
+    tokens: /create .* token|populate|token creature/i,
+    graveyard: /graveyard|mill|dredge|discard a card/i,
+    blink: /exile .* return .* battlefield|blink|flicker|enters the battlefield/i,
+    defender: /defender|toughness rather than power|\bwall\b/i,
+    landfall: /landfall|land enters|play an additional land|land card/i,
+    equipment: /equipment|equipped|attach|equip cost/i,
+    artifact: /artifact|thopter|construct|vehicle/i,
+    enchantment: /enchantment|aura|constellation/i,
+    combat: /attacks|combat damage|double strike|first strike|trample|vigilance/i,
+    wipe: /destroy all|exile all|each creature|all creatures/i
+  };
+
+  function cardRoleSet(card) {
+    const text = [card.name, card.typeLine, card.oracleText, card.purpose, card.why, card.whyPrimary, ...(card.tags || [])].join(" ");
+    return new Set(Object.entries(LIVE_ROLE_PATTERNS).filter(([, pattern]) => pattern.test(text)).map(([role]) => role));
+  }
+
+  function manaValueEstimate(card) {
+    if (Number.isFinite(Number(card.cmc))) return Number(card.cmc);
+    let total = 0;
+    const frontCost = String(card.manaCost || "").split(/\s*\/\/\s*/)[0];
+    for (const match of frontCost.matchAll(/\{([^}]+)\}/g)) {
+      const symbol = match[1].toUpperCase();
+      if (/^\d+$/.test(symbol)) total += Number(symbol);
+      else if (!["X", "Y", "Z"].includes(symbol)) total += 1;
+    }
+    return total;
+  }
+
+  function primaryCardType(card) {
+    return ["Creature", "Artifact", "Enchantment", "Instant", "Sorcery", "Planeswalker", "Battle", "Land"].find((type) => String(card.typeLine || "").includes(type)) || "Other";
+  }
+
+  function cardTypeFamily(card) {
+    const type = primaryCardType(card);
+    if (type === "Land") return "land";
+    if (["Instant", "Sorcery"].includes(type)) return "spell";
+    if (["Creature", "Artifact", "Enchantment", "Planeswalker", "Battle"].includes(type)) return "permanent";
+    return "other";
+  }
+
+  function cardAvailableFromSource(card, sourceVariant) {
+    if (card.transferRecord || card.loanRecord || card.loanedTo) return false;
+    if (sourceVariant?.id === "salvage") return true;
+    if (typeof card.bought === "boolean") return card.bought;
+    if (card.ownedExtra || state.found[itemKey(card)]) return Number(state.boughtQuantities?.[itemKey(card)] || 1) > 0;
+    const plan = buyCatalog.plans[sourceVariant?.id];
+    if (!plan) return false;
+    const shell = (plan.startingShell || []).find((candidate) => candidate.id === card.id || itemKey(candidate) === itemKey(card));
+    return Boolean(shell && !isSinglesBuiltShell(plan) && state.found[itemKey(plan.precon)]);
+  }
+
+  function identityFits(card, commander) {
+    const allowed = new Set((commander?.colorIdentity || []).map((color) => String(color).toUpperCase()));
+    return (card.colorIdentity || []).every((color) => allowed.has(String(color).toUpperCase()));
+  }
+
+  function transferFitScore(card, cut, targetVariant, sourceOwned) {
+    const cardRoles = cardRoleSet(card);
+    const cutRoles = cut ? cardRoleSet(cut) : new Set();
+    const sharedRoles = [...cardRoles].filter((role) => cutRoles.has(role));
+    const roleUnion = new Set([...cardRoles, ...cutRoles]);
+    const roleScore = roleUnion.size ? 40 * sharedRoles.length / roleUnion.size : 10;
+    const targetText = [targetVariant.name, targetVariant.commander, ...(targetVariant.mechanics || []), ...(targetVariant.summaries || []).flat()].join(" ");
+    const targetRoles = new Set(Object.entries(LIVE_ROLE_PATTERNS).filter(([, pattern]) => pattern.test(targetText)).map(([role]) => role));
+    const strategyMatches = [...cardRoles].filter((role) => targetRoles.has(role));
+    const strategyScore = targetRoles.size ? Math.min(25, 25 * strategyMatches.length / Math.max(1, Math.min(targetRoles.size, 4))) : 5;
+    const cardType = primaryCardType(card);
+    const cutType = cut ? primaryCardType(cut) : cardType;
+    const cardFamily = cardTypeFamily(card);
+    const cutFamily = cut ? cardTypeFamily(cut) : cardFamily;
+    const related = cardFamily === cutFamily && cardFamily !== "other";
+    const typeScore = cardType === cutType ? 10 : related ? 5 : 0;
+    const manaScore = cut ? Math.max(0, 10 - 2 * Math.abs(manaValueEstimate(card) - manaValueEstimate(cut))) : 7;
+    const availabilityScore = sourceOwned ? 10 : 0;
+    const flexibilityScore = Math.min(5, cardRoles.size);
+    const shortageBonus = cut && !cut.bought ? 5 : 0;
+    return {
+      score: Math.min(100, Math.round(roleScore + strategyScore + typeScore + manaScore + availabilityScore + flexibilityScore + shortageBonus)),
+      sharedRoles,
+      cardType,
+      cutType
+    };
+  }
+
+  function transferCompatibility(card, sourceVariant) {
+    if (!card || card.isCommander || card.transferRecord || card.loanRecord || card.loanedTo || Number(card.quantity || 1) !== 1) return [];
+    const commanderStatus = card.legalities?.commander || (card.commanderLegal === false ? "not_legal" : "legal");
+    if (commanderStatus !== "legal") return [];
+    const sourceOwned = cardAvailableFromSource(card, sourceVariant);
+    if (!sourceOwned) return [];
+    const results = [];
+    const liveEntries = buildLiveEntries();
+    liveEntries.filter(({variant}) => variant.id !== sourceVariant?.id).forEach(({variant: targetVariant, plan, cards: candidates}) => {
+      const active = activeLiveCards(candidates);
+      const commander = active.find((candidate) => candidate.isCommander) || candidates.find((candidate) => candidate.isCommander);
+      if (!commander || !identityFits(card, commander)) return;
+      if (active.some((candidate) => Lineup.normalizeName(candidate.name) === Lineup.normalizeName(card.name))) return;
+      const activeSlots = new Set(active.map((candidate) => candidate.lineupSlotId));
+      const vacantSlots = Array.from(new Map(candidates.filter((candidate) => !activeSlots.has(candidate.lineupSlotId) && Number(candidate.quantity || 1) === 1).map((candidate) => [candidate.lineupSlotId, candidate])).values());
+      const currentTotal = active.reduce((sum, candidate) => sum + Number(candidate.quantity || 1), 0);
+      const cutChoices = currentTotal < 100
+        ? vacantSlots.map((candidate) => ({cut: null, slotId: candidate.lineupSlotId, slotName: candidate.lineupSlotName, root: candidate}))
+        : active.filter((candidate) => !candidate.isCommander && Number(candidate.quantity || 1) === 1 && !/\bBasic Land\b/i.test(candidate.typeLine || "")).map((candidate) => ({cut: candidate, slotId: candidate.lineupSlotId, slotName: candidate.lineupSlotName, root: candidate}));
+      cutChoices.forEach(({cut, slotId, slotName}) => {
+        const simulated = cut ? active.filter((candidate) => candidate !== cut) : [...active];
+        simulated.push({...card, quantity: 1, lineupKind: "transfer", lineupSlotId: slotId, lineupSlotName: slotName});
+        const compliance = evaluateDeckCompliance(plan, ensureBuyState(targetVariant.id), simulated);
+        const nextTotal = simulated.reduce((sum, candidate) => sum + Number(candidate.quantity || 1), 0);
+        const nonCountIssues = compliance.tier3.filter((issue) => issue.card !== "Deck list");
+        if (nextTotal > 100 || nonCountIssues.length || (currentTotal >= 100 && (nextTotal !== 100 || compliance.tier3.length))) return;
+        if (currentTotal < 100 && nextTotal <= currentTotal) return;
+        const fit = transferFitScore(card, cut, targetVariant, sourceOwned);
+        const curatedSalvage = sourceVariant?.id === "salvage" && (buyCatalog.salvage || []).some((candidate) => itemKey(candidate) === itemKey(card));
+        if (curatedSalvage) fit.score = Math.min(fit.score, 49);
+        if (fit.score < 35) return;
+        const label = fit.score >= 70 ? "Strong fit" : fit.score >= 50 ? "Workable temporary" : "Emergency only";
+        const projectedReadiness = liveDeckReadiness(plan, simulated, compliance);
+        results.push({targetVariant, targetSlotId: slotId, slotName, cut, fit, label, sourceOwned, nextTotal, wouldBeReady: projectedReadiness.ready, projectedReadiness, sourceWasActive: Boolean(card.lineupActive)});
+      });
+    });
+    const sorted = results.sort((a, b) => b.fit.score - a.fit.score || Number(Boolean(b.cut && !b.cut.bought)) - Number(Boolean(a.cut && !a.cut.bought)) || Number(a.targetVariant.deckId) - Number(b.targetVariant.deckId) || a.slotName.localeCompare(b.slotName));
+    const seenDecks = new Set();
+    return sorted.filter((option) => {
+      if (seenDecks.has(option.targetVariant.id)) return false;
+      seenDecks.add(option.targetVariant.id);
+      return true;
+    });
+  }
+
+  function matchesLiveFilters(card, filters) {
+    if (filters.status === "bought" && !card.bought) return false;
+    if (filters.status === "need" && card.bought) return false;
+    if (filters.lineup === "active" && !card.lineupActive) return false;
+    if (filters.lineup === "bench" && card.lineupActive) return false;
+    if (filters.source === "shell" && !card.fromShell) return false;
+    if (filters.source === "singles" && card.fromShell) return false;
+    if (filters.category !== "all" && card.liveLevel !== filters.category) return false;
+    if (filters.cardType !== "all" && liveCardType(card) !== filters.cardType) return false;
+    if (filters.color !== "all" && liveColorKey(card) !== filters.color) return false;
+    if (filters.price !== "all" && livePriceBand(card) !== filters.price) return false;
+    const rarity = String(card.rarity || cardMetadata[itemKey(card)]?.rarity || "unknown").toLowerCase();
+    if (filters.rarity !== "all" && rarity !== filters.rarity) return false;
+    if (filters.location !== "all" && liveLocationKey(card) !== filters.location) return false;
+    const query = filters.query.trim().toLowerCase();
+    if (!query) return true;
+    return [card.name, card.typeLine, card.liveLevelLabel, card.purpose, card.why, card.whyPrimary, card.replaces, card.tempUntil, ...(card.tags || [])].join(" ").toLowerCase().includes(query);
+  }
+
+  function sortLiveCards(cards, mode) {
+    return [...cards].sort((a, b) => {
+      if (mode === "az" || mode === "za") {
+        const delta = a.name.localeCompare(b.name, undefined, {numeric: true, sensitivity: "base"});
+        return mode === "za" ? -delta : delta;
+      }
+      if (mode === "lowHigh" || mode === "highLow") {
+        const aPrice = Number(a.price) > 0 ? Number(a.price) : null;
+        const bPrice = Number(b.price) > 0 ? Number(b.price) : null;
+        if (aPrice === null && bPrice !== null) return 1;
+        if (bPrice === null && aPrice !== null) return -1;
+        const delta = aPrice === null ? 0 : mode === "highLow" ? bPrice - aPrice : aPrice - bPrice;
+        if (delta) return delta;
+      }
+      return Number(b.isCommander) - Number(a.isCommander) || LIVE_TYPE_ORDER.indexOf(liveCardType(a)) - LIVE_TYPE_ORDER.indexOf(liveCardType(b)) || a.name.localeCompare(b.name);
+    });
+  }
+
+  function liveGroupDescriptor(card, mode) {
+    const metadata = cardMetadata[itemKey(card)] || {};
+    if (mode === "status") return {label: card.bought ? "Bought" : "To Buy", order: card.bought ? 1 : 0};
+    if (mode === "lineup") return {label: card.lineupActive ? "Active 100" : "Bench options", order: card.lineupActive ? 0 : 1};
+    if (mode === "where") {
+      const labels = {bin: "Bin ($0–$1)", sleeves: `${shoppingLocation(card.price)} ($1–$5)`, binder: "Binder ($5–$15)", case: "Case ($15+)", unpriced: "Price unavailable"};
+      const key = livePriceBand(card);
+      return {label: labels[key] || shoppingLocation(card.price), order: ["bin", "sleeves", "binder", "case", "unpriced"].indexOf(key)};
+    }
+    if (mode === "rarity") {
+      const rarity = String(card.rarity || metadata.rarity || "Unknown");
+      const label = rarity === "Unknown" ? "Rarity loading / unknown" : rarity[0].toUpperCase() + rarity.slice(1);
+      return {label, order: ["Common", "Uncommon", "Rare", "Mythic", "Special", "Bonus", "Rarity loading / unknown"].indexOf(label)};
+    }
+    if (mode === "price") {
+      const labels = {bin: "Under $1", sleeves: "$1–$5", binder: "$5–$15", case: "$15+", unpriced: "Price unavailable"};
+      const key = livePriceBand(card);
+      return {label: labels[key], order: ["bin", "sleeves", "binder", "case", "unpriced"].indexOf(key)};
+    }
+    if (mode === "typeLine") {
+      const label = liveCardType(card);
+      return {label, order: LIVE_TYPE_ORDER.indexOf(label)};
+    }
+    if (mode === "themeSet") return {label: card.setName || metadata.setName || card.tags?.[0] || "Theme / set loading or unknown", order: 999};
+    if (mode === "deckCount") return {label: `In ${card.sharedDeckCount || 1} live deck${card.sharedDeckCount === 1 ? "" : "s"}`, order: -(card.sharedDeckCount || 1)};
+    if (mode === "level") return {label: card.liveLevelLabel || "Other", order: ["shell", "tuned", "enhance", "maxxed"].indexOf(card.liveLevel)};
+    return {label: "Cards", order: 0};
+  }
+
+  function groupLiveCards(cards, mode) {
+    const groups = new Map();
+    cards.forEach((card) => {
+      const descriptor = liveGroupDescriptor(card, mode);
+      if (!groups.has(descriptor.label)) groups.set(descriptor.label, {label: descriptor.label, order: descriptor.order < 0 && mode !== "deckCount" ? 999 : descriptor.order, cards: []});
+      groups.get(descriptor.label).cards.push(card);
+    });
+    return Array.from(groups.values()).sort((a, b) => a.order - b.order || a.label.localeCompare(b.label));
+  }
+
+  function liveFilterSelect(field, label, options, value, extra = "") {
+    return `<label class="filter-select ${extra}"><span>${esc(label)}</span><select data-live-filter-select="${esc(field)}">${options.map(([option, text]) => `<option value="${esc(option)}" ${String(value) === String(option) ? "selected" : ""}>${esc(text)}</option>`).join("")}</select></label>`;
+  }
+
+  function liveToolbarMarkup(variant, filters) {
+    const extraCount = ["lineup", "source", "category", "cardType", "color", "price", "rarity", "location"].filter((field) => filters[field] !== "all").length + (filters.sort !== "default" ? 1 : 0);
+    const subgroupOptions = LIVE_GROUP_OPTIONS.filter(([value]) => value === "none" || value !== filters.groupBy);
+    return `<div class="live-toolbar" data-live-toolbar="${esc(variant.id)}">
+      <input class="search-input" type="search" value="${esc(filters.query)}" placeholder="Search this deck…" aria-label="Search ${esc(variant.name)}">
+      <div class="live-toolbar-row">
+        <div class="status-chips" aria-label="Bought status">
+          <button class="filter-chip${filters.status === "all" ? " is-active" : ""}" data-live-status="all">All</button>
+          <button class="filter-chip${filters.status === "need" ? " is-active" : ""}" data-live-status="need">To Buy</button>
+          <button class="filter-chip${filters.status === "bought" ? " is-active" : ""}" data-live-status="bought">Bought</button>
+        </div>
+        <div class="live-group-controls">
+          ${liveFilterSelect("groupBy", "Group by", LIVE_GROUP_OPTIONS, filters.groupBy, "live-group-select")}
+          ${liveFilterSelect("subgroupBy", "Then by", subgroupOptions, filters.subgroupBy, "live-group-select")}
+          ${liveFilterSelect("profileStage", "Compare rating", [["1","Base"],["2","Tuned"],["3","Maxed"]], String(state.rankStages[variant.deckId] || 2), "live-profile-select")}
+          <details class="more-filters live-more-filters"><summary>Filters${extraCount ? ` <b>${extraCount}</b>` : ""}</summary><div class="filter-select-grid live-filter-grid">
+            ${liveFilterSelect("lineup", "Lineup", [["all","Active + bench"],["active","Active 100"],["bench","Bench options"]], filters.lineup)}
+            ${liveFilterSelect("source", "Source", [["all","All cards"],["shell","Starting shell"],["singles","Added singles"]], filters.source)}
+            ${liveFilterSelect("category", "Level", [["all","All levels"],["shell","Starting Shell"],["tuned","Tuned"],["enhance","Enhance"],["maxxed","Maxxed"]], filters.category)}
+            ${liveFilterSelect("cardType", "Card type", [["all","All types"], ...LIVE_TYPE_ORDER.map((type) => [type,type])], filters.cardType)}
+            ${liveFilterSelect("color", "Color", [["all","All colors"],["white","White"],["blue","Blue"],["black","Black"],["red","Red"],["green","Green"],["multicolor","Multicolor"],["colorless","Colorless"]], filters.color)}
+            ${liveFilterSelect("price", "Price", [["all","All prices"],["bin","Bin · $0–$1"],["sleeves","Sleeves · $1–$5"],["binder","Binder · $5–$15"],["case","Case · $15+"],["unpriced","Unpriced"]], filters.price)}
+            ${liveFilterSelect("rarity", "Rarity", [["all","All rarities"],["common","Common"],["uncommon","Uncommon"],["rare","Rare"],["mythic","Mythic"],["unknown","Unknown"]], filters.rarity)}
+            ${liveFilterSelect("location", "Location", [["all","All locations"],["bin","Bin"],["sleeves","Sleeves"],["binder","Binder"],["case","Case"]], filters.location)}
+            ${liveFilterSelect("sort", "Sort", [["default","Deck order"],["az","Name: A → Z"],["za","Name: Z → A"],["lowHigh","Price: Low → High"],["highLow","Price: High → Low"]], filters.sort)}
+          </div></details>
+        </div>
+      </div>
+      <div class="live-results-summary" aria-live="polite"></div>
+    </div>`;
+  }
+
+  function liveColorIdentityMarkup(cards, variant) {
+    const commander = cards.find((card) => card.isCommander);
+    const identity = new Set((commander?.colorIdentity || []).map((value) => String(value).toUpperCase()));
+    if (!identity.size) {
+      for (const match of String(variant.manaCost || "").matchAll(/\{([^}]+)\}/g)) for (const color of ["W", "U", "B", "R", "G"]) if (match[1].toUpperCase().includes(color)) identity.add(color);
+    }
+    const colors = ["W", "U", "B", "R", "G"].filter((color) => identity.has(color));
+    return colors.length ? colors.map((color) => `<i class="live-color is-${color.toLowerCase()}" title="${({W:"White",U:"Blue",B:"Black",R:"Red",G:"Green"})[color]}">${color}</i>`).join("") : `<i class="live-color is-c" title="Colorless">C</i>`;
+  }
+
+  function liveScoreFamilyMarkup(label, scores) {
+    return `<span class="live-score-family"><b>${esc(label)}</b><span>${scores.map((score) => `<i title="${esc(score.description || score.label)}"><small>${esc(score.label)}</small><strong>${esc(score.score)}/5</strong>${score.extra ? `<em>${esc(score.extra)}</em>` : ""}</i>`).join("")}</span></span>`;
+  }
+
+  function activeLiveCards(cards) {
+    return cards.filter((card) => card.lineupActive);
+  }
+
+  function liveDeckReadiness(plan, cards, compliance) {
+    const active = activeLiveCards(cards);
+    const total = active.reduce((sum, card) => sum + Number(card.quantity || 1), 0);
+    const borrowedOut = active.filter((card) => card.loanBlocksSource);
+    const shellMissing = active.filter((card) => card.fromShell && !card.bought && !card.loanedTo);
+    const singlesMissing = active.filter((card) => !card.fromShell && !card.bought && !card.loanedTo);
+    const preconMissing = !isSinglesBuiltShell(plan) && shellMissing.length > 0 && !state.found[itemKey(plan.precon)];
+    const missingCards = [...shellMissing, ...singlesMissing].reduce((sum, card) => sum + Number(card.quantity || 1), 0);
+    const purchaseItems = singlesMissing.reduce((sum, card) => sum + Number(card.quantity || 1), 0)
+      + (isSinglesBuiltShell(plan) ? shellMissing.reduce((sum, card) => sum + Number(card.quantity || 1), 0) : preconMissing ? 1 : 0);
+    const pricedSingles = [...singlesMissing, ...(isSinglesBuiltShell(plan) ? shellMissing : [])];
+    const floorTotal = pricedSingles.reduce((sum, card) => sum + (Number(card.price) || 0) * Number(card.quantity || 1), 0) + (preconMissing ? Number(plan.precon?.price || 0) : 0);
+    const ceilingTotal = pricedSingles.reduce((sum, card) => sum + (Number(card.ceiling || card.price) || 0) * Number(card.quantity || 1), 0) + (preconMissing ? Number(plan.precon?.ceiling || plan.precon?.price || 0) : 0);
+    const borrowedCards = borrowedOut.reduce((sum, card) => sum + Number(card.quantity || 1), 0);
+    const legal = total === 100 && compliance.tier3.length === 0;
+    const ready = legal && missingCards === 0 && borrowedCards === 0;
+    const benchMissing = cards.filter((card) => !card.lineupActive && !card.bought).length;
+    let label;
+    let insight;
+    if (ready) {
+      label = "Ready to play";
+      insight = "100 legal cards are active and physically available.";
+    } else if (!legal) {
+      label = "Lineup incomplete";
+      const issueCount = compliance.tier3.length;
+      insight = `${total}/100 active${issueCount ? ` · ${issueCount} rules issue${issueCount === 1 ? "" : "s"}` : ""}. Fix the lineup before play.`;
+    } else if (borrowedCards && missingCards) {
+      label = "Needs cards + returns";
+      insight = `${missingCards} active card${missingCards === 1 ? " is" : "s are"} still unavailable · ${purchaseItems} purchase item${purchaseItems === 1 ? "" : "s"} required to enter a game${floorTotal ? ` · ${money(floorTotal)}–${money(Math.max(floorTotal, ceilingTotal))}` : ""}; return or replace ${borrowedCards} loaned-out card${borrowedCards === 1 ? "" : "s"}.`;
+    } else if (borrowedCards) {
+      label = "Cards loaned out";
+      insight = `${borrowedCards} active card${borrowedCards === 1 ? " is" : "s are"} assigned to another deck; replace or return ${borrowedCards === 1 ? "it" : "them"}.`;
+    } else {
+      label = "Needs purchases";
+      insight = `${missingCards} active card${missingCards === 1 ? " is" : "s are"} unavailable · ${purchaseItems} purchase${purchaseItems === 1 ? "" : "s"} required to enter a game${floorTotal ? ` · ${money(floorTotal)}–${money(Math.max(floorTotal, ceilingTotal))}` : ""}.`;
+    }
+    return {active, total, missingCards, purchaseItems, borrowedCards, benchMissing, floorTotal, ceilingTotal, legal, ready, label, insight};
+  }
+
+  function liveDeckSummaryMarkup(variant, plan, cards, compliance, readiness, profileIndex) {
+    const total = readiness.total;
+    const boughtCount = Math.max(0, total - readiness.missingCards - readiness.borrowedCards);
+    const checkedCount = selectedDeckCards(plan, ensureBuyState(variant.id)).reduce((sum, card) => sum + Number(card.quantity || 1), 0);
+    const toBuy = readiness.purchaseItems;
+    const strategy = variant.summaries?.[profileIndex]?.[0] || variant.stageNotes?.[profileIndex] || "Final deck configuration";
+    const typeChips = LIVE_TYPE_ORDER.filter((type) => type !== "Commander" && compliance.types[type]).map((type) => `<i><b>${compliance.types[type]}</b>${esc(type)}</i>`).join("");
+    const playstyle = variant.scores?.playstyle?.[profileIndex] || [];
+    const engine = variant.scores?.engine?.[profileIndex] || [];
+    const growth = variant.scores?.growth || [];
+    const tier3Pass = compliance.tier3.length === 0;
+    return `<summary class="live-deck-summary">
+      <span class="live-deck-primary"><span class="deck-number">${variant.deckId}</span><span class="live-ready-badge ${readiness.ready ? "is-ready" : readiness.legal ? "needs-cards" : "not-ready"}">${readiness.ready ? "✓" : "!"}<b>${esc(readiness.label)}</b></span><span class="live-deck-title"><strong>${esc(variant.name)}</strong><small>${esc(variant.commander)}</small></span><span class="live-color-identity" aria-label="Commander color identity">${liveColorIdentityMarkup(readiness.active, variant)}</span><span class="live-deck-progress"><b>${checkedCount}/100 checked</b><i>${boughtCount}/100 bought</i><i>${total}/100 active</i><i>${toBuy} purchase item${toBuy === 1 ? "" : "s"} to play</i><i class="${tier3Pass ? "passes" : "has-issues"}">${compliance.selectedGameChangers.length}/3 GC · ${tier3Pass ? "Tier 3 ✓" : "Review"}</i></span><span class="live-deck-chevron" aria-hidden="true">⌄</span></span>
+      <span class="live-critical-insight ${readiness.ready ? "is-ready" : ""}"><b>${esc(readiness.label)}</b><i>${esc(readiness.insight)}</i>${readiness.benchMissing ? `<small>${readiness.benchMissing} unowned bench option${readiness.benchMissing === 1 ? "" : "s"} do not block play.</small>` : ""}</span>
+      <span class="live-deck-context"><span class="live-strategy"><b>Strategy</b><i>${esc(strategy)}</i></span><span class="live-mechanics"><b>Core mechanics</b>${(variant.mechanics || []).map((mechanic) => `<i>${esc(mechanic)}</i>`).join("")}</span><span class="live-type-counts" aria-label="Cards by type">${typeChips}</span></span>
+      <span class="live-rating-heading"><b>Compare rating · ${STAGES[profileIndex]}</b><small>Profile scores from Compare; custom card checks do not recalculate them.</small></span>
+      <span class="live-score-families">${liveScoreFamilyMarkup("Playstyle", playstyle)}${liveScoreFamilyMarkup("Engine", engine)}${liveScoreFamilyMarkup("Growth", growth)}</span>
+    </summary>`;
+  }
+
+  function liveCardGlance(card) {
+    const swap = card.tempUntil ? `Temp until ${card.tempUntil}` : card.replaces ? `Replaces ${String(card.replaces).replace(/^(replaces|swaps in for)\s+/i, "")}` : "";
+    const roles = (card.tags || []).slice(0, 2).join(" · ");
+    const purpose = usefulCardCopy(card.brief?.fit, card.whyPrimary, card.purpose, card.why, card.oracleText).split(/\n|(?<=[.!?])\s+/)[0];
+    return [card.liveLevelLabel, swap || roles, purpose].filter(Boolean).join(" · ");
+  }
+
+  function makeLiveCardRow(card, variant) {
+    const bounds = cardPriceBounds(card, cardMetadata[itemKey(card)] || {});
+    const price = Number(bounds.price) || null;
+    const ceiling = Number(bounds.ceiling) || null;
+    const location = shoppingLocation(price);
+    const row = document.createElement("article");
+    row.className = `live-card-row${card.bought ? " is-bought" : " is-needed"}${card.lineupActive ? " is-lineup-active" : " is-lineup-bench"}`;
+    const badges = [
+      card.isCommander ? `<em class="live-card-badge is-commander">Commander</em>` : "",
+      card.gameChanger ? `<em class="live-card-badge is-game-changer">Game Changer</em>` : "",
+      card.transferRecord ? `<em class="live-card-badge is-temp">Borrowed</em>` : "",
+      card.loanedTo ? `<em class="live-card-badge is-temp">Loaned out</em>` : "",
+      card.inSalvage ? `<em class="live-card-badge is-temp">Salvage</em>` : "",
+      card.tempUntil ? `<em class="live-card-badge is-temp">Temp</em>` : "",
+      card.bought ? `<em class="live-card-badge is-owned">${card.lineupActive ? "Available" : "Owned"}</em>` : ""
+    ].join("");
+    const glance = `${card.lineupActive ? "Active 100" : `Bench for ${card.lineupSlotName}`} · ${liveCardGlance(card)}`;
+    row.innerHTML = `<label class="live-lineup-radio" title="${card.lineupActive ? "Active in this deck's 100" : `Activate ${esc(card.name)} in the ${esc(card.lineupSlotName)} slot`}"><input type="radio" name="live-slot-${esc(variant.id)}-${esc(card.lineupSlotId)}" value="${esc(card.id)}" ${card.lineupActive ? "checked" : ""} ${card.isCommander || card.transferRecord ? "disabled" : ""} aria-label="Make ${esc(card.name)} active in this deck's 100"><span aria-hidden="true">✓</span></label><button type="button" class="live-card-main"><img src="${esc(card.image || cardMetadata[itemKey(card)]?.image || cardImageCandidates(card)[0])}" alt="" loading="lazy"><span class="live-card-copy"><span class="live-card-title-line"><b title="${esc(card.name)}">${esc(card.name)}${card.quantity > 1 ? ` ×${card.quantity}` : ""}</b>${badges}</span><small class="live-card-meta">${manaCostHtml(card.manaCost)}<span>${esc(card.typeLine || "Unclassified card")}</span></small><small class="live-card-glance" title="${esc(glance)}">${esc(glance)}</small></span></button><div class="live-card-status"><strong>${card.loanedTo ? card.loanBlocksSource ? `Loaned to ${esc(card.loanedTo)}` : card.lineupActive ? `Active copy available · another copy loaned to ${esc(card.loanedTo)}` : `Assigned to ${esc(card.loanedTo)}` : card.inSalvage ? "Salvage · inactive" : card.lineupActive ? card.bought ? "✓ Active · Bought" : `Active · To Buy · ${esc(location)}` : card.bought ? "Bench · Bought" : `Bench · ${esc(location)}`}</strong><small>Floor ${price ? money(price) : "unpriced"} · Ceiling ${ceiling ? money(ceiling) : "not listed"}</small>${card.bought ? "" : `<a href="${esc(card.tcgplayerUrl || `https://www.tcgplayer.com/search/magic/product?q=${encodeURIComponent(card.name)}&view=grid`)}" target="_blank" rel="noopener">TCGPlayer ↗</a>`}</div>`;
+    const radio = $(".live-lineup-radio input", row);
+    radio?.addEventListener("change", () => {
+      if (!radio.checked || card.lineupActive) return;
+      const plan = buyCatalog.plans[variant.id];
+      const current = ensureBuyState(variant.id);
+      const active = Lineup.activeEntryForSlot(plan, current, card.lineupSlotId);
+      const tentative = tentativeLineupChoice(plan, current, card.id, true);
+      const clearsTargetTransfer = Boolean(transfersForVariant(variant.id)[card.lineupSlotId]);
+      const effectiveCards = projectedEffectiveCards(variant, tentative, clearsTargetTransfer ? new Set([card.lineupSlotId]) : new Set());
+      const projectedCompliance = evaluateDeckCompliance(plan, tentative, effectiveCards);
+      if (projectedCompliance.tier3.length) {
+        showToast(`That swap is not Tier 3 compliant: ${projectedCompliance.tier3[0].rule}`);
+        renderLiveDecks();
+        return;
+      }
+      if (card.loanRecord) removePriorPhysicalTransfer("deck", variant.id, card.id, itemKey(card));
+      acceptLineupChoice(variant.id, card.id, true, tentative, active?.id || null);
+      delete transfersForVariant(variant.id)[card.lineupSlotId];
+      if (state.liveSalvage?.[itemKey(card)]?.sourceVariantId === variant.id) {
+        removePriorPhysicalTransfer("salvage", null, null, itemKey(card));
+        delete state.liveSalvage[itemKey(card)];
+      }
+      saveState(`${card.name} is active in ${variant.name}`);
+      renderLiveDecks();
+    });
+    $(".live-card-main", row).addEventListener("click", () => openBuyItemDetail(card, variant, card.fromShell ? "starting shell" : card.liveLevelLabel || "selected card"));
+    return row;
+  }
+
+  function liveGroupStats(cards) {
+    const total = cards.reduce((sum, card) => sum + Number(card.quantity || 1), 0);
+    const active = cards.filter((card) => card.lineupActive).reduce((sum, card) => sum + Number(card.quantity || 1), 0);
+    const toBuy = cards.filter((card) => card.lineupActive && !card.bought).reduce((sum, card) => sum + Number(card.quantity || 1), 0);
+    const target = cards.filter((card) => card.lineupActive && !card.bought).reduce((sum, card) => sum + (Number(card.price) || 0) * Number(card.quantity || 1), 0);
+    return `${total} choice${total === 1 ? "" : "s"} · ${active} active · ${toBuy} active to buy${target ? ` · ${money(target)} target` : ""}`;
+  }
+
+  function appendLiveRows(container, cards, variant) {
+    const list = document.createElement("div");
+    list.className = "live-card-list";
+    cards.forEach((card) => list.appendChild(makeLiveCardRow(card, variant)));
+    container.appendChild(list);
+  }
+
+  function appendLiveGroups(container, cards, primary, secondary, variant) {
+    groupLiveCards(cards, primary).forEach((group) => {
+      const section = document.createElement("details");
+      section.className = "live-card-group";
+      section.open = true;
+      section.innerHTML = `<summary><strong>${esc(group.label)}</strong><span>${esc(liveGroupStats(group.cards))}</span></summary>`;
+      if (secondary === "none") {
+        appendLiveRows(section, group.cards, variant);
+      } else {
+        const subgroups = document.createElement("div");
+        subgroups.className = "live-subgroups";
+        groupLiveCards(group.cards, secondary).forEach((subgroup) => {
+          const subsection = document.createElement("details");
+          subsection.className = "live-card-subgroup";
+          subsection.open = true;
+          subsection.innerHTML = `<summary><strong>${esc(subgroup.label)}</strong><span>${esc(liveGroupStats(subgroup.cards))}</span></summary>`;
+          appendLiveRows(subsection, subgroup.cards, variant);
+          subgroups.appendChild(subsection);
+        });
+        section.appendChild(subgroups);
+      }
+      container.appendChild(section);
+    });
+  }
+
+  function renderLiveResults(details, cards, filters, variant) {
+    const results = $(".live-results", details);
+    const visible = sortLiveCards(cards.filter((card) => matchesLiveFilters(card, filters)), filters.sort);
+    const quantity = visible.reduce((sum, card) => sum + Number(card.quantity || 1), 0);
+    const activeShown = visible.filter((card) => card.lineupActive).reduce((sum, card) => sum + Number(card.quantity || 1), 0);
+    const activeTotal = activeLiveCards(cards).reduce((sum, card) => sum + Number(card.quantity || 1), 0);
+    const activeNeeded = visible.filter((card) => card.lineupActive && !card.bought).reduce((sum, card) => sum + Number(card.quantity || 1), 0);
+    $(".live-results-summary", details).innerHTML = `<span><strong>${quantity}</strong> choices shown · ${activeShown}/${activeTotal} active cards</span><span>${activeNeeded} active to buy · ${visible.filter((card) => !card.lineupActive).length} bench options</span>`;
+    results.replaceChildren();
+    if (!visible.length) {
+      results.innerHTML = `<div class="empty-state live-filter-empty"><h3>No cards match</h3><p>Clear or change this deck’s filters.</p></div>`;
+      return;
+    }
+    if (filters.groupBy === "none") appendLiveRows(results, visible, variant);
+    else appendLiveGroups(results, visible, filters.groupBy, filters.subgroupBy, variant);
   }
 
   function renderLiveDecks() {
     const root = $("#view-live");
     const variants = selectedVariants();
-    root.innerHTML = `<div class="page-intro"><div><h2 id="live-title">Live Decks</h2><p>Your checked final-deck cards. Bought cards are clear; cards still needed are greyed out with convention-floor buying guidance.</p></div><div class="selection-meter"><strong>${variants.length}</strong><span>live decks</span></div></div><div class="live-decks"></div>`;
+    const entries = buildLiveEntries();
+    root.innerHTML = `<div class="page-intro"><div><h2 id="live-title">Live Decks</h2><p>Configure each active 100 with the lineup radios, see whether it is legal and physically ready, and use compatible owned cards or Salvage as temporary cover. Cards still needed are greyed out with floor-to-ceiling buying guidance.</p></div><div class="selection-meter"><strong>${variants.length}</strong><span>live decks</span></div></div><div class="live-decks"></div>`;
     const host = $(".live-decks", root);
-    if (!variants.length) {
+    if (!entries.length) {
       host.innerHTML = `<div class="empty-state"><h3>No live decks yet</h3><p>Select a deck in Compare and choose its final cards in Buy Picks.</p><button class="primary-button" data-go="compare">Choose decks</button></div>`;
       $("[data-go='compare']", host)?.addEventListener("click", () => switchView("compare"));
       appendLiveSalvage(host);
       return;
     }
-    variants.forEach((variant) => {
-      const plan = buyCatalog.plans[variant.id];
-      const cards = configuredDeckCards(variant);
+    entries.forEach(({variant, plan, cards}) => {
       ensureShopMetadata(cards);
-      const shellBought = Boolean(state.found[itemKey(plan.precon)]);
-      const boughtCount = cards.filter((card) => state.found[itemKey(card)] || (shellBought && (plan.startingShell || []).some((shell) => itemKey(shell) === itemKey(card)))).reduce((sum, card) => sum + Number(card.quantity || 1), 0);
+      const activeCards = activeLiveCards(cards);
+      const compliance = evaluateDeckCompliance(plan, ensureBuyState(variant.id), activeCards);
+      const readiness = liveDeckReadiness(plan, cards, compliance);
+      const profileIndex = Number(state.rankStages[variant.deckId] || 2) - 1;
+      const filters = ensureLiveFilters(variant.id);
       const details = document.createElement("details");
       details.className = "live-deck";
-      details.open = variant.deckId === openBuyDeckId;
-      details.innerHTML = `<summary><span class="deck-number">${variant.deckId}</span><span><strong>${esc(variant.name)}</strong><small>${cards.reduce((sum, card) => sum + Number(card.quantity || 1), 0)} checked · ${boughtCount} bought</small></span></summary><div class="live-card-list"></div>`;
-      const list = $(".live-card-list", details);
-      cards.forEach((card) => {
-        const fromShell = (plan.startingShell || []).some((shell) => itemKey(shell) === itemKey(card));
-        const bought = Boolean(state.found[itemKey(card)] || (shellBought && fromShell));
-        const price = Number(card.price || cardMetadata[itemKey(card)]?.price) || null;
-        const ceiling = Number(card.ceiling || cardMetadata[itemKey(card)]?.ceiling) || null;
-        const row = document.createElement("article");
-        row.className = `live-card-row${bought ? " is-bought" : " is-needed"}`;
-        row.innerHTML = `<button type="button" class="live-card-main"><img src="${esc(card.image || cardMetadata[itemKey(card)]?.image || cardImageCandidates(card)[0])}" alt="" loading="lazy"><span><b>${esc(card.name)}${card.quantity > 1 ? ` ×${card.quantity}` : ""}</b><small>${manaCostHtml(card.manaCost)}${esc(card.typeLine || "")}</small>${card.isCommander ? `<em>Commander</em>` : ""}</span></button><div class="live-card-status">${bought ? `<strong>✓ Bought</strong><small>${esc(card.purpose || card.oracleText || "In final deck")}</small>` : `<strong>${shoppingLocation(price)}</strong><small>Floor ${price ? money(price) : "unpriced"} · Ceiling ${ceiling ? money(ceiling) : "not listed"}</small><a href="${esc(card.tcgplayerUrl || `https://www.tcgplayer.com/search/magic/product?q=${encodeURIComponent(card.name)}&view=grid`)}" target="_blank" rel="noopener">TCGPlayer ↗</a>`}</div>`;
-        $(".live-card-main", row).addEventListener("click", () => openBuyItemDetail(card, variant, fromShell ? "starting shell" : "selected card"));
-        list.appendChild(row);
+      details.open = state.liveOpenDecks[variant.id] === undefined ? variant.deckId === openBuyDeckId : Boolean(state.liveOpenDecks[variant.id]);
+      const longestName = Math.max(...cards.map((card) => `${card.name}${card.quantity > 1 ? ` ×${card.quantity}` : ""}`.length), 30);
+      details.style.setProperty("--live-name-ch", `${Math.min(46, Math.max(30, longestName + 2))}ch`);
+      details.innerHTML = `${liveDeckSummaryMarkup(variant, plan, cards, compliance, readiness, profileIndex)}<div class="live-deck-body">${liveToolbarMarkup(variant, filters)}<div class="live-results"></div></div>`;
+      renderLiveResults(details, cards, filters, variant);
+      const search = $(".live-toolbar .search-input", details);
+      search.addEventListener("input", (event) => {
+        filters.query = event.target.value;
+        saveState();
+        renderLiveResults(details, cards, filters, variant);
+      });
+      $$('[data-live-status]', details).forEach((button) => button.addEventListener("click", () => {
+        filters.status = button.dataset.liveStatus;
+        saveState();
+        $$('[data-live-status]', details).forEach((peer) => peer.classList.toggle("is-active", peer === button));
+        renderLiveResults(details, cards, filters, variant);
+      }));
+      $$('[data-live-filter-select]', details).forEach((select) => select.addEventListener("change", () => {
+        const field = select.dataset.liveFilterSelect;
+        if (field === "profileStage") {
+          state.rankStages[variant.deckId] = Number(select.value);
+        } else {
+          filters[field] = select.value;
+          if (field === "groupBy" && filters.subgroupBy === filters.groupBy) filters.subgroupBy = "none";
+          if (field === "subgroupBy" && filters.subgroupBy === filters.groupBy) filters.subgroupBy = "none";
+        }
+        saveState();
+        renderLiveDecks();
+      }));
+      details.addEventListener("toggle", () => {
+        if (!details.isConnected) return;
+        state.liveOpenDecks[variant.id] = details.open;
+        saveState();
       });
       host.appendChild(details);
     });
@@ -1620,18 +2573,26 @@
   }
 
   function appendLiveSalvage(host) {
-    const cards = buyCatalog.salvage || [];
+    const cards = allSalvageCards();
     if (!cards.length) return;
     const details = document.createElement("details");
     details.className = "live-deck salvage-live-deck";
-    details.innerHTML = `<summary><span class="deck-number">♲</span><span><strong>Salvage</strong><small>${cards.length} owned cards · no current final-deck role</small></span></summary><div class="live-card-list"></div>`;
+    details.open = Boolean(state.liveOpenDecks?.salvage);
+    details.innerHTML = `<summary class="live-deck-summary salvage-live-summary"><span class="live-deck-primary"><span class="deck-number">♲</span><span class="live-deck-title"><strong>Salvage</strong><small>${cards.length} owned cards · no current final-deck role</small></span><span class="live-deck-chevron" aria-hidden="true">⌄</span></span></summary><div class="live-card-list"></div>`;
     const list = $(".live-card-list", details);
     cards.forEach((card) => {
+      const assignment = allLiveTransfers().find((record) => record.sourceKind === "salvage" && record.sourceCardKey === itemKey(card));
+      const target = assignment ? variantById(assignment.targetVariantId) : null;
       const row = document.createElement("article");
       row.className = "live-card-row is-bought is-salvage";
-      row.innerHTML = `<button type="button" class="live-card-main"><img src="${esc(card.image || cardImageCandidates(card)[0])}" alt="" loading="lazy"><span><b>${esc(card.name)}</b><small>${manaCostHtml(card.manaCost)}${esc(card.typeLine || "")}</small><em>Salvage shadow pile</em></span></button><div class="live-card-status"><strong>Owned · excluded</strong><small>${esc(card.reason)}</small></div>`;
-      $(".live-card-main", row).addEventListener("click", () => openBuyItemDetail({...card, purpose: card.reason, why: card.reason, whereToBuy: "Already owned · Salvage shadow pile", brief: {fit: card.reason}}, {id: "salvage", deckId: "Salvage", image: card.image}, "salvage"));
+      row.innerHTML = `<button type="button" class="live-card-main"><img src="${esc(card.image || cardImageCandidates(card)[0])}" alt="" loading="lazy"><span class="live-card-copy"><span class="live-card-title-line"><b>${esc(card.name)}</b><em class="live-card-badge is-owned">Owned</em>${assignment ? `<em class="live-card-badge is-temp">Assigned</em>` : ""}</span><small class="live-card-meta">${manaCostHtml(card.manaCost)}<span>${esc(card.typeLine || "")}</span></small><small class="live-card-glance">${esc(card.reason)}</small></span></button><div class="live-card-status"><strong>${assignment ? `Assigned to Deck ${target?.deckId || "?"}` : "Salvage · available"}</strong><small>${assignment ? `Filling ${esc(assignment.replacesName)} · open destination card to return` : "Owned card with no current final-deck role"}</small></div>`;
+      $(".live-card-main", row).addEventListener("click", () => openBuyItemDetail({...card, bought: !assignment, loanRecord: assignment ? {...assignment, targetVariantId: assignment.targetVariantId} : null, loanedTo: target ? `Deck ${target.deckId} · ${target.name}` : assignment ? "another deck" : "", purpose: card.reason, why: card.reason, whereToBuy: "Already owned · Salvage shadow pile", brief: {fit: card.reason}}, {id: "salvage", deckId: "Salvage", image: card.image}, "salvage"));
       list.appendChild(row);
+    });
+    details.addEventListener("toggle", () => {
+      if (!details.isConnected) return;
+      state.liveOpenDecks.salvage = details.open;
+      saveState();
     });
     host.appendChild(details);
   }
@@ -1762,7 +2723,10 @@
     const missingMap = new Map();
     items.filter((item) => !item.isFlexibleSlot).forEach((item) => {
       const metadata = cardMetadata[itemKey(item)];
-      if (item.category !== "precon" && (!metadata || metadata.price === undefined || ((!metadata.rarity || !metadata.oracleText) && !metadata.unavailable))) missingMap.set(itemKey(item), item);
+      const fetchedAt = Date.parse(metadata?.fetchedAt || "");
+      const stale = !Number.isFinite(fetchedAt) || Date.now() - fetchedAt > CARD_METADATA_MAX_AGE;
+      const incomplete = !metadata || metadata.price === undefined || !metadata.legalities?.commander || !Array.isArray(metadata.colorIdentity) || ((!metadata.rarity || !metadata.oracleText) && !metadata.unavailable);
+      if (item.category !== "precon" && (stale || incomplete)) missingMap.set(itemKey(item), item);
     });
     const missing = Array.from(missingMap.values());
     if (!missing.length || shopMetadataPromise) return shopMetadataPromise;
@@ -1782,7 +2746,7 @@
           chunk.forEach((item) => {
             const card = found.get(itemKey(item));
             if (!card) {
-              cardMetadata[itemKey(item)] = {unavailable: true, loaded: true, price: null, ceiling: null};
+              cardMetadata[itemKey(item)] = {unavailable: true, loaded: true, price: null, ceiling: null, fetchedAt: new Date().toISOString()};
               return;
             }
             const price = Number(card.prices?.usd || card.prices?.usd_foil) || null;
@@ -1794,21 +2758,25 @@
               typeLine: card.type_line || "",
               oracleText: card.oracle_text || card.card_faces?.map((face) => face.oracle_text).filter(Boolean).join("\n") || "",
               keywords: card.keywords || [],
+              colorIdentity: card.color_identity || [],
+              legalities: card.legalities || {},
               image: card.image_uris?.small || card.card_faces?.[0]?.image_uris?.small || item.image || "",
               loaded: true,
+              fetchedAt: new Date().toISOString(),
               price,
               ceiling: price ? Math.round(Math.max(price * 1.25, price + .5) * 100) / 100 : null
             };
           });
         } catch (_) {
-          chunk.forEach((item) => { cardMetadata[itemKey(item)] = {unavailable: true, loaded: true, price: null, ceiling: null}; });
+          chunk.forEach((item) => { cardMetadata[itemKey(item)] = {unavailable: true, loaded: true, price: null, ceiling: null, fetchedAt: new Date().toISOString()}; });
         }
         await new Promise((resolve) => setTimeout(resolve, 140));
       }
-      localStorage.setItem("mtg-card-metadata-v1", JSON.stringify(cardMetadata));
+      localStorage.setItem(CARD_METADATA_KEY, JSON.stringify(cardMetadata));
       shopMetadataPromise = null;
       if ($("#view-shop")?.classList.contains("is-active")) renderShop();
       if ($("#view-buy")?.classList.contains("is-active")) renderBuy();
+      if ($("#view-live")?.classList.contains("is-active")) renderLiveDecks();
     })();
     return shopMetadataPromise;
   }
@@ -1833,6 +2801,7 @@
   function makeShopCard(item) {
     const found = Boolean(state.found[item.key]);
     const metadata = cardMetadata[itemKey(item)] || {};
+    const bounds = cardPriceBounds(item, metadata);
     const rarity = item.category === "precon"
       ? "Sealed product"
       : metadata.rarity
@@ -1863,8 +2832,8 @@
         <div class="shop-buying-facts" aria-label="Buying guide">
           <div>${sectionIcon("buyLocation")}<span><small>Table location</small><strong>${esc(tableLocation)}</strong></span></div>
           <div class="shop-price-fact">
-            <span class="shop-price-half">${sectionIcon("budget")}<span><small>Target</small><strong>${money(item.price)}</strong></span></span>
-            <span class="shop-price-half">${sectionIcon("ceiling")}<span><small>Ceiling</small><strong>${item.ceiling ? money(item.ceiling) : "Not listed"}</strong></span></span>
+            <span class="shop-price-half">${sectionIcon("budget")}<span><small>Floor</small><strong>${money(bounds.price)}</strong></span></span>
+            <span class="shop-price-half">${sectionIcon("ceiling")}<span><small>Ceiling</small><strong>${bounds.ceiling ? money(bounds.ceiling) : "Not listed"}</strong></span></span>
           </div>
         </div>
         <p class="shop-purpose">${sectionIcon("does")}<span>${esc(item.purpose || item.replaces || "")}</span></p>
@@ -1893,8 +2862,12 @@
       openBuyItemDetail(item, variant, kind);
     });
     $(".found-button", card).addEventListener("click", () => {
-      state.found[item.key] = !found;
-      saveState(!found ? `${item.name} marked Bought` : `${item.name} returned to Need`);
+      const bought = !found;
+      state.found[item.key] = bought;
+      state.boughtQuantities ||= {};
+      if (bought) state.boughtQuantities[item.key] = Math.max(1, Number(item.quantity || 1));
+      else delete state.boughtQuantities[item.key];
+      saveState(bought ? `${item.name} marked Bought` : `${item.name} returned to Need`);
       renderShop();
     });
     return card;
@@ -2041,6 +3014,7 @@
       state = loadState();
       migrateCheckedSelections();
       migrateOwnedExtras();
+      migrateBoughtQuantities();
       sanitizeGameChangerSelections();
       initializeInfoTooltips();
       initializeDetailsControls();
