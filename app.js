@@ -1396,17 +1396,6 @@
     </details>`;
   }
 
-  function updateCompliancePanel(body, variant, plan) {
-    const existing = $("[data-compliance-panel]", body);
-    if (!existing) return;
-    const wasOpen = existing.open;
-    const wrapper = document.createElement("div");
-    wrapper.innerHTML = compliancePanel(variant, plan, ensureBuyState(variant.id));
-    const replacement = wrapper.firstElementChild;
-    replacement.open = wasOpen;
-    existing.replaceWith(replacement);
-  }
-
   // Literal, independent membership per category array — deliberately not Lineup's
   // canonicalized one-per-slot view, since checkboxes no longer enforce that exclusivity.
   // Whatever is actually checked is what gets counted, even multiple picks in one old slot.
@@ -2356,7 +2345,7 @@
 
   function matchesLiveFilters(card, filters) {
     if (filters.status === "bought" && !card.bought) return false;
-    if (filters.status === "need" && card.bought) return false;
+    if (filters.status === "need" && (card.bought || !card.lineupActive)) return false;
     if (filters.lineup === "active" && !card.lineupActive) return false;
     if (filters.lineup === "bench" && card.lineupActive) return false;
     if (filters.source === "shell" && !card.fromShell) return false;
@@ -2393,7 +2382,10 @@
 
   function liveGroupDescriptor(card, mode) {
     const metadata = cardMetadata[itemKey(card)] || {};
-    if (mode === "status") return {label: card.bought ? "Bought" : "To Buy", order: card.bought ? 1 : 0};
+    if (mode === "status") {
+      if (!card.lineupActive) return {label: "Bench options", order: 2};
+      return {label: card.bought ? "Bought" : "To Buy", order: card.bought ? 1 : 0};
+    }
     if (mode === "lineup") return {label: card.lineupActive ? "Active 100" : "Bench options", order: card.lineupActive ? 0 : 1};
     if (mode === "where") {
       const labels = {bin: "Bin ($0–$1)", sleeves: `${shoppingLocation(card.price)} ($1–$5)`, binder: "Binder ($5–$15)", case: "Case ($15+)", unpriced: "Price unavailable"};
