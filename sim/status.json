@@ -1,55 +1,55 @@
 {
   "state": "done",
   "message": "Converged: 3 iterations in a row gained less than 0.75 points.",
-  "requestId": "sim-3e-maxed-20260823-182906",
-  "variantId": "3e",
-  "iteration": 8,
+  "requestId": "sim-6f-maxed-20260823-185010",
+  "variantId": "6f",
+  "iteration": 4,
   "maxIterations": 12,
-  "totalGamesUsed": 28000,
+  "totalGamesUsed": 20000,
   "maxTotalSimulations": 60000,
-  "bestIteration": 5,
-  "bestScore": 72.6,
+  "bestIteration": 1,
+  "bestScore": 74.4,
   "currentMetrics": {
     "games": 2000,
-    "wins": 522,
-    "winRate": 0.261,
-    "avgWinTurn": 12.337164750957854,
-    "avgEndTurn": 10.889,
-    "screwPct": 0.039,
-    "floodPct": 0.0665,
-    "mulliganRate": 0.265,
-    "avgCommanderTurn": 4.587875700458482,
-    "commanderCastRate": 0.9815,
-    "interactionAvailability": 0.41519999999999996,
-    "deadCardsAtT8": 0.2815,
+    "wins": 648,
+    "winRate": 0.324,
+    "avgWinTurn": 12.311728395061728,
+    "avgEndTurn": 10.92,
+    "screwPct": 0.0665,
+    "floodPct": 0.052,
+    "mulliganRate": 0.4445,
+    "avgCommanderTurn": 5.033574380165289,
+    "commanderCastRate": 0.968,
+    "interactionAvailability": 0.3854,
+    "deadCardsAtT8": 0.581,
     "lossCauses": {
-      "upgraded-casual combo": 121,
-      "tuned-bracket3 combo": 233,
-      "tokens combo": 279,
-      "aristocrats combo": 200,
-      "damage": 152,
-      "combo combo": 283,
-      "voltron combo": 140,
-      "group-hug combo": 9,
-      "stax combo": 19,
-      "starter-precon combo": 20
+      "upgraded-casual combo": 109,
+      "tuned-bracket3 combo": 211,
+      "tokens combo": 265,
+      "aristocrats combo": 188,
+      "voltron combo": 141,
+      "combo combo": 286,
+      "damage": 102,
+      "starter-precon combo": 13,
+      "stax combo": 20,
+      "group-hug combo": 4
     },
-    "participationRate": 0.994,
-    "avgPeakBoard": 4.48,
+    "participationRate": 0.991,
+    "avgPeakBoard": 5.2345,
     "reasonablePaceRate": 1,
-    "funScore": 0.9969999999999999,
-    "score": 72.6,
+    "funScore": 0.9955,
+    "score": 74.4,
     "winRateInterval": {
-      "low": 0.24175209145907017,
-      "high": 0.28024790854092985,
-      "margin": 0.019247908540929844
+      "low": 0.3034889956559899,
+      "high": 0.3445110043440101,
+      "margin": 0.020511004344010073
     }
   },
   "history": [
     {
       "iteration": 0,
       "accepted": true,
-      "score": 60.6,
+      "score": 73.3,
       "swaps": [],
       "note": "baseline",
       "legalityFixes": []
@@ -57,104 +57,64 @@
     {
       "iteration": 1,
       "accepted": true,
-      "score": 64.7,
-      "gain": 4.1,
+      "score": 74.4,
+      "gain": 1.1,
       "swaps": [
         {
-          "out": "Myriad Landscape",
-          "in": "Sword of Fire and Ice",
-          "reason": "Sword of Fire and Ice covers draw, removal, protection; Myriad Landscape was cast in 0% of the games it was drawn and sat dead in 6%.",
-          "priceDelta": 48.39,
-          "addRoles": [
-            "draw",
-            "removal",
-            "protection"
-          ],
-          "cutStat": {
-            "name": "Myriad Landscape",
-            "drawnRate": 0.1755,
-            "castRate": 0,
-            "avgCastTurn": 0,
-            "deadRate": 0.05698005698005698,
-            "winRateWhenCast": 0.2054380664652568,
-            "games": 351
-          }
-        },
-        {
-          "out": "Fabled Passage",
+          "out": "Panharmonicon",
           "in": "Origin of Metalbending",
-          "reason": "Origin of Metalbending covers removal, protection; Fabled Passage was cast in 0% of the games it was drawn and sat dead in 5%.",
-          "priceDelta": -0.89,
+          "reason": "Origin of Metalbending covers removal, protection; Panharmonicon was cast in 83% of the games it was drawn and sat dead in 17%.",
+          "priceDelta": -6.82,
           "addRoles": [
             "removal",
             "protection"
           ],
           "cutStat": {
-            "name": "Fabled Passage",
-            "drawnRate": 0.185,
-            "castRate": 0,
-            "avgCastTurn": 0,
-            "deadRate": 0.04594594594594595,
-            "winRateWhenCast": 0.23512747875354106,
-            "games": 370
+            "name": "Panharmonicon",
+            "drawnRate": 0.2075,
+            "castRate": 0.8289156626506025,
+            "avgCastTurn": 8.299418604651162,
+            "deadRate": 0.1710843373493976,
+            "winRateWhenCast": 0.3546511627906977,
+            "games": 415
           }
         },
         {
-          "out": "Ghost Quarter",
-          "in": "Collective Resistance",
-          "reason": "Collective Resistance covers removal, protection; Ghost Quarter was cast in 0% of the games it was drawn and sat dead in 4%.",
-          "priceDelta": 1.08,
+          "out": "Kodama's Reach",
+          "in": "Rapid Hybridization",
+          "reason": "Rapid Hybridization covers removal, protection; Kodama's Reach was cast in 88% of the games it was drawn and sat dead in 12%.",
+          "priceDelta": -0.29,
           "addRoles": [
             "removal",
             "protection"
           ],
           "cutStat": {
-            "name": "Ghost Quarter",
-            "drawnRate": 0.194,
-            "castRate": 0,
-            "avgCastTurn": 0,
-            "deadRate": 0.03865979381443299,
-            "winRateWhenCast": 0.24396782841823056,
-            "games": 388
+            "name": "Kodama's Reach",
+            "drawnRate": 0.221,
+            "castRate": 0.8846153846153846,
+            "avgCastTurn": 7.759590792838875,
+            "deadRate": 0.11538461538461539,
+            "winRateWhenCast": 0.35294117647058826,
+            "games": 442
           }
         },
         {
-          "out": "Field of the Dead",
-          "in": "Golgari Charm",
-          "reason": "Golgari Charm covers removal, protection; Field of the Dead was cast in 0% of the games it was drawn and sat dead in 3%.",
-          "priceDelta": -25.07,
-          "addRoles": [
-            "removal",
-            "wipe",
-            "protection"
-          ],
-          "cutStat": {
-            "name": "Field of the Dead",
-            "drawnRate": 0.1905,
-            "castRate": 0,
-            "avgCastTurn": 0,
-            "deadRate": 0.028871391076115485,
-            "winRateWhenCast": 0.23243243243243245,
-            "games": 381
-          }
-        },
-        {
-          "out": "Woodland Cemetery",
-          "in": "Abrupt Decay",
-          "reason": "Abrupt Decay covers removal, protection; Woodland Cemetery was cast in 0% of the games it was drawn and sat dead in 5%.",
-          "priceDelta": 1.48,
+          "out": "Harrow",
+          "in": "Pongify",
+          "reason": "Pongify covers removal, protection; Harrow was cast in 89% of the games it was drawn and sat dead in 11%.",
+          "priceDelta": 1.61,
           "addRoles": [
             "removal",
             "protection"
           ],
           "cutStat": {
-            "name": "Woodland Cemetery",
-            "drawnRate": 0.17,
-            "castRate": 0,
-            "avgCastTurn": 0,
-            "deadRate": 0.05,
-            "winRateWhenCast": 0.26625386996904027,
-            "games": 340
+            "name": "Harrow",
+            "drawnRate": 0.2205,
+            "castRate": 0.891156462585034,
+            "avgCastTurn": 6,
+            "deadRate": 0.10884353741496598,
+            "winRateWhenCast": 0.35877862595419846,
+            "games": 441
           }
         }
       ],
@@ -162,152 +122,56 @@
     },
     {
       "iteration": 2,
-      "accepted": true,
-      "score": 71.5,
-      "gain": 6.8,
+      "accepted": false,
+      "score": 75,
+      "gain": 0.6,
       "swaps": [
         {
-          "out": "Command Tower",
-          "in": "Wear Down",
-          "reason": "Wear Down covers draw, removal; Command Tower was cast in 0% of the games it was drawn and sat dead in 2%.",
-          "priceDelta": -0.1,
+          "out": "Maelstrom Pulse",
+          "in": "Collective Resistance",
+          "reason": "Collective Resistance covers removal, protection; Maelstrom Pulse was cast in 88% of the games it was drawn and sat dead in 12%.",
+          "priceDelta": 1.66,
           "addRoles": [
-            "draw",
-            "removal"
-          ],
-          "cutStat": {
-            "name": "Command Tower",
-            "drawnRate": 0.1875,
-            "castRate": 0,
-            "avgCastTurn": 0,
-            "deadRate": 0.024,
-            "winRateWhenCast": 0.22950819672131148,
-            "games": 375
-          }
-        },
-        {
-          "out": "Bojuka Bog",
-          "in": "Inspiring Call",
-          "reason": "Inspiring Call covers draw, protection; Bojuka Bog was cast in 0% of the games it was drawn and sat dead in 3%.",
-          "priceDelta": -1.09,
-          "addRoles": [
-            "draw",
+            "removal",
             "protection"
           ],
           "cutStat": {
-            "name": "Bojuka Bog",
-            "drawnRate": 0.192,
-            "castRate": 0,
-            "avgCastTurn": 0,
-            "deadRate": 0.028645833333333332,
-            "winRateWhenCast": 0.2386058981233244,
-            "games": 384
-          }
-        },
-        {
-          "out": "Barren Moor",
-          "in": "Heritage Reclamation",
-          "reason": "Heritage Reclamation covers draw, removal; Barren Moor was cast in 0% of the games it was drawn and sat dead in 2%.",
-          "priceDelta": 0.09,
-          "addRoles": [
-            "draw",
-            "removal"
-          ],
-          "cutStat": {
-            "name": "Barren Moor",
-            "drawnRate": 0.193,
-            "castRate": 0,
-            "avgCastTurn": 0,
-            "deadRate": 0.02072538860103627,
-            "winRateWhenCast": 0.2275132275132275,
-            "games": 386
-          }
-        },
-        {
-          "out": "Mirkwood",
-          "in": "Glissa Sunslayer",
-          "reason": "Glissa Sunslayer covers draw, removal; Mirkwood was cast in 0% of the games it was drawn and sat dead in 2%.",
-          "priceDelta": 0.37,
-          "addRoles": [
-            "draw",
-            "removal",
-            "threat"
-          ],
-          "cutStat": {
-            "name": "Mirkwood",
-            "drawnRate": 0.188,
-            "castRate": 0,
-            "avgCastTurn": 0,
-            "deadRate": 0.02127659574468085,
-            "winRateWhenCast": 0.23369565217391305,
-            "games": 376
-          }
-        },
-        {
-          "out": "Jungle Hollow",
-          "in": "Insidious Fungus",
-          "reason": "Insidious Fungus covers draw, removal; Jungle Hollow was cast in 0% of the games it was drawn and sat dead in 2%.",
-          "priceDelta": 0.38,
-          "addRoles": [
-            "draw",
-            "removal",
-            "threat"
-          ],
-          "cutStat": {
-            "name": "Jungle Hollow",
-            "drawnRate": 0.1875,
-            "castRate": 0,
-            "avgCastTurn": 0,
-            "deadRate": 0.024,
-            "winRateWhenCast": 0.24316939890710382,
-            "games": 375
+            "name": "Maelstrom Pulse",
+            "drawnRate": 0.221,
+            "castRate": 0.8823529411764706,
+            "avgCastTurn": 8.056410256410256,
+            "deadRate": 0.11764705882352941,
+            "winRateWhenCast": 0.382051282051282,
+            "games": 442
           }
         }
       ],
-      "note": "accepted"
+      "note": "score did not improve, rolled back"
     },
     {
       "iteration": 3,
       "accepted": false,
-      "score": 71.6,
-      "gain": 0.1,
+      "score": 75.1,
+      "gain": 0.7,
       "swaps": [
         {
-          "out": "Casualties of War",
-          "in": "Vivien Reid",
-          "reason": "Vivien Reid covers removal, protection; Casualties of War was cast in 91% of the games it was drawn and sat dead in 9%.",
-          "priceDelta": 0.05,
+          "out": "Maelstrom Pulse",
+          "in": "Golgari Charm",
+          "reason": "Golgari Charm covers removal, protection; Maelstrom Pulse was cast in 88% of the games it was drawn and sat dead in 12%.",
+          "priceDelta": 1.95,
           "addRoles": [
             "removal",
+            "wipe",
             "protection"
           ],
           "cutStat": {
-            "name": "Casualties of War",
-            "drawnRate": 0.1695,
-            "castRate": 0.911504424778761,
-            "avgCastTurn": 8.055016181229773,
-            "deadRate": 0.08849557522123894,
-            "winRateWhenCast": 0.2750809061488673,
-            "games": 339
-          }
-        },
-        {
-          "out": "Golgari Charm",
-          "in": "Swift Demise",
-          "reason": "Swift Demise covers removal; Golgari Charm was cast in 80% of the games it was drawn and sat dead in 20%.",
-          "priceDelta": -2.03,
-          "addRoles": [
-            "removal",
-            "wipe"
-          ],
-          "cutStat": {
-            "name": "Golgari Charm",
-            "drawnRate": 0.2105,
-            "castRate": 0.7957244655581948,
-            "avgCastTurn": 7.149253731343284,
-            "deadRate": 0.2042755344418052,
-            "winRateWhenCast": 0.041791044776119404,
-            "games": 421
+            "name": "Maelstrom Pulse",
+            "drawnRate": 0.221,
+            "castRate": 0.8823529411764706,
+            "avgCastTurn": 8.056410256410256,
+            "deadRate": 0.11764705882352941,
+            "winRateWhenCast": 0.382051282051282,
+            "games": 442
           }
         }
       ],
@@ -316,165 +180,32 @@
     {
       "iteration": 4,
       "accepted": false,
-      "score": 69.8,
-      "gain": -1.7,
+      "score": 75,
+      "gain": 0.6,
       "swaps": [
         {
-          "out": "Casualties of War",
-          "in": "Kogla, the Titan Ape",
-          "reason": "Kogla, the Titan Ape covers removal, protection, finisher, threat; Casualties of War was cast in 91% of the games it was drawn and sat dead in 9%.",
-          "priceDelta": 2.94,
-          "addRoles": [
-            "removal",
-            "protection",
-            "finisher",
-            "threat"
-          ],
-          "cutStat": {
-            "name": "Casualties of War",
-            "drawnRate": 0.1695,
-            "castRate": 0.911504424778761,
-            "avgCastTurn": 8.055016181229773,
-            "deadRate": 0.08849557522123894,
-            "winRateWhenCast": 0.2750809061488673,
-            "games": 339
-          }
-        },
-        {
-          "out": "Golgari Charm",
-          "in": "Do or Die",
-          "reason": "Do or Die covers protection; Golgari Charm was cast in 80% of the games it was drawn and sat dead in 20%.",
-          "priceDelta": 6.16,
-          "addRoles": [
-            "wipe",
-            "protection"
-          ],
-          "cutStat": {
-            "name": "Golgari Charm",
-            "drawnRate": 0.2105,
-            "castRate": 0.7957244655581948,
-            "avgCastTurn": 7.149253731343284,
-            "deadRate": 0.2042755344418052,
-            "winRateWhenCast": 0.041791044776119404,
-            "games": 421
-          }
-        }
-      ],
-      "note": "score did not improve, rolled back"
-    },
-    {
-      "iteration": 5,
-      "accepted": true,
-      "score": 72.6,
-      "gain": 1.1,
-      "swaps": [
-        {
-          "out": "Casualties of War",
-          "in": "Snuff Out",
-          "reason": "Snuff Out covers removal, protection; Casualties of War was cast in 91% of the games it was drawn and sat dead in 9%.",
-          "priceDelta": 10.66,
+          "out": "Maelstrom Pulse",
+          "in": "Abrupt Decay",
+          "reason": "Abrupt Decay covers removal, protection; Maelstrom Pulse was cast in 88% of the games it was drawn and sat dead in 12%.",
+          "priceDelta": 2.05,
           "addRoles": [
             "removal",
             "protection"
           ],
           "cutStat": {
-            "name": "Casualties of War",
-            "drawnRate": 0.1695,
-            "castRate": 0.911504424778761,
-            "avgCastTurn": 8.055016181229773,
-            "deadRate": 0.08849557522123894,
-            "winRateWhenCast": 0.2750809061488673,
-            "games": 339
-          }
-        }
-      ],
-      "note": "accepted"
-    },
-    {
-      "iteration": 6,
-      "accepted": false,
-      "score": 72.5,
-      "gain": -0.1,
-      "swaps": [
-        {
-          "out": "Golgari Charm",
-          "in": "Fleshbag Marauder",
-          "reason": "Fleshbag Marauder covers threat; Golgari Charm was cast in 80% of the games it was drawn and sat dead in 20%.",
-          "priceDelta": -2.07,
-          "addRoles": [
-            "wipe",
-            "threat"
-          ],
-          "cutStat": {
-            "name": "Golgari Charm",
-            "drawnRate": 0.2125,
-            "castRate": 0.7976470588235294,
-            "avgCastTurn": 7.200589970501475,
-            "deadRate": 0.2023529411764706,
-            "winRateWhenCast": 0.04129793510324484,
-            "games": 425
-          }
-        }
-      ],
-      "note": "score did not improve, rolled back"
-    },
-    {
-      "iteration": 7,
-      "accepted": false,
-      "score": 72.5,
-      "gain": -0.1,
-      "swaps": [
-        {
-          "out": "Golgari Charm",
-          "in": "Demon's Disciple",
-          "reason": "Demon's Disciple covers threat; Golgari Charm was cast in 80% of the games it was drawn and sat dead in 20%.",
-          "priceDelta": -2.05,
-          "addRoles": [
-            "wipe",
-            "threat"
-          ],
-          "cutStat": {
-            "name": "Golgari Charm",
-            "drawnRate": 0.2125,
-            "castRate": 0.7976470588235294,
-            "avgCastTurn": 7.200589970501475,
-            "deadRate": 0.2023529411764706,
-            "winRateWhenCast": 0.04129793510324484,
-            "games": 425
-          }
-        }
-      ],
-      "note": "score did not improve, rolled back"
-    },
-    {
-      "iteration": 8,
-      "accepted": false,
-      "score": 72,
-      "gain": -0.6,
-      "swaps": [
-        {
-          "out": "Golgari Charm",
-          "in": "Accursed Marauder",
-          "reason": "Accursed Marauder covers threat; Golgari Charm was cast in 80% of the games it was drawn and sat dead in 20%.",
-          "priceDelta": -2,
-          "addRoles": [
-            "wipe",
-            "threat"
-          ],
-          "cutStat": {
-            "name": "Golgari Charm",
-            "drawnRate": 0.2125,
-            "castRate": 0.7976470588235294,
-            "avgCastTurn": 7.200589970501475,
-            "deadRate": 0.2023529411764706,
-            "winRateWhenCast": 0.04129793510324484,
-            "games": 425
+            "name": "Maelstrom Pulse",
+            "drawnRate": 0.221,
+            "castRate": 0.8823529411764706,
+            "avgCastTurn": 8.056410256410256,
+            "deadRate": 0.11764705882352941,
+            "winRateWhenCast": 0.382051282051282,
+            "games": 442
           }
         }
       ],
       "note": "score did not improve, rolled back"
     }
   ],
-  "resultPath": "sim/results/sim-3e-maxed-20260823-182906.json",
-  "updatedAt": "2026-08-23T18:29:09.637Z"
+  "resultPath": "sim/results/sim-6f-maxed-20260823-185010.json",
+  "updatedAt": "2026-08-23T18:50:13.553Z"
 }

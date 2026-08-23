@@ -72,7 +72,8 @@ only routes to victory it knows, opponents are nine archetype curves (three
 power tiers, six playstyles) rather than real decks, there is no stack and no
 real blocking assignment (a toughness-weighted reduction stands in for it, and
 a Defender creature contributes no attack power unless the deck itself lifts
-that restriction), and the fun/participation score is one reasonable take on a
+that restriction — with its toughness as the damage when an Arcades-style
+effect says so), and the fun/participation score is one reasonable take on a
 subjective idea, not a settled definition. The full list is in `sim-engine.js`
 and is copied into every result file. Read the numbers as a comparison between
 two versions of one deck, never as absolute odds.

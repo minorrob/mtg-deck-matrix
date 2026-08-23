@@ -142,8 +142,9 @@ Then say plainly what the model cannot see. Every result file carries
   deal.
 - Blocking is a toughness-weighted damage reduction, not a real block, and a
   Defender creature only contributes attack power if the deck itself lifts
-  that restriction — worth a second look for a genuinely combat-heavy or
-  wall-heavy deck.
+  that restriction (attacking with its toughness when an Arcades-style effect
+  says so) — worth a second look for a genuinely combat-heavy or wall-heavy
+  deck.
 
 Offer to show the run in the browser: `python3 -m http.server 8000`, then the
 Simulate button on that variant watches `sim/status.json` and loads the result.
