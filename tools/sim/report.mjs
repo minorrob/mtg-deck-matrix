@@ -94,6 +94,7 @@ for (const [deckId, deckResults] of [...byDeck.entries()].sort((a, b) => a[0] - 
     lines.push(`| Average win turn | ${result.baselineMetrics.avgWinTurn ? result.baselineMetrics.avgWinTurn.toFixed(1) : "no wins"} | ${result.finalMetrics.avgWinTurn ? result.finalMetrics.avgWinTurn.toFixed(1) : "no wins"} |`);
     lines.push(`| Mana screw | ${percent(result.baselineMetrics.screwPct)} | ${percent(result.finalMetrics.screwPct)} |`);
     lines.push(`| Answer in hand, turns 3-7 | ${percent(result.baselineMetrics.interactionAvailability)} | ${percent(result.finalMetrics.interactionAvailability)} |`);
+    lines.push(`| Fun/participation | ${percent(holdoutBefore?.funScore)} | ${percent(holdoutAfter?.funScore)} |`);
     lines.push("");
     changeLines(result).forEach((line) => lines.push(`- ${line}`));
     lines.push("");
@@ -113,8 +114,8 @@ for (const [deckId, deckResults] of [...byDeck.entries()].sort((a, b) => a[0] - 
       mechanics: variant?.mechanics || [],
       verdict: result.verdict,
       recommendation: result.recommendation,
-      before: {winRate: holdoutBefore?.winRate ?? null, score: holdoutBefore?.score ?? null, games: holdoutBefore?.games ?? null},
-      after: {winRate: holdoutAfter?.winRate ?? null, score: holdoutAfter?.score ?? null, games: holdoutAfter?.games ?? null},
+      before: {winRate: holdoutBefore?.winRate ?? null, score: holdoutBefore?.score ?? null, funScore: holdoutBefore?.funScore ?? null, games: holdoutBefore?.games ?? null},
+      after: {winRate: holdoutAfter?.winRate ?? null, score: holdoutAfter?.score ?? null, funScore: holdoutAfter?.funScore ?? null, games: holdoutAfter?.games ?? null},
       baseline: result.baselineMetrics,
       final: result.finalMetrics,
       changes: (result.netChanges || []).filter((change) => change.out || change.in),

@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "gamesPerIteration": 2000,
   "batchSize": 500,
   "maxIterations": 12,
@@ -19,13 +19,14 @@
   "maxSwapInPriceUsd": 60,
   "table": "mixed-pod",
   "scoreWeights": {
-    "winRate": 0.4,
+    "winRate": 0.3,
     "screw": 0.15,
     "flood": 0.1,
     "commander": 0.1,
     "interaction": 0.1,
     "clock": 0.1,
-    "deadCards": 0.05
+    "deadCards": 0.05,
+    "fun": 0.1
   },
   "targets": {
     "screwPct": 0.1,

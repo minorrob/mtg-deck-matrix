@@ -136,10 +136,15 @@ Then say plainly what the model cannot see. Every result file carries
 - Combat and drain are the only routes to victory the model knows. A deck that
   wins through an alternate win condition, a storm turn or a lock will read as
   weaker than it is.
-- Opponents are archetype curves, not real decks. They never counter a spell,
-  never target the right permanent, and never make a deal.
-- A card's power is estimated from its mana value when Scryfall data is not to
-  hand, so tokens, counters and anthems are approximated.
+- Opponents are nine archetype curves (three power tiers, six playstyles —
+  combo, stax, aristocrats, voltron, tokens, group-hug), not real decks. They
+  never counter a spell, never target the right permanent, and never make a
+  deal.
+- Blocking is a toughness-weighted damage reduction, not a real block, and a
+  Defender creature only contributes attack power if the deck itself lifts
+  that restriction (attacking with its toughness when an Arcades-style effect
+  says so) — worth a second look for a genuinely combat-heavy or wall-heavy
+  deck.
 
 Offer to show the run in the browser: `python3 -m http.server 8000`, then the
 Simulate button on that variant watches `sim/status.json` and loads the result.

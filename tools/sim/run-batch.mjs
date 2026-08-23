@@ -85,10 +85,13 @@ for (const variantId of requested) {
     exitCode: simmed.code,
     baselineScore: baseline?.metrics.score ?? null,
     baselineWinRate: baseline?.metrics.winRate ?? null,
+    baselineFunScore: baseline?.metrics.funScore ?? null,
     finalScore: result?.finalMetrics.score ?? baseline?.metrics.score ?? null,
     finalWinRate: result?.finalMetrics.winRate ?? baseline?.metrics.winRate ?? null,
+    finalFunScore: result?.finalMetrics.funScore ?? baseline?.metrics.funScore ?? null,
     holdoutScore: result?.holdoutMetrics?.score ?? null,
     holdoutWinRate: result?.holdoutMetrics?.winRate ?? null,
+    holdoutFunScore: result?.holdoutMetrics?.funScore ?? null,
     swaps: result?.swapsApplied?.length ?? 0,
     stopReason: result?.stopReason || "baseline only",
     resultPath: result ? relative(resultPath) : relative(baselinePath)
