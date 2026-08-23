@@ -2015,31 +2015,32 @@
     return Object.entries(state.liveTransfers || {}).flatMap(([targetVariantId, records]) => Object.values(records || {}).map((record) => ({...record, targetVariantId})));
   }
 
-  // Live Decks tracks which cards are active independently of Buy Picks' one-choice-per-slot
-  // model: each card is its own on/off switch here, seeded once from whatever Buy Picks had
-  // selected so existing lineups aren't lost, then fully free-form from that point on.
-  function ensureLiveActiveMap(variant, activeIds) {
+  // Compare picks the variant, Buy Picks selects cards to buy (can hold more than 100, on
+  // purpose, for optionality), Shop List tracks what's actually been bought, and Live Decks
+  // builds the active deck from that pool. It's a one-way pipeline: a card only appears here
+  // at all once it's checked in Buy Picks, and nothing chosen here flows back upstream. Each
+  // card is its own independent on/off switch for the active 100, merged in as new Buy Picks
+  // selections appear (not just seeded once), so a freshly-checked card shows up as a bench
+  // option instead of being invisible until some future full reset.
+  function ensureLiveActiveMap(variant, activeIds, candidateIds) {
     state.liveActive ||= {};
-    if (!state.liveActive[variant.id]) {
-      const seed = {};
-      activeIds.forEach((id) => { seed[id] = true; });
-      state.liveActive[variant.id] = seed;
-    }
-    return state.liveActive[variant.id];
+    const map = state.liveActive[variant.id] ||= {};
+    const firstEverView = Object.keys(map).length === 0;
+    candidateIds.forEach((id) => {
+      if (!(id in map)) map[id] = firstEverView && activeIds.has(id);
+    });
+    return map;
   }
 
-  function configuredDeckCards(variant, selectionOverride = null, excludedTransferSlots = new Set()) {
+  function configuredDeckCards(variant) {
     const plan = buyCatalog.plans[variant.id];
     if (!plan) return [];
-    const current = selectionOverride || ensureBuyState(variant.id);
-    const transferItems = liveTransferItems(variant.id).filter((item) => !excludedTransferSlots.has(item.transferRecord?.targetSlotId));
-    const model = Lineup.buildModel(plan, transferItems);
+    const current = ensureBuyState(variant.id);
+    const model = Lineup.buildModel(plan, liveTransferItems(variant.id));
+    const selected = Object.fromEntries(Lineup.ARRAY_KEYS.map((key) => [key, new Set((current[key] || []).map(String))]));
+    const candidates = model.entries.filter((entry) => !entry.item.isFlexibleSlot && (entry.kind === "transfer" || selected[entry.arrayKey]?.has(entry.id)));
     const activeIds = new Set(Lineup.selectedEntries(plan, current).map((entry) => entry.id));
-    const transferSlots = new Set(model.entries.filter((entry) => entry.kind === "transfer").map((entry) => entry.slotId));
-    // A selectionOverride means this is a Buy Picks what-if projection, not the real Live Decks
-    // render — keep that path on the slot-exclusive model so its compliance pre-check still
-    // reflects the hypothetical choice being tested, instead of the persisted live toggles.
-    const liveActive = selectionOverride ? null : ensureLiveActiveMap(variant, activeIds);
+    const liveActive = ensureLiveActiveMap(variant, activeIds, candidates.map((entry) => entry.id));
     const levelByKind = {
       shell: ["shell", "Starting Shell"],
       tuned: ["tuned", "Tuned"],
@@ -2048,7 +2049,7 @@
       max: ["maxxed", "Maxxed"],
       transfer: ["transfer", "Temporary loan"]
     };
-    return model.entries.filter((entry) => !entry.item.isFlexibleSlot).map((entry) => {
+    return candidates.map((entry) => {
       const [level, label] = levelByKind[entry.kind] || ["shell", "Starting Shell"];
       const resolved = resolvedBuyCard(entry.item);
       return {
@@ -2060,7 +2061,7 @@
         fromShell: entry.kind === "shell",
         liveLevel: level,
         liveLevelLabel: label,
-        lineupActive: entry.kind === "transfer" ? true : liveActive ? Boolean(liveActive[entry.id]) : activeIds.has(entry.id) && !transferSlots.has(entry.slotId),
+        lineupActive: entry.kind === "transfer" ? true : Boolean(liveActive[entry.id]),
         lineupSlotId: entry.slotId,
         lineupSlotName: entry.root?.name || entry.item.name,
         lineupPredecessorId: entry.predecessorId,
@@ -2165,10 +2166,6 @@
       source.card.loanBlocksSource = Boolean(source.card.lineupActive && !source.card.bought);
     });
     return entries;
-  }
-
-  function projectedEffectiveCards(variant, selection, excludedTransferSlots = new Set()) {
-    return activeLiveCards(configuredDeckCards(variant, selection, excludedTransferSlots));
   }
 
   function liveColorKey(card) {
@@ -2345,7 +2342,7 @@
 
   function matchesLiveFilters(card, filters) {
     if (filters.status === "bought" && !card.bought) return false;
-    if (filters.status === "need" && (card.bought || !card.lineupActive)) return false;
+    if (filters.status === "need" && card.bought) return false;
     if (filters.lineup === "active" && !card.lineupActive) return false;
     if (filters.lineup === "bench" && card.lineupActive) return false;
     if (filters.source === "shell" && !card.fromShell) return false;
@@ -2584,18 +2581,27 @@
     const active = activeLiveCards(cards);
     const total = active.reduce((sum, card) => sum + Number(card.quantity || 1), 0);
     const borrowedOut = active.filter((card) => card.loanBlocksSource);
+    // Readiness-to-play is about the active 100 specifically: is what's toggled on right now
+    // physically in hand.
     const shellMissing = active.filter((card) => card.fromShell && !card.bought && !card.loanedTo);
     const singlesMissing = active.filter((card) => !card.fromShell && !card.bought && !card.loanedTo);
     const preconMissing = !isSinglesBuiltShell(plan) && shellMissing.length > 0 && !state.found[itemKey(plan.precon)];
     const missingCards = [...shellMissing, ...singlesMissing].reduce((sum, card) => sum + Number(card.quantity || 1), 0);
-    const purchaseItems = singlesMissing.reduce((sum, card) => sum + Number(card.quantity || 1), 0)
-      + (isSinglesBuiltShell(plan) ? shellMissing.reduce((sum, card) => sum + Number(card.quantity || 1), 0) : preconMissing ? 1 : 0);
     const pricedSingles = [...singlesMissing, ...(isSinglesBuiltShell(plan) ? shellMissing : [])];
     const floorTotal = pricedSingles.reduce((sum, card) => sum + (Number(card.price) || 0) * Number(card.quantity || 1), 0) + (preconMissing ? Number(plan.precon?.price || 0) : 0);
     const ceilingTotal = pricedSingles.reduce((sum, card) => sum + (Number(card.ceiling || card.price) || 0) * Number(card.quantity || 1), 0) + (preconMissing ? Number(plan.precon?.ceiling || plan.precon?.price || 0) : 0);
     const borrowedCards = borrowedOut.reduce((sum, card) => sum + Number(card.quantity || 1), 0);
     const legal = total === 100 && compliance.tier3.length === 0;
     const ready = legal && missingCards === 0 && borrowedCards === 0;
+    // "To Buy" tracks the whole Buy Picks selection, active or benched — Compare -> Buy Picks
+    // -> Shop List -> Live Decks is a one-way pipeline, and Buy Picks can hold more than 100
+    // picks on purpose, so purchase progress on a pick shouldn't hide just because it isn't
+    // part of the active 100 right now.
+    const planSinglesToBuy = cards.filter((card) => !card.fromShell && !card.bought && !card.loanedTo);
+    const planShellToBuy = cards.filter((card) => card.fromShell && !card.bought && !card.loanedTo);
+    const planPreconMissing = !isSinglesBuiltShell(plan) && planShellToBuy.length > 0 && !state.found[itemKey(plan.precon)];
+    const purchaseItems = planSinglesToBuy.reduce((sum, card) => sum + Number(card.quantity || 1), 0)
+      + (isSinglesBuiltShell(plan) ? planShellToBuy.reduce((sum, card) => sum + Number(card.quantity || 1), 0) : planPreconMissing ? 1 : 0);
     const benchMissing = cards.filter((card) => !card.lineupActive && !card.bought).length;
     let label;
     let insight;
@@ -2623,6 +2629,7 @@
     const total = readiness.total;
     const boughtCount = Math.max(0, total - readiness.missingCards - readiness.borrowedCards);
     const toBuy = readiness.purchaseItems;
+    const bracket = variant.brackets?.[profileIndex] || {};
     const strategy = variant.summaries?.[profileIndex]?.[0] || variant.stageNotes?.[profileIndex] || "Final deck configuration";
     const typeChips = LIVE_TYPE_ORDER.filter((type) => type !== "Commander" && compliance.types[type]).map((type) => `<i><b>${compliance.types[type]}</b>${esc(type)}</i>`).join("");
     const playstyle = variant.scores?.playstyle?.[profileIndex] || [];
@@ -2643,6 +2650,7 @@
       </span>
       <span class="live-deck-metrics">
         <i class="is-cost" data-live-total="${esc(variant.id)}" title="Sum of the prices you locked in for cards you own in this deck"><b>${money(totalCost) === "Price varies" ? "$0.00" : money(totalCost)}</b><small>Total cost · ${priced.priced}/${priced.bought} priced</small></i>
+        <i title="${esc(bracket.description || "")}"><b>${esc(bracket.label || "—")}</b><small>Tier</small></i>
         <i><b>${boughtCount}/100</b><small>bought</small></i>
         <i><b>${total}/100</b><small>active</small></i>
         <i class="${toBuy ? "is-open" : ""}"><b>${toBuy}</b><small>to buy</small></i>
@@ -2689,6 +2697,7 @@
     const row = document.createElement("article");
     row.className = `live-card-row${card.bought ? " is-bought" : " is-needed"}${card.lineupActive ? " is-lineup-active" : " is-lineup-bench"}`;
     const badges = [
+      `<em class="live-card-badge is-level-${esc(card.liveLevel)}">${esc(card.liveLevelLabel)}</em>`,
       card.isCommander ? `<em class="live-card-badge is-commander">Commander</em>` : "",
       card.gameChanger ? `<em class="live-card-badge is-game-changer">Game Changer</em>` : "",
       card.transferRecord ? `<em class="live-card-badge is-temp">Borrowed</em>` : "",
@@ -2725,9 +2734,8 @@
   function liveGroupStats(cards) {
     const total = cards.reduce((sum, card) => sum + Number(card.quantity || 1), 0);
     const active = cards.filter((card) => card.lineupActive).reduce((sum, card) => sum + Number(card.quantity || 1), 0);
-    const toBuy = cards.filter((card) => card.lineupActive && !card.bought).reduce((sum, card) => sum + Number(card.quantity || 1), 0);
     const target = cards.filter((card) => card.lineupActive && !card.bought).reduce((sum, card) => sum + (Number(card.price) || 0) * Number(card.quantity || 1), 0);
-    return `${total} choice${total === 1 ? "" : "s"} · ${active} active · ${toBuy} active to buy${target ? ` · ${money(target)} target` : ""}`;
+    return `${total} choice${total === 1 ? "" : "s"} · ${active} active${target ? ` · ${money(target)} target` : ""}`;
   }
 
   function appendLiveRows(container, cards, variant) {
@@ -3238,7 +3246,7 @@
         <img class="shop-image" src="${esc(imageCandidates[0] || "og.png")}" alt="${esc(item.name)} card" loading="lazy" decoding="async">
       </button>
       <div class="shop-main">
-        <div class="shop-card-kicker">${icon(item.category === "precon" ? "▣" : "✦")}<span>${esc(item.category === "precon" ? "Precon" : "Single card")}</span>${rarityIcon(rarityKey, rarity)}${levelBadges}${item.gameChanger ? `<span class="shop-badge gc">GC</span>` : ""}</div>
+        <div class="shop-card-kicker">${item.manaCost ? manaCostHtml(item.manaCost) : ""}${rarityIcon(rarityKey, rarity)}${levelBadges}${item.gameChanger ? `<span class="shop-badge gc">GC</span>` : ""}</div>
         <h3><button type="button" class="shop-name-button">${esc(item.name)}${item.quantity > 1 ? ` ×${item.quantity}` : ""} →</button></h3>
         <div class="shop-facts">${item.manaCost ? `<span>${manaCostHtml(item.manaCost)}</span>` : ""}${displayType ? `<span>${esc(displayType)}</span>` : ""}</div>
         <div class="shop-buying-facts" aria-label="Buying guide">
