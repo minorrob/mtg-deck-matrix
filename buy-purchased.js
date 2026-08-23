@@ -110,7 +110,7 @@
     if (!empty) {
       empty = document.createElement("div");
       empty.className = "buy-purchased-empty";
-      empty.innerHTML = "<strong>No purchased items yet.</strong><span>Mark a card Found in Shop List and it will appear here automatically.</span>";
+      empty.innerHTML = "<strong>No purchased items yet.</strong><span>Mark a card Bought in Shop List and it will appear here automatically.</span>";
       const toolbar = root.querySelector(".buy-purchased-toolbar");
       toolbar?.insertAdjacentElement("afterend", empty);
     }
@@ -124,8 +124,11 @@
 
     let purchasedCount = 0;
     let shown = 0;
+    let selectedCount = 0;
     rows.forEach((row) => {
-      const purchased = row.dataset.purchased === "true";
+      const selected = Boolean(row.querySelector(".required-check") || row.querySelector("input[type='checkbox']")?.checked);
+      const purchased = selected && row.dataset.purchased === "true";
+      if (selected) selectedCount += 1;
       if (purchased) purchasedCount += 1;
       const visible = mode === "all" || purchased;
       row.hidden = !visible;
@@ -141,7 +144,7 @@
       if (groupRows.length) group.hidden = !groupRows.some((row) => !row.hidden);
     });
 
-    ensureToolbar(root, purchasedCount, rows.length);
+    ensureToolbar(root, purchasedCount, selectedCount);
     updateEmptyState(root, shown);
   }
 

@@ -158,6 +158,7 @@
 
   function blankState() {
     return {
+      selectionSchema: 2,
       compareSelections: {},
       rankStages: {},
       buySelections: {},
@@ -176,6 +177,7 @@
         return {
           ...initial,
           ...saved,
+          selectionSchema: saved.selectionSchema || 1,
           compareSelections: saved.compareSelections || {},
           rankStages: saved.rankStages || {},
           buySelections: saved.buySelections || {},
@@ -310,6 +312,7 @@
     $$(".view").forEach((section) => section.classList.toggle("is-active", section.id === `view-${view}`));
     if (view === "buy") renderBuy();
     if (view === "shop") renderShop();
+    if (view === "live") renderLiveDecks();
     if (focus) {
       window.scrollTo({top: 0, behavior: "smooth"});
       $("#app").focus({preventScroll: true});
@@ -677,13 +680,34 @@
 
   function ensureBuyState(variantId) {
     const existing = state.buySelections[variantId] || {};
+    const plan = buyCatalog?.plans?.[variantId];
+    const legacyExclusions = (() => {
+      try { return new Set(JSON.parse(localStorage.getItem("mtg-tuned-exclusions-v1") || "{}")[variantId] || []); }
+      catch (_) { return new Set(); }
+    })();
+    const defaultShell = (plan?.startingShell || []).filter((card) => !card.isFlexibleSlot).map((card) => card.id);
+    const defaultTuned = (plan?.required || []).map((card) => card.id).filter((id) => !legacyExclusions.has(id));
     state.buySelections[variantId] = {
-      shell: existing.shell || [],
+      shell: Array.isArray(existing.shell) ? existing.shell : defaultShell,
+      tuned: Array.isArray(existing.tuned) ? existing.tuned : defaultTuned,
       upgrade: [],
       enhance: Array.from(new Set([...(existing.upgrade || []), ...(existing.enhance || [])])),
       max: existing.max || []
     };
     return state.buySelections[variantId];
+  }
+
+  function migrateCheckedSelections() {
+    if (state.selectionSchema >= 2) return;
+    Object.entries(buyCatalog.plans || {}).forEach(([variantId, plan]) => {
+      const existing = state.buySelections[variantId] || {};
+      if (!isSinglesBuiltShell(plan)) existing.shell = (plan.startingShell || []).filter((card) => !card.isFlexibleSlot).map((card) => card.id);
+      const exclusions = (() => { try { return new Set(JSON.parse(localStorage.getItem("mtg-tuned-exclusions-v1") || "{}")[variantId] || []); } catch (_) { return new Set(); } })();
+      existing.tuned = (plan.required || []).map((card) => card.id).filter((id) => !exclusions.has(id));
+      state.buySelections[variantId] = existing;
+    });
+    state.selectionSchema = 2;
+    saveState();
   }
 
   function renderBuy() {
@@ -695,9 +719,9 @@
       <div class="page-intro">
         <div>
           <h2 id="buy-title">Build the buy plan</h2>
-          <p>Precon Starting Shells and Tuned purchases are included automatically. For singles-built Starting Shells, check the cards you need. Add optional Enhance or Maxxed choices as one-for-one swaps.</p>
+          <p>Every checked Starting Shell, Tuned, Enhance, and Maxxed card counts toward the final deck. Uncheck anything you own elsewhere or do not want.</p>
         </div>
-        <div class="selection-meter"><strong>${readyCount}/${selected.length || 0}</strong><span>profiles ready</span></div>
+        ${buyCheckedSummary(selected)}
       </div>
       ${selected.length ? "" : `<div class="empty-state"><h3>No deck picks yet</h3><p>Choose a variant in Compare first, then come back here.</p><button class="primary-button" data-go="compare">Choose decks</button></div>`}
       ${selected.some((variant) => !buyCatalog.plans[variant.id]) ? `<div class="coverage-note"><h3>Selection needs attention</h3><p>One selected variant could not be loaded. Return to Compare and select it again.</p></div>` : ""}
@@ -706,7 +730,7 @@
         const current = ensureBuyState(variant.id);
         const namedShell = (plan.startingShell || []).filter((card) => !card.isFlexibleSlot);
         const selectedShell = new Set(current.shell || []);
-        const shellSummary = isSinglesBuiltShell(plan) ? `${namedShell.filter((card) => selectedShell.has(card.id)).reduce((sum, card) => sum + Number(card.quantity || 1), 0)}/${namedShell.reduce((sum, card) => sum + Number(card.quantity || 1), 0)} shell cards · ` : "";
+        const shellSummary = `${namedShell.filter((card) => selectedShell.has(card.id)).reduce((sum, card) => sum + Number(card.quantity || 1), 0)}/${namedShell.reduce((sum, card) => sum + Number(card.quantity || 1), 0)} shell cards · `;
         return `<button class="buy-overview-card" data-open-buy-deck="${variant.deckId}"><b>Deck ${variant.deckId}</b><strong>${esc(variant.name)}</strong><span>${shellSummary}${esc(plan.priorityLabel || plan.budgetLabel)} · ${plan.required.length} Tuned purchases</span></button>`;
       }).join("")}</div></section>` : ""}
       ${selected.length ? `<div class="action-row action-row-top"><button class="primary-button save-buys">Save Buys → Shop List</button><button class="secondary-button" data-go="compare">Back to Compare</button></div>` : ""}
@@ -727,11 +751,33 @@
     }));
   }
 
+  function buyCheckedSummary(variants) {
+    const totals = {};
+    let checked = 0;
+    variants.forEach((variant) => {
+      const plan = buyCatalog.plans[variant.id];
+      if (!plan) return;
+      const result = evaluateDeckCompliance(plan, ensureBuyState(variant.id));
+      checked += result.total;
+      Object.entries(result.types).forEach(([type, count]) => { totals[type] = (totals[type] || 0) + count; });
+    });
+    const order = ["Creature", "Land", "Artifact", "Enchantment", "Instant", "Sorcery", "Planeswalker", "Battle", "Other"];
+    return `<div class="buy-checked-meter"><div class="selection-meter"><strong>${checked}</strong><span>checked cards</span></div><div class="buy-type-counters" aria-label="Checked cards by type">${order.filter((type) => totals[type]).map((type) => `<span><b>${totals[type]}</b> ${esc(type)}</span>`).join("")}</div></div>`;
+  }
+
+  function updateBuyCheckedSummary() {
+    const current = $("#view-buy .buy-checked-meter");
+    if (!current) return;
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = buyCheckedSummary(selectedVariants());
+    current.replaceWith(wrapper.firstElementChild);
+  }
+
   function makeBuyDeck(variant) {
     const plan = buyCatalog.plans[variant.id];
     const current = plan ? ensureBuyState(variant.id) : null;
     const optionalCount = current ? (current.upgrade?.length || 0) + (current.enhance?.length || 0) + (current.max?.length || 0) : 0;
-    const shellCards = plan && isSinglesBuiltShell(plan) ? (plan.startingShell || []).filter((card) => !card.isFlexibleSlot) : [];
+    const shellCards = plan ? (plan.startingShell || []).filter((card) => !card.isFlexibleSlot) : [];
     const selectedShellIds = new Set(current?.shell || []);
     const shellCount = shellCards.filter((card) => selectedShellIds.has(card.id)).reduce((sum, card) => sum + Number(card.quantity || 1), 0);
     const purchaseTotal = plan ? selectedPurchaseTotal(plan, current) : null;
@@ -808,6 +854,7 @@
       }
       updateCompliancePanel(body, variant, plan);
       updateBuyTotal(details, plan, ensureBuyState(variant.id));
+      updateBuyCheckedSummary();
     }));
     const selectAllShell = $('[data-select-shell-all]', body);
     if (selectAllShell) {
@@ -856,6 +903,7 @@
 
   function selectedPurchaseTotal(plan, current) {
     const selectedShell = new Set(current?.shell || []);
+    const selectedTuned = new Set(current?.tuned || []);
     const selectedEnhance = new Set(current?.enhance || []);
     const selectedUpgrade = new Set(current?.upgrade || []);
     const selectedMax = new Set(current?.max || []);
@@ -863,7 +911,7 @@
       ...(isSinglesBuiltShell(plan)
         ? (plan.startingShell || []).filter((item) => !item.isFlexibleSlot && selectedShell.has(item.id)).map(resolvedShellCard)
         : plan.precon ? [plan.precon] : []),
-      ...(plan.required || []),
+      ...(plan.required || []).filter((item) => selectedTuned.has(item.id)),
       ...(plan.upgrade || []).filter((item) => selectedUpgrade.has(item.id)),
       ...(plan.enhance || []).filter((item) => selectedEnhance.has(item.id)),
       ...(plan.max || []).filter((item) => selectedMax.has(item.id))
@@ -970,11 +1018,11 @@
     return `<button type="button" class="shell-card-row" data-shell-card-name="${esc(card.name)}">${image}<span><strong>${esc(card.name)}${card.quantity > 1 ? ` ×${card.quantity}` : ""}</strong><small>${manaCostHtml(card.manaCost)}${esc(card.typeLine)}</small><em>View details →</em></span></button>`;
   }
 
-  function shellPurchaseRow(card, current, variantId) {
+  function shellPurchaseRow(card, current, variantId, showPrice = true) {
     const image = card.image ? `<img src="${esc(card.image)}" alt="" loading="lazy">` : `<span class="shell-placeholder" aria-hidden="true">?</span>`;
     const checked = (current.shell || []).includes(card.id);
     return `<div class="buy-item constructed-shell-item">
-      <input type="checkbox" ${checked ? "checked" : ""} data-buy-kind="shell" data-item-id="${esc(card.id)}" data-variant-id="${esc(variantId)}" aria-label="Add ${esc(card.name)} to the Shop List">
+      <input type="checkbox" ${checked ? "checked" : ""} data-buy-kind="shell" data-item-id="${esc(card.id)}" data-variant-id="${esc(variantId)}" aria-label="Include ${esc(card.name)} in the final deck">
       <button class="buy-item-detail" type="button" data-shell-card-name="${esc(card.name)}">
         ${image}
         <span class="buy-copy">
@@ -983,11 +1031,12 @@
           <small>${manaCostHtml(card.manaCost)}${esc(card.typeLine)}</small>
         </span>
       </button>
-      <span class="price"><small>Target</small>${card.price ? money(card.price) : card.metadataLoaded ? "Not listed" : "Loading…"}</span>
+      ${showPrice ? `<span class="price"><small>Target</small>${card.price ? money(card.price) : card.metadataLoaded ? "Not listed" : "Loading…"}</span>` : `<span class="owned-shell-label">In starting shell</span>`}
     </div>`;
   }
 
   function constructedShellSection(variant, plan, cards, current, variantId) {
+    const purchasedAsSingles = isSinglesBuiltShell(plan);
     const commander = cards.find((card) => card.isCommander) || cards[0];
     const named = cards.filter((card) => !card.isFlexibleSlot);
     const flexibleCount = cards.filter((card) => card.isFlexibleSlot).reduce((sum, card) => sum + Number(card.quantity || 1), 0);
@@ -1004,15 +1053,15 @@
       const count = group.reduce((sum, card) => sum + Number(card.quantity || 1), 0);
       return `<details class="constructed-shell-group shell-type-group" ${type === "Creature" ? "open" : ""}>
         <summary><span>${esc(type)}</span><b>${count}</b></summary>
-        <div class="constructed-shell-list">${group.map((card) => shellPurchaseRow(card, current, variantId)).join("")}</div>
+        <div class="constructed-shell-list">${group.map((card) => shellPurchaseRow(card, current, variantId, purchasedAsSingles)).join("")}</div>
       </details>`;
     }).join("");
     const selectedCount = named.filter((card) => (current.shell || []).includes(card.id)).reduce((sum, card) => sum + Number(card.quantity || 1), 0);
     const allSelected = named.every((card) => (current.shell || []).includes(card.id));
     return `<section class="starting-shell constructed-shell">
-      <div class="starting-shell-heading"><span>${icon("▣")}<strong>Starting Shell · Singles to buy</strong><b>${selectedCount}/${namedCount}</b></span><label class="shell-select-all"><input type="checkbox" data-select-shell-all ${allSelected ? "checked" : ""}><span>Select all</span></label></div>
-      <p class="shell-source-note constructed-shell-note">This is not a precon. Check the individual cards you need, or use Select all, to add them to the Shop List.</p>
-      <div class="constructed-shell-commander"><h4>Commander</h4>${shellPurchaseRow(commander, current, variantId)}</div>
+      <div class="starting-shell-heading"><span>${icon("▣")}<strong>Starting Shell${purchasedAsSingles ? " · Singles to buy" : " · Final-deck choices"}</strong><b>${selectedCount}/${namedCount}</b></span><label class="shell-select-all"><input type="checkbox" data-select-shell-all ${allSelected ? "checked" : ""}><span>Select all</span></label></div>
+      <p class="shell-source-note constructed-shell-note">${purchasedAsSingles ? "Check the individual cards you need; selected cards flow to the Shop List." : "These cards came in the starting product. Keep checked only the cards you want in the finished 100; no individual price is required."}</p>
+      <div class="constructed-shell-commander"><h4>Commander</h4>${shellPurchaseRow(commander, current, variantId, purchasedAsSingles)}</div>
       <div class="constructed-shell-groups">${typeGroups}</div>
       ${flexibleCount ? `<p class="shell-flex-note"><b>${flexibleCount} modeled slot${flexibleCount === 1 ? "" : "s"} still need exact card names.</b> They preserve the 100-card compliance model but are not added to the Shop List until a card is named.</p>` : ""}
     </section>`;
@@ -1020,33 +1069,7 @@
 
   function startingShellSection(variant, plan, current, variantId) {
     const cards = (plan.startingShell || []).map(resolvedShellCard);
-    if (isSinglesBuiltShell(plan)) return constructedShellSection(variant, plan, cards, current, variantId);
-    const commander = cards.find((card) => card.isCommander) || cards[0];
-    const remaining = cards.filter((card) => card !== commander);
-    const remainingCount = remaining.reduce((sum, card) => sum + Number(card.quantity || 1), 0);
-    const groups = new Map();
-    remaining.forEach((card) => {
-      const type = shellType(card);
-      if (!groups.has(type)) groups.set(type, []);
-      groups.get(type).push(card);
-    });
-    const typeOrder = ["Creature", "Instant", "Sorcery", "Artifact", "Enchantment", "Planeswalker", "Battle", "Other", "Unspecified slots"];
-    const cardGroups = typeOrder.filter((type) => groups.has(type)).map((type) => {
-      const group = groups.get(type);
-      const count = group.reduce((sum, card) => sum + Number(card.quantity || 1), 0);
-      return `<details class="shell-type-group"><summary><span>${esc(type)}</span><b>${count}</b></summary><div class="shell-card-list">${group.map(shellCardRow).join("")}</div></details>`;
-    }).join("");
-    const lands = groups.get("Land") || [];
-    const landCount = lands.reduce((sum, card) => sum + Number(card.quantity || 1), 0);
-    const landGroup = lands.length ? `<details class="shell-type-group shell-land-group"><summary><span>Lands</span><b>${landCount}</b></summary><div class="shell-land-grid">${lands.map((card) => `<button type="button" class="shell-land-tile" data-shell-card-name="${esc(card.name)}"><div>${card.image ? `<img src="${esc(card.image)}" alt="${esc(card.name)} card" loading="lazy">` : `<span class="shell-placeholder">?</span>`}<b>×${card.quantity}</b></div><span>${esc(card.name)}</span></button>`).join("")}</div></details>` : "";
-    return `<section class="starting-shell">
-      <div class="starting-shell-heading"><span>${icon("▣")}<strong>Starting Shell</strong><b>100 cards</b></span><small>Included automatically</small></div>
-      <button type="button" class="shell-commander" data-shell-card-name="${esc(commander?.name || variant.commander)}"><img src="${esc(commander?.image || variant.image)}" alt="${esc(commander?.name || variant.commander)} card" loading="lazy"><span><small>Commander · always visible · view details</small><strong>${esc(commander?.name || variant.commander)}</strong><span>${manaCostHtml(commander?.manaCost)}${esc(commander?.typeLine || "")}</span></span></button>
-      <details class="shell-library"><summary><span>View remaining ${remainingCount} cards</span><small>Nested by card type; lands have their own visual tray</small></summary><div class="shell-library-body">
-        ${plan.startingShellKind === "custom-shell" ? `<p class="shell-source-note">The source guide names the retained core; unspecified slots preserve an honest 100-card model without inventing card names.</p>` : `<p class="shell-source-note">Complete published preconstructed decklist${plan.startingShellSource ? ` · <a href="${esc(plan.startingShellSource)}" target="_blank" rel="noopener">official source</a>` : ""}</p>`}
-        ${cardGroups}${landGroup}
-      </div></details>
-    </section>`;
+    return constructedShellSection(variant, plan, cards, current, variantId);
   }
 
   function compliancePanel(variant, plan, current) {
@@ -1110,9 +1133,11 @@
       if (existing.quantity <= 0) cards.delete(key);
       return true;
     };
-    (plan.startingShell || plan.baseCards || []).forEach((card) => addCard(card, "starting shell"));
+    const selectedShell = new Set(current.shell || []);
+    (plan.startingShell || plan.baseCards || []).filter((card) => card.isFlexibleSlot || selectedShell.has(card.id)).forEach((card) => addCard(card, "starting shell"));
+    const selectedTuned = new Set(current.tuned || []);
     const selected = [
-      ...(plan.required || []),
+      ...(plan.required || []).filter((item) => selectedTuned.has(item.id)),
       ...(plan.upgrade || []).filter((item) => (current.upgrade || []).includes(item.id)),
       ...(plan.enhance || []).filter((item) => (current.enhance || []).includes(item.id)),
       ...(plan.max || []).filter((item) => (current.max || []).includes(item.id))
@@ -1206,7 +1231,7 @@
 
   function buySection(title, note, items, kind, current, variantId) {
     if (!items?.length) return "";
-    const included = kind === "tuned" || kind === "precon";
+    const included = kind === "precon";
     const glyph = kind === "precon" ? "▣" : kind === "tuned" ? "✓" : kind === "upgrade" ? "↗" : kind === "enhance" ? "+" : "✦";
     return `<details class="buy-section" ${included ? "open" : ""}>
       <summary><span>${icon(glyph)}${esc(title)} <b>${items.length}</b></span><small>${esc(note)}</small></summary>
@@ -1216,7 +1241,7 @@
         const impact = kind === "enhance" ? enhancementImpact(item) : null;
         const replacement = item.replaces ? `<span class="replacement-line"><b${impact ? ` class="replace-impact impact-${impact.key}" title="${esc(impact.label)}" aria-label="Replaces — ${esc(impact.label)}"` : ""}>Replaces</b><span>${esc(item.replaces)}</span></span>` : "";
         return `<div class="buy-item">
-          ${required ? `<span class="required-check" aria-label="Included">✓</span>` : `<input type="checkbox" ${checked ? "checked" : ""} data-buy-kind="${esc(kind)}" data-item-id="${esc(item.id)}" data-variant-id="${esc(variantId)}" aria-label="Add ${esc(item.name)} to the Shop List">`}
+          ${required ? `<span class="required-check" aria-label="Included">✓</span>` : `<input type="checkbox" ${checked ? "checked" : ""} data-buy-kind="${esc(kind)}" data-item-id="${esc(item.id)}" data-variant-id="${esc(variantId)}" aria-label="Include ${esc(item.name)} in the final deck">`}
           <button class="buy-item-detail" type="button" data-item-kind="${esc(kind)}" data-item-id="${esc(item.id)}">
             <img src="${esc(item.image)}" alt="" loading="lazy">
             <span class="buy-copy">
@@ -1440,6 +1465,7 @@
       const plan = buyCatalog.plans[variant.id];
       if (!plan) return;
       const current = ensureBuyState(variant.id);
+      const selectedTuned = new Set(current.tuned || []);
       const selectedEnhance = new Set(current.enhance || []);
       const selectedUpgrade = new Set(current.upgrade || []);
       const selectedMax = new Set(current.max || []);
@@ -1455,7 +1481,7 @@
         : [];
       const items = [
         ...(isSinglesBuiltShell(plan) ? shellPurchases : [plan.precon]),
-        ...plan.required,
+        ...(plan.required || []).filter((item) => selectedTuned.has(item.id)),
         ...(plan.upgrade || []).filter((item) => selectedUpgrade.has(item.id)),
         ...plan.enhance.filter((item) => selectedEnhance.has(item.id)),
         ...plan.max.filter((item) => selectedMax.has(item.id))
@@ -1482,6 +1508,63 @@
     });
   }
 
+  function shoppingLocation(price) {
+    const value = Number(price) || 0;
+    if (value > 15) return "Case";
+    if (value >= 5) return "Binder";
+    if (value > 1) return `$${Math.min(6, Math.max(1, Math.ceil(value)))} sleeves`;
+    return "Bin";
+  }
+
+  function configuredDeckCards(variant) {
+    const plan = buyCatalog.plans[variant.id];
+    if (!plan) return [];
+    const current = ensureBuyState(variant.id);
+    const result = evaluateDeckCompliance(plan, current);
+    const sources = [...(plan.startingShell || []), ...(plan.required || []), ...(plan.enhance || []), ...(plan.max || [])];
+    return result.cards.filter((card) => !card.isFlexibleSlot).map((card) => {
+      const source = sources.find((item) => itemKey(item) === itemKey(card)) || card;
+      const resolved = resolvedBuyCard(source);
+      return {...resolved, quantity: card.quantity, typeLine: card.typeLine || resolved.typeLine, isCommander: card.isCommander};
+    }).sort((a, b) => Number(b.isCommander) - Number(a.isCommander) || shellType(a).localeCompare(shellType(b)) || a.name.localeCompare(b.name));
+  }
+
+  function renderLiveDecks() {
+    const root = $("#view-live");
+    const variants = selectedVariants();
+    root.innerHTML = `<div class="page-intro"><div><h2 id="live-title">Live Decks</h2><p>Your checked final-deck cards. Bought cards are clear; cards still needed are greyed out with convention-floor buying guidance.</p></div><div class="selection-meter"><strong>${variants.length}</strong><span>live decks</span></div></div><div class="live-decks"></div>`;
+    const host = $(".live-decks", root);
+    if (!variants.length) {
+      host.innerHTML = `<div class="empty-state"><h3>No live decks yet</h3><p>Select a deck in Compare and choose its final cards in Buy Picks.</p><button class="primary-button" data-go="compare">Choose decks</button></div>`;
+      $("[data-go='compare']", host)?.addEventListener("click", () => switchView("compare"));
+      return;
+    }
+    variants.forEach((variant) => {
+      const plan = buyCatalog.plans[variant.id];
+      const cards = configuredDeckCards(variant);
+      ensureShopMetadata(cards);
+      const shellBought = Boolean(state.found[itemKey(plan.precon)]);
+      const boughtCount = cards.filter((card) => state.found[itemKey(card)] || (shellBought && (plan.startingShell || []).some((shell) => itemKey(shell) === itemKey(card)))).reduce((sum, card) => sum + Number(card.quantity || 1), 0);
+      const details = document.createElement("details");
+      details.className = "live-deck";
+      details.open = variant.deckId === openBuyDeckId;
+      details.innerHTML = `<summary><span class="deck-number">${variant.deckId}</span><span><strong>${esc(variant.name)}</strong><small>${cards.reduce((sum, card) => sum + Number(card.quantity || 1), 0)} checked · ${boughtCount} bought</small></span></summary><div class="live-card-list"></div>`;
+      const list = $(".live-card-list", details);
+      cards.forEach((card) => {
+        const fromShell = (plan.startingShell || []).some((shell) => itemKey(shell) === itemKey(card));
+        const bought = Boolean(state.found[itemKey(card)] || (shellBought && fromShell));
+        const price = Number(card.price || cardMetadata[itemKey(card)]?.price) || null;
+        const ceiling = Number(card.ceiling || cardMetadata[itemKey(card)]?.ceiling) || null;
+        const row = document.createElement("article");
+        row.className = `live-card-row${bought ? " is-bought" : " is-needed"}`;
+        row.innerHTML = `<button type="button" class="live-card-main"><img src="${esc(card.image || cardMetadata[itemKey(card)]?.image || cardImageCandidates(card)[0])}" alt="" loading="lazy"><span><b>${esc(card.name)}${card.quantity > 1 ? ` ×${card.quantity}` : ""}</b><small>${manaCostHtml(card.manaCost)}${esc(card.typeLine || "")}</small>${card.isCommander ? `<em>Commander</em>` : ""}</span></button><div class="live-card-status">${bought ? `<strong>✓ Bought</strong><small>${esc(card.purpose || card.oracleText || "In final deck")}</small>` : `<strong>${shoppingLocation(price)}</strong><small>Floor ${price ? money(price) : "unpriced"} · Ceiling ${ceiling ? money(ceiling) : "not listed"}</small><a href="${esc(card.tcgplayerUrl || `https://www.tcgplayer.com/search/magic/product?q=${encodeURIComponent(card.name)}&view=grid`)}" target="_blank" rel="noopener">TCGPlayer ↗</a>`}</div>`;
+        $(".live-card-main", row).addEventListener("click", () => openBuyItemDetail(card, variant, fromShell ? "starting shell" : "selected card"));
+        list.appendChild(row);
+      });
+      host.appendChild(details);
+    });
+  }
+
   function renderShop() {
     const root = $("#view-shop");
     const allItems = derivedShopItems();
@@ -1492,14 +1575,14 @@
       <div class="page-intro">
         <div>
           <h2 id="shop-title">Shop List</h2>
-          <p>A clean, deduplicated list for walking vendor tables. Accessories never appear here.</p>
+          <p>A clean, deduplicated list for walking vendor tables. Mark purchases Bought; accessories never appear here.</p>
         </div>
-        <div class="selection-meter"><strong>${foundCount}/${allItems.length}</strong><span>items found</span></div>
+        <div class="selection-meter"><strong>${foundCount}/${allItems.length}</strong><span>items bought</span></div>
       </div>
       <div class="shop-toolbar">
         <input class="search-input" id="shop-search" type="search" value="${esc(filters.query)}" placeholder="Search cards…" aria-label="Search shopping list">
-        <div class="quick-filter-row" aria-label="Found status">
-          <div class="status-chips">${filterChip("status", "all", "All", filters)}${filterChip("status", "need", "Need", filters)}${filterChip("status", "found", "Found", filters)}</div>
+        <div class="quick-filter-row" aria-label="Bought status">
+          <div class="status-chips">${filterChip("status", "all", "All", filters)}${filterChip("status", "need", "Need", filters)}${filterChip("status", "found", "Bought", filters)}</div>
           <details class="more-filters">
             <summary>Filters${activeFilterCount ? ` <b>${activeFilterCount}</b>` : ""}</summary>
             <div class="filter-select-grid">
@@ -1716,7 +1799,7 @@
         <p class="shop-purpose">${sectionIcon("does")}<span>${esc(item.purpose || item.replaces || "")}</span></p>
         <div class="shop-refs"><span>Needed by</span>${item.deckRefs.map((ref) => `<b>Deck ${ref.deckId}</b>`).join("")}</div>
         <div class="shop-bottom">
-          <button class="found-button">${found ? "✓ Found" : "Mark found"}</button>
+          <button class="found-button">${found ? "✓ Bought" : "Mark Bought"}</button>
         </div>
       </div>`;
     const cardImage = $(".shop-image", card);
@@ -1740,7 +1823,7 @@
     });
     $(".found-button", card).addEventListener("click", () => {
       state.found[item.key] = !found;
-      saveState(!found ? `${item.name} marked found` : `${item.name} returned to Need`);
+      saveState(!found ? `${item.name} marked Bought` : `${item.name} returned to Need`);
       renderShop();
     });
     return card;
@@ -1766,7 +1849,7 @@
       {view: "buy", selectors: [".buy-overview", ".page-intro"], title: "See the chosen plans together", copy: "Buy Picks carries over each selected variant and shows how many Tuned purchases and optional swaps are involved."},
       {view: "buy", selectors: [".deck-compliance", ".empty-state"], title: "Experiment without losing the rules", copy: "The compact check follows card count, composition, and tracked Tier 2–3 limits while you try different arrangements."},
       {view: "buy", selectors: [".starting-shell", ".buy-section", ".empty-state"], title: "Build from a real 100-card shell", copy: "The commander stays visible. Expand the nested shell, then test Tuned, Enhance, and Maxxed one-for-one replacements."},
-      {view: "shop", selectors: [".shop-toolbar", ".empty-state"], title: "Finish with a vendor-table checklist", copy: "Search, filter, group, inspect larger card art, compare target and ceiling prices, and mark cards Found. You can restart a page-specific Tour here anytime."}
+      {view: "shop", selectors: [".shop-toolbar", ".empty-state"], title: "Finish with a vendor-table checklist", copy: "Search, filter, group, inspect larger card art, compare target and ceiling prices, and mark cards Bought. You can restart a page-specific Tour here anytime."}
     ],
     buy: [
       {view: "buy", selectors: [".page-intro"], title: "Test the selected arrangements", copy: "This page turns Compare selections into complete 100-card configurations and explicit purchases."},
@@ -1778,10 +1861,10 @@
     ],
     shop: [
       {view: "shop", selectors: [".page-intro"], title: "Your table-ready list", copy: "Only purchases from the selected deck arrangements appear here, deduplicated across decks."},
-      {view: "shop", selectors: [".shop-toolbar", ".empty-state"], title: "Search and filter quickly", copy: "Narrow by need/found status, purchase level, deck, or card type while walking a vendor floor."},
+      {view: "shop", selectors: [".shop-toolbar", ".empty-state"], title: "Search and filter quickly", copy: "Narrow by need/bought status, purchase level, deck, or card type while walking a vendor floor."},
       {view: "shop", selectors: [".more-filters", ".empty-state"], title: "Group the way you shop", copy: "Group by table location, rarity, price range, type, theme/set, or number of decks that need the card."},
       {view: "shop", selectors: [".shop-card", ".empty-state"], title: "Use the complete buying card", copy: "Each card shows large art, table location, target and ceiling price, rarity, purpose, and the decks that need it."},
-      {view: "shop", selectors: [".found-button", ".empty-state"], title: "Mark progress as you go", copy: "Mark a card Found and the remaining target total updates. Everything stays private on this device."}
+      {view: "shop", selectors: [".found-button", ".empty-state"], title: "Mark progress as you go", copy: "Mark a card Bought and the remaining target total updates. Everything stays private on this device."}
     ]
   };
 
@@ -1864,7 +1947,7 @@
   }
 
   function resetState() {
-    if (!window.confirm("Reset all deck picks, comments, optional buys, filters, and Found checkmarks on this device?")) return;
+    if (!window.confirm("Reset all deck picks, comments, optional buys, filters, and Bought checkmarks on this device?")) return;
     state = blankState();
     saveState("Picks reset");
     renderCompare();
@@ -1875,16 +1958,17 @@
   async function init() {
     try {
       [catalog, buyCatalog] = await Promise.all([
-        fetch("data/variants.json").then((response) => {
+        fetch("data/variants.json", {cache: "no-store"}).then((response) => {
           if (!response.ok) throw new Error("Variant catalog did not load");
           return response.json();
         }),
-        fetch("data/buy-plans.json").then((response) => {
+        fetch("data/buy-plans.json", {cache: "no-store"}).then((response) => {
           if (!response.ok) throw new Error("Buy catalog did not load");
           return response.json();
         })
       ]);
       state = loadState();
+      migrateCheckedSelections();
       initializeInfoTooltips();
       initializeDetailsControls();
       renderCompare();

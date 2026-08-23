@@ -3,6 +3,9 @@ import {readFile} from "node:fs/promises";
 
 const variants = JSON.parse(await readFile(new URL("../data/variants.json", import.meta.url), "utf8"));
 const buyPlans = JSON.parse(await readFile(new URL("../data/buy-plans.json", import.meta.url), "utf8"));
+const cards = JSON.parse(await readFile(new URL("../data/cards.json", import.meta.url), "utf8"));
+const auditedByName = new Map(cards.cards.map((card) => [card.name.toLowerCase(), card]));
+for (const card of cards.cards) for (const face of card.name.split(" // ")) auditedByName.set(face.toLowerCase(), card);
 
 assert.equal(variants.decks.length, 6, "expected six deck roles");
 assert.equal(variants.variants.length, 30, "expected thirty variants");
@@ -65,6 +68,18 @@ for (const [variantId, plan] of Object.entries(buyPlans.plans)) {
   const allItems = [plan.precon, ...plan.required, ...plan.upgrade, ...plan.enhance, ...plan.max];
   assert(allItems.every((item) => !String(item.image).startsWith("data:")), `${variantId} must not embed images`);
   assert([...plan.required, ...plan.upgrade, ...plan.enhance, ...plan.max].every((item) => item.brief && item.why !== undefined), `${variantId} purchases must retain detail fields`);
+  const commander = plan.startingShell.find((card) => card.isCommander);
+  const identity = new Set(auditedByName.get(commander.name.toLowerCase()).colorIdentity);
+  for (const item of [...plan.startingShell, ...plan.required, ...plan.enhance, ...plan.max].filter((card) => !card.isFlexibleSlot)) {
+    const audited = auditedByName.get(item.name.toLowerCase());
+    assert(audited, `${variantId}: ${item.name} must exist in the authoritative audit`);
+    assert.equal(audited.legalities.commander, "legal", `${variantId}: ${item.name} must be Commander legal`);
+    assert(audited.colorIdentity.every((color) => identity.has(color)), `${variantId}: ${item.name} must fit ${commander.name}'s color identity`);
+    assert.equal(item.typeLine, audited.typeLine, `${variantId}: ${item.name} must use its audited type line`);
+  }
 }
+
+assert.equal(cards.missing.length, 0, "all modeled cards must resolve in the authoritative audit");
+assert.equal(cards.cards.length, buyPlans.cardAudit.cardsVerified, "audit summary must match the static card catalog");
 
 console.log(`Validated ${variants.variants.length} variants and ${Object.keys(buyPlans.plans).length} connected buy profiles.`);
