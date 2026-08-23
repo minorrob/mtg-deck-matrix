@@ -30,9 +30,10 @@ if (!results.length) {
 }
 
 const percent = (value) => `${(Number(value || 0) * 100).toFixed(1)}%`;
+const STAGE_ORDER = {Tuned: 0, Maxed: 1};
 const byDeck = new Map();
 results
-  .sort((a, b) => a.variantId.localeCompare(b.variantId))
+  .sort((a, b) => a.variantId.localeCompare(b.variantId) || (STAGE_ORDER[a.stage] ?? 0) - (STAGE_ORDER[b.stage] ?? 0))
   .forEach((result) => {
     const deckId = result.deckId || 0;
     if (!byDeck.has(deckId)) byDeck.set(deckId, []);
@@ -57,7 +58,7 @@ lines.push("# Simulation results");
 lines.push("");
 lines.push(`Generated ${new Date().toISOString().slice(0, 16).replace("T", " ")} · ${results.length} deck${results.length === 1 ? "" : "s"}.`);
 lines.push("");
-lines.push("Each deck was simulated as its **Tuned build** — the plan's starting shell with every required purchase applied — not whichever boxes are ticked in a browser.");
+lines.push("Each deck was simulated from its literal card list — never whichever boxes are ticked in a browser — as two builds checked against the rules each is meant to satisfy: **Tuned** (the starting shell with every required purchase applied) against **Tier 2**, and **Maxed** (Tuned plus every Enhance and Max option) against **Tier 3**.");
 lines.push("");
 lines.push("## How to read a verdict");
 lines.push("");
@@ -77,8 +78,13 @@ for (const [deckId, deckResults] of [...byDeck.entries()].sort((a, b) => a[0] - 
     const variant = variants.variants.find((entry) => entry.id === result.variantId);
     const holdoutBefore = result.holdoutBaselineMetrics || result.baselineMetrics;
     const holdoutAfter = result.holdoutMetrics || result.finalMetrics;
-    lines.push(`### ${result.variantId} · ${result.name}`);
+    lines.push(`### ${result.variantId} · ${result.name} · ${result.stage || "Tuned"} · Tier ${result.tier ?? 3}`);
     lines.push("");
+    if (result.legalityFixes?.length) {
+      lines.push(`**Not legal as published.** The ${(result.stage || "Tuned").toLowerCase()} build in the shopping guide is not Tier ${result.tier ?? 3} legal on its own — these changes are mandatory, not a suggestion:`);
+      result.legalityFixes.forEach((fix) => lines.push(`- **Cut ${fix.out} · add ${fix.in}** — ${fix.reason}`));
+      lines.push("");
+    }
     lines.push(`**${result.verdict}** — ${result.recommendation}`);
     lines.push("");
     lines.push(`| | before | after |`);
@@ -96,10 +102,14 @@ for (const [deckId, deckResults] of [...byDeck.entries()].sort((a, b) => a[0] - 
       lines.push("");
     }
     summary.push({
+      requestId: result.id,
       variantId: result.variantId,
       deckId,
       name: result.name,
       commander: result.commander,
+      stage: result.stage || "Tuned",
+      tier: result.tier ?? 3,
+      legalityFixes: result.legalityFixes || [],
       mechanics: variant?.mechanics || [],
       verdict: result.verdict,
       recommendation: result.recommendation,

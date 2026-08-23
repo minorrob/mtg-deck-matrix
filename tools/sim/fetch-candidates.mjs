@@ -11,11 +11,25 @@
 
 import path from "node:path";
 import {createRequire} from "node:module";
-import {parseArgs, readJson, writeJson, loadCatalog, loadConfig, Lineup, Compliance, Engine, ROOT, SIM_DIR, relative} from "./lib.mjs";
+import {spawnSync} from "node:child_process";
+import {fileURLToPath} from "node:url";
+import {parseArgs, readJson, writeJson, loadCatalog, loadConfig, Lineup, Compliance, Engine, ROOT, CACHE_DIR, relative} from "./lib.mjs";
 
 const require = createRequire(import.meta.url);
 const Scryfall = require(path.join(ROOT, "scryfall-client.js"));
 const args = parseArgs(process.argv.slice(2));
+
+// Node's global fetch does not read HTTP_PROXY/HTTPS_PROXY on its own — that
+// needs the --use-env-proxy flag set before the process starts, which is too
+// late to set from inside this file. Behind a corporate or sandboxed proxy
+// (HTTPS_PROXY set) and about to make a live call, re-exec once with the flag
+// added. Nothing here runs when there is no proxy configured, which is the
+// case on an ordinary machine, so this is a no-op outside that situation.
+if (!args.offline && (process.env.HTTPS_PROXY || process.env.https_proxy) && !process.execArgv.includes("--use-env-proxy")) {
+  const child = spawnSync(process.execPath, ["--use-env-proxy", fileURLToPath(import.meta.url), ...process.argv.slice(2)], {stdio: "inherit", env: process.env});
+  process.exit(child.status ?? 1);
+}
+
 if (!args.request) {
   console.log("Usage: node tools/sim/fetch-candidates.mjs --request <requestFile> [--offline] [--out <file>]");
   process.exit(1);
@@ -109,7 +123,7 @@ if (!args.offline) {
 cardData.cards.forEach((card) => add(card, "audited-pool"));
 
 const candidates = Array.from(pool.values()).sort((a, b) => a.name.localeCompare(b.name));
-const out = args.out ? path.resolve(ROOT, String(args.out)) : path.join(SIM_DIR, "cache", `pool-${request.id}.json`);
+const out = args.out ? path.resolve(ROOT, String(args.out)) : path.join(CACHE_DIR, `pool-${request.id}.json`);
 await writeJson(out, {
   schemaVersion: 1,
   requestId: request.id,

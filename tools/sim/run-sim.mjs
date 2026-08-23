@@ -17,7 +17,7 @@ import path from "node:path";
 import {
   parseArgs, readJson, writeJson, loadConfig, loadOpponents, loadCatalog, buildTable, validateList,
   readLedger, capCheck, recordGames, writeStatus, evaluateList, roleCensus,
-  Lineup, Engine, ROOT, SIM_DIR, EXIT, relative
+  Lineup, Compliance, Engine, ROOT, RESULTS_DIR, CACHE_DIR, EXIT, relative
 } from "./lib.mjs";
 
 const args = parseArgs(process.argv.slice(2));
@@ -33,8 +33,8 @@ const config = await loadConfig();
 const opponents = await loadOpponents();
 const table = buildTable(opponents, request.table || config.table);
 const {audited} = await loadCatalog();
-const statePath = path.join(SIM_DIR, "cache", `state-${request.id}.json`);
-const poolPath = args.pool ? path.resolve(ROOT, String(args.pool)) : path.join(SIM_DIR, "cache", `pool-${request.id}.json`);
+const statePath = path.join(CACHE_DIR, `state-${request.id}.json`);
+const poolPath = args.pool ? path.resolve(ROOT, String(args.pool)) : path.join(CACHE_DIR, `pool-${request.id}.json`);
 const quiet = Boolean(args.quiet);
 
 // A --games argument may only reduce the batch size.
@@ -210,6 +210,43 @@ function candidateRanking(pool, gaps, tried) {
     .sort((a, b) => b.value - a.value || a.candidate.price - b.candidate.price);
 }
 
+// A curated Tuned or Maxed build can include a card the target tier does not
+// allow at all — most often a Game Changer baked into a required purchase, not
+// an optional pick. That is not something the evidence-based optimizer below
+// should be trusted to fix on its own: a Game Changer is usually a strong
+// performer, so nothing in cutRanking's cast-rate/dead-rate evidence would
+// ever flag it for removal even though its mere presence makes the whole list
+// illegal. Legality is the floor everything else stands on, so it is forced
+// straight, one named violation at a time, before a single game is measured.
+function legalizeForTier(cards, pool, tier) {
+  const fixes = [];
+  let working = cards.map((card) => ({...card}));
+  for (let pass = 0; pass < 12; pass += 1) {
+    const result = evaluateList(working);
+    const issues = result[`tier${tier}`];
+    if (!issues.length) break;
+    const inHand = new Set(working.map((card) => Lineup.normalizeName(card.name)));
+    const targetKey = issues
+      .flatMap((issue) => issue.card.split(" + "))
+      .map((name) => Lineup.normalizeName(name))
+      .find((key) => inHand.has(key));
+    if (!targetKey) break; // not traceable to one named card (e.g. a raw count mismatch) — leave it for validateList to report
+    const index = working.findIndex((card) => !card.isCommander && Lineup.normalizeName(card.name) === targetKey);
+    if (index < 0) break;
+    const removed = working[index];
+    const picked = new Set(working.map((card) => Lineup.normalizeName(card.name)));
+    const replacement = (pool.candidates || [])
+      .filter((candidate) => !picked.has(Lineup.normalizeName(candidate.name)))
+      .filter((candidate) => tier !== 2 || !candidate.gameChanger)
+      .filter((candidate) => !Compliance.deriveComplianceTags(candidate).length)
+      .sort((a, b) => (b.roles?.length || 0) - (a.roles?.length || 0) || Number(a.price || 0) - Number(b.price || 0))[0];
+    if (!replacement) break;
+    working.splice(index, 1, {...replacement, quantity: 1, isCommander: false});
+    fixes.push({out: removed.name, in: replacement.name, reason: `Tier ${tier} does not allow ${removed.name} to stay in this list.`});
+  }
+  return {cards: working, fixes};
+}
+
 function proposeSwaps(cards, perCardStats, gaps, pool, tried, limit, baseWinRate = 0) {
   const landCount = evaluateList(cards).types.Land || 0;
   const cuts = cutRanking(cards, perCardStats, gaps, landCount, baseWinRate);
@@ -368,11 +405,14 @@ async function finalize(state, reason, exitCode) {
           ? "within-noise"
           : "not-confirmed";
   const swapsApplied = state.history.filter((entry) => entry.accepted).flatMap((entry) => entry.swaps.map((swap) => ({...swap, iteration: entry.iteration})));
-  const finalCheck = validateList(best.cards, {
-    landFloor: request.constraints.landFloor ?? config.landFloor,
-    landCeiling: request.constraints.landCeiling ?? config.landCeiling,
-    mustKeep: request.constraints.mustKeep
-  });
+  const targetTier = request.constraints.tier === 2 ? 2 : 3;
+  const landConstraints = {landFloor: request.constraints.landFloor ?? config.landFloor, landCeiling: request.constraints.landCeiling ?? config.landCeiling, mustKeep: request.constraints.mustKeep};
+  // Both tiers are checked regardless of which one this run targeted, so a
+  // Tuned/Tier 2 result still shows whether the list happens to clear Tier 3
+  // too, and vice versa — the target tier alone decides `finalCheck.ok`.
+  const finalCheckTier2 = validateList(best.cards, {...landConstraints, tier: 2});
+  const finalCheckTier3 = validateList(best.cards, {...landConstraints, tier: 3});
+  const finalCheck = targetTier === 2 ? finalCheckTier2 : finalCheckTier3;
   const result = {
     schemaVersion: 1,
     id: request.id,
@@ -380,6 +420,8 @@ async function finalize(state, reason, exitCode) {
     deckId: request.deckId,
     name: request.name,
     commander: request.commander,
+    stage: request.stage || "Tuned",
+    tier: targetTier,
     table: table.name,
     finishedAt: new Date().toISOString(),
     stopReason: reason,
@@ -406,17 +448,29 @@ async function finalize(state, reason, exitCode) {
             : "Unverified: the run stopped before an unseen-seed check could be made.",
     scoreDelta: Number(((best.metrics.score || 0) - (state.baseline?.metrics.score || 0)).toFixed(1)),
     swapsApplied,
+    legalityFixes: state.legalityFixes || [],
     netChanges: netChanges(state.baseline?.cards || [], best.cards, state.baseline?.perCardStats),
     roleCensus: {before: roleCensus(state.baseline?.cards || []), after: roleCensus(best.cards)},
     rejectedSwaps: state.history.filter((entry) => !entry.accepted).flatMap((entry) => entry.swaps.map((swap) => ({...swap, iteration: entry.iteration, rejectedBecause: entry.note}))),
-    compliance: {tier3Clean: finalCheck.ok, problems: finalCheck.problems, total: finalCheck.result.total, lands: finalCheck.result.types.Land || 0, gameChangers: finalCheck.result.selectedGameChangers.length},
+    compliance: {
+      tier: targetTier,
+      ok: finalCheck.ok,
+      problems: finalCheck.problems,
+      total: finalCheck.result.total,
+      lands: finalCheck.result.types.Land || 0,
+      gameChangers: finalCheck.result.selectedGameChangers.length,
+      tier2Clean: finalCheckTier2.ok,
+      tier2Problems: finalCheckTier2.problems,
+      tier3Clean: finalCheckTier3.ok,
+      tier3Problems: finalCheckTier3.problems
+    },
     finalCards: best.cards.map((card) => ({name: card.name, quantity: Math.max(1, Number(card.quantity || 1)), isCommander: Boolean(card.isCommander), price: Number(card.price || 0), typeLine: card.typeLine})),
     perCardStats: best.perCardStats,
     gapsRemaining: best.gaps,
     simplifications: Engine.SIMPLIFICATIONS,
     history: state.history
   };
-  const out = path.join(SIM_DIR, "results", `${request.id}.json`);
+  const out = path.join(RESULTS_DIR, `${request.id}.json`);
   await writeJson(out, result);
   await writeStatus({
     state: exitCode === EXIT.CAP_REACHED ? "cap-reached" : "done",
@@ -461,6 +515,29 @@ async function measure(cards, state, label, seed) {
 const state = await loadState();
 
 if (args.init || (!args.apply && !args.auto && !args.finalize)) {
+  const initPool = await loadPool();
+  const targetTier = request.constraints.tier === 2 ? 2 : 3;
+  if (!state.baseline) {
+    const legalized = legalizeForTier(state.cards, initPool, targetTier);
+    if (legalized.fixes.length) {
+      state.cards = legalized.cards;
+      state.legalityFixes = legalized.fixes;
+      log(`mandatory legality fixes (Tier ${targetTier}): the shopping-guide list is not legal at this tier as published`);
+      legalized.fixes.forEach((fix) => log(`  cut ${fix.out} for ${fix.in} — ${fix.reason}`));
+      const stillIllegal = evaluateList(state.cards)[`tier${targetTier}`];
+      if (stillIllegal.length) log(`  could not fully legalize: ${stillIllegal.map((issue) => `${issue.card}: ${issue.rule}`).join("; ")}`);
+    }
+    // A wrong card count is not something the legality pass touches — it only
+    // swaps named violations one-for-one, which preserves total count by
+    // construction — so it is never fixable here. Simulating a 90-card or
+    // 110-card "deck" would silently produce metrics for something that is not
+    // a legal Commander deck at all, which is worse than refusing to start.
+    const startingTotal = evaluateList(state.cards).total;
+    if (startingTotal !== 100) {
+      console.error(`This request's starting list has ${startingTotal} cards, not 100. That is not something a card swap can fix — check how the request was built.`);
+      process.exit(EXIT.ERROR);
+    }
+  }
   const measured = await measure(state.cards, state, "baseline");
   if (!measured) {
     console.error("The simulation cap was reached before a baseline could be measured.");
@@ -469,14 +546,15 @@ if (args.init || (!args.apply && !args.auto && !args.finalize)) {
   state.baseline = {iteration: 0, cards: state.cards, metrics: measured.metrics, gaps: measured.gaps, perCardStats: measured.perCardStats};
   state.best = state.baseline;
   state.iteration = 0;
-  state.history = [{iteration: 0, accepted: true, score: measured.metrics.score, swaps: [], note: "baseline"}];
+  state.history = [{iteration: 0, accepted: true, score: measured.metrics.score, swaps: [], note: "baseline", legalityFixes: state.legalityFixes || []}];
   await saveState(state);
   const report = reportFor(state, measured.metrics, measured.perCardStats, measured.gaps, {
-    candidateSwaps: (await readJson(poolPath, {candidates: []})).candidates.length
-      ? proposeSwaps(state.cards, measured.perCardStats, measured.gaps, await loadPool(), state.tried, config.maxSwapsPerIteration * 3)
-      : []
+    candidateSwaps: initPool.candidates.length
+      ? proposeSwaps(state.cards, measured.perCardStats, measured.gaps, initPool, state.tried, config.maxSwapsPerIteration * 3)
+      : [],
+    legalityFixes: state.legalityFixes || []
   });
-  await writeJson(path.join(SIM_DIR, "results", `${request.id}.iter0.json`), report);
+  await writeJson(path.join(RESULTS_DIR, `${request.id}.iter0.json`), report);
   log(`baseline for ${request.variantId} · ${request.name}`);
   log(`  score          ${measured.metrics.score.toFixed(1)}`);
   log(`  win rate       ${(measured.metrics.winRate * 100).toFixed(1)}% ±${(Engine.winRateInterval(measured.metrics).margin * 100).toFixed(1)} over ${measured.metrics.games} games`);
@@ -497,7 +575,7 @@ if (args.apply) {
     process.exit(EXIT.INVALID_SWAPS);
   }
   const applied = applySwaps(state.best.cards, swaps, pool);
-  const check = validateList(applied.cards, {landFloor: request.constraints.landFloor ?? config.landFloor, landCeiling: request.constraints.landCeiling ?? config.landCeiling, mustKeep: request.constraints.mustKeep, roleFloors: effectiveFloors(roleCensus(state.best.cards))});
+  const check = validateList(applied.cards, {landFloor: request.constraints.landFloor ?? config.landFloor, landCeiling: request.constraints.landCeiling ?? config.landCeiling, mustKeep: request.constraints.mustKeep, roleFloors: effectiveFloors(roleCensus(state.best.cards)), tier: request.constraints.tier === 2 ? 2 : 3});
   if (applied.problems.length || !check.ok) {
     console.error("The proposed swaps were rejected:");
     [...applied.problems, ...check.problems].forEach((problem) => console.error(`  - ${problem}`));
@@ -511,7 +589,7 @@ if (args.apply) {
   swaps.forEach((swap) => state.tried.push(Lineup.normalizeName(swap.in)));
   if (improved) state.best = {iteration: state.iteration, cards: applied.cards, metrics: measured.metrics, gaps: measured.gaps, perCardStats: measured.perCardStats};
   await saveState(state);
-  await writeJson(path.join(SIM_DIR, "results", `${request.id}.iter${state.iteration}.json`), reportFor(state, measured.metrics, measured.perCardStats, measured.gaps, {
+  await writeJson(path.join(RESULTS_DIR, `${request.id}.iter${state.iteration}.json`), reportFor(state, measured.metrics, measured.perCardStats, measured.gaps, {
     swapsThisIteration: swaps,
     accepted: improved,
     bestScore: state.best.metrics.score,
@@ -549,7 +627,7 @@ if (args.auto) {
       process.exit(EXIT.CONVERGED);
     }
     const applied = applySwaps(state.best.cards, swaps, pool);
-    const check = validateList(applied.cards, {landFloor: request.constraints.landFloor ?? config.landFloor, landCeiling: request.constraints.landCeiling ?? config.landCeiling, mustKeep: request.constraints.mustKeep, roleFloors: effectiveFloors(roleCensus(state.best.cards))});
+    const check = validateList(applied.cards, {landFloor: request.constraints.landFloor ?? config.landFloor, landCeiling: request.constraints.landCeiling ?? config.landCeiling, mustKeep: request.constraints.mustKeep, roleFloors: effectiveFloors(roleCensus(state.best.cards)), tier: request.constraints.tier === 2 ? 2 : 3});
     swaps.forEach((swap) => state.tried.push(Lineup.normalizeName(swap.in)));
     if (applied.problems.length || !check.ok) {
       const note = [...applied.problems, ...check.problems].join(" ");
@@ -583,7 +661,7 @@ if (args.auto) {
     batchSize = improved ? config.maxSwapsPerIteration : Math.max(1, Math.floor(batchSize / 2));
     stalled = gain < config.convergence.minScoreGain ? stalled + 1 : 0;
     await saveState(state);
-    await writeJson(path.join(SIM_DIR, "results", `${request.id}.iter${state.iteration}.json`), reportFor(state, measured.metrics, measured.perCardStats, measured.gaps, {
+    await writeJson(path.join(RESULTS_DIR, `${request.id}.iter${state.iteration}.json`), reportFor(state, measured.metrics, measured.perCardStats, measured.gaps, {
       swapsThisIteration: swaps,
       accepted: improved,
       gain: Number(gain.toFixed(2)),

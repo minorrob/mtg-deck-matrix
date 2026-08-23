@@ -14,6 +14,11 @@ export const SIM_DIR = path.join(ROOT, "sim");
 export const CONFIG_PATH = process.env.SIM_CONFIG_PATH || path.join(SIM_DIR, "config.json");
 export const LEDGER_PATH = process.env.SIM_LEDGER_PATH || path.join(SIM_DIR, "sim-ledger.json");
 export const STATUS_PATH = process.env.SIM_STATUS_PATH || path.join(SIM_DIR, "status.json");
+// A scratch-isolated test run (or any tool invocation that should not leave
+// real-looking artifacts behind) can redirect where finished results and
+// per-run cache state land, the same way it already redirects the ledger.
+export const RESULTS_DIR = process.env.SIM_RESULTS_DIR || path.join(SIM_DIR, "results");
+export const CACHE_DIR = process.env.SIM_CACHE_DIR || path.join(SIM_DIR, "cache");
 
 export const EXIT = {
   CONTINUE: 0,
@@ -95,12 +100,8 @@ export async function loadCatalog() {
   return {variants, buyPlans, cards, audited};
 }
 
-// The Tuned build: the plan's starting shell with every required purchase applied.
-// This is what the site shows as the default Buy Picks lineup, independent of
-// whichever boxes an individual browser happens to have ticked.
-export function tunedCards(plan, audited) {
-  const defaults = Lineup.defaultSelection(plan);
-  return Lineup.selectedEntries(plan, defaults).map((entry) => {
+function literalCardsFor(plan, audited, selection) {
+  return Lineup.selectedEntries(plan, selection).map((entry) => {
     const meta = audited.get(Lineup.normalizeName(entry.item.name)) || {};
     return {
       name: entry.item.name,
@@ -119,6 +120,25 @@ export function tunedCards(plan, audited) {
       source: entry.kind
     };
   });
+}
+
+// The Tuned build: the plan's starting shell with every required purchase applied.
+// This is what the site shows as the default Buy Picks lineup, independent of
+// whichever boxes an individual browser happens to have ticked.
+export function tunedCards(plan, audited) {
+  return literalCardsFor(plan, audited, Lineup.defaultSelection(plan));
+}
+
+// The Maxed build: every Enhance and Max option layered on top of the Tuned
+// build, the same way the site's own "select everything" controls do it —
+// composing Lineup.applyChoice one item at a time so slot/replacement and
+// duplicate-name resolution behave exactly as they do in the browser.
+export function maxedCards(plan, audited) {
+  let selection = Lineup.defaultSelection(plan);
+  [...(plan.enhance || []), ...(plan.max || [])].forEach((item) => {
+    selection = Lineup.applyChoice(plan, selection, item.id);
+  });
+  return literalCardsFor(plan, audited, selection);
 }
 
 export function literalFor(card) {
@@ -158,9 +178,15 @@ export function roleCensus(cards) {
 }
 
 // Every rule a proposed list must satisfy before a single game is played.
+// `constraints.tier` picks which bracket's extra rules gate validity — Tier 2
+// (no Game Changers, no mass land denial, no two-card combos) or Tier 3 (up to
+// three Game Changers). The 100-card, singleton, identity and legality checks
+// are shared by both and always apply. Defaults to 3 to preserve every
+// existing caller that never had a tier to specify.
 export function validateList(cards, constraints = {}) {
   const problems = [];
   const result = evaluateList(cards);
+  const tier = constraints.tier === 2 ? 2 : 3;
   if (constraints.roleFloors) {
     const census = roleCensus(cards);
     Object.entries(constraints.roleFloors).forEach(([role, floor]) => {
@@ -168,7 +194,7 @@ export function validateList(cards, constraints = {}) {
     });
   }
   if (result.total !== 100) problems.push(`The list contains ${result.total} cards; Commander requires exactly 100.`);
-  result.tier3.forEach((issue) => problems.push(`${issue.card}: ${issue.rule}`));
+  result[`tier${tier}`].forEach((issue) => problems.push(`${issue.card}: ${issue.rule}`));
   const lands = result.types.Land || 0;
   if (constraints.landFloor && lands < constraints.landFloor) problems.push(`${lands} lands is below the configured floor of ${constraints.landFloor}.`);
   if (constraints.landCeiling && lands > constraints.landCeiling) problems.push(`${lands} lands is above the configured ceiling of ${constraints.landCeiling}.`);

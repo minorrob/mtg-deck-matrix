@@ -146,7 +146,9 @@ const env = {
   ...process.env,
   SIM_CONFIG_PATH: tinyConfigPath,
   SIM_LEDGER_PATH: path.join(scratch, "ledger.json"),
-  SIM_STATUS_PATH: path.join(scratch, "status.json")
+  SIM_STATUS_PATH: path.join(scratch, "status.json"),
+  SIM_RESULTS_DIR: path.join(scratch, "results"),
+  SIM_CACHE_DIR: path.join(scratch, "cache")
 };
 const requestPath = path.join(scratch, "request.json");
 await run(process.execPath, [path.join(ROOT, "tools/sim/make-request.mjs"), "--variant", "5o", "--out", requestPath], {cwd: ROOT, env});
@@ -179,6 +181,31 @@ const lowered = await run(process.execPath, [path.join(ROOT, "tools/sim/run-sim.
 const ledger2 = JSON.parse(await readFile(path.join(scratch, "ledger2.json"), "utf8"));
 assert.equal(ledger2.totalGames, 100, "a caller may not raise the per-iteration game count above the configured limit");
 assert.match(lowered.stdout, /baseline for 5o/);
+
+// A starting list whose card count is wrong is not something a card swap can
+// fix, and must never be silently simulated as if it were a real 100-card deck.
+const brokenRequest = JSON.parse(await readFile(requestPath, "utf8"));
+brokenRequest.id = `${brokenRequest.id}-broken`;
+brokenRequest.cards = brokenRequest.cards.slice(0, -3);
+const brokenRequestPath = path.join(scratch, "broken-request.json");
+await writeFile(brokenRequestPath, JSON.stringify(brokenRequest));
+const brokenResultPath = path.join(scratch, "results", `${brokenRequest.id}.iter0.json`);
+let brokenExit = 0;
+let brokenErr = "";
+try {
+  await run(process.execPath, [path.join(ROOT, "tools/sim/run-sim.mjs"), "--request", brokenRequestPath, "--pool", poolPath, "--init"], {
+    cwd: ROOT,
+    env: {...env, SIM_LEDGER_PATH: path.join(scratch, "ledger-broken.json")}
+  });
+} catch (error) {
+  brokenExit = error.code;
+  brokenErr = error.stderr || "";
+}
+assert.equal(brokenExit, 1, `a starting list with the wrong card count must refuse to run rather than simulate it (got exit ${brokenExit})`);
+assert.match(brokenErr, /has \d+ cards, not 100/, "the runner must say why it refused");
+let brokenResultWritten = true;
+try { await readFile(brokenResultPath, "utf8"); } catch (error) { brokenResultWritten = false; }
+assert.equal(brokenResultWritten, false, "a refused run must never write a result, or a reader could mistake fabricated metrics for a real deck");
 
 await rm(scratch, {recursive: true, force: true});
 

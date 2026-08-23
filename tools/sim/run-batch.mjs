@@ -16,7 +16,7 @@ const config = await loadConfig();
 const {buyPlans, variants} = await loadCatalog();
 
 if (!args.variants && !args.all) {
-  console.log("Usage: node tools/sim/run-batch.mjs --variants <a,b,c> | --all [--baseline-only] [--table <name>] [--max-batch-ms <ms>]");
+  console.log("Usage: node tools/sim/run-batch.mjs --variants <a,b,c> | --all [--stage tuned|maxed] [--online] [--baseline-only] [--table <name>] [--max-batch-ms <ms>]");
   process.exit(1);
 }
 
@@ -48,7 +48,7 @@ for (const variantId of requested) {
   }
   const variant = variants.variants.find((entry) => entry.id === variantId);
   process.stdout.write(`\n${variantId} · ${variant?.name || buyPlans.plans[variantId].deckName}\n`);
-  const made = await run("make-request.mjs", ["--variant", variantId, ...(args.table ? ["--table", String(args.table)] : [])]);
+  const made = await run("make-request.mjs", ["--variant", variantId, ...(args.stage ? ["--stage", String(args.stage)] : []), ...(args.table ? ["--table", String(args.table)] : [])]);
   if (made.code !== 0) {
     console.log(`  request failed: ${made.err.trim() || made.out.trim()}`);
     summary.push({variantId, error: "request failed"});
@@ -79,6 +79,8 @@ for (const variantId of requested) {
     variantId,
     name: request.name,
     commander: request.commander,
+    stage: request.stage,
+    tier: request.constraints?.tier,
     requestId: request.id,
     exitCode: simmed.code,
     baselineScore: baseline?.metrics.score ?? null,
