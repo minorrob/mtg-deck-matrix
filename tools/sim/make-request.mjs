@@ -72,7 +72,7 @@ const landNote = landCount < config.landFloor || landCount > config.landCeiling
 const stamp = stampNow();
 const id = requestIdFor(`${variantId}-${stageArg}`, stamp);
 const request = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   id,
   variantId,
   deckId: plan.deckId,

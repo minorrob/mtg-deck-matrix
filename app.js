@@ -1797,6 +1797,7 @@
           ${simMetricRow("Mana screw", result.baselineMetrics?.screwPct, result.finalMetrics?.screwPct, percent)}
           ${simMetricRow("Flood", result.baselineMetrics?.floodPct, result.finalMetrics?.floodPct, percent)}
           ${simMetricRow("Answer in hand, turns 3-7", result.baselineMetrics?.interactionAvailability, result.finalMetrics?.interactionAvailability, percent)}
+          ${simMetricRow("Fun/participation", result.baselineMetrics?.funScore, result.finalMetrics?.funScore, percent)}
         </div>
       </section>
       ${changes.length ? `<section class="sim-changes"><h3>${changes.length} change${changes.length === 1 ? "" : "s"} to make</h3><ol>${changes.map((change) => `

@@ -103,6 +103,24 @@ const noLands = Engine.simulateGames([commander, ...Array.from({length: 99}, (_u
 assert.equal(noLands.metrics.winRate, 0, "a deck with no lands cannot win");
 assert.ok(noLands.metrics.screwPct > 0.9, "a deck with no lands must read as mana screwed");
 
+// A Defender creature must never contribute attack power unless the deck
+// itself lifts that restriction (e.g. Felothar the Steadfast). Every card in
+// this deck — commander included — has Defender, so with no enabler present
+// attack power must be exactly 0 every game, which means the deck can never
+// reduce an opponent to 0 life and so can never win.
+const wallCommander = {name: "Wall Test Commander", quantity: 1, isCommander: true, typeLine: "Legendary Creature — Wall", manaCost: "{2}{W}", oracleText: "Defender", colorIdentity: ["W"], power: "2", toughness: "4"};
+const wallLands = {name: "Plains", quantity: 36, typeLine: "Basic Land — Plains", manaCost: "", oracleText: "({T}: Add {W}.)", colorIdentity: ["W"]};
+const testWalls = {name: "Test Wall", quantity: 63, typeLine: "Creature — Wall", manaCost: "{2}{W}", oracleText: "Defender", colorIdentity: ["W"], power: "3", toughness: "6"};
+const testAttackers = {...testWalls, name: "Test Attacker", oracleText: "", quantity: 63};
+const defenderEnabler = {name: "Defender Enabler", quantity: 1, typeLine: "Legendary Creature — Human Soldier", manaCost: "{1}{W}", oracleText: "Creatures you control can attack as though they didn't have defender.", colorIdentity: ["W"], power: "1", toughness: "1"};
+
+const wallsOnly = Engine.simulateGames([wallCommander, wallLands, testWalls], table(), {...config, games: 300}, 55);
+const realAttackers = Engine.simulateGames([wallCommander, wallLands, testAttackers], table(), {...config, games: 300}, 55);
+const liftedWalls = Engine.simulateGames([wallCommander, wallLands, {...testWalls, quantity: 62}, defenderEnabler], table(), {...config, games: 300}, 55);
+assert.ok(wallsOnly.metrics.winRate < 0.15, `a board of nothing but Defenders and no enabler can never attack, so any win must come from the table eliminating itself, not from us (got ${wallsOnly.metrics.winRate})`);
+assert.ok(realAttackers.metrics.winRate > wallsOnly.metrics.winRate + 0.2, `identical stats without Defender must win far more often (walls ${wallsOnly.metrics.winRate} vs attackers ${realAttackers.metrics.winRate})`);
+assert.ok(liftedWalls.metrics.winRate > wallsOnly.metrics.winRate + 0.2, `an enabler that lifts Defender must let the same walls fight (walls ${wallsOnly.metrics.winRate} vs lifted ${liftedWalls.metrics.winRate})`);
+
 // ---------------------------------------------------------------------------
 // The metric has to discriminate: a deliberately damaged deck must score lower
 // ---------------------------------------------------------------------------
@@ -117,10 +135,16 @@ assert.ok(damagedResult.metrics.deadCardsAtT8 > healthy.metrics.deadCardsAtT8, "
 // ---------------------------------------------------------------------------
 // Scoring and gap analysis
 // ---------------------------------------------------------------------------
-const base = {winRate: 0.3, avgWinTurn: 11, screwPct: 0.05, floodPct: 0.04, avgCommanderTurn: 4, commanderCastRate: 0.95, interactionAvailability: 0.5, deadCardsAtT8: 1, games: 1000};
+const base = {winRate: 0.3, avgWinTurn: 11, screwPct: 0.05, floodPct: 0.04, avgCommanderTurn: 4, commanderCastRate: 0.95, interactionAvailability: 0.5, deadCardsAtT8: 1, participationRate: 0.9, avgPeakBoard: 3, reasonablePaceRate: 0.85, games: 1000};
 assert.ok(Engine.compositeScore({...base, winRate: 0.4}) > Engine.compositeScore(base), "a higher win rate must score higher");
 assert.ok(Engine.compositeScore({...base, screwPct: 0.3}) < Engine.compositeScore(base), "more mana screw must score lower");
 assert.ok(Engine.compositeScore({...base, interactionAvailability: 0.1}) < Engine.compositeScore(base), "less interaction must score lower");
+assert.ok(
+  Engine.compositeScore({...base, participationRate: 0.2, avgPeakBoard: 0.3, reasonablePaceRate: 0.2}) < Engine.compositeScore(base),
+  "a deck that rarely gets to develop a board or finish a real game must score lower on the fun signal"
+);
+assert.ok(Engine.funScoreFor({...base, participationRate: 1, avgPeakBoard: 4, reasonablePaceRate: 1}) === 1, "a deck that always participates, boards out and paces normally must hit the fun ceiling");
+assert.ok(Engine.funScoreFor({...base, participationRate: 0, avgPeakBoard: 0, reasonablePaceRate: 0}) === 0, "a deck that never gets to play must hit the fun floor");
 const interval = Engine.winRateInterval({winRate: 0.3, games: 1000});
 assert.ok(interval.margin > 0.02 && interval.margin < 0.04, `a 1000-game sample at 30% should carry roughly a three point margin (got ${interval.margin})`);
 assert.ok(Engine.winRateInterval({winRate: 0.3, games: 5000}).margin < interval.margin, "more games must narrow the interval");

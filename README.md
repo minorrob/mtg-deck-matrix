@@ -68,11 +68,14 @@ gain that exists solely on the tuned seeds is reported as `not-confirmed`.
 ### What it cannot see
 
 The engine is a model, not a rules engine. Combat and repeatable drain are the
-only routes to victory it knows, opponents are archetype curves rather than real
-decks, there is no stack and no blocking assignment, and a card's power is
-estimated from its mana value when Scryfall data is not to hand. The full list
-is in `sim-engine.js` and is copied into every result file. Read the numbers as
-a comparison between two versions of one deck, never as absolute odds.
+only routes to victory it knows, opponents are nine archetype curves (three
+power tiers, six playstyles) rather than real decks, there is no stack and no
+real blocking assignment (a toughness-weighted reduction stands in for it, and
+a Defender creature contributes no attack power unless the deck itself lifts
+that restriction), and the fun/participation score is one reasonable take on a
+subjective idea, not a settled definition. The full list is in `sim-engine.js`
+and is copied into every result file. Read the numbers as a comparison between
+two versions of one deck, never as absolute odds.
 
 ## Tests
 

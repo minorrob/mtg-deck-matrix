@@ -13,12 +13,15 @@
   // deck under the same seeds before and after a swap — never as absolute odds.
   const SIMPLIFICATIONS = [
     "No stack: spells resolve when cast, and counterspells are modelled as generic interaction.",
-    "No blocking assignment: combat damage is total attacking power times an unblocked factor.",
+    "No blocking assignment: combat damage is total attacking power times an unblocked factor, and a board's damage reduction is weighted by total toughness, not a real block.",
     "No politics: opponents never team up, and never target each other's threats instead of ours.",
     "Tutors draw the best of three random cards instead of choosing exactly.",
     "Tokens are modelled as extra power on the creature that makes them, not as separate bodies.",
     "Alternate win conditions and storm are scored as a large threat rather than an instant win.",
-    "Mana fixing is ideal within the colors actually available from lands in play."
+    "Mana fixing is ideal within the colors actually available from lands in play.",
+    "A Defender creature contributes no attack power unless the deck also contains an effect that lets it attack anyway.",
+    "Opponents are nine parameterised archetype curves (three power tiers, six playstyles), not simulated decks with real cards.",
+    "The fun/participation score is one reasonable operationalisation of a subjective idea — a developed board and a game that didn't end suspiciously early either way — not a settled definition of \"fun.\""
   ];
 
   const DEFAULT_TARGETS = {
@@ -31,19 +34,24 @@
   };
 
   const DEFAULT_WEIGHTS = {
-    winRate: 0.4,
+    winRate: 0.3,
     screw: 0.15,
     flood: 0.1,
     commander: 0.1,
     interaction: 0.1,
     clock: 0.1,
-    deadCards: 0.05
+    deadCards: 0.05,
+    fun: 0.1
   };
 
   const COLORS = ["W", "U", "B", "R", "G"];
   // The share of a seat's output aimed at us rather than at the other two seats.
   const AIMED_AT_US = 0.33;
   const BASIC_COLOR = {Plains: "W", Island: "U", Swamp: "B", Mountain: "R", Forest: "G"};
+
+  function clamp01(value) {
+    return Math.max(0, Math.min(1, Number(value) || 0));
+  }
 
   function createRng(seed) {
     let state = (Number(seed) || 1) >>> 0;
@@ -108,6 +116,14 @@
     return power;
   }
 
+  function estimateToughness(card, cmc, typeLine, text) {
+    if (Number.isFinite(Number(card.toughness))) return Math.max(0, Number(card.toughness));
+    if (!/Creature/.test(typeLine)) return 0;
+    let toughness = Math.max(1, Math.round(cmc * 0.9));
+    if (/defender/.test(text)) toughness += 2;
+    return toughness;
+  }
+
   // Decks that win by draining the table rather than attacking it need a route
   // to victory the model can see, or every aristocrats and lifegain build reads
   // as unable to close. Only a repeatable trigger on a permanent counts: "when
@@ -141,6 +157,7 @@
     const isCreature = /Creature/.test(typeLine);
     const instantSpeed = /Instant/.test(typeLine) || /flash/.test(text);
     const power = estimatePower(card, cmc, typeLine, text);
+    const toughness = estimateToughness(card, cmc, typeLine, text);
     const tokenMakers = (text.match(/create (?:a|an|two|three|x|\d+)[^.]{0,40}token/g) || []).length;
     const rampMatch = /add \{[wubrgc]\}\{[wubrgc]\}|search your library for (?:a|up to two|two) (?:basic )?land/.test(text) ? 2 : 1;
     return {
@@ -156,6 +173,13 @@
       isCommander: Boolean(card.isCommander),
       isCreature,
       power,
+      toughness,
+      // Anchored to the start of a line, matching how Scryfall prints a real
+      // keyword ("Defender\nWhen this creature enters...") — a card that merely
+      // mentions "defender" in the middle of other ability text (e.g. "+1/+1 for
+      // each Defender you control") should not match.
+      isDefender: isCreature && /(?:^|\n)defender\b/.test(text),
+      liftsDefender: /attack as though (?:it|they) didn'?t have defender/.test(text),
       instantSpeed,
       isRamp: !isLand && (/\{t\}: add|add \{[wubrgc]\}/.test(text) || /search your library for (?:a|up to two|two)[^.]{0,30}land[^.]{0,30}onto the battlefield|you may play an additional land|create a treasure token/.test(text)),
       rampAmount: rampMatch,
@@ -184,8 +208,12 @@
     const profiles = [];
     const library = [];
     let commander = null;
+    // A card that lifts the Defender restriction (e.g. Felothar the Steadfast)
+    // is a deck-wide effect, checked once here rather than per creature.
+    let defendersCanAttack = false;
     cards.forEach((card) => {
       const profile = classifyCard(card);
+      if (profile.liftsDefender) defendersCanAttack = true;
       const index = profiles.push(profile) - 1;
       if (profile.isCommander && !commander) {
         commander = {profile, index};
@@ -194,7 +222,7 @@
       }
       for (let copy = 0; copy < profile.quantity; copy += 1) library.push(index);
     });
-    return {profiles, library, commander};
+    return {profiles, library, commander, defendersCanAttack};
   }
 
   function shuffle(source, rng) {
@@ -263,7 +291,8 @@
       winTurn,
       threat: profileDefinition.threatDamageByTurn,
       interaction: profileDefinition.interactionChanceByTurn,
-      wipeChance: profileDefinition.wipeChanceByTurn
+      wipeChance: profileDefinition.wipeChanceByTurn,
+      wipeVulnerability: Number.isFinite(Number(profileDefinition.wipeVulnerability)) ? Number(profileDefinition.wipeVulnerability) : 1
     };
   }
 
@@ -320,6 +349,8 @@
     let opponentBoard = 0;
     let drainAll = 0;
     let drainOne = 0;
+    let peakBoard = 0;
+    const defendersCanAttack = Boolean(deck.defendersCanAttack);
 
     hand.forEach((index) => {
       if (profiles[index].isLand) landsDrawn += 1;
@@ -382,7 +413,7 @@
           commanderOnField = true;
           commanderTax += 2;
           if (!commanderTurn) commanderTurn = turn;
-          battlefieldCreatures.push({power: commanderProfile.power + commanderProfile.boardWidth * 2, sick: true, commander: true});
+          battlefieldCreatures.push({power: commanderProfile.power + commanderProfile.boardWidth * 2, toughness: commanderProfile.toughness, sick: true, commander: true, canAttack: !commanderProfile.isDefender || defendersCanAttack});
           drainAll += commanderProfile.drain.all;
           drainOne += commanderProfile.drain.one;
           continue;
@@ -424,7 +455,10 @@
           }
         }
         if (profile.isWipe) {
-          seats.forEach((seat) => { seat.deviation *= 0.55; });
+          // wipeVulnerability scales the same 45% base reduction per seat: a
+          // combo/stax seat barely notices (they don't rely on a board), a
+          // token seat loses far more than the base amount.
+          seats.forEach((seat) => { seat.deviation *= Math.max(0, 1 - (1 - 0.55) * seat.wipeVulnerability); });
           if (profile.wipesOwnBoard) battlefieldCreatures.length = 0;
         }
         if (profile.isDrainSpell) seats.forEach((seat) => { seat.life -= profile.drainSpellAmount; });
@@ -434,8 +468,9 @@
         }
         drainAll += profile.drain.all;
         drainOne += profile.drain.one;
-        if (profile.isCreature) battlefieldCreatures.push({power: profile.power + profile.boardWidth * 2, sick: true, commander: false});
+        if (profile.isCreature) battlefieldCreatures.push({power: profile.power + profile.boardWidth * 2, toughness: profile.toughness, sick: true, commander: false, canAttack: !profile.isDefender || defendersCanAttack});
       }
+      peakBoard = Math.max(peakBoard, battlefieldCreatures.length);
 
       heldAnswers = hand.filter((index) => profiles[index].instantSpeed && (profiles[index].isRemoval || profiles[index].isProtection)).length;
       if (turn >= 3 && turn <= 7) {
@@ -444,7 +479,7 @@
       }
       if (turn === 8) deadCardsAtEight = hand.filter((index) => !castable(profiles[index], lands + rocks, sources) && !profiles[index].isLand).length;
 
-      const attackPower = battlefieldCreatures.filter((creature) => !creature.sick).reduce((sum, creature) => sum + creature.power, 0);
+      const attackPower = battlefieldCreatures.filter((creature) => !creature.sick && creature.canAttack).reduce((sum, creature) => sum + creature.power, 0);
       battlefieldCreatures.forEach((creature) => { creature.sick = false; });
       if (attackPower > 0) {
         const living = seats.filter((seat) => seat.life > 0);
@@ -474,8 +509,11 @@
         seat.life -= fromOthers;
       });
       // Creatures we control soak damage by blocking, which is the only defensive
-      // value the model gives a board beyond its attack power.
-      const blockReduction = Math.min(0.4, battlefieldCreatures.length * 0.08);
+      // value the model gives a board beyond its attack power. Weighted by total
+      // toughness rather than raw count, so a handful of high-toughness walls
+      // mitigate more than the same number of 1-toughness tokens would.
+      const totalToughness = battlefieldCreatures.reduce((sum, creature) => sum + (creature.toughness || 1), 0);
+      const blockReduction = Math.min(0.55, totalToughness * 0.025);
       for (const seat of seats) {
         if (seat.life <= 0) continue;
         life -= byTurn(seat.threat, turn) * seat.deviation * AIMED_AT_US * (1 - blockReduction);
@@ -520,17 +558,27 @@
     }
 
     const landRatio = cardsSeen ? landsDrawn / cardsSeen : 0;
+    const screwed = manaBehind >= 2 || (lands + rocks <= 2 && endTurn >= 4);
+    // Fun/participation signals: did the deck actually get to do something
+    // (not screwed out with an empty board and no commander), and did the
+    // game last long enough to feel like a real game either way — a turn-4
+    // stomp is as bad for a friendly pod as a turn-4 loss.
+    const participated = !(screwed && !commanderTurn && peakBoard <= 1);
+    const reasonablePace = endTurn >= 5;
     return {
       won,
       endTurn,
       lossCause,
       mulligans,
       commanderTurn,
-      screwed: manaBehind >= 2 || (lands + rocks <= 2 && endTurn >= 4),
+      screwed,
       flooded: landRatio > 0.55 && endTurn >= 6,
       interactionRate: measuredTurns ? interactionTurns / measuredTurns : 0,
       deadCardsAtEight,
-      life
+      life,
+      participated,
+      peakBoard,
+      reasonablePace
     };
   }
 
@@ -549,6 +597,10 @@
       interactionAvailability: 0,
       deadCardsAtT8: 0,
       lossCauses: {},
+      participationRate: 0,
+      avgPeakBoard: 0,
+      reasonablePaceRate: 0,
+      funScore: 0,
       score: 0
     };
   }
@@ -568,8 +620,24 @@
       commanderCastRate: totals.commanderGames / games,
       interactionAvailability: totals.interactionSum / games,
       deadCardsAtT8: totals.deadSum / games,
-      lossCauses: totals.lossCauses
+      lossCauses: totals.lossCauses,
+      participationRate: totals.participatedSum / games,
+      avgPeakBoard: totals.peakBoardSum / games,
+      reasonablePaceRate: totals.reasonablePaceSum / games
     };
+  }
+
+  // One reasonable operationalisation of "fun," not a settled definition —
+  // see SIMPLIFICATIONS. Half weight on actually getting to play, three
+  // tenths on a board actually developing (capped at 4 permanents, since more
+  // than that is already a fully realised board for this purpose), two
+  // tenths on the game lasting long enough to feel like a real game.
+  function funScoreFor(metrics) {
+    return clamp01(
+      (metrics.participationRate ?? 1) * 0.5
+      + Math.min(1, (metrics.avgPeakBoard ?? 0) / 4) * 0.3
+      + (metrics.reasonablePaceRate ?? 1) * 0.2
+    );
   }
 
   function compositeScore(metrics, weights = DEFAULT_WEIGHTS, targets = DEFAULT_TARGETS, commanderCmc = 4) {
@@ -582,13 +650,15 @@
     const interactionNorm = Math.min(1, metrics.interactionAvailability / Math.max(0.05, targets.interactionAvailability));
     const clockNorm = metrics.avgWinTurn ? Math.max(0, Math.min(1, (16 - metrics.avgWinTurn) / 8)) : 0;
     const deadNorm = Math.max(0, 1 - metrics.deadCardsAtT8 / Math.max(1, targets.deadCardsAtT8 * 2));
+    const funNorm = funScoreFor(metrics);
     const score = weights.winRate * winRateNorm
       + weights.screw * screwNorm
       + weights.flood * floodNorm
       + weights.commander * commanderNorm
       + weights.interaction * interactionNorm
       + weights.clock * clockNorm
-      + weights.deadCards * deadNorm;
+      + weights.deadCards * deadNorm
+      + (weights.fun ?? 0) * funNorm;
     return Math.round(score * 1000) / 10;
   }
 
@@ -624,7 +694,10 @@
       commanderGames: 0,
       interactionSum: 0,
       deadSum: 0,
-      lossCauses: {}
+      lossCauses: {},
+      participatedSum: 0,
+      peakBoardSum: 0,
+      reasonablePaceSum: 0
     };
     const games = Number(config.games || config.gamesPerIteration || 500);
     const batchSize = Number(config.batchSize || 100);
@@ -647,10 +720,14 @@
         totals.commanderGames += 1;
         totals.commanderTurnSum += result.commanderTurn;
       }
+      if (result.participated) totals.participatedSum += 1;
+      totals.peakBoardSum += result.peakBoard;
+      if (result.reasonablePace) totals.reasonablePaceSum += 1;
       if (onBatch && (index + 1) % batchSize === 0) onBatch({completed: index + 1, total: games, metrics: summarize(totals)});
     }
     const metrics = summarize(totals);
     const commanderCmc = deck.commander?.profile.cmc || 4;
+    metrics.funScore = funScoreFor(metrics);
     metrics.score = compositeScore(metrics, config.scoreWeights || DEFAULT_WEIGHTS, config.targets || DEFAULT_TARGETS, commanderCmc);
     metrics.winRateInterval = winRateInterval(metrics);
     const perCardStats = Array.from(cardStats.values()).map((stat) => ({
@@ -752,6 +829,7 @@
     summarize,
     emptyMetrics,
     compositeScore,
+    funScoreFor,
     winRateInterval,
     analyzeGaps
   };

@@ -313,7 +313,7 @@ function applySwaps(cards, swaps, pool) {
 
 function reportFor(state, metrics, perCardStats, gaps, extra = {}) {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     requestId: request.id,
     variantId: request.variantId,
     name: request.name,
@@ -414,7 +414,7 @@ async function finalize(state, reason, exitCode) {
   const finalCheckTier3 = validateList(best.cards, {...landConstraints, tier: 3});
   const finalCheck = targetTier === 2 ? finalCheckTier2 : finalCheckTier3;
   const result = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     id: request.id,
     variantId: request.variantId,
     deckId: request.deckId,
