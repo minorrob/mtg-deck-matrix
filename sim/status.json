@@ -1,55 +1,55 @@
 {
   "state": "done",
   "message": "Converged: 3 iterations in a row gained less than 0.75 points.",
-  "requestId": "sim-6f-maxed-20260823-185010",
-  "variantId": "6f",
-  "iteration": 4,
+  "requestId": "sim-5oalt-iroas-maxed-20260823",
+  "variantId": "5o",
+  "iteration": 6,
   "maxIterations": 12,
-  "totalGamesUsed": 20000,
+  "totalGamesUsed": 24000,
   "maxTotalSimulations": 60000,
-  "bestIteration": 1,
-  "bestScore": 74.4,
+  "bestIteration": 3,
+  "bestScore": 85.5,
   "currentMetrics": {
     "games": 2000,
-    "wins": 648,
-    "winRate": 0.324,
-    "avgWinTurn": 12.311728395061728,
-    "avgEndTurn": 10.92,
-    "screwPct": 0.0665,
-    "floodPct": 0.052,
-    "mulliganRate": 0.4445,
-    "avgCommanderTurn": 5.033574380165289,
-    "commanderCastRate": 0.968,
-    "interactionAvailability": 0.3854,
-    "deadCardsAtT8": 0.581,
+    "wins": 913,
+    "winRate": 0.4565,
+    "avgWinTurn": 11.801752464403068,
+    "avgEndTurn": 10.878,
+    "screwPct": 0.0445,
+    "floodPct": 0.056,
+    "mulliganRate": 0.3745,
+    "avgCommanderTurn": 4.069604406609915,
+    "commanderCastRate": 0.9985,
+    "interactionAvailability": 0.40359999999999974,
+    "deadCardsAtT8": 0.19,
     "lossCauses": {
-      "upgraded-casual combo": 109,
-      "tuned-bracket3 combo": 211,
-      "tokens combo": 265,
-      "aristocrats combo": 188,
-      "voltron combo": 141,
-      "combo combo": 286,
-      "damage": 102,
-      "starter-precon combo": 13,
-      "stax combo": 20,
-      "group-hug combo": 4
+      "upgraded-casual combo": 98,
+      "tokens combo": 233,
+      "aristocrats combo": 156,
+      "voltron combo": 91,
+      "tuned-bracket3 combo": 192,
+      "combo combo": 227,
+      "damage": 54,
+      "starter-precon combo": 9,
+      "stax combo": 14,
+      "group-hug combo": 2
     },
-    "participationRate": 0.991,
-    "avgPeakBoard": 5.2345,
+    "participationRate": 0.999,
+    "avgPeakBoard": 5.7385,
     "reasonablePaceRate": 1,
-    "funScore": 0.9955,
-    "score": 74.4,
+    "funScore": 0.9995,
+    "score": 85.5,
     "winRateInterval": {
-      "low": 0.3034889956559899,
-      "high": 0.3445110043440101,
-      "margin": 0.020511004344010073
+      "low": 0.4346696228571287,
+      "high": 0.47833037714287135,
+      "margin": 0.02183037714287135
     }
   },
   "history": [
     {
       "iteration": 0,
       "accepted": true,
-      "score": 73.3,
+      "score": 74.8,
       "swaps": [],
       "note": "baseline",
       "legalityFixes": []
@@ -57,64 +57,105 @@
     {
       "iteration": 1,
       "accepted": true,
-      "score": 74.4,
-      "gain": 1.1,
+      "score": 83.2,
+      "gain": 8.4,
       "swaps": [
         {
-          "out": "Panharmonicon",
-          "in": "Origin of Metalbending",
-          "reason": "Origin of Metalbending covers removal, protection; Panharmonicon was cast in 83% of the games it was drawn and sat dead in 17%.",
-          "priceDelta": -6.82,
+          "out": "Farewell",
+          "in": "Valorous Stance",
+          "reason": "Valorous Stance covers removal, protection; Farewell was cast in 45% of the games it was drawn and sat dead in 55%.",
+          "priceDelta": -5.72,
           "addRoles": [
             "removal",
             "protection"
           ],
           "cutStat": {
-            "name": "Panharmonicon",
-            "drawnRate": 0.2075,
-            "castRate": 0.8289156626506025,
-            "avgCastTurn": 8.299418604651162,
-            "deadRate": 0.1710843373493976,
-            "winRateWhenCast": 0.3546511627906977,
-            "games": 415
+            "name": "Farewell",
+            "drawnRate": 0.1805,
+            "castRate": 0.45429362880886426,
+            "avgCastTurn": 8.25609756097561,
+            "deadRate": 0.5457063711911357,
+            "winRateWhenCast": 0.06097560975609756,
+            "games": 361
           }
         },
         {
-          "out": "Kodama's Reach",
-          "in": "Rapid Hybridization",
-          "reason": "Rapid Hybridization covers removal, protection; Kodama's Reach was cast in 88% of the games it was drawn and sat dead in 12%.",
-          "priceDelta": -0.29,
+          "out": "Wave of Reckoning",
+          "in": "Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal",
+          "reason": "Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal covers removal, protection; Wave of Reckoning was cast in 70% of the games it was drawn and sat dead in 30%.",
+          "priceDelta": 1.4,
           "addRoles": [
+            "draw",
             "removal",
-            "protection"
+            "protection",
+            "threat"
           ],
           "cutStat": {
-            "name": "Kodama's Reach",
-            "drawnRate": 0.221,
-            "castRate": 0.8846153846153846,
-            "avgCastTurn": 7.759590792838875,
-            "deadRate": 0.11538461538461539,
-            "winRateWhenCast": 0.35294117647058826,
-            "games": 442
+            "name": "Wave of Reckoning",
+            "drawnRate": 0.1705,
+            "castRate": 0.6979472140762464,
+            "avgCastTurn": 9.008403361344538,
+            "deadRate": 0.3020527859237537,
+            "winRateWhenCast": 0.39915966386554624,
+            "games": 341
           }
         },
         {
-          "out": "Harrow",
-          "in": "Pongify",
-          "reason": "Pongify covers removal, protection; Harrow was cast in 89% of the games it was drawn and sat dead in 11%.",
-          "priceDelta": 1.61,
+          "out": "Archaeomancer's Map",
+          "in": "Pyroblast",
+          "reason": "Pyroblast covers removal, protection; Archaeomancer's Map was cast in 82% of the games it was drawn and sat dead in 18%.",
+          "priceDelta": 8.88,
           "addRoles": [
             "removal",
             "protection"
           ],
           "cutStat": {
-            "name": "Harrow",
-            "drawnRate": 0.2205,
-            "castRate": 0.891156462585034,
-            "avgCastTurn": 6,
-            "deadRate": 0.10884353741496598,
-            "winRateWhenCast": 0.35877862595419846,
-            "games": 441
+            "name": "Archaeomancer's Map",
+            "drawnRate": 0.206,
+            "castRate": 0.8155339805825242,
+            "avgCastTurn": 8.056547619047619,
+            "deadRate": 0.18446601941747573,
+            "winRateWhenCast": 0.3958333333333333,
+            "games": 412
+          }
+        },
+        {
+          "out": "Sevinne's Reclamation",
+          "in": "Éowyn, Fearless Knight",
+          "reason": "Éowyn, Fearless Knight covers removal, protection; Sevinne's Reclamation was cast in 84% of the games it was drawn and sat dead in 16%.",
+          "priceDelta": 0.83,
+          "addRoles": [
+            "removal",
+            "protection",
+            "threat"
+          ],
+          "cutStat": {
+            "name": "Sevinne's Reclamation",
+            "drawnRate": 0.1845,
+            "castRate": 0.8401084010840109,
+            "avgCastTurn": 7.903225806451613,
+            "deadRate": 0.15989159891598917,
+            "winRateWhenCast": 0.3935483870967742,
+            "games": 369
+          }
+        },
+        {
+          "out": "Ceaseless Conflict",
+          "in": "Cloud's Limit Break",
+          "reason": "Cloud's Limit Break covers removal; Ceaseless Conflict was cast in 48% of the games it was drawn and sat dead in 52%.",
+          "priceDelta": 0.04,
+          "addRoles": [
+            "removal",
+            "wipe"
+          ],
+          "cutStat": {
+            "name": "Ceaseless Conflict",
+            "drawnRate": 0.1685,
+            "castRate": 0.4836795252225519,
+            "avgCastTurn": 7.858895705521473,
+            "deadRate": 0.516320474777448,
+            "winRateWhenCast": 0.07975460122699386,
+            "games": 337
           }
         }
       ],
@@ -123,26 +164,65 @@
     {
       "iteration": 2,
       "accepted": false,
-      "score": 75,
-      "gain": 0.6,
+      "score": 81.1,
+      "gain": -2.1,
       "swaps": [
         {
-          "out": "Maelstrom Pulse",
-          "in": "Collective Resistance",
-          "reason": "Collective Resistance covers removal, protection; Maelstrom Pulse was cast in 88% of the games it was drawn and sat dead in 12%.",
-          "priceDelta": 1.66,
+          "out": "Darksteel Plate",
+          "in": "Season of the Burrow",
+          "reason": "Season of the Burrow covers removal, protection; Darksteel Plate was cast in 85% of the games it was drawn and sat dead in 15%.",
+          "priceDelta": -3.87,
           "addRoles": [
             "removal",
             "protection"
           ],
           "cutStat": {
-            "name": "Maelstrom Pulse",
-            "drawnRate": 0.221,
-            "castRate": 0.8823529411764706,
-            "avgCastTurn": 8.056410256410256,
-            "deadRate": 0.11764705882352941,
-            "winRateWhenCast": 0.382051282051282,
-            "games": 442
+            "name": "Darksteel Plate",
+            "drawnRate": 0.205,
+            "castRate": 0.848780487804878,
+            "avgCastTurn": 8.048850574712644,
+            "deadRate": 0.15121951219512195,
+            "winRateWhenCast": 0.49137931034482757,
+            "games": 410
+          }
+        },
+        {
+          "out": "Tragic Arrogance",
+          "in": "Fall of the First Civilization",
+          "reason": "Fall of the First Civilization covers removal; Tragic Arrogance was cast in 45% of the games it was drawn and sat dead in 55%.",
+          "priceDelta": 0.03,
+          "addRoles": [
+            "draw",
+            "removal",
+            "wipe"
+          ],
+          "cutStat": {
+            "name": "Tragic Arrogance",
+            "drawnRate": 0.1675,
+            "castRate": 0.44776119402985076,
+            "avgCastTurn": 7.793333333333333,
+            "deadRate": 0.5522388059701493,
+            "winRateWhenCast": 0.1,
+            "games": 335
+          }
+        },
+        {
+          "out": "Cloud's Limit Break",
+          "in": "Harsh Mercy",
+          "reason": "Harsh Mercy covers protection; Cloud's Limit Break was cast in 60% of the games it was drawn and sat dead in 40%.",
+          "priceDelta": 2.38,
+          "addRoles": [
+            "wipe",
+            "protection"
+          ],
+          "cutStat": {
+            "name": "Cloud's Limit Break",
+            "drawnRate": 0.19,
+            "castRate": 0.6,
+            "avgCastTurn": 6.302631578947368,
+            "deadRate": 0.4,
+            "winRateWhenCast": 0.14473684210526316,
+            "games": 380
           }
         }
       ],
@@ -150,62 +230,171 @@
     },
     {
       "iteration": 3,
-      "accepted": false,
-      "score": 75.1,
-      "gain": 0.7,
+      "accepted": true,
+      "score": 85.5,
+      "gain": 2.3,
       "swaps": [
         {
-          "out": "Maelstrom Pulse",
-          "in": "Golgari Charm",
-          "reason": "Golgari Charm covers removal, protection; Maelstrom Pulse was cast in 88% of the games it was drawn and sat dead in 12%.",
-          "priceDelta": 1.95,
+          "out": "Darksteel Plate",
+          "in": "Sword of Fire and Ice",
+          "reason": "Sword of Fire and Ice covers removal, protection; Darksteel Plate was cast in 85% of the games it was drawn and sat dead in 15%.",
+          "priceDelta": 42.22,
           "addRoles": [
+            "draw",
             "removal",
+            "protection"
+          ],
+          "cutStat": {
+            "name": "Darksteel Plate",
+            "drawnRate": 0.205,
+            "castRate": 0.848780487804878,
+            "avgCastTurn": 8.048850574712644,
+            "deadRate": 0.15121951219512195,
+            "winRateWhenCast": 0.49137931034482757,
+            "games": 410
+          }
+        },
+        {
+          "out": "Tragic Arrogance",
+          "in": "Final Showdown",
+          "reason": "Final Showdown covers protection; Tragic Arrogance was cast in 45% of the games it was drawn and sat dead in 55%.",
+          "priceDelta": 5.64,
+          "addRoles": [
             "wipe",
             "protection"
           ],
           "cutStat": {
-            "name": "Maelstrom Pulse",
-            "drawnRate": 0.221,
-            "castRate": 0.8823529411764706,
-            "avgCastTurn": 8.056410256410256,
-            "deadRate": 0.11764705882352941,
-            "winRateWhenCast": 0.382051282051282,
-            "games": 442
+            "name": "Tragic Arrogance",
+            "drawnRate": 0.1675,
+            "castRate": 0.44776119402985076,
+            "avgCastTurn": 7.793333333333333,
+            "deadRate": 0.5522388059701493,
+            "winRateWhenCast": 0.1,
+            "games": 335
+          }
+        }
+      ],
+      "note": "accepted"
+    },
+    {
+      "iteration": 4,
+      "accepted": false,
+      "score": 80.6,
+      "gain": -4.9,
+      "swaps": [
+        {
+          "out": "Cloud's Limit Break",
+          "in": "Martial Coup",
+          "reason": "Martial Coup covers a measured gap; Cloud's Limit Break was cast in 59% of the games it was drawn and sat dead in 41%.",
+          "priceDelta": -0.05,
+          "addRoles": [
+            "wipe"
+          ],
+          "cutStat": {
+            "name": "Cloud's Limit Break",
+            "drawnRate": 0.196,
+            "castRate": 0.5867346938775511,
+            "avgCastTurn": 6.321739130434783,
+            "deadRate": 0.413265306122449,
+            "winRateWhenCast": 0.1608695652173913,
+            "games": 392
+          }
+        },
+        {
+          "out": "Final Showdown",
+          "in": "Dismantling Wave",
+          "reason": "Dismantling Wave covers a measured gap; Final Showdown was cast in 64% of the games it was drawn and sat dead in 36%.",
+          "priceDelta": -5.64,
+          "addRoles": [
+            "draw",
+            "wipe"
+          ],
+          "cutStat": {
+            "name": "Final Showdown",
+            "drawnRate": 0.185,
+            "castRate": 0.6432432432432432,
+            "avgCastTurn": 4.764705882352941,
+            "deadRate": 0.3567567567567568,
+            "winRateWhenCast": 0.19327731092436976,
+            "games": 370
           }
         }
       ],
       "note": "score did not improve, rolled back"
     },
     {
-      "iteration": 4,
+      "iteration": 5,
       "accepted": false,
-      "score": 75,
-      "gain": 0.6,
+      "score": 79.9,
+      "gain": -5.6,
       "swaps": [
         {
-          "out": "Maelstrom Pulse",
-          "in": "Abrupt Decay",
-          "reason": "Abrupt Decay covers removal, protection; Maelstrom Pulse was cast in 88% of the games it was drawn and sat dead in 12%.",
-          "priceDelta": 2.05,
+          "out": "Cloud's Limit Break",
+          "in": "Citywide Bust",
+          "reason": "Citywide Bust covers a measured gap; Cloud's Limit Break was cast in 59% of the games it was drawn and sat dead in 41%.",
+          "priceDelta": 0,
           "addRoles": [
-            "removal",
-            "protection"
+            "wipe"
           ],
           "cutStat": {
-            "name": "Maelstrom Pulse",
-            "drawnRate": 0.221,
-            "castRate": 0.8823529411764706,
-            "avgCastTurn": 8.056410256410256,
-            "deadRate": 0.11764705882352941,
-            "winRateWhenCast": 0.382051282051282,
-            "games": 442
+            "name": "Cloud's Limit Break",
+            "drawnRate": 0.196,
+            "castRate": 0.5867346938775511,
+            "avgCastTurn": 6.321739130434783,
+            "deadRate": 0.413265306122449,
+            "winRateWhenCast": 0.1608695652173913,
+            "games": 392
+          }
+        },
+        {
+          "out": "Final Showdown",
+          "in": "Brotherhood's End",
+          "reason": "Brotherhood's End covers a measured gap; Final Showdown was cast in 64% of the games it was drawn and sat dead in 36%.",
+          "priceDelta": -4.63,
+          "addRoles": [
+            "wipe"
+          ],
+          "cutStat": {
+            "name": "Final Showdown",
+            "drawnRate": 0.185,
+            "castRate": 0.6432432432432432,
+            "avgCastTurn": 4.764705882352941,
+            "deadRate": 0.3567567567567568,
+            "winRateWhenCast": 0.19327731092436976,
+            "games": 370
+          }
+        }
+      ],
+      "note": "score did not improve, rolled back"
+    },
+    {
+      "iteration": 6,
+      "accepted": false,
+      "score": 82.4,
+      "gain": -3.1,
+      "swaps": [
+        {
+          "out": "Cloud's Limit Break",
+          "in": "White Sun's Twilight",
+          "reason": "White Sun's Twilight covers a measured gap; Cloud's Limit Break was cast in 59% of the games it was drawn and sat dead in 41%.",
+          "priceDelta": 1.49,
+          "addRoles": [
+            "wipe"
+          ],
+          "cutStat": {
+            "name": "Cloud's Limit Break",
+            "drawnRate": 0.196,
+            "castRate": 0.5867346938775511,
+            "avgCastTurn": 6.321739130434783,
+            "deadRate": 0.413265306122449,
+            "winRateWhenCast": 0.1608695652173913,
+            "games": 392
           }
         }
       ],
       "note": "score did not improve, rolled back"
     }
   ],
-  "resultPath": "sim/results/sim-6f-maxed-20260823-185010.json",
-  "updatedAt": "2026-08-23T18:50:13.553Z"
+  "resultPath": "sim/results/sim-5oalt-iroas-maxed-20260823.json",
+  "updatedAt": "2026-08-23T19:07:44.707Z"
 }
