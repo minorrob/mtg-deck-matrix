@@ -463,13 +463,13 @@
           <span class="deck-summary-copy"><strong>${esc(deck.title)}</strong><span>${chosenId ? `Picked: ${esc(variantById(chosenId).name)} · ` : ""}${variants.length} of 5 shown</span></span>
           <span class="deck-chevron" aria-hidden="true">›</span>
         </summary>
-        <p class="deck-objective">${esc(deck.objective)} <span class="swipe-hint">Swipe cards sideways →</span></p>
         <div class="rank-order" role="group" aria-label="Sort Deck ${deck.id} variants by stage ranking">
           <span>Rank order</span>
           ${STAGES.map((label, index) => `<button class="rank-order-button info-tip tip-action${rankStage === index + 1 ? " is-active" : ""}" data-rank-stage="${index + 1}" data-tooltip="${esc(stageTooltip(index, variants))}" aria-describedby="info-tooltip">${label}${tooltipHint()}</button>`).join("")}
         </div>
         <div class="variant-track">${variants.length ? "" : `<div class="variant-filter-empty">${icon("⌕")}<strong>No variants match this filter in Deck ${deck.id}</strong><span>Try another mechanic, play style, or search term.</span></div>`}</div>`;
       const track = $(".variant-track", details);
+      track.appendChild(makeDeckOverviewCard(deck));
       variants.forEach((variant) => track.appendChild(makeVariantCard(variant, rankStage)));
       $$(".rank-order-button", details).forEach((button) => button.addEventListener("click", () => {
         state.rankStages[deck.id] = Number(button.dataset.rankStage);
@@ -573,9 +573,9 @@
         </section>
         <div class="score-heading">${sectionIcon("scoring")}<span>Scoring profile</span><small>Tap a rating for what drives it</small></div>
         <div class="metric-strip">
-          ${metricFamilyMarkup("playstyle", playstyle, `metric-playstyle-${variant.id}-compare`, wideViewport())}
-          ${metricFamilyMarkup("engine", engine, `metric-engine-${variant.id}-compare`, wideViewport())}
-          ${metricFamilyMarkup("growth", growth, `metric-growth-${variant.id}-compare`, wideViewport())}
+          ${metricFamilyMarkup("playstyle", playstyle, `metric-playstyle-${variant.id}-compare`)}
+          ${metricFamilyMarkup("engine", engine, `metric-engine-${variant.id}-compare`)}
+          ${metricFamilyMarkup("growth", growth, `metric-growth-${variant.id}-compare`)}
         </div>
         <div class="variant-card-actions">
           <button class="comment-toggle tip-action info-tip${state.comments[variant.id] ? " has-comment" : ""}" type="button" aria-expanded="${openCommentId === variant.id}" data-tooltip="${esc(TOOLTIP_DEFINITIONS.addComment)}" aria-describedby="info-tooltip">${icon(state.comments[variant.id] ? "✓" : "“")}<span>${state.comments[variant.id] ? "Comment saved" : "Add a comment"}</span>${tooltipHint()}</button>
@@ -610,6 +610,19 @@
       toggle.classList.toggle("has-comment", Boolean(value.trim()));
       $("span:not(.ui-icon)", toggle).textContent = value.trim() ? "Comment saved" : "Add a comment";
     });
+    return card;
+  }
+
+  function makeDeckOverviewCard(deck) {
+    const card = document.createElement("article");
+    card.className = "variant-card deck-overview-card";
+    card.innerHTML = `
+      <div class="deck-overview-copy">
+        <span class="deck-overview-eyebrow">${icon("◆")}Deck ${deck.id} strategy</span>
+        <h3>${esc(deck.title)}</h3>
+        <p>${esc(deck.objective)}</p>
+        <span class="swipe-hint">Swipe for the five approaches →</span>
+      </div>`;
     return card;
   }
 
@@ -797,7 +810,7 @@
 
   function ensureBuyState(variantId) {
     const plan = buyCatalog?.plans?.[variantId];
-    if (!plan) return {shell: [], tuned: [], upgrade: [], enhance: [], max: []};
+    if (!plan) return Lineup.emptySelection();
     const hasStored = Object.prototype.hasOwnProperty.call(state.buySelections, variantId);
     const existing = state.buySelections[variantId] || {};
     const legacyExclusions = (() => {
@@ -1065,11 +1078,19 @@
     // quantity — the same convention selectedDeckCards uses — so shell + tuned + optional
     // always agrees with the compliance panel's total, instead of drifting when a category's
     // array length no longer matches its full candidate list (e.g. a Tuned pick unchecked).
-    const tunedIds = new Set(current?.tuned || []);
-    const tunedCount = plan ? (plan.required || []).filter((item) => tunedIds.has(item.id)).reduce((sum, item) => sum + Number(item.quantity || 1), 0) : 0;
-    const optionalIds = new Set([...(current?.upgrade || []), ...(current?.enhance || []), ...(current?.max || [])]);
+    const tunedIds = new Set([...(current?.tuned || []), ...(current?.tuned2 || []), ...(current?.funTuned || []), ...(current?.altTuned || [])]);
+    const tunedCount = plan
+      ? [...(plan.required || []), ...(plan.tuned2 || []), ...(plan.funTuned || []), ...(plan.altTuned || [])].filter((item) => tunedIds.has(item.id)).reduce((sum, item) => sum + Number(item.quantity || 1), 0)
+      : 0;
+    const optionalIds = new Set([
+      ...(current?.upgrade || []), ...(current?.enhance || []), ...(current?.max || []),
+      ...(current?.enhance2 || []), ...(current?.max2 || []), ...(current?.funMax || []), ...(current?.altMax || [])
+    ]);
     const optionalCount = plan
-      ? [...(plan.upgrade || []), ...(plan.enhance || []), ...(plan.max || [])].filter((item) => optionalIds.has(item.id)).reduce((sum, item) => sum + Number(item.quantity || 1), 0)
+      ? [
+          ...(plan.upgrade || []), ...(plan.enhance || []), ...(plan.max || []),
+          ...(plan.enhance2 || []), ...(plan.max2 || []), ...(plan.funMax || []), ...(plan.altMax || [])
+        ].filter((item) => optionalIds.has(item.id)).reduce((sum, item) => sum + Number(item.quantity || 1), 0)
       : 0;
     const shellCards = plan ? (plan.startingShell || []).filter((card) => !card.isFlexibleSlot) : [];
     const selectedShellIds = new Set(current?.shell || []);
@@ -1104,12 +1125,27 @@
         <summary><span>${icon("☰")}Deck plan &amp; analysis</span><small>How to play, buy order, bracket placement, and tuning notes</small></summary>
         <div class="legacy-plan">${plan.planHtml || variant.detailHtml || ""}</div>
       </details>
+      ${presetDropdownMarkup(plan, variant.id)}
+      ${commanderSwitchMarkup(plan, current, variant.id)}
       ${startingShellSection(variant, plan, current, variant.id)}
       ${buySection("Tuned", "Required purchases for the Tuned build", plan.required, "tuned", current, variant.id)}
+      ${buySection("Tuned-2", "Monte-Carlo-improved swaps on top of the site's Tuned build · replaces Tuned where checked", plan.tuned2, "tuned2", current, variant.id)}
       ${buySection("Enhance", "Role-preserving improvements and owned substitutions · $15 or less", plan.enhance, "enhance", current, variant.id)}
-      ${buySection("Maxxed", "Strongest Tier 3 / Bracket 3-legal capability · price is not the criterion", plan.max, "max", current, variant.id)}`;
+      ${buySection("Enhance-2", "Further Monte-Carlo-improved swaps on top of Tuned-2", plan.enhance2, "enhance2", current, variant.id)}
+      ${buySection("Maxxed", "Strongest Tier 3 / Bracket 3-legal capability · price is not the criterion", plan.max, "max", current, variant.id)}
+      ${buySection("Maxxed-2", "Strongest Monte-Carlo-improved capability on top of Enhance-2 · price is not the criterion", plan.max2, "max2", current, variant.id)}
+      ${buySection("Fun Tuned", "Fun-weighted re-optimization on top of Base · a separate build from Tuned-2, not a toggle on it", plan.funTuned, "funTuned", current, variant.id)}
+      ${buySection("Fun Max", "Fun-weighted re-optimization on top of Fun Tuned", plan.funMax, "funMax", current, variant.id)}
+      ${buySection("Alt Tuned", "Alternative-commander build on top of Base · tagged Alt", plan.altTuned, "altTuned", current, variant.id)}
+      ${buySection("Alt Max", "Alternative-commander build on top of Alt Tuned · tagged Alt", plan.altMax, "altMax", current, variant.id)}`;
     decorateRichContent(body, variant);
-    if (details.open) ensureShopMetadata([...(plan.startingShell || []), ...(plan.required || []), ...(plan.enhance || []), ...(plan.max || [])]);
+    if (details.open) {
+      ensureShopMetadata([
+        ...(plan.startingShell || []), ...(plan.required || []), ...(plan.enhance || []), ...(plan.max || []),
+        ...(plan.tuned2 || []), ...(plan.enhance2 || []), ...(plan.max2 || []),
+        ...(plan.funTuned || []), ...(plan.funMax || []), ...(plan.altTuned || []), ...(plan.altMax || [])
+      ]);
+    }
     $$('[data-shell-card-name]', body).forEach((button) => button.addEventListener("click", () => {
       const shellCard = (plan.startingShell || []).map(resolvedShellCard).find((card) => card.name === button.dataset.shellCardName);
       if (!shellCard) return;
@@ -1125,18 +1161,20 @@
         ceiling: shellCard.ceiling
       }, variant, requiresPurchase ? "starting shell single" : "starting shell");
     }));
-    // Every checkbox is its own independent switch: no slot exclusivity, no automatic swap
-    // elsewhere, no legality gate. Compliance is read back from whatever this produces; it
-    // never blocks or reverts a click.
+    // Checking a card clears its replaced lineage going backward (the same slot-group
+    // mechanism the preset dropdown uses) -- one-directional and non-locking: it never
+    // touches anything upstream of what it replaces, and any cleared card can be freely
+    // re-checked afterward. Unchecking is a plain, independent removal with no side effects
+    // on any other item -- it never restores or re-selects anything. No legality gate either
+    // way: compliance is read back from whatever this produces, it never blocks a click.
     $$('input[data-buy-kind]', body).forEach((checkbox) => checkbox.addEventListener("change", () => {
       const itemId = String(checkbox.dataset.itemId);
       const kind = checkbox.dataset.buyKind;
       const currentState = ensureBuyState(variant.id);
-      currentState[kind] = currentState[kind] || [];
       if (checkbox.checked) {
-        if (!currentState[kind].includes(itemId)) currentState[kind].push(itemId);
+        assignSelection(currentState, Lineup.applyLineageCheck(plan, currentState, itemId));
       } else {
-        currentState[kind] = currentState[kind].filter((id) => id !== itemId);
+        currentState[kind] = (currentState[kind] || []).filter((id) => id !== itemId);
       }
       saveState();
       renderBuy();
@@ -1160,6 +1198,66 @@
         renderBuy();
       });
     }
+    const presetSelect = $('[data-apply-preset]', body);
+    if (presetSelect) {
+      presetSelect.addEventListener("change", () => {
+        const key = presetSelect.value;
+        if (!key) return;
+        const preset = deckPresets(plan).find((entry) => entry.key === key);
+        assignSelection(ensureBuyState(variant.id), assemblePreset(plan, key));
+        saveState(`${preset.label} configuration applied`);
+        renderBuy();
+      });
+    }
+    // Section select-alls live inside a <summary>, so the click must never reach it --
+    // otherwise toggling the checkbox would also collapse/expand the whole section.
+    $$('[data-select-section-all]', body).forEach((toggle) => {
+      const kind = toggle.dataset.selectSectionAll;
+      const collection = kind === "tuned" ? plan.required : plan[kind];
+      const ids = (collection || []).map((item) => String(item.id));
+      const input = $("input", toggle);
+      if (!input || !ids.length) return;
+      const selected = new Set(current[kind] || []);
+      const allSelected = ids.every((id) => selected.has(id));
+      const anySelected = ids.some((id) => selected.has(id));
+      input.checked = allSelected;
+      requestAnimationFrame(() => {
+        if (input.isConnected) input.indeterminate = anySelected && !allSelected;
+      });
+      toggle.addEventListener("click", (event) => event.stopPropagation());
+      input.addEventListener("change", () => {
+        const currentState = ensureBuyState(variant.id);
+        if (input.checked) {
+          let selection = currentState;
+          for (const id of ids) selection = Lineup.applyLineageCheck(plan, selection, id);
+          assignSelection(currentState, selection);
+        } else {
+          currentState[kind] = (currentState[kind] || []).filter((id) => !ids.includes(id));
+        }
+        saveState();
+        renderBuy();
+      });
+    });
+    // Clicking the inactive commander candidate is a normal check -- slot-group clearance
+    // (shared with every other checkbox on this page) takes care of clearing the other one.
+    // Clicking the already-active candidate is the one deliberate exception to "a click always
+    // toggles" in this app: a commander can never legitimately drop to zero, so it opens the
+    // card image instead of doing nothing.
+    $$('[data-commander-id]', body).forEach((button) => button.addEventListener("click", () => {
+      const id = String(button.dataset.commanderId);
+      const currentState = ensureBuyState(variant.id);
+      const model = Lineup.buildModel(plan);
+      const entry = model.byId.get(id);
+      if (!entry) return;
+      const activeId = String(Lineup.activeEntryForSlot(plan, currentState, entry.slotId)?.id || "");
+      if (activeId === id) {
+        openCardPreview(resolvedBuyCard(entry.item));
+        return;
+      }
+      assignSelection(currentState, Lineup.applyChoice(plan, currentState, id));
+      saveState(`${entry.item.name} is now the active commander`);
+      renderBuy();
+    }));
     $$(".buy-item-detail:not([data-shell-card-name])", body).forEach((button) => button.addEventListener("click", () => {
       const kind = button.dataset.itemKind;
       const collection = kind === "tuned" ? plan.required : plan[kind];
@@ -1192,18 +1290,11 @@
 
   function selectedPurchaseTotal(plan, current) {
     const selectedShell = new Set(current?.shell || []);
-    const selectedTuned = new Set(current?.tuned || []);
-    const selectedEnhance = new Set(current?.enhance || []);
-    const selectedUpgrade = new Set(current?.upgrade || []);
-    const selectedMax = new Set(current?.max || []);
     const purchases = [
       ...(isSinglesBuiltShell(plan)
         ? (plan.startingShell || []).filter((item) => !item.isFlexibleSlot && selectedShell.has(item.id)).map(resolvedShellCard)
         : plan.precon ? [plan.precon] : []),
-      ...(plan.required || []).filter((item) => selectedTuned.has(item.id)),
-      ...(plan.upgrade || []).filter((item) => selectedUpgrade.has(item.id)),
-      ...(plan.enhance || []).filter((item) => selectedEnhance.has(item.id)),
-      ...(plan.max || []).filter((item) => selectedMax.has(item.id))
+      ...Lineup.selectedEntries(plan, current || {}).filter((entry) => entry.kind !== "shell").map((entry) => entry.item)
     ];
     return purchases.reduce((summary, item) => {
       const quantity = Math.max(1, Number(item.quantity || 1));
@@ -1348,7 +1439,11 @@
   function constructedShellSection(variant, plan, cards, current, variantId) {
     const purchasedAsSingles = isSinglesBuiltShell(plan);
     const commander = cards.find((card) => card.isCommander) || cards[0];
-    const named = cards.filter((card) => !card.isFlexibleSlot);
+    // Decks with an alt-commander candidate move the commander into the dedicated Commander
+    // switcher (commanderSwitchMarkup) instead of this row, since it can now also be filled
+    // by an altTuned pick that this section's own shell-only counting has no way to see.
+    const hasAltCommander = Boolean(plan.altTuned?.some((item) => item.isCommander));
+    const named = cards.filter((card) => !card.isFlexibleSlot && !(hasAltCommander && card === commander));
     const flexibleCount = cards.filter((card) => card.isFlexibleSlot).reduce((sum, card) => sum + Number(card.quantity || 1), 0);
     const namedCount = named.reduce((sum, card) => sum + Number(card.quantity || 1), 0);
     const groups = new Map();
@@ -1371,7 +1466,7 @@
     return `<section class="starting-shell constructed-shell">
       <div class="starting-shell-heading"><span>${icon("▣")}<strong>Starting Shell${purchasedAsSingles ? " · Singles to buy" : " · Final-deck choices"}</strong><b>${selectedCount}/${namedCount}</b></span><label class="shell-select-all"><input type="checkbox" data-select-shell-all ${allSelected ? "checked" : ""}><span>Select all</span></label></div>
       <p class="shell-source-note constructed-shell-note">${purchasedAsSingles ? "Check the individual cards you need; selected cards flow to the Shop List." : "These cards came in the starting product. Keep checked only the cards you want in the finished 100; no individual price is required."}</p>
-      <div class="constructed-shell-commander"><h4>Commander</h4>${shellPurchaseRow(commander, current, variantId, purchasedAsSingles)}</div>
+      ${hasAltCommander ? "" : `<div class="constructed-shell-commander"><h4>Commander</h4>${shellPurchaseRow(commander, current, variantId, purchasedAsSingles)}</div>`}
       <div class="constructed-shell-groups">${typeGroups}</div>
       ${flexibleCount ? `<p class="shell-flex-note"><b>${flexibleCount} modeled slot${flexibleCount === 1 ? "" : "s"} still need exact card names.</b> They preserve the 100-card compliance model but are not added to the Shop List until a card is named.</p>` : ""}
     </section>`;
@@ -1380,6 +1475,38 @@
   function startingShellSection(variant, plan, current, variantId) {
     const cards = (plan.startingShell || []).map(resolvedShellCard);
     return constructedShellSection(variant, plan, cards, current, variantId);
+  }
+
+  // 1o/3e/5o only -- both commander candidates share one slot group (the alt item's
+  // `replaces` chains back to the original commander's shell entry), so Lineup.applyChoice
+  // already guarantees exactly one of them is ever active; this just renders that pair and
+  // lets a click on the inactive one drive the normal check flow. Clicking the active one is
+  // handled separately (opens the image preview instead) since a commander can never sit at
+  // zero the way every other slot can.
+  function commanderSwitchMarkup(plan, current, variantId) {
+    const altCommander = (plan.altTuned || []).find((item) => item.isCommander);
+    const shellCommander = (plan.startingShell || []).find((item) => item.isCommander);
+    if (!altCommander || !shellCommander) return "";
+    const model = Lineup.buildModel(plan);
+    const slotId = model.byId.get(String(shellCommander.id))?.slotId;
+    const activeId = String(Lineup.activeEntryForSlot(plan, current, slotId)?.id || "");
+    const candidateMarkup = (item, isAlt) => {
+      const selected = String(item.id) === activeId;
+      return `<button type="button" class="commander-candidate${selected ? " is-selected" : ""}" data-commander-id="${esc(item.id)}" aria-pressed="${selected}">
+        <img src="${esc(item.image)}" alt="" loading="lazy">
+        <span class="commander-candidate-copy">
+          <span class="commander-candidate-eyebrow">${isAlt ? `<span class="alt-mini">◇ Alt</span>` : `<span class="kind-label shell">Original</span>`}${selected ? `<span class="commander-active-mini">✓ Active</span>` : ""}</span>
+          <strong>${esc(item.name)}</strong>
+        </span>
+      </button>`;
+    };
+    return `<section class="commander-switch" data-ui-key="commander-${esc(variantId)}">
+      <div class="commander-switch-heading"><span>${icon("♛")}Commander</span><small>Exactly one is active at a time · tap the active card to view it full size</small></div>
+      <div class="commander-switch-row">
+        ${candidateMarkup(shellCommander, false)}
+        ${candidateMarkup(altCommander, true)}
+      </div>
+    </section>`;
   }
 
   function compliancePanel(variant, plan, current) {
@@ -1523,16 +1650,89 @@
     return {key: "moderate", label: "Moderate or situational improvement"};
   }
 
+  // Base/Tuned/Maxxed are offered on every deck; the -2/Fun/Alt rungs only appear once the
+  // importer has actually populated that ladder's entry array for this specific plan (see
+  // tools/import_budget_plan.py) -- the other 24 variants have none of these keys at all, so
+  // their dropdown degrades to exactly the original three, per plan.
+  function deckPresets(plan) {
+    const presets = [
+      {key: "base", label: "Base", categories: []},
+      {key: "tuned", label: "Tuned", categories: ["required"]},
+      {key: "max", label: "Maxxed", categories: ["required", "upgrade", "enhance", "max"]}
+    ];
+    if (Array.isArray(plan.tuned2)) {
+      presets.push(
+        {key: "tuned2", label: "Tuned-2", categories: ["required", "tuned2"]},
+        {key: "enhance2", label: "Enhance-2", categories: ["required", "tuned2", "enhance2"]},
+        {key: "max2", label: "Maxxed-2", categories: ["required", "tuned2", "enhance2", "max2"]}
+      );
+    }
+    if (Array.isArray(plan.funTuned)) {
+      presets.push(
+        {key: "funTuned", label: "Fun Tuned", categories: ["funTuned"]},
+        {key: "funMax", label: "Fun Max", categories: ["funTuned", "funMax"]}
+      );
+    }
+    if (plan.altTuned?.length) {
+      presets.push(
+        {key: "altTuned", label: "Alt Tuned", categories: ["altTuned"]},
+        {key: "altMax", label: "Alt Max", categories: ["altTuned", "altMax"]}
+      );
+    }
+    return presets;
+  }
+
+  // Applies a preset's categories in ladder order onto a fresh shell baseline, using the
+  // same applyChoice/slot-group mechanism as an individual checkbox click -- proven during
+  // the data import to exactly reproduce each ladder rung's source 100-card list this way.
+  // It is a wholesale assignment, not a merge: whatever the deck was previously configured
+  // to is fully replaced, matching the dropdown's own nature as an explicit re-apply action
+  // rather than an incremental one.
+  function assemblePreset(plan, key) {
+    const preset = deckPresets(plan).find((entry) => entry.key === key);
+    if (!preset) return null;
+    let selection = Lineup.emptySelection();
+    selection.shell = (plan.startingShell || plan.baseCards || []).map((item) => String(item.id));
+    selection = Lineup.canonicalizeSelection(plan, selection);
+    for (const category of preset.categories) {
+      for (const item of plan[category] || []) selection = Lineup.applyChoice(plan, selection, item.id);
+    }
+    return selection;
+  }
+
+  function presetDropdownMarkup(plan, variantId) {
+    const presets = deckPresets(plan);
+    if (presets.length <= 1) return "";
+    return `<label class="preset-select"><span>Apply configuration</span>
+      <select data-apply-preset aria-label="Apply a configuration to Deck ${esc(variantId)}">
+        <option value="" selected>Apply configuration…</option>
+        ${presets.map((preset) => `<option value="${esc(preset.key)}">${esc(preset.label)}</option>`).join("")}
+      </select>
+    </label>`;
+  }
+
+  const KIND_LABELS = {
+    precon: "Precon", shell: "Starting Shell", tuned: "Tuned", upgrade: "Enhance", enhance: "Enhance", max: "Maxxed",
+    tuned2: "Tuned-2", enhance2: "Enhance-2", max2: "Maxxed-2",
+    funTuned: "Fun Tuned", funMax: "Fun Max",
+    altTuned: "Alt Tuned", altMax: "Alt Max"
+  };
+  const SECTION_GLYPHS = {
+    precon: "▣", tuned: "✓", upgrade: "↗", enhance: "+", max: "✦",
+    tuned2: "✓", enhance2: "+", max2: "✦",
+    funTuned: "☆", funMax: "☆", altTuned: "◇", altMax: "◇"
+  };
+
   function buySection(title, note, items, kind, current, variantId) {
     if (!items?.length) return "";
     const included = kind === "precon";
-    const glyph = kind === "precon" ? "▣" : kind === "tuned" ? "✓" : kind === "upgrade" ? "↗" : kind === "enhance" ? "+" : "✦";
+    const glyph = SECTION_GLYPHS[kind] || "✦";
     return `<details class="buy-section" data-ui-key="buysec-${esc(variantId)}-${esc(kind)}" ${included ? "open" : ""}>
-      <summary><span>${icon(glyph)}${esc(title)} <b>${items.length}</b></span><small>${esc(note)}</small></summary>
+      <summary><span>${icon(glyph)}${esc(title)} <b>${items.length}</b></span><small>${esc(note)}</small>${included ? "" : selectAllToggleMarkup(kind)}</summary>
       ${items.map((item) => {
         const required = included;
         const checked = required || (current[kind] || []).includes(item.id);
-        const impact = kind === "enhance" ? enhancementImpact(item) : null;
+        const impact = (kind === "enhance" || kind === "enhance2") ? enhancementImpact(item) : null;
         const replacement = item.replaces ? `<span class="replacement-line"><b${impact ? ` class="replace-impact impact-${impact.key}" title="${esc(impact.label)}" aria-label="Replaces — ${esc(impact.label)}"` : ""}>Replaces</b><span>${esc(item.replaces)}</span></span>` : "";
         const summaryCopy = kind === "max" ? (item.maxReason || item.purpose || item.typeLine || "") : (item.purpose || item.typeLine || "");
         return `<div class="buy-item" ${buyRowAttributes(item, checked)}>
@@ -1540,7 +1740,7 @@
           <button class="buy-item-detail" type="button" data-item-kind="${esc(kind)}" data-item-id="${esc(item.id)}">
             <img src="${esc(item.image)}" alt="" loading="lazy">
             <span class="buy-copy">
-              <span class="buy-item-eyebrow"><span class="kind-label ${esc(kind)}">${esc(kind)}</span>${item.ownedExtra ? `<span class="owned-mini">✓ Owned</span>` : ""}${item.temporaryUntil ? `<span class="temp-mini">Temp until ${esc(item.temporaryUntil)}</span>` : ""}${item.gameChanger ? `<span class="gc-mini">✦ Game Changer</span>` : ""}</span>
+              <span class="buy-item-eyebrow"><span class="kind-label ${esc(kind)}">${esc(KIND_LABELS[kind] || kind)}</span>${item.tags?.includes("alt") ? `<span class="alt-mini">◇ Alt</span>` : ""}${item.ownedExtra ? `<span class="owned-mini">✓ Owned</span>` : ""}${item.temporaryUntil ? `<span class="temp-mini">Temp until ${esc(item.temporaryUntil)}</span>` : ""}${item.gameChanger ? `<span class="gc-mini">✦ Game Changer</span>` : ""}</span>
               <strong>${esc(item.name)}${item.quantity > 1 ? ` ×${item.quantity}` : ""}</strong>
               ${replacement}<small>${esc(summaryCopy)}</small>
             </span>
@@ -1549,6 +1749,10 @@
         </div>`;
       }).join("")}
     </details>`;
+  }
+
+  function selectAllToggleMarkup(kind) {
+    return `<label class="section-select-all" data-select-section-all="${esc(kind)}"><input type="checkbox"><span>Select all</span></label>`;
   }
 
   function transferCardSnapshot(card) {
@@ -1568,7 +1772,10 @@
     if (active?.id !== entry.id) return {entry, replacement: null, next: current, wasActive: false};
     let replacement = entry.kind === "shell" ? null : model.byId.get(entry.predecessorId);
     if (!replacement || replacement.id === entry.id || Number(replacement.item.quantity || 1) !== Number(entry.item.quantity || 1)) {
-      const priorities = {tuned: 0, shell: 1, enhance: 2, upgrade: 2, max: 3};
+      const priorities = {
+        tuned: 0, shell: 1, enhance: 2, upgrade: 2, max: 3,
+        tuned2: 4, funTuned: 4, altTuned: 4, enhance2: 5, max2: 6, funMax: 6, altMax: 6
+      };
       replacement = (model.groups.get(entry.slotId) || [])
         .filter((candidate) => candidate.id !== entry.id && Number(candidate.item.quantity || 1) === Number(entry.item.quantity || 1))
         .sort((a, b) => (priorities[a.kind] ?? 9) - (priorities[b.kind] ?? 9) || a.item.name.localeCompare(b.item.name))[0] || null;
@@ -1916,10 +2123,6 @@
       const plan = buyCatalog.plans[variant.id];
       if (!plan) return;
       const current = ensureBuyState(variant.id);
-      const selectedTuned = new Set(current.tuned || []);
-      const selectedEnhance = new Set(current.enhance || []);
-      const selectedUpgrade = new Set(current.upgrade || []);
-      const selectedMax = new Set(current.max || []);
       const selectedShell = new Set(current.shell || []);
       const shellPurchases = isSinglesBuiltShell(plan)
         ? (plan.startingShell || []).filter((item) => !item.isFlexibleSlot && selectedShell.has(item.id)).map((item) => ({
@@ -1932,10 +2135,7 @@
         : [];
       const items = [
         ...(isSinglesBuiltShell(plan) ? shellPurchases : [plan.precon]),
-        ...(plan.required || []).filter((item) => selectedTuned.has(item.id)),
-        ...(plan.upgrade || []).filter((item) => selectedUpgrade.has(item.id)),
-        ...plan.enhance.filter((item) => selectedEnhance.has(item.id)),
-        ...plan.max.filter((item) => selectedMax.has(item.id))
+        ...Lineup.selectedEntries(plan, current).filter((entry) => entry.kind !== "shell").map((entry) => entry.item)
       ];
       items.forEach((item) => {
         const key = itemKey(item);
@@ -2481,8 +2681,6 @@
     engine: {label: "Engine", blurb: TOOLTIP_DEFINITIONS.engine},
     growth: {label: "Growth", blurb: TOOLTIP_DEFINITIONS.roomGrow}
   };
-
-  const wideViewport = () => !window.matchMedia("(max-width: 860px)").matches;
 
   function metricAverage(rows) {
     if (!rows.length) return 0;

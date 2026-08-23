@@ -93,7 +93,6 @@ main { width: min(1180px, 100%); min-height: 70vh; margin: 0 auto; padding: 18px
 .deck-summary-copy span { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; }
 .deck-chevron { font-size: 20px; transition: transform .2s; }
 .deck-group[open] .deck-chevron { transform: rotate(90deg); }
-.deck-objective { margin: 0; padding: 13px 15px; border-top: 1px solid var(--line); color: #4e5d56; background: #fbf8ef; font-size: 13px; line-height: 1.5; }
 .swipe-hint { display: block; margin-top: 7px; color: var(--forest-2); font-size: 11px; font-weight: 900; letter-spacing: .02em; }
 .rank-order { display: flex; align-items: center; gap: 5px; padding: 0 13px 10px; background: #fbf8ef; overflow-x: auto; }
 .rank-order > span { margin-right: 3px; color: var(--muted); font-size: 10px; font-weight: 900; text-transform: uppercase; white-space: nowrap; }
@@ -103,6 +102,12 @@ main { width: min(1180px, 100%); min-height: 70vh; margin: 0 auto; padding: 18px
 .variant-track { display: grid; grid-auto-flow: column; grid-auto-columns: min(88vw, 390px); gap: 12px; overflow-x: auto; padding: 13px; scroll-snap-type: x mandatory; scrollbar-color: #baa974 transparent; }
 .variant-card { position: relative; display: flex; flex-direction: column; min-height: 490px; border: 1px solid #d8cdb2; border-radius: 16px; overflow: hidden; background: #fffdf8; scroll-snap-align: center; }
 .variant-card.is-selected { border: 2px solid var(--gold); box-shadow: 0 0 0 3px rgba(198,151,53,.18); }
+.deck-overview-card { justify-content: center; background: linear-gradient(160deg, #fbf8ef, #f3ecd6); }
+.deck-overview-copy { padding: 22px 20px; }
+.deck-overview-eyebrow { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; color: var(--forest-2); font-size: 10px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; }
+.deck-overview-eyebrow .ui-icon { width: 16px; height: 16px; }
+.deck-overview-copy h3 { margin: 0 0 10px; color: var(--forest); font: 800 20px/1.2 Georgia, serif; }
+.deck-overview-copy p { margin: 0; color: #4e5d56; font-size: 14px; line-height: 1.55; }
 .rank-badge { width: 100%; display: flex; align-items: center; justify-content: center; gap: 3px; min-width: 0; padding: 3px 4px; border: 1px solid rgba(255,255,255,.72); border-radius: 6px; color: #3f2c09; background: linear-gradient(145deg,#f7dc7d,#c99b32); box-shadow: 0 2px 5px rgba(0,0,0,.2); text-align: center; }
 .rank-badge span { display: block; font: 900 12px/1 Georgia,serif; }
 .rank-badge small { display: block; margin: 0; font-size: 6px; font-weight: 900; letter-spacing: .02em; text-transform: uppercase; white-space: nowrap; }
@@ -292,7 +297,25 @@ main { width: min(1180px, 100%); min-height: 70vh; margin: 0 auto; padding: 18px
 .constructed-shell-item .price { min-width: 58px; text-align: right; }
 .constructed-shell-item .price small { display: block; color: var(--muted); font-size: 7px; letter-spacing: .05em; text-transform: uppercase; }
 .commander-mini { padding: 2px 5px; border-radius: 5px; color: #fff; background: #9a6d14; font-size: 8px; font-weight: 900; text-transform: uppercase; }
+.alt-mini { padding: 2px 5px; border-radius: 5px; color: #fff; background: #1f9e8b; font-size: 8px; font-weight: 900; text-transform: uppercase; }
 .kind-label.shell, .shop-badge.shell { background: #356d78; }
+.commander-switch { margin: 8px 10px; }
+.commander-switch-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; margin-bottom: 6px; }
+.commander-switch-heading > span { display: flex; align-items: center; gap: 6px; color: var(--forest); font: 850 13px/1.2 Georgia,serif; }
+.commander-switch-heading small { color: var(--muted); font-size: 9px; font-weight: 650; text-align: right; }
+.commander-switch-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.commander-candidate { display: grid; grid-template-columns: 42px minmax(0,1fr); gap: 8px; align-items: center; min-width: 0; padding: 8px; border: 2px solid #d7c9aa; border-radius: 10px; color: inherit; background: #fffdf8; text-align: left; cursor: pointer; }
+.commander-candidate img { width: 42px; aspect-ratio: .715; object-fit: cover; border-radius: 5px; background: #ddd4c2; }
+.commander-candidate.is-selected { border-color: var(--forest-2); background: #eaf3ec; }
+.commander-candidate-copy { min-width: 0; }
+.commander-candidate-eyebrow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-bottom: 3px; }
+.commander-candidate strong { display: block; overflow: hidden; font-size: 12px; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
+.commander-active-mini { padding: 2px 5px; border-radius: 5px; color: #fff; background: var(--forest-2); font-size: 8px; font-weight: 900; text-transform: uppercase; }
+.preset-select { display: flex; flex-direction: column; gap: 4px; margin: 8px 10px; padding: 9px 11px; border: 1px solid #d7c9aa; border-radius: 10px; background: #f3eddf; }
+.preset-select > span { color: var(--forest); font-size: 9px; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; }
+.preset-select select { min-height: 40px; padding: 0 8px; border: 1px solid #a99d83; border-radius: 8px; color: var(--ink); background: #fff; font-size: 13px; font-weight: 700; }
+.section-select-all { display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; border: 1px solid rgba(20,59,48,.25); border-radius: 999px; color: var(--forest); background: #fffdf8; font-size: 9px; font-weight: 900; white-space: nowrap; cursor: pointer; }
+.section-select-all input { width: 16px; height: 16px; margin: 0; accent-color: var(--forest-2); }
 .shell-flex-note { margin: 0 10px 10px; padding: 8px 9px; border-radius: 8px; color: #5d665f; background: #edf2ef; font-size: 9px; line-height: 1.45; }
 .plan-analysis { margin-bottom: 10px; border: 1px solid #b9aa88; border-radius: 12px; overflow: clip; background: #fffdf8; }
 .plan-analysis > summary { display: flex; justify-content: space-between; gap: 10px; padding: 12px; list-style: none; color: #fff; background: var(--forest); cursor: pointer; }
@@ -312,7 +335,7 @@ main { width: min(1180px, 100%); min-height: 70vh; margin: 0 auto; padding: 18px
 .legacy-plan th, .legacy-plan td { padding: 6px; border-bottom: 1px solid #e1d8c4; text-align: left; vertical-align: top; }
 .buy-section { border: 1px solid #ded4bd; border-radius: 12px; overflow: clip; background: #fffdf8; }
 .buy-section + .buy-section { margin-top: 10px; }
-.buy-section > summary { min-height: 48px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 11px; list-style: none; color: var(--forest); background: #f3eddf; font-size: 14px; font-weight: 900; cursor: pointer; }
+.buy-section > summary { min-height: 48px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 11px; list-style: none; color: var(--forest); background: #f3eddf; font-size: 14px; font-weight: 900; cursor: pointer; }
 .buy-section > summary::-webkit-details-marker { display: none; }
 .buy-section > summary span { display: flex; align-items: center; gap: 6px; }
 .buy-section > summary .ui-icon { width: 20px; height: 20px; font-size: 9px; }
@@ -343,6 +366,15 @@ main { width: min(1180px, 100%); min-height: 70vh; margin: 0 auto; padding: 18px
 .kind-label.max { background: var(--red); }
 .kind-label.enhance { background: #8b6824; }
 .kind-label.precon { background: #6a4b85; }
+/* Win-2 (indigo), Fun (magenta), and Alt (teal) each get their own hue family, shared with
+   the Shop List's .shop-badge so a card's ladder reads the same wherever it appears. */
+.kind-label.tuned2, .shop-badge.tuned2 { background: #5468b8; }
+.kind-label.enhance2, .shop-badge.enhance2 { background: #3f4f9e; }
+.kind-label.max2, .shop-badge.max2 { background: #2c3a85; }
+.kind-label.funTuned, .shop-badge.funTuned { background: #c05a92; }
+.kind-label.funMax, .shop-badge.funMax { background: #9c3d73; }
+.kind-label.altTuned, .shop-badge.altTuned { background: #1f9e8b; }
+.kind-label.altMax, .shop-badge.altMax { background: #147a6b; }
 
 .shop-toolbar { position: sticky; top: calc(107px + env(safe-area-inset-top)); z-index: 30; margin: 0 -3px 14px; padding: 10px; border: 1px solid #bdb196; border-radius: 16px; background: rgba(255,253,247,.97); box-shadow: 0 8px 20px rgba(31,42,36,.15); backdrop-filter: blur(12px); }
 .search-input { width: 100%; min-height: 46px; padding: 0 14px; border: 2px solid #a99d83; border-radius: 12px; color: var(--ink); background: #fff; font-size: 16px; outline: none; }
