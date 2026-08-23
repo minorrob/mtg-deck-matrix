@@ -2,6 +2,9 @@ import {readFile, writeFile} from "node:fs/promises";
 
 const file = new URL("../data/buy-plans.json", import.meta.url);
 const catalog = JSON.parse(await readFile(file, "utf8"));
+const floorPriceFallbacks = new Map([
+  ["swiftfoot boots", 0.75]
+]);
 const cards = new Map();
 for (const plan of Object.values(catalog.plans)) {
   for (const card of [...(plan.startingShell || []), ...(plan.required || []), ...(plan.enhance || []), ...(plan.max || [])]) {
@@ -25,7 +28,7 @@ for (let i = 0; i < names.length; i += 70) {
   for (const card of result.data || []) {
     const oracleText = card.oracle_text || card.card_faces?.map((face) => face.oracle_text).filter(Boolean).join("\n") || "";
     const image = card.image_uris?.small || card.card_faces?.[0]?.image_uris?.small || "";
-    const usd = Number(card.prices?.usd || card.prices?.usd_foil) || null;
+    const usd = Number(card.prices?.usd || card.prices?.usd_foil) || floorPriceFallbacks.get(card.name.toLocaleLowerCase()) || null;
     records.push({
       name: card.name,
       manaCost: card.mana_cost || card.card_faces?.map((face) => face.mana_cost).filter(Boolean).join(" // ") || "",
