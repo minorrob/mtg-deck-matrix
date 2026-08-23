@@ -1,0 +1,207 @@
+{
+  "state": "done",
+  "message": "Stopped because the candidate pool had nothing left that addresses a measured gap.",
+  "requestId": "sim-5o-20260823-065952",
+  "variantId": "5o",
+  "iteration": 3,
+  "maxIterations": 12,
+  "totalGamesUsed": 18000,
+  "maxTotalSimulations": 60000,
+  "bestIteration": 1,
+  "bestScore": 74.1,
+  "currentMetrics": {
+    "games": 2000,
+    "wins": 795,
+    "winRate": 0.3975,
+    "avgWinTurn": 12.236477987421384,
+    "avgEndTurn": 11.5005,
+    "screwPct": 0.0605,
+    "floodPct": 0.0485,
+    "mulliganRate": 0.375,
+    "avgCommanderTurn": 4.178068410462776,
+    "commanderCastRate": 0.994,
+    "interactionAvailability": 0.22859999999999966,
+    "deadCardsAtT8": 0.4175,
+    "lossCauses": {
+      "tuned-bracket3 combo": 568,
+      "upgraded-casual combo": 343,
+      "damage": 244,
+      "starter-precon combo": 28
+    },
+    "score": 74.1,
+    "winRateInterval": {
+      "low": 0.37605193260454456,
+      "high": 0.4189480673954555,
+      "margin": 0.02144806739545547
+    }
+  },
+  "history": [
+    {
+      "iteration": 0,
+      "accepted": true,
+      "score": 67.1,
+      "swaps": [],
+      "note": "baseline"
+    },
+    {
+      "iteration": 1,
+      "accepted": true,
+      "score": 74.1,
+      "gain": 7,
+      "swaps": [
+        {
+          "out": "Wave of Reckoning",
+          "in": "Boros Charm",
+          "reason": "Boros Charm covers removal, protection; Wave of Reckoning was cast in 82% of the games it was drawn and sat dead in 18%.",
+          "priceDelta": 3.99,
+          "addRoles": [
+            "removal",
+            "protection"
+          ],
+          "cutStat": {
+            "name": "Wave of Reckoning",
+            "drawnRate": 0.1865,
+            "castRate": 0.8150134048257373,
+            "avgCastTurn": 9.322368421052632,
+            "deadRate": 0.18498659517426275,
+            "winRateWhenCast": 0.3651315789473684,
+            "games": 373
+          }
+        },
+        {
+          "out": "Ceaseless Conflict",
+          "in": "Weathered Sentinels",
+          "reason": "Weathered Sentinels covers protection, threat; Ceaseless Conflict was cast in 82% of the games it was drawn and sat dead in 18%.",
+          "priceDelta": 0.68,
+          "addRoles": [
+            "protection",
+            "threat"
+          ],
+          "cutStat": {
+            "name": "Ceaseless Conflict",
+            "drawnRate": 0.1835,
+            "castRate": 0.8174386920980926,
+            "avgCastTurn": 7.236666666666666,
+            "deadRate": 0.18256130790190736,
+            "winRateWhenCast": 0.06333333333333334,
+            "games": 367
+          }
+        },
+        {
+          "out": "Sevinne's Reclamation",
+          "in": "Crested Sunmare",
+          "reason": "Crested Sunmare covers protection, finisher, threat; Sevinne's Reclamation was cast in 89% of the games it was drawn and sat dead in 11%.",
+          "priceDelta": 8.53,
+          "addRoles": [
+            "protection",
+            "finisher",
+            "threat"
+          ],
+          "cutStat": {
+            "name": "Sevinne's Reclamation",
+            "drawnRate": 0.1945,
+            "castRate": 0.8946015424164524,
+            "avgCastTurn": 8.278735632183908,
+            "deadRate": 0.10539845758354756,
+            "winRateWhenCast": 0.3390804597701149,
+            "games": 389
+          }
+        },
+        {
+          "out": "Tragic Arrogance",
+          "in": "Wall of Nets",
+          "reason": "Wall of Nets covers threat; Tragic Arrogance was cast in 83% of the games it was drawn and sat dead in 17%.",
+          "priceDelta": 5.46,
+          "addRoles": [
+            "wipe",
+            "threat"
+          ],
+          "cutStat": {
+            "name": "Tragic Arrogance",
+            "drawnRate": 0.1755,
+            "castRate": 0.8262108262108262,
+            "avgCastTurn": 7.341379310344828,
+            "deadRate": 0.1737891737891738,
+            "winRateWhenCast": 0.06896551724137931,
+            "games": 351
+          }
+        },
+        {
+          "out": "Elspeth, Sun's Champion",
+          "in": "Expel the Interlopers",
+          "reason": "Expel the Interlopers covers a measured gap; Elspeth, Sun's Champion was cast in 97% of the games it was drawn and sat dead in 3%.",
+          "priceDelta": -1.91,
+          "addRoles": [
+            "wipe"
+          ],
+          "cutStat": {
+            "name": "Elspeth, Sun's Champion",
+            "drawnRate": 0.1835,
+            "castRate": 0.9700272479564033,
+            "avgCastTurn": 7.834269662921348,
+            "deadRate": 0.02997275204359673,
+            "winRateWhenCast": 0.2808988764044944,
+            "games": 367
+          }
+        }
+      ],
+      "note": "accepted"
+    },
+    {
+      "iteration": 2,
+      "accepted": false,
+      "score": 74,
+      "gain": -0.1,
+      "swaps": [
+        {
+          "out": "Expel the Interlopers",
+          "in": "Fell the Mighty",
+          "reason": "Fell the Mighty covers a measured gap; Expel the Interlopers was cast in 79% of the games it was drawn and sat dead in 21%.",
+          "priceDelta": 0.04,
+          "addRoles": [
+            "wipe"
+          ],
+          "cutStat": {
+            "name": "Expel the Interlopers",
+            "drawnRate": 0.1795,
+            "castRate": 0.7855153203342619,
+            "avgCastTurn": 7.152482269503546,
+            "deadRate": 0.21448467966573817,
+            "winRateWhenCast": 0.1524822695035461,
+            "games": 359
+          }
+        }
+      ],
+      "note": "score did not improve, rolled back"
+    },
+    {
+      "iteration": 3,
+      "accepted": false,
+      "score": 74.1,
+      "gain": 0,
+      "swaps": [
+        {
+          "out": "Expel the Interlopers",
+          "in": "Cleansing Nova",
+          "reason": "Cleansing Nova covers a measured gap; Expel the Interlopers was cast in 79% of the games it was drawn and sat dead in 21%.",
+          "priceDelta": 0.08,
+          "addRoles": [
+            "wipe"
+          ],
+          "cutStat": {
+            "name": "Expel the Interlopers",
+            "drawnRate": 0.1795,
+            "castRate": 0.7855153203342619,
+            "avgCastTurn": 7.152482269503546,
+            "deadRate": 0.21448467966573817,
+            "winRateWhenCast": 0.1524822695035461,
+            "games": 359
+          }
+        }
+      ],
+      "note": "score did not improve, rolled back"
+    }
+  ],
+  "resultPath": "sim/results/sim-5o-20260823-065952.json",
+  "updatedAt": "2026-08-23T07:05:11.596Z"
+}

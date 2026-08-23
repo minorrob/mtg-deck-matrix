@@ -1,0 +1,203 @@
+{
+  "schemaVersion": 1,
+  "note": "Opponent seats are parameterised archetypes, not real decklists. Each seat samples a profile from a table mix and then jitters every number, so a 500-game batch faces a spread of opponents rather than one fixed gauntlet. Damage is split: 45% of a seat's output comes at us and 55% is spread over the other seats, which is what lets a pod soften itself up.",
+  "profiles": {
+    "starter-precon": {
+      "key": "starter-precon",
+      "label": "Out-of-the-box precon",
+      "threatDamageByTurn": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        2,
+        3,
+        4,
+        5,
+        5,
+        6,
+        6,
+        7,
+        7,
+        8,
+        8,
+        8
+      ],
+      "interactionChanceByTurn": [
+        0,
+        0,
+        0,
+        0.02,
+        0.02,
+        0.03,
+        0.04,
+        0.05,
+        0.05,
+        0.06,
+        0.06,
+        0.06,
+        0.07,
+        0.07,
+        0.07,
+        0.07,
+        0.07
+      ],
+      "wipeChanceByTurn": 0.015,
+      "winTurn": {
+        "mean": 16,
+        "sd": 2,
+        "floor": 12
+      },
+      "jitter": 0.25
+    },
+    "upgraded-casual": {
+      "key": "upgraded-casual",
+      "label": "Precon plus a hundred dollars",
+      "threatDamageByTurn": [
+        0,
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        12,
+        13,
+        13
+      ],
+      "interactionChanceByTurn": [
+        0,
+        0,
+        0.02,
+        0.04,
+        0.06,
+        0.07,
+        0.08,
+        0.09,
+        0.1,
+        0.1,
+        0.11,
+        0.11,
+        0.11,
+        0.12,
+        0.12,
+        0.12,
+        0.12
+      ],
+      "wipeChanceByTurn": 0.03,
+      "winTurn": {
+        "mean": 14,
+        "sd": 2,
+        "floor": 11
+      },
+      "jitter": 0.22
+    },
+    "tuned-bracket3": {
+      "key": "tuned-bracket3",
+      "label": "Tuned bracket 3",
+      "threatDamageByTurn": [
+        0,
+        0,
+        1,
+        3,
+        4,
+        6,
+        8,
+        10,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        18,
+        18
+      ],
+      "interactionChanceByTurn": [
+        0.01,
+        0.02,
+        0.05,
+        0.07,
+        0.1,
+        0.12,
+        0.13,
+        0.14,
+        0.15,
+        0.15,
+        0.15,
+        0.16,
+        0.16,
+        0.16,
+        0.16,
+        0.16,
+        0.16
+      ],
+      "wipeChanceByTurn": 0.05,
+      "winTurn": {
+        "mean": 11,
+        "sd": 1.5,
+        "floor": 8
+      },
+      "jitter": 0.2
+    }
+  },
+  "tables": {
+    "kitchen-table": [
+      {
+        "profile": "starter-precon",
+        "weight": 0.6
+      },
+      {
+        "profile": "upgraded-casual",
+        "weight": 0.35
+      },
+      {
+        "profile": "tuned-bracket3",
+        "weight": 0.05
+      }
+    ],
+    "mixed-pod": [
+      {
+        "profile": "starter-precon",
+        "weight": 0.35
+      },
+      {
+        "profile": "upgraded-casual",
+        "weight": 0.45
+      },
+      {
+        "profile": "tuned-bracket3",
+        "weight": 0.2
+      }
+    ],
+    "bracket3-night": [
+      {
+        "profile": "starter-precon",
+        "weight": 0.1
+      },
+      {
+        "profile": "upgraded-casual",
+        "weight": 0.4
+      },
+      {
+        "profile": "tuned-bracket3",
+        "weight": 0.5
+      }
+    ]
+  },
+  "defaultTable": "mixed-pod",
+  "tableWinTurn": {
+    "kitchen-table": 12.5,
+    "mixed-pod": 11.5,
+    "bracket3-night": 10.0
+  }
+}
