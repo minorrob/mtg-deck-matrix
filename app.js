@@ -2683,7 +2683,7 @@
   // Owned cards get a "what did you actually pay" field; sealed precon contents get a label;
   // everything still on the shopping list keeps the estimated floor-to-ceiling range.
   function livePriceMarkup(card, price, ceiling) {
-    if (card.fromPreconBox) return `<small class="live-price-precon">Precon Pack</small>`;
+    if (card.fromPreconBox && !card.isCommander) return `<small class="live-price-precon">Precon Pack</small>`;
     if (!card.bought) return `<small class="live-price-range">Floor ${price ? money(price) : "unpriced"} · Ceiling ${ceiling ? money(ceiling) : "not listed"}</small>`;
     const key = itemKey(card);
     const committed = committedPrice(card);
