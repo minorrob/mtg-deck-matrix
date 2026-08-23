@@ -136,9 +136,18 @@ assert(Object.values(buyPlans.plans).every((plan) => !plan.enhance.some((card) =
 assert(buyPlans.plans["5o"].max.filter((card) => card.gameChanger).length > 3, "Quintorius may offer more than three Game Changer alternatives");
 assert.match(appSource, /const baseCompliance = evaluateDeckCompliance\(plan, tentative\)/, "the checked-card UI must evaluate the full tentative deck before accepting a choice");
 assert.match(appSource, /projectedEffectiveCards\(variant, tentative\)/, "the checked-card UI must include temporary Live Deck assignments in Tier 3 validation");
-assert.match(appSource, /\$\{checkedCount\}\/100 checked/, "collapsed Live Deck headers must show the Buy Picks checked count");
-assert.match(appSource, /\$\{boughtCount\}\/100 bought/, "collapsed Live Deck headers must show the physically bought count");
-assert.match(appSource, /\$\{total\}\/100 active/, "collapsed Live Deck headers must show the active-lineup count");
+assert.match(appSource, /\$\{checkedCount\}\/100<\/b><small>checked/, "collapsed Live Deck headers must show the Buy Picks checked count");
+assert.match(appSource, /\$\{boughtCount\}\/100<\/b><small>bought/, "collapsed Live Deck headers must show the physically bought count");
+assert.match(appSource, /\$\{total\}\/100<\/b><small>active/, "collapsed Live Deck headers must show the active-lineup count");
+assert.match(appSource, /data-live-total="\$\{esc\(variant\.id\)\}"/, "collapsed Live Deck headers must show a committed Total Cost");
+assert.match(appSource, /if \(metadataAttempts\.get\(key\)\) return;/, "card metadata may only be requested once per session, or unresolved cards re-render the app forever");
+assert.match(appSource, /Precon Pack/, "cards that arrive inside a sealed precon must be labelled instead of priced");
+assert.doesNotMatch(appSource, /live-critical-insight/, "the duplicate readiness banner must stay out of the Live Deck header");
+assert.doesNotMatch(appSource, /Saved on this device"\);\n\s*renderCompare/, "reset must not depend on the removed save-status label");
+for (const view of ["compare", "buy", "shop", "live"]) {
+  assert.match(appSource, new RegExp(`^\\s{4}${view}: \\[`, "m"), `the tour must define its own steps for the ${view} view`);
+}
+assert.match(appSource, /function exportLiveDecks/, "Live Decks must be exportable as a flat inventory");
 assert.match(appSource, /mtg-owned-extras-import-v3/, "the complete known inventory must migrate onto each browser once");
 assert.doesNotMatch(appSource, /plan\.max\.filter\(\(candidate\) => candidate\.gameChanger && choices\.has/, "the Game Changer guard may not count Max options only");
 assert(!buyPlans.plans["1c"].max.some((card) => card.name === "Exquisite Blood"), "Exquisite Blood must stay outside the Liesa Tier 3 pool because of redundant early two-card wins");

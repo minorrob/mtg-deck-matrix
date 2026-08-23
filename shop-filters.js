@@ -2,6 +2,7 @@
   "use strict";
 
   const STORAGE_KEY = "mtg-shop-extra-filters-v1";
+  let observerControl = null;
   const DEFAULTS = { color: "all", price: "all", rarity: "all", location: "all", sort: "default" };
   const FILTER_KEYS = ["color", "price", "rarity", "location"];
   const COLOR_LABELS = {
@@ -257,15 +258,21 @@
     scheduled = true;
     queueMicrotask(() => {
       scheduled = false;
-      applyFilters(root);
+      observerControl?.pause();
+      try { applyFilters(root); }
+      finally { observerControl?.resume(); }
     });
   }
 
   function initialize() {
     const root = document.querySelector("#view-shop");
     if (!root) return;
+    // applyFilters rewrites the list it is watching. Without pausing the observer around
+    // its own writes, every pass schedules another one and the view never settles.
     const observer = new MutationObserver(() => schedule(root));
-    observer.observe(root, { childList: true, subtree: true });
+    const start = () => observer.observe(root, { childList: true, subtree: true });
+    observerControl = { pause: () => observer.disconnect(), resume: start };
+    start();
     schedule(root);
   }
 
