@@ -19,7 +19,8 @@
     "Tokens are modelled as extra power on the creature that makes them, not as separate bodies.",
     "Alternate win conditions and storm are scored as a large threat rather than an instant win.",
     "Mana fixing is ideal within the colors actually available from lands in play.",
-    "A Defender creature contributes no attack power unless the deck also contains an effect that lets it attack anyway.",
+    "A Defender creature contributes no attack power unless the deck also contains an effect that lets it attack anyway, and deals damage equal to its toughness instead of its power when the deck contains an effect that says so.",
+    "A noncreature commander (a planeswalker printed with \"can be your commander\") is cast and taxed normally but never joins combat as an attacker or blocker.",
     "Opponents are nine parameterised archetype curves (three power tiers, six playstyles), not simulated decks with real cards.",
     "The fun/participation score is one reasonable operationalisation of a subjective idea — a developed board and a game that didn't end suspiciously early either way — not a settled definition of \"fun.\""
   ];
@@ -98,9 +99,14 @@
   function producedColors(card, typeLine, text) {
     const produced = new Set();
     if (BASIC_COLOR[card.name]) produced.add(BASIC_COLOR[card.name]);
-    (text.match(/add \{([wubrgc])\}/g) || []).forEach((token) => {
-      const color = token.replace(/[^wubrgc]/g, "").toUpperCase();
-      if (COLORS.includes(color)) produced.add(color);
+    // Matches every symbol in the run right after "add" — not just the first —
+    // so a real dual/triome land's "Add {R} or {W}." or "Add {B}, {G}, or {U}."
+    // credits every color it actually produces, not only the first one.
+    (text.match(/add\s+(?:\{[wubrgc]\}\s*(?:(?:,|or\b|and\b)\s*)*)+/g) || []).forEach((run) => {
+      (run.match(/\{([wubrgc])\}/g) || []).forEach((token) => {
+        const color = token.replace(/[^wubrgc]/g, "").toUpperCase();
+        if (COLORS.includes(color)) produced.add(color);
+      });
     });
     if (/add one mana of any color|add \{c\}\{c\}|any color/.test(text)) COLORS.forEach((color) => produced.add(color));
     if (/\bLand\b/.test(typeLine) && !produced.size) (card.colorIdentity || []).forEach((color) => produced.add(String(color).toUpperCase()));
@@ -180,6 +186,11 @@
       // each Defender you control") should not match.
       isDefender: isCreature && /(?:^|\n)defender\b/.test(text),
       liftsDefender: /attack as though (?:it|they) didn'?t have defender/.test(text),
+      // Arcades, the Strategist and Felothar the Steadfast both print this
+      // clause for creatures with Defender; Assault Formation prints the
+      // unrestricted form. Scoped to Defender creatures specifically when
+      // applied below, matching the printed cards in this catalog.
+      defenderToughnessDamage: /damage equal to (?:its|their) toughness rather than (?:its|their) power/.test(text),
       instantSpeed,
       isRamp: !isLand && (/\{t\}: add|add \{[wubrgc]\}/.test(text) || /search your library for (?:a|up to two|two)[^.]{0,30}land[^.]{0,30}onto the battlefield|you may play an additional land|create a treasure token/.test(text)),
       rampAmount: rampMatch,
@@ -209,11 +220,14 @@
     const library = [];
     let commander = null;
     // A card that lifts the Defender restriction (e.g. Felothar the Steadfast)
+    // or changes how Defenders deal combat damage (Arcades, the Strategist)
     // is a deck-wide effect, checked once here rather than per creature.
     let defendersCanAttack = false;
+    let defendersDealToughnessDamage = false;
     cards.forEach((card) => {
       const profile = classifyCard(card);
       if (profile.liftsDefender) defendersCanAttack = true;
+      if (profile.defenderToughnessDamage) defendersDealToughnessDamage = true;
       const index = profiles.push(profile) - 1;
       if (profile.isCommander && !commander) {
         commander = {profile, index};
@@ -222,7 +236,7 @@
       }
       for (let copy = 0; copy < profile.quantity; copy += 1) library.push(index);
     });
-    return {profiles, library, commander, defendersCanAttack};
+    return {profiles, library, commander, defendersCanAttack, defendersDealToughnessDamage};
   }
 
   function shuffle(source, rng) {
@@ -351,6 +365,7 @@
     let drainOne = 0;
     let peakBoard = 0;
     const defendersCanAttack = Boolean(deck.defendersCanAttack);
+    const defendersDealToughnessDamage = Boolean(deck.defendersDealToughnessDamage);
 
     hand.forEach((index) => {
       if (profiles[index].isLand) landsDrawn += 1;
@@ -413,7 +428,13 @@
           commanderOnField = true;
           commanderTax += 2;
           if (!commanderTurn) commanderTurn = turn;
-          battlefieldCreatures.push({power: commanderProfile.power + commanderProfile.boardWidth * 2, toughness: commanderProfile.toughness, sick: true, commander: true, canAttack: !commanderProfile.isDefender || defendersCanAttack});
+          // A noncreature commander (a planeswalker printed with "can be your
+          // commander") is never a combatant — it never joins the board as an
+          // attacker or blocker here, the same way it never would on a table.
+          if (commanderProfile.isCreature) {
+            const commanderPower = (commanderProfile.isDefender && defendersDealToughnessDamage) ? commanderProfile.toughness : commanderProfile.power;
+            battlefieldCreatures.push({power: commanderPower + commanderProfile.boardWidth * 2, toughness: commanderProfile.toughness, sick: true, commander: true, canAttack: !commanderProfile.isDefender || defendersCanAttack});
+          }
           drainAll += commanderProfile.drain.all;
           drainOne += commanderProfile.drain.one;
           continue;
@@ -468,7 +489,10 @@
         }
         drainAll += profile.drain.all;
         drainOne += profile.drain.one;
-        if (profile.isCreature) battlefieldCreatures.push({power: profile.power + profile.boardWidth * 2, toughness: profile.toughness, sick: true, commander: false, canAttack: !profile.isDefender || defendersCanAttack});
+        if (profile.isCreature) {
+          const creaturePower = (profile.isDefender && defendersDealToughnessDamage) ? profile.toughness : profile.power;
+          battlefieldCreatures.push({power: creaturePower + profile.boardWidth * 2, toughness: profile.toughness, sick: true, commander: false, canAttack: !profile.isDefender || defendersCanAttack});
+        }
       }
       peakBoard = Math.max(peakBoard, battlefieldCreatures.length);
 

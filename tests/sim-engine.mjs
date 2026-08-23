@@ -66,6 +66,13 @@ const kokusho = classify("Kokusho, the Evening Star", "Legendary Creature — Dr
 assert.equal(kokusho.drain.all, 0, "a one-shot death trigger is not a per-turn drain engine");
 assert.equal(kokusho.isFinisher, true);
 
+const dual = classify("Sacred Foundry", "Land", "({T}: Add {R} or {W}.)", "");
+assert.deepEqual([...dual.produces].sort(), ["R", "W"], "an or-phrased dual land must produce both of its colors, not just the first");
+const triome = classify("Zagoth Triome", "Land", "({T}: Add {B}, {G}, or {U}.)", "");
+assert.deepEqual([...triome.produces].sort(), ["B", "G", "U"], "a triome must produce all three of its colors");
+const painLand = classify("Battlefield Forge", "Land", "{T}: Add {C}.\n{T}: Add {R} or {W}. This land deals 1 damage to you.", "");
+assert.deepEqual([...painLand.produces].sort(), ["R", "W"], "a multi-line land must read every add clause");
+
 const pips = Engine.parseManaCost("{3}{W}{B}");
 assert.equal(pips.value, 5);
 assert.equal(pips.pips.W, 1);
@@ -120,6 +127,23 @@ const liftedWalls = Engine.simulateGames([wallCommander, wallLands, {...testWall
 assert.ok(wallsOnly.metrics.winRate < 0.15, `a board of nothing but Defenders and no enabler can never attack, so any win must come from the table eliminating itself, not from us (got ${wallsOnly.metrics.winRate})`);
 assert.ok(realAttackers.metrics.winRate > wallsOnly.metrics.winRate + 0.2, `identical stats without Defender must win far more often (walls ${wallsOnly.metrics.winRate} vs attackers ${realAttackers.metrics.winRate})`);
 assert.ok(liftedWalls.metrics.winRate > wallsOnly.metrics.winRate + 0.2, `an enabler that lifts Defender must let the same walls fight (walls ${wallsOnly.metrics.winRate} vs lifted ${liftedWalls.metrics.winRate})`);
+
+// An Arcades-style effect goes further than lifting the restriction: the walls
+// attack with their toughness, so high-toughness/low-power walls must land far
+// harder than the same walls merely allowed to swing for their printed power.
+const arcadesEnabler = {name: "Arcades Effect", quantity: 1, typeLine: "Legendary Creature — Elder Dragon", manaCost: "{1}{G}{W}{U}", oracleText: "Each creature you control with defender assigns combat damage equal to its toughness rather than its power and can attack as though it didn't have defender.", colorIdentity: ["G", "U", "W"], power: "3", toughness: "5"};
+const weakWalls = {...testWalls, name: "Weak Wall", power: "0", toughness: "6", quantity: 62};
+const liftedWeak = Engine.simulateGames([wallCommander, wallLands, weakWalls, defenderEnabler], table(), {...config, games: 300}, 55);
+const arcadesWeak = Engine.simulateGames([wallCommander, wallLands, weakWalls, arcadesEnabler], table(), {...config, games: 300}, 55);
+assert.ok(arcadesWeak.metrics.winRate > liftedWeak.metrics.winRate + 0.2, `toughness-as-damage must let 0/6 walls actually close a game (lift-only ${liftedWeak.metrics.winRate} vs arcades ${arcadesWeak.metrics.winRate})`);
+
+// A planeswalker commander ("can be your commander") is cast and taxed like
+// any commander but never joins combat; the game must run without crediting
+// it attack power, and its cast metrics must still be tracked.
+const pwCommander = {name: "PW Commander", quantity: 1, isCommander: true, typeLine: "Legendary Planeswalker — Test", manaCost: "{2}{W}", oracleText: "This can be your commander.\n+1: Draw a card.", colorIdentity: ["W"]};
+const pwDeck = Engine.simulateGames([pwCommander, wallLands, {...testAttackers, quantity: 63}], table(), {...config, games: 200}, 7);
+assert.ok(pwDeck.metrics.commanderCastRate > 0.9, `a planeswalker commander must still be cast nearly every game (got ${pwDeck.metrics.commanderCastRate})`);
+assert.ok(pwDeck.metrics.winRate > 0, "a deck with real attackers behind a planeswalker commander must still win games");
 
 // ---------------------------------------------------------------------------
 // The metric has to discriminate: a deliberately damaged deck must score lower
