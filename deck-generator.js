@@ -83,7 +83,7 @@
   };
 
   const LENSES = [
-    {key: "synergy-max", label: "Synergy maximiser", weights: {edhrec: 0.30, theme: 0.45, curve: 0.10, budget: 0.05, scarcity: 0.10}, quotaShift: {theme: 4, removal: -2, draw: -2}, offset: 0, priceCapFactor: 1, lands: 0, blurb: "Leans hardest into the theme you asked for."},
+    {key: "synergy-max", label: "Synergy maximizer", weights: {edhrec: 0.30, theme: 0.45, curve: 0.10, budget: 0.05, scarcity: 0.10}, quotaShift: {theme: 4, removal: -2, draw: -2}, offset: 0, priceCapFactor: 1, lands: 0, blurb: "Leans hardest into the theme you asked for."},
     {key: "budget-value", label: "Budget value", weights: {edhrec: 0.30, theme: 0.20, curve: 0.15, budget: 0.30, scarcity: 0.05}, quotaShift: {}, offset: 0, priceCapFactor: 0.45, lands: 0, blurb: "Spends the least per point of effect."},
     {key: "resilient-midrange", label: "Resilient midrange", weights: {edhrec: 0.30, theme: 0.22, curve: 0.18, budget: 0.15, scarcity: 0.15}, quotaShift: {protection: 3, removal: 2, theme: -5}, offset: 1, priceCapFactor: 1, lands: 1, blurb: "Answers first, wins second; hardest to knock over."},
     {key: "aggro-tempo", label: "Aggressive tempo", weights: {edhrec: 0.28, theme: 0.27, curve: 0.25, budget: 0.10, scarcity: 0.10}, quotaShift: {finisher: 3, theme: 1, ramp: -2, wipe: -2}, offset: 1, priceCapFactor: 1, lands: -2, curveBias: -1, blurb: "Lowest curve, fastest clock, least patient."},
@@ -688,7 +688,7 @@
     const average = ranked.length ? ranked.reduce((sum, entry) => sum + entry.card.edhrecRank, 0) / ranked.length : 8000;
     const percent = Math.max(20, Math.min(95, Math.round(30 + average / 220 + stageIndex * 8)));
     const label = percent >= 75 ? "Rarely seen" : percent >= 55 ? "Fairly familiar" : "Well known";
-    return {percent: `${percent}%`, label, description: "Modelled odds a given opponent has NOT seen this commander and THIS STAGE of the build — estimated from EDHREC popularity of the exact card list"};
+    return {percent: `${percent}%`, label, description: "Modeled odds a given opponent has NOT seen this commander and THIS STAGE of the build — estimated from EDHREC popularity of the exact card list"};
   }
 
   function summariesFor(context, lens, stages) {

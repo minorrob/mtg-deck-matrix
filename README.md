@@ -29,7 +29,7 @@ catalog in memory when the page renders. `data/*.json` is never written to.
 ## Simulation and optimization
 
 Every variant — curated or generated — has a **Simulate** button. It plays the
-deck's Tuned build against randomised opponents thousands of times, finds where
+deck's Tuned build against randomized opponents thousands of times, finds where
 the build actually loses, proposes swaps, and re-measures. The games run on your
 own computer; no API key is needed and nothing is uploaded.
 

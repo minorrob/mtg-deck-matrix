@@ -1,16 +1,16 @@
-# Mechanics modelling in sim-engine.js — design notes
+# Mechanics modeling in sim-engine.js — design notes
 
 Covers the additions made to the combat and card-classification model: +1/+1 counters
 (growth, doubling, proliferate) and combat keywords (flying, menace, trample, deathtouch,
-first strike, lifelink). Written to record *why* each mechanic was modelled the way it was,
+first strike, lifelink). Written to record *why* each mechanic was modeled the way it was,
 and how it should be read against the app's existing scoring vector and the twelve curated
 per-variant dimensions (`data/variants.json`'s six playstyle + six engine ratings).
 
 ## Why these mechanics, and not others
 
 The request named proliferate, counters, flying, and trample specifically, plus "other
-mechanics." Flying's natural combat-keyword neighbours — menace, trample, deathtouch, first
-strike, lifelink — are the ones already common enough in this catalog to be worth modelling
+mechanics." Flying's natural combat-keyword neighbors — menace, trample, deathtouch, first
+strike, lifelink — are the ones already common enough in this catalog to be worth modeling
 (82, 41 Defender, 23 vigilance, 18 proliferate, 15 lifelink, 11 trample, 10 deathtouch, 9 first
 strike occurrences across the 666-card catalog). Vigilance, ward, and hexproof were left out:
 vigilance has no effect in a model with no separate untapped-for-blocking state, and ward/
@@ -37,7 +37,7 @@ control* with flying before her own keyword line 2) — a non-issue in practice,
 
 ## Counters: growth, not storage
 
-Three real patterns exist in this catalog and are modelled:
+Three real patterns exist in this catalog and are modeled:
 
 1. **Enters with counters** ("enters the battlefield with a +1/+1 counter") — applied once,
    at the creature's own `makeCreatureEntry`.
@@ -50,11 +50,11 @@ Three real patterns exist in this catalog and are modelled:
    one, matching the real rule's growth effect while skipping the real choice of which
    permanents/players to target (again, no targeting model exists here).
 
-**Not modelled**: counter *storage and transfer* — The Ozolith's actual text ("when a creature
+**Not modeled**: counter *storage and transfer* — The Ozolith's actual text ("when a creature
 you control leaves the battlefield... put those counters on The Ozolith... move all counters
 from The Ozolith onto target creature") is a genuinely different, more stateful mechanic
 (tracking counters on a noncreature permanent across a creature's death) that would need its
-own state machine for one card's specific behaviour. It classifies as an ordinary permanent
+own state machine for one card's specific behavior. It classifies as an ordinary permanent
 with no special interaction — an honest gap, not a silent wrong answer.
 
 **Doubling** (Hardened Scales, Vorel of the Hull Clade, Ozolith-the-Shattered-Spire-style "that

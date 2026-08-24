@@ -37,8 +37,8 @@
     ease: "Ease measures how naturally the card works without complicated timing, narrow setup, or expert rules knowledge.",
     fun: "Fun measures how satisfying and interactive the card is likely to feel for the player and the table.",
     fit: "Fit explains how directly the card supports this deck’s commander, mechanics, and stated game plan.",
-    simulate: "Play this exact 100-card build against randomised opponents thousands of times, find where it actually loses, and propose swaps that measurably fix it. The games run on your own computer.",
-    whyVariant: "See how this variant's simulated Tuned, Enhance, and Fun Tuned scores compare against its deck's other variants, and where it ranks among them."
+    simulate: "Play this exact 100-card build against randomized opponents thousands of times, find where it actually loses, and propose swaps that measurably fix it. The games run on your own computer.",
+    whyVariant: "See this variant's simulated score on every rung it was measured on, and where its Tuned score ranks among its deck's other variants."
   };
   const KEYWORD_DEFINITIONS = {
     flying: "This creature can normally be blocked only by creatures with flying or reach.",
@@ -73,7 +73,12 @@
   const slotRuns = new Map();
   let state;
   let toastTimer;
-  let openDeckId = 1;
+  let openDeckId = null;
+  // How many Choose placeholders to show as full editable cards, before the
+  // rest collapse behind a single "+ Add another deck" tile. Never less than
+  // however many are already built, so a returning user's own decks are never
+  // hidden -- only the empty ones beyond that need an explicit "+" click.
+  let chooseRevealCount = 1;
   let openBuyDeckId = 1;
   let openCommentId = null;
   let tourState = null;
@@ -487,7 +492,20 @@
       ${built ? `<p class="choose-storage">${icon("▤")}<span>Generated decks are private to this browser · about ${kilobytes} KB stored</span></p>` : ""}
       <div class="choose-grid" id="choose-grid"></div>`;
     const grid = $("#choose-grid", root);
-    customStore.slots.forEach((slot, index) => grid.appendChild(makeChooseSlot(slot, index)));
+    const revealed = Math.max(chooseRevealCount, built, 1);
+    customStore.slots.slice(0, revealed).forEach((slot, index) => grid.appendChild(makeChooseSlot(slot, index)));
+    if (revealed < customStore.slots.length) {
+      const addTile = document.createElement("button");
+      addTile.type = "button";
+      addTile.className = "choose-slot choose-slot-add";
+      addTile.dataset.chooseReveal = "true";
+      addTile.innerHTML = `<span class="choose-slot-add-icon">+</span><span>Add another deck</span>`;
+      addTile.addEventListener("click", () => {
+        chooseRevealCount = revealed + 1;
+        renderChoose();
+      });
+      grid.appendChild(addTile);
+    }
   }
 
   function chooseInputRow(label, hint, control) {
@@ -791,8 +809,6 @@
     const plan = buyCatalog?.plans?.[variant.id];
     if (!plan) return "";
     const badges = [
-      plan.tuned2?.length ? ["tuned2", "Tuned-2"] : null,
-      plan.max2?.length ? ["max2", "Maxxed-2"] : null,
       plan.funTuned?.length ? ["funTuned", "Fun"] : null,
       plan.altTuned?.some((item) => item.isCommander) ? ["altTuned", "◇ Alt"] : null
     ].filter(Boolean);
@@ -984,18 +1000,17 @@
 
   // Opened from the Why This Variant button, which only renders when this variant has a
   // simulation-summary.json builds entry (custom decks generated on the Choose tab never do,
-  // since they've never been through the Phase 6 sweep). Ranks this variant's Tuned score
-  // against its own deck's other variants -- Tuned rather than an average across rungs, since
-  // it's the one rung every variant was measured on the same way, so it's the only apples-to-
-  // apples comparison. Enhance and Fun Tuned are still shown per sibling for the full picture.
+  // since they've never been through the sweep). Reports THIS variant only: every rung it was
+  // measured on, plus one line placing it against its own deck's other variants at the Tuned
+  // rung -- Tuned because it's the one rung every variant was measured on the same way, so
+  // it's the only apples-to-apples comparison. Sibling readouts are deliberately not repeated
+  // here; each sibling has its own button.
   function whyVariantMarkup(variant, siblingVariants) {
-    const rows = siblingVariants.map((sibling) => ({
-      variant: sibling,
-      tuned: simulationSummary?.builds?.[sibling.id]?.Tuned || null,
-      enhance: simulationSummary?.builds?.[sibling.id]?.Enhance || null,
-      funTuned: simulationSummary?.builds?.[sibling.id]?.["Fun Tuned"] || null
-    }));
-    const ranked = rows.filter((row) => row.tuned).sort((a, b) => b.tuned.score - a.tuned.score);
+    const buildsFor = (id) => simulationSummary?.builds?.[id] || null;
+    const ranked = siblingVariants
+      .map((sibling) => ({variant: sibling, tuned: buildsFor(sibling.id)?.Tuned || null}))
+      .filter((row) => row.tuned && row.tuned.score != null)
+      .sort((a, b) => b.tuned.score - a.tuned.score);
     const mine = ranked.find((row) => row.variant.id === variant.id);
     const top = ranked[0];
     const myRank = mine ? ranked.indexOf(mine) + 1 : null;
@@ -1003,21 +1018,21 @@
       ? `<p>${esc(variant.name)} has not been through the simulation sweep yet, so there is nothing to compare it against.</p>`
       : myRank === 1
         ? `<p><strong>${esc(variant.name)}</strong> scored highest of Deck ${esc(variant.deckId)}’s ${ranked.length} simulated variants at the Tuned rung — ${mine.tuned.score.toFixed(1)} points, a ${(mine.tuned.winPct * 100).toFixed(1)}% win rate over ${mine.tuned.games.toLocaleString()} games.</p>`
-        : `<p><strong>${esc(variant.name)}</strong> placed #${myRank} of Deck ${esc(variant.deckId)}’s ${ranked.length} simulated variants. <strong>${esc(top.variant.name)}</strong> led at Tuned with ${top.tuned.score.toFixed(1)} points against this variant’s ${mine.tuned.score.toFixed(1)} — a gap of ${(top.tuned.score - mine.tuned.score).toFixed(1)}.</p>`;
-    const rowsHtml = ranked.map((row, index) => `
-      <div class="why-variant-row${row.variant.id === variant.id ? " is-this-variant" : ""}">
-        <div class="why-variant-row-head"><span class="why-variant-row-rank">#${index + 1}</span><strong>${esc(row.variant.name)}</strong>${row.variant.id === variant.id ? `<span class="why-variant-you-tag">this variant</span>` : ""}</div>
-        ${simulationReadoutMarkup("Tuned", row.tuned)}
-        ${simulationReadoutMarkup("Enhance", row.enhance)}
-        ${simulationReadoutMarkup("Fun Tuned", row.funTuned)}
-      </div>`).join("");
+        : `<p><strong>${esc(variant.name)}</strong> placed #${myRank} of Deck ${esc(variant.deckId)}’s ${ranked.length} simulated variants at the Tuned rung, scoring ${mine.tuned.score.toFixed(1)} against <strong>${esc(top.variant.name)}</strong>’s leading ${top.tuned.score.toFixed(1)} — a gap of ${(top.tuned.score - mine.tuned.score).toFixed(1)}.</p>`;
+    const myBuilds = buildsFor(variant.id);
+    const rungs = ["Tuned", "Enhance", "Max", "Fun Tuned", "Fun Max"];
+    const rowsHtml = `
+      <div class="why-variant-row is-this-variant">
+        <div class="why-variant-row-head"><strong>${esc(variant.name)}</strong><span class="why-variant-you-tag">${esc(variant.commander)}</span></div>
+        ${rungs.map((rung) => simulationReadoutMarkup(rung, myBuilds?.[rung] || null)).join("")}
+      </div>`;
     return `
       <section class="detail-block why-variant-headline">
         <h3>Why this variant</h3>
         ${headline}
       </section>
       <section class="detail-block why-variant-readout">
-        <h3>Monte Carlo readout for Deck ${esc(variant.deckId)}’s variants</h3>
+        <h3>Monte Carlo readout${engineNoteIcon()}</h3>
         <div class="why-variant-rows">${rowsHtml}</div>
       </section>`;
   }
@@ -1205,11 +1220,11 @@
   }
 
   // Gives a freshly-picked variant a smarter Buy Picks starting point than the flat site
-  // default, using whichever Compare stage the pick was made at: Base, Tuned-2 (falling back
-  // to Tuned where a variant has no -2 data), or Maxxed-2 (falling back to Max). Never touches
-  // a variant that already has a stored Buy Picks selection -- the preset dropdown is the
-  // explicit re-apply mechanism for anything past the first pick, and switching stage chips
-  // alone (with no new pick) must never reseed either.
+  // default, using whichever Compare stage the pick was made at: Base, Tuned, or Maxxed --
+  // each of which already folds in its Monte-Carlo-improved swaps where the variant has them.
+  // Never touches a variant that already has a stored Buy Picks selection -- the preset
+  // dropdown is the explicit re-apply mechanism for anything past the first pick, and
+  // switching stage chips alone (with no new pick) must never reseed either.
   function selectionIdsSignature(selection) {
     return Lineup.ARRAY_KEYS.map((key) => [...(selection?.[key] || [])].map(String).sort().join(",")).join("|");
   }
@@ -1225,7 +1240,7 @@
     // computed flat default is: if it's still exactly that, nothing of the user's is at risk.
     if (existing && selectionIdsSignature(existing) !== selectionIdsSignature(Lineup.defaultSelection(plan))) return;
     const stage = Number(state.rankStages[variant.deckId] || 2);
-    const presetKey = stage === 1 ? "base" : stage === 3 ? (plan.max2?.length ? "max2" : "max") : (plan.tuned2?.length ? "tuned2" : "tuned");
+    const presetKey = stage === 1 ? "base" : stage === 3 ? "max" : "tuned";
     const assembled = assemblePreset(plan, presetKey);
     if (assembled) state.buySelections[variant.id] = assembled;
   }
@@ -2391,20 +2406,23 @@
   // importer has actually populated that ladder's entry array for this specific plan (see
   // tools/import_budget_plan.py) -- the other 24 variants have none of these keys at all, so
   // their dropdown degrades to exactly the original three, per plan.
+  // Tuned and Maxxed absorb their Monte-Carlo-improved counterparts rather than
+  // offering them as separate rungs: the -2 arrays stay in the data (they are
+  // regenerated from the workbook, and the slot model resolves each ladder
+  // through its own `replaces` chain), but a reader only ever picks "Tuned" or
+  // "Maxxed" and gets the improved build. A plan without the -2 arrays keeps the
+  // same two rungs, just without the extra cards folded in.
   function deckPresets(plan) {
+    const tunedCategories = Array.isArray(plan.tuned2) ? ["required", "tuned2"] : ["required"];
+    const maxCategories = Array.isArray(plan.tuned2)
+      ? ["required", "tuned2", "upgrade", "enhance", "enhance2", "max", "max2"]
+      : ["required", "upgrade", "enhance", "max"];
     const presets = [
       {key: "base", label: "Base", categories: []},
-      {key: "tuned", label: "Tuned", categories: ["required"]},
-      {key: "enhance", label: "Enhance", categories: ["required", "upgrade", "enhance"]},
-      {key: "max", label: "Maxxed", categories: ["required", "upgrade", "enhance", "max"]}
+      {key: "tuned", label: "Tuned", categories: tunedCategories},
+      {key: "enhance", label: "Enhance", categories: [...tunedCategories, "upgrade", "enhance"]},
+      {key: "max", label: "Maxxed", categories: maxCategories}
     ];
-    if (Array.isArray(plan.tuned2)) {
-      presets.push(
-        {key: "tuned2", label: "Tuned-2", categories: ["required", "tuned2"]},
-        {key: "enhance2", label: "Enhance-2", categories: ["required", "tuned2", "enhance2"]},
-        {key: "max2", label: "Maxxed-2", categories: ["required", "tuned2", "enhance2", "max2"]}
-      );
-    }
     if (Array.isArray(plan.funTuned)) {
       presets.push(
         {key: "funTuned", label: "Fun Tuned", categories: ["funTuned"]},
@@ -2601,24 +2619,34 @@
     </div>`;
   }
 
+  // The engine-boundary caveat is identical on every readout, so repeating it under each one
+  // buried the numbers in boilerplate. It lives in one place now -- this hoverable icon --
+  // and every readout references it rather than restating it.
+  function engineNoteIcon() {
+    if (!simulationSummary?.engineBoundaryNote) return "";
+    return `<button type="button" class="engine-note-icon info-tip tip-action" data-tooltip="${esc(simulationSummary.engineBoundaryNote)}" aria-label="How to read these numbers">${icon("i")}</button>`;
+  }
+
   // Piece 2, additive beyond what Rob explicitly asked for: the real simulated result for
   // whichever build piece 1 just matched, straight from the workbook's Summary sheet. Kept
   // visually separate from the metric strip above, and never renders a Score/Win% without
-  // its engine tag and the v1/v2.1 boundary note -- see data/simulation-summary.json.
+  // its engine tag -- see data/simulation-summary.json.
   function simulationReadoutMarkup(buildName, sim) {
     if (!simulationSummary) return "";
     if (!sim || sim.games == null) {
-      return `<p class="simulation-readout is-unsimulated">${icon("i")}<span><b>${esc(buildName)}</b> · published list — not independently simulated</span></p>`;
+      return `<p class="simulation-readout is-unsimulated">${icon("i")}<span><b>${esc(buildName)}</b> · ${esc(sim?.note || "published list — not independently simulated")}</span></p>`;
     }
     return `<div class="simulation-readout" data-engine="${esc(sim.engine || "")}">
-      <p><b>Simulated:</b> ${esc(buildName)} · ${sim.games.toLocaleString()} games (${sim.holdoutGames != null ? sim.holdoutGames.toLocaleString() : "?"} holdout) · ${sim.winPct != null ? `${(sim.winPct * 100).toFixed(1)}% win` : "win % n/a"} · ${esc(sim.verdict || "unverified")} · <span class="engine-tag">${esc(sim.engine || "engine n/a")} engine</span></p>
-      <p class="simulation-engine-note">${icon("!")}<span>${esc(simulationSummary.engineBoundaryNote || "")}</span></p>
+      <p><b>Simulated:</b> ${esc(buildName)} · ${sim.score != null ? `score ${sim.score.toFixed(1)} · ` : ""}${sim.games.toLocaleString()} games · ${sim.winPct != null ? `${(sim.winPct * 100).toFixed(1)}% win` : "win % n/a"} · <span class="engine-tag">${esc(sim.engine || "engine n/a")} engine</span>${engineNoteIcon()}</p>
     </div>`;
   }
 
+  // The Monte-Carlo-improved rungs are folded into their base rung, so their cards
+  // carry the base rung's own label rather than announcing a tier that no longer
+  // exists as a separate choice.
   const KIND_LABELS = {
     precon: "Precon", shell: "Starting Shell", tuned: "Tuned", upgrade: "Enhance", enhance: "Enhance", max: "Maxxed",
-    tuned2: "Tuned-2", enhance2: "Enhance-2", max2: "Maxxed-2",
+    tuned2: "Tuned", enhance2: "Maxxed", max2: "Maxxed",
     funTuned: "Fun Tuned", funMax: "Fun Max",
     altTuned: "Alt Tuned", altMax: "Alt Max"
   };
@@ -2627,20 +2655,18 @@
   const kindItems = (plan, kind) => plan?.[KIND_ARRAY[kind] || kind] || [];
 
   // The ladder rungs are grouped by what they cost you, not by which optimizer produced them.
-  // Ten flat sections asked the reader to know that Tuned-2 and Fun Tuned are alternative ways
-  // to spend the same tier of money; three tabbed groups say it outright. `preset` is the
-  // configuration a tab represents end to end -- crucially NOT just its own array, since
-  // Tuned-2 builds on top of the site's Tuned list while Fun Tuned deliberately replaces it.
+  // Flat sections asked the reader to know that Tuned and Fun Tuned are alternative ways to
+  // spend the same tier of money; tabbed groups say it outright. `preset` is the configuration
+  // a tab represents end to end -- crucially NOT just its own array, since Fun Tuned is built
+  // straight off Base rather than toggling on top of Tuned.
   const LADDER_GROUPS = [
     {
       key: "tuned", title: "Tuned", glyph: "✓",
       tabs: [
-        {key: "tuned", label: "Tuned", kinds: ["tuned"], preset: "tuned", build: "Tuned",
-         note: "The site's own tuned list · the required purchases that make this deck work."},
-        {key: "tuned2", label: "Tuned-2", kinds: ["tuned2"], preset: "tuned2", build: "Tuned-2",
-         note: "Monte-Carlo-improved swaps layered on top of the site's Tuned build."},
+        {key: "tuned", label: "Tuned", kinds: ["tuned", "tuned2"], preset: "tuned", build: "Tuned",
+         note: "The required purchases that make this deck work, with every Monte-Carlo-improved swap folded in."},
         {key: "funTuned", label: "Fun Tuned", kinds: ["funTuned"], preset: "funTuned", build: "Fun Tuned",
-         note: "A fun-weighted re-optimization built straight off Base · its own build, not a toggle on Tuned-2."}
+         note: "A fun-weighted re-optimization built straight off Base · its own build, not a toggle on Tuned."}
       ]
     },
     {
@@ -2653,10 +2679,8 @@
     {
       key: "max", title: "Maxxed", glyph: "✦",
       tabs: [
-        {key: "max", label: "Maxxed", kinds: ["max"], preset: "max", build: "Max",
-         note: "Strongest Tier 3 / Bracket 3-legal capability · price is not the criterion."},
-        {key: "max2", label: "Maxxed-2", kinds: ["enhance2", "max2"], preset: "max2", build: "Max-2",
-         note: "Strongest Monte-Carlo-improved capability, including the Enhance-2 rung it builds on."},
+        {key: "max", label: "Maxxed", kinds: ["max", "enhance2", "max2"], preset: "max", build: "Max",
+         note: "Strongest Tier 3 / Bracket 3-legal capability · price is not the criterion · includes every Monte-Carlo-improved swap."},
         {key: "funMax", label: "Fun Max", kinds: ["funMax"], preset: "funMax", build: "Fun Max",
          note: "Fun-weighted re-optimization on top of Fun Tuned."}
       ]
@@ -3319,9 +3343,9 @@
       upgrade: ["enhance", "Enhance"],
       enhance: ["enhance", "Enhance"],
       max: ["maxxed", "Maxxed"],
-      tuned2: ["tuned2", "Tuned-2"],
-      enhance2: ["enhance2", "Enhance-2"],
-      max2: ["max2", "Maxxed-2"],
+      tuned2: ["tuned", "Tuned"],
+      enhance2: ["maxxed", "Maxxed"],
+      max2: ["maxxed", "Maxxed"],
       funTuned: ["funTuned", "Fun Tuned"],
       funMax: ["funMax", "Fun Max"],
       altTuned: ["altTuned", "Alt Tuned"],
@@ -4059,6 +4083,12 @@
     return [card.liveLevelLabel, swap || roles, purpose].filter(Boolean).join(" · ");
   }
 
+  // Which priced rows the reader has explicitly reopened to edit. A committed price collapses
+  // to a plain value so a recorded row reads as settled next to one still awaiting a number;
+  // this set is what lets the pencil put a single row back into an input without disturbing
+  // any other. View state, not saved state -- same reasoning as the ladder tab selection.
+  const editingPrices = new Set();
+
   // Owned cards get a "what did you actually pay" field; sealed precon contents get a label;
   // everything still on the shopping list keeps the estimated floor-to-ceiling range.
   function livePriceMarkup(card, price, ceiling) {
@@ -4066,10 +4096,16 @@
     if (!card.bought) return `<small class="live-price-range">Floor ${price ? money(price) : "unpriced"} · Ceiling ${ceiling ? money(ceiling) : "not listed"}</small>`;
     const key = itemKey(card);
     const committed = committedPrice(card);
-    return `<span class="live-price-entry${committed === null ? "" : " is-locked"}" data-paid-row="${esc(key)}">
-      <span class="live-price-field"><b aria-hidden="true">$</b><input type="text" inputmode="decimal" autocomplete="off" value="${committed === null ? "" : esc(committed.toFixed(2))}" placeholder="0.00" data-paid-key="${esc(key)}" data-ui-focus="paid-${esc(key)}" aria-label="Price paid for ${esc(card.name)}"></span>
-      <button type="button" class="live-price-commit" data-paid-commit="${esc(key)}" aria-label="Lock in the price paid for ${esc(card.name)}">✓</button>
-    </span>`;
+    return `<span class="live-price-entry${committed === null ? "" : " is-locked"}" data-paid-row="${esc(key)}">${livePriceInnerMarkup(card, key, committed)}</span>`;
+  }
+
+  function livePriceInnerMarkup(card, key, committed) {
+    if (committed !== null && !editingPrices.has(key)) {
+      return `<span class="live-price-value">${money(committed)}</span>
+        <button type="button" class="live-price-commit is-edit" data-paid-edit="${esc(key)}" aria-label="Edit the price paid for ${esc(card.name)}">✎</button>`;
+    }
+    return `<span class="live-price-field"><b aria-hidden="true">$</b><input type="text" inputmode="decimal" autocomplete="off" value="${committed === null ? "" : esc(committed.toFixed(2))}" placeholder="0.00" data-paid-key="${esc(key)}" data-ui-focus="paid-${esc(key)}" aria-label="Price paid for ${esc(card.name)}"></span>
+      <button type="button" class="live-price-commit" data-paid-commit="${esc(key)}" aria-label="Lock in the price paid for ${esc(card.name)}">✓</button>`;
   }
 
   function makeLiveCardRow(card, variant) {
@@ -4262,12 +4298,30 @@
         else state.purchasePrices[key] = Math.round(Number(raw) * 100) / 100;
         const stored = state.purchasePrices[key];
         if (stored !== undefined) input.value = Number(stored).toFixed(2);
-        cards.filter((card) => itemKey(card) === key).forEach((card) => { card.paidPrice = stored ?? null; });
-        input.closest(".live-price-entry")?.classList.toggle("is-locked", stored !== undefined);
+        const card = cards.find((entry) => itemKey(entry) === key);
+        cards.filter((entry) => itemKey(entry) === key).forEach((entry) => { entry.paidPrice = stored ?? null; });
+        const row = input.closest(".live-price-entry");
+        row?.classList.toggle("is-locked", stored !== undefined);
+        editingPrices.delete(key);
+        // A committed row collapses to its value; a cleared one stays an empty input to fill.
+        if (row && card) row.innerHTML = livePriceInnerMarkup(card, key, stored === undefined ? null : Number(stored));
         saveState(stored === undefined ? "Purchase price cleared" : `Locked in ${money(stored)}`);
         refreshTotal();
       };
       details.addEventListener("click", (event) => {
+        const edit = event.target.closest("[data-paid-edit]");
+        if (edit) {
+          event.preventDefault();
+          event.stopPropagation();
+          const key = edit.dataset.paidEdit;
+          const card = cards.find((entry) => itemKey(entry) === key);
+          const row = edit.closest(".live-price-entry");
+          if (!card || !row) return;
+          editingPrices.add(key);
+          row.innerHTML = livePriceInnerMarkup(card, key, committedPrice(card));
+          $("input[data-paid-key]", row)?.focus();
+          return;
+        }
         const commit = event.target.closest("[data-paid-commit]");
         if (!commit) return;
         event.preventDefault();
@@ -4525,7 +4579,7 @@
       <div class="shop-toolbar">
         <input class="search-input" id="shop-search" type="search" value="${esc(filters.query)}" placeholder="Search cards…" aria-label="Search shopping list">
         <div class="quick-filter-row" aria-label="Bought status">
-          <div class="status-chips">${filterChip("status", "all", "All", filters)}${filterChip("status", "need", "Need", filters)}${filterChip("status", "found", "Bought", filters)}</div>
+          <div class="status-chips" aria-label="Status">${filterChip("status", "all", "All", filters)}${filterChip("status", "need", "To Buy", filters)}${filterChip("status", "found", "Bought", filters)}</div>
           <details class="more-filters">
             <summary>Filters${activeFilterCount ? ` <b>${activeFilterCount}</b>` : ""}</summary>
             <div class="filter-select-grid">
@@ -4615,8 +4669,55 @@
       }));
     }
     $("#shop-actions", root).innerHTML = allItems.length
-      ? `<div class="action-row"><button class="secondary-button" data-go="buy">Adjust Buy Picks</button></div>`
+      ? `<div class="action-row"><button class="secondary-button" data-go="buy">Adjust Buy Picks</button><button type="button" class="secondary-button" id="shop-export"${visible.length ? "" : " disabled"}>Export ${state.shopFilters.status === "found" ? "owned list" : state.shopFilters.status === "need" ? "shopping list" : "list"}</button></div>`
       : `<div class="empty-state"><h3>Your field list is empty</h3><p>Select deck variants and save their Buy Picks first.</p><button class="primary-button" data-go="buy">Open Buy Picks</button></div>`;
+    $("#shop-export", root)?.addEventListener("click", () => exportShopList(visible));
+  }
+
+  // Exports exactly what the Shop List is showing -- the current status filter, every other
+  // filter, and the current grouping -- and nothing from any other screen. Two real uses:
+  // filtered to Bought it is a spreadsheet backup of what you own; filtered to To Buy it is a
+  // list to print and carry, so it carries a check-off column and stays narrow enough to read.
+  function exportShopList(visible) {
+    const groupBy = state.shopFilters.groupBy;
+    const groups = groupBy === "none" ? [{label: "", items: visible}] : groupShopItems(visible, groupBy);
+    const header = ["Check", "Group", "Card", "Qty", "Type", "Color", "Target", "Ceiling", "Paid", "Status"];
+    const rows = [header];
+    let count = 0;
+    groups.forEach((group) => {
+      group.items.forEach((item) => {
+        const metadata = cardMetadata[itemKey(item)] || {};
+        const bounds = cardPriceBounds(item, metadata);
+        const bought = shopItemComplete(item);
+        const paid = committedPrice(item);
+        rows.push([
+          "[ ]",
+          group.label,
+          item.name,
+          String(item.quantity || 1),
+          item.typeLine || metadata.typeLine || "",
+          (metadata.colorIdentity || item.colorIdentity || []).join("") || "C",
+          bounds.price != null ? bounds.price.toFixed(2) : "",
+          bounds.ceiling != null ? bounds.ceiling.toFixed(2) : "",
+          paid === null ? "" : paid.toFixed(2),
+          bought ? "Bought" : "To Buy"
+        ]);
+        count += 1;
+      });
+    });
+    if (!count) return showToast("Nothing to export with the current filters.");
+    const csv = rows.map((row) => row.map(csvCell).join(",")).join("\r\n");
+    const label = state.shopFilters.status === "found" ? "owned" : state.shopFilters.status === "need" ? "to-buy" : "shop-list";
+    const blob = new Blob([`﻿${csv}`], {type: "text/csv;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `mtg-${label}-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    showToast(`Exported ${count} card${count === 1 ? "" : "s"} to CSV.`);
   }
 
   function groupShopItems(items, mode) {
@@ -4907,7 +5008,7 @@
       {view: "live", selectors: [".live-deck-metrics", ".live-decks"], title: "Read the header at a glance", copy: "Total cost sums only the prices you locked in. The rest track bought and active cards, purchases still needed, and Game Changer and Tier 3 status."},
       {view: "live", selectors: [".live-deck-disclosures", ".live-decks"], title: "Detail on demand", copy: "Deck Composition and Core Mechanics stay folded until you want them, so the header stays short on a phone."},
       {view: "live", selectors: [".live-metric-strip", ".live-decks"], title: "The same three ratings", copy: "Playstyle, Engine, and Growth carry over from Compare at the stage you selected. Tap one to see which sub-scores drive it."},
-      {view: "live", selectors: [".live-toolbar", ".live-decks"], title: "Filter and group each deck", copy: "Search inside a deck, filter by status, level, type, colour, price, rarity, or location, and group and sub-group the results."},
+      {view: "live", selectors: [".live-toolbar", ".live-decks"], title: "Filter and group each deck", copy: "Search inside a deck, filter by status, level, type, color, price, rarity, or location, and group and sub-group the results."},
       {view: "live", selectors: [".live-lineup-radio", ".live-card-row", ".live-decks"], title: "Choose the active 100", copy: "Each slot has one active card and any number of bench options. The radio makes a card active; illegal swaps are refused with the rule that blocked them."},
       {view: "live", selectors: [".live-price-entry", ".live-card-row", ".live-decks"], title: "Record what you paid", copy: "Owned cards get a price box. Type what you paid and press the check to lock it in; the deck's total cost updates immediately. Cards that came in a sealed precon just read Precon Pack."},
       {view: "live", selectors: [".live-export", ".live-intro"], title: "Export the checklist", copy: "Export writes every deck in its current grouping and filters to a CSV inventory: card, type, rarity, set, level, lineup, status, what you paid, and the floor-to-ceiling range."}
