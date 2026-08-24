@@ -266,9 +266,9 @@
         "Maxed · 35 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
       ],
       "costs": [
-        "$30 total",
-        "$55 total",
-        "$431 total"
+        "$64 total",
+        "$115 total",
+        "$115 total"
       ],
       "brackets": [
         {
@@ -295,18 +295,18 @@
       "facts": [
         {
           "availability": "In print",
-          "budget": "precon only",
-          "costNote": "Base: $30 all in - precon only. That is the $40-110 brief covers a tuned build; the box on its own is $80 under it."
-        },
-        {
-          "availability": "In print",
           "budget": "in budget",
-          "costNote": "Tuned: $55 all in - 8 upgrades. That is within the original $40-110 brief for this slot."
+          "costNote": "Base: $64 all in — the cheapest hundred that is still this deck. $3 of that is already on your shelf, so $61 is what you would spend. The $55 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "In print",
-          "budget": "beyond brief",
-          "costNote": "Maxed: $431 all in - 35 upgrades. That is the $40-110 brief was never meant to cover a maxed Bracket-3 build - this is $321 past it, by design."
+          "budget": "just over",
+          "costNote": "Tuned: $115 all in — 18 cards beyond Base. $3 of that is already on your shelf, so $112 is what you would spend. That is $5 past the $55 total brief for this slot."
+        },
+        {
+          "availability": "In print",
+          "budget": "just over",
+          "costNote": "Maxed: $115 all in — 18 cards beyond Base. $3 of that is already on your shelf, so $112 is what you would spend. The $55 total brief was never meant to cover a maxed Bracket-3 build; this is $5 past it, by design."
         }
       ],
       "rarity": [
@@ -617,9 +617,9 @@
         "Maxed · 24 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
       ],
       "costs": [
-        "$45 total",
-        "$50 total",
-        "$318 total"
+        "$47 total",
+        "$47 total",
+        "$47 total"
       ],
       "brackets": [
         {
@@ -646,18 +646,18 @@
       "facts": [
         {
           "availability": "In print",
-          "budget": "precon only",
-          "costNote": "Base: $53 all in - precon only. That is the $40-110 brief covers a tuned build; the box on its own is $57 under it."
+          "budget": "in budget",
+          "costNote": "Base: $47 all in — the cheapest hundred that is still this deck. $4 of that is already on your shelf, so $42 is what you would spend. The $50 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "In print",
           "budget": "in budget",
-          "costNote": "Tuned: $58 all in - 7 upgrades. That is within the original $40-110 brief for this slot."
+          "costNote": "Tuned: $47 all in — 17 cards beyond Base. $4 of that is already on your shelf, so $43 is what you would spend. That is within the $50 total brief for this slot."
         },
         {
           "availability": "In print",
-          "budget": "beyond brief",
-          "costNote": "Maxed: $326 all in - 24 upgrades. That is the $40-110 brief was never meant to cover a maxed Bracket-3 build - this is $216 past it, by design."
+          "budget": "in budget",
+          "costNote": "Maxed: $47 all in — 17 cards beyond Base. $4 of that is already on your shelf, so $43 is what you would spend. The $50 total brief was never meant to cover a maxed Bracket-3 build; this is $-63 past it, by design."
         }
       ],
       "rarity": [
@@ -969,9 +969,9 @@
         "Maxed · 31 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
       ],
       "costs": [
-        "$31 total",
-        "$80 total",
-        "$526 total"
+        "$68 total",
+        "$86 total",
+        "$86 total"
       ],
       "brackets": [
         {
@@ -998,18 +998,18 @@
       "facts": [
         {
           "availability": "Flexible seed",
-          "budget": "precon only",
-          "costNote": "Base: $31 all in - precon only. That is the $40-110 brief covers a tuned build; the box on its own is $79 under it."
+          "budget": "in budget",
+          "costNote": "Base: $68 all in — the cheapest hundred that is still this deck. $4 of that is already on your shelf, so $63 is what you would spend. The $80 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Flexible seed",
           "budget": "in budget",
-          "costNote": "Tuned: $80 all in - 8 upgrades. That is within the original $40-110 brief for this slot."
+          "costNote": "Tuned: $86 all in — 14 cards beyond Base. $4 of that is already on your shelf, so $82 is what you would spend. That is within the $80 total brief for this slot."
         },
         {
           "availability": "Flexible seed",
-          "budget": "beyond brief",
-          "costNote": "Maxed: $526 all in - 31 upgrades. That is the $40-110 brief was never meant to cover a maxed Bracket-3 build - this is $416 past it, by design."
+          "budget": "in budget",
+          "costNote": "Maxed: $86 all in — 14 cards beyond Base. $4 of that is already on your shelf, so $82 is what you would spend. The $80 total brief was never meant to cover a maxed Bracket-3 build; this is $-24 past it, by design."
         }
       ],
       "rarity": [
@@ -1318,9 +1318,9 @@
         "Maxed · 34 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
       ],
       "costs": [
-        "$46 total",
-        "$79 total",
-        "$557 total"
+        "$44 total",
+        "$82 total",
+        "$82 total"
       ],
       "brackets": [
         {
@@ -1347,18 +1347,18 @@
       "facts": [
         {
           "availability": "In print",
-          "budget": "precon only",
-          "costNote": "Base: $46 all in - precon only. That is the $40-110 brief covers a tuned build; the box on its own is $64 under it."
+          "budget": "in budget",
+          "costNote": "Base: $44 all in — the cheapest hundred that is still this deck. $4 of that is already on your shelf, so $40 is what you would spend. The $79 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "In print",
           "budget": "in budget",
-          "costNote": "Tuned: $79 all in - 5 upgrades. That is within the original $40-110 brief for this slot."
+          "costNote": "Tuned: $82 all in — 38 cards beyond Base. $4 of that is already on your shelf, so $78 is what you would spend. That is within the $79 total brief for this slot."
         },
         {
           "availability": "In print",
-          "budget": "beyond brief",
-          "costNote": "Maxed: $557 all in - 34 upgrades. That is the $40-110 brief was never meant to cover a maxed Bracket-3 build - this is $447 past it, by design."
+          "budget": "in budget",
+          "costNote": "Maxed: $82 all in — 38 cards beyond Base. $4 of that is already on your shelf, so $78 is what you would spend. The $79 total brief was never meant to cover a maxed Bracket-3 build; this is $-28 past it, by design."
         }
       ],
       "rarity": [
@@ -1668,9 +1668,9 @@
         "Maxed · 34 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
       ],
       "costs": [
-        "$45 total",
-        "$82 total",
-        "$473 total"
+        "$48 total",
+        "$85 total",
+        "$85 total"
       ],
       "brackets": [
         {
@@ -1697,18 +1697,18 @@
       "facts": [
         {
           "availability": "In print",
-          "budget": "precon only",
-          "costNote": "Base: $45 all in - precon only. That is the $40-110 brief covers a tuned build; the box on its own is $65 under it."
+          "budget": "in budget",
+          "costNote": "Base: $48 all in — the cheapest hundred that is still this deck. $4 of that is already on your shelf, so $44 is what you would spend. The $40-110 brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "In print",
           "budget": "in budget",
-          "costNote": "Tuned: $82 all in - 9 upgrades. That is within the original $40-110 brief for this slot."
+          "costNote": "Tuned: $85 all in — 30 cards beyond Base. $4 of that is already on your shelf, so $81 is what you would spend. That is within the $40-110 brief for this slot."
         },
         {
           "availability": "In print",
-          "budget": "beyond brief",
-          "costNote": "Maxed: $473 all in - 34 upgrades. That is the $40-110 brief was never meant to cover a maxed Bracket-3 build - this is $363 past it, by design."
+          "budget": "in budget",
+          "costNote": "Maxed: $85 all in — 30 cards beyond Base. $4 of that is already on your shelf, so $81 is what you would spend. The $40-110 brief was never meant to cover a maxed Bracket-3 build; this is $-25 past it, by design."
         }
       ],
       "rarity": [
@@ -2020,9 +2020,9 @@
         "Maxed · 23 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
       ],
       "costs": [
-        "$42 total",
-        "$50 total",
-        "$524 total"
+        "$80 total",
+        "$48 total",
+        "$155 total"
       ],
       "brackets": [
         {
@@ -2049,18 +2049,18 @@
       "facts": [
         {
           "availability": "OOP — hunt it",
-          "budget": "precon only",
-          "costNote": "Base: $42 all in - precon only. That is the $40-110 brief covers a tuned build; the box on its own is $68 under it."
+          "budget": "in budget",
+          "costNote": "Base: $80 all in — the cheapest hundred that is still this deck. $2 of that is already on your shelf, so $79 is what you would spend. The $50 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "OOP — hunt it",
           "budget": "in budget",
-          "costNote": "Tuned: $50 all in - 4 upgrades. That is within the original $40-110 brief for this slot."
+          "costNote": "Tuned: $48 all in — 7 cards beyond Base. $2 of that is already on your shelf, so $46 is what you would spend. That is within the $50 total brief for this slot."
         },
         {
           "availability": "OOP — hunt it",
           "budget": "beyond brief",
-          "costNote": "Maxed: $524 all in - 23 upgrades. That is the $40-110 brief was never meant to cover a maxed Bracket-3 build - this is $414 past it, by design."
+          "costNote": "Maxed: $155 all in — 11 cards beyond Base. $2 of that is already on your shelf, so $154 is what you would spend. The $50 total brief was never meant to cover a maxed Bracket-3 build; this is $45 past it, by design."
         }
       ],
       "rarity": [
@@ -2368,9 +2368,9 @@
         "Maxed · 26 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
       ],
       "costs": [
-        "$72 total",
-        "$94 total",
-        "$727 total"
+        "$116 total",
+        "$97 total",
+        "$97 total"
       ],
       "brackets": [
         {
@@ -2397,18 +2397,18 @@
       "facts": [
         {
           "availability": "OOP — hunt it",
-          "budget": "precon only",
-          "costNote": "Base: $72 all in - precon only. That is the $40-110 brief covers a tuned build; the box on its own is $38 under it."
+          "budget": "just over",
+          "costNote": "Base: $116 all in — the cheapest hundred that is still this deck. $3 of that is already on your shelf, so $112 is what you would spend. The $94 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "OOP — hunt it",
           "budget": "in budget",
-          "costNote": "Tuned: $94 all in - 3 upgrades. That is within the original $40-110 brief for this slot."
+          "costNote": "Tuned: $97 all in — 11 cards beyond Base. $3 of that is already on your shelf, so $94 is what you would spend. That is within the $94 total brief for this slot."
         },
         {
           "availability": "OOP — hunt it",
-          "budget": "beyond brief",
-          "costNote": "Maxed: $727 all in - 26 upgrades. That is the $40-110 brief was never meant to cover a maxed Bracket-3 build - this is $617 past it, by design."
+          "budget": "in budget",
+          "costNote": "Maxed: $97 all in — 11 cards beyond Base. $3 of that is already on your shelf, so $94 is what you would spend. The $94 total brief was never meant to cover a maxed Bracket-3 build; this is $-13 past it, by design."
         }
       ],
       "rarity": [
@@ -2716,9 +2716,9 @@
         "Maxed · 37 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
       ],
       "costs": [
-        "$71 total",
-        "$94 total",
-        "$943 total"
+        "$81 total",
+        "$93 total",
+        "$93 total"
       ],
       "brackets": [
         {
@@ -2745,18 +2745,18 @@
       "facts": [
         {
           "availability": "Flexible seed",
-          "budget": "precon only",
-          "costNote": "Base: $71 all in - precon only. That is the $40-110 brief covers a tuned build; the box on its own is $39 under it."
+          "budget": "in budget",
+          "costNote": "Base: $81 all in — the cheapest hundred that is still this deck. $36 of that is already on your shelf, so $45 is what you would spend. The $40-110 brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Flexible seed",
           "budget": "in budget",
-          "costNote": "Tuned: $94 all in - 6 upgrades. That is within the original $40-110 brief for this slot."
+          "costNote": "Tuned: $93 all in — 22 cards beyond Base. $36 of that is already on your shelf, so $57 is what you would spend. That is within the $40-110 brief for this slot."
         },
         {
           "availability": "Flexible seed",
-          "budget": "beyond brief",
-          "costNote": "Maxed: $943 all in - 37 upgrades. That is the $40-110 brief was never meant to cover a maxed Bracket-3 build - this is $833 past it, by design."
+          "budget": "in budget",
+          "costNote": "Maxed: $93 all in — 22 cards beyond Base. $36 of that is already on your shelf, so $57 is what you would spend. The $40-110 brief was never meant to cover a maxed Bracket-3 build; this is $-17 past it, by design."
         }
       ],
       "rarity": [
@@ -3066,9 +3066,9 @@
         "Maxed · 31 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
       ],
       "costs": [
-        "$60 total",
-        "$91 total",
-        "$571 total"
+        "$66 total",
+        "$86 total",
+        "$86 total"
       ],
       "brackets": [
         {
@@ -3095,18 +3095,18 @@
       "facts": [
         {
           "availability": "Flexible seed",
-          "budget": "precon only",
-          "costNote": "Base: $60 all in - precon only. That is the $40-110 brief covers a tuned build; the box on its own is $50 under it."
+          "budget": "in budget",
+          "costNote": "Base: $66 all in — the cheapest hundred that is still this deck. $9 of that is already on your shelf, so $58 is what you would spend. The $91 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Flexible seed",
           "budget": "in budget",
-          "costNote": "Tuned: $91 all in - 6 upgrades. That is within the original $40-110 brief for this slot."
+          "costNote": "Tuned: $86 all in — 6 cards beyond Base. $9 of that is already on your shelf, so $77 is what you would spend. That is within the $91 total brief for this slot."
         },
         {
           "availability": "Flexible seed",
-          "budget": "beyond brief",
-          "costNote": "Maxed: $571 all in - 31 upgrades. That is the $40-110 brief was never meant to cover a maxed Bracket-3 build - this is $461 past it, by design."
+          "budget": "in budget",
+          "costNote": "Maxed: $86 all in — 6 cards beyond Base. $9 of that is already on your shelf, so $77 is what you would spend. The $91 total brief was never meant to cover a maxed Bracket-3 build; this is $-24 past it, by design."
         }
       ],
       "rarity": [
@@ -3414,9 +3414,9 @@
         "Maxed · 25 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
       ],
       "costs": [
-        "$28 total",
-        "$42 total",
-        "$330 total"
+        "$30 total",
+        "$37 total",
+        "$37 total"
       ],
       "brackets": [
         {
@@ -3443,18 +3443,18 @@
       "facts": [
         {
           "availability": "In print",
-          "budget": "precon only",
-          "costNote": "Base: $28 all in - precon only. That is the $40-110 brief covers a tuned build; the box on its own is $82 under it."
+          "budget": "in budget",
+          "costNote": "Base: $30 all in — the cheapest hundred that is still this deck. $3 of that is already on your shelf, so $28 is what you would spend. The $42 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "In print",
           "budget": "in budget",
-          "costNote": "Tuned: $42 all in - 8 upgrades. That is within the original $40-110 brief for this slot."
+          "costNote": "Tuned: $37 all in — 11 cards beyond Base. $3 of that is already on your shelf, so $35 is what you would spend. That is within the $42 total brief for this slot."
         },
         {
           "availability": "In print",
-          "budget": "beyond brief",
-          "costNote": "Maxed: $330 all in - 25 upgrades. That is the $40-110 brief was never meant to cover a maxed Bracket-3 build - this is $220 past it, by design."
+          "budget": "in budget",
+          "costNote": "Maxed: $37 all in — 11 cards beyond Base. $3 of that is already on your shelf, so $35 is what you would spend. The $42 total brief was never meant to cover a maxed Bracket-3 build; this is $-73 past it, by design."
         }
       ],
       "rarity": [
@@ -3762,9 +3762,9 @@
         "Maxed · 34 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
       ],
       "costs": [
-        "$51 total",
+        "$53 total",
         "$63 total",
-        "$564 total"
+        "$63 total"
       ],
       "brackets": [
         {
@@ -3791,18 +3791,18 @@
       "facts": [
         {
           "availability": "Flexible seed",
-          "budget": "precon only",
-          "costNote": "Base: $51 all in - precon only. That is the $40-110 brief covers a tuned build; the box on its own is $59 under it."
+          "budget": "in budget",
+          "costNote": "Base: $53 all in — the cheapest hundred that is still this deck. $9 of that is already on your shelf, so $44 is what you would spend. The $63 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Flexible seed",
           "budget": "in budget",
-          "costNote": "Tuned: $63 all in - 7 upgrades. That is within the original $40-110 brief for this slot."
+          "costNote": "Tuned: $63 all in — 12 cards beyond Base. $9 of that is already on your shelf, so $54 is what you would spend. That is within the $63 total brief for this slot."
         },
         {
           "availability": "Flexible seed",
-          "budget": "beyond brief",
-          "costNote": "Maxed: $564 all in - 34 upgrades. That is the $40-110 brief was never meant to cover a maxed Bracket-3 build - this is $454 past it, by design."
+          "budget": "in budget",
+          "costNote": "Maxed: $63 all in — 12 cards beyond Base. $9 of that is already on your shelf, so $54 is what you would spend. The $63 total brief was never meant to cover a maxed Bracket-3 build; this is $-47 past it, by design."
         }
       ],
       "rarity": [
@@ -4112,9 +4112,9 @@
         "Maxed · 34 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
       ],
       "costs": [
-        "$40 total",
+        "$61 total",
         "$58 total",
-        "$469 total"
+        "$58 total"
       ],
       "brackets": [
         {
@@ -4141,18 +4141,18 @@
       "facts": [
         {
           "availability": "Flexible seed",
-          "budget": "precon only",
-          "costNote": "Base: $40 all in - precon only. That is the $40-110 brief covers a tuned build; the box on its own is $70 under it."
+          "budget": "in budget",
+          "costNote": "Base: $61 all in — the cheapest hundred that is still this deck. $6 of that is already on your shelf, so $55 is what you would spend. The $58 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Flexible seed",
           "budget": "in budget",
-          "costNote": "Tuned: $58 all in - 5 upgrades. That is within the original $40-110 brief for this slot."
+          "costNote": "Tuned: $58 all in — 11 cards beyond Base. $6 of that is already on your shelf, so $52 is what you would spend. That is within the $58 total brief for this slot."
         },
         {
           "availability": "Flexible seed",
-          "budget": "beyond brief",
-          "costNote": "Maxed: $469 all in - 34 upgrades. That is the $40-110 brief was never meant to cover a maxed Bracket-3 build - this is $359 past it, by design."
+          "budget": "in budget",
+          "costNote": "Maxed: $58 all in — 11 cards beyond Base. $6 of that is already on your shelf, so $52 is what you would spend. The $58 total brief was never meant to cover a maxed Bracket-3 build; this is $-52 past it, by design."
         }
       ],
       "rarity": [
@@ -4461,9 +4461,9 @@
         "Maxed · 30 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
       ],
       "costs": [
-        "$36 total",
-        "$46 total",
-        "$564 total"
+        "$44 total",
+        "$197 total",
+        "$262 total"
       ],
       "brackets": [
         {
@@ -4490,18 +4490,18 @@
       "facts": [
         {
           "availability": "Flexible seed",
-          "budget": "precon only",
-          "costNote": "Base: $36 all in - precon only. That is the $40-110 brief covers a tuned build; the box on its own is $74 under it."
-        },
-        {
-          "availability": "Flexible seed",
           "budget": "in budget",
-          "costNote": "Tuned: $46 all in - 5 upgrades. That is within the original $40-110 brief for this slot."
+          "costNote": "Base: $44 all in — the cheapest hundred that is still this deck. $5 of that is already on your shelf, so $40 is what you would spend. The $40-110 brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Flexible seed",
           "budget": "beyond brief",
-          "costNote": "Maxed: $564 all in - 30 upgrades. That is the $40-110 brief was never meant to cover a maxed Bracket-3 build - this is $454 past it, by design."
+          "costNote": "Tuned: $197 all in — 17 cards beyond Base. $3 of that is already on your shelf, so $195 is what you would spend. That is $87 past the $40-110 brief for this slot."
+        },
+        {
+          "availability": "Flexible seed",
+          "budget": "beyond brief",
+          "costNote": "Maxed: $262 all in — 18 cards beyond Base. $3 of that is already on your shelf, so $259 is what you would spend. The $40-110 brief was never meant to cover a maxed Bracket-3 build; this is $152 past it, by design."
         }
       ],
       "rarity": [
@@ -4812,9 +4812,9 @@
         "Maxed · 27 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
       ],
       "costs": [
-        "$35 total",
-        "$61 total",
-        "$439 total"
+        "$52 total",
+        "$75 total",
+        "$75 total"
       ],
       "brackets": [
         {
@@ -4841,18 +4841,18 @@
       "facts": [
         {
           "availability": "Flexible seed",
-          "budget": "precon only",
-          "costNote": "Base: $35 all in - precon only. That is the $40-110 brief covers a tuned build; the box on its own is $75 under it."
+          "budget": "in budget",
+          "costNote": "Base: $52 all in — the cheapest hundred that is still this deck. $10 of that is already on your shelf, so $42 is what you would spend. The $61 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Flexible seed",
           "budget": "in budget",
-          "costNote": "Tuned: $61 all in - 6 upgrades. That is within the original $40-110 brief for this slot."
+          "costNote": "Tuned: $75 all in — 8 cards beyond Base. $10 of that is already on your shelf, so $65 is what you would spend. That is within the $61 total brief for this slot."
         },
         {
           "availability": "Flexible seed",
-          "budget": "beyond brief",
-          "costNote": "Maxed: $439 all in - 27 upgrades. That is the $40-110 brief was never meant to cover a maxed Bracket-3 build - this is $329 past it, by design."
+          "budget": "in budget",
+          "costNote": "Maxed: $75 all in — 8 cards beyond Base. $10 of that is already on your shelf, so $65 is what you would spend. The $61 total brief was never meant to cover a maxed Bracket-3 build; this is $-35 past it, by design."
         }
       ],
       "rarity": [
@@ -5160,9 +5160,9 @@
         "Maxed · 31 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
       ],
       "costs": [
-        "$55 total",
-        "$77 total",
-        "$576 total"
+        "$33 total",
+        "$98 total",
+        "$98 total"
       ],
       "brackets": [
         {
@@ -5189,18 +5189,18 @@
       "facts": [
         {
           "availability": "OOP — hunt it",
-          "budget": "precon only",
-          "costNote": "Base: $55 all in - precon only. That is the $40-110 brief covers a tuned build; the box on its own is $55 under it."
+          "budget": "in budget",
+          "costNote": "Base: $33 all in — the cheapest hundred that is still this deck. $10 of that is already on your shelf, so $23 is what you would spend. The $77 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "OOP — hunt it",
           "budget": "in budget",
-          "costNote": "Tuned: $77 all in - 6 upgrades. That is within the original $40-110 brief for this slot."
+          "costNote": "Tuned: $98 all in — 13 cards beyond Base. $11 of that is already on your shelf, so $86 is what you would spend. That is within the $77 total brief for this slot."
         },
         {
           "availability": "OOP — hunt it",
-          "budget": "beyond brief",
-          "costNote": "Maxed: $576 all in - 31 upgrades. That is the $40-110 brief was never meant to cover a maxed Bracket-3 build - this is $466 past it, by design."
+          "budget": "in budget",
+          "costNote": "Maxed: $98 all in — 13 cards beyond Base. $11 of that is already on your shelf, so $86 is what you would spend. The $77 total brief was never meant to cover a maxed Bracket-3 build; this is $-12 past it, by design."
         }
       ],
       "rarity": [
@@ -5508,9 +5508,9 @@
         "Maxed · 35 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
       ],
       "costs": [
-        "$40 total",
+        "$48 total",
         "$54 total",
-        "$574 total"
+        "$54 total"
       ],
       "brackets": [
         {
@@ -5537,18 +5537,18 @@
       "facts": [
         {
           "availability": "OOP — hunt it",
-          "budget": "precon only",
-          "costNote": "Base: $40 all in - precon only. That is the $40-110 brief covers a tuned build; the box on its own is $70 under it."
+          "budget": "in budget",
+          "costNote": "Base: $48 all in — the cheapest hundred that is still this deck. $12 of that is already on your shelf, so $36 is what you would spend. The $54 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "OOP — hunt it",
           "budget": "in budget",
-          "costNote": "Tuned: $54 all in - 6 upgrades. That is within the original $40-110 brief for this slot."
+          "costNote": "Tuned: $54 all in — 11 cards beyond Base. $11 of that is already on your shelf, so $42 is what you would spend. That is within the $54 total brief for this slot."
         },
         {
           "availability": "OOP — hunt it",
-          "budget": "beyond brief",
-          "costNote": "Maxed: $574 all in - 35 upgrades. That is the $40-110 brief was never meant to cover a maxed Bracket-3 build - this is $464 past it, by design."
+          "budget": "in budget",
+          "costNote": "Maxed: $54 all in — 11 cards beyond Base. $11 of that is already on your shelf, so $42 is what you would spend. The $54 total brief was never meant to cover a maxed Bracket-3 build; this is $-56 past it, by design."
         }
       ],
       "rarity": [
@@ -5857,9 +5857,9 @@
         "Maxed · 33 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
       ],
       "costs": [
-        "$35 total",
-        "$99 total",
-        "$768 total"
+        "$45 total",
+        "$44 total",
+        "$44 total"
       ],
       "brackets": [
         {
@@ -5886,18 +5886,18 @@
       "facts": [
         {
           "availability": "OOP — hunt it",
-          "budget": "precon only",
-          "costNote": "Base: $35 all in - precon only. That is the $40-110 brief covers a tuned build; the box on its own is $75 under it."
+          "budget": "in budget",
+          "costNote": "Base: $45 all in — the cheapest hundred that is still this deck. $12 of that is already on your shelf, so $33 is what you would spend. The $99 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "OOP — hunt it",
           "budget": "in budget",
-          "costNote": "Tuned: $99 all in - 4 upgrades. That is within the original $40-110 brief for this slot."
+          "costNote": "Tuned: $44 all in — 7 cards beyond Base. $12 of that is already on your shelf, so $32 is what you would spend. That is within the $99 total brief for this slot."
         },
         {
           "availability": "OOP — hunt it",
-          "budget": "beyond brief",
-          "costNote": "Maxed: $768 all in - 33 upgrades. That is the $40-110 brief was never meant to cover a maxed Bracket-3 build - this is $658 past it, by design."
+          "budget": "in budget",
+          "costNote": "Maxed: $44 all in — 7 cards beyond Base. $12 of that is already on your shelf, so $32 is what you would spend. The $99 total brief was never meant to cover a maxed Bracket-3 build; this is $-66 past it, by design."
         }
       ],
       "rarity": [
@@ -6205,9 +6205,9 @@
         "Maxed · 27 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
       ],
       "costs": [
-        "$40 total",
-        "$42 total",
-        "$360 total"
+        "$41 total",
+        "$107 total",
+        "$107 total"
       ],
       "brackets": [
         {
@@ -6234,18 +6234,18 @@
       "facts": [
         {
           "availability": "Flexible seed",
-          "budget": "precon only",
-          "costNote": "Base: $40 all in - precon only. That is the $40-110 brief covers a tuned build; the box on its own is $70 under it."
+          "budget": "in budget",
+          "costNote": "Base: $41 all in — the cheapest hundred that is still this deck. $11 of that is already on your shelf, so $30 is what you would spend. The $40-110 brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Flexible seed",
           "budget": "in budget",
-          "costNote": "Tuned: $42 all in - 6 upgrades. That is within the original $40-110 brief for this slot."
+          "costNote": "Tuned: $107 all in — 24 cards beyond Base. $11 of that is already on your shelf, so $96 is what you would spend. That is within the $40-110 brief for this slot."
         },
         {
           "availability": "Flexible seed",
-          "budget": "beyond brief",
-          "costNote": "Maxed: $360 all in - 27 upgrades. That is the $40-110 brief was never meant to cover a maxed Bracket-3 build - this is $250 past it, by design."
+          "budget": "in budget",
+          "costNote": "Maxed: $107 all in — 24 cards beyond Base. $11 of that is already on your shelf, so $96 is what you would spend. The $40-110 brief was never meant to cover a maxed Bracket-3 build; this is $-3 past it, by design."
         }
       ],
       "rarity": [
@@ -6555,9 +6555,9 @@
         "Maxed · 34 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
       ],
       "costs": [
-        "$35 total",
-        "$60 total",
-        "$567 total"
+        "$44 total",
+        "$62 total",
+        "$62 total"
       ],
       "brackets": [
         {
@@ -6584,18 +6584,18 @@
       "facts": [
         {
           "availability": "Flexible seed",
-          "budget": "precon only",
-          "costNote": "Base: $35 all in - precon only. That is the $40-110 brief covers a tuned build; the box on its own is $75 under it."
+          "budget": "in budget",
+          "costNote": "Base: $44 all in — the cheapest hundred that is still this deck. $10 of that is already on your shelf, so $34 is what you would spend. The $60 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Flexible seed",
           "budget": "in budget",
-          "costNote": "Tuned: $60 all in - 6 upgrades. That is within the original $40-110 brief for this slot."
+          "costNote": "Tuned: $62 all in — 7 cards beyond Base. $11 of that is already on your shelf, so $51 is what you would spend. That is within the $60 total brief for this slot."
         },
         {
           "availability": "Flexible seed",
-          "budget": "beyond brief",
-          "costNote": "Maxed: $567 all in - 34 upgrades. That is the $40-110 brief was never meant to cover a maxed Bracket-3 build - this is $457 past it, by design."
+          "budget": "in budget",
+          "costNote": "Maxed: $62 all in — 7 cards beyond Base. $11 of that is already on your shelf, so $51 is what you would spend. The $60 total brief was never meant to cover a maxed Bracket-3 build; this is $-48 past it, by design."
         }
       ],
       "rarity": [
@@ -6905,9 +6905,9 @@
         "Maxed · 28 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
       ],
       "costs": [
-        "$23 total",
-        "$69 total",
-        "$440 total"
+        "$52 total",
+        "$44 total",
+        "$103 total"
       ],
       "brackets": [
         {
@@ -6934,18 +6934,18 @@
       "facts": [
         {
           "availability": "OOP — hunt it",
-          "budget": "precon only",
-          "costNote": "Base: $23 all in - precon only. That is the $40-110 brief covers a tuned build; the box on its own is $87 under it."
+          "budget": "in budget",
+          "costNote": "Base: $52 all in — the cheapest hundred that is still this deck. $5 of that is already on your shelf, so $47 is what you would spend. The $69 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "OOP — hunt it",
           "budget": "in budget",
-          "costNote": "Tuned: $69 all in - 8 upgrades. That is within the original $40-110 brief for this slot."
+          "costNote": "Tuned: $44 all in — 16 cards beyond Base. $4 of that is already on your shelf, so $40 is what you would spend. That is within the $69 total brief for this slot."
         },
         {
           "availability": "OOP — hunt it",
-          "budget": "beyond brief",
-          "costNote": "Maxed: $440 all in - 28 upgrades. That is the $40-110 brief was never meant to cover a maxed Bracket-3 build - this is $330 past it, by design."
+          "budget": "in budget",
+          "costNote": "Maxed: $103 all in — 16 cards beyond Base. $4 of that is already on your shelf, so $99 is what you would spend. The $69 total brief was never meant to cover a maxed Bracket-3 build; this is $-7 past it, by design."
         }
       ],
       "rarity": [
@@ -7254,9 +7254,9 @@
         "Maxed · 32 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
       ],
       "costs": [
-        "$43 total",
+        "$59 total",
         "$55 total",
-        "$721 total"
+        "$55 total"
       ],
       "brackets": [
         {
@@ -7283,18 +7283,18 @@
       "facts": [
         {
           "availability": "Flexible seed",
-          "budget": "precon only",
-          "costNote": "Base: $43 all in - precon only. That is the $40-110 brief covers a tuned build; the box on its own is $67 under it."
+          "budget": "in budget",
+          "costNote": "Base: $59 all in — the cheapest hundred that is still this deck. $19 of that is already on your shelf, so $40 is what you would spend. The $55 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Flexible seed",
           "budget": "in budget",
-          "costNote": "Tuned: $55 all in - 5 upgrades. That is within the original $40-110 brief for this slot."
+          "costNote": "Tuned: $55 all in — 13 cards beyond Base. $18 of that is already on your shelf, so $37 is what you would spend. That is within the $55 total brief for this slot."
         },
         {
           "availability": "Flexible seed",
-          "budget": "beyond brief",
-          "costNote": "Maxed: $721 all in - 32 upgrades. That is the $40-110 brief was never meant to cover a maxed Bracket-3 build - this is $611 past it, by design."
+          "budget": "in budget",
+          "costNote": "Maxed: $55 all in — 13 cards beyond Base. $18 of that is already on your shelf, so $37 is what you would spend. The $55 total brief was never meant to cover a maxed Bracket-3 build; this is $-55 past it, by design."
         }
       ],
       "rarity": [
@@ -7602,9 +7602,9 @@
         "Maxed · 25 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
       ],
       "costs": [
-        "$40 total",
+        "$41 total",
         "$43 total",
-        "$593 total"
+        "$48 total"
       ],
       "brackets": [
         {
@@ -7631,18 +7631,18 @@
       "facts": [
         {
           "availability": "Flexible seed",
-          "budget": "precon only",
-          "costNote": "Base: $40 all in - precon only. That is the $40-110 brief covers a tuned build; the box on its own is $70 under it."
+          "budget": "in budget",
+          "costNote": "Base: $41 all in — the cheapest hundred that is still this deck. $7 of that is already on your shelf, so $34 is what you would spend. The $43 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Flexible seed",
           "budget": "in budget",
-          "costNote": "Tuned: $43 all in - 4 upgrades. That is within the original $40-110 brief for this slot."
+          "costNote": "Tuned: $43 all in — 13 cards beyond Base. $6 of that is already on your shelf, so $37 is what you would spend. That is within the $43 total brief for this slot."
         },
         {
           "availability": "Flexible seed",
-          "budget": "beyond brief",
-          "costNote": "Maxed: $593 all in - 25 upgrades. That is the $40-110 brief was never meant to cover a maxed Bracket-3 build - this is $483 past it, by design."
+          "budget": "in budget",
+          "costNote": "Maxed: $48 all in — 13 cards beyond Base. $6 of that is already on your shelf, so $42 is what you would spend. The $43 total brief was never meant to cover a maxed Bracket-3 build; this is $-62 past it, by design."
         }
       ],
       "rarity": [
@@ -7950,9 +7950,9 @@
         "Maxed · 28 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
       ],
       "costs": [
-        "$39 total",
-        "$56 total",
-        "$444 total"
+        "$50 total",
+        "$60 total",
+        "$60 total"
       ],
       "brackets": [
         {
@@ -7979,18 +7979,18 @@
       "facts": [
         {
           "availability": "Flexible seed",
-          "budget": "precon only",
-          "costNote": "Base: $39 all in - precon only. That is the $40-110 brief covers a tuned build; the box on its own is $71 under it."
+          "budget": "in budget",
+          "costNote": "Base: $50 all in — the cheapest hundred that is still this deck. $14 of that is already on your shelf, so $36 is what you would spend. The $56 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Flexible seed",
           "budget": "in budget",
-          "costNote": "Tuned: $56 all in - 5 upgrades. That is within the original $40-110 brief for this slot."
+          "costNote": "Tuned: $60 all in — 11 cards beyond Base. $11 of that is already on your shelf, so $49 is what you would spend. That is within the $56 total brief for this slot."
         },
         {
           "availability": "Flexible seed",
-          "budget": "beyond brief",
-          "costNote": "Maxed: $444 all in - 28 upgrades. That is the $40-110 brief was never meant to cover a maxed Bracket-3 build - this is $334 past it, by design."
+          "budget": "in budget",
+          "costNote": "Maxed: $60 all in — 11 cards beyond Base. $11 of that is already on your shelf, so $49 is what you would spend. The $56 total brief was never meant to cover a maxed Bracket-3 build; this is $-50 past it, by design."
         }
       ],
       "rarity": [
@@ -8299,9 +8299,9 @@
         "Maxed · 24 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
       ],
       "costs": [
-        "$35 total",
-        "$41 total",
-        "$377 total"
+        "$38 total",
+        "$39 total",
+        "$39 total"
       ],
       "brackets": [
         {
@@ -8328,18 +8328,18 @@
       "facts": [
         {
           "availability": "Flexible seed",
-          "budget": "precon only",
-          "costNote": "Base: $35 all in - precon only. That is the $40-110 brief covers a tuned build; the box on its own is $75 under it."
+          "budget": "in budget",
+          "costNote": "Base: $38 all in — the cheapest hundred that is still this deck. $11 of that is already on your shelf, so $26 is what you would spend. The $41 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Flexible seed",
           "budget": "in budget",
-          "costNote": "Tuned: $41 all in - 5 upgrades. That is within the original $40-110 brief for this slot."
+          "costNote": "Tuned: $39 all in — 10 cards beyond Base. $12 of that is already on your shelf, so $27 is what you would spend. That is within the $41 total brief for this slot."
         },
         {
           "availability": "Flexible seed",
-          "budget": "beyond brief",
-          "costNote": "Maxed: $377 all in - 24 upgrades. That is the $40-110 brief was never meant to cover a maxed Bracket-3 build - this is $267 past it, by design."
+          "budget": "in budget",
+          "costNote": "Maxed: $39 all in — 10 cards beyond Base. $12 of that is already on your shelf, so $27 is what you would spend. The $41 total brief was never meant to cover a maxed Bracket-3 build; this is $-71 past it, by design."
         }
       ],
       "rarity": [
@@ -8647,9 +8647,9 @@
         "Maxed · 29 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
       ],
       "costs": [
-        "$37 total",
-        "$91 total",
-        "$416 total"
+        "$65 total",
+        "$86 total",
+        "$155 total"
       ],
       "brackets": [
         {
@@ -8676,18 +8676,18 @@
       "facts": [
         {
           "availability": "In print",
-          "budget": "precon only",
-          "costNote": "Base: $37 all in - precon only. That is the $40-110 brief covers a tuned build; the box on its own is $73 under it."
+          "budget": "in budget",
+          "costNote": "Base: $65 all in — the cheapest hundred that is still this deck. $63 of that is already on your shelf, so $2 is what you would spend. The $40-110 brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "In print",
           "budget": "in budget",
-          "costNote": "Tuned: $91 all in - 8 upgrades. That is within the original $40-110 brief for this slot."
+          "costNote": "Tuned: $86 all in — 20 cards beyond Base. $43 of that is already on your shelf, so $43 is what you would spend. That is within the $40-110 brief for this slot."
         },
         {
           "availability": "In print",
           "budget": "beyond brief",
-          "costNote": "Maxed: $416 all in - 29 upgrades. That is the $40-110 brief was never meant to cover a maxed Bracket-3 build - this is $306 past it, by design."
+          "costNote": "Maxed: $155 all in — 20 cards beyond Base. $43 of that is already on your shelf, so $112 is what you would spend. The $40-110 brief was never meant to cover a maxed Bracket-3 build; this is $45 past it, by design."
         }
       ],
       "rarity": [
@@ -8996,9 +8996,9 @@
         "Maxed · 35 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
       ],
       "costs": [
-        "$43 total",
-        "$127 total",
-        "$540 total"
+        "$49 total",
+        "$52 total",
+        "$52 total"
       ],
       "brackets": [
         {
@@ -9025,18 +9025,18 @@
       "facts": [
         {
           "availability": "Flexible seed",
-          "budget": "precon only",
-          "costNote": "Base: $43 all in - precon only. That is the $165 brief covers a tuned build; the box on its own is $122 under it."
+          "budget": "in budget",
+          "costNote": "Base: $49 all in — the cheapest hundred that is still this deck. $8 of that is already on your shelf, so $41 is what you would spend. The $165 brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Flexible seed",
           "budget": "in budget",
-          "costNote": "Tuned: $127 all in - 16 upgrades. That is within the original $165 brief for this slot."
+          "costNote": "Tuned: $52 all in — 18 cards beyond Base. $8 of that is already on your shelf, so $44 is what you would spend. That is within the $165 brief for this slot."
         },
         {
           "availability": "Flexible seed",
-          "budget": "beyond brief",
-          "costNote": "Maxed: $540 all in - 35 upgrades. That is the $165 brief was never meant to cover a maxed Bracket-3 build - this is $375 past it, by design."
+          "budget": "in budget",
+          "costNote": "Maxed: $52 all in — 18 cards beyond Base. $8 of that is already on your shelf, so $44 is what you would spend. The $165 brief was never meant to cover a maxed Bracket-3 build; this is $-58 past it, by design."
         }
       ],
       "rarity": [
@@ -9345,9 +9345,9 @@
         "Maxed · 32 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
       ],
       "costs": [
-        "$39 total",
-        "$141 total",
-        "$690 total"
+        "$50 total",
+        "$129 total",
+        "$129 total"
       ],
       "brackets": [
         {
@@ -9374,18 +9374,18 @@
       "facts": [
         {
           "availability": "Flexible seed",
-          "budget": "precon only",
-          "costNote": "Base: $39 all in - precon only. That is the $165 brief covers a tuned build; the box on its own is $126 under it."
-        },
-        {
-          "availability": "Flexible seed",
           "budget": "in budget",
-          "costNote": "Tuned: $141 all in - 11 upgrades. That is within the original $165 brief for this slot."
+          "costNote": "Base: $50 all in — the cheapest hundred that is still this deck. $3 of that is already on your shelf, so $47 is what you would spend. The $141 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Flexible seed",
-          "budget": "beyond brief",
-          "costNote": "Maxed: $690 all in - 32 upgrades. That is the $165 brief was never meant to cover a maxed Bracket-3 build - this is $525 past it, by design."
+          "budget": "just over",
+          "costNote": "Tuned: $129 all in — 11 cards beyond Base. $3 of that is already on your shelf, so $126 is what you would spend. That is $19 past the $141 total brief for this slot."
+        },
+        {
+          "availability": "Flexible seed",
+          "budget": "just over",
+          "costNote": "Maxed: $129 all in — 11 cards beyond Base. $3 of that is already on your shelf, so $126 is what you would spend. The $141 total brief was never meant to cover a maxed Bracket-3 build; this is $19 past it, by design."
         }
       ],
       "rarity": [
@@ -9693,9 +9693,9 @@
         "Maxed · 34 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
       ],
       "costs": [
-        "$35 total",
-        "$102 total",
-        "$416 total"
+        "$33 total",
+        "$84 total",
+        "$84 total"
       ],
       "brackets": [
         {
@@ -9722,18 +9722,18 @@
       "facts": [
         {
           "availability": "Flexible seed",
-          "budget": "precon only",
-          "costNote": "Base: $35 all in - precon only. That is the $165 brief covers a tuned build; the box on its own is $130 under it."
+          "budget": "in budget",
+          "costNote": "Base: $33 all in — the cheapest hundred that is still this deck. $3 of that is already on your shelf, so $31 is what you would spend. The $102 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Flexible seed",
           "budget": "in budget",
-          "costNote": "Tuned: $102 all in - 13 upgrades. That is within the original $165 brief for this slot."
+          "costNote": "Tuned: $84 all in — 14 cards beyond Base. $3 of that is already on your shelf, so $81 is what you would spend. That is within the $102 total brief for this slot."
         },
         {
           "availability": "Flexible seed",
-          "budget": "beyond brief",
-          "costNote": "Maxed: $416 all in - 34 upgrades. That is the $165 brief was never meant to cover a maxed Bracket-3 build - this is $251 past it, by design."
+          "budget": "in budget",
+          "costNote": "Maxed: $84 all in — 14 cards beyond Base. $3 of that is already on your shelf, so $81 is what you would spend. The $102 total brief was never meant to cover a maxed Bracket-3 build; this is $-26 past it, by design."
         }
       ],
       "rarity": [
@@ -10041,9 +10041,9 @@
         "Maxed · 36 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
       ],
       "costs": [
-        "$50 total",
-        "$141 total",
-        "$620 total"
+        "$33 total",
+        "$166 total",
+        "$166 total"
       ],
       "brackets": [
         {
@@ -10070,18 +10070,18 @@
       "facts": [
         {
           "availability": "OOP — hunt it",
-          "budget": "precon only",
-          "costNote": "Base: $50 all in - precon only. That is the $165 brief covers a tuned build; the box on its own is $115 under it."
-        },
-        {
-          "availability": "OOP — hunt it",
           "budget": "in budget",
-          "costNote": "Tuned: $141 all in - 13 upgrades. That is within the original $165 brief for this slot."
+          "costNote": "Base: $33 all in — the cheapest hundred that is still this deck. $3 of that is already on your shelf, so $30 is what you would spend. The $141 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "OOP — hunt it",
           "budget": "beyond brief",
-          "costNote": "Maxed: $620 all in - 36 upgrades. That is the $165 brief was never meant to cover a maxed Bracket-3 build - this is $455 past it, by design."
+          "costNote": "Tuned: $166 all in — 24 cards beyond Base. $2 of that is already on your shelf, so $164 is what you would spend. That is $56 past the $141 total brief for this slot."
+        },
+        {
+          "availability": "OOP — hunt it",
+          "budget": "beyond brief",
+          "costNote": "Maxed: $166 all in — 24 cards beyond Base. $2 of that is already on your shelf, so $164 is what you would spend. The $141 total brief was never meant to cover a maxed Bracket-3 build; this is $56 past it, by design."
         }
       ],
       "rarity": [
@@ -10390,9 +10390,9 @@
         "Maxed · 35 upgrade cards · The whole ladder plus three Game Changers. Top of Bracket 3 - the legal ceiling."
       ],
       "costs": [
-        "$52 total",
-        "$160 total",
-        "$701 total"
+        "$30 total",
+        "$94 total",
+        "$94 total"
       ],
       "brackets": [
         {
@@ -10419,18 +10419,18 @@
       "facts": [
         {
           "availability": "OOP — hunt it",
-          "budget": "precon only",
-          "costNote": "Base: $52 all in - precon only. That is the $165 brief covers a tuned build; the box on its own is $113 under it."
+          "budget": "in budget",
+          "costNote": "Base: $30 all in — the cheapest hundred that is still this deck. $2 of that is already on your shelf, so $28 is what you would spend. The $160 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "OOP — hunt it",
           "budget": "in budget",
-          "costNote": "Tuned: $160 all in - 6 upgrades. That is within the original $165 brief for this slot."
+          "costNote": "Tuned: $94 all in — 10 cards beyond Base. $2 of that is already on your shelf, so $92 is what you would spend. That is within the $160 total brief for this slot."
         },
         {
           "availability": "OOP — hunt it",
-          "budget": "beyond brief",
-          "costNote": "Maxed: $701 all in - 35 upgrades. That is the $165 brief was never meant to cover a maxed Bracket-3 build - this is $536 past it, by design."
+          "budget": "in budget",
+          "costNote": "Maxed: $94 all in — 10 cards beyond Base. $2 of that is already on your shelf, so $92 is what you would spend. The $160 total brief was never meant to cover a maxed Bracket-3 build; this is $-16 past it, by design."
         }
       ],
       "rarity": [
@@ -10739,9 +10739,9 @@
         "Maxed · 64 spells · Leans hardest into the theme you asked for."
       ],
       "costs": [
-        "$111 total",
-        "$111 total",
-        "$367 total"
+        "$42 total",
+        "$52 total",
+        "$124 total"
       ],
       "brackets": [
         {
@@ -10768,18 +10768,18 @@
       "facts": [
         {
           "availability": "Generated from Scryfall",
-          "budget": "$110 target",
-          "costNote": "Base: 66 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Base: $42 all in — the cheapest hundred that is still this deck. $1 of that is already on your shelf, so $41 is what you would spend. The $112 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "tuned spend",
-          "costNote": "Tuned: 66 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Tuned: $52 all in — 9 cards beyond Base. $1 of that is already on your shelf, so $50 is what you would spend. That is within the $112 total brief for this slot."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "price-blind",
-          "costNote": "Maxed: 66 distinct cards priced at generation time."
+          "budget": "just over",
+          "costNote": "Maxed: $124 all in — 9 cards beyond Base. $1 of that is already on your shelf, so $122 is what you would spend. The $112 total brief was never meant to cover a maxed Bracket-3 build; this is $14 past it, by design."
         }
       ],
       "rarity": [
@@ -11088,9 +11088,9 @@
         "Maxed · 64 spells · Leans hardest into the theme you asked for."
       ],
       "costs": [
-        "$110 total",
-        "$110 total",
-        "$318 total"
+        "$55 total",
+        "$120 total",
+        "$182 total"
       ],
       "brackets": [
         {
@@ -11117,18 +11117,18 @@
       "facts": [
         {
           "availability": "Generated from Scryfall",
-          "budget": "$110 target",
-          "costNote": "Base: 75 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Base: $55 all in — the cheapest hundred that is still this deck. $8 of that is already on your shelf, so $47 is what you would spend. The $110 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "tuned spend",
-          "costNote": "Tuned: 75 distinct cards priced at generation time."
+          "budget": "just over",
+          "costNote": "Tuned: $120 all in — 23 cards beyond Base. $9 of that is already on your shelf, so $112 is what you would spend. That is $10 past the $110 total brief for this slot."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "price-blind",
-          "costNote": "Maxed: 75 distinct cards priced at generation time."
+          "budget": "beyond brief",
+          "costNote": "Maxed: $182 all in — 24 cards beyond Base. $9 of that is already on your shelf, so $174 is what you would spend. The $110 total brief was never meant to cover a maxed Bracket-3 build; this is $72 past it, by design."
         }
       ],
       "rarity": [
@@ -11437,9 +11437,9 @@
         "Maxed · 64 spells · Leans hardest into the theme you asked for."
       ],
       "costs": [
-        "$117 total",
-        "$117 total",
-        "$373 total"
+        "$48 total",
+        "$60 total",
+        "$59 total"
       ],
       "brackets": [
         {
@@ -11466,18 +11466,18 @@
       "facts": [
         {
           "availability": "Generated from Scryfall",
-          "budget": "$110 target",
-          "costNote": "Base: 66 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Base: $48 all in — the cheapest hundred that is still this deck. $1 of that is already on your shelf, so $47 is what you would spend. The $117 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "tuned spend",
-          "costNote": "Tuned: 66 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Tuned: $60 all in — 9 cards beyond Base. $1 of that is already on your shelf, so $59 is what you would spend. That is within the $117 total brief for this slot."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "price-blind",
-          "costNote": "Maxed: 66 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Maxed: $59 all in — 9 cards beyond Base. $1 of that is already on your shelf, so $58 is what you would spend. The $117 total brief was never meant to cover a maxed Bracket-3 build; this is $-51 past it, by design."
         }
       ],
       "rarity": [
@@ -11786,9 +11786,9 @@
         "Maxed · 64 spells · Leans hardest into the theme you asked for."
       ],
       "costs": [
-        "$112 total",
-        "$112 total",
-        "$397 total"
+        "$34 total",
+        "$85 total",
+        "$156 total"
       ],
       "brackets": [
         {
@@ -11815,18 +11815,18 @@
       "facts": [
         {
           "availability": "Generated from Scryfall",
-          "budget": "$110 target",
-          "costNote": "Base: 66 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Base: $34 all in — the cheapest hundred that is still this deck. The $112 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "tuned spend",
-          "costNote": "Tuned: 66 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Tuned: $85 all in — 24 cards beyond Base. That is within the $112 total brief for this slot."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "price-blind",
-          "costNote": "Maxed: 66 distinct cards priced at generation time."
+          "budget": "beyond brief",
+          "costNote": "Maxed: $156 all in — 25 cards beyond Base. The $112 total brief was never meant to cover a maxed Bracket-3 build; this is $46 past it, by design."
         }
       ],
       "rarity": [
@@ -12135,9 +12135,9 @@
         "Maxed · 64 spells · Leans hardest into the theme you asked for."
       ],
       "costs": [
-        "$110 total",
-        "$110 total",
-        "$319 total"
+        "$56 total",
+        "$52 total",
+        "$52 total"
       ],
       "brackets": [
         {
@@ -12164,18 +12164,18 @@
       "facts": [
         {
           "availability": "Generated from Scryfall",
-          "budget": "$110 target",
-          "costNote": "Base: 75 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Base: $56 all in — the cheapest hundred that is still this deck. $8 of that is already on your shelf, so $47 is what you would spend. The $110 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "tuned spend",
-          "costNote": "Tuned: 75 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Tuned: $52 all in — 14 cards beyond Base. $8 of that is already on your shelf, so $43 is what you would spend. That is within the $110 total brief for this slot."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "price-blind",
-          "costNote": "Maxed: 75 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Maxed: $52 all in — 14 cards beyond Base. $8 of that is already on your shelf, so $43 is what you would spend. The $110 total brief was never meant to cover a maxed Bracket-3 build; this is $-58 past it, by design."
         }
       ],
       "rarity": [
@@ -12484,9 +12484,9 @@
         "Maxed · 64 spells · Leans hardest into the theme you asked for."
       ],
       "costs": [
-        "$264 total",
-        "$264 total",
-        "$503 total"
+        "$52 total",
+        "$129 total",
+        "$129 total"
       ],
       "brackets": [
         {
@@ -12513,18 +12513,18 @@
       "facts": [
         {
           "availability": "Generated from Scryfall",
-          "budget": "$110 target",
-          "costNote": "Base: 65 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Base: $52 all in — the cheapest hundred that is still this deck. $6 of that is already on your shelf, so $46 is what you would spend. The $264 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "tuned spend",
-          "costNote": "Tuned: 65 distinct cards priced at generation time."
+          "budget": "just over",
+          "costNote": "Tuned: $129 all in — 17 cards beyond Base. $7 of that is already on your shelf, so $122 is what you would spend. That is $19 past the $264 total brief for this slot."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "price-blind",
-          "costNote": "Maxed: 65 distinct cards priced at generation time."
+          "budget": "just over",
+          "costNote": "Maxed: $129 all in — 17 cards beyond Base. $7 of that is already on your shelf, so $122 is what you would spend. The $264 total brief was never meant to cover a maxed Bracket-3 build; this is $19 past it, by design."
         }
       ],
       "rarity": [
@@ -12833,9 +12833,9 @@
         "Maxed · 64 spells · Leans hardest into the theme you asked for."
       ],
       "costs": [
-        "$108 total",
-        "$108 total",
-        "$167 total"
+        "$95 total",
+        "$97 total",
+        "$97 total"
       ],
       "brackets": [
         {
@@ -12862,18 +12862,18 @@
       "facts": [
         {
           "availability": "Generated from Scryfall",
-          "budget": "$110 target",
-          "costNote": "Base: 76 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Base: $95 all in — the cheapest hundred that is still this deck. $11 of that is already on your shelf, so $85 is what you would spend. The $108 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "tuned spend",
-          "costNote": "Tuned: 76 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Tuned: $97 all in — 6 cards beyond Base. $11 of that is already on your shelf, so $87 is what you would spend. That is within the $108 total brief for this slot."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "price-blind",
-          "costNote": "Maxed: 76 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Maxed: $97 all in — 6 cards beyond Base. $11 of that is already on your shelf, so $87 is what you would spend. The $108 total brief was never meant to cover a maxed Bracket-3 build; this is $-13 past it, by design."
         }
       ],
       "rarity": [
@@ -13182,9 +13182,9 @@
         "Maxed · 64 spells · Leans hardest into the theme you asked for."
       ],
       "costs": [
-        "$172 total",
-        "$172 total",
-        "$314 total"
+        "$113 total",
+        "$75 total",
+        "$75 total"
       ],
       "brackets": [
         {
@@ -13211,18 +13211,18 @@
       "facts": [
         {
           "availability": "Generated from Scryfall",
-          "budget": "$110 target",
-          "costNote": "Base: 66 distinct cards priced at generation time."
+          "budget": "just over",
+          "costNote": "Base: $113 all in — the cheapest hundred that is still this deck. $5 of that is already on your shelf, so $108 is what you would spend. The $172 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "tuned spend",
-          "costNote": "Tuned: 66 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Tuned: $75 all in — 10 cards beyond Base. $5 of that is already on your shelf, so $70 is what you would spend. That is within the $172 total brief for this slot."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "price-blind",
-          "costNote": "Maxed: 66 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Maxed: $75 all in — 10 cards beyond Base. $5 of that is already on your shelf, so $70 is what you would spend. The $172 total brief was never meant to cover a maxed Bracket-3 build; this is $-35 past it, by design."
         }
       ],
       "rarity": [
@@ -13531,9 +13531,9 @@
         "Maxed · 64 spells · Leans hardest into the theme you asked for."
       ],
       "costs": [
-        "$268 total",
-        "$268 total",
-        "$505 total"
+        "$59 total",
+        "$59 total",
+        "$59 total"
       ],
       "brackets": [
         {
@@ -13560,18 +13560,18 @@
       "facts": [
         {
           "availability": "Generated from Scryfall",
-          "budget": "$110 target",
-          "costNote": "Base: 65 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Base: $59 all in — the cheapest hundred that is still this deck. $6 of that is already on your shelf, so $53 is what you would spend. The $268 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "tuned spend",
-          "costNote": "Tuned: 65 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Tuned: $59 all in — 0 cards beyond Base. $6 of that is already on your shelf, so $53 is what you would spend. That is within the $268 total brief for this slot."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "price-blind",
-          "costNote": "Maxed: 65 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Maxed: $59 all in — 0 cards beyond Base. $6 of that is already on your shelf, so $53 is what you would spend. The $268 total brief was never meant to cover a maxed Bracket-3 build; this is $-51 past it, by design."
         }
       ],
       "rarity": [
@@ -13880,9 +13880,9 @@
         "Maxed · 64 spells · Leans hardest into the theme you asked for."
       ],
       "costs": [
-        "$256 total",
-        "$256 total",
-        "$487 total"
+        "$77 total",
+        "$133 total",
+        "$133 total"
       ],
       "brackets": [
         {
@@ -13909,18 +13909,18 @@
       "facts": [
         {
           "availability": "Generated from Scryfall",
-          "budget": "$110 target",
-          "costNote": "Base: 65 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Base: $77 all in — the cheapest hundred that is still this deck. $5 of that is already on your shelf, so $72 is what you would spend. The $256 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "tuned spend",
-          "costNote": "Tuned: 65 distinct cards priced at generation time."
+          "budget": "just over",
+          "costNote": "Tuned: $133 all in — 7 cards beyond Base. $5 of that is already on your shelf, so $128 is what you would spend. That is $23 past the $256 total brief for this slot."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "price-blind",
-          "costNote": "Maxed: 65 distinct cards priced at generation time."
+          "budget": "just over",
+          "costNote": "Maxed: $133 all in — 7 cards beyond Base. $5 of that is already on your shelf, so $128 is what you would spend. The $256 total brief was never meant to cover a maxed Bracket-3 build; this is $23 past it, by design."
         }
       ],
       "rarity": [
@@ -14229,9 +14229,9 @@
         "Maxed · 64 spells · Leans hardest into the theme you asked for."
       ],
       "costs": [
-        "$110 total",
-        "$110 total",
-        "$229 total"
+        "$74 total",
+        "$180 total",
+        "$180 total"
       ],
       "brackets": [
         {
@@ -14258,18 +14258,18 @@
       "facts": [
         {
           "availability": "Generated from Scryfall",
-          "budget": "$110 target",
-          "costNote": "Base: 76 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Base: $74 all in — the cheapest hundred that is still this deck. The $111 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "tuned spend",
-          "costNote": "Tuned: 76 distinct cards priced at generation time."
+          "budget": "beyond brief",
+          "costNote": "Tuned: $180 all in — 17 cards beyond Base. That is $70 past the $111 total brief for this slot."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "price-blind",
-          "costNote": "Maxed: 76 distinct cards priced at generation time."
+          "budget": "beyond brief",
+          "costNote": "Maxed: $180 all in — 17 cards beyond Base. The $111 total brief was never meant to cover a maxed Bracket-3 build; this is $70 past it, by design."
         }
       ],
       "rarity": [
@@ -14578,9 +14578,9 @@
         "Maxed · 64 spells · Leans hardest into the theme you asked for."
       ],
       "costs": [
-        "$111 total",
-        "$111 total",
-        "$231 total"
+        "$74 total",
+        "$83 total",
+        "$83 total"
       ],
       "brackets": [
         {
@@ -14607,18 +14607,18 @@
       "facts": [
         {
           "availability": "Generated from Scryfall",
-          "budget": "$110 target",
-          "costNote": "Base: 76 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Base: $74 all in — the cheapest hundred that is still this deck. The $112 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "tuned spend",
-          "costNote": "Tuned: 76 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Tuned: $83 all in — 15 cards beyond Base. That is within the $112 total brief for this slot."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "price-blind",
-          "costNote": "Maxed: 76 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Maxed: $83 all in — 15 cards beyond Base. The $112 total brief was never meant to cover a maxed Bracket-3 build; this is $-27 past it, by design."
         }
       ],
       "rarity": [
@@ -14927,9 +14927,9 @@
         "Maxed · 64 spells · Leans hardest into the theme you asked for."
       ],
       "costs": [
-        "$110 total",
-        "$110 total",
-        "$230 total"
+        "$72 total",
+        "$133 total",
+        "$133 total"
       ],
       "brackets": [
         {
@@ -14956,18 +14956,18 @@
       "facts": [
         {
           "availability": "Generated from Scryfall",
-          "budget": "$110 target",
-          "costNote": "Base: 72 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Base: $72 all in — the cheapest hundred that is still this deck. The $111 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "tuned spend",
-          "costNote": "Tuned: 72 distinct cards priced at generation time."
+          "budget": "just over",
+          "costNote": "Tuned: $133 all in — 24 cards beyond Base. That is $23 past the $111 total brief for this slot."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "price-blind",
-          "costNote": "Maxed: 72 distinct cards priced at generation time."
+          "budget": "just over",
+          "costNote": "Maxed: $133 all in — 24 cards beyond Base. The $111 total brief was never meant to cover a maxed Bracket-3 build; this is $23 past it, by design."
         }
       ],
       "rarity": [
@@ -15276,9 +15276,9 @@
         "Maxed · 64 spells · Leans hardest into the theme you asked for."
       ],
       "costs": [
-        "$115 total",
-        "$115 total",
-        "$235 total"
+        "$74 total",
+        "$90 total",
+        "$90 total"
       ],
       "brackets": [
         {
@@ -15305,18 +15305,18 @@
       "facts": [
         {
           "availability": "Generated from Scryfall",
-          "budget": "$110 target",
-          "costNote": "Base: 76 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Base: $74 all in — the cheapest hundred that is still this deck. The $116 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "tuned spend",
-          "costNote": "Tuned: 76 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Tuned: $90 all in — 9 cards beyond Base. That is within the $116 total brief for this slot."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "price-blind",
-          "costNote": "Maxed: 76 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Maxed: $90 all in — 9 cards beyond Base. The $116 total brief was never meant to cover a maxed Bracket-3 build; this is $-20 past it, by design."
         }
       ],
       "rarity": [
@@ -15625,9 +15625,9 @@
         "Maxed · 64 spells · Leans hardest into the theme you asked for."
       ],
       "costs": [
-        "$113 total",
-        "$113 total",
-        "$247 total"
+        "$65 total",
+        "$65 total",
+        "$65 total"
       ],
       "brackets": [
         {
@@ -15654,18 +15654,18 @@
       "facts": [
         {
           "availability": "Generated from Scryfall",
-          "budget": "$110 target",
-          "costNote": "Base: 77 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Base: $65 all in — the cheapest hundred that is still this deck. The $113 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "tuned spend",
-          "costNote": "Tuned: 77 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Tuned: $65 all in — 20 cards beyond Base. That is within the $113 total brief for this slot."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "price-blind",
-          "costNote": "Maxed: 77 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Maxed: $65 all in — 20 cards beyond Base. The $113 total brief was never meant to cover a maxed Bracket-3 build; this is $-45 past it, by design."
         }
       ],
       "rarity": [
@@ -15974,9 +15974,9 @@
         "Maxed · 64 spells · Leans hardest into the theme you asked for."
       ],
       "costs": [
-        "$118 total",
-        "$118 total",
-        "$264 total"
+        "$70 total",
+        "$71 total",
+        "$70 total"
       ],
       "brackets": [
         {
@@ -16003,18 +16003,18 @@
       "facts": [
         {
           "availability": "Generated from Scryfall",
-          "budget": "$110 target",
-          "costNote": "Base: 76 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Base: $70 all in — the cheapest hundred that is still this deck. $5 of that is already on your shelf, so $66 is what you would spend. The $118 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "tuned spend",
-          "costNote": "Tuned: 76 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Tuned: $71 all in — 6 cards beyond Base. $5 of that is already on your shelf, so $66 is what you would spend. That is within the $118 total brief for this slot."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "price-blind",
-          "costNote": "Maxed: 76 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Maxed: $70 all in — 7 cards beyond Base. $5 of that is already on your shelf, so $65 is what you would spend. The $118 total brief was never meant to cover a maxed Bracket-3 build; this is $-40 past it, by design."
         }
       ],
       "rarity": [
@@ -16323,9 +16323,9 @@
         "Maxed · 64 spells · Leans hardest into the theme you asked for."
       ],
       "costs": [
-        "$106 total",
-        "$106 total",
-        "$280 total"
+        "$58 total",
+        "$58 total",
+        "$58 total"
       ],
       "brackets": [
         {
@@ -16352,18 +16352,18 @@
       "facts": [
         {
           "availability": "Generated from Scryfall",
-          "budget": "$110 target",
-          "costNote": "Base: 77 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Base: $58 all in — the cheapest hundred that is still this deck. $4 of that is already on your shelf, so $55 is what you would spend. The $106 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "tuned spend",
-          "costNote": "Tuned: 77 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Tuned: $58 all in — 6 cards beyond Base. $4 of that is already on your shelf, so $54 is what you would spend. That is within the $106 total brief for this slot."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "price-blind",
-          "costNote": "Maxed: 77 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Maxed: $58 all in — 6 cards beyond Base. $4 of that is already on your shelf, so $54 is what you would spend. The $106 total brief was never meant to cover a maxed Bracket-3 build; this is $-52 past it, by design."
         }
       ],
       "rarity": [
@@ -16672,9 +16672,9 @@
         "Maxed · 64 spells · Leans hardest into the theme you asked for."
       ],
       "costs": [
-        "$110 total",
-        "$110 total",
-        "$271 total"
+        "$54 total",
+        "$54 total",
+        "$54 total"
       ],
       "brackets": [
         {
@@ -16701,18 +16701,18 @@
       "facts": [
         {
           "availability": "Generated from Scryfall",
-          "budget": "$110 target",
-          "costNote": "Base: 77 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Base: $54 all in — the cheapest hundred that is still this deck. $6 of that is already on your shelf, so $48 is what you would spend. The $110 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "tuned spend",
-          "costNote": "Tuned: 77 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Tuned: $54 all in — 6 cards beyond Base. $6 of that is already on your shelf, so $48 is what you would spend. That is within the $110 total brief for this slot."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "price-blind",
-          "costNote": "Maxed: 77 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Maxed: $54 all in — 6 cards beyond Base. $6 of that is already on your shelf, so $48 is what you would spend. The $110 total brief was never meant to cover a maxed Bracket-3 build; this is $-56 past it, by design."
         }
       ],
       "rarity": [
@@ -17021,9 +17021,9 @@
         "Maxed · 64 spells · Leans hardest into the theme you asked for."
       ],
       "costs": [
-        "$99 total",
-        "$99 total",
-        "$193 total"
+        "$36 total",
+        "$36 total",
+        "$36 total"
       ],
       "brackets": [
         {
@@ -17050,18 +17050,18 @@
       "facts": [
         {
           "availability": "Generated from Scryfall",
-          "budget": "$110 target",
-          "costNote": "Base: 75 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Base: $36 all in — the cheapest hundred that is still this deck. $4 of that is already on your shelf, so $33 is what you would spend. The $99 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "tuned spend",
-          "costNote": "Tuned: 75 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Tuned: $36 all in — 6 cards beyond Base. $6 of that is already on your shelf, so $30 is what you would spend. That is within the $99 total brief for this slot."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "price-blind",
-          "costNote": "Maxed: 75 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Maxed: $36 all in — 6 cards beyond Base. $6 of that is already on your shelf, so $30 is what you would spend. The $99 total brief was never meant to cover a maxed Bracket-3 build; this is $-74 past it, by design."
         }
       ],
       "rarity": [
@@ -17370,9 +17370,9 @@
         "Maxed · 64 spells · Leans hardest into the theme you asked for."
       ],
       "costs": [
-        "$119 total",
-        "$119 total",
-        "$279 total"
+        "$63 total",
+        "$63 total",
+        "$63 total"
       ],
       "brackets": [
         {
@@ -17399,18 +17399,18 @@
       "facts": [
         {
           "availability": "Generated from Scryfall",
-          "budget": "$110 target",
-          "costNote": "Base: 77 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Base: $63 all in — the cheapest hundred that is still this deck. $6 of that is already on your shelf, so $57 is what you would spend. The $119 total brief covers a tuned build; this is what it costs to have something playable while you buy one."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "tuned spend",
-          "costNote": "Tuned: 77 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Tuned: $63 all in — 6 cards beyond Base. $6 of that is already on your shelf, so $57 is what you would spend. That is within the $119 total brief for this slot."
         },
         {
           "availability": "Generated from Scryfall",
-          "budget": "price-blind",
-          "costNote": "Maxed: 77 distinct cards priced at generation time."
+          "budget": "in budget",
+          "costNote": "Maxed: $63 all in — 6 cards beyond Base. $6 of that is already on your shelf, so $57 is what you would spend. The $119 total brief was never meant to cover a maxed Bracket-3 build; this is $-47 past it, by design."
         }
       ],
       "rarity": [

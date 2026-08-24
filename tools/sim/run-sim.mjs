@@ -46,6 +46,16 @@ const log = (message) => {
   if (!quiet) console.log(message);
 };
 
+// What counts as a real improvement. Two floors, and the higher one wins: the
+// sampling noise (a gain smaller than the spread between two runs of the same
+// deck is not a gain at all) and a fixed fraction of the score already reached
+// (half a point on top of eighty is not worth another thousand games).
+function negligibleGain(score) {
+  const noise = Number(config.convergence?.noiseMargin ?? config.minAcceptGain ?? 1);
+  const relative = Number(config.convergence?.relativeGain ?? 0) * Math.abs(Number(score) || 0);
+  return Math.max(noise, relative);
+}
+
 function cardsWithMeta(cards) {
   return cards.map((card) => {
     const meta = audited.get(Lineup.normalizeName(card.name)) || {};
@@ -118,6 +128,15 @@ async function runBatch(cards, seed, label, state, gameCount) {
     ...config,
     games,
     scoreWeights: request.constraints?.scoreWeights || config.scoreWeights,
+    // Only a rung that asks for the band gets it. Tuned and Max are meant to be
+    // as strong as they can be, so they keep the monotonic win-rate curve; Pod
+    // Fun asks for the band because dominating the table is not the goal there.
+    winRateBand: request.constraints?.winRateBand || null,
+    // Whatever this run is optimizing, powerScore is always the unbanded
+    // performance vector, so it means the same thing on every rung and a
+    // constrained rung can be held to a floor taken from another one.
+    powerWeights: config.scoreWeights,
+    powerBand: null,
     targets: config.targets
   }, seed, async (batch) => {
     await writeStatus({
@@ -250,10 +269,104 @@ function legalizeForTier(cards, pool, tier) {
   return {cards: working, fixes};
 }
 
+
+// What a rung is chasing has to change what it tries, not just how it scores
+// what it tried. The default proposal engine is gap-driven: it looks for a job
+// the deck is doing badly and offers a card that does that job. That is exactly
+// right for "make this deck stronger", and it is useless for the other two
+// rungs.
+//
+// A Pod Fun run is scored on whether the table got a game -- how much of the
+// night the other seats spent doing nothing, how many of them were still alive
+// at the end, how early the first one died. A deck that wipes the board on turn
+// six and kills everyone by turn nine has no gaps at all, so gap analysis would
+// propose nothing and the run would converge on its first iteration having
+// changed nothing. It needs to be pointed at the cards that end games early.
+//
+// A Max run has the opposite problem. Tier 3 is not a bigger budget, it is a
+// different ceiling: the cards the lower rungs are forbidden. A Game Changer is
+// not a gap either -- it is simply a better card -- so gap analysis walks past
+// every one of them.
+
+// Cards that end the game early or leave a seat with nothing to do. Cutting
+// these is what actually moves pod experience.
+function podFunCutRanking(cards, perCardStats) {
+  const stats = new Map((perCardStats || []).map((stat) => [Lineup.normalizeName(stat.name), stat]));
+  const mustKeep = new Set((request.constraints.mustKeep || []).map((name) => Lineup.normalizeName(name)));
+  return cards
+    .filter((card) => !card.isCommander && !mustKeep.has(Lineup.normalizeName(card.name)))
+    .map((card) => {
+      const roles = rolesOf(card);
+      if (roles.includes("land")) return null;
+      const text = String(card.oracleText || "").toLowerCase();
+      let heat = 0;
+      if (roles.includes("wipe")) heat += 3;
+      if (roles.includes("finisher")) heat += 2;
+      if (/each opponent loses|each opponent sacrifices|destroy all|exile all|extra combat|you win the game/.test(text)) heat += 2;
+      // Stax: the opponents are still alive, they just have no turns.
+      if (/can'?t (?:be blocked|block|attack|cast|activate|untap|draw)|skip (?:your|their|that player's) [a-z ]*step|don'?t untap|doesn'?t untap/.test(text)) heat += 3;
+      if (!heat) return null;
+      return {card, heat, stat: stats.get(Lineup.normalizeName(card.name)) || {castRate: 0, deadRate: 0, name: card.name}};
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.heat - a.heat || Number(b.card.price || 0) - Number(a.card.price || 0));
+}
+
+// And the other side: cards that keep a game going. Answers that deal with one
+// thing rather than everything, cards that refill a hand, bodies that trade.
+// Never another wipe, never another haymaker.
+function podFunAddRanking(pool, tried) {
+  const triedKeys = new Set(tried);
+  return pool.candidates
+    .filter((candidate) => !triedKeys.has(Lineup.normalizeName(candidate.name)))
+    .filter((candidate) => {
+      const roles = candidate.roles || [];
+      if (roles.includes("wipe") || roles.includes("finisher")) return false;
+      return !/each opponent loses|destroy all|exile all|extra combat|you win the game/i.test(candidate.oracleText || "");
+    })
+    .map((candidate) => {
+      const roles = candidate.roles || [];
+      const score = (roles.includes("draw") ? 2 : 0)
+        + (roles.includes("removal") ? 2 : 0)
+        + (roles.includes("protection") ? 1 : 0)
+        + (roles.includes("ramp") ? 1 : 0)
+        - Math.max(0, (Number(candidate.cmc) || 0) - 4);
+      return {candidate, score};
+    })
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => b.score - a.score);
+}
+
+// The strongest cards the rung is allowed to play, gaps or no gaps. Price is a
+// crude stand-in for power and a good one at Tier 3, where the expensive cards
+// are expensive precisely because they win games.
+function powerAddRanking(pool, gaps, tried) {
+  const triedKeys = new Set(tried);
+  const gapRoles = new Set(gaps.flatMap((gap) => gap.rolesToFix || []));
+  return pool.candidates
+    .filter((candidate) => !triedKeys.has(Lineup.normalizeName(candidate.name)))
+    .map((candidate) => ({
+      candidate,
+      score: (candidate.gameChanger ? 6 : 0)
+        + Math.min(4, Math.log10(1 + Number(candidate.price || 0)) * 2)
+        + ((candidate.roles || []).some((role) => gapRoles.has(role)) ? 2 : 0)
+    }))
+    .sort((a, b) => b.score - a.score);
+}
+
 function proposeSwaps(cards, perCardStats, gaps, pool, tried, limit, baseWinRate = 0) {
   const landCount = evaluateList(cards).types.Land || 0;
-  const cuts = cutRanking(cards, perCardStats, gaps, landCount, baseWinRate);
-  const adds = candidateRanking(pool, gaps, tried);
+  const objective = request.constraints?.objective || "power";
+  // Every objective falls back to the gap-driven ranking once its own list of
+  // ideas runs out, so a run never stalls for want of a proposal.
+  const cuts = objective === "podfun"
+    ? [...podFunCutRanking(cards, perCardStats), ...cutRanking(cards, perCardStats, gaps, landCount, baseWinRate)]
+    : cutRanking(cards, perCardStats, gaps, landCount, baseWinRate);
+  const adds = objective === "podfun"
+    ? [...podFunAddRanking(pool, tried), ...candidateRanking(pool, gaps, tried)]
+    : objective === "max"
+      ? [...powerAddRanking(pool, gaps, tried), ...candidateRanking(pool, gaps, tried)]
+      : candidateRanking(pool, gaps, tried);
   const census = roleCensus(cards);
   const floors = effectiveFloors(census);
   const swaps = [];
@@ -578,7 +691,7 @@ if (args.apply) {
     process.exit(EXIT.INVALID_SWAPS);
   }
   const applied = applySwaps(state.best.cards, swaps, pool);
-  const check = validateList(applied.cards, {landFloor: request.constraints.landFloor ?? config.landFloor, landCeiling: request.constraints.landCeiling ?? config.landCeiling, mustKeep: request.constraints.mustKeep, roleFloors: effectiveFloors(roleCensus(state.best.cards)), tier: request.constraints.tier === 2 ? 2 : 3});
+  const check = validateList(applied.cards, {landFloor: request.constraints.landFloor ?? config.landFloor, landCeiling: request.constraints.landCeiling ?? config.landCeiling, mustKeep: request.constraints.mustKeep, roleFloors: effectiveFloors(roleCensus(state.best.cards)), affinityFloor: request.constraints.affinityFloor, affinityWeights: request.constraints.affinityWeights, tier: request.constraints.tier === 2 ? 2 : 3});
   if (applied.problems.length || !check.ok) {
     console.error("The proposed swaps were rejected:");
     [...applied.problems, ...check.problems].forEach((problem) => console.error(`  - ${problem}`));
@@ -608,7 +721,7 @@ if (args.apply) {
 
 if (args.auto) {
   const pool = await loadPool();
-  let stalled = 0;
+  const bestTrail = [];
   let batchSize = config.maxSwapsPerIteration;
   for (;;) {
     if (state.iteration >= maxIterations) {
@@ -630,7 +743,7 @@ if (args.auto) {
       process.exit(EXIT.CONVERGED);
     }
     const applied = applySwaps(state.best.cards, swaps, pool);
-    const check = validateList(applied.cards, {landFloor: request.constraints.landFloor ?? config.landFloor, landCeiling: request.constraints.landCeiling ?? config.landCeiling, mustKeep: request.constraints.mustKeep, roleFloors: effectiveFloors(roleCensus(state.best.cards)), tier: request.constraints.tier === 2 ? 2 : 3});
+    const check = validateList(applied.cards, {landFloor: request.constraints.landFloor ?? config.landFloor, landCeiling: request.constraints.landCeiling ?? config.landCeiling, mustKeep: request.constraints.mustKeep, roleFloors: effectiveFloors(roleCensus(state.best.cards)), affinityFloor: request.constraints.affinityFloor, affinityWeights: request.constraints.affinityWeights, tier: request.constraints.tier === 2 ? 2 : 3});
     swaps.forEach((swap) => state.tried.push(Lineup.normalizeName(swap.in)));
     if (applied.problems.length || !check.ok) {
       const note = [...applied.problems, ...check.problems].join(" ");
@@ -648,21 +761,73 @@ if (args.auto) {
       process.exit(EXIT.CAP_REACHED);
     }
     const gain = measured.metrics.score - state.best.metrics.score;
+    // The constrained objective. A Fun rung optimizes pod experience, but it may
+    // never buy that experience by giving up real strength: a swap that improves
+    // Pod Fun while dropping the deck's performance-weighted score below the
+    // floor its own Tuned build set is rejected outright, however good it looks
+    // on the objective being maximized. This is what makes "Tuned is at least as
+    // strong as Fun" a property of the search rather than something checked
+    // afterwards and hoped for.
+    const powerFloor = Number(request.constraints?.powerFloor);
+    const powerNow = Number(measured.metrics.powerScore ?? measured.metrics.score);
+    const powerOk = !Number.isFinite(powerFloor) || powerNow >= powerFloor;
+    // And the ceiling, which is the other half of the same idea. Weighting a
+    // win-rate band inside a composite score turned out not to be enough to
+    // change what the optimizer builds: six of the eight components reward a
+    // stronger deck, so a run that was supposed to be looking for a good night
+    // at the table kept finding a better deck instead and drifting further
+    // above the band. A ceiling is a constraint rather than a preference, and
+    // constraints are what actually change a search.
+    //
+    // While the deck is over the ceiling the objective is lexicographic: the
+    // only thing that counts as an improvement is getting closer to it, however
+    // the composite score moves. Once it is under, the score decides again.
+    // That way a deck winning three games in four is asked to come down first
+    // and be good second, rather than being scored on a curve it is nowhere
+    // near.
+    const ceiling = Number(request.constraints?.winRateCeiling);
+    const hasCeiling = Number.isFinite(ceiling) && ceiling > 0;
+    const overNow = hasCeiling ? Math.max(0, measured.metrics.winRate - ceiling) : 0;
+    const overBest = hasCeiling ? Math.max(0, state.best.metrics.winRate - ceiling) : 0;
+    const wasOver = overBest > 0;
     // A gain smaller than the sampling noise is not a gain.
-    const improved = gain >= (config.minAcceptGain ?? 0);
+    const improved = wasOver
+      ? overNow < overBest - 0.002 && powerOk
+      : overNow === 0 && gain >= (config.minAcceptGain ?? 0) && powerOk;
     state.history.push({
       iteration: state.iteration,
       accepted: improved,
       score: measured.metrics.score,
+      powerScore: Number(powerNow.toFixed(1)),
       gain: Number(gain.toFixed(2)),
       swaps,
-      note: improved ? "accepted" : "score did not improve, rolled back"
+      winRate: Number(measured.metrics.winRate.toFixed(4)),
+      note: improved
+        ? (wasOver ? `accepted: win rate down to ${(measured.metrics.winRate * 100).toFixed(1)}%, heading for the ${(ceiling * 100).toFixed(0)}% ceiling` : "accepted")
+        : !powerOk
+          ? `power ${powerNow.toFixed(1)} fell below the floor of ${powerFloor.toFixed(1)}, rolled back`
+          : wasOver
+            ? `still ${(overNow * 100).toFixed(1)} points over the ${(ceiling * 100).toFixed(0)}% ceiling, rolled back`
+            : overNow > 0
+              ? `win rate ${(measured.metrics.winRate * 100).toFixed(1)}% went back over the ${(ceiling * 100).toFixed(0)}% ceiling, rolled back`
+              : "score did not improve, rolled back"
     });
     if (improved) state.best = {iteration: state.iteration, cards: applied.cards, metrics: measured.metrics, gaps: measured.gaps, perCardStats: measured.perCardStats};
     // A rejected batch of five hides which of the five was wrong, so the next
     // attempt tries fewer changes at once.
     batchSize = improved ? config.maxSwapsPerIteration : Math.max(1, Math.floor(batchSize / 2));
-    stalled = gain < config.convergence.minScoreGain ? stalled + 1 : 0;
+    // Convergence. The rule is "keep going until the improvements are
+    // negligible", where negligible means smaller than the sampling noise or
+    // under 5% of where the score already is, whichever is larger. Measured
+    // over a WINDOW of the best score rather than one iteration at a time:
+    // three consecutive 1.5-point gains are real progress on an 80-point deck
+    // even though no single one of them clears a 4-point bar.
+    // While the run is still bringing the deck under its ceiling the composite
+    // score is not the thing being improved, so it must not be the thing that
+    // decides the run is finished.
+    if (hasCeiling && Math.max(0, state.best.metrics.winRate - ceiling) > 0) bestTrail.length = 0;
+    else bestTrail.push(state.best.metrics.score);
+    if (bestTrail.length > config.convergence.patience + 1) bestTrail.shift();
     await saveState(state);
     await writeJson(path.join(RESULTS_DIR, `${request.id}.iter${state.iteration}.json`), reportFor(state, measured.metrics, measured.perCardStats, measured.gaps, {
       swapsThisIteration: swaps,
@@ -671,9 +836,13 @@ if (args.auto) {
       bestScore: state.best.metrics.score
     }));
     log(`  iteration ${String(state.iteration).padStart(2)} · score ${measured.metrics.score.toFixed(1)} (${gain >= 0 ? "+" : ""}${gain.toFixed(1)}) · ${improved ? "kept" : "rolled back"} · ${swaps.map((swap) => `${swap.in} for ${swap.out}`).join("; ")}`);
-    if (stalled >= config.convergence.patience) {
-      await finalize(state, `Converged: ${config.convergence.patience} iterations in a row gained less than ${config.convergence.minScoreGain} points.`, EXIT.CONVERGED);
-      process.exit(EXIT.CONVERGED);
+    if (bestTrail.length === config.convergence.patience + 1) {
+      const progress = bestTrail[bestTrail.length - 1] - bestTrail[0];
+      const bar = negligibleGain(state.best.metrics.score);
+      if (progress < bar) {
+        await finalize(state, `Converged: ${config.convergence.patience} iterations moved the best score ${progress.toFixed(2)} points, under the ${bar.toFixed(2)} needed to count as an improvement.`, EXIT.CONVERGED);
+        process.exit(EXIT.CONVERGED);
+      }
     }
   }
 }

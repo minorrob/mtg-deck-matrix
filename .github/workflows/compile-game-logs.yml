@@ -1,0 +1,40 @@
+name: Compile game logs
+
+# Exported game logs are committed under data/game-logs/. This merges them into
+# data/game-history.json -- the cumulative record that simulated predictions get
+# checked against -- and commits the result back.
+on:
+  push:
+    paths:
+      - "data/game-logs/**.json"
+      - "tools/compile-game-logs.mjs"
+      - ".github/workflows/compile-game-logs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Compile the game history
+        run: node tools/compile-game-logs.mjs
+
+      - name: Commit the updated history
+        run: |
+          if git diff --quiet -- data/game-history.json; then
+            echo "No change to data/game-history.json."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/game-history.json
+          git commit -m "Compile game logs into data/game-history.json"
+          git push

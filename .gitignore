@@ -8,3 +8,8 @@ sim/results/*
 sim/cache/*
 !sim/cache/.gitkeep
 sim/sim-ledger.json
+
+# The sweep writes one file per variant while it runs; the baked outputs live
+# in data/, not here.
+sim/sweep/*
+!sim/sweep/.gitkeep

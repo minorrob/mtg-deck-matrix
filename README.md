@@ -28,6 +28,46 @@ catalog in memory when the page renders. `data/*.json` is never written to.
 
 ## Simulation and optimization
 
+### The four rungs
+
+Every variant is published at four rungs, and each one is answering a different
+question rather than spending a different amount of money.
+
+| Rung | Question | How it is built |
+|---|---|---|
+| **Base** | What does the entry price buy? | The cheapest hundred that is still this deck — placeholders you sleeve up while the real cards are on the shop list. Constructed by `tools/sim/build-base.mjs`, measured once, never optimized. |
+| **Tuned** | How well can this deck win? | Hill-climbed on the performance vector at Tier 2, $60 a card. |
+| **Pod Fun** | Does the table get a game? | The same hundred asked a different question: win rate held **under 45%** as a hard constraint, the pod-experience metric weighted, and a floor on power so it can never come out the stronger build. |
+| **Max** | What does Tier 3 add? | Hill-climbed on the performance vector again, starting from Tuned's final hundred, at Tier 3 and $100 a card. |
+
+Each rung starts from the hundred the rung below it finished at. That is not a
+detail: two independent hill-climbs from the same list land in different local
+optima, which is how a Tier 3 Max rung with twice the budget once came out
+*weaker* than the Tuned rung it is meant to be an upgrade of.
+
+Two things protect a deck from being optimized into a different deck. A **role
+census** stops the search trading away a whole job — it cannot cut its way below
+two board wipes or eight ramp pieces. And a **strategy floor** holds how much of
+the deck's own plan the hundred still carries, measured against the phrases the
+deck itself repeats rather than against its declared mechanics label. The label
+was tried first and is too coarse: "Control / Interaction" does not describe a
+theft deck, so a census built on it scored every one of that deck's actual theft
+cards as off-theme.
+
+```
+node tools/sim/sweep.mjs                     # all fifty variants, four rungs each
+node tools/sim/bake-ladders.mjs --write      # measured hundreds back into the buy plans
+node tools/sim/reprice.mjs --write           # cost figures re-summed from the cards
+node tools/sim/bake-sweep.mjs --write        # the published numbers, with caveats
+```
+
+`bake-ladders` will refuse to write unless composing every rung through
+`lineup-model.js` reproduces the exact hundred the sweep measured, because a
+published score belonging to a deck other than the one printed underneath it is
+the failure this whole pipeline exists to avoid.
+
+### Simulating one deck from the page
+
 Every variant — curated or generated — has a **Simulate** button. It plays the
 deck's Tuned build against randomized opponents thousands of times, finds where
 the build actually loses, proposes swaps, and re-measures. The games run on your
@@ -54,6 +94,20 @@ list with the site instead, use `node tools/sim/bake-result.mjs --result <file>`
 convergence test — and returns the best list it measured on every stop path. A
 `--games` argument can lower a limit but never raise one. Delete
 `sim/sim-ledger.json` to reset the cumulative count.
+
+Convergence is "keep going until the improvements are negligible", where
+negligible means smaller than the sampling noise or under 5% of the score
+already reached, whichever is larger. It is measured over a window of the best
+score rather than one iteration at a time, so three consecutive one-point gains
+count as progress on an eighty-point deck even though no single one of them
+clears the bar. The noise figure is measured, not assumed: at two thousand games
+the same deck scores within about ±0.7 points across seeds.
+
+`maxLedgerSimulations` is a budget, not a safety property, and it has been
+raised once — from five million to fifteen — to pay for the four-rung rebuild of
+all fifty variants. The engine runs about 42,000 games a second, so the whole
+cap is a few minutes of compute; the ledger exists so that spend is visible and
+deliberate, not so that it is impossible.
 
 Two guards keep the output honest rather than model-shaped. Role floors stop the
 optimizer trading away a whole job (it cannot cut its way below two board wipes

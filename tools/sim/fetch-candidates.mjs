@@ -44,10 +44,21 @@ const identity = new Set((request.constraints.colorIdentity || []).map((color) =
 const inDeck = new Set(request.cards.map((card) => Lineup.normalizeName(card.name)));
 const maxPrice = Number(request.constraints.maxSwapInPriceUsd || config.maxSwapInPriceUsd);
 
+// Owned cards keep their real market price everywhere, so a build's stated cost
+// stays the honest cost of the cards in it. Ownership is carried as a flag for
+// display and for deliberate placement, never as a discount. The salvage pile is
+// excluded outright -- those are owned cards judged not worth playing, so they
+// stay out of every candidate pool.
+const ownedNames = new Set((buyPlans.ownedExtras || []).map((name) => Lineup.normalizeName(name)));
+const salvageNames = new Set((buyPlans.salvage || []).map((card) => Lineup.normalizeName(card.name)));
+(buyPlans.salvage || []).forEach((card) => String(card.name).split(" // ").forEach((face) => salvageNames.add(Lineup.normalizeName(face))));
+const isOwned = (card) => ownedNames.has(Lineup.normalizeName(card.name));
+
 function fits(card) {
   if (!card?.name) return false;
   const key = Lineup.normalizeName(card.name);
   if (inDeck.has(key)) return false;
+  if (salvageNames.has(key)) return false;
   if (/\bBasic Land\b/.test(card.typeLine || "")) return false;
   if (card.commanderLegal === false) return false;
   if ((card.legalities?.commander || "legal") !== "legal") return false;
@@ -58,8 +69,10 @@ function fits(card) {
 
 function shape(card, source) {
   const meta = audited.get(Lineup.normalizeName(card.name)) || {};
+  const owned = isOwned(card);
   const merged = {
     name: card.name,
+    owned,
     typeLine: card.typeLine || meta.typeLine || "",
     manaCost: card.manaCost || meta.manaCost || "",
     oracleText: card.oracleText || meta.oracleText || "",
