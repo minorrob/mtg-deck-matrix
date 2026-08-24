@@ -4083,6 +4083,12 @@
     return [card.liveLevelLabel, swap || roles, purpose].filter(Boolean).join(" · ");
   }
 
+  // Which priced rows the reader has explicitly reopened to edit. A committed price collapses
+  // to a plain value so a recorded row reads as settled next to one still awaiting a number;
+  // this set is what lets the pencil put a single row back into an input without disturbing
+  // any other. View state, not saved state -- same reasoning as the ladder tab selection.
+  const editingPrices = new Set();
+
   // Owned cards get a "what did you actually pay" field; sealed precon contents get a label;
   // everything still on the shopping list keeps the estimated floor-to-ceiling range.
   function livePriceMarkup(card, price, ceiling) {
@@ -4090,10 +4096,16 @@
     if (!card.bought) return `<small class="live-price-range">Floor ${price ? money(price) : "unpriced"} · Ceiling ${ceiling ? money(ceiling) : "not listed"}</small>`;
     const key = itemKey(card);
     const committed = committedPrice(card);
-    return `<span class="live-price-entry${committed === null ? "" : " is-locked"}" data-paid-row="${esc(key)}">
-      <span class="live-price-field"><b aria-hidden="true">$</b><input type="text" inputmode="decimal" autocomplete="off" value="${committed === null ? "" : esc(committed.toFixed(2))}" placeholder="0.00" data-paid-key="${esc(key)}" data-ui-focus="paid-${esc(key)}" aria-label="Price paid for ${esc(card.name)}"></span>
-      <button type="button" class="live-price-commit" data-paid-commit="${esc(key)}" aria-label="Lock in the price paid for ${esc(card.name)}">✓</button>
-    </span>`;
+    return `<span class="live-price-entry${committed === null ? "" : " is-locked"}" data-paid-row="${esc(key)}">${livePriceInnerMarkup(card, key, committed)}</span>`;
+  }
+
+  function livePriceInnerMarkup(card, key, committed) {
+    if (committed !== null && !editingPrices.has(key)) {
+      return `<span class="live-price-value">${money(committed)}</span>
+        <button type="button" class="live-price-commit is-edit" data-paid-edit="${esc(key)}" aria-label="Edit the price paid for ${esc(card.name)}">✎</button>`;
+    }
+    return `<span class="live-price-field"><b aria-hidden="true">$</b><input type="text" inputmode="decimal" autocomplete="off" value="${committed === null ? "" : esc(committed.toFixed(2))}" placeholder="0.00" data-paid-key="${esc(key)}" data-ui-focus="paid-${esc(key)}" aria-label="Price paid for ${esc(card.name)}"></span>
+      <button type="button" class="live-price-commit" data-paid-commit="${esc(key)}" aria-label="Lock in the price paid for ${esc(card.name)}">✓</button>`;
   }
 
   function makeLiveCardRow(card, variant) {
@@ -4286,12 +4298,30 @@
         else state.purchasePrices[key] = Math.round(Number(raw) * 100) / 100;
         const stored = state.purchasePrices[key];
         if (stored !== undefined) input.value = Number(stored).toFixed(2);
-        cards.filter((card) => itemKey(card) === key).forEach((card) => { card.paidPrice = stored ?? null; });
-        input.closest(".live-price-entry")?.classList.toggle("is-locked", stored !== undefined);
+        const card = cards.find((entry) => itemKey(entry) === key);
+        cards.filter((entry) => itemKey(entry) === key).forEach((entry) => { entry.paidPrice = stored ?? null; });
+        const row = input.closest(".live-price-entry");
+        row?.classList.toggle("is-locked", stored !== undefined);
+        editingPrices.delete(key);
+        // A committed row collapses to its value; a cleared one stays an empty input to fill.
+        if (row && card) row.innerHTML = livePriceInnerMarkup(card, key, stored === undefined ? null : Number(stored));
         saveState(stored === undefined ? "Purchase price cleared" : `Locked in ${money(stored)}`);
         refreshTotal();
       };
       details.addEventListener("click", (event) => {
+        const edit = event.target.closest("[data-paid-edit]");
+        if (edit) {
+          event.preventDefault();
+          event.stopPropagation();
+          const key = edit.dataset.paidEdit;
+          const card = cards.find((entry) => itemKey(entry) === key);
+          const row = edit.closest(".live-price-entry");
+          if (!card || !row) return;
+          editingPrices.add(key);
+          row.innerHTML = livePriceInnerMarkup(card, key, committedPrice(card));
+          $("input[data-paid-key]", row)?.focus();
+          return;
+        }
         const commit = event.target.closest("[data-paid-commit]");
         if (!commit) return;
         event.preventDefault();

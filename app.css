@@ -1000,6 +1000,10 @@ footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px;
 .live-price-commit:hover, .live-price-commit:focus-visible { color: #fff; background: var(--forest-2); outline: none; }
 .live-price-entry.is-locked .live-price-field { border-color: #6fae8c; background: #eef8f2; }
 .live-price-entry.is-locked .live-price-commit { color: #fff; border-color: var(--forest-2); background: var(--forest-2); }
+/* A recorded price reads as settled: the value alone, no input chrome. */
+.live-card-status .live-price-value { padding: .08rem .38rem; color: var(--forest); font-size: .82rem; font-weight: 850; }
+.live-price-commit.is-edit { color: var(--muted); border-color: transparent; background: none; }
+.live-price-commit.is-edit:hover, .live-price-commit.is-edit:focus-visible { color: #fff; border-color: var(--forest-2); background: var(--forest-2); outline: none; }
 .live-card-status .live-price-precon { display: inline-flex; align-items: center; overflow: visible; max-width: none; padding: .16rem .48rem; border-radius: 999px; color: #6b5320; background: var(--gold-soft); font-size: .64rem; font-weight: 800; white-space: nowrap; }
 
 /* ---- Buy Picks intro ---- */
