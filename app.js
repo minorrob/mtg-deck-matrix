@@ -1869,10 +1869,23 @@
   // one preset, so this is a similarity search, not a lookup. Shared by the Buy Picks dynamic
   // metrics header (over the raw Buy Picks selection) and the Live Decks advisory performance
   // check (over just the active 100), since both are asking the same question of different id-sets.
+  // Assembling a preset walks the whole lineup model, and several features now ask for every
+  // preset on every render (the metrics header, the dropdown, the per-card build panel), so
+  // the results are cached per plan. Keyed by the plan object itself, which lives as long as
+  // the loaded catalog does -- reloading the catalog produces new objects and a fresh cache.
+  const presetAssemblyCache = new WeakMap();
+  function assembledPresets(plan) {
+    if (!presetAssemblyCache.has(plan)) {
+      presetAssemblyCache.set(plan, deckPresets(plan).map((preset) => {
+        const selection = assemblePreset(plan, preset.key);
+        return {preset, selection, ids: new Set(Lineup.ARRAY_KEYS.flatMap((key) => selection[key] || []).map(String))};
+      }));
+    }
+    return presetAssemblyCache.get(plan);
+  }
+
   function nearestPresetMatchForIds(plan, currentIds) {
-    const scored = deckPresets(plan).map((preset) => {
-      const presetSelection = assemblePreset(plan, preset.key);
-      const presetIds = new Set(Lineup.ARRAY_KEYS.flatMap((key) => presetSelection[key] || []));
+    const scored = assembledPresets(plan).map(({preset, ids: presetIds}) => {
       return {preset, presetIds, similarity: jaccardSimilarity(currentIds, presetIds)};
     });
     const best = scored.sort((a, b) => b.similarity - a.similarity)[0];
@@ -1884,6 +1897,50 @@
 
   function nearestPresetMatch(plan, current) {
     return nearestPresetMatchForIds(plan, new Set(Lineup.selectedEntries(plan, current).map((entry) => entry.id)));
+  }
+
+  // "Is checking this card a good idea?" -- answered from what the tested builds actually did
+  // with it. Every configuration fills the same slot exactly once, so for any card we can ask
+  // each build whether it kept that card or replaced it, and with what. That works for shell
+  // cards with no why-text of their own (which is most of them) and never invents a number:
+  // it reports the choices real simulated builds made, nothing more.
+  function cardBuildMembership(plan, item) {
+    const model = Lineup.buildModel(plan);
+    const entry = model.byId.get(String(item.id))
+      || model.entries.find((candidate) => Lineup.normalizeName(candidate.item.name) === Lineup.normalizeName(item.name));
+    if (!entry) return null;
+    const kept = [];
+    const cut = new Map();
+    for (const {preset, selection} of assembledPresets(plan)) {
+      const active = Lineup.activeEntryForSlot(plan, selection, entry.slotId);
+      if (!active) continue;
+      if (Lineup.normalizeName(active.item.name) === Lineup.normalizeName(entry.item.name)) kept.push(preset.label);
+      else {
+        if (!cut.has(active.item.name)) cut.set(active.item.name, []);
+        cut.get(active.item.name).push(preset.label);
+      }
+    }
+    if (!kept.length && !cut.size) return null;
+    return {kept, cut: [...cut.entries()].map(([name, builds]) => ({name, builds})), total: kept.length + [...cut.values()].reduce((sum, b) => sum + b.length, 0)};
+  }
+
+  function cardBuildMembershipMarkup(plan, item) {
+    const membership = cardBuildMembership(plan, item);
+    if (!membership) return "";
+    const {kept, cut, total} = membership;
+    let headline;
+    if (!cut.length) headline = `Every one of this deck's ${total} tested builds keeps it.`;
+    else if (!kept.length) headline = `Every one of this deck's ${total} tested builds replaces it.`;
+    else headline = `${kept.length} of this deck's ${total} tested builds keep it; ${total - kept.length} replace it.`;
+    return `<section class="detail-block build-membership">
+      <h3>${sectionIcon("scoring")}In this deck's tested builds</h3>
+      <p class="build-membership-headline">${esc(headline)}</p>
+      <ul class="build-membership-list">
+        ${kept.length ? `<li><b>Keeps it</b><span>${esc(kept.join(" · "))}</span></li>` : ""}
+        ${cut.map((group) => `<li><b>Replaced by ${esc(group.name)}</b><span>${esc(group.builds.join(" · "))}</span></li>`).join("")}
+      </ul>
+      <p class="build-membership-note">Based on the configurations that were actually simulated — not a prediction about your own list.</p>
+    </section>`;
   }
 
   // Piece 1 of the dynamic metrics header (the 12-metric strip Rob asked for, minus Growth):
@@ -2215,6 +2272,7 @@
         <section class="detail-quick-box info-tip" data-tooltip="${esc(TOOLTIP_DEFINITIONS.whereBuy)}" tabindex="0" aria-describedby="info-tooltip">${sectionIcon("buyLocation")}<span><b>Where to buy</b><small>${esc(item.whereToBuy || "Ask vendor")}</small></span>${tooltipHint()}</section>
       </div>
       ${detailEffect("What this card does", standaloneCardEffect(item))}
+      ${cardBuildMembershipMarkup(plan, item)}
       ${detailText("Why it is optional", usefulCardCopy(item.whyOptional))}
       ${detailText("Alternate rationale", usefulCardCopy(item.alternateReason))}
       ${detailText("Tradeoff", usefulCardCopy(item.alternateTradeoff))}
@@ -3260,7 +3318,7 @@
       if (missingRef) synergyGaps.push({card: card.name, missing: missingRef});
     }
 
-    return {matchPct: Math.round(match.similarity * 100), presetLabel: match.preset.label, extraNames, missingNames, roleCounts, roleGaps, synergyGaps};
+    return {matchPct: Math.round(match.similarity * 100), presetLabel: match.preset.label, presetKey: match.preset.key, extraNames, missingNames, roleCounts, roleGaps, synergyGaps};
   }
 
   function livePerformanceCheckMarkup(variant, plan, cards) {
@@ -3270,7 +3328,18 @@
     if (check.extraNames.length) deviationBits.push(`+${check.extraNames.length}`);
     if (check.missingNames.length) deviationBits.push(`−${check.missingNames.length}`);
     const listItems = (names, verb) => names.slice(0, 5).map((name) => `<li>${verb} <b>${esc(name)}</b></li>`).join("") + (names.length > 5 ? `<li>+ ${names.length - 5} more</li>` : "");
+    // No per-card impact data exists anywhere in this app -- only per-variant curated ratings
+    // and per-build simulation results. Rather than invent a number for an individual swap,
+    // say plainly what the tested builds measured and how far the current 100 has drifted
+    // from the nearest one. Mix freely; just don't read a hand-mixed list as a proven one.
+    const exactMatch = check.matchPct === 100 && !check.extraNames.length && !check.missingNames.length;
+    const sim = simulationSummary?.builds?.[variant.id]?.[PRESET_BUILD_NAME[check.presetKey]];
+    const provenLine = exactMatch
+      ? `This active 100 <b>is</b> the tested ${esc(check.presetLabel)} build.`
+      : `Proven results come from the tested configurations. This lineup is ${check.matchPct}% of the way to <b>${esc(check.presetLabel)}</b>${deviationBits.length ? ` (${deviationBits.join(" / ")})` : ""}, so its measured numbers no longer describe it exactly.`;
     const body = `
+      <p class="performance-check-proven">${provenLine}</p>
+      ${sim?.games ? `<p class="performance-check-note">${esc(check.presetLabel)} measured ${sim.score != null ? `${sim.score} pts · ` : ""}${sim.winPct != null ? `${(sim.winPct * 100).toFixed(1)}% win · ` : ""}${esc(sim.verdict || "unverified")} on the ${esc(sim.engine || "n/a")} engine.</p>` : ""}
       <p class="performance-check-note">Nearest configuration: <b>${esc(check.presetLabel)}</b> (${check.matchPct}% match)${deviationBits.length ? ` · ${deviationBits.join(" / ")} vs that build` : ""}. This is a heads-up, not a rule -- it never blocks anything.</p>
       ${check.extraNames.length || check.missingNames.length ? `<ul class="performance-check-deviations">${listItems(check.extraNames, "Added")}${listItems(check.missingNames, "Missing")}</ul>` : ""}
       ${check.roleGaps.length ? `<p class="performance-check-note">${icon("!")}<span>Below the usual floor on ${check.roleGaps.map(([role, floor]) => `${esc(ROLE_LABELS[role])} (${check.roleCounts[role]}/${floor})`).join(", ")}.</span></p>` : ""}
@@ -3635,6 +3704,127 @@
     showToast(`Exported ${cardCount} card${cardCount === 1 ? "" : "s"} to CSV.`);
   }
 
+  // Parses the CSV this app itself writes (exportLiveDecks). Handles the quoting rules
+  // csvCell produces -- doubled quotes inside a quoted cell, and commas or newlines that only
+  // appear inside quotes -- plus the UTF-8 BOM the export prepends for Excel's benefit.
+  function parseCsv(text) {
+    const rows = [];
+    let row = [];
+    let cell = "";
+    let quoted = false;
+    const source = String(text || "").replace(/^﻿/, "");
+    for (let index = 0; index < source.length; index += 1) {
+      const char = source[index];
+      if (quoted) {
+        if (char !== '"') { cell += char; continue; }
+        if (source[index + 1] === '"') { cell += '"'; index += 1; continue; }
+        quoted = false;
+        continue;
+      }
+      if (char === '"') { quoted = true; continue; }
+      if (char === ",") { row.push(cell); cell = ""; continue; }
+      if (char === "\r") continue;
+      if (char === "\n") { row.push(cell); rows.push(row); row = []; cell = ""; continue; }
+      cell += char;
+    }
+    if (cell !== "" || row.length) { row.push(cell); rows.push(row); }
+    return rows.filter((entry) => entry.some((value) => String(value).trim() !== ""));
+  }
+
+  // Restores what you own from a Live Decks checklist export, so losing this browser's storage
+  // or moving to another machine doesn't lose the record of what has been bought.
+  //
+  // Strictly additive. The export writes "exactly what is on screen, with its current
+  // filters", so a file can legitimately omit cards that are owned -- treating it as the whole
+  // truth would silently un-buy them. Nothing is ever unmarked here.
+  function importPurchaseHistory(text) {
+    const rows = parseCsv(text);
+    if (rows.length < 2) return {error: "That file has no rows to read."};
+    // Read by header name so an added export column can't shift the values being read.
+    const header = rows[0].map((value) => String(value).trim().toLowerCase());
+    const column = (name) => header.indexOf(name);
+    const cardColumn = column("card");
+    const checkedColumn = column("checked");
+    if (cardColumn < 0 || checkedColumn < 0) {
+      return {error: "That doesn't look like a Live Decks checklist — it needs at least the Card and Checked columns."};
+    }
+    const deckColumn = column("deck");
+    const qtyColumn = column("qty");
+    const paidColumn = column("paid");
+    // Recognized names come from every card array a plan can hold -- including the legacy
+    // baseCards list, which still supplies a few names that reach the export -- plus the
+    // precon boxes and the standing owned-extras inventory. The gate exists to keep typos and
+    // unrelated CSVs out of saved state, not to second-guess the app's own export.
+    const known = new Set();
+    for (const plan of Object.values(buyCatalog?.plans || {})) {
+      for (const key of ["startingShell", "baseCards", ...PLAN_CARD_ARRAYS]) {
+        for (const item of plan[key] || []) if (item?.name) known.add(itemKey(item));
+      }
+      if (plan.precon) known.add(itemKey(plan.precon));
+    }
+    for (const name of buyCatalog?.ownedExtras || []) known.add(itemKey({name}));
+    // A card needed by two decks means owning two copies, but the same card can also appear
+    // twice within one deck across categories (name-twins are expected), which would not.
+    // Counting the largest quantity per deck and summing across decks gets both right.
+    const perDeck = new Map();
+    const paid = new Map();
+    const unknown = new Set();
+    for (const row of rows.slice(1)) {
+      if (String(row[checkedColumn] || "").trim().toLowerCase() !== "x") continue;
+      const name = String(row[cardColumn] || "").trim();
+      if (!name) continue;
+      const key = itemKey({name});
+      // Double-faced cards export under their full "Front // Back" name, while some catalog
+      // entries carry only the front face, so a name counts as recognized if either form is.
+      // Storage always uses the key built from the exported name, which is the one the rest of
+      // the app derives from that same card object.
+      if (!known.has(key) && !known.has(itemKey({name: name.split(" // ")[0]}))) { unknown.add(name); continue; }
+      const deck = deckColumn >= 0 ? String(row[deckColumn] || "").trim() : "";
+      const quantity = Math.max(1, Number(qtyColumn >= 0 ? row[qtyColumn] : 1) || 1);
+      if (!perDeck.has(key)) perDeck.set(key, new Map());
+      const byDeck = perDeck.get(key);
+      byDeck.set(deck, Math.max(byDeck.get(deck) || 0, quantity));
+      // An empty Paid cell means no price was ever recorded, which is not the same as having
+      // paid nothing -- Number("") is 0, so the emptiness has to be checked before parsing.
+      const paidRaw = paidColumn >= 0 ? String(row[paidColumn] || "").trim() : "";
+      const paidValue = paidRaw === "" ? NaN : Number(paidRaw);
+      if (Number.isFinite(paidValue) && paidValue >= 0 && !paid.has(key)) paid.set(key, paidValue);
+    }
+    if (!perDeck.size) return {error: "No cards in that file were marked bought.", unknown: [...unknown]};
+    state.found ||= {};
+    state.boughtQuantities ||= {};
+    state.purchasePrices ||= {};
+    let marked = 0;
+    let priced = 0;
+    for (const [key, byDeck] of perDeck) {
+      const total = [...byDeck.values()].reduce((sum, value) => sum + value, 0);
+      if (!state.found[key]) marked += 1;
+      state.found[key] = true;
+      state.boughtQuantities[key] = Math.max(Number(state.boughtQuantities[key] || 0), total);
+      if (paid.has(key) && state.purchasePrices[key] === undefined) {
+        state.purchasePrices[key] = paid.get(key);
+        priced += 1;
+      }
+    }
+    // The checklist lists cards, so a sealed precon box has no row of its own and its "bought"
+    // mark would otherwise be lost. When every named card from a precon's shell came back as
+    // owned, the box it came in was evidently bought too -- restore that as well, so
+    // precon-shell decks report their true source rather than 100 coincidental singles.
+    let boxes = 0;
+    for (const plan of Object.values(buyCatalog?.plans || {})) {
+      if (isSinglesBuiltShell(plan) || !plan.precon) continue;
+      const shellCards = (plan.startingShell || []).filter((card) => !card.isFlexibleSlot);
+      if (!shellCards.length || !shellCards.every((card) => state.found[itemKey(card)])) continue;
+      const preconKey = itemKey(plan.precon);
+      if (state.found[preconKey]) continue;
+      state.found[preconKey] = true;
+      state.boughtQuantities[preconKey] = Math.max(1, Number(state.boughtQuantities[preconKey] || 0));
+      boxes += 1;
+    }
+    saveState("Purchase history restored");
+    return {marked, priced, boxes, matched: perDeck.size, unknown: [...unknown]};
+  }
+
   function appendLiveSalvage(host) {
     const cards = allSalvageCards();
     if (!cards.length) return;
@@ -3672,7 +3862,13 @@
           <h2 id="shop-title">Shop List</h2>
           <p>A clean, deduplicated list for walking vendor tables. Mark purchases Bought; accessories never appear here.</p>
         </div>
-        <div class="selection-meter"><strong>${foundCount}/${allItems.length}</strong><span>items bought</span></div>
+        <div class="shop-intro-actions">
+          <div class="selection-meter"><strong>${foundCount}/${allItems.length}</strong><span>items bought</span></div>
+          <label class="secondary-button shop-import" title="Restore what you own from a Live Decks checklist export — useful after clearing this browser's data or moving to another device">
+            <input type="file" accept=".csv,text/csv" id="shop-import-input" hidden>
+            <span>Upload purchase history</span>
+          </label>
+        </div>
       </div>
       <div class="shop-toolbar">
         <input class="search-input" id="shop-search" type="search" value="${esc(filters.query)}" placeholder="Search cards…" aria-label="Search shopping list">
@@ -3699,6 +3895,28 @@
       state.shopFilters.query = event.target.value;
       saveState();
       updateShopResults(root);
+    });
+    $("#shop-import-input", root)?.addEventListener("change", (event) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onerror = () => showToast("That file could not be read.");
+      reader.onload = () => {
+        const result = importPurchaseHistory(String(reader.result || ""));
+        event.target.value = "";
+        if (result.error) {
+          showToast(result.error);
+          return;
+        }
+        const parts = [`${result.matched} card${result.matched === 1 ? "" : "s"} marked bought`];
+        if (result.boxes) parts.push(`${result.boxes} precon box${result.boxes === 1 ? "" : "es"} restored`);
+        if (result.priced) parts.push(`${result.priced} paid price${result.priced === 1 ? "" : "s"} restored`);
+        if (result.unknown.length) parts.push(`${result.unknown.length} name${result.unknown.length === 1 ? "" : "s"} not in any deck`);
+        showToast(parts.join(" · "));
+        if (result.unknown.length) console.info("Purchase history: names not found in any deck plan:", result.unknown);
+        renderShop();
+      };
+      reader.readAsText(file);
     });
     $$('[data-filter]', root).forEach((button) => button.addEventListener("click", () => {
       state.shopFilters[button.dataset.filter] = button.dataset.value;
