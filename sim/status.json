@@ -1,50 +1,145 @@
 {
-  "state": "simulating",
-  "message": "baseline: 2000 of 2000 games",
-  "requestId": "sim-9e-maxed-20260824-172533",
-  "variantId": "9e",
-  "iteration": 0,
+  "state": "done",
+  "message": "Converged: 3 iterations in a row gained less than 0.75 points.",
+  "requestId": "rung-7a-enhance",
+  "variantId": "7a",
+  "iteration": 3,
   "maxIterations": 12,
-  "gamesCompletedThisIteration": 2000,
-  "gamesPerIteration": 2000,
-  "totalGamesUsed": 2000,
+  "totalGamesUsed": 13000,
   "maxTotalSimulations": 60000,
   "bestIteration": 0,
-  "bestScore": 0,
+  "bestScore": 85,
   "currentMetrics": {
     "games": 2000,
-    "wins": 814,
-    "winRate": 0.407,
-    "avgWinTurn": 11.164619164619165,
-    "avgEndTurn": 10.172,
-    "screwPct": 0.1885,
-    "floodPct": 0.068,
-    "mulliganRate": 1.034,
-    "avgCommanderTurn": 5.598157743235463,
-    "commanderCastRate": 0.8685,
-    "interactionAvailability": 0.06990000000000003,
-    "deadCardsAtT8": 1.3945,
+    "wins": 946,
+    "winRate": 0.473,
+    "avgWinTurn": 11.069767441860465,
+    "avgEndTurn": 10.428,
+    "screwPct": 0.0485,
+    "floodPct": 0.056,
+    "mulliganRate": 0.688,
+    "avgCommanderTurn": 3.115557778889445,
+    "commanderCastRate": 0.9995,
+    "interactionAvailability": 0.34000000000000014,
+    "deadCardsAtT8": 0.2555,
     "lossCauses": {
-      "combo combo": 321,
-      "damage": 137,
-      "voltron combo": 129,
-      "aristocrats combo": 147,
-      "tokens combo": 206,
-      "upgraded-casual combo": 56,
-      "tuned-bracket3 combo": 167,
-      "stax combo": 14,
-      "starter-precon combo": 5,
-      "group-hug combo": 2
+      "upgraded-casual combo": 76,
+      "tuned-bracket3 combo": 204,
+      "tokens combo": 221,
+      "aristocrats combo": 154,
+      "voltron combo": 91,
+      "combo combo": 240,
+      "damage": 37,
+      "stax combo": 15,
+      "group-hug combo": 3,
+      "starter-precon combo": 3
     },
-    "participationRate": 0.963,
-    "avgPeakBoard": 4.8735,
-    "reasonablePaceRate": 1
+    "participationRate": 0.9995,
+    "avgPeakBoard": 5.4255,
+    "reasonablePaceRate": 1,
+    "funScore": 0.9997499999999999,
+    "score": 85,
+    "winRateInterval": {
+      "low": 0.4511185069796414,
+      "high": 0.49488149302035855,
+      "margin": 0.021881493020358554
+    }
   },
-  "history": [],
-  "updatedAt": "2026-08-24T17:25:34.213Z"
-}
-Rate": 1
-  },
-  "history": [],
-  "updatedAt": "2026-08-24T17:25:34.195Z"
+  "history": [
+    {
+      "iteration": 0,
+      "accepted": true,
+      "score": 85,
+      "swaps": [],
+      "note": "baseline",
+      "legalityFixes": []
+    },
+    {
+      "iteration": 1,
+      "accepted": false,
+      "score": 82.6,
+      "gain": -2.4,
+      "swaps": [
+        {
+          "out": "Cloud's Limit Break",
+          "in": "Fall of the First Civilization",
+          "reason": "Fall of the First Civilization covers removal; Cloud's Limit Break was cast in 62% of the games it was drawn and sat dead in 38%.",
+          "priceDelta": 0,
+          "addRoles": [
+            "draw",
+            "removal",
+            "wipe"
+          ],
+          "cutStat": {
+            "name": "Cloud's Limit Break",
+            "drawnRate": 0.2285,
+            "castRate": 0.6214442013129103,
+            "avgCastTurn": 6.197183098591549,
+            "deadRate": 0.3785557986870897,
+            "winRateWhenCast": 0.176056338028169,
+            "games": 457
+          }
+        }
+      ],
+      "note": "score did not improve, rolled back"
+    },
+    {
+      "iteration": 2,
+      "accepted": false,
+      "score": 81.6,
+      "gain": -3.4,
+      "swaps": [
+        {
+          "out": "Cloud's Limit Break",
+          "in": "Harsh Mercy",
+          "reason": "Harsh Mercy covers protection; Cloud's Limit Break was cast in 62% of the games it was drawn and sat dead in 38%.",
+          "priceDelta": 2.38,
+          "addRoles": [
+            "wipe",
+            "protection"
+          ],
+          "cutStat": {
+            "name": "Cloud's Limit Break",
+            "drawnRate": 0.2285,
+            "castRate": 0.6214442013129103,
+            "avgCastTurn": 6.197183098591549,
+            "deadRate": 0.3785557986870897,
+            "winRateWhenCast": 0.176056338028169,
+            "games": 457
+          }
+        }
+      ],
+      "note": "score did not improve, rolled back"
+    },
+    {
+      "iteration": 3,
+      "accepted": false,
+      "score": 84.7,
+      "gain": -0.3,
+      "swaps": [
+        {
+          "out": "Cloud's Limit Break",
+          "in": "Final Showdown",
+          "reason": "Final Showdown covers protection; Cloud's Limit Break was cast in 62% of the games it was drawn and sat dead in 38%.",
+          "priceDelta": 5.61,
+          "addRoles": [
+            "wipe",
+            "protection"
+          ],
+          "cutStat": {
+            "name": "Cloud's Limit Break",
+            "drawnRate": 0.2285,
+            "castRate": 0.6214442013129103,
+            "avgCastTurn": 6.197183098591549,
+            "deadRate": 0.3785557986870897,
+            "winRateWhenCast": 0.176056338028169,
+            "games": 457
+          }
+        }
+      ],
+      "note": "score did not improve, rolled back"
+    }
+  ],
+  "resultPath": "sim/results/rung-7a-enhance.json",
+  "updatedAt": "2026-08-24T19:39:52.284Z"
 }

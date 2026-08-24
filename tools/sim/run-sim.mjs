@@ -578,7 +578,7 @@ if (args.apply) {
     process.exit(EXIT.INVALID_SWAPS);
   }
   const applied = applySwaps(state.best.cards, swaps, pool);
-  const check = validateList(applied.cards, {landFloor: request.constraints.landFloor ?? config.landFloor, landCeiling: request.constraints.landCeiling ?? config.landCeiling, mustKeep: request.constraints.mustKeep, roleFloors: effectiveFloors(roleCensus(state.best.cards)), tier: request.constraints.tier === 2 ? 2 : 3});
+  const check = validateList(applied.cards, {landFloor: request.constraints.landFloor ?? config.landFloor, landCeiling: request.constraints.landCeiling ?? config.landCeiling, mustKeep: request.constraints.mustKeep, roleFloors: effectiveFloors(roleCensus(state.best.cards)), themeFloor: request.constraints.themeFloor, themeTerms: request.constraints.themeTerms, tier: request.constraints.tier === 2 ? 2 : 3});
   if (applied.problems.length || !check.ok) {
     console.error("The proposed swaps were rejected:");
     [...applied.problems, ...check.problems].forEach((problem) => console.error(`  - ${problem}`));
@@ -630,7 +630,7 @@ if (args.auto) {
       process.exit(EXIT.CONVERGED);
     }
     const applied = applySwaps(state.best.cards, swaps, pool);
-    const check = validateList(applied.cards, {landFloor: request.constraints.landFloor ?? config.landFloor, landCeiling: request.constraints.landCeiling ?? config.landCeiling, mustKeep: request.constraints.mustKeep, roleFloors: effectiveFloors(roleCensus(state.best.cards)), tier: request.constraints.tier === 2 ? 2 : 3});
+    const check = validateList(applied.cards, {landFloor: request.constraints.landFloor ?? config.landFloor, landCeiling: request.constraints.landCeiling ?? config.landCeiling, mustKeep: request.constraints.mustKeep, roleFloors: effectiveFloors(roleCensus(state.best.cards)), themeFloor: request.constraints.themeFloor, themeTerms: request.constraints.themeTerms, tier: request.constraints.tier === 2 ? 2 : 3});
     swaps.forEach((swap) => state.tried.push(Lineup.normalizeName(swap.in)));
     if (applied.problems.length || !check.ok) {
       const note = [...applied.problems, ...check.problems].join(" ");

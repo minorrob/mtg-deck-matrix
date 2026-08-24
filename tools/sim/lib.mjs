@@ -122,18 +122,34 @@ function literalCardsFor(plan, audited, selection) {
   });
 }
 
-// The Tuned build: the plan's starting shell with every required purchase applied.
+// The Tuned build: the plan's starting shell with every required purchase applied,
+// plus the Monte-Carlo-improved tuned2 cards the Tuned tab folds in alongside them.
 // This is what the site shows as the default Buy Picks lineup, independent of
-// whichever boxes an individual browser happens to have ticked.
+// whichever boxes an individual browser happens to have ticked -- measuring
+// required alone would score a list the UI never displays.
 export function tunedCards(plan, audited) {
-  return literalCardsFor(plan, audited, Lineup.defaultSelection(plan));
+  let selection = Lineup.defaultSelection(plan);
+  (plan.tuned2 || []).forEach((item) => {
+    selection = Lineup.applyChoice(plan, selection, item.id);
+  });
+  return literalCardsFor(plan, audited, selection);
+}
+
+// Every rung above Tuned layers on the Tuned build, so each starts from the same
+// corrected base -- required plus the tuned2 cards the Tuned tab folds in.
+function tunedSelection(plan) {
+  let selection = Lineup.defaultSelection(plan);
+  (plan.tuned2 || []).forEach((item) => {
+    selection = Lineup.applyChoice(plan, selection, item.id);
+  });
+  return selection;
 }
 
 // The Enhance build: every Enhance option layered on top of Tuned, without Max
 // — the middle rung, same composition method as maxedCards below.
 export function enhanceCards(plan, audited) {
-  let selection = Lineup.defaultSelection(plan);
-  (plan.enhance || []).forEach((item) => {
+  let selection = tunedSelection(plan);
+  [...(plan.upgrade || []), ...(plan.enhance || [])].forEach((item) => {
     selection = Lineup.applyChoice(plan, selection, item.id);
   });
   return literalCardsFor(plan, audited, selection);
@@ -144,8 +160,8 @@ export function enhanceCards(plan, audited) {
 // composing Lineup.applyChoice one item at a time so slot/replacement and
 // duplicate-name resolution behave exactly as they do in the browser.
 export function maxedCards(plan, audited) {
-  let selection = Lineup.defaultSelection(plan);
-  [...(plan.enhance || []), ...(plan.max || []), ...(plan.enhance2 || []), ...(plan.max2 || [])].forEach((item) => {
+  let selection = tunedSelection(plan);
+  [...(plan.upgrade || []), ...(plan.enhance || []), ...(plan.enhance2 || []), ...(plan.max || []), ...(plan.max2 || [])].forEach((item) => {
     selection = Lineup.applyChoice(plan, selection, item.id);
   });
   return literalCardsFor(plan, audited, selection);
@@ -214,6 +230,22 @@ export function roleCensus(cards) {
   return census;
 }
 
+// How many cards still carry the deck's declared theme. The optimizer scores a
+// deck on how often it wins, and the engine cannot see most theme payoffs at all
+// (no cast triggers, no taxation), so left alone it will happily trade a
+// spellslinger deck's whole identity for generically efficient cards. Protecting
+// named cards would be too blunt -- it freezes specific choices the optimizer
+// might legitimately improve. Protecting the DENSITY lets it swap anything it
+// likes as long as the result is still recognizably the deck you asked for.
+export function themeCensus(cards, themeTerms = []) {
+  if (!themeTerms.length) return 0;
+  const terms = themeTerms.map((term) => String(term).toLowerCase());
+  return cards.reduce((count, card) => {
+    const haystack = `${card.oracleText || ""} ${card.typeLine || ""} ${(card.keywords || []).join(" ")}`.toLowerCase();
+    return terms.some((term) => haystack.includes(term)) ? count + Math.max(1, Number(card.quantity || 1)) : count;
+  }, 0);
+}
+
 // Every rule a proposed list must satisfy before a single game is played.
 // `constraints.tier` picks which bracket's extra rules gate validity — Tier 2
 // (no Game Changers, no mass land denial, no two-card combos) or Tier 3 (up to
@@ -229,6 +261,15 @@ export function validateList(cards, constraints = {}) {
     Object.entries(constraints.roleFloors).forEach(([role, floor]) => {
       if (census[role] < floor) problems.push(`${census[role]} ${role} cards is below the floor of ${floor}; the deck may not trade a role away.`);
     });
+  }
+  // The strategic-identity floor. Role floors keep the deck's shape (how much it
+  // ramps, draws, interacts); this keeps its plan -- a Voltron deck must still be
+  // stacking one threat, a spellslinger deck must still be casting spells that
+  // matter. Without it the optimizer maximizes a score whose engine cannot see
+  // most theme payoffs, and quietly hands back a generically efficient pile.
+  if (constraints.themeFloor && (constraints.themeTerms || []).length) {
+    const themed = themeCensus(cards, constraints.themeTerms);
+    if (themed < constraints.themeFloor) problems.push(`${themed} cards still carry the deck's strategy; the floor is ${constraints.themeFloor}. The deck may not trade its own plan away.`);
   }
   if (result.total !== 100) problems.push(`The list contains ${result.total} cards; Commander requires exactly 100.`);
   result[`tier${tier}`].forEach((issue) => problems.push(`${issue.card}: ${issue.rule}`));
