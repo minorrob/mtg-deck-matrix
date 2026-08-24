@@ -378,7 +378,7 @@ for (const variantId of merged.customVariantIds) {
     assert.ok(item.replaces, `${item.name} must name the card it replaces`);
     assert.equal(Number(item.quantity), 1, "generated swaps are always one-for-one");
   });
-  plan.enhance.forEach((item) => assert.ok(item.price <= 15, `${item.name} may not exceed the $15 Enhance ceiling`));
+  plan.enhance.forEach((item) => assert.ok(item.price <= 20, `${item.name} may not exceed the $20 Enhance ceiling`));
 }
 
 const variantView = Custom.toVariant(store, store.variants[0]);

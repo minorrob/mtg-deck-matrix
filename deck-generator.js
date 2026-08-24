@@ -18,7 +18,7 @@
   const MAX_TUNED_SWAPS = 10;
   const MAX_ENHANCE_SWAPS = 8;
   const MAX_MAX_SWAPS = 8;
-  const ENHANCE_PRICE_CAP = 15;
+  const ENHANCE_PRICE_CAP = 20;
   // Charged per earlier variant that already used a card, so five lenses on one
   // commander stay genuinely different lists instead of five reshuffles.
   const OVERLAP_PENALTY = 0.1;

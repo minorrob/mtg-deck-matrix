@@ -105968,7 +105968,7 @@
     "Kirol, History Buff // Pack a Punch",
     "Lorehold Archivist // Restore Relic"
   ],
-  "enhanceDefinition": "Optional, role-preserving improvements or owned substitutions costing no more than $15.",
+  "enhanceDefinition": "Optional, role-preserving improvements or owned substitutions costing no more than $20.",
   "maxDefinition": "The strongest configuration that pushes the deck to the legal bounds of Commander Tier 3; classification is based on capability, synergy, and Tier 3 rules rather than card price.",
   "tier3Excluded": [
     {

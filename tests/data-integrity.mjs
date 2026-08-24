@@ -77,8 +77,8 @@ for (const [variantId, plan] of Object.entries(buyPlans.plans)) {
   assert(plan.required.every((item) => item.category === "tuned"));
   assert.equal(plan.upgrade.length, 0, `${variantId} must merge legacy Upgrade cards into Enhance`);
   assert(plan.enhance.every((item) => item.category === "enhance"));
-  assert(plan.enhance.every((item) => !item.price || item.price <= 15), `${variantId} Enhance cards must stay at or below $15`);
-  assert(plan.enhance.every((item) => !item.ceiling || item.ceiling <= 15), `${variantId} Enhance ceiling prices must stay at or below $15`);
+  assert(plan.enhance.every((item) => !item.price || item.price <= 20), `${variantId} Enhance cards must stay at or below $20`);
+  assert(plan.enhance.every((item) => !item.ceiling || item.ceiling <= 20), `${variantId} Enhance ceiling prices must stay at or below $20`);
   assert([...plan.required, ...plan.upgrade, ...plan.enhance, ...plan.max].every((item) => Number.isFinite(item.price)), `${variantId} purchase options must have a current floor price`);
   assert([plan.precon, ...plan.startingShell, ...plan.required, ...plan.upgrade, ...plan.enhance, ...plan.max].every((item) => !Number.isFinite(Number(item.ceiling)) || Number(item.ceiling) <= 0 || Number(item.price) <= Number(item.ceiling)), `${variantId} floor prices may not exceed user-supplied ceilings`);
   assert(plan.max.every((item) => item.category === "max"));
@@ -102,7 +102,7 @@ for (const [variantId, plan] of Object.entries(buyPlans.plans)) {
 
 assert.equal(cards.missing.length, 0, "all modeled cards must resolve in the authoritative audit");
 assert.equal(cards.cards.length, buyPlans.cardAudit.cardsVerified, "audit summary must match the static card catalog");
-assert.match(buyPlans.enhanceDefinition, /\$15/, "Enhance definition must state the $15 limit");
+assert.match(buyPlans.enhanceDefinition, /\$20/, "Enhance definition must state the $20 limit");
 assert.match(buyPlans.maxDefinition, /Tier 3/i, "Max must be defined by the Tier 3 capability ceiling");
 assert.match(buyPlans.maxDefinition, /rather than card price/i, "Max may not be classified by cost");
 
@@ -264,6 +264,12 @@ for (const [variantId, deckBuilds] of Object.entries(simulationSummary.builds)) 
     }
   }
 }
+// "Trey's Build" marks Rob's own confirmed pick for each of the six deck slots -- authored,
+// published data (like priorityRank above), not something derived from any one browser's
+// localStorage, so it reads the same for anyone loading the Compare page.
+assert.deepEqual(variants.variants.filter((variant) => variant.treysBuild).map((variant) => variant.id).sort(), ["1o", "2c", "3e", "4c", "5o", "6f"], "Trey's Build must mark exactly these six confirmed variant picks");
+assert.match(appSource, /is-treys-build/, "the Compare card must render a distinct state for Trey's Build");
+assert.match(appSource, /treys-build-ribbon/, "Trey's Build must render a clear visual indicator on the Compare card");
 assert.deepEqual(Object.keys(simulationSummary.altCommanderCases).sort(), ["1o", "3e", "5o"], "alt-commander comparison cases must cover exactly the three alt-commander decks");
 for (const variantId of ["1o", "3e", "5o"]) {
   const altCase = simulationSummary.altCommanderCases[variantId];
@@ -359,7 +365,7 @@ assert.match(appSource, /<small>Market total<\/small>/, "the Buy Picks total mus
     assert.match(body, new RegExp(`key: "${group}", title:`), `the ${group} ladder group must exist`);
     for (const tab of tabs) assert.match(body, new RegExp(`key: "${tab}", label:`), `${tab} must be a tab inside a ladder group, not its own top-level section`);
   }
-  assert.match(body, /key: "max2", label: "Maxxed-2", kinds: \["enhance2", "max2"\]/, "Enhance-2 cards must live in the Maxxed-2 tab, since Enhance is defined as the $15-or-less tier");
+  assert.match(body, /key: "max2", label: "Maxxed-2", kinds: \["enhance2", "max2"\]/, "Enhance-2 cards must live in the Maxxed-2 tab, since Enhance is defined as the $20-or-less tier");
   assert.doesNotMatch(body, /key: "enhance2", label:/, "Enhance-2 must not be its own tab");
 }
 assert.match(appSource, /assemblePreset\(plan, input\.checked \? presetKey : "base"\)/, "a tab's select-all must apply that build's whole configuration, so the result is always a complete 100");
