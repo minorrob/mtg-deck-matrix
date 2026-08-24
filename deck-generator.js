@@ -569,8 +569,11 @@
     const swaps = [];
     let extraSpend = 0;
     let gameChangers = baseEntries.filter((entry) => entry.card.gameChanger).length;
+    // A card an earlier stage already cut must stay cut: readmitting it later as a
+    // "new" upgrade would list the same physical card under two different rungs, as
+    // if buying both were a coherent, additive shopping instruction.
     const candidates = pool.spells
-      .filter((card) => !inDeck.has(cardKey(card.name)))
+      .filter((card) => !inDeck.has(cardKey(card.name)) && !claimed.has(cardKey(card.name)))
       .map((card) => {
         const role = (card.roles || []).find((entry) => ROLE_ORDER.includes(entry)) || "theme";
         return {card, role, score: scoreCard(card, role, context, lens, usedCounts)};
