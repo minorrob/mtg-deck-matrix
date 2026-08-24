@@ -1869,10 +1869,23 @@
   // one preset, so this is a similarity search, not a lookup. Shared by the Buy Picks dynamic
   // metrics header (over the raw Buy Picks selection) and the Live Decks advisory performance
   // check (over just the active 100), since both are asking the same question of different id-sets.
+  // Assembling a preset walks the whole lineup model, and several features now ask for every
+  // preset on every render (the metrics header, the dropdown, the per-card build panel), so
+  // the results are cached per plan. Keyed by the plan object itself, which lives as long as
+  // the loaded catalog does -- reloading the catalog produces new objects and a fresh cache.
+  const presetAssemblyCache = new WeakMap();
+  function assembledPresets(plan) {
+    if (!presetAssemblyCache.has(plan)) {
+      presetAssemblyCache.set(plan, deckPresets(plan).map((preset) => {
+        const selection = assemblePreset(plan, preset.key);
+        return {preset, selection, ids: new Set(Lineup.ARRAY_KEYS.flatMap((key) => selection[key] || []).map(String))};
+      }));
+    }
+    return presetAssemblyCache.get(plan);
+  }
+
   function nearestPresetMatchForIds(plan, currentIds) {
-    const scored = deckPresets(plan).map((preset) => {
-      const presetSelection = assemblePreset(plan, preset.key);
-      const presetIds = new Set(Lineup.ARRAY_KEYS.flatMap((key) => presetSelection[key] || []));
+    const scored = assembledPresets(plan).map(({preset, ids: presetIds}) => {
       return {preset, presetIds, similarity: jaccardSimilarity(currentIds, presetIds)};
     });
     const best = scored.sort((a, b) => b.similarity - a.similarity)[0];
@@ -1884,6 +1897,50 @@
 
   function nearestPresetMatch(plan, current) {
     return nearestPresetMatchForIds(plan, new Set(Lineup.selectedEntries(plan, current).map((entry) => entry.id)));
+  }
+
+  // "Is checking this card a good idea?" -- answered from what the tested builds actually did
+  // with it. Every configuration fills the same slot exactly once, so for any card we can ask
+  // each build whether it kept that card or replaced it, and with what. That works for shell
+  // cards with no why-text of their own (which is most of them) and never invents a number:
+  // it reports the choices real simulated builds made, nothing more.
+  function cardBuildMembership(plan, item) {
+    const model = Lineup.buildModel(plan);
+    const entry = model.byId.get(String(item.id))
+      || model.entries.find((candidate) => Lineup.normalizeName(candidate.item.name) === Lineup.normalizeName(item.name));
+    if (!entry) return null;
+    const kept = [];
+    const cut = new Map();
+    for (const {preset, selection} of assembledPresets(plan)) {
+      const active = Lineup.activeEntryForSlot(plan, selection, entry.slotId);
+      if (!active) continue;
+      if (Lineup.normalizeName(active.item.name) === Lineup.normalizeName(entry.item.name)) kept.push(preset.label);
+      else {
+        if (!cut.has(active.item.name)) cut.set(active.item.name, []);
+        cut.get(active.item.name).push(preset.label);
+      }
+    }
+    if (!kept.length && !cut.size) return null;
+    return {kept, cut: [...cut.entries()].map(([name, builds]) => ({name, builds})), total: kept.length + [...cut.values()].reduce((sum, b) => sum + b.length, 0)};
+  }
+
+  function cardBuildMembershipMarkup(plan, item) {
+    const membership = cardBuildMembership(plan, item);
+    if (!membership) return "";
+    const {kept, cut, total} = membership;
+    let headline;
+    if (!cut.length) headline = `Every one of this deck's ${total} tested builds keeps it.`;
+    else if (!kept.length) headline = `Every one of this deck's ${total} tested builds replaces it.`;
+    else headline = `${kept.length} of this deck's ${total} tested builds keep it; ${total - kept.length} replace it.`;
+    return `<section class="detail-block build-membership">
+      <h3>${sectionIcon("scoring")}In this deck's tested builds</h3>
+      <p class="build-membership-headline">${esc(headline)}</p>
+      <ul class="build-membership-list">
+        ${kept.length ? `<li><b>Keeps it</b><span>${esc(kept.join(" · "))}</span></li>` : ""}
+        ${cut.map((group) => `<li><b>Replaced by ${esc(group.name)}</b><span>${esc(group.builds.join(" · "))}</span></li>`).join("")}
+      </ul>
+      <p class="build-membership-note">Based on the configurations that were actually simulated — not a prediction about your own list.</p>
+    </section>`;
   }
 
   // Piece 1 of the dynamic metrics header (the 12-metric strip Rob asked for, minus Growth):
@@ -2215,6 +2272,7 @@
         <section class="detail-quick-box info-tip" data-tooltip="${esc(TOOLTIP_DEFINITIONS.whereBuy)}" tabindex="0" aria-describedby="info-tooltip">${sectionIcon("buyLocation")}<span><b>Where to buy</b><small>${esc(item.whereToBuy || "Ask vendor")}</small></span>${tooltipHint()}</section>
       </div>
       ${detailEffect("What this card does", standaloneCardEffect(item))}
+      ${cardBuildMembershipMarkup(plan, item)}
       ${detailText("Why it is optional", usefulCardCopy(item.whyOptional))}
       ${detailText("Alternate rationale", usefulCardCopy(item.alternateReason))}
       ${detailText("Tradeoff", usefulCardCopy(item.alternateTradeoff))}
@@ -3260,7 +3318,7 @@
       if (missingRef) synergyGaps.push({card: card.name, missing: missingRef});
     }
 
-    return {matchPct: Math.round(match.similarity * 100), presetLabel: match.preset.label, extraNames, missingNames, roleCounts, roleGaps, synergyGaps};
+    return {matchPct: Math.round(match.similarity * 100), presetLabel: match.preset.label, presetKey: match.preset.key, extraNames, missingNames, roleCounts, roleGaps, synergyGaps};
   }
 
   function livePerformanceCheckMarkup(variant, plan, cards) {
@@ -3270,7 +3328,18 @@
     if (check.extraNames.length) deviationBits.push(`+${check.extraNames.length}`);
     if (check.missingNames.length) deviationBits.push(`−${check.missingNames.length}`);
     const listItems = (names, verb) => names.slice(0, 5).map((name) => `<li>${verb} <b>${esc(name)}</b></li>`).join("") + (names.length > 5 ? `<li>+ ${names.length - 5} more</li>` : "");
+    // No per-card impact data exists anywhere in this app -- only per-variant curated ratings
+    // and per-build simulation results. Rather than invent a number for an individual swap,
+    // say plainly what the tested builds measured and how far the current 100 has drifted
+    // from the nearest one. Mix freely; just don't read a hand-mixed list as a proven one.
+    const exactMatch = check.matchPct === 100 && !check.extraNames.length && !check.missingNames.length;
+    const sim = simulationSummary?.builds?.[variant.id]?.[PRESET_BUILD_NAME[check.presetKey]];
+    const provenLine = exactMatch
+      ? `This active 100 <b>is</b> the tested ${esc(check.presetLabel)} build.`
+      : `Proven results come from the tested configurations. This lineup is ${check.matchPct}% of the way to <b>${esc(check.presetLabel)}</b>${deviationBits.length ? ` (${deviationBits.join(" / ")})` : ""}, so its measured numbers no longer describe it exactly.`;
     const body = `
+      <p class="performance-check-proven">${provenLine}</p>
+      ${sim?.games ? `<p class="performance-check-note">${esc(check.presetLabel)} measured ${sim.score != null ? `${sim.score} pts · ` : ""}${sim.winPct != null ? `${(sim.winPct * 100).toFixed(1)}% win · ` : ""}${esc(sim.verdict || "unverified")} on the ${esc(sim.engine || "n/a")} engine.</p>` : ""}
       <p class="performance-check-note">Nearest configuration: <b>${esc(check.presetLabel)}</b> (${check.matchPct}% match)${deviationBits.length ? ` · ${deviationBits.join(" / ")} vs that build` : ""}. This is a heads-up, not a rule -- it never blocks anything.</p>
       ${check.extraNames.length || check.missingNames.length ? `<ul class="performance-check-deviations">${listItems(check.extraNames, "Added")}${listItems(check.missingNames, "Missing")}</ul>` : ""}
       ${check.roleGaps.length ? `<p class="performance-check-note">${icon("!")}<span>Below the usual floor on ${check.roleGaps.map(([role, floor]) => `${esc(ROLE_LABELS[role])} (${check.roleCounts[role]}/${floor})`).join(", ")}.</span></p>` : ""}

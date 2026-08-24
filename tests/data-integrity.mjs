@@ -356,4 +356,13 @@ assert.match(appSource, /is-deemphasized/, "ladder groups must support visual de
 }
 assert.doesNotMatch(appSource, /function buySection\(/, "the flat per-category section renderer is replaced by the grouped one");
 
+// Per-card guidance answers "is checking this a good idea?" from what the tested builds did
+// with the card -- every configuration fills each slot exactly once, so we can report which
+// builds kept it and what replaced it in the rest. It must never state a per-card number: no
+// per-card impact data exists anywhere in this repo, only per-variant ratings and per-build
+// simulation results.
+assert.match(appSource, /function cardBuildMembership\(/, "the detail sheet must be able to report which tested builds keep a card");
+assert.match(appSource, /Based on the configurations that were actually simulated/, "per-card guidance must say it reports real builds, not a prediction");
+assert.match(appSource, /Proven results come from the tested configurations/, "Live Decks must say plainly that proven numbers describe the tested configurations");
+
 console.log(`Validated ${variants.variants.length} variants and ${Object.keys(buyPlans.plans).length} connected buy profiles.`);
