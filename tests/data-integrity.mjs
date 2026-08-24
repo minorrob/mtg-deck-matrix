@@ -6,17 +6,21 @@ const buyPlans = JSON.parse(await readFile(new URL("../data/buy-plans.json", imp
 const cards = JSON.parse(await readFile(new URL("../data/cards.json", import.meta.url), "utf8"));
 const simulationSummary = JSON.parse(await readFile(new URL("../data/simulation-summary.json", import.meta.url), "utf8"));
 const appSource = await readFile(new URL("../app.js", import.meta.url), "utf8");
+const htmlSource = await readFile(new URL("../index.html", import.meta.url), "utf8");
 const auditedByName = new Map(cards.cards.map((card) => [card.name.toLowerCase(), card]));
 for (const card of cards.cards) for (const face of card.name.split(" // ")) auditedByName.set(face.toLowerCase(), card);
 
-assert.equal(variants.decks.length, 6, "expected six deck roles");
-assert.equal(variants.variants.length, 30, "expected thirty variants");
+assert.equal(variants.decks.length, 10, "expected ten deck roles");
+assert.equal(variants.variants.length, 50, "expected fifty variants");
 
 const ids = new Set(variants.variants.map((variant) => variant.id));
-assert.equal(ids.size, 30, "variant IDs must be unique");
-assert.equal(Object.keys(buyPlans.plans).length, 30, "every Compare variant must have a Buy Picks profile");
+assert.equal(ids.size, 50, "variant IDs must be unique");
+assert.equal(Object.keys(buyPlans.plans).length, 50, "every Compare variant must have a Buy Picks profile");
 assert.deepEqual(new Set(buyPlans.profileVariantIds), ids, "Buy Picks coverage must match the Compare catalog");
 
+// The Compare "About" panel replaced a one-line carousel card with a full dossier per deck --
+// every deck object must carry the extended fields it reads, not just title/objective.
+const DECK_ABOUT_FIELDS = ["archetype", "whatItIs", "fitAmongTen", "playstyle", "mood", "winCondition", "asksOfYou", "whenToPickThis", "priorityNote"];
 for (const deck of variants.decks) {
   const deckVariants = variants.variants.filter((variant) => variant.deckId === deck.id);
   assert.equal(
@@ -24,6 +28,12 @@ for (const deck of variants.decks) {
     5,
     `deck ${deck.id} must contain five variants`
   );
+  for (const field of DECK_ABOUT_FIELDS) {
+    assert(typeof deck[field] === "string" && deck[field].length > 20, `deck ${deck.id} must carry a real "${field}" for the About panel`);
+  }
+  assert(deck.complexity?.tier && deck.complexity?.why, `deck ${deck.id} must carry a complexity tier and rationale`);
+  assert(Number.isInteger(deck.priorityRank?.rank) && deck.priorityRank.rank >= 1 && deck.priorityRank.rank <= variants.decks.length, `deck ${deck.id} priority rank must be within 1..${variants.decks.length}`);
+  assert(typeof deck.priorityRank?.rationale === "string" && deck.priorityRank.rationale.length > 10, `deck ${deck.id} priority rank must carry a rationale`);
   for (const stageIndex of [0, 1, 2]) {
     assert.deepEqual(
       deckVariants.map((variant) => variant.ranks[stageIndex]).sort(),
@@ -31,6 +41,10 @@ for (const deck of variants.decks) {
       `deck ${deck.id} stage ${stageIndex + 1} ranks must be complete`
     );
   }
+}
+{
+  const ranks = variants.decks.map((deck) => deck.priorityRank.rank).sort((a, b) => a - b);
+  assert.deepEqual(ranks, variants.decks.map((_, i) => i + 1), "priority ranks must be a complete 1..N ordering with no gaps or duplicates");
 }
 
 for (const variant of variants.variants) {
@@ -63,8 +77,8 @@ for (const [variantId, plan] of Object.entries(buyPlans.plans)) {
   assert(plan.required.every((item) => item.category === "tuned"));
   assert.equal(plan.upgrade.length, 0, `${variantId} must merge legacy Upgrade cards into Enhance`);
   assert(plan.enhance.every((item) => item.category === "enhance"));
-  assert(plan.enhance.every((item) => !item.price || item.price <= 15), `${variantId} Enhance cards must stay at or below $15`);
-  assert(plan.enhance.every((item) => !item.ceiling || item.ceiling <= 15), `${variantId} Enhance ceiling prices must stay at or below $15`);
+  assert(plan.enhance.every((item) => !item.price || item.price <= 20), `${variantId} Enhance cards must stay at or below $20`);
+  assert(plan.enhance.every((item) => !item.ceiling || item.ceiling <= 20), `${variantId} Enhance ceiling prices must stay at or below $20`);
   assert([...plan.required, ...plan.upgrade, ...plan.enhance, ...plan.max].every((item) => Number.isFinite(item.price)), `${variantId} purchase options must have a current floor price`);
   assert([plan.precon, ...plan.startingShell, ...plan.required, ...plan.upgrade, ...plan.enhance, ...plan.max].every((item) => !Number.isFinite(Number(item.ceiling)) || Number(item.ceiling) <= 0 || Number(item.price) <= Number(item.ceiling)), `${variantId} floor prices may not exceed user-supplied ceilings`);
   assert(plan.max.every((item) => item.category === "max"));
@@ -88,7 +102,7 @@ for (const [variantId, plan] of Object.entries(buyPlans.plans)) {
 
 assert.equal(cards.missing.length, 0, "all modeled cards must resolve in the authoritative audit");
 assert.equal(cards.cards.length, buyPlans.cardAudit.cardsVerified, "audit summary must match the static card catalog");
-assert.match(buyPlans.enhanceDefinition, /\$15/, "Enhance definition must state the $15 limit");
+assert.match(buyPlans.enhanceDefinition, /\$20/, "Enhance definition must state the $20 limit");
 assert.match(buyPlans.maxDefinition, /Tier 3/i, "Max must be defined by the Tier 3 capability ceiling");
 assert.match(buyPlans.maxDefinition, /rather than card price/i, "Max may not be classified by cost");
 
@@ -141,11 +155,16 @@ assert.match(appSource, /currentState\[kind\] = \(currentState\[kind\] \|\| \[\]
 assert.match(appSource, /\$\{boughtCount\}\/100<\/b><small>bought/, "collapsed Live Deck headers must show the physically bought count");
 assert.match(appSource, /\$\{total\}\/100<\/b><small>active/, "collapsed Live Deck headers must show the active-lineup count");
 assert.match(appSource, /data-live-total="\$\{esc\(variant\.id\)\}"/, "collapsed Live Deck headers must show a committed Total Cost");
+assert.match(appSource, /<b title="\$\{checkedCount\} of \$\{count\} checked to buy">\$\{checkedCount\}\/\$\{count\}<\/b>/, "collapsed Starting Shell type rows must show checked-to-buy over the group total");
+// The flat buySection this pin was written for was replaced by tabbed ladder groups, but the
+// behaviour it protects is not superseded: a shut group must still report shopping progress,
+// since the per-tab counts only render once it is open.
+assert.match(appSource, /<b title="\$\{groupChecked\} of \$\{groupTotal\} checked to buy">\$\{groupChecked\}\/\$\{groupTotal\}<\/b>/, "collapsed ladder groups must show checked-to-buy over the group total");
 assert.match(appSource, /if \(metadataAttempts\.get\(key\)\) return;/, "card metadata may only be requested once per session, or unresolved cards re-render the app forever");
 assert.match(appSource, /Precon Pack/, "cards that arrive inside a sealed precon must be labelled instead of priced");
 assert.doesNotMatch(appSource, /live-critical-insight/, "the duplicate readiness banner must stay out of the Live Deck header");
 assert.doesNotMatch(appSource, /Saved on this device"\);\n\s*renderCompare/, "reset must not depend on the removed save-status label");
-for (const view of ["compare", "buy", "shop", "live"]) {
+for (const view of ["choose", "compare", "buy", "shop", "live"]) {
   assert.match(appSource, new RegExp(`^\\s{4}${view}: \\[`, "m"), `the tour must define its own steps for the ${view} view`);
 }
 assert.match(appSource, /function exportLiveDecks/, "Live Decks must be exportable as a flat inventory");
@@ -214,38 +233,50 @@ for (const variantId of ["1o", "2c", "3e", "4c", "5o", "6f"]) {
   else assert.equal(commanderCandidates.length, 0, `${variantId} has no alternative commander to flag`);
 }
 
-// Real simulation results (tools/import_summary_metrics.py), Phase 3's data source for the
-// Buy Picks header's additive readout and the Compare-page alt-commander preview. Base/
-// Enhance/Max are the site's own published lists and must stay unsimulated (no games/score);
-// everything else must carry a finite games/score/winPct and a recognized verdict, tagged
-// with the engine generation that actually measured it -- never inferred at render time.
-assert(simulationSummary.engineNotes?.v1 && simulationSummary.engineNotes?.["v2.1"], "simulation summary must document both engine generations");
-assert(typeof simulationSummary.engineBoundaryNote === "string" && simulationSummary.engineBoundaryNote.length > 0, "simulation summary must carry a v1/v2.1 boundary caveat");
-const UNSIMULATED_BUILDS = new Set(["Base", "Enhance", "Max"]);
-const SIMULATED_ENGINE = {
-  "Tuned": "v1", "Tuned-2": "v1", "Enhance-2": "v1", "Max-2": "v1",
-  "Fun Tuned": "v2.1", "Fun Max": "v2.1", "Alt Tuned": "v2.1", "Alt Max": "v2.1"
-};
+// Real simulation results (tools/sim/run-sim.mjs, ingested by hand into this file), the
+// Phase 6 sweep's data source for the Buy Picks header's additive readout and the Compare-
+// page alt-commander preview. Base, Max, and Fun Max stay curated-only (no measured build
+// exists for them yet) and so carry no builds entry at all; every key that IS present must
+// carry a finite games/score/winPct and a recognized verdict, tagged with the engine
+// generation that actually measured it -- never inferred at render time.
+assert(simulationSummary.engineNotes?.v1 && simulationSummary.engineNotes?.["v2.1"] && simulationSummary.engineNotes?.["v2.2"], "simulation summary must document all three engine generations");
+assert(typeof simulationSummary.engineBoundaryNote === "string" && simulationSummary.engineBoundaryNote.length > 0, "simulation summary must carry an engine-boundary caveat");
+const SIMULATED_ENGINE = {"Tuned": "v2.2", "Enhance": "v2.2", "Fun Tuned": "v2.2", "Alt Tuned": "v2.1", "Alt Max": "v2.1"};
 const VALID_VERDICTS = new Set(["confirmed", "within-noise", "not-confirmed", "no-change"]);
-assert.deepEqual(Object.keys(simulationSummary.builds).sort(), ["1o", "2c", "3e", "4c", "5o", "6f"], "simulation summary must cover exactly the six decks with new-ladder data");
+assert.deepEqual(Object.keys(simulationSummary.builds).sort(), Object.keys(buyPlans.plans).sort(), "simulation summary's builds must now cover every variant with a buy plan");
+assert.equal(Object.keys(simulationSummary.builds).length, 50, "the Phase 6 sweep covers exactly 50 variants");
 for (const [variantId, deckBuilds] of Object.entries(simulationSummary.builds)) {
-  const expectedBuilds = new Set(["Base", "Tuned", "Enhance", "Max", "Tuned-2", "Enhance-2", "Max-2", "Fun Tuned", "Fun Max"]);
+  const expectedBuilds = new Set(["Tuned", "Enhance", "Fun Tuned"]);
   if (ALT_DECKS.has(variantId)) { expectedBuilds.add("Alt Tuned"); expectedBuilds.add("Alt Max"); }
   assert.deepEqual(new Set(Object.keys(deckBuilds)), expectedBuilds, `${variantId}: simulation summary must report exactly its expected builds`);
   for (const [buildName, metrics] of Object.entries(deckBuilds)) {
-    if (UNSIMULATED_BUILDS.has(buildName)) {
-      assert.equal(metrics.games, null, `${variantId} ${buildName}: a published-only build must not carry a simulated game count`);
-      assert.equal(metrics.engine, null, `${variantId} ${buildName}: a published-only build must not carry an engine tag`);
-    } else {
-      assert(Number.isFinite(metrics.games) && metrics.games > 0, `${variantId} ${buildName}: a simulated build must report a positive game count`);
-      assert(Number.isFinite(metrics.score), `${variantId} ${buildName}: a simulated build must report a finite score`);
-      assert(Number.isFinite(metrics.winPct) && metrics.winPct > 0 && metrics.winPct < 1, `${variantId} ${buildName}: win rate must be a fraction between 0 and 1`);
-      assert(VALID_VERDICTS.has(metrics.verdict), `${variantId} ${buildName}: verdict must be one of the four documented outcomes, got ${metrics.verdict}`);
-      assert.equal(metrics.engine, SIMULATED_ENGINE[buildName], `${variantId} ${buildName}: engine tag must match the documented v1/v2.1 split`);
-    }
+    assert(Number.isFinite(metrics.games) && metrics.games > 0, `${variantId} ${buildName}: a simulated build must report a positive game count`);
+    assert(Number.isFinite(metrics.score), `${variantId} ${buildName}: a simulated build must report a finite score`);
+    assert(Number.isFinite(metrics.winPct) && metrics.winPct > 0 && metrics.winPct < 1, `${variantId} ${buildName}: win rate must be a fraction between 0 and 1`);
+    assert(VALID_VERDICTS.has(metrics.verdict), `${variantId} ${buildName}: verdict must be one of the four documented outcomes, got ${metrics.verdict}`);
+    assert.equal(metrics.engine, SIMULATED_ENGINE[buildName], `${variantId} ${buildName}: engine tag must match the documented v2.2/v2.1 split`);
   }
 }
-assert.deepEqual(Object.keys(simulationSummary.altCommanderCases).sort(), ["1o", "3e", "5o"], "alt-commander comparison cases must cover exactly the three alt-commander decks");
+// "Trey's Build" marks Rob's own confirmed pick for each of the six deck slots -- authored,
+// published data (like priorityRank above), not something derived from any one browser's
+// localStorage, so it reads the same for anyone loading the Compare page.
+assert.deepEqual(variants.variants.filter((variant) => variant.treysBuild).map((variant) => variant.id).sort(), ["1o", "2c", "3e", "4c", "5o", "6f"], "Trey's Build must mark exactly these six confirmed variant picks");
+assert.match(appSource, /is-treys-build/, "the Compare card must render a distinct state for Trey's Build");
+assert.match(appSource, /treys-build-ribbon/, "Trey's Build must render a clear visual indicator on the Compare card");
+// The three original alt-commander decks (1o/3e/5o) got the full treatment: a hand-built
+// second decklist (plan.altTuned/altMax, with its own commander flagged) powering the
+// interactive "preview the alt commander" toggle on those specific Compare cards. The other
+// 44 variants (every non-flagship original variant, plus all 20 generated ones) get the
+// lighter evaluation only -- a scored comparison and a recommendation, with no second
+// decklist -- so they must NOT be checked against plan.altTuned, which stays empty for them.
+const ALL_ALT_CASE_IDS = [
+  "1o", "3e", "5o",
+  "1a", "1b", "1c", "1e", "2o", "2a", "2b", "2e", "3o", "3c", "3d", "3f",
+  "4o", "4a", "4b", "4e", "5c", "5d", "5e", "5f", "6o", "6c", "6d", "6e",
+  "7a", "7b", "7c", "7d", "7e", "8a", "8b", "8c", "8d", "8e",
+  "9a", "9b", "9c", "9d", "9e", "10a", "10b", "10c", "10d", "10e"
+];
+assert.deepEqual(Object.keys(simulationSummary.altCommanderCases).sort(), [...ALL_ALT_CASE_IDS].sort(), "alt-commander comparison cases must cover the three fully-built decks plus all 44 lighter-weight evaluations");
 for (const variantId of ["1o", "3e", "5o"]) {
   const altCase = simulationSummary.altCommanderCases[variantId];
   const plan = buyPlans.plans[variantId];
@@ -253,6 +284,22 @@ for (const variantId of ["1o", "3e", "5o"]) {
   const altCommander = plan.altTuned.find((item) => item.isCommander);
   assert.equal(altCase.currentCommander, shellCommander.name, `${variantId}: simulation summary's current commander must match the plan's own shell commander`);
   assert.equal(altCase.altCommander, altCommander.name, `${variantId}: simulation summary's alternative commander must match the plan's own Alt Tuned commander`);
+  assert(altCase.honestRead.length > 40, `${variantId}: alt-commander case must carry a substantive caution paragraph, not a stub`);
+}
+const LIGHTWEIGHT_ALT_CASE_IDS = ALL_ALT_CASE_IDS.filter((id) => !["1o", "3e", "5o"].includes(id));
+assert.equal(LIGHTWEIGHT_ALT_CASE_IDS.length, 44, "expected exactly 44 lighter-weight commander evaluations");
+for (const variantId of LIGHTWEIGHT_ALT_CASE_IDS) {
+  const altCase = simulationSummary.altCommanderCases[variantId];
+  const variant = variants.variants.find((entry) => entry.id === variantId);
+  assert(variant, `${variantId}: must map to a real Compare variant`);
+  assert.equal(altCase.currentCommander, variant.commander, `${variantId}: simulation summary's current commander must match the variant's own commander`);
+  assert(typeof altCase.altCommander === "string" && altCase.altCommander.length > 0, `${variantId}: must name a best-measured alternative commander`);
+  assert(Number.isFinite(altCase.currentScore) && Number.isFinite(altCase.altScore), `${variantId}: must carry finite current and alternative scores`);
+  assert(Number.isInteger(altCase.currentRank) && altCase.currentRank >= 1, `${variantId}: must carry the current commander's rank among the measured field`);
+  assert(Number.isInteger(altCase.candidatesMeasured) && altCase.candidatesMeasured > 0, `${variantId}: must report how many alternative commanders were actually measured`);
+  assert(Number.isInteger(altCase.gamesEach) && altCase.gamesEach > 0, `${variantId}: must report the game count each candidate was measured over`);
+  assert.equal(altCase.engine, "v2.2", `${variantId}: lighter-weight evaluations must be tagged with the engine generation that measured them`);
+  assert((buyPlans.plans[variantId].altTuned || []).length === 0, `${variantId}: has only the lighter-weight evaluation, so altTuned must stay empty`);
   assert(altCase.honestRead.length > 40, `${variantId}: alt-commander case must carry a substantive caution paragraph, not a stub`);
 }
 assert.match(appSource, /function nearestPresetMatch/, "the Buy Picks header must compute which preset the live selection actually resembles");
@@ -263,7 +310,7 @@ assert.match(appSource, /metricFamilyMarkup\("playstyle", playstyle, `metric-pla
   assert(start > 0 && end > start, "dynamicMetricsHeaderMarkup and simulationReadoutMarkup must both be defined, in that order");
   assert.doesNotMatch(appSource.slice(start, end), /metricFamilyMarkup\("growth"/, "the Buy Picks metric strip must exclude Growth, matching the Compare page's own instruction");
 }
-assert.match(appSource, /simulationSummary\.engineBoundaryNote/, "a rendered simulation result must always carry the v1\\/v2.1 engine-boundary caveat");
+assert.match(appSource, /simulationSummary\.engineBoundaryNote/, "a rendered simulation result must always carry the engine-boundary caveat");
 
 // Phase 4 -- Live Decks/Shop List flow-through for the seven new categories, plus the Alt
 // filter and the advisory performance check. levelByKind is the load-bearing map: any new
@@ -340,7 +387,7 @@ assert.match(appSource, /<small>Market total<\/small>/, "the Buy Picks total mus
     assert.match(body, new RegExp(`key: "${group}", title:`), `the ${group} ladder group must exist`);
     for (const tab of tabs) assert.match(body, new RegExp(`key: "${tab}", label:`), `${tab} must be a tab inside a ladder group, not its own top-level section`);
   }
-  assert.match(body, /key: "max2", label: "Maxxed-2", kinds: \["enhance2", "max2"\]/, "Enhance-2 cards must live in the Maxxed-2 tab, since Enhance is defined as the $15-or-less tier");
+  assert.match(body, /key: "max2", label: "Maxxed-2", kinds: \["enhance2", "max2"\]/, "Enhance-2 cards must live in the Maxxed-2 tab, since Enhance is defined as the $20-or-less tier");
   assert.doesNotMatch(body, /key: "enhance2", label:/, "Enhance-2 must not be its own tab");
 }
 assert.match(appSource, /assemblePreset\(plan, input\.checked \? presetKey : "base"\)/, "a tab's select-all must apply that build's whole configuration, so the result is always a complete 100");
@@ -382,5 +429,69 @@ assert.match(appSource, /function importPurchaseHistory\(/, "Shop List must be a
   // the front face.
   assert.match(body, /name\.split\(" \/\/ "\)\[0\]/, "double-faced card names must be recognized in either form");
 }
+
+// The Compare "About" button replaced the removed carousel overview card; nothing should still
+// construct or reference it.
+assert.doesNotMatch(appSource, /function makeDeckOverviewCard\(/, "the retired carousel overview card renderer must not come back");
+assert.match(appSource, /data-about-deck/, "each deck group must render an About button");
+assert.match(appSource, /function openDeckAbout\(/, "an About dialog opener must exist");
+
+// Buy Picks micro-copy (Fun/Enhance/Max rows) must never fabricate a per-card claim: it either
+// quotes real authored data (whyOptional, maxReason, the card's own oracle text) or renders
+// nothing at all. This mirrors the discipline already pinned for cardBuildMembership above --
+// no per-card impact numbers exist anywhere in this repo, and no per-card "this is fun" rating
+// exists either.
+assert.match(appSource, /function microFitLine\(/, "Buy Picks rows must be able to render the short per-kind micro-copy");
+assert.match(appSource, /function deriveFunSignal\(/, "a fun-signal heuristic must exist for Fun Tuned\/Fun Max rows");
+{
+  const start = appSource.indexOf("function deriveFunSignal(");
+  const end = appSource.indexOf("function microFitLine(", start);
+  assert(start > 0 && end > start, "deriveFunSignal must be defined before microFitLine");
+  const body = appSource.slice(start, end);
+  assert.match(body, /\|\|\s*null/, "deriveFunSignal must return null, never a fabricated default, when no real signal matches");
+}
+{
+  const start = appSource.indexOf("function microFitLine(");
+  const end = appSource.indexOf("\n  }\n\n  // Base/Tuned/Maxxed", start);
+  assert(start > 0 && end > start, "microFitLine must be defined before the ladder-groups comment block");
+  const body = appSource.slice(start, end);
+  assert.match(body, /return null/, "microFitLine must be able to render nothing rather than force a line");
+  assert.match(body, /isSwapEvidenceText\(raw\)\) return null/, "microFitLine must never surface the raw swap-evidence paragraph as a row caption");
+}
+
+// The swap-evidence paragraph the fun-ladder importer copied into purpose/why/brief.fit is real
+// data ("what is lost by the card it replaces") but reads as a full paragraph, not a row
+// caption -- it must be excluded from the row and instead get its own section in the detail
+// sheet, which is exactly where a reader who wants the full picture would look.
+assert.match(appSource, /function isSwapEvidenceText\(/, "a helper must detect the swap-evidence boilerplate pattern");
+assert.match(appSource, /function swapEvidenceSentence\(/, "the detail sheet must be able to surface the full swap-evidence sentence");
+assert.match(appSource, /isSwapEvidenceText\(rawSummary\)/, "the Buy Picks row must not render the raw swap-evidence paragraph as its caption");
+assert.match(appSource, /What the card it replaces gave up/, "the detail sheet must have a clearly labeled section for what a replaced card's evidence showed");
+
+// Cross-device state portability: export bundles both localStorage keys this app actually
+// writes (the main state and, separately, Custom's Choose-step store) into one versioned file;
+// Import and Load Active both require confirmation before replacing anything, since a full-state
+// file has no safe merge rule the way the purchase-history CSV import does.
+assert.match(appSource, /function serializeStatePayload\(/, "a full-state export payload builder must exist");
+assert.match(appSource, /function exportFullState\(/, "an Export control must exist");
+assert.match(appSource, /function importStateFromFile\(/, "an Import control must exist");
+assert.match(appSource, /function loadActiveState\(/, "a Load Active control must exist");
+assert.match(appSource, /localStorage\.getItem\(Custom\.STORAGE_KEY\)/, "export must include the Custom (Choose-step) store, not just the main state");
+assert.match(appSource, /fetch\("data\/active-state\.json"/, "Load Active must read active-state.json from the repo, not invent a URL");
+// Replace, not a field-by-field merge -- a full-state file has no safe merge rule the way the
+// purchase-history CSV import does, since it covers every selection, filter, and toggle at once.
+assert.match(appSource, /state = \{\.\.\.blankState\(\), \.\.\.payload\.state\}/, "applying a state payload must fully replace state, defaulting only fields the file omits");
+{
+  const start = appSource.indexOf("function importStateFromFile(");
+  const end = appSource.indexOf("function loadActiveState(", start);
+  assert(start > 0 && end > start, "importStateFromFile must be defined before loadActiveState");
+  const importBody = appSource.slice(start, end);
+  const loadActiveBody = appSource.slice(end);
+  assert.match(importBody, /window\.confirm\(/, "importing a state file must ask for confirmation before replacing local data");
+  assert.match(loadActiveBody.slice(0, loadActiveBody.indexOf("\n  }\n") + 5), /window\.confirm\(/, "Load Active must ask for confirmation before replacing local data");
+}
+assert.match(htmlSource, /id="export-state-button"/, "an Export button must exist in the header");
+assert.match(htmlSource, /id="import-state-input"/, "an Import file input must exist in the header");
+assert.match(htmlSource, /id="load-active-button"/, "a Load Active button must exist in the header");
 
 console.log(`Validated ${variants.variants.length} variants and ${Object.keys(buyPlans.plans).length} connected buy profiles.`);

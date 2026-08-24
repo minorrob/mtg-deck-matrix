@@ -3,6 +3,14 @@
 
   const Lineup = window.MtgLineupModel;
   if (!Lineup) throw new Error("Lineup model did not load");
+  const Compliance = window.MtgComplianceModel;
+  if (!Compliance) throw new Error("Compliance model did not load");
+  const Custom = window.MtgCustomModel;
+  if (!Custom) throw new Error("Custom deck model did not load");
+  const Scryfall = window.MtgScryfall;
+  if (!Scryfall) throw new Error("Scryfall client did not load");
+  const Generator = window.MtgDeckGenerator;
+  if (!Generator) throw new Error("Deck generator did not load");
 
   const STORAGE_KEY = "mtg-deck-matrix-state-v1";
   const LEGACY_PICKS_KEY = "mtg-variant-picks";
@@ -28,7 +36,9 @@
     power: "Power measures how much the card improves the deck’s ability to establish its plan, answer threats, or win.",
     ease: "Ease measures how naturally the card works without complicated timing, narrow setup, or expert rules knowledge.",
     fun: "Fun measures how satisfying and interactive the card is likely to feel for the player and the table.",
-    fit: "Fit explains how directly the card supports this deck’s commander, mechanics, and stated game plan."
+    fit: "Fit explains how directly the card supports this deck’s commander, mechanics, and stated game plan.",
+    simulate: "Play this exact 100-card build against randomised opponents thousands of times, find where it actually loses, and propose swaps that measurably fix it. The games run on your own computer.",
+    whyVariant: "See how this variant's simulated Tuned, Enhance, and Fun Tuned scores compare against its deck's other variants, and where it ranks among them."
   };
   const KEYWORD_DEFINITIONS = {
     flying: "This creature can normally be blocked only by creatures with flying or reach.",
@@ -56,6 +66,11 @@
   let catalog;
   let buyCatalog;
   let simulationSummary = null;
+  let bakedCatalog;
+  let bakedBuyCatalog;
+  let customStore;
+  let customDeckIds = new Set();
+  const slotRuns = new Map();
   let state;
   let toastTimer;
   let openDeckId = 1;
@@ -104,6 +119,38 @@
   };
   const money = (value) => Number.isFinite(Number(value)) && Number(value) > 0 ? `$${Number(value).toFixed(2)}` : "Price varies";
   const variantById = (id) => catalog.variants.find((variant) => variant.id === id);
+  const isCustomDeck = (deckId) => customDeckIds.has(Number(deckId));
+
+  // Generated decks are merged into copies of the baked catalog on every change.
+  // The files on disk never learn about them, so the published catalog keeps its
+  // exact contents and every existing view keeps reading one shape of data.
+  function remergeCustom() {
+    const merged = Custom.mergeIntoCatalogs(customStore, bakedCatalog, bakedBuyCatalog);
+    catalog = merged.catalog;
+    buyCatalog = merged.buyCatalog;
+    customDeckIds = new Set(merged.customDeckIds);
+    if (state) pruneMissingSelections();
+  }
+
+  // Clearing a placeholder deletes variants the rest of the app may still point at.
+  function pruneMissingSelections() {
+    Object.entries(state.compareSelections).forEach(([deckId, variantId]) => {
+      if (!variantById(variantId)) delete state.compareSelections[deckId];
+    });
+  }
+
+  function persistCustom(message = "") {
+    const result = Custom.save(localStorage, customStore);
+    if (!result.saved) {
+      showToast(result.reason === "quota" || result.reason === "too-large"
+        ? "This browser is out of storage for generated decks. Clear a placeholder and try again."
+        : "Generated decks could not be saved on this device.");
+      return result;
+    }
+    if (result.warn) showToast("Generated decks are using most of this browser's storage.");
+    if (message) showToast(message);
+    return result;
+  }
 
   // Cards that Scryfall cannot resolve used to be re-requested on every render, and each
   // response re-rendered the view, which produced an endless render loop: blinking card art,
@@ -408,12 +455,196 @@
       button.setAttribute("aria-selected", String(active));
     });
     $$(".view").forEach((section) => section.classList.toggle("is-active", section.id === `view-${view}`));
+    if (view === "choose") renderChoose();
     if (view === "buy") renderBuy();
     if (view === "shop") renderShop();
     if (view === "live") renderLiveDecks();
     if (focus) {
       window.scrollTo({top: 0, behavior: "smooth"});
       $("#app").focus({preventScroll: true});
+    }
+  }
+
+  const CHOOSE_COLORS = [["W", "White"], ["U", "Blue"], ["B", "Black"], ["R", "Red"], ["G", "Green"]];
+  const CHOOSE_PLAYSTYLES = ["Fortress", "Build-up", "Convergence", "Longevity", "Friendly", "Flavor"];
+
+  function renderChoose() {
+    withUiState("#view-choose", renderChooseView);
+  }
+
+  function renderChooseView() {
+    const root = $("#view-choose");
+    const built = Custom.activeSlots(customStore).length;
+    const kilobytes = Math.round(Custom.estimateBytes(customStore) / 1024);
+    root.innerHTML = `
+      <div class="page-intro">
+        <div>
+          <h2 id="choose-title">Build your own decks</h2>
+          <p>Describe what you want to play, paste a TCGplayer link to a commander, or drop in the cards you already know you want. Each placeholder generates up to five complete, Tier 3 legal 100-card variants from live Scryfall data, then hands them to Compare beside the curated decks.</p>
+        </div>
+        <div class="selection-meter"><strong>${built}/6</strong><span>placeholders built</span></div>
+      </div>
+      ${built ? `<p class="choose-storage">${icon("▤")}<span>Generated decks are private to this browser · about ${kilobytes} KB stored</span></p>` : ""}
+      <div class="choose-grid" id="choose-grid"></div>`;
+    const grid = $("#choose-grid", root);
+    customStore.slots.forEach((slot, index) => grid.appendChild(makeChooseSlot(slot, index)));
+  }
+
+  function chooseInputRow(label, hint, control) {
+    return `<label class="choose-field"><span>${esc(label)}${hint ? `<small>${esc(hint)}</small>` : ""}</span>${control}</label>`;
+  }
+
+  function makeChooseSlot(slot, index) {
+    const variants = Custom.slotVariants(customStore, slot.slotId);
+    const inputs = slot.inputs;
+    const running = slotRuns.has(slot.slotId);
+    const section = document.createElement("section");
+    section.className = `choose-slot${variants.length ? " is-built" : ""}${running ? " is-running" : ""}`;
+    section.dataset.slotId = String(slot.slotId);
+    const statusLabel = running ? "Generating…" : variants.length ? `${variants.length} variant${variants.length === 1 ? "" : "s"}` : "Empty";
+    section.innerHTML = `
+      <header class="choose-slot-head">
+        <span class="deck-number">${slot.slotId}</span>
+        <label class="choose-title-field"><span class="visually-hidden">Name for placeholder ${index + 1}</span><input type="text" value="${esc(slot.title)}" maxlength="60" data-choose-title placeholder="My deck ${index + 1}"></label>
+        <span class="choose-status ${running ? "is-running" : variants.length ? "is-ready" : ""}">${esc(statusLabel)}</span>
+      </header>
+      <details class="choose-form" data-ui-key="chooseform-${slot.slotId}" ${variants.length ? "" : "open"}>
+        <summary><span>${icon("✎")}Describe this deck</span><small>Any combination — inputs, a commander link, or card links</small></summary>
+        <div class="choose-form-body">
+          <fieldset class="choose-colors"><legend>Colors<small>Ignored when a commander link sets them</small></legend>
+            ${CHOOSE_COLORS.map(([color, name]) => `<button type="button" class="color-pip pip-${color}${inputs.colors.includes(color) ? " is-on" : ""}" data-choose-color="${color}" aria-pressed="${inputs.colors.includes(color)}"><span class="visually-hidden">${name}</span>${color}</button>`).join("")}
+          </fieldset>
+          <fieldset class="choose-themes"><legend>Mechanics<small>Drives the card pool and the Compare filters</small></legend>
+            ${Object.keys(Generator.THEME_QUERIES).map((theme) => `<button type="button" class="theme-chip${inputs.themes.includes(theme) ? " is-on" : ""}" data-choose-theme="${esc(theme)}" aria-pressed="${inputs.themes.includes(theme)}">${esc(theme)}</button>`).join("")}
+          </fieldset>
+          <div class="choose-field-grid">
+            ${chooseInputRow("Play style", "Shifts the role mix", `<select data-choose-input="playstyle"><option value="">No preference</option>${CHOOSE_PLAYSTYLES.map((style) => `<option value="${esc(style)}" ${inputs.playstyle === style ? "selected" : ""}>${esc(style)}</option>`).join("")}</select>`)}
+            ${chooseInputRow("Budget", "Base build target, in dollars", `<input type="number" min="25" step="5" value="${esc(inputs.budgetUsd)}" data-choose-input="budgetUsd">`)}
+            ${chooseInputRow("Card set", "Scryfall set code, optional", `<input type="text" value="${esc(inputs.preferSet)}" maxlength="6" placeholder="e.g. blb" data-choose-input="preferSet">`)}
+            ${chooseInputRow("Variants", "How many approaches to build", `<select data-choose-input="variantCount">${[1, 2, 3, 4, 5].map((count) => `<option value="${count}" ${Number(inputs.variantCount) === count ? "selected" : ""}>${count}</option>`).join("")}</select>`)}
+          </div>
+          ${chooseInputRow("Commander link", "TCGplayer link — affiliate links work too", `<input type="url" value="${esc(inputs.commanderLink)}" placeholder="https://www.tcgplayer.com/product/…" data-choose-input="commanderLink">`)}
+          ${chooseInputRow("Or a commander by name", "Used when no link is given", `<input type="text" value="${esc(inputs.commanderName)}" placeholder="Slimefoot, the Stowaway" data-choose-input="commanderName">`)}
+          ${chooseInputRow("Cards to include", "One TCGplayer link per line", `<textarea rows="3" placeholder="https://www.tcgplayer.com/product/…" data-choose-seeds>${esc((inputs.seedLinks || []).join("\n"))}</textarea>`)}
+        </div>
+      </details>
+      <div class="choose-actions">
+        <button class="primary-button" type="button" data-choose-generate ${running ? "disabled" : ""}>${variants.length ? "Regenerate" : "Generate variants"}</button>
+        ${running ? `<button class="secondary-button" type="button" data-choose-stop>Stop</button>` : ""}
+        ${variants.length ? `<button class="text-button" type="button" data-choose-clear>Clear placeholder</button>` : ""}
+      </div>
+      <p class="choose-progress" data-gen-progress="${slot.slotId}" aria-live="polite">${running ? "Working…" : ""}</p>
+      ${slot.warnings?.length ? `<ul class="choose-warnings">${slot.warnings.map((warning) => `<li>${icon("!")}<span>${esc(warning)}</span></li>`).join("")}</ul>` : ""}
+      ${variants.length ? `<ol class="choose-results">${variants.map((variant) => {
+        const view = Custom.toVariant(customStore, variant);
+        return `<li>
+          <span class="choose-result-copy"><strong>${esc(view.name)}</strong><small>${esc(variant.lensLabel || "Generated")} · ${esc(view.costs[1] || "")} tuned · ${esc(view.brackets[1]?.label || "")}</small></span>
+          <button class="secondary-button" type="button" data-choose-open="${esc(variant.id)}">Open in Compare</button>
+        </li>`;
+      }).join("")}</ol>` : ""}`;
+
+    const commit = (message = "") => {
+      persistCustom(message);
+    };
+    $("[data-choose-title]", section).addEventListener("change", (event) => {
+      slot.title = event.target.value.trim() || `My deck ${index + 1}`;
+      commit();
+      remergeCustom();
+      renderCompare();
+    });
+    $$("[data-choose-color]", section).forEach((button) => button.addEventListener("click", () => {
+      const color = button.dataset.chooseColor;
+      slot.inputs.colors = slot.inputs.colors.includes(color)
+        ? slot.inputs.colors.filter((entry) => entry !== color)
+        : [...slot.inputs.colors, color];
+      button.classList.toggle("is-on");
+      button.setAttribute("aria-pressed", String(slot.inputs.colors.includes(color)));
+      commit();
+    }));
+    $$("[data-choose-theme]", section).forEach((button) => button.addEventListener("click", () => {
+      const theme = button.dataset.chooseTheme;
+      slot.inputs.themes = slot.inputs.themes.includes(theme)
+        ? slot.inputs.themes.filter((entry) => entry !== theme)
+        : [...slot.inputs.themes, theme];
+      button.classList.toggle("is-on");
+      button.setAttribute("aria-pressed", String(slot.inputs.themes.includes(theme)));
+      commit();
+    }));
+    $$("[data-choose-input]", section).forEach((field) => field.addEventListener("change", () => {
+      const key = field.dataset.chooseInput;
+      slot.inputs[key] = key === "budgetUsd" || key === "variantCount" ? Number(field.value) || Custom.blankInputs()[key] : field.value.trim();
+      commit();
+    }));
+    $("[data-choose-seeds]", section).addEventListener("change", (event) => {
+      slot.inputs.seedLinks = event.target.value.split("\n").map((line) => line.trim()).filter(Boolean);
+      commit();
+    });
+    $("[data-choose-generate]", section).addEventListener("click", () => generateSlot(slot, index));
+    $("[data-choose-stop]", section)?.addEventListener("click", () => {
+      slotRuns.get(slot.slotId)?.abort();
+      slotRuns.delete(slot.slotId);
+      renderChoose();
+    });
+    $("[data-choose-clear]", section)?.addEventListener("click", () => {
+      if (!window.confirm(`Clear ${slot.title} and the variants generated for it?`)) return;
+      Custom.clearSlot(customStore, slot.slotId);
+      persistCustom("Placeholder cleared.");
+      remergeCustom();
+      renderCompare();
+      renderChoose();
+    });
+    $$("[data-choose-open]", section).forEach((button) => button.addEventListener("click", () => {
+      openDeckId = slot.slotId;
+      // switchView only toggles which view is visible -- Compare's DOM keeps
+      // whatever group was open at its last render, so re-render first or the
+      // generated deck's group stays closed despite openDeckId.
+      renderCompare();
+      switchView("compare");
+    }));
+    return section;
+  }
+
+  async function generateSlot(slot, index) {
+    if (slotRuns.has(slot.slotId)) return;
+    const controller = new AbortController();
+    slotRuns.set(slot.slotId, controller);
+    slot.status = "generating";
+    slot.warnings = [];
+    renderChoose();
+    const progress = $(`[data-gen-progress="${slot.slotId}"]`);
+    const report = (message) => {
+      if (progress?.isConnected) progress.textContent = message;
+    };
+    try {
+      const client = Scryfall.createClient({});
+      const result = await Generator.generateForSlot({...slot.inputs, slotId: slot.slotId}, {
+        client,
+        signal: controller.signal,
+        createdAt: new Date().toISOString(),
+        onProgress: (event) => report(event.message || event.phase)
+      });
+      if (result.error) {
+        slot.status = "error";
+        slot.warnings = [result.error, ...(result.warnings || [])];
+      } else {
+        Custom.putCards(customStore, result.cards);
+        Custom.replaceSlotVariants(customStore, slot.slotId, result.variants);
+        slot.status = "ready";
+        slot.generatedAt = new Date().toISOString();
+        slot.warnings = result.warnings;
+        if (!slot.title || slot.title === `My deck ${index + 1}`) slot.title = result.commander.name;
+        slot.objective = Custom.describeSlot(slot);
+        remergeCustom();
+        renderCompare();
+        showToast(`${result.variants.length} variant${result.variants.length === 1 ? "" : "s"} generated from ${result.commander.name}.`);
+      }
+    } catch (error) {
+      slot.status = error?.name === "AbortError" ? "empty" : "error";
+      if (error?.name !== "AbortError") slot.warnings = [error.message || "Generation failed."];
+    } finally {
+      slotRuns.delete(slot.slotId);
+      persistCustom();
+      renderChoose();
     }
   }
 
@@ -432,17 +663,17 @@
     root.innerHTML = `
       <div class="page-intro">
         <div>
-          <h2 id="compare-title">Choose your six</h2>
-          <p>Open each deck role, compare its five approaches, and pick one. Your choices stay private on this device.</p>
+          <h2 id="compare-title">Choose your ${catalog.decks.length === 6 ? "six" : "decks"}</h2>
+          <p>Open each deck role, compare its approaches, and pick one. Your choices stay private on this device.</p>
         </div>
-        <div class="selection-meter"><strong>${selected.length}/6</strong><span>decks selected</span></div>
+        <div class="selection-meter"><strong>${selected.length}/${catalog.decks.length}</strong><span>decks selected</span></div>
       </div>
       <div class="action-row">
         <button class="primary-button" id="save-picks" ${selected.length ? "" : "disabled"}>Save Picks → Buy Picks</button>
         <button class="secondary-button" id="email-picks" ${selected.length ? "" : "disabled"}>Email selections</button>
       </div>
       <section class="compare-filter-panel">
-        <div class="compare-filter-heading"><div>${icon("⌕")}<span><b>Find a variant</b><small>${visibleTotal} of 30 shown${activeFilterCount ? ` · ${activeFilterCount} active filters` : ""}</small></span></div>${activeFilterCount ? `<button id="clear-compare-filters">Clear</button>` : ""}</div>
+        <div class="compare-filter-heading"><div>${icon("⌕")}<span><b>Find a variant</b><small>${visibleTotal} of ${catalog.variants.length} shown${activeFilterCount ? ` · ${activeFilterCount} active filters` : ""}</small></span></div>${activeFilterCount ? `<button id="clear-compare-filters">Clear</button>` : ""}</div>
         <div class="compare-filter-grid">
           <label class="compare-search"><span>Search</span><input id="compare-search" type="search" value="${esc(filters.query)}" placeholder="Commander, role, tag, or text…"></label>
           ${compareSelect("mechanic", "Mechanic", [["all","All mechanics"], ...mechanics.map((value) => [value,value])], filters.mechanic)}
@@ -453,20 +684,32 @@
       <div id="deck-groups"></div>`;
 
     const groups = $("#deck-groups", root);
+    let dividedAsCustom = null;
     catalog.decks.forEach((deck) => {
       const chosenId = state.compareSelections[deck.id];
       const rankStage = Number(state.rankStages[deck.id] || 2);
-      const variants = catalog.variants
-        .filter((variant) => variant.deckId === deck.id)
+      const allDeckVariants = catalog.variants.filter((variant) => variant.deckId === deck.id);
+      const deckTotal = allDeckVariants.length;
+      const variants = allDeckVariants
         .filter(matchesCompareFilters)
         .sort((a, b) => (a.ranks?.[rankStage - 1] || a.order) - (b.ranks?.[rankStage - 1] || b.order));
+      if (customDeckIds.size && isCustomDeck(deck.id) !== dividedAsCustom) {
+        dividedAsCustom = isCustomDeck(deck.id);
+        const divider = document.createElement("p");
+        divider.className = "deck-group-divider";
+        divider.innerHTML = dividedAsCustom
+          ? `${icon("✦")}<span>Your generated decks</span><small>Built on the Choose step from your own inputs</small>`
+          : `${icon("▣")}<span>Curated decks</span><small>The six researched roles</small>`;
+        groups.appendChild(divider);
+      }
       const details = document.createElement("details");
       details.className = "deck-group";
       details.open = deck.id === openDeckId;
       details.innerHTML = `
         <summary>
           <span class="deck-number">${deck.id}</span>
-          <span class="deck-summary-copy"><strong>${esc(deck.title)}</strong><span>${chosenId ? `Picked: ${esc(variantById(chosenId).name)} · ` : ""}${variants.length} of 5 shown</span></span>
+          <button type="button" class="deck-about-button" data-about-deck="${deck.id}" aria-haspopup="dialog">${icon("◆")}About</button>
+          <span class="deck-summary-copy"><strong>${esc(deck.title)}</strong><span>${chosenId ? `Picked: ${esc(variantById(chosenId).name)} · ` : ""}${variants.length} of ${deckTotal} shown</span></span>
           <span class="deck-chevron" aria-hidden="true">›</span>
         </summary>
         <div class="rank-order" role="group" aria-label="Sort Deck ${deck.id} variants by stage ranking">
@@ -475,8 +718,13 @@
         </div>
         <div class="variant-track">${variants.length ? "" : `<div class="variant-filter-empty">${icon("⌕")}<strong>No variants match this filter in Deck ${deck.id}</strong><span>Try another mechanic, play style, or search term.</span></div>`}</div>`;
       const track = $(".variant-track", details);
-      track.appendChild(makeDeckOverviewCard(deck));
-      variants.forEach((variant) => track.appendChild(makeVariantCard(variant, rankStage)));
+      variants.forEach((variant) => track.appendChild(makeVariantCard(variant, rankStage, allDeckVariants)));
+      // The About button sits inside <summary>; without stopPropagation its click would also
+      // toggle the surrounding <details> open/closed, same fix as the shell select-all above.
+      $(".deck-about-button", details)?.addEventListener("click", (event) => {
+        event.stopPropagation();
+        openDeckAbout(deck, variants);
+      });
       $$(".rank-order-button", details).forEach((button) => button.addEventListener("click", () => {
         state.rankStages[deck.id] = Number(button.dataset.rankStage);
         openDeckId = deck.id;
@@ -554,7 +802,7 @@
     </div>`;
   }
 
-  function makeVariantCard(variant, rankStage = 2) {
+  function makeVariantCard(variant, rankStage = 2, siblingVariants = [variant]) {
     const stage = rankStage;
     const selected = state.compareSelections[variant.deckId] === variant.id;
     const bracket = variant.brackets[stage - 1] || {};
@@ -566,9 +814,10 @@
     const engine = variant.scores?.engine?.[stage - 1] || [];
     const growth = variant.scores?.growth || [];
     const card = document.createElement("article");
-    card.className = `variant-card${selected ? " is-selected" : ""}`;
+    card.className = `variant-card${selected ? " is-selected" : ""}${variant.treysBuild ? " is-treys-build" : ""}`;
     card.dataset.variant = variant.id;
     card.innerHTML = `
+      ${variant.treysBuild ? `<div class="treys-build-ribbon" title="Trey's chosen build for this deck slot"><span>★ Trey's Build</span></div>` : ""}
       <label class="pick-control">
         <input type="checkbox" ${selected ? "checked" : ""} aria-label="Pick ${esc(variant.name)}">
         <span>${selected ? "Picked" : "Pick"}</span>
@@ -606,6 +855,8 @@
         </div>
         <div class="variant-card-actions">
           <button class="comment-toggle tip-action info-tip${state.comments[variant.id] ? " has-comment" : ""}" type="button" aria-expanded="${openCommentId === variant.id}" data-tooltip="${esc(TOOLTIP_DEFINITIONS.addComment)}" aria-describedby="info-tooltip">${icon(state.comments[variant.id] ? "✓" : "“")}<span>${state.comments[variant.id] ? "Comment saved" : "Add a comment"}</span>${tooltipHint()}</button>
+          <button class="simulate-button tip-action info-tip" type="button" data-tooltip="${esc(TOOLTIP_DEFINITIONS.simulate)}" aria-describedby="info-tooltip">${icon("⟳")}<span>Simulate</span>${tooltipHint()}</button>
+          ${simulationSummary?.builds?.[variant.id] ? `<button class="why-variant-button tip-action info-tip" type="button" aria-haspopup="dialog" data-tooltip="${esc(TOOLTIP_DEFINITIONS.whyVariant)}" aria-describedby="info-tooltip">${icon("★")}<span>Why This Variant</span>${tooltipHint()}</button>` : ""}
           <button class="detail-button tip-action info-tip" type="button" data-tooltip="${esc(TOOLTIP_DEFINITIONS.fullDetail)}" aria-describedby="info-tooltip">View full detail →${tooltipHint()}</button>
         </div>
         <div class="comment-editor" ${openCommentId === variant.id ? "" : "hidden"}>
@@ -627,6 +878,8 @@
       if (previewing) altCommanderPreview.add(variant.id); else altCommanderPreview.delete(variant.id);
       renderCompare();
     }));
+    $(".simulate-button", card).addEventListener("click", () => openSimDialog(variant));
+    $(".why-variant-button", card)?.addEventListener("click", () => openVariantWhy(variant, siblingVariants));
     $(".comment-toggle", card).addEventListener("click", () => {
       openCommentId = openCommentId === variant.id ? null : variant.id;
       const editor = $(".comment-editor", card);
@@ -646,7 +899,10 @@
     return card;
   }
 
-  // 1o/3e/5o only -- these three decks alone carry an alternative-commander exploration.
+  // 1o/3e/5o only -- these three decks alone got a second, fully-built decklist for their
+  // alternative commander (plan.altTuned), so they're the only ones with a toggle here. The
+  // other 44 variants also have an altCommanderCases entry, but it's a lighter-weight scored
+  // comparison with no second decklist behind it, so this card has nothing to preview for them.
   // Display-only, exactly like the plan requires: previewing the alt commander here never
   // touches Buy Picks seeding or any stored selection, only what this one card shows. The
   // real Score/Win% comparison and the caution paragraph both come straight from the
@@ -688,17 +944,95 @@
     </div>`;
   }
 
-  function makeDeckOverviewCard(deck) {
-    const card = document.createElement("article");
-    card.className = "variant-card deck-overview-card";
-    card.innerHTML = `
-      <div class="deck-overview-copy">
-        <span class="deck-overview-eyebrow">${icon("◆")}Deck ${deck.id} strategy</span>
-        <h3>${esc(deck.title)}</h3>
-        <p>${esc(deck.objective)}</p>
-        <span class="swipe-hint">Swipe for the five approaches →</span>
-      </div>`;
-    return card;
+  // Full deck dossier, opened from the About button on each deck-group summary. Reuses
+  // #detail-sheet (the same dialog openVariantDetail uses) rather than a second dialog element,
+  // since the layout -- image aside, kicker, title, body -- is already exactly what this needs.
+  function openDeckAbout(deck, variants) {
+    const dialog = $("#detail-sheet");
+    const representative = (variants || []).find((variant) => variant.order === 1) || variants?.[0];
+    $("#detail-sheet-image").src = representative?.image || "";
+    $("#detail-sheet-image").alt = representative ? `${representative.commander} card` : "";
+    $("#detail-sheet-kicker").textContent = `Deck ${deck.id} of ${catalog.decks.length} in the lineup${deck.complexity?.tier ? ` · ${deck.complexity.tier}` : ""}`;
+    $("#detail-sheet-title").textContent = deck.title;
+    $("#detail-sheet-context").innerHTML = "";
+    $("#detail-sheet-context").hidden = true;
+    $("#commander-info-toggle")?.remove();
+    $("#detail-sheet-body").innerHTML = deckAboutMarkup(deck, variants || []);
+    dialog.showModal();
+  }
+
+  function deckAboutMarkup(deck, variants) {
+    const rank = deck.priorityRank;
+    const rankBlock = rank ? `<section class="detail-block deck-priority-block"><h3>Build order</h3><p><strong>#${rank.rank} of ${rank.ofTotal}</strong> in the recommended build order.</p><p>${esc(rank.rationale)}</p>${deck.priorityNote ? `<p class="deck-priority-note">${esc(deck.priorityNote)}</p>` : ""}</section>` : "";
+    const complexityBlock = deck.complexity ? `<section class="detail-block deck-complexity-block"><h3>Complexity</h3><p><strong>${esc(deck.complexity.tier)}.</strong> ${esc(deck.complexity.why)}</p></section>` : "";
+    const variantList = variants.length
+      ? `<section class="detail-block"><h3>The five approaches</h3><ul class="deck-about-variant-list">${variants.map((variant) => `<li><strong>${esc(variant.name)}</strong><span>${esc(variant.commander)}</span></li>`).join("")}</ul></section>`
+      : "";
+    return `
+      <p class="deck-about-objective">${esc(deck.objective)}</p>
+      ${detailText("What it is", deck.whatItIs)}
+      ${detailText("Where it fits among the ten", deck.fitAmongTen)}
+      ${detailText("Playstyle", deck.playstyle)}
+      ${detailText("Mood", deck.mood)}
+      ${complexityBlock}
+      ${detailText("Win condition", deck.winCondition)}
+      ${detailText("What it asks of you", deck.asksOfYou)}
+      ${detailText("When to pick this", deck.whenToPickThis)}
+      ${rankBlock}
+      ${variantList}`;
+  }
+
+  // Opened from the Why This Variant button, which only renders when this variant has a
+  // simulation-summary.json builds entry (custom decks generated on the Choose tab never do,
+  // since they've never been through the Phase 6 sweep). Ranks this variant's Tuned score
+  // against its own deck's other variants -- Tuned rather than an average across rungs, since
+  // it's the one rung every variant was measured on the same way, so it's the only apples-to-
+  // apples comparison. Enhance and Fun Tuned are still shown per sibling for the full picture.
+  function whyVariantMarkup(variant, siblingVariants) {
+    const rows = siblingVariants.map((sibling) => ({
+      variant: sibling,
+      tuned: simulationSummary?.builds?.[sibling.id]?.Tuned || null,
+      enhance: simulationSummary?.builds?.[sibling.id]?.Enhance || null,
+      funTuned: simulationSummary?.builds?.[sibling.id]?.["Fun Tuned"] || null
+    }));
+    const ranked = rows.filter((row) => row.tuned).sort((a, b) => b.tuned.score - a.tuned.score);
+    const mine = ranked.find((row) => row.variant.id === variant.id);
+    const top = ranked[0];
+    const myRank = mine ? ranked.indexOf(mine) + 1 : null;
+    const headline = !mine
+      ? `<p>${esc(variant.name)} has not been through the simulation sweep yet, so there is nothing to compare it against.</p>`
+      : myRank === 1
+        ? `<p><strong>${esc(variant.name)}</strong> scored highest of Deck ${esc(variant.deckId)}’s ${ranked.length} simulated variants at the Tuned rung — ${mine.tuned.score.toFixed(1)} points, a ${(mine.tuned.winPct * 100).toFixed(1)}% win rate over ${mine.tuned.games.toLocaleString()} games.</p>`
+        : `<p><strong>${esc(variant.name)}</strong> placed #${myRank} of Deck ${esc(variant.deckId)}’s ${ranked.length} simulated variants. <strong>${esc(top.variant.name)}</strong> led at Tuned with ${top.tuned.score.toFixed(1)} points against this variant’s ${mine.tuned.score.toFixed(1)} — a gap of ${(top.tuned.score - mine.tuned.score).toFixed(1)}.</p>`;
+    const rowsHtml = ranked.map((row, index) => `
+      <div class="why-variant-row${row.variant.id === variant.id ? " is-this-variant" : ""}">
+        <div class="why-variant-row-head"><span class="why-variant-row-rank">#${index + 1}</span><strong>${esc(row.variant.name)}</strong>${row.variant.id === variant.id ? `<span class="why-variant-you-tag">this variant</span>` : ""}</div>
+        ${simulationReadoutMarkup("Tuned", row.tuned)}
+        ${simulationReadoutMarkup("Enhance", row.enhance)}
+        ${simulationReadoutMarkup("Fun Tuned", row.funTuned)}
+      </div>`).join("");
+    return `
+      <section class="detail-block why-variant-headline">
+        <h3>Why this variant</h3>
+        ${headline}
+      </section>
+      <section class="detail-block why-variant-readout">
+        <h3>Monte Carlo readout for Deck ${esc(variant.deckId)}’s variants</h3>
+        <div class="why-variant-rows">${rowsHtml}</div>
+      </section>`;
+  }
+
+  function openVariantWhy(variant, siblingVariants) {
+    const dialog = $("#detail-sheet");
+    $("#detail-sheet-image").src = variant.image;
+    $("#detail-sheet-image").alt = `${variant.commander} card`;
+    $("#detail-sheet-kicker").textContent = `Deck ${variant.deckId} · Why This Variant`;
+    $("#detail-sheet-title").textContent = variant.name;
+    $("#detail-sheet-context").innerHTML = "";
+    $("#detail-sheet-context").hidden = true;
+    $("#commander-info-toggle")?.remove();
+    $("#detail-sheet-body").innerHTML = whyVariantMarkup(variant, siblingVariants);
+    dialog.showModal();
   }
 
   function openVariantDetail(variant, stage) {
@@ -1051,7 +1385,7 @@
             <button type="button" class="filter-chip${state.buyMode === "purchased" ? " is-active" : ""}" data-buy-mode="purchased">Bought</button>
           </div>
           <span class="buy-mode-count" id="buy-mode-count"></span>
-          <p class="buy-intro-copy">Every checked card counts toward the final deck. <b>Enhance</b> keeps the role at $15 or less; <b>Maxxed</b> pushes capability to the legal bounds of Tier 3 / Bracket 3 regardless of price.</p>
+          <p class="buy-intro-copy">Every checked card counts toward the final deck. <b>Enhance</b> keeps the role at $20 or less; <b>Maxxed</b> pushes capability to the legal bounds of Tier 3 / Bracket 3 regardless of price.</p>
         </div>
       </div>
       ${selected.length ? "" : `<div class="empty-state"><h3>No deck picks yet</h3><p>Choose a variant in Compare first, then come back here.</p><button class="primary-button" data-go="compare">Choose decks</button></div>`}
@@ -1406,17 +1740,6 @@
     target.innerHTML = `<small>Selected total</small><strong>$${summary.total.toFixed(2)}</strong>${summary.unpriced ? `<em>+ ${summary.unpriced} unpriced</em>` : ""}`;
   }
 
-  const BASIC_LANDS = new Set(["plains", "island", "swamp", "mountain", "forest", "wastes", "snow covered plains", "snow covered island", "snow covered swamp", "snow covered mountain", "snow covered forest"]);
-  const TIER3_EARLY_COMBO_PAIRS = [
-    ["Thassa's Oracle", "Demonic Consultation"],
-    ["Thassa's Oracle", "Tainted Pact"],
-    ["Heliod, Sun-Crowned", "Walking Ballista"],
-    ["Isochron Scepter", "Dramatic Reversal"],
-    ["Devoted Druid", "Vizier of Remedies"],
-    ["Bloodchief Ascension", "Mindcrank"],
-    ["Iona, Shield of Emeria", "Painter's Servant"]
-  ];
-
   function isSinglesBuiltShell(plan) {
     return plan?.startingShellKind !== "official-precon";
   }
@@ -1546,8 +1869,9 @@
     const typeGroups = typeOrder.filter((type) => groups.has(type)).map((type) => {
       const group = groups.get(type);
       const count = group.reduce((sum, card) => sum + Number(card.quantity || 1), 0);
+      const checkedCount = group.filter((card) => (current.shell || []).includes(card.id)).reduce((sum, card) => sum + Number(card.quantity || 1), 0);
       return `<details class="constructed-shell-group shell-type-group" data-ui-key="shellgrp-${esc(variantId)}-${esc(type)}" ${type === "Creature" ? "open" : ""}>
-        <summary><span>${esc(type)}</span><b>${count}</b></summary>
+        <summary><span>${esc(type)}</span><b title="${checkedCount} of ${count} checked to buy">${checkedCount}/${count}</b></summary>
         <div class="constructed-shell-list">${group.map((card) => shellPurchaseRow(card, current, variantId, purchasedAsSingles)).join("")}</div>
       </details>`;
     }).join("");
@@ -1657,74 +1981,14 @@
   }
 
   function evaluateDeckCompliance(plan, current, cardOverride = null) {
-    const cards = new Map();
-    const normalize = Lineup.normalizeName;
-    const addCard = (item, source) => {
-      const key = normalize(item.name);
-      const existing = cards.get(key);
-      const quantity = Number(item.quantity || 1);
-      if (existing) existing.quantity += quantity;
-      else cards.set(key, {
-        name: item.name,
-        quantity,
-        typeLine: item.typeLine || cardMetadata[itemKey(item)]?.typeLine || "Unknown",
-        tags: item.tags || [],
-        isCommander: Boolean(item.isCommander || (item.tags || []).some((tag) => String(tag).toLowerCase() === "commander")),
-        gameChanger: Boolean(item.gameChanger),
-        isFlexibleSlot: Boolean(item.isFlexibleSlot),
-        colorIdentity: item.colorIdentity || cardMetadata[itemKey(item)]?.colorIdentity || [],
-        commanderLegal: item.legalities?.commander || (item.commanderLegal === false ? "not_legal" : "legal"),
-        source
-      });
-    };
     const literalCards = cardOverride || selectedDeckCards(plan, current);
-    literalCards.forEach((item) => addCard(item, item.lineupKind === "shell" ? "starting shell" : "selected option"));
-
-    const included = Array.from(cards.values());
-    const total = included.reduce((sum, card) => sum + card.quantity, 0);
-    const types = {};
-    const typeBucket = (line) => ["Land", "Creature", "Artifact", "Enchantment", "Instant", "Sorcery", "Planeswalker", "Battle"].find((type) => String(line).includes(type)) || "Other";
-    included.forEach((card) => {
-      const bucket = typeBucket(card.typeLine);
-      types[bucket] = (types[bucket] || 0) + card.quantity;
-    });
+    // Filter unresolved entries against the literal list so a caller-supplied cardOverride is
+    // respected; recomputing selectedEntries here would silently ignore it.
     const literalIds = new Set(literalCards.map((card) => card.id));
-    const common = Lineup.unresolvedEntries(plan)
+    const baseIssues = Lineup.unresolvedEntries(plan)
       .filter((entry) => literalIds.has(entry.id))
       .map((entry) => ({card: entry.item.name, rule: `Replacement slot could not be resolved: ${entry.item.replaces || "no cut named"}.`, detail: "Choose an exact starting-shell card for this slot."}));
-    if (total !== 100) common.push({card: "Deck list", rule: `Commander requires exactly 100 cards; this selection contains ${total}.`, detail: total < 100 ? `Add or restore ${100 - total} card${100 - total === 1 ? "" : "s"}.` : `Cut ${total - 100} card${total - 100 === 1 ? "" : "s"}.`});
-    const commanders = included.reduce((sum, card) => sum + (card.isCommander ? card.quantity : 0), 0);
-    if (commanders !== 1) common.push({card: "Commander slot", rule: `Exactly one commander is expected; ${commanders} are identified in the modeled list.`, detail: "Confirm the commander and partner/background configuration."});
-    included.filter((card) => card.quantity > 1 && !card.isFlexibleSlot && !/\bBasic Land\b/i.test(card.typeLine) && !BASIC_LANDS.has(normalize(card.name))).forEach((card) => common.push({card: card.name, rule: `Singleton rule: ${card.quantity} copies are modeled.`, detail: "Only basic lands and cards with explicit exceptions may repeat."}));
-    const commander = included.find((card) => card.isCommander);
-    const commanderIdentity = new Set((commander?.colorIdentity || []).map((color) => String(color).toUpperCase()));
-    included.filter((card) => card.commanderLegal !== "legal").forEach((card) => common.push({card: card.name, rule: "This card is not Commander legal.", detail: "Replace it with a Commander-legal card."}));
-    included.filter((card) => (card.colorIdentity || []).some((color) => !commanderIdentity.has(String(color).toUpperCase()))).forEach((card) => common.push({card: card.name, rule: "Color identity falls outside the commander's colors.", detail: "Choose a card whose full color identity fits the commander."}));
-
-    const selectedGameChangers = included.filter((card) => card.gameChanger);
-    const tagsFor = (card) => (card.tags || []).map((tag) => String(tag).toLowerCase()).join(" ");
-    const massLand = included.filter((card) => /mass land|land destruction/.test(tagsFor(card)));
-    const extraTurns = included.filter((card) => /extra turn|turn loop/.test(tagsFor(card)));
-    const combos = included.filter((card) => /infinite combo|two.card combo/.test(tagsFor(card)));
-    const includedNames = new Set(included.map((card) => normalize(card.name)));
-    const earlyPairs = TIER3_EARLY_COMBO_PAIRS.filter((pair) => pair.every((name) => includedNames.has(normalize(name))));
-    const tier2 = [...common];
-    selectedGameChangers.forEach((card) => tier2.push({card: card.name, rule: "Tier 2 permits no Game Changers.", detail: "Remove it or evaluate the deck for Tier 3."}));
-    combos.forEach((card) => tier2.push({card: card.name, rule: "Tier 2 permits no intentional two-card infinite combo.", detail: "Remove the combo piece or use a higher tier."}));
-    massLand.forEach((card) => tier2.push({card: card.name, rule: "Tier 2 permits no mass land denial.", detail: "Replace this effect."}));
-    extraTurns.forEach((card) => tier2.push({card: card.name, rule: "Tier 2 should not chain or loop extra turns.", detail: "Keep extra-turn effects sparse and non-repeatable."}));
-    earlyPairs.forEach((pair) => tier2.push({card: pair.join(" + "), rule: "Tier 2 permits no intentional two-card combo package.", detail: "Remove one of these paired pieces."}));
-    const tier3 = [...common];
-    if (selectedGameChangers.length > 3) selectedGameChangers.forEach((card) => tier3.push({card: card.name, rule: `Tier 3 allows up to three Game Changers; ${selectedGameChangers.length} are selected.`, detail: "Remove Game Changers until no more than three remain."}));
-    included.filter((card) => /early combo/.test(tagsFor(card))).forEach((card) => tier3.push({card: card.name, rule: "Tier 3 permits no intentional early-game two-card infinite combo.", detail: "Remove or slow the combo."}));
-    earlyPairs.forEach((pair) => tier3.push({card: pair.join(" + "), rule: "Tier 3 permits no intentional early-game two-card combo package.", detail: "Remove one of these paired pieces."}));
-    massLand.forEach((card) => tier3.push({card: card.name, rule: "Tier 3 permits no mass land denial.", detail: "Replace this effect."}));
-    extraTurns.forEach((card) => tier3.push({card: card.name, rule: "Tier 3 should not chain or loop extra turns.", detail: "Keep extra-turn effects sparse and non-repeatable."}));
-    const lands = types.Land || 0;
-    const compositionWarnings = [];
-    if (lands < 33) compositionWarnings.push(`${lands} lands is below the usual 33–42 starting range; review ramp, curve, and MDFCs before play.`);
-    if (lands > 42) compositionWarnings.push(`${lands} lands is above the usual 33–42 starting range; confirm the deck's land-matters plan needs it.`);
-    return {cards: included, total, types, tier2, tier3, compositionWarnings, selectedGameChangers};
+    return Compliance.evaluateCardList(literalCards, {baseIssues, resolveMeta: (item) => cardMetadata[itemKey(item)] || {}});
   }
 
   function openComplianceDetail(variant, result, tier) {
@@ -1742,6 +2006,297 @@
     dialog.showModal();
   }
 
+  // ---------------------------------------------------------------------------
+  // Simulation
+  //
+  // No games are played in the browser and no API is called. The dialog builds a
+  // request for the deck, hands over the one command that runs the loop on this
+  // machine, watches sim/status.json while it runs, and applies the result as an
+  // overlay when it is done. Served from anywhere but localhost it degrades to
+  // instructions plus a file picker for the result.
+  // ---------------------------------------------------------------------------
+  const SIM_STATUS_PATH = "sim/status.json";
+  const SIM_POLL_MS = 2000;
+  let simDialogVariant = null;
+  let simPollTimer = null;
+  let simResult = null;
+  let simStatus = null;
+
+  const isLocalHost = () => ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname);
+
+  function simCards(variant) {
+    const plan = buyCatalog.plans[variant.id];
+    if (!plan) return [];
+    const current = Lineup.defaultSelection(plan);
+    return Lineup.selectedEntries(plan, current).map((entry) => {
+      const meta = cardMetadata[itemKey(entry.item)] || {};
+      return {
+        name: entry.item.name,
+        quantity: Math.max(1, Number(entry.item.quantity || 1)),
+        isCommander: Boolean(entry.item.isCommander),
+        typeLine: entry.item.typeLine || meta.typeLine || "",
+        manaCost: entry.item.manaCost || meta.manaCost || "",
+        oracleText: entry.item.oracleText || meta.oracleText || "",
+        colorIdentity: entry.item.colorIdentity || meta.colorIdentity || [],
+        commanderLegal: entry.item.commanderLegal !== false,
+        gameChanger: Boolean(entry.item.gameChanger),
+        price: Number(entry.item.price ?? meta.price ?? 0),
+        tags: entry.item.tags || []
+      };
+    });
+  }
+
+  function buildSimRequest(variant) {
+    const cards = simCards(variant);
+    const commander = cards.find((card) => card.isCommander);
+    const compliance = Compliance.evaluateCardList(cards.map((card) => ({...card, tags: [...(card.tags || []), ...Compliance.deriveComplianceTags(card)]})));
+    const lands = compliance.types.Land || 0;
+    return {
+      request: {
+        schemaVersion: 1,
+        id: `sim-${variant.id}-${new Date().toISOString().replace(/[-:]/g, "").replace(/\..+/, "").replace("T", "-")}`,
+        variantId: variant.id,
+        deckId: variant.deckId,
+        source: variant.isCustom ? "generated-tuned-build" : "baked-tuned-build",
+        stage: "Tuned",
+        createdAt: new Date().toISOString(),
+        name: variant.name,
+        commander: commander?.name || variant.commander,
+        table: "mixed-pod",
+        cards,
+        constraints: {
+          colorIdentity: commander?.colorIdentity || [],
+          tier: 3,
+          landFloor: Math.min(33, lands),
+          landCeiling: Math.max(42, lands),
+          maxSwapInPriceUsd: 60,
+          mustKeep: [commander?.name].filter(Boolean),
+          themes: variant.mechanics || [],
+          budgetTotalUsd: 0
+        }
+      },
+      compliance
+    };
+  }
+
+  function simMetricRow(label, baseline, final, format) {
+    const before = format(baseline);
+    const after = final === null || final === undefined ? "" : format(final);
+    return `<div class="sim-metric"><span>${esc(label)}</span><strong>${esc(before)}${after && after !== before ? ` → ${after}` : ""}</strong></div>`;
+  }
+
+  function simResultMarkup(result) {
+    const percent = (value) => `${(Number(value || 0) * 100).toFixed(1)}%`;
+    const turn = (value) => (value ? Number(value).toFixed(1) : "no wins");
+    const verdictClass = result.verdict === "confirmed" ? "is-confirmed" : result.verdict === "not-confirmed" ? "is-rejected" : "is-tentative";
+    const changes = (result.netChanges || []).filter((change) => change.out || change.in);
+    return `
+      <section class="sim-verdict ${verdictClass}">
+        <b>${esc(result.verdict.replace(/-/g, " "))}</b>
+        <p>${esc(result.recommendation || "")}</p>
+      </section>
+      <section class="sim-metrics">
+        <h3>Measured on ${result.holdoutMetrics?.games || result.finalMetrics.games} games the optimizer never saw</h3>
+        <div class="sim-metric-grid">
+          ${simMetricRow("Win rate", result.holdoutBaselineMetrics?.winRate ?? result.baselineMetrics?.winRate, result.holdoutMetrics?.winRate, percent)}
+          ${simMetricRow("Score", result.holdoutBaselineMetrics?.score ?? result.baselineMetrics?.score, result.holdoutMetrics?.score, (value) => Number(value || 0).toFixed(1))}
+          ${simMetricRow("Average win turn", result.baselineMetrics?.avgWinTurn, result.finalMetrics?.avgWinTurn, turn)}
+          ${simMetricRow("Mana screw", result.baselineMetrics?.screwPct, result.finalMetrics?.screwPct, percent)}
+          ${simMetricRow("Flood", result.baselineMetrics?.floodPct, result.finalMetrics?.floodPct, percent)}
+          ${simMetricRow("Answer in hand, turns 3-7", result.baselineMetrics?.interactionAvailability, result.finalMetrics?.interactionAvailability, percent)}
+          ${simMetricRow("Fun/participation", result.baselineMetrics?.funScore, result.finalMetrics?.funScore, percent)}
+        </div>
+      </section>
+      ${changes.length ? `<section class="sim-changes"><h3>${changes.length} change${changes.length === 1 ? "" : "s"} to make</h3><ol>${changes.map((change) => `
+        <li>
+          <div class="sim-change-line"><b class="sim-out">Cut</b><span>${esc(change.out || "—")}</span></div>
+          <div class="sim-change-line"><b class="sim-in">Add</b><span>${esc(change.in || "—")}</span><em>${change.priceDelta >= 0 ? "+" : ""}$${Number(change.priceDelta || 0).toFixed(2)}</em></div>
+          ${change.outStat ? `<small>Measured: cast in ${(change.outStat.castRate * 100).toFixed(0)}% of the games it was drawn, stranded in hand in ${(change.outStat.deadRate * 100).toFixed(0)}%, average cast on turn ${change.outStat.avgCastTurn.toFixed(1)}, and the games it was cast in were won ${(change.outStat.winRateWhenCast * 100).toFixed(0)}% of the time against a deck average of ${(result.baselineMetrics.winRate * 100).toFixed(0)}%.</small>` : ""}
+        </li>`).join("")}</ol></section>` : `<section class="sim-changes"><h3>No changes</h3><p>Nothing in the candidate pool beat the current list.</p></section>`}
+      ${result.gapsRemaining?.length ? `<section class="sim-gaps"><h3>What is still weak</h3><ul>${result.gapsRemaining.map((gap) => `<li><b>${esc(gap.key.replace(/-/g, " "))}</b><span>${esc(gap.observed)}</span><small>Target: ${esc(gap.target)}</small></li>`).join("")}</ul></section>` : ""}
+      <section class="sim-compliance ${result.compliance?.tier3Clean ? "passes" : "has-issues"}">
+        <h3>${result.compliance?.tier3Clean ? "The optimized list is still Tier 3 legal" : "The optimized list has compliance problems"}</h3>
+        <p>${result.compliance?.total} cards · ${result.compliance?.lands} lands · ${result.compliance?.gameChangers} Game Changers${result.compliance?.problems?.length ? ` · ${esc(result.compliance.problems.join(" "))}` : ""}</p>
+      </section>
+      <div class="sim-apply-row">
+        <button class="primary-button" type="button" data-sim-apply ${result.compliance?.tier3Clean ? "" : "disabled"}>Update variant</button>
+        ${Custom.overlayFor(customStore, simDialogVariant?.id) ? `<button class="secondary-button" type="button" data-sim-revert>Revert to the original list</button>` : ""}
+      </div>
+      <details class="sim-method"><summary>How this was measured, and what it cannot see</summary>
+        <p>Each list played ${result.gamesPerIteration} games per iteration against three opponent seats sampled from ${esc(result.table)}, then both the original and the optimized list played ${result.holdoutMetrics?.games || 0} more on seeds the optimizer never tuned against. Only that second comparison decides the verdict.</p>
+        <ul>${(result.simplifications || []).map((line) => `<li>${esc(line)}</li>`).join("")}</ul>
+      </details>`;
+  }
+
+  function simStatusMarkup() {
+    if (!isLocalHost()) return "";
+    if (!simStatus || simStatus.state === "idle") return `<p class="sim-status is-idle">${icon("○")}<span>No local run detected yet.</span></p>`;
+    const mine = simStatus.variantId === simDialogVariant?.id;
+    const progress = simStatus.gamesPerIteration
+      ? Math.round((Number(simStatus.gamesCompletedThisIteration || 0) / Number(simStatus.gamesPerIteration)) * 100)
+      : 0;
+    return `<p class="sim-status is-${esc(simStatus.state)}">${icon(simStatus.state === "done" ? "✓" : "◐")}<span><b>${esc(simStatus.state.replace(/-/g, " "))}${mine ? "" : ` · ${esc(simStatus.variantId || "another deck")}`}</b>${esc(simStatus.message || "")}</span></p>
+      ${simStatus.state === "simulating" ? `<div class="sim-progress"><i style="width:${progress}%"></i></div>` : ""}
+      ${simStatus.bestScore ? `<p class="sim-status-detail">Best score so far ${Number(simStatus.bestScore).toFixed(1)} at iteration ${simStatus.bestIteration} · ${simStatus.totalGamesUsed} of ${simStatus.maxTotalSimulations} games used</p>` : ""}`;
+  }
+
+  function renderSimDialog() {
+    const variant = simDialogVariant;
+    if (!variant) return;
+    const {request, compliance} = buildSimRequest(variant);
+    const command = variant.isCustom
+      ? `node tools/sim/run-sim.mjs --request sim/requests/${request.id}.json --init --auto`
+      : `node tools/sim/run-batch.mjs --variants ${variant.id}`;
+    const overlay = Custom.overlayFor(customStore, variant.id);
+    $("#sim-dialog-kicker").textContent = `Deck ${variant.deckId} · Tuned build · ${compliance.total} cards`;
+    $("#sim-dialog-title").textContent = variant.name;
+    $("#sim-dialog-body").innerHTML = `
+      <section class="sim-deck-summary">
+        <div><span>Commander</span><strong>${esc(request.commander)}</strong></div>
+        <div><span>Lands</span><strong>${compliance.types.Land || 0}</strong></div>
+        <div><span>Game Changers</span><strong>${compliance.selectedGameChangers.length}/3</strong></div>
+        <div><span>Tier 3</span><strong>${compliance.tier3.length ? `${compliance.tier3.length} issue${compliance.tier3.length === 1 ? "" : "s"}` : "clean"}</strong></div>
+      </section>
+      ${overlay ? `<p class="sim-overlay-note">${icon("✓")}<span>This variant is already showing an optimized list applied on ${esc(String(overlay.appliedAt).slice(0, 10) || "an earlier run")}.</span></p>` : ""}
+      <section class="sim-run">
+        <h3>Run it on your computer</h3>
+        <p>The games run locally in your checkout of this repository. Nothing is sent anywhere, and no API key is needed.</p>
+        ${variant.isCustom ? `<p>This is a generated deck, so download its request file into <code>sim/requests/</code> first.</p><button class="secondary-button" type="button" data-sim-download>Download the request file</button>` : ""}
+        <div class="sim-command"><code>${esc(command)}</code><button class="secondary-button" type="button" data-sim-copy>Copy</button></div>
+        <p class="sim-command-note">Or let a local Claude session drive the loop and pick the swaps: <code>claude "/simulate-deck ${esc(variant.isCustom ? `sim/requests/${request.id}.json` : variant.id)}"</code></p>
+        ${simStatusMarkup()}
+        ${isLocalHost() ? "" : `<p class="sim-status is-remote">${icon("!")}<span>This page is not being served from your computer, so it cannot watch a run. Run the command in your checkout, then load the result file it writes.</span></p>`}
+        <label class="sim-load"><span>Load a result file</span><input type="file" accept="application/json" data-sim-load></label>
+      </section>
+      <div id="sim-result-body">${simResult ? simResultMarkup(simResult) : ""}</div>`;
+
+    $("[data-sim-copy]", $("#sim-dialog-body"))?.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(command);
+        showToast("Command copied.");
+      } catch (error) {
+        showToast("Copy failed — select the command and copy it manually.");
+      }
+    });
+    $("[data-sim-download]", $("#sim-dialog-body"))?.addEventListener("click", () => {
+      const blob = new Blob([JSON.stringify(request, null, 2)], {type: "application/json"});
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `${request.id}.json`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+    });
+    $("[data-sim-load]", $("#sim-dialog-body"))?.addEventListener("change", (event) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          adoptSimResult(JSON.parse(String(reader.result)));
+        } catch (error) {
+          showToast("That file is not a simulation result.");
+        }
+      };
+      reader.readAsText(file);
+    });
+    $("[data-sim-apply]", $("#sim-dialog-body"))?.addEventListener("click", () => applySimResult());
+    $("[data-sim-revert]", $("#sim-dialog-body"))?.addEventListener("click", () => {
+      Custom.removeOverlay(customStore, variant.id);
+      forgetVariantSelection(variant.id);
+      persistCustom("Reverted to the original list.");
+      remergeCustom();
+      saveState();
+      renderCompare();
+      renderChoose();
+      renderSimDialog();
+    });
+  }
+
+  function adoptSimResult(result) {
+    // simResultMarkup dereferences result.verdict and result.finalMetrics.games
+    // unguarded, so a file missing either must be rejected here rather than
+    // thrown mid-render -- this is the picker's advertised fallback path for a
+    // browser that couldn't run the simulation itself, so it sees real files.
+    if (!result?.finalCards?.length || typeof result.verdict !== "string" || !result.finalMetrics) {
+      showToast("That result file is missing required fields.");
+      return;
+    }
+    if (result.variantId && simDialogVariant && result.variantId !== simDialogVariant.id) {
+      showToast(`That result is for ${result.variantId}, not this variant.`);
+      return;
+    }
+    simResult = result;
+    renderSimDialog();
+  }
+
+  function applySimResult() {
+    if (!simResult || !simDialogVariant) return;
+    const cards = simResult.finalCards.map((card) => {
+      const meta = cardMetadata[itemKey(card)] || {};
+      return {...meta, ...card};
+    });
+    Custom.putCards(customStore, cards);
+    const applied = Custom.applyResultAsOverlay(customStore, simDialogVariant.id, {...simResult, finalCards: cards, appliedAt: new Date().toISOString()});
+    if (!applied.applied) {
+      showToast(applied.reason === "not-100" ? `That result has ${applied.total} cards, not 100.` : "That result could not be applied.");
+      return;
+    }
+    // The optimized list is a new set of shell ids, so any stored selection for
+    // this variant points at cards that no longer exist. Dropping it lets the
+    // buy state rebuild from the new plan's defaults.
+    forgetVariantSelection(simDialogVariant.id);
+    persistCustom(`${simDialogVariant.name} updated to the optimized list.`);
+    remergeCustom();
+    saveState();
+    renderCompare();
+    renderChoose();
+    renderSimDialog();
+  }
+
+  function forgetVariantSelection(variantId) {
+    delete state.buySelections[variantId];
+    delete state.lineupHistory[variantId];
+  }
+
+  async function pollSimStatus() {
+    if (!isLocalHost() || !simDialogVariant) return;
+    try {
+      const response = await fetch(`${SIM_STATUS_PATH}?t=${Date.now()}`, {cache: "no-store"});
+      if (!response.ok) return;
+      const status = await response.json();
+      const changed = JSON.stringify(status) !== JSON.stringify(simStatus);
+      simStatus = status;
+      if (status.state === "done" && status.resultPath && status.variantId === simDialogVariant.id && simResult?.id !== status.requestId) {
+        const resultResponse = await fetch(`${status.resultPath}?t=${Date.now()}`, {cache: "no-store"});
+        if (resultResponse.ok) {
+          adoptSimResult(await resultResponse.json());
+          return;
+        }
+      }
+      if (changed) renderSimDialog();
+    } catch (error) {
+      // A missing status file just means no run has been started here.
+    }
+  }
+
+  function openSimDialog(variant) {
+    simDialogVariant = variant;
+    simResult = null;
+    simStatus = null;
+    renderSimDialog();
+    $("#sim-dialog").showModal();
+    pollSimStatus();
+    clearInterval(simPollTimer);
+    simPollTimer = setInterval(pollSimStatus, SIM_POLL_MS);
+  }
+
+  function closeSimDialog() {
+    clearInterval(simPollTimer);
+    simPollTimer = null;
+    simDialogVariant = null;
+    $("#sim-dialog").close();
+  }
+
   function enhancementImpact(item) {
     const power = Number(item?.brief?.power);
     const evidence = [item?.whyPrimary, item?.whyOptional, item?.why, item?.purpose, item?.brief?.fit, item?.brief?.value]
@@ -1756,6 +2311,80 @@
       return {key: "good", label: "Good improvement"};
     }
     return {key: "moderate", label: "Moderate or situational improvement"};
+  }
+
+  // The fun-ladder importer (Round 1) copied the optimizer's swap-evidence sentence into every
+  // text field it had -- purpose, why, whyPrimary, and brief.fit all read identically, e.g.
+  // "Replaces X (adds Y). Evidence: the card it replaces was cast in 81% of the games it was
+  // drawn...". That is genuinely useful -- it is exactly "what is lost by the card it
+  // replaces" -- but it is a paragraph, not a row caption, and it can surface on any ladder
+  // rung's purpose field, not only Fun. Detect it so the row can fall back to something short
+  // and the detail sheet can give it a section of its own instead.
+  function isSwapEvidenceText(text) {
+    return /^Replaces .+\.\s*Evidence:/i.test(String(text || "").trim());
+  }
+
+  function swapEvidenceSentence(item) {
+    return [item?.purpose, item?.why, item?.whyPrimary, item?.brief?.fit].find((value) => isSwapEvidenceText(value)) || "";
+  }
+
+  function truncateSentence(text, maxLen = 92) {
+    const trimmed = String(text || "").trim();
+    if (trimmed.length <= maxLen) return trimmed;
+    const cut = trimmed.slice(0, maxLen);
+    const lastStop = Math.max(cut.lastIndexOf(". "), cut.lastIndexOf("; "));
+    const lastSpace = cut.lastIndexOf(" ");
+    const boundary = lastStop > maxLen * 0.4 ? lastStop + 1 : lastSpace > 0 ? lastSpace : maxLen;
+    return `${cut.slice(0, boundary).trim()}…`;
+  }
+
+  // A mechanical read of the card's own printed text -- never a claim that this specific card
+  // was measured as fun, since no per-card fun rating exists anywhere in this app's data. Order
+  // matters: first match wins. Most fun-ladder cards are solid, unglamorous synergy pieces with
+  // no single standout mechanic, and for those this returns null on purpose rather than forcing
+  // a sentence -- the same "real signal or nothing" discipline the rest of Buy Picks follows.
+  const FUN_SIGNALS = [
+    [/flip (a|two|three) coins?|randomly/i, "Coin-flip or randomized effect — pure chaos value"],
+    [/extra turn|additional turn/i, "Grants an extra turn — a genuine table reaction"],
+    [/each player (may |draws|creates|gains|untaps)/i, "Group-hug effect — gives the whole table something, you included"],
+    [/that many (plus one|more)[^.]*counters?[^.]*instead|doubl(e|ing)[^.]*counter/i, "Counters snowball — every counter you'd add doubles up"],
+    [/untap all (permanents|creatures|lands)/i, "Extra-untap engine — a real \"wait, what?\" moment at the table"],
+    [/pay \d+ life rather than pay|cast this spell without paying its mana cost/i, "Free-cast trick — sidesteps its own cost in the right spot"],
+    [/choose (two|three)\b|•.*•.*•/i, "Highly modal — plays differently almost every game"],
+    [/\{X\}/, "Scales with mana — a genuine X-spell payoff"],
+    [/create[s]? (a|two|three|four|five|\d+)[^.]*token/i, "Builds an instant board of tokens"],
+    [/^i — /im, "Saga-style storytelling — plays out like a mini-story each game"],
+    [/\b(Convoke|Delve|Escape|Cascade|Suspend)\b/, "Cheats around its own cost — feels great when it works"],
+    [/Double strike/, "Double strike finisher — big, satisfying damage swings"],
+    [/fights? (up to \w+ )?(target |another )?creature|fight each other/i, "Creature duel — decisive, tactile combat trick"],
+    [/copy target|create a copy/i, "Copy effect — doubles the fun of whatever it targets"]
+  ];
+  function deriveFunSignal(item) {
+    const text = [item.oracleText, item.manaCost, (item.keywords || []).join(" ")].filter(Boolean).join(" ");
+    return FUN_SIGNALS.find(([pattern]) => pattern.test(text))?.[1] || null;
+  }
+
+  // The very short, kind-specific line the request asked for directly on the Buy Picks row:
+  // Fun Tuned/Fun Max say what makes the card fun, Enhance rungs say how it helps performance,
+  // Max rungs say how it maximizes Tier 3. Returns null (render nothing) rather than a filler
+  // sentence when the underlying data has nothing to say -- swap-evidence paragraphs are
+  // deliberately excluded here since they belong in the detail sheet, not a one-line caption.
+  function microFitLine(item, kind) {
+    if (kind === "enhance" || kind === "enhance2" || kind === "upgrade") {
+      const raw = usefulCardCopy(item.whyOptional, item.brief?.value);
+      if (!raw || isSwapEvidenceText(raw)) return null;
+      return {kind: "perf", label: "Improves performance", text: truncateSentence(raw)};
+    }
+    if (kind === "max" || kind === "max2") {
+      const raw = usefulCardCopy(item.maxReason, item.brief?.fit);
+      if (!raw || isSwapEvidenceText(raw)) return null;
+      return {kind: "max", label: "Maximizes Tier 3", text: truncateSentence(raw)};
+    }
+    if (kind === "funTuned" || kind === "funMax") {
+      const signal = deriveFunSignal(item);
+      return signal ? {kind: "fun", label: "What makes this fun", text: signal} : null;
+    }
+    return null;
   }
 
   // Base/Tuned/Maxxed are offered on every deck; the -2/Fun/Alt rungs only appear once the
@@ -2018,7 +2647,7 @@
       key: "enhance", title: "Enhance", glyph: "+",
       tabs: [
         {key: "enhance", label: "Enhance", kinds: ["enhance", "upgrade"], preset: "enhance", build: "Enhance",
-         note: "Role-preserving improvements and owned substitutions on top of Tuned · $15 or less."}
+         note: "Role-preserving improvements and owned substitutions on top of Tuned · $20 or less."}
       ]
     },
     {
@@ -2067,7 +2696,11 @@
     const checked = (current[kind] || []).includes(item.id);
     const impact = (kind === "enhance" || kind === "enhance2") ? enhancementImpact(item) : null;
     const replacement = item.replaces ? `<span class="replacement-line"><b${impact ? ` class="replace-impact impact-${impact.key}" title="${esc(impact.label)}" aria-label="Replaces — ${esc(impact.label)}"` : ""}>Replaces</b><span>${esc(item.replaces)}</span></span>` : "";
-    const summaryCopy = kind === "max" ? (item.maxReason || item.purpose || item.typeLine || "") : (item.purpose || item.typeLine || "");
+    // A swap-evidence paragraph ("Replaces X. Evidence: cast in 81% of games...") can land in
+    // purpose/maxReason on any ladder rung; it belongs in the detail sheet, not this row.
+    const rawSummary = kind === "max" ? (item.maxReason || item.purpose || item.typeLine || "") : (item.purpose || item.typeLine || "");
+    const summaryCopy = isSwapEvidenceText(rawSummary) ? (item.typeLine || "") : rawSummary;
+    const microFit = microFitLine(item, kind);
     return `<div class="buy-item" ${buyRowAttributes(item, checked)}>
       <input type="checkbox" ${checked ? "checked" : ""} data-buy-kind="${esc(kind)}" data-item-id="${esc(item.id)}" data-variant-id="${esc(variantId)}" aria-label="Include ${esc(item.name)} in the final deck">
       <button class="buy-item-detail" type="button" data-item-kind="${esc(kind)}" data-item-id="${esc(item.id)}">
@@ -2076,6 +2709,7 @@
           <span class="buy-item-eyebrow"><span class="kind-label ${esc(kind)}">${esc(KIND_LABELS[kind] || kind)}</span>${item.tags?.includes("alt") ? `<span class="alt-mini">◇ Alt</span>` : ""}${item.ownedExtra ? `<span class="owned-mini">✓ Owned</span>` : ""}${item.temporaryUntil ? `<span class="temp-mini">Temp until ${esc(item.temporaryUntil)}</span>` : ""}${item.gameChanger ? `<span class="gc-mini">✦ Game Changer</span>` : ""}</span>
           <strong>${esc(item.name)}${item.quantity > 1 ? ` ×${item.quantity}` : ""}</strong>
           ${replacement}<small>${esc(summaryCopy)}</small>
+          ${microFit ? `<small class="micro-fit micro-fit-${microFit.kind}"><b>${esc(microFit.label)}:</b> ${esc(microFit.text)}</small>` : ""}
         </span>
       </button>
       <span class="price">${money(cardPriceBounds(item, cardMetadata[itemKey(item)] || {}).price)}</span>
@@ -2094,13 +2728,17 @@
     const tabItems = (tab) => tab.kinds.flatMap((kind) => kindItems(plan, kind).map((item) => ({item, kind})));
     const checkedCount = (tab) => tabItems(tab).filter(({item, kind}) => (current[kind] || []).includes(item.id)).length;
     const groupChecked = tabs.reduce((sum, tab) => sum + checkedCount(tab), 0);
+    // Shopping progress has to be legible while the group is shut: the per-tab counts in the
+    // tab strip only exist once it is open. Tabs within a group draw on disjoint kinds, so
+    // summing them double-counts nothing.
+    const groupTotal = tabs.reduce((sum, tab) => sum + tabItems(tab).length, 0);
     const rows = tabItems(active);
     const allChecked = rows.length > 0 && rows.every(({item, kind}) => (current[kind] || []).includes(item.id));
     const anyChecked = rows.some(({item, kind}) => (current[kind] || []).includes(item.id));
     const sim = simulationSummary?.builds?.[variantId]?.[active.build];
     return `<details class="buy-section ladder-group${deemphasized ? " is-deemphasized" : ""}" data-ui-key="buygrp-${esc(variantId)}-${esc(group.key)}" data-ladder-group="${esc(group.key)}">
       <summary>
-        <span>${icon(group.glyph)}${esc(group.title)} <b>${groupChecked}</b></span>
+        <span>${icon(group.glyph)}${esc(group.title)} <b title="${groupChecked} of ${groupTotal} checked to buy">${groupChecked}/${groupTotal}</b></span>
         <small>${esc(active.note)}</small>
         <span></span>
         <span class="section-expander" aria-hidden="true"></span>
@@ -2273,6 +2911,16 @@
       </div>
       ${detailEffect("What this card does", standaloneCardEffect(item))}
       ${cardBuildMembershipMarkup(plan, item)}
+      ${(kind === "funTuned" || kind === "funMax") ? (() => {
+        const signal = deriveFunSignal(item);
+        return signal
+          ? detailText("What makes this fun", signal)
+          : `<section class="detail-block"><h3>What makes this fun</h3><p>No single standout mechanic here -- this card earned its spot because the fun-weighted simulation measured the deck playing better with it in, not because of a flashy effect on the card itself.</p></section>`;
+      })() : ""}
+      ${(() => {
+        const evidence = swapEvidenceSentence(item);
+        return evidence ? `<section class="detail-block swap-evidence-block"><h3>What the card it replaces gave up</h3><p>${esc(evidence)}</p></section>` : "";
+      })()}
       ${detailText("Why it is optional", usefulCardCopy(item.whyOptional))}
       ${detailText("Alternate rationale", usefulCardCopy(item.alternateReason))}
       ${detailText("Tradeoff", usefulCardCopy(item.alternateTradeoff))}
@@ -2475,7 +3123,7 @@
   }
 
   function itemKey(item) {
-    return item.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    return String(item?.name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   }
 
   function cardImageCandidates(item, metadata = cardMetadata[itemKey(item)] || {}) {
@@ -3060,7 +3708,10 @@
     const extraCount = ["lineup", "source", "category", "cardType", "color", "price", "rarity", "location", ...(hasAltData ? ["alt"] : [])].filter((field) => filters[field] !== "all").length + (filters.sort !== "default" ? 1 : 0);
     const subgroupOptions = LIVE_GROUP_OPTIONS.filter(([value]) => value === "none" || value !== filters.groupBy);
     return `<div class="live-toolbar" data-live-toolbar="${esc(variant.id)}">
-      <input class="search-input" type="search" value="${esc(filters.query)}" placeholder="Search this deck…" data-ui-focus="live-search-${esc(variant.id)}" aria-label="Search ${esc(variant.name)}">
+      <div class="live-toolbar-head">
+        <input class="search-input" type="search" value="${esc(filters.query)}" placeholder="Search this deck…" data-ui-focus="live-search-${esc(variant.id)}" aria-label="Search ${esc(variant.name)}">
+        <button class="secondary-button live-simulate" type="button" data-live-simulate="${esc(variant.id)}">${icon("⟳")}<span>Simulate</span></button>
+      </div>
       <div class="live-toolbar-row">
         <div class="status-chips" aria-label="Bought status">
           <button class="filter-chip${filters.status === "all" ? " is-active" : ""}" data-live-status="all">All</button>
@@ -3570,6 +4221,7 @@
         saveState();
         renderLiveResults(details, cards, filters, variant);
       });
+      $('[data-live-simulate]', details)?.addEventListener("click", () => openSimDialog(variant));
       $$('[data-live-status]', details).forEach((button) => button.addEventListener("click", () => {
         filters.status = button.dataset.liveStatus;
         saveState();
@@ -4203,8 +4855,17 @@
   }
 
   const TOUR_STEPS = {
+    choose: [
+      {view: "choose", selectors: [".main-tabs"], title: "Step 0 · build a deck of your own", copy: "Choose is optional. The curated six are ready to compare without it — this step is here when you want variants for a deck nobody has researched for you yet."},
+      {view: "choose", selectors: [".choose-slot:first-of-type .choose-form", ".choose-slot:first-of-type"], title: "Describe what you want to play", copy: "Colors, mechanics, play style, budget and a preferred set are all optional. Give as much or as little as you like; anything you leave blank is inferred from the rest."},
+      {view: "choose", selectors: [".choose-slot:first-of-type .choose-themes", ".choose-slot:first-of-type"], title: "Mechanics drive the card pool", copy: "The mechanics you tick decide which searches run and how strongly a card's own text has to match. They also become the mechanic filters on this deck in Compare."},
+      {view: "choose", selectors: ['.choose-slot:first-of-type [data-choose-input="commanderLink"]', ".choose-slot:first-of-type"], title: "Or just paste a commander", copy: "A TCGplayer link to the commander you want is enough on its own — affiliate links included. The commander's color identity then locks every card that can be picked."},
+      {view: "choose", selectors: ["[data-choose-seeds]", ".choose-slot:first-of-type"], title: "Cards you already want", copy: "Paste one TCGplayer link per line and those cards are forced into every variant. Links that resolve to nothing, or to a card outside the color identity, are reported instead of silently dropped."},
+      {view: "choose", selectors: ['.choose-slot:first-of-type [data-choose-input="variantCount"]', ".choose-slot:first-of-type"], title: "How many approaches", copy: "Each variant is a different strategy lens on the same commander — synergy, budget, resilience, tempo and spice — and each is charged for reusing cards the earlier ones took, so they stay genuinely different lists."},
+      {view: "choose", selectors: ["[data-choose-generate]", ".choose-slot:first-of-type"], title: "Generate, then compare", copy: "Generation reads live Scryfall data and checks every stage against the Tier 3 rules before saving. Finished variants join Compare above the curated decks and flow through Buy Picks, Shop List and Live Decks like any other."}
+    ],
     compare: [
-      {view: "compare", selectors: [".main-tabs"], title: "Four steps, one flow", copy: "Compare picks the deck, Buy Picks builds the exact 100, Shop List becomes your vendor-floor checklist, and Live Decks tracks what you own and what it cost."},
+      {view: "compare", selectors: [".main-tabs"], title: "Five steps, one flow", copy: "Choose builds decks of your own, Compare picks the deck, Buy Picks builds the exact 100, Shop List becomes your vendor-floor checklist, and Live Decks tracks what you own and what it cost."},
       {view: "compare", selectors: [".page-intro"], title: "Choose one variant per deck role", copy: "There are six deck roles and five competing approaches inside each. You pick one per role; the counter tracks how many are locked in."},
       {view: "compare", selectors: [".compare-filter-panel"], title: "Narrow the field", copy: "Search by commander, tag, or text, and filter by mechanic or play style. Only matching variants stay visible inside each row."},
       {view: "compare", selectors: ["[data-compare-filter='profileStage']", ".compare-filter-panel"], title: "Base, Tuned, or Maxed", copy: "Score stage changes which build every card on the page is describing: out-of-the-box, after the core purchases, or pushed to the legal top of Tier 3."},
@@ -4228,7 +4889,7 @@
       {view: "buy", selectors: [".deck-compliance", ".empty-state"], title: "Keep the rules close", copy: "Tier 2, Tier 3, and the exact card count stay compact. Expand the check for composition and detailed issues."},
       {view: "buy", selectors: [".plan-analysis", ".empty-state"], title: "Read the full strategy", copy: "The analysis keeps how to play, buy order, bracket reasoning, stretch cards, and top-of-bracket options in one place."},
       {view: "buy", selectors: [".starting-shell", ".empty-state"], title: "Inspect the 100-card foundation", copy: "The commander never collapses. The other 99 cards are nested by type so you can work one group at a time."},
-      {view: "buy", selectors: [".buy-section", ".empty-state"], title: "Try one-for-one changes", copy: "Enhance options are role-preserving choices at $15 or less. Maxxed choices are classified by Tier 3 capability rather than cost, and each names the card it replaces."},
+      {view: "buy", selectors: [".buy-section", ".empty-state"], title: "Try one-for-one changes", copy: "Enhance options are role-preserving choices at $20 or less. Maxxed choices are classified by Tier 3 capability rather than cost, and each names the card it replaces."},
       {view: "shop", selectors: [".shop-toolbar", ".page-intro", ".empty-state"], title: "Step 3 · where these checks land", copy: "Saving your buys sends every checked purchase to the Shop List, deduplicated across all six decks and sorted for a vendor floor."},
       {view: "live", selectors: [".live-decks", ".page-intro"], title: "Step 4 · and where they end up", copy: "Once bought, each card appears in Live Decks, where you record what you paid and watch the deck's total cost and readiness update."}
     ],
@@ -4305,7 +4966,7 @@
     if (!tourState) return;
     const step = tourState.steps[tourState.index];
     switchView(step.view, false);
-    const tourName = ({compare: "Compare", buy: "Buy Picks", shop: "Shop List", live: "Live Decks"})[tourState.origin] || "Guided";
+    const tourName = ({choose: "Choose", compare: "Compare", buy: "Buy Picks", shop: "Shop List", live: "Live Decks"})[tourState.origin] || "Guided";
     $("#tour-progress").textContent = `${tourName} tour · ${tourState.index + 1} of ${tourState.steps.length}`;
     $("#tour-title").textContent = step.title;
     $("#tour-copy").innerHTML = `<p>${esc(step.copy)}</p>`;
@@ -4340,14 +5001,125 @@
     if (!window.confirm("Reset all deck picks, comments, optional buys, filters, and Bought checkmarks on this device?")) return;
     state = blankState();
     saveState("Picks reset");
+    const generated = Custom.activeSlots(customStore).length;
+    if (generated && window.confirm(`Also delete the ${generated} generated deck placeholder${generated === 1 ? "" : "s"} built on the Choose step? This cannot be undone.`)) {
+      customStore = Custom.clear(localStorage);
+      remergeCustom();
+      renderChoose();
+    }
     renderCompare();
     switchView("compare");
     showToast("Your local picks were reset.");
   }
 
+  // Cross-device state portability. localStorage never leaves one browser, so moving picks to a
+  // phone or another machine otherwise means redoing every choice by hand. This bundles the two
+  // things this app actually persists -- the main `state` object and, separately, whatever
+  // Custom decks were built on the Choose step -- into one file, versioned independently of
+  // either's own internal schema so the export wrapper itself can evolve later.
+  const STATE_EXPORT_SCHEMA = 1;
+
+  function serializeStatePayload() {
+    let custom = null;
+    try {
+      const raw = localStorage.getItem(Custom.STORAGE_KEY);
+      custom = raw ? JSON.parse(raw) : null;
+    } catch (error) {
+      custom = null;
+    }
+    return {app: "mtg-deck-matrix", exportSchema: STATE_EXPORT_SCHEMA, exportedAt: new Date().toISOString(), state, custom};
+  }
+
+  function exportFullState() {
+    const payload = serializeStatePayload();
+    const stamp = new Date().toISOString().slice(0, 10);
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `mtg-deck-matrix-state-${stamp}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    showToast("Exported your full state — Compare picks, Buy Picks, Shop List, and Live Decks.");
+  }
+
+  function isPlausibleStatePayload(payload) {
+    return Boolean(payload && typeof payload === "object" && payload.state && typeof payload.state === "object" && typeof payload.state.compareSelections === "object");
+  }
+
+  // Import and Load Active both replace, rather than merge, everything this browser has saved.
+  // A full-state file has no natural merge rule -- unlike the purchase-history CSV import, which
+  // is scoped to ownership marks alone and is safely additive, this payload covers every
+  // selection, filter, and toggle in the app, so combining two independent copies field-by-field
+  // would silently pick a winner the user never chose. Replacing is at least predictable, and
+  // the caller is required to confirm first since there is no way back once applied except
+  // re-importing an earlier export.
+  function applyStatePayload(payload, sourceLabel) {
+    state = {...blankState(), ...payload.state};
+    try {
+      if (payload.custom) localStorage.setItem(Custom.STORAGE_KEY, JSON.stringify(payload.custom));
+      else localStorage.removeItem(Custom.STORAGE_KEY);
+    } catch (error) {
+      // Best-effort; the app still functions on the baked catalog alone.
+    }
+    customStore = Custom.load(localStorage);
+    remergeCustom();
+    persistCustom();
+    saveState(`Loaded state${sourceLabel ? ` from ${sourceLabel}` : ""}`);
+    renderCompare();
+    renderChoose();
+    switchView("compare");
+    showToast(`Loaded state${sourceLabel ? ` from ${sourceLabel}` : ""}.`);
+  }
+
+  function importStateFromFile(file) {
+    const reader = new FileReader();
+    reader.onerror = () => showToast("That file could not be read.");
+    reader.onload = () => {
+      let payload;
+      try {
+        payload = JSON.parse(String(reader.result || ""));
+      } catch (error) {
+        showToast("That file is not valid JSON.");
+        return;
+      }
+      if (!isPlausibleStatePayload(payload)) {
+        showToast("That file does not look like a Deck Matrix state export.");
+        return;
+      }
+      if (!window.confirm("Load this file? It replaces every selection, buy, Shop List mark, and Live Decks change currently saved on this device.")) return;
+      applyStatePayload(payload, file.name);
+    };
+    reader.readAsText(file);
+  }
+
+  async function loadActiveState() {
+    let payload;
+    try {
+      const response = await fetch("data/active-state.json", {cache: "no-store"});
+      if (!response.ok) {
+        showToast(response.status === 404 ? "No active-state.json is committed to the repo yet." : `Could not load active state (${response.status}).`);
+        return;
+      }
+      payload = await response.json();
+    } catch (error) {
+      showToast("Could not load the active state file.");
+      return;
+    }
+    if (!isPlausibleStatePayload(payload)) {
+      showToast("data/active-state.json does not look like a Deck Matrix state export.");
+      return;
+    }
+    const when = payload.exportedAt ? ` (exported ${new Date(payload.exportedAt).toLocaleString()})` : "";
+    if (!window.confirm(`Load the active state from the repository${when}? It replaces every selection, buy, Shop List mark, and Live Decks change currently saved on this device.`)) return;
+    applyStatePayload(payload, "the repository");
+  }
+
   async function init() {
     try {
-      [catalog, buyCatalog, simulationSummary] = await Promise.all([
+      [bakedCatalog, bakedBuyCatalog, simulationSummary] = await Promise.all([
         fetch("data/variants.json", {cache: "no-store"}).then((response) => {
           if (!response.ok) throw new Error("Variant catalog did not load");
           return response.json();
@@ -4361,7 +5133,10 @@
         // extra if this is unavailable, same as any other optional metadata in this app.
         fetch("data/simulation-summary.json", {cache: "no-store"}).then((response) => response.ok ? response.json() : null).catch(() => null)
       ]);
+      customStore = Custom.load(localStorage);
+      remergeCustom();
       state = loadState();
+      pruneMissingSelections();
       migrateCheckedSelections();
       migrateOwnedExtras();
       migrateBoughtQuantities();
@@ -4372,6 +5147,13 @@
       $$(".main-tab").forEach((button) => button.addEventListener("click", () => switchView(button.dataset.view)));
       $("#reset-button").addEventListener("click", resetState);
       $("#tour-button").addEventListener("click", startTour);
+      $("#export-state-button").addEventListener("click", exportFullState);
+      $("#import-state-input").addEventListener("change", (event) => {
+        const file = event.target.files?.[0];
+        event.target.value = "";
+        if (file) importStateFromFile(file);
+      });
+      $("#load-active-button").addEventListener("click", loadActiveState);
       $("#tour-close").addEventListener("click", closeTour);
       $("#tour-back").addEventListener("click", () => moveTour(-1));
       $("#tour-next").addEventListener("click", () => moveTour(1));
@@ -4390,6 +5172,14 @@
       $("#compliance-dialog-close").addEventListener("click", () => $("#compliance-dialog").close());
       $("#compliance-dialog").addEventListener("click", (event) => {
         if (event.target === event.currentTarget) event.currentTarget.close();
+      });
+      $("#sim-dialog-close").addEventListener("click", closeSimDialog);
+      $("#sim-dialog").addEventListener("click", (event) => {
+        if (event.target === event.currentTarget) closeSimDialog();
+      });
+      $("#sim-dialog").addEventListener("close", () => {
+        clearInterval(simPollTimer);
+        simPollTimer = null;
       });
     } catch (error) {
       $("#view-compare").innerHTML = `<div class="empty-state"><h3>Could not start the Deck Matrix</h3><p>${esc(error.message)}</p></div>`;

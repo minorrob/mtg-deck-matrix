@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 2,
+  "gamesPerIteration": 2000,
+  "batchSize": 500,
+  "maxIterations": 12,
+  "maxSwapsPerIteration": 5,
+  "maxTotalSimulations": 60000,
+  "maxLedgerSimulations": 5000000,
+  "maxWallClockMs": 300000,
+  "convergence": {
+    "minScoreGain": 0.75,
+    "patience": 3
+  },
+  "maxTurns": 16,
+  "mulligans": 3,
+  "seed": 20260823,
+  "landFloor": 33,
+  "landCeiling": 42,
+  "maxSwapInPriceUsd": 60,
+  "table": "mixed-pod",
+  "scoreWeights": {
+    "winRate": 0.35,
+    "screw": 0.15,
+    "flood": 0.1,
+    "commander": 0.1,
+    "interaction": 0.1,
+    "clock": 0.1,
+    "deadCards": 0.05,
+    "fun": 0.05
+  },
+  "funRungScoreWeights": {
+    "winRate": 0.3,
+    "screw": 0.15,
+    "flood": 0.1,
+    "commander": 0.1,
+    "interaction": 0.1,
+    "clock": 0.1,
+    "deadCards": 0.05,
+    "fun": 0.1
+  },
+  "targets": {
+    "screwPct": 0.1,
+    "floodPct": 0.08,
+    "interactionAvailability": 0.4,
+    "deadCardsAtT8": 2,
+    "commanderTurnAllowance": 1,
+    "winTurnMargin": 0.5
+  },
+  "roleFloors": {
+    "ramp": 8,
+    "draw": 8,
+    "removal": 5,
+    "wipe": 2,
+    "protection": 2,
+    "land": 33
+  },
+  "maxRecommendedChanges": 8,
+  "cutEvidence": {
+    "maxCastRate": 0.9,
+    "minDeadRate": 0.1,
+    "lateCastTurn": 6,
+    "lateCmc": 6,
+    "liftVeto": 0.06
+  },
+  "minAcceptGain": 1.0,
+  "holdoutGames": 5000
+}
