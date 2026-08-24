@@ -535,6 +535,25 @@
     return haystack.includes(query);
   }
 
+  // Only six of the thirty variants were ever put through the optimizer, and only three of
+  // those have an alternative commander explored. Compare is where a variant gets chosen, so
+  // it should say up front which extra builds come with that choice rather than leaving it to
+  // be discovered two screens later in Buy Picks. Colors match the Buy Picks ladder families.
+  function variantDataBadges(variant) {
+    const plan = buyCatalog?.plans?.[variant.id];
+    if (!plan) return "";
+    const badges = [
+      plan.tuned2?.length ? ["tuned2", "Tuned-2"] : null,
+      plan.max2?.length ? ["max2", "Maxxed-2"] : null,
+      plan.funTuned?.length ? ["funTuned", "Fun"] : null,
+      plan.altTuned?.some((item) => item.isCommander) ? ["altTuned", "◇ Alt"] : null
+    ].filter(Boolean);
+    if (!badges.length) return "";
+    return `<div class="variant-data-badges" aria-label="Extra builds available for this variant">
+      ${badges.map(([kind, label]) => `<span class="kind-label ${esc(kind)}">${esc(label)}</span>`).join("")}
+    </div>`;
+  }
+
   function makeVariantCard(variant, rankStage = 2) {
     const stage = rankStage;
     const selected = state.compareSelections[variant.deckId] === variant.id;
@@ -564,6 +583,7 @@
           <h3>${esc(variant.name)}</h3>
           <p class="commander">${esc(variant.commander)}<br><span class="mana">${manaCostHtml(variant.manaCost)}<span>${esc(variant.typeLine)}</span></span></p>
           <div class="mechanic-tags">${(variant.mechanics || []).slice(0,3).map((mechanic) => `<span>${esc(mechanic)}</span>`).join("")}</div>
+          ${variantDataBadges(variant)}
         </div>
       </div>
       ${commanderCompareMarkup(variant, stage)}
@@ -1264,6 +1284,9 @@
     }));
     const selectAllShell = $('[data-select-shell-all]', body);
     if (selectAllShell) {
+      // The shell heading is a <summary> now, so a click on its select-all would also
+      // collapse the section it belongs to.
+      selectAllShell.closest("label")?.addEventListener("click", (event) => event.stopPropagation());
       const shellIds = (plan.startingShell || []).filter((card) => !card.isFlexibleSlot).map((card) => card.id);
       const selectedShell = new Set(current.shell || []);
       const partiallySelected = selectedShell.size > 0 && shellIds.some((id) => !selectedShell.has(id));
@@ -1546,13 +1569,19 @@
     }).join("");
     const selectedCount = named.filter((card) => (current.shell || []).includes(card.id)).reduce((sum, card) => sum + Number(card.quantity || 1), 0);
     const allSelected = named.every((card) => (current.shell || []).includes(card.id));
-    return `<section class="starting-shell constructed-shell">
-      <div class="starting-shell-heading"><span>${icon("▣")}<strong>Starting Shell${purchasedAsSingles ? " · Singles to buy" : " · Final-deck choices"}</strong><b>${selectedCount}/${namedCount}</b></span><label class="shell-select-all"><input type="checkbox" data-select-shell-all ${allSelected ? "checked" : ""}><span>Select all</span></label></div>
+    // A deck is always 100 slots including its commander, so count it here even on the decks
+    // whose commander lives in the separate switcher above -- reading "82/99" against a
+    // 100-card deck invites the question of which card went missing. Exactly one commander is
+    // active at all times (the slot-group model guarantees it), so this is always +1/+1.
+    const shownSelected = selectedCount + (hasAltCommander ? 1 : 0);
+    const shownTotal = namedCount + (hasAltCommander ? 1 : 0);
+    return `<details class="starting-shell constructed-shell" data-ui-key="shell-${esc(variantId)}" open>
+      <summary class="starting-shell-heading"><span>${icon("▣")}<strong>Starting Shell${purchasedAsSingles ? " · Singles to buy" : " · Final-deck choices"}</strong><b>${shownSelected}/${shownTotal}</b></span><small>${hasAltCommander ? "Includes the commander, chosen above" : "The cards this deck starts from"}</small><label class="shell-select-all"><input type="checkbox" data-select-shell-all ${allSelected ? "checked" : ""}><span>Select all</span></label><span class="section-expander" aria-hidden="true"></span></summary>
       <p class="shell-source-note constructed-shell-note">${purchasedAsSingles ? "Check the individual cards you need; selected cards flow to the Shop List." : "These cards came in the starting product. Keep checked only the cards you want in the finished 100; no individual price is required."}</p>
       ${hasAltCommander ? "" : `<div class="constructed-shell-commander"><h4>Commander</h4>${shellPurchaseRow(commander, current, variantId, purchasedAsSingles)}</div>`}
       <div class="constructed-shell-groups">${typeGroups}</div>
       ${flexibleCount ? `<p class="shell-flex-note"><b>${flexibleCount} modeled slot${flexibleCount === 1 ? "" : "s"} still need exact card names.</b> They preserve the 100-card compliance model but are not added to the Shop List until a card is named.</p>` : ""}
-    </section>`;
+    </details>`;
   }
 
   function startingShellSection(variant, plan, current, variantId) {

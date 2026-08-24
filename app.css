@@ -139,6 +139,8 @@ main { width: min(1180px, 100%); min-height: 70vh; margin: 0 auto; padding: 18px
 .commander-preview-deltas ul { margin: 0; padding-left: 16px; color: #3d4b44; font-size: 10px; line-height: 1.5; }
 .commander-preview-deltas em { color: var(--muted); font-style: normal; }
 .commander-preview-note { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.4; }
+.variant-data-badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 7px; }
+.variant-data-badges .kind-label { margin-right: 0; box-shadow: 0 1px 2px rgba(0,0,0,.22); }
 .variant-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 4px; }
 .tag { padding: 3px 6px; border-radius: 999px; color: #4e350d; background: var(--gold-soft); font-size: 9px; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; }
 .pick-control { position: absolute; top: 6px; right: 6px; z-index: 2; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border-radius: 0; color: #17382d; background: transparent; box-shadow: none; cursor: pointer; }
@@ -282,6 +284,8 @@ main { width: min(1180px, 100%); min-height: 70vh; margin: 0 auto; padding: 18px
 .starting-shell-heading strong { font-size: 14px; }
 .starting-shell-heading b { padding: 2px 6px; border-radius: 999px; color: #fff; background: var(--forest-2); font-size: 9px; }
 .starting-shell-heading small { color: var(--muted); font-size: 9px; }
+/* The shell heading is a <summary> now; the shared grid above governs its layout. */
+.constructed-shell > summary.starting-shell-heading { display: grid; }
 .shell-commander { width: 100%; display: grid; grid-template-columns: 70px minmax(0,1fr); gap: 10px; align-items: center; padding: 10px; border: 0; border-top: 1px solid #e5dcc9; color: inherit; background: linear-gradient(110deg,#edf3ee,#fffdf8); font-family: inherit; text-align: left; cursor: pointer; }
 .shell-commander:hover, .shell-commander:focus-visible, .shell-card-row:hover, .shell-card-row:focus-visible, .shell-land-tile:hover, .shell-land-tile:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; background-color: #f6edd6; }
 .shell-commander > img { width: 70px; aspect-ratio: .715; object-fit: cover; border-radius: 7px; box-shadow: 0 5px 12px rgba(0,0,0,.18); }
@@ -315,8 +319,7 @@ main { width: min(1180px, 100%); min-height: 70vh; margin: 0 auto; padding: 18px
 .shell-land-tile img, .shell-land-tile .shell-placeholder { width: 62px; height: 87px; object-fit: cover; border-radius: 6px; }
 .shell-land-tile > div > b { position: absolute; right: -5px; bottom: -4px; padding: 3px 5px; border-radius: 999px; color: #fff; background: var(--forest); font-size: 9px; }
 .shell-land-tile > span { display: block; margin-top: 6px; overflow: hidden; color: var(--forest); font-size: 9px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
-.constructed-shell .starting-shell-heading { flex-wrap: wrap; }
-.shell-select-all { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 5px 9px; border: 1px solid #9d8d6a; border-radius: 9px; color: var(--forest); background: #fffdf8; font-size: 10px; font-weight: 900; cursor: pointer; }
+.shell-select-all { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 5px 9px; border: 1px solid #9d8d6a; border-radius: 9px; color: var(--forest); background: #fffdf8; font-size: 10px; font-weight: 900; white-space: nowrap; cursor: pointer; }
 .shell-select-all input { width: 20px; height: 20px; margin: 0; accent-color: var(--forest-2); }
 .constructed-shell-note { margin: 9px 10px 3px; }
 .constructed-shell-commander { margin: 8px 10px; border: 1px solid #d7c9aa; border-radius: 9px; overflow: clip; }
@@ -369,12 +372,18 @@ main { width: min(1180px, 100%); min-height: 70vh; margin: 0 auto; padding: 18px
 .legacy-plan th, .legacy-plan td { padding: 6px; border-bottom: 1px solid #e1d8c4; text-align: left; vertical-align: top; }
 .buy-section { border: 1px solid #ded4bd; border-radius: 12px; overflow: clip; background: #fffdf8; }
 .buy-section + .buy-section { margin-top: 10px; }
-.buy-section > summary { min-height: 48px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 11px; list-style: none; color: var(--forest); background: #f3eddf; font-size: 14px; font-weight: 900; cursor: pointer; }
-.buy-section > summary::-webkit-details-marker { display: none; }
-.buy-section > summary span { display: flex; align-items: center; gap: 6px; }
-.buy-section > summary .ui-icon { width: 20px; height: 20px; font-size: 9px; }
-.buy-section > summary b { min-width: 21px; padding: 2px 6px; border-radius: 999px; color: #fff; background: var(--forest-2); font-size: 10px; text-align: center; }
-.buy-section > summary small { color: var(--muted); font-size: 10px; font-weight: 650; text-align: right; }
+/* One shared grid for every collapsible section header (Starting Shell and each buy section),
+   so the explanatory note starts at the same x down the whole column instead of being ragged
+   right-aligned, and the select-all sits immediately beside the expander. */
+.buy-section > summary, .constructed-shell > summary { min-height: 48px; display: grid; grid-template-columns: minmax(170px, auto) minmax(0, 1fr) auto auto; align-items: center; gap: 8px 12px; padding: 9px 11px; list-style: none; color: var(--forest); background: #f3eddf; font-size: 14px; font-weight: 900; cursor: pointer; }
+.buy-section > summary::-webkit-details-marker, .constructed-shell > summary::-webkit-details-marker { display: none; }
+.buy-section > summary > span:first-child, .constructed-shell > summary > span:first-child { display: flex; align-items: center; gap: 6px; }
+.buy-section > summary .ui-icon, .constructed-shell > summary .ui-icon { width: 20px; height: 20px; font-size: 9px; }
+.buy-section > summary b, .constructed-shell > summary b { min-width: 21px; padding: 2px 6px; border-radius: 999px; color: #fff; background: var(--forest-2); font-size: 10px; text-align: center; }
+.buy-section > summary small, .constructed-shell > summary small { min-width: 0; color: var(--muted); font-size: 10px; font-weight: 650; line-height: 1.35; text-align: left; }
+.section-expander { display: grid; place-items: center; width: 18px; font-size: 16px; font-weight: 900; }
+.section-expander::after { content: "＋"; }
+details[open] > summary .section-expander::after { content: "−"; }
 .buy-section > summary::after { content: "＋"; font-size: 16px; }
 .buy-section[open] > summary::after { content: "−"; }
 .buy-item { display: grid; grid-template-columns: 25px minmax(0,1fr) auto; gap: 8px; align-items: center; padding: 9px 7px; border-top: 1px solid #e8e0cf; }
@@ -696,6 +705,10 @@ footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px;
   .banner-art { left: 48%; opacity: .55; }
   .compare-filter-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .compare-search { grid-column: 1/-1; }
+  /* Narrow cards can't hold four columns; drop the note to its own full-width row so it stays
+     left-aligned and readable rather than squeezing to a few characters per line. */
+  .buy-section > summary, .constructed-shell > summary { grid-template-columns: minmax(0,1fr) auto auto; }
+  .buy-section > summary small, .constructed-shell > summary small { grid-row: 2; grid-column: 1 / -1; }
   .compliance-heading { align-items: flex-start; flex-wrap: wrap; }
   .compliance-inline { width: 100%; justify-content: flex-start; margin: 0; }
   .compliance-status, .card-count-status { flex: 1; justify-content: center; }
