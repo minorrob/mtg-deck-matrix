@@ -4549,7 +4549,7 @@
       <div class="shop-toolbar">
         <input class="search-input" id="shop-search" type="search" value="${esc(filters.query)}" placeholder="Search cards…" aria-label="Search shopping list">
         <div class="quick-filter-row" aria-label="Bought status">
-          <div class="status-chips">${filterChip("status", "all", "All", filters)}${filterChip("status", "need", "Need", filters)}${filterChip("status", "found", "Bought", filters)}</div>
+          <div class="status-chips" aria-label="Status">${filterChip("status", "all", "All", filters)}${filterChip("status", "need", "To Buy", filters)}${filterChip("status", "found", "Bought", filters)}</div>
           <details class="more-filters">
             <summary>Filters${activeFilterCount ? ` <b>${activeFilterCount}</b>` : ""}</summary>
             <div class="filter-select-grid">
@@ -4639,8 +4639,55 @@
       }));
     }
     $("#shop-actions", root).innerHTML = allItems.length
-      ? `<div class="action-row"><button class="secondary-button" data-go="buy">Adjust Buy Picks</button></div>`
+      ? `<div class="action-row"><button class="secondary-button" data-go="buy">Adjust Buy Picks</button><button type="button" class="secondary-button" id="shop-export"${visible.length ? "" : " disabled"}>Export ${state.shopFilters.status === "found" ? "owned list" : state.shopFilters.status === "need" ? "shopping list" : "list"}</button></div>`
       : `<div class="empty-state"><h3>Your field list is empty</h3><p>Select deck variants and save their Buy Picks first.</p><button class="primary-button" data-go="buy">Open Buy Picks</button></div>`;
+    $("#shop-export", root)?.addEventListener("click", () => exportShopList(visible));
+  }
+
+  // Exports exactly what the Shop List is showing -- the current status filter, every other
+  // filter, and the current grouping -- and nothing from any other screen. Two real uses:
+  // filtered to Bought it is a spreadsheet backup of what you own; filtered to To Buy it is a
+  // list to print and carry, so it carries a check-off column and stays narrow enough to read.
+  function exportShopList(visible) {
+    const groupBy = state.shopFilters.groupBy;
+    const groups = groupBy === "none" ? [{label: "", items: visible}] : groupShopItems(visible, groupBy);
+    const header = ["Check", "Group", "Card", "Qty", "Type", "Color", "Target", "Ceiling", "Paid", "Status"];
+    const rows = [header];
+    let count = 0;
+    groups.forEach((group) => {
+      group.items.forEach((item) => {
+        const metadata = cardMetadata[itemKey(item)] || {};
+        const bounds = cardPriceBounds(item, metadata);
+        const bought = shopItemComplete(item);
+        const paid = committedPrice(item);
+        rows.push([
+          "[ ]",
+          group.label,
+          item.name,
+          String(item.quantity || 1),
+          item.typeLine || metadata.typeLine || "",
+          (metadata.colorIdentity || item.colorIdentity || []).join("") || "C",
+          bounds.price != null ? bounds.price.toFixed(2) : "",
+          bounds.ceiling != null ? bounds.ceiling.toFixed(2) : "",
+          paid === null ? "" : paid.toFixed(2),
+          bought ? "Bought" : "To Buy"
+        ]);
+        count += 1;
+      });
+    });
+    if (!count) return showToast("Nothing to export with the current filters.");
+    const csv = rows.map((row) => row.map(csvCell).join(",")).join("\r\n");
+    const label = state.shopFilters.status === "found" ? "owned" : state.shopFilters.status === "need" ? "to-buy" : "shop-list";
+    const blob = new Blob([`﻿${csv}`], {type: "text/csv;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `mtg-${label}-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    showToast(`Exported ${count} card${count === 1 ? "" : "s"} to CSV.`);
   }
 
   function groupShopItems(items, mode) {
