@@ -405,8 +405,6 @@ main { width: min(1560px, 100%); min-height: 70vh; margin: 0 auto; padding: 18px
 .section-expander { display: grid; place-items: center; width: 18px; font-size: 16px; font-weight: 900; }
 .section-expander::after { content: "＋"; }
 details[open] > summary .section-expander::after { content: "−"; }
-.buy-section > summary::after { content: "＋"; font-size: 16px; }
-.buy-section[open] > summary::after { content: "−"; }
 .buy-item { display: grid; grid-template-columns: 25px minmax(0,1fr) auto; gap: 8px; align-items: center; padding: 9px 7px; border-top: 1px solid #e8e0cf; }
 .buy-item:first-of-type { border-top: 0; }
 .buy-item input { width: 20px; height: 20px; accent-color: var(--forest-2); }
