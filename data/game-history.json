@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "compiledAt": "2026-08-24T20:18:07.034Z",
+  "sourceFiles": [],
+  "totals": {
+    "games": 0,
+    "variantsPlayed": 0,
+    "winRate": 0,
+    "avgPodFun": null,
+    "avgMyFun": null
+  },
+  "variants": {},
+  "games": []
+}
