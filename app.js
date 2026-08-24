@@ -295,7 +295,11 @@
       liveTransfers: {},
       liveSalvage: {},
       liveActive: {},
-      liveActiveSeed: {}
+      liveActiveSeed: {},
+      // Games played at a real table. Written here on the night, exported as JSON,
+      // committed to the repo, and compiled into a running history -- the loop
+      // that lets simulated predictions be checked against what actually happened.
+      gameLog: []
     };
   }
 
@@ -325,7 +329,8 @@
           liveTransfers: saved.liveTransfers || {},
           liveSalvage: saved.liveSalvage || {},
           liveActive: saved.liveActive || {},
-          liveActiveSeed: saved.liveActiveSeed || {}
+          liveActiveSeed: saved.liveActiveSeed || {},
+          gameLog: Array.isArray(saved.gameLog) ? saved.gameLog : []
         };
       }
     } catch (_) {}
@@ -464,6 +469,7 @@
     if (view === "buy") renderBuy();
     if (view === "shop") renderShop();
     if (view === "live") renderLiveDecks();
+    if (view === "log") renderGameLog();
     if (focus) {
       window.scrollTo({top: 0, behavior: "smooth"});
       $("#app").focus({preventScroll: true});
@@ -4207,6 +4213,180 @@
     }
     if (filters.groupBy === "none") appendLiveRows(results, visible, variant);
     else appendLiveGroups(results, visible, filters.groupBy, filters.subgroupBy, variant);
+  }
+
+
+  // ---------------------------------------------------------------------------
+  // Game Log -- what actually happened at a real table, entered between games.
+  // Everything here is one-tap or one-number: the whole point is that a game can
+  // be recorded in well under a minute while the next one is being shuffled.
+  // Entries live in this browser until exported; the export is committed to the
+  // repo, where an action compiles it into the running history.
+  // ---------------------------------------------------------------------------
+  const LOG_SCHEMA = 1;
+
+  function loggableDecks() {
+    const picked = selectedVariants().map((variant) => ({id: variant.id, label: `${variant.name}`}));
+    if (picked.length) return picked;
+    return (bakedCatalog?.variants || []).map((variant) => ({id: variant.id, label: variant.name}));
+  }
+
+  function renderGameLog() {
+    withUiState("#view-log", renderGameLogView);
+  }
+
+  function renderGameLogView() {
+    const root = $("#view-log");
+    const log = state.gameLog || [];
+    const decks = loggableDecks();
+    const today = new Date().toISOString().slice(0, 10);
+    const draft = gameLogDraft;
+    root.innerHTML = `
+      <div class="page-intro">
+        <div>
+          <h2 id="log-title">Game Log</h2>
+          <p>Record a game the moment it ends. Everything is one tap or one number, and entries stay on this device until you export them.</p>
+        </div>
+        <div class="selection-meter"><strong>${log.length}</strong><span>games logged</span></div>
+      </div>
+      <section class="log-entry-card">
+        <div class="log-row">
+          <label class="log-field log-field-wide"><span>Deck played</span>
+            <select data-log="variantId">${decks.map((deck) => `<option value="${esc(deck.id)}" ${draft.variantId === deck.id ? "selected" : ""}>${esc(deck.label)}</option>`).join("")}</select>
+          </label>
+          <label class="log-field"><span>Date</span><input type="date" value="${esc(draft.playedOn || today)}" data-log="playedOn"></label>
+        </div>
+        <div class="log-row">
+          <span class="log-field"><span>Result</span>
+            <span class="log-chips">${[["win", "Won"], ["loss", "Lost"], ["draw", "Draw"]].map(([value, label]) => `<button type="button" class="filter-chip${draft.result === value ? " is-active" : ""}" data-log-result="${value}">${label}</button>`).join("")}</span>
+          </span>
+          <span class="log-field"><span>Players</span>
+            <span class="log-chips">${[3, 4, 5, 6].map((n) => `<button type="button" class="filter-chip${Number(draft.players) === n ? " is-active" : ""}" data-log-players="${n}">${n}</button>`).join("")}</span>
+          </span>
+        </div>
+        <div class="log-row">
+          <label class="log-field"><span>Turns</span><input type="number" min="1" max="40" inputmode="numeric" value="${esc(draft.turns ?? "")}" placeholder="—" data-log="turns"></label>
+          <label class="log-field"><span>You knocked out</span><input type="number" min="0" max="5" inputmode="numeric" value="${esc(draft.knockouts ?? "")}" placeholder="0" data-log="knockouts"></label>
+          <label class="log-field"><span>Knocked out on turn</span><input type="number" min="0" max="40" inputmode="numeric" value="${esc(draft.eliminatedTurn ?? "")}" placeholder="survived" data-log="eliminatedTurn"></label>
+        </div>
+        <div class="log-row">
+          <span class="log-field log-field-wide"><span>How was it for the table?</span>
+            <span class="log-chips">${[[1, "Rough"], [2, "Meh"], [3, "Fine"], [4, "Good"], [5, "Great"]].map(([value, label]) => `<button type="button" class="filter-chip${Number(draft.podFun) === value ? " is-active" : ""}" data-log-podfun="${value}">${label}</button>`).join("")}</span>
+          </span>
+          <span class="log-field log-field-wide"><span>How was it for you?</span>
+            <span class="log-chips">${[[1, "Rough"], [2, "Meh"], [3, "Fine"], [4, "Good"], [5, "Great"]].map(([value, label]) => `<button type="button" class="filter-chip${Number(draft.myFun) === value ? " is-active" : ""}" data-log-myfun="${value}">${label}</button>`).join("")}</span>
+          </span>
+        </div>
+        <label class="log-field log-field-wide"><span>Note <small>optional</small></span><input type="text" maxlength="180" value="${esc(draft.note || "")}" placeholder="What decided it?" data-log="note"></label>
+        <div class="log-actions">
+          <button class="primary-button" type="button" data-log-save${decks.length ? "" : " disabled"}>Save game</button>
+          <button class="text-button" type="button" data-log-clear>Clear</button>
+        </div>
+      </section>
+      <div class="log-list-head">
+        <h3>Logged games</h3>
+        <div class="action-row">
+          <button class="secondary-button" type="button" id="log-export"${log.length ? "" : " disabled"}>Export for the repo</button>
+        </div>
+      </div>
+      <div class="log-list">${log.length
+        ? [...log].reverse().map((entry) => gameLogRow(entry)).join("")
+        : `<div class="empty-state"><h3>No games logged yet</h3><p>Record one after your next game — it takes about fifteen seconds.</p></div>`}</div>`;
+
+    $$("[data-log]", root).forEach((field) => field.addEventListener("change", () => {
+      gameLogDraft[field.dataset.log] = field.value;
+    }));
+    const chip = (attr, key, numeric) => $$(`[data-log-${attr}]`, root).forEach((button) => button.addEventListener("click", () => {
+      const raw = button.dataset[`log${attr.charAt(0).toUpperCase()}${attr.slice(1)}`];
+      gameLogDraft[key] = numeric ? Number(raw) : raw;
+      renderGameLog();
+    }));
+    chip("result", "result", false);
+    chip("players", "players", true);
+    chip("podfun", "podFun", true);
+    chip("myfun", "myFun", true);
+
+    $("[data-log-save]", root)?.addEventListener("click", () => saveGameLogEntry());
+    $("[data-log-clear]", root)?.addEventListener("click", () => {
+      gameLogDraft = blankGameLogDraft();
+      renderGameLog();
+    });
+    $("#log-export", root)?.addEventListener("click", () => exportGameLog());
+    $$("[data-log-delete]", root).forEach((button) => button.addEventListener("click", () => {
+      const id = button.dataset.logDelete;
+      if (!window.confirm("Delete this logged game?")) return;
+      state.gameLog = (state.gameLog || []).filter((entry) => entry.id !== id);
+      saveState("Game removed from the log");
+      renderGameLog();
+    }));
+  }
+
+  function gameLogRow(entry) {
+    const variant = variantById(entry.variantId);
+    const resultClass = entry.result === "win" ? "is-win" : entry.result === "loss" ? "is-loss" : "";
+    return `<div class="log-row-card ${resultClass}">
+      <div class="log-row-main">
+        <strong>${esc(variant?.name || entry.variantId)}</strong>
+        <span>${esc(entry.playedOn)} · ${esc(entry.players)}-player · ${entry.turns ? `${esc(entry.turns)} turns` : "turns not noted"}</span>
+        ${entry.note ? `<small>${esc(entry.note)}</small>` : ""}
+      </div>
+      <div class="log-row-stats">
+        <span class="log-result">${entry.result === "win" ? "Won" : entry.result === "loss" ? "Lost" : "Draw"}</span>
+        <small>${esc(entry.knockouts ?? 0)} KO${Number(entry.knockouts) === 1 ? "" : "s"} · pod ${esc(entry.podFun ?? "—")}/5 · you ${esc(entry.myFun ?? "—")}/5</small>
+      </div>
+      <button type="button" class="text-button" data-log-delete="${esc(entry.id)}" aria-label="Delete this logged game">×</button>
+    </div>`;
+  }
+
+  function blankGameLogDraft() {
+    return {variantId: "", playedOn: "", result: "", players: 4, turns: "", knockouts: "", eliminatedTurn: "", podFun: 0, myFun: 0, note: ""};
+  }
+  let gameLogDraft = blankGameLogDraft();
+
+  function saveGameLogEntry() {
+    const decks = loggableDecks();
+    const variantId = gameLogDraft.variantId || decks[0]?.id;
+    if (!variantId) return showToast("Pick a deck in Compare first.");
+    if (!gameLogDraft.result) return showToast("Tap Won, Lost, or Draw first.");
+    const num = (value) => (value === "" || value === null || value === undefined ? null : Number(value));
+    const entry = {
+      id: `g-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+      schema: LOG_SCHEMA,
+      variantId,
+      playedOn: gameLogDraft.playedOn || new Date().toISOString().slice(0, 10),
+      result: gameLogDraft.result,
+      players: Number(gameLogDraft.players) || 4,
+      turns: num(gameLogDraft.turns),
+      knockouts: num(gameLogDraft.knockouts) ?? 0,
+      eliminatedTurn: num(gameLogDraft.eliminatedTurn),
+      podFun: Number(gameLogDraft.podFun) || null,
+      myFun: Number(gameLogDraft.myFun) || null,
+      note: String(gameLogDraft.note || "").trim(),
+      recordedAt: new Date().toISOString()
+    };
+    state.gameLog = [...(state.gameLog || []), entry];
+    // Keep the deck and date -- a night is usually several games with the same
+    // deck or at least the same table, so the next entry starts nearly filled in.
+    gameLogDraft = {...blankGameLogDraft(), variantId, playedOn: entry.playedOn, players: entry.players};
+    saveState("Game logged");
+    renderGameLog();
+    showToast(`Logged ${entry.result === "win" ? "a win" : entry.result === "loss" ? "a loss" : "a draw"}.`);
+  }
+
+  function exportGameLog() {
+    const log = state.gameLog || [];
+    if (!log.length) return showToast("Nothing logged yet.");
+    const payload = {schema: LOG_SCHEMA, exportedAt: new Date().toISOString(), games: log};
+    const blob = new Blob([`${JSON.stringify(payload, null, 2)}\n`], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `game-log-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    showToast(`Exported ${log.length} game${log.length === 1 ? "" : "s"} — commit it to data/game-logs/ to add it to your history.`);
   }
 
   function renderLiveDecks() {
