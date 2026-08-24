@@ -889,8 +889,28 @@
     return clamp01(idleNorm * 0.45 + survivorNorm * 0.3 + patienceNorm * 0.25);
   }
 
-  function compositeScore(metrics, weights = DEFAULT_WEIGHTS, targets = DEFAULT_TARGETS, commanderCmc = 4) {
-    const winRateNorm = Math.min(1, metrics.winRate / 0.5);
+  // Win rate is scored against a BAND, not maximized. A quarter of the games is
+  // a fair share of a four-player pod; below the floor the deck is too weak to
+  // enjoy, and above the ceiling you become the archenemy and the invitations
+  // stop. Full credit inside the band, a linear ramp up to it, and a decay above
+  // it that reaches OVERSHOOT_FLOOR at a 100% win rate -- still positive, since
+  // winning is not a failure, just no longer the thing being optimized.
+  const OVERSHOOT_FLOOR = 0.5;
+  function winRateBandNorm(winRate, band) {
+    const floor = Number(band?.floor);
+    const ceiling = Number(band?.ceiling);
+    // With no band configured, keep the original monotonic curve.
+    if (!Number.isFinite(floor) || !Number.isFinite(ceiling) || floor <= 0 || ceiling <= floor) {
+      return Math.min(1, winRate / 0.5);
+    }
+    if (winRate < floor) return clamp01(winRate / floor);
+    if (winRate <= ceiling) return 1;
+    const overshoot = (winRate - ceiling) / Math.max(0.01, 1 - ceiling);
+    return clamp01(1 - overshoot * (1 - OVERSHOOT_FLOOR));
+  }
+
+  function compositeScore(metrics, weights = DEFAULT_WEIGHTS, targets = DEFAULT_TARGETS, commanderCmc = 4, band = null) {
+    const winRateNorm = winRateBandNorm(metrics.winRate, band);
     const screwNorm = Math.max(0, 1 - metrics.screwPct / Math.max(0.01, targets.screwPct * 2));
     const floodNorm = Math.max(0, 1 - metrics.floodPct / Math.max(0.01, targets.floodPct * 2));
     const commanderNorm = metrics.avgCommanderTurn
@@ -986,7 +1006,13 @@
     const commanderCmc = deck.commander?.profile.cmc || 4;
     metrics.funScore = funScoreFor(metrics);
     metrics.podFunScore = podFunScoreFor(metrics);
-    metrics.score = compositeScore(metrics, config.scoreWeights || DEFAULT_WEIGHTS, config.targets || DEFAULT_TARGETS, commanderCmc);
+    metrics.score = compositeScore(metrics, config.scoreWeights || DEFAULT_WEIGHTS, config.targets || DEFAULT_TARGETS, commanderCmc, config.winRateBand || null);
+    // The deck's power under the performance vector, regardless of which
+    // objective this run is optimizing. The constrained Fun rung needs this to
+    // check that chasing pod experience has not quietly cost real strength.
+    metrics.powerScore = config.powerWeights
+      ? compositeScore(metrics, config.powerWeights, config.targets || DEFAULT_TARGETS, commanderCmc, config.winRateBand || null)
+      : metrics.score;
     metrics.winRateInterval = winRateInterval(metrics);
     const perCardStats = Array.from(cardStats.values()).map((stat) => ({
       name: stat.name,
@@ -1087,6 +1113,7 @@
     summarize,
     emptyMetrics,
     compositeScore,
+    winRateBandNorm,
     funScoreFor,
     podFunScoreFor,
     winRateInterval,

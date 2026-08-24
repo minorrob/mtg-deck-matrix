@@ -118,6 +118,10 @@ async function runBatch(cards, seed, label, state, gameCount) {
     ...config,
     games,
     scoreWeights: request.constraints?.scoreWeights || config.scoreWeights,
+    // Whatever this run is optimizing, powerScore is always measured against the
+    // performance vector, so a constrained rung can be held to a power floor.
+    powerWeights: config.scoreWeights,
+    winRateBand: config.winRateBand,
     targets: config.targets
   }, seed, async (batch) => {
     await writeStatus({
@@ -648,15 +652,28 @@ if (args.auto) {
       process.exit(EXIT.CAP_REACHED);
     }
     const gain = measured.metrics.score - state.best.metrics.score;
+    // The constrained objective. A Fun rung optimizes pod experience, but it may
+    // never buy that experience by giving up real strength: a swap that improves
+    // Pod Fun while dropping the deck's performance-weighted score below the
+    // floor its own Tuned build set is rejected outright, however good it looks
+    // on the objective being maximized. This is what makes "Tuned is at least as
+    // strong as Fun" a property of the search rather than something checked
+    // afterwards and hoped for.
+    const powerFloor = Number(request.constraints?.powerFloor);
+    const powerNow = Number(measured.metrics.powerScore ?? measured.metrics.score);
+    const powerOk = !Number.isFinite(powerFloor) || powerNow >= powerFloor;
     // A gain smaller than the sampling noise is not a gain.
-    const improved = gain >= (config.minAcceptGain ?? 0);
+    const improved = gain >= (config.minAcceptGain ?? 0) && powerOk;
     state.history.push({
       iteration: state.iteration,
       accepted: improved,
       score: measured.metrics.score,
+      powerScore: Number(powerNow.toFixed(1)),
       gain: Number(gain.toFixed(2)),
       swaps,
-      note: improved ? "accepted" : "score did not improve, rolled back"
+      note: improved
+        ? "accepted"
+        : powerOk ? "score did not improve, rolled back" : `power ${powerNow.toFixed(1)} fell below the floor of ${powerFloor.toFixed(1)}, rolled back`
     });
     if (improved) state.best = {iteration: state.iteration, cards: applied.cards, metrics: measured.metrics, gaps: measured.gaps, perCardStats: measured.perCardStats};
     // A rejected batch of five hides which of the five was wrong, so the next

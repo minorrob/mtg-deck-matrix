@@ -428,4 +428,25 @@ assert.match(readme, /run-batch\.mjs/, "the README must show how to run a simula
   assert.notEqual(podFun({avgFirstElimination: 6}), friendly, "how early the first player dies must move Pod Fun");
 }
 
+// Win-rate banding. The old curve rewarded every point of win rate up to 50%,
+// which told the optimizer that the best deck at the table is the one nobody
+// can beat. The band says otherwise, and the shape of it is pinned here so a
+// later weight edit cannot quietly restore "maximize win rate".
+{
+  const band = {floor: 0.3, ceiling: 0.45};
+  const at = (rate) => Engine.winRateBandNorm(rate, band);
+  assert.equal(at(0.30), 1, "the floor of the band must earn full credit");
+  assert.equal(at(0.45), 1, "the ceiling of the band must earn full credit");
+  assert.equal(at(0.38), 1, "everything inside the band must earn full credit");
+  assert.ok(at(0.15) > 0 && at(0.15) < 1, `below the floor must ramp, got ${at(0.15)}`);
+  assert.ok(at(0.15) < at(0.25), "a weaker deck must score below a nearly-there one");
+  assert.ok(at(0.76) < 1, `a 76% win rate must be scored down, not treated as ideal, got ${at(0.76)}`);
+  assert.ok(at(0.95) < at(0.76), "the further past the ceiling, the lower the credit");
+  assert.ok(at(1) >= 0.5, "dominating is still worth something -- winning is not a failure");
+  // With no band configured the original monotonic curve has to survive, or
+  // every historical score in data/ would silently change meaning.
+  assert.equal(Engine.winRateBandNorm(0.5, null), 1, "an unbanded run must keep the old curve");
+  assert.equal(Engine.winRateBandNorm(0.25, null), 0.5, "an unbanded run must keep the old slope");
+}
+
 console.log(`Simulation engine verified: deterministic under seed, discriminating between decks (My Fun and Pod Fun both range-checked), and capped by the runner at ${tinyConfig.maxTotalSimulations} games.`);
