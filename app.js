@@ -1228,19 +1228,10 @@
         <summary><span>${icon("☰")}Deck plan &amp; analysis</span><small>How to play, buy order, bracket placement, and tuning notes</small></summary>
         <div class="legacy-plan">${plan.planHtml || variant.detailHtml || ""}</div>
       </details>
-      ${presetDropdownMarkup(plan, variant.id)}
+      ${presetDropdownMarkup(plan, current, variant.id)}
       ${commanderSwitchMarkup(plan, current, variant.id)}
       ${startingShellSection(variant, plan, current, variant.id)}
-      ${buySection("Tuned", "Required purchases for the Tuned build", plan.required, "tuned", current, variant.id)}
-      ${buySection("Tuned-2", "Monte-Carlo-improved swaps on top of the site's Tuned build · replaces Tuned where checked", plan.tuned2, "tuned2", current, variant.id)}
-      ${buySection("Enhance", "Role-preserving improvements and owned substitutions · $15 or less", plan.enhance, "enhance", current, variant.id)}
-      ${buySection("Enhance-2", "Further Monte-Carlo-improved swaps on top of Tuned-2", plan.enhance2, "enhance2", current, variant.id)}
-      ${buySection("Maxxed", "Strongest Tier 3 / Bracket 3-legal capability · price is not the criterion", plan.max, "max", current, variant.id)}
-      ${buySection("Maxxed-2", "Strongest Monte-Carlo-improved capability on top of Enhance-2 · price is not the criterion", plan.max2, "max2", current, variant.id)}
-      ${buySection("Fun Tuned", "Fun-weighted re-optimization on top of Base · a separate build from Tuned-2, not a toggle on it", plan.funTuned, "funTuned", current, variant.id)}
-      ${buySection("Fun Max", "Fun-weighted re-optimization on top of Fun Tuned", plan.funMax, "funMax", current, variant.id)}
-      ${buySection("Alt Tuned", "Alternative-commander build on top of Base · tagged Alt", plan.altTuned, "altTuned", current, variant.id)}
-      ${buySection("Alt Max", "Alternative-commander build on top of Alt Tuned · tagged Alt", plan.altMax, "altMax", current, variant.id)}`;
+      ${LADDER_GROUPS.map((group) => ladderGroupMarkup(group, plan, current, variant.id, altCommanderActive(plan, current))).join("")}`;
     decorateRichContent(body, variant);
     if (details.open) {
       ensureShopMetadata([
@@ -1315,32 +1306,26 @@
         renderBuy();
       });
     }
-    // Section select-alls live inside a <summary>, so the click must never reach it --
-    // otherwise toggling the checkbox would also collapse/expand the whole section.
-    $$('[data-select-section-all]', body).forEach((toggle) => {
-      const kind = toggle.dataset.selectSectionAll;
-      const collection = kind === "tuned" ? plan.required : plan[kind];
-      const ids = (collection || []).map((item) => String(item.id));
+    // Switching which build a group is showing changes only what's on screen, never the deck.
+    $$('[data-ladder-tab]', body).forEach((button) => button.addEventListener("click", (event) => {
+      event.preventDefault();
+      ladderTabState.set(`${variant.id}:${button.dataset.ladderTab}`, button.dataset.tabKey);
+      renderBuy();
+    }));
+    // "Select all <build>" applies that build's whole configuration, not just the rows on
+    // screen: Tuned-2 is Tuned plus its swaps, while Fun Tuned deliberately replaces Tuned
+    // entirely. Applying the full stack is what makes the result a complete, exactly-100,
+    // compliance-checked deck rather than an arbitrary mixture -- which is the entire point of
+    // asking for it. Unchecking returns to Base, the configuration this all builds on.
+    $$('[data-select-tab-all]', body).forEach((toggle) => {
       const input = $("input", toggle);
-      if (!input || !ids.length) return;
-      const selected = new Set(current[kind] || []);
-      const allSelected = ids.every((id) => selected.has(id));
-      const anySelected = ids.some((id) => selected.has(id));
-      input.checked = allSelected;
-      requestAnimationFrame(() => {
-        if (input.isConnected) input.indeterminate = anySelected && !allSelected;
-      });
-      toggle.addEventListener("click", (event) => event.stopPropagation());
+      if (!input) return;
+      const presetKey = toggle.dataset.tabPreset;
       input.addEventListener("change", () => {
-        const currentState = ensureBuyState(variant.id);
-        if (input.checked) {
-          let selection = currentState;
-          for (const id of ids) selection = Lineup.applyLineageCheck(plan, selection, id);
-          assignSelection(currentState, selection);
-        } else {
-          currentState[kind] = (currentState[kind] || []).filter((id) => !ids.includes(id));
-        }
-        saveState();
+        const assembled = assemblePreset(plan, input.checked ? presetKey : "base");
+        if (!assembled) return;
+        assignSelection(ensureBuyState(variant.id), assembled);
+        saveState(input.checked ? `${$("span", toggle)?.textContent || "Configuration"} applied` : "Returned to the Base configuration");
         renderBuy();
       });
     });
@@ -1366,8 +1351,7 @@
     }));
     $$(".buy-item-detail:not([data-shell-card-name])", body).forEach((button) => button.addEventListener("click", () => {
       const kind = button.dataset.itemKind;
-      const collection = kind === "tuned" ? plan.required : plan[kind];
-      const item = kind === "precon" ? plan.precon : (collection || []).find((candidate) => candidate.id === button.dataset.itemId);
+      const item = kind === "precon" ? plan.precon : kindItems(plan, kind).find((candidate) => candidate.id === button.dataset.itemId);
       if (item) openBuyItemDetail(resolvedBuyCard(item), variant, kind);
     }));
     body.addEventListener("click", (event) => {
@@ -1589,6 +1573,18 @@
     return constructedShellSection(variant, plan, cards, current, variantId);
   }
 
+  // True when the alternative commander currently occupies the commander slot. Decides which
+  // ladder groups get de-emphasized (never disabled), so the answer has to come from the same
+  // slot-group lookup the Commander switcher itself renders from.
+  function altCommanderActive(plan, current) {
+    const altCommander = (plan.altTuned || []).find((item) => item.isCommander);
+    const shellCommander = (plan.startingShell || []).find((item) => item.isCommander);
+    if (!altCommander || !shellCommander) return false;
+    const model = Lineup.buildModel(plan);
+    const slotId = model.byId.get(String(shellCommander.id))?.slotId;
+    return String(Lineup.activeEntryForSlot(plan, current, slotId)?.id || "") === String(altCommander.id);
+  }
+
   // 1o/3e/5o only -- both commander candidates share one slot group (the alt item's
   // `replaces` chains back to the original commander's shell entry), so Lineup.applyChoice
   // already guarantees exactly one of them is ever active; this just renders that pair and
@@ -1770,6 +1766,7 @@
     const presets = [
       {key: "base", label: "Base", categories: []},
       {key: "tuned", label: "Tuned", categories: ["required"]},
+      {key: "enhance", label: "Enhance", categories: ["required", "upgrade", "enhance"]},
       {key: "max", label: "Maxxed", categories: ["required", "upgrade", "enhance", "max"]}
     ];
     if (Array.isArray(plan.tuned2)) {
@@ -1812,13 +1809,34 @@
     return selection;
   }
 
-  function presetDropdownMarkup(plan, variantId) {
-    const presets = deckPresets(plan);
-    if (presets.length <= 1) return "";
+  // The dropdown asks how far you want to invest, not which optimizer you prefer. Ten entries
+  // made the reader choose both at once; four (plus Alt where it exists) ask only the first,
+  // and the flavor comes from whichever tab is showing in that group -- so picking "Tuned"
+  // while the Fun Tuned tab is open applies Fun Tuned. Each option is still a complete,
+  // exactly-100, compliance-checked configuration.
+  function levelPresetOptions(plan, current, variantId) {
+    const options = [{key: "base", label: "Base", detail: "The starting shell on its own"}];
+    for (const group of LADDER_GROUPS) {
+      if (group.key === "alt") continue;
+      const tab = activeLadderTab(plan, group, variantId, current);
+      if (!tab) continue;
+      const sameLabel = tab.label === group.title;
+      options.push({key: tab.preset, label: group.title, detail: sameLabel ? `The ${tab.label} build` : `Using the ${tab.label} build`});
+    }
+    if (plan.altTuned?.length) {
+      options.push({key: "altTuned", label: "Alt Tuned", detail: "The alternative commander's tuned build"});
+      options.push({key: "altMax", label: "Alt Max", detail: "The alternative commander at full capability"});
+    }
+    return options;
+  }
+
+  function presetDropdownMarkup(plan, current, variantId) {
+    const options = levelPresetOptions(plan, current, variantId);
+    if (options.length <= 1) return "";
     return `<label class="preset-select"><span>Apply configuration</span>
       <select data-apply-preset aria-label="Apply a configuration to Deck ${esc(variantId)}">
         <option value="" selected>Apply configuration…</option>
-        ${presets.map((preset) => `<option value="${esc(preset.key)}">${esc(preset.label)}</option>`).join("")}
+        ${options.map((option) => `<option value="${esc(option.key)}">${esc(option.label)} — ${esc(option.detail)}</option>`).join("")}
       </select>
     </label>`;
   }
@@ -1918,42 +1936,131 @@
     funTuned: "Fun Tuned", funMax: "Fun Max",
     altTuned: "Alt Tuned", altMax: "Alt Max"
   };
-  const SECTION_GLYPHS = {
-    precon: "▣", tuned: "✓", upgrade: "↗", enhance: "+", max: "✦",
-    tuned2: "✓", enhance2: "+", max2: "✦",
-    funTuned: "☆", funMax: "☆", altTuned: "◇", altMax: "◇"
-  };
+  // Which plan array each checkbox kind draws from. Only "tuned" differs from its own name.
+  const KIND_ARRAY = {tuned: "required"};
+  const kindItems = (plan, kind) => plan?.[KIND_ARRAY[kind] || kind] || [];
 
-  function buySection(title, note, items, kind, current, variantId) {
-    if (!items?.length) return "";
-    const included = kind === "precon";
-    const glyph = SECTION_GLYPHS[kind] || "✦";
-    return `<details class="buy-section" data-ui-key="buysec-${esc(variantId)}-${esc(kind)}" ${included ? "open" : ""}>
-      <summary><span>${icon(glyph)}${esc(title)} <b>${items.length}</b></span><small>${esc(note)}</small>${included ? "" : selectAllToggleMarkup(kind)}</summary>
-      ${items.map((item) => {
-        const required = included;
-        const checked = required || (current[kind] || []).includes(item.id);
-        const impact = (kind === "enhance" || kind === "enhance2") ? enhancementImpact(item) : null;
-        const replacement = item.replaces ? `<span class="replacement-line"><b${impact ? ` class="replace-impact impact-${impact.key}" title="${esc(impact.label)}" aria-label="Replaces — ${esc(impact.label)}"` : ""}>Replaces</b><span>${esc(item.replaces)}</span></span>` : "";
-        const summaryCopy = kind === "max" ? (item.maxReason || item.purpose || item.typeLine || "") : (item.purpose || item.typeLine || "");
-        return `<div class="buy-item" ${buyRowAttributes(item, checked)}>
-          ${required ? `<span class="required-check" aria-label="Included">✓</span>` : `<input type="checkbox" ${checked ? "checked" : ""} data-buy-kind="${esc(kind)}" data-item-id="${esc(item.id)}" data-variant-id="${esc(variantId)}" aria-label="Include ${esc(item.name)} in the final deck">`}
-          <button class="buy-item-detail" type="button" data-item-kind="${esc(kind)}" data-item-id="${esc(item.id)}">
-            <img src="${esc(item.image)}" alt="" loading="lazy">
-            <span class="buy-copy">
-              <span class="buy-item-eyebrow"><span class="kind-label ${esc(kind)}">${esc(KIND_LABELS[kind] || kind)}</span>${item.tags?.includes("alt") ? `<span class="alt-mini">◇ Alt</span>` : ""}${item.ownedExtra ? `<span class="owned-mini">✓ Owned</span>` : ""}${item.temporaryUntil ? `<span class="temp-mini">Temp until ${esc(item.temporaryUntil)}</span>` : ""}${item.gameChanger ? `<span class="gc-mini">✦ Game Changer</span>` : ""}</span>
-              <strong>${esc(item.name)}${item.quantity > 1 ? ` ×${item.quantity}` : ""}</strong>
-              ${replacement}<small>${esc(summaryCopy)}</small>
-            </span>
-          </button>
-          <span class="price">${money(cardPriceBounds(item, cardMetadata[itemKey(item)] || {}).price)}</span>
-        </div>`;
-      }).join("")}
-    </details>`;
+  // The ladder rungs are grouped by what they cost you, not by which optimizer produced them.
+  // Ten flat sections asked the reader to know that Tuned-2 and Fun Tuned are alternative ways
+  // to spend the same tier of money; three tabbed groups say it outright. `preset` is the
+  // configuration a tab represents end to end -- crucially NOT just its own array, since
+  // Tuned-2 builds on top of the site's Tuned list while Fun Tuned deliberately replaces it.
+  const LADDER_GROUPS = [
+    {
+      key: "tuned", title: "Tuned", glyph: "✓",
+      tabs: [
+        {key: "tuned", label: "Tuned", kinds: ["tuned"], preset: "tuned", build: "Tuned",
+         note: "The site's own tuned list · the required purchases that make this deck work."},
+        {key: "tuned2", label: "Tuned-2", kinds: ["tuned2"], preset: "tuned2", build: "Tuned-2",
+         note: "Monte-Carlo-improved swaps layered on top of the site's Tuned build."},
+        {key: "funTuned", label: "Fun Tuned", kinds: ["funTuned"], preset: "funTuned", build: "Fun Tuned",
+         note: "A fun-weighted re-optimization built straight off Base · its own build, not a toggle on Tuned-2."}
+      ]
+    },
+    {
+      key: "enhance", title: "Enhance", glyph: "+",
+      tabs: [
+        {key: "enhance", label: "Enhance", kinds: ["enhance", "upgrade"], preset: "enhance", build: "Enhance",
+         note: "Role-preserving improvements and owned substitutions on top of Tuned · $15 or less."}
+      ]
+    },
+    {
+      key: "max", title: "Maxxed", glyph: "✦",
+      tabs: [
+        {key: "max", label: "Maxxed", kinds: ["max"], preset: "max", build: "Max",
+         note: "Strongest Tier 3 / Bracket 3-legal capability · price is not the criterion."},
+        {key: "max2", label: "Maxxed-2", kinds: ["enhance2", "max2"], preset: "max2", build: "Max-2",
+         note: "Strongest Monte-Carlo-improved capability, including the Enhance-2 rung it builds on."},
+        {key: "funMax", label: "Fun Max", kinds: ["funMax"], preset: "funMax", build: "Fun Max",
+         note: "Fun-weighted re-optimization on top of Fun Tuned."}
+      ]
+    },
+    {
+      key: "alt", title: "Alt commander", glyph: "◇",
+      tabs: [
+        {key: "altTuned", label: "Alt Tuned", kinds: ["altTuned"], preset: "altTuned", build: "Alt Tuned",
+         note: "The alternative commander's own tuned build, off Base · every card here is tagged Alt."},
+        {key: "altMax", label: "Alt Max", kinds: ["altMax"], preset: "altMax", build: "Alt Max",
+         note: "The alternative commander pushed to full capability, on top of Alt Tuned."}
+      ]
+    }
+  ];
+
+  // Which tab is showing is a view preference, not a choice about the deck, so it lives here
+  // rather than in saved state -- same reasoning as the Compare page's alt-commander preview.
+  const ladderTabState = new Map();
+
+  function availableTabs(plan, group) {
+    return group.tabs.filter((tab) => tab.kinds.some((kind) => kindItems(plan, kind).length));
   }
 
-  function selectAllToggleMarkup(kind) {
-    return `<label class="section-select-all" data-select-section-all="${esc(kind)}"><input type="checkbox"><span>Select all</span></label>`;
+  function activeLadderTab(plan, group, variantId, current) {
+    const tabs = availableTabs(plan, group);
+    if (!tabs.length) return null;
+    const stored = ladderTabState.get(`${variantId}:${group.key}`);
+    const match = tabs.find((tab) => tab.key === stored);
+    if (match) return match;
+    // Default to whichever tab the deck is actually configured toward, so opening a group
+    // shows the build in play rather than always the site's own list.
+    const checkedIn = (tab) => tab.kinds.reduce((sum, kind) => sum + kindItems(plan, kind).filter((item) => (current[kind] || []).includes(item.id)).length, 0);
+    return tabs.slice().sort((a, b) => checkedIn(b) - checkedIn(a))[0];
+  }
+
+  function buyItemRow(item, kind, current, variantId) {
+    const checked = (current[kind] || []).includes(item.id);
+    const impact = (kind === "enhance" || kind === "enhance2") ? enhancementImpact(item) : null;
+    const replacement = item.replaces ? `<span class="replacement-line"><b${impact ? ` class="replace-impact impact-${impact.key}" title="${esc(impact.label)}" aria-label="Replaces — ${esc(impact.label)}"` : ""}>Replaces</b><span>${esc(item.replaces)}</span></span>` : "";
+    const summaryCopy = kind === "max" ? (item.maxReason || item.purpose || item.typeLine || "") : (item.purpose || item.typeLine || "");
+    return `<div class="buy-item" ${buyRowAttributes(item, checked)}>
+      <input type="checkbox" ${checked ? "checked" : ""} data-buy-kind="${esc(kind)}" data-item-id="${esc(item.id)}" data-variant-id="${esc(variantId)}" aria-label="Include ${esc(item.name)} in the final deck">
+      <button class="buy-item-detail" type="button" data-item-kind="${esc(kind)}" data-item-id="${esc(item.id)}">
+        <img src="${esc(item.image)}" alt="" loading="lazy">
+        <span class="buy-copy">
+          <span class="buy-item-eyebrow"><span class="kind-label ${esc(kind)}">${esc(KIND_LABELS[kind] || kind)}</span>${item.tags?.includes("alt") ? `<span class="alt-mini">◇ Alt</span>` : ""}${item.ownedExtra ? `<span class="owned-mini">✓ Owned</span>` : ""}${item.temporaryUntil ? `<span class="temp-mini">Temp until ${esc(item.temporaryUntil)}</span>` : ""}${item.gameChanger ? `<span class="gc-mini">✦ Game Changer</span>` : ""}</span>
+          <strong>${esc(item.name)}${item.quantity > 1 ? ` ×${item.quantity}` : ""}</strong>
+          ${replacement}<small>${esc(summaryCopy)}</small>
+        </span>
+      </button>
+      <span class="price">${money(cardPriceBounds(item, cardMetadata[itemKey(item)] || {}).price)}</span>
+    </div>`;
+  }
+
+  function ladderGroupMarkup(group, plan, current, variantId, altActive) {
+    const tabs = availableTabs(plan, group);
+    if (!tabs.length) return "";
+    const active = activeLadderTab(plan, group, variantId, current);
+    const isAltGroup = group.key === "alt";
+    // Visual de-emphasis only: the group whose commander isn't in play is the one you're
+    // probably not shopping from. Every control inside stays fully clickable -- this app
+    // never blocks a choice, it only ever reports on one.
+    const deemphasized = isAltGroup ? !altActive : altActive;
+    const tabItems = (tab) => tab.kinds.flatMap((kind) => kindItems(plan, kind).map((item) => ({item, kind})));
+    const checkedCount = (tab) => tabItems(tab).filter(({item, kind}) => (current[kind] || []).includes(item.id)).length;
+    const groupChecked = tabs.reduce((sum, tab) => sum + checkedCount(tab), 0);
+    const rows = tabItems(active);
+    const allChecked = rows.length > 0 && rows.every(({item, kind}) => (current[kind] || []).includes(item.id));
+    const anyChecked = rows.some(({item, kind}) => (current[kind] || []).includes(item.id));
+    const sim = simulationSummary?.builds?.[variantId]?.[active.build];
+    return `<details class="buy-section ladder-group${deemphasized ? " is-deemphasized" : ""}" data-ui-key="buygrp-${esc(variantId)}-${esc(group.key)}" data-ladder-group="${esc(group.key)}">
+      <summary>
+        <span>${icon(group.glyph)}${esc(group.title)} <b>${groupChecked}</b></span>
+        <small>${esc(active.note)}</small>
+        <span></span>
+        <span class="section-expander" aria-hidden="true"></span>
+      </summary>
+      <div class="ladder-tabs" role="tablist" aria-label="${esc(group.title)} builds">
+        ${tabs.map((tab) => `<button type="button" role="tab" class="ladder-tab${tab.key === active.key ? " is-active" : ""}" data-ladder-tab="${esc(group.key)}" data-tab-key="${esc(tab.key)}" aria-selected="${tab.key === active.key}">${esc(tab.label)}<b>${checkedCount(tab)}/${tabItems(tab).length}</b></button>`).join("")}
+      </div>
+      <div class="ladder-tab-panel">
+        <p class="ladder-tab-note">${esc(active.note)}</p>
+        ${simulationReadoutMarkup(active.build, sim)}
+        <label class="section-select-all ladder-select-all" data-select-tab-all="${esc(group.key)}" data-tab-preset="${esc(active.preset)}">
+          <input type="checkbox" ${allChecked ? "checked" : ""}><span>Select all ${esc(active.label)}</span>
+        </label>
+        ${deemphasized ? `<p class="ladder-deemphasis-note">${icon("i")}<span>${isAltGroup ? "Shown for reference — the original commander is active. Selecting from here is still allowed." : "The alternative commander is active, so this build's cards are not part of that lineup. Selecting them is still allowed."}</span></p>` : ""}
+      </div>
+      <div class="ladder-rows" data-any-checked="${anyChecked}">${rows.map(({item, kind}) => buyItemRow(item, kind, current, variantId)).join("")}</div>
+    </details>`;
   }
 
   function transferCardSnapshot(card) {
