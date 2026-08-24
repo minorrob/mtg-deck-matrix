@@ -6,6 +6,7 @@ const buyPlans = JSON.parse(await readFile(new URL("../data/buy-plans.json", imp
 const cards = JSON.parse(await readFile(new URL("../data/cards.json", import.meta.url), "utf8"));
 const simulationSummary = JSON.parse(await readFile(new URL("../data/simulation-summary.json", import.meta.url), "utf8"));
 const appSource = await readFile(new URL("../app.js", import.meta.url), "utf8");
+const htmlSource = await readFile(new URL("../index.html", import.meta.url), "utf8");
 const auditedByName = new Map(cards.cards.map((card) => [card.name.toLowerCase(), card]));
 for (const card of cards.cards) for (const face of card.name.split(" // ")) auditedByName.set(face.toLowerCase(), card);
 
@@ -438,5 +439,31 @@ assert.match(appSource, /function isSwapEvidenceText\(/, "a helper must detect t
 assert.match(appSource, /function swapEvidenceSentence\(/, "the detail sheet must be able to surface the full swap-evidence sentence");
 assert.match(appSource, /isSwapEvidenceText\(rawSummary\)/, "the Buy Picks row must not render the raw swap-evidence paragraph as its caption");
 assert.match(appSource, /What the card it replaces gave up/, "the detail sheet must have a clearly labeled section for what a replaced card's evidence showed");
+
+// Cross-device state portability: export bundles both localStorage keys this app actually
+// writes (the main state and, separately, Custom's Choose-step store) into one versioned file;
+// Import and Load Active both require confirmation before replacing anything, since a full-state
+// file has no safe merge rule the way the purchase-history CSV import does.
+assert.match(appSource, /function serializeStatePayload\(/, "a full-state export payload builder must exist");
+assert.match(appSource, /function exportFullState\(/, "an Export control must exist");
+assert.match(appSource, /function importStateFromFile\(/, "an Import control must exist");
+assert.match(appSource, /function loadActiveState\(/, "a Load Active control must exist");
+assert.match(appSource, /localStorage\.getItem\(Custom\.STORAGE_KEY\)/, "export must include the Custom (Choose-step) store, not just the main state");
+assert.match(appSource, /fetch\("data\/active-state\.json"/, "Load Active must read active-state.json from the repo, not invent a URL");
+// Replace, not a field-by-field merge -- a full-state file has no safe merge rule the way the
+// purchase-history CSV import does, since it covers every selection, filter, and toggle at once.
+assert.match(appSource, /state = \{\.\.\.blankState\(\), \.\.\.payload\.state\}/, "applying a state payload must fully replace state, defaulting only fields the file omits");
+{
+  const start = appSource.indexOf("function importStateFromFile(");
+  const end = appSource.indexOf("function loadActiveState(", start);
+  assert(start > 0 && end > start, "importStateFromFile must be defined before loadActiveState");
+  const importBody = appSource.slice(start, end);
+  const loadActiveBody = appSource.slice(end);
+  assert.match(importBody, /window\.confirm\(/, "importing a state file must ask for confirmation before replacing local data");
+  assert.match(loadActiveBody.slice(0, loadActiveBody.indexOf("\n  }\n") + 5), /window\.confirm\(/, "Load Active must ask for confirmation before replacing local data");
+}
+assert.match(htmlSource, /id="export-state-button"/, "an Export button must exist in the header");
+assert.match(htmlSource, /id="import-state-input"/, "an Import file input must exist in the header");
+assert.match(htmlSource, /id="load-active-button"/, "a Load Active button must exist in the header");
 
 console.log(`Validated ${variants.variants.length} variants and ${Object.keys(buyPlans.plans).length} connected buy profiles.`);

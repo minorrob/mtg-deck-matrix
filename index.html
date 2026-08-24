@@ -17,13 +17,13 @@
   <meta name="twitter:description" content="Compare decks, choose buys, and shop from one mobile-friendly list.">
   <meta name="twitter:image" content="https://minorrob.github.io/mtg-deck-matrix/og.png">
   <title>Trey's Deck Matrix</title>
-  <link rel="stylesheet" href="app.css?v=26">
+  <link rel="stylesheet" href="app.css?v=27">
   <script src="lineup-model.js?v=2" defer></script>
   <script src="compliance-model.js?v=1" defer></script>
   <script src="scryfall-client.js?v=1" defer></script>
   <script src="custom-model.js?v=2" defer></script>
   <script src="deck-generator.js?v=1" defer></script>
-  <script src="app.js?v=35" defer></script>
+  <script src="app.js?v=36" defer></script>
   <script src="shop-filters.js?v=5" defer></script>
 </head>
 <body>
@@ -38,7 +38,13 @@
         <p class="eyebrow">Commander field guide</p>
         <h1>Trey's Deck Matrix</h1>
       </div>
-      <div class="header-actions"><button class="tour-button" id="tour-button" type="button">▶ Tour</button><span class="save-status visually-hidden" id="save-status" aria-live="polite">Saved on this device</span></div>
+      <div class="header-actions">
+        <button class="tour-button" id="tour-button" type="button">▶ Tour</button>
+        <button class="state-io-button" id="export-state-button" type="button" title="Download every selection, buy, Shop List mark, and Live Decks change on this device as one file">⬇ Export</button>
+        <label class="state-io-button state-io-file" title="Load a previously exported state file, replacing everything currently saved on this device">⬆ Import<input type="file" accept=".json,application/json" id="import-state-input" hidden></label>
+        <button class="state-io-button" id="load-active-button" type="button" title="Load data/active-state.json from this repository, replacing everything currently saved on this device">↺ Load Active</button>
+        <span class="save-status visually-hidden" id="save-status" aria-live="polite">Saved on this device</span>
+      </div>
     </div>
     <nav class="main-tabs" aria-label="Deck shopping flow">
       <button class="main-tab" data-view="choose" aria-selected="false">

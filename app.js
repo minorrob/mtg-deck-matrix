@@ -4944,6 +4944,111 @@
     showToast("Your local picks were reset.");
   }
 
+  // Cross-device state portability. localStorage never leaves one browser, so moving picks to a
+  // phone or another machine otherwise means redoing every choice by hand. This bundles the two
+  // things this app actually persists -- the main `state` object and, separately, whatever
+  // Custom decks were built on the Choose step -- into one file, versioned independently of
+  // either's own internal schema so the export wrapper itself can evolve later.
+  const STATE_EXPORT_SCHEMA = 1;
+
+  function serializeStatePayload() {
+    let custom = null;
+    try {
+      const raw = localStorage.getItem(Custom.STORAGE_KEY);
+      custom = raw ? JSON.parse(raw) : null;
+    } catch (error) {
+      custom = null;
+    }
+    return {app: "mtg-deck-matrix", exportSchema: STATE_EXPORT_SCHEMA, exportedAt: new Date().toISOString(), state, custom};
+  }
+
+  function exportFullState() {
+    const payload = serializeStatePayload();
+    const stamp = new Date().toISOString().slice(0, 10);
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `mtg-deck-matrix-state-${stamp}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    showToast("Exported your full state — Compare picks, Buy Picks, Shop List, and Live Decks.");
+  }
+
+  function isPlausibleStatePayload(payload) {
+    return Boolean(payload && typeof payload === "object" && payload.state && typeof payload.state === "object" && typeof payload.state.compareSelections === "object");
+  }
+
+  // Import and Load Active both replace, rather than merge, everything this browser has saved.
+  // A full-state file has no natural merge rule -- unlike the purchase-history CSV import, which
+  // is scoped to ownership marks alone and is safely additive, this payload covers every
+  // selection, filter, and toggle in the app, so combining two independent copies field-by-field
+  // would silently pick a winner the user never chose. Replacing is at least predictable, and
+  // the caller is required to confirm first since there is no way back once applied except
+  // re-importing an earlier export.
+  function applyStatePayload(payload, sourceLabel) {
+    state = {...blankState(), ...payload.state};
+    try {
+      if (payload.custom) localStorage.setItem(Custom.STORAGE_KEY, JSON.stringify(payload.custom));
+      else localStorage.removeItem(Custom.STORAGE_KEY);
+    } catch (error) {
+      // Best-effort; the app still functions on the baked catalog alone.
+    }
+    customStore = Custom.load(localStorage);
+    remergeCustom();
+    persistCustom();
+    saveState(`Loaded state${sourceLabel ? ` from ${sourceLabel}` : ""}`);
+    renderCompare();
+    renderChoose();
+    switchView("compare");
+    showToast(`Loaded state${sourceLabel ? ` from ${sourceLabel}` : ""}.`);
+  }
+
+  function importStateFromFile(file) {
+    const reader = new FileReader();
+    reader.onerror = () => showToast("That file could not be read.");
+    reader.onload = () => {
+      let payload;
+      try {
+        payload = JSON.parse(String(reader.result || ""));
+      } catch (error) {
+        showToast("That file is not valid JSON.");
+        return;
+      }
+      if (!isPlausibleStatePayload(payload)) {
+        showToast("That file does not look like a Deck Matrix state export.");
+        return;
+      }
+      if (!window.confirm("Load this file? It replaces every selection, buy, Shop List mark, and Live Decks change currently saved on this device.")) return;
+      applyStatePayload(payload, file.name);
+    };
+    reader.readAsText(file);
+  }
+
+  async function loadActiveState() {
+    let payload;
+    try {
+      const response = await fetch("data/active-state.json", {cache: "no-store"});
+      if (!response.ok) {
+        showToast(response.status === 404 ? "No active-state.json is committed to the repo yet." : `Could not load active state (${response.status}).`);
+        return;
+      }
+      payload = await response.json();
+    } catch (error) {
+      showToast("Could not load the active state file.");
+      return;
+    }
+    if (!isPlausibleStatePayload(payload)) {
+      showToast("data/active-state.json does not look like a Deck Matrix state export.");
+      return;
+    }
+    const when = payload.exportedAt ? ` (exported ${new Date(payload.exportedAt).toLocaleString()})` : "";
+    if (!window.confirm(`Load the active state from the repository${when}? It replaces every selection, buy, Shop List mark, and Live Decks change currently saved on this device.`)) return;
+    applyStatePayload(payload, "the repository");
+  }
+
   async function init() {
     try {
       [bakedCatalog, bakedBuyCatalog, simulationSummary] = await Promise.all([
@@ -4974,6 +5079,13 @@
       $$(".main-tab").forEach((button) => button.addEventListener("click", () => switchView(button.dataset.view)));
       $("#reset-button").addEventListener("click", resetState);
       $("#tour-button").addEventListener("click", startTour);
+      $("#export-state-button").addEventListener("click", exportFullState);
+      $("#import-state-input").addEventListener("change", (event) => {
+        const file = event.target.files?.[0];
+        event.target.value = "";
+        if (file) importStateFromFile(file);
+      });
+      $("#load-active-button").addEventListener("click", loadActiveState);
       $("#tour-close").addEventListener("click", closeTour);
       $("#tour-back").addEventListener("click", () => moveTour(-1));
       $("#tour-next").addEventListener("click", () => moveTour(1));

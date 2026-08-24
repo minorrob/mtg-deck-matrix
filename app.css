@@ -40,9 +40,11 @@ button { touch-action: manipulation; }
 .eyebrow { margin: 0 0 2px; color: #e6cc91; font-size: 10px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
 h1 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp(23px, 5vw, 34px); line-height: 1; }
 .save-status { max-width: 120px; color: #d9e8df; font-size: 11px; line-height: 1.25; text-align: right; }
-.header-actions { display: flex; align-items: center; gap: 8px; }
+.header-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
 .tour-button { min-height: 34px; padding: 6px 10px; border: 1px solid rgba(255,255,255,.42); border-radius: 999px; color: #fff6dd; background: rgba(8,31,24,.58); font-size: 10px; font-weight: 900; cursor: pointer; backdrop-filter: blur(4px); }
 .tour-button:hover, .tour-button:focus-visible { color: var(--forest); background: #fff4d7; outline: none; }
+.state-io-button { display: inline-flex; align-items: center; min-height: 34px; padding: 6px 10px; border: 1px solid rgba(255,255,255,.3); border-radius: 999px; color: #d9e8df; background: rgba(8,31,24,.4); font-size: 10px; font-weight: 900; cursor: pointer; backdrop-filter: blur(4px); white-space: nowrap; }
+.state-io-button:hover, .state-io-button:focus-visible { color: var(--forest); background: #fff4d7; outline: none; }
 
 .main-tabs { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 7px; width: min(960px, 100%); margin: auto; }
 .main-tab { min-height: 43px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid rgba(255,255,255,.22); border-radius: 12px; color: #d7e6df; background: rgba(255,255,255,.07); font-size: 13px; font-weight: 800; cursor: pointer; }
