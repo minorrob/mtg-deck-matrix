@@ -12,20 +12,20 @@
   // does back). Results are only meaningful compared with each other — the same
   // deck under the same seeds before and after a swap — never as absolute odds.
   const SIMPLIFICATIONS = [
-    "No stack: spells resolve when cast, and counterspells are modelled as generic interaction.",
+    "No stack: spells resolve when cast, and counterspells are modeled as generic interaction.",
     "No blocking assignment: combat damage is total attacking power weighted by a per-creature connect rate (higher for flying/menace/trample), and a board's damage reduction is weighted by total toughness plus a flat deathtouch/first-strike deterrence bonus, not a real block.",
     "+1/+1 counters model growth (enters-with, a source that adds more, a doubler, proliferate) but not storage or transfer -- a card that moves counters between permanents when something dies (The Ozolith) is treated as an ordinary permanent with no counter interaction.",
     "Proliferate is applied to every one of our own creatures that already carries a counter; the real choice of which permanents or players to target does not exist in this model.",
     "A repeatable counters or proliferate source (an activated ability, or a trigger) is assumed usable every turn from the turn it resolves onward, including that same turn.",
     "No politics: opponents never team up, and never target each other's threats instead of ours.",
     "Tutors draw the best of three random cards instead of choosing exactly.",
-    "Tokens are modelled as extra power on the creature that makes them, not as separate bodies.",
+    "Tokens are modeled as extra power on the creature that makes them, not as separate bodies.",
     "Alternate win conditions and storm are scored as a large threat rather than an instant win.",
     "Mana fixing is ideal within the colors actually available from lands in play.",
     "A Defender creature contributes no attack power unless the deck also contains an effect that lets it attack anyway, and deals damage equal to its toughness instead of its power when the deck contains an effect that says so.",
     "A noncreature commander (a planeswalker printed with \"can be your commander\") is cast and taxed normally but never joins combat as an attacker or blocker.",
-    "Opponents are nine parameterised archetype curves (three power tiers, six playstyles), not simulated decks with real cards.",
-    "The fun/participation score is one reasonable operationalisation of a subjective idea — a developed board and a game that didn't end suspiciously early either way — not a settled definition of \"fun.\""
+    "Opponents are nine parameterized archetype curves (three power tiers, six playstyles), not simulated decks with real cards.",
+    "The fun/participation score is one reasonable operationalization of a subjective idea — a developed board and a game that didn't end suspiciously early either way — not a settled definition of \"fun.\""
   ];
 
   const DEFAULT_TARGETS = {
@@ -819,10 +819,10 @@
     };
   }
 
-  // One reasonable operationalisation of "fun," not a settled definition —
+  // One reasonable operationalization of "fun," not a settled definition —
   // see SIMPLIFICATIONS. Half weight on actually getting to play, three
   // tenths on a board actually developing (capped at 4 permanents, since more
-  // than that is already a fully realised board for this purpose), two
+  // than that is already a fully realized board for this purpose), two
   // tenths on the game lasting long enough to feel like a real game.
   function funScoreFor(metrics) {
     return clamp01(
@@ -855,7 +855,7 @@
   }
 
   // A 95% interval on the win rate, so a swap that moves the number by less than
-  // the noise can be recognised as noise.
+  // the noise can be recognized as noise.
   function winRateInterval(metrics) {
     const games = Math.max(1, metrics.games);
     const rate = metrics.winRate;

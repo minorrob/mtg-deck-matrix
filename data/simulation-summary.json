@@ -2,7 +2,7 @@
   "engineNotes": {
     "v1": "Measured on the v1 engine: three opponent archetypes, win rate weighted 0.40 of the composite score.",
     "v2.1": "Measured on the v2.1 engine: nine opponent archetypes, win rate weighted 0.30 with 0.10 given to a fun/participation signal, plus three combat-modeling fixes (toughness-as-damage creatures, planeswalker commanders, dual-color lands). v2.1 scores are systematically lower because the opponent field is harder -- that is not the deck getting worse.",
-    "v2.2": "Measured on the v2.2 engine: the same nine-archetype opponent field as v2.1, extended with modelled +1/+1 counters (growth, doubling, proliferate) and combat keywords (flying, menace, trample, deathtouch, first strike, lifelink) -- see docs/mechanics-design-v2.2.md. Win rate is weighted 0.35 and fun 0.05, both reweighted from v2.1's 0.30/0.10 (the Fun rung alone keeps fun at 0.10). v2.2 scores are not comparable to v1 or v2.1 -- different weights, and modelling more of what a deck's own cards do changes the numbers independent of any change in the deck itself."
+    "v2.2": "Measured on the v2.2 engine: the same nine-archetype opponent field as v2.1, extended with modeled +1/+1 counters (growth, doubling, proliferate) and combat keywords (flying, menace, trample, deathtouch, first strike, lifelink) -- see docs/mechanics-design-v2.2.md. Win rate is weighted 0.35 and fun 0.05, both reweighted from v2.1's 0.30/0.10 (the Fun rung alone keeps fun at 0.10). v2.2 scores are not comparable to v1 or v2.1 -- different weights, and modeling more of what a deck's own cards do changes the numbers independent of any change in the deck itself."
   },
   "engineBoundaryNote": "Tuned, Enhance, and Fun Tuned are measured on the v2.2 engine for all 50 variants, the Phase 6 sweep -- the same generation as every alt-commander evaluation except the three original flagship cases (1o, 3e, 5o), which predate engine-version tagging. Base, Max, and Fun Max remain the site's own published lists, not independently simulated. Alt Tuned and Alt Max on 1o, 3e, and 5o are untouched from their original v2.1 measurement -- don't compare those two fields against anything else in this file.",
   "builds": {
@@ -2614,7 +2614,7 @@
       "candidatesMeasured": 15,
       "gamesEach": 4000,
       "altPrice": 0.98,
-      "honestRead": "Holds up. Teneb is a genuine reanimator, which is what this shell already wants, and it measures a hair above Betor (+0.2 — inside noise). Betor's end-step lifegain-to-counters engine is invisible to the model, so the true gap likely favours Betor. Swap only if you prefer the play pattern, not for the number."
+      "honestRead": "Holds up. Teneb is a genuine reanimator, which is what this shell already wants, and it measures a hair above Betor (+0.2 — inside noise). Betor's end-step lifegain-to-counters engine is invisible to the model, so the true gap likely favors Betor. Swap only if you prefer the play pattern, not for the number."
     },
     "3e": {
       "currentCommander": "The Gitrog Monster",
@@ -2689,7 +2689,7 @@
       "candidatesMeasured": 15,
       "gamesEach": 4000,
       "altPrice": 0.23,
-      "honestRead": "Real gap. Ghave's counters-into-Saprolings-into-counters loop converts through tokens, and tokens are modelled as extra power on the creature that makes them rather than a separate, resilient board -- that undersells Ghave's actual wipe-resilience. Rishkar's one-shot ETB counters on up to two creatures is simpler and fully visible, which is most of why it measures ahead. Treat the gap as real but somewhat overstated.",
+      "honestRead": "Real gap. Ghave's counters-into-Saprolings-into-counters loop converts through tokens, and tokens are modeled as extra power on the creature that makes them rather than a separate, resilient board -- that undersells Ghave's actual wipe-resilience. Rishkar's one-shot ETB counters on up to two creatures is simpler and fully visible, which is most of why it measures ahead. Treat the gap as real but somewhat overstated.",
       "engine": "v2.2"
     },
     "2o": {
@@ -2702,7 +2702,7 @@
       "candidatesMeasured": 15,
       "gamesEach": 4000,
       "altPrice": 0.64,
-      "honestRead": "Large gap, but The Reaper's whole identity -- -1/-1 counters and stealing opponents' creatures when they die with one -- sits entirely outside the model (counters only track +1/+1 growth; there is no steal-on-death pattern). Mazirek's sacrifice-triggered +1/+1 counter engine is squarely inside the modelled counter growth, so it measures fairly. The real gap is smaller than 17.8, but Mazirek is a genuine, well-supported upgrade for a Jund sacrifice/counters shell either way.",
+      "honestRead": "Large gap, but The Reaper's whole identity -- -1/-1 counters and stealing opponents' creatures when they die with one -- sits entirely outside the model (counters only track +1/+1 growth; there is no steal-on-death pattern). Mazirek's sacrifice-triggered +1/+1 counter engine is squarely inside the modeled counter growth, so it measures fairly. The real gap is smaller than 17.8, but Mazirek is a genuine, well-supported upgrade for a Jund sacrifice/counters shell either way.",
       "engine": "v2.2"
     },
     "2a": {
@@ -2793,7 +2793,7 @@
       "candidatesMeasured": 15,
       "gamesEach": 4000,
       "altPrice": 40.59,
-      "honestRead": "Omnath's landfall payoff is a 5/5 token every land drop, and tokens are modelled as extra power on the creature that makes them rather than separate, hard-to-wipe-around bodies -- that undersells exactly what makes a wide landfall board resilient. Its death-trigger damage is also outside anything the classifier reads. Bristly Bill's counters-and-doubling engine is fully visible to the model. Treat +11.9 as a real but overstated gap.",
+      "honestRead": "Omnath's landfall payoff is a 5/5 token every land drop, and tokens are modeled as extra power on the creature that makes them rather than separate, hard-to-wipe-around bodies -- that undersells exactly what makes a wide landfall board resilient. Its death-trigger damage is also outside anything the classifier reads. Bristly Bill's counters-and-doubling engine is fully visible to the model. Treat +11.9 as a real but overstated gap.",
       "engine": "v2.2"
     },
     "4o": {
@@ -2819,7 +2819,7 @@
       "candidatesMeasured": 2,
       "gamesEach": 4000,
       "altPrice": 0.41,
-      "honestRead": "Only three candidates matched Brago's narrow identity and theme combination, so this reads on a thinner field than most other cases. Brago's blink-for-value loop (exile and return your own permanents on combat damage) has no ETB-value pattern in the classifier, while Jason Bright's sacrifice-into-a-counter-and-flying is squarely inside the modelled counter growth. Treat +10.3 as understating Brago, whose whole plan of re-triggering enter-the-battlefield effects is invisible here.",
+      "honestRead": "Only three candidates matched Brago's narrow identity and theme combination, so this reads on a thinner field than most other cases. Brago's blink-for-value loop (exile and return your own permanents on combat damage) has no ETB-value pattern in the classifier, while Jason Bright's sacrifice-into-a-counter-and-flying is squarely inside the modeled counter growth. Treat +10.3 as understating Brago, whose whole plan of re-triggering enter-the-battlefield effects is invisible here.",
       "engine": "v2.2"
     },
     "4b": {
@@ -2858,7 +2858,7 @@
       "candidatesMeasured": 15,
       "gamesEach": 4000,
       "altPrice": 0.45,
-      "honestRead": "Syr Gwyn's draw-on-attack is tied to 'equipped creature attacks,' a condition the classifier doesn't parse, so only partial credit for the draw shows up. Alexios's repeatable +1/+1 counter growth lands directly on himself, a creature, which is squarely inside the modelled counter growth and scores accordingly. Real gap, but adopting Alexios trades the equipment-tribal shell for a different combat plan entirely.",
+      "honestRead": "Syr Gwyn's draw-on-attack is tied to 'equipped creature attacks,' a condition the classifier doesn't parse, so only partial credit for the draw shows up. Alexios's repeatable +1/+1 counter growth lands directly on himself, a creature, which is squarely inside the modeled counter growth and scores accordingly. Real gap, but adopting Alexios trades the equipment-tribal shell for a different combat plan entirely.",
       "engine": "v2.2"
     },
     "5d": {
@@ -3027,7 +3027,7 @@
       "candidatesMeasured": 15,
       "gamesEach": 4000,
       "altPrice": 1.76,
-      "honestRead": "Balin already ranks first of sixteen. Its Storied-gated burn is invisible to the model (Storied tracks artifact/legendary/Saga count, which isn't modelled), so if anything its real ceiling once Storied is online is higher than this score shows.",
+      "honestRead": "Balin already ranks first of sixteen. Its Storied-gated burn is invisible to the model (Storied tracks artifact/legendary/Saga count, which isn't modeled), so if anything its real ceiling once Storied is online is higher than this score shows.",
       "engine": "v2.2"
     },
     "8b": {
@@ -3040,7 +3040,7 @@
       "candidatesMeasured": 15,
       "gamesEach": 4000,
       "altPrice": 1.76,
-      "honestRead": "Real but modest gap. Balin's draw-on-Dwarf-ETB is credited as ordinary draw, but the Storied damage clause on top of it isn't modelled at all (see 8a) -- so 59.6 already understates Balin, and the true gap to Rose is smaller than 6.9.",
+      "honestRead": "Real but modest gap. Balin's draw-on-Dwarf-ETB is credited as ordinary draw, but the Storied damage clause on top of it isn't modeled at all (see 8a) -- so 59.6 already understates Balin, and the true gap to Rose is smaller than 6.9.",
       "engine": "v2.2"
     },
     "8c": {
@@ -3092,7 +3092,7 @@
       "candidatesMeasured": 15,
       "gamesEach": 4000,
       "altPrice": 0.36,
-      "honestRead": "Real gap, but Shantotto's own payoff -- growing by the exact mana value of the spell she triggers off, mid-combat -- is conditional, scaling text with no equivalent pattern in the classifier; only the 'draw a card' half of her text likely registers. Deekah's magecraft counters land on a token creature, which is fully inside the modelled counter growth and scores accordingly. Treat +11.1 as overstating the real gap.",
+      "honestRead": "Real gap, but Shantotto's own payoff -- growing by the exact mana value of the spell she triggers off, mid-combat -- is conditional, scaling text with no equivalent pattern in the classifier; only the 'draw a card' half of her text likely registers. Deekah's magecraft counters land on a token creature, which is fully inside the modeled counter growth and scores accordingly. Treat +11.1 as overstating the real gap.",
       "engine": "v2.2"
     },
     "9b": {
@@ -3170,7 +3170,7 @@
       "candidatesMeasured": 10,
       "gamesEach": 4000,
       "altPrice": 0.9,
-      "honestRead": "Same Grand Arbiter blind spot as 10a -- his tax text isn't modelled at all. Treat this gap, and every Grand Arbiter alt-commander result in this lineup, as uninformative about his real strength.",
+      "honestRead": "Same Grand Arbiter blind spot as 10a -- his tax text isn't modeled at all. Treat this gap, and every Grand Arbiter alt-commander result in this lineup, as uninformative about his real strength.",
       "engine": "v2.2"
     },
     "10c": {

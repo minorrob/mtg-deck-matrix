@@ -98,9 +98,9 @@ main { width: min(1560px, 100%); min-height: 70vh; margin: 0 auto; padding: 18px
 .deck-summary-copy span { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; }
 .deck-chevron { font-size: 20px; transition: transform .2s; }
 .deck-group[open] .deck-chevron { transform: rotate(90deg); }
-.rank-order { display: flex; align-items: center; gap: 5px; padding: 0 13px 10px; background: #fbf8ef; overflow-x: auto; }
+.rank-order { display: flex; align-items: center; gap: 5px; padding: 10px 13px; background: #fbf8ef; overflow-x: auto; }
 .rank-order > span { margin-right: 3px; color: var(--muted); font-size: 10px; font-weight: 900; text-transform: uppercase; white-space: nowrap; }
-.rank-order-button { min-height: 36px; padding: 6px 25px 6px 11px; border: 1px solid #bfb298; border-radius: 999px; color: var(--forest); background: #fffdf8; font-size: 11px; font-weight: 850; cursor: pointer; }
+.rank-order-button { min-height: 36px; padding: 6px 18px; border: 1px solid #bfb298; border-radius: 999px; color: var(--forest); background: #fffdf8; font-size: 11px; font-weight: 850; cursor: pointer; text-align: center; }
 .rank-order-button.is-active { color: #fff; border-color: var(--forest-2); background: var(--forest-2); }
 
 .variant-track { display: grid; grid-auto-flow: column; grid-auto-columns: min(88vw, 390px); gap: 12px; overflow-x: auto; padding: 13px; scroll-snap-type: x mandatory; scrollbar-color: #baa974 transparent; }
@@ -423,7 +423,7 @@ details[open] > summary .section-expander::after { content: "−"; }
 .buy-item:first-of-type { border-top: 0; }
 .buy-item input { width: 20px; height: 20px; accent-color: var(--forest-2); }
 .required-check { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; color: #fff; background: var(--forest-2); font-size: 13px; font-weight: 900; }
-.buy-item-detail { min-width: 0; display: grid; grid-template-columns: 42px minmax(0,1fr); gap: 8px; align-items: center; padding: 0; border: 0; color: inherit; background: none; text-align: left; cursor: pointer; }
+.buy-item-detail { min-width: 0; display: grid; grid-template-columns: 42px minmax(0,1fr); gap: 10px; align-items: center; padding: 0; border: 0; color: inherit; background: none; text-align: left; cursor: pointer; }
 .buy-item-detail img { width: 42px; aspect-ratio: .715; object-fit: cover; border-radius: 5px; background: #ddd4c2; }
 .buy-item-eyebrow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-bottom: 3px; }
 .gc-mini { padding: 2px 5px; border-radius: 5px; color: #fff; background: var(--red); font-size: 8px; font-weight: 900; text-transform: uppercase; }
@@ -1059,6 +1059,9 @@ footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px;
 .choose-slot { display: flex; flex-direction: column; gap: 10px; padding: 13px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow); }
 .choose-slot.is-built { border-color: #a9c3b6; }
 .choose-slot.is-running { border-color: var(--gold); }
+.choose-slot-add { align-items: center; justify-content: center; gap: 6px; min-height: 120px; border: 2px dashed var(--line); background: none; box-shadow: none; color: var(--muted); font-size: 13px; font-weight: 800; cursor: pointer; }
+.choose-slot-add:hover, .choose-slot-add:focus-visible { border-color: var(--forest-2); color: var(--forest-2); outline: none; }
+.choose-slot-add-icon { font-size: 26px; line-height: 1; color: var(--forest-2); }
 .choose-slot-head { display: flex; align-items: center; gap: 9px; }
 .choose-title-field { flex: 1; min-width: 0; }
 .choose-title-field input { width: 100%; min-height: 38px; padding: 6px 9px; border: 1px solid transparent; border-radius: 10px; background: #f7f2e5; color: var(--forest); font-size: 15px; font-weight: 850; }

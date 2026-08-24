@@ -37,7 +37,7 @@
     ease: "Ease measures how naturally the card works without complicated timing, narrow setup, or expert rules knowledge.",
     fun: "Fun measures how satisfying and interactive the card is likely to feel for the player and the table.",
     fit: "Fit explains how directly the card supports this deck’s commander, mechanics, and stated game plan.",
-    simulate: "Play this exact 100-card build against randomised opponents thousands of times, find where it actually loses, and propose swaps that measurably fix it. The games run on your own computer.",
+    simulate: "Play this exact 100-card build against randomized opponents thousands of times, find where it actually loses, and propose swaps that measurably fix it. The games run on your own computer.",
     whyVariant: "See how this variant's simulated Tuned, Enhance, and Fun Tuned scores compare against its deck's other variants, and where it ranks among them."
   };
   const KEYWORD_DEFINITIONS = {
@@ -73,7 +73,12 @@
   const slotRuns = new Map();
   let state;
   let toastTimer;
-  let openDeckId = 1;
+  let openDeckId = null;
+  // How many Choose placeholders to show as full editable cards, before the
+  // rest collapse behind a single "+ Add another deck" tile. Never less than
+  // however many are already built, so a returning user's own decks are never
+  // hidden -- only the empty ones beyond that need an explicit "+" click.
+  let chooseRevealCount = 1;
   let openBuyDeckId = 1;
   let openCommentId = null;
   let tourState = null;
@@ -487,7 +492,20 @@
       ${built ? `<p class="choose-storage">${icon("▤")}<span>Generated decks are private to this browser · about ${kilobytes} KB stored</span></p>` : ""}
       <div class="choose-grid" id="choose-grid"></div>`;
     const grid = $("#choose-grid", root);
-    customStore.slots.forEach((slot, index) => grid.appendChild(makeChooseSlot(slot, index)));
+    const revealed = Math.max(chooseRevealCount, built, 1);
+    customStore.slots.slice(0, revealed).forEach((slot, index) => grid.appendChild(makeChooseSlot(slot, index)));
+    if (revealed < customStore.slots.length) {
+      const addTile = document.createElement("button");
+      addTile.type = "button";
+      addTile.className = "choose-slot choose-slot-add";
+      addTile.dataset.chooseReveal = "true";
+      addTile.innerHTML = `<span class="choose-slot-add-icon">+</span><span>Add another deck</span>`;
+      addTile.addEventListener("click", () => {
+        chooseRevealCount = revealed + 1;
+        renderChoose();
+      });
+      grid.appendChild(addTile);
+    }
   }
 
   function chooseInputRow(label, hint, control) {
@@ -791,8 +809,6 @@
     const plan = buyCatalog?.plans?.[variant.id];
     if (!plan) return "";
     const badges = [
-      plan.tuned2?.length ? ["tuned2", "Tuned-2"] : null,
-      plan.max2?.length ? ["max2", "Maxxed-2"] : null,
       plan.funTuned?.length ? ["funTuned", "Fun"] : null,
       plan.altTuned?.some((item) => item.isCommander) ? ["altTuned", "◇ Alt"] : null
     ].filter(Boolean);
@@ -1205,11 +1221,11 @@
   }
 
   // Gives a freshly-picked variant a smarter Buy Picks starting point than the flat site
-  // default, using whichever Compare stage the pick was made at: Base, Tuned-2 (falling back
-  // to Tuned where a variant has no -2 data), or Maxxed-2 (falling back to Max). Never touches
-  // a variant that already has a stored Buy Picks selection -- the preset dropdown is the
-  // explicit re-apply mechanism for anything past the first pick, and switching stage chips
-  // alone (with no new pick) must never reseed either.
+  // default, using whichever Compare stage the pick was made at: Base, Tuned, or Maxxed --
+  // each of which already folds in its Monte-Carlo-improved swaps where the variant has them.
+  // Never touches a variant that already has a stored Buy Picks selection -- the preset
+  // dropdown is the explicit re-apply mechanism for anything past the first pick, and
+  // switching stage chips alone (with no new pick) must never reseed either.
   function selectionIdsSignature(selection) {
     return Lineup.ARRAY_KEYS.map((key) => [...(selection?.[key] || [])].map(String).sort().join(",")).join("|");
   }
@@ -1225,7 +1241,7 @@
     // computed flat default is: if it's still exactly that, nothing of the user's is at risk.
     if (existing && selectionIdsSignature(existing) !== selectionIdsSignature(Lineup.defaultSelection(plan))) return;
     const stage = Number(state.rankStages[variant.deckId] || 2);
-    const presetKey = stage === 1 ? "base" : stage === 3 ? (plan.max2?.length ? "max2" : "max") : (plan.tuned2?.length ? "tuned2" : "tuned");
+    const presetKey = stage === 1 ? "base" : stage === 3 ? "max" : "tuned";
     const assembled = assemblePreset(plan, presetKey);
     if (assembled) state.buySelections[variant.id] = assembled;
   }
@@ -2391,20 +2407,23 @@
   // importer has actually populated that ladder's entry array for this specific plan (see
   // tools/import_budget_plan.py) -- the other 24 variants have none of these keys at all, so
   // their dropdown degrades to exactly the original three, per plan.
+  // Tuned and Maxxed absorb their Monte-Carlo-improved counterparts rather than
+  // offering them as separate rungs: the -2 arrays stay in the data (they are
+  // regenerated from the workbook, and the slot model resolves each ladder
+  // through its own `replaces` chain), but a reader only ever picks "Tuned" or
+  // "Maxxed" and gets the improved build. A plan without the -2 arrays keeps the
+  // same two rungs, just without the extra cards folded in.
   function deckPresets(plan) {
+    const tunedCategories = Array.isArray(plan.tuned2) ? ["required", "tuned2"] : ["required"];
+    const maxCategories = Array.isArray(plan.tuned2)
+      ? ["required", "tuned2", "upgrade", "enhance", "enhance2", "max", "max2"]
+      : ["required", "upgrade", "enhance", "max"];
     const presets = [
       {key: "base", label: "Base", categories: []},
-      {key: "tuned", label: "Tuned", categories: ["required"]},
-      {key: "enhance", label: "Enhance", categories: ["required", "upgrade", "enhance"]},
-      {key: "max", label: "Maxxed", categories: ["required", "upgrade", "enhance", "max"]}
+      {key: "tuned", label: "Tuned", categories: tunedCategories},
+      {key: "enhance", label: "Enhance", categories: [...tunedCategories, "upgrade", "enhance"]},
+      {key: "max", label: "Maxxed", categories: maxCategories}
     ];
-    if (Array.isArray(plan.tuned2)) {
-      presets.push(
-        {key: "tuned2", label: "Tuned-2", categories: ["required", "tuned2"]},
-        {key: "enhance2", label: "Enhance-2", categories: ["required", "tuned2", "enhance2"]},
-        {key: "max2", label: "Maxxed-2", categories: ["required", "tuned2", "enhance2", "max2"]}
-      );
-    }
     if (Array.isArray(plan.funTuned)) {
       presets.push(
         {key: "funTuned", label: "Fun Tuned", categories: ["funTuned"]},
@@ -2616,9 +2635,12 @@
     </div>`;
   }
 
+  // The Monte-Carlo-improved rungs are folded into their base rung, so their cards
+  // carry the base rung's own label rather than announcing a tier that no longer
+  // exists as a separate choice.
   const KIND_LABELS = {
     precon: "Precon", shell: "Starting Shell", tuned: "Tuned", upgrade: "Enhance", enhance: "Enhance", max: "Maxxed",
-    tuned2: "Tuned-2", enhance2: "Enhance-2", max2: "Maxxed-2",
+    tuned2: "Tuned", enhance2: "Maxxed", max2: "Maxxed",
     funTuned: "Fun Tuned", funMax: "Fun Max",
     altTuned: "Alt Tuned", altMax: "Alt Max"
   };
@@ -2627,20 +2649,18 @@
   const kindItems = (plan, kind) => plan?.[KIND_ARRAY[kind] || kind] || [];
 
   // The ladder rungs are grouped by what they cost you, not by which optimizer produced them.
-  // Ten flat sections asked the reader to know that Tuned-2 and Fun Tuned are alternative ways
-  // to spend the same tier of money; three tabbed groups say it outright. `preset` is the
-  // configuration a tab represents end to end -- crucially NOT just its own array, since
-  // Tuned-2 builds on top of the site's Tuned list while Fun Tuned deliberately replaces it.
+  // Flat sections asked the reader to know that Tuned and Fun Tuned are alternative ways to
+  // spend the same tier of money; tabbed groups say it outright. `preset` is the configuration
+  // a tab represents end to end -- crucially NOT just its own array, since Fun Tuned is built
+  // straight off Base rather than toggling on top of Tuned.
   const LADDER_GROUPS = [
     {
       key: "tuned", title: "Tuned", glyph: "✓",
       tabs: [
-        {key: "tuned", label: "Tuned", kinds: ["tuned"], preset: "tuned", build: "Tuned",
-         note: "The site's own tuned list · the required purchases that make this deck work."},
-        {key: "tuned2", label: "Tuned-2", kinds: ["tuned2"], preset: "tuned2", build: "Tuned-2",
-         note: "Monte-Carlo-improved swaps layered on top of the site's Tuned build."},
+        {key: "tuned", label: "Tuned", kinds: ["tuned", "tuned2"], preset: "tuned", build: "Tuned",
+         note: "The required purchases that make this deck work, with every Monte-Carlo-improved swap folded in."},
         {key: "funTuned", label: "Fun Tuned", kinds: ["funTuned"], preset: "funTuned", build: "Fun Tuned",
-         note: "A fun-weighted re-optimization built straight off Base · its own build, not a toggle on Tuned-2."}
+         note: "A fun-weighted re-optimization built straight off Base · its own build, not a toggle on Tuned."}
       ]
     },
     {
@@ -2653,10 +2673,8 @@
     {
       key: "max", title: "Maxxed", glyph: "✦",
       tabs: [
-        {key: "max", label: "Maxxed", kinds: ["max"], preset: "max", build: "Max",
-         note: "Strongest Tier 3 / Bracket 3-legal capability · price is not the criterion."},
-        {key: "max2", label: "Maxxed-2", kinds: ["enhance2", "max2"], preset: "max2", build: "Max-2",
-         note: "Strongest Monte-Carlo-improved capability, including the Enhance-2 rung it builds on."},
+        {key: "max", label: "Maxxed", kinds: ["max", "enhance2", "max2"], preset: "max", build: "Max",
+         note: "Strongest Tier 3 / Bracket 3-legal capability · price is not the criterion · includes every Monte-Carlo-improved swap."},
         {key: "funMax", label: "Fun Max", kinds: ["funMax"], preset: "funMax", build: "Fun Max",
          note: "Fun-weighted re-optimization on top of Fun Tuned."}
       ]
@@ -3319,9 +3337,9 @@
       upgrade: ["enhance", "Enhance"],
       enhance: ["enhance", "Enhance"],
       max: ["maxxed", "Maxxed"],
-      tuned2: ["tuned2", "Tuned-2"],
-      enhance2: ["enhance2", "Enhance-2"],
-      max2: ["max2", "Maxxed-2"],
+      tuned2: ["tuned", "Tuned"],
+      enhance2: ["maxxed", "Maxxed"],
+      max2: ["maxxed", "Maxxed"],
       funTuned: ["funTuned", "Fun Tuned"],
       funMax: ["funMax", "Fun Max"],
       altTuned: ["altTuned", "Alt Tuned"],
@@ -4907,7 +4925,7 @@
       {view: "live", selectors: [".live-deck-metrics", ".live-decks"], title: "Read the header at a glance", copy: "Total cost sums only the prices you locked in. The rest track bought and active cards, purchases still needed, and Game Changer and Tier 3 status."},
       {view: "live", selectors: [".live-deck-disclosures", ".live-decks"], title: "Detail on demand", copy: "Deck Composition and Core Mechanics stay folded until you want them, so the header stays short on a phone."},
       {view: "live", selectors: [".live-metric-strip", ".live-decks"], title: "The same three ratings", copy: "Playstyle, Engine, and Growth carry over from Compare at the stage you selected. Tap one to see which sub-scores drive it."},
-      {view: "live", selectors: [".live-toolbar", ".live-decks"], title: "Filter and group each deck", copy: "Search inside a deck, filter by status, level, type, colour, price, rarity, or location, and group and sub-group the results."},
+      {view: "live", selectors: [".live-toolbar", ".live-decks"], title: "Filter and group each deck", copy: "Search inside a deck, filter by status, level, type, color, price, rarity, or location, and group and sub-group the results."},
       {view: "live", selectors: [".live-lineup-radio", ".live-card-row", ".live-decks"], title: "Choose the active 100", copy: "Each slot has one active card and any number of bench options. The radio makes a card active; illegal swaps are refused with the rule that blocked them."},
       {view: "live", selectors: [".live-price-entry", ".live-card-row", ".live-decks"], title: "Record what you paid", copy: "Owned cards get a price box. Type what you paid and press the check to lock it in; the deck's total cost updates immediately. Cards that came in a sealed precon just read Precon Pack."},
       {view: "live", selectors: [".live-export", ".live-intro"], title: "Export the checklist", copy: "Export writes every deck in its current grouping and filters to a CSV inventory: card, type, rarity, set, level, lineup, status, what you paid, and the floor-to-ceiling range."}
