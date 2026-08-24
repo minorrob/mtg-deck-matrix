@@ -595,6 +595,10 @@
     });
     $$("[data-choose-open]", section).forEach((button) => button.addEventListener("click", () => {
       openDeckId = slot.slotId;
+      // switchView only toggles which view is visible -- Compare's DOM keeps
+      // whatever group was open at its last render, so re-render first or the
+      // generated deck's group stays closed despite openDeckId.
+      renderCompare();
       switchView("compare");
     }));
     return section;
@@ -2209,8 +2213,12 @@
   }
 
   function adoptSimResult(result) {
-    if (!result?.finalCards?.length) {
-      showToast("That result file has no final deck list.");
+    // simResultMarkup dereferences result.verdict and result.finalMetrics.games
+    // unguarded, so a file missing either must be rejected here rather than
+    // thrown mid-render -- this is the picker's advertised fallback path for a
+    // browser that couldn't run the simulation itself, so it sees real files.
+    if (!result?.finalCards?.length || typeof result.verdict !== "string" || !result.finalMetrics) {
+      showToast("That result file is missing required fields.");
       return;
     }
     if (result.variantId && simDialogVariant && result.variantId !== simDialogVariant.id) {

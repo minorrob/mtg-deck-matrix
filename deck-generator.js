@@ -234,7 +234,11 @@
     const themeClause = themes.length ? THEME_QUERIES[themes[0]].query : "";
     const query = ["is:commander", "legal:commander", identityClause(inputs.colors), themeClause].filter(Boolean).join(" ");
     const results = await client.search(query, {maxPages: 1, order: "edhrec", signal});
-    const commander = results.find((card) => canBeCommander(card) && identityFits(card, new Set((inputs.colors || []).map((color) => String(color).toUpperCase()))) === (inputs.colors?.length ? true : true));
+    // Re-check identity locally only when colors were actually chosen: with no
+    // colors the query above already searched id<=wubrg, and re-checking against
+    // an empty set would reject every colored commander the search returned.
+    const wanted = new Set((inputs.colors || []).map((color) => String(color).toUpperCase()));
+    const commander = results.find((card) => canBeCommander(card) && (!wanted.size || identityFits(card, wanted)));
     if (commander) return {commander, source: "search"};
     if (themeClause) {
       const broader = await client.search(["is:commander", "legal:commander", identityClause(inputs.colors)].join(" "), {maxPages: 1, order: "edhrec", signal});
