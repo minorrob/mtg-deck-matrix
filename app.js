@@ -703,6 +703,7 @@
       details.innerHTML = `
         <summary>
           <span class="deck-number">${deck.id}</span>
+          <button type="button" class="deck-about-button" data-about-deck="${deck.id}" aria-haspopup="dialog">${icon("◆")}About</button>
           <span class="deck-summary-copy"><strong>${esc(deck.title)}</strong><span>${chosenId ? `Picked: ${esc(variantById(chosenId).name)} · ` : ""}${variants.length} of ${deckTotal} shown</span></span>
           <span class="deck-chevron" aria-hidden="true">›</span>
         </summary>
@@ -712,8 +713,13 @@
         </div>
         <div class="variant-track">${variants.length ? "" : `<div class="variant-filter-empty">${icon("⌕")}<strong>No variants match this filter in Deck ${deck.id}</strong><span>Try another mechanic, play style, or search term.</span></div>`}</div>`;
       const track = $(".variant-track", details);
-      track.appendChild(makeDeckOverviewCard(deck));
       variants.forEach((variant) => track.appendChild(makeVariantCard(variant, rankStage)));
+      // The About button sits inside <summary>; without stopPropagation its click would also
+      // toggle the surrounding <details> open/closed, same fix as the shell select-all above.
+      $(".deck-about-button", details)?.addEventListener("click", (event) => {
+        event.stopPropagation();
+        openDeckAbout(deck, variants);
+      });
       $$(".rank-order-button", details).forEach((button) => button.addEventListener("click", () => {
         state.rankStages[deck.id] = Number(button.dataset.rankStage);
         openDeckId = deck.id;
@@ -927,17 +933,42 @@
     </div>`;
   }
 
-  function makeDeckOverviewCard(deck) {
-    const card = document.createElement("article");
-    card.className = "variant-card deck-overview-card";
-    card.innerHTML = `
-      <div class="deck-overview-copy">
-        <span class="deck-overview-eyebrow">${icon("◆")}Deck ${deck.id} strategy</span>
-        <h3>${esc(deck.title)}</h3>
-        <p>${esc(deck.objective)}</p>
-        <span class="swipe-hint">Swipe for the five approaches →</span>
-      </div>`;
-    return card;
+  // Full deck dossier, opened from the About button on each deck-group summary. Reuses
+  // #detail-sheet (the same dialog openVariantDetail uses) rather than a second dialog element,
+  // since the layout -- image aside, kicker, title, body -- is already exactly what this needs.
+  function openDeckAbout(deck, variants) {
+    const dialog = $("#detail-sheet");
+    const representative = (variants || []).find((variant) => variant.order === 1) || variants?.[0];
+    $("#detail-sheet-image").src = representative?.image || "";
+    $("#detail-sheet-image").alt = representative ? `${representative.commander} card` : "";
+    $("#detail-sheet-kicker").textContent = `Deck ${deck.id} of ${catalog.decks.length} in the lineup${deck.complexity?.tier ? ` · ${deck.complexity.tier}` : ""}`;
+    $("#detail-sheet-title").textContent = deck.title;
+    $("#detail-sheet-context").innerHTML = "";
+    $("#detail-sheet-context").hidden = true;
+    $("#commander-info-toggle")?.remove();
+    $("#detail-sheet-body").innerHTML = deckAboutMarkup(deck, variants || []);
+    dialog.showModal();
+  }
+
+  function deckAboutMarkup(deck, variants) {
+    const rank = deck.priorityRank;
+    const rankBlock = rank ? `<section class="detail-block deck-priority-block"><h3>Build order</h3><p><strong>#${rank.rank} of ${rank.ofTotal}</strong> in the recommended build order.</p><p>${esc(rank.rationale)}</p>${deck.priorityNote ? `<p class="deck-priority-note">${esc(deck.priorityNote)}</p>` : ""}</section>` : "";
+    const complexityBlock = deck.complexity ? `<section class="detail-block deck-complexity-block"><h3>Complexity</h3><p><strong>${esc(deck.complexity.tier)}.</strong> ${esc(deck.complexity.why)}</p></section>` : "";
+    const variantList = variants.length
+      ? `<section class="detail-block"><h3>The five approaches</h3><ul class="deck-about-variant-list">${variants.map((variant) => `<li><strong>${esc(variant.name)}</strong><span>${esc(variant.commander)}</span></li>`).join("")}</ul></section>`
+      : "";
+    return `
+      <p class="deck-about-objective">${esc(deck.objective)}</p>
+      ${detailText("What it is", deck.whatItIs)}
+      ${detailText("Where it fits among the ten", deck.fitAmongTen)}
+      ${detailText("Playstyle", deck.playstyle)}
+      ${detailText("Mood", deck.mood)}
+      ${complexityBlock}
+      ${detailText("Win condition", deck.winCondition)}
+      ${detailText("What it asks of you", deck.asksOfYou)}
+      ${detailText("When to pick this", deck.whenToPickThis)}
+      ${rankBlock}
+      ${variantList}`;
   }
 
   function openVariantDetail(variant, stage) {
@@ -2214,6 +2245,80 @@
     return {key: "moderate", label: "Moderate or situational improvement"};
   }
 
+  // The fun-ladder importer (Round 1) copied the optimizer's swap-evidence sentence into every
+  // text field it had -- purpose, why, whyPrimary, and brief.fit all read identically, e.g.
+  // "Replaces X (adds Y). Evidence: the card it replaces was cast in 81% of the games it was
+  // drawn...". That is genuinely useful -- it is exactly "what is lost by the card it
+  // replaces" -- but it is a paragraph, not a row caption, and it can surface on any ladder
+  // rung's purpose field, not only Fun. Detect it so the row can fall back to something short
+  // and the detail sheet can give it a section of its own instead.
+  function isSwapEvidenceText(text) {
+    return /^Replaces .+\.\s*Evidence:/i.test(String(text || "").trim());
+  }
+
+  function swapEvidenceSentence(item) {
+    return [item?.purpose, item?.why, item?.whyPrimary, item?.brief?.fit].find((value) => isSwapEvidenceText(value)) || "";
+  }
+
+  function truncateSentence(text, maxLen = 92) {
+    const trimmed = String(text || "").trim();
+    if (trimmed.length <= maxLen) return trimmed;
+    const cut = trimmed.slice(0, maxLen);
+    const lastStop = Math.max(cut.lastIndexOf(". "), cut.lastIndexOf("; "));
+    const lastSpace = cut.lastIndexOf(" ");
+    const boundary = lastStop > maxLen * 0.4 ? lastStop + 1 : lastSpace > 0 ? lastSpace : maxLen;
+    return `${cut.slice(0, boundary).trim()}…`;
+  }
+
+  // A mechanical read of the card's own printed text -- never a claim that this specific card
+  // was measured as fun, since no per-card fun rating exists anywhere in this app's data. Order
+  // matters: first match wins. Most fun-ladder cards are solid, unglamorous synergy pieces with
+  // no single standout mechanic, and for those this returns null on purpose rather than forcing
+  // a sentence -- the same "real signal or nothing" discipline the rest of Buy Picks follows.
+  const FUN_SIGNALS = [
+    [/flip (a|two|three) coins?|randomly/i, "Coin-flip or randomized effect — pure chaos value"],
+    [/extra turn|additional turn/i, "Grants an extra turn — a genuine table reaction"],
+    [/each player (may |draws|creates|gains|untaps)/i, "Group-hug effect — gives the whole table something, you included"],
+    [/that many (plus one|more)[^.]*counters?[^.]*instead|doubl(e|ing)[^.]*counter/i, "Counters snowball — every counter you'd add doubles up"],
+    [/untap all (permanents|creatures|lands)/i, "Extra-untap engine — a real \"wait, what?\" moment at the table"],
+    [/pay \d+ life rather than pay|cast this spell without paying its mana cost/i, "Free-cast trick — sidesteps its own cost in the right spot"],
+    [/choose (two|three)\b|•.*•.*•/i, "Highly modal — plays differently almost every game"],
+    [/\{X\}/, "Scales with mana — a genuine X-spell payoff"],
+    [/create[s]? (a|two|three|four|five|\d+)[^.]*token/i, "Builds an instant board of tokens"],
+    [/^i — /im, "Saga-style storytelling — plays out like a mini-story each game"],
+    [/\b(Convoke|Delve|Escape|Cascade|Suspend)\b/, "Cheats around its own cost — feels great when it works"],
+    [/Double strike/, "Double strike finisher — big, satisfying damage swings"],
+    [/fights? (up to \w+ )?(target |another )?creature|fight each other/i, "Creature duel — decisive, tactile combat trick"],
+    [/copy target|create a copy/i, "Copy effect — doubles the fun of whatever it targets"]
+  ];
+  function deriveFunSignal(item) {
+    const text = [item.oracleText, item.manaCost, (item.keywords || []).join(" ")].filter(Boolean).join(" ");
+    return FUN_SIGNALS.find(([pattern]) => pattern.test(text))?.[1] || null;
+  }
+
+  // The very short, kind-specific line the request asked for directly on the Buy Picks row:
+  // Fun Tuned/Fun Max say what makes the card fun, Enhance rungs say how it helps performance,
+  // Max rungs say how it maximizes Tier 3. Returns null (render nothing) rather than a filler
+  // sentence when the underlying data has nothing to say -- swap-evidence paragraphs are
+  // deliberately excluded here since they belong in the detail sheet, not a one-line caption.
+  function microFitLine(item, kind) {
+    if (kind === "enhance" || kind === "enhance2" || kind === "upgrade") {
+      const raw = usefulCardCopy(item.whyOptional, item.brief?.value);
+      if (!raw || isSwapEvidenceText(raw)) return null;
+      return {kind: "perf", label: "Improves performance", text: truncateSentence(raw)};
+    }
+    if (kind === "max" || kind === "max2") {
+      const raw = usefulCardCopy(item.maxReason, item.brief?.fit);
+      if (!raw || isSwapEvidenceText(raw)) return null;
+      return {kind: "max", label: "Maximizes Tier 3", text: truncateSentence(raw)};
+    }
+    if (kind === "funTuned" || kind === "funMax") {
+      const signal = deriveFunSignal(item);
+      return signal ? {kind: "fun", label: "What makes this fun", text: signal} : null;
+    }
+    return null;
+  }
+
   // Base/Tuned/Maxxed are offered on every deck; the -2/Fun/Alt rungs only appear once the
   // importer has actually populated that ladder's entry array for this specific plan (see
   // tools/import_budget_plan.py) -- the other 24 variants have none of these keys at all, so
@@ -2523,7 +2628,11 @@
     const checked = (current[kind] || []).includes(item.id);
     const impact = (kind === "enhance" || kind === "enhance2") ? enhancementImpact(item) : null;
     const replacement = item.replaces ? `<span class="replacement-line"><b${impact ? ` class="replace-impact impact-${impact.key}" title="${esc(impact.label)}" aria-label="Replaces — ${esc(impact.label)}"` : ""}>Replaces</b><span>${esc(item.replaces)}</span></span>` : "";
-    const summaryCopy = kind === "max" ? (item.maxReason || item.purpose || item.typeLine || "") : (item.purpose || item.typeLine || "");
+    // A swap-evidence paragraph ("Replaces X. Evidence: cast in 81% of games...") can land in
+    // purpose/maxReason on any ladder rung; it belongs in the detail sheet, not this row.
+    const rawSummary = kind === "max" ? (item.maxReason || item.purpose || item.typeLine || "") : (item.purpose || item.typeLine || "");
+    const summaryCopy = isSwapEvidenceText(rawSummary) ? (item.typeLine || "") : rawSummary;
+    const microFit = microFitLine(item, kind);
     return `<div class="buy-item" ${buyRowAttributes(item, checked)}>
       <input type="checkbox" ${checked ? "checked" : ""} data-buy-kind="${esc(kind)}" data-item-id="${esc(item.id)}" data-variant-id="${esc(variantId)}" aria-label="Include ${esc(item.name)} in the final deck">
       <button class="buy-item-detail" type="button" data-item-kind="${esc(kind)}" data-item-id="${esc(item.id)}">
@@ -2532,6 +2641,7 @@
           <span class="buy-item-eyebrow"><span class="kind-label ${esc(kind)}">${esc(KIND_LABELS[kind] || kind)}</span>${item.tags?.includes("alt") ? `<span class="alt-mini">◇ Alt</span>` : ""}${item.ownedExtra ? `<span class="owned-mini">✓ Owned</span>` : ""}${item.temporaryUntil ? `<span class="temp-mini">Temp until ${esc(item.temporaryUntil)}</span>` : ""}${item.gameChanger ? `<span class="gc-mini">✦ Game Changer</span>` : ""}</span>
           <strong>${esc(item.name)}${item.quantity > 1 ? ` ×${item.quantity}` : ""}</strong>
           ${replacement}<small>${esc(summaryCopy)}</small>
+          ${microFit ? `<small class="micro-fit micro-fit-${microFit.kind}"><b>${esc(microFit.label)}:</b> ${esc(microFit.text)}</small>` : ""}
         </span>
       </button>
       <span class="price">${money(cardPriceBounds(item, cardMetadata[itemKey(item)] || {}).price)}</span>
@@ -2733,6 +2843,16 @@
       </div>
       ${detailEffect("What this card does", standaloneCardEffect(item))}
       ${cardBuildMembershipMarkup(plan, item)}
+      ${(kind === "funTuned" || kind === "funMax") ? (() => {
+        const signal = deriveFunSignal(item);
+        return signal
+          ? detailText("What makes this fun", signal)
+          : `<section class="detail-block"><h3>What makes this fun</h3><p>No single standout mechanic here -- this card earned its spot because the fun-weighted simulation measured the deck playing better with it in, not because of a flashy effect on the card itself.</p></section>`;
+      })() : ""}
+      ${(() => {
+        const evidence = swapEvidenceSentence(item);
+        return evidence ? `<section class="detail-block swap-evidence-block"><h3>What the card it replaces gave up</h3><p>${esc(evidence)}</p></section>` : "";
+      })()}
       ${detailText("Why it is optional", usefulCardCopy(item.whyOptional))}
       ${detailText("Alternate rationale", usefulCardCopy(item.alternateReason))}
       ${detailText("Tradeoff", usefulCardCopy(item.alternateTradeoff))}

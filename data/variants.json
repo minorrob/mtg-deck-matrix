@@ -3,32 +3,140 @@
     {
       "id": 1,
       "title": "The Forgiving Fortress",
-      "objective": "The slot that has to survive turns 1-5 against a fast start, then convert everything it accumulated into a decisive finish. This is the deck you learn combat math on, so it should punish very few mistakes and reward patience."
+      "objective": "The slot that has to survive turns 1-5 against a fast start, then convert everything it accumulated into a decisive finish. This is the deck you learn combat math on, so it should punish very few mistakes and reward patience.",
+      "archetype": "Toughness-and-lifegain fortress — a defensive shell that survives long enough for an accumulation payoff to close the game.",
+      "whatItIs": "Every one of its five approaches leans on high-toughness bodies and steady lifegain to take the earliest hits without losing tempo, then converts whatever it stockpiled — counters, life, or a graveyard — into a finish once the table has spent its removal on someone else.",
+      "fitAmongTen": "This is the lineup's teaching slot. It punishes very few mistakes, so it is where combat math, blocking assignments, and \"when do I actually need to hold up an answer\" get learned without a harsh tax for getting them wrong.",
+      "playstyle": "Early turns are quiet: you develop toughness and let opponents trade removal on each other. Threat assessment shifts around turn 6-8 once the fortress plan is online, and games often end not with a single haymaker but a fortress that simply refuses to fall over.",
+      "mood": "Patient and low-variance — a deck to play when you want a game you can think your way through rather than one that swings on a single draw.",
+      "complexity": {
+        "tier": "Beginner",
+        "why": "The core loop — block, gain life, keep threats alive — reads directly off the board with little hidden information to track."
+      },
+      "winCondition": "Combat damage once the board stabilizes and the accumulated advantage (counters or a graveyard package, depending on variant) tips games that would otherwise stall out.",
+      "asksOfYou": "Patience above all — resisting the urge to race, and correctly reading when the table has run out of removal for your threats.",
+      "whenToPickThis": "Build this first if you are new to the pod or want a deck that keeps you in the game past the early turns while you learn everyone else's threats.",
+      "priorityRank": {
+        "rank": 1,
+        "ofTotal": 6,
+        "rationale": "Lowest decision density and the most forgiving mistake tolerance of the six — the natural first build."
+      },
+      "priorityNote": "Provisional across the current six decks. Four more decks are being added to the lineup, spanning common and expert play styles; this ranking will be revisited once they're built."
     },
     {
       "id": 2,
       "title": "The Long Game",
-      "objective": "The high-ceiling slot — the deck you grow into over months. It should reward reading the table, answering only what genuinely needs answering, and out-lasting three opponents through accumulated advantage rather than a single explosive turn."
+      "objective": "The high-ceiling slot — the deck you grow into over months. It should reward reading the table, answering only what genuinely needs answering, and out-lasting three opponents through accumulated advantage rather than a single explosive turn.",
+      "archetype": "Proliferate-and-control long game — grinds three opponents down with incremental advantage rather than racing anyone.",
+      "whatItIs": "The five approaches split between a proliferate/counters engine (planeswalkers and permanent counters) and a pure control shell built on repeated removal and card advantage. Both read the same way at the table: nothing dies to you quickly, and you are still doing something on turn 15.",
+      "fitAmongTen": "This is the deck built to reward reading the table over any single game plan. It has the least fixed shape of the six — its identity depends heavily on which of the five commanders you build around — which makes it the slot for someone who wants to specialize rather than follow a template.",
+      "playstyle": "Slow starts, deliberately. You are not applying pressure in the first five turns; you are answering threats and accumulating small, permanent advantages that compound. The back half of the game is where this deck actually plays.",
+      "mood": "Controlled and cerebral — satisfying if you enjoy a deck that improves its position every single turn rather than one that needs \"the turn.\"",
+      "complexity": {
+        "tier": "Advanced",
+        "why": "Correct sequencing of counters and removal against three unknown opponents, and recognizing which threats are worth an answer, both take real reps to get right."
+      },
+      "winCondition": "Whatever the table has left after its resources are exhausted — usually a planeswalker ultimate, an oversized threat that finally resolves, or simple attrition once no one else has cards or answers left.",
+      "asksOfYou": "Judgment under uncertainty — knowing which of three opponents' threats to answer now versus which to let ride, with no reliable way to take that back once a removal spell is committed.",
+      "whenToPickThis": "Pick this once you already have a fortress or budget deck under your belt and want the slot that rewards paying attention to the whole table, not just your own hand.",
+      "priorityRank": {
+        "rank": 5,
+        "ofTotal": 6,
+        "rationale": "The highest decision complexity among the five non-capstone decks, and its flagship build carries real budget risk from a single shell card whose market price can spike well past the rest of the list — best tackled once you're comfortable evaluating a purchase against a moving price."
+      },
+      "priorityNote": "Provisional across the current six decks. Four more decks are being added to the lineup, spanning common and expert play styles; this ranking will be revisited once they're built."
     },
     {
       "id": 3,
       "title": "The City Builder",
-      "objective": "The literal infrastructure deck — lands as the city. It should feel like every single turn advances the board, reward patience with compounding returns, and eventually produce an overwhelming position rather than a sudden kill."
+      "objective": "The literal infrastructure deck — lands as the city. It should feel like every single turn advances the board, reward patience with compounding returns, and eventually produce an overwhelming position rather than a sudden kill.",
+      "archetype": "Incremental board development — lands-and-ramp for four of its five approaches, with an enchantment-engine variant that compounds the same way through a different resource.",
+      "whatItIs": "The literal infrastructure deck: extra land drops, landfall triggers, and ramp turn every turn into forward progress, so the board looks meaningfully bigger on turn 10 than in decks that are still assembling a plan.",
+      "fitAmongTen": "Where deck 1 survives and deck 2 answers, this deck simply builds — its progress is visible every turn rather than gated behind a combo piece or a stabilized board state, which makes it easy to track your own position at a glance.",
+      "playstyle": "Every land drop matters, often literally triggering something. There is no dead turn 3 — even a \"do nothing\" turn advances the plan — and the back half of the game is spent turning a mana and land advantage into an overwhelming board rather than a single finisher.",
+      "mood": "Steady and satisfying — for players who like watching a number (lands, mana, board presence) climb turn over turn rather than waiting for one big swing.",
+      "complexity": {
+        "tier": "Beginner",
+        "why": "The core loop rewards playing a land and passing; there's little bluffing or hidden-information reasoning required to execute the plan correctly."
+      },
+      "winCondition": "Overwhelming board and mana advantage — either a ramp-fueled string of oversized threats or, on the landfall variants, direct damage and token output that scales with how many lands you've played.",
+      "asksOfYou": "Consistency more than cleverness — sequencing lands and ramp correctly and not skipping a turn's development, since the whole plan is additive.",
+      "whenToPickThis": "A strong second or third build: nearly as forgiving as the fortress deck, but it starts teaching you to think about board state and long-term resource advantage instead of just combat math.",
+      "priorityRank": {
+        "rank": 2,
+        "ofTotal": 6,
+        "rationale": "Nearly as low-complexity as the fortress deck, with the added benefit of teaching resource-advantage thinking that the more advanced decks in the lineup depend on."
+      },
+      "priorityNote": "Provisional across the current six decks. Four more decks are being added to the lineup, spanning common and expert play styles; this ranking will be revisited once they're built."
     },
     {
       "id": 4,
       "title": "The Reactive Engine",
-      "objective": "The slot that reads three opponents and responds intelligently. It should hold the fort with cheap answers, accrue value passively while doing so, and eventually reach a position where the accumulated engine simply wins."
+      "objective": "The slot that reads three opponents and responds intelligently. It should hold the fort with cheap answers, accrue value passively while doing so, and eventually reach a position where the accumulated engine simply wins.",
+      "archetype": "Reactive value engine — cheap answers plus a passive value stream that eventually just wins on its own.",
+      "whatItIs": "Across its five approaches this deck holds the fort with efficient removal or defensive bodies while a passive engine (card draw off defenders, blink value, or an artifact toolbox) accrues advantage in the background, so you are never spending a turn doing nothing.",
+      "fitAmongTen": "This is the lineup's cheapest, most budget-forgiving slot, and it reads three opponents rather than following a fixed script, which makes it the natural pairing to the more linear decks elsewhere in the ten.",
+      "playstyle": "You are almost always holding up an answer rather than tapping out, and the engine ticks along on its own during opponents' turns. Games often look uneventful from your side until the accumulated card advantage from a dozen small triggers suddenly puts you far ahead.",
+      "mood": "Calm and reactive — rewards patience and punishes an opponent's overextension rather than forcing your own action.",
+      "complexity": {
+        "tier": "Intermediate",
+        "why": "Knowing when to hold up interaction versus when to develop, and tracking a slow-building engine's value over many turns, takes more judgment than the fortress or infrastructure decks but less than the proliferate/control slot."
+      },
+      "winCondition": "Accumulated card and board advantage from the passive engine, eventually cashed in on a wide alpha strike or a value lead too large for the table to fight through.",
+      "asksOfYou": "Discipline to hold up answers instead of developing your own board, and the memory to track a slow-accruing engine's state turn over turn.",
+      "whenToPickThis": "Pick this when budget is the binding constraint — it is the cheapest complete build in the lineup — or when you want a deck that plays well reactively against decks you don't control.",
+      "priorityRank": {
+        "rank": 3,
+        "ofTotal": 6,
+        "rationale": "The lineup's lowest all-in cost makes it an easy early acquisition even though its reactive decision-making is a step up from the fortress and infrastructure decks."
+      },
+      "priorityNote": "Provisional across the current six decks. Four more decks are being added to the lineup, spanning common and expert play styles; this ranking will be revisited once they're built."
     },
     {
       "id": 5,
       "title": "The Immediate Engine",
-      "objective": "The fast-rhythm slot — something happens every turn from turn four onward. It should be the deck you reach for when you want action rather than patience, while still surviving a wipe."
+      "objective": "The fast-rhythm slot — something happens every turn from turn four onward. It should be the deck you reach for when you want action rather than patience, while still surviving a wipe.",
+      "archetype": "Fast, always-doing-something midrange — five different engines (spells-matter, voltron, tokens, graveyard, tribal) that all share one trait: constant turn-by-turn action starting around turn four.",
+      "whatItIs": "Where the other decks in the lineup ramp up slowly, this one is built to have a relevant play every turn from the early game on — casting spells that trigger a payoff, equipping and attacking, or building a token board — so there's rarely a pass-with-nothing-happening turn.",
+      "fitAmongTen": "This is the tempo counterweight to the patient decks elsewhere in the ten: where the fortress and infrastructure decks reward waiting, this one rewards constant small actions, which makes it the pick when you want a game that feels busy rather than measured.",
+      "playstyle": "Turns come with a decision almost every time — cast the spell that triggers the commander, attack with an equipped threat, or add to a growing token board — and the deck still carries enough resilience to take a board wipe and keep functioning.",
+      "mood": "Energetic and hands-on — for a session where you want to be doing something every turn rather than assembling a long-game plan.",
+      "complexity": {
+        "tier": "Intermediate",
+        "why": "Sequencing spells or attacks for maximum trigger value takes practice, though the payoff — more cards, more damage, more tokens — is usually immediate and legible."
+      },
+      "winCondition": "Accumulated small triggers — extra cards, extra damage, extra bodies — compounding into a lethal turn faster than the slower decks in the lineup can set up their own finish.",
+      "asksOfYou": "Tempo awareness: sequencing plays to maximize triggers per turn, and recognizing when to convert accumulated value into an attack rather than continuing to build.",
+      "whenToPickThis": "Pick this when you want a deck that feels active from turn one rather than one you have to wait out — good variety alongside the fortress or infrastructure deck if you want your games to play differently from each other.",
+      "priorityRank": {
+        "rank": 4,
+        "ofTotal": 6,
+        "rationale": "Comes in print and cheap — its precon-based build already clears the lineup's budget with room to spare — but the trigger-sequencing it rewards is a genuine step up from the first three decks in the build order."
+      },
+      "priorityNote": "Provisional across the current six decks. Four more decks are being added to the lineup, spanning common and expert play styles; this ranking will be revisited once they're built."
     },
     {
       "id": 6,
       "title": "The Capstone",
-      "objective": "The flagship — the deck that out-resources three opponents and can win from behind. It should reward the most decisions per turn and be the one you graduate into once the other five feel automatic."
+      "objective": "The flagship — the deck that out-resources three opponents and can win from behind. It should reward the most decisions per turn and be the one you graduate into once the other five feel automatic.",
+      "archetype": "The flagship — graveyard-value, reanimation, ramp, and ETB-doubling engines that all resource out the table from behind, at a price point the other five decks don't carry.",
+      "whatItIs": "Every approach here squeezes double value from the same cards — recurring them from the graveyard, doubling their enter-the-battlefield triggers, or ramping into a mana advantage so large that card disadvantage stops mattering. It is built to keep functioning after the kind of setback — a wipe, a key piece removed — that would end one of the other five decks' games.",
+      "fitAmongTen": "This is deliberately the most demanding and most expensive slot in the lineup, sitting outside the budget band the other five decks share. It exists to be the one you build last, once the fundamentals — combat math, resource tracking, table reading — are second nature from the other five.",
+      "playstyle": "Every card is doing at least one and a half jobs: a creature that returns from the graveyard, an ETB that fires twice, a land drop that ramps into the next threat. Games are won from behind more often than from ahead, since the resource engine keeps generating value even after a setback that would sink a simpler deck.",
+      "mood": "Ambitious and resilient — for a session where you want maximum decisions per turn and a plan that survives disruption rather than one that needs a clean start.",
+      "complexity": {
+        "tier": "Expert",
+        "why": "Tracking recursion targets, ETB triggers, and mana efficiency simultaneously, across a much higher card and combo density than the other five decks, is genuinely demanding to play well."
+      },
+      "winCondition": "An overwhelming resource and board advantage rebuilt turn after turn until no remaining opponent can keep pace, typically closed out by whichever finisher the accumulated value most directly enables — reanimated threats, doubled triggers, or a ramp-fueled bomb.",
+      "asksOfYou": "Full attention — tracking what's in every graveyard, what triggers twice, and sequencing plays to maximize value extracted per card, with a real cost for getting the order wrong.",
+      "whenToPickThis": "Build this last, once the other five decks feel automatic to pilot — that's not just a suggestion, it's the deck's own design intent, and its higher, separate budget band reflects that it's meant to be a destination rather than a starting point.",
+      "priorityRank": {
+        "rank": 6,
+        "ofTotal": 6,
+        "rationale": "By design and by its own higher budget band, this is the graduation deck — build it once the other five are comfortable."
+      },
+      "priorityNote": "Provisional across the current six decks. Four more decks are being added to the lineup, spanning common and expert play styles; this ranking will be revisited once they're built."
     }
   ],
   "variants": [

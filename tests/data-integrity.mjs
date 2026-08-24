@@ -17,6 +17,9 @@ assert.equal(ids.size, 30, "variant IDs must be unique");
 assert.equal(Object.keys(buyPlans.plans).length, 30, "every Compare variant must have a Buy Picks profile");
 assert.deepEqual(new Set(buyPlans.profileVariantIds), ids, "Buy Picks coverage must match the Compare catalog");
 
+// The Compare "About" panel replaced a one-line carousel card with a full dossier per deck --
+// every deck object must carry the extended fields it reads, not just title/objective.
+const DECK_ABOUT_FIELDS = ["archetype", "whatItIs", "fitAmongTen", "playstyle", "mood", "winCondition", "asksOfYou", "whenToPickThis", "priorityNote"];
 for (const deck of variants.decks) {
   const deckVariants = variants.variants.filter((variant) => variant.deckId === deck.id);
   assert.equal(
@@ -24,6 +27,12 @@ for (const deck of variants.decks) {
     5,
     `deck ${deck.id} must contain five variants`
   );
+  for (const field of DECK_ABOUT_FIELDS) {
+    assert(typeof deck[field] === "string" && deck[field].length > 20, `deck ${deck.id} must carry a real "${field}" for the About panel`);
+  }
+  assert(deck.complexity?.tier && deck.complexity?.why, `deck ${deck.id} must carry a complexity tier and rationale`);
+  assert(Number.isInteger(deck.priorityRank?.rank) && deck.priorityRank.rank >= 1 && deck.priorityRank.rank <= variants.decks.length, `deck ${deck.id} priority rank must be within 1..${variants.decks.length}`);
+  assert(typeof deck.priorityRank?.rationale === "string" && deck.priorityRank.rationale.length > 10, `deck ${deck.id} priority rank must carry a rationale`);
   for (const stageIndex of [0, 1, 2]) {
     assert.deepEqual(
       deckVariants.map((variant) => variant.ranks[stageIndex]).sort(),
@@ -31,6 +40,10 @@ for (const deck of variants.decks) {
       `deck ${deck.id} stage ${stageIndex + 1} ranks must be complete`
     );
   }
+}
+{
+  const ranks = variants.decks.map((deck) => deck.priorityRank.rank).sort((a, b) => a - b);
+  assert.deepEqual(ranks, variants.decks.map((_, i) => i + 1), "priority ranks must be a complete 1..N ordering with no gaps or duplicates");
 }
 
 for (const variant of variants.variants) {
@@ -387,5 +400,43 @@ assert.match(appSource, /function importPurchaseHistory\(/, "Shop List must be a
   // the front face.
   assert.match(body, /name\.split\(" \/\/ "\)\[0\]/, "double-faced card names must be recognized in either form");
 }
+
+// The Compare "About" button replaced the removed carousel overview card; nothing should still
+// construct or reference it.
+assert.doesNotMatch(appSource, /function makeDeckOverviewCard\(/, "the retired carousel overview card renderer must not come back");
+assert.match(appSource, /data-about-deck/, "each deck group must render an About button");
+assert.match(appSource, /function openDeckAbout\(/, "an About dialog opener must exist");
+
+// Buy Picks micro-copy (Fun/Enhance/Max rows) must never fabricate a per-card claim: it either
+// quotes real authored data (whyOptional, maxReason, the card's own oracle text) or renders
+// nothing at all. This mirrors the discipline already pinned for cardBuildMembership above --
+// no per-card impact numbers exist anywhere in this repo, and no per-card "this is fun" rating
+// exists either.
+assert.match(appSource, /function microFitLine\(/, "Buy Picks rows must be able to render the short per-kind micro-copy");
+assert.match(appSource, /function deriveFunSignal\(/, "a fun-signal heuristic must exist for Fun Tuned\/Fun Max rows");
+{
+  const start = appSource.indexOf("function deriveFunSignal(");
+  const end = appSource.indexOf("function microFitLine(", start);
+  assert(start > 0 && end > start, "deriveFunSignal must be defined before microFitLine");
+  const body = appSource.slice(start, end);
+  assert.match(body, /\|\|\s*null/, "deriveFunSignal must return null, never a fabricated default, when no real signal matches");
+}
+{
+  const start = appSource.indexOf("function microFitLine(");
+  const end = appSource.indexOf("\n  }\n\n  // Base/Tuned/Maxxed", start);
+  assert(start > 0 && end > start, "microFitLine must be defined before the ladder-groups comment block");
+  const body = appSource.slice(start, end);
+  assert.match(body, /return null/, "microFitLine must be able to render nothing rather than force a line");
+  assert.match(body, /isSwapEvidenceText\(raw\)\) return null/, "microFitLine must never surface the raw swap-evidence paragraph as a row caption");
+}
+
+// The swap-evidence paragraph the fun-ladder importer copied into purpose/why/brief.fit is real
+// data ("what is lost by the card it replaces") but reads as a full paragraph, not a row
+// caption -- it must be excluded from the row and instead get its own section in the detail
+// sheet, which is exactly where a reader who wants the full picture would look.
+assert.match(appSource, /function isSwapEvidenceText\(/, "a helper must detect the swap-evidence boilerplate pattern");
+assert.match(appSource, /function swapEvidenceSentence\(/, "the detail sheet must be able to surface the full swap-evidence sentence");
+assert.match(appSource, /isSwapEvidenceText\(rawSummary\)/, "the Buy Picks row must not render the raw swap-evidence paragraph as its caption");
+assert.match(appSource, /What the card it replaces gave up/, "the detail sheet must have a clearly labeled section for what a replaced card's evidence showed");
 
 console.log(`Validated ${variants.variants.length} variants and ${Object.keys(buyPlans.plans).length} connected buy profiles.`);

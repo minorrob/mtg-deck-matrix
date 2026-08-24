@@ -88,12 +88,14 @@ main { width: min(1560px, 100%); min-height: 70vh; margin: 0 auto; padding: 18px
 .deck-group > summary { display: flex; align-items: center; gap: 11px; min-height: 62px; padding: 12px 14px; list-style: none; cursor: pointer; background: linear-gradient(90deg, #ece4d1, #faf7ee); }
 .deck-group > summary::-webkit-details-marker { display: none; }
 .deck-number { display: grid; flex: 0 0 38px; place-items: center; width: 38px; height: 38px; border-radius: 12px; color: #fff; background: var(--forest); font-weight: 900; }
+.deck-about-button { display: flex; flex: 0 0 auto; align-items: center; gap: 4px; height: 30px; padding: 0 12px; border: 1px solid #bfb298; border-radius: 999px; color: var(--forest); background: #fffdf8; font-size: 11px; font-weight: 850; cursor: pointer; }
+.deck-about-button:hover { border-color: var(--forest-2); color: var(--forest-2); }
+.deck-about-button .ui-icon { width: 13px; height: 13px; }
 .deck-summary-copy { min-width: 0; flex: 1; }
 .deck-summary-copy strong { display: block; color: var(--forest); font: 800 17px/1.15 Georgia, serif; }
 .deck-summary-copy span { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; }
 .deck-chevron { font-size: 20px; transition: transform .2s; }
 .deck-group[open] .deck-chevron { transform: rotate(90deg); }
-.swipe-hint { display: block; margin-top: 7px; color: var(--forest-2); font-size: 11px; font-weight: 900; letter-spacing: .02em; }
 .rank-order { display: flex; align-items: center; gap: 5px; padding: 0 13px 10px; background: #fbf8ef; overflow-x: auto; }
 .rank-order > span { margin-right: 3px; color: var(--muted); font-size: 10px; font-weight: 900; text-transform: uppercase; white-space: nowrap; }
 .rank-order-button { min-height: 36px; padding: 6px 25px 6px 11px; border: 1px solid #bfb298; border-radius: 999px; color: var(--forest); background: #fffdf8; font-size: 11px; font-weight: 850; cursor: pointer; }
@@ -102,12 +104,12 @@ main { width: min(1560px, 100%); min-height: 70vh; margin: 0 auto; padding: 18px
 .variant-track { display: grid; grid-auto-flow: column; grid-auto-columns: min(88vw, 390px); gap: 12px; overflow-x: auto; padding: 13px; scroll-snap-type: x mandatory; scrollbar-color: #baa974 transparent; }
 .variant-card { position: relative; display: flex; flex-direction: column; min-height: 490px; border: 1px solid #d8cdb2; border-radius: 16px; overflow: hidden; background: #fffdf8; scroll-snap-align: center; }
 .variant-card.is-selected { border: 2px solid var(--gold); box-shadow: 0 0 0 3px rgba(198,151,53,.18); }
-.deck-overview-card { justify-content: center; background: linear-gradient(160deg, #fbf8ef, #f3ecd6); }
-.deck-overview-copy { padding: 22px 20px; }
-.deck-overview-eyebrow { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; color: var(--forest-2); font-size: 10px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; }
-.deck-overview-eyebrow .ui-icon { width: 16px; height: 16px; }
-.deck-overview-copy h3 { margin: 0 0 10px; color: var(--forest); font: 800 20px/1.2 Georgia, serif; }
-.deck-overview-copy p { margin: 0; color: #4e5d56; font-size: 14px; line-height: 1.55; }
+.deck-about-objective { margin: 0 0 14px; padding: 12px 14px; border-left: 3px solid var(--gold); color: var(--forest); background: #fbf8ef; font: 700 15px/1.5 Georgia, serif; }
+.deck-priority-note { margin-top: 8px; color: var(--muted); font-size: 12px; font-style: italic; }
+.deck-about-variant-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.deck-about-variant-list li { display: flex; flex-direction: column; padding: 8px 10px; border: 1px solid #e5dcc4; border-radius: 8px; background: #fffdf8; }
+.deck-about-variant-list strong { color: var(--forest); font-size: 13px; }
+.deck-about-variant-list span { color: var(--muted); font-size: 12px; }
 .rank-badge { width: 100%; display: flex; align-items: center; justify-content: center; gap: 3px; min-width: 0; padding: 3px 4px; border: 1px solid rgba(255,255,255,.72); border-radius: 6px; color: #3f2c09; background: linear-gradient(145deg,#f7dc7d,#c99b32); box-shadow: 0 2px 5px rgba(0,0,0,.2); text-align: center; }
 .rank-badge span { display: block; font: 900 12px/1 Georgia,serif; }
 .rank-badge small { display: block; margin: 0; font-size: 6px; font-weight: 900; letter-spacing: .02em; text-transform: uppercase; white-space: nowrap; }
@@ -423,6 +425,11 @@ details[open] > summary .section-expander::after { content: "−"; }
 .replacement-line .replace-impact.impact-edge { color: #737a76; }
 .buy-copy strong { display: block; font-size: 13px; }
 .buy-copy small { display: block; margin-top: 3px; color: var(--muted); line-height: 1.35; }
+.buy-copy > small.micro-fit { margin-top: 4px; padding: 3px 6px; border: 0; border-radius: 6px; font-size: 10.5px; line-height: 1.3; }
+.micro-fit b { font-weight: 900; text-transform: uppercase; letter-spacing: .01em; }
+.micro-fit-fun { color: #7a4a1e; background: #fbeedb; }
+.micro-fit-perf { color: #2766a8; background: #e6eff8; }
+.micro-fit-max { color: #7551a5; background: #f0eaf8; }
 .price { color: var(--forest); font-size: 12px; font-weight: 900; white-space: nowrap; }
 .kind-label { display: inline-block; margin-right: 5px; padding: 2px 5px; border-radius: 5px; color: #fff; background: var(--blue); font-size: 8px; font-weight: 900; text-transform: uppercase; }
 .kind-label.max { background: var(--red); }
@@ -570,6 +577,7 @@ details[open] > summary .section-expander::after { content: "−"; }
 .detail-sheet-body > .mbox { padding: 0; }
 .detail-sheet-body .mx, .detail-sheet-body .mhart, .detail-sheet-body .mtop, .detail-sheet-body > .mbox > h2 { display: none; }
 .detail-sheet-body .blk, .detail-block { margin-bottom: 13px; padding: 12px; border: 1px solid #ded4bd; border-radius: 11px; background: #fffdf8; }
+.swap-evidence-block { border-left: 3px solid #bfb298; background: #fbf8ef; }
 .detail-sheet-body h3, .detail-sheet-body h4 { margin: 0 0 7px; color: var(--forest); font-family: Georgia,serif; }
 .build-membership-headline { margin: 0 0 8px !important; color: var(--forest); font-size: 13px; font-weight: 850; }
 .build-membership-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
