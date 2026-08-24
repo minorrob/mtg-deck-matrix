@@ -142,91 +142,100 @@ for (const [variantId, plan] of Object.entries(buyPlans.plans)) {
   }
 }
 
-const bant = buyPlans.plans["4c"];
-const bantGroups = Array.from(Lineup.buildModel(bant).groups.values()).map((group) => new Set(group.map((entry) => entry.item.name)));
-assert(bantGroups.some((group) => ["Cultivate", "Assault Formation", "Aura Shards", "Dovin's Veto"].every((name) => group.has(name))), "Bant Assault Formation alternatives must share one radio slot");
-assert(bantGroups.some((group) => ["Dispel", "Unbreakable Formation", "Teferi's Protection", "Wall of Nets"].every((name) => group.has(name))), "Bant protection alternatives must share one radio slot");
+// Slot integrity, across all fifty rather than on two hand-picked groupings.
+// The old pair of assertions named the four cards the workbook had sharing one
+// Bant radio slot; the ladders are now generated from what the simulation
+// measured (tools/sim/bake-ladders.mjs) and every purchase replaces exactly one
+// distinct card, so those particular groupings no longer exist. What still has
+// to hold -- and now holds everywhere, which the old pair never checked -- is
+// that no ladder item is an orphan: every purchase names a card that is really
+// there for it to replace, and resolves to a slot with a real predecessor.
+// An orphan is the mis-chaining bug that puts a hundred-and-first card in a deck.
+for (const [variantId, plan] of Object.entries(buyPlans.plans)) {
+  const model = Lineup.buildModel(plan);
+  const ladderKinds = new Set(["tuned", "upgrade", "enhance", "max", "tuned2", "enhance2", "max2", "funTuned", "funMax", "altTuned", "altMax"]);
+  for (const entry of model.entries) {
+    if (!ladderKinds.has(entry.kind)) continue;
+    if (!entry.item.replaces) continue;
+    assert(entry.predecessorId, `${variantId}: ${entry.item.name} (${entry.kind}) says it replaces ${entry.item.replaces}, but nothing by that name resolves as its predecessor`);
+    assert(model.byId.get(entry.predecessorId), `${variantId}: ${entry.item.name} (${entry.kind}) resolves to a predecessor that is not in the model`);
+  }
+  const slotless = model.entries.filter((entry) => ladderKinds.has(entry.kind) && !entry.slotId);
+  assert.equal(slotless.length, 0, `${variantId}: ${slotless.map((entry) => entry.item.name).join(", ")} landed in no slot at all`);
+}
 
-// Win/Fun/Alt-commander ladders: every preset assembles to exactly the workbook's own
-// 100-card column (T2/T3 -- the authoritative guard against by-name mis-chaining), and the
-// alt-commander decks keep exactly one commander-slot occupant checked through every step
-// of applying a preset (T6). Fixture is tools/import_budget_plan.py's own by-column record
-// of the workbook it just read, so this re-derives fixture-equality from a live re-read
-// each run rather than trusting a stale committed fixture.
-const fixtures = JSON.parse(await readFile(new URL("../tests/fixtures/budget-plan-configs.json", import.meta.url), "utf8"));
-const PRESET_CHAINS = [
-  ["tuned2", "Tuned-2", ["required", "tuned2"]],
-  ["enhance2", "Enhance-2", ["required", "tuned2", "enhance2"]],
-  ["max2", "Max-2", ["required", "tuned2", "enhance2", "max2"]],
-  ["funTuned", "Fun Tuned", ["funTuned"]],
-  ["funMax", "Fun Max", ["funTuned", "funMax"]],
-  ["altTuned", "Alt Tuned", ["altTuned"]],
-  ["altMax", "Alt Max", ["altTuned", "altMax"]]
-];
-const BASIC_LAND_NAMES = new Set(["Forest", "Plains", "Island", "Swamp", "Mountain"]);
-for (const variantId of ["1o", "2c", "3e", "4c", "5o", "6f"]) {
+// Every rung assembles to exactly the hundred that was measured for it.
+//
+// This used to compare against the workbook's own by-column record, which was
+// the right guard while the ladders were a transcription of that workbook. They
+// are not any more: all fifty variants' Tuned, Pod Fun and Max ladders are now
+// generated from what the simulation measured (tools/sim/bake-ladders.mjs), so
+// the workbook is no longer authoritative about what is in a deck. What replaces
+// it is a stronger promise and the one the site's honesty actually rests on --
+// the score printed under a build belongs to that build. data/rung-lists.json is
+// the pinned copy of what each rung measured; composing the plan through the
+// lineup model has to reproduce it card for card, or a published number is
+// describing a deck nobody can buy.
+//
+// It catches the same class of bug the workbook comparison did, and catches it
+// on fifty variants instead of six: an item whose replaces-pointer resolves to
+// the wrong twin, a chain that leaves a slot empty, a rung that quietly composes
+// to a hundred and one.
+const rungLists = JSON.parse(await readFile(new URL("../data/rung-lists.json", import.meta.url), "utf8"));
+const RUNG_CHAINS = {
+  Base: [],
+  Tuned: ["required", "tuned2"],
+  "Pod Fun": ["funTuned"],
+  Max: ["required", "tuned2", "upgrade", "enhance", "enhance2", "max", "max2"]
+};
+assert.equal(Object.keys(rungLists.variants).length, 50, "every variant must have its measured rungs pinned");
+let rungsChecked = 0;
+for (const [variantId, rungs] of Object.entries(rungLists.variants)) {
   const plan = buyPlans.plans[variantId];
-  const deckFixture = fixtures[variantId];
-  const isAltDeck = (plan.altTuned || []).length > 0;
-  const baseSelection = Lineup.canonicalizeSelection(plan, {...Lineup.emptySelection(), shell: plan.startingShell.map((item) => String(item.id))});
-  const actualBase = new Map();
-  for (const entry of Lineup.selectedEntries(plan, baseSelection)) actualBase.set(entry.item.name, (actualBase.get(entry.item.name) || 0) + 1);
-  assert.equal(Lineup.quantity(plan, baseSelection), 100, `${variantId}: the assembled Base must total 100`);
-  for (const [presetKey, columnName, categoryOrder] of PRESET_CHAINS) {
-    const expectedColumn = deckFixture.columns[columnName];
-    if (!expectedColumn) continue; // Alt columns absent on decks without an alt commander
+  assert(plan, `${variantId}: pinned rung lists name a variant with no buy plan`);
+  for (const [rungName, measured] of Object.entries(rungs)) {
+    const chain = RUNG_CHAINS[rungName];
+    assert(chain, `${variantId}: no composition chain is defined for the ${rungName} rung`);
+    let selection = Lineup.canonicalizeSelection(plan, {...Lineup.emptySelection(), shell: plan.startingShell.map((item) => String(item.id))});
+    // ownedOptional items are free substitutions the owner may tick, never part
+    // of the published build these measured lists describe.
+    for (const category of chain) for (const item of (plan[category] || []).filter((entry) => !entry.ownedOptional)) selection = Lineup.applyChoice(plan, selection, item.id);
+    assert.equal(Lineup.quantity(plan, selection), 100, `${variantId} ${rungName}: assembles to ${Lineup.quantity(plan, selection)} cards, not 100`);
 
-    let selection = Lineup.emptySelection();
-    selection.shell = plan.startingShell.map((item) => String(item.id));
-    selection = Lineup.canonicalizeSelection(plan, selection);
-    for (const category of categoryOrder) for (const item of plan[category] || []) selection = Lineup.applyChoice(plan, selection, item.id);
+    const got = new Map();
+    for (const entry of Lineup.selectedEntries(plan, selection)) {
+      const key = entry.item.name.toLowerCase();
+      got.set(key, (got.get(key) || 0) + Math.max(1, Number(entry.item.quantity || 1)));
+    }
+    const want = new Map();
+    for (const card of measured) {
+      const key = card.name.toLowerCase();
+      want.set(key, (want.get(key) || 0) + Math.max(1, Number(card.quantity || 1)));
+    }
+    for (const [name, count] of want) {
+      assert.equal(got.get(name) || 0, count, `${variantId} ${rungName}: measured ${count} of ${name}, the assembled build has ${got.get(name) || 0}`);
+    }
+    for (const [name, count] of got) {
+      assert.equal(count, want.get(name) || 0, `${variantId} ${rungName}: the assembled build carries ${count} of ${name}, which is not in the measured list`);
+    }
+    rungsChecked += 1;
+  }
+}
+assert(rungsChecked >= 190, `expected close to four rungs on each of fifty variants, checked ${rungsChecked}`);
 
+// The alt-commander decks keep exactly one commander-slot occupant checked
+// through every step of applying a preset, which is the one thing the ladders
+// being regenerated could not change: a deck with two commanders is not a deck.
+for (const variantId of ["1o", "3e", "5o"]) {
+  const plan = buyPlans.plans[variantId];
+  for (const [presetKey, categories] of [["altTuned", ["altTuned"]], ["altMax", ["altTuned", "altMax"]]]) {
+    if (!(plan[presetKey] || []).length) continue;
+    let selection = Lineup.canonicalizeSelection(plan, {...Lineup.emptySelection(), shell: plan.startingShell.map((item) => String(item.id))});
+    for (const category of categories) for (const item of plan[category] || []) selection = Lineup.applyChoice(plan, selection, item.id);
     const entries = Lineup.selectedEntries(plan, selection);
     assert.equal(Lineup.quantity(plan, selection), 100, `${variantId}: assembled ${presetKey} preset must total 100`);
-    const actual = new Map();
-    for (const entry of entries) actual.set(entry.item.name, (actual.get(entry.item.name) || 0) + 1);
-    // What the fixture is authoritative about is the LADDER: which purchase
-    // lands in which slot, and what it displaces. It is no longer authoritative
-    // about the shell, because Base is now built from measured criteria rather
-    // than transcribed from the workbook (tools/sim/build-base.mjs). So the
-    // comparison is of deltas -- the column minus its own Base column against
-    // the assembled preset minus the assembled Base -- which pins every
-    // by-name mis-chaining bug this check was written to catch while letting
-    // the starting hundred be rebuilt underneath it.
-    const delta = (over, under) => {
-      const out = new Map();
-      for (const [name, count] of over) if (!BASIC_LAND_NAMES.has(name)) out.set(name, (out.get(name) || 0) + count);
-      for (const [name, count] of under) if (!BASIC_LAND_NAMES.has(name)) out.set(name, (out.get(name) || 0) - count);
-      for (const [name, count] of Array.from(out)) if (count === 0) out.delete(name);
-      return out;
-    };
-    // The Base rebuild swapped cards out of the starting shell, so a workbook
-    // row that displaced "Seedborn Muse" now displaces whatever stood in for it.
-    // Reading the substitution map lets the comparison stay card-for-card
-    // instead of being loosened to a count, and any swap the map does not
-    // account for still fails.
-    //
-    // A name is only substituted where it refers to the SHELL card. The same
-    // name can also be a purchase -- 1o's Fun Max buys Seedborn Muse back after
-    // the ladder replaced the shell copy -- and renaming that occurrence would
-    // compare the workbook's purchase against a card nobody bought.
-    const purchased = new Set(categoryOrder.flatMap((category) => (plan[category] || []).map((item) => item.name)));
-    const substitutions = baseRebuild.variants[variantId]?.substitutions || {};
-    const rename = (pairs, skip = new Set()) => pairs.map(([name, count]) => [skip.has(name) ? name : (substitutions[name] || name), count]);
-    const expectedDelta = delta(rename(Object.entries(expectedColumn), purchased), rename(Object.entries(deckFixture.columns.Base || {})));
-    const actualDelta = delta(actual, actualBase);
-    for (const [name, count] of expectedDelta) {
-      assert.equal(actualDelta.get(name) || 0, count, `${variantId}: assembling ${presetKey} must change ${name} by ${count} exactly as the workbook's ${columnName} column does against its Base`);
-    }
-    for (const [name, count] of actualDelta) {
-      assert.equal(count, expectedDelta.get(name) || 0, `${variantId}: assembling ${presetKey} must not change ${name} — the workbook's ${columnName} column does not`);
-    }
-
-    if (isAltDeck && (presetKey === "altTuned" || presetKey === "altMax")) {
-      const commanderSlotId = Lineup.buildModel(plan).entries.find((entry) => entry.item.isCommander)?.slotId;
-      const commanderOccupants = entries.filter((entry) => entry.slotId === commanderSlotId);
-      assert.equal(commanderOccupants.length, 1, `${variantId}: exactly one commander-slot occupant must remain checked after assembling ${presetKey}`);
-    }
+    const commanderSlotId = Lineup.buildModel(plan).entries.find((entry) => entry.item.isCommander)?.slotId;
+    assert.equal(entries.filter((entry) => entry.slotId === commanderSlotId).length, 1, `${variantId}: exactly one commander-slot occupant must remain checked after assembling ${presetKey}`);
   }
 }
 

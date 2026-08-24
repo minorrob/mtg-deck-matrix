@@ -16,7 +16,7 @@
 
 import path from "node:path";
 import {readdir} from "node:fs/promises";
-import {parseArgs, readJson, writeJson, loadCatalog, baseCards, tunedCards, funTunedCards, maxedCards, Lineup, Engine, ROOT, SIM_DIR, RESULTS_DIR, relative} from "./lib.mjs";
+import {parseArgs, readJson, writeJson, loadCatalog, baseCards, tunedCards, funTunedCards, maxedCards, Compliance, Lineup, Engine, ROOT, SIM_DIR, RESULTS_DIR, relative} from "./lib.mjs";
 
 const args = parseArgs(process.argv.slice(2));
 const {buyPlans, cards: cardData, audited} = await loadCatalog();
@@ -76,9 +76,32 @@ async function reasonsFor(requestId) {
   return reasons;
 }
 
+// Cards the optimizer reached for on Scryfall that the site has never priced.
+// The shop list cannot ask you to buy a card it has no price or link for, and
+// data/cards.json is what every other tool treats as authoritative, so anything
+// that lands in a ladder gets added to it.
+const newlyAudited = new Map();
 function makeItem(name, replaces, {category, stage, suffix, reason}) {
   const meta = metaFor(name);
   if (!meta) throw new Error(`no card data anywhere for ${name}`);
+  if (!audited.has(Lineup.normalizeName(name)) && !newlyAudited.has(Lineup.normalizeName(name))) {
+    newlyAudited.set(Lineup.normalizeName(name), {
+      name: meta.name || name,
+      typeLine: meta.typeLine || "",
+      manaCost: meta.manaCost || "",
+      oracleText: meta.oracleText || "",
+      keywords: meta.keywords || [],
+      colorIdentity: meta.colorIdentity || [],
+      gameChanger: Boolean(meta.gameChanger),
+      price: Number(meta.price || 0),
+      ceiling: Number(meta.ceiling ?? meta.price ?? 0),
+      image: meta.image || "",
+      tcgplayerUrl: meta.tcgplayerUrl || "",
+      legalities: {commander: "legal"},
+      commanderLegal: true,
+      source: "sweep-candidate-pool"
+    });
+  }
   return {
     id: slug(name, suffix),
     name: meta.name || name,
@@ -101,6 +124,17 @@ function makeItem(name, replaces, {category, stage, suffix, reason}) {
     keywords: meta.keywords || [],
     colorIdentity: meta.colorIdentity || [],
     commanderLegal: true,
+    // Max cards are justified by capability rather than by price, and the page
+    // enforces that, so the reason is carried under the name the Max rung reads.
+    maxReason: category === "max" ? (reason || `Tier 3 capability the lower rungs are not allowed to play; it replaces ${replaces}.`) : undefined,
+    // No invented one-to-five scores. A simulation can say what a card did in
+    // the games it was drawn in; it cannot say how much fun the card is, and a
+    // made-up number in that column would read exactly like a measured one.
+    // The scoring block simply does not render without them.
+    brief: {
+      value: `$${Number(meta.price || 0).toFixed(2)}. Chosen by simulation over the card it replaces, not by price.`,
+      fit: reason || `Simulation put this in the ${stage} build in place of ${replaces}.`
+    },
     ownedExtra: (buyPlans.ownedExtras || []).some((owned) => Lineup.normalizeName(owned) === Lineup.normalizeName(name)) || undefined
   };
 }
@@ -195,17 +229,69 @@ report.forEach((row) => {
   console.log(`${row.variantId.padEnd(4)} ${part("tuned", row.tuned)}   ${part("pod fun", row.podfun)}   ${part("max", row.maxed)}`);
 });
 
+// Owned cards that ended up in no deck at all. Regenerating the ladders drops
+// the hand-placed "you already have this one" options along with everything
+// else, and a card sitting in a box while the shop list asks you to buy its
+// equivalent is the specific waste this whole tool is meant to prevent. Each one
+// goes back as an Enhance option -- the rung that has always meant "a
+// substitution you can make for free" -- in a deck whose colors it fits,
+// standing in for the cheapest card doing the same job.
+const SALVAGE = new Set((buyPlans.salvage || []).flatMap((card) => String(card.name).split(" // ")).map((name) => Lineup.normalizeName(name)));
+const placedNames = new Set();
+const ALL_BUCKETS = ["startingShell", "required", "upgrade", "enhance", "max", "tuned2", "enhance2", "max2", "funTuned", "funMax", "altTuned", "altMax"];
+Object.values(buyPlans.plans).forEach((plan) => ALL_BUCKETS.forEach((bucket) => (plan[bucket] || []).forEach((item) =>
+  String(item.name).split(" // ").forEach((face) => placedNames.add(Lineup.normalizeName(face))))));
+const homeless = (buyPlans.ownedExtras || []).filter((name) => {
+  const faces = String(name).split(" // ").map((face) => Lineup.normalizeName(face));
+  if (faces.some((face) => SALVAGE.has(face) || placedNames.has(face))) return false;
+  return Boolean(metaFor(String(name).split(" // ")[0]));
+});
+const rehomed = [];
+for (const ownedName of homeless) {
+  const card = metaFor(String(ownedName).split(" // ")[0]);
+  const identity = new Set((card.colorIdentity || []).map((color) => String(color).toUpperCase()));
+  const role = rolesOf(card);
+  let best = null;
+  for (const plan of Object.values(buyPlans.plans)) {
+    const commander = plan.startingShell.find((entry) => entry.isCommander);
+    const deckIdentity = new Set((commander?.colorIdentity || []).map((color) => String(color).toUpperCase()));
+    if (![...identity].every((color) => deckIdentity.has(color))) continue;
+    const tuned = tunedCards(plan, audited);
+    if (tuned.some((entry) => Lineup.normalizeName(entry.name) === Lineup.normalizeName(card.name))) continue;
+    const target = tuned
+      .filter((entry) => !entry.isCommander && Math.max(1, Number(entry.quantity || 1)) === 1)
+      .filter((entry) => rolesOf(entry).some((each) => role.includes(each)))
+      .sort((a, b) => Number(a.price || 0) - Number(b.price || 0))[0];
+    if (!target) continue;
+    if (!best || Number(target.price || 0) > Number(best.target.price || 0)) best = {plan, target};
+  }
+  if (!best) continue;
+  const item = makeItem(card.name, best.target.name, {
+    category: "enhance",
+    stage: "Enhance",
+    suffix: "owned",
+    reason: `You already own this one. It stands in for ${best.target.name} at no extra cost, doing the same job in the deck.`
+  });
+  // A free choice offered to the owner, never auto-applied by a preset: the
+  // published numbers describe the build without it.
+  item.ownedOptional = true;
+  best.plan.enhance = [...(best.plan.enhance || []), item];
+  rehomed.push(`${card.name} → ${best.plan.variantId} for ${best.target.name}`);
+}
+if (rehomed.length) console.log(`re-homed ${rehomed.length} owned card(s): ${rehomed.join("; ")}`);
+
 // The gate. Composing each rung through lineup-model must reproduce the exact
 // hundred the sweep measured, or the page publishes numbers for a deck it does
 // not describe. That is the whole reason this file exists, so it is checked
 // rather than assumed.
 const breaks = [];
+const measuredLists = new Map();
 for (const file of files) {
   const record = await readJson(path.join(SWEEP_DIR, file));
   const plan = buyPlans.plans[record.variantId];
   if (!plan) continue;
   const check = (label, composed, measured) => {
-    if (!measured) return;
+    if (!measured || !composed) return;
     const got = counts(expand(composed));
     const want = counts(expand(measured));
     const total = Array.from(got.values()).reduce((sum, count) => sum + count, 0);
@@ -217,6 +303,11 @@ for (const file of files) {
   check("Tuned", tunedCards(plan, audited), record.rungs.tuned?.cards);
   check("Pod Fun", (plan.funTuned || []).length ? funTunedCards(plan, audited) : null, record.rungs.podfun?.cards);
   check("Max", maxedCards(plan, audited), record.rungs.maxed?.cards);
+  measuredLists.set(record.variantId, Object.fromEntries(
+    [["Base", record.rungs.base], ["Tuned", record.rungs.tuned], ["Pod Fun", record.rungs.podfun], ["Max", record.rungs.maxed]]
+      .filter(([, rung]) => rung?.cards?.length)
+      .map(([label, rung]) => [label, rung.cards.map((card) => ({name: card.name, quantity: Math.max(1, Number(card.quantity || 1))}))])
+  ));
 }
 
 console.log(`\n${report.length} variants · ${report.filter((row) => row.error).length} failed to build`);
@@ -227,9 +318,28 @@ if (breaks.length) {
 }
 console.log("every rung composes back to the exact hundred the sweep measured");
 
+console.log(`${newlyAudited.size} card(s) new to the audit will be added to data/cards.json`);
+
 if (args.write) {
+  if (newlyAudited.size) {
+    cardData.cards = [...cardData.cards, ...newlyAudited.values()].sort((a, b) => a.name.localeCompare(b.name));
+    await writeJson(path.join(ROOT, "data/cards.json"), cardData);
+    // The audit count is a claim about the catalog, so it moves with it.
+    if (buyPlans.cardAudit) buyPlans.cardAudit.cardsVerified = cardData.cards.length;
+  }
   await writeJson(path.join(ROOT, "data/buy-plans.json"), buyPlans);
-  console.log("written to data/buy-plans.json");
+  // The measured hundreds, committed. bake-ladders checks composition against
+  // the sweep before writing, but the sweep's own records are working files that
+  // never reach the repository -- so the check would be unrepeatable and a later
+  // hand-edit to a plan could silently detach a published score from the deck it
+  // describes. This is the pinned copy the test suite composes against.
+  await writeJson(path.join(ROOT, "data/rung-lists.json"), {
+    schemaVersion: 1,
+    generatedAt: new Date().toISOString(),
+    note: "The exact hundred measured for each rung. Composing the plan through lineup-model.js must reproduce these lists card for card.",
+    variants: Object.fromEntries(measuredLists)
+  });
+  console.log(`written to data/buy-plans.json${newlyAudited.size ? " and data/cards.json" : ""}`);
 } else {
   console.log("(dry run — pass --write to save)");
 }

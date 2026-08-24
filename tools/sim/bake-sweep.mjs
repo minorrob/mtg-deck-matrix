@@ -15,6 +15,10 @@ import {parseArgs, readJson, writeJson, loadCatalog, loadConfig, relative, ROOT,
 const args = parseArgs(process.argv.slice(2));
 const config = await loadConfig();
 const {variants, buyPlans} = await loadCatalog();
+// The commander comparisons are research, not measurement -- they were written
+// by reading cards, not by running games -- so a sweep neither produces them
+// nor gets to drop them.
+const previous = await readJson(path.join(ROOT, "data/simulation-summary.json"), {});
 const SWEEP_DIR = path.join(SIM_DIR, "sweep");
 
 const files = (await readdir(SWEEP_DIR).catch(() => [])).filter((name) => name.endsWith(".json"));
@@ -106,7 +110,8 @@ const summary = {
       ceiling: config.winRateBand.ceiling
     }))
   },
-  builds
+  builds,
+  altCommanderCases: previous.altCommanderCases || {}
 };
 
 if (missing.length) console.log(`no sweep record for ${missing.length} variant(s): ${missing.join(", ")}`);

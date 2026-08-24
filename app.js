@@ -1026,7 +1026,7 @@
         ? `<p><strong>${esc(variant.name)}</strong> scored highest of Deck ${esc(variant.deckId)}’s ${ranked.length} simulated variants at the Tuned rung — ${mine.tuned.score.toFixed(1)} points, a ${(mine.tuned.winPct * 100).toFixed(1)}% win rate over ${mine.tuned.games.toLocaleString()} games.</p>`
         : `<p><strong>${esc(variant.name)}</strong> placed #${myRank} of Deck ${esc(variant.deckId)}’s ${ranked.length} simulated variants at the Tuned rung, scoring ${mine.tuned.score.toFixed(1)} against <strong>${esc(top.variant.name)}</strong>’s leading ${top.tuned.score.toFixed(1)} — a gap of ${(top.tuned.score - mine.tuned.score).toFixed(1)}.</p>`;
     const myBuilds = buildsFor(variant.id);
-    const rungs = ["Tuned", "Enhance", "Max", "Fun Tuned", "Fun Max"];
+    const rungs = ["Base", "Tuned", "Pod Fun", "Max"];
     const rowsHtml = `
       <div class="why-variant-row is-this-variant">
         <div class="why-variant-row-head"><strong>${esc(variant.name)}</strong><span class="why-variant-you-tag">${esc(variant.commander)}</span></div>
@@ -2457,7 +2457,13 @@
     selection.shell = (plan.startingShell || plan.baseCards || []).map((item) => String(item.id));
     selection = Lineup.canonicalizeSelection(plan, selection);
     for (const category of preset.categories) {
-      for (const item of plan[category] || []) selection = Lineup.applyChoice(plan, selection, item.id);
+      // An owned substitution is a free choice offered to you, not part of the
+      // published build a preset names -- the simulated numbers describe the
+      // build without it, so applying it silently would detach them.
+      for (const item of plan[category] || []) {
+        if (item.ownedOptional) continue;
+        selection = Lineup.applyChoice(plan, selection, item.id);
+      }
     }
     return selection;
   }
@@ -2506,7 +2512,7 @@
   const PRESET_BUILD_NAME = {
     base: "Base", tuned: "Tuned", max: "Max",
     tuned2: "Tuned-2", enhance2: "Enhance-2", max2: "Max-2",
-    funTuned: "Fun Tuned", funMax: "Fun Max",
+    funTuned: "Pod Fun", funMax: "Fun Max",
     altTuned: "Alt Tuned", altMax: "Alt Max"
   };
 
@@ -2642,8 +2648,20 @@
     if (!sim || sim.games == null) {
       return `<p class="simulation-readout is-unsimulated">${icon("i")}<span><b>${esc(buildName)}</b> · ${esc(sim?.note || "published list — not independently simulated")}</span></p>`;
     }
+    // Score alone no longer says enough: two rungs are scored on different
+    // vectors, so the comparable number is power (the shared performance
+    // reading) and the interesting one is how the rest of the table's night
+    // went.
+    const parts = [
+      sim.score != null ? `score ${sim.score.toFixed(1)}` : null,
+      sim.powerScore != null && Math.abs(sim.powerScore - (sim.score ?? sim.powerScore)) >= 0.1 ? `power ${sim.powerScore.toFixed(1)}` : null,
+      `${sim.games.toLocaleString()} games`,
+      sim.winPct != null ? `${(sim.winPct * 100).toFixed(1)}% win` : "win % n/a",
+      sim.podFunPct != null ? `pod fun ${(sim.podFunPct * 100).toFixed(0)}` : null,
+      sim.tier ? `Tier ${sim.tier}` : null
+    ].filter(Boolean);
     return `<div class="simulation-readout" data-engine="${esc(sim.engine || "")}">
-      <p><b>Simulated:</b> ${esc(buildName)} · ${sim.score != null ? `score ${sim.score.toFixed(1)} · ` : ""}${sim.games.toLocaleString()} games · ${sim.winPct != null ? `${(sim.winPct * 100).toFixed(1)}% win` : "win % n/a"} · <span class="engine-tag">${esc(sim.engine || "engine n/a")} engine</span>${engineNoteIcon()}</p>
+      <p><b>Simulated:</b> ${esc(buildName)} · ${parts.join(" · ")} · <span class="engine-tag">${esc(sim.engine || "engine n/a")} engine</span>${engineNoteIcon()}</p>
     </div>`;
   }
 
@@ -2653,7 +2671,7 @@
   const KIND_LABELS = {
     precon: "Precon", shell: "Starting Shell", tuned: "Tuned", upgrade: "Enhance", enhance: "Enhance", max: "Maxxed",
     tuned2: "Tuned", enhance2: "Maxxed", max2: "Maxxed",
-    funTuned: "Fun Tuned", funMax: "Fun Max",
+    funTuned: "Pod Fun", funMax: "Fun Max",
     altTuned: "Alt Tuned", altMax: "Alt Max"
   };
   // Which plan array each checkbox kind draws from. Only "tuned" differs from its own name.
@@ -2671,8 +2689,8 @@
       tabs: [
         {key: "tuned", label: "Tuned", kinds: ["tuned", "tuned2"], preset: "tuned", build: "Tuned",
          note: "The required purchases that make this deck work, with every Monte-Carlo-improved swap folded in."},
-        {key: "funTuned", label: "Fun Tuned", kinds: ["funTuned"], preset: "funTuned", build: "Fun Tuned",
-         note: "A fun-weighted re-optimization built straight off Base · its own build, not a toggle on Tuned."}
+        {key: "funTuned", label: "Pod Fun", kinds: ["funTuned"], preset: "funTuned", build: "Pod Fun",
+         note: "The same deck asked a different question: win rate held under 45% so the table gets a game, pod experience weighted, and floored on power so it can never be the stronger build."}
       ]
     },
     {

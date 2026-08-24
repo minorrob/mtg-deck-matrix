@@ -106,47 +106,45 @@ assert.match(buyPlans.enhanceDefinition, /\$20/, "Enhance definition must state 
 assert.match(buyPlans.maxDefinition, /Tier 3/i, "Max must be defined by the Tier 3 capability ceiling");
 assert.match(buyPlans.maxDefinition, /rather than card price/i, "Max may not be classified by cost");
 
-const expectedOwnedEnhance = new Map([
-  ["Gollum, Riddle Master", ["2c", "Wall of Omens"]],
-  ["Giant's Boulder", ["2c", "Chromatic Lantern"]],
-  ["Troll Negotiations", ["2c", "Vraska's Contempt"]],
-  ["Mirkwood", ["3e", "Foul Orchard"]],
-  ["Ragged Short Spear", ["5o", "Monologue Tax"]],
-  ["Lake-town Lookout", ["6c", "Wall of Blossoms"]],
-  ["Stony-Voiced Goblins", ["6c", "Wall of Blossoms"]],
-  ["Great Fierce Bee", ["6c", "Luminous Broodmoth"]]
-]);
-for (const [name, [variantId, replaces]] of expectedOwnedEnhance) {
-  const item = buyPlans.plans[variantId].enhance.find((card) => card.name === name);
-  assert(item?.ownedExtra, `${name} must be an owned Enhance option in ${variantId}`);
-  assert.equal(item.replaces, replaces, `${name} must replace ${replaces}`);
+// Where each owned card sits is no longer pinned by name -- the ladders are
+// regenerated from measurement (tools/sim/bake-ladders.mjs), so a card's home
+// legitimately moves between bakes. What may never happen is an owned card
+// falling out of the catalog entirely: everything on the ownership list is
+// either in salvage or placed in at least one deck, and a placement that exists
+// only as a free substitution (ownedOptional) must name the card it stands in
+// for, so the option is actionable rather than decorative.
+{
+  const LADDER_BUCKETS_ALL = ["startingShell", "required", "upgrade", "enhance", "max", "tuned2", "enhance2", "max2", "funTuned", "funMax", "altTuned", "altMax"];
+  const placed = new Set();
+  for (const plan of Object.values(buyPlans.plans)) {
+    for (const bucket of LADDER_BUCKETS_ALL) {
+      for (const item of plan[bucket] || []) String(item.name).split(" // ").forEach((face) => placed.add(face.toLowerCase()));
+    }
+  }
+  const salvaged = new Set((buyPlans.salvage || []).flatMap((card) => String(card.name).split(" // ")).map((face) => face.toLowerCase()));
+  for (const name of buyPlans.ownedExtras.filter((entry) => !entry.startsWith("Lorehold Spirit ("))) {
+    const faces = String(name).split(" // ").map((face) => face.toLowerCase());
+    assert(faces.some((face) => placed.has(face) || salvaged.has(face)), `${name} is owned but sits in no deck and not in Salvage — an owned card the catalog forgets is money wasted twice`);
+  }
+  for (const plan of Object.values(buyPlans.plans)) {
+    for (const item of plan.enhance || []) {
+      if (!item.ownedOptional) continue;
+      assert(item.ownedExtra, `${plan.variantId}: ${item.name} is a free substitution and must be flagged as owned`);
+      assert(item.replaces, `${plan.variantId}: ${item.name} must name the card it stands in for`);
+    }
+  }
 }
 assert(buyPlans.plans["5o"].startingShell.find((card) => card.name === "Augusta, Order Returned")?.ownedExtra, "Augusta, Order Returned is already in the official Quintorius shell and must be marked owned without creating an illegal duplicate option");
-for (const name of ["Giant's Boulder", "Troll Negotiations", "Great Fierce Bee"]) {
-  const item = Object.values(buyPlans.plans).flatMap((plan) => plan.enhance).find((card) => card.name === name);
-  assert(item?.temporaryUntil, `${name} must identify its temporary-until target`);
-}
 const salvageNames = new Set((buyPlans.salvage || []).flatMap((card) => [card.name, ...card.name.split(" // ")]));
 for (const name of ["Bilbo Baggins, Burglar", "Dwarven Mattock", "Dwarven Mauler", "Dwarven Shortsword", "Gundabad Opportunist", "Guardian of the Halls"]) assert(salvageNames.has(name), `${name} must be in Salvage`);
 assert((buyPlans.salvage || []).every((card) => card.reason && card.image && card.typeLine), "Salvage cards must retain an audited reason and card data");
 assert(buyPlans.ownedExtras.includes("Bilbo Baggins, Burglar // Take a Glance"), "owned import must include Bilbo's canonical Adventure name");
 for (const name of ["Naktamun Lorespinner // Wheel of Fortune", "Kirol, History Buff // Pack a Punch", "Lorehold Archivist // Restore Relic"]) assert(buyPlans.ownedExtras.includes(name), `${name} must use its canonical ownership key`);
 assert(buyPlans.ownedExtras.length >= 93, "the complete photographed ownership table must be present");
-const selectedLiveVariantIds = ["1b", "2c", "3e", "4b", "5o", "6c"];
-const normalizeOwnedName = (value) => String(value || "").split(" // ")[0].toLowerCase();
-const visibleOwnedCards = new Map();
-for (const variantId of selectedLiveVariantIds) {
-  const plan = buyPlans.plans[variantId];
-  for (const item of [...plan.startingShell, ...plan.required, ...plan.enhance, ...plan.max]) {
-    if (item.ownedExtra) visibleOwnedCards.set(normalizeOwnedName(item.name), item);
-  }
-}
-for (const item of buyPlans.salvage || []) if (item.ownedExtra) visibleOwnedCards.set(normalizeOwnedName(item.name), item);
-// A card can also be visible because a variant is deliberately held to it. Two
-// of the marquee owned cards (Atraxa, Arcades) are commanders of variants that
-// are not in today's selected six, so without this they would read as owned but
-// unreachable. The locks are enumerated in data rather than inferred, so the
-// exemption cannot quietly grow to cover an owned card that really is homeless.
+// The marquee owned cards are held to named variants -- Atraxa and Arcades stay
+// where the owner can actually play them, whatever the optimizer thinks. The
+// locks are enumerated in data rather than inferred, each with a reason, and a
+// locked card must genuinely be in its variant with its ownership showing.
 assert(Array.isArray(buyPlans.ownedLocks) && buyPlans.ownedLocks.length >= 2, "owned marquee cards must be locked to named variants");
 for (const lock of buyPlans.ownedLocks) {
   const plan = buyPlans.plans[lock.variantId];
@@ -156,15 +154,20 @@ for (const lock of buyPlans.ownedLocks) {
   assert(item.ownedExtra, `${lock.card} must be marked owned in ${lock.variantId}`);
   assert(lock.why, `the lock on ${lock.card} in ${lock.variantId} must say why`);
   assert(buyPlans.ownedExtras.includes(lock.card), `${lock.card} must be in ownedExtras to be locked as owned`);
-  visibleOwnedCards.set(normalizeOwnedName(lock.card), item);
 }
-for (const name of buyPlans.ownedExtras.filter((item) => !item.startsWith("Lorehold Spirit ("))) {
-  assert(visibleOwnedCards.has(normalizeOwnedName(name)), `${name} must be a visible owned choice in a selected Live Deck or Salvage`);
+// Which Game Changers appear where is measured now, not curated, so no card is
+// pinned by name. What holds instead: a ladder item's own gameChanger flag must
+// agree with the audited catalog everywhere, in both directions -- a mismarked
+// card either publishes an illegal Tier 2 build or forbids a legal one.
+for (const plan of Object.values(buyPlans.plans)) {
+  for (const bucket of ["required", "upgrade", "enhance", "max", "tuned2", "enhance2", "max2", "funTuned", "funMax"]) {
+    for (const item of plan[bucket] || []) {
+      const audited = auditedByName.get(item.name.toLowerCase());
+      if (!audited) continue;
+      assert.equal(Boolean(item.gameChanger), Boolean(audited.gameChanger), `${plan.variantId} ${item.name} (${bucket}): the item's Game Changer flag disagrees with the audit`);
+    }
+  }
 }
-const farewells = Object.values(buyPlans.plans).flatMap((plan) => plan.max).filter((card) => card.name === "Farewell");
-assert(farewells.length > 0 && farewells.every((card) => card.gameChanger), "Farewell must be a Max Game Changer under the current list");
-assert(Object.values(buyPlans.plans).every((plan) => !plan.enhance.some((card) => card.name === "Farewell")), "Farewell may not remain in Enhance");
-assert(buyPlans.plans["5o"].max.filter((card) => card.gameChanger).length > 3, "Quintorius may offer more than three Game Changer alternatives");
 assert.doesNotMatch(appSource, /const baseCompliance = evaluateDeckCompliance\(plan, tentative\)/, "Buy Picks checkboxes must not pre-evaluate a hypothetical selection before applying a click");
 assert.match(appSource, /assignSelection\(currentState, Lineup\.applyLineageCheck\(plan, currentState, itemId\)\)/, "checking a Buy Picks card must clear its replaced lineage one-directionally, via applyLineageCheck (not applyChoice's symmetric slot-group clearance, which the preset dropdown uses instead) -- so re-checking a card it cleared can never claw back the higher-tier pick that replaced it");
 assert.match(appSource, /currentState\[kind\] = \(currentState\[kind\] \|\| \[\]\)\.filter\(\(id\) => id !== itemId\);/, "unchecking a Buy Picks card must remain a plain, independent removal with no side effects on any other item");
@@ -186,32 +189,37 @@ for (const view of ["choose", "compare", "buy", "shop", "live"]) {
 assert.match(appSource, /function exportLiveDecks/, "Live Decks must be exportable as a flat inventory");
 assert.match(appSource, /mtg-owned-extras-import-v3/, "the complete known inventory must migrate onto each browser once");
 assert.doesNotMatch(appSource, /plan\.max\.filter\(\(candidate\) => candidate\.gameChanger && choices\.has/, "the Game Changer guard may not count Max options only");
-assert(!buyPlans.plans["1c"].max.some((card) => card.name === "Exquisite Blood"), "Exquisite Blood must stay outside the Liesa Tier 3 pool because of redundant early two-card wins");
-for (const variantId of ["4a", "6f"]) {
-  const drake = buyPlans.plans[variantId].max.find((card) => card.name === "Peregrine Drake");
-  assert(drake?.tags.some((tag) => /late two-card infinite combo/i.test(tag)), `${variantId} Peregrine Drake must be Max with its late combo documented`);
-  assert(!buyPlans.plans[variantId].enhance.some((card) => card.name === "Peregrine Drake"), `${variantId} Peregrine Drake may not remain Enhance`);
+// The capability audit used to be a list of by-name placements ("Peregrine
+// Drake is Max in 4a, with its combo documented"). Those pins described a
+// curated ladder; the ladders are measured now, so which card lands where is an
+// output, not an input. The invariants that survive are structural and checked
+// elsewhere or here: the candidate pool refuses every card the compliance model
+// flags (tools/sim/fetch-candidates.mjs), so a two-card-combo piece cannot
+// enter any rung by optimization; the Game Changer flag agrees with the audit
+// everywhere (above); and each rung composes to exactly the measured hundred
+// (tests/lineup-compliance.mjs). What remains asserted here: a Tier 2 rung
+// carries no Game Changers, since Tuned and Pod Fun are published as Tier 2.
+for (const plan of Object.values(buyPlans.plans)) {
+  const commander = plan.startingShell.find((card) => card.isCommander);
+  if (commander?.gameChanger) continue; // published as Tier 3 by construction
+  for (const bucket of ["required", "tuned2", "funTuned"]) {
+    const offenders = (plan[bucket] || []).filter((item) => item.gameChanger);
+    assert.equal(offenders.length, 0, `${plan.variantId} ${bucket} carries ${offenders.map((item) => item.name).join(", ")}, but Tuned and Pod Fun are Tier 2 rungs and Tier 2 permits no Game Changers`);
+  }
 }
-assert(buyPlans.plans["6f"].max.some((card) => card.name === "Agent of Treachery"), "Yarok Agent of Treachery must be Max capability");
-for (const [variantId, name] of [["2e", "Alhammarret's Archive"], ["3c", "Ancient Greenwarden"], ["3o", "Ancient Greenwarden"], ["5f", "Kinsbaile Cavalier"], ["6d", "Kinnan, Bonder Prodigy"]]) {
-  assert(buyPlans.plans[variantId].max.some((card) => card.name === name), `${variantId} ${name} must be Max for capability, not price`);
-  assert(!buyPlans.plans[variantId].enhance.some((card) => card.name === name), `${variantId} ${name} may not remain Enhance`);
-}
-for (const [variantId, name] of [
-  ["1o", "Branching Evolution"], ["1a", "Pitiless Plunderer"], ["1a", "Skullclamp"], ["2a", "Hullbreaker Horror"],
-  ["2b", "Deserted Temple"], ["4b", "Cyberdrive Awakener"], ["4e", "Deadeye Navigator"], ["5o", "Skullclamp"],
-  ["5o", "Sunforger"], ["5e", "Rhys the Redeemed"], ["6f", "Woodland Bellower"]
-]) {
-  assert(buyPlans.plans[variantId].max.some((card) => card.name === name), `${variantId} ${name} must be Max after the capability audit`);
-  assert(!buyPlans.plans[variantId].enhance.some((card) => card.name === name), `${variantId} ${name} may not remain Enhance after the capability audit`);
-}
-for (const [variantId, name] of [["2o", "Blowfly Infestation"], ["4a", "Strionic Resonator"]]) {
-  assert(![...buyPlans.plans[variantId].enhance, ...buyPlans.plans[variantId].max].some((card) => card.name === name), `${variantId} ${name} must stay outside strict Tier 3 options`);
-  assert(buyPlans.tier3Excluded.some((card) => card.variantId === variantId && card.name === name && card.reason), `${variantId} ${name} must retain its exclusion rationale`);
-}
-for (const [variantId, name] of [["1e", "Earthcraft"], ["6f", "Cloudstone Curio"]]) {
-  const card = buyPlans.plans[variantId].max.find((candidate) => candidate.name === name);
-  assert(card?.tags.some((tag) => /late three-card infinite combo/i.test(tag)), `${variantId} ${name} must document its late three-card line`);
+// The exclusion ledger survives even though the placements it once guarded are
+// regenerated: a card recorded as excluded from a variant's strict Tier 3
+// options must stay out of that variant's ladders, with its reason intact. This
+// is the one place a human judgment overrides the optimizer, so it is data, not
+// a pin in a test.
+assert(Array.isArray(buyPlans.tier3Excluded) && buyPlans.tier3Excluded.length > 0, "the Tier 3 exclusion ledger must survive");
+for (const excluded of buyPlans.tier3Excluded) {
+  assert(excluded.reason, `${excluded.variantId} ${excluded.name} must retain its exclusion rationale`);
+  const plan = buyPlans.plans[excluded.variantId];
+  if (!plan) continue;
+  for (const bucket of ["required", "upgrade", "enhance", "max", "tuned2", "enhance2", "max2", "funTuned", "funMax"]) {
+    assert(!(plan[bucket] || []).some((card) => card.name === excluded.name), `${excluded.variantId} ${excluded.name} is on the exclusion ledger and may not reappear in ${bucket}`);
+  }
 }
 // Cards Wizards added to the Game Changer list after this data was first built.
 // What is pinned is the FLAG, not where the card sits: which deck plays a card
@@ -221,8 +229,11 @@ for (const [variantId, name] of [["1e", "Earthcraft"], ["6f", "Cloudstone Curio"
 // somewhere, so the check cannot pass by the card having quietly vanished.
 const LADDER_BUCKETS = ["startingShell", "required", "upgrade", "enhance", "max", "tuned2", "enhance2", "max2", "funTuned", "funMax", "altTuned", "altMax"];
 for (const name of ["Seedborn Muse", "Notion Thief", "Smothering Tithe"]) {
+  // The authority is the audit; being cut from every deck is a legitimate
+  // outcome for a Game Changer (the Tier 2 rungs are required to drop it), so
+  // presence is not asserted -- only that the flag holds wherever it does appear.
+  assert(auditedByName.get(name.toLowerCase())?.gameChanger, `${name} must carry its Game Changer flag in the audit`);
   const appearances = Object.values(buyPlans.plans).flatMap((plan) => LADDER_BUCKETS.flatMap((bucket) => (plan[bucket] || []).filter((card) => card.name === name)));
-  assert(appearances.length > 0, `${name} must still appear somewhere in the plans for its Game Changer flag to mean anything`);
   for (const card of appearances) assert(card.gameChanger, `${name} must consume a current Game Changer slot everywhere it appears`);
 }
 // And the corollary: no Tier 2 rung may carry one. Base, Tuned and Pod Fun are
@@ -234,9 +245,11 @@ for (const plan of Object.values(buyPlans.plans)) {
   assert.equal(offenders.length, 0, `${plan.variantId}'s Base rung carries ${offenders.map((card) => card.name).join(", ")}, which Tier 2 does not permit`);
 }
 
-// Win/Fun/Alt-commander ladders (tools/import_budget_plan.py), six target decks only --
-// the other 24 variants have no -2/Fun/Alt data and must not gain empty placeholder arrays
-// (lineup-model.js's `plan?.tuned2 || []` already degrades an absent key gracefully).
+// Ladder shape, checked on the six decks the workbook originally described.
+// Every variant now carries every category as an array, because the sweep bakes
+// a Tuned and a Pod Fun ladder for all fifty (tools/sim/bake-ladders.mjs); an
+// empty array is a rung the sweep found nothing to change at, which is a real
+// answer and not a missing one.
 const NEW_CATEGORIES = ["tuned2", "enhance2", "max2", "funTuned", "funMax", "altTuned", "altMax"];
 const ALT_DECKS = new Set(["1o", "3e", "5o"]);
 for (const variantId of ["1o", "2c", "3e", "4c", "5o", "6f"]) {
@@ -267,58 +280,65 @@ for (const variantId of ["1o", "2c", "3e", "4c", "5o", "6f"]) {
 // and read as an explicit unmeasured entry (all-null metrics) everywhere else rather than
 // silently vanishing. Every measured key carries a finite games/score/winPct and the engine
 // generation that actually measured it -- never inferred at render time.
-assert(simulationSummary.engineNotes?.v1 && simulationSummary.engineNotes?.["v2.1"] && simulationSummary.engineNotes?.["v2.2"] && simulationSummary.engineNotes?.["v2.3"], "simulation summary must document every engine generation it references");
+// The published numbers. Every rung either reports a full measurement or says
+// plainly that it was not measured; nothing is inferred at render time, and no
+// figure survives from an engine that asked a different question.
+const ENGINE = "v2.4";
+const MEASURED_RUNGS = ["Base", "Tuned", "Pod Fun", "Max"];
+assert.equal(simulationSummary.engine, ENGINE, `the summary must name the engine that produced it`);
+assert(simulationSummary.engineNotes?.[ENGINE], "simulation summary must document the engine generation it references");
 assert(typeof simulationSummary.engineBoundaryNote === "string" && simulationSummary.engineBoundaryNote.length > 0, "simulation summary must carry an engine-boundary caveat");
-const MEASURED_AS_PUBLISHED = new Set(["Tuned", "Enhance", "Max", "Fun Tuned", "Fun Max"]);
-const ALT_ENGINE = {"Alt Tuned": "v2.1", "Alt Max": "v2.1"};
+assert(simulationSummary.winRateBand?.floor > 0 && simulationSummary.winRateBand.ceiling > simulationSummary.winRateBand.floor, "the summary must publish the win-rate band its Pod Fun rung was scored against");
 assert.deepEqual(Object.keys(simulationSummary.builds).sort(), Object.keys(buyPlans.plans).sort(), "simulation summary's builds must cover every variant with a buy plan");
 assert.equal(Object.keys(simulationSummary.builds).length, 50, "the sweep covers exactly 50 variants");
+
 for (const [variantId, deckBuilds] of Object.entries(simulationSummary.builds)) {
-  const plan = buyPlans.plans[variantId];
-  const expectedBuilds = new Set(["Base", "Tuned", "Enhance", "Max", "Fun Tuned", "Fun Max"]);
-  if (ALT_DECKS.has(variantId)) { expectedBuilds.add("Alt Tuned"); expectedBuilds.add("Alt Max"); }
-  assert.deepEqual(new Set(Object.keys(deckBuilds)), expectedBuilds, `${variantId}: simulation summary must report exactly its expected builds`);
-  assert.equal(deckBuilds.Base.score, null, `${variantId}: Base is never simulated`);
-  for (const buildName of MEASURED_AS_PUBLISHED) {
+  assert.deepEqual(Object.keys(deckBuilds), MEASURED_RUNGS, `${variantId}: simulation summary must report exactly the four rungs`);
+  for (const buildName of MEASURED_RUNGS) {
     const metrics = deckBuilds[buildName];
-    // A Fun rung is measured exactly when the plan actually carries that ladder.
-    const ladder = buildName === "Fun Tuned" ? "funTuned" : buildName === "Fun Max" ? "funMax" : null;
-    const shouldBeMeasured = !ladder || (plan[ladder] || []).length > 0;
-    if (!shouldBeMeasured) {
-      assert.equal(metrics.score, null, `${variantId} ${buildName}: a variant with no ${ladder} ladder must report no score`);
-      assert.equal(metrics.engine, null, `${variantId} ${buildName}: an unmeasured build must not claim an engine`);
+    if (metrics.score == null) {
+      assert.equal(metrics.games, null, `${variantId} ${buildName}: an unmeasured rung must not report a game count`);
       continue;
     }
     assert(Number.isFinite(metrics.games) && metrics.games > 0, `${variantId} ${buildName}: a measured build must report a positive game count`);
     assert(Number.isFinite(metrics.score), `${variantId} ${buildName}: a measured build must report a finite score`);
+    assert(Number.isFinite(metrics.powerScore), `${variantId} ${buildName}: every rung must report its power on the shared performance vector, or the rungs cannot be compared`);
     assert(Number.isFinite(metrics.winPct) && metrics.winPct > 0 && metrics.winPct < 1, `${variantId} ${buildName}: win rate must be a fraction between 0 and 1`);
-    assert.equal(metrics.verdict, "measured-as-published", `${variantId} ${buildName}: a published-list measurement carries no optimizer verdict`);
-    assert.equal(metrics.swaps, 0, `${variantId} ${buildName}: measuring a published list must never report swaps`);
-    assert.equal(metrics.engine, "v2.3", `${variantId} ${buildName}: rung scores come from the v2.3 published-list sweep`);
+    assert(Number.isFinite(metrics.podFunPct), `${variantId} ${buildName}: every rung must report how the table's night went`);
+    assert.equal(metrics.engine, ENGINE, `${variantId} ${buildName}: rung scores must come from the ${ENGINE} sweep`);
+    assert([2, 3].includes(metrics.tier), `${variantId} ${buildName}: every rung must name the bracket it was measured against`);
   }
-  for (const [buildName, engine] of Object.entries(ALT_ENGINE)) {
-    if (!deckBuilds[buildName]) continue;
-    assert.equal(deckBuilds[buildName].engine, engine, `${variantId} ${buildName}: alt-commander builds keep their original ${engine} measurement`);
-  }
-  // The bug this replaced: Tuned and Fun Tuned were both re-optimizations from the same
-  // starting list under the same fixed seed, so they could converge on byte-identical
-  // metrics. They are different published card lists and must never read as one deck.
-  if (deckBuilds["Fun Tuned"].score != null) {
-    assert.notEqual(deckBuilds["Fun Tuned"].score, deckBuilds.Tuned.score, `${variantId}: Fun Tuned and Tuned are different lists and must not report identical scores`);
-  }
+  // Base is Tier 2 except where the commander is itself a Game Changer, which
+  // makes Tier 2 permanently unreachable and the whole deck published as Tier 3.
+  const shellCommander = buyPlans.plans[variantId].startingShell.find((card) => card.isCommander);
+  assert.equal(deckBuilds.Base.tier, shellCommander?.gameChanger ? 3 : 2, `${variantId}: Base is a Tier 2 rung unless the commander is a Game Changer`);
+  assert.equal(deckBuilds.Max.tier, 3, `${variantId}: Max is the Tier 3 rung`);
 }
-// "Trey's Build" marks Rob's own confirmed pick for each of the six deck slots -- authored,
-// published data (like priorityRank above), not something derived from any one browser's
-// localStorage, so it reads the same for anyone loading the Compare page.
-assert.deepEqual(variants.variants.filter((variant) => variant.treysBuild).map((variant) => variant.id).sort(), ["1o", "2c", "3e", "4c", "5o", "6f"], "Trey's Build must mark exactly these six confirmed variant picks");
-assert.match(appSource, /is-treys-build/, "the Compare card must render a distinct state for Trey's Build");
-assert.match(appSource, /treys-build-ribbon/, "Trey's Build must render a clear visual indicator on the Compare card");
-// The three original alt-commander decks (1o/3e/5o) got the full treatment: a hand-built
-// second decklist (plan.altTuned/altMax, with its own commander flagged) powering the
-// interactive "preview the alt commander" toggle on those specific Compare cards. The other
-// 44 variants (every non-flagship original variant, plus all 20 generated ones) get the
-// lighter evaluation only -- a scored comparison and a recommendation, with no second
-// decklist -- so they must NOT be checked against plan.altTuned, which stays empty for them.
+
+// The invariant the whole constrained-rung design exists to hold: the deck
+// optimized to win must be at least as able to win as the one optimized for the
+// table's night. It is enforced during the search by a power floor and a
+// reconciliation pass, and any variant where it still fails has to be named in
+// the summary's own caveats rather than quietly averaged into the medians.
+const declaredInversions = new Set((simulationSummary.caveats?.inversions || []).map((row) => row.variantId));
+for (const [variantId, deckBuilds] of Object.entries(simulationSummary.builds)) {
+  const tuned = deckBuilds.Tuned;
+  const podFun = deckBuilds["Pod Fun"];
+  if (tuned?.powerScore == null || podFun?.powerScore == null) continue;
+  if (podFun.powerScore <= tuned.powerScore + 0.05) continue;
+  assert(declaredInversions.has(variantId), `${variantId}: Pod Fun out-powers Tuned by ${(podFun.powerScore - tuned.powerScore).toFixed(1)} and the summary does not admit it in caveats.inversions`);
+}
+// And the other half of the same promise: a Pod Fun rung that stayed above the
+// ceiling is a deck that wins too much to be a good guest, which is exactly the
+// thing a reader is spending a hundred dollars to avoid.
+const declaredOver = new Set((simulationSummary.caveats?.podFunOverCeiling || []).map((row) => row.variantId));
+for (const [variantId, deckBuilds] of Object.entries(simulationSummary.builds)) {
+  const podFun = deckBuilds["Pod Fun"];
+  if (podFun?.winPct == null) continue;
+  if (podFun.winPct <= simulationSummary.winRateBand.ceiling + 0.005) continue;
+  assert(declaredOver.has(variantId), `${variantId}: Pod Fun wins ${(podFun.winPct * 100).toFixed(0)}% against a ${(simulationSummary.winRateBand.ceiling * 100).toFixed(0)}% ceiling and the summary does not admit it in caveats.podFunOverCeiling`);
+}
+
 const ALL_ALT_CASE_IDS = [
   "1o", "3e", "5o",
   "1a", "1b", "1c", "1e", "2o", "2a", "2b", "2e", "3o", "3c", "3d", "3f",
