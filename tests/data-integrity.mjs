@@ -233,28 +233,51 @@ for (const variantId of ["1o", "2c", "3e", "4c", "5o", "6f"]) {
   else assert.equal(commanderCandidates.length, 0, `${variantId} has no alternative commander to flag`);
 }
 
-// Real simulation results (tools/sim/run-sim.mjs, ingested by hand into this file), the
-// Phase 6 sweep's data source for the Buy Picks header's additive readout and the Compare-
-// page alt-commander preview. Base, Max, and Fun Max stay curated-only (no measured build
-// exists for them yet) and so carry no builds entry at all; every key that IS present must
-// carry a finite games/score/winPct and a recognized verdict, tagged with the engine
+// Real simulation results (tools/sim/run-sim.mjs --init, ingested into this file). Every
+// rung is measured as the exact card list the site publishes for it -- no hill-climbing
+// optimizer runs -- so a score describes the deck you would actually buy. Base is never
+// simulated; Fun Tuned/Fun Max exist only where the workbook carries a fun-weighted ladder,
+// and read as an explicit unmeasured entry (all-null metrics) everywhere else rather than
+// silently vanishing. Every measured key carries a finite games/score/winPct and the engine
 // generation that actually measured it -- never inferred at render time.
-assert(simulationSummary.engineNotes?.v1 && simulationSummary.engineNotes?.["v2.1"] && simulationSummary.engineNotes?.["v2.2"], "simulation summary must document all three engine generations");
+assert(simulationSummary.engineNotes?.v1 && simulationSummary.engineNotes?.["v2.1"] && simulationSummary.engineNotes?.["v2.2"] && simulationSummary.engineNotes?.["v2.3"], "simulation summary must document every engine generation it references");
 assert(typeof simulationSummary.engineBoundaryNote === "string" && simulationSummary.engineBoundaryNote.length > 0, "simulation summary must carry an engine-boundary caveat");
-const SIMULATED_ENGINE = {"Tuned": "v2.2", "Enhance": "v2.2", "Fun Tuned": "v2.2", "Alt Tuned": "v2.1", "Alt Max": "v2.1"};
-const VALID_VERDICTS = new Set(["confirmed", "within-noise", "not-confirmed", "no-change"]);
-assert.deepEqual(Object.keys(simulationSummary.builds).sort(), Object.keys(buyPlans.plans).sort(), "simulation summary's builds must now cover every variant with a buy plan");
-assert.equal(Object.keys(simulationSummary.builds).length, 50, "the Phase 6 sweep covers exactly 50 variants");
+const MEASURED_AS_PUBLISHED = new Set(["Tuned", "Enhance", "Max", "Fun Tuned", "Fun Max"]);
+const ALT_ENGINE = {"Alt Tuned": "v2.1", "Alt Max": "v2.1"};
+assert.deepEqual(Object.keys(simulationSummary.builds).sort(), Object.keys(buyPlans.plans).sort(), "simulation summary's builds must cover every variant with a buy plan");
+assert.equal(Object.keys(simulationSummary.builds).length, 50, "the sweep covers exactly 50 variants");
 for (const [variantId, deckBuilds] of Object.entries(simulationSummary.builds)) {
-  const expectedBuilds = new Set(["Tuned", "Enhance", "Fun Tuned"]);
+  const plan = buyPlans.plans[variantId];
+  const expectedBuilds = new Set(["Base", "Tuned", "Enhance", "Max", "Fun Tuned", "Fun Max"]);
   if (ALT_DECKS.has(variantId)) { expectedBuilds.add("Alt Tuned"); expectedBuilds.add("Alt Max"); }
   assert.deepEqual(new Set(Object.keys(deckBuilds)), expectedBuilds, `${variantId}: simulation summary must report exactly its expected builds`);
-  for (const [buildName, metrics] of Object.entries(deckBuilds)) {
-    assert(Number.isFinite(metrics.games) && metrics.games > 0, `${variantId} ${buildName}: a simulated build must report a positive game count`);
-    assert(Number.isFinite(metrics.score), `${variantId} ${buildName}: a simulated build must report a finite score`);
+  assert.equal(deckBuilds.Base.score, null, `${variantId}: Base is never simulated`);
+  for (const buildName of MEASURED_AS_PUBLISHED) {
+    const metrics = deckBuilds[buildName];
+    // A Fun rung is measured exactly when the plan actually carries that ladder.
+    const ladder = buildName === "Fun Tuned" ? "funTuned" : buildName === "Fun Max" ? "funMax" : null;
+    const shouldBeMeasured = !ladder || (plan[ladder] || []).length > 0;
+    if (!shouldBeMeasured) {
+      assert.equal(metrics.score, null, `${variantId} ${buildName}: a variant with no ${ladder} ladder must report no score`);
+      assert.equal(metrics.engine, null, `${variantId} ${buildName}: an unmeasured build must not claim an engine`);
+      continue;
+    }
+    assert(Number.isFinite(metrics.games) && metrics.games > 0, `${variantId} ${buildName}: a measured build must report a positive game count`);
+    assert(Number.isFinite(metrics.score), `${variantId} ${buildName}: a measured build must report a finite score`);
     assert(Number.isFinite(metrics.winPct) && metrics.winPct > 0 && metrics.winPct < 1, `${variantId} ${buildName}: win rate must be a fraction between 0 and 1`);
-    assert(VALID_VERDICTS.has(metrics.verdict), `${variantId} ${buildName}: verdict must be one of the four documented outcomes, got ${metrics.verdict}`);
-    assert.equal(metrics.engine, SIMULATED_ENGINE[buildName], `${variantId} ${buildName}: engine tag must match the documented v2.2/v2.1 split`);
+    assert.equal(metrics.verdict, "measured-as-published", `${variantId} ${buildName}: a published-list measurement carries no optimizer verdict`);
+    assert.equal(metrics.swaps, 0, `${variantId} ${buildName}: measuring a published list must never report swaps`);
+    assert.equal(metrics.engine, "v2.3", `${variantId} ${buildName}: rung scores come from the v2.3 published-list sweep`);
+  }
+  for (const [buildName, engine] of Object.entries(ALT_ENGINE)) {
+    if (!deckBuilds[buildName]) continue;
+    assert.equal(deckBuilds[buildName].engine, engine, `${variantId} ${buildName}: alt-commander builds keep their original ${engine} measurement`);
+  }
+  // The bug this replaced: Tuned and Fun Tuned were both re-optimizations from the same
+  // starting list under the same fixed seed, so they could converge on byte-identical
+  // metrics. They are different published card lists and must never read as one deck.
+  if (deckBuilds["Fun Tuned"].score != null) {
+    assert.notEqual(deckBuilds["Fun Tuned"].score, deckBuilds.Tuned.score, `${variantId}: Fun Tuned and Tuned are different lists and must not report identical scores`);
   }
 }
 // "Trey's Build" marks Rob's own confirmed pick for each of the six deck slots -- authored,
@@ -369,29 +392,34 @@ assert.match(appSource, /<small>Paid · \$\{priced\.priced\}\/\$\{priced\.bought
 assert.match(appSource, /<small>Market total<\/small>/, "the Buy Picks total must say Market total, since it prices everything selected whether owned or not");
 
 // Buy Picks groups the ladder rungs by what they cost you rather than by which optimizer
-// produced them: Tuned holds Tuned/Tuned-2/Fun Tuned, Maxxed holds Maxxed/Maxxed-2/Fun Max,
-// Enhance stays its own tier. A tab's `preset` is the configuration it represents end to end,
-// which is NOT the same as its own array -- Tuned-2 layers on top of the site's Tuned list
-// while Fun Tuned deliberately replaces it -- so select-all must apply the full stack or it
-// stops producing a legal 100.
+// produced them, and the Monte-Carlo-improved rungs are folded into the rungs they improve:
+// Tuned holds Tuned (carrying tuned2's cards) and Fun Tuned, Maxxed holds Maxxed (carrying
+// enhance2/max2's cards) and Fun Max, Enhance stays its own tier. Tuned-2 and Maxxed-2 must
+// not reappear as separately-selectable tabs -- a reader picks how far to invest, not which
+// optimizer produced the list. A tab's `preset` is still the configuration it represents end
+// to end (Fun Tuned replaces Tuned rather than layering on it), so select-all must apply the
+// full stack or it stops producing a legal 100.
 {
   const start = appSource.indexOf("const LADDER_GROUPS = [");
   const end = appSource.indexOf("const ladderTabState", start);
   assert(start > 0 && end > start, "LADDER_GROUPS must be defined before the tab state it drives");
   const body = appSource.slice(start, end);
   for (const [group, tabs] of [
-    ["tuned", ["tuned", "tuned2", "funTuned"]],
-    ["max", ["max", "max2", "funMax"]],
+    ["tuned", ["tuned", "funTuned"]],
+    ["max", ["max", "funMax"]],
     ["alt", ["altTuned", "altMax"]]
   ]) {
     assert.match(body, new RegExp(`key: "${group}", title:`), `the ${group} ladder group must exist`);
     for (const tab of tabs) assert.match(body, new RegExp(`key: "${tab}", label:`), `${tab} must be a tab inside a ladder group, not its own top-level section`);
   }
-  assert.match(body, /key: "max2", label: "Maxxed-2", kinds: \["enhance2", "max2"\]/, "Enhance-2 cards must live in the Maxxed-2 tab, since Enhance is defined as the $20-or-less tier");
-  assert.doesNotMatch(body, /key: "enhance2", label:/, "Enhance-2 must not be its own tab");
+  assert.match(body, /key: "tuned", label: "Tuned", kinds: \["tuned", "tuned2"\]/, "the Tuned tab must carry the Monte-Carlo-improved Tuned-2 cards alongside the site's own");
+  assert.match(body, /key: "max", label: "Maxxed", kinds: \["max", "enhance2", "max2"\]/, "the Maxxed tab must carry the Monte-Carlo-improved Enhance-2/Max-2 cards alongside the site's own");
+  for (const gone of ["tuned2", "max2", "enhance2"]) {
+    assert.doesNotMatch(body, new RegExp(`key: "${gone}", label:`), `${gone} must not be a separately-selectable tab any more`);
+  }
 }
 assert.match(appSource, /assemblePreset\(plan, input\.checked \? presetKey : "base"\)/, "a tab's select-all must apply that build's whole configuration, so the result is always a complete 100");
-assert.match(appSource, /\{key: "enhance", label: "Enhance", categories: \["required", "upgrade", "enhance"\]\}/, "an Enhance intent level must exist for the simplified dropdown");
+assert.match(appSource, /\{key: "enhance", label: "Enhance", categories: \[\.\.\.tunedCategories, "upgrade", "enhance"\]\}/, "an Enhance intent level must exist for the simplified dropdown, built on whatever Tuned resolved to");
 // De-emphasis is cosmetic. This app never blocks a choice, so the alt/non-alt groups must
 // never be disabled -- only dimmed.
 assert.match(appSource, /is-deemphasized/, "ladder groups must support visual de-emphasis");

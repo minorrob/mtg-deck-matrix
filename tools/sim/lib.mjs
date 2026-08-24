@@ -145,7 +145,34 @@ export function enhanceCards(plan, audited) {
 // duplicate-name resolution behave exactly as they do in the browser.
 export function maxedCards(plan, audited) {
   let selection = Lineup.defaultSelection(plan);
-  [...(plan.enhance || []), ...(plan.max || [])].forEach((item) => {
+  [...(plan.enhance || []), ...(plan.max || []), ...(plan.enhance2 || []), ...(plan.max2 || [])].forEach((item) => {
+    selection = Lineup.applyChoice(plan, selection, item.id);
+  });
+  return literalCardsFor(plan, audited, selection);
+}
+
+// The Fun Tuned build: the plan's own fun-weighted ladder applied to the bare
+// starting shell. Unlike Enhance/Max this is NOT layered on Tuned -- it is a
+// re-optimization built straight off Base, so it starts from the shell alone
+// and never applies plan.required.
+export function funTunedCards(plan, audited) {
+  let selection = Lineup.emptySelection();
+  selection.shell = (plan.startingShell || plan.baseCards || []).map((item) => String(item.id));
+  selection = Lineup.canonicalizeSelection(plan, selection);
+  (plan.funTuned || []).forEach((item) => {
+    selection = Lineup.applyChoice(plan, selection, item.id);
+  });
+  return literalCardsFor(plan, audited, selection);
+}
+
+// The Fun Max build: the Fun Max ladder on top of Fun Tuned, the pairing the
+// site itself presents (and the only order in which funMax's replaces-chain
+// resolves against the cards funTuned actually put on the board).
+export function funMaxCards(plan, audited) {
+  let selection = Lineup.emptySelection();
+  selection.shell = (plan.startingShell || plan.baseCards || []).map((item) => String(item.id));
+  selection = Lineup.canonicalizeSelection(plan, selection);
+  [...(plan.funTuned || []), ...(plan.funMax || [])].forEach((item) => {
     selection = Lineup.applyChoice(plan, selection, item.id);
   });
   return literalCardsFor(plan, audited, selection);
