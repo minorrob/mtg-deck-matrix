@@ -265,4 +265,41 @@ assert.match(appSource, /metricFamilyMarkup\("playstyle", playstyle, `metric-pla
 }
 assert.match(appSource, /simulationSummary\.engineBoundaryNote/, "a rendered simulation result must always carry the v1\\/v2.1 engine-boundary caveat");
 
+// Phase 4 -- Live Decks/Shop List flow-through for the seven new categories, plus the Alt
+// filter and the advisory performance check. levelByKind is the load-bearing map: any new
+// category missing from it silently mislabels that card as "Starting Shell" everywhere
+// downstream (badges, filters, CSV) -- see the git history for exactly that bug, caught by
+// Playwright before this pin existed.
+{
+  const start = appSource.indexOf("const levelByKind = {");
+  const end = appSource.indexOf("};", start);
+  const levelByKindBody = appSource.slice(start, end);
+  for (const category of NEW_CATEGORIES) {
+    assert.match(levelByKindBody, new RegExp(`${category}: \\[`), `configuredDeckCards's levelByKind must map ${category} to a real Live Decks level, not fall through to Starting Shell`);
+  }
+}
+assert.match(appSource, /liveFilterSelect\("category", "Level", LEVEL_FILTER_OPTIONS, filters\.category\)/, "the Live Decks Level filter must use the shared option list");
+assert.match(appSource, /selectFilter\("category", "Level", LEVEL_FILTER_OPTIONS, filters\)/, "the Shop List Level filter must use the SAME shared option list as Live Decks, not a separately hand-maintained duplicate");
+for (const category of NEW_CATEGORIES) {
+  assert(appSource.includes(`["${category}"`), `LEVEL_FILTER_OPTIONS must offer ${category} as a Level filter choice`);
+}
+assert.match(appSource, /filters\.alt === "alt" && !card\.tags\?\.includes\("alt"\)/, "the Live Decks Alt filter must check the card's own alt tag");
+assert.match(appSource, /filters\.alt === "alt" && !item\.tags\?\.includes\("alt"\)/, "the Shop List Alt filter must check the item's own alt tag");
+assert.match(appSource, /hasAltData \? liveFilterSelect\("alt"/, "the Live Decks Alt filter control must be conditional on the deck actually having alt-commander data");
+const shopFiltersSource = await readFile(new URL("../shop-filters.js", import.meta.url), "utf8");
+assert.match(shopFiltersSource, /FILTER_KEYS = \[.*"alt"/, "shop-filters.js's own DOM-scraping Alt filter must be registered in FILTER_KEYS");
+assert.match(shopFiltersSource, /cardIsAlt/, "shop-filters.js must read the Alt badge app.js renders, not guess from card text");
+
+// Advisory performance check -- never a gate. Pin both the role-floor numbers themselves and
+// the literal words confirming the disclosure is advisory, so a future edit can't silently
+// turn "heads-up" into a block without a test noticing.
+assert.match(appSource, /const ROLE_FLOORS = \{ramp: 8, draw: 8, interaction: 8, protect: 3\};/, "role-floor advisory must use the documented 8\\/8\\/8\\/3 floors");
+assert.match(appSource, /it never blocks anything/, "the performance check must say plainly that it never blocks");
+{
+  const start = appSource.indexOf("function livePerformanceCheck(");
+  const end = appSource.indexOf("function livePerformanceCheckMarkup", start);
+  assert(start > 0 && end > start, "livePerformanceCheck and livePerformanceCheckMarkup must both be defined, in that order");
+  assert.doesNotMatch(appSource.slice(start, end), /return false/, "the performance check must never be able to gate or refuse a selection");
+}
+
 console.log(`Validated ${variants.variants.length} variants and ${Object.keys(buyPlans.plans).length} connected buy profiles.`);

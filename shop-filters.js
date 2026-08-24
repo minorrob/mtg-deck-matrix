@@ -3,8 +3,8 @@
 
   const STORAGE_KEY = "mtg-shop-extra-filters-v1";
   let observerControl = null;
-  const DEFAULTS = { color: "all", price: "all", rarity: "all", location: "all", sort: "default" };
-  const FILTER_KEYS = ["color", "price", "rarity", "location"];
+  const DEFAULTS = { color: "all", price: "all", rarity: "all", location: "all", alt: "all", sort: "default" };
+  const FILTER_KEYS = ["color", "price", "rarity", "location", "alt"];
   const COLOR_LABELS = {
     all: "All colors",
     white: "White",
@@ -80,6 +80,13 @@
     return String(card.querySelector(".shop-buying-facts > div:first-child strong")?.textContent || "").trim();
   }
 
+  // Reads the Alt badge app.js renders into the kicker for any card tagged "alt" (an
+  // alternative-commander lineage card) -- this file only ever sees rendered markup, never
+  // the JS selection state, so the badge itself is the signal.
+  function cardIsAlt(card) {
+    return Boolean(card.querySelector(".shop-badge.alt"));
+  }
+
   function matches(card) {
     if (filters.color !== "all" && cardColor(card) !== filters.color) return false;
 
@@ -90,6 +97,7 @@
 
     if (filters.rarity !== "all" && cardRarity(card) !== filters.rarity) return false;
     if (filters.location !== "all" && normalize(cardLocation(card)) !== normalize(filters.location)) return false;
+    if (filters.alt === "alt" && !cardIsAlt(card)) return false;
     return true;
   }
 
@@ -128,6 +136,7 @@
       price: ["Price", [["all", "All prices"], ["under3", "Under $3"], ["3to30", "$3–$30"], ["over30", "Over $30"]]],
       rarity: ["Rarity", [["all", "All rarities"], ["common", "Common"], ["uncommon", "Uncommon"], ["rare", "Rare"], ["mythic", "Mythic"], ["other", "Other / sealed"]]],
       location: ["Location", [["all", "All locations"], ...locations.map((location) => [location, location])]],
+      alt: ["Alt", [["all", "All cards"], ["alt", "Alt only"]]],
       sort: ["Sort", [["default", "Default order"], ["az", "Name: A → Z"], ["za", "Name: Z → A"], ["lowHigh", "Price: Low → High"], ["highLow", "Price: High → Low"]]]
     };
 

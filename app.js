@@ -234,7 +234,7 @@
       boughtQuantities: {},
       comments: {},
       compareFilters: {query: "", mechanic: "all", playstyle: "all", profileStage: "2"},
-      shopFilters: { status: "need", type: "all", category: "all", deck: "all", groupBy: "none", query: "" },
+      shopFilters: { status: "need", type: "all", category: "all", alt: "all", deck: "all", groupBy: "none", query: "" },
       buyMode: "all",
       purchasePrices: {},
       liveFilters: {},
@@ -1815,11 +1815,12 @@
     return intersection / (a.size + b.size - intersection);
   }
 
-  // Finds which preset the deck's ACTUAL current picks most resemble, regardless of whether
-  // a preset was ever applied -- free-form editing means the live selection routinely isn't
-  // an exact match for any one preset, so this is a similarity search, not a lookup.
-  function nearestPresetMatch(plan, current) {
-    const currentIds = new Set(Lineup.selectedEntries(plan, current).map((entry) => entry.id));
+  // Finds which preset a given id-set most resembles, regardless of whether a preset was ever
+  // applied -- free-form editing means a live selection routinely isn't an exact match for any
+  // one preset, so this is a similarity search, not a lookup. Shared by the Buy Picks dynamic
+  // metrics header (over the raw Buy Picks selection) and the Live Decks advisory performance
+  // check (over just the active 100), since both are asking the same question of different id-sets.
+  function nearestPresetMatchForIds(plan, currentIds) {
     const scored = deckPresets(plan).map((preset) => {
       const presetSelection = assemblePreset(plan, preset.key);
       const presetIds = new Set(Lineup.ARRAY_KEYS.flatMap((key) => presetSelection[key] || []));
@@ -1830,6 +1831,10 @@
     for (const id of currentIds) if (!best.presetIds.has(id)) extra++;
     for (const id of best.presetIds) if (!currentIds.has(id)) missing++;
     return {...best, extra, missing};
+  }
+
+  function nearestPresetMatch(plan, current) {
+    return nearestPresetMatchForIds(plan, new Set(Lineup.selectedEntries(plan, current).map((entry) => entry.id)));
   }
 
   // Piece 1 of the dynamic metrics header (the 12-metric strip Rob asked for, minus Growth):
@@ -2338,6 +2343,7 @@
     lineup: "all",
     source: "all",
     category: "all",
+    alt: "all",
     cardType: "all",
     color: "all",
     price: "all",
@@ -2347,6 +2353,23 @@
     groupBy: "status",
     subgroupBy: "typeLine"
   };
+  // Shared by the Live Decks and Shop List copies of the Level filter (see P3 in the
+  // new-categories plan -- both must stay in sync, so this is the one list they both read).
+  const LEVEL_FILTER_OPTIONS = [
+    ["all", "All levels"],
+    ["shell", "Starting Shell"],
+    ["tuned", "Tuned"],
+    ["enhance", "Enhance"],
+    ["maxxed", "Maxxed"],
+    ["tuned2", "Tuned-2"],
+    ["enhance2", "Enhance-2"],
+    ["max2", "Maxxed-2"],
+    ["funTuned", "Fun Tuned"],
+    ["funMax", "Fun Max"],
+    ["altTuned", "Alt Tuned"],
+    ["altMax", "Alt Max"]
+  ];
+  const ALT_FILTER_OPTIONS = [["all", "All cards"], ["alt", "Alt only"]];
   const LIVE_TYPE_ORDER = ["Commander", "Land", "Creature", "Artifact", "Enchantment", "Instant", "Sorcery", "Planeswalker", "Battle", "Other"];
   const LIVE_GROUP_OPTIONS = [
     ["none", "No grouping"],
@@ -2421,6 +2444,13 @@
       upgrade: ["enhance", "Enhance"],
       enhance: ["enhance", "Enhance"],
       max: ["maxxed", "Maxxed"],
+      tuned2: ["tuned2", "Tuned-2"],
+      enhance2: ["enhance2", "Enhance-2"],
+      max2: ["max2", "Maxxed-2"],
+      funTuned: ["funTuned", "Fun Tuned"],
+      funMax: ["funMax", "Fun Max"],
+      altTuned: ["altTuned", "Alt Tuned"],
+      altMax: ["altMax", "Alt Max"],
       transfer: ["transfer", "Temporary loan"]
     };
     return candidates.map((entry) => {
@@ -2722,6 +2752,7 @@
     if (filters.source === "shell" && !card.fromShell) return false;
     if (filters.source === "singles" && card.fromShell) return false;
     if (filters.category !== "all" && card.liveLevel !== filters.category) return false;
+    if (filters.alt === "alt" && !card.tags?.includes("alt")) return false;
     if (filters.cardType !== "all" && liveCardType(card) !== filters.cardType) return false;
     if (filters.color !== "all" && liveColorKey(card) !== filters.color) return false;
     if (filters.price !== "all" && livePriceBand(card) !== filters.price) return false;
@@ -2779,7 +2810,7 @@
     }
     if (mode === "themeSet") return {label: card.setName || metadata.setName || card.tags?.[0] || "Theme / set loading or unknown", order: 999};
     if (mode === "deckCount") return {label: `In ${card.sharedDeckCount || 1} live deck${card.sharedDeckCount === 1 ? "" : "s"}`, order: -(card.sharedDeckCount || 1)};
-    if (mode === "level") return {label: card.liveLevelLabel || "Other", order: ["shell", "tuned", "enhance", "maxxed"].indexOf(card.liveLevel)};
+    if (mode === "level") return {label: card.liveLevelLabel || "Other", order: ["shell", "tuned", "enhance", "maxxed", "tuned2", "enhance2", "max2", "funTuned", "funMax", "altTuned", "altMax"].indexOf(card.liveLevel)};
     return {label: "Cards", order: 0};
   }
 
@@ -2798,7 +2829,8 @@
   }
 
   function liveToolbarMarkup(variant, filters) {
-    const extraCount = ["lineup", "source", "category", "cardType", "color", "price", "rarity", "location"].filter((field) => filters[field] !== "all").length + (filters.sort !== "default" ? 1 : 0);
+    const hasAltData = Boolean(buyCatalog?.plans?.[variant.id]?.altTuned?.length);
+    const extraCount = ["lineup", "source", "category", "cardType", "color", "price", "rarity", "location", ...(hasAltData ? ["alt"] : [])].filter((field) => filters[field] !== "all").length + (filters.sort !== "default" ? 1 : 0);
     const subgroupOptions = LIVE_GROUP_OPTIONS.filter(([value]) => value === "none" || value !== filters.groupBy);
     return `<div class="live-toolbar" data-live-toolbar="${esc(variant.id)}">
       <input class="search-input" type="search" value="${esc(filters.query)}" placeholder="Search this deck…" data-ui-focus="live-search-${esc(variant.id)}" aria-label="Search ${esc(variant.name)}">
@@ -2815,7 +2847,8 @@
           <details class="more-filters live-more-filters" data-ui-key="livefilters-${esc(variant.id)}"><summary>Filters${extraCount ? ` <b>${extraCount}</b>` : ""}</summary><div class="filter-select-grid live-filter-grid">
             ${liveFilterSelect("lineup", "Lineup", [["all","Active + bench"],["active","Active 100"],["bench","Bench options"]], filters.lineup)}
             ${liveFilterSelect("source", "Source", [["all","All cards"],["shell","Starting shell"],["singles","Added singles"]], filters.source)}
-            ${liveFilterSelect("category", "Level", [["all","All levels"],["shell","Starting Shell"],["tuned","Tuned"],["enhance","Enhance"],["maxxed","Maxxed"]], filters.category)}
+            ${liveFilterSelect("category", "Level", LEVEL_FILTER_OPTIONS, filters.category)}
+            ${hasAltData ? liveFilterSelect("alt", "Alt", ALT_FILTER_OPTIONS, filters.alt) : ""}
             ${liveFilterSelect("cardType", "Card type", [["all","All types"], ...LIVE_TYPE_ORDER.map((type) => [type,type])], filters.cardType)}
             ${liveFilterSelect("color", "Color", [["all","All colors"],["white","White"],["blue","Blue"],["black","Black"],["red","Red"],["green","Green"],["multicolor","Multicolor"],["colorless","Colorless"]], filters.color)}
             ${liveFilterSelect("price", "Price", [["all","All prices"],["bin","Bin · $0–$1"],["sleeves","Sleeves · $1–$5"],["binder","Binder · $5–$15"],["case","Case · $15+"],["unpriced","Unpriced"]], filters.price)}
@@ -2997,6 +3030,87 @@
     return {active, total, missingCards, purchaseItems, borrowedCards, benchMissing, floorTotal, ceilingTotal, legal, ready, label, insight};
   }
 
+  const ROLE_FLOORS = {ramp: 8, draw: 8, interaction: 8, protect: 3};
+  const ROLE_LABELS = {ramp: "Ramp", draw: "Draw", interaction: "Interaction", protect: "Protection"};
+  const PLAN_CARD_ARRAYS = ["startingShell", "required", "upgrade", "enhance", "max", "tuned2", "enhance2", "max2", "funTuned", "funMax", "altTuned", "altMax"];
+
+  // Mirrors tests/lineup-compliance.mjs's roleFlags heuristic (same regex patterns, same four
+  // roles) against a live card's own hydrated text instead of the offline audit file -- this
+  // is a "does the active 100 still look like a functioning deck" advisory, not a rules check,
+  // so a heuristic miss here costs nothing; it never blocks anything.
+  function liveRoleFlags(card) {
+    const text = [card.name, card.typeLine, card.oracleText, ...(card.keywords || [])].join(" ").toLowerCase().replace(/[’]/g, "'").replace(/\s+/g, " ");
+    return {
+      ramp: /\badd\b[^.]{0,35}(?:mana|\{[wubrgc]\})|search your library for [^.]{0,45}(?:basic )?land|put (?:a|that|the) land card[^.]*onto the battlefield|treasure token|spells? you cast cost .* less/.test(text),
+      draw: /draw (?:a|one|two|three|x|that many|cards|a card)|put (?:one|that|those|the) cards?[^.]*into your hand|investigate|clue token/.test(text),
+      interaction: /destroy (?:target|all|each)|exile (?:target|all)|counter target|return target [^.]*owner'?s hand|deals? [^.]* damage to (?:target|any target|each creature|each opponent)|target creature gets [+-]|creatures? [^.]*get[s]? -|(?:each opponent|each player) sacrifices|\bfight\b|tap target|target permanent[^.]*shuffle|goad target|can'?t block/.test(text),
+      protect: /hexproof|indestructible|protection from|regenerate|phase out|prevent all damage|can'?t be countered|counter target spell that targets|return [^.]* you control to (?:its|their) owner'?s hand/.test(text)
+    };
+  }
+
+  function allPlanCardNames(plan) {
+    const names = new Set();
+    for (const key of PLAN_CARD_ARRAYS) for (const item of plan[key] || []) if (item?.name) names.add(item.name);
+    if (plan.precon?.name) names.add(plan.precon.name);
+    return names;
+  }
+
+  // Advisory-only ("did my mix-and-match break the deck?"), computed fresh from whatever is
+  // actually active right now -- never a gate, never blocks anything, just a heads-up.
+  function livePerformanceCheck(plan, cards) {
+    const activeCards = cards.filter((card) => card.lineupActive);
+    const activeIds = new Set(activeCards.map((card) => String(card.id)));
+    const activeNames = new Set(activeCards.map((card) => card.name));
+    const match = nearestPresetMatchForIds(plan, activeIds);
+    const model = Lineup.buildModel(plan);
+    const idName = (id) => model.byId.get(id)?.item?.name || id;
+    const extraNames = [...activeIds].filter((id) => !match.presetIds.has(id)).map(idName);
+    const missingNames = [...match.presetIds].filter((id) => !activeIds.has(id)).map(idName);
+
+    const roleCounts = {ramp: 0, draw: 0, interaction: 0, protect: 0};
+    for (const card of activeCards) {
+      const flags = liveRoleFlags(card);
+      for (const role of Object.keys(roleCounts)) if (flags[role]) roleCounts[role] += Number(card.quantity || 1);
+    }
+    const roleGaps = Object.entries(ROLE_FLOORS).filter(([role, floor]) => roleCounts[role] < floor);
+
+    const allNames = allPlanCardNames(plan);
+    const synergyGaps = [];
+    for (const card of activeCards) {
+      const text = usefulCardCopy(card.whyPrimary, card.purpose, card.why);
+      if (!text) continue;
+      // Excludes this card's own replacement lineage: a swap card's why-text routinely opens
+      // with "Replaces X..." (and, for a later rung, may reference an even earlier ancestor
+      // in the same slot's chain) to document a substitution already shown on its own Buy
+      // Picks row -- that is the intended, expected relationship, not a surprise gap. Only a
+      // mention of some OTHER card, from a different slot entirely, is worth flagging here.
+      const ancestorNames = new Set();
+      let walk = model.byId.get(model.byId.get(card.id)?.predecessorId);
+      while (walk) { ancestorNames.add(walk.item.name); walk = model.byId.get(walk.predecessorId); }
+      const missingRef = [...allNames].find((name) => name !== card.name && !ancestorNames.has(name) && name.length >= 5 && text.includes(name) && !activeNames.has(name));
+      if (missingRef) synergyGaps.push({card: card.name, missing: missingRef});
+    }
+
+    return {matchPct: Math.round(match.similarity * 100), presetLabel: match.preset.label, extraNames, missingNames, roleCounts, roleGaps, synergyGaps};
+  }
+
+  function livePerformanceCheckMarkup(variant, plan, cards) {
+    const check = livePerformanceCheck(plan, cards);
+    const noteCount = check.roleGaps.length + check.synergyGaps.length;
+    const deviationBits = [];
+    if (check.extraNames.length) deviationBits.push(`+${check.extraNames.length}`);
+    if (check.missingNames.length) deviationBits.push(`−${check.missingNames.length}`);
+    const listItems = (names, verb) => names.slice(0, 5).map((name) => `<li>${verb} <b>${esc(name)}</b></li>`).join("") + (names.length > 5 ? `<li>+ ${names.length - 5} more</li>` : "");
+    const body = `
+      <p class="performance-check-note">Nearest configuration: <b>${esc(check.presetLabel)}</b> (${check.matchPct}% match)${deviationBits.length ? ` · ${deviationBits.join(" / ")} vs that build` : ""}. This is a heads-up, not a rule -- it never blocks anything.</p>
+      ${check.extraNames.length || check.missingNames.length ? `<ul class="performance-check-deviations">${listItems(check.extraNames, "Added")}${listItems(check.missingNames, "Missing")}</ul>` : ""}
+      ${check.roleGaps.length ? `<p class="performance-check-note">${icon("!")}<span>Below the usual floor on ${check.roleGaps.map(([role, floor]) => `${esc(ROLE_LABELS[role])} (${check.roleCounts[role]}/${floor})`).join(", ")}.</span></p>` : ""}
+      ${check.synergyGaps.length ? `<ul class="performance-check-deviations">${check.synergyGaps.slice(0, 5).map((gap) => `<li>${icon("!")}<b>${esc(gap.card)}</b> assumes <b>${esc(gap.missing)}</b>, which isn't active</li>`).join("")}</ul>` : ""}
+      ${!noteCount ? `<p class="performance-check-note">No deviations from the deck's usual shape or role floors.</p>` : ""}
+    `;
+    return disclosureMarkup(`performance-${variant.id}`, "Performance check · advisory", noteCount, body, "is-advisory");
+  }
+
   function liveDeckSummaryMarkup(variant, plan, cards, compliance, readiness, profileIndex) {
     const total = readiness.total;
     const boughtCount = Math.max(0, total - readiness.missingCards - readiness.borrowedCards);
@@ -3039,6 +3153,7 @@
       <span class="live-deck-disclosures">
         ${disclosureMarkup(`composition-${variant.id}`, "Deck Composition", total, compositionBody)}
         ${disclosureMarkup(`mechanics-${variant.id}`, "Core Mechanics", (variant.mechanics || []).length, mechanicsBody)}
+        ${livePerformanceCheckMarkup(variant, plan, cards)}
       </span>
       <span class="live-metric-strip" aria-label="Compare rating · ${esc(STAGES[profileIndex])}">
         ${metricFamilyMarkup("playstyle", playstyle, `metric-playstyle-${variant.id}-live`)}
@@ -3077,6 +3192,7 @@
     row.className = `live-card-row${card.bought ? " is-bought" : " is-needed"}${card.lineupActive ? " is-lineup-active" : " is-lineup-bench"}`;
     const badges = [
       `<em class="live-card-badge is-level-${esc(card.liveLevel)}">${esc(card.liveLevelLabel)}</em>`,
+      card.tags?.includes("alt") ? `<em class="live-card-badge is-alt">Alt</em>` : "",
       card.isCommander ? `<em class="live-card-badge is-commander">Commander</em>` : "",
       card.gameChanger ? `<em class="live-card-badge is-game-changer">Game Changer</em>` : "",
       card.transferRecord ? `<em class="live-card-badge is-temp">Borrowed</em>` : "",
@@ -3380,7 +3496,7 @@
     const allItems = derivedShopItems();
     const filters = state.shopFilters;
     const foundCount = allItems.filter((item) => shopItemComplete(item)).length;
-    const activeFilterCount = [filters.type, filters.category, filters.deck].filter((value) => value !== "all").length + (filters.groupBy !== "none" ? 1 : 0);
+    const activeFilterCount = [filters.type, filters.category, filters.alt, filters.deck].filter((value) => value !== "all").length + (filters.groupBy !== "none" ? 1 : 0);
     root.innerHTML = `
       <div class="page-intro">
         <div>
@@ -3397,7 +3513,8 @@
             <summary>Filters${activeFilterCount ? ` <b>${activeFilterCount}</b>` : ""}</summary>
             <div class="filter-select-grid">
               ${selectFilter("type", "Items", [["all","All items"],["singles","Singles"],["precons","Precons"]], filters)}
-              ${selectFilter("category", "Level", [["all","All levels"],["shell","Starting Shell"],["tuned","Tuned"],["enhance","Enhance"],["maxxed","Maxxed"]], filters)}
+              ${selectFilter("category", "Level", LEVEL_FILTER_OPTIONS, filters)}
+              ${selectFilter("alt", "Alt", ALT_FILTER_OPTIONS, filters)}
               ${selectFilter("deck", "Deck", [["all","All decks"], ...selectedVariants().map((variant) => [String(variant.deckId), `Deck ${variant.deckId}`])], filters)}
               ${selectFilter("groupBy", "Group by", [["none","No grouping"],["where","Where to look"],["rarity","Rarity"],["price","Price range"],["typeLine","Card type"],["themeSet","Theme / set"],["deckCount","# of decks"]], filters)}
             </div>
@@ -3589,6 +3706,7 @@
     if (filters.type === "singles" && item.category === "precon") return false;
     if (filters.type === "precons" && item.category !== "precon") return false;
     if (filters.category !== "all" && !item.levels.has(filters.category)) return false;
+    if (filters.alt === "alt" && !item.tags?.includes("alt")) return false;
     if (filters.deck !== "all" && !item.deckRefs.some((ref) => String(ref.deckId) === filters.deck)) return false;
     const query = filters.query.trim().toLowerCase();
     if (query && !`${item.name} ${item.typeLine} ${item.purpose} ${item.deckRefs.map((ref) => ref.name).join(" ")}`.toLowerCase().includes(query)) return false;
@@ -3613,11 +3731,11 @@
     const card = document.createElement("article");
     card.className = `shop-card${found ? " is-found" : ""}`;
     const categories = Array.from(item.categories);
-    const levelLabels = {precon: "Precon", shell: "Starting Shell", tuned: "Tuned", upgrade: "Enhance", enhance: "Enhance", max: "Maxxed"};
     const levelBadges = categories
       .filter((category, index, values) => !(item.category === "precon" && category === "precon") && values.indexOf(category) === index)
-      .map((category) => `<span class="shop-badge ${esc(category)}">${esc(levelLabels[category] || category)}</span>`)
+      .map((category) => `<span class="shop-badge ${esc(category)}">${esc(KIND_LABELS[category] || category)}</span>`)
       .join("");
+    const altBadge = item.tags?.includes("alt") ? `<span class="shop-badge alt">${icon("◇")}Alt</span>` : "";
     const displayType = item.category === "precon" ? "Precon" : item.typeLine;
     const imageCandidates = cardImageCandidates(item, metadata);
     card.innerHTML = `
@@ -3625,7 +3743,7 @@
         <img class="shop-image" src="${esc(imageCandidates[0] || "og.png")}" alt="${esc(item.name)} card" loading="lazy" decoding="async">
       </button>
       <div class="shop-main">
-        <div class="shop-card-kicker">${item.manaCost ? manaCostHtml(item.manaCost) : ""}${rarityIcon(rarityKey, rarity)}${levelBadges}${item.gameChanger ? `<span class="shop-badge gc">GC</span>` : ""}</div>
+        <div class="shop-card-kicker">${item.manaCost ? manaCostHtml(item.manaCost) : ""}${rarityIcon(rarityKey, rarity)}${levelBadges}${altBadge}${item.gameChanger ? `<span class="shop-badge gc">GC</span>` : ""}</div>
         <h3><button type="button" class="shop-name-button">${esc(item.name)}${item.quantity > 1 ? ` ×${item.quantity}` : ""} →</button></h3>
         <div class="shop-facts">${item.manaCost ? `<span>${manaCostHtml(item.manaCost)}</span>` : ""}${displayType ? `<span>${esc(displayType)}</span>` : ""}</div>
         <div class="shop-buying-facts" aria-label="Buying guide">

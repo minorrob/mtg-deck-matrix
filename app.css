@@ -804,6 +804,9 @@ footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px;
 .live-card-badge { flex: 0 0 auto; padding: .13rem .28rem; border-radius: 999px; color: var(--forest); background: #e2ede6; font-size: .5rem; font-style: normal; font-weight: 950; letter-spacing: .02em; text-transform: uppercase; }
 .live-card-badge.is-game-changer { color: #fff; background: #8b6420; }.live-card-badge.is-temp { color: #744f00; background: #f6dda1; }.live-card-badge.is-owned { color: #155b3f; background: #d9eee3; }
 .live-card-badge.is-level-shell { color: #3c4b44; background: #dfe6df; }.live-card-badge.is-level-tuned { color: #fff; background: var(--forest-2); }.live-card-badge.is-level-enhance { color: #fff; background: #8b6824; }.live-card-badge.is-level-maxxed { color: #fff; background: var(--red); }.live-card-badge.is-level-transfer { color: #744f00; background: #f6dda1; }
+.live-card-badge.is-level-tuned2 { color: #fff; background: #5468b8; }.live-card-badge.is-level-enhance2 { color: #fff; background: #3f4f9e; }.live-card-badge.is-level-max2 { color: #fff; background: #2c3a85; }.live-card-badge.is-level-funTuned { color: #fff; background: #c05a92; }.live-card-badge.is-level-funMax { color: #fff; background: #9c3d73; }.live-card-badge.is-level-altTuned { color: #fff; background: #1f9e8b; }.live-card-badge.is-level-altMax { color: #fff; background: #147a6b; }
+.live-card-badge.is-alt { color: #fff; background: #1f9e8b; }
+.shop-badge.alt { background: #1f9e8b; }
 .live-placement-panel { display: grid; gap: .65rem; border: 1px solid #b6cdbd; border-radius: .75rem; background: #eff7f2; }.live-placement-panel p { margin: 0; color: #4d5c54; font-size: .8rem; line-height: 1.4; }.live-placement-select { display: grid; gap: .25rem; }.live-placement-select > span { color: #5b6b63; font-size: .65rem; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; }.live-placement-select select { width: 100%; min-height: 42px; padding: .45rem .55rem; border: 1px solid #9eb8aa; border-radius: .55rem; color: var(--ink); background: #fff; }.live-placement-reasons { display: flex; gap: .3rem; flex-wrap: wrap; }.live-placement-reasons span { padding: .22rem .4rem; border-radius: 999px; color: #285b45; background: #d9ede2; font-size: .62rem; font-weight: 800; }
 .live-card-meta { display: flex; align-items: center; gap: .32rem; min-width: 0; overflow: hidden; color: var(--muted); font-size: .66rem; line-height: 1.1; text-overflow: ellipsis; white-space: nowrap; }
 .live-card-meta .mana-cost { flex: 0 0 auto; }.live-card-meta > span:last-child { overflow: hidden; text-overflow: ellipsis; }
@@ -881,6 +884,14 @@ footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px;
 .disclosure-chips i { display: inline-flex; gap: .25rem; padding: .22rem .48rem; border-radius: 999px; color: #3c4b44; background: #e9f0eb; font-size: .68rem; font-style: normal; font-weight: 800; }
 .disclosure-chips i b { color: var(--forest); }
 .disclosure-note { display: block; margin-top: .45rem; color: var(--muted); font-size: .66rem; line-height: 1.35; }
+.header-disclosure.is-advisory .disclosure-head i { background: #96601a; }
+.header-disclosure.is-advisory .disclosure-head[aria-expanded="true"] i { color: #96601a; background: #fff4d7; }
+.performance-check-note { display: flex; gap: .4rem; align-items: flex-start; margin: 0; color: #3d4b44; font-size: .7rem; line-height: 1.4; }
+.performance-check-note + .performance-check-note, .performance-check-note + .performance-check-deviations, .performance-check-deviations + .performance-check-note { margin-top: .4rem; }
+.performance-check-note .ui-icon { width: 15px; height: 15px; font-size: 8px; }
+.performance-check-deviations { margin: .4rem 0 0; padding-left: 1.1rem; color: #3d4b44; font-size: .7rem; line-height: 1.5; }
+.performance-check-deviations li { display: list-item; }
+.performance-check-deviations .ui-icon { width: 13px; height: 13px; margin-right: .2rem; font-size: 7px; }
 
 /* ---- live deck header ---- */
 .live-intro { display: grid; grid-template-columns: 1fr; gap: .5rem; }
