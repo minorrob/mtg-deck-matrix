@@ -10,12 +10,12 @@ const htmlSource = await readFile(new URL("../index.html", import.meta.url), "ut
 const auditedByName = new Map(cards.cards.map((card) => [card.name.toLowerCase(), card]));
 for (const card of cards.cards) for (const face of card.name.split(" // ")) auditedByName.set(face.toLowerCase(), card);
 
-assert.equal(variants.decks.length, 6, "expected six deck roles");
-assert.equal(variants.variants.length, 30, "expected thirty variants");
+assert.equal(variants.decks.length, 10, "expected ten deck roles");
+assert.equal(variants.variants.length, 50, "expected fifty variants");
 
 const ids = new Set(variants.variants.map((variant) => variant.id));
-assert.equal(ids.size, 30, "variant IDs must be unique");
-assert.equal(Object.keys(buyPlans.plans).length, 30, "every Compare variant must have a Buy Picks profile");
+assert.equal(ids.size, 50, "variant IDs must be unique");
+assert.equal(Object.keys(buyPlans.plans).length, 50, "every Compare variant must have a Buy Picks profile");
 assert.deepEqual(new Set(buyPlans.profileVariantIds), ids, "Buy Picks coverage must match the Compare catalog");
 
 // The Compare "About" panel replaced a one-line carousel card with a full dossier per deck --
