@@ -895,7 +895,14 @@
   // stop. Full credit inside the band, a linear ramp up to it, and a decay above
   // it that reaches OVERSHOOT_FLOOR at a 100% win rate -- still positive, since
   // winning is not a failure, just no longer the thing being optimized.
+  // Half credit once the deck is winning seven games in ten -- the point at
+  // which it stops being the strong deck at the table and becomes the reason
+  // the table stops inviting it -- and a quarter at total dominance. Still
+  // positive at every win rate, because winning is not a failure; just no
+  // longer the thing being optimized.
+  const RUNAWAY_WIN_RATE = 0.7;
   const OVERSHOOT_FLOOR = 0.5;
+  const DOMINANCE_FLOOR = 0.25;
   function winRateBandNorm(winRate, band) {
     const floor = Number(band?.floor);
     const ceiling = Number(band?.ceiling);
@@ -905,8 +912,8 @@
     }
     if (winRate < floor) return clamp01(winRate / floor);
     if (winRate <= ceiling) return 1;
-    const overshoot = (winRate - ceiling) / Math.max(0.01, 1 - ceiling);
-    return clamp01(1 - overshoot * (1 - OVERSHOOT_FLOOR));
+    const overshoot = (winRate - ceiling) / Math.max(0.01, RUNAWAY_WIN_RATE - ceiling);
+    return clamp01(Math.max(DOMINANCE_FLOOR, 1 - overshoot * (1 - OVERSHOOT_FLOOR)));
   }
 
   function compositeScore(metrics, weights = DEFAULT_WEIGHTS, targets = DEFAULT_TARGETS, commanderCmc = 4, band = null) {

@@ -55,6 +55,20 @@ convergence test — and returns the best list it measured on every stop path. A
 `--games` argument can lower a limit but never raise one. Delete
 `sim/sim-ledger.json` to reset the cumulative count.
 
+Convergence is "keep going until the improvements are negligible", where
+negligible means smaller than the sampling noise or under 5% of the score
+already reached, whichever is larger. It is measured over a window of the best
+score rather than one iteration at a time, so three consecutive one-point gains
+count as progress on an eighty-point deck even though no single one of them
+clears the bar. The noise figure is measured, not assumed: at two thousand games
+the same deck scores within about ±0.7 points across seeds.
+
+`maxLedgerSimulations` is a budget, not a safety property, and it has been
+raised once — from five million to fifteen — to pay for the four-rung rebuild of
+all fifty variants. The engine runs about 42,000 games a second, so the whole
+cap is a few minutes of compute; the ledger exists so that spend is visible and
+deliberate, not so that it is impossible.
+
 Two guards keep the output honest rather than model-shaped. Role floors stop the
 optimizer trading away a whole job (it cannot cut its way below two board wipes
 or eight ramp pieces), and a card only becomes a cut candidate when the

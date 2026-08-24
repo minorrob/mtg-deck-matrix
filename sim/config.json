@@ -2,15 +2,15 @@
   "schemaVersion": 2,
   "gamesPerIteration": 2000,
   "batchSize": 500,
-  "maxIterations": 12,
+  "maxIterations": 40,
   "maxSwapsPerIteration": 5,
-  "maxTotalSimulations": 60000,
-  "maxLedgerSimulations": 5000000,
+  "maxTotalSimulations": 200000,
+  "maxLedgerSimulations": 15000000,
   "maxWallClockMs": 300000,
   "convergence": {
     "noiseMargin": 1.0,
     "relativeGain": 0.05,
-    "patience": 3
+    "patience": 6
   },
   "maxTurns": 16,
   "mulligans": 3,
@@ -66,7 +66,7 @@
   "minAcceptGain": 1.0,
   "holdoutGames": 5000,
   "podFunRungScoreWeights": {
-    "winRate": 0.3,
+    "winRate": 0.2,
     "screw": 0.15,
     "flood": 0.1,
     "commander": 0.1,
@@ -74,11 +74,11 @@
     "clock": 0.1,
     "deadCards": 0.05,
     "fun": 0.0,
-    "podFun": 0.1
+    "podFun": 0.2
   },
   "winRateBand": {
     "floor": 0.3,
     "ceiling": 0.45
   },
-  "powerFloorRatio": 0.9
+  "powerFloorRatio": 0.75
 }

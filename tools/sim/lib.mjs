@@ -314,6 +314,39 @@ export function deckAffinity(deckCards, index) {
   };
 }
 
+// The deck's phrase vocabulary, flattened into something a request file can
+// carry: gram -> how much a card matching it counts. Frequency inside the deck
+// times how rare the phrase is across the catalog, keeping only the strongest
+// few hundred, so the whole signature travels as a few kilobytes of JSON and a
+// simulation run can enforce it without re-reading the catalog.
+export function affinityWeights(deckCards, index, limit = 400) {
+  const deckFrequency = new Map();
+  deckCards
+    .filter((card) => !/\bLand\b/.test(card.typeLine || ""))
+    .forEach((card) => oracleShingles(card.oracleText).forEach((gram) => {
+      deckFrequency.set(gram, (deckFrequency.get(gram) || 0) + 1);
+    }));
+  return Object.fromEntries(Array.from(deckFrequency.entries())
+    .filter(([, count]) => count >= 2)
+    .map(([gram, count]) => [gram, count * Math.max(0, Math.log(index.documents / (1 + (index.documentFrequency.get(gram) || 0))))])
+    .filter(([, weight]) => weight > 0)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit));
+}
+
+export function cardAffinity(card, weights) {
+  const grams = oracleShingles(card.oracleText);
+  if (!grams.size) return 0;
+  let total = 0;
+  grams.forEach((gram) => { total += weights[gram] || 0; });
+  return total / Math.sqrt(grams.size);
+}
+
+// How much of the deck's own plan a hundred-card list is still carrying.
+export function listAffinity(cards, weights) {
+  return cards.reduce((sum, card) => sum + cardAffinity(card, weights) * Math.max(1, Number(card.quantity || 1)), 0);
+}
+
 // The oracle-text vocabulary for a variant's declared mechanics. Taken from the
 // generator's own theme table so a deck is measured against the same words it
 // was built from, rather than a second list that could drift away from it.
@@ -356,9 +389,15 @@ export function validateList(cards, constraints = {}) {
   // stacking one threat, a spellslinger deck must still be casting spells that
   // matter. Without it the optimizer maximizes a score whose engine cannot see
   // most theme payoffs, and quietly hands back a generically efficient pile.
-  if (constraints.themeFloor && (constraints.themeTerms || []).length) {
-    const themed = themeCensus(cards, constraints.themeTerms);
-    if (themed < constraints.themeFloor) problems.push(`${themed} cards still carry the deck's strategy; the floor is ${constraints.themeFloor}. The deck may not trade its own plan away.`);
+  // The strategy guard. Not a list of protected cards -- the optimizer may swap
+  // anything it likes -- but a floor on how much of the deck's own plan the
+  // hundred still carries, so it cannot cash the strategy in for generically
+  // efficient cards and call that an improvement.
+  if (constraints.affinityFloor && constraints.affinityWeights) {
+    const carried = listAffinity(cards, constraints.affinityWeights);
+    if (carried < constraints.affinityFloor) {
+      problems.push(`the list carries ${carried.toFixed(0)} of this deck's own strategy against a floor of ${constraints.affinityFloor.toFixed(0)}. The deck may not trade its own plan away.`);
+    }
   }
   if (result.total !== 100) problems.push(`The list contains ${result.total} cards; Commander requires exactly 100.`);
   result[`tier${tier}`].forEach((issue) => problems.push(`${issue.card}: ${issue.rule}`));

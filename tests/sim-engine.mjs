@@ -442,7 +442,8 @@ assert.match(readme, /run-batch\.mjs/, "the README must show how to run a simula
   assert.ok(at(0.15) < at(0.25), "a weaker deck must score below a nearly-there one");
   assert.ok(at(0.76) < 1, `a 76% win rate must be scored down, not treated as ideal, got ${at(0.76)}`);
   assert.ok(at(0.95) < at(0.76), "the further past the ceiling, the lower the credit");
-  assert.ok(at(1) >= 0.5, "dominating is still worth something -- winning is not a failure");
+  assert.ok(at(0.7) <= 0.55, "winning seven games in ten must cost about half the credit");
+  assert.ok(at(1) >= 0.2, "dominating is still worth something -- winning is not a failure");
   // With no band configured the original monotonic curve has to survive, or
   // every historical score in data/ would silently change meaning.
   assert.equal(Engine.winRateBandNorm(0.5, null), 1, "an unbanded run must keep the old curve");
