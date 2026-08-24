@@ -365,4 +365,22 @@ assert.match(appSource, /function cardBuildMembership\(/, "the detail sheet must
 assert.match(appSource, /Based on the configurations that were actually simulated/, "per-card guidance must say it reports real builds, not a prediction");
 assert.match(appSource, /Proven results come from the tested configurations/, "Live Decks must say plainly that proven numbers describe the tested configurations");
 
+// Purchase history restores ownership from a Live Decks checklist export. The export writes
+// "exactly what is on screen, with its current filters", so a file can legitimately omit cards
+// that are owned -- the import must therefore be strictly additive and never unmark anything.
+assert.match(appSource, /function importPurchaseHistory\(/, "Shop List must be able to restore ownership from a checklist export");
+{
+  const start = appSource.indexOf("function importPurchaseHistory(");
+  const end = appSource.indexOf("function appendLiveSalvage", start);
+  assert(start > 0 && end > start, "importPurchaseHistory must be defined before appendLiveSalvage");
+  const body = appSource.slice(start, end);
+  assert.doesNotMatch(body, /state\.found\[[^\]]+\]\s*=\s*false/, "importing purchase history must never unmark a card as bought");
+  assert.doesNotMatch(body, /delete state\.(found|boughtQuantities|purchasePrices)/, "importing purchase history must never delete existing ownership");
+  // Number("") is 0, so a blank Paid cell would otherwise import as a committed price of zero.
+  assert.match(body, /paidRaw === "" \? NaN : Number\(paidRaw\)/, "a blank Paid cell must not import as a paid price of zero");
+  // The export names double-faced cards "Front // Back" while some catalog entries carry only
+  // the front face.
+  assert.match(body, /name\.split\(" \/\/ "\)\[0\]/, "double-faced card names must be recognized in either form");
+}
+
 console.log(`Validated ${variants.variants.length} variants and ${Object.keys(buyPlans.plans).length} connected buy profiles.`);

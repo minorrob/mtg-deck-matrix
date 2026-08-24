@@ -438,6 +438,9 @@ details[open] > summary .section-expander::after { content: "−"; }
 .kind-label.altTuned, .shop-badge.altTuned { background: #1f9e8b; }
 .kind-label.altMax, .shop-badge.altMax { background: #147a6b; }
 
+.shop-intro-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.shop-import { display: inline-flex; align-items: center; min-height: 44px; padding: 9px 14px; border: 1px solid #a99d83; border-radius: 11px; color: var(--forest); background: #fffdf8; font-size: 12px; font-weight: 850; cursor: pointer; }
+.shop-import:hover { border-color: var(--forest-2); background: #f3eddf; }
 .shop-toolbar { position: sticky; top: calc(107px + env(safe-area-inset-top)); z-index: 30; margin: 0 -3px 14px; padding: 10px; border: 1px solid #bdb196; border-radius: 16px; background: rgba(255,253,247,.97); box-shadow: 0 8px 20px rgba(31,42,36,.15); backdrop-filter: blur(12px); }
 .search-input { width: 100%; min-height: 46px; padding: 0 14px; border: 2px solid #a99d83; border-radius: 12px; color: var(--ink); background: #fff; font-size: 16px; outline: none; }
 .search-input:focus { border-color: var(--forest-2); box-shadow: 0 0 0 3px rgba(32,88,68,.15); }
