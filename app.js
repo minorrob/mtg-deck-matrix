@@ -37,7 +37,8 @@
     ease: "Ease measures how naturally the card works without complicated timing, narrow setup, or expert rules knowledge.",
     fun: "Fun measures how satisfying and interactive the card is likely to feel for the player and the table.",
     fit: "Fit explains how directly the card supports this deck’s commander, mechanics, and stated game plan.",
-    simulate: "Play this exact 100-card build against randomised opponents thousands of times, find where it actually loses, and propose swaps that measurably fix it. The games run on your own computer."
+    simulate: "Play this exact 100-card build against randomised opponents thousands of times, find where it actually loses, and propose swaps that measurably fix it. The games run on your own computer.",
+    whyVariant: "See how this variant's simulated Tuned, Enhance, and Fun Tuned scores compare against its deck's other variants, and where it ranks among them."
   };
   const KEYWORD_DEFINITIONS = {
     flying: "This creature can normally be blocked only by creatures with flying or reach.",
@@ -683,9 +684,9 @@
     catalog.decks.forEach((deck) => {
       const chosenId = state.compareSelections[deck.id];
       const rankStage = Number(state.rankStages[deck.id] || 2);
-      const deckTotal = catalog.variants.filter((variant) => variant.deckId === deck.id).length;
-      const variants = catalog.variants
-        .filter((variant) => variant.deckId === deck.id)
+      const allDeckVariants = catalog.variants.filter((variant) => variant.deckId === deck.id);
+      const deckTotal = allDeckVariants.length;
+      const variants = allDeckVariants
         .filter(matchesCompareFilters)
         .sort((a, b) => (a.ranks?.[rankStage - 1] || a.order) - (b.ranks?.[rankStage - 1] || b.order));
       if (customDeckIds.size && isCustomDeck(deck.id) !== dividedAsCustom) {
@@ -713,7 +714,7 @@
         </div>
         <div class="variant-track">${variants.length ? "" : `<div class="variant-filter-empty">${icon("⌕")}<strong>No variants match this filter in Deck ${deck.id}</strong><span>Try another mechanic, play style, or search term.</span></div>`}</div>`;
       const track = $(".variant-track", details);
-      variants.forEach((variant) => track.appendChild(makeVariantCard(variant, rankStage)));
+      variants.forEach((variant) => track.appendChild(makeVariantCard(variant, rankStage, allDeckVariants)));
       // The About button sits inside <summary>; without stopPropagation its click would also
       // toggle the surrounding <details> open/closed, same fix as the shell select-all above.
       $(".deck-about-button", details)?.addEventListener("click", (event) => {
@@ -797,7 +798,7 @@
     </div>`;
   }
 
-  function makeVariantCard(variant, rankStage = 2) {
+  function makeVariantCard(variant, rankStage = 2, siblingVariants = [variant]) {
     const stage = rankStage;
     const selected = state.compareSelections[variant.deckId] === variant.id;
     const bracket = variant.brackets[stage - 1] || {};
@@ -851,6 +852,7 @@
         <div class="variant-card-actions">
           <button class="comment-toggle tip-action info-tip${state.comments[variant.id] ? " has-comment" : ""}" type="button" aria-expanded="${openCommentId === variant.id}" data-tooltip="${esc(TOOLTIP_DEFINITIONS.addComment)}" aria-describedby="info-tooltip">${icon(state.comments[variant.id] ? "✓" : "“")}<span>${state.comments[variant.id] ? "Comment saved" : "Add a comment"}</span>${tooltipHint()}</button>
           <button class="simulate-button tip-action info-tip" type="button" data-tooltip="${esc(TOOLTIP_DEFINITIONS.simulate)}" aria-describedby="info-tooltip">${icon("⟳")}<span>Simulate</span>${tooltipHint()}</button>
+          ${simulationSummary?.builds?.[variant.id] ? `<button class="why-variant-button tip-action info-tip" type="button" aria-haspopup="dialog" data-tooltip="${esc(TOOLTIP_DEFINITIONS.whyVariant)}" aria-describedby="info-tooltip">${icon("★")}<span>Why This Variant</span>${tooltipHint()}</button>` : ""}
           <button class="detail-button tip-action info-tip" type="button" data-tooltip="${esc(TOOLTIP_DEFINITIONS.fullDetail)}" aria-describedby="info-tooltip">View full detail →${tooltipHint()}</button>
         </div>
         <div class="comment-editor" ${openCommentId === variant.id ? "" : "hidden"}>
@@ -873,6 +875,7 @@
       renderCompare();
     }));
     $(".simulate-button", card).addEventListener("click", () => openSimDialog(variant));
+    $(".why-variant-button", card)?.addEventListener("click", () => openVariantWhy(variant, siblingVariants));
     $(".comment-toggle", card).addEventListener("click", () => {
       openCommentId = openCommentId === variant.id ? null : variant.id;
       const editor = $(".comment-editor", card);
@@ -973,6 +976,59 @@
       ${detailText("When to pick this", deck.whenToPickThis)}
       ${rankBlock}
       ${variantList}`;
+  }
+
+  // Opened from the Why This Variant button, which only renders when this variant has a
+  // simulation-summary.json builds entry (custom decks generated on the Choose tab never do,
+  // since they've never been through the Phase 6 sweep). Ranks this variant's Tuned score
+  // against its own deck's other variants -- Tuned rather than an average across rungs, since
+  // it's the one rung every variant was measured on the same way, so it's the only apples-to-
+  // apples comparison. Enhance and Fun Tuned are still shown per sibling for the full picture.
+  function whyVariantMarkup(variant, siblingVariants) {
+    const rows = siblingVariants.map((sibling) => ({
+      variant: sibling,
+      tuned: simulationSummary?.builds?.[sibling.id]?.Tuned || null,
+      enhance: simulationSummary?.builds?.[sibling.id]?.Enhance || null,
+      funTuned: simulationSummary?.builds?.[sibling.id]?.["Fun Tuned"] || null
+    }));
+    const ranked = rows.filter((row) => row.tuned).sort((a, b) => b.tuned.score - a.tuned.score);
+    const mine = ranked.find((row) => row.variant.id === variant.id);
+    const top = ranked[0];
+    const myRank = mine ? ranked.indexOf(mine) + 1 : null;
+    const headline = !mine
+      ? `<p>${esc(variant.name)} has not been through the simulation sweep yet, so there is nothing to compare it against.</p>`
+      : myRank === 1
+        ? `<p><strong>${esc(variant.name)}</strong> scored highest of Deck ${esc(variant.deckId)}’s ${ranked.length} simulated variants at the Tuned rung — ${mine.tuned.score.toFixed(1)} points, a ${(mine.tuned.winPct * 100).toFixed(1)}% win rate over ${mine.tuned.games.toLocaleString()} games.</p>`
+        : `<p><strong>${esc(variant.name)}</strong> placed #${myRank} of Deck ${esc(variant.deckId)}’s ${ranked.length} simulated variants. <strong>${esc(top.variant.name)}</strong> led at Tuned with ${top.tuned.score.toFixed(1)} points against this variant’s ${mine.tuned.score.toFixed(1)} — a gap of ${(top.tuned.score - mine.tuned.score).toFixed(1)}.</p>`;
+    const rowsHtml = ranked.map((row, index) => `
+      <div class="why-variant-row${row.variant.id === variant.id ? " is-this-variant" : ""}">
+        <div class="why-variant-row-head"><span class="why-variant-row-rank">#${index + 1}</span><strong>${esc(row.variant.name)}</strong>${row.variant.id === variant.id ? `<span class="why-variant-you-tag">this variant</span>` : ""}</div>
+        ${simulationReadoutMarkup("Tuned", row.tuned)}
+        ${simulationReadoutMarkup("Enhance", row.enhance)}
+        ${simulationReadoutMarkup("Fun Tuned", row.funTuned)}
+      </div>`).join("");
+    return `
+      <section class="detail-block why-variant-headline">
+        <h3>Why this variant</h3>
+        ${headline}
+      </section>
+      <section class="detail-block why-variant-readout">
+        <h3>Monte Carlo readout for Deck ${esc(variant.deckId)}’s variants</h3>
+        <div class="why-variant-rows">${rowsHtml}</div>
+      </section>`;
+  }
+
+  function openVariantWhy(variant, siblingVariants) {
+    const dialog = $("#detail-sheet");
+    $("#detail-sheet-image").src = variant.image;
+    $("#detail-sheet-image").alt = `${variant.commander} card`;
+    $("#detail-sheet-kicker").textContent = `Deck ${variant.deckId} · Why This Variant`;
+    $("#detail-sheet-title").textContent = variant.name;
+    $("#detail-sheet-context").innerHTML = "";
+    $("#detail-sheet-context").hidden = true;
+    $("#commander-info-toggle")?.remove();
+    $("#detail-sheet-body").innerHTML = whyVariantMarkup(variant, siblingVariants);
+    dialog.showModal();
   }
 
   function openVariantDetail(variant, stage) {
