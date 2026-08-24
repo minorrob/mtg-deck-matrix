@@ -302,4 +302,58 @@ assert.match(appSource, /it never blocks anything/, "the performance check must 
   assert.doesNotMatch(appSource.slice(start, end), /return false/, "the performance check must never be able to gate or refuse a selection");
 }
 
+// Live Decks derives its active set from Buy Picks, keyed by a signature of the Buy Picks
+// selection. Without that signature the map was append-only and seeded correct values exactly
+// once per variant, so every card a later preset introduced was silently benched -- a freshly
+// applied 100-card configuration read 100/100 in Buy Picks but 85/100 in Live Decks. The
+// signature must be computed from the buy selection alone: deriving it from anything Live
+// Decks itself writes would make a manual bench look like an upstream change and wipe it.
+assert.match(appSource, /ensureLiveActiveMap\(variant, activeIds, candidates\.map\(\(entry\) => entry\.id\), selectionIdsSignature\(current\)\)/, "the Live Decks active map must be keyed by a signature of the Buy Picks selection");
+assert.match(appSource, /state\.liveActiveSeed\[variant\.id\] = selectionSignature;/, "ensureLiveActiveMap must record the signature it rebuilt from");
+{
+  const start = appSource.indexOf("function ensureLiveActiveMap(");
+  const end = appSource.indexOf("function configuredDeckCards(", start);
+  assert(start > 0 && end > start, "ensureLiveActiveMap and configuredDeckCards must both be defined, in that order");
+  const body = appSource.slice(start, end);
+  assert.match(body, /Object\.fromEntries\(candidateIds\.map\(\(id\) => \[id, activeIds\.has\(id\)\]\)\)/, "a changed Buy Picks selection must rebuild the active map wholesale from that selection");
+  assert.doesNotMatch(body, /firstEverView/, "the one-time first-view seeding that caused the 85\\/100 mismatch must not come back");
+}
+assert.match(appSource, /<small>Paid · \$\{priced\.priced\}\/\$\{priced\.bought\} priced<\/small>/, "the Live Decks cost chip must say Paid, since it counts only money actually recorded as paid");
+assert.match(appSource, /<small>Market total<\/small>/, "the Buy Picks total must say Market total, since it prices everything selected whether owned or not");
+
+// Buy Picks groups the ladder rungs by what they cost you rather than by which optimizer
+// produced them: Tuned holds Tuned/Tuned-2/Fun Tuned, Maxxed holds Maxxed/Maxxed-2/Fun Max,
+// Enhance stays its own tier. A tab's `preset` is the configuration it represents end to end,
+// which is NOT the same as its own array -- Tuned-2 layers on top of the site's Tuned list
+// while Fun Tuned deliberately replaces it -- so select-all must apply the full stack or it
+// stops producing a legal 100.
+{
+  const start = appSource.indexOf("const LADDER_GROUPS = [");
+  const end = appSource.indexOf("const ladderTabState", start);
+  assert(start > 0 && end > start, "LADDER_GROUPS must be defined before the tab state it drives");
+  const body = appSource.slice(start, end);
+  for (const [group, tabs] of [
+    ["tuned", ["tuned", "tuned2", "funTuned"]],
+    ["max", ["max", "max2", "funMax"]],
+    ["alt", ["altTuned", "altMax"]]
+  ]) {
+    assert.match(body, new RegExp(`key: "${group}", title:`), `the ${group} ladder group must exist`);
+    for (const tab of tabs) assert.match(body, new RegExp(`key: "${tab}", label:`), `${tab} must be a tab inside a ladder group, not its own top-level section`);
+  }
+  assert.match(body, /key: "max2", label: "Maxxed-2", kinds: \["enhance2", "max2"\]/, "Enhance-2 cards must live in the Maxxed-2 tab, since Enhance is defined as the $15-or-less tier");
+  assert.doesNotMatch(body, /key: "enhance2", label:/, "Enhance-2 must not be its own tab");
+}
+assert.match(appSource, /assemblePreset\(plan, input\.checked \? presetKey : "base"\)/, "a tab's select-all must apply that build's whole configuration, so the result is always a complete 100");
+assert.match(appSource, /\{key: "enhance", label: "Enhance", categories: \["required", "upgrade", "enhance"\]\}/, "an Enhance intent level must exist for the simplified dropdown");
+// De-emphasis is cosmetic. This app never blocks a choice, so the alt/non-alt groups must
+// never be disabled -- only dimmed.
+assert.match(appSource, /is-deemphasized/, "ladder groups must support visual de-emphasis");
+{
+  const cssSource = await readFile(new URL("../app.css", import.meta.url), "utf8");
+  const deemphRules = cssSource.split("\n").filter((line) => line.includes("is-deemphasized"));
+  assert(deemphRules.length > 0, "de-emphasis must be styled");
+  for (const rule of deemphRules) assert.doesNotMatch(rule, /pointer-events\s*:\s*none/, "de-emphasized ladder groups must stay clickable -- the app never blocks a choice");
+}
+assert.doesNotMatch(appSource, /function buySection\(/, "the flat per-category section renderer is replaced by the grouped one");
+
 console.log(`Validated ${variants.variants.length} variants and ${Object.keys(buyPlans.plans).length} connected buy profiles.`);

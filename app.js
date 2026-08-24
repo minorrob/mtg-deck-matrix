@@ -242,7 +242,8 @@
       lineupHistory: {},
       liveTransfers: {},
       liveSalvage: {},
-      liveActive: {}
+      liveActive: {},
+      liveActiveSeed: {}
     };
   }
 
@@ -271,7 +272,8 @@
           lineupHistory: saved.lineupHistory || {},
           liveTransfers: saved.liveTransfers || {},
           liveSalvage: saved.liveSalvage || {},
-          liveActive: saved.liveActive || {}
+          liveActive: saved.liveActive || {},
+          liveActiveSeed: saved.liveActiveSeed || {}
         };
       }
     } catch (_) {}
@@ -533,6 +535,25 @@
     return haystack.includes(query);
   }
 
+  // Only six of the thirty variants were ever put through the optimizer, and only three of
+  // those have an alternative commander explored. Compare is where a variant gets chosen, so
+  // it should say up front which extra builds come with that choice rather than leaving it to
+  // be discovered two screens later in Buy Picks. Colors match the Buy Picks ladder families.
+  function variantDataBadges(variant) {
+    const plan = buyCatalog?.plans?.[variant.id];
+    if (!plan) return "";
+    const badges = [
+      plan.tuned2?.length ? ["tuned2", "Tuned-2"] : null,
+      plan.max2?.length ? ["max2", "Maxxed-2"] : null,
+      plan.funTuned?.length ? ["funTuned", "Fun"] : null,
+      plan.altTuned?.some((item) => item.isCommander) ? ["altTuned", "◇ Alt"] : null
+    ].filter(Boolean);
+    if (!badges.length) return "";
+    return `<div class="variant-data-badges" aria-label="Extra builds available for this variant">
+      ${badges.map(([kind, label]) => `<span class="kind-label ${esc(kind)}">${esc(label)}</span>`).join("")}
+    </div>`;
+  }
+
   function makeVariantCard(variant, rankStage = 2) {
     const stage = rankStage;
     const selected = state.compareSelections[variant.deckId] === variant.id;
@@ -562,6 +583,7 @@
           <h3>${esc(variant.name)}</h3>
           <p class="commander">${esc(variant.commander)}<br><span class="mana">${manaCostHtml(variant.manaCost)}<span>${esc(variant.typeLine)}</span></span></p>
           <div class="mechanic-tags">${(variant.mechanics || []).slice(0,3).map((mechanic) => `<span>${esc(mechanic)}</span>`).join("")}</div>
+          ${variantDataBadges(variant)}
         </div>
       </div>
       ${commanderCompareMarkup(variant, stage)}
@@ -1206,19 +1228,10 @@
         <summary><span>${icon("☰")}Deck plan &amp; analysis</span><small>How to play, buy order, bracket placement, and tuning notes</small></summary>
         <div class="legacy-plan">${plan.planHtml || variant.detailHtml || ""}</div>
       </details>
-      ${presetDropdownMarkup(plan, variant.id)}
+      ${presetDropdownMarkup(plan, current, variant.id)}
       ${commanderSwitchMarkup(plan, current, variant.id)}
       ${startingShellSection(variant, plan, current, variant.id)}
-      ${buySection("Tuned", "Required purchases for the Tuned build", plan.required, "tuned", current, variant.id)}
-      ${buySection("Tuned-2", "Monte-Carlo-improved swaps on top of the site's Tuned build · replaces Tuned where checked", plan.tuned2, "tuned2", current, variant.id)}
-      ${buySection("Enhance", "Role-preserving improvements and owned substitutions · $15 or less", plan.enhance, "enhance", current, variant.id)}
-      ${buySection("Enhance-2", "Further Monte-Carlo-improved swaps on top of Tuned-2", plan.enhance2, "enhance2", current, variant.id)}
-      ${buySection("Maxxed", "Strongest Tier 3 / Bracket 3-legal capability · price is not the criterion", plan.max, "max", current, variant.id)}
-      ${buySection("Maxxed-2", "Strongest Monte-Carlo-improved capability on top of Enhance-2 · price is not the criterion", plan.max2, "max2", current, variant.id)}
-      ${buySection("Fun Tuned", "Fun-weighted re-optimization on top of Base · a separate build from Tuned-2, not a toggle on it", plan.funTuned, "funTuned", current, variant.id)}
-      ${buySection("Fun Max", "Fun-weighted re-optimization on top of Fun Tuned", plan.funMax, "funMax", current, variant.id)}
-      ${buySection("Alt Tuned", "Alternative-commander build on top of Base · tagged Alt", plan.altTuned, "altTuned", current, variant.id)}
-      ${buySection("Alt Max", "Alternative-commander build on top of Alt Tuned · tagged Alt", plan.altMax, "altMax", current, variant.id)}`;
+      ${LADDER_GROUPS.map((group) => ladderGroupMarkup(group, plan, current, variant.id, altCommanderActive(plan, current))).join("")}`;
     decorateRichContent(body, variant);
     if (details.open) {
       ensureShopMetadata([
@@ -1262,6 +1275,9 @@
     }));
     const selectAllShell = $('[data-select-shell-all]', body);
     if (selectAllShell) {
+      // The shell heading is a <summary> now, so a click on its select-all would also
+      // collapse the section it belongs to.
+      selectAllShell.closest("label")?.addEventListener("click", (event) => event.stopPropagation());
       const shellIds = (plan.startingShell || []).filter((card) => !card.isFlexibleSlot).map((card) => card.id);
       const selectedShell = new Set(current.shell || []);
       const partiallySelected = selectedShell.size > 0 && shellIds.some((id) => !selectedShell.has(id));
@@ -1290,32 +1306,26 @@
         renderBuy();
       });
     }
-    // Section select-alls live inside a <summary>, so the click must never reach it --
-    // otherwise toggling the checkbox would also collapse/expand the whole section.
-    $$('[data-select-section-all]', body).forEach((toggle) => {
-      const kind = toggle.dataset.selectSectionAll;
-      const collection = kind === "tuned" ? plan.required : plan[kind];
-      const ids = (collection || []).map((item) => String(item.id));
+    // Switching which build a group is showing changes only what's on screen, never the deck.
+    $$('[data-ladder-tab]', body).forEach((button) => button.addEventListener("click", (event) => {
+      event.preventDefault();
+      ladderTabState.set(`${variant.id}:${button.dataset.ladderTab}`, button.dataset.tabKey);
+      renderBuy();
+    }));
+    // "Select all <build>" applies that build's whole configuration, not just the rows on
+    // screen: Tuned-2 is Tuned plus its swaps, while Fun Tuned deliberately replaces Tuned
+    // entirely. Applying the full stack is what makes the result a complete, exactly-100,
+    // compliance-checked deck rather than an arbitrary mixture -- which is the entire point of
+    // asking for it. Unchecking returns to Base, the configuration this all builds on.
+    $$('[data-select-tab-all]', body).forEach((toggle) => {
       const input = $("input", toggle);
-      if (!input || !ids.length) return;
-      const selected = new Set(current[kind] || []);
-      const allSelected = ids.every((id) => selected.has(id));
-      const anySelected = ids.some((id) => selected.has(id));
-      input.checked = allSelected;
-      requestAnimationFrame(() => {
-        if (input.isConnected) input.indeterminate = anySelected && !allSelected;
-      });
-      toggle.addEventListener("click", (event) => event.stopPropagation());
+      if (!input) return;
+      const presetKey = toggle.dataset.tabPreset;
       input.addEventListener("change", () => {
-        const currentState = ensureBuyState(variant.id);
-        if (input.checked) {
-          let selection = currentState;
-          for (const id of ids) selection = Lineup.applyLineageCheck(plan, selection, id);
-          assignSelection(currentState, selection);
-        } else {
-          currentState[kind] = (currentState[kind] || []).filter((id) => !ids.includes(id));
-        }
-        saveState();
+        const assembled = assemblePreset(plan, input.checked ? presetKey : "base");
+        if (!assembled) return;
+        assignSelection(ensureBuyState(variant.id), assembled);
+        saveState(input.checked ? `${$("span", toggle)?.textContent || "Configuration"} applied` : "Returned to the Base configuration");
         renderBuy();
       });
     });
@@ -1341,8 +1351,7 @@
     }));
     $$(".buy-item-detail:not([data-shell-card-name])", body).forEach((button) => button.addEventListener("click", () => {
       const kind = button.dataset.itemKind;
-      const collection = kind === "tuned" ? plan.required : plan[kind];
-      const item = kind === "precon" ? plan.precon : (collection || []).find((candidate) => candidate.id === button.dataset.itemId);
+      const item = kind === "precon" ? plan.precon : kindItems(plan, kind).find((candidate) => candidate.id === button.dataset.itemId);
       if (item) openBuyItemDetail(resolvedBuyCard(item), variant, kind);
     }));
     body.addEventListener("click", (event) => {
@@ -1387,7 +1396,7 @@
   }
 
   function buyTotalMarkup(summary) {
-    return `<span class="buy-total" data-buy-total><small>Selected total</small><strong>$${summary.total.toFixed(2)}</strong>${summary.unpriced ? `<em>+ ${summary.unpriced} unpriced</em>` : ""}</span>`;
+    return `<span class="buy-total" data-buy-total title="Market price of everything selected here, whether or not you own it yet. Live Decks reports what you have actually recorded paying instead."><small>Market total</small><strong>$${summary.total.toFixed(2)}</strong>${summary.unpriced ? `<em>+ ${summary.unpriced} unpriced</em>` : ""}</span>`;
   }
 
   function updateBuyTotal(deck, plan, current) {
@@ -1544,18 +1553,36 @@
     }).join("");
     const selectedCount = named.filter((card) => (current.shell || []).includes(card.id)).reduce((sum, card) => sum + Number(card.quantity || 1), 0);
     const allSelected = named.every((card) => (current.shell || []).includes(card.id));
-    return `<section class="starting-shell constructed-shell">
-      <div class="starting-shell-heading"><span>${icon("▣")}<strong>Starting Shell${purchasedAsSingles ? " · Singles to buy" : " · Final-deck choices"}</strong><b>${selectedCount}/${namedCount}</b></span><label class="shell-select-all"><input type="checkbox" data-select-shell-all ${allSelected ? "checked" : ""}><span>Select all</span></label></div>
+    // A deck is always 100 slots including its commander, so count it here even on the decks
+    // whose commander lives in the separate switcher above -- reading "82/99" against a
+    // 100-card deck invites the question of which card went missing. Exactly one commander is
+    // active at all times (the slot-group model guarantees it), so this is always +1/+1.
+    const shownSelected = selectedCount + (hasAltCommander ? 1 : 0);
+    const shownTotal = namedCount + (hasAltCommander ? 1 : 0);
+    return `<details class="starting-shell constructed-shell" data-ui-key="shell-${esc(variantId)}" open>
+      <summary class="starting-shell-heading"><span>${icon("▣")}<strong>Starting Shell${purchasedAsSingles ? " · Singles to buy" : " · Final-deck choices"}</strong><b>${shownSelected}/${shownTotal}</b></span><small>${hasAltCommander ? "Includes the commander, chosen above" : "The cards this deck starts from"}</small><label class="shell-select-all"><input type="checkbox" data-select-shell-all ${allSelected ? "checked" : ""}><span>Select all</span></label><span class="section-expander" aria-hidden="true"></span></summary>
       <p class="shell-source-note constructed-shell-note">${purchasedAsSingles ? "Check the individual cards you need; selected cards flow to the Shop List." : "These cards came in the starting product. Keep checked only the cards you want in the finished 100; no individual price is required."}</p>
       ${hasAltCommander ? "" : `<div class="constructed-shell-commander"><h4>Commander</h4>${shellPurchaseRow(commander, current, variantId, purchasedAsSingles)}</div>`}
       <div class="constructed-shell-groups">${typeGroups}</div>
       ${flexibleCount ? `<p class="shell-flex-note"><b>${flexibleCount} modeled slot${flexibleCount === 1 ? "" : "s"} still need exact card names.</b> They preserve the 100-card compliance model but are not added to the Shop List until a card is named.</p>` : ""}
-    </section>`;
+    </details>`;
   }
 
   function startingShellSection(variant, plan, current, variantId) {
     const cards = (plan.startingShell || []).map(resolvedShellCard);
     return constructedShellSection(variant, plan, cards, current, variantId);
+  }
+
+  // True when the alternative commander currently occupies the commander slot. Decides which
+  // ladder groups get de-emphasized (never disabled), so the answer has to come from the same
+  // slot-group lookup the Commander switcher itself renders from.
+  function altCommanderActive(plan, current) {
+    const altCommander = (plan.altTuned || []).find((item) => item.isCommander);
+    const shellCommander = (plan.startingShell || []).find((item) => item.isCommander);
+    if (!altCommander || !shellCommander) return false;
+    const model = Lineup.buildModel(plan);
+    const slotId = model.byId.get(String(shellCommander.id))?.slotId;
+    return String(Lineup.activeEntryForSlot(plan, current, slotId)?.id || "") === String(altCommander.id);
   }
 
   // 1o/3e/5o only -- both commander candidates share one slot group (the alt item's
@@ -1739,6 +1766,7 @@
     const presets = [
       {key: "base", label: "Base", categories: []},
       {key: "tuned", label: "Tuned", categories: ["required"]},
+      {key: "enhance", label: "Enhance", categories: ["required", "upgrade", "enhance"]},
       {key: "max", label: "Maxxed", categories: ["required", "upgrade", "enhance", "max"]}
     ];
     if (Array.isArray(plan.tuned2)) {
@@ -1781,13 +1809,34 @@
     return selection;
   }
 
-  function presetDropdownMarkup(plan, variantId) {
-    const presets = deckPresets(plan);
-    if (presets.length <= 1) return "";
+  // The dropdown asks how far you want to invest, not which optimizer you prefer. Ten entries
+  // made the reader choose both at once; four (plus Alt where it exists) ask only the first,
+  // and the flavor comes from whichever tab is showing in that group -- so picking "Tuned"
+  // while the Fun Tuned tab is open applies Fun Tuned. Each option is still a complete,
+  // exactly-100, compliance-checked configuration.
+  function levelPresetOptions(plan, current, variantId) {
+    const options = [{key: "base", label: "Base", detail: "The starting shell on its own"}];
+    for (const group of LADDER_GROUPS) {
+      if (group.key === "alt") continue;
+      const tab = activeLadderTab(plan, group, variantId, current);
+      if (!tab) continue;
+      const sameLabel = tab.label === group.title;
+      options.push({key: tab.preset, label: group.title, detail: sameLabel ? `The ${tab.label} build` : `Using the ${tab.label} build`});
+    }
+    if (plan.altTuned?.length) {
+      options.push({key: "altTuned", label: "Alt Tuned", detail: "The alternative commander's tuned build"});
+      options.push({key: "altMax", label: "Alt Max", detail: "The alternative commander at full capability"});
+    }
+    return options;
+  }
+
+  function presetDropdownMarkup(plan, current, variantId) {
+    const options = levelPresetOptions(plan, current, variantId);
+    if (options.length <= 1) return "";
     return `<label class="preset-select"><span>Apply configuration</span>
       <select data-apply-preset aria-label="Apply a configuration to Deck ${esc(variantId)}">
         <option value="" selected>Apply configuration…</option>
-        ${presets.map((preset) => `<option value="${esc(preset.key)}">${esc(preset.label)}</option>`).join("")}
+        ${options.map((option) => `<option value="${esc(option.key)}">${esc(option.label)} — ${esc(option.detail)}</option>`).join("")}
       </select>
     </label>`;
   }
@@ -1887,42 +1936,131 @@
     funTuned: "Fun Tuned", funMax: "Fun Max",
     altTuned: "Alt Tuned", altMax: "Alt Max"
   };
-  const SECTION_GLYPHS = {
-    precon: "▣", tuned: "✓", upgrade: "↗", enhance: "+", max: "✦",
-    tuned2: "✓", enhance2: "+", max2: "✦",
-    funTuned: "☆", funMax: "☆", altTuned: "◇", altMax: "◇"
-  };
+  // Which plan array each checkbox kind draws from. Only "tuned" differs from its own name.
+  const KIND_ARRAY = {tuned: "required"};
+  const kindItems = (plan, kind) => plan?.[KIND_ARRAY[kind] || kind] || [];
 
-  function buySection(title, note, items, kind, current, variantId) {
-    if (!items?.length) return "";
-    const included = kind === "precon";
-    const glyph = SECTION_GLYPHS[kind] || "✦";
-    return `<details class="buy-section" data-ui-key="buysec-${esc(variantId)}-${esc(kind)}" ${included ? "open" : ""}>
-      <summary><span>${icon(glyph)}${esc(title)} <b>${items.length}</b></span><small>${esc(note)}</small>${included ? "" : selectAllToggleMarkup(kind)}</summary>
-      ${items.map((item) => {
-        const required = included;
-        const checked = required || (current[kind] || []).includes(item.id);
-        const impact = (kind === "enhance" || kind === "enhance2") ? enhancementImpact(item) : null;
-        const replacement = item.replaces ? `<span class="replacement-line"><b${impact ? ` class="replace-impact impact-${impact.key}" title="${esc(impact.label)}" aria-label="Replaces — ${esc(impact.label)}"` : ""}>Replaces</b><span>${esc(item.replaces)}</span></span>` : "";
-        const summaryCopy = kind === "max" ? (item.maxReason || item.purpose || item.typeLine || "") : (item.purpose || item.typeLine || "");
-        return `<div class="buy-item" ${buyRowAttributes(item, checked)}>
-          ${required ? `<span class="required-check" aria-label="Included">✓</span>` : `<input type="checkbox" ${checked ? "checked" : ""} data-buy-kind="${esc(kind)}" data-item-id="${esc(item.id)}" data-variant-id="${esc(variantId)}" aria-label="Include ${esc(item.name)} in the final deck">`}
-          <button class="buy-item-detail" type="button" data-item-kind="${esc(kind)}" data-item-id="${esc(item.id)}">
-            <img src="${esc(item.image)}" alt="" loading="lazy">
-            <span class="buy-copy">
-              <span class="buy-item-eyebrow"><span class="kind-label ${esc(kind)}">${esc(KIND_LABELS[kind] || kind)}</span>${item.tags?.includes("alt") ? `<span class="alt-mini">◇ Alt</span>` : ""}${item.ownedExtra ? `<span class="owned-mini">✓ Owned</span>` : ""}${item.temporaryUntil ? `<span class="temp-mini">Temp until ${esc(item.temporaryUntil)}</span>` : ""}${item.gameChanger ? `<span class="gc-mini">✦ Game Changer</span>` : ""}</span>
-              <strong>${esc(item.name)}${item.quantity > 1 ? ` ×${item.quantity}` : ""}</strong>
-              ${replacement}<small>${esc(summaryCopy)}</small>
-            </span>
-          </button>
-          <span class="price">${money(cardPriceBounds(item, cardMetadata[itemKey(item)] || {}).price)}</span>
-        </div>`;
-      }).join("")}
-    </details>`;
+  // The ladder rungs are grouped by what they cost you, not by which optimizer produced them.
+  // Ten flat sections asked the reader to know that Tuned-2 and Fun Tuned are alternative ways
+  // to spend the same tier of money; three tabbed groups say it outright. `preset` is the
+  // configuration a tab represents end to end -- crucially NOT just its own array, since
+  // Tuned-2 builds on top of the site's Tuned list while Fun Tuned deliberately replaces it.
+  const LADDER_GROUPS = [
+    {
+      key: "tuned", title: "Tuned", glyph: "✓",
+      tabs: [
+        {key: "tuned", label: "Tuned", kinds: ["tuned"], preset: "tuned", build: "Tuned",
+         note: "The site's own tuned list · the required purchases that make this deck work."},
+        {key: "tuned2", label: "Tuned-2", kinds: ["tuned2"], preset: "tuned2", build: "Tuned-2",
+         note: "Monte-Carlo-improved swaps layered on top of the site's Tuned build."},
+        {key: "funTuned", label: "Fun Tuned", kinds: ["funTuned"], preset: "funTuned", build: "Fun Tuned",
+         note: "A fun-weighted re-optimization built straight off Base · its own build, not a toggle on Tuned-2."}
+      ]
+    },
+    {
+      key: "enhance", title: "Enhance", glyph: "+",
+      tabs: [
+        {key: "enhance", label: "Enhance", kinds: ["enhance", "upgrade"], preset: "enhance", build: "Enhance",
+         note: "Role-preserving improvements and owned substitutions on top of Tuned · $15 or less."}
+      ]
+    },
+    {
+      key: "max", title: "Maxxed", glyph: "✦",
+      tabs: [
+        {key: "max", label: "Maxxed", kinds: ["max"], preset: "max", build: "Max",
+         note: "Strongest Tier 3 / Bracket 3-legal capability · price is not the criterion."},
+        {key: "max2", label: "Maxxed-2", kinds: ["enhance2", "max2"], preset: "max2", build: "Max-2",
+         note: "Strongest Monte-Carlo-improved capability, including the Enhance-2 rung it builds on."},
+        {key: "funMax", label: "Fun Max", kinds: ["funMax"], preset: "funMax", build: "Fun Max",
+         note: "Fun-weighted re-optimization on top of Fun Tuned."}
+      ]
+    },
+    {
+      key: "alt", title: "Alt commander", glyph: "◇",
+      tabs: [
+        {key: "altTuned", label: "Alt Tuned", kinds: ["altTuned"], preset: "altTuned", build: "Alt Tuned",
+         note: "The alternative commander's own tuned build, off Base · every card here is tagged Alt."},
+        {key: "altMax", label: "Alt Max", kinds: ["altMax"], preset: "altMax", build: "Alt Max",
+         note: "The alternative commander pushed to full capability, on top of Alt Tuned."}
+      ]
+    }
+  ];
+
+  // Which tab is showing is a view preference, not a choice about the deck, so it lives here
+  // rather than in saved state -- same reasoning as the Compare page's alt-commander preview.
+  const ladderTabState = new Map();
+
+  function availableTabs(plan, group) {
+    return group.tabs.filter((tab) => tab.kinds.some((kind) => kindItems(plan, kind).length));
   }
 
-  function selectAllToggleMarkup(kind) {
-    return `<label class="section-select-all" data-select-section-all="${esc(kind)}"><input type="checkbox"><span>Select all</span></label>`;
+  function activeLadderTab(plan, group, variantId, current) {
+    const tabs = availableTabs(plan, group);
+    if (!tabs.length) return null;
+    const stored = ladderTabState.get(`${variantId}:${group.key}`);
+    const match = tabs.find((tab) => tab.key === stored);
+    if (match) return match;
+    // Default to whichever tab the deck is actually configured toward, so opening a group
+    // shows the build in play rather than always the site's own list.
+    const checkedIn = (tab) => tab.kinds.reduce((sum, kind) => sum + kindItems(plan, kind).filter((item) => (current[kind] || []).includes(item.id)).length, 0);
+    return tabs.slice().sort((a, b) => checkedIn(b) - checkedIn(a))[0];
+  }
+
+  function buyItemRow(item, kind, current, variantId) {
+    const checked = (current[kind] || []).includes(item.id);
+    const impact = (kind === "enhance" || kind === "enhance2") ? enhancementImpact(item) : null;
+    const replacement = item.replaces ? `<span class="replacement-line"><b${impact ? ` class="replace-impact impact-${impact.key}" title="${esc(impact.label)}" aria-label="Replaces — ${esc(impact.label)}"` : ""}>Replaces</b><span>${esc(item.replaces)}</span></span>` : "";
+    const summaryCopy = kind === "max" ? (item.maxReason || item.purpose || item.typeLine || "") : (item.purpose || item.typeLine || "");
+    return `<div class="buy-item" ${buyRowAttributes(item, checked)}>
+      <input type="checkbox" ${checked ? "checked" : ""} data-buy-kind="${esc(kind)}" data-item-id="${esc(item.id)}" data-variant-id="${esc(variantId)}" aria-label="Include ${esc(item.name)} in the final deck">
+      <button class="buy-item-detail" type="button" data-item-kind="${esc(kind)}" data-item-id="${esc(item.id)}">
+        <img src="${esc(item.image)}" alt="" loading="lazy">
+        <span class="buy-copy">
+          <span class="buy-item-eyebrow"><span class="kind-label ${esc(kind)}">${esc(KIND_LABELS[kind] || kind)}</span>${item.tags?.includes("alt") ? `<span class="alt-mini">◇ Alt</span>` : ""}${item.ownedExtra ? `<span class="owned-mini">✓ Owned</span>` : ""}${item.temporaryUntil ? `<span class="temp-mini">Temp until ${esc(item.temporaryUntil)}</span>` : ""}${item.gameChanger ? `<span class="gc-mini">✦ Game Changer</span>` : ""}</span>
+          <strong>${esc(item.name)}${item.quantity > 1 ? ` ×${item.quantity}` : ""}</strong>
+          ${replacement}<small>${esc(summaryCopy)}</small>
+        </span>
+      </button>
+      <span class="price">${money(cardPriceBounds(item, cardMetadata[itemKey(item)] || {}).price)}</span>
+    </div>`;
+  }
+
+  function ladderGroupMarkup(group, plan, current, variantId, altActive) {
+    const tabs = availableTabs(plan, group);
+    if (!tabs.length) return "";
+    const active = activeLadderTab(plan, group, variantId, current);
+    const isAltGroup = group.key === "alt";
+    // Visual de-emphasis only: the group whose commander isn't in play is the one you're
+    // probably not shopping from. Every control inside stays fully clickable -- this app
+    // never blocks a choice, it only ever reports on one.
+    const deemphasized = isAltGroup ? !altActive : altActive;
+    const tabItems = (tab) => tab.kinds.flatMap((kind) => kindItems(plan, kind).map((item) => ({item, kind})));
+    const checkedCount = (tab) => tabItems(tab).filter(({item, kind}) => (current[kind] || []).includes(item.id)).length;
+    const groupChecked = tabs.reduce((sum, tab) => sum + checkedCount(tab), 0);
+    const rows = tabItems(active);
+    const allChecked = rows.length > 0 && rows.every(({item, kind}) => (current[kind] || []).includes(item.id));
+    const anyChecked = rows.some(({item, kind}) => (current[kind] || []).includes(item.id));
+    const sim = simulationSummary?.builds?.[variantId]?.[active.build];
+    return `<details class="buy-section ladder-group${deemphasized ? " is-deemphasized" : ""}" data-ui-key="buygrp-${esc(variantId)}-${esc(group.key)}" data-ladder-group="${esc(group.key)}">
+      <summary>
+        <span>${icon(group.glyph)}${esc(group.title)} <b>${groupChecked}</b></span>
+        <small>${esc(active.note)}</small>
+        <span></span>
+        <span class="section-expander" aria-hidden="true"></span>
+      </summary>
+      <div class="ladder-tabs" role="tablist" aria-label="${esc(group.title)} builds">
+        ${tabs.map((tab) => `<button type="button" role="tab" class="ladder-tab${tab.key === active.key ? " is-active" : ""}" data-ladder-tab="${esc(group.key)}" data-tab-key="${esc(tab.key)}" aria-selected="${tab.key === active.key}">${esc(tab.label)}<b>${checkedCount(tab)}/${tabItems(tab).length}</b></button>`).join("")}
+      </div>
+      <div class="ladder-tab-panel">
+        <p class="ladder-tab-note">${esc(active.note)}</p>
+        ${simulationReadoutMarkup(active.build, sim)}
+        <label class="section-select-all ladder-select-all" data-select-tab-all="${esc(group.key)}" data-tab-preset="${esc(active.preset)}">
+          <input type="checkbox" ${allChecked ? "checked" : ""}><span>Select all ${esc(active.label)}</span>
+        </label>
+        ${deemphasized ? `<p class="ladder-deemphasis-note">${icon("i")}<span>${isAltGroup ? "Shown for reference — the original commander is active. Selecting from here is still allowed." : "The alternative commander is active, so this build's cards are not part of that lineup. Selecting them is still allowed."}</span></p>` : ""}
+      </div>
+      <div class="ladder-rows" data-any-checked="${anyChecked}">${rows.map(({item, kind}) => buyItemRow(item, kind, current, variantId)).join("")}</div>
+    </details>`;
   }
 
   function transferCardSnapshot(card) {
@@ -2414,19 +2552,48 @@
 
   // Compare picks the variant, Buy Picks selects cards to buy (can hold more than 100, on
   // purpose, for optionality), Shop List tracks what's actually been bought, and Live Decks
-  // builds the active deck from that pool. It's a one-way pipeline: a card only appears here
-  // at all once it's checked in Buy Picks, and nothing chosen here flows back upstream. Each
-  // card is its own independent on/off switch for the active 100, merged in as new Buy Picks
-  // selections appear (not just seeded once), so a freshly-checked card shows up as a bench
-  // option instead of being invisible until some future full reset.
-  function ensureLiveActiveMap(variant, activeIds, candidateIds) {
+  // builds the active deck from that pool. One-way pipeline: a card only appears here once
+  // it's checked in Buy Picks, and nothing chosen here flows back upstream.
+  //
+  // Which cards are active is therefore DERIVED from Buy Picks, not remembered indefinitely.
+  // Alongside each variant's active map we store a signature of the Buy Picks selection that
+  // produced it. When that signature changes -- a preset applied, a checkbox clicked, a
+  // commander switched -- the map is rebuilt wholesale from the new selection, because the
+  // upstream choice is the newer statement of intent (and rebuilding also prunes ids that are
+  // no longer selected at all). While the signature holds steady, the stored map is returned
+  // untouched, so manual bench/activate decisions made here survive any number of re-renders.
+  //
+  // Storing that signature is the whole fix for a class of bug where a freshly applied preset
+  // showed 100/100 in Buy Picks but far fewer active here: the map used to be append-only and
+  // seeded correct values exactly once per variant, so every card introduced afterwards was
+  // silently benched while unchanged cards kept stale values.
+  function ensureLiveActiveMap(variant, activeIds, candidateIds, selectionSignature) {
     state.liveActive ||= {};
-    const map = state.liveActive[variant.id] ||= {};
-    const firstEverView = Object.keys(map).length === 0;
-    candidateIds.forEach((id) => {
-      if (!(id in map)) map[id] = firstEverView && activeIds.has(id);
-    });
-    return map;
+    state.liveActiveSeed ||= {};
+    const storedMap = state.liveActive[variant.id];
+    const seedMatches = state.liveActiveSeed[variant.id] === selectionSignature;
+    if (storedMap && seedMatches) {
+      // Transfers (borrowed cards) can appear without the Buy Picks selection changing, so
+      // fill genuinely-new ids without disturbing any existing manual decision.
+      candidateIds.forEach((id) => {
+        if (!(id in storedMap)) storedMap[id] = activeIds.has(id);
+      });
+      return storedMap;
+    }
+    if (storedMap && state.liveActiveSeed[variant.id] === undefined) {
+      // Pre-signature saved state: adopt what's already there rather than overwriting a real
+      // person's bench work on first load after this shipped. The next genuine Buy Picks
+      // change rebuilds normally.
+      candidateIds.forEach((id) => {
+        if (!(id in storedMap)) storedMap[id] = activeIds.has(id);
+      });
+      state.liveActiveSeed[variant.id] = selectionSignature;
+      return storedMap;
+    }
+    const rebuilt = Object.fromEntries(candidateIds.map((id) => [id, activeIds.has(id)]));
+    state.liveActive[variant.id] = rebuilt;
+    state.liveActiveSeed[variant.id] = selectionSignature;
+    return rebuilt;
   }
 
   function configuredDeckCards(variant) {
@@ -2437,7 +2604,9 @@
     const selected = Object.fromEntries(Lineup.ARRAY_KEYS.map((key) => [key, new Set((current[key] || []).map(String))]));
     const candidates = model.entries.filter((entry) => !entry.item.isFlexibleSlot && (entry.kind === "transfer" || selected[entry.arrayKey]?.has(entry.id)));
     const activeIds = new Set(Lineup.selectedEntries(plan, current).map((entry) => entry.id));
-    const liveActive = ensureLiveActiveMap(variant, activeIds, candidates.map((entry) => entry.id));
+    // Signature is computed from the Buy Picks selection ONLY, so toggling a card here never
+    // looks like an upstream change and never triggers a rebuild of the user's own choices.
+    const liveActive = ensureLiveActiveMap(variant, activeIds, candidates.map((entry) => entry.id), selectionIdsSignature(current));
     const levelByKind = {
       shell: ["shell", "Starting Shell"],
       tuned: ["tuned", "Tuned"],
@@ -3142,11 +3311,11 @@
         <span class="live-deck-chevron" aria-hidden="true">⌄</span>
       </span>
       <span class="live-deck-metrics">
-        <i class="is-cost" data-live-total="${esc(variant.id)}" title="Sum of the prices you locked in for cards you own in this deck"><b>${money(totalCost) === "Price varies" ? "$0.00" : money(totalCost)}</b><small>Total cost · ${priced.priced}/${priced.bought} priced</small></i>
+        <i class="is-cost" data-live-total="${esc(variant.id)}" title="Money you have actually recorded paying for cards you own in this deck. Buy Picks shows market prices for everything selected instead, so the two figures are answering different questions."><b>${money(totalCost) === "Price varies" ? "$0.00" : money(totalCost)}</b><small>Paid · ${priced.priced}/${priced.bought} priced</small></i>
         <i title="${esc(bracket.description || "")}"><b>${esc(bracket.label || "—")}</b><small>Tier</small></i>
         <i><b>${boughtCount}/100</b><small>bought</small></i>
         <i><b>${total}/100</b><small>active</small></i>
-        <i class="${toBuy ? "is-open" : ""}"><b>${toBuy}</b><small>to buy</small></i>
+        <i class="${toBuy ? "is-open" : ""}" title="${toBuy ? `Market estimate to finish this deck: ${money(readiness.floorTotal)} to ${money(Math.max(readiness.floorTotal, readiness.ceilingTotal))}` : "Every card this deck needs is already owned"}"><b>${toBuy}</b><small>to buy${toBuy && readiness.floorTotal > 0 ? ` · ${money(readiness.floorTotal)}` : ""}</small></i>
         <i class="${gcTierClass}"><b>${compliance.selectedGameChangers.length}/3 GC</b><small>${gcTierLabel}</small></i>
       </span>
       <span class="live-strategy"><b>Strategy</b><i>${esc(strategy)}</i></span>
@@ -3361,7 +3530,7 @@
         if (!chip) return;
         const priced = liveDeckPricedCount(cards);
         const total = liveDeckTotalCost(cards);
-        chip.innerHTML = `<b>${total > 0 ? money(total) : "$0.00"}</b><small>Total cost · ${priced.priced}/${priced.bought} priced</small>`;
+        chip.innerHTML = `<b>${total > 0 ? money(total) : "$0.00"}</b><small>Paid · ${priced.priced}/${priced.bought} priced</small>`;
       };
       const commitFrom = (input) => {
         if (!input) return;
