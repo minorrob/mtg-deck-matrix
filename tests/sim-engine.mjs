@@ -408,4 +408,24 @@ const readme = await readFile(new URL("../README.md", import.meta.url), "utf8");
 assert.match(readme, /node tests\/sim-engine\.mjs/, "the README must list the simulation test");
 assert.match(readme, /run-batch\.mjs/, "the README must show how to run a simulation");
 
-console.log(`Simulation engine verified: deterministic under seed, discriminating between decks, and capped by the runner at ${tinyConfig.maxTotalSimulations} games.`);
+// Metric health. A score that returns nearly the same value for every deck is
+// not measuring anything, and weighting it changes nothing -- which is exactly
+// how the Fun rung came to be indistinguishable from Tuned. Pod Fun exists to
+// discriminate, so it is held to that standard here rather than discovered to
+// be flat months later.
+{
+  const podFun = (over) => Engine.podFunScoreFor({
+    avgEndTurn: 11, avgIdleTurns: 0, avgSurvivingSeats: 3, avgFirstElimination: 11, ...over
+  });
+  const friendly = podFun({});
+  const brutal = podFun({avgIdleTurns: 15, avgSurvivingSeats: 0, avgFirstElimination: 5});
+  assert.ok(friendly > 0.9, `a table where nobody is eliminated must score high on Pod Fun, got ${friendly}`);
+  assert.ok(brutal < 0.2, `a table wiped out at the halfway mark must score low on Pod Fun, got ${brutal}`);
+  assert.ok(friendly - brutal > 0.6, "Pod Fun must span a wide range between a friendly table and a brutal one");
+  // Each term has to move the number on its own, or it is decoration.
+  assert.notEqual(podFun({avgIdleTurns: 6}), friendly, "idle turns must move Pod Fun");
+  assert.notEqual(podFun({avgSurvivingSeats: 1}), friendly, "surviving opponents must move Pod Fun");
+  assert.notEqual(podFun({avgFirstElimination: 6}), friendly, "how early the first player dies must move Pod Fun");
+}
+
+console.log(`Simulation engine verified: deterministic under seed, discriminating between decks (My Fun and Pod Fun both range-checked), and capped by the runner at ${tinyConfig.maxTotalSimulations} games.`);

@@ -383,6 +383,9 @@
     return {
       key: profileDefinition.key,
       life: 40,
+      // The turn this seat's life hit zero, so Pod Fun can charge for the turns a
+      // knocked-out player spends watching rather than playing.
+      eliminatedTurn: null,
       deviation,
       winTurn,
       threat: profileDefinition.threatDamageByTurn,
@@ -682,6 +685,7 @@
         const alive = seats.filter((seat) => seat.life > 0);
         if (alive.length) alive.reduce((lowest, seat) => (seat.life < lowest.life ? seat : lowest), alive[0]).life -= drainOne;
       }
+      seats.forEach((seat) => { if (seat.life <= 0 && seat.eliminatedTurn === null) seat.eliminatedTurn = turn; });
       if (seats.every((seat) => seat.life <= 0)) {
         won = true;
         break;
@@ -757,9 +761,25 @@
     // stomp is as bad for a friendly pod as a turn-4 loss.
     const participated = !(screwed && !commanderTurn && peakBoard <= 1);
     const reasonablePace = endTurn >= 5;
+
+    // Pod signals: the same game read from the other three seats. My Fun asks
+    // whether I got to play; these ask what the table's evening looked like.
+    // Idle turns are the direct cost of knocking someone out early -- a player
+    // eliminated on turn 6 of a 12-turn game sits out half the game.
+    seats.forEach((seat) => { if (seat.life <= 0 && seat.eliminatedTurn === null) seat.eliminatedTurn = endTurn; });
+    const eliminated = seats.filter((seat) => seat.eliminatedTurn !== null);
+    const idleTurns = eliminated.reduce((sum, seat) => sum + Math.max(0, endTurn - seat.eliminatedTurn), 0);
+    const survivingSeats = seats.length - eliminated.length;
+    // A table is "still playing" while at least two opponents remain, which is
+    // when the game still has real politics and real decisions left in it.
+    const firstElimination = eliminated.length ? Math.min(...eliminated.map((seat) => seat.eliminatedTurn)) : endTurn;
+
     return {
       won,
       endTurn,
+      idleTurns,
+      survivingSeats,
+      firstElimination,
       lossCause,
       mulligans,
       commanderTurn,
@@ -792,7 +812,11 @@
       participationRate: 0,
       avgPeakBoard: 0,
       reasonablePaceRate: 0,
+      avgIdleTurns: 0,
+      avgSurvivingSeats: 0,
+      avgFirstElimination: 0,
       funScore: 0,
+      podFunScore: 0,
       score: 0
     };
   }
@@ -815,7 +839,10 @@
       lossCauses: totals.lossCauses,
       participationRate: totals.participatedSum / games,
       avgPeakBoard: totals.peakBoardSum / games,
-      reasonablePaceRate: totals.reasonablePaceSum / games
+      reasonablePaceRate: totals.reasonablePaceSum / games,
+      avgIdleTurns: totals.idleTurnSum / games,
+      avgSurvivingSeats: totals.survivingSeatSum / games,
+      avgFirstElimination: totals.firstEliminationSum / games
     };
   }
 
@@ -832,6 +859,36 @@
     );
   }
 
+  // Pod Fun: the same game read from the other three seats. My Fun asks whether
+  // this deck let ME play; this asks what the evening looked like for everyone
+  // else at the table, which is the thing that decides whether a pod invites the
+  // deck back. Deliberately built to discriminate rather than to detect
+  // disasters -- every term below has real spread across real decks, which is
+  // exactly what funScoreFor lacks (its three inputs sit at their ceilings for
+  // roughly three quarters of decks, so weighting it changes nothing).
+  //
+  //   idle      45%  turns an eliminated player spends watching, per opponent,
+  //                  measured against the length of the game they were dropped
+  //                  from. Knocking two players out at turn 6 of a turn-12 game
+  //                  costs the table twelve player-turns of doing nothing.
+  //   survivors 30%  how much of the table was still playing at the end. A game
+  //                  that ends with everyone alive beats one that ends 1-on-1.
+  //   patience  25%  how deep the game got before the first player died. Early
+  //                  eliminations are the single clearest "no fun" signal a pod
+  //                  reports, independent of who did the eliminating.
+  function podFunScoreFor(metrics) {
+    const endTurn = Math.max(1, metrics.avgEndTurn ?? 1);
+    const opponents = 3;
+    // Worst realistic case: every opponent knocked out at the halfway mark.
+    const idleBudget = Math.max(1, endTurn * 0.5 * opponents);
+    const idleNorm = clamp01(1 - (metrics.avgIdleTurns ?? 0) / idleBudget);
+    const survivorNorm = clamp01((metrics.avgSurvivingSeats ?? opponents) / opponents);
+    // Full credit once the first elimination lands at or past turn 9; no credit
+    // for a table where someone dies on turn 4.
+    const patienceNorm = clamp01(((metrics.avgFirstElimination ?? endTurn) - 4) / 5);
+    return clamp01(idleNorm * 0.45 + survivorNorm * 0.3 + patienceNorm * 0.25);
+  }
+
   function compositeScore(metrics, weights = DEFAULT_WEIGHTS, targets = DEFAULT_TARGETS, commanderCmc = 4) {
     const winRateNorm = Math.min(1, metrics.winRate / 0.5);
     const screwNorm = Math.max(0, 1 - metrics.screwPct / Math.max(0.01, targets.screwPct * 2));
@@ -843,6 +900,7 @@
     const clockNorm = metrics.avgWinTurn ? Math.max(0, Math.min(1, (16 - metrics.avgWinTurn) / 8)) : 0;
     const deadNorm = Math.max(0, 1 - metrics.deadCardsAtT8 / Math.max(1, targets.deadCardsAtT8 * 2));
     const funNorm = funScoreFor(metrics);
+    const podFunNorm = podFunScoreFor(metrics);
     const score = weights.winRate * winRateNorm
       + weights.screw * screwNorm
       + weights.flood * floodNorm
@@ -850,7 +908,8 @@
       + weights.interaction * interactionNorm
       + weights.clock * clockNorm
       + weights.deadCards * deadNorm
-      + (weights.fun ?? 0) * funNorm;
+      + (weights.fun ?? 0) * funNorm
+      + (weights.podFun ?? 0) * podFunNorm;
     return Math.round(score * 1000) / 10;
   }
 
@@ -889,7 +948,10 @@
       lossCauses: {},
       participatedSum: 0,
       peakBoardSum: 0,
-      reasonablePaceSum: 0
+      reasonablePaceSum: 0,
+      idleTurnSum: 0,
+      survivingSeatSum: 0,
+      firstEliminationSum: 0
     };
     const games = Number(config.games || config.gamesPerIteration || 500);
     const batchSize = Number(config.batchSize || 100);
@@ -915,11 +977,15 @@
       if (result.participated) totals.participatedSum += 1;
       totals.peakBoardSum += result.peakBoard;
       if (result.reasonablePace) totals.reasonablePaceSum += 1;
+      totals.idleTurnSum += result.idleTurns;
+      totals.survivingSeatSum += result.survivingSeats;
+      totals.firstEliminationSum += result.firstElimination;
       if (onBatch && (index + 1) % batchSize === 0) onBatch({completed: index + 1, total: games, metrics: summarize(totals)});
     }
     const metrics = summarize(totals);
     const commanderCmc = deck.commander?.profile.cmc || 4;
     metrics.funScore = funScoreFor(metrics);
+    metrics.podFunScore = podFunScoreFor(metrics);
     metrics.score = compositeScore(metrics, config.scoreWeights || DEFAULT_WEIGHTS, config.targets || DEFAULT_TARGETS, commanderCmc);
     metrics.winRateInterval = winRateInterval(metrics);
     const perCardStats = Array.from(cardStats.values()).map((stat) => ({
@@ -1022,6 +1088,7 @@
     emptyMetrics,
     compositeScore,
     funScoreFor,
+    podFunScoreFor,
     winRateInterval,
     analyzeGaps
   };

@@ -63,5 +63,20 @@
     "liftVeto": 0.06
   },
   "minAcceptGain": 1.0,
-  "holdoutGames": 5000
+  "holdoutGames": 5000,
+  "podFunRungScoreWeights": {
+    "winRate": 0.3,
+    "screw": 0.15,
+    "flood": 0.1,
+    "commander": 0.1,
+    "interaction": 0.1,
+    "clock": 0.1,
+    "deadCards": 0.05,
+    "fun": 0.0,
+    "podFun": 0.1
+  },
+  "winRateBand": {
+    "floor": 0.3,
+    "ceiling": 0.45
+  }
 }
