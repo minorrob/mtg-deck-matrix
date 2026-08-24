@@ -405,8 +405,20 @@
       const cheap = candidates
         .filter((entry) => !picked.has(cardKey(entry.card.name)))
         .sort((a, b) => Number(a.card.price || 0) - Number(b.card.price || 0) || b.score - a.score);
+      // Quota completeness still wins over budget in the end (an incomplete deck is worse
+      // than an over-budget one), but a cheap-enough card to stay under budget is preferred
+      // over one that merely missed the per-card cap -- so try the in-budget cheap options
+      // fully before reaching for ones that would blow the total.
       for (const entry of cheap) {
         if (chosen.length >= need) break;
+        if (spend.total + Number(entry.card.price || 0) > context.budgetUsd) continue;
+        picked.set(cardKey(entry.card.name), {card: entry.card, role, score: entry.score});
+        chosen.push({card: entry.card, role, score: entry.score});
+        spend.total += Number(entry.card.price || 0);
+      }
+      for (const entry of cheap) {
+        if (chosen.length >= need) break;
+        if (picked.has(cardKey(entry.card.name))) continue;
         picked.set(cardKey(entry.card.name), {card: entry.card, role, score: entry.score});
         chosen.push({card: entry.card, role, score: entry.score});
         spend.total += Number(entry.card.price || 0);
@@ -492,8 +504,18 @@
         .filter((card) => !picked.has(cardKey(card.name)))
         .map((card) => ({card, role: "theme", score: scoreCard(card, "theme", context, lens, usedCounts)}))
         .sort((a, b) => b.score - a.score || a.card.name.localeCompare(b.card.name));
+      // Same two-tier preference as fillRole's own fallback: fill out the count with the
+      // best-scoring cards that still fit the budget before reaching for ones that don't.
       for (const entry of filler) {
         if (spells.length >= spellCount) break;
+        if (spend.total + Number(entry.card.price || 0) > context.budgetUsd) continue;
+        picked.set(cardKey(entry.card.name), entry);
+        spells.push(entry);
+        spend.total += Number(entry.card.price || 0);
+      }
+      for (const entry of filler) {
+        if (spells.length >= spellCount) break;
+        if (picked.has(cardKey(entry.card.name))) continue;
         picked.set(cardKey(entry.card.name), entry);
         spells.push(entry);
         spend.total += Number(entry.card.price || 0);
@@ -501,12 +523,20 @@
     }
     const nonbasicTarget = Math.min(Math.floor(landTarget * 0.3), (pool.roleBuckets.get("land") || []).length);
     const landCap = context.perCardCap * (lens.priceCapFactor || 1);
+    // Nonbasics are a pure upgrade over basics -- allocateBasics below fills the same land
+    // slot count either way -- so unlike spell quotas there is no completeness pressure to
+    // force one through once it would break budget; skip it and let a basic land stand in.
     const nonbasics = (pool.roleBuckets.get("land") || [])
       .filter((card) => !picked.has(cardKey(card.name)))
       .map((card) => ({card, role: "land", score: 0.6 * edhrecScore(card.edhrecRank) + 0.4 * budgetScore(card.price, landCap) - OVERLAP_PENALTY * Number(usedCounts.get(cardKey(card.name)) || 0)}))
       .sort((a, b) => b.score - a.score || a.card.name.localeCompare(b.card.name))
       .filter((entry) => Number(entry.card.price || 0) <= landCap)
-      .slice(0, nonbasicTarget);
+      .reduce((chosen, entry) => {
+        if (chosen.length >= nonbasicTarget) return chosen;
+        if (spend.total + chosen.reduce((sum, prior) => sum + Number(prior.card.price || 0), 0) + Number(entry.card.price || 0) > context.budgetUsd) return chosen;
+        chosen.push(entry);
+        return chosen;
+      }, []);
     nonbasics.forEach((entry) => {
       picked.set(cardKey(entry.card.name), entry);
       spend.total += Number(entry.card.price || 0);
@@ -682,9 +712,13 @@
     // Each ladder judges price against what that stage is allowed to spend.
     const tunedContext = {...context, perCardCap: context.budgetUsd * 0.25};
     const enhanceContext = {...context, perCardCap: ENHANCE_PRICE_CAP};
+    // Tuned must keep Base+Tuned inside budget, so its spend cap is what's left
+    // after Base (including the commander) already spent -- not a flat fraction.
+    const commanderPrice = Number(context.commander.price || 0);
+    const tunedSpendCap = Math.max(0, context.budgetUsd - (base.spend + commanderPrice));
     const tuned = buildSwapLadder(tunedContext, pool, lens, baseEntries, usedCounts, {
       limit: MAX_TUNED_SWAPS,
-      spendCap: context.budgetUsd * 0.5,
+      spendCap: tunedSpendCap,
       margin: 0.02,
       crossRole: false,
       priceFilter: (card) => Number(card.price || 0) <= context.budgetUsd * 0.25
