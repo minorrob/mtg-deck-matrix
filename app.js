@@ -892,7 +892,10 @@
     return card;
   }
 
-  // 1o/3e/5o only -- these three decks alone carry an alternative-commander exploration.
+  // 1o/3e/5o only -- these three decks alone got a second, fully-built decklist for their
+  // alternative commander (plan.altTuned), so they're the only ones with a toggle here. The
+  // other 44 variants also have an altCommanderCases entry, but it's a lighter-weight scored
+  // comparison with no second decklist behind it, so this card has nothing to preview for them.
   // Display-only, exactly like the plan requires: previewing the alt commander here never
   // touches Buy Picks seeding or any stored selection, only what this one card shows. The
   // real Score/Win% comparison and the caution paragraph both come straight from the

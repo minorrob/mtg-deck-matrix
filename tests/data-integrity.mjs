@@ -233,35 +233,28 @@ for (const variantId of ["1o", "2c", "3e", "4c", "5o", "6f"]) {
   else assert.equal(commanderCandidates.length, 0, `${variantId} has no alternative commander to flag`);
 }
 
-// Real simulation results (tools/import_summary_metrics.py), Phase 3's data source for the
-// Buy Picks header's additive readout and the Compare-page alt-commander preview. Base/
-// Enhance/Max are the site's own published lists and must stay unsimulated (no games/score);
-// everything else must carry a finite games/score/winPct and a recognized verdict, tagged
-// with the engine generation that actually measured it -- never inferred at render time.
+// Real simulation results (tools/sim/run-sim.mjs, ingested by hand into this file), the
+// Phase 6 sweep's data source for the Buy Picks header's additive readout and the Compare-
+// page alt-commander preview. Base, Max, and Fun Max stay curated-only (no measured build
+// exists for them yet) and so carry no builds entry at all; every key that IS present must
+// carry a finite games/score/winPct and a recognized verdict, tagged with the engine
+// generation that actually measured it -- never inferred at render time.
 assert(simulationSummary.engineNotes?.v1 && simulationSummary.engineNotes?.["v2.1"] && simulationSummary.engineNotes?.["v2.2"], "simulation summary must document all three engine generations");
-assert(typeof simulationSummary.engineBoundaryNote === "string" && simulationSummary.engineBoundaryNote.length > 0, "simulation summary must carry a v1/v2.1 boundary caveat");
-const UNSIMULATED_BUILDS = new Set(["Base", "Enhance", "Max"]);
-const SIMULATED_ENGINE = {
-  "Tuned": "v1", "Tuned-2": "v1", "Enhance-2": "v1", "Max-2": "v1",
-  "Fun Tuned": "v2.1", "Fun Max": "v2.1", "Alt Tuned": "v2.1", "Alt Max": "v2.1"
-};
+assert(typeof simulationSummary.engineBoundaryNote === "string" && simulationSummary.engineBoundaryNote.length > 0, "simulation summary must carry an engine-boundary caveat");
+const SIMULATED_ENGINE = {"Tuned": "v2.2", "Enhance": "v2.2", "Fun Tuned": "v2.2", "Alt Tuned": "v2.1", "Alt Max": "v2.1"};
 const VALID_VERDICTS = new Set(["confirmed", "within-noise", "not-confirmed", "no-change"]);
-assert.deepEqual(Object.keys(simulationSummary.builds).sort(), ["1o", "2c", "3e", "4c", "5o", "6f"], "simulation summary must cover exactly the six decks with new-ladder data");
+assert.deepEqual(Object.keys(simulationSummary.builds).sort(), Object.keys(buyPlans.plans).sort(), "simulation summary's builds must now cover every variant with a buy plan");
+assert.equal(Object.keys(simulationSummary.builds).length, 50, "the Phase 6 sweep covers exactly 50 variants");
 for (const [variantId, deckBuilds] of Object.entries(simulationSummary.builds)) {
-  const expectedBuilds = new Set(["Base", "Tuned", "Enhance", "Max", "Tuned-2", "Enhance-2", "Max-2", "Fun Tuned", "Fun Max"]);
+  const expectedBuilds = new Set(["Tuned", "Enhance", "Fun Tuned"]);
   if (ALT_DECKS.has(variantId)) { expectedBuilds.add("Alt Tuned"); expectedBuilds.add("Alt Max"); }
   assert.deepEqual(new Set(Object.keys(deckBuilds)), expectedBuilds, `${variantId}: simulation summary must report exactly its expected builds`);
   for (const [buildName, metrics] of Object.entries(deckBuilds)) {
-    if (UNSIMULATED_BUILDS.has(buildName)) {
-      assert.equal(metrics.games, null, `${variantId} ${buildName}: a published-only build must not carry a simulated game count`);
-      assert.equal(metrics.engine, null, `${variantId} ${buildName}: a published-only build must not carry an engine tag`);
-    } else {
-      assert(Number.isFinite(metrics.games) && metrics.games > 0, `${variantId} ${buildName}: a simulated build must report a positive game count`);
-      assert(Number.isFinite(metrics.score), `${variantId} ${buildName}: a simulated build must report a finite score`);
-      assert(Number.isFinite(metrics.winPct) && metrics.winPct > 0 && metrics.winPct < 1, `${variantId} ${buildName}: win rate must be a fraction between 0 and 1`);
-      assert(VALID_VERDICTS.has(metrics.verdict), `${variantId} ${buildName}: verdict must be one of the four documented outcomes, got ${metrics.verdict}`);
-      assert.equal(metrics.engine, SIMULATED_ENGINE[buildName], `${variantId} ${buildName}: engine tag must match the documented v1/v2.1 split`);
-    }
+    assert(Number.isFinite(metrics.games) && metrics.games > 0, `${variantId} ${buildName}: a simulated build must report a positive game count`);
+    assert(Number.isFinite(metrics.score), `${variantId} ${buildName}: a simulated build must report a finite score`);
+    assert(Number.isFinite(metrics.winPct) && metrics.winPct > 0 && metrics.winPct < 1, `${variantId} ${buildName}: win rate must be a fraction between 0 and 1`);
+    assert(VALID_VERDICTS.has(metrics.verdict), `${variantId} ${buildName}: verdict must be one of the four documented outcomes, got ${metrics.verdict}`);
+    assert.equal(metrics.engine, SIMULATED_ENGINE[buildName], `${variantId} ${buildName}: engine tag must match the documented v2.2/v2.1 split`);
   }
 }
 // "Trey's Build" marks Rob's own confirmed pick for each of the six deck slots -- authored,
@@ -317,7 +310,7 @@ assert.match(appSource, /metricFamilyMarkup\("playstyle", playstyle, `metric-pla
   assert(start > 0 && end > start, "dynamicMetricsHeaderMarkup and simulationReadoutMarkup must both be defined, in that order");
   assert.doesNotMatch(appSource.slice(start, end), /metricFamilyMarkup\("growth"/, "the Buy Picks metric strip must exclude Growth, matching the Compare page's own instruction");
 }
-assert.match(appSource, /simulationSummary\.engineBoundaryNote/, "a rendered simulation result must always carry the v1\\/v2.1 engine-boundary caveat");
+assert.match(appSource, /simulationSummary\.engineBoundaryNote/, "a rendered simulation result must always carry the engine-boundary caveat");
 
 // Phase 4 -- Live Decks/Shop List flow-through for the seven new categories, plus the Alt
 // filter and the advisory performance check. levelByKind is the load-bearing map: any new
