@@ -1,0 +1,10 @@
+# Simulation runtime artefacts. The committed placeholders (sim/status.json,
+# sim/config.json, sim/opponents.json) stay tracked; everything a run produces
+# does not.
+sim/requests/*
+!sim/requests/.gitkeep
+sim/results/*
+!sim/results/.gitkeep
+sim/cache/*
+!sim/cache/.gitkeep
+sim/sim-ledger.json
