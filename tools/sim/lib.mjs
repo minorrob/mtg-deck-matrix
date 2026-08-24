@@ -129,6 +129,16 @@ export function tunedCards(plan, audited) {
   return literalCardsFor(plan, audited, Lineup.defaultSelection(plan));
 }
 
+// The Enhance build: every Enhance option layered on top of Tuned, without Max
+// — the middle rung, same composition method as maxedCards below.
+export function enhanceCards(plan, audited) {
+  let selection = Lineup.defaultSelection(plan);
+  (plan.enhance || []).forEach((item) => {
+    selection = Lineup.applyChoice(plan, selection, item.id);
+  });
+  return literalCardsFor(plan, audited, selection);
+}
+
 // The Maxed build: every Enhance and Max option layered on top of the Tuned
 // build, the same way the site's own "select everything" controls do it —
 // composing Lineup.applyChoice one item at a time so slot/replacement and

@@ -111,10 +111,13 @@ async function runBatch(cards, seed, label, state, gameCount) {
     });
     return {capped: true, cap};
   }
+  // A request may override the scoring weights (the Fun rung keeps fun at .10
+  // instead of every other rung's .05) without changing anything else about
+  // how the run is validated or measured.
   const result = Engine.simulateGames(cards, table.seats, {
     ...config,
     games,
-    scoreWeights: config.scoreWeights,
+    scoreWeights: request.constraints?.scoreWeights || config.scoreWeights,
     targets: config.targets
   }, seed, async (batch) => {
     await writeStatus({
