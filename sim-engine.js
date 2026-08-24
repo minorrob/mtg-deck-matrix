@@ -13,7 +13,10 @@
   // deck under the same seeds before and after a swap — never as absolute odds.
   const SIMPLIFICATIONS = [
     "No stack: spells resolve when cast, and counterspells are modelled as generic interaction.",
-    "No blocking assignment: combat damage is total attacking power times an unblocked factor, and a board's damage reduction is weighted by total toughness, not a real block.",
+    "No blocking assignment: combat damage is total attacking power weighted by a per-creature connect rate (higher for flying/menace/trample), and a board's damage reduction is weighted by total toughness plus a flat deathtouch/first-strike deterrence bonus, not a real block.",
+    "+1/+1 counters model growth (enters-with, a source that adds more, a doubler, proliferate) but not storage or transfer -- a card that moves counters between permanents when something dies (The Ozolith) is treated as an ordinary permanent with no counter interaction.",
+    "Proliferate is applied to every one of our own creatures that already carries a counter; the real choice of which permanents or players to target does not exist in this model.",
+    "A repeatable counters or proliferate source (an activated ability, or a trigger) is assumed usable every turn from the turn it resolves onward, including that same turn.",
     "No politics: opponents never team up, and never target each other's threats instead of ours.",
     "Tutors draw the best of three random cards instead of choosing exactly.",
     "Tokens are modelled as extra power on the creature that makes them, not as separate bodies.",
@@ -49,6 +52,23 @@
   // The share of a seat's output aimed at us rather than at the other two seats.
   const AIMED_AT_US = 0.33;
   const BASIC_COLOR = {Plains: "W", Island: "U", Swamp: "B", Mountain: "R", Forest: "G"};
+
+  // How much of a creature's power actually connects when it attacks. There is no real block
+  // assignment in this model (see SIMPLIFICATIONS), so this stands in for "how hard is this
+  // creature to stop" -- flying and menace both make a creature meaningfully harder to block on
+  // an ordinary board and are treated the same; trample gets some value through a block without
+  // being fully unblockable, landing between the two. CONNECT_BASE (0.7) already existed as the
+  // flat rate every creature used before this file modeled evasion at all.
+  const CONNECT_BASE = 0.7;
+  const CONNECT_EVASIVE = 0.85;
+  const CONNECT_TRAMPLE = 0.78;
+  const connectRateFor = (creature) => ((creature.hasFlying || creature.hasMenace) ? CONNECT_EVASIVE : creature.hasTrample ? CONNECT_TRAMPLE : CONNECT_BASE);
+  // A modest bonus to a blocker's deterrent value, not a real combat-trick simulation: a
+  // deathtouch blocker trades with anything regardless of its own toughness, and a first-strike
+  // blocker often kills its attacker before taking damage back. Both fold into the same
+  // toughness-weighted block-reduction estimate every creature already contributes to.
+  const DEATHTOUCH_DETERRENCE = 2;
+  const FIRST_STRIKE_DETERRENCE = 1;
 
   function clamp01(value) {
     return Math.max(0, Math.min(1, Number(value) || 0));
@@ -152,11 +172,42 @@
     };
   }
 
+  // Scryfall tags card.keywords only for an ability the card itself has, never one it merely
+  // grants to or references in others (Favorable Winds mentions "flying", but is not itself a
+  // flier). oracleText alone can't make that distinction reliably by regex -- except that a
+  // card's own printed keywords are always bunched into one comma-separated line, and it is
+  // always the FIRST line ("Flying, vigilance, deathtouch, lifelink" on Atraxa) rather than
+  // buried in a later granting sentence ("Creatures you control gain trample..."). Checking only
+  // the first line resolves every false positive found scanning this catalog's granting/
+  // referencing cards (Craterhoof, Elspeth, Iroas, Vito) for "flying/trample/deathtouch/menace/
+  // lifelink" without a real keyword of their own.
+  function hasKeyword(card, firstLine, keyword) {
+    if ((card.keywords || []).some((entry) => String(entry).toLowerCase() === keyword)) return true;
+    if (!new RegExp(`\\b${keyword}\\b`).test(firstLine)) return false;
+    // The one real granting card found in this catalog whose whole oracle text is a single
+    // line (Favorable Winds: "Creatures you control with flying get +1/+1.") has no separate
+    // later line for the first-line check above to skip past. A genuine keyword line never
+    // says "you control" -- it's a bare list ("Flying, vigilance") -- so excluding that phrase
+    // catches this case too, checked against every keyworded card in this catalog without
+    // producing a new false negative (the one card it would affect, Sephara, Sky's Blade,
+    // resolves correctly anyway via card.keywords before this line ever runs).
+    return !/\byou control\b/.test(firstLine);
+  }
+
+  // A repeatable counters/proliferate source is one that can fire more than once across a game:
+  // an activated ability (a mana/tap cost followed by a colon) or a triggered ability opening a
+  // line with "at the beginning of" or "whenever". Anything else -- a one-shot instant/sorcery,
+  // or a static enters-the-battlefield-only clause -- fires at most once, at cast time.
+  function hasRepeatableAbility(text) {
+    return /\{[^}]*\}[^:]*:/.test(text) || /(?:^|\n)(?:at the beginning of|whenever)\b/.test(text);
+  }
+
   // One pass over the card's own text decides everything the game loop knows
   // about it. Anything the loop cannot see is, by definition, not simulated.
   function classifyCard(card) {
     const typeLine = String(card.typeLine || "");
     const text = String(card.oracleText || "").toLowerCase().replace(/[’]/g, "'");
+    const firstLine = text.split("\n")[0] || "";
     const cost = parseManaCost(card.manaCost);
     const cmc = Number.isFinite(Number(card.cmc)) && Number(card.cmc) > 0 ? Number(card.cmc) : cost.value;
     const isLand = /\bLand\b/.test(typeLine);
@@ -166,6 +217,10 @@
     const toughness = estimateToughness(card, cmc, typeLine, text);
     const tokenMakers = (text.match(/create (?:a|an|two|three|x|\d+)[^.]{0,40}token/g) || []).length;
     const rampMatch = /add \{[wubrgc]\}\{[wubrgc]\}|search your library for (?:a|up to two|two) (?:basic )?land/.test(text) ? 2 : 1;
+    const entersWithCountersMatch = /enters(?: the battlefield)? with (a|an|one|two|three|four|five|\d+)[^.]{0,20}\+1\/\+1 counters?/.exec(text);
+    const addsCounterMatch = /put[s]? (?:a|an|one|two|three|four|five|\d+|x)[^.]{0,20}\+1\/\+1 counters? on/.exec(text);
+    const COUNTER_WORDS = {a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5};
+    const readCounterAmount = (word) => COUNTER_WORDS[word] ?? (Number(word) || 1);
     return {
       name: card.name,
       quantity: Math.max(1, Number(card.quantity || 1)),
@@ -210,6 +265,28 @@
       drain: drainAmount(text, typeLine),
       isDrainSpell: /Instant|Sorcery/.test(typeLine) && /each opponent loses|damage to each opponent/.test(text),
       drainSpellAmount: Number((/each opponent loses (\d+) life|deals (\d+) damage to each opponent/.exec(text) || [])[1] || (/each opponent loses (\d+) life|deals (\d+) damage to each opponent/.exec(text) || [])[2] || 3),
+      // Evasion and combat keywords -- read from the card's own first line (see hasKeyword above)
+      // so a card that merely grants or references these to other creatures is never mistaken
+      // for having them itself.
+      hasFlying: hasKeyword(card, firstLine, "flying"),
+      hasMenace: hasKeyword(card, firstLine, "menace"),
+      hasTrample: hasKeyword(card, firstLine, "trample"),
+      hasDeathtouch: hasKeyword(card, firstLine, "deathtouch"),
+      hasFirstStrike: hasKeyword(card, firstLine, "first strike"),
+      hasLifelink: hasKeyword(card, firstLine, "lifelink"),
+      // +1/+1 counters: a creature that enters already carrying some, a source (creature,
+      // artifact, or enchantment) that repeatedly or once puts more on a creature, and the rare
+      // effect (Hardened Scales, Ozolith-the-Shattered-Spire-style) that doubles every +1/+1
+      // counter this deck would place. Counter-storage/transfer effects (The Ozolith itself:
+      // move counters from a dying creature onto this permanent, then redistribute them later)
+      // are a distinct, more stateful mechanic and are not modeled -- a card with that text
+      // classifies as an ordinary permanent with no counter interaction here.
+      entersWithCounters: entersWithCountersMatch ? readCounterAmount(entersWithCountersMatch[1]) : 0,
+      addsCounterAmount: addsCounterMatch ? readCounterAmount((/put[s]? (a|an|one|two|three|four|five|\d+|x)/.exec(addsCounterMatch[0]) || [])[1]) : 0,
+      addsCounterRepeatable: Boolean(addsCounterMatch) && hasRepeatableAbility(text),
+      isProliferate: (card.keywords || []).some((entry) => String(entry).toLowerCase() === "proliferate") || /proliferate/.test(text),
+      proliferateRepeatable: /proliferate/.test(text) && hasRepeatableAbility(text),
+      doublesCounters: /that many (plus one|more)[^.]*counters?[^.]*instead|doubl(e|ing)[^.]*counter/.test(text),
       price: Number(card.price || 0),
       gameChanger: Boolean(card.gameChanger)
     };
@@ -224,10 +301,15 @@
     // is a deck-wide effect, checked once here rather than per creature.
     let defendersCanAttack = false;
     let defendersDealToughnessDamage = false;
+    // A doubler (Hardened Scales, Vorel of the Hull Clade) affects every +1/+1 counter this
+    // deck places, from any source -- checked once here rather than duplicated at every place
+    // a counter gets added, matching how the Defender-lifting flags above already work.
+    let counterDoubler = false;
     cards.forEach((card) => {
       const profile = classifyCard(card);
       if (profile.liftsDefender) defendersCanAttack = true;
       if (profile.defenderToughnessDamage) defendersDealToughnessDamage = true;
+      if (profile.doublesCounters) counterDoubler = true;
       const index = profiles.push(profile) - 1;
       if (profile.isCommander && !commander) {
         commander = {profile, index};
@@ -236,7 +318,7 @@
       }
       for (let copy = 0; copy < profile.quantity; copy += 1) library.push(index);
     });
-    return {profiles, library, commander, defendersCanAttack, defendersDealToughnessDamage};
+    return {profiles, library, commander, defendersCanAttack, defendersDealToughnessDamage, counterDoubler};
   }
 
   function shuffle(source, rng) {
@@ -366,6 +448,69 @@
     let peakBoard = 0;
     const defendersCanAttack = Boolean(deck.defendersCanAttack);
     const defendersDealToughnessDamage = Boolean(deck.defendersDealToughnessDamage);
+    const counterDoubler = Boolean(deck.counterDoubler);
+    // A repeatable counters/proliferate source (an activated ability, or a recurring trigger)
+    // keeps firing every turn from the turn it resolves onward -- tracked as a running rate
+    // rather than a one-shot effect. One-shot sources (an instant, or a static ETB-only clause)
+    // are applied immediately where they're cast instead and never added here.
+    let counterEngineRate = 0;
+    let proliferateEngineCount = 0;
+
+    // Every counter this deck places is doubled when a doubler (Hardened Scales-style) is
+    // anywhere in the 100; growCreature keeps a creature's power/toughness derived from its
+    // base stats plus counters rather than mutating power directly, so repeated triggers stack
+    // correctly instead of compounding a doubling on top of itself.
+    const scaledCounters = (amount) => amount * (counterDoubler ? 2 : 1);
+    const growCreature = (creature, amount) => {
+      if (!creature || amount <= 0) return;
+      creature.counters += amount;
+      creature.power = creature.basePower + creature.counters;
+      creature.toughness = creature.baseToughness + creature.counters;
+    };
+    // No real per-creature targeting exists in this model (see SIMPLIFICATIONS); putting new
+    // counters on the board's current biggest threat is the closest reasonable stand-in for
+    // "the counters synergy deck grows its best creature."
+    const biggestCreature = () => battlefieldCreatures.reduce((best, creature) => (!best || creature.power > best.power ? creature : best), null);
+    const proliferateBoard = () => {
+      battlefieldCreatures.forEach((creature) => { if (creature.counters > 0) growCreature(creature, scaledCounters(1)); });
+    };
+    // A card that both enters the battlefield and grows over time (Karn's Bastion is not a
+    // creature and never reaches here; a creature that both enters with counters and has, say,
+    // a doubler in play, does) needs its starting counters scaled by the doubler exactly once,
+    // the same as any other counter placed after it.
+    const makeCreatureEntry = (profile, powerOverride) => {
+      const startingCounters = profile.entersWithCounters ? scaledCounters(profile.entersWithCounters) : 0;
+      return {
+        basePower: powerOverride + profile.boardWidth * 2,
+        baseToughness: profile.toughness,
+        counters: startingCounters,
+        power: powerOverride + profile.boardWidth * 2 + startingCounters,
+        toughness: profile.toughness + startingCounters,
+        sick: true,
+        commander: false,
+        canAttack: !profile.isDefender || defendersCanAttack,
+        hasFlying: profile.hasFlying,
+        hasMenace: profile.hasMenace,
+        hasTrample: profile.hasTrample,
+        hasDeathtouch: profile.hasDeathtouch,
+        hasFirstStrike: profile.hasFirstStrike,
+        hasLifelink: profile.hasLifelink
+      };
+    };
+    // Registers what a just-cast card's counters/proliferate ability does: a one-shot source
+    // applies immediately (to the board's biggest creature, or across it for proliferate — see
+    // biggestCreature/proliferateBoard above), while a repeatable source joins a running
+    // per-turn rate that keeps firing every turn from here on, applied once below.
+    const resolveCountersAndProliferate = (profile) => {
+      if (profile.addsCounterAmount > 0) {
+        if (profile.addsCounterRepeatable) counterEngineRate += scaledCounters(profile.addsCounterAmount);
+        else growCreature(biggestCreature(), scaledCounters(profile.addsCounterAmount));
+      }
+      if (profile.isProliferate) {
+        if (profile.proliferateRepeatable) proliferateEngineCount += 1;
+        else proliferateBoard();
+      }
+    };
 
     hand.forEach((index) => {
       if (profiles[index].isLand) landsDrawn += 1;
@@ -433,10 +578,11 @@
           // attacker or blocker here, the same way it never would on a table.
           if (commanderProfile.isCreature) {
             const commanderPower = (commanderProfile.isDefender && defendersDealToughnessDamage) ? commanderProfile.toughness : commanderProfile.power;
-            battlefieldCreatures.push({power: commanderPower + commanderProfile.boardWidth * 2, toughness: commanderProfile.toughness, sick: true, commander: true, canAttack: !commanderProfile.isDefender || defendersCanAttack});
+            battlefieldCreatures.push({...makeCreatureEntry(commanderProfile, commanderPower), commander: true});
           }
           drainAll += commanderProfile.drain.all;
           drainOne += commanderProfile.drain.one;
+          resolveCountersAndProliferate(commanderProfile);
           continue;
         }
         if (bestPosition < 0) break;
@@ -491,10 +637,19 @@
         drainOne += profile.drain.one;
         if (profile.isCreature) {
           const creaturePower = (profile.isDefender && defendersDealToughnessDamage) ? profile.toughness : profile.power;
-          battlefieldCreatures.push({power: creaturePower + profile.boardWidth * 2, toughness: profile.toughness, sick: true, commander: false, canAttack: !profile.isDefender || defendersCanAttack});
+          battlefieldCreatures.push(makeCreatureEntry(profile, creaturePower));
         }
+        // After the push, so a self-targeting ETB (a creature that also says "put a +1/+1
+        // counter on this creature") can land on itself via biggestCreature() rather than an
+        // unrelated creature already on board.
+        resolveCountersAndProliferate(profile);
       }
       peakBoard = Math.max(peakBoard, battlefieldCreatures.length);
+      // Every repeatable counters/proliferate source registered above fires once per turn from
+      // the turn it resolved onward, including its first turn -- a reasonable stand-in for an
+      // activated ability usable the turn it enters, or a trigger due before combat.
+      if (counterEngineRate > 0) growCreature(biggestCreature(), counterEngineRate);
+      for (let engineIndex = 0; engineIndex < proliferateEngineCount; engineIndex += 1) proliferateBoard();
 
       heldAnswers = hand.filter((index) => profiles[index].instantSpeed && (profiles[index].isRemoval || profiles[index].isProtection)).length;
       if (turn >= 3 && turn <= 7) {
@@ -503,13 +658,23 @@
       }
       if (turn === 8) deadCardsAtEight = hand.filter((index) => !castable(profiles[index], lands + rocks, sources) && !profiles[index].isLand).length;
 
-      const attackPower = battlefieldCreatures.filter((creature) => !creature.sick && creature.canAttack).reduce((sum, creature) => sum + creature.power, 0);
+      // attackPower already carries each attacker's connect rate (flying/menace/trample get
+      // more of their power through than a flat rate would), so it is applied directly below --
+      // no further "unblocked factor" on top of it.
+      let attackPower = 0;
+      let lifelinkGain = 0;
+      battlefieldCreatures.filter((creature) => !creature.sick && creature.canAttack).forEach((creature) => {
+        const connected = creature.power * connectRateFor(creature);
+        attackPower += connected;
+        if (creature.hasLifelink) lifelinkGain += connected;
+      });
       battlefieldCreatures.forEach((creature) => { creature.sick = false; });
       if (attackPower > 0) {
         const living = seats.filter((seat) => seat.life > 0);
         if (living.length) {
           const target = living.reduce((lowest, seat) => (seat.life < lowest.life ? seat : lowest), living[0]);
-          target.life -= attackPower * 0.7;
+          target.life -= attackPower;
+          life += lifelinkGain;
         }
       }
       if (drainAll) seats.forEach((seat) => { seat.life -= drainAll; });
@@ -535,8 +700,11 @@
       // Creatures we control soak damage by blocking, which is the only defensive
       // value the model gives a board beyond its attack power. Weighted by total
       // toughness rather than raw count, so a handful of high-toughness walls
-      // mitigate more than the same number of 1-toughness tokens would.
-      const totalToughness = battlefieldCreatures.reduce((sum, creature) => sum + (creature.toughness || 1), 0);
+      // mitigate more than the same number of 1-toughness tokens would. Deathtouch and first
+      // strike add a flat deterrence bonus on top of raw toughness (see the constants above) --
+      // a rough stand-in for "this blocker trades with anything" rather than a real combat
+      // simulation.
+      const totalToughness = battlefieldCreatures.reduce((sum, creature) => sum + (creature.toughness || 1) + (creature.hasDeathtouch ? DEATHTOUCH_DETERRENCE : 0) + (creature.hasFirstStrike ? FIRST_STRIKE_DETERRENCE : 0), 0);
       const blockReduction = Math.min(0.55, totalToughness * 0.025);
       for (const seat of seats) {
         if (seat.life <= 0) continue;

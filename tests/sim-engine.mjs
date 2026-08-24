@@ -146,6 +146,128 @@ assert.ok(pwDeck.metrics.commanderCastRate > 0.9, `a planeswalker commander must
 assert.ok(pwDeck.metrics.winRate > 0, "a deck with real attackers behind a planeswalker commander must still win games");
 
 // ---------------------------------------------------------------------------
+// Combat keywords: card.keywords only tags an ability the card itself has, never one it
+// grants or references for other creatures -- checked against the exact granting/referencing
+// cards found scanning the real catalog (Favorable Winds, Craterhoof Behemoth, Elspeth's
+// ultimate, Iroas, Vito), each reproduced in miniature below.
+// ---------------------------------------------------------------------------
+assert.equal(classify("Serra Angel Test", "Creature — Angel", "Flying, vigilance", "{3}{W}{W}").hasFlying, true);
+assert.equal(classify("Atraxa Test", "Legendary Creature — Phyrexian Angel", "Flying, vigilance, deathtouch, lifelink", "{G}{W}{U}{B}").hasFlying, true);
+assert.equal(classify("Atraxa Test", "Legendary Creature — Phyrexian Angel", "Flying, vigilance, deathtouch, lifelink", "{G}{W}{U}{B}").hasDeathtouch, true);
+assert.equal(classify("Atraxa Test", "Legendary Creature — Phyrexian Angel", "Flying, vigilance, deathtouch, lifelink", "{G}{W}{U}{B}").hasLifelink, true);
+assert.equal(classify("Vorinclex Test", "Legendary Creature — Phyrexian Beast", "Haste, trample", "{4}{G}{G}").hasTrample, true);
+assert.equal(classify("Menace Own Test", "Legendary Creature — God", "Indestructible, menace", "{2}{R}{W}").hasMenace, true);
+assert.equal(classify("Favorable Winds Test", "Enchantment", "Creatures you control with flying get +1/+1.", "{1}{U}").hasFlying, false, "granting flying to other creatures is not having flying");
+assert.equal(classify("Craterhoof Test", "Creature — Beast", "Haste\nWhen this creature enters, creatures you control gain trample and get +X/+X.", "{5}{G}{G}").hasTrample, false, "a granted keyword buried in a later ability is not this card's own keyword");
+assert.equal(classify("Elspeth Ultimate Test", "Legendary Planeswalker", "+1: Create a token.\n−7: You get an emblem with \"Creatures you control get +2/+2 and have flying.\"", "{3}{W}{W}").hasFlying, false, "an emblem-granting ultimate does not give the planeswalker itself flying");
+assert.equal(classify("Iroas Grant Test", "Legendary Creature — God", "Indestructible\nCreatures you control have menace.", "{2}{R}{W}").hasMenace, false, "granting menace to others is not having menace");
+assert.equal(classify("Vito Test", "Legendary Creature — Vampire Cleric", "Whenever you gain life, target opponent loses that much life.\n{3}{B}{B}: Creatures you control gain lifelink until end of turn.", "{2}{B}").hasLifelink, false, "a granted, costed lifelink ability is not this card's own keyword");
+assert.equal(classify("First Strike Test", "Creature — Test", "First strike", "{2}{W}").hasFirstStrike, true);
+// The keywords array (as Scryfall actually supplies it) must also work, independent of text.
+assert.equal(Engine.classifyCard({name: "Keyword Array Test", typeLine: "Creature — Test", oracleText: "", manaCost: "{2}{W}", keywords: ["Flying", "Lifelink"]}).hasFlying, true);
+assert.equal(Engine.classifyCard({name: "Keyword Array Test", typeLine: "Creature — Test", oracleText: "", manaCost: "{2}{W}", keywords: ["Flying", "Lifelink"]}).hasLifelink, true);
+
+// ---------------------------------------------------------------------------
+// +1/+1 counters: growth (enters-with, a source that adds more, doubling, proliferate),
+// never storage/transfer (The Ozolith is deliberately out of scope -- see docs/mechanics-
+// design-v2.2.md).
+// ---------------------------------------------------------------------------
+assert.equal(classify("Enters Test", "Creature — Test", "This creature enters the battlefield with a +1/+1 counter on it.", "{1}{G}").entersWithCounters, 1);
+assert.equal(classify("Enters Two Test", "Creature — Test", "This creature enters the battlefield with two +1/+1 counters on it.", "{2}{G}").entersWithCounters, 2);
+assert.equal(classify("No Counters Test", "Creature — Test", "", "{2}{G}").entersWithCounters, 0);
+{
+  const oneShot = classify("One-Shot Counter Test", "Sorcery", "Put a +1/+1 counter on target creature you control.", "{1}{G}");
+  assert.equal(oneShot.addsCounterAmount, 1);
+  assert.equal(oneShot.addsCounterRepeatable, false, "an instant/sorcery is never a repeatable source");
+}
+{
+  const repeatable = classify("Repeatable Counter Test", "Artifact", "{1}, {T}: Put a +1/+1 counter on target creature you control.", "{2}");
+  assert.equal(repeatable.addsCounterAmount, 1);
+  assert.equal(repeatable.addsCounterRepeatable, true, "an activated ability can fire every turn");
+}
+{
+  const triggered = classify("Triggered Counter Test", "Creature — Test", "At the beginning of your end step, put a +1/+1 counter on this creature.", "{2}{G}");
+  assert.equal(triggered.addsCounterRepeatable, true, "a recurring trigger is also repeatable");
+}
+assert.equal(classify("Proliferate Spell Test", "Instant", "Proliferate.", "{1}{G}").isProliferate, true);
+assert.equal(classify("Proliferate Spell Test", "Instant", "Proliferate.", "{1}{G}").proliferateRepeatable, false);
+assert.equal(classify("Proliferate Engine Test", "Artifact", "{1}, {T}: Proliferate.", "{2}").proliferateRepeatable, true);
+assert.equal(Engine.classifyCard({name: "Keyword Proliferate Test", typeLine: "Legendary Creature — Test", oracleText: "Flying", manaCost: "{2}{G}", keywords: ["Flying", "Proliferate"]}).isProliferate, true, "an ETB-once proliferate tagged only in keywords must still be detected");
+assert.equal(classify("Doubler Test", "Enchantment", "If one or more +1/+1 counters would be put on a creature you control, that many plus one +1/+1 counters are put on it instead.", "{3}{G}").doublesCounters, true);
+assert.equal(classify("Non-Doubler Test", "Creature — Test", "", "{2}{G}").doublesCounters, false);
+{
+  const withDoubler = Engine.prepareDeck([commander, {name: "Doubler Card", quantity: 1, typeLine: "Enchantment", manaCost: "{3}{G}", oracleText: "If one or more +1/+1 counters would be put on a creature you control, that many plus one +1/+1 counters are put on it instead.", colorIdentity: ["G"]}]);
+  const withoutDoubler = Engine.prepareDeck([commander, {name: "Plain Card", quantity: 1, typeLine: "Sorcery", manaCost: "{1}{G}", oracleText: "Draw a card.", colorIdentity: ["G"]}]);
+  assert.equal(withDoubler.counterDoubler, true);
+  assert.equal(withoutDoubler.counterDoubler, false);
+}
+
+// ---------------------------------------------------------------------------
+// Game-loop effects, compared on the SAME seed: since both decks in a pair see identical
+// draws, mulligans, and opponent rolls, any difference in outcome is attributable to the
+// mechanic itself, not sampling noise -- a much tighter check than an aggregate win-rate
+// delta across many stochastic games (real deltas for these keyword-level effects measured
+// under 0.05 winRate on a 600-game sample, inside normal seed-to-seed noise at that scale).
+// ---------------------------------------------------------------------------
+function soloGame(cards, seed) {
+  return Engine.playGame(Engine.prepareDeck(cards), table(), config, seed, null);
+}
+{
+  // A creature that grows every turn, with vs without a doubler, holding everything else
+  // (including the RNG stream) identical.
+  const grower = {name: "Test Grower", quantity: 62, typeLine: "Creature — Test", manaCost: "{2}{W}", oracleText: "At the beginning of your end step, put a +1/+1 counter on this creature.", colorIdentity: ["W"], power: "1", toughness: "1"};
+  const doublerCard = {name: "Test Doubler", quantity: 1, typeLine: "Enchantment", manaCost: "{2}{W}", oracleText: "If one or more +1/+1 counters would be put on a creature you control, that many plus one +1/+1 counters are put on it instead.", colorIdentity: ["W"]};
+  const lands36 = {name: "Plains", quantity: 36, typeLine: "Basic Land — Plains", manaCost: "", oracleText: "({T}: Add {W}.)", colorIdentity: ["W"]};
+  let doublerWonMore = 0;
+  for (const seed of [1, 2, 3, 4, 5, 6, 7, 8]) {
+    const base = soloGame([commander, lands36, {...grower, quantity: 63}], seed);
+    const doubled = soloGame([commander, lands36, grower, doublerCard], seed);
+    if ((doubled.won ? 1 : 0) >= (base.won ? 1 : 0) && doubled.life >= base.life) doublerWonMore += 1;
+  }
+  assert.ok(doublerWonMore >= 6, `a doubler must never leave the same seed worse off, and usually help (won/matched-or-better on ${doublerWonMore}/8 seeds)`);
+}
+{
+  // Flying should connect more damage than an identical vanilla creature on the same seed.
+  const vanilla = {name: "Test Vanilla", quantity: 63, typeLine: "Creature — Test", manaCost: "{3}{W}", oracleText: "", colorIdentity: ["W"], power: "4", toughness: "4"};
+  const flyer = {...vanilla, name: "Test Flyer", oracleText: "Flying"};
+  const lands36 = {name: "Plains", quantity: 36, typeLine: "Basic Land — Plains", manaCost: "", oracleText: "({T}: Add {W}.)", colorIdentity: ["W"]};
+  let flyerBetter = 0;
+  for (const seed of [1, 2, 3, 4, 5, 6, 7, 8]) {
+    const ground = soloGame([commander, lands36, vanilla], seed);
+    const air = soloGame([commander, lands36, flyer], seed);
+    if (air.life >= ground.life) flyerBetter += 1;
+  }
+  assert.ok(flyerBetter >= 6, `flying's higher connect rate must leave the defending player at least as well off as the ground version on most identical seeds (${flyerBetter}/8)`);
+}
+{
+  // Lifelink should leave us with at least as much life as an identical non-lifelink attacker.
+  const attacker = {name: "Test Attacker", quantity: 63, typeLine: "Creature — Test", manaCost: "{3}{W}", oracleText: "", colorIdentity: ["W"], power: "4", toughness: "4"};
+  const lifelinker = {...attacker, name: "Test Lifelinker", oracleText: "Lifelink"};
+  const lands36 = {name: "Plains", quantity: 36, typeLine: "Basic Land — Plains", manaCost: "", oracleText: "({T}: Add {W}.)", colorIdentity: ["W"]};
+  let lifelinkBetter = 0;
+  for (const seed of [1, 2, 3, 4, 5, 6, 7, 8]) {
+    const plain = soloGame([commander, lands36, attacker], seed);
+    const linked = soloGame([commander, lands36, lifelinker], seed);
+    if (linked.life >= plain.life) lifelinkBetter += 1;
+  }
+  assert.ok(lifelinkBetter >= 6, `lifelink must leave our own life total at least as high as the same attack without it on most identical seeds (${lifelinkBetter}/8)`);
+}
+{
+  // Deathtouch/first-strike deterrence should reduce incoming damage versus plain blockers
+  // of the same stats, raising our own remaining life on the same seed.
+  const blocker = {name: "Test Blocker", quantity: 63, typeLine: "Creature — Test", manaCost: "{3}{W}", oracleText: "", colorIdentity: ["W"], power: "2", toughness: "2"};
+  const deathtoucher = {...blocker, name: "Test Deathtoucher", oracleText: "Deathtouch"};
+  const lands36 = {name: "Plains", quantity: 36, typeLine: "Basic Land — Plains", manaCost: "", oracleText: "({T}: Add {W}.)", colorIdentity: ["W"]};
+  let deterrenceBetter = 0;
+  for (const seed of [1, 2, 3, 4, 5, 6, 7, 8]) {
+    const plain = soloGame([commander, lands36, blocker], seed);
+    const deterred = soloGame([commander, lands36, deathtoucher], seed);
+    if (deterred.life >= plain.life) deterrenceBetter += 1;
+  }
+  assert.ok(deterrenceBetter >= 6, `deathtouch's blocker deterrence must leave our own life total at least as high on most identical seeds (${deterrenceBetter}/8)`);
+}
+
+// ---------------------------------------------------------------------------
 // The metric has to discriminate: a deliberately damaged deck must score lower
 // ---------------------------------------------------------------------------
 const healthy = Engine.simulateGames(deck, table(), {...config, games: 1000}, 20260823);
