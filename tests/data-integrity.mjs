@@ -302,4 +302,23 @@ assert.match(appSource, /it never blocks anything/, "the performance check must 
   assert.doesNotMatch(appSource.slice(start, end), /return false/, "the performance check must never be able to gate or refuse a selection");
 }
 
+// Live Decks derives its active set from Buy Picks, keyed by a signature of the Buy Picks
+// selection. Without that signature the map was append-only and seeded correct values exactly
+// once per variant, so every card a later preset introduced was silently benched -- a freshly
+// applied 100-card configuration read 100/100 in Buy Picks but 85/100 in Live Decks. The
+// signature must be computed from the buy selection alone: deriving it from anything Live
+// Decks itself writes would make a manual bench look like an upstream change and wipe it.
+assert.match(appSource, /ensureLiveActiveMap\(variant, activeIds, candidates\.map\(\(entry\) => entry\.id\), selectionIdsSignature\(current\)\)/, "the Live Decks active map must be keyed by a signature of the Buy Picks selection");
+assert.match(appSource, /state\.liveActiveSeed\[variant\.id\] = selectionSignature;/, "ensureLiveActiveMap must record the signature it rebuilt from");
+{
+  const start = appSource.indexOf("function ensureLiveActiveMap(");
+  const end = appSource.indexOf("function configuredDeckCards(", start);
+  assert(start > 0 && end > start, "ensureLiveActiveMap and configuredDeckCards must both be defined, in that order");
+  const body = appSource.slice(start, end);
+  assert.match(body, /Object\.fromEntries\(candidateIds\.map\(\(id\) => \[id, activeIds\.has\(id\)\]\)\)/, "a changed Buy Picks selection must rebuild the active map wholesale from that selection");
+  assert.doesNotMatch(body, /firstEverView/, "the one-time first-view seeding that caused the 85\\/100 mismatch must not come back");
+}
+assert.match(appSource, /<small>Paid · \$\{priced\.priced\}\/\$\{priced\.bought\} priced<\/small>/, "the Live Decks cost chip must say Paid, since it counts only money actually recorded as paid");
+assert.match(appSource, /<small>Market total<\/small>/, "the Buy Picks total must say Market total, since it prices everything selected whether owned or not");
+
 console.log(`Validated ${variants.variants.length} variants and ${Object.keys(buyPlans.plans).length} connected buy profiles.`);

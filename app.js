@@ -242,7 +242,8 @@
       lineupHistory: {},
       liveTransfers: {},
       liveSalvage: {},
-      liveActive: {}
+      liveActive: {},
+      liveActiveSeed: {}
     };
   }
 
@@ -271,7 +272,8 @@
           lineupHistory: saved.lineupHistory || {},
           liveTransfers: saved.liveTransfers || {},
           liveSalvage: saved.liveSalvage || {},
-          liveActive: saved.liveActive || {}
+          liveActive: saved.liveActive || {},
+          liveActiveSeed: saved.liveActiveSeed || {}
         };
       }
     } catch (_) {}
@@ -1387,7 +1389,7 @@
   }
 
   function buyTotalMarkup(summary) {
-    return `<span class="buy-total" data-buy-total><small>Selected total</small><strong>$${summary.total.toFixed(2)}</strong>${summary.unpriced ? `<em>+ ${summary.unpriced} unpriced</em>` : ""}</span>`;
+    return `<span class="buy-total" data-buy-total title="Market price of everything selected here, whether or not you own it yet. Live Decks reports what you have actually recorded paying instead."><small>Market total</small><strong>$${summary.total.toFixed(2)}</strong>${summary.unpriced ? `<em>+ ${summary.unpriced} unpriced</em>` : ""}</span>`;
   }
 
   function updateBuyTotal(deck, plan, current) {
@@ -2414,19 +2416,48 @@
 
   // Compare picks the variant, Buy Picks selects cards to buy (can hold more than 100, on
   // purpose, for optionality), Shop List tracks what's actually been bought, and Live Decks
-  // builds the active deck from that pool. It's a one-way pipeline: a card only appears here
-  // at all once it's checked in Buy Picks, and nothing chosen here flows back upstream. Each
-  // card is its own independent on/off switch for the active 100, merged in as new Buy Picks
-  // selections appear (not just seeded once), so a freshly-checked card shows up as a bench
-  // option instead of being invisible until some future full reset.
-  function ensureLiveActiveMap(variant, activeIds, candidateIds) {
+  // builds the active deck from that pool. One-way pipeline: a card only appears here once
+  // it's checked in Buy Picks, and nothing chosen here flows back upstream.
+  //
+  // Which cards are active is therefore DERIVED from Buy Picks, not remembered indefinitely.
+  // Alongside each variant's active map we store a signature of the Buy Picks selection that
+  // produced it. When that signature changes -- a preset applied, a checkbox clicked, a
+  // commander switched -- the map is rebuilt wholesale from the new selection, because the
+  // upstream choice is the newer statement of intent (and rebuilding also prunes ids that are
+  // no longer selected at all). While the signature holds steady, the stored map is returned
+  // untouched, so manual bench/activate decisions made here survive any number of re-renders.
+  //
+  // Storing that signature is the whole fix for a class of bug where a freshly applied preset
+  // showed 100/100 in Buy Picks but far fewer active here: the map used to be append-only and
+  // seeded correct values exactly once per variant, so every card introduced afterwards was
+  // silently benched while unchanged cards kept stale values.
+  function ensureLiveActiveMap(variant, activeIds, candidateIds, selectionSignature) {
     state.liveActive ||= {};
-    const map = state.liveActive[variant.id] ||= {};
-    const firstEverView = Object.keys(map).length === 0;
-    candidateIds.forEach((id) => {
-      if (!(id in map)) map[id] = firstEverView && activeIds.has(id);
-    });
-    return map;
+    state.liveActiveSeed ||= {};
+    const storedMap = state.liveActive[variant.id];
+    const seedMatches = state.liveActiveSeed[variant.id] === selectionSignature;
+    if (storedMap && seedMatches) {
+      // Transfers (borrowed cards) can appear without the Buy Picks selection changing, so
+      // fill genuinely-new ids without disturbing any existing manual decision.
+      candidateIds.forEach((id) => {
+        if (!(id in storedMap)) storedMap[id] = activeIds.has(id);
+      });
+      return storedMap;
+    }
+    if (storedMap && state.liveActiveSeed[variant.id] === undefined) {
+      // Pre-signature saved state: adopt what's already there rather than overwriting a real
+      // person's bench work on first load after this shipped. The next genuine Buy Picks
+      // change rebuilds normally.
+      candidateIds.forEach((id) => {
+        if (!(id in storedMap)) storedMap[id] = activeIds.has(id);
+      });
+      state.liveActiveSeed[variant.id] = selectionSignature;
+      return storedMap;
+    }
+    const rebuilt = Object.fromEntries(candidateIds.map((id) => [id, activeIds.has(id)]));
+    state.liveActive[variant.id] = rebuilt;
+    state.liveActiveSeed[variant.id] = selectionSignature;
+    return rebuilt;
   }
 
   function configuredDeckCards(variant) {
@@ -2437,7 +2468,9 @@
     const selected = Object.fromEntries(Lineup.ARRAY_KEYS.map((key) => [key, new Set((current[key] || []).map(String))]));
     const candidates = model.entries.filter((entry) => !entry.item.isFlexibleSlot && (entry.kind === "transfer" || selected[entry.arrayKey]?.has(entry.id)));
     const activeIds = new Set(Lineup.selectedEntries(plan, current).map((entry) => entry.id));
-    const liveActive = ensureLiveActiveMap(variant, activeIds, candidates.map((entry) => entry.id));
+    // Signature is computed from the Buy Picks selection ONLY, so toggling a card here never
+    // looks like an upstream change and never triggers a rebuild of the user's own choices.
+    const liveActive = ensureLiveActiveMap(variant, activeIds, candidates.map((entry) => entry.id), selectionIdsSignature(current));
     const levelByKind = {
       shell: ["shell", "Starting Shell"],
       tuned: ["tuned", "Tuned"],
@@ -3142,11 +3175,11 @@
         <span class="live-deck-chevron" aria-hidden="true">⌄</span>
       </span>
       <span class="live-deck-metrics">
-        <i class="is-cost" data-live-total="${esc(variant.id)}" title="Sum of the prices you locked in for cards you own in this deck"><b>${money(totalCost) === "Price varies" ? "$0.00" : money(totalCost)}</b><small>Total cost · ${priced.priced}/${priced.bought} priced</small></i>
+        <i class="is-cost" data-live-total="${esc(variant.id)}" title="Money you have actually recorded paying for cards you own in this deck. Buy Picks shows market prices for everything selected instead, so the two figures are answering different questions."><b>${money(totalCost) === "Price varies" ? "$0.00" : money(totalCost)}</b><small>Paid · ${priced.priced}/${priced.bought} priced</small></i>
         <i title="${esc(bracket.description || "")}"><b>${esc(bracket.label || "—")}</b><small>Tier</small></i>
         <i><b>${boughtCount}/100</b><small>bought</small></i>
         <i><b>${total}/100</b><small>active</small></i>
-        <i class="${toBuy ? "is-open" : ""}"><b>${toBuy}</b><small>to buy</small></i>
+        <i class="${toBuy ? "is-open" : ""}" title="${toBuy ? `Market estimate to finish this deck: ${money(readiness.floorTotal)} to ${money(Math.max(readiness.floorTotal, readiness.ceilingTotal))}` : "Every card this deck needs is already owned"}"><b>${toBuy}</b><small>to buy${toBuy && readiness.floorTotal > 0 ? ` · ${money(readiness.floorTotal)}` : ""}</small></i>
         <i class="${gcTierClass}"><b>${compliance.selectedGameChangers.length}/3 GC</b><small>${gcTierLabel}</small></i>
       </span>
       <span class="live-strategy"><b>Strategy</b><i>${esc(strategy)}</i></span>
@@ -3361,7 +3394,7 @@
         if (!chip) return;
         const priced = liveDeckPricedCount(cards);
         const total = liveDeckTotalCost(cards);
-        chip.innerHTML = `<b>${total > 0 ? money(total) : "$0.00"}</b><small>Total cost · ${priced.priced}/${priced.bought} priced</small>`;
+        chip.innerHTML = `<b>${total > 0 ? money(total) : "$0.00"}</b><small>Paid · ${priced.priced}/${priced.bought} priced</small>`;
       };
       const commitFrom = (input) => {
         if (!input) return;
