@@ -238,7 +238,7 @@ for (const variantId of ["1o", "2c", "3e", "4c", "5o", "6f"]) {
 // Enhance/Max are the site's own published lists and must stay unsimulated (no games/score);
 // everything else must carry a finite games/score/winPct and a recognized verdict, tagged
 // with the engine generation that actually measured it -- never inferred at render time.
-assert(simulationSummary.engineNotes?.v1 && simulationSummary.engineNotes?.["v2.1"], "simulation summary must document both engine generations");
+assert(simulationSummary.engineNotes?.v1 && simulationSummary.engineNotes?.["v2.1"] && simulationSummary.engineNotes?.["v2.2"], "simulation summary must document all three engine generations");
 assert(typeof simulationSummary.engineBoundaryNote === "string" && simulationSummary.engineBoundaryNote.length > 0, "simulation summary must carry a v1/v2.1 boundary caveat");
 const UNSIMULATED_BUILDS = new Set(["Base", "Enhance", "Max"]);
 const SIMULATED_ENGINE = {
@@ -270,7 +270,20 @@ for (const [variantId, deckBuilds] of Object.entries(simulationSummary.builds)) 
 assert.deepEqual(variants.variants.filter((variant) => variant.treysBuild).map((variant) => variant.id).sort(), ["1o", "2c", "3e", "4c", "5o", "6f"], "Trey's Build must mark exactly these six confirmed variant picks");
 assert.match(appSource, /is-treys-build/, "the Compare card must render a distinct state for Trey's Build");
 assert.match(appSource, /treys-build-ribbon/, "Trey's Build must render a clear visual indicator on the Compare card");
-assert.deepEqual(Object.keys(simulationSummary.altCommanderCases).sort(), ["1o", "3e", "5o"], "alt-commander comparison cases must cover exactly the three alt-commander decks");
+// The three original alt-commander decks (1o/3e/5o) got the full treatment: a hand-built
+// second decklist (plan.altTuned/altMax, with its own commander flagged) powering the
+// interactive "preview the alt commander" toggle on those specific Compare cards. The other
+// 44 variants (every non-flagship original variant, plus all 20 generated ones) get the
+// lighter evaluation only -- a scored comparison and a recommendation, with no second
+// decklist -- so they must NOT be checked against plan.altTuned, which stays empty for them.
+const ALL_ALT_CASE_IDS = [
+  "1o", "3e", "5o",
+  "1a", "1b", "1c", "1e", "2o", "2a", "2b", "2e", "3o", "3c", "3d", "3f",
+  "4o", "4a", "4b", "4e", "5c", "5d", "5e", "5f", "6o", "6c", "6d", "6e",
+  "7a", "7b", "7c", "7d", "7e", "8a", "8b", "8c", "8d", "8e",
+  "9a", "9b", "9c", "9d", "9e", "10a", "10b", "10c", "10d", "10e"
+];
+assert.deepEqual(Object.keys(simulationSummary.altCommanderCases).sort(), [...ALL_ALT_CASE_IDS].sort(), "alt-commander comparison cases must cover the three fully-built decks plus all 44 lighter-weight evaluations");
 for (const variantId of ["1o", "3e", "5o"]) {
   const altCase = simulationSummary.altCommanderCases[variantId];
   const plan = buyPlans.plans[variantId];
@@ -278,6 +291,22 @@ for (const variantId of ["1o", "3e", "5o"]) {
   const altCommander = plan.altTuned.find((item) => item.isCommander);
   assert.equal(altCase.currentCommander, shellCommander.name, `${variantId}: simulation summary's current commander must match the plan's own shell commander`);
   assert.equal(altCase.altCommander, altCommander.name, `${variantId}: simulation summary's alternative commander must match the plan's own Alt Tuned commander`);
+  assert(altCase.honestRead.length > 40, `${variantId}: alt-commander case must carry a substantive caution paragraph, not a stub`);
+}
+const LIGHTWEIGHT_ALT_CASE_IDS = ALL_ALT_CASE_IDS.filter((id) => !["1o", "3e", "5o"].includes(id));
+assert.equal(LIGHTWEIGHT_ALT_CASE_IDS.length, 44, "expected exactly 44 lighter-weight commander evaluations");
+for (const variantId of LIGHTWEIGHT_ALT_CASE_IDS) {
+  const altCase = simulationSummary.altCommanderCases[variantId];
+  const variant = variants.variants.find((entry) => entry.id === variantId);
+  assert(variant, `${variantId}: must map to a real Compare variant`);
+  assert.equal(altCase.currentCommander, variant.commander, `${variantId}: simulation summary's current commander must match the variant's own commander`);
+  assert(typeof altCase.altCommander === "string" && altCase.altCommander.length > 0, `${variantId}: must name a best-measured alternative commander`);
+  assert(Number.isFinite(altCase.currentScore) && Number.isFinite(altCase.altScore), `${variantId}: must carry finite current and alternative scores`);
+  assert(Number.isInteger(altCase.currentRank) && altCase.currentRank >= 1, `${variantId}: must carry the current commander's rank among the measured field`);
+  assert(Number.isInteger(altCase.candidatesMeasured) && altCase.candidatesMeasured > 0, `${variantId}: must report how many alternative commanders were actually measured`);
+  assert(Number.isInteger(altCase.gamesEach) && altCase.gamesEach > 0, `${variantId}: must report the game count each candidate was measured over`);
+  assert.equal(altCase.engine, "v2.2", `${variantId}: lighter-weight evaluations must be tagged with the engine generation that measured them`);
+  assert((buyPlans.plans[variantId].altTuned || []).length === 0, `${variantId}: has only the lighter-weight evaluation, so altTuned must stay empty`);
   assert(altCase.honestRead.length > 40, `${variantId}: alt-commander case must carry a substantive caution paragraph, not a stub`);
 }
 assert.match(appSource, /function nearestPresetMatch/, "the Buy Picks header must compute which preset the live selection actually resembles");
