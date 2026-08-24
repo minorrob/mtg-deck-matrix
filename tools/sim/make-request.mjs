@@ -49,10 +49,15 @@ if (!opponents.tables[table]) throw new Error(`Unknown opponent table "${table}"
 const stageArg = String(args.stage || "tuned").toLowerCase();
 if (!["tuned", "enhance", "maxed", "fun"].includes(stageArg)) throw new Error(`--stage must be "tuned", "enhance", "maxed", or "fun", got "${stageArg}"`);
 const stage = stageArg === "maxed" ? "Maxed" : stageArg === "enhance" ? "Enhance" : stageArg === "fun" ? "Fun" : "Tuned";
-const tier = stageArg === "maxed" ? 3 : 2;
 const cards = stageArg === "maxed" ? maxedCards(plan, audited) : stageArg === "enhance" ? enhanceCards(plan, audited) : tunedCards(plan, audited);
 
 const commander = cards.find((card) => card.isCommander);
+// A hard exception to the Tier 2 default above: a commander that is itself a
+// Game Changer (per Scryfall's own flag) makes Tier 2 permanently unreachable
+// no matter what the other 99 cards are, since the commander can never be the
+// swapped-out card. Ask for Tier 3 on every rung for that deck instead of
+// sending the optimizer after a target it can never legally hit.
+const tier = stageArg === "maxed" || commander?.gameChanger ? 3 : 2;
 // The land band constrains what a run may change, not which decks may be
 // measured: a lands-matter deck at 48 lands is a real deck and gets simulated.
 // A tier-rule violation alone (most often a required purchase that happens to
