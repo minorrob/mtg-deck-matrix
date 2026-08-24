@@ -142,6 +142,22 @@ for (const variantId of selectedLiveVariantIds) {
   }
 }
 for (const item of buyPlans.salvage || []) if (item.ownedExtra) visibleOwnedCards.set(normalizeOwnedName(item.name), item);
+// A card can also be visible because a variant is deliberately held to it. Two
+// of the marquee owned cards (Atraxa, Arcades) are commanders of variants that
+// are not in today's selected six, so without this they would read as owned but
+// unreachable. The locks are enumerated in data rather than inferred, so the
+// exemption cannot quietly grow to cover an owned card that really is homeless.
+assert(Array.isArray(buyPlans.ownedLocks) && buyPlans.ownedLocks.length >= 2, "owned marquee cards must be locked to named variants");
+for (const lock of buyPlans.ownedLocks) {
+  const plan = buyPlans.plans[lock.variantId];
+  assert(plan, `owned lock names variant ${lock.variantId}, which does not exist`);
+  const item = [...plan.startingShell, ...plan.required, ...plan.upgrade, ...plan.enhance, ...plan.max, ...(plan.tuned2 || [])].find((entry) => entry.name === lock.card);
+  assert(item, `${lock.variantId} is locked to ${lock.card} but does not contain it`);
+  assert(item.ownedExtra, `${lock.card} must be marked owned in ${lock.variantId}`);
+  assert(lock.why, `the lock on ${lock.card} in ${lock.variantId} must say why`);
+  assert(buyPlans.ownedExtras.includes(lock.card), `${lock.card} must be in ownedExtras to be locked as owned`);
+  visibleOwnedCards.set(normalizeOwnedName(lock.card), item);
+}
 for (const name of buyPlans.ownedExtras.filter((item) => !item.startsWith("Lorehold Spirit ("))) {
   assert(visibleOwnedCards.has(normalizeOwnedName(name)), `${name} must be a visible owned choice in a selected Live Deck or Salvage`);
 }
@@ -197,14 +213,25 @@ for (const [variantId, name] of [["1e", "Earthcraft"], ["6f", "Cloudstone Curio"
   const card = buyPlans.plans[variantId].max.find((candidate) => candidate.name === name);
   assert(card?.tags.some((tag) => /late three-card infinite combo/i.test(tag)), `${variantId} ${name} must document its late three-card line`);
 }
-for (const [variantId, collection, name] of [
-  ["1o", "startingShell", "Seedborn Muse"],
-  ["1b", "startingShell", "Seedborn Muse"],
-  ["1e", "startingShell", "Seedborn Muse"],
-  ["2a", "required", "Notion Thief"],
-  ["4b", "required", "Smothering Tithe"]
-]) {
-  assert(buyPlans.plans[variantId][collection].find((card) => card.name === name)?.gameChanger, `${variantId} ${name} must consume a current Game Changer slot`);
+// Cards Wizards added to the Game Changer list after this data was first built.
+// What is pinned is the FLAG, not where the card sits: which deck plays a card
+// is a build decision that the Base rebuild and the optimizer both move, but a
+// card that is a Game Changer must be marked as one wherever it appears, or a
+// Tier 2 rung will silently be published illegal. Each name must still be found
+// somewhere, so the check cannot pass by the card having quietly vanished.
+const LADDER_BUCKETS = ["startingShell", "required", "upgrade", "enhance", "max", "tuned2", "enhance2", "max2", "funTuned", "funMax", "altTuned", "altMax"];
+for (const name of ["Seedborn Muse", "Notion Thief", "Smothering Tithe"]) {
+  const appearances = Object.values(buyPlans.plans).flatMap((plan) => LADDER_BUCKETS.flatMap((bucket) => (plan[bucket] || []).filter((card) => card.name === name)));
+  assert(appearances.length > 0, `${name} must still appear somewhere in the plans for its Game Changer flag to mean anything`);
+  for (const card of appearances) assert(card.gameChanger, `${name} must consume a current Game Changer slot everywhere it appears`);
+}
+// And the corollary: no Tier 2 rung may carry one. Base, Tuned and Pod Fun are
+// all Tier 2 rungs, and a Game Changer in any of them is an illegal deck.
+for (const plan of Object.values(buyPlans.plans)) {
+  const commander = plan.startingShell.find((card) => card.isCommander);
+  if (commander?.gameChanger) continue; // Tier 2 is unreachable for this deck by construction; it is published as Tier 3.
+  const offenders = plan.startingShell.filter((card) => card.gameChanger && !card.isCommander);
+  assert.equal(offenders.length, 0, `${plan.variantId}'s Base rung carries ${offenders.map((card) => card.name).join(", ")}, which Tier 2 does not permit`);
 }
 
 // Win/Fun/Alt-commander ladders (tools/import_budget_plan.py), six target decks only --

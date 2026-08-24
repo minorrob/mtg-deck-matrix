@@ -8,7 +8,8 @@
   "maxLedgerSimulations": 5000000,
   "maxWallClockMs": 300000,
   "convergence": {
-    "minScoreGain": 0.75,
+    "noiseMargin": 1.0,
+    "relativeGain": 0.05,
     "patience": 3
   },
   "maxTurns": 16,
@@ -78,5 +79,6 @@
   "winRateBand": {
     "floor": 0.3,
     "ceiling": 0.45
-  }
+  },
+  "powerFloorRatio": 0.9
 }

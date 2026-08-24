@@ -1011,7 +1011,7 @@
     // objective this run is optimizing. The constrained Fun rung needs this to
     // check that chasing pod experience has not quietly cost real strength.
     metrics.powerScore = config.powerWeights
-      ? compositeScore(metrics, config.powerWeights, config.targets || DEFAULT_TARGETS, commanderCmc, config.winRateBand || null)
+      ? compositeScore(metrics, config.powerWeights, config.targets || DEFAULT_TARGETS, commanderCmc, config.powerBand ?? null)
       : metrics.score;
     metrics.winRateInterval = winRateInterval(metrics);
     const perCardStats = Array.from(cardStats.values()).map((stat) => ({

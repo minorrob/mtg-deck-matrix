@@ -6,6 +6,7 @@ const require = createRequire(import.meta.url);
 const Lineup = require("../lineup-model.js");
 const buyPlans = JSON.parse(await readFile(new URL("../data/buy-plans.json", import.meta.url), "utf8"));
 const cards = JSON.parse(await readFile(new URL("../data/cards.json", import.meta.url), "utf8"));
+const baseRebuild = JSON.parse(await readFile(new URL("../data/base-rebuild.json", import.meta.url), "utf8"));
 const appSource = await readFile(new URL("../app.js", import.meta.url), "utf8");
 const audited = new Map(cards.cards.map((card) => [Lineup.normalizeName(card.name), card]));
 const BASIC_NAMES = new Set(["plains", "island", "swamp", "mountain", "forest", "wastes", "snow covered plains", "snow covered island", "snow covered swamp", "snow covered mountain", "snow covered forest"]);
@@ -167,6 +168,10 @@ for (const variantId of ["1o", "2c", "3e", "4c", "5o", "6f"]) {
   const plan = buyPlans.plans[variantId];
   const deckFixture = fixtures[variantId];
   const isAltDeck = (plan.altTuned || []).length > 0;
+  const baseSelection = Lineup.canonicalizeSelection(plan, {...Lineup.emptySelection(), shell: plan.startingShell.map((item) => String(item.id))});
+  const actualBase = new Map();
+  for (const entry of Lineup.selectedEntries(plan, baseSelection)) actualBase.set(entry.item.name, (actualBase.get(entry.item.name) || 0) + 1);
+  assert.equal(Lineup.quantity(plan, baseSelection), 100, `${variantId}: the assembled Base must total 100`);
   for (const [presetKey, columnName, categoryOrder] of PRESET_CHAINS) {
     const expectedColumn = deckFixture.columns[columnName];
     if (!expectedColumn) continue; // Alt columns absent on decks without an alt commander
@@ -180,13 +185,41 @@ for (const variantId of ["1o", "2c", "3e", "4c", "5o", "6f"]) {
     assert.equal(Lineup.quantity(plan, selection), 100, `${variantId}: assembled ${presetKey} preset must total 100`);
     const actual = new Map();
     for (const entry of entries) actual.set(entry.item.name, (actual.get(entry.item.name) || 0) + 1);
-    for (const [name, count] of Object.entries(expectedColumn)) {
-      if (BASIC_LAND_NAMES.has(name)) continue; // plan.startingShell doesn't enumerate individual basic lands the way the workbook's column does -- see plan §2
-      assert.equal(actual.get(name) || 0, count, `${variantId}: assembled ${presetKey} preset must include ${name} exactly as the workbook's ${columnName} column does`);
+    // What the fixture is authoritative about is the LADDER: which purchase
+    // lands in which slot, and what it displaces. It is no longer authoritative
+    // about the shell, because Base is now built from measured criteria rather
+    // than transcribed from the workbook (tools/sim/build-base.mjs). So the
+    // comparison is of deltas -- the column minus its own Base column against
+    // the assembled preset minus the assembled Base -- which pins every
+    // by-name mis-chaining bug this check was written to catch while letting
+    // the starting hundred be rebuilt underneath it.
+    const delta = (over, under) => {
+      const out = new Map();
+      for (const [name, count] of over) if (!BASIC_LAND_NAMES.has(name)) out.set(name, (out.get(name) || 0) + count);
+      for (const [name, count] of under) if (!BASIC_LAND_NAMES.has(name)) out.set(name, (out.get(name) || 0) - count);
+      for (const [name, count] of Array.from(out)) if (count === 0) out.delete(name);
+      return out;
+    };
+    // The Base rebuild swapped cards out of the starting shell, so a workbook
+    // row that displaced "Seedborn Muse" now displaces whatever stood in for it.
+    // Reading the substitution map lets the comparison stay card-for-card
+    // instead of being loosened to a count, and any swap the map does not
+    // account for still fails.
+    //
+    // A name is only substituted where it refers to the SHELL card. The same
+    // name can also be a purchase -- 1o's Fun Max buys Seedborn Muse back after
+    // the ladder replaced the shell copy -- and renaming that occurrence would
+    // compare the workbook's purchase against a card nobody bought.
+    const purchased = new Set(categoryOrder.flatMap((category) => (plan[category] || []).map((item) => item.name)));
+    const substitutions = baseRebuild.variants[variantId]?.substitutions || {};
+    const rename = (pairs, skip = new Set()) => pairs.map(([name, count]) => [skip.has(name) ? name : (substitutions[name] || name), count]);
+    const expectedDelta = delta(rename(Object.entries(expectedColumn), purchased), rename(Object.entries(deckFixture.columns.Base || {})));
+    const actualDelta = delta(actual, actualBase);
+    for (const [name, count] of expectedDelta) {
+      assert.equal(actualDelta.get(name) || 0, count, `${variantId}: assembling ${presetKey} must change ${name} by ${count} exactly as the workbook's ${columnName} column does against its Base`);
     }
-    for (const [name, count] of actual) {
-      if (BASIC_LAND_NAMES.has(name)) continue;
-      assert.equal(count, expectedColumn[name] || 0, `${variantId}: assembled ${presetKey} preset must not include an unexpected copy of ${name}`);
+    for (const [name, count] of actualDelta) {
+      assert.equal(count, expectedDelta.get(name) || 0, `${variantId}: assembling ${presetKey} must not change ${name} — the workbook's ${columnName} column does not`);
     }
 
     if (isAltDeck && (presetKey === "altTuned" || presetKey === "altMax")) {
@@ -244,6 +277,14 @@ for (const variantId of ["1o", "2c", "3e", "4c", "5o", "6f"]) {
   assert(exercised > 0, `${variantId}: expected at least one later-rung entry with a checked ancestor to exercise one-directional lineage-uncheck`);
 }
 
+function composeWith(plan, categories) {
+  let selection = Lineup.canonicalizeSelection(plan, {...Lineup.emptySelection(), shell: plan.startingShell.map((item) => String(item.id))});
+  for (const category of categories) for (const item of plan[category] || []) selection = Lineup.applyChoice(plan, selection, item.id);
+  return Lineup.selectedEntries(plan, selection).map((entry) => entry.item);
+}
+const tunedList = (plan) => composeWith(plan, ["required", "tuned2"]);
+const maxList = (plan) => composeWith(plan, ["required", "tuned2", "upgrade", "enhance", "enhance2", "max", "max2"]);
+
 const dimirGenerated = generatedShellCards(buyPlans.plans["2a"]);
 const dimirCounterLeak = /\b(?:proliferate|infect|wither)\b|(?:\+1\/\+1|-1\/-1|charge|arrowhead) counters?|double the number of each kind of counter/;
 assert.deepEqual(dimirGenerated.filter((card) => dimirCounterLeak.test(auditText(card))).map((card) => card.name), [], "Dimir Theft generated slots must not contain counter-engine leakage");
@@ -260,7 +301,17 @@ const dimirStrategyPatterns = [
   /enter(?:s|ing)[^.]{0,160}trigger[^.]{0,100}additional time/,
   /\bcast that card\b/
 ];
-assert.ok(dimirGenerated.filter((card) => strategyMatches(card, dimirStrategyPatterns)).length >= 6, "Dimir Theft must retain at least six generated theft, reanimation, copy, or trigger-doubling cards");
+// The strategy floor now sits on the builds that get played rather than on the
+// starting shell. Base is deliberately the underperforming rung -- cheap
+// placeholders held until the real cards arrive (tools/sim/build-base.mjs) --
+// so a strong, expensive strategy card moving off it and up to Tuned is the
+// design working, not a regression. What must not happen is the deck losing its
+// plan in the builds you actually sleeve up.
+for (const [rung, cards] of [["Tuned", tunedList(buyPlans.plans["2a"])], ["Max", maxList(buyPlans.plans["2a"])]]) {
+  const held = cards.filter((card) => strategyMatches(card, dimirStrategyPatterns));
+  assert.ok(held.length >= 4, `Dimir Theft's ${rung} build must still run its theft, reanimation, copy and trigger-doubling plan (found ${held.length}: ${held.map((card) => card.name).join(", ")})`);
+}
+assert.ok(dimirGenerated.filter((card) => strategyMatches(card, dimirStrategyPatterns)).length >= 4, "Dimir Theft's Base rung may be weak, but it may not stop being a theft deck");
 for (const [role, minimum] of Object.entries({ramp: 8, draw: 8, interaction: 8, protect: 3})) {
   assert.ok(roleCount(dimirGenerated, role) >= minimum, `Dimir Theft generated shell must retain its ${minimum}-card ${role} floor`);
 }

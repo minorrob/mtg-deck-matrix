@@ -1,0 +1,1086 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-24T21:01:45.158Z",
+  "note": "Base rungs rebuilt as the cheapest hundred that is still the same deck. Prices are real market prices; owned cards were left in place.",
+  "perCardCapUsd": 2,
+  "variants": {
+    "1o": {
+      "costBefore": 81.07,
+      "costAfter": 48.1,
+      "substitutions": {
+        "Seedborn Muse": "Knight of Old Benalia",
+        "Overgrown Farmland": "Jungle Hollow",
+        "Welcoming Vampire": "Portcullis Vine",
+        "Staff of Compleation": "Mirrodin Avenged",
+        "Canopy Gargantuan": "Voltstorm Angel"
+      },
+      "forced": [
+        "Seedborn Muse"
+      ],
+      "keptOverCap": []
+    },
+    "1a": {
+      "costBefore": 82.91,
+      "costAfter": 64.15,
+      "substitutions": {
+        "Deathrite Shaman": "Death-Mask Duplicant",
+        "Underrealm Lich": "Eldrazi Ravager",
+        "Living Death": "Explorer's Scope"
+      },
+      "forced": [],
+      "keptOverCap": [
+        {
+          "name": "World Shaper",
+          "price": 9.84,
+          "why": "nothing under $2 in these colors both fills the recursion slot and holds the deck's plan as well (affinity 121)"
+        },
+        {
+          "name": "Life from the Loam",
+          "price": 5.49,
+          "why": "nothing under $2 in these colors both fills the draw slot and holds the deck's plan as well (affinity 156)"
+        }
+      ]
+    },
+    "1b": {
+      "costBefore": 81.07,
+      "costAfter": 46.63,
+      "substitutions": {
+        "Seedborn Muse": "Knight of Old Benalia",
+        "Will of the Abzan": "Teshar, Ancestor's Apostle",
+        "Overgrown Farmland": "Jungle Hollow",
+        "Welcoming Vampire": "Portcullis Vine",
+        "Staff of Compleation": "Endbringer"
+      },
+      "forced": [
+        "Seedborn Muse"
+      ],
+      "keptOverCap": []
+    },
+    "1c": {
+      "costBefore": 99.79,
+      "costAfter": 67.54,
+      "substitutions": {
+        "Approach of the Second Sun": "Knight of Old Benalia",
+        "Ghostly Prison": "Smoke Bomb",
+        "Will of the Abzan": "Vanguard of the Restless",
+        "Welcoming Vampire": "Filigree Familiar",
+        "Staff of Compleation": "Ob Nixilis Reignited",
+        "Puresteel Paladin": "Escarpment Fortress",
+        "Soul Warden": "Drogskol Shieldmate",
+        "Angelic Field Marshal": "Drill-Skimmer"
+      },
+      "forced": [],
+      "keptOverCap": [
+        {
+          "name": "Cathars' Crusade",
+          "price": 9.4,
+          "why": "nothing under $2 in these colors both fills the filler slot and holds the deck's plan as well (affinity 60)"
+        },
+        {
+          "name": "Test of Endurance",
+          "price": 8.52,
+          "why": "nothing under $2 in these colors both fills the finisher slot and holds the deck's plan as well (affinity 65)"
+        }
+      ]
+    },
+    "1e": {
+      "costBefore": 78.61,
+      "costAfter": 44.34,
+      "substitutions": {
+        "Seedborn Muse": "Knight of Old Benalia",
+        "Will of the Abzan": "Genesis",
+        "Overgrown Farmland": "Jungle Hollow",
+        "Welcoming Vampire": "Portcullis Vine",
+        "Staff of Compleation": "Endbringer"
+      },
+      "forced": [
+        "Seedborn Muse"
+      ],
+      "keptOverCap": []
+    },
+    "2o": {
+      "costBefore": 101.57,
+      "costAfter": 30.43,
+      "substitutions": {
+        "Mikaeus, the Unhallowed": "Meandering Towershell",
+        "Dictate of Erebos": "Perpetual Timepiece",
+        "World Shaper": "Tilling Treefolk",
+        "Underrealm Lich": "Eldrazi Ravager",
+        "Life from the Loam": "Golgari Thug",
+        "Living Death": "Scouring Sands",
+        "Blood Artist": "Pilgrim's Eye",
+        "Golgari Grave-Troll": "Costly Plunder"
+      },
+      "forced": [],
+      "keptOverCap": []
+    },
+    "2a": {
+      "costBefore": 126.69,
+      "costAfter": 80.3,
+      "substitutions": {
+        "Kokusho, the Evening Star": "Daring Waverider",
+        "Reanimate": "Mission Briefing",
+        "Nezahal, Primal Tide": "Eldrazi Ravager",
+        "Living Death": "Explorer's Scope"
+      },
+      "forced": [],
+      "keptOverCap": []
+    },
+    "2b": {
+      "costBefore": 131.66,
+      "costAfter": 115.59,
+      "substitutions": {
+        "Archon of Cruelty": "Fountainport Bell",
+        "Will of the Abzan": "Artisan of Kozilek",
+        "Blood Artist": "Pilgrim's Eye"
+      },
+      "forced": [],
+      "keptOverCap": [
+        {
+          "name": "Mikaeus, the Unhallowed",
+          "price": 24.22,
+          "why": "nothing under $2 in these colors both fills the finisher slot and holds the deck's plan as well (affinity 66)"
+        },
+        {
+          "name": "Reanimate",
+          "price": 9.45,
+          "why": "nothing under $2 in these colors both fills the filler slot and holds the deck's plan as well (affinity 83)"
+        }
+      ]
+    },
+    "2c": {
+      "costBefore": 156.15,
+      "costAfter": 81.35,
+      "substitutions": {
+        "The Ozolith": "Explorer's Scope",
+        "Staff of Compleation": "Neutralize",
+        "Kami of Whispered Hopes": "Aetheric Amplifier",
+        "Nissa, Voice of Zendikar": "Fountainport Bell"
+      },
+      "forced": [],
+      "keptOverCap": [
+        {
+          "name": "Ozolith, the Shattered Spire",
+          "price": 6.03,
+          "why": "nothing under $2 in these colors both fills the draw slot and holds the deck's plan as well (affinity 147)"
+        }
+      ]
+    },
+    "2e": {
+      "costBefore": 74.28,
+      "costAfter": 66.47,
+      "substitutions": {
+        "Ephemerate": "Blizzard Strix",
+        "Sephara, Sky's Blade": "Hypnotic Sprite // Mesmeric Glare"
+      },
+      "forced": [],
+      "keptOverCap": [
+        {
+          "name": "Vito, Thorn of the Dusk Rose",
+          "price": 10.58,
+          "why": "nothing under $2 in these colors both fills the threat slot and holds the deck's plan as well (affinity 71)"
+        }
+      ]
+    },
+    "3o": {
+      "costBefore": 67.62,
+      "costAfter": 33.48,
+      "substitutions": {
+        "Hermit Druid": "Arboreal Grazer",
+        "Lotus Cobra": "Claim Jumper",
+        "Life from the Loam": "Fountainport Bell",
+        "Second Harvest": "Explorer's Scope",
+        "Trostani, Selesnya's Voice": "Drogskol Shieldmate",
+        "Winds of Abandon": "Broken Bond",
+        "Sakura-Tribe Scout": "The Restoration of Eiganjo // Architect of Restoration"
+      },
+      "forced": [],
+      "keptOverCap": []
+    },
+    "3c": {
+      "costBefore": 89.74,
+      "costAfter": 52.91,
+      "substitutions": {
+        "Hermit Druid": "Wood Elves",
+        "Nezahal, Primal Tide": "Eldrazi Ravager",
+        "Life from the Loam": "Fountainport Bell",
+        "Selvala, Heart of the Wilds": "Bugenhagen, Wise Elder",
+        "Staff of Compleation": "Zuko's Exile",
+        "Mana Reflection": "Explorer's Scope",
+        "Sakura-Tribe Scout": "Arboreal Grazer",
+        "Golgari Grave-Troll": "Insidious Fungus"
+      },
+      "forced": [],
+      "keptOverCap": [
+        {
+          "name": "Sword of the Animist",
+          "price": 5.97,
+          "why": "nothing under $2 in these colors both fills the ramp slot and holds the deck's plan as well (affinity 193)"
+        }
+      ]
+    },
+    "3d": {
+      "costBefore": 90.03,
+      "costAfter": 61.02,
+      "substitutions": {
+        "Crested Sunmare": "Karmic Guide",
+        "Song of the Dryads": "Treefolk Umbra",
+        "Well of Lost Dreams": "Lake-town Lookout",
+        "Authority of the Consuls": "Springleaf Drum",
+        "Staff of Compleation": "Insidious Fungus",
+        "Zendikar Resurgent": "Portcullis Vine"
+      },
+      "forced": [],
+      "keptOverCap": [
+        {
+          "name": "Ozolith, the Shattered Spire",
+          "price": 6.03,
+          "why": "nothing under $2 in these colors both fills the draw slot and holds the deck's plan as well (affinity 85)"
+        }
+      ]
+    },
+    "3e": {
+      "costBefore": 54.81,
+      "costAfter": 44.24,
+      "substitutions": {
+        "Scute Swarm": "Pilgrim's Eye",
+        "Sakura-Tribe Scout": "Arboreal Grazer"
+      },
+      "forced": [],
+      "keptOverCap": [
+        {
+          "name": "World Shaper",
+          "price": 9.84,
+          "why": "nothing under $2 in these colors both fills the recursion slot and holds the deck's plan as well (affinity 82)"
+        }
+      ]
+    },
+    "3f": {
+      "costBefore": 169.29,
+      "costAfter": 51.64,
+      "substitutions": {
+        "Finale of Devastation": "Explorer's Scope",
+        "Nyxbloom Ancient": "Godo, Bandit Warlord",
+        "Hermit Druid": "PuPu UFO",
+        "Helix Pinnacle": "Meandering Towershell",
+        "Lotus Cobra": "Walking Atlas",
+        "Song of the Dryads": "Treefolk Umbra",
+        "Life from the Loam": "Fountainport Bell",
+        "Selvala, Heart of the Wilds": "Reckless Lackey",
+        "Second Harvest": "Scouring Sands",
+        "Goblin Bombardment": "Death-Mask Duplicant",
+        "Mana Reflection": "Springleaf Drum",
+        "Sakura-Tribe Scout": "Forerunner of the Empire",
+        "Zendikar Resurgent": "Carven Caryatid"
+      },
+      "forced": [],
+      "keptOverCap": [
+        {
+          "name": "World Shaper",
+          "price": 9.84,
+          "why": "nothing under $2 in these colors both fills the recursion slot and holds the deck's plan as well (affinity 95)"
+        },
+        {
+          "name": "Sword of the Animist",
+          "price": 5.97,
+          "why": "nothing under $2 in these colors both fills the ramp slot and holds the deck's plan as well (affinity 164)"
+        }
+      ]
+    },
+    "4o": {
+      "costBefore": 93.29,
+      "costAfter": 51.91,
+      "substitutions": {
+        "Test of Endurance": "Knight of Old Benalia",
+        "Approach of the Second Sun": "Syr Alin, the Lion's Claw",
+        "Sword of the Animist": "Cultivator's Caravan",
+        "Righteous Valkyrie": "Drogskol Shieldmate",
+        "Sphere of Safety": "Reunion of the House",
+        "Staff of Compleation": "Siren's Ruse",
+        "Brago, King Eternal": "Kongming, \"Sleeping Dragon\"",
+        "Shorikai, Genesis Engine": "Lake-town Lookout",
+        "Elspeth, Sun's Champion": "Angel of Glory's Rise"
+      },
+      "forced": [],
+      "keptOverCap": [
+        {
+          "name": "Ghostly Prison",
+          "price": 5.68,
+          "why": "nothing under $2 in these colors both fills the filler slot and holds the deck's plan as well (affinity 92)"
+        }
+      ]
+    },
+    "4a": {
+      "costBefore": 88.26,
+      "costAfter": 48.04,
+      "substitutions": {
+        "Cathars' Crusade": "Explorer's Scope",
+        "Nezahal, Primal Tide": "Anticausal Vestige",
+        "Sword of the Animist": "Prophetic Prism",
+        "Authority of the Consuls": "Fireshrieker",
+        "Staff of Compleation": "Siren's Ruse",
+        "Wonder": "Drogskol Shieldmate",
+        "Puresteel Paladin": "Skyscanner",
+        "Sephara, Sky's Blade": "Transcendent Dragon",
+        "Shorikai, Genesis Engine": "Lake-town Lookout"
+      },
+      "forced": [],
+      "keptOverCap": []
+    },
+    "4b": {
+      "costBefore": 63.18,
+      "costAfter": 45.03,
+      "substitutions": {
+        "Darksteel Plate": "Gods Willing",
+        "Ephemerate": "Blizzard Strix",
+        "Staff of Compleation": "Siren's Ruse",
+        "Sephara, Sky's Blade": "Hypnotic Sprite // Mesmeric Glare"
+      },
+      "forced": [],
+      "keptOverCap": []
+    },
+    "4c": {
+      "costBefore": 43.79,
+      "costAfter": 41.06,
+      "substitutions": {
+        "Nature's Lore": "Treefolk Umbra",
+        "Bedrock Tortoise": "Crystal Barricade"
+      },
+      "forced": [],
+      "keptOverCap": []
+    },
+    "4e": {
+      "costBefore": 74.89,
+      "costAfter": 44.07,
+      "substitutions": {
+        "Aesi, Tyrant of Gyre Strait": "Solemn Simulacrum",
+        "Scute Swarm": "Pilgrim's Eye",
+        "Lotus Cobra": "Arboreal Grazer",
+        "Uro, Titan of Nature's Wrath": "Yavimaya Elder",
+        "Nature's Lore": "Treefolk Umbra"
+      },
+      "forced": [],
+      "keptOverCap": []
+    },
+    "5o": {
+      "costBefore": 64.89,
+      "costAfter": 64.89,
+      "substitutions": {},
+      "forced": [],
+      "keptOverCap": []
+    },
+    "5c": {
+      "costBefore": 133.44,
+      "costAfter": 59.13,
+      "substitutions": {
+        "Aetherflux Reservoir": "Brainspoil",
+        "Vito, Thorn of the Dusk Rose": "The Restoration of Eiganjo // Architect of Restoration",
+        "Crested Sunmare": "Karmic Guide",
+        "Serra's Emissary": "Salvation Colossus",
+        "Darksteel Plate": "Gods Willing",
+        "Righteous Valkyrie": "Drogskol Shieldmate",
+        "Aurelia, the Warleader": "Knight of Old Benalia",
+        "Knight of the White Orchid": "Forerunner of the Empire",
+        "Staff of Compleation": "Fateful Absence",
+        "Open the Armory": "Fireshrieker",
+        "Angelic Field Marshal": "Drill-Skimmer"
+      },
+      "forced": [],
+      "keptOverCap": []
+    },
+    "5d": {
+      "costBefore": 79.28,
+      "costAfter": 41.12,
+      "substitutions": {
+        "Aetherflux Reservoir": "Death-Mask Duplicant",
+        "Crested Sunmare": "Salvation Colossus",
+        "Lightning Greaves": "Guild Artisan",
+        "Staff of Compleation": "Price of Freedom",
+        "Elspeth, Sun's Champion": "Austere Command"
+      },
+      "forced": [],
+      "keptOverCap": []
+    },
+    "5e": {
+      "costBefore": 79.52,
+      "costAfter": 49.98,
+      "substitutions": {
+        "Ozolith, the Shattered Spire": "Portcullis Vine",
+        "Sword of the Animist": "Solemn Simulacrum",
+        "Well of Lost Dreams": "Primary Research",
+        "Staff of Compleation": "Insidious Fungus",
+        "Nissa, Voice of Zendikar": "Skyscanner",
+        "Soul Warden": "Drogskol Shieldmate",
+        "Zendikar Resurgent": "Yavimaya Elder",
+        "Elspeth, Sun's Champion": "Witchbane Orb"
+      },
+      "forced": [],
+      "keptOverCap": [
+        {
+          "name": "Scute Swarm",
+          "price": 8.63,
+          "why": "nothing under $2 in these colors both fills the threat slot and holds the deck's plan as well (affinity 109)"
+        }
+      ]
+    },
+    "5f": {
+      "costBefore": 80.25,
+      "costAfter": 37.67,
+      "substitutions": {
+        "Crested Sunmare": "Salvation Colossus",
+        "Darksteel Plate": "Gods Willing",
+        "Sword of the Animist": "Endurance Bobblehead",
+        "Lightning Greaves": "Fireshrieker",
+        "Well of Lost Dreams": "Primary Research",
+        "Welcoming Vampire": "Lake-town Lookout",
+        "Staff of Compleation": "Fountainport Bell",
+        "Soul Warden": "Drogskol Shieldmate",
+        "Angelic Field Marshal": "Drill-Skimmer"
+      },
+      "forced": [],
+      "keptOverCap": []
+    },
+    "6o": {
+      "costBefore": 63.44,
+      "costAfter": 29.97,
+      "substitutions": {
+        "Reanimate": "Kruphix's Insight",
+        "Animate Dead": "Explorer's Scope",
+        "Underrealm Lich": "Eldrazi Ravager",
+        "Will of the Abzan": "Flood of Recollection",
+        "Uro, Titan of Nature's Wrath": "Yavimaya Elder",
+        "Golgari Grave-Troll": "Insidious Fungus"
+      },
+      "forced": [],
+      "keptOverCap": []
+    },
+    "6c": {
+      "costBefore": 80.53,
+      "costAfter": 49.34,
+      "substitutions": {
+        "Ravos, Soultender": "Titania, Protector of Argoth",
+        "World Shaper": "Tilling Treefolk",
+        "Underrealm Lich": "Eldrazi Ravager",
+        "Blood Artist": "Drogskol Shieldmate"
+      },
+      "forced": [],
+      "keptOverCap": []
+    },
+    "6d": {
+      "costBefore": 68.05,
+      "costAfter": 49.78,
+      "substitutions": {
+        "Life from the Loam": "Zuko's Exile",
+        "Staff of Compleation": "Insidious Fungus",
+        "Kami of Whispered Hopes": "Paradise Druid",
+        "Nissa, Voice of Zendikar": "Fountainport Bell",
+        "Wonder": "Tetsuko Umezawa, Fugitive"
+      },
+      "forced": [],
+      "keptOverCap": []
+    },
+    "6e": {
+      "costBefore": 59.55,
+      "costAfter": 33.42,
+      "substitutions": {
+        "Heroic Intervention": "The Moment",
+        "Animate Dead": "Explorer's Scope",
+        "Blood Artist": "Great Fierce Bee"
+      },
+      "forced": [],
+      "keptOverCap": []
+    },
+    "6f": {
+      "costBefore": 90.72,
+      "costAfter": 32.85,
+      "substitutions": {
+        "Heroic Intervention": "Dispelling Exhale",
+        "Aesi, Tyrant of Gyre Strait": "Burnished Hart",
+        "Nezahal, Primal Tide": "Eldrazi Ravager",
+        "Lotus Cobra": "Stony-Voiced Goblins",
+        "Life from the Loam": "Golgari Thug",
+        "Ramunap Excavator": "Drill-Skimmer",
+        "Selvala, Heart of the Wilds": "Bugenhagen, Wise Elder",
+        "Golgari Grave-Troll": "Skyscanner"
+      },
+      "forced": [],
+      "keptOverCap": []
+    },
+    "7a": {
+      "costBefore": 111.54,
+      "costAfter": 42.14,
+      "substitutions": {
+        "Sword of Forge and Frontier": "Relic Retriever",
+        "Goldspan Dragon": "Ganax, Astral Hunter",
+        "Professional Face-Breaker": "Plundering Barbarian",
+        "Goldlust Triad": "Reckless Lackey",
+        "Sword of the Animist": "Cultivator's Caravan",
+        "Fable of the Mirror-Breaker // Reflection of Kiki-Jiki": "Charming Scoundrel",
+        "Wrathful Raptors": "Knight of Old Benalia",
+        "Aerial Extortionist": "Markov Enforcer",
+        "Shared Animosity": "Martial Impetus",
+        "Leyline Axe": "Brass Knuckles",
+        "Losheel, Clockwork Scholar": "Umaro, Raging Yeti",
+        "Duelist's Heritage": "Flaming Fist",
+        "Syr Ginger, the Meal Ender": "Frontline Medic",
+        "Trumpeting Carnosaur": "Hoard-Smelter Dragon",
+        "Diamond Pick-Axe": "Seize the Spoils",
+        "White Sun's Twilight": "Angel of Glory's Rise"
+      },
+      "forced": [],
+      "keptOverCap": []
+    },
+    "7b": {
+      "costBefore": 109.78,
+      "costAfter": 55.11,
+      "substitutions": {
+        "Giggling Skitterspike": "Karmic Guide",
+        "Sword of Sinew and Steel": "Swiftfoot Boots",
+        "Sword of Forge and Frontier": "Solemn Simulacrum",
+        "Aerial Extortionist": "Zephyr Boots",
+        "Reliquary Tower": "Study Hall",
+        "Leyline Axe": "Haunted Cloak",
+        "Losheel, Clockwork Scholar": "Anticausal Vestige",
+        "Loxodon Warhammer": "Martial Impetus",
+        "War of the Last Alliance": "Thran Power Suit",
+        "The Wandering Rescuer": "Salvation Colossus",
+        "Syr Ginger, the Meal Ender": "Frontline Medic",
+        "White Sun's Twilight": "Fall of the First Civilization",
+        "Crystal Barricade": "Selfless Spirit"
+      },
+      "forced": [],
+      "keptOverCap": [
+        {
+          "name": "Sword of the Animist",
+          "price": 5.92,
+          "why": "nothing under $2 in these colors both fills the ramp slot and holds the deck's plan as well (affinity 117)"
+        }
+      ]
+    },
+    "7c": {
+      "costBefore": 117.27,
+      "costAfter": 47.87,
+      "substitutions": {
+        "Sword of Forge and Frontier": "Relic Retriever",
+        "Goldspan Dragon": "Ganax, Astral Hunter",
+        "Professional Face-Breaker": "Plundering Barbarian",
+        "Goldlust Triad": "Reckless Lackey",
+        "Sword of the Animist": "Cultivator's Caravan",
+        "Fable of the Mirror-Breaker // Reflection of Kiki-Jiki": "Charming Scoundrel",
+        "Wrathful Raptors": "Knight of Old Benalia",
+        "Aerial Extortionist": "Markov Enforcer",
+        "Shared Animosity": "Martial Impetus",
+        "Leyline Axe": "Brass Knuckles",
+        "Losheel, Clockwork Scholar": "Umaro, Raging Yeti",
+        "Duelist's Heritage": "Flaming Fist",
+        "Syr Ginger, the Meal Ender": "Frontline Medic",
+        "Trumpeting Carnosaur": "Hoard-Smelter Dragon",
+        "Diamond Pick-Axe": "Seize the Spoils",
+        "White Sun's Twilight": "Angel of Glory's Rise"
+      },
+      "forced": [],
+      "keptOverCap": []
+    },
+    "7d": {
+      "costBefore": 111.75,
+      "costAfter": 34.42,
+      "substitutions": {
+        "Bear Umbra": "Tower Defense",
+        "Goldspan Dragon": "Ganax, Astral Hunter",
+        "Toski, Bearer of Secrets": "Subira, Tulzidi Caravanner",
+        "Ohran Frostfang": "Zephyr Boots",
+        "Professional Face-Breaker": "Hoarding Ogre",
+        "Sword of the Animist": "Cultivator's Caravan",
+        "Fable of the Mirror-Breaker // Reflection of Kiki-Jiki": "Reckless Lackey",
+        "Herd Heirloom": "Goldvein Pick",
+        "Leyline Axe": "Guild Artisan",
+        "Kogla, the Titan Ape": "Bladegriff Prototype",
+        "Hedge Shredder": "Brass Knuckles",
+        "Destiny Spinner": "Slobad, Goblin Tinkerer",
+        "Kogla and Yidaro": "Mighty Servant of Leuk-o",
+        "Bello, Bard of the Brambles": "Ragged Short Spear",
+        "Elder Gargaroth": "Umaro, Raging Yeti",
+        "Diamond Pick-Axe": "Plundering Barbarian"
+      },
+      "forced": [],
+      "keptOverCap": [
+        {
+          "name": "Season of Gathering",
+          "price": 6.37,
+          "why": "nothing under $2 in these colors both fills the wipe slot and holds the deck's plan as well (affinity 76)"
+        }
+      ]
+    },
+    "7e": {
+      "costBefore": 110.31,
+      "costAfter": 55.64,
+      "substitutions": {
+        "Giggling Skitterspike": "Karmic Guide",
+        "Sword of Sinew and Steel": "Swiftfoot Boots",
+        "Sword of Forge and Frontier": "Solemn Simulacrum",
+        "Aerial Extortionist": "Zephyr Boots",
+        "Reliquary Tower": "Study Hall",
+        "Leyline Axe": "Haunted Cloak",
+        "Losheel, Clockwork Scholar": "Anticausal Vestige",
+        "Loxodon Warhammer": "Martial Impetus",
+        "War of the Last Alliance": "Thran Power Suit",
+        "The Wandering Rescuer": "Salvation Colossus",
+        "Syr Ginger, the Meal Ender": "Frontline Medic",
+        "White Sun's Twilight": "Fall of the First Civilization",
+        "Crystal Barricade": "Selfless Spirit"
+      },
+      "forced": [],
+      "keptOverCap": [
+        {
+          "name": "Sword of the Animist",
+          "price": 5.92,
+          "why": "nothing under $2 in these colors both fills the ramp slot and holds the deck's plan as well (affinity 117)"
+        }
+      ]
+    },
+    "8a": {
+      "costBefore": 264.04,
+      "costAfter": 52.37,
+      "substitutions": {
+        "The One Ring": "Nutrient Block",
+        "Chronicle of Victory": "Pirate's Pillage",
+        "Hexing Squelcher": "Mask of Avacyn",
+        "Magda, Brazen Outlaw": "Hoarding Ogre",
+        "Chandra's Ignition": "Terminal Velocity",
+        "Skullclamp": "Crash Through",
+        "Ashling, Flame Dancer": "Reckless Lackey",
+        "Glóin, Dwarf Emissary": "Relic Retriever",
+        "Lightning Greaves": "Guild Artisan",
+        "Staff of Compleation": "Vampires' Vengeance",
+        "Thran Dynamo": "Cultivator's Caravan",
+        "Clive, Ifrit's Dominant // Ifrit, Warden of Inferno": "Markov Enforcer",
+        "Brash Taunter": "Soul of New Phyrexia",
+        "Magda, the Hoardmaster": "Drill-Skimmer",
+        "Psychosis Crawler": "Olivia's Attendants",
+        "Crime Novelist": "Millikin"
+      },
+      "forced": [
+        "The One Ring"
+      ],
+      "keptOverCap": [
+        {
+          "name": "Banner of Kinship",
+          "price": 8.01,
+          "why": "nothing under $2 in these colors both fills the filler slot and holds the deck's plan as well (affinity 175)"
+        },
+        {
+          "name": "Vanquisher's Banner",
+          "price": 5.31,
+          "why": "nothing under $2 in these colors both fills the draw slot and holds the deck's plan as well (affinity 214)"
+        }
+      ]
+    },
+    "8b": {
+      "costBefore": 108.44,
+      "costAfter": 95.27,
+      "substitutions": {
+        "Enduring Innocence": "Tocasia's Welcome",
+        "Reliquary Tower": "Study Hall",
+        "Sephara, Sky's Blade": "Frontline Medic",
+        "Harsh Mercy": "Anzrag's Rampage",
+        "Crystal Barricade": "Selfless Spirit"
+      },
+      "forced": [],
+      "keptOverCap": [
+        {
+          "name": "And They Shall Know No Fear",
+          "price": 9.96,
+          "why": "nothing under $2 in these colors both fills the protection slot and holds the deck's plan as well (affinity 290)"
+        },
+        {
+          "name": "Banner of Kinship",
+          "price": 8.01,
+          "why": "nothing under $2 in these colors both fills the filler slot and holds the deck's plan as well (affinity 245)"
+        },
+        {
+          "name": "Kellan, the Fae-Blooded // Birthright Boon",
+          "price": 6.89,
+          "why": "nothing under $2 in these colors both fills the finisher slot and holds the deck's plan as well (affinity 130)"
+        },
+        {
+          "name": "Everything Comes to Dust",
+          "price": 5.54,
+          "why": "nothing under $2 in these colors both fills the wipe slot and holds the deck's plan as well (affinity 124)"
+        },
+        {
+          "name": "Vanquisher's Banner",
+          "price": 5.31,
+          "why": "nothing under $2 in these colors both fills the draw slot and holds the deck's plan as well (affinity 282)"
+        }
+      ]
+    },
+    "8c": {
+      "costBefore": 172.2,
+      "costAfter": 112.82,
+      "substitutions": {
+        "Hexing Squelcher": "Notorious Sliver War",
+        "Steely Resolve": "Tower Defense",
+        "Ashling, Flame Dancer": "Reckless Lackey",
+        "Lightning Greaves": "Guild Artisan",
+        "Oracle of Mul Daya": "Wall of Roots",
+        "Brash Taunter": "Soul of New Phyrexia",
+        "Agatha of the Vile Cauldron": "Pilgrim's Eye",
+        "Chomping Changeling": "Wood Elves"
+      },
+      "forced": [],
+      "keptOverCap": [
+        {
+          "name": "Chronicle of Victory",
+          "price": 21.94,
+          "why": "nothing under $2 in these colors both fills the draw slot and holds the deck's plan as well (affinity 191)"
+        },
+        {
+          "name": "Surrak and Goreclaw",
+          "price": 16.5,
+          "why": "nothing under $2 in these colors both fills the finisher slot and holds the deck's plan as well (affinity 109)"
+        },
+        {
+          "name": "Nylea, God of the Hunt",
+          "price": 10.48,
+          "why": "nothing under $2 in these colors both fills the protection slot and holds the deck's plan as well (affinity 90)"
+        },
+        {
+          "name": "Banner of Kinship",
+          "price": 8.01,
+          "why": "nothing under $2 in these colors both fills the filler slot and holds the deck's plan as well (affinity 202)"
+        },
+        {
+          "name": "Season of Gathering",
+          "price": 6.37,
+          "why": "nothing under $2 in these colors both fills the wipe slot and holds the deck's plan as well (affinity 71)"
+        },
+        {
+          "name": "Vanquisher's Banner",
+          "price": 5.31,
+          "why": "nothing under $2 in these colors both fills the draw slot and holds the deck's plan as well (affinity 231)"
+        }
+      ]
+    },
+    "8d": {
+      "costBefore": 268.43,
+      "costAfter": 59.05,
+      "substitutions": {
+        "The One Ring": "Nutrient Block",
+        "Chronicle of Victory": "Pirate's Pillage",
+        "Hexing Squelcher": "Mask of Avacyn",
+        "Magda, Brazen Outlaw": "Hoarding Ogre",
+        "Chandra's Ignition": "Terminal Velocity",
+        "Skullclamp": "Crash Through",
+        "Ashling, Flame Dancer": "Reckless Lackey",
+        "Glóin, Dwarf Emissary": "Relic Retriever",
+        "Lightning Greaves": "Guild Artisan",
+        "Staff of Compleation": "Vampires' Vengeance",
+        "Thran Dynamo": "Cultivator's Caravan",
+        "Clive, Ifrit's Dominant // Ifrit, Warden of Inferno": "Eldrazi Ravager",
+        "Brash Taunter": "Darksteel Juggernaut",
+        "Magda, the Hoardmaster": "Drill-Skimmer",
+        "Psychosis Crawler": "Markov Enforcer"
+      },
+      "forced": [
+        "The One Ring"
+      ],
+      "keptOverCap": [
+        {
+          "name": "Banner of Kinship",
+          "price": 8.01,
+          "why": "nothing under $2 in these colors both fills the filler slot and holds the deck's plan as well (affinity 174)"
+        },
+        {
+          "name": "Vanquisher's Banner",
+          "price": 5.31,
+          "why": "nothing under $2 in these colors both fills the draw slot and holds the deck's plan as well (affinity 215)"
+        }
+      ]
+    },
+    "8e": {
+      "costBefore": 255.63,
+      "costAfter": 76.87,
+      "substitutions": {
+        "The One Ring": "Nutrient Block",
+        "Chronicle of Victory": "Pirate's Pillage",
+        "Chandra's Ignition": "Terminal Velocity",
+        "Professional Face-Breaker": "Hoarding Ogre",
+        "Electro, Assaulting Battery": "Relic Retriever",
+        "Skullclamp": "Crash Through",
+        "Ashling, Flame Dancer": "Reckless Lackey",
+        "Lightning Greaves": "Scouring Sands",
+        "Staff of Compleation": "Olivia's Attendants",
+        "Clive, Ifrit's Dominant // Ifrit, Warden of Inferno": "Balin, Loremaster",
+        "Brash Taunter": "Medicine Bag"
+      },
+      "forced": [
+        "The One Ring"
+      ],
+      "keptOverCap": [
+        {
+          "name": "Hexing Squelcher",
+          "price": 21.91,
+          "why": "nothing under $2 in these colors both fills the protection slot and holds the deck's plan as well (affinity 53)"
+        },
+        {
+          "name": "Banner of Kinship",
+          "price": 8.01,
+          "why": "nothing under $2 in these colors both fills the filler slot and holds the deck's plan as well (affinity 176)"
+        },
+        {
+          "name": "Vanquisher's Banner",
+          "price": 5.31,
+          "why": "nothing under $2 in these colors both fills the draw slot and holds the deck's plan as well (affinity 215)"
+        }
+      ]
+    },
+    "9a": {
+      "costBefore": 111.2,
+      "costAfter": 74.43,
+      "substitutions": {
+        "Mizzix's Mastery": "Teach by Example",
+        "Wandering Archaic // Explore the Vastlands": "Diviner of Mist",
+        "Ral, Monsoon Mage // Ral, Leyline Prodigy": "Balmor, Battlemage Captain",
+        "Dualcaster Mage": "Unruly Catapult",
+        "Harmonic Prodigy": "Kaza, Roil Chaser",
+        "Narset's Reversal": "Expansion // Explosion"
+      },
+      "forced": [],
+      "keptOverCap": [
+        {
+          "name": "Electro, Assaulting Battery",
+          "price": 5.91,
+          "why": "nothing under $2 in these colors both fills the ramp slot and holds the deck's plan as well (affinity 199)"
+        },
+        {
+          "name": "Niv-Mizzet, Parun",
+          "price": 5.72,
+          "why": "nothing under $2 in these colors both fills the draw slot and holds the deck's plan as well (affinity 174)"
+        },
+        {
+          "name": "Ashling, Flame Dancer",
+          "price": 5.5,
+          "why": "nothing under $2 in these colors both fills the ramp slot and holds the deck's plan as well (affinity 187)"
+        }
+      ]
+    },
+    "9b": {
+      "costBefore": 112.22,
+      "costAfter": 73.66,
+      "substitutions": {
+        "Mizzix's Mastery": "Teach by Example",
+        "Wandering Archaic // Explore the Vastlands": "Diviner of Mist",
+        "Ral, Monsoon Mage // Ral, Leyline Prodigy": "Balmor, Battlemage Captain",
+        "Dualcaster Mage": "Unruly Catapult",
+        "Harmonic Prodigy": "Kaza, Roil Chaser",
+        "Narset's Reversal": "Expansion // Explosion",
+        "Wand of Wonder": "Blue Mage's Cane"
+      },
+      "forced": [],
+      "keptOverCap": [
+        {
+          "name": "Electro, Assaulting Battery",
+          "price": 5.91,
+          "why": "nothing under $2 in these colors both fills the ramp slot and holds the deck's plan as well (affinity 200)"
+        },
+        {
+          "name": "Niv-Mizzet, Parun",
+          "price": 5.72,
+          "why": "nothing under $2 in these colors both fills the draw slot and holds the deck's plan as well (affinity 175)"
+        },
+        {
+          "name": "Ashling, Flame Dancer",
+          "price": 5.5,
+          "why": "nothing under $2 in these colors both fills the ramp slot and holds the deck's plan as well (affinity 188)"
+        }
+      ]
+    },
+    "9c": {
+      "costBefore": 110.99,
+      "costAfter": 72.27,
+      "substitutions": {
+        "Mizzix's Mastery": "Teach by Example",
+        "Wandering Archaic // Explore the Vastlands": "Diviner of Mist",
+        "Ral, Monsoon Mage // Ral, Leyline Prodigy": "Zada, Hedron Grinder",
+        "Dualcaster Mage": "Balmor, Battlemage Captain",
+        "Harmonic Prodigy": "Kaza, Roil Chaser",
+        "Narset's Reversal": "Expansion // Explosion",
+        "Wand of Wonder": "Blue Mage's Cane"
+      },
+      "forced": [],
+      "keptOverCap": [
+        {
+          "name": "Electro, Assaulting Battery",
+          "price": 5.91,
+          "why": "nothing under $2 in these colors both fills the ramp slot and holds the deck's plan as well (affinity 197)"
+        },
+        {
+          "name": "Niv-Mizzet, Parun",
+          "price": 5.72,
+          "why": "nothing under $2 in these colors both fills the draw slot and holds the deck's plan as well (affinity 174)"
+        },
+        {
+          "name": "Ashling, Flame Dancer",
+          "price": 5.5,
+          "why": "nothing under $2 in these colors both fills the ramp slot and holds the deck's plan as well (affinity 187)"
+        }
+      ]
+    },
+    "9d": {
+      "costBefore": 115.84,
+      "costAfter": 73.85,
+      "substitutions": {
+        "Mizzix's Mastery": "Teach by Example",
+        "Wandering Archaic // Explore the Vastlands": "Diviner of Mist",
+        "Ral, Monsoon Mage // Ral, Leyline Prodigy": "Balmor, Battlemage Captain",
+        "Dualcaster Mage": "Unruly Catapult",
+        "Harmonic Prodigy": "Kaza, Roil Chaser",
+        "Reliquary Tower": "Swiftwater Cliffs",
+        "Narset's Reversal": "Expansion // Explosion",
+        "Wand of Wonder": "Blue Mage's Cane"
+      },
+      "forced": [],
+      "keptOverCap": [
+        {
+          "name": "Electro, Assaulting Battery",
+          "price": 5.91,
+          "why": "nothing under $2 in these colors both fills the ramp slot and holds the deck's plan as well (affinity 199)"
+        },
+        {
+          "name": "Ashling, Flame Dancer",
+          "price": 5.5,
+          "why": "nothing under $2 in these colors both fills the ramp slot and holds the deck's plan as well (affinity 187)"
+        }
+      ]
+    },
+    "9e": {
+      "costBefore": 113.26,
+      "costAfter": 64.89,
+      "substitutions": {
+        "Wandering Archaic // Explore the Vastlands": "Daring Waverider",
+        "Electro, Assaulting Battery": "Curious Homunculus // Voracious Reader",
+        "Professor Onyx": "Melek, Izzet Paragon",
+        "Niv-Mizzet, Parun": "Trail of Evidence",
+        "Jace, Vryn's Prodigy // Jace, Telepath Unbound": "Chakra Meditation",
+        "Dualcaster Mage": "Balmor, Battlemage Captain",
+        "Harmonic Prodigy": "Kaza, Roil Chaser",
+        "Solve the Equation": "Micromancer",
+        "Wrexial, the Risen Deep": "Diviner of Mist",
+        "Narset's Reversal": "Teach by Example",
+        "Wand of Wonder": "Blue Mage's Cane"
+      },
+      "forced": [],
+      "keptOverCap": [
+        {
+          "name": "Ashling, Flame Dancer",
+          "price": 5.5,
+          "why": "nothing under $2 in these colors both fills the ramp slot and holds the deck's plan as well (affinity 198)"
+        }
+      ]
+    },
+    "10a": {
+      "costBefore": 118.1,
+      "costAfter": 70.27,
+      "substitutions": {
+        "Kozilek's Command": "Burnished Hart",
+        "Cryptic Command": "Zuko's Exile",
+        "Erode": "Blizzard Strix",
+        "Three Steps Ahead": "Confirm Suspicions",
+        "Ephemerate": "Mistmeadow Witch",
+        "Staff of Compleation": "Siren's Ruse",
+        "Winds of Abandon": "Escape Protocol",
+        "Reliquary Tower": "Port Town",
+        "Counterspell": "Syncopate",
+        "Season of the Burrow": "Bovine Intervention"
+      },
+      "forced": [],
+      "keptOverCap": [
+        {
+          "name": "Eldrazi Confluence",
+          "price": 11.78,
+          "why": "nothing under $2 in these colors both fills the ramp slot and holds the deck's plan as well (affinity 159)"
+        }
+      ]
+    },
+    "10b": {
+      "costBefore": 105.53,
+      "costAfter": 58.08,
+      "substitutions": {
+        "Archdruid's Charm": "Blizzard Strix",
+        "Kozilek's Command": "White Auracite",
+        "Cryptic Command": "Zuko's Exile",
+        "Ephemerate": "Mistmeadow Witch",
+        "Staff of Compleation": "Siren's Ruse",
+        "Freyalise, Llanowar's Fury": "Emergency Eject",
+        "Reliquary Tower": "Port Town",
+        "Counterspell": "Gods Willing",
+        "Kogla, the Titan Ape": "Cathar Commando",
+        "Collective Resistance": "Sublime Epiphany"
+      },
+      "forced": [],
+      "keptOverCap": [
+        {
+          "name": "Eldrazi Confluence",
+          "price": 11.78,
+          "why": "nothing under $2 in these colors both fills the ramp slot and holds the deck's plan as well (affinity 140)"
+        }
+      ]
+    },
+    "10c": {
+      "costBefore": 109.95,
+      "costAfter": 53.9,
+      "substitutions": {
+        "Snuff Out": "Brainspoil",
+        "Kozilek's Command": "Grim Bounty",
+        "Cryptic Command": "Mirrodin Avenged",
+        "Erode": "Blizzard Strix",
+        "Saw in Half": "Luminous Rebuke",
+        "Ephemerate": "Mistmeadow Witch",
+        "Staff of Compleation": "Zuko's Exile",
+        "Drown in the Loch": "Nekrataal",
+        "Counterspell": "Disdainful Stroke",
+        "Summon: Primal Odin": "Summon: Leviathan",
+        "Damn": "Terror"
+      },
+      "forced": [],
+      "keptOverCap": []
+    },
+    "10d": {
+      "costBefore": 99.05,
+      "costAfter": 36.38,
+      "substitutions": {
+        "Eldrazi Confluence": "Goldvein Pick",
+        "Snuff Out": "Bloodchief's Thirst",
+        "Cavalier of Night": "Bone Shards",
+        "Kozilek's Command": "Deadly Dispute",
+        "Saw in Half": "Death-Mask Duplicant",
+        "Kozilek, the Great Distortion": "Eldrazi Ravager",
+        "Staff of Compleation": "Zuko's Exile",
+        "Throat Slitter": "Bumbleflower's Sharepot",
+        "Reliquary Tower": "Study Hall",
+        "Primaris Eliminator": "Vraska's Contempt"
+      },
+      "forced": [],
+      "keptOverCap": []
+    },
+    "10e": {
+      "costBefore": 118.54,
+      "costAfter": 62.55,
+      "substitutions": {
+        "Snuff Out": "Brainspoil",
+        "Kozilek's Command": "Grim Bounty",
+        "Cryptic Command": "Mirrodin Avenged",
+        "Erode": "Blizzard Strix",
+        "Saw in Half": "Luminous Rebuke",
+        "Ephemerate": "Mistmeadow Witch",
+        "Staff of Compleation": "Zuko's Exile",
+        "Drown in the Loch": "Nekrataal",
+        "Counterspell": "The Moment",
+        "Summon: Primal Odin": "Summon: Leviathan",
+        "Damn": "Terror"
+      },
+      "forced": [],
+      "keptOverCap": []
+    }
+  }
+}

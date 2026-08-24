@@ -46,6 +46,16 @@ const log = (message) => {
   if (!quiet) console.log(message);
 };
 
+// What counts as a real improvement. Two floors, and the higher one wins: the
+// sampling noise (a gain smaller than the spread between two runs of the same
+// deck is not a gain at all) and a fixed fraction of the score already reached
+// (half a point on top of eighty is not worth another thousand games).
+function negligibleGain(score) {
+  const noise = Number(config.convergence?.noiseMargin ?? config.minAcceptGain ?? 1);
+  const relative = Number(config.convergence?.relativeGain ?? 0) * Math.abs(Number(score) || 0);
+  return Math.max(noise, relative);
+}
+
 function cardsWithMeta(cards) {
   return cards.map((card) => {
     const meta = audited.get(Lineup.normalizeName(card.name)) || {};
@@ -118,10 +128,15 @@ async function runBatch(cards, seed, label, state, gameCount) {
     ...config,
     games,
     scoreWeights: request.constraints?.scoreWeights || config.scoreWeights,
-    // Whatever this run is optimizing, powerScore is always measured against the
-    // performance vector, so a constrained rung can be held to a power floor.
+    // Only a rung that asks for the band gets it. Tuned and Max are meant to be
+    // as strong as they can be, so they keep the monotonic win-rate curve; Pod
+    // Fun asks for the band because dominating the table is not the goal there.
+    winRateBand: request.constraints?.winRateBand || null,
+    // Whatever this run is optimizing, powerScore is always the unbanded
+    // performance vector, so it means the same thing on every rung and a
+    // constrained rung can be held to a floor taken from another one.
     powerWeights: config.scoreWeights,
-    winRateBand: config.winRateBand,
+    powerBand: null,
     targets: config.targets
   }, seed, async (batch) => {
     await writeStatus({
@@ -612,7 +627,7 @@ if (args.apply) {
 
 if (args.auto) {
   const pool = await loadPool();
-  let stalled = 0;
+  const bestTrail = [];
   let batchSize = config.maxSwapsPerIteration;
   for (;;) {
     if (state.iteration >= maxIterations) {
@@ -679,7 +694,14 @@ if (args.auto) {
     // A rejected batch of five hides which of the five was wrong, so the next
     // attempt tries fewer changes at once.
     batchSize = improved ? config.maxSwapsPerIteration : Math.max(1, Math.floor(batchSize / 2));
-    stalled = gain < config.convergence.minScoreGain ? stalled + 1 : 0;
+    // Convergence. The rule is "keep going until the improvements are
+    // negligible", where negligible means smaller than the sampling noise or
+    // under 5% of where the score already is, whichever is larger. Measured
+    // over a WINDOW of the best score rather than one iteration at a time:
+    // three consecutive 1.5-point gains are real progress on an 80-point deck
+    // even though no single one of them clears a 4-point bar.
+    bestTrail.push(state.best.metrics.score);
+    if (bestTrail.length > config.convergence.patience + 1) bestTrail.shift();
     await saveState(state);
     await writeJson(path.join(RESULTS_DIR, `${request.id}.iter${state.iteration}.json`), reportFor(state, measured.metrics, measured.perCardStats, measured.gaps, {
       swapsThisIteration: swaps,
@@ -688,9 +710,13 @@ if (args.auto) {
       bestScore: state.best.metrics.score
     }));
     log(`  iteration ${String(state.iteration).padStart(2)} · score ${measured.metrics.score.toFixed(1)} (${gain >= 0 ? "+" : ""}${gain.toFixed(1)}) · ${improved ? "kept" : "rolled back"} · ${swaps.map((swap) => `${swap.in} for ${swap.out}`).join("; ")}`);
-    if (stalled >= config.convergence.patience) {
-      await finalize(state, `Converged: ${config.convergence.patience} iterations in a row gained less than ${config.convergence.minScoreGain} points.`, EXIT.CONVERGED);
-      process.exit(EXIT.CONVERGED);
+    if (bestTrail.length === config.convergence.patience + 1) {
+      const progress = bestTrail[bestTrail.length - 1] - bestTrail[0];
+      const bar = negligibleGain(state.best.metrics.score);
+      if (progress < bar) {
+        await finalize(state, `Converged: ${config.convergence.patience} iterations moved the best score ${progress.toFixed(2)} points, under the ${bar.toFixed(2)} needed to count as an improvement.`, EXIT.CONVERGED);
+        process.exit(EXIT.CONVERGED);
+      }
     }
   }
 }

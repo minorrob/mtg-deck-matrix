@@ -9,6 +9,7 @@ export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "
 export const Lineup = require(path.join(ROOT, "lineup-model.js"));
 export const Compliance = require(path.join(ROOT, "compliance-model.js"));
 export const Engine = require(path.join(ROOT, "sim-engine.js"));
+export const Generator = require(path.join(ROOT, "deck-generator.js"));
 
 export const SIM_DIR = path.join(ROOT, "sim");
 export const CONFIG_PATH = process.env.SIM_CONFIG_PATH || path.join(SIM_DIR, "config.json");
@@ -120,6 +121,19 @@ function literalCardsFor(plan, audited, selection) {
       source: entry.kind
     };
   });
+}
+
+// The Base build: the plan's starting shell with nothing bought on top of it.
+// This is the cheapest legal hundred the variant can be assembled from -- the
+// placeholders you play while the real cards are still on the shop list -- and
+// it is measured, never optimized. Its whole point is to show what the entry
+// price actually buys you.
+export function baseCards(plan, audited) {
+  const selection = Lineup.canonicalizeSelection(plan, {
+    ...Lineup.emptySelection(),
+    shell: (plan.startingShell || plan.baseCards || []).map((item) => String(item.id))
+  });
+  return literalCardsFor(plan, audited, selection);
 }
 
 // The Tuned build: the plan's starting shell with every required purchase applied,
@@ -237,6 +251,81 @@ export function roleCensus(cards) {
 // named cards would be too blunt -- it freezes specific choices the optimizer
 // might legitimately improve. Protecting the DENSITY lets it swap anything it
 // likes as long as the result is still recognizably the deck you asked for.
+// How much a card reads like the rest of a particular deck.
+//
+// The declared `mechanics` label turned out to be too coarse to protect a
+// strategy: "Control / Interaction" does not describe a theft deck, so a census
+// built on it scored every one of that deck's actual theft cards as off-theme
+// and let them all be traded away for cheap removal. This measures the deck
+// against ITSELF instead. Repeated phrases in a deck's oracle text are what the
+// deck is about -- "spirits you control", "sacrifice a land", "magecraft
+// whenever" -- and a phrase's weight falls with how common it is across the
+// whole catalog, so "draw a card" counts for almost nothing and "cards leave
+// your graveyard" counts for a lot.
+//
+// The result is a number with no absolute meaning, only a comparative one:
+// swapping card A for card B is safe for the strategy when B scores at least as
+// high as A. Filler scores near zero and can be replaced by anything; a card
+// carrying the plan can only be replaced by another card carrying it.
+const AFFINITY_STOPWORDS = new Set(("a an the of to and or for with this that it its you your they their target each all any " +
+  "from into onto on in at as be is are was were when whenever if then than may can could will would do does put get gets have has had").split(" "));
+
+export function oracleShingles(text, maxSize = 4) {
+  const words = String(text || "").toLowerCase().replace(/[^a-z0-9/+\- ]+/g, " ").split(/\s+/).filter(Boolean);
+  const grams = new Set();
+  for (let size = 2; size <= maxSize; size += 1) {
+    for (let index = 0; index + size <= words.length; index += 1) {
+      const gram = words.slice(index, index + size);
+      if (gram.every((word) => AFFINITY_STOPWORDS.has(word))) continue;
+      grams.add(gram.join(" "));
+    }
+  }
+  return grams;
+}
+
+// Catalog-wide document frequency, built once and shared by every deck.
+export function buildOracleIndex(catalogCards) {
+  const documentFrequency = new Map();
+  catalogCards.forEach((card) => oracleShingles(card.oracleText).forEach((gram) => {
+    documentFrequency.set(gram, (documentFrequency.get(gram) || 0) + 1);
+  }));
+  return {documentFrequency, documents: Math.max(1, catalogCards.length)};
+}
+
+export function deckAffinity(deckCards, index) {
+  const deckFrequency = new Map();
+  deckCards
+    .filter((card) => !/\bLand\b/.test(card.typeLine || ""))
+    .forEach((card) => oracleShingles(card.oracleText).forEach((gram) => {
+      deckFrequency.set(gram, (deckFrequency.get(gram) || 0) + 1);
+    }));
+  return (card) => {
+    const grams = oracleShingles(card.oracleText);
+    if (!grams.size) return 0;
+    let total = 0;
+    grams.forEach((gram) => {
+      const inDeck = deckFrequency.get(gram) || 0;
+      if (inDeck < 2) return; // said once, by one card: that is the card, not the deck
+      const idf = Math.log(index.documents / (1 + (index.documentFrequency.get(gram) || 0)));
+      total += inDeck * Math.max(0, idf);
+    });
+    // Longer cards say more words and would otherwise always win.
+    return total / Math.sqrt(grams.size);
+  };
+}
+
+// The oracle-text vocabulary for a variant's declared mechanics. Taken from the
+// generator's own theme table so a deck is measured against the same words it
+// was built from, rather than a second list that could drift away from it.
+export function themeTermsFor(mechanics = []) {
+  const terms = new Set();
+  (mechanics || []).forEach((mechanic) => {
+    const key = Generator.THEME_ALIASES[mechanic] || mechanic;
+    (Generator.THEME_QUERIES[key]?.terms || []).forEach((term) => terms.add(term));
+  });
+  return Array.from(terms);
+}
+
 export function themeCensus(cards, themeTerms = []) {
   if (!themeTerms.length) return 0;
   const terms = themeTerms.map((term) => String(term).toLowerCase());
