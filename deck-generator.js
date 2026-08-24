@@ -730,7 +730,9 @@
       margin: 0.01,
       crossRole: false,
       claimed: tuned.claimed,
-      priceFilter: (card) => Number(card.price || 0) <= ENHANCE_PRICE_CAP
+      // Bound the ceiling too, not just the nonfoil price: Enhance promises "at or below $20,"
+      // and a card whose only listings run higher (foil premium) can't honestly keep that promise.
+      priceFilter: (card) => Number(card.price || 0) <= ENHANCE_PRICE_CAP && Number(card.ceiling || card.price || 0) <= ENHANCE_PRICE_CAP
     });
     const enhanceEntries = applySwaps(tunedEntries, enhance.swaps);
     // Maxed is explicitly not a budget stage, so price stops steering the score.

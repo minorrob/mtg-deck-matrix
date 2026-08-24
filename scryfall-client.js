@@ -130,7 +130,9 @@
       image: imageFor(raw, "small"),
       imageLarge: imageFor(raw, "normal"),
       price: usd,
-      ceiling: Number(prices.usd_foil) || usd,
+      // A foil premium raises the ceiling; a printing that happens to be cheaper in foil
+      // must never pull it below the nonfoil price a buyer would actually pay.
+      ceiling: Math.max(usd, Number(prices.usd_foil) || 0),
       edhrecRank: Number(raw.edhrec_rank) || null,
       gameChanger: Boolean(raw.game_changer),
       reserved: Boolean(raw.reserved),
