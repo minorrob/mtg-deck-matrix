@@ -233,8 +233,8 @@ main { width: min(1560px, 100%); min-height: 70vh; margin: 0 auto; padding: 18px
 .simulation-readout p { margin: 0; color: #3d4b44; font-size: 11px; line-height: 1.45; }
 .engine-tag { padding: 1px 5px; border-radius: 5px; color: #fff; background: var(--blue); font-size: 8px; font-weight: 900; text-transform: uppercase; }
 .simulation-readout[data-engine="v2.1"] .engine-tag { background: #6a4b85; }
-.simulation-engine-note { display: flex !important; gap: 6px; align-items: flex-start; margin-top: 5px !important; color: var(--muted) !important; font-size: 9px !important; }
-.simulation-engine-note .ui-icon { width: 14px; height: 14px; font-size: 7px; }
+.engine-note-icon { display: inline-flex; align-items: center; margin-left: 5px; padding: 0; border: 0; background: none; vertical-align: -2px; }
+.engine-note-icon .ui-icon { width: 14px; height: 14px; font-size: 7px; }
 .why-variant-rows { display: flex; flex-direction: column; gap: 10px; }
 .why-variant-row { padding: 10px; border: 1px solid #ded4bd; border-radius: 10px; background: #fbf8f0; }
 .why-variant-row.is-this-variant { border-color: var(--blue); background: #eef4fb; }

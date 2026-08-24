@@ -38,7 +38,7 @@
     fun: "Fun measures how satisfying and interactive the card is likely to feel for the player and the table.",
     fit: "Fit explains how directly the card supports this deck’s commander, mechanics, and stated game plan.",
     simulate: "Play this exact 100-card build against randomized opponents thousands of times, find where it actually loses, and propose swaps that measurably fix it. The games run on your own computer.",
-    whyVariant: "See how this variant's simulated Tuned, Enhance, and Fun Tuned scores compare against its deck's other variants, and where it ranks among them."
+    whyVariant: "See this variant's simulated score on every rung it was measured on, and where its Tuned score ranks among its deck's other variants."
   };
   const KEYWORD_DEFINITIONS = {
     flying: "This creature can normally be blocked only by creatures with flying or reach.",
@@ -1000,18 +1000,17 @@
 
   // Opened from the Why This Variant button, which only renders when this variant has a
   // simulation-summary.json builds entry (custom decks generated on the Choose tab never do,
-  // since they've never been through the Phase 6 sweep). Ranks this variant's Tuned score
-  // against its own deck's other variants -- Tuned rather than an average across rungs, since
-  // it's the one rung every variant was measured on the same way, so it's the only apples-to-
-  // apples comparison. Enhance and Fun Tuned are still shown per sibling for the full picture.
+  // since they've never been through the sweep). Reports THIS variant only: every rung it was
+  // measured on, plus one line placing it against its own deck's other variants at the Tuned
+  // rung -- Tuned because it's the one rung every variant was measured on the same way, so
+  // it's the only apples-to-apples comparison. Sibling readouts are deliberately not repeated
+  // here; each sibling has its own button.
   function whyVariantMarkup(variant, siblingVariants) {
-    const rows = siblingVariants.map((sibling) => ({
-      variant: sibling,
-      tuned: simulationSummary?.builds?.[sibling.id]?.Tuned || null,
-      enhance: simulationSummary?.builds?.[sibling.id]?.Enhance || null,
-      funTuned: simulationSummary?.builds?.[sibling.id]?.["Fun Tuned"] || null
-    }));
-    const ranked = rows.filter((row) => row.tuned).sort((a, b) => b.tuned.score - a.tuned.score);
+    const buildsFor = (id) => simulationSummary?.builds?.[id] || null;
+    const ranked = siblingVariants
+      .map((sibling) => ({variant: sibling, tuned: buildsFor(sibling.id)?.Tuned || null}))
+      .filter((row) => row.tuned && row.tuned.score != null)
+      .sort((a, b) => b.tuned.score - a.tuned.score);
     const mine = ranked.find((row) => row.variant.id === variant.id);
     const top = ranked[0];
     const myRank = mine ? ranked.indexOf(mine) + 1 : null;
@@ -1019,21 +1018,21 @@
       ? `<p>${esc(variant.name)} has not been through the simulation sweep yet, so there is nothing to compare it against.</p>`
       : myRank === 1
         ? `<p><strong>${esc(variant.name)}</strong> scored highest of Deck ${esc(variant.deckId)}’s ${ranked.length} simulated variants at the Tuned rung — ${mine.tuned.score.toFixed(1)} points, a ${(mine.tuned.winPct * 100).toFixed(1)}% win rate over ${mine.tuned.games.toLocaleString()} games.</p>`
-        : `<p><strong>${esc(variant.name)}</strong> placed #${myRank} of Deck ${esc(variant.deckId)}’s ${ranked.length} simulated variants. <strong>${esc(top.variant.name)}</strong> led at Tuned with ${top.tuned.score.toFixed(1)} points against this variant’s ${mine.tuned.score.toFixed(1)} — a gap of ${(top.tuned.score - mine.tuned.score).toFixed(1)}.</p>`;
-    const rowsHtml = ranked.map((row, index) => `
-      <div class="why-variant-row${row.variant.id === variant.id ? " is-this-variant" : ""}">
-        <div class="why-variant-row-head"><span class="why-variant-row-rank">#${index + 1}</span><strong>${esc(row.variant.name)}</strong>${row.variant.id === variant.id ? `<span class="why-variant-you-tag">this variant</span>` : ""}</div>
-        ${simulationReadoutMarkup("Tuned", row.tuned)}
-        ${simulationReadoutMarkup("Enhance", row.enhance)}
-        ${simulationReadoutMarkup("Fun Tuned", row.funTuned)}
-      </div>`).join("");
+        : `<p><strong>${esc(variant.name)}</strong> placed #${myRank} of Deck ${esc(variant.deckId)}’s ${ranked.length} simulated variants at the Tuned rung, scoring ${mine.tuned.score.toFixed(1)} against <strong>${esc(top.variant.name)}</strong>’s leading ${top.tuned.score.toFixed(1)} — a gap of ${(top.tuned.score - mine.tuned.score).toFixed(1)}.</p>`;
+    const myBuilds = buildsFor(variant.id);
+    const rungs = ["Tuned", "Enhance", "Max", "Fun Tuned", "Fun Max"];
+    const rowsHtml = `
+      <div class="why-variant-row is-this-variant">
+        <div class="why-variant-row-head"><strong>${esc(variant.name)}</strong><span class="why-variant-you-tag">${esc(variant.commander)}</span></div>
+        ${rungs.map((rung) => simulationReadoutMarkup(rung, myBuilds?.[rung] || null)).join("")}
+      </div>`;
     return `
       <section class="detail-block why-variant-headline">
         <h3>Why this variant</h3>
         ${headline}
       </section>
       <section class="detail-block why-variant-readout">
-        <h3>Monte Carlo readout for Deck ${esc(variant.deckId)}’s variants</h3>
+        <h3>Monte Carlo readout${engineNoteIcon()}</h3>
         <div class="why-variant-rows">${rowsHtml}</div>
       </section>`;
   }
@@ -2620,18 +2619,25 @@
     </div>`;
   }
 
+  // The engine-boundary caveat is identical on every readout, so repeating it under each one
+  // buried the numbers in boilerplate. It lives in one place now -- this hoverable icon --
+  // and every readout references it rather than restating it.
+  function engineNoteIcon() {
+    if (!simulationSummary?.engineBoundaryNote) return "";
+    return `<button type="button" class="engine-note-icon info-tip tip-action" data-tooltip="${esc(simulationSummary.engineBoundaryNote)}" aria-label="How to read these numbers">${icon("i")}</button>`;
+  }
+
   // Piece 2, additive beyond what Rob explicitly asked for: the real simulated result for
   // whichever build piece 1 just matched, straight from the workbook's Summary sheet. Kept
   // visually separate from the metric strip above, and never renders a Score/Win% without
-  // its engine tag and the v1/v2.1 boundary note -- see data/simulation-summary.json.
+  // its engine tag -- see data/simulation-summary.json.
   function simulationReadoutMarkup(buildName, sim) {
     if (!simulationSummary) return "";
     if (!sim || sim.games == null) {
-      return `<p class="simulation-readout is-unsimulated">${icon("i")}<span><b>${esc(buildName)}</b> · published list — not independently simulated</span></p>`;
+      return `<p class="simulation-readout is-unsimulated">${icon("i")}<span><b>${esc(buildName)}</b> · ${esc(sim?.note || "published list — not independently simulated")}</span></p>`;
     }
     return `<div class="simulation-readout" data-engine="${esc(sim.engine || "")}">
-      <p><b>Simulated:</b> ${esc(buildName)} · ${sim.games.toLocaleString()} games (${sim.holdoutGames != null ? sim.holdoutGames.toLocaleString() : "?"} holdout) · ${sim.winPct != null ? `${(sim.winPct * 100).toFixed(1)}% win` : "win % n/a"} · ${esc(sim.verdict || "unverified")} · <span class="engine-tag">${esc(sim.engine || "engine n/a")} engine</span></p>
-      <p class="simulation-engine-note">${icon("!")}<span>${esc(simulationSummary.engineBoundaryNote || "")}</span></p>
+      <p><b>Simulated:</b> ${esc(buildName)} · ${sim.score != null ? `score ${sim.score.toFixed(1)} · ` : ""}${sim.games.toLocaleString()} games · ${sim.winPct != null ? `${(sim.winPct * 100).toFixed(1)}% win` : "win % n/a"} · <span class="engine-tag">${esc(sim.engine || "engine n/a")} engine</span>${engineNoteIcon()}</p>
     </div>`;
   }
 
