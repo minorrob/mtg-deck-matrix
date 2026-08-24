@@ -102,11 +102,21 @@
       const nextTrail = new Set(trail).add(entry.id);
       const targetName = replacementName(entry.item.replaces);
       const targetKey = normalizeName(targetName);
-      const wantedLadderParent = LADDER_PARENT[entry.kind];
-      const ladderCandidates = wantedLadderParent ? ladderCandidatesByName.get(targetKey) : null;
-      const ladderMatch = ladderCandidates
-        ? ladderCandidates.find((candidate) => candidate.kind === wantedLadderParent)
-        : null;
+      // Walk the whole rest of this entry's own ladder (max2->enhance2->tuned2, not just the
+      // one immediate rung) before ever falling back to byName's cross-ladder guess. A rung's
+      // own direct parent can carry a row through unchanged and so have no same-named entry
+      // of its own -- e.g. an Enhance-2 value that's really just Tuned-2's untouched pick --
+      // and stopping at that one missing rung would wrongly hand max2 off to an unrelated
+      // same-named card from the original site ladder instead of the earlier rung it actually
+      // came from. This only ever redirects among candidates that already share entry's own
+      // ladder lineage; it never reaches past it into a different ladder's candidate.
+      const ladderCandidates = ladderCandidatesByName.get(targetKey);
+      let ladderMatch = null;
+      let wantedLadderParent = LADDER_PARENT[entry.kind];
+      while (wantedLadderParent && !ladderMatch) {
+        ladderMatch = ladderCandidates ? ladderCandidates.find((candidate) => candidate.kind === wantedLadderParent) : null;
+        wantedLadderParent = LADDER_PARENT[wantedLadderParent];
+      }
       const predecessor = shellByName.get(targetKey) || ladderMatch || byName.get(targetKey) || null;
       predecessorMemo.set(entry.id, predecessor?.id || null);
       const rootId = predecessor
@@ -183,6 +193,47 @@
     return canonicalizeSelection(plan, canonical, options);
   }
 
+  // Interactive Buy Picks "check" behavior: clears the candidate's slot group the same way
+  // applyChoice does, but never clears a successor -- a card built (directly or transitively)
+  // on top of the one being checked. That asymmetry is what makes lineage-uncheck one-directional:
+  // checking a higher-tier card still clears what it replaces, but re-checking a card that was
+  // cleared this way can never claw back the higher-tier pick that replaced it. Nothing here
+  // ever blocks -- it only decides what else gets cleared.
+  //
+  // Deliberately bypasses canonicalizeSelection, which applyChoice relies on: canonicalize
+  // always collapses a slot back down to one entry, so routing through it would silently
+  // re-merge a preserved successor the moment anything else in its slot changed, undoing the
+  // one-directionality this function exists to provide. It also skips applyChoice's cross-slot
+  // duplicate-name substitution -- an interactive click should only ever affect the slot the
+  // user clicked; a duplicate name elsewhere is a compliance-panel warning, not a side effect
+  // of this click.
+  function applyLineageCheck(plan, selection, candidateId, options = {}) {
+    const model = buildModel(plan, options.extraCandidates || []);
+    const candidate = model.byId.get(String(candidateId));
+    const pruned = Object.fromEntries(ARRAY_KEYS.map((key) => [
+      key,
+      (Array.isArray(selection?.[key]) ? selection[key] : []).filter((id) => model.byId.has(String(id)))
+    ]));
+    if (!candidate || candidate.kind === "transfer") return pruned;
+    const isSuccessorOfCandidate = (entry) => {
+      let walk = model.byId.get(entry.predecessorId);
+      while (walk) {
+        if (walk.id === candidate.id) return true;
+        walk = model.byId.get(walk.predecessorId);
+      }
+      return false;
+    };
+    const clearIds = new Set(
+      (model.groups.get(candidate.slotId) || [])
+        .filter((entry) => entry.id !== candidate.id && !isSuccessorOfCandidate(entry))
+        .map((entry) => entry.id)
+    );
+    const next = {};
+    ARRAY_KEYS.forEach((key) => { next[key] = pruned[key].filter((id) => !clearIds.has(String(id))); });
+    if (!next[candidate.arrayKey].includes(candidate.id)) next[candidate.arrayKey].push(candidate.id);
+    return next;
+  }
+
   function defaultSelection(plan) {
     let next = emptySelection();
     next.shell = (plan?.startingShell || plan?.baseCards || []).map((item) => String(item.id));
@@ -234,6 +285,7 @@
     buildModel,
     canonicalizeSelection,
     applyChoice,
+    applyLineageCheck,
     restoreChoice,
     defaultSelection,
     selectedEntries,

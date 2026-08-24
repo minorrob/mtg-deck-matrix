@@ -197,6 +197,53 @@ for (const variantId of ["1o", "2c", "3e", "4c", "5o", "6f"]) {
   }
 }
 
+// T8 -- lineage-uncheck is one-directional. applyChoice (used above, and by the preset
+// dropdown) clears a slot group symmetrically: whichever entry you feed it wins, and every
+// other occupant -- ancestor or descendant -- is cleared. That is correct for assembling a
+// preset in ladder order, but wrong for an interactive click: found by exercising the real
+// Buy Picks UI, checking a higher-tier card correctly clears what it replaces, but manually
+// re-checking that cleared card then claws back the higher-tier pick, which is exactly the
+// lock the product spec rules out ("re-checking a downstream/cleared card must NOT clear the
+// upstream card"). applyLineageCheck exists to provide that asymmetry; this proves it holds
+// both directions. Tries every later rung (not just max2), since a deck can legitimately have
+// zero items at any one rung -- the workbook's chain-diff only emits a row where that column
+// actually changed from its predecessor -- and still exercises real name-twin ambiguity along
+// the way (e.g. a max2 card whose immediate predecessor column carried a tuned2 pick through
+// unchanged, which shares its name with an unrelated original-ladder "tuned" card at the same
+// slot -- resolveRoot's own ladder-chain walk, just above, is what keeps predecessorId pointed
+// at the right twin instead of that unrelated one).
+for (const variantId of ["1o", "2c", "3e", "4c", "5o", "6f"]) {
+  const plan = buyPlans.plans[variantId];
+  if (!Array.isArray(plan.tuned2) || !plan.tuned2.length) continue;
+  const model = Lineup.buildModel(plan);
+  let exercised = 0;
+  for (const [rung, prereqs] of Object.entries(LADDER_PREREQS)) {
+    if (!plan[rung]?.length) continue;
+    let baseline = Lineup.emptySelection();
+    baseline.shell = plan.startingShell.map((item) => String(item.id));
+    baseline = Lineup.canonicalizeSelection(plan, baseline);
+    for (const category of ["required", ...prereqs]) {
+      for (const item of plan[category] || []) baseline = Lineup.applyChoice(plan, baseline, item.id);
+    }
+    const baselineIds = new Set(Lineup.ARRAY_KEYS.flatMap((key) => baseline[key] || []).map(String));
+    for (const candidate of plan[rung]) {
+      const candidateEntry = model.byId.get(String(candidate.id));
+      const ancestor = model.byId.get(candidateEntry?.predecessorId);
+      if (!ancestor || !baselineIds.has(ancestor.id)) continue;
+      const afterCheck = Lineup.applyLineageCheck(plan, baseline, candidate.id);
+      const checkedAfterCheck = new Set(Lineup.ARRAY_KEYS.flatMap((key) => afterCheck[key] || []).map(String));
+      assert(checkedAfterCheck.has(String(candidate.id)), `${variantId}: checking ${candidate.name} (${rung}) must leave it checked`);
+      assert(!checkedAfterCheck.has(ancestor.id), `${variantId}: checking ${candidate.name} (${rung}) must clear its replaced ancestor ${ancestor.item.name}`);
+      const afterRecheck = Lineup.applyLineageCheck(plan, afterCheck, ancestor.id);
+      const checkedAfterRecheck = new Set(Lineup.ARRAY_KEYS.flatMap((key) => afterRecheck[key] || []).map(String));
+      assert(checkedAfterRecheck.has(ancestor.id), `${variantId}: re-checking ${ancestor.item.name} must succeed (nothing ever blocks)`);
+      assert(checkedAfterRecheck.has(String(candidate.id)), `${variantId}: re-checking ${ancestor.item.name} must NOT clear the higher-tier ${candidate.name} (${rung}) it was replaced by (one-directional, no lock)`);
+      exercised++;
+    }
+  }
+  assert(exercised > 0, `${variantId}: expected at least one later-rung entry with a checked ancestor to exercise one-directional lineage-uncheck`);
+}
+
 const dimirGenerated = generatedShellCards(buyPlans.plans["2a"]);
 const dimirCounterLeak = /\b(?:proliferate|infect|wither)\b|(?:\+1\/\+1|-1\/-1|charge|arrowhead) counters?|double the number of each kind of counter/;
 assert.deepEqual(dimirGenerated.filter((card) => dimirCounterLeak.test(auditText(card))).map((card) => card.name), [], "Dimir Theft generated slots must not contain counter-engine leakage");
