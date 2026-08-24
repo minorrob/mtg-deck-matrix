@@ -356,9 +356,13 @@ for (const category of NEW_CATEGORIES) {
 assert.match(appSource, /filters\.alt === "alt" && !card\.tags\?\.includes\("alt"\)/, "the Live Decks Alt filter must check the card's own alt tag");
 assert.match(appSource, /filters\.alt === "alt" && !item\.tags\?\.includes\("alt"\)/, "the Shop List Alt filter must check the item's own alt tag");
 assert.match(appSource, /hasAltData \? liveFilterSelect\("alt"/, "the Live Decks Alt filter control must be conditional on the deck actually having alt-commander data");
+// The Shop List's Alt filter is app.js's, and only app.js's. shop-filters.js injects its
+// extra controls into that same grid, so defining an Alt filter there too rendered two
+// identical dropdowns side by side.
 const shopFiltersSource = await readFile(new URL("../shop-filters.js", import.meta.url), "utf8");
-assert.match(shopFiltersSource, /FILTER_KEYS = \[.*"alt"/, "shop-filters.js's own DOM-scraping Alt filter must be registered in FILTER_KEYS");
-assert.match(shopFiltersSource, /cardIsAlt/, "shop-filters.js must read the Alt badge app.js renders, not guess from card text");
+assert.doesNotMatch(shopFiltersSource, /FILTER_KEYS = \[[^\]]*"alt"/, "shop-filters.js must not register a second Alt filter -- app.js already renders one into the same grid");
+assert.doesNotMatch(shopFiltersSource, /alt: \["Alt"/, "shop-filters.js must not define an Alt control of its own");
+assert.match(appSource, /selectFilter\("alt", "Alt", ALT_FILTER_OPTIONS, filters\)/, "app.js owns the Shop List's single Alt filter");
 
 // Advisory performance check -- never a gate. Pin both the role-floor numbers themselves and
 // the literal words confirming the disclosure is advisory, so a future edit can't silently
