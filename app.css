@@ -1206,43 +1206,96 @@ footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px;
 
 /* ---------------------------------------------------------------------------
    Cards — the flat inventory table.
+
    Dex is a set of accordions because it answers one deck at a time; this
-   answers across decks, so it is a real table with sortable headers. The wrap
-   scrolls horizontally on its own rather than letting the page scroll sideways.
+   answers across decks, so it is a real table with sortable headers and a
+   per-column value filter. Below 900px it stops being a grid entirely: each row
+   becomes a stacked card with its column names as labels, which is the only way
+   twelve columns stay readable on a phone.
    --------------------------------------------------------------------------- */
-.card-filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-top: 10px; }
-.cards-total { margin: 10px 0 0; font-size: 13px; color: var(--muted, #6b6b6b); }
-.cards-table-wrap { overflow-x: auto; margin-top: 16px; border: 1px solid var(--line, #e2ddd3); border-radius: 12px; background: var(--card, #fff); }
+.cards-total { margin: 12px 0 0; font-size: 13px; color: var(--muted, #6b6b6b); }
+.cards-table-wrap { overflow-x: auto; margin-top: 12px; border: 1px solid var(--line, #e2ddd3); border-radius: 12px; background: var(--card, #fff); }
 .cards-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.cards-table thead th { position: sticky; top: 0; z-index: 1; padding: 10px 12px; text-align: left; font: 700 11px/1.3 Georgia, serif; letter-spacing: .05em; text-transform: uppercase; color: var(--muted, #6b6b6b); background: var(--surface, #faf7f1); border-bottom: 1px solid var(--line, #e2ddd3); white-space: nowrap; }
-.cards-table thead th.is-sortable { cursor: pointer; }
-.cards-table thead th.is-sortable:hover, .cards-table thead th.is-sortable:focus-visible { color: var(--ink, #1d1a15); text-decoration: underline; }
-.cards-table thead th[aria-sort]::after { content: " ▾"; }
+.cards-table thead th { position: sticky; top: 0; z-index: 2; isolation: isolate; padding: 0; text-align: left; background: var(--surface, #faf7f1); border-bottom: 1px solid var(--line, #e2ddd3); white-space: nowrap; }
+.cards-th { display: flex; align-items: stretch; gap: 2px; }
+.cards-th-sort { flex: 1; display: inline-flex; align-items: center; gap: 5px; padding: 10px 6px 10px 12px; border: 0; background: none; cursor: pointer; font: 700 11px/1.3 Georgia, serif; letter-spacing: .05em; text-transform: uppercase; color: var(--muted, #6b6b6b); text-align: left; }
+.cards-th-sort:hover, .cards-th-sort:focus-visible { color: var(--ink, #1d1a15); }
+.cards-th-sort i { font-style: normal; font-size: 12px; }
+.cards-th-menu { padding: 0 10px 0 4px; border: 0; background: none; cursor: pointer; color: var(--muted, #9a9182); font-size: 15px; line-height: 1; }
+.cards-th-menu:hover, .cards-th-menu[aria-expanded="true"] { color: var(--ink, #1d1a15); }
+.cards-table thead th.is-sorted { color: var(--ink, #1d1a15); }
+.cards-table thead th.is-sorted .cards-th-sort { color: var(--ink, #1d1a15); }
+.cards-table thead th.is-filtered .cards-th-menu { color: #8a5a1f; }
+.cards-table thead th.is-filtered { box-shadow: inset 0 -2px 0 #c99b32; }
 .cards-table tbody tr { border-top: 1px solid var(--line, #ece7dd); cursor: pointer; }
 .cards-table tbody tr:hover { background: var(--surface, #faf7f1); }
-.cards-table tbody tr.is-needed .cards-cell-status { color: var(--ink, #1d1a15); }
 .cards-table tbody tr.is-salvage { background: color-mix(in srgb, var(--surface, #faf7f1) 70%, #efe6d2); }
+.cards-table tbody tr.is-active-100 .cards-cell-name b { color: #2c5c2a; }
 .cards-table td, .cards-table th[scope="row"] { padding: 8px 12px; vertical-align: middle; text-align: left; font-weight: 400; }
-.cards-cell-name { min-width: 240px; }
+.cards-table td i { font-style: normal; color: var(--muted, #b3aa9b); }
+.col-lineup { width: 44px; }
+.col-lineup .live-lineup-radio { margin: 0; }
+.cards-cell-name { min-width: 230px; }
 .cards-cell-name img { width: 30px; height: 42px; object-fit: cover; border-radius: 3px; margin-right: 10px; vertical-align: middle; }
 .cards-cell-name span { display: inline-block; vertical-align: middle; }
 .cards-cell-name b { display: block; font-weight: 700; }
 .cards-cell-name em { font-style: normal; font-size: 11px; color: var(--muted, #6b6b6b); }
-.cards-cell-name small { display: block; font-size: 11px; color: var(--muted, #6b6b6b); }
-.cards-table td small { display: block; font-size: 11px; color: var(--muted, #6b6b6b); }
+.cards-cell-name small, .cards-table td small { display: block; font-size: 11px; color: var(--muted, #6b6b6b); }
 .cards-deck { font-weight: 700; white-space: nowrap; }
 .cards-cell-mana { white-space: nowrap; }
 .cards-cell-money { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.cards-cell-status { min-width: 180px; }
-.cards-cell-status a { margin-left: 6px; white-space: nowrap; }
-.cards-role { display: inline-block; padding: 2px 8px; border-radius: 999px; font: 700 11px/1.5 Georgia, serif; background: var(--surface, #f1ece2); color: var(--muted, #6b6b6b); white-space: nowrap; }
+.cards-cell-status { min-width: 170px; }
+.cards-role, .cards-color { display: inline-block; padding: 2px 8px; border-radius: 999px; font: 700 11px/1.5 Georgia, serif; background: var(--surface, #f1ece2); color: var(--muted, #6b6b6b); white-space: nowrap; }
 .cards-role.role-active-100, .cards-role.role-commander { background: #dcefda; color: #2c5c2a; }
 .cards-role.role-salvage { background: #f0e4cc; color: #75551a; }
 .cards-role.role-assigned { background: #dfe7f5; color: #2f4c7a; }
-@media (max-width: 720px) {
-  .cards-table { font-size: 12px; }
-  .cards-cell-name { min-width: 180px; }
-  .cards-cell-name img { display: none; }
+.cards-color.color-white { background: #f7f2e2; color: #7a6a33; }
+.cards-color.color-blue { background: #dce8f6; color: #2b4d75; }
+.cards-color.color-black { background: #e2ddd9; color: #3d3733; }
+.cards-color.color-red { background: #f7dfd8; color: #8a3a24; }
+.cards-color.color-green { background: #dcecda; color: #33602c; }
+.cards-color.color-multicolor { background: #f6ecd2; color: #7a6320; }
+
+/* The column value picker. Anchored to the header button in page coordinates,
+   so it survives the table's own horizontal scroll. */
+.cards-column-menu { position: absolute; z-index: 60; width: 232px; padding: 10px; border: 1px solid var(--line, #d8d1c4); border-radius: 10px; background: var(--card, #fff); box-shadow: 0 8px 24px rgba(0,0,0,.16); }
+.cards-column-menu-head { margin: 0 0 6px; font: 700 11px/1.3 Georgia, serif; letter-spacing: .05em; text-transform: uppercase; color: var(--muted, #6b6b6b); }
+.cards-column-all { display: flex; align-items: center; gap: 7px; padding: 5px 2px; border-bottom: 1px solid var(--line, #ece7dd); font-weight: 700; font-size: 13px; }
+.cards-column-values { max-height: 230px; overflow-y: auto; padding: 4px 0; }
+.cards-column-values label { display: flex; align-items: center; gap: 7px; padding: 4px 2px; font-size: 13px; cursor: pointer; }
+.cards-column-values label:hover { background: var(--surface, #faf7f1); }
+.cards-column-menu-actions { display: flex; gap: 6px; margin-top: 8px; }
+.cards-column-menu-actions button { flex: 1; padding: 5px 8px; font-size: 12px; }
+
+/* One toolbar for the page rather than one per deck, and Simulate moved onto
+   each deck's own body where it has something to point at. */
+.dex-toolbar .live-toolbar-head { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.dex-toolbar .search-input { flex: 1 1 220px; min-width: 160px; max-width: 340px; }
+.dex-toolbar .live-group-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.live-deck-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 8px 16px 0; }
+.live-deck-actions .live-results-summary { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+
+@media (max-width: 900px) {
+  /* Twelve columns do not fit a phone, so the table stops being one. Each row
+     becomes a stacked card and every cell carries its column name. */
+  .cards-table-wrap { overflow-x: visible; border: 0; background: none; }
+  .cards-table, .cards-table tbody, .cards-table tr, .cards-table td, .cards-table th { display: block; width: auto; }
+  .cards-table thead { display: none; }
+  .cards-table tbody tr { margin-bottom: 10px; padding: 10px 12px; border: 1px solid var(--line, #e2ddd3); border-radius: 10px; background: var(--card, #fff); display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; align-items: start; }
+  .cards-table tbody tr .col-lineup { grid-row: 1; grid-column: 1; padding: 0; }
+  .cards-table tbody tr .cards-cell-name { grid-row: 1; grid-column: 2; padding: 0 0 6px; min-width: 0; }
+  /* Only the four facts worth a line of their own. Colour, type, mana, rarity
+     and set live in the type line already or in the detail sheet -- printing all
+     twelve columns as label/value pairs makes a 300px row per card, which is a
+     wall, not a table. */
+  .cards-table tbody tr td:not(.col-lineup) { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 3px 0; font-size: 12px; border-top: 1px dotted var(--line, #ece7dd); }
+  .cards-table tbody tr td:not(.col-lineup)::before { content: attr(data-label); font-weight: 700; color: var(--muted, #6b6b6b); text-transform: uppercase; font-size: 10px; letter-spacing: .05em; white-space: nowrap; }
+  .cards-table tbody tr .cards-cell-money { text-align: right; }
+  .cards-table tbody tr td.col-color, .cards-table tbody tr td.col-type, .cards-table tbody tr td.col-mana,
+  .cards-table tbody tr td.col-rarity, .cards-table tbody tr td.col-set, .cards-table tbody tr td.col-target { display: none; }
+  .cards-table tbody tr .col-deck small { display: inline; }
+  .cards-table tbody tr .cards-cell-status { min-width: 0; text-align: right; }
+  .dex-toolbar .search-input { max-width: none; }
 }
 
 /* Salvage intake — the box that turns a pile of receipts into assignable cards. */
@@ -1255,3 +1308,71 @@ footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px;
 .salvage-intake-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .salvage-intake-status { font-size: 12px; color: var(--muted, #6b6b6b); }
 .salvage-intake-status b { color: #8a3a1f; }
+
+/* ---------------------------------------------------------------------------
+   Shop — one toolbar row, a zoom that is really a column count, and a list mode.
+
+   Shop answers "what do I still need to buy", so the All/Bought chips are gone
+   and Filters moved up beside the search. Zoom sets how many cards sit across
+   a row (--shop-zoom); the grid follows it directly rather than scaling type,
+   so a smaller card is a denser scan and not a blurrier one.
+   --------------------------------------------------------------------------- */
+.shop-toolbar-single { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.shop-toolbar-single .search-input { flex: 1 1 200px; min-width: 150px; max-width: 320px; }
+.shop-view-controls { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+.shop-zoom { display: inline-flex; align-items: center; gap: 6px; padding: 3px 6px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
+.shop-zoom button { width: 24px; height: 24px; padding: 0; border: 0; border-radius: 50%; background: rgba(0,0,0,.05); color: var(--forest); font: 700 15px/1 Georgia, serif; cursor: pointer; }
+.shop-zoom button:hover:not(:disabled) { background: rgba(0,0,0,.11); }
+.shop-zoom button:disabled { opacity: .35; cursor: default; }
+.shop-zoom span { min-width: 44px; font-size: 11px; font-weight: 700; color: var(--muted); text-align: center; }
+
+@media (min-width: 720px) {
+  #shop-list .shop-group-grid { grid-template-columns: repeat(var(--shop-zoom, 3), minmax(0, 1fr)); }
+  /* At four across the image has to give way or the text has nowhere to go. */
+  #shop-list[style*="--shop-zoom:4"] .shop-card { grid-template-columns: 84px minmax(0,1fr); }
+  #shop-list[style*="--shop-zoom:4"] .shop-image, #shop-list[style*="--shop-zoom:4"] .shop-image-button { width: 84px; }
+  #shop-list[style*="--shop-zoom:2"] .shop-card { grid-template-columns: 150px minmax(0,1fr); }
+  #shop-list[style*="--shop-zoom:2"] .shop-image, #shop-list[style*="--shop-zoom:2"] .shop-image-button { width: 150px; }
+}
+
+/* List mode: one line per card, for working down a want-list rather than
+   browsing art. */
+#shop-list.is-list .shop-group-grid { grid-template-columns: 1fr; gap: 0; }
+#shop-list.is-list .shop-card { grid-template-columns: 34px minmax(0,1fr) auto; align-items: center; gap: 10px; padding: 6px 9px; border-radius: 0; border-width: 0 0 1px; box-shadow: none; background: none; }
+#shop-list.is-list .shop-card:last-child { border-bottom: 0; }
+#shop-list.is-list .shop-image, #shop-list.is-list .shop-image-button { width: 34px; }
+#shop-list.is-list .shop-image { aspect-ratio: 1; object-fit: cover; border-radius: 4px; }
+#shop-list.is-list .shop-main h3 { margin: 0; font-size: 14px; }
+#shop-list.is-list .shop-card-kicker { min-height: 0; margin: 0; }
+#shop-list.is-list .shop-purpose, #shop-list.is-list .shop-refs { display: none; }
+#shop-list.is-list .shop-meta { font-size: 11px; }
+
+@media (max-width: 719px) {
+  .shop-view-controls { margin-left: 0; width: 100%; justify-content: space-between; }
+  .shop-toolbar-single .search-input { max-width: none; }
+}
+
+/* Simulate — written for someone who has never opened a terminal. */
+.sim-lede { margin: 0 0 8px; font-size: 13px; line-height: 1.5; }
+.sim-steps { margin: 10px 0 0; padding-left: 20px; display: grid; gap: 10px; }
+.sim-steps li { font-size: 13px; line-height: 1.5; }
+.sim-steps li b { display: block; }
+.sim-steps li span { display: block; color: var(--muted); }
+.sim-steps kbd { display: inline-block; padding: 1px 5px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; background: var(--surface); font: 600 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; }
+.sim-steps .sim-command { margin-top: 6px; }
+.sim-steps button.secondary-button { margin-top: 6px; }
+.sim-first-time { margin-top: 12px; padding: 8px 10px; border: 1px dashed var(--line); border-radius: 9px; background: var(--surface); }
+.sim-first-time summary { font-weight: 700; font-size: 13px; cursor: pointer; }
+.sim-first-time p { margin: 8px 0 0; font-size: 12px; line-height: 1.5; color: var(--muted); }
+
+/* The phone's replacement for clickable headers. Hidden wherever the real table
+   exists, because there the headers are the control. */
+.cards-mobile-sort { display: none; }
+@media (max-width: 900px) {
+  .cards-mobile-sort { display: flex; align-items: end; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .cards-mobile-sort label { display: grid; gap: 2px; flex: 1 1 130px; }
+  .cards-mobile-sort span { font: 700 10px/1.3 Georgia, serif; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+  .cards-mobile-sort select { width: 100%; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--card, #fff); font-size: 13px; }
+  .cards-mobile-sort button { padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+  .cards-column-menu { width: min(280px, calc(100vw - 24px)); }
+}
