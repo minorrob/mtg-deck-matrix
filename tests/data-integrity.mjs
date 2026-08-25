@@ -183,7 +183,7 @@ assert.match(appSource, /if \(metadataAttempts\.get\(key\)\) return;/, "card met
 assert.match(appSource, /Precon Pack/, "cards that arrive inside a sealed precon must be labelled instead of priced");
 assert.doesNotMatch(appSource, /live-critical-insight/, "the duplicate readiness banner must stay out of the Live Deck header");
 assert.doesNotMatch(appSource, /Saved on this device"\);\n\s*renderCompare/, "reset must not depend on the removed save-status label");
-for (const view of ["choose", "compare", "buy", "shop", "live"]) {
+for (const view of ["compare", "buy", "shop", "live", "cards", "log"]) {
   assert.match(appSource, new RegExp(`^\\s{4}${view}: \\[`, "m"), `the tour must define its own steps for the ${view} view`);
 }
 assert.match(appSource, /function exportLiveDecks/, "Live Decks must be exportable as a flat inventory");

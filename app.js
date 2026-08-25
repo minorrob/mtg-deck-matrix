@@ -85,7 +85,7 @@
   let activeTooltipTarget = null;
   let shopMetadataPromise = null;
   // Which Compare cards are currently previewing their alt commander -- display-only and
-  // deliberately not part of `state`/localStorage: it never changes what Buy Picks seeds.
+  // deliberately not part of `state`/localStorage: it never changes what Tune seeds.
   const altCommanderPreview = new Set();
   let cardMetadata = {};
   try { cardMetadata = JSON.parse(localStorage.getItem(CARD_METADATA_KEY) || "{}"); } catch (_) {}
@@ -124,6 +124,13 @@
   };
   const money = (value) => Number.isFinite(Number(value)) && Number(value) > 0 ? `$${Number(value).toFixed(2)}` : "Price varies";
   const variantById = (id) => catalog.variants.find((variant) => variant.id === id);
+  // Which variants wear the corner ribbon. Read from data/active-state.json at
+  // startup rather than from a flag baked into each variant record, so the
+  // ribbon always marks the build that is actually loaded -- one source of
+  // truth, and re-picking the slate is a data change rather than an edit across
+  // fifty variant records.
+  let treysBuildIds = new Set();
+  const isTreysBuild = (variant) => treysBuildIds.has(variant.id);
   const isCustomDeck = (deckId) => customDeckIds.has(Number(deckId));
 
   // Generated decks are merged into copies of the baked catalog on every change.
@@ -296,6 +303,7 @@
       liveSalvage: {},
       liveActive: {},
       liveActiveSeed: {},
+      cardFilters: {query: "", deck: "all", status: "all", bought: "all", type: "all", sort: "deck"},
       // Games played at a real table. Written here on the night, exported as JSON,
       // committed to the repo, and compiled into a running history -- the loop
       // that lets simulated predictions be checked against what actually happened.
@@ -328,6 +336,7 @@
           lineupHistory: saved.lineupHistory || {},
           liveTransfers: saved.liveTransfers || {},
           liveSalvage: saved.liveSalvage || {},
+          cardFilters: {...initial.cardFilters, ...(saved.cardFilters || {})},
           liveActive: saved.liveActive || {},
           liveActiveSeed: saved.liveActiveSeed || {},
           gameLog: Array.isArray(saved.gameLog) ? saved.gameLog : []
@@ -469,6 +478,7 @@
     if (view === "buy") renderBuy();
     if (view === "shop") renderShop();
     if (view === "live") renderLiveDecks();
+    if (view === "cards") renderCards();
     if (view === "log") renderGameLog();
     if (focus) {
       window.scrollTo({top: 0, behavior: "smooth"});
@@ -479,7 +489,13 @@
   const CHOOSE_COLORS = [["W", "White"], ["U", "Blue"], ["B", "Black"], ["R", "Red"], ["G", "Green"]];
   const CHOOSE_PLAYSTYLES = ["Fortress", "Build-up", "Convergence", "Longevity", "Friendly", "Flavor"];
 
+  // Choose is withdrawn from the page for now: index.html carries neither its tab
+  // nor its section. Everything behind it -- the generator, the slot store, the
+  // Scryfall client -- is untouched, and every call site here stays valid,
+  // because the renderer simply has nothing to draw into. Putting the two
+  // elements back in index.html brings the whole step back.
   function renderChoose() {
+    if (!$("#view-choose")) return;
     withUiState("#view-choose", renderChooseView);
   }
 
@@ -693,7 +709,7 @@
         <div class="selection-meter"><strong>${selected.length}/${catalog.decks.length}</strong><span>decks selected</span></div>
       </div>
       <div class="action-row">
-        <button class="primary-button" id="save-picks" ${selected.length ? "" : "disabled"}>Save Picks → Buy Picks</button>
+        <button class="primary-button" id="save-picks" ${selected.length ? "" : "disabled"}>Save Picks → Tune</button>
         <button class="secondary-button" id="email-picks" ${selected.length ? "" : "disabled"}>Email selections</button>
       </div>
       <section class="compare-filter-panel">
@@ -810,7 +826,7 @@
   // Only six of the thirty variants were ever put through the optimizer, and only three of
   // those have an alternative commander explored. Compare is where a variant gets chosen, so
   // it should say up front which extra builds come with that choice rather than leaving it to
-  // be discovered two screens later in Buy Picks. Colors match the Buy Picks ladder families.
+  // be discovered two screens later in Tune. Colors match the Tune ladder families.
   function variantDataBadges(variant) {
     const plan = buyCatalog?.plans?.[variant.id];
     if (!plan) return "";
@@ -839,7 +855,7 @@
     card.className = `variant-card${selected ? " is-selected" : ""}${variant.treysBuild ? " is-treys-build" : ""}`;
     card.dataset.variant = variant.id;
     card.innerHTML = `
-      ${variant.treysBuild ? `<div class="treys-build-ribbon" title="Trey's chosen build for this deck slot"><span>★ Trey's Build</span></div>` : ""}
+      ${isTreysBuild(variant) ? `<div class="treys-build-ribbon" title="Trey's chosen build for this deck slot"><span>★ Trey's Build</span></div>` : ""}
       <label class="pick-control">
         <input type="checkbox" ${selected ? "checked" : ""} aria-label="Pick ${esc(variant.name)}">
         <span>${selected ? "Picked" : "Pick"}</span>
@@ -926,7 +942,7 @@
   // other 44 variants also have an altCommanderCases entry, but it's a lighter-weight scored
   // comparison with no second decklist behind it, so this card has nothing to preview for them.
   // Display-only, exactly like the plan requires: previewing the alt commander here never
-  // touches Buy Picks seeding or any stored selection, only what this one card shows. The
+  // touches Tune seeding or any stored selection, only what this one card shows. The
   // real Score/Win% comparison and the caution paragraph both come straight from the
   // workbook's own Summary sheet (data/simulation-summary.json) -- never fabricated.
   function commanderCompareMarkup(variant, stage) {
@@ -1218,17 +1234,17 @@
     } else {
       state.compareSelections[variant.deckId] = variant.id;
       seedBuyStateForNewPick(variant);
-      if (previous) showToast(`Deck ${variant.deckId} changed. Other Buy Picks were preserved.`);
+      if (previous) showToast(`Deck ${variant.deckId} changed. Other Tune were preserved.`);
       else showToast(`Deck ${variant.deckId} saved: ${variant.name}`);
     }
     saveState();
     renderCompare();
   }
 
-  // Gives a freshly-picked variant a smarter Buy Picks starting point than the flat site
+  // Gives a freshly-picked variant a smarter Tune starting point than the flat site
   // default, using whichever Compare stage the pick was made at: Base, Tuned, or Maxxed --
   // each of which already folds in its Monte-Carlo-improved swaps where the variant has them.
-  // Never touches a variant that already has a stored Buy Picks selection -- the preset
+  // Never touches a variant that already has a stored Tune selection -- the preset
   // dropdown is the explicit re-apply mechanism for anything past the first pick, and
   // switching stage chips alone (with no new pick) must never reseed either.
   function selectionIdsSignature(selection) {
@@ -1419,10 +1435,10 @@
         const shellSummary = `${namedShell.filter((card) => selectedShell.has(card.id)).reduce((sum, card) => sum + Number(card.quantity || 1), 0)}/${namedShell.reduce((sum, card) => sum + Number(card.quantity || 1), 0)} shell cards · `;
         return `<button class="buy-overview-card" data-open-buy-deck="${variant.deckId}"><b>Deck ${variant.deckId}</b><strong>${esc(variant.name)}</strong><span>${shellSummary}${esc(plan.priorityLabel || plan.budgetLabel)} · ${plan.required.length} Tuned purchases</span></button>`;
       }).join("")}</div></section>` : ""}
-      ${selected.length ? `<div class="action-row action-row-top"><button class="primary-button save-buys">Save Buys → Shop List</button><button class="secondary-button" data-go="compare">Back to Compare</button></div>` : ""}
+      ${selected.length ? `<div class="action-row action-row-top"><button class="primary-button save-buys">Save Buys → Shop</button><button class="secondary-button" data-go="compare">Back to Compare</button></div>` : ""}
       <div id="buy-decks"></div>
       ${salvageBuySection()}
-      ${selected.length ? `<div class="action-row"><button class="primary-button save-buys">Save Buys → Shop List</button><button class="secondary-button" data-go="compare">Back to Compare</button></div>` : ""}`;
+      ${selected.length ? `<div class="action-row"><button class="primary-button save-buys">Save Buys → Shop</button><button class="secondary-button" data-go="compare">Back to Compare</button></div>` : ""}`;
 
     const decksRoot = $("#buy-decks", root);
     selected.forEach((variant) => decksRoot.appendChild(makeBuyDeck(variant)));
@@ -1478,7 +1494,7 @@
     else if (nothingShown) {
       const notice = document.createElement("div");
       notice.className = "empty-state buy-mode-empty";
-      notice.innerHTML = `<h3>No bought cards yet</h3><p>Mark a card Bought in the Shop List and it appears here.</p>`;
+      notice.innerHTML = `<h3>No bought cards yet</h3><p>Mark a card Bought in the Shop and it appears here.</p>`;
       $("#buy-decks", root)?.before(notice);
     }
   }
@@ -1572,7 +1588,7 @@
     });
     const body = $(".buy-body", details);
     if (!plan) {
-      body.innerHTML = `<div class="empty-state"><h3>Purchase profile not published yet</h3><p>This variant remains selected, but it will not add generic or mismatched cards to your Shop List.</p></div>`;
+      body.innerHTML = `<div class="empty-state"><h3>Purchase profile not published yet</h3><p>This variant remains selected, but it will not add generic or mismatched cards to your Shop.</p></div>`;
       return details;
     }
 
@@ -1751,7 +1767,7 @@
   }
 
   function buyTotalMarkup(summary) {
-    return `<span class="buy-total" data-buy-total title="Market price of everything selected here, whether or not you own it yet. Live Decks reports what you have actually recorded paying instead."><small>Market total</small><strong>$${summary.total.toFixed(2)}</strong>${summary.unpriced ? `<em>+ ${summary.unpriced} unpriced</em>` : ""}</span>`;
+    return `<span class="buy-total" data-buy-total title="Market price of everything selected here, whether or not you own it yet. Dex reports what you have actually recorded paying instead."><small>Market total</small><strong>$${summary.total.toFixed(2)}</strong>${summary.unpriced ? `<em>+ ${summary.unpriced} unpriced</em>` : ""}</span>`;
   }
 
   function updateBuyTotal(deck, plan, current) {
@@ -1906,10 +1922,10 @@
     const shownTotal = namedCount + (hasAltCommander ? 1 : 0);
     return `<details class="starting-shell constructed-shell" data-ui-key="shell-${esc(variantId)}" open>
       <summary class="starting-shell-heading"><span>${icon("▣")}<strong>Starting Shell${purchasedAsSingles ? " · Singles to buy" : " · Final-deck choices"}</strong><b>${shownSelected}/${shownTotal}</b></span><small>${hasAltCommander ? "Includes the commander, chosen above" : "The cards this deck starts from"}</small><label class="shell-select-all"><input type="checkbox" data-select-shell-all ${allSelected ? "checked" : ""}><span>Select all</span></label><span class="section-expander" aria-hidden="true"></span></summary>
-      <p class="shell-source-note constructed-shell-note">${purchasedAsSingles ? "Check the individual cards you need; selected cards flow to the Shop List." : "These cards came in the starting product. Keep checked only the cards you want in the finished 100; no individual price is required."}</p>
+      <p class="shell-source-note constructed-shell-note">${purchasedAsSingles ? "Check the individual cards you need; selected cards flow to the Shop." : "These cards came in the starting product. Keep checked only the cards you want in the finished 100; no individual price is required."}</p>
       ${hasAltCommander ? "" : `<div class="constructed-shell-commander"><h4>Commander</h4>${shellPurchaseRow(commander, current, variantId, purchasedAsSingles)}</div>`}
       <div class="constructed-shell-groups">${typeGroups}</div>
-      ${flexibleCount ? `<p class="shell-flex-note"><b>${flexibleCount} modeled slot${flexibleCount === 1 ? "" : "s"} still need exact card names.</b> They preserve the 100-card compliance model but are not added to the Shop List until a card is named.</p>` : ""}
+      ${flexibleCount ? `<p class="shell-flex-note"><b>${flexibleCount} modeled slot${flexibleCount === 1 ? "" : "s"} still need exact card names.</b> They preserve the 100-card compliance model but are not added to the Shop until a card is named.</p>` : ""}
     </details>`;
   }
 
@@ -2363,7 +2379,7 @@
   // was measured as fun, since no per-card fun rating exists anywhere in this app's data. Order
   // matters: first match wins. Most fun-ladder cards are solid, unglamorous synergy pieces with
   // no single standout mechanic, and for those this returns null on purpose rather than forcing
-  // a sentence -- the same "real signal or nothing" discipline the rest of Buy Picks follows.
+  // a sentence -- the same "real signal or nothing" discipline the rest of Tune follows.
   const FUN_SIGNALS = [
     [/flip (a|two|three) coins?|randomly/i, "Coin-flip or randomized effect — pure chaos value"],
     [/extra turn|additional turn/i, "Grants an extra turn — a genuine table reaction"],
@@ -2385,7 +2401,7 @@
     return FUN_SIGNALS.find(([pattern]) => pattern.test(text))?.[1] || null;
   }
 
-  // The very short, kind-specific line the request asked for directly on the Buy Picks row:
+  // The very short, kind-specific line the request asked for directly on the Tune row:
   // Fun Tuned/Fun Max say what makes the card fun, Enhance rungs say how it helps performance,
   // Max rungs say how it maximizes Tier 3. Returns null (render nothing) rather than a filler
   // sentence when the underlying data has nothing to say -- swap-evidence paragraphs are
@@ -2525,8 +2541,8 @@
 
   // Finds which preset a given id-set most resembles, regardless of whether a preset was ever
   // applied -- free-form editing means a live selection routinely isn't an exact match for any
-  // one preset, so this is a similarity search, not a lookup. Shared by the Buy Picks dynamic
-  // metrics header (over the raw Buy Picks selection) and the Live Decks advisory performance
+  // one preset, so this is a similarity search, not a lookup. Shared by the Tune dynamic
+  // metrics header (over the raw Tune selection) and the Dex advisory performance
   // check (over just the active 100), since both are asking the same question of different id-sets.
   // Assembling a preset walks the whole lineup model, and several features now ask for every
   // preset on every render (the metrics header, the dropdown, the per-card build panel), so
@@ -3245,7 +3261,7 @@
     groupBy: "status",
     subgroupBy: "typeLine"
   };
-  // Shared by the Live Decks and Shop List copies of the Level filter (see P3 in the
+  // Shared by the Dex and Shop copies of the Level filter (see P3 in the
   // new-categories plan -- both must stay in sync, so this is the one list they both read).
   const LEVEL_FILTER_OPTIONS = [
     ["all", "All levels"],
@@ -3304,13 +3320,13 @@
     return Object.entries(state.liveTransfers || {}).flatMap(([targetVariantId, records]) => Object.values(records || {}).map((record) => ({...record, targetVariantId})));
   }
 
-  // Compare picks the variant, Buy Picks selects cards to buy (can hold more than 100, on
-  // purpose, for optionality), Shop List tracks what's actually been bought, and Live Decks
+  // Compare picks the variant, Tune selects cards to buy (can hold more than 100, on
+  // purpose, for optionality), Shop tracks what's actually been bought, and Dex
   // builds the active deck from that pool. One-way pipeline: a card only appears here once
-  // it's checked in Buy Picks, and nothing chosen here flows back upstream.
+  // it's checked in Tune, and nothing chosen here flows back upstream.
   //
-  // Which cards are active is therefore DERIVED from Buy Picks, not remembered indefinitely.
-  // Alongside each variant's active map we store a signature of the Buy Picks selection that
+  // Which cards are active is therefore DERIVED from Tune, not remembered indefinitely.
+  // Alongside each variant's active map we store a signature of the Tune selection that
   // produced it. When that signature changes -- a preset applied, a checkbox clicked, a
   // commander switched -- the map is rebuilt wholesale from the new selection, because the
   // upstream choice is the newer statement of intent (and rebuilding also prunes ids that are
@@ -3318,7 +3334,7 @@
   // untouched, so manual bench/activate decisions made here survive any number of re-renders.
   //
   // Storing that signature is the whole fix for a class of bug where a freshly applied preset
-  // showed 100/100 in Buy Picks but far fewer active here: the map used to be append-only and
+  // showed 100/100 in Tune but far fewer active here: the map used to be append-only and
   // seeded correct values exactly once per variant, so every card introduced afterwards was
   // silently benched while unchanged cards kept stale values.
   function ensureLiveActiveMap(variant, activeIds, candidateIds, selectionSignature) {
@@ -3327,7 +3343,7 @@
     const storedMap = state.liveActive[variant.id];
     const seedMatches = state.liveActiveSeed[variant.id] === selectionSignature;
     if (storedMap && seedMatches) {
-      // Transfers (borrowed cards) can appear without the Buy Picks selection changing, so
+      // Transfers (borrowed cards) can appear without the Tune selection changing, so
       // fill genuinely-new ids without disturbing any existing manual decision.
       candidateIds.forEach((id) => {
         if (!(id in storedMap)) storedMap[id] = activeIds.has(id);
@@ -3336,7 +3352,7 @@
     }
     if (storedMap && state.liveActiveSeed[variant.id] === undefined) {
       // Pre-signature saved state: adopt what's already there rather than overwriting a real
-      // person's bench work on first load after this shipped. The next genuine Buy Picks
+      // person's bench work on first load after this shipped. The next genuine Tune
       // change rebuilds normally.
       candidateIds.forEach((id) => {
         if (!(id in storedMap)) storedMap[id] = activeIds.has(id);
@@ -3358,7 +3374,7 @@
     const selected = Object.fromEntries(Lineup.ARRAY_KEYS.map((key) => [key, new Set((current[key] || []).map(String))]));
     const candidates = model.entries.filter((entry) => !entry.item.isFlexibleSlot && (entry.kind === "transfer" || selected[entry.arrayKey]?.has(entry.id)));
     const activeIds = new Set(Lineup.selectedEntries(plan, current).map((entry) => entry.id));
-    // Signature is computed from the Buy Picks selection ONLY, so toggling a card here never
+    // Signature is computed from the Tune selection ONLY, so toggling a card here never
     // looks like an upstream change and never triggers a rebuild of the user's own choices.
     const liveActive = ensureLiveActiveMap(variant, activeIds, candidates.map((entry) => entry.id), selectionIdsSignature(current));
     const levelByKind = {
@@ -3924,8 +3940,8 @@
     const borrowedCards = borrowedOut.reduce((sum, card) => sum + Number(card.quantity || 1), 0);
     const legal = total === 100 && compliance.tier3.length === 0;
     const ready = legal && missingCards === 0 && borrowedCards === 0;
-    // "To Buy" tracks the whole Buy Picks selection, active or benched — Compare -> Buy Picks
-    // -> Shop List -> Live Decks is a one-way pipeline, and Buy Picks can hold more than 100
+    // "To Buy" tracks the whole Tune selection, active or benched — Compare -> Tune
+    // -> Shop -> Dex is a one-way pipeline, and Tune can hold more than 100
     // picks on purpose, so purchase progress on a pick shouldn't hide just because it isn't
     // part of the active 100 right now.
     const planSinglesToBuy = cards.filter((card) => !card.fromShell && !card.bought && !card.loanedTo);
@@ -4079,7 +4095,7 @@
         <span class="live-deck-chevron" aria-hidden="true">⌄</span>
       </span>
       <span class="live-deck-metrics">
-        <i class="is-cost" data-live-total="${esc(variant.id)}" title="Money you have actually recorded paying for cards you own in this deck. Buy Picks shows market prices for everything selected instead, so the two figures are answering different questions."><b>${money(totalCost) === "Price varies" ? "$0.00" : money(totalCost)}</b><small>Paid · ${priced.priced}/${priced.bought} priced</small></i>
+        <i class="is-cost" data-live-total="${esc(variant.id)}" title="Money you have actually recorded paying for cards you own in this deck. Tune shows market prices for everything selected instead, so the two figures are answering different questions."><b>${money(totalCost) === "Price varies" ? "$0.00" : money(totalCost)}</b><small>Paid · ${priced.priced}/${priced.bought} priced</small></i>
         <i title="${esc(bracket.description || "")}"><b>${esc(bracket.label || "—")}</b><small>Tier</small></i>
         <i><b>${boughtCount}/100</b><small>bought</small></i>
         <i><b>${total}/100</b><small>active</small></i>
@@ -4418,7 +4434,7 @@
     liveExportContext = entries.map(({variant, plan, cards}) => ({variant, plan, cards, filters: ensureLiveFilters(variant.id)}));
     root.innerHTML = `<div class="page-intro live-intro">
         <div class="live-intro-head">
-          <h2 id="live-title">Live Decks</h2>
+          <h2 id="live-title">Dex</h2>
           <div class="live-intro-actions">
             <div class="selection-meter"><strong>${variants.length}</strong><span>live decks</span></div>
             <button type="button" class="secondary-button live-export" id="live-export"${entries.length ? "" : " disabled"}>Export checklist</button>
@@ -4429,7 +4445,7 @@
     $("#live-export", root)?.addEventListener("click", exportLiveDecks);
     const host = $(".live-decks", root);
     if (!entries.length) {
-      host.innerHTML = `<div class="empty-state"><h3>No live decks yet</h3><p>Select a deck in Compare and choose its final cards in Buy Picks.</p><button class="primary-button" data-go="compare">Choose decks</button></div>`;
+      host.innerHTML = `<div class="empty-state"><h3>No live decks yet</h3><p>Select a deck in Compare and choose its final cards in Tune.</p><button class="primary-button" data-go="compare">Choose decks</button></div>`;
       $("[data-go='compare']", host)?.addEventListener("click", () => switchView("compare"));
       appendLiveSalvage(host);
       return;
@@ -4635,7 +4651,7 @@
     return rows.filter((entry) => entry.some((value) => String(value).trim() !== ""));
   }
 
-  // Restores what you own from a Live Decks checklist export, so losing this browser's storage
+  // Restores what you own from a Dex checklist export, so losing this browser's storage
   // or moving to another machine doesn't lose the record of what has been bought.
   //
   // Strictly additive. The export writes "exactly what is on screen, with its current
@@ -4650,7 +4666,7 @@
     const cardColumn = column("card");
     const checkedColumn = column("checked");
     if (cardColumn < 0 || checkedColumn < 0) {
-      return {error: "That doesn't look like a Live Decks checklist — it needs at least the Card and Checked columns."};
+      return {error: "That doesn't look like a Dex checklist — it needs at least the Card and Checked columns."};
     }
     const deckColumn = column("deck");
     const qtyColumn = column("qty");
@@ -4731,11 +4747,13 @@
 
   function appendLiveSalvage(host) {
     const cards = allSalvageCards();
-    if (!cards.length) return;
     const details = document.createElement("details");
     details.className = "live-deck salvage-live-deck";
-    details.open = Boolean(state.liveOpenDecks?.salvage);
-    details.innerHTML = `<summary class="live-deck-summary salvage-live-summary"><span class="live-deck-primary"><span class="deck-number">♲</span><span class="live-deck-title"><strong>Salvage</strong><small>${cards.length} owned cards · no current final-deck role</small></span><span class="live-deck-chevron" aria-hidden="true">⌄</span></span></summary><div class="live-card-list"></div>`;
+    // Always rendered, even empty: an empty yard is exactly the moment you want
+    // the box that fills it.
+    details.open = cards.length ? Boolean(state.liveOpenDecks?.salvage) : true;
+    details.innerHTML = `<summary class="live-deck-summary salvage-live-summary"><span class="live-deck-primary"><span class="deck-number">♲</span><span class="live-deck-title"><strong>Salvage</strong><small>${cards.length ? `${cards.length} owned cards · no current final-deck role` : "Nothing here yet · add cards you already own"}</small></span><span class="live-deck-chevron" aria-hidden="true">⌄</span></span></summary><div class="salvage-intake-wrap">${salvageIntakeMarkup()}</div><div class="live-card-list"></div>`;
+    wireSalvageIntake(details);
     const list = $(".live-card-list", details);
     cards.forEach((card) => {
       const assignment = allLiveTransfers().find((record) => record.sourceKind === "salvage" && record.sourceCardKey === itemKey(card));
@@ -4754,6 +4772,358 @@
     host.appendChild(details);
   }
 
+  // ---------------------------------------------------------------------------
+  // Cards -- the same inventory Dex shows, flattened.
+  //
+  // Dex answers "what is in this deck and what do I still owe on it", one deck
+  // at a time, with the buying and the lineup radios attached. Cards answers a
+  // different question -- "where is this card, across everything I own" -- and a
+  // per-deck accordion is the wrong shape for it. Same cards, same statuses, one
+  // sortable table, plus the Salvage pile so a card that belongs to no deck is
+  // still findable.
+  // ---------------------------------------------------------------------------
+
+  const CARD_COLUMNS = [
+    {key: "name", label: "Card", sortable: true},
+    {key: "deck", label: "Deck", sortable: true},
+    {key: "type", label: "Type", sortable: true},
+    {key: "mana", label: "Mana", sortable: false},
+    {key: "role", label: "In deck", sortable: true},
+    {key: "status", label: "Status", sortable: true},
+    {key: "paid", label: "Paid", sortable: true},
+    {key: "target", label: "Target", sortable: true}
+  ];
+
+  // One row per physical card across every live deck, then the Salvage pile.
+  // Salvage rows carry deckId "salvage" so the deck filter can isolate them and
+  // the sort keeps them together rather than scattering them through deck 1.
+  function allCardRows() {
+    const rows = [];
+    buildLiveEntries().forEach(({variant, cards}) => {
+      ensureShopMetadata(cards);
+      cards.forEach((card) => {
+        const metadata = cardMetadata[itemKey(card)] || {};
+        const bounds = cardPriceBounds(card, metadata);
+        rows.push({
+          card,
+          variant,
+          key: itemKey(card),
+          name: card.name,
+          quantity: Math.max(1, Number(card.quantity || 1)),
+          deckId: String(variant.deckId),
+          deckLabel: `Deck ${variant.deckId}`,
+          deckName: variant.name,
+          type: liveCardType(card),
+          manaCost: card.manaCost || metadata.manaCost || "",
+          typeLine: card.typeLine || metadata.typeLine || "",
+          image: card.image || metadata.image || cardImageCandidates(card)[0],
+          role: card.isCommander ? "Commander" : card.lineupActive ? "Active 100" : card.inSalvage ? "Salvage" : "Bench",
+          status: liveCardStatusText(card),
+          bought: Boolean(card.bought),
+          paid: committedPrice(card),
+          target: card.fromPreconBox ? null : Number(bounds.price) || null,
+          ceiling: card.fromPreconBox ? null : Number(bounds.ceiling) || null,
+          url: card.tcgplayerUrl || metadata.tcgplayerUrl || `https://www.tcgplayer.com/search/magic/product?q=${encodeURIComponent(card.name)}&view=grid`
+        });
+      });
+    });
+    allSalvageCards().forEach((card) => {
+      const metadata = cardMetadata[itemKey(card)] || {};
+      const assignment = allLiveTransfers().find((record) => record.sourceKind === "salvage" && record.sourceCardKey === itemKey(card));
+      const target = assignment ? variantById(assignment.targetVariantId) : null;
+      rows.push({
+        card,
+        variant: null,
+        key: itemKey(card),
+        name: card.name,
+        quantity: Math.max(1, Number(card.quantity || 1)),
+        deckId: "salvage",
+        deckLabel: "Salvage",
+        deckName: assignment ? `Assigned to Deck ${target?.deckId || "?"}` : "No current deck role",
+        type: liveCardType(card),
+        manaCost: card.manaCost || metadata.manaCost || "",
+        typeLine: card.typeLine || metadata.typeLine || "",
+        image: card.image || metadata.image || cardImageCandidates(card)[0],
+        role: assignment ? "Assigned" : "Salvage",
+        status: assignment ? `Filling ${assignment.replacesName}` : "Owned · available to assign",
+        bought: true,
+        paid: committedPrice(card),
+        target: Number(card.price) || null,
+        ceiling: Number(card.ceiling) || null,
+        url: card.tcgplayerUrl || metadata.tcgplayerUrl || `https://www.tcgplayer.com/search/magic/product?q=${encodeURIComponent(card.name)}&view=grid`
+      });
+    });
+    return rows;
+  }
+
+  function matchesCardFilters(row, filters) {
+    const query = String(filters.query || "").trim().toLowerCase();
+    if (query && ![row.name, row.typeLine, row.deckName, row.status].some((field) => String(field || "").toLowerCase().includes(query))) return false;
+    if (filters.deck !== "all" && row.deckId !== filters.deck) return false;
+    if (filters.type !== "all" && row.type !== filters.type) return false;
+    if (filters.bought === "bought" && !row.bought) return false;
+    if (filters.bought === "need" && row.bought) return false;
+    if (filters.status === "active" && row.role !== "Active 100" && row.role !== "Commander") return false;
+    if (filters.status === "bench" && row.role !== "Bench") return false;
+    if (filters.status === "salvage" && row.deckId !== "salvage") return false;
+    return true;
+  }
+
+  const CARD_SORTS = {
+    // Deck order puts Salvage last rather than first, because it is the pile you
+    // consult after the decks, not before them.
+    deck: (a, b) => (a.deckId === "salvage" ? 1 : 0) - (b.deckId === "salvage" ? 1 : 0) || Number(a.deckId) - Number(b.deckId) || LIVE_TYPE_ORDER.indexOf(a.type) - LIVE_TYPE_ORDER.indexOf(b.type) || a.name.localeCompare(b.name),
+    name: (a, b) => a.name.localeCompare(b.name),
+    type: (a, b) => LIVE_TYPE_ORDER.indexOf(a.type) - LIVE_TYPE_ORDER.indexOf(b.type) || a.name.localeCompare(b.name),
+    role: (a, b) => a.role.localeCompare(b.role) || a.name.localeCompare(b.name),
+    status: (a, b) => a.status.localeCompare(b.status) || a.name.localeCompare(b.name),
+    paid: (a, b) => (b.paid ?? -1) - (a.paid ?? -1) || a.name.localeCompare(b.name),
+    target: (a, b) => (b.target ?? -1) - (a.target ?? -1) || a.name.localeCompare(b.name)
+  };
+
+  function renderCards() {
+    withUiState("#view-cards", renderCardsView);
+  }
+
+  function renderCardsView() {
+    const root = $("#view-cards");
+    const filters = state.cardFilters;
+    const rows = allCardRows();
+    const visible = rows.filter((row) => matchesCardFilters(row, filters)).sort(CARD_SORTS[filters.sort] || CARD_SORTS.deck);
+    const decks = Array.from(new Map(rows.filter((row) => row.deckId !== "salvage").map((row) => [row.deckId, row.deckLabel])).entries()).sort((a, b) => Number(a[0]) - Number(b[0]));
+    const owed = visible.filter((row) => !row.bought).reduce((sum, row) => sum + (row.target || 0) * row.quantity, 0);
+    const paid = visible.filter((row) => row.paid !== null).reduce((sum, row) => sum + row.paid, 0);
+    const types = LIVE_TYPE_ORDER.filter((type) => rows.some((row) => row.type === type));
+
+    root.innerHTML = `
+      <div class="page-intro">
+        <div>
+          <h2 id="cards-title">Cards</h2>
+          <p>Every card in every live deck, plus the Salvage pile, as one table. Same inventory as Dex — sorted and filtered across decks instead of inside one.</p>
+        </div>
+        <div class="shop-intro-actions">
+          <div class="selection-meter"><strong>${visible.length}</strong><span>cards shown</span></div>
+          <button type="button" class="secondary-button" id="cards-export"${visible.length ? "" : " disabled"}>Export table</button>
+        </div>
+      </div>
+      <div class="shop-toolbar">
+        <input class="search-input" id="cards-search" type="search" value="${esc(filters.query)}" placeholder="Search cards, types, decks…" aria-label="Search every card">
+        <div class="filter-select-grid card-filter-grid">
+          ${cardFilterSelect("deck", "Deck", [["all", "Every deck"], ...decks, ["salvage", "Salvage"]], filters.deck)}
+          ${cardFilterSelect("type", "Type", [["all", "All types"], ...types.map((type) => [type, type])], filters.type)}
+          ${cardFilterSelect("status", "In deck", [["all", "Anywhere"], ["active", "Active 100"], ["bench", "Bench"], ["salvage", "Salvage"]], filters.status)}
+          ${cardFilterSelect("bought", "Owned", [["all", "Bought or not"], ["bought", "Bought"], ["need", "Still to buy"]], filters.bought)}
+          ${cardFilterSelect("sort", "Sort", [["deck", "By deck"], ["name", "By name"], ["type", "By type"], ["role", "By role"], ["status", "By status"], ["paid", "By paid"], ["target", "By target"]], filters.sort)}
+        </div>
+        <p class="cards-total">${visible.length} of ${rows.length} cards${owed > 0 ? ` · ${money(owed)} still to buy` : ""}${paid > 0 ? ` · ${money(paid)} recorded as paid` : ""}</p>
+      </div>
+      ${visible.length ? `<div class="cards-table-wrap"><table class="cards-table">
+        <thead><tr>${CARD_COLUMNS.map((column) => `<th scope="col"${column.sortable ? ` class="is-sortable"${filters.sort === column.key ? ' aria-sort="ascending"' : ""} data-card-sort="${column.key}" tabindex="0" role="button"` : ""}>${esc(column.label)}</th>`).join("")}</tr></thead>
+        <tbody>${visible.map(cardRowMarkup).join("")}</tbody>
+      </table></div>`
+      : `<div class="empty-state"><h3>No cards match</h3><p>${rows.length ? "Widen the filters to see the rest of the inventory." : "Pick decks in Compare and build them in Tune, and every card lands here."}</p></div>`}`;
+
+    const search = $("#cards-search", root);
+    search.addEventListener("input", (event) => {
+      filters.query = event.target.value;
+      saveState();
+      renderCards();
+    });
+    $$("[data-card-filter]", root).forEach((select) => select.addEventListener("change", () => {
+      filters[select.dataset.cardFilter] = select.value;
+      saveState();
+      renderCards();
+    }));
+    $$("[data-card-sort]", root).forEach((header) => {
+      const apply = () => {
+        filters.sort = header.dataset.cardSort;
+        saveState();
+        renderCards();
+      };
+      header.addEventListener("click", apply);
+      header.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          apply();
+        }
+      });
+    });
+    // The row opens the same detail sheet the deck views use, so a card means
+    // the same thing wherever you found it.
+    $$("[data-card-key]", root).forEach((rowElement) => rowElement.addEventListener("click", (event) => {
+      if (event.target.closest("a")) return;
+      const row = visible.find((entry) => `${entry.deckId}:${entry.key}` === rowElement.dataset.cardKey);
+      if (!row) return;
+      if (row.variant) openBuyItemDetail(row.card, row.variant, row.card.lineupKind || "shell");
+      else openBuyItemDetail({...row.card, bought: true, purpose: row.card.reason, why: row.card.reason, brief: {fit: row.card.reason}}, {id: "salvage", deckId: "Salvage", image: row.image}, "salvage");
+    }));
+    $("#cards-export", root)?.addEventListener("click", () => exportCardsTable(visible));
+  }
+
+  function cardFilterSelect(field, label, options, value) {
+    return `<label class="filter-select"><span>${esc(label)}</span><select data-card-filter="${esc(field)}">${options
+      .map(([optionValue, optionLabel]) => `<option value="${esc(optionValue)}"${String(optionValue) === String(value) ? " selected" : ""}>${esc(optionLabel)}</option>`)
+      .join("")}</select></label>`;
+  }
+
+  function cardRowMarkup(row) {
+    const money2 = (value) => (value === null || value === undefined ? "—" : `$${Number(value).toFixed(2)}`);
+    return `<tr data-card-key="${esc(`${row.deckId}:${row.key}`)}" class="${row.bought ? "is-bought" : "is-needed"}${row.deckId === "salvage" ? " is-salvage" : ""}">
+      <th scope="row" class="cards-cell-name"><img src="${esc(row.image)}" alt="" loading="lazy"><span><b>${esc(row.name)}</b>${row.quantity > 1 ? `<em>×${row.quantity}</em>` : ""}<small>${esc(row.typeLine)}</small></span></th>
+      <td><span class="cards-deck">${esc(row.deckLabel)}</span><small>${esc(row.deckName)}</small></td>
+      <td>${esc(row.type)}</td>
+      <td class="cards-cell-mana">${manaCostHtml(row.manaCost)}</td>
+      <td><span class="cards-role role-${esc(row.role.toLowerCase().replace(/[^a-z]+/g, "-"))}">${esc(row.role)}</span></td>
+      <td class="cards-cell-status">${esc(row.status)}${row.bought ? "" : ` <a href="${esc(row.url)}" target="_blank" rel="noopener">TCGplayer ↗</a>`}</td>
+      <td class="cards-cell-money">${money2(row.paid)}</td>
+      <td class="cards-cell-money">${money2(row.target)}</td>
+    </tr>`;
+  }
+
+  function exportCardsTable(rows) {
+    const header = ["Deck", "Deck name", "Card", "Qty", "Type", "Type line", "Mana cost", "In deck", "Status", "Bought", "Paid", "Target", "Ceiling"];
+    const body = rows.map((row) => [
+      row.deckLabel,
+      row.deckName,
+      row.name,
+      row.quantity,
+      row.type,
+      row.typeLine,
+      String(row.manaCost || "").replace(/[{}]/g, ""),
+      row.role,
+      row.status,
+      row.bought ? "x" : "",
+      row.paid === null ? "" : row.paid.toFixed(2),
+      row.target === null ? "" : Number(row.target).toFixed(2),
+      row.ceiling === null ? "" : Number(row.ceiling).toFixed(2)
+    ]);
+    downloadCsv([header, ...body], `cards-${new Date().toISOString().slice(0, 10)}.csv`);
+    showToast(`Exported ${rows.length} card${rows.length === 1 ? "" : "s"} to CSV.`);
+  }
+
+  // One place that turns a table into a downloaded CSV, BOM included so Excel
+  // reads the accented card names correctly.
+  function downloadCsv(rows, filename) {
+    const csv = rows.map((row) => row.map(csvCell).join(",")).join("\r\n");
+    const blob = new Blob([`\ufeff${csv}`], {type: "text/csv;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Salvage intake -- adding cards you already bought that no deck asked for.
+  //
+  // Until now a card could only reach the Salvage yard by being pushed out of a
+  // deck. That misses the common case entirely: a booster, a bundle, a box of
+  // singles off a vendor table. Paste the links (or just the names) and each one
+  // is resolved against Scryfall for its real type line, mana cost, image and
+  // price, then filed as owned and available to assign.
+  //
+  // Failures are reported line by line rather than silently dropped, because a
+  // card you believe is in the yard and is not is worse than one you know failed.
+  // ---------------------------------------------------------------------------
+
+  function salvageIntakeMarkup() {
+    return `<form class="salvage-intake" data-salvage-intake>
+      <label for="salvage-intake-input"><b>Add cards you already own</b><small>One per line — a TCGplayer link (affiliate links work) or just the card name. They land in Salvage, ready to assign to any deck.</small></label>
+      <textarea id="salvage-intake-input" rows="3" placeholder="https://www.tcgplayer.com/product/…&#10;Solemn Simulacrum"></textarea>
+      <div class="salvage-intake-actions">
+        <button type="submit" class="primary-button">Add to Salvage</button>
+        <span class="salvage-intake-status" data-salvage-status aria-live="polite"></span>
+      </div>
+    </form>`;
+  }
+
+  function wireSalvageIntake(root) {
+    const form = $("[data-salvage-intake]", root);
+    if (!form) return;
+    const status = $("[data-salvage-status]", form);
+    const input = $("#salvage-intake-input", form);
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const lines = String(input.value || "").split("\n").map((line) => line.trim()).filter(Boolean);
+      if (!lines.length) return showToast("Paste a link or a card name first.");
+      const button = $("button[type=submit]", form);
+      button.disabled = true;
+      const client = Scryfall.createClient({});
+      const added = [];
+      const failed = [];
+      for (let index = 0; index < lines.length; index += 1) {
+        const line = lines[index];
+        status.textContent = `Looking up ${index + 1} of ${lines.length}…`;
+        try {
+          // A link goes through the TCGplayer resolver, which handles affiliate
+          // wrappers and set-prefixed slugs; anything else is treated as a name.
+          const resolved = /^https?:\/\//i.test(line)
+            ? await client.resolveTcgplayerUrl(line)
+            : {card: await client.named(line), error: "no card by that name"};
+          if (!resolved.card) {
+            failed.push(`${line} — ${resolved.error || "no card matched"}`);
+            continue;
+          }
+          added.push(addCardToSalvage(resolved.card, line));
+        } catch (error) {
+          failed.push(`${line} — ${error.message || "lookup failed"}`);
+        }
+      }
+      button.disabled = false;
+      if (added.length) {
+        saveState(`${added.length} card${added.length === 1 ? "" : "s"} added to Salvage`);
+        input.value = failed.length ? failed.map((entry) => entry.split(" — ")[0]).join("\n") : "";
+        showToast(`${added.length} card${added.length === 1 ? "" : "s"} added to Salvage${failed.length ? `; ${failed.length} could not be found` : ""}.`);
+      }
+      // Whatever failed stays in the box with its reason underneath, so the line
+      // can be corrected and resubmitted instead of retyped from memory.
+      status.innerHTML = failed.length
+        ? `<b>${failed.length} not added:</b> ${failed.map((entry) => esc(entry)).join("; ")}`
+        : added.length ? `Added ${added.map((card) => esc(card.name)).join(", ")}.` : "";
+      if (added.length) {
+        renderLiveDecks();
+        if ($("#view-cards")?.classList.contains("is-active")) renderCards();
+      }
+    });
+  }
+
+  function addCardToSalvage(card, source) {
+    const record = {
+      name: card.name,
+      manaCost: card.manaCost || "",
+      typeLine: card.typeLine || "",
+      oracleText: card.oracleText || "",
+      keywords: card.keywords || [],
+      colorIdentity: card.colorIdentity || [],
+      commanderLegal: card.commanderLegal !== false,
+      rarity: card.rarity || "",
+      setName: card.setName || "",
+      image: card.image || "",
+      price: Number(card.price || 0),
+      ceiling: Number(card.ceiling ?? card.price ?? 0),
+      tcgplayerUrl: card.tcgplayerUrl || (/^https?:\/\//i.test(source) ? source : ""),
+      gameChanger: Boolean(card.gameChanger),
+      ownedExtra: true
+    };
+    state.liveSalvage ||= {};
+    state.liveSalvage[itemKey(record)] = {
+      card: record,
+      reason: "Added by hand — a card you own that no deck has claimed yet.",
+      sourceVariantId: null,
+      sourceEntryId: null,
+      addedByHand: true,
+      movedAt: new Date().toISOString()
+    };
+    // Owning it is the whole point, so it counts as bought immediately.
+    state.found[itemKey(record)] = true;
+    state.boughtQuantities ||= {};
+    state.boughtQuantities[itemKey(record)] = Math.max(1, Number(state.boughtQuantities[itemKey(record)] || 0));
+    return record;
+  }
+
   function renderShop() {
     const root = $("#view-shop");
     const allItems = derivedShopItems();
@@ -4763,12 +5133,12 @@
     root.innerHTML = `
       <div class="page-intro">
         <div>
-          <h2 id="shop-title">Shop List</h2>
+          <h2 id="shop-title">Shop</h2>
           <p>A clean, deduplicated list for walking vendor tables. Mark purchases Bought; accessories never appear here.</p>
         </div>
         <div class="shop-intro-actions">
           <div class="selection-meter"><strong>${foundCount}/${allItems.length}</strong><span>items bought</span></div>
-          <label class="secondary-button shop-import" title="Restore what you own from a Live Decks checklist export — useful after clearing this browser's data or moving to another device">
+          <label class="secondary-button shop-import" title="Restore what you own from a Dex checklist export — useful after clearing this browser's data or moving to another device">
             <input type="file" accept=".csv,text/csv" id="shop-import-input" hidden>
             <span>Upload purchase history</span>
           </label>
@@ -4867,12 +5237,12 @@
       }));
     }
     $("#shop-actions", root).innerHTML = allItems.length
-      ? `<div class="action-row"><button class="secondary-button" data-go="buy">Adjust Buy Picks</button><button type="button" class="secondary-button" id="shop-export"${visible.length ? "" : " disabled"}>Export ${state.shopFilters.status === "found" ? "owned list" : state.shopFilters.status === "need" ? "shopping list" : "list"}</button></div>`
-      : `<div class="empty-state"><h3>Your field list is empty</h3><p>Select deck variants and save their Buy Picks first.</p><button class="primary-button" data-go="buy">Open Buy Picks</button></div>`;
+      ? `<div class="action-row"><button class="secondary-button" data-go="buy">Adjust Tune</button><button type="button" class="secondary-button" id="shop-export"${visible.length ? "" : " disabled"}>Export ${state.shopFilters.status === "found" ? "owned list" : state.shopFilters.status === "need" ? "shopping list" : "list"}</button></div>`
+      : `<div class="empty-state"><h3>Your field list is empty</h3><p>Select deck variants and save their Tune first.</p><button class="primary-button" data-go="buy">Open Tune</button></div>`;
     $("#shop-export", root)?.addEventListener("click", () => exportShopList(visible));
   }
 
-  // Exports exactly what the Shop List is showing -- the current status filter, every other
+  // Exports exactly what the Shop is showing -- the current status filter, every other
   // filter, and the current grouping -- and nothing from any other screen. Two real uses:
   // filtered to Bought it is a spreadsheet backup of what you own; filtered to To Buy it is a
   // list to print and carry, so it carries a check-off column and stays narrow enough to read.
@@ -5027,7 +5397,7 @@
   }
 
   // A card shared by several decks needs one bought copy per deck. state.found stays
-  // "at least one owned" (other views rely on that), so Shop List completion is tracked
+  // "at least one owned" (other views rely on that), so Shop completion is tracked
   // separately against the summed cross-deck quantity.
   function shopItemBoughtCount(item) {
     return Math.min(item.quantity, Math.max(0, Number(state.boughtQuantities?.[item.key] || 0)));
@@ -5154,17 +5524,8 @@
   }
 
   const TOUR_STEPS = {
-    choose: [
-      {view: "choose", selectors: [".main-tabs"], title: "Step 0 · build a deck of your own", copy: "Choose is optional. The curated six are ready to compare without it — this step is here when you want variants for a deck nobody has researched for you yet."},
-      {view: "choose", selectors: [".choose-slot:first-of-type .choose-form", ".choose-slot:first-of-type"], title: "Describe what you want to play", copy: "Colors, mechanics, play style, budget and a preferred set are all optional. Give as much or as little as you like; anything you leave blank is inferred from the rest."},
-      {view: "choose", selectors: [".choose-slot:first-of-type .choose-themes", ".choose-slot:first-of-type"], title: "Mechanics drive the card pool", copy: "The mechanics you tick decide which searches run and how strongly a card's own text has to match. They also become the mechanic filters on this deck in Compare."},
-      {view: "choose", selectors: ['.choose-slot:first-of-type [data-choose-input="commanderLink"]', ".choose-slot:first-of-type"], title: "Or just paste a commander", copy: "A TCGplayer link to the commander you want is enough on its own — affiliate links included. The commander's color identity then locks every card that can be picked."},
-      {view: "choose", selectors: ["[data-choose-seeds]", ".choose-slot:first-of-type"], title: "Cards you already want", copy: "Paste one TCGplayer link per line and those cards are forced into every variant. Links that resolve to nothing, or to a card outside the color identity, are reported instead of silently dropped."},
-      {view: "choose", selectors: ['.choose-slot:first-of-type [data-choose-input="variantCount"]', ".choose-slot:first-of-type"], title: "How many approaches", copy: "Each variant is a different strategy lens on the same commander — synergy, budget, resilience, tempo and spice — and each is charged for reusing cards the earlier ones took, so they stay genuinely different lists."},
-      {view: "choose", selectors: ["[data-choose-generate]", ".choose-slot:first-of-type"], title: "Generate, then compare", copy: "Generation reads live Scryfall data and checks every stage against the Tier 3 rules before saving. Finished variants join Compare above the curated decks and flow through Buy Picks, Shop List and Live Decks like any other."}
-    ],
     compare: [
-      {view: "compare", selectors: [".main-tabs"], title: "Five steps, one flow", copy: "Choose builds decks of your own, Compare picks the deck, Buy Picks builds the exact 100, Shop List becomes your vendor-floor checklist, and Live Decks tracks what you own and what it cost."},
+      {view: "compare", selectors: [".main-tabs"], title: "Six steps, one flow", copy: "Compare picks the deck, Tune builds the exact 100, Shop is your vendor-floor checklist, Dex tracks what you own and what it cost, Cards flattens all of it into one searchable table, and Game Log records how the decks actually played."},
       {view: "compare", selectors: [".page-intro"], title: "Choose one variant per deck role", copy: "There are six deck roles and five competing approaches inside each. You pick one per role; the counter tracks how many are locked in."},
       {view: "compare", selectors: [".compare-filter-panel"], title: "Narrow the field", copy: "Search by commander, tag, or text, and filter by mechanic or play style. Only matching variants stay visible inside each row."},
       {view: "compare", selectors: ["[data-compare-filter='profileStage']", ".compare-filter-panel"], title: "Base, Tuned, or Maxed", copy: "Score stage changes which build every card on the page is describing: out-of-the-box, after the core purchases, or pushed to the legal top of Tier 3."},
@@ -5176,21 +5537,21 @@
       {view: "compare", selectors: [".deck-group:first-of-type .detail-button"], title: "Open the full evidence", copy: "Full detail carries the commander breakdown, rank reasoning, rarity, precon seed, play pattern, and bracket route. On a phone the green commander block folds away behind its caret."},
       {view: "compare", selectors: [".deck-group:first-of-type .comment-toggle"], title: "Leave feedback in place", copy: "Attach a comment to a variant. Comments stay on this device and travel with your selections when you email them."},
       {view: "compare", selectors: [".deck-group:first-of-type .pick-control"], title: "Lock in the pick", copy: "Picking a variant is what feeds every later step. Change it any time — your other choices are preserved."},
-      {view: "buy", selectors: [".buy-intro", ".page-intro"], title: "Step 2 · your picks become a 100-card plan", copy: "Buy Picks carries each selected variant across and turns it into an explicit purchase list, with the checked-card count and type spread in the header."},
+      {view: "buy", selectors: [".buy-intro", ".page-intro"], title: "Step 2 · your picks become a 100-card plan", copy: "Tune carries each selected variant across and turns it into an explicit purchase list, with the checked-card count and type spread in the header."},
       {view: "buy", selectors: [".starting-shell", ".buy-section", ".empty-state"], title: "Step 2 · check exactly what you want", copy: "The commander stays fixed. Tick or untick the shell, Tuned, Enhance, and Maxxed cards; the rules check follows along as you go."},
       {view: "shop", selectors: [".shop-toolbar", ".page-intro", ".empty-state"], title: "Step 3 · one deduplicated shopping list", copy: "Every checked card across all six decks collapses into a single list you can filter, group, and work through at a vendor table."},
-      {view: "live", selectors: [".live-decks", ".page-intro"], title: "Step 4 · what you own and what it cost", copy: "Live Decks tracks the physical build: which cards you have, what you paid for each, the running total cost, and whether the deck is legal and ready to play."}
+      {view: "live", selectors: [".live-decks", ".page-intro"], title: "Step 4 · what you own and what it cost", copy: "Dex tracks the physical build: which cards you have, what you paid for each, the running total cost, and whether the deck is legal and ready to play."}
     ],
     buy: [
       {view: "buy", selectors: [".buy-intro", ".page-intro"], title: "Build the buy plan", copy: "Your Compare picks become complete 100-card configurations here. The header shows how many cards are checked and how they split by type."},
-      {view: "buy", selectors: [".buy-mode-chips", ".page-intro"], title: "All or only what you own", copy: "Switch to Bought to see just the cards already marked as purchased in the Shop List."},
+      {view: "buy", selectors: [".buy-mode-chips", ".page-intro"], title: "All or only what you own", copy: "Switch to Bought to see just the cards already marked as purchased in the Shop."},
       {view: "buy", selectors: [".buy-overview", ".empty-state"], title: "Jump between deck plans", copy: "Move quickly among the selected decks and compare the size of each Tuned package."},
       {view: "buy", selectors: [".deck-compliance", ".empty-state"], title: "Keep the rules close", copy: "Tier 2, Tier 3, and the exact card count stay compact. Expand the check for composition and detailed issues."},
       {view: "buy", selectors: [".plan-analysis", ".empty-state"], title: "Read the full strategy", copy: "The analysis keeps how to play, buy order, bracket reasoning, stretch cards, and top-of-bracket options in one place."},
       {view: "buy", selectors: [".starting-shell", ".empty-state"], title: "Inspect the 100-card foundation", copy: "The commander never collapses. The other 99 cards are nested by type so you can work one group at a time."},
       {view: "buy", selectors: [".buy-section", ".empty-state"], title: "Try one-for-one changes", copy: "Enhance options are role-preserving choices at $20 or less. Maxxed choices are classified by Tier 3 capability rather than cost, and each names the card it replaces."},
-      {view: "shop", selectors: [".shop-toolbar", ".page-intro", ".empty-state"], title: "Step 3 · where these checks land", copy: "Saving your buys sends every checked purchase to the Shop List, deduplicated across all six decks and sorted for a vendor floor."},
-      {view: "live", selectors: [".live-decks", ".page-intro"], title: "Step 4 · and where they end up", copy: "Once bought, each card appears in Live Decks, where you record what you paid and watch the deck's total cost and readiness update."}
+      {view: "shop", selectors: [".shop-toolbar", ".page-intro", ".empty-state"], title: "Step 3 · where these checks land", copy: "Saving your buys sends every checked purchase to the Shop, deduplicated across all six decks and sorted for a vendor floor."},
+      {view: "live", selectors: [".live-decks", ".page-intro"], title: "Step 4 · and where they end up", copy: "Once bought, each card appears in Dex, where you record what you paid and watch the deck's total cost and readiness update."}
     ],
     shop: [
       {view: "shop", selectors: [".page-intro"], title: "Your table-ready list", copy: "Only purchases from the selected deck arrangements appear here, deduplicated across decks."},
@@ -5198,18 +5559,32 @@
       {view: "shop", selectors: [".more-filters", ".empty-state"], title: "Group the way you shop", copy: "Group by table location, rarity, price range, type, theme or set, or the number of decks that need the card."},
       {view: "shop", selectors: [".shop-card", ".empty-state"], title: "Use the complete buying card", copy: "Each card shows large art, table location, target and ceiling price, rarity, purpose, and the decks that need it."},
       {view: "shop", selectors: [".found-button", ".empty-state"], title: "Mark progress as you go", copy: "Mark a card Bought and the remaining target total updates. Everything stays private on this device."},
-      {view: "live", selectors: [".live-deck-metrics", ".live-decks", ".page-intro"], title: "Step 4 · bought cards become inventory", copy: "Anything marked Bought turns into an owned card in Live Decks, where you enter the price you actually paid."},
+      {view: "live", selectors: [".live-deck-metrics", ".live-decks", ".page-intro"], title: "Step 4 · bought cards become inventory", copy: "Anything marked Bought turns into an owned card in Dex, where you enter the price you actually paid."},
       {view: "live", selectors: [".live-export", ".page-intro"], title: "Step 4 · take the list with you", copy: "Export writes the decks exactly as filtered on screen to a flat CSV checklist for a spreadsheet or a printout."}
     ],
     live: [
-      {view: "live", selectors: [".live-intro", ".page-intro"], title: "The physical build", copy: "Live Decks is the inventory view: what each deck contains, what you own, what it cost, and whether it is legal and ready to play."},
+      {view: "live", selectors: [".live-intro", ".page-intro"], title: "The physical build", copy: "Dex is the inventory view: what each deck contains, what you own, what it cost, and whether it is legal and ready to play."},
       {view: "live", selectors: [".live-deck-metrics", ".live-decks"], title: "Read the header at a glance", copy: "Total cost sums only the prices you locked in. The rest track bought and active cards, purchases still needed, and Game Changer and Tier 3 status."},
       {view: "live", selectors: [".live-deck-disclosures", ".live-decks"], title: "Detail on demand", copy: "Deck Composition and Core Mechanics stay folded until you want them, so the header stays short on a phone."},
       {view: "live", selectors: [".live-metric-strip", ".live-decks"], title: "The same three ratings", copy: "Playstyle, Engine, and Growth carry over from Compare at the stage you selected. Tap one to see which sub-scores drive it."},
       {view: "live", selectors: [".live-toolbar", ".live-decks"], title: "Filter and group each deck", copy: "Search inside a deck, filter by status, level, type, color, price, rarity, or location, and group and sub-group the results."},
       {view: "live", selectors: [".live-lineup-radio", ".live-card-row", ".live-decks"], title: "Choose the active 100", copy: "Each slot has one active card and any number of bench options. The radio makes a card active; illegal swaps are refused with the rule that blocked them."},
       {view: "live", selectors: [".live-price-entry", ".live-card-row", ".live-decks"], title: "Record what you paid", copy: "Owned cards get a price box. Type what you paid and press the check to lock it in; the deck's total cost updates immediately. Cards that came in a sealed precon just read Precon Pack."},
-      {view: "live", selectors: [".live-export", ".live-intro"], title: "Export the checklist", copy: "Export writes every deck in its current grouping and filters to a CSV inventory: card, type, rarity, set, level, lineup, status, what you paid, and the floor-to-ceiling range."}
+      {view: "live", selectors: [".live-export", ".live-intro"], title: "Export the checklist", copy: "Export writes every deck in its current grouping and filters to a CSV inventory: card, type, rarity, set, level, lineup, status, what you paid, and the floor-to-ceiling range."},
+      {view: "live", selectors: [".salvage-live-deck .salvage-intake", ".salvage-live-deck"], title: "Cards you bought that no deck asked for", copy: "Paste TCGplayer links or plain card names, one per line, and each is looked up on Scryfall and filed into Salvage as owned — ready to assign into any deck. Anything that cannot be found is reported line by line rather than quietly dropped."},
+      {view: "live", selectors: [".salvage-live-deck", ".live-decks"], title: "The Salvage yard", copy: "Cards pushed out of a deck land here alongside the ones you added by hand. Open any of them to send it into a deck that needs it."}
+    ],
+    cards: [
+      {view: "cards", selectors: [".page-intro"], title: "Every card, one table", copy: "Cards is the same inventory Dex shows, flattened. Dex answers \u201cwhat is in this deck\u201d one deck at a time; this answers \u201cwhere is this card\u201d across all of them, Salvage included."},
+      {view: "cards", selectors: [".card-filter-grid", ".shop-toolbar"], title: "Filter across decks", copy: "Narrow by deck, card type, whether a card is in the active 100 or on the bench, and whether you have bought it yet. The line underneath keeps a running count of what is still owed."},
+      {view: "cards", selectors: [".cards-table thead", ".cards-table-wrap"], title: "Sort by any column", copy: "Click a heading to sort — by name, deck, type, role, status, what you paid, or what it should cost. Sorting by paid is the fastest way to see where the money actually went."},
+      {view: "cards", selectors: [".cards-table tbody tr", ".cards-table-wrap"], title: "Open any card", copy: "A row opens the same detail sheet the deck views use, so a card means the same thing wherever you found it."},
+      {view: "cards", selectors: ["#cards-export", ".page-intro"], title: "Export what you are looking at", copy: "Export writes exactly the rows currently visible, with their deck, role, status, paid price and target price."}
+    ],
+    log: [
+      {view: "log", selectors: [".page-intro"], title: "What actually happened", copy: "Everything else on this site is a model. This is the record: what you played, whether you won, how long it took, and how the table felt about it."},
+      {view: "log", selectors: [".game-log-form", "#view-log"], title: "Under thirty seconds after a game", copy: "Deck, result, turns, knockouts, and two quick reads on how much fun it was for you and for the pod. Save and it is on this device immediately."},
+      {view: "log", selectors: ["[data-log-export]", ".page-intro"], title: "Export and commit", copy: "Export writes the games as JSON. Commit that file under data/game-logs/ and a GitHub Action compiles every entry into the cumulative history the simulated predictions get checked against."}
     ]
   };
 
@@ -5265,7 +5640,7 @@
     if (!tourState) return;
     const step = tourState.steps[tourState.index];
     switchView(step.view, false);
-    const tourName = ({choose: "Choose", compare: "Compare", buy: "Buy Picks", shop: "Shop List", live: "Live Decks"})[tourState.origin] || "Guided";
+    const tourName = ({choose: "Choose", compare: "Compare", buy: "Tune", shop: "Shop", live: "Dex"})[tourState.origin] || "Guided";
     $("#tour-progress").textContent = `${tourName} tour · ${tourState.index + 1} of ${tourState.steps.length}`;
     $("#tour-title").textContent = step.title;
     $("#tour-copy").innerHTML = `<p>${esc(step.copy)}</p>`;
@@ -5341,7 +5716,7 @@
     link.click();
     link.remove();
     setTimeout(() => URL.revokeObjectURL(url), 2000);
-    showToast("Exported your full state — Compare picks, Buy Picks, Shop List, and Live Decks.");
+    showToast("Exported your full state — Compare picks, Tune, Shop, and Dex.");
   }
 
   function isPlausibleStatePayload(payload) {
@@ -5388,7 +5763,7 @@
         showToast("That file does not look like a Deck Matrix state export.");
         return;
       }
-      if (!window.confirm("Load this file? It replaces every selection, buy, Shop List mark, and Live Decks change currently saved on this device.")) return;
+      if (!window.confirm("Load this file? It replaces every selection, buy, Shop mark, and Dex change currently saved on this device.")) return;
       applyStatePayload(payload, file.name);
     };
     reader.readAsText(file);
@@ -5412,13 +5787,14 @@
       return;
     }
     const when = payload.exportedAt ? ` (exported ${new Date(payload.exportedAt).toLocaleString()})` : "";
-    if (!window.confirm(`Load the active state from the repository${when}? It replaces every selection, buy, Shop List mark, and Live Decks change currently saved on this device.`)) return;
+    if (!window.confirm(`Load the active state from the repository${when}? It replaces every selection, buy, Shop mark, and Dex change currently saved on this device.`)) return;
     applyStatePayload(payload, "the repository");
   }
 
   async function init() {
     try {
-      [bakedCatalog, bakedBuyCatalog, simulationSummary] = await Promise.all([
+      let activeStateFile = null;
+      [bakedCatalog, bakedBuyCatalog, simulationSummary, activeStateFile] = await Promise.all([
         fetch("data/variants.json", {cache: "no-store"}).then((response) => {
           if (!response.ok) throw new Error("Variant catalog did not load");
           return response.json();
@@ -5428,10 +5804,16 @@
           return response.json();
         }),
         // Additive: real simulation results for the new ladders. Never blocks startup --
-        // the commander-compare preview and Buy Picks simulation readout just render nothing
+        // the commander-compare preview and Tune simulation readout just render nothing
         // extra if this is unavailable, same as any other optional metadata in this app.
-        fetch("data/simulation-summary.json", {cache: "no-store"}).then((response) => response.ok ? response.json() : null).catch(() => null)
+        fetch("data/simulation-summary.json", {cache: "no-store"}).then((response) => response.ok ? response.json() : null).catch(() => null),
+        // Read for the corner ribbon alone. Loading this file does NOT apply it
+        // -- that stays an explicit Load Active click -- so a browser mid-build
+        // keeps its own picks while still being told which six are the
+        // published slate.
+        fetch("data/active-state.json", {cache: "no-store"}).then((response) => response.ok ? response.json() : null).catch(() => null)
       ]);
+      treysBuildIds = new Set(Object.values(activeStateFile?.state?.compareSelections || {}).filter(Boolean));
       customStore = Custom.load(localStorage);
       remergeCustom();
       state = loadState();
