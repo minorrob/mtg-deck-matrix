@@ -61,18 +61,98 @@ const rolesOf = (card) => {
     .filter((role) => profile[`is${role}`]).map((role) => role.toLowerCase());
 };
 
-// Reasons the optimizer recorded for the swaps it made, so a generated item can
-// say what the simulation actually saw rather than a stock sentence.
-async function reasonsFor(requestId) {
+// What a generated card's line actually says.
+//
+// The first version repeated the optimizer's internal note, which described the
+// card being REPLACED -- "Cloud's Limit Break covers removal; Tip the Scales was
+// cast in 56% of the games it was drawn and sat dead 44% of the time". That is
+// the evidence for a cut, not a reason to own a card, and it left every Pod Fun
+// item reading "chosen by simulation, it replaces X", which says nothing at all.
+//
+// These lines describe the card you are being asked to buy: the job it does in
+// this deck, and what the simulation saw it do -- how often it got cast, how
+// early, and how the games went when it did.
+const ROLE_PHRASES = {
+  ramp: "accelerates the mana",
+  draw: "refills the hand",
+  removal: "answers a single threat",
+  wipe: "resets the board when it has gotten away from you",
+  protection: "keeps the deck's key pieces alive",
+  finisher: "closes the game out",
+  recursion: "buys the same card a second time",
+  tutor: "finds the piece the deck is missing",
+  threat: "puts a body on the board",
+  land: "fixes the mana"
+};
+// The constrained rung is not chasing power, so its cards are justified by what
+// they do for everyone's night rather than by what they do for your win rate.
+const POD_FUN_PHRASES = {
+  removal: "answers one threat instead of sweeping the board, so the table keeps its permanents",
+  draw: "keeps your hand full without ending anyone's game early",
+  ramp: "gets the deck doing something on time rather than doing everything at once",
+  protection: "lets you defend a position instead of removing the problem permanently",
+  threat: "gives the board a body to interact with rather than a clock nobody can answer",
+  recursion: "gets more turns out of cards already in the yard, which is slow and visible",
+  tutor: "finds the piece you need without shortening the game",
+  land: "fixes the mana"
+};
+
+function statSentence(stat) {
+  if (!stat || !Number.isFinite(stat.castRate)) return "";
+  const cast = Math.round(stat.castRate * 100);
+  const turn = Number(stat.avgCastTurn);
+  const win = Number.isFinite(stat.winRateWhenCast) ? Math.round(stat.winRateWhenCast * 100) : null;
+  const when = turn > 0 ? `, on average by turn ${turn.toFixed(1)}` : "";
+  // A card cast in almost every game it is drawn is doing its job; one cast half
+  // the time is a card the deck often cannot afford, and that is worth knowing
+  // before buying it.
+  const wonClause = win === null ? "" : ` The games it landed in were won ${win}% of the time.`;
+  return ` The simulation cast it in ${cast}% of the games it was drawn${when}.${wonClause}`;
+}
+
+function composeRationale(roles, stage, stat) {
+  const table = stage === "Pod Fun" ? POD_FUN_PHRASES : ROLE_PHRASES;
+  const jobs = (roles || []).map((role) => table[role === "creature" ? "threat" : role]).filter(Boolean);
+  const job = jobs.length
+    ? `${jobs.slice(0, 2).join(", and ")}.`
+    : stage === "Pod Fun"
+      ? "earns its slot on how the table's night goes rather than on your win rate."
+      : "earns its slot on the deck's measured weaknesses rather than on a card-quality list.";
+  const opener = stage === "Pod Fun"
+    ? "Kept for the table: it "
+    : stage === "Maxxed"
+      ? "Tier 3 capability: it "
+      : "Tunes the deck because it ";
+  return `${opener}${job}${statSentence(stat)}`.replace(/\s+/g, " ").trim();
+}
+
+async function rationaleFor(requestId, stage) {
   const result = await readJson(path.join(RESULTS_DIR, `${requestId}.json`), null);
   const reasons = new Map();
-  (result?.netChanges || []).forEach((change) => {
-    const name = change.in?.name || change.add?.name || change.name;
-    if (name && change.reason) reasons.set(Lineup.normalizeName(name), change.reason);
+  if (!result) return reasons;
+  const statByName = new Map((result.perCardStats || []).map((stat) => [Lineup.normalizeName(stat.name), stat]));
+  const rolesByName = new Map();
+  (result.netChanges || []).forEach((change) => {
+    const name = change.in?.name || change.in;
+    if (name) rolesByName.set(Lineup.normalizeName(String(name)), change.inRoles || []);
   });
-  (result?.history || []).forEach((entry) => (entry.swaps || []).forEach((swap) => {
-    if (swap.in && swap.reason && !reasons.has(Lineup.normalizeName(swap.in))) reasons.set(Lineup.normalizeName(swap.in), swap.reason);
+  (result.history || []).forEach((entry) => (entry.swaps || []).forEach((swap) => {
+    const key = swap.in ? Lineup.normalizeName(swap.in) : null;
+    if (key && !rolesByName.has(key)) rolesByName.set(key, swap.addRoles || []);
   }));
+
+  // Every card in the measured list, not only the ones this particular run
+  // happened to swap in. A run that converged after two changes still carries
+  // ninety-eight cards it measured, and each of those has a cast rate worth
+  // reporting -- keying off the swap log alone left most items with no numbers
+  // at all, which is the thing this rewrite exists to fix.
+  statByName.forEach((stat, key) => {
+    const roles = rolesByName.get(key) || rolesOf(metaFor(stat.name));
+    reasons.set(key, composeRationale(roles, stage, stat));
+  });
+  rolesByName.forEach((roles, key) => {
+    if (!reasons.has(key)) reasons.set(key, composeRationale(roles, stage, statByName.get(key)));
+  });
   return reasons;
 }
 
@@ -81,6 +161,17 @@ async function reasonsFor(requestId) {
 // data/cards.json is what every other tool treats as authoritative, so anything
 // that lands in a ladder gets added to it.
 const newlyAudited = new Map();
+// Used when a card entered the list without a recorded swap (a legality repair,
+// or a seed carried in from the rung below). Still describes the card's job
+// rather than naming what it displaced.
+function defaultRationale(meta, stage) {
+  const roles = rolesOf(meta);
+  const table = stage === "Pod Fun" ? POD_FUN_PHRASES : ROLE_PHRASES;
+  const jobs = roles.map((role) => table[role === "creature" ? "threat" : role]).filter(Boolean);
+  if (!jobs.length) return `Held in the ${stage} build by the simulation, which measured the deck as stronger with it than without.`;
+  return `${stage === "Pod Fun" ? "Kept for the table: it " : "Tunes the deck because it "}${jobs.slice(0, 2).join(", and ")}.`;
+}
+
 function makeItem(name, replaces, {category, stage, suffix, reason}) {
   const meta = metaFor(name);
   if (!meta) throw new Error(`no card data anywhere for ${name}`);
@@ -112,8 +203,8 @@ function makeItem(name, replaces, {category, stage, suffix, reason}) {
     ceiling: Number(meta.ceiling ?? meta.price ?? 0),
     category,
     stage,
-    purpose: reason || `Chosen by simulation for the ${stage} build; it replaces ${replaces}.`,
-    why: reason || `Chosen by simulation for the ${stage} build; it replaces ${replaces}.`,
+    purpose: reason || defaultRationale(meta, stage),
+    why: reason || defaultRationale(meta, stage),
     replaces,
     gameChanger: Boolean(meta.gameChanger),
     tags: [],
@@ -126,14 +217,14 @@ function makeItem(name, replaces, {category, stage, suffix, reason}) {
     commanderLegal: true,
     // Max cards are justified by capability rather than by price, and the page
     // enforces that, so the reason is carried under the name the Max rung reads.
-    maxReason: category === "max" ? (reason || `Tier 3 capability the lower rungs are not allowed to play; it replaces ${replaces}.`) : undefined,
+    maxReason: category === "max" ? (reason || defaultRationale(meta, "Maxxed")) : undefined,
     // No invented one-to-five scores. A simulation can say what a card did in
     // the games it was drawn in; it cannot say how much fun the card is, and a
     // made-up number in that column would read exactly like a measured one.
     // The scoring block simply does not render without them.
     brief: {
-      value: `$${Number(meta.price || 0).toFixed(2)}. Chosen by simulation over the card it replaces, not by price.`,
-      fit: reason || `Simulation put this in the ${stage} build in place of ${replaces}.`
+      value: `$${Number(meta.price || 0).toFixed(2)}. Chosen by simulation on what it did in the games, not by price.`,
+      fit: reason || defaultRationale(meta, stage)
     },
     ownedExtra: (buyPlans.ownedExtras || []).some((owned) => Lineup.normalizeName(owned) === Lineup.normalizeName(name)) || undefined
   };
@@ -191,7 +282,7 @@ for (const file of files) {
   try {
     const tunedTarget = expand(record.rungs.tuned.cards);
     const tuned = ladderFor(base, tunedTarget, [...(plan.required || []), ...(plan.tuned2 || [])], {
-      category: "tuned", stage: "Core", suffix: "tuned", reasons: await reasonsFor(record.rungs.tuned.requestId)
+      category: "tuned", stage: "Core", suffix: "tuned", reasons: await rationaleFor(record.rungs.tuned.requestId, "Tuned")
     });
     plan.required = tuned.items;
     plan.tuned2 = [];
@@ -199,7 +290,7 @@ for (const file of files) {
 
     if (record.rungs.podfun) {
       const podfun = ladderFor(base, expand(record.rungs.podfun.cards), plan.funTuned || [], {
-        category: "funTuned", stage: "Pod Fun", suffix: "pod-fun", reasons: await reasonsFor(record.rungs.podfun.requestId)
+        category: "funTuned", stage: "Pod Fun", suffix: "pod-fun", reasons: await rationaleFor(record.rungs.podfun.requestId, "Pod Fun")
       });
       plan.funTuned = podfun.items;
       plan.funMax = [];
@@ -208,7 +299,7 @@ for (const file of files) {
 
     if (record.rungs.maxed) {
       const maxed = ladderFor(tunedTarget, expand(record.rungs.maxed.cards), [...(plan.upgrade || []), ...(plan.enhance || []), ...(plan.enhance2 || []), ...(plan.max || []), ...(plan.max2 || [])], {
-        category: "max", stage: "Maxxed", suffix: "max", reasons: await reasonsFor(record.rungs.maxed.requestId)
+        category: "max", stage: "Maxxed", suffix: "max", reasons: await rationaleFor(record.rungs.maxed.requestId, "Maxxed")
       });
       plan.max = maxed.items;
       plan.upgrade = [];

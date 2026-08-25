@@ -10,6 +10,7 @@ const Custom = require("../custom-model.js");
 const Generator = require("../deck-generator.js");
 const fixture = JSON.parse(await readFile(new URL("./fixtures/scryfall/cards.json", import.meta.url), "utf8"));
 const indexSource = await readFile(new URL("../index.html", import.meta.url), "utf8");
+const appSource = await readFile(new URL("../app.js", import.meta.url), "utf8");
 
 // ---------------------------------------------------------------------------
 // A stand-in Scryfall: enough of the query grammar to answer everything the
@@ -442,18 +443,22 @@ for (const module of ["lineup-model.js", "compliance-model.js", "scryfall-client
 }
 assert.ok(indexSource.indexOf("compliance-model.js") < indexSource.indexOf("deck-generator.js"), "the generator must load after the compliance model it depends on");
 assert.ok(indexSource.indexOf("deck-generator.js") < indexSource.indexOf("app.js?"), "generator modules must load before app.js");
-assert.match(indexSource, /<button class="main-tab" data-view="choose"/, "index.html must publish the Choose tab");
-assert.match(indexSource, /<section class="view" id="view-choose"/, "index.html must publish the Choose view");
-assert.ok(indexSource.indexOf('data-view="choose"') < indexSource.indexOf('data-view="compare"'), "Step 0 must sit in front of Compare");
-assert.ok(indexSource.indexOf('id="view-choose"') < indexSource.indexOf('id="view-compare"'), "the Choose section must precede the Compare section");
+// Choose is withdrawn from the page for now, so the tab and section are gone on
+// purpose. What must stay true is that withdrawing it is a two-element change
+// and nothing else: the generator, the Scryfall client, the custom store and the
+// renderer are all still wired, so putting the tab and section back in
+// index.html brings the whole step back with them.
+assert.doesNotMatch(indexSource, /data-view="choose"/, "the Choose tab is withdrawn for now");
+assert.doesNotMatch(indexSource, /id="view-choose"/, "the Choose section is withdrawn for now");
+assert.match(appSource, /function renderChooseView\(\)/, "the Choose renderer must survive the tab being withdrawn");
+assert.match(appSource, /if \(!\$\("#view-choose"\)\) return;/, "renderChoose must no-op rather than throw while its section is absent");
+assert.match(appSource, /Generator\.generateForSlot/, "the generator must still be wired to the slot runner");
 
 const cssSource = await readFile(new URL("../app.css", import.meta.url), "utf8");
-assert.match(cssSource, /\.main-tabs \{[^}]*repeat\(5, minmax\(0, 1fr\)\)/, "the tab bar must make room for five steps");
-assert.doesNotMatch(cssSource, /\.main-tabs\{grid-template-columns:repeat\(4,minmax\(0,1fr\)\)\}/, "the narrow-screen tab bar must also fit five steps");
+assert.match(cssSource, /\.main-tabs \{[^}]*repeat\(6, minmax\(0, 1fr\)\)/, "the tab bar must make room for all six steps");
 assert.match(cssSource, /\.choose-grid \{/, "the Choose grid must be styled");
 assert.match(cssSource, /\.deck-group-divider \{/, "the generated-deck divider must be styled");
 
-const appSource = await readFile(new URL("../app.js", import.meta.url), "utf8");
 assert.match(appSource, /const Custom = window\.MtgCustomModel/, "app.js must bind the custom deck model");
 assert.match(appSource, /const Generator = window\.MtgDeckGenerator/, "app.js must bind the deck generator");
 assert.match(appSource, /function renderChoose\(\)/, "app.js must render the Choose view");
@@ -464,6 +469,8 @@ assert.match(appSource, /\$\{selected\.length\}\/\$\{catalog\.decks\.length\}/, 
 assert.match(appSource, /\$\{variants\.length\} of \$\{deckTotal\} shown/, "each deck row must count its own variants");
 assert.match(appSource, /deck-group-divider/, "generated decks must be separated from the curated ones");
 assert.match(appSource, /String\(item\?\.name \|\| ""\)/, "itemKey must tolerate plans that carry no precon");
-assert.match(appSource, /^\s{4}choose: \[/m, "the tour must define its own steps for the Choose view");
+// The Choose tour steps go with the withdrawn tab; the tour must not offer a
+// walkthrough of a page nobody can reach.
+assert.doesNotMatch(appSource, /^\s{4}choose: \[/m, "the tour must not walk through a withdrawn view");
 
 console.log(`Generated ${generated.variants.length} compliant variants from ${fixture.data.length} fixture cards in ${calls.length} stubbed Scryfall calls.`);
