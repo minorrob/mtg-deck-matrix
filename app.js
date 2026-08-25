@@ -85,7 +85,7 @@
   let activeTooltipTarget = null;
   let shopMetadataPromise = null;
   // Which Compare cards are currently previewing their alt commander -- display-only and
-  // deliberately not part of `state`/localStorage: it never changes what Tune seeds.
+  // deliberately not part of `state`/localStorage: it never changes what Calibrate seeds.
   const altCommanderPreview = new Set();
   let cardMetadata = {};
   try { cardMetadata = JSON.parse(localStorage.getItem(CARD_METADATA_KEY) || "{}"); } catch (_) {}
@@ -122,10 +122,6 @@
     const filename = RARITY_ICONS[key] || SECTION_ICONS.rarity;
     return `<img class="rarity-icon" src="assets/icons/${filename}" alt="${esc(label || "Rarity")}" title="${esc(label || "Rarity")}">`;
   };
-  // How many cards sit across a row in Shop's gallery. Two is a phone-sized
-  // browse; four is a dense vendor-floor scan.
-  const SHOP_ZOOM_MIN = 2;
-  const SHOP_ZOOM_MAX = 4;
   const money = (value) => Number.isFinite(Number(value)) && Number(value) > 0 ? `$${Number(value).toFixed(2)}` : "Price varies";
   const variantById = (id) => catalog.variants.find((variant) => variant.id === id);
   // Which variants wear the corner ribbon. Read from data/active-state.json at
@@ -297,7 +293,7 @@
       boughtQuantities: {},
       comments: {},
       compareFilters: {query: "", mechanic: "all", playstyle: "all", profileStage: "2"},
-      shopFilters: {status: "need", type: "all", category: "all", alt: "all", deck: "all", groupBy: "none", query: "", layout: "gallery", zoom: 3},
+      shopFilters: {status: "need", type: "all", category: "all", alt: "all", deck: "all", groupBy: "none", query: "", layout: "gallery"},
       buyMode: "all",
       purchasePrices: {},
       liveFilters: {},
@@ -713,7 +709,7 @@
         <div class="selection-meter"><strong>${selected.length}/${catalog.decks.length}</strong><span>decks selected</span></div>
       </div>
       <div class="action-row">
-        <button class="primary-button" id="save-picks" ${selected.length ? "" : "disabled"}>Save Picks → Tune</button>
+        <button class="primary-button" id="save-picks" ${selected.length ? "" : "disabled"}>Save Picks → Calibrate</button>
         <button class="secondary-button" id="email-picks" ${selected.length ? "" : "disabled"}>Email selections</button>
       </div>
       <section class="compare-filter-panel">
@@ -830,7 +826,7 @@
   // Only six of the thirty variants were ever put through the optimizer, and only three of
   // those have an alternative commander explored. Compare is where a variant gets chosen, so
   // it should say up front which extra builds come with that choice rather than leaving it to
-  // be discovered two screens later in Tune. Colors match the Tune ladder families.
+  // be discovered two screens later in Calibrate. Colors match the Calibrate ladder families.
   function variantDataBadges(variant) {
     const plan = buyCatalog?.plans?.[variant.id];
     if (!plan) return "";
@@ -946,7 +942,7 @@
   // other 44 variants also have an altCommanderCases entry, but it's a lighter-weight scored
   // comparison with no second decklist behind it, so this card has nothing to preview for them.
   // Display-only, exactly like the plan requires: previewing the alt commander here never
-  // touches Tune seeding or any stored selection, only what this one card shows. The
+  // touches Calibrate seeding or any stored selection, only what this one card shows. The
   // real Score/Win% comparison and the caution paragraph both come straight from the
   // workbook's own Summary sheet (data/simulation-summary.json) -- never fabricated.
   function commanderCompareMarkup(variant, stage) {
@@ -1085,7 +1081,7 @@
     $("#detail-sheet-context").innerHTML = "";
     $("#detail-sheet-context").hidden = false;
     $("#commander-info-toggle")?.remove();
-    $("#detail-sheet-body").innerHTML = variant.detailHtml || `<p>No extended report is available.</p>`;
+    $("#detail-sheet-body").innerHTML = variant.detailHtml ? `<div class="deck-plan">${variant.detailHtml}</div>` : `<p>No extended report is available.</p>`;
     decorateRichContent($("#detail-sheet-body"), variant);
     organizeVariantDetail($("#detail-sheet-body"), variant);
     dialog.showModal();
@@ -1238,17 +1234,17 @@
     } else {
       state.compareSelections[variant.deckId] = variant.id;
       seedBuyStateForNewPick(variant);
-      if (previous) showToast(`Deck ${variant.deckId} changed. Other Tune were preserved.`);
+      if (previous) showToast(`Deck ${variant.deckId} changed. Other Calibrate were preserved.`);
       else showToast(`Deck ${variant.deckId} saved: ${variant.name}`);
     }
     saveState();
     renderCompare();
   }
 
-  // Gives a freshly-picked variant a smarter Tune starting point than the flat site
+  // Gives a freshly-picked variant a smarter Calibrate starting point than the flat site
   // default, using whichever Compare stage the pick was made at: Base, Tuned, or Maxxed --
   // each of which already folds in its Monte-Carlo-improved swaps where the variant has them.
-  // Never touches a variant that already has a stored Tune selection -- the preset
+  // Never touches a variant that already has a stored Calibrate selection -- the preset
   // dropdown is the explicit re-apply mechanism for anything past the first pick, and
   // switching stage chips alone (with no new pick) must never reseed either.
   function selectionIdsSignature(selection) {
@@ -1431,14 +1427,14 @@
       </div>
       ${selected.length ? "" : `<div class="empty-state"><h3>No deck picks yet</h3><p>Choose a variant in Compare first, then come back here.</p><button class="primary-button" data-go="compare">Choose decks</button></div>`}
       ${selected.some((variant) => !buyCatalog.plans[variant.id]) ? `<div class="coverage-note"><h3>Selection needs attention</h3><p>One selected variant could not be loaded. Return to Compare and select it again.</p></div>` : ""}
-      ${readyCount ? `<section class="buy-overview"><h3>Shopping plan summary</h3><div class="buy-overview-grid">${selected.filter((variant) => buyCatalog.plans[variant.id]).map((variant) => {
+      ${readyCount ? `<details class="buy-overview" data-ui-key="buy-overview" open><summary><h3>Shopping plan summary</h3><span class="section-expander" aria-hidden="true"></span></summary><div class="buy-overview-grid">${selected.filter((variant) => buyCatalog.plans[variant.id]).map((variant) => {
         const plan = buyCatalog.plans[variant.id];
         const current = ensureBuyState(variant.id);
         const namedShell = (plan.startingShell || []).filter((card) => !card.isFlexibleSlot);
         const selectedShell = new Set(current.shell || []);
         const shellSummary = `${namedShell.filter((card) => selectedShell.has(card.id)).reduce((sum, card) => sum + Number(card.quantity || 1), 0)}/${namedShell.reduce((sum, card) => sum + Number(card.quantity || 1), 0)} shell cards · `;
         return `<button class="buy-overview-card" data-open-buy-deck="${variant.deckId}"><b>Deck ${variant.deckId}</b><strong>${esc(variant.name)}</strong><span>${shellSummary}${esc(plan.priorityLabel || plan.budgetLabel)} · ${plan.required.length} Tuned purchases</span></button>`;
-      }).join("")}</div></section>` : ""}
+      }).join("")}</div></details>` : ""}
       ${selected.length ? `<div class="action-row action-row-top"><button class="primary-button save-buys">Save Buys → Shop</button><button class="secondary-button" data-go="compare">Back to Compare</button></div>` : ""}
       <div id="buy-decks"></div>
       ${salvageBuySection()}
@@ -1597,16 +1593,15 @@
     }
 
     body.innerHTML = `
-      ${compliancePanel(variant, plan, current)}
-      ${dynamicMetricsHeaderMarkup(plan, current, variant)}
-      <details class="plan-analysis" data-ui-key="plan-${esc(variant.id)}">
-        <summary><span>${icon("☰")}Deck plan &amp; analysis</span><small>How to play, buy order, bracket placement, and tuning notes</small></summary>
-        <div class="legacy-plan">${plan.planHtml || variant.detailHtml || ""}</div>
-      </details>
+      <div class="deck-tools" role="tablist" aria-label="Inspect this deck">
+        ${DECK_TOOLS.map((tool) => `<button type="button" role="tab" class="deck-tool" data-deck-tool="${esc(tool.key)}" aria-selected="false" aria-controls="deck-tool-panel-${esc(variant.id)}">${icon(tool.glyph)}<span>${esc(tool.label)}</span></button>`).join("")}
+      </div>
+      <div class="deck-tool-panel" id="deck-tool-panel-${esc(variant.id)}" role="tabpanel" hidden></div>
       ${presetDropdownMarkup(plan, current, variant.id)}
       ${commanderSwitchMarkup(plan, current, variant.id)}
       ${startingShellSection(variant, plan, current, variant.id)}
       ${LADDER_GROUPS.map((group) => ladderGroupMarkup(group, plan, current, variant.id, altCommanderActive(plan, current))).join("")}`;
+    wireDeckTools(body, variant, plan, current);
     decorateRichContent(body, variant);
     if (details.open) {
       ensureShopMetadata([
@@ -1771,7 +1766,7 @@
   }
 
   function buyTotalMarkup(summary) {
-    return `<span class="buy-total" data-buy-total title="Market price of everything selected here, whether or not you own it yet. Dex reports what you have actually recorded paying instead."><small>Market total</small><strong>$${summary.total.toFixed(2)}</strong>${summary.unpriced ? `<em>+ ${summary.unpriced} unpriced</em>` : ""}</span>`;
+    return `<span class="buy-total" data-buy-total title="Market price of everything selected here, whether or not you own it yet. Decks reports what you have actually recorded paying instead."><small>Market total</small><strong>$${summary.total.toFixed(2)}</strong>${summary.unpriced ? `<em>+ ${summary.unpriced} unpriced</em>` : ""}</span>`;
   }
 
   function updateBuyTotal(deck, plan, current) {
@@ -1982,6 +1977,53 @@
     </section>`;
   }
 
+  function deckPlanMarkup(variant, plan) {
+    const body = plan?.planHtml || variant.detailHtml || "";
+    if (!body) return `<div class="empty-state"><h3>No plan published</h3><p>This variant has no extended write-up yet.</p></div>`;
+    return `<div class="deck-plan">${body}</div>`;
+  }
+
+  // Three ways of inspecting one deck, on one row. Each renders into the shared
+  // panel underneath; clicking the open one closes it again, so the default
+  // state of a deck is its cards rather than three folded headers competing
+  // with the deck header above them for the reader's attention.
+  const DECK_TOOLS = [
+    {key: "check", label: "Deck check", glyph: "✓"},
+    {key: "ratings", label: "Estimated ratings", glyph: "◎"},
+    {key: "plan", label: "Deck plan", glyph: "☰"}
+  ];
+
+  function wireDeckTools(body, variant, plan, current) {
+    const panel = $(".deck-tool-panel", body);
+    const buttons = $$(".deck-tool", body);
+    const show = (key) => {
+      const button = buttons.find((entry) => entry.dataset.deckTool === key);
+      const alreadyOpen = button?.getAttribute("aria-selected") === "true";
+      buttons.forEach((entry) => entry.setAttribute("aria-selected", String(!alreadyOpen && entry === button)));
+      if (alreadyOpen || !button) {
+        panel.hidden = true;
+        panel.innerHTML = "";
+        deckToolOpen.delete(variant.id);
+        return;
+      }
+      panel.hidden = false;
+      panel.dataset.tool = key;
+      panel.innerHTML = key === "check" ? compliancePanel(variant, plan, current)
+        : key === "ratings" ? dynamicMetricsHeaderMarkup(plan, current, variant)
+        : deckPlanMarkup(variant, plan);
+      decorateRichContent(panel, variant);
+      deckToolOpen.set(variant.id, key);
+    };
+    buttons.forEach((button) => button.addEventListener("click", () => show(button.dataset.deckTool)));
+    // Re-opening a deck restores whichever tool was showing when it closed.
+    const remembered = deckToolOpen.get(variant.id);
+    if (remembered) show(remembered);
+  }
+
+  // View preference, not a decision about the deck, so it lives here rather
+  // than in saved state -- same reasoning as the ladder tabs.
+  const deckToolOpen = new Map();
+
   function compliancePanel(variant, plan, current) {
     const result = evaluateDeckCompliance(plan, current);
     const tierButton = (tier) => {
@@ -1993,8 +2035,8 @@
     };
     const countState = result.total === 100 ? "is-compliant" : "is-noncompliant";
     const landPercent = result.total ? Math.min(100, Math.round((result.types.Land || 0) / result.total * 100)) : 0;
-    return `<details class="deck-compliance" data-compliance-panel data-ui-key="compliance-${esc(variant.id)}">
-      <summary class="compliance-heading"><span class="compliance-title">${icon("✓")}<span><b>Commander deck check</b><small>4-player construction · click to expand</small></span></span><span class="compliance-inline">${tierButton(2)}${tierButton(3)}<span class="card-count-status ${countState}" data-composition-detail role="button" tabindex="0"><b>${result.total}/100</b><small>${result.total === 100 ? "Exact" : result.total < 100 ? `${100 - result.total} under` : `${result.total - 100} over`}</small></span></span></summary>
+    return `<div class="deck-compliance" data-compliance-panel>
+      <div class="compliance-heading"><span class="compliance-title">${icon("✓")}<span><b>Commander deck check</b><small>4-player construction</small></span></span><span class="compliance-inline">${tierButton(2)}${tierButton(3)}<span class="card-count-status ${countState}" data-composition-detail role="button" tabindex="0"><b>${result.total}/100</b><small>${result.total === 100 ? "Exact" : result.total < 100 ? `${100 - result.total} under` : `${result.total - 100} over`}</small></span></span></div>
       <div class="compliance-details">
       <button class="composition-strip" data-composition-detail aria-label="View deck composition details">
         <span class="land-segment" style="width:${landPercent}%"></span><span class="other-segment" style="width:${100 - landPercent}%"></span>
@@ -2002,7 +2044,7 @@
       </button>
       ${result.compositionWarnings.length ? `<p class="composition-warning">${icon("!")}<span>${esc(result.compositionWarnings[0])}</span></p>` : ""}
       <p class="audit-note">Guideline check · open a Tier status for rule details</p></div>
-    </details>`;
+    </div>`;
   }
 
   // Literal, independent membership per category array — deliberately not Lineup's
@@ -2411,7 +2453,7 @@
   // was measured as fun, since no per-card fun rating exists anywhere in this app's data. Order
   // matters: first match wins. Most fun-ladder cards are solid, unglamorous synergy pieces with
   // no single standout mechanic, and for those this returns null on purpose rather than forcing
-  // a sentence -- the same "real signal or nothing" discipline the rest of Tune follows.
+  // a sentence -- the same "real signal or nothing" discipline the rest of Calibrate follows.
   const FUN_SIGNALS = [
     [/flip (a|two|three) coins?|randomly/i, "Coin-flip or randomized effect — pure chaos value"],
     [/extra turn|additional turn/i, "Grants an extra turn — a genuine table reaction"],
@@ -2433,7 +2475,7 @@
     return FUN_SIGNALS.find(([pattern]) => pattern.test(text))?.[1] || null;
   }
 
-  // The very short, kind-specific line the request asked for directly on the Tune row:
+  // The very short, kind-specific line the request asked for directly on the Calibrate row:
   // Fun Tuned/Fun Max say what makes the card fun, Enhance rungs say how it helps performance,
   // Max rungs say how it maximizes Tier 3. Returns null (render nothing) rather than a filler
   // sentence when the underlying data has nothing to say -- swap-evidence paragraphs are
@@ -2573,8 +2615,8 @@
 
   // Finds which preset a given id-set most resembles, regardless of whether a preset was ever
   // applied -- free-form editing means a live selection routinely isn't an exact match for any
-  // one preset, so this is a similarity search, not a lookup. Shared by the Tune dynamic
-  // metrics header (over the raw Tune selection) and the Dex advisory performance
+  // one preset, so this is a similarity search, not a lookup. Shared by the Calibrate dynamic
+  // metrics header (over the raw Calibrate selection) and the Decks advisory performance
   // check (over just the active 100), since both are asking the same question of different id-sets.
   // Assembling a preset walks the whole lineup model, and several features now ask for every
   // preset on every render (the metrics header, the dropdown, the per-card build panel), so
@@ -2666,15 +2708,17 @@
     if (match.missing) deltaBits.push(`−${match.missing}`);
     const buildName = PRESET_BUILD_NAME[match.preset.key];
     const sim = simulationSummary?.builds?.[variant.id]?.[buildName];
+    // The measured readout used to hang below this panel as a loose dotted box,
+    // which read as a stray note rather than as part of the ratings. It belongs
+    // inside them: these are the estimates, that is what the simulation actually
+    // measured, and they answer the same question.
     return `<div class="dynamic-metrics" data-ui-key="dynmetrics-${esc(variant.id)}">
-      <details class="metric-strip-panel" data-ui-key="dynmetrics-strip-${esc(variant.id)}">
-        <summary><span>${icon("◎")}Estimated ratings</span><small>Nearest configuration: ${esc(match.preset.label)} (${matchPct}% match)${deltaBits.length ? ` · ${deltaBits.join(" / ")} vs that build` : ""}</small></summary>
-        ${inherited ? `<p class="dynamic-metrics-note">${esc(match.preset.label)} has no ratings authored for it yet -- these are inherited from ${stage === 3 ? "Maxxed" : "Tuned"}'s profile until real sim-derived ratings replace them.</p>` : ""}
-        <div class="metric-strip">
-          ${metricFamilyMarkup("playstyle", playstyle, `metric-playstyle-${variant.id}-buy`)}
-          ${metricFamilyMarkup("engine", engine, `metric-engine-${variant.id}-buy`)}
-        </div>
-      </details>
+      <p class="dynamic-metrics-lede">Nearest configuration: <b>${esc(match.preset.label)}</b> (${matchPct}% match)${deltaBits.length ? ` · ${deltaBits.join(" / ")} vs that build` : ""}</p>
+      ${inherited ? `<p class="dynamic-metrics-note">${esc(match.preset.label)} has no ratings authored for it yet -- these are inherited from ${stage === 3 ? "Maxxed" : "Tuned"}'s profile until real sim-derived ratings replace them.</p>` : ""}
+      <div class="metric-strip">
+        ${metricFamilyMarkup("playstyle", playstyle, `metric-playstyle-${variant.id}-buy`)}
+        ${metricFamilyMarkup("engine", engine, `metric-engine-${variant.id}-buy`)}
+      </div>
       ${simulationReadoutMarkup(buildName, sim)}
     </div>`;
   }
@@ -2745,14 +2789,14 @@
       key: "enhance", title: "Enhance", glyph: "+",
       tabs: [
         {key: "enhance", label: "Enhance", kinds: ["enhance", "upgrade"], preset: "enhance", build: "Enhance",
-         note: "Role-preserving improvements and owned substitutions on top of Tuned · $20 or less."}
+         note: "Role-preserving improvements and owned substitutions on top of Tuned, still inside Tier 2 · $20 or less."}
       ]
     },
     {
       key: "max", title: "Maxxed", glyph: "✦",
       tabs: [
         {key: "max", label: "Maxxed", kinds: ["max", "enhance2", "max2"], preset: "max", build: "Max",
-         note: "Strongest Tier 3 / Bracket 3-legal capability · price is not the criterion · includes every Monte-Carlo-improved swap."},
+         note: "Tier 3 capability — the Game Changers a Tier 2 build may not run at all — plus every Monte-Carlo-improved swap. Price is not the criterion here."},
         {key: "funMax", label: "Fun Max", kinds: ["funMax"], preset: "funMax", build: "Fun Max",
          note: "Fun-weighted re-optimization on top of Fun Tuned."}
       ]
@@ -2788,7 +2832,7 @@
     return tabs.slice().sort((a, b) => checkedIn(b) - checkedIn(a))[0];
   }
 
-  function buyItemRow(item, kind, current, variantId) {
+  function buyItemRow(item, kind, current, variantId, options = {}) {
     const checked = (current[kind] || []).includes(item.id);
     const impact = (kind === "enhance" || kind === "enhance2") ? enhancementImpact(item) : null;
     const replacement = item.replaces ? `<span class="replacement-line"><b${impact ? ` class="replace-impact impact-${impact.key}" title="${esc(impact.label)}" aria-label="Replaces — ${esc(impact.label)}"` : ""}>Replaces</b><span>${esc(item.replaces)}</span></span>` : "";
@@ -2802,7 +2846,7 @@
       <button class="buy-item-detail" type="button" data-item-kind="${esc(kind)}" data-item-id="${esc(item.id)}">
         <img src="${esc(item.image)}" alt="" loading="lazy">
         <span class="buy-copy">
-          <span class="buy-item-eyebrow"><span class="kind-label ${esc(kind)}">${esc(KIND_LABELS[kind] || kind)}</span>${item.tags?.includes("alt") ? `<span class="alt-mini">◇ Alt</span>` : ""}${item.ownedExtra ? `<span class="owned-mini">✓ Owned</span>` : ""}${item.temporaryUntil ? `<span class="temp-mini">Temp until ${esc(item.temporaryUntil)}</span>` : ""}${item.gameChanger ? `<span class="gc-mini">✦ Game Changer</span>` : ""}</span>
+          <span class="buy-item-eyebrow"><span class="kind-label ${esc(kind)}">${esc(KIND_LABELS[kind] || kind)}</span>${altTagMarkup(item, options)}${item.capabilityOption ? `<span class="offer-mini" title="Offered on top of the measured rung — the published score for this build does not include it">＋ Option</span>` : ""}${item.ownedExtra ? `<span class="owned-mini">✓ Owned</span>` : ""}${item.temporaryUntil ? `<span class="temp-mini">Temp until ${esc(item.temporaryUntil)}</span>` : ""}${item.gameChanger ? `<span class="gc-mini">✦ Game Changer</span>` : ""}</span>
           <strong>${esc(item.name)}${item.quantity > 1 ? ` ×${item.quantity}` : ""}</strong>
           ${replacement}<small>${esc(summaryCopy)}</small>
           ${microFit ? `<small class="micro-fit micro-fit-${microFit.kind}"><b>${esc(microFit.label)}:</b> ${esc(microFit.text)}</small>` : ""}
@@ -2810,6 +2854,27 @@
       </button>
       <span class="price">${money(cardPriceBounds(item, cardMetadata[itemKey(item)] || {}).price)}</span>
     </div>`;
+  }
+
+  // Which commander a row belongs to. Inside the Alt commander group every card
+  // is there to support one specific alternative commander, and saying whose
+  // build it is on the row itself beats a note above the list that a reader has
+  // already scrolled past. Outside that group the old generic Alt flag stands.
+  function altTagMarkup(item, options) {
+    if (item.isCommander) return `<span class="commander-mini">◆ Commander</span>`;
+    if (options.altCommanderName) return `<span class="alt-mini">◇ ${esc(options.altCommanderName)}</span>`;
+    return item.tags?.includes("alt") ? `<span class="alt-mini">◇ Alt</span>` : "";
+  }
+
+  // The measured delta for a whole rung of offered options, written by
+  // tools/sim/build-capability.mjs. Every item on a rung carries the same
+  // sentence, so the panel states it once rather than repeating it per row --
+  // and it only ever says what the engine produced, including the runs where
+  // adopting the rung measured worse than the build below it.
+  function rungMeasurementMarkup(rows) {
+    const note = rows.map(({item}) => item.rungMeasurement).find(Boolean);
+    if (!note) return "";
+    return `<p class="rung-measurement">${icon("i")}<span>${esc(note)}</span></p>`;
   }
 
   function ladderGroupMarkup(group, plan, current, variantId, altActive) {
@@ -2829,6 +2894,10 @@
     // summing them double-counts nothing.
     const groupTotal = tabs.reduce((sum, tab) => sum + tabItems(tab).length, 0);
     const rows = tabItems(active);
+    // In the Alt commander group every row is part of one commander's build, so
+    // the rows carry that commander's name and the panel drops the two notes
+    // that used to say the same thing less usefully above them.
+    const altCommanderName = isAltGroup ? (plan.altTuned || []).find((item) => item.isCommander)?.name || "" : "";
     const allChecked = rows.length > 0 && rows.every(({item, kind}) => (current[kind] || []).includes(item.id));
     const anyChecked = rows.some(({item, kind}) => (current[kind] || []).includes(item.id));
     const sim = simulationSummary?.builds?.[variantId]?.[active.build];
@@ -2844,13 +2913,14 @@
       </div>
       <div class="ladder-tab-panel">
         <p class="ladder-tab-note">${esc(active.note)}</p>
-        ${simulationReadoutMarkup(active.build, sim)}
+        ${isAltGroup ? "" : simulationReadoutMarkup(active.build, sim)}
+        ${rungMeasurementMarkup(rows)}
         <label class="section-select-all ladder-select-all" data-select-tab-all="${esc(group.key)}" data-tab-preset="${esc(active.preset)}">
           <input type="checkbox" ${allChecked ? "checked" : ""}><span>Select all ${esc(active.label)}</span>
         </label>
-        ${deemphasized ? `<p class="ladder-deemphasis-note">${icon("i")}<span>${isAltGroup ? "Shown for reference — the original commander is active. Selecting from here is still allowed." : "The alternative commander is active, so this build's cards are not part of that lineup. Selecting them is still allowed."}</span></p>` : ""}
+        ${deemphasized && !isAltGroup ? `<p class="ladder-deemphasis-note">${icon("i")}<span>The alternative commander is active, so this build's cards are not part of that lineup. Selecting them is still allowed.</span></p>` : ""}
       </div>
-      <div class="ladder-rows" data-any-checked="${anyChecked}">${rows.map(({item, kind}) => buyItemRow(item, kind, current, variantId)).join("")}</div>
+      <div class="ladder-rows" data-any-checked="${anyChecked}">${rows.map(({item, kind}) => buyItemRow(item, kind, current, variantId, {altCommanderName})).join("")}</div>
     </details>`;
   }
 
@@ -2991,7 +3061,7 @@
       ${detailText("Commander note", item.commanderNote)}
       <section class="precon-plan-source">
         <div class="precon-plan-heading"><p>Complete source plan</p><h3>Everything from the original shopping guide</h3></div>
-        <div class="legacy-plan">${plan?.planHtml || variant.detailHtml || "<p>No extended plan is available.</p>"}</div>
+        <div class="deck-plan">${plan?.planHtml || variant.detailHtml || "<p>No extended plan is available.</p>"}</div>
       </section>
       ${item.tcgplayerUrl ? `<p><a class="primary-button detail-link" href="${esc(item.tcgplayerUrl)}" target="_blank" rel="noopener">Find this precon on TCGplayer</a></p>` : ""}`
       : `
@@ -3293,7 +3363,7 @@
     groupBy: "status",
     subgroupBy: "typeLine"
   };
-  // Shared by the Dex and Shop copies of the Level filter (see P3 in the
+  // Shared by the Decks and Shop copies of the Level filter (see P3 in the
   // new-categories plan -- both must stay in sync, so this is the one list they both read).
   const LEVEL_FILTER_OPTIONS = [
     ["all", "All levels"],
@@ -3324,7 +3394,7 @@
     ["level", "Build level"]
   ];
 
-  // Dex used to keep a filter set per deck, which meant six copies of the same
+  // Decks used to keep a filter set per deck, which meant six copies of the same
   // controls on one page and six places to set the same thing. There is now one
   // set for the whole page. The signature is unchanged on purpose: every
   // consumer of these filters -- matching, sorting, grouping, the CSV export --
@@ -3334,7 +3404,7 @@
     state.liveFilters.page = {...LIVE_FILTER_DEFAULTS, ...(state.liveFilters.page || {})};
     const filters = state.liveFilters.page;
     if (filters.groupBy === filters.subgroupBy) filters.subgroupBy = "none";
-    // Dex and Cards are the "what do I actually have" pages, so they show what
+    // Decks and Cards are the "what do I actually have" pages, so they show what
     // you own. Shop is the other half of that question and shows what you do not.
     filters.status = "bought";
     return filters;
@@ -3361,13 +3431,13 @@
     return Object.entries(state.liveTransfers || {}).flatMap(([targetVariantId, records]) => Object.values(records || {}).map((record) => ({...record, targetVariantId})));
   }
 
-  // Compare picks the variant, Tune selects cards to buy (can hold more than 100, on
-  // purpose, for optionality), Shop tracks what's actually been bought, and Dex
+  // Compare picks the variant, Calibrate selects cards to buy (can hold more than 100, on
+  // purpose, for optionality), Shop tracks what's actually been bought, and Decks
   // builds the active deck from that pool. One-way pipeline: a card only appears here once
-  // it's checked in Tune, and nothing chosen here flows back upstream.
+  // it's checked in Calibrate, and nothing chosen here flows back upstream.
   //
-  // Which cards are active is therefore DERIVED from Tune, not remembered indefinitely.
-  // Alongside each variant's active map we store a signature of the Tune selection that
+  // Which cards are active is therefore DERIVED from Calibrate, not remembered indefinitely.
+  // Alongside each variant's active map we store a signature of the Calibrate selection that
   // produced it. When that signature changes -- a preset applied, a checkbox clicked, a
   // commander switched -- the map is rebuilt wholesale from the new selection, because the
   // upstream choice is the newer statement of intent (and rebuilding also prunes ids that are
@@ -3375,7 +3445,7 @@
   // untouched, so manual bench/activate decisions made here survive any number of re-renders.
   //
   // Storing that signature is the whole fix for a class of bug where a freshly applied preset
-  // showed 100/100 in Tune but far fewer active here: the map used to be append-only and
+  // showed 100/100 in Calibrate but far fewer active here: the map used to be append-only and
   // seeded correct values exactly once per variant, so every card introduced afterwards was
   // silently benched while unchanged cards kept stale values.
   function ensureLiveActiveMap(variant, activeIds, candidateIds, selectionSignature) {
@@ -3384,7 +3454,7 @@
     const storedMap = state.liveActive[variant.id];
     const seedMatches = state.liveActiveSeed[variant.id] === selectionSignature;
     if (storedMap && seedMatches) {
-      // Transfers (borrowed cards) can appear without the Tune selection changing, so
+      // Transfers (borrowed cards) can appear without the Calibrate selection changing, so
       // fill genuinely-new ids without disturbing any existing manual decision.
       candidateIds.forEach((id) => {
         if (!(id in storedMap)) storedMap[id] = activeIds.has(id);
@@ -3393,7 +3463,7 @@
     }
     if (storedMap && state.liveActiveSeed[variant.id] === undefined) {
       // Pre-signature saved state: adopt what's already there rather than overwriting a real
-      // person's bench work on first load after this shipped. The next genuine Tune
+      // person's bench work on first load after this shipped. The next genuine Calibrate
       // change rebuilds normally.
       candidateIds.forEach((id) => {
         if (!(id in storedMap)) storedMap[id] = activeIds.has(id);
@@ -3415,7 +3485,7 @@
     const selected = Object.fromEntries(Lineup.ARRAY_KEYS.map((key) => [key, new Set((current[key] || []).map(String))]));
     const candidates = model.entries.filter((entry) => !entry.item.isFlexibleSlot && (entry.kind === "transfer" || selected[entry.arrayKey]?.has(entry.id)));
     const activeIds = new Set(Lineup.selectedEntries(plan, current).map((entry) => entry.id));
-    // Signature is computed from the Tune selection ONLY, so toggling a card here never
+    // Signature is computed from the Calibrate selection ONLY, so toggling a card here never
     // looks like an upstream change and never triggers a rebuild of the user's own choices.
     const liveActive = ensureLiveActiveMap(variant, activeIds, candidates.map((entry) => entry.id), selectionIdsSignature(current));
     const levelByKind = {
@@ -3810,7 +3880,7 @@
 
   // One toolbar for the page. Search is narrowed to leave room for the controls
   // that used to sit on a second row underneath it, and the All/To Buy/Bought
-  // chips are gone entirely -- Dex shows bought cards, which is the question the
+  // chips are gone entirely -- Decks shows bought cards, which is the question the
   // page exists to answer. Simulate stays on each deck's own header, because it
   // needs one deck to point at and a page-level button would have none.
   function dexToolbarMarkup(filters, {searchLabel = "Search every deck…", scope = "dex"} = {}) {
@@ -4001,8 +4071,8 @@
     const borrowedCards = borrowedOut.reduce((sum, card) => sum + Number(card.quantity || 1), 0);
     const legal = total === 100 && compliance.tier3.length === 0;
     const ready = legal && missingCards === 0 && borrowedCards === 0;
-    // "To Buy" tracks the whole Tune selection, active or benched — Compare -> Tune
-    // -> Shop -> Dex is a one-way pipeline, and Tune can hold more than 100
+    // "To Buy" tracks the whole Calibrate selection, active or benched — Compare -> Calibrate
+    // -> Shop -> Decks is a one-way pipeline, and Calibrate can hold more than 100
     // picks on purpose, so purchase progress on a pick shouldn't hide just because it isn't
     // part of the active 100 right now.
     const planSinglesToBuy = cards.filter((card) => !card.fromShell && !card.bought && !card.loanedTo);
@@ -4156,7 +4226,7 @@
         <span class="live-deck-chevron" aria-hidden="true">⌄</span>
       </span>
       <span class="live-deck-metrics">
-        <i class="is-cost" data-live-total="${esc(variant.id)}" title="Money you have actually recorded paying for cards you own in this deck. Tune shows market prices for everything selected instead, so the two figures are answering different questions."><b>${money(totalCost) === "Price varies" ? "$0.00" : money(totalCost)}</b><small>Paid · ${priced.priced}/${priced.bought} priced</small></i>
+        <i class="is-cost" data-live-total="${esc(variant.id)}" title="Money you have actually recorded paying for cards you own in this deck. Calibrate shows market prices for everything selected instead, so the two figures are answering different questions."><b>${money(totalCost) === "Price varies" ? "$0.00" : money(totalCost)}</b><small>Paid · ${priced.priced}/${priced.bought} priced</small></i>
         <i title="${esc(bracket.description || "")}"><b>${esc(bracket.label || "—")}</b><small>Tier</small></i>
         <i><b>${boughtCount}/100</b><small>bought</small></i>
         <i><b>${total}/100</b><small>active</small></i>
@@ -4238,7 +4308,7 @@
     return row;
   }
 
-  // Ticking a card into or out of a deck's active hundred. Shared by the Dex
+  // Ticking a card into or out of a deck's active hundred. Shared by the Decks
   // card rows and the Cards table so the two views cannot drift: one writer, one
   // piece of state, and every view that shows it re-renders.
   function setLineupActive(card, variant, checked) {
@@ -4502,7 +4572,7 @@
     liveExportContext = entries.map(({variant, plan, cards}) => ({variant, plan, cards, filters: ensureLiveFilters(variant.id)}));
     root.innerHTML = `<div class="page-intro live-intro">
         <div class="live-intro-head">
-          <h2 id="live-title">Dex</h2>
+          <h2 id="live-title">Decks</h2>
           <div class="live-intro-actions">
             <div class="selection-meter"><strong>${variants.length}</strong><span>live decks</span></div>
             <button type="button" class="secondary-button live-export" id="live-export"${entries.length ? "" : " disabled"}>Export checklist</button>
@@ -4514,7 +4584,7 @@
     wireDexToolbar(root, ensureLiveFilters(), renderLiveDecks);
     const host = $(".live-decks", root);
     if (!entries.length) {
-      host.innerHTML = `<div class="empty-state"><h3>No live decks yet</h3><p>Select a deck in Compare and choose its final cards in Tune.</p><button class="primary-button" data-go="compare">Choose decks</button></div>`;
+      host.innerHTML = `<div class="empty-state"><h3>No live decks yet</h3><p>Select a deck in Compare and choose its final cards in Calibrate.</p><button class="primary-button" data-go="compare">Choose decks</button></div>`;
       $("[data-go='compare']", host)?.addEventListener("click", () => switchView("compare"));
       appendLiveSalvage(host);
       return;
@@ -4698,7 +4768,7 @@
     return rows.filter((entry) => entry.some((value) => String(value).trim() !== ""));
   }
 
-  // Restores what you own from a Dex checklist export, so losing this browser's storage
+  // Restores what you own from a Decks checklist export, so losing this browser's storage
   // or moving to another machine doesn't lose the record of what has been bought.
   //
   // Strictly additive. The export writes "exactly what is on screen, with its current
@@ -4713,7 +4783,7 @@
     const cardColumn = column("card");
     const checkedColumn = column("checked");
     if (cardColumn < 0 || checkedColumn < 0) {
-      return {error: "That doesn't look like a Dex checklist — it needs at least the Card and Checked columns."};
+      return {error: "That doesn't look like a Decks checklist — it needs at least the Card and Checked columns."};
     }
     const deckColumn = column("deck");
     const qtyColumn = column("qty");
@@ -4820,9 +4890,9 @@
   }
 
   // ---------------------------------------------------------------------------
-  // Cards -- the same inventory Dex shows, flattened.
+  // Cards -- the same inventory Decks shows, flattened.
   //
-  // Dex answers "what is in this deck and what do I still owe on it", one deck
+  // Decks answers "what is in this deck and what do I still owe on it", one deck
   // at a time, with the buying and the lineup radios attached. Cards answers a
   // different question -- "where is this card, across everything I own" -- and a
   // per-deck accordion is the wrong shape for it. Same cards, same statuses, one
@@ -4944,14 +5014,16 @@
   const CARD_COLUMNS = [
     {key: "lineup", label: "In 100", sortable: true, menu: false, value: (row) => (row.lineupActive ? "Active" : "Bench")},
     {key: "name", label: "Card", sortable: true, menu: false, value: (row) => row.name},
-    {key: "deck", label: "Deck", sortable: true, menu: true, value: (row) => row.deckName},
+    {key: "deck", label: "Deck", sortable: true, menu: true, value: (row) => row.deckName,
+      sort: (a, b, direction) => ((a.deckId === "salvage" ? 1 : 0) - (b.deckId === "salvage" ? 1 : 0))
+        || (Number(a.deckId) - Number(b.deckId)) * direction
+        || LIVE_TYPE_ORDER.indexOf(a.type) - LIVE_TYPE_ORDER.indexOf(b.type)
+        || a.name.localeCompare(b.name)},
     {key: "color", label: "Color", sortable: true, menu: true, value: (row) => row.colorLabel},
     {key: "type", label: "Type", sortable: true, menu: true, value: (row) => row.type},
-    {key: "mana", label: "Mana", sortable: true, menu: false, value: (row) => row.cmc},
     {key: "rarity", label: "Rarity", sortable: true, menu: true, value: (row) => row.rarity},
     {key: "set", label: "Set", sortable: true, menu: true, value: (row) => row.setName},
     {key: "role", label: "Role", sortable: true, menu: true, value: (row) => row.role},
-    {key: "status", label: "Status", sortable: true, menu: true, value: (row) => row.status},
     {key: "paid", label: "Paid", sortable: true, menu: false, value: (row) => row.paid},
     {key: "target", label: "Target", sortable: true, menu: false, value: (row) => row.target}
   ];
@@ -5033,8 +5105,10 @@
 
   // Excel's rule: first click sorts one way, clicking the same header again
   // reverses it. Text goes A→Z then Z→A; numbers go low→high then high→low.
-  function sortCardRows(rows, table) {
-    const column = CARD_COLUMN_BY_KEY.get(table.sortKey) || CARD_COLUMN_BY_KEY.get("deck");
+  // Shared by the Cards table and Shop's list mode, which differ only in which
+  // columns they declare.
+  function sortTableRows(rows, table, columnsByKey, fallbackKey) {
+    const column = columnsByKey.get(table.sortKey) || columnsByKey.get(fallbackKey);
     const direction = table.sortDir === "desc" ? -1 : 1;
     const compare = (a, b) => {
       const left = column.value(a);
@@ -5052,25 +5126,24 @@
       }
       return String(left ?? "").localeCompare(String(right ?? "")) * direction || a.name.localeCompare(b.name);
     };
-    // The deck column keeps Salvage at the bottom rather than sorting it into
-    // the middle alphabetically.
-    if (column.key === "deck") {
-      return rows.slice().sort((a, b) =>
-        ((a.deckId === "salvage" ? 1 : 0) - (b.deckId === "salvage" ? 1 : 0))
-        || (Number(a.deckId) - Number(b.deckId)) * direction
-        || LIVE_TYPE_ORDER.indexOf(a.type) - LIVE_TYPE_ORDER.indexOf(b.type)
-        || a.name.localeCompare(b.name));
-    }
+    // A column may declare its own ordering when a plain comparison would be
+    // wrong -- Cards keeps Salvage at the bottom rather than sorting it
+    // alphabetically into the middle of deck 1.
+    if (column.sort) return rows.slice().sort((a, b) => column.sort(a, b, direction));
     return rows.slice().sort(compare);
   }
 
-  function matchesCardTableFilters(row, table, query) {
-    if (query && ![row.name, row.typeLine, row.deckName, row.status, row.setName].some((field) => String(field || "").toLowerCase().includes(query))) return false;
+  function matchesColumnFilters(row, table, columnsByKey) {
     return Object.entries(table.columnFilters || {}).every(([key, allowed]) => {
       if (!Array.isArray(allowed) || !allowed.length) return true;
-      const column = CARD_COLUMN_BY_KEY.get(key);
+      const column = columnsByKey.get(key);
       return column ? allowed.includes(String(column.value(row))) : true;
     });
+  }
+
+  function matchesTableQuery(row, query, fields) {
+    if (!query) return true;
+    return fields.some((field) => String(row[field] || "").toLowerCase().includes(query));
   }
 
   function renderCards() {
@@ -5083,7 +5156,7 @@
     const table = ensureCardTable();
     const query = String(filters.query || "").trim().toLowerCase();
     const owned = allCardRows().filter((row) => row.bought);
-    const visible = sortCardRows(owned.filter((row) => matchesCardTableFilters(row, table, query)), table);
+    const visible = sortTableRows(owned.filter((row) => matchesColumnFilters(row, table, CARD_COLUMN_BY_KEY) && matchesTableQuery(row, query, ["name", "typeLine", "deckName", "setName"])), table, CARD_COLUMN_BY_KEY, "deck");
     const activeColumnFilters = Object.values(table.columnFilters || {}).filter((values) => Array.isArray(values) && values.length).length;
     const paid = visible.filter((row) => row.paid !== null).reduce((sum, row) => sum + row.paid, 0);
 
@@ -5091,7 +5164,7 @@
       <div class="page-intro">
         <div>
           <h2 id="cards-title">Cards</h2>
-          <p>Every card you own, across every deck and the Salvage yard, as one table. The same inventory Dex shows — just not filed under each deck.</p>
+          <p>Every card you own, across every deck and the Salvage yard, as one table. The same inventory Decks shows — just not filed under each deck.</p>
         </div>
         <div class="shop-intro-actions">
           <div class="selection-meter"><strong>${visible.length}</strong><span>cards</span></div>
@@ -5100,14 +5173,10 @@
         </div>
       </div>
       ${dexToolbarMarkup(filters, {searchLabel: "Search every card…", scope: "cards"})}
-      <div class="cards-mobile-sort">
-        <label><span>Sort</span><select data-card-mobile-sort>${CARD_COLUMNS.filter((column) => column.sortable).map((column) => `<option value="${esc(column.key)}"${table.sortKey === column.key ? " selected" : ""}>${esc(column.label)}</option>`).join("")}</select></label>
-        <button type="button" data-card-mobile-dir aria-label="Reverse the sort order">${table.sortDir === "desc" ? "↓ Z→A" : "↑ A→Z"}</button>
-        <label><span>Filter</span><select data-card-mobile-menu><option value="">Choose a column…</option>${CARD_COLUMNS.filter((column) => column.menu).map((column) => `<option value="${esc(column.key)}"${Array.isArray(table.columnFilters?.[column.key]) && table.columnFilters[column.key].length ? " data-on=\"1\"" : ""}>${esc(column.label)}${Array.isArray(table.columnFilters?.[column.key]) && table.columnFilters[column.key].length ? " ●" : ""}</option>`).join("")}</select></label>
-      </div>
+      ${mobileTableControlsMarkup(CARD_COLUMNS, table)}
       <p class="cards-total">${visible.length} of ${owned.length} owned cards${paid > 0 ? ` · ${money(paid)} recorded as paid` : ""}</p>
       ${visible.length ? `<div class="cards-table-wrap"><table class="cards-table">
-        <thead><tr>${CARD_COLUMNS.map((column) => cardHeaderMarkup(column, table, owned)).join("")}</tr></thead>
+        <thead><tr>${CARD_COLUMNS.map((column) => tableHeaderMarkup(column, table)).join("")}</tr></thead>
         <tbody>${visible.map(cardRowMarkup).join("")}</tbody>
       </table></div>`
       : `<div class="empty-state"><h3>${owned.length ? "No cards match" : "Nothing bought yet"}</h3><p>${owned.length ? "Clear a filter to see the rest of what you own." : "Mark cards Bought in Shop and they appear here."}</p></div>`}`;
@@ -5122,7 +5191,18 @@
     });
   }
 
-  function cardHeaderMarkup(column, table, rows) {
+  // A phone has no headers to click, so sorting and column filtering get their
+  // own row. Shared by both tables, same as everything else about them.
+  function mobileTableControlsMarkup(columns, table) {
+    const on = (key) => Array.isArray(table.columnFilters?.[key]) && table.columnFilters[key].length;
+    return `<div class="cards-mobile-sort">
+      <label><span>Sort</span><select data-card-mobile-sort>${columns.filter((column) => column.sortable).map((column) => `<option value="${esc(column.key)}"${table.sortKey === column.key ? " selected" : ""}>${esc(column.label)}</option>`).join("")}</select></label>
+      <button type="button" data-card-mobile-dir aria-label="Reverse the sort order">${table.sortDir === "desc" ? "↓ Z→A" : "↑ A→Z"}</button>
+      <label><span>Filter</span><select data-card-mobile-menu><option value="">Choose a column…</option>${columns.filter((column) => column.menu).map((column) => `<option value="${esc(column.key)}">${esc(column.label)}${on(column.key) ? " ●" : ""}</option>`).join("")}</select></label>
+    </div>`;
+  }
+
+  function tableHeaderMarkup(column, table) {
     const sorted = table.sortKey === column.key;
     const arrow = sorted ? (table.sortDir === "desc" ? "↓" : "↑") : "";
     const filtered = Array.isArray(table.columnFilters?.[column.key]) && table.columnFilters[column.key].length;
@@ -5144,47 +5224,50 @@
       <td class="col-deck" data-label="Deck"><span class="cards-deck">${esc(row.deckLabel)}</span><small>${esc(row.deckName)}</small></td>
       <td class="col-color" data-label="Color"><span class="cards-color color-${esc(row.colorLabel.toLowerCase())}">${esc(row.colorLabel)}</span></td>
       <td class="col-type" data-label="Type">${esc(row.type)}</td>
-      <td class="cards-cell-mana col-mana" data-label="Mana">${manaCostHtml(row.manaCost) || "<i>—</i>"}</td>
       <td class="col-rarity" data-label="Rarity">${esc(row.rarity)}</td>
       <td class="col-set" data-label="Set">${esc(row.setName)}</td>
       <td class="col-role" data-label="Role"><span class="cards-role role-${esc(row.role.toLowerCase().replace(/[^a-z]+/g, "-"))}">${esc(row.role)}</span></td>
-      <td class="cards-cell-status col-status" data-label="Status">${esc(row.status)}</td>
       <td class="cards-cell-money col-paid" data-label="Paid">${cash(row.paid)}</td>
       <td class="cards-cell-money col-target" data-label="Target">${cash(row.target)}</td>
     </tr>`;
   }
 
-  function wireCardTable(root, visible, table, allRows) {
-    const byKey = new Map(visible.map((row) => [`${row.deckId}:${row.key}`, row]));
+  // Sorting and column filtering, wired the same way for every table.
+  function wireTableControls(root, table, allRows, columnsByKey, rerender) {
     $$("[data-card-sort]", root).forEach((button) => button.addEventListener("click", () => {
       const key = button.dataset.cardSort;
       // Same header twice reverses; a different header starts ascending again.
       table.sortDir = table.sortKey === key && table.sortDir === "asc" ? "desc" : "asc";
       table.sortKey = key;
       saveState();
-      renderCards();
+      rerender();
     }));
     $$("[data-card-menu]", root).forEach((button) => button.addEventListener("click", (event) => {
       event.stopPropagation();
-      openCardColumnMenu(button, table, allRows);
+      openColumnMenu(button, table, allRows, columnsByKey, rerender);
     }));
     // On a phone the table has no headers to click -- it is a stack of cards --
     // so sorting and column filtering get their own row above it.
     $("[data-card-mobile-sort]", root)?.addEventListener("change", (event) => {
       table.sortKey = event.target.value;
       saveState();
-      renderCards();
+      rerender();
     });
     $("[data-card-mobile-dir]", root)?.addEventListener("click", () => {
       table.sortDir = table.sortDir === "asc" ? "desc" : "asc";
       saveState();
-      renderCards();
+      rerender();
     });
     $("[data-card-mobile-menu]", root)?.addEventListener("change", (event) => {
       const key = event.target.value;
       event.target.value = "";
-      if (key) openCardColumnMenu(event.target, table, allRows, key);
+      if (key) openColumnMenu(event.target, table, allRows, columnsByKey, rerender, key);
     });
+  }
+
+  function wireCardTable(root, visible, table, allRows) {
+    const byKey = new Map(visible.map((row) => [`${row.deckId}:${row.key}`, row]));
+    wireTableControls(root, table, allRows, CARD_COLUMN_BY_KEY, renderCards);
     $$("[data-card-lineup]", root).forEach((input) => input.addEventListener("change", (event) => {
       event.stopPropagation();
       const row = byKey.get(input.dataset.cardLineup);
@@ -5202,13 +5285,13 @@
   // The per-column value picker. Distinct values from the whole owned set, not
   // just the visible rows, so narrowing one column never hides the options in
   // another and leaves you unable to widen it again.
-  function openCardColumnMenu(button, table, allRows, forcedKey) {
+  function openColumnMenu(button, table, allRows, columnsByKey, rerender, forcedKey) {
     $$(".cards-column-menu").forEach((menu) => menu.remove());
     if (button.getAttribute("aria-expanded") === "true") return button.setAttribute("aria-expanded", "false");
     $$("[data-card-menu]").forEach((peer) => peer.setAttribute("aria-expanded", "false"));
     button.setAttribute("aria-expanded", "true");
     const key = forcedKey || button.dataset.cardMenu;
-    const column = CARD_COLUMN_BY_KEY.get(key);
+    const column = columnsByKey.get(key);
     const values = Array.from(new Set(allRows.map((row) => String(column.value(row))))).sort((a, b) => a.localeCompare(b));
     const selected = new Set(table.columnFilters?.[key] || values);
     const menu = document.createElement("div");
@@ -5232,14 +5315,14 @@
       else table.columnFilters[key] = chosen;
       saveState();
       menu.remove();
-      renderCards();
+      rerender();
     });
     $("[data-column-clear]", menu).addEventListener("click", () => {
       table.columnFilters = {...table.columnFilters};
       delete table.columnFilters[key];
       saveState();
       menu.remove();
-      renderCards();
+      rerender();
     });
     menu.addEventListener("click", (event) => event.stopPropagation());
     setTimeout(() => document.addEventListener("click", function close() {
@@ -5281,7 +5364,7 @@
     const root = $("#view-shop");
     const allItems = derivedShopItems();
     const filters = state.shopFilters;
-    // Shop is the half of the question Dex and Cards do not answer: what is
+    // Shop is the half of the question Decks and Cards do not answer: what is
     // still outstanding. The All/Bought chips are gone with the status filter
     // pinned here, so there is one page per question instead of three pages
     // that each do all three.
@@ -5296,7 +5379,7 @@
         </div>
         <div class="shop-intro-actions">
           <div class="selection-meter"><strong>${foundCount}/${allItems.length}</strong><span>items bought</span></div>
-          <label class="secondary-button shop-import" title="Restore what you own from a Dex checklist export — useful after clearing this browser's data or moving to another device">
+          <label class="secondary-button shop-import" title="Restore what you own from a Decks checklist export — useful after clearing this browser's data or moving to another device">
             <input type="file" accept=".csv,text/csv" id="shop-import-input" hidden>
             <span>Upload purchase history</span>
           </label>
@@ -5319,28 +5402,15 @@
             <button type="button" class="filter-chip${filters.layout === "list" ? "" : " is-active"}" data-shop-layout="gallery" aria-pressed="${filters.layout === "list" ? "false" : "true"}">Gallery</button>
             <button type="button" class="filter-chip${filters.layout === "list" ? " is-active" : ""}" data-shop-layout="list" aria-pressed="${filters.layout === "list" ? "true" : "false"}">List</button>
           </div>
-          <div class="shop-zoom" role="group" aria-label="Card size">
-            <button type="button" data-shop-zoom="out" title="Smaller cards, more per row" aria-label="Smaller cards"${filters.zoom <= SHOP_ZOOM_MIN ? " disabled" : ""}>−</button>
-            <span aria-live="polite">${filters.zoom} up</span>
-            <button type="button" data-shop-zoom="in" title="Bigger cards, fewer per row" aria-label="Bigger cards"${filters.zoom >= SHOP_ZOOM_MAX ? " disabled" : ""}>+</button>
-          </div>
         </div>
       </div>
       <div class="shop-summary" id="shop-summary"></div>
-      <div class="shop-list${filters.layout === "list" ? " is-list" : ""}" id="shop-list" style="--shop-zoom:${filters.zoom}"></div>
+      <div class="shop-list${filters.layout === "list" ? " is-list" : ""}" id="shop-list"></div>
       <div id="shop-actions"></div>`;
 
     updateShopResults(root);
     $$("[data-shop-layout]", root).forEach((button) => button.addEventListener("click", () => {
       state.shopFilters.layout = button.dataset.shopLayout;
-      saveState();
-      renderShop();
-    }));
-    $$("[data-shop-zoom]", root).forEach((button) => button.addEventListener("click", () => {
-      // Zoom is a column count, not a scale factor: one step is one fewer or
-      // one more card across, which is the thing you are actually choosing.
-      const step = button.dataset.shopZoom === "in" ? -1 : 1;
-      state.shopFilters.zoom = Math.max(SHOP_ZOOM_MIN, Math.min(SHOP_ZOOM_MAX, Number(state.shopFilters.zoom || 3) + step));
       saveState();
       renderShop();
     }));
@@ -5402,8 +5472,10 @@
     const remainingTotal = allItems.filter((item) => !shopItemComplete(item)).reduce((sum, item) => sum + (Number(item.price) || 0) * Number(item.quantity || 1), 0);
     $("#shop-summary", root).innerHTML = `<span><strong>${visible.length}</strong> shown · ${allItems.length - foundCount} still needed</span><span>${money(remainingTotal)} target</span>`;
     const list = $("#shop-list", root);
-    list.classList.toggle("is-grouped", state.shopFilters.groupBy !== "none");
-    if (state.shopFilters.groupBy === "none") {
+    list.classList.toggle("is-grouped", state.shopFilters.groupBy !== "none" && state.shopFilters.layout !== "list");
+    if (state.shopFilters.layout === "list") {
+      renderShopTable(list, visible);
+    } else if (state.shopFilters.groupBy === "none") {
       list.replaceChildren(...visible.map((item) => makeShopCard(item)));
     } else {
       const groups = groupShopItems(visible, state.shopFilters.groupBy);
@@ -5415,16 +5487,170 @@
         return section;
       }));
     }
+    // Export scopes to how you intend to buy: a vendor-floor list and a
+    // shopping-cart list are different errands and want different paper.
     $("#shop-actions", root).innerHTML = allItems.length
-      ? `<div class="action-row"><button class="secondary-button" data-go="buy">Adjust Tune</button><button type="button" class="secondary-button" id="shop-export"${visible.length ? "" : " disabled"}>Export ${state.shopFilters.status === "found" ? "owned list" : state.shopFilters.status === "need" ? "shopping list" : "list"}</button></div>`
-      : `<div class="empty-state"><h3>Your field list is empty</h3><p>Select deck variants and save their Tune first.</p><button class="primary-button" data-go="buy">Open Tune</button></div>`;
-    $("#shop-export", root)?.addEventListener("click", () => exportShopList(visible));
+      ? `<div class="action-row"><button class="secondary-button" data-go="buy">Adjust Calibrate</button>
+          <div class="shop-export-menu">
+            <button type="button" class="secondary-button" id="shop-export" aria-haspopup="true" aria-expanded="false"${visible.length ? "" : " disabled"}>Export ▾</button>
+            <div class="shop-export-options" hidden>
+              <button type="button" data-shop-export="online">Online — ${visible.filter((item) => buyChannelOf(item) === "online").length} cards</button>
+              <button type="button" data-shop-export="inperson">In-person — ${visible.filter((item) => buyChannelOf(item) === "inperson").length} cards</button>
+              <button type="button" data-shop-export="all">All — ${visible.length} cards</button>
+            </div>
+          </div>
+        </div>`
+      : `<div class="empty-state"><h3>Your field list is empty</h3><p>Select deck variants and save their Calibrate first.</p><button class="primary-button" data-go="buy">Open Calibrate</button></div>`;
+    const exportButton = $("#shop-export", root);
+    const exportOptions = $(".shop-export-options", root);
+    exportButton?.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const open = exportOptions.hidden;
+      exportOptions.hidden = !open;
+      exportButton.setAttribute("aria-expanded", String(open));
+      if (open) setTimeout(() => document.addEventListener("click", function close() {
+        exportOptions.hidden = true;
+        exportButton.setAttribute("aria-expanded", "false");
+        document.removeEventListener("click", close);
+      }, {once: true}), 0);
+    });
+    $$("[data-shop-export]", root).forEach((button) => button.addEventListener("click", () => {
+      const scope = button.dataset.shopExport;
+      exportOptions.hidden = true;
+      exportButton.setAttribute("aria-expanded", "false");
+      const rows = scope === "all" ? visible : visible.filter((item) => buyChannelOf(item) === scope);
+      if (!rows.length) return showToast(`Nothing marked ${scope === "online" ? "Online" : "In-person"} in the current view.`);
+      exportShopList(rows, scope);
+    }));
   }
 
   // Exports exactly what the Shop is showing -- the current status filter, every other
   // filter, and the current grouping -- and nothing from any other screen. Two real uses:
   // filtered to Bought it is a spreadsheet backup of what you own; filtered to To Buy it is a
   // list to print and carry, so it carries a check-off column and stays narrow enough to read.
+  // How you intend to buy a card, kept per card. Unset means undecided, which
+  // is why All is a separate export rather than the sum of the other two.
+  const BUY_CHANNELS = [
+    {key: "online", label: "Online"},
+    {key: "inperson", label: "In-person"}
+  ];
+  function buyChannelOf(item) {
+    return state.buyChannels?.[itemKey(item)] || "";
+  }
+  function setBuyChannel(item, channel) {
+    state.buyChannels ||= {};
+    const key = itemKey(item);
+    if (state.buyChannels[key] === channel) delete state.buyChannels[key];
+    else state.buyChannels[key] = channel;
+    saveState(`${item.name} marked ${state.buyChannels[key] ? (state.buyChannels[key] === "online" ? "for online" : "for in-person") : "undecided"}`);
+    renderShop();
+  }
+
+  // Shop's list mode: the same table Cards uses, so "show me many cards at
+  // once" looks the same wherever it is asked. The difference is the row
+  // control -- here a card is not in a deck yet, it is a thing to acquire, so
+  // the row asks how rather than whether.
+  const SHOP_COLUMNS = [
+    {key: "buy", label: "Buy", sortable: false, menu: false, value: (row) => row.channelLabel},
+    {key: "name", label: "Card", sortable: true, menu: false, value: (row) => row.name},
+    {key: "deck", label: "Decks", sortable: true, menu: true, value: (row) => row.deckLabel},
+    {key: "color", label: "Color", sortable: true, menu: true, value: (row) => row.colorLabel},
+    {key: "type", label: "Type", sortable: true, menu: true, value: (row) => row.type},
+    {key: "rarity", label: "Rarity", sortable: true, menu: true, value: (row) => row.rarity},
+    {key: "where", label: "Where", sortable: true, menu: true, value: (row) => row.where},
+    {key: "price", label: "Floor", sortable: true, menu: false, value: (row) => row.price},
+    {key: "ceiling", label: "Ceiling", sortable: true, menu: false, value: (row) => row.ceiling}
+  ];
+  const SHOP_COLUMN_BY_KEY = new Map(SHOP_COLUMNS.map((column) => [column.key, column]));
+
+  function shopTableRows(items) {
+    return items.map((item) => {
+      const metadata = cardMetadata[itemKey(item)] || {};
+      const bounds = cardPriceBounds(item, metadata);
+      const channel = buyChannelOf(item);
+      return {
+        item,
+        key: itemKey(item),
+        name: item.name,
+        quantity: Math.max(1, Number(item.quantity || 1)),
+        deckLabel: item.deckRefs?.length ? item.deckRefs.map((ref) => `Deck ${ref.deckId}`).join(", ") : "—",
+        colorLabel: colorLabelFor(item, metadata),
+        type: item.category === "precon" ? "Precon" : liveCardType(item),
+        typeLine: item.typeLine || metadata.typeLine || "",
+        rarity: metadata.rarity ? `${metadata.rarity[0].toUpperCase()}${metadata.rarity.slice(1)}` : "Unknown",
+        where: shopTableLocation(item, metadata),
+        image: cardImageCandidates(item, metadata)[0],
+        channel,
+        channelLabel: channel === "online" ? "Online" : channel === "inperson" ? "In-person" : shopItemComplete(item) ? "Bought" : "—",
+        bought: shopItemComplete(item),
+        price: Number(bounds.price) || null,
+        ceiling: Number(bounds.ceiling) || null
+      };
+    });
+  }
+
+  function renderShopTable(host, items) {
+    const table = ensureShopTable();
+    const rows = shopTableRows(items);
+    const visible = sortTableRows(rows.filter((row) => matchesColumnFilters(row, table, SHOP_COLUMN_BY_KEY)), table, SHOP_COLUMN_BY_KEY, "name");
+    host.innerHTML = `${mobileTableControlsMarkup(SHOP_COLUMNS, table)}<div class="cards-table-wrap"><table class="cards-table shop-table">
+      <thead><tr>${SHOP_COLUMNS.map((column) => tableHeaderMarkup(column, table)).join("")}</tr></thead>
+      <tbody>${visible.map(shopTableRowMarkup).join("")}</tbody>
+    </table></div>`;
+    wireTableControls(host, table, rows, SHOP_COLUMN_BY_KEY, renderShop);
+    $$("[data-buy-channel]", host).forEach((button) => button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const row = visible.find((entry) => entry.key === button.dataset.rowKey);
+      if (!row) return;
+      if (button.dataset.buyChannel === "bought") return toggleShopFound(row.item);
+      setBuyChannel(row.item, button.dataset.buyChannel);
+    }));
+    $$("tbody tr[data-row-key]", host).forEach((element) => element.addEventListener("click", (event) => {
+      if (event.target.closest("button, a")) return;
+      const row = visible.find((entry) => entry.key === element.dataset.rowKey);
+      if (!row) return;
+      const variant = selectedVariants().find((candidate) => row.item.deckRefs?.some((ref) => ref.deckId === candidate.deckId)) || selectedVariants()[0];
+      if (variant) openBuyItemDetail(row.item, variant, row.item.category || "shop");
+    }));
+  }
+
+  function shopTableRowMarkup(row) {
+    const cash = (value) => (value === null || value === undefined ? "<i>—</i>" : `$${Number(value).toFixed(2)}`);
+    const channelButton = (key, label) => `<button type="button" class="shop-channel${row.channel === key ? " is-on" : ""}" data-buy-channel="${esc(key)}" data-row-key="${esc(row.key)}">${esc(label)}</button>`;
+    return `<tr data-row-key="${esc(row.key)}" class="${row.bought ? "is-bought" : ""}">
+      <td class="col-buy" data-label="Buy"><span class="shop-channel-group">${channelButton("online", "Online")}${channelButton("inperson", "In-person")}<button type="button" class="shop-channel is-bought${row.bought ? " is-on" : ""}" data-buy-channel="bought" data-row-key="${esc(row.key)}">${row.bought ? "✓ Bought" : "Bought"}</button></span></td>
+      <th scope="row" class="cards-cell-name col-name" data-label="Card"><img src="${esc(row.image)}" alt="" loading="lazy"><span><b>${esc(row.name)}</b>${row.quantity > 1 ? `<em>×${row.quantity}</em>` : ""}<small>${esc(row.typeLine)}</small></span></th>
+      <td class="col-deck" data-label="Decks">${esc(row.deckLabel)}</td>
+      <td class="col-color" data-label="Color"><span class="cards-color color-${esc(row.colorLabel.toLowerCase())}">${esc(row.colorLabel)}</span></td>
+      <td class="col-type" data-label="Type">${esc(row.type)}</td>
+      <td class="col-rarity" data-label="Rarity">${esc(row.rarity)}</td>
+      <td class="col-where" data-label="Where">${esc(row.where)}</td>
+      <td class="cards-cell-money col-price" data-label="Floor">${cash(row.price)}</td>
+      <td class="cards-cell-money col-ceiling" data-label="Ceiling">${cash(row.ceiling)}</td>
+    </tr>`;
+  }
+
+  function shopTableLocation(item, metadata) {
+    if (item.category === "precon") return "Precon / sealed product";
+    return item.whereToBuy || metadata.whereToBuy || "Ask vendor";
+  }
+
+  // Same write the gallery's Mark Bought performs, reachable from the table.
+  function toggleShopFound(item) {
+    const bought = !shopItemComplete(item);
+    state.found[item.key] = bought;
+    state.boughtQuantities ||= {};
+    if (bought) state.boughtQuantities[item.key] = Math.max(1, Number(item.quantity || 1));
+    else delete state.boughtQuantities[item.key];
+    saveState(bought ? `${item.name} marked Bought` : `${item.name} returned to Need`);
+    renderShop();
+  }
+
+  function ensureShopTable() {
+    state.shopTable = {sortKey: "name", sortDir: "asc", columnFilters: {}, ...(state.shopTable || {})};
+    return state.shopTable;
+  }
+
   function exportShopList(visible) {
     const groupBy = state.shopFilters.groupBy;
     const groups = groupBy === "none" ? [{label: "", items: visible}] : groupShopItems(visible, groupBy);
@@ -5704,7 +5930,7 @@
 
   const TOUR_STEPS = {
     compare: [
-      {view: "compare", selectors: [".main-tabs"], title: "Six steps, one flow", copy: "Compare picks the deck, Tune builds the exact 100, Shop is your vendor-floor checklist, Dex tracks what you own and what it cost, Cards flattens all of it into one searchable table, and Game Log records how the decks actually played."},
+      {view: "compare", selectors: [".main-tabs"], title: "Six steps, one flow", copy: "Compare picks the deck, Calibrate builds the exact 100, Shop is your vendor-floor checklist, Decks tracks what you own and what it cost, Cards flattens all of it into one searchable table, and Game Log records how the decks actually played."},
       {view: "compare", selectors: [".page-intro"], title: "Choose one variant per deck role", copy: "There are six deck roles and five competing approaches inside each. You pick one per role; the counter tracks how many are locked in."},
       {view: "compare", selectors: [".compare-filter-panel"], title: "Narrow the field", copy: "Search by commander, tag, or text, and filter by mechanic or play style. Only matching variants stay visible inside each row."},
       {view: "compare", selectors: ["[data-compare-filter='profileStage']", ".compare-filter-panel"], title: "Base, Tuned, or Maxed", copy: "Score stage changes which build every card on the page is describing: out-of-the-box, after the core purchases, or pushed to the legal top of Tier 3."},
@@ -5716,10 +5942,10 @@
       {view: "compare", selectors: [".deck-group:first-of-type .detail-button"], title: "Open the full evidence", copy: "Full detail carries the commander breakdown, rank reasoning, rarity, precon seed, play pattern, and bracket route. On a phone the green commander block folds away behind its caret."},
       {view: "compare", selectors: [".deck-group:first-of-type .comment-toggle"], title: "Leave feedback in place", copy: "Attach a comment to a variant. Comments stay on this device and travel with your selections when you email them."},
       {view: "compare", selectors: [".deck-group:first-of-type .pick-control"], title: "Lock in the pick", copy: "Picking a variant is what feeds every later step. Change it any time — your other choices are preserved."},
-      {view: "buy", selectors: [".buy-intro", ".page-intro"], title: "Step 2 · your picks become a 100-card plan", copy: "Tune carries each selected variant across and turns it into an explicit purchase list, with the checked-card count and type spread in the header."},
+      {view: "buy", selectors: [".buy-intro", ".page-intro"], title: "Step 2 · your picks become a 100-card plan", copy: "Calibrate carries each selected variant across and turns it into an explicit purchase list, with the checked-card count and type spread in the header."},
       {view: "buy", selectors: [".starting-shell", ".buy-section", ".empty-state"], title: "Step 2 · check exactly what you want", copy: "The commander stays fixed. Tick or untick the shell, Tuned, Enhance, and Maxxed cards; the rules check follows along as you go."},
       {view: "shop", selectors: [".shop-toolbar", ".page-intro", ".empty-state"], title: "Step 3 · one deduplicated shopping list", copy: "Every checked card across all six decks collapses into a single list you can filter, group, and work through at a vendor table."},
-      {view: "live", selectors: [".live-decks", ".page-intro"], title: "Step 4 · what you own and what it cost", copy: "Dex tracks the physical build: which cards you have, what you paid for each, the running total cost, and whether the deck is legal and ready to play."}
+      {view: "live", selectors: [".live-decks", ".page-intro"], title: "Step 4 · what you own and what it cost", copy: "Decks tracks the physical build: which cards you have, what you paid for each, the running total cost, and whether the deck is legal and ready to play."}
     ],
     buy: [
       {view: "buy", selectors: [".buy-intro", ".page-intro"], title: "Build the buy plan", copy: "Your Compare picks become complete 100-card configurations here. The header shows how many cards are checked and how they split by type."},
@@ -5730,7 +5956,7 @@
       {view: "buy", selectors: [".starting-shell", ".empty-state"], title: "Inspect the 100-card foundation", copy: "The commander never collapses. The other 99 cards are nested by type so you can work one group at a time."},
       {view: "buy", selectors: [".buy-section", ".empty-state"], title: "Try one-for-one changes", copy: "Enhance options are role-preserving choices at $20 or less. Maxxed choices are classified by Tier 3 capability rather than cost, and each names the card it replaces."},
       {view: "shop", selectors: [".shop-toolbar", ".page-intro", ".empty-state"], title: "Step 3 · where these checks land", copy: "Saving your buys sends every checked purchase to the Shop, deduplicated across all six decks and sorted for a vendor floor."},
-      {view: "live", selectors: [".live-decks", ".page-intro"], title: "Step 4 · and where they end up", copy: "Once bought, each card appears in Dex, where you record what you paid and watch the deck's total cost and readiness update."}
+      {view: "live", selectors: [".live-decks", ".page-intro"], title: "Step 4 · and where they end up", copy: "Once bought, each card appears in Decks, where you record what you paid and watch the deck's total cost and readiness update."}
     ],
     shop: [
       {view: "shop", selectors: [".page-intro"], title: "Your table-ready list", copy: "Only purchases from the selected deck arrangements appear here, deduplicated across decks."},
@@ -5738,11 +5964,11 @@
       {view: "shop", selectors: [".more-filters", ".empty-state"], title: "Group the way you shop", copy: "Group by table location, rarity, price range, type, theme or set, or the number of decks that need the card."},
       {view: "shop", selectors: [".shop-card", ".empty-state"], title: "Use the complete buying card", copy: "Each card shows large art, table location, target and ceiling price, rarity, purpose, and the decks that need it."},
       {view: "shop", selectors: [".found-button", ".empty-state"], title: "Mark progress as you go", copy: "Mark a card Bought and the remaining target total updates. Everything stays private on this device."},
-      {view: "live", selectors: [".live-deck-metrics", ".live-decks", ".page-intro"], title: "Step 4 · bought cards become inventory", copy: "Anything marked Bought turns into an owned card in Dex, where you enter the price you actually paid."},
+      {view: "live", selectors: [".live-deck-metrics", ".live-decks", ".page-intro"], title: "Step 4 · bought cards become inventory", copy: "Anything marked Bought turns into an owned card in Decks, where you enter the price you actually paid."},
       {view: "live", selectors: [".live-export", ".page-intro"], title: "Step 4 · take the list with you", copy: "Export writes the decks exactly as filtered on screen to a flat CSV checklist for a spreadsheet or a printout."}
     ],
     live: [
-      {view: "live", selectors: [".live-intro", ".page-intro"], title: "The physical build", copy: "Dex is the inventory view: what each deck contains, what you own, what it cost, and whether it is legal and ready to play."},
+      {view: "live", selectors: [".live-intro", ".page-intro"], title: "The physical build", copy: "Decks is the inventory view: what each deck contains, what you own, what it cost, and whether it is legal and ready to play."},
       {view: "live", selectors: [".live-deck-metrics", ".live-decks"], title: "Read the header at a glance", copy: "Total cost sums only the prices you locked in. The rest track bought and active cards, purchases still needed, and Game Changer and Tier 3 status."},
       {view: "live", selectors: [".live-deck-disclosures", ".live-decks"], title: "Detail on demand", copy: "Deck Composition and Core Mechanics stay folded until you want them, so the header stays short on a phone."},
       {view: "live", selectors: [".live-metric-strip", ".live-decks"], title: "The same three ratings", copy: "Playstyle, Engine, and Growth carry over from Compare at the stage you selected. Tap one to see which sub-scores drive it."},
@@ -5754,7 +5980,7 @@
       {view: "live", selectors: [".salvage-live-deck", ".live-decks"], title: "The Salvage yard", copy: "Cards pushed out of a deck land here alongside the ones you added by hand. Open any of them to send it into a deck that needs it."}
     ],
     cards: [
-      {view: "cards", selectors: [".page-intro"], title: "Every card, one table", copy: "Cards is the same inventory Dex shows, flattened. Dex answers \u201cwhat is in this deck\u201d one deck at a time; this answers \u201cwhere is this card\u201d across all of them, Salvage included."},
+      {view: "cards", selectors: [".page-intro"], title: "Every card, one table", copy: "Cards is the same inventory Decks shows, flattened. Decks answers \u201cwhat is in this deck\u201d one deck at a time; this answers \u201cwhere is this card\u201d across all of them, Salvage included."},
       {view: "cards", selectors: [".card-filter-grid", ".shop-toolbar"], title: "Filter across decks", copy: "Narrow by deck, card type, whether a card is in the active 100 or on the bench, and whether you have bought it yet. The line underneath keeps a running count of what is still owed."},
       {view: "cards", selectors: [".cards-table thead", ".cards-table-wrap"], title: "Sort by any column", copy: "Click a heading to sort — by name, deck, type, role, status, what you paid, or what it should cost. Sorting by paid is the fastest way to see where the money actually went."},
       {view: "cards", selectors: [".cards-table tbody tr", ".cards-table-wrap"], title: "Open any card", copy: "A row opens the same detail sheet the deck views use, so a card means the same thing wherever you found it."},
@@ -5819,7 +6045,7 @@
     if (!tourState) return;
     const step = tourState.steps[tourState.index];
     switchView(step.view, false);
-    const tourName = ({choose: "Choose", compare: "Compare", buy: "Tune", shop: "Shop", live: "Dex"})[tourState.origin] || "Guided";
+    const tourName = ({choose: "Choose", compare: "Compare", buy: "Calibrate", shop: "Shop", live: "Decks"})[tourState.origin] || "Guided";
     $("#tour-progress").textContent = `${tourName} tour · ${tourState.index + 1} of ${tourState.steps.length}`;
     $("#tour-title").textContent = step.title;
     $("#tour-copy").innerHTML = `<p>${esc(step.copy)}</p>`;
@@ -5895,7 +6121,7 @@
     link.click();
     link.remove();
     setTimeout(() => URL.revokeObjectURL(url), 2000);
-    showToast("Exported your full state — Compare picks, Tune, Shop, and Dex.");
+    showToast("Exported your full state — Compare picks, Calibrate, Shop, and Decks.");
   }
 
   function isPlausibleStatePayload(payload) {
@@ -5942,7 +6168,7 @@
         showToast("That file does not look like a Deck Matrix state export.");
         return;
       }
-      if (!window.confirm("Load this file? It replaces every selection, buy, Shop mark, and Dex change currently saved on this device.")) return;
+      if (!window.confirm("Load this file? It replaces every selection, buy, Shop mark, and Decks change currently saved on this device.")) return;
       applyStatePayload(payload, file.name);
     };
     reader.readAsText(file);
@@ -5966,7 +6192,7 @@
       return;
     }
     const when = payload.exportedAt ? ` (exported ${new Date(payload.exportedAt).toLocaleString()})` : "";
-    if (!window.confirm(`Load the active state from the repository${when}? It replaces every selection, buy, Shop mark, and Dex change currently saved on this device.`)) return;
+    if (!window.confirm(`Load the active state from the repository${when}? It replaces every selection, buy, Shop mark, and Decks change currently saved on this device.`)) return;
     applyStatePayload(payload, "the repository");
   }
 
@@ -5983,7 +6209,7 @@
           return response.json();
         }),
         // Additive: real simulation results for the new ladders. Never blocks startup --
-        // the commander-compare preview and Tune simulation readout just render nothing
+        // the commander-compare preview and Calibrate simulation readout just render nothing
         // extra if this is unavailable, same as any other optional metadata in this app.
         fetch("data/simulation-summary.json", {cache: "no-store"}).then((response) => response.ok ? response.json() : null).catch(() => null),
         // Read for the corner ribbon alone. Loading this file does NOT apply it
