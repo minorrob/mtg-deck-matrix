@@ -299,6 +299,26 @@
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F507176%3Fpage%3D1"
     },
     {
+      "name": "Acrobatic Maneuver",
+      "typeLine": "Instant",
+      "manaCost": "{2}{W}",
+      "oracleText": "Exile target creature you control, then return that card to the battlefield under its owner's control.\nDraw a card.",
+      "keywords": [],
+      "colorIdentity": [
+        "W"
+      ],
+      "gameChanger": false,
+      "price": 0.13,
+      "ceiling": 1.75,
+      "image": "https://cards.scryfall.io/small/front/7/4/74f92174-f38f-4623-a5f7-f5be7f7dcc9d.jpg?1783937239",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F122773%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
+    },
+    {
       "name": "Adaptive Automaton",
       "manaCost": "{3}",
       "typeLine": "Artifact Creature — Construct",
@@ -1187,6 +1207,24 @@
       "price": 0.28,
       "priceUpdated": "2026-08-24",
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F105261%3Fpage%3D1"
+    },
+    {
+      "name": "Alloy Myr",
+      "typeLine": "Artifact Creature — Myr",
+      "manaCost": "{3}",
+      "oracleText": "{T}: Add one mana of any color.",
+      "keywords": [],
+      "colorIdentity": [],
+      "gameChanger": false,
+      "price": 0.47,
+      "ceiling": 0.47,
+      "image": "https://cards.scryfall.io/small/front/e/8/e8d2180b-f54c-47a9-9458-28e7a19e35ee.jpg?1783930344",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F215940%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
     },
     {
       "name": "Altar of the Wretched // Wretched Bonemass",
@@ -3902,6 +3940,29 @@
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F687555%3Fpage%3D1"
     },
     {
+      "name": "Atomize",
+      "typeLine": "Instant",
+      "manaCost": "{2}{B}{G}",
+      "oracleText": "Destroy target nonland permanent. Proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)",
+      "keywords": [
+        "Proliferate"
+      ],
+      "colorIdentity": [
+        "B",
+        "G"
+      ],
+      "gameChanger": false,
+      "price": 11.01,
+      "ceiling": 12.12,
+      "image": "https://cards.scryfall.io/small/front/5/9/592cbafc-ab4e-461f-b64f-0bf9d83aaff3.jpg?1783912392",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F540844%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
+    },
+    {
       "name": "Atraxa, Praetors' Voice",
       "manaCost": "{G}{W}{U}{B}",
       "typeLine": "Legendary Creature — Phyrexian Angel Horror",
@@ -4168,7 +4229,8 @@
       "image": "https://cards.scryfall.io/small/front/a/6/a6222cc6-996e-4b73-af87-e837bf1eb921.jpg?1783941186",
       "price": 28.64,
       "priceUpdated": "2026-08-23",
-      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F47412%3Fpage%3D1"
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F47412%3Fpage%3D1",
+      "gameChanger": true
     },
     {
       "name": "Aurelia, the Law Above",
@@ -6204,6 +6266,48 @@
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F499968%3Fpage%3D1"
     },
     {
+      "name": "Biosynthic Burst",
+      "typeLine": "Instant",
+      "manaCost": "{1}{G}",
+      "oracleText": "Put a +1/+1 counter on target creature you control. It gains reach, trample, and indestructible until end of turn. Untap it. (Damage and effects that say \"destroy\" don't destroy it.)",
+      "keywords": [],
+      "colorIdentity": [
+        "G"
+      ],
+      "gameChanger": false,
+      "price": 0.33,
+      "ceiling": 0.33,
+      "image": "https://cards.scryfall.io/small/front/6/d/6d73a4a8-5d52-4c12-a96a-45cd202bcc62.jpg?1783905942",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F644588%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
+    },
+    {
+      "name": "Birds of Paradise",
+      "typeLine": "Creature — Bird",
+      "manaCost": "{G}",
+      "oracleText": "Flying\n{T}: Add one mana of any color.",
+      "keywords": [
+        "Flying"
+      ],
+      "colorIdentity": [
+        "G"
+      ],
+      "gameChanger": false,
+      "price": 9.78,
+      "ceiling": 9.78,
+      "image": "https://cards.scryfall.io/small/front/4/9/492c2f9a-51e7-4e0f-9899-23bf43ea988b.jpg?1783903230",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F698193%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
+    },
+    {
       "name": "Bitter Triumph",
       "manaCost": "{1}{B}",
       "typeLine": "Instant",
@@ -7398,7 +7502,8 @@
       "image": "https://cards.scryfall.io/small/front/d/2/d2124603-d20e-40eb-97f0-a66323397ac2.jpg?1783933451",
       "price": 14.58,
       "priceUpdated": "2026-08-23",
-      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F187187%3Fpage%3D1"
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F187187%3Fpage%3D1",
+      "gameChanger": true
     },
     {
       "name": "Bolt Hound",
@@ -9505,6 +9610,29 @@
       "price": 0.24,
       "priceUpdated": "2026-08-23",
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F686700%3Fpage%3D1"
+    },
+    {
+      "name": "Celestial Armor",
+      "typeLine": "Artifact — Equipment",
+      "manaCost": "{2}{W}",
+      "oracleText": "Flash (You may cast this spell any time you could cast an instant.)\nWhen this Equipment enters, attach it to target creature you control. That creature gains hexproof and indestructible until end of turn.\nEquipped creature gets +2/+0 and has flying.\nEquip {3}{W} ({3}{W}: Attach to target creature you control. Equip only as a sorcery.)",
+      "keywords": [
+        "Equip",
+        "Flash"
+      ],
+      "colorIdentity": [
+        "W"
+      ],
+      "gameChanger": false,
+      "price": 0.59,
+      "ceiling": 0.67,
+      "image": "https://cards.scryfall.io/small/front/8/0/809ee8ad-1573-49e5-9e84-b7cdd29efcae.jpg?1783909129",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F591157%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
     },
     {
       "name": "Chain Assassination",
@@ -12077,7 +12205,8 @@
       "image": "https://cards.scryfall.io/small/front/c/9/c9bd60fc-2777-44bc-b314-a792e8e48360.jpg?1783921921",
       "price": 30.55,
       "priceUpdated": "2026-08-23",
-      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F276378%3Fpage%3D1"
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F276378%3Fpage%3D1",
+      "gameChanger": true
     },
     {
       "name": "Conspiracy Theorist",
@@ -13357,6 +13486,26 @@
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F269452%3Fpage%3D1"
     },
     {
+      "name": "Culling the Weak",
+      "typeLine": "Instant",
+      "manaCost": "{B}",
+      "oracleText": "As an additional cost to cast this spell, sacrifice a creature.\nAdd {B}{B}{B}{B}.",
+      "keywords": [],
+      "colorIdentity": [
+        "B"
+      ],
+      "gameChanger": false,
+      "price": 7.05,
+      "ceiling": 7.05,
+      "image": "https://cards.scryfall.io/small/front/5/0/50c33f18-0a5c-4e46-ab0d-6e450915594f.jpg?1783946521",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F4307%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
+    },
+    {
       "name": "Cultivate",
       "manaCost": "{2}{G}",
       "typeLine": "Sorcery",
@@ -13697,7 +13846,8 @@
       "image": "https://cards.scryfall.io/small/front/d/f/dfb7c4b9-f2f4-4d4e-baf2-86551c8150fe.jpg?1783913339",
       "price": 38.89,
       "priceUpdated": "2026-08-24",
-      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F530800%3Fpage%3D1"
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F530800%3Fpage%3D1",
+      "gameChanger": true
     },
     {
       "name": "Dakmor Salvage",
@@ -15185,7 +15335,8 @@
       "image": "https://cards.scryfall.io/small/front/a/2/a24b4cb6-cebb-428b-8654-74347a6a8d63.jpg?1783915679",
       "price": 62.11,
       "priceUpdated": "2026-08-23",
-      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F504566%3Fpage%3D1"
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F504566%3Fpage%3D1",
+      "gameChanger": true
     },
     {
       "name": "Depala, Pilot Exemplar",
@@ -17302,6 +17453,26 @@
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F695544%3Fpage%3D1"
     },
     {
+      "name": "Drannith Magistrate",
+      "typeLine": "Creature — Human Wizard",
+      "manaCost": "{1}{W}",
+      "oracleText": "Your opponents can't cast spells from anywhere other than their hands.",
+      "keywords": [],
+      "colorIdentity": [
+        "W"
+      ],
+      "gameChanger": true,
+      "price": 13.79,
+      "ceiling": 14.82,
+      "image": "https://cards.scryfall.io/normal/front/9/8/98b0a4a8-9319-451b-9b79-b0bca7a41e91.jpg?1783931091",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F212115%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall-game-changers"
+    },
+    {
       "name": "Dread Presence",
       "typeLine": "Creature — Nightmare",
       "manaCost": "{3}{B}",
@@ -17618,6 +17789,28 @@
       "price": 0.08,
       "priceUpdated": "2026-08-24",
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F609794%3Fpage%3D1"
+    },
+    {
+      "name": "Drown in Ichor",
+      "typeLine": "Sorcery",
+      "manaCost": "{1}{B}",
+      "oracleText": "Target creature gets -4/-4 until end of turn. Proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)",
+      "keywords": [
+        "Proliferate"
+      ],
+      "colorIdentity": [
+        "B"
+      ],
+      "gameChanger": false,
+      "price": 0.79,
+      "ceiling": 1.33,
+      "image": "https://cards.scryfall.io/small/front/b/f/bf148ef4-0ed7-4fbe-8ab6-01dd3981c8d3.jpg?1783918049",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F479182%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
     },
     {
       "name": "Drown in the Loch",
@@ -18135,6 +18328,26 @@
       "price": 2.26,
       "priceUpdated": "2026-08-24",
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F200607%3Fpage%3D1"
+    },
+    {
+      "name": "Eaten Alive",
+      "typeLine": "Sorcery",
+      "manaCost": "{B}",
+      "oracleText": "As an additional cost to cast this spell, sacrifice a creature or pay {3}{B}.\nExile target creature or planeswalker.",
+      "keywords": [],
+      "colorIdentity": [
+        "B"
+      ],
+      "gameChanger": false,
+      "price": 0.24,
+      "ceiling": 0.26,
+      "image": "https://cards.scryfall.io/small/front/1/4/143d278d-d99b-42da-9fbd-9ab70526d53a.jpg?1783908152",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F609927%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
     },
     {
       "name": "Eater of Virtue",
@@ -19357,7 +19570,28 @@
       "image": "https://cards.scryfall.io/small/front/1/c/1c9675fb-1a89-420f-aea8-50e0642f549c.jpg?1783918516",
       "price": 34.25,
       "priceUpdated": "2026-08-23",
-      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F457158%3Fpage%3D1"
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F457158%3Fpage%3D1",
+      "gameChanger": true
+    },
+    {
+      "name": "Enter the Avatar State",
+      "typeLine": "Instant — Lesson",
+      "manaCost": "{W}",
+      "oracleText": "Until end of turn, target creature you control becomes an Avatar in addition to its other types and gains flying, first strike, lifelink, and hexproof. (A creature with hexproof can't be the target of spells or abilities your opponents control.)",
+      "keywords": [],
+      "colorIdentity": [
+        "W"
+      ],
+      "gameChanger": false,
+      "price": 0.3,
+      "ceiling": 0.38,
+      "image": "https://cards.scryfall.io/small/front/a/8/a8f3d2cb-d073-4df8-8769-49612628a377.jpg?1783905001",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F662030%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
     },
     {
       "name": "Éowyn, Fearless Knight",
@@ -20941,6 +21175,28 @@
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F687403%3Fpage%3D1"
     },
     {
+      "name": "Fake Your Own Death",
+      "typeLine": "Instant",
+      "manaCost": "{1}{B}",
+      "oracleText": "Until end of turn, target creature gets +2/+0 and gains \"When this creature dies, return it to the battlefield tapped under its owner's control and you create a Treasure token.\" (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")",
+      "keywords": [
+        "Treasure"
+      ],
+      "colorIdentity": [
+        "B"
+      ],
+      "gameChanger": false,
+      "price": 0.28,
+      "ceiling": 0.36,
+      "image": "https://cards.scryfall.io/small/front/6/9/693635a6-df50-44c5-9598-0c79b45d4df4.jpg?1783909074",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F591674%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
+    },
+    {
       "name": "Fall of the First Civilization",
       "manaCost": "{2}{W}",
       "typeLine": "Enchantment — Saga",
@@ -21108,7 +21364,28 @@
       "image": "https://cards.scryfall.io/small/front/1/1/114d2180-093b-4838-97ad-badbc8ee50b0.jpg?1783913032",
       "price": 5.9,
       "priceUpdated": "2026-08-23",
-      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F535709%3Fpage%3D1"
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F535709%3Fpage%3D1",
+      "gameChanger": true
+    },
+    {
+      "name": "Farhaven Elf",
+      "typeLine": "Creature — Elf Druid",
+      "manaCost": "{2}{G}",
+      "oracleText": "When this creature enters, you may search your library for a basic land card, put it onto the battlefield tapped, then shuffle.",
+      "keywords": [],
+      "colorIdentity": [
+        "G"
+      ],
+      "gameChanger": false,
+      "price": 0.22,
+      "ceiling": 0.22,
+      "image": "https://cards.scryfall.io/small/front/3/2/320d0a4c-c556-4468-b934-bfdf17961a53.jpg?1783928316",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F231217%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
     },
     {
       "name": "Farseek",
@@ -21960,7 +22237,8 @@
       "image": "https://cards.scryfall.io/small/front/4/7/470ca3f4-29aa-4c4c-8ff2-8cdd70c69943.jpg?1783932937",
       "price": 27.4,
       "priceUpdated": "2026-08-23",
-      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F192562%3Fpage%3D1"
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F192562%3Fpage%3D1",
+      "gameChanger": true
     },
     {
       "name": "Fields of Strife",
@@ -22006,6 +22284,26 @@
       "price": 0.13,
       "priceUpdated": "2026-08-23",
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F687415%3Fpage%3D1"
+    },
+    {
+      "name": "Fiend Hunter",
+      "typeLine": "Creature — Human Cleric",
+      "manaCost": "{1}{W}{W}",
+      "oracleText": "When this creature enters, you may exile another target creature.\nWhen this creature leaves the battlefield, return the exiled card to the battlefield under its owner's control.",
+      "keywords": [],
+      "colorIdentity": [
+        "W"
+      ],
+      "gameChanger": false,
+      "price": 0.5,
+      "ceiling": 0.5,
+      "image": "https://cards.scryfall.io/small/front/2/b/2b497736-e502-4e0c-b5dc-6ce5e9e8d4ab.jpg?1785497384",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F709578%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
     },
     {
       "name": "Fiendlash",
@@ -22303,6 +22601,26 @@
       "price": 44.31,
       "priceUpdated": "2026-08-23",
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F504142%3Fpage%3D1"
+    },
+    {
+      "name": "Firdoch Core",
+      "typeLine": "Kindred Artifact — Shapeshifter",
+      "manaCost": "{3}",
+      "oracleText": "Changeling (This card is every creature type.)\n{T}: Add one mana of any color.\n{4}: This artifact becomes a 4/4 artifact creature until end of turn.",
+      "keywords": [
+        "Changeling"
+      ],
+      "colorIdentity": [],
+      "gameChanger": false,
+      "price": 0.35,
+      "ceiling": 0.6,
+      "image": "https://cards.scryfall.io/small/front/8/e/8e45cd37-bf97-4742-978d-96f96ed653cd.jpg?1783904397",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F671721%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
     },
     {
       "name": "Fire Diamond",
@@ -23158,7 +23476,8 @@
       "image": "https://cards.scryfall.io/small/front/8/9/89f612d6-7c59-4a7b-a87d-45f789e88ba5.jpg?1783918494",
       "price": 59.38,
       "priceUpdated": "2026-08-24",
-      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F449583%3Fpage%3D1"
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F449583%3Fpage%3D1",
+      "gameChanger": true
     },
     {
       "name": "Forceful Denial",
@@ -25386,7 +25705,8 @@
       "image": "https://cards.scryfall.io/small/front/0/c/0c008129-daba-46bc-829c-d2c0c13ecdd3.jpg?1783942589",
       "price": 0,
       "priceUpdated": "2026-08-24",
-      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fmagic%2Fproduct%3FproductLineName%3Dmagic%26q%3DGlacial%2BChasm%26view%3Dgrid"
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fmagic%2Fproduct%3FproductLineName%3Dmagic%26q%3DGlacial%2BChasm%26view%3Dgrid",
+      "gameChanger": true
     },
     {
       "name": "Glacial Fortress",
@@ -26777,6 +27097,26 @@
       "priceUpdated": "2026-08-24",
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F276439%3Fpage%3D1",
       "gameChanger": true
+    },
+    {
+      "name": "Grand Crescendo",
+      "typeLine": "Instant",
+      "manaCost": "{X}{W}{W}",
+      "oracleText": "Create X 1/1 green and white Citizen creature tokens. Creatures you control gain indestructible until end of turn.",
+      "keywords": [],
+      "colorIdentity": [
+        "W"
+      ],
+      "gameChanger": false,
+      "price": 3.72,
+      "ceiling": 3.72,
+      "image": "https://cards.scryfall.io/small/front/c/2/c2157a04-f9e8-47b7-bf8d-763d794159f5.jpg?1783907127",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F624286%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
     },
     {
       "name": "Grapeshot",
@@ -32049,7 +32389,8 @@
       "image": "https://cards.scryfall.io/small/front/9/9/99e0c371-1024-4432-9fd9-3bc29c8d38e4.jpg?1783912996",
       "price": 41,
       "priceUpdated": "2026-08-23",
-      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F535882%3Fpage%3D1"
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F535882%3Fpage%3D1",
+      "gameChanger": true
     },
     {
       "name": "Judith, Carnage Connoisseur",
@@ -33667,6 +34008,26 @@
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F161884%3Fpage%3D1"
     },
     {
+      "name": "Kor Cartographer",
+      "typeLine": "Creature — Kor Scout",
+      "manaCost": "{3}{W}",
+      "oracleText": "When this creature enters, you may search your library for a Plains card, put it onto the battlefield tapped, then shuffle.",
+      "keywords": [],
+      "colorIdentity": [
+        "W"
+      ],
+      "gameChanger": false,
+      "price": 0.22,
+      "ceiling": 0.22,
+      "image": "https://cards.scryfall.io/small/front/6/2/6226b346-ca4c-45ea-871c-1a8fb7f9be0d.jpg?1783928330",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F231239%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
+    },
+    {
       "name": "Kozilek, the Great Distortion",
       "manaCost": "{8}{C}{C}",
       "typeLine": "Legendary Creature — Eldrazi",
@@ -34951,7 +35312,8 @@
       "image": "https://cards.scryfall.io/small/front/7/5/758f95f8-bcb0-43ae-b474-56ebd855951e.jpg?1783939234",
       "price": 0,
       "priceUpdated": "2026-08-24",
-      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fmagic%2Fproduct%3FproductLineName%3Dmagic%26q%3DLion%2527s%2BEye%2BDiamond%26view%3Dgrid"
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fmagic%2Fproduct%3FproductLineName%3Dmagic%26q%3DLion%2527s%2BEye%2BDiamond%26view%3Dgrid",
+      "gameChanger": true
     },
     {
       "name": "Liquimetal Torque",
@@ -35805,6 +36167,29 @@
       "price": 2.94,
       "priceUpdated": "2026-08-24",
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F507298%3Fpage%3D1"
+    },
+    {
+      "name": "Lotho, Corrupt Shirriff",
+      "typeLine": "Legendary Creature — Halfling Rogue",
+      "manaCost": "{W}{B}",
+      "oracleText": "Whenever a player casts their second spell each turn, you lose 1 life and create a Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")",
+      "keywords": [
+        "Treasure"
+      ],
+      "colorIdentity": [
+        "B",
+        "W"
+      ],
+      "gameChanger": false,
+      "price": 11.18,
+      "ceiling": 12.69,
+      "image": "https://cards.scryfall.io/small/front/c/e/ce01ff8f-a037-484f-9148-c847ffaabc5a.jpg?1783916251",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F498682%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
     },
     {
       "name": "Lotus Cobra",
@@ -36825,7 +37210,8 @@
       "image": "https://cards.scryfall.io/small/front/c/1/c1a31d52-a407-4ded-bfca-cc812f11afa0.jpg?1783921790",
       "price": 119.27,
       "priceUpdated": "2026-08-24",
-      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F276291%3Fpage%3D1"
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F276291%3Fpage%3D1",
+      "gameChanger": true
     },
     {
       "name": "Managorger Hydra",
@@ -37692,6 +38078,28 @@
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F39543%3Fpage%3D1"
     },
     {
+      "name": "Mephitic Vapors",
+      "typeLine": "Sorcery",
+      "manaCost": "{2}{B}",
+      "oracleText": "All creatures get -1/-1 until end of turn.\nSurveil 2. (Look at the top two cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)",
+      "keywords": [
+        "Surveil"
+      ],
+      "colorIdentity": [
+        "B"
+      ],
+      "gameChanger": false,
+      "price": 0.19,
+      "ceiling": 0.25,
+      "image": "https://cards.scryfall.io/small/front/2/0/20770a2a-0138-430b-a45d-96bd2e3e5b6b.jpg?1783913323",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F531230%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
+    },
+    {
       "name": "Merciless Eviction",
       "manaCost": "{4}{W}{B}",
       "typeLine": "Sorcery",
@@ -38533,6 +38941,26 @@
       "price": 0.13,
       "priceUpdated": "2026-08-24",
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F490387%3Fpage%3D1"
+    },
+    {
+      "name": "Mirror Shield",
+      "typeLine": "Artifact — Equipment",
+      "manaCost": "{2}",
+      "oracleText": "Equipped creature gets +0/+2 and has hexproof and \"Whenever a creature with deathtouch blocks or becomes blocked by this creature, destroy that creature.\"\nEquip {2} ({2}: Attach to target creature you control. Equip only as a sorcery.)",
+      "keywords": [
+        "Equip"
+      ],
+      "colorIdentity": [],
+      "gameChanger": false,
+      "price": 0.49,
+      "ceiling": 0.71,
+      "image": "https://cards.scryfall.io/small/front/e/7/e7624e84-93ce-4983-8624-ebc934cab67f.jpg?1783931516",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F207101%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
     },
     {
       "name": "Mirrorshell Crab",
@@ -39483,7 +39911,8 @@
       "image": "https://cards.scryfall.io/small/front/b/f/bf9fecfd-d122-422f-bd0a-5bf69b434dfe.jpg?1783938445",
       "price": 0,
       "priceUpdated": "2026-08-24",
-      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fmagic%2Fproduct%3FproductLineName%3Dmagic%26q%3DMox%2BDiamond%26view%3Dgrid"
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fmagic%2Fproduct%3FproductLineName%3Dmagic%26q%3DMox%2BDiamond%26view%3Dgrid",
+      "gameChanger": true
     },
     {
       "name": "Muddle the Mixture",
@@ -40336,7 +40765,8 @@
       "image": "https://cards.scryfall.io/small/front/3/6/36fa9a0b-b0c9-43ea-ba11-99d7982f974e.jpg?1783918491",
       "price": 16.12,
       "priceUpdated": "2026-08-24",
-      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F457199%3Fpage%3D1"
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F457199%3Fpage%3D1",
+      "gameChanger": true
     },
     {
       "name": "Nadaar, Selfless Paladin",
@@ -40553,7 +40983,8 @@
       "image": "https://cards.scryfall.io/small/front/b/f/bfe3329c-7faa-4925-b9d2-075a1ab27e80.jpg?1783937562",
       "price": 36.48,
       "priceUpdated": "2026-08-23",
-      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F118476%3Fpage%3D1"
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F118476%3Fpage%3D1",
+      "gameChanger": true
     },
     {
       "name": "Nature's Claim",
@@ -40942,6 +41373,26 @@
       "price": 0.44,
       "priceUpdated": "2026-08-24",
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F532947%3Fpage%3D1"
+    },
+    {
+      "name": "Nephalia Smuggler",
+      "typeLine": "Creature — Human Rogue",
+      "manaCost": "{U}",
+      "oracleText": "{3}{U}, {T}: Exile another target creature you control, then return that card to the battlefield under your control.",
+      "keywords": [],
+      "colorIdentity": [
+        "U"
+      ],
+      "gameChanger": false,
+      "price": 0.22,
+      "ceiling": 0.27,
+      "image": "https://cards.scryfall.io/small/front/6/e/6e9a17b5-422c-4add-adbf-63e4492121e8.jpg?1783921913",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F276670%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
     },
     {
       "name": "Nest of Scarabs",
@@ -42154,6 +42605,26 @@
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F269390%3Fpage%3D1"
     },
     {
+      "name": "Oblivion's Hunger",
+      "typeLine": "Instant",
+      "manaCost": "{1}{B}",
+      "oracleText": "Target creature you control gains indestructible until end of turn. Draw a card if that creature has a +1/+1 counter on it. (Damage and effects that say \"destroy\" don't destroy the creature.)",
+      "keywords": [],
+      "colorIdentity": [
+        "B"
+      ],
+      "gameChanger": false,
+      "price": 0.06,
+      "ceiling": 0.29,
+      "image": "https://cards.scryfall.io/small/front/f/a/faf65512-8228-48f4-ba7b-d861b66d28c9.jpg?1783929368",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F221937%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
+    },
+    {
       "name": "Obuun, Mul Daya Ancestor",
       "manaCost": "{1}{R}{G}{W}",
       "typeLine": "Legendary Creature — Elf Spirit",
@@ -42801,7 +43272,8 @@
       "image": "https://cards.scryfall.io/small/front/7/c/7c024bae-5631-4e20-ac69-df392ac9e109.jpg?1783916299",
       "price": 47.25,
       "priceUpdated": "2026-08-23",
-      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F498367%3Fpage%3D1"
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F498367%3Fpage%3D1",
+      "gameChanger": true
     },
     {
       "name": "Ordeal of Nylea",
@@ -45745,6 +46217,29 @@
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F273386%3Fpage%3D1"
     },
     {
+      "name": "Prizefight",
+      "typeLine": "Instant",
+      "manaCost": "{1}{G}",
+      "oracleText": "Target creature you control fights target creature you don't control. (Each deals damage equal to its power to the other.)\nCreate a Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")",
+      "keywords": [
+        "Treasure",
+        "Fight"
+      ],
+      "colorIdentity": [
+        "G"
+      ],
+      "gameChanger": false,
+      "price": 0.33,
+      "ceiling": 0.41,
+      "image": "https://cards.scryfall.io/small/front/5/4/544c810b-5f90-4535-aa76-14f8c6b9428a.jpg?1783923100",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F269112%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
+    },
+    {
       "name": "Professional Face-Breaker",
       "manaCost": "{2}{R}",
       "typeLine": "Creature — Human Warrior",
@@ -45956,6 +46451,28 @@
       "price": 0.2,
       "priceUpdated": "2026-08-24",
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F513010%3Fpage%3D1"
+    },
+    {
+      "name": "Prosperous Innkeeper",
+      "typeLine": "Creature — Halfling Citizen",
+      "manaCost": "{1}{G}",
+      "oracleText": "When this creature enters, create a Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")\nWhenever another creature you control enters, you gain 1 life.",
+      "keywords": [
+        "Treasure"
+      ],
+      "colorIdentity": [
+        "G"
+      ],
+      "gameChanger": false,
+      "price": 0.27,
+      "ceiling": 0.41,
+      "image": "https://cards.scryfall.io/small/front/0/9/096d3c0c-98e2-4cfc-a6e1-fddb0359c63f.jpg?1783926456",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F239194%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
     },
     {
       "name": "Prosperous Thief",
@@ -49339,7 +49856,8 @@
       "image": "https://cards.scryfall.io/small/front/9/f/9f37c5b6-a59c-45cd-9a99-e9357fe9ea1b.jpg?1783919146",
       "price": 70.27,
       "priceUpdated": "2026-08-23",
-      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F454994%3Fpage%3D1"
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F454994%3Fpage%3D1",
+      "gameChanger": true
     },
     {
       "name": "Righteous Valkyrie",
@@ -49386,6 +49904,28 @@
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F230869%3Fpage%3D1"
     },
     {
+      "name": "Ring of Xathrid",
+      "typeLine": "Artifact — Equipment",
+      "manaCost": "{2}",
+      "oracleText": "{2}: Regenerate equipped creature. (The next time that creature would be destroyed this turn, instead tap it, remove it from combat, and heal all damage on it.)\nAt the beginning of your upkeep, put a +1/+1 counter on equipped creature if it's black.\nEquip {1} ({1}: Attach to target creature you control. Equip only as a sorcery.)",
+      "keywords": [
+        "Heal",
+        "Regenerate",
+        "Equip"
+      ],
+      "colorIdentity": [],
+      "gameChanger": false,
+      "price": 0.49,
+      "ceiling": 5.01,
+      "image": "https://cards.scryfall.io/small/front/4/7/47e2aa59-63dc-4e28-8cdc-2ca868ff8f59.jpg?1783940458",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F59795%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
+    },
+    {
       "name": "Rip Apart",
       "manaCost": "{R}{W}",
       "typeLine": "Sorcery",
@@ -49427,6 +49967,28 @@
       "price": 0.23,
       "priceUpdated": "2026-08-23",
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F696950%3Fpage%3D1"
+    },
+    {
+      "name": "Ripples of Potential",
+      "typeLine": "Instant",
+      "manaCost": "{1}{U}",
+      "oracleText": "Proliferate, then choose any number of permanents you control that had a counter put on them this way. Those permanents phase out. (To proliferate, choose any number of permanents and/or players, then give each another counter of each kind already there. Treat phased-out permanents and anything attached to them as though they don't exist until their controller's next turn.)",
+      "keywords": [
+        "Proliferate"
+      ],
+      "colorIdentity": [
+        "U"
+      ],
+      "gameChanger": false,
+      "price": 3.86,
+      "ceiling": 3.86,
+      "image": "https://cards.scryfall.io/small/front/8/e/8e724c6d-3922-406f-b9e6-e478e1039416.jpg?1783906041",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F642806%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
     },
     {
       "name": "Rise of the Eldrazi",
@@ -51127,6 +51689,24 @@
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F139826%3Fpage%3D1"
     },
     {
+      "name": "Scampering Surveyor",
+      "typeLine": "Artifact Creature — Gnome",
+      "manaCost": "{4}",
+      "oracleText": "When this creature enters, search your library for a basic land card or Cave card, put it onto the battlefield tapped, then shuffle.",
+      "keywords": [],
+      "colorIdentity": [],
+      "gameChanger": false,
+      "price": 0.29,
+      "ceiling": 0.37,
+      "image": "https://cards.scryfall.io/small/front/a/f/afcb2a90-d4c0-4c83-8ee7-2ac3a23b4402.jpg?1783913722",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F526278%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
+    },
+    {
       "name": "Scavenger Grounds",
       "manaCost": "",
       "typeLine": "Land — Desert",
@@ -51381,6 +51961,26 @@
       "price": 4.76,
       "priceUpdated": "2026-08-24",
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F166937%3Fpage%3D1"
+    },
+    {
+      "name": "Scrollshift",
+      "typeLine": "Instant",
+      "manaCost": "{2}{W}",
+      "oracleText": "Exile up to one target artifact, creature, or enchantment you control, then return it to the battlefield under its owner's control.\nDraw a card.",
+      "keywords": [],
+      "colorIdentity": [
+        "W"
+      ],
+      "gameChanger": false,
+      "price": 0.31,
+      "ceiling": 0.39,
+      "image": "https://cards.scryfall.io/small/front/6/f/6fc278d1-2ea4-4fbc-95cd-a9cd48c3c630.jpg?1783917051",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F491730%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
     },
     {
       "name": "Scute Swarm",
@@ -52063,6 +52663,26 @@
       "price": 0.98,
       "priceUpdated": "2026-08-24",
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F671080%3Fpage%3D1"
+    },
+    {
+      "name": "Selfless Savior",
+      "typeLine": "Creature — Dog",
+      "manaCost": "{W}",
+      "oracleText": "Sacrifice this creature: Another target creature you control gains indestructible until end of turn. (Damage and effects that say \"destroy\" don't destroy it.)",
+      "keywords": [],
+      "colorIdentity": [
+        "W"
+      ],
+      "gameChanger": false,
+      "price": 0.39,
+      "ceiling": 1.28,
+      "image": "https://cards.scryfall.io/small/front/6/9/6911759c-7177-402c-a95a-f9f46efaf521.jpg?1783930734",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F215553%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
     },
     {
       "name": "Selfless Spirit",
@@ -52801,6 +53421,28 @@
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F624660%3Fpage%3D1"
     },
     {
+      "name": "Shambling Ghast",
+      "typeLine": "Creature — Zombie",
+      "manaCost": "{B}",
+      "oracleText": "When this creature dies, choose one —\n• Target creature an opponent controls gets -1/-1 until end of turn.\n• Create a Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")",
+      "keywords": [
+        "Treasure"
+      ],
+      "colorIdentity": [
+        "B"
+      ],
+      "gameChanger": false,
+      "price": 0.41,
+      "ceiling": 2.07,
+      "image": "https://cards.scryfall.io/small/front/d/9/d96198a7-dd19-4940-bf8f-23135011fc84.jpg?1783926489",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F243154%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
+    },
+    {
       "name": "Shantotto, Tactician Magician",
       "manaCost": "{1}{U}{R}",
       "typeLine": "Legendary Creature — Dwarf Wizard",
@@ -52884,6 +53526,26 @@
       "price": 4.04,
       "priceUpdated": "2026-08-24",
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F525776%3Fpage%3D1"
+    },
+    {
+      "name": "Shared Roots",
+      "typeLine": "Sorcery — Lesson",
+      "manaCost": "{1}{G}",
+      "oracleText": "Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.",
+      "keywords": [],
+      "colorIdentity": [
+        "G"
+      ],
+      "gameChanger": false,
+      "price": 0.37,
+      "ceiling": 0.57,
+      "image": "https://cards.scryfall.io/small/front/e/7/e7847ba5-e85e-417f-96c0-aef2e6f83994.jpg?1783904936",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F661944%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
     },
     {
       "name": "Shatterstorm",
@@ -53030,6 +53692,26 @@
       "price": 1.64,
       "priceUpdated": "2026-08-24",
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F687523%3Fpage%3D1"
+    },
+    {
+      "name": "Sheltering Word",
+      "typeLine": "Instant",
+      "manaCost": "{1}{G}",
+      "oracleText": "Target creature you control gains hexproof until end of turn. You gain life equal to that creature's toughness. (A creature with hexproof can't be the target of spells or abilities your opponents control.)",
+      "keywords": [],
+      "colorIdentity": [
+        "G"
+      ],
+      "gameChanger": false,
+      "price": 0.19,
+      "ceiling": 1.66,
+      "image": "https://cards.scryfall.io/small/front/9/3/93cd9be4-1ce4-4a7c-b2a6-98d3fde0a92b.jpg?1783940662",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F58975%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
     },
     {
       "name": "Sheoldred, Whispering One",
@@ -54382,6 +55064,31 @@
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F642866%3Fpage%3D1"
     },
     {
+      "name": "Skycoach Conductor // All Aboard",
+      "typeLine": "Creature — Bird Pilot // Instant",
+      "manaCost": "{2}{U} // {U}",
+      "oracleText": "Flash\nFlying, vigilance\nThis creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.) // Exile target non-Pilot creature you control, then return that card to the battlefield under its owner's control.",
+      "keywords": [
+        "Flying",
+        "Vigilance",
+        "Prepared",
+        "Flash"
+      ],
+      "colorIdentity": [
+        "U"
+      ],
+      "gameChanger": false,
+      "price": 0.31,
+      "ceiling": 0.32,
+      "image": "https://cards.scryfall.io/small/front/4/e/4ecbca71-9a1d-44c5-b709-d6f565941d5e.jpg?1783903688",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F688971%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
+    },
+    {
       "name": "Skyknight Vanguard",
       "manaCost": "{R}{W}",
       "typeLine": "Creature — Human Knight",
@@ -55009,6 +55716,26 @@
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F263086%3Fpage%3D1"
     },
     {
+      "name": "Snakeskin Veil",
+      "typeLine": "Instant",
+      "manaCost": "{G}",
+      "oracleText": "Put a +1/+1 counter on target creature you control. It gains hexproof until end of turn. (It can't be the target of spells or abilities your opponents control.)",
+      "keywords": [],
+      "colorIdentity": [
+        "G"
+      ],
+      "gameChanger": false,
+      "price": 0.26,
+      "ceiling": 0.31,
+      "image": "https://cards.scryfall.io/small/front/a/3/a3d2c692-7566-468e-9c86-47a9f768fde2.jpg?1783907335",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F624592%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
+    },
+    {
       "name": "Snap",
       "manaCost": "{1}{U}",
       "typeLine": "Instant",
@@ -55345,6 +56072,26 @@
       "price": 4.1,
       "priceUpdated": "2026-08-24",
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F235658%3Fpage%3D1"
+    },
+    {
+      "name": "Song of Freyalise",
+      "typeLine": "Enchantment — Saga",
+      "manaCost": "{1}{G}",
+      "oracleText": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)\nI, II — Until your next turn, creatures you control gain \"{T}: Add one mana of any color.\"\nIII — Put a +1/+1 counter on each creature you control. Those creatures gain vigilance, trample, and indestructible until end of turn.",
+      "keywords": [],
+      "colorIdentity": [
+        "G"
+      ],
+      "gameChanger": false,
+      "price": 0.41,
+      "ceiling": 8.46,
+      "image": "https://cards.scryfall.io/small/front/a/4/a45b534b-8442-4074-a8d2-f38e83f24868.jpg?1783934974",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F162244%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
     },
     {
       "name": "Song of the Dryads",
@@ -56832,6 +57579,26 @@
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F83274%3Fpage%3D1"
     },
     {
+      "name": "Springbloom Druid",
+      "typeLine": "Creature — Elf Druid",
+      "manaCost": "{2}{G}",
+      "oracleText": "When this creature enters, you may sacrifice a land. If you do, search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle.",
+      "keywords": [],
+      "colorIdentity": [
+        "G"
+      ],
+      "gameChanger": false,
+      "price": 0.59,
+      "ceiling": 0.59,
+      "image": "https://cards.scryfall.io/small/front/1/7/17d67b88-3f76-401f-b04a-f2bcaab4aa97.jpg?1787562486",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F695551%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
+    },
+    {
       "name": "Springleaf Drum",
       "manaCost": "{1}",
       "typeLine": "Artifact",
@@ -57683,6 +58450,29 @@
       "price": 0.31,
       "priceUpdated": "2026-08-24",
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F98772%3Fpage%3D1"
+    },
+    {
+      "name": "Stolen Stark Tech",
+      "typeLine": "Artifact — Equipment",
+      "manaCost": "{1}{B}",
+      "oracleText": "Flash\nWhen this Equipment enters, attach it to target creature you control. That creature gains indestructible until end of turn. (Damage and effects that say \"destroy\" don't destroy it.)\nEquipped creature gets +1/+0.\nEquip {1} ({1}: Attach to target creature you control. Equip only as a sorcery.)",
+      "keywords": [
+        "Equip",
+        "Flash"
+      ],
+      "colorIdentity": [
+        "B"
+      ],
+      "gameChanger": false,
+      "price": 0.18,
+      "ceiling": 0.24,
+      "image": "https://cards.scryfall.io/small/front/d/b/db4557ad-4141-4dae-870e-a587506f4914.jpg?1783902937",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F697008%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
     },
     {
       "name": "Stonebrow, Krosan Hero",
@@ -60344,6 +61134,26 @@
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F216098%3Fpage%3D1"
     },
     {
+      "name": "Sylvan Safekeeper",
+      "typeLine": "Creature — Human Wizard",
+      "manaCost": "{G}",
+      "oracleText": "Sacrifice a land: Target creature you control gains shroud until end of turn. (It can't be the target of spells or abilities.)",
+      "keywords": [],
+      "colorIdentity": [
+        "G"
+      ],
+      "gameChanger": false,
+      "price": 5.55,
+      "ceiling": 5.72,
+      "image": "https://cards.scryfall.io/small/front/8/3/83036e21-21ea-4324-aa07-11757f80c417.jpg?1783911211",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F548583%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
+    },
+    {
       "name": "Symmetry Matrix",
       "manaCost": "{4}",
       "typeLine": "Artifact",
@@ -60640,6 +61450,26 @@
       "price": 5.43,
       "priceUpdated": "2026-08-23",
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F506046%3Fpage%3D1"
+    },
+    {
+      "name": "Take Up the Shield",
+      "typeLine": "Instant",
+      "manaCost": "{1}{W}",
+      "oracleText": "Put a +1/+1 counter on target creature. It gains lifelink and indestructible until end of turn. (Damage and effects that say \"destroy\" don't destroy it.)",
+      "keywords": [],
+      "colorIdentity": [
+        "W"
+      ],
+      "gameChanger": false,
+      "price": 0.21,
+      "ceiling": 0.26,
+      "image": "https://cards.scryfall.io/small/front/5/1/5199d708-8b11-461d-9e91-3e8cd70906f7.jpg?1783902965",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F696973%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
     },
     {
       "name": "Talisman of Conviction",
@@ -61150,7 +61980,8 @@
       "image": "https://cards.scryfall.io/small/front/4/8/483fa1cb-1e35-44f2-a143-98c0f107f5ca.jpg?1783921926",
       "price": 47.53,
       "priceUpdated": "2026-08-23",
-      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F276254%3Fpage%3D1"
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F276254%3Fpage%3D1",
+      "gameChanger": true
     },
     {
       "name": "Teferi's Time Twist",
@@ -61895,6 +62726,28 @@
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F457272%3Fpage%3D1"
     },
     {
+      "name": "Terror Tide",
+      "typeLine": "Sorcery",
+      "manaCost": "{2}{B}{B}",
+      "oracleText": "Fathomless descent — All creatures get -X/-X until end of turn, where X is the number of permanent cards in your graveyard.",
+      "keywords": [
+        "Fathomless descent"
+      ],
+      "colorIdentity": [
+        "B"
+      ],
+      "gameChanger": false,
+      "price": 0.3,
+      "ceiling": 0.36,
+      "image": "https://cards.scryfall.io/small/front/0/a/0a281d2c-20b9-4887-a924-9be6c07b7629.jpg?1783913768",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F525117%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
+    },
+    {
       "name": "Teshar, Ancestor's Apostle",
       "manaCost": "{3}{W}",
       "typeLine": "Legendary Creature — Bird Cleric",
@@ -62193,6 +63046,26 @@
       "price": 0.43,
       "priceUpdated": "2026-08-24",
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F206962%3Fpage%3D1"
+    },
+    {
+      "name": "Thassa's Oracle",
+      "typeLine": "Creature — Merfolk Wizard",
+      "manaCost": "{U}{U}",
+      "oracleText": "When this creature enters, look at the top X cards of your library, where X is your devotion to blue. Put up to one of them on top of your library and the rest on the bottom of your library in a random order. If X is greater than or equal to the number of cards in your library, you win the game. (Each {U} in the mana costs of permanents you control counts toward your devotion to blue.)",
+      "keywords": [],
+      "colorIdentity": [
+        "U"
+      ],
+      "gameChanger": true,
+      "price": 21.8,
+      "ceiling": 25.95,
+      "image": "https://cards.scryfall.io/normal/front/7/2/726e8b29-13e9-4138-b6a9-d2a0d8188d1c.jpg?1783931575",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F206926%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall-game-changers"
     },
     {
       "name": "The Celestus",
@@ -62756,7 +63629,8 @@
       "image": "https://cards.scryfall.io/small/front/d/5/d5806e68-1054-458e-866d-1f2470f682b2.jpg?1783916239",
       "price": 112.92,
       "priceUpdated": "2026-08-23",
-      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F487805%3Fpage%3D1"
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F487805%3Fpage%3D1",
+      "gameChanger": true
     },
     {
       "name": "The Ozolith",
@@ -70817,6 +71691,28 @@
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F206840%3Fpage%3D1"
     },
     {
+      "name": "Whisper of the Dross",
+      "typeLine": "Instant",
+      "manaCost": "{B}",
+      "oracleText": "Target creature gets -1/-1 until end of turn. Proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)",
+      "keywords": [
+        "Proliferate"
+      ],
+      "colorIdentity": [
+        "B"
+      ],
+      "gameChanger": false,
+      "price": 0.35,
+      "ceiling": 0.46,
+      "image": "https://cards.scryfall.io/small/front/5/8/58d287e8-5297-415a-97d5-02002470c52b.jpg?1783918038",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F479612%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
+    },
+    {
       "name": "Whispersilk Cloak",
       "manaCost": "{3}",
       "typeLine": "Artifact — Equipment",
@@ -71521,6 +72417,28 @@
       "price": 0.82,
       "priceUpdated": "2026-08-24",
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F698038%3Fpage%3D1"
+    },
+    {
+      "name": "Without Weakness",
+      "typeLine": "Instant",
+      "manaCost": "{1}{B}",
+      "oracleText": "Target creature you control gains indestructible until end of turn. (Damage and effects that say \"destroy\" don't destroy it. If its toughness is 0 or less, it still dies.)\nCycling {2} ({2}, Discard this card: Draw a card.)",
+      "keywords": [
+        "Cycling"
+      ],
+      "colorIdentity": [
+        "B"
+      ],
+      "gameChanger": false,
+      "price": 0.18,
+      "ceiling": 0.27,
+      "image": "https://cards.scryfall.io/small/front/d/6/d6695fa8-881c-407c-91d9-3ac770372d35.jpg?1783936035",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F136683%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall"
     },
     {
       "name": "Wizard's Retort",
