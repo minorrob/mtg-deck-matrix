@@ -1376,3 +1376,218 @@ footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px;
   .cards-mobile-sort button { padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
   .cards-column-menu { width: min(280px, calc(100vw - 24px)); }
 }
+
+/* The shopping plan summary folds away; it is orientation, not the work. */
+.buy-overview > summary { display: flex; align-items: center; justify-content: space-between; gap: 10px; cursor: pointer; list-style: none; }
+.buy-overview > summary::-webkit-details-marker { display: none; }
+.buy-overview > summary h3 { margin: 0; }
+.buy-overview[open] > summary { margin-bottom: 10px; }
+
+/* Card rows: the thumbnail and the copy beside it.
+   The reported symptom was the badge row and card name running over the
+   thumbnail's right edge. The grid gap alone was carrying the separation, which
+   leaves nothing between them the moment the image renders wider than its track
+   (a cached image with intrinsic width, a zoomed viewport, a font that has not
+   loaded yet and lets the copy reflow left). These make the separation
+   structural: the image can never exceed its track, the copy can never start
+   inside it, and a long name wraps instead of pushing left. */
+.buy-item-detail { column-gap: 12px; }
+.buy-item-detail > img, .buy-item-detail > .shell-placeholder { max-width: 100%; min-width: 0; justify-self: start; }
+.buy-item-detail .buy-copy { min-width: 0; padding-left: 2px; overflow: hidden; }
+.buy-item-detail .buy-copy > strong { display: block; min-width: 0; overflow-wrap: anywhere; }
+.buy-item-detail .buy-copy > small { display: block; min-width: 0; overflow-wrap: anywhere; }
+.buy-item-eyebrow { min-width: 0; }
+.shell-card-row { column-gap: 12px; }
+.shell-card-row > span { min-width: 0; padding-left: 2px; overflow: hidden; }
+.shell-card-row strong, .shell-card-row small { display: block; min-width: 0; overflow-wrap: anywhere; }
+.live-card-main { column-gap: 12px; }
+.live-card-main .live-card-copy { min-width: 0; padding-left: 2px; }
+
+/* ===========================================================================
+   Deck plan & analysis.
+
+   The plan markup is authored in data/variants.json with a rich class
+   vocabulary — .mbox, .mhead, .blk, .rarity, .scores, .bmeter and the rest —
+   and none of it had ever been given a stylesheet. It rendered as a run of
+   bold blue headings and unbordered tables: every section the same weight,
+   nothing scannable, the ratings collapsing into "FortressBuild-upConvergence".
+
+   The structure it wants is a briefing: a masthead, a three-up header (what the
+   commander is, how rare the build is, what box it comes in), then a stack of
+   labelled sections that each look like a section. That is what this gives it,
+   scoped to .deck-plan so the same sheet renders identically wherever it is
+   opened from.
+   =========================================================================== */
+.deck-plan { --plan-line: #e0d7c2; --plan-ink: #2b3a33; --plan-soft: #f7f2e5; color: var(--plan-ink); font-size: 13px; line-height: 1.55; }
+.deck-plan .mbox { display: grid; gap: 14px; }
+
+/* Masthead: rank ribbon, deck name. */
+.deck-plan .mtop { display: flex; align-items: center; gap: 12px; }
+.deck-plan .mtop svg { flex: 0 0 auto; }
+.deck-plan .ctag { display: inline-block; padding: 2px 8px; border-radius: 999px; background: var(--forest); color: #fdfbf4; font: 700 9px/1.7 Georgia, serif; letter-spacing: .08em; text-transform: uppercase; }
+.deck-plan .rankname { margin-top: 3px; font: 800 15px/1.2 Georgia, serif; color: var(--forest); }
+.deck-plan h2 { margin: 0; font: 800 21px/1.2 Georgia, serif; color: var(--forest); }
+
+/* Three-up header. Collapses to one column on a phone. */
+.deck-plan .mhead { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+.deck-plan .mhcol { display: grid; gap: 12px; min-width: 0; }
+.deck-plan .mhart { min-width: 0; }
+
+/* Every labelled section is a card, so sections stop running together. */
+.deck-plan .blk { padding: 11px 12px; border: 1px solid var(--plan-line); border-radius: 11px; background: var(--surface); }
+.deck-plan h4 { margin: 0 0 8px; font: 700 10px/1.3 Georgia, serif; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+.deck-plan p { margin: 6px 0; }
+.deck-plan p:first-child { margin-top: 0; }
+.deck-plan p:last-child { margin-bottom: 0; }
+.deck-plan a { color: var(--forest); }
+
+/* Tables: the commander line, the upgrade list, the Game Changer route. */
+.deck-plan table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.deck-plan th { padding: 5px 8px 5px 0; border-bottom: 1px solid var(--plan-line); text-align: left; font: 700 9px/1.4 Georgia, serif; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+.deck-plan td { padding: 7px 8px 7px 0; border-bottom: 1px solid #efe9da; vertical-align: top; }
+.deck-plan tr:last-child td { border-bottom: 0; }
+.deck-plan td.nm { font-weight: 700; color: var(--forest); min-width: 118px; }
+.deck-plan td.mc, .deck-plan th.mc { white-space: nowrap; }
+.deck-plan td.ty { color: var(--muted); font-size: 11px; min-width: 96px; }
+.deck-plan td.pr, .deck-plan th.pr { text-align: right; padding-right: 0; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.deck-plan tr.cmdr td { background: #f3f7f0; }
+
+/* Rarity meters. */
+.deck-plan .rarity.rstage { display: grid; grid-template-columns: 52px minmax(60px, 1fr) 38px auto; gap: 8px; align-items: center; margin: 0 0 5px; font-size: 11px; }
+.deck-plan .rstg { font-weight: 700; color: var(--forest); }
+.deck-plan .rbar { height: 7px; border-radius: 999px; background: #e6e0cf; overflow: hidden; }
+.deck-plan .rbar > span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #8fae8a, var(--forest)); }
+.deck-plan .rpct { font-variant-numeric: tabular-nums; text-align: right; font-weight: 700; }
+.deck-plan .rtag { color: var(--muted); font-size: 10px; white-space: nowrap; }
+.deck-plan .method { margin-top: 8px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+
+/* Precon seed strip. */
+.deck-plan .precon { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 9px 10px; border-radius: 9px; background: var(--plan-soft); font-size: 11px; }
+.deck-plan .precon b { font-size: 13px; color: var(--forest); }
+.deck-plan .pill { padding: 2px 7px; border-radius: 999px; background: #dfe9da; color: #33602c; font: 700 9px/1.6 Georgia, serif; letter-spacing: .05em; text-transform: uppercase; }
+.deck-plan .cost { margin-left: auto; padding: 4px 10px; border-radius: 8px; background: var(--forest); color: #fdfbf4; font-weight: 700; white-space: nowrap; }
+
+/* "Why this commander" pull-out. */
+.deck-plan .special { padding: 12px; border: 1px solid var(--plan-line); border-left: 3px solid var(--forest); border-radius: 11px; background: var(--plan-soft); }
+.deck-plan .splbl { margin-bottom: 6px; font: 700 10px/1.3 Georgia, serif; letter-spacing: .09em; text-transform: uppercase; color: var(--forest); }
+
+/* Ratings. Two labelled groups of named five-dot meters. */
+.deck-plan .scores { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
+.deck-plan .sclbl { margin-bottom: 7px; font: 700 10px/1.3 Georgia, serif; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+.deck-plan .fit { display: grid; gap: 5px; }
+.deck-plan .fr { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center; font-size: 12px; }
+.deck-plan .fl { min-width: 0; overflow-wrap: anywhere; }
+.deck-plan .fd { display: inline-flex; gap: 3px; }
+.deck-plan .fd .d { width: 9px; height: 9px; border-radius: 50%; background: #ded7c5; }
+.deck-plan .fd .d.on { background: var(--forest); }
+.deck-plan .pct { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--muted); font-size: 11px; }
+.deck-plan .grow .fr { grid-template-columns: minmax(0, 1fr) auto; }
+
+/* Bracket meter. */
+.deck-plan .bmeter { display: grid; grid-template-columns: auto minmax(80px, 1fr) auto; gap: 10px; align-items: center; margin: 4px 0 6px; font-size: 10px; color: var(--muted); }
+.deck-plan .bm2, .deck-plan .bm3 { text-align: center; line-height: 1.3; }
+.deck-plan .bm2 i, .deck-plan .bm3 i { font-style: normal; font-size: 9px; }
+.deck-plan .bmtrack { position: relative; height: 8px; border-radius: 999px; background: linear-gradient(90deg, #dfe9da, #f0e2c2); }
+.deck-plan .bmtrack > i { position: absolute; top: 50%; transform: translate(-50%, -50%); font-style: normal; }
+.deck-plan .bmtrack > i b { display: inline-block; padding: 2px 7px; border-radius: 999px; background: var(--forest); color: #fdfbf4; font-size: 10px; }
+.deck-plan .blab { margin-bottom: 8px; font-weight: 700; font-size: 11px; color: var(--forest); }
+
+/* Lists: how it plays, room to grow, Game Changers. */
+.deck-plan ul { margin: 6px 0 0; padding: 0; list-style: none; display: grid; gap: 5px; }
+.deck-plan ul li { position: relative; padding-left: 15px; font-size: 12px; }
+.deck-plan ul li::before { content: "▸"; position: absolute; left: 0; color: var(--forest); }
+.deck-plan ul li.none { padding-left: 0; color: var(--muted); font-style: italic; }
+.deck-plan ul li.none::before { content: none; }
+.deck-plan .nblbl { margin: 10px 0 4px; font: 700 10px/1.3 Georgia, serif; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+.deck-plan .play { padding: 10px 12px; border-radius: 9px; background: var(--plan-soft); }
+.deck-plan .fixes { display: grid; gap: 6px; margin: 8px 0 0; }
+.deck-plan .stagerank { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--plan-line); color: var(--muted); font-size: 11px; }
+
+/* Runner-up / verdict block, and the honest caveat. */
+.deck-plan .verdict { padding: 11px 12px; border: 1px solid var(--plan-line); border-radius: 11px; background: #f4f1e6; }
+.deck-plan .vhead { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font: 700 12px/1.2 Georgia, serif; color: var(--forest); }
+.deck-plan .flag { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #f0e2c2; color: #75551a; font: 700 9px/1.7 Georgia, serif; letter-spacing: .06em; text-transform: uppercase; }
+
+@media (max-width: 760px) {
+  .deck-plan .mhead { grid-template-columns: 1fr; }
+  .deck-plan .rarity.rstage { grid-template-columns: 46px minmax(40px, 1fr) 34px; }
+  .deck-plan .rtag { grid-column: 1 / -1; }
+  .deck-plan table, .deck-plan thead, .deck-plan tbody, .deck-plan tr, .deck-plan th, .deck-plan td { display: block; }
+  .deck-plan thead { display: none; }
+  .deck-plan tr { padding: 8px 0; border-bottom: 1px solid #efe9da; }
+  .deck-plan td { padding: 2px 0; border: 0; }
+  .deck-plan td.pr { text-align: left; font-weight: 700; }
+  .deck-plan .cost { margin-left: 0; }
+}
+
+/* ---------------------------------------------------------------------------
+   Deck tools — three ways of inspecting one deck, on one row.
+
+   Three stacked disclosures of identical weight read as three equal parts of
+   the deck; they are not, they are three lenses on it. A button row says that,
+   and it restores the colour hierarchy the page had lost: the deck header is
+   the loudest thing, the tool row is visibly attached to it, and the Starting
+   Shell and ladder sections sit below on the page surface — so the next deck's
+   header reads as a new deck rather than as one more fold in this one.
+   --------------------------------------------------------------------------- */
+.deck-tools { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; padding: 0; background: #dfd6c0; border-bottom: 1px solid #dfd6c0; }
+.deck-tool { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 8px 6px; border: 0; background: #efe8d7; color: var(--forest); font: 700 12px/1.2 Georgia, serif; cursor: pointer; }
+.deck-tool .ui-icon { width: 18px; height: 18px; font-size: 9px; }
+.deck-tool:hover { background: #e6ddc8; }
+.deck-tool[aria-selected="true"] { background: var(--surface); color: var(--forest); box-shadow: inset 0 -3px 0 var(--forest); }
+.deck-tool-panel { padding: 12px 14px; border-bottom: 1px solid var(--line); background: var(--surface); }
+.deck-tool-panel[hidden] { display: none; }
+.deck-tool-panel > .deck-compliance, .deck-tool-panel > .dynamic-metrics { border: 0; padding: 0; background: none; }
+.dynamic-metrics-lede { margin: 0 0 10px; font-size: 12px; color: var(--muted); }
+.dynamic-metrics-lede b { color: var(--forest); }
+/* The measured readout now sits inside the ratings rather than dangling below
+   them as a loose dotted box. */
+.dynamic-metrics .simulation-readout { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+.deck-tool-panel .compliance-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+
+@media (max-width: 560px) {
+  .deck-tool { flex-direction: column; gap: 2px; font-size: 11px; }
+  .deck-tool .ui-icon { width: 16px; height: 16px; }
+}
+
+/* Shop's list mode is the Cards table with a different row control: a card here
+   is not in a deck yet, so the row asks how you mean to buy it rather than
+   whether it is in the hundred. */
+#shop-list.is-list { display: block; }
+#shop-list.is-list .cards-table-wrap { margin-top: 0; }
+.shop-channel-group { display: inline-flex; gap: 3px; flex-wrap: wrap; }
+.shop-channel { padding: 3px 8px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--muted); font: 700 10px/1.6 Georgia, serif; cursor: pointer; white-space: nowrap; }
+.shop-channel:hover { border-color: var(--forest); color: var(--forest); }
+.shop-channel.is-on { border-color: var(--forest); background: var(--forest); color: #fdfbf4; }
+.shop-channel.is-bought.is-on { border-color: #2c5c2a; background: #dcefda; color: #2c5c2a; }
+.shop-table tbody tr.is-bought { opacity: .62; }
+.col-buy { min-width: 190px; }
+
+/* The export dropdown: one errand per file. */
+.shop-export-menu { position: relative; display: inline-block; }
+.shop-export-options { position: absolute; right: 0; top: calc(100% + 4px); z-index: 40; display: grid; min-width: 190px; padding: 4px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); box-shadow: 0 8px 24px rgba(0,0,0,.16); }
+.shop-export-options[hidden] { display: none; }
+.shop-export-options button { padding: 7px 10px; border: 0; border-radius: 6px; background: none; color: var(--ink); font-size: 12px; text-align: left; cursor: pointer; white-space: nowrap; }
+.shop-export-options button:hover { background: var(--surface-2); }
+
+@media (max-width: 900px) {
+  .cards-table tbody tr td.col-where, .cards-table tbody tr td.col-ceiling { display: none; }
+  .col-buy { min-width: 0; }
+}
+
+/* Offered upgrades and commander tags on Calibrate ladder rows.
+   ---------------------------------------------------------------
+   An "Option" is a card the page offers on top of a rung the simulation had
+   already finished with -- the Tier 3 Game Changers the Tuned build is
+   forbidden to run, and the sub-$20 substitutions that stay inside Tier 2.
+   They are not part of the hundred the published score was measured on, so
+   they read as an offer rather than as a purchase the plan already assumes.
+   The measured delta for the whole rung sits above the rows, once. */
+.commander-mini { padding: 2px 5px; border-radius: 5px; color: #fff; background: var(--forest); font-size: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: .04em; }
+.offer-mini { padding: 2px 5px; border-radius: 5px; color: #5a4300; background: #ffe6a8; border: 1px solid #e0bd5f; font-size: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: .04em; }
+.rung-measurement { display: flex; gap: 6px; align-items: flex-start; margin: 0; padding: 7px 9px; border: 1px solid #cfc3a8; border-left: 3px solid var(--gold); border-radius: 8px; background: #fbf7ec; color: var(--ink); font-size: 10px; line-height: 1.45; }
+.rung-measurement .ui-icon { flex: none; width: 14px; height: 14px; font-size: 7px; }
+/* The alt-commander tag carries a card name now, not the word "Alt", so it has
+   to be allowed to be long without shoving the price off the row. */
+.alt-mini { max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-transform: none; letter-spacing: .01em; }
+@media (max-width: 640px) { .alt-mini { max-width: 120px; } }

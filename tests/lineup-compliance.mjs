@@ -197,9 +197,11 @@ for (const [variantId, rungs] of Object.entries(rungLists.variants)) {
     const chain = RUNG_CHAINS[rungName];
     assert(chain, `${variantId}: no composition chain is defined for the ${rungName} rung`);
     let selection = Lineup.canonicalizeSelection(plan, {...Lineup.emptySelection(), shell: plan.startingShell.map((item) => String(item.id))});
-    // ownedOptional items are free substitutions the owner may tick, never part
-    // of the published build these measured lists describe.
-    for (const category of chain) for (const item of (plan[category] || []).filter((entry) => !entry.ownedOptional)) selection = Lineup.applyChoice(plan, selection, item.id);
+    // ownedOptional items are free substitutions the owner may tick, and
+    // capabilityOption items are the Tier 3 upgrades offered on top of a
+    // finished rung. Neither is part of the published build these measured
+    // lists describe, so neither composes into it.
+    for (const category of chain) for (const item of (plan[category] || []).filter((entry) => !entry.ownedOptional && !entry.capabilityOption)) selection = Lineup.applyChoice(plan, selection, item.id);
     assert.equal(Lineup.quantity(plan, selection), 100, `${variantId} ${rungName}: assembles to ${Lineup.quantity(plan, selection)} cards, not 100`);
 
     const got = new Map();
@@ -286,13 +288,23 @@ for (const variantId of ["1o", "2c", "3e", "4c", "5o", "6f"]) {
   assert(exercised > 0, `${variantId}: expected at least one later-rung entry with a checked ancestor to exercise one-directional lineage-uncheck`);
 }
 
-function composeWith(plan, categories) {
+function composeWith(plan, categories, {includeOptions = false} = {}) {
   let selection = Lineup.canonicalizeSelection(plan, {...Lineup.emptySelection(), shell: plan.startingShell.map((item) => String(item.id))});
-  for (const category of categories) for (const item of plan[category] || []) selection = Lineup.applyChoice(plan, selection, item.id);
+  for (const category of categories) {
+    // ownedOptional and capabilityOption items are offers, not part of the
+    // published rung -- tools/sim/lib.mjs composes the measured builds without
+    // them and so does this. includeOptions asks for the other list: everything
+    // the page would put in the deck if you ticked every box.
+    for (const item of (plan[category] || []).filter((entry) => includeOptions || (!entry.ownedOptional && !entry.capabilityOption))) {
+      selection = Lineup.applyChoice(plan, selection, item.id);
+    }
+  }
   return Lineup.selectedEntries(plan, selection).map((entry) => entry.item);
 }
 const tunedList = (plan) => composeWith(plan, ["required", "tuned2"]);
-const maxList = (plan) => composeWith(plan, ["required", "tuned2", "upgrade", "enhance", "enhance2", "max", "max2"]);
+const MAX_CATEGORIES = ["required", "tuned2", "upgrade", "enhance", "enhance2", "max", "max2"];
+const maxList = (plan) => composeWith(plan, MAX_CATEGORIES);
+const maxListWithOptions = (plan) => composeWith(plan, MAX_CATEGORIES, {includeOptions: true});
 
 const dimirGenerated = generatedShellCards(buyPlans.plans["2a"]);
 const dimirCounterLeak = /\b(?:proliferate|infect|wither)\b|(?:\+1\/\+1|-1\/-1|charge|arrowhead) counters?|double the number of each kind of counter/;
@@ -316,7 +328,16 @@ const dimirStrategyPatterns = [
 // so a strong, expensive strategy card moving off it and up to Tuned is the
 // design working, not a regression. What must not happen is the deck losing its
 // plan in the builds you actually sleeve up.
-for (const [rung, cards] of [["Tuned", tunedList(buyPlans.plans["2a"])], ["Max", maxList(buyPlans.plans["2a"])]]) {
+// The third list is the one a shopper can actually end up with: every Enhance
+// and Max option ticked. An offered upgrade that quietly sells the deck's own
+// plan for a stronger generic card is the specific failure this catches --
+// Bolas's Citadel was offered for Agent of Treachery here until the capability
+// builder was made to refuse any swap that reduces the strategy carried.
+for (const [rung, cards] of [
+  ["Tuned", tunedList(buyPlans.plans["2a"])],
+  ["Max", maxList(buyPlans.plans["2a"])],
+  ["Max with every option ticked", maxListWithOptions(buyPlans.plans["2a"])]
+]) {
   const held = cards.filter((card) => strategyMatches(card, dimirStrategyPatterns));
   assert.ok(held.length >= 4, `Dimir Theft's ${rung} build must still run its theft, reanimation, copy and trigger-doubling plan (found ${held.length}: ${held.map((card) => card.name).join(", ")})`);
 }

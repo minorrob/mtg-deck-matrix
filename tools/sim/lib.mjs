@@ -163,10 +163,11 @@ function tunedSelection(plan) {
 // — the middle rung, same composition method as maxedCards below.
 export function enhanceCards(plan, audited) {
   let selection = tunedSelection(plan);
-  // ownedOptional items are free substitutions offered to the owner, never part
-  // of the published build -- the measured numbers describe the list without
-  // them, so composing them in would detach a score from its deck.
-  [...(plan.upgrade || []), ...(plan.enhance || [])].filter((item) => !item.ownedOptional).forEach((item) => {
+  // ownedOptional items are free substitutions offered to the owner, and
+  // capabilityOption items are upgrades offered on top of a finished rung.
+  // Neither is part of the published build -- the measured numbers describe the
+  // list without them, so composing them in would detach a score from its deck.
+  [...(plan.upgrade || []), ...(plan.enhance || [])].filter((item) => !item.ownedOptional && !item.capabilityOption).forEach((item) => {
     selection = Lineup.applyChoice(plan, selection, item.id);
   });
   return literalCardsFor(plan, audited, selection);
@@ -178,7 +179,7 @@ export function enhanceCards(plan, audited) {
 // duplicate-name resolution behave exactly as they do in the browser.
 export function maxedCards(plan, audited) {
   let selection = tunedSelection(plan);
-  [...(plan.upgrade || []), ...(plan.enhance || []), ...(plan.enhance2 || []), ...(plan.max || []), ...(plan.max2 || [])].filter((item) => !item.ownedOptional).forEach((item) => {
+  [...(plan.upgrade || []), ...(plan.enhance || []), ...(plan.enhance2 || []), ...(plan.max || []), ...(plan.max2 || [])].filter((item) => !item.ownedOptional && !item.capabilityOption).forEach((item) => {
     selection = Lineup.applyChoice(plan, selection, item.id);
   });
   return literalCardsFor(plan, audited, selection);
