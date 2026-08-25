@@ -1901,6 +1901,8 @@
       if (!groups.has(type)) groups.set(type, []);
       groups.get(type).push(card);
     });
+    // Same reasoning as the ladder rows: alphabetical inside each type group.
+    groups.forEach((group) => group.sort(byCardName));
     const typeOrder = ["Creature", "Instant", "Sorcery", "Artifact", "Enchantment", "Planeswalker", "Battle", "Other", "Land"];
     const typeGroups = typeOrder.filter((type) => groups.has(type)).map((type) => {
       const group = groups.get(type);
@@ -2886,7 +2888,11 @@
     // probably not shopping from. Every control inside stays fully clickable -- this app
     // never blocks a choice, it only ever reports on one.
     const deemphasized = isAltGroup ? !altActive : altActive;
-    const tabItems = (tab) => tab.kinds.flatMap((kind) => kindItems(plan, kind).map((item) => ({item, kind})));
+    // Alphabetical within each kind, so a rung you are shopping reads like a
+    // list you can scan rather than the order the optimizer happened to accept
+    // its swaps in. Sorted on a copy -- the plan's own array order is what
+    // lineup-model walks to resolve one rung's `replaces` onto the rung below.
+    const tabItems = (tab) => tab.kinds.flatMap((kind) => kindItems(plan, kind).slice().sort(byCardName).map((item) => ({item, kind})));
     const checkedCount = (tab) => tabItems(tab).filter(({item, kind}) => (current[kind] || []).includes(item.id)).length;
     const groupChecked = tabs.reduce((sum, tab) => sum + checkedCount(tab), 0);
     // Shopping progress has to be legible while the group is shut: the per-tab counts in the
@@ -3036,6 +3042,47 @@
     return `<section class="detail-block live-placement-panel"><h3>Use in another Live Deck</h3><p>Suggestions are deterministic: Commander legality and colors first, then role, strategy, card type, mana value, physical availability, and whether the swap covers an unowned active card.</p><label class="live-placement-select"><span>Best compatible destination per deck</span><select data-live-placement-select>${options.map((option) => `<option value="${esc(`${option.targetVariant.id}|${option.targetSlotId}`)}">Deck ${option.targetVariant.deckId} · ${esc(option.cut ? `replace ${option.cut.name}` : `fill vacant ${option.slotName}`)} · ${esc(option.label)} ${option.fit.score}${option.wouldBeReady ? " · target ready after swap" : ""}${option.sourceWasActive ? " · source loses this copy" : ""}</option>`).join("")}</select></label><div class="live-placement-reasons" data-live-placement-reasons></div><div class="live-placement-actions"><button type="button" class="primary-button" data-assign-live-transfer>Assign temporarily</button>${salvageAction}</div></section>`;
   }
 
+  // Find the card an item's `replaces` pointer names, anywhere in the plan. The
+  // pointer is a name rather than an id (that is what lets a rung layer onto the
+  // rung below it without knowing which item filled the slot), so this is a
+  // lookup by name across every bucket, falling back to the audited catalog for
+  // cards that sit in the shell rather than on a ladder.
+  const REPLACES_BUCKETS = ["startingShell", "required", "tuned2", "upgrade", "enhance", "enhance2", "max", "max2", "funTuned", "funMax", "altTuned", "altMax"];
+  function replacedCardFor(plan, name) {
+    if (!name) return null;
+    const key = itemKey({name});
+    for (const bucket of REPLACES_BUCKETS) {
+      const found = (plan?.[bucket] || []).find((candidate) => itemKey(candidate) === key);
+      if (found) return found;
+    }
+    const meta = cardMetadata[key];
+    return meta ? {name, ...meta} : {name};
+  }
+
+  // Buying a card off a ladder is always a swap, and until now the sheet said so
+  // in words -- a name and an arrow. What you actually want to know is whether
+  // you are happy to take that card out, and for that you have to look at it.
+  // Both cards, side by side, at the top of the sheet.
+  function swapPreviewMarkup(plan, item) {
+    if (!item.replaces) return "";
+    const outgoing = replacedCardFor(plan, item.replaces);
+    if (!outgoing) return "";
+    const big = (card) => (cardImageCandidates(card)[0] || "").replace("version=small", "version=normal").replace("/small/", "/normal/");
+    const side = (card, role, label) => `<figure class="swap-side is-${role}">
+      <img src="${esc(big(card))}" alt="${esc(card.name)} card" loading="lazy">
+      <figcaption><b>${esc(label)}</b><span>${esc(card.name)}</span></figcaption>
+    </figure>`;
+    return `<section class="detail-block detail-swap">
+      <h3>${sectionIcon("does")}The swap</h3>
+      <div class="swap-pair">
+        ${side(outgoing, "out", "Out")}
+        <span class="swap-arrow" aria-hidden="true">→</span>
+        ${side(item, "in", "In")}
+      </div>
+      <button type="button" class="related-card-link swap-open" data-related-card="${esc(item.replaces)}">Open ${esc(item.replaces)} →</button>
+    </section>`;
+  }
+
   function openBuyItemDetail(item, variant, kind) {
     item = resolvedBuyCard(item);
     const dialog = $("#detail-sheet");
@@ -3066,6 +3113,7 @@
       ${item.tcgplayerUrl ? `<p><a class="primary-button detail-link" href="${esc(item.tcgplayerUrl)}" target="_blank" rel="noopener">Find this precon on TCGplayer</a></p>` : ""}`
       : `
       <div class="item-meta">${item.manaCost ? `<span>${manaCostHtml(item.manaCost)}</span>` : ""}<span>${esc(item.typeLine || "")}</span><span>${money(item.price)}${item.ceiling ? ` · ceiling ${money(item.ceiling)}` : ""}</span></div>
+      ${swapPreviewMarkup(plan, item)}
       ${item.gameChanger ? `<p class="gc-callout">Game Changer · counts toward this deck’s limit of three in Bracket 3.</p>` : ""}
       ${item.temporaryUntil ? `<p class="temp-callout"><b>Temporary slot.</b> Use this owned card until you find ${esc(item.temporaryUntil)}.</p>` : ""}
       ${item.ownedExtra && !item.temporaryUntil ? `<p class="owned-callout">Already owned · this option costs nothing to test.</p>` : ""}
@@ -3096,13 +3144,14 @@
       ${placementMarkup}
       ${item.tcgplayerUrl ? `<p><a class="primary-button detail-link" href="${esc(item.tcgplayerUrl)}" target="_blank" rel="noopener">Search this card on TCGplayer</a></p>` : ""}`;
     decorateRichContent($("#detail-sheet-body"), variant);
-    $("[data-related-card]", $("#detail-sheet-body"))?.addEventListener("click", (event) => {
+    // There are two of these now -- the swap preview's button and the quick
+    // grid's -- so every one gets wired rather than whichever came first.
+    $$("[data-related-card]", $("#detail-sheet-body")).forEach((button) => button.addEventListener("click", (event) => {
       const replacementName = event.currentTarget.dataset.relatedCard;
-      const relatedItems = [...(plan?.startingShell || []), ...(plan?.required || []), ...(plan?.enhance || []), ...(plan?.max || [])];
-      const related = relatedItems.find((candidate) => itemKey(candidate) === itemKey({name: replacementName}));
-      if (related) openBuyItemDetail({...related, whereToBuy: related.whereToBuy || "Already in the starting shell"}, variant, "starting shell");
+      const related = replacedCardFor(plan, replacementName);
+      if (related?.typeLine || related?.id) openBuyItemDetail({...related, whereToBuy: related.whereToBuy || "Already in the starting shell"}, variant, "starting shell");
       else showToast(`${replacementName} is not available in this modeled shell.`);
-    });
+    }));
     const placementSelect = $("[data-live-placement-select]", $("#detail-sheet-body"));
     const placementButton = $("[data-assign-live-transfer]", $("#detail-sheet-body"));
     if (placementSelect && placementButton) {
@@ -3287,6 +3336,11 @@
     const definition = TOOLTIP_DEFINITIONS[label.toLowerCase()] || `${label} is scored for this card in the selected deck.`;
     return `<div><span ${tooltipAttributes(definition, "score-label")}>${esc(label)}</span><b>${esc(value)}/5</b><span class="score-dots">${[1,2,3,4,5].map((dot) => `<i class="${dot <= value ? "is-on" : ""}"></i>`).join("")}</span></div>`;
   }
+
+  // Card names sort the way a person reads them: case-insensitively, ignoring
+  // the leading punctuation on names like "_____ Goblin", and on the first face
+  // of a split card, which is the face the row prints.
+  const byCardName = (a, b) => String(a?.name || "").split(" // ")[0].localeCompare(String(b?.name || "").split(" // ")[0], "en", {sensitivity: "base", ignorePunctuation: true});
 
   function itemKey(item) {
     return String(item?.name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
