@@ -40,6 +40,101 @@
   const RUNG_LABEL = {base: "Base", tuned: "Tuned", enhance: "Enhance", fun: "Fun", max: "Max", alt: "Alt", transfer: "Borrowed"};
   function rungOf(kind) { return RUNG_BY_KIND[kind] || "base"; }
 
+  /* ---------------- the four measured builds ----------------
+   * Five rungs appear on a slot, but only four of them are whole-deck builds that
+   * the simulation ever measured, and data/rung-lists.json pins exactly those four.
+   * Enhance is deliberately absent: it is a set of optional per-slot substitutions
+   * layered on Tuned, not a hundred anyone ran games with.
+   *
+   * The chains are NOT cumulative in the obvious way. Max layers on Tuned, but Fun
+   * branches straight off Base -- it is the same deck asked a different question,
+   * not Tuned with jokes added. These are the same chains tests/lineup-compliance.mjs
+   * composes against the pinned lists, which is what makes "apply this rung" and
+   * "the hundred we measured" the same thing.
+   */
+  const BUILD_RUNGS = ["base", "tuned", "fun", "max"];
+  const RUNG_CHAIN = {
+    base: [],
+    tuned: ["required", "tuned2"],
+    fun: ["funTuned"],
+    max: ["required", "tuned2", "upgrade", "enhance", "enhance2", "max", "max2"]
+  };
+
+  /* Compare ranks variants on three stages; the Deck page offers four rungs. Maxed
+     lands on max and Base on base. Compare has no Fun stage, so everything else is
+     Tuned -- which is also what an unseeded deck would already have defaulted to. */
+  function rungForStage(stage) {
+    const n = Number(stage) || 2;
+    return n === 1 ? "base" : n === 3 ? "max" : "tuned";
+  }
+
+  /**
+   * The selection that IS this rung, for every slot at once, regardless of whether
+   * a single card has been bought. ownedOptional and capabilityOption items are
+   * offers layered on top of a finished rung, never part of the rung itself, so
+   * they are excluded here exactly as lib.mjs and the compliance test exclude them.
+   */
+  function selectionForRung(plan, rung) {
+    let selection = Lineup.canonicalizeSelection(plan, Object.assign(Lineup.emptySelection(), {
+      shell: (plan.startingShell || []).map((item) => String(item.id))
+    }));
+    (RUNG_CHAIN[rung] || []).forEach((bucket) => {
+      (plan[bucket] || [])
+        .filter((item) => !item.ownedOptional && !item.capabilityOption)
+        .forEach((item) => { selection = Lineup.applyChoice(plan, selection, item.id); });
+    });
+    return selection;
+  }
+
+  /* Composing a rung walks applyChoice once per item and each call rebuilds the
+     lineup model, so the four signatures cost ~40ms together -- once per render, on
+     every pick, which is felt. Plans are stable objects for the life of the page,
+     so the answer is cached against the plan itself. */
+  const signatureCache = new WeakMap();
+  function rungSignatures(plan) {
+    let cached = signatureCache.get(plan);
+    if (!cached) {
+      cached = {};
+      BUILD_RUNGS.forEach((rung) => { cached[rung] = selectionSignature(selectionForRung(plan, rung)); });
+      signatureCache.set(plan, cached);
+    }
+    return cached;
+  }
+
+  /* Which other whole-deck builds are literally the same hundred as this one. Today
+     Max collapses onto Tuned for most variants, because their Tier 3 cards are filed
+     as offers rather than as the rung. The UI says so out loud rather than letting
+     the button look broken. */
+  function rungTwins(plan, rung) {
+    const signatures = rungSignatures(plan);
+    return BUILD_RUNGS.filter((other) => other !== rung && signatures[other] === signatures[rung]);
+  }
+
+  function selectionSignature(selection) {
+    const ids = [];
+    Lineup.ARRAY_KEYS.forEach((key) => {
+      ((selection && selection[key]) || []).forEach((id) => ids.push(String(id)));
+    });
+    return ids.sort().join("|");
+  }
+
+  /**
+   * Which rung the deck is currently standing on, or null once it has been hand
+   * edited away from all four. Derived rather than remembered: a stored "you chose
+   * Tuned" would keep claiming Tuned after a single slot was changed underneath it.
+   *
+   * `preferred` is the last rung the reader actually clicked. Two rungs can be the
+   * same hundred -- Max and Tuned are, on most variants -- and in that case the
+   * honest answer is the one they asked for, not whichever sorts first.
+   */
+  function activeRung(plan, selection, preferred) {
+    const signature = selectionSignature(selection);
+    const signatures = rungSignatures(plan);
+    const matches = BUILD_RUNGS.filter((rung) => signatures[rung] === signature);
+    if (!matches.length) return null;
+    return matches.includes(preferred) ? preferred : matches[0];
+  }
+
   /**
    * The ladder is a chain, not a five-way comparison. Base states the slot's job;
    * Tuned improves on Base's fit to the deck's strategy; Enhance improves on what
@@ -330,6 +425,7 @@
 
   return {
     RUNG_ORDER, RUNG_LABEL, RUNG_BY_KIND, rungOf,
+    BUILD_RUNGS, RUNG_CHAIN, rungForStage, selectionForRung, selectionSignature, activeRung, rungTwins,
     PRICE_BANDS, priceBand,
     ACQUISITION: ACQ, PLACE, ownedKey, normalizeOwned, ownedCount, acquisitionOf,
     SPOTS, vendorSpot, rungHeading,

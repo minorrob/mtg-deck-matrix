@@ -1848,3 +1848,20 @@ div.sp-band{padding:9px 13px;border-radius:12px 12px 0 0}
 .sp-assign{padding:8px 12px;border:1px solid var(--forest-2);border-radius:999px;background:var(--forest-2);
   color:#fff;font-size:12.5px;font-weight:700;cursor:pointer}
 .sp-assign:hover{background:var(--forest)}
+
+/* Rank order on the Deck page.
+   ---------------------------
+   The same control Compare carries, doing the same job one level down: Compare
+   ranks variants by stage, this sets every slot in the chosen variant to one rung
+   at once. Four buttons, not five -- Base, Tuned, Fun and Max are the whole-deck
+   builds the simulation measured and data/rung-lists.json pins; Enhance is a set
+   of per-slot substitutions layered on Tuned, so there is no "Enhance hundred" to
+   switch a deck to. The highlight is derived from the selection, so hand-editing a
+   single slot drops it and the note says why. */
+.dp-rank { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 10px; }
+.dp-rank-lab { color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.dp-rank-b { min-height: 30px; padding: 4px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink); font-size: 12px; font-weight: 700; }
+.dp-rank-b:hover { border-color: var(--forest-2); }
+.dp-rank-b.is-on { border-color: var(--forest-2); background: var(--forest-2); color: #fff; }
+.dp-rank-note { color: var(--muted); font-size: 10.5px; font-style: italic; }
+@media (max-width: 640px) { .dp-rank-b { padding: 4px 10px; font-size: 11.5px; } }
