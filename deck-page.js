@@ -32,6 +32,33 @@
     return String(value == null ? "" : value).replace(/[&<>"]/g, (ch) =>
       ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[ch]));
   }
+  /**
+   * Mana and tap symbols, drawn rather than spelled. Card text is written in
+   * symbols and reads as nonsense without them -- "{T}: Add {G}" is not a
+   * sentence -- and 785 of the 1,754 cards in the catalog carry at least one in
+   * their rules text, so this is most of the pane, not a corner case.
+   *
+   * Takes text that has ALREADY been escaped: esc leaves braces alone, so the
+   * token scan is safe to run afterwards, and running it first would let card
+   * text smuggle markup through.
+   */
+  function withSymbols(escaped) {
+    return String(escaped == null ? "" : escaped).replace(/\{([^}]{1,6})\}/g, (whole, token) => {
+      const code = token.toUpperCase().replace(/\//g, "").replace(/[^A-Z0-9\u221E]/g, "");
+      if (!code) return whole;
+      return `<img class="mana-symbol" src="https://svgs.scryfall.io/card-symbols/${
+        encodeURIComponent(code)}.svg" alt="${esc(whole)}" title="${esc(whole)}">`;
+    });
+  }
+
+  function manaHtml(cost) {
+    const value = String(cost || "").trim();
+    if (!value) return "\u2014";
+    // A cost with no braces at all is not a cost this can draw; show the words.
+    if (!/\{[^}]+\}/.test(value)) return esc(value);
+    return `<span class="mana-cost" aria-label="Mana cost ${esc(value)}">${withSymbols(esc(value))}</span>`;
+  }
+
   function money(n) {
     return Number.isFinite(Number(n)) ? "$" + Number(n).toFixed(2) : "—";
   }
@@ -71,7 +98,7 @@
       ? `<img class="dp-art" src="${esc(m.image)}" alt="${esc(name)}" loading="lazy">`
       : `<div class="dp-art dp-art-blank"><span>${esc(name)}</span></div>`;
     const rows = [
-      ["Mana", m.manaCost ? esc(m.manaCost) : "—"],
+      ["Mana", manaHtml(m.manaCost)],
       ["Type", esc(m.typeLine || "—")],
       ["Mechanics", (m.keywords && m.keywords.length) ? esc(m.keywords.join(" · ")) : "—"],
       ["Rarity", `<span class="dp-rar"><span class="dp-sw" style="--rar:var(--rar-${rk})"></span>${
@@ -83,7 +110,8 @@
     ];
     return `<div class="dp-face" style="--rar:var(--rar-${rk})">${img}</div>
       <ul class="dp-stats">${rows.map(([k, v]) => `<li><b>${k}</b><span>${v}</span></li>`).join("")}</ul>
-      ${m.oracleText ? `<p class="dp-oracle">${esc(m.oracleText)}</p>` : ""}
+      ${m.oracleText ? `<p class="dp-oracle">${
+        withSymbols(esc(m.oracleText)).replace(/\n/g, "<br>")}</p>` : ""}
       <p class="dp-hint">Point at any rung to preview it here.</p>`;
   }
 
