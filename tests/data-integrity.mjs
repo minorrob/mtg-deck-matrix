@@ -7,6 +7,7 @@ const cards = JSON.parse(await readFile(new URL("../data/cards.json", import.met
 const simulationSummary = JSON.parse(await readFile(new URL("../data/simulation-summary.json", import.meta.url), "utf8"));
 const appSource = await readFile(new URL("../app.js", import.meta.url), "utf8");
 const htmlSource = await readFile(new URL("../index.html", import.meta.url), "utf8");
+const rungLists = JSON.parse(await readFile(new URL("../data/rung-lists.json", import.meta.url), "utf8"));
 const auditedByName = new Map(cards.cards.map((card) => [card.name.toLowerCase(), card]));
 for (const card of cards.cards) for (const face of card.name.split(" // ")) auditedByName.set(face.toLowerCase(), card);
 
@@ -195,6 +196,12 @@ for (const view of tabViews) {
 for (const view of [...appSource.matchAll(/^\s{4}([a-z0-9]+): \[$/gm)].map((m) => m[1])) {
   assert.ok(tabViews.includes(view), `the tour still defines steps for ${view}, which is no longer a tab`);
 }
+// Compare has two stage controls: the page-level Score stage select and each
+// deck's own Rank order row. Only the second one ever restaged the cards, so
+// choosing Maxed filtered by Maxed scores while every tile still quoted Tuned's
+// cost, power level and Game Changer count -- which read exactly like stale data.
+assert.match(appSource, /if \(select\.dataset\.compareFilter === "profileStage"\) \{\s*\n\s*catalog\.decks\.forEach\(\(deck\) => \{ state\.rankStages\[deck\.id\] = Number\(select\.value\); \}\);/,
+  "the Score stage select must set every deck's stage, not only the score filter");
 assert.match(appSource, /function exportLiveDecks/, "Live Decks must be exportable as a flat inventory");
 assert.match(appSource, /mtg-owned-extras-import-v3/, "the complete known inventory must migrate onto each browser once");
 assert.doesNotMatch(appSource, /plan\.max\.filter\(\(candidate\) => candidate\.gameChanger && choices\.has/, "the Game Changer guard may not count Max options only");
@@ -581,5 +588,57 @@ assert.match(appSource, /state = \{\.\.\.blankState\(\), \.\.\.payload\.state\}/
 assert.match(htmlSource, /id="export-state-button"/, "an Export button must exist in the header");
 assert.match(htmlSource, /id="import-state-input"/, "an Import file input must exist in the header");
 assert.match(htmlSource, /id="load-active-button"/, "a Load Active button must exist in the header");
+
+/* Compare reads its per-stage figures out of variants.json by index, and those
+   arrays are written by tools rather than by the page. When the Max rung gained
+   Game Changers, the Maxed column went on showing Tuned's cost, Tuned's card
+   count and "0 GC" -- and nothing here noticed, because nothing tied the arrays
+   to the hundreds they describe. The stage-note counts had in fact been wrong at
+   the Tuned rung since Base was rebuilt, months before that. These four tie them
+   together. tools/sim/resync-compare.mjs and tools/sim/reprice.mjs fix a break. */
+{
+  const STAGE_RUNG = ["Base", "Tuned", "Max"];
+  const gameChangerNames = new Set(cards.cards.filter((card) => card.gameChanger).map((card) => card.name.toLowerCase()));
+  const priceOf = (name) => Number(auditedByName.get(name.toLowerCase())?.price) || 0;
+  const dollars = (text) => Number(String(text).replace(/[^0-9.]/g, ""));
+  const held = (list) => (list || []).reduce((sum, entry) => sum + (gameChangerNames.has(entry.name.toLowerCase()) ? (entry.quantity || 1) : 0), 0);
+
+  for (const variant of variants.variants) {
+    const pinned = rungLists.variants[variant.id];
+    assert.ok(pinned, `${variant.id} has no pinned rung lists`);
+    const baseNames = new Set((pinned.Base || []).map((entry) => entry.name.toLowerCase()));
+
+    STAGE_RUNG.forEach((rung, index) => {
+      const count = held(pinned[rung]);
+      assert.equal(variant.brackets[index].gameChangers, `${count} GC`,
+        `${variant.id} ${rung}: the Compare chip says ${variant.brackets[index].gameChangers} but the pinned hundred holds ${count}`);
+      // compliance-model refuses a Game Changer at Tier 2, so a rung holding one
+      // cannot be labelled Bracket 2 whatever a density estimate scored it.
+      if (count > 0) {
+        assert.doesNotMatch(variant.brackets[index].label, /^B2/,
+          `${variant.id} ${rung} is labelled ${variant.brackets[index].label} while holding ${count} Game Changer(s)`);
+      }
+    });
+
+    [1, 2].forEach((index) => {
+      const stated = /·\s*(\d+)\s*(?:upgrade cards|spells)/.exec(variant.stageNotes?.[index] || "");
+      if (!stated) return;
+      const beyond = (pinned[STAGE_RUNG[index]] || []).filter((entry) => !baseNames.has(entry.name.toLowerCase())).length;
+      assert.equal(Number(stated[1]), beyond,
+        `${variant.id} ${STAGE_RUNG[index]} note claims ${stated[1]} cards beyond Base; the pinned hundred has ${beyond}`);
+    });
+
+    // The reported bug: Maxed showed Tuned's number. Max is Tuned plus bought
+    // Game Changers, so its total is strictly the larger of the two.
+    assert.ok(dollars(variant.costs[2]) > dollars(variant.costs[1]),
+      `${variant.id} publishes a Maxed build cost of ${variant.costs[2]} against a Tuned cost of ${variant.costs[1]}`);
+    // Plan items carry the price they were priced at, which drifts a little from
+    // the catalog, so this is a drift check rather than a second calculation.
+    const summed = (pinned.Max || []).reduce((sum, entry) => sum + priceOf(entry.name) * (entry.quantity || 1), 0);
+    const published = dollars(variant.costs[2]);
+    assert.ok(Math.abs(summed - published) <= Math.max(5, published * 0.05),
+      `${variant.id} publishes ${variant.costs[2]} for Maxed but its pinned hundred prices at $${summed.toFixed(0)}`);
+  }
+}
 
 console.log(`Validated ${variants.variants.length} variants and ${Object.keys(buyPlans.plans).length} connected buy profiles.`);
