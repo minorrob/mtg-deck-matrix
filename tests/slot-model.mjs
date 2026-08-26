@@ -330,44 +330,52 @@ ok("a hand edit drops the highlight entirely", () => {
     "one Max card on a Tuned deck is no longer any whole rung, whatever was clicked");
 });
 
-/**
- * KNOWN GAP, being closed separately: Max is supposed to be the Tier 3 build, and
- * for most variants it currently composes to byte-identical the Tuned hundred.
- *
- * The cause is a modelling decision, not a fact about the decks. The v2.4 sweep's
- * Max optimizer accepted no swap on 40 of 50 variants, and the Game Changers added
- * afterwards to fill those ladders carry `capabilityOption`, which by design keeps
- * them out of the composed rung so the pinned lists still match. Bracket 3 is
- * defined by being allowed up to three Game Changers, and 43 of 50 variants have
- * in-colour, priced ones sitting in their plan right now.
- *
- * This test pins the CURRENT state so the fix is visible as a diff rather than
- * slipping in unnoticed. When Max becomes a real Tier 3 build, this number drops
- * and the assertion below is what will say so.
- */
-ok("the Max-equals-Tuned collapse is pinned until Max becomes a real Tier 3 build", () => {
-  const collapsed = planIds.filter((id) => {
+/* ---------- Max is the Tier 3 build ---------- */
+const cardsJson = JSON.parse(await readFile(new URL("../data/cards.json", import.meta.url), "utf8"));
+const gameChangerNames = new Set(cardsJson.cards.filter((c) => c.gameChanger).map((c) => c.name.toLowerCase()));
+const TIER3_LIMIT = 3;
+const gameChangersIn = (plan, rung) => Lineup.selectedEntries(plan, Slot.selectionForRung(plan, rung))
+  .filter((entry) => gameChangerNames.has(entry.item.name.toLowerCase()));
+
+ok("Max is a Tier 3 build, not a label over the Tuned hundred", () => {
+  // It used to be exactly that on 40 of 50, because the Game Changers filling
+  // those ladders carried capabilityOption and so never composed into the rung.
+  // Bracket 3 IS the allowance of up to three Game Changers, so a Max rung that
+  // carries none of them is not a Tier 3 build.
+  const same = planIds.filter((id) => {
     const plan = buyPlans.plans[id];
     return Slot.selectionSignature(Slot.selectionForRung(plan, "max"))
         === Slot.selectionSignature(Slot.selectionForRung(plan, "tuned"));
   });
-  assert.equal(collapsed.length, 40,
-    `${collapsed.length} variants have Max identical to Tuned. If this dropped, the Tier 3 fix landed -- update this number. If it rose, a Max rung lost its content.`);
-  // Whatever the rung composes to, the Tier 3 cards themselves are present as
-  // offers on the ladder, which is what makes the fix a promotion rather than a hunt.
-  const withOffers = planIds.filter((id) =>
-    (buyPlans.plans[id].max || []).some((item) => item.capabilityOption && item.gameChanger));
-  assert.equal(withOffers.length, 43, "43 variants carry in-colour Game Changers as offers");
+  assert.equal(same.length, 0,
+    `${same.length} variants still have Max identical to Tuned (${same.join(", ")})`);
+  const carrying = planIds.filter((id) => gameChangersIn(buyPlans.plans[id], "max").length > 0);
+  assert.equal(carrying.length, planIds.length,
+    `${planIds.length - carrying.length} Max rungs carry no Game Changer at all, so they are not Tier 3 builds`);
 });
 
-ok("no variant may end up offered more Game Changers than Tier 3 allows", () => {
-  // compliance-model.js caps Tier 3 at three. Four variants are currently offered
-  // more, so this asserts the ceiling that the promotion step has to enforce.
-  const over = planIds
-    .map((id) => [id, (buyPlans.plans[id].max || []).filter((i) => i.capabilityOption && i.gameChanger).length])
-    .filter(([, n]) => n > 3);
-  assert.deepEqual(over.map(([id]) => id).sort(), ["4b", "5f", "6c", "9b"],
-    "these are the variants whose offers exceed the Tier 3 limit of three and must be capped when promoted");
+ok("no Max rung exceeds Bracket 3's limit of three Game Changers", () => {
+  // 2a shipped four before this landed -- a genuinely illegal deck that nothing
+  // checked, because the Tier 3 ceiling was never asserted against a composed rung.
+  for (const id of planIds) {
+    const held = gameChangersIn(buyPlans.plans[id], "max");
+    assert.ok(held.length <= TIER3_LIMIT,
+      `${id} Max carries ${held.length} Game Changers (${held.map((e) => e.item.name).join(", ")}), over the limit of ${TIER3_LIMIT}`);
+  }
+});
+
+ok("the rungs below Max stay clean of Game Changers", () => {
+  // Base, Tuned and Pod Fun are published as Tier 2, which permits none at all.
+  // Two decks lead with one as their commander and are Bracket 3 by construction.
+  for (const id of planIds) {
+    const commander = (buyPlans.plans[id].startingShell || []).find((c) => c.isCommander);
+    if (commander && gameChangerNames.has(String(commander.name).toLowerCase())) continue;
+    for (const rung of ["base", "tuned", "fun"]) {
+      const held = gameChangersIn(buyPlans.plans[id], rung);
+      assert.equal(held.length, 0,
+        `${id} ${rung} carries ${held.map((e) => e.item.name).join(", ")}, but that rung is published as Tier 2`);
+    }
+  }
 });
 
 ok("a slot keeps its place in the list whatever rung is picked", () => {

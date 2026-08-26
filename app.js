@@ -1246,11 +1246,13 @@
           <h2 id="compare-title">Choose your ${catalog.decks.length === 6 ? "six" : "decks"}</h2>
           <p>Open each deck role, compare its approaches, and pick one. Your choices stay private on this device.</p>
         </div>
-        <div class="selection-meter"><strong>${selected.length}/${catalog.decks.length}</strong><span>decks selected</span></div>
-      </div>
-      <div class="action-row">
-        <button class="primary-button" id="save-picks" ${selected.length ? "" : "disabled"}>Save Picks → Calibrate</button>
-        <button class="secondary-button" id="email-picks" ${selected.length ? "" : "disabled"}>Email selections</button>
+        <div class="intro-side">
+          <div class="selection-meter"><strong>${selected.length}/${catalog.decks.length}</strong><span>decks selected</span></div>
+          <div class="intro-actions">
+            <button class="mini-button mini-go" id="save-picks" ${selected.length ? "" : "disabled"}>Deck →</button>
+            <button class="mini-button" id="email-picks" title="Email your selections" aria-label="Email selections" ${selected.length ? "" : "disabled"}>✉</button>
+          </div>
+        </div>
       </div>
       <section class="compare-filter-panel">
         <div class="compare-filter-heading"><div>${icon("⌕")}<span><b>Find a variant</b><small>${visibleTotal} of ${catalog.variants.length} shown${activeFilterCount ? ` · ${activeFilterCount} active filters` : ""}</small></span></div>${activeFilterCount ? `<button id="clear-compare-filters">Clear</button>` : ""}</div>
@@ -1323,10 +1325,9 @@
       groups.appendChild(details);
     });
 
-    $("#save-picks", root).addEventListener("click", () => {
-      saveState();
-      switchView("buy");
-    });
+    // Picks are already written on every change, so this is navigation, not a
+    // save -- which is why it no longer takes a button bar to say so.
+    $("#save-picks", root).addEventListener("click", () => switchView("deck2"));
     $("#email-picks", root).addEventListener("click", emailPicks);
     $("#compare-search", root).addEventListener("input", (event) => {
       state.compareFilters.query = event.target.value;
@@ -1774,7 +1775,7 @@
     } else {
       state.compareSelections[variant.deckId] = variant.id;
       seedBuyStateForNewPick(variant);
-      if (previous) showToast(`Deck ${variant.deckId} changed. Other Calibrate were preserved.`);
+      if (previous) showToast(`Deck ${variant.deckId} changed. Your other picks were preserved.`);
       else showToast(`Deck ${variant.deckId} saved: ${variant.name}`);
     }
     saveState();
@@ -6522,63 +6523,47 @@
     dialog.showModal();
   }
 
+  /* One tour per tab, and the tabs are Compare, Deck, Shop and Game Log. The
+     lists that used to sit here were keyed by buy/live/cards, three views that no
+     longer exist, so Deck and Shop both fell through to the Compare tour and
+     narrated a six-tab site nobody was looking at. Each selector list ends in a
+     fallback that survives an unpicked deck, because a tour that lands on nothing
+     is worse than no tour. */
   const TOUR_STEPS = {
     compare: [
-      {view: "compare", selectors: [".main-tabs"], title: "Six steps, one flow", copy: "Compare picks the deck, Calibrate builds the exact 100, Shop is your vendor-floor checklist, Decks tracks what you own and what it cost, Cards flattens all of it into one searchable table, and Game Log records how the decks actually played."},
-      {view: "compare", selectors: [".page-intro"], title: "Choose one variant per deck role", copy: "There are six deck roles and five competing approaches inside each. You pick one per role; the counter tracks how many are locked in."},
+      {view: "compare", selectors: [".main-tabs"], title: "Four steps, one flow", copy: "Compare picks which version of each deck to build, Deck turns that pick into an exact hundred and tracks what is physically in the box, Shop is the vendor-floor list of what is still owed, and Game Log records how the decks actually played."},
+      {view: "compare", selectors: [".page-intro"], title: "One variant per deck", copy: "Every deck role has five competing approaches. Pick one per role — the counter shows how many are locked in."},
+      {view: "compare", selectors: [".intro-actions", ".selection-meter"], title: "Nothing to save", copy: "Picks are written to this device the moment you make them. Deck → just jumps ahead, and the envelope mails the current selections to yourself."},
       {view: "compare", selectors: [".compare-filter-panel"], title: "Narrow the field", copy: "Search by commander, tag, or text, and filter by mechanic or play style. Only matching variants stay visible inside each row."},
-      {view: "compare", selectors: ["[data-compare-filter='profileStage']", ".compare-filter-panel"], title: "Base, Tuned, or Maxed", copy: "Score stage changes which build every card on the page is describing: out-of-the-box, after the core purchases, or pushed to the legal top of Tier 3."},
+      {view: "compare", selectors: ["[data-compare-filter='profileStage']", ".compare-filter-panel"], title: "Base, Tuned, or Maxed", copy: "Score stage changes which build every number on the page describes: out of the box, after the core purchases, or Maxed — a real Bracket 3 hundred carrying up to three Game Changers."},
       {view: "compare", selectors: [".deck-group:first-of-type > summary"], title: "One row per deck role", copy: "Each row is a role with its own objective. Open it to see the five approaches competing for that slot."},
-      {view: "compare", selectors: [".deck-group:first-of-type .rank-order"], title: "Change the ranking lens", copy: "Re-rank the variants for Base, Tuned, or Maxed play to see whether a recommendation still holds as investment increases."},
-      {view: "compare", selectors: [".deck-group:first-of-type .variant-card"], title: "Swipe through the approaches", copy: "Cards sit side by side. Slide horizontally to compare commander, cost, power level, availability, and rarity at a glance."},
-      {view: "compare", selectors: [".deck-group:first-of-type .metric-strip", ".deck-group:first-of-type .variant-card"], title: "Read the three ratings", copy: "Playstyle is how the deck feels to play, Engine is how efficiently it works, Growth is how much upgrade road is left. Each shows an average out of five — tap one to see every sub-score and why it landed there."},
-      {view: "compare", selectors: [".deck-group:first-of-type .build-promise", ".deck-group:first-of-type .variant-card"], title: "What the build actually does", copy: "A plain-language summary of the game plan at the selected stage, so you are not reverse-engineering it from card names."},
-      {view: "compare", selectors: [".deck-group:first-of-type .detail-button"], title: "Open the full evidence", copy: "Full detail carries the commander breakdown, rank reasoning, rarity, precon seed, play pattern, and bracket route. On a phone the green commander block folds away behind its caret."},
-      {view: "compare", selectors: [".deck-group:first-of-type .comment-toggle"], title: "Leave feedback in place", copy: "Attach a comment to a variant. Comments stay on this device and travel with your selections when you email them."},
-      {view: "compare", selectors: [".deck-group:first-of-type .pick-control"], title: "Lock in the pick", copy: "Picking a variant is what feeds every later step. Change it any time — your other choices are preserved."},
-      {view: "buy", selectors: [".buy-intro", ".page-intro"], title: "Step 2 · your picks become a 100-card plan", copy: "Calibrate carries each selected variant across and turns it into an explicit purchase list, with the checked-card count and type spread in the header."},
-      {view: "buy", selectors: [".starting-shell", ".buy-section", ".empty-state"], title: "Step 2 · check exactly what you want", copy: "The commander stays fixed. Tick or untick the shell, Tuned, Enhance, and Maxxed cards; the rules check follows along as you go."},
-      {view: "shop", selectors: [".shop-toolbar", ".page-intro", ".empty-state"], title: "Step 3 · one deduplicated shopping list", copy: "Every checked card across all six decks collapses into a single list you can filter, group, and work through at a vendor table."},
-      {view: "live", selectors: [".live-decks", ".page-intro"], title: "Step 4 · what you own and what it cost", copy: "Decks tracks the physical build: which cards you have, what you paid for each, the running total cost, and whether the deck is legal and ready to play."}
+      {view: "compare", selectors: [".deck-group:first-of-type .rank-order"], title: "Change the ranking lens", copy: "Re-rank the variants for Base, Tuned, or Maxed play to see whether a recommendation still holds as the money goes in."},
+      {view: "compare", selectors: [".deck-group:first-of-type .metric-strip", ".deck-group:first-of-type .variant-card"], title: "Read the three ratings", copy: "Playstyle is how the deck feels to play, Engine is how efficiently it works, Growth is how much upgrade road is left. Tap one to see every sub-score and why it landed there."},
+      {view: "compare", selectors: [".deck-group:first-of-type .detail-button", ".deck-group:first-of-type .variant-card"], title: "Open the full evidence", copy: "Full detail carries the commander breakdown, rank reasoning, rarity, precon seed, play pattern, and bracket route."},
+      {view: "compare", selectors: [".deck-group:first-of-type .pick-control", ".deck-group:first-of-type .variant-card"], title: "Lock in the pick", copy: "Picking a variant feeds every later step, and the score stage you were reading becomes the rung the Deck tab opens on. Change it any time — your other picks are preserved."},
+      {view: "deck2", selectors: [".dp-rail", ".loading-card", "#view-deck2"], title: "Next · your pick becomes a hundred cards", copy: "Deck opens on the variant you picked, one button per deck along the top."}
     ],
-    buy: [
-      {view: "buy", selectors: [".buy-intro", ".page-intro"], title: "Build the buy plan", copy: "Your Compare picks become complete 100-card configurations here. The header shows how many cards are checked and how they split by type."},
-      {view: "buy", selectors: [".buy-mode-chips", ".page-intro"], title: "All or only what you own", copy: "Switch to Bought to see just the cards already marked as purchased in the Shop."},
-      {view: "buy", selectors: [".buy-overview", ".empty-state"], title: "Jump between deck plans", copy: "Move quickly among the selected decks and compare the size of each Tuned package."},
-      {view: "buy", selectors: [".deck-compliance", ".empty-state"], title: "Keep the rules close", copy: "Tier 2, Tier 3, and the exact card count stay compact. Expand the check for composition and detailed issues."},
-      {view: "buy", selectors: [".plan-analysis", ".empty-state"], title: "Read the full strategy", copy: "The analysis keeps how to play, buy order, bracket reasoning, stretch cards, and top-of-bracket options in one place."},
-      {view: "buy", selectors: [".starting-shell", ".empty-state"], title: "Inspect the 100-card foundation", copy: "The commander never collapses. The other 99 cards are nested by type so you can work one group at a time."},
-      {view: "buy", selectors: [".buy-section", ".empty-state"], title: "Try one-for-one changes", copy: "Enhance options are role-preserving choices at $20 or less. Maxxed choices are classified by Tier 3 capability rather than cost, and each names the card it replaces."},
-      {view: "shop", selectors: [".shop-toolbar", ".page-intro", ".empty-state"], title: "Step 3 · where these checks land", copy: "Saving your buys sends every checked purchase to the Shop, deduplicated across all six decks and sorted for a vendor floor."},
-      {view: "live", selectors: [".live-decks", ".page-intro"], title: "Step 4 · and where they end up", copy: "Once bought, each card appears in Decks, where you record what you paid and watch the deck's total cost and readiness update."}
+    deck2: [
+      {view: "deck2", selectors: [".dp-rail", ".loading-card", "#view-deck2"], title: "One deck at a time", copy: "A button per deck you picked on Compare. Everything below belongs to the deck highlighted here."},
+      {view: "deck2", selectors: [".dp-tally", ".loading-card", "#view-deck2"], title: "Where all hundred cards are", copy: "The tally always adds to the full deck: what is in this box, what you own but have filed elsewhere, what is ordered, what is still to buy, and any slot still empty."},
+      {view: "deck2", selectors: [".dp-rank", ".loading-card", "#view-deck2"], title: "Rank order sets every slot at once", copy: "Base is the cheapest hundred that is still this deck, Tuned is the core purchases, Fun branches off Base for a pod that wants a game rather than a result, and Max is the Bracket 3 build with its Game Changers. One click moves all hundred slots, and ticks the box for the cards you already own."},
+      {view: "deck2", selectors: [".dp-stats-row", ".loading-card", "#view-deck2"], title: "Slots filled and land count", copy: "The two numbers that decide whether the deck is playable tonight, kept where you cannot miss them."},
+      {view: "deck2", selectors: [".dp-grp-h", ".loading-card", "#view-deck2"], title: "Grouped by card type", copy: "Creatures, lands, removal and the rest each fold away, with a card count and how many of them you still owe."},
+      {view: "deck2", selectors: [".dp-slot", ".loading-card", "#view-deck2"], title: "One row per slot", copy: "A slot is a job in the deck, not a card. The row names whichever card is doing that job right now, which rung it came from, its price, and where the physical copy is."},
+      {view: "deck2", selectors: [".dp-box", ".dp-slot", "#view-deck2"], title: "The box checkbox", copy: "Tick it when the card is actually sleeved in this deck. Ticking also records that you hold a copy, so a card can never read as in the box and still to buy at the same time."},
+      {view: "deck2", selectors: [".dp-main", ".dp-slot", "#view-deck2"], title: "Open a slot for its options", copy: "Every slot carries the rungs that can fill it, side by side, each with the reason it was chosen over the one it replaces.", act: "openSlot"},
+      {view: "deck2", selectors: [".dp-cand", ".dp-slot", "#view-deck2"], title: "Swap one slot without moving the page", copy: "Picking a rung inside a slot changes that slot only. The row keeps its place and the panel stays open, so you can work down a group without hunting for where you were."},
+      {view: "shop2", selectors: [".sp-bar", ".loading-card", "#view-shop2"], title: "Next · what is still owed", copy: "Everything left to buy across every deck collapses into one list on Shop."}
     ],
-    shop: [
-      {view: "shop", selectors: [".page-intro"], title: "Your table-ready list", copy: "Only purchases from the selected deck arrangements appear here, deduplicated across decks."},
-      {view: "shop", selectors: [".shop-toolbar", ".empty-state"], title: "Search and filter quickly", copy: "Narrow by need or bought status, purchase level, deck, or card type while walking a vendor floor."},
-      {view: "shop", selectors: [".more-filters", ".empty-state"], title: "Group the way you shop", copy: "Group by table location, rarity, price range, type, theme or set, or the number of decks that need the card."},
-      {view: "shop", selectors: [".shop-card", ".empty-state"], title: "Use the complete buying card", copy: "Each card shows large art, table location, target and ceiling price, rarity, purpose, and the decks that need it."},
-      {view: "shop", selectors: [".found-button", ".empty-state"], title: "Mark progress as you go", copy: "Mark a card Bought and the remaining target total updates. Everything stays private on this device."},
-      {view: "live", selectors: [".live-deck-metrics", ".live-decks", ".page-intro"], title: "Step 4 · bought cards become inventory", copy: "Anything marked Bought turns into an owned card in Decks, where you enter the price you actually paid."},
-      {view: "live", selectors: [".live-export", ".page-intro"], title: "Step 4 · take the list with you", copy: "Export writes the decks exactly as filtered on screen to a flat CSV checklist for a spreadsheet or a printout."}
-    ],
-    live: [
-      {view: "live", selectors: [".live-intro", ".page-intro"], title: "The physical build", copy: "Decks is the inventory view: what each deck contains, what you own, what it cost, and whether it is legal and ready to play."},
-      {view: "live", selectors: [".live-deck-metrics", ".live-decks"], title: "Read the header at a glance", copy: "Total cost sums only the prices you locked in. The rest track bought and active cards, purchases still needed, and Game Changer and Tier 3 status."},
-      {view: "live", selectors: [".live-deck-disclosures", ".live-decks"], title: "Detail on demand", copy: "Deck Composition and Core Mechanics stay folded until you want them, so the header stays short on a phone."},
-      {view: "live", selectors: [".live-metric-strip", ".live-decks"], title: "The same three ratings", copy: "Playstyle, Engine, and Growth carry over from Compare at the stage you selected. Tap one to see which sub-scores drive it."},
-      {view: "live", selectors: [".live-toolbar", ".live-decks"], title: "Filter and group each deck", copy: "Search inside a deck, filter by status, level, type, color, price, rarity, or location, and group and sub-group the results."},
-      {view: "live", selectors: [".live-lineup-radio", ".live-card-row", ".live-decks"], title: "Choose the active 100", copy: "Each slot has one active card and any number of bench options. The radio makes a card active; illegal swaps are refused with the rule that blocked them."},
-      {view: "live", selectors: [".live-price-entry", ".live-card-row", ".live-decks"], title: "Record what you paid", copy: "Owned cards get a price box. Type what you paid and press the check to lock it in; the deck's total cost updates immediately. Cards that came in a sealed precon just read Precon Pack."},
-      {view: "live", selectors: [".live-export", ".live-intro"], title: "Export the checklist", copy: "Export writes every deck in its current grouping and filters to a CSV inventory: card, type, rarity, set, level, lineup, status, what you paid, and the floor-to-ceiling range."},
-      {view: "live", selectors: [".salvage-live-deck .salvage-intake", ".salvage-live-deck"], title: "Cards you bought that no deck asked for", copy: "Paste TCGplayer links or plain card names, one per line, and each is looked up on Scryfall and filed into Salvage as owned — ready to assign into any deck. Anything that cannot be found is reported line by line rather than quietly dropped."},
-      {view: "live", selectors: [".salvage-live-deck", ".live-decks"], title: "The Salvage yard", copy: "Cards pushed out of a deck land here alongside the ones you added by hand. Open any of them to send it into a deck that needs it."}
-    ],
-    cards: [
-      {view: "cards", selectors: [".page-intro"], title: "Every card, one table", copy: "Cards is the same inventory Decks shows, flattened. Decks answers \u201cwhat is in this deck\u201d one deck at a time; this answers \u201cwhere is this card\u201d across all of them, Salvage included."},
-      {view: "cards", selectors: [".card-filter-grid", ".shop-toolbar"], title: "Filter across decks", copy: "Narrow by deck, card type, whether a card is in the active 100 or on the bench, and whether you have bought it yet. The line underneath keeps a running count of what is still owed."},
-      {view: "cards", selectors: [".cards-table thead", ".cards-table-wrap"], title: "Sort by any column", copy: "Click a heading to sort — by name, deck, type, role, status, what you paid, or what it should cost. Sorting by paid is the fastest way to see where the money actually went."},
-      {view: "cards", selectors: [".cards-table tbody tr", ".cards-table-wrap"], title: "Open any card", copy: "A row opens the same detail sheet the deck views use, so a card means the same thing wherever you found it."},
-      {view: "cards", selectors: ["#cards-export", ".page-intro"], title: "Export what you are looking at", copy: "Export writes exactly the rows currently visible, with their deck, role, status, paid price and target price."}
+    shop2: [
+      {view: "shop2", selectors: [".sp-bar", ".loading-card", "#view-shop2"], title: "One list, every deck", copy: "Each card you still owe appears once, however many decks want it, with the decks named on the row."},
+      {view: "shop2", selectors: [".sp-drop", ".sp-bar", "#view-shop2"], title: "Filters stack", copy: "Each filter is a multi-select — tick two rarities or three decks and the list keeps both. Active filters show as chips you can pull off one at a time."},
+      {view: "shop2", selectors: ["#sp-q", ".sp-bar", "#view-shop2"], title: "Search inside the list", copy: "Type any part of a card name to narrow what is on screen without touching the filters."},
+      {view: "shop2", selectors: [".sp-seg", ".sp-bar", "#view-shop2"], title: "Table, gallery, or bench", copy: "Table is fastest to scan at a vendor counter, gallery shows the art when you are hunting a specific printing, and Bench holds cards you own that no slot has asked for yet."},
+      {view: "shop2", selectors: ["#sp-group", ".sp-bar", "#view-shop2"], title: "Group the way you shop", copy: "Group by table location, price band, rarity, type, or deck, so the list matches the order you will actually walk the floor in."},
+      {view: "shop2", selectors: [".sp-tot", ".sp-bar", "#view-shop2"], title: "The running total", copy: "How many cards and how much money are still outstanding, for exactly the rows the filters have left on screen."},
+      {view: "shop2", selectors: [".sp-card", ".sp-table", ".sp-bar", "#view-shop2"], title: "Mark it bought", copy: "Marking a card bought moves it into your ownership ledger, drops it out of the owed total, and makes it available to tick into a box back on Deck."},
+      {view: "log", selectors: [".game-log-form", ".page-intro", "#view-log"], title: "Next · what actually happened", copy: "Game Log is the only part of this site that is not a model. Record a game and the predictions get something to answer to."}
     ],
     log: [
       {view: "log", selectors: [".page-intro"], title: "What actually happened", copy: "Everything else on this site is a model. This is the record: what you played, whether you won, how long it took, and how the table felt about it."},
@@ -6597,6 +6582,15 @@
     $("#tour-layer").hidden = true;
     if (origin && activeViewName() !== origin) switchView(origin, false);
   }
+
+  /* A step can open the thing it is about to describe. Without this the two Deck
+     steps that talk about the inside of a slot spotlight a closed row instead. */
+  const TOUR_ACTS = {
+    openSlot() {
+      if ($(".dp-cand")) return;
+      $("[data-dp-expand]")?.click();
+    }
+  };
 
   function findTourTarget(step) {
     for (const selector of step.selectors) {
@@ -6639,10 +6633,11 @@
     if (!tourState) return;
     const step = tourState.steps[tourState.index];
     switchView(step.view, false);
-    const tourName = ({choose: "Choose", compare: "Compare", buy: "Calibrate", shop: "Shop", live: "Decks"})[tourState.origin] || "Guided";
+    const tourName = ({compare: "Compare", deck2: "Deck", shop2: "Shop", log: "Game Log"})[tourState.origin] || "Guided";
     $("#tour-progress").textContent = `${tourName} tour · ${tourState.index + 1} of ${tourState.steps.length}`;
     $("#tour-title").textContent = step.title;
     $("#tour-copy").innerHTML = `<p>${esc(step.copy)}</p>`;
+    if (step.act) TOUR_ACTS[step.act]?.();
     $("#tour-back").disabled = tourState.index === 0;
     $("#tour-next").textContent = tourState.index === tourState.steps.length - 1 ? "Finish" : "Next";
     requestAnimationFrame(() => requestAnimationFrame(() => {

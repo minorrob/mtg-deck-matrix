@@ -183,8 +183,17 @@ assert.match(appSource, /if \(metadataAttempts\.get\(key\)\) return;/, "card met
 assert.match(appSource, /Precon Pack/, "cards that arrive inside a sealed precon must be labelled instead of priced");
 assert.doesNotMatch(appSource, /live-critical-insight/, "the duplicate readiness banner must stay out of the Live Deck header");
 assert.doesNotMatch(appSource, /Saved on this device"\);\n\s*renderCompare/, "reset must not depend on the removed save-status label");
-for (const view of ["compare", "buy", "shop", "live", "cards", "log"]) {
-  assert.match(appSource, new RegExp(`^\\s{4}${view}: \\[`, "m"), `the tour must define its own steps for the ${view} view`);
+// Read the tabs off the markup rather than listing them here. The list that used
+// to sit in this line named buy, live and cards -- three views retired into Deck
+// and Shop -- so it went on passing while the two surviving tabs had no tour of
+// their own and fell through to Compare's, which narrated a site of six tabs.
+const tabViews = [...htmlSource.matchAll(/class="main-tab[^"]*"\s+data-view="([a-z0-9]+)"/g)].map((m) => m[1]);
+assert.ok(tabViews.length >= 4, `expected the tab bar to still have tabs, found ${tabViews.length}`);
+for (const view of tabViews) {
+  assert.match(appSource, new RegExp(`^\\s{4}${view}: \\[`, "m"), `the tour must define its own steps for the ${view} tab`);
+}
+for (const view of [...appSource.matchAll(/^\s{4}([a-z0-9]+): \[$/gm)].map((m) => m[1])) {
+  assert.ok(tabViews.includes(view), `the tour still defines steps for ${view}, which is no longer a tab`);
 }
 assert.match(appSource, /function exportLiveDecks/, "Live Decks must be exportable as a flat inventory");
 assert.match(appSource, /mtg-owned-extras-import-v3/, "the complete known inventory must migrate onto each browser once");
