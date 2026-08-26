@@ -201,6 +201,44 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:900px}
 .gmeta{font-size:11px;color:var(--muted);display:flex;gap:5px;flex-wrap:wrap;align-items:center}
 .gfoot{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-top:auto;padding-top:5px}
 
+/* card preview pane */
+.cand-wrap{display:grid;grid-template-columns:minmax(0,1fr) 292px;gap:14px;align-items:start}
+.cprev{position:sticky;top:12px}
+.cface{border:1px solid #2b2b2b;border-radius:12px;padding:7px;background:#f0ead8;
+  box-shadow:0 4px 14px rgba(31,42,36,.18)}
+.cf-top,.cf-type{display:flex;justify-content:space-between;align-items:center;gap:8px;
+  padding:4px 8px;border:1px solid #4a453a;border-radius:5px;background:#e6dfc9}
+.cf-nm{font-family:var(--serif);font-size:12.5px;font-weight:600;line-height:1.2}
+.cf-mv{font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;color:#3b3629}
+.cf-art{margin:5px 0;height:118px;border:1px solid #4a453a;border-radius:4px;display:grid;place-items:center;
+  background:linear-gradient(150deg,var(--art-a,#cfc8bb),var(--art-b,#9aa295));overflow:hidden}
+.cf-art span{font-family:var(--serif);font-size:11px;color:rgba(255,255,255,.9);text-shadow:0 1px 3px rgba(0,0,0,.45);padding:8px;text-align:center}
+.cf-type{margin-top:5px;font-size:10.5px}
+.cf-rules{margin-top:5px;min-height:74px;padding:7px 8px;border:1px solid #4a453a;border-radius:4px;
+  background:#f6f1e2;font-size:10.5px;line-height:1.4;color:#2c2a22}
+.cf-rules i{color:#6a6455}
+.cf-pt{margin-top:5px;text-align:right;font-size:12px;font-weight:800;font-variant-numeric:tabular-nums}
+.cstats{list-style:none;margin:10px 0 0;padding:0;border:1px solid var(--line);border-radius:10px;
+  background:var(--surface);overflow:hidden}
+.cstats li{display:grid;grid-template-columns:74px 1fr;gap:8px;padding:6px 10px;font-size:11.5px}
+.cstats li+li{border-top:1px solid var(--line)}
+.cstats b{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.cprev-note{margin:7px 2px 0;font-size:10.5px;color:var(--muted)}
+
+/* destination chooser */
+.dest{margin-top:10px;padding:11px;border:1px solid #b9cfc2;border-radius:12px;background:#eef5f0}
+.dest h5{margin:0 0 3px;font-family:var(--serif);font-size:14px;font-weight:400}
+.dest .flab{display:block;margin:9px 0 4px}
+.dsel{width:100%;min-height:36px;padding:6px 10px;border:1px solid var(--line);border-radius:9px;
+  background:var(--surface);font-size:12.5px}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.tag{padding:2px 8px;border:1px solid #b9cfc2;border-radius:999px;background:var(--surface);font-size:11px}
+.tag.rung{border-color:var(--forest-2);font-weight:700}
+.repl{margin-top:9px;padding:8px 10px;border-left:3px solid var(--gold);background:var(--surface);
+  border-radius:0 8px 8px 0;font-size:12px}
+.repl b{display:block;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.dest .mini.prime{margin-top:10px;width:100%;justify-content:center;text-align:center}
+
 /* bench + drawer */
 .scrim{position:fixed;inset:0;z-index:80;background:rgba(20,32,27,.42);border:0;padding:0}
 .scrim[hidden]{display:none}
@@ -227,6 +265,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:900px}
   box-shadow:var(--shadow);font-size:13px;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 
+@media (max-width:900px){ .cand-wrap{grid-template-columns:minmax(0,1fr)} .cprev{position:static;max-width:330px} }
 @media (max-width:640px){
   .slot-h{grid-template-columns:22px 1fr;row-gap:6px}
   .slot-r{grid-column:2;justify-content:flex-start}
@@ -298,6 +337,141 @@ function locBits(l){
   if(l==="buy")    return {g:"\u25CB",t:"To buy",  c:"buy"};
   if(l==="ordered")return {g:"\u29D6",t:"Ordered", c:"ordered"};
   return {g:"\u25C6",t:"In D"+l.slice(1),c:"other"};
+}
+
+/* ============ card faces ============ */
+/* In the live app this pane shows the Scryfall image; the shell draws the frame from this data. */
+var FACE={
+"Felothar the Steadfast":["2WBG","Legendary Creature \u2014 Human Soldier","3/5",["Vigilance","Toughness matters"],
+  "Vigilance. At the beginning of your end step, each opponent loses life equal to the greatest toughness among creatures you control."],
+"Betor, Ancestor's Voice":["2WBG","Legendary Creature \u2014 Spirit","1/6",["Flying","End-step payoff"],
+  "Flying. At the beginning of your end step, choose one depending on the total toughness among creatures you control."],
+"Sylvan Caryatid":["1G","Creature \u2014 Plant","0/3",["Defender","Hexproof","Mana ability"],
+  "Defender, hexproof. {T}: Add one mana of any color."],
+"Selvala, Heart of the Wilds":["2G","Legendary Creature \u2014 Elf Scout","2/3",["Mana ability","Scales with board"],
+  "Whenever another creature enters, its controller may draw a card if its power is greater than each other creature's power. {T}: Add {G} for each creature's greatest power."],
+"Ozolith, the Shattered Spire":["1G","Legendary Creature \u2014 Phyrexian Insect","1/4",["Counters matter","Mana ability"],
+  "{T}: Add {G}. If that mana is spent on a modified creature spell, it enters with an additional +1/+1 counter."],
+"Rampaging Baloths":["4GG","Creature \u2014 Beast","6/6",["Trample","Landfall"],
+  "Trample. Landfall \u2014 Whenever a land you control enters, you may create a 4/4 green Beast creature token."],
+"Sword of Fire and Ice":["3","Artifact \u2014 Equipment","\u2014",["Equip 2","Protection","Card draw"],
+  "Equipped creature gets +2/+2 and has protection from red and from blue. Whenever it deals combat damage, it deals 2 damage to any target and you draw a card."],
+"Wall of Roots":["1G","Creature \u2014 Plant Wall","0/5",["Defender","Mana ability"],
+  "Defender. Put a -0/-1 counter on this creature: Add {G}. Activate only once each turn."],
+"Overgrown Battlement":["1G","Creature \u2014 Wall","0/4",["Defender","Scales with defenders"],
+  "Defender. {T}: Add {G} for each creature you control with defender."],
+"Axebane Guardian":["2G","Creature \u2014 Human Druid","0/3",["Defender","Any colour"],
+  "Defender. {T}: Add one mana of any color for each creature you control with defender."],
+"Vine Trellis":["1G","Creature \u2014 Plant Wall","0/4",["Defender","Mana ability"],"Defender. {T}: Add {G}."],
+"Wall of Omens":["1W","Creature \u2014 Wall","0/4",["Defender","Replaces itself"],
+  "Defender. When this creature enters, draw a card."],
+"Carven Caryatid":["2G","Creature \u2014 Plant Wall","0/5",["Defender","Replaces itself"],
+  "Defender. When this creature enters, draw a card."],
+"Shalai, Voice of Plenty":["3W","Legendary Creature \u2014 Angel","3/4",["Flying","Blanket hexproof"],
+  "Flying. You, planeswalkers you control, and other creatures you control have hexproof. {4}{G}{G}: Put a +1/+1 counter on each creature you control."],
+"Sanctuary Warden":["3WW","Creature \u2014 Angel","4/4",["Flying","Shield counters","Card draw"],
+  "Flying. This creature enters with two shield counters. Whenever it attacks, you may remove a counter to draw a card and create a 1/1 Citizen."],
+"Jaddi Offshoot":["G","Creature \u2014 Plant Wall","0/3",["Defender","Landfall"],
+  "Defender. Landfall \u2014 Whenever a land you control enters, you gain 1 life."],
+"Ikra Shidiqi, the Usurper":["3BG","Legendary Creature \u2014 Naga Shaman","3/5",["Menace","Toughness matters"],
+  "Menace. Whenever a creature you control deals combat damage to a player, you gain that much life. Its toughness, not power, determines the amount."],
+"Hornet Nest":["2G","Creature \u2014 Insect","0/2",["Defender","Deterrent"],
+  "Defender. Whenever this creature is dealt damage, create that many 1/1 green Insect tokens with flying and deathtouch."],
+"Selesnya Signet":["2","Artifact","\u2014",["Mana rock","Filter"],"{1}, {T}: Add {G}{W}."],
+"Arcane Signet":["2","Artifact","\u2014",["Mana rock","Any commander colour"],
+  "{T}: Add one mana of any color in your commander's color identity."],
+"Chromatic Lantern":["3","Artifact","\u2014",["Mana rock","Fixes lands"],
+  "Lands you control have \u201c{T}: Add one mana of any color.\u201d {T}: Add one mana of any color."],
+"Mana Crypt":["0","Artifact","\u2014",["Free","Fast mana","Game Changer"],
+  "At the beginning of your upkeep, flip a coin. If you lose the flip, this deals 3 damage to you. {T}: Add {C}{C}."],
+"Swiftfoot Boots":["2","Artifact \u2014 Equipment","\u2014",["Equip 1","Hexproof","Haste"],
+  "Equipped creature has hexproof and haste. Equip {1}."],
+"Lightning Greaves":["2","Artifact \u2014 Equipment","\u2014",["Equip 0","Shroud","Haste"],
+  "Equipped creature has shroud and haste. Equip {0}."],
+"Thran Power Suit":["2","Artifact \u2014 Equipment","\u2014",["Equip 2","Counters","Toughness"],
+  "Equipped creature gets +1/+1 for each counter on it and has trample. Equip {2}."],
+"Assault Formation":["1G","Enchantment","\u2014",["Toughness as power","Anthem"],
+  "Each creature you control assigns combat damage equal to its toughness rather than its power. {G}: Target creature with defender can attack as though it didn't have defender."],
+"High Alert":["1U","Enchantment","\u2014",["Toughness as power","Untap"],
+  "Each creature you control assigns combat damage equal to its toughness. Creatures you control with defender can attack. {1}{U}: Untap target creature."],
+"Rolling Stones":["1W","Enchantment","\u2014",["Walls attack"],"Creatures with defender can attack as though they didn't have defender."],
+"Feed the Swarm":["1B","Sorcery","\u2014",["Removal","Hits enchantments"],
+  "Destroy target creature or enchantment an opponent controls. You lose life equal to that permanent's mana value."],
+"Anguished Unmaking":["1WB","Instant","\u2014",["Catch-all removal","Exile"],
+  "Exile target nonland permanent. You lose 3 life."],
+"Golgari Charm":["BG","Instant","\u2014",["Modal","Sweeper mode"],
+  "Choose one \u2014 All creatures get -1/-1 until end of turn; or destroy target enchantment; or regenerate each creature you control."],
+"Vindicate":["1WB","Sorcery","\u2014",["Unconditional","Hits lands"],"Destroy target permanent."],
+"Despark":["WB","Instant","\u2014",["Removal","Mana value 4+"],
+  "Exile target permanent with mana value 4 or greater."],
+"Swords to Plowshares":["W","Instant","\u2014",["Cheapest removal","Exile"],
+  "Exile target creature. Its controller gains life equal to its power."],
+"Path to Exile":["W","Instant","\u2014",["Cheapest removal","Exile"],
+  "Exile target creature. Its controller may search their library for a basic land, put it onto the battlefield tapped, then shuffle."],
+"Cultivate":["2G","Sorcery","\u2014",["Ramp","Fixing"],
+  "Search your library for up to two basic land cards, put one onto the battlefield tapped and the other into your hand, then shuffle."],
+"Kodama's Reach":["2G","Sorcery","\u2014",["Ramp","Fixing"],
+  "Search your library for up to two basic land cards, put one onto the battlefield tapped and the other into your hand, then shuffle."],
+"Nature's Lore":["1G","Sorcery","\u2014",["Ramp","Untapped","Duals"],
+  "Search your library for a Forest card, put it onto the battlefield untapped, then shuffle."],
+"Three Visits":["1G","Sorcery","\u2014",["Ramp","Untapped","Duals"],
+  "Search your library for a Forest card, put it onto the battlefield untapped, then shuffle."],
+"Farseek":["1G","Sorcery","\u2014",["Ramp","Non-Forest duals"],
+  "Search your library for a Plains, Island, Swamp or Mountain card, put it onto the battlefield tapped, then shuffle."],
+"Rampant Growth":["1G","Sorcery","\u2014",["Ramp"],
+  "Search your library for a basic land card, put it onto the battlefield tapped, then shuffle."],
+"Wood Elves":["2G","Creature \u2014 Elf Scout","1/1",["Ramp on a body","Fetches duals"],
+  "When this creature enters, search your library for a Forest card, put it onto the battlefield, then shuffle."],
+"Solemn Simulacrum":["4","Artifact Creature \u2014 Golem","2/2",["Ramp","Card on death"],
+  "When this creature enters, search your library for a basic land card, put it onto the battlefield tapped, then shuffle. When it dies, draw a card."],
+"Commander's Sphere":["3","Artifact","\u2014",["Mana rock","Cantrips"],
+  "{T}: Add one mana of any color in your commander's color identity. Sacrifice: Draw a card."],
+"Fellwar Stone":["2","Artifact","\u2014",["Mana rock"],
+  "{T}: Add one mana of any color that a land an opponent controls could produce."],
+"Llanowar Scout":["1G","Creature \u2014 Elf Scout","1/1",["Extra land drop"],
+  "{T}: You may put a land card from your hand onto the battlefield."],
+"Rhox Faithmender":["3W","Creature \u2014 Rhino Monk","1/5",["Lifelink","Doubles life"],
+  "Lifelink. If you would gain life, you gain twice that much life instead."],
+"Command Tower":["\u2014","Land","\u2014",["Any commander colour"],
+  "{T}: Add one mana of any color in your commander's color identity."],
+"Sandsteppe Citadel":["\u2014","Land","\u2014",["Tri-land","Enters tapped"],
+  "This land enters tapped. {T}: Add {W}, {B}, or {G}."],
+"Obuun, Mul Daya Ancestor":["2RGW","Legendary Creature \u2014 Elemental Cat","3/3",["Landfall","Lands become creatures"],
+  "Vigilance. Landfall \u2014 Whenever a land you control enters, you may have target land you control become an X/X Elemental creature with haste."],
+"Arboreal Grazer":["G","Creature \u2014 Ape","0/3",["Reach","Extra land drop"],
+  "Reach. When this creature enters, you may put a land card from your hand onto the battlefield tapped."],
+"Sakura-Tribe Elder":["1G","Creature \u2014 Snake Shaman","1/1",["Chump block","Ramp"],
+  "Sacrifice this creature: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle."],
+"Tireless Tracker":["2G","Creature \u2014 Human Scout","3/2",["Landfall","Clues","Counters"],
+  "Landfall \u2014 Whenever a land you control enters, investigate. Whenever you sacrifice a Clue, put a +1/+1 counter on this creature."],
+"Springbloom Druid":["2G","Creature \u2014 Human Druid","2/2",["Two land drops","Fixing"],
+  "When this creature enters, you may sacrifice a land. If you do, search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle."],
+"Risen Reef":["2G","Creature \u2014 Elemental","1/1",["Elemental payoff","Draw or ramp"],
+  "Whenever this creature or another Elemental you control enters, look at the top card of your library. If it's a land, put it onto the battlefield tapped. Otherwise, put it into your hand."],
+"Wayfarer's Bauble":["1","Artifact","\u2014",["Ramp","Colourless"],
+  "{2}, {T}, Sacrifice: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle."],
+"Sword of the Animist":["2","Artifact \u2014 Equipment","\u2014",["Equip 2","Ramp on attack"],
+  "Equipped creature gets +1/+1 and has \u201cWhenever this creature attacks, search your library for a basic land card, put it onto the battlefield tapped, then shuffle.\u201d"],
+"Crop Rotation":["G","Instant","\u2014",["Land tutor","Instant speed"],
+  "As an additional cost, sacrifice a land. Search your library for a land card, put it onto the battlefield, then shuffle."],
+"Song of the Dryads":["2G","Enchantment \u2014 Aura","\u2014",["Answers anything","Aura"],
+  "Enchant permanent. Enchanted permanent is a colorless Forest land."],
+"Harrow":["2G","Instant","\u2014",["Two lands","Instant speed"],
+  "As an additional cost, sacrifice a land. Search your library for up to two basic land cards, put them onto the battlefield, then shuffle."],
+"Migration Path":["3G","Sorcery","\u2014",["Two lands","Cycling"],
+  "Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. Cycling {2}."],
+"Skyshroud Claim":["3G","Sorcery","\u2014",["Two lands","Untapped","Duals"],
+  "Search your library for up to two Forest cards, put them onto the battlefield untapped, then shuffle."],
+"Circuitous Route":["3G","Sorcery","\u2014",["Two lands","Gates"],
+  "Search your library for up to two basic land or Gate cards, put them onto the battlefield tapped, then shuffle."]
+};
+function faceOf(nm,typeFallback){
+  var f=FACE[nm];
+  if(f) return {mv:f[0],tl:f[1],pt:f[2],kw:f[3],ox:f[4]};
+  if(/^(Forest|Plains|Island|Swamp|Mountain)$/.test(nm))
+    return {mv:"\u2014",tl:"Basic Land \u2014 "+nm,pt:"\u2014",kw:["Basic"],
+      ox:"{T}: Add {"+({Forest:"G",Plains:"W",Island:"U",Swamp:"B",Mountain:"R"}[nm])+"}."};
+  return {mv:"\u2014",tl:typeFallback||"Card",pt:"\u2014",kw:[],ox:""};
 }
 
 /* ============ data ============ */
@@ -589,13 +763,40 @@ function slotRow(s){
 }
 function tile(s,key,cd,isOwned){
   var L=locBits(cd.loc),on=(!isOwned&&s.pick===key);
-  return '<button class="tile" data-pick="'+s.id+'|'+key+'|'+(isOwned?1:0)+'" aria-pressed="'+on+'">'+
+  return '<button class="tile" data-pick="'+s.id+'|'+key+'|'+(isOwned?1:0)+'" '+
+    'data-prev="'+s.id+'|'+key+'|'+(isOwned?1:0)+'" aria-pressed="'+on+'">'+
     (isOwned?'<span class="rung none" style="align-self:flex-start">Owned</span>'
             :'<span class="rung '+key+'" style="align-self:flex-start">'+RUNGLAB[key]+'</span>')+
     '<span class="tile-nm">'+esc(cd.name)+'</span>'+
     '<span class="tile-ft"><span class="loc '+L.c+'"><span class="g">'+L.g+'</span>'+L.t+'</span>'+
     '<span class="fit num">'+(isOwned?'fit '+cd.fit:money(cd.price))+'</span></span></button>';
 }
+function cardOf(s,key,isOwned){
+  if(isOwned) return s.owned[+String(key).replace("own","")];
+  return s.cands[key]||pickOf(s);
+}
+function previewMarkup(s,key,isOwned){
+  var cd=cardOf(s,key,isOwned), f=faceOf(cd.name,s.type), tint=COLORHEX[cd.color]||"#cfc8bb";
+  var L=locBits(cd.loc);
+  return '<div class="cface" style="--art-a:'+tint+';--art-b:#6f7a70">'+
+      '<div class="cf-top"><span class="cf-nm">'+esc(cd.name)+'</span><span class="cf-mv num">'+f.mv+'</span></div>'+
+      '<div class="cf-art"><span>'+esc(cd.name)+'</span></div>'+
+      '<div class="cf-type"><span>'+esc(f.tl)+'</span><span class="cf-mv">'+esc(RARLAB[cd.rar]||"")+'</span></div>'+
+      '<div class="cf-rules">'+(f.ox?esc(f.ox):'<i>No rules text in the shell for this card.</i>')+'</div>'+
+      (f.pt!=="\u2014"?'<div class="cf-pt">'+f.pt+'</div>':'')+
+    '</div>'+
+    '<ul class="cstats">'+
+      '<li><b>Mana</b><span class="num">'+f.mv+'</span></li>'+
+      '<li><b>Type</b><span>'+esc(f.tl)+'</span></li>'+
+      (f.pt!=="\u2014"?'<li><b>Stats</b><span class="num">'+f.pt+'</span></li>':'')+
+      '<li><b>Mechanics</b><span>'+(f.kw.length?esc(f.kw.join(" \u00b7 ")):"\u2014")+'</span></li>'+
+      '<li><b>Colour</b><span><span class="dot" style="background:'+tint+'"></span>'+esc(COLORLAB[cd.color])+'</span></li>'+
+      '<li><b>Where</b><span class="loc '+L.c+'"><span class="g">'+L.g+'</span>'+L.t+'</span></li>'+
+      '<li><b>Target</b><span class="num">'+money(cd.price)+'</span></li>'+
+    '</ul>'+
+    '<p class="cprev-note">Hover any rung to preview it here. In the live app this pane shows the Scryfall card image.</p>';
+}
+
 function candRail(s){
   if(s.pick==="basic")
     return '<div class="cand"><div class="why"><div class="why-part"><span class="why-k">Basics have no ladder</span>'+
@@ -607,12 +808,15 @@ function candRail(s){
   if(s.pick!=="base"&&s.pick!=="none"&&sel.why)
     why+='<div class="why-part"><span class="why-k">Why '+esc(sel.name)+' over the other '+(rungsOf(s).length-1)+'</span>'+esc(sel.why)+'</div>';
   if(s.pick==="none") why+='<div class="why-part"><span class="why-k">This slot is empty</span>Pick a rung above, or slot a card you already own.</div>';
-  return '<div class="cand">'+
+  var previewKey = s.pick!=="none"? s.pick : rungsOf(s)[0];
+  return '<div class="cand"><div class="cand-wrap"><div>'+
     '<p class="cand-lab">The '+plur(rungsOf(s).length,"rung")+' for this slot</p><div class="cand-row">'+rs+'</div>'+
     (ow?'<p class="cand-lab">What I own that would fit here</p><div class="cand-row">'+ow+'</div>':"")+
     (why?'<div class="why">'+why+'</div>':"")+
     '<div class="cand-acts"><button class="mini prime" data-card="'+s.id+'">Open card record</button>'+
     (s.pick!=="none"?'<button class="mini" data-bench="'+s.id+'">Send pick to Bench</button>':"")+
+    '</div></div>'+
+    '<aside class="cprev" id="prev-'+s.id+'">'+(previewKey?previewMarkup(s,previewKey,false):"")+'</aside>'+
     '</div></div>';
 }
 function fillerFor(g,key){
@@ -1004,6 +1208,14 @@ document.addEventListener("click",function(e){
     return;
   }
 });
+function hookPreview(ev){
+  var t=ev.target.closest("[data-prev]"); if(!t) return;
+  var b=t.dataset.prev.split("|"), host=$("#prev-"+b[0]);
+  if(host) host.innerHTML=previewMarkup(find(b[0]),b[1],b[2]==="1");
+}
+document.addEventListener("mouseover",hookPreview);
+document.addEventListener("focusin",hookPreview);
+
 document.addEventListener("change",function(e){
   var b=e.target.closest("[data-box]");
   if(b){ var s=find(b.dataset.box); s.inBox=b.checked;
