@@ -1,0 +1,1029 @@
+<title>Slot Ladder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+:root{
+  color-scheme:light;
+  --ink:#1d2824; --muted:#63706a; --paper:#f5f0e3; --surface:#fffdf7; --surface-2:#ede6d5;
+  --forest:#143b30; --forest-2:#205844; --gold:#c69735; --gold-soft:#f2dfaa;
+  --red:#993f37; --blue:#315f70; --line:#d8cfba;
+  --shadow:0 10px 26px rgba(31,42,36,.12); --radius:18px;
+  --r-base:#8a938b; --r-tuned:#2f6b52; --r-enhance:#6f8a30; --r-max:#c69735; --r-fun:#315f70;
+  --sans:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --serif:Georgia,"Times New Roman",serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;touch-action:manipulation}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:6px}
+.num{font-variant-numeric:tabular-nums}
+
+/* header */
+.hdr{position:sticky;top:0;z-index:60;padding:10px 14px 0;color:#fff8e8;
+  background:linear-gradient(135deg,#102b23,#1b4b3c 72%,#765b24);box-shadow:0 5px 18px rgba(17,43,35,.28)}
+.hdr-in{width:min(1400px,100%);margin:0 auto}
+.brand{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.eyebrow{margin:0 0 2px;color:#e6cc91;font-size:10px;font-weight:800;letter-spacing:.15em;text-transform:uppercase}
+.brand h1{margin:0;font-family:var(--serif);font-size:clamp(21px,4vw,29px);line-height:1;font-weight:400}
+.hdr-acts{display:flex;gap:7px;flex-wrap:wrap}
+.ghost{min-height:32px;padding:5px 11px;border:1px solid rgba(255,255,255,.32);border-radius:999px;
+  color:#d9e8df;background:rgba(8,31,24,.4);font-size:11px;font-weight:700;white-space:nowrap}
+.ghost:hover{color:var(--forest);background:#fff4d7}
+.tabs{display:flex;gap:7px;margin:11px 0 0;padding-bottom:11px}
+.tab{flex:1;max-width:220px;min-height:40px;display:flex;align-items:center;justify-content:center;gap:7px;
+  border:1px solid rgba(255,255,255,.22);border-radius:12px 12px 0 0;color:#d7e6df;background:rgba(255,255,255,.07);
+  font-size:13px;font-weight:700}
+.tab[aria-selected="true"]{color:var(--forest);background:var(--paper);border-color:var(--paper)}
+.tab-n{display:grid;place-items:center;width:19px;height:19px;border-radius:50%;background:rgba(255,255,255,.14);font-size:10px}
+.tab[aria-selected="true"] .tab-n{color:#fff;background:var(--forest-2)}
+
+main{width:min(1400px,100%);margin:0 auto;padding:16px 14px 60px}
+.view[hidden]{display:none}
+.note{margin:0;color:var(--muted);font-size:12px}
+
+/* deck rail + stat card */
+.rail{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 10px}
+.rail-btn{flex:0 0 auto;min-width:158px;text-align:left;padding:8px 11px;border:1px solid var(--line);
+  border-radius:12px;background:var(--surface);box-shadow:var(--shadow)}
+.rail-btn[aria-pressed="true"]{border-color:var(--forest-2);box-shadow:0 0 0 2px rgba(32,88,68,.18),var(--shadow)}
+.rail-no{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.rail-nm{font-family:var(--serif);font-size:15px;line-height:1.2}
+.rail-st{margin-top:3px;font-size:11px;color:var(--muted)}
+.deck-card{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);
+  box-shadow:var(--shadow);padding:14px 15px;margin-bottom:14px}
+.deck-top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start}
+.deck-card h2{margin:0;font-family:var(--serif);font-size:21px;font-weight:400}
+.deck-sub{margin:2px 0 0;color:var(--muted);font-size:12px}
+.stats{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px}
+.stat{padding:5px 10px;border:1px solid var(--line);border-radius:999px;background:var(--paper);font-size:12px}
+.stat.ok{border-color:#b9cfc2;background:#e9f2ec}
+.stat.warn{border-color:#e0c3a6;background:#fbf0e4}
+.collapse{display:flex;margin-top:12px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--paper)}
+.cstep{flex:1;padding:6px 9px;font-size:11px;color:var(--muted);border-right:1px solid var(--line)}
+.cstep:last-child{border-right:0}
+.cstep b{display:block;font-size:15px;color:var(--muted);font-variant-numeric:tabular-nums}
+.cstep.done{background:var(--surface)} .cstep.done b{color:var(--ink)}
+.cstep.now{background:var(--gold-soft)} .cstep.now b{color:var(--forest)}
+
+/* groups */
+.grp{margin-bottom:11px;border:1px solid var(--line);border-radius:var(--radius);
+  background:var(--surface);box-shadow:var(--shadow);overflow:hidden}
+.grp-h{width:100%;display:flex;align-items:center;gap:10px;padding:10px 13px;border:0;background:var(--surface-2);text-align:left}
+.grp-h .car{transition:transform .16s ease;color:var(--muted);font-size:11px}
+.grp[data-open="1"] .grp-h .car{transform:rotate(90deg)}
+.grp-nm{font-weight:700;font-size:13px}
+.grp-ct{margin-left:auto;font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.grp-body{display:none} .grp[data-open="1"] .grp-body{display:block}
+
+/* slot row */
+.slot{border-top:1px solid var(--line)}
+.slot-h{display:grid;grid-template-columns:26px 1fr auto;gap:10px;align-items:center;padding:9px 13px}
+.slot:hover .slot-h{background:#fffef9}
+.slot[data-open="1"] .slot-h{background:var(--gold-soft)}
+.box{width:19px;height:19px;margin:0;accent-color:var(--forest-2);cursor:pointer}
+.box:disabled{cursor:not-allowed;opacity:.4}
+.slot-main{min-width:0;display:flex;flex-direction:column;gap:2px;text-align:left;border:0;background:none;padding:0}
+.slot-l1{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.slot-nm{font-weight:600;font-size:14px}
+.slot-nm.hole{color:var(--red);font-style:italic}
+.qty{color:var(--muted);font-weight:500;font-variant-numeric:tabular-nums}
+.rung{padding:1px 7px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#fff}
+.rung.base{background:var(--r-base)} .rung.tuned{background:var(--r-tuned)}
+.rung.enhance{background:var(--r-enhance)} .rung.max{background:var(--r-max);color:#3c2c05}
+.rung.fun{background:var(--r-fun)} .rung.basic,.rung.none{background:var(--surface-2);color:var(--muted)}
+.slot-l2{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slot-r{display:flex;align-items:center;gap:11px}
+.price{font-size:13px;font-variant-numeric:tabular-nums}
+.price.buy{color:var(--gold);font-weight:700}
+.loc{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;white-space:nowrap}
+.loc .g{font-size:11px}
+.loc.deck{color:var(--forest-2)} .loc.other{color:var(--red);font-weight:600}
+.loc.bench{color:var(--muted)} .loc.buy{color:var(--muted)} .loc.ordered{color:var(--blue);font-weight:600}
+.of{min-width:52px;padding:3px 8px;border:1px solid var(--line);border-radius:999px;background:var(--paper);
+  font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.slot[data-open="1"] .of{border-color:var(--forest-2);color:var(--forest-2);background:var(--surface)}
+.more{width:100%;padding:9px 13px;border:0;border-top:1px solid var(--line);background:var(--paper);
+  text-align:left;font-size:12px;color:var(--forest-2);font-weight:600}
+.more:hover{background:var(--gold-soft)}
+
+/* candidate rail */
+.cand{display:none;padding:0 13px 13px 49px;background:#fffef9;border-top:1px dashed var(--line)}
+.slot[data-open="1"] .cand{display:block}
+.cand-lab{margin:11px 0 7px;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.cand-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.tile{flex:0 0 auto;width:162px;padding:9px 10px;border:1px solid var(--line);border-radius:12px;
+  background:var(--surface);text-align:left;display:flex;flex-direction:column;gap:4px}
+.tile:hover{border-color:var(--forest-2)}
+.tile[aria-pressed="true"]{border-color:var(--forest-2);background:var(--gold-soft);box-shadow:0 0 0 2px rgba(32,88,68,.16)}
+.tile-nm{font-size:12.5px;font-weight:600;line-height:1.25}
+.tile-ft{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:11px}
+.fit{color:var(--muted);font-variant-numeric:tabular-nums}
+.why{margin:11px 0 0;border-left:3px solid var(--gold);background:var(--paper);border-radius:0 8px 8px 0;overflow:hidden}
+.why-part{padding:8px 11px;font-size:12.5px}
+.why-part+.why-part{border-top:1px solid var(--line)}
+.why-k{display:block;margin-bottom:2px;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.cand-acts{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.mini{padding:5px 11px;border:1px solid var(--line);border-radius:999px;background:var(--surface);font-size:11.5px;font-weight:600}
+.mini:hover{border-color:var(--forest-2)}
+.mini.prime{border-color:var(--forest-2);color:#fff;background:var(--forest-2)}
+
+/* ---------- shop filter bar ---------- */
+.fbar{position:relative;z-index:20;padding:10px 12px;margin-bottom:11px;border:1px solid var(--line);
+  border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow)}
+.frow{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.frow+.frow{margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+.fdrop{position:relative}
+.fbtn{min-height:33px;padding:5px 11px;border:1px solid var(--line);border-radius:999px;background:var(--paper);
+  font-size:12.5px;font-weight:600;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.fbtn[data-on="1"]{border-color:var(--forest-2);background:var(--gold-soft)}
+.fbtn .cnt{display:grid;place-items:center;min-width:17px;height:17px;padding:0 4px;border-radius:999px;
+  background:var(--forest-2);color:#fff;font-size:10px;font-variant-numeric:tabular-nums}
+.pop{position:absolute;top:calc(100% + 5px);left:0;z-index:40;min-width:186px;max-height:290px;overflow-y:auto;
+  padding:7px;border:1px solid var(--line);border-radius:12px;background:var(--surface);box-shadow:var(--shadow)}
+.pop[hidden]{display:none}
+.pop label{display:flex;align-items:center;gap:8px;padding:5px 7px;border-radius:7px;font-size:12.5px;cursor:pointer}
+.pop label:hover{background:var(--paper)}
+.pop input{width:15px;height:15px;accent-color:var(--forest-2);margin:0}
+.pop-foot{display:flex;gap:6px;margin-top:5px;padding-top:6px;border-top:1px solid var(--line)}
+.pop-foot button{flex:1;padding:4px;border:1px solid var(--line);border-radius:7px;background:var(--paper);font-size:11px;font-weight:600}
+.fq{flex:1;min-width:140px;min-height:33px;padding:5px 12px;border:1px solid var(--line);border-radius:999px;background:var(--paper);font-size:12.5px}
+.fsel{min-height:33px;padding:5px 10px;border:1px solid var(--line);border-radius:999px;background:var(--paper);font-size:12.5px}
+.flab{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--paper)}
+.seg button{padding:5px 12px;border:0;background:none;font-size:12px;font-weight:600;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--forest-2);color:#fff}
+.f-tot{margin-left:auto;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.f-tot b{color:var(--ink);font-size:14px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.chip-f{display:inline-flex;align-items:center;gap:6px;padding:3px 6px 3px 10px;border:1px solid var(--forest-2);
+  border-radius:999px;background:var(--gold-soft);font-size:11.5px;font-weight:600}
+.chip-f button{width:17px;height:17px;border:0;border-radius:50%;background:rgba(32,88,68,.16);font-size:11px;line-height:1;color:var(--forest)}
+
+/* ---------- shop table ---------- */
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow)}
+table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:900px}
+.tbl th{position:sticky;top:0;z-index:10;padding:8px 10px;background:var(--surface-2);text-align:left;
+  font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);
+  border-bottom:1px solid var(--line);white-space:nowrap}
+.tbl th button{border:0;background:none;padding:0;font:inherit;color:inherit;display:inline-flex;gap:5px;align-items:center}
+.tbl th .ar{color:var(--forest-2)}
+.tbl td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tbody tr:hover td{background:#fffef9;cursor:pointer}
+.tbl tr.band td{background:var(--paper);border-bottom:1px solid var(--line);border-top:2px solid var(--line)}
+.tbl tr.band:hover td{background:var(--paper);cursor:default}
+.band-nm{font-weight:800;font-size:12px;letter-spacing:.04em}
+.band-ct{float:right;font-size:11.5px;color:var(--muted);font-weight:500;font-variant-numeric:tabular-nums}
+.cell-nm{font-weight:600}
+.pill{display:inline-block;padding:1px 7px;border:1px solid var(--line);border-radius:999px;
+  background:var(--paper);font-size:11px;white-space:nowrap}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:-1px;border:1px solid rgba(0,0,0,.18)}
+.chipd{display:inline-block;padding:1px 5px;border:1px solid var(--line);border-radius:5px;background:var(--paper);
+  font-size:10px;font-weight:700;color:var(--muted);margin-right:3px}
+
+/* tri-state */
+.tri{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--paper)}
+.tri button{padding:4px 9px;border:0;background:none;font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap}
+.tri button+button{border-left:1px solid var(--line)}
+.tri button[aria-pressed="true"][data-s="need"]{background:var(--surface-2);color:var(--ink)}
+.tri button[aria-pressed="true"][data-s="ordered"]{background:var(--blue);color:#fff}
+.tri button[aria-pressed="true"][data-s="hand"]{background:var(--forest-2);color:#fff}
+
+/* gallery */
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:10px;padding:11px}
+.gcard{border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden;display:flex;flex-direction:column}
+.gart{aspect-ratio:63/44;display:grid;place-items:center;background:linear-gradient(140deg,#e7e0cd,#d3ccb6);
+  position:relative}
+.gart span{font-family:var(--serif);font-size:12px;color:#7d7663;padding:6px;text-align:center}
+.gbody{padding:9px 10px;display:flex;flex-direction:column;gap:5px;flex:1}
+.gnm{font-size:12.5px;font-weight:600;line-height:1.25}
+.gmeta{font-size:11px;color:var(--muted);display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.gfoot{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-top:auto;padding-top:5px}
+
+/* bench + drawer */
+.scrim{position:fixed;inset:0;z-index:80;background:rgba(20,32,27,.42);border:0;padding:0}
+.scrim[hidden]{display:none}
+.drawer{position:fixed;top:0;right:0;bottom:0;z-index:90;width:min(440px,100%);overflow-y:auto;
+  background:var(--surface);border-left:1px solid var(--line);box-shadow:-14px 0 34px rgba(20,32,27,.2)}
+.drawer[hidden]{display:none}
+.dr-h{position:sticky;top:0;z-index:5;padding:14px 16px;color:#fff8e8;background:linear-gradient(135deg,#102b23,#1b4b3c)}
+.dr-h h3{margin:2px 0 0;font-family:var(--serif);font-size:20px;font-weight:400}
+.dr-x{position:absolute;top:11px;right:12px;width:29px;height:29px;border:1px solid rgba(255,255,255,.3);
+  border-radius:50%;background:rgba(8,31,24,.4);color:#fff8e8;font-size:15px;line-height:1}
+.dr-sec{padding:14px 16px;border-bottom:1px solid var(--line)}
+.dr-sec:last-child{border-bottom:0}
+.dr-job{display:block;margin-bottom:7px;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+.dr-sec h4{margin:0 0 6px;font-family:var(--serif);font-size:16px;font-weight:400}
+.dr-sec p{margin:0 0 8px;font-size:13px} .dr-sec p:last-child{margin-bottom:0}
+.dr-grid{display:grid;grid-template-columns:auto 1fr;gap:5px 12px;font-size:12.5px;margin:0}
+.dr-grid dt{color:var(--muted)} .dr-grid dd{margin:0;font-weight:600}
+.bench-item{padding:11px 16px;border-bottom:1px solid var(--line)}
+.bench-nm{font-weight:600;font-size:13.5px}
+.bench-fits{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+
+.toast{position:fixed;left:50%;bottom:22px;z-index:120;transform:translateX(-50%) translateY(14px);
+  max-width:min(460px,92vw);padding:10px 16px;border-radius:999px;color:#fff8e8;background:var(--forest);
+  box-shadow:var(--shadow);font-size:13px;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media (max-width:640px){
+  .slot-h{grid-template-columns:22px 1fr;row-gap:6px}
+  .slot-r{grid-column:2;justify-content:flex-start}
+  .cand{padding-left:13px}
+  .tab{font-size:12px}
+  .f-tot{margin-left:0;width:100%}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<header class="hdr">
+  <div class="hdr-in">
+    <div class="brand">
+      <div>
+        <p class="eyebrow">Commander field guide &middot; shell</p>
+        <h1>Trey's Deck Matrix</h1>
+      </div>
+      <div class="hdr-acts">
+        <button class="ghost" data-act="bench">&#9671; Bench <span id="benchn">0</span></button>
+        <button class="ghost" data-act="merge">&#8681; Merge purchases</button>
+        <button class="ghost" data-act="loadactive">&#8635; Load Active</button>
+      </div>
+    </div>
+    <nav class="tabs" aria-label="Sections">
+      <button class="tab" data-tab="deck" aria-selected="true"><span class="tab-n">1</span><span>Deck</span></button>
+      <button class="tab" data-tab="shop" aria-selected="false"><span class="tab-n">2</span><span>Shop</span></button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="view" id="v-deck">
+    <div class="rail" id="rail"></div>
+    <div class="deck-card" id="deckcard"></div>
+    <div id="groups"></div>
+  </section>
+
+  <section class="view" id="v-shop" hidden>
+    <div class="fbar" id="fbar"></div>
+    <div id="shopout"></div>
+  </section>
+</main>
+
+<button class="scrim" id="scrim" hidden aria-label="Close panel"></button>
+<aside class="drawer" id="drawer" hidden aria-label="Panel"></aside>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+(function(){
+"use strict";
+var $=function(s){return document.querySelector(s)};
+function esc(s){return String(s).replace(/[&<>"]/g,function(m){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]})}
+function money(n){return "$"+n.toFixed(2)}
+function plur(n,w){return n+" "+w+(n===1?"":"s")}
+
+/* ============ vocabulary ============ */
+var RUNGS=["base","tuned","enhance","fun","max"];
+var RUNGLAB={base:"Base",tuned:"Tuned",enhance:"Enhance",fun:"Fun",max:"Max",basic:"Basic",none:"Empty"};
+var COLORLAB={W:"White",U:"Blue",B:"Black",R:"Red",G:"Green",M:"Multicolor",C:"Colorless"};
+var COLORHEX={W:"#f4efdc",U:"#a9c9e0",B:"#9a94a3",R:"#dda291",G:"#a6c3a4",M:"#e3ce8f",C:"#cfc8bb"};
+var RARLAB={C:"Common",U:"Uncommon",R:"Rare",M:"Mythic"};
+var BANDS=["<$1","$1","$2","$3","$4","$5","$6","$7-15","$15+"];
+function bandOf(p){
+  if(p<1)return "<$1"; if(p<2)return "$1"; if(p<3)return "$2"; if(p<4)return "$3";
+  if(p<5)return "$4";  if(p<6)return "$5"; if(p<7)return "$6"; if(p<15)return "$7-15"; return "$15+";
+}
+function locBits(l){
+  if(l==="deck")   return {g:"\u25CF",t:"In deck", c:"deck"};
+  if(l==="bench")  return {g:"\u25C7",t:"Bench",   c:"bench"};
+  if(l==="buy")    return {g:"\u25CB",t:"To buy",  c:"buy"};
+  if(l==="ordered")return {g:"\u29D6",t:"Ordered", c:"ordered"};
+  return {g:"\u25C6",t:"In D"+l.slice(1),c:"other"};
+}
+
+/* ============ data ============ */
+function c(name,price,loc,color,rar,why){
+  return {name:name,price:price,loc:loc,color:color,rar:rar,why:why||""};
+}
+function slot(id,type,qty,pick,cands,owned,where){
+  return {id:id,type:type,qty:qty,pick:pick,cands:cands,owned:owned||[],where:where||"CCS floor",inBox:null};
+}
+
+var DECKS={
+ d1:{id:"d1",no:1,name:"Ancestral Bulwark",cmd:"Felothar the Steadfast",ci:"W/B/G",variant:"1b",
+   lands:37,tier:"Tier 2",gc:"0/3",hiddenBuy:11,hiddenBuyVal:18.40,hiddenSleeved:48,
+   groups:[
+    {type:"Commander",total:1,slots:[
+      slot("s01","Commander",1,"base",{
+        base:c("Felothar the Steadfast",1.20,"deck","M","R",
+          "This deck wins by making toughness the thing that kills people. Felothar is the engine that converts a wall of fat blockers into damage on your end step."),
+        tuned:c("Betor, Ancestor's Voice",4.10,"bench","M","R",
+          "Tunes it: same toughness payoff, but it fires on your end step without needing to attack, so the wall never has to leave home.")},[])
+    ]},
+    {type:"Creature",total:26,slots:[
+      slot("s72","Creature",1,"tuned",{
+        base:c("Sylvan Caryatid",0.31,"deck","G","R",
+          "This slot is the turn-two mana body. It has to survive combat and pay for the four-drops, which is why it is a defender and not a mana elf."),
+        tuned:c("Selvala, Heart of the Wilds",5.25,"deck","G","M",
+          "Tunes it: the mana scales with the board instead of staying flat at one, so by turn five it is paying for two spells, not one."),
+        enhance:c("Ozolith, the Shattered Spire",7.34,"buy","G","R",
+          "Enhances it: keeps the mana job and adds a counter engine on top, which every toughness card in the deck reads."),
+        fun:c("Rampaging Baloths",2.10,"d3","G","R",
+          "More fun: stops being a mana slot and starts making 4/4s. The table has to answer it, which changes the whole political read."),
+        max:c("Sword of Fire and Ice",43.21,"buy","C","M",
+          "Maximizes T3: the highest-rate card that fits here. Protection, damage and a card every hit, at the cost of the mana this slot was built for.")},
+        [c("Wood Elves",0.40,"bench","G","C"),c("Solemn Simulacrum",0.90,"d4","C","R")]),
+      slot("s18","Creature",1,"base",{
+        base:c("Wall of Roots",0.40,"deck","G","C",
+          "The second mana body. It must block a three-power creature on turn three and still make mana, which almost nothing else at two mana does."),
+        tuned:c("Overgrown Battlement",0.40,"deck","G","C",
+          "Tunes it: the mana scales with how many defenders are out, and this deck plays eleven of them."),
+        enhance:c("Axebane Guardian",1.85,"buy","G","U",
+          "Enhances it: same scaling but in every colour, which fixes the third colour the deck keeps stumbling on."),
+        fun:c("Vine Trellis",0.20,"bench","G","C",
+          "More fun: nothing clever, just the cheap wall that lets you durdle a turn earlier and talk your way out of the first attack.")},
+        [c("Llanowar Scout",0.25,"bench","G","C")]),
+      slot("s21","Creature",1,"enhance",{
+        base:c("Wall of Omens",0.55,"bench","W","U",
+          "This slot pays for itself. A body that replaces its own card keeps the hand full while the board stalls."),
+        tuned:c("Carven Caryatid",0.70,"deck","G","U",
+          "Tunes it: a point more toughness, which matters in a deck where toughness is the damage stat."),
+        enhance:c("Shalai, Voice of Plenty",6.80,"buy","W","R",
+          "Enhances it: blanket hexproof for you and the board. The single hardest card in the deck for a pod to play around."),
+        max:c("Sanctuary Warden",12.40,"buy","W","M",
+          "Maximizes T3: protection plus a repeatable card engine on a body that already fits the toughness plan.")},
+        [c("Rhox Faithmender",1.10,"d3","W","R")],"Not sourced"),
+      slot("s26","Creature",1,"tuned",{
+        base:c("Jaddi Offshoot",0.20,"deck","G","C",
+          "This slot converts toughness into a resource. Landfall lifegain is the cheapest version of that conversion."),
+        tuned:c("Ikra Shidiqi, the Usurper",0.85,"buy","M","R",
+          "Tunes it: converts toughness into cards instead of life, which is the half of the engine the deck actually needs."),
+        fun:c("Hornet Nest",1.40,"bench","G","R",
+          "More fun: dares the table to attack you and punishes them for it. Nothing else in the deck creates that standoff.")},[])
+    ]},
+    {type:"Artifact",total:10,slots:[
+      slot("s41","Artifact",1,"tuned",{
+        base:c("Selesnya Signet",0.25,"deck","C","C",
+          "Two-mana rock. The curve does not work without a turn-two acceleration slot in three colours."),
+        tuned:c("Arcane Signet",0.90,"deck","C","C",
+          "Tunes it: every colour the commander needs, no filtering step, one less awkward turn."),
+        enhance:c("Chromatic Lantern",1.09,"buy","C","R",
+          "Enhances it: fixes every land as well, which matters because the manabase runs nine tapped lands."),
+        max:c("Mana Crypt",129.00,"buy","C","M",
+          "Maximizes T3: a full turn of acceleration for free. It is also the card that tells the pod you came to win.")},
+        [c("Commander's Sphere",0.30,"bench","C","C"),c("Fellwar Stone",0.55,"d3","C","U")],"Game Theory"),
+      slot("s44","Artifact",1,"base",{
+        base:c("Swiftfoot Boots",0.65,"ordered","C","U",
+          "Insurance on the commander. Without this slot the deck folds to the first targeted removal spell."),
+        tuned:c("Lightning Greaves",2.30,"buy","C","R",
+          "Tunes it: one mana cheaper to equip, so protection lands the same turn the commander does."),
+        max:c("Thran Power Suit",3.15,"buy","C","R",
+          "Maximizes T3: protection plus a toughness bump, which this deck reads as damage.")},[],"Game Theory")
+    ]},
+    {type:"Enchantment",total:7,slots:[
+      slot("s51","Enchantment",1,"base",{
+        base:c("Assault Formation",0.75,"deck","G","U",
+          "The thesis card. It makes toughness the attack stat, which is the reason every other slot in this deck is built the way it is."),
+        tuned:c("High Alert",1.40,"buy","U","U",
+          "Tunes it: same effect plus vigilance and an untap, so the wall attacks and still blocks."),
+        fun:c("Rolling Stones",0.90,"bench","W","R",
+          "More fun: lets the walls swing without changing their stats. Slower, sillier, and the table never sees it coming.")},[])
+    ]},
+    {type:"Instant",total:11,slots:[
+      slot("s60","Instant",1,"tuned",{
+        base:c("Feed the Swarm",0.35,"deck","B","C",
+          "The cheap catch-all. This slot exists so a creature or enchantment never runs away with the game."),
+        tuned:c("Anguished Unmaking",1.15,"buy","M","R",
+          "Tunes it: answers literally any permanent at instant speed for three, held up rather than cast."),
+        enhance:c("Golgari Charm",2.48,"buy","M","U",
+          "Enhances it: three modes, one of which is a one-sided sweeper against the token decks in the pod."),
+        max:c("Vindicate",3.90,"buy","M","R",
+          "Maximizes T3: unconditional, hits lands too, and the sorcery speed barely matters in a deck that holds the ground.")},
+        [c("Despark",0.30,"bench","M","U")]),
+      slot("s63","Instant",1,"base",{
+        base:c("Swords to Plowshares",1.85,"bench","W","U",
+          "The one-mana answer. This slot is reserved for the cheapest possible response to a commander that ends the game.")},
+        [c("Path to Exile",2.10,"d3","W","U")])
+    ]},
+    {type:"Sorcery",total:8,slots:[
+      slot("s70","Sorcery",1,"base",{
+        base:c("Cultivate",0.45,"deck","G","C",
+          "Ramp and land-drop insurance. The deck runs three colours off a low curve, so this slot fixes and thins at once."),
+        tuned:c("Kodama's Reach",0.50,"bench","G","C",
+          "Tunes it: identical effect, and having both means you can draw either one."),
+        enhance:c("Nature's Lore",1.75,"buy","G","R",
+          "Enhances it: two mana instead of three and the land enters untapped, which is a full turn earlier."),
+        max:c("Three Visits",3.40,"buy","G","R",
+          "Maximizes T3: the strictly best version of this effect at the lowest cost the format allows.")},
+        [c("Farseek",0.35,"bench","G","C"),c("Rampant Growth",0.20,"d4","G","C")])
+    ]},
+    {type:"Land",total:37,slots:[
+      slot("sL1","Land",1,"base",{base:c("Command Tower",0.17,"buy","C","C",
+        "Every colour, no drawback. In a three-colour deck this is the single best land available.")},[],"Game Theory"),
+      slot("sL2","Land",1,"base",{base:c("Sandsteppe Citadel",0.30,"deck","C","C",
+        "Tri-land for exactly this deck's colours. It enters tapped, which a curve this low can afford.")},[]),
+      slot("sB1","Land",11,"basic",{basic:c("Forest",0.10,"deck","G","C","")},[],"Bulk box"),
+      slot("sB2","Land",9,"basic",{basic:c("Plains",0.10,"deck","W","C","")},[],"Bulk box"),
+      slot("sB3","Land",8,"basic",{basic:c("Swamp",0.10,"buy","B","C","")},[],"Bulk box")
+    ]}
+   ]},
+
+ d3:{id:"d3",no:3,name:"Seismic Stampede",cmd:"Obuun, Mul Daya Ancestor",ci:"R/G/W",variant:"3o",
+   lands:38,tier:"Tier 2",gc:"0/3",hiddenBuy:32,hiddenBuyVal:52.10,hiddenSleeved:39,
+   groups:[
+    {type:"Commander",total:1,slots:[
+      slot("t01","Commander",1,"base",{base:c("Obuun, Mul Daya Ancestor",1.27,"deck","M","M",
+        "Turns a land drop into a creature every turn. Landfall payoff and threat in the same card, which is why the whole deck is lands.")},[])
+    ]},
+    {type:"Creature",total:24,slots:[
+      slot("t12","Creature",1,"fun",{
+        base:c("Arboreal Grazer",0.20,"deck","G","C",
+          "This slot buys an extra land drop on turn one. Everything downstream counts land drops, so the earliest one is worth the most."),
+        tuned:c("Sakura-Tribe Elder",0.45,"deck","G","C",
+          "Tunes it: blocks something first, then gets the land. Two jobs from one card in a deck that is short on interaction."),
+        fun:c("Rampaging Baloths",2.10,"deck","G","R",
+          "More fun: a 4/4 on every land drop. The pod has to answer it or lose to it, and watching that math dawn on them is the point."),
+        max:c("Tireless Tracker",0.40,"buy","G","R",
+          "Maximizes T3: turns every land drop into a card and a counter, which is the highest-rate landfall payoff in the colour.")},[]),
+      slot("t15","Creature",1,"tuned",{
+        base:c("Llanowar Scout",0.25,"buy","G","C",
+          "The extra-land-drop slot. It has to be a body so it still does something once the lands run out."),
+        tuned:c("Springbloom Druid",0.40,"deck","G","C",
+          "Tunes it: two land drops from one card, so it is two landfall triggers instead of the option of one."),
+        enhance:c("Risen Reef",0.27,"buy","M","U",
+          "Enhances it: every elemental that follows draws or ramps, which turns the land plan into a card engine.")},
+        [c("Wood Elves",0.40,"bench","G","U")])
+    ]},
+    {type:"Artifact",total:9,slots:[
+      slot("t31","Artifact",1,"tuned",{
+        base:c("Wayfarer's Bauble",0.40,"deck","C","C",
+          "Colourless ramp that any deck can cast. This slot exists because the curve needs a two-mana play that finds a land."),
+        tuned:c("Sword of the Animist",4.10,"buy","C","R",
+          "Tunes it: every attack becomes a land drop, and every land drop is a trigger. It turns combat into ramp."),
+        max:c("Sword of Fire and Ice",43.21,"buy","C","M",
+          "Maximizes T3: protection, reach and a card per hit on the same equipment slot.")},
+        [c("Commander's Sphere",0.30,"bench","C","C")],"Game Theory")
+    ]},
+    {type:"Instant",total:12,slots:[
+      slot("t44","Instant",1,"base",{
+        base:c("Crop Rotation",3.62,"buy","G","R",
+          "Finds the one land that matters at instant speed. In a lands deck this slot is a tutor that happens to cost one mana."),
+        tuned:c("Song of the Dryads",5.49,"buy","G","U",
+          "Tunes it: still land-flavoured, but it answers any permanent in the pod, which this deck otherwise cannot do.")},[])
+    ]},
+    {type:"Sorcery",total:16,slots:[
+      slot("t55","Sorcery",1,"tuned",{
+        base:c("Harrow",0.30,"deck","G","C",
+          "Two lands from one card at instant speed. This slot is the landfall multiplier."),
+        tuned:c("Migration Path",0.55,"deck","G","C",
+          "Tunes it: same two lands and it cantrips off the back, so the hand does not shrink."),
+        enhance:c("Skyshroud Claim",1.90,"buy","G","U",
+          "Enhances it: two lands, untapped, and they can be duals. It is the version that does not cost you the turn.")},
+        [c("Circuitous Route",0.25,"bench","G","C")]),
+      slot("t58","Sorcery",1,"base",{
+        base:c("Rampant Growth",0.20,"ordered","G","C",
+          "The cheapest land drop in the deck. This slot is here purely to hit the two-mana ramp step every game.")},[],"Game Theory")
+    ]},
+    {type:"Land",total:38,slots:[
+      slot("tL1","Land",1,"base",{base:c("Path to Exile",2.10,"deck","W","U",
+        "Borrowed into this slot. The only cheap answer the deck runs.")},[]),
+      slot("tB1","Land",12,"basic",{basic:c("Forest",0.10,"deck","G","C","")},[],"Bulk box"),
+      slot("tB2","Land",10,"basic",{basic:c("Mountain",0.10,"buy","R","C","")},[],"Bulk box")
+    ]}
+   ]}
+};
+
+var cur="d1", openSlot=null, openGroups={}, expanded={}, filler={};
+
+Object.keys(DECKS).forEach(function(k){
+  DECKS[k].groups.forEach(function(g){
+    openGroups[k+"|"+g.type]=(g.type==="Creature"||g.type==="Commander");
+    g.slots.forEach(function(s){ s.inBox = (pickOf(s).loc!=="buy" && pickOf(s).loc!=="ordered"); });
+  });
+});
+
+function pickOf(s){ return s.pick==="none" ? {name:"\u2014 empty \u2014",price:0,loc:"buy",color:"C",rar:"C",why:""} : s.cands[s.pick]; }
+function allSlots(d){ var o=[]; DECKS[d].groups.forEach(function(g){o=o.concat(g.slots)}); return o }
+function rungsOf(s){ return RUNGS.filter(function(r){return s.cands[r]}) }
+function predOf(s,key){ var r=rungsOf(s), i=r.indexOf(key); return i>0? r[i-1] : (r.length&&r[0]!==key? r[0] : null) }
+
+/* ============ deck totals ============ */
+function totals(d){
+  var D=DECKS[d], sleeved=D.hiddenSleeved, buyN=D.hiddenBuy, buyV=D.hiddenBuyVal, tot=0, holes=0;
+  D.groups.forEach(function(g){ tot+=g.total });
+  allSlots(d).forEach(function(s){
+    var p=pickOf(s);
+    if(s.inBox) sleeved+=s.qty;
+    if(s.pick==="none") holes+=s.qty;
+    else if(p.loc==="buy"){ buyN+=s.qty; buyV+=p.price*s.qty }
+  });
+  return {tot:tot,sleeved:sleeved,buyN:buyN,buyV:buyV,holes:holes};
+}
+function benchCards(){
+  var out=[];
+  Object.keys(DECKS).forEach(function(k){
+    allSlots(k).forEach(function(s){
+      rungsOf(s).concat(["basic"]).forEach(function(r){
+        var cd=s.cands[r]; if(cd&&cd.loc==="bench") out.push({card:cd,slot:s,deck:k,rung:r});
+      });
+      s.owned.forEach(function(o){ if(o.loc==="bench") out.push({card:o,slot:s,deck:k,rung:"own"}) });
+    });
+  });
+  var seen={}, uniq=[];
+  out.forEach(function(x){ if(!seen[x.card.name]){seen[x.card.name]=1; uniq.push(x)} });
+  return uniq;
+}
+
+/* ============ deck render ============ */
+function renderRail(){
+  $("#rail").innerHTML=Object.keys(DECKS).map(function(k){
+    var D=DECKS[k],t=totals(k);
+    return '<button class="rail-btn" data-deck="'+k+'" aria-pressed="'+(k===cur)+'">'+
+      '<div class="rail-no">Deck '+D.no+' &middot; '+D.variant+'</div>'+
+      '<div class="rail-nm">'+esc(D.name)+'</div>'+
+      '<div class="rail-st num">'+t.sleeved+'/'+t.tot+' sleeved &middot; '+t.buyN+' to buy'+
+      (t.holes?' &middot; '+t.holes+' hole'+(t.holes>1?'s':''):'')+'</div></button>';
+  }).join("");
+  $("#benchn").textContent=benchCards().length;
+}
+function renderDeckCard(){
+  var D=DECKS[cur],t=totals(cur);
+  $("#deckcard").innerHTML=
+   '<div class="deck-top"><div><h2>Deck '+D.no+' &middot; '+esc(D.name)+'</h2>'+
+     '<p class="deck-sub">'+esc(D.cmd)+' &middot; '+D.ci+' &middot; variant '+D.variant+'</p></div>'+
+     '<button class="mini" data-act="variant">Change variant &rsaquo;</button></div>'+
+   '<div class="stats">'+
+     '<span class="stat'+(t.holes?" warn":" ok")+'"><b class="num">'+(t.tot-t.holes)+'/'+t.tot+'</b> slots filled</span>'+
+     '<span class="stat'+(t.sleeved===t.tot?" ok":" warn")+'"><b class="num">'+t.sleeved+'/'+t.tot+'</b> physically sleeved</span>'+
+     '<span class="stat"><b class="num">'+D.lands+'</b> lands</span>'+
+     '<span class="stat ok">'+D.tier+' &#10003;</span>'+
+     '<span class="stat"><b class="num">'+D.gc+'</b> game changers</span>'+
+     '<span class="stat warn"><b class="num">'+t.buyN+'</b> to buy &middot; <b class="num">'+money(t.buyV)+'</b></span>'+
+   '</div>'+
+   '<div class="collapse" role="group" aria-label="How this slot narrowed">'+
+     '<div class="cstep done"><b>25</b>5 variants &times; 5 rungs</div>'+
+     '<div class="cstep done"><b>5</b>rungs, variant '+D.variant+' chosen</div>'+
+     '<div class="cstep now"><b>1</b>calibrated &mdash; the other 4 stay one click away</div></div>';
+}
+function slotRow(s){
+  var p=pickOf(s),L=locBits(p.loc),isBasic=s.pick==="basic",hole=s.pick==="none",
+      n=rungsOf(s).length+s.owned.length,open=(openSlot===s.id);
+  var right = isBasic
+    ? '<div class="slot-r"><span class="seg" data-step="'+s.id+'"><button data-d="-1" aria-label="One fewer">&minus;</button>'+
+      '<button style="pointer-events:none" class="num">'+s.qty+'</button><button data-d="1" aria-label="One more">+</button></span>'+
+      '<span class="loc '+L.c+'"><span class="g">'+L.g+'</span>'+L.t+'</span></div>'
+    : '<div class="slot-r">'+(hole?'':'<span class="price'+(p.loc==="buy"?" buy":"")+' num">'+money(p.price)+'</span>')+
+      '<span class="loc '+L.c+'"><span class="g">'+(hole?"\u25CB":L.g)+'</span>'+(hole?"needs a card":L.t)+'</span>'+
+      '<span class="of">'+(hole?"0":"1")+' of '+n+'</span></div>';
+  var sub = isBasic ? "Basic land &middot; one row, "+s.qty+" cards"
+    : hole ? "slot "+s.id.toUpperCase()+" &middot; pick a rung or a card you own"
+    : (s.cands.base && s.pick!=="base" ? "&#8596; replaces "+esc(s.cands.base.name) : "slot "+s.id.toUpperCase());
+  return '<div class="slot" data-slot="'+s.id+'" data-open="'+(open?1:0)+'">'+
+    '<div class="slot-h">'+
+      '<input class="box" type="checkbox" data-box="'+s.id+'"'+(s.inBox?" checked":"")+
+        ((p.loc==="buy"||p.loc==="ordered"||hole)?" disabled":"")+' aria-label="'+esc(p.name)+' is in the box">'+
+      '<button class="slot-main" data-expand="'+s.id+'" aria-expanded="'+(open?"true":"false")+'">'+
+        '<span class="slot-l1"><span class="slot-nm'+(hole?" hole":"")+'">'+esc(p.name)+'</span>'+
+          (s.qty>1&&!hole?'<span class="qty num">&times;'+s.qty+'</span>':"")+
+          '<span class="rung '+s.pick+'">'+RUNGLAB[s.pick]+'</span></span>'+
+        '<span class="slot-l2">'+sub+'</span></button>'+right+'</div>'+(open?candRail(s):"")+'</div>';
+}
+function tile(s,key,cd,isOwned){
+  var L=locBits(cd.loc),on=(!isOwned&&s.pick===key);
+  return '<button class="tile" data-pick="'+s.id+'|'+key+'|'+(isOwned?1:0)+'" aria-pressed="'+on+'">'+
+    (isOwned?'<span class="rung none" style="align-self:flex-start">Owned</span>'
+            :'<span class="rung '+key+'" style="align-self:flex-start">'+RUNGLAB[key]+'</span>')+
+    '<span class="tile-nm">'+esc(cd.name)+'</span>'+
+    '<span class="tile-ft"><span class="loc '+L.c+'"><span class="g">'+L.g+'</span>'+L.t+'</span>'+
+    '<span class="fit num">'+(isOwned?'fit '+cd.fit:money(cd.price))+'</span></span></button>';
+}
+function candRail(s){
+  if(s.pick==="basic")
+    return '<div class="cand"><div class="why"><div class="why-part"><span class="why-k">Basics have no ladder</span>'+
+      'One row per land type per deck, with its count. On the Shop page these merge across all six decks into a single line.</div></div></div>';
+  var rs=rungsOf(s).map(function(r){return tile(s,r,s.cands[r],false)}).join("");
+  var ow=s.owned.map(function(o,i){ o.fit=o.fit||(78-i*11); return tile(s,"own"+i,o,true) }).join("");
+  var base=s.cands.base, sel=pickOf(s), why="";
+  if(base&&base.why) why+='<div class="why-part"><span class="why-k">What this slot does &middot; from Base</span>'+esc(base.why)+'</div>';
+  if(s.pick!=="base"&&s.pick!=="none"&&sel.why)
+    why+='<div class="why-part"><span class="why-k">Why '+esc(sel.name)+' over the other '+(rungsOf(s).length-1)+'</span>'+esc(sel.why)+'</div>';
+  if(s.pick==="none") why+='<div class="why-part"><span class="why-k">This slot is empty</span>Pick a rung above, or slot a card you already own.</div>';
+  return '<div class="cand">'+
+    '<p class="cand-lab">The '+plur(rungsOf(s).length,"rung")+' for this slot</p><div class="cand-row">'+rs+'</div>'+
+    (ow?'<p class="cand-lab">What I own that would fit here</p><div class="cand-row">'+ow+'</div>':"")+
+    (why?'<div class="why">'+why+'</div>':"")+
+    '<div class="cand-acts"><button class="mini prime" data-card="'+s.id+'">Open card record</button>'+
+    (s.pick!=="none"?'<button class="mini" data-bench="'+s.id+'">Send pick to Bench</button>':"")+
+    '</div></div>';
+}
+function fillerFor(g,key){
+  if(filler[key]) return filler[key];
+  var have=g.slots.reduce(function(a,s){return a+s.qty},0), need=g.total-have, out=[];
+  for(var i=0;i<need;i++){
+    var id=key.replace(/\W/g,"")+"x"+i;
+    out.push(slot(id,g.type,1,"base",{base:c(g.type+" slot "+(i+1),0.35,i%4===0?"buy":"deck","C","C",
+      "Placeholder row so you can see how a full-length group behaves. In the real app every slot renders with its own ladder.")},[]));
+  }
+  out.forEach(function(s){ s.inBox = pickOf(s).loc!=="buy" });
+  filler[key]=out; return out;
+}
+function renderGroups(){
+  $("#groups").innerHTML=DECKS[cur].groups.map(function(g){
+    var key=cur+"|"+g.type, open=openGroups[key], ex=expanded[key],
+        rows=g.slots.concat(ex?fillerFor(g,key):[]),
+        cards=rows.reduce(function(a,s){return a+s.qty},0),
+        buy=rows.filter(function(s){return pickOf(s).loc==="buy"}).length;
+    return '<section class="grp" data-open="'+(open?1:0)+'">'+
+      '<button class="grp-h" data-grp="'+esc(g.type)+'" aria-expanded="'+(open?"true":"false")+'">'+
+        '<span class="car">&#9654;</span><span class="grp-nm">'+g.type+'</span>'+
+        '<span class="grp-ct">'+plur(g.total,"slot")+(buy?' &middot; '+buy+' to buy':'')+'</span></button>'+
+      '<div class="grp-body">'+rows.map(slotRow).join("")+
+      (!ex&&g.total>cards?'<button class="more" data-more="'+esc(g.type)+'">+ '+(g.total-cards)+' more slots in this group &mdash; show them</button>':"")+
+      '</div></section>';
+  }).join("");
+}
+function renderDeck(){ renderRail(); renderDeckCard(); renderGroups(); }
+
+/* ============ shop ============ */
+var ACQ={};
+var SF={status:[],color:[],type:[],band:[],rarity:[],where:[],deck:[],q:"",
+        view:"table",groupBy:"where",sortKey:"name",sortDir:"asc"};
+var COLS=[
+ {k:"status",l:"Status",sort:false},{k:"name",l:"Card"},{k:"decks",l:"Decks"},
+ {k:"color",l:"Color"},{k:"type",l:"Type"},{k:"rarity",l:"Rarity"},
+ {k:"band",l:"Price band"},{k:"price",l:"Target"},{k:"where",l:"Where"}
+];
+var GROUPBY=[["none","No grouping"],["where","Where to buy"],["band","Price band"],["color","Color"],
+             ["type","Type"],["rarity","Rarity"],["deck","Deck"],["status","Status"]];
+
+function shopRows(){
+  var map={};
+  Object.keys(DECKS).forEach(function(k){
+    allSlots(k).forEach(function(s){
+      if(s.pick==="none") return;
+      var p=pickOf(s);
+      var r=map[p.name]||(map[p.name]={name:p.name,price:p.price,loc:p.loc,where:s.where,
+        color:COLORLAB[p.color],ckey:p.color,type:s.type==="Commander"?"Creature":s.type,
+        rarity:RARLAB[p.rar],decks:{},qty:0});
+      r.decks["D"+DECKS[k].no]=1; r.qty+=s.qty;
+    });
+  });
+  return Object.keys(map).map(function(n){
+    var r=map[n];
+    if(!ACQ[n]) ACQ[n]={ordered:r.loc==="ordered"?r.qty:0, hand:(r.loc!=="buy"&&r.loc!=="ordered")?r.qty:0};
+    var a=ACQ[n];
+    r.ordered=Math.min(a.ordered,r.qty); r.hand=Math.min(a.hand,r.qty);
+    r.need=Math.max(0,r.qty-r.ordered-r.hand);
+    r.status = r.hand>=r.qty?"In hand" : (r.need===0?"Ordered" : (r.hand||r.ordered?"Partly here":"Not in hand"));
+    r.band=bandOf(r.price); r.deckList=Object.keys(r.decks);
+    return r;
+  });
+}
+function passes(r){
+  if(SF.status.length && SF.status.indexOf(r.status)<0) return false;
+  if(SF.color.length  && SF.color.indexOf(r.color)<0)   return false;
+  if(SF.type.length   && SF.type.indexOf(r.type)<0)     return false;
+  if(SF.band.length   && SF.band.indexOf(r.band)<0)     return false;
+  if(SF.rarity.length && SF.rarity.indexOf(r.rarity)<0) return false;
+  if(SF.where.length  && SF.where.indexOf(r.where)<0)   return false;
+  if(SF.deck.length   && !SF.deck.some(function(d){return r.decks[d]})) return false;
+  if(SF.q && r.name.toLowerCase().indexOf(SF.q.toLowerCase())<0) return false;
+  return true;
+}
+function valOf(r,k){
+  if(k==="decks") return r.deckList.join(",");
+  if(k==="price") return r.price;
+  if(k==="band")  return BANDS.indexOf(r.band);
+  return r[k]!==undefined?r[k]:"";
+}
+function sortRows(rows){
+  var k=SF.sortKey,dir=SF.sortDir==="asc"?1:-1;
+  return rows.slice().sort(function(a,b){
+    var x=valOf(a,k),y=valOf(b,k);
+    if(typeof x==="number"&&typeof y==="number") return (x-y)*dir;
+    return String(x).localeCompare(String(y))*dir;
+  });
+}
+function groupRows(rows){
+  if(SF.groupBy==="none") return [["",rows]];
+  var by={},order=[];
+  rows.forEach(function(r){
+    var g = SF.groupBy==="deck" ? r.deckList.join(" + ") : r[SF.groupBy];
+    if(!by[g]){by[g]=[];order.push(g)}
+    by[g].push(r);
+  });
+  if(SF.groupBy==="band") order.sort(function(a,b){return BANDS.indexOf(a)-BANDS.indexOf(b)});
+  else order.sort();
+  return order.map(function(g){return [g,by[g]]});
+}
+function distinct(k){
+  if(k==="band") return BANDS.slice();   /* the drawers exist whether or not you need one today */
+  var s={},all=shopRows();
+  if(k==="deck"){ all.forEach(function(r){r.deckList.forEach(function(d){s[d]=1})}) }
+  else all.forEach(function(r){ s[r[k]]=1 });
+  var out=Object.keys(s);
+  if(k==="band") out.sort(function(a,b){return BANDS.indexOf(a)-BANDS.indexOf(b)});
+  else out.sort();
+  return out;
+}
+var FILTERS=[["status","Status"],["color","Color"],["type","Type"],["band","Price"],
+             ["rarity","Rarity"],["where","Where"],["deck","Deck"]];
+function renderFilters(){
+  var chips=[];
+  FILTERS.forEach(function(f){ SF[f[0]].forEach(function(v){
+    chips.push('<span class="chip-f">'+esc(f[1])+': '+esc(v)+
+      '<button data-unchip="'+f[0]+'|'+esc(v)+'" aria-label="Remove">&times;</button></span>');
+  })});
+  $("#fbar").innerHTML=
+   '<div class="frow">'+
+     FILTERS.map(function(f){
+       var n=SF[f[0]].length;
+       return '<span class="fdrop"><button class="fbtn" data-fdrop="'+f[0]+'" data-on="'+(n?1:0)+'">'+
+         esc(f[1])+(n?'<span class="cnt num">'+n+'</span>':'<span style="color:var(--muted)">&#9662;</span>')+'</button>'+
+         '<div class="pop" id="pop-'+f[0]+'" hidden>'+
+           distinct(f[0]).map(function(v){
+             return '<label><input type="checkbox" data-fchk="'+f[0]+'|'+esc(v)+'"'+
+               (SF[f[0]].indexOf(v)>=0?" checked":"")+'>'+esc(v)+'</label>';
+           }).join("")+
+           '<div class="pop-foot"><button data-fall="'+f[0]+'">Select all</button>'+
+           '<button data-fnone="'+f[0]+'">Clear</button></div>'+
+         '</div></span>';
+     }).join("")+
+     '<input class="fq" id="fq" type="search" placeholder="Search cards&hellip;" aria-label="Search cards" value="'+esc(SF.q)+'">'+
+   '</div>'+
+   '<div class="frow">'+
+     '<span class="flab">View</span>'+
+     '<span class="seg"><button data-view="table" aria-pressed="'+(SF.view==="table")+'">&#9776; Table</button>'+
+     '<button data-view="gallery" aria-pressed="'+(SF.view==="gallery")+'">&#9638; Gallery</button></span>'+
+     '<span class="flab" style="margin-left:6px">Group by</span>'+
+     '<select class="fsel" id="gsel">'+GROUPBY.map(function(g){
+       return '<option value="'+g[0]+'"'+(SF.groupBy===g[0]?" selected":"")+'>'+g[1]+'</option>'}).join("")+'</select>'+
+     (SF.view==="gallery"?'<span class="flab" style="margin-left:6px">Sort</span>'+
+       '<select class="fsel" id="ssel">'+COLS.filter(function(c2){return c2.sort!==false}).map(function(c2){
+         return '<option value="'+c2.k+'"'+(SF.sortKey===c2.k?" selected":"")+'>'+c2.l+'</option>'}).join("")+'</select>':"")+
+     '<span class="f-tot" id="shoptot"></span>'+
+   '</div>'+
+   (chips.length?'<div class="frow"><div class="chips">'+chips.join("")+
+     '<button class="mini" data-clearall="1">Clear all filters</button></div></div>':"");
+}
+function triFor(r){
+  return '<span class="tri" data-tri="'+esc(r.name)+'">'+
+    '<button data-s="need" aria-pressed="'+(r.need>0&&!r.hand&&!r.ordered)+'">Need'+(r.qty>1?' '+r.need:'')+'</button>'+
+    '<button data-s="ordered" aria-pressed="'+(r.ordered>0&&r.hand<r.qty)+'">Ordered'+(r.qty>1?' '+r.ordered:'')+'</button>'+
+    '<button data-s="hand" aria-pressed="'+(r.hand>0)+'">In hand'+(r.qty>1?' '+r.hand+'/'+r.qty:'')+'</button></span>';
+}
+function bandHead(g,list,cols){
+  var sum=list.reduce(function(a,r){return a+r.price*r.need},0);
+  return '<tr class="band"><td colspan="'+cols+'"><span class="band-nm">'+esc(g)+'</span>'+
+    '<span class="band-ct">'+plur(list.length,"card")+' &middot; '+money(sum)+' to buy</span></td></tr>';
+}
+function renderShop(){
+  renderFilters();
+  var rows=shopRows().filter(passes), groups=groupRows(sortRows(rows));
+  var n=0,v=0;
+  rows.forEach(function(r){ n+=r.need; v+=r.price*r.need });
+  var tot=$("#shoptot"); if(tot) tot.innerHTML='<b class="num">'+n+'</b> still to buy &middot; <b class="num">'+money(v)+'</b>';
+  if(!rows.length){ $("#shopout").innerHTML='<p class="note" style="padding:22px 4px">Nothing matches those filters.</p>'; return }
+
+  if(SF.view==="table"){
+    var head=COLS.map(function(c2){
+      var on=SF.sortKey===c2.k;
+      return '<th>'+(c2.sort===false?esc(c2.l)
+        :'<button data-sort="'+c2.k+'">'+esc(c2.l)+(on?'<span class="ar">'+(SF.sortDir==="asc"?"\u25B2":"\u25BC")+'</span>':'')+'</button>')+'</th>';
+    }).join("");
+    var body=groups.map(function(gp){
+      return (gp[0]?bandHead(gp[0],gp[1],COLS.length):"")+gp[1].map(function(r){
+        return '<tr data-row="'+esc(r.name)+'">'+
+          '<td>'+triFor(r)+'</td>'+
+          '<td class="cell-nm">'+esc(r.name)+(r.qty>1?' <span class="qty num">&times;'+r.qty+'</span>':'')+'</td>'+
+          '<td>'+r.deckList.map(function(d){return '<span class="chipd">'+d+'</span>'}).join("")+'</td>'+
+          '<td><span class="dot" style="background:'+COLORHEX[r.ckey]+'"></span>'+esc(r.color)+'</td>'+
+          '<td>'+esc(r.type)+'</td><td>'+esc(r.rarity)+'</td>'+
+          '<td><span class="pill num">'+esc(r.band)+'</span></td>'+
+          '<td class="num'+(r.need?' price buy':'')+'">'+money(r.price)+
+            (r.qty>1?'<br><span style="font-size:11px;color:var(--muted)">'+money(r.price*r.qty)+' all</span>':'')+'</td>'+
+          '<td>'+esc(r.where)+'</td></tr>';
+      }).join("");
+    }).join("");
+    $("#shopout").innerHTML='<div class="tw"><table class="tbl"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table></div>';
+  } else {
+    $("#shopout").innerHTML=groups.map(function(gp){
+      return '<section class="grp" data-open="1">'+(gp[0]?'<div class="grp-h" style="cursor:default">'+
+        '<span class="grp-nm">'+esc(gp[0])+'</span><span class="grp-ct">'+plur(gp[1].length,"card")+'</span></div>':"")+
+        '<div class="gal">'+gp[1].map(function(r){
+          return '<article class="gcard" data-row="'+esc(r.name)+'">'+
+            '<div class="gart"><span>'+esc(r.name)+'</span></div>'+
+            '<div class="gbody"><div class="gnm">'+esc(r.name)+(r.qty>1?' <span class="qty num">&times;'+r.qty+'</span>':'')+'</div>'+
+            '<div class="gmeta"><span class="dot" style="background:'+COLORHEX[r.ckey]+'"></span>'+esc(r.color)+
+              ' &middot; '+esc(r.type)+' &middot; '+esc(r.rarity)+'</div>'+
+            '<div class="gmeta">'+r.deckList.map(function(d){return '<span class="chipd">'+d+'</span>'}).join("")+
+              '<span class="pill num">'+esc(r.band)+'</span></div>'+
+            '<div class="gfoot"><span class="price num'+(r.need?' buy':'')+'">'+money(r.price)+'</span>'+
+              '<span class="note">'+esc(r.where)+'</span></div>'+
+            '<div>'+triFor(r)+'</div></div></article>';
+        }).join("")+'</div></section>';
+    }).join("");
+  }
+}
+
+/* ============ drawers ============ */
+function openCard(s){
+  var p=pickOf(s),L=locBits(p.loc),base=s.cands.base;
+  $("#drawer").innerHTML=
+  '<div class="dr-h"><button class="dr-x" data-close="1" aria-label="Close">&times;</button>'+
+    '<span class="eyebrow">'+RUNGLAB[s.pick]+' &middot; slot '+s.id.toUpperCase()+'</span><h3>'+esc(p.name)+'</h3></div>'+
+  '<div class="dr-sec"><span class="dr-job">1 &middot; The card as printed</span><h4>What it does</h4>'+
+    '<p>Card text, keywords and timing come straight from Scryfall and are the same in every deck that runs it.</p>'+
+    '<dl class="dr-grid"><dt>Colour</dt><dd>'+esc(COLORLAB[p.color])+'</dd><dt>Type</dt><dd>'+esc(s.type)+'</dd>'+
+    '<dt>Rarity</dt><dd>'+esc(RARLAB[p.rar])+'</dd><dt>Price band</dt><dd class="num">'+bandOf(p.price)+'</dd></dl></div>'+
+  '<div class="dr-sec"><span class="dr-job">2 &middot; Fit &amp; play</span><h4>Why it is here, and how to run it</h4>'+
+    (base&&base.why?'<p><b>What this slot does.</b> '+esc(base.why)+'</p>':"")+
+    (s.pick!=="base"&&p.why?'<p><b>Why '+esc(p.name)+'.</b> '+esc(p.why)+'</p>':"")+
+    (base&&s.pick!=="base"&&s.pick!=="basic"?'<p><b>Replaces</b> '+esc(base.name)+' at '+money(base.price)+
+      '. This rung measured 76.0 against the base build&rsquo;s 75.0 over 5,000 games.</p>':"")+
+    '<p><b>Sequencing.</b> Cast it on curve with a protection spell up. It is the enabler, not the payoff &mdash; '+
+    'if the pod answers it, the deck still wins through its main plan.</p></div>'+
+  '<div class="dr-sec"><span class="dr-job">3 &middot; Get it</span><h4>Buy</h4>'+
+    '<dl class="dr-grid"><dt>Target</dt><dd class="num">'+money(p.price)+'</dd>'+
+    '<dt>Ceiling</dt><dd class="num">'+money(p.price*1.25)+'</dd><dt>Where</dt><dd>'+esc(s.where)+'</dd></dl>'+
+    '<div class="cand-acts" style="margin-top:10px">'+triFor({name:p.name,qty:1,need:p.loc==="buy"?1:0,
+      ordered:p.loc==="ordered"?1:0,hand:(p.loc!=="buy"&&p.loc!=="ordered")?1:0})+'</div></div>'+
+  '<div class="dr-sec"><span class="dr-job">4 &middot; Place it</span><h4>Where the copy is</h4>'+
+    '<p><span class="loc '+L.c+'"><span class="g">'+L.g+'</span>'+L.t+'</span>'+
+    (p.loc==="deck"?" &mdash; sleeved in Deck "+DECKS[cur].no+", slot "+s.id.toUpperCase()+"."
+     :p.loc==="bench"?" &mdash; owned and unassigned. One click on its rung slots it."
+     :p.loc==="ordered"?" &mdash; paid for and in transit. It cannot be sleeved until it arrives, so the box still has a hole here."
+     :p.loc==="buy"?" &mdash; not owned yet, so the box has a hole in this slot."
+     :" &mdash; owned, but sleeved in another deck. Pulling it leaves that deck a hole.")+'</p>'+
+    '<div class="cand-acts"><button class="mini" data-close="1">Send to Bench</button>'+
+    '<button class="mini" data-close="1">Show the other '+Math.max(0,rungsOf(s).length-1)+' rungs</button></div></div>';
+  $("#drawer").hidden=false; $("#scrim").hidden=false;
+}
+function openBench(){
+  var items=benchCards();
+  $("#drawer").innerHTML=
+   '<div class="dr-h"><button class="dr-x" data-close="1" aria-label="Close">&times;</button>'+
+     '<span class="eyebrow">Owned &middot; unassigned</span><h3>The Bench</h3></div>'+
+   (items.length?items.map(function(x){
+     var fits=[];
+     Object.keys(DECKS).forEach(function(k){
+       allSlots(k).forEach(function(s){
+         var hit=rungsOf(s).filter(function(r){return s.cands[r].name===x.card.name}).length ||
+                 s.owned.filter(function(o){return o.name===x.card.name}).length;
+         if(hit) fits.push({d:k,s:s});
+       });
+     });
+     return '<div class="bench-item"><div class="bench-nm">'+esc(x.card.name)+
+       ' <span class="qty num">'+money(x.card.price)+'</span></div>'+
+       '<div class="note">Fits '+plur(fits.length,"slot")+' across your decks</div>'+
+       '<div class="bench-fits">'+fits.map(function(f){
+         return '<button class="mini" data-slotit="'+f.d+'|'+f.s.id+'|'+esc(x.card.name)+'">'+
+           'Slot into D'+DECKS[f.d].no+' &middot; '+f.s.id.toUpperCase()+'</button>';
+       }).join("")+'</div></div>';
+   }).join("")
+   :'<div class="dr-sec"><p class="note">Nothing on the Bench. Cards land here when you send a pick back, '+
+    'or when you buy something no deck has claimed yet.</p></div>');
+  $("#drawer").hidden=false; $("#scrim").hidden=false;
+}
+function closeDrawer(){ $("#drawer").hidden=true; $("#scrim").hidden=true }
+var tt; function toast(m){var t=$("#toast");t.innerHTML=m;t.classList.add("on");
+  clearTimeout(tt);tt=setTimeout(function(){t.classList.remove("on")},3600)}
+
+/* ============ events ============ */
+function find(id){var o=null;Object.keys(DECKS).forEach(function(k){
+  allSlots(k).concat(Object.keys(filler).reduce(function(a,f){return a.concat(filler[f])},[]))
+    .forEach(function(s){if(s.id===id)o=s})});return o}
+function punch(donor,name,borrower){var hit=null;
+  allSlots(donor).forEach(function(s){var p=pickOf(s);
+    if(p.name===name&&p.loc==="deck"){p.loc=borrower;s.inBox=false;hit=s.id.toUpperCase()}});return hit}
+function setAcq(name,which){
+  var rows=shopRows(),r=null; rows.forEach(function(x){if(x.name===name)r=x});
+  if(!r) return;
+  var a=ACQ[name];
+  if(which==="need"){ if(a.hand>0)a.hand--; else if(a.ordered>0)a.ordered--; }
+  if(which==="ordered"){ if(a.ordered+a.hand<r.qty)a.ordered++; }
+  if(which==="hand"){ if(a.hand<r.qty){a.hand++; if(a.ordered>0)a.ordered--;} }
+  /* flow back to the deck: a card fully in hand becomes owned and unassigned */
+  Object.keys(DECKS).forEach(function(k){ allSlots(k).forEach(function(s){
+    if(s.pick==="none")return; var p=pickOf(s); if(p.name!==name)return;
+    if(a.hand>=r.qty && (p.loc==="buy"||p.loc==="ordered")){ p.loc="bench" }
+    else if(a.ordered>0 && a.hand===0 && p.loc==="buy"){ p.loc="ordered" }
+    else if(a.hand===0 && a.ordered===0 && (p.loc==="bench"||p.loc==="ordered")){ p.loc="buy"; s.inBox=false }
+  })});
+}
+document.addEventListener("click",function(e){
+  var el;
+  if(!e.target.closest(".fdrop")) document.querySelectorAll(".pop").forEach(function(p){p.hidden=true});
+
+  if((el=e.target.closest("[data-tab]"))){
+    var t=el.dataset.tab;
+    document.querySelectorAll("[data-tab]").forEach(function(b){b.setAttribute("aria-selected",b.dataset.tab===t)});
+    $("#v-deck").hidden=(t!=="deck"); $("#v-shop").hidden=(t!=="shop");
+    if(t==="shop") renderShop();
+    return;
+  }
+  if((el=e.target.closest("[data-deck]"))){cur=el.dataset.deck;openSlot=null;renderDeck();return}
+  if((el=e.target.closest("[data-grp]"))){var k=cur+"|"+el.dataset.grp;openGroups[k]=!openGroups[k];renderGroups();return}
+  if((el=e.target.closest("[data-more]"))){expanded[cur+"|"+el.dataset.more]=true;renderGroups();return}
+  if((el=e.target.closest("[data-expand]"))){openSlot=(openSlot===el.dataset.expand)?null:el.dataset.expand;renderGroups();return}
+
+  if((el=e.target.closest("[data-pick]"))){
+    var b=el.dataset.pick.split("|"),s=find(b[0]),key=b[1],own=b[2]==="1";
+    if(own){ toast("Shell only &mdash; slotting an owned card writes a transfer record and re-runs the Tier check."); return }
+    var cd=s.cands[key];
+    if(cd.loc.charAt(0)==="d"&&cd.loc!=="deck"){
+      var other=DECKS[cd.loc];
+      if(!confirm("Pull "+cd.name+" out of Deck "+other.no+" \u00B7 "+other.name+"?\n\nThat deck loses this card and its slot becomes a hole until you replace or rebuy it.")) return;
+      var hole=punch(other.id,cd.name,cur); cd.loc="deck"; s.pick=key; s.inBox=true;
+      toast("Pulled <b>"+esc(cd.name)+"</b> from Deck "+other.no+(hole?". Deck "+other.no+" slot "+hole+" is now a hole.":"."));
+    } else {
+      s.pick=key; s.inBox=(cd.loc!=="buy"&&cd.loc!=="ordered");
+      toast(cd.loc==="buy"?"Slot set to <b>"+esc(cd.name)+"</b> &mdash; added to the Shop list at "+money(cd.price)+"."
+        :cd.loc==="ordered"?"Slot set to <b>"+esc(cd.name)+"</b> &mdash; ordered, so the box stays empty until it lands."
+        :"Slot set to <b>"+esc(cd.name)+"</b>.");
+    }
+    renderDeck(); return;   /* the rail stays open */
+  }
+  if((el=e.target.closest("[data-card]"))){openCard(find(el.dataset.card));return}
+  if((el=e.target.closest("[data-bench]"))){
+    var sb=find(el.dataset.bench),was=pickOf(sb),prev=predOf(sb,sb.pick);
+    was.loc="bench"; sb.pick=prev||"none"; sb.inBox=sb.pick!=="none"&&pickOf(sb).loc==="deck";
+    toast("<b>"+esc(was.name)+"</b> is on the Bench. "+(prev
+      ? "This slot fell back to <b>"+esc(sb.cands[prev].name)+"</b> ("+RUNGLAB[prev]+")."
+      : "This slot is now empty &mdash; pick a rung or slot something you own."));
+    renderDeck(); return;
+  }
+  if((el=e.target.closest("[data-slotit]"))){
+    var q=el.dataset.slotit.split("|"),dk=q[0],sid=q[1],nm=q[2];
+    cur=dk; var ss=find(sid);
+    rungsOf(ss).forEach(function(r){ if(ss.cands[r].name===nm){ss.pick=r;ss.cands[r].loc="deck";ss.inBox=true} });
+    closeDrawer(); renderDeck();
+    toast("<b>"+esc(nm)+"</b> slotted into Deck "+DECKS[dk].no+" &middot; "+sid.toUpperCase()+".");
+    return;
+  }
+  if((el=e.target.closest("[data-step] button"))&&el.dataset.d){
+    var st=el.closest("[data-step]"),s2=find(st.dataset.step);
+    s2.qty=Math.max(0,s2.qty+ +el.dataset.d); renderDeck(); return;
+  }
+
+  /* --- shop --- */
+  if((el=e.target.closest("[data-fdrop]"))){
+    var id="pop-"+el.dataset.fdrop,pop=$("#"+id),was2=pop.hidden;
+    document.querySelectorAll(".pop").forEach(function(p){p.hidden=true});
+    pop.hidden=!was2; return;
+  }
+  if((el=e.target.closest("[data-fall]"))){SF[el.dataset.fall]=distinct(el.dataset.fall);renderShop();return}
+  if((el=e.target.closest("[data-fnone]"))){SF[el.dataset.fnone]=[];renderShop();return}
+  if((el=e.target.closest("[data-unchip]"))){
+    var u=el.dataset.unchip.split("|");SF[u[0]]=SF[u[0]].filter(function(v){return v!==u[1]});renderShop();return}
+  if((el=e.target.closest("[data-clearall]"))){FILTERS.forEach(function(f){SF[f[0]]=[]});SF.q="";renderShop();return}
+  if((el=e.target.closest("[data-view]"))){SF.view=el.dataset.view;renderShop();return}
+  if((el=e.target.closest("[data-sort]"))){
+    var k2=el.dataset.sort;
+    if(SF.sortKey===k2) SF.sortDir=(SF.sortDir==="asc"?"desc":"asc"); else {SF.sortKey=k2;SF.sortDir="asc"}
+    renderShop(); return;
+  }
+  if((el=e.target.closest("[data-tri] button"))){
+    e.stopPropagation();
+    setAcq(el.closest("[data-tri]").dataset.tri, el.dataset.s);
+    if($("#v-shop").hidden){ renderDeck(); if(!$("#drawer").hidden) closeDrawer() } else renderShop();
+    return;
+  }
+  if((el=e.target.closest("[data-row]"))){
+    var nm2=el.dataset.row,found=null;
+    Object.keys(DECKS).forEach(function(k){allSlots(k).forEach(function(s){
+      if(s.pick!=="none"&&pickOf(s).name===nm2&&!found)found=s})});
+    if(found) openCard(found); return;
+  }
+  if((el=e.target.closest("[data-close]"))||e.target.id==="scrim"){closeDrawer();return}
+  if((el=e.target.closest("[data-act]"))){
+    var a=el.dataset.act;
+    if(a==="bench") openBench();
+    if(a==="merge") toast("<b>Merge purchases</b> &mdash; unions owned counts and paid prices only. Slot picks are never touched, so your in-person marks survive.");
+    if(a==="loadactive") toast("<b>Load Active</b> &mdash; full replace of slot picks from the repo. Today this silently wipes in-person marks; that is the bug Merge fixes.");
+    if(a==="variant") toast("Shell only &mdash; opens Compare, where the slot goes back to 1&#8209;of&#8209;25.");
+    return;
+  }
+});
+document.addEventListener("change",function(e){
+  var b=e.target.closest("[data-box]");
+  if(b){ var s=find(b.dataset.box); s.inBox=b.checked;
+    toast(b.checked?"<b>"+esc(pickOf(s).name)+"</b> marked as sleeved."
+                   :"<b>"+esc(pickOf(s).name)+"</b> unchecked &mdash; the box has a hole in this slot.");
+    renderRail(); renderDeckCard(); return; }
+  var f=e.target.closest("[data-fchk]");
+  if(f){ var p=f.dataset.fchk.split("|"),arr=SF[p[0]];
+    if(f.checked){ if(arr.indexOf(p[1])<0) arr.push(p[1]) } else SF[p[0]]=arr.filter(function(v){return v!==p[1]});
+    renderShop(); var pop=$("#pop-"+p[0]); if(pop) pop.hidden=false; return; }
+  if(e.target.id==="gsel"){ SF.groupBy=e.target.value; renderShop(); return }
+  if(e.target.id==="ssel"){ SF.sortKey=e.target.value; renderShop(); return }
+});
+document.addEventListener("input",function(e){
+  if(e.target.id==="fq"){ SF.q=e.target.value; renderShop();
+    var box=$("#fq"); if(box){box.focus();box.setSelectionRange(box.value.length,box.value.length)} }
+});
+document.addEventListener("keydown",function(e){if(e.key==="Escape"){closeDrawer();
+  document.querySelectorAll(".pop").forEach(function(p){p.hidden=true})}});
+
+renderDeck(); renderShop();
+})();
+</script>
