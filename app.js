@@ -523,6 +523,7 @@
     const rung = Slot.rungForStage(state.rankStages[variant.deckId]);
     if (rung === "tuned") return;
     assignSelection(ensureBuyState(variant.id), Slot.selectionForRung(plan, rung));
+    syncBoxesToOwned(variant.id, plan);
     if (!state.deckRung) state.deckRung = {};
     state.deckRung[variant.id] = rung;
     saveState();
@@ -648,6 +649,7 @@
       if (!ctx || !Slot) return true;
       const plan = buyCatalog.plans[ctx.deckId];
       assignSelection(ensureBuyState(ctx.deckId), Slot.selectionForRung(plan, el.dataset.dpRung));
+      syncBoxesToOwned(ctx.deckId, plan);
       if (!state.deckRung) state.deckRung = {};
       state.deckRung[ctx.deckId] = el.dataset.dpRung;
       saveState();
@@ -666,6 +668,49 @@
       return true;
     }
     return false;
+  }
+
+  /**
+   * Recompute one deck's box ticks from what is actually in hand.
+   *
+   * Setting a rung rewrites every slot at once, so the ticks have to be rebuilt
+   * with it: a tick is a claim about a SLOT, and once the slot holds a different
+   * card the old claim is about a card that is no longer there. Rebuilding also
+   * does the useful half of the job -- a rung whose cards are already in the box
+   * arrives with the box already checked, instead of asking for ninety more
+   * clicks to say what the ownership ledger already knows.
+   *
+   * Two things it will not do. It never invents ownership, only reads it. And it
+   * never claims a copy another deck's box already holds: there are six boxes and
+   * one physical copy sits in exactly one of them.
+   */
+  function syncBoxesToOwned(variantId, plan) {
+    const Slot = window.MtgSlotModel;
+    if (!Slot || !plan) return;
+    const owned = Slot.normalizeOwned(state);
+
+    const heldElsewhere = {};
+    selectedVariants().forEach((other) => {
+      if (other.id === variantId) return;
+      const otherPlan = buyCatalog && buyCatalog.plans ? buyCatalog.plans[other.id] : null;
+      if (!otherPlan) return;
+      const ticked = (state.deckActive && state.deckActive[other.id]) || {};
+      Slot.deckSlots(otherPlan, ensureBuyState(other.id), {owned}).forEach((slot) => {
+        if (slot.pick && ticked[slot.slotId]) heldElsewhere[Slot.ownedKey(slot.pick.name)] = true;
+      });
+    });
+
+    const next = {};
+    Slot.deckSlots(plan, ensureBuyState(variantId), {owned}).forEach((slot) => {
+      if (!slot.pick) return;
+      if (heldElsewhere[Slot.ownedKey(slot.pick.name)]) return;
+      // Partly here is not here: two of the three copies a slot needs cannot be
+      // sleeved as if they were three.
+      if (Slot.acquisitionOf(owned, slot.pick.name, slot.pick.quantity) !== Slot.ACQUISITION.HAND) return;
+      next[slot.slotId] = true;
+    });
+    if (!state.deckActive) state.deckActive = {};
+    state.deckActive[variantId] = next;
   }
 
   /* Raise a card to "in hand" without ever lowering one: a deck that borrows a
