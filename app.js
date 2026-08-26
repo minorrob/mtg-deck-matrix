@@ -1336,11 +1336,21 @@
     });
     $$('[data-compare-filter]', root).forEach((select) => select.addEventListener("change", () => {
       state.compareFilters[select.dataset.compareFilter] = select.value;
+      /* Score stage says it changes which build every number on the page
+         describes, and it did not: the cards read their stage from each deck's
+         own Rank order row, so picking Maxed here filtered by Maxed scores while
+         every tile went on quoting Tuned's cost, Tuned's power level and 0 GC.
+         It now sets the stage for every deck; a deck's own Rank order still
+         overrides it for that one deck. */
+      if (select.dataset.compareFilter === "profileStage") {
+        catalog.decks.forEach((deck) => { state.rankStages[deck.id] = Number(select.value); });
+      }
       saveState();
       renderCompare();
     }));
     $("#clear-compare-filters", root)?.addEventListener("click", () => {
       state.compareFilters = {...blankState().compareFilters};
+      catalog.decks.forEach((deck) => { state.rankStages[deck.id] = Number(state.compareFilters.profileStage); });
       saveState();
       renderCompare();
     });

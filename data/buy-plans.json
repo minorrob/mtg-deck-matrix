@@ -9193,7 +9193,7 @@
       "buyStrategy": "Rebuild option",
       "buyWhy": "The precon's face commander turns every wall into an attacker",
       "buyFirst": "Begin with Huatli, the Sun's Heart, Vindicate, Unbreakable Formation.",
-      "allIn": 46.93,
+      "allIn": 52.8,
       "startingShell": [
         {
           "id": "shell-felothar-the-steadfast",
@@ -16548,7 +16548,7 @@
       "buyStrategy": "Profile-tuned",
       "buyWhy": "Freely converts counters into bodies and bodies back into counters",
       "buyFirst": "Begin with Ashnod's Altar, Blood Artist, Cathars' Crusade.",
-      "allIn": 82.28,
+      "allIn": 83.01,
       "startingShell": [
         {
           "id": "shell-felothar-the-steadfast",
@@ -42732,7 +42732,7 @@
       "buyStrategy": "Profile-tuned",
       "buyWhy": "Draws a card on every land drop — you simply never run out",
       "buyFirst": "Begin with Tatyova, Benthic Druid, Kruphix, God of Horizons, Wall of Blossoms.",
-      "allIn": 63.42,
+      "allIn": 63.81,
       "startingShell": [
         {
           "id": "shell-3c-commander",
@@ -87625,7 +87625,7 @@
       "buyStrategy": "Profile-tuned",
       "buyWhy": "Every creature that enters gains you life — the fortress builds itself",
       "buyFirst": "Begin with Intangible Virtue, Second Harvest, Cathars' Crusade.",
-      "allIn": 59.72,
+      "allIn": 59.97,
       "startingShell": [
         {
           "id": "shell-5e-commander",
@@ -97340,7 +97340,7 @@
       "buyStrategy": "Singles-first, staged",
       "buyWhy": "The Capstone and the graduation exam — build it last, enjoy it longest.",
       "buyFirst": "Nethroi, Buried Alive, Fauna Shaman and the mill package (~$45). Craterhoof, Elesh Norn and Vigor are later trips.",
-      "allIn": 51.67,
+      "allIn": 52.75,
       "startingShell": [
         {
           "id": "shell-stitcher-s-supplier",
@@ -143817,7 +143817,7 @@
       "buyStrategy": "Synergy maximizer",
       "buyWhy": "Tuned: Leans hardest into the theme you asked for.",
       "buyFirst": "Start with the Starting Shell singles.",
-      "allIn": 180.15,
+      "allIn": 180.48,
       "startingShell": [
         {
           "id": "shell-9a-1-shantotto-tactician-magician",
@@ -147307,7 +147307,7 @@
       "buyStrategy": "Synergy maximizer",
       "buyWhy": "Tuned: Leans hardest into the theme you asked for.",
       "buyFirst": "Start with the Starting Shell singles.",
-      "allIn": 83.08,
+      "allIn": 83.41,
       "startingShell": [
         {
           "id": "shell-9b-1-veyran-voice-of-duality",
