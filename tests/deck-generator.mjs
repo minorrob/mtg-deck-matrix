@@ -455,7 +455,13 @@ assert.match(appSource, /if \(!\$\("#view-choose"\)\) return;/, "renderChoose mu
 assert.match(appSource, /Generator\.generateForSlot/, "the generator must still be wired to the slot runner");
 
 const cssSource = await readFile(new URL("../app.css", import.meta.url), "utf8");
-assert.match(cssSource, /\.main-tabs \{[^}]*repeat\(6, minmax\(0, 1fr\)\)/, "the tab bar must make room for all six steps");
+// Derive the count instead of hard-coding it: the tab bar and its grid must agree,
+// and that guard should survive tabs being added or withdrawn.
+const tabCount = (indexSource.match(/class="main-tab[ "]/g) || []).length;
+const gridMatch = cssSource.match(/\.main-tabs \{[^}]*repeat\((\d+), minmax\(0, 1fr\)\)/);
+assert.ok(gridMatch, "the tab bar must declare a fixed-column grid");
+assert.equal(Number(gridMatch[1]), tabCount,
+  `the tab bar grid (${gridMatch[1]} columns) must make room for exactly the ${tabCount} tabs in index.html`);
 assert.match(cssSource, /\.choose-grid \{/, "the Choose grid must be styled");
 assert.match(cssSource, /\.deck-group-divider \{/, "the generated-deck divider must be styled");
 

@@ -467,7 +467,423 @@
       .filter(Boolean);
   }
 
+  // ---- Deck page bridge -------------------------------------------------
+  // The new Deck view reads through slot-model.js and renders via deck-page.js.
+  // It runs beside the old Calibrate and Decks tabs rather than replacing them,
+  // so the two can be compared against real data before anything is removed.
+  const deckPageState = {deckIndex: 0, openSlot: null, closedGroups: {}};
+
+  // The baked catalog carries rarity, art, oracle text and a price for every card
+  // in the plans, so the Deck page does not depend on the Scryfall cache being warm.
+  let deckPageCards = null;
+  /**
+   * Ownership migration. `found` was a boolean and `boughtQuantities` a count, which
+   * together could not say "paid for, not here yet". The pair is folded into
+   * owned[key] = {inHand, ordered} once, and both legacy keys are kept written so a
+   * rollback to the old views still reads correctly.
+   */
+  function migrateOwnership() {
+    const Slot = window.MtgSlotModel;
+    if (!Slot || state.ownershipSchema >= 3) return;
+    state.owned = Slot.normalizeOwned(state);
+    state.ownershipSchema = 3;
+    saveState();
+  }
+
+  function loadDeckPageCards() {
+    if (deckPageCards) return Promise.resolve(deckPageCards);
+    return fetch("data/cards.json")
+      .then((r) => r.json())
+      .then((payload) => {
+        const map = {};
+        (payload.cards || payload || []).forEach((card) => {
+          if (card && card.name) map[Lineup.normalizeName(card.name)] = card;
+        });
+        deckPageCards = map;
+        return map;
+      })
+      .catch(() => (deckPageCards = {}));
+  }
+
+  function deckPageContext() {
+    const Slot = window.MtgSlotModel;
+    const variants = selectedVariants();
+    if (!Slot || !variants.length) return null;
+    const variant = variants[Math.min(deckPageState.deckIndex, variants.length - 1)];
+    const plan = buyCatalog && buyCatalog.plans ? buyCatalog.plans[variant.id] : null;
+    if (!plan) return null;
+
+    const owned = Slot.normalizeOwned(state);
+    // Baked catalog first, then anything the Scryfall cache has freshened on top.
+    const cards = Object.assign({}, deckPageCards || {});
+    const slots = Slot.deckSlots(plan, ensureBuyState(variant.id), {owned, cards});
+    slots.forEach((slot) => slot.rungs.forEach((rung) => {
+      const key = Lineup.normalizeName(rung.name);
+      const md = cardMetadata[itemKey({name: rung.name})];
+      if (md && md.loaded && !md.unavailable) cards[key] = Object.assign({}, cards[key], md);
+    }));
+
+    // Which physical box each owned copy is in. There are six boxes and a copy
+    // lives in exactly one, so this is read from the boxes you have actually
+    // ticked - never inferred from which deck happens to list the card first.
+    const boxes = {};
+    const deckLabels = {};
+    variants.forEach((v) => {
+      deckLabels[v.id] = "D" + v.deckId;
+      const p = buyCatalog && buyCatalog.plans ? buyCatalog.plans[v.id] : null;
+      if (!p) return;
+      const ticked = (state.deckActive && state.deckActive[v.id]) || {};
+      Slot.deckSlots(p, ensureBuyState(v.id), {owned, cards}).forEach((slot) => {
+        if (!slot.pick || !ticked[slot.slotId]) return;
+        boxes[Slot.ownedKey(slot.pick.name)] = v.id;
+      });
+    });
+
+    const openGroups = {};
+    Object.keys(deckPageState.closedGroups).forEach((k) => {
+      if (deckPageState.closedGroups[k]) openGroups[k] = false;
+    });
+
+    return {
+      deckId: variant.id,
+      deckTitle: "Deck " + variant.deckId + " · " + variant.name,
+      commander: plan.commanderName || variant.commander || "",
+      colors: variant.colorIdentity || variant.colors || "",
+      variantId: variant.id,
+      slots, owned, cards, boxes, deckLabels, openGroups,
+      active: (state.deckActive && state.deckActive[variant.id]) || {},
+      openSlot: deckPageState.openSlot,
+      variants
+    };
+  }
+
+  function renderDeckPage() {
+    const host = $("#view-deck2");
+    if (!host || !window.MtgDeckPage) return;
+    if (!deckPageCards) {
+      host.innerHTML = '<div class="loading-card">Loading the card catalog…</div>';
+      loadDeckPageCards().then(renderDeckPage);
+      return;
+    }
+    const ctx = deckPageContext();
+    if (!ctx) {
+      host.innerHTML = '<div class="loading-card">Choose a variant for at least one deck on Compare, then come back.</div>';
+      return;
+    }
+    const rail = ctx.variants.map((v, i) => (
+      '<button class="rail-btn' + (i === deckPageState.deckIndex ? " is-on" : "") + '" data-dp-deck="' + i +
+      '" aria-pressed="' + (i === deckPageState.deckIndex) + '"><span class="rail-no">Deck ' + v.deckId +
+      '</span><span class="rail-nm">' + esc(v.name) + '</span></button>'
+    )).join("");
+    host.innerHTML = '<div class="dp-rail">' + rail + '</div><div id="dp-body"></div>';
+    window.MtgDeckPage.render($("#dp-body"), ctx);
+  }
+
+  function deckPageClick(event) {
+    let el;
+    if ((el = event.target.closest("[data-dp-deck]"))) {
+      deckPageState.deckIndex = Number(el.dataset.dpDeck) || 0;
+      deckPageState.openSlot = null;
+      renderDeckPage();
+      return true;
+    }
+    if ((el = event.target.closest("[data-dp-grp]"))) {
+      const key = el.dataset.dpGrp;
+      deckPageState.closedGroups[key] = !deckPageState.closedGroups[key];
+      renderDeckPage();
+      return true;
+    }
+    if ((el = event.target.closest("[data-dp-expand]"))) {
+      const id = el.dataset.dpExpand;
+      deckPageState.openSlot = deckPageState.openSlot === id ? null : id;
+      renderDeckPage();
+      return true;
+    }
+    if ((el = event.target.closest("[data-dp-pick]"))) {
+      const entryId = el.dataset.dpPick.split("|")[1];
+      const ctx = deckPageContext();
+      if (!ctx) return true;
+      const plan = buyCatalog.plans[ctx.deckId];
+      const current = ensureBuyState(ctx.deckId);
+      assignSelection(current, Lineup.applyChoice(plan, current, entryId));
+      saveState();
+      renderDeckPage();   // the rail deliberately stays open after a pick
+      return true;
+    }
+    return false;
+  }
+
+  function deckPageChange(event) {
+    const el = event.target.closest("[data-dp-box]");
+    if (!el) return false;
+    const ctx = deckPageContext();
+    if (!ctx) return true;
+    if (!state.deckActive) state.deckActive = {};
+    if (!state.deckActive[ctx.deckId]) state.deckActive[ctx.deckId] = {};
+    if (el.checked) state.deckActive[ctx.deckId][el.dataset.dpBox] = true;
+    else delete state.deckActive[ctx.deckId][el.dataset.dpBox];
+    saveState();
+    renderDeckPage();
+    return true;
+  }
+
+  function deckPagePreview(event) {
+    const el = event.target.closest("[data-dp-prev]");
+    if (!el || !window.MtgDeckPage) return;
+    const parts = el.dataset.dpPrev.split("|");
+    const host = document.getElementById("dp-prev-" + parts[0]);
+    if (!host) return;
+    const ctx = deckPageContext();
+    if (!ctx) return;
+    const glyphs = {active: "●", other: "◆", bench: "◇", ordered: "⧖", buy: "○"};
+    const labels = {active: "In the box", other: "In another box", bench: "Owned, no box", ordered: "Ordered", buy: "To buy"};
+    const kind = parts[2];
+    host.innerHTML = window.MtgDeckPage.previewMarkup(ctx, parts[1],
+      {kind: kind, glyph: glyphs[kind] || "○", label: labels[kind] || "To buy"},
+      parts[3] === "" ? null : Number(parts[3]));
+  }
+
+  document.addEventListener("click", (event) => { deckPageClick(event); });
+  document.addEventListener("change", (event) => { deckPageChange(event); });
+  document.addEventListener("mouseover", deckPagePreview);
+  document.addEventListener("focusin", deckPagePreview);
+
+  // ---- Shop page bridge --------------------------------------------------
+  // The same slots, re-keyed by card name and merged across every selected deck.
+  const shopFilters = {
+    status: [], color: [], type: [], band: [], spot: [], rarity: [], deck: [], rung: [],
+    query: "", view: "table", groupBy: "spot", sortKey: "name", sortDir: "asc"
+  };
+
+  /**
+   * What the Bench holds: cards you own that sit in no deck's box, each with the
+   * best slot it could fill in every deck. A destination names the rung it would
+   * occupy - or says it is an ad-hoc transfer - and, crucially, the state of the
+   * card it displaces, because covering an unbought card saves money while
+   * displacing one you own only moves it.
+   */
+  function benchItems(decks, owned, cards, deckLabels) {
+    const Slot = window.MtgSlotModel;
+    const boxed = {};
+    decks.forEach((d) => {
+      const ticked = (state.deckActive && state.deckActive[d.id]) || {};
+      d.slots.forEach((slot) => { if (slot.pick && ticked[slot.slotId]) boxed[Slot.ownedKey(slot.pick.name)] = d.id; });
+    });
+
+    const seen = new Set();
+    const items = [];
+    decks.forEach((d) => d.slots.forEach((slot) => slot.rungs.forEach((rung) => {
+      const key = Slot.ownedKey(rung.name);
+      if (seen.has(key) || boxed[key]) return;
+      if (Slot.ownedCount(owned, rung.name).inHand < 1) return;
+      seen.add(key);
+      const fact = cards[Lineup.normalizeName(rung.name)] || {};
+      const roles = [];
+      const destinations = [];
+      decks.forEach((target) => {
+        let best = null;
+        target.slots.forEach((s) => {
+          const match = s.rungs.find((r) => Slot.ownedKey(r.name) === key);
+          if (!match) return;
+          roles.push(`${deckLabels[target.id]} · ${Slot.RUNG_LABEL[match.rung] || match.rung}`);
+          if (s.pick && Slot.ownedKey(s.pick.name) === key) return;   // already the pick here
+          const score = {max: 88, enhance: 82, tuned: 79, fun: 74, base: 71}[match.rung] || 70;
+          if (!best || score > best.score) best = {slot: s, match, score, deck: target};
+        });
+        if (!best) return;
+        const replacedPick = best.slot.pick;
+        const rl = replacedPick
+          ? deckPageLocationFor(target, replacedPick, best.slot, owned, boxed, deckLabels)
+          : {kind: "empty", label: "empty slot", glyph: "○", name: null, price: 0};
+        destinations.push({
+          deckId: target.id, slotId: best.slot.slotId, entryId: best.match.entryId,
+          // Every destination here is a real rung of that slot's ladder. Cards that
+          // merely *fit* a slot without being on its ladder are ad-hoc transfers and
+          // need the full compatibility check; they are not offered yet.
+          rung: Slot.RUNG_LABEL[best.match.rung] || null,
+          label: `${deckLabels[target.id]} · ${Slot.RUNG_LABEL[best.match.rung]} rung · replace ${
+            replacedPick ? replacedPick.name : "an empty slot"} · fit ${best.score}`,
+          action: `replace ${replacedPick ? replacedPick.name : "the empty slot"}`,
+          reasons: ["Commander legal + colour legal", `${best.slot.type} slot`],
+          replaced: rl
+        });
+      });
+      destinations.sort((a, b) => (b.replaced.kind === "buy" ? 1 : 0) - (a.replaced.kind === "buy" ? 1 : 0));
+      items.push({
+        key, name: rung.name, price: rung.price, spot: Slot.vendorSpot(rung.price),
+        typeLine: fact.typeLine || "", image: fact.image || "",
+        rarityKey: ({common: "C", uncommon: "U", rare: "R", special: "S", mythic: "M", bonus: "B"})[fact.rarity] || "C",
+        roles: Array.from(new Set(roles)), destinations
+      });
+    })));
+    return items.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  function deckPageLocationFor(target, pick, slot, owned, boxed, deckLabels) {
+    const Slot = window.MtgSlotModel;
+    const acq = Slot.acquisitionOf(owned, pick.name, pick.quantity);
+    const base = {name: pick.name, price: pick.price || 0};
+    if (acq === Slot.ACQUISITION.NONE) return Object.assign(base, {kind: "buy", glyph: "○", label: "To buy"});
+    if (acq === Slot.ACQUISITION.ORDERED) return Object.assign(base, {kind: "ordered", glyph: "⧖", label: "Ordered"});
+    const ticked = (state.deckActive && state.deckActive[target.id]) || {};
+    if (ticked[slot.slotId]) return Object.assign(base, {kind: "active", glyph: "●", label: "In the box"});
+    const holder = boxed[Slot.ownedKey(pick.name)];
+    if (holder && holder !== target.id) {
+      return Object.assign(base, {kind: "other", glyph: "◆", label: "In " + (deckLabels[holder] || holder) + "'s box"});
+    }
+    return Object.assign(base, {kind: "bench", glyph: "◇", label: "Owned, no box"});
+  }
+
+  function shopContext() {
+    const Slot = window.MtgSlotModel;
+    const variants = selectedVariants();
+    if (!Slot || !variants.length) return null;
+    const owned = Slot.normalizeOwned(state);
+    const cards = deckPageCards || {};
+    const deckLabels = {};
+    const decks = [];
+    variants.forEach((v) => {
+      const plan = buyCatalog && buyCatalog.plans ? buyCatalog.plans[v.id] : null;
+      if (!plan) return;
+      deckLabels[v.id] = "D" + v.deckId;
+      decks.push({id: v.id, slots: Slot.deckSlots(plan, ensureBuyState(v.id), {owned, cards})});
+    });
+    if (!decks.length) return null;
+    return {
+      rows: Slot.shopRows(decks, owned),
+      factFor: (name) => cards[Lineup.normalizeName(name)] || cardMetadata[itemKey({name})] || {},
+      bench: benchItems(decks, owned, cards, deckLabels),
+      deckLabels, filters: shopFilters, owned, decks
+    };
+  }
+
+  function renderShopPage() {
+    const host = $("#view-shop2");
+    if (!host || !window.MtgShopPage) return;
+    if (!deckPageCards) {
+      host.innerHTML = '<div class="loading-card">Loading the card catalog…</div>';
+      loadDeckPageCards().then(renderShopPage);
+      return;
+    }
+    const ctx = shopContext();
+    if (!ctx) { host.innerHTML = '<div class="loading-card">Choose a variant for at least one deck on Compare, then come back.</div>'; return; }
+    window.MtgShopPage.render(host, ctx);
+  }
+
+  /** One writer for ownership, so in-hand and ordered can never drift apart. */
+  function bumpOwned(name, which, quantity) {
+    const Slot = window.MtgSlotModel;
+    if (!state.owned) state.owned = Slot.normalizeOwned(state);
+    const key = Slot.ownedKey(name);
+    const rec = state.owned[key] || (state.owned[key] = {inHand: 0, ordered: 0});
+    const cap = Math.max(1, Number(quantity) || 1);
+    if (which === "need") { if (rec.inHand > 0) rec.inHand -= 1; else if (rec.ordered > 0) rec.ordered -= 1; }
+    if (which === "ordered" && rec.inHand + rec.ordered < cap) rec.ordered += 1;
+    if (which === "hand" && rec.inHand < cap) { rec.inHand += 1; if (rec.ordered > 0) rec.ordered -= 1; }
+    // Keep the legacy pair in step until the old tabs are gone.
+    state.found[key] = rec.inHand > 0;
+    state.boughtQuantities[key] = rec.inHand;
+    if (!rec.inHand) delete state.found[key];
+    saveState();
+  }
+
+  function shopClick(event) {
+    let el;
+    if (!event.target.closest(".sp-drop")) $$(".sp-pop").forEach((pop) => { pop.hidden = true; });
+    if ((el = event.target.closest("[data-sp-drop]"))) {
+      const pop = document.getElementById("sp-pop-" + el.dataset.spDrop);
+      const wasHidden = pop && pop.hidden;
+      $$(".sp-pop").forEach((p) => { p.hidden = true; });
+      if (pop) pop.hidden = !wasHidden;
+      return true;
+    }
+    if ((el = event.target.closest("[data-sp-all]"))) {
+      const ctx = shopContext();
+      const key = el.dataset.spAll;
+      shopFilters[key] = window.MtgShopPage.values(window.MtgShopPage.decorate(ctx.rows, ctx.factFor, ctx.deckLabels), key);
+      renderShopPage(); return true;
+    }
+    if ((el = event.target.closest("[data-sp-none]"))) { shopFilters[el.dataset.spNone] = []; renderShopPage(); return true; }
+    if ((el = event.target.closest("[data-sp-unchip]"))) {
+      const [key, value] = el.dataset.spUnchip.split("|");
+      shopFilters[key] = (shopFilters[key] || []).filter((v) => v !== value);
+      renderShopPage(); return true;
+    }
+    if (event.target.closest("[data-sp-clear]")) {
+      window.MtgShopPage.FILTERS.forEach((f) => { shopFilters[f.key] = []; });
+      shopFilters.query = ""; renderShopPage(); return true;
+    }
+    if ((el = event.target.closest("[data-sp-view]"))) { shopFilters.view = el.dataset.spView; renderShopPage(); return true; }
+    if ((el = event.target.closest("[data-sp-sort]"))) {
+      const key = el.dataset.spSort;
+      if (shopFilters.sortKey === key) shopFilters.sortDir = shopFilters.sortDir === "asc" ? "desc" : "asc";
+      else { shopFilters.sortKey = key; shopFilters.sortDir = "asc"; }
+      renderShopPage(); return true;
+    }
+    if ((el = event.target.closest("[data-sp-assign]"))) {
+      const [key, index] = el.dataset.spAssign.split("|");
+      const ctx = shopContext();
+      const item = ctx && (ctx.bench || []).find((b) => b.key === key);
+      const sel = document.getElementById("sp-dest-" + key);
+      const dest = item && item.destinations[Number(sel ? sel.value : index) || 0];
+      if (!dest) return true;
+      const plan = buyCatalog.plans[dest.deckId];
+      const current = ensureBuyState(dest.deckId);
+      assignSelection(current, Lineup.applyChoice(plan, current, dest.entryId));
+      if (!state.deckActive) state.deckActive = {};
+      if (!state.deckActive[dest.deckId]) state.deckActive[dest.deckId] = {};
+      state.deckActive[dest.deckId][dest.slotId] = true;
+      saveState();
+      renderShopPage();
+      showToast(`${item.name} assigned — ${dest.label}`);
+      return true;
+    }
+    if ((el = event.target.closest("[data-sp-tri] button"))) {
+      event.stopPropagation();
+      const key = el.closest("[data-sp-tri]").dataset.spTri;
+      const ctx = shopContext();
+      const row = ctx && ctx.rows.find((r) => r.key === key);
+      if (row) { bumpOwned(row.name, el.dataset.spS, row.quantity); renderShopPage(); }
+      return true;
+    }
+    return false;
+  }
+
+  function shopChange(event) {
+    const chk = event.target.closest("[data-sp-chk]");
+    if (chk) {
+      const [key, value] = chk.dataset.spChk.split("|");
+      const list = shopFilters[key] || (shopFilters[key] = []);
+      if (chk.checked) { if (list.indexOf(value) < 0) list.push(value); }
+      else shopFilters[key] = list.filter((v) => v !== value);
+      renderShopPage();
+      const pop = document.getElementById("sp-pop-" + key);
+      if (pop) pop.hidden = false;
+      return true;
+    }
+    if (event.target.dataset && event.target.dataset.spDest) { renderShopPage(); return true; }
+    if (event.target.id === "sp-group") { shopFilters.groupBy = event.target.value; renderShopPage(); return true; }
+    if (event.target.id === "sp-sort") { shopFilters.sortKey = event.target.value; renderShopPage(); return true; }
+    return false;
+  }
+
+  document.addEventListener("click", (event) => { shopClick(event); });
+  document.addEventListener("change", (event) => { shopChange(event); });
+  document.addEventListener("input", (event) => {
+    if (event.target.id !== "sp-q") return;
+    shopFilters.query = event.target.value;
+    renderShopPage();
+    const box = $("#sp-q");
+    if (box) { box.focus(); box.setSelectionRange(box.value.length, box.value.length); }
+  });
+
+  // Calibrate, Shop, Decks and Cards no longer have tabs. Their sections and every
+  // renderer behind them stay in place - the same way Choose was withdrawn - so the
+  // old views remain reachable in code while the two new pages carry the flow.
+  const RETIRED_VIEWS = {buy: "deck2", live: "deck2", shop: "shop2", cards: "shop2"};
+
   function switchView(view, focus = true) {
+    if (RETIRED_VIEWS[view] && !$(`.main-tab[data-view="${view}"]`)) view = RETIRED_VIEWS[view];
     $$(".main-tab").forEach((button) => {
       const active = button.dataset.view === view;
       button.classList.toggle("is-active", active);
@@ -479,6 +895,8 @@
     if (view === "shop") renderShop();
     if (view === "live") renderLiveDecks();
     if (view === "cards") renderCards();
+    if (view === "deck2") renderDeckPage();
+    if (view === "shop2") renderShopPage();
     if (view === "log") renderGameLog();
     if (focus) {
       window.scrollTo({top: 0, behavior: "smooth"});
@@ -6280,6 +6698,7 @@
       migrateCheckedSelections();
       migrateOwnedExtras();
       migrateBoughtQuantities();
+      migrateOwnership();
       sanitizeGameChangerSelections();
       initializeInfoTooltips();
       initializeDetailsControls();
