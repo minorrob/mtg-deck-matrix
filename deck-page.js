@@ -114,8 +114,12 @@
     const name = pick ? pick.name : "— empty —";
     const loc = pick ? locationOf(ctx, name, pick.quantity, deckId, slot.slotId)
                      : {kind: "buy", glyph: "○", label: "needs a card"};
-    // You cannot put a card in the box that you do not physically have.
-    const canBox = pick && loc.kind !== "buy" && loc.kind !== "ordered";
+    // Ticking the box is a claim about the physical world, and the app's ownership
+    // data is not a better authority on that than the person holding the cards. It
+    // used to be disabled for anything not already marked owned, which locked the
+    // box on every card the ledger had not caught up with -- commanders included.
+    // The tick now stands on its own and app.js marks the card in hand to match, so
+    // the tally still adds up instead of reading "in the box" and "to buy" at once.
     const inBox = !!(ctx.active || {})[slot.slotId];
     const count = slot.rungs.length;
     // When a rung has displaced the Base card, the sub-line's job is to name what
@@ -129,7 +133,7 @@
     return `<div class="dp-slot" data-dp-slot="${esc(slot.slotId)}" data-open="${open ? 1 : 0}">
       <div class="dp-slot-h">
         <input class="dp-box" type="checkbox" data-dp-box="${esc(slot.slotId)}"
-          ${inBox ? "checked" : ""} ${canBox ? "" : "disabled"}
+          ${inBox ? "checked" : ""} ${pick ? "" : "disabled"}
           aria-label="${esc(name)} is in this deck's box">
         <button class="dp-main" data-dp-expand="${esc(slot.slotId)}" aria-expanded="${open}">
           <span class="dp-l1">
@@ -237,6 +241,19 @@
           ${t.ordered ? `<span class="dp-tally-op">+</span><span class="dp-tally-b is-ordered"><b class="dp-num">${t.ordered}</b> ordered</span>` : ""}
           <span class="dp-tally-op">+</span><span class="dp-tally-b is-buy"><b class="dp-num">${t.buy}</b> to buy ${money(t.buyValue)}</span>
           ${t.holes ? `<span class="dp-tally-op">+</span><span class="dp-tally-b is-hole"><b class="dp-num">${t.holes}</b> empty ${t.holes === 1 ? "slot" : "slots"}</span>` : ""}
+        </div>
+        <div class="dp-rank" role="group" aria-label="Set every slot to one rung">
+          <span class="dp-rank-lab">Rank order</span>
+          ${(ctx.buildRungs || []).map((rung) => `<button type="button" class="dp-rank-b${
+            ctx.rung === rung ? " is-on" : ""}" data-dp-rung="${esc(rung)}" aria-pressed="${ctx.rung === rung}">${
+            esc(RUNG_LABEL[rung] || rung)}</button>`).join("")}
+          ${ctx.rung
+            ? ((ctx.rungTwins || []).length
+              ? `<span class="dp-rank-note">same hundred as ${
+                  ctx.rungTwins.map((r) => esc((ctx.rungLabels || {})[r] || r)).join(" and ")
+                } — nothing on this deck changes between them yet</span>`
+              : "")
+            : '<span class="dp-rank-note">this deck matches no whole rung — pick one to set every slot at once</span>'}
         </div>
         <div class="dp-collapse">
           <div class="dp-cstep is-done"><b>25</b>5 variants × 5 rungs</div>

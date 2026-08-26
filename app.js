@@ -303,6 +303,10 @@
       liveSalvage: {},
       liveActive: {},
       liveActiveSeed: {},
+      // The last rung the reader clicked on the Deck page, per variant. Not the
+      // source of truth for what the deck IS -- that is always derived from the
+      // selection -- only a tie-break for when two rungs are the same hundred.
+      deckRung: {},
       cardFilters: {query: "", deck: "all", status: "all", bought: "all", type: "all", sort: "deck"},
       // Games played at a real table. Written here on the night, exported as JSON,
       // committed to the repo, and compiled into a running history -- the loop
@@ -338,6 +342,7 @@
           liveSalvage: saved.liveSalvage || {},
           cardFilters: {...initial.cardFilters, ...(saved.cardFilters || {})},
           liveActive: saved.liveActive || {},
+          deckRung: saved.deckRung || {},
           liveActiveSeed: saved.liveActiveSeed || {},
           gameLog: Array.isArray(saved.gameLog) ? saved.gameLog : []
         };
@@ -505,6 +510,24 @@
       .catch(() => (deckPageCards = {}));
   }
 
+  /**
+   * Compare's Rank order, carried into the Deck page the first time a variant is
+   * opened here. It runs once per variant: after that the deck has its own stored
+   * selection and Compare must not reach back in and overwrite picks made here.
+   * Tuned needs no seeding because it is already what ensureBuyState defaults to.
+   */
+  function seedDeckRungFromCompare(variant, plan) {
+    const Slot = window.MtgSlotModel;
+    if (!Slot || !plan) return;
+    if (Object.prototype.hasOwnProperty.call(state.buySelections, variant.id)) return;
+    const rung = Slot.rungForStage(state.rankStages[variant.deckId]);
+    if (rung === "tuned") return;
+    assignSelection(ensureBuyState(variant.id), Slot.selectionForRung(plan, rung));
+    if (!state.deckRung) state.deckRung = {};
+    state.deckRung[variant.id] = rung;
+    saveState();
+  }
+
   function deckPageContext() {
     const Slot = window.MtgSlotModel;
     const variants = selectedVariants();
@@ -512,6 +535,7 @@
     const variant = variants[Math.min(deckPageState.deckIndex, variants.length - 1)];
     const plan = buyCatalog && buyCatalog.plans ? buyCatalog.plans[variant.id] : null;
     if (!plan) return null;
+    seedDeckRungFromCompare(variant, plan);
 
     const owned = Slot.normalizeOwned(state);
     // Baked catalog first, then anything the Scryfall cache has freshened on top.
@@ -539,6 +563,8 @@
       });
     });
 
+    const rung = Slot.activeRung(plan, ensureBuyState(variant.id), (state.deckRung || {})[variant.id]);
+
     const openGroups = {};
     Object.keys(deckPageState.closedGroups).forEach((k) => {
       if (deckPageState.closedGroups[k]) openGroups[k] = false;
@@ -551,13 +577,30 @@
       colors: variant.colorIdentity || variant.colors || "",
       variantId: variant.id,
       slots, owned, cards, boxes, deckLabels, openGroups,
+      // Which of the four measured builds this deck currently IS, derived from the
+      // selection rather than remembered, so a single hand-edited slot honestly
+      // drops the highlight instead of leaving a rung claiming a deck it no longer
+      // describes.
+      rung: rung,
+      rungTwins: rung ? Slot.rungTwins(plan, rung) : [],
+      rungLabels: Slot.RUNG_LABEL,
+      buildRungs: Slot.BUILD_RUNGS,
       active: (state.deckActive && state.deckActive[variant.id]) || {},
       openSlot: deckPageState.openSlot,
       variants
     };
   }
 
+  /* Every pick, rung and tick re-renders the whole page, which without this would
+     drop the reader wherever the new markup happened to put them -- a jump down the
+     moment they touched a card in an open slot. withUiState is the same wrapper the
+     other views already use: it restores scroll, focus and open-state around the
+     rebuild, so the page holds still until the reader moves it. */
   function renderDeckPage() {
+    withUiState("#view-deck2", renderDeckPageView);
+  }
+
+  function renderDeckPageView() {
     const host = $("#view-deck2");
     if (!host || !window.MtgDeckPage) return;
     if (!deckPageCards) {
@@ -599,6 +642,18 @@
       renderDeckPage();
       return true;
     }
+    if ((el = event.target.closest("[data-dp-rung]"))) {
+      const ctx = deckPageContext();
+      const Slot = window.MtgSlotModel;
+      if (!ctx || !Slot) return true;
+      const plan = buyCatalog.plans[ctx.deckId];
+      assignSelection(ensureBuyState(ctx.deckId), Slot.selectionForRung(plan, el.dataset.dpRung));
+      if (!state.deckRung) state.deckRung = {};
+      state.deckRung[ctx.deckId] = el.dataset.dpRung;
+      saveState();
+      renderDeckPage();
+      return true;
+    }
     if ((el = event.target.closest("[data-dp-pick]"))) {
       const entryId = el.dataset.dpPick.split("|")[1];
       const ctx = deckPageContext();
@@ -613,6 +668,22 @@
     return false;
   }
 
+  /* Raise a card to "in hand" without ever lowering one: a deck that borrows a
+     copy already counted elsewhere must not quietly reduce the number you own. */
+  function markInHand(name, quantity) {
+    const Slot = window.MtgSlotModel;
+    if (!Slot) return;
+    const key = Slot.ownedKey(name);
+    state.owned = Slot.normalizeOwned(state);
+    const held = state.owned[key] || {inHand: 0, ordered: 0};
+    const need = Math.max(1, Number(quantity) || 1);
+    if (held.inHand >= need) return;
+    state.owned[key] = {inHand: need, ordered: Math.max(0, Number(held.ordered) || 0)};
+    // The legacy pair stays written so a rollback to the old views still reads right.
+    state.found[key] = true;
+    state.boughtQuantities[key] = Math.max(Number(state.boughtQuantities[key]) || 0, need);
+  }
+
   function deckPageChange(event) {
     const el = event.target.closest("[data-dp-box]");
     if (!el) return false;
@@ -620,8 +691,14 @@
     if (!ctx) return true;
     if (!state.deckActive) state.deckActive = {};
     if (!state.deckActive[ctx.deckId]) state.deckActive[ctx.deckId] = {};
-    if (el.checked) state.deckActive[ctx.deckId][el.dataset.dpBox] = true;
-    else delete state.deckActive[ctx.deckId][el.dataset.dpBox];
+    if (el.checked) {
+      state.deckActive[ctx.deckId][el.dataset.dpBox] = true;
+      // Putting a card in the box means you are holding it. Without this the row
+      // would read "in the box" and "to buy" in the same breath, and the tally
+      // would count it twice.
+      const slot = ctx.slots.find((row) => row.slotId === el.dataset.dpBox);
+      if (slot && slot.pick) markInHand(slot.pick.name, slot.pick.quantity);
+    } else delete state.deckActive[ctx.deckId][el.dataset.dpBox];
     saveState();
     renderDeckPage();
     return true;

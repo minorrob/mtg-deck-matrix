@@ -249,4 +249,132 @@ ok("every spot a price can produce is one the filter offers, and bands nest insi
   assert.equal(seen.size, Slot.PRICE_BANDS.length, "the sweep should reach every band");
 });
 
+/* ---------- the four measured builds ---------- */
+const rungLists = JSON.parse(await readFile(new URL("../data/rung-lists.json", import.meta.url), "utf8"));
+const RUNG_PIN = {base: "Base", tuned: "Tuned", fun: "Pod Fun", max: "Max"};
+
+ok("the rung buttons are exactly the builds rung-lists.json pins", () => {
+  assert.deepEqual(Slot.BUILD_RUNGS, ["base", "tuned", "fun", "max"]);
+  // Enhance is a rung on a slot but never a whole deck, so it must not be offered
+  // as one -- there is no measured Enhance hundred to switch a deck to.
+  assert.ok(!Slot.BUILD_RUNGS.includes("enhance"), "Enhance is not a whole-deck build");
+  const pinned = new Set(Object.values(rungLists.variants).flatMap((r) => Object.keys(r)));
+  assert.deepEqual([...pinned].sort(), ["Base", "Max", "Pod Fun", "Tuned"]);
+});
+
+ok("Compare's three stages land on the right rungs", () => {
+  assert.equal(Slot.rungForStage(1), "base");
+  assert.equal(Slot.rungForStage(2), "tuned");
+  assert.equal(Slot.rungForStage(3), "max");
+  // Compare has no Fun stage; an absent or junk value must not invent one.
+  assert.equal(Slot.rungForStage(undefined), "tuned");
+  assert.equal(Slot.rungForStage("nonsense"), "tuned");
+});
+
+ok("applying a rung reproduces the exact hundred that rung was measured on", () => {
+  let compared = 0;
+  for (const [variantId, rungs] of Object.entries(rungLists.variants)) {
+    const plan = buyPlans.plans[variantId];
+    assert.ok(plan, `${variantId} is pinned but has no plan`);
+    for (const rung of Slot.BUILD_RUNGS) {
+      const measured = rungs[RUNG_PIN[rung]];
+      if (!measured) continue;
+      const selection = Slot.selectionForRung(plan, rung);
+      const got = new Map();
+      for (const entry of Lineup.selectedEntries(plan, selection)) {
+        const key = entry.item.name.toLowerCase();
+        got.set(key, (got.get(key) || 0) + Math.max(1, Number(entry.item.quantity || 1)));
+      }
+      const want = new Map();
+      for (const card of measured) {
+        const key = card.name.toLowerCase();
+        want.set(key, (want.get(key) || 0) + Math.max(1, Number(card.quantity || 1)));
+      }
+      assert.equal(Lineup.quantity(plan, selection), 100, `${variantId} ${rung} must be 100 cards`);
+      for (const [name, count] of want) {
+        assert.equal(got.get(name) || 0, count, `${variantId} ${rung}: measured ${count} of ${name}`);
+      }
+      for (const [name, count] of got) {
+        assert.equal(count, want.get(name) || 0, `${variantId} ${rung}: assembled ${name}, not in the measured list`);
+      }
+      compared += 1;
+    }
+  }
+  assert.equal(compared, 200, `expected four rungs on fifty variants, compared ${compared}`);
+});
+
+ok("the highlight is derived, and the reader's click breaks a tie", () => {
+  for (const variantId of ["1b", "2c", "5o"]) {
+    const plan = buyPlans.plans[variantId];
+    for (const rung of Slot.BUILD_RUNGS) {
+      const selection = Slot.selectionForRung(plan, rung);
+      // Asking for a rung always reports that rung back, even when another rung is
+      // the same hundred -- otherwise clicking Max would light up Tuned.
+      assert.equal(Slot.activeRung(plan, selection, rung), rung,
+        `${variantId} at ${rung} should report ${rung} when ${rung} was asked for`);
+      // With no preference, a tie resolves to the earliest rung, deterministically.
+      const reported = Slot.activeRung(plan, selection, undefined);
+      assert.ok(Slot.BUILD_RUNGS.includes(reported), `${variantId} ${rung} reported ${reported}`);
+      assert.equal(Slot.selectionSignature(Slot.selectionForRung(plan, reported)),
+        Slot.selectionSignature(selection), `${variantId}: a tie must resolve to an identical hundred`);
+    }
+  }
+});
+
+ok("a hand edit drops the highlight entirely", () => {
+  const plan = buyPlans.plans["2a"];
+  const tuned = Slot.selectionForRung(plan, "tuned");
+  const moved = (plan.max || []).find((item) => !item.capabilityOption && !item.ownedOptional);
+  assert.ok(moved, "2a should carry a measured Max card to move");
+  assert.equal(Slot.activeRung(plan, Lineup.applyChoice(plan, tuned, moved.id), "tuned"), null,
+    "one Max card on a Tuned deck is no longer any whole rung, whatever was clicked");
+});
+
+/**
+ * KNOWN GAP, being closed separately: Max is supposed to be the Tier 3 build, and
+ * for most variants it currently composes to byte-identical the Tuned hundred.
+ *
+ * The cause is a modelling decision, not a fact about the decks. The v2.4 sweep's
+ * Max optimizer accepted no swap on 40 of 50 variants, and the Game Changers added
+ * afterwards to fill those ladders carry `capabilityOption`, which by design keeps
+ * them out of the composed rung so the pinned lists still match. Bracket 3 is
+ * defined by being allowed up to three Game Changers, and 43 of 50 variants have
+ * in-colour, priced ones sitting in their plan right now.
+ *
+ * This test pins the CURRENT state so the fix is visible as a diff rather than
+ * slipping in unnoticed. When Max becomes a real Tier 3 build, this number drops
+ * and the assertion below is what will say so.
+ */
+ok("the Max-equals-Tuned collapse is pinned until Max becomes a real Tier 3 build", () => {
+  const collapsed = planIds.filter((id) => {
+    const plan = buyPlans.plans[id];
+    return Slot.selectionSignature(Slot.selectionForRung(plan, "max"))
+        === Slot.selectionSignature(Slot.selectionForRung(plan, "tuned"));
+  });
+  assert.equal(collapsed.length, 40,
+    `${collapsed.length} variants have Max identical to Tuned. If this dropped, the Tier 3 fix landed -- update this number. If it rose, a Max rung lost its content.`);
+  // Whatever the rung composes to, the Tier 3 cards themselves are present as
+  // offers on the ladder, which is what makes the fix a promotion rather than a hunt.
+  const withOffers = planIds.filter((id) =>
+    (buyPlans.plans[id].max || []).some((item) => item.capabilityOption && item.gameChanger));
+  assert.equal(withOffers.length, 43, "43 variants carry in-colour Game Changers as offers");
+});
+
+ok("no variant may end up offered more Game Changers than Tier 3 allows", () => {
+  // compliance-model.js caps Tier 3 at three. Four variants are currently offered
+  // more, so this asserts the ceiling that the promotion step has to enforce.
+  const over = planIds
+    .map((id) => [id, (buyPlans.plans[id].max || []).filter((i) => i.capabilityOption && i.gameChanger).length])
+    .filter(([, n]) => n > 3);
+  assert.deepEqual(over.map(([id]) => id).sort(), ["4b", "5f", "6c", "9b"],
+    "these are the variants whose offers exceed the Tier 3 limit of three and must be capped when promoted");
+});
+
+ok("Fun branches off Base, it is not Tuned with jokes added", () => {
+  const plan = buyPlans.plans[Object.keys(buyPlans.plans).find((id) => (buyPlans.plans[id].funTuned || []).length)];
+  const fun = Slot.selectionSignature(Slot.selectionForRung(plan, "fun"));
+  assert.notEqual(fun, Slot.selectionSignature(Slot.selectionForRung(plan, "tuned")));
+  assert.deepEqual(Slot.RUNG_CHAIN.fun, ["funTuned"], "Fun composes off the shell alone");
+});
+
 process.stdout.write(`\n${checks} checks passed across ${planIds.length} plans.\n`);
