@@ -1865,3 +1865,9 @@ div.sp-band{padding:9px 13px;border-radius:12px 12px 0 0}
 .dp-rank-b.is-on { border-color: var(--forest-2); background: var(--forest-2); color: #fff; }
 .dp-rank-note { color: var(--muted); font-size: 10.5px; font-style: italic; }
 @media (max-width: 640px) { .dp-rank-b { padding: 4px 10px; font-size: 11.5px; } }
+
+/* Mana symbols inside the Deck page's card pane. The shared .mana-symbol rule
+   sizes for a card row; in a paragraph of rules text they want to sit on the
+   line rather than tower over it. */
+.dp-oracle .mana-symbol { width: 14px !important; height: 14px !important; min-width: 14px; max-width: 14px; vertical-align: -.14em; }
+.dp-stats .mana-cost { flex-wrap: wrap; gap: 2px; }
