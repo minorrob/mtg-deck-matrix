@@ -25,6 +25,9 @@
   const RARITY_KEY = {common: "C", uncommon: "U", rare: "R", special: "S", mythic: "M", bonus: "B"};
   const RUNG_LABEL = Slot.RUNG_LABEL;
 
+  /** Double-faced names are unusable in a sentence; the front face is the card. */
+  function face(name) { return String(name || "").split(" // ")[0]; }
+
   function esc(value) {
     return String(value == null ? "" : value).replace(/[&<>"]/g, (ch) =>
       ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[ch]));
@@ -39,16 +42,21 @@
    * with the rung ramp. "Ordered" is the one the old model could not express:
    * paid for, not here, cannot be sleeved.
    */
-  function locationOf(ctx, name, quantity, thisDeckId) {
+  /**
+   * Owning a card and having it in this deck's box are different facts. There are
+   * six boxes and one copy lives in exactly one of them, so the box checkbox - not
+   * a guess about which deck claimed it first - decides "active".
+   */
+  function locationOf(ctx, name, quantity, thisDeckId, slotId) {
     const acq = Slot.acquisitionOf(ctx.owned, name, quantity);
     if (acq === Slot.ACQUISITION.NONE) return {kind: "buy", glyph: "○", label: "To buy"};
     if (acq === Slot.ACQUISITION.ORDERED) return {kind: "ordered", glyph: "⧖", label: "Ordered"};
-    const holder = (ctx.assignments || {})[Slot.ownedKey(name)];
+    if (slotId && (ctx.active || {})[slotId]) return {kind: "active", glyph: "●", label: "In the box"};
+    const holder = (ctx.boxes || {})[Slot.ownedKey(name)];
     if (holder && holder !== thisDeckId) {
-      return {kind: "other", glyph: "◆", label: "In " + (ctx.deckLabels?.[holder] || holder), deck: holder};
+      return {kind: "other", glyph: "◆", label: "In " + ((ctx.deckLabels || {})[holder] || holder) + "'s box", deck: holder};
     }
-    if (holder === thisDeckId) return {kind: "deck", glyph: "●", label: "In deck"};
-    return {kind: "bench", glyph: "◇", label: "Bench"};
+    return {kind: "bench", glyph: "◇", label: "Owned, no box"};
   }
 
   function meta(ctx, name) { return (ctx.cards || {})[Lineup.normalizeName(name)] || {}; }
@@ -81,7 +89,7 @@
 
   /* ---------------- a candidate tile ---------------- */
   function tileMarkup(ctx, slot, rung, deckId, owned) {
-    const loc = locationOf(ctx, rung.name, rung.quantity, deckId);
+    const loc = locationOf(ctx, rung.name, rung.quantity, deckId, rung.selected ? slot.slotId : null);
     const rk = rarityKey(ctx, rung.name);
     return `<button class="dp-tile" style="--rar:var(--rar-${rk})"
         title="${esc((meta(ctx, rung.name).rarity || "common"))}"
@@ -104,9 +112,11 @@
     const open = openId === slot.slotId;
     const pick = slot.pick;
     const name = pick ? pick.name : "— empty —";
-    const loc = pick ? locationOf(ctx, name, pick.quantity, deckId) : {kind: "buy", glyph: "○", label: "needs a card"};
-    const canSleeve = pick && (loc.kind === "deck" || loc.kind === "bench" || loc.kind === "other");
-    const sleeved = !!(ctx.sleeved || {})[slot.slotId];
+    const loc = pick ? locationOf(ctx, name, pick.quantity, deckId, slot.slotId)
+                     : {kind: "buy", glyph: "○", label: "needs a card"};
+    // You cannot put a card in the box that you do not physically have.
+    const canBox = pick && loc.kind !== "buy" && loc.kind !== "ordered";
+    const inBox = !!(ctx.active || {})[slot.slotId];
     const count = slot.rungs.length;
     // When a rung has displaced the Base card, the sub-line's job is to name what
     // was displaced. Otherwise it is dead space, so give it the card's type line.
@@ -119,8 +129,8 @@
     return `<div class="dp-slot" data-dp-slot="${esc(slot.slotId)}" data-open="${open ? 1 : 0}">
       <div class="dp-slot-h">
         <input class="dp-box" type="checkbox" data-dp-box="${esc(slot.slotId)}"
-          ${sleeved ? "checked" : ""} ${canSleeve ? "" : "disabled"}
-          aria-label="${esc(name)} is sleeved in the deck">
+          ${inBox ? "checked" : ""} ${canBox ? "" : "disabled"}
+          aria-label="${esc(name)} is in this deck's box">
         <button class="dp-main" data-dp-expand="${esc(slot.slotId)}" aria-expanded="${open}">
           <span class="dp-l1">
             <span class="dp-nm${pick ? "" : " is-hole"}">${esc(name)}</span>
@@ -147,17 +157,15 @@
     const shown = pick ? rungs.find((r) => r.entryId === pick.entryId) : rungs[0];
     const parts = [];
     if (base && base.why) {
-      // Only claim to state the slot's thesis when someone actually wrote one.
-      const heading = base.whySource === "authored"
-        ? "What this slot does · from Base"
-        : "What the Base card does · its own rules text";
-      parts.push(`<div class="dp-why-part"><span class="dp-why-k">${heading}</span>${esc(base.why)}</div>`);
+      parts.push(`<div class="dp-why-part"><span class="dp-why-k">${
+        esc(Slot.rungHeading("base", face(base.name), null, base.whySource === "authored"))
+      }</span>${esc(base.why)}</div>`);
     }
     if (pick && pick.rung !== "base" && pick.why) {
-      const heading = pick.whySource === "authored"
-        ? `Why ${esc(pick.name)} over the other ${rungs.length - 1}`
-        : `What ${esc(pick.name)} does · no rung note written yet`;
-      parts.push(`<div class="dp-why-part"><span class="dp-why-k">${heading}</span>${esc(pick.why)}</div>`);
+      // Each rung answers to the one it replaced, not to the other four.
+      parts.push(`<div class="dp-why-part"><span class="dp-why-k">${
+        esc(Slot.rungHeading(pick.rung, face(pick.name), face(pick.predecessorName), pick.whySource === "authored"))
+      }</span>${esc(pick.why)}</div>`);
     }
     if (!pick) parts.push('<div class="dp-why-part"><span class="dp-why-k">This slot is empty</span>Pick a rung, or slot a card you already own.</div>');
 
@@ -189,18 +197,17 @@
    * those out is what makes "100 - 77 sleeved" fail to equal "22 to buy".
    */
   function totals(ctx, slots, deckId) {
-    const t = {cards: 0, sleeved: 0, ordered: 0, elsewhere: 0, buy: 0, buyValue: 0, holes: 0, lands: 0};
+    const t = {cards: 0, active: 0, ordered: 0, owned: 0, buy: 0, buyValue: 0, holes: 0, lands: 0};
     slots.forEach((s) => {
       if (!s.pick) { t.holes += 1; return; }
       const qty = s.pick.quantity;
       t.cards += qty;
       if (s.type === "Land") t.lands += qty;
-      const loc = locationOf(ctx, s.pick.name, qty, deckId);
-      const isSleeved = !!(ctx.sleeved || {})[s.slotId] && loc.kind !== "buy" && loc.kind !== "ordered";
-      if (isSleeved) t.sleeved += qty;
+      const loc = locationOf(ctx, s.pick.name, qty, deckId, s.slotId);
+      if (loc.kind === "active") t.active += qty;
       else if (loc.kind === "ordered") t.ordered += qty;
       else if (loc.kind === "buy") { t.buy += qty; t.buyValue += (s.pick.price || 0) * qty; }
-      else t.elsewhere += qty;
+      else t.owned += qty;   // in hand, but in another box or loose
     });
     return t;
   }
@@ -219,13 +226,14 @@
             ctx.variantId ? " · variant " + esc(ctx.variantId) : ""}</p></div>
         </div>
         <div class="dp-stats-row">
-          <span class="dp-stat${t.holes ? " is-warn" : " is-ok"}"><b class="dp-num">${t.cards}</b> cards in ${plural(slots.length, "slot")}</span>
+          <span class="dp-stat${t.holes ? " is-warn" : " is-ok"}"><b class="dp-num">${slots.length - t.holes}/${slots.length}</b> slots filled${
+            t.holes ? ` · ${plural(t.holes, "card")} still to choose` : ""}</span>
           <span class="dp-stat"><b class="dp-num">${t.lands}</b> lands</span>
         </div>
         <div class="dp-tally" role="group" aria-label="Where all ${t.cards + t.holes} cards are">
           <span class="dp-tally-t"><b class="dp-num">${t.cards + t.holes}</b> cards</span><span class="dp-tally-op">=</span>
-          <span class="dp-tally-b is-deck"><b class="dp-num">${t.sleeved}</b> sleeved</span>
-          ${t.elsewhere ? `<span class="dp-tally-op">+</span><span class="dp-tally-b is-bench"><b class="dp-num">${t.elsewhere}</b> owned elsewhere</span>` : ""}
+          <span class="dp-tally-b is-deck"><b class="dp-num">${t.active}</b> in the box</span>
+          ${t.owned ? `<span class="dp-tally-op">+</span><span class="dp-tally-b is-bench"><b class="dp-num">${t.owned}</b> owned, not in this box</span>` : ""}
           ${t.ordered ? `<span class="dp-tally-op">+</span><span class="dp-tally-b is-ordered"><b class="dp-num">${t.ordered}</b> ordered</span>` : ""}
           <span class="dp-tally-op">+</span><span class="dp-tally-b is-buy"><b class="dp-num">${t.buy}</b> to buy ${money(t.buyValue)}</span>
           ${t.holes ? `<span class="dp-tally-op">+</span><span class="dp-tally-b is-hole"><b class="dp-num">${t.holes}</b> empty ${t.holes === 1 ? "slot" : "slots"}</span>` : ""}

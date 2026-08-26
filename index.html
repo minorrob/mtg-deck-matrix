@@ -26,6 +26,7 @@
   <script src="deck-generator.js?v=2" defer></script>
   <script src="slot-model.js?v=1" defer></script>
   <script src="deck-page.js?v=1" defer></script>
+  <script src="shop-page.js?v=1" defer></script>
   <script src="app.js?v=46" defer></script>
   <script src="shop-filters.js?v=5" defer></script>
 </head>
@@ -54,23 +55,14 @@
       <button class="main-tab is-active" data-view="compare" aria-selected="true">
         <span class="tab-step">1</span><span>Compare</span>
       </button>
-      <button class="main-tab" data-view="buy" aria-selected="false">
-        <span class="tab-step">2</span><span>Calibrate</span>
+      <button class="main-tab" data-view="deck2" aria-selected="false">
+        <span class="tab-step">2</span><span>Deck</span>
       </button>
-      <button class="main-tab" data-view="shop" aria-selected="false">
+      <button class="main-tab" data-view="shop2" aria-selected="false">
         <span class="tab-step">3</span><span>Shop</span>
       </button>
-      <button class="main-tab" data-view="live" aria-selected="false">
-        <span class="tab-step">4</span><span>Decks</span>
-      </button>
-      <button class="main-tab" data-view="deck2" aria-selected="false">
-        <span class="tab-step">&#9733;</span><span>Deck (new)</span>
-      </button>
-      <button class="main-tab" data-view="cards" aria-selected="false">
-        <span class="tab-step">5</span><span>Cards</span>
-      </button>
       <button class="main-tab" data-view="log" aria-selected="false">
-        <span class="tab-step">6</span><span>Game Log</span>
+        <span class="tab-step">4</span><span>Game Log</span>
       </button>
     </nav>
   </header>
@@ -86,6 +78,7 @@
     <section class="view" id="view-shop" aria-labelledby="shop-title"></section>
     <section class="view" id="view-live" aria-labelledby="live-title"></section>
     <section class="view" id="view-deck2" aria-labelledby="deck2-title"></section>
+    <section class="view" id="view-shop2" aria-labelledby="shop2-title"></section>
     <section class="view" id="view-cards" aria-labelledby="cards-title"></section>
     <section class="view" id="view-log" aria-labelledby="log-title"></section>
   </main>

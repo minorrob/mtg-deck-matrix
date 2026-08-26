@@ -40,6 +40,25 @@
   const RUNG_LABEL = {base: "Base", tuned: "Tuned", enhance: "Enhance", fun: "Fun", max: "Max", alt: "Alt", transfer: "Borrowed"};
   function rungOf(kind) { return RUNG_BY_KIND[kind] || "base"; }
 
+  /**
+   * The ladder is a chain, not a five-way comparison. Base states the slot's job;
+   * Tuned improves on Base's fit to the deck's strategy; Enhance improves on what
+   * Tuned already fixed. Fun and Max are their own axes and answer to the slot,
+   * not to the rung below them. So each heading names its actual predecessor.
+   */
+  function rungHeading(rung, name, predecessorName, authored) {
+    const card = name || "this card";
+    const prev = predecessorName;
+    if (rung === "base") return authored ? "What this slot does" : "What the Base card does · its own rules text";
+    if (!authored) return `What ${card} does · no rung note written yet`;
+    if (rung === "tuned") return prev ? `How ${card} fits the strategy better than ${prev}` : `How ${card} fits the strategy`;
+    if (rung === "enhance") return prev ? `How ${card} improves on ${prev}'s fit` : `How ${card} improves the slot`;
+    if (rung === "fun") return `What makes ${card} fun`;
+    if (rung === "max") return `How ${card} maximizes Tier 3`;
+    if (rung === "alt") return `Why ${card} as the alternate commander`;
+    return `Why ${card}`;
+  }
+
   /* ---------------- price bands ----------------
    * These are physical drawers at a vendor table, not a computed histogram, so the
    * list is fixed and every band exists whether or not anything falls in it today.
@@ -62,6 +81,12 @@
    * and adds the state that was missing: ordered and in transit.
    */
   const ACQ = {NONE: "Not in hand", ORDERED: "Ordered", PARTIAL: "Partly here", HAND: "In hand"};
+
+  /* Where a card physically is. Owning a card and having it sleeved in this deck's
+     box are different facts: there are six boxes, and one copy sits in exactly one
+     of them. PLACE.ACTIVE means "in this deck's box"; PLACE.OWNED means "in hand,
+     but in another box or loose on the bench". */
+  const PLACE = {ACTIVE: "active", OWNED: "owned", ORDERED: "ordered", BUY: "buy", EMPTY: "empty"};
 
   function ownedKey(name) {
     return String(name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -104,6 +129,22 @@
   }
 
   /* ---------------- card facts ---------------- */
+  /**
+   * Where a card physically sits at a vendor's table. This is not a store name and
+   * not a stored field - a seller shelves by price, so it falls straight out of the
+   * price. Coarser than the price band on purpose: the band tells you which dollar
+   * drawer, this tells you which container to walk to.
+   */
+  const SPOTS = ["Bulk bin", "Boxes", "Binder", "Case"];
+  function vendorSpot(price) {
+    const band = priceBand(price);
+    if (band === null) return null;
+    if (band === "<$1") return "Bulk bin";
+    if (band === "$7-15") return "Binder";
+    if (band === "$15+") return "Case";
+    return "Boxes";               // the $1 through $6 drawers
+  }
+
   const BASICS = new Set(["plains", "island", "swamp", "mountain", "forest", "wastes"]);
   const TYPE_ORDER = ["Commander", "Creature", "Artifact", "Enchantment", "Instant", "Sorcery", "Planeswalker", "Battle", "Land", "Other"];
 
@@ -168,7 +209,9 @@
   }
   function priceOf(item, cards) {
     const own = num(item && item.price);
-    if (own !== null) return own;
+    // A plan price of exactly 0 is missing data wearing a zero, not a free card:
+    // the set includes City of Traitors and Cabal Ritual. Let the catalog answer.
+    if (own !== null && own !== 0) return own;
     // Starting-shell items frequently carry no price of their own, so fall back to
     // the baked catalog before giving up. Without this a deck's "to buy" total
     // silently reads its own base cards as free.
@@ -194,6 +237,7 @@
     const rows = [];
     model.groups.forEach((entries, slotId) => {
       const shell = entries.find((e) => e.kind === "shell") || entries[0];
+      const nameById = new Map(entries.map((e) => [e.id, e.item && e.item.name]));
       const rungs = entries
         .filter((e) => !(e.item && e.item.isFlexibleSlot))
         .map((e) => ({
@@ -207,6 +251,7 @@
           replaces: e.item.replaces || null,
           isCommander: !!e.item.isCommander,
           gameChanger: !!e.item.gameChanger,
+          predecessorName: nameById.get(e.predecessorId) || (shell && shell.item ? shell.item.name : null),
           why: whyText(rungOf(e.kind), e.item, opts.cards),
           whySource: whySource(rungOf(e.kind), e.item, opts.cards),
           selected: selected.has(e.id)
@@ -230,9 +275,11 @@
         pick: pick ? {
           rung: pick.rung, entryId: pick.entryId, name: pick.name,
           price: pick.price, ceiling: pick.ceiling, band: priceBand(pick.price),
-          why: pick.why, whySource: pick.whySource, quantity: pick.quantity
+          why: pick.why, whySource: pick.whySource, predecessorName: pick.predecessorName,
+          quantity: pick.quantity
         } : null,
         acquisition: name ? acquisitionOf(owned, name, pick.quantity) : ACQ.NONE,
+        spot: pick ? vendorSpot(pick.price) : null,
         rungs
       });
     });
@@ -260,7 +307,8 @@
         if (!row) {
           row = {
             key, name: slot.pick.name, price: slot.pick.price, ceiling: slot.pick.ceiling,
-            band: priceBand(slot.pick.price), type: slot.type, isBasic: slot.isBasic,
+            band: priceBand(slot.pick.price), spot: vendorSpot(slot.pick.price),
+            type: slot.type, isBasic: slot.isBasic,
             quantity: 0, decks: [], rungs: []
           };
           map.set(key, row);
@@ -283,7 +331,8 @@
   return {
     RUNG_ORDER, RUNG_LABEL, RUNG_BY_KIND, rungOf,
     PRICE_BANDS, priceBand,
-    ACQUISITION: ACQ, ownedKey, normalizeOwned, ownedCount, acquisitionOf,
+    ACQUISITION: ACQ, PLACE, ownedKey, normalizeOwned, ownedCount, acquisitionOf,
+    SPOTS, vendorSpot, rungHeading,
     TYPE_ORDER, cardType, isBasicLand, whyFor, whyText, whySource,
     deckSlots, shopRows
   };

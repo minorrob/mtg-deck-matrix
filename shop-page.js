@@ -1,0 +1,334 @@
+/**
+ * Shop page - the same slots, re-keyed by card name and merged across all six decks.
+ *
+ * That re-key is the only real difference from the Deck page: there a row is a slot,
+ * here a row is a card you have to find. Basics collapse the opposite way (Forest x25
+ * across six decks, not x11 in one), and every seller-facing dimension is available
+ * three ways at once - as a column, as a multi-select filter, and as a grouping.
+ *
+ * Table and gallery are two renderings of one filtered, sorted, grouped list; group-by
+ * applies to both, and in the table it becomes bands with sorting inside each band.
+ */
+(function (root, factory) {
+  "use strict";
+  const req = (typeof module === "object" && module.exports && typeof require === "function") ? require : null;
+  const Slot = req ? req("./slot-model.js") : root && root.MtgSlotModel;
+  const api = factory(Slot);
+  if (typeof module === "object" && module.exports) module.exports = api;
+  if (root) root.MtgShopPage = api;
+})(typeof globalThis !== "undefined" ? globalThis : this, function (Slot) {
+  "use strict";
+
+  if (!Slot) throw new Error("Shop page requires the slot model");
+
+  const COLOR_LABEL = {W: "White", U: "Blue", B: "Black", R: "Red", G: "Green", M: "Multicolor", C: "Colorless"};
+  const COLOR_HEX = {W: "#f4efdc", U: "#a9c9e0", B: "#9a94a3", R: "#dda291", G: "#a6c3a4", M: "#e3ce8f", C: "#cfc8bb"};
+  const RARITY_KEY = {common: "C", uncommon: "U", rare: "R", special: "S", mythic: "M", bonus: "B"};
+  const STATUS = ["Not in hand", "Ordered", "Partly here", "In hand"];
+
+  const COLUMNS = [
+    {key: "status", label: "Status", sortable: false},
+    {key: "name", label: "Card"},
+    {key: "decks", label: "Decks"},
+    {key: "color", label: "Color"},
+    {key: "type", label: "Type"},
+    {key: "rarity", label: "Rarity"},
+    {key: "band", label: "Price band"},
+    {key: "spot", label: "Where"},
+    {key: "price", label: "Target"},
+    {key: "lineTotal", label: "Line"}
+  ];
+  const FILTERS = [
+    {key: "status", label: "Status"}, {key: "color", label: "Color"}, {key: "type", label: "Type"},
+    {key: "band", label: "Price"}, {key: "spot", label: "Where"}, {key: "rarity", label: "Rarity"},
+    {key: "deck", label: "Deck"}, {key: "rung", label: "Rung"}
+  ];
+  const GROUP_BY = [
+    ["none", "No grouping"], ["spot", "Where at the table"], ["band", "Price band"],
+    ["color", "Color"], ["type", "Type"], ["rarity", "Rarity"], ["deck", "Deck"], ["status", "Status"]
+  ];
+
+  function esc(v) {
+    return String(v == null ? "" : v).replace(/[&<>"]/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+  }
+  function money(n) { return Number.isFinite(Number(n)) ? "$" + Number(n).toFixed(2) : "—"; }
+  function plural(n, w) { return n + " " + w + (n === 1 ? "" : "s"); }
+
+  function colorKey(colorIdentity) {
+    const ci = Array.isArray(colorIdentity) ? colorIdentity : [];
+    if (!ci.length) return "C";
+    if (ci.length > 1) return "M";
+    return ci[0];
+  }
+
+  /** Decorate the model's shop rows with the facts a seller's table is organised by.
+   *  Name normalisation belongs to the caller, which already owns the lineup model. */
+  function decorate(rows, factFor, deckLabels) {
+    const lookup = typeof factFor === "function" ? factFor : () => ({});
+    return rows.map((row) => {
+      const fact = lookup(row.name) || {};
+      const ck = colorKey(fact.colorIdentity);
+      return Object.assign({}, row, {
+        colorKey: ck,
+        color: COLOR_LABEL[ck],
+        rarity: (fact.rarity || "common").replace(/^./, (c) => c.toUpperCase()),
+        rarityKey: RARITY_KEY[fact.rarity] || "C",
+        setName: fact.setName || "",
+        image: fact.image || "",
+        oracleText: fact.oracleText || "",
+        deckNames: (row.decks || []).map((d) => (deckLabels || {})[d] || d),
+        lineTotal: (row.price || 0) * row.quantity,
+        rung: (row.rungs || []).map((r) => Slot.RUNG_LABEL[r] || r).join(", ")
+      });
+    });
+  }
+
+  function values(rows, key) {
+    if (key === "band") return Slot.PRICE_BANDS.slice();
+    if (key === "spot") return Slot.SPOTS.slice();
+    if (key === "status") return STATUS.slice();
+    const set = new Set();
+    rows.forEach((r) => {
+      if (key === "deck") (r.deckNames || []).forEach((d) => set.add(d));
+      else if (key === "rung") (r.rungs || []).forEach((g) => set.add(Slot.RUNG_LABEL[g] || g));
+      else if (r[key]) set.add(r[key]);
+    });
+    return Array.from(set).sort();
+  }
+
+  function passes(row, f) {
+    const any = (key, value) => !f[key] || !f[key].length || f[key].indexOf(value) >= 0;
+    const anyOf = (key, list) => !f[key] || !f[key].length || (list || []).some((v) => f[key].indexOf(v) >= 0);
+    if (!any("status", row.acquisition)) return false;
+    if (!any("color", row.color)) return false;
+    if (!any("type", row.type)) return false;
+    if (!any("band", row.band)) return false;
+    if (!any("spot", row.spot)) return false;
+    if (!any("rarity", row.rarity)) return false;
+    if (!anyOf("deck", row.deckNames)) return false;
+    if (!anyOf("rung", (row.rungs || []).map((g) => Slot.RUNG_LABEL[g] || g))) return false;
+    if (f.query) {
+      const q = f.query.toLowerCase();
+      if (!(row.name.toLowerCase().indexOf(q) >= 0 || (row.type || "").toLowerCase().indexOf(q) >= 0
+        || (row.setName || "").toLowerCase().indexOf(q) >= 0)) return false;
+    }
+    return true;
+  }
+
+  function sortValue(row, key) {
+    if (key === "decks") return (row.deckNames || []).join(",");
+    if (key === "band") return Slot.PRICE_BANDS.indexOf(row.band);
+    if (key === "spot") return Slot.SPOTS.indexOf(row.spot);
+    if (key === "price") return row.price == null ? -1 : row.price;
+    if (key === "lineTotal") return row.lineTotal;
+    return row[key] == null ? "" : row[key];
+  }
+  function sortRows(rows, key, dir) {
+    const sign = dir === "desc" ? -1 : 1;
+    return rows.slice().sort((a, b) => {
+      const x = sortValue(a, key), y = sortValue(b, key);
+      if (typeof x === "number" && typeof y === "number") return (x - y) * sign;
+      return String(x).localeCompare(String(y)) * sign || String(a.name).localeCompare(String(b.name));
+    });
+  }
+  function groupRows(rows, groupBy) {
+    if (!groupBy || groupBy === "none") return [["", rows]];
+    const map = new Map();
+    rows.forEach((r) => {
+      const g = groupBy === "deck" ? (r.deckNames || []).join(" + ")
+        : groupBy === "status" ? r.acquisition
+        : (r[groupBy] || "No price yet");
+      if (!map.has(g)) map.set(g, []);
+      map.get(g).push(r);
+    });
+    let order = Array.from(map.keys());
+    if (groupBy === "band") order.sort((a, b) => Slot.PRICE_BANDS.indexOf(a) - Slot.PRICE_BANDS.indexOf(b));
+    else if (groupBy === "spot") order.sort((a, b) => Slot.SPOTS.indexOf(a) - Slot.SPOTS.indexOf(b));
+    else if (groupBy === "status") order.sort((a, b) => STATUS.indexOf(a) - STATUS.indexOf(b));
+    else order.sort();
+    // Cards we have no price for are a to-do, not a shelf; they sort last either way.
+    const unpriced = order.indexOf("No price yet");
+    if (unpriced > -1) order.push(order.splice(unpriced, 1)[0]);
+    return order.map((g) => [g, map.get(g)]);
+  }
+
+  /* ---------------- pieces ---------------- */
+  function triMarkup(row) {
+    const many = row.quantity > 1;
+    const on = (k) => k === "need" ? (row.need > 0 && !row.inHand && !row.ordered)
+      : k === "ordered" ? (row.ordered > 0 && row.inHand < row.quantity)
+      : row.inHand > 0;
+    return `<span class="sp-tri" data-sp-tri="${esc(row.key)}">
+      <button type="button" data-sp-s="need" aria-pressed="${on("need")}">Need${many ? " " + row.need : ""}</button>
+      <button type="button" data-sp-s="ordered" aria-pressed="${on("ordered")}">Ordered${many ? " " + row.ordered : ""}</button>
+      <button type="button" data-sp-s="hand" aria-pressed="${on("hand")}">In hand${many ? ` ${row.inHand}/${row.quantity}` : ""}</button>
+    </span>`;
+  }
+  function bandHeader(name, list, colSpan) {
+    const owed = list.reduce((sum, r) => sum + (r.price || 0) * r.need, 0);
+    const inner = `<span class="sp-band-nm">${esc(name)}</span><span class="sp-band-ct">${
+      plural(list.length, "card")} · ${money(owed)} still to buy</span>`;
+    return colSpan ? `<tr class="sp-band"><td colspan="${colSpan}">${inner}</td></tr>`
+                   : `<div class="sp-band">${inner}</div>`;
+  }
+  function cell(row, key) {
+    switch (key) {
+      case "status": return triMarkup(row);
+      case "name": return `<span class="sp-nm">${esc(row.name)}</span>${
+        row.quantity > 1 ? ` <span class="sp-qty dp-num">×${row.quantity}</span>` : ""}`;
+      case "decks": return (row.deckNames || []).map((d) => `<span class="sp-chip">${esc(d)}</span>`).join("");
+      case "color": return `<span class="sp-dot" style="background:${COLOR_HEX[row.colorKey]}"></span>${esc(row.color)}`;
+      case "rarity": return `<span class="sp-dot is-ring" style="--rar:var(--rar-${row.rarityKey})"></span>${esc(row.rarity)}`;
+      case "band": return `<span class="sp-pill dp-num">${esc(row.band || "no price")}</span>`;
+      case "spot": return esc(row.spot || "no price");
+      case "price": return `<span class="dp-num${row.need ? " is-buy" : ""}">${money(row.price)}</span>`;
+      case "lineTotal": return `<span class="dp-num">${money(row.lineTotal)}</span>`;
+      default: return esc(row[key] || "");
+    }
+  }
+
+  /**
+   * The Bench is what you own that is in no box. Each card offers the best slot it
+   * could fill in each deck, tagged with the rung it would occupy, and - the fact
+   * that actually decides the trade - the state of the card it would replace.
+   */
+  function benchMarkup(ctx) {
+    const items = ctx.bench || [];
+    if (!items.length) {
+      return `<p class="sp-empty">Nothing on the Bench. Cards land here when you own them but have not
+        put them in any deck's box.</p>`;
+    }
+    return `<div class="sp-bench">${items.map((item) => {
+      const opts = item.destinations || [];
+      const chosen = opts[0];
+      return `<article class="sp-bcard" style="--rar:var(--rar-${item.rarityKey || "C"})">
+        <div class="sp-bhead">
+          ${item.image ? `<img class="sp-bart" src="${esc(item.image)}" alt="${esc(item.name)}" loading="lazy">`
+                       : `<div class="sp-bart sp-art-blank"><span>${esc(item.name)}</span></div>`}
+          <div><div class="sp-nm">${esc(item.name)}</div>
+            <div class="sp-meta">${esc(item.typeLine || "")}</div>
+            <div class="sp-meta"><span class="sp-pill dp-num">${money(item.price)}</span>
+              <span class="sp-pill">${esc(item.spot || "no price")}</span></div>
+            <div class="sp-meta">${item.roles && item.roles.length
+              ? esc(item.roles.join(" · "))
+              : "No role in any of the six decks"}</div>
+          </div>
+        </div>
+        ${opts.length ? `
+          <label class="sp-lab" for="sp-dest-${esc(item.key)}">Best slot per deck</label>
+          <select class="sp-sel sp-dest" id="sp-dest-${esc(item.key)}" data-sp-dest="${esc(item.key)}">
+            ${opts.map((o, i) => `<option value="${i}">${esc(o.label)}</option>`).join("")}
+          </select>
+          ${destDetail(chosen)}
+          <button type="button" class="sp-assign" data-sp-assign="${esc(item.key)}|0">Assign · ${esc(chosen.action)}</button>
+        ` : `<p class="sp-meta">No legal slot in any deck: colour identity, singleton or bracket rules rule it out.</p>`}
+      </article>`;
+    }).join("")}</div>`;
+  }
+
+  function destDetail(d) {
+    if (!d) return "";
+    const r = d.replaced || {};
+    const consequence = r.kind === "buy"
+      ? `<b>Saves ${money(r.price)}</b> — you no longer have to buy it.`
+      : r.kind === "ordered"
+        ? "Already paid for; it will arrive with no slot."
+        : r.kind === "active"
+          ? "Frees a physical card — it moves to the Bench."
+          : "That card is owned and already off-box.";
+    return `<div class="sp-tags">
+        <span class="sp-tag ${d.rung ? "is-rung" : ""}">${d.rung ? "Slots as " + esc(d.rung) : "Ad-hoc transfer"}</span>
+        ${(d.reasons || []).map((x) => `<span class="sp-tag">${esc(x)}</span>`).join("")}
+      </div>
+      <div class="sp-repl"><b>Replacing</b>${esc(r.name || "an empty slot")}
+        ${r.label ? ` · <span class="dp-loc is-${esc(r.kind)}"><span class="dp-g">${esc(r.glyph || "")}</span>${esc(r.label)}</span>` : ""}
+        <div>${consequence}</div></div>`;
+  }
+
+  function render(host, ctx) {
+    if (!host) return;
+    const f = ctx.filters || {};
+    const all = decorate(ctx.rows || [], ctx.factFor, ctx.deckLabels);
+    const kept = all.filter((r) => passes(r, f));
+    const groups = groupRows(sortRows(kept, f.sortKey || "name", f.sortDir || "asc"), f.groupBy);
+
+    const owedCards = kept.reduce((n, r) => n + r.need, 0);
+    const owedValue = kept.reduce((n, r) => n + (r.price || 0) * r.need, 0);
+
+    const chips = [];
+    FILTERS.forEach((flt) => (f[flt.key] || []).forEach((v) => chips.push(
+      `<span class="sp-fchip">${esc(flt.label)}: ${esc(v)}<button type="button" data-sp-unchip="${esc(flt.key)}|${esc(v)}" aria-label="Remove">×</button></span>`)));
+
+    const bar = `<div class="sp-bar">
+      <div class="sp-frow">
+        ${FILTERS.map((flt) => {
+          const n = (f[flt.key] || []).length;
+          return `<span class="sp-drop">
+            <button type="button" class="sp-fbtn" data-sp-drop="${esc(flt.key)}" data-on="${n ? 1 : 0}">${esc(flt.label)}${
+              n ? `<span class="sp-cnt dp-num">${n}</span>` : '<span class="sp-caret">▾</span>'}</button>
+            <div class="sp-pop" id="sp-pop-${esc(flt.key)}" hidden>
+              ${values(all, flt.key).map((v) => `<label><input type="checkbox" data-sp-chk="${esc(flt.key)}|${esc(v)}"${
+                (f[flt.key] || []).indexOf(v) >= 0 ? " checked" : ""}>${esc(v)}</label>`).join("")}
+              <div class="sp-pop-foot"><button type="button" data-sp-all="${esc(flt.key)}">Select all</button><button type="button" data-sp-none="${esc(flt.key)}">Clear</button></div>
+            </div></span>`;
+        }).join("")}
+        <input class="sp-q" id="sp-q" type="search" placeholder="Search cards…" aria-label="Search cards" value="${esc(f.query || "")}">
+      </div>
+      <div class="sp-frow">
+        <span class="sp-lab">View</span>
+        <span class="sp-seg">
+          <button type="button" data-sp-view="table" aria-pressed="${f.view === "table"}">☰ Table</button>
+          <button type="button" data-sp-view="gallery" aria-pressed="${f.view === "gallery"}">▦ Gallery</button>
+          <button type="button" data-sp-view="bench" aria-pressed="${f.view === "bench"}">◇ Bench${
+            (ctx.bench || []).length ? " " + (ctx.bench || []).length : ""}</button>
+        </span>
+        <span class="sp-lab">Group by</span>
+        <select class="sp-sel" id="sp-group">${GROUP_BY.map(([v, l]) =>
+          `<option value="${v}"${f.groupBy === v ? " selected" : ""}>${l}</option>`).join("")}</select>
+        ${f.view === "gallery" ? `<span class="sp-lab">Sort</span><select class="sp-sel" id="sp-sort">${
+          COLUMNS.filter((c) => c.sortable !== false).map((c) =>
+            `<option value="${c.key}"${f.sortKey === c.key ? " selected" : ""}>${c.label}</option>`).join("")}</select>` : ""}
+        <span class="sp-tot"><b class="dp-num">${owedCards}</b> still to buy · <b class="dp-num">${money(owedValue)}</b></span>
+      </div>
+      ${chips.length ? `<div class="sp-frow"><div class="sp-chips">${chips.join("")}<button type="button" class="sp-mini" data-sp-clear="1">Clear all filters</button></div></div>` : ""}
+    </div>`;
+
+    if (f.view === "bench") { host.innerHTML = bar + benchMarkup(ctx); return; }
+    if (!kept.length) {
+      host.innerHTML = bar + '<p class="sp-empty">Nothing matches those filters.</p>';
+      return;
+    }
+
+    let body;
+    if (f.view === "gallery") {
+      body = groups.map(([name, list]) => `<section class="sp-group">${
+        name ? bandHeader(name, list, 0) : ""}<div class="sp-gal">${list.map((r) => `
+          <article class="sp-card" style="--rar:var(--rar-${r.rarityKey})" data-sp-row="${esc(r.key)}">
+            ${r.image ? `<img class="sp-art" src="${esc(r.image)}" alt="${esc(r.name)}" loading="lazy">`
+                      : `<div class="sp-art sp-art-blank"><span>${esc(r.name)}</span></div>`}
+            <div class="sp-cbody">
+              <div class="sp-nm">${esc(r.name)}${r.quantity > 1 ? ` <span class="sp-qty dp-num">×${r.quantity}</span>` : ""}</div>
+              <div class="sp-meta"><span class="sp-dot" style="background:${COLOR_HEX[r.colorKey]}"></span>${esc(r.color)} · ${esc(r.type)} · ${esc(r.rarity)}</div>
+              <div class="sp-meta">${(r.deckNames || []).map((d) => `<span class="sp-chip">${esc(d)}</span>`).join("")}<span class="sp-pill dp-num">${esc(r.band || "—")}</span></div>
+              <div class="sp-foot"><span class="dp-num${r.need ? " is-buy" : ""}">${money(r.price)}</span><span class="sp-where">${esc(r.spot || "—")}</span></div>
+              ${triMarkup(r)}
+            </div></article>`).join("")}</div></section>`).join("");
+    } else {
+      const head = COLUMNS.map((c) => {
+        if (c.sortable === false) return `<th>${esc(c.label)}</th>`;
+        const on = (f.sortKey || "name") === c.key;
+        return `<th><button type="button" data-sp-sort="${c.key}">${esc(c.label)}${
+          on ? `<span class="sp-ar">${(f.sortDir || "asc") === "asc" ? "▲" : "▼"}</span>` : ""}</button></th>`;
+      }).join("");
+      body = `<div class="sp-tw"><table class="sp-table"><thead><tr>${head}</tr></thead><tbody>${
+        groups.map(([name, list]) => (name ? bandHeader(name, list, COLUMNS.length) : "")
+          + list.map((r) => `<tr data-sp-row="${esc(r.key)}">${
+            COLUMNS.map((c) => `<td>${cell(r, c.key)}</td>`).join("")}</tr>`).join("")).join("")
+      }</tbody></table></div>`;
+    }
+    host.innerHTML = bar + body;
+  }
+
+  return {render, decorate, passes, sortRows, groupRows, values, benchMarkup, destDetail,
+          COLUMNS, FILTERS, GROUP_BY, STATUS};
+});

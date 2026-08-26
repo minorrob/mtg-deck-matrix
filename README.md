@@ -135,7 +135,7 @@ two versions of one deck, never as absolute odds.
 ## Tests
 
 ```
-node tests/slot-model.mjs         # the shared slot projection, price bands and ownership states
+node tests/slot-model.mjs         # the shared slot projection, price bands, shelves and ownership states
 node tests/data-integrity.mjs      # the baked catalog and the app source patterns it depends on
 node tests/lineup-compliance.mjs   # the 100-card lineup model across all 30 plans
 node tests/compliance-model.mjs    # the shared Commander bracket rules

@@ -194,6 +194,18 @@ ok("a starting-shell card with no price of its own falls back to the catalog", (
   process.stdout.write(`      (unpriced picks: ${missingBefore} -> ${missingAfter} of ${total})\n`);
 });
 
+ok("a plan price of exactly zero is treated as missing, not as free", () => {
+  const item = {name: "City of Traitors", price: 0};
+  const withCatalog = {"city of traitors": {price: 534.39}};
+  assert.equal(Slot.priceBand(0), "<$1", "a genuine zero still bands as the cheap drawer");
+  const bare = Slot.deckSlots({startingShell: [{id: "x", name: "City of Traitors", price: 0}]}, {shell: ["x"]});
+  assert.equal(bare[0].pick.price, null, "with no catalog, a zero price reads as unknown");
+  const fixed = Slot.deckSlots({startingShell: [{id: "x", name: "City of Traitors", price: 0}]},
+    {shell: ["x"]}, {cards: withCatalog});
+  assert.equal(fixed[0].pick.price, 534.39, "the catalog answers instead");
+  assert.equal(Slot.vendorSpot(fixed[0].pick.price), "Case", "and it shelves in the case, not the bulk bin");
+});
+
 ok("rationale reports whether it was authored or is just the card's rules text", () => {
   const authored = Slot.whySource("max", {maxReason: "because it is the best"}, cards);
   assert.equal(authored, "authored");
@@ -215,6 +227,26 @@ ok("Base rungs are overwhelmingly unauthored, which the UI must not hide", () =>
   });
   assert.ok(fallback > authored, "if this ever flips, the Base copy got written and the label can change");
   process.stdout.write(`      (Base rungs: ${authored} authored, ${fallback} falling back)\n`);
+});
+
+ok("where a card sits at the table follows straight from its price", () => {
+  const cases = [[0, "Bulk bin"], [0.99, "Bulk bin"], [1, "Boxes"], [3.5, "Boxes"], [6.99, "Boxes"],
+                 [7, "Binder"], [14.99, "Binder"], [15, "Case"], [534.39, "Case"]];
+  cases.forEach(([price, spot]) => assert.equal(Slot.vendorSpot(price), spot, `${price} -> ${spot}`));
+  assert.equal(Slot.vendorSpot(null), null, "an unpriced card has no shelf");
+});
+
+ok("every spot a price can produce is one the filter offers, and bands nest inside spots", () => {
+  const seen = new Map();
+  for (let cents = 0; cents <= 3000; cents += 13) {
+    const price = cents / 100;
+    const spot = Slot.vendorSpot(price);
+    assert.ok(Slot.SPOTS.includes(spot), `${price} produced ${spot}`);
+    const band = Slot.priceBand(price);
+    if (!seen.has(band)) seen.set(band, spot);
+    assert.equal(seen.get(band), spot, `band ${band} must map to exactly one spot`);
+  }
+  assert.equal(seen.size, Slot.PRICE_BANDS.length, "the sweep should reach every band");
 });
 
 process.stdout.write(`\n${checks} checks passed across ${planIds.length} plans.\n`);
