@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-25T02:02:52.703Z",
+  "generatedAt": "2026-08-26T22:34:57.993Z",
   "note": "The exact hundred measured for each rung. Composing the plan through lineup-model.js must reproduce these lists card for card.",
   "variants": {
     "10a": {
@@ -960,10 +960,6 @@
           "quantity": 1
         },
         {
-          "name": "Laboratory Maniac",
-          "quantity": 1
-        },
-        {
           "name": "Summon: Yojimbo",
           "quantity": 1
         },
@@ -1028,10 +1024,6 @@
           "quantity": 1
         },
         {
-          "name": "Cryptolith Fragment // Aurora of Emrakul",
-          "quantity": 1
-        },
-        {
           "name": "Cloud's Limit Break",
           "quantity": 1
         },
@@ -1080,10 +1072,6 @@
           "quantity": 1
         },
         {
-          "name": "Ultima, Origin of Oblivion",
-          "quantity": 1
-        },
-        {
           "name": "Bovine Intervention",
           "quantity": 1
         },
@@ -1124,10 +1112,6 @@
           "quantity": 1
         },
         {
-          "name": "Plague Myr",
-          "quantity": 1
-        },
-        {
           "name": "Teferi's Time Twist",
           "quantity": 1
         },
@@ -1156,15 +1140,7 @@
           "quantity": 1
         },
         {
-          "name": "Mind Stone",
-          "quantity": 1
-        },
-        {
           "name": "Escape Protocol",
-          "quantity": 1
-        },
-        {
-          "name": "Mox Diamond",
           "quantity": 1
         },
         {
@@ -1173,10 +1149,6 @@
         },
         {
           "name": "Neutralize",
-          "quantity": 1
-        },
-        {
-          "name": "Triskaidekaphile",
           "quantity": 1
         },
         {
@@ -1226,6 +1198,34 @@
         {
           "name": "Plains",
           "quantity": 11
+        },
+        {
+          "name": "Laboratory Maniac",
+          "quantity": 1
+        },
+        {
+          "name": "Cryptolith Fragment // Aurora of Emrakul",
+          "quantity": 1
+        },
+        {
+          "name": "Plague Myr",
+          "quantity": 1
+        },
+        {
+          "name": "Mind Stone",
+          "quantity": 1
+        },
+        {
+          "name": "Triskaidekaphile",
+          "quantity": 1
+        },
+        {
+          "name": "Mox Diamond",
+          "quantity": 1
+        },
+        {
+          "name": "Consecrated Sphinx",
+          "quantity": 1
         }
       ]
     },
@@ -2198,10 +2198,6 @@
           "quantity": 1
         },
         {
-          "name": "Paradise Druid",
-          "quantity": 1
-        },
-        {
           "name": "Sowing Mycospawn",
           "quantity": 1
         },
@@ -2262,23 +2258,7 @@
           "quantity": 1
         },
         {
-          "name": "Fall of the First Civilization",
-          "quantity": 1
-        },
-        {
-          "name": "Cryptolith Fragment // Aurora of Emrakul",
-          "quantity": 1
-        },
-        {
-          "name": "Scavenger Grounds",
-          "quantity": 1
-        },
-        {
           "name": "Gods Willing",
-          "quantity": 1
-        },
-        {
-          "name": "Ultima, Origin of Oblivion",
           "quantity": 1
         },
         {
@@ -2326,10 +2306,6 @@
           "quantity": 1
         },
         {
-          "name": "Plague Myr",
-          "quantity": 1
-        },
-        {
           "name": "Mistmeadow Witch",
           "quantity": 1
         },
@@ -2371,10 +2347,6 @@
         },
         {
           "name": "Return to Nature",
-          "quantity": 1
-        },
-        {
-          "name": "Wall of Roots",
           "quantity": 1
         },
         {
@@ -2468,6 +2440,34 @@
         {
           "name": "Plains",
           "quantity": 7
+        },
+        {
+          "name": "Paradise Druid",
+          "quantity": 1
+        },
+        {
+          "name": "Cryptolith Fragment // Aurora of Emrakul",
+          "quantity": 1
+        },
+        {
+          "name": "Scavenger Grounds",
+          "quantity": 1
+        },
+        {
+          "name": "Plague Myr",
+          "quantity": 1
+        },
+        {
+          "name": "Aura Shards",
+          "quantity": 1
+        },
+        {
+          "name": "Crop Rotation",
+          "quantity": 1
+        },
+        {
+          "name": "Consecrated Sphinx",
+          "quantity": 1
         }
       ]
     },
@@ -3508,14 +3508,6 @@
           "quantity": 1
         },
         {
-          "name": "Cryptolith Fragment // Aurora of Emrakul",
-          "quantity": 1
-        },
-        {
-          "name": "Fleshbag Marauder",
-          "quantity": 1
-        },
-        {
           "name": "Disdainful Stroke",
           "quantity": 1
         },
@@ -3588,15 +3580,7 @@
           "quantity": 1
         },
         {
-          "name": "Plague Myr",
-          "quantity": 1
-        },
-        {
           "name": "Sheltered by Ghosts",
-          "quantity": 1
-        },
-        {
-          "name": "Ultima, Origin of Oblivion",
           "quantity": 1
         },
         {
@@ -3609,10 +3593,6 @@
         },
         {
           "name": "Ravenous Chupacabra",
-          "quantity": 1
-        },
-        {
-          "name": "Millikin",
           "quantity": 1
         },
         {
@@ -3645,14 +3625,6 @@
         },
         {
           "name": "Essence Flux",
-          "quantity": 1
-        },
-        {
-          "name": "Prosperous Thief",
-          "quantity": 1
-        },
-        {
-          "name": "Valorous Stance",
           "quantity": 1
         },
         {
@@ -3710,6 +3682,34 @@
         {
           "name": "Plains",
           "quantity": 9
+        },
+        {
+          "name": "Cryptolith Fragment // Aurora of Emrakul",
+          "quantity": 1
+        },
+        {
+          "name": "Plague Myr",
+          "quantity": 1
+        },
+        {
+          "name": "Millikin",
+          "quantity": 1
+        },
+        {
+          "name": "Prosperous Thief",
+          "quantity": 1
+        },
+        {
+          "name": "Braids, Cabal Minion",
+          "quantity": 1
+        },
+        {
+          "name": "Tergrid, God of Fright // Tergrid's Lantern",
+          "quantity": 1
+        },
+        {
+          "name": "Orcish Bowmasters",
+          "quantity": 1
         }
       ]
     },
@@ -4722,15 +4722,7 @@
           "quantity": 1
         },
         {
-          "name": "Zulaport Cutthroat",
-          "quantity": 1
-        },
-        {
           "name": "Blight Grenade",
-          "quantity": 1
-        },
-        {
-          "name": "Cryptolith Fragment // Aurora of Emrakul",
           "quantity": 1
         },
         {
@@ -4782,10 +4774,6 @@
           "quantity": 1
         },
         {
-          "name": "Marauding Blight-Priest",
-          "quantity": 1
-        },
-        {
           "name": "Argentum Masticore",
           "quantity": 1
         },
@@ -4798,15 +4786,7 @@
           "quantity": 1
         },
         {
-          "name": "The Fire Nation Drill",
-          "quantity": 1
-        },
-        {
           "name": "The Revelations of Ezio",
-          "quantity": 1
-        },
-        {
-          "name": "Plague Myr",
           "quantity": 1
         },
         {
@@ -4850,10 +4830,6 @@
           "quantity": 1
         },
         {
-          "name": "Mind Stone",
-          "quantity": 1
-        },
-        {
           "name": "Bumbleflower's Sharepot",
           "quantity": 1
         },
@@ -4867,10 +4843,6 @@
         },
         {
           "name": "Deadly Plot",
-          "quantity": 1
-        },
-        {
-          "name": "Gollum, Riddle Master",
           "quantity": 1
         },
         {
@@ -4920,6 +4892,34 @@
         {
           "name": "Swamp",
           "quantity": 26
+        },
+        {
+          "name": "Zulaport Cutthroat",
+          "quantity": 1
+        },
+        {
+          "name": "Cryptolith Fragment // Aurora of Emrakul",
+          "quantity": 1
+        },
+        {
+          "name": "Plague Myr",
+          "quantity": 1
+        },
+        {
+          "name": "Mind Stone",
+          "quantity": 1
+        },
+        {
+          "name": "Gollum, Riddle Master",
+          "quantity": 1
+        },
+        {
+          "name": "Orcish Bowmasters",
+          "quantity": 1
+        },
+        {
+          "name": "Tergrid, God of Fright // Tergrid's Lantern",
+          "quantity": 1
         }
       ]
     },
@@ -5960,14 +5960,6 @@
           "quantity": 1
         },
         {
-          "name": "Cryptolith Fragment // Aurora of Emrakul",
-          "quantity": 1
-        },
-        {
-          "name": "Fleshbag Marauder",
-          "quantity": 1
-        },
-        {
           "name": "The Moment",
           "quantity": 1
         },
@@ -6040,15 +6032,7 @@
           "quantity": 1
         },
         {
-          "name": "Plague Myr",
-          "quantity": 1
-        },
-        {
           "name": "Sheltered by Ghosts",
-          "quantity": 1
-        },
-        {
-          "name": "Ultima, Origin of Oblivion",
           "quantity": 1
         },
         {
@@ -6061,10 +6045,6 @@
         },
         {
           "name": "Ravenous Chupacabra",
-          "quantity": 1
-        },
-        {
-          "name": "Millikin",
           "quantity": 1
         },
         {
@@ -6097,14 +6077,6 @@
         },
         {
           "name": "Essence Flux",
-          "quantity": 1
-        },
-        {
-          "name": "Prosperous Thief",
-          "quantity": 1
-        },
-        {
-          "name": "Valorous Stance",
           "quantity": 1
         },
         {
@@ -6162,6 +6134,34 @@
         {
           "name": "Plains",
           "quantity": 9
+        },
+        {
+          "name": "Cryptolith Fragment // Aurora of Emrakul",
+          "quantity": 1
+        },
+        {
+          "name": "Plague Myr",
+          "quantity": 1
+        },
+        {
+          "name": "Millikin",
+          "quantity": 1
+        },
+        {
+          "name": "Prosperous Thief",
+          "quantity": 1
+        },
+        {
+          "name": "Smothering Tithe",
+          "quantity": 1
+        },
+        {
+          "name": "Braids, Cabal Minion",
+          "quantity": 1
+        },
+        {
+          "name": "Orcish Bowmasters",
+          "quantity": 1
         }
       ]
     },
@@ -6994,10 +6994,6 @@
           "quantity": 1
         },
         {
-          "name": "Cruel Revival",
-          "quantity": 1
-        },
-        {
           "name": "Black Market Connections",
           "quantity": 1
         },
@@ -7038,10 +7034,6 @@
           "quantity": 1
         },
         {
-          "name": "Priest of Forgotten Gods",
-          "quantity": 1
-        },
-        {
           "name": "Reclamation Sage",
           "quantity": 1
         },
@@ -7058,10 +7050,6 @@
           "quantity": 1
         },
         {
-          "name": "Glissa Sunslayer",
-          "quantity": 1
-        },
-        {
           "name": "Eldrazi Ravager",
           "quantity": 1
         },
@@ -7074,15 +7062,7 @@
           "quantity": 1
         },
         {
-          "name": "Wear Down",
-          "quantity": 1
-        },
-        {
           "name": "Doomed Dissenter",
-          "quantity": 1
-        },
-        {
-          "name": "Hithlain Rope",
           "quantity": 1
         },
         {
@@ -7106,15 +7086,7 @@
           "quantity": 1
         },
         {
-          "name": "Freyalise, Llanowar's Fury",
-          "quantity": 1
-        },
-        {
           "name": "Death-Mask Duplicant",
-          "quantity": 1
-        },
-        {
-          "name": "Corpse Connoisseur",
           "quantity": 1
         },
         {
@@ -7138,15 +7110,7 @@
           "quantity": 1
         },
         {
-          "name": "Seal of Doom",
-          "quantity": 1
-        },
-        {
           "name": "Kodama's Reach",
-          "quantity": 1
-        },
-        {
-          "name": "Sol Ring",
           "quantity": 1
         },
         {
@@ -7178,6 +7142,42 @@
           "quantity": 1
         },
         {
+          "name": "Currency Converter",
+          "quantity": 1
+        },
+        {
+          "name": "Buried Alive",
+          "quantity": 1
+        },
+        {
+          "name": "Cruel Revival",
+          "quantity": 1
+        },
+        {
+          "name": "Priest of Forgotten Gods",
+          "quantity": 1
+        },
+        {
+          "name": "Glissa Sunslayer",
+          "quantity": 1
+        },
+        {
+          "name": "Wear Down",
+          "quantity": 1
+        },
+        {
+          "name": "Hithlain Rope",
+          "quantity": 1
+        },
+        {
+          "name": "Freyalise, Llanowar's Fury",
+          "quantity": 1
+        },
+        {
+          "name": "Seal of Doom",
+          "quantity": 1
+        },
+        {
           "name": "Terror",
           "quantity": 1
         },
@@ -7187,14 +7187,6 @@
         },
         {
           "name": "Long Goodbye",
-          "quantity": 1
-        },
-        {
-          "name": "Currency Converter",
-          "quantity": 1
-        },
-        {
-          "name": "Buried Alive",
           "quantity": 1
         },
         {
@@ -7226,7 +7218,15 @@
           "quantity": 1
         },
         {
-          "name": "Origin of Metalbending",
+          "name": "Crop Rotation",
+          "quantity": 1
+        },
+        {
+          "name": "Demonic Tutor",
+          "quantity": 1
+        },
+        {
+          "name": "Orcish Bowmasters",
           "quantity": 1
         }
       ]
@@ -8292,10 +8292,6 @@
           "quantity": 1
         },
         {
-          "name": "Indomitable Ancients",
-          "quantity": 1
-        },
-        {
           "name": "Rhox Faithmender",
           "quantity": 1
         },
@@ -8316,10 +8312,6 @@
           "quantity": 1
         },
         {
-          "name": "Zetalpa, Primal Dawn",
-          "quantity": 1
-        },
-        {
           "name": "Assault Formation",
           "quantity": 1
         },
@@ -8333,10 +8325,6 @@
         },
         {
           "name": "Sylvan Caryatid",
-          "quantity": 1
-        },
-        {
-          "name": "Anguished Unmaking",
           "quantity": 1
         },
         {
@@ -8597,6 +8585,18 @@
         },
         {
           "name": "Sun Titan",
+          "quantity": 1
+        },
+        {
+          "name": "Aura Shards",
+          "quantity": 1
+        },
+        {
+          "name": "Braids, Cabal Minion",
+          "quantity": 1
+        },
+        {
+          "name": "Orcish Bowmasters",
           "quantity": 1
         }
       ]
@@ -9414,10 +9414,6 @@
           "quantity": 18
         },
         {
-          "name": "Danitha Capashen, Paragon",
-          "quantity": 1
-        },
-        {
           "name": "Ob Nixilis Reignited",
           "quantity": 1
         },
@@ -9454,14 +9450,6 @@
           "quantity": 1
         },
         {
-          "name": "Mind Stone",
-          "quantity": 1
-        },
-        {
-          "name": "Mirrodin Avenged",
-          "quantity": 1
-        },
-        {
           "name": "Filigree Familiar",
           "quantity": 1
         },
@@ -9483,10 +9471,6 @@
         },
         {
           "name": "Expel the Interlopers",
-          "quantity": 1
-        },
-        {
-          "name": "Terror",
           "quantity": 1
         },
         {
@@ -9523,10 +9507,6 @@
         },
         {
           "name": "Crashing Drawbridge",
-          "quantity": 1
-        },
-        {
-          "name": "Protector of the Wastes",
           "quantity": 1
         },
         {
@@ -9578,10 +9558,6 @@
           "quantity": 1
         },
         {
-          "name": "Valorous Stance",
-          "quantity": 1
-        },
-        {
           "name": "Colfenor's Urn",
           "quantity": 1
         },
@@ -9594,19 +9570,11 @@
           "quantity": 1
         },
         {
-          "name": "Big Game Hunter",
-          "quantity": 1
-        },
-        {
           "name": "Teyo, the Shieldmage",
           "quantity": 1
         },
         {
           "name": "Authority of the Consuls",
-          "quantity": 1
-        },
-        {
-          "name": "Long Goodbye",
           "quantity": 1
         },
         {
@@ -9622,15 +9590,35 @@
           "quantity": 1
         },
         {
-          "name": "Staff of Compleation",
-          "quantity": 1
-        },
-        {
           "name": "Cathars' Crusade",
           "quantity": 1
         },
         {
           "name": "Rolling Stones",
+          "quantity": 1
+        },
+        {
+          "name": "Mirrodin Avenged",
+          "quantity": 1
+        },
+        {
+          "name": "Terror",
+          "quantity": 1
+        },
+        {
+          "name": "Valorous Stance",
+          "quantity": 1
+        },
+        {
+          "name": "Big Game Hunter",
+          "quantity": 1
+        },
+        {
+          "name": "Long Goodbye",
+          "quantity": 1
+        },
+        {
+          "name": "Staff of Compleation",
           "quantity": 1
         },
         {
@@ -9663,6 +9651,18 @@
         },
         {
           "name": "Crested Sunmare",
+          "quantity": 1
+        },
+        {
+          "name": "Smothering Tithe",
+          "quantity": 1
+        },
+        {
+          "name": "Orcish Bowmasters",
+          "quantity": 1
+        },
+        {
+          "name": "Braids, Cabal Minion",
           "quantity": 1
         }
       ]
@@ -10836,10 +10836,6 @@
           "quantity": 1
         },
         {
-          "name": "Wall of Roots",
-          "quantity": 1
-        },
-        {
           "name": "Despark",
           "quantity": 1
         },
@@ -10952,10 +10948,6 @@
           "quantity": 1
         },
         {
-          "name": "Glissa Sunslayer",
-          "quantity": 1
-        },
-        {
           "name": "Mind Stone",
           "quantity": 1
         },
@@ -11020,10 +11012,6 @@
           "quantity": 1
         },
         {
-          "name": "Blood Artist",
-          "quantity": 1
-        },
-        {
           "name": "Spectacular Tactics",
           "quantity": 1
         },
@@ -11033,6 +11021,18 @@
         },
         {
           "name": "Seal of Doom",
+          "quantity": 1
+        },
+        {
+          "name": "Smothering Tithe",
+          "quantity": 1
+        },
+        {
+          "name": "Aura Shards",
+          "quantity": 1
+        },
+        {
+          "name": "Opposition Agent",
           "quantity": 1
         }
       ]
@@ -12070,27 +12070,7 @@
           "quantity": 1
         },
         {
-          "name": "Selvala, Heart of the Wilds",
-          "quantity": 1
-        },
-        {
-          "name": "Chain Assassination",
-          "quantity": 1
-        },
-        {
-          "name": "Cast Out",
-          "quantity": 1
-        },
-        {
           "name": "Rampart Architect",
-          "quantity": 1
-        },
-        {
-          "name": "Tree of Redemption",
-          "quantity": 1
-        },
-        {
-          "name": "Damn",
           "quantity": 1
         },
         {
@@ -12106,23 +12086,11 @@
           "quantity": 1
         },
         {
-          "name": "The Mightstone and Weakstone",
-          "quantity": 1
-        },
-        {
           "name": "Assault Formation",
           "quantity": 1
         },
         {
           "name": "Sylvan Caryatid",
-          "quantity": 1
-        },
-        {
-          "name": "Nutrient Block",
-          "quantity": 1
-        },
-        {
-          "name": "Freyalise, Llanowar's Fury",
           "quantity": 1
         },
         {
@@ -12218,10 +12186,6 @@
           "quantity": 1
         },
         {
-          "name": "Staff of Compleation",
-          "quantity": 1
-        },
-        {
           "name": "Feed the Swarm",
           "quantity": 1
         },
@@ -12230,19 +12194,11 @@
           "quantity": 1
         },
         {
-          "name": "Insidious Fungus",
-          "quantity": 1
-        },
-        {
           "name": "Arboreal Grazer",
           "quantity": 1
         },
         {
           "name": "Axebane Guardian",
-          "quantity": 1
-        },
-        {
-          "name": "Lethal Scheme",
           "quantity": 1
         },
         {
@@ -12275,10 +12231,6 @@
         },
         {
           "name": "Despark",
-          "quantity": 1
-        },
-        {
-          "name": "Heritage Reclamation",
           "quantity": 1
         },
         {
@@ -12328,6 +12280,42 @@
         {
           "name": "Forest",
           "quantity": 7
+        },
+        {
+          "name": "Selvala, Heart of the Wilds",
+          "quantity": 1
+        },
+        {
+          "name": "Chain Assassination",
+          "quantity": 1
+        },
+        {
+          "name": "Cast Out",
+          "quantity": 1
+        },
+        {
+          "name": "Nutrient Block",
+          "quantity": 1
+        },
+        {
+          "name": "Freyalise, Llanowar's Fury",
+          "quantity": 1
+        },
+        {
+          "name": "Staff of Compleation",
+          "quantity": 1
+        },
+        {
+          "name": "Insidious Fungus",
+          "quantity": 1
+        },
+        {
+          "name": "Lethal Scheme",
+          "quantity": 1
+        },
+        {
+          "name": "Heritage Reclamation",
+          "quantity": 1
         },
         {
           "name": "Phyrexian Arena",
@@ -12403,6 +12391,18 @@
         },
         {
           "name": "Innkeeper's Talent",
+          "quantity": 1
+        },
+        {
+          "name": "Aura Shards",
+          "quantity": 1
+        },
+        {
+          "name": "Smothering Tithe",
+          "quantity": 1
+        },
+        {
+          "name": "Orcish Bowmasters",
           "quantity": 1
         }
       ]
@@ -13240,14 +13240,6 @@
           "quantity": 1
         },
         {
-          "name": "Vohar, Vodalian Desecrator",
-          "quantity": 1
-        },
-        {
-          "name": "Consecrated Sphinx",
-          "quantity": 1
-        },
-        {
           "name": "Mission Briefing",
           "quantity": 1
         },
@@ -13297,10 +13289,6 @@
         },
         {
           "name": "Bloodchief's Thirst",
-          "quantity": 1
-        },
-        {
-          "name": "Marauding Blight-Priest",
           "quantity": 1
         },
         {
@@ -13360,10 +13348,6 @@
           "quantity": 1
         },
         {
-          "name": "Mox Diamond",
-          "quantity": 1
-        },
-        {
           "name": "Shield Sphere",
           "quantity": 1
         },
@@ -13388,10 +13372,6 @@
           "quantity": 1
         },
         {
-          "name": "Cryptolith Fragment // Aurora of Emrakul",
-          "quantity": 1
-        },
-        {
           "name": "Bone Shards",
           "quantity": 1
         },
@@ -13401,10 +13381,6 @@
         },
         {
           "name": "Infernal Grasp",
-          "quantity": 1
-        },
-        {
-          "name": "Force of Will",
           "quantity": 1
         },
         {
@@ -13440,7 +13416,7 @@
           "quantity": 1
         },
         {
-          "name": "Tergrid, God of Fright // Tergrid's Lantern",
+          "name": "Rewind",
           "quantity": 1
         },
         {
@@ -13453,6 +13429,18 @@
         },
         {
           "name": "Go for the Throat",
+          "quantity": 1
+        },
+        {
+          "name": "Vohar, Vodalian Desecrator",
+          "quantity": 1
+        },
+        {
+          "name": "Marauding Blight-Priest",
+          "quantity": 1
+        },
+        {
+          "name": "Cryptolith Fragment // Aurora of Emrakul",
           "quantity": 1
         },
         {
@@ -13469,6 +13457,18 @@
         },
         {
           "name": "Corpse Connoisseur",
+          "quantity": 1
+        },
+        {
+          "name": "Consecrated Sphinx",
+          "quantity": 1
+        },
+        {
+          "name": "Mox Diamond",
+          "quantity": 1
+        },
+        {
+          "name": "Tergrid, God of Fright // Tergrid's Lantern",
           "quantity": 1
         }
       ]
@@ -14270,19 +14270,11 @@
           "quantity": 36
         },
         {
-          "name": "Big Game Hunter",
-          "quantity": 1
-        },
-        {
           "name": "Staff of Compleation",
           "quantity": 1
         },
         {
           "name": "Animate Dead",
-          "quantity": 1
-        },
-        {
-          "name": "Long Goodbye",
           "quantity": 1
         },
         {
@@ -14358,15 +14350,7 @@
           "quantity": 1
         },
         {
-          "name": "Weathered Sentinels",
-          "quantity": 1
-        },
-        {
           "name": "Woe Strider",
-          "quantity": 1
-        },
-        {
-          "name": "Collector's Vault",
           "quantity": 1
         },
         {
@@ -14379,10 +14363,6 @@
         },
         {
           "name": "Corpse Connoisseur",
-          "quantity": 1
-        },
-        {
-          "name": "Wight of Precinct Six",
           "quantity": 1
         },
         {
@@ -14422,14 +14402,6 @@
           "quantity": 1
         },
         {
-          "name": "Rune-Scarred Demon",
-          "quantity": 1
-        },
-        {
-          "name": "Blitzball",
-          "quantity": 1
-        },
-        {
           "name": "Dread Return",
           "quantity": 1
         },
@@ -14451,14 +14423,6 @@
         },
         {
           "name": "Reanimate",
-          "quantity": 1
-        },
-        {
-          "name": "Snuff Out",
-          "quantity": 1
-        },
-        {
-          "name": "Argentum Masticore",
           "quantity": 1
         },
         {
@@ -14486,10 +14450,6 @@
           "quantity": 1
         },
         {
-          "name": "Terror",
-          "quantity": 1
-        },
-        {
           "name": "Infernal Grasp",
           "quantity": 1
         },
@@ -14502,11 +14462,39 @@
           "quantity": 1
         },
         {
-          "name": "Seal of Doom",
+          "name": "Throne of Geth",
           "quantity": 1
         },
         {
-          "name": "Throne of Geth",
+          "name": "Big Game Hunter",
+          "quantity": 1
+        },
+        {
+          "name": "Long Goodbye",
+          "quantity": 1
+        },
+        {
+          "name": "Collector's Vault",
+          "quantity": 1
+        },
+        {
+          "name": "Blitzball",
+          "quantity": 1
+        },
+        {
+          "name": "Snuff Out",
+          "quantity": 1
+        },
+        {
+          "name": "Argentum Masticore",
+          "quantity": 1
+        },
+        {
+          "name": "Terror",
+          "quantity": 1
+        },
+        {
+          "name": "Seal of Doom",
           "quantity": 1
         },
         {
@@ -14519,6 +14507,18 @@
         },
         {
           "name": "Ophiomancer",
+          "quantity": 1
+        },
+        {
+          "name": "Vampiric Tutor",
+          "quantity": 1
+        },
+        {
+          "name": "Tergrid, God of Fright // Tergrid's Lantern",
+          "quantity": 1
+        },
+        {
+          "name": "Braids, Cabal Minion",
           "quantity": 1
         }
       ]
@@ -15672,19 +15672,11 @@
           "quantity": 1
         },
         {
-          "name": "Terror",
-          "quantity": 1
-        },
-        {
           "name": "Throne of Geth",
           "quantity": 1
         },
         {
           "name": "Conclave Mentor",
-          "quantity": 1
-        },
-        {
-          "name": "Long Goodbye",
           "quantity": 1
         },
         {
@@ -15708,14 +15700,6 @@
           "quantity": 1
         },
         {
-          "name": "Spectacular Tactics",
-          "quantity": 1
-        },
-        {
-          "name": "Heritage Reclamation",
-          "quantity": 1
-        },
-        {
           "name": "Sylvan Caryatid",
           "quantity": 1
         },
@@ -15733,14 +15717,6 @@
         },
         {
           "name": "Chromatic Lantern",
-          "quantity": 1
-        },
-        {
-          "name": "Talisman of Progress",
-          "quantity": 1
-        },
-        {
-          "name": "Origin of Metalbending",
           "quantity": 1
         },
         {
@@ -15765,10 +15741,6 @@
         },
         {
           "name": "Read the Bones",
-          "quantity": 1
-        },
-        {
-          "name": "Jace, Vryn's Prodigy // Jace, Telepath Unbound",
           "quantity": 1
         },
         {
@@ -15797,10 +15769,6 @@
         },
         {
           "name": "Wall of Roots",
-          "quantity": 1
-        },
-        {
-          "name": "Filigree Familiar",
           "quantity": 1
         },
         {
@@ -15956,6 +15924,30 @@
           "quantity": 1
         },
         {
+          "name": "Terror",
+          "quantity": 1
+        },
+        {
+          "name": "Long Goodbye",
+          "quantity": 1
+        },
+        {
+          "name": "Spectacular Tactics",
+          "quantity": 1
+        },
+        {
+          "name": "Heritage Reclamation",
+          "quantity": 1
+        },
+        {
+          "name": "Origin of Metalbending",
+          "quantity": 1
+        },
+        {
+          "name": "Jace, Vryn's Prodigy // Jace, Telepath Unbound",
+          "quantity": 1
+        },
+        {
           "name": "Mirrodin Avenged",
           "quantity": 1
         },
@@ -16012,11 +16004,19 @@
           "quantity": 1
         },
         {
-          "name": "Mystic Confluence",
+          "name": "Chain Assassination",
           "quantity": 1
         },
         {
-          "name": "Chain Assassination",
+          "name": "Aura Shards",
+          "quantity": 1
+        },
+        {
+          "name": "Smothering Tithe",
+          "quantity": 1
+        },
+        {
+          "name": "Rhystic Study",
           "quantity": 1
         }
       ]
@@ -16926,10 +16926,6 @@
           "quantity": 1
         },
         {
-          "name": "Hypnotic Sprite // Mesmeric Glare",
-          "quantity": 1
-        },
-        {
           "name": "Geist of Saint Traft",
           "quantity": 1
         },
@@ -16967,14 +16963,6 @@
         },
         {
           "name": "Rhox Faithmender",
-          "quantity": 1
-        },
-        {
-          "name": "Isperia, Supreme Judge",
-          "quantity": 1
-        },
-        {
-          "name": "Mulldrifter",
           "quantity": 1
         },
         {
@@ -17099,6 +17087,18 @@
         },
         {
           "name": "Mind Stone",
+          "quantity": 1
+        },
+        {
+          "name": "Thassa's Oracle",
+          "quantity": 1
+        },
+        {
+          "name": "Rhystic Study",
+          "quantity": 1
+        },
+        {
+          "name": "Bolas's Citadel",
           "quantity": 1
         }
       ]
@@ -17944,10 +17944,6 @@
           "quantity": 1
         },
         {
-          "name": "Origin of Metalbending",
-          "quantity": 1
-        },
-        {
           "name": "Wall of Blossoms",
           "quantity": 1
         },
@@ -18012,10 +18008,6 @@
           "quantity": 1
         },
         {
-          "name": "Hull Breach",
-          "quantity": 1
-        },
-        {
           "name": "Eldrazi Ravager",
           "quantity": 1
         },
@@ -18068,10 +18060,6 @@
           "quantity": 1
         },
         {
-          "name": "Wall of Limbs",
-          "quantity": 1
-        },
-        {
           "name": "Woe Strider",
           "quantity": 1
         },
@@ -18096,23 +18084,11 @@
           "quantity": 1
         },
         {
-          "name": "Golgari Signet",
-          "quantity": 1
-        },
-        {
-          "name": "Terror",
-          "quantity": 1
-        },
-        {
           "name": "Decimate",
           "quantity": 1
         },
         {
           "name": "Cast Down",
-          "quantity": 1
-        },
-        {
-          "name": "Long Goodbye",
           "quantity": 1
         },
         {
@@ -18152,6 +18128,18 @@
           "quantity": 1
         },
         {
+          "name": "Origin of Metalbending",
+          "quantity": 1
+        },
+        {
+          "name": "Terror",
+          "quantity": 1
+        },
+        {
+          "name": "Long Goodbye",
+          "quantity": 1
+        },
+        {
           "name": "Necroskitter",
           "quantity": 1
         },
@@ -18181,6 +18169,18 @@
         },
         {
           "name": "Serrated Arrows",
+          "quantity": 1
+        },
+        {
+          "name": "Crop Rotation",
+          "quantity": 1
+        },
+        {
+          "name": "Tergrid, God of Fright // Tergrid's Lantern",
+          "quantity": 1
+        },
+        {
+          "name": "Orcish Bowmasters",
           "quantity": 1
         }
       ]
@@ -19134,10 +19134,6 @@
           "quantity": 1
         },
         {
-          "name": "Wall of Roots",
-          "quantity": 1
-        },
-        {
           "name": "Mulldrifter",
           "quantity": 1
         },
@@ -19174,10 +19170,6 @@
           "quantity": 1
         },
         {
-          "name": "Sol Ring",
-          "quantity": 1
-        },
-        {
           "name": "Mind Stone",
           "quantity": 1
         },
@@ -19207,10 +19199,6 @@
         },
         {
           "name": "Forbid",
-          "quantity": 1
-        },
-        {
-          "name": "Blighted Woodland",
           "quantity": 1
         },
         {
@@ -19247,6 +19235,18 @@
         },
         {
           "name": "Explore",
+          "quantity": 1
+        },
+        {
+          "name": "Crop Rotation",
+          "quantity": 1
+        },
+        {
+          "name": "Thassa's Oracle",
+          "quantity": 1
+        },
+        {
+          "name": "Field of the Dead",
           "quantity": 1
         }
       ]
@@ -20104,10 +20104,6 @@
           "quantity": 1
         },
         {
-          "name": "Wall of Roots",
-          "quantity": 1
-        },
-        {
           "name": "Arboreal Grazer",
           "quantity": 1
         },
@@ -20136,10 +20132,6 @@
           "quantity": 1
         },
         {
-          "name": "Scavenger Grounds",
-          "quantity": 1
-        },
-        {
           "name": "Sidar Kondo of Jamuraa",
           "quantity": 1
         },
@@ -20153,10 +20145,6 @@
         },
         {
           "name": "Kami of Ancient Law",
-          "quantity": 1
-        },
-        {
-          "name": "Origin of Metalbending",
           "quantity": 1
         },
         {
@@ -20240,10 +20228,6 @@
           "quantity": 1
         },
         {
-          "name": "Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal",
-          "quantity": 1
-        },
-        {
           "name": "Colfenor's Urn",
           "quantity": 1
         },
@@ -20272,10 +20256,6 @@
           "quantity": 1
         },
         {
-          "name": "Spectacular Tactics",
-          "quantity": 1
-        },
-        {
           "name": "Return to Dust",
           "quantity": 1
         },
@@ -20284,15 +20264,23 @@
           "quantity": 1
         },
         {
-          "name": "Fall of the First Civilization",
+          "name": "Khalni Heart Expedition",
+          "quantity": 1
+        },
+        {
+          "name": "Origin of Metalbending",
+          "quantity": 1
+        },
+        {
+          "name": "Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal",
+          "quantity": 1
+        },
+        {
+          "name": "Spectacular Tactics",
           "quantity": 1
         },
         {
           "name": "Valorous Stance",
-          "quantity": 1
-        },
-        {
-          "name": "Khalni Heart Expedition",
           "quantity": 1
         },
         {
@@ -20313,6 +20301,18 @@
         },
         {
           "name": "Bugenhagen, Wise Elder",
+          "quantity": 1
+        },
+        {
+          "name": "Aura Shards",
+          "quantity": 1
+        },
+        {
+          "name": "Field of the Dead",
+          "quantity": 1
+        },
+        {
+          "name": "Smothering Tithe",
           "quantity": 1
         }
       ]
@@ -21354,10 +21354,6 @@
           "quantity": 1
         },
         {
-          "name": "Orcish Bowmasters",
-          "quantity": 1
-        },
-        {
           "name": "Rampant Growth",
           "quantity": 1
         },
@@ -21419,10 +21415,6 @@
         },
         {
           "name": "Jungle Hollow",
-          "quantity": 1
-        },
-        {
-          "name": "Bojuka Bog",
           "quantity": 1
         },
         {
@@ -21534,11 +21526,19 @@
           "quantity": 1
         },
         {
+          "name": "Ulamog, the Infinite Gyre",
+          "quantity": 1
+        },
+        {
+          "name": "Orcish Bowmasters",
+          "quantity": 1
+        },
+        {
           "name": "Tergrid, God of Fright // Tergrid's Lantern",
           "quantity": 1
         },
         {
-          "name": "Ulamog, the Infinite Gyre",
+          "name": "Field of the Dead",
           "quantity": 1
         }
       ]
@@ -22476,10 +22476,6 @@
           "quantity": 1
         },
         {
-          "name": "Death-Mask Duplicant",
-          "quantity": 1
-        },
-        {
           "name": "Destiny Spinner",
           "quantity": 1
         },
@@ -22497,10 +22493,6 @@
         },
         {
           "name": "Jaddi Offshoot",
-          "quantity": 1
-        },
-        {
-          "name": "Wall of Roots",
           "quantity": 1
         },
         {
@@ -22548,23 +22540,11 @@
           "quantity": 1
         },
         {
-          "name": "Origin of Metalbending",
-          "quantity": 1
-        },
-        {
           "name": "Springleaf Drum",
           "quantity": 1
         },
         {
-          "name": "Artifact Mutation",
-          "quantity": 1
-        },
-        {
           "name": "Scouring Sands",
-          "quantity": 1
-        },
-        {
-          "name": "Mind Stone",
           "quantity": 1
         },
         {
@@ -22581,6 +22561,14 @@
         },
         {
           "name": "Ragged Short Spear",
+          "quantity": 1
+        },
+        {
+          "name": "Origin of Metalbending",
+          "quantity": 1
+        },
+        {
+          "name": "Artifact Mutation",
           "quantity": 1
         },
         {
@@ -22605,6 +22593,18 @@
         },
         {
           "name": "Hull Breach",
+          "quantity": 1
+        },
+        {
+          "name": "Crop Rotation",
+          "quantity": 1
+        },
+        {
+          "name": "Jeska's Will",
+          "quantity": 1
+        },
+        {
+          "name": "Seedborn Muse",
           "quantity": 1
         }
       ]
@@ -23442,10 +23442,6 @@
           "quantity": 1
         },
         {
-          "name": "Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal",
-          "quantity": 1
-        },
-        {
           "name": "Yavimaya Elder",
           "quantity": 1
         },
@@ -23499,18 +23495,6 @@
         },
         {
           "name": "Broken Bond",
-          "quantity": 1
-        },
-        {
-          "name": "Hull Breach",
-          "quantity": 1
-        },
-        {
-          "name": "Cast Out",
-          "quantity": 1
-        },
-        {
-          "name": "Flick a Coin",
           "quantity": 1
         },
         {
@@ -23590,10 +23574,6 @@
           "quantity": 1
         },
         {
-          "name": "Wall of Roots",
-          "quantity": 1
-        },
-        {
           "name": "Wood Elves",
           "quantity": 1
         },
@@ -23618,15 +23598,7 @@
           "quantity": 1
         },
         {
-          "name": "Valorous Stance",
-          "quantity": 1
-        },
-        {
           "name": "Arcane Signet",
-          "quantity": 1
-        },
-        {
-          "name": "Sol Ring",
           "quantity": 1
         },
         {
@@ -23646,19 +23618,35 @@
           "quantity": 1
         },
         {
-          "name": "Origin of Metalbending",
-          "quantity": 1
-        },
-        {
           "name": "Skyshroud Claim",
           "quantity": 1
         },
         {
-          "name": "Fall of the First Civilization",
+          "name": "Fungal Plots",
           "quantity": 1
         },
         {
-          "name": "Fungal Plots",
+          "name": "Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal",
+          "quantity": 1
+        },
+        {
+          "name": "Cast Out",
+          "quantity": 1
+        },
+        {
+          "name": "Flick a Coin",
+          "quantity": 1
+        },
+        {
+          "name": "Valorous Stance",
+          "quantity": 1
+        },
+        {
+          "name": "Origin of Metalbending",
+          "quantity": 1
+        },
+        {
+          "name": "Fall of the First Civilization",
           "quantity": 1
         },
         {
@@ -23687,6 +23675,18 @@
         },
         {
           "name": "Zendikar Resurgent",
+          "quantity": 1
+        },
+        {
+          "name": "Crop Rotation",
+          "quantity": 1
+        },
+        {
+          "name": "Smothering Tithe",
+          "quantity": 1
+        },
+        {
+          "name": "Aura Shards",
           "quantity": 1
         }
       ]
@@ -24564,10 +24564,6 @@
           "quantity": 1
         },
         {
-          "name": "Fall of the First Civilization",
-          "quantity": 1
-        },
-        {
           "name": "Cleansing Nova",
           "quantity": 1
         },
@@ -24581,10 +24577,6 @@
         },
         {
           "name": "Nikko-Onna",
-          "quantity": 1
-        },
-        {
-          "name": "Geist of Saint Traft",
           "quantity": 1
         },
         {
@@ -24640,10 +24632,6 @@
           "quantity": 1
         },
         {
-          "name": "Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal",
-          "quantity": 1
-        },
-        {
           "name": "Grim Poppet",
           "quantity": 1
         },
@@ -24661,10 +24649,6 @@
         },
         {
           "name": "Staff of the Storyteller",
-          "quantity": 1
-        },
-        {
-          "name": "Spectacular Tactics",
           "quantity": 1
         },
         {
@@ -24688,19 +24672,7 @@
           "quantity": 1
         },
         {
-          "name": "Valorous Stance",
-          "quantity": 1
-        },
-        {
           "name": "Felidar Retreat",
-          "quantity": 1
-        },
-        {
-          "name": "Bitterthorn, Nissa's Animus",
-          "quantity": 1
-        },
-        {
-          "name": "Rapid Hybridization",
           "quantity": 1
         },
         {
@@ -24716,10 +24688,6 @@
           "quantity": 1
         },
         {
-          "name": "Mystic Confluence",
-          "quantity": 1
-        },
-        {
           "name": "Siren's Ruse",
           "quantity": 1
         },
@@ -24729,6 +24697,26 @@
         },
         {
           "name": "Fellwar Stone",
+          "quantity": 1
+        },
+        {
+          "name": "Fall of the First Civilization",
+          "quantity": 1
+        },
+        {
+          "name": "Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal",
+          "quantity": 1
+        },
+        {
+          "name": "Spectacular Tactics",
+          "quantity": 1
+        },
+        {
+          "name": "Valorous Stance",
+          "quantity": 1
+        },
+        {
+          "name": "Rapid Hybridization",
           "quantity": 1
         },
         {
@@ -24753,6 +24741,18 @@
         },
         {
           "name": "Swiftfoot Boots",
+          "quantity": 1
+        },
+        {
+          "name": "Smothering Tithe",
+          "quantity": 1
+        },
+        {
+          "name": "Rhystic Study",
+          "quantity": 1
+        },
+        {
+          "name": "Thassa's Oracle",
           "quantity": 1
         }
       ]
@@ -25590,10 +25590,6 @@
           "quantity": 1
         },
         {
-          "name": "Valorous Stance",
-          "quantity": 1
-        },
-        {
           "name": "Burnished Hart",
           "quantity": 1
         },
@@ -25639,10 +25635,6 @@
         },
         {
           "name": "Contentious Plan",
-          "quantity": 1
-        },
-        {
-          "name": "Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal",
           "quantity": 1
         },
         {
@@ -25758,10 +25750,6 @@
           "quantity": 1
         },
         {
-          "name": "Sphinx's Revelation",
-          "quantity": 1
-        },
-        {
           "name": "Mind Stone",
           "quantity": 1
         },
@@ -25786,15 +25774,7 @@
           "quantity": 1
         },
         {
-          "name": "Fall of the First Civilization",
-          "quantity": 1
-        },
-        {
           "name": "Return to Dust",
-          "quantity": 1
-        },
-        {
-          "name": "Pristine Talisman",
           "quantity": 1
         },
         {
@@ -25803,6 +25783,14 @@
         },
         {
           "name": "Portable Hole",
+          "quantity": 1
+        },
+        {
+          "name": "Valorous Stance",
+          "quantity": 1
+        },
+        {
+          "name": "Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal",
           "quantity": 1
         },
         {
@@ -25819,6 +25807,18 @@
         },
         {
           "name": "Eldrazi Ravager",
+          "quantity": 1
+        },
+        {
+          "name": "Consecrated Sphinx",
+          "quantity": 1
+        },
+        {
+          "name": "Rhystic Study",
+          "quantity": 1
+        },
+        {
+          "name": "Smothering Tithe",
           "quantity": 1
         }
       ]
@@ -26848,10 +26848,6 @@
           "quantity": 1
         },
         {
-          "name": "Collector's Vault",
-          "quantity": 1
-        },
-        {
           "name": "Perimeter Captain",
           "quantity": 1
         },
@@ -26868,10 +26864,6 @@
           "quantity": 1
         },
         {
-          "name": "Staff of Compleation",
-          "quantity": 1
-        },
-        {
           "name": "Wall of Tanglecord",
           "quantity": 1
         },
@@ -26881,10 +26873,6 @@
         },
         {
           "name": "Tetsuko Umezawa, Fugitive",
-          "quantity": 1
-        },
-        {
-          "name": "Pongify",
           "quantity": 1
         },
         {
@@ -26940,10 +26928,6 @@
           "quantity": 1
         },
         {
-          "name": "The Mightstone and Weakstone",
-          "quantity": 1
-        },
-        {
           "name": "Sylvan Caryatid",
           "quantity": 1
         },
@@ -26961,10 +26945,6 @@
         },
         {
           "name": "Angelic Wall",
-          "quantity": 1
-        },
-        {
-          "name": "Cast Out",
           "quantity": 1
         },
         {
@@ -27100,6 +27080,22 @@
           "quantity": 1
         },
         {
+          "name": "Collector's Vault",
+          "quantity": 1
+        },
+        {
+          "name": "Staff of Compleation",
+          "quantity": 1
+        },
+        {
+          "name": "Pongify",
+          "quantity": 1
+        },
+        {
+          "name": "Cast Out",
+          "quantity": 1
+        },
+        {
           "name": "Fateful Absence",
           "quantity": 1
         },
@@ -27124,10 +27120,6 @@
           "quantity": 1
         },
         {
-          "name": "Acidic Slime",
-          "quantity": 1
-        },
-        {
           "name": "Wall of Blossoms",
           "quantity": 1
         },
@@ -27137,10 +27129,6 @@
         },
         {
           "name": "Rishkar, Peema Renegade",
-          "quantity": 1
-        },
-        {
-          "name": "Axebane Guardian",
           "quantity": 1
         },
         {
@@ -27173,6 +27161,18 @@
         },
         {
           "name": "Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal",
+          "quantity": 1
+        },
+        {
+          "name": "Smothering Tithe",
+          "quantity": 1
+        },
+        {
+          "name": "Aura Shards",
+          "quantity": 1
+        },
+        {
+          "name": "Crop Rotation",
           "quantity": 1
         }
       ]
@@ -28046,10 +28046,6 @@
           "quantity": 1
         },
         {
-          "name": "Axebane Guardian",
-          "quantity": 1
-        },
-        {
           "name": "Overgrown Battlement",
           "quantity": 1
         },
@@ -28162,10 +28158,6 @@
           "quantity": 1
         },
         {
-          "name": "Mind Stone",
-          "quantity": 1
-        },
-        {
           "name": "Arcane Signet",
           "quantity": 1
         },
@@ -28202,10 +28194,6 @@
           "quantity": 1
         },
         {
-          "name": "Cast Out",
-          "quantity": 1
-        },
-        {
           "name": "Assault Formation",
           "quantity": 1
         },
@@ -28218,10 +28206,6 @@
           "quantity": 1
         },
         {
-          "name": "Skyclave Relic",
-          "quantity": 1
-        },
-        {
           "name": "Rolling Stones",
           "quantity": 1
         },
@@ -28231,6 +28215,10 @@
         },
         {
           "name": "Primary Research",
+          "quantity": 1
+        },
+        {
+          "name": "Mind Stone",
           "quantity": 1
         },
         {
@@ -28255,6 +28243,18 @@
         },
         {
           "name": "Angel of Serenity",
+          "quantity": 1
+        },
+        {
+          "name": "Crop Rotation",
+          "quantity": 1
+        },
+        {
+          "name": "Smothering Tithe",
+          "quantity": 1
+        },
+        {
+          "name": "Aura Shards",
           "quantity": 1
         }
       ]
@@ -29100,14 +29100,6 @@
           "quantity": 1
         },
         {
-          "name": "Danitha Capashen, Paragon",
-          "quantity": 1
-        },
-        {
-          "name": "Divert Disaster",
-          "quantity": 1
-        },
-        {
           "name": "Pilgrim's Eye",
           "quantity": 1
         },
@@ -29145,10 +29137,6 @@
         },
         {
           "name": "Remorseful Cleric",
-          "quantity": 1
-        },
-        {
-          "name": "Cloud's Limit Break",
           "quantity": 1
         },
         {
@@ -29204,10 +29192,6 @@
           "quantity": 1
         },
         {
-          "name": "Pongify",
-          "quantity": 1
-        },
-        {
           "name": "Fog Bank",
           "quantity": 1
         },
@@ -29232,19 +29216,11 @@
           "quantity": 1
         },
         {
-          "name": "Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal",
-          "quantity": 1
-        },
-        {
           "name": "Syr Alin, the Lion's Claw",
           "quantity": 1
         },
         {
           "name": "Knight of Old Benalia",
-          "quantity": 1
-        },
-        {
-          "name": "Polymorph",
           "quantity": 1
         },
         {
@@ -29280,6 +29256,26 @@
           "quantity": 1
         },
         {
+          "name": "Divert Disaster",
+          "quantity": 1
+        },
+        {
+          "name": "Cloud's Limit Break",
+          "quantity": 1
+        },
+        {
+          "name": "Pongify",
+          "quantity": 1
+        },
+        {
+          "name": "Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal",
+          "quantity": 1
+        },
+        {
+          "name": "Polymorph",
+          "quantity": 1
+        },
+        {
           "name": "Valorous Stance",
           "quantity": 1
         },
@@ -29300,10 +29296,6 @@
           "quantity": 1
         },
         {
-          "name": "Isperia, Supreme Judge",
-          "quantity": 1
-        },
-        {
           "name": "Windborn Muse",
           "quantity": 1
         },
@@ -29316,11 +29308,19 @@
           "quantity": 1
         },
         {
+          "name": "Sphinx's Revelation",
+          "quantity": 1
+        },
+        {
           "name": "Force of Will",
           "quantity": 1
         },
         {
-          "name": "Sphinx's Revelation",
+          "name": "Rhystic Study",
+          "quantity": 1
+        },
+        {
+          "name": "Consecrated Sphinx",
           "quantity": 1
         }
       ]
@@ -30170,23 +30170,11 @@
           "quantity": 1
         },
         {
-          "name": "Spectacular Tactics",
-          "quantity": 1
-        },
-        {
-          "name": "Terror",
-          "quantity": 1
-        },
-        {
           "name": "Animate Dead",
           "quantity": 1
         },
         {
           "name": "Bitterthorn, Nissa's Animus",
-          "quantity": 1
-        },
-        {
-          "name": "Giada, Font of Hope",
           "quantity": 1
         },
         {
@@ -30222,15 +30210,7 @@
           "quantity": 1
         },
         {
-          "name": "Cloud's Limit Break",
-          "quantity": 1
-        },
-        {
           "name": "Lorehold Archivist // Restore Relic",
-          "quantity": 1
-        },
-        {
-          "name": "Brainspoil",
           "quantity": 1
         },
         {
@@ -30271,14 +30251,6 @@
         },
         {
           "name": "Salvation Colossus",
-          "quantity": 1
-        },
-        {
-          "name": "Terminate",
-          "quantity": 1
-        },
-        {
-          "name": "Zetalpa, Primal Dawn",
           "quantity": 1
         },
         {
@@ -30326,10 +30298,6 @@
           "quantity": 1
         },
         {
-          "name": "Big Game Hunter",
-          "quantity": 1
-        },
-        {
           "name": "Currency Converter",
           "quantity": 1
         },
@@ -30370,6 +30338,30 @@
           "quantity": 1
         },
         {
+          "name": "Costly Plunder",
+          "quantity": 1
+        },
+        {
+          "name": "Spectacular Tactics",
+          "quantity": 1
+        },
+        {
+          "name": "Terror",
+          "quantity": 1
+        },
+        {
+          "name": "Cloud's Limit Break",
+          "quantity": 1
+        },
+        {
+          "name": "Terminate",
+          "quantity": 1
+        },
+        {
+          "name": "Big Game Hunter",
+          "quantity": 1
+        },
+        {
           "name": "Long Goodbye",
           "quantity": 1
         },
@@ -30379,10 +30371,6 @@
         },
         {
           "name": "Valorous Stance",
-          "quantity": 1
-        },
-        {
-          "name": "Costly Plunder",
           "quantity": 1
         },
         {
@@ -30403,6 +30391,18 @@
         },
         {
           "name": "Sun Titan",
+          "quantity": 1
+        },
+        {
+          "name": "Demonic Tutor",
+          "quantity": 1
+        },
+        {
+          "name": "Smothering Tithe",
+          "quantity": 1
+        },
+        {
+          "name": "Orcish Bowmasters",
           "quantity": 1
         }
       ]
@@ -31220,10 +31220,6 @@
           "quantity": 18
         },
         {
-          "name": "Boros Charm",
-          "quantity": 1
-        },
-        {
           "name": "Felidar Sovereign",
           "quantity": 1
         },
@@ -31268,10 +31264,6 @@
           "quantity": 1
         },
         {
-          "name": "Currency Converter",
-          "quantity": 1
-        },
-        {
           "name": "Staff of the Storyteller",
           "quantity": 1
         },
@@ -31289,10 +31281,6 @@
         },
         {
           "name": "Remorseful Cleric",
-          "quantity": 1
-        },
-        {
-          "name": "Valorous Stance",
           "quantity": 1
         },
         {
@@ -31340,15 +31328,7 @@
           "quantity": 1
         },
         {
-          "name": "City of Traitors",
-          "quantity": 1
-        },
-        {
           "name": "Angel of Serenity",
-          "quantity": 1
-        },
-        {
-          "name": "Plague Myr",
           "quantity": 1
         },
         {
@@ -31369,10 +31349,6 @@
         },
         {
           "name": "Venerable Warsinger",
-          "quantity": 1
-        },
-        {
-          "name": "Chaos Warp",
           "quantity": 1
         },
         {
@@ -31424,18 +31400,6 @@
           "quantity": 1
         },
         {
-          "name": "Spectacular Tactics",
-          "quantity": 1
-        },
-        {
-          "name": "Final Showdown",
-          "quantity": 1
-        },
-        {
-          "name": "Jaya Ballard, Task Mage",
-          "quantity": 1
-        },
-        {
           "name": "Astral Cornucopia",
           "quantity": 1
         },
@@ -31449,6 +31413,30 @@
         },
         {
           "name": "Pristine Talisman",
+          "quantity": 1
+        },
+        {
+          "name": "Boros Charm",
+          "quantity": 1
+        },
+        {
+          "name": "Valorous Stance",
+          "quantity": 1
+        },
+        {
+          "name": "Plague Myr",
+          "quantity": 1
+        },
+        {
+          "name": "Chaos Warp",
+          "quantity": 1
+        },
+        {
+          "name": "Spectacular Tactics",
+          "quantity": 1
+        },
+        {
+          "name": "Jaya Ballard, Task Mage",
           "quantity": 1
         },
         {
@@ -31469,6 +31457,18 @@
         },
         {
           "name": "Dismantling Wave",
+          "quantity": 1
+        },
+        {
+          "name": "Final Showdown",
+          "quantity": 1
+        },
+        {
+          "name": "Field of the Dead",
+          "quantity": 1
+        },
+        {
+          "name": "Jeska's Will",
           "quantity": 1
         }
       ]
@@ -32442,10 +32442,6 @@
           "quantity": 1
         },
         {
-          "name": "Pristine Talisman",
-          "quantity": 1
-        },
-        {
           "name": "Selesnya Signet",
           "quantity": 1
         },
@@ -32510,19 +32506,11 @@
           "quantity": 1
         },
         {
-          "name": "Terramorphic Expanse",
-          "quantity": 1
-        },
-        {
           "name": "Collective Resistance",
           "quantity": 1
         },
         {
           "name": "Intangible Virtue",
-          "quantity": 1
-        },
-        {
-          "name": "Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal",
           "quantity": 1
         },
         {
@@ -32535,6 +32523,18 @@
         },
         {
           "name": "Unbreakable Formation",
+          "quantity": 1
+        },
+        {
+          "name": "Aura Shards",
+          "quantity": 1
+        },
+        {
+          "name": "Crop Rotation",
+          "quantity": 1
+        },
+        {
+          "name": "Field of the Dead",
           "quantity": 1
         }
       ]
@@ -33380,10 +33380,6 @@
           "quantity": 1
         },
         {
-          "name": "Spectacular Tactics",
-          "quantity": 1
-        },
-        {
           "name": "Bitterthorn, Nissa's Animus",
           "quantity": 1
         },
@@ -33397,10 +33393,6 @@
         },
         {
           "name": "Pristine Talisman",
-          "quantity": 1
-        },
-        {
-          "name": "Orzhov Signet",
           "quantity": 1
         },
         {
@@ -33444,15 +33436,7 @@
           "quantity": 1
         },
         {
-          "name": "Valorous Stance",
-          "quantity": 1
-        },
-        {
           "name": "Fell the Mighty",
-          "quantity": 1
-        },
-        {
-          "name": "Big Game Hunter",
           "quantity": 1
         },
         {
@@ -33477,10 +33461,6 @@
         },
         {
           "name": "Blight Pile",
-          "quantity": 1
-        },
-        {
-          "name": "Protector of the Wastes",
           "quantity": 1
         },
         {
@@ -33556,10 +33536,6 @@
           "quantity": 1
         },
         {
-          "name": "Long Goodbye",
-          "quantity": 1
-        },
-        {
           "name": "Colfenor's Urn",
           "quantity": 1
         },
@@ -33572,10 +33548,6 @@
           "quantity": 1
         },
         {
-          "name": "Terror",
-          "quantity": 1
-        },
-        {
           "name": "Teyo, the Shieldmage",
           "quantity": 1
         },
@@ -33584,11 +33556,27 @@
           "quantity": 1
         },
         {
-          "name": "Puresteel Paladin",
+          "name": "Spectacular Tactics",
           "quantity": 1
         },
         {
-          "name": "Danitha Capashen, Paragon",
+          "name": "Valorous Stance",
+          "quantity": 1
+        },
+        {
+          "name": "Big Game Hunter",
+          "quantity": 1
+        },
+        {
+          "name": "Long Goodbye",
+          "quantity": 1
+        },
+        {
+          "name": "Terror",
+          "quantity": 1
+        },
+        {
+          "name": "Puresteel Paladin",
           "quantity": 1
         },
         {
@@ -33601,6 +33589,18 @@
         },
         {
           "name": "Sun Titan",
+          "quantity": 1
+        },
+        {
+          "name": "Smothering Tithe",
+          "quantity": 1
+        },
+        {
+          "name": "Braids, Cabal Minion",
+          "quantity": 1
+        },
+        {
+          "name": "Orcish Bowmasters",
           "quantity": 1
         }
       ]
@@ -34650,10 +34650,6 @@
           "quantity": 1
         },
         {
-          "name": "Price of Freedom",
-          "quantity": 1
-        },
-        {
           "name": "Relic Retriever",
           "quantity": 1
         },
@@ -34663,10 +34659,6 @@
         },
         {
           "name": "Turbulent Steppe",
-          "quantity": 1
-        },
-        {
-          "name": "Fateful Absence",
           "quantity": 1
         },
         {
@@ -34747,10 +34739,6 @@
         },
         {
           "name": "Bitterthorn, Nissa's Animus",
-          "quantity": 1
-        },
-        {
-          "name": "Battlefield Forge",
           "quantity": 1
         },
         {
@@ -34902,19 +34890,19 @@
           "quantity": 6
         },
         {
+          "name": "Price of Freedom",
+          "quantity": 1
+        },
+        {
+          "name": "Fateful Absence",
+          "quantity": 1
+        },
+        {
           "name": "Darksteel Plate",
           "quantity": 1
         },
         {
-          "name": "Cloud's Limit Break",
-          "quantity": 1
-        },
-        {
           "name": "Cast Out",
-          "quantity": 1
-        },
-        {
-          "name": "Spectacular Spider-Man",
           "quantity": 1
         },
         {
@@ -34946,10 +34934,6 @@
           "quantity": 1
         },
         {
-          "name": "Coldsteel Heart",
-          "quantity": 1
-        },
-        {
           "name": "Boros Charm",
           "quantity": 1
         },
@@ -34971,6 +34955,22 @@
         },
         {
           "name": "Skullclamp",
+          "quantity": 1
+        },
+        {
+          "name": "Spectacular Spider-Man",
+          "quantity": 1
+        },
+        {
+          "name": "Farewell",
+          "quantity": 1
+        },
+        {
+          "name": "Field of the Dead",
+          "quantity": 1
+        },
+        {
+          "name": "Jeska's Will",
           "quantity": 1
         }
       ]
@@ -36212,10 +36212,6 @@
           "quantity": 1
         },
         {
-          "name": "Rune-Scarred Demon",
-          "quantity": 1
-        },
-        {
           "name": "Twilight Shepherd",
           "quantity": 1
         },
@@ -36249,10 +36245,6 @@
         },
         {
           "name": "Hallowed Spiritkeeper",
-          "quantity": 1
-        },
-        {
-          "name": "Sifter of Skulls",
           "quantity": 1
         },
         {
@@ -36476,15 +36468,23 @@
           "quantity": 1
         },
         {
-          "name": "Fauna Shaman",
-          "quantity": 1
-        },
-        {
           "name": "Luminous Broodmoth",
           "quantity": 1
         },
         {
           "name": "Karmic Guide",
+          "quantity": 1
+        },
+        {
+          "name": "Crop Rotation",
+          "quantity": 1
+        },
+        {
+          "name": "Demonic Tutor",
+          "quantity": 1
+        },
+        {
+          "name": "Worldly Tutor",
           "quantity": 1
         }
       ]
@@ -37346,10 +37346,6 @@
           "quantity": 1
         },
         {
-          "name": "Troll Negotiations",
-          "quantity": 1
-        },
-        {
           "name": "Fuel for the Cause",
           "quantity": 1
         },
@@ -37363,10 +37359,6 @@
         },
         {
           "name": "Skyclave Relic",
-          "quantity": 1
-        },
-        {
-          "name": "Inspiring Call",
           "quantity": 1
         },
         {
@@ -37470,10 +37462,6 @@
           "quantity": 1
         },
         {
-          "name": "Currency Converter",
-          "quantity": 1
-        },
-        {
           "name": "Zuko's Exile",
           "quantity": 1
         },
@@ -37551,6 +37539,18 @@
         },
         {
           "name": "Genesis Wave",
+          "quantity": 1
+        },
+        {
+          "name": "Crop Rotation",
+          "quantity": 1
+        },
+        {
+          "name": "Rhystic Study",
+          "quantity": 1
+        },
+        {
+          "name": "Thassa's Oracle",
           "quantity": 1
         }
       ]
@@ -38368,10 +38368,6 @@
           "quantity": 18
         },
         {
-          "name": "Morbid Opportunist",
-          "quantity": 1
-        },
-        {
           "name": "Reclamation Sage",
           "quantity": 1
         },
@@ -38441,10 +38437,6 @@
         },
         {
           "name": "Feed the Swarm",
-          "quantity": 1
-        },
-        {
-          "name": "Sylvan Caryatid",
           "quantity": 1
         },
         {
@@ -38564,10 +38556,6 @@
           "quantity": 1
         },
         {
-          "name": "Tragic Slip",
-          "quantity": 1
-        },
-        {
           "name": "Long Goodbye",
           "quantity": 1
         },
@@ -38617,6 +38605,18 @@
         },
         {
           "name": "Grave Titan",
+          "quantity": 1
+        },
+        {
+          "name": "Crop Rotation",
+          "quantity": 1
+        },
+        {
+          "name": "Orcish Bowmasters",
+          "quantity": 1
+        },
+        {
+          "name": "Tergrid, God of Fright // Tergrid's Lantern",
           "quantity": 1
         }
       ]
@@ -39450,10 +39450,6 @@
           "quantity": 12
         },
         {
-          "name": "Sidisi, Undead Vizier",
-          "quantity": 1
-        },
-        {
           "name": "Zendikar's Roil",
           "quantity": 1
         },
@@ -39558,14 +39554,6 @@
           "quantity": 1
         },
         {
-          "name": "Terror",
-          "quantity": 1
-        },
-        {
-          "name": "Arcane Signet",
-          "quantity": 1
-        },
-        {
           "name": "Go for the Throat",
           "quantity": 1
         },
@@ -39610,6 +39598,10 @@
           "quantity": 1
         },
         {
+          "name": "Terror",
+          "quantity": 1
+        },
+        {
           "name": "Origin of Metalbending",
           "quantity": 1
         },
@@ -39631,10 +39623,6 @@
         },
         {
           "name": "Sepulchral Primordial",
-          "quantity": 1
-        },
-        {
-          "name": "Craterhoof Behemoth",
           "quantity": 1
         },
         {
@@ -39699,6 +39687,18 @@
         },
         {
           "name": "Pongify",
+          "quantity": 1
+        },
+        {
+          "name": "Crop Rotation",
+          "quantity": 1
+        },
+        {
+          "name": "Demonic Tutor",
+          "quantity": 1
+        },
+        {
+          "name": "Tergrid, God of Fright // Tergrid's Lantern",
           "quantity": 1
         }
       ]
@@ -40548,10 +40548,6 @@
           "quantity": 1
         },
         {
-          "name": "Arcane Signet",
-          "quantity": 1
-        },
-        {
           "name": "Village Rites",
           "quantity": 1
         },
@@ -40581,10 +40577,6 @@
         },
         {
           "name": "Cultivate",
-          "quantity": 1
-        },
-        {
-          "name": "Cruel Revival",
           "quantity": 1
         },
         {
@@ -40649,10 +40641,6 @@
         },
         {
           "name": "The Gitrog Monster",
-          "quantity": 1
-        },
-        {
-          "name": "Corpse Connoisseur",
           "quantity": 1
         },
         {
@@ -40724,15 +40712,7 @@
           "quantity": 1
         },
         {
-          "name": "Rapid Hybridization",
-          "quantity": 1
-        },
-        {
           "name": "Splendid Reclamation",
-          "quantity": 1
-        },
-        {
-          "name": "Pongify",
           "quantity": 1
         },
         {
@@ -40756,11 +40736,19 @@
           "quantity": 1
         },
         {
-          "name": "Sublime Epiphany",
+          "name": "Cruel Revival",
           "quantity": 1
         },
         {
-          "name": "Sidisi, Undead Vizier",
+          "name": "Rapid Hybridization",
+          "quantity": 1
+        },
+        {
+          "name": "Pongify",
+          "quantity": 1
+        },
+        {
+          "name": "Sublime Epiphany",
           "quantity": 1
         },
         {
@@ -40781,6 +40769,18 @@
         },
         {
           "name": "Heroic Intervention",
+          "quantity": 1
+        },
+        {
+          "name": "Crop Rotation",
+          "quantity": 1
+        },
+        {
+          "name": "Demonic Tutor",
+          "quantity": 1
+        },
+        {
+          "name": "Worldly Tutor",
           "quantity": 1
         }
       ]
@@ -41590,10 +41590,6 @@
           "quantity": 1
         },
         {
-          "name": "Cultivator's Caravan",
-          "quantity": 1
-        },
-        {
           "name": "Seize the Spoils",
           "quantity": 1
         },
@@ -41666,10 +41662,6 @@
           "quantity": 1
         },
         {
-          "name": "Spectacular Spider-Man",
-          "quantity": 1
-        },
-        {
           "name": "Angel of Glory's Rise",
           "quantity": 1
         },
@@ -41691,10 +41683,6 @@
         },
         {
           "name": "Extinguisher Battleship",
-          "quantity": 1
-        },
-        {
-          "name": "Worldslayer",
           "quantity": 1
         },
         {
@@ -41734,31 +41722,11 @@
           "quantity": 1
         },
         {
-          "name": "Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal",
-          "quantity": 1
-        },
-        {
           "name": "Atsushi, the Blazing Sky",
           "quantity": 1
         },
         {
-          "name": "Spectacular Tactics",
-          "quantity": 1
-        },
-        {
-          "name": "Jaya Ballard, Task Mage",
-          "quantity": 1
-        },
-        {
-          "name": "Valorous Stance",
-          "quantity": 1
-        },
-        {
           "name": "Mask of Memory",
-          "quantity": 1
-        },
-        {
-          "name": "Giant's Boulder",
           "quantity": 1
         },
         {
@@ -41798,27 +41766,11 @@
           "quantity": 1
         },
         {
-          "name": "Emergency Eject",
-          "quantity": 1
-        },
-        {
           "name": "Psychotic Fury",
           "quantity": 1
         },
         {
-          "name": "Breeches, Eager Pillager",
-          "quantity": 1
-        },
-        {
           "name": "Hoarding Ogre",
-          "quantity": 1
-        },
-        {
-          "name": "Pyroblast",
-          "quantity": 1
-        },
-        {
-          "name": "Argentum Masticore",
           "quantity": 1
         },
         {
@@ -41848,6 +41800,54 @@
         {
           "name": "Plains",
           "quantity": 12
+        },
+        {
+          "name": "Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal",
+          "quantity": 1
+        },
+        {
+          "name": "Spectacular Tactics",
+          "quantity": 1
+        },
+        {
+          "name": "Jaya Ballard, Task Mage",
+          "quantity": 1
+        },
+        {
+          "name": "Valorous Stance",
+          "quantity": 1
+        },
+        {
+          "name": "Giant's Boulder",
+          "quantity": 1
+        },
+        {
+          "name": "Emergency Eject",
+          "quantity": 1
+        },
+        {
+          "name": "Pyroblast",
+          "quantity": 1
+        },
+        {
+          "name": "Argentum Masticore",
+          "quantity": 1
+        },
+        {
+          "name": "Spectacular Spider-Man",
+          "quantity": 1
+        },
+        {
+          "name": "Smothering Tithe",
+          "quantity": 1
+        },
+        {
+          "name": "Jeska's Will",
+          "quantity": 1
+        },
+        {
+          "name": "Farewell",
+          "quantity": 1
         }
       ]
     },
@@ -42772,10 +42772,6 @@
           "quantity": 1
         },
         {
-          "name": "The Mightstone and Weakstone",
-          "quantity": 1
-        },
-        {
           "name": "Explorer's Scope",
           "quantity": 1
         },
@@ -42808,10 +42804,6 @@
           "quantity": 1
         },
         {
-          "name": "Battle Angels of Tyr",
-          "quantity": 1
-        },
-        {
           "name": "Firemane Commando",
           "quantity": 1
         },
@@ -42836,10 +42828,6 @@
           "quantity": 1
         },
         {
-          "name": "The Eternal Wanderer",
-          "quantity": 1
-        },
-        {
           "name": "Fall of the First Civilization",
           "quantity": 1
         },
@@ -42848,23 +42836,11 @@
           "quantity": 1
         },
         {
-          "name": "Demolition Field",
-          "quantity": 1
-        },
-        {
           "name": "Myr Battlesphere",
           "quantity": 1
         },
         {
-          "name": "Mind Stone",
-          "quantity": 1
-        },
-        {
           "name": "Extinguisher Battleship",
-          "quantity": 1
-        },
-        {
-          "name": "Staff of Compleation",
           "quantity": 1
         },
         {
@@ -42884,39 +42860,7 @@
           "quantity": 1
         },
         {
-          "name": "Dragon's Hoard",
-          "quantity": 1
-        },
-        {
-          "name": "Beza, the Bounding Spring",
-          "quantity": 1
-        },
-        {
           "name": "Zetalpa, Primal Dawn",
-          "quantity": 1
-        },
-        {
-          "name": "Currency Converter",
-          "quantity": 1
-        },
-        {
-          "name": "Collector's Vault",
-          "quantity": 1
-        },
-        {
-          "name": "Disenchant",
-          "quantity": 1
-        },
-        {
-          "name": "Argentum Masticore",
-          "quantity": 1
-        },
-        {
-          "name": "Destroy Evil",
-          "quantity": 1
-        },
-        {
-          "name": "Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal",
           "quantity": 1
         },
         {
@@ -42932,35 +42876,11 @@
           "quantity": 1
         },
         {
-          "name": "Giant's Boulder",
-          "quantity": 1
-        },
-        {
-          "name": "Commander's Sphere",
-          "quantity": 1
-        },
-        {
           "name": "The Sentry, Golden Guardian",
           "quantity": 1
         },
         {
-          "name": "Master of Ceremonies",
-          "quantity": 1
-        },
-        {
-          "name": "Your Temple Is Under Attack",
-          "quantity": 1
-        },
-        {
           "name": "Eldrazi Ravager",
-          "quantity": 1
-        },
-        {
-          "name": "Eldrazi Confluence",
-          "quantity": 1
-        },
-        {
-          "name": "Bandit's Haul",
           "quantity": 1
         },
         {
@@ -42976,31 +42896,7 @@
           "quantity": 1
         },
         {
-          "name": "Spectacular Tactics",
-          "quantity": 1
-        },
-        {
-          "name": "Dawn's Truce",
-          "quantity": 1
-        },
-        {
-          "name": "Strixhaven Stadium",
-          "quantity": 1
-        },
-        {
-          "name": "Repel Calamity",
-          "quantity": 1
-        },
-        {
           "name": "Thran Power Suit",
-          "quantity": 1
-        },
-        {
-          "name": "Archangel of Thune",
-          "quantity": 1
-        },
-        {
-          "name": "Valorous Stance",
           "quantity": 1
         },
         {
@@ -43052,12 +42948,116 @@
           "quantity": 1
         },
         {
-          "name": "Ash Barrens",
+          "name": "Plains",
+          "quantity": 26
+        },
+        {
+          "name": "The Mightstone and Weakstone",
           "quantity": 1
         },
         {
-          "name": "Plains",
-          "quantity": 26
+          "name": "Battle Angels of Tyr",
+          "quantity": 1
+        },
+        {
+          "name": "Demolition Field",
+          "quantity": 1
+        },
+        {
+          "name": "Mind Stone",
+          "quantity": 1
+        },
+        {
+          "name": "Staff of Compleation",
+          "quantity": 1
+        },
+        {
+          "name": "Dragon's Hoard",
+          "quantity": 1
+        },
+        {
+          "name": "Beza, the Bounding Spring",
+          "quantity": 1
+        },
+        {
+          "name": "Currency Converter",
+          "quantity": 1
+        },
+        {
+          "name": "Collector's Vault",
+          "quantity": 1
+        },
+        {
+          "name": "Disenchant",
+          "quantity": 1
+        },
+        {
+          "name": "Argentum Masticore",
+          "quantity": 1
+        },
+        {
+          "name": "Destroy Evil",
+          "quantity": 1
+        },
+        {
+          "name": "Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal",
+          "quantity": 1
+        },
+        {
+          "name": "Giant's Boulder",
+          "quantity": 1
+        },
+        {
+          "name": "Commander's Sphere",
+          "quantity": 1
+        },
+        {
+          "name": "Master of Ceremonies",
+          "quantity": 1
+        },
+        {
+          "name": "Your Temple Is Under Attack",
+          "quantity": 1
+        },
+        {
+          "name": "Eldrazi Confluence",
+          "quantity": 1
+        },
+        {
+          "name": "Bandit's Haul",
+          "quantity": 1
+        },
+        {
+          "name": "Spectacular Tactics",
+          "quantity": 1
+        },
+        {
+          "name": "Dawn's Truce",
+          "quantity": 1
+        },
+        {
+          "name": "Repel Calamity",
+          "quantity": 1
+        },
+        {
+          "name": "Valorous Stance",
+          "quantity": 1
+        },
+        {
+          "name": "Archangel of Thune",
+          "quantity": 1
+        },
+        {
+          "name": "Smothering Tithe",
+          "quantity": 1
+        },
+        {
+          "name": "Field of the Dead",
+          "quantity": 1
+        },
+        {
+          "name": "Farewell",
+          "quantity": 1
         }
       ]
     },
@@ -43866,10 +43866,6 @@
           "quantity": 1
         },
         {
-          "name": "Pyroblast",
-          "quantity": 1
-        },
-        {
           "name": "Seize the Spoils",
           "quantity": 1
         },
@@ -43942,14 +43938,6 @@
           "quantity": 1
         },
         {
-          "name": "Cloud's Limit Break",
-          "quantity": 1
-        },
-        {
-          "name": "Jaya Ballard, Task Mage",
-          "quantity": 1
-        },
-        {
           "name": "Steel Hellkite",
           "quantity": 1
         },
@@ -43971,10 +43959,6 @@
         },
         {
           "name": "Worldslayer",
-          "quantity": 1
-        },
-        {
-          "name": "Mox Diamond",
           "quantity": 1
         },
         {
@@ -44010,10 +43994,6 @@
           "quantity": 1
         },
         {
-          "name": "Valorous Stance",
-          "quantity": 1
-        },
-        {
           "name": "Atsushi, the Blazing Sky",
           "quantity": 1
         },
@@ -44026,15 +44006,7 @@
           "quantity": 1
         },
         {
-          "name": "Argentum Masticore",
-          "quantity": 1
-        },
-        {
           "name": "Mask of Memory",
-          "quantity": 1
-        },
-        {
-          "name": "Ultima, Origin of Oblivion",
           "quantity": 1
         },
         {
@@ -44074,10 +44046,6 @@
           "quantity": 1
         },
         {
-          "name": "Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal",
-          "quantity": 1
-        },
-        {
           "name": "Psychotic Fury",
           "quantity": 1
         },
@@ -44087,14 +44055,6 @@
         },
         {
           "name": "Hoarding Ogre",
-          "quantity": 1
-        },
-        {
-          "name": "Spectacular Tactics",
-          "quantity": 1
-        },
-        {
-          "name": "Season of the Burrow",
           "quantity": 1
         },
         {
@@ -44124,6 +44084,46 @@
         {
           "name": "Plains",
           "quantity": 13
+        },
+        {
+          "name": "Pyroblast",
+          "quantity": 1
+        },
+        {
+          "name": "Cloud's Limit Break",
+          "quantity": 1
+        },
+        {
+          "name": "Jaya Ballard, Task Mage",
+          "quantity": 1
+        },
+        {
+          "name": "Valorous Stance",
+          "quantity": 1
+        },
+        {
+          "name": "Argentum Masticore",
+          "quantity": 1
+        },
+        {
+          "name": "Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal",
+          "quantity": 1
+        },
+        {
+          "name": "Spectacular Tactics",
+          "quantity": 1
+        },
+        {
+          "name": "Season of the Burrow",
+          "quantity": 1
+        },
+        {
+          "name": "Smothering Tithe",
+          "quantity": 1
+        },
+        {
+          "name": "Jeska's Will",
+          "quantity": 1
         }
       ]
     },
@@ -44956,27 +44956,11 @@
           "quantity": 1
         },
         {
-          "name": "Artifact Mutation",
-          "quantity": 1
-        },
-        {
           "name": "Hoarding Ogre",
           "quantity": 1
         },
         {
-          "name": "Selvala, Heart of the Wilds",
-          "quantity": 1
-        },
-        {
-          "name": "Heritage Reclamation",
-          "quantity": 1
-        },
-        {
           "name": "Garruk's Uprising",
-          "quantity": 1
-        },
-        {
-          "name": "Insidious Fungus",
           "quantity": 1
         },
         {
@@ -45004,35 +44988,7 @@
           "quantity": 1
         },
         {
-          "name": "The Celestus",
-          "quantity": 1
-        },
-        {
-          "name": "Toski, Bearer of Secrets",
-          "quantity": 1
-        },
-        {
-          "name": "Urabrask // The Great Work",
-          "quantity": 1
-        },
-        {
-          "name": "Jaya Ballard, Task Mage",
-          "quantity": 1
-        },
-        {
-          "name": "Sunset Strikemaster",
-          "quantity": 1
-        },
-        {
-          "name": "Tyrant Guard",
-          "quantity": 1
-        },
-        {
           "name": "Raging Swordtooth",
-          "quantity": 1
-        },
-        {
-          "name": "Solemn Simulacrum",
           "quantity": 1
         },
         {
@@ -45052,31 +45008,11 @@
           "quantity": 1
         },
         {
-          "name": "Unstable Obelisk",
-          "quantity": 1
-        },
-        {
-          "name": "Warping Wail",
-          "quantity": 1
-        },
-        {
           "name": "Savage Ventmaw",
           "quantity": 1
         },
         {
-          "name": "Seize the Spoils",
-          "quantity": 1
-        },
-        {
-          "name": "Big Score",
-          "quantity": 1
-        },
-        {
           "name": "Zephyr Boots",
-          "quantity": 1
-        },
-        {
-          "name": "Stonespeaker Crystal",
           "quantity": 1
         },
         {
@@ -45096,10 +45032,6 @@
           "quantity": 1
         },
         {
-          "name": "Domri, Anarch of Bolas",
-          "quantity": 1
-        },
-        {
           "name": "Atsushi, the Blazing Sky",
           "quantity": 1
         },
@@ -45112,18 +45044,6 @@
           "quantity": 1
         },
         {
-          "name": "Reckoner Bankbuster",
-          "quantity": 1
-        },
-        {
-          "name": "Origin of Metalbending",
-          "quantity": 1
-        },
-        {
-          "name": "Bonders' Enclave",
-          "quantity": 1
-        },
-        {
           "name": "Mask of Memory",
           "quantity": 1
         },
@@ -45132,27 +45052,7 @@
           "quantity": 1
         },
         {
-          "name": "Zuko's Exile",
-          "quantity": 1
-        },
-        {
-          "name": "Veil of Summer",
-          "quantity": 1
-        },
-        {
-          "name": "Eladamri, Lord of Leaves",
-          "quantity": 1
-        },
-        {
-          "name": "Collective Resistance",
-          "quantity": 1
-        },
-        {
           "name": "Crash Through",
-          "quantity": 1
-        },
-        {
-          "name": "Pyroblast",
           "quantity": 1
         },
         {
@@ -45190,6 +45090,106 @@
         {
           "name": "Mountain",
           "quantity": 13
+        },
+        {
+          "name": "Artifact Mutation",
+          "quantity": 1
+        },
+        {
+          "name": "Selvala, Heart of the Wilds",
+          "quantity": 1
+        },
+        {
+          "name": "Heritage Reclamation",
+          "quantity": 1
+        },
+        {
+          "name": "Insidious Fungus",
+          "quantity": 1
+        },
+        {
+          "name": "The Celestus",
+          "quantity": 1
+        },
+        {
+          "name": "Toski, Bearer of Secrets",
+          "quantity": 1
+        },
+        {
+          "name": "Jaya Ballard, Task Mage",
+          "quantity": 1
+        },
+        {
+          "name": "Sunset Strikemaster",
+          "quantity": 1
+        },
+        {
+          "name": "Tyrant Guard",
+          "quantity": 1
+        },
+        {
+          "name": "Solemn Simulacrum",
+          "quantity": 1
+        },
+        {
+          "name": "Unstable Obelisk",
+          "quantity": 1
+        },
+        {
+          "name": "Warping Wail",
+          "quantity": 1
+        },
+        {
+          "name": "Seize the Spoils",
+          "quantity": 1
+        },
+        {
+          "name": "Big Score",
+          "quantity": 1
+        },
+        {
+          "name": "Stonespeaker Crystal",
+          "quantity": 1
+        },
+        {
+          "name": "Domri, Anarch of Bolas",
+          "quantity": 1
+        },
+        {
+          "name": "Reckoner Bankbuster",
+          "quantity": 1
+        },
+        {
+          "name": "Origin of Metalbending",
+          "quantity": 1
+        },
+        {
+          "name": "Zuko's Exile",
+          "quantity": 1
+        },
+        {
+          "name": "Veil of Summer",
+          "quantity": 1
+        },
+        {
+          "name": "Collective Resistance",
+          "quantity": 1
+        },
+        {
+          "name": "Pyroblast",
+          "quantity": 1
+        },
+        {
+          "name": "Jeska's Will",
+          "quantity": 1
+        },
+        {
+          "name": "Field of the Dead",
+          "quantity": 1
+        },
+        {
+          "name": "Seedborn Muse",
+          "quantity": 1
         }
       ]
     },
@@ -46186,27 +46186,11 @@
           "quantity": 1
         },
         {
-          "name": "Destroy Evil",
-          "quantity": 1
-        },
-        {
-          "name": "Slip On the Ring",
-          "quantity": 1
-        },
-        {
           "name": "Myr Battlesphere",
           "quantity": 1
         },
         {
           "name": "Artisan of Kozilek",
-          "quantity": 1
-        },
-        {
-          "name": "Repel Calamity",
-          "quantity": 1
-        },
-        {
-          "name": "Worldslayer",
           "quantity": 1
         },
         {
@@ -46238,27 +46222,7 @@
           "quantity": 1
         },
         {
-          "name": "Ultima, Origin of Oblivion",
-          "quantity": 1
-        },
-        {
           "name": "Sanctuary Warden",
-          "quantity": 1
-        },
-        {
-          "name": "Cathar Commando",
-          "quantity": 1
-        },
-        {
-          "name": "Demolition Field",
-          "quantity": 1
-        },
-        {
-          "name": "Collective Effort",
-          "quantity": 1
-        },
-        {
-          "name": "Argentum Masticore",
           "quantity": 1
         },
         {
@@ -46271,10 +46235,6 @@
         },
         {
           "name": "Weathered Sentinels",
-          "quantity": 1
-        },
-        {
-          "name": "Disenchant",
           "quantity": 1
         },
         {
@@ -46306,19 +46266,11 @@
           "quantity": 1
         },
         {
-          "name": "Rootborn Defenses",
-          "quantity": 1
-        },
-        {
           "name": "Angel of Indemnity",
           "quantity": 1
         },
         {
           "name": "Chocobo Knights",
-          "quantity": 1
-        },
-        {
-          "name": "Spectacular Tactics",
           "quantity": 1
         },
         {
@@ -46330,23 +46282,7 @@
           "quantity": 1
         },
         {
-          "name": "Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal",
-          "quantity": 1
-        },
-        {
           "name": "Thran Power Suit",
-          "quantity": 1
-        },
-        {
-          "name": "Giant's Boulder",
-          "quantity": 1
-        },
-        {
-          "name": "Valorous Stance",
-          "quantity": 1
-        },
-        {
-          "name": "Make Your Move",
           "quantity": 1
         },
         {
@@ -46363,10 +46299,6 @@
         },
         {
           "name": "Exotic Orchard",
-          "quantity": 1
-        },
-        {
-          "name": "Path of Ancestry",
           "quantity": 1
         },
         {
@@ -46400,6 +46332,74 @@
         {
           "name": "Plains",
           "quantity": 26
+        },
+        {
+          "name": "Destroy Evil",
+          "quantity": 1
+        },
+        {
+          "name": "Slip On the Ring",
+          "quantity": 1
+        },
+        {
+          "name": "Repel Calamity",
+          "quantity": 1
+        },
+        {
+          "name": "Cathar Commando",
+          "quantity": 1
+        },
+        {
+          "name": "Demolition Field",
+          "quantity": 1
+        },
+        {
+          "name": "Collective Effort",
+          "quantity": 1
+        },
+        {
+          "name": "Argentum Masticore",
+          "quantity": 1
+        },
+        {
+          "name": "Disenchant",
+          "quantity": 1
+        },
+        {
+          "name": "Rootborn Defenses",
+          "quantity": 1
+        },
+        {
+          "name": "Spectacular Tactics",
+          "quantity": 1
+        },
+        {
+          "name": "Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal",
+          "quantity": 1
+        },
+        {
+          "name": "Giant's Boulder",
+          "quantity": 1
+        },
+        {
+          "name": "Valorous Stance",
+          "quantity": 1
+        },
+        {
+          "name": "Make Your Move",
+          "quantity": 1
+        },
+        {
+          "name": "Smothering Tithe",
+          "quantity": 1
+        },
+        {
+          "name": "Field of the Dead",
+          "quantity": 1
+        },
+        {
+          "name": "Farewell",
+          "quantity": 1
         }
       ]
     },
@@ -47200,10 +47200,6 @@
           "quantity": 1
         },
         {
-          "name": "Sol Ring",
-          "quantity": 1
-        },
-        {
           "name": "Arcane Signet",
           "quantity": 1
         },
@@ -47240,10 +47236,6 @@
           "quantity": 1
         },
         {
-          "name": "Currency Converter",
-          "quantity": 1
-        },
-        {
           "name": "Big Score",
           "quantity": 1
         },
@@ -47268,10 +47260,6 @@
           "quantity": 1
         },
         {
-          "name": "Blitzball",
-          "quantity": 1
-        },
-        {
           "name": "Chaos Warp",
           "quantity": 1
         },
@@ -47292,59 +47280,11 @@
           "quantity": 1
         },
         {
-          "name": "Collector's Vault",
-          "quantity": 1
-        },
-        {
-          "name": "Ashling, Flame Dancer",
-          "quantity": 1
-        },
-        {
-          "name": "Charming Scoundrel",
-          "quantity": 1
-        },
-        {
-          "name": "Chandra, Spark Hunter",
-          "quantity": 1
-        },
-        {
-          "name": "Price of Freedom",
-          "quantity": 1
-        },
-        {
           "name": "Notorious Sliver War",
           "quantity": 1
         },
         {
-          "name": "Cathartic Pyre",
-          "quantity": 1
-        },
-        {
-          "name": "Wildfire Howl",
-          "quantity": 1
-        },
-        {
-          "name": "Staff of Compleation",
-          "quantity": 1
-        },
-        {
-          "name": "Sword of Fire and Ice",
-          "quantity": 1
-        },
-        {
-          "name": "Jaya Ballard, Task Mage",
-          "quantity": 1
-        },
-        {
-          "name": "Eldrazi Confluence",
-          "quantity": 1
-        },
-        {
           "name": "Adaptive Automaton",
-          "quantity": 1
-        },
-        {
-          "name": "Pyroblast",
           "quantity": 1
         },
         {
@@ -47365,10 +47305,6 @@
         },
         {
           "name": "Memorial Team Leader",
-          "quantity": 1
-        },
-        {
-          "name": "Argentum Masticore",
           "quantity": 1
         },
         {
@@ -47424,15 +47360,7 @@
           "quantity": 1
         },
         {
-          "name": "The Mightstone and Weakstone",
-          "quantity": 1
-        },
-        {
           "name": "Dragon's Hoard",
-          "quantity": 1
-        },
-        {
-          "name": "Bandit's Haul",
           "quantity": 1
         },
         {
@@ -47450,6 +47378,78 @@
         {
           "name": "Mountain",
           "quantity": 36
+        },
+        {
+          "name": "Currency Converter",
+          "quantity": 1
+        },
+        {
+          "name": "Blitzball",
+          "quantity": 1
+        },
+        {
+          "name": "Collector's Vault",
+          "quantity": 1
+        },
+        {
+          "name": "Ashling, Flame Dancer",
+          "quantity": 1
+        },
+        {
+          "name": "Charming Scoundrel",
+          "quantity": 1
+        },
+        {
+          "name": "Chandra, Spark Hunter",
+          "quantity": 1
+        },
+        {
+          "name": "Price of Freedom",
+          "quantity": 1
+        },
+        {
+          "name": "Cathartic Pyre",
+          "quantity": 1
+        },
+        {
+          "name": "Wildfire Howl",
+          "quantity": 1
+        },
+        {
+          "name": "Staff of Compleation",
+          "quantity": 1
+        },
+        {
+          "name": "Sword of Fire and Ice",
+          "quantity": 1
+        },
+        {
+          "name": "Jaya Ballard, Task Mage",
+          "quantity": 1
+        },
+        {
+          "name": "Eldrazi Confluence",
+          "quantity": 1
+        },
+        {
+          "name": "Pyroblast",
+          "quantity": 1
+        },
+        {
+          "name": "Argentum Masticore",
+          "quantity": 1
+        },
+        {
+          "name": "The Mightstone and Weakstone",
+          "quantity": 1
+        },
+        {
+          "name": "Bandit's Haul",
+          "quantity": 1
+        },
+        {
+          "name": "Jeska's Will",
+          "quantity": 1
         }
       ]
     },
@@ -48442,10 +48442,6 @@
           "quantity": 1
         },
         {
-          "name": "Solemn Simulacrum",
-          "quantity": 1
-        },
-        {
           "name": "Sram, Senior Edificer",
           "quantity": 1
         },
@@ -48466,10 +48462,6 @@
           "quantity": 1
         },
         {
-          "name": "Spectacular Tactics",
-          "quantity": 1
-        },
-        {
           "name": "Boros Charm",
           "quantity": 1
         },
@@ -48479,10 +48471,6 @@
         },
         {
           "name": "Anzrag's Rampage",
-          "quantity": 1
-        },
-        {
-          "name": "Valorous Stance",
           "quantity": 1
         },
         {
@@ -48530,19 +48518,7 @@
           "quantity": 1
         },
         {
-          "name": "Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal",
-          "quantity": 1
-        },
-        {
-          "name": "Jaya Ballard, Task Mage",
-          "quantity": 1
-        },
-        {
           "name": "Banner of Kinship",
-          "quantity": 1
-        },
-        {
-          "name": "Pyroblast",
           "quantity": 1
         },
         {
@@ -48587,10 +48563,6 @@
         },
         {
           "name": "An Unexpected Party // At the Door",
-          "quantity": 1
-        },
-        {
-          "name": "Make a Stand",
           "quantity": 1
         },
         {
@@ -48642,10 +48614,6 @@
           "quantity": 1
         },
         {
-          "name": "Evolving Wilds",
-          "quantity": 1
-        },
-        {
           "name": "Rogue's Passage",
           "quantity": 1
         },
@@ -48676,6 +48644,38 @@
         {
           "name": "Plains",
           "quantity": 23
+        },
+        {
+          "name": "Spectacular Tactics",
+          "quantity": 1
+        },
+        {
+          "name": "Valorous Stance",
+          "quantity": 1
+        },
+        {
+          "name": "Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal",
+          "quantity": 1
+        },
+        {
+          "name": "Pyroblast",
+          "quantity": 1
+        },
+        {
+          "name": "Make a Stand",
+          "quantity": 1
+        },
+        {
+          "name": "Smothering Tithe",
+          "quantity": 1
+        },
+        {
+          "name": "Field of the Dead",
+          "quantity": 1
+        },
+        {
+          "name": "Teferi's Protection",
+          "quantity": 1
         }
       ]
     },
@@ -49592,10 +49592,6 @@
           "quantity": 1
         },
         {
-          "name": "Heritage Reclamation",
-          "quantity": 1
-        },
-        {
           "name": "Selfless Safewright",
           "quantity": 1
         },
@@ -49616,15 +49612,7 @@
           "quantity": 1
         },
         {
-          "name": "Ashling, Flame Dancer",
-          "quantity": 1
-        },
-        {
           "name": "Earthshaker Giant",
-          "quantity": 1
-        },
-        {
-          "name": "Jaya Ballard, Task Mage",
           "quantity": 1
         },
         {
@@ -49656,10 +49644,6 @@
           "quantity": 1
         },
         {
-          "name": "Origin of Metalbending",
-          "quantity": 1
-        },
-        {
           "name": "Reckless Bushwhacker",
           "quantity": 1
         },
@@ -49676,14 +49660,6 @@
           "quantity": 1
         },
         {
-          "name": "Bandit's Haul",
-          "quantity": 1
-        },
-        {
-          "name": "Insidious Fungus",
-          "quantity": 1
-        },
-        {
           "name": "Tower Defense",
           "quantity": 1
         },
@@ -49692,15 +49668,7 @@
           "quantity": 1
         },
         {
-          "name": "Artifact Mutation",
-          "quantity": 1
-        },
-        {
           "name": "Storm-Kiln Artist",
-          "quantity": 1
-        },
-        {
-          "name": "Collective Resistance",
           "quantity": 1
         },
         {
@@ -49708,19 +49676,7 @@
           "quantity": 1
         },
         {
-          "name": "Domri, Anarch of Bolas",
-          "quantity": 1
-        },
-        {
-          "name": "Wall of Roots",
-          "quantity": 1
-        },
-        {
           "name": "Siege-Gang Commander",
-          "quantity": 1
-        },
-        {
-          "name": "Plundering Barbarian",
           "quantity": 1
         },
         {
@@ -49732,16 +49688,60 @@
           "quantity": 1
         },
         {
-          "name": "Rampant Growth",
-          "quantity": 1
-        },
-        {
           "name": "Forest",
           "quantity": 22
         },
         {
           "name": "Mountain",
           "quantity": 14
+        },
+        {
+          "name": "Heritage Reclamation",
+          "quantity": 1
+        },
+        {
+          "name": "Ashling, Flame Dancer",
+          "quantity": 1
+        },
+        {
+          "name": "Origin of Metalbending",
+          "quantity": 1
+        },
+        {
+          "name": "Bandit's Haul",
+          "quantity": 1
+        },
+        {
+          "name": "Insidious Fungus",
+          "quantity": 1
+        },
+        {
+          "name": "Artifact Mutation",
+          "quantity": 1
+        },
+        {
+          "name": "Collective Resistance",
+          "quantity": 1
+        },
+        {
+          "name": "Domri, Anarch of Bolas",
+          "quantity": 1
+        },
+        {
+          "name": "Plundering Barbarian",
+          "quantity": 1
+        },
+        {
+          "name": "Crop Rotation",
+          "quantity": 1
+        },
+        {
+          "name": "Jeska's Will",
+          "quantity": 1
+        },
+        {
+          "name": "Seedborn Muse",
+          "quantity": 1
         }
       ]
     },
@@ -50642,10 +50642,6 @@
           "quantity": 1
         },
         {
-          "name": "Glóin the Mighty // Easy Pickings",
-          "quantity": 1
-        },
-        {
           "name": "Psychic Paper",
           "quantity": 1
         },
@@ -50792,6 +50788,10 @@
         {
           "name": "Mountain",
           "quantity": 36
+        },
+        {
+          "name": "Jeska's Will",
+          "quantity": 1
         }
       ]
     },
@@ -51620,10 +51620,6 @@
           "quantity": 1
         },
         {
-          "name": "Solemn Simulacrum",
-          "quantity": 1
-        },
-        {
           "name": "Charming Scoundrel",
           "quantity": 1
         },
@@ -51696,35 +51692,11 @@
           "quantity": 1
         },
         {
-          "name": "Cathartic Pyre",
-          "quantity": 1
-        },
-        {
-          "name": "Price of Freedom",
-          "quantity": 1
-        },
-        {
           "name": "Notorious Sliver War",
           "quantity": 1
         },
         {
-          "name": "Sword of Fire and Ice",
-          "quantity": 1
-        },
-        {
           "name": "Gilgamesh, Master-at-Arms",
-          "quantity": 1
-        },
-        {
-          "name": "Argentum Masticore",
-          "quantity": 1
-        },
-        {
-          "name": "Flick a Coin",
-          "quantity": 1
-        },
-        {
-          "name": "Pyroblast",
           "quantity": 1
         },
         {
@@ -51828,10 +51800,6 @@
           "quantity": 1
         },
         {
-          "name": "Chandra, Spark Hunter",
-          "quantity": 1
-        },
-        {
           "name": "Crash Through",
           "quantity": 1
         },
@@ -51842,6 +51810,38 @@
         {
           "name": "Mountain",
           "quantity": 36
+        },
+        {
+          "name": "Cathartic Pyre",
+          "quantity": 1
+        },
+        {
+          "name": "Price of Freedom",
+          "quantity": 1
+        },
+        {
+          "name": "Sword of Fire and Ice",
+          "quantity": 1
+        },
+        {
+          "name": "Argentum Masticore",
+          "quantity": 1
+        },
+        {
+          "name": "Flick a Coin",
+          "quantity": 1
+        },
+        {
+          "name": "Pyroblast",
+          "quantity": 1
+        },
+        {
+          "name": "Chandra, Spark Hunter",
+          "quantity": 1
+        },
+        {
+          "name": "Jeska's Will",
+          "quantity": 1
         }
       ]
     },
@@ -52782,10 +52782,6 @@
           "quantity": 1
         },
         {
-          "name": "Sanar, Unfinished Genius // Wild Idea",
-          "quantity": 1
-        },
-        {
           "name": "Electro, Assaulting Battery",
           "quantity": 1
         },
@@ -52942,10 +52938,6 @@
           "quantity": 1
         },
         {
-          "name": "Micromancer",
-          "quantity": 1
-        },
-        {
           "name": "Chakra Meditation",
           "quantity": 1
         },
@@ -53000,10 +52992,6 @@
         {
           "name": "Island",
           "quantity": 13
-        },
-        {
-          "name": "Price of Freedom",
-          "quantity": 1
         },
         {
           "name": "Sword of Fire and Ice",
@@ -53067,6 +53055,18 @@
         },
         {
           "name": "Chandra, Spark Hunter",
+          "quantity": 1
+        },
+        {
+          "name": "Mystical Tutor",
+          "quantity": 1
+        },
+        {
+          "name": "Gamble",
+          "quantity": 1
+        },
+        {
+          "name": "Rhystic Study",
           "quantity": 1
         }
       ]
@@ -54008,10 +54008,6 @@
           "quantity": 1
         },
         {
-          "name": "Sanar, Unfinished Genius // Wild Idea",
-          "quantity": 1
-        },
-        {
           "name": "Electro, Assaulting Battery",
           "quantity": 1
         },
@@ -54176,10 +54172,6 @@
           "quantity": 1
         },
         {
-          "name": "Micromancer",
-          "quantity": 1
-        },
-        {
           "name": "Chakra Meditation",
           "quantity": 1
         },
@@ -54252,10 +54244,6 @@
           "quantity": 1
         },
         {
-          "name": "Bane's Contingency",
-          "quantity": 1
-        },
-        {
           "name": "Chromatic Lantern",
           "quantity": 1
         },
@@ -54293,6 +54281,18 @@
         },
         {
           "name": "Unstable Obelisk",
+          "quantity": 1
+        },
+        {
+          "name": "Mystical Tutor",
+          "quantity": 1
+        },
+        {
+          "name": "Gamble",
+          "quantity": 1
+        },
+        {
+          "name": "Rhystic Study",
           "quantity": 1
         }
       ]
@@ -55186,15 +55186,7 @@
           "quantity": 1
         },
         {
-          "name": "Commander's Sphere",
-          "quantity": 1
-        },
-        {
           "name": "Electro, Assaulting Battery",
-          "quantity": 1
-        },
-        {
-          "name": "Mystic Confluence",
           "quantity": 1
         },
         {
@@ -55202,27 +55194,11 @@
           "quantity": 1
         },
         {
-          "name": "Chandra, Spark Hunter",
-          "quantity": 1
-        },
-        {
           "name": "Summon: Esper Valigarmanda",
           "quantity": 1
         },
         {
-          "name": "Pongify",
-          "quantity": 1
-        },
-        {
           "name": "Archmage Emeritus",
-          "quantity": 1
-        },
-        {
-          "name": "Flick a Coin",
-          "quantity": 1
-        },
-        {
-          "name": "Sword of Fire and Ice",
           "quantity": 1
         },
         {
@@ -55254,23 +55230,11 @@
           "quantity": 1
         },
         {
-          "name": "Pyroblast",
-          "quantity": 1
-        },
-        {
           "name": "Aether Channeler",
           "quantity": 1
         },
         {
-          "name": "Sunset Strikemaster",
-          "quantity": 1
-        },
-        {
           "name": "Vandalblast",
-          "quantity": 1
-        },
-        {
-          "name": "Blur",
           "quantity": 1
         },
         {
@@ -55294,23 +55258,7 @@
           "quantity": 1
         },
         {
-          "name": "Hithlain Rope",
-          "quantity": 1
-        },
-        {
           "name": "Shipwreck Dowser",
-          "quantity": 1
-        },
-        {
-          "name": "Bane's Contingency",
-          "quantity": 1
-        },
-        {
-          "name": "Arcane Denial",
-          "quantity": 1
-        },
-        {
-          "name": "Refute",
           "quantity": 1
         },
         {
@@ -55326,14 +55274,6 @@
           "quantity": 1
         },
         {
-          "name": "Muddle the Mixture",
-          "quantity": 1
-        },
-        {
-          "name": "Sublime Epiphany",
-          "quantity": 1
-        },
-        {
           "name": "Talrand, Sky Summoner",
           "quantity": 1
         },
@@ -55346,23 +55286,7 @@
           "quantity": 1
         },
         {
-          "name": "Collector's Vault",
-          "quantity": 1
-        },
-        {
-          "name": "Giant's Boulder",
-          "quantity": 1
-        },
-        {
-          "name": "Darksteel Ingot",
-          "quantity": 1
-        },
-        {
           "name": "Young Pyromancer",
-          "quantity": 1
-        },
-        {
-          "name": "Jaya Ballard, Task Mage",
           "quantity": 1
         },
         {
@@ -55390,39 +55314,11 @@
           "quantity": 1
         },
         {
-          "name": "Aether Spellbomb",
-          "quantity": 1
-        },
-        {
           "name": "Trail of Evidence",
           "quantity": 1
         },
         {
-          "name": "Izzet Charm",
-          "quantity": 1
-        },
-        {
-          "name": "Fellwar Stone",
-          "quantity": 1
-        },
-        {
-          "name": "Micromancer",
-          "quantity": 1
-        },
-        {
           "name": "Chakra Meditation",
-          "quantity": 1
-        },
-        {
-          "name": "Cryptic Command",
-          "quantity": 1
-        },
-        {
-          "name": "Chromatic Lantern",
-          "quantity": 1
-        },
-        {
-          "name": "Rapid Hybridization",
           "quantity": 1
         },
         {
@@ -55456,6 +55352,110 @@
         {
           "name": "Island",
           "quantity": 15
+        },
+        {
+          "name": "Commander's Sphere",
+          "quantity": 1
+        },
+        {
+          "name": "Mystic Confluence",
+          "quantity": 1
+        },
+        {
+          "name": "Chandra, Spark Hunter",
+          "quantity": 1
+        },
+        {
+          "name": "Pongify",
+          "quantity": 1
+        },
+        {
+          "name": "Flick a Coin",
+          "quantity": 1
+        },
+        {
+          "name": "Sword of Fire and Ice",
+          "quantity": 1
+        },
+        {
+          "name": "Pyroblast",
+          "quantity": 1
+        },
+        {
+          "name": "Sunset Strikemaster",
+          "quantity": 1
+        },
+        {
+          "name": "Blur",
+          "quantity": 1
+        },
+        {
+          "name": "Hithlain Rope",
+          "quantity": 1
+        },
+        {
+          "name": "Bane's Contingency",
+          "quantity": 1
+        },
+        {
+          "name": "Refute",
+          "quantity": 1
+        },
+        {
+          "name": "Sublime Epiphany",
+          "quantity": 1
+        },
+        {
+          "name": "Collector's Vault",
+          "quantity": 1
+        },
+        {
+          "name": "Giant's Boulder",
+          "quantity": 1
+        },
+        {
+          "name": "Darksteel Ingot",
+          "quantity": 1
+        },
+        {
+          "name": "Jaya Ballard, Task Mage",
+          "quantity": 1
+        },
+        {
+          "name": "Aether Spellbomb",
+          "quantity": 1
+        },
+        {
+          "name": "Izzet Charm",
+          "quantity": 1
+        },
+        {
+          "name": "Fellwar Stone",
+          "quantity": 1
+        },
+        {
+          "name": "Cryptic Command",
+          "quantity": 1
+        },
+        {
+          "name": "Chromatic Lantern",
+          "quantity": 1
+        },
+        {
+          "name": "Rapid Hybridization",
+          "quantity": 1
+        },
+        {
+          "name": "Mystical Tutor",
+          "quantity": 1
+        },
+        {
+          "name": "Gamble",
+          "quantity": 1
+        },
+        {
+          "name": "Rhystic Study",
+          "quantity": 1
         }
       ]
     },
@@ -56396,15 +56396,7 @@
           "quantity": 1
         },
         {
-          "name": "Sanar, Unfinished Genius // Wild Idea",
-          "quantity": 1
-        },
-        {
           "name": "Electro, Assaulting Battery",
-          "quantity": 1
-        },
-        {
-          "name": "Pyroblast",
           "quantity": 1
         },
         {
@@ -56412,23 +56404,7 @@
           "quantity": 1
         },
         {
-          "name": "Giant's Boulder",
-          "quantity": 1
-        },
-        {
-          "name": "Summon: Esper Valigarmanda",
-          "quantity": 1
-        },
-        {
-          "name": "Pongify",
-          "quantity": 1
-        },
-        {
           "name": "Archmage Emeritus",
-          "quantity": 1
-        },
-        {
-          "name": "Izzet Charm",
           "quantity": 1
         },
         {
@@ -56472,10 +56448,6 @@
           "quantity": 1
         },
         {
-          "name": "Mystic Confluence",
-          "quantity": 1
-        },
-        {
           "name": "Steel Hellkite",
           "quantity": 1
         },
@@ -56489,10 +56461,6 @@
         },
         {
           "name": "Blasphemous Act",
-          "quantity": 1
-        },
-        {
-          "name": "Rapid Hybridization",
           "quantity": 1
         },
         {
@@ -56536,10 +56504,6 @@
           "quantity": 1
         },
         {
-          "name": "Muddle the Mixture",
-          "quantity": 1
-        },
-        {
           "name": "Veyran, Voice of Duality",
           "quantity": 1
         },
@@ -56561,10 +56525,6 @@
         },
         {
           "name": "Mystic Retrieval",
-          "quantity": 1
-        },
-        {
-          "name": "Cryptic Command",
           "quantity": 1
         },
         {
@@ -56612,19 +56572,11 @@
           "quantity": 1
         },
         {
-          "name": "Polymorph",
-          "quantity": 1
-        },
-        {
           "name": "Micromancer",
           "quantity": 1
         },
         {
           "name": "Chakra Meditation",
-          "quantity": 1
-        },
-        {
-          "name": "Chandra, Spark Hunter",
           "quantity": 1
         },
         {
@@ -56682,6 +56634,54 @@
         {
           "name": "Island",
           "quantity": 13
+        },
+        {
+          "name": "Pyroblast",
+          "quantity": 1
+        },
+        {
+          "name": "Giant's Boulder",
+          "quantity": 1
+        },
+        {
+          "name": "Pongify",
+          "quantity": 1
+        },
+        {
+          "name": "Izzet Charm",
+          "quantity": 1
+        },
+        {
+          "name": "Mystic Confluence",
+          "quantity": 1
+        },
+        {
+          "name": "Rapid Hybridization",
+          "quantity": 1
+        },
+        {
+          "name": "Cryptic Command",
+          "quantity": 1
+        },
+        {
+          "name": "Polymorph",
+          "quantity": 1
+        },
+        {
+          "name": "Chandra, Spark Hunter",
+          "quantity": 1
+        },
+        {
+          "name": "Mystical Tutor",
+          "quantity": 1
+        },
+        {
+          "name": "Gamble",
+          "quantity": 1
+        },
+        {
+          "name": "Jeska's Will",
+          "quantity": 1
         }
       ]
     },
@@ -57634,15 +57634,7 @@
           "quantity": 1
         },
         {
-          "name": "Sanar, Unfinished Genius // Wild Idea",
-          "quantity": 1
-        },
-        {
           "name": "Curious Homunculus // Voracious Reader",
-          "quantity": 1
-        },
-        {
-          "name": "Cruel Revival",
           "quantity": 1
         },
         {
@@ -57650,15 +57642,7 @@
           "quantity": 1
         },
         {
-          "name": "Divert Disaster",
-          "quantity": 1
-        },
-        {
           "name": "Galazeth Prismari",
-          "quantity": 1
-        },
-        {
-          "name": "Mind Stone",
           "quantity": 1
         },
         {
@@ -57667,14 +57651,6 @@
         },
         {
           "name": "Trail of Evidence",
-          "quantity": 1
-        },
-        {
-          "name": "Siren's Ruse",
-          "quantity": 1
-        },
-        {
-          "name": "Chandra, Spark Hunter",
           "quantity": 1
         },
         {
@@ -57702,10 +57678,6 @@
           "quantity": 1
         },
         {
-          "name": "Chromatic Lantern",
-          "quantity": 1
-        },
-        {
           "name": "Priest of Forgotten Gods",
           "quantity": 1
         },
@@ -57727,22 +57699,6 @@
         },
         {
           "name": "Thing in the Ice // Awoken Horror",
-          "quantity": 1
-        },
-        {
-          "name": "Drown in the Loch",
-          "quantity": 1
-        },
-        {
-          "name": "Plundering Barbarian",
-          "quantity": 1
-        },
-        {
-          "name": "Cabal Ritual",
-          "quantity": 1
-        },
-        {
-          "name": "Warping Wail",
           "quantity": 1
         },
         {
@@ -57770,15 +57726,7 @@
           "quantity": 1
         },
         {
-          "name": "Micromancer",
-          "quantity": 1
-        },
-        {
           "name": "Muddle the Mixture",
-          "quantity": 1
-        },
-        {
-          "name": "Jaya Ballard, Task Mage",
           "quantity": 1
         },
         {
@@ -57794,31 +57742,11 @@
           "quantity": 1
         },
         {
-          "name": "Fellwar Stone",
-          "quantity": 1
-        },
-        {
-          "name": "Oriq Loremage",
-          "quantity": 1
-        },
-        {
-          "name": "Giant's Boulder",
-          "quantity": 1
-        },
-        {
-          "name": "Big Game Hunter",
-          "quantity": 1
-        },
-        {
           "name": "Young Pyromancer",
           "quantity": 1
         },
         {
           "name": "Stormcatch Mentor",
-          "quantity": 1
-        },
-        {
-          "name": "Flick a Coin",
           "quantity": 1
         },
         {
@@ -57834,10 +57762,6 @@
           "quantity": 1
         },
         {
-          "name": "Grim Bounty",
-          "quantity": 1
-        },
-        {
           "name": "Daring Waverider",
           "quantity": 1
         },
@@ -57846,19 +57770,7 @@
           "quantity": 1
         },
         {
-          "name": "Chain Assassination",
-          "quantity": 1
-        },
-        {
-          "name": "Unstable Obelisk",
-          "quantity": 1
-        },
-        {
           "name": "Judith, Carnage Connoisseur",
-          "quantity": 1
-        },
-        {
-          "name": "Snuff Out",
           "quantity": 1
         },
         {
@@ -57867,10 +57779,6 @@
         },
         {
           "name": "Thermo-Alchemist",
-          "quantity": 1
-        },
-        {
-          "name": "Price of Freedom",
           "quantity": 1
         },
         {
@@ -57924,6 +57832,98 @@
         {
           "name": "Island",
           "quantity": 12
+        },
+        {
+          "name": "Cruel Revival",
+          "quantity": 1
+        },
+        {
+          "name": "Divert Disaster",
+          "quantity": 1
+        },
+        {
+          "name": "Mind Stone",
+          "quantity": 1
+        },
+        {
+          "name": "Siren's Ruse",
+          "quantity": 1
+        },
+        {
+          "name": "Chandra, Spark Hunter",
+          "quantity": 1
+        },
+        {
+          "name": "Chromatic Lantern",
+          "quantity": 1
+        },
+        {
+          "name": "Drown in the Loch",
+          "quantity": 1
+        },
+        {
+          "name": "Plundering Barbarian",
+          "quantity": 1
+        },
+        {
+          "name": "Cabal Ritual",
+          "quantity": 1
+        },
+        {
+          "name": "Warping Wail",
+          "quantity": 1
+        },
+        {
+          "name": "Jaya Ballard, Task Mage",
+          "quantity": 1
+        },
+        {
+          "name": "Fellwar Stone",
+          "quantity": 1
+        },
+        {
+          "name": "Giant's Boulder",
+          "quantity": 1
+        },
+        {
+          "name": "Big Game Hunter",
+          "quantity": 1
+        },
+        {
+          "name": "Flick a Coin",
+          "quantity": 1
+        },
+        {
+          "name": "Grim Bounty",
+          "quantity": 1
+        },
+        {
+          "name": "Chain Assassination",
+          "quantity": 1
+        },
+        {
+          "name": "Unstable Obelisk",
+          "quantity": 1
+        },
+        {
+          "name": "Snuff Out",
+          "quantity": 1
+        },
+        {
+          "name": "Price of Freedom",
+          "quantity": 1
+        },
+        {
+          "name": "Mystical Tutor",
+          "quantity": 1
+        },
+        {
+          "name": "Demonic Tutor",
+          "quantity": 1
+        },
+        {
+          "name": "Gamble",
+          "quantity": 1
         }
       ]
     }

@@ -24594,6 +24594,26 @@
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F697626%3Fpage%3D1"
     },
     {
+      "name": "Gamble",
+      "typeLine": "Sorcery",
+      "manaCost": "{R}",
+      "oracleText": "Search your library for a card, put that card into your hand, discard a card at random, then shuffle.",
+      "keywords": [],
+      "colorIdentity": [
+        "R"
+      ],
+      "gameChanger": true,
+      "price": 17.81,
+      "ceiling": 18.09,
+      "image": "https://cards.scryfall.io/normal/front/8/e/8e37fae5-ddd0-4e16-8581-71579f89d9c5.jpg?1783918462",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F461900%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall-game-changers"
+    },
+    {
       "name": "Ganax, Astral Hunter",
       "manaCost": "{4}{R}",
       "typeLine": "Legendary Creature — Dragon",
@@ -43142,6 +43162,28 @@
       "price": 0.95,
       "priceUpdated": "2026-08-23",
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F687362%3Fpage%3D1"
+    },
+    {
+      "name": "Opposition Agent",
+      "typeLine": "Creature — Human Rogue",
+      "manaCost": "{2}{B}",
+      "oracleText": "Flash\nYou control your opponents while they're searching their libraries.\nWhile an opponent is searching their library, they exile each card they find. You may play those cards for as long as they remain exiled, and you may spend mana as though it were mana of any color to cast them.",
+      "keywords": [
+        "Flash"
+      ],
+      "colorIdentity": [
+        "B"
+      ],
+      "gameChanger": true,
+      "price": 18.68,
+      "ceiling": 26.89,
+      "image": "https://cards.scryfall.io/normal/front/0/8/086f97e9-8b62-44f3-b467-149c2ac5ca78.jpg?1783928831",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F226314%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall-game-changers"
     },
     {
       "name": "Opulent Palace",
@@ -68516,6 +68558,26 @@
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F491642%3Fpage%3D1"
     },
     {
+      "name": "Vampiric Tutor",
+      "typeLine": "Instant",
+      "manaCost": "{B}",
+      "oracleText": "Search your library for a card, then shuffle and put that card on top. You lose 2 life.",
+      "keywords": [],
+      "colorIdentity": [
+        "B"
+      ],
+      "gameChanger": true,
+      "price": 55,
+      "ceiling": 61.99,
+      "image": "https://cards.scryfall.io/normal/front/3/4/34a0203f-9cce-43a4-9cb7-8ce6647895cd.jpg?1783918468",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F457178%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall-game-changers"
+    },
+    {
       "name": "Vandalblast",
       "manaCost": "{R}",
       "typeLine": "Sorcery",
@@ -72741,6 +72803,26 @@
       "price": 9.84,
       "priceUpdated": "2026-08-23",
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F545073%3Fpage%3D1"
+    },
+    {
+      "name": "Worldly Tutor",
+      "typeLine": "Instant",
+      "manaCost": "{G}",
+      "oracleText": "Search your library for a creature card, reveal it, then shuffle and put the card on top.",
+      "keywords": [],
+      "colorIdentity": [
+        "G"
+      ],
+      "gameChanger": true,
+      "price": 28,
+      "ceiling": 28,
+      "image": "https://cards.scryfall.io/normal/front/f/3/f39aa2e9-e294-4ce6-bf5e-e1f579101a7a.jpg?1783918434",
+      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F457269%3Fpage%3D1",
+      "legalities": {
+        "commander": "legal"
+      },
+      "commanderLegal": true,
+      "source": "scryfall-game-changers"
     },
     {
       "name": "Worldslayer",
