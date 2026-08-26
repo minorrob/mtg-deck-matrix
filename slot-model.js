@@ -363,8 +363,16 @@
       rows.push({
         slotId,
         shellName: shell && shell.item ? shell.item.name : face.name,
-        type: shell && shell.item && shell.item.isCommander ? "Commander" : cardType((face && model.byId.get(face.entryId).item) || {}),
-        isBasic: isBasicLand(face && model.byId.get(face.entryId).item),
+        // A slot's identity is its shell card, not whatever rung is picked right
+        // now. Deriving the type from the pick re-filed the row into a different
+        // group on almost every pick -- thirteen of fourteen slots measured, moving
+        // up to 2,900px -- so choosing a card made the open pane appear to slam
+        // shut when it had only been carried somewhere else on the page. The name,
+        // price, location and rung badge all still follow the pick; only where the
+        // row LIVES is anchored, because that is the part the reader is holding on
+        // to while they compare candidates.
+        type: shell && shell.item && shell.item.isCommander ? "Commander" : cardType((shell && shell.item) || {}),
+        isBasic: isBasicLand(shell && shell.item),
         quantity: pick ? pick.quantity : face.quantity,
         filled: !!pick,
         pick: pick ? {
@@ -382,7 +390,10 @@
     rows.sort((a, b) => {
       const ai = TYPE_ORDER.indexOf(a.type), bi = TYPE_ORDER.indexOf(b.type);
       if (ai !== bi) return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
-      return String(a.pick ? a.pick.name : a.shellName).localeCompare(String(b.pick ? b.pick.name : b.shellName));
+      // Sorted on the shell name for the same reason: alphabetical by the card
+      // currently showing would re-order the list under the reader's cursor every
+      // time they tried a candidate.
+      return String(a.shellName).localeCompare(String(b.shellName));
     });
     return rows;
   }

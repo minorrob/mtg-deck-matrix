@@ -370,6 +370,24 @@ ok("no variant may end up offered more Game Changers than Tier 3 allows", () => 
     "these are the variants whose offers exceed the Tier 3 limit of three and must be capped when promoted");
 });
 
+ok("a slot keeps its place in the list whatever rung is picked", () => {
+  // Picking a rung used to re-file the row, because both the group and the sort
+  // key were read off the picked card and a rung usually swaps in a different card
+  // type. Thirteen of fourteen slots measured jumped group, up to 2,900px, which
+  // read as the open pane slamming shut. Identity is the shell; only the contents
+  // follow the pick.
+  for (const variantId of ["1b", "2c", "5o"]) {
+    const plan = buyPlans.plans[variantId];
+    const place = (rung) => Slot.deckSlots(plan, Slot.selectionForRung(plan, rung), {owned: {}})
+      .map((row, index) => `${index}:${row.slotId}:${row.type}`).join("|");
+    const base = place("base");
+    for (const rung of Slot.BUILD_RUNGS) {
+      assert.equal(place(rung), base,
+        `${variantId}: every slot must sit in the same group and the same position at ${rung} as at base`);
+    }
+  }
+});
+
 ok("Fun branches off Base, it is not Tuned with jokes added", () => {
   const plan = buyPlans.plans[Object.keys(buyPlans.plans).find((id) => (buyPlans.plans[id].funTuned || []).length)];
   const fun = Slot.selectionSignature(Slot.selectionForRung(plan, "fun"));
