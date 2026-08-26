@@ -168,4 +168,53 @@ ok("counts never exceed what the decks actually need", () => {
   assert.equal(rows[0].need, 0);
 });
 
+/* ---------- catalog fallbacks ---------- */
+const cardsPayload = JSON.parse(await readFile(new URL("../data/cards.json", import.meta.url), "utf8"));
+const cards = {};
+(cardsPayload.cards || []).forEach((c) => { if (c && c.name) cards[Lineup.normalizeName(c.name)] = c; });
+
+const activePayload = JSON.parse(await readFile(new URL("../data/active-state.json", import.meta.url), "utf8"));
+const activeState = activePayload.state || activePayload;
+
+ok("a starting-shell card with no price of its own falls back to the catalog", () => {
+  // The gap shows on real selections, not on defaultSelection: a shipped shell card
+  // often carries no price, so a deck built mostly of Base picks undercounts itself.
+  let missingBefore = 0, missingAfter = 0, total = 0;
+  Object.keys(activeState.buySelections || {}).forEach((id) => {
+    const plan = buyPlans.plans[id];
+    if (!plan) return;
+    const sel = activeState.buySelections[id];
+    Slot.deckSlots(plan, sel).forEach((r) => { if (r.pick) { total += 1; if (r.pick.price == null) missingBefore += 1; } });
+    Slot.deckSlots(plan, sel, {cards}).forEach((r) => { if (r.pick && r.pick.price == null) missingAfter += 1; });
+  });
+  assert.ok(total > 0, "the shipped active state should carry real selections");
+  assert.ok(missingBefore > 0, "the gap this guards against should exist in the data");
+  assert.ok(missingAfter < missingBefore, `catalog fallback fixed nothing (${missingBefore} -> ${missingAfter})`);
+  assert.ok(missingAfter / total < 0.08, `${missingAfter} of ${total} picks still have no price`);
+  process.stdout.write(`      (unpriced picks: ${missingBefore} -> ${missingAfter} of ${total})\n`);
+});
+
+ok("rationale reports whether it was authored or is just the card's rules text", () => {
+  const authored = Slot.whySource("max", {maxReason: "because it is the best"}, cards);
+  assert.equal(authored, "authored");
+  const oracle = Slot.whySource("base", {name: "Sol Ring"}, cards);
+  assert.equal(oracle, "oracle", "a shell card with no purpose falls back to oracle text");
+  assert.equal(Slot.whySource("base", {name: "Not A Real Card At All"}, cards), "none");
+  assert.equal(Slot.whyText("base", {name: "Not A Real Card At All"}, cards), "");
+});
+
+ok("Base rungs are overwhelmingly unauthored, which the UI must not hide", () => {
+  let authored = 0, fallback = 0;
+  planIds.forEach((id) => {
+    const plan = buyPlans.plans[id];
+    Slot.deckSlots(plan, Lineup.defaultSelection(plan), {cards}).forEach((row) => {
+      const base = row.rungs.find((r) => r.rung === "base");
+      if (!base) return;
+      if (base.whySource === "authored") authored += 1; else fallback += 1;
+    });
+  });
+  assert.ok(fallback > authored, "if this ever flips, the Base copy got written and the label can change");
+  process.stdout.write(`      (Base rungs: ${authored} authored, ${fallback} falling back)\n`);
+});
+
 process.stdout.write(`\n${checks} checks passed across ${planIds.length} plans.\n`);

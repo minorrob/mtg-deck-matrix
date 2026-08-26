@@ -24,6 +24,8 @@
   <script src="scryfall-client.js?v=2" defer></script>
   <script src="custom-model.js?v=2" defer></script>
   <script src="deck-generator.js?v=2" defer></script>
+  <script src="slot-model.js?v=1" defer></script>
+  <script src="deck-page.js?v=1" defer></script>
   <script src="app.js?v=46" defer></script>
   <script src="shop-filters.js?v=5" defer></script>
 </head>
@@ -61,6 +63,9 @@
       <button class="main-tab" data-view="live" aria-selected="false">
         <span class="tab-step">4</span><span>Decks</span>
       </button>
+      <button class="main-tab" data-view="deck2" aria-selected="false">
+        <span class="tab-step">&#9733;</span><span>Deck (new)</span>
+      </button>
       <button class="main-tab" data-view="cards" aria-selected="false">
         <span class="tab-step">5</span><span>Cards</span>
       </button>
@@ -80,6 +85,7 @@
     <section class="view" id="view-buy" aria-labelledby="buy-title"></section>
     <section class="view" id="view-shop" aria-labelledby="shop-title"></section>
     <section class="view" id="view-live" aria-labelledby="live-title"></section>
+    <section class="view" id="view-deck2" aria-labelledby="deck2-title"></section>
     <section class="view" id="view-cards" aria-labelledby="cards-title"></section>
     <section class="view" id="view-log" aria-labelledby="log-title"></section>
   </main>

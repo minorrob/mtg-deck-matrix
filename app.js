@@ -467,6 +467,172 @@
       .filter(Boolean);
   }
 
+  // ---- Deck page bridge -------------------------------------------------
+  // The new Deck view reads through slot-model.js and renders via deck-page.js.
+  // It runs beside the old Calibrate and Decks tabs rather than replacing them,
+  // so the two can be compared against real data before anything is removed.
+  const deckPageState = {deckIndex: 0, openSlot: null, closedGroups: {}};
+
+  // The baked catalog carries rarity, art, oracle text and a price for every card
+  // in the plans, so the Deck page does not depend on the Scryfall cache being warm.
+  let deckPageCards = null;
+  function loadDeckPageCards() {
+    if (deckPageCards) return Promise.resolve(deckPageCards);
+    return fetch("data/cards.json")
+      .then((r) => r.json())
+      .then((payload) => {
+        const map = {};
+        (payload.cards || payload || []).forEach((card) => {
+          if (card && card.name) map[Lineup.normalizeName(card.name)] = card;
+        });
+        deckPageCards = map;
+        return map;
+      })
+      .catch(() => (deckPageCards = {}));
+  }
+
+  function deckPageContext() {
+    const Slot = window.MtgSlotModel;
+    const variants = selectedVariants();
+    if (!Slot || !variants.length) return null;
+    const variant = variants[Math.min(deckPageState.deckIndex, variants.length - 1)];
+    const plan = buyCatalog && buyCatalog.plans ? buyCatalog.plans[variant.id] : null;
+    if (!plan) return null;
+
+    const owned = Slot.normalizeOwned(state);
+    // Baked catalog first, then anything the Scryfall cache has freshened on top.
+    const cards = Object.assign({}, deckPageCards || {});
+    const slots = Slot.deckSlots(plan, ensureBuyState(variant.id), {owned, cards});
+    slots.forEach((slot) => slot.rungs.forEach((rung) => {
+      const key = Lineup.normalizeName(rung.name);
+      const md = cardMetadata[itemKey({name: rung.name})];
+      if (md && md.loaded && !md.unavailable) cards[key] = Object.assign({}, cards[key], md);
+    }));
+
+    // Which deck holds each owned copy. First selected deck that picks it wins,
+    // mirroring how buildLiveEntries already allocates a single physical card.
+    const assignments = {};
+    const deckLabels = {};
+    variants.forEach((v) => {
+      deckLabels[v.id] = "D" + v.deckId;
+      const p = buyCatalog && buyCatalog.plans ? buyCatalog.plans[v.id] : null;
+      if (!p) return;
+      Slot.deckSlots(p, ensureBuyState(v.id), {owned, cards}).forEach((slot) => {
+        if (!slot.pick) return;
+        const key = Slot.ownedKey(slot.pick.name);
+        if (!assignments[key] && Slot.ownedCount(owned, slot.pick.name).inHand > 0) assignments[key] = v.id;
+      });
+    });
+
+    const openGroups = {};
+    Object.keys(deckPageState.closedGroups).forEach((k) => {
+      if (deckPageState.closedGroups[k]) openGroups[k] = false;
+    });
+
+    return {
+      deckId: variant.id,
+      deckTitle: "Deck " + variant.deckId + " · " + variant.name,
+      commander: plan.commanderName || variant.commander || "",
+      colors: variant.colorIdentity || variant.colors || "",
+      variantId: variant.id,
+      slots, owned, cards, assignments, deckLabels, openGroups,
+      sleeved: state.deckSleeved && state.deckSleeved[variant.id] ? state.deckSleeved[variant.id] : {},
+      openSlot: deckPageState.openSlot,
+      variants
+    };
+  }
+
+  function renderDeckPage() {
+    const host = $("#view-deck2");
+    if (!host || !window.MtgDeckPage) return;
+    if (!deckPageCards) {
+      host.innerHTML = '<div class="loading-card">Loading the card catalog…</div>';
+      loadDeckPageCards().then(renderDeckPage);
+      return;
+    }
+    const ctx = deckPageContext();
+    if (!ctx) {
+      host.innerHTML = '<div class="loading-card">Choose a variant for at least one deck on Compare, then come back.</div>';
+      return;
+    }
+    const rail = ctx.variants.map((v, i) => (
+      '<button class="rail-btn' + (i === deckPageState.deckIndex ? " is-on" : "") + '" data-dp-deck="' + i +
+      '" aria-pressed="' + (i === deckPageState.deckIndex) + '"><span class="rail-no">Deck ' + v.deckId +
+      '</span><span class="rail-nm">' + esc(v.name) + '</span></button>'
+    )).join("");
+    host.innerHTML = '<div class="dp-rail">' + rail + '</div><div id="dp-body"></div>';
+    window.MtgDeckPage.render($("#dp-body"), ctx);
+  }
+
+  function deckPageClick(event) {
+    let el;
+    if ((el = event.target.closest("[data-dp-deck]"))) {
+      deckPageState.deckIndex = Number(el.dataset.dpDeck) || 0;
+      deckPageState.openSlot = null;
+      renderDeckPage();
+      return true;
+    }
+    if ((el = event.target.closest("[data-dp-grp]"))) {
+      const key = el.dataset.dpGrp;
+      deckPageState.closedGroups[key] = !deckPageState.closedGroups[key];
+      renderDeckPage();
+      return true;
+    }
+    if ((el = event.target.closest("[data-dp-expand]"))) {
+      const id = el.dataset.dpExpand;
+      deckPageState.openSlot = deckPageState.openSlot === id ? null : id;
+      renderDeckPage();
+      return true;
+    }
+    if ((el = event.target.closest("[data-dp-pick]"))) {
+      const entryId = el.dataset.dpPick.split("|")[1];
+      const ctx = deckPageContext();
+      if (!ctx) return true;
+      const plan = buyCatalog.plans[ctx.deckId];
+      const current = ensureBuyState(ctx.deckId);
+      assignSelection(current, Lineup.applyChoice(plan, current, entryId));
+      saveState();
+      renderDeckPage();   // the rail deliberately stays open after a pick
+      return true;
+    }
+    return false;
+  }
+
+  function deckPageChange(event) {
+    const el = event.target.closest("[data-dp-box]");
+    if (!el) return false;
+    const ctx = deckPageContext();
+    if (!ctx) return true;
+    if (!state.deckSleeved) state.deckSleeved = {};
+    if (!state.deckSleeved[ctx.deckId]) state.deckSleeved[ctx.deckId] = {};
+    if (el.checked) state.deckSleeved[ctx.deckId][el.dataset.dpBox] = true;
+    else delete state.deckSleeved[ctx.deckId][el.dataset.dpBox];
+    saveState();
+    renderDeckPage();
+    return true;
+  }
+
+  function deckPagePreview(event) {
+    const el = event.target.closest("[data-dp-prev]");
+    if (!el || !window.MtgDeckPage) return;
+    const parts = el.dataset.dpPrev.split("|");
+    const host = document.getElementById("dp-prev-" + parts[0]);
+    if (!host) return;
+    const ctx = deckPageContext();
+    if (!ctx) return;
+    const glyphs = {deck: "●", other: "◆", bench: "◇", ordered: "⧖", buy: "○"};
+    const labels = {deck: "In deck", other: "In another deck", bench: "Bench", ordered: "Ordered", buy: "To buy"};
+    const kind = parts[2];
+    host.innerHTML = window.MtgDeckPage.previewMarkup(ctx, parts[1],
+      {kind: kind, glyph: glyphs[kind] || "○", label: labels[kind] || "To buy"},
+      parts[3] === "" ? null : Number(parts[3]));
+  }
+
+  document.addEventListener("click", (event) => { deckPageClick(event); });
+  document.addEventListener("change", (event) => { deckPageChange(event); });
+  document.addEventListener("mouseover", deckPagePreview);
+  document.addEventListener("focusin", deckPagePreview);
+
   function switchView(view, focus = true) {
     $$(".main-tab").forEach((button) => {
       const active = button.dataset.view === view;
@@ -479,6 +645,7 @@
     if (view === "shop") renderShop();
     if (view === "live") renderLiveDecks();
     if (view === "cards") renderCards();
+    if (view === "deck2") renderDeckPage();
     if (view === "log") renderGameLog();
     if (focus) {
       window.scrollTo({top: 0, behavior: "smooth"});

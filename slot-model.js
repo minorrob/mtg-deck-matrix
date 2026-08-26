@@ -128,6 +128,25 @@
    * each answer their own question against it. Fields already exist per item in
    * buy-plans.json - this only decides which one a rung speaks with.
    */
+  /**
+   * Where a rung's rationale came from. Base cards carry no authored `purpose` in
+   * buy-plans.json, so the UI must not claim to be stating the slot's thesis when
+   * all it has is the card's own rules text. Authoring real Base copy is a content
+   * task; until then the label has to tell the truth about what it is showing.
+   */
+  function whySource(rung, item, cards) {
+    if (whyFor(rung, item)) return "authored";
+    const fact = cards ? cards[Lineup.normalizeName(item && item.name)] : null;
+    const oracle = (fact && fact.oracleText) || (item && item.oracleText);
+    return oracle ? "oracle" : "none";
+  }
+  function whyText(rung, item, cards) {
+    const authored = whyFor(rung, item);
+    if (authored) return authored;
+    const fact = cards ? cards[Lineup.normalizeName(item && item.name)] : null;
+    return (fact && fact.oracleText) || (item && item.oracleText) || "";
+  }
+
   function whyFor(rung, item) {
     if (!item) return "";
     const pick = (...keys) => {
@@ -140,14 +159,23 @@
     return pick("purpose", "whyPrimary", "why", "alternateReason");
   }
 
-  function priceOf(item) {
-    const n = Number(item && item.price);
+  /** null/undefined/"" must not coerce to 0 - Number(null) is 0, and a card priced
+   *  at $0.00 is a very different claim from a card whose price we do not know. */
+  function num(value) {
+    if (value === null || value === undefined || value === "") return null;
+    const n = Number(value);
     return Number.isFinite(n) ? n : null;
   }
-  function ceilingOf(item) {
-    const n = Number(item && item.ceiling);
-    return Number.isFinite(n) ? n : null;
+  function priceOf(item, cards) {
+    const own = num(item && item.price);
+    if (own !== null) return own;
+    // Starting-shell items frequently carry no price of their own, so fall back to
+    // the baked catalog before giving up. Without this a deck's "to buy" total
+    // silently reads its own base cards as free.
+    const fact = cards ? cards[Lineup.normalizeName(item && item.name)] : null;
+    return fact ? num(fact.price) : null;
   }
+  function ceilingOf(item) { return num(item && item.ceiling); }
 
   /* ---------------- the projection ----------------
    * One row per slot, carrying every rung so the UI can drill sideways without
@@ -174,12 +202,13 @@
           entryId: e.id,
           name: e.item.name,
           quantity: Math.max(1, Number(e.item.quantity) || 1),
-          price: priceOf(e.item),
+          price: priceOf(e.item, opts.cards),
           ceiling: ceilingOf(e.item),
           replaces: e.item.replaces || null,
           isCommander: !!e.item.isCommander,
           gameChanger: !!e.item.gameChanger,
-          why: whyFor(rungOf(e.kind), e.item),
+          why: whyText(rungOf(e.kind), e.item, opts.cards),
+          whySource: whySource(rungOf(e.kind), e.item, opts.cards),
           selected: selected.has(e.id)
         }))
         .sort((a, b) => {
@@ -201,7 +230,7 @@
         pick: pick ? {
           rung: pick.rung, entryId: pick.entryId, name: pick.name,
           price: pick.price, ceiling: pick.ceiling, band: priceBand(pick.price),
-          why: pick.why, quantity: pick.quantity
+          why: pick.why, whySource: pick.whySource, quantity: pick.quantity
         } : null,
         acquisition: name ? acquisitionOf(owned, name, pick.quantity) : ACQ.NONE,
         rungs
@@ -255,7 +284,7 @@
     RUNG_ORDER, RUNG_LABEL, RUNG_BY_KIND, rungOf,
     PRICE_BANDS, priceBand,
     ACQUISITION: ACQ, ownedKey, normalizeOwned, ownedCount, acquisitionOf,
-    TYPE_ORDER, cardType, isBasicLand, whyFor,
+    TYPE_ORDER, cardType, isBasicLand, whyFor, whyText, whySource,
     deckSlots, shopRows
   };
 });

@@ -10,6 +10,8 @@
   --red:#993f37; --blue:#315f70; --line:#d8cfba;
   --shadow:0 10px 26px rgba(31,42,36,.12); --radius:18px;
   --r-base:#8a938b; --r-tuned:#2f6b52; --r-enhance:#6f8a30; --r-max:#c69735; --r-fun:#315f70;
+  /* rarity outlines - mild hints behind art, never fills */
+  --rar-C:#d8cfba; --rar-U:#7f9c85; --rar-R:#6f8fa8; --rar-S:#8d7fa6; --rar-M:#c19a4e; --rar-B:#d9b45c;
   --sans:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   --serif:Georgia,"Times New Roman",serif;
 }
@@ -60,6 +62,15 @@ main{width:min(1400px,100%);margin:0 auto;padding:16px 14px 60px}
 .stat{padding:5px 10px;border:1px solid var(--line);border-radius:999px;background:var(--paper);font-size:12px}
 .stat.ok{border-color:#b9cfc2;background:#e9f2ec}
 .stat.warn{border-color:#e0c3a6;background:#fbf0e4}
+.tally{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px;padding:8px 11px;
+  border:1px solid var(--line);border-radius:12px;background:var(--paper);font-size:12px}
+.tally-t{font-weight:700}
+.tally-eq,.tally-p{color:var(--muted);font-weight:700}
+.tally-b{padding:3px 9px;border:1px solid var(--line);border-radius:999px;background:var(--surface);white-space:nowrap}
+.tally-b.is-deck{border-color:#b9cfc2;background:#e9f2ec}
+.tally-b.is-ordered{border-color:#b3c6d0;background:#e8eef2}
+.tally-b.is-buy{border-color:#e0c3a6;background:#fbf0e4}
+.tally-b.is-hole{border-color:#d8b3ae;background:#f7e9e7}
 .collapse{display:flex;margin-top:12px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--paper)}
 .cstep{flex:1;padding:6px 9px;font-size:11px;color:var(--muted);border-right:1px solid var(--line)}
 .cstep:last-child{border-right:0}
@@ -113,10 +124,13 @@ main{width:min(1400px,100%);margin:0 auto;padding:16px 14px 60px}
 .slot[data-open="1"] .cand{display:block}
 .cand-lab{margin:11px 0 7px;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .cand-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
-.tile{flex:0 0 auto;width:162px;padding:9px 10px;border:1px solid var(--line);border-radius:12px;
+.tile{flex:0 0 auto;width:162px;padding:9px 10px;border:2px solid var(--rar,var(--line));border-radius:12px;
   background:var(--surface);text-align:left;display:flex;flex-direction:column;gap:4px}
-.tile:hover{border-color:var(--forest-2)}
-.tile[aria-pressed="true"]{border-color:var(--forest-2);background:var(--gold-soft);box-shadow:0 0 0 2px rgba(32,88,68,.16)}
+.tile:hover{box-shadow:0 0 0 2px rgba(32,88,68,.28)}
+.rar-key{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+.rar-sw{width:11px;height:11px;border-radius:3px;border:2px solid var(--rar,var(--line));background:var(--surface)}
+.legend-crown{color:var(--gold);font-size:10px;line-height:1}
+.tile[aria-pressed="true"]{background:var(--gold-soft);box-shadow:0 0 0 3px rgba(32,88,68,.42)}
 .tile-nm{font-size:12.5px;font-weight:600;line-height:1.25}
 .tile-ft{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:11px}
 .fit{color:var(--muted);font-variant-numeric:tabular-nums}
@@ -192,7 +206,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:900px}
 
 /* gallery */
 .gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:10px;padding:11px}
-.gcard{border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden;display:flex;flex-direction:column}
+.gcard{border:2px solid var(--rar,var(--line));border-radius:14px;background:var(--surface);overflow:hidden;display:flex;flex-direction:column}
 .gart{aspect-ratio:63/44;display:grid;place-items:center;background:linear-gradient(140deg,#e7e0cd,#d3ccb6);
   position:relative}
 .gart span{font-family:var(--serif);font-size:12px;color:#7d7663;padding:6px;text-align:center}
@@ -204,7 +218,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:900px}
 /* card preview pane */
 .cand-wrap{display:grid;grid-template-columns:minmax(0,1fr) 292px;gap:14px;align-items:start}
 .cprev{position:sticky;top:12px}
-.cface{border:1px solid #2b2b2b;border-radius:12px;padding:7px;background:#f0ead8;
+.cface{border:2px solid var(--rar,#2b2b2b);border-radius:12px;padding:7px;background:#f0ead8;
   box-shadow:0 4px 14px rgba(31,42,36,.18)}
 .cf-top,.cf-type{display:flex;justify-content:space-between;align-items:center;gap:8px;
   padding:4px 8px;border:1px solid #4a453a;border-radius:5px;background:#e6dfc9}
@@ -676,21 +690,45 @@ Object.keys(DECKS).forEach(function(k){
 });
 
 function pickOf(s){ return s.pick==="none" ? {name:"\u2014 empty \u2014",price:0,loc:"buy",color:"C",rar:"C",why:""} : s.cands[s.pick]; }
+/* The slot's own state is the authority for the card it holds: if it is sleeved,
+   the card is in this deck, whatever the candidate record last said. That is what
+   stops "Bench" and a ticked box appearing on the same row. */
+function slotLoc(s){
+  if(s.pick==="none") return "buy";
+  var raw=pickOf(s).loc;
+  if(raw==="buy"||raw==="ordered") return raw;
+  return s.inBox ? "deck" : (raw==="deck" ? "bench" : raw);
+}
 function allSlots(d){ var o=[]; DECKS[d].groups.forEach(function(g){o=o.concat(g.slots)}); return o }
 function rungsOf(s){ return RUNGS.filter(function(r){return s.cands[r]}) }
 function predOf(s,key){ var r=rungsOf(s), i=r.indexOf(key); return i>0? r[i-1] : (r.length&&r[0]!==key? r[0] : null) }
 
 /* ============ deck totals ============ */
 function totals(d){
-  var D=DECKS[d], sleeved=D.hiddenSleeved, buyN=D.hiddenBuy, buyV=D.hiddenBuyVal, tot=0, holes=0;
+  var D=DECKS[d], tot=0;
   D.groups.forEach(function(g){ tot+=g.total });
+  /* Buckets are mutually exclusive and must add up to `tot`, so the row can be
+     checked by eye. hiddenSleeved/hiddenBuy stand in for slots this shell does
+     not draw. */
+  /* Derive the undrawn remainder rather than hard-coding two constants that can
+     drift apart from the group totals - that drift is exactly what made Deck 3
+     add up to 101. Whatever this shell does not draw is split into a sleeved
+     part (given) and a to-buy part (the rest), so the tally always closes. */
+  var drawn=0; allSlots(d).forEach(function(s){ drawn+=s.qty });
+  var hidden=Math.max(0, tot-drawn);
+  var hiddenSleeved=Math.min(D.hiddenSleeved, hidden);
+  var hiddenBuy=hidden-hiddenSleeved;
+  var t={tot:tot,sleeved:hiddenSleeved,ordered:0,buyN:hiddenBuy,
+         buyV:hiddenBuy?D.hiddenBuyVal*(hiddenBuy/Math.max(1,D.hiddenBuy)):0,elsewhere:0,holes:0};
   allSlots(d).forEach(function(s){
-    var p=pickOf(s);
-    if(s.inBox) sleeved+=s.qty;
-    if(s.pick==="none") holes+=s.qty;
-    else if(p.loc==="buy"){ buyN+=s.qty; buyV+=p.price*s.qty }
+    var loc=slotLoc(s), p=pickOf(s);
+    if(s.pick==="none"){ t.holes+=s.qty; return }
+    if(loc==="deck")         t.sleeved+=s.qty;
+    else if(loc==="ordered") t.ordered+=s.qty;
+    else if(loc==="buy"){    t.buyN+=s.qty; t.buyV+=p.price*s.qty }
+    else                     t.elsewhere+=s.qty;   /* owned, on the Bench or in another deck */
   });
-  return {tot:tot,sleeved:sleeved,buyN:buyN,buyV:buyV,holes:holes};
+  return t;
 }
 function benchCards(){
   var out=[];
@@ -727,11 +765,17 @@ function renderDeckCard(){
      '<button class="mini" data-act="variant">Change variant &rsaquo;</button></div>'+
    '<div class="stats">'+
      '<span class="stat'+(t.holes?" warn":" ok")+'"><b class="num">'+(t.tot-t.holes)+'/'+t.tot+'</b> slots filled</span>'+
-     '<span class="stat'+(t.sleeved===t.tot?" ok":" warn")+'"><b class="num">'+t.sleeved+'/'+t.tot+'</b> physically sleeved</span>'+
      '<span class="stat"><b class="num">'+D.lands+'</b> lands</span>'+
      '<span class="stat ok">'+D.tier+' &#10003;</span>'+
      '<span class="stat"><b class="num">'+D.gc+'</b> game changers</span>'+
-     '<span class="stat warn"><b class="num">'+t.buyN+'</b> to buy &middot; <b class="num">'+money(t.buyV)+'</b></span>'+
+   '</div>'+
+   '<div class="tally" role="group" aria-label="Where all '+t.tot+' cards are">'+
+     '<span class="tally-t"><b class="num">'+t.tot+'</b> cards</span><span class="tally-eq">=</span>'+
+     '<span class="tally-b is-deck"><b class="num">'+t.sleeved+'</b> sleeved</span>'+
+     (t.elsewhere?'<span class="tally-p">+</span><span class="tally-b is-bench"><b class="num">'+t.elsewhere+'</b> owned elsewhere</span>':'')+
+     (t.ordered?'<span class="tally-p">+</span><span class="tally-b is-ordered"><b class="num">'+t.ordered+'</b> ordered</span>':'')+
+     '<span class="tally-p">+</span><span class="tally-b is-buy"><b class="num">'+t.buyN+'</b> to buy '+money(t.buyV)+'</span>'+
+     (t.holes?'<span class="tally-p">+</span><span class="tally-b is-hole"><b class="num">'+t.holes+'</b> empty</span>':'')+
    '</div>'+
    '<div class="collapse" role="group" aria-label="How this slot narrowed">'+
      '<div class="cstep done"><b>25</b>5 variants &times; 5 rungs</div>'+
@@ -739,7 +783,7 @@ function renderDeckCard(){
      '<div class="cstep now"><b>1</b>calibrated &mdash; the other 4 stay one click away</div></div>';
 }
 function slotRow(s){
-  var p=pickOf(s),L=locBits(p.loc),isBasic=s.pick==="basic",hole=s.pick==="none",
+  var p=pickOf(s),L=locBits(slotLoc(s)),isBasic=s.pick==="basic",hole=s.pick==="none",
       n=rungsOf(s).length+s.owned.length,open=(openSlot===s.id);
   var right = isBasic
     ? '<div class="slot-r"><span class="seg" data-step="'+s.id+'"><button data-d="-1" aria-label="One fewer">&minus;</button>'+
@@ -763,10 +807,13 @@ function slotRow(s){
 }
 function tile(s,key,cd,isOwned){
   var L=locBits(cd.loc),on=(!isOwned&&s.pick===key);
-  return '<button class="tile" data-pick="'+s.id+'|'+key+'|'+(isOwned?1:0)+'" '+
+  return '<button class="tile" style="--rar:var(--rar-'+(cd.rar||"C")+')" '+
+    'title="'+esc(RARLAB[cd.rar]||"Common")+'" data-pick="'+s.id+'|'+key+'|'+(isOwned?1:0)+'" '+
     'data-prev="'+s.id+'|'+key+'|'+(isOwned?1:0)+'" aria-pressed="'+on+'">'+
-    (isOwned?'<span class="rung none" style="align-self:flex-start">Owned</span>'
-            :'<span class="rung '+key+'" style="align-self:flex-start">'+RUNGLAB[key]+'</span>')+
+    '<span style="display:flex;align-items:center;gap:5px">'+
+      (isOwned?'<span class="rung none">Owned</span>':'<span class="rung '+key+'">'+RUNGLAB[key]+'</span>')+
+      (/^Legendary/.test(faceOf(cd.name,s.type).tl)?'<span class="legend-crown" title="Legendary">\u265B</span>':'')+
+    '</span>'+
     '<span class="tile-nm">'+esc(cd.name)+'</span>'+
     '<span class="tile-ft"><span class="loc '+L.c+'"><span class="g">'+L.g+'</span>'+L.t+'</span>'+
     '<span class="fit num">'+(isOwned?'fit '+cd.fit:money(cd.price))+'</span></span></button>';
@@ -778,7 +825,7 @@ function cardOf(s,key,isOwned){
 function previewMarkup(s,key,isOwned){
   var cd=cardOf(s,key,isOwned), f=faceOf(cd.name,s.type), tint=COLORHEX[cd.color]||"#cfc8bb";
   var L=locBits(cd.loc);
-  return '<div class="cface" style="--art-a:'+tint+';--art-b:#6f7a70">'+
+  return '<div class="cface" style="--rar:var(--rar-'+(cd.rar||"C")+');--art-a:'+tint+';--art-b:#6f7a70">'+
       '<div class="cf-top"><span class="cf-nm">'+esc(cd.name)+'</span><span class="cf-mv num">'+f.mv+'</span></div>'+
       '<div class="cf-art"><span>'+esc(cd.name)+'</span></div>'+
       '<div class="cf-type"><span>'+esc(f.tl)+'</span><span class="cf-mv">'+esc(RARLAB[cd.rar]||"")+'</span></div>'+
@@ -792,6 +839,8 @@ function previewMarkup(s,key,isOwned){
       '<li><b>Mechanics</b><span>'+(f.kw.length?esc(f.kw.join(" \u00b7 ")):"\u2014")+'</span></li>'+
       '<li><b>Colour</b><span><span class="dot" style="background:'+tint+'"></span>'+esc(COLORLAB[cd.color])+'</span></li>'+
       '<li><b>Where</b><span class="loc '+L.c+'"><span class="g">'+L.g+'</span>'+L.t+'</span></li>'+
+      '<li><b>Rarity</b><span class="rar-key"><span class="rar-sw" style="--rar:var(--rar-'+(cd.rar||"C")+')"></span>'+
+        esc(RARLAB[cd.rar]||"Common")+(/^Legendary/.test(f.tl)?' \u265B Legendary':'')+'</span></li>'+
       '<li><b>Target</b><span class="num">'+money(cd.price)+'</span></li>'+
     '</ul>'+
     '<p class="cprev-note">Hover any rung to preview it here. In the live app this pane shows the Scryfall card image.</p>';
@@ -867,7 +916,7 @@ function shopRows(){
       var p=pickOf(s);
       var r=map[p.name]||(map[p.name]={name:p.name,price:p.price,loc:p.loc,where:s.where,
         color:COLORLAB[p.color],ckey:p.color,type:s.type==="Commander"?"Creature":s.type,
-        rarity:RARLAB[p.rar],decks:{},qty:0});
+        rarity:RARLAB[p.rar],rkey:p.rar,decks:{},qty:0});
       r.decks["D"+DECKS[k].no]=1; r.qty+=s.qty;
     });
   });
@@ -1014,7 +1063,7 @@ function renderShop(){
       return '<section class="grp" data-open="1">'+(gp[0]?'<div class="grp-h" style="cursor:default">'+
         '<span class="grp-nm">'+esc(gp[0])+'</span><span class="grp-ct">'+plur(gp[1].length,"card")+'</span></div>':"")+
         '<div class="gal">'+gp[1].map(function(r){
-          return '<article class="gcard" data-row="'+esc(r.name)+'">'+
+          return '<article class="gcard" style="--rar:var(--rar-'+(r.rkey||"C")+')" data-row="'+esc(r.name)+'">'+
             '<div class="gart"><span>'+esc(r.name)+'</span></div>'+
             '<div class="gbody"><div class="gnm">'+esc(r.name)+(r.qty>1?' <span class="qty num">&times;'+r.qty+'</span>':'')+'</div>'+
             '<div class="gmeta"><span class="dot" style="background:'+COLORHEX[r.ckey]+'"></span>'+esc(r.color)+
