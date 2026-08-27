@@ -593,6 +593,7 @@
        plainly that they need another. */
     const claimSatisfied = new Map();
     const unclaimed = new Map();
+    const servedQty = new Map();
     variants.forEach((v) => {
       deckLabels[v.id] = "D" + v.deckId;
       const p = buyCatalog && buyCatalog.plans ? buyCatalog.plans[v.id] : null;
@@ -609,6 +610,9 @@
             unclaimed.set(key, left - qty);
             boxes[key] = boxes[key] || v.id;   // whoever actually holds it
             committed.set(key, (committed.get(key) || 0) + qty);
+            if (!servedQty.has(key)) servedQty.set(key, new Map());
+            const per = servedQty.get(key);
+            per.set(v.id, (per.get(v.id) || 0) + qty);
           }
           claimSatisfied.set(`${key}|${v.id}`, served);
         }
@@ -658,6 +662,17 @@
       spareCopies: (name) => {
         const key = Slot.ownedKey(name);
         return unclaimed.has(key) ? unclaimed.get(key) : (Slot.ownedCount(owned, name).inHand || 0);
+      },
+      /* How many copies this deck could draw on: everything you own less what the OTHER
+         decks have taken. This deck's own claim is not subtracted, so a row reads the same
+         whether or not its box is ticked -- "seven of the sixty-eight Forests still going
+         spare", not "seven of sixty-one because I already counted mine". */
+      availableFor: (name) => {
+        const key = Slot.ownedKey(name);
+        const per = servedQty.get(key);
+        let taken = 0;
+        if (per) per.forEach((qty, id) => { if (id !== variant.id) taken += qty; });
+        return Math.max(0, (Slot.ownedCount(owned, name).inHand || 0) - taken);
       },
       // Search and filter live per deck: narrowing deck 1 to lands should not follow you
       // into deck 2, where you were looking at something else.

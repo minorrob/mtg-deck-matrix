@@ -205,8 +205,14 @@ for (const view of [...appSource.matchAll(/^\s{4}([a-z0-9]+): \[$/gm)].map((m) =
   //    shell so rows stay put when the rung changes, which means a land slot can hold a
   //    creature and an enchantment slot can hold a land. Deck 1 at Tuned read 38 by slot
   //    and 36 by card.
-  assert.match(deckSource, /if \(cardTypeOf\(ctx, s\.pick\.name\) === "Land"\) t\.lands \+= qty;/,
-    "the land count must read the card in the slot, not the slot's own type");
+  assert.match(deckSource, /if \(cardTypeOf\(ctx, s\.pick\.name\) === "Land"\) t\.activeLands \+= qty;\s*\n\s*else t\.activeOther \+= qty;/,
+    "lands must be read off the card in the slot, and split against the rest of what is boxed");
+  // "35/100 cards in the box" beside "36 lands" was two different questions in one row.
+  // The two type figures are counted inside the active bucket, so they add up to the 35.
+  assert.match(deckSource, /if \(loc\.kind === "active"\) \{\s*\n\s*if \(cardTypeOf/,
+    "the type split must be counted inside what is in the box, not across the whole deck");
+  assert.ok(!deckSource.includes("t.lands"),
+    "a deck-wide land count next to a box count is the confusion this replaced");
   assert.match(deckSource, /const misfiled = pick && realType && realType !== slot\.type/,
     "a row whose card type differs from its group must say so, or counting by eye misses it");
 
