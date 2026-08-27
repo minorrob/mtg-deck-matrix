@@ -27,7 +27,7 @@
    * rung exactly as the Calibrate page already labels them, so nothing new is invented
    * here; this is the single place that mapping now lives.
    */
-  const RUNG_ORDER = ["base", "tuned", "enhance", "fun", "max"];
+  const RUNG_ORDER = ["base", "tuned", "enhance", "fun", "max", "manual"];
   const RUNG_BY_KIND = {
     shell: "base",
     tuned: "tuned", required: "tuned", tuned2: "tuned",
@@ -35,9 +35,12 @@
     max: "max", enhance2: "max", max2: "max",
     funTuned: "fun", funMax: "fun",
     altTuned: "alt", altMax: "alt",
+    // Hand-added: a Salvage pull or a pasted TCGplayer link. Sorted last on a slot because
+    // it is the owner's own answer, offered after every measured one.
+    manual: "manual",
     transfer: "transfer"
   };
-  const RUNG_LABEL = {base: "Base", tuned: "Tuned", enhance: "Enhance", fun: "Fun", max: "Max", alt: "Alt", transfer: "Borrowed"};
+  const RUNG_LABEL = {base: "Base", tuned: "Tuned", enhance: "Enhance", fun: "Fun", max: "Max", alt: "Alt", manual: "Manual", transfer: "Borrowed"};
   function rungOf(kind) { return RUNG_BY_KIND[kind] || "base"; }
 
   /* ---------------- the four measured builds ----------------

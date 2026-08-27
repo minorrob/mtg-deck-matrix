@@ -1629,7 +1629,7 @@ footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px;
    can never be confused with a rung. Rarity is an outline only. */
 :root{
   --rung-base:#8a938b; --rung-tuned:#2f6b52; --rung-enhance:#6f8a30;
-  --rung-max:#c69735; --rung-fun:#315f70; --rung-alt:#7a6a9a;
+  --rung-max:#c69735; --rung-fun:#315f70; --rung-alt:#7a6a9a; --rung-manual:#6d5bd0;
   --rar-C:#d8cfba; --rar-U:#7f9c85; --rar-R:#6f8fa8; --rar-S:#8d7fa6; --rar-M:#c19a4e; --rar-B:#d9b45c;
 }
 .dp-num{font-variant-numeric:tabular-nums}
@@ -1693,6 +1693,25 @@ footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px;
 .dp-rung.is-fun{background:var(--rung-fun)}
 .dp-rung.is-alt{background:var(--rung-alt)}
 .dp-rung.is-owned,.dp-rung.is-none{background:var(--surface-2);color:var(--muted)}
+.dp-rung.is-manual{background:var(--rung-manual,#6d5bd0);color:#fff}
+
+/* The Manual box. Shaped like the card that would sit in the slot, drawn as an outline so
+   it reads as a space waiting to be filled rather than a card that is already there. */
+.dp-manual{margin:11px 0 0;padding:11px 12px;border:2px dashed var(--line);border-radius:12px;
+  background:repeating-linear-gradient(135deg,transparent,transparent 9px,rgba(109,91,208,.035) 9px,rgba(109,91,208,.035) 18px)}
+.dp-manual-hd{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.dp-manual-ttl{font-size:12.5px;font-weight:700;color:var(--muted);flex:1 1 auto;min-width:0}
+.dp-manual-go{flex:0 0 auto;min-height:32px;padding:5px 14px;border:1px solid var(--rung-manual,#6d5bd0);border-radius:8px;
+  background:var(--rung-manual,#6d5bd0);color:#fff;font-size:12px;font-weight:800;cursor:pointer}
+.dp-manual-go:hover{filter:brightness(1.08)}
+.dp-manual-go:disabled{opacity:.5;cursor:default}
+.dp-manual-f{display:block;margin:0 0 8px}
+.dp-manual-f>span{display:block;font-size:11px;font-weight:700;letter-spacing:.03em;color:var(--muted);margin-bottom:3px}
+.dp-manual-f input,.dp-manual-f select{width:100%;max-width:100%;padding:6px 9px;border:1px solid var(--line);
+  border-radius:8px;background:var(--paper);font:inherit;font-size:12.5px;color:inherit}
+.dp-manual-f input:focus,.dp-manual-f select:focus{outline:2px solid var(--rung-manual,#6d5bd0);outline-offset:1px}
+.dp-manual-note{margin:2px 0 0;font-size:11.5px;line-height:1.45;color:var(--muted)}
+@media (max-width:720px){.dp-manual{padding:10px}.dp-manual-hd{flex-wrap:wrap}}
 .dp-crown{color:var(--gold);font-size:10px;line-height:1}
 
 .dp-loc{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;white-space:nowrap}

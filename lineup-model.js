@@ -8,7 +8,12 @@
 
   const ARRAY_KEYS = [
     "shell", "tuned", "upgrade", "enhance", "max",
-    "tuned2", "enhance2", "max2", "funTuned", "funMax", "altTuned", "altMax"
+    "tuned2", "enhance2", "max2", "funTuned", "funMax", "altTuned", "altMax",
+    // Cards the owner added themselves -- pulled out of Salvage, or resolved from a pasted
+    // TCGplayer link. They are not produced by any optimizer and carry no measured evidence,
+    // so they never chain off another rung: each one names the card it would replace and is
+    // offered as one more choice inside that card's slot.
+    "manual"
   ];
 
   // The newer ladders routinely propose a card that's ALSO a name-twin of something already
@@ -57,6 +62,7 @@
       ["funMax", "funMax", "Fun Max", plan?.funMax || []],
       ["altTuned", "altTuned", "Alt Tuned", plan?.altTuned || []],
       ["altMax", "altMax", "Alt Max", plan?.altMax || []],
+      ["manual", "manual", "Manual", plan?.manual || []],
       ["transfer", "transfer", "Temporary", extraCandidates || []]
     ];
     return sources.flatMap(([kind, arrayKey, label, items]) => items.map((item, index) => ({
