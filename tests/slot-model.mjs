@@ -479,4 +479,52 @@ ok("Fun branches off Base, it is not Tuned with jokes added", () => {
   assert.deepEqual(Slot.RUNG_CHAIN.fun, ["funTuned"], "Fun composes off the shell alone");
 });
 
+ok("the page and the simulation agree about what a card is FOR, card for card", () => {
+  /* Same argument as the mana rules above. A slot offering you "removal you already own"
+     has to mean removal in the sense the simulation scores, or the suggestion is a guess
+     wearing the simulation's clothes. Eight roles, whole catalog, no exceptions. */
+  const engine = require("../sim-engine.js");
+  const FLAG = {
+    ramp: "isRamp", draw: "isDraw", removal: "isRemoval", wipe: "isWipe",
+    protection: "isProtection", recursion: "isRecursion", tutor: "isTutor", finisher: "isFinisher"
+  };
+  assert.deepEqual(Object.keys(FLAG).slice().sort(), Slot.ROLE_KEYS.slice().sort(),
+    "every role the page can show has to be one the engine actually tests for");
+  const drift = [];
+  for (const card of cardsPayload.cards) {
+    const mine = new Set(Slot.cardRoles(card));
+    const theirs = engine.classifyCard(card);
+    for (const [role, flag] of Object.entries(FLAG)) {
+      if (mine.has(role) !== Boolean(theirs[flag])) drift.push(`${card.name}: ${role} page ${mine.has(role)} vs engine ${Boolean(theirs[flag])}`);
+    }
+  }
+  assert.equal(drift.length, 0, `roles read differently on ${drift.length} card/role pairs, e.g. ${drift.slice(0, 3).join(" | ")}`);
+  // The mana value the fit uses is the engine's too, or a "same cost" badge lies.
+  const valueDrift = cardsPayload.cards.filter((card) => Slot.manaValueOf(card) !== engine.classifyCard(card).cmc);
+  assert.equal(valueDrift.length, 0, `mana value differs on ${valueDrift.length} cards, e.g. ${valueDrift.slice(0, 3).map((c) => c.name).join(", ")}`);
+});
+
+ok("a slot's best fit is the card that does the same job at the same cost", () => {
+  const target = {type: "Instant", manaValue: 2, roles: ["removal"]};
+  const swords = cards[Lineup.normalizeName("Swords to Plowshares")];
+  const solRing = cards[Lineup.normalizeName("Sol Ring")];
+  assert.ok(swords && solRing, "the catalog should carry both fixtures");
+  const a = Slot.slotFit(swords, target);
+  const b = Slot.slotFit(solRing, target);
+  assert.ok(a.score > b.score, `removal should outrank a mana rock for a removal slot (${a.score} vs ${b.score})`);
+  assert.ok(a.reasons.length, "a score with no reasons behind it is a number you cannot argue with");
+  assert.ok(a.reasons.some((r) => /removal/.test(r)), `expected the reason to name the role, got ${a.reasons.join(", ")}`);
+
+  // Type is worth more than cost: a slot's shape survives a mana off, not a type swap.
+  const sameTypeOffCost = Slot.slotFit({typeLine: "Instant", manaCost: "{4}{W}", oracleText: "Destroy target creature."}, target);
+  const offTypeSameCost = Slot.slotFit({typeLine: "Creature — Bear", manaCost: "{1}{W}", oracleText: "Destroy target creature."}, target);
+  assert.ok(sameTypeOffCost.score > offTypeSameCost.score,
+    `an Instant off-curve should beat a Creature on-curve for an Instant slot (${sameTypeOffCost.score} vs ${offTypeSameCost.score})`);
+
+  // A card that shares nothing scores at or below zero, so "best fit" can come back empty
+  // rather than dressing up the least-bad card in the pile as a suggestion.
+  const nothing = Slot.slotFit({typeLine: "Land", manaCost: "", oracleText: ""}, target);
+  assert.ok(nothing.score <= 0, `an unrelated card should not score as a fit (${nothing.score})`);
+});
+
 process.stdout.write(`\n${checks} checks passed across ${planIds.length} plans.\n`);

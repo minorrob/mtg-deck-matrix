@@ -301,7 +301,26 @@
     FILTERS.forEach((flt) => (f[flt.key] || []).forEach((v) => chips.push(
       `<span class="sp-fchip">${esc(flt.label)}: ${esc(v)}<button type="button" data-sp-unchip="${esc(flt.key)}|${esc(v)}" aria-label="Remove">×</button></span>`)));
 
-    const bar = `<div class="sp-bar">
+    /* On a phone this whole bar used to sit between you and the one thing you came here
+       to do, which is tell the app you bought a card. Nothing is removed -- every filter,
+       the grouping, the sort and the totals are all still here on a phone exactly as they
+       are on a desktop -- but the options fold behind one button, and what stays out is
+       the row that picks the view and the line that says what you still owe. */
+    const activeFilters = FILTERS.reduce((n, flt) => n + (f[flt.key] || []).length, 0) + (f.query ? 1 : 0);
+    const bar = `<div class="sp-bar" data-open="${f.barOpen ? 1 : 0}">
+      <div class="sp-frow sp-frow-nav">
+        <span class="sp-seg">
+          <button type="button" data-sp-view="table" aria-pressed="${f.view === "table"}">\u2630 Table</button>
+          <button type="button" data-sp-view="gallery" aria-pressed="${f.view === "gallery"}">\u25a6 Gallery</button>
+          <button type="button" data-sp-view="bench" aria-pressed="${f.view === "bench"}">\u25c7 Bench${
+            (ctx.bench || []).length ? " " + (ctx.bench || []).length : ""}</button>
+        </span>
+        <button type="button" class="sp-mob" data-sp-mob aria-expanded="${Boolean(f.barOpen)}">
+          ${f.barOpen ? "Hide options" : "Filter, group, sort"}${
+            activeFilters ? `<span class="sp-cnt dp-num">${activeFilters}</span>` : '<span class="sp-caret">\u25be</span>'}
+        </button>
+      </div>
+      <div class="sp-bar-body">
       <div class="sp-frow">
         ${FILTERS.map((flt) => {
           const n = (f[flt.key] || []).length;
@@ -317,23 +336,19 @@
         <input class="sp-q" id="sp-q" type="search" placeholder="Search cards…" aria-label="Search cards" value="${esc(f.query || "")}">
       </div>
       <div class="sp-frow">
-        <span class="sp-lab">View</span>
-        <span class="sp-seg">
-          <button type="button" data-sp-view="table" aria-pressed="${f.view === "table"}">☰ Table</button>
-          <button type="button" data-sp-view="gallery" aria-pressed="${f.view === "gallery"}">▦ Gallery</button>
-          <button type="button" data-sp-view="bench" aria-pressed="${f.view === "bench"}">◇ Bench${
-            (ctx.bench || []).length ? " " + (ctx.bench || []).length : ""}</button>
-        </span>
         <span class="sp-lab">Group by</span>
         <select class="sp-sel" id="sp-group">${GROUP_BY.map(([v, l]) =>
           `<option value="${v}"${f.groupBy === v ? " selected" : ""}>${l}</option>`).join("")}</select>
         ${f.view === "gallery" ? `<span class="sp-lab">Sort</span><select class="sp-sel" id="sp-sort">${
           COLUMNS.filter((c) => c.sortable !== false).map((c) =>
             `<option value="${c.key}"${f.sortKey === c.key ? " selected" : ""}>${c.label}</option>`).join("")}</select>` : ""}
+      </div>
+      ${chips.length ? `<div class="sp-frow"><div class="sp-chips">${chips.join("")}<button type="button" class="sp-mini" data-sp-clear="1">Clear all filters</button></div></div>` : ""}
+      </div>
+      <div class="sp-frow sp-frow-tot">
         <span class="sp-tot"><b class="dp-num">${owedCards}</b> still to buy · <b class="dp-num">${money(owedValue)}</b></span>
         <span class="sp-tot sp-paid-tot" data-sp-paid-total><b class="dp-num">${money(paidTotal)}</b> paid · ${paidCount}/${all.length} priced</span>
       </div>
-      ${chips.length ? `<div class="sp-frow"><div class="sp-chips">${chips.join("")}<button type="button" class="sp-mini" data-sp-clear="1">Clear all filters</button></div></div>` : ""}
     </div>`;
 
     if (f.view === "bench") { host.innerHTML = bar + benchMarkup(ctx); return; }
@@ -367,7 +382,7 @@
       body = `<div class="sp-tw"><table class="sp-table"><thead><tr>${head}</tr></thead><tbody>${
         groups.map(([name, list]) => (name ? bandHeader(name, list, COLUMNS.length) : "")
           + list.map((r) => `<tr data-sp-row="${esc(r.key)}">${
-            COLUMNS.map((c) => `<td>${cell(r, c.key)}</td>`).join("")}</tr>`).join("")).join("")
+            COLUMNS.map((c) => `<td data-k="${c.key}" data-lab="${esc(c.label)}">${cell(r, c.key)}</td>`).join("")}</tr>`).join("")).join("")
       }</tbody></table></div>`;
     }
     host.innerHTML = bar + body;

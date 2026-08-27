@@ -634,6 +634,9 @@
       const md = cards[Lineup.normalizeName(entry.name)] || {};
       freeCards.push({
         name: entry.name, typeLine: md.typeLine || "", image: md.image || "",
+        // The fit model reads cost and rules text, so a loose card has to arrive carrying
+        // them -- a name and a type line cannot tell you what a card is for.
+        manaCost: md.manaCost || "", oracleText: md.oracleText || "", colorIdentity: md.colorIdentity || [],
         price: Number(md.price) || 0, fromDeck: "D" + entry.deckId, fromVariantId: entry.variantId
       });
     });
@@ -650,6 +653,10 @@
       deckId: variant.id,
       deckTitle: "Deck " + variant.deckId + " · " + variant.name,
       commander: plan.commanderName || variant.commander || "",
+      /* A Commander deck's colours ARE its commander's colours -- there is nowhere else
+         for them to come from. Offering a card outside them is not a weak suggestion, it
+         is an illegal one, so the slot filters on this before it ranks anything. */
+      identity: (cards[Lineup.normalizeName(plan.commanderName || variant.commander || "")] || {}).colorIdentity || [],
       colors: variant.colorIdentity || variant.colors || "",
       variantId: variant.id,
       slots, owned, cards, boxes, deckLabels, openGroups,
@@ -692,7 +699,11 @@
       paidFor,
       // The Salvage yard, offered in every slot's Manual box. Cards already carried into
       // this deck as a manual pick are filtered out per slot by the box itself.
-      salvage: allSalvageCards().map((card) => ({name: card.name, typeLine: card.typeLine || "", image: card.image || "", price: Number(card.price) || 0})),
+      salvage: allSalvageCards().map((card) => ({
+        name: card.name, typeLine: card.typeLine || "", image: card.image || "",
+        manaCost: card.manaCost || "", oracleText: card.oracleText || "", colorIdentity: card.colorIdentity || [],
+        price: Number(card.price) || 0
+      })),
       // Owned copies another deck lists but is not holding. Same offer as the yard, kept
       // in its own list so the box can say where each one is sitting.
       freeCards,
@@ -944,6 +955,23 @@
       renderDeckPage();
       return true;
     }
+    /* A best-fit button is the dropdown beneath it, filled in and submitted. It goes
+       through submitManualCard rather than taking a shortcut so the card is filed,
+       priced, pulled out of the yard and reported exactly as a hand-picked one is --
+       one way into a slot, not two that can drift apart. */
+    if ((el = event.target.closest("[data-dp-fit]"))) {
+      const raw = el.dataset.dpFit || "";
+      const cut = raw.indexOf("|");
+      const slotId = cut < 0 ? raw : raw.slice(0, cut);
+      const name = cut < 0 ? "" : raw.slice(cut + 1);
+      const scope = document.querySelector(`[data-dp-manual="${CSS.escape(slotId)}"]`);
+      const select = scope?.querySelector("[data-dp-manual-salvage]");
+      const url = scope?.querySelector("[data-dp-manual-url]");
+      if (url) url.value = "";
+      if (select) select.value = name;
+      submitManualCard(slotId);
+      return true;
+    }
     if ((el = event.target.closest("[data-dp-manual-submit]"))) {
       submitManualCard(el.dataset.dpManualSubmit);
       return true;
@@ -1072,7 +1100,10 @@
   // The same slots, re-keyed by card name and merged across every selected deck.
   const shopFilters = {
     status: [], color: [], type: [], band: [], spot: [], rarity: [], deck: [], rung: [],
-    query: "", view: "table", groupBy: "spot", sortKey: "name", sortDir: "asc"
+    query: "", view: "table", groupBy: "spot", sortKey: "name", sortDir: "asc",
+    // Phones only: whether the filter/group/sort block is unfolded. Desktop ignores it
+    // and shows the block regardless, so this never hides anything on a wide screen.
+    barOpen: false
   };
 
   /**
@@ -1318,6 +1349,7 @@
       window.MtgShopPage.FILTERS.forEach((f) => { shopFilters[f.key] = []; });
       shopFilters.query = ""; renderShopPage(); return true;
     }
+    if (event.target.closest("[data-sp-mob]")) { shopFilters.barOpen = !shopFilters.barOpen; renderShopPage(); return true; }
     if ((el = event.target.closest("[data-sp-view]"))) { shopFilters.view = el.dataset.spView; renderShopPage(); return true; }
     if (event.target.closest("[data-sp-intake-toggle]")) { shopIntakeOpen = !shopIntakeOpen; renderShopPage(); return true; }
     if (event.target.closest("[data-sp-intake-submit]")) { submitBenchIntake(); return true; }
