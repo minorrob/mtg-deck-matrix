@@ -609,7 +609,17 @@
    * deck, quantities summed. Basics collapse here the opposite way they do on the
    * Deck page - Forest x25 across six decks instead of Forest x11 in one.
    */
-  function shopRows(decks, owned) {
+  /**
+   * One row per card the six boxes ask for, with what you hold against it.
+   *
+   * `holds` is optional and, when given, decides the split instead of the global ledger:
+   * a map of card key to {inHand, ordered} counting only the copies the decks were
+   * actually allocated. Without it the Shop asks "do I own one of these", which is a
+   * different question from "is every box that wants one going to get one" -- and the two
+   * disagree by exactly the copies sitting on the bench, so the Shop said four fewer
+   * cards to buy than the six Deck pages did.
+   */
+  function shopRows(decks, owned, holds) {
     const map = new Map();
     (decks || []).forEach((deck) => {
       (deck.slots || []).forEach((slot) => {
@@ -631,7 +641,12 @@
       });
     });
     return Array.from(map.values()).map((row) => {
-      const {inHand, ordered} = ownedCount(owned, row.name);
+      /* When an allocation is given it is complete: a card with no entry was allocated to
+         nobody, which is not the same as a card nobody owns. Falling back to the ledger
+         there put "you have one" against a card every box had been denied, and the Shop
+         dropped it from the list while the Deck pages still asked for it. */
+      const allocated = holds ? (holds[row.key] || {inHand: 0, ordered: 0}) : null;
+      const {inHand, ordered} = allocated || ownedCount(owned, row.name);
       row.inHand = Math.min(inHand, row.quantity);
       row.ordered = Math.min(ordered, Math.max(0, row.quantity - row.inHand));
       row.need = Math.max(0, row.quantity - row.inHand - row.ordered);
