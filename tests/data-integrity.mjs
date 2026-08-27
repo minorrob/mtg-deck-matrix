@@ -882,4 +882,33 @@ assert.match(appSource, /ownedTotal: \(name\) => Slot\.ownedCount\(owned, name\)
 assert.match(deckPageSource, /\$\{pool\} of your \$\{stock === null \? pool : stock\} still free/,
   "the sub-line must still say how many are unallocated, or the pill's total is misleading");
 
+
+/* Cards bought but not yet arrived. The state file lists them beside the state; until
+   this was wired up nothing read the list, so each one looked exactly like a card on the
+   table and a ticked row said "In the box" about something still in the post. */
+assert.match(appSource, /function applyOrderedManifest\(payload\)/, "the ordered manifest must be read, not just stored");
+assert.match(appSource, /state = \{\.\.\.blankState\(\), \.\.\.payload\.state\};\n\s*applyOrderedManifest\(payload\);/,
+  "the manifest must be applied to the state a load just installed, before anything renders it");
+assert.match(appSource, /state\.owned\[key\] = \{inHand: 0, ordered: rec\.inHand \+ \(rec\.ordered \|\| 0\)\};/,
+  "an ordered copy must leave in-hand entirely, or acquisitionOf still reads it as held");
+assert.match(appSource, /state\.boughtQuantities\[key\] = 0;\n\s*delete state\.found\[key\];/,
+  "the legacy found/boughtQuantities pair must be kept in step the way bumpOwned keeps it");
+assert.match(appSource, /if \(!rec \|\| !rec\.inHand\) return;/,
+  "a manifest name with no ownership behind it is a typo, not a card in the post");
+
+// And the manifest in the committed state has to name cards that state actually owns,
+// or the list is decoration.
+{
+  const manifest = activeState.orderedNotYetInHand || [];
+  assert.ok(manifest.length > 0, "the committed state should carry an ordered manifest");
+  const slug = (name) => String(name).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const unmatched = manifest.filter((entry) => {
+    const key = slug(typeof entry === "string" ? entry : entry.name);
+    return !(activeState.state.found[key] || activeState.state.boughtQuantities[key]);
+  });
+  assert.equal(unmatched.length, 0,
+    `${unmatched.length} ordered names match no owned card, e.g. ${unmatched.slice(0, 3).join(", ")}`);
+}
+
 console.log(`Validated ${variants.variants.length} variants and ${Object.keys(buyPlans.plans).length} connected buy profiles.`);

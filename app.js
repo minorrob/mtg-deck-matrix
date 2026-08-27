@@ -7362,9 +7362,49 @@
   // would silently pick a winner the user never chose. Replacing is at least predictable, and
   // the caller is required to confirm first since there is no way back once applied except
   // re-importing an earlier export.
+  /**
+   * Cards you have paid for that have not arrived.
+   *
+   * A state file records these as a plain list beside the state -- a manifest of what is
+   * in the post. Nothing read it. So each of them stayed indistinguishable from a card
+   * sitting on the table (found, with a quantity, which normalizeOwned reads as in hand),
+   * and once its box was ticked the row said "In the box" about a card still in a
+   * envelope somewhere.
+   *
+   * This turns the manifest into real ownership: those copies move from in-hand to
+   * ordered, and the legacy found/boughtQuantities pair is kept in step exactly the way
+   * bumpOwned keeps it, so there is still one convention for what those two mean.
+   * Clicking "In hand" on the Shop moves a copy back the other way, which is the round
+   * trip the manifest exists to describe.
+   */
+  function applyOrderedManifest(payload) {
+    const Slot = window.MtgSlotModel;
+    const list = payload && payload.orderedNotYetInHand;
+    if (!Slot || !Array.isArray(list) || !list.length) return;
+    // Ownership becomes explicit here rather than being re-derived on every read, so the
+    // ordered records have somewhere to live that normalizeOwned will not flatten.
+    state.owned = Slot.normalizeOwned(state);
+    state.found ||= {};
+    state.boughtQuantities ||= {};
+    list.forEach((entry) => {
+      const name = typeof entry === "string" ? entry : (entry && entry.name) || "";
+      if (!name) return;
+      const key = Slot.ownedKey(name);
+      const rec = state.owned[key];
+      // Only a card the file already counts as owned can be re-filed as ordered; a name
+      // with no ownership behind it is a typo in the manifest, not a card in the post.
+      if (!rec || !rec.inHand) return;
+      state.owned[key] = {inHand: 0, ordered: rec.inHand + (rec.ordered || 0)};
+      state.boughtQuantities[key] = 0;
+      delete state.found[key];
+    });
+    state.ownershipSchema = 3;
+  }
+
   function applyStatePayload(payload, sourceLabel, options = {}) {
     if (options.backup !== false) stashUndo();
     state = {...blankState(), ...payload.state};
+    applyOrderedManifest(payload);
     try {
       if (payload.custom) localStorage.setItem(Custom.STORAGE_KEY, JSON.stringify(payload.custom));
       else localStorage.removeItem(Custom.STORAGE_KEY);
