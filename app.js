@@ -733,6 +733,68 @@
     showToast(`${entry.name} is now a Manual option on the ${replaces || "selected"} slot. Tick it to swap it in.`);
   }
 
+  /**
+   * Sends a hand-added card back to the bench: out of the slot, out of this deck, and
+   * back into the Salvage yard where every deck can reach it again.
+   *
+   * Order matters. The slot is handed back FIRST, to whatever filled it before -- a
+   * deck that loses a card without gaining one is ninety-nine cards, and the tally
+   * would say so. Only once the slot is settled does the card leave.
+   *
+   * A card that was never owned does not go on the bench. The yard means "cards you
+   * own that no deck has claimed", and a card you resolved from a link and have not
+   * bought is not one of those; it simply leaves the slot, and the toast says so
+   * rather than quietly inventing a copy.
+   */
+  function returnManualCard(slotId, entryId) {
+    const ctx = deckPageContext();
+    if (!ctx) return;
+    const variantId = ctx.deckId;
+    const plan = buyCatalog.plans[variantId];
+    const list = state.manualCards?.[variantId] || [];
+    if (!plan || !list.length) return;
+
+    const model = Lineup.buildModel(plan);
+    const entry = model.byId.get(String(entryId));
+    if (!entry || entry.kind !== "manual") return;
+    const card = list.find((candidate) => itemKey(candidate) === itemKey(entry.item));
+    if (!card) return;
+
+    // Hand the slot back before the card leaves it.
+    const current = ensureBuyState(variantId);
+    const active = Lineup.activeEntryForSlot(plan, current, entry.slotId);
+    if (active?.id === entry.id) {
+      const replacement = slotFallbackFor(model, entry);
+      if (!replacement) {
+        return showToast(`${card.name} is the only card this slot can hold, so it cannot go back yet.`);
+      }
+      assignSelection(current, Lineup.applyChoice(plan, current, replacement.id));
+    }
+
+    state.manualCards[variantId] = list.filter((candidate) => itemKey(candidate) !== itemKey(card));
+    if (!state.manualCards[variantId].length) delete state.manualCards[variantId];
+
+    const key = itemKey(card);
+    const owned = card.source === "salvage" || Boolean(state.found?.[key]) || Number(state.boughtQuantities?.[key] || 0) > 0;
+    if (owned && !state.liveSalvage?.[key]) {
+      state.liveSalvage ||= {};
+      state.liveSalvage[key] = {
+        card: transferCardSnapshot(card),
+        reason: `Taken back out of Deck ${plan.deckId ?? ""} · ${ctx.deckTitle || variantId}`.replace(/\s+·\s*$/, ""),
+        sourceVariantId: variantId,
+        sourceEntryId: entry.id,
+        movedAt: new Date().toISOString()
+      };
+    }
+
+    applyManualCards();
+    saveState(`${card.name} sent back to the bench`);
+    renderDeckPage();
+    showToast(owned
+      ? `${card.name} is back on the bench and free for any deck.`
+      : `${card.name} left the slot. It was never on the bench — you have not bought it.`);
+  }
+
   function deckPageClick(event) {
     let el;
     if ((el = event.target.closest("[data-dp-deck]"))) {
@@ -768,6 +830,13 @@
     }
     if ((el = event.target.closest("[data-dp-manual-submit]"))) {
       submitManualCard(el.dataset.dpManualSubmit);
+      return true;
+    }
+    // Ahead of [data-dp-pick]: the return button sits over the tile, and a click on it
+    // must not also be read as picking the card it is removing.
+    if ((el = event.target.closest("[data-dp-manual-return]"))) {
+      const [slotId, entryId] = el.dataset.dpManualReturn.split("|");
+      returnManualCard(slotId, entryId);
       return true;
     }
     if ((el = event.target.closest("[data-dp-pick]"))) {
@@ -3612,6 +3681,32 @@
     return Object.fromEntries(keys.filter((key) => card[key] !== undefined).map((key) => [key, card[key]]));
   }
 
+  /**
+   * What fills a slot when the card currently in it leaves.
+   *
+   * The card it replaced, when that is still a same-sized option; otherwise the best
+   * remaining candidate in the same slot, cheapest rung first. Same-sized matters
+   * because a slot can hold twelve basics as easily as one spell, and swapping across
+   * that boundary is what would quietly take the deck off a hundred.
+   *
+   * Shared by the Salvage move on a live deck and by sending a hand-added card back to
+   * the bench, so both answer the question the same way.
+   */
+  function slotFallbackFor(model, entry) {
+    const sameSize = (candidate) => Number(candidate.item.quantity || 1) === Number(entry.item.quantity || 1);
+    const predecessor = entry.kind === "shell" ? null : model.byId.get(entry.predecessorId);
+    if (predecessor && predecessor.id !== entry.id && sameSize(predecessor)) return predecessor;
+    // "manual" is absent on purpose: another hand-added card is a fine choice to make
+    // deliberately and a poor one to fall into, so it sorts behind every measured rung.
+    const priorities = {
+      tuned: 0, shell: 1, enhance: 2, upgrade: 2, max: 3,
+      tuned2: 4, funTuned: 4, altTuned: 4, enhance2: 5, max2: 6, funMax: 6, altMax: 6
+    };
+    return (model.groups.get(entry.slotId) || [])
+      .filter((candidate) => candidate.id !== entry.id && sameSize(candidate))
+      .sort((a, b) => (priorities[a.kind] ?? 9) - (priorities[b.kind] ?? 9) || a.item.name.localeCompare(b.item.name))[0] || null;
+  }
+
   function salvageMoveOption(card, sourceVariant) {
     if (!sourceVariant?.id || sourceVariant.id === "salvage" || card.isCommander || card.transferRecord || card.loanedTo || !cardAvailableFromSource(card, sourceVariant)) return null;
     const plan = buyCatalog.plans[sourceVariant.id];
@@ -3622,16 +3717,7 @@
     if (!entry) return null;
     const active = Lineup.activeEntryForSlot(plan, current, entry.slotId);
     if (active?.id !== entry.id) return {entry, replacement: null, next: current, wasActive: false};
-    let replacement = entry.kind === "shell" ? null : model.byId.get(entry.predecessorId);
-    if (!replacement || replacement.id === entry.id || Number(replacement.item.quantity || 1) !== Number(entry.item.quantity || 1)) {
-      const priorities = {
-        tuned: 0, shell: 1, enhance: 2, upgrade: 2, max: 3,
-        tuned2: 4, funTuned: 4, altTuned: 4, enhance2: 5, max2: 6, funMax: 6, altMax: 6
-      };
-      replacement = (model.groups.get(entry.slotId) || [])
-        .filter((candidate) => candidate.id !== entry.id && Number(candidate.item.quantity || 1) === Number(entry.item.quantity || 1))
-        .sort((a, b) => (priorities[a.kind] ?? 9) - (priorities[b.kind] ?? 9) || a.item.name.localeCompare(b.item.name))[0] || null;
-    }
+    const replacement = slotFallbackFor(model, entry);
     if (!replacement) return null;
     const next = tentativeLineupChoice(plan, current, replacement.id, true);
     if (evaluateDeckCompliance(plan, next).tier3.length) return null;

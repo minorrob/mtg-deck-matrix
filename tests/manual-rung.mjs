@@ -98,6 +98,60 @@ ok("choosing a manual card keeps the deck at a hundred cards", () => {
   }
 });
 
+ok("every hand-added card has somewhere to hand its slot back to", () => {
+  // A card can only leave a slot if something the same size can take it. Without this
+  // the return button would be offered on a card that cannot actually go anywhere.
+  for (const id of variantIds) {
+    const plan = grafted(id);
+    const model = Lineup.buildModel(plan);
+    for (const card of manualCards[id]) {
+      const entry = model.entries.find((candidate) => candidate.item.name === card.name && candidate.kind === "manual");
+      const sameSize = (model.groups.get(entry.slotId) || [])
+        .filter((candidate) => candidate.id !== entry.id
+          && Number(candidate.item.quantity || 1) === Number(entry.item.quantity || 1));
+      assert.ok(sameSize.length, `${id}: ${card.name} has no same-sized card to hand slot ${entry.slotId} back to`);
+    }
+  }
+});
+
+ok("sending one back leaves the deck at a hundred cards", () => {
+  // The order the app uses: hand the slot back first, then drop the card. A deck that
+  // loses a card without gaining one is ninety-nine, and the tally would say so.
+  for (const id of variantIds) {
+    for (const card of manualCards[id]) {
+      const plan = grafted(id);
+      const model = Lineup.buildModel(plan);
+      const entry = model.entries.find((candidate) => candidate.item.name === card.name && candidate.kind === "manual");
+      const picked = Lineup.applyChoice(plan, Lineup.defaultSelection(plan), entry.id);
+      const fallback = (model.groups.get(entry.slotId) || [])
+        .filter((candidate) => candidate.id !== entry.id
+          && Number(candidate.item.quantity || 1) === Number(entry.item.quantity || 1))[0];
+      const handedBack = Lineup.applyChoice(plan, picked, fallback.id);
+      assert.equal(Lineup.quantity(plan, handedBack), 100,
+        `${id}: handing ${card.name}'s slot back leaves ${Lineup.quantity(plan, handedBack)} cards`);
+
+      // And then the card itself goes, which is a plan without it at all.
+      const without = {...plan, manual: (plan.manual || []).filter((other) => other.name !== card.name)};
+      assert.equal(Lineup.quantity(without, Lineup.defaultSelection(without)), 100,
+        `${id}: the deck is not a hundred once ${card.name} has left it`);
+    }
+  }
+});
+
+ok("the return control is read before the pick that sits under it", () => {
+  // Match the handler expressions, not any mention -- the comment above the return
+  // branch names the pick branch, and an indexOf for the bare selector finds that.
+  const returnAt = appSource.indexOf('closest("[data-dp-manual-return]")');
+  const pickAt = appSource.indexOf('closest("[data-dp-pick]")');
+  assert.ok(returnAt > 0 && pickAt > 0, "both handlers must exist");
+  assert.ok(returnAt < pickAt,
+    "the return button overlaps its tile, so its handler has to run before the tile's pick handler");
+  assert.match(appSource, /function returnManualCard\(slotId, entryId\)/);
+  // Ownership is read, never invented: the yard means cards you own.
+  assert.match(appSource, /const owned = card\.source === "salvage" \|\| Boolean\(state\.found\?\.\[key\]\)/,
+    "a card that was never bought must not be put on the bench");
+});
+
 ok("the measured rungs are untouched by what was added by hand", () => {
   // Manual is not in RUNG_CHAIN, so composing Base, Tuned, Fun or Max must return the
   // same hundred whether or not the deck carries hand-added options.

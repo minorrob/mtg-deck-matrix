@@ -115,7 +115,18 @@
       <p class="dp-hint">Point at any rung to preview it here.</p>`;
   }
 
-  /* ---------------- a candidate tile ---------------- */
+  /* ---------------- a candidate tile ----------------
+   * A hand-added card is the only kind that can leave a slot again, so it is the only
+   * one that carries a control to do it. The button is a sibling of the tile rather
+   * than a child, because a button inside a button is not markup a browser will honour.
+   */
+  function manualTileMarkup(ctx, slot, rung, deckId) {
+    return `<span class="dp-tile-wrap">${tileMarkup(ctx, slot, rung, deckId, false)}<button type="button"
+      class="dp-tile-return" data-dp-manual-return="${esc(slot.slotId)}|${esc(rung.entryId)}"
+      title="Take ${esc(rung.name)} out of this slot and put it back on the bench"
+      aria-label="Send ${esc(rung.name)} back to the bench">↩</button></span>`;
+  }
+
   function tileMarkup(ctx, slot, rung, deckId, owned) {
     const loc = locationOf(ctx, rung.name, rung.quantity, deckId, rung.selected ? slot.slotId : null);
     const rk = rarityKey(ctx, rung.name);
@@ -237,7 +248,9 @@
     const prevLoc = shown ? locationOf(ctx, shown.name, shown.quantity, deckId) : null;
     return `<div class="dp-cand"><div class="dp-cand-wrap"><div>
         <p class="dp-lab">The ${plural(rungs.length, "rung")} for this slot</p>
-        <div class="dp-row">${rungs.map((r) => tileMarkup(ctx, slot, r, deckId, false)).join("")}</div>
+        <div class="dp-row">${rungs.map((r) => (r.rung === "manual"
+          ? manualTileMarkup(ctx, slot, r, deckId)
+          : tileMarkup(ctx, slot, r, deckId, false))).join("")}</div>
         ${parts.length ? `<div class="dp-why">${parts.join("")}</div>` : ""}
         ${manualBoxMarkup(ctx, slot, deckId)}
       </div>
