@@ -396,6 +396,26 @@ ok("a slot keeps its place in the list whatever rung is picked", () => {
   }
 });
 
+ok("card art is asked for at the size the layout actually renders", () => {
+  // The catalog stores Scryfall's `small`, 146px wide, because that is what the import
+  // captured. The preview renders it at 286 CSS px on a desktop and 316 on a phone --
+  // 572 and 948 device pixels once screen scaling is counted. The CSS has always
+  // declared aspect-ratio 488/680, which is `normal`'s exact shape.
+  const small = "https://cards.scryfall.io/small/front/3/b/3bb17913-fe4d.jpg?1783933150";
+  assert.equal(Slot.cardImage(small, "normal"),
+    "https://cards.scryfall.io/normal/front/3/b/3bb17913-fe4d.jpg?1783933150");
+  // Idempotent, so a card that already arrived at the right size is untouched.
+  assert.equal(Slot.cardImage(Slot.cardImage(small, "normal"), "normal"), Slot.cardImage(small, "normal"));
+  // Only the size segment moves: the digest, the extension and the cache-busting query
+  // all have to survive, or the URL stops resolving.
+  assert.match(Slot.cardImage(small, "large"), /\/large\/front\/3\/b\/3bb17913-fe4d\.jpg\?1783933150$/);
+  // Anything that is not a Scryfall card image is handed back as it came.
+  assert.equal(Slot.cardImage("https://example.com/small/x.png", "normal"), "https://example.com/small/x.png");
+  assert.equal(Slot.cardImage(small, "gigantic"), small, "an unknown size must not rewrite anything");
+  assert.equal(Slot.cardImage("", "normal"), "");
+  assert.equal(Slot.cardImage(null, "normal"), "");
+});
+
 ok("Fun branches off Base, it is not Tuned with jokes added", () => {
   const plan = buyPlans.plans[Object.keys(buyPlans.plans).find((id) => (buyPlans.plans[id].funTuned || []).length)];
   const fun = Slot.selectionSignature(Slot.selectionForRung(plan, "fun"));

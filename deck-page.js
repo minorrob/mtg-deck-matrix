@@ -95,7 +95,7 @@
     const m = meta(ctx, name);
     const rk = rarityKey(ctx, name);
     const img = m.image
-      ? `<img class="dp-art" src="${esc(m.image)}" alt="${esc(name)}" loading="lazy">`
+      ? `<img class="dp-art" src="${esc(Slot.cardImage(m.image, "normal"))}" alt="${esc(name)}" loading="lazy">`
       : `<div class="dp-art dp-art-blank"><span>${esc(name)}</span></div>`;
     const rows = [
       ["Mana", manaHtml(m.manaCost)],
@@ -201,8 +201,23 @@
    * card as a rung tile like any other, and the box turns into a way to replace it.
    */
   function manualBoxMarkup(ctx, slot, deckId) {
+    /* Not on the commander. Every other slot holds a card the deck was built to want;
+       the commander slot holds the card the deck was built FROM -- its colour identity,
+       its plan, its legality all follow from it. The box used to appear here like
+       anywhere else, and picking what it added left the deck at a hundred cards with no
+       commander in them, which is not a Commander deck at all. */
+    if (slot.type === "Commander") return "";
     const existing = slot.rungs.filter((r) => r.rung === "manual");
-    const yard = (ctx.salvage || []).filter((c) => !existing.some((e) => Slot.ownedKey(e.name) === Slot.ownedKey(c.name)));
+    // Anything already on offer in this slot, by any rung, is not offered again.
+    const taken = (c) => slot.rungs.some((r) => Slot.ownedKey(r.name) === Slot.ownedKey(c.name));
+    const yard = (ctx.salvage || []).filter((c) => !taken(c));
+    // Owned copies another deck lists but is not holding. Same standing as the yard, in
+    // its own group so each one can say which deck it is sitting in.
+    const loose = (ctx.freeCards || []).filter((c) => !taken(c)
+      && !yard.some((y) => Slot.ownedKey(y.name) === Slot.ownedKey(c.name)));
+    const total = yard.length + loose.length;
+    const option = (c, suffix) => `<option value="${esc(c.name)}">${esc(c.name)}${
+      c.typeLine ? ` · ${esc(String(c.typeLine).split(" —")[0])}` : ""}${suffix || ""}</option>`;
     const sid = esc(slot.slotId);
     return `<div class="dp-manual" data-dp-manual="${sid}">
       <div class="dp-manual-hd">
@@ -216,10 +231,12 @@
           data-dp-manual-url="${sid}" aria-label="TCGplayer link for a card to put in this slot">
       </label>
       <label class="dp-manual-f">
-        <span>or a card from Salvage${yard.length ? ` · ${yard.length}` : ""}</span>
-        <select data-dp-manual-salvage="${sid}" aria-label="Choose a card from the Salvage yard for this slot"${yard.length ? "" : " disabled"}>
-          <option value="">${yard.length ? "Choose a card you already own…" : "Salvage is empty"}</option>
-          ${yard.map((c) => `<option value="${esc(c.name)}">${esc(c.name)}${c.typeLine ? ` · ${esc(String(c.typeLine).split(" —")[0])}` : ""}</option>`).join("")}
+        <span>or a card you already own${total ? ` · ${total}` : ""}</span>
+        <select data-dp-manual-salvage="${sid}" aria-label="Choose a card you already own for this slot"${total ? "" : " disabled"}>
+          <option value="">${total ? "Choose a card you already own…" : "Nothing loose to put here"}</option>
+          ${yard.length ? `<optgroup label="On the bench">${yard.map((c) => option(c)).join("")}</optgroup>` : ""}
+          ${loose.length ? `<optgroup label="Owned, but no deck is holding it">${
+            loose.map((c) => option(c, ` · listed in ${esc(c.fromDeck || "another deck")}`)).join("")}</optgroup>` : ""}
         </select>
       </label>
       <p class="dp-manual-note" data-dp-manual-status="${sid}">Fill in one of the two. A manual card carries no simulation evidence, so its measured fields read n/a.</p>
