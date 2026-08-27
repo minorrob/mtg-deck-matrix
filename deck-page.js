@@ -220,9 +220,10 @@
        "Forest ×7" is seven cards, not one, and the number worth knowing is how many of the
        Forests you own are still going spare once the other decks have taken theirs. */
     const pool = pick && ctx.availableFor ? ctx.availableFor(name) : null;
+    const stock = pick && ctx.ownedTotal ? ctx.ownedTotal(name) : null;
     const sub = slot.isBasic
-      ? `Basic land · ${slot.quantity} of ${pool === null ? slot.quantity : pool} you own${
-          pool !== null && pool < slot.quantity ? ` · ${slot.quantity - pool} short` : ""}`
+      ? `Basic land${pool === null ? "" : ` · ${pool} of your ${stock === null ? pool : stock} still free${
+          pool < slot.quantity ? ` · ${slot.quantity - pool} short` : ""}`}`
       : (pick && pick.rung !== "base" && slot.shellName !== name)
         ? `${misfiled ? `${esc(realType)} · ` : ""}↔ replaces ${esc(slot.shellName)}`
         : esc(meta(ctx, name).typeLine || "");
@@ -244,7 +245,12 @@
         <div class="dp-r">
           ${pick ? `<span class="dp-num${loc.kind === "buy" ? " is-buy" : ""}">${money(pick.price)}</span>` : ""}
           <span class="dp-loc is-${loc.kind}"><span class="dp-g">${loc.glyph}</span>${esc(loc.label)}</span>
-          <span class="dp-of">${pick ? 1 : 0} of ${count}</span>
+          <span class="dp-of">${slot.isBasic && stock !== null
+            /* On a basic-land row the rung count is always "1 of 1", which says nothing.
+               The copies are the fact worth showing: twelve of the ninety-one Plains you
+               own are in this deck. Every other row keeps the rung count. */
+            ? `${slot.quantity} of ${stock}`
+            : `${pick ? 1 : 0} of ${count}`}</span>
         </div>
       </div>
       ${open ? candidateMarkup(ctx, slot, deckId) : ""}

@@ -855,4 +855,31 @@ assert.equal(activeState.state.boughtQuantities.plains, activeState.state.bought
 assert.equal(activeState.state.boughtQuantities.mountain, activeState.state.boughtQuantities.island + 6,
   "Mountains must exceed the plain box by the precon's six");
 
+
+// A loaded state carries selections; until now it carried no boxes, so the Deck page
+// opened on "0/100 cards in the box" for a deck whose hundred was entirely settled.
+assert.match(appSource, /deckActive: \{\},\n\s*deckActiveSeed: \{\},/,
+  "the Deck page's boxes must be part of the declared state shape, not a key that appears on first click");
+assert.match(appSource, /deckActive: saved\.deckActive \|\| \{\},\n\s*deckActiveSeed: saved\.deckActiveSeed \|\| \{\},/,
+  "boxes must be restored explicitly from a saved state");
+assert.match(appSource, /function ensureDeckBoxesSeeded\(\)/, "the seeding function must exist");
+assert.match(appSource, /if \(state\.deckActiveSeed\[variant\.id\]\) return;/,
+  "seeding must happen once per variant, or a later render would undo an untick");
+assert.match(appSource, /if \(existing && Object\.keys\(existing\)\.length\) \{/,
+  "a state that carries its own boxes must keep them");
+// Called on load and at boot, not only when the Deck tab is opened -- Compare's copy
+// accounting and the Shop's Bench read the same ticks.
+assert.match(appSource, /ensureDeckBoxesSeeded\(\);\n\s*saveState\(`Loaded state/,
+  "a loaded payload must have its boxes seeded before it is saved");
+assert.match(appSource, /sanitizeGameChangerSelections\(\);\n(?:\s*\/\/[^\n]*\n)*\s*ensureDeckBoxesSeeded\(\);/,
+  "boot must seed boxes too, for the state already in localStorage");
+
+// A basic-land row's right-hand pill counted rungs, which is always "1 of 1" there.
+assert.match(deckPageSource, /\$\{slot\.quantity\} of \$\{stock\}/,
+  "a basic-land row must show its copies against the number you own");
+assert.match(appSource, /ownedTotal: \(name\) => Slot\.ownedCount\(owned, name\)\.inHand \|\| 0,/,
+  "the copies figure must come from what you own outright, before any deck's claim");
+assert.match(deckPageSource, /\$\{pool\} of your \$\{stock === null \? pool : stock\} still free/,
+  "the sub-line must still say how many are unallocated, or the pill's total is misleading");
+
 console.log(`Validated ${variants.variants.length} variants and ${Object.keys(buyPlans.plans).length} connected buy profiles.`);
