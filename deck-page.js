@@ -103,15 +103,31 @@
     if (acq === Slot.ACQUISITION.PARTIAL) {
       return {kind: "ordered", glyph: "⧖", label: assigned ? "Assigned · partly here" : "Partly here", assigned};
     }
-    if (assigned) return {kind: "active", glyph: "●", label: "In the box", assigned};
-    const holder = (ctx.boxes || {})[Slot.ownedKey(name)];
-    if (holder && holder !== thisDeckId) {
-      return {kind: "other", glyph: "◆", label: "In " + ((ctx.deckLabels || {})[holder] || holder) + "'s box", deck: holder, assigned};
+    /* You own it -- but do you own a copy this deck can have? What another deck has boxed
+       is gone as far as this one is concerned, and with one Sol Ring across five decks
+       that is the normal case rather than the edge one. */
+    const need = Math.max(1, Number(quantity) || 1);
+    const holds = assigned
+      ? (ctx.claimHeld ? ctx.claimHeld(name) : true)          // this deck's claim was served
+      : (ctx.spareCopies ? ctx.spareCopies(name) >= need : true);  // a copy is still free
+    if (holds) {
+      return assigned
+        ? {kind: "active", glyph: "●", label: "In the box", assigned}
+        : {kind: "bench", glyph: "◇", label: "Owned, no box", assigned};
     }
-    return {kind: "bench", glyph: "◇", label: "Owned, no box", assigned};
+    const holder = (ctx.boxes || {})[Slot.ownedKey(name)];
+    const whose = holder && holder !== thisDeckId ? ((ctx.deckLabels || {})[holder] || holder) : "";
+    // Every copy is spoken for, so this deck needs one of its own. Ticking the box is
+    // still allowed -- it is a plan, not a claim -- and the shortfall counts as to-buy,
+    // which is the same copy the Shop is already asking you to buy.
+    if (assigned) {
+      return {kind: "buy", glyph: "◐", label: whose ? `Assigned · another copy needed (${whose} has yours)` : "Assigned · another copy needed", assigned, deck: holder};
+    }
+    return {kind: "other", glyph: "◆", label: whose ? `In ${whose}'s box` : "Owned, no box", deck: holder, assigned};
   }
 
   function meta(ctx, name) { return (ctx.cards || {})[Lineup.normalizeName(name)] || {}; }
+  function cardTypeOf(ctx, name) { return Slot.cardType(meta(ctx, name)); }
   function rarityKey(ctx, name) { return RARITY_KEY[meta(ctx, name).rarity] || "C"; }
   function isLegendary(ctx, name) { return /^Legendary\b/.test(meta(ctx, name).typeLine || ""); }
 
@@ -194,10 +210,16 @@
     const count = slot.rungs.length;
     // When a rung has displaced the Base card, the sub-line's job is to name what
     // was displaced. Otherwise it is dead space, so give it the card's type line.
+    /* Rows are grouped by the slot's shell so they never jump when the rung changes, which
+       means a group heading is about the JOB, not about what is filling it today. When the
+       card in the slot is a different type from the group it sits in, the row has to say
+       so, or counting Lands by eye misses a land filed under Enchantment. */
+    const realType = pick ? cardTypeOf(ctx, name) : null;
+    const misfiled = pick && realType && realType !== slot.type && !slot.isBasic;
     const sub = slot.isBasic
       ? `Basic land · one row, ${slot.quantity} cards`
       : (pick && pick.rung !== "base" && slot.shellName !== name)
-        ? `↔ replaces ${esc(slot.shellName)}`
+        ? `${misfiled ? `${esc(realType)} · ` : ""}↔ replaces ${esc(slot.shellName)}`
         : esc(meta(ctx, name).typeLine || "");
 
     return `<div class="dp-slot" data-dp-slot="${esc(slot.slotId)}" data-open="${open ? 1 : 0}">
@@ -384,7 +406,11 @@
       if (!s.pick) { t.holes += 1; return; }
       const qty = s.pick.quantity;
       t.cards += qty;
-      if (s.type === "Land") t.lands += qty;
+      /* By the card in the slot, not by the slot. Slot identity is anchored to the shell
+         so rows stay put when the rung changes, which means a land slot can be holding a
+         creature and an enchantment slot can be holding a land. Deck 1 at Tuned reads 38
+         by slot and 36 by card; 36 is the number you can count in your hand. */
+      if (cardTypeOf(ctx, s.pick.name) === "Land") t.lands += qty;
       const loc = locationOf(ctx, s.pick.name, qty, deckId, s.slotId);
       // Assignment is counted alongside the buckets rather than inside them: the buckets
       // answer "where are these cards", which a tick does not change.
@@ -413,10 +439,14 @@
             ctx.variantId ? " · variant " + esc(ctx.variantId) : ""}</p></div>
         </div>
         <div class="dp-stats-row">
-          <span class="dp-stat${t.holes ? " is-warn" : " is-ok"}"><b class="dp-num">${slots.length - t.holes}/${slots.length}</b> slots filled${
-            t.holes ? ` · ${plural(t.holes, "card")} still to choose` : ""}</span>
+          <!-- Cards, not rows. Eighty-five rows hold a hundred cards because the basics
+               collapse into one row each, so "85/85 slots filled" answered a question
+               nobody asked and hid the one that matters: how much of this deck is
+               actually sleeved. -->
+          <span class="dp-stat${t.active === t.cards && t.cards ? " is-ok" : " is-warn"}"><b class="dp-num">${t.active}/${t.cards}</b> cards in the box${
+            t.assigned > t.active ? ` · ${t.assigned - t.active} ticked, copy still needed` : ""}${
+            t.holes ? ` · ${plural(t.holes, "slot")} still to fill` : ""}</span>
           <span class="dp-stat"><b class="dp-num">${t.lands}</b> lands</span>
-          <span class="dp-stat"${t.assigned ? '' : ' hidden'}><b class="dp-num">${t.assigned}</b> assigned to this box</span>
         </div>
         <div class="dp-tally" role="group" aria-label="Where all ${t.cards + t.holes} cards are">
           <span class="dp-tally-t"><b class="dp-num">${t.cards + t.holes}</b> cards</span><span class="dp-tally-op">=</span>
