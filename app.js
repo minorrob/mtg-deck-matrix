@@ -758,7 +758,7 @@
       },
       // Search and filter live per deck: narrowing deck 1 to lands should not follow you
       // into deck 2, where you were looking at something else.
-      filters: deckPageState.filters[variant.id] || (deckPageState.filters[variant.id] = {query: "", type: "all", rung: "all", where: "all"}),
+      filters: deckPageState.filters[variant.id] || (deckPageState.filters[variant.id] = {query: "", type: "all", rung: "all", status: "all", active: "all", groupBy: "type"}),
       paidFor,
       // The Salvage yard, offered in every slot's Manual box. Cards already carried into
       // this deck as a manual pick are filtered out per slot by the box itself.
@@ -1014,7 +1014,11 @@
     }
     if (event.target.closest("[data-dp-filter-clear]")) {
       const ctx = deckPageContext();
-      if (ctx) deckPageState.filters[ctx.deckId] = {query: "", type: "all", rung: "all", where: "all"};
+      /* Clear resets what is HIDING rows. How they are stacked is not one of those --
+         someone who put the deck in shopping order did not ask for it back in type
+         order just because they dropped a search term. */
+      if (ctx) deckPageState.filters[ctx.deckId] = {query: "", type: "all", rung: "all",
+        status: "all", active: "all", groupBy: ctx.filters.groupBy || "type"};
       renderDeckPage();
       return true;
     }

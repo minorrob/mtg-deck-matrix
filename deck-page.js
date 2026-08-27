@@ -409,20 +409,31 @@
    * slot, every rung it could hold, and the card the slot was built around, so looking
    * for a card finds the slot it could go in even when it is not the one showing.
    */
-  const WHERE_LABEL = {
-    active: "In the box", bench: "Owned, no box", other: "In another box",
-    ordered: "Ordered", buy: "To buy", hole: "Empty slot"
-  };
+  /* Two questions, asked separately, because they are separate facts about a slot.
+     STATUS is about the card: do you have it, is it in the post, or is it still to buy.
+     ACTIVE is about the deck: have you claimed the slot. They used to be a single "Where"
+     dropdown of six mixed values, which could not express "everything I own that is not
+     in this box" without listing two of them. */
+  const STATUS_LABEL = {buy: "To buy", owned: "Owned", ordered: "Ordered", hole: "Empty slot"};
+  const STATUS_ORDER = ["owned", "ordered", "buy", "hole"];
+  const ACTIVE_LABEL = {active: "Active", inactive: "Inactive"};
 
-  function slotWhere(ctx, slot, deckId) {
+  function slotStatus(ctx, slot, deckId) {
     if (!slot.pick) return "hole";
-    return locationOf(ctx, slot.pick.name, slot.pick.quantity, deckId, slot.slotId).kind;
+    const kind = locationOf(ctx, slot.pick.name, slot.pick.quantity, deckId, slot.slotId).kind;
+    if (kind === "buy" || kind === "ordered") return kind;
+    // active, bench and other all mean the same thing about the card: you have a copy.
+    return "owned";
+  }
+  function slotActive(ctx, slot) {
+    return (ctx.active || {})[slot.slotId] ? "active" : "inactive";
   }
 
   function slotMatches(ctx, slot, deckId, f) {
     if (f.type && f.type !== "all" && slot.type !== f.type) return false;
     if (f.rung && f.rung !== "all" && !slot.rungs.some((r) => r.rung === f.rung)) return false;
-    if (f.where && f.where !== "all" && slotWhere(ctx, slot, deckId) !== f.where) return false;
+    if (f.status && f.status !== "all" && slotStatus(ctx, slot, deckId) !== f.status) return false;
+    if (f.active && f.active !== "all" && slotActive(ctx, slot) !== f.active) return false;
     const query = String(f.query || "").trim().toLowerCase();
     if (!query) return true;
     const haystack = [slot.shellName, slot.pick && slot.pick.name, ...slot.rungs.map((r) => r.name)]
@@ -435,15 +446,24 @@
   function filterMarkup(ctx, slots, shown) {
     const f = ctx.filters || {};
     const active = (f.query || "").trim() !== ""
-      || ["type", "rung", "where"].some((k) => f[k] && f[k] !== "all");
+      || ["type", "rung", "status", "active"].some((k) => f[k] && f[k] !== "all");
     const types = Slot.TYPE_ORDER.filter((t) => slots.some((s) => s.type === t));
     const rungs = Slot.RUNG_ORDER.filter((r) => slots.some((s) => s.rungs.some((x) => x.rung === r)));
-    const wheres = Object.keys(WHERE_LABEL).filter((w) => slots.some((s) => slotWhere(ctx, s, ctx.deckId) === w));
-    const select = (key, label, options) => `<label class="dp-f"><span>${esc(label)}</span>
+    // Only the values this deck actually has, so a dropdown never offers an empty result.
+    const states = STATUS_ORDER.filter((k) => slots.some((s) => slotStatus(ctx, s, ctx.deckId) === k));
+    const actives = ["active", "inactive"].filter((k) => slots.some((s) => slotActive(ctx, s) === k));
+    const select = (key, label, options, allLabel) => `<label class="dp-f"><span>${esc(label)}</span>
       <select data-dp-filter="${key}">
-        <option value="all">All</option>
+        <option value="all">${esc(allLabel || "All")}</option>
         ${options.map(([value, text]) => `<option value="${esc(value)}"${
           (f[key] || "all") === value ? " selected" : ""}>${esc(text)}</option>`).join("")}
+      </select></label>`;
+    // Group by is not a filter -- it hides nothing -- so it carries no "All" and is never
+    // counted as an active filter that the Clear button would reset.
+    const grouper = `<label class="dp-f"><span>Group by</span>
+      <select data-dp-filter="groupBy">
+        ${GROUP_BY.map(([value, text]) => `<option value="${esc(value)}"${
+          (f.groupBy || "type") === value ? " selected" : ""}>${esc(text)}</option>`).join("")}
       </select></label>`;
     return `<div class="dp-filters" role="search">
       <label class="dp-f dp-f-q"><span>Search</span>
@@ -451,7 +471,9 @@
           aria-label="Search this deck's slots"></label>
       ${select("type", "Type", types.map((t) => [t, t]))}
       ${select("rung", "Rung", rungs.map((r) => [r, RUNG_LABEL[r] || r]))}
-      ${select("where", "Where", wheres.map((w) => [w, WHERE_LABEL[w]]))}
+      ${select("status", "Status", states.map((k) => [k, STATUS_LABEL[k]]))}
+      ${select("active", "Active", actives.map((k) => [k, ACTIVE_LABEL[k]]), "All")}
+      ${grouper}
       <span class="dp-f-count">${shown === slots.length
         ? `${plural(slots.length, "slot")}`
         : `${shown} of ${plural(slots.length, "slot")}`}</span>
@@ -510,12 +532,29 @@
     </details>`;
   }
 
-  function groupSlots(slots) {
+  /* How the rows are stacked. Type is the default because it is how a deck is built and
+     how a physical box is sorted; Rarity is how a binder is sorted; Status is how a
+     shopping trip is sorted. None is the answer to "just show me the list" -- it returns
+     one nameless group, and the renderer leaves off the heading rather than drawing a
+     box around every row in the deck. */
+  const GROUP_BY = [["type", "Type"], ["rarity", "Rarity"], ["status", "Status"], ["none", "None"]];
+  const RARITY_LABEL = {M: "Mythic", R: "Rare", S: "Special", B: "Bonus", U: "Uncommon", C: "Common"};
+  const RARITY_ORDER = ["M", "R", "S", "B", "U", "C"];
+
+  function groupSlots(slots, groupBy, ctx, deckId) {
+    if (!slots.length) return [];
+    if (groupBy === "none") return [[null, slots]];
     const by = new Map();
-    slots.forEach((s) => {
-      if (!by.has(s.type)) by.set(s.type, []);
-      by.get(s.type).push(s);
-    });
+    const push = (k, s) => { if (!by.has(k)) by.set(k, []); by.get(k).push(s); };
+    if (groupBy === "rarity") {
+      slots.forEach((s) => push(s.pick ? rarityKey(ctx, s.pick.name) : "C", s));
+      return RARITY_ORDER.filter((k) => by.has(k)).map((k) => [RARITY_LABEL[k], by.get(k)]);
+    }
+    if (groupBy === "status") {
+      slots.forEach((s) => push(slotStatus(ctx, s, deckId), s));
+      return STATUS_ORDER.filter((k) => by.has(k)).map((k) => [STATUS_LABEL[k], by.get(k)]);
+    }
+    slots.forEach((s) => push(s.type, s));
     return Slot.TYPE_ORDER.filter((t) => by.has(t)).map((t) => [t, by.get(t)]);
   }
 
@@ -625,16 +664,19 @@
       ${readyMarkup(ctx, slots)}
       ${filterMarkup(ctx, slots, visible.length)}
       ${visible.length ? "" : '<p class="dp-empty">No slot in this deck matches that.</p>'}
-      ${groupSlots(visible).map(([type, rows]) => {
-        const isOpen = (ctx.openGroups || {})[type] !== false;
+      ${groupSlots(visible, (ctx.filters || {}).groupBy || "type", ctx, deckId).map(([label, rows]) => {
+        const body = rows.map((s) => slotMarkup(ctx, s, deckId, open)).join("");
+        // Group by None: the rows are the list, with nothing to collapse them into.
+        if (!label) return `<section class="dp-grp" data-open="1"><div class="dp-grp-body">${body}</div></section>`;
+        const isOpen = (ctx.openGroups || {})[label] !== false;
         const buys = rows.filter((s) => s.pick && locationOf(ctx, s.pick.name, s.pick.quantity, deckId).kind === "buy").length;
         const qty = rows.reduce((n, s) => n + (s.pick ? s.pick.quantity : 0), 0);
         return `<section class="dp-grp" data-open="${isOpen ? 1 : 0}">
-          <button class="dp-grp-h" data-dp-grp="${esc(type)}" aria-expanded="${isOpen}">
-            <span class="dp-car">▶</span><span class="dp-grp-nm">${esc(type)}</span>
+          <button class="dp-grp-h" data-dp-grp="${esc(label)}" aria-expanded="${isOpen}">
+            <span class="dp-car">▶</span><span class="dp-grp-nm">${esc(label)}</span>
             <span class="dp-grp-ct">${plural(qty, "card")}${buys ? " · " + buys + " to buy" : ""}</span>
           </button>
-          <div class="dp-grp-body">${rows.map((s) => slotMarkup(ctx, s, deckId, open)).join("")}</div>
+          <div class="dp-grp-body">${body}</div>
         </section>`;
       }).join("")}`;
   }
