@@ -848,12 +848,30 @@ for (const basic of ["plains", "island", "swamp", "mountain", "forest"]) {
   assert.ok((activeState.state.boughtQuantities[basic] || 0) >= 80,
     `${basic} should carry at least the box of eighty`);
 }
-assert.match(activeState.note, /Lorehold Spirit .*11 Plains and 6 Mountains/,
-  "the note must record where the basics figure came from");
-assert.equal(activeState.state.boughtQuantities.plains, activeState.state.boughtQuantities.island + 11,
-  "Plains must exceed the plain box by the precon's eleven");
-assert.equal(activeState.state.boughtQuantities.mountain, activeState.state.boughtQuantities.island + 6,
-  "Mountains must exceed the plain box by the precon's six");
+assert.match(activeState.note, /On Hand \/ Ordered spreadsheet/,
+  "the note must record where ownership came from");
+/* Ownership is one record per card now, and the two legacy fields are derived from it
+   rather than kept alongside it. Nothing else in the app writes them independently, so a
+   drift here means a second writer has appeared. */
+const ownedRecords = activeState.state.owned || {};
+assert.ok(Object.keys(ownedRecords).length > 300, "the state should carry explicit ownership for every card");
+assert.equal(activeState.state.ownershipSchema, 3, "explicit ownership is schema 3");
+const derived = Object.entries(ownedRecords).filter(([key, rec]) =>
+  (activeState.state.boughtQuantities[key] || 0) !== rec.inHand
+  || Boolean(activeState.state.found[key]) !== rec.inHand > 0);
+assert.equal(derived.length, 0,
+  `found/boughtQuantities disagree with owned on ${derived.length} cards, e.g. ${derived.slice(0, 3).map(([k]) => k).join(", ")}`);
+// The manifest and the ownership records have to name the same set of cards.
+{
+  const slugged = (name) => String(name).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const fromRecords = new Set(Object.entries(ownedRecords).filter(([, r]) => r.ordered > 0).map(([k]) => k));
+  const fromManifest = new Set((activeState.orderedNotYetInHand || []).map(slugged));
+  const onlyRecords = [...fromRecords].filter((k) => !fromManifest.has(k));
+  const onlyManifest = [...fromManifest].filter((k) => !fromRecords.has(k));
+  assert.equal(onlyRecords.length + onlyManifest.length, 0,
+    `the ordered manifest and the ownership records disagree: ${onlyRecords.slice(0, 3).join(", ")} | ${onlyManifest.slice(0, 3).join(", ")}`);
+}
 
 
 // A loaded state carries selections; until now it carried no boxes, so the Deck page
@@ -896,17 +914,15 @@ assert.match(appSource, /state\.boughtQuantities\[key\] = 0;\n\s*delete state\.f
 assert.match(appSource, /if \(!rec \|\| !rec\.inHand\) return;/,
   "a manifest name with no ownership behind it is a typo, not a card in the post");
 
-// And the manifest in the committed state has to name cards that state actually owns,
-// or the list is decoration.
+// The manifest has to name cards the state carries a record for, or the list is
+// decoration. What "owned" means for those cards -- ordered, not in hand -- is checked
+// against the records themselves further down.
 {
   const manifest = activeState.orderedNotYetInHand || [];
   assert.ok(manifest.length > 0, "the committed state should carry an ordered manifest");
   const slug = (name) => String(name).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-  const unmatched = manifest.filter((entry) => {
-    const key = slug(typeof entry === "string" ? entry : entry.name);
-    return !(activeState.state.found[key] || activeState.state.boughtQuantities[key]);
-  });
+  const unmatched = manifest.filter((entry) => !(activeState.state.owned || {})[slug(entry)]);
   assert.equal(unmatched.length, 0,
     `${unmatched.length} ordered names match no owned card, e.g. ${unmatched.slice(0, 3).join(", ")}`);
 }
