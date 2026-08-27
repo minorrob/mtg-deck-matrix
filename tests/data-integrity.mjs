@@ -273,20 +273,25 @@ for (const view of [...appSource.matchAll(/^\s{4}([a-z0-9]+): \[$/gm)].map((m) =
   for (const phrase of ["Assigned · to buy", "Assigned · ordered", "In the box"]) {
     assert.ok(deckSource.includes(phrase), `the row must be able to say "${phrase}"`);
   }
-  /* Ticking a box must always move a card between two buckets, or the tick reads as
-     having done nothing. A card you own and have ticked is in the box; one you have
-     ticked but cannot hold -- ordered, unbought, or its only copy in another deck -- is
-     assigned. Everything unticked is filed by where the card actually is. The buckets
-     stay mutually exclusive, so they still sum to the card count by eye. */
-  assert.match(deckSource, /if \(loc\.assigned\) \{\s*\n\s*if \(loc\.kind === "active"\) t\.active \+= qty;\s*\n\s*else \{\s*\n\s*t\.assigned \+= qty;/,
-    "a ticked card must land in the box bucket or the assigned bucket, never outside both");
-  assert.match(deckSource, /\} else if \(loc\.kind === "ordered"\) t\.ordered \+= qty;/,
-    "the acquisition buckets must only catch cards that are NOT ticked");
-  // Money owed does not stop being owed because the slot is spoken for.
-  assert.match(deckSource, /if \(loc\.kind === "buy"\) t\.assignedValue \+= \(s\.pick\.price \|\| 0\) \* qty;/,
-    "an assigned card you have not bought must keep its cost on the page");
-  assert.match(deckSource, /<b class="dp-num">\$\{t\.assigned\}<\/b> assigned, not here yet/,
-    "the assigned count needs a term of its own in the tally");
+  /* Every bucket is about the CARD -- in this box, held elsewhere, in the post, or still
+     to be bought -- and they stay mutually exclusive so they sum to the card count by eye.
+     Assignment gets no bucket. It had one, and once every slot was ticked that bucket
+     swallowed the other three: a deck with fifty-seven cards in the post and two left to
+     buy reported "0 to buy $0.00", which reads as nothing outstanding. */
+  assert.match(deckSource, /if \(loc\.kind === "active"\) t\.active \+= qty;\s*\n\s*else if \(loc\.kind === "ordered"\) t\.ordered \+= qty;\s*\n\s*else if \(loc\.kind === "buy"\) \{ t\.buy \+= qty; t\.buyValue \+= \(s\.pick\.price \|\| 0\) \* qty; \}/,
+    "the buckets must be filed by where the card is, never gated on whether the slot is ticked");
+  assert.doesNotMatch(deckSource, /t\.assigned\b/,
+    "assignment must not take a bucket of its own again");
+  // Money owed is reported against the to-buy bucket, which is the only place it lives now.
+  assert.match(deckSource, /<b class="dp-num">\$\{t\.buy\}<\/b> to buy \$\{money\(t\.buyValue\)\}/,
+    "the to-buy term must carry its own subtotal");
+  assert.match(deckSource, /<b class="dp-num">\$\{t\.ordered\}<\/b> ordered, not here yet/,
+    "cards in the post need a term of their own, or a fully-ticked deck looks finished");
+  // Ticking still has to move a number, for a card you cannot hold as much as one you can.
+  assert.match(deckSource, /if \(loc\.assigned\) t\.claimed \+= qty;/,
+    "the claim count is what a tick moves when the card is not here yet");
+  assert.match(deckSource, /<b class="dp-num">\$\{t\.claimed\}\/\$\{t\.cards \+ t\.holes\}<\/b> claimed/,
+    "the claim count has to be on screen to be worth moving");
 }
 
 /* What a card cost, where you can type it, and what can reach the Bench. These are

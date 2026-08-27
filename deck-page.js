@@ -585,7 +585,7 @@
    */
   function totals(ctx, slots, deckId) {
     const t = {cards: 0, active: 0, ordered: 0, owned: 0, buy: 0, buyValue: 0, holes: 0,
-               assigned: 0, assignedValue: 0, activeLands: 0, activeOther: 0};
+               claimed: 0, activeLands: 0, activeOther: 0};
     slots.forEach((s) => {
       if (!s.pick) { t.holes += 1; return; }
       const qty = s.pick.quantity;
@@ -601,27 +601,25 @@
         if (cardTypeOf(ctx, s.pick.name) === "Land") t.activeLands += qty;
         else t.activeOther += qty;
       }
-      // Assignment is counted alongside the buckets rather than inside them: the buckets
-      // answer "where are these cards", which a tick does not change.
-      /* Five buckets, and ticking a box always moves a card between two of them.
+      /* Four buckets, and every one of them is about the CARD: is it in this box, held
+         somewhere else, in the post, or still to be bought. They are mutually exclusive
+         and sum to the card count, so the line can be checked by eye.
 
-         A card you own and have ticked is IN THE BOX. A card you have ticked but cannot
-         physically hold -- on order, not bought, or its only copy sitting in another
-         deck's box -- is ASSIGNED: the slot is spoken for, the card is not here yet.
-         Everything unticked is filed by where the card actually is. Before this, ticking
-         an ordered card left it in the ordered bucket and no number on the page moved,
-         which made the tick look like it had done nothing at all. */
-      if (loc.assigned) {
-        if (loc.kind === "active") t.active += qty;
-        else {
-          t.assigned += qty;
-          // Still money owed, so the assigned line carries its own subtotal rather than
-          // quietly dropping out of what the deck costs to finish.
-          if (loc.kind === "buy") t.assignedValue += (s.pick.price || 0) * qty;
-        }
-      } else if (loc.kind === "ordered") t.ordered += qty;
+         Assignment deliberately does not get a bucket of its own. It had one, and once
+         every slot was ticked that bucket swallowed the other three -- a deck with
+         fifty-seven cards in the post and two left to buy reported "0 to buy $0.00",
+         which reads as nothing outstanding when the truth is fifty-nine cards short.
+         What ticking does is already visible here: an owned card moves between "in the
+         box" and "owned, not in this box". For a card you do not have yet, the tick
+         changes the row's label and the claim count in the header, not where the card
+         is, because a tick cannot make a card arrive. */
+      if (loc.kind === "active") t.active += qty;
+      else if (loc.kind === "ordered") t.ordered += qty;
       else if (loc.kind === "buy") { t.buy += qty; t.buyValue += (s.pick.price || 0) * qty; }
       else t.owned += qty;   // in hand, but in another box or loose
+      // What the deck has claimed, counted alongside rather than inside the buckets, so
+      // ticking any row -- including one you cannot hold yet -- still moves a number.
+      if (loc.assigned) t.claimed += qty;
     });
     return t;
   }
@@ -650,14 +648,13 @@
             t.holes ? ` · ${plural(t.holes, "slot")} still to fill` : ""}</span>
           <span class="dp-stat"><b class="dp-num">${t.activeLands}</b> lands</span>
           <span class="dp-stat"><b class="dp-num">${t.activeOther}</b> non-lands</span>
+          <span class="dp-stat"><b class="dp-num">${t.claimed}/${t.cards + t.holes}</b> claimed</span>
         </div>
         <div class="dp-tally" role="group" aria-label="Where all ${t.cards + t.holes} cards are">
           <span class="dp-tally-t"><b class="dp-num">${t.cards + t.holes}</b> cards</span><span class="dp-tally-op">=</span>
           <span class="dp-tally-b is-deck"><b class="dp-num">${t.active}</b> in the box</span>
           ${t.owned ? `<span class="dp-tally-op">+</span><span class="dp-tally-b is-bench"><b class="dp-num">${t.owned}</b> owned, not in this box</span>` : ""}
-          ${t.ordered ? `<span class="dp-tally-op">+</span><span class="dp-tally-b is-ordered"><b class="dp-num">${t.ordered}</b> ordered</span>` : ""}
-          ${t.assigned ? `<span class="dp-tally-op">+</span><span class="dp-tally-b is-assigned"><b class="dp-num">${t.assigned}</b> assigned, not here yet${
-            t.assignedValue ? ` ${money(t.assignedValue)}` : ""}</span>` : ""}
+          ${t.ordered ? `<span class="dp-tally-op">+</span><span class="dp-tally-b is-ordered"><b class="dp-num">${t.ordered}</b> ordered, not here yet</span>` : ""}
           <span class="dp-tally-op">+</span><span class="dp-tally-b is-buy"><b class="dp-num">${t.buy}</b> to buy ${money(t.buyValue)}</span>
           ${t.holes ? `<span class="dp-tally-op">+</span><span class="dp-tally-b is-hole"><b class="dp-num">${t.holes}</b> empty ${t.holes === 1 ? "slot" : "slots"}</span>` : ""}
         </div>
