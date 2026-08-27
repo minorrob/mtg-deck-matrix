@@ -328,6 +328,9 @@
          selection, so it happens once and never undoes an untick. */
       deckActive: {},
       deckActiveSeed: {},
+      /* Which box physically holds which copies, per variant, when that has been audited.
+         A global count cannot express it, and without it the allocator can only guess. */
+      deckHolds: {},
       // Cards the owner added to a deck by hand, keyed by variant id. These live in state
       // rather than in data/buy-plans.json on purpose: the buy catalog is regenerated from
       // the build kit, so anything written into it would be lost on the next rebuild.
@@ -370,6 +373,7 @@
           deckRung: saved.deckRung || {},
           deckActive: saved.deckActive || {},
           deckActiveSeed: saved.deckActiveSeed || {},
+          deckHolds: saved.deckHolds || {},
           manualCards: saved.manualCards || {},
           liveActiveSeed: saved.liveActiveSeed || {},
           gameLog: Array.isArray(saved.gameLog) ? saved.gameLog : []
@@ -606,6 +610,89 @@
     if (wrote) saveState();
   }
 
+  /**
+   * Which box gets which copy.
+   *
+   * One Sol Ring and five decks that each want one is the normal case here, so ownership
+   * cannot be read as a per-deck fact: the ledger knows there is one copy, not who has it.
+   * The copies are handed out once here and both the Deck page and the Shop read the
+   * result, because a shopping list that disagrees with the deck it is shopping for is
+   * worse than either number alone.
+   *
+   * Ordered copies are allocated exactly like held ones. A card in the post is one card:
+   * if two decks list it, one is getting it and the other still has to buy one. Reading
+   * "ordered" off the global count let every deck claiming the card call itself ordered,
+   * which inflated what was in the post and hid what was still to buy.
+   *
+   * Where an audit says which box holds which copy -- state.deckHolds -- those decks are
+   * served first, and a deck the audit says holds none is never served at all. No count
+   * can reconstruct that: two decks sharing two copies look identical to a counter and
+   * are not at all identical on the table.
+   */
+  function allocateCopies(variants, owned, cards) {
+    const Slot = window.MtgSlotModel;
+    const boxes = {};
+    const committed = new Map();
+    const claimSatisfied = new Map();
+    const unclaimed = new Map();
+    const unordered = new Map();
+    const servedQty = new Map();
+    const allocated = {};
+    const holdOf = (id, key) => ((state.deckHolds || {})[id] || {})[key] || null;
+    const claims = [];
+    variants.forEach((v) => {
+      const p = buyCatalog && buyCatalog.plans ? buyCatalog.plans[v.id] : null;
+      if (!p) return;
+      const ticked = (state.deckActive && state.deckActive[v.id]) || {};
+      Slot.deckSlots(p, ensureBuyState(v.id), {owned, cards}).forEach((slot) => {
+        if (!slot.pick || !ticked[slot.slotId]) return;
+        const key = Slot.ownedKey(slot.pick.name);
+        const qty = Math.max(1, Number(slot.pick.quantity) || 1);
+        const hold = holdOf(v.id, key);
+        claims.push({key, qty, id: v.id, name: slot.pick.name,
+          audited: Boolean(hold && ((hold.inHand || 0) >= qty || (hold.ordered || 0) >= qty)),
+          wantsOrdered: Boolean(hold && !(hold.inHand || 0) && (hold.ordered || 0) >= qty),
+          /* Audited, and audited as holding none. Three decks list Valorous Stance and the
+             audit put copies in two of them; without this the third is handed a spare and
+             the shopping list quietly loses a card that has to be bought. */
+          denied: Boolean(hold && !(hold.inHand || 0) && !(hold.ordered || 0))});
+      });
+    });
+
+    const take = (key, id, qty, from) => {
+      const rec = allocated[key] || (allocated[key] = {inHand: 0, ordered: 0});
+      if (from === "hand") {
+        unclaimed.set(key, unclaimed.get(key) - qty);
+        rec.inHand += qty;
+        boxes[key] = boxes[key] || id;             // whoever actually holds it
+        committed.set(key, (committed.get(key) || 0) + qty);
+        if (!servedQty.has(key)) servedQty.set(key, new Map());
+        servedQty.get(key).set(id, (servedQty.get(key).get(id) || 0) + qty);
+      } else {
+        unordered.set(key, unordered.get(key) - qty);
+        rec.ordered += qty;
+      }
+      return from;
+    };
+    const serve = (claim) => {
+      const {key, qty, name, id} = claim;
+      if (claim.denied) return void claimSatisfied.set(`${key}|${id}`, false);
+      if (!unclaimed.has(key)) unclaimed.set(key, Slot.ownedCount(owned, name).inHand || 0);
+      if (!unordered.has(key)) unordered.set(key, Slot.ownedCount(owned, name).ordered || 0);
+      let got = false;
+      if (!claim.wantsOrdered && unclaimed.get(key) >= qty) got = take(key, id, qty, "hand");
+      else if (unordered.get(key) >= qty) got = take(key, id, qty, "ordered");
+      // Audited as ordered, but the ordered copies are gone; a held one will do.
+      else if (unclaimed.get(key) >= qty) got = take(key, id, qty, "hand");
+      claimSatisfied.set(`${key}|${id}`, got);
+    };
+    // Audited holders first, so the box the cards were physically counted into is the box
+    // that gets them; then everyone else in deck order.
+    claims.filter((c) => c.audited).forEach(serve);
+    claims.filter((c) => !c.audited).forEach(serve);
+    return {boxes, committed, claimSatisfied, unclaimed, servedQty, allocated};
+  }
+
   function deckPageContext() {
     const Slot = window.MtgSlotModel;
     const variants = selectedVariants();
@@ -626,10 +713,10 @@
       if (md && md.loaded && !md.unavailable) cards[key] = Object.assign({}, cards[key], md);
     }));
 
-    // Which physical box each owned copy is in. There are six boxes and a copy
-    // lives in exactly one, so this is read from the boxes you have actually
-    // ticked - never inferred from which deck happens to list the card first.
-    const boxes = {};
+    /* Which box holds which copy is decided once, by allocateCopies, and read here and by
+       the Shop alike -- a shopping list that disagrees with the deck it is shopping for is
+       worse than either number on its own. */
+    const {boxes, committed, claimSatisfied, unclaimed, servedQty} = allocateCopies(variants, owned, cards);
     const deckLabels = {};
     /* A card is only spoken for where a ticked box holds it. Everything else another
        deck merely LISTS -- a rung it never picked, or a slot whose box is still empty --
@@ -638,43 +725,13 @@
        is actually holding". Two guards keep it honest: a copy already in a box is not
        offered anywhere else, and nothing you do not own appears at all -- the ledger is
        read, never inferred from a deck listing the card. */
-    const committed = new Map();
     const listedBy = new Map();
     const mine = new Set();
-    /* Copies, not names. One Sol Ring and five decks that each box one is the normal case
-       here, and the old map held a single deck per card name, so four of those five decks
-       were told the card was somewhere else.
-    
-       Counting what OTHER decks have boxed is not enough either: with two decks boxing the
-       same single copy, each sees the other holding one and neither gets it, so a card you
-       own reads as missing from both. The copies are allocated instead -- decks walked in a
-       fixed order, first claim served -- so exactly one deck holds it and the rest are told
-       plainly that they need another. */
-    const claimSatisfied = new Map();
-    const unclaimed = new Map();
-    const servedQty = new Map();
     variants.forEach((v) => {
       deckLabels[v.id] = "D" + v.deckId;
       const p = buyCatalog && buyCatalog.plans ? buyCatalog.plans[v.id] : null;
       if (!p) return;
-      const ticked = (state.deckActive && state.deckActive[v.id]) || {};
       Slot.deckSlots(p, ensureBuyState(v.id), {owned, cards}).forEach((slot) => {
-        if (slot.pick && ticked[slot.slotId]) {
-          const key = Slot.ownedKey(slot.pick.name);
-          const qty = Math.max(1, Number(slot.pick.quantity) || 1);
-          if (!unclaimed.has(key)) unclaimed.set(key, Slot.ownedCount(owned, slot.pick.name).inHand || 0);
-          const left = unclaimed.get(key);
-          const served = left >= qty;
-          if (served) {
-            unclaimed.set(key, left - qty);
-            boxes[key] = boxes[key] || v.id;   // whoever actually holds it
-            committed.set(key, (committed.get(key) || 0) + qty);
-            if (!servedQty.has(key)) servedQty.set(key, new Map());
-            const per = servedQty.get(key);
-            per.set(v.id, (per.get(v.id) || 0) + qty);
-          }
-          claimSatisfied.set(`${key}|${v.id}`, served);
-        }
         (slot.rungs || []).forEach((rung) => {
           const key = Slot.ownedKey(rung.name);
           if (v.id === variant.id) return void mine.add(key);
@@ -734,8 +791,9 @@
         try { return evaluateDeckCompliance(plan, ensureBuyState(variant.id), literal); }
         catch (error) { return null; }
       },
-      // Did this deck's claim on the card get served? Only meaningful where it is ticked.
-      claimHeld: (name) => claimSatisfied.get(`${Slot.ownedKey(name)}|${variant.id}`) === true,
+      /* What this deck's claim was served with -- "hand", "ordered", or false for a copy
+         it will have to buy. Only meaningful where the slot is ticked. */
+      claimHeld: (name) => claimSatisfied.get(`${Slot.ownedKey(name)}|${variant.id}`) || false,
       // Copies nobody has boxed, which is what an unticked slot could still take.
       spareCopies: (name) => {
         const key = Slot.ownedKey(name);
@@ -1316,7 +1374,7 @@
     });
     if (!decks.length) return null;
     return {
-      rows: Slot.shopRows(decks, owned),
+      rows: Slot.shopRows(decks, owned, allocateCopies(variants, owned, cards).allocated),
       factFor: (name) => cards[Lineup.normalizeName(name)] || cardMetadata[itemKey({name})] || {},
       paidFor,
       bench: benchItems(decks, owned, cards, deckLabels),
@@ -7409,6 +7467,14 @@
     const Slot = window.MtgSlotModel;
     const list = payload && payload.orderedNotYetInHand;
     if (!Slot || !Array.isArray(list) || !list.length) return;
+    /* Only for a file that does not already know. The manifest exists to upgrade a state
+       whose ownership is a flat count -- found plus a quantity, with no way to say "two of
+       these three are in the post". A file carrying explicit {inHand, ordered} records has
+       already answered that, per card, and re-filing from a list of names would flatten a
+       card that is partly held and partly ordered into wholly ordered. Which is exactly
+       what it did to Overgrown Battlement: one copy in deck 4's box, one on its way to
+       deck 1, and the manifest moved both into the post. */
+    if (state.ownershipSchema >= 3 && state.owned && Object.keys(state.owned).length) return;
     // Ownership becomes explicit here rather than being re-derived on every read, so the
     // ordered records have somewhere to live that normalizeOwned will not flatten.
     state.owned = Slot.normalizeOwned(state);

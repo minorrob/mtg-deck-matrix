@@ -11,6 +11,7 @@ const rungLists = JSON.parse(await readFile(new URL("../data/rung-lists.json", i
 const cssSource = await readFile(new URL("../app.css", import.meta.url), "utf8");
 const deckPageSource = await readFile(new URL("../deck-page.js", import.meta.url), "utf8");
 const shopPageSource = await readFile(new URL("../shop-page.js", import.meta.url), "utf8");
+const slotModelSource = await readFile(new URL("../slot-model.js", import.meta.url), "utf8");
 const activeState = JSON.parse(await readFile(new URL("../data/active-state.json", import.meta.url), "utf8"));
 const auditedByName = new Map(cards.cards.map((card) => [card.name.toLowerCase(), card]));
 for (const card of cards.cards) for (const face of card.name.split(" // ")) auditedByName.set(face.toLowerCase(), card);
@@ -229,16 +230,38 @@ for (const view of [...appSource.matchAll(/^\s{4}([a-z0-9]+): \[$/gm)].map((m) =
   assert.match(deckSource, /<b class="dp-num">\$\{t\.active\}\/\$\{t\.cards\}<\/b> cards in the box/,
     "the header must read as cards in the box over cards in the deck");
 
-  // 3. Copies are allocated, not counted. Two decks boxing the same single copy used to
-  //    leave BOTH reading "another copy needed", because each saw the other holding one.
-  assert.match(appSource, /const served = left >= qty;/,
-    "boxed copies must be served from a pool, first claim first");
-  assert.match(appSource, /claimSatisfied\.set\(`\$\{key\}\|\$\{v\.id\}`, served\);/,
+  /* 3. Copies are allocated, not counted, and allocated ONCE -- the Deck page and the Shop
+        read the same result, because a shopping list that disagrees with the deck it is
+        shopping for is worse than either number alone. Ordered copies are allocated too:
+        a card in the post is one card, and reading "ordered" off the global count let
+        every deck claiming it call itself ordered. */
+  assert.match(appSource, /function allocateCopies\(variants, owned, cards\)/,
+    "there must be one allocator");
+  assert.match(appSource, /Slot\.shopRows\(decks, owned, allocateCopies\(variants, owned, cards\)\.allocated\)/,
+    "the Shop must price what the decks were actually allocated, not the raw ledger");
+  assert.match(appSource, /else if \(unordered\.get\(key\) >= qty\) got = take\(key, id, qty, "ordered"\);/,
+    "ordered copies must be handed out one at a time like held ones");
+  assert.match(appSource, /denied: Boolean\(hold && !\(hold\.inHand \|\| 0\) && !\(hold\.ordered \|\| 0\)\)/,
+    "a deck the audit says holds none must never be served a spare");
+  assert.match(appSource, /if \(claim\.denied\) return void claimSatisfied\.set\(`\$\{key\}\|\$\{id\}`, false\);/,
+    "the denial has to be honoured where the copies are handed out");
+  // A complete allocation means a missing entry is zero, not "ask the ledger instead".
+  assert.match(slotModelSource, /const allocated = holds \? \(holds\[row\.key\] \|\| \{inHand: 0, ordered: 0\}\) : null;/,
+    "a card with no allocation was allocated to nobody");
+  // An audited file already knows its own split; the manifest is only for older ones.
+  assert.match(appSource, /if \(state\.ownershipSchema >= 3 && state\.owned && Object\.keys\(state\.owned\)\.length\) return;/,
+    "the ordered manifest must not re-file ownership a state already records per card");
+  assert.match(appSource, /claimSatisfied\.set\(`\$\{key\}\|\$\{id\}`, got\);/,
     "each deck's claim on a card must be recorded per deck, not per name");
   assert.ok(!appSource.includes("boxedElsewhere"),
     "counting what other decks boxed is symmetric and starves both; the allocation replaces it");
-  assert.match(deckSource, /\? \(ctx\.claimHeld \? ctx\.claimHeld\(name\) : true\)/,
-    "a ticked slot must ask whether its own claim was served");
+  /* A ticked slot is answered by the allocator, not the global ledger: the ledger knows
+     there is one copy, not which box has it. The answer is what the claim was served
+     WITH, so an ordered copy reads as ordered rather than as owned. */
+  assert.match(deckSource, /const got = ctx\.claimHeld\(name\);/,
+    "a ticked slot must ask what its own claim was served with");
+  assert.match(deckSource, /if \(got === "ordered"\) return \{kind: "ordered", glyph: "⧖", label: "Assigned · ordered", assigned\};/,
+    "a claim served from the post must read as ordered, not as in the box");
   // Ticking is never refused: the shortfall is a card to buy, and the Shop already asks
   // for it, since shopRows sums quantity across decks against what you own.
   assert.match(deckSource, /label: whose \? `Assigned · another copy needed/,
@@ -853,8 +876,12 @@ for (const basic of ["plains", "island", "swamp", "mountain", "forest"]) {
   assert.ok((activeState.state.boughtQuantities[basic] || 0) >= 80,
     `${basic} should carry at least the box of eighty`);
 }
-assert.match(activeState.note, /On Hand \/ Ordered spreadsheet/,
+assert.match(activeState.note, /audited Deck Truth sheet/,
   "the note must record where ownership came from");
+/* The audit is per deck, so where each copy sits is recorded as well as how many there
+   are -- a global count cannot say which box holds which copy. */
+assert.ok(Object.keys(activeState.state.deckHolds || {}).length === 6,
+  "every active deck should carry its audited holdings");
 /* Ownership is one record per card now, and the two legacy fields are derived from it
    rather than kept alongside it. Nothing else in the app writes them independently, so a
    drift here means a second writer has appeared. */

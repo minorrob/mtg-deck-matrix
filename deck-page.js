@@ -94,6 +94,22 @@
   function locationOf(ctx, name, quantity, thisDeckId, slotId) {
     const acq = Slot.acquisitionOf(ctx.owned, name, quantity);
     const assigned = Boolean(slotId && (ctx.active || {})[slotId]);
+    /* A claimed slot is answered by the allocator, not by the global ledger. One copy of a
+       card and three decks asking for it is the normal case here, and the ledger only
+       knows there is one -- it cannot say which box has it. The allocator can, so where
+       this deck has claimed the slot its answer wins: "hand", "ordered", or nothing, in
+       which case this deck needs a copy of its own however many exist elsewhere. */
+    if (assigned && ctx.claimHeld) {
+      const got = ctx.claimHeld(name);
+      if (got === "hand") return {kind: "active", glyph: "●", label: "In the box", assigned};
+      if (got === "ordered") return {kind: "ordered", glyph: "⧖", label: "Assigned · ordered", assigned};
+      const holder = (ctx.boxes || {})[Slot.ownedKey(name)];
+      const whose = holder && holder !== thisDeckId ? ((ctx.deckLabels || {})[holder] || holder) : "";
+      return acq === Slot.ACQUISITION.NONE
+        ? {kind: "buy", glyph: "◐", label: "Assigned · to buy", assigned}
+        : {kind: "buy", glyph: "◐", assigned, deck: holder,
+           label: whose ? `Assigned · another copy needed (${whose} has yours)` : "Assigned · another copy needed"};
+    }
     if (acq === Slot.ACQUISITION.NONE) {
       return {kind: "buy", glyph: assigned ? "◐" : "○", label: assigned ? "Assigned · to buy" : "To buy", assigned};
     }
