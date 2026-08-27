@@ -216,8 +216,13 @@
        so, or counting Lands by eye misses a land filed under Enchantment. */
     const realType = pick ? cardTypeOf(ctx, name) : null;
     const misfiled = pick && realType && realType !== slot.type && !slot.isBasic;
+    /* A row that stands for several cards says how many of them you can actually field.
+       "Forest ×7" is seven cards, not one, and the number worth knowing is how many of the
+       Forests you own are still going spare once the other decks have taken theirs. */
+    const pool = pick && ctx.availableFor ? ctx.availableFor(name) : null;
     const sub = slot.isBasic
-      ? `Basic land · one row, ${slot.quantity} cards`
+      ? `Basic land · ${slot.quantity} of ${pool === null ? slot.quantity : pool} you own${
+          pool !== null && pool < slot.quantity ? ` · ${slot.quantity - pool} short` : ""}`
       : (pick && pick.rung !== "base" && slot.shellName !== name)
         ? `${misfiled ? `${esc(realType)} · ` : ""}↔ replaces ${esc(slot.shellName)}`
         : esc(meta(ctx, name).typeLine || "");
@@ -401,17 +406,23 @@
    * those out is what makes "100 - 77 sleeved" fail to equal "22 to buy".
    */
   function totals(ctx, slots, deckId) {
-    const t = {cards: 0, active: 0, ordered: 0, owned: 0, buy: 0, buyValue: 0, holes: 0, lands: 0, assigned: 0};
+    const t = {cards: 0, active: 0, ordered: 0, owned: 0, buy: 0, buyValue: 0, holes: 0, assigned: 0,
+               activeLands: 0, activeOther: 0};
     slots.forEach((s) => {
       if (!s.pick) { t.holes += 1; return; }
       const qty = s.pick.quantity;
       t.cards += qty;
-      /* By the card in the slot, not by the slot. Slot identity is anchored to the shell
-         so rows stay put when the rung changes, which means a land slot can be holding a
-         creature and an enchantment slot can be holding a land. Deck 1 at Tuned reads 38
-         by slot and 36 by card; 36 is the number you can count in your hand. */
-      if (cardTypeOf(ctx, s.pick.name) === "Land") t.lands += qty;
       const loc = locationOf(ctx, s.pick.name, qty, deckId, s.slotId);
+      /* Lands are split out of what is IN THE BOX, not out of the deck. "35/100 cards in
+         the box" beside "36 lands" invited the obvious question -- 36 of what? -- because
+         one number was about the box and the other about the whole deck. These two add up
+         to the 35. Counted by the card in the slot, not by the slot: identity is anchored
+         to the shell so rows stay put when the rung changes, which leaves land slots
+         holding creatures and enchantment slots holding lands. */
+      if (loc.kind === "active") {
+        if (cardTypeOf(ctx, s.pick.name) === "Land") t.activeLands += qty;
+        else t.activeOther += qty;
+      }
       // Assignment is counted alongside the buckets rather than inside them: the buckets
       // answer "where are these cards", which a tick does not change.
       if (loc.assigned) t.assigned += qty;
@@ -446,7 +457,8 @@
           <span class="dp-stat${t.active === t.cards && t.cards ? " is-ok" : " is-warn"}"><b class="dp-num">${t.active}/${t.cards}</b> cards in the box${
             t.assigned > t.active ? ` · ${t.assigned - t.active} ticked, copy still needed` : ""}${
             t.holes ? ` · ${plural(t.holes, "slot")} still to fill` : ""}</span>
-          <span class="dp-stat"><b class="dp-num">${t.lands}</b> lands</span>
+          <span class="dp-stat"><b class="dp-num">${t.activeLands}</b> lands</span>
+          <span class="dp-stat"><b class="dp-num">${t.activeOther}</b> non-lands</span>
         </div>
         <div class="dp-tally" role="group" aria-label="Where all ${t.cards + t.holes} cards are">
           <span class="dp-tally-t"><b class="dp-num">${t.cards + t.holes}</b> cards</span><span class="dp-tally-op">=</span>
