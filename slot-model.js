@@ -144,6 +144,26 @@
    * Tuned already fixed. Fun and Max are their own axes and answer to the slot,
    * not to the rung below them. So each heading names its actual predecessor.
    */
+  /**
+   * Which Scryfall image size to ask for.
+   *
+   * The catalog stores `small`, 146px wide, because that is what the import happened to
+   * capture. The preview pane renders it at 286 CSS px on a desktop and 316 on a phone
+   * -- 572 and 948 device pixels once the screen's own scaling is counted -- so it was
+   * being blown up four to six times. The CSS has always declared aspect-ratio 488/680,
+   * which is `normal`'s exact shape, so that is the size the layout was drawn for.
+   *
+   * Rewriting the URL rather than the data means a card added later -- a Salvage intake,
+   * a manual card resolved from a link -- gets the same treatment without a migration.
+   * Anything that is not a Scryfall card image is handed back untouched.
+   */
+  const SCRYFALL_SIZES = ["small", "normal", "large", "png", "art_crop", "border_crop"];
+  function cardImage(url, size) {
+    const raw = String(url || "");
+    if (!raw || !SCRYFALL_SIZES.includes(size)) return raw;
+    return raw.replace(/(cards\.scryfall\.io\/)(small|normal|large|png|art_crop|border_crop)(\/)/, `$1${size}$3`);
+  }
+
   function rungHeading(rung, name, predecessorName, authored) {
     const card = name || "this card";
     const prev = predecessorName;
@@ -442,7 +462,7 @@
     BUILD_RUNGS, RUNG_CHAIN, rungForStage, selectionForRung, selectionSignature, activeRung, rungTwins,
     PRICE_BANDS, priceBand,
     ACQUISITION: ACQ, PLACE, ownedKey, normalizeOwned, ownedCount, acquisitionOf,
-    SPOTS, vendorSpot, rungHeading,
+    SPOTS, vendorSpot, rungHeading, cardImage,
     TYPE_ORDER, cardType, isBasicLand, whyFor, whyText, whySource,
     deckSlots, shopRows
   };

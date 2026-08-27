@@ -304,7 +304,7 @@
       body = groups.map(([name, list]) => `<section class="sp-group">${
         name ? bandHeader(name, list, 0) : ""}<div class="sp-gal">${list.map((r) => `
           <article class="sp-card" style="--rar:var(--rar-${r.rarityKey})" data-sp-row="${esc(r.key)}">
-            ${r.image ? `<img class="sp-art" src="${esc(r.image)}" alt="${esc(r.name)}" loading="lazy">`
+            ${r.image ? `<img class="sp-art" src="${esc(Slot.cardImage(r.image, "normal"))}" alt="${esc(r.name)}" loading="lazy">`
                       : `<div class="sp-art sp-art-blank"><span>${esc(r.name)}</span></div>`}
             <div class="sp-cbody">
               <div class="sp-nm">${esc(r.name)}${r.quantity > 1 ? ` <span class="sp-qty dp-num">×${r.quantity}</span>` : ""}</div>

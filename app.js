@@ -572,16 +572,49 @@
     // ticked - never inferred from which deck happens to list the card first.
     const boxes = {};
     const deckLabels = {};
+    /* A card is only spoken for where a ticked box holds it. Everything else another
+       deck merely LISTS -- a rung it never picked, or a slot whose box is still empty --
+       is a card sitting loose, and loose is what Salvage means. So the Manual box offers
+       those too, which is the difference between "cards in the yard" and "cards no deck
+       is actually holding". Two guards keep it honest: a copy already in a box is not
+       offered anywhere else, and nothing you do not own appears at all -- the ledger is
+       read, never inferred from a deck listing the card. */
+    const committed = new Map();
+    const listedBy = new Map();
+    const mine = new Set();
     variants.forEach((v) => {
       deckLabels[v.id] = "D" + v.deckId;
       const p = buyCatalog && buyCatalog.plans ? buyCatalog.plans[v.id] : null;
       if (!p) return;
       const ticked = (state.deckActive && state.deckActive[v.id]) || {};
       Slot.deckSlots(p, ensureBuyState(v.id), {owned, cards}).forEach((slot) => {
-        if (!slot.pick || !ticked[slot.slotId]) return;
-        boxes[Slot.ownedKey(slot.pick.name)] = v.id;
+        if (slot.pick && ticked[slot.slotId]) {
+          const key = Slot.ownedKey(slot.pick.name);
+          boxes[key] = v.id;
+          committed.set(key, (committed.get(key) || 0) + Math.max(1, Number(slot.pick.quantity) || 1));
+        }
+        (slot.rungs || []).forEach((rung) => {
+          const key = Slot.ownedKey(rung.name);
+          if (v.id === variant.id) return void mine.add(key);
+          if (!listedBy.has(key)) listedBy.set(key, {name: rung.name, deckId: v.deckId, variantId: v.id});
+        });
       });
     });
+
+    // Cards this deck can already reach through their own slots are left out: offering
+    // them again under Manual would be a second door to the same room.
+    const freeCards = [];
+    listedBy.forEach((entry, key) => {
+      if (mine.has(key)) return;
+      const held = Slot.ownedCount(owned, entry.name).inHand || 0;
+      if (held <= (committed.get(key) || 0)) return;
+      const md = cards[Lineup.normalizeName(entry.name)] || {};
+      freeCards.push({
+        name: entry.name, typeLine: md.typeLine || "", image: md.image || "",
+        price: Number(md.price) || 0, fromDeck: "D" + entry.deckId, fromVariantId: entry.variantId
+      });
+    });
+    freeCards.sort((a, b) => a.name.localeCompare(b.name));
 
     const rung = Slot.activeRung(plan, ensureBuyState(variant.id), (state.deckRung || {})[variant.id]);
 
@@ -600,6 +633,9 @@
       // The Salvage yard, offered in every slot's Manual box. Cards already carried into
       // this deck as a manual pick are filtered out per slot by the box itself.
       salvage: allSalvageCards().map((card) => ({name: card.name, typeLine: card.typeLine || "", image: card.image || "", price: Number(card.price) || 0})),
+      // Owned copies another deck lists but is not holding. Same offer as the yard, kept
+      // in its own list so the box can say where each one is sitting.
+      freeCards,
       // Which of the four measured builds this deck currently IS, derived from the
       // selection rather than remembered, so a single hand-edited slot honestly
       // drops the highlight instead of leaving a rung claiming a deck it no longer
@@ -662,13 +698,26 @@
     if (url && fromYard) return say("Use one or the other, not both.");
 
     const slot = ctx.slots.find((row) => String(row.slotId) === String(slotId));
+    // The box is not rendered on the commander slot; this refuses it there too, so a
+    // stale panel cannot leave the deck with a hundred cards and no commander.
+    if (slot?.type === "Commander") return say("The commander is the one slot this cannot fill.");
     // A manual card answers to the card this slot was built around, so that is what it replaces.
     const replaces = slot?.shellName || "";
     let card = null;
+    let looseFrom = "";
     if (fromYard) {
       const record = Object.values(state.liveSalvage || {}).find((entry) => entry.card?.name === fromYard);
-      if (!record) return say("That card is no longer in Salvage.");
-      card = {...record.card};
+      if (record) {
+        card = {...record.card};
+      } else {
+        /* Not in the yard, so it is a copy another deck lists but is not holding. The
+           deck it is listed in keeps listing it -- nothing is taken away there, because
+           nothing was committed there; this just claims the loose copy for this slot. */
+        const free = (ctx.freeCards || []).find((entry) => entry.name === fromYard);
+        if (!free) return say("That card is not loose any more.");
+        card = {...(ctx.cards[Lineup.normalizeName(fromYard)] || {}), name: fromYard};
+        looseFrom = free.fromDeck || "";
+      }
     } else {
       say("Looking it up…");
       try {
@@ -702,10 +751,11 @@
       replaces,
       // Manual cards never went through the simulation. Saying so plainly is the honest
       // reading; the alternative is a blank that looks like a missing value.
-      purpose: fromYard ? "Added by hand from the Salvage yard. Not simulated — measured fields read n/a."
-                        : "Added by hand from a TCGplayer link. Not simulated — measured fields read n/a.",
+      purpose: fromYard
+        ? `Added by hand from ${looseFrom ? `a copy ${looseFrom} lists but is not holding` : "the Salvage yard"}. Not simulated — measured fields read n/a.`
+        : "Added by hand from a TCGplayer link. Not simulated — measured fields read n/a.",
       why: "n/a — added by hand, not measured by the simulation.",
-      whereToBuy: fromYard ? "Already owned · was in Salvage" : "Singles case",
+      whereToBuy: fromYard ? (looseFrom ? `Already owned · was loose in ${looseFrom}` : "Already owned · was in Salvage") : "Singles case",
       source: fromYard ? "salvage" : "tcgplayer",
       addedAt: new Date().toISOString()
     };

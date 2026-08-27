@@ -164,6 +164,33 @@ ok("the measured rungs are untouched by what was added by hand", () => {
   }
 });
 
+ok("nothing hand-added is filed against a commander", () => {
+  // Picking a manual card on the commander slot left a hundred cards with no commander
+  // among them. The box is no longer offered there; this keeps the data honest too.
+  for (const id of variantIds) {
+    const commander = (buyPlans.plans[id].startingShell || []).find((card) => card.isCommander);
+    if (!commander) continue;
+    for (const card of manualCards[id]) {
+      assert.notEqual(card.replaces, commander.name,
+        `${id}: ${card.name} is filed against the commander ${commander.name}`);
+    }
+  }
+  assert.match(appSource, /if \(slot\?\.type === "Commander"\) return say\(/,
+    "submitManualCard must refuse the commander slot even if the panel is stale");
+});
+
+ok("the loose pool is owned copies no box is holding, and nothing else", () => {
+  // Two guards, and both matter. Without the ownership read the box would offer cards
+  // that have not been bought; without the committed count it would offer the same
+  // physical copy to two decks at once.
+  assert.match(appSource, /const held = Slot\.ownedCount\(owned, entry\.name\)\.inHand \|\| 0;/,
+    "a card must be owned before it is offered as loose");
+  assert.match(appSource, /if \(held <= \(committed\.get\(key\) \|\| 0\)\) return;/,
+    "a copy already in a ticked box must not be offered to another deck");
+  assert.match(appSource, /if \(mine\.has\(key\)\) return;/,
+    "a card this deck already reaches through its own slots must not be offered again");
+});
+
 ok("Manual sorts last on a slot, after every measured rung", () => {
   assert.equal(Slot.RUNG_ORDER[Slot.RUNG_ORDER.length - 1], "manual",
     `manual must sort last; RUNG_ORDER is ${Slot.RUNG_ORDER.join(", ")}`);
