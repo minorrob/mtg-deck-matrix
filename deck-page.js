@@ -106,7 +106,13 @@
         isLegendary(ctx, name) ? ' ♛ Legendary' : ""}</span>`],
       ["Set", esc(m.setName || "—")],
       ["Where", `<span class="dp-loc is-${loc.kind}"><span class="dp-g">${loc.glyph}</span>${esc(loc.label)}</span>`],
-      ["Target", `<span class="dp-num">${money(price)}</span>`]
+      ["Target", `<span class="dp-num">${money(price)}</span>`],
+      /* What it cost, not what it is worth. Editable here because this is where you are
+         looking at the card; the same number appears on the Shop row you bought it on. */
+      ["Paid", `<span class="dp-paid${ctx.paidFor && ctx.paidFor(name) === null ? "" : " is-set"}">
+        <input type="text" inputmode="decimal" data-dp-paid="${esc(Slot.ownedKey(name))}"
+          value="${ctx.paidFor && ctx.paidFor(name) !== null ? Number(ctx.paidFor(name)).toFixed(2) : ""}"
+          placeholder="—" aria-label="What you paid for ${esc(name)}"></span>`]
     ];
     return `<div class="dp-face" style="--rar:var(--rar-${rk})">${img}</div>
       <ul class="dp-stats">${rows.map(([k, v]) => `<li><b>${k}</b><span>${v}</span></li>`).join("")}</ul>
@@ -277,6 +283,61 @@
   }
 
   /* ---------------- groups and the page ---------------- */
+  /* ---------------- search and filter ----------------
+   * Eighty-five rows is too many to scan for one card. The search reads the card in the
+   * slot, every rung it could hold, and the card the slot was built around, so looking
+   * for a card finds the slot it could go in even when it is not the one showing.
+   */
+  const WHERE_LABEL = {
+    active: "In the box", bench: "Owned, no box", other: "In another box",
+    ordered: "Ordered", buy: "To buy", hole: "Empty slot"
+  };
+
+  function slotWhere(ctx, slot, deckId) {
+    if (!slot.pick) return "hole";
+    return locationOf(ctx, slot.pick.name, slot.pick.quantity, deckId, slot.slotId).kind;
+  }
+
+  function slotMatches(ctx, slot, deckId, f) {
+    if (f.type && f.type !== "all" && slot.type !== f.type) return false;
+    if (f.rung && f.rung !== "all" && !slot.rungs.some((r) => r.rung === f.rung)) return false;
+    if (f.where && f.where !== "all" && slotWhere(ctx, slot, deckId) !== f.where) return false;
+    const query = String(f.query || "").trim().toLowerCase();
+    if (!query) return true;
+    const haystack = [slot.shellName, slot.pick && slot.pick.name, ...slot.rungs.map((r) => r.name)]
+      .filter(Boolean)
+      .concat([meta(ctx, slot.pick ? slot.pick.name : slot.shellName).typeLine || ""])
+      .join(" ").toLowerCase();
+    return haystack.indexOf(query) >= 0;
+  }
+
+  function filterMarkup(ctx, slots, shown) {
+    const f = ctx.filters || {};
+    const active = (f.query || "").trim() !== ""
+      || ["type", "rung", "where"].some((k) => f[k] && f[k] !== "all");
+    const types = Slot.TYPE_ORDER.filter((t) => slots.some((s) => s.type === t));
+    const rungs = Slot.RUNG_ORDER.filter((r) => slots.some((s) => s.rungs.some((x) => x.rung === r)));
+    const wheres = Object.keys(WHERE_LABEL).filter((w) => slots.some((s) => slotWhere(ctx, s, ctx.deckId) === w));
+    const select = (key, label, options) => `<label class="dp-f"><span>${esc(label)}</span>
+      <select data-dp-filter="${key}">
+        <option value="all">All</option>
+        ${options.map(([value, text]) => `<option value="${esc(value)}"${
+          (f[key] || "all") === value ? " selected" : ""}>${esc(text)}</option>`).join("")}
+      </select></label>`;
+    return `<div class="dp-filters" role="search">
+      <label class="dp-f dp-f-q"><span>Search</span>
+        <input type="search" id="dp-q" value="${esc(f.query || "")}" placeholder="Card, rung, or type…"
+          aria-label="Search this deck's slots"></label>
+      ${select("type", "Type", types.map((t) => [t, t]))}
+      ${select("rung", "Rung", rungs.map((r) => [r, RUNG_LABEL[r] || r]))}
+      ${select("where", "Where", wheres.map((w) => [w, WHERE_LABEL[w]]))}
+      <span class="dp-f-count">${shown === slots.length
+        ? `${plural(slots.length, "slot")}`
+        : `${shown} of ${plural(slots.length, "slot")}`}</span>
+      ${active ? `<button type="button" class="dp-f-clear" data-dp-filter-clear>Clear</button>` : ""}
+    </div>`;
+  }
+
   function groupSlots(slots) {
     const by = new Map();
     slots.forEach((s) => {
@@ -313,6 +374,8 @@
     const deckId = ctx.deckId;
     const slots = ctx.slots;
     const t = totals(ctx, slots, deckId);
+    // The tally above counts the whole deck; the list below shows what the filter left.
+    const visible = slots.filter((slot) => slotMatches(ctx, slot, deckId, ctx.filters || {}));
     const open = ctx.openSlot || null;
     host.innerHTML = `
       <div class="dp-head">
@@ -353,7 +416,9 @@
           <div class="dp-cstep is-now"><b>1</b>calibrated — the other 4 stay one click away</div>
         </div>
       </div>
-      ${groupSlots(slots).map(([type, rows]) => {
+      ${filterMarkup(ctx, slots, visible.length)}
+      ${visible.length ? "" : '<p class="dp-empty">No slot in this deck matches that.</p>'}
+      ${groupSlots(visible).map(([type, rows]) => {
         const isOpen = (ctx.openGroups || {})[type] !== false;
         const buys = rows.filter((s) => s.pick && locationOf(ctx, s.pick.name, s.pick.quantity, deckId).kind === "buy").length;
         const qty = rows.reduce((n, s) => n + (s.pick ? s.pick.quantity : 0), 0);

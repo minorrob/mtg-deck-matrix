@@ -36,6 +36,7 @@
     {key: "band", label: "Price band"},
     {key: "spot", label: "Where"},
     {key: "price", label: "Target"},
+    {key: "paid", label: "Paid"},
     {key: "lineTotal", label: "Line"}
   ];
   const FILTERS = [
@@ -63,8 +64,9 @@
 
   /** Decorate the model's shop rows with the facts a seller's table is organised by.
    *  Name normalisation belongs to the caller, which already owns the lineup model. */
-  function decorate(rows, factFor, deckLabels) {
+  function decorate(rows, factFor, deckLabels, paidFor) {
     const lookup = typeof factFor === "function" ? factFor : () => ({});
+    const paidLookup = typeof paidFor === "function" ? paidFor : () => null;
     return rows.map((row) => {
       const fact = lookup(row.name) || {};
       const ck = colorKey(fact.colorIdentity);
@@ -78,6 +80,8 @@
         oracleText: fact.oracleText || "",
         deckNames: (row.decks || []).map((d) => (deckLabels || {})[d] || d),
         lineTotal: (row.price || 0) * row.quantity,
+        // What it cost, not what it is worth. null is unpriced; 0 is a real answer.
+        paid: paidLookup(row.name),
         rung: (row.rungs || []).map((r) => Slot.RUNG_LABEL[r] || r).join(", ")
       });
     });
@@ -120,6 +124,8 @@
     if (key === "band") return Slot.PRICE_BANDS.indexOf(row.band);
     if (key === "spot") return Slot.SPOTS.indexOf(row.spot);
     if (key === "price") return row.price == null ? -1 : row.price;
+    // Unpriced sorts below every real figure, including a genuine zero.
+    if (key === "paid") return row.paid == null ? -1 : row.paid;
     if (key === "lineTotal") return row.lineTotal;
     return row[key] == null ? "" : row[key];
   }
@@ -153,6 +159,15 @@
   }
 
   /* ---------------- pieces ---------------- */
+  /* Type what you paid. Committed on change rather than on every keystroke, so a
+     half-typed "1" never lands as a dollar. */
+  function paidInput(row) {
+    return `<span class="sp-paid${row.paid === null ? "" : " is-set"}">
+      <input type="text" inputmode="decimal" data-sp-paid="${esc(row.key)}"
+        value="${row.paid === null ? "" : Number(row.paid).toFixed(2)}" placeholder="—"
+        aria-label="What you paid for ${esc(row.name)}"></span>`;
+  }
+
   function triMarkup(row) {
     const many = row.quantity > 1;
     const on = (k) => k === "need" ? (row.need > 0 && !row.inHand && !row.ordered)
@@ -182,6 +197,7 @@
       case "band": return `<span class="sp-pill dp-num">${esc(row.band || "no price")}</span>`;
       case "spot": return esc(row.spot || "no price");
       case "price": return `<span class="dp-num${row.need ? " is-buy" : ""}">${money(row.price)}</span>`;
+      case "paid": return paidInput(row);
       case "lineTotal": return `<span class="dp-num">${money(row.lineTotal)}</span>`;
       default: return esc(row[key] || "");
     }
@@ -192,13 +208,35 @@
    * could fill in each deck, tagged with the rung it would occupy, and - the fact
    * that actually decides the trade - the state of the card it would replace.
    */
+  /* Cards reach the Bench two ways: pushed out of a deck, or picked up in a shop and
+     typed in here. The intake sits above the cards in both the empty and full states,
+     because "I just bought this and it has no home" is exactly when the Bench is empty. */
+  function benchIntakeMarkup(open) {
+    return `<div class="sp-intake" data-sp-intake data-open="${open ? 1 : 0}">
+      <div class="sp-intake-hd">
+        <button type="button" class="sp-intake-go" data-sp-intake-toggle aria-expanded="${Boolean(open)}">
+          ${open ? "\u00d7 Close" : "+ Add card to Bench"}</button>
+        <span class="sp-intake-note">A TCGplayer link or just the card name. One per line.</span>
+      </div>
+      ${open ? `<div class="sp-intake-body">
+        <textarea data-sp-intake-input rows="3" aria-label="TCGplayer links or card names to add to the Bench"
+          placeholder="https://www.tcgplayer.com/product/&#10;Solemn Simulacrum"></textarea>
+        <div class="sp-intake-actions">
+          <button type="button" class="sp-intake-go" data-sp-intake-submit>Look up and add</button>
+          <span class="sp-intake-status" data-sp-intake-status aria-live="polite"></span>
+        </div>
+      </div>` : ""}
+    </div>`;
+  }
+
   function benchMarkup(ctx) {
     const items = ctx.bench || [];
+    const intake = benchIntakeMarkup(ctx.intakeOpen);
     if (!items.length) {
-      return `<p class="sp-empty">Nothing on the Bench. Cards land here when you own them but have not
+      return `${intake}<p class="sp-empty">Nothing on the Bench. Cards land here when you own them but have not
         put them in any deck's box.</p>`;
     }
-    return `<div class="sp-bench">${items.map((item) => {
+    return `${intake}<div class="sp-bench">${items.map((item) => {
       const opts = item.destinations || [];
       const chosen = opts[0];
       return `<article class="sp-bcard" style="--rar:var(--rar-${item.rarityKey || "C"})">
@@ -248,12 +286,16 @@
   function render(host, ctx) {
     if (!host) return;
     const f = ctx.filters || {};
-    const all = decorate(ctx.rows || [], ctx.factFor, ctx.deckLabels);
+    const all = decorate(ctx.rows || [], ctx.factFor, ctx.deckLabels, ctx.paidFor);
     const kept = all.filter((r) => passes(r, f));
     const groups = groupRows(sortRows(kept, f.sortKey || "name", f.sortDir || "asc"), f.groupBy);
 
     const owedCards = kept.reduce((n, r) => n + r.need, 0);
     const owedValue = kept.reduce((n, r) => n + (r.price || 0) * r.need, 0);
+    // Counted over every row, not the filtered ones: "what has this cost me" is a
+    // question about the collection, and a filter is not meant to change the answer.
+    const paidTotal = all.reduce((n, r) => n + (r.paid === null ? 0 : r.paid), 0);
+    const paidCount = all.filter((r) => r.paid !== null).length;
 
     const chips = [];
     FILTERS.forEach((flt) => (f[flt.key] || []).forEach((v) => chips.push(
@@ -289,6 +331,7 @@
           COLUMNS.filter((c) => c.sortable !== false).map((c) =>
             `<option value="${c.key}"${f.sortKey === c.key ? " selected" : ""}>${c.label}</option>`).join("")}</select>` : ""}
         <span class="sp-tot"><b class="dp-num">${owedCards}</b> still to buy · <b class="dp-num">${money(owedValue)}</b></span>
+        <span class="sp-tot sp-paid-tot" data-sp-paid-total><b class="dp-num">${money(paidTotal)}</b> paid · ${paidCount}/${all.length} priced</span>
       </div>
       ${chips.length ? `<div class="sp-frow"><div class="sp-chips">${chips.join("")}<button type="button" class="sp-mini" data-sp-clear="1">Clear all filters</button></div></div>` : ""}
     </div>`;
@@ -311,6 +354,7 @@
               <div class="sp-meta"><span class="sp-dot" style="background:${COLOR_HEX[r.colorKey]}"></span>${esc(r.color)} · ${esc(r.type)} · ${esc(r.rarity)}</div>
               <div class="sp-meta">${(r.deckNames || []).map((d) => `<span class="sp-chip">${esc(d)}</span>`).join("")}<span class="sp-pill dp-num">${esc(r.band || "—")}</span></div>
               <div class="sp-foot"><span class="dp-num${r.need ? " is-buy" : ""}">${money(r.price)}</span><span class="sp-where">${esc(r.spot || "—")}</span></div>
+              <div class="sp-foot"><span class="sp-lab">Paid</span>${paidInput(r)}</div>
               ${triMarkup(r)}
             </div></article>`).join("")}</div></section>`).join("");
     } else {
