@@ -927,4 +927,34 @@ assert.match(appSource, /if \(!rec \|\| !rec\.inHand\) return;/,
     `${unmatched.length} ordered names match no owned card, e.g. ${unmatched.slice(0, 3).join(", ")}`);
 }
 
+
+/* The Deck page's filter bar. Status and Active are separate dropdowns because they are
+   separate facts -- what the card's situation is, and whether this deck has claimed the
+   slot. They replaced a single six-value "Where", which could not express "everything I
+   own that is not in this box" without picking two of its values at once. */
+assert.doesNotMatch(deckPageSource, /f\.where/, "the mixed Where filter must be gone, not left alongside its replacement");
+assert.match(deckPageSource, /const STATUS_LABEL = \{buy: "To buy", owned: "Owned", ordered: "Ordered", hole: "Empty slot"\};/,
+  "Status must offer To buy, Owned and Ordered, plus the empty slots that belong to neither");
+assert.match(deckPageSource, /const ACTIVE_LABEL = \{active: "Active", inactive: "Inactive"\};/,
+  "Active must offer Active and Inactive");
+// Owned is one answer about the card, however the copy is filed.
+assert.match(deckPageSource, /if \(kind === "buy" \|\| kind === "ordered"\) return kind;\n(?:\s*\/\/[^\n]*\n)*\s*return "owned";/,
+  "in-the-box, on-the-bench and in-another-box must all read as Owned");
+assert.match(deckPageSource, /if \(f\.status && f\.status !== "all" && slotStatus\(ctx, slot, deckId\) !== f\.status\) return false;/,
+  "the Status dropdown must actually filter");
+assert.match(deckPageSource, /if \(f\.active && f\.active !== "all" && slotActive\(ctx, slot\) !== f\.active\) return false;/,
+  "the Active dropdown must actually filter");
+
+assert.match(deckPageSource, /const GROUP_BY = \[\["type", "Type"\], \["rarity", "Rarity"\], \["status", "Status"\], \["none", "None"\]\];/,
+  "Group by must offer exactly Type, Rarity, Status and None");
+assert.match(deckPageSource, /if \(groupBy === "none"\) return \[\[null, slots\]\];/,
+  "None must return one nameless group rather than a group per row");
+assert.match(deckPageSource, /if \(!label\) return `<section class="dp-grp" data-open="1"><div class="dp-grp-body">\$\{body\}<\/div><\/section>`;/,
+  "a nameless group must render without a heading, or None still looks grouped");
+// Grouping is not a filter: Clear resets what hides rows, not how they are stacked.
+assert.match(appSource, /groupBy: ctx\.filters\.groupBy \|\| "type"\}/,
+  "Clear must carry the chosen grouping through");
+assert.match(appSource, /\{query: "", type: "all", rung: "all", status: "all", active: "all", groupBy: "type"\}/,
+  "a deck's filters must start with the new keys, or the first render reads undefined");
+
 console.log(`Validated ${variants.variants.length} variants and ${Object.keys(buyPlans.plans).length} connected buy profiles.`);
