@@ -1755,6 +1755,15 @@ footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px;
   background:var(--surface);text-align:left;display:flex;flex-direction:column;gap:4px;cursor:pointer}
 .dp-tile:hover{box-shadow:0 0 0 2px rgba(32,88,68,.28)}
 .dp-tile[aria-pressed="true"]{background:var(--gold-soft);box-shadow:0 0 0 3px rgba(32,88,68,.42)}
+.dp-tile-wrap{position:relative;flex:0 0 auto;display:block}
+/* Inside the tile, not hanging off it. .dp-row scrolls sideways, and overflow-x:auto
+   forces overflow-y to match, so anything past the tile's edge is clipped -- a corner
+   badge lost its top 6px and, on a phone, 8px of its right. */
+.dp-tile-return{position:absolute;top:7px;right:8px;z-index:1;width:22px;height:22px;display:grid;place-items:center;
+  border:1px solid var(--rung-manual,#6d5bd0);border-radius:50%;background:var(--paper);color:var(--rung-manual,#6d5bd0);
+  font-size:13px;line-height:1;cursor:pointer;box-shadow:0 1px 4px rgba(31,42,36,.2)}
+.dp-tile-return:hover{color:#fff;background:var(--rung-manual,#6d5bd0)}
+.dp-tile-return:focus-visible{outline:2px solid var(--rung-manual,#6d5bd0);outline-offset:2px}
 .dp-tile-top{display:flex;align-items:center;gap:5px}
 .dp-tile-nm{font-size:12.5px;font-weight:600;line-height:1.25}
 .dp-tile-ft{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:11px}
