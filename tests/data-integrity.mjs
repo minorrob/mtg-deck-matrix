@@ -196,6 +196,40 @@ for (const view of tabViews) {
 for (const view of [...appSource.matchAll(/^\s{4}([a-z0-9]+): \[$/gm)].map((m) => m[1])) {
   assert.ok(tabViews.includes(view), `the tour still defines steps for ${view}, which is no longer a tab`);
 }
+/* Ticking a slot's box is a decision about the deck list, not a claim about the shelf.
+   It used to be both: the tick wrote the card into the ownership ledger as in-hand so the
+   row would stop reading "to buy". That made it one-way -- tick an ordered card, untick
+   it, and it came back "Owned, no box", because the raise had no matching fall -- and for
+   as long as it was ticked the ledger held one physical copy twice, once as held and once
+   as on order. */
+{
+  const deckSource = await readFile(new URL("../deck-page.js", import.meta.url), "utf8");
+  const handler = appSource.slice(appSource.indexOf("function deckPageChange"));
+  // Anchor the end AFTER the start. deckPageChange handles the paid field and the filters
+  // before the box, and both of those call renderDeckPage, so an unanchored search found
+  // one of them, produced an empty slice, and made every assertion below pass on nothing.
+  const boxStart = handler.indexOf("data-dp-box");
+  const boxBranch = handler.slice(boxStart, handler.indexOf("renderDeckPage()", boxStart));
+  assert.ok(boxStart > 0 && boxBranch.length > 40, "could not find the box branch to check");
+  for (const writer of ["markInHand", "state.owned", "state.found", "state.boughtQuantities"]) {
+    assert.ok(!boxBranch.includes(writer),
+      `ticking a box must not touch ${writer} -- assignment and ownership are separate facts`);
+  }
+  assert.ok(!appSource.includes("markInHand"),
+    "markInHand had one caller and that caller is gone; leaving it invites the bug back");
+
+  // The label has to carry both facts, since the tick no longer hides one of them.
+  assert.match(deckSource, /const assigned = Boolean\(slotId && \(ctx\.active \|\| \{\}\)\[slotId\]\);/,
+    "locationOf must read the tick separately from the acquisition");
+  for (const phrase of ["Assigned · to buy", "Assigned · ordered", "In the box"]) {
+    assert.ok(deckSource.includes(phrase), `the row must be able to say "${phrase}"`);
+  }
+  // The buckets answer "where are these cards", which a tick does not change, so an
+  // ordered card stays in the ordered bucket however firmly it is spoken for.
+  assert.match(deckSource, /if \(loc\.assigned\) t\.assigned \+= qty;\s*\n\s*if \(loc\.kind === "active"\) t\.active \+= qty;/,
+    "assignment must be counted alongside the tally buckets, not inside them");
+}
+
 /* What a card cost, where you can type it, and what can reach the Bench. These are
    source pins because the behaviour lives in the rendering, not in the data. */
 {

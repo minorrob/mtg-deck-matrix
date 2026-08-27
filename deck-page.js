@@ -74,16 +74,41 @@
    * six boxes and one copy lives in exactly one of them, so the box checkbox - not
    * a guess about which deck claimed it first - decides "active".
    */
+  /**
+   * Two facts, one line: whether you have assigned this slot to this deck, and where the
+   * card actually is.
+   *
+   * They are independent. Ticking the box is a decision about the deck list -- "this card
+   * is the one filling this job" -- and it says nothing about whether the card is sleeved,
+   * on a truck, or still on a shelf in a shop. It used to say something: ticking wrote the
+   * card into the ownership ledger as in-hand so the row would stop reading "to buy",
+   * which meant an ordered card ticked and then unticked came back as "Owned, no box"
+   * rather than "Ordered", and the ledger briefly held one physical copy twice, once as
+   * held and once as on order. The tick no longer touches the ledger at all; the label
+   * carries both facts instead, so nothing is hidden and nothing is invented.
+   *
+   * The kind still follows acquisition, because that is what the tally and the shopping
+   * list are counting: a card on order is not in the box yet, however firmly it is spoken
+   * for.
+   */
   function locationOf(ctx, name, quantity, thisDeckId, slotId) {
     const acq = Slot.acquisitionOf(ctx.owned, name, quantity);
-    if (acq === Slot.ACQUISITION.NONE) return {kind: "buy", glyph: "○", label: "To buy"};
-    if (acq === Slot.ACQUISITION.ORDERED) return {kind: "ordered", glyph: "⧖", label: "Ordered"};
-    if (slotId && (ctx.active || {})[slotId]) return {kind: "active", glyph: "●", label: "In the box"};
+    const assigned = Boolean(slotId && (ctx.active || {})[slotId]);
+    if (acq === Slot.ACQUISITION.NONE) {
+      return {kind: "buy", glyph: assigned ? "◐" : "○", label: assigned ? "Assigned · to buy" : "To buy", assigned};
+    }
+    if (acq === Slot.ACQUISITION.ORDERED) {
+      return {kind: "ordered", glyph: "⧖", label: assigned ? "Assigned · ordered" : "Ordered", assigned};
+    }
+    if (acq === Slot.ACQUISITION.PARTIAL) {
+      return {kind: "ordered", glyph: "⧖", label: assigned ? "Assigned · partly here" : "Partly here", assigned};
+    }
+    if (assigned) return {kind: "active", glyph: "●", label: "In the box", assigned};
     const holder = (ctx.boxes || {})[Slot.ownedKey(name)];
     if (holder && holder !== thisDeckId) {
-      return {kind: "other", glyph: "◆", label: "In " + ((ctx.deckLabels || {})[holder] || holder) + "'s box", deck: holder};
+      return {kind: "other", glyph: "◆", label: "In " + ((ctx.deckLabels || {})[holder] || holder) + "'s box", deck: holder, assigned};
     }
-    return {kind: "bench", glyph: "◇", label: "Owned, no box"};
+    return {kind: "bench", glyph: "◇", label: "Owned, no box", assigned};
   }
 
   function meta(ctx, name) { return (ctx.cards || {})[Lineup.normalizeName(name)] || {}; }
@@ -354,13 +379,16 @@
    * those out is what makes "100 - 77 sleeved" fail to equal "22 to buy".
    */
   function totals(ctx, slots, deckId) {
-    const t = {cards: 0, active: 0, ordered: 0, owned: 0, buy: 0, buyValue: 0, holes: 0, lands: 0};
+    const t = {cards: 0, active: 0, ordered: 0, owned: 0, buy: 0, buyValue: 0, holes: 0, lands: 0, assigned: 0};
     slots.forEach((s) => {
       if (!s.pick) { t.holes += 1; return; }
       const qty = s.pick.quantity;
       t.cards += qty;
       if (s.type === "Land") t.lands += qty;
       const loc = locationOf(ctx, s.pick.name, qty, deckId, s.slotId);
+      // Assignment is counted alongside the buckets rather than inside them: the buckets
+      // answer "where are these cards", which a tick does not change.
+      if (loc.assigned) t.assigned += qty;
       if (loc.kind === "active") t.active += qty;
       else if (loc.kind === "ordered") t.ordered += qty;
       else if (loc.kind === "buy") { t.buy += qty; t.buyValue += (s.pick.price || 0) * qty; }
@@ -388,6 +416,7 @@
           <span class="dp-stat${t.holes ? " is-warn" : " is-ok"}"><b class="dp-num">${slots.length - t.holes}/${slots.length}</b> slots filled${
             t.holes ? ` · ${plural(t.holes, "card")} still to choose` : ""}</span>
           <span class="dp-stat"><b class="dp-num">${t.lands}</b> lands</span>
+          <span class="dp-stat"${t.assigned ? '' : ' hidden'}><b class="dp-num">${t.assigned}</b> assigned to this box</span>
         </div>
         <div class="dp-tally" role="group" aria-label="Where all ${t.cards + t.holes} cards are">
           <span class="dp-tally-t"><b class="dp-num">${t.cards + t.holes}</b> cards</span><span class="dp-tally-op">=</span>
