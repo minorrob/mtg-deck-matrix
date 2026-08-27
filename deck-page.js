@@ -406,8 +406,8 @@
    * those out is what makes "100 - 77 sleeved" fail to equal "22 to buy".
    */
   function totals(ctx, slots, deckId) {
-    const t = {cards: 0, active: 0, ordered: 0, owned: 0, buy: 0, buyValue: 0, holes: 0, assigned: 0,
-               activeLands: 0, activeOther: 0};
+    const t = {cards: 0, active: 0, ordered: 0, owned: 0, buy: 0, buyValue: 0, holes: 0,
+               assigned: 0, assignedValue: 0, activeLands: 0, activeOther: 0};
     slots.forEach((s) => {
       if (!s.pick) { t.holes += 1; return; }
       const qty = s.pick.quantity;
@@ -425,9 +425,23 @@
       }
       // Assignment is counted alongside the buckets rather than inside them: the buckets
       // answer "where are these cards", which a tick does not change.
-      if (loc.assigned) t.assigned += qty;
-      if (loc.kind === "active") t.active += qty;
-      else if (loc.kind === "ordered") t.ordered += qty;
+      /* Five buckets, and ticking a box always moves a card between two of them.
+
+         A card you own and have ticked is IN THE BOX. A card you have ticked but cannot
+         physically hold -- on order, not bought, or its only copy sitting in another
+         deck's box -- is ASSIGNED: the slot is spoken for, the card is not here yet.
+         Everything unticked is filed by where the card actually is. Before this, ticking
+         an ordered card left it in the ordered bucket and no number on the page moved,
+         which made the tick look like it had done nothing at all. */
+      if (loc.assigned) {
+        if (loc.kind === "active") t.active += qty;
+        else {
+          t.assigned += qty;
+          // Still money owed, so the assigned line carries its own subtotal rather than
+          // quietly dropping out of what the deck costs to finish.
+          if (loc.kind === "buy") t.assignedValue += (s.pick.price || 0) * qty;
+        }
+      } else if (loc.kind === "ordered") t.ordered += qty;
       else if (loc.kind === "buy") { t.buy += qty; t.buyValue += (s.pick.price || 0) * qty; }
       else t.owned += qty;   // in hand, but in another box or loose
     });
@@ -464,6 +478,8 @@
           <span class="dp-tally-b is-deck"><b class="dp-num">${t.active}</b> in the box</span>
           ${t.owned ? `<span class="dp-tally-op">+</span><span class="dp-tally-b is-bench"><b class="dp-num">${t.owned}</b> owned, not in this box</span>` : ""}
           ${t.ordered ? `<span class="dp-tally-op">+</span><span class="dp-tally-b is-ordered"><b class="dp-num">${t.ordered}</b> ordered</span>` : ""}
+          ${t.assigned ? `<span class="dp-tally-op">+</span><span class="dp-tally-b is-assigned"><b class="dp-num">${t.assigned}</b> assigned, not here yet${
+            t.assignedValue ? ` ${money(t.assignedValue)}` : ""}</span>` : ""}
           <span class="dp-tally-op">+</span><span class="dp-tally-b is-buy"><b class="dp-num">${t.buy}</b> to buy ${money(t.buyValue)}</span>
           ${t.holes ? `<span class="dp-tally-op">+</span><span class="dp-tally-b is-hole"><b class="dp-num">${t.holes}</b> empty ${t.holes === 1 ? "slot" : "slots"}</span>` : ""}
         </div>

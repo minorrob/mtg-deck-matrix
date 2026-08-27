@@ -1841,6 +1841,7 @@ footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px;
 .dp-tally-b{padding:3px 9px;border:1px solid var(--line);border-radius:999px;background:var(--surface);white-space:nowrap}
 .dp-tally-b.is-deck{border-color:#b9cfc2;background:#e9f2ec}
 .dp-tally-b.is-ordered{border-color:#b3c6d0;background:#e8eef2}
+.dp-tally-b.is-assigned{border-color:#c6b8e0;background:#efeaf8}
 .dp-tally-b.is-buy{border-color:#e0c3a6;background:#fbf0e4}
 .dp-tally-b.is-hole{border-color:#d8b3ae;background:#f7e9e7}
 
