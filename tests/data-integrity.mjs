@@ -965,9 +965,56 @@ assert.match(deckPageSource, /if \(groupBy === "none"\) return \[\[null, slots\]
 assert.match(deckPageSource, /if \(!label\) return `<section class="dp-grp" data-open="1"><div class="dp-grp-body">\$\{body\}<\/div><\/section>`;/,
   "a nameless group must render without a heading, or None still looks grouped");
 // Grouping is not a filter: Clear resets what hides rows, not how they are stacked.
-assert.match(appSource, /groupBy: ctx\.filters\.groupBy \|\| "type"\}/,
-  "Clear must carry the chosen grouping through");
-assert.match(appSource, /\{query: "", type: "all", rung: "all", where: "all", status: "all", active: "all", groupBy: "type"\}/,
+assert.match(appSource, /groupBy: ctx\.filters\.groupBy \|\| "type", sortBy: ctx\.filters\.sortBy \|\| ""\};/,
+  "Clear must carry the chosen grouping and sort through -- neither hides a row");
+assert.match(appSource, /\{query: "", type: "all", rung: "all", where: "all", status: "all", active: "all", groupBy: "type", sortBy: ""\}/,
   "a deck's filters must start with the new keys, or the first render reads undefined");
+
+
+/* Select all / Deselect all. Deselect is the one that was asked for; select is its way
+   back, because eighty-five clicks is not an undo. Neither may touch anything but the
+   claim -- a bulk clear that also edited the selection or the ownership ledger would be
+   a very expensive mis-click. */
+assert.match(deckPageSource, /data-dp-claim="all"/, "Select all must exist");
+assert.match(deckPageSource, /data-dp-claim="none"/, "Deselect all must exist");
+assert.match(deckPageSource, /\$\{t\.claimed === t\.cards \+ t\.holes \? "disabled" : ""\}/,
+  "Select all must be disabled once everything is already claimed");
+assert.match(deckPageSource, /\$\{t\.claimed \? "" : "disabled"\}/,
+  "Deselect all must be disabled once nothing is claimed");
+{
+  const handler = appSource.slice(appSource.indexOf('data-dp-claim]'), appSource.indexOf('data-dp-manual-submit]'));
+  assert.ok(handler.length > 200, "the claim handler should be found ahead of the manual-submit one");
+  assert.match(handler, /state\.deckActive\[ctx\.deckId\] = next;/, "the handler must write the claim map");
+  assert.match(handler, /state\.deckActiveSeed\[ctx\.deckId\] = true;/,
+    "clearing every box must leave the deck marked seeded, or the next render fills them back in");
+  for (const forbidden of ["buySelections", "compareSelections", "boughtQuantities", "state.owned", "deckRung"]) {
+    assert.ok(handler.indexOf(forbidden) < 0, `a bulk claim must not write ${forbidden}`);
+  }
+}
+
+
+/* One reading of what a card cost. A price typed into the Paid box is the real number;
+   the target is an estimate standing in until there is one. Everything that shows or
+   sorts by cost goes through costOf, so a row and the sort beside it cannot disagree. */
+assert.match(deckPageSource, /function costOf\(ctx, pick\)/, "there must be one place that decides what a card cost");
+assert.match(deckPageSource, /return paid === null \? \{value: Number\(pick\.price\) \|\| 0, paid: false\} : \{value: Number\(paid\), paid: true\};/,
+  "a paid price must win over the target, and the row must know which it is showing");
+assert.match(deckPageSource, /\}>\$\{money\(cost\.value\)\}<\/span>/, "the row's price must come from costOf, not straight off the plan");
+assert.match(deckPageSource, /const cost = \(s\) => \(s\.pick \? costOf\(ctx, s\.pick\)\.value \* Math\.max\(1, Number\(s\.pick\.quantity\) \|\| 1\) : -1\);/,
+  "a cost sort must sort on the same number the row prints");
+// Typing a price has to rebuild the page, or the row keeps showing what it replaced.
+assert.match(appSource, /paid\.parentElement\?\.classList\.toggle\("is-set", stored !== null\);\n(?:\s*\/\*[\s\S]*?\*\/\n)?\s*renderDeckPage\(\);/,
+  "committing a paid price must re-render the deck");
+
+assert.match(deckPageSource, /const SORT_BY = \[\["", "Deck order"\], \["name", "Name A–Z"\], \["name-desc", "Name Z–A"\],\n\s*\["cost-desc", "Cost high–low"\], \["cost", "Cost low–high"\]\];/,
+  "Sort by must offer both directions on name and on cost, with deck order as the way back");
+assert.match(deckPageSource, /sortSlots\(ctx, rows, \(ctx\.filters \|\| \{\}\)\.sortBy \|\| ""\)/,
+  "sorting must happen inside a group, so choosing one never undoes the grouping");
+
+/* The three numbers that used to sit under Rank order -- 25, 5, 1 -- were the same on
+   every deck: five variants times five rungs, five rungs, one chosen. Arithmetic, not
+   insight, and it cost a row of screen on every page. */
+assert.doesNotMatch(deckPageSource, /dp-collapse|dp-cstep/, "the fixed 25 / 5 / 1 strip must not come back");
+assert.doesNotMatch(cssSource, /\.dp-cstep/, "its styles must go with it");
 
 console.log(`Validated ${variants.variants.length} variants and ${Object.keys(buyPlans.plans).length} connected buy profiles.`);

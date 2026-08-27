@@ -1698,12 +1698,6 @@ footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px;
 .dp-stat{padding:5px 10px;border:1px solid var(--line);border-radius:999px;background:var(--paper);font-size:12px}
 .dp-stat.is-ok{border-color:#b9cfc2;background:#e9f2ec}
 .dp-stat.is-warn{border-color:#e0c3a6;background:#fbf0e4}
-.dp-collapse{display:flex;margin-top:12px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--paper)}
-.dp-cstep{flex:1;padding:6px 9px;font-size:11px;color:var(--muted);border-right:1px solid var(--line)}
-.dp-cstep:last-child{border-right:0}
-.dp-cstep b{display:block;font-size:15px;font-variant-numeric:tabular-nums;color:var(--muted)}
-.dp-cstep.is-done{background:var(--surface)} .dp-cstep.is-done b{color:var(--ink)}
-.dp-cstep.is-now{background:var(--gold-soft)} .dp-cstep.is-now b{color:var(--forest)}
 
 .dp-grp{margin-bottom:11px;border:1px solid var(--line);border-radius:var(--radius);
   background:var(--surface);box-shadow:var(--shadow);overflow:hidden}
@@ -2140,3 +2134,12 @@ div.sp-band{padding:9px 13px;border-radius:12px 12px 0 0}
   .sp-table td[data-k="spot"] { max-width: 46%; }
   .sp-table td[data-k="paid"] input { width: 66px; }
 }
+
+/* Select all / Deselect all. Same shape as the Rank order buttons above them, because
+   they do the same kind of thing -- one click, every slot -- and sit on their own row so
+   a bulk clear is never a mis-aimed click at a rung. */
+.dp-claim { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 7px; }
+.dp-claim .dp-rank-b:disabled { opacity: .45; cursor: default; }
+.dp-claim .dp-rank-b:not(:disabled):hover { border-color: var(--accent); color: var(--accent); }
+/* A price you typed beats the estimate it replaced, and says so. */
+.dp-num.is-paid { color: var(--forest-2); font-weight: 850; }
