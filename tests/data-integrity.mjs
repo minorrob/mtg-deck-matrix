@@ -196,6 +196,19 @@ for (const view of tabViews) {
 for (const view of [...appSource.matchAll(/^\s{4}([a-z0-9]+): \[$/gm)].map((m) => m[1])) {
   assert.ok(tabViews.includes(view), `the tour still defines steps for ${view}, which is no longer a tab`);
 }
+/* The phone tab grid is written as a column count, so it silently stops matching when
+   a tab is added or retired: it still said three columns after Calibrate, Decks and
+   Cards were folded into Deck and Shop, so the four tabs wrapped to two rows and the
+   sticky header ate a third of a 360px screen. */
+{
+  const cssSource = await readFile(new URL("../app.css", import.meta.url), "utf8");
+  const tabCount = [...htmlSource.matchAll(/class="main-tab[^"]*"\s+data-view="/g)].length;
+  const columns = /@media\s*\(max-width:\s*700px\)\s*\{\s*\.main-tabs\s*\{[^}]*repeat\((\d+),/.exec(cssSource);
+  assert.ok(columns, "the phone rule for .main-tabs must set an explicit column count");
+  assert.equal(Number(columns[1]), tabCount,
+    `the phone tab grid has ${columns[1]} columns for ${tabCount} tabs, so they wrap to more than one row`);
+}
+
 // Compare has two stage controls: the page-level Score stage select and each
 // deck's own Rank order row. Only the second one ever restaged the cards, so
 // choosing Maxed filtered by Maxed scores while every tile still quoted Tuned's

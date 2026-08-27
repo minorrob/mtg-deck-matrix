@@ -6708,6 +6708,37 @@
     ]
   };
 
+  /* The sticky header measured 194px on a 390px screen and 211px on a 360px one --
+     a quarter and a third of the viewport, held there permanently, for a title and
+     five buttons touched once a session. On a phone it now starts folded to the tab
+     bar. This is a per-device presentation choice, not part of the deck state, so it
+     is kept out of the exported file and read straight from localStorage. */
+  const HEADER_COLLAPSE_KEY = "mtg-header-collapsed-v1";
+
+  function readHeaderCollapsed() {
+    try {
+      const saved = localStorage.getItem(HEADER_COLLAPSE_KEY);
+      if (saved === "0" || saved === "1") return saved === "1";
+    } catch (error) { /* private mode, blocked storage: fall through to the default */ }
+    // Folded is the default only where it buys something. On a wide screen the
+    // toggle is hidden, so leaving it open is what the reader expects.
+    return window.matchMedia("(max-width: 700px)").matches;
+  }
+
+  function setHeaderCollapsed(collapsed) {
+    const header = $(".app-header");
+    const toggle = $("#header-toggle");
+    if (!header) return;
+    header.dataset.collapsed = collapsed ? "1" : "0";
+    if (toggle) {
+      toggle.setAttribute("aria-expanded", String(!collapsed));
+      toggle.setAttribute("aria-label", collapsed
+        ? "Show the title and the Tour, Export, Import, Load Active and Reset buttons"
+        : "Hide the title and the Tour, Export, Import, Load Active and Reset buttons");
+    }
+    try { localStorage.setItem(HEADER_COLLAPSE_KEY, collapsed ? "1" : "0"); } catch (error) { /* nothing to remember it with */ }
+  }
+
   function activeViewName() {
     return $(".main-tab.is-active")?.dataset.view || "compare";
   }
@@ -6959,6 +6990,10 @@
       $$(".main-tab").forEach((button) => button.addEventListener("click", () => switchView(button.dataset.view)));
       $("#reset-button").addEventListener("click", resetState);
       $("#tour-button").addEventListener("click", startTour);
+      setHeaderCollapsed(readHeaderCollapsed());
+      $("#header-toggle")?.addEventListener("click", () => {
+        setHeaderCollapsed($(".app-header")?.dataset.collapsed !== "1");
+      });
       $("#export-state-button").addEventListener("click", exportFullState);
       $("#import-state-input").addEventListener("change", (event) => {
         const file = event.target.files?.[0];
