@@ -495,7 +495,7 @@
   // The new Deck view reads through slot-model.js and renders via deck-page.js.
   // It runs beside the old Calibrate and Decks tabs rather than replacing them,
   // so the two can be compared against real data before anything is removed.
-  const deckPageState = {deckIndex: 0, openSlot: null, closedGroups: {}};
+  const deckPageState = {deckIndex: 0, openSlot: null, closedGroups: {}, filters: {}};
 
   // The baked catalog carries rarity, art, oracle text and a price for every card
   // in the plans, so the Deck page does not depend on the Scryfall cache being warm.
@@ -630,6 +630,10 @@
       colors: variant.colorIdentity || variant.colors || "",
       variantId: variant.id,
       slots, owned, cards, boxes, deckLabels, openGroups,
+      // Search and filter live per deck: narrowing deck 1 to lands should not follow you
+      // into deck 2, where you were looking at something else.
+      filters: deckPageState.filters[variant.id] || (deckPageState.filters[variant.id] = {query: "", type: "all", rung: "all", where: "all"}),
+      paidFor,
       // The Salvage yard, offered in every slot's Manual box. Cards already carried into
       // this deck as a manual pick are filtered out per slot by the box itself.
       salvage: allSalvageCards().map((card) => ({name: card.name, typeLine: card.typeLine || "", image: card.image || "", price: Number(card.price) || 0})),
@@ -878,6 +882,12 @@
       renderDeckPage();
       return true;
     }
+    if (event.target.closest("[data-dp-filter-clear]")) {
+      const ctx = deckPageContext();
+      if (ctx) deckPageState.filters[ctx.deckId] = {query: "", type: "all", rung: "all", where: "all"};
+      renderDeckPage();
+      return true;
+    }
     if ((el = event.target.closest("[data-dp-manual-submit]"))) {
       submitManualCard(el.dataset.dpManualSubmit);
       return true;
@@ -963,6 +973,21 @@
   }
 
   function deckPageChange(event) {
+    const paid = event.target.closest("[data-dp-paid]");
+    if (paid) {
+      // Committed on change, not on every keystroke, so a half-typed "1" never lands.
+      const stored = commitPaidPrice(paid.dataset.dpPaid, paid.value, "Paid");
+      paid.value = stored === null ? "" : stored.toFixed(2);
+      paid.parentElement?.classList.toggle("is-set", stored !== null);
+      return true;
+    }
+    const filter = event.target.closest("[data-dp-filter]");
+    if (filter) {
+      const ctx = deckPageContext();
+      if (ctx) ctx.filters[filter.dataset.dpFilter] = filter.value;
+      renderDeckPage();
+      return true;
+    }
     const el = event.target.closest("[data-dp-box]");
     if (!el) return false;
     const ctx = deckPageContext();
@@ -1089,6 +1114,30 @@
     return Object.assign(base, {kind: "bench", glyph: "◇", label: "Owned, no box"});
   }
 
+  /**
+   * What a card actually cost, as distinct from what it is worth.
+   *
+   * state.purchasePrices is keyed by the same slug ownedKey and itemKey both produce,
+   * so one number covers a card wherever it turns up -- the Shop row you bought it on,
+   * the slot it ends up in, the deck total underneath. Undefined means unpriced, which
+   * is not the same as free: a zero is a real answer someone typed.
+   */
+  function paidFor(name) {
+    const value = state.purchasePrices?.[itemKey({name})];
+    return value === undefined || value === null ? null : Number(value);
+  }
+
+  /** One writer, so a price typed on the Shop and a price typed on a slot agree. */
+  function commitPaidPrice(key, raw, label) {
+    const cleaned = String(raw ?? "").replace(/[^0-9.]/g, "");
+    state.purchasePrices ||= {};
+    if (!cleaned) delete state.purchasePrices[key];
+    else state.purchasePrices[key] = Math.round(Number(cleaned) * 100) / 100;
+    const stored = state.purchasePrices[key];
+    saveState(stored === undefined ? `${label || "Price"} cleared` : `${label || "Paid"} ${money(stored)}`);
+    return stored === undefined ? null : stored;
+  }
+
   function shopContext() {
     const Slot = window.MtgSlotModel;
     const variants = selectedVariants();
@@ -1107,9 +1156,70 @@
     return {
       rows: Slot.shopRows(decks, owned),
       factFor: (name) => cards[Lineup.normalizeName(name)] || cardMetadata[itemKey({name})] || {},
+      paidFor,
       bench: benchItems(decks, owned, cards, deckLabels),
+      intakeOpen: shopIntakeOpen,
       deckLabels, filters: shopFilters, owned, decks
     };
+  }
+
+  let shopIntakeOpen = false;
+
+  /**
+   * Typing a card onto the Bench. Same two routes the Salvage intake has always taken --
+   * a TCGplayer link through the resolver that understands affiliate wrappers and
+   * set-prefixed slugs, or a bare name through Scryfall's named lookup -- and the same
+   * writer, addCardToSalvage, so a card typed here is indistinguishable from one pushed
+   * out of a deck. Lines that fail are left in the box with the reason, so a typo can be
+   * fixed rather than retyped from scratch.
+   */
+  async function submitBenchIntake() {
+    const scope = $("[data-sp-intake]");
+    const input = scope?.querySelector("[data-sp-intake-input]");
+    const status = scope?.querySelector("[data-sp-intake-status]");
+    const button = scope?.querySelector("[data-sp-intake-submit]");
+    const say = (message) => { if (status) status.textContent = message; };
+    const lines = String(input?.value || "").split("\n").map((line) => line.trim()).filter(Boolean);
+    if (!lines.length) return say("Paste a link or a card name first.");
+    if (button) button.disabled = true;
+    const client = Scryfall.createClient({});
+    const added = [];
+    const failed = [];
+    /* A lookup that never comes back would leave the button disabled and the reader with
+       no way out, so each line gets its own ceiling. Fifteen seconds is far longer than
+       Scryfall needs and short enough that an outage reads as an outage. */
+    const withinTimeout = (promise) => Promise.race([
+      promise,
+      new Promise((_, reject) => setTimeout(() => reject(new Error("the lookup timed out")), 15000))
+    ]);
+    for (let index = 0; index < lines.length; index += 1) {
+      const line = lines[index];
+      say(`Looking up ${index + 1} of ${lines.length}\u2026`);
+      try {
+        const resolved = /^https?:\/\//i.test(line)
+          ? await withinTimeout(client.resolveTcgplayerUrl(line))
+          : {card: await withinTimeout(client.named(line)), error: "no card by that name"};
+        if (!resolved.card) { failed.push(`${line} \u2014 ${resolved.error || "no card matched"}`); continue; }
+        added.push(addCardToSalvage(resolved.card, line));
+      } catch (error) {
+        failed.push(`${line} \u2014 ${error.message || "lookup failed"}`);
+      }
+    }
+    if (button) button.disabled = false;
+    if (added.length) saveState(`${added.length} card${added.length === 1 ? "" : "s"} added to the Bench`);
+    // Re-render to show what landed, then put the lines that failed back: the panel is
+    // rebuilt from scratch, so anything written to the old textarea goes with it, and
+    // retyping a link you already pasted is the one thing this should never ask for.
+    renderShopPage();
+    const box = $("[data-sp-intake-input]");
+    if (box) box.value = failed.map((entry) => entry.split(" \u2014 ")[0]).join("\n");
+    const after = $("[data-sp-intake-status]");
+    if (after) {
+      after.textContent = added.length
+        ? `Added ${added.map((card) => card.name).join(", ")}${failed.length ? `. Still to fix: ${failed.join("; ")}` : "."}`
+        : `Nothing added. ${failed.join("; ")}`;
+    }
+    if (added.length) showToast(`${added.length} card${added.length === 1 ? "" : "s"} on the Bench.`);
   }
 
   function renderShopPage() {
@@ -1169,6 +1279,8 @@
       shopFilters.query = ""; renderShopPage(); return true;
     }
     if ((el = event.target.closest("[data-sp-view]"))) { shopFilters.view = el.dataset.spView; renderShopPage(); return true; }
+    if (event.target.closest("[data-sp-intake-toggle]")) { shopIntakeOpen = !shopIntakeOpen; renderShopPage(); return true; }
+    if (event.target.closest("[data-sp-intake-submit]")) { submitBenchIntake(); return true; }
     if ((el = event.target.closest("[data-sp-sort]"))) {
       const key = el.dataset.spSort;
       if (shopFilters.sortKey === key) shopFilters.sortDir = shopFilters.sortDir === "asc" ? "desc" : "asc";
@@ -1219,12 +1331,45 @@
     if (event.target.dataset && event.target.dataset.spDest) { renderShopPage(); return true; }
     if (event.target.id === "sp-group") { shopFilters.groupBy = event.target.value; renderShopPage(); return true; }
     if (event.target.id === "sp-sort") { shopFilters.sortKey = event.target.value; renderShopPage(); return true; }
+    const paid = event.target.closest("[data-sp-paid]");
+    if (paid) {
+      // No re-render: the row is already showing what was typed, and rebuilding the
+      // table under a field someone is still tabbing through loses their place.
+      const stored = commitPaidPrice(paid.dataset.spPaid, paid.value, "Paid");
+      paid.value = stored === null ? "" : stored.toFixed(2);
+      paid.closest("tr, .sp-card")?.classList.toggle("is-paid", stored !== null);
+      updateShopPaidTotal();
+      return true;
+    }
     return false;
+  }
+
+  /* The running total is the one figure that has to move the moment a price lands,
+     since it is the answer to "what has this actually cost me". */
+  function updateShopPaidTotal() {
+    const chip = $("[data-sp-paid-total]");
+    if (!chip) return;
+    const ctx = shopContext();
+    if (!ctx) return;
+    const rows = window.MtgShopPage.decorate(ctx.rows, ctx.factFor, ctx.deckLabels, ctx.paidFor);
+    const total = rows.reduce((sum, row) => sum + (row.paid === null ? 0 : row.paid), 0);
+    const priced = rows.filter((row) => row.paid !== null).length;
+    chip.innerHTML = `<b class="dp-num">${money(total)}</b> paid \u00b7 ${priced}/${rows.length} priced`;
   }
 
   document.addEventListener("click", (event) => { shopClick(event); });
   document.addEventListener("change", (event) => { shopChange(event); });
   document.addEventListener("input", (event) => {
+    if (event.target.id === "dp-q") {
+      const ctx = deckPageContext();
+      if (!ctx) return;
+      ctx.filters.query = event.target.value;
+      const at = event.target.selectionStart;
+      renderDeckPage();
+      const box = $("#dp-q");
+      if (box) { box.focus(); box.setSelectionRange(at, at); }
+      return;
+    }
     if (event.target.id !== "sp-q") return;
     shopFilters.query = event.target.value;
     renderShopPage();

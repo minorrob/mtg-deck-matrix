@@ -196,6 +196,45 @@ for (const view of tabViews) {
 for (const view of [...appSource.matchAll(/^\s{4}([a-z0-9]+): \[$/gm)].map((m) => m[1])) {
   assert.ok(tabViews.includes(view), `the tour still defines steps for ${view}, which is no longer a tab`);
 }
+/* What a card cost, where you can type it, and what can reach the Bench. These are
+   source pins because the behaviour lives in the rendering, not in the data. */
+{
+  const cssSource = await readFile(new URL("../app.css", import.meta.url), "utf8");
+  const shopSource = await readFile(new URL("../shop-page.js", import.meta.url), "utf8");
+  const deckSource = await readFile(new URL("../deck-page.js", import.meta.url), "utf8");
+
+  // One writer, so a price typed on the Shop and one typed on a slot are the same number.
+  assert.match(appSource, /function commitPaidPrice\(key, raw, label\)/,
+    "purchase prices must go through a single writer");
+  for (const surface of ["data-sp-paid", "data-dp-paid"]) {
+    assert.ok(appSource.includes(surface), `${surface} must be handled in app.js`);
+  }
+  assert.match(shopSource, /\{key: "paid", label: "Paid"\}/, "the Shop table must carry a Paid column");
+  assert.match(shopSource, /if \(key === "paid"\) return row\.paid == null \? -1 : row\.paid;/,
+    "Paid must sort as a number, with unpriced below a genuine zero");
+  assert.match(deckSource, /data-dp-paid="\$\{esc\(Slot\.ownedKey\(name\)\)\}"/,
+    "the slot pane's paid field must key off the same slug the Shop row uses");
+
+  // The Bench intake has to be reachable when the Bench is empty, which is exactly when
+  // a card with no home turns up.
+  const benchBody = shopSource.slice(shopSource.indexOf("function benchMarkup"));
+  // Target the empty-state return itself. Slicing at the first "sp-bench" caught the
+  // populated return's intake too, so the assertion passed with the empty one deleted.
+  const emptyReturn = /if \(!items\.length\) \{\s*\n?\s*return `([\s\S]*?)`;/.exec(benchBody);
+  assert.ok(emptyReturn, "the Bench must still have an empty state");
+  assert.ok(emptyReturn[1].includes("${intake}"),
+    "the empty Bench must still offer the intake -- that is when it is needed most");
+  assert.match(appSource, /new Error\("the lookup timed out"\)/,
+    "each lookup must be bounded, or one hung request disables the button for good");
+  assert.match(appSource, /const box = \$\("\[data-sp-intake-input\]"\);\s*\n\s*if \(box\) box\.value = failed/,
+    "lines that failed must be put back after the re-render, not written to the panel it replaced");
+
+  // Searching for a card should find the slot it COULD fill, not only the slot it fills.
+  assert.match(deckSource, /const haystack = \[slot\.shellName, slot\.pick && slot\.pick\.name, \.\.\.slot\.rungs\.map\(\(r\) => r\.name\)\]/,
+    "the deck search must read every rung in the slot, not just the active pick");
+  assert.match(cssSource, /\.dp-filters\{/, "the deck filter bar needs its own styles");
+}
+
 /* The phone tab grid is written as a column count, so it silently stops matching when
    a tab is added or retired: it still said three columns after Calibrate, Decks and
    Cards were folded into Deck and Shop, so the four tabs wrapped to two rows and the

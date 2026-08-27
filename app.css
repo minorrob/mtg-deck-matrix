@@ -1755,6 +1755,42 @@ footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px;
   background:var(--surface);text-align:left;display:flex;flex-direction:column;gap:4px;cursor:pointer}
 .dp-tile:hover{box-shadow:0 0 0 2px rgba(32,88,68,.28)}
 .dp-tile[aria-pressed="true"]{background:var(--gold-soft);box-shadow:0 0 0 3px rgba(32,88,68,.42)}
+/* Deck search and filter. Eighty-five rows is too many to scan for one card. */
+.dp-filters{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px;margin:0 0 11px;padding:9px 10px;
+  border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.dp-f{display:grid;gap:3px;min-width:0}
+.dp-f>span{font-size:9px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.dp-f input,.dp-f select{min-height:34px;padding:4px 8px;border:1px solid var(--line);border-radius:8px;
+  background:var(--paper);font:inherit;font-size:12.5px;color:inherit}
+.dp-f-q{flex:1 1 220px}
+.dp-f-q input{width:100%}
+.dp-f-count{margin-left:auto;align-self:center;font-size:11.5px;font-weight:800;color:var(--muted);white-space:nowrap}
+.dp-f-clear{align-self:center;min-height:30px;padding:0 11px;border:1px solid #b8aa8d;border-radius:999px;
+  color:var(--forest);background:#fffdf8;font-size:10.5px;font-weight:900;cursor:pointer}
+.dp-empty{margin:0 0 12px;padding:14px;border:1px dashed var(--line);border-radius:12px;
+  color:var(--muted);text-align:center}
+
+/* What a card actually cost, wherever you are standing when you find out. */
+.dp-paid input,.sp-paid input{width:74px;max-width:100%;min-height:28px;padding:2px 6px;border:1px solid var(--line);
+  border-radius:7px;background:var(--paper);font:inherit;font-size:12px;text-align:right;color:inherit}
+.dp-paid.is-set input,.sp-paid.is-set input{border-color:var(--forest-2);font-weight:800;color:var(--forest)}
+.dp-paid input:focus,.sp-paid input:focus{outline:2px solid rgba(32,88,68,.2);outline-offset:1px}
+.sp-paid-tot{white-space:nowrap}
+
+/* Typing a card straight onto the Bench. */
+.sp-intake{margin:0 0 11px;padding:9px 10px;border:1px dashed var(--line);border-radius:12px;background:var(--surface)}
+.sp-intake-hd{display:flex;flex-wrap:wrap;align-items:center;gap:9px}
+.sp-intake-note{font-size:11px;color:var(--muted)}
+.sp-intake-go{min-height:32px;padding:0 13px;border:1px solid var(--forest-2);border-radius:999px;
+  color:#fff;background:var(--forest-2);font-size:11px;font-weight:900;cursor:pointer}
+.sp-intake-go:disabled{opacity:.5;cursor:default}
+.sp-intake-body{margin-top:9px;display:grid;gap:7px}
+.sp-intake-body textarea{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:9px;
+  background:var(--paper);font:inherit;font-size:12.5px;color:inherit;resize:vertical}
+.sp-intake-actions{display:flex;flex-wrap:wrap;align-items:center;gap:9px}
+.sp-intake-status{font-size:11.5px;color:var(--muted);flex:1 1 12rem;min-width:0}
+@media (max-width:640px){.dp-f-count{margin-left:0}.dp-f select{width:100%}}
+
 .dp-tile-wrap{position:relative;flex:0 0 auto;display:block}
 /* Inside the tile, not hanging off it. .dp-row scrolls sideways, and overflow-x:auto
    forces overflow-y to match, so anything past the tile's edge is clipped -- a corner
