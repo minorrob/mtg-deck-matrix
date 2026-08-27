@@ -455,7 +455,6 @@
                nobody asked and hid the one that matters: how much of this deck is
                actually sleeved. -->
           <span class="dp-stat${t.active === t.cards && t.cards ? " is-ok" : " is-warn"}"><b class="dp-num">${t.active}/${t.cards}</b> cards in the box${
-            t.assigned > t.active ? ` · ${t.assigned - t.active} ticked, copy still needed` : ""}${
             t.holes ? ` · ${plural(t.holes, "slot")} still to fill` : ""}</span>
           <span class="dp-stat"><b class="dp-num">${t.activeLands}</b> lands</span>
           <span class="dp-stat"><b class="dp-num">${t.activeOther}</b> non-lands</span>
