@@ -2,7 +2,7 @@
  "app": "mtg-deck-matrix",
  "exportSchema": 1,
  "exportedAt": "2026-08-27T00:00:00.000Z",
- "note": "The active six: 1b Felothar, 2c Atraxa, 3o Obuun, 4e Roon, 5o Quintorius, 7e Danitha. Ownership from Rob's 2026-08-26 purchase checklist. 2026-08-27: nothing is swapped out any more. The cards that would have replaced a shared single, and the further pulls from the Salvage yard, are all filed as Manual options on the slot each one would fill, so the choice is made in the app. Sol Ring, Arcane Signet, Command Tower, Exotic Orchard, Fellwar Stone and Terramorphic Expanse stay in every deck and are resolved by buying duplicate copies instead. 2026-08-27: a basic-land box brings the basics to 80 of each, plus the Lorehold Spirit (Secrets of Strixhaven) precon's own 11 Plains and 6 Mountains -- so Plains 91, Mountains 86, and 80 each of Island, Swamp and Forest.",
+ "note": "The active six: 1b Felothar, 2c Atraxa, 3o Obuun, 4e Roon, 5o Quintorius, 7e Danitha. Buy selections are the Tuned rung with a card already owned substituted into every slot where Tuned would otherwise have required a purchase — the fastest hundred in each box. Ownership comes from Rob's 2026-08-26 purchase checklist. Alternates from the duplicate-resolution and Salvage passes are filed as Manual options on the slot each one would fill, so nothing swaps without a click. No alt-commander cards are selected in any of the six. Basics are a pool, not a per-deck figure: a basic-land box brings them to 80 of each, plus the Lorehold Spirit (Secrets of Strixhaven) precon's own 11 Plains and 6 Mountains -- so Plains 91, Mountains 86, and 80 each of Island, Swamp and Forest.",
  "state": {
   "selectionSchema": 3,
   "ownershipSchema": 2,
@@ -85,11 +85,12 @@
      "shell-radiant-grove",
      "shell-plains",
      "shell-swamp",
-     "shell-forest"
+     "shell-forest",
+     "shell-arcane-signet",
+     "shell-command-tower"
     ],
     "tuned": [
      "venat-heart-of-hydaelyn-tuned",
-     "cabal-ritual-tuned",
      "cloud-s-limit-break-tuned",
      "chromatic-lantern-tuned",
      "golgari-charm-tuned",
@@ -99,11 +100,9 @@
      "origin-of-metalbending-tuned",
      "long-goodbye-tuned",
      "valorous-stance-tuned",
-     "glacial-chasm-tuned",
+     "emeria-the-sky-ruin-tuned",
      "spectacular-tactics-tuned",
-     "huatli-the-sun-s-heart-tuned",
      "vindicate-tuned",
-     "city-of-traitors-tuned",
      "sun-titan-tuned"
     ],
     "upgrade": [],
@@ -112,10 +111,13 @@
     "tuned2": [],
     "enhance2": [],
     "max2": [],
-    "funTuned": [],
+    "funTuned": [
+     "huatli-the-sun-s-heart-pod-fun"
+    ],
     "funMax": [],
     "altTuned": [],
-    "altMax": []
+    "altMax": [],
+    "manual": []
    },
    "2c": {
     "shell": [
@@ -137,7 +139,6 @@
      "shell-arcane-signet",
      "shell-fellwar-stone",
      "shell-chromatic-lantern",
-     "shell-talisman-of-progress",
      "shell-farseek",
      "shell-swords-to-plowshares",
      "shell-path-to-exile",
@@ -145,7 +146,6 @@
      "shell-ritual-of-soot",
      "shell-read-the-bones",
      "shell-everflowing-chalice",
-     "shell-skyclave-relic",
      "shell-ichor-wellspring",
      "shell-merfolk-skydiver",
      "shell-contentious-plan",
@@ -189,7 +189,8 @@
      "flexible-shell-slot-3",
      "flexible-shell-slot-4",
      "shell-2c-base-neutralize",
-     "shell-2c-base-explorer-s-scope"
+     "shell-2c-base-explorer-s-scope",
+     "shell-naya-panorama"
     ],
     "tuned": [
      "terror-tuned",
@@ -211,12 +212,13 @@
      "glissa-sunslayer-tuned",
      "lethal-scheme-tuned",
      "abrupt-decay-tuned",
-     "insidious-fungus-tuned",
      "mystic-confluence-tuned",
      "chain-assassination-tuned"
     ],
     "upgrade": [],
-    "enhance": [],
+    "enhance": [
+     "prophetic-prism-enh"
+    ],
     "max": [],
     "tuned2": [],
     "enhance2": [],
@@ -224,7 +226,10 @@
     "funTuned": [],
     "funMax": [],
     "altTuned": [],
-    "altMax": []
+    "altMax": [],
+    "manual": [
+     "manual-2c-mind-stone"
+    ]
    },
    "3o": {
     "shell": [
@@ -250,7 +255,6 @@
      "shell-3o-flex-23",
      "shell-3o-flex-26",
      "shell-3o-flex-27",
-     "shell-3o-flex-28",
      "shell-3o-flex-29",
      "shell-3o-flex-30",
      "shell-3o-flex-31",
@@ -281,7 +285,9 @@
      "shell-3o-flex-57",
      "shell-3o-flex-58",
      "shell-3o-flex-60",
-     "shell-3o-flex-62"
+     "shell-3o-flex-62",
+     "shell-3o-flex-2",
+     "shell-3o-flex-63"
     ],
     "tuned": [
      "venat-heart-of-hydaelyn-tuned",
@@ -290,13 +296,11 @@
      "valorous-stance-tuned",
      "origin-of-metalbending-tuned",
      "fall-of-the-first-civilization-tuned",
-     "chandra-spark-hunter-tuned",
      "path-to-exile-tuned",
      "song-of-the-dryads-tuned",
      "sword-of-fire-and-ice-tuned",
      "tireless-tracker-tuned",
-     "sword-of-the-animist-tuned",
-     "zendikar-resurgent-tuned"
+     "sword-of-the-animist-tuned"
     ],
     "upgrade": [],
     "enhance": [],
@@ -307,7 +311,10 @@
     "funTuned": [],
     "funMax": [],
     "altTuned": [],
-    "altMax": []
+    "altMax": [],
+    "manual": [
+     "manual-3o-prophetic-prism"
+    ]
    },
    "4e": {
     "shell": [
@@ -327,7 +334,6 @@
      "shell-4e-flex-16",
      "shell-4e-flex-17",
      "shell-4e-flex-18",
-     "shell-4e-flex-19",
      "shell-4e-flex-20",
      "shell-4e-flex-21",
      "shell-4e-flex-22",
@@ -335,10 +341,8 @@
      "shell-4e-flex-24",
      "shell-4e-flex-25",
      "shell-4e-flex-26",
-     "shell-4e-flex-27",
      "shell-4e-flex-28",
      "shell-4e-flex-29",
-     "shell-4e-flex-30",
      "shell-4e-flex-31",
      "shell-4e-flex-32",
      "shell-4e-base-solemn-simulacrum",
@@ -346,7 +350,6 @@
      "shell-4e-flex-35",
      "shell-4e-flex-36",
      "shell-4e-flex-37",
-     "shell-4e-flex-38",
      "shell-4e-flex-39",
      "shell-4e-flex-40",
      "shell-4e-flex-41",
@@ -355,7 +358,6 @@
      "shell-4e-flex-44",
      "shell-4e-flex-45",
      "shell-4e-flex-47",
-     "shell-4e-flex-48",
      "shell-4e-flex-49",
      "shell-4e-flex-50",
      "shell-4e-flex-51",
@@ -370,27 +372,35 @@
      "shell-4e-flex-60",
      "shell-4e-flex-61",
      "shell-4e-base-treefolk-umbra",
-     "shell-4e-flex-63"
+     "shell-4e-flex-63",
+     "shell-4e-flex-6",
+     "shell-4e-flex-2"
     ],
     "tuned": [
-     "mind-stone-tuned",
-     "panharmonicon-tuned",
      "cloudblazer-tuned",
      "sun-titan-tuned",
-     "wall-of-omens-tuned",
      "heroic-intervention-tuned",
      "angel-of-serenity-tuned"
     ],
     "upgrade": [],
-    "enhance": [],
+    "enhance": [
+     "prophetic-prism-enh",
+     "blizzard-strix-enh"
+    ],
     "max": [],
     "tuned2": [],
     "enhance2": [],
     "max2": [],
-    "funTuned": [],
+    "funTuned": [
+     "fateful-absence-pod-fun",
+     "wall-of-omens-pod-fun",
+     "freyalise-llanowar-s-fury-pod-fun",
+     "mind-stone-pod-fun"
+    ],
     "funMax": [],
     "altTuned": [],
-    "altMax": []
+    "altMax": [],
+    "manual": []
    },
    "5o": {
     "shell": [
@@ -458,27 +468,27 @@
      "shell-sacred-peaks",
      "shell-study-hall",
      "shell-plains",
-     "shell-mountain"
+     "shell-mountain",
+     "shell-anger",
+     "shell-atsushi-the-blazing-sky",
+     "shell-conspiracy-theorist",
+     "shell-excava-the-risen-past",
+     "shell-moonshaker-cavalry",
+     "shell-naktamun-lorespinner",
+     "shell-archaeomancer-s-map",
+     "shell-advanced-reconstruction",
+     "shell-monologue-tax",
+     "shell-fateful-tempest",
+     "shell-sevinne-s-reclamation"
     ],
     "tuned": [
-     "price-of-freedom-tuned",
      "fateful-absence-tuned",
-     "darksteel-plate-tuned",
      "cloud-s-limit-break-tuned",
      "cast-out-tuned",
-     "sunforger-tuned",
-     "owyn-fearless-knight-tuned",
-     "weathered-wayfarer-tuned",
-     "pyroblast-tuned",
      "bag-of-holding-tuned",
      "valorous-stance-tuned",
      "venat-heart-of-hydaelyn-tuned",
      "fall-of-the-first-civilization-tuned",
-     "coldsteel-heart-tuned",
-     "boros-charm-tuned",
-     "nikko-onna-tuned",
-     "umaro-raging-yeti-tuned",
-     "portable-hole-tuned",
      "eldrazi-ravager-tuned",
      "skullclamp-tuned"
     ],
@@ -491,7 +501,8 @@
     "funTuned": [],
     "funMax": [],
     "altTuned": [],
-    "altMax": []
+    "altMax": [],
+    "manual": []
    },
    "7e": {
     "shell": [
@@ -531,7 +542,6 @@
      "shell-7e-base-solemn-simulacrum",
      "shell-7e-42-odric-master-tactician",
      "shell-7e-43-weathered-sentinels",
-     "shell-7e-45-darksteel-juggernaut",
      "shell-7e-46-the-sentry-golden-guardian",
      "shell-7e-47-lyra-dawnbringer",
      "shell-7e-base-karmic-guide",
@@ -555,7 +565,8 @@
      "shell-7e-base-study-hall",
      "shell-7e-73-temple-of-the-false-god",
      "shell-7e-74-ash-barrens",
-     "shell-7e-75-plains"
+     "shell-7e-75-plains",
+     "shell-7e-base-haunted-cloak"
     ],
     "tuned": [
      "destroy-evil-tuned",
@@ -564,7 +575,6 @@
      "cathar-commando-tuned",
      "demolition-field-tuned",
      "collective-effort-tuned",
-     "argentum-masticore-tuned",
      "disenchant-tuned",
      "rootborn-defenses-tuned",
      "spectacular-tactics-tuned",
@@ -579,10 +589,13 @@
     "tuned2": [],
     "enhance2": [],
     "max2": [],
-    "funTuned": [],
+    "funTuned": [
+     "argentum-masticore-pod-fun"
+    ],
     "funMax": [],
     "altTuned": [],
-    "altMax": []
+    "altMax": [],
+    "manual": []
    }
   },
   "found": {
@@ -2747,8 +2760,8 @@
      "rarity": "uncommon",
      "setName": "Mystery Booster Commander Edition",
      "image": "https://cards.scryfall.io/small/front/b/3/b30a8f92-ce42-4b27-a893-bcf97fde228d.jpg?1785759375",
-     "price": 0,
-     "ceiling": 0,
+     "price": 0.0,
+     "ceiling": 0.0,
      "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018",
      "gameChanger": false,
      "category": "manual",
