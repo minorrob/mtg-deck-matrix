@@ -258,6 +258,68 @@
    * when that is where it came from. A slot that already holds a manual card shows that
    * card as a rung tile like any other, and the box turns into a way to replace it.
    */
+  /**
+   * The three cards you already own that would most plausibly do this slot's job.
+   *
+   * The dropdown below this lists everything loose, alphabetically, which is the right
+   * tool when you know what you are looking for and the wrong one when you are sitting
+   * behind a pile of cards asking "does anything here go in this hole". So the slot
+   * answers that question itself: same job, same shape, same cost, ranked, with the
+   * reasoning shown rather than implied.
+   *
+   * Two gates before anything is offered.
+   *
+   * The slot has to actually need a card. A slot holding something already in your hand
+   * does not want alternatives -- the card is there, on the table, in front of you. So
+   * this appears on the slots where it can change what you do: the ones holding a card
+   * you would have to go and buy, and the ones holding nothing at all. Everywhere else
+   * it stays out of the way, which is what lets it be worth noticing when it appears.
+   *
+   * And what the slot is FOR is read from the card standing in it, falling back to the
+   * card the slot was built around when it is empty. The pick is what is on screen and
+   * what a suggestion would displace; ranking against the shell instead offers creature
+   * swaps for a slot visibly holding a removal spell.
+   */
+  function fitsMarkup(ctx, slot, deckId, pool) {
+    if (!Slot.slotFit || !(pool || []).length) return "";
+    const here = slot.pick
+      ? locationOf(ctx, slot.pick.name, slot.pick.quantity, deckId, slot.slotId)
+      : null;
+    if (here && here.kind !== "buy") return "";
+    const shell = meta(ctx, (slot.pick && slot.pick.name) || slot.shellName || "");
+    if (!shell.typeLine) return "";
+    const target = {
+      type: Slot.cardType(shell),
+      manaValue: Slot.manaValueOf(shell),
+      roles: Slot.cardRoles(shell)
+    };
+    const identity = ctx.identity || [];
+    const ranked = pool
+      // Colour is a gate, not a score: a card outside the commander's identity is illegal
+      // here, and an illegal suggestion is worse than no suggestion.
+      .filter((card) => (card.colorIdentity || []).every((color) => identity.indexOf(color) >= 0))
+      .map((card) => ({card, fit: Slot.slotFit(card, target)}))
+      /* When the slot's own card is FOR something -- removal, ramp, a finisher -- a
+         suggestion has to share that. Without this the list fills with "also a creature,
+         same cost", which is true of forty cards and useful about none of them. Where the
+         shell has no role to share (a vanilla body, a utility land), shape and cost are
+         the best signal there is, and the fallback shows those instead. */
+      .filter((row) => row.fit.score > 0 && (!target.roles.length || row.fit.shared.length))
+      .sort((a, b) => b.fit.score - a.fit.score || a.card.name.localeCompare(b.card.name))
+      .slice(0, 3);
+    if (!ranked.length) return "";
+    const sid = esc(slot.slotId);
+    return `<div class="dp-fits">
+      <p class="dp-fits-lab">Cards you own that would do this slot's job</p>
+      <div class="dp-fits-row">${ranked.map(({card, fit}) => `
+        <button type="button" class="dp-fit" data-dp-fit="${sid}|${esc(card.name)}"
+          title="Put ${esc(card.name)} in this slot">
+          <span class="dp-fit-nm">${esc(face(card.name))}</span>
+          <span class="dp-fit-why">${esc(fit.reasons.join(" · ") || "fits the slot")}</span>
+        </button>`).join("")}</div>
+    </div>`;
+  }
+
   function manualBoxMarkup(ctx, slot, deckId) {
     /* Not on the commander. Every other slot holds a card the deck was built to want;
        the commander slot holds the card the deck was built FROM -- its colour identity,
@@ -278,6 +340,7 @@
       c.typeLine ? ` · ${esc(String(c.typeLine).split(" —")[0])}` : ""}${suffix || ""}</option>`;
     const sid = esc(slot.slotId);
     return `<div class="dp-manual" data-dp-manual="${sid}">
+      ${fitsMarkup(ctx, slot, deckId, yard.concat(loose))}
       <div class="dp-manual-hd">
         <span class="dp-rung is-manual">Manual</span>
         <span class="dp-manual-ttl">${existing.length ? "Add another card to this slot" : "Put your own card in this slot"}</span>

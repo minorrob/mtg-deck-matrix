@@ -30,20 +30,25 @@ you last exported.
 
 ---
 
-## 2 · "Three cards you own could fill this slot"
+## 2 · ~~"Three cards you own could fill this slot"~~ — shipped
 
-**The gap.** Open a slot you still need to buy and the app offers the rungs it was built
-with, plus anything loose in your collection that is legal here. What it does not do is rank
-them — "of the 274 loose cards, these three are the ones that actually do this slot's job".
+**Built.** Open a slot that still needs a card and it now names up to three cards you already
+own that would do that slot's job, ranked, with the reasoning shown. Pressing one files it as
+a Manual pick on that slot.
 
-**What exists already.** The Shop's Bench view computes exactly that, per card: the best slot
-it could fill in each deck, the rung it would occupy, and the card it would displace. The
-engine is written. It is on the wrong page.
+**How it decides.** `Slot.slotFit` scores a candidate on three things, in the order they
+matter: type (a Creature slot wants a creature), what the card is FOR, and cost. The role
+tests are lifted from `sim-engine.js` and pinned against it across all 1,761 cards, so
+"this is removal" means the same thing in the slot as in the simulation. Colour identity is
+a gate rather than a score — an out-of-identity card is not a worse fit, it is illegal.
 
-**Why it is not minor.** The Bench answers *card → where does this go*. The slot needs
-*slot → what fits here*, which is the same data indexed the other way and re-ranked per
-slot. Doing it per open slot across 85 slots needs the index built once per deck rather
-than per row, which is a real piece of work rather than a moved function.
+**Two things keep it quiet.** It only appears on a slot whose card you would still have to
+buy, or an empty one; a slot holding a card in your hand does not want alternatives. And a
+slot whose own card has a role only offers cards that share it, which is the difference
+between six useful suggestions and fifty-nine readings of "also a creature".
+
+**Still open.** It ranks against the loose pool only. It does not consider what removing a
+card would do to the deck's curve or its colour sources — see item 5.
 
 ---
 

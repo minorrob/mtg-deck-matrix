@@ -251,6 +251,102 @@
     };
   }
 
+  /* ---------------- what a card is for, and where it would fit ----------------
+   * The same eight role tests sim-engine runs when it scores a deck, so "this is
+   * removal" means the same thing sitting in a slot as it does in the simulation.
+   * tests/slot-model.mjs asserts the pair agree across the whole catalog.
+   */
+  const ROLE_KEYS = ["ramp", "draw", "removal", "wipe", "protection", "recursion", "tutor", "finisher"];
+  const ROLE_LABEL = {
+    ramp: "ramp", draw: "draw", removal: "removal", wipe: "a sweeper",
+    protection: "protection", recursion: "recursion", tutor: "a tutor", finisher: "a finisher"
+  };
+
+  function manaValueOf(card) {
+    const stated = Number(card && card.cmc);
+    if (Number.isFinite(stated) && stated > 0) return stated;
+    return manaCostOf(card && card.manaCost).value;
+  }
+
+  function cardRoles(card) {
+    const typeLine = String((card && card.typeLine) || "");
+    const text = String((card && card.oracleText) || "").toLowerCase().replace(/[’]/g, "'");
+    const isLand = /\bLand\b/.test(typeLine);
+    const isCreature = /Creature/.test(typeLine);
+    const roles = [];
+    const add = (role, hit) => { if (hit) roles.push(role); };
+    add("ramp", !isLand && (/\{t\}: add|add \{[wubrgc]\}/.test(text)
+      || /search your library for (?:a|up to two|two)[^.]{0,30}land[^.]{0,30}onto the battlefield|you may play an additional land|create a treasure token/.test(text)));
+    add("draw", /draw (?:a|one|two|three|four|x|\d+) cards?|draws? that many cards|draw cards equal/.test(text)
+      && !/each opponent draws/.test(text));
+    add("removal", /destroy target|exile target (?:creature|permanent|artifact|enchantment|planeswalker|nonland)|deals? \d+ damage to (?:target|any target)|fights? target|return target (?:creature|permanent|nonland permanent) to its owner's hand|target creature gets [-−]/.test(text));
+    add("wipe", /destroy all|exile all|all creatures get [-−]|each player sacrifices|return all creatures|destroy each creature|each creature deals damage equal to its (?:power|toughness) to itself/.test(text));
+    add("protection", /hexproof|indestructible|protection from|counter target spell|regenerate|phases? out|prevent all damage|can't be countered/.test(text));
+    add("recursion", /return target .{0,40}from your graveyard|return .{0,30}from your graveyard to (?:the battlefield|your hand)/.test(text));
+    add("tutor", /search your library for an? (?:card|artifact|creature|enchantment|instant|sorcery|permanent)/.test(text));
+    add("finisher", /you win the game|each opponent loses \d+ life|extra combat phase|deals damage equal to/.test(text)
+      || (isCreature && manaValueOf(card) >= 5));
+    return roles;
+  }
+
+  // Instants and sorceries do the same job at different speeds; artifacts and
+  // enchantments are both "a permanent that sits there". Near-misses, worth half.
+  const SOFT_TYPE = {Instant: "spell", Sorcery: "spell", Artifact: "permanent", Enchantment: "permanent"};
+  function article(type) {
+    return /^[AEIOU]/.test(type) ? `an ${type.toLowerCase()}` : `a ${type.toLowerCase()}`;
+  }
+
+  /**
+   * Whether a card you own could stand in for the card a slot was built around.
+   *
+   * The question a pile of cards on the table actually poses is not "is this good" but
+   * "does this do the job that card was doing". So the score is built from the three
+   * things that decide that, in the order they matter:
+   *
+   *   type      a Creature slot wants a creature; swapping one for an Instant changes
+   *             the deck's shape, not just its contents
+   *   role      what the card is FOR -- removal for removal, ramp for ramp -- read with
+   *             sim-engine's own tests so the page and the simulation agree
+   *   cost      a four-drop standing in for a two-drop is a different card in play even
+   *             when it does the same thing on paper
+   *
+   * Colour is not scored, it is a gate: a card outside the deck's identity is not a
+   * worse fit, it is not legal, and the caller filters it out before scoring.
+   *
+   * Returns a score and the reasons behind it, because a bare number ranking cards you
+   * own is a number you have no way to argue with.
+   */
+  function slotFit(card, target) {
+    const want = target || {};
+    const reasons = [];
+    let score = 0;
+
+    const type = cardType(card);
+    const wantType = want.type || "";
+    if (wantType && type === wantType) { score += 5; reasons.push(`also ${article(type)}`); }
+    else if (wantType && SOFT_TYPE[type] && SOFT_TYPE[wantType] === SOFT_TYPE[type]) { score += 2; reasons.push("same kind of spell"); }
+
+    const roles = cardRoles(card);
+    const wanted = want.roles || [];
+    const shared = roles.filter((role) => wanted.indexOf(role) >= 0);
+    shared.slice(0, 2).forEach((role) => { score += 3; reasons.push(ROLE_LABEL[role]); });
+
+    /* Cost is a tie-breaker, not a qualification. A five-drop standing in for a two-drop
+       is a real problem, but it is a smaller problem than putting a creature where the
+       deck wanted an instant -- so the type match outweighs any cost gap, and the gap
+       only bites once it is big enough to change when the card is castable. */
+    const value = manaValueOf(card);
+    const wantValue = Number(want.manaValue);
+    if (Number.isFinite(wantValue) && wantValue > 0) {
+      const gap = Math.abs(value - wantValue);
+      if (gap === 0) { score += 2; reasons.push("same cost"); }
+      else if (gap === 1) { score += 1; reasons.push("within a mana"); }
+      else if (gap >= 3) { score -= Math.min(3, gap - 2); }
+    }
+
+    return {score, reasons, roles, shared, manaValue: value, type};
+  }
+
   function rungHeading(rung, name, predecessorName, authored) {
     const card = name || "this card";
     const prev = predecessorName;
@@ -551,6 +647,7 @@
     ACQUISITION: ACQ, PLACE, ownedKey, normalizeOwned, ownedCount, acquisitionOf,
     SPOTS, vendorSpot, rungHeading, cardImage,
     MANA_COLORS, manaCostOf, producesColors, manaHealth,
+    ROLE_KEYS, ROLE_LABEL, manaValueOf, cardRoles, slotFit,
     TYPE_ORDER, cardType, isBasicLand, whyFor, whyText, whySource,
     deckSlots, shopRows
   };

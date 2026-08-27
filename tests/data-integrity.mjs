@@ -8,6 +8,10 @@ const simulationSummary = JSON.parse(await readFile(new URL("../data/simulation-
 const appSource = await readFile(new URL("../app.js", import.meta.url), "utf8");
 const htmlSource = await readFile(new URL("../index.html", import.meta.url), "utf8");
 const rungLists = JSON.parse(await readFile(new URL("../data/rung-lists.json", import.meta.url), "utf8"));
+const cssSource = await readFile(new URL("../app.css", import.meta.url), "utf8");
+const deckPageSource = await readFile(new URL("../deck-page.js", import.meta.url), "utf8");
+const shopPageSource = await readFile(new URL("../shop-page.js", import.meta.url), "utf8");
+const activeState = JSON.parse(await readFile(new URL("../data/active-state.json", import.meta.url), "utf8"));
 const auditedByName = new Map(cards.cards.map((card) => [card.name.toLowerCase(), card]));
 for (const card of cards.cards) for (const face of card.name.split(" // ")) auditedByName.set(face.toLowerCase(), card);
 
@@ -781,5 +785,74 @@ assert.match(htmlSource, /id="load-active-button"/, "a Load Active button must e
       `${variant.id} publishes ${variant.costs[2]} for Maxed but its pinned hundred prices at $${summed.toFixed(0)}`);
   }
 }
+
+
+
+/* ---------------------------------------------------------------------------
+   Cards you own that would fill a slot, the mobile Shop, and the basics pool.
+   Every assertion below was checked by breaking the code it names and watching
+   this file fail; none of them can pass against an empty match.
+   --------------------------------------------------------------------------- */
+
+// The suggestion box earns its place by being rare. A slot already holding a card you
+// have in hand does not want alternatives, so the box is gated on the slot needing one.
+assert.match(deckPageSource, /if \(here && here\.kind !== "buy"\) return "";/,
+  "the in-slot suggestions must stay hidden on a slot whose card is already in hand");
+// It ranks against the card standing in the slot -- the one on screen, the one a
+// suggestion would displace -- and only falls back to the shell when the slot is empty.
+assert.match(deckPageSource, /const shell = meta\(ctx, \(slot\.pick && slot\.pick\.name\) \|\| slot\.shellName \|\| ""\);/,
+  "the fit target must come from the picked card first and the shell only as a fallback");
+// A slot whose card is FOR something only offers cards that do that thing.
+assert.match(deckPageSource, /row\.fit\.score > 0 && \(!target\.roles\.length \|\| row\.fit\.shared\.length\)/,
+  "a slot with roles must require a shared role, or the list fills with same-type noise");
+// Colour identity is a gate, not a tiebreak: an out-of-identity card is illegal here.
+assert.match(deckPageSource, /\.filter\(\(card\) => \(card\.colorIdentity \|\| \[\]\)\.every\(\(color\) => identity\.indexOf\(color\) >= 0\)\)/,
+  "suggestions must be filtered to the deck's colour identity before they are ranked");
+// The deck's identity comes from its commander, and the loose pools carry what the fit
+// model reads -- a name and a type line cannot say what a card costs or is for.
+assert.match(appSource, /identity: \(cards\[Lineup\.normalizeName\(plan\.commanderName \|\| variant\.commander \|\| ""\)\] \|\| \{\}\)\.colorIdentity \|\| \[\]/,
+  "the Deck page context must derive colour identity from the commander card");
+for (const field of ["manaCost", "oracleText", "colorIdentity"]) {
+  assert.ok(new RegExp(`freeCards\\.push\\(\\{[^}]*${field}:`, "s").test(appSource),
+    `loose cards must carry ${field} or the fit model cannot read them`);
+}
+// One way into a slot: the suggestion button drives the same submit path as the dropdown.
+assert.match(appSource, /if \(select\) select\.value = name;\n\s*submitManualCard\(slotId\);/,
+  "a best-fit button must go through submitManualCard, not a second code path");
+
+// Mobile Shop: the options fold, but the fold hides nothing you cannot get back, and the
+// count on the button means a folded bar can never conceal why a card is missing.
+assert.match(shopPageSource, /<div class="sp-bar-body">/, "the foldable block must exist to be folded");
+assert.match(shopPageSource, /const activeFilters = FILTERS\.reduce/, "the fold button must count the filters it is hiding");
+assert.match(shopPageSource, /class="sp-frow sp-frow-tot"/, "the totals row must sit outside the fold");
+assert.match(cssSource, /\.sp-bar\[data-open="0"\] \.sp-bar-body \{ display: none; \}/,
+  "the fold must be CSS-driven so a desktop never hides the options");
+assert.match(cssSource, /\.sp-gal \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); /,
+  "the gallery must be two cards to a row on a phone");
+// Every column survives the restack, carrying the label its header used to carry.
+assert.match(shopPageSource, /<td data-k="\$\{c\.key\}" data-lab="\$\{esc\(c\.label\)\}">/,
+  "restacked table cells must carry their own column label");
+assert.match(cssSource, /table\.sp-table \{ min-width: 0;/,
+  "the 1000px table floor must be lifted on a phone, or the restack is still a scroller");
+
+// iOS zooms the page when a focused field's text is under 16px and never zooms back.
+// The rule has to be last in the file to win the ties it needs to win.
+const zoomRule = cssSource.lastIndexOf("select[class], select:not([class]), textarea[class], textarea:not([class]) { font-size: 16px; }");
+assert.ok(zoomRule > 0, "the 16px mobile field rule must exist");
+assert.ok(cssSource.slice(zoomRule).indexOf("font-size: 14px") < 0,
+  "no later rule may put a form field back under 16px on a phone");
+
+// The basics are a pool, and the note has to say what the pool is made of, because the
+// number is a claim about a physical box that nothing in the app can re-derive.
+for (const basic of ["plains", "island", "swamp", "mountain", "forest"]) {
+  assert.ok((activeState.state.boughtQuantities[basic] || 0) >= 80,
+    `${basic} should carry at least the box of eighty`);
+}
+assert.match(activeState.note, /Lorehold Spirit .*11 Plains and 6 Mountains/,
+  "the note must record where the basics figure came from");
+assert.equal(activeState.state.boughtQuantities.plains, activeState.state.boughtQuantities.island + 11,
+  "Plains must exceed the plain box by the precon's eleven");
+assert.equal(activeState.state.boughtQuantities.mountain, activeState.state.boughtQuantities.island + 6,
+  "Mountains must exceed the plain box by the precon's six");
 
 console.log(`Validated ${variants.variants.length} variants and ${Object.keys(buyPlans.plans).length} connected buy profiles.`);

@@ -1,18 +1,36 @@
+/* The palette.
+   ------------
+   Green, parchment and gold, because that is what a table covered in Magic cards
+   looks like. The earlier version of this was the same three hues at about half the
+   chroma, which read as tasteful and tired: nothing on the page was brighter than
+   anything else, so nothing pulled the eye.
+
+   --forest-2 does most of the work. It is the "on" colour -- every ticked box, every
+   active rung, every primary button, every pressed segment -- so lifting it from a
+   grey-green to a real green lifts every active state on every screen at once. It is
+   checked against white at 5.3:1, so white text on it still passes AA at any size.
+
+   --accent is the one hue that is not in the family, kept for the single thing on a
+   screen that most wants pressing. Used sparingly it reads as "here"; used everywhere
+   it would just be a second dull colour. */
 :root {
   color-scheme: light;
-  --ink: #1d2824;
-  --muted: #63706a;
-  --paper: #f5f0e3;
-  --surface: #fffdf7;
-  --surface-2: #ede6d5;
-  --forest: #143b30;
-  --forest-2: #205844;
-  --gold: #c69735;
-  --gold-soft: #f2dfaa;
-  --red: #993f37;
-  --blue: #315f70;
-  --line: #d8cfba;
-  --shadow: 0 10px 26px rgba(31, 42, 36, .12);
+  --ink: #16221d;
+  --muted: #586761;
+  --paper: #f4efdf;
+  --surface: #fffefa;
+  --surface-2: #ece4d0;
+  --forest: #0f3a2b;
+  --forest-2: #1d7a55;
+  --gold: #dda01c;
+  --gold-soft: #ffe9b0;
+  --red: #c0392b;
+  --blue: #1f6f8b;
+  --line: #dcd2b9;
+  --accent: #d2651f;
+  --accent-soft: #ffe0cb;
+  --warn: #b8791a;
+  --shadow: 0 10px 26px rgba(20, 40, 31, .13);
   --radius: 18px;
   font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
@@ -29,12 +47,12 @@ button { touch-action: manipulation; }
   z-index: 50;
   padding: max(10px, env(safe-area-inset-top)) 14px 9px;
   color: #fff8e8;
-  background: linear-gradient(135deg, #102b23, #1b4b3c 72%, #765b24);
+  background: linear-gradient(135deg, #082b1f, #1a6b4a 68%, #a8781f);
   box-shadow: 0 5px 18px rgba(17, 43, 35, .28);
   overflow: hidden;
 }
-.app-header::after { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; background: linear-gradient(90deg, rgba(9,31,24,.98) 0%, rgba(13,44,34,.9) 43%, rgba(17,48,38,.3) 75%, rgba(72,48,21,.3) 100%); }
-.banner-art { position: absolute; inset: 0 0 0 42%; z-index: 0; display: grid; grid-template-columns: repeat(3,1fr); opacity: .68; filter: saturate(.9) contrast(1.08); pointer-events: none; }
+.app-header::after { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; background: linear-gradient(90deg, rgba(7,30,22,.97) 0%, rgba(11,44,33,.78) 43%, rgba(15,58,43,.14) 75%, rgba(96,64,22,.16) 100%); }
+.banner-art { position: absolute; inset: 0 0 0 42%; z-index: 0; display: grid; grid-template-columns: repeat(3,1fr); opacity: .84; filter: saturate(1.18) contrast(1.05); pointer-events: none; }
 .banner-art img { width: 100%; height: 100%; object-fit: cover; object-position: center 28%; }
 .brand-row { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 1560px; margin: 0 auto 9px; }
 .eyebrow { margin: 0 0 2px; color: #e6cc91; font-size: 10px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
@@ -74,8 +92,8 @@ h1 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp
 }
 
 .main-tabs { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; width: min(1060px, 100%); margin: auto; }
-.main-tab { min-height: 43px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid rgba(255,255,255,.22); border-radius: 12px; color: #d7e6df; background: rgba(255,255,255,.07); font-size: 13px; font-weight: 800; cursor: pointer; }
-.main-tab.is-active { color: var(--forest); background: #fff4d7; border-color: #fff4d7; box-shadow: 0 4px 12px rgba(0,0,0,.2); }
+.main-tab { min-height: 43px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid rgba(255,255,255,.26); border-radius: 12px; color: #e4f1ea; background: rgba(255,255,255,.09); font-size: 13px; font-weight: 800; cursor: pointer; }
+.main-tab.is-active { color: #0d3325; background: linear-gradient(180deg, #fff8e4, #ffe4a2); border-color: #ffd98a; box-shadow: 0 5px 15px rgba(0,0,0,.3), inset 0 1px 0 #fffdf4; }
 .tab-step { display: grid; place-items: center; width: 19px; height: 19px; border-radius: 50%; background: rgba(255,255,255,.13); font-size: 10px; }
 .main-tab.is-active .tab-step { color: #fff; background: var(--forest-2); }
 
@@ -99,7 +117,7 @@ main { width: min(1560px, 100%); min-height: 70vh; margin: 0 auto; padding: 18px
 .action-row { display: grid; grid-template-columns: repeat(auto-fit,minmax(145px,1fr)); gap: 9px; margin: 12px 0 18px; }
 .action-row-top { margin-top: 0; }
 .primary-button, .secondary-button, .found-button { min-height: 44px; border: 0; border-radius: 12px; padding: 10px 15px; font-weight: 850; cursor: pointer; }
-.primary-button { color: white; background: var(--forest-2); box-shadow: 0 5px 13px rgba(32,88,68,.23); }
+.primary-button { color: white; background: var(--forest-2); box-shadow: 0 5px 14px rgba(29,122,85,.28); }
 .primary-button:disabled { opacity: .42; cursor: not-allowed; box-shadow: none; }
 .secondary-button { color: var(--forest); border: 1px solid #9db1a8; background: #fffdf7; }
 .text-button { padding: 4px; border: 0; color: inherit; background: none; text-decoration: underline; cursor: pointer; }
@@ -1655,8 +1673,11 @@ footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px;
    in the existing blue. Location is carried by glyph shape, never by hue, so it
    can never be confused with a rung. Rarity is an outline only. */
 :root{
-  --rung-base:#8a938b; --rung-tuned:#2f6b52; --rung-enhance:#6f8a30;
-  --rung-max:#c69735; --rung-fun:#315f70; --rung-alt:#7a6a9a; --rung-manual:#6d5bd0;
+  /* One hue per rung, so a tile's colour tells you where the card came from before you
+     read a word of it. Lifted to the same chroma as the rest of the palette -- Tuned
+     shares the app's "on" green on purpose, because a Tuned deck is the default build. */
+  --rung-base:#8c968d; --rung-tuned:#1d7a55; --rung-enhance:#7d9c26;
+  --rung-max:#dda01c; --rung-fun:#1f6f8b; --rung-alt:#8a76b5; --rung-manual:#6d5bd0;
   --rar-C:#d8cfba; --rar-U:#7f9c85; --rar-R:#6f8fa8; --rar-S:#8d7fa6; --rar-M:#c19a4e; --rar-B:#d9b45c;
 }
 .dp-num{font-variant-numeric:tabular-nums}
@@ -1729,8 +1750,8 @@ footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px;
 .dp-manual-hd{display:flex;align-items:center;gap:8px;margin-bottom:9px}
 .dp-manual-ttl{font-size:12.5px;font-weight:700;color:var(--muted);flex:1 1 auto;min-width:0}
 .dp-manual-go{flex:0 0 auto;min-height:32px;padding:5px 14px;border:1px solid var(--rung-manual,#6d5bd0);border-radius:8px;
-  background:var(--rung-manual,#6d5bd0);color:#fff;font-size:12px;font-weight:800;cursor:pointer}
-.dp-manual-go:hover{filter:brightness(1.08)}
+  background:var(--surface);color:var(--rung-manual,#6d5bd0);font-size:12px;font-weight:800;cursor:pointer}
+.dp-manual-go:hover,.dp-manual-go:focus-visible{background:var(--rung-manual,#6d5bd0);color:#fff;outline:none}
 .dp-manual-go:disabled{opacity:.5;cursor:default}
 .dp-manual-f{display:block;margin:0 0 8px}
 .dp-manual-f>span{display:block;font-size:11px;font-weight:700;letter-spacing:.03em;color:var(--muted);margin-bottom:3px}
@@ -1987,3 +2008,135 @@ div.sp-band{padding:9px 13px;border-radius:12px 12px 0 0}
    line rather than tower over it. */
 .dp-oracle .mana-symbol { width: 14px !important; height: 14px !important; min-width: 14px; max-width: 14px; vertical-align: -.14em; }
 .dp-stats .mana-cost { flex-wrap: wrap; gap: 2px; }
+
+/* Cards you own that would do this slot's job.
+   -------------------------------------------
+   Sits at the top of the Manual box, above the dropdown that lists everything loose
+   alphabetically. This is the accent's one job on the Deck page: of everything in a
+   slot, "you already own something that goes here" is the line most worth noticing,
+   because it is the only one that saves you money. */
+.dp-fits { margin: 0 0 10px; padding: 9px 10px; border: 1px solid var(--accent-soft);
+  border-left: 3px solid var(--accent); border-radius: 0 11px 11px 0; background: linear-gradient(180deg, #fff8f2, var(--accent-soft)); }
+.dp-fits-lab { margin: 0 0 7px; color: #8a3d0f; font-size: 10px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.dp-fits-row { display: flex; flex-wrap: wrap; gap: 7px; }
+.dp-fit { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-height: 44px;
+  padding: 6px 12px; border: 1px solid #f0bd97; border-radius: 11px; background: var(--surface);
+  text-align: left; cursor: pointer; }
+.dp-fit:hover, .dp-fit:focus-visible { border-color: var(--accent); background: #fff; outline: none;
+  box-shadow: 0 3px 10px rgba(210,101,31,.22); }
+.dp-fit-nm { color: var(--ink); font-size: 13px; font-weight: 850; }
+.dp-fit-why { color: var(--muted); font-size: 10.5px; }
+@media (max-width: 640px) {
+  .dp-fits-row { flex-direction: column; }
+  .dp-fit { width: 100%; }
+}
+
+/* Shop on a phone.
+   ---------------
+   Three changes, all of them about the same thing: the gap between picking a card up
+   off the table and telling the app you own it.
+
+   1. The filter, group and sort block folds behind one button. Nothing is removed --
+      it is all still there, one tap away, and a badge says how many filters are on so
+      a folded bar can never hide the reason a card is missing from the list.
+   2. Two cards to a row in the gallery instead of one. 184px was a desktop minimum
+      that left a 390px phone showing a single card per screenful.
+   3. Need / Ordered / In hand becomes a full-width control with real touch targets.
+      It is the only thing on this page you press repeatedly, and it was the smallest. */
+.sp-mob { display: none; }
+@media (max-width: 640px) {
+  .sp-mob { display: inline-flex; align-items: center; gap: 6px; min-height: 38px; margin-left: auto;
+    padding: 5px 13px; border: 1px solid var(--forest-2); border-radius: 999px;
+    background: var(--surface); color: var(--forest); font-size: 12.5px; font-weight: 850; cursor: pointer; }
+  .sp-bar[data-open="0"] .sp-bar-body { display: none; }
+  .sp-frow-nav { gap: 6px; }
+  .sp-frow-nav .sp-seg { flex: 1 1 auto; }
+  /* The totals sit under the fold-out, so they must not inherit its divider when the
+     block above them is hidden. */
+  .sp-bar[data-open="0"] .sp-frow-tot { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+  .sp-gal { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 8px; }
+  .sp-cbody { padding: 7px 8px; gap: 4px; }
+  .sp-nm { font-size: 12.5px; }
+  .sp-meta { font-size: 10px; }
+  .sp-tri { display: flex; width: 100%; margin-top: 3px; border-radius: 11px; }
+  .sp-tri button { flex: 1; min-height: 42px; padding: 4px 2px; font-size: 12px; font-weight: 800; }
+  /* In hand is the answer this control is usually being asked for, so it is the one
+     that looks like a button rather than a label. */
+  .sp-tri button[data-sp-s="hand"] { font-weight: 900; }
+  /* Two tiles to a row leaves each control about 145px, so the gallery's copy of it
+     has to be smaller than the table's -- at 12px "In hand" runs past its third. */
+  .sp-gal .sp-tri button { padding: 4px 1px; font-size: 10px; }
+  .sp-tri button[aria-pressed="true"][data-sp-s="hand"] { box-shadow: inset 0 0 0 1px rgba(255,255,255,.35); }
+}
+
+/* iOS Safari zooms the whole page in when you focus a text field whose text is under
+   16px, and does not zoom back out when you leave it -- which is why the Game Log, the
+   one tab that is mostly a form, was the tab that "shrank the screen". This changes no
+   layout: the fields keep their sizes, the text inside them is simply large enough that
+   the browser leaves the viewport alone. Last in the file so it wins the ties against
+   the single-class rules that set 12-14px. */
+@media (max-width: 700px) {
+  input[type="text"], input[type="url"], input[type="number"], input[type="search"],
+  input[type="date"], input[type="email"], input[type="tel"], input[type="password"],
+  input:not([type]),
+  /* select and textarea carry no type attribute to lean on, and a bare element
+     selector loses to every `.thing select` rule in this file. The [class] pair
+     matches the same two elements at class-level weight, which ties those rules
+     and wins on being last. */
+  select[class], select:not([class]), textarea[class], textarea:not([class]) { font-size: 16px; }
+  /* The two price fields are sized in ems, so a bigger font would push them wider than
+     the row they sit in. They get the width back instead. */
+  .dp-paid input, .sp-paid input { width: 84px; }
+  .live-card-status .live-price-field input { width: 3.4rem; font-size: 16px; }
+}
+
+/* The Shop's table on a phone.
+   ---------------------------
+   Eleven columns is the right shape for a desktop and the wrong shape for a 390px
+   screen, where it became a wide scroller whose first column was the only one you
+   could see. The columns do not shrink here -- they restack. Each row becomes a
+   card: the card's name, the one control this page exists for, then the rest as a
+   quiet wrapped footer that keeps its own labels now that the header row is gone. */
+@media (max-width: 640px) {
+  .sp-tw { overflow-x: visible; border: 0; border-radius: 0; background: none; box-shadow: none; }
+  /* The 1000px floor is what made this a scroller; on a phone the row IS the layout. */
+  table.sp-table { min-width: 0; width: 100%; font-size: 13px; }
+  .sp-table, .sp-table tbody, .sp-table td { display: block; width: auto; }
+  .sp-table thead { display: none; }
+  .sp-table tbody tr:hover td { background: none; }
+
+  .sp-table tr.sp-band { display: block; margin: 13px 2px 7px; padding: 0; border: 0; background: none; }
+  .sp-table tr.sp-band td { display: block; padding: 0; border: 0; }
+
+  .sp-table tr:not(.sp-band) {
+    display: flex; flex-flow: row wrap; align-items: baseline; gap: 0;
+    margin: 0 0 8px; padding: 10px 11px; border: 1px solid var(--line);
+    border-radius: 13px; background: var(--surface); box-shadow: 0 2px 7px rgba(20,40,31,.06);
+  }
+  .sp-table td { padding: 0; border: 0; }
+  /* Name, decks and the buy control each own a full line. */
+  .sp-table td[data-k="name"] { order: 0; flex: 1 0 100%; font-size: 15px; font-weight: 850; line-height: 1.25; }
+  .sp-table td[data-k="decks"] { order: 1; flex: 1 0 100%; margin-top: 5px; }
+  .sp-table td[data-k="status"] { order: 2; flex: 1 0 100%; margin-top: 8px; }
+  /* Everything else shares one wrapped line, each cell carrying the label its column
+     used to carry in the header. */
+  .sp-table td[data-k="color"], .sp-table td[data-k="type"], .sp-table td[data-k="rarity"],
+  .sp-table td[data-k="band"], .sp-table td[data-k="spot"], .sp-table td[data-k="price"],
+  .sp-table td[data-k="paid"], .sp-table td[data-k="lineTotal"] {
+    order: 3; display: inline-flex; align-items: center; gap: 4px; min-width: 0; max-width: 100%;
+    margin: 5px 9px 0 0; color: var(--muted); font-size: 11px; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .sp-table td[data-k="color"]::before, .sp-table td[data-k="type"]::before,
+  .sp-table td[data-k="rarity"]::before, .sp-table td[data-k="band"]::before,
+  .sp-table td[data-k="spot"]::before, .sp-table td[data-k="price"]::before,
+  .sp-table td[data-k="paid"]::before, .sp-table td[data-k="lineTotal"]::before {
+    content: attr(data-lab); font-size: 9px; font-weight: 900; letter-spacing: .07em;
+    text-transform: uppercase; opacity: .7;
+  }
+  /* Where can be a phrase rather than a word. It shares the line and truncates instead
+     of taking a row of its own -- these rows are scanned in bulk, and every line spent
+     on a label is a card you have to scroll past. */
+  .sp-table td[data-k="spot"] { max-width: 46%; }
+  .sp-table td[data-k="paid"] input { width: 66px; }
+}
