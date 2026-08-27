@@ -18,16 +18,16 @@
   <meta name="twitter:image" content="https://minorrob.github.io/mtg-deck-matrix/og.png">
   <title>Trey's MtG Deck Builder</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%83%8F%EF%B8%8F%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="app.css?v=46">
+  <link rel="stylesheet" href="app.css?v=48">
   <script src="lineup-model.js?v=3" defer></script>
   <script src="compliance-model.js?v=1" defer></script>
   <script src="scryfall-client.js?v=2" defer></script>
   <script src="custom-model.js?v=2" defer></script>
   <script src="deck-generator.js?v=2" defer></script>
-  <script src="slot-model.js?v=5" defer></script>
-  <script src="deck-page.js?v=11" defer></script>
+  <script src="slot-model.js?v=6" defer></script>
+  <script src="deck-page.js?v=12" defer></script>
   <script src="shop-page.js?v=3" defer></script>
-  <script src="app.js?v=59" defer></script>
+  <script src="app.js?v=61" defer></script>
   <script src="shop-filters.js?v=5" defer></script>
 </head>
 <body>
@@ -47,7 +47,9 @@
         <button class="state-io-button" id="export-state-button" type="button" title="Download every selection, buy, Shop List mark, and Live Decks change on this device as one file">⬇ Export</button>
         <label class="state-io-button state-io-file" title="Load a previously exported state file, replacing everything currently saved on this device">⬆ Import<input type="file" accept=".json,application/json" id="import-state-input" hidden></label>
         <button class="state-io-button" id="load-active-button" type="button" title="Load data/active-state.json from this repository, replacing everything currently saved on this device">↺ Load Active</button>
+        <button class="state-io-button" id="undo-load-button" type="button" hidden title="Put back whatever was on this device before the last file load">↺ Undo load</button>
         <button class="state-io-button" id="reset-button" type="button" title="Reset every deck pick, comment, optional buy, filter, and Bought checkmark on this device">⟲ Reset All</button>
+        <span class="export-age" id="export-age" title="When you last downloaded a copy of everything on this device">never exported</span>
         <span class="save-status visually-hidden" id="save-status" aria-live="polite">Saved on this device</span>
       </div>
     </div>

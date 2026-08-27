@@ -656,6 +656,18 @@
       /* How many copies of a card other decks have boxed, and how many you own that
          nothing has claimed. deck-page reads these instead of "who has it", so five decks
          can each box a copy of a card you own five of without any of them lying. */
+      /* Everything needed to answer "can I sleeve this and play it": the hundred as literal
+         cards, the rules verdict on them, and whether the colours it asks for are actually
+         behind it. Computed here rather than in the page because evaluateDeckCompliance is
+         the same call Calibrate has always used -- one authority on legality, not two. */
+      deckCards: (() => {
+        try { return Lineup.selectedEntries(plan, ensureBuyState(variant.id)).map((entry) => entry.item); }
+        catch (error) { return []; }
+      })(),
+      complianceFor: (literal) => {
+        try { return evaluateDeckCompliance(plan, ensureBuyState(variant.id), literal); }
+        catch (error) { return null; }
+      },
       // Did this deck's claim on the card get served? Only meaningful where it is ticked.
       claimHeld: (name) => claimSatisfied.get(`${Slot.ownedKey(name)}|${variant.id}`) === true,
       // Copies nobody has boxed, which is what an unticked slot could still take.
@@ -7185,7 +7197,63 @@
     link.click();
     link.remove();
     setTimeout(() => URL.revokeObjectURL(url), 2000);
-    showToast("Exported your full state — Compare picks, Calibrate, Shop, and Decks.");
+    try { localStorage.setItem(LAST_EXPORT_KEY, String(Date.now())); } catch (error) { /* nothing to remember it with */ }
+    refreshStateChrome();
+    showToast("Exported your full state — Compare picks, Deck boxes, Shop marks and prices.");
+  }
+
+  /* Loading a file replaces everything on this device with no way back, which is the one
+     irreversible action in the app. Whatever was here is kept for exactly one undo, so a
+     Load Active pressed out of habit does not cost an evening of ticked boxes. Both keys
+     live outside `state`: a backup inside the thing it backs up is no backup, and stamping
+     the export time into the state would make every exported file stale the moment it was
+     written. */
+  const LOAD_UNDO_KEY = "mtg-load-undo-v1";
+  const LAST_EXPORT_KEY = "mtg-last-export-v1";
+
+  function stashUndo() {
+    try { localStorage.setItem(LOAD_UNDO_KEY, JSON.stringify(serializeStatePayload())); }
+    catch (error) { /* storage refused: the load still happens, it just cannot be undone */ }
+    refreshStateChrome();
+  }
+
+  function undoLoad() {
+    let payload = null;
+    try { payload = JSON.parse(localStorage.getItem(LOAD_UNDO_KEY) || "null"); }
+    catch (error) { payload = null; }
+    if (!isPlausibleStatePayload(payload)) return showToast("There is nothing to undo.");
+    if (!window.confirm("Put back what was here before the last load? Anything changed since is lost.")) return;
+    try { localStorage.removeItem(LOAD_UNDO_KEY); } catch (error) { /* nothing to clear */ }
+    applyStatePayload(payload, "before the last load", {backup: false});
+  }
+
+  function sinceExport() {
+    let stamp = null;
+    try { stamp = localStorage.getItem(LAST_EXPORT_KEY); } catch (error) { return null; }
+    if (!stamp) return null;
+    const minutes = Math.max(0, Math.round((Date.now() - Number(stamp)) / 60000));
+    if (!Number.isFinite(minutes)) return null;
+    if (minutes < 1) return "just now";
+    if (minutes < 60) return `${minutes} min ago`;
+    const hours = Math.round(minutes / 60);
+    if (hours < 24) return `${hours} hr ago`;
+    return `${Math.round(hours / 24)} d ago`;
+  }
+
+  /* The two things worth knowing about your file, kept honest after every change to it. */
+  function refreshStateChrome() {
+    const undo = $("#undo-load-button");
+    if (undo) {
+      let has = false;
+      try { has = Boolean(localStorage.getItem(LOAD_UNDO_KEY)); } catch (error) { has = false; }
+      undo.hidden = !has;
+    }
+    const chip = $("#export-age");
+    if (chip) {
+      const ago = sinceExport();
+      chip.textContent = ago ? `exported ${ago}` : "never exported";
+      chip.classList.toggle("is-stale", !ago);
+    }
   }
 
   function isPlausibleStatePayload(payload) {
@@ -7199,7 +7267,8 @@
   // would silently pick a winner the user never chose. Replacing is at least predictable, and
   // the caller is required to confirm first since there is no way back once applied except
   // re-importing an earlier export.
-  function applyStatePayload(payload, sourceLabel) {
+  function applyStatePayload(payload, sourceLabel, options = {}) {
+    if (options.backup !== false) stashUndo();
     state = {...blankState(), ...payload.state};
     try {
       if (payload.custom) localStorage.setItem(Custom.STORAGE_KEY, JSON.stringify(payload.custom));
@@ -7298,6 +7367,8 @@
       $$(".main-tab").forEach((button) => button.addEventListener("click", () => switchView(button.dataset.view)));
       $("#reset-button").addEventListener("click", resetState);
       $("#tour-button").addEventListener("click", startTour);
+      $("#undo-load-button")?.addEventListener("click", undoLoad);
+      refreshStateChrome();
       setHeaderCollapsed(readHeaderCollapsed());
       $("#header-toggle")?.addEventListener("click", () => {
         setHeaderCollapsed($(".app-header")?.dataset.collapsed !== "1");

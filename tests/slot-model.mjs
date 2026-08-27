@@ -396,6 +396,62 @@ ok("a slot keeps its place in the list whatever rung is picked", () => {
   }
 });
 
+ok("the page and the simulation agree about mana, card for card", () => {
+  /* slot-model carries its own copy of the two mana rules, because sim-engine is a
+     Node-only module and loading eleven hundred lines of it into the page to read a land
+     would be absurd. A copy that drifts is worse than no readout at all -- the page would
+     tell you a deck can cast itself while the engine scores it as stranded -- so the two
+     are checked against each other over the whole catalog rather than trusted to stay in
+     step by good intentions. */
+  const engine = require("../sim-engine.js");
+  const catalog = cardsPayload.cards;
+  const costMismatch = [];
+  const colorMismatch = [];
+  for (const card of catalog) {
+    const mine = Slot.manaCostOf(card.manaCost);
+    const theirs = engine.parseManaCost(card.manaCost);
+    if (JSON.stringify(mine) !== JSON.stringify(theirs)) costMismatch.push(card.name);
+    const a = Slot.producesColors(card).slice().sort().join("");
+    const b = (engine.classifyCard(card).produces || []).slice().sort().join("");
+    if (a !== b) colorMismatch.push(`${card.name}: page ${a || "none"} vs engine ${b || "none"}`);
+  }
+  assert.equal(costMismatch.length, 0,
+    `mana costs read differently on ${costMismatch.length} cards, e.g. ${costMismatch.slice(0, 3).join(", ")}`);
+  assert.equal(colorMismatch.length, 0,
+    `colour production reads differently on ${colorMismatch.length} cards, e.g. ${colorMismatch.slice(0, 3).join(" | ")}`);
+  assert.ok(catalog.length > 1000, `expected the real catalog, got ${catalog.length} cards`);
+});
+
+ok("a thin colour is one the deck cannot reliably pay for", () => {
+  const deck = [
+    {name: "Forest", typeLine: "Basic Land — Forest", colorIdentity: ["G"], quantity: 30},
+    {name: "Island", typeLine: "Basic Land — Island", colorIdentity: ["U"], quantity: 3},
+    {name: "Cheap Green", typeLine: "Creature", manaCost: "{G}", quantity: 30},
+    {name: "Blue Bomb", typeLine: "Sorcery", manaCost: "{4}{U}{U}", quantity: 6}
+  ];
+  const health = Slot.manaHealth(deck);
+  assert.equal(health.lands, 33, "lands are counted by copies, not by rows");
+  assert.equal(health.sources.G, 30);
+  assert.equal(health.pips.U, 12, "six copies asking for two blue each");
+  assert.ok(health.thin.includes("U"), "three Islands behind twelve blue pips is thin");
+  assert.ok(!health.thin.includes("G"), "thirty Forests behind thirty green pips is not");
+  // The floor scales with demand, so a colour carrying most of the pips has to carry most
+  // of the lands. A flat floor called eighteen green sources against thirty-four green
+  // pips healthy, which is the shape that actually strands cards in hand.
+  const lopsided = Slot.manaHealth([
+    {name: "Forest", typeLine: "Basic Land — Forest", colorIdentity: ["G"], quantity: 18},
+    {name: "Plains", typeLine: "Basic Land — Plains", colorIdentity: ["W"], quantity: 18},
+    {name: "Green Spell", typeLine: "Sorcery", manaCost: "{G}{G}", quantity: 17},
+    {name: "White Spell", typeLine: "Sorcery", manaCost: "{W}", quantity: 17}
+  ]);
+  assert.equal(lopsided.pips.G, 34);
+  assert.ok(lopsided.thin.includes("G"), "thirty-four green pips off eighteen sources is thin");
+  assert.ok(!lopsided.thin.includes("W"), "seventeen white pips off eighteen sources is not");
+  // The commander is excluded from demand: it is cast from a zone you always have access to.
+  const withCommander = Slot.manaHealth(deck.concat([{name: "Cmdr", typeLine: "Legendary Creature", manaCost: "{9}{U}", isCommander: true, quantity: 1}]));
+  assert.equal(withCommander.pips.U, health.pips.U, "the commander's own pips are not deck demand");
+});
+
 ok("card art is asked for at the size the layout actually renders", () => {
   // The catalog stores Scryfall's `small`, 146px wide, because that is what the import
   // captured. The preview renders it at 286 CSS px on a desktop and 316 on a phone --

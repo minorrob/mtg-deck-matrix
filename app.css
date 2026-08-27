@@ -39,6 +39,8 @@ button { touch-action: manipulation; }
 .brand-row { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 1560px; margin: 0 auto 9px; }
 .eyebrow { margin: 0 0 2px; color: #e6cc91; font-size: 10px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
 h1 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp(23px, 5vw, 34px); line-height: 1; }
+.export-age { align-self: center; color: #cfe0d6; font-size: 9px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+.export-age.is-stale { color: #f0d089; }
 .save-status { max-width: 120px; color: #d9e8df; font-size: 11px; line-height: 1.25; text-align: right; }
 .header-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
 .tour-button { min-height: 34px; padding: 6px 10px; border: 1px solid rgba(255,255,255,.42); border-radius: 999px; color: #fff6dd; background: rgba(8,31,24,.58); font-size: 10px; font-weight: 900; cursor: pointer; backdrop-filter: blur(4px); }
@@ -1755,6 +1757,25 @@ footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px;
   background:var(--surface);text-align:left;display:flex;flex-direction:column;gap:4px;cursor:pointer}
 .dp-tile:hover{box-shadow:0 0 0 2px rgba(32,88,68,.28)}
 .dp-tile[aria-pressed="true"]{background:var(--gold-soft);box-shadow:0 0 0 3px rgba(32,88,68,.42)}
+/* Ready to sleeve: the rules verdict and the mana, where you are holding the cards. */
+.dp-ready{margin:0 0 11px;border:1px solid var(--line);border-left-width:4px;border-radius:12px;background:var(--surface)}
+.dp-ready.is-ok{border-left-color:var(--forest-2)}
+.dp-ready.is-warn{border-left-color:#c69735}
+.dp-ready.is-bad{border-left-color:#9b3b2f}
+.dp-ready>summary{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding:9px 12px;cursor:pointer;list-style:none}
+.dp-ready>summary::-webkit-details-marker{display:none}
+.dp-ready-v{font-size:12.5px}
+.dp-ready-m{display:flex;flex-wrap:wrap;gap:5px}
+.dp-mana{display:inline-flex;align-items:center;gap:3px;padding:1px 7px;border:1px solid var(--line);border-radius:999px;
+  background:var(--paper);font-size:11px;white-space:nowrap}
+.dp-mana.is-thin{border-color:#c69735;background:#fdf3dd;font-weight:800}
+.dp-ready-c{margin-left:auto;font-size:11.5px;color:var(--muted);white-space:nowrap}
+.dp-ready-body{padding:0 12px 11px}
+.dp-ready-list{margin:0;padding-left:18px;font-size:12px;line-height:1.5}
+.dp-ready-list i{color:var(--muted);font-style:normal}
+.dp-ready-note{margin:0 0 7px;font-size:12px;line-height:1.5;color:var(--muted)}
+@media (max-width:640px){.dp-ready-c{margin-left:0}}
+
 /* Deck search and filter. Eighty-five rows is too many to scan for one card. */
 .dp-filters{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px;margin:0 0 11px;padding:9px 10px;
   border:1px solid var(--line);border-radius:12px;background:var(--surface)}

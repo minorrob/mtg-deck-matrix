@@ -390,6 +390,57 @@
     </div>`;
   }
 
+  /* ---------------- ready to sleeve? ----------------
+   * The question you are actually asking with the cards in front of you: is this a legal
+   * hundred, and can it cast itself. Both answers already existed -- compliance-model has
+   * ruled on legality since the beginning, and the mana rules are the engine's own -- they
+   * were just never shown on the page where you are holding the cards.
+   */
+  const PIP = {W: "◐", U: "◉", B: "●", R: "◆", G: "◈"};
+
+  function readyMarkup(ctx, slots) {
+    const cards = ctx.deckCards || [];
+    if (!cards.length) return "";
+    const rules = ctx.complianceFor ? ctx.complianceFor(cards) : null;
+    const mana = Slot.manaHealth(cards);
+    const problems = rules ? (rules.tier3 || []) : [];
+    const warnings = rules ? (rules.compositionWarnings || []) : [];
+    const gc = rules ? (rules.selectedGameChangers || []).length : 0;
+
+    // Only the colours the deck actually asks for. Sources for a colour it never casts --
+    // an any-colour rock in a two-colour deck credits all five -- are noise on the row.
+    const colors = Slot.MANA_COLORS.filter((c) => mana.pips[c] > 0);
+    const manaChips = colors.map((c) => {
+      const thin = mana.thin.indexOf(c) >= 0;
+      return `<span class="dp-mana${thin ? " is-thin" : ""}" title="${
+        mana.sources[c]} source${mana.sources[c] === 1 ? "" : "s"} for ${mana.pips[c]} ${c} pip${
+        mana.pips[c] === 1 ? "" : "s"}${thin ? " — thin" : ""}">${PIP[c]} <b class="dp-num">${
+        mana.sources[c]}</b>/${mana.pips[c]}</span>`;
+    }).join("");
+
+    const verdict = problems.length
+      ? `<b>${plural(problems.length, "rule problem")}</b>`
+      : `<b>Legal</b> at Bracket 3${gc ? ` · ${plural(gc, "Game Changer")}` : ""}`;
+
+    return `<details class="dp-ready${problems.length ? " is-bad" : mana.thin.length ? " is-warn" : " is-ok"}">
+      <summary>
+        <span class="dp-ready-v">${problems.length ? "⚠" : "✓"} ${verdict}</span>
+        <span class="dp-ready-m">${manaChips}</span>
+        <span class="dp-ready-c"><b class="dp-num">${mana.lands}</b> lands · avg cost <b class="dp-num">${
+          mana.averageValue.toFixed(1)}</b></span>
+      </summary>
+      <div class="dp-ready-body">
+        ${problems.length ? `<ul class="dp-ready-list">${problems.slice(0, 8).map((p) =>
+          `<li><b>${esc(p.card)}</b> ${esc(p.rule)}${p.detail ? ` <i>${esc(p.detail)}</i>` : ""}</li>`).join("")}</ul>`
+          : `<p class="dp-ready-note">Nothing in this hundred breaks a Bracket 3 rule: one commander, a hundred cards, singleton outside the basics, every colour inside the commander's identity, and no more than three Game Changers.</p>`}
+        ${mana.thin.length ? `<p class="dp-ready-note"><b>Thin on ${
+          mana.thin.join(", ")}.</b> A colour wants roughly a third of the deck's lands behind it before its pips stop stranding cards in hand. Counted over lands and rocks alike, weighted by how many copies each slot holds.</p>` : ""}
+        ${warnings.length ? `<ul class="dp-ready-list">${warnings.slice(0, 5).map((w) =>
+          `<li>${esc(typeof w === "string" ? w : (w.rule || w.card || ""))}</li>`).join("")}</ul>` : ""}
+      </div>
+    </details>`;
+  }
+
   function groupSlots(slots) {
     const by = new Map();
     slots.forEach((s) => {
@@ -502,6 +553,7 @@
           <div class="dp-cstep is-now"><b>1</b>calibrated — the other 4 stay one click away</div>
         </div>
       </div>
+      ${readyMarkup(ctx, slots)}
       ${filterMarkup(ctx, slots, visible.length)}
       ${visible.length ? "" : '<p class="dp-empty">No slot in this deck matches that.</p>'}
       ${groupSlots(visible).map(([type, rows]) => {
