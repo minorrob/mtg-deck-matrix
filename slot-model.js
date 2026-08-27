@@ -164,6 +164,93 @@
     return raw.replace(/(cards\.scryfall\.io\/)(small|normal|large|png|art_crop|border_crop)(\/)/, `$1${size}$3`);
   }
 
+  /* ---------------- mana ----------------
+   * What a card costs and what it can pay for. Deliberately the same two rules
+   * sim-engine uses -- tests/slot-model.mjs asserts the pair agree across the whole
+   * catalog -- because a page that disagrees with the simulation about what a land
+   * taps for is worse than a page with no mana readout at all.
+   */
+  const MANA_COLORS = ["W", "U", "B", "R", "G"];
+  const BASIC_COLOR = {Plains: "W", Island: "U", Swamp: "B", Mountain: "R", Forest: "G"};
+
+  function manaCostOf(manaCost) {
+    const tokens = String(manaCost || "").match(/\{([^}]+)\}/g) || [];
+    const pips = {W: 0, U: 0, B: 0, R: 0, G: 0};
+    let generic = 0;
+    let value = 0;
+    tokens.forEach((token) => {
+      const body = token.slice(1, -1).toUpperCase();
+      if (/^\d+$/.test(body)) { generic += Number(body); value += Number(body); return; }
+      if (body === "X" || body === "Y") return;
+      const color = MANA_COLORS.find((entry) => body.includes(entry));
+      if (color) pips[color] += 1; else generic += 1;
+      value += 1;
+    });
+    return {pips, generic, value};
+  }
+
+  function producesColors(card) {
+    const text = String((card && card.oracleText) || "").toLowerCase();
+    const typeLine = String((card && card.typeLine) || "");
+    const produced = new Set();
+    if (BASIC_COLOR[card && card.name]) produced.add(BASIC_COLOR[card.name]);
+    // Every symbol in the run after "add", not just the first, so a dual or triome
+    // gets credit for each colour it actually taps for.
+    (text.match(/add\s+(?:\{[wubrgc]\}\s*(?:(?:,|or\b|and\b)\s*)*)+/g) || []).forEach((run) => {
+      (run.match(/\{([wubrgc])\}/g) || []).forEach((token) => {
+        const color = token.replace(/[^wubrgc]/g, "").toUpperCase();
+        if (MANA_COLORS.includes(color)) produced.add(color);
+      });
+    });
+    if (/add one mana of any color|add \{c\}\{c\}|any color/.test(text)) MANA_COLORS.forEach((color) => produced.add(color));
+    if (/\bLand\b/.test(typeLine) && !produced.size) ((card && card.colorIdentity) || []).forEach((color) => produced.add(String(color).toUpperCase()));
+    return Array.from(produced);
+  }
+
+  /**
+   * Whether a hundred can actually cast itself.
+   *
+   * Sources counts every card that taps for a colour, lands and rocks alike, weighted by
+   * how many copies the slot holds. Demand is the pips the deck's own spells ask for. The
+   * ratio between them is the thing worth seeing at a table: eighteen green pips off nine
+   * green sources is a deck that will sit in your hand.
+   *
+   * The floor is deliberately crude -- a colour wants roughly a third of the deck's lands
+   * behind it before the pips stop being a problem -- because a precise answer needs the
+   * curve, and a crude answer you can check by eye beats a precise one you cannot.
+   */
+  function manaHealth(cards) {
+    const sources = {W: 0, U: 0, B: 0, R: 0, G: 0};
+    const pips = {W: 0, U: 0, B: 0, R: 0, G: 0};
+    let lands = 0;
+    let spells = 0;
+    let totalValue = 0;
+    (cards || []).forEach((card) => {
+      const qty = Math.max(1, Number(card.quantity) || 1);
+      const isLand = /\bLand\b/.test(String(card.typeLine || ""));
+      if (isLand) lands += qty; else { spells += qty; }
+      producesColors(card).forEach((color) => { sources[color] += qty; });
+      if (!isLand && !card.isCommander) {
+        const cost = manaCostOf(card.manaCost);
+        MANA_COLORS.forEach((color) => { pips[color] += cost.pips[color] * qty; });
+        totalValue += cost.value * qty;
+      }
+    });
+    /* A colour is thin when the deck asks more of it than it can pay for. A flat floor --
+       a third of the lands, say -- misses the case that actually strands cards: deck 3
+       asks thirty-four green pips off eighteen green sources and a flat rule calls that
+       healthy. So the floor scales with how much of the deck's demand that colour is. A
+       colour carrying sixty per cent of the pips wants roughly sixty per cent of the lands
+       behind it; the 0.9 is slack for rocks and fixing that a pip count cannot see. */
+    const totalPips = MANA_COLORS.reduce((sum, color) => sum + pips[color], 0);
+    const floorFor = (color) => (!totalPips ? 0 : Math.max(6, Math.round(lands * (pips[color] / totalPips) * 0.9)));
+    const thin = MANA_COLORS.filter((color) => pips[color] > 0 && sources[color] < floorFor(color));
+    return {
+      sources, pips, lands, spells, thin, floorFor,
+      averageValue: spells ? totalValue / spells : 0
+    };
+  }
+
   function rungHeading(rung, name, predecessorName, authored) {
     const card = name || "this card";
     const prev = predecessorName;
@@ -463,6 +550,7 @@
     PRICE_BANDS, priceBand,
     ACQUISITION: ACQ, PLACE, ownedKey, normalizeOwned, ownedCount, acquisitionOf,
     SPOTS, vendorSpot, rungHeading, cardImage,
+    MANA_COLORS, manaCostOf, producesColors, manaHealth,
     TYPE_ORDER, cardType, isBasicLand, whyFor, whyText, whySource,
     deckSlots, shopRows
   };
