@@ -182,6 +182,39 @@
     </div>`;
   }
 
+  /* ---------------- the Manual box ----------------
+   * Every slot gets one, shaped like the card that would sit there. Two ways in: a
+   * TCGplayer link, or a card already sitting in the Salvage yard. Submit resolves it,
+   * writes it to this variant as a Manual rung on this slot, and pulls it out of Salvage
+   * when that is where it came from. A slot that already holds a manual card shows that
+   * card as a rung tile like any other, and the box turns into a way to replace it.
+   */
+  function manualBoxMarkup(ctx, slot, deckId) {
+    const existing = slot.rungs.filter((r) => r.rung === "manual");
+    const yard = (ctx.salvage || []).filter((c) => !existing.some((e) => Slot.ownedKey(e.name) === Slot.ownedKey(c.name)));
+    const sid = esc(slot.slotId);
+    return `<div class="dp-manual" data-dp-manual="${sid}">
+      <div class="dp-manual-hd">
+        <span class="dp-rung is-manual">Manual</span>
+        <span class="dp-manual-ttl">${existing.length ? "Add another card to this slot" : "Put your own card in this slot"}</span>
+        <button type="button" class="dp-manual-go" data-dp-manual-submit="${sid}" title="Load this card into the slot">Submit</button>
+      </div>
+      <label class="dp-manual-f">
+        <span>TCGplayer link</span>
+        <input type="url" inputmode="url" placeholder="https://www.tcgplayer.com/product/…"
+          data-dp-manual-url="${sid}" aria-label="TCGplayer link for a card to put in this slot">
+      </label>
+      <label class="dp-manual-f">
+        <span>or a card from Salvage${yard.length ? ` · ${yard.length}` : ""}</span>
+        <select data-dp-manual-salvage="${sid}" aria-label="Choose a card from the Salvage yard for this slot"${yard.length ? "" : " disabled"}>
+          <option value="">${yard.length ? "Choose a card you already own…" : "Salvage is empty"}</option>
+          ${yard.map((c) => `<option value="${esc(c.name)}">${esc(c.name)}${c.typeLine ? ` · ${esc(String(c.typeLine).split(" —")[0])}` : ""}</option>`).join("")}
+        </select>
+      </label>
+      <p class="dp-manual-note" data-dp-manual-status="${sid}">Fill in one of the two. A manual card carries no simulation evidence, so its measured fields read n/a.</p>
+    </div>`;
+  }
+
   function candidateMarkup(ctx, slot, deckId) {
     const rungs = slot.rungs.filter((r) => r.rung !== "transfer");
     const base = rungs.find((r) => r.rung === "base");
@@ -206,6 +239,7 @@
         <p class="dp-lab">The ${plural(rungs.length, "rung")} for this slot</p>
         <div class="dp-row">${rungs.map((r) => tileMarkup(ctx, slot, r, deckId, false)).join("")}</div>
         ${parts.length ? `<div class="dp-why">${parts.join("")}</div>` : ""}
+        ${manualBoxMarkup(ctx, slot, deckId)}
       </div>
       <aside class="dp-prev" id="dp-prev-${esc(slot.slotId)}">${
         shown ? previewMarkup(ctx, shown.name, prevLoc, shown.price) : ""}</aside>

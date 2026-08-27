@@ -141,7 +141,21 @@
     catalog = merged.catalog;
     buyCatalog = merged.buyCatalog;
     customDeckIds = new Set(merged.customDeckIds);
+    applyManualCards();
     if (state) pruneMissingSelections();
+  }
+
+  // Hangs each variant's hand-added cards off its plan as a `manual` array, which is where
+  // lineup-model picks them up as one more candidate inside the slot of the card each one
+  // replaces. Re-applied after every catalog rebuild because that rebuild starts from the
+  // baked plans, which know nothing about these.
+  function applyManualCards() {
+    if (!state?.manualCards || !buyCatalog?.plans) return;
+    for (const [variantId, cards] of Object.entries(state.manualCards)) {
+      const plan = buyCatalog.plans[variantId];
+      if (!plan || !Array.isArray(cards) || !cards.length) continue;
+      buyCatalog.plans[variantId] = {...plan, manual: cards.map((card) => ({...card}))};
+    }
   }
 
   // Clearing a placeholder deletes variants the rest of the app may still point at.
@@ -307,6 +321,10 @@
       // source of truth for what the deck IS -- that is always derived from the
       // selection -- only a tie-break for when two rungs are the same hundred.
       deckRung: {},
+      // Cards the owner added to a deck by hand, keyed by variant id. These live in state
+      // rather than in data/buy-plans.json on purpose: the buy catalog is regenerated from
+      // the build kit, so anything written into it would be lost on the next rebuild.
+      manualCards: {},
       cardFilters: {query: "", deck: "all", status: "all", bought: "all", type: "all", sort: "deck"},
       // Games played at a real table. Written here on the night, exported as JSON,
       // committed to the repo, and compiled into a running history -- the loop
@@ -343,6 +361,7 @@
           cardFilters: {...initial.cardFilters, ...(saved.cardFilters || {})},
           liveActive: saved.liveActive || {},
           deckRung: saved.deckRung || {},
+          manualCards: saved.manualCards || {},
           liveActiveSeed: saved.liveActiveSeed || {},
           gameLog: Array.isArray(saved.gameLog) ? saved.gameLog : []
         };
@@ -578,6 +597,9 @@
       colors: variant.colorIdentity || variant.colors || "",
       variantId: variant.id,
       slots, owned, cards, boxes, deckLabels, openGroups,
+      // The Salvage yard, offered in every slot's Manual box. Cards already carried into
+      // this deck as a manual pick are filtered out per slot by the box itself.
+      salvage: allSalvageCards().map((card) => ({name: card.name, typeLine: card.typeLine || "", image: card.image || "", price: Number(card.price) || 0})),
       // Which of the four measured builds this deck currently IS, derived from the
       // selection rather than remembered, so a single hand-edited slot honestly
       // drops the highlight instead of leaving a rung claiming a deck it no longer
@@ -623,6 +645,94 @@
     window.MtgDeckPage.render($("#dp-body"), ctx);
   }
 
+  // Resolves whatever the reader put in a slot's Manual box and files it as a Manual rung
+  // on that slot. A TCGplayer link goes through the same resolver the Salvage intake uses,
+  // which already understands affiliate wrappers and set-prefixed slugs; a Salvage pick is
+  // already resolved, so it is simply moved. Either way the card is written to
+  // state.manualCards -- never to the buy catalog, which is regenerated from the build kit.
+  async function submitManualCard(slotId) {
+    const ctx = deckPageContext();
+    if (!ctx) return;
+    const scope = document.querySelector(`[data-dp-manual="${CSS.escape(slotId)}"]`);
+    const status = scope?.querySelector("[data-dp-manual-status]");
+    const url = String(scope?.querySelector("[data-dp-manual-url]")?.value || "").trim();
+    const fromYard = String(scope?.querySelector("[data-dp-manual-salvage]")?.value || "").trim();
+    const say = (message) => { if (status) status.textContent = message; };
+    if (!url && !fromYard) return say("Paste a TCGplayer link or choose a card from Salvage first.");
+    if (url && fromYard) return say("Use one or the other, not both.");
+
+    const slot = ctx.slots.find((row) => String(row.slotId) === String(slotId));
+    // A manual card answers to the card this slot was built around, so that is what it replaces.
+    const replaces = slot?.shellName || "";
+    let card = null;
+    if (fromYard) {
+      const record = Object.values(state.liveSalvage || {}).find((entry) => entry.card?.name === fromYard);
+      if (!record) return say("That card is no longer in Salvage.");
+      card = {...record.card};
+    } else {
+      say("Looking it up…");
+      try {
+        const resolved = await Scryfall.createClient({}).resolveTcgplayerUrl(url);
+        if (!resolved?.card) return say(resolved?.error || "No card matched that link.");
+        card = resolved.card;
+      } catch (error) {
+        return say(error?.message || "That link could not be resolved.");
+      }
+    }
+
+    const price = Number(card.price) || 0;
+    const entry = {
+      id: `manual-${ctx.deckId}-${itemKey(card)}`,
+      name: card.name,
+      quantity: Math.max(1, Number(slot?.quantity) || 1),
+      manaCost: card.manaCost || "",
+      typeLine: card.typeLine || "",
+      oracleText: card.oracleText || "",
+      keywords: card.keywords || [],
+      colorIdentity: card.colorIdentity || [],
+      commanderLegal: card.commanderLegal !== false,
+      rarity: card.rarity || "",
+      setName: card.setName || "",
+      image: card.image || "",
+      price, ceiling: Number(card.ceiling ?? price) || price,
+      tcgplayerUrl: card.tcgplayerUrl || (/^https?:\/\//i.test(url) ? url : ""),
+      gameChanger: Boolean(card.gameChanger),
+      category: "manual",
+      stage: "Manual",
+      replaces,
+      // Manual cards never went through the simulation. Saying so plainly is the honest
+      // reading; the alternative is a blank that looks like a missing value.
+      purpose: fromYard ? "Added by hand from the Salvage yard. Not simulated — measured fields read n/a."
+                        : "Added by hand from a TCGplayer link. Not simulated — measured fields read n/a.",
+      why: "n/a — added by hand, not measured by the simulation.",
+      whereToBuy: fromYard ? "Already owned · was in Salvage" : "Singles case",
+      source: fromYard ? "salvage" : "tcgplayer",
+      addedAt: new Date().toISOString()
+    };
+    entry.whyPrimary = entry.why;
+
+    state.manualCards ||= {};
+    const list = (state.manualCards[ctx.deckId] || []).filter((existing) => itemKey(existing) !== itemKey(entry));
+    list.push(entry);
+    state.manualCards[ctx.deckId] = list;
+
+    // A card pulled out of the yard now has a deck home, so it leaves the yard -- unless
+    // more copies are owned than the one this slot just took.
+    if (fromYard) {
+      const key = itemKey(entry);
+      const owned = Number(state.boughtQuantities?.[key] || 1);
+      const placed = Object.values(state.manualCards).flat().filter((existing) => itemKey(existing) === key).length;
+      if (placed >= owned) delete state.liveSalvage[key];
+    }
+    // A card resolved from a link is one you still have to buy, so nothing is marked
+    // owned here: it reaches the Shop as an unbought card in the plan, like any other.
+
+    applyManualCards();
+    saveState(`${entry.name} added to Deck ${ctx.deckId}`);
+    renderDeckPage();
+    showToast(`${entry.name} is now a Manual option on the ${replaces || "selected"} slot. Tick it to swap it in.`);
+  }
+
   function deckPageClick(event) {
     let el;
     if ((el = event.target.closest("[data-dp-deck]"))) {
@@ -654,6 +764,10 @@
       state.deckRung[ctx.deckId] = el.dataset.dpRung;
       saveState();
       renderDeckPage();
+      return true;
+    }
+    if ((el = event.target.closest("[data-dp-manual-submit]"))) {
+      submitManualCard(el.dataset.dpManualSubmit);
       return true;
     }
     if ((el = event.target.closest("[data-dp-pick]"))) {
@@ -3317,7 +3431,8 @@
     precon: "Precon", shell: "Starting Shell", tuned: "Tuned", upgrade: "Enhance", enhance: "Enhance", max: "Maxxed",
     tuned2: "Tuned", enhance2: "Maxxed", max2: "Maxxed",
     funTuned: "Pod Fun", funMax: "Fun Max",
-    altTuned: "Alt Tuned", altMax: "Alt Max"
+    altTuned: "Alt Tuned", altMax: "Alt Max",
+    manual: "Manual"
   };
   // Which plan array each checkbox kind draws from. Only "tuned" differs from its own name.
   const KIND_ARRAY = {tuned: "required"};
@@ -3355,6 +3470,13 @@
       ]
     },
     {
+      key: "manual", title: "Manual", glyph: "✎",
+      tabs: [
+        {key: "manual", label: "Manual", kinds: ["manual"], preset: "manual", build: "Manual",
+         note: "Cards you put here yourself — pulled out of Salvage, or resolved from a pasted TCGplayer link. Each one names the card it would replace and is offered as one more choice in that slot: check it to swap it in, uncheck it to hand the slot back. Nothing here has been through the simulation, so measured fields read n/a."}
+      ]
+    },
+    {
       key: "alt", title: "Alt commander", glyph: "◇",
       tabs: [
         {key: "altTuned", label: "Alt Tuned", kinds: ["altTuned"], preset: "altTuned", build: "Alt Tuned",
@@ -3370,6 +3492,10 @@
   const ladderTabState = new Map();
 
   function availableTabs(plan, group) {
+    // Every other group hides when it holds no cards, because an empty rung is noise.
+    // Manual is the exception: its whole point is the box you add the first card with, so
+    // it stays reachable on a deck that has none yet.
+    if (group.key === "manual") return group.tabs;
     return group.tabs.filter((tab) => tab.kinds.some((kind) => kindItems(plan, kind).length));
   }
 
@@ -3598,7 +3724,7 @@
   // rung below it without knowing which item filled the slot), so this is a
   // lookup by name across every bucket, falling back to the audited catalog for
   // cards that sit in the shell rather than on a ladder.
-  const REPLACES_BUCKETS = ["startingShell", "required", "tuned2", "upgrade", "enhance", "enhance2", "max", "max2", "funTuned", "funMax", "altTuned", "altMax"];
+  const REPLACES_BUCKETS = ["startingShell", "required", "tuned2", "upgrade", "enhance", "enhance2", "max", "max2", "funTuned", "funMax", "altTuned", "altMax", "manual"];
   function replacedCardFor(plan, name) {
     if (!name) return null;
     const key = itemKey({name});
@@ -4710,7 +4836,7 @@
 
   const ROLE_FLOORS = {ramp: 8, draw: 8, interaction: 8, protect: 3};
   const ROLE_LABELS = {ramp: "Ramp", draw: "Draw", interaction: "Interaction", protect: "Protection"};
-  const PLAN_CARD_ARRAYS = ["startingShell", "required", "upgrade", "enhance", "max", "tuned2", "enhance2", "max2", "funTuned", "funMax", "altTuned", "altMax"];
+  const PLAN_CARD_ARRAYS = ["startingShell", "required", "upgrade", "enhance", "max", "tuned2", "enhance2", "max2", "funTuned", "funMax", "altTuned", "altMax", "manual"];
 
   // Mirrors tests/lineup-compliance.mjs's roleFlags heuristic (same regex patterns, same four
   // roles) against a live card's own hydrated text instead of the offline audit file -- this
@@ -6582,6 +6708,37 @@
     ]
   };
 
+  /* The sticky header measured 194px on a 390px screen and 211px on a 360px one --
+     a quarter and a third of the viewport, held there permanently, for a title and
+     five buttons touched once a session. On a phone it now starts folded to the tab
+     bar. This is a per-device presentation choice, not part of the deck state, so it
+     is kept out of the exported file and read straight from localStorage. */
+  const HEADER_COLLAPSE_KEY = "mtg-header-collapsed-v1";
+
+  function readHeaderCollapsed() {
+    try {
+      const saved = localStorage.getItem(HEADER_COLLAPSE_KEY);
+      if (saved === "0" || saved === "1") return saved === "1";
+    } catch (error) { /* private mode, blocked storage: fall through to the default */ }
+    // Folded is the default only where it buys something. On a wide screen the
+    // toggle is hidden, so leaving it open is what the reader expects.
+    return window.matchMedia("(max-width: 700px)").matches;
+  }
+
+  function setHeaderCollapsed(collapsed) {
+    const header = $(".app-header");
+    const toggle = $("#header-toggle");
+    if (!header) return;
+    header.dataset.collapsed = collapsed ? "1" : "0";
+    if (toggle) {
+      toggle.setAttribute("aria-expanded", String(!collapsed));
+      toggle.setAttribute("aria-label", collapsed
+        ? "Show the title and the Tour, Export, Import, Load Active and Reset buttons"
+        : "Hide the title and the Tour, Export, Import, Load Active and Reset buttons");
+    }
+    try { localStorage.setItem(HEADER_COLLAPSE_KEY, collapsed ? "1" : "0"); } catch (error) { /* nothing to remember it with */ }
+  }
+
   function activeViewName() {
     return $(".main-tab.is-active")?.dataset.view || "compare";
   }
@@ -6833,6 +6990,10 @@
       $$(".main-tab").forEach((button) => button.addEventListener("click", () => switchView(button.dataset.view)));
       $("#reset-button").addEventListener("click", resetState);
       $("#tour-button").addEventListener("click", startTour);
+      setHeaderCollapsed(readHeaderCollapsed());
+      $("#header-toggle")?.addEventListener("click", () => {
+        setHeaderCollapsed($(".app-header")?.dataset.collapsed !== "1");
+      });
       $("#export-state-button").addEventListener("click", exportFullState);
       $("#import-state-input").addEventListener("change", (event) => {
         const file = event.target.files?.[0];

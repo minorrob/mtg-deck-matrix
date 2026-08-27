@@ -18,16 +18,16 @@
   <meta name="twitter:image" content="https://minorrob.github.io/mtg-deck-matrix/og.png">
   <title>Trey's MtG Deck Builder</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%83%8F%EF%B8%8F%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="app.css?v=40">
-  <script src="lineup-model.js?v=2" defer></script>
+  <link rel="stylesheet" href="app.css?v=42">
+  <script src="lineup-model.js?v=3" defer></script>
   <script src="compliance-model.js?v=1" defer></script>
   <script src="scryfall-client.js?v=2" defer></script>
   <script src="custom-model.js?v=2" defer></script>
   <script src="deck-generator.js?v=2" defer></script>
-  <script src="slot-model.js?v=3" defer></script>
-  <script src="deck-page.js?v=3" defer></script>
+  <script src="slot-model.js?v=4" defer></script>
+  <script src="deck-page.js?v=4" defer></script>
   <script src="shop-page.js?v=1" defer></script>
-  <script src="app.js?v=51" defer></script>
+  <script src="app.js?v=53" defer></script>
   <script src="shop-filters.js?v=5" defer></script>
 </head>
 <body>
@@ -37,7 +37,7 @@
       <img src="https://api.scryfall.com/cards/named?format=image&amp;version=art_crop&amp;fuzzy=Slinza%2C+the+Spiked+Stampede" alt="">
       <img src="https://api.scryfall.com/cards/named?format=image&amp;version=art_crop&amp;fuzzy=Sauron%2C+the+Dark+Lord" alt="">
     </div>
-    <div class="brand-row">
+    <div class="brand-row" id="header-brand">
       <div>
         <p class="eyebrow">Commander field guide</p>
         <h1>Trey's Deck Matrix</h1>
@@ -65,6 +65,10 @@
         <span class="tab-step">4</span><span>Game Log</span>
       </button>
     </nav>
+    <button class="header-toggle" id="header-toggle" type="button" aria-expanded="false" aria-controls="header-brand"
+      aria-label="Show the title and the Tour, Export, Import, Load Active and Reset buttons">
+      <span aria-hidden="true">⌄</span>
+    </button>
   </header>
 
   <main id="app" tabindex="-1">
