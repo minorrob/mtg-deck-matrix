@@ -582,6 +582,17 @@
     const committed = new Map();
     const listedBy = new Map();
     const mine = new Set();
+    /* Copies, not names. One Sol Ring and five decks that each box one is the normal case
+       here, and the old map held a single deck per card name, so four of those five decks
+       were told the card was somewhere else.
+    
+       Counting what OTHER decks have boxed is not enough either: with two decks boxing the
+       same single copy, each sees the other holding one and neither gets it, so a card you
+       own reads as missing from both. The copies are allocated instead -- decks walked in a
+       fixed order, first claim served -- so exactly one deck holds it and the rest are told
+       plainly that they need another. */
+    const claimSatisfied = new Map();
+    const unclaimed = new Map();
     variants.forEach((v) => {
       deckLabels[v.id] = "D" + v.deckId;
       const p = buyCatalog && buyCatalog.plans ? buyCatalog.plans[v.id] : null;
@@ -590,8 +601,16 @@
       Slot.deckSlots(p, ensureBuyState(v.id), {owned, cards}).forEach((slot) => {
         if (slot.pick && ticked[slot.slotId]) {
           const key = Slot.ownedKey(slot.pick.name);
-          boxes[key] = v.id;
-          committed.set(key, (committed.get(key) || 0) + Math.max(1, Number(slot.pick.quantity) || 1));
+          const qty = Math.max(1, Number(slot.pick.quantity) || 1);
+          if (!unclaimed.has(key)) unclaimed.set(key, Slot.ownedCount(owned, slot.pick.name).inHand || 0);
+          const left = unclaimed.get(key);
+          const served = left >= qty;
+          if (served) {
+            unclaimed.set(key, left - qty);
+            boxes[key] = boxes[key] || v.id;   // whoever actually holds it
+            committed.set(key, (committed.get(key) || 0) + qty);
+          }
+          claimSatisfied.set(`${key}|${v.id}`, served);
         }
         (slot.rungs || []).forEach((rung) => {
           const key = Slot.ownedKey(rung.name);
@@ -630,6 +649,16 @@
       colors: variant.colorIdentity || variant.colors || "",
       variantId: variant.id,
       slots, owned, cards, boxes, deckLabels, openGroups,
+      /* How many copies of a card other decks have boxed, and how many you own that
+         nothing has claimed. deck-page reads these instead of "who has it", so five decks
+         can each box a copy of a card you own five of without any of them lying. */
+      // Did this deck's claim on the card get served? Only meaningful where it is ticked.
+      claimHeld: (name) => claimSatisfied.get(`${Slot.ownedKey(name)}|${variant.id}`) === true,
+      // Copies nobody has boxed, which is what an unticked slot could still take.
+      spareCopies: (name) => {
+        const key = Slot.ownedKey(name);
+        return unclaimed.has(key) ? unclaimed.get(key) : (Slot.ownedCount(owned, name).inHand || 0);
+      },
       // Search and filter live per deck: narrowing deck 1 to lands should not follow you
       // into deck 2, where you were looking at something else.
       filters: deckPageState.filters[variant.id] || (deckPageState.filters[variant.id] = {query: "", type: "all", rung: "all", where: "all"}),

@@ -196,6 +196,45 @@ for (const view of tabViews) {
 for (const view of [...appSource.matchAll(/^\s{4}([a-z0-9]+): \[$/gm)].map((m) => m[1])) {
   assert.ok(tabViews.includes(view), `the tour still defines steps for ${view}, which is no longer a tab`);
 }
+/* The deck header's arithmetic. Three separate ways it was wrong, all of them from
+   counting the wrong thing rather than counting badly. */
+{
+  const deckSource = await readFile(new URL("../deck-page.js", import.meta.url), "utf8");
+
+  // 1. Lands by the card in the slot, not by the slot. Slot identity is anchored to the
+  //    shell so rows stay put when the rung changes, which means a land slot can hold a
+  //    creature and an enchantment slot can hold a land. Deck 1 at Tuned read 38 by slot
+  //    and 36 by card.
+  assert.match(deckSource, /if \(cardTypeOf\(ctx, s\.pick\.name\) === "Land"\) t\.lands \+= qty;/,
+    "the land count must read the card in the slot, not the slot's own type");
+  assert.match(deckSource, /const misfiled = pick && realType && realType !== slot\.type/,
+    "a row whose card type differs from its group must say so, or counting by eye misses it");
+
+  // 2. Cards, not rows. Eighty-five rows hold a hundred cards, because the basics collapse
+  //    into one row each.
+  // Match the computation, not the phrase: the comment above the header explains the old
+  // "85/85 slots filled" wording, and a bare text search finds that and fails on prose.
+  assert.ok(!deckSource.includes("${slots.length - t.holes}/${slots.length}"),
+    "the header must no longer compute filled rows over total rows");
+  assert.match(deckSource, /<b class="dp-num">\$\{t\.active\}\/\$\{t\.cards\}<\/b> cards in the box/,
+    "the header must read as cards in the box over cards in the deck");
+
+  // 3. Copies are allocated, not counted. Two decks boxing the same single copy used to
+  //    leave BOTH reading "another copy needed", because each saw the other holding one.
+  assert.match(appSource, /const served = left >= qty;/,
+    "boxed copies must be served from a pool, first claim first");
+  assert.match(appSource, /claimSatisfied\.set\(`\$\{key\}\|\$\{v\.id\}`, served\);/,
+    "each deck's claim on a card must be recorded per deck, not per name");
+  assert.ok(!appSource.includes("boxedElsewhere"),
+    "counting what other decks boxed is symmetric and starves both; the allocation replaces it");
+  assert.match(deckSource, /\? \(ctx\.claimHeld \? ctx\.claimHeld\(name\) : true\)/,
+    "a ticked slot must ask whether its own claim was served");
+  // Ticking is never refused: the shortfall is a card to buy, and the Shop already asks
+  // for it, since shopRows sums quantity across decks against what you own.
+  assert.match(deckSource, /label: whose \? `Assigned · another copy needed/,
+    "a deck whose copy is elsewhere must still be tickable, and say what it needs");
+}
+
 /* Ticking a slot's box is a decision about the deck list, not a claim about the shelf.
    It used to be both: the tick wrote the card into the ownership ledger as in-hand so the
    row would stop reading "to buy". That made it one-way -- tick an ordered card, untick
