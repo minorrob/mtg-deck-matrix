@@ -758,7 +758,7 @@
       },
       // Search and filter live per deck: narrowing deck 1 to lands should not follow you
       // into deck 2, where you were looking at something else.
-      filters: deckPageState.filters[variant.id] || (deckPageState.filters[variant.id] = {query: "", type: "all", rung: "all", where: "all", status: "all", active: "all", groupBy: "type"}),
+      filters: deckPageState.filters[variant.id] || (deckPageState.filters[variant.id] = {query: "", type: "all", rung: "all", where: "all", status: "all", active: "all", groupBy: "type", sortBy: ""}),
       paidFor,
       // The Salvage yard, offered in every slot's Manual box. Cards already carried into
       // this deck as a manual pick are filtered out per slot by the box itself.
@@ -1018,7 +1018,8 @@
          someone who put the deck in shopping order did not ask for it back in type
          order just because they dropped a search term. */
       if (ctx) deckPageState.filters[ctx.deckId] = {query: "", type: "all", rung: "all",
-        where: "all", status: "all", active: "all", groupBy: ctx.filters.groupBy || "type"};
+        where: "all", status: "all", active: "all",
+        groupBy: ctx.filters.groupBy || "type", sortBy: ctx.filters.sortBy || ""};
       renderDeckPage();
       return true;
     }
@@ -1037,6 +1038,23 @@
       if (url) url.value = "";
       if (select) select.value = name;
       submitManualCard(slotId);
+      return true;
+    }
+    /* Every box at once. This writes only deckActive -- the selection, the rung and the
+       ownership ledger are all left alone, because claiming a slot has never been a claim
+       about what is in it. The seed flag is already set for any deck being looked at, so
+       deselecting all does not come back on the next render. */
+    if ((el = event.target.closest("[data-dp-claim]"))) {
+      const ctx = deckPageContext();
+      if (!ctx) return true;
+      const next = {};
+      if (el.dataset.dpClaim === "all") ctx.slots.forEach((slot) => { if (slot.pick) next[slot.slotId] = true; });
+      state.deckActive ||= {};
+      state.deckActive[ctx.deckId] = next;
+      state.deckActiveSeed ||= {};
+      state.deckActiveSeed[ctx.deckId] = true;
+      saveState(el.dataset.dpClaim === "all" ? "Every slot claimed" : "Every box cleared");
+      renderDeckPage();
       return true;
     }
     if ((el = event.target.closest("[data-dp-manual-submit]"))) {
@@ -1114,6 +1132,12 @@
       const stored = commitPaidPrice(paid.dataset.dpPaid, paid.value, "Paid");
       paid.value = stored === null ? "" : stored.toFixed(2);
       paid.parentElement?.classList.toggle("is-set", stored !== null);
+      /* The row shows what a card cost, and a price you just typed IS what it cost, so
+         the page has to be rebuilt rather than only the input patched. Without this the
+         row kept showing the target it had been replaced by, and a cost sort disagreed
+         with the number printed beside it. withUiState keeps the open slot open and the
+         cursor where it was. */
+      renderDeckPage();
       return true;
     }
     const filter = event.target.closest("[data-dp-filter]");

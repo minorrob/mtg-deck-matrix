@@ -126,6 +126,16 @@
     return {kind: "other", glyph: "◆", label: whose ? `In ${whose}'s box` : "Owned, no box", deck: holder, assigned};
   }
 
+  /* What a card cost. A price you typed into the slot's Paid box is the real number and
+     wins; the target price is an estimate standing in until you have one. Everything that
+     shows or sorts by cost goes through here, so the row and the sort can never disagree
+     about which figure they are using. */
+  function costOf(ctx, pick) {
+    if (!pick) return {value: 0, paid: false};
+    const paid = ctx.paidFor ? ctx.paidFor(pick.name) : null;
+    return paid === null ? {value: Number(pick.price) || 0, paid: false} : {value: Number(paid), paid: true};
+  }
+
   function meta(ctx, name) { return (ctx.cards || {})[Lineup.normalizeName(name)] || {}; }
   function cardTypeOf(ctx, name) { return Slot.cardType(meta(ctx, name)); }
   function rarityKey(ctx, name) { return RARITY_KEY[meta(ctx, name).rarity] || "C"; }
@@ -219,6 +229,7 @@
     /* A row that stands for several cards says how many of them you can actually field.
        "Forest ×7" is seven cards, not one, and the number worth knowing is how many of the
        Forests you own are still going spare once the other decks have taken theirs. */
+    const cost = costOf(ctx, pick);
     const pool = pick && ctx.availableFor ? ctx.availableFor(name) : null;
     const stock = pick && ctx.ownedTotal ? ctx.ownedTotal(name) : null;
     const sub = slot.isBasic
@@ -243,7 +254,9 @@
           <span class="dp-l2">${sub}</span>
         </button>
         <div class="dp-r">
-          ${pick ? `<span class="dp-num${loc.kind === "buy" ? " is-buy" : ""}">${money(pick.price)}</span>` : ""}
+          ${pick ? `<span class="dp-num${loc.kind === "buy" ? " is-buy" : ""}${cost.paid ? " is-paid" : ""}"${
+            cost.paid ? ` title="What you paid. Target was ${money(pick.price)}."` : ""
+          }>${money(cost.value)}</span>` : ""}
           <span class="dp-loc is-${loc.kind}"><span class="dp-g">${loc.glyph}</span>${esc(loc.label)}</span>
           <span class="dp-of">${slot.isBasic && stock !== null
             /* On a basic-land row the rung count is always "1 of 1", which says nothing.
@@ -482,6 +495,11 @@
       <select data-dp-filter="groupBy">
         ${GROUP_BY.map(([value, text]) => `<option value="${esc(value)}"${
           (f.groupBy || "type") === value ? " selected" : ""}>${esc(text)}</option>`).join("")}
+      </select></label>
+    <label class="dp-f"><span>Sort by</span>
+      <select data-dp-filter="sortBy">
+        ${SORT_BY.map(([value, text]) => `<option value="${esc(value)}"${
+          (f.sortBy || "") === value ? " selected" : ""}>${esc(text)}</option>`).join("")}
       </select></label>`;
     return `<div class="dp-filters" role="search">
       <label class="dp-f dp-f-q"><span>Search</span>
@@ -557,6 +575,24 @@
      one nameless group, and the renderer leaves off the heading rather than drawing a
      box around every row in the deck. */
   const GROUP_BY = [["type", "Type"], ["rarity", "Rarity"], ["status", "Status"], ["none", "None"]];
+  /* Sorting happens inside each group, never across them, so choosing a sort never
+     silently undoes the grouping. Deck order is kept as the default because it is the
+     order the plan was written in, and losing it would leave no way back. */
+  const SORT_BY = [["", "Deck order"], ["name", "Name A–Z"], ["name-desc", "Name Z–A"],
+                   ["cost-desc", "Cost high–low"], ["cost", "Cost low–high"]];
+  function sortSlots(ctx, rows, sortBy) {
+    if (!sortBy) return rows;
+    const name = (s) => face((s.pick && s.pick.name) || s.shellName || "").toLowerCase();
+    // An empty slot has no card and so no cost; it sorts to the end either way rather
+    // than pretending to be free.
+    const cost = (s) => (s.pick ? costOf(ctx, s.pick).value * Math.max(1, Number(s.pick.quantity) || 1) : -1);
+    const out = rows.slice();
+    if (sortBy === "name") out.sort((a, b) => name(a).localeCompare(name(b)));
+    else if (sortBy === "name-desc") out.sort((a, b) => name(b).localeCompare(name(a)));
+    else if (sortBy === "cost") out.sort((a, b) => cost(a) - cost(b) || name(a).localeCompare(name(b)));
+    else if (sortBy === "cost-desc") out.sort((a, b) => cost(b) - cost(a) || name(a).localeCompare(name(b)));
+    return out;
+  }
   const RARITY_LABEL = {M: "Mythic", R: "Rare", S: "Special", B: "Bonus", U: "Uncommon", C: "Common"};
   const RARITY_ORDER = ["M", "R", "S", "B", "U", "C"];
 
@@ -671,17 +707,23 @@
               : "")
             : '<span class="dp-rank-note">this deck matches no whole rung — pick one to set every slot at once</span>'}
         </div>
-        <div class="dp-collapse">
-          <div class="dp-cstep is-done"><b>25</b>5 variants × 5 rungs</div>
-          <div class="dp-cstep is-done"><b>5</b>rungs, variant ${esc(ctx.variantId || "")} chosen</div>
-          <div class="dp-cstep is-now"><b>1</b>calibrated — the other 4 stay one click away</div>
+        <!-- Every box at once. Deselect is what was asked for; select is here because a
+             one-way door that costs eighty-five clicks to walk back is not a control, it
+             is a trap. Neither touches the selection -- only which slots are claimed. -->
+        <div class="dp-claim" role="group" aria-label="Claim or release every slot">
+          <span class="dp-rank-lab">All boxes</span>
+          <button type="button" class="dp-rank-b" data-dp-claim="all"
+            ${t.claimed === t.cards + t.holes ? "disabled" : ""}>Select all</button>
+          <button type="button" class="dp-rank-b" data-dp-claim="none"
+            ${t.claimed ? "" : "disabled"}>Deselect all</button>
         </div>
       </div>
       ${readyMarkup(ctx, slots)}
       ${filterMarkup(ctx, slots, visible.length)}
       ${visible.length ? "" : '<p class="dp-empty">No slot in this deck matches that.</p>'}
       ${groupSlots(visible, (ctx.filters || {}).groupBy || "type", ctx, deckId).map(([label, rows]) => {
-        const body = rows.map((s) => slotMarkup(ctx, s, deckId, open)).join("");
+        const body = sortSlots(ctx, rows, (ctx.filters || {}).sortBy || "")
+          .map((s) => slotMarkup(ctx, s, deckId, open)).join("");
         // Group by None: the rows are the list, with nothing to collapse them into.
         if (!label) return `<section class="dp-grp" data-open="1"><div class="dp-grp-body">${body}</div></section>`;
         const isOpen = (ctx.openGroups || {})[label] !== false;
