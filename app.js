@@ -321,6 +321,13 @@
       // source of truth for what the deck IS -- that is always derived from the
       // selection -- only a tie-break for when two rungs are the same hundred.
       deckRung: {},
+      /* Which slots are ticked, per variant: the Deck page's boxes. A tick says "this
+         card is assigned to this deck, whatever its status is", so this is the deck's
+         claim on a hundred cards, not a claim about what is physically in hand.
+         deckActiveSeed records which variants have had their boxes filled in from the
+         selection, so it happens once and never undoes an untick. */
+      deckActive: {},
+      deckActiveSeed: {},
       // Cards the owner added to a deck by hand, keyed by variant id. These live in state
       // rather than in data/buy-plans.json on purpose: the buy catalog is regenerated from
       // the build kit, so anything written into it would be lost on the next rebuild.
@@ -361,6 +368,8 @@
           cardFilters: {...initial.cardFilters, ...(saved.cardFilters || {})},
           liveActive: saved.liveActive || {},
           deckRung: saved.deckRung || {},
+          deckActive: saved.deckActive || {},
+          deckActiveSeed: saved.deckActiveSeed || {},
           manualCards: saved.manualCards || {},
           liveActiveSeed: saved.liveActiveSeed || {},
           gameLog: Array.isArray(saved.gameLog) ? saved.gameLog : []
@@ -548,6 +557,55 @@
     saveState();
   }
 
+  /**
+   * The hundred you picked IS the hundred you are claiming for the deck.
+   *
+   * A tick says "this card is assigned to this deck, whatever its status is". So a deck
+   * whose selection is settled but whose boxes have never been touched is a deck with a
+   * hundred cards and nothing claimed -- which is what "0/100 cards in the box" was
+   * reporting after a Load Active, because a loaded state carries selections and, until
+   * now, no boxes. The selection is the claim, so the boxes are filled in to match it the
+   * first time a variant is seen.
+   *
+   * Once per variant, and only where nothing is ticked: a state that carries its own
+   * boxes keeps them, and unticking a slot is never undone by a later render.
+   *
+   * Every slot with a card is ticked, including cards you do not have yet. That is not a
+   * lie about what is in the box -- the tally reads ownership separately, so a ticked
+   * card you cannot hold counts under Assigned and only a ticked card actually in hand
+   * counts as in the box. Assignment is also not exclusive: six decks may all claim the
+   * one Sol Ring, and five of them will say another copy is needed, which is the truth
+   * the duplicate-copy plan already prices.
+   */
+  function ensureDeckBoxesSeeded() {
+    const Slot = window.MtgSlotModel;
+    if (!Slot || !buyCatalog || !buyCatalog.plans) return;
+    state.deckActive ||= {};
+    state.deckActiveSeed ||= {};
+    let wrote = false;
+    const owned = Slot.normalizeOwned(state);
+    selectedVariants().forEach((variant) => {
+      if (state.deckActiveSeed[variant.id]) return;
+      const plan = buyCatalog.plans[variant.id];
+      if (!plan) return;
+      const existing = state.deckActive[variant.id];
+      // Boxes already in the state are the reader's, not ours to overwrite.
+      if (existing && Object.keys(existing).length) {
+        state.deckActiveSeed[variant.id] = true;
+        wrote = true;
+        return;
+      }
+      const next = {};
+      Slot.deckSlots(plan, ensureBuyState(variant.id), {owned}).forEach((slot) => {
+        if (slot.pick) next[slot.slotId] = true;
+      });
+      state.deckActive[variant.id] = next;
+      state.deckActiveSeed[variant.id] = true;
+      wrote = true;
+    });
+    if (wrote) saveState();
+  }
+
   function deckPageContext() {
     const Slot = window.MtgSlotModel;
     const variants = selectedVariants();
@@ -556,6 +614,7 @@
     const plan = buyCatalog && buyCatalog.plans ? buyCatalog.plans[variant.id] : null;
     if (!plan) return null;
     seedDeckRungFromCompare(variant, plan);
+    ensureDeckBoxesSeeded();
 
     const owned = Slot.normalizeOwned(state);
     // Baked catalog first, then anything the Scryfall cache has freshened on top.
@@ -686,6 +745,10 @@
          decks have taken. This deck's own claim is not subtracted, so a row reads the same
          whether or not its box is ticked -- "seven of the sixty-eight Forests still going
          spare", not "seven of sixty-one because I already counted mine". */
+      // How many you own outright, before any deck's claim is taken off. A basic-land
+      // row shows its copies against this, because "twelve of the ninety-one Plains I
+      // own" is the sentence a pile of lands on the table actually answers to.
+      ownedTotal: (name) => Slot.ownedCount(owned, name).inHand || 0,
       availableFor: (name) => {
         const key = Slot.ownedKey(name);
         const per = servedQty.get(key);
@@ -7311,6 +7374,7 @@
     customStore = Custom.load(localStorage);
     remergeCustom();
     persistCustom();
+    ensureDeckBoxesSeeded();
     saveState(`Loaded state${sourceLabel ? ` from ${sourceLabel}` : ""}`);
     renderCompare();
     renderChoose();
@@ -7393,6 +7457,9 @@
       migrateBoughtQuantities();
       migrateOwnership();
       sanitizeGameChangerSelections();
+      // Boxes come from the selection the first time a variant is seen, so Compare's copy
+      // accounting and the Shop's Bench agree with the Deck page before it is opened.
+      ensureDeckBoxesSeeded();
       initializeInfoTooltips();
       initializeDetailsControls();
       renderCompare();
