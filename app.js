@@ -956,22 +956,6 @@
     state.deckActive[variantId] = next;
   }
 
-  /* Raise a card to "in hand" without ever lowering one: a deck that borrows a
-     copy already counted elsewhere must not quietly reduce the number you own. */
-  function markInHand(name, quantity) {
-    const Slot = window.MtgSlotModel;
-    if (!Slot) return;
-    const key = Slot.ownedKey(name);
-    state.owned = Slot.normalizeOwned(state);
-    const held = state.owned[key] || {inHand: 0, ordered: 0};
-    const need = Math.max(1, Number(quantity) || 1);
-    if (held.inHand >= need) return;
-    state.owned[key] = {inHand: need, ordered: Math.max(0, Number(held.ordered) || 0)};
-    // The legacy pair stays written so a rollback to the old views still reads right.
-    state.found[key] = true;
-    state.boughtQuantities[key] = Math.max(Number(state.boughtQuantities[key]) || 0, need);
-  }
-
   function deckPageChange(event) {
     const paid = event.target.closest("[data-dp-paid]");
     if (paid) {
@@ -994,14 +978,14 @@
     if (!ctx) return true;
     if (!state.deckActive) state.deckActive = {};
     if (!state.deckActive[ctx.deckId]) state.deckActive[ctx.deckId] = {};
-    if (el.checked) {
-      state.deckActive[ctx.deckId][el.dataset.dpBox] = true;
-      // Putting a card in the box means you are holding it. Without this the row
-      // would read "in the box" and "to buy" in the same breath, and the tally
-      // would count it twice.
-      const slot = ctx.slots.find((row) => row.slotId === el.dataset.dpBox);
-      if (slot && slot.pick) markInHand(slot.pick.name, slot.pick.quantity);
-    } else delete state.deckActive[ctx.deckId][el.dataset.dpBox];
+    /* Assignment only. This used to also mark the card in hand so the row would stop
+       reading "to buy" -- which made the tick one-way: untick an ordered card and it came
+       back "Owned, no box", because the raise had no matching fall, and for as long as it
+       was ticked the ledger held one physical copy twice, once as held and once as on
+       order. deck-page's label carries both facts now, so the ledger can be left alone
+       and the tick is exactly as reversible as it looks. */
+    if (el.checked) state.deckActive[ctx.deckId][el.dataset.dpBox] = true;
+    else delete state.deckActive[ctx.deckId][el.dataset.dpBox];
     saveState();
     renderDeckPage();
     return true;
@@ -5398,7 +5382,6 @@
     if (filters.groupBy === "none") appendLiveRows(results, visible, variant);
     else appendLiveGroups(results, visible, filters.groupBy, filters.subgroupBy, variant);
   }
-
 
   // ---------------------------------------------------------------------------
   // Game Log -- what actually happened at a real table, entered between games.
