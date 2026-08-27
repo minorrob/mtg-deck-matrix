@@ -409,11 +409,27 @@
    * slot, every rung it could hold, and the card the slot was built around, so looking
    * for a card finds the slot it could go in even when it is not the one showing.
    */
-  /* Two questions, asked separately, because they are separate facts about a slot.
-     STATUS is about the card: do you have it, is it in the post, or is it still to buy.
-     ACTIVE is about the deck: have you claimed the slot. They used to be a single "Where"
-     dropdown of six mixed values, which could not express "everything I own that is not
-     in this box" without listing two of them. */
+  /* Three questions about a slot, each with its own dropdown, because each is a separate
+     fact and they compose.
+
+       WHERE   which pile the copy is physically in -- this box, the bench, another deck's
+               box -- the six-value reading the row itself shows.
+       STATUS  what the card's situation is: you have it, it is in the post, or it is
+               still to buy.
+       ACTIVE  whether this deck has claimed the slot.
+
+     Where is the finest-grained of the three and the other two are coarser cuts across
+     it, so they are kept apart rather than folded together: "everything I own that is not
+     in this box" is a Status question that no single Where value answers. */
+  const WHERE_LABEL = {
+    active: "In the box", bench: "Owned, no box", other: "In another box",
+    ordered: "Ordered", buy: "To buy", hole: "Empty slot"
+  };
+  function slotWhere(ctx, slot, deckId) {
+    if (!slot.pick) return "hole";
+    return locationOf(ctx, slot.pick.name, slot.pick.quantity, deckId, slot.slotId).kind;
+  }
+
   const STATUS_LABEL = {buy: "To buy", owned: "Owned", ordered: "Ordered", hole: "Empty slot"};
   const STATUS_ORDER = ["owned", "ordered", "buy", "hole"];
   const ACTIVE_LABEL = {active: "Active", inactive: "Inactive"};
@@ -432,6 +448,7 @@
   function slotMatches(ctx, slot, deckId, f) {
     if (f.type && f.type !== "all" && slot.type !== f.type) return false;
     if (f.rung && f.rung !== "all" && !slot.rungs.some((r) => r.rung === f.rung)) return false;
+    if (f.where && f.where !== "all" && slotWhere(ctx, slot, deckId) !== f.where) return false;
     if (f.status && f.status !== "all" && slotStatus(ctx, slot, deckId) !== f.status) return false;
     if (f.active && f.active !== "all" && slotActive(ctx, slot) !== f.active) return false;
     const query = String(f.query || "").trim().toLowerCase();
@@ -446,10 +463,11 @@
   function filterMarkup(ctx, slots, shown) {
     const f = ctx.filters || {};
     const active = (f.query || "").trim() !== ""
-      || ["type", "rung", "status", "active"].some((k) => f[k] && f[k] !== "all");
+      || ["type", "rung", "where", "status", "active"].some((k) => f[k] && f[k] !== "all");
     const types = Slot.TYPE_ORDER.filter((t) => slots.some((s) => s.type === t));
     const rungs = Slot.RUNG_ORDER.filter((r) => slots.some((s) => s.rungs.some((x) => x.rung === r)));
     // Only the values this deck actually has, so a dropdown never offers an empty result.
+    const wheres = Object.keys(WHERE_LABEL).filter((w) => slots.some((s) => slotWhere(ctx, s, ctx.deckId) === w));
     const states = STATUS_ORDER.filter((k) => slots.some((s) => slotStatus(ctx, s, ctx.deckId) === k));
     const actives = ["active", "inactive"].filter((k) => slots.some((s) => slotActive(ctx, s) === k));
     const select = (key, label, options, allLabel) => `<label class="dp-f"><span>${esc(label)}</span>
@@ -471,6 +489,7 @@
           aria-label="Search this deck's slots"></label>
       ${select("type", "Type", types.map((t) => [t, t]))}
       ${select("rung", "Rung", rungs.map((r) => [r, RUNG_LABEL[r] || r]))}
+      ${select("where", "Where", wheres.map((w) => [w, WHERE_LABEL[w]]))}
       ${select("status", "Status", states.map((k) => [k, STATUS_LABEL[k]]))}
       ${select("active", "Active", actives.map((k) => [k, ACTIVE_LABEL[k]]), "All")}
       ${grouper}
