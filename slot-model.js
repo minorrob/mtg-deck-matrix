@@ -420,13 +420,24 @@
     return {inHand: Math.max(0, Number(rec.inHand) || 0), ordered: Math.max(0, Number(rec.ordered) || 0)};
   }
 
-  function acquisitionOf(owned, name, quantity) {
+  /* Where a pile of copies stands, given how many of them are actually here. Kept apart
+     from the ledger lookup because the two answer different questions: the ledger knows
+     how many copies exist, and a shop row needs to know how many of them this row got.
+     A card owned once and already sleeved in another deck is not "in hand" for the deck
+     still asking for it. */
+  function acquisitionFor(quantity, inHand, ordered) {
     const need = Math.max(1, Number(quantity) || 1);
-    const {inHand, ordered} = ownedCount(owned, name);
-    if (inHand >= need) return ACQ.HAND;
-    if (inHand > 0) return ACQ.PARTIAL;
-    if (ordered > 0) return inHand + ordered >= need ? ACQ.ORDERED : ACQ.PARTIAL;
+    const have = Math.max(0, Number(inHand) || 0);
+    const coming = Math.max(0, Number(ordered) || 0);
+    if (have >= need) return ACQ.HAND;
+    if (have > 0) return ACQ.PARTIAL;
+    if (coming > 0) return have + coming >= need ? ACQ.ORDERED : ACQ.PARTIAL;
     return ACQ.NONE;
+  }
+
+  function acquisitionOf(owned, name, quantity) {
+    const {inHand, ordered} = ownedCount(owned, name);
+    return acquisitionFor(quantity, inHand, ordered);
   }
 
   /* ---------------- card facts ---------------- */
@@ -619,7 +630,7 @@
    * disagree by exactly the copies sitting on the bench, so the Shop said four fewer
    * cards to buy than the six Deck pages did.
    */
-  function shopRows(decks, owned, holds) {
+  function shopRows(decks, owned, holds, perDeck) {
     const map = new Map();
     (decks || []).forEach((deck) => {
       (deck.slots || []).forEach((slot) => {
@@ -631,11 +642,12 @@
             key, name: slot.pick.name, price: slot.pick.price, ceiling: slot.pick.ceiling,
             band: priceBand(slot.pick.price), spot: vendorSpot(slot.pick.price),
             type: slot.type, isBasic: slot.isBasic,
-            quantity: 0, decks: [], rungs: []
+            quantity: 0, decks: [], rungs: [], byDeck: {}
           };
           map.set(key, row);
         }
         row.quantity += slot.pick.quantity;
+        row.byDeck[deck.id] = (row.byDeck[deck.id] || 0) + slot.pick.quantity;
         if (row.decks.indexOf(deck.id) < 0) row.decks.push(deck.id);
         if (row.rungs.indexOf(slot.pick.rung) < 0) row.rungs.push(slot.pick.rung);
       });
@@ -650,8 +662,54 @@
       row.inHand = Math.min(inHand, row.quantity);
       row.ordered = Math.min(ordered, Math.max(0, row.quantity - row.inHand));
       row.need = Math.max(0, row.quantity - row.inHand - row.ordered);
-      row.acquisition = acquisitionOf(owned, row.name, row.quantity);
+      /* Read off this row's own copies, not the ledger. The two disagree whenever a card
+         is owned once and wanted twice: the ledger says "in hand", the row says one copy
+         is still to buy, and the status filter believed the ledger -- so "Not in hand"
+         hid forty cards that were genuinely still owed. */
+      row.acquisition = acquisitionFor(row.quantity, row.inHand, row.ordered);
+      /* What each deck's share of the pile looks like on its own. Which box got which
+         copy is the allocator's answer; without it a per-deck split would be a guess, so
+         the breakdown carries quantity alone and scopeRow leaves the row whole. */
+      const split = perDeck || null;
+      row.decks.forEach((id) => {
+        const want = row.byDeck[id];
+        const got = split ? ((split[id] || {})[row.key] || {inHand: 0, ordered: 0}) : null;
+        const held = got ? Math.min(got.inHand, want) : null;
+        const coming = got ? Math.min(got.ordered, Math.max(0, want - held)) : null;
+        row.byDeck[id] = {
+          quantity: want,
+          inHand: held,
+          ordered: coming,
+          need: got ? Math.max(0, want - held - coming) : null,
+          acquisition: got ? acquisitionFor(want, held, coming) : null
+        };
+      });
       return row;
+    });
+  }
+
+  /**
+   * The same row, but describing only the decks asked about. Filtering the Shop to one
+   * deck asks "what do I still need for this deck", and an unscoped row cannot answer it:
+   * Sol Ring sits in six decks, one copy is owned, and the row says "Partly here" no
+   * matter which deck you are shopping for. Returns null when none of these decks want
+   * the card, and the row untouched when no deck was named or no allocation was supplied.
+   */
+  function scopeRow(row, deckIds) {
+    const ids = (deckIds || []).filter((id) => row.byDeck && row.byDeck[id]);
+    if (!ids.length || ids.length === (row.decks || []).length) {
+      return (deckIds || []).length && !ids.length ? null : row;
+    }
+    if (ids.some((id) => row.byDeck[id].need === null)) return row;
+    const sum = (field) => ids.reduce((n, id) => n + row.byDeck[id][field], 0);
+    const quantity = sum("quantity");
+    const inHand = sum("inHand");
+    const ordered = sum("ordered");
+    return Object.assign({}, row, {
+      quantity, inHand, ordered,
+      need: Math.max(0, quantity - inHand - ordered),
+      acquisition: acquisitionFor(quantity, inHand, ordered),
+      scopedTo: ids.slice()
     });
   }
 
@@ -659,11 +717,11 @@
     RUNG_ORDER, RUNG_LABEL, RUNG_BY_KIND, rungOf,
     BUILD_RUNGS, RUNG_CHAIN, rungForStage, selectionForRung, selectionSignature, activeRung, rungTwins,
     PRICE_BANDS, priceBand,
-    ACQUISITION: ACQ, PLACE, ownedKey, normalizeOwned, ownedCount, acquisitionOf,
+    ACQUISITION: ACQ, PLACE, ownedKey, normalizeOwned, ownedCount, acquisitionOf, acquisitionFor,
     SPOTS, vendorSpot, rungHeading, cardImage,
     MANA_COLORS, manaCostOf, producesColors, manaHealth,
     ROLE_KEYS, ROLE_LABEL, manaValueOf, cardRoles, slotFit,
     TYPE_ORDER, cardType, isBasicLand, whyFor, whyText, whySource,
-    deckSlots, shopRows
+    deckSlots, shopRows, scopeRow
   };
 });

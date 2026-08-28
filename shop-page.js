@@ -125,6 +125,15 @@
     return Array.from(set).sort();
   }
 
+  /** Which deck ids the Deck filter names. The filter stores build names, because that is
+   *  what the reader picked from; the rows are keyed by variant id. */
+  function deckScope(ctx, f) {
+    const picked = f.deck || [];
+    if (!picked.length) return [];
+    const labels = ctx.deckLabels || {};
+    return Object.keys(labels).filter((id) => picked.indexOf(labels[id]) >= 0);
+  }
+
   function passes(row, f) {
     const any = (key, value) => !f[key] || !f[key].length || f[key].indexOf(value) >= 0;
     const anyOf = (key, list) => !f[key] || !f[key].length || (list || []).some((v) => f[key].indexOf(v) >= 0);
@@ -429,7 +438,16 @@
   function render(host, ctx) {
     if (!host) return;
     const f = ctx.filters || {};
-    const all = decorate(ctx.rows || [], ctx.factFor, ctx.deckLabels, ctx.paidFor);
+    /* Filtering to a deck asks a question about that deck, so every count on screen has
+       to answer it. Left unscoped, a row speaks for all six boxes at once: Sol Ring is
+       owned once and wanted six times, so it reads "Partly here" no matter which deck
+       you are shopping for -- and asking for "Not in hand" hid it, along with thirty-nine
+       other cards that were genuinely still owed. */
+    const deckIds = deckScope(ctx, f);
+    const rows = deckIds.length
+      ? (ctx.rows || []).map((r) => Slot.scopeRow(r, deckIds)).filter(Boolean)
+      : (ctx.rows || []);
+    const all = decorate(rows, ctx.factFor, ctx.deckLabels, ctx.paidFor);
     const done = ctx.picked instanceof Set ? ctx.picked : new Set();
     /* The Store view answers one question -- what is still on the list -- so it starts
        from what you still owe rather than from everything. A card picked up in this
@@ -443,9 +461,12 @@
     const owedValue = kept.reduce((n, r) => n + unitCost(r, r.paid) * r.need, 0);
     // Counted over every row, not the filtered ones: "what has this cost me" is a
     // question about the collection, and a filter is not meant to change the answer.
+    // Taken from the unscoped rows for the same reason -- a deck filter narrows what you
+    // are shopping for, not what you have already spent.
     // What was actually spent, so a row of twelve Plains counts twelve times, not once.
-    const paidTotal = all.reduce((n, r) => n + (r.paid === null ? 0 : r.paid * r.quantity), 0);
-    const paidCount = all.filter((r) => r.paid !== null).length;
+    const spent = decorate(ctx.rows || [], ctx.factFor, ctx.deckLabels, ctx.paidFor);
+    const paidTotal = spent.reduce((n, r) => n + (r.paid === null ? 0 : r.paid * r.quantity), 0);
+    const paidCount = spent.filter((r) => r.paid !== null).length;
 
     const chips = [];
     FILTERS.forEach((flt) => (f[flt.key] || []).forEach((v) => chips.push(
@@ -497,8 +518,10 @@
       ${chips.length ? `<div class="sp-frow"><div class="sp-chips">${chips.join("")}<button type="button" class="sp-mini" data-sp-clear="1">Clear all filters</button></div></div>` : ""}
       </div>
       <div class="sp-frow sp-frow-tot">
-        <span class="sp-tot"><b class="dp-num">${owedCards}</b> still to buy · <b class="dp-num">${money(owedValue)}</b></span>
-        <span class="sp-tot sp-paid-tot" data-sp-paid-total><b class="dp-num">${money(paidTotal)}</b> paid · ${paidCount}/${all.length} priced</span>
+        <span class="sp-tot"><b class="dp-num">${owedCards}</b> still to buy${
+          deckIds.length ? ` for ${esc(deckIds.map((id) => (ctx.deckLabels || {})[id] || id).join(" and "))}` : ""
+        } · <b class="dp-num">${money(owedValue)}</b></span>
+        <span class="sp-tot sp-paid-tot" data-sp-paid-total><b class="dp-num">${money(paidTotal)}</b> paid · ${paidCount}/${spent.length} priced</span>
       </div>
     </div>`;
 
@@ -587,5 +610,5 @@
   }
 
   return {render, decorate, passes, sortRows, groupRows, values, benchMarkup, destDetail,
-          COLUMNS, FILTERS, GROUP_BY, STATUS};
+          COLUMNS, FILTERS, GROUP_BY, STATUS, deckScope};
 });

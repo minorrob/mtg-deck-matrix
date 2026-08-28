@@ -168,6 +168,51 @@ ok("counts never exceed what the decks actually need", () => {
   assert.equal(rows[0].need, 0);
 });
 
+/* ---------- a row's status is about the row, not the shelf ----------
+   One Sol Ring, wanted by two decks. The ledger says you own one, so reading the status
+   off the ledger called the row "In hand" while it was still asking for a second copy --
+   and the Shop's "Not in hand" filter dropped it, hiding a card genuinely still owed. */
+const twoDecks = () => [
+  {id: "3o", slots: [{pick: {name: "Sol Ring", price: 1.2, quantity: 1, rung: "base"}, type: "Artifact", isBasic: false}]},
+  {id: "5o", slots: [{pick: {name: "Sol Ring", price: 1.2, quantity: 1, rung: "base"}, type: "Artifact", isBasic: false}]}
+];
+
+ok("a row still owed never reads as in hand", () => {
+  const rows = Slot.shopRows(twoDecks(), {"sol-ring": {inHand: 1, ordered: 0}});
+  const ring = rows.find((r) => r.name === "Sol Ring");
+  assert.equal(ring.quantity, 2, "two decks want it, so the row stands for two copies");
+  assert.equal(ring.need, 1, "one copy is still to buy");
+  assert.equal(ring.acquisition, Slot.ACQUISITION.PARTIAL,
+    "a row that still needs a copy cannot claim to be in hand");
+});
+
+ok("a deck-scoped row answers for that deck alone", () => {
+  // 5o's box holds the copy; 3o's does not. Scoped to 3o the honest answer is "buy one".
+  const perDeck = {"5o": {"sol-ring": {inHand: 1, ordered: 0}}, "3o": {}};
+  const rows = Slot.shopRows(twoDecks(), {"sol-ring": {inHand: 1, ordered: 0}}, {"sol-ring": {inHand: 1, ordered: 0}}, perDeck);
+  const ring = rows.find((r) => r.name === "Sol Ring");
+
+  const obuun = Slot.scopeRow(ring, ["3o"]);
+  assert.equal(obuun.quantity, 1, "Obuun wants one");
+  assert.equal(obuun.need, 1, "and has none of them");
+  assert.equal(obuun.acquisition, Slot.ACQUISITION.NONE, "so for Obuun it is not in hand");
+
+  const quintorius = Slot.scopeRow(ring, ["5o"]);
+  assert.equal(quintorius.need, 0, "Quintorius is holding its copy");
+  assert.equal(quintorius.acquisition, Slot.ACQUISITION.HAND);
+
+  assert.equal(Slot.scopeRow(ring, []), ring, "naming no deck leaves the row whole");
+  assert.equal(Slot.scopeRow(ring, ["1b"]), null, "a deck that does not want the card drops the row");
+  assert.equal(Slot.scopeRow(ring, ["3o", "5o"]).quantity, 2, "every deck named is the unscoped row again");
+});
+
+ok("scoping is refused rather than guessed when no allocation was supplied", () => {
+  const rows = Slot.shopRows(twoDecks(), {"sol-ring": {inHand: 1, ordered: 0}});
+  const ring = rows.find((r) => r.name === "Sol Ring");
+  assert.equal(Slot.scopeRow(ring, ["3o"]), ring,
+    "without a per-deck split, which box holds the copy is unknown and must not be invented");
+});
+
 /* ---------- catalog fallbacks ---------- */
 const cardsPayload = JSON.parse(await readFile(new URL("../data/cards.json", import.meta.url), "utf8"));
 const cards = {};
