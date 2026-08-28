@@ -296,13 +296,27 @@
     }).join("")}</ul>`;
   }
 
+  /* 1-3: before Assigned existed. 4: every slot carries a reviewed recommendation beside
+     the card that is actually in it. Older files are migrated on load, never rejected. */
+  const STATE_VERSION = 4;
+
   function blankState() {
     return {
       selectionSchema: 3,
       ownershipSchema: 2,
+      /* The saved shape's own version, separate from the two schema numbers above, which
+         version particular fields. This one versions the whole export, so an older file
+         can be recognised and migrated rather than half-read. Raised to 4 when Assigned
+         arrived: before it, a slot had one selection and no reset target. */
+      stateVersion: STATE_VERSION,
       compareSelections: {},
       rankStages: {},
       buySelections: {},
+      /* Active and Assigned. buySelections is Active -- the hundred the deck is counted,
+         shopped and checked as. assignedSelections is the reviewed recommendation behind
+         it: the thing a reset returns to. They start identical on import and only ever
+         diverge because someone chose a different rung, which changes Active alone. */
+      assignedSelections: {},
       found: {},
       boughtQuantities: {},
       comments: {},
@@ -353,9 +367,11 @@
           ...saved,
           selectionSchema: saved.selectionSchema || 1,
           ownershipSchema: saved.ownershipSchema || 1,
+          stateVersion: Number(saved.stateVersion) || 1,
           compareSelections: saved.compareSelections || {},
           rankStages: saved.rankStages || {},
           buySelections: saved.buySelections || {},
+          assignedSelections: saved.assignedSelections || {},
           found: saved.found || {},
           boughtQuantities: saved.boughtQuantities || {},
           comments: saved.comments || {},
@@ -586,6 +602,34 @@
    * one Sol Ring, and five of them will say another copy is needed, which is the truth
    * the duplicate-copy plan already prices.
    */
+  /* Assigned is the reviewed recommendation behind each slot, and every state that has
+     ever existed has an Active hundred, so migrating an older file is simply: whatever it
+     was selecting, that was the recommendation. Seeded once per variant and never
+     overwritten -- the whole value of Assigned is that it does not move when Active does.
+     Run for every plan, not only the six on screen, so switching a variant later still
+     finds a reset target waiting for it. */
+  function ensureAssignedSeeded() {
+    if (!buyCatalog || !buyCatalog.plans) return;
+    state.assignedSelections ||= {};
+    let wrote = false;
+    Object.keys(state.buySelections || {}).forEach((variantId) => {
+      if (!buyCatalog.plans[variantId]) return;
+      const already = state.assignedSelections[variantId];
+      if (already && Object.keys(already).length) return;
+      state.assignedSelections[variantId] = cloneSelection(state.buySelections[variantId]);
+      wrote = true;
+    });
+    if (state.stateVersion !== STATE_VERSION) { state.stateVersion = STATE_VERSION; wrote = true; }
+    if (wrote) saveState();
+  }
+
+  /** A selection is arrays of entry ids per rung; copying it must not share those arrays. */
+  function cloneSelection(selection) {
+    const out = {};
+    Lineup.ARRAY_KEYS.forEach((key) => { out[key] = ((selection || {})[key] || []).slice(); });
+    return out;
+  }
+
   function ensureDeckBoxesSeeded() {
     const Slot = window.MtgSlotModel;
     if (!Slot || !buyCatalog || !buyCatalog.plans) return;
@@ -707,6 +751,7 @@
     if (!plan) return null;
     seedDeckRungFromCompare(variant, plan);
     ensureDeckBoxesSeeded();
+    ensureAssignedSeeded();
 
     const owned = Slot.normalizeOwned(state);
     // Baked catalog first, then anything the Scryfall cache has freshened on top.
@@ -843,6 +888,10 @@
       buildRungs: Slot.BUILD_RUNGS,
       active: (state.deckActive && state.deckActive[variant.id]) || {},
       openSlot: deckPageState.openSlot,
+      /* The entry ids the reviewed recommendation selects for this deck. A Set because the
+         page asks "is this rung the recommendation?" once per rung on every render. */
+      assignedIds: new Set(Lineup.ARRAY_KEYS.flatMap((k) =>
+        (((state.assignedSelections || {})[variant.id] || {})[k] || []).map(String))),
       panels: {
         head: !deckPageState.closedPanels.head,
         filters: !deckPageState.closedPanels.filters,
@@ -1085,11 +1134,61 @@
       const Slot = window.MtgSlotModel;
       if (!ctx || !Slot) return true;
       const plan = buyCatalog.plans[ctx.deckId];
-      assignSelection(ensureBuyState(ctx.deckId), Slot.selectionForRung(plan, el.dataset.dpRung));
+      /* A rung is not a whole hundred on every slot: a slot with no Tuned card has nothing
+         to give when Tuned is asked for, and taking the rung literally left the deck short.
+         So the requested rung wins wherever it is populated and Assigned fills the rest,
+         which is the only way this button can keep the deck at exactly a hundred. */
+      assignSelection(ensureBuyState(ctx.deckId),
+        withAssignedFallback(ctx.deckId, plan, Slot.selectionForRung(plan, el.dataset.dpRung)));
       syncBoxesToOwned(ctx.deckId, plan);
       if (!state.deckRung) state.deckRung = {};
       state.deckRung[ctx.deckId] = el.dataset.dpRung;
       saveState();
+      renderDeckPage();
+      return true;
+    }
+    /* Reset returns Active to Assigned and touches nothing else. Every alternative the
+       slot carries is still there afterwards -- resetting is choosing the recommendation
+       again, not throwing the other candidates away. */
+    if ((el = event.target.closest("[data-dp-reset]"))) {
+      const ctx = deckPageContext();
+      const Slot = window.MtgSlotModel;
+      if (!ctx || !Slot) return true;
+      const plan = buyCatalog.plans[ctx.deckId];
+      const assigned = (state.assignedSelections || {})[ctx.deckId];
+      if (!assigned) return true;
+      const slotId = el.dataset.dpReset;
+      const current = ensureBuyState(ctx.deckId);
+      if (slotId === "deck") {
+        assignSelection(current, assigned);
+        saveState("Every slot back to its recommendation");
+      } else {
+        // One slot: take the Assigned entry for it and apply that single choice.
+        const seat = Slot.deckSlots(plan, assigned, {}).find((sl) => sl.slotId === slotId);
+        if (!seat || !seat.pick) return true;
+        assignSelection(current, Lineup.applyChoice(plan, current, seat.pick.entryId));
+        saveState(`${seat.pick.name} restored`);
+      }
+      syncBoxesToOwned(ctx.deckId, plan);
+      renderDeckPage();
+      return true;
+    }
+    /* Make Assigned is the deliberate other direction: the card in the slot becomes the
+       recommendation, so a later reset comes back here instead of where it started. It is
+       separate from choosing a rung precisely so that choosing one never does this. */
+    if ((el = event.target.closest("[data-dp-makeassigned]"))) {
+      const ctx = deckPageContext();
+      const Slot = window.MtgSlotModel;
+      if (!ctx || !Slot) return true;
+      const plan = buyCatalog.plans[ctx.deckId];
+      const slotId = el.dataset.dpMakeassigned;
+      const live = Slot.deckSlots(plan, ensureBuyState(ctx.deckId), {}).find((sl) => sl.slotId === slotId);
+      if (!live || !live.pick) return true;
+      state.assignedSelections ||= {};
+      const next = cloneSelection(state.assignedSelections[ctx.deckId] || ensureBuyState(ctx.deckId));
+      assignSelection(next, Lineup.applyChoice(plan, next, live.pick.entryId));
+      state.assignedSelections[ctx.deckId] = next;
+      saveState(`${live.pick.name} is now this slot's recommendation`);
       renderDeckPage();
       return true;
     }
@@ -2756,6 +2855,29 @@
     });
     state.selectionSchema = 3;
     saveState("Named 100-card lineups restored");
+  }
+
+  /* Fill every slot the requested rung left empty with that slot's Assigned card. The
+     rung's own picks are kept exactly as they are; this only reaches slots the rung does
+     not speak for, which is what keeps the total at a hundred. */
+  function withAssignedFallback(variantId, plan, selection) {
+    const Slot = window.MtgSlotModel;
+    const assigned = (state.assignedSelections || {})[variantId];
+    if (!Slot || !assigned) return selection;
+    const chosen = new Set();
+    Lineup.ARRAY_KEYS.forEach((k) => (selection[k] || []).forEach((id) => chosen.add(String(id))));
+    const spokenFor = new Set();
+    Slot.deckSlots(plan, selection, {}).forEach((slot) => { if (slot.pick) spokenFor.add(slot.slotId); });
+    const out = {};
+    Lineup.ARRAY_KEYS.forEach((k) => { out[k] = (selection[k] || []).slice(); });
+    // Which slot each Assigned entry belongs to, so only the empty ones are filled.
+    Slot.deckSlots(plan, assigned, {}).forEach((slot) => {
+      if (!slot.pick || spokenFor.has(slot.slotId) || chosen.has(String(slot.pick.entryId))) return;
+      const rung = (slot.rungs || []).find((r) => r.entryId === slot.pick.entryId);
+      const key = rung ? rung.kind : null;
+      if (key && Object.prototype.hasOwnProperty.call(out, key)) out[key].push(slot.pick.entryId);
+    });
+    return out;
   }
 
   function assignSelection(target, source) {
@@ -7806,6 +7928,7 @@
     remergeCustom();
     persistCustom();
     ensureDeckBoxesSeeded();
+    ensureAssignedSeeded();
     saveState(`Loaded state${sourceLabel ? ` from ${sourceLabel}` : ""}`);
     renderCompare();
     renderChoose();
@@ -7891,6 +8014,7 @@
       // Boxes come from the selection the first time a variant is seen, so Compare's copy
       // accounting and the Shop's Bench agree with the Deck page before it is opened.
       ensureDeckBoxesSeeded();
+      ensureAssignedSeeded();
       initializeInfoTooltips();
       initializeDetailsControls();
       renderCompare();

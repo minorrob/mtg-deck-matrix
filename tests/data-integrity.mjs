@@ -919,10 +919,12 @@ assert.match(appSource, /if \(existing && Object\.keys\(existing\)\.length\) \{/
   "a state that carries its own boxes must keep them");
 // Called on load and at boot, not only when the Deck tab is opened -- Compare's copy
 // accounting and the Shop's Bench read the same ticks.
-assert.match(appSource, /ensureDeckBoxesSeeded\(\);\n\s*saveState\(`Loaded state/,
-  "a loaded payload must have its boxes seeded before it is saved");
-assert.match(appSource, /sanitizeGameChangerSelections\(\);\n(?:\s*\/\/[^\n]*\n)*\s*ensureDeckBoxesSeeded\(\);/,
-  "boot must seed boxes too, for the state already in localStorage");
+/* Assigned is seeded alongside the boxes, and for the same reason: a payload that lands
+   without a reviewed recommendation behind each slot has nothing for a reset to return to. */
+assert.match(appSource, /ensureDeckBoxesSeeded\(\);\n\s*ensureAssignedSeeded\(\);\n\s*saveState\(`Loaded state/,
+  "a loaded payload must have its boxes and its recommendations seeded before it is saved");
+assert.match(appSource, /sanitizeGameChangerSelections\(\);\n(?:\s*\/\/[^\n]*\n)*\s*ensureDeckBoxesSeeded\(\);\n\s*ensureAssignedSeeded\(\);/,
+  "boot must seed boxes and recommendations too, for the state already in localStorage");
 
 // A basic-land row's right-hand pill counted rungs, which is always "1 of 1" there.
 assert.match(deckPageSource, /\$\{slot\.quantity\} of \$\{stock\}/,

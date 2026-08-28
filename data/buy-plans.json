@@ -176047,7 +176047,7 @@
   "cardAudit": {
     "source": "Scryfall collection API",
     "generatedAt": "2026-08-23T00:54:57.663Z",
-    "cardsVerified": 1759,
+    "cardsVerified": 1815,
     "wrongTypesCorrected": 0,
     "legalityIssues": []
   },
