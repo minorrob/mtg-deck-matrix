@@ -1362,4 +1362,69 @@ assert.doesNotMatch(cssSource, /\.dp-cstep/, "its styles must go with it");
     "a bench card with no destination must say why it has none");
 }
 
+/* ---------- the gallery tile, and what a Buy actually does ----------
+   The art carries the name, the colour and the type. Repeating them underneath spent a
+   third of the tile restating the picture, so the panel is down to three rows: who wants
+   it, what it costs beside the one button worth having there, and where it is. */
+{
+  assert.match(shopPageSource, /function galleryBody\(r\)/, "the gallery panel must be built in one place");
+  const body = shopPageSource.slice(shopPageSource.indexOf("function galleryBody(r)"),
+                                   shopPageSource.indexOf("function bandHeader"));
+  for (const gone of ["sp-dot", "r.rarity", "r.spot", "sp-pill", "paidInput"]) {
+    assert.ok(body.indexOf(gone) < 0, `the gallery panel must no longer carry ${gone}`);
+  }
+  for (const kept of ["sp-gdecks", "data-sp-price", "data-sp-paid", "data-sp-buy", "triMarkup"]) {
+    assert.ok(body.indexOf(kept) >= 0, `the gallery panel still needs ${kept}`);
+  }
+  /* The price IS the paid box, at rest. Two fields would put an empty bordered input on
+     every tile asking to be filled in; one that reads as text until tapped does not. */
+  assert.match(shopPageSource, /<span class="sp-gedit" hidden>/, "the editor must start hidden behind the price");
+  assert.match(appSource, /if \(\(el = event\.target\.closest\("\[data-sp-price\]"\)\)\)/, "tapping the price must open it");
+  assert.match(appSource, /if \(event\.key === "Enter"\) \{[\s\S]{0,200}?closeGalleryPrice\(input\);/,
+    "Enter is what closes a keyboard, so Enter is what must commit");
+  assert.match(appSource, /closeGalleryPrice\(input\);\s*\n\s*updateShopPaidTotal\(\);\s*\n\s*\}\);/,
+    "and tapping away must save rather than discard what was typed");
+
+  /* Buying writes the box's hold, not just the ledger. Without it the purchase went
+     nowhere the Shop could see: the audit had recorded "this deck holds none of these",
+     the allocator honours that, and the card just paid for stayed on the list. */
+  assert.match(appSource, /const CLAIM_ORDER = \["5o", "4e", "2c", "7e", "3o", "1b"\];/,
+    "a bought card lands in Rob's deck order: 5, 4, 2, 7, 3, 1");
+  assert.match(appSource, /hold\.inHand \+= add;/, "claiming must raise the box's hold");
+  assert.match(appSource, /const claimedNow = Object\.values\(state\.deckHolds\)/,
+    "free copies must be counted against every box first, not one at a time as they are visited");
+  assert.match(appSource, /shopHoldUndo\.set\(key, holdsBefore\);/,
+    "and Undo must be able to put the holds back with the ledger");
+
+  /* Assigning off the Bench frees the card it displaces. Without releasing the hold the
+     app goes on claiming a card that is sitting loose in your hand. */
+  assert.match(appSource, /if \(out && per\[out\] && per\[out\]\.inHand > 0\) \{\s*\n\s*per\[out\]\.inHand -= 1;/,
+    "an assignment must release the displaced card's hold");
+}
+
+/* A minimum track wider than the column it sits in overflows: a flat 330px floor spilled
+   out of a 328px phone, which is how a full-width card comes to look like it fills half
+   the screen. */
+assert.match(cssSource, /\.sp-bench\{display:grid;grid-template-columns:repeat\(auto-fill,minmax\(min\(100%,320px\),1fr\)\)/,
+  "the bench grid's minimum must be capped at the width available");
+
+/* Three panels sit above the slot list, and the place you finish reading one is the place
+   you want to shut it. Each ends with its own control; shut, each keeps the one line that
+   says what it is. */
+{
+  assert.match(deckPageSource, /function panelToggle\(key, open, whenShut\)/, "one control, used by all three panels");
+  for (const key of ["head", "ready", "filters"]) {
+    assert.ok(deckPageSource.indexOf(`panelToggle("${key}"`) >= 0, `the ${key} panel needs a control`);
+  }
+  assert.match(deckPageSource, /<div class="dp-head" data-open="\$\{headOpen \? 1 : 0\}">/,
+    "the head panel's open state must reach the markup");
+  assert.match(cssSource, /\.dp-head\[data-open="0"\] \.dp-head-body,\s*\n\.dp-filters\[data-open="0"\] \.dp-filters-body\{display:none\}/,
+    "shutting a panel must hide its body and nothing else");
+  // What survives a collapse is the line that identifies the panel.
+  assert.match(deckPageSource, /<div class="dp-head-top">/, "the deck name and commander stay visible");
+  assert.match(deckPageSource, /<div class="dp-filters-body">/, "the search field stays visible");
+  assert.match(appSource, /if \(key === "ready"\) deckPageState\.closedPanels\.ready = deckPageState\.closedPanels\.ready === false;/,
+    "the compliance panel ships closed, so its flag reads the other way round");
+}
+
 console.log(`Validated ${variants.variants.length} variants and ${Object.keys(buyPlans.plans).length} connected buy profiles.`);
