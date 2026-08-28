@@ -1786,7 +1786,11 @@ footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px;
 .dp-panel-t[aria-expanded="true"] .dp-car{transform:rotate(-90deg)}
 .dp-panel-t[aria-expanded="false"] .dp-car{transform:rotate(90deg)}
 .dp-head[data-open="0"] .dp-head-body,
-.dp-filters[data-open="0"] .dp-filters-body{display:none}
+.dp-filters[data-open="0"] .dp-filters-body,
+.dp-cand[data-open="0"] .dp-cand-more{display:none}
+/* Inside an open slot the control sits in the left column, under the rungs, so it lines
+   up with the block it folds rather than running under the card image beside it. */
+.dp-cand .dp-panel-t{margin-top:10px;border-radius:0}
 .dp-filters[data-open="0"]{gap:0}
 .dp-filters-body{display:contents}
 .dp-ready .dp-panel-t{margin-top:10px}

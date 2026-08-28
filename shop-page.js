@@ -216,9 +216,13 @@
   }
   /* The gallery panel, cut back to what it is for. The art already carries the name, the
      colour and the type, so repeating them under it spent a third of the tile saying what
-     the picture said. Three rows are left: which decks want it, what it costs beside the
-     one button worth having here, and where the card is. Everything dropped is still a
-     column in the table view.
+     the picture said. Two rows are left: which decks want it, and what it costs beside the
+     one button worth having here. Everything dropped is still a column in the table view,
+     which is where a status gets corrected -- Buy only ever moves a card one way, and the
+     three-way control it replaced was three targets where one was wanted.
+
+     A card that is ordered, or already in hand, simply has no button. Nothing is owed on
+     it, so there is nothing to press; change it back on the table and the button returns.
 
      The price doubles as the Paid box. It reads as plain text until you tap it, which is
      the only state that matters while browsing, and the input it becomes commits on Enter
@@ -241,8 +245,7 @@
           aria-label="What you paid for ${esc(r.name)}"></span>
         ${r.need ? `<button type="button" class="sp-buy sp-gbuy" data-sp-buy="${esc(r.key)}">Buy${
           r.need > 1 ? " " + r.need : ""}</button>` : ""}
-      </div>
-      ${triMarkup(r)}`;
+      </div>`;
   }
 
   function bandHeader(name, list, colSpan) {

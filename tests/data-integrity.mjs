@@ -1370,12 +1370,23 @@ assert.doesNotMatch(cssSource, /\.dp-cstep/, "its styles must go with it");
   assert.match(shopPageSource, /function galleryBody\(r\)/, "the gallery panel must be built in one place");
   const body = shopPageSource.slice(shopPageSource.indexOf("function galleryBody(r)"),
                                    shopPageSource.indexOf("function bandHeader"));
-  for (const gone of ["sp-dot", "r.rarity", "r.spot", "sp-pill", "paidInput"]) {
+  /* The three-way status control went with them. Buy only ever moves a card one way, so
+     the control it replaced was three targets where one was wanted, and correcting a
+     status is a thing you do once, on the table, not at a booth. A card that is ordered or
+     already in hand simply has no button: nothing is owed on it, so there is nothing to
+     press, and changing it back on the table brings the button back. */
+  for (const gone of ["sp-dot", "r.rarity", "r.spot", "sp-pill", "paidInput", "triMarkup", "sp-nm"]) {
     assert.ok(body.indexOf(gone) < 0, `the gallery panel must no longer carry ${gone}`);
   }
-  for (const kept of ["sp-gdecks", "data-sp-price", "data-sp-paid", "data-sp-buy", "triMarkup"]) {
+  for (const kept of ["sp-gdecks", "data-sp-price", "data-sp-paid", "data-sp-buy"]) {
     assert.ok(body.indexOf(kept) >= 0, `the gallery panel still needs ${kept}`);
   }
+  // The button is gated on what is owed, which is what makes it come and go by itself.
+  assert.match(shopPageSource, /\$\{r\.need \? `<button type="button" class="sp-buy sp-gbuy"/,
+    "Buy must appear only where something is still owed");
+  // And the table keeps the control, because that is where a status is corrected.
+  assert.match(shopPageSource, /case "status": return triMarkup\(row\);/,
+    "the table view must keep the three-way status control");
   /* The price IS the paid box, at rest. Two fields would put an empty bordered input on
      every tile asking to be filled in; one that reads as text until tapped does not. */
   assert.match(shopPageSource, /<span class="sp-gedit" hidden>/, "the editor must start hidden behind the price");
@@ -1418,11 +1429,21 @@ assert.match(cssSource, /\.sp-bench\{display:grid;grid-template-columns:repeat\(
   }
   assert.match(deckPageSource, /<div class="dp-head" data-open="\$\{headOpen \? 1 : 0\}">/,
     "the head panel's open state must reach the markup");
-  assert.match(cssSource, /\.dp-head\[data-open="0"\] \.dp-head-body,\s*\n\.dp-filters\[data-open="0"\] \.dp-filters-body\{display:none\}/,
+  assert.match(cssSource, /\.dp-head\[data-open="0"\] \.dp-head-body,\s*\n\.dp-filters\[data-open="0"\] \.dp-filters-body,\s*\n\.dp-cand\[data-open="0"\] \.dp-cand-more\{display:none\}/,
     "shutting a panel must hide its body and nothing else");
   // What survives a collapse is the line that identifies the panel.
   assert.match(deckPageSource, /<div class="dp-head-top">/, "the deck name and commander stay visible");
   assert.match(deckPageSource, /<div class="dp-filters-body">/, "the search field stays visible");
+  /* And the same control inside an open slot. The rungs are what the slot is for;
+     the reasoning and the add-a-card box under them are a second read that pushed the
+     card image and the next slot off a phone screen. One flag for every slot, because
+     only one is open at a time and folding it once means wanting it folded next time. */
+  assert.ok(deckPageSource.indexOf('panelToggle("slotDetail"') >= 0, "an open slot needs the same control");
+  assert.match(deckPageSource, /<div class="dp-cand" data-open="\$\{detailOpen \? 1 : 0\}">/,
+    "the slot's fold state must reach the markup");
+  assert.match(deckPageSource, /const detail = `\$\{parts\.length \? `<div class="dp-why">/,
+    "what folds is the reasoning and the manual box, not the rungs");
+
   assert.match(appSource, /if \(key === "ready"\) deckPageState\.closedPanels\.ready = deckPageState\.closedPanels\.ready === false;/,
     "the compliance panel ships closed, so its flag reads the other way round");
 }

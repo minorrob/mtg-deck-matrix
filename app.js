@@ -846,7 +846,10 @@
       panels: {
         head: !deckPageState.closedPanels.head,
         filters: !deckPageState.closedPanels.filters,
-        ready: Boolean(deckPageState.closedPanels.ready === false)
+        ready: Boolean(deckPageState.closedPanels.ready === false),
+        // One flag for every slot: only one is open at a time, and folding the reasoning
+        // away on one slot means wanting it folded on the next.
+        slotDetail: !deckPageState.closedPanels.slotDetail
       },
       variants
     };

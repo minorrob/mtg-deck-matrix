@@ -454,13 +454,21 @@
     if (!pick) parts.push('<div class="dp-why-part"><span class="dp-why-k">This slot is empty</span>Pick a rung, or slot a card you already own.</div>');
 
     const prevLoc = shown ? locationOf(ctx, shown.name, shown.quantity, deckId) : null;
-    return `<div class="dp-cand"><div class="dp-cand-wrap"><div>
+    /* The rungs are what an open slot is for; everything under them -- the reasoning and
+       the box for adding a card by hand -- is a second read, and on a phone it pushed the
+       card image and the next slot off the screen. It folds away, and stays folded for
+       every slot you open until you unfold it, because wanting the reasons once usually
+       means wanting them for a while. */
+    const detail = `${parts.length ? `<div class="dp-why">${parts.join("")}</div>` : ""}${
+      manualBoxMarkup(ctx, slot, deckId)}`;
+    const detailOpen = (ctx.panels || {}).slotDetail !== false;
+    return `<div class="dp-cand" data-open="${detailOpen ? 1 : 0}"><div class="dp-cand-wrap"><div>
         <p class="dp-lab">The ${plural(rungs.length, "rung")} for this slot</p>
         <div class="dp-row">${rungs.map((r) => (r.rung === "manual"
           ? manualTileMarkup(ctx, slot, r, deckId)
           : tileMarkup(ctx, slot, r, deckId, false))).join("")}</div>
-        ${parts.length ? `<div class="dp-why">${parts.join("")}</div>` : ""}
-        ${manualBoxMarkup(ctx, slot, deckId)}
+        ${detail ? `<div class="dp-cand-more">${detail}</div>
+          ${panelToggle("slotDetail", detailOpen, parts.length ? "Why these rungs, and add a card" : "Add a card by hand")}` : ""}
       </div>
       <aside class="dp-prev" id="dp-prev-${esc(slot.slotId)}">${
         shown ? previewMarkup(ctx, shown.name, prevLoc, shown.price, shown.quantity) : ""}</aside>
