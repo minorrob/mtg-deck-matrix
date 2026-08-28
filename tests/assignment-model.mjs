@@ -111,6 +111,29 @@ ok("basic-land quantities stay grouped", () => {
   }
 });
 
+/* The two swaps that needed a new shell slot rather than a rung choice. A basic-land
+   slot carries a quantity, so "eleven Mountains and a Command Tower" is a shell
+   change; re-baking either variant from an optimizer run would drop it silently, and
+   the deck would go back to disagreeing with the workbook by one card. */
+ok("the re-shelled basics stay traded for their real cards", () => {
+  const held = (id) => {
+    const counts = new Map();
+    Slot.deckSlots(graft(id), state.buySelections[id], {})
+      .filter((s) => s.pick)
+      .forEach((s) => {
+        const k = Slot.ownedKey(s.pick.name);
+        counts.set(k, (counts.get(k) || 0) + s.pick.quantity);
+      });
+    return counts;
+  };
+  const obuun = held("3o");
+  assert.equal(obuun.get("mountain"), 11, `3o runs ${obuun.get("mountain")} Mountains, not 11`);
+  assert.equal(obuun.get("command-tower"), 1, "3o must run the Command Tower it traded a Mountain for");
+  const quintorius = held("5o");
+  assert.equal(quintorius.get("mountain"), 5, `5o runs ${quintorius.get("mountain")} Mountains, not 5`);
+  assert.equal(quintorius.get("tectonic-reformation"), 1, "5o must run the Tectonic Reformation it traded a Mountain for");
+});
+
 /* The one card the workbook rejected: outside Atraxa's colours, so it cannot be a
    candidate anywhere in that deck, not merely unselected. */
 ok("Rugged Highlands is not offered in Atraxa", () => {

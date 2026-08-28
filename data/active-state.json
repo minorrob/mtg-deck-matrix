@@ -273,7 +273,8 @@
      "shell-3o-flex-60",
      "shell-forest",
      "shell-mountain",
-     "shell-plains"
+     "shell-plains",
+     "shell-3o-command-tower"
     ],
     "tuned": [
      "valorous-stance-tuned",
@@ -469,7 +470,8 @@
      "shell-sunscorched-divide",
      "shell-temple-of-triumph",
      "shell-terramorphic-expanse",
-     "shell-turbulent-steppe"
+     "shell-turbulent-steppe",
+     "shell-5o-tectonic-reformation"
     ],
     "tuned": [
      "valorous-stance-tuned",
@@ -12814,7 +12816,7 @@
      "ordered": 0
     },
     "mountain": {
-     "inHand": 12,
+     "inHand": 11,
      "ordered": 0
     },
     "plains": {
@@ -13354,7 +13356,7 @@
      "ordered": 0
     },
     "mountain": {
-     "inHand": 6,
+     "inHand": 5,
      "ordered": 0
     },
     "plains": {
@@ -14741,7 +14743,8 @@
      "shell-3o-flex-60",
      "shell-forest",
      "shell-mountain",
-     "shell-plains"
+     "shell-plains",
+     "shell-3o-command-tower"
     ],
     "tuned": [
      "valorous-stance-tuned",
@@ -14937,7 +14940,8 @@
      "shell-sunscorched-divide",
      "shell-temple-of-triumph",
      "shell-terramorphic-expanse",
-     "shell-turbulent-steppe"
+     "shell-turbulent-steppe",
+     "shell-5o-tectonic-reformation"
     ],
     "tuned": [
      "valorous-stance-tuned",
