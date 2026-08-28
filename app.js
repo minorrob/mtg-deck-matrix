@@ -687,6 +687,7 @@
     const unordered = new Map();
     const servedQty = new Map();
     const allocated = {};
+    const perDeck = {};
     const holdOf = (id, key) => ((state.deckHolds || {})[id] || {})[key] || null;
     const claims = [];
     variants.forEach((v) => {
@@ -710,6 +711,12 @@
 
     const take = (key, id, qty, from) => {
       const rec = allocated[key] || (allocated[key] = {inHand: 0, ordered: 0});
+      /* The same allocation, filed by box rather than summed. The Shop needs it to answer
+         "what do I still need for THIS deck": one Sol Ring across six decks is one row,
+         and without the split that row can only speak for all six at once. */
+      const mine = perDeck[id] || (perDeck[id] = {});
+      const seat = mine[key] || (mine[key] = {inHand: 0, ordered: 0});
+      seat[from === "hand" ? "inHand" : "ordered"] += qty;
       if (from === "hand") {
         unclaimed.set(key, unclaimed.get(key) - qty);
         rec.inHand += qty;
@@ -739,7 +746,7 @@
     // that gets them; then everyone else in deck order.
     claims.filter((c) => c.audited).forEach(serve);
     claims.filter((c) => !c.audited).forEach(serve);
-    return {boxes, committed, claimSatisfied, unclaimed, servedQty, allocated};
+    return {boxes, committed, claimSatisfied, unclaimed, servedQty, allocated, perDeck};
   }
 
   function deckPageContext() {
@@ -1544,7 +1551,7 @@
     });
     if (!decks.length) return null;
     return {
-      rows: Slot.shopRows(decks, owned, allocateCopies(variants, owned, cards).allocated),
+      rows: (() => { const a = allocateCopies(variants, owned, cards); return Slot.shopRows(decks, owned, a.allocated, a.perDeck); })(),
       factFor: (name) => cards[Lineup.normalizeName(name)] || cardMetadata[itemKey({name})] || {},
       paidFor,
       bench: benchItems(decks, owned, cards, deckLabels),
@@ -1659,7 +1666,15 @@
   const CLAIM_ORDER = ["5o", "4e", "2c", "7e", "3o", "1b"];
   function claimBoughtCard(ctx, key) {
     const Slot = window.MtgSlotModel;
-    const rank = (id) => { const i = CLAIM_ORDER.indexOf(id); return i < 0 ? CLAIM_ORDER.length : i; };
+    /* Filtering to a deck and then tapping Buy is a sentence: "this one is for Obuun."
+       So the decks named by the filter are served first, and the standing order decides
+       only among the rest. */
+    const asked = new Set(window.MtgShopPage.deckScope(ctx, ctx.filters || {}));
+    const rank = (id) => {
+      if (asked.has(id)) return -1;
+      const i = CLAIM_ORDER.indexOf(id);
+      return i < 0 ? CLAIM_ORDER.length : i;
+    };
     const decks = (ctx.decks || []).slice().sort((a, b) => rank(a.id) - rank(b.id));
     state.deckHolds = state.deckHolds || {};
     state.deckActive = state.deckActive || {};
@@ -1737,7 +1752,12 @@
     if ((el = event.target.closest("[data-sp-buy]"))) {
       const key = el.dataset.spBuy;
       const ctx = shopContext();
-      const row = ctx && ctx.rows.find((r) => r.key === key);
+      /* The row on screen is the row the button belongs to. Filtered to one deck it stands
+         for that deck's copies alone, and buying the whole unscoped pile off a button that
+         says "Buy 1" would put four Command Towers in the ledger on one tap. */
+      const scope = ctx ? window.MtgShopPage.deckScope(ctx, ctx.filters || {}) : [];
+      const found = ctx && ctx.rows.find((r) => r.key === key);
+      const row = found && scope.length ? window.MtgSlotModel.scopeRow(found, scope) : found;
       if (row) {
         const before = (state.owned && state.owned[key]) ? {...state.owned[key]} : {inHand: 0, ordered: 0};
         shopBuyUndo.set(key, before);
@@ -1746,7 +1766,11 @@
           holdsBefore[deckId] = {...(per[key] || {inHand: 0, ordered: 0})};
         }
         shopHoldUndo.set(key, holdsBefore);
-        for (let i = row.inHand; i < row.quantity; i += 1) bumpOwned(row.name, "hand", row.quantity);
+        /* Buy as many copies as THIS row is short, but let the ledger hold as many as every
+           deck between them wants: the shortfall is what the button is offering to fill, and
+           the cap is a fact about the collection, so scoping the cap would refuse a second
+           copy of a card another box already holds. */
+        for (let i = row.inHand; i < row.quantity; i += 1) bumpOwned(row.name, "hand", found.quantity);
         const claimed = claimBoughtCard(ctx, key);
         shopPickedUp.add(key);
         renderShopPage();

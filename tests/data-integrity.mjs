@@ -237,8 +237,13 @@ for (const view of [...appSource.matchAll(/^\s{4}([a-z0-9]+): \[$/gm)].map((m) =
         every deck claiming it call itself ordered. */
   assert.match(appSource, /function allocateCopies\(variants, owned, cards\)/,
     "there must be one allocator");
-  assert.match(appSource, /Slot\.shopRows\(decks, owned, allocateCopies\(variants, owned, cards\)\.allocated\)/,
+  assert.match(appSource, /Slot\.shopRows\(decks, owned, a\.allocated, a\.perDeck\)/,
     "the Shop must price what the decks were actually allocated, not the raw ledger");
+  // Filed by box as well as summed, so a deck-filtered Shop can say what THAT deck owes.
+  assert.match(appSource, /return \{boxes, committed, claimSatisfied, unclaimed, servedQty, allocated, perDeck\};/,
+    "the allocator must publish the per-deck split, not only the total");
+  assert.match(slotModelSource, /row\.acquisition = acquisitionFor\(row\.quantity, row\.inHand, row\.ordered\);/,
+    "a row's status must come from its own copies, never from the raw ledger");
   assert.match(appSource, /else if \(unordered\.get\(key\) >= qty\) got = take\(key, id, qty, "ordered"\);/,
     "ordered copies must be handed out one at a time like held ones");
   assert.match(appSource, /denied: Boolean\(hold && !\(hold\.inHand \|\| 0\) && !\(hold\.ordered \|\| 0\)\)/,
@@ -1320,6 +1325,49 @@ assert.doesNotMatch(cssSource, /\.dp-cstep/, "its styles must go with it");
   const fromHolds = owe(Slot.shopRows(decks, owned, claimTotals));
   assert.ok(fromHolds >= fromLedger,
     `counting from the boxes owes ${fromHolds} but counting from the ledger owes ${fromLedger}; a hold must never hide a card you have to buy`);
+
+  /* ---------- what a filter says must be what the row says ----------
+     The Shop's Status filter matches on a row's acquisition, so a row that still owes a
+     copy while calling itself "In hand" is a card the filter hides. That is how filtering
+     to Obuun and asking for "Not in hand" showed two of the seven colourless cards still
+     to buy: Sol Ring and Command Tower are owned once, wanted by several decks, and the
+     status was read off the shelf instead of off the row. */
+  const rows = Slot.shopRows(decks, owned, claimTotals, holds);
+  const lying = rows.filter((r) => r.need > 0 && r.acquisition === Slot.ACQUISITION.HAND);
+  assert.equal(lying.length, 0,
+    `${lying.length} rows still owe a copy while claiming to be in hand, so the status filter hides them: ${
+      lying.slice(0, 4).map((r) => `${r.name} needs ${r.need}`).join("; ")}`);
+
+  /* Scoped to one deck, every card that deck is short has to be findable under "Not in
+     hand" -- that is the whole question a shopper is asking at a vendor's table. */
+  for (const deck of decks) {
+    const scoped = rows.map((r) => Slot.scopeRow(r, [deck.id])).filter(Boolean);
+    const owedHere = scoped.filter((r) => r.need > 0);
+    const findable = owedHere.filter((r) => r.acquisition === Slot.ACQUISITION.NONE
+      || r.acquisition === Slot.ACQUISITION.PARTIAL || r.acquisition === Slot.ACQUISITION.ORDERED);
+    assert.equal(findable.length, owedHere.length,
+      `${deck.id}: ${owedHere.length - findable.length} cards it still needs do not show as owed when the Shop is filtered to it`);
+    const fully = owedHere.filter((r) => r.inHand === 0 && r.ordered === 0);
+    const shown = fully.filter((r) => r.acquisition === Slot.ACQUISITION.NONE);
+    assert.equal(shown.length, fully.length,
+      `${deck.id}: ${fully.length - shown.length} cards it holds none of are not listed as "Not in hand"`);
+  }
+}
+
+/* The Shop's two ways of acting on a row -- reading it and buying it -- have to be looking
+   at the same row. Filtered to one deck, a tile that says "Buy" for one copy must not put
+   four in the ledger because the unscoped pile wanted four. */
+{
+  const appSource = await readFile(new URL("../app.js", import.meta.url), "utf8");
+  assert.match(appSource, /const row = found && scope\.length \? window\.MtgSlotModel\.scopeRow\(found, scope\) : found;/,
+    "Buy must act on the row as filtered, not on the unscoped pile");
+  assert.match(appSource, /for \(let i = row\.inHand; i < row\.quantity; i \+= 1\) bumpOwned\(row\.name, "hand", found\.quantity\);/,
+    "the shortfall is scoped but the ledger cap is not: another box may already hold a copy");
+  const shopSource = await readFile(new URL("../shop-page.js", import.meta.url), "utf8");
+  assert.match(shopSource, /const deckIds = deckScope\(ctx, f\);/,
+    "the Shop must know which decks the filter names before it counts anything");
+  assert.match(shopSource, /const spent = decorate\(ctx\.rows \|\| \[\], ctx\.factFor, ctx\.deckLabels, ctx\.paidFor\);/,
+    "what you have already spent is a fact about the collection, so a filter must not change it");
 }
 
 /* Whatever else changes, a deck is a hundred cards. A slot the audit could not fill is
