@@ -301,7 +301,7 @@ for (const view of [...appSource.matchAll(/^\s{4}([a-z0-9]+): \[$/gm)].map((m) =
      Assignment gets no bucket. It had one, and once every slot was ticked that bucket
      swallowed the other three: a deck with fifty-seven cards in the post and two left to
      buy reported "0 to buy $0.00", which reads as nothing outstanding. */
-  assert.match(deckSource, /if \(loc\.kind === "active"\) t\.active \+= qty;\s*\n\s*else if \(loc\.kind === "ordered"\) t\.ordered \+= qty;\s*\n\s*else if \(loc\.kind === "buy"\) \{ t\.buy \+= qty; t\.buyValue \+= \(s\.pick\.price \|\| 0\) \* qty; \}/,
+  assert.match(deckSource, /if \(loc\.kind === "active"\) t\.active \+= qty;\s*\n\s*else if \(loc\.kind === "ordered"\) t\.ordered \+= qty;\s*\n\s*else if \(loc\.kind === "buy"\) \{ t\.buy \+= qty; t\.buyValue \+= costOf\(ctx, s\.pick\)\.value; \}/,
     "the buckets must be filed by where the card is, never gated on whether the slot is ticked");
   assert.doesNotMatch(deckSource, /t\.assigned\b/,
     "assignment must not take a bucket of its own again");
@@ -1024,10 +1024,10 @@ assert.match(deckPageSource, /\$\{t\.claimed \? "" : "disabled"\}/,
    the target is an estimate standing in until there is one. Everything that shows or
    sorts by cost goes through costOf, so a row and the sort beside it cannot disagree. */
 assert.match(deckPageSource, /function costOf\(ctx, pick\)/, "there must be one place that decides what a card cost");
-assert.match(deckPageSource, /return paid === null \? \{value: Number\(pick\.price\) \|\| 0, paid: false\} : \{value: Number\(paid\), paid: true\};/,
+assert.match(deckPageSource, /const unit = paid === null \? Number\(pick\.price\) \|\| 0 : Number\(paid\);/,
   "a paid price must win over the target, and the row must know which it is showing");
 assert.match(deckPageSource, /\}>\$\{money\(cost\.value\)\}<\/span>/, "the row's price must come from costOf, not straight off the plan");
-assert.match(deckPageSource, /const cost = \(s\) => \(s\.pick \? costOf\(ctx, s\.pick\)\.value \* Math\.max\(1, Number\(s\.pick\.quantity\) \|\| 1\) : -1\);/,
+assert.match(deckPageSource, /const cost = \(s\) => \(s\.pick \? costOf\(ctx, s\.pick\)\.value : -1\);/,
   "a cost sort must sort on the same number the row prints");
 // Typing a price has to rebuild the page, or the row keeps showing what it replaced.
 assert.match(appSource, /paid\.parentElement\?\.classList\.toggle\("is-set", stored !== null\);\n(?:\s*\/\*[\s\S]*?\*\/\n)?\s*renderDeckPage\(\);/,
@@ -1090,6 +1090,276 @@ assert.doesNotMatch(cssSource, /\.dp-cstep/, "its styles must go with it");
   assert.equal(shortBench.length, 0,
     `${shortBench.length} bench cards have no spare copy behind them, e.g. ${shortBench.slice(0, 3).join(", ")}`);
   void chosen;
+}
+
+
+/* ---------- what a card actually cost ----------
+   The Cost column of the master sheet is the record of money spent. It lands in
+   state.purchasePrices, keyed by the same slug every other part of the app resolves a
+   card by, so a price typed on a Shop row and a price read on a slot are one number. */
+{
+  const Slot = (await import("../slot-model.js")).default || (await import("../slot-model.js"));
+  const prices = activeState.state.purchasePrices || {};
+  assert.ok(Object.keys(prices).length > 250,
+    `the paid-price ledger should carry the master sheet's costs, found ${Object.keys(prices).length}`);
+
+  const badKey = Object.keys(prices).find((k) => k !== Slot.ownedKey(k));
+  assert.equal(badKey, undefined,
+    `every paid price must be filed under a slug the app resolves cards by, found ${badKey}`);
+
+  const badValue = Object.entries(prices).find(([, v]) => !Number.isFinite(Number(v)) || Number(v) < 0);
+  assert.equal(badValue, undefined, `a paid price must be a real non-negative number, found ${badValue}`);
+
+  // Cents, not fractions of one. A price that will not round-trip through a two-decimal
+  // input is a price the Paid box would silently rewrite the moment it was touched.
+  const notCents = Object.entries(prices).find(([, v]) => Math.abs(Number(v) * 100 - Math.round(Number(v) * 100)) > 1e-9);
+  assert.equal(notCents, undefined, `paid prices are money and must land on a cent, found ${notCents}`);
+
+  /* The prices have to reach the cards actually in the decks, not sit beside them. A card
+     the app knows is one in the catalog, on the bench, or hand-added to a slot -- the last
+     of those lives only in the state file, so checking the catalog alone would call a
+     legitimately priced manual card an orphan. */
+  const known = new Set(cards.cards.map((c) => Slot.ownedKey(c.name)));
+  Object.keys(activeState.state.liveSalvage || {}).forEach((k) => known.add(k));
+  Object.values(activeState.state.manualCards || {})
+    .forEach((list) => (list || []).forEach((e) => known.add(Slot.ownedKey(e.name))));
+  const orphans = Object.keys(prices).filter((k) => !known.has(k));
+  assert.equal(orphans.length, 0,
+    `${orphans.length} paid prices name no card the app knows, e.g. ${orphans.slice(0, 3).join(", ")}`);
+}
+
+/* ---------- a row that stands for twelve cards costs twelve times ----------
+   Rob's rule, and it has to hold everywhere a row shows one money figure: the slot row on
+   the Deck page, the Line column and the gallery tile on the Shop. The unit price stays
+   available for the Paid box and the hover, because that is what you type into it. */
+{
+  const ShopPage = (await import("../shop-page.js")).default || (await import("../shop-page.js"));
+  const rows = [
+    {key: "plains", name: "Plains", price: 0.4, quantity: 12, decks: [], rungs: []},
+    {key: "sol-ring", name: "Sol Ring", price: 2, quantity: 1, decks: [], rungs: []}
+  ];
+  const paid = {Plains: 0.1, "Sol Ring": null};
+  const out = ShopPage.decorate(rows, () => ({}), {}, (n) => paid[n] ?? null);
+  assert.equal(out[0].lineTotal.toFixed(2), "1.20",
+    "twelve Plains at the ten cents you paid is $1.20, not the ten cents and not the target");
+  assert.equal(out[1].lineTotal.toFixed(2), "2.00",
+    "an unpriced single falls back to its target, undivided and unmultiplied");
+  assert.equal(out[0].paid, 0.1, "the per-copy figure stays, because that is what the Paid box takes");
+
+  assert.match(deckPageSource, /const quantity = Math\.max\(1, Number\(pick\.quantity\) \|\| 1\);\s*\n\s*return \{value: unit \* quantity/,
+    "the Deck page's slot cost must be the whole row, not one copy of it");
+  assert.doesNotMatch(deckPageSource, /costOf\(ctx, s\.pick\)\.value \* Math\.max/,
+    "sorting must not multiply a row cost that already counts its copies");
+  assert.match(shopPageSource, /lineTotal: unitCost\(row, paidLookup\(row\.name\)\) \* row\.quantity/,
+    "the Shop's line total must prefer what was paid over what was estimated");
+}
+
+
+/* ---------- the Store view: the list you hold at a seller's table ----------
+   Different job from every other view on the page. Those are for deciding what to buy;
+   this one is for the ten seconds after the decision, holding a card, flipping through a
+   box. It is judged on two things: how many cards fit on a phone at once, and how few
+   taps it takes to say you bought one. */
+{
+  const ShopPage = (await import("../shop-page.js")).default || (await import("../shop-page.js"));
+
+  assert.match(shopPageSource, /data-sp-view="store"/, "the Store must be reachable from the view segment");
+  assert.match(shopPageSource, /data-sp-buy="\$\{esc\(r\.key\)\}"/, "every Store row needs a Buy target");
+  assert.match(shopPageSource, /data-sp-unbuy="\$\{esc\(r\.key\)\}"/, "and every bought row an Undo, because a mistap at a booth is likely");
+  assert.match(appSource, /shopPickedUp\.add\(key\)/, "a bought row has to be remembered so it can stay in place");
+  /* Undo restores the record as it was, rather than decrementing: a card that was already
+     partly in hand before the tap must come back partly in hand, not one lower than it. */
+  assert.match(appSource, /shopBuyUndo\.set\(key, before\)/, "Buy must record what it is about to overwrite");
+  assert.match(appSource, /state\.owned\[key\] = \{inHand: before\.inHand, ordered: before\.ordered\};/,
+    "Undo must put back exactly what was there, not guess at a decrement");
+
+  /* The count on the row and the button is what is still owed. A row of two Signets with
+     one already in the box is one card to find; labelling it x2 sends you looking for a
+     copy you already have. */
+  assert.match(shopPageSource, /const many = r\.need > 1;/, "the Store counts what is missing, not what the deck asks for");
+
+  // A price nobody has is not a price of nothing.
+  assert.match(shopPageSource, /function isPriced\(row, paid\)/, "the Store must be able to say it does not know a price");
+  assert.match(shopPageSource, /\$\{known \? money\(line\) : "\?"\}/, "an unknown price must never render as \\$0.00");
+
+  /* Every tap rebuilds the page, and in this view that is a tap per card. Losing your
+     place forty rows into a box, once per purchase, would make the view useless. */
+  assert.match(appSource, /withUiState\("#view-shop2", \(\) => window\.MtgShopPage\.render\(host, ctx\)\);/,
+    "the Shop must hold its scroll position across a re-render");
+
+  // Grouping has to be able to match how the cards in front of you are actually filed.
+  const byKey = Object.fromEntries(ShopPage.GROUP_BY);
+  assert.equal(byKey.letter, "First letter", "an alphabetical box needs an alphabetical grouping");
+  assert.equal(byKey.setName, "Set", "a box per set needs a grouping per set");
+
+  const rows = [
+    {key: "a", name: "Éowyn, Fearless Knight", setName: "Tales of Middle-earth", quantity: 1, need: 1, decks: [], rungs: []},
+    {key: "b", name: "Abrupt Decay", setName: "Modern Masters 2017", quantity: 1, need: 1, decks: [], rungs: []},
+    {key: "c", name: "9th Sphere", setName: "Modern Masters 2017", quantity: 1, need: 1, decks: [], rungs: []}
+  ];
+  const letters = ShopPage.groupRows(rows, "letter").map(([g]) => g);
+  assert.deepEqual(letters, ["#", "A", "E"],
+    "a shop files Eowyn under E and a numeral under the divider at the front");
+  const sets = ShopPage.groupRows(rows, "setName").map(([g, list]) => [g, list.length]);
+  assert.deepEqual(sets, [["Modern Masters 2017", 2], ["Tales of Middle-earth", 1]], "and a set box holds its set");
+
+  /* The slot's type is the job the slot does; the card's type is where it is filed. Abrupt
+     Decay sitting in a Land slot must not send you to the lands box. */
+  const decorated = ShopPage.decorate(
+    [{key: "abrupt-decay", name: "Abrupt Decay", type: "Land", quantity: 1, need: 1, decks: [], rungs: []}],
+    () => ({typeLine: "Instant", colorIdentity: ["B", "G"], rarity: "rare", setName: "Modern Masters 2017"}),
+    {}, () => null);
+  assert.equal(decorated[0].cardType, "Instant", "the Store row must say what the card is, not what the slot wanted");
+}
+
+/* Nothing you still have to buy may be priced at zero. Zero reaches the Store two ways --
+   a plan entry that was never priced and a catalog miss -- and standing at a table being
+   told a ten-dollar card is free is the single most expensive thing this page could do. */
+{
+  const Slot = (await import("../slot-model.js")).default || (await import("../slot-model.js"));
+  const byName = {};
+  cards.cards.forEach((c) => { byName[c.name.split(" // ")[0].toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()] = c; });
+  const owned = Slot.normalizeOwned(activeState.state);
+  const decks = [];
+  for (const [variantId, selection] of Object.entries(activeState.state.buySelections || {})) {
+    const plan = buyPlans.plans[variantId];
+    if (!plan) continue;
+    const grafted = {...plan, manual: (activeState.state.manualCards[variantId] || []).map((c) => ({...c}))};
+    decks.push({id: variantId, slots: Slot.deckSlots(grafted, selection, {owned, cards: byName})});
+  }
+  const prices = activeState.state.purchasePrices || {};
+  const free = Slot.shopRows(decks, owned, null)
+    .filter((r) => r.need > 0 && !(Number(r.price) > 0) && prices[r.key] === undefined);
+  assert.equal(free.length, 0,
+    `${free.length} cards you still have to buy carry no price at all, e.g. ${free.slice(0, 4).map((r) => r.name).join(", ")}`);
+}
+
+/* One rule about a zero price, applied in both places that read one. slot-model has
+   always treated a plan price of exactly zero as missing data wearing a zero -- Cabal
+   Ritual and City of Traitors are both in that set -- and the sweep's library did not,
+   so the cost published under a deck and the cost quoted on its Shop rows disagreed by
+   whatever those cards were really worth. */
+{
+  const libSource = await readFile(new URL("../tools/sim/lib.mjs", import.meta.url), "utf8");
+  assert.match(libSource, /price: Number\(\(entry\.item\.price \|\| meta\.price\) \?\? 0\)/,
+    "the sweep must fall back to the catalog on a zero plan price, as slot-model does");
+  assert.doesNotMatch(libSource, /Number\(entry\.item\.price \?\? meta\.price \?\? 0\)/,
+    "?? keeps a zero, which is the bug this replaced");
+}
+
+/* ---------- the two ways of counting what you owe must agree ----------
+   The Shop can work out what is still needed from the ledger (how many copies exist) or
+   from state.deckHolds (which box is holding which copy). Those are the same question and
+   have to give the same answer. They did not: the audit sheet recorded eleven Mountains in
+   a deck whose plan sleeves twelve, so the holds path put a twelfth Mountain on the
+   shopping list against a shelf of eighty of them. A hold is a claim on the pool, so it
+   has to be the count the deck actually composes. */
+{
+  const Slot = (await import("../slot-model.js")).default || (await import("../slot-model.js"));
+  const byName = {};
+  cards.cards.forEach((c) => { byName[c.name.split(" // ")[0].toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()] = c; });
+  const owned = Slot.normalizeOwned(activeState.state);
+  const holds = activeState.state.deckHolds || {};
+
+  const decks = [];
+  for (const [variantId, selection] of Object.entries(activeState.state.buySelections || {})) {
+    const plan = buyPlans.plans[variantId];
+    if (!plan) continue;
+    const grafted = {...plan, manual: (activeState.state.manualCards[variantId] || []).map((c) => ({...c}))};
+    decks.push({id: variantId, slots: Slot.deckSlots(grafted, selection, {owned, cards: byName})});
+  }
+  assert.ok(decks.length >= 6, "the shipped state should carry the live decks");
+
+  // No box may claim more copies of a card than the collection holds.
+  const overclaimed = [];
+  const claimTotals = {};
+  for (const per of Object.values(holds)) {
+    for (const [key, rec] of Object.entries(per)) {
+      const t = claimTotals[key] || (claimTotals[key] = {inHand: 0, ordered: 0});
+      t.inHand += rec.inHand || 0;
+      t.ordered += rec.ordered || 0;
+    }
+  }
+  for (const [key, t] of Object.entries(claimTotals)) {
+    const have = owned[key] || {inHand: 0, ordered: 0};
+    if (t.inHand > have.inHand) overclaimed.push(`${key}: boxes hold ${t.inHand}, you own ${have.inHand}`);
+  }
+  assert.equal(overclaimed.length, 0,
+    `${overclaimed.length} cards are claimed by more boxes than you own copies, e.g. ${overclaimed.slice(0, 3).join("; ")}`);
+
+  /* Basics are held against the pool, not against a per-deck line. A deck sleeving twelve
+     Mountains off a shelf of eighty must be recorded as holding twelve: recording eleven
+     put the twelfth on the shopping list, because the Shop reads the holds and not the
+     shelf. Non-basics are exempt -- a deck can legitimately be short a copy, which is
+     what "still to buy" means. */
+  const BASIC = new Set(["plains", "island", "swamp", "mountain", "forest", "wastes"]);
+  const shortBasics = [];
+  for (const deck of decks) {
+    const per = holds[deck.id] || {};
+    for (const slot of deck.slots) {
+      if (!slot.pick || !slot.isBasic) continue;
+      const key = Slot.ownedKey(slot.pick.name);
+      if (!BASIC.has(key)) continue;
+      const claimed = (per[key] || {}).inHand || 0;
+      const elsewhere = Object.entries(holds)
+        .reduce((n, [other, map]) => n + (other === deck.id ? 0 : ((map[key] || {}).inHand || 0)), 0);
+      const spare = Math.max(0, ((owned[key] || {}).inHand || 0) - elsewhere);
+      const should = Math.min(slot.pick.quantity, spare);
+      if (claimed < should) shortBasics.push(`${deck.id} ${slot.pick.name}: sleeves ${slot.pick.quantity}, holds ${claimed}, ${spare} free`);
+    }
+  }
+  assert.equal(shortBasics.length, 0,
+    `${shortBasics.length} decks hold fewer basics than they sleeve, which puts a card you own on the shopping list: ${shortBasics.join("; ")}`);
+
+  /* A hold can only ever ADD to what you owe -- it says a box does not have a copy the
+     collection does. It must never hide a purchase the ledger can see. */
+  const owe = (rs) => rs.reduce((n, r) => n + r.need, 0);
+  const fromLedger = owe(Slot.shopRows(decks, owned, null));
+  const fromHolds = owe(Slot.shopRows(decks, owned, claimTotals));
+  assert.ok(fromHolds >= fromLedger,
+    `counting from the boxes owes ${fromHolds} but counting from the ledger owes ${fromLedger}; a hold must never hide a card you have to buy`);
+}
+
+/* Whatever else changes, a deck is a hundred cards. A slot the audit could not fill is
+   left empty on purpose and shows as one, so the count below it is the honest number. */
+{
+  const Slot = (await import("../slot-model.js")).default || (await import("../slot-model.js"));
+  const short = [];
+  for (const [variantId, selection] of Object.entries(activeState.state.buySelections || {})) {
+    const plan = buyPlans.plans[variantId];
+    if (!plan) continue;
+    const grafted = {...plan, manual: (activeState.state.manualCards[variantId] || []).map((c) => ({...c}))};
+    const slots = Slot.deckSlots(grafted, selection, {});
+    const cards_ = slots.filter((s) => s.pick).reduce((n, s) => n + s.pick.quantity, 0);
+    const holes = slots.filter((s) => !s.pick).length;
+    if (cards_ + holes !== 100) short.push(`${variantId}: ${cards_} cards + ${holes} empty`);
+  }
+  assert.equal(short.length, 0,
+    `${short.length} live decks do not account for a hundred slots: ${short.join(", ")}`);
+}
+
+/* ---------- the Bench is everything loose, not everything a plan happens to name ----------
+   It was built by walking the decks' rungs, which finds the cards a slot could take -- the
+   useful half -- and silently dropped every other card you own and have not filed. Twenty
+   five of sixty-eight loose cards were invisible that way. A bench that hides a third of
+   the shelf is not a record of what is unassigned, so the yard is walked too. */
+{
+  assert.match(appSource, /Object\.values\(state\.liveSalvage \|\| \{\}\)\.forEach\(\(entry\) => \{/,
+    "benchItems must read the yard, not only the decks' rungs");
+  assert.match(appSource, /\[\.\.\.fromRungs, \.\.\.loose\]\.forEach\(\(rung\) => \{/,
+    "and it must walk both sources into one list");
+  /* Whether a card is on the bench is how many copies are left over, not whether a box has
+     one: owning two Prophetic Prisms with one sleeved leaves one loose. */
+  assert.match(appSource, /if \(spareCopies\(rung\.name\) < 1\) return;/,
+    "the bench test must be a spare copy, not the absence of a boxed one");
+  assert.doesNotMatch(appSource, /if \(seen\.has\(key\) \|\| boxed\[key\]\) return;/,
+    "the boolean 'is it in a box' test hid every card you own two of");
+  // Eighty spare Plains is one fact about the shelf, not eighty tiles to scroll past.
+  assert.match(appSource, /if \(Slot\.isBasicLand\(\{name: rung\.name/,
+    "basics are a pool and must not each take a bench tile");
+  // And a card nothing offers has to say so rather than claim it is illegal somewhere.
+  assert.match(shopPageSource, /No slot in any of the six decks offers this card/,
+    "a bench card with no destination must say why it has none");
 }
 
 console.log(`Validated ${variants.variants.length} variants and ${Object.keys(buyPlans.plans).length} connected buy profiles.`);

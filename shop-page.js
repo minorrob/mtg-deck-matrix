@@ -44,8 +44,12 @@
     {key: "band", label: "Price"}, {key: "spot", label: "Where"}, {key: "rarity", label: "Rarity"},
     {key: "deck", label: "Deck"}, {key: "rung", label: "Rung"}
   ];
+  /* Set and Letter are here because that is how a vendor's singles are filed -- a box per
+     set, or one long alphabetical run -- and matching the app's order to the box in front
+     of you is the difference between scanning and searching. */
   const GROUP_BY = [
-    ["none", "No grouping"], ["spot", "Where at the table"], ["band", "Price band"],
+    ["none", "No grouping"], ["letter", "First letter"], ["setName", "Set"],
+    ["spot", "Where at the table"], ["band", "Price band"],
     ["color", "Color"], ["type", "Type"], ["rarity", "Rarity"], ["deck", "Deck"], ["status", "Status"]
   ];
 
@@ -54,6 +58,20 @@
   }
   function money(n) { return Number.isFinite(Number(n)) ? "$" + Number(n).toFixed(2) : "—"; }
   function plural(n, w) { return n + " " + w + (n === 1 ? "" : "s"); }
+
+  /** What one copy costs: what you paid if you have said, the target estimate if not. */
+  function unitCost(row, paid) {
+    return paid === null || paid === undefined ? Number(row.price) || 0 : Number(paid) || 0;
+  }
+
+  /* A price nobody has is not a price of nothing. Zero reaches here two ways -- a plan
+     entry that was never priced, and a catalog miss -- and printing "$0.00" against a card
+     at a seller's table would have you handing over a common's worth for a ten-dollar
+     card. Say what is true instead: we do not know. */
+  function isPriced(row, paid) {
+    if (paid !== null && paid !== undefined) return true;
+    return Number(row.price) > 0;
+  }
 
   function colorKey(colorIdentity) {
     const ci = Array.isArray(colorIdentity) ? colorIdentity : [];
@@ -76,10 +94,17 @@
         rarity: (fact.rarity || "common").replace(/^./, (c) => c.toUpperCase()),
         rarityKey: RARITY_KEY[fact.rarity] || "C",
         setName: fact.setName || "",
+        /* The slot's `type` is the job the slot does, which is the right label on a deck
+           list and the wrong one in a shop: a Land slot filled by Abrupt Decay would have
+           you looking for it in the wrong box. This is what the card actually is. */
+        cardType: fact.typeLine ? Slot.cardType(fact) : "",
         image: fact.image || "",
         oracleText: fact.oracleText || "",
         deckNames: (row.decks || []).map((d) => (deckLabels || {})[d] || d),
-        lineTotal: (row.price || 0) * row.quantity,
+        /* What the row costs, not what one copy costs. A price you typed wins over the
+           target estimate, and a row standing for twelve copies costs twelve times it --
+           the same rule the Deck page's slot rows use, so the two never disagree. */
+        lineTotal: unitCost(row, paidLookup(row.name)) * row.quantity,
         // What it cost, not what it is worth. null is unpriced; 0 is a real answer.
         paid: paidLookup(row.name),
         rung: (row.rungs || []).map((r) => Slot.RUNG_LABEL[r] || r).join(", ")
@@ -121,6 +146,7 @@
 
   function sortValue(row, key) {
     if (key === "decks") return (row.deckNames || []).join(",");
+    if (key === "setName") return row.setName || "";
     if (key === "band") return Slot.PRICE_BANDS.indexOf(row.band);
     if (key === "spot") return Slot.SPOTS.indexOf(row.spot);
     if (key === "price") return row.price == null ? -1 : row.price;
@@ -137,12 +163,21 @@
       return String(x).localeCompare(String(y)) * sign || String(a.name).localeCompare(String(b.name));
     });
   }
+  /** The drawer a card would be filed in: its first letter, with digits and symbols
+   *  swept into one bucket the way a shop's box divider does. */
+  function letterOf(name) {
+    const c = String(name || "").trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").charAt(0).toUpperCase();
+    return c >= "A" && c <= "Z" ? c : "#";
+  }
+
   function groupRows(rows, groupBy) {
     if (!groupBy || groupBy === "none") return [["", rows]];
     const map = new Map();
     rows.forEach((r) => {
       const g = groupBy === "deck" ? (r.deckNames || []).join(" + ")
         : groupBy === "status" ? r.acquisition
+        : groupBy === "letter" ? letterOf(r.name)
+        : groupBy === "setName" ? (r.setName || "No set")
         : (r[groupBy] || "No price yet");
       if (!map.has(g)) map.set(g, []);
       map.get(g).push(r);
@@ -180,7 +215,7 @@
     </span>`;
   }
   function bandHeader(name, list, colSpan) {
-    const owed = list.reduce((sum, r) => sum + (r.price || 0) * r.need, 0);
+    const owed = list.reduce((sum, r) => sum + unitCost(r, r.paid) * r.need, 0);
     const inner = `<span class="sp-band-nm">${esc(name)}</span><span class="sp-band-ct">${
       plural(list.length, "card")} · ${money(owed)} still to buy</span>`;
     return colSpan ? `<tr class="sp-band"><td colspan="${colSpan}">${inner}</td></tr>`
@@ -198,7 +233,9 @@
       case "spot": return esc(row.spot || "no price");
       case "price": return `<span class="dp-num${row.need ? " is-buy" : ""}">${money(row.price)}</span>`;
       case "paid": return paidInput(row);
-      case "lineTotal": return `<span class="dp-num">${money(row.lineTotal)}</span>`;
+      case "lineTotal": return `<span class="dp-num"${
+        row.quantity > 1 ? ` title="${money(unitCost(row, row.paid))} each &times; ${row.quantity}"` : ""
+      }>${money(row.lineTotal)}</span>`;
       default: return esc(row[key] || "");
     }
   }
@@ -259,7 +296,8 @@
           </select>
           ${destDetail(chosen)}
           <button type="button" class="sp-assign" data-sp-assign="${esc(item.key)}|0">Assign · ${esc(chosen.action)}</button>
-        ` : `<p class="sp-meta">No legal slot in any deck: colour identity, singleton or bracket rules rule it out.</p>`}
+        ` : `<p class="sp-meta">No slot in any of the six decks offers this card &mdash; either no plan carries it,
+             or colour identity, singleton or bracket rules rule it out. It is yours and unassigned.</p>`}
       </article>`;
     }).join("")}</div>`;
   }
@@ -283,18 +321,96 @@
         <div>${consequence}</div></div>`;
   }
 
+  /* ---------------- Store: the view for when you are standing at a booth ----------------
+   *
+   * Everything else on this page is for deciding what to buy. This one is for the ten
+   * seconds after you have already decided: you are holding a card, flipping through a
+   * seller's box, and the only questions are "is this on my list" and "how much should it
+   * be". So the row carries a name you can read at arm's length, the money, and one big
+   * target you can hit without looking -- and nothing else. Four rows fit on a phone in
+   * the table view; twelve fit here, which is the whole point.
+   *
+   * Rows you have picked up stay where they are, struck through with an Undo, rather than
+   * vanishing: a row that disappears under your thumb is indistinguishable from a mistap,
+   * and it takes the place you were reading with it.
+   */
+  function storeMarkup(groups, done, groupBy) {
+    if (!groups.length) return '<p class="sp-empty">Nothing left on the list. Either the filters are too tight, or you are done.</p>';
+    return groups.map(([name, list]) => {
+      const owe = list.filter((r) => !done.has(r.key));
+      const money_ = owe.reduce((n, r) => n + unitCost(r, r.paid) * r.need, 0);
+      return `<section class="sp-store-grp">${name ? `<h3 class="sp-store-h">
+          <span class="sp-store-hn">${esc(name)}</span>
+          <span class="sp-store-hc">${owe.length ? `${plural(owe.length, "card")} · ${money(money_)}` : "all picked up"}</span>
+        </h3>` : ""}
+        <ul class="sp-store-list">${list.map((r) => storeRow(r, done.has(r.key), groupBy)).join("")}</ul>
+      </section>`;
+    }).join("");
+  }
+
+  function storeRow(r, picked, groupBy) {
+    /* What is still owed, not what the deck asks for. A row of two Arcane Signets with one
+       already in the box is one card to find, and labelling it "x2" sends you looking for
+       a copy you have. */
+    const many = r.need > 1;
+    if (picked) {
+      return `<li class="sp-store-row is-got" data-sp-row="${esc(r.key)}">
+        <span class="sp-store-tick">✓</span>
+        <span class="sp-store-body"><span class="sp-store-nm">${esc(r.name)}</span></span>
+        <button type="button" class="sp-undo" data-sp-unbuy="${esc(r.key)}">Undo</button>
+      </li>`;
+    }
+    /* What you expect to pay, so a seller's sticker can be judged without doing sums.
+       The line is the row's price; the unit rides along only when they differ. */
+    const line = unitCost(r, r.paid) * r.need;
+    /* Above a few dollars the seller's sticker is worth reading carefully; below it, it is
+       not. Marking the row is what lets a page of near-identical commons be skimmed and
+       the two cards that matter still catch the eye. */
+    const known = isPriced(r, r.paid);
+    const dear = known && line >= 5;
+    return `<li class="sp-store-row${dear ? " is-dear" : ""}" data-sp-row="${esc(r.key)}">
+      <span class="sp-store-dot" style="background:${COLOR_HEX[r.colorKey]}" title="${esc(r.color)}"></span>
+      <span class="sp-store-body">
+        <span class="sp-store-nm">${esc(r.name)}${many ? ` <span class="sp-qty dp-num">×${r.need}</span>` : ""}</span>
+        <span class="sp-store-sub">${[
+          esc(r.cardType || r.type || ""),
+          /* Which decks want it comes before which set it is from: the decks decide
+             whether a card at a bad price is still worth taking, and the set is usually
+             already the divider you are standing in front of. */
+          /* Joined with a plus, not a space: deck names are several words each now, and
+             "Lorehold Spirit Boros Aura Rush" reads as one deck nobody has. */
+          (r.deckNames || []).length ? (r.deckNames || []).map((d) => esc(d)).join(" + ") : "",
+          groupBy === "setName" ? "" : esc(r.setName || "")
+        ].filter(Boolean).join(" · ")}</span>
+      </span>
+      <span class="sp-store-money${dear ? " is-dear" : ""}${known ? "" : " is-unpriced"}">
+        <b class="dp-num">${known ? money(line) : "?"}</b>${
+          known && many ? `<span class="sp-store-ea">${money(unitCost(r, r.paid))} ea</span>` : ""}${
+          known ? "" : '<span class="sp-store-ea">no price</span>'}
+      </span>
+      <button type="button" class="sp-buy" data-sp-buy="${esc(r.key)}">Buy${many ? " " + r.need : ""}</button>
+    </li>`;
+  }
+
   function render(host, ctx) {
     if (!host) return;
     const f = ctx.filters || {};
     const all = decorate(ctx.rows || [], ctx.factFor, ctx.deckLabels, ctx.paidFor);
-    const kept = all.filter((r) => passes(r, f));
+    const done = ctx.picked instanceof Set ? ctx.picked : new Set();
+    /* The Store view answers one question -- what is still on the list -- so it starts
+       from what you still owe rather than from everything. A card picked up in this
+       sitting stays visible so the tick can be taken back; one bought last week does not. */
+    const inStore = f.view === "store";
+    const scope = inStore && !f.storeAll ? all.filter((r) => r.need > 0 || done.has(r.key)) : all;
+    const kept = scope.filter((r) => passes(r, f));
     const groups = groupRows(sortRows(kept, f.sortKey || "name", f.sortDir || "asc"), f.groupBy);
 
     const owedCards = kept.reduce((n, r) => n + r.need, 0);
-    const owedValue = kept.reduce((n, r) => n + (r.price || 0) * r.need, 0);
+    const owedValue = kept.reduce((n, r) => n + unitCost(r, r.paid) * r.need, 0);
     // Counted over every row, not the filtered ones: "what has this cost me" is a
     // question about the collection, and a filter is not meant to change the answer.
-    const paidTotal = all.reduce((n, r) => n + (r.paid === null ? 0 : r.paid), 0);
+    // What was actually spent, so a row of twelve Plains counts twelve times, not once.
+    const paidTotal = all.reduce((n, r) => n + (r.paid === null ? 0 : r.paid * r.quantity), 0);
     const paidCount = all.filter((r) => r.paid !== null).length;
 
     const chips = [];
@@ -314,6 +430,7 @@
           <button type="button" data-sp-view="gallery" aria-pressed="${f.view === "gallery"}">\u25a6 Gallery</button>
           <button type="button" data-sp-view="bench" aria-pressed="${f.view === "bench"}">\u25c7 Bench${
             (ctx.bench || []).length ? " " + (ctx.bench || []).length : ""}</button>
+          <button type="button" data-sp-view="store" aria-pressed="${f.view === "store"}">\u25c9 Store</button>
         </span>
         <button type="button" class="sp-mob" data-sp-mob aria-expanded="${Boolean(f.barOpen)}">
           ${f.barOpen ? "Hide options" : "Filter, group, sort"}${
@@ -352,6 +469,60 @@
     </div>`;
 
     if (f.view === "bench") { host.innerHTML = bar + benchMarkup(ctx); return; }
+
+    /* The Store gets its own bar. Everything on the general one is a decision aid, and at
+       a booth there are no decisions left to make -- so what stays out is a search box you
+       can reach without a tap, the two controls that make the app's order match the box in
+       front of you, and the count of what is left. The full filter set is still one tap
+       away behind the same button as everywhere else. */
+    if (inStore) {
+      const left = kept.filter((r) => !done.has(r.key));
+      const leftCards = left.reduce((n, r) => n + r.need, 0);
+      const leftValue = left.reduce((n, r) => n + unitCost(r, r.paid) * r.need, 0);
+      const gotHere = kept.length - left.length;
+      const storeBar = `<div class="sp-store-bar" data-open="${f.barOpen ? 1 : 0}">
+        <div class="sp-store-top">
+          <span class="sp-seg sp-seg-sm">
+            <button type="button" data-sp-view="table" aria-pressed="false">\u2630</button>
+            <button type="button" data-sp-view="gallery" aria-pressed="false">\u25a6</button>
+            <button type="button" data-sp-view="store" aria-pressed="true">\u25c9 Store</button>
+          </span>
+          <span class="sp-store-count"><b class="dp-num">${leftCards}</b> to find · <b class="dp-num">${money(leftValue)}</b>${
+            gotHere ? ` · <span class="sp-store-got">${gotHere} picked up</span>` : ""}</span>
+        </div>
+        <div class="sp-store-top">
+          <input class="sp-q sp-store-q" id="sp-q" type="search" placeholder="Type a card name\u2026" aria-label="Search cards" value="${esc(f.query || "")}">
+        </div>
+        <div class="sp-store-top">
+          <span class="sp-lab">In the box by</span>
+          <select class="sp-sel" id="sp-group" aria-label="Group the list the way the seller's cards are filed">${
+            GROUP_BY.map(([v, l]) => `<option value="${v}"${f.groupBy === v ? " selected" : ""}>${l}</option>`).join("")}</select>
+          <span class="sp-lab">then</span>
+          <select class="sp-sel" id="sp-sort" aria-label="Sort within each group">${
+            COLUMNS.filter((c) => c.sortable !== false).map((c) =>
+              `<option value="${c.key}"${f.sortKey === c.key ? " selected" : ""}>${c.label}</option>`).join("")}</select>
+          <button type="button" class="sp-mini" data-sp-storeall aria-pressed="${Boolean(f.storeAll)}">${
+            f.storeAll ? "Only what I need" : "Show everything"}</button>
+          <button type="button" class="sp-mini" data-sp-mob aria-expanded="${Boolean(f.barOpen)}">Filters${
+            activeFilters ? `<span class="sp-cnt dp-num">${activeFilters}</span>` : ""}</button>
+        </div>
+        ${f.barOpen ? `<div class="sp-store-filters"><div class="sp-frow">${FILTERS.map((flt) => {
+          const n = (f[flt.key] || []).length;
+          return `<span class="sp-drop">
+            <button type="button" class="sp-fbtn" data-sp-drop="${esc(flt.key)}" data-on="${n ? 1 : 0}">${esc(flt.label)}${
+              n ? `<span class="sp-cnt dp-num">${n}</span>` : '<span class="sp-caret">▾</span>'}</button>
+            <div class="sp-pop" id="sp-pop-${esc(flt.key)}" hidden>
+              ${values(all, flt.key).map((v) => `<label><input type="checkbox" data-sp-chk="${esc(flt.key)}|${esc(v)}"${
+                (f[flt.key] || []).indexOf(v) >= 0 ? " checked" : ""}>${esc(v)}</label>`).join("")}
+              <div class="sp-pop-foot"><button type="button" data-sp-all="${esc(flt.key)}">Select all</button><button type="button" data-sp-none="${esc(flt.key)}">Clear</button></div>
+            </div></span>`;
+        }).join("")}${chips.length ? `<button type="button" class="sp-mini" data-sp-clear="1">Clear all</button>` : ""}</div></div>` : ""}
+      </div>`;
+      host.innerHTML = storeBar + `<div class="sp-store">${storeMarkup(groups, done, f.groupBy)}</div>`;
+      return;
+    }
+
+
     if (!kept.length) {
       host.innerHTML = bar + '<p class="sp-empty">Nothing matches those filters.</p>';
       return;
@@ -368,7 +539,9 @@
               <div class="sp-nm">${esc(r.name)}${r.quantity > 1 ? ` <span class="sp-qty dp-num">×${r.quantity}</span>` : ""}</div>
               <div class="sp-meta"><span class="sp-dot" style="background:${COLOR_HEX[r.colorKey]}"></span>${esc(r.color)} · ${esc(r.type)} · ${esc(r.rarity)}</div>
               <div class="sp-meta">${(r.deckNames || []).map((d) => `<span class="sp-chip">${esc(d)}</span>`).join("")}<span class="sp-pill dp-num">${esc(r.band || "—")}</span></div>
-              <div class="sp-foot"><span class="dp-num${r.need ? " is-buy" : ""}">${money(r.price)}</span><span class="sp-where">${esc(r.spot || "—")}</span></div>
+              <div class="sp-foot"><span class="dp-num${r.need ? " is-buy" : ""}"${
+                r.quantity > 1 ? ` title="${money(unitCost(r, r.paid))} each &times; ${r.quantity}"` : ""
+              }>${money(r.lineTotal)}</span><span class="sp-where">${esc(r.spot || "—")}</span></div>
               <div class="sp-foot"><span class="sp-lab">Paid</span>${paidInput(r)}</div>
               ${triMarkup(r)}
             </div></article>`).join("")}</div></section>`).join("");
