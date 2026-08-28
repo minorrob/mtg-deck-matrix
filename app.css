@@ -1965,6 +1965,61 @@ div.sp-band{padding:9px 13px;border-radius:12px 12px 0 0}
 .sp-meta{font-size:11px;color:var(--muted);display:flex;gap:4px;flex-wrap:wrap;align-items:center}
 .sp-foot{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-top:auto;padding-top:4px}
 @media (max-width:640px){ .sp-tot{margin-left:0;width:100%} }
+/* ---- Store: the list you hold in one hand at a booth ----------------------
+   Sized off one constraint: how many cards fit on a phone screen at arm's length.
+   The table view fits four. This fits eleven, because the row carries the name, the
+   money and a target you can hit without aiming, and stops there. */
+.sp-store-bar{margin:0 0 10px;padding:8px 10px;
+  border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow)}
+.sp-store-top{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sp-store-top+.sp-store-top{margin-top:7px}
+.sp-seg-sm button{padding:5px 9px;font-size:12px}
+.sp-store-count{margin-left:auto;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.sp-store-count b{color:var(--ink);font-size:15px}
+.sp-store-got{color:var(--forest-2);font-weight:700}
+.sp-store-q{flex:1 1 100%;min-height:40px;font-size:16px}
+.sp-store-filters{margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+.sp-store-grp+.sp-store-grp{margin-top:12px}
+/* Stuck under the app header, not behind it: --head-h is measured and republished
+   whenever the header collapses, expands or reflows. */
+.sp-store-h{position:sticky;top:var(--head-h,0px);z-index:10;display:flex;align-items:baseline;gap:8px;
+  margin:0 0 4px;padding:7px 10px;border-radius:9px;background:var(--forest);color:#fff;
+  font-size:12px;letter-spacing:.04em;box-shadow:0 3px 8px rgba(31,42,36,.18)}
+.sp-store-hn{font-weight:800;text-transform:uppercase}
+.sp-store-hc{margin-left:auto;font-weight:500;opacity:.82;font-variant-numeric:tabular-nums}
+.sp-store-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+.sp-store-row{display:flex;align-items:center;gap:9px;min-height:56px;padding:6px 8px 6px 10px;
+  border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:11px;background:var(--surface)}
+.sp-store-dot{flex:none;width:11px;height:11px;border-radius:50%;border:1px solid rgba(0,0,0,.22)}
+.sp-store-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.sp-store-nm{font-size:16px;font-weight:700;line-height:1.16;color:var(--ink);
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sp-store-sub{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sp-store-money{flex:none;text-align:right;display:flex;flex-direction:column;line-height:1.1}
+.sp-store-money b{font-size:14px;color:var(--ink)}
+.sp-store-money.is-dear b{color:var(--accent);font-size:15px}
+.sp-store-money.is-unpriced b{color:var(--muted);font-weight:700}
+.sp-store-row.is-dear{border-left-color:var(--gold)}
+.sp-store-ea{font-size:10px;color:var(--muted)}
+.sp-buy{flex:none;min-width:66px;min-height:42px;padding:0 14px;border:0;border-radius:10px;
+  background:var(--forest-2);color:#fff;font-size:14px;font-weight:800;cursor:pointer;
+  box-shadow:0 1px 0 rgba(0,0,0,.18)}
+.sp-buy:active{transform:translateY(1px)}
+.sp-store-row.is-got{border-left-color:var(--line);background:var(--paper);min-height:40px}
+.sp-store-row.is-got .sp-store-nm{font-size:13.5px;font-weight:600;color:var(--muted);
+  text-decoration:line-through;-webkit-line-clamp:1}
+.sp-store-tick{flex:none;display:grid;place-items:center;width:22px;height:22px;border-radius:50%;
+  background:var(--forest-2);color:#fff;font-size:13px;font-weight:800}
+.sp-undo{flex:none;min-height:32px;padding:0 12px;border:1px solid var(--line);border-radius:999px;
+  background:var(--surface);font-size:12.5px;font-weight:700;color:var(--forest);cursor:pointer}
+@media (max-width:640px){
+  /* One thumb, one hand, a box of cards in the other. Everything grows. */
+  .sp-store-row{min-height:60px;gap:8px}
+  .sp-store-nm{font-size:17px}
+  .sp-buy{min-width:74px;min-height:46px;font-size:15px}
+  .sp-store-count{margin-left:0;width:100%}
+  .sp-store-money b{font-size:15px}
+}
 .sp-bench{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px}
 .sp-bcard{padding:12px;border:2px solid var(--rar,var(--line));border-radius:var(--radius);
   background:var(--surface);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px}

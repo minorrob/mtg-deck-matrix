@@ -1252,8 +1252,20 @@
     query: "", view: "table", groupBy: "spot", sortKey: "name", sortDir: "asc",
     // Phones only: whether the filter/group/sort block is unfolded. Desktop ignores it
     // and shows the block regardless, so this never hides anything on a wide screen.
-    barOpen: false
+    barOpen: false,
+    // Store view: normally it shows only what is still owed. This opens it to everything,
+    // for the case where you want to check whether you already have the card in your hand.
+    storeAll: false
   };
+
+  /* Cards ticked off during this visit to the Store view. Deliberately not saved: it is
+     "what I have picked up since I walked in", so it should be empty the next time the
+     app is opened, and the ownership ledger -- which IS saved -- already carries the fact
+     that the card was bought. What this buys is an Undo that stays where your eye is. */
+  let shopPickedUp = new Set();
+  /* What the ownership record said before a Buy, so Undo puts back exactly that rather
+     than guessing at a decrement. A mistap at a booth has to cost one tap, not an audit. */
+  const shopBuyUndo = new Map();
 
   /**
    * What the Bench holds: cards you own that sit in no deck's box, each with the
@@ -1379,6 +1391,7 @@
       paidFor,
       bench: benchItems(decks, owned, cards, deckLabels),
       intakeOpen: shopIntakeOpen,
+      picked: shopPickedUp,
       deckLabels, filters: shopFilters, owned, decks
     };
   }
@@ -1452,7 +1465,11 @@
     }
     const ctx = shopContext();
     if (!ctx) { host.innerHTML = '<div class="loading-card">Choose a variant for at least one deck on Compare, then come back.</div>'; return; }
-    window.MtgShopPage.render(host, ctx);
+    /* Every tap on this page rebuilds it, and in the Store view that is a tap per card.
+       Losing your place forty rows into a seller's box, once per purchase, would make the
+       view useless -- so the same wrapper the Deck page uses puts the scroll, the focus
+       and the open panels back where they were. */
+    withUiState("#view-shop2", () => window.MtgShopPage.render(host, ctx));
   }
 
   /** One writer for ownership, so in-hand and ordered can never drift apart. */
@@ -1499,7 +1516,54 @@
       shopFilters.query = ""; renderShopPage(); return true;
     }
     if (event.target.closest("[data-sp-mob]")) { shopFilters.barOpen = !shopFilters.barOpen; renderShopPage(); return true; }
-    if ((el = event.target.closest("[data-sp-view]"))) { shopFilters.view = el.dataset.spView; renderShopPage(); return true; }
+    if ((el = event.target.closest("[data-sp-view]"))) {
+      const next = el.dataset.spView;
+      /* Arriving at the Store is arriving at a booth: the list of what you have already
+         picked up starts empty, and grouping falls to the seller's own order rather than
+         the app's, which is what you will be scanning against. */
+      if (next === "store" && shopFilters.view !== "store") {
+        shopPickedUp = new Set();
+        shopFilters.sortKey = "name";
+        shopFilters.sortDir = "asc";
+        if (shopFilters.groupBy === "spot") shopFilters.groupBy = "letter";
+      }
+      shopFilters.view = next; renderShopPage(); return true;
+    }
+    if (event.target.closest("[data-sp-storeall]")) { shopFilters.storeAll = !shopFilters.storeAll; renderShopPage(); return true; }
+    /* One tap, one card off the list. It fills the row rather than adding a copy at a
+       time, because the row is one purchase -- twelve Plains is a stack, not twelve
+       decisions -- and because a half-filled row at a booth is a row you have to come
+       back to. The tick is recorded so the row can stay put with an Undo on it. */
+    if ((el = event.target.closest("[data-sp-buy]"))) {
+      const key = el.dataset.spBuy;
+      const ctx = shopContext();
+      const row = ctx && ctx.rows.find((r) => r.key === key);
+      if (row) {
+        const before = (state.owned && state.owned[key]) ? {...state.owned[key]} : {inHand: 0, ordered: 0};
+        shopBuyUndo.set(key, before);
+        for (let i = row.inHand; i < row.quantity; i += 1) bumpOwned(row.name, "hand", row.quantity);
+        shopPickedUp.add(key);
+        renderShopPage();
+        showToast(`${row.name} \u2014 in hand`);
+      }
+      return true;
+    }
+    if ((el = event.target.closest("[data-sp-unbuy]"))) {
+      const key = el.dataset.spUnbuy;
+      const before = shopBuyUndo.get(key);
+      if (before) {
+        if (!state.owned) state.owned = window.MtgSlotModel.normalizeOwned(state);
+        state.owned[key] = {inHand: before.inHand, ordered: before.ordered};
+        state.found[key] = before.inHand > 0;
+        state.boughtQuantities[key] = before.inHand;
+        if (!before.inHand) delete state.found[key];
+        shopBuyUndo.delete(key);
+        saveState();
+      }
+      shopPickedUp.delete(key);
+      renderShopPage();
+      return true;
+    }
     if (event.target.closest("[data-sp-intake-toggle]")) { shopIntakeOpen = !shopIntakeOpen; renderShopPage(); return true; }
     if (event.target.closest("[data-sp-intake-submit]")) { submitBenchIntake(); return true; }
     if ((el = event.target.closest("[data-sp-sort]"))) {
@@ -7196,7 +7260,8 @@
       {view: "shop2", selectors: [".sp-bar", ".loading-card", "#view-shop2"], title: "One list, every deck", copy: "Each card you still owe appears once, however many decks want it, with the decks named on the row."},
       {view: "shop2", selectors: [".sp-drop", ".sp-bar", "#view-shop2"], title: "Filters stack", copy: "Each filter is a multi-select — tick two rarities or three decks and the list keeps both. Active filters show as chips you can pull off one at a time."},
       {view: "shop2", selectors: ["#sp-q", ".sp-bar", "#view-shop2"], title: "Search inside the list", copy: "Type any part of a card name to narrow what is on screen without touching the filters."},
-      {view: "shop2", selectors: [".sp-seg", ".sp-bar", "#view-shop2"], title: "Table, gallery, or bench", copy: "Table is fastest to scan at a vendor counter, gallery shows the art when you are hunting a specific printing, and Bench holds cards you own that no slot has asked for yet."},
+      {view: "shop2", selectors: [".sp-seg", ".sp-bar", "#view-shop2"], title: "Four ways to read the list", copy: "Table carries every column, gallery shows the art when you are hunting a specific printing, Bench holds cards you own that no slot has asked for yet, and Store is the one to open when you are standing at a seller's table."},
+      {view: "shop2", selectors: [".sp-seg", ".sp-bar", "#view-shop2"], title: "Store, for a phone in one hand", copy: "Store shows only what you still owe, ten to a screen instead of four, and each row is a name, a price and a Buy button big enough to hit without looking. Buy marks the card in hand; the row stays where it is, struck through, with an Undo. Group by first letter or by set to match the box you are flipping through."},
       {view: "shop2", selectors: ["#sp-group", ".sp-bar", "#view-shop2"], title: "Group the way you shop", copy: "Group by table location, price band, rarity, type, or deck, so the list matches the order you will actually walk the floor in."},
       {view: "shop2", selectors: [".sp-tot", ".sp-bar", "#view-shop2"], title: "The running total", copy: "How many cards and how much money are still outstanding, for exactly the rows the filters have left on screen."},
       {view: "shop2", selectors: [".sp-card", ".sp-table", ".sp-bar", "#view-shop2"], title: "Mark it bought", copy: "Marking a card bought moves it into your ownership ledger, drops it out of the owed total, and makes it available to tick into a box back on Deck."},
@@ -7226,11 +7291,23 @@
     return window.matchMedia("(max-width: 700px)").matches;
   }
 
+  /* The header is sticky, so anything else that wants to stick has to know how tall it is
+     -- and it is not one number: it collapses on a phone, expands when asked, and wraps
+     differently at every width. Measuring it and publishing the answer is the only version
+     of this that does not go stale. Read as --head-h by the Store view's group headings. */
+  function publishHeaderHeight() {
+    const header = $(".app-header");
+    if (!header) return;
+    const h = Math.round(header.getBoundingClientRect().height);
+    document.documentElement.style.setProperty("--head-h", h + "px");
+  }
+
   function setHeaderCollapsed(collapsed) {
     const header = $(".app-header");
     const toggle = $("#header-toggle");
     if (!header) return;
     header.dataset.collapsed = collapsed ? "1" : "0";
+    publishHeaderHeight();
     if (toggle) {
       toggle.setAttribute("aria-expanded", String(!collapsed));
       toggle.setAttribute("aria-label", collapsed
@@ -7616,7 +7693,10 @@
       $("#tour-close").addEventListener("click", closeTour);
       $("#tour-back").addEventListener("click", () => moveTour(-1));
       $("#tour-next").addEventListener("click", () => moveTour(1));
-      window.addEventListener("resize", () => tourState && positionTour(findTourTarget(tourState.steps[tourState.index])));
+      window.addEventListener("resize", () => {
+        publishHeaderHeight();
+        if (tourState) positionTour(findTourTarget(tourState.steps[tourState.index]));
+      });
       document.addEventListener("keydown", (event) => {
         if (event.key === "Escape" && tourState) closeTour();
       });

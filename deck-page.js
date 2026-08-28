@@ -163,9 +163,15 @@
      that it is what you paid rather than what it is worth -- has to be sayable on hover. */
   function costTitle(cost, pick) {
     const parts = [];
-    if (cost.quantity > 1) parts.push(`${money(cost.unit)} each x ${cost.quantity}`);
-    if (cost.paid) parts.push(`What you paid. Target was ${money(pick.price)} each.`);
-    return parts.length ? ` title="${esc(parts.join(" . "))}"` : "";
+    if (cost.quantity > 1) parts.push(`${money(cost.unit)} each \u00d7 ${cost.quantity}`);
+    // Only compare against a target there is one of. A plan price of exactly zero is a
+    // card nobody priced, and "Target was $0.00" reads as a claim that it was free.
+    if (cost.paid) {
+      parts.push(Number(pick.price) > 0
+        ? `What you paid. Target was ${money(pick.price)}${cost.quantity > 1 ? " each" : ""}.`
+        : "What you paid. There was no target price for this one.");
+    }
+    return parts.length ? ` title="${esc(parts.join(" \u00b7 "))}"` : "";
   }
 
   function meta(ctx, name) { return (ctx.cards || {})[Lineup.normalizeName(name)] || {}; }

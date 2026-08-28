@@ -115,7 +115,10 @@ function literalCardsFor(plan, audited, selection) {
       colorIdentity: entry.item.colorIdentity || meta.colorIdentity || [],
       commanderLegal: entry.item.commanderLegal !== false && (meta.legalities?.commander || "legal") === "legal",
       gameChanger: Boolean(entry.item.gameChanger),
-      price: Number(entry.item.price ?? meta.price ?? 0),
+      /* A plan price of exactly 0 is missing data wearing a zero, not a free card --
+         Cabal Ritual and City of Traitors are both in that set. Same rule slot-model
+         applies, so the cost the sweep publishes and the cost the Shop quotes agree. */
+      price: Number((entry.item.price || meta.price) ?? 0),
       tags: entry.item.tags || [],
       lineupKind: entry.kind,
       source: entry.kind

@@ -1154,4 +1154,97 @@ assert.doesNotMatch(cssSource, /\.dp-cstep/, "its styles must go with it");
     "the Shop's line total must prefer what was paid over what was estimated");
 }
 
+
+/* ---------- the Store view: the list you hold at a seller's table ----------
+   Different job from every other view on the page. Those are for deciding what to buy;
+   this one is for the ten seconds after the decision, holding a card, flipping through a
+   box. It is judged on two things: how many cards fit on a phone at once, and how few
+   taps it takes to say you bought one. */
+{
+  const ShopPage = (await import("../shop-page.js")).default || (await import("../shop-page.js"));
+
+  assert.match(shopPageSource, /data-sp-view="store"/, "the Store must be reachable from the view segment");
+  assert.match(shopPageSource, /data-sp-buy="\$\{esc\(r\.key\)\}"/, "every Store row needs a Buy target");
+  assert.match(shopPageSource, /data-sp-unbuy="\$\{esc\(r\.key\)\}"/, "and every bought row an Undo, because a mistap at a booth is likely");
+  assert.match(appSource, /shopPickedUp\.add\(key\)/, "a bought row has to be remembered so it can stay in place");
+  /* Undo restores the record as it was, rather than decrementing: a card that was already
+     partly in hand before the tap must come back partly in hand, not one lower than it. */
+  assert.match(appSource, /shopBuyUndo\.set\(key, before\)/, "Buy must record what it is about to overwrite");
+  assert.match(appSource, /state\.owned\[key\] = \{inHand: before\.inHand, ordered: before\.ordered\};/,
+    "Undo must put back exactly what was there, not guess at a decrement");
+
+  /* The count on the row and the button is what is still owed. A row of two Signets with
+     one already in the box is one card to find; labelling it x2 sends you looking for a
+     copy you already have. */
+  assert.match(shopPageSource, /const many = r\.need > 1;/, "the Store counts what is missing, not what the deck asks for");
+
+  // A price nobody has is not a price of nothing.
+  assert.match(shopPageSource, /function isPriced\(row, paid\)/, "the Store must be able to say it does not know a price");
+  assert.match(shopPageSource, /\$\{known \? money\(line\) : "\?"\}/, "an unknown price must never render as \\$0.00");
+
+  /* Every tap rebuilds the page, and in this view that is a tap per card. Losing your
+     place forty rows into a box, once per purchase, would make the view useless. */
+  assert.match(appSource, /withUiState\("#view-shop2", \(\) => window\.MtgShopPage\.render\(host, ctx\)\);/,
+    "the Shop must hold its scroll position across a re-render");
+
+  // Grouping has to be able to match how the cards in front of you are actually filed.
+  const byKey = Object.fromEntries(ShopPage.GROUP_BY);
+  assert.equal(byKey.letter, "First letter", "an alphabetical box needs an alphabetical grouping");
+  assert.equal(byKey.setName, "Set", "a box per set needs a grouping per set");
+
+  const rows = [
+    {key: "a", name: "Éowyn, Fearless Knight", setName: "Tales of Middle-earth", quantity: 1, need: 1, decks: [], rungs: []},
+    {key: "b", name: "Abrupt Decay", setName: "Modern Masters 2017", quantity: 1, need: 1, decks: [], rungs: []},
+    {key: "c", name: "9th Sphere", setName: "Modern Masters 2017", quantity: 1, need: 1, decks: [], rungs: []}
+  ];
+  const letters = ShopPage.groupRows(rows, "letter").map(([g]) => g);
+  assert.deepEqual(letters, ["#", "A", "E"],
+    "a shop files Eowyn under E and a numeral under the divider at the front");
+  const sets = ShopPage.groupRows(rows, "setName").map(([g, list]) => [g, list.length]);
+  assert.deepEqual(sets, [["Modern Masters 2017", 2], ["Tales of Middle-earth", 1]], "and a set box holds its set");
+
+  /* The slot's type is the job the slot does; the card's type is where it is filed. Abrupt
+     Decay sitting in a Land slot must not send you to the lands box. */
+  const decorated = ShopPage.decorate(
+    [{key: "abrupt-decay", name: "Abrupt Decay", type: "Land", quantity: 1, need: 1, decks: [], rungs: []}],
+    () => ({typeLine: "Instant", colorIdentity: ["B", "G"], rarity: "rare", setName: "Modern Masters 2017"}),
+    {}, () => null);
+  assert.equal(decorated[0].cardType, "Instant", "the Store row must say what the card is, not what the slot wanted");
+}
+
+/* Nothing you still have to buy may be priced at zero. Zero reaches the Store two ways --
+   a plan entry that was never priced and a catalog miss -- and standing at a table being
+   told a ten-dollar card is free is the single most expensive thing this page could do. */
+{
+  const Slot = (await import("../slot-model.js")).default || (await import("../slot-model.js"));
+  const byName = {};
+  cards.cards.forEach((c) => { byName[c.name.split(" // ")[0].toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()] = c; });
+  const owned = Slot.normalizeOwned(activeState.state);
+  const decks = [];
+  for (const [variantId, selection] of Object.entries(activeState.state.buySelections || {})) {
+    const plan = buyPlans.plans[variantId];
+    if (!plan) continue;
+    const grafted = {...plan, manual: (activeState.state.manualCards[variantId] || []).map((c) => ({...c}))};
+    decks.push({id: variantId, slots: Slot.deckSlots(grafted, selection, {owned, cards: byName})});
+  }
+  const prices = activeState.state.purchasePrices || {};
+  const free = Slot.shopRows(decks, owned, null)
+    .filter((r) => r.need > 0 && !(Number(r.price) > 0) && prices[r.key] === undefined);
+  assert.equal(free.length, 0,
+    `${free.length} cards you still have to buy carry no price at all, e.g. ${free.slice(0, 4).map((r) => r.name).join(", ")}`);
+}
+
+/* One rule about a zero price, applied in both places that read one. slot-model has
+   always treated a plan price of exactly zero as missing data wearing a zero -- Cabal
+   Ritual and City of Traitors are both in that set -- and the sweep's library did not,
+   so the cost published under a deck and the cost quoted on its Shop rows disagreed by
+   whatever those cards were really worth. */
+{
+  const libSource = await readFile(new URL("../tools/sim/lib.mjs", import.meta.url), "utf8");
+  assert.match(libSource, /price: Number\(\(entry\.item\.price \|\| meta\.price\) \?\? 0\)/,
+    "the sweep must fall back to the catalog on a zero plan price, as slot-model does");
+  assert.doesNotMatch(libSource, /Number\(entry\.item\.price \?\? meta\.price \?\? 0\)/,
+    "?? keeps a zero, which is the bug this replaced");
+}
+
 console.log(`Validated ${variants.variants.length} variants and ${Object.keys(buyPlans.plans).length} connected buy profiles.`);

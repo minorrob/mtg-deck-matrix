@@ -8842,15 +8842,17 @@
         "B"
       ],
       "gameChanger": false,
-      "price": 0,
-      "ceiling": 0,
+      "price": 12.71,
+      "ceiling": 12.71,
       "image": "https://cards.scryfall.io/small/front/a/5/a5d85875-22da-4054-ae42-e85b472a6d5d.jpg?1783939296",
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fmagic%2Fproduct%3FproductLineName%3Dmagic%26q%3DCabal%2BRitual%26view%3Dgrid",
       "legalities": {
         "commander": "legal"
       },
       "commanderLegal": true,
-      "source": "sweep-candidate-pool"
+      "source": "sweep-candidate-pool",
+      "setName": "Mystery Booster 2",
+      "priceUpdated": "2026-08-28T03:13:38.145Z"
     },
     {
       "name": "Caldera Pyremaw",
@@ -10444,8 +10446,8 @@
       "setName": "Mystery Booster Commander Edition",
       "setCode": "mbc",
       "image": "https://cards.scryfall.io/small/front/9/b/9b29492a-8bdd-4806-8d1b-3058ed277cc1.jpg?1785759423",
-      "price": null,
-      "priceUpdated": "2026-08-23",
+      "price": 0.87,
+      "priceUpdated": "2026-08-28T03:13:38.145Z",
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F709821%3Fpage%3D1"
     },
     {
@@ -53883,8 +53885,8 @@
       "setName": "Masters Edition",
       "setCode": "me1",
       "image": "https://cards.scryfall.io/small/front/7/a/7a76a97e-a857-4593-ae7c-e393d8a868ac.jpg?1783942926",
-      "price": null,
-      "priceUpdated": "2026-08-23",
+      "price": 9.65,
+      "priceUpdated": "2026-08-28T03:13:38.145Z",
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fmagic%2Fproduct%3FproductLineName%3Dmagic%26q%3DShield%2BSphere%26view%3Dgrid"
     },
     {
