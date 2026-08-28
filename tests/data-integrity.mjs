@@ -301,7 +301,7 @@ for (const view of [...appSource.matchAll(/^\s{4}([a-z0-9]+): \[$/gm)].map((m) =
      Assignment gets no bucket. It had one, and once every slot was ticked that bucket
      swallowed the other three: a deck with fifty-seven cards in the post and two left to
      buy reported "0 to buy $0.00", which reads as nothing outstanding. */
-  assert.match(deckSource, /if \(loc\.kind === "active"\) t\.active \+= qty;\s*\n\s*else if \(loc\.kind === "ordered"\) t\.ordered \+= qty;\s*\n\s*else if \(loc\.kind === "buy"\) \{ t\.buy \+= qty; t\.buyValue \+= \(s\.pick\.price \|\| 0\) \* qty; \}/,
+  assert.match(deckSource, /if \(loc\.kind === "active"\) t\.active \+= qty;\s*\n\s*else if \(loc\.kind === "ordered"\) t\.ordered \+= qty;\s*\n\s*else if \(loc\.kind === "buy"\) \{ t\.buy \+= qty; t\.buyValue \+= costOf\(ctx, s\.pick\)\.value; \}/,
     "the buckets must be filed by where the card is, never gated on whether the slot is ticked");
   assert.doesNotMatch(deckSource, /t\.assigned\b/,
     "assignment must not take a bucket of its own again");
@@ -1024,10 +1024,10 @@ assert.match(deckPageSource, /\$\{t\.claimed \? "" : "disabled"\}/,
    the target is an estimate standing in until there is one. Everything that shows or
    sorts by cost goes through costOf, so a row and the sort beside it cannot disagree. */
 assert.match(deckPageSource, /function costOf\(ctx, pick\)/, "there must be one place that decides what a card cost");
-assert.match(deckPageSource, /return paid === null \? \{value: Number\(pick\.price\) \|\| 0, paid: false\} : \{value: Number\(paid\), paid: true\};/,
+assert.match(deckPageSource, /const unit = paid === null \? Number\(pick\.price\) \|\| 0 : Number\(paid\);/,
   "a paid price must win over the target, and the row must know which it is showing");
 assert.match(deckPageSource, /\}>\$\{money\(cost\.value\)\}<\/span>/, "the row's price must come from costOf, not straight off the plan");
-assert.match(deckPageSource, /const cost = \(s\) => \(s\.pick \? costOf\(ctx, s\.pick\)\.value \* Math\.max\(1, Number\(s\.pick\.quantity\) \|\| 1\) : -1\);/,
+assert.match(deckPageSource, /const cost = \(s\) => \(s\.pick \? costOf\(ctx, s\.pick\)\.value : -1\);/,
   "a cost sort must sort on the same number the row prints");
 // Typing a price has to rebuild the page, or the row keeps showing what it replaced.
 assert.match(appSource, /paid\.parentElement\?\.classList\.toggle\("is-set", stored !== null\);\n(?:\s*\/\*[\s\S]*?\*\/\n)?\s*renderDeckPage\(\);/,
@@ -1090,6 +1090,68 @@ assert.doesNotMatch(cssSource, /\.dp-cstep/, "its styles must go with it");
   assert.equal(shortBench.length, 0,
     `${shortBench.length} bench cards have no spare copy behind them, e.g. ${shortBench.slice(0, 3).join(", ")}`);
   void chosen;
+}
+
+
+/* ---------- what a card actually cost ----------
+   The Cost column of the master sheet is the record of money spent. It lands in
+   state.purchasePrices, keyed by the same slug every other part of the app resolves a
+   card by, so a price typed on a Shop row and a price read on a slot are one number. */
+{
+  const Slot = (await import("../slot-model.js")).default || (await import("../slot-model.js"));
+  const prices = activeState.state.purchasePrices || {};
+  assert.ok(Object.keys(prices).length > 250,
+    `the paid-price ledger should carry the master sheet's costs, found ${Object.keys(prices).length}`);
+
+  const badKey = Object.keys(prices).find((k) => k !== Slot.ownedKey(k));
+  assert.equal(badKey, undefined,
+    `every paid price must be filed under a slug the app resolves cards by, found ${badKey}`);
+
+  const badValue = Object.entries(prices).find(([, v]) => !Number.isFinite(Number(v)) || Number(v) < 0);
+  assert.equal(badValue, undefined, `a paid price must be a real non-negative number, found ${badValue}`);
+
+  // Cents, not fractions of one. A price that will not round-trip through a two-decimal
+  // input is a price the Paid box would silently rewrite the moment it was touched.
+  const notCents = Object.entries(prices).find(([, v]) => Math.abs(Number(v) * 100 - Math.round(Number(v) * 100)) > 1e-9);
+  assert.equal(notCents, undefined, `paid prices are money and must land on a cent, found ${notCents}`);
+
+  /* The prices have to reach the cards actually in the decks, not sit beside them. A card
+     the app knows is one in the catalog, on the bench, or hand-added to a slot -- the last
+     of those lives only in the state file, so checking the catalog alone would call a
+     legitimately priced manual card an orphan. */
+  const known = new Set(cards.cards.map((c) => Slot.ownedKey(c.name)));
+  Object.keys(activeState.state.liveSalvage || {}).forEach((k) => known.add(k));
+  Object.values(activeState.state.manualCards || {})
+    .forEach((list) => (list || []).forEach((e) => known.add(Slot.ownedKey(e.name))));
+  const orphans = Object.keys(prices).filter((k) => !known.has(k));
+  assert.equal(orphans.length, 0,
+    `${orphans.length} paid prices name no card the app knows, e.g. ${orphans.slice(0, 3).join(", ")}`);
+}
+
+/* ---------- a row that stands for twelve cards costs twelve times ----------
+   Rob's rule, and it has to hold everywhere a row shows one money figure: the slot row on
+   the Deck page, the Line column and the gallery tile on the Shop. The unit price stays
+   available for the Paid box and the hover, because that is what you type into it. */
+{
+  const ShopPage = (await import("../shop-page.js")).default || (await import("../shop-page.js"));
+  const rows = [
+    {key: "plains", name: "Plains", price: 0.4, quantity: 12, decks: [], rungs: []},
+    {key: "sol-ring", name: "Sol Ring", price: 2, quantity: 1, decks: [], rungs: []}
+  ];
+  const paid = {Plains: 0.1, "Sol Ring": null};
+  const out = ShopPage.decorate(rows, () => ({}), {}, (n) => paid[n] ?? null);
+  assert.equal(out[0].lineTotal.toFixed(2), "1.20",
+    "twelve Plains at the ten cents you paid is $1.20, not the ten cents and not the target");
+  assert.equal(out[1].lineTotal.toFixed(2), "2.00",
+    "an unpriced single falls back to its target, undivided and unmultiplied");
+  assert.equal(out[0].paid, 0.1, "the per-copy figure stays, because that is what the Paid box takes");
+
+  assert.match(deckPageSource, /const quantity = Math\.max\(1, Number\(pick\.quantity\) \|\| 1\);\s*\n\s*return \{value: unit \* quantity/,
+    "the Deck page's slot cost must be the whole row, not one copy of it");
+  assert.doesNotMatch(deckPageSource, /costOf\(ctx, s\.pick\)\.value \* Math\.max/,
+    "sorting must not multiply a row cost that already counts its copies");
+  assert.match(shopPageSource, /lineTotal: unitCost\(row, paidLookup\(row\.name\)\) \* row\.quantity/,
+    "the Shop's line total must prefer what was paid over what was estimated");
 }
 
 console.log(`Validated ${variants.variants.length} variants and ${Object.keys(buyPlans.plans).length} connected buy profiles.`);

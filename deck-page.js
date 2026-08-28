@@ -145,11 +145,27 @@
   /* What a card cost. A price you typed into the slot's Paid box is the real number and
      wins; the target price is an estimate standing in until you have one. Everything that
      shows or sorts by cost goes through here, so the row and the sort can never disagree
-     about which figure they are using. */
+     about which figure they are using.
+
+     A row can stand for more than one copy -- twelve Plains is one row -- so it carries
+     both figures: `unit` is what one copy costs, `value` is what the row costs. The row
+     is what gets shown and sorted on, because a row that reads $0.10 next to "x12" is
+     answering a question nobody asked. */
   function costOf(ctx, pick) {
-    if (!pick) return {value: 0, paid: false};
+    if (!pick) return {value: 0, unit: 0, quantity: 1, paid: false};
     const paid = ctx.paidFor ? ctx.paidFor(pick.name) : null;
-    return paid === null ? {value: Number(pick.price) || 0, paid: false} : {value: Number(paid), paid: true};
+    const unit = paid === null ? Number(pick.price) || 0 : Number(paid);
+    const quantity = Math.max(1, Number(pick.quantity) || 1);
+    return {value: unit * quantity, unit, quantity, paid: paid !== null};
+  }
+
+  /* The row shows one number, so anything the number is hiding -- that it is a multiple,
+     that it is what you paid rather than what it is worth -- has to be sayable on hover. */
+  function costTitle(cost, pick) {
+    const parts = [];
+    if (cost.quantity > 1) parts.push(`${money(cost.unit)} each x ${cost.quantity}`);
+    if (cost.paid) parts.push(`What you paid. Target was ${money(pick.price)} each.`);
+    return parts.length ? ` title="${esc(parts.join(" . "))}"` : "";
   }
 
   function meta(ctx, name) { return (ctx.cards || {})[Lineup.normalizeName(name)] || {}; }
@@ -158,7 +174,7 @@
   function isLegendary(ctx, name) { return /^Legendary\b/.test(meta(ctx, name).typeLine || ""); }
 
   /* ---------------- the card pane ---------------- */
-  function previewMarkup(ctx, name, loc, price) {
+  function previewMarkup(ctx, name, loc, price, quantity) {
     const m = meta(ctx, name);
     const rk = rarityKey(ctx, name);
     const img = m.image
@@ -173,7 +189,10 @@
         isLegendary(ctx, name) ? ' ♛ Legendary' : ""}</span>`],
       ["Set", esc(m.setName || "—")],
       ["Where", `<span class="dp-loc is-${loc.kind}"><span class="dp-g">${loc.glyph}</span>${esc(loc.label)}</span>`],
-      ["Target", `<span class="dp-num">${money(price)}</span>`],
+      /* Per copy, with the row's total beside it when the row is a multiple -- the Paid box
+         below takes a per-copy figure, so the two have to be reading the same unit. */
+      ["Target", `<span class="dp-num">${money(price)}</span>${
+        Number(quantity) > 1 ? ` <span class="dp-sub">each &middot; ${money((Number(price) || 0) * Number(quantity))} for ${Number(quantity)}</span>` : ""}`],
       /* What it cost, not what it is worth. Editable here because this is where you are
          looking at the card; the same number appears on the Shop row you bought it on. */
       ["Paid", `<span class="dp-paid${ctx.paidFor && ctx.paidFor(name) === null ? "" : " is-set"}">
@@ -271,7 +290,7 @@
         </button>
         <div class="dp-r">
           ${pick ? `<span class="dp-num${loc.kind === "buy" ? " is-buy" : ""}${cost.paid ? " is-paid" : ""}"${
-            cost.paid ? ` title="What you paid. Target was ${money(pick.price)}."` : ""
+            costTitle(cost, pick)
           }>${money(cost.value)}</span>` : ""}
           <span class="dp-loc is-${loc.kind}"><span class="dp-g">${loc.glyph}</span>${esc(loc.label)}</span>
           <span class="dp-of">${slot.isBasic && stock !== null
@@ -428,7 +447,7 @@
         ${manualBoxMarkup(ctx, slot, deckId)}
       </div>
       <aside class="dp-prev" id="dp-prev-${esc(slot.slotId)}">${
-        shown ? previewMarkup(ctx, shown.name, prevLoc, shown.price) : ""}</aside>
+        shown ? previewMarkup(ctx, shown.name, prevLoc, shown.price, shown.quantity) : ""}</aside>
     </div></div>`;
   }
 
@@ -601,7 +620,7 @@
     const name = (s) => face((s.pick && s.pick.name) || s.shellName || "").toLowerCase();
     // An empty slot has no card and so no cost; it sorts to the end either way rather
     // than pretending to be free.
-    const cost = (s) => (s.pick ? costOf(ctx, s.pick).value * Math.max(1, Number(s.pick.quantity) || 1) : -1);
+    const cost = (s) => (s.pick ? costOf(ctx, s.pick).value : -1);   // already the whole row
     const out = rows.slice();
     if (sortBy === "name") out.sort((a, b) => name(a).localeCompare(name(b)));
     else if (sortBy === "name-desc") out.sort((a, b) => name(b).localeCompare(name(a)));
@@ -667,7 +686,7 @@
          is, because a tick cannot make a card arrive. */
       if (loc.kind === "active") t.active += qty;
       else if (loc.kind === "ordered") t.ordered += qty;
-      else if (loc.kind === "buy") { t.buy += qty; t.buyValue += (s.pick.price || 0) * qty; }
+      else if (loc.kind === "buy") { t.buy += qty; t.buyValue += costOf(ctx, s.pick).value; }
       else t.owned += qty;   // in hand, but in another box or loose
       // What the deck has claimed, counted alongside rather than inside the buckets, so
       // ticking any row -- including one you cannot hold yet -- still moves a number.

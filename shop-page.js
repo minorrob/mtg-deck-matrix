@@ -55,6 +55,11 @@
   function money(n) { return Number.isFinite(Number(n)) ? "$" + Number(n).toFixed(2) : "—"; }
   function plural(n, w) { return n + " " + w + (n === 1 ? "" : "s"); }
 
+  /** What one copy costs: what you paid if you have said, the target estimate if not. */
+  function unitCost(row, paid) {
+    return paid === null || paid === undefined ? Number(row.price) || 0 : Number(paid) || 0;
+  }
+
   function colorKey(colorIdentity) {
     const ci = Array.isArray(colorIdentity) ? colorIdentity : [];
     if (!ci.length) return "C";
@@ -79,7 +84,10 @@
         image: fact.image || "",
         oracleText: fact.oracleText || "",
         deckNames: (row.decks || []).map((d) => (deckLabels || {})[d] || d),
-        lineTotal: (row.price || 0) * row.quantity,
+        /* What the row costs, not what one copy costs. A price you typed wins over the
+           target estimate, and a row standing for twelve copies costs twelve times it --
+           the same rule the Deck page's slot rows use, so the two never disagree. */
+        lineTotal: unitCost(row, paidLookup(row.name)) * row.quantity,
         // What it cost, not what it is worth. null is unpriced; 0 is a real answer.
         paid: paidLookup(row.name),
         rung: (row.rungs || []).map((r) => Slot.RUNG_LABEL[r] || r).join(", ")
@@ -180,7 +188,7 @@
     </span>`;
   }
   function bandHeader(name, list, colSpan) {
-    const owed = list.reduce((sum, r) => sum + (r.price || 0) * r.need, 0);
+    const owed = list.reduce((sum, r) => sum + unitCost(r, r.paid) * r.need, 0);
     const inner = `<span class="sp-band-nm">${esc(name)}</span><span class="sp-band-ct">${
       plural(list.length, "card")} · ${money(owed)} still to buy</span>`;
     return colSpan ? `<tr class="sp-band"><td colspan="${colSpan}">${inner}</td></tr>`
@@ -198,7 +206,9 @@
       case "spot": return esc(row.spot || "no price");
       case "price": return `<span class="dp-num${row.need ? " is-buy" : ""}">${money(row.price)}</span>`;
       case "paid": return paidInput(row);
-      case "lineTotal": return `<span class="dp-num">${money(row.lineTotal)}</span>`;
+      case "lineTotal": return `<span class="dp-num"${
+        row.quantity > 1 ? ` title="${money(unitCost(row, row.paid))} each &times; ${row.quantity}"` : ""
+      }>${money(row.lineTotal)}</span>`;
       default: return esc(row[key] || "");
     }
   }
@@ -291,10 +301,11 @@
     const groups = groupRows(sortRows(kept, f.sortKey || "name", f.sortDir || "asc"), f.groupBy);
 
     const owedCards = kept.reduce((n, r) => n + r.need, 0);
-    const owedValue = kept.reduce((n, r) => n + (r.price || 0) * r.need, 0);
+    const owedValue = kept.reduce((n, r) => n + unitCost(r, r.paid) * r.need, 0);
     // Counted over every row, not the filtered ones: "what has this cost me" is a
     // question about the collection, and a filter is not meant to change the answer.
-    const paidTotal = all.reduce((n, r) => n + (r.paid === null ? 0 : r.paid), 0);
+    // What was actually spent, so a row of twelve Plains counts twelve times, not once.
+    const paidTotal = all.reduce((n, r) => n + (r.paid === null ? 0 : r.paid * r.quantity), 0);
     const paidCount = all.filter((r) => r.paid !== null).length;
 
     const chips = [];
@@ -368,7 +379,9 @@
               <div class="sp-nm">${esc(r.name)}${r.quantity > 1 ? ` <span class="sp-qty dp-num">×${r.quantity}</span>` : ""}</div>
               <div class="sp-meta"><span class="sp-dot" style="background:${COLOR_HEX[r.colorKey]}"></span>${esc(r.color)} · ${esc(r.type)} · ${esc(r.rarity)}</div>
               <div class="sp-meta">${(r.deckNames || []).map((d) => `<span class="sp-chip">${esc(d)}</span>`).join("")}<span class="sp-pill dp-num">${esc(r.band || "—")}</span></div>
-              <div class="sp-foot"><span class="dp-num${r.need ? " is-buy" : ""}">${money(r.price)}</span><span class="sp-where">${esc(r.spot || "—")}</span></div>
+              <div class="sp-foot"><span class="dp-num${r.need ? " is-buy" : ""}"${
+                r.quantity > 1 ? ` title="${money(unitCost(r, r.paid))} each &times; ${r.quantity}"` : ""
+              }>${money(r.lineTotal)}</span><span class="sp-where">${esc(r.spot || "—")}</span></div>
               <div class="sp-foot"><span class="sp-lab">Paid</span>${paidInput(r)}</div>
               ${triMarkup(r)}
             </div></article>`).join("")}</div></section>`).join("");

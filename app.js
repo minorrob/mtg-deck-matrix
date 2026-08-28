@@ -1573,7 +1573,7 @@
     const ctx = shopContext();
     if (!ctx) return;
     const rows = window.MtgShopPage.decorate(ctx.rows, ctx.factFor, ctx.deckLabels, ctx.paidFor);
-    const total = rows.reduce((sum, row) => sum + (row.paid === null ? 0 : row.paid), 0);
+    const total = rows.reduce((sum, row) => sum + (row.paid === null ? 0 : row.paid * row.quantity), 0);
     const priced = rows.filter((row) => row.paid !== null).length;
     chip.innerHTML = `<b class="dp-num">${money(total)}</b> paid \u00b7 ${priced}/${rows.length} priced`;
   }
