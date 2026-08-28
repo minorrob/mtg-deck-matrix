@@ -1044,4 +1044,52 @@ assert.match(deckPageSource, /sortSlots\(ctx, rows, \(ctx\.filters \|\| \{\}\)\.
 assert.doesNotMatch(deckPageSource, /dp-collapse|dp-cstep/, "the fixed 25 / 5 / 1 strip must not come back");
 assert.doesNotMatch(cssSource, /\.dp-cstep/, "its styles must go with it");
 
+
+/* Cards picked up and dropped on the bench, then offered on the slots they could fill.
+   An option is only useful if it is legal, real, and not already chosen for you. */
+{
+  const Slot = (await import("../slot-model.js")).default || (await import("../slot-model.js"));
+  const yard = activeState.state.liveSalvage || {};
+  assert.ok(Object.keys(yard).length > 40, "the yard should hold the cards that were added to it");
+  const thin = Object.entries(yard).filter(([, e]) => !e.card || !e.card.typeLine || !e.card.name);
+  assert.equal(thin.length, 0,
+    `${thin.length} yard cards carry no type line, e.g. ${thin.slice(0, 3).map(([k]) => k).join(", ")}`);
+
+  // Every hand-added option has to be legal in the deck it is offered to. Getting this
+  // wrong is silent -- the card simply sits there, illegal, until a game says so.
+  const cardsByKey = new Map(cards.cards.map((c) => [Slot.ownedKey(c.name), c]));
+  const illegal = [];
+  const chosen = [];
+  for (const [variantId, list] of Object.entries(activeState.state.manualCards || {})) {
+    const plan = buyPlans.plans[variantId];
+    if (!plan) continue;
+    const grafted = {...plan, manual: list.map((c) => ({...c}))};
+    const slots = Slot.deckSlots(grafted, activeState.state.buySelections[variantId] || {}, {});
+    const seat = slots.find((s) => s.type === "Commander" && s.pick);
+    const identity = (seat && (cardsByKey.get(Slot.ownedKey(seat.pick.name)) || {}).colorIdentity) || [];
+    assert.ok(identity.length, `${variantId} should have a commander to take its colours from`);
+    for (const entry of list) {
+      const ci = entry.colorIdentity || [];
+      if (!ci.every((c) => identity.indexOf(c) >= 0)) illegal.push(`${variantId}/${entry.name}`);
+
+    }
+  }
+  assert.equal(illegal.length, 0,
+    `${illegal.length} hand-added cards are outside their deck's colours, e.g. ${illegal.slice(0, 3).join(", ")}`);
+  /* A card on the bench has to be a copy no box is holding. It may well ALSO be in a box
+     -- the audit has Prophetic Prism boxed in deck 3 and a second copy loose -- so the
+     test is not "is it in a deck" but "is there a copy left over". Without the spare, one
+     of the two records is stale and the same card is being counted twice. */
+  const shortBench = [];
+  for (const [key, entry] of Object.entries(yard)) {
+    const held = (activeState.state.owned[key] || {}).inHand || 0;
+    const boxed = Object.values(activeState.state.deckHolds || {})
+      .reduce((n, per) => n + ((per[key] || {}).inHand || 0), 0);
+    if (held - boxed < (entry.card.quantity || 1)) shortBench.push(`${entry.card.name} (own ${held}, boxed ${boxed})`);
+  }
+  assert.equal(shortBench.length, 0,
+    `${shortBench.length} bench cards have no spare copy behind them, e.g. ${shortBench.slice(0, 3).join(", ")}`);
+  void chosen;
+}
+
 console.log(`Validated ${variants.variants.length} variants and ${Object.keys(buyPlans.plans).length} connected buy profiles.`);
