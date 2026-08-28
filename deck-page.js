@@ -174,6 +174,16 @@
     return parts.length ? ` title="${esc(parts.join(" \u00b7 "))}"` : "";
   }
 
+  /* A box you have read is a box you want out of the way, and on a phone the only way to
+     shut one was to scroll back up to its header. Each of the three panels above the slot
+     list now ends with its own control, so closing is where finishing is. What stays
+     visible when a panel is shut is the one line that identifies it: the deck and its
+     commander, the compliance verdict, the search field. */
+  function panelToggle(key, open, whenShut) {
+    return `<button type="button" class="dp-panel-t" data-dp-panel="${esc(key)}" aria-expanded="${open}">
+      <span class="dp-car">\u25b6</span>${open ? "Collapse" : esc(whenShut)}</button>`;
+  }
+
   function meta(ctx, name) { return (ctx.cards || {})[Lineup.normalizeName(name)] || {}; }
   function cardTypeOf(ctx, name) { return Slot.cardType(meta(ctx, name)); }
   function rarityKey(ctx, name) { return RARITY_KEY[meta(ctx, name).rarity] || "C"; }
@@ -514,10 +524,11 @@
     return haystack.indexOf(query) >= 0;
   }
 
-  function filterMarkup(ctx, slots, shown) {
+  function filterMarkup(ctx, slots, shown, open) {
     const f = ctx.filters || {};
-    const active = (f.query || "").trim() !== ""
-      || ["type", "rung", "where", "status", "active"].some((k) => f[k] && f[k] !== "all");
+    const activeCount = ((f.query || "").trim() ? 1 : 0)
+      + ["type", "rung", "where", "status", "active"].filter((k) => f[k] && f[k] !== "all").length;
+    const active = activeCount > 0;
     const types = Slot.TYPE_ORDER.filter((t) => slots.some((s) => s.type === t));
     const rungs = Slot.RUNG_ORDER.filter((r) => slots.some((s) => s.rungs.some((x) => x.rung === r)));
     // Only the values this deck actually has, so a dropdown never offers an empty result.
@@ -542,10 +553,11 @@
         ${SORT_BY.map(([value, text]) => `<option value="${esc(value)}"${
           (f.sortBy || "") === value ? " selected" : ""}>${esc(text)}</option>`).join("")}
       </select></label>`;
-    return `<div class="dp-filters" role="search">
+    return `<div class="dp-filters" role="search" data-open="${open ? 1 : 0}">
       <label class="dp-f dp-f-q"><span>Search</span>
         <input type="search" id="dp-q" value="${esc(f.query || "")}" placeholder="Card, rung, or type…"
           aria-label="Search this deck's slots"></label>
+      <div class="dp-filters-body">
       ${select("type", "Type", types.map((t) => [t, t]))}
       ${select("rung", "Rung", rungs.map((r) => [r, RUNG_LABEL[r] || r]))}
       ${select("where", "Where", wheres.map((w) => [w, WHERE_LABEL[w]]))}
@@ -556,6 +568,8 @@
         ? `${plural(slots.length, "slot")}`
         : `${shown} of ${plural(slots.length, "slot")}`}</span>
       ${active ? `<button type="button" class="dp-f-clear" data-dp-filter-clear>Clear</button>` : ""}
+      </div>
+      ${panelToggle("filters", open, active ? `${plural(activeCount, "filter")} on` : "Filter, group, sort")}
     </div>`;
   }
 
@@ -567,7 +581,7 @@
    */
   const PIP = {W: "◐", U: "◉", B: "●", R: "◆", G: "◈"};
 
-  function readyMarkup(ctx, slots) {
+  function readyMarkup(ctx, slots, panels) {
     const cards = ctx.deckCards || [];
     if (!cards.length) return "";
     const rules = ctx.complianceFor ? ctx.complianceFor(cards) : null;
@@ -591,7 +605,8 @@
       ? `<b>${plural(problems.length, "rule problem")}</b>`
       : `<b>Legal</b> at Bracket 3${gc ? ` · ${plural(gc, "Game Changer")}` : ""}`;
 
-    return `<details class="dp-ready${problems.length ? " is-bad" : mana.thin.length ? " is-warn" : " is-ok"}">
+    const open = (panels || {}).ready === true;
+    return `<details class="dp-ready${problems.length ? " is-bad" : mana.thin.length ? " is-warn" : " is-ok"}"${open ? " open" : ""}>
       <summary>
         <span class="dp-ready-v">${problems.length ? "⚠" : "✓"} ${verdict}</span>
         <span class="dp-ready-m">${manaChips}</span>
@@ -606,6 +621,7 @@
           mana.thin.join(", ")}.</b> A colour wants roughly a third of the deck's lands behind it before its pips stop stranding cards in hand. Counted over lands and rocks alike, weighted by how many copies each slot holds.</p>` : ""}
         ${warnings.length ? `<ul class="dp-ready-list">${warnings.slice(0, 5).map((w) =>
           `<li>${esc(typeof w === "string" ? w : (w.rule || w.card || ""))}</li>`).join("")}</ul>` : ""}
+        ${panelToggle("ready", true, "")}
       </div>
     </details>`;
   }
@@ -709,13 +725,17 @@
     // The tally above counts the whole deck; the list below shows what the filter left.
     const visible = slots.filter((slot) => slotMatches(ctx, slot, deckId, ctx.filters || {}));
     const open = ctx.openSlot || null;
+    const panels = ctx.panels || {};
+    const headOpen = panels.head !== false;
+    const filtersOpen = panels.filters !== false;
     host.innerHTML = `
-      <div class="dp-head">
+      <div class="dp-head" data-open="${headOpen ? 1 : 0}">
         <div class="dp-head-top">
           <div><h2>${esc(ctx.deckTitle)}</h2>
           <p class="dp-sub">${esc(ctx.commander || "")}${ctx.colors ? " · " + esc(ctx.colors) : ""}${
             ctx.variantId ? " · variant " + esc(ctx.variantId) : ""}</p></div>
         </div>
+        <div class="dp-head-body">
         <div class="dp-stats-row">
           <!-- Cards, not rows. Eighty-five rows hold a hundred cards because the basics
                collapse into one row each, so "85/85 slots filled" answered a question
@@ -758,9 +778,11 @@
           <button type="button" class="dp-rank-b" data-dp-claim="none"
             ${t.claimed ? "" : "disabled"}>Deselect all</button>
         </div>
+        </div>
+        ${panelToggle("head", headOpen, `${t.active}/${t.cards} in the box · ${t.buy} to buy`)}
       </div>
-      ${readyMarkup(ctx, slots)}
-      ${filterMarkup(ctx, slots, visible.length)}
+      ${readyMarkup(ctx, slots, panels)}
+      ${filterMarkup(ctx, slots, visible.length, filtersOpen)}
       ${visible.length ? "" : '<p class="dp-empty">No slot in this deck matches that.</p>'}
       ${groupSlots(visible, (ctx.filters || {}).groupBy || "type", ctx, deckId).map(([label, rows]) => {
         const body = sortSlots(ctx, rows, (ctx.filters || {}).sortBy || "")

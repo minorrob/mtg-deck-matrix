@@ -214,6 +214,37 @@
       <button type="button" data-sp-s="hand" aria-pressed="${on("hand")}">In hand${many ? ` ${row.inHand}/${row.quantity}` : ""}</button>
     </span>`;
   }
+  /* The gallery panel, cut back to what it is for. The art already carries the name, the
+     colour and the type, so repeating them under it spent a third of the tile saying what
+     the picture said. Three rows are left: which decks want it, what it costs beside the
+     one button worth having here, and where the card is. Everything dropped is still a
+     column in the table view.
+
+     The price doubles as the Paid box. It reads as plain text until you tap it, which is
+     the only state that matters while browsing, and the input it becomes commits on Enter
+     and goes back to being text -- no second field, no label, no border sitting there
+     asking to be filled in. */
+  function galleryBody(r) {
+    const known = isPriced(r, r.paid);
+    // The row's cost, the same figure the table's Line column shows: a tile standing for
+    // twelve Plains costs twelve times one. The box below takes the per-copy price.
+    const shown = known ? money(r.lineTotal) : "?";
+    return `
+      <div class="sp-meta sp-gdecks">${(r.deckNames || []).map((d) =>
+        `<span class="sp-chip">${esc(d)}</span>`).join("") || '<span class="sp-chip is-none">No deck</span>'}</div>
+      <div class="sp-grow">
+        <button type="button" class="sp-gprice${r.paid === null ? "" : " is-paid"}${r.need ? " is-buy" : ""}"
+          data-sp-price="${esc(r.key)}" title="What you paid, per copy. Tap to change it.">${shown}</button>
+        <span class="sp-gedit" hidden><span class="sp-gcur">$</span><input type="text" inputmode="decimal"
+          data-sp-paid="${esc(r.key)}" value="${r.paid === null ? "" : Number(r.paid).toFixed(2)}"
+          placeholder="${known ? money(unitCost(r, null)).replace("$", "") : ""}"
+          aria-label="What you paid for ${esc(r.name)}"></span>
+        ${r.need ? `<button type="button" class="sp-buy sp-gbuy" data-sp-buy="${esc(r.key)}">Buy${
+          r.need > 1 ? " " + r.need : ""}</button>` : ""}
+      </div>
+      ${triMarkup(r)}`;
+  }
+
   function bandHeader(name, list, colSpan) {
     const owed = list.reduce((sum, r) => sum + unitCost(r, r.paid) * r.need, 0);
     const inner = `<span class="sp-band-nm">${esc(name)}</span><span class="sp-band-ct">${
@@ -535,16 +566,7 @@
           <article class="sp-card" style="--rar:var(--rar-${r.rarityKey})" data-sp-row="${esc(r.key)}">
             ${r.image ? `<img class="sp-art" src="${esc(Slot.cardImage(r.image, "normal"))}" alt="${esc(r.name)}" loading="lazy">`
                       : `<div class="sp-art sp-art-blank"><span>${esc(r.name)}</span></div>`}
-            <div class="sp-cbody">
-              <div class="sp-nm">${esc(r.name)}${r.quantity > 1 ? ` <span class="sp-qty dp-num">×${r.quantity}</span>` : ""}</div>
-              <div class="sp-meta"><span class="sp-dot" style="background:${COLOR_HEX[r.colorKey]}"></span>${esc(r.color)} · ${esc(r.type)} · ${esc(r.rarity)}</div>
-              <div class="sp-meta">${(r.deckNames || []).map((d) => `<span class="sp-chip">${esc(d)}</span>`).join("")}<span class="sp-pill dp-num">${esc(r.band || "—")}</span></div>
-              <div class="sp-foot"><span class="dp-num${r.need ? " is-buy" : ""}"${
-                r.quantity > 1 ? ` title="${money(unitCost(r, r.paid))} each &times; ${r.quantity}"` : ""
-              }>${money(r.lineTotal)}</span><span class="sp-where">${esc(r.spot || "—")}</span></div>
-              <div class="sp-foot"><span class="sp-lab">Paid</span>${paidInput(r)}</div>
-              ${triMarkup(r)}
-            </div></article>`).join("")}</div></section>`).join("");
+            <div class="sp-cbody">${galleryBody(r)}</div></article>`).join("")}</div></section>`).join("");
     } else {
       const head = COLUMNS.map((c) => {
         if (c.sortable === false) return `<th>${esc(c.label)}</th>`;

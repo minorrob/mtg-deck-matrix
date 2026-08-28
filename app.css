@@ -1773,6 +1773,24 @@ footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px;
 .dp-tile:hover{box-shadow:0 0 0 2px rgba(32,88,68,.28)}
 .dp-tile[aria-pressed="true"]{background:var(--gold-soft);box-shadow:0 0 0 3px rgba(32,88,68,.42)}
 /* Ready to sleeve: the rules verdict and the mana, where you are holding the cards. */
+/* ---- collapsing the three panels above the slot list -------------------------
+   Each ends with its own control, because the place you finish reading a box is the
+   place you want to shut it -- scrolling back to a header to close what you just read
+   is the whole problem. Shut, a panel keeps the one line that identifies it. */
+.dp-panel-t{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;flex:1 1 100%;
+  margin:8px 0 0;padding:6px 10px;border:0;border-top:1px solid var(--line);border-radius:0 0 11px 11px;
+  background:none;color:var(--muted);font:inherit;font-size:11.5px;font-weight:700;
+  letter-spacing:.04em;text-transform:uppercase;cursor:pointer}
+.dp-panel-t:hover{color:var(--forest);background:var(--paper)}
+.dp-panel-t .dp-car{transition:transform .15s ease;font-size:9px}
+.dp-panel-t[aria-expanded="true"] .dp-car{transform:rotate(-90deg)}
+.dp-panel-t[aria-expanded="false"] .dp-car{transform:rotate(90deg)}
+.dp-head[data-open="0"] .dp-head-body,
+.dp-filters[data-open="0"] .dp-filters-body{display:none}
+.dp-filters[data-open="0"]{gap:0}
+.dp-filters-body{display:contents}
+.dp-ready .dp-panel-t{margin-top:10px}
+
 .dp-ready{margin:0 0 11px;border:1px solid var(--line);border-left-width:4px;border-radius:12px;background:var(--surface)}
 .dp-ready.is-ok{border-left-color:var(--forest-2)}
 .dp-ready.is-warn{border-left-color:#c69735}
@@ -2020,7 +2038,38 @@ div.sp-band{padding:9px 13px;border-radius:12px 12px 0 0}
   .sp-store-count{margin-left:0;width:100%}
   .sp-store-money b{font-size:15px}
 }
-.sp-bench{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px}
+/* ---- the gallery tile, cut back ---------------------------------------------
+   The art carries the name, the colour and the type, so repeating them underneath spent
+   a third of the tile saying what the picture said. Three rows are left: who wants it,
+   what it costs beside the one button worth having here, and where it is. */
+.sp-gdecks{gap:4px}
+.sp-chip.is-none{opacity:.55}
+.sp-grow{display:flex;align-items:center;gap:8px;margin-top:auto}
+.sp-gprice{flex:1;min-width:0;min-height:34px;padding:2px 4px;border:0;border-radius:8px;
+  background:none;font:inherit;font-size:15px;font-weight:800;color:var(--ink);
+  font-variant-numeric:tabular-nums;text-align:left;cursor:text}
+/* Only where hovering is a thing. On a phone the tap leaves the hover stuck on, and a
+   price that keeps a grey box after you edit it is not the plain text it was promised. */
+@media (hover: hover){ .sp-gprice:hover{background:var(--paper)} }
+.sp-gprice.is-buy{color:var(--accent)}
+.sp-gprice.is-paid{color:var(--forest-2)}
+.sp-gedit{flex:1;min-width:0;display:flex;align-items:center;gap:2px;padding:0 6px;
+  border:1px solid var(--forest-2);border-radius:8px;background:var(--surface)}
+.sp-gedit[hidden]{display:none}
+.sp-gcur{font-size:13px;font-weight:700;color:var(--muted)}
+.sp-gedit input{width:100%;min-width:0;min-height:32px;padding:0;border:0;background:none;
+  font:inherit;font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink)}
+.sp-gedit input:focus{outline:none}
+.sp-gbuy{min-width:58px;min-height:34px;padding:0 12px;font-size:13px}
+@media (max-width:640px){
+  .sp-gprice{font-size:16px;min-height:38px}
+  .sp-gbuy{min-width:64px;min-height:38px;font-size:14px}
+}
+
+/* min() so the track can never be wider than the column it is in: a flat 330px minimum
+   overflowed a 328px phone, which is how a full-width card ends up looking like it only
+   fills part of the screen. */
+.sp-bench{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));gap:12px}
 .sp-bcard{padding:12px;border:2px solid var(--rar,var(--line));border-radius:var(--radius);
   background:var(--surface);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px}
 .sp-bhead{display:grid;grid-template-columns:86px minmax(0,1fr);gap:11px;align-items:start}
@@ -2029,6 +2078,19 @@ div.sp-band{padding:9px 13px;border-radius:12px 12px 0 0}
 .sp-tags{display:flex;flex-wrap:wrap;gap:5px}
 .sp-tag{padding:2px 8px;border:1px solid #b9cfc2;border-radius:999px;background:#eef5f0;font-size:11px}
 .sp-tag.is-rung{border-color:var(--forest-2);font-weight:800;background:var(--gold-soft)}
+@media (max-width:640px){
+  /* One hand, one column. The art comes down to a thumbnail, the facts sit beside it
+     rather than under a tall picture, and the tile stops reserving a card-shaped block of
+     empty space on every entry that has nothing to say. */
+  .sp-bcard{padding:10px;gap:7px}
+  .sp-bhead{grid-template-columns:60px minmax(0,1fr);gap:9px}
+  .sp-bart{width:60px}
+  .sp-bcard .sp-nm{font-size:15px;line-height:1.2}
+  .sp-bcard .sp-meta{font-size:11px}
+  .sp-dest,.sp-assign{width:100%}
+  .sp-assign{min-height:42px;font-size:14px}
+}
+
 .sp-repl{padding:8px 10px;border-left:3px solid var(--gold);background:var(--paper);border-radius:0 8px 8px 0;font-size:12px}
 .sp-repl b{display:block;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .sp-assign{padding:8px 12px;border:1px solid var(--forest-2);border-radius:999px;background:var(--forest-2);

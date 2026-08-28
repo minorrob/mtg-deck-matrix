@@ -508,7 +508,12 @@
   // The new Deck view reads through slot-model.js and renders via deck-page.js.
   // It runs beside the old Calibrate and Decks tabs rather than replacing them,
   // so the two can be compared against real data before anything is removed.
-  const deckPageState = {deckIndex: 0, openSlot: null, closedGroups: {}, filters: {}};
+  /* Which of the three panels above the slot list are shut. Held here rather than in the
+     saved state for the same reason closedGroups is: it is a reading position, not a
+     decision, and a fresh visit should start from the page as designed. The compliance
+     panel is the exception -- it is a <details> that ships closed, so its flag is
+     "opened", not "closed". */
+  const deckPageState = {deckIndex: 0, openSlot: null, closedGroups: {}, closedPanels: {}, filters: {}};
 
   // The baked catalog carries rarity, art, oracle text and a price for every card
   // in the plans, so the Deck page does not depend on the Scryfall cache being warm.
@@ -838,6 +843,11 @@
       buildRungs: Slot.BUILD_RUNGS,
       active: (state.deckActive && state.deckActive[variant.id]) || {},
       openSlot: deckPageState.openSlot,
+      panels: {
+        head: !deckPageState.closedPanels.head,
+        filters: !deckPageState.closedPanels.filters,
+        ready: Boolean(deckPageState.closedPanels.ready === false)
+      },
       variants
     };
   }
@@ -1048,6 +1058,16 @@
     if ((el = event.target.closest("[data-dp-grp]"))) {
       const key = el.dataset.dpGrp;
       deckPageState.closedGroups[key] = !deckPageState.closedGroups[key];
+      renderDeckPage();
+      return true;
+    }
+    /* The compliance panel ships closed, so its flag reads the other way round from the
+       other two. Storing "closed" for all three and inverting one here keeps the default
+       for each panel where it belongs -- in the markup that draws it. */
+    if ((el = event.target.closest("[data-dp-panel]"))) {
+      const key = el.dataset.dpPanel;
+      if (key === "ready") deckPageState.closedPanels.ready = deckPageState.closedPanels.ready === false;
+      else deckPageState.closedPanels[key] = !deckPageState.closedPanels[key];
       renderDeckPage();
       return true;
     }
@@ -1266,6 +1286,9 @@
   /* What the ownership record said before a Buy, so Undo puts back exactly that rather
      than guessing at a decrement. A mistap at a booth has to cost one tap, not an audit. */
   const shopBuyUndo = new Map();
+  /* And what each box was holding, for the same reason: a buy writes holds as well as the
+     ledger, so an undo that only restores the ledger leaves the boxes over-claiming. */
+  const shopHoldUndo = new Map();
 
   /**
    * What the Bench holds: cards you own that sit in no deck's box, each with the
@@ -1522,6 +1545,48 @@
     saveState();
   }
 
+  /* A card just bought has to land in a box, and deckHolds is where a box says what it
+     holds. Without writing it the purchase went nowhere the Shop could see: the audit had
+     recorded "this deck holds none of these", the allocator honours that so a deck the
+     audit denied is never handed a spare, and the card you had just paid for stayed on the
+     list. So the copies now in hand are dealt out to the decks that want them.
+
+     The order is Rob's: deck 5 first, then 4, 2, 7, 3, 1. A card three decks want and one
+     copy bought satisfies the first of them and leaves the other two still owing one,
+     which is the truth. */
+  const CLAIM_ORDER = ["5o", "4e", "2c", "7e", "3o", "1b"];
+  function claimBoughtCard(ctx, key) {
+    const Slot = window.MtgSlotModel;
+    const rank = (id) => { const i = CLAIM_ORDER.indexOf(id); return i < 0 ? CLAIM_ORDER.length : i; };
+    const decks = (ctx.decks || []).slice().sort((a, b) => rank(a.id) - rank(b.id));
+    state.deckHolds = state.deckHolds || {};
+    state.deckActive = state.deckActive || {};
+    /* Copies nobody's box has yet. Every existing hold comes off the total first -- not
+       one deck at a time as they are visited, or a deck early in the order would be handed
+       a copy a later one is already holding. */
+    const claimedNow = Object.values(state.deckHolds)
+      .reduce((n, per) => n + ((per[key] || {}).inHand || 0), 0);
+    let free = Math.max(0, ((Slot.normalizeOwned(state)[key] || {}).inHand || 0) - claimedNow);
+    const filled = [];
+    for (const deck of decks) {
+      const slot = deck.slots.find((s) => s.pick && Slot.ownedKey(s.pick.name) === key);
+      if (!slot) continue;
+      const per = state.deckHolds[deck.id] || (state.deckHolds[deck.id] = {});
+      const hold = per[key] || (per[key] = {inHand: 0, ordered: 0});
+      const want = Math.max(1, Number(slot.pick.quantity) || 1);
+      const add = Math.min(Math.max(0, want - hold.inHand), free);
+      if (add > 0) {
+        hold.inHand += add;
+        free -= add;
+        filled.push((ctx.deckLabels || {})[deck.id] || deck.id);
+      }
+      state.deckActive[deck.id] = state.deckActive[deck.id] || {};
+      state.deckActive[deck.id][slot.slotId] = true;
+    }
+    saveState();
+    return filled.length ? `into ${filled.join(" and ")}` : "";
+  }
+
   function shopClick(event) {
     let el;
     if (!event.target.closest(".sp-drop")) $$(".sp-pop").forEach((pop) => { pop.hidden = true; });
@@ -1574,10 +1639,31 @@
       if (row) {
         const before = (state.owned && state.owned[key]) ? {...state.owned[key]} : {inHand: 0, ordered: 0};
         shopBuyUndo.set(key, before);
+        const holdsBefore = {};
+        for (const [deckId, per] of Object.entries(state.deckHolds || {})) {
+          holdsBefore[deckId] = {...(per[key] || {inHand: 0, ordered: 0})};
+        }
+        shopHoldUndo.set(key, holdsBefore);
         for (let i = row.inHand; i < row.quantity; i += 1) bumpOwned(row.name, "hand", row.quantity);
+        const claimed = claimBoughtCard(ctx, key);
         shopPickedUp.add(key);
         renderShopPage();
-        showToast(`${row.name} \u2014 in hand`);
+        showToast(`${row.name} \u2014 in hand${claimed ? ` \u00b7 ${claimed}` : ""}`);
+      }
+      return true;
+    }
+    /* The price on a gallery tile is the Paid box, in its resting state. Tapping swaps
+       the two in place rather than re-rendering, so nothing moves under your thumb and
+       the keyboard opens on the field you meant. */
+    if ((el = event.target.closest("[data-sp-price]"))) {
+      const wrap = el.parentElement;
+      const edit = wrap && wrap.querySelector(".sp-gedit");
+      if (edit) {
+        el.hidden = true;
+        edit.hidden = false;
+        const input = edit.querySelector("input");
+        input.focus();
+        input.select();
       }
       return true;
     }
@@ -1585,6 +1671,15 @@
       const key = el.dataset.spUnbuy;
       const before = shopBuyUndo.get(key);
       if (before) {
+        // The holds the buy wrote have to come back with the ledger, or the boxes keep
+        // claiming a card the collection no longer says you own.
+        const holds = shopHoldUndo.get(key);
+        if (holds) {
+          for (const [deckId, rec] of Object.entries(holds)) {
+            if (state.deckHolds && state.deckHolds[deckId]) state.deckHolds[deckId][key] = {...rec};
+          }
+          shopHoldUndo.delete(key);
+        }
         if (!state.owned) state.owned = window.MtgSlotModel.normalizeOwned(state);
         state.owned[key] = {inHand: before.inHand, ordered: before.ordered};
         state.found[key] = before.inHand > 0;
@@ -1618,9 +1713,30 @@
       if (!state.deckActive) state.deckActive = {};
       if (!state.deckActive[dest.deckId]) state.deckActive[dest.deckId] = {};
       state.deckActive[dest.deckId][dest.slotId] = true;
+      /* The card that was in this slot is now out of it, and if the box was holding a
+         physical copy that copy is loose. Releasing the hold is what puts it on the Bench,
+         because the Bench is spare copies -- and without it the app would go on claiming a
+         card that is sitting in your hand while the incoming one had no box at all. */
+      const Slot = window.MtgSlotModel;
+      const holds = (state.deckHolds = state.deckHolds || {});
+      const per = holds[dest.deckId] || (holds[dest.deckId] = {});
+      const out = dest.replaced && dest.replaced.name ? Slot.ownedKey(dest.replaced.name) : null;
+      let freed = null;
+      if (out && per[out] && per[out].inHand > 0) {
+        per[out].inHand -= 1;
+        freed = dest.replaced.name;
+      }
+      // And the card moving in takes the box it just joined, up to what the slot asks for.
+      const inKey = Slot.ownedKey(item.name);
+      const spare = ((Slot.normalizeOwned(state)[inKey] || {}).inHand || 0)
+        - Object.values(holds).reduce((n, m) => n + ((m[inKey] || {}).inHand || 0), 0);
+      if (spare > 0) {
+        const rec = per[inKey] || (per[inKey] = {inHand: 0, ordered: 0});
+        rec.inHand += 1;
+      }
       saveState();
       renderShopPage();
-      showToast(`${item.name} assigned — ${dest.label}`);
+      showToast(`${item.name} assigned — ${dest.label}${freed ? ` · ${freed} is on the Bench` : ""}`);
       return true;
     }
     if ((el = event.target.closest("[data-sp-tri] button"))) {
@@ -1655,11 +1771,34 @@
       // table under a field someone is still tabbing through loses their place.
       const stored = commitPaidPrice(paid.dataset.spPaid, paid.value, "Paid");
       paid.value = stored === null ? "" : stored.toFixed(2);
+      closeGalleryPrice(paid);
       paid.closest("tr, .sp-card")?.classList.toggle("is-paid", stored !== null);
       updateShopPaidTotal();
       return true;
     }
     return false;
+  }
+
+  /* Put a gallery tile's price back to being text. The figure it goes back to is the
+     row's cost, not the per-copy price just typed, because that is what the tile showed
+     before it was tapped and a tile that reads differently after an edit than before one
+     looks like the edit did something else. */
+  function closeGalleryPrice(input) {
+    const edit = input.closest(".sp-gedit");
+    if (!edit) return;
+    const wrap = edit.parentElement;
+    const button = wrap && wrap.querySelector("[data-sp-price]");
+    if (!button) return;
+    const key = input.dataset.spPaid;
+    const ctx = shopContext();
+    const row = ctx && ctx.rows.find((r) => r.key === key);
+    const paid = paidFor(row ? row.name : "");
+    const unit = paid === null ? Number(row && row.price) || 0 : paid;
+    const known = paid !== null || Number(row && row.price) > 0;
+    button.textContent = known ? money(unit * (row ? row.quantity : 1)) : "?";
+    button.classList.toggle("is-paid", paid !== null);
+    edit.hidden = true;
+    button.hidden = false;
   }
 
   /* The running total is the one figure that has to move the moment a price lands,
@@ -1674,6 +1813,42 @@
     const priced = rows.filter((row) => row.paid !== null).length;
     chip.innerHTML = `<b class="dp-num">${money(total)}</b> paid \u00b7 ${priced}/${rows.length} priced`;
   }
+
+  /* The compliance panel is a native <details>, so clicking its summary opens it without
+     going through the handler above. Recording that here keeps the flag and the DOM in
+     step; no re-render, because the browser has already done the work. */
+  document.addEventListener("toggle", (event) => {
+    const box = event.target;
+    if (!box || !box.classList || !box.classList.contains("dp-ready")) return;
+    deckPageState.closedPanels.ready = box.open ? false : undefined;
+  }, true);
+
+  /* Enter is how you finish typing a price on a phone: it closes the keyboard, so it has
+     to be what commits. Escape puts the tile back without writing anything. */
+  document.addEventListener("keydown", (event) => {
+    const input = event.target.closest && event.target.closest(".sp-gedit input[data-sp-paid]");
+    if (!input) return;
+    if (event.key === "Enter") {
+      event.preventDefault();
+      const stored = commitPaidPrice(input.dataset.spPaid, input.value, "Paid");
+      input.value = stored === null ? "" : stored.toFixed(2);
+      closeGalleryPrice(input);
+      updateShopPaidTotal();
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      closeGalleryPrice(input);
+    }
+  });
+  /* Tapping away is not "cancel". Whatever is in the box when focus leaves is what was
+     meant, and losing it would be the one thing worse than an extra tap. */
+  document.addEventListener("focusout", (event) => {
+    const input = event.target.closest && event.target.closest(".sp-gedit input[data-sp-paid]");
+    if (!input) return;
+    const stored = commitPaidPrice(input.dataset.spPaid, input.value, "Paid");
+    input.value = stored === null ? "" : stored.toFixed(2);
+    closeGalleryPrice(input);
+    updateShopPaidTotal();
+  });
 
   document.addEventListener("click", (event) => { shopClick(event); });
   document.addEventListener("change", (event) => { shopChange(event); });
