@@ -39363,7 +39363,7 @@
         {
           "id": "shell-mountain",
           "name": "Mountain",
-          "quantity": 12,
+          "quantity": 11,
           "manaCost": "",
           "typeLine": "Basic Land — Mountain",
           "tags": [],
@@ -39378,6 +39378,28 @@
           ],
           "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fmagic%2Fproduct%3FproductLineName%3Dmagic%26q%3DMountain%26view%3Dgrid",
           "commanderLegal": true
+        },
+        {
+          "id": "shell-3o-command-tower",
+          "name": "Command Tower",
+          "quantity": 1,
+          "manaCost": "",
+          "typeLine": "Land",
+          "tags": [],
+          "isCommander": false,
+          "gameChanger": false,
+          "isFlexibleSlot": false,
+          "image": "https://cards.scryfall.io/small/front/0/5/0548fb60-c843-4f8f-a029-6f10efc63a41.jpg?1783903206",
+          "oracleText": "{T}: Add one mana of any color in your commander's color identity.",
+          "keywords": [],
+          "colorIdentity": [],
+          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F697438%3Fpage%3D1",
+          "commanderLegal": true,
+          "rarity": "common",
+          "setName": "Marvel Super Heroes Commander",
+          "price": 0.39,
+          "priceUpdated": "2026-08-23",
+          "why": "The handoff workbook runs Obuun on eleven Mountains and a Command Tower. A three-colour deck fixes its commander's cost better with the Tower than with a twelfth red source."
         },
         {
           "id": "shell-forest",
@@ -40980,7 +41002,7 @@
         }
       ],
       "startingShellKind": "custom-shell",
-      "startingShellSource": "",
+      "startingShellSource": "Custom shell · Mountain traded for Command Tower on the handoff workbook's reading",
       "baseCards": [
         {
           "id": "shell-3o-commander",
@@ -77741,7 +77763,7 @@
         {
           "id": "shell-mountain",
           "name": "Mountain",
-          "quantity": 6,
+          "quantity": 5,
           "manaCost": "",
           "typeLine": "Basic Land — Mountain",
           "tags": [],
@@ -77756,10 +77778,36 @@
           ],
           "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fmagic%2Fproduct%3FproductLineName%3Dmagic%26q%3DMountain%26view%3Dgrid",
           "commanderLegal": true
+        },
+        {
+          "id": "shell-5o-tectonic-reformation",
+          "name": "Tectonic Reformation",
+          "quantity": 1,
+          "manaCost": "{1}{R}",
+          "typeLine": "Enchantment",
+          "tags": [],
+          "isCommander": false,
+          "gameChanger": false,
+          "isFlexibleSlot": false,
+          "image": "https://cards.scryfall.io/small/front/6/5/656c3e32-8928-4b99-b79c-5761c592aa3d.jpg?1783931168",
+          "oracleText": "Each land card in your hand has cycling {R}.\nCycling {2} ({2}, Discard this card: Draw a card.)",
+          "keywords": [
+            "Cycling"
+          ],
+          "colorIdentity": [
+            "R"
+          ],
+          "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F212423%3Fpage%3D1",
+          "commanderLegal": true,
+          "rarity": "rare",
+          "setName": "Commander 2020",
+          "price": 0.41,
+          "priceUpdated": "2026-08-28",
+          "why": "The handoff workbook runs Quintorius on five Mountains and Tectonic Reformation, which turns the lands drawn late into cards and feeds the graveyard the deck is built on."
         }
       ],
       "startingShellKind": "official-precon",
-      "startingShellSource": "https://magic.wizards.com/en/news/announcements/secrets-of-strixhaven-commander-decklists",
+      "startingShellSource": "https://magic.wizards.com/en/news/announcements/secrets-of-strixhaven-commander-decklists · Mountain traded for Tectonic Reformation on the handoff workbook's reading",
       "baseCards": [
         {
           "id": "quintorius-history-chaser",

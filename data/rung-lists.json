@@ -22621,7 +22621,11 @@
         },
         {
           "name": "Mountain",
-          "quantity": 12
+          "quantity": 11
+        },
+        {
+          "name": "Command Tower",
+          "quantity": 1
         },
         {
           "name": "Forest",
@@ -22891,7 +22895,11 @@
         },
         {
           "name": "Mountain",
-          "quantity": 12
+          "quantity": 11
+        },
+        {
+          "name": "Command Tower",
+          "quantity": 1
         },
         {
           "name": "Forest",
@@ -23161,7 +23169,11 @@
         },
         {
           "name": "Mountain",
-          "quantity": 12
+          "quantity": 11
+        },
+        {
+          "name": "Command Tower",
+          "quantity": 1
         },
         {
           "name": "Forest",
@@ -23431,7 +23443,11 @@
         },
         {
           "name": "Mountain",
-          "quantity": 12
+          "quantity": 11
+        },
+        {
+          "name": "Command Tower",
+          "quantity": 1
         },
         {
           "name": "Forest",
@@ -33945,7 +33961,11 @@
         },
         {
           "name": "Mountain",
-          "quantity": 6
+          "quantity": 5
+        },
+        {
+          "name": "Tectonic Reformation",
+          "quantity": 1
         }
       ],
       "Tuned": [
@@ -34215,7 +34235,11 @@
         },
         {
           "name": "Mountain",
-          "quantity": 6
+          "quantity": 5
+        },
+        {
+          "name": "Tectonic Reformation",
+          "quantity": 1
         },
         {
           "name": "Darksteel Plate",
@@ -34557,7 +34581,11 @@
         },
         {
           "name": "Mountain",
-          "quantity": 6
+          "quantity": 5
+        },
+        {
+          "name": "Tectonic Reformation",
+          "quantity": 1
         },
         {
           "name": "Darksteel Plate",
@@ -34887,7 +34915,11 @@
         },
         {
           "name": "Mountain",
-          "quantity": 6
+          "quantity": 5
+        },
+        {
+          "name": "Tectonic Reformation",
+          "quantity": 1
         },
         {
           "name": "Price of Freedom",
