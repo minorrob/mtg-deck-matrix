@@ -235,6 +235,30 @@
       aria-label="Send ${esc(rung.name)} back to the bench">↩</button></span>`;
   }
 
+  /* Two facts about a candidate, and they are different facts: Active is the card the deck
+     is counted and shopped as, Assigned is the reviewed recommendation a reset returns to.
+     Usually they are the same card, and then it wears both badges rather than appearing
+     twice -- one tile, two labels, because there is only one card there. */
+  function assignedEntryFor(ctx, slot) {
+    const ids = ctx.assignedIds || null;
+    if (!ids) return null;
+    const hit = (slot.rungs || []).find((r) => ids.has(String(r.entryId)));
+    return hit || null;
+  }
+  function stateBadges(ctx, slot, rung, deckId) {
+    const assigned = assignedEntryFor(ctx, slot);
+    const isAssigned = Boolean(assigned && assigned.entryId === rung.entryId);
+    const isActive = Boolean(rung.selected);
+    if (!isActive && !isAssigned) return "";
+    const both = isActive && isAssigned;
+    void deckId;
+    return `<span class="dp-state">${
+      isActive ? '<span class="dp-badge is-active" title="Counted in this deck right now">Active</span>' : ""}${
+      isAssigned ? `<span class="dp-badge is-assigned" title="${both
+        ? "The reviewed recommendation, and what is in the deck"
+        : "The reviewed recommendation. Reset returns here."}">Assigned</span>` : ""}</span>`;
+  }
+
   function tileMarkup(ctx, slot, rung, deckId, owned) {
     const loc = locationOf(ctx, rung.name, rung.quantity, deckId, rung.selected ? slot.slotId : null);
     const rk = rarityKey(ctx, rung.name);
@@ -245,6 +269,7 @@
         aria-pressed="${rung.selected}">
       <span class="dp-tile-top">
         <span class="dp-rung is-${owned ? "owned" : rung.rung}">${owned ? "Owned" : (RUNG_LABEL[rung.rung] || rung.rung)}</span>
+        ${stateBadges(ctx, slot, rung, deckId)}
         ${isLegendary(ctx, rung.name) ? '<span class="dp-crown" title="Legendary">♛</span>' : ""}
       </span>
       <span class="dp-tile-nm">${esc(rung.name)}</span>
@@ -467,12 +492,32 @@
         <div class="dp-row">${rungs.map((r) => (r.rung === "manual"
           ? manualTileMarkup(ctx, slot, r, deckId)
           : tileMarkup(ctx, slot, r, deckId, false))).join("")}</div>
+        ${slotStateBar(ctx, slot, deckId)}
         ${detail ? `<div class="dp-cand-more">${detail}</div>
           ${panelToggle("slotDetail", detailOpen, parts.length ? "Why these rungs, and add a card" : "Add a card by hand")}` : ""}
       </div>
       <aside class="dp-prev" id="dp-prev-${esc(slot.slotId)}">${
         shown ? previewMarkup(ctx, shown.name, prevLoc, shown.price, shown.quantity) : ""}</aside>
     </div></div>`;
+  }
+
+  /* What this slot is holding against what it was recommended, with the two moves between
+     them. Reset only ever puts Active back to Assigned; Make Assigned only ever moves the
+     recommendation to what is in the slot. Neither deletes a candidate. */
+  function slotStateBar(ctx, slot, deckId) {
+    const assigned = assignedEntryFor(ctx, slot);
+    if (!assigned || !slot.pick) return "";
+    const same = assigned.entryId === slot.pick.entryId;
+    void deckId;
+    return `<div class="dp-sbar">
+      <span class="dp-sbar-t">${same
+        ? `Active is the recommendation \u2014 <b>${esc(assigned.name)}</b>`
+        : `Recommended here: <b>${esc(assigned.name)}</b>`}</span>
+      ${same ? "" : `<button type="button" class="dp-sbtn" data-dp-reset="${esc(slot.slotId)}"
+        >Reset to ${esc(face(assigned.name))}</button>`}
+      ${same ? "" : `<button type="button" class="dp-sbtn is-alt" data-dp-makeassigned="${esc(slot.slotId)}"
+        >Make ${esc(face(slot.pick.name))} the recommendation</button>`}
+    </div>`;
   }
 
   /* ---------------- groups and the page ---------------- */
@@ -686,7 +731,7 @@
    */
   function totals(ctx, slots, deckId) {
     const t = {cards: 0, active: 0, ordered: 0, owned: 0, buy: 0, buyValue: 0, holes: 0,
-               claimed: 0, activeLands: 0, activeOther: 0};
+               claimed: 0, activeLands: 0, activeOther: 0, offRecommendation: 0};
     slots.forEach((s) => {
       if (!s.pick) { t.holes += 1; return; }
       const qty = s.pick.quantity;
@@ -721,6 +766,10 @@
       // What the deck has claimed, counted alongside rather than inside the buckets, so
       // ticking any row -- including one you cannot hold yet -- still moves a number.
       if (loc.assigned) t.claimed += qty;
+      // How far the deck has drifted from what was recommended, which is the only thing
+      // the deck-level reset acts on and so the only thing worth counting for it.
+      const rec = assignedEntryFor(ctx, s);
+      if (rec && rec.entryId !== s.pick.entryId) t.offRecommendation += 1;
     });
     return t;
   }
@@ -785,6 +834,18 @@
             ${t.claimed === t.cards + t.holes ? "disabled" : ""}>Select all</button>
           <button type="button" class="dp-rank-b" data-dp-claim="none"
             ${t.claimed ? "" : "disabled"}>Deselect all</button>
+        </div>
+        <!-- Back to the reviewed hundred. It changes which card is in each slot and
+             nothing else: every alternative stays on its slot, and the boxes, prices and
+             ownership are untouched. -->
+        <div class="dp-claim" role="group" aria-label="Return every slot to its recommendation">
+          <span class="dp-rank-lab">Recommended</span>
+          <button type="button" class="dp-rank-b" data-dp-reset="deck"
+            ${t.offRecommendation ? "" : "disabled"}>Reset ${
+              t.offRecommendation ? plural(t.offRecommendation, "slot") : "all slots"}</button>
+          <span class="dp-rank-note">${t.offRecommendation
+            ? `${plural(t.offRecommendation, "slot")} hold something other than the recommendation`
+            : "every slot holds its recommendation"}</span>
         </div>
         </div>
         ${panelToggle("head", headOpen, `${t.active}/${t.cards} in the box · ${t.buy} to buy`)}

@@ -1777,6 +1777,30 @@ footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px;
    Each ends with its own control, because the place you finish reading a box is the
    place you want to shut it -- scrolling back to a header to close what you just read
    is the whole problem. Shut, a panel keeps the one line that identifies it. */
+/* ---- Active and Assigned -----------------------------------------------------
+   Two different facts about a candidate: Active is the card the deck is counted and
+   shopped as, Assigned is the reviewed recommendation a reset returns to. When they
+   are the same card it wears both badges rather than appearing twice. */
+.dp-state{display:inline-flex;gap:3px;margin-left:auto;flex-wrap:wrap;row-gap:3px}
+.dp-badge{padding:1px 5px;border-radius:999px;font-size:8.5px;font-weight:800;
+  letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
+.dp-badge.is-active{background:var(--forest-2);color:#fff}
+.dp-badge.is-assigned{background:var(--gold-soft,#f6e7bd);color:var(--ink);
+  box-shadow:inset 0 0 0 1px var(--gold)}
+.dp-sbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px;
+  padding:8px 10px;border:1px solid var(--line);border-left:3px solid var(--gold);
+  border-radius:0 9px 9px 0;background:var(--paper);font-size:12.5px}
+.dp-sbar-t{flex:1 1 12rem;min-width:0;color:var(--muted)}
+.dp-sbar-t b{color:var(--ink)}
+.dp-sbtn{min-height:32px;padding:0 12px;border:1px solid var(--forest-2);border-radius:999px;
+  background:var(--forest-2);color:#fff;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.dp-sbtn.is-alt{background:var(--surface);color:var(--forest);border-color:var(--line)}
+.dp-sbtn:hover{filter:brightness(1.06)}
+@media (max-width:640px){
+  .dp-sbar{gap:6px}
+  .dp-sbtn{flex:1 1 100%;min-height:38px;font-size:13px}
+}
+
 .dp-panel-t{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;flex:1 1 100%;
   margin:8px 0 0;padding:6px 10px;border:0;border-top:1px solid var(--line);border-radius:0 0 11px 11px;
   background:none;color:var(--muted);font:inherit;font-size:11.5px;font-weight:700;
@@ -1858,7 +1882,9 @@ footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px;
   font-size:13px;line-height:1;cursor:pointer;box-shadow:0 1px 4px rgba(31,42,36,.2)}
 .dp-tile-return:hover{color:#fff;background:var(--rung-manual,#6d5bd0)}
 .dp-tile-return:focus-visible{outline:2px solid var(--rung-manual,#6d5bd0);outline-offset:2px}
-.dp-tile-top{display:flex;align-items:center;gap:5px}
+/* Wrapping, because a tile is a fixed 162px and a card can carry a rung chip plus both
+   state badges. Without it the third label ran off the edge of the tile. */
+.dp-tile-top{display:flex;align-items:center;gap:4px;flex-wrap:wrap;row-gap:3px}
 .dp-tile-nm{font-size:12.5px;font-weight:600;line-height:1.25}
 .dp-tile-ft{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:11px}
 
