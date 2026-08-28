@@ -1247,4 +1247,119 @@ assert.doesNotMatch(cssSource, /\.dp-cstep/, "its styles must go with it");
     "?? keeps a zero, which is the bug this replaced");
 }
 
+/* ---------- the two ways of counting what you owe must agree ----------
+   The Shop can work out what is still needed from the ledger (how many copies exist) or
+   from state.deckHolds (which box is holding which copy). Those are the same question and
+   have to give the same answer. They did not: the audit sheet recorded eleven Mountains in
+   a deck whose plan sleeves twelve, so the holds path put a twelfth Mountain on the
+   shopping list against a shelf of eighty of them. A hold is a claim on the pool, so it
+   has to be the count the deck actually composes. */
+{
+  const Slot = (await import("../slot-model.js")).default || (await import("../slot-model.js"));
+  const byName = {};
+  cards.cards.forEach((c) => { byName[c.name.split(" // ")[0].toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()] = c; });
+  const owned = Slot.normalizeOwned(activeState.state);
+  const holds = activeState.state.deckHolds || {};
+
+  const decks = [];
+  for (const [variantId, selection] of Object.entries(activeState.state.buySelections || {})) {
+    const plan = buyPlans.plans[variantId];
+    if (!plan) continue;
+    const grafted = {...plan, manual: (activeState.state.manualCards[variantId] || []).map((c) => ({...c}))};
+    decks.push({id: variantId, slots: Slot.deckSlots(grafted, selection, {owned, cards: byName})});
+  }
+  assert.ok(decks.length >= 6, "the shipped state should carry the live decks");
+
+  // No box may claim more copies of a card than the collection holds.
+  const overclaimed = [];
+  const claimTotals = {};
+  for (const per of Object.values(holds)) {
+    for (const [key, rec] of Object.entries(per)) {
+      const t = claimTotals[key] || (claimTotals[key] = {inHand: 0, ordered: 0});
+      t.inHand += rec.inHand || 0;
+      t.ordered += rec.ordered || 0;
+    }
+  }
+  for (const [key, t] of Object.entries(claimTotals)) {
+    const have = owned[key] || {inHand: 0, ordered: 0};
+    if (t.inHand > have.inHand) overclaimed.push(`${key}: boxes hold ${t.inHand}, you own ${have.inHand}`);
+  }
+  assert.equal(overclaimed.length, 0,
+    `${overclaimed.length} cards are claimed by more boxes than you own copies, e.g. ${overclaimed.slice(0, 3).join("; ")}`);
+
+  /* Basics are held against the pool, not against a per-deck line. A deck sleeving twelve
+     Mountains off a shelf of eighty must be recorded as holding twelve: recording eleven
+     put the twelfth on the shopping list, because the Shop reads the holds and not the
+     shelf. Non-basics are exempt -- a deck can legitimately be short a copy, which is
+     what "still to buy" means. */
+  const BASIC = new Set(["plains", "island", "swamp", "mountain", "forest", "wastes"]);
+  const shortBasics = [];
+  for (const deck of decks) {
+    const per = holds[deck.id] || {};
+    for (const slot of deck.slots) {
+      if (!slot.pick || !slot.isBasic) continue;
+      const key = Slot.ownedKey(slot.pick.name);
+      if (!BASIC.has(key)) continue;
+      const claimed = (per[key] || {}).inHand || 0;
+      const elsewhere = Object.entries(holds)
+        .reduce((n, [other, map]) => n + (other === deck.id ? 0 : ((map[key] || {}).inHand || 0)), 0);
+      const spare = Math.max(0, ((owned[key] || {}).inHand || 0) - elsewhere);
+      const should = Math.min(slot.pick.quantity, spare);
+      if (claimed < should) shortBasics.push(`${deck.id} ${slot.pick.name}: sleeves ${slot.pick.quantity}, holds ${claimed}, ${spare} free`);
+    }
+  }
+  assert.equal(shortBasics.length, 0,
+    `${shortBasics.length} decks hold fewer basics than they sleeve, which puts a card you own on the shopping list: ${shortBasics.join("; ")}`);
+
+  /* A hold can only ever ADD to what you owe -- it says a box does not have a copy the
+     collection does. It must never hide a purchase the ledger can see. */
+  const owe = (rs) => rs.reduce((n, r) => n + r.need, 0);
+  const fromLedger = owe(Slot.shopRows(decks, owned, null));
+  const fromHolds = owe(Slot.shopRows(decks, owned, claimTotals));
+  assert.ok(fromHolds >= fromLedger,
+    `counting from the boxes owes ${fromHolds} but counting from the ledger owes ${fromLedger}; a hold must never hide a card you have to buy`);
+}
+
+/* Whatever else changes, a deck is a hundred cards. A slot the audit could not fill is
+   left empty on purpose and shows as one, so the count below it is the honest number. */
+{
+  const Slot = (await import("../slot-model.js")).default || (await import("../slot-model.js"));
+  const short = [];
+  for (const [variantId, selection] of Object.entries(activeState.state.buySelections || {})) {
+    const plan = buyPlans.plans[variantId];
+    if (!plan) continue;
+    const grafted = {...plan, manual: (activeState.state.manualCards[variantId] || []).map((c) => ({...c}))};
+    const slots = Slot.deckSlots(grafted, selection, {});
+    const cards_ = slots.filter((s) => s.pick).reduce((n, s) => n + s.pick.quantity, 0);
+    const holes = slots.filter((s) => !s.pick).length;
+    if (cards_ + holes !== 100) short.push(`${variantId}: ${cards_} cards + ${holes} empty`);
+  }
+  assert.equal(short.length, 0,
+    `${short.length} live decks do not account for a hundred slots: ${short.join(", ")}`);
+}
+
+/* ---------- the Bench is everything loose, not everything a plan happens to name ----------
+   It was built by walking the decks' rungs, which finds the cards a slot could take -- the
+   useful half -- and silently dropped every other card you own and have not filed. Twenty
+   five of sixty-eight loose cards were invisible that way. A bench that hides a third of
+   the shelf is not a record of what is unassigned, so the yard is walked too. */
+{
+  assert.match(appSource, /Object\.values\(state\.liveSalvage \|\| \{\}\)\.forEach\(\(entry\) => \{/,
+    "benchItems must read the yard, not only the decks' rungs");
+  assert.match(appSource, /\[\.\.\.fromRungs, \.\.\.loose\]\.forEach\(\(rung\) => \{/,
+    "and it must walk both sources into one list");
+  /* Whether a card is on the bench is how many copies are left over, not whether a box has
+     one: owning two Prophetic Prisms with one sleeved leaves one loose. */
+  assert.match(appSource, /if \(spareCopies\(rung\.name\) < 1\) return;/,
+    "the bench test must be a spare copy, not the absence of a boxed one");
+  assert.doesNotMatch(appSource, /if \(seen\.has\(key\) \|\| boxed\[key\]\) return;/,
+    "the boolean 'is it in a box' test hid every card you own two of");
+  // Eighty spare Plains is one fact about the shelf, not eighty tiles to scroll past.
+  assert.match(appSource, /if \(Slot\.isBasicLand\(\{name: rung\.name/,
+    "basics are a pool and must not each take a bench tile");
+  // And a card nothing offers has to say so rather than claim it is illegal somewhere.
+  assert.match(shopPageSource, /No slot in any of the six decks offers this card/,
+    "a bench card with no destination must say why it has none");
+}
+
 console.log(`Validated ${variants.variants.length} variants and ${Object.keys(buyPlans.plans).length} connected buy profiles.`);

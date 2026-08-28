@@ -728,7 +728,7 @@
     const listedBy = new Map();
     const mine = new Set();
     variants.forEach((v) => {
-      deckLabels[v.id] = "D" + v.deckId;
+      deckLabels[v.id] = deckTag(v);
       const p = buyCatalog && buyCatalog.plans ? buyCatalog.plans[v.id] : null;
       if (!p) return;
       Slot.deckSlots(p, ensureBuyState(v.id), {owned, cards}).forEach((slot) => {
@@ -1276,18 +1276,51 @@
    */
   function benchItems(decks, owned, cards, deckLabels) {
     const Slot = window.MtgSlotModel;
+    /* Which deck holds a copy, and how many copies the boxes hold between them. The
+       second number is what decides whether a card is on the bench: owning two Prophetic
+       Prisms with one sleeved leaves one loose, and a boolean "is it in a box" hid it. */
     const boxed = {};
+    const boxedCount = {};
     decks.forEach((d) => {
       const ticked = (state.deckActive && state.deckActive[d.id]) || {};
-      d.slots.forEach((slot) => { if (slot.pick && ticked[slot.slotId]) boxed[Slot.ownedKey(slot.pick.name)] = d.id; });
+      d.slots.forEach((slot) => {
+        if (!slot.pick || !ticked[slot.slotId]) return;
+        const key = Slot.ownedKey(slot.pick.name);
+        boxed[key] = boxed[key] || d.id;
+        const held = ((state.deckHolds || {})[d.id] || {})[key];
+        boxedCount[key] = (boxedCount[key] || 0) + (held ? held.inHand : Math.max(1, Number(slot.pick.quantity) || 1));
+      });
     });
+    const spareCopies = (name) => {
+      const key = Slot.ownedKey(name);
+      return (Slot.ownedCount(owned, name).inHand || 0) - (boxedCount[key] || 0);
+    };
+
+    /* Two ways a card belongs on the Bench, and it used to be built from only one of them.
+       Walking the decks' rungs finds cards a slot could take -- which is the useful half --
+       but it silently drops everything else you own and have not filed, because no plan
+       mentions it. Twenty-five of sixty-eight loose cards were invisible that way, and a
+       bench that hides a third of the shelf is not a record of what is unassigned. So the
+       yard is walked too, and a card nothing wants is listed saying exactly that. */
+    const loose = [];
+    Object.values(state.liveSalvage || {}).forEach((entry) => {
+      const name = entry && entry.card && entry.card.name;
+      if (name) loose.push({name, price: Number(entry.card.price) || 0});
+    });
+    const fromRungs = [];
+    decks.forEach((d) => d.slots.forEach((slot) => slot.rungs.forEach((rung) => {
+      fromRungs.push({name: rung.name, price: rung.price});
+    })));
 
     const seen = new Set();
     const items = [];
-    decks.forEach((d) => d.slots.forEach((slot) => slot.rungs.forEach((rung) => {
+    [...fromRungs, ...loose].forEach((rung) => {
       const key = Slot.ownedKey(rung.name);
-      if (seen.has(key) || boxed[key]) return;
-      if (Slot.ownedCount(owned, rung.name).inHand < 1) return;
+      if (seen.has(key)) return;
+      // Basics are a pool, not bench cards. Eighty spare Plains is one fact about the
+      // shelf, already shown on every basic-land row; it is not eighty tiles to scroll.
+      if (Slot.isBasicLand({name: rung.name, typeLine: (cards[Lineup.normalizeName(rung.name)] || {}).typeLine})) return;
+      if (spareCopies(rung.name) < 1) return;
       seen.add(key);
       const fact = cards[Lineup.normalizeName(rung.name)] || {};
       const roles = [];
@@ -1327,7 +1360,7 @@
         rarityKey: ({common: "C", uncommon: "U", rare: "R", special: "S", mythic: "M", bonus: "B"})[fact.rarity] || "C",
         roles: Array.from(new Set(roles)), destinations
       });
-    })));
+    });
     return items.sort((a, b) => a.name.localeCompare(b.name));
   }
 
@@ -1381,7 +1414,7 @@
     variants.forEach((v) => {
       const plan = buyCatalog && buyCatalog.plans ? buyCatalog.plans[v.id] : null;
       if (!plan) return;
-      deckLabels[v.id] = "D" + v.deckId;
+      deckLabels[v.id] = deckTag(v);
       decks.push({id: v.id, slots: Slot.deckSlots(plan, ensureBuyState(v.id), {owned, cards})});
     });
     if (!decks.length) return null;
@@ -4584,6 +4617,15 @@
   // the leading punctuation on names like "_____ Goblin", and on the first face
   // of a split card, which is the face the row prints.
   const byCardName = (a, b) => String(a?.name || "").split(" // ")[0].localeCompare(String(b?.name || "").split(" // ")[0], "en", {sensitivity: "base", ignorePunctuation: true});
+
+  /* What to call a deck where it is only ever a tag: on a Shop row, a Bench destination,
+     an "in whose box" label. "D3" is a filing code and says nothing at a vendor's table;
+     the build name is what the deck is. The commander after the dash is dropped because
+     the name in front of it is already unique among the six. */
+  function deckTag(variant) {
+    const name = String((variant && variant.name) || "").split(/\s+[\u2014\u2013-]\s+/)[0].trim();
+    return name || ("D" + (variant && variant.deckId));
+  }
 
   function itemKey(item) {
     return String(item?.name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");

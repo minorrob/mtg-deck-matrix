@@ -296,7 +296,8 @@
           </select>
           ${destDetail(chosen)}
           <button type="button" class="sp-assign" data-sp-assign="${esc(item.key)}|0">Assign · ${esc(chosen.action)}</button>
-        ` : `<p class="sp-meta">No legal slot in any deck: colour identity, singleton or bracket rules rule it out.</p>`}
+        ` : `<p class="sp-meta">No slot in any of the six decks offers this card &mdash; either no plan carries it,
+             or colour identity, singleton or bracket rules rule it out. It is yours and unassigned.</p>`}
       </article>`;
     }).join("")}</div>`;
   }
@@ -376,7 +377,9 @@
           /* Which decks want it comes before which set it is from: the decks decide
              whether a card at a bad price is still worth taking, and the set is usually
              already the divider you are standing in front of. */
-          (r.deckNames || []).length ? (r.deckNames || []).map((d) => esc(d)).join(" ") : "",
+          /* Joined with a plus, not a space: deck names are several words each now, and
+             "Lorehold Spirit Boros Aura Rush" reads as one deck nobody has. */
+          (r.deckNames || []).length ? (r.deckNames || []).map((d) => esc(d)).join(" + ") : "",
           groupBy === "setName" ? "" : esc(r.setName || "")
         ].filter(Boolean).join(" · ")}</span>
       </span>

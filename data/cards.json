@@ -38674,6 +38674,27 @@
       "tcgplayerUrl": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F273045%3Fpage%3D1"
     },
     {
+      "name": "Migration Path",
+      "manaCost": "{3}{G}",
+      "typeLine": "Sorcery",
+      "oracleText": "Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle.\nCycling {2} ({2}, Discard this card: Draw a card.)",
+      "keywords": [
+        "Cycling"
+      ],
+      "colorIdentity": [
+        "G"
+      ],
+      "legalities": {
+        "commander": "legal"
+      },
+      "rarity": "uncommon",
+      "setName": "Tarkir: Dragonstorm Commander",
+      "setCode": "tdc",
+      "image": "https://cards.scryfall.io/small/front/2/1/21e3dfad-69b6-416c-966b-0d9c876d22fe.jpg?1783907043",
+      "price": 0.36,
+      "priceUpdated": "2026-08-28T05:11:33.923Z"
+    },
+    {
       "name": "Mikaeus, the Unhallowed",
       "manaCost": "{3}{B}{B}{B}",
       "typeLine": "Legendary Creature — Zombie Cleric",
