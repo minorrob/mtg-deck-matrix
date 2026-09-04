@@ -376,7 +376,7 @@ main { padding: 24px 0 140px; }
 
 .pick-row {
   display: grid; align-items: center; gap: 12px;
-  grid-template-columns: 24px minmax(0,1fr) 132px 92px 66px;
+  grid-template-columns: 24px minmax(0,1fr) 132px 92px 66px 34px;
   padding: 9px 13px; border-bottom: 1px solid var(--line-soft);
   background: var(--panel); font-size: 13.5px; cursor: pointer;
 }
@@ -393,11 +393,21 @@ main { padding: 24px 0 140px; }
 
 .pick-head {
   display: grid; gap: 12px;
-  grid-template-columns: 24px minmax(0,1fr) 132px 92px 66px;
+  grid-template-columns: 24px minmax(0,1fr) 132px 92px 66px 34px;
   padding: 8px 13px; background: var(--ink-2); border-bottom: 1px solid var(--line);
   font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em; color: var(--text-faint);
 }
 .pick-head .money { text-align: right; }
+
+/* The popup's own target on a selectable row, so tapping the row still selects. */
+.info {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--panel-2); border: 1px solid var(--line); color: var(--text-dim);
+  font-family: var(--serif); font-size: 13px; font-style: italic; font-weight: 700;
+  cursor: pointer; display: grid; place-items: center; justify-self: end;
+}
+.info:hover { border-color: var(--patina); color: var(--patina); }
+.info:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
 
 .empty { padding: 34px 16px; text-align: center; color: var(--text-faint); font-size: 14px; }
 
@@ -464,7 +474,7 @@ main { padding: 24px 0 140px; }
   .detail-head .hook { font-size: 15px; }
   .turn { grid-template-columns: 1fr; gap: 2px; }
   .key-card { grid-template-columns: 1fr; gap: 1px; }
-  .pick-row, .pick-head { grid-template-columns: 22px minmax(0,1fr) 62px; }
+  .pick-row, .pick-head { grid-template-columns: 22px minmax(0,1fr) 62px 34px; }
   .pick-row .where, .pick-head .where, .pick-row .st, .pick-head .st { display: none; }
   .pick-row .n span { display: block; }
   .curve { height: 62px; }
@@ -474,4 +484,167 @@ main { padding: 24px 0 140px; }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
+}
+
+/* ------------------------------------------------------------ card popup */
+
+/* The front is the real card; the back is what the card does and where it
+   stands in the collection. Tapping the card turns it over, which is the one
+   gesture everybody already knows from the physical object. */
+
+.sheet {
+  position: fixed; inset: 0; z-index: 90;
+  display: grid; place-items: center;
+  padding: 20px;
+  background: rgba(5, 10, 8, .72);
+  backdrop-filter: blur(6px);
+  animation: sheet-in .16s ease;
+}
+@keyframes sheet-in { from { opacity: 0; } }
+
+.sheet-body {
+  position: relative;
+  width: min(420px, 100%);
+  max-height: 100%;
+  display: flex; flex-direction: column; gap: 12px;
+}
+
+.sheet-x {
+  position: absolute; top: -6px; right: -6px; z-index: 3;
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--panel-2); border: 1px solid var(--line); color: var(--text);
+  font-size: 19px; line-height: 1; cursor: pointer;
+}
+.sheet-x:hover { border-color: var(--text-faint); }
+
+.flip {
+  perspective: 1600px;
+  width: 100%; aspect-ratio: 488 / 680;
+  cursor: pointer; flex: none;
+  background: none; border: 0; padding: 0;
+}
+.flip-inner {
+  position: relative; width: 100%; height: 100%;
+  transform-style: preserve-3d;
+  transition: transform .58s cubic-bezier(.22, .72, .2, 1);
+}
+.flip.is-flipped .flip-inner { transform: rotateY(180deg); }
+
+.face {
+  position: absolute; inset: 0;
+  backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  border-radius: 4.6% / 3.3%;
+  overflow: hidden;
+}
+.face.front { background: #0a0f0d; }
+.face.front img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.face.front .fallback {
+  display: grid; place-items: center; height: 100%; padding: 20px;
+  text-align: center; color: var(--text-faint); font-size: 13px;
+}
+
+.face.back {
+  transform: rotateY(180deg);
+  background: linear-gradient(180deg, var(--panel), var(--ink-2));
+  border: 1px solid var(--line);
+  padding: 15px 16px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 9px;
+  text-align: left;
+}
+.face.back h4 { font-size: 16px; line-height: 1.2; }
+.face.back .tl {
+  font-size: 12px; color: var(--text-dim);
+  padding-bottom: 8px; border-bottom: 1px solid var(--line-soft);
+}
+.face.back .oracle {
+  font-size: 12.5px; line-height: 1.5; white-space: pre-wrap; color: var(--text);
+}
+.face.back .oracle em { color: var(--text-dim); font-style: italic; }
+.face.back .pt {
+  align-self: flex-end; font-family: var(--serif); font-size: 17px;
+  font-variant-numeric: tabular-nums;
+}
+.face.back .foot {
+  margin-top: auto; padding-top: 9px; border-top: 1px solid var(--line-soft);
+  font-size: 11.5px; color: var(--text-faint);
+  display: flex; flex-wrap: wrap; gap: 4px 10px;
+}
+
+/* Mana pips, parsed straight out of the {2}{R}{R} cost string. */
+.cost { display: inline-flex; gap: 3px; vertical-align: -2px; }
+.mana {
+  width: 17px; height: 17px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 10px; font-weight: 800; color: #17110a;
+  background: #c9c2b4; box-shadow: 0 0 0 1px rgba(0,0,0,.45) inset;
+}
+.mana.W { background: var(--w); } .mana.U { background: var(--u); color: #08131f; }
+.mana.B { background: var(--b); color: #f0ecf5; } .mana.R { background: var(--r); }
+.mana.G { background: var(--g); }
+
+.sheet-meta {
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); padding: 11px 13px;
+  font-size: 12.5px; color: var(--text-dim);
+  display: flex; flex-direction: column; gap: 7px;
+  overflow-y: auto;
+}
+.sheet-meta .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.sheet-meta b { color: var(--text); font-weight: 650; }
+.sheet-hint { font-size: 11.5px; color: var(--text-faint); text-align: center; }
+
+/* Anything that opens the popup. Underlined only on hover, so a hundred-card
+   list does not turn into a wall of links. */
+.cardlink {
+  background: none; border: 0; padding: 0; margin: 0; font: inherit;
+  color: inherit; cursor: pointer; text-align: left;
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cardlink:hover { color: var(--patina); text-decoration: underline; }
+.cardlink:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; border-radius: 3px; }
+
+/* ------------------------------------------------------- mobile polish */
+
+@media (max-width: 760px) {
+  /* The ribbon wrapped to three lines and pushed the decks off screen. One
+     line that scrolls sideways keeps the first deck above the fold. */
+  .ribbon {
+    flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
+    -webkit-overflow-scrolling: touch; gap: 0 14px;
+  }
+  .ribbon::-webkit-scrollbar { display: none; }
+  .ribbon > span { white-space: nowrap; flex: none; }
+
+  .tab { padding: 9px 11px 12px; font-size: 13.5px; min-height: 44px; }
+  .brand h1 { font-size: 18px; }
+
+  main { padding-bottom: 190px; }
+
+  .stat-strip { grid-template-columns: repeat(2, 1fr); }
+  .panel { padding: 14px 14px; }
+
+  /* Comfortable thumb targets in the long lists. */
+  .card-row { min-height: 40px; padding: 7px 6px; }
+  .pick-row { min-height: 52px; padding: 11px 12px; }
+  .pick-row input { width: 20px; height: 20px; }
+  .info { width: 34px; height: 34px; }
+
+  /* The tray was a single flex row that wrapped into a scramble. */
+  .tray-in { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+  .tray .tally { grid-column: 1 / -1; }
+  .tray .to { grid-column: 1 / -1; }
+  .tray .btn { width: 100%; }
+  .tray-in .btn.primary { grid-column: 1; }
+  .tray-in #copy-btn { grid-column: 2; }
+  .tray-in .btn.ghost { grid-column: 1 / -1; }
+
+  .sheet { padding: 12px; }
+  .sheet-body { width: 100%; }
+  .toast { bottom: 140px; }
+}
+
+/* A phone in landscape has no room for a full-height card plus a panel. */
+@media (max-height: 560px) {
+  .flip { max-height: 62vh; width: auto; margin: 0 auto; }
+  .sheet-meta { display: none; }
 }
