@@ -263,17 +263,17 @@ main { padding: 24px 0 140px; }
 
 /* The commander, in the cell the stats leave over. */
 .stat-commander {
-  display: flex; align-items: center; gap: 10px;
-  cursor: pointer; text-align: left; border: 0; font: inherit;
-  padding: 8px 12px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; text-align: center; border: 0; font: inherit;
+  padding: 6px; min-height: 0;
 }
 .stat-commander:hover { background: var(--panel-2); }
 .stat-commander:focus-visible { outline: 2px solid var(--ember); outline-offset: -2px; }
 .stat-commander img {
-  width: 44px; border-radius: 3px; display: block; flex: none;
+  width: 44px; max-width: 100%; max-height: 100%; height: auto;
+  border-radius: 3px; display: block; flex: none;
   box-shadow: 0 2px 8px -3px rgba(0,0,0,.9);
 }
-.stat-commander .k { margin: 0; }
 
 .panel {
   background: var(--panel); border: 1px solid var(--line);

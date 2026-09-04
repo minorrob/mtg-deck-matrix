@@ -496,8 +496,15 @@
         class: "stat stat-commander", type: "button",
         title: "Show " + deck.commander, "aria-label": "Show " + deck.commander,
         onclick: function () { openCard(deck.commander); }
-      }, [thumb, el("span", { class: "k", text: "Commander" })]);
-      thumb.addEventListener("error", function () { thumb.remove(); });
+      }, [thumb]);
+      // 44px of card is 61px tall, which is the whole cell: a label beside it
+      // overflowed the 74px of content and got clipped to "COMM". The art says
+      // "commander" on its own, and the button keeps the accessible name. If the
+      // art never arrives, the word comes back in its place.
+      thumb.addEventListener("error", function () {
+        thumb.remove();
+        cell.appendChild(el("span", { class: "k", text: "Commander" }));
+      });
       cells.push(cell);
     }
     return el("div", { class: "stat-strip" }, cells);
