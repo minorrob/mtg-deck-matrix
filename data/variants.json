@@ -48,19 +48,19 @@
     },
     {
       "id": 3,
-      "title": "The City Builder",
-      "objective": "The literal infrastructure deck — lands as the city. It should feel like every single turn advances the board, reward patience with compounding returns, and eventually produce an overwhelming position rather than a sudden kill.",
-      "archetype": "Incremental board development — lands-and-ramp for four of its five approaches, with an enchantment-engine variant that compounds the same way through a different resource.",
-      "whatItIs": "The literal infrastructure deck: extra land drops, landfall triggers, and ramp turn every turn into forward progress, so the board looks meaningfully bigger on turn 10 than in decks that are still assembling a plan.",
-      "fitAmongTen": "Where deck 1 survives and deck 2 answers, this deck simply builds — its progress is visible every turn rather than gated behind a combo piece or a stabilized board state, which makes it easy to track your own position at a glance.",
-      "playstyle": "Every land drop matters, often literally triggering something. There is no dead turn 3 — even a \"do nothing\" turn advances the plan — and the back half of the game is spent turning a mana and land advantage into an overwhelming board rather than a single finisher.",
-      "mood": "Steady and satisfying — for players who like watching a number (lands, mana, board presence) climb turn over turn rather than waiting for one big swing.",
+      "title": "The Snowball",
+      "objective": "The compounding slot — a commander that fires for free every time another permanent lands, so each turn's play makes the next one bigger. It should feel like no turn is wasted, reward patience with returns that stack, and eventually produce an overwhelming position rather than a sudden kill.",
+      "archetype": "Permanent-drop engine — a commander whose trigger reads \"whenever another permanent you control enters,\" played behind as many cheap permanents per turn as the deck can find. Three of its five approaches feed that engine with lands, one with enchantments, one with creature tokens.",
+      "whatItIs": "All five put a free repeating trigger on the table and then spend the game maximizing how often it fires, so the board looks meaningfully bigger on turn 10 than in decks that are still assembling a plan. What the trigger pays is the difference — Aesi, Sythis and the Gitrog Monster turn each drop into cards, Omnath into 5/5 bodies, Purphoros into damage aimed straight at the table.",
+      "fitAmongTen": "Where deck 1 survives and deck 2 answers, this deck simply accumulates — its progress is visible on the board every turn rather than gated behind a combo piece or a stabilized board state, which makes it easy to track your own position at a glance.",
+      "playstyle": "Every permanent you play does something the moment it lands, often literally triggering the commander. There is no dead turn 3 — even a \"do nothing\" turn advances the plan — and the back half of the game is spent converting a lead in permanents into a hand full of cards, a board full of bodies, or a life total the table cannot recover.",
+      "mood": "Steady and satisfying — for players who like watching a number (permanents, mana, board presence) climb turn over turn rather than waiting for one big swing.",
       "complexity": {
         "tier": "Beginner",
-        "why": "The core loop rewards playing a land and passing; there's little bluffing or hidden-information reasoning required to execute the plan correctly."
+        "why": "The core loop rewards playing your cheapest permanent and passing; there's little bluffing or hidden-information reasoning required to execute the plan correctly."
       },
-      "winCondition": "Overwhelming board and mana advantage — either a ramp-fueled string of oversized threats or, on the landfall variants, direct damage and token output that scales with how many lands you've played.",
-      "asksOfYou": "Consistency more than cleverness — sequencing lands and ramp correctly and not skipping a turn's development, since the whole plan is additive.",
+      "winCondition": "An overwhelming lead in permanents, cashed out differently by build — a ramp-fueled string of oversized threats, a board of tokens, or on the burn variant, direct damage that scales with how many creatures you've played.",
+      "asksOfYou": "Consistency more than cleverness — sequencing your drops so the trigger fires as often as possible and not skipping a turn's development, since the whole plan is additive.",
       "whenToPickThis": "A strong second or third build: nearly as forgiving as the fortress deck, but it starts teaching you to think about board state and long-term resource advantage instead of just combat math.",
       "priorityRank": {
         "rank": 3,
@@ -140,24 +140,24 @@
     },
     {
       "id": 7,
-      "title": "The Unbreakable Line",
-      "objective": "The Voltron slot — turn one commander into a near-unkillable, evasive threat carrying enough equipment to end the game in a couple of swings, while staying resilient enough that losing the equipped creature once doesn't lose you the game.",
-      "archetype": "Equipment Voltron — stack combat-relevant gear and buffs onto one efficient threat until a single attack step threatens lethal, with evasion, first strike, or sheer size making that threat hard to answer in combat.",
-      "whatItIs": "Every one of its five approaches centers combat math on one carefully protected creature, layering equipment and combat tricks until a couple of swings end the game. Where they differ is how the payoff scales — one grows its wearer for free on its own triggers, one goes wide with cheap equipment-tribal bodies as backup threats, one leans on raw size instead of counters, one turns exalted-style solo attacks into a blowout, one closes the game fast off a cheap curve — but all five convert \"stick one creature, keep it alive\" into a fast clock.",
-      "fitAmongTen": "Deck 5 already offers a Voltron-flavored commander among its five alternatives, but only as one of five different strategic identities sharing that slot. This is the lineup's first deck fully committed to Equipment Voltron across every one of its five builds — the dedicated version of that plan rather than a single option within a broader menu.",
-      "playstyle": "Early turns assemble mana and equipment cheaply; the moment your one key threat is carrying two or three pieces, every combat becomes a math problem the table has to solve exactly right or lose. Exactly how that threat gets through — first strike, sheer size, going unblocked, or simply out-racing the table — depends on which of the five you're playing.",
-      "mood": "Direct and confrontational — for a session where you want a visible, escalating threat and the tension of protecting one crucial creature rather than a wide board.",
+      "title": "The Combat Clock",
+      "objective": "The aggression slot — put a threat on the board that grows every turn and force the table to answer it in combat, while staying resilient enough that losing one creature doesn't lose you the game.",
+      "archetype": "Growing combat threat — equipment and counters piled onto one efficient body for four of its five approaches, and an evasive double-striker that grows the whole board for the fifth. Every build turns the attack step into a math problem the table has to solve exactly right.",
+      "whatItIs": "Four of its five approaches center combat math on one carefully protected creature, layering equipment and combat tricks until a couple of swings end the game — one grows its wearer for free on its own triggers, one goes wide with cheap equipment-tribal bodies as backup threats, one leans on raw size instead of counters, one turns exalted-style solo attacks into a blowout. The fifth spreads the growth instead of stacking it: a flying double-striker that hands out +1/+1 counters and evasive tokens at the beginning of every combat. All five convert \"stick a threat, keep it alive\" into a fast clock.",
+      "fitAmongTen": "Deck 5 already offers a Voltron-flavored commander among its five alternatives, but only as one of five different strategic identities sharing that slot. This is the lineup's deck fully committed to winning through the attack step — equipment on one creature as the default route, with one build that gets there by going wide in the air instead.",
+      "playstyle": "Early turns assemble mana and cheap threats; the moment your key creature is carrying two or three pieces — or the whole board has picked up counters — every combat becomes a math problem the table has to solve exactly right or lose. Exactly how the damage gets through — first strike, sheer size, flying, or simply out-racing the table — depends on which of the five you're playing.",
+      "mood": "Direct and confrontational — for a session where you want a visible, escalating threat and the tension of protecting whatever is carrying your game plan.",
       "complexity": {
         "tier": "Beginner",
-        "why": "The game plan reads directly off the board — equip, attack, win — with the one real skill being timing: don't over-commit equipment into an open board wipe or a removal spell you should have played around."
+        "why": "The game plan reads directly off the board — grow it, attack, win — with the one real skill being timing: don't over-commit into an open board wipe or a removal spell you should have played around."
       },
-      "winCondition": "Commander damage or raw combat damage from one or two massively equipped threats, usually inside a handful of turns once the gear starts sticking.",
-      "asksOfYou": "Restraint as much as aggression — recognizing when the table has an answer up and holding equipment back a turn, since this plan's biggest risk is losing everything to a single removal spell or wipe.",
-      "whenToPickThis": "Build this alongside the Fortress deck if you want two very different beginner-friendly games — one that wins by refusing to die, one that wins by making one threat unstoppable.",
+      "winCondition": "Commander damage or raw combat damage, usually inside a handful of turns once the threat starts sticking — from one massively equipped creature on four of the builds, and from a board of flying tokens carrying counters on the fifth.",
+      "asksOfYou": "Restraint as much as aggression — recognizing when the table has an answer up and holding a turn back, since this plan's biggest risk is losing everything to a single removal spell or wipe.",
+      "whenToPickThis": "Build this alongside the Fortress deck if you want two very different beginner-friendly games — one that wins by refusing to die, one that wins by making a threat the table can't afford to let live.",
       "priorityRank": {
         "rank": 2,
         "ofTotal": 10,
-        "rationale": "As approachable as the Fortress deck with an even more linear game plan, though its single-threat design carries more risk to a well-timed wipe."
+        "rationale": "As approachable as the Fortress deck with an even more linear game plan, though concentrating on one growing threat carries more risk to a well-timed wipe."
       },
       "priorityNote": "Reflects the full ten-deck lineup, spanning common and expert play styles across a shared non-capstone budget band (with the Capstone alone set higher by design)."
     },
@@ -167,7 +167,7 @@
       "objective": "The tribal value-engine slot — build toward \"Storied\" (three or more artifacts, legendaries, and/or Sagas) so Balin's discard-and-draw becomes a repeatable card-advantage-into-damage engine instead of a one-time refill.",
       "archetype": "Mono-red-leaning Dwarf tribal — a wide, aggressive board of cheap Dwarves and red value creatures, backed by a commander that turns that density into card advantage, burn, or +1/+1 counters.",
       "whatItIs": "Every one of its five approaches runs a real density of Dwarves and cheap red aggression, curving into the table before it can stabilize. Where they differ is what converts that board into a win — one refills your hand and burns opponents off legendary-and-artifact density, one doubles down on vehicles and crewing, one grows the whole team with counters, one turns every point of damage the deck deals into more damage, one reanimates the aggression that already traded away — but all five are built to close games fast on a wide, disposable board.",
-      "fitAmongTen": "The lineup's other value-engine decks (City Builder, Long Game, Capstone) all measure value in cards or board state. This is the only one that converts spent cards directly into opponents' life totals once its own built-in threshold is met, and the only mono-color deck in the ten — no color-fixing considerations at all, at the cost of a narrower card pool to draw from.",
+      "fitAmongTen": "The lineup's other value-engine decks (Snowball, Long Game, Capstone) all measure value in cards or board state. This is the only one that converts spent cards directly into opponents' life totals once its own built-in threshold is met, and the only mono-color deck in the ten — no color-fixing considerations at all, at the cost of a narrower card pool to draw from.",
       "playstyle": "Early turns fill the board with cheap Dwarves almost as a side effect of just playing your hand. Once the deck's own payoff turns on, every subsequent attack or trigger compounds — exactly how depends on which of the five you're playing, from card-and-damage wheels to counters that snowball to burn that scales with the board.",
       "mood": "Patient but punishing — a slow build toward a single flag flipping, after which the deck plays noticeably meaner than it did the turns before.",
       "complexity": {
