@@ -196,6 +196,173 @@
     return decks;
   }
 
+  /* ---------------------------------------------------------- card popup */
+
+  var FACTS = null, factsPending = null;
+
+  /* 403 KB of printed card text and image URLs. Nobody needs it to read the
+     deck list, so it is not fetched until the first card is opened. */
+  function loadFacts() {
+    if (FACTS) return Promise.resolve(FACTS);
+    if (!factsPending) {
+      factsPending = fetchJson("data/card-facts.json?v=1").then(function (f) {
+        FACTS = f.cards || {};
+        return FACTS;
+      }).catch(function () { FACTS = {}; return FACTS; });
+    }
+    return factsPending;
+  }
+
+  // "{2}{R}{R}" -> pips. Hybrid and phyrexian symbols keep their raw text,
+  // which is rare enough here to be worth less code than a full symbol set.
+  function manaCost(cost) {
+    var wrap = el("span", { class: "cost" });
+    (String(cost || "").match(/\{[^}]+\}/g) || []).forEach(function (sym) {
+      var body = sym.slice(1, -1);
+      wrap.appendChild(el("span", {
+        class: "mana" + (/^[WUBRG]$/.test(body) ? " " + body : ""), text: body
+      }));
+    });
+    return wrap;
+  }
+
+  // Scryfall wraps reminder text in parentheses; it reads as an aside.
+  function oracle(text) {
+    var node = el("div", { class: "oracle" });
+    String(text || "").split(/(\([^)]*\))/).forEach(function (part) {
+      if (!part) return;
+      node.appendChild(part.charAt(0) === "(" ? el("em", { text: part })
+                                              : document.createTextNode(part));
+    });
+    return node;
+  }
+
+  function closeCard() {
+    var sheet = document.getElementById("sheet");
+    if (sheet) sheet.remove();
+    document.body.style.overflow = "";
+    if (closeCard.restore && closeCard.restore.focus) closeCard.restore.focus();
+    closeCard.restore = null;
+  }
+
+  function openCard(name) {
+    closeCard();
+    closeCard.restore = document.activeElement;
+    document.body.style.overflow = "hidden";
+
+    var card = byName(name);
+    var flip = el("button", { class: "flip", type: "button",
+      "aria-label": "Turn " + name + " over" });
+    var front = el("div", { class: "face front" });
+    var back = el("div", { class: "face back" });
+    flip.appendChild(el("div", { class: "flip-inner" }, [front, back]));
+    flip.addEventListener("click", function () { flip.classList.toggle("is-flipped"); });
+
+    var sheet = el("div", { class: "sheet", id: "sheet", role: "dialog",
+      "aria-modal": "true", "aria-label": name }, [
+      el("div", { class: "sheet-body" }, [
+        el("button", { class: "sheet-x", type: "button", "aria-label": "Close",
+          onclick: closeCard, text: "×" }),
+        flip,
+        el("p", { class: "sheet-hint", text: "Tap the card to turn it over" }),
+        cardStanding(card, name)
+      ])
+    ]);
+    // A click on the backdrop closes; a click inside must not.
+    sheet.addEventListener("click", function (e) { if (e.target === sheet) closeCard(); });
+    document.body.appendChild(sheet);
+    flip.focus();
+
+    loadFacts().then(function (facts) {
+      var f = facts[name];
+      if (f && f.normal) {
+        var img = el("img", { src: f.normal, alt: name });
+        img.addEventListener("error", function () {
+          front.textContent = "";
+          front.appendChild(el("div", { class: "fallback", text: "No image for " + name }));
+        });
+        front.appendChild(img);
+      } else {
+        front.appendChild(el("div", { class: "fallback",
+          text: f ? "No image for " + name : name + " is not in the card data" }));
+      }
+      fillBack(back, name, f, card);
+    });
+  }
+
+  function fillBack(back, name, f, card) {
+    back.textContent = "";
+    back.appendChild(el("h4", {}, [name, f && f.manaCost ? " " : null,
+      f && f.manaCost ? manaCost(f.manaCost) : null]));
+    if (f) {
+      back.appendChild(el("div", { class: "tl", text: f.typeLine }));
+      back.appendChild(oracle(f.oracleText));
+      var pt = f.power !== undefined && f.power !== null ? f.power + "/" + f.toughness
+             : (f.loyalty ? "Loyalty " + f.loyalty : "");
+      if (pt) back.appendChild(el("div", { class: "pt", text: pt }));
+      back.appendChild(el("div", { class: "foot" }, [
+        f.setName ? el("span", { text: f.setName + (f.setCode ? " (" + f.setCode + ")" : "") }) : null,
+        f.rarity ? el("span", { text: f.rarity }) : null,
+        (card && card.price) || f.price ? el("span", { text: money(card && card.price || f.price) }) : null
+      ]));
+    } else if (card) {
+      // No Scryfall record, but the workbook still knows what it does.
+      back.appendChild(el("div", { class: "tl", text: card.type }));
+      if (card.mechanics && card.mechanics.length) {
+        back.appendChild(oracle(card.mechanics.join("\n")));
+      }
+    }
+  }
+
+  /* Where this card stands in the collection: the half the printed card does
+     not tell you, and the reason for opening it on a phone in a card shop. */
+  function cardStanding(card, name) {
+    if (!card) return null;
+    var uses = DATA.decks.filter(function (d) { return (card.target[d.id] || 0) > 0; });
+    var box = DATA.decks.filter(function (d) { return (card.actual[d.id] || 0) > 0; });
+    var rows = [];
+
+    rows.push(el("div", { class: "row" }, [
+      el("span", { class: "chip " + statusChip(card.status), text: card.status }),
+      card.purpose ? el("span", { class: "chip plain", text: card.purpose }) : null,
+      card.price ? el("span", { text: money(card.price) + " each" }) : null
+    ]));
+    rows.push(el("div", { class: "row" }, [
+      el("span", {}, [el("b", { text: String(card.own) }), " owned"]),
+      card.ordered ? el("span", {}, [el("b", { text: String(card.ordered) }), " on order"]) : null,
+      card.bench ? el("span", {}, [el("b", { text: String(card.bench) }), " spare on the bench"]) : null,
+      card.buyCount ? el("span", {}, [el("b", { text: String(card.buyCount) }), " to buy"]) : null
+    ]));
+    rows.push(el("div", { class: "row" }, [
+      uses.length
+        ? el("span", {}, ["Wanted by ", el("b", { text: uses.map(function (d) { return d.label; }).join(", ") })])
+        : el("span", { text: "Not in any of the six decks" })
+    ]));
+    if (box.length) {
+      rows.push(el("div", { class: "row" }, [
+        el("span", {}, ["In the box for ", el("b", { text: box.map(function (d) { return d.label; }).join(", ") })])
+      ]));
+    }
+    // A card the workbook has a note about usually has one for a reason.
+    if (card.notes) rows.push(el("div", { class: "row" }, el("span", { text: card.notes })));
+    return el("div", { class: "sheet-meta" }, rows);
+  }
+
+  function statusChip(status) {
+    if (status === "In Hand") return "patina";
+    if (status === "Ordered") return "amber";
+    if (status === "To Buy" || status === "B3 Option") return "rose";
+    return "";
+  }
+
+  // Any card name, anywhere, opens the popup.
+  function cardLink(name, extra) {
+    return el("button", {
+      class: "cardlink" + (extra ? " " + extra : ""), type: "button", title: name,
+      onclick: function (e) { e.preventDefault(); e.stopPropagation(); openCard(name); }
+    }, name);
+  }
+
   /* --------------------------------------------------------- shared parts */
 
   /* Commander art, straight from Scryfall's named endpoint. It is the fastest
@@ -347,7 +514,7 @@
           return el("div", { class: "card-row", title: SLOT_LABEL[r.state] }, [
             el("span", { class: "dot " + r.state }),
             el("span", { class: "cname" }, [
-              r.card.name,
+              cardLink(r.card.name),
               r.card.purpose ? el("span", { class: "sub", text: r.card.purpose }) : null
             ]),
             el("span", { class: "qty", text: r.qty > 1 ? "x" + r.qty : "" }),
@@ -363,12 +530,12 @@
     return list.map(function (s) {
       return el("div", { class: "swap" + (s.replaces ? "" : " no-out") }, [
         el("div", { class: "in" }, [
-          s.add,
+          cardLink(s.add),
           s.gameChanger ? el("span", { class: "chip amber", text: "Game Changer" }) : null,
           el("span", { class: "price num", text: s.price ? money(s.price) : "" })
         ]),
         el("div", { class: "arrow", text: "→" }),
-        el("div", { class: "out", text: s.replaces ? "out: " + s.replaces : "" }),
+        el("div", { class: "out" }, s.replaces ? ["out: ", cardLink(s.replaces)] : []),
         opts && opts.why && s.why ? el("div", { class: "why", text: s.why }) : null
       ]);
     });
@@ -445,7 +612,7 @@
           el("h3", {}, [el("span", { text: "Cards that carry it" })]),
           el("div", { class: "key-cards" }, guide.keyCards.map(function (kc) {
             return el("div", { class: "key-card" }, [
-              el("div", { class: "kc-name", text: kc.name }),
+              el("div", { class: "kc-name" }, cardLink(kc.name)),
               el("div", { class: "kc-why", text: kc.why })
             ]);
           }))
@@ -609,7 +776,12 @@
         el("span", { class: "where", text: row.where || "" }),
         el("span", { class: "st" }, row.status
           ? el("span", { class: "chip " + (row.chip || ""), text: row.status }) : null),
-        el("span", { class: "money num", text: row.price ? money(row.price) : "—" })
+        el("span", { class: "money num", text: row.price ? money(row.price) : "—" }),
+        el("button", {
+          class: "info", type: "button", title: "Show " + row.name,
+          "aria-label": "Show " + row.name,
+          onclick: function (e) { e.preventDefault(); e.stopPropagation(); openCard(row.name); }
+        }, "i")
       ]);
       table.appendChild(node);
     });
@@ -961,7 +1133,10 @@
       document.querySelectorAll(".tab").forEach(function (t) {
         t.addEventListener("click", function () { go("#/" + t.dataset.view); });
       });
-      window.addEventListener("hashchange", route);
+      window.addEventListener("hashchange", function () { closeCard(); route(); });
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && document.getElementById("sheet")) closeCard();
+      });
       route();
     }).catch(function (err) {
       document.getElementById("page").appendChild(el("div", { class: "panel" }, [
