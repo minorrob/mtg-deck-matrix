@@ -249,6 +249,27 @@ def read_upgrades(wb, cards, master_by_name):
     return out, notes
 
 
+def price_fallback(root):
+    """Scryfall prices for the rows the workbook leaves blank.
+
+    Seventy bench rows carry no "$ Each" -- they are cards nobody costed because
+    nobody was buying them -- which left the Bench tab showing a dash where a
+    price belongs. data/card-facts.json already holds a Scryfall price for every
+    one of them.
+
+    That file is generated *from* this one, so the order is: import, build the
+    facts, import again. The second pass is what fills the prices, and it is
+    idempotent -- a row that already has a workbook price is never overwritten,
+    because the workbook is what he actually paid.
+    """
+    path = os.path.join(root, "data", "card-facts.json")
+    if not os.path.exists(path):
+        return {}
+    with open(path, encoding="utf-8") as fh:
+        return {name: fact.get("price") for name, fact in
+                json.load(fh).get("cards", {}).items() if fact.get("price") is not None}
+
+
 def main():
     default = os.path.join(ROOT, "data", "source", "MtG_Deck_Flat.xlsx")
     src = sys.argv[1] if len(sys.argv) > 1 else default
@@ -264,6 +285,19 @@ def main():
         sys.exit("{0} cells disagree between the flat sheet and the formulas".format(len(bad)))
     print("cross-check: {0} rows, flat sheet and formulas agree".format(checked) if checked
           else "cross-check: workbook carries no resolved values; using the formulas")
+    fallback = price_fallback(ROOT)
+    filled = 0
+    for card in cards:
+        card["priceSource"] = "workbook" if card["price"] is not None else ""
+        if card["price"] is None and card["name"] in fallback:
+            card["price"] = round(float(fallback[card["name"]]), 2)
+            card["priceSource"] = "scryfall"
+            filled += 1
+            if card["buyCount"] > 0:
+                card["toBuyCost"] = round(card["buyCount"] * card["price"], 2)
+    if filled:
+        print("filled {0} blank prices from Scryfall".format(filled))
+
     by_name = {c["name"]: c for c in cards}
 
     upgrades, upgrade_notes = read_upgrades(wb, cards, by_name)

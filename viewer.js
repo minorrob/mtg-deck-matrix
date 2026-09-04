@@ -472,14 +472,30 @@
 
   /* -------------------------------------------------------- deck detail  */
 
-  function statBlock(items) {
-    return el("div", { class: "stat-strip" }, items.map(function (it) {
+  function statBlock(items, deck) {
+    var cells = items.map(function (it) {
       return el("div", { class: "stat" }, [
         el("div", { class: "k", text: it.k }),
         el("div", { class: "v num", text: it.v }),
         it.n ? el("div", { class: "n", text: it.n }) : null
       ]);
-    }));
+    });
+    // The strip lays out on a fixed column count, so an odd number of stats
+    // leaves a hole. The commander belongs in it: it is the one card every
+    // reader wants to look at first, and it opens like any other.
+    if (deck) {
+      var thumb = el("img", { alt: deck.commander, loading: "lazy", src:
+        "https://api.scryfall.com/cards/named?format=image&version=small&exact="
+        + encodeURIComponent(deck.commander) });
+      var cell = el("button", {
+        class: "stat stat-commander", type: "button",
+        title: "Show " + deck.commander, "aria-label": "Show " + deck.commander,
+        onclick: function () { openCard(deck.commander); }
+      }, [thumb, el("span", { class: "k", text: "Commander" })]);
+      thumb.addEventListener("error", function () { thumb.remove(); });
+      cells.push(cell);
+    }
+    return el("div", { class: "stat-strip" }, cells);
   }
 
   function curveChart(shape) {
@@ -572,7 +588,7 @@
         el("div", { class: "meta-row", style: "margin-top:10px" }, [pips(colorsOf(deck))]),
         guide && guide.hook ? el("p", { class: "hook", text: guide.hook }) : null
       ]),
-      statBlock(stats1)
+      statBlock(stats1, deck)
     ]));
 
     var left = el("div"), right = el("div");
