@@ -9,7 +9,9 @@ const Scryfall = require("../scryfall-client.js");
 const Custom = require("../custom-model.js");
 const Generator = require("../deck-generator.js");
 const fixture = JSON.parse(await readFile(new URL("./fixtures/scryfall/cards.json", import.meta.url), "utf8"));
-const indexSource = await readFile(new URL("../index.html", import.meta.url), "utf8");
+// The full app moved to matrix.html when the simplified viewer took over
+// index.html. These assertions are about the full app, so they follow it.
+const indexSource = await readFile(new URL("../matrix.html", import.meta.url), "utf8");
 const appSource = await readFile(new URL("../app.js", import.meta.url), "utf8");
 
 // ---------------------------------------------------------------------------
@@ -439,7 +441,7 @@ assert.ok(flavor.theme > fortress.theme, "Flavor must lean further into the them
 // Page wiring
 // ---------------------------------------------------------------------------
 for (const module of ["lineup-model.js", "compliance-model.js", "scryfall-client.js", "custom-model.js", "deck-generator.js"]) {
-  assert.ok(indexSource.includes(module), `index.html must load ${module}`);
+  assert.ok(indexSource.includes(module), `matrix.html must load ${module}`);
 }
 assert.ok(indexSource.indexOf("compliance-model.js") < indexSource.indexOf("deck-generator.js"), "the generator must load after the compliance model it depends on");
 assert.ok(indexSource.indexOf("deck-generator.js") < indexSource.indexOf("app.js?"), "generator modules must load before app.js");
@@ -447,7 +449,7 @@ assert.ok(indexSource.indexOf("deck-generator.js") < indexSource.indexOf("app.js
 // purpose. What must stay true is that withdrawing it is a two-element change
 // and nothing else: the generator, the Scryfall client, the custom store and the
 // renderer are all still wired, so putting the tab and section back in
-// index.html brings the whole step back with them.
+// matrix.html brings the whole step back with them.
 assert.doesNotMatch(indexSource, /data-view="choose"/, "the Choose tab is withdrawn for now");
 assert.doesNotMatch(indexSource, /id="view-choose"/, "the Choose section is withdrawn for now");
 assert.match(appSource, /function renderChooseView\(\)/, "the Choose renderer must survive the tab being withdrawn");
@@ -461,7 +463,7 @@ const tabCount = (indexSource.match(/class="main-tab[ "]/g) || []).length;
 const gridMatch = cssSource.match(/\.main-tabs \{[^}]*repeat\((\d+), minmax\(0, 1fr\)\)/);
 assert.ok(gridMatch, "the tab bar must declare a fixed-column grid");
 assert.equal(Number(gridMatch[1]), tabCount,
-  `the tab bar grid (${gridMatch[1]} columns) must make room for exactly the ${tabCount} tabs in index.html`);
+  `the tab bar grid (${gridMatch[1]} columns) must make room for exactly the ${tabCount} tabs in matrix.html`);
 assert.match(cssSource, /\.choose-grid \{/, "the Choose grid must be styled");
 assert.match(cssSource, /\.deck-group-divider \{/, "the generated-deck divider must be styled");
 
