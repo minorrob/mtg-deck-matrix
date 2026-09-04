@@ -125,7 +125,12 @@ ok("every rung answers with its own field, and Base speaks for the slot", () => 
 
 /* ---------- the shop re-key ---------- */
 ok("shop rows merge one card across decks and sum its quantity", () => {
-  const decks = ["1b", "3o"].filter((id) => buyPlans.plans[id]).map((id) => ({
+  // The pair has to be two decks that actually share cards, or there is no merge to
+  // test. 1b and 3o used to be one; they are now Betor (white/black/green walls) and
+  // Purphoros (mono-red goblins), the two furthest-apart colour identities in the
+  // lineup, and they have not one card in common. 5o and 3o share six, a Mountain
+  // among them.
+  const decks = ["5o", "3o"].filter((id) => buyPlans.plans[id]).map((id) => ({
     id, slots: Slot.deckSlots(buyPlans.plans[id], Lineup.defaultSelection(buyPlans.plans[id]))
   }));
   assert.ok(decks.length === 2, "needs two real plans to test the merge");
@@ -394,9 +399,19 @@ ok("Max is a Tier 3 build, not a label over the Tuned hundred", () => {
   });
   assert.equal(same.length, 0,
     `${same.length} variants still have Max identical to Tuned (${same.join(", ")})`);
-  const carrying = planIds.filter((id) => gameChangersIn(buyPlans.plans[id], "max").length > 0);
-  assert.equal(carrying.length, planIds.length,
-    `${planIds.length - carrying.length} Max rungs carry no Game Changer at all, so they are not Tier 3 builds`);
+  // Bracket 3's defining allowance is up to three Game Changers, and every ladder the
+  // sweep generated promotes some into Max. The six decks Trey actually plays are not
+  // generated: their Max rung is his own Bracket-3 list, and three of those lists add
+  // no Game Changer at all -- Atraxa's six swaps, Betor's three and Shadrix's six are
+  // mana, draw and death triggers, none of them on Wizards' list. Those Max rungs are
+  // still Tier 3 builds (bought at the Tier 3 budget, and measurably a different, and
+  // for two of the three a stronger, hundred than Tuned); they simply do not spend the
+  // allowance. Every other Max rung must still carry one, and the exceptions are named
+  // here so a ladder that quietly loses its Game Changers cannot hide among them.
+  const GAME_CHANGER_FREE_MAX = new Set(["1b", "2c", "7e"]);
+  const bare = planIds.filter((id) => gameChangersIn(buyPlans.plans[id], "max").length === 0);
+  assert.deepEqual(bare.slice().sort(), [...GAME_CHANGER_FREE_MAX].sort(),
+    `Max rungs carrying no Game Changer: ${bare.join(", ")}`);
 });
 
 ok("no Max rung exceeds Bracket 3's limit of three Game Changers", () => {
