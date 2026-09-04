@@ -1,6 +1,6 @@
 {
  "schemaVersion": 1,
- "generatedAt": "2026-09-04T01:05:56+00:00",
+ "generatedAt": "2026-09-04T02:29:17+00:00",
  "source": "MtG_Deck_Flat.xlsx",
  "crossChecked": 579,
  "note": "Formula columns (Status, Qty, Own, Extra, Buy Count, $ To Buy) are recomputed here: the workbook ships with no cached formula results.",
@@ -392,7 +392,7 @@
     {
      "action": "CUT",
      "card": "Curious Farm Animals",
-     "price": null,
+     "price": 0.27,
      "status": "-> Bench (cut 2026-09-02)",
      "note": "Comes out at Tuned; move to Bench box",
      "replaces": "",
@@ -401,7 +401,7 @@
     {
      "action": "CUT",
      "card": "Explorer's Scope",
-     "price": null,
+     "price": 0.21,
      "status": "-> Bench",
      "note": "Comes out at Tuned; move to Bench box",
      "replaces": "",
@@ -410,7 +410,7 @@
     {
      "action": "CUT",
      "card": "Goldvein Pick",
-     "price": null,
+     "price": 0.3,
      "status": "-> Bench",
      "note": "Comes out at Tuned; move to Bench box",
      "replaces": "",
@@ -419,7 +419,7 @@
     {
      "action": "CUT",
      "card": "Haystack",
-     "price": null,
+     "price": 0.39,
      "status": "-> Bench",
      "note": "Comes out at Tuned; move to Bench box",
      "replaces": "",
@@ -446,7 +446,7 @@
     {
      "action": "CUT",
      "card": "Wild Pack Squad",
-     "price": null,
+     "price": 0.17,
      "status": "-> Bench",
      "note": "Comes out at Tuned; move to Bench box",
      "replaces": "",
@@ -633,7 +633,7 @@
     {
      "action": "CUT",
      "card": "Burning Curiosity",
-     "price": null,
+     "price": 0.2,
      "status": "-> Bench",
      "note": "Comes out at Tuned; move to Bench box",
      "replaces": "",
@@ -642,7 +642,7 @@
     {
      "action": "CUT",
      "card": "Cinder Strike",
-     "price": null,
+     "price": 0.18,
      "status": "-> Bench",
      "note": "Comes out at Tuned; move to Bench box",
      "replaces": "",
@@ -651,7 +651,7 @@
     {
      "action": "CUT",
      "card": "Dwarven Mauler",
-     "price": null,
+     "price": 0.26,
      "status": "-> Bench",
      "note": "Comes out at Tuned; move to Bench box",
      "replaces": "",
@@ -687,7 +687,7 @@
     {
      "action": "CUT",
      "card": "Monastery Raid",
-     "price": null,
+     "price": 0.24,
      "status": "-> Bench",
      "note": "Comes out at Tuned; move to Bench box",
      "replaces": "",
@@ -705,7 +705,7 @@
     {
      "action": "CUT",
      "card": "Tweeze",
-     "price": null,
+     "price": 0.14,
      "status": "-> Bench",
      "note": "Comes out at Tuned; move to Bench box",
      "replaces": "",
@@ -867,7 +867,8 @@
    "bench": 0,
    "buyCount": 1,
    "toBuyCost": 3.11,
-   "status": "To Buy"
+   "status": "To Buy",
+   "priceSource": "workbook"
   },
   {
    "name": "Fervor",
@@ -909,7 +910,8 @@
    "bench": 0,
    "buyCount": 1,
    "toBuyCost": 4.21,
-   "status": "To Buy"
+   "status": "To Buy",
+   "priceSource": "workbook"
   },
   {
    "name": "Kambal, Consul of Allocation",
@@ -951,7 +953,8 @@
    "bench": 0,
    "buyCount": 1,
    "toBuyCost": 10.17,
-   "status": "To Buy"
+   "status": "To Buy",
+   "priceSource": "workbook"
   },
   {
    "name": "Mentor of the Meek",
@@ -993,7 +996,8 @@
    "bench": 0,
    "buyCount": 1,
    "toBuyCost": 4.95,
-   "status": "To Buy"
+   "status": "To Buy",
+   "priceSource": "workbook"
   },
   {
    "name": "Molten Echoes",
@@ -1035,7 +1039,8 @@
    "bench": 0,
    "buyCount": 1,
    "toBuyCost": 9.51,
-   "status": "To Buy"
+   "status": "To Buy",
+   "priceSource": "workbook"
   },
   {
    "name": "Night's Whisper",
@@ -1077,7 +1082,8 @@
    "bench": 0,
    "buyCount": 1,
    "toBuyCost": 5.42,
-   "status": "To Buy"
+   "status": "To Buy",
+   "priceSource": "workbook"
   },
   {
    "name": "Ophiomancer",
@@ -1119,7 +1125,8 @@
    "bench": 0,
    "buyCount": 1,
    "toBuyCost": 0.96,
-   "status": "To Buy"
+   "status": "To Buy",
+   "priceSource": "workbook"
   },
   {
    "name": "Ruby Medallion",
@@ -1161,7 +1168,8 @@
    "bench": 0,
    "buyCount": 1,
    "toBuyCost": 14.81,
-   "status": "To Buy"
+   "status": "To Buy",
+   "priceSource": "workbook"
   },
   {
    "name": "Rundvelt Hordemaster",
@@ -1203,7 +1211,8 @@
    "bench": 0,
    "buyCount": 1,
    "toBuyCost": 4.87,
-   "status": "To Buy"
+   "status": "To Buy",
+   "priceSource": "workbook"
   },
   {
    "name": "Skullclamp",
@@ -1246,7 +1255,8 @@
    "bench": 0,
    "buyCount": 1,
    "toBuyCost": 5.89,
-   "status": "To Buy"
+   "status": "To Buy",
+   "priceSource": "workbook"
   },
   {
    "name": "Teysa Karlov",
@@ -1288,7 +1298,8 @@
    "bench": 0,
    "buyCount": 1,
    "toBuyCost": 2.67,
-   "status": "To Buy"
+   "status": "To Buy",
+   "priceSource": "workbook"
   },
   {
    "name": "Tree of Perdition",
@@ -1331,7 +1342,8 @@
    "bench": 0,
    "buyCount": 1,
    "toBuyCost": 2.94,
-   "status": "To Buy"
+   "status": "To Buy",
+   "priceSource": "workbook"
   },
   {
    "name": "Brushland",
@@ -1373,7 +1385,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Remove"
+   "status": "Remove",
+   "priceSource": "workbook"
   },
   {
    "name": "Colfenor, the Last Yew",
@@ -1416,7 +1429,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Remove"
+   "status": "Remove",
+   "priceSource": "workbook"
   },
   {
    "name": "Concealed Courtyard",
@@ -1459,7 +1473,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Remove"
+   "status": "Remove",
+   "priceSource": "workbook"
   },
   {
    "name": "Costly Plunder",
@@ -1501,7 +1516,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Remove"
+   "status": "Remove",
+   "priceSource": "workbook"
   },
   {
    "name": "Doomed Traveler",
@@ -1543,7 +1559,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Remove"
+   "status": "Remove",
+   "priceSource": "workbook"
   },
   {
    "name": "Eternal Witness",
@@ -1585,7 +1602,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Remove"
+   "status": "Remove",
+   "priceSource": "workbook"
   },
   {
    "name": "Fire Diamond",
@@ -1627,7 +1645,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Remove"
+   "status": "Remove",
+   "priceSource": "workbook"
   },
   {
    "name": "Gather the Townsfolk",
@@ -1669,7 +1688,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Remove"
+   "status": "Remove",
+   "priceSource": "workbook"
   },
   {
    "name": "Goblin Motivator",
@@ -1711,7 +1731,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Remove"
+   "status": "Remove",
+   "priceSource": "workbook"
   },
   {
    "name": "Goblin Oriflamme",
@@ -1753,7 +1774,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Remove"
+   "status": "Remove",
+   "priceSource": "workbook"
   },
   {
    "name": "Great Furnace",
@@ -1795,7 +1817,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Remove"
+   "status": "Remove",
+   "priceSource": "workbook"
   },
   {
    "name": "Hunted Witness",
@@ -1837,7 +1860,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Remove"
+   "status": "Remove",
+   "priceSource": "workbook"
   },
   {
    "name": "Inspiring Overseer",
@@ -1880,7 +1904,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Remove"
+   "status": "Remove",
+   "priceSource": "workbook"
   },
   {
    "name": "Llanowar Wastes",
@@ -1922,7 +1947,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Remove"
+   "status": "Remove",
+   "priceSource": "workbook"
   },
   {
    "name": "Priest of Fell Rites",
@@ -1965,7 +1991,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Remove"
+   "status": "Remove",
+   "priceSource": "workbook"
   },
   {
    "name": "Rummaging Goblin",
@@ -2007,7 +2034,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Remove"
+   "status": "Remove",
+   "priceSource": "workbook"
   },
   {
    "name": "Shineshadow Snarl",
@@ -2050,7 +2078,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Remove"
+   "status": "Remove",
+   "priceSource": "workbook"
   },
   {
    "name": "Sign in Blood",
@@ -2092,7 +2121,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Remove"
+   "status": "Remove",
+   "priceSource": "workbook"
   },
   {
    "name": "Silverquill Campus",
@@ -2135,7 +2165,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Remove"
+   "status": "Remove",
+   "priceSource": "workbook"
   },
   {
    "name": "Slaughter Specialist",
@@ -2178,7 +2209,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Remove"
+   "status": "Remove",
+   "priceSource": "workbook"
   },
   {
    "name": "Solemn Simulacrum",
@@ -2221,7 +2253,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Remove"
+   "status": "Remove",
+   "priceSource": "workbook"
   },
   {
    "name": "Suture Priest",
@@ -2264,7 +2297,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Remove"
+   "status": "Remove",
+   "priceSource": "workbook"
   },
   {
    "name": "Utter End",
@@ -2306,7 +2340,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Remove"
+   "status": "Remove",
+   "priceSource": "workbook"
   },
   {
    "name": "Wall of Blossoms",
@@ -2349,7 +2384,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Remove"
+   "status": "Remove",
+   "priceSource": "workbook"
   },
   {
    "name": "Shared Animosity",
@@ -2391,7 +2427,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Aetherize",
@@ -2433,7 +2470,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Anguished Unmaking",
@@ -2476,7 +2514,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Arboreal Grazer",
@@ -2519,7 +2558,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Argentum Masticore",
@@ -2563,7 +2603,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Artisan of Kozilek",
@@ -2590,7 +2631,7 @@
    "own": 0,
    "cartVendor": "TCG",
    "ordered": 1,
-   "price": null,
+   "price": 0.45,
    "type": "?",
    "subType": "Eldrazi",
    "color": "C",
@@ -2607,7 +2648,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "scryfall"
   },
   {
    "name": "Ash Barrens",
@@ -2650,7 +2692,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Assault Formation",
@@ -2694,7 +2737,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Azorius Chancery",
@@ -2737,7 +2781,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Azorius Signet",
@@ -2779,7 +2824,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Bastion of Remembrance",
@@ -2822,7 +2868,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Beetleback Chief",
@@ -2864,7 +2911,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Big Score",
@@ -2906,7 +2954,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Blasphemous Act",
@@ -2949,7 +2998,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Buried Ruin",
@@ -2992,7 +3042,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Carven Caryatid",
@@ -3035,7 +3086,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Castle Ardenvale",
@@ -3078,7 +3130,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Castle Embereth",
@@ -3121,7 +3174,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Caves of Koilos",
@@ -3163,7 +3217,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Chaos Warp",
@@ -3205,7 +3260,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Charming Prince",
@@ -3247,7 +3303,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Chocobo Knights",
@@ -3289,7 +3346,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Chulane, Teller of Tales",
@@ -3333,7 +3391,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Cloudblazer",
@@ -3376,7 +3435,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Contagion Clasp",
@@ -3419,7 +3479,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Corpse Knight",
@@ -3461,7 +3522,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Cruel Celebrant",
@@ -3503,7 +3565,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Cultivate",
@@ -3545,7 +3608,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Danitha Capashen, Paragon",
@@ -3572,7 +3636,7 @@
    "own": 0,
    "cartVendor": "TCG",
    "ordered": 1,
-   "price": null,
+   "price": 0.86,
    "type": "?",
    "subType": "Human Knight",
    "color": "C",
@@ -3588,7 +3652,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "scryfall"
   },
   {
    "name": "Day of Judgment",
@@ -3630,7 +3695,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Deadly Dispute",
@@ -3672,7 +3738,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Deepglow Skate",
@@ -3714,7 +3781,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Dreadhorde Invasion",
@@ -3757,7 +3825,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Elspeth, Sun's Nemesis",
@@ -3801,7 +3870,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Empty the Warrens",
@@ -3844,7 +3914,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Everflowing Chalice",
@@ -3887,7 +3958,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Evolution Sage",
@@ -3929,7 +4001,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Faithless Looting",
@@ -3972,7 +4045,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Fateful Absence",
@@ -4015,7 +4089,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Forgotten Ancient",
@@ -4058,7 +4133,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Frontline Medic",
@@ -4101,7 +4177,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Generous Gift",
@@ -4144,7 +4221,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Genesis Chamber",
@@ -4186,7 +4264,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Glacial Fortress",
@@ -4229,7 +4308,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Goblin Bombardment",
@@ -4271,7 +4351,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Goblin Instigator",
@@ -4313,7 +4394,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Goblin Matron",
@@ -4355,7 +4437,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Goblin Ringleader",
@@ -4398,7 +4481,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Goblin Warchief",
@@ -4441,7 +4525,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Golgari Signet",
@@ -4483,7 +4568,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Grateful Apparition",
@@ -4526,7 +4612,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Hidden Stockpile",
@@ -4569,7 +4656,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Hordeling Outburst",
@@ -4611,7 +4699,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Huatli, the Sun's Heart",
@@ -4654,7 +4743,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Ichor Wellspring",
@@ -4696,7 +4786,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Impact Tremors",
@@ -4738,7 +4829,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Inexorable Tide",
@@ -4780,7 +4872,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Inspiring Call",
@@ -4823,7 +4916,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Jaddi Offshoot",
@@ -4866,7 +4960,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Keeper of the Accord",
@@ -4909,7 +5004,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Kher Keep",
@@ -4952,7 +5048,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Knight of Autumn",
@@ -4994,7 +5091,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Krenko, Mob Boss",
@@ -5036,7 +5134,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Krosan Verge",
@@ -5079,7 +5178,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Legion Warboss",
@@ -5122,7 +5222,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Light Up the Stage",
@@ -5165,7 +5266,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Migration Path",
@@ -5208,7 +5310,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Mogg War Marshal",
@@ -5251,7 +5354,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Mulldrifter",
@@ -5295,7 +5399,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Myr Battlesphere",
@@ -5338,7 +5443,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Nadier's Nightblade",
@@ -5380,7 +5486,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Nyx-Fleece Ram",
@@ -5422,7 +5529,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Odric, Lunarch Marshal",
@@ -5464,7 +5572,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Ogre Battledriver",
@@ -5506,7 +5615,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Orzhov Basilica",
@@ -5549,7 +5659,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Ossification",
@@ -5591,7 +5702,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Outpost Siege",
@@ -5635,7 +5747,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Peregrine Drake",
@@ -5678,7 +5791,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Promise of Loyalty",
@@ -5721,7 +5835,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Quest for the Goblin Lord",
@@ -5764,7 +5879,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Quintorius Kand",
@@ -5808,7 +5924,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Radiant Grove",
@@ -5851,7 +5968,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Rampart Architect",
@@ -5894,7 +6012,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Read the Bones",
@@ -5937,7 +6056,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Rootborn Defenses",
@@ -5980,7 +6100,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Sandsteppe Citadel",
@@ -6023,7 +6144,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Seaside Citadel",
@@ -6066,7 +6188,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Selesnya Signet",
@@ -6108,7 +6231,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Shadrix Silverquill",
@@ -6152,7 +6276,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Siege-Gang Commander",
@@ -6195,7 +6320,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Simic Signet",
@@ -6237,7 +6363,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Skirk Prospector",
@@ -6279,7 +6406,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Soulherder",
@@ -6322,7 +6450,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Steady Progress",
@@ -6364,7 +6493,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Strixhaven Stadium",
@@ -6408,7 +6538,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Swords to Plowshares",
@@ -6451,7 +6582,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Tekuthal, Inquiry Dominus",
@@ -6495,7 +6627,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Temple of the False God",
@@ -6537,7 +6670,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Thrilling Discovery",
@@ -6580,7 +6714,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Throne of Geth",
@@ -6622,7 +6757,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Tithe Taker",
@@ -6665,7 +6801,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Tower Defense",
@@ -6707,7 +6844,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Vandalblast",
@@ -6750,7 +6888,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Vault of the Archangel",
@@ -6793,7 +6932,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Village Rites",
@@ -6835,7 +6975,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Viscera Seer",
@@ -6877,7 +7018,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Voyager Staff",
@@ -6904,7 +7046,7 @@
    "own": 0,
    "cartVendor": "TCG",
    "ordered": 1,
-   "price": null,
+   "price": 0.35,
    "type": "?",
    "subType": "",
    "color": "C",
@@ -6919,7 +7061,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "scryfall"
   },
   {
    "name": "Walking Bulwark",
@@ -6962,7 +7105,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Wall of Limbs",
@@ -7006,7 +7150,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Wall of Omens",
@@ -7049,7 +7194,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Wall of Reverence",
@@ -7092,7 +7238,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Wall of Roots",
@@ -7135,7 +7282,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Wave of Reckoning",
@@ -7177,7 +7325,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Welcoming Vampire",
@@ -7220,7 +7369,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Witty Roastmaster",
@@ -7262,7 +7412,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Zetalpa, Primal Dawn",
@@ -7305,7 +7456,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Zulaport Cutthroat",
@@ -7347,7 +7499,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Arcane Signet",
@@ -7389,7 +7542,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Mind Stone",
@@ -7432,7 +7586,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Orzhov Signet",
@@ -7474,7 +7629,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Sol Ring",
@@ -7516,7 +7672,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Ordered"
+   "status": "Ordered",
+   "priceSource": "workbook"
   },
   {
    "name": "Betor, Ancestor's Voice",
@@ -7560,7 +7717,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Fell the Mighty",
@@ -7602,7 +7760,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Felothar the Steadfast",
@@ -7646,7 +7805,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Goblin Rabblemaster",
@@ -7689,7 +7849,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Hinterland Harbor",
@@ -7732,7 +7893,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Painful Truths",
@@ -7774,7 +7936,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Pawn of Ulamog",
@@ -7816,7 +7979,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Protector of the Wastes",
@@ -7860,7 +8024,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Purphoros's Intervention",
@@ -7902,7 +8067,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Temple of Silence",
@@ -7945,7 +8111,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Conspicuous Snoop",
@@ -7987,7 +8154,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Goblin Chieftain",
@@ -8029,7 +8197,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Goblin Trashmaster",
@@ -8071,7 +8240,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Mirkwood",
@@ -8114,7 +8284,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Vampire Hexmage",
@@ -8157,7 +8328,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Abigale, Eloquent First-Year",
@@ -8200,7 +8372,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Abrade",
@@ -8242,7 +8415,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Advanced Reconstruction",
@@ -8286,7 +8460,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Aetheric Amplifier",
@@ -8330,7 +8505,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Ancient Greenwarden",
@@ -8373,7 +8549,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Angel of Indemnity",
@@ -8417,7 +8594,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Anger",
@@ -8459,7 +8637,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Anointer Priest",
@@ -8502,7 +8681,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Ao, the Dawn Sky",
@@ -8529,7 +8709,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.31,
    "type": "Legendary Creature",
    "subType": "Dragon Spirit",
    "color": "W",
@@ -8545,7 +8725,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "scryfall"
   },
   {
    "name": "Arbaaz Mir",
@@ -8587,7 +8768,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Arcades, the Strategist",
@@ -8630,7 +8812,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Arcane Sanctum",
@@ -8657,7 +8840,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.48,
    "type": "Land",
    "subType": "",
    "color": "L",
@@ -8673,7 +8856,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "scryfall"
   },
   {
    "name": "Archaeomancer's Map",
@@ -8716,7 +8900,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Atraxa, Praetors' Voice",
@@ -8760,7 +8945,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Atsushi, the Blazing Sky",
@@ -8804,7 +8990,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Augusta, Order Returned",
@@ -8848,7 +9035,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Axebane Guardian",
@@ -8890,7 +9078,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Bag of Holding",
@@ -8917,7 +9106,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.34,
    "type": "Artifact",
    "subType": "",
    "color": "C",
@@ -8934,7 +9123,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "scryfall"
   },
   {
    "name": "Balefire Liege",
@@ -8978,7 +9168,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Bant Panorama",
@@ -9021,7 +9212,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Barrage of Expendables",
@@ -9063,7 +9255,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Battlefield Forge",
@@ -9106,7 +9299,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Bilbo Baggins, Burglar",
@@ -9149,7 +9343,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Bitterthorn, Nissa's Animus",
@@ -9193,7 +9388,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Blight Pile",
@@ -9235,7 +9431,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Blossoming Sands",
@@ -9279,7 +9476,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Boar-q-pine",
@@ -9321,7 +9519,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Boggart Mischief",
@@ -9364,7 +9563,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Bristlebane Battler",
@@ -9407,7 +9607,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Bronze Guardian",
@@ -9451,7 +9652,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Burdened Stoneback",
@@ -9494,7 +9696,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Burnished Hart",
@@ -9537,7 +9740,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Canopy Gargantuan",
@@ -9564,7 +9768,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 3.25,
    "type": "Creature",
    "subType": "Dragon",
    "color": "G",
@@ -9580,7 +9784,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "scryfall"
   },
   {
    "name": "Cast Out",
@@ -9624,7 +9829,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Cathar Commando",
@@ -9666,7 +9872,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Cathartic Reunion",
@@ -9708,7 +9915,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Ceaseless Conflict",
@@ -9751,7 +9959,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Chain Assassination",
@@ -9778,7 +9987,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.28,
    "type": "Instant",
    "subType": "",
    "color": "B",
@@ -9795,7 +10004,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "scryfall"
   },
   {
    "name": "Clachan Festival",
@@ -9822,7 +10032,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.2,
    "type": "Kindred Enchantment",
    "subType": "Kithkin",
    "color": "W",
@@ -9838,7 +10048,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "scryfall"
   },
   {
    "name": "Claim Jumper",
@@ -9881,7 +10092,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Clifftop Retreat",
@@ -9924,7 +10136,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Cloud's Limit Break",
@@ -9968,7 +10181,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Coiling Oracle",
@@ -10010,7 +10224,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Collective Effort",
@@ -10053,7 +10268,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Combustion Technique",
@@ -10096,7 +10312,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Command Tower",
@@ -10138,7 +10355,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Conspiracy Theorist",
@@ -10181,7 +10399,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Containment Construct",
@@ -10223,7 +10442,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Counterspell",
@@ -10265,7 +10485,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Court Street Denizen",
@@ -10307,7 +10528,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Crashing Drawbridge",
@@ -10349,7 +10571,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Dawn-Blessed Pennant",
@@ -10392,7 +10615,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Day of Black Sun",
@@ -10434,7 +10658,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Deputy of Detention",
@@ -10476,7 +10701,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Disenchant",
@@ -10518,7 +10744,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Dragon Fodder",
@@ -10560,7 +10787,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Dragonlord Dromoka",
@@ -10604,7 +10832,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Drogskol Shieldmate",
@@ -10647,7 +10876,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Drowned Catacomb",
@@ -10674,7 +10904,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 1.02,
    "type": "Land",
    "subType": "",
    "color": "L",
@@ -10690,7 +10920,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "scryfall"
   },
   {
    "name": "Drumbellower",
@@ -10733,7 +10964,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Earth Kingdom Jailer",
@@ -10776,7 +11008,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Emeria, the Sky Ruin",
@@ -10820,7 +11053,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Enraged Flamecaster",
@@ -10862,7 +11096,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Ephemerate",
@@ -10905,7 +11140,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Excava, the Risen Past",
@@ -10948,7 +11184,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Exotic Orchard",
@@ -10990,7 +11227,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Fabled Passage",
@@ -11033,7 +11271,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Faeburrow Elder",
@@ -11076,7 +11315,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Fall of the First Civilization",
@@ -11120,7 +11360,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Fanatical Firebrand",
@@ -11163,7 +11404,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Farhaven Elf",
@@ -11205,7 +11447,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Farseek",
@@ -11247,7 +11490,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Feed the Swarm",
@@ -11290,7 +11534,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Fellwar Stone",
@@ -11332,7 +11577,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Fertilid",
@@ -11375,7 +11621,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Fields of Strife",
@@ -11419,7 +11666,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Filigree Familiar",
@@ -11462,7 +11710,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Flux Channeler",
@@ -11504,7 +11753,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Fortified Village",
@@ -11547,7 +11797,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Foundry Street Denizen",
@@ -11589,7 +11840,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Freyalise, Llanowar's Fury",
@@ -11633,7 +11885,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Furycalm Snarl",
@@ -11676,7 +11929,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Ghor-Clan Wrecker",
@@ -11719,7 +11973,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Ghost Vacuum",
@@ -11762,7 +12017,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Gilt-Leaf's Embrace",
@@ -11805,7 +12061,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Glamermite",
@@ -11848,7 +12105,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Glittering Massif",
@@ -11892,7 +12150,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Go for the Throat",
@@ -11934,7 +12193,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Goblin Gathering",
@@ -11976,7 +12236,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Goblin Rally",
@@ -12018,7 +12279,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Gollum, Riddle Master",
@@ -12061,7 +12323,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Grazing Gladehart",
@@ -12088,7 +12351,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.3,
    "type": "Creature",
    "subType": "Antelope",
    "color": "G",
@@ -12103,7 +12366,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "scryfall"
   },
   {
    "name": "Gristle Glutton",
@@ -12145,7 +12409,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Guardian of Faith",
@@ -12172,7 +12437,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.64,
    "type": "Creature",
    "subType": "Spirit Knight",
    "color": "W",
@@ -12188,7 +12453,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "scryfall"
   },
   {
    "name": "Guardian Scalelord",
@@ -12231,7 +12497,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Gundabad Opportunist",
@@ -12258,7 +12525,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.11,
    "type": "Creature",
    "subType": "Goblin Rogue",
    "color": "R",
@@ -12273,7 +12540,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "scryfall"
   },
   {
    "name": "Heirloom Auntie",
@@ -12316,7 +12584,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Hofri Ghostforge",
@@ -12359,7 +12628,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Ikra Shidiqi, the Usurper",
@@ -12402,7 +12672,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Impassioned Orator",
@@ -12444,7 +12715,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Indomitable Ancients",
@@ -12486,7 +12758,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Indulging Patrician",
@@ -12529,7 +12802,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Intangible Virtue",
@@ -12572,7 +12846,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Isolated Chapel",
@@ -12615,7 +12890,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Jungle Barrier",
@@ -12657,7 +12933,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Kami of Ancient Law",
@@ -12699,7 +12976,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Karmic Guide",
@@ -12743,7 +13021,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Karn's Bastion",
@@ -12786,7 +13065,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Kin-Tree Invocation",
@@ -12828,7 +13108,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Kirol, History Buff // Pack a Punch",
@@ -12872,7 +13153,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Knight of the White Orchid",
@@ -12915,7 +13197,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Kor Cartographer",
@@ -12957,7 +13240,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Kulrath Zealot",
@@ -13000,7 +13284,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Laelia, the Blade Reforged",
@@ -13044,7 +13329,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Lethal Scheme",
@@ -13087,7 +13373,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Lingering Souls",
@@ -13130,7 +13417,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Long Goodbye",
@@ -13173,7 +13461,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Lorehold Archivist // Restore Relic",
@@ -13217,7 +13506,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Lorehold Campus",
@@ -13261,7 +13551,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Lorehold Charm",
@@ -13305,7 +13596,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Lotus Field",
@@ -13348,7 +13640,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Loyal Inventor",
@@ -13391,7 +13684,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Maralen, Fae Ascendant",
@@ -13434,7 +13728,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Meandering Towershell",
@@ -13477,7 +13772,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Merfolk Skydiver",
@@ -13520,7 +13816,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Millikin",
@@ -13562,7 +13859,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Ministrant of Obligation",
@@ -13604,7 +13902,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Mirrodin Avenged",
@@ -13647,7 +13946,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Mistmeadow Witch",
@@ -13689,7 +13989,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Mistveil Plains",
@@ -13733,7 +14034,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Momentary Blink",
@@ -13776,7 +14078,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Monologue Tax",
@@ -13818,7 +14121,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Moonlit Lamenter",
@@ -13861,7 +14165,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Moonshaker Cavalry",
@@ -13904,7 +14209,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Mortify",
@@ -13946,7 +14252,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Mulch",
@@ -13988,7 +14295,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Myriad Landscape",
@@ -14031,7 +14339,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Naktamun Lorespinner // Wheel of Fortune",
@@ -14074,7 +14383,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Night Market",
@@ -14118,7 +14428,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Nightmare Sower",
@@ -14161,7 +14472,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Overgrown Battlement",
@@ -14203,7 +14515,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Patchwork Banner",
@@ -14246,7 +14559,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Path of Ancestry",
@@ -14289,7 +14603,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Path to Exile",
@@ -14332,7 +14647,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Pilgrim's Eye",
@@ -14375,7 +14691,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Plaguemaw Beast",
@@ -14417,7 +14734,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Platypus-Bear",
@@ -14460,7 +14778,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Portcullis Vine",
@@ -14503,7 +14822,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Primary Research",
@@ -14546,7 +14866,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Prophetic Prism",
@@ -14589,7 +14910,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Purphoros, God of the Forge",
@@ -14633,7 +14955,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Putrefy",
@@ -14675,7 +14998,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Quintorius, Field Historian",
@@ -14718,7 +15042,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Quintorius, History Chaser",
@@ -14762,7 +15087,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Quintorius, Loremaster",
@@ -14806,7 +15132,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Radiant Summit",
@@ -14849,7 +15176,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Ragged Short Spear",
@@ -14892,7 +15220,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Raid Bombardment",
@@ -14934,7 +15263,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Raise the Alarm",
@@ -14976,7 +15306,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Ratonhnhaké꞉ton",
@@ -15020,7 +15351,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Reaping Willow",
@@ -15063,7 +15395,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Rebellious Captives",
@@ -15106,7 +15439,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Reckless Ransacking",
@@ -15149,7 +15483,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Reclamation Sage",
@@ -15191,7 +15526,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Reflector Mage",
@@ -15234,7 +15570,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Relic Retriever",
@@ -15277,7 +15614,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Reluctant Dounguard",
@@ -15320,7 +15658,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Remorseful Cleric",
@@ -15363,7 +15702,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Repel Calamity",
@@ -15405,7 +15745,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Requiem Angel",
@@ -15448,7 +15789,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Return to Dust",
@@ -15491,7 +15833,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Rhox Faithmender",
@@ -15534,7 +15877,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Rip Apart",
@@ -15577,7 +15921,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Ritual of Soot",
@@ -15619,7 +15964,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Roon of the Hidden Realm",
@@ -15662,7 +16008,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Rugged Prairie",
@@ -15705,7 +16052,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Sacred Peaks",
@@ -15748,7 +16096,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Salvation Colossus",
@@ -15791,7 +16140,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Sapling of Colfenor",
@@ -15835,7 +16185,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Satyr Wayfinder",
@@ -15877,7 +16228,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Scoured Barrens",
@@ -15920,7 +16272,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Secret Rendezvous",
@@ -15947,7 +16300,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.31,
    "type": "Sorcery",
    "subType": "",
    "color": "W",
@@ -15962,7 +16315,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "scryfall"
   },
   {
    "name": "Seize the Spoils",
@@ -16005,7 +16359,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Selfless Spirit",
@@ -16048,7 +16403,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Serra Paragon",
@@ -16092,7 +16448,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Sevinne's Reclamation",
@@ -16136,7 +16493,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Shalai, Voice of Plenty",
@@ -16179,7 +16537,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Sheltering Word",
@@ -16222,7 +16581,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Shinestriker",
@@ -16264,7 +16624,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Shore Lurker",
@@ -16307,7 +16668,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Sidar Kondo of Jamuraa",
@@ -16350,7 +16712,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Siren's Ruse",
@@ -16393,7 +16756,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Skyclave Apparition",
@@ -16436,7 +16800,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Skyshroud Claim",
@@ -16478,7 +16843,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Smuggler's Copter",
@@ -16521,7 +16887,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Song of the Dryads",
@@ -16563,7 +16930,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Soul of New Phyrexia",
@@ -16606,7 +16974,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Sourbread Auntie",
@@ -16648,7 +17017,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Spectral Procession",
@@ -16690,7 +17060,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Spiral into Solitude",
@@ -16733,7 +17104,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Spirit of Resilience",
@@ -16776,7 +17148,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Squee, Dubious Monarch",
@@ -16820,7 +17193,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Squee, Goblin Nabob",
@@ -16862,7 +17236,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Staff of the Storyteller",
@@ -16906,7 +17281,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Stone Quarry",
@@ -16949,7 +17325,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Stony Strength",
@@ -16991,7 +17368,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Stratosoarer",
@@ -17034,7 +17412,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Study Hall",
@@ -17078,7 +17457,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Sun Titan",
@@ -17121,7 +17501,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Sun-Dappled Celebrant",
@@ -17164,7 +17545,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Sunscorched Divide",
@@ -17206,7 +17588,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Sword of the Animist",
@@ -17249,7 +17632,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Sylvan Caryatid",
@@ -17292,7 +17676,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Sylvan Ranger",
@@ -17334,7 +17719,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Temple of Enlightenment",
@@ -17377,7 +17763,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Temple of Triumph",
@@ -17421,7 +17808,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Tempt with Vengeance",
@@ -17464,7 +17852,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Terramorphic Expanse",
@@ -17506,7 +17895,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Teshar, Ancestor's Apostle",
@@ -17549,7 +17939,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Tezzeret's Gambit",
@@ -17592,7 +17983,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "The Eternal Wanderer",
@@ -17636,7 +18028,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "The Restoration of Eiganjo",
@@ -17680,7 +18073,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Thousand-Year Elixir",
@@ -17723,7 +18117,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Thrill of Possibility",
@@ -17766,7 +18161,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Thrummingbird",
@@ -17809,7 +18205,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Tidus, Yuna's Guardian",
@@ -17852,7 +18249,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Tireless Provisioner",
@@ -17894,7 +18292,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Tocasia's Welcome",
@@ -17936,7 +18335,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Tome of Legends",
@@ -17979,7 +18379,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Tragic Arrogance",
@@ -18022,7 +18423,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Tree of Redemption",
@@ -18064,7 +18466,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Treefolk Umbra",
@@ -18107,7 +18510,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Troll Negotiations",
@@ -18149,7 +18553,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Turbulent Steppe",
@@ -18192,7 +18597,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Unbury",
@@ -18219,7 +18625,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.24,
    "type": "Instant",
    "subType": "",
    "color": "B",
@@ -18235,7 +18641,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "scryfall"
   },
   {
    "name": "Valakut Exploration",
@@ -18278,7 +18685,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Valorous Stance",
@@ -18321,7 +18729,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Vanguard of the Restless",
@@ -18365,7 +18774,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Venerable Warsinger",
@@ -18408,7 +18818,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Vindicate",
@@ -18450,7 +18861,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Viral Drake",
@@ -18494,7 +18906,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Voracious Tome-Skimmer",
@@ -18536,7 +18949,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Wakestone Gargoyle",
@@ -18579,7 +18993,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Wall of Mulch",
@@ -18621,7 +19036,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Wall of Resurgence",
@@ -18664,7 +19080,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Wavesifter",
@@ -18707,7 +19124,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Wayward Swordtooth",
@@ -18750,7 +19168,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Weathered Wayfarer",
@@ -18793,7 +19212,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "White Orchid Phantom",
@@ -18837,7 +19257,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Wilderness Reclamation",
@@ -18879,7 +19300,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Winds of Abandon",
@@ -18923,7 +19345,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Wind-Scarred Crag",
@@ -18967,7 +19390,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Wingmantle Chaplain",
@@ -19010,7 +19434,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Winnowing",
@@ -19053,7 +19478,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Yavimaya Elder",
@@ -19096,7 +19522,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Zack Fair",
@@ -19139,7 +19566,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "In Hand"
+   "status": "In Hand",
+   "priceSource": "workbook"
   },
   {
    "name": "Despark",
@@ -19181,7 +19609,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Extra"
+   "status": "Extra",
+   "priceSource": "workbook"
   },
   {
    "name": "Hanweir Garrison",
@@ -19223,7 +19652,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Extra"
+   "status": "Extra",
+   "priceSource": "workbook"
   },
   {
    "name": "Krenko's Command",
@@ -19265,7 +19695,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Extra"
+   "status": "Extra",
+   "priceSource": "workbook"
   },
   {
    "name": "Blight Rot",
@@ -19307,7 +19738,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Extra"
+   "status": "Extra",
+   "priceSource": "workbook"
   },
   {
    "name": "Dundoolin Weaver",
@@ -19349,7 +19781,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Extra"
+   "status": "Extra",
+   "priceSource": "workbook"
   },
   {
    "name": "Evolving Wilds",
@@ -19391,7 +19824,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Extra"
+   "status": "Extra",
+   "priceSource": "workbook"
   },
   {
    "name": "Forest",
@@ -19433,7 +19867,8 @@
    "bench": 56,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Extra"
+   "status": "Extra",
+   "priceSource": "workbook"
   },
   {
    "name": "Island",
@@ -19475,7 +19910,8 @@
    "bench": 72,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Extra"
+   "status": "Extra",
+   "priceSource": "workbook"
   },
   {
    "name": "Mountain",
@@ -19517,7 +19953,8 @@
    "bench": 49,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Extra"
+   "status": "Extra",
+   "priceSource": "workbook"
   },
   {
    "name": "Origin of Metalbending",
@@ -19560,7 +19997,8 @@
    "bench": 2,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Extra"
+   "status": "Extra",
+   "priceSource": "workbook"
   },
   {
    "name": "Plains",
@@ -19602,7 +20040,8 @@
    "bench": 42,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Extra"
+   "status": "Extra",
+   "priceSource": "workbook"
   },
   {
    "name": "Pretending Poxbearers",
@@ -19629,7 +20068,7 @@
    "own": 2,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.06,
    "type": "Creature",
    "subType": "Human Citizen Ally",
    "color": "Opt-WB",
@@ -19644,7 +20083,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Extra"
+   "status": "Extra",
+   "priceSource": "scryfall"
   },
   {
    "name": "Spectacular Tactics",
@@ -19687,7 +20127,8 @@
    "bench": 2,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Extra"
+   "status": "Extra",
+   "priceSource": "workbook"
   },
   {
    "name": "Sunpetal Grove",
@@ -19730,7 +20171,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Extra"
+   "status": "Extra",
+   "priceSource": "workbook"
   },
   {
    "name": "Swamp",
@@ -19772,7 +20214,8 @@
    "bench": 48,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Extra"
+   "status": "Extra",
+   "priceSource": "workbook"
   },
   {
    "name": "Terror",
@@ -19815,7 +20258,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Extra"
+   "status": "Extra",
+   "priceSource": "workbook"
   },
   {
    "name": "Weathered Sentinels",
@@ -19858,7 +20302,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Extra"
+   "status": "Extra",
+   "priceSource": "workbook"
   },
   {
    "name": "Akoum Hellhound",
@@ -19900,7 +20345,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "workbook"
   },
   {
    "name": "Alexios, Deimos of Kosmos",
@@ -19944,7 +20390,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "workbook"
   },
   {
    "name": "Auntie's Sentence",
@@ -19971,7 +20418,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.15,
    "type": "Sorcery",
    "subType": "",
    "color": "B",
@@ -19987,7 +20434,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "scryfall"
   },
   {
    "name": "Awaken the Erstwhile",
@@ -20014,7 +20462,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.44,
    "type": "Sorcery",
    "subType": "",
    "color": "B",
@@ -20029,7 +20477,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "scryfall"
   },
   {
    "name": "Burning Curiosity",
@@ -20056,7 +20505,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.2,
    "type": "Sorcery",
    "subType": "",
    "color": "R",
@@ -20072,7 +20521,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "scryfall"
   },
   {
    "name": "Cinder Strike",
@@ -20099,7 +20549,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.18,
    "type": "Sorcery",
    "subType": "",
    "color": "R",
@@ -20115,7 +20565,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "scryfall"
   },
   {
    "name": "Civic Stalwart",
@@ -20157,7 +20608,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "workbook"
   },
   {
    "name": "Curious Farm Animals",
@@ -20184,7 +20636,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.27,
    "type": "Creature",
    "subType": "Boar Elk Bird Ox",
    "color": "W",
@@ -20200,7 +20652,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "scryfall"
   },
   {
    "name": "Currency Converter",
@@ -20227,7 +20680,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.51,
    "type": "Artifact",
    "subType": "",
    "color": "C",
@@ -20244,7 +20697,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "scryfall"
   },
   {
    "name": "Dismal Backwater",
@@ -20287,7 +20741,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "workbook"
   },
   {
    "name": "Dwarven Mauler",
@@ -20314,7 +20769,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.26,
    "type": "Creature",
    "subType": "Dwarf Warrior",
    "color": "R",
@@ -20330,7 +20785,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "scryfall"
   },
   {
    "name": "Dwarven Shortsword",
@@ -20374,7 +20830,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "workbook"
   },
   {
    "name": "Explorer's Scope",
@@ -20401,7 +20858,7 @@
    "own": 3,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.21,
    "type": "Artifact",
    "subType": "Equipment",
    "color": "C",
@@ -20416,7 +20873,8 @@
    "bench": 3,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "scryfall"
   },
   {
    "name": "Faerie Duelist",
@@ -20443,7 +20901,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.09,
    "type": "Creature",
    "subType": "Faerie Rogue",
    "color": "U",
@@ -20458,7 +20916,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "scryfall"
   },
   {
    "name": "Fateful Tempest",
@@ -20501,7 +20960,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "workbook"
   },
   {
    "name": "Giant's Boulder",
@@ -20545,7 +21005,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "workbook"
   },
   {
    "name": "Gloom Ripper",
@@ -20572,7 +21033,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.27,
    "type": "Creature",
    "subType": "Elf Assassin",
    "color": "B",
@@ -20588,7 +21049,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "scryfall"
   },
   {
    "name": "Goldvein Pick",
@@ -20615,7 +21077,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.3,
    "type": "Artifact",
    "subType": "Equipment",
    "color": "C",
@@ -20631,7 +21093,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "scryfall"
   },
   {
    "name": "Guardian of the Halls",
@@ -20674,7 +21137,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "workbook"
   },
   {
    "name": "Haystack",
@@ -20701,7 +21165,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.39,
    "type": "Artifact",
    "subType": "",
    "color": "W",
@@ -20716,7 +21180,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "scryfall"
   },
   {
    "name": "Knight of Old Benalia",
@@ -20759,7 +21224,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "workbook"
   },
   {
    "name": "Kyoshi Island Plaza",
@@ -20786,7 +21252,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.31,
    "type": "Legendary Enchantment",
    "subType": "Shrine",
    "color": "G",
@@ -20802,7 +21268,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "scryfall"
   },
   {
    "name": "Monastery Raid",
@@ -20829,7 +21296,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.24,
    "type": "Sorcery",
    "subType": "",
    "color": "R",
@@ -20845,7 +21312,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "scryfall"
   },
   {
    "name": "Naya Panorama",
@@ -20888,7 +21356,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "workbook"
   },
   {
    "name": "Negate",
@@ -20930,7 +21399,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "workbook"
   },
   {
    "name": "Octopus Form",
@@ -20957,7 +21427,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.25,
    "type": "Instant",
    "subType": "Lesson",
    "color": "U",
@@ -20973,7 +21443,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "scryfall"
   },
   {
    "name": "Ordeal of Nylea",
@@ -21016,7 +21487,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "workbook"
   },
   {
    "name": "Riverguard's Reflexes",
@@ -21043,7 +21515,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.19,
    "type": "Instant",
    "subType": "",
    "color": "W",
@@ -21059,7 +21531,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "scryfall"
   },
   {
    "name": "Senate Griffin",
@@ -21086,7 +21559,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.06,
    "type": "Creature",
    "subType": "Griffin",
    "color": "Multi",
@@ -21101,7 +21574,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "scryfall"
   },
   {
    "name": "Simic Guildgate",
@@ -21143,7 +21617,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "workbook"
   },
   {
    "name": "Stony-Voiced Goblins",
@@ -21170,7 +21645,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.15,
    "type": "Creature",
    "subType": "Goblin Bard",
    "color": "B",
@@ -21185,7 +21660,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "scryfall"
   },
   {
    "name": "Sylvan Brushstrider",
@@ -21212,7 +21688,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.13,
    "type": "Creature",
    "subType": "Beast",
    "color": "G",
@@ -21227,7 +21703,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "scryfall"
   },
   {
    "name": "Temporal Cleansing",
@@ -21270,7 +21747,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "workbook"
   },
   {
    "name": "Thirsting Shade",
@@ -21313,7 +21791,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "workbook"
   },
   {
    "name": "Timid Shieldbearer",
@@ -21340,7 +21819,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.1,
    "type": "Creature",
    "subType": "Kithkin Soldier",
    "color": "W",
@@ -21355,7 +21834,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "scryfall"
   },
   {
    "name": "Tweeze",
@@ -21382,7 +21862,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.14,
    "type": "Instant",
    "subType": "",
    "color": "R",
@@ -21398,7 +21878,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "scryfall"
   },
   {
    "name": "Undercity's Embrace",
@@ -21441,7 +21922,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "workbook"
   },
   {
    "name": "Unexpected Assistance",
@@ -21484,7 +21966,8 @@
    "bench": 2,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "workbook"
   },
   {
    "name": "Unforgiving Aim",
@@ -21528,7 +22011,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "workbook"
   },
   {
    "name": "Unwelcome Sprite",
@@ -21570,7 +22054,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "workbook"
   },
   {
    "name": "Voldaren Epicure",
@@ -21613,7 +22098,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "workbook"
   },
   {
    "name": "Wild Pack Squad",
@@ -21640,7 +22126,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.17,
    "type": "Creature",
    "subType": "Human Mercenary",
    "color": "W",
@@ -21655,7 +22141,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "scryfall"
   },
   {
    "name": "Wildvine Pummeler",
@@ -21682,7 +22169,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.09,
    "type": "Creature",
    "subType": "Giant Berserker",
    "color": "G",
@@ -21699,7 +22186,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench-Sub"
+   "status": "Bench-Sub",
+   "priceSource": "scryfall"
   },
   {
    "name": "Enchanted River's Grasp",
@@ -21726,7 +22214,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.16,
    "type": "",
    "subType": "",
    "color": "",
@@ -21739,7 +22227,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Fearsome Goblin Pair",
@@ -21766,7 +22255,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.24,
    "type": "",
    "subType": "",
    "color": "",
@@ -21779,7 +22268,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Front Porch Sentries",
@@ -21806,7 +22296,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.09,
    "type": "",
    "subType": "",
    "color": "",
@@ -21819,7 +22309,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Getaway Barrel",
@@ -21846,7 +22337,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.35,
    "type": "",
    "subType": "",
    "color": "",
@@ -21859,7 +22350,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Mirkwood Nurturer",
@@ -21886,7 +22378,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.15,
    "type": "",
    "subType": "",
    "color": "",
@@ -21899,7 +22391,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Mirkwood Pathmaker",
@@ -21926,7 +22419,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.26,
    "type": "",
    "subType": "",
    "color": "",
@@ -21939,7 +22432,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Moment of Glory",
@@ -21966,7 +22460,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.08,
    "type": "",
    "subType": "",
    "color": "",
@@ -21979,7 +22473,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Old Fat Spider Can't See Me",
@@ -22006,7 +22501,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.23,
    "type": "",
    "subType": "",
    "color": "",
@@ -22019,7 +22514,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Ordinary Bear",
@@ -22046,7 +22542,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.25,
    "type": "",
    "subType": "",
    "color": "",
@@ -22059,7 +22555,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Rage into the Valley",
@@ -22086,7 +22583,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.15,
    "type": "",
    "subType": "",
    "color": "",
@@ -22099,7 +22596,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Stone by Sunlight",
@@ -22126,7 +22624,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.19,
    "type": "",
    "subType": "",
    "color": "",
@@ -22139,7 +22637,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Tidings of War",
@@ -22166,7 +22665,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.2,
    "type": "",
    "subType": "",
    "color": "",
@@ -22179,7 +22678,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Wood Elves",
@@ -22221,7 +22721,8 @@
    "bench": 2,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "workbook"
   },
   {
    "name": "Access Tunnel",
@@ -22264,7 +22765,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "workbook"
   },
   {
    "name": "Airship Engine Room",
@@ -22291,7 +22793,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.17,
    "type": "Land",
    "subType": "",
    "color": "L",
@@ -22307,7 +22809,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Arno Dorian",
@@ -22334,7 +22837,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.23,
    "type": "Legendary Creature",
    "subType": "Human Assassin",
    "color": "Multi",
@@ -22350,7 +22853,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Bayek of Siwa",
@@ -22377,7 +22881,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.36,
    "type": "Legendary Creature",
    "subType": "Human Assassin",
    "color": "Multi",
@@ -22393,7 +22897,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Blizzard Strix",
@@ -22420,7 +22925,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.18,
    "type": "Snow Creature",
    "subType": "Bird",
    "color": "U",
@@ -22436,7 +22941,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Boggart Cursecrafter",
@@ -22463,7 +22969,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.34,
    "type": "Creature",
    "subType": "Goblin Warlock",
    "color": "Multi",
@@ -22478,7 +22984,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Bolrac-Clan Crusher",
@@ -22505,7 +23012,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.05,
    "type": "Creature",
    "subType": "Ogre Warrior",
    "color": "Multi",
@@ -22520,7 +23027,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Chaos Spewer",
@@ -22547,7 +23055,7 @@
    "own": 2,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.13,
    "type": "Creature",
    "subType": "Goblin Warlock",
    "color": "Opt-UR",
@@ -22562,7 +23070,8 @@
    "bench": 2,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Clan Guildmage",
@@ -22589,7 +23098,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.07,
    "type": "Creature",
    "subType": "Human Shaman",
    "color": "Multi",
@@ -22605,7 +23114,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Dai Li Indoctrination",
@@ -22632,7 +23142,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.17,
    "type": "Sorcery",
    "subType": "Lesson",
    "color": "B",
@@ -22648,7 +23158,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Dawn's Light Archer",
@@ -22675,7 +23186,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.13,
    "type": "Creature",
    "subType": "Elf Archer",
    "color": "G",
@@ -22691,7 +23202,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Deepchannel Duelist",
@@ -22718,7 +23230,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.29,
    "type": "Creature",
    "subType": "Merfolk Soldier",
    "color": "Multi",
@@ -22734,7 +23246,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Desmond Miles",
@@ -22761,7 +23274,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.43,
    "type": "Legendary Creature",
    "subType": "Human Assassin",
    "color": "B",
@@ -22777,7 +23290,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Destroy Evil",
@@ -22820,7 +23334,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "workbook"
   },
   {
    "name": "Dwarven Mattock",
@@ -22847,7 +23362,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.18,
    "type": "Artifact - Equipment",
    "subType": "Equipment",
    "color": "C",
@@ -22863,7 +23378,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Eldrazi Ravager",
@@ -22890,7 +23406,7 @@
    "own": 2,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.27,
    "type": "Creature",
    "subType": "Eldrazi",
    "color": "C",
@@ -22907,7 +23423,8 @@
    "bench": 2,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Endbringer",
@@ -22934,7 +23451,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.38,
    "type": "Creature",
    "subType": "Eldrazi",
    "color": "C",
@@ -22951,7 +23468,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Gangly Stompling",
@@ -22978,7 +23496,7 @@
    "own": 2,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.24,
    "type": "Creature",
    "subType": "Shapeshifter",
    "color": "Opt-RG",
@@ -22994,7 +23512,8 @@
    "bench": 2,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Glamer Gifter",
@@ -23021,7 +23540,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.27,
    "type": "Creature",
    "subType": "Faerie Wizard",
    "color": "U",
@@ -23036,7 +23555,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Gran-Gran",
@@ -23063,7 +23583,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.28,
    "type": "Legendary Creature",
    "subType": "Human Peasant Ally",
    "color": "U",
@@ -23079,7 +23599,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Great Fierce Bee",
@@ -23106,7 +23627,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.13,
    "type": "Creature",
    "subType": "Insect",
    "color": "B",
@@ -23122,7 +23643,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Hemlock Vial",
@@ -23149,7 +23671,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.2,
    "type": "Artifact",
    "subType": "",
    "color": "B",
@@ -23165,7 +23687,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Ironsoul Enforcer",
@@ -23207,7 +23730,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "workbook"
   },
   {
    "name": "Kithkeeper",
@@ -23234,7 +23758,7 @@
    "own": 2,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.1,
    "type": "Creature",
    "subType": "Elemental",
    "color": "W",
@@ -23250,7 +23774,8 @@
    "bench": 2,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Lake-town Lookout",
@@ -23293,7 +23818,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "workbook"
   },
   {
    "name": "Lys Alana Dignitary",
@@ -23336,7 +23862,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "workbook"
   },
   {
    "name": "Lys Alana Informant",
@@ -23363,7 +23890,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.15,
    "type": "Creature",
    "subType": "Elf Scout",
    "color": "G",
@@ -23378,7 +23905,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Make Your Move",
@@ -23420,7 +23948,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "workbook"
   },
   {
    "name": "Meanders Guide",
@@ -23463,7 +23992,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "workbook"
   },
   {
    "name": "Midnight Tilling",
@@ -23505,7 +24035,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "workbook"
   },
   {
    "name": "Mirrorform",
@@ -23532,7 +24063,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 1.61,
    "type": "Instant",
    "subType": "",
    "color": "U",
@@ -23547,7 +24078,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Moonglove Extractor",
@@ -23574,7 +24106,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.09,
    "type": "Creature",
    "subType": "Elf Warlock",
    "color": "B",
@@ -23589,7 +24121,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Perpetual Timepiece",
@@ -23616,7 +24149,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.26,
    "type": "Artifact",
    "subType": "",
    "color": "C",
@@ -23632,7 +24165,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Prideful Feastling",
@@ -23659,7 +24193,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.19,
    "type": "Creature",
    "subType": "Shapeshifter",
    "color": "Multi",
@@ -23675,7 +24209,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Rocketeer Boostbuggy",
@@ -23702,7 +24237,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.21,
    "type": "Artifact",
    "subType": "Vehicle",
    "color": "Multi",
@@ -23718,7 +24253,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Rugged Highlands",
@@ -23745,7 +24281,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.16,
    "type": "Land",
    "subType": "",
    "color": "L",
@@ -23761,7 +24297,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Surly Farrier",
@@ -23788,7 +24325,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.08,
    "type": "Creature",
    "subType": "Kithkin Citizen",
    "color": "G",
@@ -23803,7 +24340,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Timber Gorge",
@@ -23830,7 +24368,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.24,
    "type": "Land",
    "subType": "",
    "color": "L",
@@ -23845,7 +24383,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Ultima, Origin of Oblivion",
@@ -23872,7 +24411,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 1.09,
    "type": "Legendary Creature",
    "subType": "God",
    "color": "C",
@@ -23889,7 +24428,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Venat, Heart of Hydaelyn",
@@ -23916,7 +24456,7 @@
    "own": 2,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 1.81,
    "type": "Legendary Creature",
    "subType": "Elder Wizard",
    "color": "W",
@@ -23933,7 +24473,8 @@
    "bench": 2,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Wanderwine Distracter",
@@ -23960,7 +24501,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.07,
    "type": "Creature",
    "subType": "Merfolk Wizard",
    "color": "U",
@@ -23975,7 +24516,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Zendikar's Roil",
@@ -24002,7 +24544,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": null,
+   "price": 0.94,
    "type": "Enchantment",
    "subType": "",
    "color": "G",
@@ -24017,7 +24559,8 @@
    "bench": 1,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "Bench"
+   "status": "Bench",
+   "priceSource": "scryfall"
   },
   {
    "name": "Anim Pakal, Thousandth Moon",
@@ -24059,7 +24602,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "Anointed Procession",
@@ -24101,7 +24645,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "Ashnod's Altar",
@@ -24143,7 +24688,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "Beast Whisperer",
@@ -24185,7 +24731,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "Blood Artist",
@@ -24227,7 +24774,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "Boros Charm",
@@ -24269,7 +24817,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "Brightclimb Pathway",
@@ -24311,7 +24860,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "Den of the Bugbear",
@@ -24353,7 +24903,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "Dictate of Erebos",
@@ -24395,7 +24946,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "Doran, the Siege Tower",
@@ -24437,7 +24989,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "Elenda, the Dusk Rose",
@@ -24479,7 +25032,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "Fable of the Mirror-Breaker",
@@ -24521,7 +25075,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "Farewell",
@@ -24563,7 +25118,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "Goblin Piledriver",
@@ -24605,7 +25161,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "Goblin Recruiter",
@@ -24647,7 +25204,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "Guardian Project",
@@ -24689,7 +25247,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "Ichormoon Gauntlet",
@@ -24731,7 +25290,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "Idol of Oblivion",
@@ -24773,7 +25333,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "Inspiring Vantage",
@@ -24815,7 +25376,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "Jeska's Will",
@@ -24855,7 +25417,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "Muxus, Goblin Grandee",
@@ -24897,7 +25460,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "Nature's Lore",
@@ -24939,7 +25503,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "Panharmonicon",
@@ -24981,7 +25546,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "Pashalik Mons",
@@ -25023,7 +25589,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "Phyrexian Arena",
@@ -25065,7 +25632,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "Pir, Imaginative Rascal",
@@ -25107,7 +25675,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "Pitiless Plunderer",
@@ -25149,7 +25718,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "Professional Face-Breaker",
@@ -25191,7 +25761,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "Rhystic Study",
@@ -25233,7 +25804,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "Smothering Tithe",
@@ -25275,7 +25847,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "Sunbaked Canyon",
@@ -25317,7 +25890,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "Teleportation Circle",
@@ -25359,7 +25933,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "The Meathook Massacre",
@@ -25401,7 +25976,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "Underworld Breach",
@@ -25443,7 +26019,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "Vorinclex, Monstrous Raider",
@@ -25485,7 +26062,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   },
   {
    "name": "War Room",
@@ -25527,7 +26105,8 @@
    "bench": 0,
    "buyCount": 0,
    "toBuyCost": 0.0,
-   "status": "B3 Option"
+   "status": "B3 Option",
+   "priceSource": "workbook"
   }
  ]
 }

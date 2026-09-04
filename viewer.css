@@ -261,6 +261,20 @@ main { padding: 24px 0 140px; }
 .stat .v { font-family: var(--serif); font-size: 20px; font-variant-numeric: tabular-nums; margin-top: 1px; }
 .stat .n { font-size: 11px; color: var(--text-faint); }
 
+/* The commander, in the cell the stats leave over. */
+.stat-commander {
+  display: flex; align-items: center; gap: 10px;
+  cursor: pointer; text-align: left; border: 0; font: inherit;
+  padding: 8px 12px;
+}
+.stat-commander:hover { background: var(--panel-2); }
+.stat-commander:focus-visible { outline: 2px solid var(--ember); outline-offset: -2px; }
+.stat-commander img {
+  width: 44px; border-radius: 3px; display: block; flex: none;
+  box-shadow: 0 2px 8px -3px rgba(0,0,0,.9);
+}
+.stat-commander .k { margin: 0; }
+
 .panel {
   background: var(--panel); border: 1px solid var(--line);
   border-radius: var(--radius); padding: 16px 18px; margin-bottom: 14px;
@@ -615,7 +629,10 @@ main { padding: 24px 0 140px; }
   .ribbon::-webkit-scrollbar { display: none; }
   .ribbon > span { white-space: nowrap; flex: none; }
 
-  .tab { padding: 9px 11px 12px; font-size: 13.5px; min-height: 44px; }
+  .topbar-row { flex-wrap: wrap; gap: 0; padding-top: 10px; }
+  .brand { flex: 1 0 100%; }
+  .tabs { margin-left: 0; width: 100%; justify-content: space-between; }
+  .tab { padding: 9px 4px 11px; font-size: 13.5px; min-height: 44px; flex: 1; justify-content: center; }
   .brand h1 { font-size: 18px; }
 
   main { padding-bottom: 190px; }
