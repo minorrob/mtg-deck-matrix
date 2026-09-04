@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-04T03:24:42.780Z",
+  "generatedAt": "2026-09-04T11:41:25.674Z",
   "engine": "sim-engine.js",
   "table": "mixed-pod",
   "seeds": [
@@ -24,22 +24,22 @@
       ],
       "builds": {
         "v1": {
-          "score": 83.98,
-          "se": 0.06,
-          "winRate": 0.5326,
-          "screwPct": 0.0615,
-          "floodPct": 0.0389,
-          "avgCommanderTurn": 5.26,
-          "commanderCastRate": 0.9892,
-          "deadCardsAtT8": 0.19,
-          "avgWinTurn": 11.31,
+          "score": 85.73,
+          "se": 0.033,
+          "winRate": 0.5582,
+          "screwPct": 0.0511,
+          "floodPct": 0.0393,
+          "avgCommanderTurn": 5.24,
+          "commanderCastRate": 0.9918,
+          "deadCardsAtT8": 0.16,
+          "avgWinTurn": 11.25,
           "perSeedScores": [
-            83.9,
-            83.8,
-            84,
-            84.2,
-            83.9,
-            84.1
+            85.7,
+            85.7,
+            85.7,
+            85.9,
+            85.7,
+            85.7
           ],
           "lands": 35,
           "avgMv": 3.09,
@@ -65,22 +65,22 @@
           "sameAs": "v1"
         },
         "b3": {
-          "score": 85.68,
-          "se": 0.048,
-          "winRate": 0.558,
-          "screwPct": 0.0638,
-          "floodPct": 0.0372,
-          "avgCommanderTurn": 5.28,
-          "commanderCastRate": 0.9897,
-          "deadCardsAtT8": 0.2,
-          "avgWinTurn": 11.19,
+          "score": 86.53,
+          "se": 0.042,
+          "winRate": 0.5734,
+          "screwPct": 0.0612,
+          "floodPct": 0.0376,
+          "avgCommanderTurn": 5.34,
+          "commanderCastRate": 0.9911,
+          "deadCardsAtT8": 0.17,
+          "avgWinTurn": 11.17,
           "perSeedScores": [
-            85.6,
-            85.8,
-            85.7,
-            85.5,
-            85.8,
-            85.7
+            86.5,
+            86.7,
+            86.5,
+            86.4,
+            86.6,
+            86.5
           ],
           "lands": 35,
           "avgMv": 3.11,
@@ -110,7 +110,7 @@
       },
       "delta": {
         "v1ToB3": {
-          "score": 1.7,
+          "score": 0.8,
           "significant": true
         },
         "v1ToTuned": {
@@ -118,7 +118,7 @@
           "significant": false
         },
         "tunedToB3": {
-          "score": 1.7,
+          "score": 0.8,
           "significant": true
         }
       },
@@ -138,22 +138,22 @@
       ],
       "builds": {
         "v1": {
-          "score": 72.02,
-          "se": 0.14,
-          "winRate": 0.4964,
+          "score": 72.68,
+          "se": 0.065,
+          "winRate": 0.5132,
           "screwPct": 0.2211,
-          "floodPct": 0.0161,
-          "avgCommanderTurn": 5.99,
-          "commanderCastRate": 0.9008,
-          "deadCardsAtT8": 0.94,
-          "avgWinTurn": 11.77,
+          "floodPct": 0.0167,
+          "avgCommanderTurn": 6.01,
+          "commanderCastRate": 0.9015,
+          "deadCardsAtT8": 0.95,
+          "avgWinTurn": 11.82,
           "perSeedScores": [
-            71.9,
-            72.3,
-            71.8,
             72.4,
-            71.5,
-            72.2
+            72.8,
+            72.6,
+            72.8,
+            72.7,
+            72.8
           ],
           "lands": 30,
           "avgMv": 3.23,
@@ -179,22 +179,22 @@
           "sameAs": "v1"
         },
         "b3": {
-          "score": 72.35,
-          "se": 0.123,
-          "winRate": 0.4989,
+          "score": 73.02,
+          "se": 0.048,
+          "winRate": 0.518,
           "screwPct": 0.217,
-          "floodPct": 0.0154,
-          "avgCommanderTurn": 5.97,
-          "commanderCastRate": 0.9059,
+          "floodPct": 0.0159,
+          "avgCommanderTurn": 5.99,
+          "commanderCastRate": 0.9066,
           "deadCardsAtT8": 0.87,
-          "avgWinTurn": 11.86,
+          "avgWinTurn": 11.91,
           "perSeedScores": [
-            72.7,
-            72.4,
-            72.6,
-            72.4,
-            71.9,
-            72.1
+            73.2,
+            73,
+            73.1,
+            72.9,
+            72.9,
+            73
           ],
           "lands": 30,
           "avgMv": 3.2,
@@ -224,16 +224,16 @@
       },
       "delta": {
         "v1ToB3": {
-          "score": 0.33,
-          "significant": false
+          "score": 0.34,
+          "significant": true
         },
         "v1ToTuned": {
           "score": 0,
           "significant": false
         },
         "tunedToB3": {
-          "score": 0.33,
-          "significant": false
+          "score": 0.34,
+          "significant": true
         }
       },
       "swapsApplied": {
@@ -253,22 +253,22 @@
       ],
       "builds": {
         "v1": {
-          "score": 77.87,
-          "se": 0.141,
-          "winRate": 0.5644,
+          "score": 78.07,
+          "se": 0.143,
+          "winRate": 0.5547,
           "screwPct": 0.1274,
-          "floodPct": 0.0321,
+          "floodPct": 0.0323,
           "avgCommanderTurn": 5.28,
-          "commanderCastRate": 0.8622,
+          "commanderCastRate": 0.8609,
           "deadCardsAtT8": 1.09,
-          "avgWinTurn": 10.52,
+          "avgWinTurn": 10.58,
           "perSeedScores": [
-            77.6,
+            77.8,
+            78.6,
+            78,
             78.4,
-            77.7,
-            78.2,
-            77.7,
-            77.6
+            77.8,
+            77.8
           ],
           "lands": 33,
           "avgMv": 2.94,
@@ -294,22 +294,22 @@
           "sameAs": "v1"
         },
         "b3": {
-          "score": 78.15,
-          "se": 0.112,
-          "winRate": 0.5198,
+          "score": 78.37,
+          "se": 0.126,
+          "winRate": 0.507,
           "screwPct": 0.1167,
-          "floodPct": 0.0311,
+          "floodPct": 0.0315,
           "avgCommanderTurn": 5.22,
-          "commanderCastRate": 0.8784,
+          "commanderCastRate": 0.8774,
           "deadCardsAtT8": 1.02,
-          "avgWinTurn": 10.78,
+          "avgWinTurn": 10.87,
           "perSeedScores": [
-            78,
-            78.6,
-            78.3,
             78.2,
-            77.9,
-            77.9
+            78.9,
+            78.5,
+            78.4,
+            78.1,
+            78.1
           ],
           "lands": 33,
           "avgMv": 3.01,
@@ -339,7 +339,7 @@
       },
       "delta": {
         "v1ToB3": {
-          "score": 0.28,
+          "score": 0.3,
           "significant": false
         },
         "v1ToTuned": {
@@ -347,7 +347,7 @@
           "significant": false
         },
         "tunedToB3": {
-          "score": 0.28,
+          "score": 0.3,
           "significant": false
         }
       },
@@ -367,22 +367,22 @@
       ],
       "builds": {
         "v1": {
-          "score": 80.07,
-          "se": 0.08,
-          "winRate": 0.6728,
-          "screwPct": 0.075,
-          "floodPct": 0.0919,
-          "avgCommanderTurn": 5.48,
-          "commanderCastRate": 0.9594,
-          "deadCardsAtT8": 0.55,
-          "avgWinTurn": 10.36,
+          "score": 79,
+          "se": 0.068,
+          "winRate": 0.5852,
+          "screwPct": 0.0785,
+          "floodPct": 0.0929,
+          "avgCommanderTurn": 5.49,
+          "commanderCastRate": 0.9571,
+          "deadCardsAtT8": 0.57,
+          "avgWinTurn": 10.85,
           "perSeedScores": [
-            80,
-            80,
-            80.3,
-            79.8,
-            80,
-            80.3
+            79,
+            79,
+            79.2,
+            78.7,
+            79,
+            79.1
           ],
           "lands": 39,
           "avgMv": 3.51,
@@ -408,22 +408,22 @@
           "sameAs": "v1"
         },
         "b3": {
-          "score": 80.3,
-          "se": 0.063,
-          "winRate": 0.6669,
-          "screwPct": 0.0728,
-          "floodPct": 0.0912,
-          "avgCommanderTurn": 5.47,
-          "commanderCastRate": 0.96,
-          "deadCardsAtT8": 0.56,
-          "avgWinTurn": 10.42,
+          "score": 79.25,
+          "se": 0.043,
+          "winRate": 0.5781,
+          "screwPct": 0.0763,
+          "floodPct": 0.0909,
+          "avgCommanderTurn": 5.48,
+          "commanderCastRate": 0.9575,
+          "deadCardsAtT8": 0.59,
+          "avgWinTurn": 10.91,
           "perSeedScores": [
-            80.1,
-            80.4,
-            80.4,
-            80.4,
-            80.1,
-            80.4
+            79.1,
+            79.2,
+            79.4,
+            79.3,
+            79.2,
+            79.3
           ],
           "lands": 39,
           "avgMv": 3.49,
@@ -453,7 +453,7 @@
       },
       "delta": {
         "v1ToB3": {
-          "score": 0.23,
+          "score": 0.25,
           "significant": true
         },
         "v1ToTuned": {
@@ -461,7 +461,7 @@
           "significant": false
         },
         "tunedToB3": {
-          "score": 0.23,
+          "score": 0.25,
           "significant": true
         }
       },
@@ -480,22 +480,22 @@
       ],
       "builds": {
         "v1": {
-          "score": 82.87,
-          "se": 0.061,
-          "winRate": 0.6738,
-          "screwPct": 0.0327,
-          "floodPct": 0.1276,
-          "avgCommanderTurn": 4.89,
-          "commanderCastRate": 0.9939,
+          "score": 82.78,
+          "se": 0.04,
+          "winRate": 0.647,
+          "screwPct": 0.0336,
+          "floodPct": 0.1295,
+          "avgCommanderTurn": 4.87,
+          "commanderCastRate": 0.9934,
           "deadCardsAtT8": 0.06,
-          "avgWinTurn": 10.28,
+          "avgWinTurn": 10.47,
           "perSeedScores": [
-            82.8,
-            82.8,
             82.7,
             82.8,
-            83,
-            83.1
+            82.7,
+            82.7,
+            82.9,
+            82.9
           ],
           "lands": 42,
           "avgMv": 2.48,
@@ -518,22 +518,22 @@
           "cards": 100
         },
         "tuned": {
-          "score": 82.67,
-          "se": 0.033,
-          "winRate": 0.646,
-          "screwPct": 0.0346,
-          "floodPct": 0.1231,
-          "avgCommanderTurn": 4.89,
-          "commanderCastRate": 0.9932,
-          "deadCardsAtT8": 0.08,
-          "avgWinTurn": 10.34,
+          "score": 83.25,
+          "se": 0.056,
+          "winRate": 0.6303,
+          "screwPct": 0.0328,
+          "floodPct": 0.1234,
+          "avgCommanderTurn": 4.85,
+          "commanderCastRate": 0.9936,
+          "deadCardsAtT8": 0.07,
+          "avgWinTurn": 10.48,
           "perSeedScores": [
-            82.6,
-            82.6,
-            82.7,
-            82.8,
-            82.6,
-            82.7
+            83.1,
+            83.2,
+            83.3,
+            83.4,
+            83.1,
+            83.4
           ],
           "lands": 42,
           "avgMv": 2.66,
@@ -556,22 +556,22 @@
           "cards": 100
         },
         "b3": {
-          "score": 81.62,
-          "se": 0.142,
-          "winRate": 0.5589,
-          "screwPct": 0.0345,
-          "floodPct": 0.1216,
-          "avgCommanderTurn": 4.85,
-          "commanderCastRate": 0.9933,
-          "deadCardsAtT8": 0.08,
-          "avgWinTurn": 10.77,
+          "score": 82.28,
+          "se": 0.154,
+          "winRate": 0.5447,
+          "screwPct": 0.0325,
+          "floodPct": 0.1224,
+          "avgCommanderTurn": 4.84,
+          "commanderCastRate": 0.9943,
+          "deadCardsAtT8": 0.07,
+          "avgWinTurn": 10.89,
           "perSeedScores": [
-            81.8,
-            81.8,
-            81.4,
-            81.8,
-            81,
-            81.9
+            82.6,
+            82.4,
+            82.1,
+            82.5,
+            81.6,
+            82.5
           ],
           "lands": 42,
           "avgMv": 2.79,
@@ -601,15 +601,15 @@
       },
       "delta": {
         "v1ToB3": {
-          "score": -1.25,
+          "score": -0.5,
           "significant": true
         },
         "v1ToTuned": {
-          "score": -0.2,
+          "score": 0.47,
           "significant": true
         },
         "tunedToB3": {
-          "score": -1.05,
+          "score": -0.97,
           "significant": true
         }
       },
@@ -627,22 +627,22 @@
       ],
       "builds": {
         "v1": {
-          "score": 77.12,
-          "se": 0.048,
-          "winRate": 0.6566,
-          "screwPct": 0.0787,
-          "floodPct": 0.0667,
-          "avgCommanderTurn": 3.97,
-          "commanderCastRate": 0.9932,
-          "deadCardsAtT8": 0.23,
-          "avgWinTurn": 10.11,
+          "score": 77.35,
+          "se": 0.05,
+          "winRate": 0.6496,
+          "screwPct": 0.0729,
+          "floodPct": 0.0677,
+          "avgCommanderTurn": 3.93,
+          "commanderCastRate": 0.9938,
+          "deadCardsAtT8": 0.22,
+          "avgWinTurn": 10.14,
           "perSeedScores": [
-            77,
-            77.1,
             77.3,
-            77,
-            77.1,
-            77.2
+            77.3,
+            77.5,
+            77.3,
+            77.2,
+            77.5
           ],
           "lands": 37,
           "avgMv": 2.71,
@@ -665,22 +665,22 @@
           "cards": 100
         },
         "tuned": {
-          "score": 75.98,
-          "se": 0.07,
-          "winRate": 0.6573,
-          "screwPct": 0.089,
-          "floodPct": 0.0674,
-          "avgCommanderTurn": 4,
-          "commanderCastRate": 0.9917,
-          "deadCardsAtT8": 0.25,
-          "avgWinTurn": 10.14,
+          "score": 76.78,
+          "se": 0.079,
+          "winRate": 0.6538,
+          "screwPct": 0.0781,
+          "floodPct": 0.0673,
+          "avgCommanderTurn": 3.94,
+          "commanderCastRate": 0.9932,
+          "deadCardsAtT8": 0.23,
+          "avgWinTurn": 10.15,
           "perSeedScores": [
-            76.1,
-            75.9,
-            76,
-            76,
-            75.7,
-            76.2
+            76.8,
+            76.6,
+            76.9,
+            76.9,
+            76.5,
+            77
           ],
           "lands": 37,
           "avgMv": 2.83,
@@ -703,22 +703,22 @@
           "cards": 100
         },
         "b3": {
-          "score": 76.5,
-          "se": 0.073,
-          "winRate": 0.619,
-          "screwPct": 0.077,
-          "floodPct": 0.0671,
-          "avgCommanderTurn": 4.06,
-          "commanderCastRate": 0.9927,
-          "deadCardsAtT8": 0.22,
-          "avgWinTurn": 10.33,
+          "score": 77.18,
+          "se": 0.083,
+          "winRate": 0.615,
+          "screwPct": 0.0675,
+          "floodPct": 0.067,
+          "avgCommanderTurn": 4.01,
+          "commanderCastRate": 0.994,
+          "deadCardsAtT8": 0.2,
+          "avgWinTurn": 10.35,
           "perSeedScores": [
-            76.3,
-            76.5,
-            76.7,
-            76.7,
-            76.3,
-            76.5
+            77.1,
+            77.2,
+            77.3,
+            77.5,
+            76.9,
+            77.1
           ],
           "lands": 37,
           "avgMv": 2.81,
@@ -748,15 +748,15 @@
       },
       "delta": {
         "v1ToB3": {
-          "score": -0.62,
-          "significant": true
+          "score": -0.17,
+          "significant": false
         },
         "v1ToTuned": {
-          "score": -1.14,
+          "score": -0.57,
           "significant": true
         },
         "tunedToB3": {
-          "score": 0.52,
+          "score": 0.4,
           "significant": true
         }
       },
