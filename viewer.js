@@ -454,18 +454,18 @@
     });
     root.appendChild(grid);
 
-    /* Where the workbook contradicts itself, say so here rather than picking a
-       side quietly. Folded away, because it is not what anyone came for. */
-    var notes = (DATA.dataNotes || []).slice();
-    if (RATINGS && RATINGS.method) notes.unshift("How the score is measured: " + RATINGS.method);
-    if (notes.length) {
+    /* Only how the score is made. The import still records where the workbook
+       contradicts itself -- in data/master-v2.json under dataNotes, and on
+       stdout when tools/import_master_v2.py runs -- but that is bookkeeping for
+       whoever is fixing the sheet, not something to put in front of a reader. */
+    if (RATINGS && RATINGS.method) {
       root.appendChild(el("details", { class: "panel", style: "margin-top:20px" }, [
         el("summary", { style: "cursor:pointer;color:var(--text-dim);font-size:13px",
-          text: "Where the numbers come from, and " + plural(notes.length - (RATINGS ? 1 : 0),
-            "thing", "things") + " the workbook is inconsistent about" }),
-        el("ul", { class: "note-list", style: "margin-top:10px" }, notes.map(function (n) {
-          return el("li", { text: n });
-        }))
+          text: "How the score is measured" }),
+        el("ul", { class: "note-list", style: "margin-top:10px" },
+          [RATINGS.method].concat(RATINGS.notes || []).slice(0, 4).map(function (n) {
+            return el("li", { text: n });
+          }))
       ]));
     }
   }
