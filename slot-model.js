@@ -189,6 +189,24 @@
     return {pips, generic, value};
   }
 
+  const BASIC_TYPE_COLOR = {plains: "W", island: "U", swamp: "B", mountain: "R", forest: "G"};
+  const PUTS_LAND_ONTO_BATTLEFIELD = new RegExp(
+    "search(?:es)? your library for [^.]{0,70}?(?:land|plains|island|swamp|mountain|forest)"
+    + "[^.]{0,90}?onto the battlefield", "i");
+
+  // A Treasure a card just makes is ramp; one behind a mana or sacrifice cost is
+  // not ramp on cast. Kept identical to sim-engine's rule -- the suite compares
+  // the two card for card.
+  function makesTreasureFreely(text) {
+    if (!/create a treasure token/.test(text)) return false;
+    return String(text).split("\n").some((line) => {
+      if (!/create a treasure token/.test(line)) return false;
+      const colon = line.indexOf(":");
+      if (colon < 0) return true;
+      return !/\{\d|sacrifice|discard|pay/.test(line.slice(0, colon));
+    });
+  }
+
   function producesColors(card) {
     const text = String((card && card.oracleText) || "").toLowerCase();
     const typeLine = String((card && card.typeLine) || "");
@@ -203,6 +221,20 @@
       });
     });
     if (/add one mana of any color|add \{c\}\{c\}|any color/.test(text)) MANA_COLORS.forEach((color) => produced.add(color));
+    // A land that goes and gets a basic makes what that basic makes. These carry
+    // an empty colour identity, so the fallback below left Evolving Wilds and the
+    // Panoramas producing nothing at all. Only a fetch that puts the land onto
+    // the battlefield counts -- basic landcycling puts it in your hand, which is
+    // card selection, not mana. Kept identical to sim-engine's rule on purpose;
+    // the suite checks the two against each other over the whole catalog.
+    if (/\bLand\b/.test(typeLine) && !produced.size && PUTS_LAND_ONTO_BATTLEFIELD.test(text)) {
+      const named = text.match(/\b(plains|island|swamp|mountain|forest)\b/g) || [];
+      if (named.length) {
+        named.forEach((word) => produced.add(BASIC_TYPE_COLOR[word]));
+      } else {
+        MANA_COLORS.forEach((color) => produced.add(color));
+      }
+    }
     if (/\bLand\b/.test(typeLine) && !produced.size) ((card && card.colorIdentity) || []).forEach((color) => produced.add(String(color).toUpperCase()));
     return Array.from(produced);
   }
@@ -276,7 +308,9 @@
     const roles = [];
     const add = (role, hit) => { if (hit) roles.push(role); };
     add("ramp", !isLand && (/\{t\}: add|add \{[wubrgc]\}/.test(text)
-      || /search your library for (?:a|up to two|two)[^.]{0,30}land[^.]{0,30}onto the battlefield|you may play an additional land|create a treasure token/.test(text)));
+      || PUTS_LAND_ONTO_BATTLEFIELD.test(text)
+      || /you may play an additional land/.test(text)
+      || makesTreasureFreely(text)));
     add("draw", /draw (?:a|one|two|three|four|x|\d+) cards?|draws? that many cards|draw cards equal/.test(text)
       && !/each opponent draws/.test(text));
     add("removal", /destroy target|exile target (?:creature|permanent|artifact|enchantment|planeswalker|nonland)|deals? \d+ damage to (?:target|any target)|fights? target|return target (?:creature|permanent|nonland permanent) to its owner's hand|target creature gets [-−]/.test(text));

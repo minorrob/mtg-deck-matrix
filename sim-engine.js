@@ -51,6 +51,13 @@
   const COLORS = ["W", "U", "B", "R", "G"];
   // The share of a seat's output aimed at us rather than at the other two seats.
   const AIMED_AT_US = 0.33;
+  // How a sacrifice deck actually plays: you keep a few bodies back rather than
+  // emptying the board, and one outlet only gets through so many creatures in a
+  // turn before you run out of things worth eating.
+  const SAC_KEEP_BACK = 3;
+  const SAC_PER_OUTLET = 2;
+  // A card off the top is worth more than a point of reach, less than a body.
+  const DEATH_DRAW_VALUE = 1.5;
   const BASIC_COLOR = {Plains: "W", Island: "U", Swamp: "B", Mountain: "R", Forest: "G"};
 
   // How much of a creature's power actually connects when it attacks. There is no real block
@@ -129,8 +136,42 @@
       });
     });
     if (/add one mana of any color|add \{c\}\{c\}|any color/.test(text)) COLORS.forEach((color) => produced.add(color));
+    // A land that goes and gets a basic makes whatever that basic makes. These
+    // carry an empty colour identity, so falling through to it left Evolving
+    // Wilds, Terramorphic Expanse and Fabled Passage producing no colour --
+    // which flattered every swap that replaced one with a real dual.
+    if (/\bLand\b/.test(typeLine) && !produced.size && PUTS_LAND_ONTO_BATTLEFIELD.test(text)) {
+      const named = text.match(/\b(plains|island|swamp|mountain|forest)\b/g) || [];
+      if (named.length) {
+        named.forEach((word) => produced.add(BASIC_TYPE_COLOR[word]));
+      } else {
+        COLORS.forEach((color) => produced.add(color));
+      }
+    }
     if (/\bLand\b/.test(typeLine) && !produced.size) (card.colorIdentity || []).forEach((color) => produced.add(String(color).toUpperCase()));
     return Array.from(produced);
+  }
+
+  const BASIC_TYPES = "land|plains|island|swamp|mountain|forest";
+  const BASIC_TYPE_COLOR = {plains: "W", island: "U", swamp: "B", mountain: "R", forest: "G"};
+  const PUTS_LAND_ONTO_BATTLEFIELD = new RegExp(
+    "search(?:es)? your library for [^.]{0,70}?(?:" + BASIC_TYPES + ")[^.]{0,90}?"
+    + "onto the battlefield", "i");
+
+
+  // A Treasure a card just makes is ramp. A Treasure locked behind paying mana
+  // or sacrificing something is not ramp on the turn it is cast, and crediting
+  // it as such is what put Currency Converter and Goldvein Pick at the top of a
+  // bench screen they have no business leading.
+  function makesTreasureFreely(text) {
+    if (!/create a treasure token/.test(text)) return false;
+    return text.split("\n").some((line) => {
+      if (!/create a treasure token/.test(line)) return false;
+      const colon = line.indexOf(":");
+      if (colon < 0) return true;                       // triggered or static
+      const cost = line.slice(0, colon);
+      return !/\{\d|sacrifice|discard|pay/.test(cost); // a bare {T} still counts
+    });
   }
 
   function estimatePower(card, cmc, typeLine, text) {
@@ -157,9 +198,36 @@
   // "whenever a creature you control dies" is an engine. Assuming the trigger
   // fires every turn is generous, and is why drain decks should be read as an
   // upper bound rather than a forecast.
+  const DEATH_TRIGGER = /(?:whenever|when) (?:a|an|another|one or more)[^.]{0,60}(?:creature|creatures)[^.]{0,40}you control[^.]{0,20}(?:dies|die)/;
+  function isDeathTriggered(text) { return DEATH_TRIGGER.test(text); }
+
+  // Aristocrats payoffs: what each of your own creatures dying pays. Kept
+  // separate from drainAmount because a death trigger only fires when something
+  // dies, which needs a sacrifice outlet (or combat) to happen on purpose --
+  // the engine used to model neither, so a sacrifice deck read as its bodies.
+  function deathValue(text, typeLine) {
+    if (/Instant|Sorcery/.test(typeLine)) return {drain: 0, draw: 0};
+    if (!isDeathTriggered(text)) return {drain: 0, draw: 0};
+    const words = {a: 1, one: 1, two: 2, three: 3};
+    const read = (match) => {
+      if (!match) return 0;
+      const raw = match[1] || match[2] || "1";
+      return Number(words[raw] ?? raw) || 1;
+    };
+    return {
+      drain: read(/each opponent loses (\d+|a|one|two|three) life|deals (\d+) damage to each opponent/.exec(text)),
+      draw: /draw a card/.test(text) ? 1 : 0
+    };
+  }
+
   function drainAmount(text, typeLine) {
     if (/Instant|Sorcery/.test(typeLine)) return {all: 0, one: 0};
     if (!/whenever|at the beginning of/.test(text)) return {all: 0, one: 0};
+    // A death trigger is not an every-turn drain. Before deaths were modelled
+    // this read Blood Artist as "each opponent loses 1 life every turn, forever,
+    // with nothing having died"; deathValue now pays it when something actually
+    // dies, so crediting it here as well would pay it twice.
+    if (isDeathTriggered(text)) return {all: 0, one: 0};
     const words = {a: 1, one: 1, two: 2, three: 3};
     const read = (match) => {
       if (!match) return 0;
@@ -247,7 +315,18 @@
       // applied below, matching the printed cards in this catalog.
       defenderToughnessDamage: /damage equal to (?:its|their) toughness rather than (?:its|their) power/.test(text),
       instantSpeed,
-      isRamp: !isLand && (/\{t\}: add|add \{[wubrgc]\}/.test(text) || /search your library for (?:a|up to two|two)[^.]{0,30}land[^.]{0,30}onto the battlefield|you may play an additional land|create a treasure token/.test(text)),
+      // Two separate misses used to live here. The land-fetch pattern allowed
+      // only thirty characters between "land" and "onto the battlefield", which
+      // Cultivate ("...cards, reveal those cards, and put one onto the
+      // battlefield tapped and the other into your hand") overruns; and it
+      // required the literal word "land", which Nature's Lore, Three Visits,
+      // Farseek and Wood Elves never say -- they name a basic land type. Between
+      // them that is most of the ramp actually played in this format, and every
+      // green deck was being scored without it.
+      isRamp: !isLand && (/\{t\}: add|add \{[wubrgc]\}/.test(text)
+        || PUTS_LAND_ONTO_BATTLEFIELD.test(text)
+        || /you may play an additional land/.test(text)
+        || makesTreasureFreely(text)),
       rampAmount: rampMatch,
       isDraw: /draw (?:a|one|two|three|four|x|\d+) cards?|draws? that many cards|draw cards equal/.test(text) && !/each opponent draws/.test(text),
       drawAmount: /draw (?:two|three|four|\d+) cards|draw cards equal|draws? that many/.test(text) ? 2 : 1,
@@ -263,6 +342,15 @@
       isFinisher: /you win the game|each opponent loses \d+ life|extra combat phase|deals damage equal to/.test(text) || (isCreature && cmc >= 5),
       boardWidth: tokenMakers,
       drain: drainAmount(text, typeLine),
+      // A repeatable way to put your own creature in the graveyard on demand.
+      // Only an activated ability counts: the sacrifice has to be a cost, which
+      // is what makes it available at will rather than once.
+      isSacOutlet: !/Instant|Sorcery/.test(typeLine)
+        && /sacrifice (?:a|an|another) (?:creature|permanent|token|artifact)[^:\n]{0,40}:/.test(text),
+      // What one of your creatures dying is worth. Read off the same permanents
+      // the drain reader already looks at, so an aristocrats payoff is credited
+      // once as a death trigger rather than twice.
+      death: deathValue(text, typeLine),
       isDrainSpell: /Instant|Sorcery/.test(typeLine) && /each opponent loses|damage to each opponent/.test(text),
       drainSpellAmount: Number((/each opponent loses (\d+) life|deals (\d+) damage to each opponent/.exec(text) || [])[1] || (/each opponent loses (\d+) life|deals (\d+) damage to each opponent/.exec(text) || [])[2] || 3),
       // Evasion and combat keywords -- read from the card's own first line (see hasKeyword above)
@@ -437,6 +525,8 @@
     let interactionTurns = 0;
     let measuredTurns = 0;
     let landsDrawn = 0;
+    // Lands played tapped this turn; they come online at the next land drop.
+    let tappedPending = {count: 0, colors: []};
     let cardsSeen = hand.length;
     let missedDrops = 0;
     let manaBehind = 0;
@@ -448,6 +538,9 @@
     let opponentBoard = 0;
     let drainAll = 0;
     let drainOne = 0;
+    let sacOutlets = 0;
+    let deathDrain = 0;
+    let deathDraw = 0;
     let peakBoard = 0;
     const defendersCanAttack = Boolean(deck.defendersCanAttack);
     const defendersDealToughnessDamage = Boolean(deck.defendersDealToughnessDamage);
@@ -535,13 +628,26 @@
         if (profiles[card].isLand) landsDrawn += 1;
       }
 
+      // A land that entered tapped last turn is available now. entersTapped was
+      // being computed on every card and then never read, so a tapped dual was
+      // scored as though it came down untapped -- which is most of the
+      // difference between a Guildgate and a real dual.
+      if (tappedPending.count) {
+        lands += tappedPending.count;
+        tappedPending.colors.forEach((color) => { sources[color] += 1; });
+        tappedPending = {count: 0, colors: []};
+      }
       const landInHand = hand.findIndex((index) => profiles[index].isLand);
       if (landInHand >= 0) {
         const [played] = hand.splice(landInHand, 1);
         const profile = profiles[played];
-        lands += 1;
-        profile.produces.forEach((color) => { sources[color] += 1; });
-        if (!profile.produces.length) COLORS.forEach((color) => { sources[color] += 0; });
+        if (profile.entersTapped) {
+          tappedPending.count += 1;
+          profile.produces.forEach((color) => { tappedPending.colors.push(color); });
+        } else {
+          lands += 1;
+          profile.produces.forEach((color) => { sources[color] += 1; });
+        }
         cast.add(played);
       } else if (turn <= 6 && lands < 5) {
         // Only a drop missed while still short on mana is screw; running out of
@@ -585,6 +691,9 @@
           }
           drainAll += commanderProfile.drain.all;
           drainOne += commanderProfile.drain.one;
+          if (commanderProfile.isSacOutlet) sacOutlets += 1;
+          deathDrain += commanderProfile.death.drain;
+          deathDraw += commanderProfile.death.draw;
           resolveCountersAndProliferate(commanderProfile);
           continue;
         }
@@ -638,6 +747,9 @@
         }
         drainAll += profile.drain.all;
         drainOne += profile.drain.one;
+        if (profile.isSacOutlet) sacOutlets += 1;
+        deathDrain += profile.death.drain;
+        deathDraw += profile.death.draw;
         if (profile.isCreature) {
           const creaturePower = (profile.isDefender && defendersDealToughnessDamage) ? profile.toughness : profile.power;
           battlefieldCreatures.push(makeCreatureEntry(profile, creaturePower));
@@ -654,7 +766,16 @@
       if (counterEngineRate > 0) growCreature(biggestCreature(), counterEngineRate);
       for (let engineIndex = 0; engineIndex < proliferateEngineCount; engineIndex += 1) proliferateBoard();
 
-      heldAnswers = hand.filter((index) => profiles[index].instantSpeed && (profiles[index].isRemoval || profiles[index].isProtection)).length;
+      // An answer you cannot pay for is not an answer. Counting instant-speed
+      // removal by presence in hand alone inverted the metric: a six-mana instant
+      // sat there uncastable and scored interaction on every turn, while a
+      // one-mana instant that could actually be held up scored the same or less.
+      heldAnswers = hand.filter((index) => {
+        const answer = profiles[index];
+        return answer.instantSpeed
+          && (answer.isRemoval || answer.isProtection)
+          && castable(answer, lands + rocks, sources);
+      }).length;
       if (turn >= 3 && turn <= 7) {
         measuredTurns += 1;
         if (heldAnswers > 0) interactionTurns += 1;
@@ -678,6 +799,34 @@
           const target = living.reduce((lowest, seat) => (seat.life < lowest.life ? seat : lowest), living[0]);
           target.life -= attackPower;
           life += lifelinkGain;
+        }
+      }
+      // Sacrifice, once there is both an outlet and something that pays for a
+      // death. This runs after combat, so a creature attacks and is then eaten;
+      // the cost is the attacks it will not make later. A body is only fed to
+      // the outlet when its death pays more than the body was going to hit for,
+      // which is the decision a pilot actually makes -- eating the whole board
+      // for one point each is not how the deck plays, and modelling it that way
+      // made an outlet read as a liability.
+      if (sacOutlets > 0 && (deathDrain > 0 || deathDraw > 0)) {
+        const livingSeats = Math.max(1, seats.filter((seat) => seat.life > 0).length);
+        const payoff = deathDrain * livingSeats + deathDraw * DEATH_DRAW_VALUE;
+        const spare = Math.max(0, battlefieldCreatures.length - SAC_KEEP_BACK);
+        const worthEating = battlefieldCreatures
+          .map((creature, index) => ({creature, index}))
+          .filter((entry) => !entry.creature.commander && entry.creature.power < payoff)
+          .sort((a, b) => a.creature.power - b.creature.power)
+          .slice(0, Math.min(spare, SAC_PER_OUTLET * sacOutlets));
+        if (worthEating.length) {
+          worthEating.map((entry) => entry.index).sort((a, b) => b - a)
+            .forEach((index) => { battlefieldCreatures.splice(index, 1); });
+          if (deathDrain) {
+            seats.forEach((seat) => { seat.life -= deathDrain * worthEating.length; });
+          }
+          for (let drawn = 0; drawn < deathDraw * worthEating.length && library.length; drawn += 1) {
+            hand.push(library.shift());
+            cardsSeen += 1;
+          }
         }
       }
       if (drainAll) seats.forEach((seat) => { seat.life -= drainAll; });
@@ -901,14 +1050,23 @@
   // positive at every win rate, because winning is not a failure; just no
   // longer the thing being optimized.
   const RUNAWAY_WIN_RATE = 0.7;
+  // Share of the unbanded win-rate credit earned by a 50% win rate.
+  const EVEN_SHARE_CREDIT = 0.85;
   const OVERSHOOT_FLOOR = 0.5;
   const DOMINANCE_FLOOR = 0.25;
   function winRateBandNorm(winRate, band) {
     const floor = Number(band?.floor);
     const ceiling = Number(band?.ceiling);
-    // With no band configured, keep the original monotonic curve.
+    // With no band configured the curve has to stay monotonic across the whole
+    // range. It used to be min(1, winRate / 0.5), which saturated at an even
+    // share of a four-player pod: every deck above 50% scored identically, so a
+    // real improvement registered as no movement and, worse, a change that cost
+    // win rate could still read as a gain from the other terms. Most of the
+    // credit is still earned by the time a deck takes its share; the rest is
+    // spread above it so the term never stops rising.
     if (!Number.isFinite(floor) || !Number.isFinite(ceiling) || floor <= 0 || ceiling <= floor) {
-      return Math.min(1, winRate / 0.5);
+      return EVEN_SHARE_CREDIT * Math.min(1, winRate / 0.5)
+        + (1 - EVEN_SHARE_CREDIT) * clamp01(winRate);
     }
     if (winRate < floor) return clamp01(winRate / floor);
     if (winRate <= ceiling) return 1;
