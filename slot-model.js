@@ -300,9 +300,15 @@
     return manaCostOf(card && card.manaCost).value;
   }
 
+  // Reminder text is always parenthesised and never carries rules meaning.
+  // Kept identical to sim-engine's stripReminder on purpose.
+  function stripReminder(text) {
+    return String(text).replace(/\([^()]*\)/g, " ").replace(/[ \t]{2,}/g, " ");
+  }
+
   function cardRoles(card) {
     const typeLine = String((card && card.typeLine) || "");
-    const text = String((card && card.oracleText) || "").toLowerCase().replace(/[’]/g, "'");
+    const text = stripReminder(String((card && card.oracleText) || "").toLowerCase().replace(/[’]/g, "'"));
     const isLand = /\bLand\b/.test(typeLine);
     const isCreature = /Creature/.test(typeLine);
     const roles = [];

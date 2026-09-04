@@ -272,17 +272,23 @@
 
   // One pass over the card's own text decides everything the game loop knows
   // about it. Anything the loop cannot see is, by definition, not simulated.
+  // Reminder text is always parenthesised and never carries rules meaning.
+  function stripReminder(text) {
+    return String(text).replace(/\([^()]*\)/g, " ").replace(/[ \t]{2,}/g, " ");
+  }
+
   function classifyCard(card) {
     const typeLine = String(card.typeLine || "");
-    const text = String(card.oracleText || "").toLowerCase().replace(/[’]/g, "'");
+    const rawText = String(card.oracleText || "").toLowerCase().replace(/[’]/g, "'");
+    const text = stripReminder(rawText);
     const firstLine = text.split("\n")[0] || "";
     const cost = parseManaCost(card.manaCost);
     const cmc = Number.isFinite(Number(card.cmc)) && Number(card.cmc) > 0 ? Number(card.cmc) : cost.value;
     const isLand = /\bLand\b/.test(typeLine);
     const isCreature = /Creature/.test(typeLine);
     const instantSpeed = /Instant/.test(typeLine) || /flash/.test(text);
-    const power = estimatePower(card, cmc, typeLine, text);
-    const toughness = estimateToughness(card, cmc, typeLine, text);
+    const power = estimatePower(card, cmc, typeLine, rawText);
+    const toughness = estimateToughness(card, cmc, typeLine, rawText);
     const tokenMakers = (text.match(/create (?:a|an|two|three|x|\d+)[^.]{0,40}token/g) || []).length;
     const rampMatch = /add \{[wubrgc]\}\{[wubrgc]\}|search your library for (?:a|up to two|two) (?:basic )?land/.test(text) ? 2 : 1;
     const entersWithCountersMatch = /enters(?: the battlefield)? with (a|an|one|two|three|four|five|\d+)[^.]{0,20}\+1\/\+1 counters?/.exec(text);
@@ -298,7 +304,7 @@
       isLand,
       isBasicLand: /\bBasic Land\b/.test(typeLine),
       entersTapped: /enters (?:the battlefield )?tapped/.test(text),
-      produces: producedColors(card, typeLine, text),
+      produces: producedColors(card, typeLine, rawText),
       isCommander: Boolean(card.isCommander),
       isCreature,
       power,
