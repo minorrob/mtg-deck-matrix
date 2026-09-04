@@ -58,6 +58,29 @@ for (const deck of variants.decks) {
   assert.deepEqual(ranks, variants.decks.map((_, i) => i + 1), "priority ranks must be a complete 1..N ordering with no gaps or duplicates");
 }
 
+// Deck 8's "where it fits" and "when to pick this" both count its mono-red builds out loud.
+// That copy first went stale silently when a variant was swapped under it, so the count is
+// pinned here: swap a deck-8 commander, or give another slot more mono-color builds, and this
+// fails rather than leaving the prose quietly wrong.
+{
+  const identityOf = new Map(cards.cards.map((card) => [card.name, card.colorIdentity]));
+  const monoCount = (deckId) => variants.variants
+    .filter((variant) => variant.deckId === deckId)
+    .filter((variant) => (identityOf.get(variant.commander) || []).length === 1)
+    .length;
+  const counts = variants.decks.map((deck) => ({id: deck.id, mono: monoCount(deck.id)}));
+  const eight = counts.find((entry) => entry.id === 8);
+  assert.equal(eight.mono, 3, 'deck 8 says "three of its five builds are mono-red" — update that copy');
+  for (const entry of counts) {
+    if (entry.id === 8) continue;
+    assert(
+      entry.mono < eight.mono,
+      `deck 8 claims the lineup's most mono-color builds, but deck ${entry.id} now has ${entry.mono}`
+    );
+    assert(entry.mono < 5, `deck ${entry.id} is now entirely mono-color; no deck record says that of itself`);
+  }
+}
+
 for (const variant of variants.variants) {
   assert(variant.detailHtml.length > 1000, `${variant.id} must retain its long-form report`);
   assert(!variant.detailHtml.includes("data:image"), `${variant.id} detail must use external card art`);
