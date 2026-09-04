@@ -6,7 +6,7 @@
   "engineNotes": {
     "v2.4": "Measured on the v2.4 engine: nine opponent archetypes, a four-rung ladder in which every rung starts from the hundred the rung below it finished at, and two objectives rather than one. Tuned and Max maximize win rate. Pod Fun is scored against a 30-45% win-rate band with the ceiling enforced as a constraint, weights the pod-experience metric at 20%, and is floored at 75% of its own Tuned build's power so it can never come out the stronger deck."
   },
-  "engineBoundaryNote": "Every build in this file was measured on v2.4, so the rungs are comparable with each other. They are not comparable with figures published before it: the win-rate band alone moves a dominant deck's score by ten points or more, and that is a change of question rather than a change of answer.",
+  "engineBoundaryNote": "Every build in this file was measured on v2.4, so the rungs are comparable with each other. They are not comparable with figures published before it: the win-rate band alone moves a dominant deck's score by ten points or more, and that is a change of question rather than a change of answer. These figures were also measured before two later repairs to sim-engine.js: the seven faults fixed on 2026-09-03, and the stop on 2026-09-04 to reading Scryfall reminder text as rules text. Both moved real numbers, so nothing here is comparable with data/deck-ratings.json either. Regenerating this file means re-running the fifty-variant sweep, which optimizes rather than re-measures and would rewrite every published hundred with it.",
   "scoreWeights": {
     "winRate": 0.35,
     "screw": 0.15,

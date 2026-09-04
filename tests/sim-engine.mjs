@@ -76,10 +76,19 @@ const kokusho = classify("Kokusho, the Evening Star", "Legendary Creature — Dr
 assert.equal(kokusho.drain.all, 0, "a one-shot death trigger is not a per-turn drain engine");
 assert.equal(kokusho.isFinisher, true);
 
-const dual = classify("Sacred Foundry", "Land", "({T}: Add {R} or {W}.)", "");
-assert.deepEqual([...dual.produces].sort(), ["R", "W"], "an or-phrased dual land must produce both of its colors, not just the first");
-const triome = classify("Zagoth Triome", "Land", "({T}: Add {B}, {G}, or {U}.)", "");
+// Scryfall prints a shockland's or a Triome's mana ability as REMINDER text, because the
+// ability comes from the basic land types on the type line rather than from any rules text
+// the card carries -- Tundra's entire oracle text is "({T}: Add {W} or {U}.)". Reminder text
+// is stripped before a card is classified (see below), so these colours have to be read off
+// the type line, which is where they really come from. These fixtures used to carry a bare
+// "Land" type line and passed on the strength of the parenthetical alone.
+const dual = classify("Sacred Foundry", "Land — Mountain Plains", "({T}: Add {R} or {W}.)\nAs this land enters, you may pay 2 life. If you don't, it enters tapped.", "");
+assert.deepEqual([...dual.produces].sort(), ["R", "W"], "a dual land's colours come from its basic land types, not from its reminder text");
+const triome = classify("Zagoth Triome", "Land — Swamp Forest Island", "({T}: Add {B}, {G}, or {U}.)\nThis land enters tapped.\nCycling {3} ({3}, Discard this card: Draw a card.)", "");
 assert.deepEqual([...triome.produces].sort(), ["B", "G", "U"], "a triome must produce all three of its colors");
+assert.equal(triome.isDraw, false, "cycling is a discard, not card draw");
+const orPhrased = classify("Or-Phrased Test", "Land", "{T}: Add {R} or {W}.", "");
+assert.deepEqual([...orPhrased.produces].sort(), ["R", "W"], "an or-phrased add clause must credit both of its colors, not just the first");
 const painLand = classify("Battlefield Forge", "Land", "{T}: Add {C}.\n{T}: Add {R} or {W}. This land deals 1 damage to you.", "");
 assert.deepEqual([...painLand.produces].sort(), ["R", "W"], "a multi-line land must read every add clause");
 
@@ -210,6 +219,157 @@ assert.equal(classify("Non-Doubler Test", "Creature — Test", "", "{2}{G}").dou
   const withoutDoubler = Engine.prepareDeck([commander, {name: "Plain Card", quantity: 1, typeLine: "Sorcery", manaCost: "{1}{G}", oracleText: "Draw a card.", colorIdentity: ["G"]}]);
   assert.equal(withDoubler.counterDoubler, true);
   assert.equal(withoutDoubler.counterDoubler, false);
+}
+
+// ---------------------------------------------------------------------------
+// Reminder text carries no rules meaning, and the engine must not read it as though it
+// did. Every case below is a real card out of the six decks, quoted as Scryfall gives it.
+// ---------------------------------------------------------------------------
+{
+  // Bronze Guardian, the worst of them. Ward's reminder says "counter", and there is no
+  // full stop between it and "Double strike" on the line above, so doubl(e|ing)[^.]*counter
+  // matched and prepareDeck set a deck-wide +1/+1 counter doubler. The card has no counter
+  // interaction whatever, and D4 read as the second-strongest of the six decks largely
+  // because of it: stripping reminder text costs that deck 8.8 points of win rate, and
+  // this one card's parenthetical is the whole of it.
+  const bronze = {
+    name: "Bronze Guardian", quantity: 1, typeLine: "Artifact Creature — Golem", manaCost: "{5}",
+    oracleText: "Double strike\nWard {2} (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays {2}.)\nOther artifacts you control have ward {2}.\nBronze Guardian's power is equal to the number of artifacts you control.",
+    colorIdentity: []
+  };
+  assert.equal(Engine.classifyCard(bronze).doublesCounters, false,
+    "a reminder that happens to say \"counter\" beside the word \"Double\" is not a counter doubler");
+  assert.equal(Engine.prepareDeck([commander, bronze]).counterDoubler, false,
+    "and it must not turn on the deck-wide doubler either");
+  // The real thing still reads as one, so this is not the regex being switched off.
+  assert.equal(classify("Hardened Scales Test", "Enchantment", "If one or more +1/+1 counters would be put on a creature you control, that many plus one +1/+1 counters are put on it instead.", "{G}").doublesCounters, true);
+  assert.equal(classify("Spectacular Showdown Test", "Sorcery", "Target creature you control gains double strike until end of turn.", "{1}{R}").doublesCounters, false,
+    "\"double strike\" and \"counter\" in the same sentence is not a doubler either");
+}
+{
+  // The other classes the sweep turned up, one card each.
+  assert.equal(classify("Cast Out", "Enchantment", "Flash\nWhen this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield.\nCycling {W} ({W}, Discard this card: Draw a card.)", "{3}{W}").isDraw, false,
+    "cycling's reminder text is a discard outlet, not card draw");
+  assert.equal(classify("Ancient Greenwarden", "Creature — Elemental", "Reach (This creature can block creatures with flying.)\nYou may play lands from your graveyard.", "{4}{G}{G}").hasFlying, false,
+    "reach's reminder mentions flying; the creature does not have it");
+  assert.equal(classify("Ministrant of Obligation", "Creature — Human Cleric", "Afterlife 2 (When this creature dies, create two 1/1 white and black Spirit creature tokens with flying.)", "{2}{W}").boardWidth, 0,
+    "a token named only in reminder text is not board width");
+  assert.equal(classify("Protector of the Wastes", "Creature — Dragon", "Flying\nMax speed — This creature enters with three +1/+1 counters on it.\nStart your engines! (If you have no speed, it starts at 1. It increases once on each of your turns when an opponent loses life. Max speed is 4.)", "{4}{W}").addsCounterAmount, 0,
+    "Start your engines!'s reminder text is not a source of +1/+1 counters");
+  // A real one of each still reads, so none of the above is the test being disabled.
+  assert.equal(classify("Divination Test", "Sorcery", "Draw two cards.", "{2}{U}").isDraw, true);
+  assert.equal(classify("Serra Angel Test", "Creature — Angel", "Flying, vigilance", "{3}{W}{W}").hasFlying, true);
+  assert.equal(classify("Token Maker Test", "Sorcery", "Create two 1/1 white Soldier creature tokens.", "{2}{W}").boardWidth, 1);
+}
+{
+  // Two keywords state their real effect NOWHERE but in the parentheses. Both are
+  // deliberately left uncredited rather than read back out of the reminder.
+  //
+  // Basic landcycling puts a basic in your HAND. #50 already settled that as card
+  // selection rather than acceleration when it fixed the ramp reader; stripping the
+  // reminder makes that structural instead of incidental.
+  const ashBarrens = classify("Ash Barrens", "Land", "{T}: Add {C}.\nBasic landcycling {1} ({1}, Discard this card: Search your library for a basic land card, reveal it, put it into your hand, then shuffle.)", "");
+  assert.equal(ashBarrens.isRamp, false, "a land is never ramp");
+  assert.equal(ashBarrens.isTutor, false, "basic landcycling fetches to hand: card selection, not a tutor");
+  const cycler = classify("Kulrath Zealot", "Creature — Elemental Warrior", "When this creature enters, exile the top card of your library. Until the end of your next turn, you may play that card.\nBasic landcycling {1}{R} ({1}{R}, Discard this card: Search your library for a basic land card, reveal it, put it into your hand, then shuffle.)", "{3}{R}");
+  assert.equal(cycler.isRamp, false, "landcycling a creature does not make it a ramp spell");
+  assert.equal(cycler.rampAmount, 1, "and it must not inflate the ramp amount either");
+  // Investigate makes a Clue: an inert artifact token that draws only for {2} and a
+  // sacrifice. Gated, exactly like a gated Treasure, so neither the token nor the draw
+  // is credited.
+  const tracker = classify("Tireless Tracker", "Creature — Human Scout", "Landfall — Whenever a land you control enters, investigate. (Create a Clue token. It's an artifact with \"{2}, Sacrifice this token: Draw a card.\")\nWhenever you sacrifice a Clue, put a +1/+1 counter on this creature.", "{2}{G}");
+  assert.equal(tracker.isDraw, false, "a Clue is a gated draw, not a card in hand");
+  assert.equal(tracker.boardWidth, 0, "and an artifact token is not a body on the board");
+}
+{
+  // The whole point: the parentheses cannot change how a deck measures. Two lists that
+  // differ ONLY in whether the reminder text is present have to play out identically.
+  const lands = {name: "Plains", quantity: 36, typeLine: "Basic Land — Plains", manaCost: "", oracleText: "({T}: Add {W}.)", colorIdentity: ["W"]};
+  const printed = {
+    name: "Reminder Card", quantity: 63, typeLine: "Artifact Creature — Golem", manaCost: "{2}{W}",
+    oracleText: "Double strike\nWard {2} (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays {2}.)",
+    colorIdentity: ["W"]
+  };
+  const stripped = {...printed, oracleText: "Double strike\nWard {2}"};
+  const withReminder = Engine.simulateGames([commander, lands, printed], table(), {...config, games: 400}, 4242);
+  const without = Engine.simulateGames([commander, lands, stripped], table(), {...config, games: 400}, 4242);
+  assert.deepEqual(withReminder.metrics, without.metrics,
+    "reminder text must be worth exactly nothing: the same hundred with and without it is the same deck");
+}
+
+// ---------------------------------------------------------------------------
+// Fetch lands: the basic they go and get arrives TAPPED, so the colour is a turn away
+// ---------------------------------------------------------------------------
+{
+  const panorama = classify("Naya Panorama", "Land", "{T}: Add {C}.\n{1}, {T}, Sacrifice this land: Search your library for a basic Mountain, Forest, or Plains card, put it onto the battlefield tapped, then shuffle.", "");
+  assert.deepEqual([...panorama.produces].sort(), ["G", "R", "W"], "a Panorama can still get any of the three basics it names");
+  assert.equal(panorama.entersTapped, true, "but not on the turn it is played: it taps for {C}, and the basic comes down tapped");
+  const wilds = classify("Evolving Wilds", "Land", "{T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.", "");
+  assert.equal(wilds.entersTapped, true, "a fetch that names no basic type is tapped too");
+  assert.deepEqual([...wilds.produces].sort(), ["B", "G", "R", "U", "W"], "and can get any basic in the deck");
+  // A land that makes its own colour is read as printed, fetch clause or not.
+  assert.equal(classify("Command Tower", "Land", "{T}: Add one mana of any color.", "").entersTapped, false);
+  assert.equal(classify("Selesnya Guildgate", "Land — Gate", "This land enters tapped.\n{T}: Add {G} or {W}.", "").entersTapped, true);
+  // A shockland keeps its colours through the strip (they come off the type line) and is
+  // read as entering tapped, because its text says so and the model has no way to spend
+  // two life for the alternative.
+  const shock = classify("Temple Garden", "Land — Forest Plains", "({T}: Add {G} or {W}.)\nAs this land enters, you may pay 2 life. If you don't, it enters tapped.", "");
+  assert.deepEqual([...shock.produces].sort(), ["G", "W"]);
+  assert.equal(shock.entersTapped, true);
+}
+{
+  // The pair: a deck whose fixing is Panoramas against the same deck with real tapped
+  // duals, everything else held identical. The Panorama version used to come out AHEAD,
+  // because it modelled as an untapped three-colour land.
+  const spells = {name: "Three-Colour Spell", quantity: 63, typeLine: "Creature — Test", manaCost: "{R}{G}{W}", oracleText: "", colorIdentity: ["G", "R", "W"]};
+  const naya = {name: "Naya Commander", quantity: 1, isCommander: true, typeLine: "Legendary Creature — Human", manaCost: "{R}{G}{W}", oracleText: "", colorIdentity: ["G", "R", "W"]};
+  const panoramas = {name: "Naya Panorama", quantity: 36, typeLine: "Land", manaCost: "", oracleText: "{T}: Add {C}.\n{1}, {T}, Sacrifice this land: Search your library for a basic Mountain, Forest, or Plains card, put it onto the battlefield tapped, then shuffle.", colorIdentity: []};
+  const tappedTriland = {name: "Jungle Shrine", quantity: 36, typeLine: "Land", manaCost: "", oracleText: "This land enters tapped.\n{T}: Add {R}, {G}, or {W}.", colorIdentity: ["G", "R", "W"]};
+  const untappedTriland = {...tappedTriland, name: "Untapped Shrine", oracleText: "{T}: Add {R}, {G}, or {W}."};
+  const run = (land) => Engine.simulateGames([naya, land, spells], table(), {...config, games: 1500}, 20260904).metrics;
+  const fetches = run(panoramas);
+  const tapped = run(tappedTriland);
+  const untapped = run(untappedTriland);
+  assert.ok(untapped.screwPct < tapped.screwPct,
+    `an untapped tri-land must beat a tapped one (${untapped.screwPct} vs ${tapped.screwPct})`);
+  assert.ok(fetches.screwPct >= tapped.screwPct,
+    `a Panorama must not beat a real tapped tri-land, which is what it did when it modelled as untapped (${fetches.screwPct} vs ${tapped.screwPct})`);
+  assert.ok(fetches.score < untapped.score,
+    `and it must not read like an untapped one either (${fetches.score} vs ${untapped.score})`);
+}
+
+// ---------------------------------------------------------------------------
+// A Treasure behind a condition is not ramp
+// ---------------------------------------------------------------------------
+{
+  // Currency Converter's cost is a bare {T}, so the cost test passed it and the card
+  // modelled as a one-mana Treasure engine. The Treasure needs a card discarded, exiled
+  // with this artifact, and a land at that.
+  const converter = {
+    name: "Currency Converter", quantity: 1, typeLine: "Artifact", manaCost: "{2}",
+    oracleText: "Whenever you discard a card, you may exile that card from your graveyard.\n{2}, {T}: Draw a card, then discard a card.\n{T}: Put a card exiled with this artifact into its owner's graveyard. If it's a land card, create a Treasure token. If it's a nonland card, create a 2/2 black Rogue creature token.",
+    colorIdentity: []
+  };
+  assert.equal(Engine.classifyCard(converter).isRamp, false, "a Treasure behind \"if it's a land card\" is not ramp");
+  // Everything that really does just make one still does.
+  assert.equal(classify("Strike It Rich", "Sorcery", "Create a Treasure token. It gains haste until end of turn.", "{R}").isRamp, true);
+  assert.equal(classify("Smothering Tithe", "Enchantment", "Whenever an opponent draws a card, that player may pay {2}. If the player doesn't, you create a Treasure token.", "{3}{W}").isRamp, true,
+    "a trigger that names a condition is the ordinary shape of a trigger, not a gate");
+  assert.equal(classify("Bare Tap Test", "Artifact", "{T}: Create a Treasure token.", "{3}").isRamp, true);
+  assert.equal(classify("Goldvein Pick", "Artifact — Equipment", "Equipped creature gets +1/+1 and has \"Whenever this creature deals combat damage to a player, create a Treasure token.\"\nEquip {2}", "{1}").isRamp, true,
+    "a Treasure on a combat trigger is still a Treasure the card just makes");
+  assert.equal(classify("Costed Treasure Test", "Artifact", "{2}, {T}: Create a Treasure token.", "{3}").isRamp, false,
+    "paying mana for it was already not ramp, and still is not");
+  // The pair: the same card with and without the Treasure clause has to measure the same
+  // now, because the clause is no longer worth anything to a deck that plays it.
+  const lands = {name: "Swamp", quantity: 36, typeLine: "Basic Land — Swamp", manaCost: "", oracleText: "({T}: Add {B}.)", colorIdentity: ["B"]};
+  const filler = {name: "Filler Creature", quantity: 53, typeLine: "Creature — Test", manaCost: "{2}{B}", oracleText: "", colorIdentity: ["B"]};
+  const blackCommander = {name: "Black Commander", quantity: 1, isCommander: true, typeLine: "Legendary Creature — Human", manaCost: "{2}{B}", oracleText: "", colorIdentity: ["B"]};
+  const noTreasure = {...converter, quantity: 10, oracleText: converter.oracleText.replace(" If it's a land card, create a Treasure token.", "")};
+  const withClause = Engine.simulateGames([blackCommander, lands, filler, {...converter, quantity: 10}], table(), {...config, games: 400}, 4242);
+  const withoutClause = Engine.simulateGames([blackCommander, lands, filler, noTreasure], table(), {...config, games: 400}, 4242);
+  assert.deepEqual(withClause.metrics, withoutClause.metrics,
+    "the gated Treasure clause must be worth nothing: it was worth 0.45 to 1.58 score points across the six decks");
 }
 
 // ---------------------------------------------------------------------------

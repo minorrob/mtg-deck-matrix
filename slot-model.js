@@ -194,21 +194,33 @@
     "search(?:es)? your library for [^.]{0,70}?(?:land|plains|island|swamp|mountain|forest)"
     + "[^.]{0,90}?onto the battlefield", "i");
 
-  // A Treasure a card just makes is ramp; one behind a mana or sacrifice cost is
-  // not ramp on cast. Kept identical to sim-engine's rule -- the suite compares
-  // the two card for card.
+  // Reminder text is what Scryfall prints in parentheses to restate a keyword --
+  // cycling's "Discard this card: Draw a card", Treasure's "Add one mana of any
+  // color". It carries no rules meaning, so it is stripped before any rule below
+  // reads the card, and the card's own oracleText is left alone for display.
+  // Kept identical to sim-engine's rule -- the suite compares the two card for card.
+  function withoutReminderText(card) {
+    return String((card && card.oracleText) || "").replace(/\s*\([^)]*\)/g, "");
+  }
+
+  // A Treasure a card just makes is ramp; one behind a mana or sacrifice cost, or
+  // behind a condition inside an activated ability (Currency Converter's "if it's
+  // a land card"), is not ramp on cast. Kept identical to sim-engine's rule -- the
+  // suite compares the two card for card.
   function makesTreasureFreely(text) {
     if (!/create a treasure token/.test(text)) return false;
     return String(text).split("\n").some((line) => {
       if (!/create a treasure token/.test(line)) return false;
       const colon = line.indexOf(":");
       if (colon < 0) return true;
-      return !/\{\d|sacrifice|discard|pay/.test(line.slice(0, colon));
+      if (/\{\d|sacrifice|discard|pay/.test(line.slice(0, colon))) return false;
+      const clause = line.slice(colon + 1).split(".").find((sentence) => /create a treasure token/.test(sentence)) || "";
+      return !/\bif\b|\bunless\b/.test(clause);
     });
   }
 
   function producesColors(card) {
-    const text = String((card && card.oracleText) || "").toLowerCase();
+    const text = withoutReminderText(card).toLowerCase();
     const typeLine = String((card && card.typeLine) || "");
     const produced = new Set();
     if (BASIC_COLOR[card && card.name]) produced.add(BASIC_COLOR[card.name]);
@@ -221,6 +233,14 @@
       });
     });
     if (/add one mana of any color|add \{c\}\{c\}|any color/.test(text)) MANA_COLORS.forEach((color) => produced.add(color));
+    // A land with a basic land type has that type's mana ability whether or not
+    // its rules text says so -- the ability comes from the type line, which is
+    // why Scryfall prints it as reminder text and why stripping the reminder must
+    // not take a shockland's or a Triome's colours with it.
+    if (/\bLand\b/.test(typeLine)) {
+      (typeLine.toLowerCase().match(/\b(plains|island|swamp|mountain|forest)\b/g) || [])
+        .forEach((word) => produced.add(BASIC_TYPE_COLOR[word]));
+    }
     // A land that goes and gets a basic makes what that basic makes. These carry
     // an empty colour identity, so the fallback below left Evolving Wilds and the
     // Panoramas producing nothing at all. Only a fetch that puts the land onto
@@ -302,7 +322,7 @@
 
   function cardRoles(card) {
     const typeLine = String((card && card.typeLine) || "");
-    const text = String((card && card.oracleText) || "").toLowerCase().replace(/[’]/g, "'");
+    const text = withoutReminderText(card).toLowerCase().replace(/[’]/g, "'");
     const isLand = /\bLand\b/.test(typeLine);
     const isCreature = /Creature/.test(typeLine);
     const roles = [];

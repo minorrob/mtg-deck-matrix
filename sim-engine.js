@@ -22,6 +22,8 @@
     "Tokens are modeled as extra power on the creature that makes them, not as separate bodies.",
     "Alternate win conditions and storm are scored as a large threat rather than an instant win.",
     "Mana fixing is ideal within the colors actually available from lands in play.",
+    "Reminder text is stripped before a card is read: it restates a keyword for the reader and carries no rules meaning. Where a keyword states its real effect only in the reminder -- basic landcycling, investigate -- the card is credited with nothing for it.",
+    "A fetch land is modeled as entering tapped, because the basic it goes and gets arrives tapped or has to be paid for; neither the mana some of them charge to crack nor the land itself being spent is modeled.",
     "A Defender creature contributes no attack power unless the deck also contains an effect that lets it attack anyway, and deals damage equal to its toughness instead of its power when the deck contains an effect that says so.",
     "A noncreature commander (a planeswalker printed with \"can be your commander\") is cast and taxed normally but never joins combat as an attacker or blocker.",
     "Opponents are nine parameterized archetype curves (three power tiers, six playstyles), not simulated decks with real cards.",
@@ -123,7 +125,10 @@
     return {pips, generic, value};
   }
 
-  function producedColors(card, typeLine, text) {
+  // What the card taps for itself, before any land it might go and get. Kept
+  // separate from producedColors below because "does this land make its own
+  // colour" is also the question that decides whether it is a fetch.
+  function ownProducedColors(card, typeLine, text) {
     const produced = new Set();
     if (BASIC_COLOR[card.name]) produced.add(BASIC_COLOR[card.name]);
     // Matches every symbol in the run right after "add" — not just the first —
@@ -136,6 +141,37 @@
       });
     });
     if (/add one mana of any color|add \{c\}\{c\}|any color/.test(text)) COLORS.forEach((color) => produced.add(color));
+    // A land with a basic land type has that type's mana ability whether or not
+    // its rules text says so: the ability comes from the type line, which is
+    // exactly why Scryfall prints it as reminder text -- "({T}: Add {R} or {W}.)"
+    // is the whole of Sacred Foundry's first line, and Tundra's entire oracle
+    // text. Reading the type line means stripping reminder text cannot take a
+    // dual land's colours away with it.
+    if (/\bLand\b/.test(typeLine)) {
+      (typeLine.toLowerCase().match(/\b(plains|island|swamp|mountain|forest)\b/g) || [])
+        .forEach((word) => produced.add(BASIC_TYPE_COLOR[word]));
+    }
+    return produced;
+  }
+
+  // A land whose only colour is the basic it goes and gets. None of the ten in this
+  // catalog can pay a coloured pip on the turn it is played: nine put the basic
+  // onto the battlefield TAPPED (Evolving Wilds and Riveteers Overlook crack for
+  // free, the Panoramas and Blighted Woodland charge mana on top), and the tenth,
+  // Demolition Field, gets an untapped basic but only for {2} and sacrificing
+  // itself. entersTapped used to be read off the fetch itself, which models Naya
+  // Panorama as an untapped R/G/W land: strictly better than a real tapped dual,
+  // which it is not. Treating the fetch as entering tapped costs it the {C} it
+  // really does tap for on that turn and does not charge the mana to crack it; the
+  // two errors point in opposite directions and the colour lands on the right turn.
+  function fetchesItsColors(card, typeLine, text) {
+    return /\bLand\b/.test(typeLine)
+      && PUTS_LAND_ONTO_BATTLEFIELD.test(text)
+      && !ownProducedColors(card, typeLine, text).size;
+  }
+
+  function producedColors(card, typeLine, text) {
+    const produced = ownProducedColors(card, typeLine, text);
     // A land that goes and gets a basic makes whatever that basic makes. These
     // carry an empty colour identity, so falling through to it left Evolving
     // Wilds, Terramorphic Expanse and Fabled Passage producing no colour --
@@ -163,6 +199,17 @@
   // or sacrificing something is not ramp on the turn it is cast, and crediting
   // it as such is what put Currency Converter and Goldvein Pick at the top of a
   // bench screen they have no business leading.
+  //
+  // The cost before the colon is only half of what gates one. Currency Converter
+  // reads "{T}: Put a card exiled with this artifact into its owner's graveyard.
+  // If it's a land card, create a Treasure token." -- a bare {T}, so the cost test
+  // passes it, and the card modelled as a one-mana Treasure engine. The Treasure
+  // needs a card discarded, exiled with this artifact, and a land at that. So the
+  // clause that creates it has to be something the activation actually does, not
+  // something it might do: a conditional Treasure inside an activated ability is
+  // not free. Only activated abilities are read this way -- a triggered Treasure
+  // that names a condition (Smothering Tithe's "if the player doesn't") is the
+  // ordinary shape of a trigger, and those are ramp.
   function makesTreasureFreely(text) {
     if (!/create a treasure token/.test(text)) return false;
     return text.split("\n").some((line) => {
@@ -170,7 +217,11 @@
       const colon = line.indexOf(":");
       if (colon < 0) return true;                       // triggered or static
       const cost = line.slice(0, colon);
-      return !/\{\d|sacrifice|discard|pay/.test(cost); // a bare {T} still counts
+      if (/\{\d|sacrifice|discard|pay/.test(cost)) return false;  // a bare {T} still counts
+      // ...and what a bare {T} buys has to be the Treasure itself, not a Treasure
+      // it might reach.
+      const clause = line.slice(colon + 1).split(".").find((sentence) => /create a treasure token/.test(sentence)) || "";
+      return !/\bif\b|\bunless\b/.test(clause);
     });
   }
 
@@ -270,11 +321,37 @@
     return /\{[^}]*\}[^:]*:/.test(text) || /(?:^|\n)(?:at the beginning of|whenever)\b/.test(text);
   }
 
+  // Scryfall prints reminder text in parentheses -- "Ward {2} (Whenever this
+  // creature becomes the target of a spell or ability an opponent controls,
+  // counter it unless that player pays {2}.)" -- restating a keyword for a reader
+  // who does not know it. It carries no rules meaning, and every regex below used
+  // to read it as though it did. Bronze Guardian is the worst of it: Ward's
+  // reminder puts "counter" in the same sentence as "Double strike", so
+  // doubl(e|ing)[^.]*counter matched and prepareDeck set a deck-wide +1/+1 counter
+  // doubler off a card with no counter interaction at all. Cycling made Cast Out
+  // card draw, Treasure's reminder decided whether three cards were ramp, reach's
+  // "can block creatures with flying" gave Ancient Greenwarden flying, and token
+  // reminders handed board width to four cards that make no tokens.
+  //
+  // Two keywords state their real effect NOWHERE ELSE, and both are deliberately
+  // left uncredited rather than read out of the parentheses:
+  //   * basic landcycling puts a basic in your HAND, which #50 already settled as
+  //     card selection rather than acceleration;
+  //   * investigate makes a Clue, an inert artifact that draws only for {2} and a
+  //     sacrifice -- gated, the same way makesTreasureFreely reads a gated
+  //     Treasure, so neither the token nor the draw is credited.
+  // tests/sim-engine.mjs pins both.
+  //
+  // The card's own oracleText is untouched: the popup still shows what is printed.
+  function stripReminderText(oracleText) {
+    return String(oracleText || "").replace(/\s*\([^)]*\)/g, "");
+  }
+
   // One pass over the card's own text decides everything the game loop knows
   // about it. Anything the loop cannot see is, by definition, not simulated.
   function classifyCard(card) {
     const typeLine = String(card.typeLine || "");
-    const text = String(card.oracleText || "").toLowerCase().replace(/[’]/g, "'");
+    const text = stripReminderText(card.oracleText).toLowerCase().replace(/[’]/g, "'");
     const firstLine = text.split("\n")[0] || "";
     const cost = parseManaCost(card.manaCost);
     const cmc = Number.isFinite(Number(card.cmc)) && Number(card.cmc) > 0 ? Number(card.cmc) : cost.value;
@@ -297,7 +374,10 @@
       typeLine,
       isLand,
       isBasicLand: /\bBasic Land\b/.test(typeLine),
-      entersTapped: /enters (?:the battlefield )?tapped/.test(text),
+      // A fetch is tapped too: the basic it goes and gets arrives tapped, so the
+      // colour is a turn away however the fetch itself is printed (see
+      // fetchesItsColors).
+      entersTapped: /enters (?:the battlefield )?tapped/.test(text) || fetchesItsColors(card, typeLine, text),
       produces: producedColors(card, typeLine, text),
       isCommander: Boolean(card.isCommander),
       isCreature,

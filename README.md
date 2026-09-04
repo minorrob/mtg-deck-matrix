@@ -61,6 +61,22 @@ node tools/sim/reprice.mjs --write           # cost figures re-summed from the c
 node tools/sim/bake-sweep.mjs --write        # the published numbers, with caveats
 ```
 
+### The six real decks
+
+The Decks tab ranks the six decks in the Deck Master workbook, and those numbers
+come from `data/deck-ratings.json` rather than from the fifty-variant sweep.
+
+```
+node tools/sim/rate-decks.mjs                # measure and print, write nothing
+node tools/sim/rate-decks.mjs --write        # rewrite data/deck-ratings.json
+```
+
+It builds all fourteen hundreds — v1, Tuned and Bracket 3 for each deck — out of
+`data/master-v2.json` and measures them at six seeds by twenty thousand games,
+so a published score can always be reproduced from the workbook rather than from
+a scratch directory. It measures; it never optimizes. Re-run it after any change
+to the engine or to the workbook's target column.
+
 `bake-ladders` will refuse to write unless composing every rung through
 `lineup-model.js` reproduces the exact hundred the sweep measured, because a
 published score belonging to a deck other than the one printed underneath it is
