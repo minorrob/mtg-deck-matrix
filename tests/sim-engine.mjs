@@ -60,8 +60,18 @@ assert.equal(classify("Rhystic Study", "Enchantment", "Whenever an opponent cast
 const bloodArtist = classify("Blood Artist", "Creature — Vampire", "Whenever this creature or another creature dies, target player loses 1 life and you gain 1 life.", "{1}{B}");
 assert.equal(bloodArtist.drain.one, 1, "a repeatable single-target drain is an engine");
 assert.equal(bloodArtist.drain.all, 0);
+// Bastion needs YOUR creatures to die, so it is a death payoff, not a drain
+// that ticks every upkeep. It used to be read as the latter and paid out every
+// turn with nothing having died; deaths are modelled now, so it is paid when
+// one happens. Blood Artist above triggers on any creature dying, which happens
+// from combat and removal without help, so that one stays a drain engine.
 const bastion = classify("Bastion of Remembrance", "Enchantment", "Whenever a creature you control dies, each opponent loses 1 life and you gain 1 life.", "{2}{B}");
-assert.equal(bastion.drain.all, 1, "a repeatable each-opponent drain hits every seat");
+assert.equal(bastion.drain.all, 0, "a payoff that needs your own creatures to die is not a per-turn drain");
+assert.equal(bastion.death.drain, 1, "it pays each opponent one life per creature of yours that dies");
+assert.equal(classify("Viscera Seer", "Creature — Vampire Wizard", "Sacrifice a creature: Scry 1.", "{B}").isSacOutlet, true,
+  "a repeatable sacrifice ability is an outlet");
+assert.equal(classify("Grave Pact", "Enchantment", "Whenever a creature you control dies, each other player sacrifices a creature.", "{2}{B}{B}").isSacOutlet, false,
+  "a death trigger is not itself an outlet");
 const kokusho = classify("Kokusho, the Evening Star", "Legendary Creature — Dragon Spirit", "When this creature dies, each opponent loses 5 life.", "{3}{B}{B}");
 assert.equal(kokusho.drain.all, 0, "a one-shot death trigger is not a per-turn drain engine");
 assert.equal(kokusho.isFinisher, true);
@@ -446,10 +456,19 @@ assert.match(readme, /run-batch\.mjs/, "the README must show how to run a simula
   assert.ok(at(0.95) < at(0.76), "the further past the ceiling, the lower the credit");
   assert.ok(at(0.7) <= 0.55, "winning seven games in ten must cost about half the credit");
   assert.ok(at(1) >= 0.2, "dominating is still worth something -- winning is not a failure");
-  // With no band configured the original monotonic curve has to survive, or
-  // every historical score in data/ would silently change meaning.
-  assert.equal(Engine.winRateBandNorm(0.5, null), 1, "an unbanded run must keep the old curve");
-  assert.equal(Engine.winRateBandNorm(0.25, null), 0.5, "an unbanded run must keep the old slope");
+  // The unbanded curve used to be min(1, winRate / 0.5), which saturated at an
+  // even share of a four-player pod: 50%, 62% and 75% all scored 1.000, so a
+  // real improvement registered as nothing and a change that cost win rate
+  // could still read as a gain from the other terms. It rises across the whole
+  // range now. Every published figure was regenerated against this curve when
+  // it changed -- an unbanded score from before then is not comparable.
+  const unbanded = (rate) => Engine.winRateBandNorm(rate, null);
+  for (const [lower, higher] of [[0.25, 0.4], [0.4, 0.5], [0.5, 0.55], [0.55, 0.62], [0.62, 0.75], [0.75, 0.95]]) {
+    assert.ok(unbanded(higher) > unbanded(lower),
+      `an unbanded curve must keep rising: ${higher} scored ${unbanded(higher)}, ${lower} scored ${unbanded(lower)}`);
+  }
+  assert.ok(unbanded(1) <= 1 && unbanded(0) >= 0, "the unbanded curve stays inside 0..1");
+  assert.ok(unbanded(0.5) > 0.8, "an even share of the pod still earns most of the credit");
 }
 
 console.log(`Simulation engine verified: deterministic under seed, discriminating between decks (My Fun and Pod Fun both range-checked), and capped by the runner at ${tinyConfig.maxTotalSimulations} games.`);
