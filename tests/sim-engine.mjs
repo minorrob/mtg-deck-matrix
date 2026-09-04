@@ -280,12 +280,25 @@ function soloGame(cards, seed) {
 // ---------------------------------------------------------------------------
 // The metric has to discriminate: a deliberately damaged deck must score lower
 // ---------------------------------------------------------------------------
-const healthy = Engine.simulateGames(deck, table(), {...config, games: 1000}, 20260823);
+// Measured with the win-rate band off, which is how every score this repo publishes
+// is measured (data/deck-ratings.json, tools/sim and data/simulation-summary.json's
+// Base, Tuned and Max rungs all pass winRateBand: null). Leaving config's band on
+// asks a different question -- "is this deck a good guest" -- and on a deck that wins
+// well over the 45% ceiling it answers yes to the damage: blanking a quarter of
+// Quintorius's spells drops its win rate from 55.7% to 42.0% and RAISES its banded
+// score, because 42% is inside the band and 56% is not. That is the band working, not
+// the metric failing, so the discrimination is checked on the unbanded vector the
+// published numbers actually use.
+const discriminationOptions = {...config, games: 1000, winRateBand: null};
+const healthy = Engine.simulateGames(deck, table(), discriminationOptions, 20260823);
 const damaged = deck.map((card, index) => (!card.isCommander && !/Land/.test(card.typeLine) && index % 4 === 0
   ? {name: `Overcosted Blank ${index}`, quantity: 1, typeLine: "Artifact", manaCost: "{8}", oracleText: "", colorIdentity: []}
   : card));
-const damagedResult = Engine.simulateGames(damaged, table(), {...config, games: 1000}, 20260823);
+const damagedResult = Engine.simulateGames(damaged, table(), discriminationOptions, 20260823);
 assert.ok(damagedResult.metrics.score < healthy.metrics.score - 2, `replacing a quarter of the spells with blanks must measurably hurt (${healthy.metrics.score} vs ${damagedResult.metrics.score})`);
+// And whichever vector it is scored on, the win rate itself must fall.
+assert.ok(damagedResult.metrics.winRate < healthy.metrics.winRate - 0.05,
+  `a quarter of the deck replaced with eight-mana blanks must win less often (${healthy.metrics.winRate} vs ${damagedResult.metrics.winRate})`);
 assert.ok(damagedResult.metrics.deadCardsAtT8 > healthy.metrics.deadCardsAtT8, "the blanks must show up as dead cards in hand");
 
 // ---------------------------------------------------------------------------

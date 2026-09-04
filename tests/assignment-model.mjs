@@ -101,21 +101,37 @@ ok("no active nonbasic card appears twice in a deck", () => {
   }
 });
 
-/* Grouped basics survive as one row of many copies, not many rows of one. */
-ok("basic-land quantities stay grouped", () => {
+/* Grouped basics survive as one row of many copies, not many rows of one -- unless a
+   measured rung buys one of those copies out. A slot holds exactly one card, so
+   "the Bracket 3 build runs thirty-three Mountains, not thirty-four" can only be said
+   by giving that thirty-fourth Mountain a row of its own for Den of the Bugbear to
+   take. An extra row is legitimate exactly when some rung is offering to take it; an
+   extra row nothing offers anything for is the scattering this guards against. */
+ok("basic-land quantities stay grouped except where a rung buys a copy out", () => {
   for (const id of live) {
     const basics = Slot.deckSlots(graft(id), state.buySelections[id], {})
       .filter((s) => s.pick && s.isBasic);
-    const names = basics.map((s) => Slot.ownedKey(s.pick.name));
-    assert.equal(new Set(names).size, names.length, `${id} splits a basic across slots`);
+    const rowsByName = new Map();
+    basics.forEach((s) => {
+      const key = Slot.ownedKey(s.pick.name);
+      if (!rowsByName.has(key)) rowsByName.set(key, []);
+      rowsByName.get(key).push(s);
+    });
+    for (const [key, rows] of rowsByName) {
+      if (rows.length === 1) continue;
+      const tradeable = rows.filter((s) => (s.rungs || []).length > 1);
+      assert.equal(tradeable.length, rows.length - 1,
+        `${id} splits ${key} across ${rows.length} slots but only ${tradeable.length} of them are a copy a rung trades away`);
+    }
   }
 });
 
-/* The two swaps that needed a new shell slot rather than a rung choice. A basic-land
-   slot carries a quantity, so "eleven Mountains and a Command Tower" is a shell
-   change; re-baking either variant from an optimizer run would drop it silently, and
-   the deck would go back to disagreeing with the workbook by one card. */
-ok("the re-shelled basics stay traded for their real cards", () => {
+/* The basic-land counts, which no rung choice can express and which a re-bake would
+   silently round off. Obuun's eleven Mountains and the old Quintorius list's five are
+   gone with those decks; 3o and 5o are now Purphoros and Quintorius, Loremaster, and
+   their basic counts come straight from the Master sheet's target column. Reading them
+   off the composed deck is what catches a shell that lost or gained a land. */
+ok("the shipped basics are the counts the Master sheet targets", () => {
   const held = (id) => {
     const counts = new Map();
     Slot.deckSlots(graft(id), state.buySelections[id], {})
@@ -126,12 +142,20 @@ ok("the re-shelled basics stay traded for their real cards", () => {
       });
     return counts;
   };
-  const obuun = held("3o");
-  assert.equal(obuun.get("mountain"), 11, `3o runs ${obuun.get("mountain")} Mountains, not 11`);
-  assert.equal(obuun.get("command-tower"), 1, "3o must run the Command Tower it traded a Mountain for");
-  const quintorius = held("5o");
-  assert.equal(quintorius.get("mountain"), 5, `5o runs ${quintorius.get("mountain")} Mountains, not 5`);
-  assert.equal(quintorius.get("tectonic-reformation"), 1, "5o must run the Tectonic Reformation it traded a Mountain for");
+  const expected = {
+    "3o": {mountain: 34},
+    "5o": {mountain: 5, plains: 7},
+    "1b": {plains: 10, swamp: 9, forest: 10},
+    "2c": {plains: 8, island: 5, swamp: 8, forest: 6},
+    "4e": {plains: 8, island: 5, forest: 8},
+    "7e": {plains: 18, swamp: 17}
+  };
+  for (const [id, basics] of Object.entries(expected)) {
+    const counts = held(id);
+    for (const [name, want] of Object.entries(basics)) {
+      assert.equal(counts.get(name), want, `${id} runs ${counts.get(name)} ${name}, not ${want}`);
+    }
+  }
 });
 
 /* The one card the workbook rejected: outside Atraxa's colours, so it cannot be a

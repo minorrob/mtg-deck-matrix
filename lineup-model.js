@@ -44,6 +44,23 @@
       .trim();
   }
 
+  // Basic lands are the one card a legal deck may hold many copies of, and the only
+  // row a plan may therefore carry twice. Two things below turn on that: a rung that
+  // runs more copies of a basic than the shell does has to be able to say so without
+  // applyChoice reading the second row as an illegal duplicate, and a shell that
+  // carries a basic as more than one row (the only way the model can express "this
+  // build runs one fewer Mountain", since a slot holds exactly one card) has to be
+  // addressable a row at a time rather than by a name that names several rows.
+  const BASIC_LAND_NAMES = new Set([
+    "plains", "island", "swamp", "mountain", "forest", "wastes",
+    "snow covered plains", "snow covered island", "snow covered swamp",
+    "snow covered mountain", "snow covered forest"
+  ]);
+
+  function isBasicLandName(value) {
+    return BASIC_LAND_NAMES.has(normalizeName(value));
+  }
+
   function emptySelection() {
     return Object.fromEntries(ARRAY_KEYS.map((key) => [key, []]));
   }
@@ -123,7 +140,12 @@
         ladderMatch = ladderCandidates ? ladderCandidates.find((candidate) => candidate.kind === wantedLadderParent) : null;
         wantedLadderParent = LADDER_PARENT[wantedLadderParent];
       }
-      const predecessor = shellByName.get(targetKey) || ladderMatch || byName.get(targetKey) || null;
+      // `replacesId` names the exact entry this item was diffed against. It exists for
+      // the case a name cannot express: a shell that carries a basic land as several
+      // rows, where "replaces: Swamp" would point every item at the same row. A name
+      // still resolves everything that has no id, so nothing already published moves.
+      const explicit = entry.item.replacesId ? byId.get(String(entry.item.replacesId)) || null : null;
+      const predecessor = explicit || shellByName.get(targetKey) || ladderMatch || byName.get(targetKey) || null;
       predecessorMemo.set(entry.id, predecessor?.id || null);
       const rootId = predecessor
         ? resolveRoot(predecessor, nextTrail)
@@ -179,6 +201,10 @@
     let canonical = canonicalizeSelection(plan, next, options);
     const selectedIds = new Set(ARRAY_KEYS.flatMap((key) => canonical[key] || []).map(String));
     const duplicateName = normalizeName(candidate.item.name);
+    // Two rows of the same card is only a problem for a singleton. A build that runs
+    // fourteen Forests where the shell runs eight says so as six more Forest rows, and
+    // reconciling those away would delete the shell's own basics instead.
+    if (isBasicLandName(candidate.item.name)) return canonical;
     const duplicate = model.entries.find((entry) => selectedIds.has(entry.id) && entry.id !== candidate.id && normalizeName(entry.item.name) === duplicateName);
     if (!duplicate) return canonical;
     const duplicateGroupIds = new Set((model.groups.get(duplicate.slotId) || []).map((entry) => entry.id));
@@ -287,6 +313,7 @@
     ARRAY_KEYS,
     normalizeName,
     replacementName,
+    isBasicLandName,
     emptySelection,
     buildModel,
     canonicalizeSelection,

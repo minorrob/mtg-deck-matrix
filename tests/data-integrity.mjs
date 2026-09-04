@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
+import {createRequire} from "node:module";
 import {readFile} from "node:fs/promises";
 
+const require = createRequire(import.meta.url);
+const Lineup = require("../lineup-model.js");
 const variants = JSON.parse(await readFile(new URL("../data/variants.json", import.meta.url), "utf8"));
 const buyPlans = JSON.parse(await readFile(new URL("../data/buy-plans.json", import.meta.url), "utf8"));
 const cards = JSON.parse(await readFile(new URL("../data/cards.json", import.meta.url), "utf8"));
@@ -93,7 +96,14 @@ for (const [variantId, plan] of Object.entries(buyPlans.plans)) {
   assert(plan.max.every((item) => item.maxReason && !/market price|purchase cost|card price|dollar/i.test(item.maxReason)), `${variantId} Max cards must have capability-based rationale`);
   assert([...plan.required, ...plan.enhance].every((item) => item.replaces), `${variantId} Tuned and Enhance purchases must name a one-for-one cut`);
   const allItems = [plan.precon, ...plan.required, ...plan.upgrade, ...plan.enhance, ...plan.max];
-  const singletonChoiceNames = [...plan.startingShell, ...plan.required, ...plan.enhance, ...plan.max].map((item) => item.name.split(" // ")[0].toLowerCase());
+  // Basic lands are the one card a deck may legally run many copies of, and the only
+  // card a plan may therefore carry as more than one row. It has to be able to: a slot
+  // holds exactly one card, so "the Bracket 3 build runs one fewer Mountain" can only be
+  // said by giving that Mountain a row of its own for the Tier 3 land to take. Every
+  // other card is a singleton, and offering one twice is the bug this line catches.
+  const singletonChoiceNames = [...plan.startingShell, ...plan.required, ...plan.enhance, ...plan.max]
+    .filter((item) => !Lineup.isBasicLandName(item.name))
+    .map((item) => item.name.split(" // ")[0].toLowerCase());
   assert.equal(new Set(singletonChoiceNames).size, singletonChoiceNames.length, `${variantId} may not offer the same singleton card in two lineup slots`);
   assert(allItems.every((item) => !String(item.image).startsWith("data:")), `${variantId} must not embed images`);
   assert([...plan.required, ...plan.upgrade, ...plan.enhance, ...plan.max].every((item) => item.brief && item.why !== undefined), `${variantId} purchases must retain detail fields`);
@@ -564,7 +574,13 @@ for (const variantId of LIGHTWEIGHT_ALT_CASE_IDS) {
   assert(Number.isInteger(altCase.currentRank) && altCase.currentRank >= 1, `${variantId}: must carry the current commander's rank among the measured field`);
   assert(Number.isInteger(altCase.candidatesMeasured) && altCase.candidatesMeasured > 0, `${variantId}: must report how many alternative commanders were actually measured`);
   assert(Number.isInteger(altCase.gamesEach) && altCase.gamesEach > 0, `${variantId}: must report the game count each candidate was measured over`);
-  assert.equal(altCase.engine, "v2.2", `${variantId}: lighter-weight evaluations must be tagged with the engine generation that measured them`);
+  // Forty of the lighter-weight evaluations are still the v2.2 pass that measured
+  // fifteen candidate commanders apiece. The four decks that became Trey's own were
+  // re-measured on the engine this file names, against a different and narrower
+  // field -- the legends already inside each deck -- so they carry that generation
+  // instead. Either way the case has to name the engine that produced its numbers.
+  const REMEASURED_ALT_CASES = new Set(["1b", "3o", "4e", "7e"]);
+  assert.equal(altCase.engine, REMEASURED_ALT_CASES.has(variantId) ? ENGINE : "v2.2", `${variantId}: lighter-weight evaluations must be tagged with the engine generation that measured them`);
   assert((buyPlans.plans[variantId].altTuned || []).length === 0, `${variantId}: has only the lighter-weight evaluation, so altTuned must stay empty`);
   assert(altCase.honestRead.length > 40, `${variantId}: alt-commander case must carry a substantive caution paragraph, not a stub`);
 }
