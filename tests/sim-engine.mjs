@@ -383,10 +383,12 @@ await rm(scratch, {recursive: true, force: true});
 // Page wiring: the Simulate screen and the skill that drives the loop
 // ---------------------------------------------------------------------------
 const appSource = await readFile(new URL("../app.js", import.meta.url), "utf8");
-const indexSource = await readFile(new URL("../index.html", import.meta.url), "utf8");
+// The full app moved to matrix.html when the simplified viewer took over
+// index.html. These assertions are about the full app, so they follow it.
+const indexSource = await readFile(new URL("../matrix.html", import.meta.url), "utf8");
 const skill = await readFile(new URL("../.claude/skills/simulate-deck/SKILL.md", import.meta.url), "utf8");
 
-assert.match(indexSource, /<dialog class="sim-dialog" id="sim-dialog">/, "index.html must carry the simulation dialog");
+assert.match(indexSource, /<dialog class="sim-dialog" id="sim-dialog">/, "matrix.html must carry the simulation dialog");
 assert.match(appSource, /function openSimDialog\(variant\)/, "app.js must open a simulation dialog");
 assert.match(appSource, /class="simulate-button tip-action/, "every variant card must offer a Simulate button");
 assert.match(appSource, /data-live-simulate/, "Live Decks must offer a Simulate button too");

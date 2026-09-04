@@ -6,7 +6,9 @@ const buyPlans = JSON.parse(await readFile(new URL("../data/buy-plans.json", imp
 const cards = JSON.parse(await readFile(new URL("../data/cards.json", import.meta.url), "utf8"));
 const simulationSummary = JSON.parse(await readFile(new URL("../data/simulation-summary.json", import.meta.url), "utf8"));
 const appSource = await readFile(new URL("../app.js", import.meta.url), "utf8");
-const htmlSource = await readFile(new URL("../index.html", import.meta.url), "utf8");
+// The full app moved to matrix.html when the simplified viewer took over
+// index.html. These assertions are about the full app, so they follow it.
+const htmlSource = await readFile(new URL("../matrix.html", import.meta.url), "utf8");
 const rungLists = JSON.parse(await readFile(new URL("../data/rung-lists.json", import.meta.url), "utf8"));
 const cssSource = await readFile(new URL("../app.css", import.meta.url), "utf8");
 const deckPageSource = await readFile(new URL("../deck-page.js", import.meta.url), "utf8");

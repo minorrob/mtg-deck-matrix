@@ -8,7 +8,9 @@ const Compliance = require("../compliance-model.js");
 const buyPlans = JSON.parse(await readFile(new URL("../data/buy-plans.json", import.meta.url), "utf8"));
 const cards = JSON.parse(await readFile(new URL("../data/cards.json", import.meta.url), "utf8"));
 const appSource = await readFile(new URL("../app.js", import.meta.url), "utf8");
-const indexSource = await readFile(new URL("../index.html", import.meta.url), "utf8");
+// The full app moved to matrix.html when the simplified viewer took over
+// index.html. These assertions are about the full app, so they follow it.
+const indexSource = await readFile(new URL("../matrix.html", import.meta.url), "utf8");
 const audited = new Map(cards.cards.map((card) => [Lineup.normalizeName(card.name), card]));
 const resolveMeta = (item) => audited.get(Lineup.normalizeName(item.name)) || {};
 
@@ -99,7 +101,7 @@ assert.match(appSource, /const Compliance = window\.MtgComplianceModel/, "app.js
 assert.match(appSource, /Compliance\.evaluateCardList\(literalCards/, "evaluateDeckCompliance must delegate to the shared module");
 assert.doesNotMatch(appSource, /const TIER3_EARLY_COMBO_PAIRS = \[/, "combo pairs may not be re-duplicated in app.js");
 assert.doesNotMatch(appSource, /const BASIC_LANDS = new Set/, "the basic-land list may not be re-duplicated in app.js");
-assert.match(indexSource, /compliance-model\.js\?v=\d+/, "index.html must load the compliance model");
+assert.match(indexSource, /compliance-model\.js\?v=\d+/, "matrix.html must load the compliance model");
 assert.ok(indexSource.indexOf("compliance-model.js") < indexSource.indexOf("app.js?"), "compliance model must load before app.js");
 assert.ok(indexSource.indexOf("lineup-model.js") < indexSource.indexOf("compliance-model.js"), "lineup model must load before the compliance model");
 
