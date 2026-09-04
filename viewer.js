@@ -12,7 +12,7 @@
 (function () {
   "use strict";
 
-  var DATA = null, RATINGS = null, GUIDES = null;
+  var DATA = null, RATINGS = null, GUIDES = null, SWAPS = null;
 
   var STORE = "mtg-viewer.v1";
   var state = {
@@ -170,6 +170,11 @@
   function guideFor(id) {
     if (!GUIDES) return null;
     return (GUIDES.decks || []).filter(function (g) { return g.id === id; })[0] || null;
+  }
+
+  function swapsFor(id) {
+    if (!SWAPS) return null;
+    return (SWAPS.decks || []).filter(function (s) { return s.id === id; })[0] || null;
   }
 
   function ratingFor(id) {
@@ -557,6 +562,50 @@
     });
   }
 
+  /* What the optimiser would change, and what it costs. Shown as a
+     recommendation rather than folded into the hundred above, because he has
+     not made these swaps -- the deck list stays what the workbook says it is. */
+  function swapPanel(plan) {
+    var free = plan.swaps.filter(function (s) { return s.free; });
+    var paid = plan.swaps.filter(function (s) { return !s.free; });
+    var tier = plan.tiers["$15"] || plan.tiers["$0"];
+    var before = plan.before;
+
+    function row(s) {
+      return el("div", { class: "swap" + (s.out ? "" : " no-out") }, [
+        el("div", { class: "in" }, [
+          cardLink(s["in"]),
+          s.free ? el("span", { class: "chip patina", text: "free" })
+                 : el("span", { class: "price num", text: money(s.price) })
+        ]),
+        el("div", { class: "arrow", text: "\u2192" }),
+        el("div", { class: "out" }, ["out: ", cardLink(s.out)]),
+        el("div", { class: "why", text: s.reason })
+      ]);
+    }
+
+    var delta = tier.terms.performance - before.performance;
+    var winBefore = before.winRate * 100, winAfter = tier.terms.winRate * 100;
+    return el("div", { class: "panel" }, [
+      el("h3", {}, [el("span", { text: "Recommended changes" }),
+        el("span", { class: "tally", text: plural(plan.swaps.length, "swap") + " · "
+          + money(tier.spend) + " · " + plural(free.length, "free card") + " off the bench" })]),
+      el("div", { class: "meta-row", style: "margin:-2px 0 10px" }, [
+        el("span", { class: "chip patina",
+          text: (delta >= 0 ? "+" : "") + delta.toFixed(2) + " performance" }),
+        el("span", { class: "chip" + (winAfter < 60 ? "" : " rose"),
+          text: "win " + winBefore.toFixed(1) + "% \u2192 " + winAfter.toFixed(1) + "%" }),
+        el("span", { class: "chip",
+          text: "decisions " + before.decisionDensity + " \u2192 " + tier.terms.decisionDensity })
+      ]),
+      free.length ? el("h4", { class: "swap-head", text: "Free, off the bench" }) : null,
+      el("div", {}, free.map(row)),
+      paid.length ? el("h4", { class: "swap-head",
+        text: "Worth buying \u2014 " + money(paid.reduce(function (n, s) { return n + s.price; }, 0)) }) : null,
+      el("div", {}, paid.map(row))
+    ]);
+  }
+
   function renderDeck(root, deck) {
     var stats = deckStats(deck), shape = deckShape(deck);
     var guide = guideFor(deck.id), rating = ratingFor(deck.id);
@@ -721,6 +770,9 @@
         el("div", {}, swapRows(deck.b3, { why: true }))
       ]));
     }
+
+    var plan = swapsFor(deck.id);
+    if (plan && plan.swaps.length) right.appendChild(swapPanel(plan));
 
     root.appendChild(el("div", { class: "cols" }, [left, right]));
 
@@ -1125,11 +1177,13 @@
       // page is fully usable without either, so a miss is not an error.
       return Promise.all([
         fetchJson("data/deck-ratings.json?v=1").catch(function () { return null; }),
-        fetchJson("data/deck-guides.json?v=1").catch(function () { return null; })
+        fetchJson("data/deck-guides.json?v=1").catch(function () { return null; }),
+        fetchJson("data/deck-swaps.json?v=1").catch(function () { return null; })
       ]);
     }).then(function (extra) {
       RATINGS = extra[0];
       GUIDES = extra[1];
+      SWAPS = extra[2];
 
       document.getElementById("ribbon-slot").appendChild(renderRibbon());
       document.getElementById("tab-bench").querySelector(".count").textContent =

@@ -665,3 +665,10 @@ main { padding: 24px 0 140px; }
   .flip { max-height: 62vh; width: auto; margin: 0 auto; }
   .sheet-meta { display: none; }
 }
+
+.swap-head {
+  font-family: var(--sans); font-size: 11px; font-weight: 700;
+  letter-spacing: .09em; text-transform: uppercase; color: var(--text-faint);
+  margin: 12px 0 2px;
+}
+.swap-head:first-of-type { margin-top: 2px; }
