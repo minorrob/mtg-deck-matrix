@@ -156,3 +156,32 @@ rather than a different query.
 is a hairball that tells you nothing. Picking a card chooses the centre; nodes
 outside the current filters are drawn faded rather than removed, so narrowing the
 pane never silently empties the canvas.
+
+## The copilot layer
+
+`ingest/08-build-lenses.mjs` writes `data/lenses.json`.
+
+**The copilot never picks a card and never edits a deck.** It hands over a
+filter, the reason it thinks that filter is worth looking at, and the evidence
+behind the reason. Everything it produces resolves to the same filter state the
+side pane already drives, so a lens you disagree with costs one click to ignore
+and can never quietly change anything.
+
+Every lens is **derived from a query, never authored**. A finding that stops
+being true — you finish the deck, you buy the card — stops appearing on the next
+build rather than sitting there being wrong.
+
+Four generators, all from real findings:
+
+| lens | query |
+|---|---|
+| a deck short of its own target | `ASSIGNED_TO` target vs actual, priced from the cheapest printing |
+| cards you own that are in no deck | `OWNS` with no `ASSIGNED_TO` |
+| cheap cards the field plays with your commanders | EDHREC inclusion ≥ 50%, you own none, under $5 |
+| a payoff with nothing to pay it off | hard `REQUIRES` with fewer than two `FILLS` in the same deck |
+
+Rebuild it whenever the overlays or EDHREC data change:
+
+```bash
+node graph/ingest/08-build-lenses.mjs
+```

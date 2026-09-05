@@ -7,8 +7,8 @@
 (function () {
   "use strict";
 
-  var DATA = null, EGO = null, CY = null;
-  var state = {q: "", mvMax: 20, view: "list", f: {}, showAll: {}, clickFocuses: false};
+  var DATA = null, LENSES = [], EGO = null, CY = null;
+  var state = {q: "", mvMax: 20, view: "list", f: {}, showAll: {}, clickFocuses: false, lens: null};
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
     return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]; }); };
@@ -46,6 +46,7 @@
   }
 
   function matches(card, skipKey) {
+    if (state.lens && !state.lens._set[card.id]) return false;
     if (state.q && card._search.indexOf(state.q.toLowerCase()) < 0) return false;
     if (Number(card.mv || 0) > state.mvMax) return false;
     for (var i = 0; i < FACETS.length; i++) {
@@ -255,7 +256,46 @@
     CY.on("dbltap", "node", function (evt) { closeCard(); EGO = evt.target.id(); render(); });
   }
 
+  /* The copilot hands over a filter and the reason for it. It never picks a card
+     and never edits a deck, so a lens you disagree with costs one click to drop.
+     Each one is generated from a query, so a finding that stops being true stops
+     appearing rather than sitting here being wrong. */
+  var KIND = {warning: "Warning", attention: "Worth a look", opportunity: "Opportunity"};
+
+  function renderLenses() {
+    var host = $("copilot");
+    if (!LENSES.length) { host.hidden = true; return; }
+    host.hidden = false;
+    var active = state.lens;
+    host.innerHTML =
+      "<summary><strong>Copilot</strong> <span class=\"gp-cp-n\">" + LENSES.length + " things worth a look</span>" +
+        (active ? ' <span class="gp-cp-live">showing: ' + esc(active.title) + "</span>" : "") + "</summary>" +
+      '<div class="gp-cp-grid">' + LENSES.map(function (l) {
+        var on = active && active.id === l.id;
+        return '<div class="gp-cp gp-cp-' + esc(l.kind) + (on ? " is-on" : "") + '">' +
+          '<span class="gp-cp-kind">' + esc(KIND[l.kind] || l.kind) + "</span>" +
+          "<b>" + esc(l.title) + "</b>" +
+          "<p>" + esc(l.why) + "</p>" +
+          '<p class="gp-cp-ev">' + esc(l.evidence) + "</p>" +
+          '<button class="gp-btn' + (on ? "" : " primary") + '" data-lens="' + esc(l.id) + '" type="button">' +
+            (on ? "Clear this lens" : "Show these " + l.count) + "</button></div>";
+      }).join("") + "</div>";
+  }
+
+  function applyLens(id) {
+    if (state.lens && state.lens.id === id) { state.lens = null; render(); return; }
+    var l = LENSES.filter(function (x) { return x.id === id; })[0];
+    if (!l) return;
+    if (!l._set) { l._set = {}; (l.filter.ids || []).forEach(function (i) { l._set[i] = 1; }); }
+    state.lens = l;
+    state.f = {}; state.q = ""; $("q").value = "";   // a lens is the whole question
+    state.view = "list"; syncViews();
+    render();
+    $("result").scrollIntoView({behavior: "smooth", block: "start"});
+  }
+
   function render() {
+    renderLenses();
     var rows = visible();
     $("count").textContent = rows.length.toLocaleString() + " of " + DATA.cards.length.toLocaleString() + " cards";
     renderFacets();
@@ -284,7 +324,9 @@
     if (view) { state.view = view.dataset.view; syncViews(); render(); return; }
     var more = e.target.closest("[data-more]");
     if (more) { state.showAll[more.dataset.more] = true; render(); return; }
-    if (e.target.id === "clear") { state.f = {}; state.q = ""; state.mvMax = 20; state.showAll = {}; $("q").value = ""; render(); return; }
+    if (e.target.id === "clear") { state.f = {}; state.q = ""; state.mvMax = 20; state.showAll = {}; state.lens = null; $("q").value = ""; render(); return; }
+    var lensBtn = e.target.closest("[data-lens]");
+    if (lensBtn) { applyLens(lensBtn.dataset.lens); return; }
     var lock = e.target.closest("#click-focus");
     if (lock) {
       state.clickFocuses = !state.clickFocuses;
@@ -301,12 +343,27 @@
     document.querySelectorAll(".gp-view").forEach(function (b) { b.classList.toggle("is-on", b.dataset.view === state.view); });
   }
 
+  // Lenses are optional: the page is fully usable without them, so a missing or
+  // stale lenses.json must never stop the cards loading.
+  fetch("data/lenses.json", {cache: "no-store"})
+    .then(function (r) { return r.ok ? r.json() : {lenses: []}; })
+    .catch(function () { return {lenses: []}; })
+    .then(function (j) {
+      LENSES = (j && j.lenses) || [];
+      if (DATA) renderLenses();          // the two fetches race; whoever lands second paints
+    });
+
   fetch("data/graph.json", {cache: "no-store"})
     .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
     .then(function (json) {
       DATA = json;
       indexCards();
-      if (window.matchMedia("(max-width: 860px)").matches) $("pane").hidden = true;
+      if (window.matchMedia("(max-width: 860px)").matches) {
+        $("pane").hidden = true;
+        // Eleven findings is most of a phone screen before a single card shows.
+        // Collapsed still announces the count, which is the part that matters.
+        $("copilot").open = false;
+      }
       render();
     })
     .catch(function (err) {
