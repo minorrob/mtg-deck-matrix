@@ -72,3 +72,46 @@ The first run of `queries/03` returned Treasure-makers as Purphoros payoffs,
 because the creature-token pattern made the word "creature" optional. The graph
 was right; the edges were wrong. Treat every new pattern as guilty until a
 query proves it — that is what the `queries/` folder is for.
+
+## The second signal: EDHREC
+
+`ingest/04-fetch-edhrec.mjs` caches one JSON page per commander; `05` turns it
+into `PLAYED_WITH` edges carrying `inclusion` (share of that commander's decks
+running the card) and `synergy` (EDHREC's own figure: inclusion here minus
+inclusion in comparable decks).
+
+**This is the one card-to-card edge in the model, and it is different in kind.**
+Everywhere else a card links to an Event or a Resource, because authored pairs
+neither scale nor generalise. This edge is *measured* — an aggregate over a very
+large number of real decklists, scoped to a commander. Nobody typed it, and it
+moves when the format moves.
+
+### Why it is worth having both
+
+`queries/06-mechanical-vs-empirical.cypher` puts the two side by side:
+
+| verdict | meaning |
+|---|---|
+| `AGREE` | text and field both say yes — highest confidence |
+| `PLAY-ONLY` | the field plays it heavily, our rules see nothing — **an extraction gap** |
+
+Run against six commanders, that column immediately found three:
+
+1. **Proliferate was not in the event vocabulary at all.** Atraxa — whose whole
+   deck is counter manipulation — returned *zero* mechanical matches. Every card
+   in her top twenty read PLAY-ONLY. Adding the event took her to 7 of 8 AGREE.
+2. **Lands were excluded from `CAUSES`.** Kher Keep makes a creature token every
+   turn and is in 54% of Purphoros decks; it was invisible.
+3. **Co-payoffs were unreachable.** The path only looked for
+   `CAUSES→Event←TRIGGERS_ON`, so two cards cashing the *same* event never
+   connected. Impact Tremors is in **87%** of Purphoros decks and is exactly that
+   shape. The query now walks `CAUSES|TRIGGERS_ON` on the inbound leg.
+
+Three still read PLAY-ONLY on Purphoros and are genuinely harder: **Norin the
+Wary** (flickers itself, so the token-creation rules miss it), **Skullclamp**
+(pays off creatures dying, one hop further out), and **Panharmonicon** (doubles
+triggers — a card about other cards' rules). They are left as known gaps rather
+than papered over.
+
+Keep this query in the loop whenever an edge rule changes. It is the only check
+that catches an extraction rule which is confidently, silently wrong.
