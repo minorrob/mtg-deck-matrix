@@ -23,13 +23,17 @@ const run = promisify(execFile);
 const SOURCE = "data/source/Treys_MtG_Master_v3.xlsx";
 const COMMITTED = "data/master-v2.json";
 
-// generatedAt is a timestamp; everything else must match exactly.
+// generatedAt is a timestamp; everything else that the workbook decides must
+// match exactly.
 //
-// Sort keys RECURSIVELY. The obvious shorthand, JSON.stringify(o, Object.keys(o)),
-// looks like a key sort and is not: an array second argument is a property
-// allowlist applied at every level, so each card -- holding none of the top-level
-// keys -- serialised to {} and the comparison compared nothing at all. This test
-// passed a deliberately corrupted file before that was caught.
+// The workbook does NOT decide every price. It leaves 82 rows blank, and the
+// importer fills those from data/card-facts.json, which holds a Scryfall price
+// -- and Scryfall reprices daily. Twenty-five of those 82 moved by a cent
+// overnight the first time this test ran on a later day, which is the market
+// moving, not the file rotting. So a Scryfall-sourced price and the toBuyCost
+// computed from it are blanked before the comparison, and checked separately for
+// still being present. A workbook price is compared exactly, because that one
+// really is a fact about the source.
 const sorted = (v) => {
   if (Array.isArray(v)) return v.map(sorted);
   if (v && typeof v === "object") {
@@ -37,9 +41,17 @@ const sorted = (v) => {
   }
   return v;
 };
+// Sort keys RECURSIVELY. The obvious shorthand, JSON.stringify(o, Object.keys(o)),
+// looks like a key sort and is not: an array second argument is a property
+// allowlist applied at every level, so each card -- holding none of the top-level
+// keys -- serialised to {} and the comparison compared nothing at all. This test
+// passed a deliberately corrupted file before that was caught.
 const stable = (json) => {
   const copy = {...json};
   delete copy.generatedAt;
+  copy.cards = copy.cards.map((card) => card.priceSource === "scryfall"
+    ? {...card, price: "(live)", toBuyCost: "(live)"}
+    : card);
   return JSON.stringify(sorted(copy));
 };
 
@@ -80,7 +92,22 @@ try {
     "edit the workbook and re-run tools/import_master_v2.py. If this fired after a merge, the JSON side of " +
     "that merge was resolved by hand and should be thrown away and rebuilt.");
 
-  console.log(`master-regenerates: ${committed.cards.length} cards reproduce exactly from ${SOURCE}.`);
+  // Blanking a field is only safe if something else still watches it. A row
+  // that lost its Scryfall price would otherwise slip through as "(live)"
+  // matching "(live)", and the shopping pages would quietly quote $0.
+  const live = committed.cards.filter((card) => card.priceSource === "scryfall");
+  const freshLive = new Map(fresh.cards.map((card) => [card.name, card]));
+  const lost = live.filter((card) => {
+    const now = freshLive.get(card.name);
+    return !now || now.priceSource !== "scryfall" || !(Number(now.price) > 0);
+  });
+  assert.equal(lost.length, 0,
+    `${lost.length} row(s) that carried a Scryfall price no longer do: ` +
+    lost.map((card) => card.name).join(", ") +
+    ". Rebuild data/card-facts.json (python3 tools/build_card_facts.py) and import again.");
+
+  console.log(`master-regenerates: ${committed.cards.length} cards reproduce from ${SOURCE} ` +
+    `(${live.length} prices come from Scryfall and are checked for presence, not value).`);
 } finally {
   await rm(dir, {recursive: true, force: true});
 }

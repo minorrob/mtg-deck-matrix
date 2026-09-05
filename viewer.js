@@ -181,9 +181,31 @@
     return (GUIDES.decks || []).filter(function (g) { return g.id === id && sameCommander(g, id); })[0] || null;
   }
 
+  /* The optimiser's recommendations were measured against the hundred as it
+     stood on 2026-09-04, and the 2026-09-05 rebuild changed 14 to 30 cards in
+     every deck. Its source lists are gone, so the file cannot be regenerated --
+     but a swap can still be checked one at a time: "cut X for Y" is advice only
+     while X is still in the deck. The dead ones are dropped rather than the
+     whole panel hidden, because the 45 that survive are still the right call,
+     and the panel says how many went and why. */
   function swapsFor(id) {
     if (!SWAPS) return null;
-    return (SWAPS.decks || []).filter(function (s) { return s.id === id && sameCommander(s, id); })[0] || null;
+    var rec = (SWAPS.decks || []).filter(function (s) { return s.id === id; })[0];
+    if (!rec) return null;
+    var deck = (DATA.decks || []).filter(function (d) { return d.id === id; })[0];
+    if (!deck) return rec;
+    var held = {};
+    deckCards(deck).forEach(function (r) { held[r.card.name] = true; });
+    var live = (rec.swaps || []).filter(function (s) { return !s.out || held[s.out]; });
+    if (live.length === (rec.swaps || []).length && rec.commander === deck.commander) return rec;
+    return {
+      id: rec.id, label: rec.label, commander: rec.commander,
+      tiers: rec.tiers, before: rec.before, swaps: live,
+      dropped: (rec.swaps || []).length - live.length,
+      // A seat change makes every measured figure in the record describe a deck
+      // with a different commander, which the reader should be told once.
+      reseated: rec.commander !== deck.commander ? rec.commander : null
+    };
   }
 
   function ratingFor(id) {
@@ -614,6 +636,12 @@
         el("span", { class: "chip",
           text: "decisions " + before.decisionDensity + " \u2192 " + tier.terms.decisionDensity })
       ]),
+      plan.dropped || plan.reseated ? el("p", { class: "caveat", text:
+        "Measured on the list as it stood before the 2026-09-05 rebuild"
+        + (plan.reseated ? ", when " + plan.reseated + " held the seat" : "")
+        + ". " + (plan.dropped
+          ? plural(plan.dropped, "recommendation") + " dropped: the card it would cut has already left the deck."
+          : "Every recommendation still names a card in the deck.") }) : null,
       free.length ? el("h4", { class: "swap-head", text: "Free, off the bench" }) : null,
       el("div", {}, free.map(row)),
       paid.length ? el("h4", { class: "swap-head",

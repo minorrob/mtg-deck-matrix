@@ -672,3 +672,14 @@ main { padding: 24px 0 140px; }
   margin: 12px 0 2px;
 }
 .swap-head:first-of-type { margin-top: 2px; }
+
+/* Says what a panel's numbers were measured against when that is no longer the
+   deck on screen. Quiet, but never hidden: advice with a stale basis is worth
+   reading and worth doubting, and the reader needs both. */
+.caveat {
+  font-family: var(--sans); font-size: 12px; line-height: 1.45;
+  color: var(--text-faint); margin: 0 0 10px;
+  padding: 7px 10px; border-radius: 7px;
+  background: var(--sink, rgba(0, 0, 0, .03));
+  border-left: 2px solid var(--rule, rgba(0, 0, 0, .12));
+}
