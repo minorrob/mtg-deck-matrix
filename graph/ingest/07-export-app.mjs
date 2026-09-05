@@ -36,11 +36,14 @@ async function cypher(statement, parameters = {}) {
   return result.data.map((row) => Object.fromEntries(result.columns.map((c, i) => [c, row.row[i]])));
 }
 
-const scope = process.argv.includes("--commanders")
-  ? `EXISTS { (:Collection)-[:OWNS]->(c) } OR EXISTS { (c)-[:ASSIGNED_TO]->(:Deck) }
-     OR EXISTS { (:Card)-[:PLAYED_WITH]->(c) } OR c.canBeCommander`
-  : `EXISTS { (:Collection)-[:OWNS]->(c) } OR EXISTS { (c)-[:ASSIGNED_TO]->(:Deck) }
-     OR EXISTS { (:Card)-[:PLAYED_WITH]->(c) }`;
+// A commander anchors every PLAYED_WITH edge it sources, so it has to be in scope
+// even when it is not owned and not in a deck -- otherwise its edges are orphaned
+// and silently dropped below. That cost 5,800 of 12,929 edges before it was caught.
+const BASE = `EXISTS { (:Collection)-[:OWNS]->(c) }
+   OR EXISTS { (c)-[:ASSIGNED_TO]->(:Deck) }
+   OR EXISTS { (:Card)-[:PLAYED_WITH]->(c) }
+   OR EXISTS { (c)-[:PLAYED_WITH]->(:Card) }`;
+const scope = process.argv.includes("--commanders") ? `${BASE} OR c.canBeCommander` : BASE;
 
 console.log("querying cards...");
 const cards = await cypher(`
@@ -68,7 +71,7 @@ const played = (await cypher(`
 MATCH (a:Card)-[p:PLAYED_WITH]->(b:Card)
 RETURN a.oracleId AS from, b.oracleId AS to, p.inclusion AS inclusion,
        p.synergy AS synergy, p.numDecks AS decks`))
-  .filter((e) => known.has(e.from) && known.has(e.to));
+  .filter((e) => known.has(e.from) && known.has(e.to) && Number(e.inclusion || 0) >= 0.08);
 console.log(`  ${played.length.toLocaleString()} PLAYED_WITH edges`);
 
 const decks = await cypher(`MATCH (d:Deck) RETURN d.id AS id, d.name AS name ORDER BY d.id`);

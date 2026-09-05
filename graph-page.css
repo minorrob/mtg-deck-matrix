@@ -58,6 +58,10 @@
   cursor: pointer; text-align: left; font: inherit; color: inherit; width: 100%;
 }
 .gp-card:hover, .gp-card:focus-visible { border-color: var(--forest-2); outline: none; }
+/* Hundreds of tiles rebuild on every filter click. Skipping layout and paint for
+   the ones off screen is what keeps that click feeling immediate. */
+.gp-card { content-visibility: auto; contain-intrinsic-size: auto 84px; }
+.gp-more { border-style: dashed; color: var(--accent); font-weight: 800; }
 .gp-card.is-ego { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold-soft); }
 .gp-card img { width: 44px; border-radius: 3px; display: block; background: var(--surface-2); }
 .gp-card b { display: block; font-size: 13px; line-height: 1.25; }
