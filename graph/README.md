@@ -22,15 +22,27 @@ the moment it lands.
 
 ## Running it
 
+Run from the repository root, not from `graph/` — the ingest scripts read
+`data/master-v2.json` by relative path.
+
 ```bash
-cd graph
-docker compose up -d                       # http://localhost:7474  neo4j / mtggraph
-node ingest/01-fetch.mjs                   # Scryfall bulk -> .cache
-node ingest/02-build-csv.mjs               # -> .import/*.csv
-cp .import/*.csv .data/import/             # or mount, see compose
-cat schema/constraints.cypher ingest/03-load.cypher | \
-  docker exec -i mtg-graph cypher-shell -u neo4j -p mtggraph
+docker compose -f graph/docker-compose.yml up -d   # :7474  neo4j / mtggraph
+
+node graph/ingest/01-fetch.mjs           # Scryfall bulk  -> graph/.cache  (~30 MB)
+node graph/ingest/02-build-csv.mjs       # cards + edges  -> graph/.import
+node graph/ingest/04-fetch-edhrec.mjs    # EDHREC pages   -> graph/.cache/edhrec
+node graph/ingest/05-build-edhrec-csv.mjs
+
+# compose mounts graph/.import at the container's import directory, so the CSVs
+# are already in place -- nothing to copy.
+cat graph/schema/constraints.cypher \
+    graph/ingest/03-load.cypher \
+    graph/ingest/06-load-edhrec.cypher \
+  | docker exec -i mtg-graph cypher-shell -u neo4j -p mtggraph
 ```
+
+About five minutes end to end, most of it the Scryfall download. Everything is
+rebuilt from source, so a wiped `.data` costs only the wait.
 
 Then `queries/` holds parameterised Cypher. Neo4j Browser at :7474 is the
 exploration surface while the model is still being shaped.
