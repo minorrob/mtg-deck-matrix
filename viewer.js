@@ -22,7 +22,8 @@
     shareTo: "",
     query: "",
     benchFilter: "all",
-    buyFilter: "all"
+    buyFilter: "need",    // the store list opens on what the decks are short of
+    buyGroup: "price"     // price | color | kind -- how the buy list is grouped
   };
 
   /* ------------------------------------------------------------- plumbing */
@@ -167,19 +168,27 @@
     return "WUBRG".split("").filter(function (ch) { return seen[ch]; });
   }
 
+  /* Guides, ratings and swaps are keyed by slot id, but they were generated for
+     the commander that held the slot at the time. After the 2026-09-05 rebuild
+     D4 and D6 changed hands (Felothar, Krenko), so a record only counts when
+     its commander matches the master's; a stale one is hidden, not shown. */
+  function sameCommander(rec, id) {
+    var deck = (DATA.decks || []).filter(function (d) { return d.id === id; })[0];
+    return !deck || !rec.commander || rec.commander === deck.commander;
+  }
   function guideFor(id) {
     if (!GUIDES) return null;
-    return (GUIDES.decks || []).filter(function (g) { return g.id === id; })[0] || null;
+    return (GUIDES.decks || []).filter(function (g) { return g.id === id && sameCommander(g, id); })[0] || null;
   }
 
   function swapsFor(id) {
     if (!SWAPS) return null;
-    return (SWAPS.decks || []).filter(function (s) { return s.id === id; })[0] || null;
+    return (SWAPS.decks || []).filter(function (s) { return s.id === id && sameCommander(s, id); })[0] || null;
   }
 
   function ratingFor(id) {
     if (!RATINGS) return null;
-    return (RATINGS.decks || []).filter(function (r) { return r.id === id; })[0] || null;
+    return (RATINGS.decks || []).filter(function (r) { return r.id === id && sameCommander(r, id); })[0] || null;
   }
 
   // Rank by measured score when the ratings file is present; otherwise by how
@@ -919,11 +928,13 @@
       var c = byName(name), meta = BUY_KIND[kind];
       var sub = c ? [c.type, c.purpose].filter(Boolean).join(" · ") : "";
       if (replaces) sub += (sub ? " · " : "") + "replaces " + replaces;
+      var inCart = c && c.cartVendor === "WF";
       rows.push({
         source: "To Buy", name: name, price: price, copies: copies || 1,
         sub: sub, where: deckLabel ? "for " + deckLabel : "",
-        status: gc ? "Game Changer" : meta.status,
-        chip: gc ? "amber" : meta.chip, kind: kind, group: meta.group
+        status: inCart ? "In WF cart" : (gc ? "Game Changer" : meta.status),
+        chip: inCart ? "patina" : (gc ? "amber" : meta.chip), kind: kind, group: meta.group,
+        color: c ? c.color : "", type: c ? c.type : "", inCart: inCart
       });
     }
 
@@ -933,7 +944,9 @@
       var p = plan[c.name];
       var wants = DATA.decks.filter(function (d) { return (c.target[d.id] || 0) > 0; })
         .map(function (d) { return d.label; });
-      push(c.name, c.price, c.buyCount, p ? p.kind : "need",
+      // A targeted card the decks are short of is needed now, whatever plan
+      // it also appears in; the upgrade loops below only add what is not.
+      push(c.name, c.price, c.buyCount, "need",
         wants.join(", ") || (p && p.deck) || "", p && p.replaces, p && p.gameChanger);
     });
 
@@ -977,6 +990,47 @@
     });
   }
 
+  /* The buy list is read in a shop, off a phone. Price bands put the expensive
+     cards first so they get checked against the case before the commons; the
+     color view follows how a singles binder is sorted. Cards already in the
+     Wake Forest cart are bought online and sit in a group of their own at the
+     bottom in every view. */
+  var PRICE_BANDS = [["$6 and up", 6], ["$4 to $6", 4], ["$1 to $4", 1], ["Under $1", 0]];
+  var COLOR_NAME = { W: "White", U: "Blue", B: "Black", R: "Red", G: "Green", C: "Colorless", L: "Lands" };
+  var COLOR_ORDER = ["White", "Blue", "Black", "Red", "Green", "Multicolor", "Colorless", "Lands"];
+  function priceBand(p) {
+    for (var i = 0; i < PRICE_BANDS.length; i++) if ((p || 0) >= PRICE_BANDS[i][1]) return PRICE_BANDS[i][0];
+    return "Under $1";
+  }
+  function colorGroup(row) {
+    if (row.type && /Land/.test(row.type) && !/Creature/.test(row.type)) return "Lands";
+    var c = row.color || "";
+    if (COLOR_NAME[c]) return COLOR_NAME[c];
+    return "Multicolor";
+  }
+  function regroupBuyRows(rows, mode) {
+    var out = rows.map(function (r) {
+      var g = r.inCart ? "In your Wake Forest cart — buying online, skip at the store"
+        : mode === "price" ? priceBand(r.price)
+        : mode === "color" ? colorGroup(r)
+        : r.group;
+      return Object.assign({}, r, { group: g });
+    });
+    var rank = function (r) {
+      if (r.inCart) return 99;
+      if (mode === "price") return PRICE_BANDS.map(function (b) { return b[0]; }).indexOf(r.group);
+      if (mode === "color") return COLOR_ORDER.indexOf(r.group);
+      return 0;
+    };
+    out.sort(function (a, b) {
+      var d = rank(a) - rank(b);
+      if (d) return d;
+      if (mode === "color" && !a.inCart) return ((b.price || 0) - (a.price || 0)) || a.name.localeCompare(b.name);
+      return a.name.localeCompare(b.name);
+    });
+    return out;
+  }
+
   function renderPicker(root, kind) {
     var isBench = kind === "bench";
     var all = isBench ? benchRows() : buyRows();
@@ -1010,6 +1064,15 @@
       if (isBench) return filter === "spare" ? r.where === "spare" : r.where !== "spare";
       return r.kind === filter;
     });
+
+    if (!isBench) {
+      var modes = [["price", "By price"], ["color", "By color"], ["kind", "By reason"]];
+      root.appendChild(el("div", { class: "filter", style: "margin:-4px 0 10px" }, modes.map(function (m) {
+        return el("button", { type: "button", "aria-pressed": state.buyGroup === m[0] ? "true" : "false",
+          text: m[1], onclick: function () { state.buyGroup = m[0]; save(); render(); } });
+      })));
+      rows = regroupBuyRows(rows, state.buyGroup);
+    }
 
     groupedTable(root, rows, {
       where: isBench ? "Where else" : "For which deck",
