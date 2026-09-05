@@ -439,6 +439,23 @@
     </li>`;
   }
 
+  /* The rows the page is showing, by the same route render() takes to them.
+     Export has to agree with the screen, and the only way to guarantee that is to
+     ask the same functions in the same order -- a second, parallel filter
+     implementation is a second thing to keep in step, and it would not be. */
+  function visibleRows(ctx) {
+    const f = (ctx && ctx.filters) || {};
+    const deckIds = deckScope(ctx, f);
+    const rows = deckIds.length
+      ? (ctx.rows || []).map((r) => Slot.scopeRow(r, deckIds)).filter(Boolean)
+      : (ctx.rows || []);
+    const all = decorate(rows, ctx.factFor, ctx.deckLabels, ctx.paidFor);
+    const done = ctx.picked instanceof Set ? ctx.picked : new Set();
+    const inStore = f.view === "store";
+    const scope = inStore && !f.storeAll ? all.filter((r) => r.need > 0 || done.has(r.key)) : all;
+    return scope.filter((r) => passes(r, f));
+  }
+
   function render(host, ctx) {
     if (!host) return;
     const f = ctx.filters || {};
@@ -491,6 +508,7 @@
             (ctx.bench || []).length ? " " + (ctx.bench || []).length : ""}</button>
           <button type="button" data-sp-view="store" aria-pressed="${f.view === "store"}">\u25c9 Store</button>
         </span>
+        ${ctx.onExport ? '<button type="button" class="sp-fbtn sp-exp" data-sp-export>\u2913 Export</button>' : ""}
         <button type="button" class="sp-mob" data-sp-mob aria-expanded="${Boolean(f.barOpen)}">
           ${f.barOpen ? "Hide options" : "Filter, group, sort"}${
             activeFilters ? `<span class="sp-cnt dp-num">${activeFilters}</span>` : '<span class="sp-caret">\u25be</span>'}
@@ -613,6 +631,6 @@
     host.innerHTML = bar + body;
   }
 
-  return {render, decorate, passes, sortRows, groupRows, values, benchMarkup, destDetail,
+  return {render, visibleRows, decorate, passes, sortRows, groupRows, values, benchMarkup, destDetail,
           COLUMNS, FILTERS, GROUP_BY, STATUS, deckScope};
 });

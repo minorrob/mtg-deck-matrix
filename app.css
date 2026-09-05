@@ -2214,27 +2214,6 @@ div.sp-band{padding:9px 13px;border-radius:12px 12px 0 0}
   .sp-tri button[aria-pressed="true"][data-sp-s="hand"] { box-shadow: inset 0 0 0 1px rgba(255,255,255,.35); }
 }
 
-/* iOS Safari zooms the whole page in when you focus a text field whose text is under
-   16px, and does not zoom back out when you leave it -- which is why the Game Log, the
-   one tab that is mostly a form, was the tab that "shrank the screen". This changes no
-   layout: the fields keep their sizes, the text inside them is simply large enough that
-   the browser leaves the viewport alone. Last in the file so it wins the ties against
-   the single-class rules that set 12-14px. */
-@media (max-width: 700px) {
-  input[type="text"], input[type="url"], input[type="number"], input[type="search"],
-  input[type="date"], input[type="email"], input[type="tel"], input[type="password"],
-  input:not([type]),
-  /* select and textarea carry no type attribute to lean on, and a bare element
-     selector loses to every `.thing select` rule in this file. The [class] pair
-     matches the same two elements at class-level weight, which ties those rules
-     and wins on being last. */
-  select[class], select:not([class]), textarea[class], textarea:not([class]) { font-size: 16px; }
-  /* The two price fields are sized in ems, so a bigger font would push them wider than
-     the row they sit in. They get the width back instead. */
-  .dp-paid input, .sp-paid input { width: 84px; }
-  .live-card-status .live-price-field input { width: 3.4rem; font-size: 16px; }
-}
-
 /* The Shop's table on a phone.
    ---------------------------
    Eleven columns is the right shape for a desktop and the wrong shape for a 390px
@@ -2294,3 +2273,59 @@ div.sp-band{padding:9px 13px;border-radius:12px 12px 0 0}
 .dp-claim .dp-rank-b:not(:disabled):hover { border-color: var(--accent); color: var(--accent); }
 /* A price you typed beats the estimate it replaced, and says so. */
 .dp-num.is-paid { color: var(--forest-2); font-weight: 850; }
+
+/* The shopping-trip export. Three lists that go to three different places, so
+   the dialog explains where each one is used rather than just naming it -- the
+   choice is about the errand, not the file format. */
+.trip-dialog {
+  max-width: 540px; width: calc(100vw - 32px); border: 1px solid var(--line);
+  border-radius: 14px; padding: 0; background: var(--surface); color: inherit;
+}
+.trip-dialog::backdrop { background: rgba(12, 24, 18, .46); }
+.trip-lede { margin: 0 0 14px; color: var(--muted); font-size: 14px; }
+.trip-opt, .trip-word {
+  display: flex; gap: 11px; align-items: flex-start; cursor: pointer;
+  padding: 11px 13px; margin-bottom: 8px;
+  border: 1px solid var(--line); border-radius: 9px; background: var(--surface);
+}
+.trip-opt:hover, .trip-word:hover { border-color: var(--forest-2, #1c5a42); }
+.trip-opt.is-empty { opacity: .5; cursor: default; }
+.trip-opt.is-empty:hover { border-color: var(--line); }
+.trip-opt input, .trip-word input { margin-top: 3px; flex: 0 0 auto; }
+/* The name and the count are one sentence -- "To Buy - 263 cards" -- so the name
+   stays inline. As a block it broke the line and left the dash starting a row. */
+.trip-opt b { font-size: 14.5px; }
+.trip-opt em { display: block; font-style: normal; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.trip-word { margin-top: 14px; background: var(--sink, rgba(0,0,0,.03)); }
+.trip-word span { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+.trip-actions { display: flex; justify-content: flex-end; margin-top: 16px; }
+@media (max-width: 560px) {
+  .trip-opt, .trip-word { padding: 12px; }
+  .trip-actions .primary-button { width: 100%; }
+}
+
+/* iOS Safari zooms the whole page in when you focus a text field whose text is under
+   16px, and does not zoom back out when you leave it -- which is why the Game Log, the
+   one tab that is mostly a form, was the tab that "shrank the screen". This changes no
+   layout: the fields keep their sizes, the text inside them is simply large enough that
+   the browser leaves the viewport alone.
+
+   THIS BLOCK STAYS AT THE END OF THE FILE. It wins its ties on source order alone, so
+   anything appended below it can take a form field back under 16px and bring the zoom
+   back. It had already drifted up once, above the Shop's phone table and then above the
+   trip dialog; it is back at the bottom, and tests/data-integrity.mjs fails if a later
+   rule sets a 14px font. Append new sections above this comment, not below it. */
+@media (max-width: 700px) {
+  input[type="text"], input[type="url"], input[type="number"], input[type="search"],
+  input[type="date"], input[type="email"], input[type="tel"], input[type="password"],
+  input:not([type]),
+  /* select and textarea carry no type attribute to lean on, and a bare element
+     selector loses to every `.thing select` rule in this file. The [class] pair
+     matches the same two elements at class-level weight, which ties those rules
+     and wins on being last. */
+  select[class], select:not([class]), textarea[class], textarea:not([class]) { font-size: 16px; }
+  /* The two price fields are sized in ems, so a bigger font would push them wider than
+     the row they sit in. They get the width back instead. */
+  .dp-paid input, .sp-paid input { width: 84px; }
+  .live-card-status .live-price-field input { width: 3.4rem; font-size: 16px; }
+}

@@ -17,16 +17,22 @@
  */
 (function (root, factory) {
   "use strict";
-  const api = factory();
+  const docx = (typeof module === "object" && module.exports && typeof require === "function")
+    ? require("./docx-writer.js")
+    : root && root.MtgDocxWriter;
+  const api = factory(docx);
   if (typeof module === "object" && module.exports) module.exports = api;
   if (root) root.MtgShopExport = api;
-})(typeof globalThis !== "undefined" ? globalThis : this, function () {
+})(typeof globalThis !== "undefined" ? globalThis : this, function (Docx) {
   "use strict";
 
   /* The boundaries are stated rather than implied. "$6+, $1-6, under $1" leaves
      exactly $1.00 and exactly $6.00 undecided, and a card that falls through
      every band vanishes off the sheet. These three cover the line with no gap and
      no overlap: a price is in exactly one, always. */
+  const DOCX_MIME =
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
   const BANDS = [
     {key: "high", label: "$6 and up", test: (p) => p >= 6},
     {key: "mid", label: "$1 to $6", test: (p) => p >= 1 && p < 6},
@@ -117,7 +123,9 @@
         deck: (r.deckNames || []).join(", ") || "Unassigned",
         name: r.name,
         color: r.color || "Colorless",
-        type: r.type || ""
+        // The Shop's rows call it cardType (what the card IS) to distinguish it
+        // from the slot's type (the job the slot does). Either is accepted.
+        type: r.type || r.cardType || ""
       }))
       .sort((a, b) => a.deck.localeCompare(b.deck) || byName(a, b));
   }
@@ -198,6 +206,45 @@ ${note ? `<p class="noprint">${esc(note)}</p>` : ""}
       "This tab will open your print dialog. Check it against the shelf.");
   }
 
+  /* The same list, aimed at Word instead of a printer. One source of truth for
+     what is on it; the renderers differ only in where it is going. */
+  function toBuyDoc(rows, meta) {
+    const groups = toBuyGroups(rows);
+    const total = groups.reduce((n, g) => n + g.count, 0);
+    return {
+      title: "To Buy",
+      subtitle: `${total} card${total === 1 ? "" : "s"} · grouped by price, then color, A to Z · ` +
+        `target prices, not what you will pay · ${(meta && meta.date) || ""}`,
+      sections: groups.map((band) => ({
+        heading: `${band.label} · ${band.count}`,
+        groups: band.colors.map((c) => ({
+          heading: c.color,
+          items: c.cards.map((card) => ({
+            text: card.name + (card.quantity > 1 ? ` ×${card.quantity}` : ""),
+            right: card.price
+          }))
+        }))
+      }))
+    };
+  }
+
+  function inHandDoc(rows, meta) {
+    const list = inHandRows(rows);
+    return {
+      title: "In Hand",
+      subtitle: `${list.length} card${list.length === 1 ? "" : "s"} · already owned, ` +
+        `listed by deck · ${(meta && meta.date) || ""}`,
+      sections: [{
+        groups: [{
+          items: list.map((r) => ({
+            text: r.name,
+            note: `${r.color}${r.type ? " · " + r.type : ""} · ${r.deck}`
+          }))
+        }]
+      }]
+    };
+  }
+
   /**
    * Build whichever lists were asked for. Returns files ready to hand to a
    * download, each with the name it should be saved under and the type it is.
@@ -210,6 +257,11 @@ ${note ? `<p class="noprint">${esc(note)}</p>` : ""}
       files.push({id: "toBuy", label: "To Buy", kind: "print",
         filename: `to-buy-${stamp}.html`, mime: "text/html;charset=utf-8",
         content: toBuyHtml(rows, {date: stamp})});
+    }
+    if (asked.toBuyDocx && Docx) {
+      files.push({id: "toBuyDocx", label: "To Buy (Word)", kind: "docx",
+        filename: `to-buy-${stamp}.docx`, mime: DOCX_MIME,
+        bytes: Docx.build(toBuyDoc(rows, {date: stamp}))});
     }
     if (asked.order) {
       const text = orderText(rows);
@@ -225,6 +277,11 @@ ${note ? `<p class="noprint">${esc(note)}</p>` : ""}
         filename: `in-hand-${stamp}.html`, mime: "text/html;charset=utf-8",
         content: inHandHtml(rows, {date: stamp})});
     }
+    if (asked.inHandDocx && Docx) {
+      files.push({id: "inHandDocx", label: "In hand (Word)", kind: "docx",
+        filename: `in-hand-${stamp}.docx`, mime: DOCX_MIME,
+        bytes: Docx.build(inHandDoc(rows, {date: stamp}))});
+    }
     return files;
   }
 
@@ -237,6 +294,8 @@ ${note ? `<p class="noprint">${esc(note)}</p>` : ""}
     inHandRows,
     toBuyHtml,
     inHandHtml,
+    toBuyDoc,
+    inHandDoc,
     build
   };
 });

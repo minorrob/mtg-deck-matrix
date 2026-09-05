@@ -1557,7 +1557,10 @@
       bench: benchItems(decks, owned, cards, deckLabels),
       intakeOpen: shopIntakeOpen,
       picked: shopPickedUp,
-      deckLabels, filters: shopFilters, owned, decks
+      deckLabels, filters: shopFilters, owned, decks,
+      // The page owns the decorated rows -- color, card type, deck names -- so it
+      // hands them straight over rather than the app rebuilding them from raw.
+      onExport: openTripExport
     };
   }
 
@@ -1731,6 +1734,14 @@
       shopFilters.query = ""; renderShopPage(); return true;
     }
     if (event.target.closest("[data-sp-mob]")) { shopFilters.barOpen = !shopFilters.barOpen; renderShopPage(); return true; }
+    /* Export takes what is on screen, filters and all. Exporting the whole plan
+       when you are looking at one deck's outstanding red cards would be the wrong
+       list every time, so the dialog is handed the rows the page is showing. */
+    if (event.target.closest("[data-sp-export]")) {
+      const ctx = shopContext();
+      if (ctx) openTripExport(window.MtgShopPage.visibleRows(ctx));
+      return true;
+    }
     if ((el = event.target.closest("[data-sp-view]"))) {
       const next = el.dataset.spView;
       /* Arriving at the Store is arriving at a booth: the list of what you have already
@@ -7313,6 +7324,100 @@
     return state.shopTable;
   }
 
+  /* THE SHOPPING TRIP. Three lists, and they are not three views of one table:
+     one is printed and carried to a booth, one is pasted into a checkout, one is
+     checked against a shelf. Which ones you want depends on the errand, so the
+     dialog asks rather than assuming, and remembers nothing -- the answer is
+     different next week.
+
+     Everything is built by shop-export.js and written client-side. Nothing here
+     talks to a server, which is what lets a friend who loaded their own deck use
+     the same button. */
+  function openTripExport(rows) {
+    const Shop = window.MtgShopExport;
+    const dialog = $("#trip-dialog");
+    if (!Shop || !dialog) return showToast("The export module did not load.");
+    if (!rows || !rows.length) return showToast("Nothing in the current view to export.");
+    const counts = {
+      toBuy: Shop.toBuyGroups(rows).reduce((n, g) => n + g.count, 0),
+      order: Shop.orderText(rows).split("\n").filter(Boolean).length,
+      inHand: Shop.inHandRows(rows).length
+    };
+    const has = (n) => n > 0;
+    $("#trip-dialog-kicker").textContent =
+      `${rows.length} card${rows.length === 1 ? "" : "s"} in the current view`;
+    $("#trip-dialog-body").innerHTML = `
+      <p class="trip-lede">Pick any or all. Each one is cut for where it is used.</p>
+      <label class="trip-opt${has(counts.toBuy) ? "" : " is-empty"}">
+        <input type="checkbox" data-trip="toBuy"${has(counts.toBuy) ? " checked" : " disabled"}>
+        <span><b>To Buy</b> — ${counts.toBuy} card${counts.toBuy === 1 ? "" : "s"}
+        <em>Printed, two columns, grouped by price then color. Carry it to the booth.</em></span>
+      </label>
+      <label class="trip-opt${has(counts.order) ? "" : " is-empty"}">
+        <input type="checkbox" data-trip="order"${has(counts.order) ? " checked" : " disabled"}>
+        <span><b>Order</b> — ${counts.order} line${counts.order === 1 ? "" : "s"}
+        <em>Paste into tcgplayer.com/massentry and press Add to Cart.</em></span>
+      </label>
+      <label class="trip-opt${has(counts.inHand) ? "" : " is-empty"}">
+        <input type="checkbox" data-trip="inHand"${has(counts.inHand) ? " checked" : " disabled"}>
+        <span><b>In hand</b> — ${counts.inHand} card${counts.inHand === 1 ? "" : "s"}
+        <em>What you already own, by deck. Check it against the shelf.</em></span>
+      </label>
+      <label class="trip-word">
+        <input type="checkbox" data-trip-word>
+        <span>Also give me Word files. The print pages lay out more reliably, so
+        take these only if you want to edit the list on the way.</span>
+      </label>
+      <div class="trip-actions">
+        <button type="button" class="primary-button" data-trip-go>Download</button>
+      </div>`;
+
+    $("[data-trip-go]", $("#trip-dialog-body")).addEventListener("click", () => {
+      const want = {};
+      $$("[data-trip]", $("#trip-dialog-body")).forEach((box) => {
+        if (box.checked) want[box.dataset.trip] = true;
+      });
+      if ($("[data-trip-word]", $("#trip-dialog-body")).checked) {
+        if (want.toBuy) want.toBuyDocx = true;
+        if (want.inHand) want.inHandDocx = true;
+      }
+      const files = Shop.build(rows, want, {date: new Date().toISOString().slice(0, 10)});
+      if (!files.length) return showToast("Nothing selected to export.");
+      files.forEach((file, i) => {
+        // Browsers drop downloads fired in the same tick, so they are spaced out.
+        setTimeout(() => downloadFile(file), i * 350);
+      });
+      dialog.close();
+      // find() hands back the FILE, not the note on it. Printed straight into the
+      // toast that read "Exported 5 files. [object Object]".
+      const note = (files.find((f) => f.note) || {}).note;
+      showToast(`Exported ${files.length} file${files.length === 1 ? "" : "s"}.` +
+        (note ? " " + note : ""));
+    });
+    dialog.showModal();
+  }
+
+  /* One place that turns an export-module file into a download. A print sheet is
+     opened in a tab rather than saved: it exists to be printed, and a file in the
+     downloads folder is one more step between here and paper. */
+  function downloadFile(file) {
+    if (file.kind === "print") {
+      const win = window.open("", "_blank");
+      if (win) { win.document.write(file.content); win.document.close(); return; }
+      // Popups blocked: fall through and save it, which still works.
+    }
+    const body = file.bytes ? [file.bytes] : [file.content];
+    const blob = new Blob(body, {type: file.mime});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = file.filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
+
   function exportShopList(visible) {
     const groupBy = state.shopFilters.groupBy;
     const groups = groupBy === "none" ? [{label: "", items: visible}] : groupShopItems(visible, groupBy);
@@ -8078,6 +8183,10 @@
       });
       $("#compliance-dialog-close").addEventListener("click", () => $("#compliance-dialog").close());
       $("#compliance-dialog").addEventListener("click", (event) => {
+        if (event.target === event.currentTarget) event.currentTarget.close();
+      });
+      $("#trip-dialog-close").addEventListener("click", () => $("#trip-dialog").close());
+      $("#trip-dialog").addEventListener("click", (event) => {
         if (event.target === event.currentTarget) event.currentTarget.close();
       });
       $("#sim-dialog-close").addEventListener("click", closeSimDialog);
