@@ -53,6 +53,7 @@ RETURN c.oracleId AS id, c.name AS name, c.manaValue AS mv, c.colorIdentity AS c
        c.typeLine AS type, c.rarity AS rarity, c.setName AS set, c.priceUsd AS price,
        c.priceFoil AS priceFoil, c.edhrecRank AS rank, c.isLand AS isLand,
        c.canBeCommander AS isCommander, c.image AS image,
+       c.tcgUri AS buy, c.printings AS printings, c.cheapestSet AS cheapestSet,
        coalesce(o.qty,0) AS own, coalesce(o.ordered,0) AS ordered, coalesce(o.bench,0) AS bench,
        [(c)-[:FILLS]->(r:Role) | r.id]            AS roles,
        [(c)-[:REQUIRES]->(r:Role) | r.id]         AS requires,

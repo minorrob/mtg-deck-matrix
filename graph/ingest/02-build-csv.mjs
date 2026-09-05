@@ -13,8 +13,9 @@
 // text in parentheses, and reading it as rules text is what once credited Bronze
 // Guardian with a +1/+1 counter doubler it does not have.
 import {mkdir, readFile, writeFile} from "node:fs/promises";
-import {createReadStream} from "node:fs";
+import {createReadStream, existsSync} from "node:fs";
 import {createInterface} from "node:readline";
+import {buildPriceIndex} from "./02b-price-index.mjs";
 
 const cacheDir = arg("--cache") || "graph/.cache";
 const outDir = arg("--out") || "graph/.import";
@@ -110,6 +111,18 @@ async function *jsonl(path) {
 }
 
 await mkdir(outDir, {recursive: true});
+
+// Prices come from every printing, not the one representative row oracle_cards
+// carries -- see 02b for why four staple shocklands otherwise read as free.
+let priceIndex = new Map();
+if (existsSync(`${cacheDir}/default_cards.jsonl`)) {
+  const built = await buildPriceIndex(cacheDir);
+  priceIndex = built.index;
+  console.log(`priced from ${built.rows.toLocaleString()} printings`);
+} else {
+  console.log("no default_cards.jsonl -- falling back to one printing per card; run 01-fetch.mjs to fix prices");
+}
+
 const cards = [], fills = [], causes = [], triggers = [], produces = [], consumes = [],
       requires = [], mechanics = [], tribes = [], printings = [];
 let seen = 0, legal = 0;
@@ -127,11 +140,16 @@ for await (const c of jsonl(`${cacheDir}/oracle_cards.jsonl`)) {
   const ci = (c.color_identity || []).join("");
   const isLand = /\bLand\b/.test(typeLine);
 
-  cards.push([c.oracle_id, c.name, mv, ci, typeLine, c.rarity || "", c.set_name || "",
-              Number(c.prices?.usd || 0) || "", Number(c.prices?.usd_foil || 0) || "",
+  const pi = priceIndex.get(c.oracle_id);
+  const usd = (pi && pi.usd) || Number(c.prices?.usd) || "";
+  const foil = (pi && pi.foil) || Number(c.prices?.usd_foil) || "";
+  cards.push([c.oracle_id, c.name, mv, ci, typeLine, c.rarity || "", (pi && pi.set) || c.set_name || "",
+              usd, foil,
               c.edhrec_rank || "", isLand ? "true" : "false",
               /\bLegendary\b/.test(typeLine) && /Creature/.test(typeLine) ? "true" : "false",
-              (c.image_uris?.normal || faces[0]?.image_uris?.normal || "")]);
+              (c.image_uris?.normal || faces[0]?.image_uris?.normal || ""),
+              (pi && pi.tcg) || c.purchase_uris?.tcgplayer || "",
+              pi ? pi.printings : 1]);
   printings.push([c.id, c.oracle_id, c.set || "", c.collector_number || "",
                   c.finishes?.includes("foil") ? "true" : "false", Number(c.prices?.usd || 0) || ""]);
 
@@ -166,7 +184,7 @@ for (const card of master.cards) {
 }
 
 const files = {
-  "cards.csv":      rows(["oracleId","name","manaValue","colorIdentity","typeLine","rarity","setName","priceUsd","priceFoil","edhrecRank","isLand","canBeCommander","image"], cards),
+  "cards.csv":      rows(["oracleId","name","manaValue","colorIdentity","typeLine","rarity","setName","priceUsd","priceFoil","edhrecRank","isLand","canBeCommander","image","tcgUri","printings"], cards),
   "printings.csv":  rows(["scryfallId","oracleId","set","collectorNumber","hasFoil","priceUsd"], printings),
   "fills.csv":      rows(["oracleId","role","weight"], fills),
   "causes.csv":     rows(["oracleId","event","rate"], causes),
