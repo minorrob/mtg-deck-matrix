@@ -3,7 +3,7 @@
 //   :param role => 'ramp'   :param maxCmc => 2   :param identity => 'GWUB'
 MATCH (:Collection)-[o:OWNS]->(c:Card)-[:FILLS]->(r:Role {id: $role})
 WHERE c.manaValue <= $maxCmc
-  AND ALL(ch IN split(c.colorIdentity,'') WHERE ch IN split($identity,''))
+  AND (c.colorIdentity IS NULL OR ALL(ch IN split(c.colorIdentity,'') WHERE ch IN split($identity,'')))
 OPTIONAL MATCH (c)-[a:ASSIGNED_TO]->(d:Deck) WHERE a.actual > 0
 RETURN c.name AS card, c.manaValue AS mv, c.colorIdentity AS ci, c.priceUsd AS price,
        o.qty AS own, o.ordered AS ordered,

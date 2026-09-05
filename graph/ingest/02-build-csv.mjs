@@ -33,10 +33,10 @@ const rows = (header, data) => [header.join(","), ...data.map((r) => r.map(csv).
 // that CAUSES it says. Keeping both sides in one table is what keeps them aligned.
 const EVENTS = [
   {id: "creature-etb",   listen: /whenever (?:another )?(?:a |one or more )?creatures?[^.]{0,40}enters/,
-                         cause:  /create (?:a|an|one|two|three|four|x|\d+)[^.]{0,60}creature tokens?|put (?:a|an|two|\d+)[^.]{0,40}creature[^.]{0,20}onto the battlefield/},
+                         cause:  /create (?:a|an|one|two|three|four|x|\d+)[^.]{0,60}creature tokens?|put (?:a|an|two|\d+)[^.]{0,40}creature[^.]{0,20}onto the battlefield|exile [^.]{0,50}(?:then )?returns? (?:it|them|that card|those cards) to the battlefield|returns? (?:it|them|that card) to the battlefield under (?:its|their) owner/},
   {id: "land-drop",      listen: /landfall|whenever a land (?:you control )?enters/,
                          cause:  /you may play an additional land|put (?:a|that) land(?: card)? onto the battlefield|search your library for a[^.]{0,50}land[^.]{0,40}onto the battlefield/},
-  {id: "creature-dies",  listen: /whenever (?:another )?(?:a )?creature (?:you control )?dies/,
+  {id: "creature-dies",  listen: /whenever (?:another |a |the )?(?:equipped |enchanted |target |nontoken )?creature(?:s)? (?:you control )?(?:dies|die)/,
                          cause:  /sacrifice (?:a|an|another|two|\d+) creature|destroy target creature|deals? \d+ damage to target creature/},
   {id: "attack",         listen: /whenever [^.]{0,40}attacks/,
                          cause:  /must be blocked|attacks? each combat if able|goad/},
@@ -153,6 +153,12 @@ for await (const c of jsonl(`${cacheDir}/oracle_cards.jsonl`)) {
   printings.push([c.id, c.oracle_id, c.set || "", c.collector_number || "",
                   c.finishes?.includes("foil") ? "true" : "false", Number(c.prices?.usd || 0) || ""]);
 
+  // A trigger doubler listens to whatever it doubles, so it reads as a co-payoff.
+  const doublesEtb = /entering the battlefield causes a triggered ability[^.]{0,60}to trigger|triggers? an additional time/.test(text);
+  if (doublesEtb) {
+    if (/creature|permanent/.test(text)) triggers.push([c.oracle_id, "creature-etb", "true"]);
+    if (/land/.test(text)) triggers.push([c.oracle_id, "land-drop", "true"]);
+  }
   for (const e of EVENTS) {
     if (e.listen && e.listen.test(text)) triggers.push([c.oracle_id, e.id, /you control/.test(text) ? "true" : "false"]);
     if (e.cause && e.cause.test(text)) causes.push([c.oracle_id, e.id, /whenever|at the beginning/.test(text) ? "repeatable" : "once"]);
