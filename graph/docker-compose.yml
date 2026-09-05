@@ -1,0 +1,15 @@
+# The graph runs on your machine, not in the app. The app consumes an export of it.
+#   docker compose up -d      then  http://localhost:7474   (neo4j / mtggraph)
+services:
+  neo4j:
+    image: neo4j:5.26-community
+    container_name: mtg-graph
+    ports: ["7474:7474", "7687:7687"]
+    environment:
+      NEO4J_AUTH: neo4j/mtggraph
+      NEO4J_server_memory_heap_max__size: 2G
+      NEO4J_server_memory_pagecache_size: 1G
+      NEO4J_PLUGINS: '["apoc"]'
+    volumes:
+      - ./.data:/data
+      - ./.import:/var/lib/neo4j/import
