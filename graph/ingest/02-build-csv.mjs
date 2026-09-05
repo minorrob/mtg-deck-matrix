@@ -43,6 +43,8 @@ const EVENTS = [
   {id: "end-step",       listen: /at the beginning of (?:your |each )?end step/, cause: null},
   {id: "upkeep",         listen: /at the beginning of (?:your |each )?upkeep/, cause: null},
   {id: "cast-spell",     listen: /whenever you cast (?:a|an|your)/, cause: null},
+  {id: "proliferate",    listen: /proliferate/,
+                         cause:  /put (?:a|an|one|two|three|x|\d+)[^.]{0,40}counters? on|enters with (?:a|an|one|two|three|x|\d+)[^.]{0,30}counters?/},
   {id: "counter-placed", listen: /whenever (?:one or more )?\+1\/\+1 counters? (?:is|are) put/,
                          cause:  /put (?:a|an|one|two|three|x|\d+)[^.]{0,30}\+1\/\+1 counters?/},
   {id: "life-gain",      listen: /whenever you gain life/, cause: /you gain \d+ life|gain (?:that much|x) life|lifelink/},
@@ -135,7 +137,7 @@ for await (const c of jsonl(`${cacheDir}/oracle_cards.jsonl`)) {
 
   for (const e of EVENTS) {
     if (e.listen && e.listen.test(text)) triggers.push([c.oracle_id, e.id, /you control/.test(text) ? "true" : "false"]);
-    if (e.cause && e.cause.test(text) && !isLand) causes.push([c.oracle_id, e.id, /whenever|at the beginning/.test(text) ? "repeatable" : "once"]);
+    if (e.cause && e.cause.test(text)) causes.push([c.oracle_id, e.id, /whenever|at the beginning/.test(text) ? "repeatable" : "once"]);
   }
   for (const r of RESOURCES) {
     if (r.produce && r.produce.test(text)) produces.push([c.oracle_id, r.id]);
