@@ -113,6 +113,42 @@
     return BUILD_RUNGS.filter((other) => other !== rung && signatures[other] === signatures[rung]);
   }
 
+  /**
+   * The measured rung this deck is closest to, and how far off it is.
+   *
+   * activeRung answers "is this deck exactly a rung", which is the right question
+   * for the highlight and the wrong one for the reader who has changed three
+   * cards and wants to know what their score used to describe. This answers that:
+   * the rung sharing the most entries, and the count of entries that differ.
+   *
+   * `preferred` breaks ties toward the rung the reader last clicked, for the same
+   * reason activeRung does -- two rungs are often the same hundred.
+   */
+  function nearestRung(plan, selection, preferred) {
+    const mine = new Map();     // slotId -> entry id
+    Lineup.selectedEntries(plan, selection).forEach((entry) => {
+      if (entry.slotId) mine.set(entry.slotId, String(entry.id));
+    });
+    let best = null;
+    BUILD_RUNGS.forEach((rung) => {
+      const theirs = new Map();
+      Lineup.selectedEntries(plan, selectionForRung(plan, rung)).forEach((entry) => {
+        if (entry.slotId) theirs.set(entry.slotId, String(entry.id));
+      });
+      /* Counted in slots, not in cards. Swapping one card is one card out and one
+         card in, and reporting that as "2 differences" reads as twice the edit
+         somebody made. A slot the other rung does not have at all still counts
+         once, which is why both directions are walked. */
+      let differs = 0;
+      theirs.forEach((id, slotId) => { if (mine.get(slotId) !== id) differs += 1; });
+      mine.forEach((id, slotId) => { if (!theirs.has(slotId)) differs += 1; });
+      const better = !best || differs < best.differs
+        || (differs === best.differs && rung === preferred);
+      if (better) best = {rung, differs, slots: theirs.size};
+    });
+    return best;
+  }
+
   function selectionSignature(selection) {
     const ids = [];
     Lineup.ARRAY_KEYS.forEach((key) => {
@@ -756,6 +792,7 @@
   return {
     RUNG_ORDER, RUNG_LABEL, RUNG_BY_KIND, rungOf,
     BUILD_RUNGS, RUNG_CHAIN, rungForStage, selectionForRung, selectionSignature, activeRung, rungTwins,
+    nearestRung,
     PRICE_BANDS, priceBand,
     ACQUISITION: ACQ, PLACE, ownedKey, normalizeOwned, ownedCount, acquisitionOf, acquisitionFor,
     SPOTS, vendorSpot, rungHeading, cardImage,

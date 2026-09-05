@@ -18,18 +18,26 @@
   <meta name="twitter:image" content="https://minorrob.github.io/mtg-deck-matrix/og.png">
   <title>My MtG Deck Builder</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%83%8F%EF%B8%8F%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="app.css?v=65">
+  <link rel="stylesheet" href="app.css?v=66">
   <script src="lineup-model.js?v=4" defer></script>
   <script src="compliance-model.js?v=2" defer></script>
   <script src="scryfall-client.js?v=3" defer></script>
   <script src="custom-model.js?v=3" defer></script>
   <script src="deck-generator.js?v=3" defer></script>
-  <script src="slot-model.js?v=11" defer></script>
-  <script src="deck-page.js?v=27" defer></script>
+  <script src="slot-model.js?v=12" defer></script>
+  <script src="deck-page.js?v=28" defer></script>
   <script src="shop-page.js?v=14" defer></script>
-  <script src="app.js?v=88" defer></script>
+  <script src="app.js?v=89" defer></script>
   <script src="docx-writer.js?v=1" defer></script>
+  <script src="xlsx-writer.js?v=1" defer></script>
   <script src="shop-export.js?v=1" defer></script>
+  <!-- Measuring a deck in the browser: the engine, the protocol, and the check on
+       whether the number on screen still describes the deck on screen. deck-measure
+       throws at load without the engine, and defer preserves document order, so
+       sim-engine has to come first here rather than merely be present. -->
+  <script src="sim-engine.js?v=1" defer></script>
+  <script src="deck-measure.js?v=1" defer></script>
+  <script src="deck-audit.js?v=1" defer></script>
   <script src="shop-filters.js?v=6" defer></script>
 </head>
 <body>

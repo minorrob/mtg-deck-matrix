@@ -11,6 +11,9 @@ import {readFile} from "node:fs/promises";
 const read = async (p) => readFile(new URL(p, import.meta.url), "utf8");
 const viewer = await read("../viewer.js");
 const page = await read("../index.html");
+const matrix = await read("../matrix.html");
+const app = await read("../app.js");
+const deckPage = await read("../deck-page.js");
 const panel = await read("../import-panel.js");
 const store = await read("../deck-store.js");
 const css = await read("../viewer.css");
@@ -131,5 +134,44 @@ check("the panel's fields do not trigger the iOS zoom", () => {
     `no rule may follow it: ${after.trim().slice(0, 80)}`);
 });
 
+/* ---------------- the Deck page's own measurement ---------------- */
+
+check("the matrix page loads the engine before the module that needs it", () => {
+  // deck-measure.js throws at load time without MtgSimEngine, and `defer` keeps
+  // document order, so being present is not enough: it has to be earlier.
+  const at = (name) => matrix.indexOf(`src="${name}.js`);
+  ["sim-engine", "deck-measure", "deck-audit", "xlsx-writer", "docx-writer"].forEach((name) => {
+    assert.ok(at(name) > 0, `matrix.html does not load ${name}.js`);
+  });
+  assert.ok(at("sim-engine") < at("deck-measure"), "the engine comes first");
+  assert.ok(at("docx-writer") < at("xlsx-writer"), "the workbook writer borrows the ZIP writer");
+});
+
+check("the deck audit is derived on every render, never remembered", () => {
+  // A stored "you were measured at 91.5" keeps claiming 91.5 after a slot moves.
+  assert.match(app, /audit: deckAuditFor\(variant, plan, rung\)/,
+    "the context computes it rather than reading a saved field");
+  assert.match(app, /nearestRung\(plan, ensureBuyState\(variant\.id\)/);
+  assert.match(deckPage, /function measuredMarkup\(ctx\)/);
+});
+
+check("only a full re-run is written to state, and it carries its hash", () => {
+  const body = app.slice(app.indexOf("async function rerunDeckMeasure()"),
+    app.indexOf("function exportDeckWorkbook()"));
+  assert.match(body, /state\.deckMeasures\[variant\.id\] = result/);
+  assert.ok(!/preview: true/.test(body), "the recorded run is never a preview");
+  assert.match(body, /!== 100/, "a deck short of a hundred is refused rather than measured");
+});
+
+check("the workbook names where each score came from", () => {
+  // A spreadsheet outlives the page it was exported from, so a bare number in it
+  // is worse than one on screen: there is nothing left to ask.
+  const body = app.slice(app.indexOf("function exportDeckWorkbook()"));
+  assert.match(body, /scoreSource:/);
+  assert.match(body, /measured in the browser/);
+  assert.match(body, /not measured on this hundred/,
+    "a deck with no score for its hundred says so rather than borrowing one");
+});
+
 console.log(`import-wiring: ${checks} checks passed · ` +
-  `${MODULES.length} modules loaded ahead of viewer.js`);
+  `${MODULES.length} modules on My Decks, 5 more on the matrix page`);

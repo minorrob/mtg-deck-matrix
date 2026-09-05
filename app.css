@@ -2304,6 +2304,44 @@ div.sp-band{padding:9px 13px;border-radius:12px 12px 0 0}
   .trip-actions .primary-button { width: 100%; }
 }
 
+/* The measured strip on the Deck page.
+   -----------------------------------
+   Three states, three colors, and the color is the whole point: a reader who has
+   changed three cards should be able to tell at a glance that the number above
+   the deck no longer describes it. Amber for adrift, green once it has been
+   re-measured here, quiet for a deck still sitting on a published rung. */
+.dp-meas {
+  margin: 0 0 10px; border: 1px solid var(--line); border-radius: 11px;
+  background: var(--surface); overflow: hidden;
+}
+.dp-meas > summary {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px;
+  padding: 9px 12px; cursor: pointer; list-style: none; font-size: 13px;
+}
+.dp-meas > summary::-webkit-details-marker { display: none; }
+.dp-meas-v { font-size: 13.5px; }
+.dp-meas-d { font-weight: 750; }
+.dp-meas-n { color: var(--muted); font-size: 12.5px; flex: 1 1 200px; }
+.dp-meas.is-adrift { border-color: #a4761f; background: rgba(216, 162, 46, .07); }
+.dp-meas.is-adrift .dp-meas-v, .dp-meas.is-adrift .dp-meas-d { color: #a4761f; }
+.dp-meas.is-measured { border-color: var(--forest-2, #1c5a42); background: rgba(28, 90, 66, .07); }
+.dp-meas.is-measured .dp-meas-v { color: var(--forest-2, #1c5a42); }
+.dp-meas-body { padding: 2px 12px 12px; border-top: 1px solid var(--line); }
+.dp-meas-t { border-collapse: collapse; margin: 10px 0 6px; width: 100%; max-width: 460px; }
+.dp-meas-t th {
+  text-align: left; font-weight: 600; font-size: 12.5px; color: var(--muted);
+  padding: 3px 10px 3px 0;
+}
+.dp-meas-t td { padding: 3px 0; font-size: 17px; font-weight: 800; text-align: right; }
+.dp-meas-t .dp-meas-se { font-size: 12px; font-weight: 600; color: var(--muted); padding-left: 8px; }
+.dp-meas-note { margin: 6px 0 0; font-size: 12px; line-height: 1.5; color: var(--muted); }
+.dp-meas-run { margin: 10px 0 0; font-size: 13px; font-weight: 700; color: var(--forest-2, #1c5a42); }
+.dp-meas-acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+
+@media (max-width: 560px) {
+  .dp-meas-acts .dp-rank-b { flex: 1 1 100%; }
+}
+
 /* iOS Safari zooms the whole page in when you focus a text field whose text is under
    16px, and does not zoom back out when you leave it -- which is why the Game Log, the
    one tab that is mostly a form, was the tab that "shrank the screen". This changes no

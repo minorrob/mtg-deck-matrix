@@ -679,6 +679,78 @@
     </details>`;
   }
 
+  /* The score, and whether it still describes this deck.
+     ------------------------------------------------------
+     Every published score in this app came from a Node sweep over a hundred cards
+     that were pinned at the time. This page lets any of those hundred be changed,
+     and nothing used to connect the two -- so a deck three cards from what was
+     measured still showed the measured number as if it were its own.
+
+     Three states, and they say different things:
+
+       matched   the selection composes a measured rung. The published figure is
+                 shown with the engine and game count that produced it.
+       adrift    it composes none. The badge names the nearest rung and how many
+                 slots differ, because "out of sync" without a number is a nag.
+       measured  a re-run has been done here. Its own figure leads, with the
+                 difference against the same rung measured the same way.
+
+     The published number and a re-run number are never subtracted from each other:
+     they are different engines on different protocols, and a delta across that gap
+     would be the most confident-looking wrong answer this page could give. */
+  function measuredMarkup(ctx) {
+    const audit = ctx.audit;
+    if (!audit) return "";
+    const open = (ctx.panels || {}).measured === true;
+    const busy = ctx.measuring || null;
+    const tone = audit.state === "adrift" ? " is-adrift"
+      : audit.state === "measured" ? " is-measured" : " is-matched";
+
+    const near = ctx.nearRung;
+    const drift = audit.state === "adrift" && near
+      ? `${plural(near.differs, "slot")} away from ${esc((ctx.rungLabels || {})[near.rung] || near.rung)}`
+      : "";
+
+    const runs = audit.measured ? `
+      <table class="dp-meas-t">
+        <tr><th>This hundred</th><td class="dp-num">${audit.measured.current.score.toFixed(2)}</td>
+          <td class="dp-meas-se">±${audit.measured.current.se}</td></tr>
+        ${audit.measured.baseline ? `<tr><th>${esc((ctx.rungLabels || {})[audit.measured.baselineRung]
+          || audit.measured.baselineRung || "the recommendation")}, measured the same way</th>
+          <td class="dp-num">${audit.measured.baseline.score.toFixed(2)}</td>
+          <td class="dp-meas-se">±${audit.measured.baseline.se}</td></tr>` : ""}
+      </table>
+      <p class="dp-meas-note">Six seeds of ${audit.measured.current.protocol.gamesPerSeed.toLocaleString()}
+        games each, run in this browser on the engine this app ships. ${audit.published
+          ? `The published ${Number(audit.published.score).toFixed(1)} came from the ${
+              esc(audit.published.engine || "sweep")} run and is a different engine, so it is
+              shown for reference and never subtracted from these.`
+          : ""}</p>` : "";
+
+    return `<details class="dp-meas${tone}"${open ? " open" : ""}>
+      <summary>
+        <span class="dp-meas-v">${audit.state === "adrift" ? "⚠" : audit.state === "measured" ? "◎" : "✓"}
+          <b>${esc(audit.headline)}</b></span>
+        ${drift ? `<span class="dp-meas-d">${drift}</span>` : ""}
+        <span class="dp-meas-n">${esc(audit.note)}</span>
+      </summary>
+      <div class="dp-meas-body">
+        ${runs}
+        ${busy ? `<p class="dp-meas-run">Measuring… ${esc(busy)}</p>` : `
+          <div class="dp-meas-acts">
+            <button type="button" class="dp-rank-b" data-dp-measure="1">${
+              audit.measured ? "Measure again" : "Measure this hundred"}</button>
+            <button type="button" class="dp-rank-b" data-dp-xlsx="1">Export to Excel</button>
+          </div>
+          <p class="dp-meas-note">A run is about seven seconds: this hundred and the rung it
+            came from, both measured here so the difference between them is real. The Excel
+            file carries one sheet for each deck you have chosen, with the reason each card
+            is in it.</p>`}
+        ${panelToggle("measured", true, "")}
+      </div>
+    </details>`;
+  }
+
   /* How the rows are stacked. Type is the default because it is how a deck is built and
      how a physical box is sorted; Rarity is how a binder is sorted; Status is how a
      shopping trip is sorted. None is the answer to "just show me the list" -- it returns
@@ -850,6 +922,7 @@
         </div>
         ${panelToggle("head", headOpen, `${t.active}/${t.cards} in the box · ${t.buy} to buy`)}
       </div>
+      ${measuredMarkup(ctx)}
       ${readyMarkup(ctx, slots, panels)}
       ${filterMarkup(ctx, slots, visible.length, filtersOpen)}
       ${visible.length ? "" : '<p class="dp-empty">No slot in this deck matches that.</p>'}
@@ -871,5 +944,5 @@
       }).join("")}`;
   }
 
-  return {render, previewMarkup, locationOf, groupSlots, totals, RARITY_KEY};
+  return {render, previewMarkup, locationOf, groupSlots, totals, measuredMarkup, RARITY_KEY};
 });

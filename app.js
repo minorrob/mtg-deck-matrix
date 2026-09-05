@@ -893,6 +893,15 @@
       rungTwins: rung ? Slot.rungTwins(plan, rung) : [],
       rungLabels: Slot.RUNG_LABEL,
       buildRungs: Slot.BUILD_RUNGS,
+      /* Whether the score above this deck still describes it. Computed here
+         rather than remembered, for the same reason the rung is: a stored "you
+         were measured at 91.5" keeps claiming 91.5 after a slot is changed
+         underneath it. nearRung is what the badge counts against -- the rung
+         this hundred is closest to, and how many slots are off it. */
+      nearRung: window.MtgSlotModel.nearestRung(plan, ensureBuyState(variant.id),
+        (state.deckRung || {})[variant.id]),
+      audit: deckAuditFor(variant, plan, rung),
+      measuring: measuringDeck === variant.id ? measuringLine : null,
       active: (state.deckActive && state.deckActive[variant.id]) || {},
       openSlot: deckPageState.openSlot,
       /* The entry ids the reviewed recommendation selects for this deck. A Set because the
@@ -903,12 +912,202 @@
         head: !deckPageState.closedPanels.head,
         filters: !deckPageState.closedPanels.filters,
         ready: Boolean(deckPageState.closedPanels.ready === false),
+        measured: Boolean(deckPageState.closedPanels.measured === false),
         // One flag for every slot: only one is open at a time, and folding the reasoning
         // away on one slot means wanting it folded on the next.
         slotDetail: !deckPageState.closedPanels.slotDetail
       },
       variants
     };
+  }
+
+  /* ------------------------------------------------ measuring a deck here */
+
+  /* Which deck is mid-run, and what the progress line says. Module state rather
+     than app state: it describes this second, not this device, and writing it to
+     localStorage would resurrect "Measuring... seed 3 of 6" on a fresh load. */
+  let measuringDeck = null, measuringLine = null;
+  let simSeats = null;
+
+  /* The simulation's own config and opponent table. Fetched once, on the first
+     re-run, so a reader who never presses the button never pays for them. */
+  function simContext() {
+    if (simSeats) return Promise.resolve(simSeats);
+    return Promise.all([
+      fetch("sim/config.json", {cache: "no-store"}).then((r) => r.json()),
+      fetch("sim/opponents.json", {cache: "no-store"}).then((r) => r.json())
+    ]).then(([config, opponents]) => {
+      simSeats = {config, seats: window.MtgDeckMeasure.buildSeats(opponents, config.table)};
+      return simSeats;
+    }).catch(() => null);
+  }
+
+  /* The literal hundred, as cards the simulator can play. `deckPageCards` is the
+     baked catalog the Deck page already holds, so this needs no fetch. */
+  function lineupFor(plan, selection, commanderName) {
+    const Audit = window.MtgDeckAudit;
+    const entries = Lineup.selectedEntries(plan, selection).map((entry) => entry.item);
+    return Audit.lineupOf(entries, deckPageCards || {}, Lineup.normalizeName, commanderName);
+  }
+
+  function deckAuditFor(variant, plan, rung) {
+    const Audit = window.MtgDeckAudit;
+    const Slot = window.MtgSlotModel;
+    if (!Audit || !deckPageCards) return null;
+    const commander = plan.commanderName || variant.commander || "";
+    const lineup = lineupFor(plan, ensureBuyState(variant.id), commander);
+    const published = rung
+      ? (simulationSummary?.builds?.[variant.id]?.[Slot.RUNG_LABEL[rung]] || null)
+      : null;
+    return Audit.status({
+      hash: Audit.hashOf(lineup),
+      rung,
+      stored: (state.deckMeasures || {})[variant.id] || null,
+      published,
+      rungLabels: Slot.RUNG_LABEL
+    });
+  }
+
+  /* Measure the deck as it stands and the rung it came from, both here, both the
+     same way. Two runs of six seeds is about seven seconds of blocked main thread,
+     which is why the button reports which seed it is on rather than spinning. */
+  async function rerunDeckMeasure() {
+    const ctx = deckPageContext();
+    if (!ctx || measuringDeck) return;
+    const Audit = window.MtgDeckAudit;
+    const Slot = window.MtgSlotModel;
+    if (!Audit || !window.MtgDeckMeasure) return showToast("The simulator did not load.");
+    const variant = ctx.variants[deckPageState.deckIndex];
+    const plan = buyCatalog.plans[variant.id];
+    if (!plan) return;
+    const context = await simContext();
+    if (!context) return showToast("The simulation config could not be loaded.");
+
+    const commander = plan.commanderName || variant.commander || "";
+    const current = lineupFor(plan, ensureBuyState(variant.id), commander);
+    if (current.reduce((n, c) => n + c.quantity, 0) !== 100) {
+      return showToast("A score needs a hundred cards. Fill the empty slots first.");
+    }
+    /* The baseline is the rung this hundred is nearest to, which is the one the
+       published number described before the deck was edited. With no rung at all
+       there is nothing honest to compare against, and the run says so by
+       returning a single figure rather than inventing a second. */
+    const near = ctx.nearRung;
+    const baseline = near ? lineupFor(plan, Slot.selectionForRung(plan, near.rung), commander) : null;
+
+    measuringDeck = variant.id;
+    let done = 0;
+    const total = baseline ? 12 : 6;
+    measuringLine = `seed 1 of ${total}`;
+    renderDeckPage();
+    // One frame, so the progress line paints before the engine takes the thread.
+    await new Promise((resolve) => setTimeout(resolve, 40));
+
+    try {
+      const result = Audit.rerun(current, baseline, {
+        config: context.config,
+        seats: context.seats,
+        baselineRung: near ? near.rung : null,
+        onSeed: () => {
+          done += 1;
+          measuringLine = `seed ${Math.min(done + 1, total)} of ${total}`;
+        }
+      });
+      state.deckMeasures = state.deckMeasures || {};
+      state.deckMeasures[variant.id] = result;
+      saveState();
+      const delta = result.baseline ? result.current.score - result.baseline.score : null;
+      showToast(delta === null
+        ? `${variant.name} measures ${result.current.score.toFixed(2)}.`
+        : `${variant.name} measures ${result.current.score.toFixed(2)}, ${
+            (delta >= 0 ? "+" : "") + delta.toFixed(2)} against ${Slot.RUNG_LABEL[result.baselineRung]}.`);
+    } finally {
+      measuringDeck = null;
+      measuringLine = null;
+      renderDeckPage();
+    }
+  }
+
+  /* ------------------------------------------------ the deck workbook */
+
+  /* One sheet per chosen deck, with a summary in front. The reason to export at
+     all is the "why" column: a decklist is available from a dozen places, and the
+     sentence explaining why each card is in this deck is not. */
+  function exportDeckWorkbook() {
+    const Audit = window.MtgDeckAudit;
+    const Xlsx = window.MtgXlsxWriter;
+    const Slot = window.MtgSlotModel;
+    const ctx = deckPageContext();
+    if (!Audit || !Xlsx || !ctx) return showToast("The workbook writer did not load.");
+
+    const decks = ctx.variants.map((variant) => {
+      const plan = buyCatalog.plans[variant.id];
+      if (!plan) return null;
+      const selection = ensureBuyState(variant.id);
+      const rung = Slot.activeRung(plan, selection, (state.deckRung || {})[variant.id]);
+      const measured = (state.deckMeasures || {})[variant.id] || null;
+      const published = rung ? (simulationSummary?.builds?.[variant.id]?.[Slot.RUNG_LABEL[rung]] || null) : null;
+      const commander = plan.commanderName || variant.commander || "";
+
+      const cards = Lineup.selectedEntries(plan, selection).map((entry) => {
+        const item = entry.item;
+        const facts = (deckPageCards || {})[Lineup.normalizeName(item.name)] || {};
+        const where = window.MtgDeckPage.locationOf(ctx, item.name, item.quantity, variant.id);
+        const unit = Number(item.price != null ? item.price : facts.price) || 0;
+        const quantity = Math.max(1, Number(item.quantity || 1));
+        return {
+          name: item.name,
+          quantity,
+          type: facts.typeLine || item.typeLine || "",
+          manaCost: facts.manaCost || item.manaCost || "",
+          // data/cards.json carries no mana value, only the printed cost, so it is
+          // read off the cost by the same helper the slot fit uses.
+          mv: Slot.manaValueOf(facts.manaCost ? facts : item) || 0,
+          color: (facts.colorIdentity || item.colorIdentity || []).join("") || "C",
+          // The bucket an entry came out of IS its rung -- there is no `rung` field
+          // on an entry, and reading one gave a column of blanks.
+          rung: Slot.RUNG_LABEL[Slot.rungOf(entry.kind)] || "",
+          where: where.label,
+          inBox: where.kind === "active",
+          toBuy: where.kind === "buy",
+          unit,
+          line: unit * quantity,
+          /* The whole reason for the file. The plan writes `why` on every card it
+             adds and `brief` on some; a starting-shell card has neither, because
+             the shell is where the deck begins rather than something argued for.
+             Saying that is better than a blank cell, which reads as missing data. */
+          why: item.why || item.maxReason || item.brief || item.purpose
+            || (entry.kind === "shell" ? "In the starting shell" : "")
+        };
+      });
+
+      return {
+        /* Excel truncates a sheet name at 31 characters, and "D2 Proliferate
+           Counters — Atrax" reads as a broken file rather than a long one. The
+           commander is already its own column on the Summary, so the sheet is
+           named by the deck and its theme alone. */
+        title: `D${variant.deckId} ${String(variant.name).split(/\s+[—-]\s+/)[0]}`,
+        commander,
+        rungLabel: rung ? Slot.RUNG_LABEL[rung] : null,
+        score: measured && measured.hash === Audit.hashOf(lineupFor(plan, selection, commander))
+          ? measured.current.score
+          : (published ? published.score : null),
+        scoreSource: measured && measured.hash === Audit.hashOf(lineupFor(plan, selection, commander))
+          ? "measured in the browser, six seeds of 20,000 games"
+          : (published ? `${published.engine || "sweep"}, ${Number(published.games || 0).toLocaleString()} games`
+            : "not measured on this hundred"),
+        cards
+      };
+    }).filter(Boolean);
+
+    if (!decks.length) return showToast("Choose a variant for at least one deck first.");
+    const book = Audit.workbook(decks, {});
+    downloadFile({
+      filename: book.filename,
+      mime: Xlsx.MIME,
+      bytes: Xlsx.build(book)
+    });
+    showToast(`${decks.length} deck${decks.length === 1 ? "" : "s"} exported, one sheet each.`);
   }
 
   /* Every pick, rung and tick re-renders the whole page, which without this would
@@ -1134,6 +1333,14 @@
       const id = el.dataset.dpExpand;
       deckPageState.openSlot = deckPageState.openSlot === id ? null : id;
       renderDeckPage();
+      return true;
+    }
+    if (event.target.closest("[data-dp-measure]")) {
+      rerunDeckMeasure();
+      return true;
+    }
+    if (event.target.closest("[data-dp-xlsx]")) {
+      exportDeckWorkbook();
       return true;
     }
     if ((el = event.target.closest("[data-dp-rung]"))) {
