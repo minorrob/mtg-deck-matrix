@@ -244,9 +244,47 @@
     };
   }
 
+  /* Fold a Scryfall fetch back into a deck that had unresolved names.
+   *
+   * Scryfall answers with the card's FULL name, and a double-faced card's full
+   * name is both halves: ask for "Virtue of Courage" and you are handed
+   * "Virtue of Courage // Embereth Blaze". A lookup keyed by what came back
+   * therefore misses what was asked for, and the card silently stays missing --
+   * which is how a 100-card deck quietly measured as 99. Keying by the REQUESTED
+   * name is the fix, with the returned name kept for display.
+   *
+   * `fetched` maps whatever key the caller has to a facts object; both the
+   * requested spelling and the returned one are tried, through the same
+   * normalizer the rest of the resolve uses.
+   */
+  function applyFallback(deck, fetched) {
+    const index = buildIndex(Object.keys(fetched || {}).map((name) => ({name, ...fetched[name]})));
+    const stillMissing = [];
+    const added = [];
+    (deck.unresolved || []).forEach((name) => {
+      const card = lookup(index, name);
+      if (!card) { stillMissing.push(name); return; }
+      added.push({
+        name: card.name || name,
+        quantity: 1,
+        isCommander: (deck.commander || []).some((c) => normalizeName(c) === normalizeName(name)),
+        card
+      });
+    });
+    const cards = deck.cards.concat(added);
+    const total = cards.reduce((n, c) => n + c.quantity, 0);
+    const warnings = (deck.warnings || []).filter((w) => !/resolved, not 100/.test(w));
+    if (total !== 100) {
+      warnings.push(`${total} cards resolved, not 100.` +
+        (stillMissing.length ? ` Still unmatched: ${stillMissing.join(", ")}.` : ""));
+    }
+    return {...deck, cards, unresolved: stillMissing, total, warnings};
+  }
+
   return {
     parseDecklist,
     resolveDeck,
+    applyFallback,
     buildIndex,
     lookup,
     foldName,
