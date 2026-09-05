@@ -127,3 +127,32 @@ than papered over.
 
 Keep this query in the loop whenever an edge rule changes. It is the only check
 that catches an extraction rule which is confidently, silently wrong.
+
+## Shipping a slice to the app
+
+`ingest/07-export-app.mjs` writes `data/graph.json` — the part that ships.
+
+```bash
+node graph/ingest/07-export-app.mjs               # ~1.5k cards, ~1 MB
+node graph/ingest/07-export-app.mjs --commanders  # + every legendary creature
+```
+
+The app is a static site with no backend, which is what lets it work at a table
+with no wifi. Neo4j is the workshop; this file is the product. 31,830 cards with
+every edge is far too much for a browser, so the default scope is what you can
+actually build with: cards you own, cards your decks name, and cards EDHREC links
+to your commanders.
+
+Edges to Event, Resource, Role, Mechanic and Tribe are **flattened onto the card**
+as arrays — single-hop and high-fanout, so separate records would cost more than
+they explain. `PLAYED_WITH` stays a real edge list because it carries weights and
+is what the graph view draws.
+
+`graph.html` is the control plane: a faceted pane on the left, and one filter
+state behind both the list and the graph, so switching view is a render choice
+rather than a different query.
+
+**The graph is ego-centric and capped at 90 neighbours.** 1,500 nodes on a canvas
+is a hairball that tells you nothing. Picking a card chooses the centre; nodes
+outside the current filters are drawn faded rather than removed, so narrowing the
+pane never silently empties the canvas.

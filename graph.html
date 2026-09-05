@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0f3a2b">
+  <title>Card Graph &middot; Trey's Decks</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%95%B8%EF%B8%8F%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="app.css?v=62">
+  <link rel="stylesheet" href="graph-page.css?v=1">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.30.2/cytoscape.min.js" defer></script>
+  <script src="graph-page.js?v=1" defer></script>
+</head>
+<body class="graph-body">
+  <header class="app-header">
+    <a class="back-link" href="index.html"><span class="back-arrow" aria-hidden="true">&#8592;</span> Trey's Decks</a>
+    <div class="brand-row">
+      <div>
+        <p class="eyebrow">Card graph</p>
+        <h1>Every card, and what connects them</h1>
+      </div>
+      <div class="header-actions">
+        <a class="state-io-button" href="matrix.html">Deck matrix &rarr;</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="gp">
+    <aside class="gp-pane" id="pane" aria-label="Filters">
+      <div class="gp-pane-head">
+        <strong>Filters</strong>
+        <button class="gp-clear" id="clear" type="button">Clear all</button>
+      </div>
+      <label class="gp-search">
+        <span class="visually-hidden">Search cards</span>
+        <input type="search" id="q" placeholder="Search name or type&hellip;" autocomplete="off">
+      </label>
+      <div id="facets"></div>
+    </aside>
+
+    <section class="gp-main">
+      <div class="gp-bar">
+        <button class="gp-pane-toggle" id="pane-toggle" type="button" aria-expanded="false">Filters</button>
+        <span class="gp-count" id="count">loading&hellip;</span>
+        <div class="gp-views" role="group" aria-label="View">
+          <button class="gp-view is-on" data-view="list" type="button">List</button>
+          <button class="gp-view" data-view="graph" type="button">Graph</button>
+        </div>
+      </div>
+      <div id="result"></div>
+      <div id="cy" hidden></div>
+      <p class="gp-legend" id="legend" hidden></p>
+    </section>
+  </main>
+</body>
+</html>
