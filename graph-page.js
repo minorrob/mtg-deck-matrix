@@ -107,7 +107,7 @@
       (c.image ? '<img src="' + esc(c.image) + '" alt="" loading="lazy">' : '<span class="gp-card-noart"></span>') +
       "<span><b>" + esc(c.name) + "</b>" +
       '<span class="meta">' + (c.mv || 0) + " mv &middot; " + esc(c.ci || "C") +
-      (c.price ? " &middot; $" + Number(c.price).toFixed(2) : "") + "</span>" +
+      (c.price ? " &middot; $" + Number(c.price).toFixed(2) : " &middot; no price") + "</span>" +
       '<span class="gp-tags">' +
         (owned ? '<span class="gp-tag own">' + owned + "</span>" : "") +
         (c.decks || []).map(function (d) { return '<span class="gp-tag deck">' + esc(d.deck) + "</span>"; }).join("") +

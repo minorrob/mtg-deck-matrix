@@ -8,7 +8,9 @@ CALL (r) {
       c.colors = size(coalesce(r.colorIdentity,'')), c.typeLine = r.typeLine, c.rarity = r.rarity,
       c.setName = r.setName, c.priceUsd = toFloat(r.priceUsd), c.priceFoil = toFloat(r.priceFoil),
       c.edhrecRank = toInteger(r.edhrecRank), c.isLand = (r.isLand = 'true'),
-      c.canBeCommander = (r.canBeCommander = 'true'), c.image = r.image, c.commanderLegal = true
+      c.canBeCommander = (r.canBeCommander = 'true'), c.image = r.image, c.commanderLegal = true,
+      c.tcgUri = r.tcgUri, c.printings = toInteger(r.printings),
+      c.cheapestSet = r.setName
 } IN TRANSACTIONS OF 5000 ROWS;
 
 LOAD CSV WITH HEADERS FROM 'file:///fills.csv' AS r
