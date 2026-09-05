@@ -188,3 +188,58 @@ body.gp-locked { overflow: hidden; }
 .gp-cp p { margin: 0; font-size: 11.5px; line-height: 1.45; color: var(--muted); }
 .gp-cp-ev { font-style: italic; opacity: .8; font-size: 10.5px; }
 .gp-cp .gp-btn { align-self: flex-start; margin-top: 6px; min-height: 30px; font-size: 11.5px; padding: 4px 11px; }
+
+/* ------------------------------------------------- the Copilot, expanded */
+
+/* Two things were added to a lens card: what it is worth, and a way to set it
+   aside. Both change how the panel reads. The impact chip means a five-point
+   drop and a note about mana screw no longer look like the same size of thing;
+   the dismiss row means a finding you have decided about stops competing for
+   attention with one you have not, without being deleted. */
+
+.gp-cp { position: relative; }
+
+.gp-cp-impact {
+  position: absolute; top: 10px; right: 12px;
+  font-size: 11.5px; font-weight: 800; letter-spacing: .01em;
+  font-variant-numeric: tabular-nums; color: var(--muted);
+}
+.gp-cp-warning .gp-cp-impact { color: #b0563f; }
+.gp-cp-opportunity .gp-cp-impact { color: var(--forest-2, #1c5a42); }
+
+/* A lens the simulation produced says so. The graph's findings are structural
+   facts; these are measurements with an error bar, and the reader should be able
+   to tell which kind of claim they are looking at without reading the evidence. */
+.gp-cp-src {
+  font-style: normal; font-weight: 700; opacity: .75;
+  padding-left: 5px; border-left: 1px solid currentColor; margin-left: 5px;
+}
+
+.gp-cp-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
+.gp-cp-dis { display: flex; flex-wrap: wrap; gap: 4px; margin-left: auto; }
+.gp-cp-x {
+  appearance: none; cursor: pointer; border: 1px solid transparent; border-radius: 7px;
+  background: transparent; color: var(--muted);
+  padding: 4px 7px; font: inherit; font-size: 11.5px; font-weight: 650;
+}
+.gp-cp-x:hover { border-color: var(--line); color: inherit; }
+
+.gp-cp.is-set { opacity: .62; }
+.gp-cp-gone { margin: 8px 0 0; font-size: 12px; color: var(--muted); }
+.gp-cp-undo {
+  appearance: none; cursor: pointer; border: 0; background: none; padding: 0;
+  font: inherit; font-size: 12px; font-weight: 700; color: var(--forest-2, #1c5a42);
+  text-decoration: underline;
+}
+
+.gp-cp-set { margin-top: 12px; }
+.gp-cp-set > summary {
+  cursor: pointer; font-size: 12.5px; font-weight: 700; color: var(--muted);
+  padding: 6px 0;
+}
+
+@media (max-width: 640px) {
+  .gp-cp-impact { position: static; display: block; margin-bottom: 4px; }
+  .gp-cp-dis { margin-left: 0; width: 100%; }
+  .gp-cp-acts .gp-btn { width: 100%; }
+}

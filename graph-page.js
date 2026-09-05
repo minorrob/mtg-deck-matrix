@@ -8,6 +8,21 @@
   "use strict";
 
   var DATA = null, LENSES = [], EGO = null, CY = null;
+
+  /* Lenses you have read and decided about. Kept per lens id with the reason,
+     because "I dismissed this" and "I dismissed this BECAUSE I disagree with the
+     simulation" are different things to come back to in a month. A dismissal is
+     never a deletion: the card stays, folded, with a way back. */
+  var DISMISS_KEY = "mtg-graph-dismissed.v1";
+  var dismissed = (function () {
+    try { return JSON.parse(localStorage.getItem(DISMISS_KEY) || "{}") || {}; }
+    catch (err) { return {}; }
+  })();
+  function setDismissed(id, reason) {
+    if (reason === null) delete dismissed[id];
+    else dismissed[id] = {reason: reason, at: new Date().toISOString()};
+    try { localStorage.setItem(DISMISS_KEY, JSON.stringify(dismissed)); } catch (err) { /* storage off */ }
+  }
   var state = {q: "", mvMax: 20, view: "list", f: {}, showAll: {}, clickFocuses: false, lens: null};
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
@@ -543,24 +558,70 @@
      appearing rather than sitting here being wrong. */
   var KIND = {warning: "Warning", attention: "Worth a look", opportunity: "Opportunity"};
 
+  /* Why somebody would set a finding aside. Offered as a fixed list rather than a
+     text box, because the reason has to be readable a month later by whoever
+     wrote it -- and because "already done" and "I disagree" mean different things
+     to the next build: one of them will come back on its own, the other will not. */
+  var REASONS = [
+    ["done", "Already handled"],
+    ["disagree", "I disagree with this"],
+    ["later", "Not now"]
+  ];
+  var REASON_LABEL = {};
+  REASONS.forEach(function (r) { REASON_LABEL[r[0]] = r[1]; });
+
+  /* What a lens is worth, in the two currencies this app deals in. Only the
+     simulator's lenses carry one; a graph lens says how many cards it found,
+     which is a size and not a stake. */
+  function impactChip(l) {
+    var im = l.impact || {};
+    var bits = [];
+    if (im.score) bits.push((im.score > 0 ? "+" : "") + Number(im.score).toFixed(2) + " pts");
+    if (im.dollars) bits.push("$" + Math.abs(Number(im.dollars)).toFixed(2));
+    return bits.length ? '<span class="gp-cp-impact">' + esc(bits.join(" · ")) + "</span>" : "";
+  }
+
   function renderLenses() {
     var host = $("copilot");
     if (!LENSES.length) { host.hidden = true; return; }
     host.hidden = false;
     var active = state.lens;
+    var live = LENSES.filter(function (l) { return !dismissed[l.id]; });
+    var set = LENSES.filter(function (l) { return dismissed[l.id]; });
+
     host.innerHTML =
-      "<summary><strong>Copilot</strong> <span class=\"gp-cp-n\">" + LENSES.length + " things worth a look</span>" +
+      "<summary><strong>Copilot</strong> <span class=\"gp-cp-n\">" + live.length + " things worth a look" +
+        (set.length ? " · " + set.length + " set aside" : "") + "</span>" +
         (active ? ' <span class="gp-cp-live">showing: ' + esc(active.title) + "</span>" : "") + "</summary>" +
-      '<div class="gp-cp-grid">' + LENSES.map(function (l) {
-        var on = active && active.id === l.id;
-        return '<div class="gp-cp gp-cp-' + esc(l.kind) + (on ? " is-on" : "") + '">' +
-          '<span class="gp-cp-kind">' + esc(KIND[l.kind] || l.kind) + "</span>" +
-          "<b>" + esc(l.title) + "</b>" +
-          "<p>" + esc(l.why) + "</p>" +
-          '<p class="gp-cp-ev">' + esc(l.evidence) + "</p>" +
-          '<button class="gp-btn' + (on ? "" : " primary") + '" data-lens="' + esc(l.id) + '" type="button">' +
-            (on ? "Clear this lens" : "Show these " + l.count) + "</button></div>";
-      }).join("") + "</div>";
+      '<div class="gp-cp-grid">' + live.map(card).join("") + "</div>" +
+      (set.length
+        ? '<details class="gp-cp-set"><summary>' + set.length + " set aside</summary>" +
+          '<div class="gp-cp-grid">' + set.map(card).join("") + "</div></details>"
+        : "");
+
+    function card(l) {
+      var on = active && active.id === l.id;
+      var gone = dismissed[l.id];
+      return '<div class="gp-cp gp-cp-' + esc(l.kind) + (on ? " is-on" : "") + (gone ? " is-set" : "") +
+        (l.source === "simulation" ? " is-sim" : "") + '">' +
+        '<span class="gp-cp-kind">' + esc(KIND[l.kind] || l.kind) +
+          (l.source === "simulation" ? ' <i class="gp-cp-src">simulated</i>' : "") + "</span>" +
+        impactChip(l) +
+        "<b>" + esc(l.title) + "</b>" +
+        "<p>" + esc(l.why) + "</p>" +
+        '<p class="gp-cp-ev">' + esc(l.evidence) + "</p>" +
+        (gone
+          ? '<p class="gp-cp-gone">Set aside — ' + esc(REASON_LABEL[gone.reason] || gone.reason) +
+            ' <button class="gp-cp-undo" data-undismiss="' + esc(l.id) + '" type="button">put it back</button></p>'
+          : '<div class="gp-cp-acts">' +
+            '<button class="gp-btn' + (on ? "" : " primary") + '" data-lens="' + esc(l.id) + '" type="button">' +
+              (on ? "Clear this lens" : ((l.action && l.action.label) || ("Show these " + l.count))) + "</button>" +
+            '<span class="gp-cp-dis">' + REASONS.map(function (r) {
+              return '<button class="gp-cp-x" data-dismiss="' + esc(l.id) + '" data-reason="' + r[0] +
+                '" type="button" title="Set aside: ' + esc(r[1]) + '">' + esc(r[1]) + "</button>";
+            }).join("") + "</span></div>") +
+        "</div>";
+    }
   }
 
   function applyLens(id) {
@@ -615,6 +676,17 @@
     }
     var lensBtn = e.target.closest("[data-lens]");
     if (lensBtn) { applyLens(lensBtn.dataset.lens); return; }
+    var dis = e.target.closest("[data-dismiss]");
+    if (dis) {
+      setDismissed(dis.dataset.dismiss, dis.dataset.reason);
+      // A lens being looked at that is then set aside must stop filtering, or the
+      // page keeps showing a question that is no longer being asked.
+      if (state.lens && state.lens.id === dis.dataset.dismiss) state.lens = null;
+      render();
+      return;
+    }
+    var undo = e.target.closest("[data-undismiss]");
+    if (undo) { setDismissed(undo.dataset.undismiss, null); render(); return; }
     var lock = e.target.closest("#click-focus");
     if (lock) {
       state.clickFocuses = !state.clickFocuses;
@@ -631,14 +703,51 @@
     document.querySelectorAll(".gp-view").forEach(function (b) { b.classList.toggle("is-on", b.dataset.view === state.view); });
   }
 
-  // Lenses are optional: the page is fully usable without them, so a missing or
-  // stale lenses.json must never stop the cards loading.
+  /* Two sources, one Copilot.
+     -------------------------
+     data/lenses.json is generated from the graph: what a deck is short of, what
+     you own that nothing uses, what the field plays that you do not have. All
+     structural, and none of it can say whether a change makes the deck play
+     better.
+
+     data/deck-ratings.json can. sim-lenses.js turns its measured deltas into the
+     findings the graph cannot reach -- above all the negative one: an upgrade
+     path you were about to buy that measures WORSE than the deck you have. It is
+     computed here rather than baked into a file, so it can never be stale against
+     the ratings it reads.
+
+     All three fetches are optional and all three race. Whoever lands last paints. */
+  var GRAPH_LENSES = [], SIM_LENSES = [];
+
+  function mergeLenses() {
+    var Sim = window.MtgSimLenses;
+    // A sim lens names a deck; the cards it means are looked up once, here, where
+    // the card list is. Before graph.json lands there is nothing to resolve
+    // against, so the merge waits rather than producing empty filters.
+    if (DATA && Sim) {
+      SIM_LENSES.forEach(function (l) {
+        if (l.filter && !l.filter.ids) l.filter.ids = Sim.resolve(l, DATA.cards);
+      });
+    }
+    var ready = SIM_LENSES.filter(function (l) { return (l.filter.ids || []).length; });
+    LENSES = Sim ? Sim.rank(ready.concat(GRAPH_LENSES)) : GRAPH_LENSES;
+    if (DATA) renderLenses();
+  }
+
   fetch("data/lenses.json", {cache: "no-store"})
     .then(function (r) { return r.ok ? r.json() : {lenses: []}; })
     .catch(function () { return {lenses: []}; })
-    .then(function (j) {
-      LENSES = (j && j.lenses) || [];
-      if (DATA) renderLenses();          // the two fetches race; whoever lands second paints
+    .then(function (j) { GRAPH_LENSES = (j && j.lenses) || []; mergeLenses(); });
+
+  Promise.all([
+    fetch("data/deck-ratings.json", {cache: "no-store"}).then(function (r) { return r.ok ? r.json() : null; }),
+    fetch("data/master-v2.json", {cache: "no-store"}).then(function (r) { return r.ok ? r.json() : null; })
+  ]).catch(function () { return [null, null]; })
+    .then(function (parts) {
+      var ratings = parts && parts[0];
+      if (!ratings || !window.MtgSimLenses) return;
+      SIM_LENSES = window.MtgSimLenses.build(ratings, {master: parts[1]});
+      mergeLenses();
     });
 
   fetch("data/graph.json", {cache: "no-store"})
@@ -646,6 +755,7 @@
     .then(function (json) {
       DATA = json;
       indexCards();
+      mergeLenses();     // sim lenses name decks; now there are cards to name
       if (window.matchMedia("(max-width: 860px)").matches) {
         $("pane").hidden = true;
         // Eleven findings is most of a phone screen before a single card shows.
