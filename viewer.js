@@ -20,6 +20,12 @@
      than approximately. */
   var MASTER = null, IMPORTS = [];
 
+  /* What the reader says they own, if they have told us. null means they have
+     not, and the workbook's own audited figures stand untouched -- which is the
+     default and must stay the default, because those figures were counted by
+     hand against physical boxes and an upload is a claim. */
+  var INVENTORY = null;
+
   var STORE = "mtg-viewer.v1";
   var state = {
     view: "decks",
@@ -86,6 +92,7 @@
      how an added card would come back "not found" from the row that holds it. */
   function rebuild() {
     DATA = Store ? Store.merge(MASTER, IMPORTS) : MASTER;
+    applyInventory();
     byName.index = null;
     // merge builds new deck objects, so a deck page already open is holding the
     // old one. Re-point it, or scoring a deck leaves its own banner still saying
@@ -93,6 +100,127 @@
     if (state.deck) {
       state.deck = DATA.decks.filter(function (d) { return d.id === state.deck.id; })[0] || null;
     }
+  }
+
+  /* An uploaded collection replaces the workbook's ownership figures.
+     -----------------------------------------------------------------
+     Every `actual`, `bench` and `own` on the catalog is recomputed from what the
+     file says, by allocating copies to decks in deck order and calling the
+     remainder bench. That is the same arithmetic the workbook does by hand, run
+     against a different set of numbers.
+
+     DATA is rebuilt from MASTER on every call, so this writes to a fresh copy
+     and the workbook's own figures are one `clearInventory()` away, with no
+     reload and nothing to undo.
+
+     Deck order decides who gets the only copy of a card three decks want. It is
+     the Master's own order, which is stable and stated, rather than the ranked
+     order -- ranking depends on the ratings, which depend on the decks, and a
+     rule that changes when a score changes is not a rule anybody can predict. */
+  function applyInventory() {
+    var Inv = window.MtgInventoryImport;
+    if (!INVENTORY || !Inv || !DATA) return;
+    var decks = DATA.decks.map(function (deck) {
+      return {
+        id: deck.id, label: deck.label,
+        wants: DATA.cards.filter(function (c) { return (c.target[deck.id] || 0) > 0; })
+          .map(function (c) { return {name: c.name, quantity: c.target[deck.id]}; })
+      };
+    });
+    var result = Inv.reconcile(INVENTORY.cards, decks);
+    INVENTORY.result = result;
+
+    var held = {};
+    result.holdings.forEach(function (row) { held[row.name.toLowerCase()] = row; });
+    var allocated = {};
+    result.decks.forEach(function (deck) {
+      deck.filled.forEach(function (f) {
+        allocated[f.name.toLowerCase() + "|" + deck.id] = f.quantity;
+      });
+    });
+
+    /* A NEW object, not an assignment into DATA. With no added decks Store.merge
+       returns the master itself -- there is nothing to merge, so there is nothing
+       to copy -- and writing DATA.cards would overwrite the workbook's own rows
+       in place. Reverting would then "restore" the numbers the upload had already
+       replaced, which is exactly what it did before this line. */
+    var cards = DATA.cards.map(function (card) {
+      var row = held[card.name.toLowerCase()];
+      var actual = {};
+      var short = 0;
+      DATA.decks.forEach(function (deck) {
+        var got = allocated[card.name.toLowerCase() + "|" + deck.id] || 0;
+        actual[deck.id] = got;
+        short += Math.max(0, (card.target[deck.id] || 0) - got);
+      });
+      var owned = row ? row.quantity : 0;
+      return Object.assign({}, card, {
+        actual: actual,
+        own: owned,
+        qty: owned,
+        // Ordered copies came from the workbook and describe a purchase, not a
+        // shelf. An upload says nothing about them, so they are cleared rather
+        // than carried over as if the file had confirmed them.
+        ordered: 0,
+        bench: row ? row.spare : 0,
+        benchActual: row ? row.spare : 0,
+        /* buyCount and status are what the To Buy tab reads. Leaving them at the
+           workbook's figures left that tab describing the audited collection
+           while the ribbon beside it described the uploaded one -- two counts of
+           the same thing, on the same screen, disagreeing. */
+        buyCount: short,
+        toBuyCost: card.price ? short * card.price : 0,
+        status: owned > 0 ? "In Hand" : "To Buy"
+      });
+    });
+
+    // A card in the file that no deck lists is still owned, and belongs on the
+    // bench rather than nowhere.
+    var known = {};
+    cards.forEach(function (c) { known[c.name.toLowerCase()] = true; });
+    result.holdings.filter(function (row) { return !known[row.name.toLowerCase()]; })
+      .forEach(function (row) {
+        var blank = {};
+        DATA.decks.forEach(function (d) { blank[d.id] = 0; });
+        cards.push({
+          name: row.name, bracket: "", target: Object.assign({}, blank), actual: Object.assign({}, blank),
+          benchTarget: 0, benchActual: row.spare, qty: row.quantity, own: row.quantity,
+          cartVendor: "", ordered: 0, price: null, type: "Card", subType: "", color: "C",
+          mv: 0, series: "", purpose: "", mechanics: [], notes: "", moves: "",
+          bench: row.spare, buyCount: 0, toBuyCost: 0, status: "In Hand",
+          priceSource: "upload", fromUpload: true
+        });
+      });
+
+    DATA = Object.assign({}, DATA, {cards: cards});
+  }
+
+  var INVENTORY_KEY = "mtg-viewer-inventory.v1";
+
+  function saveInventory() {
+    try {
+      if (INVENTORY) {
+        localStorage.setItem(INVENTORY_KEY, JSON.stringify({
+          cards: INVENTORY.cards, uploadedAt: INVENTORY.uploadedAt, source: INVENTORY.source
+        }));
+      } else localStorage.removeItem(INVENTORY_KEY);
+      return true;
+    } catch (err) { return false; }
+  }
+
+  function loadInventory() {
+    try {
+      var raw = JSON.parse(localStorage.getItem(INVENTORY_KEY) || "null");
+      INVENTORY = raw && Array.isArray(raw.cards) && raw.cards.length ? raw : null;
+    } catch (err) { INVENTORY = null; }
+  }
+
+  function clearInventory() {
+    INVENTORY = null;
+    saveInventory();
+    rebuild();
+    toast("Back to the workbook's own counts.");
+    render();
   }
 
   function saveImports() {
@@ -1290,6 +1418,100 @@
     return out;
   }
 
+  /* ------------------------------------------------------ uploaded counts */
+
+  /* The strip above the bench. Two states: no file, in which case it offers one
+     and explains what will happen; or a file, in which case it says what came of
+     it and offers the way back. There is no third state, because an upload that
+     half-applied would be worse than one that failed. */
+  function inventoryBar() {
+    if (!INVENTORY) {
+      var box = el("div", { class: "inv-bar" }, [
+        el("div", {}, [
+          el("b", { text: "These counts come from the Deck Master workbook." }),
+          el("span", { text: " Upload what you actually own and the decks are filled from it "
+            + "instead — whatever is left over lands here." })
+        ]),
+        el("label", { class: "btn primary inv-file" }, [
+          "Upload what I own",
+          el("input", { type: "file", accept: ".csv,.tsv,.txt,.xlsx,text/csv,text/plain",
+            hidden: true, onchange: onInventoryFile })
+        ])
+      ]);
+      return box;
+    }
+    var r = INVENTORY.result || {totals: {}};
+    var t = r.totals || {};
+    var when = String(INVENTORY.uploadedAt || "").slice(0, 10);
+    return el("div", { class: "inv-bar is-on" }, [
+      el("div", {}, [
+        el("b", { text: plural(t.cards || 0, "card") + " from your upload" }),
+        el("span", { text: " · " + plural(t.used || 0, "copy", "copies") + " went into decks · "
+          + plural(t.spare || 0, "copy", "copies") + " on the bench"
+          + (t.short ? " · " + plural(t.short, "copy", "copies") + " still needed" : "")
+          + (when ? " · read " + when : "") })
+      ]),
+      el("div", { class: "inv-acts" }, [
+        el("label", { class: "btn inv-file" }, [
+          "Replace",
+          el("input", { type: "file", accept: ".csv,.tsv,.txt,.xlsx,text/csv,text/plain",
+            hidden: true, onchange: onInventoryFile })
+        ]),
+        el("button", { class: "btn ghost", type: "button", text: "Use the workbook's counts",
+          onclick: clearInventory })
+      ])
+    ]);
+  }
+
+  /* A .xlsx arrives as bytes and everything else as text, and the difference has
+     to be settled before the file is read rather than after -- readAsText on a
+     ZIP produces mojibake that parses as a one-column list of nonsense. */
+  function onInventoryFile(event) {
+    var file = event.target.files && event.target.files[0];
+    event.target.value = "";
+    if (!file) return;
+    var Inv = window.MtgInventoryImport;
+    if (!Inv) return toast("The inventory reader did not load.");
+    var reader = new FileReader();
+    reader.onerror = function () { toast("That file could not be read."); };
+    if (/\.xlsx$/i.test(file.name)) {
+      reader.onload = function () {
+        var Xlsx = window.MtgXlsxReader;
+        if (!Xlsx) return toast("The spreadsheet reader did not load.");
+        Xlsx.read(new Uint8Array(reader.result))
+          .then(function (book) {
+            var sheet = (book.sheets || [])[0];
+            if (!sheet || !sheet.rows.length) throw new Error("The first sheet is empty.");
+            takeInventory(Inv.parseTable(sheet.rows), file.name + " · " + sheet.name);
+          })
+          .catch(function (err) { toast(String(err && err.message || err)); });
+      };
+      reader.readAsArrayBuffer(file);
+    } else {
+      reader.onload = function () {
+        takeInventory(Inv.parseText(String(reader.result || "")), file.name);
+      };
+      reader.readAsText(file);
+    }
+  }
+
+  function takeInventory(parsed, source) {
+    if (!parsed.cards.length) {
+      return toast("No cards were found in that file.");
+    }
+    INVENTORY = {cards: parsed.cards, uploadedAt: new Date().toISOString(), source: source};
+    if (!saveInventory()) toast("This browser would not save it — it is here until you reload.");
+    rebuild();
+    var t = (INVENTORY.result || {totals: {}}).totals || {};
+    // A guessed column layout is the one thing about this that could be silently
+    // wrong, so it is said out loud rather than left in the count.
+    toast(plural(t.cards || 0, "card") + " read"
+      + (parsed.guessed ? " (columns were guessed)" : "")
+      + " · " + plural(t.spare || 0, "copy", "copies") + " on the bench");
+    go("#/bench");
+    render();
+  }
+
   function renderPicker(root, kind) {
     var isBench = kind === "bench";
     var all = isBench ? benchRows() : buyRows();
@@ -1298,9 +1520,12 @@
     root.appendChild(el("div", { class: "section-head" }, [
       el("h2", { text: isBench ? "The bench" : "Still to buy" }),
       el("p", { text: isBench
-        ? "Spare copies not committed to any of the six decks. Tick what you want to move, then Share."
-        : "Everything the six decks still need, plus every upgrade not yet bought. Tick and Share." })
+        ? "Spare copies not committed to any of the decks. Tick what you want to move, then Share."
+        : "Everything the decks still need, plus every upgrade not yet bought. Tick and Share." })
     ]));
+
+    // The bench IS the leftover, so the upload that produces it belongs here.
+    if (isBench) root.appendChild(inventoryBar());
 
     var chips = isBench
       ? [["all", "All"], ["spare", "Not in any deck"], ["dupe", "Spare copies"]]
@@ -1526,6 +1751,7 @@
       // Decks added on this device are read before the first render, so an
       // added deck is on the page at load rather than appearing a beat later.
       IMPORTS = Store ? Store.read(window.localStorage) : [];
+      loadInventory();
       rebuild();
       // The ratings and the guides are generated separately and may lag; the
       // page is fully usable without either, so a miss is not an error.

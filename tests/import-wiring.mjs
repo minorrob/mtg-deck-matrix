@@ -24,7 +24,8 @@ const check = (label, fn) => { fn(); checks += 1; void label; };
 /* ---------------- the page loads what the page uses ---------------- */
 
 const MODULES = ["lineup-model", "sim-engine", "scryfall-client", "deck-import",
-  "deck-sources", "deck-measure", "deck-store", "import-panel"];
+  "deck-sources", "deck-measure", "deck-store", "import-panel",
+  "xlsx-reader", "inventory-import"];
 
 check("every module the import path needs is on the page", () => {
   MODULES.forEach((name) => {
@@ -37,6 +38,7 @@ check("they load in dependency order, ahead of the page that calls them", () => 
   const at = (name) => page.indexOf(`src="${name}.js`);
   // deck-import requires the lineup model; deck-measure requires the engine.
   assert.ok(at("lineup-model") < at("deck-import"), "the lineup model comes before the parser");
+  assert.ok(at("lineup-model") < at("inventory-import"), "and before the inventory reader, which normalizes names");
   assert.ok(at("sim-engine") < at("deck-measure"), "the engine comes before the measurement");
   MODULES.forEach((name) => {
     assert.ok(at(name) < at("viewer"), `${name}.js must load before viewer.js`);
@@ -53,7 +55,9 @@ check("the globals viewer.js reaches for are the ones the modules attach", () =>
     "window.MtgDeckMeasure": "deck-measure.js",
     "window.MtgImportPanel": "import-panel.js",
     "window.MtgSimEngine": "sim-engine.js",
-    "window.MtgScryfall": "scryfall-client.js"
+    "window.MtgScryfall": "scryfall-client.js",
+    "window.MtgInventoryImport": "inventory-import.js",
+    "window.MtgXlsxReader": "xlsx-reader.js"
   };
   [...new Set(wanted)].forEach((name) => {
     assert.ok(attached[name], `viewer.js reads ${name}, which nothing on this page defines`);
@@ -113,6 +117,27 @@ check("the ribbon and the tab counts are rebuilt on every render", () => {
     "render must refresh the counts");
   assert.ok(!/\["6", "decks"\]/.test(viewer), 'the deck count must not be the literal "6"');
   assert.ok(!/\/600/.test(viewer), "the card total must not be the literal 600");
+});
+
+check("an uploaded collection never writes into the workbook's own rows", () => {
+  // With no added decks Store.merge returns the master itself, so assigning
+  // DATA.cards would overwrite the audited figures in place -- and "use the
+  // workbook's counts" would then restore the numbers the upload had replaced.
+  assert.match(viewer, /DATA = Object\.assign\(\{\}, DATA, \{cards: cards\}\)/,
+    "applyInventory must build a new object, not assign into the one it was given");
+  assert.ok(!/DATA\.cards\s*=\s*DATA\.cards\.map/.test(viewer),
+    "an in-place rewrite of the catalog is the bug this guards");
+  assert.match(viewer, /function clearInventory\(\)/, "there has to be a way back");
+});
+
+check("the buy list is recomputed from an upload, not left at the workbook's figures", () => {
+  // Otherwise the To Buy tab describes the audited collection while the ribbon
+  // beside it describes the uploaded one: two counts of the same thing, on the
+  // same screen, disagreeing.
+  const body = viewer.slice(viewer.indexOf("function applyInventory()"),
+    viewer.indexOf("var INVENTORY_KEY"));
+  assert.match(body, /buyCount: short/);
+  assert.match(body, /status: owned > 0 \? "In Hand" : "To Buy"/);
 });
 
 check("a rank is computed over the decks that are loaded", () => {

@@ -804,6 +804,28 @@ main { padding: 24px 0 140px; }
 .imp-banner b { color: var(--text); font-weight: 700; }
 .imp-banner .btn { margin-left: auto; padding: 5px 12px; font-size: 12.5px; }
 
+/* The strip above the bench.
+   ------------------------
+   Two states and no third one. Without a file it explains what an upload would
+   do; with one it reports what came of it and offers the way back, because
+   replacing hand-audited counts with a claim has to be reversible in one click. */
+.inv-bar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+  margin: 0 0 14px; padding: 11px 14px;
+  background: var(--panel-2); border: 1px dashed var(--line);
+  border-radius: var(--radius-sm);
+  font-size: 13px; line-height: 1.5; color: var(--text-dim);
+}
+.inv-bar b { color: var(--text); font-weight: 700; }
+.inv-bar > div:first-child { flex: 1 1 260px; min-width: 0; }
+.inv-bar.is-on { border-style: solid; border-color: var(--patina); background: var(--patina-soft); }
+.inv-acts { display: flex; gap: 6px; flex-wrap: wrap; }
+.inv-file { cursor: pointer; }
+
+@media (max-width: 560px) {
+  .inv-bar .btn, .inv-bar .inv-file { flex: 1 1 100%; text-align: center; }
+}
+
 /* iOS zooms a focused field whose text is under 16px and does not zoom back.
    Same rule as app.css, same reason, and it stays last in this file too. */
 @media (max-width: 700px) {
