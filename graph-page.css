@@ -71,7 +71,33 @@
 .gp-tag.own { background: var(--gold-soft); color: #6b4c07; }
 .gp-tag.deck { background: #dff1e6; color: var(--forest); }
 
-#cy { height: min(70vh, 640px); border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+/* The reason groups, as a chip row above the canvas. It doubles as the legend:
+   a reader can learn WHY a card has 90 neighbours without reading the graph at
+   all, which is more than the old single-ring layout ever conveyed. */
+.gp-groups {
+  display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px;
+}
+.gp-group {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 28px; padding: 3px 11px 3px 5px;
+  border: 1px solid var(--line); border-radius: 999px;
+  background: var(--surface); color: var(--ink, inherit);
+  font-size: 12px; font-weight: 600; cursor: pointer; line-height: 1.25;
+}
+.gp-group:hover { border-color: #b8ac8c; }
+.gp-group.is-on { background: #0f3a2b; border-color: #0f3a2b; color: #f4efe2; }
+.gp-group-n {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 20px; height: 20px; padding: 0 5px; border-radius: 999px;
+  background: rgba(15, 58, 43, .1); font-size: 11px; font-weight: 800;
+}
+.gp-group.is-on .gp-group-n { background: rgba(244, 239, 226, .2); }
+.gp-group-all { font-weight: 700; }
+
+/* Taller than it was: the clustered layout spends its space on three rings of
+   cards inside each wedge rather than one ring of ninety, and it needs the room
+   to keep the group labels off each other. */
+#cy { height: min(76vh, 720px); border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
 .gp-legend { color: var(--muted); font-size: 11.5px; margin-top: 8px; }
 .gp-empty { color: var(--muted); padding: 30px 4px; font-size: 13px; }
 
@@ -84,6 +110,11 @@
     border-radius: 999px; background: var(--surface); font-size: 12px; font-weight: 800; cursor: pointer;
   }
   .gp-grid { grid-template-columns: minmax(0, 1fr); }
+  /* On a phone the chip row is the usable control -- pinching a clustered graph
+     to read a 10px label is not. It stays first, and the canvas gives up height
+     so both fit without scrolling past one to reach the other. */
+  .gp-group { font-size: 11.5px; }
+  #cy { height: min(58vh, 460px); }
 }
 
 /* Tapping a node shows the card; re-centring is a button inside that popup. The

@@ -167,7 +167,13 @@
     box.addEventListener("click", function (e) {
       if (e.target === box || e.target.closest(".gp-modal-x")) closeCard();
       var f = e.target.closest("[data-focus]");
-      if (f) { EGO = f.dataset.focus; state.view = "graph"; syncViews(); closeCard(); render(); }
+      if (f) {
+        EGO = f.dataset.focus; state.view = "graph"; syncViews(); closeCard();
+        // A new centre has different reasons, so an expanded group from the old
+        // one would open something the reader never asked for.
+        groupState = {open: {}, only: null};
+        render();
+      }
     });
     document.body.appendChild(box);
     document.body.classList.add("gp-locked");
@@ -190,16 +196,60 @@
   /* The graph is deliberately ego-centric and capped. Two cards are joined when
      one CAUSES an event the other TRIGGERS_ON, when both trigger on the same
      event (a co-payoff), or when EDHREC records them played together. */
+  /* WHY THE OLD PICTURE WAS AN ASTERISK, AND IT WAS NOT THE LAYOUT.
+   *
+   * Good-Fortune Unicorn requires the role "creatures". Every creature in a
+   * 4,883-card pool supplies it, so the candidate list was two thousand cards
+   * that all scored the same 3, and taking the top 90 took 90 of them. The graph
+   * then drew 90 identical spokes labelled "supplies creatures", which is a true
+   * statement about nothing.
+   *
+   * Two things fix it, and both are about WHICH cards are picked rather than
+   * where they are drawn:
+   *
+   *   1. A quota per reason. Reasons compete for slots round-robin instead of
+   *      by raw weight, so one broad role cannot crowd out the shared events and
+   *      the co-play that were the interesting half of the answer.
+   *   2. Relevance inside a reason. Two thousand cards supply "creatures"; the
+   *      ones worth drawing are the ones he owns, the ones already in a deck,
+   *      and the ones EDHREC actually pairs with this card. Ties inside a group
+   *      break on that, not on catalogue order.
+   */
+  var PER_GROUP = 14;     // candidates kept per reason before relevance decides
+  var TOTAL_CAP = 90;     // candidates handed to the clustering
+
   function neighbours(ego, pool) {
     var byId = {}; pool.forEach(function (c) { byId[c.id] = c; });
-    var inFilter = {}; pool.forEach(function (c) { inFilter[c.id] = 1; });
     var out = [], seen = {};
+
+    // EDHREC co-play, as a lookup: a card the data says is played alongside this
+    // one is more worth drawing than one that merely shares a keyword.
+    var synergy = {};
+    DATA.played.forEach(function (p) {
+      if (p.from === ego.id) synergy[p.to] = Math.max(synergy[p.to] || 0, p.synergy || 0);
+      if (p.to === ego.id) synergy[p.from] = Math.max(synergy[p.from] || 0, p.synergy || 0);
+    });
+
+    /* Relevance is about HIS collection, not the card's power level. A card in
+       one of the six decks is the most relevant thing there is; one he owns is
+       next; one EDHREC pairs with this card is next. Everything else is a card
+       he would have to go and buy on the strength of a shared keyword. */
+    function relevance(card) {
+      var r = 0;
+      if ((card.decks || []).length) r += 4;
+      if (card.own > 0) r += 2;
+      else if (card.ordered > 0 || card.bench > 0) r += 1;
+      r += (synergy[card.id] || 0) * 3;
+      return r;
+    }
+
     function add(card, label, weight) {
       if (!card || card.id === ego.id) return;
       var k = card.id + "|" + label;
       if (seen[k]) return; seen[k] = 1;
-      out.push({card: card, label: label, weight: weight});
+      out.push({card: card, label: label, weight: weight, rel: relevance(card)});
     }
+
     var egoTrig = ego.triggers || [], egoCause = ego.causes || [];
     pool.forEach(function (c) {
       (c.causes || []).forEach(function (e) { if (egoTrig.indexOf(e) >= 0) add(c, e, 2); });
@@ -218,7 +268,139 @@
       if (p.from === ego.id && byId[p.to]) add(byId[p.to], "played together", 1 + (p.synergy || 0) * 3);
       if (p.to === ego.id && byId[p.from]) add(byId[p.from], "played together", 1 + (p.synergy || 0) * 3);
     });
-    return out.sort(function (a, b) { return b.weight - a.weight; }).slice(0, 90);
+
+    // Bucket by reason, keep the most relevant few of each, then let the reasons
+    // take turns until the canvas is full. Round-robin is what stops "supplies
+    // creatures" from being the whole answer.
+    var buckets = {}, order = [];
+    out.forEach(function (n) {
+      if (!buckets[n.label]) { buckets[n.label] = []; order.push(n.label); }
+      buckets[n.label].push(n);
+    });
+    order.forEach(function (label) {
+      buckets[label].sort(function (a, b) { return b.rel - a.rel || b.weight - a.weight ||
+        (a.card.name < b.card.name ? -1 : 1); });
+      buckets[label] = buckets[label].slice(0, PER_GROUP);
+    });
+    // A reason with more relevant cards behind it goes first, so the busiest
+    // wedge is also the one worth reading.
+    order.sort(function (a, b) { return buckets[b][0].rel - buckets[a][0].rel || buckets[b].length - buckets[a].length; });
+
+    var picked = [], round = 0, added = true;
+    while (picked.length < TOTAL_CAP && added) {
+      added = false;
+      for (var i = 0; i < order.length && picked.length < TOTAL_CAP; i++) {
+        var b = buckets[order[i]];
+        if (round < b.length) { picked.push(b[round]); added = true; }
+      }
+      round++;
+    }
+    return picked;
+  }
+
+  /* WHY THE GRAPH IS NOT A STAR ANY MORE.
+   *
+   * The ego's 90 neighbours all hang off one node, so laid out as a single ring
+   * they draw an asterisk: 90 identical spokes, and 90 edge labels at 6px
+   * printed on top of each other. The picture carried one fact -- "this card is
+   * connected to a lot of cards" -- which the count already said in words.
+   *
+   * The information being thrown away was the edge label. Every neighbour is
+   * here for a REASON: it supplies a role this card needs, it fires on an event
+   * this card causes, it is played alongside it. Group by that reason and 90
+   * spokes become eight or so labelled clusters, each label drawn once at a size
+   * a person can read. The layout is computed rather than simulated, so the same
+   * card always draws the same picture and nothing drifts while you look at it.
+   */
+  var groupState = {open: {}, only: null};
+
+  /* A phone gets fewer, so the labels stay readable rather than the picture
+     staying complete. Nothing is lost: the chip row above the canvas lists every
+     reason at full size, and tapping one isolates it. */
+  function limits() {
+    var narrow = window.matchMedia("(max-width: 860px)").matches;
+    return {cap: narrow ? 5 : 8, hubs: narrow ? 4 : 8};
+  }
+
+  // The edge labels are already prose; these turn them into a small, ordered set
+  // of buckets. Order is deliberate: the reasons that describe a functional
+  // dependency come before the ones that describe correlation.
+  function groupOf(label) {
+    // The ROLE is the reason, not the word "supplies". Collapsing every role
+    // into one hub is the same mistake the old single ring made, one level up.
+    if (label.indexOf("supplies ") === 0) {
+      return {key: "sup:" + label.slice(9), title: "Supplies " + label.slice(9), rank: 0};
+    }
+    if (label.indexOf("needs ") === 0) {
+      return {key: "need:" + label.slice(6), title: "Needs its " + label.slice(6), rank: 1};
+    }
+    if (label === "played together") return {key: "coplay", title: "Played together (EDHREC)", rank: 4};
+    if (label.indexOf(" (co-payoff)") > 0) {
+      var ev = label.slice(0, label.length - " (co-payoff)".length);
+      return {key: "co:" + ev, title: "Also fires on " + ev, rank: 3};
+    }
+    return {key: "ev:" + label, title: "Shares the event " + label, rank: 2};
+  }
+
+  function cluster(near) {
+    var byKey = {}, order = [];
+    near.forEach(function (n) {
+      var g = groupOf(n.label);
+      if (!byKey[g.key]) { byKey[g.key] = {key: g.key, title: g.title, rank: g.rank, items: []}; order.push(byKey[g.key]); }
+      byKey[g.key].items.push(n);
+    });
+    order.forEach(function (g) {
+      g.items.sort(function (a, b) { return b.weight - a.weight; });
+      g.weight = g.items.reduce(function (n, i) { return n + i.weight; }, 0);
+    });
+    // Biggest first inside a rank, so the eye lands on the busiest cluster.
+    return order.sort(function (a, b) { return a.rank - b.rank || b.items.length - a.items.length; });
+  }
+
+  /* Positions, computed rather than simulated, so the same card always draws the
+     same picture and nothing drifts while you are looking at it.
+
+     Each cluster owns an angular wedge. Sizing the wedge purely by card count
+     put a one-card cluster in a 12-degree slice and then drew a 180px label
+     across it, straight through its neighbour -- so a wedge is also never
+     narrower than its own label needs, and the hubs alternate between two radii
+     so that two wide labels side by side sit on different rings instead of on
+     top of each other. Cards start outside the further hub ring, which is what
+     keeps a label off the art. */
+  var HUB_R_IN = 200, HUB_R_OUT = 292, CARD_R0 = 382, CARD_RING = 98;
+
+  function place(groups) {
+    var pos = {}, hub = {};
+    // A wedge must hold whichever is larger: its cards, or its label. 22 is the
+    // angular cost of a label in the same units the card count is measured in,
+    // tuned so an eight-card cluster and a long label ask for about the same.
+    var demand = groups.map(function (g) {
+      return Math.max(2.6, g.shown.length, g.title.length / 22 * 4);
+    });
+    var total = demand.reduce(function (a, b) { return a + b; }, 0) || 1;
+    var angle = -Math.PI / 2;            // start at twelve o'clock
+    groups.forEach(function (g, gi) {
+      var span = demand[gi] / total * Math.PI * 2;
+      var mid = angle + span / 2;
+      var hubR = gi % 2 ? HUB_R_OUT : HUB_R_IN;
+      hub[g.key] = {x: Math.cos(mid) * hubR, y: Math.sin(mid) * hubR};
+      var n = g.shown.length;
+      var rings = n <= 4 ? 1 : (n <= 9 ? 2 : 3);
+      var perRing = Math.ceil(n / rings);
+      g.shown.forEach(function (item, i) {
+        var ring = Math.floor(i / perRing);
+        var inRing = i % perRing;
+        var countInRing = Math.min(perRing, n - ring * perRing);
+        // Leave a margin inside the wedge so neighbouring clusters do not touch.
+        var usable = span * 0.8;
+        var t = countInRing === 1 ? 0.5 : inRing / (countInRing - 1);
+        var a = mid - usable / 2 + usable * t;
+        var r = CARD_R0 + ring * CARD_RING;
+        pos[item.card.id] = {x: Math.cos(a) * r, y: Math.sin(a) * r};
+      });
+      angle += span;
+    });
+    return {pos: pos, hub: hub};
   }
 
   function renderGraph(rows) {
@@ -227,42 +409,132 @@
     var ego = DATA.cards.filter(function (c) { return c.id === EGO; })[0];
     if (!ego) { host.innerHTML = ""; return; }
     var near = neighbours(ego, DATA.cards);
-    var shown = {}; rows.forEach(function (c) { shown[c.id] = 1; });
+    var shownIds = {}; rows.forEach(function (c) { shownIds[c.id] = 1; });
+    var groups = cluster(near);
+    if (groupState.only && !groups.some(function (g) { return g.key === groupState.only; })) groupState.only = null;
+    // Twenty hubs is a hairball of labels, which is the old problem wearing a
+    // hat. The canvas draws the busiest MAX_HUBS; the chip row above lists every
+    // reason, and clicking one isolates it, so nothing is unreachable.
+    var lim = limits();
+    var drawn = groupState.only
+      ? groups.filter(function (g) { return g.key === groupState.only; })
+      : groups.slice(0, lim.hubs);
+    drawn.forEach(function (g) {
+      var open = groupState.open[g.key] || groupState.only === g.key;
+      g.shown = open ? g.items : g.items.slice(0, lim.cap);
+      g.hidden = g.items.length - g.shown.length;
+    });
+
+    renderGroupBar(groups, near.length);
     $("legend").hidden = false;
-    $("legend").innerHTML = "Centre: <strong>" + esc(ego.name) + "</strong>. " + near.length +
-      " connected cards. Edges name what joins them &mdash; a shared event, a role one needs and the other supplies, or EDHREC co-play. Faded nodes fall outside your current filters. Click any node to re-centre.";
+    var offCanvas = groupState.only ? 0 : Math.max(0, groups.length - drawn.length);
+    $("legend").innerHTML = "Centre: <strong>" + esc(ego.name) + "</strong>, ringed by " +
+      drawn.reduce(function (n, g) { return n + g.shown.length; }, 0) + " of " + near.length +
+      " connected cards, grouped by why they are connected" +
+      (offCanvas ? " \u2014 the " + drawn.length + " busiest reasons of " + groups.length +
+        ", with " + offCanvas + " more in the chips above" : "") +
+      ". Cards are picked for relevance to your collection first: in a deck, then owned, then EDHREC co-play. " +
+      "Click a group label to open it, a chip to isolate one reason, or any card to re-centre. " +
+      "Faded cards fall outside your filters.";
     if (!window.cytoscape) { host.innerHTML = '<p class="gp-empty">Graph library did not load.</p>'; return; }
 
-    var els = [{data: {id: ego.id, label: ego.name, img: ego.image, ego: 1}}];
-    near.forEach(function (n) {
-      els.push({data: {id: n.card.id, label: n.card.name, img: n.card.image, dim: shown[n.card.id] ? 0 : 1}});
-      els.push({data: {id: ego.id + ">" + n.card.id + n.label, source: ego.id, target: n.card.id, label: n.label, w: n.weight}});
+    var laid = place(drawn);
+    var els = [{data: {id: ego.id, label: ego.name, img: ego.image, kind: "ego"}, position: {x: 0, y: 0}}];
+    drawn.forEach(function (g) {
+      var hubId = "hub:" + g.key;
+      els.push({data: {id: hubId, kind: "hub", group: g.key,
+        label: g.title + "  (" + g.items.length + ")" + (g.hidden ? "  +" + g.hidden : "")},
+        position: laid.hub[g.key]});
+      els.push({data: {id: ego.id + ">" + hubId, source: ego.id, target: hubId, kind: "spine", w: Math.min(4, 1 + g.items.length / 4)}});
+      g.shown.forEach(function (n) {
+        els.push({data: {id: n.card.id, label: n.card.name, img: n.card.image, kind: "card",
+          group: g.key, dim: shownIds[n.card.id] ? 0 : 1}, position: laid.pos[n.card.id]});
+        els.push({data: {id: hubId + ">" + n.card.id, source: hubId, target: n.card.id, kind: "leaf", w: n.weight}});
+      });
     });
+
     if (CY) { CY.destroy(); CY = null; }
     CY = window.cytoscape({
       container: host, elements: els,
       style: [
-        {selector: "node", style: {
+        {selector: "node[kind = 'card']", style: {
           "background-image": "data(img)", "background-fit": "cover", "background-color": "#ece4d0",
-          width: 40, height: 56, shape: "round-rectangle", label: "data(label)",
-          "font-size": 7, "text-valign": "bottom", "text-margin-y": 3, color: "#586761",
-          "text-max-width": 66, "text-wrap": "ellipsis", "border-width": 1, "border-color": "#dcd2b9"}},
-        {selector: "node[dim = 1]", style: {opacity: 0.32}},
-        {selector: "node[ego]", style: {width: 66, height: 92, "border-width": 3, "border-color": "#dda01c", "font-size": 9, color: "#16221d"}},
-        {selector: "edge", style: {
-          width: "mapData(w, 1, 4, 1, 3)", "line-color": "#c9bfa6", "curve-style": "bezier",
-          label: "data(label)", "font-size": 6, color: "#8b8371", "text-rotation": "autorotate",
-          "target-arrow-shape": "none"}}
+          width: 46, height: 64, shape: "round-rectangle", label: "data(label)",
+          "font-size": 8.5, "text-valign": "bottom", "text-margin-y": 4, color: "#586761",
+          "text-max-width": 80, "text-wrap": "ellipsis", "border-width": 1, "border-color": "#dcd2b9"}},
+        {selector: "node[dim = 1]", style: {opacity: 0.45}},
+        {selector: "node[kind = 'ego']", style: {
+          "background-image": "data(img)", "background-fit": "cover", "background-color": "#ece4d0",
+          width: 82, height: 114, shape: "round-rectangle", label: "data(label)",
+          "font-size": 11, "font-weight": "bold", "text-valign": "bottom", "text-margin-y": 5,
+          color: "#16221d", "text-max-width": 130, "text-wrap": "ellipsis",
+          "border-width": 3, "border-color": "#dda01c"}},
+        /* The hub is the label. Drawing it once, at a readable size, on a solid
+           chip is the whole point of the regrouping -- it replaces the 90
+           unreadable edge labels the old layout printed on top of each other. */
+        {selector: "node[kind = 'hub']", style: {
+          shape: "round-rectangle", "background-color": "#0f3a2b", "background-opacity": 0.92,
+          width: "label", height: 20, padding: "7px", label: "data(label)", "font-size": 10,
+          "font-weight": "bold", color: "#f4efe2", "text-valign": "center", "text-halign": "center",
+          "text-max-width": 190, "text-wrap": "wrap", "border-width": 0}},
+        {selector: "edge[kind = 'spine']", style: {
+          width: "mapData(w, 1, 4, 1.5, 4)", "line-color": "#b8ac8c", "curve-style": "straight",
+          opacity: 0.85, "target-arrow-shape": "none"}},
+        {selector: "edge[kind = 'leaf']", style: {
+          width: "mapData(w, 1, 4, 0.8, 2)", "line-color": "#d4cab1", "curve-style": "bezier",
+          opacity: 0.7, "target-arrow-shape": "none"}},
+        /* Hover reads one thread out of the picture. Everything not on it fades
+           rather than disappearing, so the shape of the whole stays legible. */
+        {selector: ".faded", style: {opacity: 0.12}},
+        {selector: ".lit", style: {opacity: 1, "border-color": "#dda01c", "border-width": 3}},
+        {selector: "edge.lit", style: {"line-color": "#dda01c", opacity: 1, width: 3}}
       ],
-      layout: {name: "concentric", concentric: function (n) { return n.data("ego") ? 10 : 1; },
-               levelWidth: function () { return 1; }, minNodeSpacing: 22, padding: 24},
+      layout: {name: "preset", fit: true, padding: 34},
       wheelSensitivity: 0.2
     });
-    CY.on("tap", "node", function (evt) {
-      var id = evt.target.id();
-      if (state.clickFocuses) { EGO = id; render(); } else openCard(id);
+
+    /* Group keys carry colons and spaces ("ev:creature enters"), which a
+       cytoscape selector string would have to escape. Filtering on the data
+       instead sidesteps the escaping question entirely. */
+    function clearHighlight() { CY.elements().removeClass("faded lit"); }
+    CY.on("mouseover", "node[kind = 'card'], node[kind = 'hub']", function (evt) {
+      var n = evt.target, group = n.data("group");
+      CY.elements().addClass("faded");
+      CY.nodes().filter(function (el) {
+        return el.data("group") === group || el.data("kind") === "ego";
+      }).removeClass("faded");
+      n.closedNeighborhood().removeClass("faded").addClass("lit");
     });
-    CY.on("dbltap", "node", function (evt) { closeCard(); EGO = evt.target.id(); render(); });
+    CY.on("mouseout", "node", clearHighlight);
+
+    CY.on("tap", "node[kind = 'hub']", function (evt) {
+      var g = evt.target.data("group");
+      groupState.open[g] = !groupState.open[g];
+      render();
+    });
+    CY.on("tap", "node[kind = 'card'], node[kind = 'ego']", function (evt) {
+      var id = evt.target.id();
+      if (state.clickFocuses) { EGO = id; groupState = {open: {}, only: null}; render(); } else openCard(id);
+    });
+    CY.on("dbltap", "node[kind = 'card']", function (evt) {
+      closeCard(); EGO = evt.target.id(); groupState = {open: {}, only: null}; render();
+    });
+  }
+
+  /* The same grouping, as text, above the canvas. It is the legend, the table of
+     contents and the filter at once: a reader who only wants to know WHY a card
+     is connected never has to read the canvas at all. */
+  function renderGroupBar(groups, total) {
+    var host = $("groups");
+    if (!groups.length) { host.hidden = true; return; }
+    host.hidden = false;
+    host.innerHTML = groups.map(function (g) {
+      var on = groupState.only === g.key;
+      return '<button type="button" class="gp-group' + (on ? " is-on" : "") + '" data-group="' +
+        esc(g.key) + '"><span class="gp-group-n">' + g.items.length + "</span>" + esc(g.title) + "</button>";
+    }).join("") + (groupState.only
+      ? '<button type="button" class="gp-group gp-group-all" data-group="">Show all ' + total + "</button>"
+      : "");
   }
 
   /* The copilot hands over a filter and the reason for it. It never picks a card
@@ -310,6 +582,7 @@
     renderFacets();
     var graph = state.view === "graph";
     $("result").hidden = graph; $("cy").hidden = !graph; $("legend").hidden = !graph;
+    $("groups").hidden = !graph;
     if (graph) renderGraph(rows); else renderList(rows);
   }
 
@@ -334,6 +607,12 @@
     var more = e.target.closest("[data-more]");
     if (more) { state.showAll[more.dataset.more] = true; render(); return; }
     if (e.target.id === "clear") { state.f = {}; state.q = ""; state.mvMax = 20; state.showAll = {}; state.lens = null; $("q").value = ""; render(); return; }
+    var grp = e.target.closest(".gp-group");
+    if (grp) {
+      var key = grp.dataset.group;
+      groupState.only = key && groupState.only !== key ? key : null;
+      render(); return;
+    }
     var lensBtn = e.target.closest("[data-lens]");
     if (lensBtn) { applyLens(lensBtn.dataset.lens); return; }
     var lock = e.target.closest("#click-focus");
