@@ -1,4 +1,4 @@
-/* Trey's Commander Decks — the fast view.
+/* My Commander Decks — the fast view.
  *
  * Three tabs and nothing else: the six decks, the bench, and what is still to
  * buy. Everything it shows comes from data/master-v2.json, which is generated
@@ -181,7 +181,7 @@
     return (GUIDES.decks || []).filter(function (g) { return g.id === id && sameCommander(g, id); })[0] || null;
   }
 
-  /* The optimiser's recommendations were measured against the hundred as it
+  /* The optimizer's recommendations were measured against the hundred as it
      stood on 2026-09-04, and the 2026-09-05 rebuild changed 14 to 30 cards in
      every deck. Its source lists are gone, so the file cannot be regenerated --
      but a swap can still be checked one at a time: "cut X for Y" is advice only
@@ -600,7 +600,7 @@
     });
   }
 
-  /* What the optimiser would change, and what it costs. Shown as a
+  /* What the optimizer would change, and what it costs. Shown as a
      recommendation rather than folded into the hundred above, because he has
      not made these swaps -- the deck list stays what the workbook says it is. */
   function swapPanel(plan) {

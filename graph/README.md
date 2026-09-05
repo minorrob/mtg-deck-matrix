@@ -152,8 +152,8 @@ is what the graph view draws.
 state behind both the list and the graph, so switching view is a render choice
 rather than a different query.
 
-**The graph is ego-centric and capped at 90 neighbours.** 1,500 nodes on a canvas
-is a hairball that tells you nothing. Picking a card chooses the centre; nodes
+**The graph is ego-centric and capped at 90 neighbors.** 1,500 nodes on a canvas
+is a hairball that tells you nothing. Picking a card chooses the center; nodes
 outside the current filters are drawn faded rather than removed, so narrowing the
 pane never silently empties the canvas.
 

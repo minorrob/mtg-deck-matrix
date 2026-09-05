@@ -217,11 +217,11 @@ assert.match(appSource, /\$\{total\}\/100<\/b><small>active/, "collapsed Live De
 assert.match(appSource, /data-live-total="\$\{esc\(variant\.id\)\}"/, "collapsed Live Deck headers must show a committed Total Cost");
 assert.match(appSource, /<b title="\$\{checkedCount\} of \$\{count\} checked to buy">\$\{checkedCount\}\/\$\{count\}<\/b>/, "collapsed Starting Shell type rows must show checked-to-buy over the group total");
 // The flat buySection this pin was written for was replaced by tabbed ladder groups, but the
-// behaviour it protects is not superseded: a shut group must still report shopping progress,
+// behavior it protects is not superseded: a shut group must still report shopping progress,
 // since the per-tab counts only render once it is open.
 assert.match(appSource, /<b title="\$\{groupChecked\} of \$\{groupTotal\} checked to buy">\$\{groupChecked\}\/\$\{groupTotal\}<\/b>/, "collapsed ladder groups must show checked-to-buy over the group total");
 assert.match(appSource, /if \(metadataAttempts\.get\(key\)\) return;/, "card metadata may only be requested once per session, or unresolved cards re-render the app forever");
-assert.match(appSource, /Precon Pack/, "cards that arrive inside a sealed precon must be labelled instead of priced");
+assert.match(appSource, /Precon Pack/, "cards that arrive inside a sealed precon must be labeled instead of priced");
 assert.doesNotMatch(appSource, /live-critical-insight/, "the duplicate readiness banner must stay out of the Live Deck header");
 assert.doesNotMatch(appSource, /Saved on this device"\);\n\s*renderCompare/, "reset must not depend on the removed save-status label");
 // Read the tabs off the markup rather than listing them here. The list that used
@@ -284,7 +284,7 @@ for (const view of [...appSource.matchAll(/^\s{4}([a-z0-9]+): \[$/gm)].map((m) =
   assert.match(appSource, /denied: Boolean\(hold && !\(hold\.inHand \|\| 0\) && !\(hold\.ordered \|\| 0\)\)/,
     "a deck the audit says holds none must never be served a spare");
   assert.match(appSource, /if \(claim\.denied\) return void claimSatisfied\.set\(`\$\{key\}\|\$\{id\}`, false\);/,
-    "the denial has to be honoured where the copies are handed out");
+    "the denial has to be honored where the copies are handed out");
   // A complete allocation means a missing entry is zero, not "ask the ledger instead".
   assert.match(slotModelSource, /const allocated = holds \? \(holds\[row\.key\] \|\| \{inHand: 0, ordered: 0\}\) : null;/,
     "a card with no allocation was allocated to nobody");
@@ -358,7 +358,7 @@ for (const view of [...appSource.matchAll(/^\s{4}([a-z0-9]+): \[$/gm)].map((m) =
 }
 
 /* What a card cost, where you can type it, and what can reach the Bench. These are
-   source pins because the behaviour lives in the rendering, not in the data. */
+   source pins because the behavior lives in the rendering, not in the data. */
 {
   const cssSource = await readFile(new URL("../app.css", import.meta.url), "utf8");
   const shopSource = await readFile(new URL("../shop-page.js", import.meta.url), "utf8");
@@ -598,7 +598,7 @@ for (const variantId of LIGHTWEIGHT_ALT_CASE_IDS) {
   assert(Number.isInteger(altCase.candidatesMeasured) && altCase.candidatesMeasured > 0, `${variantId}: must report how many alternative commanders were actually measured`);
   assert(Number.isInteger(altCase.gamesEach) && altCase.gamesEach > 0, `${variantId}: must report the game count each candidate was measured over`);
   // Forty of the lighter-weight evaluations are still the v2.2 pass that measured
-  // fifteen candidate commanders apiece. The four decks that became Trey's own were
+  // fifteen candidate commanders apiece. The four decks that became my own were
   // re-measured on the engine this file names, against a different and narrower
   // field -- the legends already inside each deck -- so they carry that generation
   // instead. Either way the case has to name the engine that produced its numbers.
@@ -832,10 +832,10 @@ assert.match(htmlSource, /id="load-active-button"/, "a Load Active button must e
       assert.equal(variant.brackets[index].gameChangers, `${count} GC`,
         `${variant.id} ${rung}: the Compare chip says ${variant.brackets[index].gameChangers} but the pinned hundred holds ${count}`);
       // compliance-model refuses a Game Changer at Tier 2, so a rung holding one
-      // cannot be labelled Bracket 2 whatever a density estimate scored it.
+      // cannot be labeled Bracket 2 whatever a density estimate scored it.
       if (count > 0) {
         assert.doesNotMatch(variant.brackets[index].label, /^B2/,
-          `${variant.id} ${rung} is labelled ${variant.brackets[index].label} while holding ${count} Game Changer(s)`);
+          `${variant.id} ${rung} is labeled ${variant.brackets[index].label} while holding ${count} Game Changer(s)`);
       }
     });
 
@@ -879,13 +879,13 @@ assert.match(deckPageSource, /const shell = meta\(ctx, \(slot\.pick && slot\.pic
 // A slot whose card is FOR something only offers cards that do that thing.
 assert.match(deckPageSource, /row\.fit\.score > 0 && \(!target\.roles\.length \|\| row\.fit\.shared\.length\)/,
   "a slot with roles must require a shared role, or the list fills with same-type noise");
-// Colour identity is a gate, not a tiebreak: an out-of-identity card is illegal here.
+// Color identity is a gate, not a tiebreak: an out-of-identity card is illegal here.
 assert.match(deckPageSource, /\.filter\(\(card\) => \(card\.colorIdentity \|\| \[\]\)\.every\(\(color\) => identity\.indexOf\(color\) >= 0\)\)/,
-  "suggestions must be filtered to the deck's colour identity before they are ranked");
+  "suggestions must be filtered to the deck's color identity before they are ranked");
 // The deck's identity comes from its commander, and the loose pools carry what the fit
 // model reads -- a name and a type line cannot say what a card costs or is for.
 assert.match(appSource, /identity: \(cards\[Lineup\.normalizeName\(plan\.commanderName \|\| variant\.commander \|\| ""\)\] \|\| \{\}\)\.colorIdentity \|\| \[\]/,
-  "the Deck page context must derive colour identity from the commander card");
+  "the Deck page context must derive color identity from the commander card");
 for (const field of ["manaCost", "oracleText", "colorIdentity"]) {
   assert.ok(new RegExp(`freeCards\\.push\\(\\{[^}]*${field}:`, "s").test(appSource),
     `loose cards must carry ${field} or the fit model cannot read them`);
@@ -1115,7 +1115,7 @@ assert.doesNotMatch(cssSource, /\.dp-cstep/, "its styles must go with it");
     const slots = Slot.deckSlots(grafted, activeState.state.buySelections[variantId] || {}, {});
     const seat = slots.find((s) => s.type === "Commander" && s.pick);
     const identity = (seat && (cardsByKey.get(Slot.ownedKey(seat.pick.name)) || {}).colorIdentity) || [];
-    assert.ok(identity.length, `${variantId} should have a commander to take its colours from`);
+    assert.ok(identity.length, `${variantId} should have a commander to take its colors from`);
     for (const entry of list) {
       const ci = entry.colorIdentity || [];
       if (!ci.every((c) => identity.indexOf(c) >= 0)) illegal.push(`${variantId}/${entry.name}`);
@@ -1123,7 +1123,7 @@ assert.doesNotMatch(cssSource, /\.dp-cstep/, "its styles must go with it");
     }
   }
   assert.equal(illegal.length, 0,
-    `${illegal.length} hand-added cards are outside their deck's colours, e.g. ${illegal.slice(0, 3).join(", ")}`);
+    `${illegal.length} hand-added cards are outside their deck's colors, e.g. ${illegal.slice(0, 3).join(", ")}`);
   /* A card on the bench has to be a copy no box is holding. It may well ALSO be in a box
      -- the audit has Prophetic Prism boxed in deck 3 and a second copy loose -- so the
      test is not "is it in a deck" but "is there a copy left over". Without the spare, one
@@ -1222,7 +1222,7 @@ assert.doesNotMatch(cssSource, /\.dp-cstep/, "its styles must go with it");
     "Undo must put back exactly what was there, not guess at a decrement");
 
   /* The count on the row and the button is what is still owed. A row of two Signets with
-     one already in the box is one card to find; labelling it x2 sends you looking for a
+     one already in the box is one card to find; labeling it x2 sends you looking for a
      copy you already have. */
   assert.match(shopPageSource, /const many = r\.need > 1;/, "the Store counts what is missing, not what the deck asks for");
 
@@ -1370,7 +1370,7 @@ assert.doesNotMatch(cssSource, /\.dp-cstep/, "its styles must go with it");
   /* ---------- what a filter says must be what the row says ----------
      The Shop's Status filter matches on a row's acquisition, so a row that still owes a
      copy while calling itself "In hand" is a card the filter hides. That is how filtering
-     to Obuun and asking for "Not in hand" showed two of the seven colourless cards still
+     to Obuun and asking for "Not in hand" showed two of the seven colorless cards still
      to buy: Sol Ring and Command Tower are owned once, wanted by several decks, and the
      status was read off the shelf instead of off the row. */
   const rows = Slot.shopRows(decks, owned, claimTotals, holds);
@@ -1454,7 +1454,7 @@ assert.doesNotMatch(cssSource, /\.dp-cstep/, "its styles must go with it");
 }
 
 /* ---------- the gallery tile, and what a Buy actually does ----------
-   The art carries the name, the colour and the type. Repeating them underneath spent a
+   The art carries the name, the color and the type. Repeating them underneath spent a
    third of the tile restating the picture, so the panel is down to three rows: who wants
    it, what it costs beside the one button worth having there, and where it is. */
 {

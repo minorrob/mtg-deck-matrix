@@ -136,7 +136,7 @@
         "ceiling": 0.45
       }
     ],
-    "note": "The six decks Trey actually plays were measured on a different brief from the other forty-four. Their Pod Fun rung was searched over his own bench at zero spend, with the win rate held under 60% rather than under this file's 45% ceiling — his instruction, and the reason all six are listed above as over the ceiling. It is also why five of them out-power their own Tuned rung: a search that may spend nothing but may reorder a hundred cards is free to find a better hundred, and on these lists it did."
+    "note": "The six decks My actually plays were measured on a different brief from the other forty-four. Their Pod Fun rung was searched over his own bench at zero spend, with the win rate held under 60% rather than under this file's 45% ceiling — his instruction, and the reason all six are listed above as over the ceiling. It is also why five of them out-power their own Tuned rung: a search that may spend nothing but may reorder a hundred cards is free to find a better hundred, and on these lists it did."
   },
   "builds": {
     "1a": {
@@ -253,7 +253,7 @@
         "verdict": "measured",
         "swaps": 0,
         "engine": "v2.4",
-        "note": "the target hundred Trey is building; this deck's Tuned pass changed nothing, so it is the Base hundred",
+        "note": "the target hundred My is building; this deck's Tuned pass changed nothing, so it is the Base hundred",
         "stopReason": "Six independent seeds of 20,000 games each, ±0.068 on the score."
       },
       "Pod Fun": {
@@ -603,7 +603,7 @@
         "verdict": "no-tier-3-headroom",
         "swaps": 0,
         "engine": "v2.4",
-        "note": "no in-colour Game Changer could be added without breaking the deck",
+        "note": "no in-color Game Changer could be added without breaking the deck",
         "stopReason": "Measured over 5,000 games on a seed the selection never saw."
       }
     },
@@ -721,7 +721,7 @@
         "verdict": "measured",
         "swaps": 0,
         "engine": "v2.4",
-        "note": "the target hundred Trey is building; this deck's Tuned pass changed nothing, so it is the Base hundred",
+        "note": "the target hundred My is building; this deck's Tuned pass changed nothing, so it is the Base hundred",
         "stopReason": "Six independent seeds of 20,000 games each, ±0.143 on the score."
       },
       "Pod Fun": {
@@ -1267,7 +1267,7 @@
         "verdict": "measured",
         "swaps": 10,
         "engine": "v2.4",
-        "note": "the target hundred Trey is building, 10 cards on from Base",
+        "note": "the target hundred My is building, 10 cards on from Base",
         "stopReason": "Six independent seeds of 20,000 games each, ±0.079 on the score."
       },
       "Pod Fun": {
@@ -1579,7 +1579,7 @@
         "verdict": "measured",
         "swaps": 0,
         "engine": "v2.4",
-        "note": "the target hundred Trey is building; this deck's Tuned pass changed nothing, so it is the Base hundred",
+        "note": "the target hundred My is building; this deck's Tuned pass changed nothing, so it is the Base hundred",
         "stopReason": "Six independent seeds of 20,000 games each, ±0.065 on the score."
       },
       "Pod Fun": {
@@ -2047,7 +2047,7 @@
         "verdict": "measured",
         "swaps": 0,
         "engine": "v2.4",
-        "note": "the target hundred Trey is building; this deck's Tuned pass changed nothing, so it is the Base hundred",
+        "note": "the target hundred My is building; this deck's Tuned pass changed nothing, so it is the Base hundred",
         "stopReason": "Six independent seeds of 20,000 games each, ±0.033 on the score."
       },
       "Pod Fun": {
@@ -2827,7 +2827,7 @@
         "verdict": "measured",
         "swaps": 9,
         "engine": "v2.4",
-        "note": "the target hundred Trey is building, 9 cards on from Base",
+        "note": "the target hundred My is building, 9 cards on from Base",
         "stopReason": "Six independent seeds of 20,000 games each, ±0.056 on the score."
       },
       "Pod Fun": {
@@ -4075,7 +4075,7 @@
       "candidatesMeasured": 6,
       "gamesEach": 120000,
       "altPrice": 0.14,
-      "honestRead": "Kirol, History Buff // Pack a Punch measures 1.22 points above Quintorius, Loremaster on this exact hundred, which is larger than the 0.14 the seed-to-seed noise would explain. Read it narrowly: the field is only the 6 legends already inside this deck whose colour identity covers every card in it, the ninety-nine is identical in both runs, and the engine scores a commander on what it does in combat and on the board — a body it can swing is worth more to it than a trigger it cannot model.",
+      "honestRead": "Kirol, History Buff // Pack a Punch measures 1.22 points above Quintorius, Loremaster on this exact hundred, which is larger than the 0.14 the seed-to-seed noise would explain. Read it narrowly: the field is only the 6 legends already inside this deck whose color identity covers every card in it, the ninety-nine is identical in both runs, and the engine scores a commander on what it does in combat and on the board — a body it can swing is worth more to it than a trigger it cannot model.",
       "engine": "v2.4"
     },
     "1a": {
@@ -4101,7 +4101,7 @@
       "candidatesMeasured": 1,
       "gamesEach": 120000,
       "altPrice": 3.05,
-      "honestRead": "No alternative already in this deck beats Betor, Ancestor's Voice by more than the seed-to-seed noise (-6.68 against 0.24), so the commander in the box is the right one on this evidence. The field is only the 1 legend already inside the deck whose colour identity covers every card in it, not every legal commander in the colours.",
+      "honestRead": "No alternative already in this deck beats Betor, Ancestor's Voice by more than the seed-to-seed noise (-6.68 against 0.24), so the commander in the box is the right one on this evidence. The field is only the 1 legend already inside the deck whose color identity covers every card in it, not every legal commander in the colors.",
       "engine": "v2.4"
     },
     "1c": {
@@ -4192,7 +4192,7 @@
       "candidatesMeasured": 1,
       "gamesEach": 120000,
       "altPrice": 2.54,
-      "honestRead": "No alternative already in this deck beats Purphoros, God of the Forge by more than the seed-to-seed noise (-6.75 against 0.19), so the commander in the box is the right one on this evidence. The field is only the 1 legend already inside the deck whose colour identity covers every card in it, not every legal commander in the colours.",
+      "honestRead": "No alternative already in this deck beats Purphoros, God of the Forge by more than the seed-to-seed noise (-6.75 against 0.19), so the commander in the box is the right one on this evidence. The field is only the 1 legend already inside the deck whose color identity covers every card in it, not every legal commander in the colors.",
       "engine": "v2.4"
     },
     "3c": {
@@ -4283,7 +4283,7 @@
       "candidatesMeasured": 2,
       "gamesEach": 120000,
       "altPrice": 0.3,
-      "honestRead": "Roon of the Hidden Realm measures 0.29 points above Chulane, Teller of Tales on this exact hundred, which is larger than the 0.15 the seed-to-seed noise would explain. Read it narrowly: the field is only the 2 legends already inside this deck whose colour identity covers every card in it, the ninety-nine is identical in both runs, and the engine scores a commander on what it does in combat and on the board — a body it can swing is worth more to it than a trigger it cannot model.",
+      "honestRead": "Roon of the Hidden Realm measures 0.29 points above Chulane, Teller of Tales on this exact hundred, which is larger than the 0.15 the seed-to-seed noise would explain. Read it narrowly: the field is only the 2 legends already inside this deck whose color identity covers every card in it, the ninety-nine is identical in both runs, and the engine scores a commander on what it does in combat and on the board — a body it can swing is worth more to it than a trigger it cannot model.",
       "engine": "v2.4"
     },
     "5c": {
@@ -4452,7 +4452,7 @@
       "candidatesMeasured": 3,
       "gamesEach": 120000,
       "altPrice": 2.64,
-      "honestRead": "No alternative already in this deck beats Shadrix Silverquill by more than the seed-to-seed noise (-11.25 against 0.17), so the commander in the box is the right one on this evidence. The field is only the 3 legends already inside the deck whose colour identity covers every card in it, not every legal commander in the colours.",
+      "honestRead": "No alternative already in this deck beats Shadrix Silverquill by more than the seed-to-seed noise (-11.25 against 0.17), so the commander in the box is the right one on this evidence. The field is only the 3 legends already inside the deck whose color identity covers every card in it, not every legal commander in the colors.",
       "engine": "v2.4"
     },
     "8a": {

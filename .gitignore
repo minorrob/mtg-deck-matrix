@@ -1,4 +1,4 @@
-# Simulation runtime artefacts. The committed placeholders (sim/status.json,
+# Simulation runtime artifacts. The committed placeholders (sim/status.json,
 # sim/config.json, sim/opponents.json) stay tracked; everything a run produces
 # does not.
 sim/requests/*

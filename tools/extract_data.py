@@ -547,7 +547,7 @@ def extract_compare() -> dict:
     ).replace(
         "$58 total", "$50 total"
     ).replace(
-        "Rewrites a rule of the game for everybody, in a deck where only you benefit. Your 0/5 walls hit for five. The board that was pure defence last turn is lethal this turn without adding a single creature.",
+        "Rewrites a rule of the game for everybody, in a deck where only you benefit. Your 0/5 walls hit for five. The board that was pure defense last turn is lethal this turn without adding a single creature.",
         "Felothar puts the whole plan in the command zone: your walls deal damage with toughness, defenders can attack, and a spare high-toughness creature can be exchanged for a new hand. The defensive board becomes an attack without waiting to draw a separate enabler.",
     ).replace(
         "Doran's effect on an enchantment; also lets defenders attack.",

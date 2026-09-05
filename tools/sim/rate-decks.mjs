@@ -24,7 +24,7 @@
  *          has already left the hundred is skipped and reported.
  *
  * Cards are supplied the way every other measurement in this repo supplies them:
- * type line, mana cost, oracle text, keywords, colour identity and the Master's
+ * type line, mana cost, oracle text, keywords, color identity and the Master's
  * price. data/cards.json carries no power or toughness for any card, so the
  * engine estimates a creature's power from its mana value here exactly as it does
  * in the sweep and the ladders. Handing this run the printed figures out of

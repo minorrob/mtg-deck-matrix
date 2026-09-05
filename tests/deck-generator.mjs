@@ -178,7 +178,7 @@ assert.deepEqual(Scryfall.slugNameCandidates("magic-bloomburrow-blood-artist")[0
 assert.ok(Scryfall.slugNameCandidates("magic-bloomburrow-blood-artist").includes("blood artist"), "slug candidates must trim leading set words");
 
 // ---------------------------------------------------------------------------
-// Client behaviour: caching, retries, and TCGplayer resolution
+// Client behavior: caching, retries, and TCGplayer resolution
 // ---------------------------------------------------------------------------
 {
   const {client, calls} = makeClient(fixture.data);

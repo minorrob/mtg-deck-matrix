@@ -69,12 +69,12 @@ ok("Active equals Assigned on the shipped state, as an import leaves it", () => 
   }
 });
 
-ok("every active card is Commander legal and inside its commander's colours", () => {
+ok("every active card is Commander legal and inside its commander's colors", () => {
   for (const id of live) {
     const slots = Slot.deckSlots(graft(id), state.buySelections[id], {});
     const seat = slots.find((s) => s.type === "Commander" && s.pick);
     const identity = new Set((byKey.get(Slot.ownedKey(seat.pick.name)) || {}).colorIdentity || []);
-    assert.ok(identity.size, `${id}: no colours for ${seat.pick.name}`);
+    assert.ok(identity.size, `${id}: no colors for ${seat.pick.name}`);
     for (const slot of slots) {
       if (!slot.pick) continue;
       const fact = byKey.get(Slot.ownedKey(slot.pick.name));
@@ -158,7 +158,7 @@ ok("the shipped basics are the counts the Master sheet targets", () => {
   }
 });
 
-/* The one card the workbook rejected: outside Atraxa's colours, so it cannot be a
+/* The one card the workbook rejected: outside Atraxa's colors, so it cannot be a
    candidate anywhere in that deck, not merely unselected. */
 ok("Rugged Highlands is not offered in Atraxa", () => {
   const offered = [];

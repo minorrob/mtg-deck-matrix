@@ -65,7 +65,7 @@
   function plural(n, word) { return n + " " + word + (n === 1 ? "" : "s"); }
 
   /* ---------------- where the physical copy is ----------------
-   * Five states, carried by glyph shape rather than colour so they never collide
+   * Five states, carried by glyph shape rather than color so they never collide
    * with the rung ramp. "Ordered" is the one the old model could not express:
    * paid for, not here, cannot be sleeved.
    */
@@ -226,7 +226,7 @@
   /* ---------------- a candidate tile ----------------
    * A hand-added card is the only kind that can leave a slot again, so it is the only
    * one that carries a control to do it. The button is a sibling of the tile rather
-   * than a child, because a button inside a button is not markup a browser will honour.
+   * than a child, because a button inside a button is not markup a browser will honor.
    */
   function manualTileMarkup(ctx, slot, rung, deckId) {
     return `<span class="dp-tile-wrap">${tileMarkup(ctx, slot, rung, deckId, false)}<button type="button"
@@ -390,7 +390,7 @@
     };
     const identity = ctx.identity || [];
     const ranked = pool
-      // Colour is a gate, not a score: a card outside the commander's identity is illegal
+      // Color is a gate, not a score: a card outside the commander's identity is illegal
       // here, and an illegal suggestion is worse than no suggestion.
       .filter((card) => (card.colorIdentity || []).every((color) => identity.indexOf(color) >= 0))
       .map((card) => ({card, fit: Slot.slotFit(card, target)}))
@@ -417,7 +417,7 @@
 
   function manualBoxMarkup(ctx, slot, deckId) {
     /* Not on the commander. Every other slot holds a card the deck was built to want;
-       the commander slot holds the card the deck was built FROM -- its colour identity,
+       the commander slot holds the card the deck was built FROM -- its color identity,
        its plan, its legality all follow from it. The box used to appear here like
        anywhere else, and picking what it added left the deck at a hundred cards with no
        commander in them, which is not a Commander deck at all. */
@@ -643,8 +643,8 @@
     const warnings = rules ? (rules.compositionWarnings || []) : [];
     const gc = rules ? (rules.selectedGameChangers || []).length : 0;
 
-    // Only the colours the deck actually asks for. Sources for a colour it never casts --
-    // an any-colour rock in a two-colour deck credits all five -- are noise on the row.
+    // Only the colors the deck actually asks for. Sources for a color it never casts --
+    // an any-color rock in a two-color deck credits all five -- are noise on the row.
     const colors = Slot.MANA_COLORS.filter((c) => mana.pips[c] > 0);
     const manaChips = colors.map((c) => {
       const thin = mana.thin.indexOf(c) >= 0;
@@ -669,9 +669,9 @@
       <div class="dp-ready-body">
         ${problems.length ? `<ul class="dp-ready-list">${problems.slice(0, 8).map((p) =>
           `<li><b>${esc(p.card)}</b> ${esc(p.rule)}${p.detail ? ` <i>${esc(p.detail)}</i>` : ""}</li>`).join("")}</ul>`
-          : `<p class="dp-ready-note">Nothing in this hundred breaks a Bracket 3 rule: one commander, a hundred cards, singleton outside the basics, every colour inside the commander's identity, and no more than three Game Changers.</p>`}
+          : `<p class="dp-ready-note">Nothing in this hundred breaks a Bracket 3 rule: one commander, a hundred cards, singleton outside the basics, every color inside the commander's identity, and no more than three Game Changers.</p>`}
         ${mana.thin.length ? `<p class="dp-ready-note"><b>Thin on ${
-          mana.thin.join(", ")}.</b> A colour wants roughly a third of the deck's lands behind it before its pips stop stranding cards in hand. Counted over lands and rocks alike, weighted by how many copies each slot holds.</p>` : ""}
+          mana.thin.join(", ")}.</b> A color wants roughly a third of the deck's lands behind it before its pips stop stranding cards in hand. Counted over lands and rocks alike, weighted by how many copies each slot holds.</p>` : ""}
         ${warnings.length ? `<ul class="dp-ready-list">${warnings.slice(0, 5).map((w) =>
           `<li>${esc(typeof w === "string" ? w : (w.rule || w.card || ""))}</li>`).join("")}</ul>` : ""}
         ${panelToggle("ready", true, "")}

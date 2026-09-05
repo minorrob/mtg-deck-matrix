@@ -213,7 +213,7 @@
     const produced = new Set();
     if (BASIC_COLOR[card && card.name]) produced.add(BASIC_COLOR[card.name]);
     // Every symbol in the run after "add", not just the first, so a dual or triome
-    // gets credit for each colour it actually taps for.
+    // gets credit for each color it actually taps for.
     (text.match(/add\s+(?:\{[wubrgc]\}\s*(?:(?:,|or\b|and\b)\s*)*)+/g) || []).forEach((run) => {
       (run.match(/\{([wubrgc])\}/g) || []).forEach((token) => {
         const color = token.replace(/[^wubrgc]/g, "").toUpperCase();
@@ -222,7 +222,7 @@
     });
     if (/add one mana of any color|add \{c\}\{c\}|any color/.test(text)) MANA_COLORS.forEach((color) => produced.add(color));
     // A land that goes and gets a basic makes what that basic makes. These carry
-    // an empty colour identity, so the fallback below left Evolving Wilds and the
+    // an empty color identity, so the fallback below left Evolving Wilds and the
     // Panoramas producing nothing at all. Only a fetch that puts the land onto
     // the battlefield counts -- basic landcycling puts it in your hand, which is
     // card selection, not mana. Kept identical to sim-engine's rule on purpose;
@@ -242,12 +242,12 @@
   /**
    * Whether a hundred can actually cast itself.
    *
-   * Sources counts every card that taps for a colour, lands and rocks alike, weighted by
+   * Sources counts every card that taps for a color, lands and rocks alike, weighted by
    * how many copies the slot holds. Demand is the pips the deck's own spells ask for. The
    * ratio between them is the thing worth seeing at a table: eighteen green pips off nine
    * green sources is a deck that will sit in your hand.
    *
-   * The floor is deliberately crude -- a colour wants roughly a third of the deck's lands
+   * The floor is deliberately crude -- a color wants roughly a third of the deck's lands
    * behind it before the pips stop being a problem -- because a precise answer needs the
    * curve, and a crude answer you can check by eye beats a precise one you cannot.
    */
@@ -268,11 +268,11 @@
         totalValue += cost.value * qty;
       }
     });
-    /* A colour is thin when the deck asks more of it than it can pay for. A flat floor --
+    /* A color is thin when the deck asks more of it than it can pay for. A flat floor --
        a third of the lands, say -- misses the case that actually strands cards: deck 3
        asks thirty-four green pips off eighteen green sources and a flat rule calls that
-       healthy. So the floor scales with how much of the deck's demand that colour is. A
-       colour carrying sixty per cent of the pips wants roughly sixty per cent of the lands
+       healthy. So the floor scales with how much of the deck's demand that color is. A
+       color carrying sixty per cent of the pips wants roughly sixty per cent of the lands
        behind it; the 0.9 is slack for rocks and fixing that a pip count cannot see. */
     const totalPips = MANA_COLORS.reduce((sum, color) => sum + pips[color], 0);
     const floorFor = (color) => (!totalPips ? 0 : Math.max(6, Math.round(lands * (pips[color] / totalPips) * 0.9)));
@@ -350,7 +350,7 @@
    *   cost      a four-drop standing in for a two-drop is a different card in play even
    *             when it does the same thing on paper
    *
-   * Colour is not scored, it is a gate: a card outside the deck's identity is not a
+   * Color is not scored, it is a gate: a card outside the deck's identity is not a
    * worse fit, it is not legal, and the caller filters it out before scoring.
    *
    * Returns a score and the reasons behind it, because a bare number ranking cards you

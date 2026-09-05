@@ -44,7 +44,7 @@ const sorted = (v) => {
 // Sort keys RECURSIVELY. The obvious shorthand, JSON.stringify(o, Object.keys(o)),
 // looks like a key sort and is not: an array second argument is a property
 // allowlist applied at every level, so each card -- holding none of the top-level
-// keys -- serialised to {} and the comparison compared nothing at all. This test
+// keys -- serialized to {} and the comparison compared nothing at all. This test
 // passed a deliberately corrupted file before that was caught.
 const stable = (json) => {
   const copy = {...json};

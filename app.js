@@ -129,8 +129,8 @@
   // ribbon always marks the build that is actually loaded -- one source of
   // truth, and re-picking the slate is a data change rather than an edit across
   // fifty variant records.
-  let treysBuildIds = new Set();
-  const isTreysBuild = (variant) => treysBuildIds.has(variant.id);
+  let myBuildIds = new Set();
+  const isMyBuild = (variant) => myBuildIds.has(variant.id);
   const isCustomDeck = (deckId) => customDeckIds.has(Number(deckId));
 
   // Generated decks are merged into copies of the baked catalog on every change.
@@ -306,7 +306,7 @@
       ownershipSchema: 2,
       /* The saved shape's own version, separate from the two schema numbers above, which
          version particular fields. This one versions the whole export, so an older file
-         can be recognised and migrated rather than half-read. Raised to 4 when Assigned
+         can be recognized and migrated rather than half-read. Raised to 4 when Assigned
          arrived: before it, a slot had one selection and no reset target. */
       stateVersion: STATE_VERSION,
       compareSelections: {},
@@ -826,7 +826,7 @@
       deckId: variant.id,
       deckTitle: "Deck " + variant.deckId + " · " + variant.name,
       commander: plan.commanderName || variant.commander || "",
-      /* A Commander deck's colours ARE its commander's colours -- there is nowhere else
+      /* A Commander deck's colors ARE its commander's colors -- there is nowhere else
          for them to come from. Offering a card outside them is not a weak suggestion, it
          is an illegal one, so the slot filters on this before it ranks anything. */
       identity: (cards[Lineup.normalizeName(plan.commanderName || variant.commander || "")] || {}).colorIdentity || [],
@@ -837,7 +837,7 @@
          nothing has claimed. deck-page reads these instead of "who has it", so five decks
          can each box a copy of a card you own five of without any of them lying. */
       /* Everything needed to answer "can I sleeve this and play it": the hundred as literal
-         cards, the rules verdict on them, and whether the colours it asks for are actually
+         cards, the rules verdict on them, and whether the colors it asks for are actually
          behind it. Computed here rather than in the page because evaluateDeckCompliance is
          the same call Calibrate has always used -- one authority on legality, not two. */
       deckCards: (() => {
@@ -1481,7 +1481,7 @@
           label: `${deckLabels[target.id]} · ${Slot.RUNG_LABEL[best.match.rung]} rung · replace ${
             replacedPick ? replacedPick.name : "an empty slot"} · fit ${best.score}`,
           action: `replace ${replacedPick ? replacedPick.name : "the empty slot"}`,
-          reasons: ["Commander legal + colour legal", `${best.slot.type} slot`],
+          reasons: ["Commander legal + color legal", `${best.slot.type} slot`],
           replaced: rl
         });
       });
@@ -2400,10 +2400,10 @@
     const engine = variant.scores?.engine?.[stage - 1] || [];
     const growth = variant.scores?.growth || [];
     const card = document.createElement("article");
-    card.className = `variant-card${selected ? " is-selected" : ""}${variant.treysBuild ? " is-treys-build" : ""}`;
+    card.className = `variant-card${selected ? " is-selected" : ""}${variant.myBuild ? " is-my-build" : ""}`;
     card.dataset.variant = variant.id;
     card.innerHTML = `
-      ${isTreysBuild(variant) ? `<div class="treys-build-ribbon" title="Trey's chosen build for this deck slot"><span>★ Trey's Build</span></div>` : ""}
+      ${isMyBuild(variant) ? `<div class="my-build-ribbon" title="my chosen build for this deck slot"><span>★ My Build</span></div>` : ""}
       <label class="pick-control">
         <input type="checkbox" ${selected ? "checked" : ""} aria-label="Pick ${esc(variant.name)}">
         <span>${selected ? "Picked" : "Pick"}</span>
@@ -8025,7 +8025,7 @@
         // published slate.
         fetch("data/active-state.json", {cache: "no-store"}).then((response) => response.ok ? response.json() : null).catch(() => null)
       ]);
-      treysBuildIds = new Set(Object.values(activeStateFile?.state?.compareSelections || {}).filter(Boolean));
+      myBuildIds = new Set(Object.values(activeStateFile?.state?.compareSelections || {}).filter(Boolean));
       customStore = Custom.load(localStorage);
       remergeCustom();
       state = loadState();

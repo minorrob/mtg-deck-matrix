@@ -80,7 +80,7 @@
     return ci[0];
   }
 
-  /** Decorate the model's shop rows with the facts a seller's table is organised by.
+  /** Decorate the model's shop rows with the facts a seller's table is organized by.
    *  Name normalisation belongs to the caller, which already owns the lineup model. */
   function decorate(rows, factFor, deckLabels, paidFor) {
     const lookup = typeof factFor === "function" ? factFor : () => ({});
@@ -224,7 +224,7 @@
     </span>`;
   }
   /* The gallery panel, cut back to what it is for. The art already carries the name, the
-     colour and the type, so repeating them under it spent a third of the tile saying what
+     color and the type, so repeating them under it spent a third of the tile saying what
      the picture said. Two rows are left: which decks want it, and what it costs beside the
      one button worth having here. Everything dropped is still a column in the table view,
      which is where a status gets corrected -- Buy only ever moves a card one way, and the
@@ -340,7 +340,7 @@
           ${destDetail(chosen)}
           <button type="button" class="sp-assign" data-sp-assign="${esc(item.key)}|0">Assign · ${esc(chosen.action)}</button>
         ` : `<p class="sp-meta">No slot in any of the six decks offers this card &mdash; either no plan carries it,
-             or colour identity, singleton or bracket rules rule it out. It is yours and unassigned.</p>`}
+             or color identity, singleton or bracket rules rule it out. It is yours and unassigned.</p>`}
       </article>`;
     }).join("")}</div>`;
   }
@@ -393,7 +393,7 @@
 
   function storeRow(r, picked, groupBy) {
     /* What is still owed, not what the deck asks for. A row of two Arcane Signets with one
-       already in the box is one card to find, and labelling it "x2" sends you looking for
+       already in the box is one card to find, and labeling it "x2" sends you looking for
        a copy you have. */
     const many = r.need > 1;
     if (picked) {

@@ -2,7 +2,7 @@
 //
 //   node graph/ingest/02-build-csv.mjs [--cache graph/.cache] [--out graph/.import]
 //
-// THE MODELLING DECISION THIS FILE ENCODES. Cards are never linked to cards.
+// THE MODELING DECISION THIS FILE ENCODES. Cards are never linked to cards.
 // A card is linked to the EVENTS it fires on and the events it CAUSES, and to the
 // RESOURCES it makes and spends. Synergy is then a two-hop path -- Krenko CAUSES
 // creature-etb, Purphoros TRIGGERS_ON creature-etb -- so it is derived at query

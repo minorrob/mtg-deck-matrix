@@ -40,7 +40,7 @@ question rather than spending a different amount of money.
 | **Pod Fun** | Does the table get a game? | The same hundred asked a different question: win rate held **under 45%** as a hard constraint, the pod-experience metric weighted, and a floor on power so it can never come out the stronger build. |
 | **Max** | What does Tier 3 add? | Hill-climbed on the performance vector again, starting from Tuned's final hundred, at Tier 3 and $100 a card. |
 
-The six variants that carry the ★ Trey's Build ribbon are the owner's own decks and
+The six variants that carry the ★ My Build ribbon are the owner's own decks and
 were built to a different brief. Their Pod Fun rung was searched over his own bench
 at zero spend, with the win rate held **under 60%** rather than 45% — his own
 instruction — so all six sit above this file's 45% ceiling and are declared as such

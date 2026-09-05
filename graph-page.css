@@ -72,7 +72,7 @@
 .gp-tag.deck { background: #dff1e6; color: var(--forest); }
 
 /* The reason groups, as a chip row above the canvas. It doubles as the legend:
-   a reader can learn WHY a card has 90 neighbours without reading the graph at
+   a reader can learn WHY a card has 90 neighbors without reading the graph at
    all, which is more than the old single-ring layout ever conveyed. */
 .gp-groups {
   display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px;
@@ -117,7 +117,7 @@
   #cy { height: min(58vh, 460px); }
 }
 
-/* Tapping a node shows the card; re-centring is a button inside that popup. The
+/* Tapping a node shows the card; re-centering is a button inside that popup. The
    lock is the opt-in inverse for anyone who would rather drill straight in. */
 .gp-lock {
   min-height: 30px; padding: 4px 11px; border: 1px solid var(--line); border-radius: 999px;

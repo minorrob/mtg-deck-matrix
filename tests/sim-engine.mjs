@@ -62,7 +62,7 @@ assert.equal(bloodArtist.drain.one, 1, "a repeatable single-target drain is an e
 assert.equal(bloodArtist.drain.all, 0);
 // Bastion needs YOUR creatures to die, so it is a death payoff, not a drain
 // that ticks every upkeep. It used to be read as the latter and paid out every
-// turn with nothing having died; deaths are modelled now, so it is paid when
+// turn with nothing having died; deaths are modeled now, so it is paid when
 // one happens. Blood Artist above triggers on any creature dying, which happens
 // from combat and removal without help, so that one stays a drain engine.
 const bastion = classify("Bastion of Remembrance", "Enchantment", "Whenever a creature you control dies, each opponent loses 1 life and you gain 1 life.", "{2}{B}");
@@ -99,7 +99,7 @@ assert.deepEqual(second.metrics, first.metrics, "the same seed must reproduce th
 assert.deepEqual(second.perCardStats, first.perCardStats, "per-card statistics must be reproducible too");
 const third = Engine.simulateGames(deck, table(), {...config, games: 200}, 99);
 assert.notDeepEqual(third.metrics, first.metrics, "a different seed must produce a different sample");
-assert.ok(Math.abs(third.metrics.winRate - first.metrics.winRate) < 0.25, "two samples of the same deck must stay in the same neighbourhood");
+assert.ok(Math.abs(third.metrics.winRate - first.metrics.winRate) < 0.25, "two samples of the same deck must stay in the same neighborhood");
 
 // ---------------------------------------------------------------------------
 // Sanity decks: the model has to be obviously right at the extremes

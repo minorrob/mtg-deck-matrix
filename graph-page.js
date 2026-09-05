@@ -1,8 +1,8 @@
 /* The control plane over data/graph.json.
  *
  * One filter state drives both views. The list renders every match; the graph
- * renders ONE card's neighbourhood, because 1,500 nodes on a canvas is a hairball
- * that tells you nothing. Picking a card in the list is what chooses the centre.
+ * renders ONE card's neighborhood, because 1,500 nodes on a canvas is a hairball
+ * that tells you nothing. Picking a card in the list is what chooses the center.
  */
 (function () {
   "use strict";
@@ -14,18 +14,18 @@
     return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]; }); };
 
   // Which card fields a facet reads. Array-valued fields match if ANY selected
-  // value is present; scalars match exactly. Colour is the exception -- a card
+  // value is present; scalars match exactly. Color is the exception -- a card
   // passes only if its identity is a SUBSET of what you ticked, because that is
-  // what "legal in these colours" means, not "mentions this colour".
+  // what "legal in these colors" means, not "mentions this color".
   var FACETS = [
     {key: "roles",     label: "Role",       from: function (c) { return c.roles; }},
-    // Colour identity, with the semantics a deckbuilder wants: "legal in a deck of
-    // these colours". A colourless card is legal in every deck, so it passes any
-    // selection -- ticking C on its own is the way to isolate colourless.
-    {key: "colors", label: "Colour", from: function (c) { return c.ci ? c.ci.split("") : ["C"]; },
+    // Color identity, with the semantics a deckbuilder wants: "legal in a deck of
+    // these colors". A colorless card is legal in every deck, so it passes any
+    // selection -- ticking C on its own is the way to isolate colorless.
+    {key: "colors", label: "Color", from: function (c) { return c.ci ? c.ci.split("") : ["C"]; },
      match: function (have, picked) {
-       var colourless = have.length === 1 && have[0] === "C";
-       if (colourless) return true;
+       var colorless = have.length === 1 && have[0] === "C";
+       if (colorless) return true;
        if (picked.length === 1 && picked[0] === "C") return false;
        return have.every(function (v) { return picked.indexOf(v) >= 0; });
      }},
@@ -74,7 +74,7 @@
 
   function optionsFor(facet) {
     // Count against everything the OTHER facets allow, so a count never reads zero
-    // for something you can still pick -- the standard faceted-search behaviour.
+    // for something you can still pick -- the standard faceted-search behavior.
     var pool = DATA.cards.filter(function (c) { return matches(c, facet.key); });
     var counts = {};
     pool.forEach(function (c) { c._f[facet.key].forEach(function (v) { if (v) counts[v] = (counts[v] || 0) + 1; }); });
@@ -82,7 +82,7 @@
       .map(function (v) { return {value: v, n: counts[v]}; });
   }
 
-  // Role, Colour and Ownership are the three you reach for first, so they start
+  // Role, Color and Ownership are the three you reach for first, so they start
   // open. A pane where every group is shut costs two clicks to reach any filter.
   var OPEN_BY_DEFAULT = {roles: true, colors: true, owned: true};
 
@@ -125,11 +125,11 @@
       "</span></span></button>";
   }
 
-  /* Tapping a node shows the card. Re-centring lives INSIDE the popup as a button.
+  /* Tapping a node shows the card. Re-centering lives INSIDE the popup as a button.
      A lock toggle would make the common act -- "what is this card?" -- require a
      mode change, and a mode is a cost paid on every click. Right-click and
      long-press were the other candidates and both fail on a phone, which is where
-     this gets used. Double-click still re-centres directly for speed, and the
+     this gets used. Double-click still re-centers directly for speed, and the
      toggle in the bar flips single-click to focus for anyone who prefers it. */
   function byId(id) { for (var i = 0; i < DATA.cards.length; i++) if (DATA.cards[i].id === id) return DATA.cards[i]; return null; }
 
@@ -149,7 +149,7 @@
         '<div class="gp-modal-body">' +
           "<h2>" + esc(c.name) + "</h2>" +
           '<p class="gp-modal-type">' + esc(c.type || "") + "</p>" +
-          '<p class="gp-modal-facts">' + (c.mv || 0) + " mana value &middot; " + esc(c.ci || "colourless") +
+          '<p class="gp-modal-facts">' + (c.mv || 0) + " mana value &middot; " + esc(c.ci || "colorless") +
             (c.price ? " &middot; <strong>$" + Number(c.price).toFixed(2) + "</strong>" : " &middot; no price") +
             (c.cheapestSet ? ' <span class="gp-dim">cheapest in ' + esc(c.cheapestSet) +
               (c.printings > 1 ? " of " + c.printings + " printings" : "") + "</span>" : "") + "</p>" +
@@ -169,7 +169,7 @@
       var f = e.target.closest("[data-focus]");
       if (f) {
         EGO = f.dataset.focus; state.view = "graph"; syncViews(); closeCard();
-        // A new centre has different reasons, so an expanded group from the old
+        // A new center has different reasons, so an expanded group from the old
         // one would open something the reader never asked for.
         groupState = {open: {}, only: null};
         render();
@@ -201,7 +201,7 @@
    * Good-Fortune Unicorn requires the role "creatures". Every creature in a
    * 4,883-card pool supplies it, so the candidate list was two thousand cards
    * that all scored the same 3, and taking the top 90 took 90 of them. The graph
-   * then drew 90 identical spokes labelled "supplies creatures", which is a true
+   * then drew 90 identical spokes labeled "supplies creatures", which is a true
    * statement about nothing.
    *
    * Two things fix it, and both are about WHICH cards are picked rather than
@@ -213,12 +213,12 @@
    *   2. Relevance inside a reason. Two thousand cards supply "creatures"; the
    *      ones worth drawing are the ones he owns, the ones already in a deck,
    *      and the ones EDHREC actually pairs with this card. Ties inside a group
-   *      break on that, not on catalogue order.
+   *      break on that, not on catalog order.
    */
   var PER_GROUP = 14;     // candidates kept per reason before relevance decides
   var TOTAL_CAP = 90;     // candidates handed to the clustering
 
-  function neighbours(ego, pool) {
+  function neighbors(ego, pool) {
     var byId = {}; pool.forEach(function (c) { byId[c.id] = c; });
     var out = [], seen = {};
 
@@ -300,15 +300,15 @@
 
   /* WHY THE GRAPH IS NOT A STAR ANY MORE.
    *
-   * The ego's 90 neighbours all hang off one node, so laid out as a single ring
+   * The ego's 90 neighbors all hang off one node, so laid out as a single ring
    * they draw an asterisk: 90 identical spokes, and 90 edge labels at 6px
    * printed on top of each other. The picture carried one fact -- "this card is
    * connected to a lot of cards" -- which the count already said in words.
    *
-   * The information being thrown away was the edge label. Every neighbour is
+   * The information being thrown away was the edge label. Every neighbor is
    * here for a REASON: it supplies a role this card needs, it fires on an event
    * this card causes, it is played alongside it. Group by that reason and 90
-   * spokes become eight or so labelled clusters, each label drawn once at a size
+   * spokes become eight or so labeled clusters, each label drawn once at a size
    * a person can read. The layout is computed rather than simulated, so the same
    * card always draws the same picture and nothing drifts while you look at it.
    */
@@ -362,7 +362,7 @@
 
      Each cluster owns an angular wedge. Sizing the wedge purely by card count
      put a one-card cluster in a 12-degree slice and then drew a 180px label
-     across it, straight through its neighbour -- so a wedge is also never
+     across it, straight through its neighbor -- so a wedge is also never
      narrower than its own label needs, and the hubs alternate between two radii
      so that two wide labels side by side sit on different rings instead of on
      top of each other. Cards start outside the further hub ring, which is what
@@ -408,7 +408,7 @@
     if (!EGO) { EGO = (rows[0] || DATA.cards[0]).id; }
     var ego = DATA.cards.filter(function (c) { return c.id === EGO; })[0];
     if (!ego) { host.innerHTML = ""; return; }
-    var near = neighbours(ego, DATA.cards);
+    var near = neighbors(ego, DATA.cards);
     var shownIds = {}; rows.forEach(function (c) { shownIds[c.id] = 1; });
     var groups = cluster(near);
     if (groupState.only && !groups.some(function (g) { return g.key === groupState.only; })) groupState.only = null;
@@ -428,13 +428,13 @@
     renderGroupBar(groups, near.length);
     $("legend").hidden = false;
     var offCanvas = groupState.only ? 0 : Math.max(0, groups.length - drawn.length);
-    $("legend").innerHTML = "Centre: <strong>" + esc(ego.name) + "</strong>, ringed by " +
+    $("legend").innerHTML = "Center: <strong>" + esc(ego.name) + "</strong>, ringed by " +
       drawn.reduce(function (n, g) { return n + g.shown.length; }, 0) + " of " + near.length +
       " connected cards, grouped by why they are connected" +
       (offCanvas ? " \u2014 the " + drawn.length + " busiest reasons of " + groups.length +
         ", with " + offCanvas + " more in the chips above" : "") +
       ". Cards are picked for relevance to your collection first: in a deck, then owned, then EDHREC co-play. " +
-      "Click a group label to open it, a chip to isolate one reason, or any card to re-centre. " +
+      "Click a group label to open it, a chip to isolate one reason, or any card to re-center. " +
       "Faded cards fall outside your filters.";
     if (!window.cytoscape) { host.innerHTML = '<p class="gp-empty">Graph library did not load.</p>'; return; }
 
