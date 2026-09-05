@@ -212,6 +212,10 @@
         aria-label="What you paid for ${esc(row.name)}"></span>`;
   }
 
+  /* The three pills are ACTIONS -- Need, Order, In hand -- so the middle one is a
+     verb: pressing it puts the card on the order. The STATUS list above is a
+     different thing, a description of where a card has got to, and "Ordered" is
+     right there. Same word, two jobs; only the button changed. */
   function triMarkup(row) {
     const many = row.quantity > 1;
     const on = (k) => k === "need" ? (row.need > 0 && !row.inHand && !row.ordered)
@@ -219,7 +223,7 @@
       : row.inHand > 0;
     return `<span class="sp-tri" data-sp-tri="${esc(row.key)}">
       <button type="button" data-sp-s="need" aria-pressed="${on("need")}">Need${many ? " " + row.need : ""}</button>
-      <button type="button" data-sp-s="ordered" aria-pressed="${on("ordered")}">Ordered${many ? " " + row.ordered : ""}</button>
+      <button type="button" data-sp-s="ordered" aria-pressed="${on("ordered")}">Order${many ? " " + row.ordered : ""}</button>
       <button type="button" data-sp-s="hand" aria-pressed="${on("hand")}">In hand${many ? ` ${row.inHand}/${row.quantity}` : ""}</button>
     </span>`;
   }
