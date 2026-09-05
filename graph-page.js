@@ -485,7 +485,22 @@
       ". Cards are picked for relevance to your collection first: in a deck, then owned, then EDHREC co-play. " +
       "Click a group label to open it, a chip to isolate one reason, or any card to re-center. " +
       "Faded cards fall outside your filters.";
-    if (!window.cytoscape) { host.innerHTML = '<p class="gp-empty">Graph library did not load.</p>'; return; }
+    /* Cytoscape is the one thing on this page that comes from a CDN, so it is the
+       one thing that can be missing on a working connection -- a blocked domain, a
+       corporate proxy, an offline laptop. Measured here on a cold load: the request
+       reset and the drawing stopped, which is correct. What was wrong was the
+       message: "Graph library did not load" is a dead end that does not mention
+       the List view, which has every one of these cards in it and still works. */
+    if (!window.cytoscape) {
+      host.innerHTML = '<div class="gp-empty">' +
+        "<p><b>The drawing library did not load.</b> It comes from a CDN, so a blocked " +
+        "domain or an offline connection stops it; nothing else on this page needs it.</p>" +
+        "<p>Every card in this view is in the <b>List</b> beside it, with the same " +
+        "filters and the same Copilot.</p>" +
+        '<button class="gp-btn primary" type="button" data-view="list">Show the list instead</button>' +
+        "</div>";
+      return;
+    }
 
     var laid = place(drawn);
     var els = [{data: {id: ego.id, label: ego.name, img: ego.image, kind: "ego"}, position: {x: 0, y: 0}}];

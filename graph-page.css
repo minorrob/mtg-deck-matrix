@@ -100,6 +100,9 @@
 #cy { height: min(76vh, 720px); border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
 .gp-legend { color: var(--muted); font-size: 11.5px; margin-top: 8px; }
 .gp-empty { color: var(--muted); padding: 30px 4px; font-size: 13px; }
+.gp-empty p { margin: 0 0 10px; max-width: 52ch; line-height: 1.55; }
+.gp-empty b { color: var(--ink); }
+.gp-empty .gp-btn { margin-top: 4px; }
 
 @media (max-width: 860px) {
   .gp { grid-template-columns: minmax(0, 1fr); }
