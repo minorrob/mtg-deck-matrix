@@ -1,5 +1,9 @@
 """Turn MtG Deck Master into the JSON the viewer reads.
 
+2026-09-05: the source is now Treys MtG Master v3 (the six-deck rebuild: D4 is
+Felothar, D6 is Krenko). It carries no Upgrades or B3 sheets of the old shape,
+so both are optional; the "B3 Upgrades" sheet it does carry is the Mid-B3 list.
+
 Two workbooks, and which one is authoritative matters. The v2 workbook has
 never been opened in Excel, so every formula column comes back empty: Status,
 Qty, Own, Extra (Bench), Buy Count and $ To Buy are blank in the file. The Flat
@@ -29,9 +33,9 @@ DECKS = [
     ("D1", "Quintorius", "Quintorius, Loremaster"),
     ("D2", "Chulane",    "Chulane, Teller of Tales"),
     ("D3", "Atraxa",     "Atraxa, Praetors' Voice"),
-    ("D4", "Betor",      "Betor, Ancestor's Voice"),
+    ("D4", "Felothar",   "Felothar the Steadfast"),
     ("D5", "Shadrix",    "Shadrix Silverquill"),
-    ("D6", "Purphoros",  "Purphoros, God of the Forge"),
+    ("D6", "Krenko",     "Krenko, Mob Boss"),
 ]
 IDS = [d[0] for d in DECKS]
 
@@ -195,9 +199,12 @@ def read_upgrades(wb, cards, master_by_name):
     from its price; one CUT row lost its Card cell and cannot be identified --
     four candidates fit -- so it is dropped and flagged rather than guessed.
     """
-    rows = [r for r in sheet_rows(wb, "Upgrades (D5-D6)", 1)
+    rows = [r for r in (sheet_rows(wb, "Upgrades (D5-D6)", 1) if "Upgrades (D5-D6)" in wb.sheetnames else [])
             if str(r.get("Action") or "").strip() in ("ADD", "CUT")]
-    pairs = [p for p in tuned_pairs(cards) if p["deck"] in ("D5", "D6")]
+    # A Tuned pairing only counts while the deck still targets the card; the
+    # 2026-09-05 rebuild dropped several Tuned adds, and their Notes remain.
+    pairs = [p for p in tuned_pairs(cards) if p["deck"] in ("D5", "D6")
+             and (master_by_name.get(p["add"]) or {}).get("target", {}).get(p["deck"], 0) > 0]
     by_add = {p["add"]: p for p in pairs}
 
     out, notes, seen_add = [], [], set()
@@ -271,7 +278,7 @@ def price_fallback(root):
 
 
 def main():
-    default = os.path.join(ROOT, "data", "source", "MtG_Deck_Flat.xlsx")
+    default = os.path.join(ROOT, "data", "source", "Treys_MtG_Master_v3.xlsx")
     src = sys.argv[1] if len(sys.argv) > 1 else default
     wb = openpyxl.load_workbook(src, data_only=True, read_only=True)
     if CARD_SHEET in wb.sheetnames:
@@ -301,7 +308,7 @@ def main():
     by_name = {c["name"]: c for c in cards}
 
     upgrades, upgrade_notes = read_upgrades(wb, cards, by_name)
-    b3 = [r for r in sheet_rows(wb, "B3 Upgrades", 1)
+    b3 = [r for r in (sheet_rows(wb, "B3 Upgrades", 1) if "B3 Upgrades" in wb.sheetnames else [])
           if str(r.get("Deck") or "").strip() in IDS]
 
     # The Read Me names each deck's commander; the Master tags one card in each
