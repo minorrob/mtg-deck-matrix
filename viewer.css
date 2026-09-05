@@ -683,3 +683,129 @@ main { padding: 24px 0 140px; }
   background: var(--sink, rgba(0, 0, 0, .03));
   border-left: 2px solid var(--rule, rgba(0, 0, 0, .12));
 }
+
+/* ------------------------------------------------------- add a deck */
+
+/* The import panel. It sits over the page like the card popup does, and borrows
+   that popup's scrim and close button so there is one modal idiom here rather
+   than two. Everything inside it is a form, which this page otherwise has none
+   of, so the field styles live here rather than being factored out of nothing. */
+
+.imp-wrap {
+  position: fixed; inset: 0; z-index: 95;
+  display: grid; place-items: start center;
+  padding: 24px 16px; overflow: auto;
+  background: rgba(5, 10, 8, .78);
+  backdrop-filter: blur(6px);
+  animation: sheet-in .16s ease;
+}
+
+.imp-body {
+  position: relative;
+  width: min(520px, 100%);
+  background: linear-gradient(180deg, var(--panel), var(--ink-2));
+  border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 22px 20px 18px;
+}
+
+.imp-h { font-size: 21px; margin-bottom: 6px; }
+.imp-lede { margin: 0 0 16px; color: var(--text-dim); font-size: 13.5px; line-height: 1.5; }
+.imp-note {
+  margin: 0 0 14px; padding: 10px 12px; font-size: 13px; line-height: 1.5;
+  background: var(--ember-soft); border: 1px solid #6b4522; border-radius: var(--radius-sm);
+  color: #f0c9a4;
+}
+
+.imp-field { display: block; margin-bottom: 12px; }
+.imp-field > span {
+  display: flex; align-items: baseline; gap: 8px;
+  margin-bottom: 5px; font-size: 12px; font-weight: 700;
+  letter-spacing: .04em; text-transform: uppercase; color: var(--text-dim);
+}
+.imp-field > span em { font-style: normal; letter-spacing: 0; text-transform: none;
+  font-weight: 600; color: var(--text-faint); }
+.imp-field input, .imp-field textarea {
+  width: 100%; box-sizing: border-box;
+  background: var(--ink); color: var(--text);
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  padding: 10px 12px; font: 14px/1.45 var(--sans);
+}
+.imp-field textarea { font-family: var(--mono); font-size: 12.5px; resize: vertical; }
+.imp-field input:focus, .imp-field textarea:focus {
+  outline: none; border-color: var(--patina);
+}
+
+.imp-or {
+  margin: 4px 0 12px; text-align: center; font-size: 12px;
+  color: var(--text-faint); text-transform: uppercase; letter-spacing: .08em;
+}
+
+.imp-status { margin: 0 0 12px; font-size: 13px; line-height: 1.5; color: var(--text-dim); min-height: 1em; }
+.imp-status.is-warn { color: var(--amber); }
+.imp-status.is-ok { color: var(--patina); }
+
+.imp-problems {
+  margin: 0 0 14px; padding: 10px 12px 10px 30px;
+  background: #34290f; border: 1px solid #5d4b1c; border-radius: var(--radius-sm);
+}
+.imp-problems li { font-size: 13px; line-height: 1.5; color: #ecd79a; margin-bottom: 4px; }
+.imp-problems li:last-child { margin-bottom: 0; }
+
+.imp-unmatched { margin: 0 0 14px; font-size: 13px; color: var(--text-dim); }
+.imp-unmatched summary { cursor: pointer; color: var(--text-dim); }
+.imp-unmatched p { margin: 8px 0 0; font-size: 12.5px; color: var(--text-faint); line-height: 1.6; }
+
+.imp-score { margin-bottom: 14px; }
+.imp-result {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 14px; border-radius: var(--radius-sm);
+  background: var(--panel-2); border: 1px solid var(--line);
+}
+.imp-result.is-full { border-color: #1d5348; background: var(--patina-soft); }
+.imp-num { font-family: var(--serif); font-size: 32px; line-height: 1; }
+.imp-result.is-full .imp-num { color: var(--patina); }
+.imp-num-side { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.imp-num-side b { font-size: 12px; letter-spacing: .05em; text-transform: uppercase; }
+.imp-num-side span { font-size: 12px; color: var(--text-dim); }
+.imp-result .btn { margin-left: auto; }
+.imp-caveat { margin: 8px 0 0; font-size: 12px; line-height: 1.55; color: var(--text-faint); }
+
+.imp-actions { display: flex; justify-content: flex-end; gap: 8px; }
+
+/* The tile that opens all this, sitting at the end of the deck grid. It is a
+   dashed outline rather than a filled card because it is not a deck yet. */
+.deck-add {
+  display: grid; place-items: center; gap: 6px;
+  min-height: 190px; padding: 20px; cursor: pointer;
+  background: transparent; color: var(--text-dim);
+  border: 1px dashed var(--line); border-radius: var(--radius);
+  font: inherit; text-align: center;
+}
+.deck-add:hover { border-color: var(--patina); color: var(--text); }
+.deck-add .plus { font-size: 26px; line-height: 1; color: var(--text-faint); }
+.deck-add b { font-family: var(--serif); font-size: 16px; font-weight: 600; color: var(--text); }
+.deck-add span { font-size: 12.5px; line-height: 1.45; max-width: 24ch; }
+
+@media (max-width: 560px) {
+  .imp-body { padding: 18px 15px 15px; }
+  .imp-result { flex-wrap: wrap; }
+  .imp-result .btn { margin-left: 0; width: 100%; }
+}
+
+/* The strip at the top of an added deck: where it came from, and the way out. */
+.imp-banner {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  margin: 0 0 14px; padding: 9px 12px;
+  background: var(--panel-2); border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  font-size: 12.5px; color: var(--text-dim);
+}
+.imp-banner b { color: var(--text); font-weight: 700; }
+.imp-banner .btn { margin-left: auto; padding: 5px 12px; font-size: 12.5px; }
+
+/* iOS zooms a focused field whose text is under 16px and does not zoom back.
+   Same rule as app.css, same reason, and it stays last in this file too. */
+@media (max-width: 700px) {
+  .imp-field input, .imp-field textarea { font-size: 16px; }
+}
