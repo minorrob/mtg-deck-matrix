@@ -243,3 +243,36 @@ body.gp-locked { overflow: hidden; }
   .gp-cp-dis { margin-left: 0; width: 100%; }
   .gp-cp-acts .gp-btn { width: 100%; }
 }
+
+/* Tonight's deck.
+   -------------
+   A Copilot with twenty findings across six decks is a reading list. Somebody
+   packing a bag has one deck in their hands. This is a lens on the lenses: it
+   folds the rest away rather than hiding them, and every deck keeps its chip
+   whatever its count, because "Krenko 0" is an answer and a missing chip is not. */
+.gp-tonight {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 5px;
+  padding: 0 13px 11px;
+}
+.gp-tonight-lab {
+  font-size: 10px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted); margin-right: 3px;
+}
+.gp-tonight-b {
+  appearance: none; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 999px;
+  background: var(--surface); color: var(--muted);
+  padding: 4px 10px; font: inherit; font-size: 12px; font-weight: 700;
+}
+.gp-tonight-b b { font-weight: 900; opacity: .55; font-variant-numeric: tabular-nums; }
+.gp-tonight-b:hover { border-color: var(--forest-2); color: var(--ink); }
+.gp-tonight-b.is-on {
+  background: var(--forest-2); border-color: var(--forest-2); color: #fff;
+}
+.gp-tonight-b.is-on b { opacity: .8; }
+.gp-tonight-b.is-clear { border-style: dashed; }
+
+@media (max-width: 640px) {
+  .gp-tonight { padding: 0 11px 10px; }
+  .gp-tonight-lab { flex: 1 1 100%; margin-bottom: 2px; }
+}

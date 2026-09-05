@@ -18,6 +18,40 @@
     try { return JSON.parse(localStorage.getItem(DISMISS_KEY) || "{}") || {}; }
     catch (err) { return {}; }
   })();
+  /* Which deck is being played tonight, if any.
+     A Copilot with twenty findings across six decks is a reading list. Somebody
+     packing a bag for a game tonight has one deck in their hands and wants the
+     three findings about it -- so this is a lens on the lenses, not a filter on
+     the cards, and it never hides anything: the rest fold into a drawer with
+     their count still on the label. */
+  var TONIGHT_KEY = "mtg-graph-tonight.v1";
+  var tonight = (function () {
+    try { return localStorage.getItem(TONIGHT_KEY) || ""; } catch (err) { return ""; }
+  })();
+  function setTonight(deck) {
+    tonight = tonight === deck ? "" : deck;
+    try {
+      if (tonight) localStorage.setItem(TONIGHT_KEY, tonight);
+      else localStorage.removeItem(TONIGHT_KEY);
+    } catch (err) { /* storage off */ }
+  }
+
+  /* Which decks a finding is about.
+     A simulator lens names its deck outright. A graph lens does not carry the
+     field, but it does put the deck's name at the front of its title -- "Shadrix
+     is 53 cards short", "Atraxa: 1 graveyard payoff" -- which is how it was
+     generated and is stable enough to read back. A lens naming no deck belongs to
+     all of them, because "50 cards you own are in no deck" is true tonight too. */
+  function decksOf(lens) {
+    var names = ((DATA && DATA.decks) || []).map(function (d) { return d.name; });
+    var found = names.filter(function (n) {
+      return (lens.filter && lens.filter.deck === n) ||
+        String(lens.title || "").indexOf(n) === 0 ||
+        String(lens.title || "").indexOf(n + ":") >= 0;
+    });
+    return found;
+  }
+
   function setDismissed(id, reason) {
     if (reason === null) delete dismissed[id];
     else dismissed[id] = {reason: reason, at: new Date().toISOString()};
@@ -589,15 +623,56 @@
     var live = LENSES.filter(function (l) { return !dismissed[l.id]; });
     var set = LENSES.filter(function (l) { return dismissed[l.id]; });
 
+    // Tonight's deck splits `live` in two rather than filtering it: a finding
+    // about another deck is not wrong, it is just not tonight's problem.
+    var mine = live, others = [];
+    if (tonight) {
+      mine = live.filter(function (l) {
+        var d = decksOf(l);
+        return !d.length || d.indexOf(tonight) >= 0;
+      });
+      others = live.filter(function (l) { return mine.indexOf(l) < 0; });
+    }
+
     host.innerHTML =
-      "<summary><strong>Copilot</strong> <span class=\"gp-cp-n\">" + live.length + " things worth a look" +
+      "<summary><strong>Copilot</strong> <span class=\"gp-cp-n\">" +
+        (tonight ? mine.length + " for " + esc(tonight) + " tonight" : live.length + " things worth a look") +
         (set.length ? " · " + set.length + " set aside" : "") + "</span>" +
         (active ? ' <span class="gp-cp-live">showing: ' + esc(active.title) + "</span>" : "") + "</summary>" +
-      '<div class="gp-cp-grid">' + live.map(card).join("") + "</div>" +
+      tonightBar() +
+      '<div class="gp-cp-grid">' + mine.map(card).join("") + "</div>" +
+      (others.length
+        ? '<details class="gp-cp-set"><summary>' + others.length + " about the other decks</summary>" +
+          '<div class="gp-cp-grid">' + others.map(card).join("") + "</div></details>"
+        : "") +
       (set.length
         ? '<details class="gp-cp-set"><summary>' + set.length + " set aside</summary>" +
           '<div class="gp-cp-grid">' + set.map(card).join("") + "</div></details>"
         : "");
+
+    /* The chip row. Every deck is offered whether or not it has a finding, with
+       the count on it -- "Krenko 0" is an answer, and hiding the chip would make
+       a clean deck look like a missing one. */
+    function tonightBar() {
+      var names = ((DATA && DATA.decks) || []).map(function (d) { return d.name; });
+      if (names.length < 2) return "";
+      var counts = {};
+      names.forEach(function (n) {
+        counts[n] = live.filter(function (l) { return decksOf(l).indexOf(n) >= 0; }).length;
+      });
+      return '<div class="gp-tonight" role="group" aria-label="Which deck are you playing tonight">' +
+        '<span class="gp-tonight-lab">Playing tonight</span>' +
+        names.map(function (n) {
+          var on = tonight === n;
+          return '<button type="button" class="gp-tonight-b' + (on ? " is-on" : "") +
+            '" data-tonight="' + esc(n) + '" aria-pressed="' + on + '">' + esc(n) +
+            ' <b>' + counts[n] + "</b></button>";
+        }).join("") +
+        (tonight
+          ? '<button type="button" class="gp-tonight-b is-clear" data-tonight="">Any deck</button>'
+          : "") +
+        "</div>";
+    }
 
     function card(l) {
       var on = active && active.id === l.id;
@@ -676,6 +751,8 @@
     }
     var lensBtn = e.target.closest("[data-lens]");
     if (lensBtn) { applyLens(lensBtn.dataset.lens); return; }
+    var pick = e.target.closest("[data-tonight]");
+    if (pick) { setTonight(pick.dataset.tonight); renderLenses(); return; }
     var dis = e.target.closest("[data-dismiss]");
     if (dis) {
       setDismissed(dis.dataset.dismiss, dis.dataset.reason);
