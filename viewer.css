@@ -1,50 +1,79 @@
 /* My Commander Decks — the fast view.
    One job: someone who has never seen these decks understands them in fifteen
    seconds. So the hierarchy is deck name, then what the deck does, then how
-   ready it is; everything else is smaller than those three. */
+   ready it is; everything else is smaller than those three.
+
+   THE PALETTE IS app.css's, IN THIS FILE'S OWN NAMES.
+   ---------------------------------------------------
+   This page used to be dark green on near-black while the Matrix and the graph
+   were green, parchment and gold. Three pages, one app, and the one somebody
+   opens first looked like a different product -- which is what the redesign was
+   asked to fix.
+
+   The values below are app.css's tokens exactly. The NAMES are this file's own,
+   which is what makes the change a swap rather than a rewrite: seven hundred
+   lines of rules that say var(--panel) and var(--ember) keep saying it and come
+   out in the master's colors. Where the two files disagree the master wins, and
+   where this file needs a token the master has no name for -- --text-faint,
+   --panel-2 -- the value is derived from the master's, not invented beside it.
+
+   Kept from the old theme: Fraunces on the headings. The Matrix has no serif of
+   its own and this page's whole layout is built around one, so removing it would
+   have been a redesign of the hierarchy rather than of the palette. */
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
-  --ink:        #0c1411;
-  --ink-2:      #111d19;
-  --panel:      #16241f;
-  --panel-2:    #1c2d27;
-  --line:       #263a33;
-  --line-soft:  #1e2f29;
+  /* app.css --paper / --surface / --surface-2 / --line */
+  --ink:        #f4efdf;   /* the page */
+  --ink-2:      #faf6ea;   /* a card's lower half, under the gradient */
+  --panel:      #fffefa;   /* a raised surface */
+  --panel-2:    #ece4d0;   /* a sunken one */
+  --line:       #dcd2b9;
+  --line-soft:  #e8e0cc;
 
-  --text:       #e8efe9;
-  --text-dim:   #9db0a7;
-  --text-faint: #6d8279;
+  /* app.css --ink / --muted, plus one step fainter for the third rank of text */
+  --text:       #16221d;
+  --text-dim:   #586761;
+  /* 4.7:1 on parchment. The dark theme could afford a fainter third rank
+     because dark grounds forgive low contrast; parchment does not, and this
+     rank carries the commander name under every deck title. */
+  --text-faint: #5f6d67;
 
-  --ember:      #e8853c;
-  --ember-soft: #3a2617;
-  --patina:     #3fbb9c;
-  --patina-soft:#123029;
-  --amber:      #d9b23f;
-  --rose:       #e0685f;
+  /* app.css --accent / --accent-soft / --forest-2 / --gold / --red */
+  --ember:      #d2651f;
+  --ember-soft: #ffe0cb;
+  --patina:     #1d7a55;
+  --patina-soft:#e2f0e7;
+  --amber:      #b8791a;   /* --warn: --gold itself is too pale on parchment */
+  --rose:       #c0392b;
 
-  --w: #f4ecd2; --u: #4a94d6; --b: #7d6f92; --r: #e06a4a; --g: #4faa6b; --c: #9fada7;
+  /* Mana pips, re-cut for a light ground. White needs a real border to exist at
+     all, so it is the only one that gets an outline in the rule below. */
+  --w: #f6efd8; --u: #2f7fbf; --b: #5b4f70; --r: #c14a2c; --g: #2f8b4f; --c: #9aa8a2;
 
-  --radius: 14px;
-  --radius-sm: 9px;
-  --shadow: 0 1px 0 rgba(255,255,255,.03) inset, 0 10px 26px -18px rgba(0,0,0,.9);
+  --radius: 18px;
+  --radius-sm: 11px;
+  --shadow: 0 10px 26px rgba(20, 40, 31, .13);
 
-  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* Inter first, as the Matrix and the graph have it. */
+  --sans: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --serif: "Fraunces", "Iowan Old Style", Georgia, "Times New Roman", serif;
   --mono: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
 }
 
 * { box-sizing: border-box; }
 
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; background: #0f3a2b; }
 
 body {
   margin: 0;
   background: var(--ink);
+  /* The same two glows the dark theme had, at the weight parchment can carry --
+     any stronger and they read as a stain rather than as depth. */
   background-image:
-    radial-gradient(1100px 520px at 12% -8%, rgba(63,187,156,.10), transparent 62%),
-    radial-gradient(900px 460px at 92% 0%, rgba(232,133,60,.09), transparent 60%);
+    radial-gradient(1100px 520px at 12% -8%, rgba(29,122,85,.07), transparent 62%),
+    radial-gradient(900px 460px at 92% 0%, rgba(210,101,31,.06), transparent 60%);
   background-attachment: fixed;
   color: var(--text);
   font: 15px/1.55 var(--sans);
@@ -70,7 +99,7 @@ button { font: inherit; color: inherit; }
 
 .topbar {
   position: sticky; top: 0; z-index: 40;
-  background: rgba(12,20,17,.86);
+  background: rgba(244,239,223,.88);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--line-soft);
 }
@@ -180,7 +209,7 @@ main { padding: 24px 0 140px; }
   font-family: var(--serif); font-size: 17px; font-weight: 700;
   color: var(--text-dim); line-height: 1;
 }
-.rank-badge.is-top { background: var(--ember-soft); border-color: #6b4522; color: var(--ember); }
+.rank-badge.is-top { background: var(--ember-soft); border-color: #f0b184; color: #a24713; }
 .rank-badge small { display: block; font-size: 8px; letter-spacing: .1em; color: inherit; opacity: .75; font-family: var(--sans); }
 
 .deck-name { min-width: 0; flex: 1; }
@@ -197,8 +226,8 @@ main { padding: 24px 0 140px; }
 .pips { display: flex; gap: 3px; flex: none; }
 .pip {
   width: 15px; height: 15px; border-radius: 50%;
-  border: 1px solid rgba(0,0,0,.45);
-  box-shadow: 0 0 0 1px rgba(255,255,255,.07) inset;
+  border: 1px solid rgba(22,34,29,.22);
+  box-shadow: 0 0 0 1px rgba(22,34,29,.06) inset;
 }
 .pip.W { background: var(--w); } .pip.U { background: var(--u); }
 .pip.B { background: var(--b); } .pip.R { background: var(--r); }
@@ -212,10 +241,10 @@ main { padding: 24px 0 140px; }
   background: var(--panel-2); border: 1px solid var(--line); color: var(--text-dim);
   white-space: nowrap;
 }
-.chip.ember { background: var(--ember-soft); border-color: #6b4522; color: var(--ember); }
-.chip.patina { background: var(--patina-soft); border-color: #1d5348; color: var(--patina); }
-.chip.amber { background: #34290f; border-color: #5d4b1c; color: var(--amber); }
-.chip.rose { background: #37201e; border-color: #63332f; color: var(--rose); }
+.chip.ember { background: var(--ember-soft); border-color: #f0b184; color: #a24713; }
+.chip.patina { background: var(--patina-soft); border-color: #9ecdb4; color: #135c3f; }
+.chip.amber { background: #fdf0d2; border-color: #e2c489; color: #8a5a12; }
+.chip.rose { background: #fbe2de; border-color: #eaa79d; color: #9e2f22; }
 .chip.plain { background: transparent; }
 
 /* Readiness: the bar is the answer to "can I play this tonight". */
@@ -272,7 +301,7 @@ main { padding: 24px 0 140px; }
 .stat-commander img {
   width: 44px; max-width: 100%; max-height: 100%; height: auto;
   border-radius: 3px; display: block; flex: none;
-  box-shadow: 0 2px 8px -3px rgba(0,0,0,.9);
+  box-shadow: 0 2px 8px -3px rgba(20,40,31,.28);
 }
 
 .panel {
@@ -337,7 +366,7 @@ main { padding: 24px 0 140px; }
 
 .dot {
   width: 8px; height: 8px; border-radius: 50%; flex: none;
-  background: var(--line); box-shadow: 0 0 0 3px rgba(0,0,0,.25);
+  background: var(--line); box-shadow: 0 0 0 3px rgba(20,40,31,.10);
 }
 .dot.box { background: var(--patina); }
 .dot.hand { background: #2f7f6c; }
@@ -379,7 +408,7 @@ main { padding: 24px 0 140px; }
   background: var(--panel); border: 1px solid var(--line); color: var(--text-dim);
   border-radius: 999px; padding: 5px 12px; font-size: 12.5px; font-weight: 600;
 }
-.filter button[aria-pressed="true"] { background: var(--ember-soft); border-color: #6b4522; color: var(--ember); }
+.filter button[aria-pressed="true"] { background: var(--ember-soft); border-color: #f0b184; color: #a24713; }
 
 .pick-all {
   appearance: none; cursor: pointer; background: none; border: 0;
@@ -429,7 +458,7 @@ main { padding: 24px 0 140px; }
 
 .tray {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
-  background: rgba(14,24,20,.96); backdrop-filter: blur(14px);
+  background: rgba(255,254,250,.96); backdrop-filter: blur(14px);
   border-top: 1px solid var(--line);
   transform: translateY(110%); transition: transform .18s ease;
 }
@@ -454,14 +483,19 @@ main { padding: 24px 0 140px; }
   background: var(--panel-2); border: 1px solid var(--line); color: var(--text);
 }
 .btn:hover { border-color: var(--text-faint); }
-.btn.primary { background: var(--ember); border-color: var(--ember); color: #22150a; }
+/* Green, not orange, and for two reasons that point the same way: the Matrix's
+   own primary button is --forest-2 with white on it, and white on the accent
+   orange is 3.6:1, which is below AA at this size. --ember stays the accent
+   for the things that are pressed rather than the things that press. */
+.btn.primary { background: var(--patina); border-color: var(--patina); color: #fff; }
+.btn.primary:hover { filter: brightness(1.08); }
 .btn.primary:hover { filter: brightness(1.08); }
 .btn.ghost { background: transparent; border-color: transparent; color: var(--text-dim); }
 .btn.ghost:hover { color: var(--text); }
 
 .toast {
   position: fixed; left: 50%; bottom: 92px; transform: translate(-50%, 14px);
-  background: var(--patina); color: #06201a; font-weight: 700; font-size: 13px;
+  background: var(--patina); color: #f2fbf6; font-weight: 700; font-size: 13px;
   padding: 9px 16px; border-radius: 999px; z-index: 70;
   opacity: 0; pointer-events: none; transition: opacity .18s ease, transform .18s ease;
 }
@@ -510,7 +544,7 @@ main { padding: 24px 0 140px; }
   position: fixed; inset: 0; z-index: 90;
   display: grid; place-items: center;
   padding: 20px;
-  background: rgba(5, 10, 8, .72);
+  background: rgba(22, 34, 29, .42);
   backdrop-filter: blur(6px);
   animation: sheet-in .16s ease;
 }
@@ -590,10 +624,11 @@ main { padding: 24px 0 140px; }
   width: 17px; height: 17px; border-radius: 50%;
   display: grid; place-items: center;
   font-size: 10px; font-weight: 800; color: #17110a;
-  background: #c9c2b4; box-shadow: 0 0 0 1px rgba(0,0,0,.45) inset;
+  background: #cfc7b6; box-shadow: 0 0 0 1px rgba(22,34,29,.28) inset;
 }
 .mana.W { background: var(--w); } .mana.U { background: var(--u); color: #08131f; }
-.mana.B { background: var(--b); color: #f0ecf5; } .mana.R { background: var(--r); }
+.mana.B { background: var(--b); color: #f4f1f8; } .mana.R { background: var(--r); color: #fff4f0; }
+.mana.W { box-shadow: 0 0 0 1px rgba(22,34,29,.2) inset; }
 .mana.G { background: var(--g); }
 
 .sheet-meta {
@@ -695,7 +730,7 @@ main { padding: 24px 0 140px; }
   position: fixed; inset: 0; z-index: 95;
   display: grid; place-items: start center;
   padding: 24px 16px; overflow: auto;
-  background: rgba(5, 10, 8, .78);
+  background: rgba(22, 34, 29, .46);
   backdrop-filter: blur(6px);
   animation: sheet-in .16s ease;
 }
@@ -713,8 +748,8 @@ main { padding: 24px 0 140px; }
 .imp-lede { margin: 0 0 16px; color: var(--text-dim); font-size: 13.5px; line-height: 1.5; }
 .imp-note {
   margin: 0 0 14px; padding: 10px 12px; font-size: 13px; line-height: 1.5;
-  background: var(--ember-soft); border: 1px solid #6b4522; border-radius: var(--radius-sm);
-  color: #f0c9a4;
+  background: var(--ember-soft); border: 1px solid #f0b184; border-radius: var(--radius-sm);
+  color: #7a3d0d;
 }
 
 .imp-field { display: block; margin-bottom: 12px; }
@@ -747,9 +782,9 @@ main { padding: 24px 0 140px; }
 
 .imp-problems {
   margin: 0 0 14px; padding: 10px 12px 10px 30px;
-  background: #34290f; border: 1px solid #5d4b1c; border-radius: var(--radius-sm);
+  background: #fdf0d2; border: 1px solid #e2c489; border-radius: var(--radius-sm);
 }
-.imp-problems li { font-size: 13px; line-height: 1.5; color: #ecd79a; margin-bottom: 4px; }
+.imp-problems li { font-size: 13px; line-height: 1.5; color: #6f4a0c; margin-bottom: 4px; }
 .imp-problems li:last-child { margin-bottom: 0; }
 
 .imp-unmatched { margin: 0 0 14px; font-size: 13px; color: var(--text-dim); }
@@ -762,7 +797,7 @@ main { padding: 24px 0 140px; }
   padding: 12px 14px; border-radius: var(--radius-sm);
   background: var(--panel-2); border: 1px solid var(--line);
 }
-.imp-result.is-full { border-color: #1d5348; background: var(--patina-soft); }
+.imp-result.is-full { border-color: #9ecdb4; background: var(--patina-soft); }
 .imp-num { font-family: var(--serif); font-size: 32px; line-height: 1; }
 .imp-result.is-full .imp-num { color: var(--patina); }
 .imp-num-side { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
