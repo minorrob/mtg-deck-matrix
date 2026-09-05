@@ -7,9 +7,9 @@
   <title>Card Graph &middot; Trey's Decks</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%95%B8%EF%B8%8F%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" href="app.css?v=62">
-  <link rel="stylesheet" href="graph-page.css?v=1">
+  <link rel="stylesheet" href="graph-page.css?v=2">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.30.2/cytoscape.min.js" defer></script>
-  <script src="graph-page.js?v=2" defer></script>
+  <script src="graph-page.js?v=3" defer></script>
 </head>
 <body class="graph-body">
   <header class="app-header">
@@ -42,6 +42,10 @@
       <div class="gp-bar">
         <button class="gp-pane-toggle" id="pane-toggle" type="button" aria-expanded="false">Filters</button>
         <span class="gp-count" id="count">loading&hellip;</span>
+        <button class="gp-lock" id="click-focus" type="button" aria-pressed="false"
+          title="Off: tapping a node shows the card, with a Focus button inside it. On: tapping re-centres straight away.">
+          &#128274; Tap to focus
+        </button>
         <div class="gp-views" role="group" aria-label="View">
           <button class="gp-view is-on" data-view="list" type="button">List</button>
           <button class="gp-view" data-view="graph" type="button">Graph</button>

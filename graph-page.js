@@ -8,7 +8,7 @@
   "use strict";
 
   var DATA = null, EGO = null, CY = null;
-  var state = {q: "", mvMax: 20, view: "list", f: {}, showAll: {}};
+  var state = {q: "", mvMax: 20, view: "list", f: {}, showAll: {}, clickFocuses: false};
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
     return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]; }); };
@@ -115,6 +115,61 @@
       "</span></span></button>";
   }
 
+  /* Tapping a node shows the card. Re-centring lives INSIDE the popup as a button.
+     A lock toggle would make the common act -- "what is this card?" -- require a
+     mode change, and a mode is a cost paid on every click. Right-click and
+     long-press were the other candidates and both fail on a phone, which is where
+     this gets used. Double-click still re-centres directly for speed, and the
+     toggle in the bar flips single-click to focus for anyone who prefers it. */
+  function byId(id) { for (var i = 0; i < DATA.cards.length; i++) if (DATA.cards[i].id === id) return DATA.cards[i]; return null; }
+
+  function openCard(id) {
+    var c = byId(id);
+    if (!c) return;
+    var owned = [];
+    if (c.own > 0) owned.push(c.own + " in hand");
+    if (c.ordered > 0) owned.push(c.ordered + " on order");
+    if (c.bench > 0) owned.push(c.bench + " on the bench");
+    var box = document.createElement("div");
+    box.className = "gp-modal";
+    box.innerHTML =
+      '<div class="gp-modal-in" role="dialog" aria-modal="true" aria-label="' + esc(c.name) + '">' +
+        '<button class="gp-modal-x" type="button" aria-label="Close">&times;</button>' +
+        (c.image ? '<img class="gp-modal-art" src="' + esc(c.image) + '" alt="' + esc(c.name) + '">' : "") +
+        '<div class="gp-modal-body">' +
+          "<h2>" + esc(c.name) + "</h2>" +
+          '<p class="gp-modal-type">' + esc(c.type || "") + "</p>" +
+          '<p class="gp-modal-facts">' + (c.mv || 0) + " mana value &middot; " + esc(c.ci || "colourless") +
+            (c.price ? " &middot; <strong>$" + Number(c.price).toFixed(2) + "</strong>" : " &middot; no price") +
+            (c.cheapestSet ? ' <span class="gp-dim">cheapest in ' + esc(c.cheapestSet) +
+              (c.printings > 1 ? " of " + c.printings + " printings" : "") + "</span>" : "") + "</p>" +
+          (owned.length ? '<p class="gp-modal-own">' + esc(owned.join(" &middot; ").replace(/&middot;/g, "·")) + "</p>" : "") +
+          '<div class="gp-tags">' +
+            (c.decks || []).map(function (d) { return '<span class="gp-tag deck">' + esc(d.deck) + "</span>"; }).join("") +
+            (c.roles || []).map(function (r) { return '<span class="gp-tag">' + esc(r) + "</span>"; }).join("") +
+          "</div>" +
+          '<div class="gp-modal-acts">' +
+            '<button class="gp-btn primary" data-focus="' + c.id + '" type="button">Focus this card</button>' +
+            (c.buy ? '<a class="gp-btn" href="' + esc(c.buy) + '" target="_blank" rel="noopener noreferrer">Buy on TCGPlayer &nearr;</a>' : "") +
+          "</div>" +
+        "</div>" +
+      "</div>";
+    box.addEventListener("click", function (e) {
+      if (e.target === box || e.target.closest(".gp-modal-x")) closeCard();
+      var f = e.target.closest("[data-focus]");
+      if (f) { EGO = f.dataset.focus; state.view = "graph"; syncViews(); closeCard(); render(); }
+    });
+    document.body.appendChild(box);
+    document.body.classList.add("gp-locked");
+    box.querySelector(".gp-modal-x").focus();
+  }
+  function closeCard() {
+    var m = document.querySelector(".gp-modal");
+    if (m) m.remove();
+    document.body.classList.remove("gp-locked");
+  }
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeCard(); });
+
   function renderList(rows) {
     $("result").innerHTML = rows.length
       ? '<div class="gp-grid">' + rows.slice(0, 400).map(cardTile).join("") + "</div>" +
@@ -193,7 +248,11 @@
                levelWidth: function () { return 1; }, minNodeSpacing: 22, padding: 24},
       wheelSensitivity: 0.2
     });
-    CY.on("tap", "node", function (evt) { EGO = evt.target.id(); render(); });
+    CY.on("tap", "node", function (evt) {
+      var id = evt.target.id();
+      if (state.clickFocuses) { EGO = id; render(); } else openCard(id);
+    });
+    CY.on("dbltap", "node", function (evt) { closeCard(); EGO = evt.target.id(); render(); });
   }
 
   function render() {
@@ -220,12 +279,19 @@
   });
   document.addEventListener("click", function (e) {
     var tile = e.target.closest(".gp-card");
-    if (tile) { EGO = tile.dataset.id; state.view = "graph"; syncViews(); render(); return; }
+    if (tile && !tile.dataset.more) { openCard(tile.dataset.id); return; }
     var view = e.target.closest(".gp-view");
     if (view) { state.view = view.dataset.view; syncViews(); render(); return; }
     var more = e.target.closest("[data-more]");
     if (more) { state.showAll[more.dataset.more] = true; render(); return; }
     if (e.target.id === "clear") { state.f = {}; state.q = ""; state.mvMax = 20; state.showAll = {}; $("q").value = ""; render(); return; }
+    var lock = e.target.closest("#click-focus");
+    if (lock) {
+      state.clickFocuses = !state.clickFocuses;
+      lock.classList.toggle("is-on", state.clickFocuses);
+      lock.setAttribute("aria-pressed", String(state.clickFocuses));
+      return;
+    }
     if (e.target.id === "pane-toggle") {
       var pane = $("pane"), open = !pane.hidden;
       pane.hidden = open; e.target.setAttribute("aria-expanded", String(!open));
