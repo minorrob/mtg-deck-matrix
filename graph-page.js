@@ -8,7 +8,7 @@
   "use strict";
 
   var DATA = null, EGO = null, CY = null;
-  var state = {q: "", mvMax: 20, view: "list", f: {}};
+  var state = {q: "", mvMax: 20, view: "list", f: {}, showAll: {}};
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
     return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]; }); };
@@ -36,18 +36,24 @@
     {key: "rarity",    label: "Rarity",     from: function (c) { return [c.rarity]; }}
   ];
 
+  function indexCards() {
+    DATA.cards.forEach(function (c) {
+      var v = {};
+      FACETS.forEach(function (f) { v[f.key] = f.from(c) || []; });
+      c._f = v;
+      c._search = ((c.name || "") + " " + (c.type || "")).toLowerCase();
+    });
+  }
+
   function matches(card, skipKey) {
-    if (state.q) {
-      var q = state.q.toLowerCase();
-      if ((card.name || "").toLowerCase().indexOf(q) < 0 && (card.type || "").toLowerCase().indexOf(q) < 0) return false;
-    }
+    if (state.q && card._search.indexOf(state.q.toLowerCase()) < 0) return false;
     if (Number(card.mv || 0) > state.mvMax) return false;
     for (var i = 0; i < FACETS.length; i++) {
       var f = FACETS[i];
       if (f.key === skipKey) continue;               // for counting a facet's own options
       var picked = state.f[f.key];
       if (!picked || !picked.length) continue;
-      var have = f.from(card) || [];
+      var have = card._f[f.key];
       if (f.subset) { if (!have.every(function (v) { return picked.indexOf(v) >= 0; })) return false; }
       else if (!have.some(function (v) { return picked.indexOf(v) >= 0; })) return false;
     }
@@ -61,7 +67,7 @@
     // for something you can still pick -- the standard faceted-search behaviour.
     var pool = DATA.cards.filter(function (c) { return matches(c, facet.key); });
     var counts = {};
-    pool.forEach(function (c) { (facet.from(c) || []).forEach(function (v) { if (v) counts[v] = (counts[v] || 0) + 1; }); });
+    pool.forEach(function (c) { c._f[facet.key].forEach(function (v) { if (v) counts[v] = (counts[v] || 0) + 1; }); });
     return Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a] || String(a).localeCompare(b); })
       .map(function (v) { return {value: v, n: counts[v]}; });
   }
@@ -74,8 +80,11 @@
     var host = $("facets"), open = {};
     host.querySelectorAll("details.gp-facet").forEach(function (d) { open[d.dataset.key] = d.open; });
     host.innerHTML = FACETS.map(function (f) {
-      var opts = optionsFor(f), picked = state.f[f.key] || [];
-      if (!opts.length) return "";
+      var all = optionsFor(f), picked = state.f[f.key] || [];
+      if (!all.length) return "";
+      var cap = state.showAll[f.key] ? all.length : 24;
+      var opts = all.slice(0, cap).concat(all.slice(cap).filter(function (o) { return picked.indexOf(o.value) >= 0; }));
+      var hidden = all.length - opts.length;
       var isOpen = open[f.key] !== undefined ? open[f.key] : (picked.length > 0 || !!OPEN_BY_DEFAULT[f.key]);
       return '<details class="gp-facet" data-key="' + f.key + '"' + (isOpen ? " open" : "") + '>' +
         "<summary>" + esc(f.label) + (picked.length ? ' <span class="gp-on">' + picked.length + "</span>" : "") + "</summary>" +
@@ -84,7 +93,9 @@
           return '<label class="gp-opt' + (on ? " is-on" : "") + '">' +
             '<input type="checkbox" data-facet="' + f.key + '" value="' + esc(o.value) + '"' + (on ? " checked" : "") + ">" +
             esc(o.value) + ' <span class="n">' + o.n + "</span></label>";
-        }).join("") + "</div></details>";
+        }).join("") +
+        (hidden > 0 ? '<button class="gp-opt gp-more" data-more="' + f.key + '" type="button">+' + hidden + " more</button>" : "") +
+        "</div></details>";
     }).join("") +
     '<details class="gp-facet" data-key="mv" open><summary>Mana value &le; <span class="gp-on">' + state.mvMax + '</span></summary>' +
     '<div class="gp-range"><input type="range" id="mv" min="0" max="20" step="1" value="' + state.mvMax + '"></div></details>';
@@ -212,7 +223,9 @@
     if (tile) { EGO = tile.dataset.id; state.view = "graph"; syncViews(); render(); return; }
     var view = e.target.closest(".gp-view");
     if (view) { state.view = view.dataset.view; syncViews(); render(); return; }
-    if (e.target.id === "clear") { state.f = {}; state.q = ""; state.mvMax = 20; $("q").value = ""; render(); return; }
+    var more = e.target.closest("[data-more]");
+    if (more) { state.showAll[more.dataset.more] = true; render(); return; }
+    if (e.target.id === "clear") { state.f = {}; state.q = ""; state.mvMax = 20; state.showAll = {}; $("q").value = ""; render(); return; }
     if (e.target.id === "pane-toggle") {
       var pane = $("pane"), open = !pane.hidden;
       pane.hidden = open; e.target.setAttribute("aria-expanded", String(!open));
@@ -226,6 +239,7 @@
     .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
     .then(function (json) {
       DATA = json;
+      indexCards();
       if (window.matchMedia("(max-width: 860px)").matches) $("pane").hidden = true;
       render();
     })
