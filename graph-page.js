@@ -19,7 +19,16 @@
   // what "legal in these colours" means, not "mentions this colour".
   var FACETS = [
     {key: "roles",     label: "Role",       from: function (c) { return c.roles; }},
-    {key: "colors",    label: "Colour",     from: function (c) { return c.ci ? c.ci.split("") : ["C"]; }, subset: true},
+    // Colour identity, with the semantics a deckbuilder wants: "legal in a deck of
+    // these colours". A colourless card is legal in every deck, so it passes any
+    // selection -- ticking C on its own is the way to isolate colourless.
+    {key: "colors", label: "Colour", from: function (c) { return c.ci ? c.ci.split("") : ["C"]; },
+     match: function (have, picked) {
+       var colourless = have.length === 1 && have[0] === "C";
+       if (colourless) return true;
+       if (picked.length === 1 && picked[0] === "C") return false;
+       return have.every(function (v) { return picked.indexOf(v) >= 0; });
+     }},
     {key: "owned",     label: "Ownership",  from: function (c) {
       var out = []; if (c.own > 0) out.push("in hand"); if (c.ordered > 0) out.push("on order");
       if (c.bench > 0) out.push("bench"); if (!c.own && !c.ordered) out.push("not owned"); return out; }},
@@ -55,7 +64,7 @@
       var picked = state.f[f.key];
       if (!picked || !picked.length) continue;
       var have = card._f[f.key];
-      if (f.subset) { if (!have.every(function (v) { return picked.indexOf(v) >= 0; })) return false; }
+      if (f.match) { if (!f.match(have, picked)) return false; }
       else if (!have.some(function (v) { return picked.indexOf(v) >= 0; })) return false;
     }
     return true;

@@ -9,7 +9,7 @@
 //           all. That is an interaction the extraction is missing.
 MATCH (cmd:Card {name: $commander})
 OPTIONAL MATCH (cmd)-[:TRIGGERS_ON]->(e:Event)<-[r:CAUSES|TRIGGERS_ON]-(mech:Card)
-  WHERE ALL(ch IN split(mech.colorIdentity,'') WHERE ch IN split(cmd.colorIdentity,''))
+  WHERE (mech.colorIdentity IS NULL OR ALL(ch IN split(mech.colorIdentity,'') WHERE ch IN split(coalesce(cmd.colorIdentity,''),'')))
 // CAUSES feeds the commander's trigger; a second TRIGGERS_ON is a co-payoff -- another
 // card cashing the same event. Impact Tremors is in 87% of Purphoros decks and is that
 // shape exactly, so a path that only looked for CAUSES could never see it.
