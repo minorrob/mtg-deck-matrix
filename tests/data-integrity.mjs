@@ -17,6 +17,9 @@ const cssSource = await readFile(new URL("../app.css", import.meta.url), "utf8")
 const deckPageSource = await readFile(new URL("../deck-page.js", import.meta.url), "utf8");
 const shopPageSource = await readFile(new URL("../shop-page.js", import.meta.url), "utf8");
 const slotModelSource = await readFile(new URL("../slot-model.js", import.meta.url), "utf8");
+// The other two pages that fetch committed data, for the versioned-URL check below.
+const graphPageSource = await readFile(new URL("../graph-page.js", import.meta.url), "utf8");
+const viewerSource = await readFile(new URL("../viewer.js", import.meta.url), "utf8");
 const activeState = JSON.parse(await readFile(new URL("../data/active-state.json", import.meta.url), "utf8"));
 const auditedByName = new Map(cards.cards.map((card) => [card.name.toLowerCase(), card]));
 for (const card of cards.cards) for (const face of card.name.split(" // ")) auditedByName.set(face.toLowerCase(), card);
@@ -791,7 +794,26 @@ assert.match(appSource, /function exportFullState\(/, "an Export control must ex
 assert.match(appSource, /function importStateFromFile\(/, "an Import control must exist");
 assert.match(appSource, /function loadActiveState\(/, "a Load Active control must exist");
 assert.match(appSource, /localStorage\.getItem\(Custom\.STORAGE_KEY\)/, "export must include the Custom (Choose-step) store, not just the main state");
-assert.match(appSource, /fetch\("data\/active-state\.json"/, "Load Active must read active-state.json from the repo, not invent a URL");
+assert.match(appSource, /fetch\("data\/active-state\.json\?v=\d+"/, "Load Active must read active-state.json from the repo, not invent a URL");
+
+/* Every committed data file is fetched with a version in its URL and left to the
+   browser cache. The version is what makes the cache safe: a rebuilt file gets a
+   new URL, so nothing stale can be served however long a browser holds the old
+   one. Measured at the socket, "no-store" cost the full payload on every single
+   visit -- 1.15 MB on the Matrix, 1.35 MB on the graph -- for no freshness the
+   version does not already give. Live polling is the one exception, and it is
+   checked separately in tests/sim-engine.mjs. */
+[["app.js", appSource], ["graph-page.js", graphPageSource], ["viewer.js", viewerSource]]
+  .forEach(([name, src]) => {
+    const dataFetches = src.match(/fetch\(\s*"(?:data|sim)\/[^"]+"/g) || [];
+    dataFetches.forEach((call) => {
+      assert.match(call, /\?v=\d+"$/,
+        `${name}: ${call} has no version, so a browser could serve a stale copy of it`);
+    });
+    const noStore = (src.match(/fetch\(\s*"(?:data|sim)\/[^"]+",\s*\{\s*cache:\s*"no-store"/g) || []);
+    assert.deepEqual(noStore, [],
+      `${name}: a committed data file is fetched with no-store, which re-downloads it on every visit`);
+  });
 // Replace, not a field-by-field merge -- a full-state file has no safe merge rule the way the
 // purchase-history CSV import does, since it covers every selection, filter, and toggle at once.
 assert.match(appSource, /state = \{\.\.\.blankState\(\), \.\.\.payload\.state\}/, "applying a state payload must fully replace state, defaulting only fields the file omits");

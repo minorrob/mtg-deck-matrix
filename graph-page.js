@@ -827,14 +827,14 @@
     if (DATA) renderLenses();
   }
 
-  fetch("data/lenses.json", {cache: "no-store"})
+  fetch("data/lenses.json?v=1", {cache: "default"})
     .then(function (r) { return r.ok ? r.json() : {lenses: []}; })
     .catch(function () { return {lenses: []}; })
     .then(function (j) { GRAPH_LENSES = (j && j.lenses) || []; mergeLenses(); });
 
   Promise.all([
-    fetch("data/deck-ratings.json", {cache: "no-store"}).then(function (r) { return r.ok ? r.json() : null; }),
-    fetch("data/master-v2.json", {cache: "no-store"}).then(function (r) { return r.ok ? r.json() : null; })
+    fetch("data/deck-ratings.json?v=1", {cache: "default"}).then(function (r) { return r.ok ? r.json() : null; }),
+    fetch("data/master-v2.json?v=1", {cache: "default"}).then(function (r) { return r.ok ? r.json() : null; })
   ]).catch(function () { return [null, null]; })
     .then(function (parts) {
       var ratings = parts && parts[0];
@@ -851,7 +851,7 @@
     if (DATA && state.view === "graph") render();
   });
 
-  fetch("data/graph.json", {cache: "no-store"})
+  fetch("data/graph.json?v=1", {cache: "default"})
     .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
     .then(function (json) {
       DATA = json;

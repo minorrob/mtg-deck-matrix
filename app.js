@@ -550,7 +550,7 @@
 
   function loadDeckPageCards() {
     if (deckPageCards) return Promise.resolve(deckPageCards);
-    return fetch("data/cards.json")
+    return fetch("data/cards.json?v=1")
       .then((r) => r.json())
       .then((payload) => {
         const map = {};
@@ -963,8 +963,8 @@
   function simContext() {
     if (simSeats) return Promise.resolve(simSeats);
     return Promise.all([
-      fetch("sim/config.json", {cache: "no-store"}).then((r) => r.json()),
-      fetch("sim/opponents.json", {cache: "no-store"}).then((r) => r.json())
+      fetch("sim/config.json?v=1", {cache: "default"}).then((r) => r.json()),
+      fetch("sim/opponents.json?v=1", {cache: "default"}).then((r) => r.json())
     ]).then(([config, opponents]) => {
       simSeats = {config, seats: window.MtgDeckMeasure.buildSeats(opponents, config.table)};
       return simSeats;
@@ -4192,6 +4192,8 @@
   async function pollSimStatus() {
     if (!isLocalHost() || !simDialogVariant) return;
     try {
+      // no-store, unlike the committed data above: this file is being rewritten
+      // by a local process right now, and a reused byte of it is a stale run.
       const response = await fetch(`${SIM_STATUS_PATH}?t=${Date.now()}`, {cache: "no-store"});
       if (!response.ok) return;
       const status = await response.json();
@@ -8410,7 +8412,7 @@
   async function loadActiveState() {
     let payload;
     try {
-      const response = await fetch("data/active-state.json", {cache: "no-store"});
+      const response = await fetch("data/active-state.json?v=1", {cache: "default"});
       if (!response.ok) {
         showToast(response.status === 404 ? "No active-state.json is committed to the repo yet." : `Could not load active state (${response.status}).`);
         return;
@@ -8432,24 +8434,41 @@
   async function init() {
     try {
       let activeStateFile = null;
+      /* cache: "default", not "no-store".
+         These four are ten megabytes uncompressed -- about 1.15 MB gzipped --
+         and "no-store" forbade the browser from reusing any of it, so every
+         visit paid for the lot again. Measured at the socket, against a server
+         sending GitHub Pages' own ETag and Cache-Control: max-age=600:
+
+             no-store     60 KB  ->  60 KB   nothing is ever reused
+             no-cache     60 KB  ->  60 KB   no better: Chromium does not
+                                             revalidate a no-cache response on
+                                             a later page load
+             default      60 KB  ->   0 KB   no request at all inside max-age
+
+         So "default", and every data URL carries a ?v= the way viewer.js's
+         always have. The version is what makes this safe rather than merely
+         fast: a rebuilt data file gets a new URL, so nothing stale can be
+         served however long a browser holds the old one. Bump it when the
+         shape of a data file changes, exactly as app.js?v= is bumped. */
       [bakedCatalog, bakedBuyCatalog, simulationSummary, activeStateFile] = await Promise.all([
-        fetch("data/variants.json", {cache: "no-store"}).then((response) => {
+        fetch("data/variants.json?v=1", {cache: "default"}).then((response) => {
           if (!response.ok) throw new Error("Variant catalog did not load");
           return response.json();
         }),
-        fetch("data/buy-plans.json", {cache: "no-store"}).then((response) => {
+        fetch("data/buy-plans.json?v=1", {cache: "default"}).then((response) => {
           if (!response.ok) throw new Error("Buy catalog did not load");
           return response.json();
         }),
         // Additive: real simulation results for the new ladders. Never blocks startup --
         // the commander-compare preview and Calibrate simulation readout just render nothing
         // extra if this is unavailable, same as any other optional metadata in this app.
-        fetch("data/simulation-summary.json", {cache: "no-store"}).then((response) => response.ok ? response.json() : null).catch(() => null),
+        fetch("data/simulation-summary.json?v=1", {cache: "default"}).then((response) => response.ok ? response.json() : null).catch(() => null),
         // Read for the corner ribbon alone. Loading this file does NOT apply it
         // -- that stays an explicit Load Active click -- so a browser mid-build
         // keeps its own picks while still being told which six are the
         // published slate.
-        fetch("data/active-state.json", {cache: "no-store"}).then((response) => response.ok ? response.json() : null).catch(() => null)
+        fetch("data/active-state.json?v=1", {cache: "default"}).then((response) => response.ok ? response.json() : null).catch(() => null)
       ]);
       myBuildIds = new Set(Object.values(activeStateFile?.state?.compareSelections || {}).filter(Boolean));
       customStore = Custom.load(localStorage);

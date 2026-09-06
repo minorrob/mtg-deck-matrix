@@ -1777,8 +1777,13 @@
 
   /* --------------------------------------------------------------- start */
 
+  /* Every URL here already carries its own ?v=, which is what makes the browser
+     cache safe to use: a data rebuild bumps the version and the URL changes, so
+     nothing stale can be served. "no-cache" was defeating that for no benefit --
+     measured at the socket, it re-downloaded every file on every visit, exactly
+     as "no-store" did. */
   function fetchJson(url) {
-    return fetch(url, { cache: "no-cache" }).then(function (r) {
+    return fetch(url, { cache: "default" }).then(function (r) {
       if (!r.ok) throw new Error(url + " → " + r.status);
       return r.json();
     });
