@@ -114,7 +114,11 @@
       total: cards.reduce((n, c) => n + c.quantity, 0),
       unresolved: resolved.unresolved || [],
       warnings: resolved.warnings || [],
-      measured: resolved.measured || null
+      measured: resolved.measured || null,
+      // Only a generated deck has this: which rung of which lens, at what budget
+      // target. Carried on the record rather than recomputed, because the ladder
+      // it came off does not survive the save -- one rung does.
+      generated: resolved.generated || null
     };
   }
 
@@ -245,7 +249,11 @@
         source: rec.source,
         sourceUrl: rec.sourceUrl,
         importedAt: rec.importedAt,
-        measured: rec.measured
+        measured: rec.measured,
+        // Carried onto the deck the viewer renders, not just the stored record:
+        // the banner is the one place a generated deck's rung and lens are
+        // visible, and the deck page never sees the record.
+        generated: rec.generated || null
       });
     });
 

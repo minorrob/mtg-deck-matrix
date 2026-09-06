@@ -25,6 +25,9 @@ const check = (label, fn) => { fn(); checks += 1; void label; };
 
 const MODULES = ["lineup-model", "sim-engine", "scryfall-client", "deck-import",
   "deck-sources", "deck-measure", "deck-store", "import-panel",
+  // Building one from nothing takes the same road as far as deck-store, then
+  // three more: the compliance rules, the generator, and the map onto a record.
+  "compliance-model", "deck-generator", "deck-build", "build-panel",
   "xlsx-reader", "inventory-import"];
 
 check("every module the import path needs is on the page", () => {
@@ -40,6 +43,9 @@ check("they load in dependency order, ahead of the page that calls them", () => 
   assert.ok(at("lineup-model") < at("deck-import"), "the lineup model comes before the parser");
   assert.ok(at("lineup-model") < at("inventory-import"), "and before the inventory reader, which normalizes names");
   assert.ok(at("sim-engine") < at("deck-measure"), "the engine comes before the measurement");
+  assert.ok(at("compliance-model") < at("deck-generator"), "the generator repairs against the compliance rules");
+  assert.ok(at("deck-generator") < at("deck-build"), "deck-build maps what the generator produced");
+  assert.ok(at("deck-build") < at("build-panel"), "and the panel drives deck-build");
   MODULES.forEach((name) => {
     assert.ok(at(name) < at("viewer"), `${name}.js must load before viewer.js`);
   });
@@ -57,7 +63,10 @@ check("the globals viewer.js reaches for are the ones the modules attach", () =>
     "window.MtgSimEngine": "sim-engine.js",
     "window.MtgScryfall": "scryfall-client.js",
     "window.MtgInventoryImport": "inventory-import.js",
-    "window.MtgXlsxReader": "xlsx-reader.js"
+    "window.MtgXlsxReader": "xlsx-reader.js",
+    "window.MtgDeckGenerator": "deck-generator.js",
+    "window.MtgDeckBuild": "deck-build.js",
+    "window.MtgBuildPanel": "build-panel.js"
   };
   [...new Set(wanted)].forEach((name) => {
     assert.ok(attached[name], `viewer.js reads ${name}, which nothing on this page defines`);

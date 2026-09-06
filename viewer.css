@@ -203,14 +203,17 @@ main { padding: 24px 0 140px; }
 .deck-card-top { display: flex; align-items: flex-start; gap: 12px; }
 
 .rank-badge {
-  flex: none; width: 38px; height: 38px; border-radius: 10px;
+  flex: none; width: 42px; height: 40px; border-radius: 10px;
   display: grid; place-items: center;
   background: var(--panel-2); border: 1px solid var(--line);
   font-family: var(--serif); font-size: 17px; font-weight: 700;
   color: var(--text-dim); line-height: 1;
 }
 .rank-badge.is-top { background: var(--ember-soft); border-color: #f0b184; color: #a24713; }
-.rank-badge small { display: block; font-size: 8px; letter-spacing: .1em; color: inherit; opacity: .75; font-family: var(--sans); }
+/* 9.5px is the floor everywhere in this app -- the sweep that set it found this
+   one label under it, and the badge was widened to 42px to hold the bigger word
+   rather than the word being shrunk to fit the badge. */
+.rank-badge small { display: block; font-size: 9.5px; letter-spacing: .06em; color: inherit; opacity: .75; font-family: var(--sans); }
 
 .deck-name { min-width: 0; flex: 1; }
 .deck-name h3 { font-size: 19px; line-height: 1.2; }
@@ -821,6 +824,101 @@ main { padding: 24px 0 140px; }
 .deck-add .plus { font-size: 26px; line-height: 1; color: var(--text-faint); }
 .deck-add b { font-family: var(--serif); font-size: 16px; font-weight: 600; color: var(--text); }
 .deck-add span { font-size: 12.5px; line-height: 1.45; max-width: 24ch; }
+
+/* Building one from nothing. The panel borrows import's shell and fields
+   wholesale -- it is the same errand through a different door -- and adds only
+   what generation needs: two fields side by side, a narrated wait, and the two
+   rows of choices that come back. */
+.bp-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.bp-row .imp-field { margin-bottom: 12px; }
+.bp-row select {
+  width: 100%; box-sizing: border-box;
+  background: var(--ink); color: var(--text);
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  padding: 10px 12px; font: 14px/1.45 var(--sans);
+}
+.bp-row select:focus { outline: none; border-color: var(--patina); }
+
+/* The wait, narrated. Each line is a phase that finished; the last one is
+   whatever is happening now, and it rewrites itself rather than repeating. */
+.bp-steps { margin: 0 0 14px; padding: 0; list-style: none; }
+.bp-steps li {
+  padding: 5px 0 5px 20px; position: relative;
+  font-size: 13px; line-height: 1.45; color: var(--text-dim);
+}
+.bp-steps li::before {
+  content: "\2713"; position: absolute; left: 2px; top: 5px;
+  color: var(--patina); font-size: 12px; font-weight: 800;
+}
+.bp-steps li:last-child { color: var(--text); }
+.bp-steps li:last-child::before { content: "\2026"; color: var(--text-faint); font-weight: 700; }
+
+/* Which build, and which price. Two rows of the same kind of button: a bold
+   name over a line of plain fact, with the chosen one filled in. */
+.bp-picks, .bp-rungs { display: grid; gap: 8px; margin: 0 0 12px; }
+.bp-picks { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.bp-pick, .bp-rung {
+  display: block; width: 100%; text-align: left; cursor: pointer;
+  padding: 9px 12px; font: inherit;
+  background: var(--panel-2); color: var(--text-dim);
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+}
+.bp-pick:hover, .bp-rung:hover { border-color: var(--patina); }
+.bp-pick.is-on, .bp-rung.is-on {
+  background: var(--patina-soft); border-color: var(--patina); color: var(--text);
+}
+.bp-pick b, .bp-rung b { display: block; font-size: 14px; font-weight: 800; color: var(--text); }
+.bp-pick span, .bp-rung span { display: block; margin-top: 2px; font-size: 12px; line-height: 1.45; }
+
+/* The theme picker. Chips rather than a text box: these sixteen are the whole
+   vocabulary the generator has, and a free-text field both hid that and dropped
+   anything outside it without saying so. */
+.bp-themes { border: 0; margin: 0 0 12px; padding: 0; min-width: 0; }
+.bp-themes > span {
+  display: flex; align-items: baseline; gap: 8px;
+  margin-bottom: 6px; font-size: 12px; font-weight: 700;
+  letter-spacing: .04em; text-transform: uppercase; color: var(--text-dim);
+}
+.bp-themes > span em { font-style: normal; letter-spacing: 0; text-transform: none;
+  font-weight: 600; color: var(--text-faint); }
+.bp-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.bp-chip {
+  display: inline-flex; align-items: center; cursor: pointer;
+  padding: 5px 10px; border-radius: 999px;
+  background: var(--panel-2); border: 1px solid var(--line);
+  font-size: 12.5px; color: var(--text-dim);
+}
+.bp-chip:hover { border-color: var(--patina); }
+.bp-chip input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.bp-chip.is-on { background: var(--patina-soft); border-color: var(--patina); color: var(--text); font-weight: 600; }
+.bp-chip input:focus-visible + span { outline: 2px solid var(--ember); outline-offset: 3px; border-radius: 3px; }
+
+/* The play-style select sits in a plain field, so it needs the same skin the
+   two inside .bp-row already got. */
+.imp-field select {
+  width: 100%; box-sizing: border-box;
+  background: var(--ink); color: var(--text);
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  padding: 10px 12px; font: 14px/1.45 var(--sans);
+}
+.imp-field select:focus { outline: none; border-color: var(--patina); }
+
+/* A hundred card names inside a details. Monospaced so the eye can run down
+   them, and capped in height so opening it does not lose the Save button. */
+.bp-list {
+  max-height: 190px; overflow-y: auto;
+  font-family: var(--mono); font-size: 11.5px; line-height: 1.7;
+  word-break: break-word;
+}
+
+/* The second add tile. Same shape as Add a deck, marked only by its glyph --
+   the two are peers, and making one look primary would be a claim that one is
+   the usual way in. */
+.deck-add.is-build .plus { font-size: 22px; color: var(--patina); }
+
+@media (max-width: 560px) {
+  .bp-row { grid-template-columns: 1fr; }
+}
 
 @media (max-width: 560px) {
   .imp-body { padding: 18px 15px 15px; }

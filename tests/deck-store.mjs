@@ -177,6 +177,37 @@ check("the lineup is what deck-measure hydrates", () => {
   assert.ok(lineup[0].card.oracleText, "the facts travel with the entry");
 });
 
+
+// ---------------------------------------------------------------------------
+// A generated deck carries where it came from, all the way to the deck page.
+// The record keeps it, the merged deck keeps it, and an imported deck has null
+// there rather than a missing key -- the banner reads it either way.
+// ---------------------------------------------------------------------------
+{
+  const genResolved = {
+    name: "Built one", commander: ["Krenko, Mob Boss"], source: "generated",
+    cards: [{name: "Krenko, Mob Boss", quantity: 1, isCommander: true,
+      card: {typeLine: "Legendary Creature - Goblin Warrior", cmc: 4, price: 3.5, colorIdentity: ["R"]}}],
+    generated: {rung: "tuned", rungLabel: "Tuned", lens: "synergy-max",
+      lensLabel: "Synergy maximizer", inputs: {budgetUsd: 150}}
+  };
+  const genRecord = Store.toRecord(genResolved, {id: "U9", label: "Built one"});
+  assert.equal(genRecord.generated.rungLabel, "Tuned", "the record keeps the rung it was built at");
+  assert.equal(genRecord.generated.lensLabel, "Synergy maximizer");
+  assert.equal(genRecord.source, "generated");
+
+  const merged = Store.merge(master, [genRecord]);
+  const deck = merged.decks.filter((d) => d.id === "U9")[0];
+  assert.ok(deck, "a generated deck must appear among the decks");
+  assert.equal(deck.generated.rungLabel, "Tuned",
+    "the deck page never sees the record, so the merge has to carry the provenance");
+  assert.equal(deck.generated.inputs.budgetUsd, 150);
+
+  const pasted = Store.toRecord({name: "Pasted", commander: [], cards: [], source: "paste"}, {id: "U8"});
+  assert.equal(pasted.generated, null, "an imported deck has null, not a missing key");
+  checks += 6;
+}
+
 console.log(`deck-store: ${checks} checks passed · ` +
   `${merged.cards.length - master.cards.length} new catalog row from a 3-card import, ` +
   `${merged.decks.length} decks`);

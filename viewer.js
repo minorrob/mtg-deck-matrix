@@ -702,6 +702,31 @@
     }).open();
   }
 
+  /* Building one from nothing.
+     The generator's own front door -- the Choose tab -- was retired when the app
+     went to four tabs, and it has been unreachable ever since. This is its new
+     one, beside Add a deck rather than on a tab of its own, because "I have a
+     deck" and "I want one" are the same errand from where the reader sits. */
+  function openBuild() {
+    var missing = ["MtgDeckGenerator", "MtgDeckBuild", "MtgDeckStore", "MtgDeckMeasure",
+      "MtgBuildPanel", "MtgScryfall", "MtgSimEngine"].filter(function (name) { return !window[name]; });
+    if (missing.length) return toast("The deck builder did not load (" + missing[0] + ").");
+
+    window.MtgBuildPanel.createPanel({
+      existing: function () { return IMPORTS; },
+      measureContext: measureContext,
+      onSaved: function (record) {
+        IMPORTS = Store.add(IMPORTS, record);
+        saveImports();
+        rebuild();
+        toast(record.measured
+          ? record.label + " built and measured at " + record.measured.score.toFixed(2) + "."
+          : record.label + " built.");
+        go("#/deck/" + record.id);
+      }
+    }).open();
+  }
+
   /* Measuring a deck that was saved without a score.
      The panel's preview is deliberately not recorded -- one seed and 2,000 games
      is a tenth of a point out, which is the size of the gaps between these decks
@@ -811,14 +836,22 @@
       ]));
     });
 
-    // The tile that adds one. Last in the grid, because it is the thing you
-    // reach for after looking at what is already there.
+    // The two tiles that add one. Last in the grid, because they are what you
+    // reach for after looking at what is already there -- and side by side,
+    // because which one you want depends only on whether the deck exists yet.
     grid.appendChild(el("button", { class: "deck-add", type: "button",
       onclick: openImport }, [
       el("span", { class: "plus", "aria-hidden": "true", text: "+" }),
       el("b", { text: "Add a deck" }),
       el("span", { text: "Paste a list from Moxfield or anywhere else, or give an "
         + "Archidekt link. It is scored on the same simulation as these." })
+    ]));
+    grid.appendChild(el("button", { class: "deck-add is-build", type: "button",
+      onclick: openBuild }, [
+      el("span", { class: "plus", "aria-hidden": "true", text: "\u2726" }),
+      el("b", { text: "Build one" }),
+      el("span", { text: "Name a commander and a theme. It is built from live "
+        + "Scryfall data into a legal hundred, at three prices." })
     ]));
     root.appendChild(grid);
 
@@ -993,10 +1026,17 @@
     /* An added deck says where it came from, and offers the way back out. The
        six do neither, because neither is true of them. */
     if (deck.imported) {
+      var gen = deck.generated;
       root.appendChild(el("div", { class: "imp-banner" }, [
         el("span", {}, [
-          el("b", { text: "Added deck" }), " · ",
-          deck.source === "paste" ? "pasted list" : "from " + deck.source,
+          el("b", { text: gen ? "Built here" : "Added deck" }), " · ",
+          /* A generated deck's provenance is the interesting kind: which rung of
+             which lens, and what it was aimed at. A pasted one only has where the
+             text came from. */
+          gen
+            ? [gen.rungLabel, gen.lensLabel].filter(Boolean).join(" · ").toLowerCase()
+              + (gen.inputs && gen.inputs.budgetUsd ? " · $" + Math.round(gen.inputs.budgetUsd) + " target" : "")
+            : deck.source === "paste" ? "pasted list" : "from " + deck.source,
           deck.sourceUrl ? el("a", { href: deck.sourceUrl, target: "_blank",
             rel: "noopener", text: " open it there ↗" }) : null,
           deck.measured ? "" : " · not scored yet"

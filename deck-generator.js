@@ -251,12 +251,21 @@
     return {commander: null, error: "No commander matched those inputs."};
   }
 
+  /* The cards you already own and want built around.
+     A TCGplayer link resolves through the product id; anything else is taken as
+     a card name, because "Doubling Season" is what somebody actually types and
+     making them find a link first is a tax on the one input that is pure
+     signal about what they want to play. */
   async function resolveSeeds(inputs, client, context, warnings) {
     const seeds = [];
-    for (const link of inputs.seedLinks || []) {
+    const lines = [...(inputs.seedLinks || []), ...(inputs.seedNames || [])];
+    for (const link of lines) {
       const raw = String(link || "").trim();
       if (!raw) continue;
-      const resolved = await client.resolveTcgplayerUrl(raw, {signal: context.signal});
+      const isLink = /^https?:\/\//i.test(raw);
+      const resolved = isLink
+        ? await client.resolveTcgplayerUrl(raw, {signal: context.signal})
+        : {card: await client.named(raw, {signal: context.signal}), error: "no card matched that name"};
       if (!resolved.card) {
         warnings.push(`${raw} — ${resolved.error || "no card matched"}.`);
         continue;
