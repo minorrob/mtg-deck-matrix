@@ -2353,6 +2353,66 @@ div.sp-band{padding:9px 13px;border-radius:12px 12px 0 0}
   .dp-meas-acts .dp-rank-b { flex: 1 1 100%; }
 }
 
+/* What the games say.
+   -------------------
+   The panel that reads the Game Log back. Its whole job is to put an observed
+   rate next to a predicted one without letting the pair read as a verdict, so
+   the sentence under each row is as prominent as the numbers above it -- that
+   sentence is where the confidence interval lives, and the numbers alone would
+   be the confident-looking lie this panel exists to avoid. */
+.gr-panel {
+  margin: 0 0 16px; padding: 14px 15px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.gr-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; margin-bottom: 10px; }
+.gr-head h3 { margin: 0; font-size: 16px; }
+.gr-head span { color: var(--muted); font-size: 12.5px; }
+.gr-fun {
+  margin: 0 0 12px; padding: 8px 11px; font-size: 13px; line-height: 1.5;
+  background: var(--gold-soft); border-radius: 9px; color: #5c4a25;
+}
+.gr-rows { display: flex; flex-direction: column; gap: 8px; }
+
+.gr-row {
+  display: grid; gap: 4px 14px; align-items: baseline;
+  grid-template-columns: minmax(0, 1.6fr) repeat(4, auto);
+  padding: 10px 12px; border: 1px solid var(--line); border-left-width: 3px;
+  border-radius: 11px; background: var(--paper);
+}
+.gr-row.is-below { border-left-color: var(--red); }
+.gr-row.is-above { border-left-color: var(--forest-2); }
+.gr-deck { min-width: 0; }
+.gr-deck b { display: block; font-size: 14px; }
+.gr-deck span { font-size: 11.5px; color: var(--muted); }
+.gr-num { text-align: right; }
+.gr-num b { display: block; font-size: 16px; font-weight: 850; }
+/* A range rather than a rate, because too few games have been played for a rate.
+   Smaller and quieter, so it does not read as a figure to act on. */
+.gr-num.is-provisional b { font-size: 13px; font-weight: 750; color: var(--muted); }
+.gr-num span {
+  font-size: 9.5px; font-weight: 800; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--muted);
+}
+/* The sentence spans every column: it is the finding, and the figures above it
+   are only the shorthand. */
+.gr-says {
+  grid-column: 1 / -1; margin: 6px 0 0;
+  font-size: 12.5px; line-height: 1.55; color: var(--muted);
+}
+.gr-caveat {
+  margin: 12px 0 0; font-size: 11.5px; line-height: 1.55; color: var(--muted);
+  padding-top: 10px; border-top: 1px solid var(--line);
+}
+
+@media (max-width: 700px) {
+  /* Five columns will not fit a phone. The deck takes the first row and the four
+     figures share the second, which keeps them comparable across decks. */
+  .gr-row { grid-template-columns: repeat(4, 1fr); }
+  .gr-deck { grid-column: 1 / -1; }
+  .gr-num { text-align: left; }
+}
+
 /* iOS Safari zooms the whole page in when you focus a text field whose text is under
    16px, and does not zoom back out when you leave it -- which is why the Game Log, the
    one tab that is mostly a form, was the tab that "shrank the screen". This changes no

@@ -6287,6 +6287,87 @@
     withUiState("#view-log", renderGameLogView);
   }
 
+  /* ------------------------------------------- what the games taught you */
+
+  /* The Game Log has been write-only since it was built. Every score in this app
+     is a prediction; every row in that log is an outcome; nothing put the two
+     side by side. This does -- carefully, because twelve games of Commander is
+     not evidence of much and the interesting-looking version of this panel would
+     be a confident-looking lie.
+
+     game-record.js does the arithmetic and, more importantly, the restraint: a
+     Wilson interval that contains the prediction is reported as "these agree, or
+     there are too few games to tell", never as a difference. */
+  function gameRecordMarkup() {
+    const Rec = window.MtgGameRecord;
+    const log = state.gameLog || [];
+    if (!Rec || !log.length) return "";
+
+    const labels = {};
+    (state.compareSelections ? Object.values(state.compareSelections) : []).forEach((id) => {
+      const v = variantById(id);
+      if (v) labels[id] = v.name;
+    });
+    log.forEach((entry) => {
+      if (labels[entry.variantId]) return;
+      const v = variantById(entry.variantId);
+      labels[entry.variantId] = v ? v.name : entry.variantId;
+    });
+
+    const summary = Rec.summarize(log, {labels});
+    const rows = summary.decks.map((deck) => {
+      /* The published win rate for the rung this deck is standing on. Tuned is
+         the fallback because it is the one rung every variant was measured on
+         the same way -- comparing a logged record against a rung the deck is not
+         actually built as would be worse than not comparing at all. */
+      const plan = buyCatalog.plans[deck.id];
+      const Slot = window.MtgSlotModel;
+      const rung = plan && Slot ? Slot.activeRung(plan, ensureBuyState(deck.id), (state.deckRung || {})[deck.id]) : null;
+      const build = simulationSummary?.builds?.[deck.id];
+      const sim = (rung && build?.[Slot.RUNG_LABEL[rung]]) || build?.Tuned || null;
+      const predicted = sim && sim.winPct != null ? Number(sim.winPct) : null;
+      const result = Rec.compare(deck, predicted);
+      /* Under five decided games the range IS the headline. "100% won" off one
+         game is the exact failure this panel was written to avoid, and the
+         sentence underneath is not enough to undo a number that size. */
+      const head = Rec.headline(deck);
+      const tone = result.verdict === "below" ? " is-below"
+        : result.verdict === "above" ? " is-above" : "";
+      return `<div class="gr-row${tone}">
+        <div class="gr-deck">
+          <b>${esc(deck.label)}</b>
+          <span>${deck.games} game${deck.games === 1 ? "" : "s"}${deck.draws ? ` · ${deck.draws} drawn` : ""}${
+            deck.last ? ` · last ${esc(deck.last)}` : ""}</span>
+        </div>
+        <div class="gr-num${head.provisional ? " is-provisional" : ""}"><b class="num">${head.text}</b>
+          <span>${head.provisional ? "could be" : "won"}</span></div>
+        <div class="gr-num"><b class="num">${predicted == null ? "—" : Rec.pct(predicted)}</b>
+          <span>predicted</span></div>
+        <div class="gr-num"><b class="num">${deck.podFun == null ? "—" : deck.podFun}</b>
+          <span>table fun</span></div>
+        <div class="gr-num"><b class="num">${deck.avgTurns == null ? "—" : deck.avgTurns}</b>
+          <span>turns</span></div>
+        <p class="gr-says">${esc(Rec.phrase(result))}</p>
+      </div>`;
+    }).join("");
+
+    const fun = Rec.funVersusWinning(summary);
+    const t = summary.totals;
+    return `<section class="gr-panel">
+      <div class="gr-head">
+        <h3>What the games say</h3>
+        <span>${t.games} game${t.games === 1 ? "" : "s"} across ${t.decks} deck${t.decks === 1 ? "" : "s"}${
+          t.winRate == null ? "" : ` · won ${Rec.pct(t.winRate)} of the ${t.decided} that had a winner`}</span>
+      </div>
+      ${fun ? `<p class="gr-fun">${esc(fun.note)}</p>` : ""}
+      <div class="gr-rows">${rows}</div>
+      <p class="gr-caveat">The predicted rate comes from the simulation's own opponent
+        table, not from the four people you actually sit with — so a gap can be the
+        deck, the piloting, or the pod, and nothing in a log can tell those apart.
+        Ranges are 95% intervals on the games recorded here.</p>
+    </section>`;
+  }
+
   function renderGameLogView() {
     const root = $("#view-log");
     const log = state.gameLog || [];
@@ -6335,6 +6416,10 @@
           <button class="text-button" type="button" data-log-clear>Clear</button>
         </div>
       </section>
+      <!-- The reading comes before the list. Somebody opening this tab after a
+           night wants what the games mean, not to scroll past forty rows to find
+           out; the rows are the record and stay below it. -->
+      ${gameRecordMarkup()}
       <div class="log-list-head">
         <h3>Logged games</h3>
         <div class="action-row">
