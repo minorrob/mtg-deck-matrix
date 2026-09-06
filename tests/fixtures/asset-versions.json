@@ -2,12 +2,12 @@
   "note": "Written by tests/asset-versions.mjs --update. Each entry records the content a ?v= was last bumped for; the test fails when content moves and the version does not.",
   "assets": {
     "app.css": {
-      "version": 79,
-      "sha": "36d47b2f5a3d4eee"
+      "version": 80,
+      "sha": "8442ddb28dd0780b"
     },
     "app.js": {
-      "version": 115,
-      "sha": "ab7f7ff62b01c195"
+      "version": 118,
+      "sha": "924e7aad243b8189"
     },
     "build-panel.js": {
       "version": 4,
@@ -22,8 +22,8 @@
       "sha": "4c2b2793f05a10be"
     },
     "data/active-state.json": {
-      "version": 1,
-      "sha": "c20b5dda6bf2bcb5"
+      "version": 3,
+      "sha": "accf956617a13e9c"
     },
     "data/buy-plans.json": {
       "version": 1,
@@ -60,6 +60,10 @@
     "data/master-v2.json": {
       "version": 1,
       "sha": "5270481c2c4c58ad"
+    },
+    "data/pull-list.json": {
+      "version": 1,
+      "sha": "5f58e9270e04b9a0"
     },
     "data/simulation-summary.json": {
       "version": 1,
@@ -146,8 +150,8 @@
       "sha": "64114effd22e3a11"
     },
     "shop-page.js": {
-      "version": 16,
-      "sha": "095f8fb626004bf3"
+      "version": 18,
+      "sha": "6a8eceea117da582"
     },
     "sim-engine.js": {
       "version": 1,
@@ -166,8 +170,8 @@
       "sha": "3d2c66d42af520e0"
     },
     "slot-model.js": {
-      "version": 12,
-      "sha": "4b314af3ec7fb71e"
+      "version": 13,
+      "sha": "40931aa79a531d88"
     },
     "viewer.css": {
       "version": 19,

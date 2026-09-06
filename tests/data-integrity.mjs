@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import {createRequire} from "node:module";
 import {readFile} from "node:fs/promises";
+import {existsSync} from "node:fs";
 
 const require = createRequire(import.meta.url);
 const Lineup = require("../lineup-model.js");
@@ -944,8 +945,35 @@ for (const basic of ["plains", "island", "swamp", "mountain", "forest"]) {
   assert.ok((activeState.state.boughtQuantities[basic] || 0) >= 80,
     `${basic} should carry at least the box of eighty`);
 }
-assert.match(activeState.note, /audited Deck Truth sheet/,
-  "the note must record where ownership came from");
+/* The note has to name the workbook the ledger came from, and that workbook has to be in
+   the repository -- otherwise "where did these numbers come from" is answerable only by
+   whoever ran the import. Checked by looking the filename up on disk rather than against
+   a fixed phrase: the source changes, and a test pinned to the name of the last one fails
+   for the wrong reason the first time it does. */
+{
+  const named = [...activeState.note.matchAll(/([A-Za-z0-9_.-]+\.xlsx)/g)].map((m) => m[1]);
+  assert.ok(named.length, "the note must record where ownership came from, by naming the workbook");
+  const missing = named.filter((f) => !existsSync(new URL(`../data/source/${f}`, import.meta.url)));
+  assert.deepEqual(missing, [],
+    `the note names ${missing.join(", ")}, which is not in data/source/ -- commit the sheet or correct the note`);
+}
+/* Same rule for the pull list: it is the one thing on the Shop that is not derived from
+   anything, so the document behind it has to be in the repository, and the tool that reads
+   it has to be too. A list nobody can regenerate is a list nobody can correct. */
+{
+  const pullList = JSON.parse(await readFile(new URL("../data/pull-list.json", import.meta.url), "utf8"));
+  assert.ok(existsSync(new URL(`../${pullList.source}`, import.meta.url)),
+    `the pull list names ${pullList.source}, which is not in the repository`);
+  assert.ok(existsSync(new URL(`../${pullList.generatedBy}`, import.meta.url)),
+    `the pull list names ${pullList.generatedBy} as its importer, which is not in the repository`);
+  assert.ok(pullList.note && /Max \$/.test(pullList.note),
+    "the list must carry the sentence explaining what its ceilings mean");
+  /* Every card has to be shoppable: a name to ask for, a count, and a price you will pay.
+     A row missing any of the three is one you cannot act on at a booth. */
+  const broken = (pullList.cards || []).filter((c) => !c.name || !(c.quantity >= 1) || !(Number(c.ceiling) > 0));
+  assert.deepEqual(broken.map((c) => c.name || "(unnamed)"), [],
+    "every card on the pull list needs a name, a count and a ceiling");
+}
 /* The audit is per deck, so where each copy sits is recorded as well as how many there
    are -- a global count cannot say which box holds which copy. */
 assert.ok(Object.keys(activeState.state.deckHolds || {}).length === 6,

@@ -2027,6 +2027,13 @@ div.sp-band{padding:9px 13px;border-radius:12px 12px 0 0}
 .sp-chip{display:inline-block;padding:1px 5px;border:1px solid var(--line);border-radius:5px;background:var(--paper);
   font-size:10px;font-weight:700;color:var(--muted);margin-right:3px}
 .sp-pill{display:inline-block;padding:1px 7px;border:1px solid var(--line);border-radius:999px;background:var(--paper);font-size:11px}
+/* The written list, marked wherever one of its cards appears. Amber rather than the deck
+   chips' paper, because "somebody wrote this down" is a different claim from "a deck
+   wants this", and fifty-five of these rows have no deck behind them at all. */
+.sp-chip.is-list{background:var(--gold-soft);border-color:var(--gold);color:var(--ink)}
+.sp-list-tot b{color:var(--ink)}
+.sp-store-list-note{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sp-store-list-note b{color:var(--ink);font-variant-numeric:tabular-nums}
 .sp-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px;
   border:1px solid rgba(0,0,0,.18)}
 .sp-dot.is-ring{background:var(--surface);border:2px solid var(--rar,var(--line))}
@@ -2087,6 +2094,11 @@ div.sp-band{padding:9px 13px;border-radius:12px 12px 0 0}
 .sp-store-money.is-dear b{color:var(--accent);font-size:15px}
 .sp-store-money.is-unpriced b{color:var(--muted);font-weight:700}
 .sp-store-row.is-dear{border-left-color:var(--gold)}
+/* Where the Buy button would be on a row that owes nothing. Same footprint, so the money
+   column does not shift between a row you can act on and one you cannot. */
+.sp-store-have{flex:none;min-width:66px;text-align:center;font-size:11.5px;font-weight:700;
+  color:var(--muted)}
+.sp-store-money.is-settled b{color:var(--muted);font-weight:600}
 .sp-store-ea{font-size:10px;color:var(--muted)}
 .sp-buy{flex:none;min-width:66px;min-height:42px;padding:0 14px;border:0;border-radius:10px;
   background:var(--forest-2);color:#fff;font-size:14px;font-weight:800;cursor:pointer;

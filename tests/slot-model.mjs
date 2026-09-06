@@ -587,4 +587,130 @@ ok("a slot's best fit is the card that does the same job at the same cost", () =
   assert.ok(nothing.score <= 0, `an unrelated card should not score as a fit (${nothing.score})`);
 });
 
+/* ---------- the written pull list, merged into the shop rows ---------- */
+/* The four rules the Shop's buy tab rests on: the list's own copies survive the ledger,
+   they stop being owed once bought, its ceiling is the price you will pay, and a card no
+   deck names still gets a row. Every one of these was a way the merge could quietly lie. */
+const pullFixture = () => [
+  // In the box once already, and the list wants one more.
+  {name: "Exotic Orchard", quantity: 1, held: 1, ceiling: 0.24},
+  // In no deck at all, and owned by nobody. Typed only the way the document types it,
+  // because that is all there is when Scryfall was unreachable at import.
+  {name: "Blood Artist", quantity: 1, ceiling: 2.79, type: "Creature \u00b7 B"},
+  // Two copies wanted where a deck wants one, and the plan's target is wildly stale.
+  {name: "Night's Whisper", quantity: 2, ceiling: 0.29}
+];
+const shopRow = (over) => Object.assign({
+  key: "x", name: "X", price: 1, ceiling: 1, band: "$1", spot: "Boxes", type: "Creature",
+  isBasic: false, quantity: 1, decks: ["d1"], rungs: ["tuned"], byDeck: {d1: {}},
+  inHand: 0, ordered: 0, need: 1, acquisition: Slot.ACQUISITION.NONE
+}, over);
+
+ok("a card no deck names still gets a row, priced at the list's ceiling", () => {
+  const rows = Slot.withPullList([], pullFixture(), {});
+  const artist = rows.find((r) => r.name === "Blood Artist");
+  assert.ok(artist, "a pull-list card in no deck must still reach the Shop");
+  assert.equal(artist.need, 1);
+  assert.equal(artist.quantity, 1);
+  assert.equal(artist.price, 2.79, "the ceiling is the price at the booth");
+  assert.equal(artist.band, "$2");
+  assert.equal(artist.spot, "Boxes");
+  assert.equal(artist.type, "Creature", "the row files under what the card is");
+  assert.ok(Slot.TYPE_ORDER.includes(artist.type), "and under a type the Type filter offers");
+  assert.deepEqual(artist.decks, [], "no deck asked for it and the row must not pretend one did");
+  assert.equal(artist.onPullList, true);
+});
+
+ok("a copy already in the box does not cancel the copy the list asks for", () => {
+  const owned = {"exotic-orchard": {inHand: 1, ordered: 0}};
+  const [orchard] = Slot.withPullList([], [pullFixture()[0]], owned);
+  assert.equal(orchard.inHand, 1, "the copy on the shelf is still counted");
+  assert.equal(orchard.need, 1, "and the second copy is still owed");
+  assert.equal(orchard.quantity, 2, "the row stands for both copies");
+});
+
+ok("buying the copy clears the row instead of asking again forever", () => {
+  const after = {"exotic-orchard": {inHand: 2, ordered: 0}};
+  const [orchard] = Slot.withPullList([], [pullFixture()[0]], after);
+  assert.equal(orchard.need, 0, "the list is satisfied once the copies arrive");
+  assert.equal(orchard.acquisition, Slot.ACQUISITION.HAND);
+});
+
+ok("a deck row keeps its decks and takes the list's extra copy and price", () => {
+  const row = shopRow({key: "night-s-whisper", name: "Night's Whisper", price: 5.42, quantity: 1, need: 1});
+  const [merged] = Slot.withPullList([row], pullFixture(), {});
+  assert.deepEqual(merged.decks, ["d1"], "the deck that wanted it still wants it");
+  assert.equal(merged.need, 2, "one for the deck, two on the list, so two are owed");
+  assert.equal(merged.quantity, 2);
+  assert.equal(merged.price, 0.29, "the ceiling beats a stale target at the booth");
+  assert.equal(merged.planPrice, 5.42, "and the stale target is kept, not thrown away");
+  assert.equal(merged.band, "<$1", "the band follows the price that will actually be paid");
+});
+
+ok("the list is measured against the collection, not against one deck's allocation", () => {
+  /* A card owned three times and wanted once by a deck is allocated one copy. Reading
+     that allocation as "what I own" would keep asking for a copy already on the shelf. */
+  const row = shopRow({key: "exotic-orchard", name: "Exotic Orchard", quantity: 1, inHand: 1, need: 0});
+  const owned = {"exotic-orchard": {inHand: 3, ordered: 0}};
+  const [merged] = Slot.withPullList([row], [pullFixture()[0]], owned);
+  assert.equal(merged.need, 0, "three in the box covers the one held plus the one wanted");
+});
+
+ok("a row no list names is returned exactly as it came in", () => {
+  const row = shopRow({key: "sol-ring", name: "Sol Ring"});
+  const [same] = Slot.withPullList([row], pullFixture(), {});
+  assert.equal(same, row, "an untouched row should not even be copied");
+  assert.equal(same.onPullList, undefined);
+});
+
+ok("an empty or missing list leaves the shop rows alone", () => {
+  const row = shopRow({});
+  assert.deepEqual(Slot.withPullList([row], [], {}), [row]);
+  assert.deepEqual(Slot.withPullList([row], null, {}), [row]);
+});
+
+ok("the same card written twice on the list is one row asking for both copies", () => {
+  const rows = Slot.withPullList([], [
+    {name: "Blood Artist", quantity: 1, ceiling: 2.79},
+    {name: "Blood Artist", quantity: 2, ceiling: 2.79}
+  ], {});
+  assert.equal(rows.length, 1, "one card, one row");
+  assert.equal(rows[0].need, 3);
+});
+
+/* ---------- the committed list, against the real ledger ---------- */
+const pullList = JSON.parse(await readFile(new URL("../data/pull-list.json", import.meta.url), "utf8"));
+
+ok("the committed pull list reproduces its own totals", () => {
+  const copies = pullList.cards.reduce((n, c) => n + c.quantity, 0);
+  const budget = pullList.cards.reduce((n, c) => n + (c.ceiling || 0) * c.quantity, 0);
+  assert.equal(pullList.cards.length, pullList.totals.cards);
+  assert.equal(copies, pullList.totals.copies);
+  assert.equal(Math.round(budget * 100) / 100, pullList.totals.budget);
+  pullList.cards.forEach((c) => {
+    assert.ok(c.name && c.quantity >= 1, `${c.name} needs a name and a count`);
+    assert.ok(Number(c.ceiling) > 0, `${c.name} has no price ceiling`);
+  });
+});
+
+ok("every card the list holds a baseline for is one the ledger really holds", () => {
+  const owned = Slot.normalizeOwned(activeState);
+  pullList.cards.filter((c) => c.held).forEach((c) => {
+    const have = Slot.ownedCount(owned, c.name);
+    assert.equal(have.inHand + have.ordered, c.held,
+      `${c.name}: the list was written against ${c.held} but the ledger says ${have.inHand + have.ordered}`);
+  });
+});
+
+ok("against today's ledger the Shop owes exactly what the document asks for", () => {
+  const owned = Slot.normalizeOwned(activeState);
+  const rows = Slot.withPullList([], pullList.cards, owned);
+  const cards = rows.filter((r) => r.need > 0).length;
+  const copies = rows.reduce((n, r) => n + r.need, 0);
+  const money = rows.reduce((n, r) => n + (Number(r.price) || 0) * r.need, 0);
+  assert.equal(cards, pullList.totals.cards, "every card on the list is still owed");
+  assert.equal(copies, pullList.totals.copies);
+  assert.equal(Math.round(money * 100) / 100, pullList.totals.budget);
+});
+
 process.stdout.write(`\n${checks} checks passed across ${planIds.length} plans.\n`);

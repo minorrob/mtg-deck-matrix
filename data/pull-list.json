@@ -1,0 +1,1033 @@
+{
+ "source": "data/source/CardPullList-2026-09-06-rev2.docx",
+ "generatedBy": "tools/import-pull-list.mjs",
+ "dated": "2026-09-06",
+ "revision": 2,
+ "note": "68 cards, 70 copies. Any printing; Lightly Played or better; nonfoil preferred. \"Max $\" is the per-copy price I have in mind (today's low LP-or-better online price); please flag anything you would price above it rather than pulling it.",
+ "cards": [
+  {
+   "name": "Anim Pakal, Thousandth Moon",
+   "quantity": 1,
+   "type": "Legendary Creature · Multi",
+   "ceiling": 3.69,
+   "typeLine": "Legendary Creature — Human Soldier",
+   "manaCost": "{1}{R}{W}",
+   "colorIdentity": [
+    "R",
+    "W"
+   ],
+   "rarity": "rare",
+   "image": "https://cards.scryfall.io/normal/front/8/6/868856b7-8875-43c1-8249-0f8fb2c8319b.jpg?1783913734",
+   "oracleText": "Whenever you attack with one or more non-Gnome creatures, put a +1/+1 counter on Anim Pakal, then create X 1/1 colorless Gnome artifact creature tokens that are tapped and attacking, where X is the number of +1/+1 counters on Anim Pakal.",
+   "scryfallId": "868856b7-8875-43c1-8249-0f8fb2c8319b"
+  },
+  {
+   "name": "Arbor Adherent",
+   "quantity": 1,
+   "type": "Creature · G",
+   "ceiling": 1.87,
+   "typeLine": "Creature — Dog Druid",
+   "manaCost": "{3}{G}",
+   "colorIdentity": [
+    "G"
+   ],
+   "rarity": "rare",
+   "image": "https://cards.scryfall.io/normal/front/5/7/57d0502f-5ae8-40b6-9f2b-cd4418016219.jpg?1783907169",
+   "oracleText": "{T}: Add one mana of any color.\n{T}: Add X mana of any one color, where X is the greatest toughness among other creatures you control.",
+   "scryfallId": "57d0502f-5ae8-40b6-9f2b-cd4418016219"
+  },
+  {
+   "name": "Battle Hymn",
+   "quantity": 1,
+   "type": "Instant · R",
+   "ceiling": 1.55,
+   "typeLine": "Instant",
+   "manaCost": "{1}{R}",
+   "colorIdentity": [
+    "R"
+   ],
+   "rarity": "common",
+   "image": "https://cards.scryfall.io/normal/front/4/3/43b5d46e-7054-44f8-9a14-b412f2f0ab86.jpg?1783940689",
+   "oracleText": "Add {R} for each creature you control.",
+   "scryfallId": "43b5d46e-7054-44f8-9a14-b412f2f0ab86"
+  },
+  {
+   "name": "Beast Whisperer",
+   "quantity": 1,
+   "type": "Creature · G",
+   "ceiling": 7.51,
+   "typeLine": "Creature — Elf Druid",
+   "manaCost": "{2}{G}{G}",
+   "colorIdentity": [
+    "G"
+   ],
+   "rarity": "rare",
+   "image": "https://cards.scryfall.io/normal/front/d/a/daf4bcd2-3ae4-4803-9ea1-3bcc3de5ca59.jpg?1783912531",
+   "oracleText": "Whenever you cast a creature spell, draw a card.",
+   "scryfallId": "daf4bcd2-3ae4-4803-9ea1-3bcc3de5ca59"
+  },
+  {
+   "name": "Blood Artist",
+   "quantity": 1,
+   "type": "Creature · B",
+   "ceiling": 2.79,
+   "typeLine": "Creature — Vampire",
+   "manaCost": "{1}{B}",
+   "colorIdentity": [
+    "B"
+   ],
+   "rarity": "uncommon",
+   "image": "https://cards.scryfall.io/normal/front/b/5/b5275d76-2947-4219-be21-614c7421614a.jpg?1783903786",
+   "oracleText": "Whenever this creature or another creature dies, target player loses 1 life and you gain 1 life.",
+   "scryfallId": "b5275d76-2947-4219-be21-614c7421614a"
+  },
+  {
+   "name": "Blot Out the Sky",
+   "quantity": 1,
+   "type": "Sorcery · Multi",
+   "ceiling": 1.47,
+   "typeLine": "Sorcery",
+   "manaCost": "{X}{W}{B}",
+   "colorIdentity": [
+    "B",
+    "W"
+   ],
+   "rarity": "mythic",
+   "image": "https://cards.scryfall.io/normal/front/0/1/0141312f-4b68-4c56-b1dc-5b7e6afbb96c.jpg?1783927322",
+   "oracleText": "Create X tapped 2/1 white and black Inkling creature tokens with flying. If X is 6 or more, destroy all noncreature, nonland permanents.",
+   "scryfallId": "0141312f-4b68-4c56-b1dc-5b7e6afbb96c"
+  },
+  {
+   "name": "Boros Signet",
+   "quantity": 1,
+   "type": "Artifact · Multi",
+   "ceiling": 0.52,
+   "typeLine": "Artifact",
+   "manaCost": "{2}",
+   "colorIdentity": [
+    "R",
+    "W"
+   ],
+   "rarity": "uncommon",
+   "image": "https://cards.scryfall.io/normal/front/4/9/49c37c0e-d363-4033-a069-710241cd9923.jpg?1783907016",
+   "oracleText": "{1}, {T}: Add {R}{W}.",
+   "scryfallId": "49c37c0e-d363-4033-a069-710241cd9923"
+  },
+  {
+   "name": "Branching Evolution",
+   "quantity": 1,
+   "type": "Enchantment · G",
+   "ceiling": 7.83,
+   "typeLine": "Enchantment",
+   "manaCost": "{2}{G}",
+   "colorIdentity": [
+    "G"
+   ],
+   "rarity": "rare",
+   "image": "https://cards.scryfall.io/normal/front/c/0/c0f1a736-8b12-4f58-a031-bf1733f65c51.jpg?1783911212",
+   "oracleText": "If one or more +1/+1 counters would be put on a creature you control, twice that many +1/+1 counters are put on that creature instead.",
+   "scryfallId": "c0f1a736-8b12-4f58-a031-bf1733f65c51"
+  },
+  {
+   "name": "Breena, the Demagogue",
+   "quantity": 1,
+   "type": "Legendary Creature · Multi",
+   "ceiling": 1.03,
+   "typeLine": "Legendary Creature — Bird Warlock",
+   "manaCost": "{1}{W}{B}",
+   "colorIdentity": [
+    "B",
+    "W"
+   ],
+   "rarity": "mythic",
+   "image": "https://cards.scryfall.io/normal/front/5/9/599f87c8-643e-4224-93a5-853c0bd4e497.jpg?1783903756",
+   "oracleText": "Flying\nWhenever a player attacks one of your opponents, if that opponent has more life than another of your opponents, that attacking player draws a card and you put two +1/+1 counters on a creature you control.",
+   "scryfallId": "599f87c8-643e-4224-93a5-853c0bd4e497"
+  },
+  {
+   "name": "Cankerbloom",
+   "quantity": 1,
+   "type": "Creature · G",
+   "ceiling": 0.36,
+   "typeLine": "Creature — Phyrexian Fungus",
+   "manaCost": "{1}{G}",
+   "colorIdentity": [
+    "G"
+   ],
+   "rarity": "uncommon",
+   "image": "https://cards.scryfall.io/normal/front/8/9/89b39293-6f57-4294-85fc-c718bdbb4d40.jpg?1783918019",
+   "oracleText": "{1}, Sacrifice this creature: Choose one —\n• Destroy target artifact.\n• Destroy target enchantment.\n• Proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)",
+   "scryfallId": "89b39293-6f57-4294-85fc-c718bdbb4d40"
+  },
+  {
+   "name": "Cathartic Pyre",
+   "quantity": 1,
+   "type": "Instant · R",
+   "ceiling": 0.31,
+   "typeLine": "Instant",
+   "manaCost": "{1}{R}",
+   "colorIdentity": [
+    "R"
+   ],
+   "rarity": "uncommon",
+   "image": "https://cards.scryfall.io/normal/front/0/d/0d762a71-ee49-49fd-a54a-0c066277c88c.jpg?1783904552",
+   "oracleText": "Choose one —\n• Cathartic Pyre deals 3 damage to target creature or planeswalker.\n• Discard up to two cards, then draw that many cards.",
+   "scryfallId": "0d762a71-ee49-49fd-a54a-0c066277c88c"
+  },
+  {
+   "name": "Chromatic Lantern",
+   "quantity": 1,
+   "type": "Artifact · C",
+   "ceiling": 0.94,
+   "typeLine": "Artifact",
+   "manaCost": "{3}",
+   "colorIdentity": [],
+   "rarity": "rare",
+   "image": "https://cards.scryfall.io/normal/front/9/b/9b29492a-8bdd-4806-8d1b-3058ed277cc1.jpg?1787743253",
+   "oracleText": "Lands you control have \"{T}: Add one mana of any color.\"\n{T}: Add one mana of any color.",
+   "scryfallId": "9b29492a-8bdd-4806-8d1b-3058ed277cc1"
+  },
+  {
+   "name": "Coldsteel Heart",
+   "quantity": 1,
+   "type": "Snow Artifact · C",
+   "ceiling": 1.72,
+   "typeLine": "Snow Artifact",
+   "manaCost": "{2}",
+   "colorIdentity": [],
+   "rarity": "uncommon",
+   "image": "https://cards.scryfall.io/normal/front/b/2/b2548ad2-3c62-4ed1-899c-1002b46cdd8f.jpg?1783921794",
+   "oracleText": "This artifact enters tapped.\nAs this artifact enters, choose a color.\n{T}: Add one mana of the chosen color.",
+   "scryfallId": "b2548ad2-3c62-4ed1-899c-1002b46cdd8f"
+  },
+  {
+   "name": "Contentious Plan",
+   "quantity": 1,
+   "type": "Sorcery · U",
+   "ceiling": 0.39,
+   "typeLine": "Sorcery",
+   "manaCost": "{1}{U}",
+   "colorIdentity": [
+    "U"
+   ],
+   "rarity": "common",
+   "image": "https://cards.scryfall.io/normal/front/8/e/8e30deb6-9e1f-4545-ae30-c30ba6c7b3a0.jpg?1783933466",
+   "oracleText": "Proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)\nDraw a card.",
+   "scryfallId": "8e30deb6-9e1f-4545-ae30-c30ba6c7b3a0"
+  },
+  {
+   "name": "Darksteel Reactor",
+   "quantity": 1,
+   "type": "Artifact · C",
+   "ceiling": 0.36,
+   "typeLine": "Artifact",
+   "manaCost": "{4}",
+   "colorIdentity": [],
+   "rarity": "rare",
+   "image": "https://cards.scryfall.io/normal/front/a/0/a07dd78e-8348-41ad-b6dd-f8a709e051fe.jpg?1783906023",
+   "oracleText": "Indestructible (Effects that say \"destroy\" don't destroy this artifact.)\nAt the beginning of your upkeep, you may put a charge counter on this artifact.\nWhen this artifact has twenty or more charge counters on it, you win the game.",
+   "scryfallId": "a07dd78e-8348-41ad-b6dd-f8a709e051fe"
+  },
+  {
+   "name": "Deathbringer Liege",
+   "quantity": 1,
+   "type": "Creature · Multi",
+   "ceiling": 1.08,
+   "typeLine": "Creature — Horror",
+   "manaCost": "{2}{W/B}{W/B}{W/B}",
+   "colorIdentity": [
+    "B",
+    "W"
+   ],
+   "rarity": "rare",
+   "image": "https://cards.scryfall.io/normal/front/f/7/f72d5f2f-7e54-4538-9f0a-eed464a74016.jpg?1783921842",
+   "oracleText": "Other white creatures you control get +1/+1.\nOther black creatures you control get +1/+1.\nWhenever you cast a white spell, you may tap target creature.\nWhenever you cast a black spell, you may destroy target creature if it's tapped.",
+   "scryfallId": "f72d5f2f-7e54-4538-9f0a-eed464a74016"
+  },
+  {
+   "name": "Divert Disaster",
+   "quantity": 1,
+   "type": "Instant · U",
+   "ceiling": 0.26,
+   "typeLine": "Instant",
+   "manaCost": "{1}{U}",
+   "colorIdentity": [
+    "U"
+   ],
+   "rarity": "common",
+   "image": "https://cards.scryfall.io/normal/front/c/5/c5f7d2fe-628b-4493-8281-0e5f91ce5d61.jpg?1783905982",
+   "oracleText": "Counter target spell unless its controller pays {2}. If they do, you create a Lander token. (It's an artifact with \"{2}, {T}, Sacrifice this token: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.\")",
+   "scryfallId": "c5f7d2fe-628b-4493-8281-0e5f91ce5d61"
+  },
+  {
+   "name": "Doran, the Siege Tower",
+   "quantity": 1,
+   "type": "Legendary Creature · Multi",
+   "ceiling": 8.48,
+   "typeLine": "Legendary Creature — Treefolk Shaman",
+   "manaCost": "{W}{B}{G}",
+   "colorIdentity": [
+    "B",
+    "G",
+    "W"
+   ],
+   "rarity": "rare",
+   "image": "https://cards.scryfall.io/normal/front/e/0/e0ad8e7f-cda0-4529-94fc-dd3709158a94.jpg?1783921840",
+   "oracleText": "Each creature assigns combat damage equal to its toughness rather than its power.",
+   "scryfallId": "e0ad8e7f-cda0-4529-94fc-dd3709158a94"
+  },
+  {
+   "name": "Dream Stalker",
+   "quantity": 1,
+   "type": "Creature · U",
+   "ceiling": 0.17,
+   "typeLine": "Creature — Illusion",
+   "manaCost": "{1}{U}",
+   "colorIdentity": [
+    "U"
+   ],
+   "rarity": "common",
+   "image": "https://cards.scryfall.io/normal/front/e/5/e59b4729-74c1-4aa9-937d-27cda960f157.jpg?1783927850",
+   "oracleText": "When this creature enters, return a permanent you control to its owner's hand.",
+   "scryfallId": "e59b4729-74c1-4aa9-937d-27cda960f157"
+  },
+  {
+   "name": "Elas il-Kor, Sadistic Pilgrim",
+   "quantity": 1,
+   "type": "Legendary Creature · Multi",
+   "ceiling": 3.11,
+   "typeLine": "Legendary Creature — Phyrexian Kor Cleric",
+   "manaCost": "{W}{B}",
+   "colorIdentity": [
+    "B",
+    "W"
+   ],
+   "rarity": "uncommon",
+   "image": "https://cards.scryfall.io/normal/front/1/c/1c3f0ffe-cf51-4c30-8cd5-9e3c7e92c019.jpg?1783921287",
+   "oracleText": "Deathtouch\nWhenever another creature you control enters, you gain 1 life.\nWhenever another creature you control dies, each opponent loses 1 life.",
+   "scryfallId": "1c3f0ffe-cf51-4c30-8cd5-9e3c7e92c019"
+  },
+  {
+   "name": "Exotic Orchard",
+   "quantity": 1,
+   "type": "Land · L",
+   "ceiling": 0.24,
+   "typeLine": "Land",
+   "manaCost": "",
+   "colorIdentity": [],
+   "rarity": "rare",
+   "image": "https://cards.scryfall.io/normal/front/d/1/d11c5fe0-1528-4c94-a8cc-42bcab9d7487.jpg?1787743263",
+   "oracleText": "{T}: Add one mana of any color that a land an opponent controls could produce.",
+   "scryfallId": "d11c5fe0-1528-4c94-a8cc-42bcab9d7487",
+   "held": 1
+  },
+  {
+   "name": "Ezuri, Stalker of Spheres",
+   "quantity": 1,
+   "type": "Legendary Creature · Multi",
+   "ceiling": 0.79,
+   "typeLine": "Legendary Creature — Phyrexian Elf Warrior",
+   "manaCost": "{2}{G}{U}",
+   "colorIdentity": [
+    "G",
+    "U"
+   ],
+   "rarity": "rare",
+   "image": "https://cards.scryfall.io/normal/front/d/3/d38961ce-0257-412f-acec-c5c9886061f8.jpg?1783918001",
+   "oracleText": "When Ezuri enters, you may pay {3}. If you do, proliferate twice.\nWhenever you proliferate, draw a card.",
+   "scryfallId": "d38961ce-0257-412f-acec-c5c9886061f8"
+  },
+  {
+   "name": "Farseek",
+   "quantity": 1,
+   "type": "Sorcery · G",
+   "ceiling": 0.48,
+   "typeLine": "Sorcery",
+   "manaCost": "{1}{G}",
+   "colorIdentity": [
+    "G"
+   ],
+   "rarity": "common",
+   "image": "https://cards.scryfall.io/normal/front/c/1/c1aac0f5-1d01-4673-b8d3-878d9a1d423c.jpg?1783903231",
+   "oracleText": "Search your library for a Plains, Island, Swamp, or Mountain card, put it onto the battlefield tapped, then shuffle.",
+   "scryfallId": "c1aac0f5-1d01-4673-b8d3-878d9a1d423c",
+   "held": 1
+  },
+  {
+   "name": "Fblthp, the Lost",
+   "quantity": 1,
+   "type": "Legendary Creature · U",
+   "ceiling": 0.27,
+   "typeLine": "Legendary Creature — Homunculus",
+   "manaCost": "{1}{U}",
+   "colorIdentity": [
+    "U"
+   ],
+   "rarity": "rare",
+   "image": "https://cards.scryfall.io/normal/front/7/9/79b2c547-0d9e-4fd7-a399-347ad908c70b.jpg?1783913337",
+   "oracleText": "When Fblthp enters, draw a card. If it entered from your library or was cast from your library, draw two cards instead.\nWhen Fblthp becomes the target of a spell, shuffle Fblthp into its owner's library.",
+   "scryfallId": "79b2c547-0d9e-4fd7-a399-347ad908c70b"
+  },
+  {
+   "name": "Felisa, Fang of Silverquill",
+   "quantity": 1,
+   "type": "Legendary Creature · Multi",
+   "ceiling": 1.97,
+   "typeLine": "Legendary Creature — Vampire Wizard",
+   "manaCost": "{2}{W}{B}",
+   "colorIdentity": [
+    "B",
+    "W"
+   ],
+   "rarity": "mythic",
+   "image": "https://cards.scryfall.io/normal/front/1/8/18b8abf0-e8c3-4c19-bdf1-18aabe75a3de.jpg?1783922398",
+   "oracleText": "Flying\nMentor (Whenever this creature attacks, put a +1/+1 counter on target attacking creature with lesser power.)\nWhenever a nontoken creature you control dies, if it had counters on it, create X tapped 2/1 white and black Inkling creature tokens with flying, where X is the number of counters it had on it.",
+   "scryfallId": "18b8abf0-e8c3-4c19-bdf1-18aabe75a3de"
+  },
+  {
+   "name": "Fellwar Stone",
+   "quantity": 1,
+   "type": "Artifact · C",
+   "ceiling": 0.85,
+   "typeLine": "Artifact",
+   "manaCost": "{2}",
+   "colorIdentity": [],
+   "rarity": "uncommon",
+   "image": "https://cards.scryfall.io/normal/front/3/e/3ef87948-0ad9-4757-a692-2262c8e24367.jpg?1785759354",
+   "oracleText": "{T}: Add one mana of any color that a land an opponent controls could produce.",
+   "scryfallId": "3ef87948-0ad9-4757-a692-2262c8e24367",
+   "held": 1
+  },
+  {
+   "name": "Fervor",
+   "quantity": 1,
+   "type": "Enchantment · R",
+   "ceiling": 2.22,
+   "typeLine": "Enchantment",
+   "manaCost": "{2}{R}",
+   "colorIdentity": [
+    "R"
+   ],
+   "rarity": "rare",
+   "image": "https://cards.scryfall.io/normal/front/a/8/a88515c2-4b4f-4d16-9f50-149ef012e961.jpg?1783940484",
+   "oracleText": "Creatures you control have haste. (They can attack and {T} as soon as they come under your control.)",
+   "scryfallId": "a88515c2-4b4f-4d16-9f50-149ef012e961"
+  },
+  {
+   "name": "Fynn, the Fangbearer",
+   "quantity": 1,
+   "type": "Legendary Creature · G",
+   "ceiling": 0.18,
+   "typeLine": "Legendary Creature — Human Warrior",
+   "manaCost": "{1}{G}",
+   "colorIdentity": [
+    "G"
+   ],
+   "rarity": "uncommon",
+   "image": "https://cards.scryfall.io/normal/front/6/9/699efb9e-2649-432b-8b2d-10775114c314.jpg?1783908919",
+   "oracleText": "Deathtouch (Any amount of damage this deals to a creature is enough to destroy it.)\nWhenever a creature you control with deathtouch deals combat damage to a player, that player gets two poison counters. (A player with ten or more poison counters loses the game.)",
+   "scryfallId": "699efb9e-2649-432b-8b2d-10775114c314"
+  },
+  {
+   "name": "Grand Coliseum",
+   "quantity": 1,
+   "type": "Land · L",
+   "ceiling": 0.37,
+   "typeLine": "Land",
+   "manaCost": "",
+   "colorIdentity": [],
+   "rarity": "rare",
+   "image": "https://cards.scryfall.io/normal/front/b/0/b07eb189-559a-4cd5-95ac-f6612fd11cf1.jpg?1783904151",
+   "oracleText": "This land enters tapped.\n{T}: Add {C}.\n{T}: Add one mana of any color. This land deals 1 damage to you.",
+   "scryfallId": "b07eb189-559a-4cd5-95ac-f6612fd11cf1"
+  },
+  {
+   "name": "Hardened Scales",
+   "quantity": 1,
+   "type": "Enchantment · G",
+   "ceiling": 2.31,
+   "typeLine": "Enchantment",
+   "manaCost": "{G}",
+   "colorIdentity": [
+    "G"
+   ],
+   "rarity": "rare",
+   "image": "https://cards.scryfall.io/normal/front/9/9/99cfd1a8-49fd-4cc0-96f2-f9f159ce5d55.jpg?1783903765",
+   "oracleText": "If one or more +1/+1 counters would be put on a creature you control, that many plus one +1/+1 counters are put on it instead.",
+   "scryfallId": "99cfd1a8-49fd-4cc0-96f2-f9f159ce5d55"
+  },
+  {
+   "name": "Hornet Nest",
+   "quantity": 1,
+   "type": "Creature · G",
+   "ceiling": 0.35,
+   "typeLine": "Creature — Insect",
+   "manaCost": "{2}{G}",
+   "colorIdentity": [
+    "G"
+   ],
+   "rarity": "rare",
+   "image": "https://cards.scryfall.io/normal/front/c/c/cc4693c6-f532-4726-b51a-21b04f820448.jpg?1783907044",
+   "oracleText": "Defender (This creature can't attack.)\nWhenever this creature is dealt damage, create that many 1/1 green Insect creature tokens with flying and deathtouch. (Any amount of damage a creature with deathtouch deals to a creature is enough to destroy it.)",
+   "scryfallId": "cc4693c6-f532-4726-b51a-21b04f820448"
+  },
+  {
+   "name": "Innkeeper's Talent",
+   "quantity": 1,
+   "type": "Enchantment · G",
+   "ceiling": 9.19,
+   "typeLine": "Enchantment — Class",
+   "manaCost": "{1}{G}",
+   "colorIdentity": [
+    "G"
+   ],
+   "rarity": "rare",
+   "image": "https://cards.scryfall.io/normal/front/9/4/941b0afc-0e8f-45f2-ae7f-07595e164611.jpg?1784634092",
+   "oracleText": "(Gain the next level as a sorcery to add its ability.)\nAt the beginning of combat on your turn, put a +1/+1 counter on target creature you control.\n{G}: Level 2\nPermanents you control with counters on them have ward {1}.\n{3}{G}: Level 3\nIf you would put one or more counters on a permanent or player, put twice that many of each of those kinds of counters on that permanent or player instead.",
+   "scryfallId": "941b0afc-0e8f-45f2-ae7f-07595e164611"
+  },
+  {
+   "name": "Intruder Alarm",
+   "quantity": 1,
+   "type": "Enchantment · U",
+   "ceiling": 3.68,
+   "typeLine": "Enchantment",
+   "manaCost": "{2}{U}",
+   "colorIdentity": [
+    "U"
+   ],
+   "rarity": "rare",
+   "image": "https://cards.scryfall.io/normal/front/8/d/8d62468e-ed9d-4932-bbbd-103b33b98b25.jpg?1783944797",
+   "oracleText": "Creatures don't untap during their controllers' untap steps.\nWhenever a creature enters, untap all creatures.",
+   "scryfallId": "8d62468e-ed9d-4932-bbbd-103b33b98b25"
+  },
+  {
+   "name": "Kiora's Follower",
+   "quantity": 1,
+   "type": "Creature · Multi",
+   "ceiling": 0.34,
+   "typeLine": "Creature — Merfolk",
+   "manaCost": "{G}{U}",
+   "colorIdentity": [
+    "G",
+    "U"
+   ],
+   "rarity": "uncommon",
+   "image": "https://cards.scryfall.io/normal/front/3/6/3666d3eb-fc62-4966-9149-aa3435650c29.jpg?1783913849",
+   "oracleText": "{T}: Untap another target permanent.",
+   "scryfallId": "3666d3eb-fc62-4966-9149-aa3435650c29"
+  },
+  {
+   "name": "Krenko, Tin Street Kingpin",
+   "quantity": 1,
+   "type": "Legendary Creature · R",
+   "ceiling": 2.63,
+   "typeLine": "Legendary Creature — Goblin",
+   "manaCost": "{2}{R}",
+   "colorIdentity": [
+    "R"
+   ],
+   "rarity": "rare",
+   "image": "https://cards.scryfall.io/normal/front/2/f/2f5689e2-d8a2-442b-8027-f89686adcb67.jpg?1783917146",
+   "oracleText": "Whenever Krenko attacks, put a +1/+1 counter on it, then create a number of 1/1 red Goblin creature tokens equal to Krenko's power.",
+   "scryfallId": "2f5689e2-d8a2-442b-8027-f89686adcb67"
+  },
+  {
+   "name": "Llanowar Elves",
+   "quantity": 1,
+   "type": "Creature · G",
+   "ceiling": 0.27,
+   "typeLine": "Creature — Elf Druid",
+   "manaCost": "{G}",
+   "colorIdentity": [
+    "G"
+   ],
+   "rarity": "common",
+   "image": "https://cards.scryfall.io/normal/front/6/a/6a0b230b-d391-4998-a3f7-7b158a0ec2cd.jpg?1783909057",
+   "oracleText": "{T}: Add {G}.",
+   "scryfallId": "6a0b230b-d391-4998-a3f7-7b158a0ec2cd"
+  },
+  {
+   "name": "Lorehold Command",
+   "quantity": 1,
+   "type": "Instant · Multi",
+   "ceiling": 0.41,
+   "typeLine": "Instant",
+   "manaCost": "{3}{R}{W}",
+   "colorIdentity": [
+    "R",
+    "W"
+   ],
+   "rarity": "rare",
+   "image": "https://cards.scryfall.io/normal/front/e/4/e4f0885f-1049-4a19-853d-f4e6d4bec29e.jpg?1783927309",
+   "oracleText": "Choose two —\n• Create a 3/2 red and white Spirit creature token.\n• Creatures you control get +1/+0 and gain indestructible and haste until end of turn.\n• Lorehold Command deals 3 damage to any target. Target player gains 3 life.\n• Sacrifice a permanent, then draw two cards.",
+   "scryfallId": "e4f0885f-1049-4a19-853d-f4e6d4bec29e"
+  },
+  {
+   "name": "Magistrate's Scepter",
+   "quantity": 1,
+   "type": "Artifact · C",
+   "ceiling": 3.09,
+   "typeLine": "Artifact",
+   "manaCost": "{3}",
+   "colorIdentity": [],
+   "rarity": "rare",
+   "image": "https://cards.scryfall.io/normal/front/e/c/ecf1f24f-d910-4ec6-95d2-0ecaf9f051aa.jpg?1783934512",
+   "oracleText": "{4}, {T}: Put a charge counter on this artifact.\n{T}, Remove three charge counters from this artifact: Take an extra turn after this one.",
+   "scryfallId": "ecf1f24f-d910-4ec6-95d2-0ecaf9f051aa"
+  },
+  {
+   "name": "Mentor of the Meek",
+   "quantity": 1,
+   "type": "Creature · W",
+   "ceiling": 0.14,
+   "typeLine": "Creature — Human Soldier",
+   "manaCost": "{2}{W}",
+   "colorIdentity": [
+    "W"
+   ],
+   "rarity": "rare",
+   "image": "https://cards.scryfall.io/normal/front/0/5/05b6a101-4d12-4f50-8f02-5c778e08b149.jpg?1785497406",
+   "oracleText": "Whenever another creature you control with power 2 or less enters, you may pay {1}. If you do, draw a card.",
+   "scryfallId": "05b6a101-4d12-4f50-8f02-5c778e08b149"
+  },
+  {
+   "name": "Mirkwood Bats",
+   "quantity": 1,
+   "type": "Creature · B",
+   "ceiling": 1.43,
+   "typeLine": "Creature — Bat",
+   "manaCost": "{3}{B}",
+   "colorIdentity": [
+    "B"
+   ],
+   "rarity": "common",
+   "image": "https://cards.scryfall.io/normal/front/1/5/15f035df-784a-4dc8-b7f5-77139a4e6e99.jpg?1783916303",
+   "oracleText": "Flying\nWhenever you create or sacrifice a token, each opponent loses 1 life.",
+   "scryfallId": "15f035df-784a-4dc8-b7f5-77139a4e6e99"
+  },
+  {
+   "name": "Night's Whisper",
+   "quantity": 2,
+   "type": "Sorcery · B",
+   "ceiling": 0.29,
+   "typeLine": "Sorcery",
+   "manaCost": "{1}{B}",
+   "colorIdentity": [
+    "B"
+   ],
+   "rarity": "common",
+   "image": "https://cards.scryfall.io/normal/front/e/8/e8399c2e-ecc8-41c9-a690-a0eeafb27f77.jpg?1785497515",
+   "oracleText": "You draw two cards and lose 2 life.",
+   "scryfallId": "e8399c2e-ecc8-41c9-a690-a0eeafb27f77"
+  },
+  {
+   "name": "Ophiomancer",
+   "quantity": 1,
+   "type": "Creature · B",
+   "ceiling": 0.96,
+   "typeLine": "Creature — Human Shaman",
+   "manaCost": "{2}{B}",
+   "colorIdentity": [
+    "B"
+   ],
+   "rarity": "rare",
+   "image": "https://cards.scryfall.io/normal/front/b/a/baf793b6-9612-43f3-9f1b-2e53e81cb89f.jpg?1783903820",
+   "oracleText": "At the beginning of each upkeep, if you control no Snakes, create a 1/1 black Snake creature token with deathtouch.",
+   "scryfallId": "baf793b6-9612-43f3-9f1b-2e53e81cb89f"
+  },
+  {
+   "name": "Pashalik Mons",
+   "quantity": 1,
+   "type": "Legendary Creature · R",
+   "ceiling": 3.9,
+   "typeLine": "Legendary Creature — Goblin Warrior",
+   "manaCost": "{2}{R}",
+   "colorIdentity": [
+    "R"
+   ],
+   "rarity": "rare",
+   "image": "https://cards.scryfall.io/normal/front/c/a/ca20a650-65b0-4714-b7ce-0481af3db377.jpg?1783918458",
+   "oracleText": "Whenever Pashalik Mons or another Goblin you control dies, Pashalik Mons deals 1 damage to any target.\n{3}{R}, Sacrifice a Goblin: Create two 1/1 red Goblin creature tokens.",
+   "scryfallId": "ca20a650-65b0-4714-b7ce-0481af3db377"
+  },
+  {
+   "name": "Perimeter Captain",
+   "quantity": 1,
+   "type": "Creature · W",
+   "ceiling": 0.67,
+   "typeLine": "Creature — Human Soldier",
+   "manaCost": "{W}",
+   "colorIdentity": [
+    "W"
+   ],
+   "rarity": "uncommon",
+   "image": "https://cards.scryfall.io/normal/front/4/e/4e532309-5cf9-4d12-b673-f9baad30b800.jpg?1783942065",
+   "oracleText": "Defender\nWhenever a creature you control with defender blocks, you may gain 2 life.",
+   "scryfallId": "4e532309-5cf9-4d12-b673-f9baad30b800"
+  },
+  {
+   "name": "Phyrexian Arena",
+   "quantity": 2,
+   "type": "Enchantment · B",
+   "ceiling": 3.74,
+   "typeLine": "Enchantment",
+   "manaCost": "{1}{B}{B}",
+   "colorIdentity": [
+    "B"
+   ],
+   "rarity": "rare",
+   "image": "https://cards.scryfall.io/normal/front/0/7/0784b6f0-9ebf-43d2-ba0f-a6bc93ba0c48.jpg?1783909072",
+   "oracleText": "At the beginning of your upkeep, you draw a card and you lose 1 life.",
+   "scryfallId": "0784b6f0-9ebf-43d2-ba0f-a6bc93ba0c48"
+  },
+  {
+   "name": "Pitiless Plunderer",
+   "quantity": 1,
+   "type": "Creature · B",
+   "ceiling": 3.42,
+   "typeLine": "Creature — Human Pirate",
+   "manaCost": "{3}{B}",
+   "colorIdentity": [
+    "B"
+   ],
+   "rarity": "uncommon",
+   "image": "https://cards.scryfall.io/normal/front/5/b/5b5cd187-857a-44dd-8595-a52857a0b753.jpg?1783913869",
+   "oracleText": "Whenever another creature you control dies, create a Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")",
+   "scryfallId": "5b5cd187-857a-44dd-8595-a52857a0b753"
+  },
+  {
+   "name": "Priest of Forgotten Gods",
+   "quantity": 1,
+   "type": "Creature · B",
+   "ceiling": 0.59,
+   "typeLine": "Creature — Human Cleric",
+   "manaCost": "{1}{B}",
+   "colorIdentity": [
+    "B"
+   ],
+   "rarity": "rare",
+   "image": "https://cards.scryfall.io/normal/front/3/6/363f8761-91a7-47e8-9e15-3b73d59bc020.jpg?1783903781",
+   "oracleText": "{T}, Sacrifice two other creatures: Any number of target players each lose 2 life and sacrifice a creature of their choice. You add {B}{B} and draw a card. (Activate only as an instant.)",
+   "scryfallId": "363f8761-91a7-47e8-9e15-3b73d59bc020"
+  },
+  {
+   "name": "Raid Bombardment",
+   "quantity": 1,
+   "type": "Enchantment · R",
+   "ceiling": 0.3,
+   "typeLine": "Enchantment",
+   "manaCost": "{2}{R}",
+   "colorIdentity": [
+    "R"
+   ],
+   "rarity": "common",
+   "image": "https://cards.scryfall.io/normal/front/c/a/ca75d458-4947-4075-89b6-e93936c67370.jpg?1783933802",
+   "oracleText": "Whenever a creature you control with power 2 or less attacks, this enchantment deals 1 damage to the player or planeswalker that creature is attacking.",
+   "scryfallId": "ca75d458-4947-4075-89b6-e93936c67370"
+  },
+  {
+   "name": "Reckless Bushwhacker",
+   "quantity": 1,
+   "type": "Creature · R",
+   "ceiling": 0.19,
+   "typeLine": "Creature — Goblin Warrior Ally",
+   "manaCost": "{2}{R}",
+   "colorIdentity": [
+    "R"
+   ],
+   "rarity": "uncommon",
+   "image": "https://cards.scryfall.io/normal/front/0/4/0405b1b9-976a-4aaf-bec6-fa006decea74.jpg?1783937905",
+   "oracleText": "Surge {1}{R} (You may cast this spell for its surge cost if you or a teammate has cast another spell this turn.)\nHaste\nWhen this creature enters, if its surge cost was paid, other creatures you control get +1/+0 and gain haste until end of turn.",
+   "scryfallId": "0405b1b9-976a-4aaf-bec6-fa006decea74"
+  },
+  {
+   "name": "Restoration Angel",
+   "quantity": 1,
+   "type": "Creature · W",
+   "ceiling": 0.33,
+   "typeLine": "Creature — Angel",
+   "manaCost": "{3}{W}",
+   "colorIdentity": [
+    "W"
+   ],
+   "rarity": "rare",
+   "image": "https://cards.scryfall.io/normal/front/f/1/f17f85d3-58e5-4128-90c5-98b524256af8.jpg?1783908175",
+   "oracleText": "Flash\nFlying\nWhen this creature enters, you may exile target non-Angel creature you control, then return that card to the battlefield under your control.",
+   "scryfallId": "f17f85d3-58e5-4128-90c5-98b524256af8"
+  },
+  {
+   "name": "Risen Reef",
+   "quantity": 1,
+   "type": "Creature · Multi",
+   "ceiling": 0.31,
+   "typeLine": "Creature — Elemental",
+   "manaCost": "{1}{G}{U}",
+   "colorIdentity": [
+    "G",
+    "U"
+   ],
+   "rarity": "uncommon",
+   "image": "https://cards.scryfall.io/normal/front/7/1/715ad2ff-7eae-42f1-bb3c-a3afc2c9b82a.jpg?1783904536",
+   "oracleText": "Whenever this creature or another Elemental you control enters, look at the top card of your library. If it's a land card, you may put it onto the battlefield tapped. If you don't put the card onto the battlefield, put it into your hand.",
+   "scryfallId": "715ad2ff-7eae-42f1-bb3c-a3afc2c9b82a"
+  },
+  {
+   "name": "Rundvelt Hordemaster",
+   "quantity": 1,
+   "type": "Creature · R",
+   "ceiling": 4.87,
+   "typeLine": "Creature — Goblin Warrior",
+   "manaCost": "{1}{R}",
+   "colorIdentity": [
+    "R"
+   ],
+   "rarity": "rare",
+   "image": "https://cards.scryfall.io/normal/front/f/f/ffee9dbe-af90-4e19-844d-4df1180f24c4.jpg?1783921311",
+   "oracleText": "Other Goblins you control get +1/+1.\nWhenever this creature or another Goblin you control dies, exile the top card of your library. If it's a Goblin creature card, you may cast that card until the end of your next turn.",
+   "scryfallId": "ffee9dbe-af90-4e19-844d-4df1180f24c4"
+  },
+  {
+   "name": "Saruli Caretaker",
+   "quantity": 1,
+   "type": "Creature · G",
+   "ceiling": 0.27,
+   "typeLine": "Creature — Dryad",
+   "manaCost": "{G}",
+   "colorIdentity": [
+    "G"
+   ],
+   "rarity": "common",
+   "image": "https://cards.scryfall.io/normal/front/e/f/ef3358cb-714c-49bf-b7e9-a69d02d7799e.jpg?1783933664",
+   "oracleText": "Defender\n{T}, Tap an untapped creature you control: Add one mana of any color.",
+   "scryfallId": "ef3358cb-714c-49bf-b7e9-a69d02d7799e"
+  },
+  {
+   "name": "Serum Snare",
+   "quantity": 1,
+   "type": "Instant · U",
+   "ceiling": 0.35,
+   "typeLine": "Instant",
+   "manaCost": "{1}{U}",
+   "colorIdentity": [
+    "U"
+   ],
+   "rarity": "uncommon",
+   "image": "https://cards.scryfall.io/normal/front/d/3/d326bff1-5370-4817-8370-6da87a061058.jpg?1783918057",
+   "oracleText": "Return target nonland permanent to its owner's hand. If that permanent had mana value 3 or less, proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)",
+   "scryfallId": "d326bff1-5370-4817-8370-6da87a061058"
+  },
+  {
+   "name": "Skrelv, Defector Mite",
+   "quantity": 1,
+   "type": "Legendary Artifact Creature · W",
+   "ceiling": 2.91,
+   "typeLine": "Legendary Artifact Creature — Phyrexian Mite",
+   "manaCost": "{W}",
+   "colorIdentity": [
+    "W"
+   ],
+   "rarity": "rare",
+   "image": "https://cards.scryfall.io/normal/front/6/0/60b565da-a49b-479c-b0c4-8ff3dd20cc0b.jpg?1783918072",
+   "oracleText": "Toxic 1 (Players dealt combat damage by this creature also get a poison counter.)\nSkrelv can't block.\n{W/P}, {T}: Choose a color. Another target creature you control gains toxic 1 and hexproof from that color until end of turn. It can't be blocked by creatures of that color this turn. ({W/P} can be paid with either {W} or 2 life.)",
+   "scryfallId": "60b565da-a49b-479c-b0c4-8ff3dd20cc0b"
+  },
+  {
+   "name": "Skullclamp",
+   "quantity": 1,
+   "type": "Artifact · C",
+   "ceiling": 5.89,
+   "typeLine": "Artifact — Equipment",
+   "manaCost": "{1}",
+   "colorIdentity": [],
+   "rarity": "rare",
+   "image": "https://cards.scryfall.io/normal/front/1/d/1d8b007b-3169-4ee3-80c7-781fc096fc7a.jpg?1783903215",
+   "oracleText": "Equipped creature gets +1/-1.\nWhenever equipped creature dies, draw two cards.\nEquip {1}",
+   "scryfallId": "1d8b007b-3169-4ee3-80c7-781fc096fc7a",
+   "held": 1
+  },
+  {
+   "name": "Stalwart Shield-Bearers",
+   "quantity": 1,
+   "type": "Creature · W",
+   "ceiling": 1.88,
+   "typeLine": "Creature — Human Soldier",
+   "manaCost": "{1}{W}",
+   "colorIdentity": [
+    "W"
+   ],
+   "rarity": "common",
+   "image": "https://cards.scryfall.io/normal/front/8/6/868256bb-d4e2-42eb-a43a-360148aec06f.jpg?1783942002",
+   "oracleText": "Defender\nOther creatures you control with defender get +0/+2.",
+   "scryfallId": "868256bb-d4e2-42eb-a43a-360148aec06f"
+  },
+  {
+   "name": "Tatyova, Benthic Druid",
+   "quantity": 1,
+   "type": "Legendary Creature · Multi",
+   "ceiling": 0.15,
+   "typeLine": "Legendary Creature — Merfolk Druid",
+   "manaCost": "{3}{G}{U}",
+   "colorIdentity": [
+    "G",
+    "U"
+   ],
+   "rarity": "uncommon",
+   "image": "https://cards.scryfall.io/normal/front/e/a/eabc978a-0666-472d-bdc6-d4b29d29eca4.jpg?1783909051",
+   "oracleText": "Landfall — Whenever a land you control enters, you gain 1 life and draw a card.",
+   "scryfallId": "eabc978a-0666-472d-bdc6-d4b29d29eca4"
+  },
+  {
+   "name": "Teysa Karlov",
+   "quantity": 1,
+   "type": "Legendary Creature · Multi",
+   "ceiling": 2.67,
+   "typeLine": "Legendary Creature — Human Advisor",
+   "manaCost": "{2}{W}{B}",
+   "colorIdentity": [
+    "B",
+    "W"
+   ],
+   "rarity": "rare",
+   "image": "https://cards.scryfall.io/normal/front/c/d/cd14f1ce-7fcd-485c-b7ca-01c5b45fdc01.jpg?1783915608",
+   "oracleText": "If a creature dying causes a triggered ability of a permanent you control to trigger, that ability triggers an additional time.\nCreature tokens you control have vigilance and lifelink.",
+   "scryfallId": "cd14f1ce-7fcd-485c-b7ca-01c5b45fdc01"
+  },
+  {
+   "name": "Tree of Perdition",
+   "quantity": 1,
+   "type": "Creature · B",
+   "ceiling": 2.94,
+   "typeLine": "Creature — Plant",
+   "manaCost": "{3}{B}",
+   "colorIdentity": [
+    "B"
+   ],
+   "rarity": "mythic",
+   "image": "https://cards.scryfall.io/normal/front/7/5/750b4c88-26c7-43ec-b6b9-ece3263dfd59.jpg?1783911525",
+   "oracleText": "Defender\n{T}: Exchange target opponent's life total with this creature's toughness.",
+   "scryfallId": "750b4c88-26c7-43ec-b6b9-ece3263dfd59"
+  },
+  {
+   "name": "Unexpected Windfall",
+   "quantity": 1,
+   "type": "Instant · R",
+   "ceiling": 3.34,
+   "typeLine": "Instant",
+   "manaCost": "{2}{R}{R}",
+   "colorIdentity": [
+    "R"
+   ],
+   "rarity": "common",
+   "image": "https://cards.scryfall.io/normal/front/b/a/bae6a5fb-39f5-4cf8-85f7-661cb4570507.jpg?1783926470",
+   "oracleText": "As an additional cost to cast this spell, discard a card.\nDraw two cards and create two Treasure tokens. (They're artifacts with \"{T}, Sacrifice this token: Add one mana of any color.\")",
+   "scryfallId": "bae6a5fb-39f5-4cf8-85f7-661cb4570507"
+  },
+  {
+   "name": "Unlicensed Hearse",
+   "quantity": 1,
+   "type": "Artifact · C",
+   "ceiling": 0.38,
+   "typeLine": "Artifact — Vehicle",
+   "manaCost": "{2}",
+   "colorIdentity": [],
+   "rarity": "rare",
+   "image": "https://cards.scryfall.io/normal/front/9/3/93ee60f7-31dd-4bc6-b71f-57a1a0d19d20.jpg?1783923059",
+   "oracleText": "{T}: Exile up to two target cards from a single graveyard.\nUnlicensed Hearse's power and toughness are each equal to the number of cards exiled with it.\nCrew 2",
+   "scryfallId": "93ee60f7-31dd-4bc6-b71f-57a1a0d19d20"
+  },
+  {
+   "name": "Vraska's Fall",
+   "quantity": 1,
+   "type": "Instant · B",
+   "ceiling": 0.39,
+   "typeLine": "Instant",
+   "manaCost": "{2}{B}",
+   "colorIdentity": [
+    "B"
+   ],
+   "rarity": "common",
+   "image": "https://cards.scryfall.io/normal/front/0/1/0173b7b4-2832-4943-ba45-8ba498d7a056.jpg?1783918037",
+   "oracleText": "Each opponent sacrifices a creature or planeswalker of their choice and gets a poison counter.",
+   "scryfallId": "0173b7b4-2832-4943-ba45-8ba498d7a056"
+  },
+  {
+   "name": "Wall of Blood",
+   "quantity": 1,
+   "type": "Creature · B",
+   "ceiling": 2.02,
+   "typeLine": "Creature — Wall",
+   "manaCost": "{2}{B}",
+   "colorIdentity": [
+    "B"
+   ],
+   "rarity": "uncommon",
+   "image": "https://cards.scryfall.io/normal/front/1/7/17320043-f81c-4e14-b9ba-c1309972c22b.jpg?1783944542",
+   "oracleText": "Defender (This creature can't attack.)\nPay 1 life: This creature gets +1/+1 until end of turn.",
+   "scryfallId": "17320043-f81c-4e14-b9ba-c1309972c22b"
+  },
+  {
+   "name": "Wall of Blossoms",
+   "quantity": 1,
+   "type": "Creature · G",
+   "ceiling": 0.29,
+   "typeLine": "Creature — Plant Wall",
+   "manaCost": "{1}{G}",
+   "colorIdentity": [
+    "G"
+   ],
+   "rarity": "uncommon",
+   "image": "https://cards.scryfall.io/normal/front/d/f/df901113-e273-4fe0-a264-8e9e26e70905.jpg?1783907035",
+   "oracleText": "Defender\nWhen this creature enters, draw a card.",
+   "scryfallId": "df901113-e273-4fe0-a264-8e9e26e70905"
+  },
+  {
+   "name": "Wall of Junk",
+   "quantity": 1,
+   "type": "Artifact Creature · C",
+   "ceiling": 0.31,
+   "typeLine": "Artifact Creature — Wall",
+   "manaCost": "{2}",
+   "colorIdentity": [],
+   "rarity": "uncommon",
+   "image": "https://cards.scryfall.io/normal/front/1/7/17f19832-0c66-4f06-8110-ce4b2a3d8346.jpg?1783918408",
+   "oracleText": "Defender (This creature can't attack.)\nWhen this creature blocks, return it to its owner's hand at end of combat. (Return it only if it's on the battlefield.)",
+   "scryfallId": "17f19832-0c66-4f06-8110-ce4b2a3d8346"
+  },
+  {
+   "name": "Whitemane Lion",
+   "quantity": 1,
+   "type": "Creature · W",
+   "ceiling": 0.09,
+   "typeLine": "Creature — Cat",
+   "manaCost": "{1}{W}",
+   "colorIdentity": [
+    "W"
+   ],
+   "rarity": "common",
+   "image": "https://cards.scryfall.io/normal/front/a/3/a358def9-65a0-4741-896c-b2a8c8947768.jpg?1783918502",
+   "oracleText": "Flash\nWhen this creature enters, return a creature you control to its owner's hand.",
+   "scryfallId": "a358def9-65a0-4741-896c-b2a8c8947768"
+  },
+  {
+   "name": "Windborn Muse",
+   "quantity": 1,
+   "type": "Creature · W",
+   "ceiling": 0.54,
+   "typeLine": "Creature — Spirit",
+   "manaCost": "{3}{W}",
+   "colorIdentity": [
+    "W"
+   ],
+   "rarity": "rare",
+   "image": "https://cards.scryfall.io/normal/front/3/c/3ce8b722-7bc0-4053-8627-7846f9d17eda.jpg?1783913021",
+   "oracleText": "Flying\nCreatures can't attack you unless their controller pays {2} for each creature they control that's attacking you.",
+   "scryfallId": "3ce8b722-7bc0-4053-8627-7846f9d17eda"
+  }
+ ],
+ "totals": {
+  "cards": 68,
+  "copies": 70,
+  "budget": 124.67
+ }
+}
