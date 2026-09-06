@@ -34,8 +34,17 @@
     shareTo: "",
     query: "",
     benchFilter: "all",
+    /* Most valuable first, not A-Z. The bench is spare copies, and the question
+       asked of it -- at ten cards or at two thousand -- is "is there anything in
+       here worth doing something about", which alphabetical order answers last.
+       It matters more the bigger the bench gets: past the cap below only the
+       first page is on screen, and the first fifty cards beginning with A is an
+       arbitrary answer where the fifty most valuable is a real one. A-Z is one
+       click away, and a card you can name is what the search box is for. */
+    benchSort: "price",   // price | name
     buyFilter: "need",    // the store list opens on what the decks are short of
-    buyGroup: "price"     // price | color | kind -- how the buy list is grouped
+    buyGroup: "price",    // price | color | kind -- how the buy list is grouped
+    expanded: {}          // group name -> true; deliberately not saved, see below
   };
 
   /* ------------------------------------------------------------- plumbing */
@@ -69,7 +78,18 @@
     try {
       localStorage.setItem(STORE, JSON.stringify({
         shareTo: state.shareTo,
-        picks: Array.from(state.picks.values())
+        picks: Array.from(state.picks.values()),
+        /* How the lists are arranged is a preference, and a preference that
+           does not survive a reload is a preference the app forgot. These were
+           being changed, save() was being called, and none of them was in the
+           object -- so picking "By color" lasted exactly until the next visit.
+           `query` and `expanded` stay out on purpose: a search box that comes
+           back pre-filled, or two thousand rows that come back expanded, is the
+           app deciding something the reader did not ask for twice. */
+        benchFilter: state.benchFilter,
+        benchSort: state.benchSort,
+        buyFilter: state.buyFilter,
+        buyGroup: state.buyGroup
       }));
     } catch (err) { /* private mode, or storage off; the page still works */ }
   }
@@ -78,6 +98,12 @@
     try {
       var raw = JSON.parse(localStorage.getItem(STORE) || "{}");
       state.shareTo = raw.shareTo || "";
+      // Each read back only if it is still a value this build offers, so a
+      // renamed mode in a saved file cannot leave a tab filtered by nothing.
+      if (["all", "spare", "dupe"].indexOf(raw.benchFilter) >= 0) state.benchFilter = raw.benchFilter;
+      if (["price", "name"].indexOf(raw.benchSort) >= 0) state.benchSort = raw.benchSort;
+      if (["all", "need", "tuned", "b3"].indexOf(raw.buyFilter) >= 0) state.buyFilter = raw.buyFilter;
+      if (["price", "color", "kind"].indexOf(raw.buyGroup) >= 0) state.buyGroup = raw.buyGroup;
       (raw.picks || []).forEach(function (p) { state.picks.set(p.source + "|" + p.name, p); });
     } catch (err) { /* ignore anything unparseable */ }
   }
@@ -1316,7 +1342,22 @@
         status: c.status, chip: c.status === "Bench-Sub" || c.status === "Extra-Sub" ? "patina" : "",
         group: uses.length ? "Spare copies of cards a deck uses" : "Not in any deck"
       };
-    }).sort(function (a, b) { return a.name.localeCompare(b.name); });
+    }).sort(benchOrder());
+  }
+
+  /* Price descending, with unpriced cards last rather than first: a card nobody
+     has a price for is unknown, not free, and a list that opens on two hundred
+     dashes has buried the answer. Ties break on name so the order is stable
+     between renders -- an unstable sort makes a row move under a finger that
+     was reaching for it. */
+  function benchOrder() {
+    if (state.benchSort === "name") {
+      return function (a, b) { return a.name.localeCompare(b.name); };
+    }
+    return function (a, b) {
+      var ap = a.price || 0, bp = b.price || 0;
+      return (bp * (b.copies || 1)) - (ap * (a.copies || 1)) || a.name.localeCompare(b.name);
+    };
   }
 
   var BUY_KIND = {
@@ -1391,7 +1432,32 @@
     return rows;
   }
 
-  function groupedTable(root, rows, cols) {
+  /* A group longer than this is not read, it is scrolled past.
+   *
+   * The bench after a collection upload is the case that proves it: 1,940 spare
+   * cards rendered as one list is 118,000 pixels -- 126 screens on a desktop and
+   * 156 on a phone. Nothing errored and nothing was slow; it simply was not a
+   * page anybody opens twice.
+   *
+   * So a long group shows its first page and says exactly how many it is holding
+   * back, with one button for the rest. The same bargain the game log makes, for
+   * the same reason. A group shorter than the cap is untouched, so a normal buy
+   * list still arrives whole and the small bench nobody has uploaded to looks
+   * exactly as it did.
+   *
+   * Fifty rather than the log's twenty-five because these rows are half the
+   * height.
+   *
+   * ONLY THE BENCH IS CAPPED, and the buy list deliberately is not. They look
+   * alike and they are not the same kind of list. The bench is browsed -- it is
+   * bounded by the size of somebody's collection, which is thousands, and the
+   * question asked of it is answered by the top of the list or by the search
+   * box. The buy list is worked through, item by item, in a shop: it is bounded
+   * by what the decks actually need, and a shopping list that hides its last
+   * forty cards behind a tap is a shopping list you get home without. */
+  var GROUP_PAGE = 50;
+
+  function groupedTable(root, rows, cols, cap) {
     var order = [], groups = {};
     rows.forEach(function (r) {
       if (!groups[r.group]) { groups[r.group] = []; order.push(r.group); }
@@ -1405,15 +1471,29 @@
     order.forEach(function (name) {
       var list = groups[name];
       var sum = list.reduce(function (n, r) { return n + (r.price || 0) * (r.copies || 1); }, 0);
-      root.appendChild(el("div", { class: "section-head", style: "margin:18px 0 8px" }, [
+      var open = !cap || state.expanded[name] || list.length <= cap;
+      var shown = open ? list : list.slice(0, cap);
+      var hidden = list.length - shown.length;
+      root.appendChild(el("div", { class: "section-head group-head", style: "margin:18px 0 8px" }, [
         el("h2", { style: "font-size:16px", text: name }),
-        el("p", { text: plural(list.length, "card") + " · " + money(sum) }),
+        el("p", { text: (open ? plural(list.length, "card")
+          : shown.length + " of " + plural(list.length, "card")) + " · " + money(sum) }),
+        // Select all has always meant the whole group, which is right and was
+        // invisible: while a group is capped the button says the number it is
+        // about to tick, so nobody selects two thousand cards expecting fifty.
         el("button", { class: "pick-all", type: "button", onclick: function () {
           var allOn = list.every(function (r) { return state.picks.has(pickKey(r)); });
           list.forEach(function (r) { togglePick(r, !allOn); });
-        }, text: "Select all" })
+        }, text: open ? "Select all" : "Select all " + list.length })
       ]));
-      root.appendChild(pickTable(list, cols));
+      root.appendChild(pickTable(shown, cols));
+      if (hidden > 0) {
+        root.appendChild(el("button", {
+          class: "show-rest", type: "button",
+          text: "Show the other " + plural(hidden, "card"),
+          onclick: function () { state.expanded[name] = true; renderInPlace(); }
+        }));
+      }
     });
   }
 
@@ -1540,14 +1620,21 @@
       return toast("No cards were found in that file.");
     }
     INVENTORY = {cards: parsed.cards, uploadedAt: new Date().toISOString(), source: source};
-    if (!saveInventory()) toast("This browser would not save it — it is here until you reload.");
+    var saved = saveInventory();
     rebuild();
     var t = (INVENTORY.result || {totals: {}}).totals || {};
-    // A guessed column layout is the one thing about this that could be silently
-    // wrong, so it is said out loud rather than left in the count.
+    /* ONE toast, not two. There were two, and the second landed in the same tick
+       as the first: toast() replaces the node's text and resets its timer, so the
+       warning that the upload had not been saved was overwritten by the count
+       before it could be read. The failure case is a collection too big for this
+       browser's storage -- which is to say, exactly the big upload this message
+       exists for. So the warning is part of the same sentence as the count.
+       A guessed column layout goes in it too: it is the other thing about an
+       upload that can be silently wrong. */
     toast(plural(t.cards || 0, "card") + " read"
       + (parsed.guessed ? " (columns were guessed)" : "")
-      + " · " + plural(t.spare || 0, "copy", "copies") + " on the bench");
+      + " · " + plural(t.spare || 0, "copy", "copies") + " on the bench"
+      + (saved ? "" : " · too big to save, so it is gone when you reload"));
     go("#/bench");
     render();
   }
@@ -1589,6 +1676,16 @@
       return r.kind === filter;
     });
 
+    if (isBench) {
+      // Mirrors the buy list's group-by row, in the same place, because it does
+      // the same job: it says how this list is arranged and lets you rearrange it.
+      var sorts = [["price", "Most valuable"], ["name", "A to Z"]];
+      root.appendChild(el("div", { class: "filter", style: "margin:-4px 0 10px" }, sorts.map(function (m) {
+        return el("button", { type: "button", "aria-pressed": state.benchSort === m[0] ? "true" : "false",
+          text: m[1], onclick: function () { state.benchSort = m[0]; save(); render(); } });
+      })));
+    }
+
     if (!isBench) {
       var modes = [["price", "By price"], ["color", "By color"], ["kind", "By reason"]];
       root.appendChild(el("div", { class: "filter", style: "margin:-4px 0 10px" }, modes.map(function (m) {
@@ -1601,7 +1698,7 @@
     groupedTable(root, rows, {
       where: isBench ? "Where else" : "For which deck",
       status: "Status"
-    });
+    }, isBench ? GROUP_PAGE : 0);
   }
 
   /* ------------------------------------------------------------ the tray */
@@ -1772,7 +1869,25 @@
     else renderDecks(root);
 
     syncTray();
-    if (state.view !== "deck") window.scrollTo(0, 0);
+    if (state.view !== "deck" && !holdScroll) window.scrollTo(0, 0);
+    holdScroll = false;
+  }
+
+  /* A re-render normally means a new page, so it starts at the top. Expanding a
+     capped group is the exception: the button that does it sits at the BOTTOM of
+     what you have just read, and throwing the reader back to the top is how a
+     "show more" button comes to feel like a mistake. */
+  var holdScroll = false;
+  function renderInPlace() {
+    // render() empties #page before rebuilding it, so the document briefly has
+    // no height and the browser clamps the scroll position to the new maximum.
+    // Suppressing the scrollTo(0, 0) alone is not enough -- measured, it still
+    // moved the reader 933px up the page. The position has to be taken before
+    // the rebuild and put back after it.
+    var y = window.scrollY;
+    holdScroll = true;
+    render();
+    window.scrollTo(0, y);
   }
 
   /* --------------------------------------------------------------- start */

@@ -10,7 +10,7 @@
  * Node; a missing browser is a missing tool, not a failing app, and a test that
  * cannot tell those apart is one people learn to ignore.
  */
-import {readFileSync, existsSync, mkdirSync, rmSync} from "node:fs";
+import {readFileSync, existsSync, mkdirSync, rmSync, readdirSync} from "node:fs";
 import {fileURLToPath} from "node:url";
 import {dirname, join} from "node:path";
 
@@ -41,10 +41,20 @@ if (!chromium) {
   process.exit(0);
 }
 
-/* The browser binary. Playwright's own default first, then the path this
-   project's container puts it at. */
-const EXECUTABLE = process.env.UAT_CHROMIUM ||
-  ["/opt/pw-browsers/chromium-1194/chrome-linux/chrome"].find((p) => existsSync(p));
+/* The browser binary. Playwright's own default first, then whatever this
+   project's container has put under /opt/pw-browsers -- found by looking rather
+   than by a pinned build number, because the build number changes with the
+   image and a hard-coded one turns "the browser moved" into "the app is fine",
+   silently, which is the failure mode this whole file exists to avoid. */
+function containerChromium() {
+  const root = "/opt/pw-browsers";
+  if (!existsSync(root)) return null;
+  const builds = readdirSync(root)
+    .filter((name) => /^chromium-\d+$/.test(name))
+    .sort((a, b) => Number(b.split("-")[1]) - Number(a.split("-")[1]));
+  return builds.map((name) => join(root, name, "chrome-linux", "chrome")).find((p) => existsSync(p)) || null;
+}
+const EXECUTABLE = process.env.UAT_CHROMIUM || containerChromium();
 
 try {
   const ping = await fetch(`${BASE}/matrix.html`, {method: "GET"});
@@ -140,6 +150,63 @@ function seasonOfGames() {
     };
   });
 }
+
+/* A collection that grew: what somebody's browser holds after a year of use.
+ *
+ * Ten decks added by hand on top of the workbook's six, and a real collection
+ * uploaded -- 3,200 distinct names, which is a shoebox, not a hoard. Built from
+ * the repo's own card graph so the names, types and prices are real ones, and
+ * built deterministically so a number in a failure message means the same thing
+ * on the next run.
+ *
+ * This is the persona the app was thinnest on. "Continued use" had been tested
+ * as "leave and come back" and as "250 logged games"; nobody had ever asked what
+ * the app looks like once the collection behind it is large. */
+function grownCollection() {
+  const graph = JSON.parse(readFileSync(join(ROOT, "data", "graph.json"), "utf8"));
+  const pool = graph.cards.filter((c) => !/^(Plains|Island|Swamp|Mountain|Forest|Wastes)$/.test(c.name));
+  const commanders = graph.cards.filter((c) => c.isCommander);
+  let n = 20260906;
+  const rnd = () => (n = (n * 1103515245 + 12345) % 2147483648) / 2147483648;
+  const asCard = (c, isCommander) => ({
+    name: c.name, quantity: 1, isCommander, typeLine: c.type, manaCost: "", oracleText: "",
+    keywords: [], colorIdentity: String(c.ci || "").split("").filter((x) => "WUBRG".includes(x)),
+    mv: c.mv || 0, price: c.price == null ? null : c.price, gameChanger: false, image: c.image || ""
+  });
+
+  const decks = Array.from({length: 10}, (unused, d) => {
+    const cmd = commanders[Math.floor(rnd() * commanders.length)];
+    const picked = new Map();
+    while (picked.size < 99) {
+      const c = pool[Math.floor(rnd() * pool.length)];
+      if (!picked.has(c.name)) picked.set(c.name, c);
+    }
+    const cards = [asCard(cmd, true)].concat([...picked.values()].map((c) => asCard(c, false)));
+    return {
+      schema: 1, id: `U${d + 1}`, label: `${cmd.name.split(",")[0]} build`, commander: cmd.name,
+      imported: true, source: "paste", sourceUrl: null,
+      importedAt: new Date(Date.UTC(2026, 2 + (d % 6), 3 + d)).toISOString(),
+      cards, total: 100, unresolved: [], warnings: [], measured: null, generated: null
+    };
+  });
+
+  const held = new Map();
+  decks.forEach((d) => d.cards.forEach((c) => held.set(c.name, (held.get(c.name) || 0) + 1)));
+  while (held.size < 3200) {
+    const c = pool[Math.floor(rnd() * pool.length)];
+    if (!held.has(c.name)) held.set(c.name, rnd() < 0.15 ? 2 : 1);
+  }
+  ["Plains", "Island", "Swamp", "Mountain", "Forest"].forEach((b) => held.set(b, 60));
+
+  return {
+    decks,
+    inventory: {
+      cards: [...held.entries()].map(([name, quantity]) => ({name, quantity})),
+      uploadedAt: new Date(Date.UTC(2026, 7, 14)).toISOString(), source: "collection.csv"
+    }
+  };
+}
+const GROWN = grownCollection();
 
 for (const screen of SCREENS) {
   console.log(`\n──────── ${screen.tag} ${screen.w}×${screen.h} ────────`);
@@ -256,6 +323,124 @@ for (const screen of SCREENS) {
     console.log(`     one deck "${oneDeck}" → wins only "${justWins}"`);
     await shot(page, `${screen.tag}-continued-season`);
     await healthy(page, screen.tag, "continued · a season");
+    await ctx.close();
+  }
+
+  // ═══ CONTINUED, at scale: a collection that grew ═══
+  {
+    const {ctx, page} = await freshPage(screen);
+    await page.goto(`${BASE}/index.html`, {waitUntil: "domcontentloaded"});
+    await page.evaluate(([decks, inventory]) => {
+      localStorage.setItem("mtg-imported-decks.v1", JSON.stringify({schema: 1, decks}));
+      localStorage.setItem("mtg-viewer-inventory.v1", JSON.stringify(inventory));
+    }, [GROWN.decks, GROWN.inventory]);
+    // A full load, not a hash change: navigating to a URL that differs only by
+    // its fragment is a same-document navigation, so the app would still be the
+    // one that booted before any of this was written. That mistake made this
+    // harness report an eleven-fold difference in the bench count twice.
+    await page.goto("about:blank");
+    await page.goto(`${BASE}/index.html`, {waitUntil: "domcontentloaded"});
+    await page.waitForSelector(".deck-card", {timeout: 20000});
+
+    const decks = await page.locator(".deck-card").count();
+    check(decks === 16, screen.tag, "continued · a collection",
+      `${decks} decks with ten added to the six, expected 16`);
+    await healthy(page, screen.tag, "continued · a collection");
+
+    await page.locator(".tab").filter({hasText: /^\s*Bench/}).first().click();
+    await page.waitForTimeout(600);
+
+    const benchTall = await page.evaluate(() => document.documentElement.scrollHeight);
+    const benchScreens = benchTall / screen.h;
+    const rows = await page.locator(".pick-row").count();
+    check(benchScreens < 10, screen.tag, "continued · a collection",
+      `the bench is ${Math.round(benchScreens)} screens tall — 1,940 spare cards in one list`);
+    check(rows < 120, screen.tag, "continued · a collection",
+      `${rows} rows rendered at once — the bench has no ceiling`);
+
+    // The count has to name what is held back, or the cap is just a lie of
+    // omission: a reader who cannot see the other 1,890 must at least be told.
+    const capped = clean(await page.locator(".section-head p").nth(1).textContent());
+    check(/^\d+ of [\d,]+ cards/.test(capped), screen.tag, "continued · a collection",
+      `a capped group must say how many it is holding back, said "${capped}"`);
+
+    // Sorted by what a spare card is worth, not by its initial: the first fifty
+    // of two thousand is only a useful answer if the fifty were chosen.
+    const top = Number(clean(await page.locator(".pick-row .money").first().textContent()).replace(/[^0-9.]/g, ""));
+    const tenth = Number(clean(await page.locator(".pick-row .money").nth(9).textContent()).replace(/[^0-9.]/g, ""));
+    check(top >= tenth && top > 5, screen.tag, "continued · a collection",
+      `the bench opens on $${top} then $${tenth} — it is not showing the valuable spares first`);
+    console.log(`  continued · a collection ${decks} decks · bench ${rows} rows, ${Math.round(benchScreens)} screens · "${capped}"`);
+
+    // Everything is still reachable, and reaching it does not move the reader.
+    await page.evaluate(() => {
+      const b = document.querySelector(".show-rest");
+      window.scrollTo(0, window.scrollY + b.getBoundingClientRect().top - 400);
+    });
+    await page.waitForTimeout(150);
+    const anchored = await page.evaluate(() => {
+      const rowsAbove = [...document.querySelector(".show-rest").previousElementSibling
+        .querySelectorAll(".pick-row")];
+      const last = rowsAbove[rowsAbove.length - 1];
+      return {name: last.querySelector("b").textContent, top: Math.round(last.getBoundingClientRect().top)};
+    });
+    // .click() would scroll the button into view first and measure its own move.
+    await page.evaluate(() => document.querySelector(".show-rest").click());
+    await page.waitForTimeout(500);
+    const after = await page.evaluate((name) => {
+      // The ROW, not the <b> inside it. Measuring the row before and the label
+      // after reported a 9px shift on desktop and 11px on a phone that was
+      // nothing but the label's own offset inside its row -- a harness bug that
+      // looked exactly like a layout bug, on a check written to catch one.
+      const b = [...document.querySelectorAll(".pick-row b")].find((x) => x.textContent === name);
+      return {rows: document.querySelectorAll(".pick-row").length,
+        top: b ? Math.round(b.closest(".pick-row").getBoundingClientRect().top) : null};
+    }, anchored.name);
+    check(after.rows > 1500, screen.tag, "continued · a collection",
+      `showing the rest gave ${after.rows} rows — the whole bench must still be reachable`);
+    // Two pixels, not twelve: measured, the row does not move at all, so the
+    // margin here is for sub-pixel rounding and nothing else. A loose threshold
+    // on a check like this passes the bug it was written to catch.
+    check(after.top !== null && Math.abs(after.top - anchored.top) <= 2, screen.tag,
+      "continued · a collection",
+      `"${anchored.name}" moved ${after.top - anchored.top}px when the rest was shown`);
+    console.log(`     show the rest → ${after.rows} rows, "${anchored.name}" moved ` +
+      `${after.top === null ? "off the page" : after.top - anchored.top + "px"}`);
+    await shot(page, `${screen.tag}-continued-collection`);
+    await healthy(page, screen.tag, "continued · a collection");
+
+    /* The buy list is deliberately NOT capped. It is worked through in a shop
+       rather than browsed, and a shopping list that hides its last forty cards
+       behind a tap is a shopping list you get home without. */
+    await page.locator(".tab").filter({hasText: /^\s*To Buy/}).first().click();
+    await page.waitForTimeout(600);
+    await page.locator(".filter button").filter({hasText: /^All$/}).first().click();
+    await page.waitForTimeout(400);
+    const buyRest = await page.locator(".show-rest").count();
+    const buyRows = await page.locator(".pick-row").count();
+    check(buyRest === 0 && buyRows > 100, screen.tag, "continued · a collection",
+      `the buy list showed ${buyRows} rows behind ${buyRest} "show the rest" buttons`);
+    console.log(`     buy list ${buyRows} rows, uncapped`);
+    await healthy(page, screen.tag, "continued · a collection");
+
+    /* How the lists are arranged is a preference, and this persona's whole
+       complaint is work that is not where they left it. */
+    await page.locator(".tab").filter({hasText: /^\s*Bench/}).first().click();
+    await page.waitForTimeout(400);
+    await page.locator(".filter button").filter({hasText: "A to Z"}).first().click();
+    await page.waitForTimeout(300);
+    await page.goto("about:blank");
+    await page.goto(`${BASE}/index.html#/bench`, {waitUntil: "domcontentloaded"});
+    await page.waitForSelector(".pick-row", {timeout: 20000});
+    await page.waitForTimeout(400);
+    const kept = await page.locator('.filter button[aria-pressed="true"]').allTextContents();
+    check(kept.includes("A to Z"), screen.tag, "continued · a collection",
+      `the sort was set to A to Z and came back as ${JSON.stringify(kept)}`);
+    const reopened = await page.locator(".pick-row").count();
+    check(reopened < 120, screen.tag, "continued · a collection",
+      `${reopened} rows on a fresh visit — "show the rest" must not be what comes back`);
+    console.log(`     after a reload: ${JSON.stringify(kept)} · ${reopened} rows`);
+    await healthy(page, screen.tag, "continued · a collection");
     await ctx.close();
   }
 

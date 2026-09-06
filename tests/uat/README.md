@@ -1,7 +1,7 @@
 # User journeys, in a browser
 
 The twenty-three suites in `tests/` check that the modules are right. Nothing in
-them opens a page. This does: three people, seven journeys, two screen sizes, in a
+them opens a page. This does: three people, eight journeys, two screen sizes, in a
 real Chromium.
 
 ## Why it exists as its own thing
@@ -27,15 +27,31 @@ empty app with — it is why none of these were ever seen:
 
 None of that is visible if the app is full of decks before the test begins.
 
+The same blindness ran the other way. "Continued use" was tested as *leave and
+come back*, always with the same six decks and no collection behind them, so
+none of this was seen either:
+
+- With a collection uploaded, the bench was 1,940 spare cards in one list: 126
+  screens on a desktop and 156 on a phone. Nothing errored and nothing was slow.
+- It was sorted A to Z, so the top of it was whatever began with A rather than
+  the Rhystic Study sitting spare.
+- The buy list's group-by was written by a `save()` that never stored it, so
+  choosing "By color" lasted until the next visit and no further.
+- An upload too big for the browser's storage warned about it in a toast that
+  the success message overwrote in the same tick — the one case where the
+  warning matters is the one where it was invisible.
+
+None of THAT is visible if the collection behind the app is always empty.
+
 ## The three people
 
 | | who they are | what they have | what they need |
 |---|---|---|---|
 | **First** | has never seen this | empty `localStorage` | to understand what it is and get one useful thing out of it |
-| **Continued** | uses it between games | six picked decks, a game log | their work where they left it, and to change something |
+| **Continued** | uses it between games | six picked decks, a game log, ten added decks, 3,200 cards | their work where they left it, and to change something |
 | **Exit** | wants their data, or a clean slate | a full collection | to take it with them, wipe it, and put it back |
 
-## The seven journeys
+## The eight journeys
 
 **First · lands** — `index.html` shows six decks and two ways to add one.
 Nothing is required before it makes sense.
@@ -62,6 +78,18 @@ a page nobody reads, and can be narrowed. Before this, 250 games made the Game
 Log 18 screens tall on a desktop and 47 on a phone, with no filter and no
 ceiling — everything worked, and nothing was usable.
 
+**Continued · a collection that grew** — ten decks added by hand on top of the
+workbook's six, and a real collection uploaded: 3,200 distinct names, which is a
+shoebox rather than a hoard. Built from the repo's own card graph, so the names,
+types and prices are real, and built deterministically, so a number in a failure
+message means the same thing next run. Asserts the bench is a page somebody
+would open twice, that the cap says what it is holding back, that the top of it
+is sorted by what a spare card is worth, that everything is still one button
+away, and that reaching it does not move the row under the reader's thumb. The
+buy list is asserted to be *un*capped: it is worked through in a shop rather than
+browsed, and a shopping list that hides its last forty cards behind a tap is a
+shopping list you get home without.
+
 **Exit · export, reset, import** — the export carries the picks and a date, Reset
 All really resets, and re-importing the file brings everything back including the
 Deck page. If any leg of that breaks, this is a place work goes in and does not
@@ -69,7 +97,10 @@ come out of.
 
 ## Running it
 
-Needs a static server on `:8790` and Playwright's Chromium. Neither is a
+Needs a static server on `:8790` and Playwright's Chromium — found under
+`/opt/pw-browsers` by looking rather than by a pinned build number, so a
+container image bump does not quietly turn "the browser moved" into "the app is
+fine". Neither is a
 dependency of this repo — there is no `package.json`, and the twenty-three Node
 suites deliberately need nothing but Node. So this script **skips cleanly** when
 either is missing rather than failing: a missing browser is not a failing app.

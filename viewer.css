@@ -420,6 +420,28 @@ main { padding: 24px 0 140px; }
 
 .pick-table { border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
 
+/* A group header must not change height when the group is expanded.
+   Measured at 390px: "50 of 1940 cards · $446.53" beside "Select all 1940"
+   wrapped onto a second line, and the shorter "1940 cards · $446.53" beside
+   "Select all" did not -- so pressing "Show the other 1890" collapsed the header
+   from 66px to 29px and pulled the whole list up 26px under the reader's thumb,
+   at the exact moment they were reaching for a row. Two fixed rows instead:
+   the name, then the count and the action, whatever either of them says. */
+@media (max-width: 700px) {
+  .group-head { display: grid; grid-template-columns: 1fr auto; align-items: baseline; }
+  .group-head h2 { grid-column: 1 / -1; }
+}
+
+/* The way out of a capped group. Full width and directly under the last row it
+   is talking about, so it reads as the end of that list rather than the start of
+   the next section. */
+.show-rest {
+  appearance: none; cursor: pointer; width: 100%; margin-top: 8px;
+  background: var(--panel-2); border: 1px solid var(--line); color: var(--text);
+  border-radius: 9px; padding: 10px 16px; font-size: 13.5px; font-weight: 700;
+}
+.show-rest:hover { border-color: var(--text-faint); }
+
 .pick-row {
   display: grid; align-items: center; gap: 12px;
   grid-template-columns: 24px minmax(0,1fr) 132px 92px 66px 34px;
