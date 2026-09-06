@@ -65,7 +65,7 @@
   function plural(n, word) { return n + " " + word + (n === 1 ? "" : "s"); }
 
   /* ---------------- where the physical copy is ----------------
-   * Five states, carried by glyph shape rather than colour so they never collide
+   * Five states, carried by glyph shape rather than color so they never collide
    * with the rung ramp. "Ordered" is the one the old model could not express:
    * paid for, not here, cannot be sleeved.
    */
@@ -226,7 +226,7 @@
   /* ---------------- a candidate tile ----------------
    * A hand-added card is the only kind that can leave a slot again, so it is the only
    * one that carries a control to do it. The button is a sibling of the tile rather
-   * than a child, because a button inside a button is not markup a browser will honour.
+   * than a child, because a button inside a button is not markup a browser will honor.
    */
   function manualTileMarkup(ctx, slot, rung, deckId) {
     return `<span class="dp-tile-wrap">${tileMarkup(ctx, slot, rung, deckId, false)}<button type="button"
@@ -390,7 +390,7 @@
     };
     const identity = ctx.identity || [];
     const ranked = pool
-      // Colour is a gate, not a score: a card outside the commander's identity is illegal
+      // Color is a gate, not a score: a card outside the commander's identity is illegal
       // here, and an illegal suggestion is worse than no suggestion.
       .filter((card) => (card.colorIdentity || []).every((color) => identity.indexOf(color) >= 0))
       .map((card) => ({card, fit: Slot.slotFit(card, target)}))
@@ -417,7 +417,7 @@
 
   function manualBoxMarkup(ctx, slot, deckId) {
     /* Not on the commander. Every other slot holds a card the deck was built to want;
-       the commander slot holds the card the deck was built FROM -- its colour identity,
+       the commander slot holds the card the deck was built FROM -- its color identity,
        its plan, its legality all follow from it. The box used to appear here like
        anywhere else, and picking what it added left the deck at a hundred cards with no
        commander in them, which is not a Commander deck at all. */
@@ -643,8 +643,8 @@
     const warnings = rules ? (rules.compositionWarnings || []) : [];
     const gc = rules ? (rules.selectedGameChangers || []).length : 0;
 
-    // Only the colours the deck actually asks for. Sources for a colour it never casts --
-    // an any-colour rock in a two-colour deck credits all five -- are noise on the row.
+    // Only the colors the deck actually asks for. Sources for a color it never casts --
+    // an any-color rock in a two-color deck credits all five -- are noise on the row.
     const colors = Slot.MANA_COLORS.filter((c) => mana.pips[c] > 0);
     const manaChips = colors.map((c) => {
       const thin = mana.thin.indexOf(c) >= 0;
@@ -669,12 +669,102 @@
       <div class="dp-ready-body">
         ${problems.length ? `<ul class="dp-ready-list">${problems.slice(0, 8).map((p) =>
           `<li><b>${esc(p.card)}</b> ${esc(p.rule)}${p.detail ? ` <i>${esc(p.detail)}</i>` : ""}</li>`).join("")}</ul>`
-          : `<p class="dp-ready-note">Nothing in this hundred breaks a Bracket 3 rule: one commander, a hundred cards, singleton outside the basics, every colour inside the commander's identity, and no more than three Game Changers.</p>`}
+          : `<p class="dp-ready-note">Nothing in this hundred breaks a Bracket 3 rule: one commander, a hundred cards, singleton outside the basics, every color inside the commander's identity, and no more than three Game Changers.</p>`}
         ${mana.thin.length ? `<p class="dp-ready-note"><b>Thin on ${
-          mana.thin.join(", ")}.</b> A colour wants roughly a third of the deck's lands behind it before its pips stop stranding cards in hand. Counted over lands and rocks alike, weighted by how many copies each slot holds.</p>` : ""}
+          mana.thin.join(", ")}.</b> A color wants roughly a third of the deck's lands behind it before its pips stop stranding cards in hand. Counted over lands and rocks alike, weighted by how many copies each slot holds.</p>` : ""}
         ${warnings.length ? `<ul class="dp-ready-list">${warnings.slice(0, 5).map((w) =>
           `<li>${esc(typeof w === "string" ? w : (w.rule || w.card || ""))}</li>`).join("")}</ul>` : ""}
         ${panelToggle("ready", true, "")}
+      </div>
+    </details>`;
+  }
+
+  /* The score, and whether it still describes this deck.
+     ------------------------------------------------------
+     Every published score in this app came from a Node sweep over a hundred cards
+     that were pinned at the time. This page lets any of those hundred be changed,
+     and nothing used to connect the two -- so a deck three cards from what was
+     measured still showed the measured number as if it were its own.
+
+     Three states, and they say different things:
+
+       matched   the selection composes a measured rung. The published figure is
+                 shown with the engine and game count that produced it.
+       adrift    it composes none. The badge names the nearest rung and how many
+                 slots differ, because "out of sync" without a number is a nag.
+       measured  a re-run has been done here. Its own figure leads, with the
+                 difference against the same rung measured the same way.
+
+     The published number and a re-run number are never subtracted from each other:
+     they are different engines on different protocols, and a delta across that gap
+     would be the most confident-looking wrong answer this page could give. */
+  function measuredMarkup(ctx) {
+    const audit = ctx.audit;
+    if (!audit) return "";
+    const open = (ctx.panels || {}).measured === true;
+    const busy = ctx.measuring || null;
+    const tone = audit.state === "adrift" ? " is-adrift"
+      : audit.state === "measured" ? " is-measured" : " is-matched";
+
+    const near = ctx.nearRung;
+    const drift = audit.state === "adrift" && near
+      ? `${plural(near.differs, "slot")} away from ${esc((ctx.rungLabels || {})[near.rung] || near.rung)}`
+      : "";
+
+    const runs = audit.measured ? `
+      <table class="dp-meas-t">
+        <tr><th>This hundred</th><td class="dp-num">${audit.measured.current.score.toFixed(2)}</td>
+          <td class="dp-meas-se">±${audit.measured.current.se}</td></tr>
+        ${audit.measured.baseline ? `<tr><th>${esc((ctx.rungLabels || {})[audit.measured.baselineRung]
+          || audit.measured.baselineRung || "the recommendation")}, measured the same way</th>
+          <td class="dp-num">${audit.measured.baseline.score.toFixed(2)}</td>
+          <td class="dp-meas-se">±${audit.measured.baseline.se}</td></tr>` : ""}
+      </table>
+      <p class="dp-meas-note">Six seeds of ${audit.measured.current.protocol.gamesPerSeed.toLocaleString()}
+        games each, run in this browser on the engine this app ships. ${audit.published
+          ? `The published ${Number(audit.published.score).toFixed(1)} came from the ${
+              esc(audit.published.engine || "sweep")} run and is a different engine, so it is
+              shown for reference and never subtracted from these.`
+          : ""}</p>` : "";
+
+    /* What the games actually did, beside what the simulation predicted. Only
+       when this deck has been played: an empty record is not a finding, and a
+       row of dashes would be worse than no row. */
+    const rec = ctx.record;
+    const played = rec ? `
+      <div class="dp-rec${rec.verdict === "below" ? " is-below" : rec.verdict === "above" ? " is-above" : ""}">
+        <div class="dp-rec-nums">
+          <span><b class="dp-num${rec.headline.provisional ? " is-soft" : ""}">${esc(rec.headline.text)}</b>
+            ${rec.headline.provisional ? "could be" : "won"}</span>
+          <span><b class="dp-num">${rec.predicted == null ? "—" : Math.round(rec.predicted * 100) + "%"}</b> predicted</span>
+          <span><b class="dp-num">${rec.games}</b> played</span>
+          ${rec.podFun == null ? "" : `<span><b class="dp-num">${rec.podFun}</b> table fun</span>`}
+          ${rec.avgTurns == null ? "" : `<span><b class="dp-num">${rec.avgTurns}</b> turns long</span>`}
+        </div>
+        <p class="dp-meas-note">${esc(rec.says)}</p>
+      </div>` : "";
+
+    return `<details class="dp-meas${tone}"${open ? " open" : ""}>
+      <summary>
+        <span class="dp-meas-v">${audit.state === "adrift" ? "⚠" : audit.state === "measured" ? "◎" : "✓"}
+          <b>${esc(audit.headline)}</b></span>
+        ${drift ? `<span class="dp-meas-d">${drift}</span>` : ""}
+        <span class="dp-meas-n">${esc(audit.note)}</span>
+      </summary>
+      <div class="dp-meas-body">
+        ${played}
+        ${runs}
+        ${busy ? `<p class="dp-meas-run">Measuring… ${esc(busy)}</p>` : `
+          <div class="dp-meas-acts">
+            <button type="button" class="dp-rank-b" data-dp-measure="1">${
+              audit.measured ? "Measure again" : "Measure this hundred"}</button>
+            <button type="button" class="dp-rank-b" data-dp-xlsx="1">Export to Excel</button>
+          </div>
+          <p class="dp-meas-note">A run is about seven seconds: this hundred and the rung it
+            came from, both measured here so the difference between them is real. The Excel
+            file carries one sheet for each deck you have chosen, with the reason each card
+            is in it.</p>`}
+        ${panelToggle("measured", true, "")}
       </div>
     </details>`;
   }
@@ -850,6 +940,7 @@
         </div>
         ${panelToggle("head", headOpen, `${t.active}/${t.cards} in the box · ${t.buy} to buy`)}
       </div>
+      ${measuredMarkup(ctx)}
       ${readyMarkup(ctx, slots, panels)}
       ${filterMarkup(ctx, slots, visible.length, filtersOpen)}
       ${visible.length ? "" : '<p class="dp-empty">No slot in this deck matches that.</p>'}
@@ -871,5 +962,5 @@
       }).join("")}`;
   }
 
-  return {render, previewMarkup, locationOf, groupSlots, totals, RARITY_KEY};
+  return {render, previewMarkup, locationOf, groupSlots, totals, measuredMarkup, RARITY_KEY};
 });

@@ -1,4 +1,4 @@
-/* Trey's Commander Decks — the fast view.
+/* My Commander Decks — the fast view.
  *
  * Three tabs and nothing else: the six decks, the bench, and what is still to
  * buy. Everything it shows comes from data/master-v2.json, which is generated
@@ -13,6 +13,18 @@
   "use strict";
 
   var DATA = null, RATINGS = null, GUIDES = null, SWAPS = null;
+
+  /* The workbook's six, exactly as loaded, and the decks somebody added on this
+     device. DATA is the two folded together and is what every render reads; the
+     master is kept apart so removing an import restores the six unchanged rather
+     than approximately. */
+  var MASTER = null, IMPORTS = [];
+
+  /* What the reader says they own, if they have told us. null means they have
+     not, and the workbook's own audited figures stand untouched -- which is the
+     default and must stay the default, because those figures were counted by
+     hand against physical boxes and an upload is a claim. */
+  var INVENTORY = null;
 
   var STORE = "mtg-viewer.v1";
   var state = {
@@ -68,6 +80,154 @@
       state.shareTo = raw.shareTo || "";
       (raw.picks || []).forEach(function (p) { state.picks.set(p.source + "|" + p.name, p); });
     } catch (err) { /* ignore anything unparseable */ }
+  }
+
+  /* -------------------------------------------------------- added decks */
+
+  var Store = window.MtgDeckStore;
+
+  /* Fold the added decks back into the catalog and drop every memo computed off
+     the old one. byName caches a name index and orderedDecks stamps _rank onto
+     the deck objects; both describe the catalog that was, and a stale index is
+     how an added card would come back "not found" from the row that holds it. */
+  function rebuild() {
+    DATA = Store ? Store.merge(MASTER, IMPORTS) : MASTER;
+    applyInventory();
+    byName.index = null;
+    // merge builds new deck objects, so a deck page already open is holding the
+    // old one. Re-point it, or scoring a deck leaves its own banner still saying
+    // "not scored yet" while the stat block above it shows the score.
+    if (state.deck) {
+      state.deck = DATA.decks.filter(function (d) { return d.id === state.deck.id; })[0] || null;
+    }
+  }
+
+  /* An uploaded collection replaces the workbook's ownership figures.
+     -----------------------------------------------------------------
+     Every `actual`, `bench` and `own` on the catalog is recomputed from what the
+     file says, by allocating copies to decks in deck order and calling the
+     remainder bench. That is the same arithmetic the workbook does by hand, run
+     against a different set of numbers.
+
+     DATA is rebuilt from MASTER on every call, so this writes to a fresh copy
+     and the workbook's own figures are one `clearInventory()` away, with no
+     reload and nothing to undo.
+
+     Deck order decides who gets the only copy of a card three decks want. It is
+     the Master's own order, which is stable and stated, rather than the ranked
+     order -- ranking depends on the ratings, which depend on the decks, and a
+     rule that changes when a score changes is not a rule anybody can predict. */
+  function applyInventory() {
+    var Inv = window.MtgInventoryImport;
+    if (!INVENTORY || !Inv || !DATA) return;
+    var decks = DATA.decks.map(function (deck) {
+      return {
+        id: deck.id, label: deck.label,
+        wants: DATA.cards.filter(function (c) { return (c.target[deck.id] || 0) > 0; })
+          .map(function (c) { return {name: c.name, quantity: c.target[deck.id]}; })
+      };
+    });
+    var result = Inv.reconcile(INVENTORY.cards, decks);
+    INVENTORY.result = result;
+
+    var held = {};
+    result.holdings.forEach(function (row) { held[row.name.toLowerCase()] = row; });
+    var allocated = {};
+    result.decks.forEach(function (deck) {
+      deck.filled.forEach(function (f) {
+        allocated[f.name.toLowerCase() + "|" + deck.id] = f.quantity;
+      });
+    });
+
+    /* A NEW object, not an assignment into DATA. With no added decks Store.merge
+       returns the master itself -- there is nothing to merge, so there is nothing
+       to copy -- and writing DATA.cards would overwrite the workbook's own rows
+       in place. Reverting would then "restore" the numbers the upload had already
+       replaced, which is exactly what it did before this line. */
+    var cards = DATA.cards.map(function (card) {
+      var row = held[card.name.toLowerCase()];
+      var actual = {};
+      var short = 0;
+      DATA.decks.forEach(function (deck) {
+        var got = allocated[card.name.toLowerCase() + "|" + deck.id] || 0;
+        actual[deck.id] = got;
+        short += Math.max(0, (card.target[deck.id] || 0) - got);
+      });
+      var owned = row ? row.quantity : 0;
+      return Object.assign({}, card, {
+        actual: actual,
+        own: owned,
+        qty: owned,
+        // Ordered copies came from the workbook and describe a purchase, not a
+        // shelf. An upload says nothing about them, so they are cleared rather
+        // than carried over as if the file had confirmed them.
+        ordered: 0,
+        bench: row ? row.spare : 0,
+        benchActual: row ? row.spare : 0,
+        /* buyCount and status are what the To Buy tab reads. Leaving them at the
+           workbook's figures left that tab describing the audited collection
+           while the ribbon beside it described the uploaded one -- two counts of
+           the same thing, on the same screen, disagreeing. */
+        buyCount: short,
+        toBuyCost: card.price ? short * card.price : 0,
+        status: owned > 0 ? "In Hand" : "To Buy"
+      });
+    });
+
+    // A card in the file that no deck lists is still owned, and belongs on the
+    // bench rather than nowhere.
+    var known = {};
+    cards.forEach(function (c) { known[c.name.toLowerCase()] = true; });
+    result.holdings.filter(function (row) { return !known[row.name.toLowerCase()]; })
+      .forEach(function (row) {
+        var blank = {};
+        DATA.decks.forEach(function (d) { blank[d.id] = 0; });
+        cards.push({
+          name: row.name, bracket: "", target: Object.assign({}, blank), actual: Object.assign({}, blank),
+          benchTarget: 0, benchActual: row.spare, qty: row.quantity, own: row.quantity,
+          cartVendor: "", ordered: 0, price: null, type: "Card", subType: "", color: "C",
+          mv: 0, series: "", purpose: "", mechanics: [], notes: "", moves: "",
+          bench: row.spare, buyCount: 0, toBuyCost: 0, status: "In Hand",
+          priceSource: "upload", fromUpload: true
+        });
+      });
+
+    DATA = Object.assign({}, DATA, {cards: cards});
+  }
+
+  var INVENTORY_KEY = "mtg-viewer-inventory.v1";
+
+  function saveInventory() {
+    try {
+      if (INVENTORY) {
+        localStorage.setItem(INVENTORY_KEY, JSON.stringify({
+          cards: INVENTORY.cards, uploadedAt: INVENTORY.uploadedAt, source: INVENTORY.source
+        }));
+      } else localStorage.removeItem(INVENTORY_KEY);
+      return true;
+    } catch (err) { return false; }
+  }
+
+  function loadInventory() {
+    try {
+      var raw = JSON.parse(localStorage.getItem(INVENTORY_KEY) || "null");
+      INVENTORY = raw && Array.isArray(raw.cards) && raw.cards.length ? raw : null;
+    } catch (err) { INVENTORY = null; }
+  }
+
+  function clearInventory() {
+    INVENTORY = null;
+    saveInventory();
+    rebuild();
+    toast("Back to the workbook's own counts.");
+    render();
+  }
+
+  function saveImports() {
+    if (!Store) return true;
+    var ok = Store.write(window.localStorage, IMPORTS);
+    if (!ok) toast("This browser would not save the deck — it is here until you reload.");
+    return ok;
   }
 
   /* --------------------------------------------------------- card reading */
@@ -130,7 +290,9 @@
       tally[r.state] += r.qty;
       if (r.state === "buy" && r.card.price) cost += r.card.price * r.qty;
     });
-    return { rows: rows, tally: tally, toBuyCost: cost, total: 100 };
+    // An added deck may be 97 cards, and a readiness bar drawn against 100 would
+    // report it as permanently short of a hundredth card it does not want.
+    return { rows: rows, tally: tally, toBuyCost: cost, total: deck.targetCards || 100 };
   }
 
   // The curve and the role split, computed here rather than trusted to the
@@ -152,6 +314,21 @@
     });
     return { curve: curve, roles: roles, lands: lands, spells: spells,
              avgMv: spells ? mvSum / spells : 0 };
+  }
+
+  /* An added deck has no written hook, because nobody wrote one for it. What can
+     honestly be said is what it is made of, which is what the guides' first line
+     would have covered anyway. */
+  function addedHook(deck) {
+    var shape = deckShape(deck), rows = deckCards(deck);
+    var creatures = 0;
+    rows.forEach(function (r) { if (/Creature/.test(r.card.type)) creatures += r.qty; });
+    var colors = colorsOf(deck);
+    var SPREAD = { 0: "Colorless", 1: "Mono-color", 2: "Two colors",
+                   3: "Three colors", 4: "Four colors", 5: "Five colors" };
+    return (SPREAD[colors.length] || "Multicolor") + ". " +
+      plural(shape.lands, "land") + ", " + plural(creatures, "creature") +
+      ", average mana value " + shape.avgMv.toFixed(2) + ".";
   }
 
   function colorsOf(deck) {
@@ -181,12 +358,46 @@
     return (GUIDES.decks || []).filter(function (g) { return g.id === id && sameCommander(g, id); })[0] || null;
   }
 
+  /* The optimizer's recommendations were measured against the hundred as it
+     stood on 2026-09-04, and the 2026-09-05 rebuild changed 14 to 30 cards in
+     every deck. Its source lists are gone, so the file cannot be regenerated --
+     but a swap can still be checked one at a time: "cut X for Y" is advice only
+     while X is still in the deck. The dead ones are dropped rather than the
+     whole panel hidden, because the 45 that survive are still the right call,
+     and the panel says how many went and why. */
   function swapsFor(id) {
     if (!SWAPS) return null;
-    return (SWAPS.decks || []).filter(function (s) { return s.id === id && sameCommander(s, id); })[0] || null;
+    var rec = (SWAPS.decks || []).filter(function (s) { return s.id === id; })[0];
+    if (!rec) return null;
+    var deck = (DATA.decks || []).filter(function (d) { return d.id === id; })[0];
+    if (!deck) return rec;
+    var held = {};
+    deckCards(deck).forEach(function (r) { held[r.card.name] = true; });
+    var live = (rec.swaps || []).filter(function (s) { return !s.out || held[s.out]; });
+    if (live.length === (rec.swaps || []).length && rec.commander === deck.commander) return rec;
+    return {
+      id: rec.id, label: rec.label, commander: rec.commander,
+      tiers: rec.tiers, before: rec.before, swaps: live,
+      dropped: (rec.swaps || []).length - live.length,
+      // A seat change makes every measured figure in the record describe a deck
+      // with a different commander, which the reader should be told once.
+      reseated: rec.commander !== deck.commander ? rec.commander : null
+    };
   }
 
+  /* An added deck carries its own measurement rather than appearing in the
+     ratings file, which is generated from the workbook and knows nothing about
+     it. Shaped like a ratings record so every reader stays the same. */
   function ratingFor(id) {
+    var deck = (DATA.decks || []).filter(function (d) { return d.id === id; })[0];
+    if (deck && deck.imported) {
+      if (!deck.measured) return null;
+      return { id: id, commander: deck.commander, builds: { v1: {
+        score: deck.measured.score,
+        winRate: deck.measured.winRate,
+        bracket: null
+      } } };
+    }
     if (!RATINGS) return null;
     return (RATINGS.decks || []).filter(function (r) { return r.id === id && sameCommander(r, id); })[0] || null;
   }
@@ -208,6 +419,16 @@
     });
     decks.forEach(function (d, i) { d._rank = i + 1; });
     return decks;
+  }
+
+  /* A deck's place in that order, asked for one deck at a time.
+     orderedDecks() stamps _rank as a side effect of building the grid, so a deck
+     page opened straight from a link -- a shared URL, a reload, the jump after an
+     import -- had never been through it and printed "rank undefined". The order
+     is cheap enough to recompute and this is the only honest way to ask. */
+  function rankOf(id) {
+    var at = orderedDecks().map(function (d) { return d.id; }).indexOf(id);
+    return at < 0 ? null : at + 1;
   }
 
   /* ---------------------------------------------------------- card popup */
@@ -400,15 +621,154 @@
 
   function readyBar(stats) {
     var box = stats.tally.box, coming = stats.tally.order + stats.tally.hand;
+    // The bar is a percentage of the deck's own target, not of a hundred: an
+    // added deck of 97 cards is full at 97, not 97% of the way there forever.
+    var pct = function (n) { return Math.round(n / (stats.total || 100) * 100); };
     return el("div", { class: "ready" }, [
       el("div", { class: "ready-bar" }, [
-        el("i", { class: "have", style: "width:" + box + "%" }),
-        el("i", { class: "order", style: "width:" + coming + "%" })
+        el("i", { class: "have", style: "width:" + pct(box) + "%" }),
+        el("i", { class: "order", style: "width:" + pct(coming) + "%" })
       ]),
       el("span", { class: "ready-label" }, [
-        el("b", { text: box + "/100" }), " boxed"
+        el("b", { text: box + "/" + stats.total }), " boxed"
       ])
     ]);
+  }
+
+  /* ----------------------------------------------------------- add a deck */
+
+  /* Three things the import panel needs and this page does not otherwise load:
+     the app's own card names to match a paste against, a Scryfall client for
+     everything that does not match, and the simulation's config. Each is fetched
+     once, on the first import, and never on a page that only reads decks. */
+
+  var simContext = null, scryfall = null;
+
+  function localCards() {
+    // The workbook's own catalog is already in memory, and its 648 names are
+    // the ones most likely to overlap a deck built from the same card pool.
+    return Promise.resolve((MASTER.cards || []).map(function (c) {
+      return { name: c.name, type: c.type, typeLine: c.type, mv: c.mv,
+               price: c.price, colorIdentity: c.color, ci: c.color };
+    }));
+  }
+
+  /* The app's own catalog carries no rules text, and the engine reads rules text.
+     So a card that matched locally is still looked up: matching tells us the name
+     is real, Scryfall tells us what the card does. */
+  function lookupCards(names) {
+    if (!window.MtgScryfall) return Promise.resolve({});
+    if (!scryfall) scryfall = window.MtgScryfall.createClient();
+    return scryfall.collection(names).then(function (result) {
+      var out = {};
+      result.cards.forEach(function (card) { out[card.name] = card; });
+      return out;
+    });
+  }
+
+  function measureContext() {
+    if (simContext) return Promise.resolve(simContext);
+    return Promise.all([
+      fetchJson("sim/config.json?v=1"),
+      fetchJson("sim/opponents.json?v=1")
+    ]).then(function (parts) {
+      simContext = {
+        config: parts[0],
+        seats: window.MtgDeckMeasure.buildSeats(parts[1], parts[0].table)
+      };
+      return simContext;
+    }).catch(function () { return null; });
+  }
+
+  function openImport() {
+    var missing = ["MtgDeckImport", "MtgDeckSources", "MtgDeckStore", "MtgDeckMeasure",
+      "MtgImportPanel", "MtgSimEngine"].filter(function (name) { return !window[name]; });
+    if (missing.length) return toast("The import tools did not load (" + missing[0] + ").");
+
+    window.MtgImportPanel.createPanel({
+      existing: function () { return IMPORTS; },
+      localCards: localCards,
+      lookupCards: lookupCards,
+      measureContext: measureContext,
+      onSaved: function (record) {
+        IMPORTS = Store.add(IMPORTS, record);
+        saveImports();
+        rebuild();
+        toast(record.measured
+          ? record.label + " added and measured at " + record.measured.score.toFixed(2) + "."
+          : record.label + " added.");
+        go("#/deck/" + record.id);
+      }
+    }).open();
+  }
+
+  /* Building one from nothing.
+     The generator's own front door -- the Choose tab -- was retired when the app
+     went to four tabs, and it has been unreachable ever since. This is its new
+     one, beside Add a deck rather than on a tab of its own, because "I have a
+     deck" and "I want one" are the same errand from where the reader sits. */
+  function openBuild() {
+    var missing = ["MtgDeckGenerator", "MtgDeckBuild", "MtgDeckStore", "MtgDeckMeasure",
+      "MtgBuildPanel", "MtgScryfall", "MtgSimEngine"].filter(function (name) { return !window[name]; });
+    if (missing.length) return toast("The deck builder did not load (" + missing[0] + ").");
+
+    window.MtgBuildPanel.createPanel({
+      existing: function () { return IMPORTS; },
+      measureContext: measureContext,
+      onSaved: function (record) {
+        IMPORTS = Store.add(IMPORTS, record);
+        saveImports();
+        rebuild();
+        toast(record.measured
+          ? record.label + " built and measured at " + record.measured.score.toFixed(2) + "."
+          : record.label + " built.");
+        go("#/deck/" + record.id);
+      }
+    }).open();
+  }
+
+  /* Measuring a deck that was saved without a score.
+     The panel's preview is deliberately not recorded -- one seed and 2,000 games
+     is a tenth of a point out, which is the size of the gaps between these decks
+     -- so a deck saved after only a preview arrives here unscored, and this is
+     how it gets a real number without being imported again. */
+  function measureDeck(deck, button) {
+    var record = IMPORTS.filter(function (r) { return r.id === deck.id; })[0];
+    if (!record || !window.MtgDeckMeasure) return;
+    if (!Store.measurable(record)) {
+      return toast("A score needs a hundred cards and a commander. This deck has "
+        + record.total + ".");
+    }
+    button.disabled = true;
+    button.textContent = "Measuring…";
+    measureContext().then(function (context) {
+      if (!context) { button.disabled = false; button.textContent = "Measure it";
+        return toast("The simulation could not be loaded."); }
+      var cards = window.MtgDeckMeasure.hydrate(Store.toLineup(record), null);
+      // One frame, so the disabled button paints before the engine takes the
+      // thread for three and a half seconds.
+      setTimeout(function () {
+        record.measured = window.MtgDeckMeasure.measure(cards, {
+          config: context.config, seats: context.seats,
+          onSeed: function (done, total) { button.textContent = "Seed " + done + " of " + total; }
+        });
+        saveImports();
+        rebuild();
+        toast(record.label + " scores " + record.measured.score.toFixed(2) + ".");
+        render();
+      }, 30);
+    });
+  }
+
+  /* Taking one back out. The master was never written to, so this is a filter
+     and a rebuild rather than a reload. */
+  function removeImport(deck) {
+    if (!window.confirm("Remove " + deck.label + "? The six decks are not affected.")) return;
+    IMPORTS = Store.remove(IMPORTS, deck.id);
+    saveImports();
+    rebuild();
+    toast(deck.label + " removed.");
+    go("#/decks");
   }
 
   /* --------------------------------------------------------------- decks  */
@@ -416,8 +776,11 @@
   function renderDecks(root) {
     var decks = orderedDecks();
 
+    var added = decks.filter(function (d) { return d.imported; }).length;
     root.appendChild(el("div", { class: "section-head" }, [
-      el("h2", { text: "The six decks" }),
+      el("h2", { text: added
+        ? decks.length + " decks"
+        : "The six decks" }),
       el("p", { text: RATINGS
         ? "Ranked by simulated score. Tap a deck for how to play it and what is still missing."
         : "Tap a deck for how to play it, the full hundred, and what is still missing." })
@@ -443,6 +806,11 @@
       if (stats.tally.buy) {
         meta.push(el("span", { class: "chip rose", text: stats.tally.buy + " to buy" }));
       }
+      if (deck.imported) {
+        meta.push(el("span", { class: "chip", title: "Added on this device from "
+          + (deck.source === "paste" ? "a pasted list" : deck.source),
+          text: deck.measured ? "Added deck" : "Added · not scored" }));
+      }
 
       grid.appendChild(el("button", {
         class: "deck-card", type: "button",
@@ -461,11 +829,30 @@
           pips(colorsOf(deck))
         ]),
         el("p", { class: "hook", text: (guide && guide.hook) ||
-          (deck.label + " — " + plural(stats.tally.box, "card") + " of the hundred already boxed.") }),
+          (deck.imported ? addedHook(deck)
+            : deck.label + " — " + plural(stats.tally.box, "card") + " of the hundred already boxed.") }),
         el("div", { class: "meta-row" }, meta),
         readyBar(stats)
       ]));
     });
+
+    // The two tiles that add one. Last in the grid, because they are what you
+    // reach for after looking at what is already there -- and side by side,
+    // because which one you want depends only on whether the deck exists yet.
+    grid.appendChild(el("button", { class: "deck-add", type: "button",
+      onclick: openImport }, [
+      el("span", { class: "plus", "aria-hidden": "true", text: "+" }),
+      el("b", { text: "Add a deck" }),
+      el("span", { text: "Paste a list from Moxfield or anywhere else, or give an "
+        + "Archidekt link. It is scored on the same simulation as these." })
+    ]));
+    grid.appendChild(el("button", { class: "deck-add is-build", type: "button",
+      onclick: openBuild }, [
+      el("span", { class: "plus", "aria-hidden": "true", text: "\u2726" }),
+      el("b", { text: "Build one" }),
+      el("span", { text: "Name a commander and a theme. It is built from live "
+        + "Scryfall data into a legal hundred, at three prices." })
+    ]));
     root.appendChild(grid);
 
     /* Only how the score is made. The import still records where the workbook
@@ -578,7 +965,7 @@
     });
   }
 
-  /* What the optimiser would change, and what it costs. Shown as a
+  /* What the optimizer would change, and what it costs. Shown as a
      recommendation rather than folded into the hundred above, because he has
      not made these swaps -- the deck list stays what the workbook says it is. */
   function swapPanel(plan) {
@@ -614,6 +1001,12 @@
         el("span", { class: "chip",
           text: "decisions " + before.decisionDensity + " \u2192 " + tier.terms.decisionDensity })
       ]),
+      plan.dropped || plan.reseated ? el("p", { class: "caveat", text:
+        "Measured on the list as it stood before the 2026-09-05 rebuild"
+        + (plan.reseated ? ", when " + plan.reseated + " held the seat" : "")
+        + ". " + (plan.dropped
+          ? plural(plan.dropped, "recommendation") + " dropped: the card it would cut has already left the deck."
+          : "Every recommendation still names a card in the deck.") }) : null,
       free.length ? el("h4", { class: "swap-head", text: "Free, off the bench" }) : null,
       el("div", {}, free.map(row)),
       paid.length ? el("h4", { class: "swap-head",
@@ -630,14 +1023,48 @@
     root.appendChild(el("button", { class: "back-link", type: "button",
       onclick: function () { go("#/decks"); } }, "← All decks"));
 
+    /* An added deck says where it came from, and offers the way back out. The
+       six do neither, because neither is true of them. */
+    if (deck.imported) {
+      var gen = deck.generated;
+      root.appendChild(el("div", { class: "imp-banner" }, [
+        el("span", {}, [
+          el("b", { text: gen ? "Built here" : "Added deck" }), " · ",
+          /* A generated deck's provenance is the interesting kind: which rung of
+             which lens, and what it was aimed at. A pasted one only has where the
+             text came from. */
+          gen
+            ? [gen.rungLabel, gen.lensLabel].filter(Boolean).join(" · ").toLowerCase()
+              + (gen.inputs && gen.inputs.budgetUsd ? " · $" + Math.round(gen.inputs.budgetUsd) + " target" : "")
+            : deck.source === "paste" ? "pasted list" : "from " + deck.source,
+          deck.sourceUrl ? el("a", { href: deck.sourceUrl, target: "_blank",
+            rel: "noopener", text: " open it there ↗" }) : null,
+          deck.measured ? "" : " · not scored yet"
+        ]),
+        deck.measured ? null : el("button", { class: "btn", type: "button",
+          text: "Measure it", style: "margin-left:auto",
+          onclick: function (e) { measureDeck(deck, e.currentTarget); } }),
+        el("button", { class: "btn ghost", type: "button",
+          style: deck.measured ? "" : "margin-left:0",
+          onclick: function () { removeImport(deck); }, text: "Remove" })
+      ]));
+    }
+
     var stats1 = [
-      { k: "Boxed", v: stats.tally.box + "/100", n: stats.tally.box === 100 ? "ready to play" : "of the plan" },
+      { k: "Boxed", v: stats.tally.box + "/" + stats.total,
+        n: stats.tally.box === stats.total ? "ready to play" : "of the plan" },
       { k: "Lands", v: String(shape.lands) },
       { k: "Avg cost", v: shape.avgMv.toFixed(2), n: "mana value" }
     ];
     if (rating && rating.builds && rating.builds.v1) {
+      // The ratings file's own rank is over the six it was generated for; once a
+      // deck has been added, the only rank that describes what is on screen is
+      // the one computed over what is on screen.
+      var place = DATA.decks.some(function (d) { return d.imported; })
+        ? rankOf(deck.id)
+        : (rating.rank ? rating.rank.v1 : rankOf(deck.id));
       stats1.unshift({ k: "Score", v: rating.builds.v1.score.toFixed(1),
-        n: "rank " + (rating.rank ? rating.rank.v1 : deck._rank) + " of 6" });
+        n: place ? "rank " + place + " of " + DATA.decks.length : "measured here" });
       if (rating.builds.v1.bracket) {
         stats1.push({ k: "Bracket", v: rating.builds.v1.bracket.label });
       }
@@ -1031,6 +1458,100 @@
     return out;
   }
 
+  /* ------------------------------------------------------ uploaded counts */
+
+  /* The strip above the bench. Two states: no file, in which case it offers one
+     and explains what will happen; or a file, in which case it says what came of
+     it and offers the way back. There is no third state, because an upload that
+     half-applied would be worse than one that failed. */
+  function inventoryBar() {
+    if (!INVENTORY) {
+      var box = el("div", { class: "inv-bar" }, [
+        el("div", {}, [
+          el("b", { text: "These counts come from the Deck Master workbook." }),
+          el("span", { text: " Upload what you actually own and the decks are filled from it "
+            + "instead — whatever is left over lands here." })
+        ]),
+        el("label", { class: "btn primary inv-file" }, [
+          "Upload what I own",
+          el("input", { type: "file", accept: ".csv,.tsv,.txt,.xlsx,text/csv,text/plain",
+            hidden: true, onchange: onInventoryFile })
+        ])
+      ]);
+      return box;
+    }
+    var r = INVENTORY.result || {totals: {}};
+    var t = r.totals || {};
+    var when = String(INVENTORY.uploadedAt || "").slice(0, 10);
+    return el("div", { class: "inv-bar is-on" }, [
+      el("div", {}, [
+        el("b", { text: plural(t.cards || 0, "card") + " from your upload" }),
+        el("span", { text: " · " + plural(t.used || 0, "copy", "copies") + " went into decks · "
+          + plural(t.spare || 0, "copy", "copies") + " on the bench"
+          + (t.short ? " · " + plural(t.short, "copy", "copies") + " still needed" : "")
+          + (when ? " · read " + when : "") })
+      ]),
+      el("div", { class: "inv-acts" }, [
+        el("label", { class: "btn inv-file" }, [
+          "Replace",
+          el("input", { type: "file", accept: ".csv,.tsv,.txt,.xlsx,text/csv,text/plain",
+            hidden: true, onchange: onInventoryFile })
+        ]),
+        el("button", { class: "btn ghost", type: "button", text: "Use the workbook's counts",
+          onclick: clearInventory })
+      ])
+    ]);
+  }
+
+  /* A .xlsx arrives as bytes and everything else as text, and the difference has
+     to be settled before the file is read rather than after -- readAsText on a
+     ZIP produces mojibake that parses as a one-column list of nonsense. */
+  function onInventoryFile(event) {
+    var file = event.target.files && event.target.files[0];
+    event.target.value = "";
+    if (!file) return;
+    var Inv = window.MtgInventoryImport;
+    if (!Inv) return toast("The inventory reader did not load.");
+    var reader = new FileReader();
+    reader.onerror = function () { toast("That file could not be read."); };
+    if (/\.xlsx$/i.test(file.name)) {
+      reader.onload = function () {
+        var Xlsx = window.MtgXlsxReader;
+        if (!Xlsx) return toast("The spreadsheet reader did not load.");
+        Xlsx.read(new Uint8Array(reader.result))
+          .then(function (book) {
+            var sheet = (book.sheets || [])[0];
+            if (!sheet || !sheet.rows.length) throw new Error("The first sheet is empty.");
+            takeInventory(Inv.parseTable(sheet.rows), file.name + " · " + sheet.name);
+          })
+          .catch(function (err) { toast(String(err && err.message || err)); });
+      };
+      reader.readAsArrayBuffer(file);
+    } else {
+      reader.onload = function () {
+        takeInventory(Inv.parseText(String(reader.result || "")), file.name);
+      };
+      reader.readAsText(file);
+    }
+  }
+
+  function takeInventory(parsed, source) {
+    if (!parsed.cards.length) {
+      return toast("No cards were found in that file.");
+    }
+    INVENTORY = {cards: parsed.cards, uploadedAt: new Date().toISOString(), source: source};
+    if (!saveInventory()) toast("This browser would not save it — it is here until you reload.");
+    rebuild();
+    var t = (INVENTORY.result || {totals: {}}).totals || {};
+    // A guessed column layout is the one thing about this that could be silently
+    // wrong, so it is said out loud rather than left in the count.
+    toast(plural(t.cards || 0, "card") + " read"
+      + (parsed.guessed ? " (columns were guessed)" : "")
+      + " · " + plural(t.spare || 0, "copy", "copies") + " on the bench");
+    go("#/bench");
+    render();
+  }
+
   function renderPicker(root, kind) {
     var isBench = kind === "bench";
     var all = isBench ? benchRows() : buyRows();
@@ -1039,9 +1560,12 @@
     root.appendChild(el("div", { class: "section-head" }, [
       el("h2", { text: isBench ? "The bench" : "Still to buy" }),
       el("p", { text: isBench
-        ? "Spare copies not committed to any of the six decks. Tick what you want to move, then Share."
-        : "Everything the six decks still need, plus every upgrade not yet bought. Tick and Share." })
+        ? "Spare copies not committed to any of the decks. Tick what you want to move, then Share."
+        : "Everything the decks still need, plus every upgrade not yet bought. Tick and Share." })
     ]));
+
+    // The bench IS the leftover, so the upload that produces it belongs here.
+    if (isBench) root.appendChild(inventoryBar());
 
     var chips = isBench
       ? [["all", "All"], ["spare", "Not in any deck"], ["dupe", "Spare copies"]]
@@ -1179,7 +1703,9 @@
     }, 0);
 
     var bits = [
-      ["6", "decks"], [String(boxed) + "/600", "cards boxed"],
+      [String(DATA.decks.length), "decks"],
+      [String(boxed) + "/" + DATA.decks.reduce(function (n, d) { return n + (d.targetCards || 100); }, 0),
+        "cards boxed"],
       [String(ordered), "on order"], [String(toBuy), "still to buy"],
       [money(buyCost), "to finish"], [String(bench), "bench copies"],
       [String(upgrades), "upgrades planned"]
@@ -1212,9 +1738,28 @@
     render();
   }
 
+  /* The ribbon and the two tab counts describe the whole catalog, so they are
+     rebuilt on every render rather than once at boot -- adding or removing a
+     deck changes all three, and a stale "6 decks" over seven is the kind of
+     wrong that reads as a bug in the numbers themselves. */
+  function renderCounts() {
+    // "six Commander decks" stops being true the moment somebody adds a seventh.
+    var sub = document.getElementById("brand-sub");
+    if (sub && DATA.decks.some(function (d) { return d.imported; })) {
+      sub.textContent = DATA.decks.length + " Commander decks, what they do, and what they still need";
+    }
+    var slot = document.getElementById("ribbon-slot");
+    if (slot) { slot.textContent = ""; slot.appendChild(renderRibbon()); }
+    var bench = document.getElementById("tab-bench");
+    if (bench) bench.querySelector(".count").textContent = String(benchRows().length);
+    var buy = document.getElementById("tab-buy");
+    if (buy) buy.querySelector(".count").textContent = String(buyRows().length);
+  }
+
   function render() {
     var root = document.getElementById("page");
     root.textContent = "";
+    renderCounts();
 
     document.querySelectorAll(".tab").forEach(function (t) {
       var on = t.dataset.view === state.view || (state.view === "deck" && t.dataset.view === "decks");
@@ -1242,7 +1787,12 @@
   function boot() {
     load();
     fetchJson("data/master-v2.json?v=1").then(function (master) {
-      DATA = master;
+      MASTER = master;
+      // Decks added on this device are read before the first render, so an
+      // added deck is on the page at load rather than appearing a beat later.
+      IMPORTS = Store ? Store.read(window.localStorage) : [];
+      loadInventory();
+      rebuild();
       // The ratings and the guides are generated separately and may lag; the
       // page is fully usable without either, so a miss is not an error.
       return Promise.all([
@@ -1254,12 +1804,6 @@
       RATINGS = extra[0];
       GUIDES = extra[1];
       SWAPS = extra[2];
-
-      document.getElementById("ribbon-slot").appendChild(renderRibbon());
-      document.getElementById("tab-bench").querySelector(".count").textContent =
-        String(benchRows().length);
-      document.getElementById("tab-buy").querySelector(".count").textContent =
-        String(buyRows().length);
 
       var to = document.getElementById("share-to");
       to.value = state.shareTo;

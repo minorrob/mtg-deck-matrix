@@ -39,7 +39,7 @@ a Manual pick on that slot.
 **How it decides.** `Slot.slotFit` scores a candidate on three things, in the order they
 matter: type (a Creature slot wants a creature), what the card is FOR, and cost. The role
 tests are lifted from `sim-engine.js` and pinned against it across all 1,761 cards, so
-"this is removal" means the same thing in the slot as in the simulation. Colour identity is
+"this is removal" means the same thing in the slot as in the simulation. Color identity is
 a gate rather than a score — an out-of-identity card is not a worse fit, it is illegal.
 
 **Two things keep it quiet.** It only appears on a slot whose card you would still have to
@@ -48,19 +48,19 @@ slot whose own card has a role only offers cards that share it, which is the dif
 between six useful suggestions and fifty-nine readings of "also a creature".
 
 **Still open.** It ranks against the loose pool only. It does not consider what removing a
-card would do to the deck's curve or its colour sources — see item 5.
+card would do to the deck's curve or its color sources — see item 5.
 
 ---
 
 ## 3 · A pull sheet for building at the table
 
-**The gap.** The Deck page is organised by the deck's structure — slots grouped by the job
+**The gap.** The Deck page is organized by the deck's structure — slots grouped by the job
 each one does. Physically pulling a hundred cards is a different task: you want them ordered
 the way they are actually sitting, so building is a walk through your boxes rather than
 eighty-five separate searches.
 
 **What it would take.** A print-and-tick view grouped by where each card lives — this deck's
-box, another deck's box, the bench, still to buy — then by set or colour inside that. It
+box, another deck's box, the bench, still to buy — then by set or color inside that. It
 would also want a "found it" tick that syncs back, so the walk itself records progress.
 
 **Why it is not minor.** It is a new view with its own layout, print styles and a second way

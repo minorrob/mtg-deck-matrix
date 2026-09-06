@@ -129,8 +129,8 @@
   // ribbon always marks the build that is actually loaded -- one source of
   // truth, and re-picking the slate is a data change rather than an edit across
   // fifty variant records.
-  let treysBuildIds = new Set();
-  const isTreysBuild = (variant) => treysBuildIds.has(variant.id);
+  let myBuildIds = new Set();
+  const isMyBuild = (variant) => myBuildIds.has(variant.id);
   const isCustomDeck = (deckId) => customDeckIds.has(Number(deckId));
 
   // Generated decks are merged into copies of the baked catalog on every change.
@@ -306,7 +306,7 @@
       ownershipSchema: 2,
       /* The saved shape's own version, separate from the two schema numbers above, which
          version particular fields. This one versions the whole export, so an older file
-         can be recognised and migrated rather than half-read. Raised to 4 when Assigned
+         can be recognized and migrated rather than half-read. Raised to 4 when Assigned
          arrived: before it, a slot had one selection and no reset target. */
       stateVersion: STATE_VERSION,
       compareSelections: {},
@@ -826,7 +826,7 @@
       deckId: variant.id,
       deckTitle: "Deck " + variant.deckId + " · " + variant.name,
       commander: plan.commanderName || variant.commander || "",
-      /* A Commander deck's colours ARE its commander's colours -- there is nowhere else
+      /* A Commander deck's colors ARE its commander's colors -- there is nowhere else
          for them to come from. Offering a card outside them is not a weak suggestion, it
          is an illegal one, so the slot filters on this before it ranks anything. */
       identity: (cards[Lineup.normalizeName(plan.commanderName || variant.commander || "")] || {}).colorIdentity || [],
@@ -837,7 +837,7 @@
          nothing has claimed. deck-page reads these instead of "who has it", so five decks
          can each box a copy of a card you own five of without any of them lying. */
       /* Everything needed to answer "can I sleeve this and play it": the hundred as literal
-         cards, the rules verdict on them, and whether the colours it asks for are actually
+         cards, the rules verdict on them, and whether the colors it asks for are actually
          behind it. Computed here rather than in the page because evaluateDeckCompliance is
          the same call Calibrate has always used -- one authority on legality, not two. */
       deckCards: (() => {
@@ -893,6 +893,20 @@
       rungTwins: rung ? Slot.rungTwins(plan, rung) : [],
       rungLabels: Slot.RUNG_LABEL,
       buildRungs: Slot.BUILD_RUNGS,
+      /* Whether the score above this deck still describes it. Computed here
+         rather than remembered, for the same reason the rung is: a stored "you
+         were measured at 91.5" keeps claiming 91.5 after a slot is changed
+         underneath it. nearRung is what the badge counts against -- the rung
+         this hundred is closest to, and how many slots are off it. */
+      nearRung: window.MtgSlotModel.nearestRung(plan, ensureBuyState(variant.id),
+        (state.deckRung || {})[variant.id]),
+      audit: deckAuditFor(variant, plan, rung),
+      /* How this deck has actually gone, if it has been played. The measured
+         strip reports what the simulation says; this is the other half of that
+         sentence, and the Deck page is where somebody is deciding what to change
+         about the deck -- which is exactly when a record is worth seeing. */
+      record: deckRecordFor(variant, plan, rung),
+      measuring: measuringDeck === variant.id ? measuringLine : null,
       active: (state.deckActive && state.deckActive[variant.id]) || {},
       openSlot: deckPageState.openSlot,
       /* The entry ids the reviewed recommendation selects for this deck. A Set because the
@@ -903,12 +917,226 @@
         head: !deckPageState.closedPanels.head,
         filters: !deckPageState.closedPanels.filters,
         ready: Boolean(deckPageState.closedPanels.ready === false),
+        measured: Boolean(deckPageState.closedPanels.measured === false),
         // One flag for every slot: only one is open at a time, and folding the reasoning
         // away on one slot means wanting it folded on the next.
         slotDetail: !deckPageState.closedPanels.slotDetail
       },
       variants
     };
+  }
+
+  /* This deck's own record, against the rung it is standing on.
+     Same module and the same restraint as the Game Log panel: an interval that
+     contains the prediction reads as "cannot tell", never as a difference. */
+  function deckRecordFor(variant, plan, rung) {
+    const Rec = window.MtgGameRecord;
+    const log = (state.gameLog || []).filter((entry) => entry && entry.variantId === variant.id);
+    if (!Rec || !log.length) return null;
+    const Slot = window.MtgSlotModel;
+    const build = simulationSummary?.builds?.[variant.id];
+    const sim = (rung && build?.[Slot.RUNG_LABEL[rung]]) || build?.Tuned || null;
+    const predicted = sim && sim.winPct != null ? Number(sim.winPct) : null;
+    const deck = Rec.summarize(log, {labels: {[variant.id]: variant.name}}).decks[0];
+    const result = Rec.compare(deck, predicted);
+    return {
+      games: deck.games,
+      headline: Rec.headline(deck),
+      predicted,
+      verdict: result.verdict,
+      says: Rec.phrase(result),
+      podFun: deck.podFun,
+      avgTurns: deck.avgTurns
+    };
+  }
+
+  /* ------------------------------------------------ measuring a deck here */
+
+  /* Which deck is mid-run, and what the progress line says. Module state rather
+     than app state: it describes this second, not this device, and writing it to
+     localStorage would resurrect "Measuring... seed 3 of 6" on a fresh load. */
+  let measuringDeck = null, measuringLine = null;
+  let simSeats = null;
+
+  /* The simulation's own config and opponent table. Fetched once, on the first
+     re-run, so a reader who never presses the button never pays for them. */
+  function simContext() {
+    if (simSeats) return Promise.resolve(simSeats);
+    return Promise.all([
+      fetch("sim/config.json", {cache: "no-store"}).then((r) => r.json()),
+      fetch("sim/opponents.json", {cache: "no-store"}).then((r) => r.json())
+    ]).then(([config, opponents]) => {
+      simSeats = {config, seats: window.MtgDeckMeasure.buildSeats(opponents, config.table)};
+      return simSeats;
+    }).catch(() => null);
+  }
+
+  /* The literal hundred, as cards the simulator can play. `deckPageCards` is the
+     baked catalog the Deck page already holds, so this needs no fetch. */
+  function lineupFor(plan, selection, commanderName) {
+    const Audit = window.MtgDeckAudit;
+    const entries = Lineup.selectedEntries(plan, selection).map((entry) => entry.item);
+    return Audit.lineupOf(entries, deckPageCards || {}, Lineup.normalizeName, commanderName);
+  }
+
+  function deckAuditFor(variant, plan, rung) {
+    const Audit = window.MtgDeckAudit;
+    const Slot = window.MtgSlotModel;
+    if (!Audit || !deckPageCards) return null;
+    const commander = plan.commanderName || variant.commander || "";
+    const lineup = lineupFor(plan, ensureBuyState(variant.id), commander);
+    const published = rung
+      ? (simulationSummary?.builds?.[variant.id]?.[Slot.RUNG_LABEL[rung]] || null)
+      : null;
+    return Audit.status({
+      hash: Audit.hashOf(lineup),
+      rung,
+      stored: (state.deckMeasures || {})[variant.id] || null,
+      published,
+      rungLabels: Slot.RUNG_LABEL
+    });
+  }
+
+  /* Measure the deck as it stands and the rung it came from, both here, both the
+     same way. Two runs of six seeds is about seven seconds of blocked main thread,
+     which is why the button reports which seed it is on rather than spinning. */
+  async function rerunDeckMeasure() {
+    const ctx = deckPageContext();
+    if (!ctx || measuringDeck) return;
+    const Audit = window.MtgDeckAudit;
+    const Slot = window.MtgSlotModel;
+    if (!Audit || !window.MtgDeckMeasure) return showToast("The simulator did not load.");
+    const variant = ctx.variants[deckPageState.deckIndex];
+    const plan = buyCatalog.plans[variant.id];
+    if (!plan) return;
+    const context = await simContext();
+    if (!context) return showToast("The simulation config could not be loaded.");
+
+    const commander = plan.commanderName || variant.commander || "";
+    const current = lineupFor(plan, ensureBuyState(variant.id), commander);
+    if (current.reduce((n, c) => n + c.quantity, 0) !== 100) {
+      return showToast("A score needs a hundred cards. Fill the empty slots first.");
+    }
+    /* The baseline is the rung this hundred is nearest to, which is the one the
+       published number described before the deck was edited. With no rung at all
+       there is nothing honest to compare against, and the run says so by
+       returning a single figure rather than inventing a second. */
+    const near = ctx.nearRung;
+    const baseline = near ? lineupFor(plan, Slot.selectionForRung(plan, near.rung), commander) : null;
+
+    measuringDeck = variant.id;
+    let done = 0;
+    const total = baseline ? 12 : 6;
+    measuringLine = `seed 1 of ${total}`;
+    renderDeckPage();
+    // One frame, so the progress line paints before the engine takes the thread.
+    await new Promise((resolve) => setTimeout(resolve, 40));
+
+    try {
+      const result = Audit.rerun(current, baseline, {
+        config: context.config,
+        seats: context.seats,
+        baselineRung: near ? near.rung : null,
+        onSeed: () => {
+          done += 1;
+          measuringLine = `seed ${Math.min(done + 1, total)} of ${total}`;
+        }
+      });
+      state.deckMeasures = state.deckMeasures || {};
+      state.deckMeasures[variant.id] = result;
+      saveState();
+      const delta = result.baseline ? result.current.score - result.baseline.score : null;
+      showToast(delta === null
+        ? `${variant.name} measures ${result.current.score.toFixed(2)}.`
+        : `${variant.name} measures ${result.current.score.toFixed(2)}, ${
+            (delta >= 0 ? "+" : "") + delta.toFixed(2)} against ${Slot.RUNG_LABEL[result.baselineRung]}.`);
+    } finally {
+      measuringDeck = null;
+      measuringLine = null;
+      renderDeckPage();
+    }
+  }
+
+  /* ------------------------------------------------ the deck workbook */
+
+  /* One sheet per chosen deck, with a summary in front. The reason to export at
+     all is the "why" column: a decklist is available from a dozen places, and the
+     sentence explaining why each card is in this deck is not. */
+  function exportDeckWorkbook() {
+    const Audit = window.MtgDeckAudit;
+    const Xlsx = window.MtgXlsxWriter;
+    const Slot = window.MtgSlotModel;
+    const ctx = deckPageContext();
+    if (!Audit || !Xlsx || !ctx) return showToast("The workbook writer did not load.");
+
+    const decks = ctx.variants.map((variant) => {
+      const plan = buyCatalog.plans[variant.id];
+      if (!plan) return null;
+      const selection = ensureBuyState(variant.id);
+      const rung = Slot.activeRung(plan, selection, (state.deckRung || {})[variant.id]);
+      const measured = (state.deckMeasures || {})[variant.id] || null;
+      const published = rung ? (simulationSummary?.builds?.[variant.id]?.[Slot.RUNG_LABEL[rung]] || null) : null;
+      const commander = plan.commanderName || variant.commander || "";
+
+      const cards = Lineup.selectedEntries(plan, selection).map((entry) => {
+        const item = entry.item;
+        const facts = (deckPageCards || {})[Lineup.normalizeName(item.name)] || {};
+        const where = window.MtgDeckPage.locationOf(ctx, item.name, item.quantity, variant.id);
+        const unit = Number(item.price != null ? item.price : facts.price) || 0;
+        const quantity = Math.max(1, Number(item.quantity || 1));
+        return {
+          name: item.name,
+          quantity,
+          type: facts.typeLine || item.typeLine || "",
+          manaCost: facts.manaCost || item.manaCost || "",
+          // data/cards.json carries no mana value, only the printed cost, so it is
+          // read off the cost by the same helper the slot fit uses.
+          mv: Slot.manaValueOf(facts.manaCost ? facts : item) || 0,
+          color: (facts.colorIdentity || item.colorIdentity || []).join("") || "C",
+          // The bucket an entry came out of IS its rung -- there is no `rung` field
+          // on an entry, and reading one gave a column of blanks.
+          rung: Slot.RUNG_LABEL[Slot.rungOf(entry.kind)] || "",
+          where: where.label,
+          inBox: where.kind === "active",
+          toBuy: where.kind === "buy",
+          unit,
+          line: unit * quantity,
+          /* The whole reason for the file. The plan writes `why` on every card it
+             adds and `brief` on some; a starting-shell card has neither, because
+             the shell is where the deck begins rather than something argued for.
+             Saying that is better than a blank cell, which reads as missing data. */
+          why: item.why || item.maxReason || item.brief || item.purpose
+            || (entry.kind === "shell" ? "In the starting shell" : "")
+        };
+      });
+
+      return {
+        /* Excel truncates a sheet name at 31 characters, and "D2 Proliferate
+           Counters — Atrax" reads as a broken file rather than a long one. The
+           commander is already its own column on the Summary, so the sheet is
+           named by the deck and its theme alone. */
+        title: `D${variant.deckId} ${String(variant.name).split(/\s+[—-]\s+/)[0]}`,
+        commander,
+        rungLabel: rung ? Slot.RUNG_LABEL[rung] : null,
+        score: measured && measured.hash === Audit.hashOf(lineupFor(plan, selection, commander))
+          ? measured.current.score
+          : (published ? published.score : null),
+        scoreSource: measured && measured.hash === Audit.hashOf(lineupFor(plan, selection, commander))
+          ? "measured in the browser, six seeds of 20,000 games"
+          : (published ? `${published.engine || "sweep"}, ${Number(published.games || 0).toLocaleString()} games`
+            : "not measured on this hundred"),
+        cards
+      };
+    }).filter(Boolean);
+
+    if (!decks.length) return showToast("Choose a variant for at least one deck first.");
+    const book = Audit.workbook(decks, {});
+    downloadFile({
+      filename: book.filename,
+      mime: Xlsx.MIME,
+      bytes: Xlsx.build(book)
+    });
+    showToast(`${decks.length} deck${decks.length === 1 ? "" : "s"} exported, one sheet each.`);
   }
 
   /* Every pick, rung and tick re-renders the whole page, which without this would
@@ -1134,6 +1362,14 @@
       const id = el.dataset.dpExpand;
       deckPageState.openSlot = deckPageState.openSlot === id ? null : id;
       renderDeckPage();
+      return true;
+    }
+    if (event.target.closest("[data-dp-measure]")) {
+      rerunDeckMeasure();
+      return true;
+    }
+    if (event.target.closest("[data-dp-xlsx]")) {
+      exportDeckWorkbook();
       return true;
     }
     if ((el = event.target.closest("[data-dp-rung]"))) {
@@ -1481,7 +1717,7 @@
           label: `${deckLabels[target.id]} · ${Slot.RUNG_LABEL[best.match.rung]} rung · replace ${
             replacedPick ? replacedPick.name : "an empty slot"} · fit ${best.score}`,
           action: `replace ${replacedPick ? replacedPick.name : "the empty slot"}`,
-          reasons: ["Commander legal + colour legal", `${best.slot.type} slot`],
+          reasons: ["Commander legal + color legal", `${best.slot.type} slot`],
           replaced: rl
         });
       });
@@ -1557,7 +1793,10 @@
       bench: benchItems(decks, owned, cards, deckLabels),
       intakeOpen: shopIntakeOpen,
       picked: shopPickedUp,
-      deckLabels, filters: shopFilters, owned, decks
+      deckLabels, filters: shopFilters, owned, decks,
+      // The page owns the decorated rows -- color, card type, deck names -- so it
+      // hands them straight over rather than the app rebuilding them from raw.
+      onExport: openTripExport
     };
   }
 
@@ -1731,6 +1970,14 @@
       shopFilters.query = ""; renderShopPage(); return true;
     }
     if (event.target.closest("[data-sp-mob]")) { shopFilters.barOpen = !shopFilters.barOpen; renderShopPage(); return true; }
+    /* Export takes what is on screen, filters and all. Exporting the whole plan
+       when you are looking at one deck's outstanding red cards would be the wrong
+       list every time, so the dialog is handed the rows the page is showing. */
+    if (event.target.closest("[data-sp-export]")) {
+      const ctx = shopContext();
+      if (ctx) openTripExport(window.MtgShopPage.visibleRows(ctx));
+      return true;
+    }
     if ((el = event.target.closest("[data-sp-view]"))) {
       const next = el.dataset.spView;
       /* Arriving at the Store is arriving at a booth: the list of what you have already
@@ -2400,10 +2647,10 @@
     const engine = variant.scores?.engine?.[stage - 1] || [];
     const growth = variant.scores?.growth || [];
     const card = document.createElement("article");
-    card.className = `variant-card${selected ? " is-selected" : ""}${variant.treysBuild ? " is-treys-build" : ""}`;
+    card.className = `variant-card${selected ? " is-selected" : ""}${variant.myBuild ? " is-my-build" : ""}`;
     card.dataset.variant = variant.id;
     card.innerHTML = `
-      ${isTreysBuild(variant) ? `<div class="treys-build-ribbon" title="Trey's chosen build for this deck slot"><span>★ Trey's Build</span></div>` : ""}
+      ${isMyBuild(variant) ? `<div class="my-build-ribbon" title="my chosen build for this deck slot"><span>★ My Build</span></div>` : ""}
       <label class="pick-control">
         <input type="checkbox" ${selected ? "checked" : ""} aria-label="Pick ${esc(variant.name)}">
         <span>${selected ? "Picked" : "Pick"}</span>
@@ -6069,6 +6316,87 @@
     withUiState("#view-log", renderGameLogView);
   }
 
+  /* ------------------------------------------- what the games taught you */
+
+  /* The Game Log has been write-only since it was built. Every score in this app
+     is a prediction; every row in that log is an outcome; nothing put the two
+     side by side. This does -- carefully, because twelve games of Commander is
+     not evidence of much and the interesting-looking version of this panel would
+     be a confident-looking lie.
+
+     game-record.js does the arithmetic and, more importantly, the restraint: a
+     Wilson interval that contains the prediction is reported as "these agree, or
+     there are too few games to tell", never as a difference. */
+  function gameRecordMarkup() {
+    const Rec = window.MtgGameRecord;
+    const log = state.gameLog || [];
+    if (!Rec || !log.length) return "";
+
+    const labels = {};
+    (state.compareSelections ? Object.values(state.compareSelections) : []).forEach((id) => {
+      const v = variantById(id);
+      if (v) labels[id] = v.name;
+    });
+    log.forEach((entry) => {
+      if (labels[entry.variantId]) return;
+      const v = variantById(entry.variantId);
+      labels[entry.variantId] = v ? v.name : entry.variantId;
+    });
+
+    const summary = Rec.summarize(log, {labels});
+    const rows = summary.decks.map((deck) => {
+      /* The published win rate for the rung this deck is standing on. Tuned is
+         the fallback because it is the one rung every variant was measured on
+         the same way -- comparing a logged record against a rung the deck is not
+         actually built as would be worse than not comparing at all. */
+      const plan = buyCatalog.plans[deck.id];
+      const Slot = window.MtgSlotModel;
+      const rung = plan && Slot ? Slot.activeRung(plan, ensureBuyState(deck.id), (state.deckRung || {})[deck.id]) : null;
+      const build = simulationSummary?.builds?.[deck.id];
+      const sim = (rung && build?.[Slot.RUNG_LABEL[rung]]) || build?.Tuned || null;
+      const predicted = sim && sim.winPct != null ? Number(sim.winPct) : null;
+      const result = Rec.compare(deck, predicted);
+      /* Under five decided games the range IS the headline. "100% won" off one
+         game is the exact failure this panel was written to avoid, and the
+         sentence underneath is not enough to undo a number that size. */
+      const head = Rec.headline(deck);
+      const tone = result.verdict === "below" ? " is-below"
+        : result.verdict === "above" ? " is-above" : "";
+      return `<div class="gr-row${tone}">
+        <div class="gr-deck">
+          <b>${esc(deck.label)}</b>
+          <span>${deck.games} game${deck.games === 1 ? "" : "s"}${deck.draws ? ` · ${deck.draws} drawn` : ""}${
+            deck.last ? ` · last ${esc(deck.last)}` : ""}</span>
+        </div>
+        <div class="gr-num${head.provisional ? " is-provisional" : ""}"><b class="num">${head.text}</b>
+          <span>${head.provisional ? "could be" : "won"}</span></div>
+        <div class="gr-num"><b class="num">${predicted == null ? "—" : Rec.pct(predicted)}</b>
+          <span>predicted</span></div>
+        <div class="gr-num"><b class="num">${deck.podFun == null ? "—" : deck.podFun}</b>
+          <span>table fun</span></div>
+        <div class="gr-num"><b class="num">${deck.avgTurns == null ? "—" : deck.avgTurns}</b>
+          <span>turns</span></div>
+        <p class="gr-says">${esc(Rec.phrase(result))}</p>
+      </div>`;
+    }).join("");
+
+    const fun = Rec.funVersusWinning(summary);
+    const t = summary.totals;
+    return `<section class="gr-panel">
+      <div class="gr-head">
+        <h3>What the games say</h3>
+        <span>${t.games} game${t.games === 1 ? "" : "s"} across ${t.decks} deck${t.decks === 1 ? "" : "s"}${
+          t.winRate == null ? "" : ` · won ${Rec.pct(t.winRate)} of the ${t.decided} that had a winner`}</span>
+      </div>
+      ${fun ? `<p class="gr-fun">${esc(fun.note)}</p>` : ""}
+      <div class="gr-rows">${rows}</div>
+      <p class="gr-caveat">The predicted rate comes from the simulation's own opponent
+        table, not from the four people you actually sit with — so a gap can be the
+        deck, the piloting, or the pod, and nothing in a log can tell those apart.
+        Ranges are 95% intervals on the games recorded here.</p>
+    </section>`;
+  }
+
   function renderGameLogView() {
     const root = $("#view-log");
     const log = state.gameLog || [];
@@ -6117,6 +6445,10 @@
           <button class="text-button" type="button" data-log-clear>Clear</button>
         </div>
       </section>
+      <!-- The reading comes before the list. Somebody opening this tab after a
+           night wants what the games mean, not to scroll past forty rows to find
+           out; the rows are the record and stay below it. -->
+      ${gameRecordMarkup()}
       <div class="log-list-head">
         <h3>Logged games</h3>
         <div class="action-row">
@@ -7313,6 +7645,100 @@
     return state.shopTable;
   }
 
+  /* THE SHOPPING TRIP. Three lists, and they are not three views of one table:
+     one is printed and carried to a booth, one is pasted into a checkout, one is
+     checked against a shelf. Which ones you want depends on the errand, so the
+     dialog asks rather than assuming, and remembers nothing -- the answer is
+     different next week.
+
+     Everything is built by shop-export.js and written client-side. Nothing here
+     talks to a server, which is what lets a friend who loaded their own deck use
+     the same button. */
+  function openTripExport(rows) {
+    const Shop = window.MtgShopExport;
+    const dialog = $("#trip-dialog");
+    if (!Shop || !dialog) return showToast("The export module did not load.");
+    if (!rows || !rows.length) return showToast("Nothing in the current view to export.");
+    const counts = {
+      toBuy: Shop.toBuyGroups(rows).reduce((n, g) => n + g.count, 0),
+      order: Shop.orderText(rows).split("\n").filter(Boolean).length,
+      inHand: Shop.inHandRows(rows).length
+    };
+    const has = (n) => n > 0;
+    $("#trip-dialog-kicker").textContent =
+      `${rows.length} card${rows.length === 1 ? "" : "s"} in the current view`;
+    $("#trip-dialog-body").innerHTML = `
+      <p class="trip-lede">Pick any or all. Each one is cut for where it is used.</p>
+      <label class="trip-opt${has(counts.toBuy) ? "" : " is-empty"}">
+        <input type="checkbox" data-trip="toBuy"${has(counts.toBuy) ? " checked" : " disabled"}>
+        <span><b>To Buy</b> — ${counts.toBuy} card${counts.toBuy === 1 ? "" : "s"}
+        <em>Printed, two columns, grouped by price then color. Carry it to the booth.</em></span>
+      </label>
+      <label class="trip-opt${has(counts.order) ? "" : " is-empty"}">
+        <input type="checkbox" data-trip="order"${has(counts.order) ? " checked" : " disabled"}>
+        <span><b>Order</b> — ${counts.order} line${counts.order === 1 ? "" : "s"}
+        <em>Paste into tcgplayer.com/massentry and press Add to Cart.</em></span>
+      </label>
+      <label class="trip-opt${has(counts.inHand) ? "" : " is-empty"}">
+        <input type="checkbox" data-trip="inHand"${has(counts.inHand) ? " checked" : " disabled"}>
+        <span><b>In hand</b> — ${counts.inHand} card${counts.inHand === 1 ? "" : "s"}
+        <em>What you already own, by deck. Check it against the shelf.</em></span>
+      </label>
+      <label class="trip-word">
+        <input type="checkbox" data-trip-word>
+        <span>Also give me Word files. The print pages lay out more reliably, so
+        take these only if you want to edit the list on the way.</span>
+      </label>
+      <div class="trip-actions">
+        <button type="button" class="primary-button" data-trip-go>Download</button>
+      </div>`;
+
+    $("[data-trip-go]", $("#trip-dialog-body")).addEventListener("click", () => {
+      const want = {};
+      $$("[data-trip]", $("#trip-dialog-body")).forEach((box) => {
+        if (box.checked) want[box.dataset.trip] = true;
+      });
+      if ($("[data-trip-word]", $("#trip-dialog-body")).checked) {
+        if (want.toBuy) want.toBuyDocx = true;
+        if (want.inHand) want.inHandDocx = true;
+      }
+      const files = Shop.build(rows, want, {date: new Date().toISOString().slice(0, 10)});
+      if (!files.length) return showToast("Nothing selected to export.");
+      files.forEach((file, i) => {
+        // Browsers drop downloads fired in the same tick, so they are spaced out.
+        setTimeout(() => downloadFile(file), i * 350);
+      });
+      dialog.close();
+      // find() hands back the FILE, not the note on it. Printed straight into the
+      // toast that read "Exported 5 files. [object Object]".
+      const note = (files.find((f) => f.note) || {}).note;
+      showToast(`Exported ${files.length} file${files.length === 1 ? "" : "s"}.` +
+        (note ? " " + note : ""));
+    });
+    dialog.showModal();
+  }
+
+  /* One place that turns an export-module file into a download. A print sheet is
+     opened in a tab rather than saved: it exists to be printed, and a file in the
+     downloads folder is one more step between here and paper. */
+  function downloadFile(file) {
+    if (file.kind === "print") {
+      const win = window.open("", "_blank");
+      if (win) { win.document.write(file.content); win.document.close(); return; }
+      // Popups blocked: fall through and save it, which still works.
+    }
+    const body = file.bytes ? [file.bytes] : [file.content];
+    const blob = new Blob(body, {type: file.mime});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = file.filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
+
   function exportShopList(visible) {
     const groupBy = state.shopFilters.groupBy;
     const groups = groupBy === "none" ? [{label: "", items: visible}] : groupShopItems(visible, groupBy);
@@ -8025,7 +8451,7 @@
         // published slate.
         fetch("data/active-state.json", {cache: "no-store"}).then((response) => response.ok ? response.json() : null).catch(() => null)
       ]);
-      treysBuildIds = new Set(Object.values(activeStateFile?.state?.compareSelections || {}).filter(Boolean));
+      myBuildIds = new Set(Object.values(activeStateFile?.state?.compareSelections || {}).filter(Boolean));
       customStore = Custom.load(localStorage);
       remergeCustom();
       state = loadState();
@@ -8078,6 +8504,10 @@
       });
       $("#compliance-dialog-close").addEventListener("click", () => $("#compliance-dialog").close());
       $("#compliance-dialog").addEventListener("click", (event) => {
+        if (event.target === event.currentTarget) event.currentTarget.close();
+      });
+      $("#trip-dialog-close").addEventListener("click", () => $("#trip-dialog").close());
+      $("#trip-dialog").addEventListener("click", (event) => {
         if (event.target === event.currentTarget) event.currentTarget.close();
       });
       $("#sim-dialog-close").addEventListener("click", closeSimDialog);

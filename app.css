@@ -5,14 +5,14 @@
    chroma, which read as tasteful and tired: nothing on the page was brighter than
    anything else, so nothing pulled the eye.
 
-   --forest-2 does most of the work. It is the "on" colour -- every ticked box, every
+   --forest-2 does most of the work. It is the "on" color -- every ticked box, every
    active rung, every primary button, every pressed segment -- so lifting it from a
-   grey-green to a real green lifts every active state on every screen at once. It is
+   gray-green to a real green lifts every active state on every screen at once. It is
    checked against white at 5.3:1, so white text on it still passes AA at any size.
 
    --accent is the one hue that is not in the family, kept for the single thing on a
    screen that most wants pressing. Used sparingly it reads as "here"; used everywhere
-   it would just be a second dull colour. */
+   it would just be a second dull color. */
 :root {
   color-scheme: light;
   --ink: #16221d;
@@ -160,9 +160,9 @@ main { width: min(1560px, 100%); min-height: 70vh; margin: 0 auto; padding: 18px
 .variant-track { display: grid; grid-auto-flow: column; grid-auto-columns: min(88vw, 390px); gap: 12px; overflow-x: auto; padding: 13px; scroll-snap-type: x mandatory; scrollbar-color: #baa974 transparent; }
 .variant-card { position: relative; display: flex; flex-direction: column; min-height: 490px; border: 1px solid #d8cdb2; border-radius: 16px; overflow: hidden; background: #fffdf8; scroll-snap-align: center; }
 .variant-card.is-selected { border: 2px solid var(--gold); box-shadow: 0 0 0 3px rgba(198,151,53,.18); }
-.variant-card.is-treys-build { border-color: var(--gold); }
-.treys-build-ribbon { position: absolute; top: 12px; left: -34px; z-index: 2; width: 150px; padding: 4px 0; transform: rotate(-45deg); text-align: center; color: #3f2c09; background: linear-gradient(145deg,#f7dc7d,#c99b32); box-shadow: 0 2px 6px rgba(0,0,0,.25); pointer-events: none; }
-.treys-build-ribbon span { display: block; font: 900 10px/1.2 Georgia, serif; letter-spacing: .02em; text-transform: uppercase; }
+.variant-card.is-my-build { border-color: var(--gold); }
+.my-build-ribbon { position: absolute; top: 12px; left: -34px; z-index: 2; width: 150px; padding: 4px 0; transform: rotate(-45deg); text-align: center; color: #3f2c09; background: linear-gradient(145deg,#f7dc7d,#c99b32); box-shadow: 0 2px 6px rgba(0,0,0,.25); pointer-events: none; }
+.my-build-ribbon span { display: block; font: 900 10px/1.2 Georgia, serif; letter-spacing: .02em; text-transform: uppercase; }
 .deck-about-objective { margin: 0 0 14px; padding: 12px 14px; border-left: 3px solid var(--gold); color: var(--forest); background: #fbf8ef; font: 700 15px/1.5 Georgia, serif; }
 .deck-priority-note { margin-top: 8px; color: var(--muted); font-size: 12px; font-style: italic; }
 .deck-about-variant-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
@@ -183,7 +183,18 @@ main { width: min(1560px, 100%); min-height: 70vh; margin: 0 auto; padding: 18px
 .commander { margin: 0; color: #e5d3a2; font-size: 12px; line-height: 1.35; }
 .mana { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-top: 6px; color: #f8f0db; font-size: 11px; }
 .mechanic-tags { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 7px; }
-.mechanic-tags span { padding: 3px 5px; border: 1px solid rgba(255,255,255,.23); border-radius: 5px; color: #e8f2ec; background: rgba(0,0,0,.12); font-size: 7px; font-weight: 800; }
+/* THE 9.5px FLOOR ON TEXT.
+   A sweep over every page measured eight rules setting body text at 7px -- the
+   mechanic chips on a deck header, the "BUILD COST" label under a figure, the
+   little uppercase notes on a shell row and a shop card. Seven pixels of
+   uppercase is not small type, it is type nobody reads, and there were 178 of
+   them on the Compare tab alone. They are 9.5px now, which is the smallest size
+   anything else in this file uses for an eyebrow label.
+
+   The four rules that still say 7px set it on a .ui-icon: a glyph inside a fixed
+   13-14px circle, where raising the size overflows the circle and the glyph is
+   decorative beside a label that is already legible. */
+.mechanic-tags span { padding: 3px 5px; border: 1px solid rgba(255,255,255,.23); border-radius: 5px; color: #e8f2ec; background: rgba(0,0,0,.12); font-size: 9.5px; font-weight: 800; }
 .commander-compare { padding: 9px 12px; border-bottom: 1px solid #e4dbc8; background: #f8f4e6; }
 .commander-compare-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 6px; align-items: center; }
 .commander-compare-thumb { display: grid; grid-template-columns: 28px 1fr; gap: 6px; align-items: center; min-width: 0; padding: 4px; border: 2px solid transparent; border-radius: 8px; color: #5c6a62; background: none; text-align: left; cursor: pointer; }
@@ -241,11 +252,11 @@ main { width: min(1560px, 100%); min-height: 70vh; margin: 0 auto; padding: 18px
 .cost-budget-metric > .cost-budget-copy { align-self: stretch; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0; color: inherit; font-size: inherit; letter-spacing: 0; text-transform: none; }
 .cost-budget-copy > span { min-width: 0; display: grid; align-content: center; gap: 2px; padding: 0 5px; }
 .cost-budget-copy > span:first-child { padding-left: 0; border-right: 1px solid #d8ccb2; }
-.cost-budget-copy small { color: var(--muted); font-size: 7px; line-height: 1; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; }
+.cost-budget-copy small { color: var(--muted); font-size: 9.5px; line-height: 1; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; }
 .cost-budget-copy strong { overflow: hidden; color: var(--forest); font-size: 10px; line-height: 1.05; text-overflow: ellipsis; white-space: nowrap; }
 .availability-metric > strong { display: flex; align-items: center; gap: 4px; }
 .availability-metric > strong > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.availability-metric > strong > b { flex: 0 0 auto; padding: 2px 4px; border-radius: 999px; color: var(--forest); background: #fff; font-size: 7px; }
+.availability-metric > strong > b { flex: 0 0 auto; padding: 2px 4px; border-radius: 999px; color: var(--forest); background: #fff; font-size: 9.5px; }
 .availability-metric > strong > b.has-gc { color: #fff; background: var(--red); }
 .bracket-metric .ui-icon { background: var(--blue); }
 .rarity-metric .ui-icon { background: #6a4b85; }
@@ -307,7 +318,7 @@ main { width: min(1560px, 100%); min-height: 70vh; margin: 0 auto; padding: 18px
 .compliance-status > strong { font-size: 9px; }
 .card-count-status { display: grid; grid-template-columns: auto; gap: 0; text-align: center; }
 .card-count-status > b { color: var(--forest); font-size: 10px; }
-.card-count-status > small { color: var(--muted); font-size: 7px; }
+.card-count-status > small { color: var(--muted); font-size: 9.5px; }
 .is-compliant { border-color: #8fb6a1; background: #edf7f0; }
 .is-compliant > strong { color: #1d694a; }
 .is-noncompliant { border-color: #d8a69f; background: #fbefed; }
@@ -380,7 +391,7 @@ main { width: min(1560px, 100%); min-height: 70vh; margin: 0 auto; padding: 18px
 .shell-card-row strong, .shell-card-row small { display: block; }
 .shell-card-row strong { overflow: hidden; color: var(--forest); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 .shell-card-row small { display: flex; align-items: center; gap: 4px; overflow: hidden; color: var(--muted); font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
-.shell-card-row em { display: block; margin-top: 2px; color: var(--forest-2); font-size: 7px; font-style: normal; font-weight: 850; letter-spacing: .03em; text-transform: uppercase; }
+.shell-card-row em { display: block; margin-top: 2px; color: var(--forest-2); font-size: 9.5px; font-style: normal; font-weight: 850; letter-spacing: .03em; text-transform: uppercase; }
 .shell-land-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(84px,1fr)); gap: 8px; padding: 9px; border-top: 1px solid #e4dbc8; }
 .shell-land-tile { min-width: 0; padding: 4px; border: 0; border-radius: 7px; color: inherit; background: transparent; font-family: inherit; text-align: center; cursor: pointer; }
 .shell-land-tile > div { position: relative; width: 62px; margin: auto; }
@@ -400,7 +411,7 @@ main { width: min(1560px, 100%); min-height: 70vh; margin: 0 auto; padding: 18px
 .constructed-shell-item .buy-item-detail { grid-template-columns: 42px minmax(0,1fr); }
 .constructed-shell-item .buy-item-detail .shell-placeholder { width: 42px; height: 59px; }
 .constructed-shell-item .price { min-width: 58px; text-align: right; }
-.constructed-shell-item .price small { display: block; color: var(--muted); font-size: 7px; letter-spacing: .05em; text-transform: uppercase; }
+.constructed-shell-item .price small { display: block; color: var(--muted); font-size: 9.5px; letter-spacing: .05em; text-transform: uppercase; }
 .commander-mini { padding: 2px 5px; border-radius: 5px; color: #fff; background: #9a6d14; font-size: 8px; font-weight: 900; text-transform: uppercase; }
 .alt-mini { padding: 2px 5px; border-radius: 5px; color: #fff; background: #1f9e8b; font-size: 8px; font-weight: 900; text-transform: uppercase; }
 .kind-label.shell, .shop-badge.shell { background: #356d78; }
@@ -547,7 +558,7 @@ details[open] > summary .section-expander::after { content: "−"; }
 .shop-card-kicker { min-height: 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-bottom: 2px; color: var(--muted); font-size: 8px; font-weight: 900; letter-spacing: .07em; text-transform: uppercase; }
 .shop-card-kicker .ui-icon { width: 17px; height: 17px; font-size: 8px; }
 .shop-card-kicker .rarity-icon { width: 22px; height: 22px; margin-left: 2px; object-fit: contain; filter: drop-shadow(0 1px 1px rgba(44,31,12,.2)); }
-.shop-card-kicker .shop-badge { padding: 2px 5px; font-size: 7px; letter-spacing: 0; }
+.shop-card-kicker .shop-badge { padding: 2px 5px; font-size: 9.5px; letter-spacing: 0; }
 .shop-main h3 { margin: 0 0 4px; font: 800 17px/1.15 Georgia, serif; }
 .shop-name-button { max-width: 100%; padding: 0; border: 0; color: var(--forest); background: none; font: inherit; text-align: left; cursor: pointer; }
 .shop-name-button:hover, .shop-name-button:focus-visible { color: #8a6414; text-decoration: underline; outline: none; }
@@ -563,7 +574,7 @@ details[open] > summary .section-expander::after { content: "−"; }
 .shop-buying-facts > div:nth-child(3) .ui-icon { color: #fff; background: var(--blue); }
 .shop-buying-facts > div:nth-child(4) .ui-icon { color: #fff; background: #6a4b85; }
 .shop-buying-facts span { min-width: 0; display: grid; gap: 1px; }
-.shop-buying-facts small { color: var(--muted); font-size: 7px; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; }
+.shop-buying-facts small { color: var(--muted); font-size: 9.5px; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; }
 .shop-buying-facts strong { min-width: 0; overflow: hidden; color: var(--forest); font-size: 10px; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
 .shop-price-fact { padding: 0 !important; gap: 0 !important; overflow: hidden; }
 .shop-price-half { min-width: 0; flex: 1; display: flex !important; grid-template-columns: none !important; align-items: center; gap: 5px !important; padding: 4px 6px; }
@@ -1338,7 +1349,7 @@ footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px;
   .cards-table tbody tr { margin-bottom: 10px; padding: 10px 12px; border: 1px solid var(--line, #e2ddd3); border-radius: 10px; background: var(--card, #fff); display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; align-items: start; }
   .cards-table tbody tr .col-lineup { grid-row: 1; grid-column: 1; padding: 0; }
   .cards-table tbody tr .cards-cell-name { grid-row: 1; grid-column: 2; padding: 0 0 6px; min-width: 0; }
-  /* Only the four facts worth a line of their own. Colour, type, mana, rarity
+  /* Only the four facts worth a line of their own. Color, type, mana, rarity
      and set live in the type line already or in the detail sheet -- printing all
      twelve columns as label/value pairs makes a 300px row per card, which is a
      wall, not a table. */
@@ -1468,7 +1479,7 @@ footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px;
 
    The structure it wants is a briefing: a masthead, a three-up header (what the
    commander is, how rare the build is, what box it comes in), then a stack of
-   labelled sections that each look like a section. That is what this gives it,
+   labeled sections that each look like a section. That is what this gives it,
    scoped to .deck-plan so the same sheet renders identically wherever it is
    opened from.
    =========================================================================== */
@@ -1487,7 +1498,7 @@ footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px;
 .deck-plan .mhcol { display: grid; gap: 12px; min-width: 0; }
 .deck-plan .mhart { min-width: 0; }
 
-/* Every labelled section is a card, so sections stop running together. */
+/* Every labeled section is a card, so sections stop running together. */
 .deck-plan .blk { padding: 11px 12px; border: 1px solid var(--plan-line); border-radius: 11px; background: var(--surface); }
 .deck-plan h4 { margin: 0 0 8px; font: 700 10px/1.3 Georgia, serif; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
 .deck-plan p { margin: 6px 0; }
@@ -1525,7 +1536,7 @@ footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px;
 .deck-plan .special { padding: 12px; border: 1px solid var(--plan-line); border-left: 3px solid var(--forest); border-radius: 11px; background: var(--plan-soft); }
 .deck-plan .splbl { margin-bottom: 6px; font: 700 10px/1.3 Georgia, serif; letter-spacing: .09em; text-transform: uppercase; color: var(--forest); }
 
-/* Ratings. Two labelled groups of named five-dot meters. */
+/* Ratings. Two labeled groups of named five-dot meters. */
 .deck-plan .scores { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
 .deck-plan .sclbl { margin-bottom: 7px; font: 700 10px/1.3 Georgia, serif; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
 .deck-plan .fit { display: grid; gap: 5px; }
@@ -1579,7 +1590,7 @@ footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px;
 
    Three stacked disclosures of identical weight read as three equal parts of
    the deck; they are not, they are three lenses on it. A button row says that,
-   and it restores the colour hierarchy the page had lost: the deck header is
+   and it restores the color hierarchy the page had lost: the deck header is
    the loudest thing, the tool row is visibly attached to it, and the Starting
    Shell and ladder sections sit below on the page surface — so the next deck's
    header reads as a new deck rather than as one more fold in this one.
@@ -1672,12 +1683,12 @@ footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px;
 }
 
 /* ===================== Deck page (slot ladder) =====================
-   The collapsed view that replaces Calibrate and Decks. Rung colours ascend
-   grey -> green -> olive -> gold with the power ladder; Fun sits off that axis
+   The collapsed view that replaces Calibrate and Decks. Rung colors ascend
+   gray -> green -> olive -> gold with the power ladder; Fun sits off that axis
    in the existing blue. Location is carried by glyph shape, never by hue, so it
    can never be confused with a rung. Rarity is an outline only. */
 :root{
-  /* One hue per rung, so a tile's colour tells you where the card came from before you
+  /* One hue per rung, so a tile's color tells you where the card came from before you
      read a word of it. Lifted to the same chroma as the rest of the palette -- Tuned
      shares the app's "on" green on purpose, because a Tuned deck is the default build. */
   --rung-base:#8c968d; --rung-tuned:#1d7a55; --rung-enhance:#7d9c26;
@@ -2073,7 +2084,7 @@ div.sp-band{padding:9px 13px;border-radius:12px 12px 0 0}
   .sp-store-money b{font-size:15px}
 }
 /* ---- the gallery tile, cut back ---------------------------------------------
-   The art carries the name, the colour and the type, so repeating them underneath spent
+   The art carries the name, the color and the type, so repeating them underneath spent
    a third of the tile saying what the picture said. Three rows are left: who wants it,
    what it costs beside the one button worth having here, and where it is. */
 .sp-gdecks{gap:4px}
@@ -2083,7 +2094,7 @@ div.sp-band{padding:9px 13px;border-radius:12px 12px 0 0}
   background:none;font:inherit;font-size:15px;font-weight:800;color:var(--ink);
   font-variant-numeric:tabular-nums;text-align:left;cursor:text}
 /* Only where hovering is a thing. On a phone the tap leaves the hover stuck on, and a
-   price that keeps a grey box after you edit it is not the plain text it was promised. */
+   price that keeps a gray box after you edit it is not the plain text it was promised. */
 @media (hover: hover){ .sp-gprice:hover{background:var(--paper)} }
 .sp-gprice.is-buy{color:var(--accent)}
 .sp-gprice.is-paid{color:var(--forest-2)}
@@ -2214,27 +2225,6 @@ div.sp-band{padding:9px 13px;border-radius:12px 12px 0 0}
   .sp-tri button[aria-pressed="true"][data-sp-s="hand"] { box-shadow: inset 0 0 0 1px rgba(255,255,255,.35); }
 }
 
-/* iOS Safari zooms the whole page in when you focus a text field whose text is under
-   16px, and does not zoom back out when you leave it -- which is why the Game Log, the
-   one tab that is mostly a form, was the tab that "shrank the screen". This changes no
-   layout: the fields keep their sizes, the text inside them is simply large enough that
-   the browser leaves the viewport alone. Last in the file so it wins the ties against
-   the single-class rules that set 12-14px. */
-@media (max-width: 700px) {
-  input[type="text"], input[type="url"], input[type="number"], input[type="search"],
-  input[type="date"], input[type="email"], input[type="tel"], input[type="password"],
-  input:not([type]),
-  /* select and textarea carry no type attribute to lean on, and a bare element
-     selector loses to every `.thing select` rule in this file. The [class] pair
-     matches the same two elements at class-level weight, which ties those rules
-     and wins on being last. */
-  select[class], select:not([class]), textarea[class], textarea:not([class]) { font-size: 16px; }
-  /* The two price fields are sized in ems, so a bigger font would push them wider than
-     the row they sit in. They get the width back instead. */
-  .dp-paid input, .sp-paid input { width: 84px; }
-  .live-card-status .live-price-field input { width: 3.4rem; font-size: 16px; }
-}
-
 /* The Shop's table on a phone.
    ---------------------------
    Eleven columns is the right shape for a desktop and the wrong shape for a 390px
@@ -2294,3 +2284,171 @@ div.sp-band{padding:9px 13px;border-radius:12px 12px 0 0}
 .dp-claim .dp-rank-b:not(:disabled):hover { border-color: var(--accent); color: var(--accent); }
 /* A price you typed beats the estimate it replaced, and says so. */
 .dp-num.is-paid { color: var(--forest-2); font-weight: 850; }
+
+/* The shopping-trip export. Three lists that go to three different places, so
+   the dialog explains where each one is used rather than just naming it -- the
+   choice is about the errand, not the file format. */
+.trip-dialog {
+  max-width: 540px; width: calc(100vw - 32px); border: 1px solid var(--line);
+  border-radius: 14px; padding: 0; background: var(--surface); color: inherit;
+}
+.trip-dialog::backdrop { background: rgba(12, 24, 18, .46); }
+.trip-lede { margin: 0 0 14px; color: var(--muted); font-size: 14px; }
+.trip-opt, .trip-word {
+  display: flex; gap: 11px; align-items: flex-start; cursor: pointer;
+  padding: 11px 13px; margin-bottom: 8px;
+  border: 1px solid var(--line); border-radius: 9px; background: var(--surface);
+}
+.trip-opt:hover, .trip-word:hover { border-color: var(--forest-2, #1c5a42); }
+.trip-opt.is-empty { opacity: .5; cursor: default; }
+.trip-opt.is-empty:hover { border-color: var(--line); }
+.trip-opt input, .trip-word input { margin-top: 3px; flex: 0 0 auto; }
+/* The name and the count are one sentence -- "To Buy - 263 cards" -- so the name
+   stays inline. As a block it broke the line and left the dash starting a row. */
+.trip-opt b { font-size: 14.5px; }
+.trip-opt em { display: block; font-style: normal; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.trip-word { margin-top: 14px; background: var(--sink, rgba(0,0,0,.03)); }
+.trip-word span { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+.trip-actions { display: flex; justify-content: flex-end; margin-top: 16px; }
+@media (max-width: 560px) {
+  .trip-opt, .trip-word { padding: 12px; }
+  .trip-actions .primary-button { width: 100%; }
+}
+
+/* The measured strip on the Deck page.
+   -----------------------------------
+   Three states, three colors, and the color is the whole point: a reader who has
+   changed three cards should be able to tell at a glance that the number above
+   the deck no longer describes it. Amber for adrift, green once it has been
+   re-measured here, quiet for a deck still sitting on a published rung. */
+.dp-meas {
+  margin: 0 0 10px; border: 1px solid var(--line); border-radius: 11px;
+  background: var(--surface); overflow: hidden;
+}
+.dp-meas > summary {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px;
+  padding: 9px 12px; cursor: pointer; list-style: none; font-size: 13px;
+}
+.dp-meas > summary::-webkit-details-marker { display: none; }
+.dp-meas-v { font-size: 13.5px; }
+.dp-meas-d { font-weight: 750; }
+.dp-meas-n { color: var(--muted); font-size: 12.5px; flex: 1 1 200px; }
+.dp-meas.is-adrift { border-color: #a4761f; background: rgba(216, 162, 46, .07); }
+.dp-meas.is-adrift .dp-meas-v, .dp-meas.is-adrift .dp-meas-d { color: #a4761f; }
+.dp-meas.is-measured { border-color: var(--forest-2, #1c5a42); background: rgba(28, 90, 66, .07); }
+.dp-meas.is-measured .dp-meas-v { color: var(--forest-2, #1c5a42); }
+.dp-meas-body { padding: 2px 12px 12px; border-top: 1px solid var(--line); }
+.dp-meas-t { border-collapse: collapse; margin: 10px 0 6px; width: 100%; max-width: 460px; }
+.dp-meas-t th {
+  text-align: left; font-weight: 600; font-size: 12.5px; color: var(--muted);
+  padding: 3px 10px 3px 0;
+}
+.dp-meas-t td { padding: 3px 0; font-size: 17px; font-weight: 800; text-align: right; }
+.dp-meas-t .dp-meas-se { font-size: 12px; font-weight: 600; color: var(--muted); padding-left: 8px; }
+.dp-meas-note { margin: 6px 0 0; font-size: 12px; line-height: 1.5; color: var(--muted); }
+
+/* The deck's own record, above the runs. It is the other half of the sentence
+   the strip above it starts: one number is what the simulation says, this is
+   what happened. */
+.dp-rec {
+  margin: 10px 0 4px; padding: 9px 11px;
+  border: 1px solid var(--line); border-left-width: 3px; border-radius: 9px;
+  background: var(--paper);
+}
+.dp-rec.is-below { border-left-color: var(--red); }
+.dp-rec.is-above { border-left-color: var(--forest-2); }
+.dp-rec-nums { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 11.5px; color: var(--muted); }
+.dp-rec-nums b { font-size: 15px; margin-right: 3px; }
+.dp-rec-nums b.is-soft { font-size: 12.5px; font-weight: 700; }
+.dp-meas-run { margin: 10px 0 0; font-size: 13px; font-weight: 700; color: var(--forest-2, #1c5a42); }
+.dp-meas-acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+
+@media (max-width: 560px) {
+  .dp-meas-acts .dp-rank-b { flex: 1 1 100%; }
+}
+
+/* What the games say.
+   -------------------
+   The panel that reads the Game Log back. Its whole job is to put an observed
+   rate next to a predicted one without letting the pair read as a verdict, so
+   the sentence under each row is as prominent as the numbers above it -- that
+   sentence is where the confidence interval lives, and the numbers alone would
+   be the confident-looking lie this panel exists to avoid. */
+.gr-panel {
+  margin: 0 0 16px; padding: 14px 15px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.gr-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; margin-bottom: 10px; }
+.gr-head h3 { margin: 0; font-size: 16px; }
+.gr-head span { color: var(--muted); font-size: 12.5px; }
+.gr-fun {
+  margin: 0 0 12px; padding: 8px 11px; font-size: 13px; line-height: 1.5;
+  background: var(--gold-soft); border-radius: 9px; color: #5c4a25;
+}
+.gr-rows { display: flex; flex-direction: column; gap: 8px; }
+
+.gr-row {
+  display: grid; gap: 4px 14px; align-items: baseline;
+  grid-template-columns: minmax(0, 1.6fr) repeat(4, auto);
+  padding: 10px 12px; border: 1px solid var(--line); border-left-width: 3px;
+  border-radius: 11px; background: var(--paper);
+}
+.gr-row.is-below { border-left-color: var(--red); }
+.gr-row.is-above { border-left-color: var(--forest-2); }
+.gr-deck { min-width: 0; }
+.gr-deck b { display: block; font-size: 14px; }
+.gr-deck span { font-size: 11.5px; color: var(--muted); }
+.gr-num { text-align: right; }
+.gr-num b { display: block; font-size: 16px; font-weight: 850; }
+/* A range rather than a rate, because too few games have been played for a rate.
+   Smaller and quieter, so it does not read as a figure to act on. */
+.gr-num.is-provisional b { font-size: 13px; font-weight: 750; color: var(--muted); }
+.gr-num span {
+  font-size: 9.5px; font-weight: 800; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--muted);
+}
+/* The sentence spans every column: it is the finding, and the figures above it
+   are only the shorthand. */
+.gr-says {
+  grid-column: 1 / -1; margin: 6px 0 0;
+  font-size: 12.5px; line-height: 1.55; color: var(--muted);
+}
+.gr-caveat {
+  margin: 12px 0 0; font-size: 11.5px; line-height: 1.55; color: var(--muted);
+  padding-top: 10px; border-top: 1px solid var(--line);
+}
+
+@media (max-width: 700px) {
+  /* Five columns will not fit a phone. The deck takes the first row and the four
+     figures share the second, which keeps them comparable across decks. */
+  .gr-row { grid-template-columns: repeat(4, 1fr); }
+  .gr-deck { grid-column: 1 / -1; }
+  .gr-num { text-align: left; }
+}
+
+/* iOS Safari zooms the whole page in when you focus a text field whose text is under
+   16px, and does not zoom back out when you leave it -- which is why the Game Log, the
+   one tab that is mostly a form, was the tab that "shrank the screen". This changes no
+   layout: the fields keep their sizes, the text inside them is simply large enough that
+   the browser leaves the viewport alone.
+
+   THIS BLOCK STAYS AT THE END OF THE FILE. It wins its ties on source order alone, so
+   anything appended below it can take a form field back under 16px and bring the zoom
+   back. It had already drifted up once, above the Shop's phone table and then above the
+   trip dialog; it is back at the bottom, and tests/data-integrity.mjs fails if a later
+   rule sets a 14px font. Append new sections above this comment, not below it. */
+@media (max-width: 700px) {
+  input[type="text"], input[type="url"], input[type="number"], input[type="search"],
+  input[type="date"], input[type="email"], input[type="tel"], input[type="password"],
+  input:not([type]),
+  /* select and textarea carry no type attribute to lean on, and a bare element
+     selector loses to every `.thing select` rule in this file. The [class] pair
+     matches the same two elements at class-level weight, which ties those rules
+     and wins on being last. */
+  select[class], select:not([class]), textarea[class], textarea:not([class]) { font-size: 16px; }
+  /* The two price fields are sized in ems, so a bigger font would push them wider than
+     the row they sit in. They get the width back instead. */
+  .dp-paid input, .sp-paid input { width: 84px; }
+  .live-card-status .live-price-field input { width: 3.4rem; font-size: 16px; }
+}

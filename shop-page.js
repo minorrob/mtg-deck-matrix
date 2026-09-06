@@ -80,7 +80,7 @@
     return ci[0];
   }
 
-  /** Decorate the model's shop rows with the facts a seller's table is organised by.
+  /** Decorate the model's shop rows with the facts a seller's table is organized by.
    *  Name normalisation belongs to the caller, which already owns the lineup model. */
   function decorate(rows, factFor, deckLabels, paidFor) {
     const lookup = typeof factFor === "function" ? factFor : () => ({});
@@ -212,6 +212,10 @@
         aria-label="What you paid for ${esc(row.name)}"></span>`;
   }
 
+  /* The three pills are ACTIONS -- Need, Order, In hand -- so the middle one is a
+     verb: pressing it puts the card on the order. The STATUS list above is a
+     different thing, a description of where a card has got to, and "Ordered" is
+     right there. Same word, two jobs; only the button changed. */
   function triMarkup(row) {
     const many = row.quantity > 1;
     const on = (k) => k === "need" ? (row.need > 0 && !row.inHand && !row.ordered)
@@ -219,12 +223,12 @@
       : row.inHand > 0;
     return `<span class="sp-tri" data-sp-tri="${esc(row.key)}">
       <button type="button" data-sp-s="need" aria-pressed="${on("need")}">Need${many ? " " + row.need : ""}</button>
-      <button type="button" data-sp-s="ordered" aria-pressed="${on("ordered")}">Ordered${many ? " " + row.ordered : ""}</button>
+      <button type="button" data-sp-s="ordered" aria-pressed="${on("ordered")}">Order${many ? " " + row.ordered : ""}</button>
       <button type="button" data-sp-s="hand" aria-pressed="${on("hand")}">In hand${many ? ` ${row.inHand}/${row.quantity}` : ""}</button>
     </span>`;
   }
   /* The gallery panel, cut back to what it is for. The art already carries the name, the
-     colour and the type, so repeating them under it spent a third of the tile saying what
+     color and the type, so repeating them under it spent a third of the tile saying what
      the picture said. Two rows are left: which decks want it, and what it costs beside the
      one button worth having here. Everything dropped is still a column in the table view,
      which is where a status gets corrected -- Buy only ever moves a card one way, and the
@@ -340,7 +344,7 @@
           ${destDetail(chosen)}
           <button type="button" class="sp-assign" data-sp-assign="${esc(item.key)}|0">Assign · ${esc(chosen.action)}</button>
         ` : `<p class="sp-meta">No slot in any of the six decks offers this card &mdash; either no plan carries it,
-             or colour identity, singleton or bracket rules rule it out. It is yours and unassigned.</p>`}
+             or color identity, singleton or bracket rules rule it out. It is yours and unassigned.</p>`}
       </article>`;
     }).join("")}</div>`;
   }
@@ -393,7 +397,7 @@
 
   function storeRow(r, picked, groupBy) {
     /* What is still owed, not what the deck asks for. A row of two Arcane Signets with one
-       already in the box is one card to find, and labelling it "x2" sends you looking for
+       already in the box is one card to find, and labeling it "x2" sends you looking for
        a copy you have. */
     const many = r.need > 1;
     if (picked) {
@@ -433,6 +437,23 @@
       </span>
       <button type="button" class="sp-buy" data-sp-buy="${esc(r.key)}">Buy${many ? " " + r.need : ""}</button>
     </li>`;
+  }
+
+  /* The rows the page is showing, by the same route render() takes to them.
+     Export has to agree with the screen, and the only way to guarantee that is to
+     ask the same functions in the same order -- a second, parallel filter
+     implementation is a second thing to keep in step, and it would not be. */
+  function visibleRows(ctx) {
+    const f = (ctx && ctx.filters) || {};
+    const deckIds = deckScope(ctx, f);
+    const rows = deckIds.length
+      ? (ctx.rows || []).map((r) => Slot.scopeRow(r, deckIds)).filter(Boolean)
+      : (ctx.rows || []);
+    const all = decorate(rows, ctx.factFor, ctx.deckLabels, ctx.paidFor);
+    const done = ctx.picked instanceof Set ? ctx.picked : new Set();
+    const inStore = f.view === "store";
+    const scope = inStore && !f.storeAll ? all.filter((r) => r.need > 0 || done.has(r.key)) : all;
+    return scope.filter((r) => passes(r, f));
   }
 
   function render(host, ctx) {
@@ -487,6 +508,7 @@
             (ctx.bench || []).length ? " " + (ctx.bench || []).length : ""}</button>
           <button type="button" data-sp-view="store" aria-pressed="${f.view === "store"}">\u25c9 Store</button>
         </span>
+        ${ctx.onExport ? '<button type="button" class="sp-fbtn sp-exp" data-sp-export>\u2913 Export</button>' : ""}
         <button type="button" class="sp-mob" data-sp-mob aria-expanded="${Boolean(f.barOpen)}">
           ${f.barOpen ? "Hide options" : "Filter, group, sort"}${
             activeFilters ? `<span class="sp-cnt dp-num">${activeFilters}</span>` : '<span class="sp-caret">\u25be</span>'}
@@ -609,6 +631,6 @@
     host.innerHTML = bar + body;
   }
 
-  return {render, decorate, passes, sortRows, groupRows, values, benchMarkup, destDetail,
+  return {render, visibleRows, decorate, passes, sortRows, groupRows, values, benchMarkup, destDetail,
           COLUMNS, FILTERS, GROUP_BY, STATUS, deckScope};
 });

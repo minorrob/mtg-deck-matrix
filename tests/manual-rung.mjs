@@ -46,12 +46,12 @@ ok("every hand-added card is legal in the deck it was added to", () => {
   for (const id of variantIds) {
     const plan = buyPlans.plans[id];
     const commander = (plan.startingShell || []).find((card) => card.isCommander);
-    const identity = new Set((commander?.colorIdentity || []).map((colour) => String(colour).toUpperCase()));
+    const identity = new Set((commander?.colorIdentity || []).map((color) => String(color).toUpperCase()));
     for (const card of manualCards[id]) {
       assert.notEqual(card.commanderLegal, false, `${id}: ${card.name} is not Commander legal`);
-      for (const colour of card.colorIdentity || []) {
-        assert.ok(identity.has(String(colour).toUpperCase()),
-          `${id}: ${card.name} has colour ${colour}, outside ${commander?.name}'s identity`);
+      for (const color of card.colorIdentity || []) {
+        assert.ok(identity.has(String(color).toUpperCase()),
+          `${id}: ${card.name} has color ${color}, outside ${commander?.name}'s identity`);
       }
     }
   }

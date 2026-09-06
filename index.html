@@ -3,26 +3,53 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#0c1411">
+  <meta name="theme-color" content="#0f3a2b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Trey's Decks">
+  <meta name="apple-mobile-web-app-title" content="My Decks">
   <meta name="description" content="Six Commander decks: what each one does, how to play it, every card in it, what is on the bench, and what is still to buy.">
-  <meta property="og:title" content="Trey's Commander Decks">
+  <meta property="og:title" content="My Commander Decks">
   <meta property="og:description" content="Six decks, ranked. How to play them, the cards in them, the bench, and the buy list.">
   <meta property="og:type" content="website">
   <meta property="og:image" content="https://minorrob.github.io/mtg-deck-matrix/og.png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Trey's Commander Decks">
+  <meta name="twitter:title" content="My Commander Decks">
   <meta name="twitter:description" content="Six decks, ranked. How to play them, the cards in them, the bench, and the buy list.">
   <meta name="twitter:image" content="https://minorrob.github.io/mtg-deck-matrix/og.png">
-  <title>Trey's Commander Decks</title>
+  <title>My Commander Decks</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%83%8F%EF%B8%8F%3C/text%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap">
-  <link rel="stylesheet" href="viewer.css?v=5">
-  <script src="viewer.js?v=7" defer></script>
+  <!-- Inter for the body, as the Matrix and the graph have it; Fraunces stays on
+       the headings, which is the one thing this page keeps from its own theme. -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800;900&display=swap">
+  <link rel="stylesheet" href="viewer.css?v=14">
+  <!-- Adding a deck. Six small modules rather than one, because each is useful
+       and testable on its own: the parser has no idea what a score is, and the
+       simulator has no idea where a decklist came from. Loaded here in
+       dependency order; every one of them is a UMD module that also runs under
+       Node, which is how tests/ reaches them. -->
+  <script src="lineup-model.js?v=1" defer></script>
+  <script src="sim-engine.js?v=1" defer></script>
+  <script src="scryfall-client.js?v=1" defer></script>
+  <script src="deck-import.js?v=1" defer></script>
+  <script src="deck-sources.js?v=1" defer></script>
+  <script src="deck-measure.js?v=1" defer></script>
+  <script src="deck-store.js?v=2" defer></script>
+  <script src="import-panel.js?v=1" defer></script>
+  <!-- Building one from nothing: the generator has been in this repo since the
+       Choose tab existed and has been unreachable since that tab was retired.
+       deck-build.js maps what it produces onto the same record an import makes. -->
+  <script src="compliance-model.js?v=2" defer></script>
+  <script src="deck-generator.js?v=4" defer></script>
+  <script src="deck-build.js?v=2" defer></script>
+  <script src="build-panel.js?v=3" defer></script>
+  <!-- Reading what you own out of whatever file it lives in. xlsx-reader is a
+       ZIP walk plus DecompressionStream, so a real Excel file is read here
+       without asking anybody to export it as CSV first. -->
+  <script src="xlsx-reader.js?v=1" defer></script>
+  <script src="inventory-import.js?v=1" defer></script>
+  <script src="viewer.js?v=13" defer></script>
 </head>
 <body>
 
@@ -30,8 +57,8 @@
   <div class="wrap">
     <div class="topbar-row">
       <div class="brand">
-        <h1>Trey's Decks</h1>
-        <span class="brand-sub">six Commander decks, what they do, and what they still need</span>
+        <h1>My Decks</h1>
+        <span class="brand-sub" id="brand-sub">six Commander decks, what they do, and what they still need</span>
       </div>
       <nav class="tabs" aria-label="Sections">
         <button class="tab" type="button" data-view="decks" aria-selected="true">Decks</button>

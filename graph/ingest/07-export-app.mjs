@@ -2,6 +2,13 @@
 //
 //   node graph/ingest/07-export-app.mjs                 # your working set (~1.6k cards)
 //   node graph/ingest/07-export-app.mjs --commanders    # + every legendary creature
+//
+// ALWAYS PASS --commanders for the graph that ships. The narrow scope is fine
+// for exploring your own collection and wrong for anyone else's deck: their
+// commander lands outside it, and a commander anchors every PLAYED_WITH edge it
+// sources, so its synergies vanish rather than degrade. Measured on a real
+// import: 70 of 78 names resolved narrow, 73 of 78 wide, and the one the narrow
+// scope lost was the commander.
 //   node graph/ingest/07-export-app.mjs --out data/graph.json
 //
 // WHY AN EXPORT AND NOT A LIVE CONNECTION. The app is a static site with no

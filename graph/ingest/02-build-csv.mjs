@@ -2,7 +2,7 @@
 //
 //   node graph/ingest/02-build-csv.mjs [--cache graph/.cache] [--out graph/.import]
 //
-// THE MODELLING DECISION THIS FILE ENCODES. Cards are never linked to cards.
+// THE MODELING DECISION THIS FILE ENCODES. Cards are never linked to cards.
 // A card is linked to the EVENTS it fires on and the events it CAUSES, and to the
 // RESOURCES it makes and spends. Synergy is then a two-hop path -- Krenko CAUSES
 // creature-etb, Purphoros TRIGGERS_ON creature-etb -- so it is derived at query
@@ -179,7 +179,13 @@ for await (const c of jsonl(`${cacheDir}/oracle_cards.jsonl`)) {
 // --- your overlays --------------------------------------------------------
 const master = JSON.parse(await readFile("data/master-v2.json", "utf8"));
 const owns = [], assigned = [];
-const DECKS = {D1: "Quintorius", D2: "Chulane", D3: "Atraxa", D4: "Betor", D5: "Shadrix", D6: "Purphoros"};
+// The deck labels come from the Master, never from a constant here. They were
+// hardcoded once -- D4 "Betor", D6 "Purphoros" -- and when the 2026-09-05 rebuild
+// moved Felothar and Krenko into those command zones, this file kept writing the
+// old names into assigned.csv. The Deck nodes, graph.json and every Copilot
+// warning then named two commanders that no longer held their seats, and nothing
+// downstream could notice because the CSV looked internally consistent.
+const DECKS = Object.fromEntries(master.decks.map((deck) => [deck.id, deck.label]));
 for (const card of master.cards) {
   const own = Number(card.own || 0), ordered = Number(card.ordered || 0);
   if (own || ordered) owns.push([card.name, own, ordered, Number(card.benchActual || 0)]);

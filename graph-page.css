@@ -71,9 +71,38 @@
 .gp-tag.own { background: var(--gold-soft); color: #6b4c07; }
 .gp-tag.deck { background: #dff1e6; color: var(--forest); }
 
-#cy { height: min(70vh, 640px); border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+/* The reason groups, as a chip row above the canvas. It doubles as the legend:
+   a reader can learn WHY a card has 90 neighbors without reading the graph at
+   all, which is more than the old single-ring layout ever conveyed. */
+.gp-groups {
+  display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px;
+}
+.gp-group {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 28px; padding: 3px 11px 3px 5px;
+  border: 1px solid var(--line); border-radius: 999px;
+  background: var(--surface); color: var(--ink, inherit);
+  font-size: 12px; font-weight: 600; cursor: pointer; line-height: 1.25;
+}
+.gp-group:hover { border-color: #b8ac8c; }
+.gp-group.is-on { background: #0f3a2b; border-color: #0f3a2b; color: #f4efe2; }
+.gp-group-n {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 20px; height: 20px; padding: 0 5px; border-radius: 999px;
+  background: rgba(15, 58, 43, .1); font-size: 11px; font-weight: 800;
+}
+.gp-group.is-on .gp-group-n { background: rgba(244, 239, 226, .2); }
+.gp-group-all { font-weight: 700; }
+
+/* Taller than it was: the clustered layout spends its space on three rings of
+   cards inside each wedge rather than one ring of ninety, and it needs the room
+   to keep the group labels off each other. */
+#cy { height: min(76vh, 720px); border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
 .gp-legend { color: var(--muted); font-size: 11.5px; margin-top: 8px; }
 .gp-empty { color: var(--muted); padding: 30px 4px; font-size: 13px; }
+.gp-empty p { margin: 0 0 10px; max-width: 52ch; line-height: 1.55; }
+.gp-empty b { color: var(--ink); }
+.gp-empty .gp-btn { margin-top: 4px; }
 
 @media (max-width: 860px) {
   .gp { grid-template-columns: minmax(0, 1fr); }
@@ -84,9 +113,14 @@
     border-radius: 999px; background: var(--surface); font-size: 12px; font-weight: 800; cursor: pointer;
   }
   .gp-grid { grid-template-columns: minmax(0, 1fr); }
+  /* On a phone the chip row is the usable control -- pinching a clustered graph
+     to read a 10px label is not. It stays first, and the canvas gives up height
+     so both fit without scrolling past one to reach the other. */
+  .gp-group { font-size: 11.5px; }
+  #cy { height: min(58vh, 460px); }
 }
 
-/* Tapping a node shows the card; re-centring is a button inside that popup. The
+/* Tapping a node shows the card; re-centering is a button inside that popup. The
    lock is the opt-in inverse for anyone who would rather drill straight in. */
 .gp-lock {
   min-height: 30px; padding: 4px 11px; border: 1px solid var(--line); border-radius: 999px;
@@ -157,3 +191,91 @@ body.gp-locked { overflow: hidden; }
 .gp-cp p { margin: 0; font-size: 11.5px; line-height: 1.45; color: var(--muted); }
 .gp-cp-ev { font-style: italic; opacity: .8; font-size: 10.5px; }
 .gp-cp .gp-btn { align-self: flex-start; margin-top: 6px; min-height: 30px; font-size: 11.5px; padding: 4px 11px; }
+
+/* ------------------------------------------------- the Copilot, expanded */
+
+/* Two things were added to a lens card: what it is worth, and a way to set it
+   aside. Both change how the panel reads. The impact chip means a five-point
+   drop and a note about mana screw no longer look like the same size of thing;
+   the dismiss row means a finding you have decided about stops competing for
+   attention with one you have not, without being deleted. */
+
+.gp-cp { position: relative; }
+
+.gp-cp-impact {
+  position: absolute; top: 10px; right: 12px;
+  font-size: 11.5px; font-weight: 800; letter-spacing: .01em;
+  font-variant-numeric: tabular-nums; color: var(--muted);
+}
+.gp-cp-warning .gp-cp-impact { color: #b0563f; }
+.gp-cp-opportunity .gp-cp-impact { color: var(--forest-2, #1c5a42); }
+
+/* A lens the simulation produced says so. The graph's findings are structural
+   facts; these are measurements with an error bar, and the reader should be able
+   to tell which kind of claim they are looking at without reading the evidence. */
+.gp-cp-src {
+  font-style: normal; font-weight: 700; opacity: .75;
+  padding-left: 5px; border-left: 1px solid currentColor; margin-left: 5px;
+}
+
+.gp-cp-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
+.gp-cp-dis { display: flex; flex-wrap: wrap; gap: 4px; margin-left: auto; }
+.gp-cp-x {
+  appearance: none; cursor: pointer; border: 1px solid transparent; border-radius: 7px;
+  background: transparent; color: var(--muted);
+  padding: 4px 7px; font: inherit; font-size: 11.5px; font-weight: 650;
+}
+.gp-cp-x:hover { border-color: var(--line); color: inherit; }
+
+.gp-cp.is-set { opacity: .62; }
+.gp-cp-gone { margin: 8px 0 0; font-size: 12px; color: var(--muted); }
+.gp-cp-undo {
+  appearance: none; cursor: pointer; border: 0; background: none; padding: 0;
+  font: inherit; font-size: 12px; font-weight: 700; color: var(--forest-2, #1c5a42);
+  text-decoration: underline;
+}
+
+.gp-cp-set { margin-top: 12px; }
+.gp-cp-set > summary {
+  cursor: pointer; font-size: 12.5px; font-weight: 700; color: var(--muted);
+  padding: 6px 0;
+}
+
+@media (max-width: 640px) {
+  .gp-cp-impact { position: static; display: block; margin-bottom: 4px; }
+  .gp-cp-dis { margin-left: 0; width: 100%; }
+  .gp-cp-acts .gp-btn { width: 100%; }
+}
+
+/* Tonight's deck.
+   -------------
+   A Copilot with twenty findings across six decks is a reading list. Somebody
+   packing a bag has one deck in their hands. This is a lens on the lenses: it
+   folds the rest away rather than hiding them, and every deck keeps its chip
+   whatever its count, because "Krenko 0" is an answer and a missing chip is not. */
+.gp-tonight {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 5px;
+  padding: 0 13px 11px;
+}
+.gp-tonight-lab {
+  font-size: 10px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted); margin-right: 3px;
+}
+.gp-tonight-b {
+  appearance: none; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 999px;
+  background: var(--surface); color: var(--muted);
+  padding: 4px 10px; font: inherit; font-size: 12px; font-weight: 700;
+}
+.gp-tonight-b b { font-weight: 900; opacity: .55; font-variant-numeric: tabular-nums; }
+.gp-tonight-b:hover { border-color: var(--forest-2); color: var(--ink); }
+.gp-tonight-b.is-on {
+  background: var(--forest-2); border-color: var(--forest-2); color: #fff;
+}
+.gp-tonight-b.is-on b { opacity: .8; }
+.gp-tonight-b.is-clear { border-style: dashed; }
+
+@media (max-width: 640px) {
+  .gp-tonight { padding: 0 11px 10px; }
+  .gp-tonight-lab { flex: 1 1 100%; margin-bottom: 2px; }
+}

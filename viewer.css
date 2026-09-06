@@ -1,50 +1,79 @@
-/* Trey's Commander Decks — the fast view.
+/* My Commander Decks — the fast view.
    One job: someone who has never seen these decks understands them in fifteen
    seconds. So the hierarchy is deck name, then what the deck does, then how
-   ready it is; everything else is smaller than those three. */
+   ready it is; everything else is smaller than those three.
+
+   THE PALETTE IS app.css's, IN THIS FILE'S OWN NAMES.
+   ---------------------------------------------------
+   This page used to be dark green on near-black while the Matrix and the graph
+   were green, parchment and gold. Three pages, one app, and the one somebody
+   opens first looked like a different product -- which is what the redesign was
+   asked to fix.
+
+   The values below are app.css's tokens exactly. The NAMES are this file's own,
+   which is what makes the change a swap rather than a rewrite: seven hundred
+   lines of rules that say var(--panel) and var(--ember) keep saying it and come
+   out in the master's colors. Where the two files disagree the master wins, and
+   where this file needs a token the master has no name for -- --text-faint,
+   --panel-2 -- the value is derived from the master's, not invented beside it.
+
+   Kept from the old theme: Fraunces on the headings. The Matrix has no serif of
+   its own and this page's whole layout is built around one, so removing it would
+   have been a redesign of the hierarchy rather than of the palette. */
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
-  --ink:        #0c1411;
-  --ink-2:      #111d19;
-  --panel:      #16241f;
-  --panel-2:    #1c2d27;
-  --line:       #263a33;
-  --line-soft:  #1e2f29;
+  /* app.css --paper / --surface / --surface-2 / --line */
+  --ink:        #f4efdf;   /* the page */
+  --ink-2:      #faf6ea;   /* a card's lower half, under the gradient */
+  --panel:      #fffefa;   /* a raised surface */
+  --panel-2:    #ece4d0;   /* a sunken one */
+  --line:       #dcd2b9;
+  --line-soft:  #e8e0cc;
 
-  --text:       #e8efe9;
-  --text-dim:   #9db0a7;
-  --text-faint: #6d8279;
+  /* app.css --ink / --muted, plus one step fainter for the third rank of text */
+  --text:       #16221d;
+  --text-dim:   #586761;
+  /* 4.7:1 on parchment. The dark theme could afford a fainter third rank
+     because dark grounds forgive low contrast; parchment does not, and this
+     rank carries the commander name under every deck title. */
+  --text-faint: #5f6d67;
 
-  --ember:      #e8853c;
-  --ember-soft: #3a2617;
-  --patina:     #3fbb9c;
-  --patina-soft:#123029;
-  --amber:      #d9b23f;
-  --rose:       #e0685f;
+  /* app.css --accent / --accent-soft / --forest-2 / --gold / --red */
+  --ember:      #d2651f;
+  --ember-soft: #ffe0cb;
+  --patina:     #1d7a55;
+  --patina-soft:#e2f0e7;
+  --amber:      #b8791a;   /* --warn: --gold itself is too pale on parchment */
+  --rose:       #c0392b;
 
-  --w: #f4ecd2; --u: #4a94d6; --b: #7d6f92; --r: #e06a4a; --g: #4faa6b; --c: #9fada7;
+  /* Mana pips, re-cut for a light ground. White needs a real border to exist at
+     all, so it is the only one that gets an outline in the rule below. */
+  --w: #f6efd8; --u: #2f7fbf; --b: #5b4f70; --r: #c14a2c; --g: #2f8b4f; --c: #9aa8a2;
 
-  --radius: 14px;
-  --radius-sm: 9px;
-  --shadow: 0 1px 0 rgba(255,255,255,.03) inset, 0 10px 26px -18px rgba(0,0,0,.9);
+  --radius: 18px;
+  --radius-sm: 11px;
+  --shadow: 0 10px 26px rgba(20, 40, 31, .13);
 
-  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* Inter first, as the Matrix and the graph have it. */
+  --sans: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --serif: "Fraunces", "Iowan Old Style", Georgia, "Times New Roman", serif;
   --mono: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
 }
 
 * { box-sizing: border-box; }
 
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; background: #0f3a2b; }
 
 body {
   margin: 0;
   background: var(--ink);
+  /* The same two glows the dark theme had, at the weight parchment can carry --
+     any stronger and they read as a stain rather than as depth. */
   background-image:
-    radial-gradient(1100px 520px at 12% -8%, rgba(63,187,156,.10), transparent 62%),
-    radial-gradient(900px 460px at 92% 0%, rgba(232,133,60,.09), transparent 60%);
+    radial-gradient(1100px 520px at 12% -8%, rgba(29,122,85,.07), transparent 62%),
+    radial-gradient(900px 460px at 92% 0%, rgba(210,101,31,.06), transparent 60%);
   background-attachment: fixed;
   color: var(--text);
   font: 15px/1.55 var(--sans);
@@ -70,7 +99,7 @@ button { font: inherit; color: inherit; }
 
 .topbar {
   position: sticky; top: 0; z-index: 40;
-  background: rgba(12,20,17,.86);
+  background: rgba(244,239,223,.88);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--line-soft);
 }
@@ -174,14 +203,17 @@ main { padding: 24px 0 140px; }
 .deck-card-top { display: flex; align-items: flex-start; gap: 12px; }
 
 .rank-badge {
-  flex: none; width: 38px; height: 38px; border-radius: 10px;
+  flex: none; width: 42px; height: 40px; border-radius: 10px;
   display: grid; place-items: center;
   background: var(--panel-2); border: 1px solid var(--line);
   font-family: var(--serif); font-size: 17px; font-weight: 700;
   color: var(--text-dim); line-height: 1;
 }
-.rank-badge.is-top { background: var(--ember-soft); border-color: #6b4522; color: var(--ember); }
-.rank-badge small { display: block; font-size: 8px; letter-spacing: .1em; color: inherit; opacity: .75; font-family: var(--sans); }
+.rank-badge.is-top { background: var(--ember-soft); border-color: #f0b184; color: #a24713; }
+/* 9.5px is the floor everywhere in this app -- the sweep that set it found this
+   one label under it, and the badge was widened to 42px to hold the bigger word
+   rather than the word being shrunk to fit the badge. */
+.rank-badge small { display: block; font-size: 9.5px; letter-spacing: .06em; color: inherit; opacity: .75; font-family: var(--sans); }
 
 .deck-name { min-width: 0; flex: 1; }
 .deck-name h3 { font-size: 19px; line-height: 1.2; }
@@ -197,8 +229,8 @@ main { padding: 24px 0 140px; }
 .pips { display: flex; gap: 3px; flex: none; }
 .pip {
   width: 15px; height: 15px; border-radius: 50%;
-  border: 1px solid rgba(0,0,0,.45);
-  box-shadow: 0 0 0 1px rgba(255,255,255,.07) inset;
+  border: 1px solid rgba(22,34,29,.22);
+  box-shadow: 0 0 0 1px rgba(22,34,29,.06) inset;
 }
 .pip.W { background: var(--w); } .pip.U { background: var(--u); }
 .pip.B { background: var(--b); } .pip.R { background: var(--r); }
@@ -212,10 +244,10 @@ main { padding: 24px 0 140px; }
   background: var(--panel-2); border: 1px solid var(--line); color: var(--text-dim);
   white-space: nowrap;
 }
-.chip.ember { background: var(--ember-soft); border-color: #6b4522; color: var(--ember); }
-.chip.patina { background: var(--patina-soft); border-color: #1d5348; color: var(--patina); }
-.chip.amber { background: #34290f; border-color: #5d4b1c; color: var(--amber); }
-.chip.rose { background: #37201e; border-color: #63332f; color: var(--rose); }
+.chip.ember { background: var(--ember-soft); border-color: #f0b184; color: #a24713; }
+.chip.patina { background: var(--patina-soft); border-color: #9ecdb4; color: #135c3f; }
+.chip.amber { background: #fdf0d2; border-color: #e2c489; color: #8a5a12; }
+.chip.rose { background: #fbe2de; border-color: #eaa79d; color: #9e2f22; }
 .chip.plain { background: transparent; }
 
 /* Readiness: the bar is the answer to "can I play this tonight". */
@@ -272,7 +304,7 @@ main { padding: 24px 0 140px; }
 .stat-commander img {
   width: 44px; max-width: 100%; max-height: 100%; height: auto;
   border-radius: 3px; display: block; flex: none;
-  box-shadow: 0 2px 8px -3px rgba(0,0,0,.9);
+  box-shadow: 0 2px 8px -3px rgba(20,40,31,.28);
 }
 
 .panel {
@@ -337,7 +369,7 @@ main { padding: 24px 0 140px; }
 
 .dot {
   width: 8px; height: 8px; border-radius: 50%; flex: none;
-  background: var(--line); box-shadow: 0 0 0 3px rgba(0,0,0,.25);
+  background: var(--line); box-shadow: 0 0 0 3px rgba(20,40,31,.10);
 }
 .dot.box { background: var(--patina); }
 .dot.hand { background: #2f7f6c; }
@@ -379,7 +411,7 @@ main { padding: 24px 0 140px; }
   background: var(--panel); border: 1px solid var(--line); color: var(--text-dim);
   border-radius: 999px; padding: 5px 12px; font-size: 12.5px; font-weight: 600;
 }
-.filter button[aria-pressed="true"] { background: var(--ember-soft); border-color: #6b4522; color: var(--ember); }
+.filter button[aria-pressed="true"] { background: var(--ember-soft); border-color: #f0b184; color: #a24713; }
 
 .pick-all {
   appearance: none; cursor: pointer; background: none; border: 0;
@@ -429,7 +461,7 @@ main { padding: 24px 0 140px; }
 
 .tray {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
-  background: rgba(14,24,20,.96); backdrop-filter: blur(14px);
+  background: rgba(255,254,250,.96); backdrop-filter: blur(14px);
   border-top: 1px solid var(--line);
   transform: translateY(110%); transition: transform .18s ease;
 }
@@ -454,14 +486,19 @@ main { padding: 24px 0 140px; }
   background: var(--panel-2); border: 1px solid var(--line); color: var(--text);
 }
 .btn:hover { border-color: var(--text-faint); }
-.btn.primary { background: var(--ember); border-color: var(--ember); color: #22150a; }
+/* Green, not orange, and for two reasons that point the same way: the Matrix's
+   own primary button is --forest-2 with white on it, and white on the accent
+   orange is 3.6:1, which is below AA at this size. --ember stays the accent
+   for the things that are pressed rather than the things that press. */
+.btn.primary { background: var(--patina); border-color: var(--patina); color: #fff; }
+.btn.primary:hover { filter: brightness(1.08); }
 .btn.primary:hover { filter: brightness(1.08); }
 .btn.ghost { background: transparent; border-color: transparent; color: var(--text-dim); }
 .btn.ghost:hover { color: var(--text); }
 
 .toast {
   position: fixed; left: 50%; bottom: 92px; transform: translate(-50%, 14px);
-  background: var(--patina); color: #06201a; font-weight: 700; font-size: 13px;
+  background: var(--patina); color: #f2fbf6; font-weight: 700; font-size: 13px;
   padding: 9px 16px; border-radius: 999px; z-index: 70;
   opacity: 0; pointer-events: none; transition: opacity .18s ease, transform .18s ease;
 }
@@ -510,7 +547,7 @@ main { padding: 24px 0 140px; }
   position: fixed; inset: 0; z-index: 90;
   display: grid; place-items: center;
   padding: 20px;
-  background: rgba(5, 10, 8, .72);
+  background: rgba(22, 34, 29, .42);
   backdrop-filter: blur(6px);
   animation: sheet-in .16s ease;
 }
@@ -590,10 +627,11 @@ main { padding: 24px 0 140px; }
   width: 17px; height: 17px; border-radius: 50%;
   display: grid; place-items: center;
   font-size: 10px; font-weight: 800; color: #17110a;
-  background: #c9c2b4; box-shadow: 0 0 0 1px rgba(0,0,0,.45) inset;
+  background: #cfc7b6; box-shadow: 0 0 0 1px rgba(22,34,29,.28) inset;
 }
 .mana.W { background: var(--w); } .mana.U { background: var(--u); color: #08131f; }
-.mana.B { background: var(--b); color: #f0ecf5; } .mana.R { background: var(--r); }
+.mana.B { background: var(--b); color: #f4f1f8; } .mana.R { background: var(--r); color: #fff4f0; }
+.mana.W { box-shadow: 0 0 0 1px rgba(22,34,29,.2) inset; }
 .mana.G { background: var(--g); }
 
 .sheet-meta {
@@ -672,3 +710,257 @@ main { padding: 24px 0 140px; }
   margin: 12px 0 2px;
 }
 .swap-head:first-of-type { margin-top: 2px; }
+
+/* Says what a panel's numbers were measured against when that is no longer the
+   deck on screen. Quiet, but never hidden: advice with a stale basis is worth
+   reading and worth doubting, and the reader needs both. */
+.caveat {
+  font-family: var(--sans); font-size: 12px; line-height: 1.45;
+  color: var(--text-faint); margin: 0 0 10px;
+  padding: 7px 10px; border-radius: 7px;
+  background: var(--sink, rgba(0, 0, 0, .03));
+  border-left: 2px solid var(--rule, rgba(0, 0, 0, .12));
+}
+
+/* ------------------------------------------------------- add a deck */
+
+/* The import panel. It sits over the page like the card popup does, and borrows
+   that popup's scrim and close button so there is one modal idiom here rather
+   than two. Everything inside it is a form, which this page otherwise has none
+   of, so the field styles live here rather than being factored out of nothing. */
+
+.imp-wrap {
+  position: fixed; inset: 0; z-index: 95;
+  display: grid; place-items: start center;
+  padding: 24px 16px; overflow: auto;
+  background: rgba(22, 34, 29, .46);
+  backdrop-filter: blur(6px);
+  animation: sheet-in .16s ease;
+}
+
+.imp-body {
+  position: relative;
+  width: min(520px, 100%);
+  background: linear-gradient(180deg, var(--panel), var(--ink-2));
+  border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 22px 20px 18px;
+}
+
+.imp-h { font-size: 21px; margin-bottom: 6px; }
+.imp-lede { margin: 0 0 16px; color: var(--text-dim); font-size: 13.5px; line-height: 1.5; }
+.imp-note {
+  margin: 0 0 14px; padding: 10px 12px; font-size: 13px; line-height: 1.5;
+  background: var(--ember-soft); border: 1px solid #f0b184; border-radius: var(--radius-sm);
+  color: #7a3d0d;
+}
+
+.imp-field { display: block; margin-bottom: 12px; }
+.imp-field > span {
+  display: flex; align-items: baseline; gap: 8px;
+  margin-bottom: 5px; font-size: 12px; font-weight: 700;
+  letter-spacing: .04em; text-transform: uppercase; color: var(--text-dim);
+}
+.imp-field > span em { font-style: normal; letter-spacing: 0; text-transform: none;
+  font-weight: 600; color: var(--text-faint); }
+.imp-field input, .imp-field textarea {
+  width: 100%; box-sizing: border-box;
+  background: var(--ink); color: var(--text);
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  padding: 10px 12px; font: 14px/1.45 var(--sans);
+}
+.imp-field textarea { font-family: var(--mono); font-size: 12.5px; resize: vertical; }
+.imp-field input:focus, .imp-field textarea:focus {
+  outline: none; border-color: var(--patina);
+}
+
+.imp-or {
+  margin: 4px 0 12px; text-align: center; font-size: 12px;
+  color: var(--text-faint); text-transform: uppercase; letter-spacing: .08em;
+}
+
+.imp-status { margin: 0 0 12px; font-size: 13px; line-height: 1.5; color: var(--text-dim); min-height: 1em; }
+.imp-status.is-warn { color: var(--amber); }
+.imp-status.is-ok { color: var(--patina); }
+
+.imp-problems {
+  margin: 0 0 14px; padding: 10px 12px 10px 30px;
+  background: #fdf0d2; border: 1px solid #e2c489; border-radius: var(--radius-sm);
+}
+.imp-problems li { font-size: 13px; line-height: 1.5; color: #6f4a0c; margin-bottom: 4px; }
+.imp-problems li:last-child { margin-bottom: 0; }
+
+.imp-unmatched { margin: 0 0 14px; font-size: 13px; color: var(--text-dim); }
+.imp-unmatched summary { cursor: pointer; color: var(--text-dim); }
+.imp-unmatched p { margin: 8px 0 0; font-size: 12.5px; color: var(--text-faint); line-height: 1.6; }
+
+.imp-score { margin-bottom: 14px; }
+.imp-result {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 14px; border-radius: var(--radius-sm);
+  background: var(--panel-2); border: 1px solid var(--line);
+}
+.imp-result.is-full { border-color: #9ecdb4; background: var(--patina-soft); }
+.imp-num { font-family: var(--serif); font-size: 32px; line-height: 1; }
+.imp-result.is-full .imp-num { color: var(--patina); }
+.imp-num-side { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.imp-num-side b { font-size: 12px; letter-spacing: .05em; text-transform: uppercase; }
+.imp-num-side span { font-size: 12px; color: var(--text-dim); }
+.imp-result .btn { margin-left: auto; }
+.imp-caveat { margin: 8px 0 0; font-size: 12px; line-height: 1.55; color: var(--text-faint); }
+
+.imp-actions { display: flex; justify-content: flex-end; gap: 8px; }
+
+/* The tile that opens all this, sitting at the end of the deck grid. It is a
+   dashed outline rather than a filled card because it is not a deck yet. */
+.deck-add {
+  display: grid; place-items: center; gap: 6px;
+  min-height: 190px; padding: 20px; cursor: pointer;
+  background: transparent; color: var(--text-dim);
+  border: 1px dashed var(--line); border-radius: var(--radius);
+  font: inherit; text-align: center;
+}
+.deck-add:hover { border-color: var(--patina); color: var(--text); }
+.deck-add .plus { font-size: 26px; line-height: 1; color: var(--text-faint); }
+.deck-add b { font-family: var(--serif); font-size: 16px; font-weight: 600; color: var(--text); }
+.deck-add span { font-size: 12.5px; line-height: 1.45; max-width: 24ch; }
+
+/* Building one from nothing. The panel borrows import's shell and fields
+   wholesale -- it is the same errand through a different door -- and adds only
+   what generation needs: two fields side by side, a narrated wait, and the two
+   rows of choices that come back. */
+.bp-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.bp-row .imp-field { margin-bottom: 12px; }
+.bp-row select {
+  width: 100%; box-sizing: border-box;
+  background: var(--ink); color: var(--text);
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  padding: 10px 12px; font: 14px/1.45 var(--sans);
+}
+.bp-row select:focus { outline: none; border-color: var(--patina); }
+
+/* The wait, narrated. Each line is a phase that finished; the last one is
+   whatever is happening now, and it rewrites itself rather than repeating. */
+.bp-steps { margin: 0 0 14px; padding: 0; list-style: none; }
+.bp-steps li {
+  padding: 5px 0 5px 20px; position: relative;
+  font-size: 13px; line-height: 1.45; color: var(--text-dim);
+}
+.bp-steps li::before {
+  content: "\2713"; position: absolute; left: 2px; top: 5px;
+  color: var(--patina); font-size: 12px; font-weight: 800;
+}
+.bp-steps li:last-child { color: var(--text); }
+.bp-steps li:last-child::before { content: "\2026"; color: var(--text-faint); font-weight: 700; }
+
+/* Which build, and which price. Two rows of the same kind of button: a bold
+   name over a line of plain fact, with the chosen one filled in. */
+.bp-picks, .bp-rungs { display: grid; gap: 8px; margin: 0 0 12px; }
+.bp-picks { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.bp-pick, .bp-rung {
+  display: block; width: 100%; text-align: left; cursor: pointer;
+  padding: 9px 12px; font: inherit;
+  background: var(--panel-2); color: var(--text-dim);
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+}
+.bp-pick:hover, .bp-rung:hover { border-color: var(--patina); }
+.bp-pick.is-on, .bp-rung.is-on {
+  background: var(--patina-soft); border-color: var(--patina); color: var(--text);
+}
+.bp-pick b, .bp-rung b { display: block; font-size: 14px; font-weight: 800; color: var(--text); }
+.bp-pick span, .bp-rung span { display: block; margin-top: 2px; font-size: 12px; line-height: 1.45; }
+
+/* The theme picker. Chips rather than a text box: these sixteen are the whole
+   vocabulary the generator has, and a free-text field both hid that and dropped
+   anything outside it without saying so. */
+.bp-themes { border: 0; margin: 0 0 12px; padding: 0; min-width: 0; }
+.bp-themes > span {
+  display: flex; align-items: baseline; gap: 8px;
+  margin-bottom: 6px; font-size: 12px; font-weight: 700;
+  letter-spacing: .04em; text-transform: uppercase; color: var(--text-dim);
+}
+.bp-themes > span em { font-style: normal; letter-spacing: 0; text-transform: none;
+  font-weight: 600; color: var(--text-faint); }
+.bp-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.bp-chip {
+  display: inline-flex; align-items: center; cursor: pointer;
+  padding: 5px 10px; border-radius: 999px;
+  background: var(--panel-2); border: 1px solid var(--line);
+  font-size: 12.5px; color: var(--text-dim);
+}
+.bp-chip:hover { border-color: var(--patina); }
+.bp-chip input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.bp-chip.is-on { background: var(--patina-soft); border-color: var(--patina); color: var(--text); font-weight: 600; }
+.bp-chip input:focus-visible + span { outline: 2px solid var(--ember); outline-offset: 3px; border-radius: 3px; }
+
+/* The play-style select sits in a plain field, so it needs the same skin the
+   two inside .bp-row already got. */
+.imp-field select {
+  width: 100%; box-sizing: border-box;
+  background: var(--ink); color: var(--text);
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  padding: 10px 12px; font: 14px/1.45 var(--sans);
+}
+.imp-field select:focus { outline: none; border-color: var(--patina); }
+
+/* A hundred card names inside a details. Monospaced so the eye can run down
+   them, and capped in height so opening it does not lose the Save button. */
+.bp-list {
+  max-height: 190px; overflow-y: auto;
+  font-family: var(--mono); font-size: 11.5px; line-height: 1.7;
+  word-break: break-word;
+}
+
+/* The second add tile. Same shape as Add a deck, marked only by its glyph --
+   the two are peers, and making one look primary would be a claim that one is
+   the usual way in. */
+.deck-add.is-build .plus { font-size: 22px; color: var(--patina); }
+
+@media (max-width: 560px) {
+  .bp-row { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 560px) {
+  .imp-body { padding: 18px 15px 15px; }
+  .imp-result { flex-wrap: wrap; }
+  .imp-result .btn { margin-left: 0; width: 100%; }
+}
+
+/* The strip at the top of an added deck: where it came from, and the way out. */
+.imp-banner {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  margin: 0 0 14px; padding: 9px 12px;
+  background: var(--panel-2); border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  font-size: 12.5px; color: var(--text-dim);
+}
+.imp-banner b { color: var(--text); font-weight: 700; }
+.imp-banner .btn { margin-left: auto; padding: 5px 12px; font-size: 12.5px; }
+
+/* The strip above the bench.
+   ------------------------
+   Two states and no third one. Without a file it explains what an upload would
+   do; with one it reports what came of it and offers the way back, because
+   replacing hand-audited counts with a claim has to be reversible in one click. */
+.inv-bar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+  margin: 0 0 14px; padding: 11px 14px;
+  background: var(--panel-2); border: 1px dashed var(--line);
+  border-radius: var(--radius-sm);
+  font-size: 13px; line-height: 1.5; color: var(--text-dim);
+}
+.inv-bar b { color: var(--text); font-weight: 700; }
+.inv-bar > div:first-child { flex: 1 1 260px; min-width: 0; }
+.inv-bar.is-on { border-style: solid; border-color: var(--patina); background: var(--patina-soft); }
+.inv-acts { display: flex; gap: 6px; flex-wrap: wrap; }
+.inv-file { cursor: pointer; }
+
+@media (max-width: 560px) {
+  .inv-bar .btn, .inv-bar .inv-file { flex: 1 1 100%; text-align: center; }
+}
+
+/* iOS zooms a focused field whose text is under 16px and does not zoom back.
+   Same rule as app.css, same reason, and it stays last in this file too. */
+@media (max-width: 700px) {
+  .imp-field input, .imp-field textarea { font-size: 16px; }
+}

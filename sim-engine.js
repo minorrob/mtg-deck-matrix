@@ -137,8 +137,8 @@
     });
     if (/add one mana of any color|add \{c\}\{c\}|any color/.test(text)) COLORS.forEach((color) => produced.add(color));
     // A land that goes and gets a basic makes whatever that basic makes. These
-    // carry an empty colour identity, so falling through to it left Evolving
-    // Wilds, Terramorphic Expanse and Fabled Passage producing no colour --
+    // carry an empty color identity, so falling through to it left Evolving
+    // Wilds, Terramorphic Expanse and Fabled Passage producing no color --
     // which flattered every swap that replaced one with a real dual.
     if (/\bLand\b/.test(typeLine) && !produced.size && PUTS_LAND_ONTO_BATTLEFIELD.test(text)) {
       const named = text.match(/\b(plains|island|swamp|mountain|forest)\b/g) || [];
@@ -223,7 +223,7 @@
   function drainAmount(text, typeLine) {
     if (/Instant|Sorcery/.test(typeLine)) return {all: 0, one: 0};
     if (!/whenever|at the beginning of/.test(text)) return {all: 0, one: 0};
-    // A death trigger is not an every-turn drain. Before deaths were modelled
+    // A death trigger is not an every-turn drain. Before deaths were modeled
     // this read Blood Artist as "each opponent loses 1 life every turn, forever,
     // with nothing having died"; deathValue now pays it when something actually
     // dies, so crediting it here as well would pay it twice.
@@ -812,7 +812,7 @@
       // the cost is the attacks it will not make later. A body is only fed to
       // the outlet when its death pays more than the body was going to hit for,
       // which is the decision a pilot actually makes -- eating the whole board
-      // for one point each is not how the deck plays, and modelling it that way
+      // for one point each is not how the deck plays, and modeling it that way
       // made an outlet read as a liability.
       if (sacOutlets > 0 && (deathDrain > 0 || deathDraw > 0)) {
         const livingSeats = Math.max(1, seats.filter((seat) => seat.life > 0).length);

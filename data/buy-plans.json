@@ -9188,9 +9188,9 @@
       "commander": "Betor, Ancestor's Voice",
       "budgetLabel": "$55 total",
       "bracketLabel": "B2.9",
-      "priorityLabel": "Trey's build · Tuned rank #3 of 6",
+      "priorityLabel": "my build · Tuned rank #3 of 6",
       "buyRank": 3,
-      "buyStrategy": "Trey's build",
+      "buyStrategy": "my build",
       "buyWhy": "Fifteen walls that normally cannot attack, plus three cards that let them hit for their toughness.",
       "buyFirst": "Begin with The Meathook Massacre, Guardian Project, Doran, the Siege Tower.",
       "allIn": 102.51,
@@ -12254,7 +12254,7 @@
         "gameChanger": false,
         "why": "Fifteen walls that normally cannot attack, plus three cards that let them hit for their toughness.",
         "buyRank": 3,
-        "buyStrategy": "Trey's build",
+        "buyStrategy": "my build",
         "buyFirst": "Begin with The Meathook Massacre, Guardian Project, Doran, the Siege Tower.",
         "allIn": 102.51,
         "outOfPrint": false,
@@ -20783,7 +20783,7 @@
       "priorityLabel": "Base Variant · Tuned rank #3",
       "buyRank": 3,
       "buyStrategy": "Base Variant",
-      "buyWhy": "Keith's favourite — and he was right about Bloodbriar",
+      "buyWhy": "Keith's favorite — and he was right about Bloodbriar",
       "buyFirst": "Begin with Necroskitter, Hapatra, Vizier of Poisons, Kulrath Knight.",
       "allIn": 37.23,
       "startingShell": [
@@ -30188,9 +30188,9 @@
       "commander": "Atraxa, Praetors' Voice",
       "budgetLabel": "$89 total",
       "bracketLabel": "B2.9",
-      "priorityLabel": "Trey's build · Tuned rank #4 of 6",
+      "priorityLabel": "my build · Tuned rank #4 of 6",
       "buyRank": 4,
-      "buyStrategy": "Trey's build",
+      "buyStrategy": "my build",
       "buyWhy": "Atraxa proliferates at every end step, and sixteen other cards do it too, so every counter keeps growing.",
       "buyFirst": "Begin with Phyrexian Arena, Vorinclex, Monstrous Raider, Ichormoon Gauntlet.",
       "allIn": 166.2,
@@ -33398,7 +33398,7 @@
         "gameChanger": false,
         "why": "Atraxa proliferates at every end step, and sixteen other cards do it too, so every counter keeps growing.",
         "buyRank": 4,
-        "buyStrategy": "Trey's build",
+        "buyStrategy": "my build",
         "buyFirst": "Begin with Phyrexian Arena, Vorinclex, Monstrous Raider, Ichormoon Gauntlet.",
         "allIn": 166.2,
         "outOfPrint": false,
@@ -37097,9 +37097,9 @@
       "commander": "Purphoros, God of the Forge",
       "budgetLabel": "$135 total",
       "bracketLabel": "B3.0",
-      "priorityLabel": "Trey's build · Tuned rank #5 of 6",
+      "priorityLabel": "my build · Tuned rank #5 of 6",
       "buyRank": 5,
-      "buyStrategy": "Trey's build",
+      "buyStrategy": "my build",
       "buyWhy": "Every creature that enters deals damage to each opponent, and you make Goblin tokens two and three at a time.",
       "buyFirst": "Begin with Fervor, Molten Echoes, Ruby Medallion.",
       "allIn": 221.08,
@@ -39805,7 +39805,7 @@
         "gameChanger": false,
         "why": "Every creature that enters deals damage to each opponent, and you make Goblin tokens two and three at a time.",
         "buyRank": 5,
-        "buyStrategy": "Trey's build",
+        "buyStrategy": "my build",
         "buyFirst": "Begin with Fervor, Molten Echoes, Ruby Medallion.",
         "allIn": 221.08,
         "outOfPrint": false,
@@ -40445,8 +40445,8 @@
           "ceiling": 7.78,
           "category": "funTuned",
           "stage": "Pod Fun",
-          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Other Goblins you control get +1/+1.\nSacrifice a Goblin: Destroy target artifact.",
-          "why": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Other Goblins you control get +1/+1.\nSacrifice a Goblin: Destroy target artifact.",
+          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Other Goblins you control get +1/+1.\nSacrifice a Goblin: Destroy target artifact.",
+          "why": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Other Goblins you control get +1/+1.\nSacrifice a Goblin: Destroy target artifact.",
           "replaces": "Tweeze",
           "replacesId": "shell-tweeze",
           "gameChanger": false,
@@ -40462,7 +40462,7 @@
           "commanderLegal": true,
           "brief": {
             "value": "$7.78 at market, and $0 to build: the Pod Fun rung was searched over the bench alone.",
-            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Other Goblins you control get +1/+1.\nSacrifice a Goblin: Destroy target artifact."
+            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Other Goblins you control get +1/+1.\nSacrifice a Goblin: Destroy target artifact."
           }
         },
         {
@@ -40535,8 +40535,8 @@
           "ceiling": 5.94,
           "category": "funTuned",
           "stage": "Pod Fun",
-          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Haste (This creature can attack and {T} as soon as it comes under your control.)\nOther Goblin creatures you control get.",
-          "why": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Haste (This creature can attack and {T} as soon as it comes under your control.)\nOther Goblin creatures you control get.",
+          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Haste (This creature can attack and {T} as soon as it comes under your control.)\nOther Goblin creatures you control get.",
+          "why": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Haste (This creature can attack and {T} as soon as it comes under your control.)\nOther Goblin creatures you control get.",
           "replaces": "Cinder Strike",
           "replacesId": "shell-cinder-strike",
           "gameChanger": false,
@@ -40554,7 +40554,7 @@
           "commanderLegal": true,
           "brief": {
             "value": "$5.94 at market, and $0 to build: the Pod Fun rung was searched over the bench alone.",
-            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Haste (This creature can attack and {T} as soon as it comes under your control.)\nOther Goblin creatures you control get."
+            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Haste (This creature can attack and {T} as soon as it comes under your control.)\nOther Goblin creatures you control get."
           }
         },
         {
@@ -40599,8 +40599,8 @@
           "ceiling": 4.21,
           "category": "funTuned",
           "stage": "Pod Fun",
-          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Creatures you control have haste. (They can attack and {T} as soon as they come under your control.).",
-          "why": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Creatures you control have haste. (They can attack and {T} as soon as they come under your control.).",
+          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Creatures you control have haste. (They can attack and {T} as soon as they come under your control.).",
+          "why": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Creatures you control have haste. (They can attack and {T} as soon as they come under your control.).",
           "replaces": "Akoum Hellhound",
           "replacesId": "shell-akoum-hellhound",
           "gameChanger": false,
@@ -40616,7 +40616,7 @@
           "commanderLegal": true,
           "brief": {
             "value": "$4.21 at market, and $0 to build: the Pod Fun rung was searched over the bench alone.",
-            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Creatures you control have haste. (They can attack and {T} as soon as they come under your control.)."
+            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Creatures you control have haste. (They can attack and {T} as soon as they come under your control.)."
           }
         },
         {
@@ -40629,8 +40629,8 @@
           "ceiling": 9.51,
           "category": "funTuned",
           "stage": "Pod Fun",
-          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: As this enchantment enters, choose a creature type.\nWhenever a nontoken creature you control of the chosen type enters,.",
-          "why": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: As this enchantment enters, choose a creature type.\nWhenever a nontoken creature you control of the chosen type enters,.",
+          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: As this enchantment enters, choose a creature type.\nWhenever a nontoken creature you control of the chosen type enters,.",
+          "why": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: As this enchantment enters, choose a creature type.\nWhenever a nontoken creature you control of the chosen type enters,.",
           "replaces": "Monastery Raid",
           "replacesId": "shell-monastery-raid",
           "gameChanger": false,
@@ -40646,7 +40646,7 @@
           "commanderLegal": true,
           "brief": {
             "value": "$9.51 at market, and $0 to build: the Pod Fun rung was searched over the bench alone.",
-            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: As this enchantment enters, choose a creature type.\nWhenever a nontoken creature you control of the chosen type enters,."
+            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: As this enchantment enters, choose a creature type.\nWhenever a nontoken creature you control of the chosen type enters,."
           }
         },
         {
@@ -40659,8 +40659,8 @@
           "ceiling": 14.81,
           "category": "funTuned",
           "stage": "Pod Fun",
-          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Red spells you cast cost {1} less to cast.",
-          "why": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Red spells you cast cost {1} less to cast.",
+          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Red spells you cast cost {1} less to cast.",
+          "why": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Red spells you cast cost {1} less to cast.",
           "replaces": "Dwarven Mauler",
           "replacesId": "shell-dwarven-mauler",
           "gameChanger": false,
@@ -40674,7 +40674,7 @@
           "commanderLegal": true,
           "brief": {
             "value": "$14.81 at market, and $0 to build: the Pod Fun rung was searched over the bench alone.",
-            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Red spells you cast cost {1} less to cast."
+            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Red spells you cast cost {1} less to cast."
           }
         },
         {
@@ -40687,8 +40687,8 @@
           "ceiling": 4.87,
           "category": "funTuned",
           "stage": "Pod Fun",
-          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Other Goblins you control get +1/+1.\nWhenever this creature or another Goblin you control dies, exile the top card of yo.",
-          "why": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Other Goblins you control get +1/+1.\nWhenever this creature or another Goblin you control dies, exile the top card of yo.",
+          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Other Goblins you control get +1/+1.\nWhenever this creature or another Goblin you control dies, exile the top card of yo.",
+          "why": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Other Goblins you control get +1/+1.\nWhenever this creature or another Goblin you control dies, exile the top card of yo.",
           "replaces": "Burning Curiosity",
           "replacesId": "shell-burning-curiosity",
           "gameChanger": false,
@@ -40704,7 +40704,7 @@
           "commanderLegal": true,
           "brief": {
             "value": "$4.87 at market, and $0 to build: the Pod Fun rung was searched over the bench alone.",
-            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Other Goblins you control get +1/+1.\nWhenever this creature or another Goblin you control dies, exile the top card of yo."
+            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Other Goblins you control get +1/+1.\nWhenever this creature or another Goblin you control dies, exile the top card of yo."
           }
         },
         {
@@ -40717,8 +40717,8 @@
           "ceiling": 0.28,
           "category": "funTuned",
           "stage": "Pod Fun",
-          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Removal: X damage to target creature/planeswalker, or make an X/1 hasty trampler.",
-          "why": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Removal: X damage to target creature/planeswalker, or make an X/1 hasty trampler.",
+          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Removal: X damage to target creature/planeswalker, or make an X/1 hasty trampler.",
+          "why": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Removal: X damage to target creature/planeswalker, or make an X/1 hasty trampler.",
           "replaces": "Goblin Motivator",
           "replacesId": "shell-goblin-motivator",
           "gameChanger": false,
@@ -40734,7 +40734,7 @@
           "commanderLegal": true,
           "brief": {
             "value": "$0.28 at market, and $0 to build: the Pod Fun rung was searched over the bench alone.",
-            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Removal: X damage to target creature/planeswalker, or make an X/1 hasty trampler."
+            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Removal: X damage to target creature/planeswalker, or make an X/1 hasty trampler."
           }
         },
         {
@@ -40747,8 +40747,8 @@
           "ceiling": 0.66,
           "category": "funTuned",
           "stage": "Pod Fun",
-          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Token Producer: Creates a 1/1 Goblin that must attack at each of your combats; Gets +1/+0 per other attacking Goblin; other Goblins must attack.",
-          "why": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Token Producer: Creates a 1/1 Goblin that must attack at each of your combats; Gets +1/+0 per other attacking Goblin; other Goblins must attack.",
+          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Token Producer: Creates a 1/1 Goblin that must attack at each of your combats; Gets +1/+0 per other attacking Goblin; other Goblins must attack.",
+          "why": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Token Producer: Creates a 1/1 Goblin that must attack at each of your combats; Gets +1/+0 per other attacking Goblin; other Goblins must attack.",
           "replaces": "Goblin Oriflamme",
           "replacesId": "shell-goblin-oriflamme",
           "gameChanger": false,
@@ -40764,7 +40764,7 @@
           "commanderLegal": true,
           "brief": {
             "value": "$0.66 at market, and $0 to build: the Pod Fun rung was searched over the bench alone.",
-            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Token Producer: Creates a 1/1 Goblin that must attack at each of your combats; Gets +1/+0 per other attacking Goblin; other Goblins must attack."
+            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Token Producer: Creates a 1/1 Goblin that must attack at each of your combats; Gets +1/+0 per other attacking Goblin; other Goblins must attack."
           }
         },
         {
@@ -40777,8 +40777,8 @@
           "ceiling": 4.47,
           "category": "funTuned",
           "stage": "Pod Fun",
-          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Whenever a creature you control attacks, it gets +1/+0 until end of turn for each other attacking creature that shares a.",
-          "why": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Whenever a creature you control attacks, it gets +1/+0 until end of turn for each other attacking creature that shares a.",
+          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Whenever a creature you control attacks, it gets +1/+0 until end of turn for each other attacking creature that shares a.",
+          "why": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Whenever a creature you control attacks, it gets +1/+0 until end of turn for each other attacking creature that shares a.",
           "replaces": "Alexios, Deimos of Kosmos",
           "replacesId": "shell-alexios-deimos-of-kosmos",
           "gameChanger": false,
@@ -40794,7 +40794,7 @@
           "commanderLegal": true,
           "brief": {
             "value": "$4.47 at market, and $0 to build: the Pod Fun rung was searched over the bench alone.",
-            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Whenever a creature you control attacks, it gets +1/+0 until end of turn for each other attacking creature that shares a."
+            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Whenever a creature you control attacks, it gets +1/+0 until end of turn for each other attacking creature that shares a."
           }
         },
         {
@@ -40807,8 +40807,8 @@
           "ceiling": 4.85,
           "category": "funTuned",
           "stage": "Pod Fun",
-          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Play with the top card of your library revealed.\nYou may cast Goblin spells from the top of your library.\nAs long as the.",
-          "why": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Play with the top card of your library revealed.\nYou may cast Goblin spells from the top of your library.\nAs long as the.",
+          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Play with the top card of your library revealed.\nYou may cast Goblin spells from the top of your library.\nAs long as the.",
+          "why": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Play with the top card of your library revealed.\nYou may cast Goblin spells from the top of your library.\nAs long as the.",
           "replaces": "Voldaren Epicure",
           "replacesId": "shell-voldaren-epicure",
           "gameChanger": false,
@@ -40824,7 +40824,7 @@
           "commanderLegal": true,
           "brief": {
             "value": "$4.85 at market, and $0 to build: the Pod Fun rung was searched over the bench alone.",
-            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Play with the top card of your library revealed.\nYou may cast Goblin spells from the top of your library.\nAs long as the."
+            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Play with the top card of your library revealed.\nYou may cast Goblin spells from the top of your library.\nAs long as the."
           }
         }
       ],
@@ -70491,9 +70491,9 @@
       "commander": "Chulane, Teller of Tales",
       "budgetLabel": "$89 total",
       "bracketLabel": "B3.0",
-      "priorityLabel": "Trey's build · Tuned rank #6 of 6",
+      "priorityLabel": "my build · Tuned rank #6 of 6",
       "buyRank": 6,
-      "buyStrategy": "Trey's build",
+      "buyStrategy": "my build",
       "buyWhy": "Every creature you cast draws a card and drops a land, then you blink it to do it all again.",
       "buyFirst": "Begin with Guardian Project, Panharmonicon, Rhystic Study.",
       "allIn": 199.98,
@@ -73881,7 +73881,7 @@
         "gameChanger": false,
         "why": "Every creature you cast draws a card and drops a land, then you blink it to do it all again.",
         "buyRank": 6,
-        "buyStrategy": "Trey's build",
+        "buyStrategy": "my build",
         "buyFirst": "Begin with Guardian Project, Panharmonicon, Rhystic Study.",
         "allIn": 199.98,
         "outOfPrint": false,
@@ -74397,9 +74397,9 @@
       "commander": "Quintorius, Loremaster",
       "budgetLabel": "$89 total",
       "bracketLabel": "B3.0",
-      "priorityLabel": "Trey's build · Tuned rank #1 of 6",
+      "priorityLabel": "my build · Tuned rank #1 of 6",
       "buyRank": 1,
-      "buyStrategy": "Trey's build",
+      "buyStrategy": "my build",
       "buyWhy": "Fill your graveyard on purpose, then exile it back one card at a time, taking a free 3/2 Spirit each time.",
       "buyFirst": "Begin with Farewell, Sunbaked Canyon, Smothering Tithe.",
       "allIn": 182.38,
@@ -78125,7 +78125,7 @@
         "gameChanger": false,
         "why": "Fill your graveyard on purpose, then exile it back one card at a time, taking a free 3/2 Spirit each time.",
         "buyRank": 1,
-        "buyStrategy": "Trey's build",
+        "buyStrategy": "my build",
         "buyFirst": "Begin with Farewell, Sunbaked Canyon, Smothering Tithe.",
         "allIn": 182.38,
         "outOfPrint": false,
@@ -124637,9 +124637,9 @@
       "commander": "Shadrix Silverquill",
       "budgetLabel": "$68 total",
       "bracketLabel": "B2.9",
-      "priorityLabel": "Trey's build · Tuned rank #2 of 6",
+      "priorityLabel": "my build · Tuned rank #2 of 6",
       "buyRank": 2,
-      "buyStrategy": "Trey's build",
+      "buyStrategy": "my build",
       "buyWhy": "Make white and black tokens, sacrifice them, and drain all three opponents one point at a time.",
       "buyFirst": "Begin with Kambal, Consul of Allocation, Mentor of the Meek, Night's Whisper.",
       "allIn": 176.23,
@@ -127459,7 +127459,7 @@
         "gameChanger": false,
         "why": "Make white and black tokens, sacrifice them, and drain all three opponents one point at a time.",
         "buyRank": 2,
-        "buyStrategy": "Trey's build",
+        "buyStrategy": "my build",
         "buyFirst": "Begin with Kambal, Consul of Allocation, Mentor of the Meek, Night's Whisper.",
         "allIn": 176.23,
         "outOfPrint": false,
@@ -127986,8 +127986,8 @@
           "ceiling": 4.95,
           "category": "funTuned",
           "stage": "Pod Fun",
-          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Whenever another creature you control with power 2 or less enters, you may pay {1}. If you do, draw a card.",
-          "why": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Whenever another creature you control with power 2 or less enters, you may pay {1}. If you do, draw a card.",
+          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Whenever another creature you control with power 2 or less enters, you may pay {1}. If you do, draw a card.",
+          "why": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Whenever another creature you control with power 2 or less enters, you may pay {1}. If you do, draw a card.",
           "replaces": "Hemlock Vial",
           "replacesId": "shell-hemlock-vial",
           "gameChanger": false,
@@ -128003,7 +128003,7 @@
           "commanderLegal": true,
           "brief": {
             "value": "$4.95 at market, and $0 to build: the Pod Fun rung was searched over the bench alone.",
-            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Whenever another creature you control with power 2 or less enters, you may pay {1}. If you do, draw a card."
+            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Whenever another creature you control with power 2 or less enters, you may pay {1}. If you do, draw a card."
           }
         },
         {
@@ -128172,8 +128172,8 @@
           "ceiling": 10.17,
           "category": "funTuned",
           "stage": "Pod Fun",
-          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Whenever an opponent casts a noncreature spell, that player loses 2 life and you gain 2 life.",
-          "why": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Whenever an opponent casts a noncreature spell, that player loses 2 life and you gain 2 life.",
+          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Whenever an opponent casts a noncreature spell, that player loses 2 life and you gain 2 life.",
+          "why": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Whenever an opponent casts a noncreature spell, that player loses 2 life and you gain 2 life.",
           "replaces": "Great Fierce Bee",
           "replacesId": "shell-great-fierce-bee",
           "gameChanger": false,
@@ -128190,7 +128190,7 @@
           "commanderLegal": true,
           "brief": {
             "value": "$10.17 at market, and $0 to build: the Pod Fun rung was searched over the bench alone.",
-            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Whenever an opponent casts a noncreature spell, that player loses 2 life and you gain 2 life."
+            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Whenever an opponent casts a noncreature spell, that player loses 2 life and you gain 2 life."
           }
         },
         {
@@ -128203,8 +128203,8 @@
           "ceiling": 5.42,
           "category": "funTuned",
           "stage": "Pod Fun",
-          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: You draw two cards and lose 2 life.",
-          "why": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: You draw two cards and lose 2 life.",
+          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: You draw two cards and lose 2 life.",
+          "why": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: You draw two cards and lose 2 life.",
           "replaces": "Lake-town Lookout",
           "replacesId": "shell-lake-town-lookout",
           "gameChanger": false,
@@ -128220,7 +128220,7 @@
           "commanderLegal": true,
           "brief": {
             "value": "$5.42 at market, and $0 to build: the Pod Fun rung was searched over the bench alone.",
-            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: You draw two cards and lose 2 life."
+            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: You draw two cards and lose 2 life."
           }
         },
         {
@@ -128233,8 +128233,8 @@
           "ceiling": 5.89,
           "category": "funTuned",
           "stage": "Pod Fun",
-          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Card Draw: Equipped creature gets +1/-1; Draw two cards whenever equipped creature dies.",
-          "why": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Card Draw: Equipped creature gets +1/-1; Draw two cards whenever equipped creature dies.",
+          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Card Draw: Equipped creature gets +1/-1; Draw two cards whenever equipped creature dies.",
+          "why": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Card Draw: Equipped creature gets +1/-1; Draw two cards whenever equipped creature dies.",
           "replaces": "Suture Priest",
           "replacesId": "shell-suture-priest",
           "gameChanger": false,
@@ -128250,7 +128250,7 @@
           "commanderLegal": true,
           "brief": {
             "value": "$5.89 at market, and $0 to build: the Pod Fun rung was searched over the bench alone.",
-            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Card Draw: Equipped creature gets +1/-1; Draw two cards whenever equipped creature dies."
+            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Card Draw: Equipped creature gets +1/-1; Draw two cards whenever equipped creature dies."
           }
         },
         {
@@ -128263,8 +128263,8 @@
           "ceiling": 2.67,
           "category": "funTuned",
           "stage": "Pod Fun",
-          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: If a creature dying causes a triggered ability of a permanent you control to trigger, that ability triggers an additiona.",
-          "why": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: If a creature dying causes a triggered ability of a permanent you control to trigger, that ability triggers an additiona.",
+          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: If a creature dying causes a triggered ability of a permanent you control to trigger, that ability triggers an additiona.",
+          "why": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: If a creature dying causes a triggered ability of a permanent you control to trigger, that ability triggers an additiona.",
           "replaces": "Prideful Feastling",
           "replacesId": "shell-prideful-feastling",
           "gameChanger": false,
@@ -128281,7 +128281,7 @@
           "commanderLegal": true,
           "brief": {
             "value": "$2.67 at market, and $0 to build: the Pod Fun rung was searched over the bench alone.",
-            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: If a creature dying causes a triggered ability of a permanent you control to trigger, that ability triggers an additiona."
+            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: If a creature dying causes a triggered ability of a permanent you control to trigger, that ability triggers an additiona."
           }
         },
         {
@@ -128294,8 +128294,8 @@
           "ceiling": 0.34,
           "category": "funTuned",
           "stage": "Pod Fun",
-          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Removal: Exiles target creature or planeswalker (enchants a basic land you control).",
-          "why": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Removal: Exiles target creature or planeswalker (enchants a basic land you control).",
+          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Removal: Exiles target creature or planeswalker (enchants a basic land you control).",
+          "why": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Removal: Exiles target creature or planeswalker (enchants a basic land you control).",
           "replaces": "Costly Plunder",
           "replacesId": "shell-costly-plunder",
           "gameChanger": false,
@@ -128313,7 +128313,7 @@
           "commanderLegal": true,
           "brief": {
             "value": "$0.34 at market, and $0 to build: the Pod Fun rung was searched over the bench alone.",
-            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Removal: Exiles target creature or planeswalker (enchants a basic land you control)."
+            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Removal: Exiles target creature or planeswalker (enchants a basic land you control)."
           }
         },
         {
@@ -128326,8 +128326,8 @@
           "ceiling": 0.84,
           "category": "funTuned",
           "stage": "Pod Fun",
-          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Token Producer: Whenever another non-Spirit creature you control dies, create a 1/1 flying Spirit; 5/4 flying body.",
-          "why": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Token Producer: Whenever another non-Spirit creature you control dies, create a 1/1 flying Spirit; 5/4 flying body.",
+          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Token Producer: Whenever another non-Spirit creature you control dies, create a 1/1 flying Spirit; 5/4 flying body.",
+          "why": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Token Producer: Whenever another non-Spirit creature you control dies, create a 1/1 flying Spirit; 5/4 flying body.",
           "replaces": "Inspiring Overseer",
           "replacesId": "shell-inspiring-overseer",
           "gameChanger": false,
@@ -128345,7 +128345,7 @@
           "commanderLegal": true,
           "brief": {
             "value": "$0.84 at market, and $0 to build: the Pod Fun rung was searched over the bench alone.",
-            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Token Producer: Whenever another non-Spirit creature you control dies, create a 1/1 flying Spirit; 5/4 flying body."
+            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Token Producer: Whenever another non-Spirit creature you control dies, create a 1/1 flying Spirit; 5/4 flying body."
           }
         },
         {
@@ -128358,8 +128358,8 @@
           "ceiling": 1,
           "category": "funTuned",
           "stage": "Pod Fun",
-          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Token Producer: -1: Up to two creatures get +2/+1 until end of turn; -2: Create two 1/1 Human Soldier tokens; Escape from the graveyard by exiling four cards.",
-          "why": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Token Producer: -1: Up to two creatures get +2/+1 until end of turn; -2: Create two 1/1 Human Soldier tokens; Escape from the graveyard by exiling four cards.",
+          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Token Producer: -1: Up to two creatures get +2/+1 until end of turn; -2: Create two 1/1 Human Soldier tokens; Escape from the graveyard by exiling four cards.",
+          "why": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Token Producer: -1: Up to two creatures get +2/+1 until end of turn; -2: Create two 1/1 Human Soldier tokens; Escape from the graveyard by exiling four cards.",
           "replaces": "Curious Farm Animals",
           "replacesId": "shell-curious-farm-animals",
           "gameChanger": false,
@@ -128377,7 +128377,7 @@
           "commanderLegal": true,
           "brief": {
             "value": "$1.00 at market, and $0 to build: the Pod Fun rung was searched over the bench alone.",
-            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Token Producer: -1: Up to two creatures get +2/+1 until end of turn; -2: Create two 1/1 Human Soldier tokens; Escape from the graveyard by exiling four cards."
+            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Token Producer: -1: Up to two creatures get +2/+1 until end of turn; -2: Create two 1/1 Human Soldier tokens; Escape from the graveyard by exiling four cards."
           }
         },
         {
@@ -128390,8 +128390,8 @@
           "ceiling": 1.09,
           "category": "funTuned",
           "stage": "Pod Fun",
-          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Board Wipe: Destroys all creatures.",
-          "why": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Board Wipe: Destroys all creatures.",
+          "purpose": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Board Wipe: Destroys all creatures.",
+          "why": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Board Wipe: Destroys all creatures.",
           "replaces": "Timid Shieldbearer",
           "replacesId": "shell-timid-shieldbearer",
           "gameChanger": false,
@@ -128407,7 +128407,7 @@
           "commanderLegal": true,
           "brief": {
             "value": "$1.09 at market, and $0 to build: the Pod Fun rung was searched over the bench alone.",
-            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimiser started from: Board Wipe: Destroys all creatures."
+            "fit": "Carried into the Pod Fun hundred from the Tuned list the optimizer started from: Board Wipe: Destroys all creatures."
           }
         }
       ],
@@ -132601,7 +132601,7 @@
           "ceiling": 0.33
         },
         {
-          "id": "shell-8b-50-ultramarines-honour-guard",
+          "id": "shell-8b-50-ultramarines-honor-guard",
           "name": "Ultramarines Honour Guard",
           "quantity": 1,
           "manaCost": "{3}{W}",
@@ -133625,7 +133625,7 @@
           "gameChanger": false
         },
         {
-          "id": "shell-8b-50-ultramarines-honour-guard",
+          "id": "shell-8b-50-ultramarines-honor-guard",
           "name": "Ultramarines Honour Guard",
           "quantity": 1,
           "typeLine": "Creature — Astartes Warrior",

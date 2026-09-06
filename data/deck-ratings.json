@@ -1,811 +1,811 @@
 {
-  "schemaVersion": 1,
-  "generatedAt": "2026-09-04T11:41:25.674Z",
-  "engine": "sim-engine.js",
-  "table": "mixed-pod",
-  "seeds": [
-    20260904,
-    20268823,
-    20276742,
-    20284661,
-    20292580,
-    20300499
-  ],
-  "gamesPerSeed": 20000,
-  "method": "Each hundred-card list was played out 20,000 times per seed, six independent seeds apiece, against a four-player pod whose three other seats are drawn from the mixed-pod table in sim/opponents.json — a spread of precon, upgraded-casual, tuned, combo, stax, aristocrats, voltron, tokens and group-hug opponents rather than one fixed gauntlet. Score is a 0–100 composite of how the deck actually played: how often it won, how often it was mana screwed or flooded, how reliably and how early the commander landed, how much interaction was in hand, how fast it closed, and how many uncastable cards were stranded. Higher is better, and a gap between two builds counts as real only when it is larger than twice the combined seed-to-seed noise.",
-  "decks": [
-    {
-      "id": "D1",
-      "label": "Quintorius",
-      "commander": "Quintorius, Loremaster",
-      "colorIdentity": [
-        "R",
-        "W"
-      ],
-      "builds": {
-        "v1": {
-          "score": 85.73,
-          "se": 0.033,
-          "winRate": 0.5582,
-          "screwPct": 0.0511,
-          "floodPct": 0.0393,
-          "avgCommanderTurn": 5.24,
-          "commanderCastRate": 0.9918,
-          "deadCardsAtT8": 0.16,
-          "avgWinTurn": 11.25,
-          "perSeedScores": [
-            85.7,
-            85.7,
-            85.7,
-            85.9,
-            85.7,
-            85.7
-          ],
-          "lands": 35,
-          "avgMv": 3.09,
-          "curve": {
-            "1": 7,
-            "2": 20,
-            "3": 16,
-            "4": 10,
-            "5": 9,
-            "6": 1,
-            "7": 1,
-            "8": 1
-          },
-          "bracket": {
-            "label": "B2",
-            "tier": 2,
-            "gameChangers": 0
-          },
-          "cost": 89.02,
-          "cards": 100
-        },
-        "tuned": {
-          "sameAs": "v1"
-        },
-        "b3": {
-          "score": 86.53,
-          "se": 0.042,
-          "winRate": 0.5734,
-          "screwPct": 0.0612,
-          "floodPct": 0.0376,
-          "avgCommanderTurn": 5.34,
-          "commanderCastRate": 0.9911,
-          "deadCardsAtT8": 0.17,
-          "avgWinTurn": 11.17,
-          "perSeedScores": [
-            86.5,
-            86.7,
-            86.5,
-            86.4,
-            86.6,
-            86.5
-          ],
-          "lands": 35,
-          "avgMv": 3.11,
-          "curve": {
-            "1": 7,
-            "2": 19,
-            "3": 17,
-            "4": 11,
-            "5": 7,
-            "6": 2,
-            "7": 1,
-            "8": 1
-          },
-          "bracket": {
-            "label": "B3",
-            "tier": 3,
-            "gameChangers": 2
-          },
-          "cost": 182.38,
-          "cards": 100
-        }
-      },
-      "rank": {
-        "v1": 1,
-        "tuned": 1,
-        "b3": 1
-      },
-      "delta": {
-        "v1ToB3": {
-          "score": 0.8,
-          "significant": true
-        },
-        "v1ToTuned": {
-          "score": 0,
-          "significant": false
-        },
-        "tunedToB3": {
-          "score": 0.8,
-          "significant": true
-        }
-      },
-      "swapsApplied": {
-        "tuned": 0,
-        "b3": 8
-      }
+ "schemaVersion": 1,
+ "generatedAt": "2026-09-05T18:20:39.240Z",
+ "engine": "sim-engine.js",
+ "table": "mixed-pod",
+ "seeds": [
+  20260904,
+  20268823,
+  20276742,
+  20284661,
+  20292580,
+  20300499
+ ],
+ "gamesPerSeed": 20000,
+ "method": "Each hundred-card list was played out 20,000 times per seed, 6 independent seeds apiece, against a four-player pod whose three other seats are drawn from the mixed-pod table in sim/opponents.json — a spread of precon, upgraded-casual, tuned, combo, stax, aristocrats, voltron, tokens and group-hug opponents rather than one fixed gauntlet. Score is a 0–100 composite of how the deck actually played: how often it won, how often it was mana screwed or flooded, how reliably and how early the commander landed, how much interaction was in hand, how fast it closed, and how many uncastable cards were stranded. Higher is better, and a gap between two builds counts as real only when it is larger than twice the combined seed-to-seed noise.",
+ "decks": [
+  {
+   "id": "D1",
+   "label": "Quintorius",
+   "commander": "Quintorius, Loremaster",
+   "colorIdentity": [
+    "R",
+    "W"
+   ],
+   "builds": {
+    "v1": {
+     "score": 84.03,
+     "se": 0.102,
+     "winRate": 0.5469,
+     "screwPct": 0.0845,
+     "floodPct": 0.0384,
+     "avgCommanderTurn": 5.4,
+     "commanderCastRate": 0.9839,
+     "deadCardsAtT8": 0.25,
+     "avgWinTurn": 11.48,
+     "perSeedScores": [
+      83.9,
+      84,
+      84.1,
+      84.5,
+      83.9,
+      83.8
+     ],
+     "lands": 35,
+     "avgMv": 3.2,
+     "curve": {
+      "1": 5,
+      "2": 20,
+      "3": 16,
+      "4": 11,
+      "5": 10,
+      "6": 1,
+      "7": 1,
+      "8": 1
+     },
+     "bracket": {
+      "label": "B2",
+      "tier": 2,
+      "gameChangers": 0
+     },
+     "cost": 94.8,
+     "cards": 100
     },
-    {
-      "id": "D2",
-      "label": "Chulane",
-      "commander": "Chulane, Teller of Tales",
-      "colorIdentity": [
-        "G",
-        "U",
-        "W"
-      ],
-      "builds": {
-        "v1": {
-          "score": 72.68,
-          "se": 0.065,
-          "winRate": 0.5132,
-          "screwPct": 0.2211,
-          "floodPct": 0.0167,
-          "avgCommanderTurn": 6.01,
-          "commanderCastRate": 0.9015,
-          "deadCardsAtT8": 0.95,
-          "avgWinTurn": 11.82,
-          "perSeedScores": [
-            72.4,
-            72.8,
-            72.6,
-            72.8,
-            72.7,
-            72.8
-          ],
-          "lands": 30,
-          "avgMv": 3.23,
-          "curve": {
-            "1": 3,
-            "2": 20,
-            "3": 24,
-            "4": 10,
-            "5": 7,
-            "6": 6,
-            "7": 0,
-            "8": 0
-          },
-          "bracket": {
-            "label": "B2",
-            "tier": 2,
-            "gameChangers": 0
-          },
-          "cost": 88.87,
-          "cards": 100
-        },
-        "tuned": {
-          "sameAs": "v1"
-        },
-        "b3": {
-          "score": 73.02,
-          "se": 0.048,
-          "winRate": 0.518,
-          "screwPct": 0.217,
-          "floodPct": 0.0159,
-          "avgCommanderTurn": 5.99,
-          "commanderCastRate": 0.9066,
-          "deadCardsAtT8": 0.87,
-          "avgWinTurn": 11.91,
-          "perSeedScores": [
-            73.2,
-            73,
-            73.1,
-            72.9,
-            72.9,
-            73
-          ],
-          "lands": 30,
-          "avgMv": 3.2,
-          "curve": {
-            "1": 3,
-            "2": 19,
-            "3": 24,
-            "4": 13,
-            "5": 7,
-            "6": 4,
-            "7": 0,
-            "8": 0
-          },
-          "bracket": {
-            "label": "B3",
-            "tier": 3,
-            "gameChangers": 1
-          },
-          "cost": 199.98,
-          "cards": 100
-        }
-      },
-      "rank": {
-        "v1": 6,
-        "tuned": 6,
-        "b3": 6
-      },
-      "delta": {
-        "v1ToB3": {
-          "score": 0.34,
-          "significant": true
-        },
-        "v1ToTuned": {
-          "score": 0,
-          "significant": false
-        },
-        "tunedToB3": {
-          "score": 0.34,
-          "significant": true
-        }
-      },
-      "swapsApplied": {
-        "tuned": 0,
-        "b3": 5
-      }
+    "tuned": {
+     "sameAs": "v1"
     },
-    {
-      "id": "D3",
-      "label": "Atraxa",
-      "commander": "Atraxa, Praetors' Voice",
-      "colorIdentity": [
-        "B",
-        "G",
-        "U",
-        "W"
-      ],
-      "builds": {
-        "v1": {
-          "score": 78.07,
-          "se": 0.143,
-          "winRate": 0.5547,
-          "screwPct": 0.1274,
-          "floodPct": 0.0323,
-          "avgCommanderTurn": 5.28,
-          "commanderCastRate": 0.8609,
-          "deadCardsAtT8": 1.09,
-          "avgWinTurn": 10.58,
-          "perSeedScores": [
-            77.8,
-            78.6,
-            78,
-            78.4,
-            77.8,
-            77.8
-          ],
-          "lands": 33,
-          "avgMv": 2.94,
-          "curve": {
-            "1": 2,
-            "2": 23,
-            "3": 23,
-            "4": 10,
-            "5": 8,
-            "6": 0,
-            "7": 0,
-            "8": 0
-          },
-          "bracket": {
-            "label": "B2",
-            "tier": 2,
-            "gameChangers": 0
-          },
-          "cost": 89.11,
-          "cards": 100
-        },
-        "tuned": {
-          "sameAs": "v1"
-        },
-        "b3": {
-          "score": 78.37,
-          "se": 0.126,
-          "winRate": 0.507,
-          "screwPct": 0.1167,
-          "floodPct": 0.0315,
-          "avgCommanderTurn": 5.22,
-          "commanderCastRate": 0.8774,
-          "deadCardsAtT8": 1.02,
-          "avgWinTurn": 10.87,
-          "perSeedScores": [
-            78.2,
-            78.9,
-            78.5,
-            78.4,
-            78.1,
-            78.1
-          ],
-          "lands": 33,
-          "avgMv": 3.01,
-          "curve": {
-            "1": 0,
-            "2": 23,
-            "3": 26,
-            "4": 8,
-            "5": 8,
-            "6": 1,
-            "7": 0,
-            "8": 0
-          },
-          "bracket": {
-            "label": "B2",
-            "tier": 2,
-            "gameChangers": 0
-          },
-          "cost": 166.2,
-          "cards": 100
-        }
-      },
-      "rank": {
-        "v1": 4,
-        "tuned": 4,
-        "b3": 4
-      },
-      "delta": {
-        "v1ToB3": {
-          "score": 0.3,
-          "significant": false
-        },
-        "v1ToTuned": {
-          "score": 0,
-          "significant": false
-        },
-        "tunedToB3": {
-          "score": 0.3,
-          "significant": false
-        }
-      },
-      "swapsApplied": {
-        "tuned": 0,
-        "b3": 6
-      }
-    },
-    {
-      "id": "D4",
-      "label": "Betor",
-      "commander": "Betor, Ancestor's Voice",
-      "colorIdentity": [
-        "B",
-        "G",
-        "W"
-      ],
-      "builds": {
-        "v1": {
-          "score": 79,
-          "se": 0.068,
-          "winRate": 0.5852,
-          "screwPct": 0.0785,
-          "floodPct": 0.0929,
-          "avgCommanderTurn": 5.49,
-          "commanderCastRate": 0.9571,
-          "deadCardsAtT8": 0.57,
-          "avgWinTurn": 10.85,
-          "perSeedScores": [
-            79,
-            79,
-            79.2,
-            78.7,
-            79,
-            79.1
-          ],
-          "lands": 39,
-          "avgMv": 3.51,
-          "curve": {
-            "1": 4,
-            "2": 16,
-            "3": 15,
-            "4": 11,
-            "5": 7,
-            "6": 4,
-            "7": 2,
-            "8": 2
-          },
-          "bracket": {
-            "label": "B2",
-            "tier": 2,
-            "gameChangers": 0
-          },
-          "cost": 55.27,
-          "cards": 100
-        },
-        "tuned": {
-          "sameAs": "v1"
-        },
-        "b3": {
-          "score": 79.25,
-          "se": 0.043,
-          "winRate": 0.5781,
-          "screwPct": 0.0763,
-          "floodPct": 0.0909,
-          "avgCommanderTurn": 5.48,
-          "commanderCastRate": 0.9575,
-          "deadCardsAtT8": 0.59,
-          "avgWinTurn": 10.91,
-          "perSeedScores": [
-            79.1,
-            79.2,
-            79.4,
-            79.3,
-            79.2,
-            79.3
-          ],
-          "lands": 39,
-          "avgMv": 3.49,
-          "curve": {
-            "1": 4,
-            "2": 16,
-            "3": 15,
-            "4": 12,
-            "5": 6,
-            "6": 4,
-            "7": 2,
-            "8": 2
-          },
-          "bracket": {
-            "label": "B2",
-            "tier": 2,
-            "gameChangers": 0
-          },
-          "cost": 102.51,
-          "cards": 100
-        }
-      },
-      "rank": {
-        "v1": 3,
-        "tuned": 3,
-        "b3": 3
-      },
-      "delta": {
-        "v1ToB3": {
-          "score": 0.25,
-          "significant": true
-        },
-        "v1ToTuned": {
-          "score": 0,
-          "significant": false
-        },
-        "tunedToB3": {
-          "score": 0.25,
-          "significant": true
-        }
-      },
-      "swapsApplied": {
-        "tuned": 0,
-        "b3": 3
-      }
-    },
-    {
-      "id": "D5",
-      "label": "Shadrix",
-      "commander": "Shadrix Silverquill",
-      "colorIdentity": [
-        "B",
-        "W"
-      ],
-      "builds": {
-        "v1": {
-          "score": 82.78,
-          "se": 0.04,
-          "winRate": 0.647,
-          "screwPct": 0.0336,
-          "floodPct": 0.1295,
-          "avgCommanderTurn": 4.87,
-          "commanderCastRate": 0.9934,
-          "deadCardsAtT8": 0.06,
-          "avgWinTurn": 10.47,
-          "perSeedScores": [
-            82.7,
-            82.8,
-            82.7,
-            82.7,
-            82.9,
-            82.9
-          ],
-          "lands": 42,
-          "avgMv": 2.48,
-          "curve": {
-            "1": 8,
-            "2": 26,
-            "3": 16,
-            "4": 4,
-            "5": 4,
-            "6": 0,
-            "7": 0,
-            "8": 0
-          },
-          "bracket": {
-            "label": "B2",
-            "tier": 2,
-            "gameChangers": 0
-          },
-          "cost": 42.29,
-          "cards": 100
-        },
-        "tuned": {
-          "score": 83.25,
-          "se": 0.056,
-          "winRate": 0.6303,
-          "screwPct": 0.0328,
-          "floodPct": 0.1234,
-          "avgCommanderTurn": 4.85,
-          "commanderCastRate": 0.9936,
-          "deadCardsAtT8": 0.07,
-          "avgWinTurn": 10.48,
-          "perSeedScores": [
-            83.1,
-            83.2,
-            83.3,
-            83.4,
-            83.1,
-            83.4
-          ],
-          "lands": 42,
-          "avgMv": 2.66,
-          "curve": {
-            "1": 7,
-            "2": 24,
-            "3": 15,
-            "4": 7,
-            "5": 4,
-            "6": 1,
-            "7": 0,
-            "8": 0
-          },
-          "bracket": {
-            "label": "B2",
-            "tier": 2,
-            "gameChangers": 0
-          },
-          "cost": 68.47,
-          "cards": 100
-        },
-        "b3": {
-          "score": 82.28,
-          "se": 0.154,
-          "winRate": 0.5447,
-          "screwPct": 0.0325,
-          "floodPct": 0.1224,
-          "avgCommanderTurn": 4.84,
-          "commanderCastRate": 0.9943,
-          "deadCardsAtT8": 0.07,
-          "avgWinTurn": 10.89,
-          "perSeedScores": [
-            82.6,
-            82.4,
-            82.1,
-            82.5,
-            81.6,
-            82.5
-          ],
-          "lands": 42,
-          "avgMv": 2.79,
-          "curve": {
-            "1": 5,
-            "2": 24,
-            "3": 14,
-            "4": 9,
-            "5": 5,
-            "6": 1,
-            "7": 0,
-            "8": 0
-          },
-          "bracket": {
-            "label": "B2",
-            "tier": 2,
-            "gameChangers": 0
-          },
-          "cost": 176.23,
-          "cards": 100
-        }
-      },
-      "rank": {
-        "v1": 2,
-        "tuned": 2,
-        "b3": 2
-      },
-      "delta": {
-        "v1ToB3": {
-          "score": -0.5,
-          "significant": true
-        },
-        "v1ToTuned": {
-          "score": 0.47,
-          "significant": true
-        },
-        "tunedToB3": {
-          "score": -0.97,
-          "significant": true
-        }
-      },
-      "swapsApplied": {
-        "tuned": 9,
-        "b3": 6
-      }
-    },
-    {
-      "id": "D6",
-      "label": "Purphoros",
-      "commander": "Purphoros, God of the Forge",
-      "colorIdentity": [
-        "R"
-      ],
-      "builds": {
-        "v1": {
-          "score": 77.35,
-          "se": 0.05,
-          "winRate": 0.6496,
-          "screwPct": 0.0729,
-          "floodPct": 0.0677,
-          "avgCommanderTurn": 3.93,
-          "commanderCastRate": 0.9938,
-          "deadCardsAtT8": 0.22,
-          "avgWinTurn": 10.14,
-          "perSeedScores": [
-            77.3,
-            77.3,
-            77.5,
-            77.3,
-            77.2,
-            77.5
-          ],
-          "lands": 37,
-          "avgMv": 2.71,
-          "curve": {
-            "1": 15,
-            "2": 16,
-            "3": 15,
-            "4": 12,
-            "5": 2,
-            "6": 2,
-            "7": 0,
-            "8": 1
-          },
-          "bracket": {
-            "label": "B2",
-            "tier": 2,
-            "gameChangers": 0
-          },
-          "cost": 80.57,
-          "cards": 100
-        },
-        "tuned": {
-          "score": 76.78,
-          "se": 0.079,
-          "winRate": 0.6538,
-          "screwPct": 0.0781,
-          "floodPct": 0.0673,
-          "avgCommanderTurn": 3.94,
-          "commanderCastRate": 0.9932,
-          "deadCardsAtT8": 0.23,
-          "avgWinTurn": 10.15,
-          "perSeedScores": [
-            76.8,
-            76.6,
-            76.9,
-            76.9,
-            76.5,
-            77
-          ],
-          "lands": 37,
-          "avgMv": 2.83,
-          "curve": {
-            "1": 11,
-            "2": 18,
-            "3": 16,
-            "4": 13,
-            "5": 2,
-            "6": 2,
-            "7": 0,
-            "8": 1
-          },
-          "bracket": {
-            "label": "B2",
-            "tier": 2,
-            "gameChangers": 0
-          },
-          "cost": 135.22,
-          "cards": 100
-        },
-        "b3": {
-          "score": 77.18,
-          "se": 0.083,
-          "winRate": 0.615,
-          "screwPct": 0.0675,
-          "floodPct": 0.067,
-          "avgCommanderTurn": 4.01,
-          "commanderCastRate": 0.994,
-          "deadCardsAtT8": 0.2,
-          "avgWinTurn": 10.35,
-          "perSeedScores": [
-            77.1,
-            77.2,
-            77.3,
-            77.5,
-            76.9,
-            77.1
-          ],
-          "lands": 37,
-          "avgMv": 2.81,
-          "curve": {
-            "1": 10,
-            "2": 20,
-            "3": 16,
-            "4": 12,
-            "5": 2,
-            "6": 2,
-            "7": 0,
-            "8": 1
-          },
-          "bracket": {
-            "label": "B3",
-            "tier": 3,
-            "gameChangers": 2
-          },
-          "cost": 221.08,
-          "cards": 100
-        }
-      },
-      "rank": {
-        "v1": 5,
-        "tuned": 5,
-        "b3": 5
-      },
-      "delta": {
-        "v1ToB3": {
-          "score": -0.17,
-          "significant": false
-        },
-        "v1ToTuned": {
-          "score": -0.57,
-          "significant": true
-        },
-        "tunedToB3": {
-          "score": 0.4,
-          "significant": true
-        }
-      },
-      "swapsApplied": {
-        "tuned": 10,
-        "b3": 9
-      }
+    "b3": {
+     "score": 84.53,
+     "se": 0.049,
+     "winRate": 0.5477,
+     "screwPct": 0.0792,
+     "floodPct": 0.0378,
+     "avgCommanderTurn": 5.37,
+     "commanderCastRate": 0.9852,
+     "deadCardsAtT8": 0.24,
+     "avgWinTurn": 11.47,
+     "perSeedScores": [
+      84.6,
+      84.5,
+      84.6,
+      84.7,
+      84.4,
+      84.4
+     ],
+     "lands": 35,
+     "avgMv": 3.12,
+     "curve": {
+      "1": 5,
+      "2": 23,
+      "3": 14,
+      "4": 11,
+      "5": 9,
+      "6": 1,
+      "7": 1,
+      "8": 1
+     },
+     "bracket": {
+      "label": "B3",
+      "tier": 3,
+      "gameChangers": 1
+     },
+     "cost": 127.03,
+     "cards": 100
     }
-  ],
-  "ranking": {
-    "v1": [
-      "D1",
-      "D5",
-      "D4",
-      "D3",
-      "D6",
-      "D2"
-    ],
-    "tuned": [
-      "D1",
-      "D5",
-      "D4",
-      "D3",
-      "D6",
-      "D2"
-    ],
-    "b3": [
-      "D1",
-      "D5",
-      "D4",
-      "D3",
-      "D6",
-      "D2"
-    ]
+   },
+   "swapsApplied": {
+    "tuned": 0,
+    "b3": 6
+   },
+   "rank": {
+    "v1": 3,
+    "tuned": 3,
+    "b3": 2
+   },
+   "delta": {
+    "v1ToB3": {
+     "score": 0.5,
+     "significant": true
+    },
+    "v1ToTuned": {
+     "score": 0,
+     "significant": false
+    },
+    "tunedToB3": {
+     "score": 0.5,
+     "significant": true
+    }
+   }
   },
-  "notes": [
-    "Score is the engine's composite, 0-100: 35% win rate, 15% mana screw, 10% flood, 10% commander reliability, 10% interaction in hand, 10% clock, 5% dead cards, 5% own-fun. It is not a win percentage and the six decks are not playing each other -- each one is measured separately against the same pod of simulated opponents.",
-    "winRate, screwPct, floodPct and commanderCastRate are fractions of games from 0 to 1, not percentages. avgCommanderTurn and avgWinTurn are turn numbers; deadCardsAtT8 is a card count.",
-    "se is the standard error of the score across the six seeds. Two builds differ meaningfully only when the gap between their scores is larger than twice the combined standard error (2 * hypot(seA, seB)); every `significant` flag in this file was set that way, and gaps smaller than that should be read as a tie.",
-    "The Master's target column already has the D5 and D6 Tuned swaps applied to it -- every upgrade ADD sits at target=1, every upgrade CUT at target=0, and fifty card notes date the edit to 2026-09-02. So `tuned` here is the published target hundred, and `v1` is that hundred with the Tuned swaps undone, one displaced card restored per Tuned add.",
-    "Which card each Tuned add displaced was read from the per-card slot notes rather than from upgrades[].CUT, because the CUT list names cards that had already left the target hundred: Explorer's Scope, Wild Pack Squad, Fire Diamond and Rummaging Goblin were each bench-substituted out before the Tuned pass by a card that is still in the list, so restoring them would have left those slots doubly filled. The slot notes give a complete one-for-one map: nine displaced cards for D5's nine adds, ten for D6's ten.",
-    "D1 through D4 have no upgrades, so their tuned build is their v1 build and is recorded as {\"sameAs\": \"v1\"} rather than measured twice.",
-    "b3 is built on top of tuned. Six of D5's seven B3 swaps applied: Blood Artist could not, because the card it replaces (Prideful Feastling) was already taken out of D5 by the Tuned add Teysa Karlov. That row of the B3 sheet was written against the pre-Tuned list. Every other deck applied all of its B3 swaps.",
-    "cost is the sum of the Master's own price column over the list, so it matches what the shopping pages quote. Every card in these six lists now carries a price in the Master -- the basics included -- so cost is a full total at the Master's prices rather than the floor it used to be.",
-    "bracket comes from compliance-model.js: Bracket 2 permits no Game Changers, Bracket 3 up to three. Game Changer status is Scryfall's game_changer flag, the same field the app's own Scryfall client reads. All fourteen lists are clean at Tier 3; the B3 lists that show B3 are there only because they carry one or two Game Changers.",
-    "The win-rate term no longer saturates. It used to be scored as min(1, winRate / 0.5), so every build above a 50% win rate got full credit and the score moved only on consistency; that was one of seven faults fixed in sim-engine.js, and the curve now keeps rising across the whole range. A build with a clearly higher win rate than another now scores higher for it. This is the engine's default, unbanded scoring, the same setting the repo's own power rungs are measured on.",
-    "curve counts nonland cards only, bucketed by mana value with 0-1 in the 1 bucket and everything 8 or above in the 8 bucket. avgMv is the mean mana value of the nonland cards.",
-    "Every list was asserted to be exactly 100 cards with exactly one commander and no repeated nonbasic before a single game was simulated.",
-    "Measured against data/master-v2.json as generated 2026-09-04T02:29:17+00:00.",
-    "Regenerated on the repaired engine. Every figure in this file supersedes the previous one: interaction now requires an answer the deck can actually pay for, the win-rate curve no longer saturates at an even share, sacrifice is modelled, death triggers pay per death rather than every upkeep, the ramp reader recognises Cultivate/Nature's Lore/Farseek/Wood Elves and their kind, a land that enters tapped costs a turn, and a fetch land produces colour. Every score fell, because all seven handed out credit that was not earned; the ranking did not change."
+  {
+   "id": "D2",
+   "label": "Chulane",
+   "commander": "Chulane, Teller of Tales",
+   "colorIdentity": [
+    "G",
+    "U",
+    "W"
+   ],
+   "builds": {
+    "v1": {
+     "score": 73.78,
+     "se": 0.079,
+     "winRate": 0.418,
+     "screwPct": 0.0963,
+     "floodPct": 0.0423,
+     "avgCommanderTurn": 5.3,
+     "commanderCastRate": 0.9638,
+     "deadCardsAtT8": 0.4,
+     "avgWinTurn": 11.86,
+     "perSeedScores": [
+      73.5,
+      73.7,
+      73.7,
+      74,
+      73.8,
+      74
+     ],
+     "lands": 35,
+     "avgMv": 3,
+     "curve": {
+      "1": 6,
+      "2": 21,
+      "3": 20,
+      "4": 7,
+      "5": 7,
+      "6": 4,
+      "7": 0,
+      "8": 0
+     },
+     "bracket": {
+      "label": "B2",
+      "tier": 2,
+      "gameChangers": 0
+     },
+     "cost": 73.5,
+     "cards": 100
+    },
+    "tuned": {
+     "sameAs": "v1"
+    },
+    "b3": {
+     "score": 73.77,
+     "se": 0.154,
+     "winRate": 0.4145,
+     "screwPct": 0.0896,
+     "floodPct": 0.0424,
+     "avgCommanderTurn": 5.17,
+     "commanderCastRate": 0.9658,
+     "deadCardsAtT8": 0.39,
+     "avgWinTurn": 11.88,
+     "perSeedScores": [
+      73.6,
+      73.5,
+      73.8,
+      74.3,
+      73.3,
+      74.1
+     ],
+     "lands": 35,
+     "avgMv": 3.09,
+     "curve": {
+      "1": 5,
+      "2": 20,
+      "3": 21,
+      "4": 7,
+      "5": 7,
+      "6": 5,
+      "7": 0,
+      "8": 0
+     },
+     "bracket": {
+      "label": "B3",
+      "tier": 3,
+      "gameChangers": 1
+     },
+     "cost": 221.48,
+     "cards": 100
+    }
+   },
+   "swapsApplied": {
+    "tuned": 0,
+    "b3": 9
+   },
+   "rank": {
+    "v1": 4,
+    "tuned": 4,
+    "b3": 5
+   },
+   "delta": {
+    "v1ToB3": {
+     "score": -0.01,
+     "significant": false
+    },
+    "v1ToTuned": {
+     "score": 0,
+     "significant": false
+    },
+    "tunedToB3": {
+     "score": -0.01,
+     "significant": false
+    }
+   }
+  },
+  {
+   "id": "D3",
+   "label": "Atraxa",
+   "commander": "Atraxa, Praetors' Voice",
+   "colorIdentity": [
+    "B",
+    "G",
+    "U",
+    "W"
+   ],
+   "builds": {
+    "v1": {
+     "score": 84.6,
+     "se": 0.146,
+     "winRate": 0.493,
+     "screwPct": 0.0683,
+     "floodPct": 0.0451,
+     "avgCommanderTurn": 4.62,
+     "commanderCastRate": 0.9565,
+     "deadCardsAtT8": 0.38,
+     "avgWinTurn": 10.74,
+     "perSeedScores": [
+      84.5,
+      84.6,
+      84.5,
+      85.2,
+      84.1,
+      84.7
+     ],
+     "lands": 35,
+     "avgMv": 2.75,
+     "curve": {
+      "1": 3,
+      "2": 25,
+      "3": 20,
+      "4": 9,
+      "5": 6,
+      "6": 0,
+      "7": 0,
+      "8": 0
+     },
+     "bracket": {
+      "label": "B2",
+      "tier": 2,
+      "gameChangers": 0
+     },
+     "cost": 98.3,
+     "cards": 100
+    },
+    "tuned": {
+     "sameAs": "v1"
+    },
+    "b3": {
+     "score": 79.62,
+     "se": 0.101,
+     "winRate": 0.4334,
+     "screwPct": 0.0756,
+     "floodPct": 0.0448,
+     "avgCommanderTurn": 4.65,
+     "commanderCastRate": 0.9526,
+     "deadCardsAtT8": 0.4,
+     "avgWinTurn": 11.17,
+     "perSeedScores": [
+      79.2,
+      79.7,
+      79.6,
+      79.9,
+      79.5,
+      79.8
+     ],
+     "lands": 35,
+     "avgMv": 2.74,
+     "curve": {
+      "1": 4,
+      "2": 23,
+      "3": 21,
+      "4": 10,
+      "5": 5,
+      "6": 0,
+      "7": 0,
+      "8": 0
+     },
+     "bracket": {
+      "label": "B3",
+      "tier": 3,
+      "gameChangers": 1
+     },
+     "cost": 170.56,
+     "cards": 100
+    }
+   },
+   "swapsApplied": {
+    "tuned": 0,
+    "b3": 8
+   },
+   "rank": {
+    "v1": 2,
+    "tuned": 2,
+    "b3": 3
+   },
+   "delta": {
+    "v1ToB3": {
+     "score": -4.98,
+     "significant": true
+    },
+    "v1ToTuned": {
+     "score": 0,
+     "significant": false
+    },
+    "tunedToB3": {
+     "score": -4.98,
+     "significant": true
+    }
+   }
+  },
+  {
+   "id": "D4",
+   "label": "Felothar",
+   "commander": "Felothar the Steadfast",
+   "colorIdentity": [
+    "B",
+    "G",
+    "W"
+   ],
+   "builds": {
+    "v1": {
+     "score": 71.9,
+     "se": 0.171,
+     "winRate": 0.4135,
+     "screwPct": 0.1133,
+     "floodPct": 0.048,
+     "avgCommanderTurn": 5.04,
+     "commanderCastRate": 0.9542,
+     "deadCardsAtT8": 0.64,
+     "avgWinTurn": 11.58,
+     "perSeedScores": [
+      71.9,
+      72.4,
+      71.4,
+      72.4,
+      71.7,
+      71.6
+     ],
+     "lands": 35,
+     "avgMv": 3.18,
+     "curve": {
+      "1": 6,
+      "2": 18,
+      "3": 17,
+      "4": 14,
+      "5": 4,
+      "6": 4,
+      "7": 2,
+      "8": 0
+     },
+     "bracket": {
+      "label": "B2",
+      "tier": 2,
+      "gameChangers": 0
+     },
+     "cost": 65.33,
+     "cards": 100
+    },
+    "tuned": {
+     "sameAs": "v1"
+    },
+    "b3": {
+     "score": 76.37,
+     "se": 0.061,
+     "winRate": 0.4347,
+     "screwPct": 0.1002,
+     "floodPct": 0.0473,
+     "avgCommanderTurn": 4.91,
+     "commanderCastRate": 0.9659,
+     "deadCardsAtT8": 0.52,
+     "avgWinTurn": 11.59,
+     "perSeedScores": [
+      76.6,
+      76.3,
+      76.2,
+      76.5,
+      76.3,
+      76.3
+     ],
+     "lands": 35,
+     "avgMv": 3.2,
+     "curve": {
+      "1": 4,
+      "2": 19,
+      "3": 19,
+      "4": 14,
+      "5": 3,
+      "6": 4,
+      "7": 2,
+      "8": 0
+     },
+     "bracket": {
+      "label": "B3",
+      "tier": 3,
+      "gameChangers": 1
+     },
+     "cost": 148.44,
+     "cards": 100
+    }
+   },
+   "swapsApplied": {
+    "tuned": 0,
+    "b3": 8
+   },
+   "rank": {
+    "v1": 6,
+    "tuned": 5,
+    "b3": 4
+   },
+   "delta": {
+    "v1ToB3": {
+     "score": 4.47,
+     "significant": true
+    },
+    "v1ToTuned": {
+     "score": 0,
+     "significant": false
+    },
+    "tunedToB3": {
+     "score": 4.47,
+     "significant": true
+    }
+   }
+  },
+  {
+   "id": "D5",
+   "label": "Shadrix",
+   "commander": "Shadrix Silverquill",
+   "colorIdentity": [
+    "B",
+    "W"
+   ],
+   "builds": {
+    "v1": {
+     "score": 84.83,
+     "se": 0.042,
+     "winRate": 0.6105,
+     "screwPct": 0.0852,
+     "floodPct": 0.044,
+     "avgCommanderTurn": 5.21,
+     "commanderCastRate": 0.977,
+     "deadCardsAtT8": 0.21,
+     "avgWinTurn": 10.78,
+     "perSeedScores": [
+      85,
+      84.8,
+      84.9,
+      84.7,
+      84.8,
+      84.8
+     ],
+     "lands": 35,
+     "avgMv": 2.77,
+     "curve": {
+      "1": 5,
+      "2": 27,
+      "3": 17,
+      "4": 11,
+      "5": 4,
+      "6": 1,
+      "7": 0,
+      "8": 0
+     },
+     "bracket": {
+      "label": "B2",
+      "tier": 2,
+      "gameChangers": 0
+     },
+     "cost": 63.96,
+     "cards": 100
+    },
+    "tuned": {
+     "score": 86.07,
+     "se": 0.042,
+     "winRate": 0.6359,
+     "screwPct": 0.0743,
+     "floodPct": 0.0412,
+     "avgCommanderTurn": 5.13,
+     "commanderCastRate": 0.9818,
+     "deadCardsAtT8": 0.2,
+     "avgWinTurn": 10.74,
+     "perSeedScores": [
+      86,
+      86.2,
+      86,
+      86,
+      86,
+      86.2
+     ],
+     "lands": 35,
+     "avgMv": 2.8,
+     "curve": {
+      "1": 5,
+      "2": 26,
+      "3": 17,
+      "4": 12,
+      "5": 4,
+      "6": 1,
+      "7": 0,
+      "8": 0
+     },
+     "bracket": {
+      "label": "B2",
+      "tier": 2,
+      "gameChangers": 0
+     },
+     "cost": 67.78,
+     "cards": 100
+    },
+    "b3": {
+     "score": 86.05,
+     "se": 0.05,
+     "winRate": 0.6163,
+     "screwPct": 0.0747,
+     "floodPct": 0.0418,
+     "avgCommanderTurn": 5.16,
+     "commanderCastRate": 0.9831,
+     "deadCardsAtT8": 0.18,
+     "avgWinTurn": 10.66,
+     "perSeedScores": [
+      86.2,
+      86,
+      86,
+      86.2,
+      85.9,
+      86
+     ],
+     "lands": 35,
+     "avgMv": 2.89,
+     "curve": {
+      "1": 5,
+      "2": 24,
+      "3": 17,
+      "4": 12,
+      "5": 6,
+      "6": 1,
+      "7": 0,
+      "8": 0
+     },
+     "bracket": {
+      "label": "B3",
+      "tier": 3,
+      "gameChangers": 1
+     },
+     "cost": 186.08,
+     "cards": 100
+    }
+   },
+   "swapsApplied": {
+    "tuned": 4,
+    "b3": 7
+   },
+   "rank": {
+    "v1": 1,
+    "tuned": 1,
+    "b3": 1
+   },
+   "delta": {
+    "v1ToB3": {
+     "score": 1.22,
+     "significant": true
+    },
+    "v1ToTuned": {
+     "score": 1.24,
+     "significant": true
+    },
+    "tunedToB3": {
+     "score": -0.02,
+     "significant": false
+    }
+   }
+  },
+  {
+   "id": "D6",
+   "label": "Krenko",
+   "commander": "Krenko, Mob Boss",
+   "colorIdentity": [
+    "R"
+   ],
+   "builds": {
+    "v1": {
+     "score": 72.08,
+     "se": 0.101,
+     "winRate": 0.4013,
+     "screwPct": 0.0759,
+     "floodPct": 0.0441,
+     "avgCommanderTurn": 3.99,
+     "commanderCastRate": 0.9937,
+     "deadCardsAtT8": 0.2,
+     "avgWinTurn": 11.41,
+     "perSeedScores": [
+      72,
+      72.1,
+      72,
+      72.4,
+      71.7,
+      72.3
+     ],
+     "lands": 35,
+     "avgMv": 2.71,
+     "curve": {
+      "1": 12,
+      "2": 18,
+      "3": 21,
+      "4": 10,
+      "5": 2,
+      "6": 1,
+      "7": 0,
+      "8": 1
+     },
+     "bracket": {
+      "label": "B2",
+      "tier": 2,
+      "gameChangers": 0
+     },
+     "cost": 121.37,
+     "cards": 100
+    },
+    "tuned": {
+     "score": 71.37,
+     "se": 0.056,
+     "winRate": 0.3992,
+     "screwPct": 0.079,
+     "floodPct": 0.0446,
+     "avgCommanderTurn": 3.99,
+     "commanderCastRate": 0.9925,
+     "deadCardsAtT8": 0.2,
+     "avgWinTurn": 11.44,
+     "perSeedScores": [
+      71.4,
+      71.2,
+      71.3,
+      71.4,
+      71.3,
+      71.6
+     ],
+     "lands": 35,
+     "avgMv": 2.74,
+     "curve": {
+      "1": 10,
+      "2": 20,
+      "3": 21,
+      "4": 10,
+      "5": 2,
+      "6": 1,
+      "7": 0,
+      "8": 1
+     },
+     "bracket": {
+      "label": "B2",
+      "tier": 2,
+      "gameChangers": 0
+     },
+     "cost": 148.04,
+     "cards": 100
+    },
+    "b3": {
+     "score": 72.82,
+     "se": 0.075,
+     "winRate": 0.4136,
+     "screwPct": 0.0711,
+     "floodPct": 0.0448,
+     "avgCommanderTurn": 4.04,
+     "commanderCastRate": 0.9938,
+     "deadCardsAtT8": 0.23,
+     "avgWinTurn": 11.41,
+     "perSeedScores": [
+      73,
+      73,
+      72.8,
+      72.8,
+      72.5,
+      72.8
+     ],
+     "lands": 35,
+     "avgMv": 2.83,
+     "curve": {
+      "1": 8,
+      "2": 22,
+      "3": 20,
+      "4": 9,
+      "5": 3,
+      "6": 2,
+      "7": 0,
+      "8": 1
+     },
+     "bracket": {
+      "label": "B3",
+      "tier": 3,
+      "gameChangers": 1
+     },
+     "cost": 211,
+     "cards": 100
+    }
+   },
+   "swapsApplied": {
+    "tuned": 5,
+    "b3": 7
+   },
+   "rank": {
+    "v1": 5,
+    "tuned": 6,
+    "b3": 6
+   },
+   "delta": {
+    "v1ToB3": {
+     "score": 0.74,
+     "significant": true
+    },
+    "v1ToTuned": {
+     "score": -0.71,
+     "significant": true
+    },
+    "tunedToB3": {
+     "score": 1.45,
+     "significant": true
+    }
+   }
+  }
+ ],
+ "ranking": {
+  "v1": [
+   "D5",
+   "D3",
+   "D1",
+   "D2",
+   "D6",
+   "D4"
+  ],
+  "tuned": [
+   "D5",
+   "D3",
+   "D1",
+   "D2",
+   "D4",
+   "D6"
+  ],
+  "b3": [
+   "D5",
+   "D1",
+   "D3",
+   "D4",
+   "D2",
+   "D6"
   ]
+ },
+ "notes": [
+  "Score is the engine's composite, 0-100: 35% win rate, 15% mana screw, 10% flood, 10% commander reliability, 10% interaction in hand, 10% clock, 5% dead cards, 5% own-fun. It is not a win percentage and the six decks are not playing each other -- each one is measured separately against the same pod of three opponents drawn from sim/opponents.json.",
+  "winRate, screwPct, floodPct and commanderCastRate are fractions of games from 0 to 1, not percentages. avgCommanderTurn and avgWinTurn are turn numbers; deadCardsAtT8 is a card count.",
+  "se is the standard error of the score across the six seeds. Two builds differ meaningfully only when the gap between their scores is larger than twice the combined standard error (2 * hypot(seA, seB)); every `significant` flag in this file was set that way, and gaps smaller than that should be read as ties however they print.",
+  "Measured against data/master-v2.json as generated 2026-09-05T13:19:23+00:00, from Treys_MtG_Master_v3.xlsx. That rebuild changed every one of the six decks -- 14 cards of D6, 16 of D1, 17 of D4, 20 of D5, 24 of D3 and 30 of D2 -- so no figure here is comparable to the run of 2026-09-04 card for card.",
+  "Two decks changed hands in that rebuild, and it is a seat change rather than a rename. D4 is Felothar the Steadfast and D6 is Krenko, Mob Boss; Betor, Ancestor's Voice and Purphoros, God of the Forge are both still in their decks, as cards in the 99. Moving a card from the 99 to the command zone is a real change to how the deck plays -- it is castable every game instead of drawn in about one -- so both decks were re-measured rather than relabelled.",
+  "The v3 workbook ships no Upgrades sheet. The Tuned pairings were recovered by tools/import_master_v2.py from the Master Notes instead, and each one carries a `repaired` field saying so. D5 has four and D6 has five; D1 through D4 have none, so their tuned build is their v1 build and is recorded as {\"sameAs\": \"v1\"} rather than measured twice.",
+  "The Master's target column already has those Tuned adds applied to it -- every add sits at target=1 and every displaced card at target=0. So `tuned` here is the published target hundred, and `v1` is that hundred with the Tuned adds taken back out and the cards they displaced put back.",
+  "b3 is built on top of tuned. All 45 B3 swaps applied this time -- 6 for D1, 9 for D2, 8 for D3, 8 for D4, 7 for D5 and 7 for D6 -- with none skipped for a displaced card that had already left the hundred.",
+  "cost is the sum of the Master's own price column over the list, so it matches what the shopping pages quote. Every card in these six lists carries a price in the Master -- the basics included -- so cost is a full total rather than a floor.",
+  "bracket comes from compliance-model.js: Bracket 2 permits no Game Changers, Bracket 3 up to three. Game Changer status is Scryfall's game_changer flag, the same field the app's own Scryfall client reads. All fourteen lists are clean at Tier 3; each b3 list carries exactly one Game Changer, which is what puts it in the bracket.",
+  "curve counts nonland cards only, bucketed by mana value with 0-1 in the 1 bucket and everything 8 or above in the 8 bucket. avgMv is the mean mana value of the nonland cards.",
+  "Every list was asserted to be exactly 100 cards with exactly one commander and no repeated nonbasic before a single game was simulated.",
+  "data/cards.json carries no power or toughness for any card, so the engine estimates a creature's power from its mana value here exactly as it does in the sweep and the ladders. data/card-facts.json now has the printed figures, but feeding them in would measure these six decks on a footing no other published number in this repo shares, so this run deliberately does not.",
+  "Reproduce with `node tools/sim/rate-decks.mjs --write`. The six seeds and the 20,000 games per seed are the tool's defaults, so a rerun on the same data reproduces this file."
+ ]
 }

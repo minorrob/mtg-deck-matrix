@@ -50,7 +50,7 @@
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   localStorage.setItem(PURCHASED_VIEW_KEY, "purchased");
   localStorage.setItem("mtg-owned-quintorius-import-v1", JSON.stringify({count:names.length, importedAt:new Date().toISOString()}));
-  document.getElementById("status").innerHTML = `<span class="ok">✓ ${names.length} owned entries saved.</span><br>Returning to Trey’s Deck Matrix…`;
+  document.getElementById("status").innerHTML = `<span class="ok">✓ ${names.length} owned entries saved.</span><br>Returning to My’s Deck Matrix…`;
   setTimeout(() => location.replace("./"), 750);
 })();
 </script>

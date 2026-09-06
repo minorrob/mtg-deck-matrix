@@ -39,7 +39,17 @@ cat graph/schema/constraints.cypher \
     graph/ingest/03-load.cypher \
     graph/ingest/06-load-edhrec.cypher \
   | docker exec -i mtg-graph cypher-shell -u neo4j -p mtggraph
+
+node graph/ingest/07-export-app.mjs --commanders   # -> data/graph.json
+node graph/ingest/08-build-lenses.mjs              # -> data/lenses.json
 ```
+
+`--commanders` is not optional, despite the name. Without it the export keeps
+only cards that are owned, assigned, or carry an EDHREC edge, and somebody
+importing their own deck arrives with a commander the graph has never heard of --
+which matters more than one missing card, because a commander anchors every
+`PLAYED_WITH` edge it sources. It costs 2.2 MB (4,902 cards to 7,710) and
+tests/deck-import.mjs fails if the shipped graph was built without it.
 
 About five minutes end to end, most of it the Scryfall download. Everything is
 rebuilt from source, so a wiped `.data` costs only the wait.
@@ -152,8 +162,8 @@ is what the graph view draws.
 state behind both the list and the graph, so switching view is a render choice
 rather than a different query.
 
-**The graph is ego-centric and capped at 90 neighbours.** 1,500 nodes on a canvas
-is a hairball that tells you nothing. Picking a card chooses the centre; nodes
+**The graph is ego-centric and capped at 90 neighbors.** 1,500 nodes on a canvas
+is a hairball that tells you nothing. Picking a card chooses the center; nodes
 outside the current filters are drawn faded rather than removed, so narrowing the
 pane never silently empties the canvas.
 
