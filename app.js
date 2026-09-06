@@ -496,6 +496,25 @@
   function initializeDetailsControls() {
     // Disclosures that live inside a <summary> must swallow the click, or the surrounding
     // <details> collapses the moment you try to expand the panel inside it.
+    /* The two ways out of a first-run empty page. Delegated, because the page
+       that carries them is re-rendered from scratch on every state change. */
+    document.addEventListener("click", (event) => {
+      const goto = event.target.closest("[data-goto-view]");
+      if (goto) { event.preventDefault(); switchView(goto.dataset.gotoView); return; }
+      const tour = event.target.closest("[data-first-run-tour]");
+      if (tour) { event.preventDefault(); startTour(); return; }
+      const load = event.target.closest("[data-first-run-load]");
+      if (load) {
+        event.preventDefault();
+        /* Back to the tab they asked from. This button's whole promise is
+           "fill THIS page in", and applyStatePayload's own default is to land on
+           Compare -- right for the header control, wrong for a button sitting
+           inside the page it is meant to populate. */
+        const here = load.closest(".view");
+        loadActiveState(here ? here.id.replace(/^view-/, "") : null);
+      }
+    });
+
     document.addEventListener("click", (event) => {
       const toggle = event.target.closest("[data-panel-toggle]");
       if (!toggle) return;
@@ -1144,6 +1163,42 @@
      moment they touched a card in an open slot. withUiState is the same wrapper the
      other views already use: it restores scroll, focus and open-state around the
      rebuild, so the page holds still until the reader moves it. */
+  /* The screen a first-time visitor actually meets on tabs 2 and 3.
+   *
+   * It used to be one sentence in a .loading-card -- the same class as
+   * "Loading the card catalog…", so a permanent state was dressed as a
+   * transient one and somebody could reasonably sit and wait for it to
+   * resolve. It told them to go to Compare without taking them there, and it
+   * said "choose a variant", which is a word this app has not defined yet at
+   * the moment somebody first reads it.
+   *
+   * So: what this tab is FOR, why it is empty, and the two ways out. The second
+   * way matters most for a first run -- Load Active fills the whole app with the
+   * six real decks in one click, and until now it was an unlabelled glyph in a
+   * header that is folded shut on a phone.
+   */
+  function firstRunEmpty(title, whatFor) {
+    return `<div class="empty-state fr-empty">
+      <h2>${esc(title)}</h2>
+      <p class="fr-empty-what">${esc(whatFor)}</p>
+      <p class="fr-empty-why">It is empty because no deck has been picked yet. Compare holds six deck
+        roles with five approaches each; picking one for any role fills this page in.</p>
+      <div class="fr-empty-acts">
+        <button class="primary-button" type="button" data-goto-view="compare">Pick a deck on Compare</button>
+        <button class="secondary-button" type="button" data-first-run-load>Or load the six built decks</button>
+        <!-- The Tour lives in the header, and on a phone the header starts folded
+             to the tab bar -- a deliberate trade, since it was a quarter of the
+             viewport for five buttons touched once a session. The cost was that
+             the one affordance built for a first visit was invisible on the
+             device most likely to be somebody's first. It is offered here too,
+             where a first-timer actually is. -->
+        <button class="secondary-button fr-empty-tour" type="button" data-first-run-tour>Show me around</button>
+      </div>
+      <p class="fr-empty-note">Loading the six replaces anything saved on this device — on a first visit
+        that is nothing, and it is the quickest way to see every part of this working.</p>
+    </div>`;
+  }
+
   function renderDeckPage() {
     withUiState("#view-deck2", renderDeckPageView);
   }
@@ -1158,7 +1213,10 @@
     }
     const ctx = deckPageContext();
     if (!ctx) {
-      host.innerHTML = '<div class="loading-card">Choose a variant for at least one deck on Compare, then come back.</div>';
+      host.innerHTML = firstRunEmpty(
+        "Deck turns a pick into an exact hundred",
+        "Every slot in the deck, which card is filling it and why, what is sleeved in the box, " +
+        "what is on order, and what is still owed.");
       return;
     }
     const rail = ctx.variants.map((v, i) => (
@@ -1868,7 +1926,13 @@
       return;
     }
     const ctx = shopContext();
-    if (!ctx) { host.innerHTML = '<div class="loading-card">Choose a variant for at least one deck on Compare, then come back.</div>'; return; }
+    if (!ctx) {
+      host.innerHTML = firstRunEmpty(
+        "Shop is everything still owed, in one list",
+        "Each card you still need appears once however many decks want it, priced, grouped the way " +
+        "you will actually walk a vendor floor, and exportable as a print list or a bulk order.");
+      return;
+    }
     /* Every tap on this page rebuilds it, and in the Store view that is a tap per card.
        Losing your place forty rows into a seller's box, once per purchase, would make the
        view useless -- so the same wrapper the Deck page uses puts the scroll, the focus
@@ -8032,26 +8096,26 @@
       {view: "compare", selectors: [".compare-filter-panel"], title: "Narrow the field", copy: "Search by commander, tag, or text, and filter by mechanic or play style. Only matching variants stay visible inside each row."},
       {view: "compare", selectors: ["[data-compare-filter='profileStage']", ".compare-filter-panel"], title: "Base, Tuned, or Maxed", copy: "Score stage changes which build every number on the page describes: out of the box, after the core purchases, or Maxed — a real Bracket 3 hundred carrying up to three Game Changers."},
       {view: "compare", selectors: [".deck-group:first-of-type > summary"], title: "One row per deck role", copy: "Each row is a role with its own objective. Open it to see the five approaches competing for that slot."},
-      {view: "compare", selectors: [".deck-group:first-of-type .rank-order"], title: "Change the ranking lens", copy: "Re-rank the variants for Base, Tuned, or Maxed play to see whether a recommendation still holds as the money goes in."},
+      {view: "compare", selectors: [".deck-group:first-of-type .rank-order"], act: "openGroup", title: "Change the ranking lens", copy: "Re-rank the variants for Base, Tuned, or Maxed play to see whether a recommendation still holds as the money goes in."},
       {view: "compare", selectors: [".deck-group:first-of-type .metric-strip", ".deck-group:first-of-type .variant-card"], title: "Read the three ratings", copy: "Playstyle is how the deck feels to play, Engine is how efficiently it works, Growth is how much upgrade road is left. Tap one to see every sub-score and why it landed there."},
       {view: "compare", selectors: [".deck-group:first-of-type .detail-button", ".deck-group:first-of-type .variant-card"], title: "Open the full evidence", copy: "Full detail carries the commander breakdown, rank reasoning, rarity, precon seed, play pattern, and bracket route."},
       {view: "compare", selectors: [".deck-group:first-of-type .pick-control", ".deck-group:first-of-type .variant-card"], title: "Lock in the pick", copy: "Picking a variant feeds every later step, and the score stage you were reading becomes the rung the Deck tab opens on. Change it any time — your other picks are preserved."},
-      {view: "deck2", selectors: [".dp-rail", ".loading-card", "#view-deck2"], title: "Next · your pick becomes a hundred cards", copy: "Deck opens on the variant you picked, one button per deck along the top."}
+      {view: "deck2", selectors: [".dp-rail", ".fr-empty", "#view-deck2"], title: "Next · your pick becomes a hundred cards", copy: "Deck opens on the variant you picked, one button per deck along the top."}
     ],
     deck2: [
-      {view: "deck2", selectors: [".dp-rail", ".loading-card", "#view-deck2"], title: "One deck at a time", copy: "A button per deck you picked on Compare. Everything below belongs to the deck highlighted here."},
-      {view: "deck2", selectors: [".dp-tally", ".loading-card", "#view-deck2"], title: "Where all hundred cards are", copy: "The tally always adds to the full deck: what is in this box, what you own but have filed elsewhere, what is ordered, what is still to buy, and any slot still empty."},
-      {view: "deck2", selectors: [".dp-rank", ".loading-card", "#view-deck2"], title: "Rank order sets every slot at once", copy: "Base is the cheapest hundred that is still this deck, Tuned is the core purchases, Fun branches off Base for a pod that wants a game rather than a result, and Max is the Bracket 3 build with its Game Changers. One click moves all hundred slots, and ticks the box for the cards you already own."},
-      {view: "deck2", selectors: [".dp-stats-row", ".loading-card", "#view-deck2"], title: "Slots filled and land count", copy: "The two numbers that decide whether the deck is playable tonight, kept where you cannot miss them."},
-      {view: "deck2", selectors: [".dp-grp-h", ".loading-card", "#view-deck2"], title: "Grouped by card type", copy: "Creatures, lands, removal and the rest each fold away, with a card count and how many of them you still owe."},
-      {view: "deck2", selectors: [".dp-slot", ".loading-card", "#view-deck2"], title: "One row per slot", copy: "A slot is a job in the deck, not a card. The row names whichever card is doing that job right now, which rung it came from, its price, and where the physical copy is."},
+      {view: "deck2", selectors: [".dp-rail", ".fr-empty", "#view-deck2"], title: "One deck at a time", copy: "A button per deck you picked on Compare. Everything below belongs to the deck highlighted here."},
+      {view: "deck2", selectors: [".dp-tally", ".fr-empty", "#view-deck2"], title: "Where all hundred cards are", copy: "The tally always adds to the full deck: what is in this box, what you own but have filed elsewhere, what is ordered, what is still to buy, and any slot still empty."},
+      {view: "deck2", selectors: [".dp-rank", ".fr-empty", "#view-deck2"], title: "Rank order sets every slot at once", copy: "Base is the cheapest hundred that is still this deck, Tuned is the core purchases, Fun branches off Base for a pod that wants a game rather than a result, and Max is the Bracket 3 build with its Game Changers. One click moves all hundred slots, and ticks the box for the cards you already own."},
+      {view: "deck2", selectors: [".dp-stats-row", ".fr-empty", "#view-deck2"], title: "Slots filled and land count", copy: "The two numbers that decide whether the deck is playable tonight, kept where you cannot miss them."},
+      {view: "deck2", selectors: [".dp-grp-h", ".fr-empty", "#view-deck2"], title: "Grouped by card type", copy: "Creatures, lands, removal and the rest each fold away, with a card count and how many of them you still owe."},
+      {view: "deck2", selectors: [".dp-slot", ".fr-empty", "#view-deck2"], title: "One row per slot", copy: "A slot is a job in the deck, not a card. The row names whichever card is doing that job right now, which rung it came from, its price, and where the physical copy is."},
       {view: "deck2", selectors: [".dp-box", ".dp-slot", "#view-deck2"], title: "The box checkbox", copy: "Tick it when the card is actually sleeved in this deck. Ticking also records that you hold a copy, so a card can never read as in the box and still to buy at the same time."},
       {view: "deck2", selectors: [".dp-main", ".dp-slot", "#view-deck2"], title: "Open a slot for its options", copy: "Every slot carries the rungs that can fill it, side by side, each with the reason it was chosen over the one it replaces.", act: "openSlot"},
       {view: "deck2", selectors: [".dp-cand", ".dp-slot", "#view-deck2"], title: "Swap one slot without moving the page", copy: "Picking a rung inside a slot changes that slot only. The row keeps its place and the panel stays open, so you can work down a group without hunting for where you were."},
-      {view: "shop2", selectors: [".sp-bar", ".loading-card", "#view-shop2"], title: "Next · what is still owed", copy: "Everything left to buy across every deck collapses into one list on Shop."}
+      {view: "shop2", selectors: [".sp-bar", ".fr-empty", "#view-shop2"], title: "Next · what is still owed", copy: "Everything left to buy across every deck collapses into one list on Shop."}
     ],
     shop2: [
-      {view: "shop2", selectors: [".sp-bar", ".loading-card", "#view-shop2"], title: "One list, every deck", copy: "Each card you still owe appears once, however many decks want it, with the decks named on the row."},
+      {view: "shop2", selectors: [".sp-bar", ".fr-empty", "#view-shop2"], title: "One list, every deck", copy: "Each card you still owe appears once, however many decks want it, with the decks named on the row."},
       {view: "shop2", selectors: [".sp-drop", ".sp-bar", "#view-shop2"], title: "Filters stack", copy: "Each filter is a multi-select — tick two rarities or three decks and the list keeps both. Active filters show as chips you can pull off one at a time."},
       {view: "shop2", selectors: ["#sp-q", ".sp-bar", "#view-shop2"], title: "Search inside the list", copy: "Type any part of a card name to narrow what is on screen without touching the filters."},
       {view: "shop2", selectors: [".sp-seg", ".sp-bar", "#view-shop2"], title: "Four ways to read the list", copy: "Table carries every column, gallery shows the art when you are hunting a specific printing, Bench holds cards you own that no slot has asked for yet, and Store is the one to open when you are standing at a seller's table."},
@@ -8128,14 +8192,49 @@
     openSlot() {
       if ($(".dp-cand")) return;
       $("[data-dp-expand]")?.click();
+    },
+    /* Every deck row on Compare starts collapsed, which is right for reading and
+       wrong for a tour: the four steps that describe the ranking, the ratings,
+       the evidence and the pick all live inside a row. Measured on a first visit,
+       three of them spotlighted a 6x6 box. */
+    openGroup() {
+      const group = $(".deck-group");
+      if (group && !group.open) {
+        group.open = true;
+        group.querySelector("summary")?.dispatchEvent(new Event("toggle", {bubbles: true}));
+      }
     }
   };
 
+  /* Look inside the step's own view first.
+   *
+   * Every selector here used to be matched against the whole document, which was
+   * fine while each class lived in one view and stopped being fine the moment
+   * Deck and Shop both grew a .fr-empty: querySelector returns the first in
+   * document order, so a Deck step spotlighted Shop's hidden copy and drew a 1px
+   * box. Scoping first also means a step can never point at a different tab's
+   * element by accident. The unscoped pass stays for the selectors that are
+   * deliberately outside a view, like .main-tabs in the header. */
   function findTourTarget(step) {
+    const scope = step.view ? $(`#view-${step.view}`) : null;
+    const found = (selector, where) => {
+      /* Which selector won, recorded on the layer. A tour that points at the
+         wrong thing is otherwise undebuggable from the outside: the only visible
+         symptom is a box in the wrong place, and every explanation for that looks
+         equally plausible until you can see what matched. */
+      $("#tour-layer")?.setAttribute("data-tour-hit", `${where}:${selector}`);
+    };
+    if (scope) {
+      for (const selector of step.selectors) {
+        const target = $(selector, scope);
+        if (target) { found(selector, "view"); return target; }
+      }
+    }
     for (const selector of step.selectors) {
       const target = $(selector);
-      if (target) return target;
+      if (target) { found(selector, "page"); return target; }
     }
+    $("#tour-layer")?.setAttribute("data-tour-hit", "none");
     return null;
   }
 
@@ -8148,7 +8247,7 @@
       return;
     }
     const rect = target.getBoundingClientRect();
-    if (rect.bottom < 0 || rect.top > innerHeight) {
+    if (rect.width < 8 || rect.height < 8 || rect.bottom < 0 || rect.top > innerHeight) {
       Object.assign(spotlight.style, {left: "50%", top: "50%", width: "1px", height: "1px"});
       Object.assign(popover.style, {left: `${Math.max(12, (innerWidth - Math.min(360, innerWidth - 24)) / 2)}px`, top: `${Math.max(12, (innerHeight - popover.offsetHeight) / 2)}px`});
       return;
@@ -8179,16 +8278,83 @@
     if (step.act) TOUR_ACTS[step.act]?.();
     $("#tour-back").disabled = tourState.index === 0;
     $("#tour-next").textContent = tourState.index === tourState.steps.length - 1 ? "Finish" : "Next";
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      const target = findTourTarget(step);
-      target?.scrollIntoView({behavior: "instant", block: "center", inline: "nearest"});
-      setTimeout(() => positionTour(target), 40);
-    }));
+    placeTourStep(step, tourState.index);
   }
+
+  /* Find and measure in the same breath, and keep going until it holds.
+   *
+   * The old version positioned once inside a double rAF. That is right for a
+   * view already rendered and wrong for one still arriving: Deck and Shop fetch
+   * a 2.8 MB card catalog on first entry, so the last Compare step -- the one
+   * that hands off to Deck -- switched tabs and measured an empty section.
+   *
+   * The first attempt at fixing it made the failure worse in an instructive way.
+   * It found a target, checked it was solid, and THEN positioned on a timer. On
+   * the hand-off step it found the "Loading the card catalog…" box, which was
+   * real and solid, stopped retrying because it had succeeded -- and forty
+   * milliseconds later the catalog arrived, the box was replaced, and it
+   * measured a node no longer in the document. Every rect on a detached element
+   * is zero, so the spotlight collapsed to a pixel and stayed there for the rest
+   * of the step, with the thing it named plainly on screen.
+   *
+   * So: no gap between finding and measuring, and the retry decision is made on
+   * the measurement rather than on the find. A target that vanishes between one
+   * attempt and the next simply fails that attempt and the next one picks up
+   * whatever replaced it. Six seconds is the ceiling, because it has to outlast
+   * that catalog fetch on a cold cache. The index check stops a slow step from
+   * repainting over a fast reader's next one. */
+  function placeTourStep(step, index) {
+    let tries = 0;
+    const attempt = () => {
+      if (!tourState || tourState.index !== index) return;
+      // Still fetching: whatever is on screen now is about to be replaced, so
+      // there is nothing worth pointing at yet.
+      if ($(`#view-${step.view} .loading-card`)) {
+        positionTour(null);
+        if ((tries += 1) < 30) setTimeout(attempt, 200);
+        return;
+      }
+      const target = findTourTarget(step);
+      const rect = target && target.isConnected ? target.getBoundingClientRect() : null;
+      const solid = rect && rect.width >= 8 && rect.height >= 8;
+      if (solid) {
+        target.scrollIntoView({behavior: "instant", block: "center", inline: "nearest"});
+        // Re-read after the scroll: the rect that decided "solid" was taken
+        // before the page moved under it.
+        positionTour(target.isConnected ? target : null);
+        return;
+      }
+      positionTour(null);
+      if ((tries += 1) < 30) setTimeout(attempt, 200);
+    };
+    requestAnimationFrame(() => requestAnimationFrame(attempt));
+  }
+
+  /* Deck and Shop describe a deck you have chosen. Somebody who presses Tour
+     before choosing one gets ten steps about a rail, a tally, rungs and slots,
+     every one of them spotlighting the same "nothing picked yet" panel --
+     measured, and technically not a dead end but a poor way to learn what this
+     is. So the tour opens by saying what is missing and pointing at the two
+     buttons that fix it, then carries on. */
+  const TOUR_EMPTY_FIRST = {
+    deck2: {view: "deck2", selectors: [".fr-empty-acts", ".fr-empty"],
+      title: "Nothing to show you yet",
+      copy: "This tour walks through a deck you have picked, and there is not one yet. " +
+        "Pick one on Compare, or load the six that are already built — either fills this page " +
+        "in, and the rest of the tour will have something to point at."},
+    shop2: {view: "shop2", selectors: [".fr-empty-acts", ".fr-empty"],
+      title: "Nothing owed yet",
+      copy: "Shop lists what your chosen decks still need, and no deck has been chosen. " +
+        "Pick one on Compare, or load the six that are already built, and this becomes a real " +
+        "buy list you can shop from."}
+  };
 
   function startTour() {
     const view = activeViewName();
-    const steps = TOUR_STEPS[view] || TOUR_STEPS.compare;
+    let steps = TOUR_STEPS[view] || TOUR_STEPS.compare;
+    if (TOUR_EMPTY_FIRST[view] && $(`#view-${view} .fr-empty`)) {
+      steps = [TOUR_EMPTY_FIRST[view], ...steps];
+    }
     if (!steps?.length) return;
     tourState = {steps, index: 0, origin: view};
     $("#tour-layer").hidden = false;
@@ -8384,7 +8550,11 @@
     saveState(`Loaded state${sourceLabel ? ` from ${sourceLabel}` : ""}`);
     renderCompare();
     renderChoose();
-    switchView("compare");
+    /* Compare by default -- the header control means "start from this state", and
+       Compare is where that starts. options.returnTo is passed by the first-run
+       button inside an empty Deck or Shop page, whose promise was to fill in the
+       page it sits on rather than to send the reader somewhere else. */
+    switchView(options.returnTo || "compare");
     showToast(`Loaded state${sourceLabel ? ` from ${sourceLabel}` : ""}.`);
   }
 
@@ -8409,7 +8579,26 @@
     reader.readAsText(file);
   }
 
-  async function loadActiveState() {
+  /* Has anybody done anything on this device yet?
+   *
+   * Not readable from most of the saved state, which turns out to be seeded by
+   * the app itself: a browser that has merely LOADED this page once already
+   * holds 99 owned, 99 found, 99 bought quantities and 50 buy selections, all
+   * written by ensureDeckBoxesSeeded, ensureAssignedSeeded and the precon
+   * ownership pass. Counting those as work made every first visit look busy.
+   *
+   * A picked variant is the one thing only a person creates, and it is also the
+   * gate everything else sits behind -- you cannot mark a card bought for a deck
+   * you have not chosen. So: no picks, no work, nothing to warn about. Comments
+   * and logged games are counted too, because either can exist without a pick
+   * and both are typed by hand. */
+  function hasSavedWork() {
+    const some = (o) => o && Object.keys(o).length > 0;
+    return Boolean(some(state.compareSelections) || some(state.comments) ||
+      (state.gameLog || []).length > 0);
+  }
+
+  async function loadActiveState(returnTo) {
     let payload;
     try {
       const response = await fetch("data/active-state.json?v=1", {cache: "default"});
@@ -8427,8 +8616,16 @@
       return;
     }
     const when = payload.exportedAt ? ` (exported ${new Date(payload.exportedAt).toLocaleString()})` : "";
-    if (!window.confirm(`Load the active state from the repository${when}? It replaces every selection, buy, Shop mark, and Decks change currently saved on this device.`)) return;
-    applyStatePayload(payload, "the repository");
+    /* Only warn somebody who has something to lose.
+       A first-time visitor has an untouched device, and this dialog told them
+       loading would replace "every selection, buy, Shop mark, and Decks change
+       currently saved on this device" -- a warning about destroying work they
+       have not done, on the one button that would have shown them what the app
+       is. Nothing saved means nothing to confirm. */
+    if (hasSavedWork() &&
+        !window.confirm(`Load the active state from the repository${when}? It replaces every ` +
+          `selection, buy, Shop mark, and Decks change currently saved on this device.`)) return;
+    applyStatePayload(payload, "the repository", returnTo ? {returnTo} : {});
   }
 
   async function init() {

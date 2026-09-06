@@ -1561,4 +1561,58 @@ assert.match(cssSource, /\.sp-bench\{display:grid;grid-template-columns:repeat\(
     "the compliance panel ships closed, so its flag reads the other way round");
 }
 
+
+// ---------------------------------------------------------------------------
+// The first visit.
+//
+// Deck and Shop are tabs 2 and 3 of the primary journey and are empty until a
+// variant is picked -- which, for everybody who has never been here, is the
+// state they meet. That screen used to be one sentence in a .loading-card: a
+// permanent state dressed as a transient one, telling the reader to go to
+// Compare without taking them there, using a word ("variant") the app has not
+// defined yet at the moment it is first read.
+// ---------------------------------------------------------------------------
+assert.match(appSource, /function firstRunEmpty\(/,
+  "Deck and Shop must share one first-run empty state rather than a bare sentence each");
+assert.doesNotMatch(appSource, /loading-card">Choose a variant for at least one deck/,
+  "the old one-line empty state must be gone, not merely supplemented");
+assert.match(appSource, /data-goto-view="compare"/,
+  "the empty state must carry the reader to Compare, not just name it");
+assert.match(appSource, /data-first-run-load/,
+  "and must offer the six built decks, which is the fastest way to see this working");
+assert.match(appSource, /class="primary-button" type="button" data-goto-view/,
+  "its buttons must use the Matrix's own classes -- .btn belongs to My Decks and renders unstyled here");
+
+/* Loading the six warns that it replaces what is saved. On a first visit nothing
+   is saved, and the app itself seeds 99 owned, 99 found and 50 buy selections on
+   the very first page load -- so "is anything stored" is not the question. A
+   picked variant is the one thing only a person creates. */
+assert.match(appSource, /function hasSavedWork\(/,
+  "the replace-everything warning must be conditional on there being work to lose");
+assert.match(appSource, /hasSavedWork\(\) &&\s*\n?\s*!window\.confirm/,
+  "and the confirm must be the thing it gates");
+{
+  const body = appSource.slice(appSource.indexOf("function hasSavedWork("),
+    appSource.indexOf("async function loadActiveState"));
+  ["boughtQuantities", "buySelections", "assignedSelections", "owned", "found"].forEach((seeded) => {
+    assert.doesNotMatch(body, new RegExp(`state\\.${seeded}\\b`),
+      `hasSavedWork must not read state.${seeded}: the app seeds it before anybody touches anything`);
+  });
+  assert.match(body, /state\.compareSelections/, "a picked variant is what counts as work");
+}
+
+/* The Tour is the first-timer's guided path, and its selector lists all ended in
+   ".loading-card" -- the old empty state, and now a transient that is on screen
+   only while a 2.8 MB catalog is fetched. A tour that latches onto it measures a
+   detached node a moment later and collapses to a pixel. */
+assert.doesNotMatch(appSource, /selectors: \[[^\]]*"\.loading-card"/,
+  "no tour step may target the loading card: it is gone by the time the step is read");
+assert.match(appSource, /TOUR_EMPTY_FIRST/,
+  "the Deck and Shop tours must open by saying nothing is picked, rather than narrating ten steps at an empty page");
+assert.match(appSource, /function placeTourStep\(/,
+  "tour placement must retry while its target is still arriving");
+assert.match(appSource, /target && target\.isConnected/,
+  "and must not measure an element that has been replaced since it was found");
+
+
 console.log(`Validated ${variants.variants.length} variants and ${Object.keys(buyPlans.plans).length} connected buy profiles.`);
