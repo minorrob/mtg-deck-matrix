@@ -493,8 +493,9 @@
        the List view, which has every one of these cards in it and still works. */
     if (!window.cytoscape) {
       host.innerHTML = '<div class="gp-empty">' +
-        "<p><b>The drawing library did not load.</b> It comes from a CDN, so a blocked " +
-        "domain or an offline connection stops it; nothing else on this page needs it.</p>" +
+        "<p><b>The drawing library is not here yet.</b> It comes from a CDN, so a slow " +
+        "connection delays it and a blocked domain stops it; nothing else on this page " +
+        "needs it, and this view draws itself as soon as it arrives.</p>" +
         "<p>Every card in this view is in the <b>List</b> beside it, with the same " +
         "filters and the same Copilot.</p>" +
         '<button class="gp-btn primary" type="button" data-view="list">Show the list instead</button>' +
@@ -841,6 +842,14 @@
       SIM_LENSES = window.MtgSimLenses.build(ratings, {master: parts[1]});
       mergeLenses();
     });
+
+  /* The library is loaded async so it cannot hold the page up, which means it can
+     arrive after this view has already told the reader it is missing. When it
+     does, draw -- a message that stays wrong once the thing it describes has
+     turned up is worse than the delay it was written to excuse. */
+  window.addEventListener("cytoscape-ready", function () {
+    if (DATA && state.view === "graph") render();
+  });
 
   fetch("data/graph.json", {cache: "no-store"})
     .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })

@@ -21,8 +21,19 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <!-- Inter for the body, as the Matrix and the graph have it; Fraunces stays on
-       the headings, which is the one thing this page keeps from its own theme. -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800;900&display=swap">
+       the headings, which is the one thing this page keeps from its own theme.
+
+       LOADED WITHOUT BLOCKING THE FIRST PAINT. A plain stylesheet link holds the
+       render until it answers, and measured on a connection that could not reach
+       fonts.googleapis.com that was 12.5 seconds of blank page -- for a font.
+       media="print" makes it a non-blocking fetch; onload promotes it to the real
+       stylesheet once it is here. Both stacks in viewer.css name real system
+       fallbacks and the URL already carries display=swap, so the page is legible
+       from the first paint and re-flows into Fraunces and Inter when they land. -->
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800;900&display=swap">
+  <link rel="stylesheet" media="print" onload="this.media='all';this.onload=null"
+        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800;900&display=swap">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800;900&display=swap"></noscript>
   <link rel="stylesheet" href="viewer.css?v=14">
   <!-- Adding a deck. Six small modules rather than one, because each is useful
        and testable on its own: the parser has no idea what a score is, and the
