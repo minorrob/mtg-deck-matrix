@@ -1,30 +1,54 @@
 # MtG Deck Matrix
 
-A mobile-first static app with one private browser-local flow:
+A mobile-first static site — plain HTML, CSS and JavaScript served as files —
+that keeps everything in the browser it is opened in. Nothing is uploaded and
+there is no account.
 
-0. **Choose** — describe a deck you want and generate up to five complete variants for it.
-1. **Compare** — choose one variant for each deck role.
-2. **Buy Picks** — include required tune-ups and optionally select Enhance or Max cards.
-3. **Shop List** — search, filter, deduplicate, and mark cards or precons as found.
-4. **Live Decks** — track what you own, what you paid, and whether each deck is legal and ready.
+## Three pages
 
-The source data is normalized from the two legacy HTML files kept in the parent project folder. Run `tools/extract_data.py` after those source files change.
+**`index.html` · My Decks** is the front door: every deck you have, what it does,
+how far from finished it is. Three tabs — **Decks**, **Bench** (spare copies) and
+**To Buy** — plus two ways to gain a deck: paste one you already have, or
+describe one and have it built. Upload what you own as csv, xlsx or a pasted
+note and the collection is allocated to your decks copy by copy, the remainder
+landing on the bench.
+
+**`matrix.html` · the Matrix** is the build-and-buy half. **Compare** picks one
+variant per deck role out of fifty; **Deck** turns that pick into an exact
+hundred, slot by slot, at the rung you choose; **Shop** is everything still owed
+in one list, with a Store view built for a phone at a vendor's booth; **Game
+Log** records what actually happened and reads it back against what the
+simulation predicted.
+
+**`graph.html` · the card graph** is 7,710 Commander-legal cards, what connects
+them, and a Copilot that says which twenty are worth a look.
+
+Everything lives in `localStorage`. Export writes one file carrying the lot —
+picks, boxes, Shop marks, prices, the decks you added and the collection you
+uploaded — and importing it puts all of that back. `data/*.json` is never written
+to by the app.
 
 ## Current catalog coverage
 
-All 30 Compare variants are normalized and connected to Buy Picks. The six complete profiles from the original Shopping Guide retain their audited shopping plans. The other variants promote their own published precon seed, key-upgrade table, upgrade ladder, and Bracket 3 route into variant-specific purchase profiles; verified shared precons reuse their full 100-card shell, while incomplete source lists remain visibly modeled rather than being presented as audited decklists.
+Fifty variants, each published at four rungs and each connected to a buy profile.
+The six that carry the ★ My Build ribbon are the owner's own decks with audited
+shopping plans. The rest promote their published precon seed, key-upgrade table,
+upgrade ladder and Bracket 3 route into variant-specific purchase profiles;
+verified shared precons reuse their full 100-card shell, while incomplete source
+lists stay visibly modeled rather than being presented as audited decklists.
 
-## Step 0 · Choose
+## Build a deck from nothing
 
-Six placeholders take any mix of colors, mechanics, a play style, a budget, a
-preferred set, a commander by TCGplayer link or name, and TCGplayer links for
-cards you want included. Each one queries live Scryfall and builds complete,
-Tier 3 legal, exactly-100-card variants with the same Base / Tuned / Maxed
-ladder the curated decks use, so they flow through Buy Picks, Shop List and
-Live Decks unchanged.
+**Build a deck**, beside **Add a deck** on My Decks, takes a commander, sixteen
+themes as chips, six play styles, a budget to aim at, and any cards you want kept
+in. It queries live Scryfall and builds three complete, Tier 3 legal,
+exactly-100-card rungs, ranked by what people actually play with *your*
+commander — EDHREC's per-commander inclusion and synergy numbers, not a global
+popularity rank. A commander with no EDHREC page still builds; the weight folds
+back onto the global rank instead.
 
-Generated decks live in this browser's `localStorage` and are merged into the
-catalog in memory when the page renders. `data/*.json` is never written to.
+The rung you keep is stored exactly the way a pasted deck is, so it is a peer of
+every other deck everywhere downstream.
 
 ## Simulation and optimization
 
@@ -143,14 +167,35 @@ two versions of one deck, never as absolute odds.
 
 ## Tests
 
+Twenty-four suites, run individually or all at once. They use only Node
+built-ins — there is no `package.json`, no dependency to install and no build
+step.
+
 ```
-node tests/slot-model.mjs         # the shared slot projection, price bands, shelves and ownership states
-node tests/data-integrity.mjs      # the baked catalog and the app source patterns it depends on
-node tests/lineup-compliance.mjs   # the 100-card lineup model across all 30 plans
-node tests/compliance-model.mjs    # the shared Commander bracket rules
-node tests/deck-generator.mjs      # Step 0 generation against a stubbed Scryfall
-node tests/sim-engine.mjs          # the simulation engine and the runner's caps
+for f in tests/*.mjs; do node "$f" || echo "FAIL $f"; done
 ```
 
-No dependencies, no build step: the tests use only Node built-ins, and the site
-is plain HTML, CSS and JavaScript served as files.
+| | |
+|---|---|
+| `asset-versions` | one `?v=` per file across every page, and a changed file has a changed version |
+| `assignment-model` `slot-model` `lineup-compliance` | the slot projection, the hundred it composes to, and the rungs across all fifty plans |
+| `compliance-model` | the Commander bracket rules, shared between the page and the simulator |
+| `data-integrity` | the baked catalog and the source patterns the app depends on |
+| `deck-audit` `deck-measure` `sim-engine` `sim-lenses` | the simulation engine, its caps, and the findings read off it |
+| `deck-build` `deck-generator` `edhrec-client` `deck-sources` `deck-import` `deck-store` | building a deck from nothing, and adding one you already have |
+| `game-record` | what the game log may claim, and the Wilson interval that gates it |
+| `inventory-import` `master-regenerates` `xlsx-writer` `docx-writer` `shop-export` | reading what you own, and writing what you need |
+| `import-wiring` `manual-rung` | the modules each page loads, and hand-added options |
+
+### Journeys, in a real browser
+
+`tests/uat/journeys.mjs` opens the pages as three people — a first-timer with
+empty storage, somebody a year in with ten added decks and 3,200 cards, and
+somebody leaving with their data — across ten journeys at two screen sizes. It
+needs Playwright and a static server, neither of which this repo depends on, so
+it **skips rather than fails** when either is missing. See `tests/uat/README.md`.
+
+```
+python3 -m http.server 8790
+node tests/uat/journeys.mjs
+```

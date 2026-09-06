@@ -1657,4 +1657,22 @@ assert.match(appSource, /target && target\.isConnected/,
     "data/active-state.json must not carry a My Decks block: Load Active would then wipe added decks");
 }
 
+/* The README named six suites when there were twenty-four, and four tabs that had
+   not existed for months. A stale README is not a cosmetic problem in a repo with
+   no build step and no package.json: it is the only place that says what to run.
+   The suite list at least can be held to the directory. */
+{
+  const readme = await readFile(new URL("../README.md", import.meta.url), "utf8");
+  const {readdir} = await import("node:fs/promises");
+  const suites = (await readdir(new URL("../tests", import.meta.url)))
+    .filter((f) => f.endsWith(".mjs")).map((f) => f.slice(0, -4)).sort();
+  const missing = suites.filter((name) => !readme.includes("`" + name + "`"));
+  assert.deepEqual(missing, [],
+    `README.md does not name ${missing.join(", ")} — a suite nobody knows to run is a suite nobody runs`);
+  assert.ok(readme.includes(`${suites.length}`) || /Twenty-four/i.test(readme),
+    "README.md must say how many suites there are, and mean it");
+  assert.ok(!/Buy Picks|Live Decks|Shop List|Step 0/.test(readme),
+    "README.md still names a tab this app retired");
+}
+
 console.log(`Validated ${variants.variants.length} variants and ${Object.keys(buyPlans.plans).length} connected buy profiles.`);
