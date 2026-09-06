@@ -83,7 +83,7 @@ for (const variant of variants.variants) {
       /* A hundred with a Game Changer in it fails Tier 2 outright, so no density
          estimate can leave it in Bracket 2. This is not only a Maxed question:
          10a and 10d lead with a commander that is itself a Game Changer, so
-         every one of their rungs is Bracket 3 and all three were labelled B2.
+         every one of their rungs is Bracket 3 and all three were labeled B2.
          Where the published number already sits in Bracket 3 it is kept as the
          within-bracket read. */
       if (held > 0) {
@@ -147,7 +147,7 @@ for (const variant of variants.variants) {
         ? `<div class="nblbl">The Maxed rung — ${plural(maxGc.length, "color-legal Game Changer")}, about ${money(gcTotal)}</div>` +
           `<table class="route"><tr><th>Game Changer</th><th class="pr">$</th><th>What it replaces, and what it buys you</th></tr>${rows}</table>` +
           `<p class="method">Three is the ceiling: a fourth would put the deck in Bracket 4. These are not a shortlist — they are the cards the Maxed hundred runs. Each was tried in several slots in the list it would join, kept only where the deck did not measurably get worse over 3,000 simulated games, and confirmed afterwards on a seed the selection never saw. Prices are Scryfall market values.</p>`
-        : `<p class="method">No in-colour Game Changer survived measurement for this commander, so the Maxed rung is this deck at its ceiling without one.</p>`);
+        : `<p class="method">No in-color Game Changer survived measurement for this commander, so the Maxed rung is this deck at its ceiling without one.</p>`);
 
     const start = html.indexOf('<div class="gcnow">');
     const table = start >= 0 ? html.indexOf('<table class="route"', start) : -1;

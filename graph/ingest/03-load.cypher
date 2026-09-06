@@ -54,10 +54,10 @@ CALL (r) { MATCH (c:Card {oracleId: r.oracleId}) MERGE (t:Tribe {id: r.tribe}) M
 IN TRANSACTIONS OF 5000 ROWS;
 
 // --- your overlays. These are the only mutable part of the graph. -----------
-MERGE (:Collection {id: 'trey'});
+MERGE (:Collection {id: 'my'});
 LOAD CSV WITH HEADERS FROM 'file:///owns.csv' AS r
 CALL (r) {
-  MATCH (c:Card {name: r.name}) MATCH (col:Collection {id: 'trey'})
+  MATCH (c:Card {name: r.name}) MATCH (col:Collection {id: 'my'})
   MERGE (col)-[o:OWNS]->(c)
   SET o.qty = toInteger(r.own), o.ordered = toInteger(r.ordered), o.bench = toInteger(r.bench),
       o.state = CASE WHEN toInteger(r.own) > 0 THEN 'owned'

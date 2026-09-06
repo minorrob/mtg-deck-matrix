@@ -40,7 +40,7 @@ const SWAPS = [
     variantId: "3o",
     basic: "Mountain",
     add: "Command Tower",
-    why: "The handoff workbook runs Obuun on eleven Mountains and a Command Tower. A three-colour deck fixes its commander's cost better with the Tower than with a twelfth red source."
+    why: "The handoff workbook runs Obuun on eleven Mountains and a Command Tower. A three-color deck fixes its commander's cost better with the Tower than with a twelfth red source."
   },
   {
     variantId: "5o",

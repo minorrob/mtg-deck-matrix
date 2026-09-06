@@ -1,4 +1,4 @@
-"""The optimiser's recommendations, trimmed to what the viewer shows.
+"""The optimizer's recommendations, trimmed to what the viewer shows.
 
 six-optimized.json carries the full hundred at every spend tier, which is most
 of its bulk and none of what a reader wants on a phone. The viewer needs the

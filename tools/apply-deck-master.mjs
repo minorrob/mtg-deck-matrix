@@ -140,7 +140,7 @@ function solve(planId, wanted) {
 function identityOf(planId) {
   const seat = Slot.deckSlots(plans[planId], {}, {}).find((s) => s.type === "Commander");
   const card = catalog.find((c) => c.name === canonical((seat && (seat.rungs[0] || {}).name) || ""));
-  if (!card) throw new Error(`${planId}: no commander to take colours from`);
+  if (!card) throw new Error(`${planId}: no commander to take colors from`);
   return {name: card.name, identity: new Set(card.colorIdentity || [])};
 }
 
@@ -180,7 +180,7 @@ for (const [label, id] of Object.entries(DECK_OF)) {
     const ci = (fact && fact.colorIdentity) || [];
     unsupplied.push({id, name, count, why: !fact ? "no card by that name in the catalog or on the bench"
       : !ci.every((c) => identity.has(c))
-        ? `colour identity ${ci.join("") || "colourless"} is outside ${commander}'s ${[...identity].sort().join("") || "colourless"} - it cannot legally be in this deck`
+        ? `color identity ${ci.join("") || "colorless"} is outside ${commander}'s ${[...identity].sort().join("") || "colorless"} - it cannot legally be in this deck`
         : "the plan has no slot that offers it, and a hand-added card is an alternative on a slot, never an extra slot"});
   });
   report.push({label, id, cards: [...got.values()].reduce((a, b) => a + b, 0),

@@ -1,658 +1,707 @@
 {
-  "schemaVersion": 1,
-  "generatedAt": "2026-09-04T01:04:06Z",
-  "decks": [
+ "schemaVersion": 1,
+ "generatedAt": "2026-09-04T01:04:06Z",
+ "decks": [
+  {
+   "id": "D1",
+   "label": "Quintorius",
+   "commander": "Quintorius, Loremaster",
+   "nickname": "Boros Graveyard Spirits",
+   "hook": "Fill your graveyard on purpose, then exile it back one card at a time, taking a free 3/2 Spirit each time.",
+   "colorIdentity": [
+    "R",
+    "W"
+   ],
+   "archetype": "Graveyard value with Spirit tokens",
+   "difficulty": {
+    "tier": "Intermediate",
+    "why": "You are tracking three zones at once - hand, graveyard, and the exile pile Quintorius builds - and the order you spend Spirits in decides the turn."
+   },
+   "whatItDoes": "Eleven cards discard or mill on purpose (Faithless Looting, Cathartic Reunion, Thrill of Possibility, Thrilling Discovery, Seize the Spoils, Big Score, Unexpected Windfall, Advanced Reconstruction, Quintorius, History Chaser, Glittering Massif, Night Market), so your graveyard fills fast. Quintorius, Loremaster then exiles one noncreature, nonland card from it at every end step and hands you a 3/2 Spirit; sacrificing a Spirit casts that exiled card for free. Thirteen more recursion cards pull permanents back, and every card that leaves the graveyard triggers Quintorius, Field Historian, Quintorius, History Chaser and Spirit of Resilience for still more Spirits.",
+   "howItWins": "Moonshaker Cavalry at eight mana gives your whole team flying and +X/+X where X is your creature count, which usually kills a player outright off a board of 3/2 Spirits. Hofri Ghostforge and Balefire Liege get there the slow way, adding trample and haste and turning each 3/2 Spirit token into a 6/5.",
+   "turns": [
     {
-      "id": "D1",
-      "label": "Quintorius Kand",
-      "commander": "Quintorius, Loremaster",
-      "nickname": "Boros Graveyard Spirits",
-      "hook": "Fill your graveyard on purpose, then exile it back one card at a time, taking a free 3/2 Spirit each time.",
-      "colorIdentity": [
-        "R",
-        "W"
-      ],
-      "archetype": "Graveyard value with Spirit tokens",
-      "difficulty": {
-        "tier": "Intermediate",
-        "why": "You are tracking three zones at once - hand, graveyard, and the exile pile Quintorius builds - and the order you spend Spirits in decides the turn."
-      },
-      "whatItDoes": "Eleven cards discard or mill on purpose (Faithless Looting, Thrill of Possibility, Thrilling Discovery, Seize the Spoils, Ragged Short Spear, Conspiracy Theorist, Millikin, Advanced Reconstruction, Quintorius, History Chaser, Glittering Massif, Night Market), so your graveyard fills fast. Quintorius, Loremaster then exiles one noncreature, nonland card from it at every end step and hands you a 3/2 Spirit; sacrificing a Spirit casts that exiled card for free. Eleven more recursion cards pull permanents back, and every card that leaves the graveyard triggers Quintorius, Field Historian, Quintorius, History Chaser, Relic Retriever and Spirit of Resilience for still more Spirits.",
-      "howItWins": "Moonshaker Cavalry at eight mana gives your whole team flying and +X/+X where X is your creature count, which usually kills a player outright off a board of 3/2 Spirits. Hofri Ghostforge and Balefire Liege get there the slow way, adding trample and haste and turning each 3/2 Spirit token into a 6/5.",
-      "turns": [
-        {
-          "when": "Turns 1-3",
-          "do": "Land every turn and get a rock down - Sol Ring, Arcane Signet, Fellwar Stone or Mind Stone. Then loot: Faithless Looting or Thrill of Possibility puts something worth recurring in the yard. Weathered Wayfarer and Knight of the White Orchid catch you up if a land drop is missed."
-        },
-        {
-          "when": "Turns 4-6",
-          "do": "Cast Quintorius, Loremaster on five and keep Selfless Spirit or Valorous Stance up to protect him. Each end step you exile a card and get a Spirit; spend the Spirits on Sevinne's Reclamation, Cast Out, Return to Dust or whatever you binned. Staff of the Storyteller turns the token flow into cards."
-        },
-        {
-          "when": "Turns 7+",
-          "do": "Get to eight mana for Moonshaker Cavalry, or land Hofri Ghostforge or Balefire Liege first so the Spirits are already oversized. Sun Titan and Karmic Guide rebuild the board after a wipe; Teshar, Ancestor's Apostle reanimates a cheap creature on every historic spell."
-        }
-      ],
-      "mulligan": "Keep three or four lands with at least one untapped red or white source, a cheap mana rock or Weathered Wayfarer, and one looting spell; a hand with no way to fill the graveyard does nothing for four turns.",
-      "keyCards": [
-        {
-          "name": "Quintorius, Loremaster",
-          "why": "The engine: a Spirit every end step, and each Spirit converts into a free spell from exile."
-        },
-        {
-          "name": "Moonshaker Cavalry",
-          "why": "The only real finisher in the deck - flying and +X/+X for the team turns a wide board into lethal."
-        },
-        {
-          "name": "Hofri Ghostforge",
-          "why": "Spirits get +1/+1, trample and haste, and every nontoken creature that dies comes back as a Spirit copy."
-        },
-        {
-          "name": "Balefire Liege",
-          "why": "+1/+1 to your red creatures and +1/+1 to your white ones, so red-and-white Spirit tokens get both, plus 3 damage on every red spell."
-        },
-        {
-          "name": "Quintorius, Field Historian",
-          "why": "A second Spirit factory that fires on any card leaving the graveyard, not just at end step."
-        },
-        {
-          "name": "Sun Titan",
-          "why": "Returns a mana value 3 or less permanent when it enters and again on every attack."
-        },
-        {
-          "name": "Faithless Looting",
-          "why": "One mana to load the graveyard, and it flashes back later to do it again."
-        }
-      ],
-      "watchFor": [
-        "Seventeen of the 35 lands can come in tapped and ten of them always do, so an opening hand of three tapped lands hands the table two free turns.",
-        "Quintorius, Loremaster only exiles noncreature, nonland cards. A graveyard full of creatures gives him nothing, so keep instants, sorceries and artifacts flowing into it.",
-        "Ceaseless Conflict is the only board wipe and it costs five; it does replace your own nontoken creatures with 3/2 Spirits, but you have no cheap answer to a board that goes wide before turn five.",
-        "Four of the 100 cards are named Quintorius and all four make Spirit tokens. With none of them on the battlefield the recursion cards still return permanents, but the deck stops producing bodies entirely."
-      ],
-      "shape": {
-        "lands": 35,
-        "creatures": 33,
-        "instants": 7,
-        "sorceries": 7,
-        "artifacts": 11,
-        "enchantments": 5,
-        "planeswalkers": 2,
-        "battles": 0,
-        "avgMv": 2.98,
-        "curve": {
-          "1": 7,
-          "2": 21,
-          "3": 17,
-          "4": 10,
-          "5": 8,
-          "6": 1,
-          "7": 0,
-          "8": 1
-        },
-        "roles": {
-          "Land": 35,
-          "Recursion": 11,
-          "Card Draw": 7,
-          "Removal": 7,
-          "Value Engine": 7,
-          "Ramp": 6,
-          "Mana Rock": 5,
-          "Token Producer": 4,
-          "Card Advantage": 3,
-          "Graveyard Hate": 3,
-          "Lord/Anthem": 3,
-          "Protection": 2
-        }
-      },
-      "upgradePath": "There are no Tuned swaps for this deck, so the 100 cards listed here are the Tuned build. The eight Bracket-3 swaps mostly fix the mana and add reach: Inspiring Vantage and Sunbaked Canyon replace two of the always-tapped lands, Smothering Tithe and Fable of the Mirror-Breaker add real ramp plus repeatable looting, War Room adds draw on a land, and Farewell trades Ceaseless Conflict for an exile wipe that recursion cannot answer."
+     "when": "Turns 1-3",
+     "do": "Land every turn and get a rock down - Arcane Signet, Boros Signet, Fellwar Stone or Mind Stone. Then loot: Faithless Looting or Thrill of Possibility puts something worth recurring in the yard. Weathered Wayfarer and Knight of the White Orchid catch you up if a land drop is missed."
     },
     {
-      "id": "D2",
-      "label": "Chulane",
-      "commander": "Chulane, Teller of Tales",
-      "nickname": "Bant Blink Value",
-      "hook": "Every creature you cast draws a card and drops a land, then you blink it to do it all again.",
-      "colorIdentity": [
-        "W",
-        "U",
-        "G"
-      ],
-      "archetype": "Blink and enter-trigger value engine",
-      "difficulty": {
-        "tier": "Intermediate",
-        "why": "The individual cards are easy, but you have to sequence creature casts around Chulane and keep a spare land in hand for his trigger to matter."
-      },
-      "whatItDoes": "Fifty of the 100 cards are creatures and 29 of them do something the moment they enter. Chulane, Teller of Tales turns every creature cast into a card plus a free land from your hand, so a curve of cheap bodies snowballs. Eight blink effects - Ephemerate, Momentary Blink, Siren's Ruse, Charming Prince, Mistmeadow Witch, Soulherder, Roon of the Hidden Realm and The Eternal Wanderer - re-run the best of those enter triggers over and over.",
-      "howItWins": "No single card in this deck ends a game. You out-card the table and then attack wide; Arcades, the Strategist is the closest thing to a finisher, letting the eight defenders swing for their toughness while drawing you a card each time one enters.",
-      "turns": [
-        {
-          "when": "Turns 1-3",
-          "do": "Fix and ramp: Coiling Oracle, Sylvan Ranger, Farhaven Elf, Satyr Wayfinder, Farseek or Cultivate. Overgrown Battlement on two and Axebane Guardian on three tap for a pile of mana and make the five-drop happen a turn early."
-        },
-        {
-          "when": "Turns 4-6",
-          "do": "Cast Chulane, Teller of Tales with a land still in hand. From there chain creature spells - Cloudblazer, Mulldrifter, Reflector Mage, Deputy of Detention, Knight of Autumn - taking a card and a land off each. Soulherder on three starts blinking the best one every end step."
-        },
-        {
-          "when": "Turns 7+",
-          "do": "Loop Roon of the Hidden Realm or Soulherder on Cloudblazer, Angel of Indemnity or Peregrine Drake, use Chulane's {3}, tap ability to bounce and recast your own creature for another card, and swing once you are far enough ahead. Ancient Greenwarden doubles land triggers and lets you replay lands from the graveyard."
-        }
-      ],
-      "mulligan": "Keep three or four lands with at least two colors plus a two- or three-mana ramp creature; two lands is keepable only if one of them fixes and you also have Farseek, Cultivate or Sylvan Ranger.",
-      "keyCards": [
-        {
-          "name": "Chulane, Teller of Tales",
-          "why": "A card and a land drop off every creature spell, plus a repeatable bounce to reuse enter triggers."
-        },
-        {
-          "name": "Soulherder",
-          "why": "A free blink at every end step and it grows a +1/+1 counter each time."
-        },
-        {
-          "name": "Roon of the Hidden Realm",
-          "why": "A second repeatable blink that works on your turn or an opponent's."
-        },
-        {
-          "name": "Mulldrifter",
-          "why": "Two cards on entry, cheap to evoke early, and the best target for every blink effect."
-        },
-        {
-          "name": "Peregrine Drake",
-          "why": "Untaps five lands when it enters, so a blink effect on it is close to free mana."
-        },
-        {
-          "name": "Arcades, the Strategist",
-          "why": "Turns the eight defenders into attackers that hit for toughness and draws a card whenever one enters."
-        },
-        {
-          "name": "Ephemerate",
-          "why": "One mana, rebounds for a second free blink next turn, and protects a creature from removal."
-        }
-      ],
-      "watchFor": [
-        "Thirty lands is the lowest count of the six decks, and Chulane's land drop only works if a land is in your hand - you can have him online and still get only half of him.",
-        "The mana is thin for a three-color five-drop commander: 13 white, 11 green and 10 blue land sources before the three fetch lands.",
-        "Removal is soft. Reflector Mage and Aetherize only bounce; outside Cast Out, Deputy of Detention and Song of the Dryads you cannot permanently answer a big threat.",
-        "Nothing here closes a game quickly. Against a pod with a fast combo deck you will lose while sitting on the best board."
-      ],
-      "shape": {
-        "lands": 30,
-        "creatures": 50,
-        "instants": 7,
-        "sorceries": 6,
-        "artifacts": 2,
-        "enchantments": 4,
-        "planeswalkers": 1,
-        "battles": 0,
-        "avgMv": 3.21,
-        "curve": {
-          "1": 3,
-          "2": 20,
-          "3": 25,
-          "4": 9,
-          "5": 7,
-          "6": 6,
-          "7": 0,
-          "8": 0
-        },
-        "roles": {
-          "Land": 30,
-          "Ramp": 13,
-          "Blink": 8,
-          "Card Draw": 8,
-          "Removal": 6,
-          "Defender Ramp": 5,
-          "Utility Creature": 4,
-          "Artifact/Enchantment Removal": 3,
-          "Recursion": 3,
-          "Card Selection": 3,
-          "Interaction": 2,
-          "Value Engine": 2,
-          "Combat Trick": 2,
-          "Protection": 2
-        }
-      },
-      "upgradePath": "There are no Tuned swaps for this deck, so the 100 cards listed here are the Tuned build. All five Bracket-3 swaps add card flow and redundancy: Rhystic Study taxes all three opponents every turn, Beast Whisperer and Guardian Project stack more draw on top of Chulane, Panharmonicon doubles every enter trigger, and Teleportation Circle gives you a free blink each end step if Roon or Soulherder gets answered."
+     "when": "Turns 4-6",
+     "do": "Cast Quintorius, Loremaster on five and keep Selfless Spirit or Valorous Stance up to protect him. Each end step you exile a card and get a Spirit; spend the Spirits on Sevinne's Reclamation, Cast Out, Return to Dust or whatever you binned. Tocasia's Welcome turns the token flow into cards: every Spirit is mana value 0, so it draws once a turn for free."
     },
     {
-      "id": "D3",
-      "label": "Atraxa",
-      "commander": "Atraxa, Praetors' Voice",
-      "nickname": "Proliferate Counters",
-      "hook": "Atraxa proliferates at every end step, and sixteen other cards do it too, so every counter keeps growing.",
-      "colorIdentity": [
-        "W",
-        "U",
-        "B",
-        "G"
-      ],
-      "archetype": "Four-color counters and proliferate",
-      "difficulty": {
-        "tier": "Advanced",
-        "why": "Four colors off 27 basic lands, and every proliferate makes you choose which permanents and players actually get another counter."
-      },
-      "whatItDoes": "You put counters on things cheaply - Merfolk Skydiver, Wall of Resurgence, Forgotten Ancient, Bristlebane Battler - and then grow them for free. Atraxa, Praetors' Voice proliferates at every one of your end steps, and 16 other cards proliferate as well, including Inexorable Tide, Flux Channeler, Evolution Sage, Thrummingbird, Grateful Apparition and Tekuthal, Inquiry Dominus. While that builds, 13 removal spells and four board wipes keep the rest of the table from running away with the game.",
-      "howItWins": "Nothing in the deck costs more than five mana and there is no dedicated finisher, so you win by attacking with counter-inflated creatures behind Atraxa's 4/4 flying, vigilance, deathtouch, lifelink body. Viral Drake plus repeated proliferate is a real but slow second route, adding poison counters one at a time until an opponent hits ten.",
-      "turns": [
-        {
-          "when": "Turns 1-3",
-          "do": "Fix and ramp: Fertilid, Pilgrim's Eye, Axebane Guardian, Azorius Signet, Simic Signet, Everflowing Chalice, Wayward Swordtooth. Thrummingbird and Grateful Apparition on two both proliferate just by connecting for one damage, so play them into open boards."
-        },
-        {
-          "when": "Turns 4-6",
-          "do": "Cast Atraxa on four if you have all four colors, then add a proliferate engine - Inexorable Tide, Flux Channeler or Evolution Sage - and start feeding Forgotten Ancient. Deepglow Skate doubles every counter on any number of permanents when it enters, which is often the biggest turn of the game."
-        },
-        {
-          "when": "Turns 7+",
-          "do": "Tekuthal, Inquiry Dominus turns every proliferate into two. Hold up Go for the Throat, Anguished Unmaking, Mortify and Repel Calamity, and reset with Tragic Arrogance or Wave of Reckoning when someone gets ahead - Wave of Reckoning is safe for your low-power, counter-fattened creatures."
-        }
-      ],
-      "mulligan": "Keep three or four lands covering at least three of your four colors plus a two- or three-mana ramp piece; a hand that produces only two colors will not cast Atraxa on time.",
-      "keyCards": [
-        {
-          "name": "Atraxa, Praetors' Voice",
-          "why": "A free proliferate every end step on a 4/4 flying deathtouch lifelink body that also blocks everything."
-        },
-        {
-          "name": "Inexorable Tide",
-          "why": "Proliferate on every spell you cast, which is the deck's only true engine."
-        },
-        {
-          "name": "Deepglow Skate",
-          "why": "Doubles every counter on any number of permanents when it enters - the single biggest swing in the list."
-        },
-        {
-          "name": "Tekuthal, Inquiry Dominus",
-          "why": "Every proliferate becomes two, which doubles the output of all 16 proliferate cards."
-        },
-        {
-          "name": "Forgotten Ancient",
-          "why": "Grows on every spell anyone casts and hands its counters out to the rest of your board each upkeep."
-        },
-        {
-          "name": "Flux Channeler",
-          "why": "Three mana, proliferates on every noncreature spell, and 32 of the 100 cards are noncreature, nonland spells."
-        },
-        {
-          "name": "Tragic Arrogance",
-          "why": "You choose what everyone keeps, so it is a wipe that leaves your best permanent standing."
-        },
-        {
-          "name": "Evolution Sage",
-          "why": "Proliferates on every land drop, which makes even a flooded draw do work."
-        }
-      ],
-      "watchFor": [
-        "Card draw is close to nonexistent: only four creatures draw a card and there is no repeatable draw engine, so any board wipe leaves you with nothing.",
-        "The mana base is the real weakness - 27 of the 33 lands are basics, with only 9 white, 7 blue, 11 black and 7 green land sources, and Lotus Field sacrifices two lands when it enters.",
-        "Six creatures enter with -1/-1 counters they want to remove (Bristlebane Battler, Burdened Stoneback, Heirloom Auntie, Moonlit Lamenter, Reaping Willow, Reluctant Dounguard). Proliferate would add to those, so never point it at them.",
-        "The curve tops out at five with no finisher. If the game goes long you have to have removal in hand, because you cannot race anyone."
-      ],
-      "shape": {
-        "lands": 33,
-        "creatures": 35,
-        "instants": 11,
-        "sorceries": 5,
-        "artifacts": 8,
-        "enchantments": 8,
-        "planeswalkers": 0,
-        "battles": 0,
-        "avgMv": 2.93,
-        "curve": {
-          "1": 3,
-          "2": 23,
-          "3": 24,
-          "4": 9,
-          "5": 8,
-          "6": 0,
-          "7": 0,
-          "8": 0
-        },
-        "roles": {
-          "Land": 31,
-          "Proliferate": 16,
-          "Removal": 13,
-          "Counters Payoff": 7,
-          "Ramp": 5,
-          "Mana Rock": 4,
-          "Board Wipe": 4,
-          "Token Producer": 2,
-          "Protection": 2,
-          "Value Engine": 2,
-          "Recursion": 2,
-          "Lifegain": 2,
-          "Card Draw": 2
-        }
-      },
-      "upgradePath": "There are no Tuned swaps for this deck, so the 100 cards listed here are the Tuned build. The six Bracket-3 swaps attack both weak spots directly: Nature's Lore fixes the mana, Phyrexian Arena and Night's Whisper add the repeatable draw the list lacks, and Ichormoon Gauntlet, Pir, Imaginative Rascal and Vorinclex, Monstrous Raider make every counter you place count for more."
-    },
-    {
-      "id": "D4",
-      "label": "Betor",
-      "commander": "Betor, Ancestor's Voice",
-      "nickname": "Big-Butt Defenders",
-      "hook": "Fifteen walls that normally cannot attack, plus three cards that let them hit for their toughness.",
-      "colorIdentity": [
-        "W",
-        "B",
-        "G"
-      ],
-      "archetype": "Defensive walls turned into attackers",
-      "difficulty": {
-        "tier": "Intermediate",
-        "why": "The board builds itself and blocks everything, but the deck has no offense at all until you find one of three specific cards."
-      },
-      "whatItDoes": "You fill the board with 15 defenders that block anything, make mana (Overgrown Battlement, Axebane Guardian, Sylvan Caryatid, Wall of Roots) and replace themselves (Wall of Omens, Carven Caryatid). Assault Formation, Huatli, the Sun's Heart or Felothar the Steadfast then make every creature you control deal combat damage equal to its toughness, which turns a 0/13 into a 13-point attacker. Betor, Ancestor's Voice converts the deck's lifegain into +1/+1 counters at your end step and reanimates a creature whenever you lost life that turn.",
-      "howItWins": "Tree of Perdition taps to swap an opponent's life total with its own 13 toughness, and one swing from Tree of Redemption with a toughness enabler out is exactly lethal from there. Otherwise you grind through with Indomitable Ancients, Canopy Gargantuan and Salvation Colossus, or fly over with Zetalpa, Primal Dawn and Dragonlord Dromoka.",
-      "turns": [
-        {
-          "when": "Turns 1-3",
-          "do": "Curve into mana walls: Wall of Roots or Overgrown Battlement on two, Axebane Guardian or Sylvan Caryatid on three. Wall of Omens and Carven Caryatid draw a card while they do it. Jaddi Offshoot and Grazing Gladehart start turning land drops into life."
-        },
-        {
-          "when": "Turns 4-6",
-          "do": "Find a toughness enabler. Assault Formation on two is the cheapest, Huatli, the Sun's Heart on three, and Felothar the Steadfast on four also lets defenders attack at all. Betor on five then adds counters equal to your life gained each end step."
-        },
-        {
-          "when": "Turns 7+",
-          "do": "Attack with 0/13s. Salvation Colossus makes the rest of the team +2/+2 and indestructible whenever you attack, Myr Battlesphere adds four bodies plus damage, and Sun Titan or Betor rebuilds after a wipe. Wall of Limbs sacrifices for a large chunk of life loss if you cannot get through."
-        }
-      ],
-      "mulligan": "Keep three or four lands with a green source plus a two- or three-mana mana wall (Wall of Roots, Overgrown Battlement, Axebane Guardian, Sylvan Caryatid) or Wall of Omens; with 39 lands you will draw more.",
-      "keyCards": [
-        {
-          "name": "Betor, Ancestor's Voice",
-          "why": "Turns each turn's lifegain into +1/+1 counters and reanimates a creature whenever you also lost life."
-        },
-        {
-          "name": "Assault Formation",
-          "why": "Two mana, makes the whole board deal damage equal to toughness, and can push a single defender in for {G}."
-        },
-        {
-          "name": "Felothar the Steadfast",
-          "why": "Toughness damage plus the only effect that lets all your defenders attack, and a sacrifice outlet that draws."
-        },
-        {
-          "name": "Huatli, the Sun's Heart",
-          "why": "A third copy of the toughness-damage effect, and its -3 gains life equal to your largest toughness, which feeds Betor."
-        },
-        {
-          "name": "Tree of Perdition",
-          "why": "Sets an opponent to 13 life from nowhere, which puts them in range of one attack."
-        },
-        {
-          "name": "Axebane Guardian",
-          "why": "With a full wall board it taps for four or five mana of any colors, powering out the eight-drops."
-        },
-        {
-          "name": "Salvation Colossus",
-          "why": "A 9/9 that gives the whole team +2/+2 and indestructible on every attack, and comes back from the graveyard."
-        }
-      ],
-      "watchFor": [
-        "Only three cards turn toughness into damage - Assault Formation, Huatli, the Sun's Heart and Felothar the Steadfast. Draw none of them and 15 defenders just sit there.",
-        "39 lands is the highest count of the six decks against an average mana value of 3.5, and only four cards are tagged card draw, so flooding is the most likely way you lose.",
-        "Betor's reanimate half only fires if you lost life that turn, and this deck gains life rather than losing it. Read the Bones, Painful Truths, Anguished Unmaking, Feed the Swarm and Sapling of Colfenor are the five cards that turn that half on.",
-        "Ritual of Soot, your own four-mana wipe, kills 17 of your 38 creatures. Wave of Reckoning and Fell the Mighty are the two wipes that spare a board of 0-power walls."
-      ],
-      "shape": {
-        "lands": 39,
-        "creatures": 38,
-        "instants": 7,
-        "sorceries": 10,
-        "artifacts": 3,
-        "enchantments": 1,
-        "planeswalkers": 2,
-        "battles": 0,
-        "avgMv": 3.51,
-        "curve": {
-          "1": 4,
-          "2": 16,
-          "3": 15,
-          "4": 11,
-          "5": 7,
-          "6": 4,
-          "7": 2,
-          "8": 2
-        },
-        "roles": {
-          "Land": 37,
-          "Removal": 8,
-          "Finisher": 5,
-          "Ramp": 5,
-          "Protection": 5,
-          "Lifegain": 5,
-          "Toughness Payoff": 4,
-          "Card Draw": 4,
-          "Defender Ramp": 4,
-          "Mana Rock": 3,
-          "Token Producer": 3,
-          "Board Wipe": 3,
-          "Flexible Fixing": 2,
-          "Combat Trick": 2,
-          "Utility Creature": 2
-        }
-      },
-      "upgradePath": "There are no Tuned swaps for this deck, so the 100 cards listed here are the Tuned build. All three Bracket-3 swaps are aimed at the failure modes above: Doran, the Siege Tower is a fourth toughness-damage effect so the plan survives removal, Guardian Project turns 38 creatures into a draw engine, and The Meathook Massacre adds a scalable wipe that drains while it clears."
-    },
-    {
-      "id": "D5",
-      "label": "Shadrix",
-      "commander": "Shadrix Silverquill",
-      "nickname": "Orzhov Token Drain",
-      "hook": "Make white and black tokens, sacrifice them, and drain all three opponents one point at a time.",
-      "colorIdentity": [
-        "W",
-        "B"
-      ],
-      "archetype": "Token aristocrats with drain payoffs",
-      "difficulty": {
-        "tier": "Intermediate",
-        "why": "The plan is simple, but Shadrix's combat trigger forces you to hand one of two gifts to an opponent every single turn."
-      },
-      "whatItDoes": "Twelve cards make creature tokens - Spectral Procession, Lingering Souls, Raise the Alarm, Clachan Festival, Ministrant of Obligation, Ophiomancer, Dreadhorde Invasion, Hidden Stockpile and more - and six drain payoffs turn those bodies into damage. Corpse Knight and Elas il-Kor, Sadistic Pilgrim drain when creatures enter; Cruel Celebrant, Zulaport Cutthroat, Nadier's Nightblade and Bastion of Remembrance drain when they die. Four sacrifice outlets (Viscera Seer, Zack Fair, Village Rites, Deadly Dispute) let you cash the board in whenever you want.",
-      "howItWins": "Death triggers, not combat. With Cruel Celebrant, Zulaport Cutthroat and Bastion of Remembrance on the table, your own Day of Judgment or Promise of Loyalty drains every opponent for the size of your board, and Teysa Karlov doubles all of those triggers.",
-      "turns": [
-        {
-          "when": "Turns 1-3",
-          "do": "Sol Ring, Arcane Signet, Orzhov Signet or Mind Stone, then a cheap drain body on two: Corpse Knight, Cruel Celebrant, Elas il-Kor, Sadistic Pilgrim or Zulaport Cutthroat. Viscera Seer on one is the free sacrifice outlet you want down early."
-        },
-        {
-          "when": "Turns 4-6",
-          "do": "Pour tokens into the payoffs. Spectral Procession costs three white mana for three fliers, Lingering Souls gives four bodies across two casts, and Raise the Alarm goes at instant speed. Teysa Karlov on four doubles every death trigger. Shadrix Silverquill on five gives you a mode every combat."
-        },
-        {
-          "when": "Turns 7+",
-          "do": "Equip Skullclamp to 1/1 tokens for two cards each, then sacrifice the board with the drain payoffs out. If the board is even and you have two or more payoffs down, Day of Judgment or Promise of Loyalty is a win condition rather than a reset."
-        }
-      ],
-      "mulligan": "Keep three or four lands with both colors plus a two-mana drain creature or a cheap token maker; with 42 lands, a hand of five lands and one spell should be shipped.",
-      "keyCards": [
-        {
-          "name": "Shadrix Silverquill",
-          "why": "A 2/5 flier with double strike whose combat trigger hands out two of three modes each turn - one for you, one for an opponent."
-        },
-        {
-          "name": "Teysa Karlov",
-          "why": "Doubles every death trigger in the deck and gives your tokens vigilance and lifelink."
-        },
-        {
-          "name": "Bastion of Remembrance",
-          "why": "An enchantment version of the drain payoff, so board wipes cannot remove it."
-        },
-        {
-          "name": "Cruel Celebrant",
-          "why": "Two mana, drains for every creature or planeswalker you lose, and cheap enough to recast right after a sweeper."
-        },
-        {
-          "name": "Skullclamp",
-          "why": "On a 1/1 token it kills the token and draws two, which also turns on every death trigger you control."
-        },
-        {
-          "name": "Spectral Procession",
-          "why": "Three fliers for three white mana - the single best token spell in the list."
-        },
-        {
-          "name": "Viscera Seer",
-          "why": "The only free, repeatable sacrifice outlet, which is what makes the drain payoffs work on demand."
-        },
-        {
-          "name": "Requiem Angel",
-          "why": "Every non-Spirit creature you lose becomes a 1/1 flying Spirit, so a wipe leaves you with a board."
-        }
-      ],
-      "watchFor": [
-        "42 lands against an average mana value of 2.7 is roughly seven too many. Flooding out is the most common way this deck loses.",
-        "Viscera Seer is the only free repeatable sacrifice outlet. Village Rites and Deadly Dispute are one-shots, Zack Fair sacrifices only itself, and Hidden Stockpile costs {1} each activation.",
-        "Shadrix makes you choose two modes on two different players, so an opponent gets a 2/1 flier, a card, or counters every combat. Give the draw-and-lose-1-life mode to whoever is furthest behind.",
-        "Only 26 of the 100 cards are creatures. If the token makers get answered, the six drain payoffs have nothing to eat."
-      ],
-      "shape": {
-        "lands": 42,
-        "creatures": 26,
-        "instants": 10,
-        "sorceries": 6,
-        "artifacts": 9,
-        "enchantments": 6,
-        "planeswalkers": 1,
-        "battles": 0,
-        "avgMv": 2.71,
-        "curve": {
-          "1": 7,
-          "2": 24,
-          "3": 14,
-          "4": 7,
-          "5": 4,
-          "6": 2,
-          "7": 0,
-          "8": 0
-        },
-        "roles": {
-          "Land": 42,
-          "Token Producer": 12,
-          "Removal": 7,
-          "Drain Payoff": 6,
-          "Card Draw": 5,
-          "Mana Rock": 5,
-          "Tuned add": 4,
-          "Sacrifice Outlet": 4,
-          "Board Wipe": 2,
-          "Utility Creature": 2,
-          "Lifegain": 2,
-          "Artifact/Enchantment Removal": 2,
-          "Lord/Anthem": 2
-        }
-      },
-      "upgradePath": "The Tuned swaps are already applied in this list: Skullclamp, Teysa Karlov, Requiem Angel, Day of Judgment, Ossification, Mentor of the Meek, Night's Whisper and Elspeth, Sun's Nemesis are in, and eight weaker cards including Costly Plunder, Suture Priest and Inspiring Overseer went to the bench. The seven Bracket-3 swaps add exactly what is thin: Blood Artist and Dictate of Erebos as more death payoffs, Ashnod's Altar and Pitiless Plunderer as free sacrifice outlets, Elenda, the Dusk Rose as a wipe-proof threat, and Anointed Procession to double every token you make."
-    },
-    {
-      "id": "D6",
-      "label": "Purphoros",
-      "commander": "Purphoros, God of the Forge",
-      "nickname": "Goblin Token Burn",
-      "hook": "Every creature that enters deals damage to each opponent, and you make Goblin tokens two and three at a time.",
-      "colorIdentity": [
-        "R"
-      ],
-      "archetype": "Mono-red goblin tokens and pings",
-      "difficulty": {
-        "tier": "Beginner",
-        "why": "One color, cheap spells, and the plan never changes - make tokens, deal damage, repeat."
-      },
-      "whatItDoes": "Seventeen cards make creature tokens and 20 of the 29 creature cards are Goblins. Purphoros, God of the Forge deals 2 damage to each opponent every time another creature you control enters, and Impact Tremors and Witty Roastmaster each add another point. Hordeling Outburst by itself is 6 damage to every opponent with Purphoros out, and 12 with all three of those on the table.",
-      "howItWins": "Usually without attacking. Dragon Fodder, Krenko's Command, Hordeling Outburst and Goblin Rally are 11 tokens between them, which is 22 damage to each opponent with Purphoros on the battlefield. When you do attack, Goblin Chieftain, Rundvelt Hordemaster and Goblin Trashmaster each give other Goblins +1/+1, and Shared Animosity makes an attacking swarm enormous.",
-      "turns": [
-        {
-          "when": "Turns 1-3",
-          "do": "Sol Ring, Arcane Signet or Mind Stone, then a one-drop: Skirk Prospector, Fanatical Firebrand or Foundry Street Denizen. Impact Tremors on two is worth playing before any token spell, and Quest for the Goblin Lord starts counting."
-        },
-        {
-          "when": "Turns 4-6",
-          "do": "Purphoros on four, then start dumping tokens - Dragon Fodder, Krenko's Command, Hordeling Outburst, Beetleback Chief, Goblin Rally. Goblin Matron tutors the Goblin you need and Goblin Ringleader refills your hand with up to four more."
-        },
-        {
-          "when": "Turns 7+",
-          "do": "Krenko, Mob Boss doubles the board every time he taps, Siege-Gang Commander turns spare Goblins into 2-damage shots, and Goblin Bombardment or Barrage of Expendables converts the entire board into direct damage at instant speed."
-        }
-      ],
-      "mulligan": "Keep three or four lands with a one- or two-mana play; a hand with Impact Tremors or a mana rock plus two token spells is a fine keep on three lands.",
-      "keyCards": [
-        {
-          "name": "Purphoros, God of the Forge",
-          "why": "2 damage to each opponent per creature entering, and indestructible, so removal almost never touches it."
-        },
-        {
-          "name": "Impact Tremors",
-          "why": "A second copy of the Purphoros trigger for two mana, and opponents rarely spend removal on it."
-        },
-        {
-          "name": "Krenko, Mob Boss",
-          "why": "Doubles your Goblin count every time he taps, which is 2 damage per token with Purphoros out."
-        },
-        {
-          "name": "Siege-Gang Commander",
-          "why": "Three tokens on entry and a repeatable sacrifice outlet that throws 2 damage at any target."
-        },
-        {
-          "name": "Goblin Bombardment",
-          "why": "Free repeatable sacrifice outlet - it converts a board that is about to be wiped into damage."
-        },
-        {
-          "name": "Shared Animosity",
-          "why": "Every attacking Goblin gets +1/+0 for each other attacking Goblin, which is how the swarm actually kills."
-        },
-        {
-          "name": "Goblin Ringleader",
-          "why": "Digs four cards deep and puts every Goblin it finds in your hand, with haste attached."
-        },
-        {
-          "name": "Hordeling Outburst",
-          "why": "Three bodies for three mana, the cleanest single Purphoros trigger in the deck."
-        }
-      ],
-      "watchFor": [
-        "Blasphemous Act deals 13 damage to every creature, including all of your Goblins. Purphoros survives it, but only cast it when you are behind on board.",
-        "Interaction is thin: four removal spells (Abrade, Combustion Technique, Chaos Warp, Purphoros's Intervention) plus Vandalblast for artifacts, and nothing that answers an opposing enchantment.",
-        "37 lands with 34 Mountains against an average mana value of 2.8 means you will flood. Only Big Score and Light Up the Stage are true draw spells; the rest is looting with Faithless Looting, Cathartic Reunion, Bag of Holding and Gristle Glutton.",
-        "Purphoros is only a creature while your devotion to red is five or more, so do not plan on him blocking or attacking - he is a damage engine, not a body."
-      ],
-      "shape": {
-        "lands": 37,
-        "creatures": 29,
-        "instants": 5,
-        "sorceries": 13,
-        "artifacts": 7,
-        "enchantments": 9,
-        "planeswalkers": 0,
-        "battles": 0,
-        "avgMv": 2.78,
-        "curve": {
-          "1": 11,
-          "2": 18,
-          "3": 17,
-          "4": 13,
-          "5": 2,
-          "6": 1,
-          "7": 0,
-          "8": 1
-        },
-        "roles": {
-          "Land": 37,
-          "Token Producer": 17,
-          "Tuned add": 8,
-          "Burn": 5,
-          "Removal": 4,
-          "Discard/Looting": 4,
-          "Sacrifice Outlet": 3,
-          "Mana Rock": 3,
-          "Card Draw": 2,
-          "Tutor": 2,
-          "Card Advantage": 2,
-          "Lord/Anthem": 2
-        }
-      },
-      "upgradePath": "The Tuned swaps are already applied here: Goblin Chieftain, Goblin Trashmaster, Rundvelt Hordemaster, Goblin Rabblemaster, Conspicuous Snoop, Shared Animosity, Molten Echoes, Fervor, Ruby Medallion and Purphoros's Intervention replaced ten weaker cards. The nine Bracket-3 swaps turn it into a one-turn kill deck: Jeska's Will and Underworld Breach let you replay Dragon Fodder, Krenko's Command and Empty the Warrens in a single turn, while Muxus, Goblin Grandee, Goblin Recruiter and Goblin Piledriver stack the board and the attack."
+     "when": "Turns 7+",
+     "do": "Get to eight mana for Moonshaker Cavalry, or land Hofri Ghostforge or Balefire Liege first so the Spirits are already oversized. Sun Titan and Karmic Guide rebuild the board after a wipe; Teshar, Ancestor's Apostle reanimates a cheap creature on every historic spell."
     }
-  ]
+   ],
+   "mulligan": "Keep three or four lands with at least one untapped red or white source, a cheap mana rock or Weathered Wayfarer, and one looting spell; a hand with no way to fill the graveyard does nothing for four turns.",
+   "keyCards": [
+    {
+     "name": "Quintorius, Loremaster",
+     "why": "The engine: a Spirit every end step, and each Spirit converts into a free spell from exile."
+    },
+    {
+     "name": "Moonshaker Cavalry",
+     "why": "The only real finisher in the deck - flying and +X/+X for the team turns a wide board into lethal."
+    },
+    {
+     "name": "Hofri Ghostforge",
+     "why": "Spirits get +1/+1, trample and haste, and every nontoken creature that dies comes back as a Spirit copy."
+    },
+    {
+     "name": "Balefire Liege",
+     "why": "+1/+1 to your red creatures and +1/+1 to your white ones, so red-and-white Spirit tokens get both, plus 3 damage on every red spell."
+    },
+    {
+     "name": "Quintorius, Field Historian",
+     "why": "A second Spirit factory that fires on any card leaving the graveyard, not just at end step."
+    },
+    {
+     "name": "Sun Titan",
+     "why": "Returns a mana value 3 or less permanent when it enters and again on every attack."
+    },
+    {
+     "name": "Faithless Looting",
+     "why": "One mana to load the graveyard, and it flashes back later to do it again."
+    }
+   ],
+   "watchFor": [
+    "Fourteen of the 35 lands can come in tapped and nine of them always do, so an opening hand of three tapped lands hands the table two free turns.",
+    "Quintorius, Loremaster only exiles noncreature, nonland cards. A graveyard full of creatures gives him nothing, so keep instants, sorceries and artifacts flowing into it.",
+    "Ceaseless Conflict is the only board wipe and it costs five; it does replace your own nontoken creatures with 3/2 Spirits, but you have no cheap answer to a board that goes wide before turn five.",
+    "Four of the 100 cards are named Quintorius and all four make Spirit tokens. With none of them on the battlefield the recursion cards still return permanents, but the deck stops producing bodies entirely."
+   ],
+   "shape": {
+    "lands": 35,
+    "creatures": 27,
+    "planeswalkers": 2,
+    "battles": 0,
+    "instants": 12,
+    "sorceries": 9,
+    "artifacts": 8,
+    "enchantments": 7,
+    "avgMv": 3.09,
+    "curve": {
+     "1": 5,
+     "2": 21,
+     "3": 17,
+     "4": 11,
+     "5": 9,
+     "6": 1,
+     "7": 0,
+     "8": 1
+    },
+    "roles": {
+     "Land": 34,
+     "Recursion": 13,
+     "Removal": 8,
+     "Value Engine": 7,
+     "Card Draw": 5,
+     "Ramp": 5,
+     "Mana Rock": 4,
+     "B3 (Max) add": 3,
+     "Card Advantage": 3,
+     "Graveyard Hate": 3,
+     "Discard/Looting": 2,
+     "Lord/Anthem": 2,
+     "Protection": 2,
+     "Token Producer": 2,
+     "Artifact/Enchantment Removal": 1,
+     "Board Wipe": 1,
+     "Combat Trick": 1,
+     "Commander": 1,
+     "Finisher": 1,
+     "Interaction": 1,
+     "Utility Creature": 1
+    }
+   },
+   "upgradePath": "There are no Tuned swaps for this deck, so the 100 cards listed here are the Tuned build. The six Bracket-3 swaps add reach and repeatable draw: Underworld Breach is the Game Changer, casting anything out of the graveyard for the price of exiling three other cards, and every one of those activations is another Spirit. Boros Charm gives the Spirit army board-wide indestructible or four damage to the face, Sunbaked Canyon replaces one of the always-tapped lands with an untapped one that cashes in for a card, War Room puts repeatable draw on a land, Brought Back returns two permanents at instant speed, and Archivist of Oghma taxes every tutor and fetch at the table."
+  },
+  {
+   "id": "D2",
+   "label": "Chulane",
+   "commander": "Chulane, Teller of Tales",
+   "nickname": "Bant Blink Value",
+   "hook": "Every creature you cast draws a card and drops a land, then you blink it to do it all again.",
+   "colorIdentity": [
+    "W",
+    "U",
+    "G"
+   ],
+   "archetype": "Blink and enter-trigger value engine",
+   "difficulty": {
+    "tier": "Intermediate",
+    "why": "The individual cards are easy, but you have to sequence creature casts around Chulane and keep a spare land in hand for his trigger to matter."
+   },
+   "whatItDoes": "Forty-five of the 100 cards are creatures and most of them do something the moment they enter. Chulane, Teller of Tales turns every creature cast into a card plus a free land from your hand, so a curve of cheap bodies snowballs. Thirteen blink effects - Ephemerate, Siren's Ruse, Voyager Staff, Shrieking Drake, Whitemane Lion, Dream Stalker, Charming Prince, Mistmeadow Witch, Mirkwood Nurturer, Soulherder, Restoration Angel, Roon of the Hidden Realm and The Eternal Wanderer - re-run the best of those enter triggers over and over.",
+   "howItWins": "No single card in this deck ends a game. You out-card the table and then attack wide with 45 creatures. The Eternal Wanderer is the closest thing to a finisher: it exiles a blocker on every plus, makes a double-strike Samurai on zero, and its ultimate returns every creature to its owner's hand while you rebuild fastest.",
+   "turns": [
+    {
+     "when": "Turns 1-3",
+     "do": "Fix and ramp: Coiling Oracle, Sylvan Ranger, Farhaven Elf, Satyr Wayfinder, Farseek or Cultivate. Llanowar Elves on one, Kiora's Follower or Faeburrow Elder on two and Axebane Guardian on three all make the five-drop happen a turn early."
+    },
+    {
+     "when": "Turns 4-6",
+     "do": "Cast Chulane, Teller of Tales with a land still in hand. From there chain creature spells - Cloudblazer, Mulldrifter, Reflector Mage, Deputy of Detention, Knight of Autumn - taking a card and a land off each. Soulherder on three starts blinking the best one every end step."
+    },
+    {
+     "when": "Turns 7+",
+     "do": "Loop Roon of the Hidden Realm or Soulherder on Cloudblazer, Shinestriker or Peregrine Drake, use Chulane's {3}, tap ability to bounce and recast your own creature for another card, and swing once you are far enough ahead. Ancient Greenwarden doubles land triggers and lets you replay lands from the graveyard."
+    }
+   ],
+   "mulligan": "Keep three or four lands with at least two colors plus a two- or three-mana ramp creature; two lands is keepable only if one of them fixes and you also have Farseek, Cultivate or Sylvan Ranger.",
+   "keyCards": [
+    {
+     "name": "Chulane, Teller of Tales",
+     "why": "A card and a land drop off every creature spell, plus a repeatable bounce to reuse enter triggers."
+    },
+    {
+     "name": "Soulherder",
+     "why": "A free blink at every end step and it grows a +1/+1 counter each time."
+    },
+    {
+     "name": "Roon of the Hidden Realm",
+     "why": "A second repeatable blink that works on your turn or an opponent's."
+    },
+    {
+     "name": "Mulldrifter",
+     "why": "Two cards on entry, cheap to evoke early, and the best target for every blink effect."
+    },
+    {
+     "name": "Peregrine Drake",
+     "why": "Untaps five lands when it enters, so a blink effect on it is close to free mana."
+    },
+    {
+     "name": "Restoration Angel",
+     "why": "Flash, a 3/4 body, and a blink at instant speed - it re-runs an enter trigger on someone else's turn and ambushes an attacker doing it."
+    },
+    {
+     "name": "Ephemerate",
+     "why": "One mana, rebounds for a second free blink next turn, and protects a creature from removal."
+    }
+   ],
+   "watchFor": [
+    "Chulane's land drop only works if a land is in your hand, so with 35 lands and 13 ramp cards you can have him online and still get only half of him. Hold a land back rather than jamming it on curve.",
+    "The mana is workable but not generous for a three-color five-drop commander: 15 green, 12 white and 12 blue land sources across 35 lands, 24 of them basics.",
+    "Removal is soft. Reflector Mage and Aetherize only bounce; outside Cast Out, Deputy of Detention and Song of the Dryads you cannot permanently answer a big threat.",
+    "Nothing here closes a game quickly. Against a pod with a fast combo deck you will lose while sitting on the best board."
+   ],
+   "shape": {
+    "lands": 35,
+    "creatures": 45,
+    "planeswalkers": 1,
+    "battles": 0,
+    "instants": 8,
+    "sorceries": 4,
+    "artifacts": 4,
+    "enchantments": 3,
+    "avgMv": 2.98,
+    "curve": {
+     "1": 6,
+     "2": 21,
+     "3": 21,
+     "4": 6,
+     "5": 7,
+     "6": 4,
+     "7": 0,
+     "8": 0
+    },
+    "roles": {
+     "Land": 35,
+     "Blink": 13,
+     "Ramp": 13,
+     "Card Draw": 10,
+     "Removal": 6,
+     "Artifact/Enchantment Removal": 4,
+     "Protection": 4,
+     "Interaction": 3,
+     "Mana Rock": 3,
+     "Value Engine": 2,
+     "Board Wipe": 1,
+     "Card Advantage": 1,
+     "Card Selection": 1,
+     "Commander": 1,
+     "Defender Ramp": 1,
+     "Discard/Looting": 1,
+     "Recursion": 1
+    }
+   },
+   "upgradePath": "There are no Tuned swaps for this deck, so the 100 cards listed here are the Tuned build. All nine Bracket-3 swaps add card flow and redundancy: Rhystic Study is the Game Changer, taxing all three opponents every turn, Guardian Project stacks more draw on top of Chulane, Panharmonicon doubles every enter trigger, Cloudstone Curio returns a creature on every creature cast, Eladamri's Call tutors the body the board needs, and Deadeye Navigator with Peregrine Drake is unbounded mana - legal at Bracket 3, and worth knowing before you assemble it at a friendly table."
+  },
+  {
+   "id": "D3",
+   "label": "Atraxa",
+   "commander": "Atraxa, Praetors' Voice",
+   "nickname": "Proliferate Counters",
+   "hook": "Atraxa proliferates at every end step, and sixteen other cards do it too, so every counter keeps growing.",
+   "colorIdentity": [
+    "W",
+    "U",
+    "B",
+    "G"
+   ],
+   "archetype": "Four-color counters and proliferate",
+   "difficulty": {
+    "tier": "Advanced",
+    "why": "Four colors off 27 basic lands, and every proliferate makes you choose which permanents and players actually get another counter."
+   },
+   "whatItDoes": "You put counters on things cheaply - Merfolk Skydiver, Wall of Resurgence, Forgotten Ancient, Rebellious Captives - and then grow them for free. Atraxa, Praetors' Voice proliferates at every one of your end steps, and 18 other cards proliferate as well, including Inexorable Tide, Flux Channeler, Evolution Sage, Thrummingbird, Grateful Apparition and Tekuthal, Inquiry Dominus. While that builds, 12 removal spells and two board wipes keep the rest of the table from running away with the game.",
+   "howItWins": "Nothing in the deck costs more than five mana and there is no dedicated finisher, so you win by attacking with counter-inflated creatures behind Atraxa's 4/4 flying, vigilance, deathtouch, lifelink body. Viral Drake plus repeated proliferate is a real but slow second route, adding poison counters one at a time until an opponent hits ten.",
+   "turns": [
+    {
+     "when": "Turns 1-3",
+     "do": "Fix and ramp: Axebane Guardian, Azorius Signet, Fellwar Stone, Prophetic Prism, Everflowing Chalice, Astral Cornucopia, Bitterthorn, Nissa's Animus, Wayward Swordtooth. Thrummingbird and Grateful Apparition on two both proliferate just by connecting for one damage, so play them into open boards."
+    },
+    {
+     "when": "Turns 4-6",
+     "do": "Cast Atraxa on four if you have all four colors, then add a proliferate engine - Inexorable Tide, Flux Channeler or Evolution Sage - and start feeding Forgotten Ancient. Deepglow Skate doubles every counter on any number of permanents when it enters, which is often the biggest turn of the game."
+    },
+    {
+     "when": "Turns 7+",
+     "do": "Tekuthal, Inquiry Dominus turns every proliferate into two. Hold up Go for the Throat, Anguished Unmaking, Mortify and Repel Calamity, and reset with Tragic Arrogance or Day of Black Sun when someone gets ahead - Day of Black Sun lets you name the mana value, so you can sweep the table below your own counter-fattened creatures."
+    }
+   ],
+   "mulligan": "Keep three or four lands covering at least three of your four colors plus a two- or three-mana ramp piece; a hand that produces only two colors will not cast Atraxa on time.",
+   "keyCards": [
+    {
+     "name": "Atraxa, Praetors' Voice",
+     "why": "A free proliferate every end step on a 4/4 flying deathtouch lifelink body that also blocks everything."
+    },
+    {
+     "name": "Inexorable Tide",
+     "why": "Proliferate on every spell you cast, which is the deck's only true engine."
+    },
+    {
+     "name": "Deepglow Skate",
+     "why": "Doubles every counter on any number of permanents when it enters - the single biggest swing in the list."
+    },
+    {
+     "name": "Tekuthal, Inquiry Dominus",
+     "why": "Every proliferate becomes two, which doubles the output of all 16 proliferate cards."
+    },
+    {
+     "name": "Forgotten Ancient",
+     "why": "Grows on every spell anyone casts and hands its counters out to the rest of your board each upkeep."
+    },
+    {
+     "name": "Flux Channeler",
+     "why": "Three mana, proliferates on every noncreature spell, and 32 of the 100 cards are noncreature, nonland spells."
+    },
+    {
+     "name": "Tragic Arrogance",
+     "why": "You choose what everyone keeps, so it is a wipe that leaves your best permanent standing."
+    },
+    {
+     "name": "Evolution Sage",
+     "why": "Proliferates on every land drop, which makes even a flooded draw do work."
+    }
+   ],
+   "watchFor": [
+    "Card draw is close to nonexistent: only four creatures draw a card and there is no repeatable draw engine, so any board wipe leaves you with nothing.",
+    "The mana base is the real weakness - 24 of the 35 lands are basics, with 13 black, 11 white, 10 blue and 9 green land sources for a four-color deck, and Lotus Field sacrifices two lands when it enters.",
+    "Three creatures enter with -1/-1 counters they want to remove (Moonlit Lamenter, Reaping Willow, Reluctant Dounguard). Proliferate would add to those, so never point it at them.",
+    "The curve tops out at five with no finisher. If the game goes long you have to have removal in hand, because you cannot race anyone."
+   ],
+   "shape": {
+    "lands": 35,
+    "creatures": 27,
+    "planeswalkers": 0,
+    "battles": 0,
+    "instants": 13,
+    "sorceries": 6,
+    "artifacts": 15,
+    "enchantments": 4,
+    "avgMv": 2.75,
+    "curve": {
+     "1": 3,
+     "2": 25,
+     "3": 20,
+     "4": 9,
+     "5": 6,
+     "6": 0,
+     "7": 0,
+     "8": 0
+    },
+    "roles": {
+     "Land": 33,
+     "Proliferate": 18,
+     "Removal": 12,
+     "Mana Rock": 8,
+     "Counters Payoff": 4,
+     "Ramp": 3,
+     "B3 (Max) add": 2,
+     "Board Wipe": 2,
+     "Card Draw": 2,
+     "Interaction": 2,
+     "Protection": 2,
+     "Recursion": 2,
+     "Value Engine": 2,
+     "Artifact/Enchantment Removal": 1,
+     "Commander": 1,
+     "Defender Ramp": 1,
+     "Discard/Looting": 1,
+     "Drain Payoff": 1,
+     "Finisher": 1,
+     "Reanimation": 1,
+     "Token Producer": 1
+    }
+   },
+   "upgradePath": "There are no Tuned swaps for this deck, so the 100 cards listed here are the Tuned build. Nature's Lore and Ichormoon Gauntlet are already folded into the list. The eight Bracket-3 swaps attack both weak spots directly: Cyclonic Rift is the Game Changer, a one-sided instant wipe that leaves every counter you built standing, Phyrexian Arena and Guardian Project add the repeatable draw the list lacks, Chromatic Lantern and Three Visits fix a four-color mana base, and Pir, Imaginative Rascal and Branching Evolution both make every counter you place count for more."
+  },
+  {
+   "id": "D4",
+   "label": "Felothar",
+   "commander": "Felothar the Steadfast",
+   "nickname": "Big-Butt Defenders",
+   "hook": "Forty creatures that mostly are not allowed to attack, and a commander who fixes both halves of that: they hit for their toughness, and they may swing.",
+   "colorIdentity": [
+    "W",
+    "B",
+    "G"
+   ],
+   "archetype": "Defensive walls turned into attackers",
+   "difficulty": {
+    "tier": "Beginner",
+    "why": "The board builds and defends itself, and the one card that turns defense into offense now starts in the command zone instead of having to be drawn."
+   },
+   "whatItDoes": "You fill the board with 24 defenders that block anything, make mana (Overgrown Battlement, Sylvan Caryatid, Axebane Guardian, Wall of Roots, Saruli Caretaker, Portcullis Vine) and replace themselves (Wall of Omens, Wall of Blossoms, Carven Caryatid). Felothar the Steadfast does two things that no other card in the deck does together: every creature you control assigns combat damage equal to its toughness rather than its power, and they can all attack as though they did not have defender. A 0/13 Tree of Redemption becomes a 13-point attacker that is allowed to attack. His third line -- {3}, {T}, sacrifice another creature, draw cards equal to its toughness and discard equal to its power -- turns the same fat, powerless bodies into a draw engine that costs almost nothing.",
+   "howItWins": "Combat, mostly. Tree of Perdition taps to swap an opponent's life total with its own 13 toughness, and from there a single connection is lethal. Triskaidekaphobia closes the same door without attacking at all: set an opponent to 13 and choose the mode. Otherwise you grind through with Indomitable Ancients, Kami of Old Stone and Belligerent Brontodon while Canopy Gargantuan puts counters equal to each creature's toughness on the whole team every upkeep, and Kin-Tree Invocation makes an X/X the size of your largest butt. Dragonlord Dromoka and Protector of the Wastes fly over a stalled board.",
+   "turns": [
+    {
+     "when": "Turns 1-3",
+     "do": "Curve into mana walls: Portcullis Vine or Saruli Caretaker on one, Wall of Roots or Overgrown Battlement on two, Sylvan Caryatid or Axebane Guardian on three. Wall of Omens, Wall of Blossoms and Carven Caryatid draw a card while they do it, and Jaddi Offshoot turns each land drop into life."
+    },
+    {
+     "when": "Turns 4-6",
+     "do": "Cast Felothar. Four mana off a board that already makes four or more, and the entire plan switches on the turn he lands -- there is no second card to find. Shield-Wall Sentinel tutors whichever defender you are missing. Assault Formation on two, Doran on three and Huatli, the Sun's Heart on three are backup copies of the toughness half, so hold one rather than casting it into an open board."
+    },
+    {
+     "when": "Turns 7+",
+     "do": "Attack with 0/13s. Canopy Gargantuan makes the whole team enormous, Sun Titan rebuilds after a wipe, and Felothar's sacrifice ability draws ten or more cards off one Indomitable Ancients or Tree of Redemption. Wakestone Gargoyle and Walking Bulwark let the defenders swing on a turn Felothar is not on the battlefield."
+    }
+   ],
+   "mulligan": "Keep three or four lands with a green source plus a one- or two-mana mana wall (Portcullis Vine, Saruli Caretaker, Wall of Roots, Overgrown Battlement, Sylvan Caryatid) or a wall that draws. Fifteen cards ramp or fix, so a three-land hand with two of them is better than a five-land hand with none.",
+   "keyCards": [
+    {
+     "name": "Felothar the Steadfast",
+     "why": "Toughness damage and permission to attack, in the command zone, plus a sacrifice outlet that draws cards equal to the sacrificed creature's toughness."
+    },
+    {
+     "name": "Assault Formation",
+     "why": "Two mana, the same toughness-damage effect, and it can push a single defender through for {G} if Felothar has been answered."
+    },
+    {
+     "name": "Doran, the Siege Tower",
+     "why": "Three mana for the toughness half -- and it applies to every creature on the table, so it also shrinks an opposing board of small, fat blockers."
+    },
+    {
+     "name": "Huatli, the Sun's Heart",
+     "why": "A third copy of the toughness effect that cannot be hit by creature removal, and its -3 gains life equal to your largest toughness."
+    },
+    {
+     "name": "Tree of Perdition",
+     "why": "Sets an opponent to 13 life from nowhere, which is one attack, or one Triskaidekaphobia upkeep, from lethal."
+    },
+    {
+     "name": "Axebane Guardian",
+     "why": "With a full wall board it taps for four or five mana of any color, which is how the six- and seven-drops get cast."
+    },
+    {
+     "name": "Canopy Gargantuan",
+     "why": "Every upkeep, each other creature gets +1/+1 counters equal to its own toughness -- on a board of walls that doubles the damage."
+    },
+    {
+     "name": "Betor, Ancestor's Voice",
+     "why": "Still in the 99 after the seat change: turns the deck's lifegain into +1/+1 counters at your end step, which is more toughness, which is more damage."
+    }
+   ],
+   "watchFor": [
+    "Felothar carries the plan, and he gets more expensive every time he dies. Assault Formation, Doran, Huatli and Belligerent Brontodon are four more copies of the toughness half and Wakestone Gargoyle and Walking Bulwark cover the permission half, but hold Guardian of Faith, Shalai, Voice of Plenty or Soul of New Phyrexia when you can rather than tapping out into an open board.",
+    "Ritual of Soot is your own four-mana wipe and it kills 22 of your 40 creatures. Slaughter the Strong, Fell the Mighty and Wave of Reckoning are the three wipes a board of 0-power walls walks away from; those are the ones to cast when you are behind.",
+    "Betor is still in the deck at five mana, and half his text needs you to have lost life that turn. This deck gains it. Painful Truths, Feed the Swarm, Anguished Unmaking, Wall of Blood and Caves of Koilos are the five cards that switch the reanimate half on.",
+    "35 lands against an average mana value of 3.18 is tight for a deck with four cards costing six or more, and Blossoming Sands, Sandsteppe Citadel, Radiant Grove, Krosan Verge, Myriad Landscape and Path of Ancestry all enter tapped. Ash Barrens is the fixer that does not cost you the turn."
+   ],
+   "shape": {
+    "lands": 35,
+    "creatures": 40,
+    "planeswalkers": 2,
+    "battles": 0,
+    "instants": 7,
+    "sorceries": 10,
+    "artifacts": 3,
+    "enchantments": 3,
+    "avgMv": 3.18,
+    "curve": {
+     "1": 6,
+     "2": 18,
+     "3": 17,
+     "4": 14,
+     "5": 4,
+     "6": 4,
+     "7": 2,
+     "8": 0
+    },
+    "roles": {
+     "Land": 33,
+     "Removal": 8,
+     "Utility Creature": 7,
+     "Defender Ramp": 6,
+     "Toughness Payoff": 5,
+     "Board Wipe": 4,
+     "Card Draw": 4,
+     "Finisher": 4,
+     "Protection": 4,
+     "Ramp": 4,
+     "Lifegain": 3,
+     "Mana Rock": 3,
+     "B3 (Max) add": 2,
+     "Combat Trick": 2,
+     "Counters Payoff": 2,
+     "Flexible Fixing": 2,
+     "Token Producer": 2,
+     "Commander": 1,
+     "Evasion": 1,
+     "Haste Enabler": 1,
+     "Recursion": 1,
+     "Tutor": 1
+    }
+   },
+   "upgradePath": "There are no Tuned swaps for this deck, so the 100 cards listed here are the Tuned build; Doran, the Siege Tower and Phyrexian Arena are already folded into it. The eight Bracket-3 swaps aim at the two things that still beat it. Guardian Project and Spidersilk Armor turn 40 creatures into a draw engine and give every one of them another point of toughness -- which on this deck is another point of damage. Aura Shards is the Game Changer: with 41 creatures entering, every wall destroys an artifact or an enchantment. Heroic Intervention and The Meathook Massacre replace the two cards that most often hurt you, Guardian of Faith and your own Ritual of Soot, and Kodama's Reach and Command Tower fix a mana base that enters tapped too often."
+  },
+  {
+   "id": "D5",
+   "label": "Shadrix",
+   "commander": "Shadrix Silverquill",
+   "nickname": "Orzhov Token Drain",
+   "hook": "Make white and black tokens, sacrifice them, and drain all three opponents one point at a time.",
+   "colorIdentity": [
+    "W",
+    "B"
+   ],
+   "archetype": "Token aristocrats with drain payoffs",
+   "difficulty": {
+    "tier": "Intermediate",
+    "why": "The plan is simple, but Shadrix's combat trigger forces you to hand one of two gifts to an opponent every single turn."
+   },
+   "whatItDoes": "Twelve cards make creature tokens - Spectral Procession, Lingering Souls, Raise the Alarm, Clachan Festival, Ministrant of Obligation, Ophiomancer, Dreadhorde Invasion, Hidden Stockpile and more - and six drain payoffs turn those bodies into damage. Corpse Knight and Elas il-Kor, Sadistic Pilgrim drain when creatures enter; Cruel Celebrant, Zulaport Cutthroat, Nadier's Nightblade and Bastion of Remembrance drain when they die. Four sacrifice outlets (Viscera Seer, Zack Fair, Village Rites, Deadly Dispute) let you cash the board in whenever you want.",
+   "howItWins": "Death triggers, not combat. With Cruel Celebrant, Zulaport Cutthroat and Bastion of Remembrance on the table, your own Day of Judgment or Promise of Loyalty drains every opponent for the size of your board, and Teysa Karlov doubles all of those triggers.",
+   "turns": [
+    {
+     "when": "Turns 1-3",
+     "do": "Arcane Signet, Coldsteel Heart, Orzhov Signet, Prismatic Lens or Mind Stone, then a cheap drain body on two: Corpse Knight, Cruel Celebrant, Elas il-Kor, Sadistic Pilgrim or Zulaport Cutthroat. Viscera Seer on one is the free sacrifice outlet you want down early."
+    },
+    {
+     "when": "Turns 4-6",
+     "do": "Pour tokens into the payoffs. Spectral Procession costs three white mana for three fliers, Lingering Souls gives four bodies across two casts, and Raise the Alarm goes at instant speed. Teysa Karlov on four doubles every death trigger. Shadrix Silverquill on five gives you a mode every combat."
+    },
+    {
+     "when": "Turns 7+",
+     "do": "Equip Skullclamp to 1/1 tokens for two cards each, then sacrifice the board with the drain payoffs out. If the board is even and you have two or more payoffs down, Day of Judgment or Promise of Loyalty is a win condition rather than a reset."
+    }
+   ],
+   "mulligan": "Keep three or four lands with both colors plus a two-mana drain creature or a cheap token maker; with 42 lands, a hand of five lands and one spell should be shipped.",
+   "keyCards": [
+    {
+     "name": "Shadrix Silverquill",
+     "why": "A 2/5 flier with double strike whose combat trigger hands out two of three modes each turn - one for you, one for an opponent."
+    },
+    {
+     "name": "Teysa Karlov",
+     "why": "Doubles every death trigger in the deck and gives your tokens vigilance and lifelink."
+    },
+    {
+     "name": "Bastion of Remembrance",
+     "why": "An enchantment version of the drain payoff, so board wipes cannot remove it."
+    },
+    {
+     "name": "Cruel Celebrant",
+     "why": "Two mana, drains for every creature or planeswalker you lose, and cheap enough to recast right after a sweeper."
+    },
+    {
+     "name": "Skullclamp",
+     "why": "On a 1/1 token it kills the token and draws two, which also turns on every death trigger you control."
+    },
+    {
+     "name": "Spectral Procession",
+     "why": "Three fliers for three white mana - the single best token spell in the list."
+    },
+    {
+     "name": "Viscera Seer",
+     "why": "The only free, repeatable sacrifice outlet, which is what makes the drain payoffs work on demand."
+    },
+    {
+     "name": "Requiem Angel",
+     "why": "Every non-Spirit creature you lose becomes a 1/1 flying Spirit, so a wipe leaves you with a board."
+    }
+   ],
+   "watchFor": [
+    "35 lands against an average mana value of 2.85, and only one card in the deck ramps. Two colors and a cheap curve carry it, but a hand that misses its third land drop stays stuck for a long time.",
+    "Viscera Seer is the only free repeatable sacrifice outlet. Village Rites and Deadly Dispute are one-shots, Zack Fair sacrifices only itself, and Hidden Stockpile costs {1} each activation.",
+    "Shadrix makes you choose two modes on two different players, so an opponent gets a 2/1 flier, a card, or counters every combat. Give the draw-and-lose-1-life mode to whoever is furthest behind.",
+    "Only 31 of the 100 cards are creatures, and 14 of the token makers are what keep the board wide. If those get answered, the seven drain payoffs have nothing to eat."
+   ],
+   "shape": {
+    "lands": 35,
+    "creatures": 31,
+    "planeswalkers": 1,
+    "battles": 0,
+    "instants": 13,
+    "sorceries": 7,
+    "artifacts": 7,
+    "enchantments": 6,
+    "avgMv": 2.85,
+    "curve": {
+     "1": 5,
+     "2": 26,
+     "3": 16,
+     "4": 12,
+     "5": 4,
+     "6": 2,
+     "7": 0,
+     "8": 0
+    },
+    "roles": {
+     "Land": 35,
+     "Token Producer": 14,
+     "Removal": 8,
+     "Drain Payoff": 7,
+     "Card Draw": 5,
+     "Mana Rock": 5,
+     "Sacrifice Outlet": 5,
+     "Lord/Anthem": 3,
+     "Tuned add": 3,
+     "B3 (Max) add": 2,
+     "Board Wipe": 2,
+     "Utility Creature": 2,
+     "Artifact/Enchantment Removal": 1,
+     "Card Advantage": 1,
+     "Combat Trick": 1,
+     "Commander": 1,
+     "Counters Payoff": 1,
+     "Protection": 1,
+     "Ramp": 1,
+     "Stax/Tax": 1,
+     "Value Engine": 1
+    }
+   },
+   "upgradePath": "The four Tuned swaps are already applied in this list: Skullclamp, Teysa Karlov, Mentor of the Meek and Night's Whisper took the slots of Suture Priest, Prideful Feastling, Hemlock Vial and Lake-town Lookout. Blood Artist and Pitiless Plunderer are already folded into the list. The seven Bracket-3 swaps add exactly what is thin: Smothering Tithe is the Game Changer, and it pairs with Shadrix specifically - he hands opponents cards every combat, and each one is a Treasure for you. Dictate of Erebos turns every sacrifice into a table-wide edict, Ashnod's Altar makes tokens worth two mana each, Elenda, the Dusk Rose is a threat that dies into a Vampire army, Black Market Connections adds a card or a body every upkeep, and Concealed Courtyard fixes the early turns."
+  },
+  {
+   "id": "D6",
+   "label": "Krenko",
+   "commander": "Krenko, Mob Boss",
+   "nickname": "Goblin Swarm",
+   "hook": "Tap the commander, double the Goblins. Do it twice and the board is bigger than anyone can block.",
+   "colorIdentity": [
+    "R"
+   ],
+   "archetype": "Mono-red Goblin tokens",
+   "difficulty": {
+    "tier": "Beginner",
+    "why": "One color, cheap spells, and one thing to do each turn -- add Goblins, then tap Krenko. The only real decision is when to sacrifice the board for damage."
+   },
+   "whatItDoes": "Twenty-four of the 29 creature cards are Goblins and 17 cards make tokens. Krenko, Mob Boss taps to create a 1/1 Goblin for every Goblin you already control, so four Goblins becomes eight, eight becomes sixteen. Purphoros, God of the Forge -- still in the deck after the seat change, now as a card in the 99 -- deals 2 damage to each opponent every time another creature you control enters, and Impact Tremors and Witty Roastmaster each add a point. One Krenko activation into eight new tokens with Purphoros on the battlefield is 16 damage to every opponent before combat.",
+   "howItWins": "Two ways, and often without attacking. Either the entering triggers do it -- Purphoros, Impact Tremors and Witty Roastmaster turning each Krenko tap into a burn spell aimed at the table -- or you sacrifice the swarm: Goblin Bombardment and Barrage of Expendables convert every Goblin into a point of damage at instant speed, and Siege-Gang Commander turns each one into two. When you do attack, Goblin Chieftain, Rundvelt Hordemaster, Goblin Trashmaster and Patchwork Banner all pump the team, and Shared Animosity makes a swarm of 1/1s lethal on its own.",
+   "turns": [
+    {
+     "when": "Turns 1-3",
+     "do": "Sol Ring, Arcane Signet or Mind Stone, then a one-drop: Skirk Prospector, Fanatical Firebrand or Foundry Street Denizen. Impact Tremors on two is worth playing before any token spell, and Quest for the Goblin Lord starts counting from the first Goblin."
+    },
+    {
+     "when": "Turns 4-6",
+     "do": "Krenko on four, then protect him or give him haste -- Swiftfoot Boots, Thousand-Year Elixir, Goblin Warchief and Goblin Chieftain all let him tap the turn he lands, and the Elixir untaps him for a second activation. Goblin Matron tutors whichever Goblin the board is missing and Goblin Ringleader refills your hand with up to four more."
+    },
+    {
+     "when": "Turns 7+",
+     "do": "Tap Krenko, then tap him again. Thornbite Staff on Krenko untaps him every time a creature dies, so with Skirk Prospector or Goblin Bombardment as the outlet the loop makes as many Goblins as you have mana and patience for. Then either swing with Shared Animosity or sacrifice the board through Goblin Bombardment for the same damage at instant speed."
+    }
+   ],
+   "mulligan": "Keep three or four lands with a one- or two-mana play. A hand with Impact Tremors or a mana rock plus two token spells is a fine keep on three lands; a hand whose only action is Krenko is not, because he does nothing the turn he arrives without help.",
+   "keyCards": [
+    {
+     "name": "Krenko, Mob Boss",
+     "why": "Taps to double the Goblin count, and every token he makes is another Purphoros and Impact Tremors trigger."
+    },
+    {
+     "name": "Purphoros, God of the Forge",
+     "why": "2 damage to each opponent per creature entering. He is the reason a Krenko activation is lethal rather than merely large."
+    },
+    {
+     "name": "Thousand-Year Elixir",
+     "why": "Krenko taps the turn he lands, and untaps for a second activation the same turn."
+    },
+    {
+     "name": "Thornbite Staff",
+     "why": "Equipped to Krenko, every creature death untaps him -- with a free sacrifice outlet that is as many activations as you have mana for."
+    },
+    {
+     "name": "Skirk Prospector",
+     "why": "Sacrifices a Goblin for red mana, which both fuels the Thornbite loop and turns spare tokens into real spells."
+    },
+    {
+     "name": "Goblin Bombardment",
+     "why": "No mana, no tap: every Goblin on the board is a point of damage at instant speed, which is how you win through a wipe."
+    },
+    {
+     "name": "Shared Animosity",
+     "why": "Each attacking Goblin gets +1/+0 for every other attacking Goblin. Ten 1/1s attack as ten 10/1s."
+    },
+    {
+     "name": "Siege-Gang Commander",
+     "why": "Three tokens on arrival, then turns each spare Goblin into 2 damage anywhere."
+    }
+   ],
+   "watchFor": [
+    "Krenko does nothing the turn he lands unless you give him haste or he survives a rotation. Swiftfoot Boots, Thousand-Year Elixir, Goblin Warchief, Goblin Chieftain and Ogre Battledriver are the five cards that fix that; without one, casting him into three untapped opponents is handing them a free removal spell.",
+    "Blasphemous Act deals 13 damage to every creature, including your entire board. It costs {1} less per creature on the battlefield, so it is usually a one-mana wipe when your own swarm is out -- cast it when you are behind, not when you are ahead, and remember Purphoros survives it.",
+    "Interaction is thin: Abrade, Cathartic Pyre, Combustion Technique and Purphoros's Intervention answer creatures, Vandalblast and Siege Smash answer artifacts, and Chaos Warp is the only card in the deck that can answer an opposing enchantment.",
+    "35 lands, 32 of them Mountains, against an average mana value of 2.69 -- you will flood. Skullclamp, Light Up the Stage, Outpost Siege and Gundabad Opportunist are the cards that turn a flooded board into new cards; Faithless Looting and Gristle Glutton only trade one card for another."
+   ],
+   "shape": {
+    "lands": 35,
+    "creatures": 29,
+    "planeswalkers": 0,
+    "battles": 0,
+    "instants": 8,
+    "sorceries": 11,
+    "artifacts": 10,
+    "enchantments": 7,
+    "avgMv": 2.69,
+    "curve": {
+     "1": 10,
+     "2": 20,
+     "3": 22,
+     "4": 10,
+     "5": 2,
+     "6": 0,
+     "7": 0,
+     "8": 1
+    },
+    "roles": {
+     "Land": 35,
+     "Token Producer": 17,
+     "Burn": 7,
+     "Removal": 5,
+     "Tuned add": 5,
+     "Haste Enabler": 3,
+     "Lord/Anthem": 3,
+     "Mana Rock": 3,
+     "Sacrifice Outlet": 3,
+     "Artifact/Enchantment Removal": 2,
+     "Card Advantage": 2,
+     "Card Draw": 2,
+     "Discard/Looting": 2,
+     "Ramp": 2,
+     "Tutor": 2,
+     "B3 (Max) add": 1,
+     "Board Wipe": 1,
+     "Commander": 1,
+     "Cost Reducer": 1,
+     "Protection": 1,
+     "Value Engine": 1,
+     "Wheel": 1
+    }
+   },
+   "upgradePath": "The five Tuned swaps are already applied here: Conspicuous Snoop, Goblin Chieftain, Goblin Trashmaster, Shared Animosity and Rundvelt Hordemaster took the slots of Voldaren Epicure, Cinder Strike, Tweeze, Alexios and Burning Curiosity. The seven Bracket-3 swaps push it from a deck that wins on turn nine to one that can win on turn six. Jeska's Will is the Game Changer -- mana equal to the largest hand at the table plus three impulse cards, which is the turn Krenko taps twice. Muxus, Goblin Grandee drops three or four Goblins off the top for free, Lightning Greaves means Krenko activates the turn he lands and cannot be targeted, and Skirk Fire Marshal taps five Goblins for 10 damage to every opponent when the board is walled off and combat is not an option."
+  }
+ ]
 }

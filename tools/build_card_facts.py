@@ -9,6 +9,12 @@ the six real decks run plenty of cards the fifty variants never did.
 So this writes a trimmed catalog: only the names in master-v2, only the fields
 the popup shows. Local catalog first, Scryfall for the rest.
 
+"The names in master-v2" is not only its card rows. Each deck also carries an
+Upgrades and a B3 sheet, and the viewer renders both as clickable card links --
+a B3 add is usually a card he does not own yet, so it has no row of its own.
+Twenty such names had no facts at all and their popups opened empty. They are
+collected here alongside the rows.
+
 Scryfall is reachable from this container with curl only -- urllib and requests
 both fail on the proxy -- so the fetch shells out.
 """
@@ -106,21 +112,52 @@ def fetch(names):
     return found, missing
 
 
+def wanted(master):
+    """Every name the viewer can turn into a card link, in a stable order."""
+    names, seen = [], set()
+
+    def add(name):
+        if not name:
+            return
+        k = key(name)
+        if k in seen:
+            return
+        seen.add(k)
+        names.append(name)
+
+    for card in master["cards"]:
+        add(card["name"])
+    # The swap sheets name cards on both sides. The add is the one that usually
+    # has no row -- it is not in the box yet -- but a replaced card can be
+    # missing too when the swap predates the row it displaced.
+    for deck in master["decks"]:
+        for entry in deck.get("upgrades") or []:
+            add(entry.get("card"))
+            add(entry.get("replaces"))
+        for entry in deck.get("b3") or []:
+            add(entry.get("add"))
+            add(entry.get("replaces"))
+    return names
+
+
 def main():
     master = json.load(open(os.path.join(ROOT, "data", "master-v2.json"), encoding="utf-8"))
     catalog = json.load(open(os.path.join(ROOT, "data", "cards.json"), encoding="utf-8"))["cards"]
     local = {key(v["name"]): v for v in catalog}
 
+    names = wanted(master)
     facts, need = {}, []
-    for card in master["cards"]:
-        hit = local.get(key(card["name"]))
+    for name in names:
+        hit = local.get(key(name))
         if hit:
-            facts[card["name"]] = from_local(hit)
+            facts[name] = from_local(hit)
         else:
-            need.append(card["name"])
+            need.append(name)
 
-    print("{0} names: {1} from the local catalog, {2} to fetch".format(
-        len(master["cards"]), len(facts), len(need)))
+    print("{0} names ({1} card rows, {2} from the swap sheets): {3} from the "
+          "local catalog, {4} to fetch".format(
+              len(names), len(master["cards"]), len(names) - len(master["cards"]),
+              len(facts), len(need)))
     if need:
         found, missing = fetch(need)
         for name in need:
@@ -130,6 +167,13 @@ def main():
         if missing:
             print("  not found on Scryfall ({0}): {1}".format(
                 len(missing), ", ".join(sorted(set(missing))[:12])))
+
+    # Every name the viewer can link must resolve, or a popup opens empty. A
+    # gap here is a data error, not a cosmetic one, so it stops the run.
+    unresolved = [n for n in names if n not in facts]
+    if unresolved:
+        raise SystemExit("no facts for {0} name(s): {1}".format(
+            len(unresolved), ", ".join(sorted(unresolved))))
 
     # A card with no image is worse than useless in a picture popup, so say how
     # many there are rather than letting them fail silently in the browser.

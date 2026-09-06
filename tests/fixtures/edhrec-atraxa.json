@@ -1,0 +1,1087 @@
+{
+ "container": {
+  "json_dict": {
+   "cardlists": [
+    {
+     "header": "New Cards",
+     "tag": "newcards",
+     "cardviews": [
+      {
+       "name": "Gleaming Splendor",
+       "sanitized": "gleaming-splendor",
+       "synergy": -0.08156208119899505,
+       "num_decks": 93,
+       "potential_decks": 4424
+      },
+      {
+       "name": "The Theorist, Jace Beleren",
+       "sanitized": "the-theorist-jace-beleren",
+       "synergy": 0.006112451289664133,
+       "num_decks": 90,
+       "potential_decks": 5389
+      },
+      {
+       "name": "Worzel, the Protector",
+       "sanitized": "worzel-the-protector",
+       "synergy": 0.004344101461538444,
+       "num_decks": 39,
+       "potential_decks": 3831
+      },
+      {
+       "name": "Feroz, Ulgrotha's Warden",
+       "sanitized": "feroz-ulgrothas-warden",
+       "synergy": 0.0026707620789259553,
+       "num_decks": 27,
+       "potential_decks": 3831
+      },
+      {
+       "name": "Chandra, Chill of Compliance",
+       "sanitized": "chandra-chill-of-compliance",
+       "synergy": 0.0026218082759664908,
+       "num_decks": 75,
+       "potential_decks": 11322
+      }
+     ]
+    },
+    {
+     "header": "High Synergy Cards",
+     "tag": "highsynergycards",
+     "cardviews": [
+      {
+       "name": "Tekuthal, Inquiry Dominus",
+       "sanitized": "tekuthal-inquiry-dominus",
+       "synergy": 0.2732084296689031,
+       "num_decks": 29355,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Evolution Sage",
+       "sanitized": "evolution-sage",
+       "synergy": 0.2412852934313282,
+       "num_decks": 26114,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Karn's Bastion",
+       "sanitized": "karns-bastion",
+       "synergy": 0.23780398239301098,
+       "num_decks": 26347,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Ezuri, Stalker of Spheres",
+       "sanitized": "ezuri-stalker-of-spheres",
+       "synergy": 0.21678657518145666,
+       "num_decks": 23520,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Vraska, Betrayal's Sting",
+       "sanitized": "vraska-betrayals-sting",
+       "synergy": 0.20887657731472714,
+       "num_decks": 23254,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Inexorable Tide",
+       "sanitized": "inexorable-tide",
+       "synergy": 0.20858452230567626,
+       "num_decks": 22186,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Thrummingbird",
+       "sanitized": "thrummingbird",
+       "synergy": 0.19968758673138837,
+       "num_decks": 22477,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Tezzeret's Gambit",
+       "sanitized": "tezzerets-gambit",
+       "synergy": 0.1980703618243444,
+       "num_decks": 21318,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Flux Channeler",
+       "sanitized": "flux-channeler",
+       "synergy": 0.17281153770142527,
+       "num_decks": 17815,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Vorinclex, Monstrous Raider",
+       "sanitized": "vorinclex-monstrous-raider",
+       "synergy": 0.16375012245410048,
+       "num_decks": 18551,
+       "potential_decks": 44172
+      }
+     ]
+    },
+    {
+     "header": "Top Cards",
+     "tag": "topcards",
+     "cardviews": [
+      {
+       "name": "Swords to Plowshares",
+       "sanitized": "swords-to-plowshares",
+       "synergy": -0.02482064694164554,
+       "num_decks": 24493,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Farseek",
+       "sanitized": "farseek",
+       "synergy": 0.06432240164929348,
+       "num_decks": 20563,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Prologue to Phyresis",
+       "sanitized": "prologue-to-phyresis",
+       "synergy": 0.15987848904223356,
+       "num_decks": 17921,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Cultivate",
+       "sanitized": "cultivate",
+       "synergy": 0.07374216912826315,
+       "num_decks": 17291,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Counterspell",
+       "sanitized": "counterspell",
+       "synergy": 0.05359601340351383,
+       "num_decks": 16536,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Infectious Inquiry",
+       "sanitized": "infectious-inquiry",
+       "synergy": 0.1473571381488388,
+       "num_decks": 16413,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Vraska's Fall",
+       "sanitized": "vraskas-fall",
+       "synergy": 0.14325986973164917,
+       "num_decks": 16096,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Path to Exile",
+       "sanitized": "path-to-exile",
+       "synergy": 0.033605524649822804,
+       "num_decks": 15864,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Bloated Contaminator",
+       "sanitized": "bloated-contaminator",
+       "synergy": 0.14031527404609193,
+       "num_decks": 15484,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Venerated Rotpriest",
+       "sanitized": "venerated-rotpriest",
+       "synergy": 0.1365200736115816,
+       "num_decks": 15313,
+       "potential_decks": 44172
+      }
+     ]
+    },
+    {
+     "header": "Game Changers",
+     "tag": "gamechangers",
+     "cardviews": [
+      {
+       "name": "Rhystic Study",
+       "sanitized": "rhystic-study",
+       "synergy": -0.1062495060354317,
+       "num_decks": 12560,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Cyclonic Rift",
+       "sanitized": "cyclonic-rift",
+       "synergy": -0.054256969494377694,
+       "num_decks": 11262,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Demonic Tutor",
+       "sanitized": "demonic-tutor",
+       "synergy": -0.11698976051698104,
+       "num_decks": 10192,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Teferi's Protection",
+       "sanitized": "teferis-protection",
+       "synergy": 0.05042124669558676,
+       "num_decks": 9998,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Smothering Tithe",
+       "sanitized": "smothering-tithe",
+       "synergy": -0.11194487304240228,
+       "num_decks": 9662,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Farewell",
+       "sanitized": "farewell",
+       "synergy": 0.041375700049259806,
+       "num_decks": 8840,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Narset, Parter of Veils",
+       "sanitized": "narset-parter-of-veils",
+       "synergy": 0.05793750611926256,
+       "num_decks": 7144,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Vampiric Tutor",
+       "sanitized": "vampiric-tutor",
+       "synergy": -0.12897605302918572,
+       "num_decks": 6926,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Fierce Guardianship",
+       "sanitized": "fierce-guardianship",
+       "synergy": -0.10147610945113314,
+       "num_decks": 6302,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Enlightened Tutor",
+       "sanitized": "enlightened-tutor",
+       "synergy": -0.13752340087934334,
+       "num_decks": 4792,
+       "potential_decks": 44172
+      }
+     ]
+    },
+    {
+     "header": "Creatures",
+     "tag": "creatures",
+     "cardviews": [
+      {
+       "name": "Cankerbloom",
+       "sanitized": "cankerbloom",
+       "synergy": 0.12477826128758981,
+       "num_decks": 14585,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Ichor Rats",
+       "sanitized": "ichor-rats",
+       "synergy": 0.13507519440258298,
+       "num_decks": 14273,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Birds of Paradise",
+       "sanitized": "birds-of-paradise",
+       "synergy": -0.13336333507563208,
+       "num_decks": 13908,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Dreamtide Whale",
+       "sanitized": "dreamtide-whale",
+       "synergy": 0.131233012398136,
+       "num_decks": 13857,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Deepglow Skate",
+       "sanitized": "deepglow-skate",
+       "synergy": 0.12627507003149033,
+       "num_decks": 13549,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Skrelv, Defector Mite",
+       "sanitized": "skrelv-defector-mite",
+       "synergy": 0.11161581386493866,
+       "num_decks": 13389,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Blighted Agent",
+       "sanitized": "blighted-agent",
+       "synergy": 0.12589827309000096,
+       "num_decks": 13187,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Metastatic Evangel",
+       "sanitized": "metastatic-evangel",
+       "synergy": 0.12061302146392777,
+       "num_decks": 13164,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Ixhel, Scion of Atraxa",
+       "sanitized": "ixhel-scion-of-atraxa",
+       "synergy": 0.11218809214214187,
+       "num_decks": 12990,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Contaminant Grafter",
+       "sanitized": "contaminant-grafter",
+       "synergy": 0.1050032304749183,
+       "num_decks": 11472,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Voidwing Hybrid",
+       "sanitized": "voidwing-hybrid",
+       "synergy": 0.10377848292245462,
+       "num_decks": 11461,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Skithiryx, the Blight Dragon",
+       "sanitized": "skithiryx-the-blight-dragon",
+       "synergy": 0.10403346835632052,
+       "num_decks": 11184,
+       "potential_decks": 44172
+      }
+     ]
+    },
+    {
+     "header": "Instants",
+     "tag": "instants",
+     "cardviews": [
+      {
+       "name": "Experimental Augury",
+       "sanitized": "experimental-augury",
+       "synergy": 0.13280200382666799,
+       "num_decks": 14823,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Infectious Bite",
+       "sanitized": "infectious-bite",
+       "synergy": 0.11782409504440333,
+       "num_decks": 13141,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Heroic Intervention",
+       "sanitized": "heroic-intervention",
+       "synergy": 0.05039325030198308,
+       "num_decks": 10341,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Atomize",
+       "sanitized": "atomize",
+       "synergy": 0.08446940307213636,
+       "num_decks": 9005,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Assassin's Trophy",
+       "sanitized": "assassins-trophy",
+       "synergy": -0.00964908706580983,
+       "num_decks": 8384,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Ripples of Potential",
+       "sanitized": "ripples-of-potential",
+       "synergy": 0.06781802988586445,
+       "num_decks": 7670,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Mana Drain",
+       "sanitized": "mana-drain",
+       "synergy": -0.017730683616393406,
+       "num_decks": 7057,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Radstorm",
+       "sanitized": "radstorm",
+       "synergy": 0.06080541408529659,
+       "num_decks": 6346,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Anguished Unmaking",
+       "sanitized": "anguished-unmaking",
+       "synergy": 0.02125898655203251,
+       "num_decks": 6275,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Tainted Strike",
+       "sanitized": "tainted-strike",
+       "synergy": 0.05421126852019728,
+       "num_decks": 5809,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Reject Imperfection",
+       "sanitized": "reject-imperfection",
+       "synergy": 0.04621286938423133,
+       "num_decks": 5571,
+       "potential_decks": 44172
+      },
+      {
+       "name": "An Offer You Can't Refuse",
+       "sanitized": "an-offer-you-cant-refuse",
+       "synergy": -0.11089810076036774,
+       "num_decks": 5152,
+       "potential_decks": 44172
+      }
+     ]
+    },
+    {
+     "header": "Sorceries",
+     "tag": "sorceries",
+     "cardviews": [
+      {
+       "name": "Unnatural Restoration",
+       "sanitized": "unnatural-restoration",
+       "synergy": 0.12371018016756777,
+       "num_decks": 14160,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Phyresis Outbreak",
+       "sanitized": "phyresis-outbreak",
+       "synergy": 0.12265526990604977,
+       "num_decks": 13360,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Nature's Lore",
+       "sanitized": "natures-lore",
+       "synergy": 0.019738863162454545,
+       "num_decks": 12895,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Drown in Ichor",
+       "sanitized": "drown-in-ichor",
+       "synergy": 0.10236851830761035,
+       "num_decks": 11481,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Three Visits",
+       "sanitized": "three-visits",
+       "synergy": 0.015134967655341197,
+       "num_decks": 10493,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Contentious Plan",
+       "sanitized": "contentious-plan",
+       "synergy": 0.09507416914568662,
+       "num_decks": 9966,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Thirsting Roots",
+       "sanitized": "thirsting-roots",
+       "synergy": 0.07291626518956969,
+       "num_decks": 8568,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Kodama's Reach",
+       "sanitized": "kodamas-reach",
+       "synergy": 0.020195724878405014,
+       "num_decks": 8322,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Rampant Growth",
+       "sanitized": "rampant-growth",
+       "synergy": 0.011375717995960183,
+       "num_decks": 7938,
+       "potential_decks": 44172
+      },
+      {
+       "name": "White Sun's Twilight",
+       "sanitized": "white-suns-twilight",
+       "synergy": 0.055562839804534817,
+       "num_decks": 7263,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Expansion Algorithm",
+       "sanitized": "expansion-algorithm",
+       "synergy": 0.06147108553836653,
+       "num_decks": 2065,
+       "potential_decks": 13571
+      },
+      {
+       "name": "Supreme Verdict",
+       "sanitized": "supreme-verdict",
+       "synergy": 0.03042738891936843,
+       "num_decks": 6399,
+       "potential_decks": 44172
+      }
+     ]
+    },
+    {
+     "header": "Utility Artifacts",
+     "tag": "utilityartifacts",
+     "cardviews": [
+      {
+       "name": "Contagion Engine",
+       "sanitized": "contagion-engine",
+       "synergy": 0.12043937107289415,
+       "num_decks": 12502,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Lightning Greaves",
+       "sanitized": "lightning-greaves",
+       "synergy": 0.06563751037919419,
+       "num_decks": 10950,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Ichormoon Gauntlet",
+       "sanitized": "ichormoon-gauntlet",
+       "synergy": 0.09009108303870797,
+       "num_decks": 9508,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Swiftfoot Boots",
+       "sanitized": "swiftfoot-boots",
+       "synergy": 0.032717317891606756,
+       "num_decks": 7998,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Contagion Clasp",
+       "sanitized": "contagion-clasp",
+       "synergy": 0.06851557245978675,
+       "num_decks": 7220,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Sword of Truth and Justice",
+       "sanitized": "sword-of-truth-and-justice",
+       "synergy": 0.06275490424914387,
+       "num_decks": 6670,
+       "potential_decks": 44172
+      },
+      {
+       "name": "The Chain Veil",
+       "sanitized": "the-chain-veil",
+       "synergy": 0.06068801237112417,
+       "num_decks": 6202,
+       "potential_decks": 44172
+      },
+      {
+       "name": "The Ozolith",
+       "sanitized": "the-ozolith",
+       "synergy": 0.027153823560352064,
+       "num_decks": 4400,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Insight Engine",
+       "sanitized": "insight-engine",
+       "synergy": 0.03525392014509098,
+       "num_decks": 2534,
+       "potential_decks": 29128
+      },
+      {
+       "name": "The One Ring",
+       "sanitized": "the-one-ring",
+       "synergy": -0.1055454904860066,
+       "num_decks": 3693,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Norn's Annex",
+       "sanitized": "norns-annex",
+       "synergy": 0.029673885687881436,
+       "num_decks": 3576,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Grafted Exoskeleton",
+       "sanitized": "grafted-exoskeleton",
+       "synergy": 0.030916613217858657,
+       "num_decks": 3407,
+       "potential_decks": 44172
+      }
+     ]
+    },
+    {
+     "header": "Enchantments",
+     "tag": "enchantments",
+     "cardviews": [
+      {
+       "name": "Brokers Ascendancy",
+       "sanitized": "brokers-ascendancy",
+       "synergy": 0.12808772807978425,
+       "num_decks": 14364,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Doubling Season",
+       "sanitized": "doubling-season",
+       "synergy": 0.12845175119335345,
+       "num_decks": 14295,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Norn's Decree",
+       "sanitized": "norns-decree",
+       "synergy": 0.10229544287790862,
+       "num_decks": 11419,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Innkeeper's Talent",
+       "sanitized": "innkeepers-talent",
+       "synergy": 0.07854701030531208,
+       "num_decks": 8988,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Phyrexian Arena",
+       "sanitized": "phyrexian-arena",
+       "synergy": 0.04838385097698922,
+       "num_decks": 8568,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Oath of Teferi",
+       "sanitized": "oath-of-teferi",
+       "synergy": 0.08046934977364918,
+       "num_decks": 8385,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Skrelv's Hive",
+       "sanitized": "skrelvs-hive",
+       "synergy": 0.06034888628813202,
+       "num_decks": 7241,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Hardened Scales",
+       "sanitized": "hardened-scales",
+       "synergy": 0.03593582107556485,
+       "num_decks": 6049,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Ghostly Prison",
+       "sanitized": "ghostly-prison",
+       "synergy": 0.03535783060689676,
+       "num_decks": 5916,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Propaganda",
+       "sanitized": "propaganda",
+       "synergy": 0.027883377585719626,
+       "num_decks": 5414,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Mystic Remora",
+       "sanitized": "mystic-remora",
+       "synergy": -0.16336440609431943,
+       "num_decks": 4812,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Oath of Nissa",
+       "sanitized": "oath-of-nissa",
+       "synergy": 0.04540377957601879,
+       "num_decks": 4652,
+       "potential_decks": 44172
+      }
+     ]
+    },
+    {
+     "header": "Planeswalkers",
+     "tag": "planeswalkers",
+     "cardviews": [
+      {
+       "name": "Tamiyo, Field Researcher",
+       "sanitized": "tamiyo-field-researcher",
+       "synergy": 0.11408423562434988,
+       "num_decks": 12139,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Ajani, Sleeper Agent",
+       "sanitized": "ajani-sleeper-agent",
+       "synergy": 0.09287615504860394,
+       "num_decks": 10015,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Teferi, Master of Time",
+       "sanitized": "teferi-master-of-time",
+       "synergy": 0.07016599991002784,
+       "num_decks": 7425,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Oko, Thief of Crowns",
+       "sanitized": "oko-thief-of-crowns",
+       "synergy": 0.0512241090905651,
+       "num_decks": 7218,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Teferi, Hero of Dominaria",
+       "sanitized": "teferi-hero-of-dominaria",
+       "synergy": 0.05813128458391702,
+       "num_decks": 6393,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Teferi, Temporal Archmage",
+       "sanitized": "teferi-temporal-archmage",
+       "synergy": 0.060558891369802206,
+       "num_decks": 6231,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Ugin, the Spirit Dragon",
+       "sanitized": "ugin-the-spirit-dragon",
+       "synergy": 0.055821527032226634,
+       "num_decks": 5982,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Elspeth, Sun's Champion",
+       "sanitized": "elspeth-suns-champion",
+       "synergy": 0.05298446696557975,
+       "num_decks": 5691,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Teferi, Time Raveler",
+       "sanitized": "teferi-time-raveler",
+       "synergy": -0.02211915560710434,
+       "num_decks": 5667,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Narset Transcendent",
+       "sanitized": "narset-transcendent",
+       "synergy": 0.046458586563685476,
+       "num_decks": 4768,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Wrenn and Realmbreaker",
+       "sanitized": "wrenn-and-realmbreaker",
+       "synergy": 0.04203856670637293,
+       "num_decks": 4739,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Ashiok, Dream Render",
+       "sanitized": "ashiok-dream-render",
+       "synergy": 0.04054140224142905,
+       "num_decks": 4646,
+       "potential_decks": 44172
+      }
+     ]
+    },
+    {
+     "header": "Utility Lands",
+     "tag": "utilitylands",
+     "cardviews": [
+      {
+       "name": "Reliquary Tower",
+       "sanitized": "reliquary-tower",
+       "synergy": -0.014444438523410291,
+       "num_decks": 10827,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Rogue's Passage",
+       "sanitized": "rogues-passage",
+       "synergy": 0.04715824510407243,
+       "num_decks": 7044,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Yavimaya, Cradle of Growth",
+       "sanitized": "yavimaya-cradle-of-growth",
+       "synergy": 0.012905982877737088,
+       "num_decks": 6646,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Inkmoth Nexus",
+       "sanitized": "inkmoth-nexus",
+       "synergy": 0.05708093443667811,
+       "num_decks": 6102,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Urborg, Tomb of Yawgmoth",
+       "sanitized": "urborg-tomb-of-yawgmoth",
+       "synergy": 0.014710068048884806,
+       "num_decks": 5651,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Boseiju, Who Endures",
+       "sanitized": "boseiju-who-endures",
+       "synergy": -0.14933452487490012,
+       "num_decks": 5617,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Bojuka Bog",
+       "sanitized": "bojuka-bog",
+       "synergy": 0.01238438337434751,
+       "num_decks": 5274,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Nesting Grounds",
+       "sanitized": "nesting-grounds",
+       "synergy": 0.043673667169591965,
+       "num_decks": 4781,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Interplanar Beacon",
+       "sanitized": "interplanar-beacon",
+       "synergy": 0.04247856839235299,
+       "num_decks": 4328,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Gavony Township",
+       "sanitized": "gavony-township",
+       "synergy": 0.031518648134086835,
+       "num_decks": 4262,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Otawara, Soaring City",
+       "sanitized": "otawara-soaring-city",
+       "synergy": -0.14892914058388015,
+       "num_decks": 3415,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Dreadship Reef",
+       "sanitized": "dreadship-reef",
+       "synergy": 0.03280895392736388,
+       "num_decks": 3382,
+       "potential_decks": 44172
+      }
+     ]
+    },
+    {
+     "header": "Mana Artifacts",
+     "tag": "manaartifacts",
+     "cardviews": [
+      {
+       "name": "Sol Ring",
+       "sanitized": "sol-ring",
+       "synergy": -0.019921547720503474,
+       "num_decks": 37529,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Arcane Signet",
+       "sanitized": "arcane-signet",
+       "synergy": -0.0027132897983102033,
+       "num_decks": 34671,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Chromatic Lantern",
+       "sanitized": "chromatic-lantern",
+       "synergy": 0.09857901514723089,
+       "num_decks": 19596,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Astral Cornucopia",
+       "sanitized": "astral-cornucopia",
+       "synergy": 0.18471042152085324,
+       "num_decks": 19094,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Everflowing Chalice",
+       "sanitized": "everflowing-chalice",
+       "synergy": 0.15754603878294807,
+       "num_decks": 16661,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Fellwar Stone",
+       "sanitized": "fellwar-stone",
+       "synergy": -0.062317519981550995,
+       "num_decks": 12148,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Glistening Sphere",
+       "sanitized": "glistening-sphere",
+       "synergy": 0.10821733763527216,
+       "num_decks": 12064,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Replicating Ring",
+       "sanitized": "replicating-ring",
+       "synergy": 0.07608288588560268,
+       "num_decks": 8025,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Staff of Compleation",
+       "sanitized": "staff-of-compleation",
+       "synergy": 0.06820684675615939,
+       "num_decks": 7887,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Commander's Sphere",
+       "sanitized": "commanders-sphere",
+       "synergy": 0.029551938776764,
+       "num_decks": 6212,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Phyrexian Atlas",
+       "sanitized": "phyrexian-atlas",
+       "synergy": 0.021284816489733085,
+       "num_decks": 3117,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Pentad Prism",
+       "sanitized": "pentad-prism",
+       "synergy": 0.02739683266992736,
+       "num_decks": 2839,
+       "potential_decks": 44172
+      }
+     ]
+    },
+    {
+     "header": "Lands",
+     "tag": "lands",
+     "cardviews": [
+      {
+       "name": "Forest",
+       "sanitized": "forest",
+       "synergy": 0.13480875704609374,
+       "num_decks": 40543,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Command Tower",
+       "sanitized": "command-tower",
+       "synergy": -0.005098798719938458,
+       "num_decks": 40524,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Island",
+       "sanitized": "island",
+       "synergy": 0.13388372168501228,
+       "num_decks": 40290,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Plains",
+       "sanitized": "plains",
+       "synergy": 0.13606114756609222,
+       "num_decks": 39588,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Swamp",
+       "sanitized": "swamp",
+       "synergy": 0.13893256454809633,
+       "num_decks": 39454,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Exotic Orchard",
+       "sanitized": "exotic-orchard",
+       "synergy": -0.01738830211211051,
+       "num_decks": 28070,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Breeding Pool",
+       "sanitized": "breeding-pool",
+       "synergy": -0.050262482656476315,
+       "num_decks": 21395,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Overgrown Tomb",
+       "sanitized": "overgrown-tomb",
+       "synergy": 0.005658534961643424,
+       "num_decks": 20795,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Temple Garden",
+       "sanitized": "temple-garden",
+       "synergy": 0.015648142307438107,
+       "num_decks": 20606,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Hallowed Fountain",
+       "sanitized": "hallowed-fountain",
+       "synergy": -0.005908477189103478,
+       "num_decks": 20246,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Watery Grave",
+       "sanitized": "watery-grave",
+       "synergy": -0.03382954514060338,
+       "num_decks": 20173,
+       "potential_decks": 44172
+      },
+      {
+       "name": "Godless Shrine",
+       "sanitized": "godless-shrine",
+       "synergy": 0.018036980089540466,
+       "num_decks": 19868,
+       "potential_decks": 44172
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

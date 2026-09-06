@@ -21,7 +21,7 @@
  * comments and game logs are the user's own record of the physical world and survive
  * untouched. Only what each slot holds, and what it was recommended, are rewritten.
  *
- * Rugged Highlands stays out of Atraxa: it is outside that commander's colour identity,
+ * Rugged Highlands stays out of Atraxa: it is outside that commander's color identity,
  * the workbook rejects it, and a deck holding it loses a rules check.
  *
  * Run: node tools/apply-app-handoff.mjs <choices.csv> <slots.csv> [--write]
@@ -91,7 +91,7 @@ for (const [deck, vid] of Object.entries(VARIANT)) {
   const rows = sheetSlots.filter((r) => r["Deck Name"] === deck);
   const commander = (rows.find((r) => r["Commander Slot?"] === "True") || {}).Commander || "";
   const identity = new Set(((factOf(commander) || {}).colorIdentity) || []);
-  if (!identity.size) throw new Error(`${vid}: no commander colours for ${commander || deck}`);
+  if (!identity.size) throw new Error(`${vid}: no commander colors for ${commander || deck}`);
 
   /* Pass one: join every workbook slot to an app slot by the card the app has there. A
      slot can hold several copies of a name, so the app slots are held as a queue per name
@@ -135,7 +135,7 @@ for (const [deck, vid] of Object.entries(VARIANT)) {
       if (!fact) { refused.push({vid, name, why: "no card by that name in the catalog"}); continue; }
       const ci = fact.colorIdentity || [];
       if (!ci.every((c) => identity.has(c))) {
-        refused.push({vid, name, why: `colour identity ${ci.join("") || "colourless"} is outside ${commander}'s`});
+        refused.push({vid, name, why: `color identity ${ci.join("") || "colorless"} is outside ${commander}'s`});
         continue;
       }
       // Already a rung on this slot? Then nothing to add -- the plan can serve it.

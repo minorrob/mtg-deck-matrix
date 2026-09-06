@@ -5,7 +5,7 @@ description: Run the deck simulation and optimization loop on a Commander deck f
 
 # Simulating and optimizing a deck
 
-You are driving a local optimization loop for the Trey's Deck Matrix repository.
+You are driving a local optimization loop for the My Deck Matrix repository.
 The games run on this machine. Nothing calls an API, and nothing is uploaded.
 
 Your job is judgment: read what the simulation measured, decide which swaps are

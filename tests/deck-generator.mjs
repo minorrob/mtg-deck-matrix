@@ -8,160 +8,23 @@ const Compliance = require("../compliance-model.js");
 const Scryfall = require("../scryfall-client.js");
 const Custom = require("../custom-model.js");
 const Generator = require("../deck-generator.js");
+const Edhrec = require("../edhrec-client.js");
 const fixture = JSON.parse(await readFile(new URL("./fixtures/scryfall/cards.json", import.meta.url), "utf8"));
 // The full app moved to matrix.html when the simplified viewer took over
 // index.html. These assertions are about the full app, so they follow it.
 const indexSource = await readFile(new URL("../matrix.html", import.meta.url), "utf8");
 const appSource = await readFile(new URL("../app.js", import.meta.url), "utf8");
 
-// ---------------------------------------------------------------------------
-// A stand-in Scryfall: enough of the query grammar to answer everything the
-// generator asks, and nothing more. `otag:` only knows two tags so the pool
-// fetch exercises both the tagged path and the oracle-text fallback in one run.
-// ---------------------------------------------------------------------------
-const KNOWN_TAGS = {
-  ramp: (card) => /Add \{|search your library for a basic land/i.test(card.oracle_text || ""),
-  removal: (card) => /destroy target|exile target/i.test(card.oracle_text || "")
-};
+import {makeScryfallStub, makeClient} from "./helpers/stub-scryfall.mjs";
 
-function splitTop(text) {
-  const chunks = [];
-  let depth = 0;
-  let quoted = false;
-  let current = "";
-  for (const char of text) {
-    if (char === '"') quoted = !quoted;
-    if (char === "(" && !quoted) depth += 1;
-    if (char === ")" && !quoted) depth -= 1;
-    if (char === " " && !quoted && depth === 0) {
-      if (current) chunks.push(current);
-      current = "";
-      continue;
-    }
-    current += char;
-  }
-  if (current) chunks.push(current);
-  return chunks;
-}
-
-function parseQuery(text) {
-  const chunks = splitTop(text.trim());
-  const groups = [[]];
-  chunks.forEach((chunk) => {
-    if (chunk.toLowerCase() === "or") groups.push([]);
-    else groups[groups.length - 1].push(chunk);
-  });
-  if (groups.length > 1) return {op: "or", parts: groups.map((group) => ({op: "and", parts: group.map(parseTerm)}))};
-  return {op: "and", parts: groups[0].map(parseTerm)};
-}
-
-function parseTerm(chunk) {
-  let text = chunk;
-  let negate = false;
-  if (text.startsWith("-")) {
-    negate = true;
-    text = text.slice(1);
-  }
-  if (text.startsWith("(") && text.endsWith(")")) return {op: "group", negate, node: parseQuery(text.slice(1, -1))};
-  return {op: "term", negate, text};
-}
-
-function matchTerm(card, text) {
-  const lower = text.toLowerCase();
-  const value = (prefix) => text.slice(prefix.length).replace(/^"|"$/g, "").toLowerCase();
-  if (lower === "legal:commander") return (card.legalities?.commander || "legal") === "legal";
-  if (lower === "is:commander") return /legendary creature/i.test(card.type_line);
-  if (lower.startsWith("id<=")) {
-    const allowed = new Set(value("id<=").toUpperCase().split(""));
-    return (card.color_identity || []).every((color) => allowed.has(color));
-  }
-  if (lower.startsWith("otag:")) {
-    const tag = value("otag:");
-    return KNOWN_TAGS[tag] ? KNOWN_TAGS[tag](card) : false;
-  }
-  if (lower.startsWith("oracle:") || lower.startsWith("o:")) {
-    const needle = lower.startsWith("oracle:") ? value("oracle:") : value("o:");
-    return String(card.oracle_text || "").toLowerCase().includes(needle);
-  }
-  if (lower.startsWith("type:") || lower.startsWith("t:")) {
-    const needle = lower.startsWith("type:") ? value("type:") : value("t:");
-    return String(card.type_line || "").toLowerCase().includes(needle);
-  }
-  if (lower.startsWith("set:")) return String(card.set || "").toLowerCase() === value("set:");
-  const comparison = /^(cmc|mv|power|toughness|usd)(>=|<=|>|<|=)(\d+(?:\.\d+)?)$/.exec(lower);
-  if (comparison) {
-    const [, field, operator, rawValue] = comparison;
-    const actual = field === "usd" ? Number(card.prices?.usd || 0) : field === "cmc" || field === "mv" ? Number(card.cmc || 0) : Number(card[field] || 0);
-    const expected = Number(rawValue);
-    if (operator === ">=") return actual >= expected;
-    if (operator === "<=") return actual <= expected;
-    if (operator === ">") return actual > expected;
-    if (operator === "<") return actual < expected;
-    return actual === expected;
-  }
-  return false;
-}
-
-function evaluateNode(node, card) {
-  if (node.op === "or") return node.parts.some((part) => evaluateNode(part, card));
-  if (node.op === "and") return node.parts.every((part) => evaluateNode(part, card));
-  const result = node.op === "group" ? evaluateNode(node.node, card) : matchTerm(card, node.text);
-  return node.negate ? !result : result;
-}
-
-function makeScryfallStub(cards) {
-  const calls = [];
-  const byName = new Map(cards.map((card) => [card.name.toLowerCase(), card]));
-  const byProduct = new Map(cards.map((card) => [Number(card.tcgplayer_id), card]));
-  const respond = (status, data) => ({ok: status < 400, status, json: async () => data});
-  async function fetchImpl(url, init = {}) {
-    calls.push({url, method: init.method || "GET"});
-    const parsed = new URL(url);
-    if (parsed.pathname === "/cards/search") {
-      const query = parsed.searchParams.get("q") || "";
-      const page = Number(parsed.searchParams.get("page") || 1);
-      const node = parseQuery(query);
-      const matched = cards.filter((card) => evaluateNode(node, card)).sort((a, b) => (a.edhrec_rank || 99999) - (b.edhrec_rank || 99999));
-      const slice = matched.slice((page - 1) * 175, page * 175);
-      if (!slice.length) return respond(404, {object: "error", status: 404, details: "No cards found"});
-      return respond(200, {object: "list", total_cards: matched.length, has_more: matched.length > page * 175, data: slice});
-    }
-    if (parsed.pathname === "/cards/named") {
-      const wanted = (parsed.searchParams.get("exact") || parsed.searchParams.get("fuzzy") || "").toLowerCase();
-      const exact = byName.get(wanted);
-      const fuzzy = exact || cards.find((card) => card.name.toLowerCase().includes(wanted)) || null;
-      return fuzzy ? respond(200, fuzzy) : respond(404, {object: "error", status: 404});
-    }
-    if (parsed.pathname.startsWith("/cards/tcgplayer/")) {
-      const card = byProduct.get(Number(parsed.pathname.split("/").pop()));
-      return card ? respond(200, card) : respond(404, {object: "error", status: 404});
-    }
-    if (parsed.pathname === "/cards/collection") {
-      const identifiers = JSON.parse(init.body || "{}").identifiers || [];
-      const found = identifiers.map((entry) => byName.get(String(entry.name || "").toLowerCase())).filter(Boolean);
-      const missing = identifiers.filter((entry) => !byName.get(String(entry.name || "").toLowerCase()));
-      return respond(200, {object: "list", data: found, not_found: missing});
-    }
-    return respond(404, {object: "error", status: 404});
-  }
-  return {fetchImpl, calls};
-}
-
-function makeClient(cards) {
-  const stub = makeScryfallStub(cards);
-  let clock = 0;
-  const client = Scryfall.createClient({
-    fetchImpl: stub.fetchImpl,
-    delayMs: 0,
-    cache: (() => {
-      const store = new Map();
-      return {get: (key) => (store.has(key) ? store.get(key) : null), set: (key, value) => void store.set(key, value)};
-    })(),
-    now: () => (clock += 1),
-    sleep: async () => undefined
-  });
-  return {client, calls: stub.calls};
-}
+/* No EDHREC, deliberately. These assertions pin the deck the generator builds
+   from Scryfall alone, which is also the deck a commander with no EDHREC page
+   gets -- and running them against the live site would make the suite depend on
+   somebody else's uptime and on data that changes weekly. The case where the
+   signal IS present is covered in tests/edhrec-client.mjs and below. */
+const noEdhrec = async () => ({ok: false, status: 404, json: async () => ({})});
+// The stub Scryfall these tests run against now lives in helpers/, because
+// tests/deck-build.mjs needs the same generator output to map from.
 
 // ---------------------------------------------------------------------------
 // TCGplayer link parsing
@@ -178,7 +41,7 @@ assert.deepEqual(Scryfall.slugNameCandidates("magic-bloomburrow-blood-artist")[0
 assert.ok(Scryfall.slugNameCandidates("magic-bloomburrow-blood-artist").includes("blood artist"), "slug candidates must trim leading set words");
 
 // ---------------------------------------------------------------------------
-// Client behaviour: caching, retries, and TCGplayer resolution
+// Client behavior: caching, retries, and TCGplayer resolution
 // ---------------------------------------------------------------------------
 {
   const {client, calls} = makeClient(fixture.data);
@@ -251,7 +114,7 @@ const inputs = {
   preferSet: ""
 };
 const progress = [];
-const generated = await Generator.generateForSlot(inputs, {client, onProgress: (event) => progress.push(event), createdAt: "2026-08-23T00:00:00.000Z"});
+const generated = await Generator.generateForSlot(inputs, {client, fetchImpl: noEdhrec, onProgress: (event) => progress.push(event), createdAt: "2026-08-23T00:00:00.000Z"});
 
 assert.equal(generated.commander.name, "Slimefoot, the Stowaway", "the typed commander name must win");
 assert.equal(generated.variants.length, 3, "variantCount must decide how many lenses are built");
@@ -302,7 +165,7 @@ assert.ok(first.size - shared >= 20, `two lenses must differ by at least 20 card
     seedLinks: [],
     variantCount: 1,
     commanderLink: `https://partner.tcgplayer.com/c/1/2/3?u=${encodeURIComponent(`https://www.tcgplayer.com/product/${commanderCard.tcgplayer_id}?page=1`)}`
-  }, {client: linkClient});
+  }, {client: linkClient, fetchImpl: noEdhrec});
   assert.equal(linked.commander.name, "Slimefoot, the Stowaway", "a commander link must resolve through the affiliate wrapper");
   assert.equal(linked.variants.length, 1);
 }
@@ -316,7 +179,7 @@ assert.ok(first.size - shared >= 20, `two lenses must differ by at least 20 card
     themes: ["Counters / Proliferate"],
     budgetUsd: 120,
     variantCount: 1
-  }, {client: searchClient});
+  }, {client: searchClient, fetchImpl: noEdhrec});
   assert.ok(searched.commander, "an inputs-only slot must still resolve a commander");
   assert.equal(Generator.evaluateEntries(searched.builds[0].stages[0]).total, 100);
 }
@@ -430,8 +293,8 @@ assert.ok(fortress.protection > neutral.protection, "Fortress must ask for more 
 assert.ok(fortress.finisher < neutral.finisher, "Fortress must ask for fewer finishers");
 assert.ok(flavor.theme > fortress.theme, "Flavor must lean further into the theme than Fortress does");
 {
-  const {client: styleClient} = makeClient(fixture.data);
-  const styled = await Generator.generateForSlot({...inputs, variantCount: 1, seedLinks: [], playstyle: "Fortress"}, {client: styleClient});
+  const {client: styleClient, fetchImpl: noEdhrec} = makeClient(fixture.data);
+  const styled = await Generator.generateForSlot({...inputs, variantCount: 1, seedLinks: [], playstyle: "Fortress"}, {client: styleClient, fetchImpl: noEdhrec});
   const protectionCount = styled.builds[0].stages[0].filter((entry) => entry.role === "protection").length;
   assert.ok(protectionCount >= 6, `a Fortress build must actually fill the extra protection slots (filled ${protectionCount})`);
   assert.equal(Generator.evaluateEntries(styled.builds[0].stages[0]).total, 100);
@@ -480,5 +343,68 @@ assert.match(appSource, /String\(item\?\.name \|\| ""\)/, "itemKey must tolerate
 // The Choose tour steps go with the withdrawn tab; the tour must not offer a
 // walkthrough of a page nobody can reach.
 assert.doesNotMatch(appSource, /^\s{4}choose: \[/m, "the tour must not walk through a withdrawn view");
+
+
+// ---------------------------------------------------------------------------
+// EDHREC synergy, when there is a page for the commander.
+//
+// Two builds off the same pool and the same seed, one with the signal and one
+// without. The point of the whole feature is that they differ; a check that
+// only proved "it does not crash" would have passed just as happily if the
+// numbers were being read and thrown away.
+// ---------------------------------------------------------------------------
+{
+  const edhPage = JSON.parse(await readFile(new URL("./fixtures/edhrec-atraxa.json", import.meta.url), "utf8"));
+  const withEdh = async () => ({ok: true, json: async () => edhPage});
+  const same = {...inputs, variantCount: 1, seedLinks: [], createdAt: "2026-08-23T00:00:00.000Z"};
+
+  const {client: a} = makeClient(fixture.data);
+  const plain = await Generator.generateForSlot(same, {client: a, fetchImpl: noEdhrec});
+  const {client: b} = makeClient(fixture.data);
+  const tilted = await Generator.generateForSlot(same, {client: b, fetchImpl: withEdh});
+
+  const names = (r) => r.builds[0].stages[1].map((e) => e.card.name).sort();
+  assert.equal(tilted.builds.length, 1, "the signal must not stop a deck being built");
+  assert.equal(names(tilted).length, names(plain).length, "both are still a hundred cards");
+  assert.notDeepEqual(names(tilted), names(plain),
+    "EDHREC synergy must actually change which cards get picked, or it is being read and discarded");
+
+  /* That last one on its own would pass for the wrong reason. Present-vs-absent
+     also flips the weight fold-back, so the two builds would differ even if
+     every synergy number were being discarded. This isolates it: a page whose
+     cards are all outside the pool leaves the weights exactly as the real page
+     does, and changes nothing else. If the real page still builds a different
+     deck, the numbers -- not the weights -- are what moved it. */
+  const irrelevant = {container: {json_dict: {cardlists: [{header: "Top Cards", cardviews: [
+    {name: "A Card That Is In No Pool", synergy: 0.5, num_decks: 90, potential_decks: 100}
+  ]}]}}};
+  const {client: d} = makeClient(fixture.data);
+  const weightsOnly = await Generator.generateForSlot(same,
+    {client: d, fetchImpl: async () => ({ok: true, json: async () => irrelevant})});
+  assert.notDeepEqual(names(tilted), names(weightsOnly),
+    "with the weights held equal, the EDHREC numbers must still change the deck");
+  const overlap = [...Edhrec.parse(edhPage).cards.values()]
+    .filter((e) => fixture.data.some((c) => c.name.toLowerCase() === e.name.toLowerCase()));
+  assert.ok(overlap.length > 20,
+    `the EDHREC fixture must actually cover the card pool (${overlap.length} of ${fixture.data.length} overlap)`);
+
+  // And it must not break the deck it changes.
+  const legal = tilted.compliance || tilted.builds[0].compliance;
+  assert.deepEqual(legal[1].tier3, [], "the tilted Tuned build must still be Bracket 3 legal");
+
+  // A commander EDHREC has never heard of must build EXACTLY the deck it built
+  // before this signal existed -- that is what the weight fold-back is for, and
+  // a zeroed synergy term would silently cost the deck its whole swap ladder.
+  const {client: c} = makeClient(fixture.data);
+  const missing = await Generator.generateForSlot(same, {client: c, fetchImpl: noEdhrec});
+  assert.deepEqual(names(missing), names(plain),
+    "no EDHREC page must reproduce the old build card for card");
+  assert.ok(missing.builds[0].variant.tuned.length > 0,
+    "and must keep its Tuned ladder, which a zeroed weight silently emptied");
+  assert.ok((tilted.warnings || []).every((w) => !/no page/i.test(w)),
+    "a commander WITH a page must not be warned about");
+  assert.ok((missing.warnings || []).some((w) => /EDHREC has no page/.test(w)),
+    "a commander without one must say so, since it changes how cards were ranked");
+}
 
 console.log(`Generated ${generated.variants.length} compliant variants from ${fixture.data.length} fixture cards in ${calls.length} stubbed Scryfall calls.`);

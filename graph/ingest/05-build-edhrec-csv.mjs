@@ -13,7 +13,7 @@
 //             running the card.
 // synergy   = EDHREC's own figure: inclusion here minus inclusion in comparable
 //             decks. Positive means the pairing is specific to this commander
-//             rather than a card everyone in these colours plays anyway.
+//             rather than a card everyone in these colors plays anyway.
 import {readdir, readFile, writeFile, mkdir} from "node:fs/promises";
 
 const cacheDir = "graph/.cache/edhrec";

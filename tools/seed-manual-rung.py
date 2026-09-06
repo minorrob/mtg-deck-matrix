@@ -14,7 +14,7 @@
 # five decks in the catalog. Nothing is swapped out any more -- every alternate is
 # offered as a choice inside the slot it would fill, and the pick is made in the app.
 #
-# Every option is pre-flighted before a byte is written: colour identity inside the
+# Every option is pre-flighted before a byte is written: color identity inside the
 # commander's, Commander-legal, the card it replaces actually present in that deck,
 # and, for a Salvage pick, actually in the yard. A single failure aborts the run.
 #
@@ -86,7 +86,7 @@ for pid,repl,card,src,why in SEED:
     have={key(it['name']) for a in ARRS for it in plan.get(a) or []}
     c=I[card]; ci=set(c.get('color_identity') or [])
     if key(repl) not in have: bad.append(f'{NAME[pid]}: "{repl}" is not in the deck, so nothing would anchor {card}')
-    if not ci<=CI[pid]: bad.append(f'{NAME[pid]}: {card} colour identity {"".join(sorted(ci)) or "C"} outside {"".join(sorted(CI[pid]))}')
+    if not ci<=CI[pid]: bad.append(f'{NAME[pid]}: {card} color identity {"".join(sorted(ci)) or "C"} outside {"".join(sorted(CI[pid]))}')
     if c['legalities']['commander']!='legal': bad.append(f'{NAME[pid]}: {card} is not Commander legal')
     if src=='salvage' and key(card) not in yard: bad.append(f'{NAME[pid]}: {card} is not in the Salvage yard')
 if bad:

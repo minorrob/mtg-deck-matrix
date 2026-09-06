@@ -6,7 +6,7 @@
 // The problem this fixes. For forty of fifty variants the Max rung composed to
 // byte-identical the Tuned hundred, which says those decks cannot be made Tier 3.
 // That is false. Bracket 3 IS the allowance of up to three Game Changers, and
-// forty-three of the fifty already had in-colour, priced ones sitting in their
+// forty-three of the fifty already had in-color, priced ones sitting in their
 // plan -- filed as `capabilityOption`, a flag that by design keeps an item out of
 // the composed rung so the pinned lists still matched. The invariant held and the
 // meaning did not: Max became a label over the Tuned hundred.
@@ -403,7 +403,7 @@ if (args.write) {
       swaps: row.promoted, engine: "v2.4",
       note: row.promoted
         ? `${row.promoted} Game Changer${row.promoted === 1 ? "" : "s"} promoted into the rung; ${row.gcInFinal} in the finished deck, against Bracket 3's limit of three`
-        : "no in-colour Game Changer could be added without breaking the deck",
+        : "no in-color Game Changer could be added without breaking the deck",
       stopReason: `Measured over ${GAMES.toLocaleString()} games on a seed the selection never saw.`
     });
   });

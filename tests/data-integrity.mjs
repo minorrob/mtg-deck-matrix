@@ -17,6 +17,9 @@ const cssSource = await readFile(new URL("../app.css", import.meta.url), "utf8")
 const deckPageSource = await readFile(new URL("../deck-page.js", import.meta.url), "utf8");
 const shopPageSource = await readFile(new URL("../shop-page.js", import.meta.url), "utf8");
 const slotModelSource = await readFile(new URL("../slot-model.js", import.meta.url), "utf8");
+// The other two pages that fetch committed data, for the versioned-URL check below.
+const graphPageSource = await readFile(new URL("../graph-page.js", import.meta.url), "utf8");
+const viewerSource = await readFile(new URL("../viewer.js", import.meta.url), "utf8");
 const activeState = JSON.parse(await readFile(new URL("../data/active-state.json", import.meta.url), "utf8"));
 const auditedByName = new Map(cards.cards.map((card) => [card.name.toLowerCase(), card]));
 for (const card of cards.cards) for (const face of card.name.split(" // ")) auditedByName.set(face.toLowerCase(), card);
@@ -217,11 +220,11 @@ assert.match(appSource, /\$\{total\}\/100<\/b><small>active/, "collapsed Live De
 assert.match(appSource, /data-live-total="\$\{esc\(variant\.id\)\}"/, "collapsed Live Deck headers must show a committed Total Cost");
 assert.match(appSource, /<b title="\$\{checkedCount\} of \$\{count\} checked to buy">\$\{checkedCount\}\/\$\{count\}<\/b>/, "collapsed Starting Shell type rows must show checked-to-buy over the group total");
 // The flat buySection this pin was written for was replaced by tabbed ladder groups, but the
-// behaviour it protects is not superseded: a shut group must still report shopping progress,
+// behavior it protects is not superseded: a shut group must still report shopping progress,
 // since the per-tab counts only render once it is open.
 assert.match(appSource, /<b title="\$\{groupChecked\} of \$\{groupTotal\} checked to buy">\$\{groupChecked\}\/\$\{groupTotal\}<\/b>/, "collapsed ladder groups must show checked-to-buy over the group total");
 assert.match(appSource, /if \(metadataAttempts\.get\(key\)\) return;/, "card metadata may only be requested once per session, or unresolved cards re-render the app forever");
-assert.match(appSource, /Precon Pack/, "cards that arrive inside a sealed precon must be labelled instead of priced");
+assert.match(appSource, /Precon Pack/, "cards that arrive inside a sealed precon must be labeled instead of priced");
 assert.doesNotMatch(appSource, /live-critical-insight/, "the duplicate readiness banner must stay out of the Live Deck header");
 assert.doesNotMatch(appSource, /Saved on this device"\);\n\s*renderCompare/, "reset must not depend on the removed save-status label");
 // Read the tabs off the markup rather than listing them here. The list that used
@@ -284,7 +287,7 @@ for (const view of [...appSource.matchAll(/^\s{4}([a-z0-9]+): \[$/gm)].map((m) =
   assert.match(appSource, /denied: Boolean\(hold && !\(hold\.inHand \|\| 0\) && !\(hold\.ordered \|\| 0\)\)/,
     "a deck the audit says holds none must never be served a spare");
   assert.match(appSource, /if \(claim\.denied\) return void claimSatisfied\.set\(`\$\{key\}\|\$\{id\}`, false\);/,
-    "the denial has to be honoured where the copies are handed out");
+    "the denial has to be honored where the copies are handed out");
   // A complete allocation means a missing entry is zero, not "ask the ledger instead".
   assert.match(slotModelSource, /const allocated = holds \? \(holds\[row\.key\] \|\| \{inHand: 0, ordered: 0\}\) : null;/,
     "a card with no allocation was allocated to nobody");
@@ -358,7 +361,7 @@ for (const view of [...appSource.matchAll(/^\s{4}([a-z0-9]+): \[$/gm)].map((m) =
 }
 
 /* What a card cost, where you can type it, and what can reach the Bench. These are
-   source pins because the behaviour lives in the rendering, not in the data. */
+   source pins because the behavior lives in the rendering, not in the data. */
 {
   const cssSource = await readFile(new URL("../app.css", import.meta.url), "utf8");
   const shopSource = await readFile(new URL("../shop-page.js", import.meta.url), "utf8");
@@ -598,7 +601,7 @@ for (const variantId of LIGHTWEIGHT_ALT_CASE_IDS) {
   assert(Number.isInteger(altCase.candidatesMeasured) && altCase.candidatesMeasured > 0, `${variantId}: must report how many alternative commanders were actually measured`);
   assert(Number.isInteger(altCase.gamesEach) && altCase.gamesEach > 0, `${variantId}: must report the game count each candidate was measured over`);
   // Forty of the lighter-weight evaluations are still the v2.2 pass that measured
-  // fifteen candidate commanders apiece. The four decks that became Trey's own were
+  // fifteen candidate commanders apiece. The four decks that became my own were
   // re-measured on the engine this file names, against a different and narrower
   // field -- the legends already inside each deck -- so they carry that generation
   // instead. Either way the case has to name the engine that produced its numbers.
@@ -791,7 +794,26 @@ assert.match(appSource, /function exportFullState\(/, "an Export control must ex
 assert.match(appSource, /function importStateFromFile\(/, "an Import control must exist");
 assert.match(appSource, /function loadActiveState\(/, "a Load Active control must exist");
 assert.match(appSource, /localStorage\.getItem\(Custom\.STORAGE_KEY\)/, "export must include the Custom (Choose-step) store, not just the main state");
-assert.match(appSource, /fetch\("data\/active-state\.json"/, "Load Active must read active-state.json from the repo, not invent a URL");
+assert.match(appSource, /fetch\("data\/active-state\.json\?v=\d+"/, "Load Active must read active-state.json from the repo, not invent a URL");
+
+/* Every committed data file is fetched with a version in its URL and left to the
+   browser cache. The version is what makes the cache safe: a rebuilt file gets a
+   new URL, so nothing stale can be served however long a browser holds the old
+   one. Measured at the socket, "no-store" cost the full payload on every single
+   visit -- 1.15 MB on the Matrix, 1.35 MB on the graph -- for no freshness the
+   version does not already give. Live polling is the one exception, and it is
+   checked separately in tests/sim-engine.mjs. */
+[["app.js", appSource], ["graph-page.js", graphPageSource], ["viewer.js", viewerSource]]
+  .forEach(([name, src]) => {
+    const dataFetches = src.match(/fetch\(\s*"(?:data|sim)\/[^"]+"/g) || [];
+    dataFetches.forEach((call) => {
+      assert.match(call, /\?v=\d+"$/,
+        `${name}: ${call} has no version, so a browser could serve a stale copy of it`);
+    });
+    const noStore = (src.match(/fetch\(\s*"(?:data|sim)\/[^"]+",\s*\{\s*cache:\s*"no-store"/g) || []);
+    assert.deepEqual(noStore, [],
+      `${name}: a committed data file is fetched with no-store, which re-downloads it on every visit`);
+  });
 // Replace, not a field-by-field merge -- a full-state file has no safe merge rule the way the
 // purchase-history CSV import does, since it covers every selection, filter, and toggle at once.
 assert.match(appSource, /state = \{\.\.\.blankState\(\), \.\.\.payload\.state\}/, "applying a state payload must fully replace state, defaulting only fields the file omits");
@@ -832,10 +854,10 @@ assert.match(htmlSource, /id="load-active-button"/, "a Load Active button must e
       assert.equal(variant.brackets[index].gameChangers, `${count} GC`,
         `${variant.id} ${rung}: the Compare chip says ${variant.brackets[index].gameChangers} but the pinned hundred holds ${count}`);
       // compliance-model refuses a Game Changer at Tier 2, so a rung holding one
-      // cannot be labelled Bracket 2 whatever a density estimate scored it.
+      // cannot be labeled Bracket 2 whatever a density estimate scored it.
       if (count > 0) {
         assert.doesNotMatch(variant.brackets[index].label, /^B2/,
-          `${variant.id} ${rung} is labelled ${variant.brackets[index].label} while holding ${count} Game Changer(s)`);
+          `${variant.id} ${rung} is labeled ${variant.brackets[index].label} while holding ${count} Game Changer(s)`);
       }
     });
 
@@ -879,13 +901,13 @@ assert.match(deckPageSource, /const shell = meta\(ctx, \(slot\.pick && slot\.pic
 // A slot whose card is FOR something only offers cards that do that thing.
 assert.match(deckPageSource, /row\.fit\.score > 0 && \(!target\.roles\.length \|\| row\.fit\.shared\.length\)/,
   "a slot with roles must require a shared role, or the list fills with same-type noise");
-// Colour identity is a gate, not a tiebreak: an out-of-identity card is illegal here.
+// Color identity is a gate, not a tiebreak: an out-of-identity card is illegal here.
 assert.match(deckPageSource, /\.filter\(\(card\) => \(card\.colorIdentity \|\| \[\]\)\.every\(\(color\) => identity\.indexOf\(color\) >= 0\)\)/,
-  "suggestions must be filtered to the deck's colour identity before they are ranked");
+  "suggestions must be filtered to the deck's color identity before they are ranked");
 // The deck's identity comes from its commander, and the loose pools carry what the fit
 // model reads -- a name and a type line cannot say what a card costs or is for.
 assert.match(appSource, /identity: \(cards\[Lineup\.normalizeName\(plan\.commanderName \|\| variant\.commander \|\| ""\)\] \|\| \{\}\)\.colorIdentity \|\| \[\]/,
-  "the Deck page context must derive colour identity from the commander card");
+  "the Deck page context must derive color identity from the commander card");
 for (const field of ["manaCost", "oracleText", "colorIdentity"]) {
   assert.ok(new RegExp(`freeCards\\.push\\(\\{[^}]*${field}:`, "s").test(appSource),
     `loose cards must carry ${field} or the fit model cannot read them`);
@@ -1115,7 +1137,7 @@ assert.doesNotMatch(cssSource, /\.dp-cstep/, "its styles must go with it");
     const slots = Slot.deckSlots(grafted, activeState.state.buySelections[variantId] || {}, {});
     const seat = slots.find((s) => s.type === "Commander" && s.pick);
     const identity = (seat && (cardsByKey.get(Slot.ownedKey(seat.pick.name)) || {}).colorIdentity) || [];
-    assert.ok(identity.length, `${variantId} should have a commander to take its colours from`);
+    assert.ok(identity.length, `${variantId} should have a commander to take its colors from`);
     for (const entry of list) {
       const ci = entry.colorIdentity || [];
       if (!ci.every((c) => identity.indexOf(c) >= 0)) illegal.push(`${variantId}/${entry.name}`);
@@ -1123,7 +1145,7 @@ assert.doesNotMatch(cssSource, /\.dp-cstep/, "its styles must go with it");
     }
   }
   assert.equal(illegal.length, 0,
-    `${illegal.length} hand-added cards are outside their deck's colours, e.g. ${illegal.slice(0, 3).join(", ")}`);
+    `${illegal.length} hand-added cards are outside their deck's colors, e.g. ${illegal.slice(0, 3).join(", ")}`);
   /* A card on the bench has to be a copy no box is holding. It may well ALSO be in a box
      -- the audit has Prophetic Prism boxed in deck 3 and a second copy loose -- so the
      test is not "is it in a deck" but "is there a copy left over". Without the spare, one
@@ -1222,7 +1244,7 @@ assert.doesNotMatch(cssSource, /\.dp-cstep/, "its styles must go with it");
     "Undo must put back exactly what was there, not guess at a decrement");
 
   /* The count on the row and the button is what is still owed. A row of two Signets with
-     one already in the box is one card to find; labelling it x2 sends you looking for a
+     one already in the box is one card to find; labeling it x2 sends you looking for a
      copy you already have. */
   assert.match(shopPageSource, /const many = r\.need > 1;/, "the Store counts what is missing, not what the deck asks for");
 
@@ -1370,7 +1392,7 @@ assert.doesNotMatch(cssSource, /\.dp-cstep/, "its styles must go with it");
   /* ---------- what a filter says must be what the row says ----------
      The Shop's Status filter matches on a row's acquisition, so a row that still owes a
      copy while calling itself "In hand" is a card the filter hides. That is how filtering
-     to Obuun and asking for "Not in hand" showed two of the seven colourless cards still
+     to Obuun and asking for "Not in hand" showed two of the seven colorless cards still
      to buy: Sol Ring and Command Tower are owned once, wanted by several decks, and the
      status was read off the shelf instead of off the row. */
   const rows = Slot.shopRows(decks, owned, claimTotals, holds);
@@ -1454,7 +1476,7 @@ assert.doesNotMatch(cssSource, /\.dp-cstep/, "its styles must go with it");
 }
 
 /* ---------- the gallery tile, and what a Buy actually does ----------
-   The art carries the name, the colour and the type. Repeating them underneath spent a
+   The art carries the name, the color and the type. Repeating them underneath spent a
    third of the tile restating the picture, so the panel is down to three rows: who wants
    it, what it costs beside the one button worth having there, and where it is. */
 {
@@ -1537,6 +1559,120 @@ assert.match(cssSource, /\.sp-bench\{display:grid;grid-template-columns:repeat\(
 
   assert.match(appSource, /if \(key === "ready"\) deckPageState\.closedPanels\.ready = deckPageState\.closedPanels\.ready === false;/,
     "the compliance panel ships closed, so its flag reads the other way round");
+}
+
+
+// ---------------------------------------------------------------------------
+// The first visit.
+//
+// Deck and Shop are tabs 2 and 3 of the primary journey and are empty until a
+// variant is picked -- which, for everybody who has never been here, is the
+// state they meet. That screen used to be one sentence in a .loading-card: a
+// permanent state dressed as a transient one, telling the reader to go to
+// Compare without taking them there, using a word ("variant") the app has not
+// defined yet at the moment it is first read.
+// ---------------------------------------------------------------------------
+assert.match(appSource, /function firstRunEmpty\(/,
+  "Deck and Shop must share one first-run empty state rather than a bare sentence each");
+assert.doesNotMatch(appSource, /loading-card">Choose a variant for at least one deck/,
+  "the old one-line empty state must be gone, not merely supplemented");
+assert.match(appSource, /data-goto-view="compare"/,
+  "the empty state must carry the reader to Compare, not just name it");
+assert.match(appSource, /data-first-run-load/,
+  "and must offer the six built decks, which is the fastest way to see this working");
+assert.match(appSource, /class="primary-button" type="button" data-goto-view/,
+  "its buttons must use the Matrix's own classes -- .btn belongs to My Decks and renders unstyled here");
+
+/* Loading the six warns that it replaces what is saved. On a first visit nothing
+   is saved, and the app itself seeds 99 owned, 99 found and 50 buy selections on
+   the very first page load -- so "is anything stored" is not the question. A
+   picked variant is the one thing only a person creates. */
+assert.match(appSource, /function hasSavedWork\(/,
+  "the replace-everything warning must be conditional on there being work to lose");
+assert.match(appSource, /hasSavedWork\(\) &&\s*\n?\s*!window\.confirm/,
+  "and the confirm must be the thing it gates");
+{
+  const body = appSource.slice(appSource.indexOf("function hasSavedWork("),
+    appSource.indexOf("async function loadActiveState"));
+  ["boughtQuantities", "buySelections", "assignedSelections", "owned", "found"].forEach((seeded) => {
+    assert.doesNotMatch(body, new RegExp(`state\\.${seeded}\\b`),
+      `hasSavedWork must not read state.${seeded}: the app seeds it before anybody touches anything`);
+  });
+  assert.match(body, /state\.compareSelections/, "a picked variant is what counts as work");
+}
+
+/* The Tour is the first-timer's guided path, and its selector lists all ended in
+   ".loading-card" -- the old empty state, and now a transient that is on screen
+   only while a 2.8 MB catalog is fetched. A tour that latches onto it measures a
+   detached node a moment later and collapses to a pixel. */
+assert.doesNotMatch(appSource, /selectors: \[[^\]]*"\.loading-card"/,
+  "no tour step may target the loading card: it is gone by the time the step is read");
+assert.match(appSource, /TOUR_EMPTY_FIRST/,
+  "the Deck and Shop tours must open by saying nothing is picked, rather than narrating ten steps at an empty page");
+assert.match(appSource, /function placeTourStep\(/,
+  "tour placement must retry while its target is still arriving");
+assert.match(appSource, /target && target\.isConnected/,
+  "and must not measure an element that has been replaced since it was found");
+
+
+/* THE EXPORT IS THE ONLY WAY OUT, so what it leaves behind is the one bug a
+   backup must not have.
+ *
+ * The Matrix (matrix.html) writes the export; My Decks (index.html) owns three
+ * other keys in the same origin -- decks somebody added, a collection they
+ * uploaded, their picks. None of it was in the file, and the button said
+ * "Exported your full state", so a person could back up, move browser, load the
+ * file, and find ten decks and three thousand cards gone.
+ *
+ * matrix.html loads neither viewer.js nor deck-store.js, so app.js names those
+ * keys as literals. Each one is pinned here against the module that owns it: a
+ * rename on either side fails this suite rather than quietly emptying the
+ * export again. */
+{
+  const viewerSource = await readFile(new URL("../viewer.js", import.meta.url), "utf8");
+  const storeSource = await readFile(new URL("../deck-store.js", import.meta.url), "utf8");
+  const owners = [
+    ["mtg-imported-decks.v1", storeSource, "deck-store.js"],
+    ["mtg-viewer-inventory.v1", viewerSource, "viewer.js"],
+    ["mtg-viewer.v1", viewerSource, "viewer.js"]
+  ];
+  owners.forEach(([key, source, where]) => {
+    assert.ok(source.includes(`"${key}"`),
+      `${where} no longer uses "${key}" — app.js exports that key and would now export nothing`);
+    assert.ok(appSource.includes(`"${key}"`),
+      `app.js must carry "${key}" in the export, or ${where}'s data leaves this browser with no way back`);
+  });
+  assert.match(appSource, /myDecks: readMyDecks\(\)/,
+    "the export payload must carry the My Decks block");
+  assert.match(appSource, /function restoreMyDecks\(/,
+    "and importing must put it back, or the export is a file nothing reads");
+  // Absent means "this file has nothing to say", not "delete them". Load Active
+  // ships data/active-state.json, which carries no block at all.
+  const restore = appSource.slice(appSource.indexOf("function restoreMyDecks("),
+    appSource.indexOf("function importStateFromFile("));
+  assert.match(restore, /if \(!mine \|\| typeof mine !== "object"\) return;/,
+    "a payload without a My Decks block must leave this browser's decks alone");
+  const active = JSON.parse(await readFile(new URL("../data/active-state.json", import.meta.url), "utf8"));
+  assert.equal(active.myDecks, undefined,
+    "data/active-state.json must not carry a My Decks block: Load Active would then wipe added decks");
+}
+
+/* The README named six suites when there were twenty-four, and four tabs that had
+   not existed for months. A stale README is not a cosmetic problem in a repo with
+   no build step and no package.json: it is the only place that says what to run.
+   The suite list at least can be held to the directory. */
+{
+  const readme = await readFile(new URL("../README.md", import.meta.url), "utf8");
+  const {readdir} = await import("node:fs/promises");
+  const suites = (await readdir(new URL("../tests", import.meta.url)))
+    .filter((f) => f.endsWith(".mjs")).map((f) => f.slice(0, -4)).sort();
+  const missing = suites.filter((name) => !readme.includes("`" + name + "`"));
+  assert.deepEqual(missing, [],
+    `README.md does not name ${missing.join(", ")} — a suite nobody knows to run is a suite nobody runs`);
+  assert.ok(readme.includes(`${suites.length}`) || /Twenty-four/i.test(readme),
+    "README.md must say how many suites there are, and mean it");
+  assert.ok(!/Buy Picks|Live Decks|Shop List|Step 0/.test(readme),
+    "README.md still names a tab this app retired");
 }
 
 console.log(`Validated ${variants.variants.length} variants and ${Object.keys(buyPlans.plans).length} connected buy profiles.`);

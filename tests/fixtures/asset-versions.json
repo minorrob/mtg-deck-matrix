@@ -1,0 +1,189 @@
+{
+  "note": "Written by tests/asset-versions.mjs --update. Each entry records the content a ?v= was last bumped for; the test fails when content moves and the version does not.",
+  "assets": {
+    "app.css": {
+      "version": 79,
+      "sha": "36d47b2f5a3d4eee"
+    },
+    "app.js": {
+      "version": 115,
+      "sha": "ab7f7ff62b01c195"
+    },
+    "build-panel.js": {
+      "version": 4,
+      "sha": "20ae1f37aec98908"
+    },
+    "compliance-model.js": {
+      "version": 2,
+      "sha": "5843be95892058c1"
+    },
+    "custom-model.js": {
+      "version": 3,
+      "sha": "4c2b2793f05a10be"
+    },
+    "data/active-state.json": {
+      "version": 1,
+      "sha": "c20b5dda6bf2bcb5"
+    },
+    "data/buy-plans.json": {
+      "version": 1,
+      "sha": "1c50c0409672016a"
+    },
+    "data/card-facts.json": {
+      "version": 1,
+      "sha": "95c74463c1ceec90"
+    },
+    "data/cards.json": {
+      "version": 1,
+      "sha": "f3c35612e8d8f44b"
+    },
+    "data/deck-guides.json": {
+      "version": 1,
+      "sha": "dcb139d39ac4e9d8"
+    },
+    "data/deck-ratings.json": {
+      "version": 1,
+      "sha": "425abec39421e6ea"
+    },
+    "data/deck-swaps.json": {
+      "version": 1,
+      "sha": "ec9c4f6a1466a388"
+    },
+    "data/graph.json": {
+      "version": 1,
+      "sha": "5c666f73f9f2b8de"
+    },
+    "data/lenses.json": {
+      "version": 1,
+      "sha": "664bd76816f35f8b"
+    },
+    "data/master-v2.json": {
+      "version": 1,
+      "sha": "5270481c2c4c58ad"
+    },
+    "data/simulation-summary.json": {
+      "version": 1,
+      "sha": "f2e7caa5b393b6b9"
+    },
+    "data/variants.json": {
+      "version": 1,
+      "sha": "a8ffdb3fea4b4254"
+    },
+    "deck-audit.js": {
+      "version": 1,
+      "sha": "fe146f4e47bd58d7"
+    },
+    "deck-build.js": {
+      "version": 2,
+      "sha": "e9c86f90d56f2f2a"
+    },
+    "deck-generator.js": {
+      "version": 6,
+      "sha": "d91fd61911ff9b9b"
+    },
+    "deck-import.js": {
+      "version": 1,
+      "sha": "f40a303e042c6b6f"
+    },
+    "deck-measure.js": {
+      "version": 1,
+      "sha": "3f8b752cd397e0f6"
+    },
+    "deck-page.js": {
+      "version": 30,
+      "sha": "afc927eb190d94aa"
+    },
+    "deck-sources.js": {
+      "version": 1,
+      "sha": "ef5fc76341934d92"
+    },
+    "deck-store.js": {
+      "version": 2,
+      "sha": "d6384dd278fca982"
+    },
+    "docx-writer.js": {
+      "version": 1,
+      "sha": "b6aff451bbef0894"
+    },
+    "edhrec-client.js": {
+      "version": 1,
+      "sha": "40f86ac14065b1d7"
+    },
+    "game-record.js": {
+      "version": 1,
+      "sha": "64ca6d7289743a4f"
+    },
+    "graph-page.css": {
+      "version": 13,
+      "sha": "71c521ba571226fd"
+    },
+    "graph-page.js": {
+      "version": 18,
+      "sha": "c210afcd2e530f7a"
+    },
+    "import-panel.js": {
+      "version": 1,
+      "sha": "676450bbfc055b03"
+    },
+    "inventory-import.js": {
+      "version": 1,
+      "sha": "1edfae29892d2fe1"
+    },
+    "lineup-model.js": {
+      "version": 5,
+      "sha": "b076eb50c7ab1bb0"
+    },
+    "scryfall-client.js": {
+      "version": 4,
+      "sha": "8c18fa7667e5e413"
+    },
+    "shop-export.js": {
+      "version": 1,
+      "sha": "5ded3157ad4ed0ef"
+    },
+    "shop-filters.js": {
+      "version": 6,
+      "sha": "64114effd22e3a11"
+    },
+    "shop-page.js": {
+      "version": 16,
+      "sha": "095f8fb626004bf3"
+    },
+    "sim-engine.js": {
+      "version": 1,
+      "sha": "10f73f59238db98e"
+    },
+    "sim-lenses.js": {
+      "version": 1,
+      "sha": "eebb89d7271ea9e7"
+    },
+    "sim/config.json": {
+      "version": 1,
+      "sha": "1c1040245521cd80"
+    },
+    "sim/opponents.json": {
+      "version": 1,
+      "sha": "3d2c66d42af520e0"
+    },
+    "slot-model.js": {
+      "version": 12,
+      "sha": "4b314af3ec7fb71e"
+    },
+    "viewer.css": {
+      "version": 19,
+      "sha": "c85be3019a99778e"
+    },
+    "viewer.js": {
+      "version": 17,
+      "sha": "b12029b6cfb3b892"
+    },
+    "xlsx-reader.js": {
+      "version": 1,
+      "sha": "73cf11df9d616bca"
+    },
+    "xlsx-writer.js": {
+      "version": 1,
+      "sha": "d7a5f2cc915a434a"
+    }
+  }
+}

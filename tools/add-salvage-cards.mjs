@@ -3,7 +3,7 @@
  * slots where it could actually do a job.
  *
  * A card lands on a slot's Manual list only where all four hold:
- *   - the deck can legally play it (its colour identity is inside the commander's);
+ *   - the deck can legally play it (its color identity is inside the commander's);
  *   - the slot's current card is NOT in your hands -- still to buy, or in the post --
  *     because a slot you can already fill does not need a substitute;
  *   - it does the same job, judged by Slot.slotFit, which is the same scoring the Deck
@@ -111,7 +111,7 @@ for (const [key, rec] of Object.entries(doc.state.owned)) {
 /* ---------- where each one could go ---------- */
 const owned = Slot.normalizeOwned(doc.state);
 const decks = Object.entries(doc.state.compareSelections).map(([, id]) => id).filter(Boolean);
-/* A deck's colours are its commander's, and the commander is the card in the commander
+/* A deck's colors are its commander's, and the commander is the card in the commander
    slot -- read from the composed deck rather than a field on the plan, which does not
    carry one. Getting this wrong is silent: an empty identity rejects every card. */
 const identityOf = (slots) => {

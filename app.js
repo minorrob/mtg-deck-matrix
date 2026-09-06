@@ -129,8 +129,8 @@
   // ribbon always marks the build that is actually loaded -- one source of
   // truth, and re-picking the slate is a data change rather than an edit across
   // fifty variant records.
-  let treysBuildIds = new Set();
-  const isTreysBuild = (variant) => treysBuildIds.has(variant.id);
+  let myBuildIds = new Set();
+  const isMyBuild = (variant) => myBuildIds.has(variant.id);
   const isCustomDeck = (deckId) => customDeckIds.has(Number(deckId));
 
   // Generated decks are merged into copies of the baked catalog on every change.
@@ -306,7 +306,7 @@
       ownershipSchema: 2,
       /* The saved shape's own version, separate from the two schema numbers above, which
          version particular fields. This one versions the whole export, so an older file
-         can be recognised and migrated rather than half-read. Raised to 4 when Assigned
+         can be recognized and migrated rather than half-read. Raised to 4 when Assigned
          arrived: before it, a slot had one selection and no reset target. */
       stateVersion: STATE_VERSION,
       compareSelections: {},
@@ -496,6 +496,25 @@
   function initializeDetailsControls() {
     // Disclosures that live inside a <summary> must swallow the click, or the surrounding
     // <details> collapses the moment you try to expand the panel inside it.
+    /* The two ways out of a first-run empty page. Delegated, because the page
+       that carries them is re-rendered from scratch on every state change. */
+    document.addEventListener("click", (event) => {
+      const goto = event.target.closest("[data-goto-view]");
+      if (goto) { event.preventDefault(); switchView(goto.dataset.gotoView); return; }
+      const tour = event.target.closest("[data-first-run-tour]");
+      if (tour) { event.preventDefault(); startTour(); return; }
+      const load = event.target.closest("[data-first-run-load]");
+      if (load) {
+        event.preventDefault();
+        /* Back to the tab they asked from. This button's whole promise is
+           "fill THIS page in", and applyStatePayload's own default is to land on
+           Compare -- right for the header control, wrong for a button sitting
+           inside the page it is meant to populate. */
+        const here = load.closest(".view");
+        loadActiveState(here ? here.id.replace(/^view-/, "") : null);
+      }
+    });
+
     document.addEventListener("click", (event) => {
       const toggle = event.target.closest("[data-panel-toggle]");
       if (!toggle) return;
@@ -550,7 +569,7 @@
 
   function loadDeckPageCards() {
     if (deckPageCards) return Promise.resolve(deckPageCards);
-    return fetch("data/cards.json")
+    return fetch("data/cards.json?v=1")
       .then((r) => r.json())
       .then((payload) => {
         const map = {};
@@ -826,7 +845,7 @@
       deckId: variant.id,
       deckTitle: "Deck " + variant.deckId + " · " + variant.name,
       commander: plan.commanderName || variant.commander || "",
-      /* A Commander deck's colours ARE its commander's colours -- there is nowhere else
+      /* A Commander deck's colors ARE its commander's colors -- there is nowhere else
          for them to come from. Offering a card outside them is not a weak suggestion, it
          is an illegal one, so the slot filters on this before it ranks anything. */
       identity: (cards[Lineup.normalizeName(plan.commanderName || variant.commander || "")] || {}).colorIdentity || [],
@@ -837,7 +856,7 @@
          nothing has claimed. deck-page reads these instead of "who has it", so five decks
          can each box a copy of a card you own five of without any of them lying. */
       /* Everything needed to answer "can I sleeve this and play it": the hundred as literal
-         cards, the rules verdict on them, and whether the colours it asks for are actually
+         cards, the rules verdict on them, and whether the colors it asks for are actually
          behind it. Computed here rather than in the page because evaluateDeckCompliance is
          the same call Calibrate has always used -- one authority on legality, not two. */
       deckCards: (() => {
@@ -893,6 +912,20 @@
       rungTwins: rung ? Slot.rungTwins(plan, rung) : [],
       rungLabels: Slot.RUNG_LABEL,
       buildRungs: Slot.BUILD_RUNGS,
+      /* Whether the score above this deck still describes it. Computed here
+         rather than remembered, for the same reason the rung is: a stored "you
+         were measured at 91.5" keeps claiming 91.5 after a slot is changed
+         underneath it. nearRung is what the badge counts against -- the rung
+         this hundred is closest to, and how many slots are off it. */
+      nearRung: window.MtgSlotModel.nearestRung(plan, ensureBuyState(variant.id),
+        (state.deckRung || {})[variant.id]),
+      audit: deckAuditFor(variant, plan, rung),
+      /* How this deck has actually gone, if it has been played. The measured
+         strip reports what the simulation says; this is the other half of that
+         sentence, and the Deck page is where somebody is deciding what to change
+         about the deck -- which is exactly when a record is worth seeing. */
+      record: deckRecordFor(variant, plan, rung),
+      measuring: measuringDeck === variant.id ? measuringLine : null,
       active: (state.deckActive && state.deckActive[variant.id]) || {},
       openSlot: deckPageState.openSlot,
       /* The entry ids the reviewed recommendation selects for this deck. A Set because the
@@ -903,6 +936,7 @@
         head: !deckPageState.closedPanels.head,
         filters: !deckPageState.closedPanels.filters,
         ready: Boolean(deckPageState.closedPanels.ready === false),
+        measured: Boolean(deckPageState.closedPanels.measured === false),
         // One flag for every slot: only one is open at a time, and folding the reasoning
         // away on one slot means wanting it folded on the next.
         slotDetail: !deckPageState.closedPanels.slotDetail
@@ -911,11 +945,260 @@
     };
   }
 
+  /* This deck's own record, against the rung it is standing on.
+     Same module and the same restraint as the Game Log panel: an interval that
+     contains the prediction reads as "cannot tell", never as a difference. */
+  function deckRecordFor(variant, plan, rung) {
+    const Rec = window.MtgGameRecord;
+    const log = (state.gameLog || []).filter((entry) => entry && entry.variantId === variant.id);
+    if (!Rec || !log.length) return null;
+    const Slot = window.MtgSlotModel;
+    const build = simulationSummary?.builds?.[variant.id];
+    const sim = (rung && build?.[Slot.RUNG_LABEL[rung]]) || build?.Tuned || null;
+    const predicted = sim && sim.winPct != null ? Number(sim.winPct) : null;
+    const deck = Rec.summarize(log, {labels: {[variant.id]: variant.name}}).decks[0];
+    const result = Rec.compare(deck, predicted);
+    return {
+      games: deck.games,
+      headline: Rec.headline(deck),
+      predicted,
+      verdict: result.verdict,
+      says: Rec.phrase(result),
+      podFun: deck.podFun,
+      avgTurns: deck.avgTurns
+    };
+  }
+
+  /* ------------------------------------------------ measuring a deck here */
+
+  /* Which deck is mid-run, and what the progress line says. Module state rather
+     than app state: it describes this second, not this device, and writing it to
+     localStorage would resurrect "Measuring... seed 3 of 6" on a fresh load. */
+  let measuringDeck = null, measuringLine = null;
+  let simSeats = null;
+
+  /* The simulation's own config and opponent table. Fetched once, on the first
+     re-run, so a reader who never presses the button never pays for them. */
+  function simContext() {
+    if (simSeats) return Promise.resolve(simSeats);
+    return Promise.all([
+      fetch("sim/config.json?v=1", {cache: "default"}).then((r) => r.json()),
+      fetch("sim/opponents.json?v=1", {cache: "default"}).then((r) => r.json())
+    ]).then(([config, opponents]) => {
+      simSeats = {config, seats: window.MtgDeckMeasure.buildSeats(opponents, config.table)};
+      return simSeats;
+    }).catch(() => null);
+  }
+
+  /* The literal hundred, as cards the simulator can play. `deckPageCards` is the
+     baked catalog the Deck page already holds, so this needs no fetch. */
+  function lineupFor(plan, selection, commanderName) {
+    const Audit = window.MtgDeckAudit;
+    const entries = Lineup.selectedEntries(plan, selection).map((entry) => entry.item);
+    return Audit.lineupOf(entries, deckPageCards || {}, Lineup.normalizeName, commanderName);
+  }
+
+  function deckAuditFor(variant, plan, rung) {
+    const Audit = window.MtgDeckAudit;
+    const Slot = window.MtgSlotModel;
+    if (!Audit || !deckPageCards) return null;
+    const commander = plan.commanderName || variant.commander || "";
+    const lineup = lineupFor(plan, ensureBuyState(variant.id), commander);
+    const published = rung
+      ? (simulationSummary?.builds?.[variant.id]?.[Slot.RUNG_LABEL[rung]] || null)
+      : null;
+    return Audit.status({
+      hash: Audit.hashOf(lineup),
+      rung,
+      stored: (state.deckMeasures || {})[variant.id] || null,
+      published,
+      rungLabels: Slot.RUNG_LABEL
+    });
+  }
+
+  /* Measure the deck as it stands and the rung it came from, both here, both the
+     same way. Two runs of six seeds is about seven seconds of blocked main thread,
+     which is why the button reports which seed it is on rather than spinning. */
+  async function rerunDeckMeasure() {
+    const ctx = deckPageContext();
+    if (!ctx || measuringDeck) return;
+    const Audit = window.MtgDeckAudit;
+    const Slot = window.MtgSlotModel;
+    if (!Audit || !window.MtgDeckMeasure) return showToast("The simulator did not load.");
+    const variant = ctx.variants[deckPageState.deckIndex];
+    const plan = buyCatalog.plans[variant.id];
+    if (!plan) return;
+    const context = await simContext();
+    if (!context) return showToast("The simulation config could not be loaded.");
+
+    const commander = plan.commanderName || variant.commander || "";
+    const current = lineupFor(plan, ensureBuyState(variant.id), commander);
+    if (current.reduce((n, c) => n + c.quantity, 0) !== 100) {
+      return showToast("A score needs a hundred cards. Fill the empty slots first.");
+    }
+    /* The baseline is the rung this hundred is nearest to, which is the one the
+       published number described before the deck was edited. With no rung at all
+       there is nothing honest to compare against, and the run says so by
+       returning a single figure rather than inventing a second. */
+    const near = ctx.nearRung;
+    const baseline = near ? lineupFor(plan, Slot.selectionForRung(plan, near.rung), commander) : null;
+
+    measuringDeck = variant.id;
+    let done = 0;
+    const total = baseline ? 12 : 6;
+    measuringLine = `seed 1 of ${total}`;
+    renderDeckPage();
+    // One frame, so the progress line paints before the engine takes the thread.
+    await new Promise((resolve) => setTimeout(resolve, 40));
+
+    try {
+      const result = Audit.rerun(current, baseline, {
+        config: context.config,
+        seats: context.seats,
+        baselineRung: near ? near.rung : null,
+        onSeed: () => {
+          done += 1;
+          measuringLine = `seed ${Math.min(done + 1, total)} of ${total}`;
+        }
+      });
+      state.deckMeasures = state.deckMeasures || {};
+      state.deckMeasures[variant.id] = result;
+      saveState();
+      const delta = result.baseline ? result.current.score - result.baseline.score : null;
+      showToast(delta === null
+        ? `${variant.name} measures ${result.current.score.toFixed(2)}.`
+        : `${variant.name} measures ${result.current.score.toFixed(2)}, ${
+            (delta >= 0 ? "+" : "") + delta.toFixed(2)} against ${Slot.RUNG_LABEL[result.baselineRung]}.`);
+    } finally {
+      measuringDeck = null;
+      measuringLine = null;
+      renderDeckPage();
+    }
+  }
+
+  /* ------------------------------------------------ the deck workbook */
+
+  /* One sheet per chosen deck, with a summary in front. The reason to export at
+     all is the "why" column: a decklist is available from a dozen places, and the
+     sentence explaining why each card is in this deck is not. */
+  function exportDeckWorkbook() {
+    const Audit = window.MtgDeckAudit;
+    const Xlsx = window.MtgXlsxWriter;
+    const Slot = window.MtgSlotModel;
+    const ctx = deckPageContext();
+    if (!Audit || !Xlsx || !ctx) return showToast("The workbook writer did not load.");
+
+    const decks = ctx.variants.map((variant) => {
+      const plan = buyCatalog.plans[variant.id];
+      if (!plan) return null;
+      const selection = ensureBuyState(variant.id);
+      const rung = Slot.activeRung(plan, selection, (state.deckRung || {})[variant.id]);
+      const measured = (state.deckMeasures || {})[variant.id] || null;
+      const published = rung ? (simulationSummary?.builds?.[variant.id]?.[Slot.RUNG_LABEL[rung]] || null) : null;
+      const commander = plan.commanderName || variant.commander || "";
+
+      const cards = Lineup.selectedEntries(plan, selection).map((entry) => {
+        const item = entry.item;
+        const facts = (deckPageCards || {})[Lineup.normalizeName(item.name)] || {};
+        const where = window.MtgDeckPage.locationOf(ctx, item.name, item.quantity, variant.id);
+        const unit = Number(item.price != null ? item.price : facts.price) || 0;
+        const quantity = Math.max(1, Number(item.quantity || 1));
+        return {
+          name: item.name,
+          quantity,
+          type: facts.typeLine || item.typeLine || "",
+          manaCost: facts.manaCost || item.manaCost || "",
+          // data/cards.json carries no mana value, only the printed cost, so it is
+          // read off the cost by the same helper the slot fit uses.
+          mv: Slot.manaValueOf(facts.manaCost ? facts : item) || 0,
+          color: (facts.colorIdentity || item.colorIdentity || []).join("") || "C",
+          // The bucket an entry came out of IS its rung -- there is no `rung` field
+          // on an entry, and reading one gave a column of blanks.
+          rung: Slot.RUNG_LABEL[Slot.rungOf(entry.kind)] || "",
+          where: where.label,
+          inBox: where.kind === "active",
+          toBuy: where.kind === "buy",
+          unit,
+          line: unit * quantity,
+          /* The whole reason for the file. The plan writes `why` on every card it
+             adds and `brief` on some; a starting-shell card has neither, because
+             the shell is where the deck begins rather than something argued for.
+             Saying that is better than a blank cell, which reads as missing data. */
+          why: item.why || item.maxReason || item.brief || item.purpose
+            || (entry.kind === "shell" ? "In the starting shell" : "")
+        };
+      });
+
+      return {
+        /* Excel truncates a sheet name at 31 characters, and "D2 Proliferate
+           Counters — Atrax" reads as a broken file rather than a long one. The
+           commander is already its own column on the Summary, so the sheet is
+           named by the deck and its theme alone. */
+        title: `D${variant.deckId} ${String(variant.name).split(/\s+[—-]\s+/)[0]}`,
+        commander,
+        rungLabel: rung ? Slot.RUNG_LABEL[rung] : null,
+        score: measured && measured.hash === Audit.hashOf(lineupFor(plan, selection, commander))
+          ? measured.current.score
+          : (published ? published.score : null),
+        scoreSource: measured && measured.hash === Audit.hashOf(lineupFor(plan, selection, commander))
+          ? "measured in the browser, six seeds of 20,000 games"
+          : (published ? `${published.engine || "sweep"}, ${Number(published.games || 0).toLocaleString()} games`
+            : "not measured on this hundred"),
+        cards
+      };
+    }).filter(Boolean);
+
+    if (!decks.length) return showToast("Choose a variant for at least one deck first.");
+    const book = Audit.workbook(decks, {});
+    downloadFile({
+      filename: book.filename,
+      mime: Xlsx.MIME,
+      bytes: Xlsx.build(book)
+    });
+    showToast(`${decks.length} deck${decks.length === 1 ? "" : "s"} exported, one sheet each.`);
+  }
+
   /* Every pick, rung and tick re-renders the whole page, which without this would
      drop the reader wherever the new markup happened to put them -- a jump down the
      moment they touched a card in an open slot. withUiState is the same wrapper the
      other views already use: it restores scroll, focus and open-state around the
      rebuild, so the page holds still until the reader moves it. */
+  /* The screen a first-time visitor actually meets on tabs 2 and 3.
+   *
+   * It used to be one sentence in a .loading-card -- the same class as
+   * "Loading the card catalog…", so a permanent state was dressed as a
+   * transient one and somebody could reasonably sit and wait for it to
+   * resolve. It told them to go to Compare without taking them there, and it
+   * said "choose a variant", which is a word this app has not defined yet at
+   * the moment somebody first reads it.
+   *
+   * So: what this tab is FOR, why it is empty, and the two ways out. The second
+   * way matters most for a first run -- Load Active fills the whole app with the
+   * six real decks in one click, and until now it was an unlabelled glyph in a
+   * header that is folded shut on a phone.
+   */
+  function firstRunEmpty(title, whatFor) {
+    return `<div class="empty-state fr-empty">
+      <h2>${esc(title)}</h2>
+      <p class="fr-empty-what">${esc(whatFor)}</p>
+      <p class="fr-empty-why">It is empty because no deck has been picked yet. Compare holds six deck
+        roles with five approaches each; picking one for any role fills this page in.</p>
+      <div class="fr-empty-acts">
+        <button class="primary-button" type="button" data-goto-view="compare">Pick a deck on Compare</button>
+        <button class="secondary-button" type="button" data-first-run-load>Or load the six built decks</button>
+        <!-- The Tour lives in the header, and on a phone the header starts folded
+             to the tab bar -- a deliberate trade, since it was a quarter of the
+             viewport for five buttons touched once a session. The cost was that
+             the one affordance built for a first visit was invisible on the
+             device most likely to be somebody's first. It is offered here too,
+             where a first-timer actually is. -->
+        <button class="secondary-button fr-empty-tour" type="button" data-first-run-tour>Show me around</button>
+      </div>
+      <p class="fr-empty-note">Loading the six replaces anything saved on this device — on a first visit
+        that is nothing, and it is the quickest way to see every part of this working.</p>
+    </div>`;
+  }
+
   function renderDeckPage() {
     withUiState("#view-deck2", renderDeckPageView);
   }
@@ -930,7 +1213,10 @@
     }
     const ctx = deckPageContext();
     if (!ctx) {
-      host.innerHTML = '<div class="loading-card">Choose a variant for at least one deck on Compare, then come back.</div>';
+      host.innerHTML = firstRunEmpty(
+        "Deck turns a pick into an exact hundred",
+        "Every slot in the deck, which card is filling it and why, what is sleeved in the box, " +
+        "what is on order, and what is still owed.");
       return;
     }
     const rail = ctx.variants.map((v, i) => (
@@ -1134,6 +1420,14 @@
       const id = el.dataset.dpExpand;
       deckPageState.openSlot = deckPageState.openSlot === id ? null : id;
       renderDeckPage();
+      return true;
+    }
+    if (event.target.closest("[data-dp-measure]")) {
+      rerunDeckMeasure();
+      return true;
+    }
+    if (event.target.closest("[data-dp-xlsx]")) {
+      exportDeckWorkbook();
       return true;
     }
     if ((el = event.target.closest("[data-dp-rung]"))) {
@@ -1379,6 +1673,10 @@
   const shopFilters = {
     status: [], color: [], type: [], band: [], spot: [], rarity: [], deck: [], rung: [],
     query: "", view: "table", groupBy: "spot", sortKey: "name", sortDir: "asc",
+    /* Which view you LAND on, decided once, the first time Shop is opened -- see
+       pickShopView. Not saved: it is a starting point, and all four are one tap
+       apart from wherever you start. */
+    viewPicked: false,
     // Phones only: whether the filter/group/sort block is unfolded. Desktop ignores it
     // and shows the block regardless, so this never hides anything on a wide screen.
     barOpen: false,
@@ -1481,7 +1779,7 @@
           label: `${deckLabels[target.id]} · ${Slot.RUNG_LABEL[best.match.rung]} rung · replace ${
             replacedPick ? replacedPick.name : "an empty slot"} · fit ${best.score}`,
           action: `replace ${replacedPick ? replacedPick.name : "the empty slot"}`,
-          reasons: ["Commander legal + colour legal", `${best.slot.type} slot`],
+          reasons: ["Commander legal + color legal", `${best.slot.type} slot`],
           replaced: rl
         });
       });
@@ -1557,7 +1855,10 @@
       bench: benchItems(decks, owned, cards, deckLabels),
       intakeOpen: shopIntakeOpen,
       picked: shopPickedUp,
-      deckLabels, filters: shopFilters, owned, decks
+      deckLabels, filters: shopFilters, owned, decks,
+      // The page owns the decorated rows -- color, card type, deck names -- so it
+      // hands them straight over rather than the app rebuilding them from raw.
+      onExport: openTripExport
     };
   }
 
@@ -1620,16 +1921,58 @@
     if (added.length) showToast(`${added.length} card${added.length === 1 ? "" : "s"} on the Bench.`);
   }
 
+  /* Arriving at the Store is arriving at a booth: the list of what you have
+     already picked up starts empty, and grouping falls to the seller's own order
+     rather than the app's, which is what you will be scanning against. */
+  function enterStoreView() {
+    shopPickedUp = new Set();
+    shopFilters.sortKey = "name";
+    shopFilters.sortDir = "asc";
+    if (shopFilters.groupBy === "spot") shopFilters.groupBy = "letter";
+  }
+
+  /* WHICH OF THE FOUR VIEWS A PHONE LANDS ON.
+   *
+   * The table is a reference: every card any selected deck wants, with its
+   * colour, type, rarity, band, target and paid price. On a desktop that is a
+   * table and reads like one. On a phone every row stacks into a 195px card, and
+   * with the six decks loaded that is 414 of them -- measured, 81,649px, or 105
+   * screens. Store is the same shopping trip in 23, and it is the view built for
+   * it: a search box, the seller's own letter groups, and one green Buy button
+   * per row.
+   *
+   * So a narrow screen lands on Store. Decided once, when Shop is first opened
+   * rather than when the page loads, so it reflects the window somebody is
+   * actually using; and never again after that, so choosing the table on a phone
+   * keeps the table. All four stay one tap away either way -- this only decides
+   * where you start. */
+  function pickShopView() {
+    if (shopFilters.viewPicked) return;
+    shopFilters.viewPicked = true;
+    let narrow = false;
+    try { narrow = window.matchMedia("(max-width: 700px)").matches; } catch (error) { narrow = false; }
+    if (!narrow) return;
+    enterStoreView();
+    shopFilters.view = "store";
+  }
+
   function renderShopPage() {
     const host = $("#view-shop2");
     if (!host || !window.MtgShopPage) return;
+    pickShopView();
     if (!deckPageCards) {
       host.innerHTML = '<div class="loading-card">Loading the card catalog…</div>';
       loadDeckPageCards().then(renderShopPage);
       return;
     }
     const ctx = shopContext();
-    if (!ctx) { host.innerHTML = '<div class="loading-card">Choose a variant for at least one deck on Compare, then come back.</div>'; return; }
+    if (!ctx) {
+      host.innerHTML = firstRunEmpty(
+        "Shop is everything still owed, in one list",
+        "Each card you still need appears once however many decks want it, priced, grouped the way " +
+        "you will actually walk a vendor floor, and exportable as a print list or a bulk order.");
+      return;
+    }
     /* Every tap on this page rebuilds it, and in the Store view that is a tap per card.
        Losing your place forty rows into a seller's box, once per purchase, would make the
        view useless -- so the same wrapper the Deck page uses puts the scroll, the focus
@@ -1731,17 +2074,21 @@
       shopFilters.query = ""; renderShopPage(); return true;
     }
     if (event.target.closest("[data-sp-mob]")) { shopFilters.barOpen = !shopFilters.barOpen; renderShopPage(); return true; }
+    /* Export takes what is on screen, filters and all. Exporting the whole plan
+       when you are looking at one deck's outstanding red cards would be the wrong
+       list every time, so the dialog is handed the rows the page is showing. */
+    if (event.target.closest("[data-sp-export]")) {
+      const ctx = shopContext();
+      if (ctx) openTripExport(window.MtgShopPage.visibleRows(ctx));
+      return true;
+    }
     if ((el = event.target.closest("[data-sp-view]"))) {
       const next = el.dataset.spView;
       /* Arriving at the Store is arriving at a booth: the list of what you have already
          picked up starts empty, and grouping falls to the seller's own order rather than
          the app's, which is what you will be scanning against. */
-      if (next === "store" && shopFilters.view !== "store") {
-        shopPickedUp = new Set();
-        shopFilters.sortKey = "name";
-        shopFilters.sortDir = "asc";
-        if (shopFilters.groupBy === "spot") shopFilters.groupBy = "letter";
-      }
+      if (next === "store" && shopFilters.view !== "store") enterStoreView();
+      shopFilters.viewPicked = true;
       shopFilters.view = next; renderShopPage(); return true;
     }
     if (event.target.closest("[data-sp-storeall]")) { shopFilters.storeAll = !shopFilters.storeAll; renderShopPage(); return true; }
@@ -2287,13 +2634,13 @@
       details.innerHTML = `
         <summary>
           <span class="deck-number">${deck.id}</span>
-          <button type="button" class="deck-about-button" data-about-deck="${deck.id}" aria-haspopup="dialog">${icon("◆")}About</button>
+          <button type="button" class="deck-about-button" data-about-deck="${deck.id}" aria-haspopup="dialog" aria-label="${esc("About " + deck.title)}">${icon("◆")}About</button>
           <span class="deck-summary-copy"><strong>${esc(deck.title)}</strong><span>${chosenId ? `Picked: ${esc(variantById(chosenId).name)} · ` : ""}${variants.length} of ${deckTotal} shown</span></span>
           <span class="deck-chevron" aria-hidden="true">›</span>
         </summary>
         <div class="rank-order" role="group" aria-label="Sort Deck ${deck.id} variants by stage ranking">
           <span>Rank order</span>
-          ${STAGES.map((label, index) => `<button class="rank-order-button info-tip tip-action${rankStage === index + 1 ? " is-active" : ""}" data-rank-stage="${index + 1}" data-tooltip="${esc(stageTooltip(index, variants))}" aria-describedby="info-tooltip">${label}${tooltipHint()}</button>`).join("")}
+          ${STAGES.map((label, index) => `<button class="rank-order-button info-tip tip-action${rankStage === index + 1 ? " is-active" : ""}" aria-pressed="${rankStage === index + 1}" data-rank-stage="${index + 1}" data-tooltip="${esc(stageTooltip(index, variants))}" aria-describedby="info-tooltip">${label}${tooltipHint()}</button>`).join("")}
         </div>
         <div class="variant-track">${variants.length ? "" : `<div class="variant-filter-empty">${icon("⌕")}<strong>No variants match this filter in Deck ${deck.id}</strong><span>Try another mechanic, play style, or search term.</span></div>`}</div>`;
       const track = $(".variant-track", details);
@@ -2400,10 +2747,10 @@
     const engine = variant.scores?.engine?.[stage - 1] || [];
     const growth = variant.scores?.growth || [];
     const card = document.createElement("article");
-    card.className = `variant-card${selected ? " is-selected" : ""}${variant.treysBuild ? " is-treys-build" : ""}`;
+    card.className = `variant-card${selected ? " is-selected" : ""}${variant.myBuild ? " is-my-build" : ""}`;
     card.dataset.variant = variant.id;
     card.innerHTML = `
-      ${isTreysBuild(variant) ? `<div class="treys-build-ribbon" title="Trey's chosen build for this deck slot"><span>★ Trey's Build</span></div>` : ""}
+      ${isMyBuild(variant) ? `<div class="my-build-ribbon" title="my chosen build for this deck slot"><span>★ My Build</span></div>` : ""}
       <label class="pick-control">
         <input type="checkbox" ${selected ? "checked" : ""} aria-label="Pick ${esc(variant.name)}">
         <span>${selected ? "Picked" : "Pick"}</span>
@@ -2439,11 +2786,16 @@
           ${metricFamilyMarkup("engine", engine, `metric-engine-${variant.id}-compare`)}
           ${metricFamilyMarkup("growth", growth, `metric-growth-${variant.id}-compare`)}
         </div>
-        <div class="variant-card-actions">
-          <button class="comment-toggle tip-action info-tip${state.comments[variant.id] ? " has-comment" : ""}" type="button" aria-expanded="${openCommentId === variant.id}" data-tooltip="${esc(TOOLTIP_DEFINITIONS.addComment)}" aria-describedby="info-tooltip">${icon(state.comments[variant.id] ? "✓" : "“")}<span>${state.comments[variant.id] ? "Comment saved" : "Add a comment"}</span>${tooltipHint()}</button>
-          <button class="simulate-button tip-action info-tip" type="button" data-tooltip="${esc(TOOLTIP_DEFINITIONS.simulate)}" aria-describedby="info-tooltip">${icon("⟳")}<span>Simulate</span>${tooltipHint()}</button>
-          ${simulationSummary?.builds?.[variant.id] ? `<button class="why-variant-button tip-action info-tip" type="button" aria-haspopup="dialog" data-tooltip="${esc(TOOLTIP_DEFINITIONS.whyVariant)}" aria-describedby="info-tooltip">${icon("★")}<span>Why This Variant</span>${tooltipHint()}</button>` : ""}
-          <button class="detail-button tip-action info-tip" type="button" data-tooltip="${esc(TOOLTIP_DEFINITIONS.fullDetail)}" aria-describedby="info-tooltip">View full detail →${tooltipHint()}</button>
+        <!-- Fifty variants, four actions each: two hundred buttons called "Simulate",
+             "Add a comment", "Why This Variant" and "View full detail" with nothing
+             saying of what. On screen the card around them answers that; tabbing
+             through them it was two hundred identical names. The visible words stay
+             first in each label, so saying "click Simulate" still finds one. -->
+        <div class="variant-card-actions" role="group" aria-label="${esc(variant.name)}">
+          <button class="comment-toggle tip-action info-tip${state.comments[variant.id] ? " has-comment" : ""}" type="button" aria-expanded="${openCommentId === variant.id}" aria-label="${esc((state.comments[variant.id] ? "Comment saved" : "Add a comment") + " — " + variant.name)}" data-tooltip="${esc(TOOLTIP_DEFINITIONS.addComment)}" aria-describedby="info-tooltip">${icon(state.comments[variant.id] ? "✓" : "“")}<span>${state.comments[variant.id] ? "Comment saved" : "Add a comment"}</span>${tooltipHint()}</button>
+          <button class="simulate-button tip-action info-tip" type="button" aria-label="${esc("Simulate — " + variant.name)}" data-tooltip="${esc(TOOLTIP_DEFINITIONS.simulate)}" aria-describedby="info-tooltip">${icon("⟳")}<span>Simulate</span>${tooltipHint()}</button>
+          ${simulationSummary?.builds?.[variant.id] ? `<button class="why-variant-button tip-action info-tip" type="button" aria-haspopup="dialog" aria-label="${esc("Why This Variant — " + variant.name)}" data-tooltip="${esc(TOOLTIP_DEFINITIONS.whyVariant)}" aria-describedby="info-tooltip">${icon("★")}<span>Why This Variant</span>${tooltipHint()}</button>` : ""}
+          <button class="detail-button tip-action info-tip" type="button" aria-label="${esc("View full detail — " + variant.name)}" data-tooltip="${esc(TOOLTIP_DEFINITIONS.fullDetail)}" aria-describedby="info-tooltip">View full detail →${tooltipHint()}</button>
         </div>
         <div class="comment-editor" ${openCommentId === variant.id ? "" : "hidden"}>
           <label for="comment-${esc(variant.id)}">Feedback on this variant</label>
@@ -3945,6 +4297,8 @@
   async function pollSimStatus() {
     if (!isLocalHost() || !simDialogVariant) return;
     try {
+      // no-store, unlike the committed data above: this file is being rewritten
+      // by a local process right now, and a reused byte of it is a stale run.
       const response = await fetch(`${SIM_STATUS_PATH}?t=${Date.now()}`, {cache: "no-store"});
       if (!response.ok) return;
       const status = await response.json();
@@ -6069,6 +6423,87 @@
     withUiState("#view-log", renderGameLogView);
   }
 
+  /* ------------------------------------------- what the games taught you */
+
+  /* The Game Log has been write-only since it was built. Every score in this app
+     is a prediction; every row in that log is an outcome; nothing put the two
+     side by side. This does -- carefully, because twelve games of Commander is
+     not evidence of much and the interesting-looking version of this panel would
+     be a confident-looking lie.
+
+     game-record.js does the arithmetic and, more importantly, the restraint: a
+     Wilson interval that contains the prediction is reported as "these agree, or
+     there are too few games to tell", never as a difference. */
+  function gameRecordMarkup() {
+    const Rec = window.MtgGameRecord;
+    const log = state.gameLog || [];
+    if (!Rec || !log.length) return "";
+
+    const labels = {};
+    (state.compareSelections ? Object.values(state.compareSelections) : []).forEach((id) => {
+      const v = variantById(id);
+      if (v) labels[id] = v.name;
+    });
+    log.forEach((entry) => {
+      if (labels[entry.variantId]) return;
+      const v = variantById(entry.variantId);
+      labels[entry.variantId] = v ? v.name : entry.variantId;
+    });
+
+    const summary = Rec.summarize(log, {labels});
+    const rows = summary.decks.map((deck) => {
+      /* The published win rate for the rung this deck is standing on. Tuned is
+         the fallback because it is the one rung every variant was measured on
+         the same way -- comparing a logged record against a rung the deck is not
+         actually built as would be worse than not comparing at all. */
+      const plan = buyCatalog.plans[deck.id];
+      const Slot = window.MtgSlotModel;
+      const rung = plan && Slot ? Slot.activeRung(plan, ensureBuyState(deck.id), (state.deckRung || {})[deck.id]) : null;
+      const build = simulationSummary?.builds?.[deck.id];
+      const sim = (rung && build?.[Slot.RUNG_LABEL[rung]]) || build?.Tuned || null;
+      const predicted = sim && sim.winPct != null ? Number(sim.winPct) : null;
+      const result = Rec.compare(deck, predicted);
+      /* Under five decided games the range IS the headline. "100% won" off one
+         game is the exact failure this panel was written to avoid, and the
+         sentence underneath is not enough to undo a number that size. */
+      const head = Rec.headline(deck);
+      const tone = result.verdict === "below" ? " is-below"
+        : result.verdict === "above" ? " is-above" : "";
+      return `<div class="gr-row${tone}">
+        <div class="gr-deck">
+          <b>${esc(deck.label)}</b>
+          <span>${deck.games} game${deck.games === 1 ? "" : "s"}${deck.draws ? ` · ${deck.draws} drawn` : ""}${
+            deck.last ? ` · last ${esc(deck.last)}` : ""}</span>
+        </div>
+        <div class="gr-num${head.provisional ? " is-provisional" : ""}"><b class="num">${head.text}</b>
+          <span>${head.provisional ? "could be" : "won"}</span></div>
+        <div class="gr-num"><b class="num">${predicted == null ? "—" : Rec.pct(predicted)}</b>
+          <span>predicted</span></div>
+        <div class="gr-num"><b class="num">${deck.podFun == null ? "—" : deck.podFun}</b>
+          <span>table fun</span></div>
+        <div class="gr-num"><b class="num">${deck.avgTurns == null ? "—" : deck.avgTurns}</b>
+          <span>turns</span></div>
+        <p class="gr-says">${esc(Rec.phrase(result))}</p>
+      </div>`;
+    }).join("");
+
+    const fun = Rec.funVersusWinning(summary);
+    const t = summary.totals;
+    return `<section class="gr-panel">
+      <div class="gr-head">
+        <h3>What the games say</h3>
+        <span>${t.games} game${t.games === 1 ? "" : "s"} across ${t.decks} deck${t.decks === 1 ? "" : "s"}${
+          t.winRate == null ? "" : ` · won ${Rec.pct(t.winRate)} of the ${t.decided} that had a winner`}</span>
+      </div>
+      ${fun ? `<p class="gr-fun">${esc(fun.note)}</p>` : ""}
+      <div class="gr-rows">${rows}</div>
+      <p class="gr-caveat">The predicted rate comes from the simulation's own opponent
+        table, not from the four people you actually sit with — so a gap can be the
+        deck, the piloting, or the pod, and nothing in a log can tell those apart.
+        Ranges are 95% intervals on the games recorded here.</p>
+    </section>`;
+  }
+
   function renderGameLogView() {
     const root = $("#view-log");
     const log = state.gameLog || [];
@@ -6092,10 +6527,10 @@
         </div>
         <div class="log-row">
           <span class="log-field"><span>Result</span>
-            <span class="log-chips">${[["win", "Won"], ["loss", "Lost"], ["draw", "Draw"]].map(([value, label]) => `<button type="button" class="filter-chip${draft.result === value ? " is-active" : ""}" data-log-result="${value}">${label}</button>`).join("")}</span>
+            <span class="log-chips" role="group" aria-label="Result">${[["win", "Won"], ["loss", "Lost"], ["draw", "Draw"]].map(([value, label]) => `<button type="button" class="filter-chip${draft.result === value ? " is-active" : ""}" aria-pressed="${draft.result === value}" data-log-result="${value}">${label}</button>`).join("")}</span>
           </span>
           <span class="log-field"><span>Players</span>
-            <span class="log-chips">${[3, 4, 5, 6].map((n) => `<button type="button" class="filter-chip${Number(draft.players) === n ? " is-active" : ""}" data-log-players="${n}">${n}</button>`).join("")}</span>
+            <span class="log-chips" role="group" aria-label="How many players">${[3, 4, 5, 6].map((n) => `<button type="button" class="filter-chip${Number(draft.players) === n ? " is-active" : ""}" aria-pressed="${Number(draft.players) === n}" data-log-players="${n}">${n}</button>`).join("")}</span>
           </span>
         </div>
         <div class="log-row">
@@ -6104,11 +6539,17 @@
           <label class="log-field"><span>Knocked out on turn</span><input type="number" min="0" max="40" inputmode="numeric" value="${esc(draft.eliminatedTurn ?? "")}" placeholder="survived" data-log="eliminatedTurn"></label>
         </div>
         <div class="log-row">
+          <!-- Ten buttons called Rough, Meh, Fine, Good, Great, and then the same
+               five again. On screen the question above each row says which is
+               which; with a screen reader they were ten identical names in a
+               row. The group carries the question, and every chip says whether
+               it is the one chosen -- which nothing here did: being picked was a
+               CSS class and nothing else, on all seventeen of them. -->
           <span class="log-field log-field-wide"><span>How was it for the table?</span>
-            <span class="log-chips">${[[1, "Rough"], [2, "Meh"], [3, "Fine"], [4, "Good"], [5, "Great"]].map(([value, label]) => `<button type="button" class="filter-chip${Number(draft.podFun) === value ? " is-active" : ""}" data-log-podfun="${value}">${label}</button>`).join("")}</span>
+            <span class="log-chips" role="group" aria-label="How was it for the table?">${[[1, "Rough"], [2, "Meh"], [3, "Fine"], [4, "Good"], [5, "Great"]].map(([value, label]) => `<button type="button" class="filter-chip${Number(draft.podFun) === value ? " is-active" : ""}" aria-pressed="${Number(draft.podFun) === value}" data-log-podfun="${value}">${label}</button>`).join("")}</span>
           </span>
           <span class="log-field log-field-wide"><span>How was it for you?</span>
-            <span class="log-chips">${[[1, "Rough"], [2, "Meh"], [3, "Fine"], [4, "Good"], [5, "Great"]].map(([value, label]) => `<button type="button" class="filter-chip${Number(draft.myFun) === value ? " is-active" : ""}" data-log-myfun="${value}">${label}</button>`).join("")}</span>
+            <span class="log-chips" role="group" aria-label="How was it for you?">${[[1, "Rough"], [2, "Meh"], [3, "Fine"], [4, "Good"], [5, "Great"]].map(([value, label]) => `<button type="button" class="filter-chip${Number(draft.myFun) === value ? " is-active" : ""}" aria-pressed="${Number(draft.myFun) === value}" data-log-myfun="${value}">${label}</button>`).join("")}</span>
           </span>
         </div>
         <label class="log-field log-field-wide"><span>Note <small>optional</small></span><input type="text" maxlength="180" value="${esc(draft.note || "")}" placeholder="What decided it?" data-log="note"></label>
@@ -6117,14 +6558,19 @@
           <button class="text-button" type="button" data-log-clear>Clear</button>
         </div>
       </section>
+      <!-- The reading comes before the list. Somebody opening this tab after a
+           night wants what the games mean, not to scroll past forty rows to find
+           out; the rows are the record and stay below it. -->
+      ${gameRecordMarkup()}
       <div class="log-list-head">
         <h3>Logged games</h3>
         <div class="action-row">
           <button class="secondary-button" type="button" id="log-export"${log.length ? "" : " disabled"}>Export for the repo</button>
         </div>
       </div>
+      ${gameLogFilterBar(log)}
       <div class="log-list">${log.length
-        ? [...log].reverse().map((entry) => gameLogRow(entry)).join("")
+        ? gameLogVisible(log).map((entry) => gameLogRow(entry)).join("") + gameLogMore(log)
         : `<div class="empty-state"><h3>No games logged yet</h3><p>Record one after your next game — it takes about fifteen seconds.</p></div>`}</div>`;
 
     $$("[data-log]", root).forEach((field) => field.addEventListener("change", () => {
@@ -6153,6 +6599,84 @@
       saveState("Game removed from the log");
       renderGameLog();
     }));
+    /* Filters are a reading position, not a decision, so they live in module
+       state and are not saved: coming back to the log should show the whole
+       thing, not whatever narrowing was left behind three weeks ago. */
+    $$("[data-log-filter-deck]", root).forEach((button) => button.addEventListener("click", () => {
+      logFilters.deck = button.dataset.logFilterDeck;
+      logFilters.all = false;
+      renderGameLog();
+    }));
+    $$("[data-log-filter-result]", root).forEach((button) => button.addEventListener("click", () => {
+      logFilters.result = button.dataset.logFilterResult;
+      logFilters.all = false;
+      renderGameLog();
+    }));
+    $("[data-log-all]", root)?.addEventListener("click", () => {
+      logFilters.all = true;
+      renderGameLog();
+    });
+  }
+
+  /* A log that grows.
+   *
+   * Every entry was rendered, newest first, with nothing to narrow it by. That
+   * is right for the first month and wrong by the second: measured at 250 games
+   * -- about two years of weekly Commander -- the page was 18 screens tall on a
+   * desktop and 47 on a phone, with no way to find a particular game and no
+   * reason to scroll past the first few.
+   *
+   * So: filter by deck and by result, and show the most recent PAGE by default.
+   * The common question is "how have the last few gone", which is answered
+   * without scrolling; the rare one is "find that game against Atraxa", which
+   * the filters answer. Nothing is hidden -- the count says exactly how many
+   * more there are and one button shows them. */
+  const LOG_PAGE = 25;
+  let logFilters = {deck: "all", result: "all", all: false};
+
+  function gameLogMatches(log) {
+    return log.filter((entry) =>
+      (logFilters.deck === "all" || entry.variantId === logFilters.deck) &&
+      (logFilters.result === "all" || entry.result === logFilters.result));
+  }
+
+  const gameLogVisible = (log) => {
+    const matched = [...gameLogMatches(log)].reverse();
+    return logFilters.all ? matched : matched.slice(0, LOG_PAGE);
+  };
+
+  function gameLogMore(log) {
+    const hidden = gameLogMatches(log).length - LOG_PAGE;
+    if (logFilters.all || hidden <= 0) return "";
+    return `<button class="secondary-button log-more" type="button" data-log-all>` +
+      `Show ${hidden} older game${hidden === 1 ? "" : "s"}</button>`;
+  }
+
+  function gameLogFilterBar(log) {
+    if (log.length <= LOG_PAGE) return "";
+    // One chip per deck that actually appears in the log, with its count -- a
+    // filter offering decks you have never played is a filter that lies about
+    // what is in here.
+    const counts = new Map();
+    log.forEach((e) => counts.set(e.variantId, (counts.get(e.variantId) || 0) + 1));
+    const decks = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+    const chip = (attr, value, label, on) =>
+      `<button class="log-chip${on ? " is-on" : ""}" type="button" data-log-${attr}="${esc(value)}" ` +
+      `aria-pressed="${on}">${esc(label)}</button>`;
+    const shown = gameLogMatches(log).length;
+    return `<div class="log-filters">
+      <div class="log-filter-row">
+        ${chip("filter-deck", "all", `All decks (${log.length})`, logFilters.deck === "all")}
+        ${decks.map(([id, n]) => chip("filter-deck", id,
+          `${(variantById(id)?.name || id).split("—")[0].trim()} (${n})`,
+          logFilters.deck === id)).join("")}
+      </div>
+      <div class="log-filter-row">
+        ${[["all", "Any result"], ["win", "Won"], ["loss", "Lost"], ["draw", "Drew"]]
+          .map(([v, label]) => chip("filter-result", v, label, logFilters.result === v)).join("")}
+        <span class="log-filter-count">${shown} of ${log.length} shown</span>
+      </div>
+    </div>`;
   }
 
   function gameLogRow(entry) {
@@ -7313,6 +7837,100 @@
     return state.shopTable;
   }
 
+  /* THE SHOPPING TRIP. Three lists, and they are not three views of one table:
+     one is printed and carried to a booth, one is pasted into a checkout, one is
+     checked against a shelf. Which ones you want depends on the errand, so the
+     dialog asks rather than assuming, and remembers nothing -- the answer is
+     different next week.
+
+     Everything is built by shop-export.js and written client-side. Nothing here
+     talks to a server, which is what lets a friend who loaded their own deck use
+     the same button. */
+  function openTripExport(rows) {
+    const Shop = window.MtgShopExport;
+    const dialog = $("#trip-dialog");
+    if (!Shop || !dialog) return showToast("The export module did not load.");
+    if (!rows || !rows.length) return showToast("Nothing in the current view to export.");
+    const counts = {
+      toBuy: Shop.toBuyGroups(rows).reduce((n, g) => n + g.count, 0),
+      order: Shop.orderText(rows).split("\n").filter(Boolean).length,
+      inHand: Shop.inHandRows(rows).length
+    };
+    const has = (n) => n > 0;
+    $("#trip-dialog-kicker").textContent =
+      `${rows.length} card${rows.length === 1 ? "" : "s"} in the current view`;
+    $("#trip-dialog-body").innerHTML = `
+      <p class="trip-lede">Pick any or all. Each one is cut for where it is used.</p>
+      <label class="trip-opt${has(counts.toBuy) ? "" : " is-empty"}">
+        <input type="checkbox" data-trip="toBuy"${has(counts.toBuy) ? " checked" : " disabled"}>
+        <span><b>To Buy</b> — ${counts.toBuy} card${counts.toBuy === 1 ? "" : "s"}
+        <em>Printed, two columns, grouped by price then color. Carry it to the booth.</em></span>
+      </label>
+      <label class="trip-opt${has(counts.order) ? "" : " is-empty"}">
+        <input type="checkbox" data-trip="order"${has(counts.order) ? " checked" : " disabled"}>
+        <span><b>Order</b> — ${counts.order} line${counts.order === 1 ? "" : "s"}
+        <em>Paste into tcgplayer.com/massentry and press Add to Cart.</em></span>
+      </label>
+      <label class="trip-opt${has(counts.inHand) ? "" : " is-empty"}">
+        <input type="checkbox" data-trip="inHand"${has(counts.inHand) ? " checked" : " disabled"}>
+        <span><b>In hand</b> — ${counts.inHand} card${counts.inHand === 1 ? "" : "s"}
+        <em>What you already own, by deck. Check it against the shelf.</em></span>
+      </label>
+      <label class="trip-word">
+        <input type="checkbox" data-trip-word>
+        <span>Also give me Word files. The print pages lay out more reliably, so
+        take these only if you want to edit the list on the way.</span>
+      </label>
+      <div class="trip-actions">
+        <button type="button" class="primary-button" data-trip-go>Download</button>
+      </div>`;
+
+    $("[data-trip-go]", $("#trip-dialog-body")).addEventListener("click", () => {
+      const want = {};
+      $$("[data-trip]", $("#trip-dialog-body")).forEach((box) => {
+        if (box.checked) want[box.dataset.trip] = true;
+      });
+      if ($("[data-trip-word]", $("#trip-dialog-body")).checked) {
+        if (want.toBuy) want.toBuyDocx = true;
+        if (want.inHand) want.inHandDocx = true;
+      }
+      const files = Shop.build(rows, want, {date: new Date().toISOString().slice(0, 10)});
+      if (!files.length) return showToast("Nothing selected to export.");
+      files.forEach((file, i) => {
+        // Browsers drop downloads fired in the same tick, so they are spaced out.
+        setTimeout(() => downloadFile(file), i * 350);
+      });
+      dialog.close();
+      // find() hands back the FILE, not the note on it. Printed straight into the
+      // toast that read "Exported 5 files. [object Object]".
+      const note = (files.find((f) => f.note) || {}).note;
+      showToast(`Exported ${files.length} file${files.length === 1 ? "" : "s"}.` +
+        (note ? " " + note : ""));
+    });
+    dialog.showModal();
+  }
+
+  /* One place that turns an export-module file into a download. A print sheet is
+     opened in a tab rather than saved: it exists to be printed, and a file in the
+     downloads folder is one more step between here and paper. */
+  function downloadFile(file) {
+    if (file.kind === "print") {
+      const win = window.open("", "_blank");
+      if (win) { win.document.write(file.content); win.document.close(); return; }
+      // Popups blocked: fall through and save it, which still works.
+    }
+    const body = file.bytes ? [file.bytes] : [file.content];
+    const blob = new Blob(body, {type: file.mime});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = file.filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
+
   function exportShopList(visible) {
     const groupBy = state.shopFilters.groupBy;
     const groups = groupBy === "none" ? [{label: "", items: visible}] : groupShopItems(visible, groupBy);
@@ -7604,26 +8222,26 @@
       {view: "compare", selectors: [".compare-filter-panel"], title: "Narrow the field", copy: "Search by commander, tag, or text, and filter by mechanic or play style. Only matching variants stay visible inside each row."},
       {view: "compare", selectors: ["[data-compare-filter='profileStage']", ".compare-filter-panel"], title: "Base, Tuned, or Maxed", copy: "Score stage changes which build every number on the page describes: out of the box, after the core purchases, or Maxed — a real Bracket 3 hundred carrying up to three Game Changers."},
       {view: "compare", selectors: [".deck-group:first-of-type > summary"], title: "One row per deck role", copy: "Each row is a role with its own objective. Open it to see the five approaches competing for that slot."},
-      {view: "compare", selectors: [".deck-group:first-of-type .rank-order"], title: "Change the ranking lens", copy: "Re-rank the variants for Base, Tuned, or Maxed play to see whether a recommendation still holds as the money goes in."},
+      {view: "compare", selectors: [".deck-group:first-of-type .rank-order"], act: "openGroup", title: "Change the ranking lens", copy: "Re-rank the variants for Base, Tuned, or Maxed play to see whether a recommendation still holds as the money goes in."},
       {view: "compare", selectors: [".deck-group:first-of-type .metric-strip", ".deck-group:first-of-type .variant-card"], title: "Read the three ratings", copy: "Playstyle is how the deck feels to play, Engine is how efficiently it works, Growth is how much upgrade road is left. Tap one to see every sub-score and why it landed there."},
       {view: "compare", selectors: [".deck-group:first-of-type .detail-button", ".deck-group:first-of-type .variant-card"], title: "Open the full evidence", copy: "Full detail carries the commander breakdown, rank reasoning, rarity, precon seed, play pattern, and bracket route."},
       {view: "compare", selectors: [".deck-group:first-of-type .pick-control", ".deck-group:first-of-type .variant-card"], title: "Lock in the pick", copy: "Picking a variant feeds every later step, and the score stage you were reading becomes the rung the Deck tab opens on. Change it any time — your other picks are preserved."},
-      {view: "deck2", selectors: [".dp-rail", ".loading-card", "#view-deck2"], title: "Next · your pick becomes a hundred cards", copy: "Deck opens on the variant you picked, one button per deck along the top."}
+      {view: "deck2", selectors: [".dp-rail", ".fr-empty", "#view-deck2"], title: "Next · your pick becomes a hundred cards", copy: "Deck opens on the variant you picked, one button per deck along the top."}
     ],
     deck2: [
-      {view: "deck2", selectors: [".dp-rail", ".loading-card", "#view-deck2"], title: "One deck at a time", copy: "A button per deck you picked on Compare. Everything below belongs to the deck highlighted here."},
-      {view: "deck2", selectors: [".dp-tally", ".loading-card", "#view-deck2"], title: "Where all hundred cards are", copy: "The tally always adds to the full deck: what is in this box, what you own but have filed elsewhere, what is ordered, what is still to buy, and any slot still empty."},
-      {view: "deck2", selectors: [".dp-rank", ".loading-card", "#view-deck2"], title: "Rank order sets every slot at once", copy: "Base is the cheapest hundred that is still this deck, Tuned is the core purchases, Fun branches off Base for a pod that wants a game rather than a result, and Max is the Bracket 3 build with its Game Changers. One click moves all hundred slots, and ticks the box for the cards you already own."},
-      {view: "deck2", selectors: [".dp-stats-row", ".loading-card", "#view-deck2"], title: "Slots filled and land count", copy: "The two numbers that decide whether the deck is playable tonight, kept where you cannot miss them."},
-      {view: "deck2", selectors: [".dp-grp-h", ".loading-card", "#view-deck2"], title: "Grouped by card type", copy: "Creatures, lands, removal and the rest each fold away, with a card count and how many of them you still owe."},
-      {view: "deck2", selectors: [".dp-slot", ".loading-card", "#view-deck2"], title: "One row per slot", copy: "A slot is a job in the deck, not a card. The row names whichever card is doing that job right now, which rung it came from, its price, and where the physical copy is."},
+      {view: "deck2", selectors: [".dp-rail", ".fr-empty", "#view-deck2"], title: "One deck at a time", copy: "A button per deck you picked on Compare. Everything below belongs to the deck highlighted here."},
+      {view: "deck2", selectors: [".dp-tally", ".fr-empty", "#view-deck2"], title: "Where all hundred cards are", copy: "The tally always adds to the full deck: what is in this box, what you own but have filed elsewhere, what is ordered, what is still to buy, and any slot still empty."},
+      {view: "deck2", selectors: [".dp-rank", ".fr-empty", "#view-deck2"], title: "Rank order sets every slot at once", copy: "Base is the cheapest hundred that is still this deck, Tuned is the core purchases, Fun branches off Base for a pod that wants a game rather than a result, and Max is the Bracket 3 build with its Game Changers. One click moves all hundred slots, and ticks the box for the cards you already own."},
+      {view: "deck2", selectors: [".dp-stats-row", ".fr-empty", "#view-deck2"], title: "Slots filled and land count", copy: "The two numbers that decide whether the deck is playable tonight, kept where you cannot miss them."},
+      {view: "deck2", selectors: [".dp-grp-h", ".fr-empty", "#view-deck2"], title: "Grouped by card type", copy: "Creatures, lands, removal and the rest each fold away, with a card count and how many of them you still owe."},
+      {view: "deck2", selectors: [".dp-slot", ".fr-empty", "#view-deck2"], title: "One row per slot", copy: "A slot is a job in the deck, not a card. The row names whichever card is doing that job right now, which rung it came from, its price, and where the physical copy is."},
       {view: "deck2", selectors: [".dp-box", ".dp-slot", "#view-deck2"], title: "The box checkbox", copy: "Tick it when the card is actually sleeved in this deck. Ticking also records that you hold a copy, so a card can never read as in the box and still to buy at the same time."},
       {view: "deck2", selectors: [".dp-main", ".dp-slot", "#view-deck2"], title: "Open a slot for its options", copy: "Every slot carries the rungs that can fill it, side by side, each with the reason it was chosen over the one it replaces.", act: "openSlot"},
       {view: "deck2", selectors: [".dp-cand", ".dp-slot", "#view-deck2"], title: "Swap one slot without moving the page", copy: "Picking a rung inside a slot changes that slot only. The row keeps its place and the panel stays open, so you can work down a group without hunting for where you were."},
-      {view: "shop2", selectors: [".sp-bar", ".loading-card", "#view-shop2"], title: "Next · what is still owed", copy: "Everything left to buy across every deck collapses into one list on Shop."}
+      {view: "shop2", selectors: [".sp-bar", ".fr-empty", "#view-shop2"], title: "Next · what is still owed", copy: "Everything left to buy across every deck collapses into one list on Shop."}
     ],
     shop2: [
-      {view: "shop2", selectors: [".sp-bar", ".loading-card", "#view-shop2"], title: "One list, every deck", copy: "Each card you still owe appears once, however many decks want it, with the decks named on the row."},
+      {view: "shop2", selectors: [".sp-bar", ".fr-empty", "#view-shop2"], title: "One list, every deck", copy: "Each card you still owe appears once, however many decks want it, with the decks named on the row."},
       {view: "shop2", selectors: [".sp-drop", ".sp-bar", "#view-shop2"], title: "Filters stack", copy: "Each filter is a multi-select — tick two rarities or three decks and the list keeps both. Active filters show as chips you can pull off one at a time."},
       {view: "shop2", selectors: ["#sp-q", ".sp-bar", "#view-shop2"], title: "Search inside the list", copy: "Type any part of a card name to narrow what is on screen without touching the filters."},
       {view: "shop2", selectors: [".sp-seg", ".sp-bar", "#view-shop2"], title: "Four ways to read the list", copy: "Table carries every column, gallery shows the art when you are hunting a specific printing, Bench holds cards you own that no slot has asked for yet, and Store is the one to open when you are standing at a seller's table."},
@@ -7700,14 +8318,49 @@
     openSlot() {
       if ($(".dp-cand")) return;
       $("[data-dp-expand]")?.click();
+    },
+    /* Every deck row on Compare starts collapsed, which is right for reading and
+       wrong for a tour: the four steps that describe the ranking, the ratings,
+       the evidence and the pick all live inside a row. Measured on a first visit,
+       three of them spotlighted a 6x6 box. */
+    openGroup() {
+      const group = $(".deck-group");
+      if (group && !group.open) {
+        group.open = true;
+        group.querySelector("summary")?.dispatchEvent(new Event("toggle", {bubbles: true}));
+      }
     }
   };
 
+  /* Look inside the step's own view first.
+   *
+   * Every selector here used to be matched against the whole document, which was
+   * fine while each class lived in one view and stopped being fine the moment
+   * Deck and Shop both grew a .fr-empty: querySelector returns the first in
+   * document order, so a Deck step spotlighted Shop's hidden copy and drew a 1px
+   * box. Scoping first also means a step can never point at a different tab's
+   * element by accident. The unscoped pass stays for the selectors that are
+   * deliberately outside a view, like .main-tabs in the header. */
   function findTourTarget(step) {
+    const scope = step.view ? $(`#view-${step.view}`) : null;
+    const found = (selector, where) => {
+      /* Which selector won, recorded on the layer. A tour that points at the
+         wrong thing is otherwise undebuggable from the outside: the only visible
+         symptom is a box in the wrong place, and every explanation for that looks
+         equally plausible until you can see what matched. */
+      $("#tour-layer")?.setAttribute("data-tour-hit", `${where}:${selector}`);
+    };
+    if (scope) {
+      for (const selector of step.selectors) {
+        const target = $(selector, scope);
+        if (target) { found(selector, "view"); return target; }
+      }
+    }
     for (const selector of step.selectors) {
       const target = $(selector);
-      if (target) return target;
+      if (target) { found(selector, "page"); return target; }
     }
+    $("#tour-layer")?.setAttribute("data-tour-hit", "none");
     return null;
   }
 
@@ -7720,7 +8373,7 @@
       return;
     }
     const rect = target.getBoundingClientRect();
-    if (rect.bottom < 0 || rect.top > innerHeight) {
+    if (rect.width < 8 || rect.height < 8 || rect.bottom < 0 || rect.top > innerHeight) {
       Object.assign(spotlight.style, {left: "50%", top: "50%", width: "1px", height: "1px"});
       Object.assign(popover.style, {left: `${Math.max(12, (innerWidth - Math.min(360, innerWidth - 24)) / 2)}px`, top: `${Math.max(12, (innerHeight - popover.offsetHeight) / 2)}px`});
       return;
@@ -7751,16 +8404,83 @@
     if (step.act) TOUR_ACTS[step.act]?.();
     $("#tour-back").disabled = tourState.index === 0;
     $("#tour-next").textContent = tourState.index === tourState.steps.length - 1 ? "Finish" : "Next";
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      const target = findTourTarget(step);
-      target?.scrollIntoView({behavior: "instant", block: "center", inline: "nearest"});
-      setTimeout(() => positionTour(target), 40);
-    }));
+    placeTourStep(step, tourState.index);
   }
+
+  /* Find and measure in the same breath, and keep going until it holds.
+   *
+   * The old version positioned once inside a double rAF. That is right for a
+   * view already rendered and wrong for one still arriving: Deck and Shop fetch
+   * a 2.8 MB card catalog on first entry, so the last Compare step -- the one
+   * that hands off to Deck -- switched tabs and measured an empty section.
+   *
+   * The first attempt at fixing it made the failure worse in an instructive way.
+   * It found a target, checked it was solid, and THEN positioned on a timer. On
+   * the hand-off step it found the "Loading the card catalog…" box, which was
+   * real and solid, stopped retrying because it had succeeded -- and forty
+   * milliseconds later the catalog arrived, the box was replaced, and it
+   * measured a node no longer in the document. Every rect on a detached element
+   * is zero, so the spotlight collapsed to a pixel and stayed there for the rest
+   * of the step, with the thing it named plainly on screen.
+   *
+   * So: no gap between finding and measuring, and the retry decision is made on
+   * the measurement rather than on the find. A target that vanishes between one
+   * attempt and the next simply fails that attempt and the next one picks up
+   * whatever replaced it. Six seconds is the ceiling, because it has to outlast
+   * that catalog fetch on a cold cache. The index check stops a slow step from
+   * repainting over a fast reader's next one. */
+  function placeTourStep(step, index) {
+    let tries = 0;
+    const attempt = () => {
+      if (!tourState || tourState.index !== index) return;
+      // Still fetching: whatever is on screen now is about to be replaced, so
+      // there is nothing worth pointing at yet.
+      if ($(`#view-${step.view} .loading-card`)) {
+        positionTour(null);
+        if ((tries += 1) < 30) setTimeout(attempt, 200);
+        return;
+      }
+      const target = findTourTarget(step);
+      const rect = target && target.isConnected ? target.getBoundingClientRect() : null;
+      const solid = rect && rect.width >= 8 && rect.height >= 8;
+      if (solid) {
+        target.scrollIntoView({behavior: "instant", block: "center", inline: "nearest"});
+        // Re-read after the scroll: the rect that decided "solid" was taken
+        // before the page moved under it.
+        positionTour(target.isConnected ? target : null);
+        return;
+      }
+      positionTour(null);
+      if ((tries += 1) < 30) setTimeout(attempt, 200);
+    };
+    requestAnimationFrame(() => requestAnimationFrame(attempt));
+  }
+
+  /* Deck and Shop describe a deck you have chosen. Somebody who presses Tour
+     before choosing one gets ten steps about a rail, a tally, rungs and slots,
+     every one of them spotlighting the same "nothing picked yet" panel --
+     measured, and technically not a dead end but a poor way to learn what this
+     is. So the tour opens by saying what is missing and pointing at the two
+     buttons that fix it, then carries on. */
+  const TOUR_EMPTY_FIRST = {
+    deck2: {view: "deck2", selectors: [".fr-empty-acts", ".fr-empty"],
+      title: "Nothing to show you yet",
+      copy: "This tour walks through a deck you have picked, and there is not one yet. " +
+        "Pick one on Compare, or load the six that are already built — either fills this page " +
+        "in, and the rest of the tour will have something to point at."},
+    shop2: {view: "shop2", selectors: [".fr-empty-acts", ".fr-empty"],
+      title: "Nothing owed yet",
+      copy: "Shop lists what your chosen decks still need, and no deck has been chosen. " +
+        "Pick one on Compare, or load the six that are already built, and this becomes a real " +
+        "buy list you can shop from."}
+  };
 
   function startTour() {
     const view = activeViewName();
-    const steps = TOUR_STEPS[view] || TOUR_STEPS.compare;
+    let steps = TOUR_STEPS[view] || TOUR_STEPS.compare;
+    if (TOUR_EMPTY_FIRST[view] && $(`#view-${view} .fr-empty`)) {
+      steps = [TOUR_EMPTY_FIRST[view], ...steps];
+    }
     if (!steps?.length) return;
     tourState = {steps, index: 0, origin: view};
     $("#tour-layer").hidden = false;
@@ -7796,7 +8516,47 @@
   // things this app actually persists -- the main `state` object and, separately, whatever
   // Custom decks were built on the Choose step -- into one file, versioned independently of
   // either's own internal schema so the export wrapper itself can evolve later.
-  const STATE_EXPORT_SCHEMA = 1;
+  /* 2 added `myDecks`: the added decks, the uploaded collection and the My Decks
+     picks, which schema 1 files do not carry. A file without the block leaves
+     what is on the device alone -- it has nothing to say about those decks, and
+     deleting ten of them because somebody loaded last month's backup would be a
+     worse bug than the one this fixed. */
+  const STATE_EXPORT_SCHEMA = 2;
+
+  /* The other page's storage.
+   *
+   * My Decks (index.html) keeps three things of its own in this same origin's
+   * localStorage: the decks somebody added by hand, the collection they
+   * uploaded, and their picks and list preferences. None of it was in the
+   * export, and the button that wrote the file said "Exported your full state"
+   * -- so a person with ten added decks and three thousand cards could back up,
+   * move to a new browser, load the file, and find both gone, having been told
+   * in as many words that they had not been.
+   *
+   * The names are literals here rather than imports because matrix.html does not
+   * load viewer.js or deck-store.js and should not have to. tests/data-integrity
+   * pins each one against the module that owns it, so a rename there fails the
+   * suite instead of quietly emptying the export again. */
+  const MY_DECKS_KEYS = {
+    decks: "mtg-imported-decks.v1",       // deck-store.js STORE_KEY
+    inventory: "mtg-viewer-inventory.v1", // viewer.js INVENTORY_KEY
+    picks: "mtg-viewer.v1"                // viewer.js STORE
+  };
+
+  function readMyDecks() {
+    const out = {};
+    Object.keys(MY_DECKS_KEYS).forEach((field) => {
+      try {
+        const raw = localStorage.getItem(MY_DECKS_KEYS[field]);
+        out[field] = raw ? JSON.parse(raw) : null;
+      } catch (error) {
+        // Unparseable is not the same as absent, but neither can be exported,
+        // and a backup that throws is worse than one that is honest about a gap.
+        out[field] = null;
+      }
+    });
+    return out;
+  }
 
   function serializeStatePayload() {
     let custom = null;
@@ -7806,7 +8566,21 @@
     } catch (error) {
       custom = null;
     }
-    return {app: "mtg-deck-matrix", exportSchema: STATE_EXPORT_SCHEMA, exportedAt: new Date().toISOString(), state, custom};
+    return {app: "mtg-deck-matrix", exportSchema: STATE_EXPORT_SCHEMA, exportedAt: new Date().toISOString(),
+      state, custom, myDecks: readMyDecks()};
+  }
+
+  /* Counts for the toast, so the message describes the file rather than the
+     feature. "Exported your full state" was true of the Matrix and false of the
+     rest, which is the only kind of wrong a backup message must not be. */
+  function myDecksSummary(payload) {
+    const mine = payload.myDecks || {};
+    const decks = ((mine.decks || {}).decks || []).length;
+    const cards = ((mine.inventory || {}).cards || []).length;
+    const bits = [];
+    if (decks) bits.push(`${decks} added deck${decks === 1 ? "" : "s"}`);
+    if (cards) bits.push(`${cards.toLocaleString()} collection card${cards === 1 ? "" : "s"}`);
+    return bits.join(" and ");
   }
 
   function exportFullState() {
@@ -7823,7 +8597,9 @@
     setTimeout(() => URL.revokeObjectURL(url), 2000);
     try { localStorage.setItem(LAST_EXPORT_KEY, String(Date.now())); } catch (error) { /* nothing to remember it with */ }
     refreshStateChrome();
-    showToast("Exported your full state — Compare picks, Deck boxes, Shop marks and prices.");
+    const also = myDecksSummary(payload);
+    showToast("Exported your full state — Compare picks, Deck boxes, Shop marks and prices"
+      + (also ? `, plus ${also}.` : "."));
   }
 
   /* Loading a file replaces everything on this device with no way back, which is the one
@@ -7951,13 +8727,40 @@
     customStore = Custom.load(localStorage);
     remergeCustom();
     persistCustom();
+    restoreMyDecks(payload);
     ensureDeckBoxesSeeded();
     ensureAssignedSeeded();
     saveState(`Loaded state${sourceLabel ? ` from ${sourceLabel}` : ""}`);
     renderCompare();
     renderChoose();
-    switchView("compare");
-    showToast(`Loaded state${sourceLabel ? ` from ${sourceLabel}` : ""}.`);
+    /* Compare by default -- the header control means "start from this state", and
+       Compare is where that starts. options.returnTo is passed by the first-run
+       button inside an empty Deck or Shop page, whose promise was to fill in the
+       page it sits on rather than to send the reader somewhere else. */
+    switchView(options.returnTo || "compare");
+    const also = payload.myDecks ? myDecksSummary(payload) : "";
+    showToast(`Loaded state${sourceLabel ? ` from ${sourceLabel}` : ""}`
+      + (also ? ` — including ${also}.` : "."));
+  }
+
+  /* Put the other page's storage back, and only when the file has an opinion
+     about it. A present-but-empty block means "no decks, no collection" and does
+     clear them; an ABSENT block means the file predates this and must not touch
+     what is here. data/active-state.json is the everyday case of the second:
+     it is the workbook's Matrix state and says nothing about anybody's decks,
+     so Load Active must leave them exactly where they are. */
+  function restoreMyDecks(payload) {
+    const mine = payload && payload.myDecks;
+    if (!mine || typeof mine !== "object") return;
+    Object.keys(MY_DECKS_KEYS).forEach((field) => {
+      try {
+        if (mine[field]) localStorage.setItem(MY_DECKS_KEYS[field], JSON.stringify(mine[field]));
+        else localStorage.removeItem(MY_DECKS_KEYS[field]);
+      } catch (error) {
+        // Storage refused -- most likely a collection larger than this browser
+        // will hold. The Matrix half of the load still stands.
+      }
+    });
   }
 
   function importStateFromFile(file) {
@@ -7981,10 +8784,29 @@
     reader.readAsText(file);
   }
 
-  async function loadActiveState() {
+  /* Has anybody done anything on this device yet?
+   *
+   * Not readable from most of the saved state, which turns out to be seeded by
+   * the app itself: a browser that has merely LOADED this page once already
+   * holds 99 owned, 99 found, 99 bought quantities and 50 buy selections, all
+   * written by ensureDeckBoxesSeeded, ensureAssignedSeeded and the precon
+   * ownership pass. Counting those as work made every first visit look busy.
+   *
+   * A picked variant is the one thing only a person creates, and it is also the
+   * gate everything else sits behind -- you cannot mark a card bought for a deck
+   * you have not chosen. So: no picks, no work, nothing to warn about. Comments
+   * and logged games are counted too, because either can exist without a pick
+   * and both are typed by hand. */
+  function hasSavedWork() {
+    const some = (o) => o && Object.keys(o).length > 0;
+    return Boolean(some(state.compareSelections) || some(state.comments) ||
+      (state.gameLog || []).length > 0);
+  }
+
+  async function loadActiveState(returnTo) {
     let payload;
     try {
-      const response = await fetch("data/active-state.json", {cache: "no-store"});
+      const response = await fetch("data/active-state.json?v=1", {cache: "default"});
       if (!response.ok) {
         showToast(response.status === 404 ? "No active-state.json is committed to the repo yet." : `Could not load active state (${response.status}).`);
         return;
@@ -7999,33 +8821,58 @@
       return;
     }
     const when = payload.exportedAt ? ` (exported ${new Date(payload.exportedAt).toLocaleString()})` : "";
-    if (!window.confirm(`Load the active state from the repository${when}? It replaces every selection, buy, Shop mark, and Decks change currently saved on this device.`)) return;
-    applyStatePayload(payload, "the repository");
+    /* Only warn somebody who has something to lose.
+       A first-time visitor has an untouched device, and this dialog told them
+       loading would replace "every selection, buy, Shop mark, and Decks change
+       currently saved on this device" -- a warning about destroying work they
+       have not done, on the one button that would have shown them what the app
+       is. Nothing saved means nothing to confirm. */
+    if (hasSavedWork() &&
+        !window.confirm(`Load the active state from the repository${when}? It replaces every ` +
+          `selection, buy, Shop mark, and Decks change currently saved on this device.`)) return;
+    applyStatePayload(payload, "the repository", returnTo ? {returnTo} : {});
   }
 
   async function init() {
     try {
       let activeStateFile = null;
+      /* cache: "default", not "no-store".
+         These four are ten megabytes uncompressed -- about 1.15 MB gzipped --
+         and "no-store" forbade the browser from reusing any of it, so every
+         visit paid for the lot again. Measured at the socket, against a server
+         sending GitHub Pages' own ETag and Cache-Control: max-age=600:
+
+             no-store     60 KB  ->  60 KB   nothing is ever reused
+             no-cache     60 KB  ->  60 KB   no better: Chromium does not
+                                             revalidate a no-cache response on
+                                             a later page load
+             default      60 KB  ->   0 KB   no request at all inside max-age
+
+         So "default", and every data URL carries a ?v= the way viewer.js's
+         always have. The version is what makes this safe rather than merely
+         fast: a rebuilt data file gets a new URL, so nothing stale can be
+         served however long a browser holds the old one. Bump it when the
+         shape of a data file changes, exactly as app.js?v= is bumped. */
       [bakedCatalog, bakedBuyCatalog, simulationSummary, activeStateFile] = await Promise.all([
-        fetch("data/variants.json", {cache: "no-store"}).then((response) => {
+        fetch("data/variants.json?v=1", {cache: "default"}).then((response) => {
           if (!response.ok) throw new Error("Variant catalog did not load");
           return response.json();
         }),
-        fetch("data/buy-plans.json", {cache: "no-store"}).then((response) => {
+        fetch("data/buy-plans.json?v=1", {cache: "default"}).then((response) => {
           if (!response.ok) throw new Error("Buy catalog did not load");
           return response.json();
         }),
         // Additive: real simulation results for the new ladders. Never blocks startup --
         // the commander-compare preview and Calibrate simulation readout just render nothing
         // extra if this is unavailable, same as any other optional metadata in this app.
-        fetch("data/simulation-summary.json", {cache: "no-store"}).then((response) => response.ok ? response.json() : null).catch(() => null),
+        fetch("data/simulation-summary.json?v=1", {cache: "default"}).then((response) => response.ok ? response.json() : null).catch(() => null),
         // Read for the corner ribbon alone. Loading this file does NOT apply it
         // -- that stays an explicit Load Active click -- so a browser mid-build
         // keeps its own picks while still being told which six are the
         // published slate.
-        fetch("data/active-state.json", {cache: "no-store"}).then((response) => response.ok ? response.json() : null).catch(() => null)
+        fetch("data/active-state.json?v=1", {cache: "default"}).then((response) => response.ok ? response.json() : null).catch(() => null)
       ]);
-      treysBuildIds = new Set(Object.values(activeStateFile?.state?.compareSelections || {}).filter(Boolean));
+      myBuildIds = new Set(Object.values(activeStateFile?.state?.compareSelections || {}).filter(Boolean));
       customStore = Custom.load(localStorage);
       remergeCustom();
       state = loadState();
@@ -8078,6 +8925,10 @@
       });
       $("#compliance-dialog-close").addEventListener("click", () => $("#compliance-dialog").close());
       $("#compliance-dialog").addEventListener("click", (event) => {
+        if (event.target === event.currentTarget) event.currentTarget.close();
+      });
+      $("#trip-dialog-close").addEventListener("click", () => $("#trip-dialog").close());
+      $("#trip-dialog").addEventListener("click", (event) => {
         if (event.target === event.currentTarget) event.currentTarget.close();
       });
       $("#sim-dialog-close").addEventListener("click", closeSimDialog);

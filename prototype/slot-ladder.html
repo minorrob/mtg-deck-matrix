@@ -295,7 +295,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:900px}
     <div class="brand">
       <div>
         <p class="eyebrow">Commander field guide &middot; shell</p>
-        <h1>Trey's Deck Matrix</h1>
+        <h1>My Deck Matrix</h1>
       </div>
       <div class="hdr-acts">
         <button class="ghost" data-act="bench">&#9671; Bench <span id="benchn">0</span></button>
@@ -374,7 +374,7 @@ var FACE={
   "Defender. Put a -0/-1 counter on this creature: Add {G}. Activate only once each turn."],
 "Overgrown Battlement":["1G","Creature \u2014 Wall","0/4",["Defender","Scales with defenders"],
   "Defender. {T}: Add {G} for each creature you control with defender."],
-"Axebane Guardian":["2G","Creature \u2014 Human Druid","0/3",["Defender","Any colour"],
+"Axebane Guardian":["2G","Creature \u2014 Human Druid","0/3",["Defender","Any color"],
   "Defender. {T}: Add one mana of any color for each creature you control with defender."],
 "Vine Trellis":["1G","Creature \u2014 Plant Wall","0/4",["Defender","Mana ability"],"Defender. {T}: Add {G}."],
 "Wall of Omens":["1W","Creature \u2014 Wall","0/4",["Defender","Replaces itself"],
@@ -392,7 +392,7 @@ var FACE={
 "Hornet Nest":["2G","Creature \u2014 Insect","0/2",["Defender","Deterrent"],
   "Defender. Whenever this creature is dealt damage, create that many 1/1 green Insect tokens with flying and deathtouch."],
 "Selesnya Signet":["2","Artifact","\u2014",["Mana rock","Filter"],"{1}, {T}: Add {G}{W}."],
-"Arcane Signet":["2","Artifact","\u2014",["Mana rock","Any commander colour"],
+"Arcane Signet":["2","Artifact","\u2014",["Mana rock","Any commander color"],
   "{T}: Add one mana of any color in your commander's color identity."],
 "Chromatic Lantern":["3","Artifact","\u2014",["Mana rock","Fixes lands"],
   "Lands you control have \u201c{T}: Add one mana of any color.\u201d {T}: Add one mana of any color."],
@@ -446,7 +446,7 @@ var FACE={
   "{T}: You may put a land card from your hand onto the battlefield."],
 "Rhox Faithmender":["3W","Creature \u2014 Rhino Monk","1/5",["Lifelink","Doubles life"],
   "Lifelink. If you would gain life, you gain twice that much life instead."],
-"Command Tower":["\u2014","Land","\u2014",["Any commander colour"],
+"Command Tower":["\u2014","Land","\u2014",["Any commander color"],
   "{T}: Add one mana of any color in your commander's color identity."],
 "Sandsteppe Citadel":["\u2014","Land","\u2014",["Tri-land","Enters tapped"],
   "This land enters tapped. {T}: Add {W}, {B}, or {G}."],
@@ -462,7 +462,7 @@ var FACE={
   "When this creature enters, you may sacrifice a land. If you do, search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle."],
 "Risen Reef":["2G","Creature \u2014 Elemental","1/1",["Elemental payoff","Draw or ramp"],
   "Whenever this creature or another Elemental you control enters, look at the top card of your library. If it's a land, put it onto the battlefield tapped. Otherwise, put it into your hand."],
-"Wayfarer's Bauble":["1","Artifact","\u2014",["Ramp","Colourless"],
+"Wayfarer's Bauble":["1","Artifact","\u2014",["Ramp","Colorless"],
   "{2}, {T}, Sacrifice: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle."],
 "Sword of the Animist":["2","Artifact \u2014 Equipment","\u2014",["Equip 2","Ramp on attack"],
   "Equipped creature gets +1/+1 and has \u201cWhenever this creature attacks, search your library for a basic land card, put it onto the battlefield tapped, then shuffle.\u201d"],
@@ -526,7 +526,7 @@ var DECKS={
         tuned:c("Overgrown Battlement",0.40,"deck","G","C",
           "Tunes it: the mana scales with how many defenders are out, and this deck plays eleven of them."),
         enhance:c("Axebane Guardian",1.85,"buy","G","U",
-          "Enhances it: same scaling but in every colour, which fixes the third colour the deck keeps stumbling on."),
+          "Enhances it: same scaling but in every color, which fixes the third color the deck keeps stumbling on."),
         fun:c("Vine Trellis",0.20,"bench","G","C",
           "More fun: nothing clever, just the cheap wall that lets you durdle a turn earlier and talk your way out of the first attack.")},
         [c("Llanowar Scout",0.25,"bench","G","C")]),
@@ -551,9 +551,9 @@ var DECKS={
     {type:"Artifact",total:10,slots:[
       slot("s41","Artifact",1,"tuned",{
         base:c("Selesnya Signet",0.25,"deck","C","C",
-          "Two-mana rock. The curve does not work without a turn-two acceleration slot in three colours."),
+          "Two-mana rock. The curve does not work without a turn-two acceleration slot in three colors."),
         tuned:c("Arcane Signet",0.90,"deck","C","C",
-          "Tunes it: every colour the commander needs, no filtering step, one less awkward turn."),
+          "Tunes it: every color the commander needs, no filtering step, one less awkward turn."),
         enhance:c("Chromatic Lantern",1.09,"buy","C","R",
           "Enhances it: fixes every land as well, which matters because the manabase runs nine tapped lands."),
         max:c("Mana Crypt",129.00,"buy","C","M",
@@ -595,7 +595,7 @@ var DECKS={
     {type:"Sorcery",total:8,slots:[
       slot("s70","Sorcery",1,"base",{
         base:c("Cultivate",0.45,"deck","G","C",
-          "Ramp and land-drop insurance. The deck runs three colours off a low curve, so this slot fixes and thins at once."),
+          "Ramp and land-drop insurance. The deck runs three colors off a low curve, so this slot fixes and thins at once."),
         tuned:c("Kodama's Reach",0.50,"bench","G","C",
           "Tunes it: identical effect, and having both means you can draw either one."),
         enhance:c("Nature's Lore",1.75,"buy","G","R",
@@ -606,9 +606,9 @@ var DECKS={
     ]},
     {type:"Land",total:37,slots:[
       slot("sL1","Land",1,"base",{base:c("Command Tower",0.17,"buy","C","C",
-        "Every colour, no drawback. In a three-colour deck this is the single best land available.")},[],"Game Theory"),
+        "Every color, no drawback. In a three-color deck this is the single best land available.")},[],"Game Theory"),
       slot("sL2","Land",1,"base",{base:c("Sandsteppe Citadel",0.30,"deck","C","C",
-        "Tri-land for exactly this deck's colours. It enters tapped, which a curve this low can afford.")},[]),
+        "Tri-land for exactly this deck's colors. It enters tapped, which a curve this low can afford.")},[]),
       slot("sB1","Land",11,"basic",{basic:c("Forest",0.10,"deck","G","C","")},[],"Bulk box"),
       slot("sB2","Land",9,"basic",{basic:c("Plains",0.10,"deck","W","C","")},[],"Bulk box"),
       slot("sB3","Land",8,"basic",{basic:c("Swamp",0.10,"buy","B","C","")},[],"Bulk box")
@@ -631,7 +631,7 @@ var DECKS={
         fun:c("Rampaging Baloths",2.10,"deck","G","R",
           "More fun: a 4/4 on every land drop. The pod has to answer it or lose to it, and watching that math dawn on them is the point."),
         max:c("Tireless Tracker",0.40,"buy","G","R",
-          "Maximizes T3: turns every land drop into a card and a counter, which is the highest-rate landfall payoff in the colour.")},[]),
+          "Maximizes T3: turns every land drop into a card and a counter, which is the highest-rate landfall payoff in the color.")},[]),
       slot("t15","Creature",1,"tuned",{
         base:c("Llanowar Scout",0.25,"buy","G","C",
           "The extra-land-drop slot. It has to be a body so it still does something once the lands run out."),
@@ -644,7 +644,7 @@ var DECKS={
     {type:"Artifact",total:9,slots:[
       slot("t31","Artifact",1,"tuned",{
         base:c("Wayfarer's Bauble",0.40,"deck","C","C",
-          "Colourless ramp that any deck can cast. This slot exists because the curve needs a two-mana play that finds a land."),
+          "Colorless ramp that any deck can cast. This slot exists because the curve needs a two-mana play that finds a land."),
         tuned:c("Sword of the Animist",4.10,"buy","C","R",
           "Tunes it: every attack becomes a land drop, and every land drop is a trigger. It turns combat into ramp."),
         max:c("Sword of Fire and Ice",43.21,"buy","C","M",
@@ -837,7 +837,7 @@ function previewMarkup(s,key,isOwned){
       '<li><b>Type</b><span>'+esc(f.tl)+'</span></li>'+
       (f.pt!=="\u2014"?'<li><b>Stats</b><span class="num">'+f.pt+'</span></li>':'')+
       '<li><b>Mechanics</b><span>'+(f.kw.length?esc(f.kw.join(" \u00b7 ")):"\u2014")+'</span></li>'+
-      '<li><b>Colour</b><span><span class="dot" style="background:'+tint+'"></span>'+esc(COLORLAB[cd.color])+'</span></li>'+
+      '<li><b>Color</b><span><span class="dot" style="background:'+tint+'"></span>'+esc(COLORLAB[cd.color])+'</span></li>'+
       '<li><b>Where</b><span class="loc '+L.c+'"><span class="g">'+L.g+'</span>'+L.t+'</span></li>'+
       '<li><b>Rarity</b><span class="rar-key"><span class="rar-sw" style="--rar:var(--rar-'+(cd.rar||"C")+')"></span>'+
         esc(RARLAB[cd.rar]||"Common")+(/^Legendary/.test(f.tl)?' \u265B Legendary':'')+'</span></li>'+
@@ -1086,7 +1086,7 @@ function openCard(s){
     '<span class="eyebrow">'+RUNGLAB[s.pick]+' &middot; slot '+s.id.toUpperCase()+'</span><h3>'+esc(p.name)+'</h3></div>'+
   '<div class="dr-sec"><span class="dr-job">1 &middot; The card as printed</span><h4>What it does</h4>'+
     '<p>Card text, keywords and timing come straight from Scryfall and are the same in every deck that runs it.</p>'+
-    '<dl class="dr-grid"><dt>Colour</dt><dd>'+esc(COLORLAB[p.color])+'</dd><dt>Type</dt><dd>'+esc(s.type)+'</dd>'+
+    '<dl class="dr-grid"><dt>Color</dt><dd>'+esc(COLORLAB[p.color])+'</dd><dt>Type</dt><dd>'+esc(s.type)+'</dd>'+
     '<dt>Rarity</dt><dd>'+esc(RARLAB[p.rar])+'</dd><dt>Price band</dt><dd class="num">'+bandOf(p.price)+'</dd></dl></div>'+
   '<div class="dr-sec"><span class="dr-job">2 &middot; Fit &amp; play</span><h4>Why it is here, and how to run it</h4>'+
     (base&&base.why?'<p><b>What this slot does.</b> '+esc(base.why)+'</p>':"")+

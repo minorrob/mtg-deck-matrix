@@ -127,7 +127,7 @@ ok("every rung answers with its own field, and Base speaks for the slot", () => 
 ok("shop rows merge one card across decks and sum its quantity", () => {
   // The pair has to be two decks that actually share cards, or there is no merge to
   // test. 1b and 3o used to be one; they are now Betor (white/black/green walls) and
-  // Purphoros (mono-red goblins), the two furthest-apart colour identities in the
+  // Purphoros (mono-red goblins), the two furthest-apart color identities in the
   // lineup, and they have not one card in common. 5o and 3o share six, a Mountain
   // among them.
   const decks = ["5o", "3o"].filter((id) => buyPlans.plans[id]).map((id) => ({
@@ -400,7 +400,7 @@ ok("Max is a Tier 3 build, not a label over the Tuned hundred", () => {
   assert.equal(same.length, 0,
     `${same.length} variants still have Max identical to Tuned (${same.join(", ")})`);
   // Bracket 3's defining allowance is up to three Game Changers, and every ladder the
-  // sweep generated promotes some into Max. The six decks Trey actually plays are not
+  // sweep generated promotes some into Max. The six decks My actually plays are not
   // generated: their Max rung is his own Bracket-3 list, and three of those lists add
   // no Game Changer at all -- Atraxa's six swaps, Betor's three and Shadrix's six are
   // mana, draw and death triggers, none of them on Wizards' list. Those Max rungs are
@@ -478,11 +478,11 @@ ok("the page and the simulation agree about mana, card for card", () => {
   assert.equal(costMismatch.length, 0,
     `mana costs read differently on ${costMismatch.length} cards, e.g. ${costMismatch.slice(0, 3).join(", ")}`);
   assert.equal(colorMismatch.length, 0,
-    `colour production reads differently on ${colorMismatch.length} cards, e.g. ${colorMismatch.slice(0, 3).join(" | ")}`);
+    `color production reads differently on ${colorMismatch.length} cards, e.g. ${colorMismatch.slice(0, 3).join(" | ")}`);
   assert.ok(catalog.length > 1000, `expected the real catalog, got ${catalog.length} cards`);
 });
 
-ok("a thin colour is one the deck cannot reliably pay for", () => {
+ok("a thin color is one the deck cannot reliably pay for", () => {
   const deck = [
     {name: "Forest", typeLine: "Basic Land — Forest", colorIdentity: ["G"], quantity: 30},
     {name: "Island", typeLine: "Basic Land — Island", colorIdentity: ["U"], quantity: 3},
@@ -495,7 +495,7 @@ ok("a thin colour is one the deck cannot reliably pay for", () => {
   assert.equal(health.pips.U, 12, "six copies asking for two blue each");
   assert.ok(health.thin.includes("U"), "three Islands behind twelve blue pips is thin");
   assert.ok(!health.thin.includes("G"), "thirty Forests behind thirty green pips is not");
-  // The floor scales with demand, so a colour carrying most of the pips has to carry most
+  // The floor scales with demand, so a color carrying most of the pips has to carry most
   // of the lands. A flat floor called eighteen green sources against thirty-four green
   // pips healthy, which is the shape that actually strands cards in hand.
   const lopsided = Slot.manaHealth([

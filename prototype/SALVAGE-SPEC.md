@@ -82,10 +82,10 @@ The requested escalation maps onto it as:
 | `bonus` | `#d9b45c` | brighter gold — Masterpiece / Expedition / Invocation |
 
 Deliberately desaturated: these sit behind card art on a parchment surface and are
-meant to read as a hint, not a highlight. Outline only — never a fill, never text colour.
+meant to read as a hint, not a highlight. Outline only — never a fill, never text color.
 
 Legendary gets its own small marker (a crown glyph on the tile corner) rather than
-taking a rarity colour, since for a Commander player it is worth seeing separately.
+taking a rarity color, since for a Commander player it is worth seeing separately.
 
 `data/cards.json` currently carries `rare 740 · uncommon 446 · common 297 · mythic 202`
 and 69 nulls; a null rarity falls back to the common outline.
