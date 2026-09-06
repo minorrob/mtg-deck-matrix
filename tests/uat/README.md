@@ -100,6 +100,23 @@ lands somewhere it can actually shop, and that all four views stay one tap away
 from wherever that is — the Store toolbar offered only three, so landing there
 would have put the bench out of reach.
 
+It also asserts the written pull list reaches the page. Fifty-five of its
+sixty-eight cards are named by no deck the app tracks, so nothing derived can
+produce them: if the merge stopped working, every other number on the page would
+still add up and the cards would simply not be there. Scoped to the list with
+"Show everything" already on, the count has to equal the file's own, every row
+has to say which list it came from, and the totals line has to name the list and
+its date.
+
+And it asserts undo is a real undo. Buying a card writes two things — the ledger
+and the per-deck holds — and in this ledger a per-deck `{inHand: 0, ordered: 0}`
+is not "nothing", it is "this box was counted and holds none", which the
+allocator honours by refusing to serve the card at all. Undo was writing that
+assertion into all six boxes for a card none of them had been counted for, so the
+copy bought the next day would be denied to every deck and the Shop would go on
+asking for a card already in the box. Nothing on screen said so, which is why
+this one is measured in storage rather than in the markup.
+
 **Continued · records a game** — the log had been read back at 250 games and
 never once *written* to by a test. Fills the form the way somebody does at the
 table, saves, and asserts the entry keeps what was typed, that the two fun scales

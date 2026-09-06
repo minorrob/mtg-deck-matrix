@@ -66,6 +66,9 @@
   let catalog;
   let buyCatalog;
   let simulationSummary = null;
+  /* The written pull list, or null. Optional exactly as the simulation summary is: the
+     Shop is complete without it and simply carries no list rows if it fails to load. */
+  let pullList = null;
   let bakedCatalog;
   let bakedBuyCatalog;
   let customStore;
@@ -1848,9 +1851,22 @@
       decks.push({id: v.id, slots: Slot.deckSlots(plan, ensureBuyState(v.id), {owned, cards})});
     });
     if (!decks.length) return null;
+    /* The written list carries its own card facts -- art, color, rarity, type line -- for
+       the fifty-five cards no deck names, because nothing this page reads knows them. They
+       are consulted last, so a card the decks do have keeps the catalog's own record. */
+    const listFacts = {};
+    ((pullList && pullList.cards) || []).forEach((card) => {
+      if (card && card.name) listFacts[Lineup.normalizeName(card.name)] = card;
+    });
     return {
-      rows: (() => { const a = allocateCopies(variants, owned, cards); return Slot.shopRows(decks, owned, a.allocated, a.perDeck); })(),
-      factFor: (name) => cards[Lineup.normalizeName(name)] || cardMetadata[itemKey({name})] || {},
+      rows: (() => {
+        const a = allocateCopies(variants, owned, cards);
+        const rows = Slot.shopRows(decks, owned, a.allocated, a.perDeck);
+        return Slot.withPullList(rows, (pullList && pullList.cards) || [], owned);
+      })(),
+      factFor: (name) => cards[Lineup.normalizeName(name)] || cardMetadata[itemKey({name})]
+        || listFacts[Lineup.normalizeName(name)] || {},
+      pullList,
       paidFor,
       bench: benchItems(decks, owned, cards, deckLabels),
       intakeOpen: shopIntakeOpen,
@@ -2108,9 +2124,15 @@
       if (row) {
         const before = (state.owned && state.owned[key]) ? {...state.owned[key]} : {inHand: 0, ordered: 0};
         shopBuyUndo.set(key, before);
+        /* Null where the deck had no entry, not a zero. In this ledger a per-deck
+           {inHand: 0, ordered: 0} is an assertion -- "this box was counted and holds none"
+           -- and allocateCopies honours it by refusing to serve the card however many are
+           on the shelf. Undoing a purchase was writing that assertion into all six boxes
+           for a card none of them had been counted for, so the copy you buy tomorrow would
+           be denied to every deck and the Shop would go on asking for a card in the box. */
         const holdsBefore = {};
         for (const [deckId, per] of Object.entries(state.deckHolds || {})) {
-          holdsBefore[deckId] = {...(per[key] || {inHand: 0, ordered: 0})};
+          holdsBefore[deckId] = per[key] ? {...per[key]} : null;
         }
         shopHoldUndo.set(key, holdsBefore);
         /* Buy as many copies as THIS row is short, but let the ledger hold as many as every
@@ -2149,7 +2171,9 @@
         const holds = shopHoldUndo.get(key);
         if (holds) {
           for (const [deckId, rec] of Object.entries(holds)) {
-            if (state.deckHolds && state.deckHolds[deckId]) state.deckHolds[deckId][key] = {...rec};
+            if (!state.deckHolds || !state.deckHolds[deckId]) continue;
+            if (rec) state.deckHolds[deckId][key] = {...rec};
+            else delete state.deckHolds[deckId][key];
           }
           shopHoldUndo.delete(key);
         }
@@ -8806,7 +8830,7 @@
   async function loadActiveState(returnTo) {
     let payload;
     try {
-      const response = await fetch("data/active-state.json?v=1", {cache: "default"});
+      const response = await fetch("data/active-state.json?v=3", {cache: "default"});
       if (!response.ok) {
         showToast(response.status === 404 ? "No active-state.json is committed to the repo yet." : `Could not load active state (${response.status}).`);
         return;
@@ -8853,7 +8877,7 @@
          fast: a rebuilt data file gets a new URL, so nothing stale can be
          served however long a browser holds the old one. Bump it when the
          shape of a data file changes, exactly as app.js?v= is bumped. */
-      [bakedCatalog, bakedBuyCatalog, simulationSummary, activeStateFile] = await Promise.all([
+      [bakedCatalog, bakedBuyCatalog, simulationSummary, activeStateFile, pullList] = await Promise.all([
         fetch("data/variants.json?v=1", {cache: "default"}).then((response) => {
           if (!response.ok) throw new Error("Variant catalog did not load");
           return response.json();
@@ -8870,7 +8894,10 @@
         // -- that stays an explicit Load Active click -- so a browser mid-build
         // keeps its own picks while still being told which six are the
         // published slate.
-        fetch("data/active-state.json?v=1", {cache: "default"}).then((response) => response.ok ? response.json() : null).catch(() => null)
+        fetch("data/active-state.json?v=3", {cache: "default"}).then((response) => response.ok ? response.json() : null).catch(() => null),
+        // The written pull list. Additive and never blocking: without it the Shop shows
+        // exactly what the decks are owed, which is what it showed before the list existed.
+        fetch("data/pull-list.json?v=1", {cache: "default"}).then((response) => response.ok ? response.json() : null).catch(() => null)
       ]);
       myBuildIds = new Set(Object.values(activeStateFile?.state?.compareSelections || {}).filter(Boolean));
       customStore = Custom.load(localStorage);

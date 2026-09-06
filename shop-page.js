@@ -42,13 +42,24 @@
   const FILTERS = [
     {key: "status", label: "Status"}, {key: "color", label: "Color"}, {key: "type", label: "Type"},
     {key: "band", label: "Price"}, {key: "spot", label: "Where"}, {key: "rarity", label: "Rarity"},
-    {key: "deck", label: "Deck"}, {key: "rung", label: "Rung"}
+    {key: "deck", label: "Deck"}, {key: "rung", label: "Rung"}, {key: "list", label: "List"}
   ];
+  /* Two written lists reach this page and they answer different questions. The deck plan
+     is derived -- what six boxes want, minus what the ledger holds. The pull list is not:
+     it is a document somebody wrote, and most of its cards are for builds this app does
+     not track. A card can be on both. Naming them is what stops fifty-five rows from
+     appearing out of nowhere with no deck against them and no explanation. */
+  const LIST_LABEL = {pull: "Pull list", deck: "Deck plan"};
+  function listsOf(row) {
+    return row.onPullList
+      ? ((row.decks || []).length ? [LIST_LABEL.pull, LIST_LABEL.deck] : [LIST_LABEL.pull])
+      : [LIST_LABEL.deck];
+  }
   /* Set and Letter are here because that is how a vendor's singles are filed -- a box per
      set, or one long alphabetical run -- and matching the app's order to the box in front
      of you is the difference between scanning and searching. */
   const GROUP_BY = [
-    ["none", "No grouping"], ["letter", "First letter"], ["setName", "Set"],
+    ["none", "No grouping"], ["letter", "First letter"], ["setName", "Set"], ["list", "Which list"],
     ["spot", "Where at the table"], ["band", "Price band"],
     ["color", "Color"], ["type", "Type"], ["rarity", "Rarity"], ["deck", "Deck"], ["status", "Status"]
   ];
@@ -107,6 +118,7 @@
         lineTotal: unitCost(row, paidLookup(row.name)) * row.quantity,
         // What it cost, not what it is worth. null is unpriced; 0 is a real answer.
         paid: paidLookup(row.name),
+        lists: listsOf(row),
         rung: (row.rungs || []).map((r) => Slot.RUNG_LABEL[r] || r).join(", ")
       });
     });
@@ -118,7 +130,8 @@
     if (key === "status") return STATUS.slice();
     const set = new Set();
     rows.forEach((r) => {
-      if (key === "deck") (r.deckNames || []).forEach((d) => set.add(d));
+      if (key === "list") (r.lists || []).forEach((l) => set.add(l));
+      else if (key === "deck") (r.deckNames || []).forEach((d) => set.add(d));
       else if (key === "rung") (r.rungs || []).forEach((g) => set.add(Slot.RUNG_LABEL[g] || g));
       else if (r[key]) set.add(r[key]);
     });
@@ -144,6 +157,7 @@
     if (!any("spot", row.spot)) return false;
     if (!any("rarity", row.rarity)) return false;
     if (!anyOf("deck", row.deckNames)) return false;
+    if (!anyOf("list", row.lists)) return false;
     if (!anyOf("rung", (row.rungs || []).map((g) => Slot.RUNG_LABEL[g] || g))) return false;
     if (f.query) {
       const q = f.query.toLowerCase();
@@ -183,7 +197,10 @@
     if (!groupBy || groupBy === "none") return [["", rows]];
     const map = new Map();
     rows.forEach((r) => {
-      const g = groupBy === "deck" ? (r.deckNames || []).join(" + ")
+      /* One bucket a row, so a card on both lists is filed under the pull list -- that is
+         the one you are holding, and the one that explains why the row is here at all. */
+      const g = groupBy === "list" ? (r.onPullList ? LIST_LABEL.pull : LIST_LABEL.deck)
+        : groupBy === "deck" ? (r.deckNames || []).join(" + ")
         : groupBy === "status" ? r.acquisition
         : groupBy === "letter" ? letterOf(r.name)
         : groupBy === "setName" ? (r.setName || "No set")
@@ -259,8 +276,10 @@
     // twelve Plains costs twelve times one. The box below takes the per-copy price.
     const shown = known ? money(r.lineTotal) : "?";
     return `
-      <div class="sp-meta sp-gdecks">${(r.deckNames || []).map((d) =>
-        `<span class="sp-chip">${esc(d)}</span>`).join("") || '<span class="sp-chip is-none">No deck</span>'}</div>
+      <div class="sp-meta sp-gdecks">${
+        (r.onPullList ? [`<span class="sp-chip is-list">${LIST_LABEL.pull}</span>`] : [])
+          .concat((r.deckNames || []).map((d) => `<span class="sp-chip">${esc(d)}</span>`)).join("")
+        || '<span class="sp-chip is-none">No deck</span>'}</div>
       <div class="sp-grow">
         <button type="button" class="sp-gprice${r.paid === null ? "" : " is-paid"}${r.need ? " is-buy" : ""}"
           data-sp-price="${esc(r.key)}" title="What you paid, per copy. Tap to change it.">${shown}</button>
@@ -274,6 +293,42 @@
       </div>`;
   }
 
+  /* WHICH VIEWS START FROM WHAT YOU STILL OWE.
+   *
+   * Store and Gallery both answer one question -- what is still on the list -- so both
+   * start from the shortfall rather than from every card any deck names. A card picked up
+   * in this sitting stays visible so the tick can be taken back; one bought last week does
+   * not. The Table is the exception and stays whole: it is the reference, the place a
+   * status gets corrected, and the only view that can show you a card you already own
+   * beside one you do not.
+   *
+   * The Gallery was the odd one out. It carries the same green Buy button as the Store and
+   * showed all 414 cards to reach the 257 that needed buying -- thirty screens on a desktop
+   * and eighty-nine on a phone, most of it cards already in the box. "Show everything" was
+   * already the way back and now applies to both. */
+  const owedOnly = (f) => (f.view === "store" || f.view === "gallery") && !f.storeAll;
+
+  const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  /* Read off the string, not through Date. "2026-09-06" parsed as a date is midnight UTC,
+     which west of Greenwich is the fifth, and a shopping list dated a day early is the
+     kind of wrong nobody thinks to check. */
+  function shortDate(iso) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || ""));
+    return m ? `${Number(m[3])} ${MONTHS[Number(m[2]) - 1] || ""} ${m[1]}` : String(iso || "");
+  }
+
+  /* Where the extra rows came from, said once, wherever the reader is standing. The
+     document's own note rides along as the title: it is the sentence you would read to a
+     seller -- any printing, lightly played or better -- and it explains what the ceilings
+     mean, which is not obvious from a number in a column. */
+  function listLine(ctx, className) {
+    const list = ctx && ctx.pullList;
+    if (!list || !(list.totals && list.totals.cards)) return "";
+    return `<span class="${className}" title="${esc(list.note || "")}">${LIST_LABEL.pull} · ${
+      esc(shortDate(list.dated))}${list.revision ? `, rev ${esc(list.revision)}` : ""} · ${
+      plural(list.totals.cards, "card")} · <b class="dp-num">${money(list.totals.budget)}</b></span>`;
+  }
+
   function bandHeader(name, list, colSpan) {
     const owed = list.reduce((sum, r) => sum + unitCost(r, r.paid) * r.need, 0);
     const inner = `<span class="sp-band-nm">${esc(name)}</span><span class="sp-band-ct">${
@@ -281,12 +336,29 @@
     return colSpan ? `<tr class="sp-band"><td colspan="${colSpan}">${inner}</td></tr>`
                    : `<div class="sp-band">${inner}</div>`;
   }
+  /* The marker that says a row came off the written list, and what was written against
+     it: the count asked for and the most you said you would pay a copy. Where the deck
+     plan's own estimate disagrees by more than small change, the tooltip says so -- the
+     two numbers are on screen in different places, and Mentor of the Meek reads $4.95 on
+     one and $0.14 on the other. */
+  function pullTag(row) {
+    if (!row.onPullList) return "";
+    const at = Number(row.ceiling) > 0 ? ` at up to ${money(row.ceiling)} a copy` : "";
+    const stale = Number(row.planPrice) > 0 && Math.abs(Number(row.planPrice) - Number(row.ceiling)) >= 0.5
+      ? `; the deck plan estimated ${money(row.planPrice)}` : "";
+    return ` <span class="sp-chip is-list" title="On the pull list${
+      row.pullQuantity > 1 ? `, ${row.pullQuantity} copies` : ""}${at}${stale}">list</span>`;
+  }
+
   function cell(row, key) {
     switch (key) {
       case "status": return triMarkup(row);
       case "name": return `<span class="sp-nm">${esc(row.name)}</span>${
-        row.quantity > 1 ? ` <span class="sp-qty dp-num">×${row.quantity}</span>` : ""}`;
-      case "decks": return (row.deckNames || []).map((d) => `<span class="sp-chip">${esc(d)}</span>`).join("");
+        row.quantity > 1 ? ` <span class="sp-qty dp-num">×${row.quantity}</span>` : ""}${pullTag(row)}`;
+      /* A row with no deck against it is the normal case for a pull-list card, so the
+         cell says which list put it there rather than sitting empty. */
+      case "decks": return (row.deckNames || []).map((d) => `<span class="sp-chip">${esc(d)}</span>`).join("")
+        || (row.onPullList ? `<span class="sp-chip is-list">${LIST_LABEL.pull}</span>` : "");
       case "color": return `<span class="sp-dot" style="background:${COLOR_HEX[row.colorKey]}"></span>${esc(row.color)}`;
       case "rarity": return `<span class="sp-dot is-ring" style="--rar:var(--rar-${row.rarityKey})"></span>${esc(row.rarity)}`;
       case "band": return `<span class="sp-pill dp-num">${esc(row.band || "no price")}</span>`;
@@ -438,18 +510,32 @@
              whether a card at a bad price is still worth taking, and the set is usually
              already the divider you are standing in front of. */
           /* Joined with a plus, not a space: deck names are several words each now, and
-             "Lorehold Spirit Boros Aura Rush" reads as one deck nobody has. */
-          (r.deckNames || []).length ? (r.deckNames || []).map((d) => esc(d)).join(" + ") : "",
+             "Lorehold Spirit Boros Aura Rush" reads as one deck nobody has. A card off the
+             written list says so here, which for the fifty-five in no deck is the only
+             answer to "why am I buying this". */
+          (r.deckNames || []).map((d) => esc(d)).concat(r.onPullList ? [LIST_LABEL.pull] : []).join(" + "),
           groupBy === "setName" ? "" : esc(r.setName || "")
         ].filter(Boolean).join(" · ")}</span>
       </span>
-      <span class="sp-store-money${dear ? " is-dear" : ""}${known ? "" : " is-unpriced"}">
+      ${r.need > 0 ? `<span class="sp-store-money${dear ? " is-dear" : ""}${known ? "" : " is-unpriced"}">
         <b class="dp-num">${known ? money(line) : "?"}</b>${
           known && many ? `<span class="sp-store-ea">${money(unitCost(r, r.paid))} ea</span>` : ""}${
           known ? "" : '<span class="sp-store-ea">no price</span>'}
-      </span>
-      <button type="button" class="sp-buy" data-sp-buy="${esc(r.key)}" aria-label="Buy${
-        many ? " " + r.need : ""} — ${esc(r.name)}">Buy${many ? " " + r.need : ""}</button>
+      </span>`
+      /* A row that owes nothing costs nothing MORE, which is not the same as costing
+         $0.00 -- and $0.00 against a card in a seller's box is the one number here you
+         must not print. What is worth knowing is the per-copy price, said as a per-copy
+         price, so it cannot be read as a line total. */
+      : `<span class="sp-store-money is-settled"><b class="dp-num">${
+          known ? money(unitCost(r, r.paid)) : "?"}</b><span class="sp-store-ea">each</span></span>`}
+      ${r.need > 0
+        ? `<button type="button" class="sp-buy" data-sp-buy="${esc(r.key)}" aria-label="Buy${
+            many ? " " + r.need : ""} — ${esc(r.name)}">Buy${many ? " " + r.need : ""}</button>`
+        /* Nothing is owed on this row, so there is nothing to press. It only appears here
+           at all under "Show everything", where the question is "am I holding a card I
+           still need" and the answer is this word. A green Buy button that changes nothing
+           answers it wrongly and looks like it worked. Same rule the gallery tile uses. */
+        : `<span class="sp-store-have">${esc(r.acquisition)}</span>`}
     </li>`;
   }
 
@@ -465,8 +551,7 @@
       : (ctx.rows || []);
     const all = decorate(rows, ctx.factFor, ctx.deckLabels, ctx.paidFor);
     const done = ctx.picked instanceof Set ? ctx.picked : new Set();
-    const inStore = f.view === "store";
-    const scope = inStore && !f.storeAll ? all.filter((r) => r.need > 0 || done.has(r.key)) : all;
+    const scope = owedOnly(f) ? all.filter((r) => r.need > 0 || done.has(r.key)) : all;
     return scope.filter((r) => passes(r, f));
   }
 
@@ -484,11 +569,8 @@
       : (ctx.rows || []);
     const all = decorate(rows, ctx.factFor, ctx.deckLabels, ctx.paidFor);
     const done = ctx.picked instanceof Set ? ctx.picked : new Set();
-    /* The Store view answers one question -- what is still on the list -- so it starts
-       from what you still owe rather than from everything. A card picked up in this
-       sitting stays visible so the tick can be taken back; one bought last week does not. */
     const inStore = f.view === "store";
-    const scope = inStore && !f.storeAll ? all.filter((r) => r.need > 0 || done.has(r.key)) : all;
+    const scope = owedOnly(f) ? all.filter((r) => r.need > 0 || done.has(r.key)) : all;
     const kept = scope.filter((r) => passes(r, f));
     const groups = groupRows(sortRows(kept, f.sortKey || "name", f.sortDir || "asc"), f.groupBy);
 
@@ -522,6 +604,8 @@
             (ctx.bench || []).length ? " " + (ctx.bench || []).length : ""}</button>
           <button type="button" data-sp-view="store" aria-pressed="${f.view === "store"}">\u25c9 Store</button>
         </span>
+        ${f.view === "gallery" ? `<button type="button" class="sp-fbtn" data-sp-storeall aria-pressed="${
+          Boolean(f.storeAll)}">${f.storeAll ? "Only what I need" : "Show everything"}</button>` : ""}
         ${ctx.onExport ? '<button type="button" class="sp-fbtn sp-exp" data-sp-export>\u2913 Export</button>' : ""}
         <button type="button" class="sp-mob" data-sp-mob aria-expanded="${Boolean(f.barOpen)}">
           ${f.barOpen ? "Hide options" : "Filter, group, sort"}${
@@ -557,6 +641,7 @@
         <span class="sp-tot"><b class="dp-num">${owedCards}</b> still to buy${
           deckIds.length ? ` for ${esc(deckIds.map((id) => (ctx.deckLabels || {})[id] || id).join(" and "))}` : ""
         } · <b class="dp-num">${money(owedValue)}</b></span>
+        ${listLine(ctx, "sp-tot sp-list-tot")}
         <span class="sp-tot sp-paid-tot" data-sp-paid-total><b class="dp-num">${money(paidTotal)}</b> paid · ${paidCount}/${spent.length} priced</span>
       </div>
     </div>`;
@@ -573,6 +658,7 @@
       const leftCards = left.reduce((n, r) => n + r.need, 0);
       const leftValue = left.reduce((n, r) => n + unitCost(r, r.paid) * r.need, 0);
       const gotHere = kept.length - left.length;
+      const storeListLine = listLine(ctx, "sp-store-list-note");
       const storeBar = `<div class="sp-store-bar" data-open="${f.barOpen ? 1 : 0}">
         <div class="sp-store-top">
           <span class="sp-seg sp-seg-sm">
@@ -584,6 +670,7 @@
           <span class="sp-store-count"><b class="dp-num">${leftCards}</b> to find · <b class="dp-num">${money(leftValue)}</b>${
             gotHere ? ` · <span class="sp-store-got">${gotHere} picked up</span>` : ""}</span>
         </div>
+        ${storeListLine ? `<div class="sp-store-top">${storeListLine}</div>` : ""}
         <div class="sp-store-top">
           <input class="sp-q sp-store-q" id="sp-q" type="search" placeholder="Type a card name\u2026" aria-label="Search cards" value="${esc(f.query || "")}">
         </div>

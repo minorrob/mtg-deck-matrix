@@ -765,6 +765,103 @@
   }
 
   /**
+   * The pull list, merged into the shop rows.
+   *
+   * WHY THIS IS NOT DERIVED. Every other number here falls out of one subtraction: what
+   * the decks want, minus what the ledger says you own. This list does not. Fifty-five of
+   * its sixty-eight cards are named by none of the picked decks -- they are cards somebody
+   * decided to buy, for builds this app is not tracking -- so no arithmetic over the
+   * current selections produces them. They are carried as what they are: a written list,
+   * with a per-copy ceiling, standing beside the derived rows and labelled `onPullList` so
+   * the page can say which is which.
+   *
+   * THE THREE RULES.
+   *
+   * 1. The list decides what is owed, measured against the day it was written. Four of
+   *    these cards -- Exotic Orchard, Farseek, Fellwar Stone, Skullclamp -- were already
+   *    in hand once and on the list once, which is a second copy for a seventh deck, not
+   *    a mistake. So the list owes `held + quantity` copies in total, where `held` is what
+   *    the importer saw in the ledger, and the shortfall against what is in the box now is
+   *    what is still to buy. Reading the count alone would either drop all four on sight
+   *    or never let any row clear once the card was bought.
+   * 2. The quantity follows the need. A row stands for every copy you will end up with,
+   *    so it grows to `inHand + ordered + need` -- never shrinking below what the decks
+   *    asked for.
+   * 3. The ceiling is the price. It is what the shopper wrote down this week and is
+   *    willing to pay; the plan's target came off an older sheet and is sometimes wildly
+   *    above it (Mentor of the Meek: $4.95 against $0.14). Paying the older number at a
+   *    booth is the failure this prevents, so the ceiling wins and the target is kept
+   *    under `planPrice` rather than thrown away.
+   *
+   * The ledger, not the allocation, settles rule 1. `row.inHand` counts the copies THIS
+   * row was allocated, which is the right answer to "will every box get one" and the wrong
+   * one to "how many of these do I own": a card owned three times and wanted once by a
+   * deck is allocated one, and the list would go on asking for copies already on a shelf.
+   */
+  function withPullList(rows, cards, owned) {
+    const list = Array.isArray(cards) ? cards : [];
+    if (!list.length) return (rows || []).slice();
+    const wanted = new Map();
+    list.forEach((card) => {
+      if (!card || !card.name) return;
+      const key = ownedKey(card.name);
+      const at = wanted.get(key);
+      const quantity = Math.max(1, Number(card.quantity) || 1);
+      if (at) at.quantity += quantity;
+      else wanted.set(key, Object.assign({}, card, {key, quantity}));
+    });
+
+    /* How many copies the list is still short of, given what the collection holds now. */
+    const outstanding = (card) => {
+      const have = ownedCount(owned, card.name);
+      return Math.max(0, (Number(card.held) || 0) + card.quantity - have.inHand - have.ordered);
+    };
+
+    const merged = (rows || []).map((row) => {
+      const card = wanted.get(row.key);
+      if (!card) return row;
+      wanted.delete(row.key);
+      const ceiling = Number(card.ceiling);
+      const priced = Number.isFinite(ceiling) && ceiling > 0;
+      const need = Math.max(Number(row.need) || 0, outstanding(card));
+      const quantity = Math.max(Number(row.quantity) || 0, (row.inHand || 0) + (row.ordered || 0) + need);
+      return Object.assign({}, row, {
+        need, quantity,
+        acquisition: acquisitionFor(quantity, row.inHand, row.ordered),
+        onPullList: true,
+        pullQuantity: card.quantity,
+        planPrice: row.price,
+        price: priced ? ceiling : row.price,
+        ceiling: priced ? ceiling : row.ceiling,
+        band: priceBand(priced ? ceiling : row.price),
+        spot: vendorSpot(priced ? ceiling : row.price)
+      });
+    });
+
+    /* What is left asked for by nobody's deck. The ledger still applies -- a card you own
+       and are buying another of should say so -- so the copies you hold sit beside the
+       copies the list wants rather than cancelling them. */
+    wanted.forEach((card) => {
+      const {inHand, ordered} = ownedCount(owned, card.name);
+      const need = outstanding(card);
+      const ceiling = Number(card.ceiling);
+      const price = Number.isFinite(ceiling) && ceiling > 0 ? ceiling : null;
+      merged.push({
+        key: card.key, name: card.name, price, ceiling: price,
+        band: priceBand(price), spot: vendorSpot(price),
+        /* The list's own type string ("Creature · G") stands in when Scryfall was not
+           reachable at import: cardType reads the words, and those are the same words. */
+        type: cardType({typeLine: card.typeLine || card.type}), isBasic: isBasicLand(card),
+        quantity: inHand + ordered + need, decks: [], rungs: [], byDeck: {},
+        inHand, ordered, need,
+        acquisition: acquisitionFor(inHand + ordered + need, inHand, ordered),
+        onPullList: true, pullQuantity: card.quantity, planPrice: null
+      });
+    });
+    return merged;
+  }
+
+  /**
    * The same row, but describing only the decks asked about. Filtering the Shop to one
    * deck asks "what do I still need for this deck", and an unscoped row cannot answer it:
    * Sol Ring sits in six decks, one copy is owned, and the row says "Partly here" no
@@ -799,6 +896,6 @@
     MANA_COLORS, manaCostOf, producesColors, manaHealth,
     ROLE_KEYS, ROLE_LABEL, manaValueOf, cardRoles, slotFit,
     TYPE_ORDER, cardType, isBasicLand, whyFor, whyText, whySource,
-    deckSlots, shopRows, scopeRow
+    deckSlots, shopRows, withPullList, scopeRow
   };
 });

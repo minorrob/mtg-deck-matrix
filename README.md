@@ -23,6 +23,14 @@ simulation predicted.
 **`graph.html` · the card graph** is 7,710 Commander-legal cards, what connects
 them, and a Copilot that says which twenty are worth a look.
 
+Two lists reach the Shop, and they are not the same kind of thing. The **deck
+plan** is derived: what the six boxes want, minus what the ledger says you own.
+The **pull list** is not — it is a written document, `data/pull-list.json`, built
+by `tools/import-pull-list.mjs` from the .docx in `data/source/`, and most of its
+cards are for builds this app is not tracking. Its rows carry a gold `list` tag,
+its per-copy ceiling is the price the Shop shows, and the List filter scopes the
+page to either one.
+
 Everything lives in `localStorage`. Export writes one file carrying the lot —
 picks, boxes, Shop marks, prices, the decks you added and the collection you
 uploaded — and importing it puts all of that back. `data/*.json` is never written
@@ -172,9 +180,15 @@ built-ins — there is no `package.json`, no dependency to install and no build
 step.
 
 ```
-for f in tests/*.mjs; do node "$f" || echo "FAIL $f"; done   # all of them
-node tests/sim-engine.mjs                                    # or one, while working on it
+./runtests.sh -q             # all of them, one line each, non-zero exit if any fail
+./runtests.sh                # the same, with every suite's own output
+node tests/sim-engine.mjs    # or one, while working on it
 ```
+
+Use the script rather than a shell loop. `for f in tests/*.mjs; do node "$f" ||
+echo FAIL; done` exits 0 whatever happens — the exit code belongs to the last
+`echo` — so a red suite scrolls past under a thousand green lines and the run
+ends looking like a pass.
 
 | | |
 |---|---|
@@ -192,7 +206,7 @@ node tests/sim-engine.mjs                                    # or one, while wor
 
 `tests/uat/journeys.mjs` opens the pages as three people — a first-timer with
 empty storage, somebody a year in with ten added decks and 3,200 cards, and
-somebody leaving with their data — across ten journeys at two screen sizes. It
+somebody leaving with their data — across eleven journeys at two screen sizes. It
 needs Playwright and a static server, neither of which this repo depends on, so
 it **skips rather than fails** when either is missing. See `tests/uat/README.md`.
 

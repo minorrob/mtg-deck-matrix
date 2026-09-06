@@ -353,6 +353,109 @@ for (const screen of SCREENS) {
     check(views === 4, screen.tag, "continued · a shopping trip",
       `${views} Shop views reachable, expected 4`);
     console.log(`  continued · a trip       lands on "${landed}" · ${Math.round(shopScreens)} screens · ${views} views`);
+
+    /* The Gallery carries the same green Buy button as the Store, so it answers the same
+       question and starts from the same place: what is still owed. It used to render every
+       card any deck names to reach the ones that needed buying. "Show everything" is the
+       way back, and it has to be ON the Gallery -- it used to live only in the Store's own
+       toolbar, so scoping the Gallery without moving it would have hidden cards behind a
+       button on another view. */
+    await page.locator('#view-shop2 [data-sp-view="gallery"]').first().click();
+    await page.waitForTimeout(2500);
+    const owed = await page.evaluate(() => document.querySelectorAll("#view-shop2 .sp-card").length);
+    const showAll = page.locator("#view-shop2 [data-sp-storeall]").first();
+    check(await showAll.count() > 0, screen.tag, "continued · a shopping trip",
+      "the Gallery is scoped to what is owed with no way back to everything");
+    await showAll.click();
+    await page.waitForTimeout(2500);
+    const everything = await page.evaluate(() => document.querySelectorAll("#view-shop2 .sp-card").length);
+    check(owed > 0 && everything > owed, screen.tag, "continued · a shopping trip",
+      `the Gallery showed ${owed} owed and ${everything} in total — the scoping is doing nothing`);
+    console.log(`     gallery ${owed} owed · ${everything} with "Show everything"`);
+
+    /* THE WRITTEN PULL LIST. Fifty-five of its sixty-eight cards are named by no deck the
+       app tracks, so nothing derived can produce them: if the merge silently drops out,
+       every other number on this page still adds up and the cards simply are not there.
+       Checked by count, against the file, with "Show everything" already on -- a card the
+       ledger has since caught up with still has a row, it just has nothing owed on it. */
+    const pullList = JSON.parse(readFileSync(join(ROOT, "data", "pull-list.json"), "utf8"));
+    const listDrop = page.locator('#view-shop2 [data-sp-drop="list"]').first();
+    check(await listDrop.count() > 0, screen.tag, "continued · a shopping trip",
+      "no List filter, so there is no way to see which rows came off the written list");
+    if (await listDrop.count() > 0) {
+      /* On a phone every filter folds behind one button, so the List filter is reachable
+         but not on screen. Open the fold first -- and check that opening it is enough,
+         because a filter you cannot reach is a filter that is not there. */
+      if (!(await listDrop.isVisible())) await page.locator("#view-shop2 [data-sp-mob]").first().click();
+      check(await listDrop.isVisible(), screen.tag, "continued · a shopping trip",
+        "the List filter never comes into view, even with the options open");
+      await listDrop.click();
+      await page.locator('#view-shop2 [data-sp-chk="list|Pull list"]').first().click();
+      await page.waitForTimeout(2000);
+      const onList = await page.evaluate(() => document.querySelectorAll("#view-shop2 .sp-card").length);
+      const tagged = await page.evaluate(() => document.querySelectorAll("#view-shop2 .sp-card .sp-chip.is-list").length);
+      check(onList === pullList.totals.cards, screen.tag, "continued · a shopping trip",
+        `the pull list has ${pullList.totals.cards} cards, the Shop shows ${onList}`);
+      check(tagged === onList, screen.tag, "continued · a shopping trip",
+        `${onList} rows scoped to the pull list but only ${tagged} say so`);
+      const named = clean(await page.locator("#view-shop2 .sp-list-tot, #view-shop2 .sp-store-list-note")
+        .first().textContent().catch(() => ""));
+      check(/Pull list/.test(named), screen.tag, "continued · a shopping trip",
+        `the Shop does not name the list its extra rows came from (read "${named}")`);
+      console.log(`     pull list ${onList} cards, all tagged · ${named}`);
+      // Put it back, so the screenshot and the health sweep see the page as it opens.
+      await page.locator('#view-shop2 [data-sp-chk="list|Pull list"]').first().click();
+      await page.waitForTimeout(1500);
+    }
+
+    /* UNDO HAS TO BE A REAL UNDO. Buying a card writes two things -- the ledger and the
+       per-deck holds -- and in this ledger a per-deck {inHand: 0, ordered: 0} is not
+       "nothing", it is "this box was counted and holds none", which the allocator honours
+       by refusing to serve the card at all. Undo used to write that assertion into every
+       deck for a card none of them had been counted for, so the copy you bought the next
+       day would be denied to all six boxes and the Shop would go on asking for a card
+       already in the box. Nothing on screen said so, which is why this is measured in
+       storage rather than in the markup. */
+    const readShopState = () => page.evaluate(() => {
+      const st = JSON.parse(localStorage.getItem("mtg-deck-matrix-state-v1") || "{}");
+      return {owned: st.owned || {}, holds: st.deckHolds || {}};
+    });
+    await page.locator('#view-shop2 [data-sp-view="store"]').first().click();
+    await page.waitForTimeout(2000);
+    /* "Show everything" is still on from the Gallery check above, and it shows rows that
+       owe nothing. Those carry no Buy button -- a green button that changes nothing reads
+       as having worked -- so put the Store back to what is owed before pressing one. */
+    const showEverything = page.locator("#view-shop2 [data-sp-storeall][aria-pressed='true']").first();
+    if (await showEverything.count() > 0) { await showEverything.click(); await page.waitForTimeout(2000); }
+    const settled = await page.evaluate(() =>
+      [...document.querySelectorAll("#view-shop2 .sp-store-row")]
+        .filter((li) => !li.querySelector("[data-sp-buy]")).length);
+    check(settled === 0, screen.tag, "continued · a shopping trip",
+      `${settled} rows on the owed list have nothing to buy on them`);
+    const buyable = page.locator("#view-shop2 [data-sp-buy]").first();
+    if (await buyable.count() > 0) {
+      const key = await buyable.getAttribute("data-sp-buy");
+      const was = await readShopState();
+      await buyable.click();
+      await page.waitForTimeout(1500);
+      const bought = await readShopState();
+      check((bought.owned[key]?.inHand || 0) > (was.owned[key]?.inHand || 0), screen.tag,
+        "continued · a shopping trip", `buying ${key} did not put a copy in the ledger`);
+      await page.locator(`#view-shop2 [data-sp-unbuy="${key}"]`).first().click();
+      await page.waitForTimeout(1500);
+      const now = await readShopState();
+      check(JSON.stringify(now.owned[key] || null) === JSON.stringify(was.owned[key] || {inHand: 0, ordered: 0}),
+        screen.tag, "continued · a shopping trip",
+        `undo left ${key} owned as ${JSON.stringify(now.owned[key])}, was ${JSON.stringify(was.owned[key] || null)}`);
+      const planted = Object.entries(now.holds)
+        .filter(([deck]) => was.holds[deck] && was.holds[deck][key] === undefined)
+        .filter(([deck]) => now.holds[deck][key] !== undefined)
+        .map(([deck]) => deck);
+      check(planted.length === 0, screen.tag, "continued · a shopping trip",
+        `undo left ${key} counted-and-absent in ${planted.join(", ")}, which denies the card to those decks`);
+      console.log(`     buy then undo ${key} · ledger and ${Object.keys(now.holds).length} boxes back as they were`);
+    }
+    await healthy(page, screen.tag, "continued · a shopping trip");
     await shot(page, `${screen.tag}-continued-shop`);
     await healthy(page, screen.tag, "continued · a shopping trip");
     await ctx.close();
