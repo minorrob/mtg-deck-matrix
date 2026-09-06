@@ -301,6 +301,30 @@ for (const screen of SCREENS) {
       `came back to ${back} decks, left with ${rail}`);
     console.log(`  continued · returns      ${back} decks still there`);
     await healthy(page, screen.tag, "continued · returns");
+
+    /* THE SHOPPING TRIP. Shop has four views and a phone used to land on the
+       table -- every card any selected deck wants, each row stacked into a 195px
+       card, 414 of them: 105 screens at 390px. Store is the same trip in 23 and
+       is the view built for it, with a search box, the seller's own letter
+       groups and one Buy button per row. So a narrow screen must land somewhere
+       it can actually shop. */
+    await page.click('.main-tab[data-view="shop2"]');
+    await page.waitForTimeout(3000);
+    const shopTall = await page.evaluate(() => document.documentElement.scrollHeight);
+    const shopScreens = shopTall / screen.h;
+    const landed = clean(await page.locator('#view-shop2 [data-sp-view][aria-pressed="true"]')
+      .first().textContent().catch(() => ""));
+    check(shopScreens < 40, screen.tag, "continued · a shopping trip",
+      `Shop opens ${Math.round(shopScreens)} screens tall on "${landed}"`);
+    check(Boolean(landed), screen.tag, "continued · a shopping trip",
+      "no Shop view is marked as the one you are looking at");
+    // Every view stays one tap away, wherever the landing put you.
+    const views = await page.locator("#view-shop2 [data-sp-view]").count();
+    check(views === 4, screen.tag, "continued · a shopping trip",
+      `${views} Shop views reachable, expected 4`);
+    console.log(`  continued · a trip       lands on "${landed}" · ${Math.round(shopScreens)} screens · ${views} views`);
+    await shot(page, `${screen.tag}-continued-shop`);
+    await healthy(page, screen.tag, "continued · a shopping trip");
     await ctx.close();
   }
 

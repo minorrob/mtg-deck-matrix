@@ -1,7 +1,7 @@
 # User journeys, in a browser
 
 The twenty-three suites in `tests/` check that the modules are right. Nothing in
-them opens a page. This does: three people, nine journeys, two screen sizes, in a
+them opens a page. This does: three people, ten journeys, two screen sizes, in a
 real Chromium.
 
 ## Why it exists as its own thing
@@ -60,7 +60,7 @@ None of THAT is visible if the collection behind the app is always empty.
 | **Continued** | uses it between games | six picked decks, a game log, ten added decks, 3,200 cards | their work where they left it, and to change something |
 | **Exit** | wants their data, or a clean slate | a full collection | to take it with them, wipe it, and put it back |
 
-## The nine journeys
+## The ten journeys
 
 **First · lands** — `index.html` shows six decks and two ways to add one, and
 says where the rest of the app is without anybody scrolling. Nothing is required
@@ -90,6 +90,15 @@ replace-everything dialog (there is nothing to replace), that the six arrive,
 and that it stays on the tab the button was pressed from.
 
 **Continued · leaves and returns** — the work is still there.
+
+**Continued · a shopping trip** — Shop with the six decks loaded. It has four
+views, and a phone used to land on the table: every card any selected deck wants,
+each row stacked into a 195px card, 414 of them — 105 screens at 390px wide.
+Store is the same trip in 23 and is the view built for it, with a search box, the
+seller's own letter groups and one Buy button per row. Asserts a narrow screen
+lands somewhere it can actually shop, and that all four views stay one tap away
+from wherever that is — the Store toolbar offered only three, so landing there
+would have put the bench out of reach.
 
 **Continued · a season of games** — 250 logged games, about two years of weekly
 Commander. Asserts the log does not render all of them at once, does not become

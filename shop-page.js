@@ -562,8 +562,9 @@
       const storeBar = `<div class="sp-store-bar" data-open="${f.barOpen ? 1 : 0}">
         <div class="sp-store-top">
           <span class="sp-seg sp-seg-sm">
-            <button type="button" data-sp-view="table" aria-pressed="false">\u2630</button>
-            <button type="button" data-sp-view="gallery" aria-pressed="false">\u25a6</button>
+            <button type="button" data-sp-view="table" aria-pressed="false" aria-label="Table">\u2630</button>
+            <button type="button" data-sp-view="gallery" aria-pressed="false" aria-label="Gallery">\u25a6</button>
+            <button type="button" data-sp-view="bench" aria-pressed="false" aria-label="Bench">\u25c7</button>
             <button type="button" data-sp-view="store" aria-pressed="true">\u25c9 Store</button>
           </span>
           <span class="sp-store-count"><b class="dp-num">${leftCards}</b> to find · <b class="dp-num">${money(leftValue)}</b>${

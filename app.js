@@ -1673,6 +1673,10 @@
   const shopFilters = {
     status: [], color: [], type: [], band: [], spot: [], rarity: [], deck: [], rung: [],
     query: "", view: "table", groupBy: "spot", sortKey: "name", sortDir: "asc",
+    /* Which view you LAND on, decided once, the first time Shop is opened -- see
+       pickShopView. Not saved: it is a starting point, and all four are one tap
+       apart from wherever you start. */
+    viewPicked: false,
     // Phones only: whether the filter/group/sort block is unfolded. Desktop ignores it
     // and shows the block regardless, so this never hides anything on a wide screen.
     barOpen: false,
@@ -1917,9 +1921,45 @@
     if (added.length) showToast(`${added.length} card${added.length === 1 ? "" : "s"} on the Bench.`);
   }
 
+  /* Arriving at the Store is arriving at a booth: the list of what you have
+     already picked up starts empty, and grouping falls to the seller's own order
+     rather than the app's, which is what you will be scanning against. */
+  function enterStoreView() {
+    shopPickedUp = new Set();
+    shopFilters.sortKey = "name";
+    shopFilters.sortDir = "asc";
+    if (shopFilters.groupBy === "spot") shopFilters.groupBy = "letter";
+  }
+
+  /* WHICH OF THE FOUR VIEWS A PHONE LANDS ON.
+   *
+   * The table is a reference: every card any selected deck wants, with its
+   * colour, type, rarity, band, target and paid price. On a desktop that is a
+   * table and reads like one. On a phone every row stacks into a 195px card, and
+   * with the six decks loaded that is 414 of them -- measured, 81,649px, or 105
+   * screens. Store is the same shopping trip in 23, and it is the view built for
+   * it: a search box, the seller's own letter groups, and one green Buy button
+   * per row.
+   *
+   * So a narrow screen lands on Store. Decided once, when Shop is first opened
+   * rather than when the page loads, so it reflects the window somebody is
+   * actually using; and never again after that, so choosing the table on a phone
+   * keeps the table. All four stay one tap away either way -- this only decides
+   * where you start. */
+  function pickShopView() {
+    if (shopFilters.viewPicked) return;
+    shopFilters.viewPicked = true;
+    let narrow = false;
+    try { narrow = window.matchMedia("(max-width: 700px)").matches; } catch (error) { narrow = false; }
+    if (!narrow) return;
+    enterStoreView();
+    shopFilters.view = "store";
+  }
+
   function renderShopPage() {
     const host = $("#view-shop2");
     if (!host || !window.MtgShopPage) return;
+    pickShopView();
     if (!deckPageCards) {
       host.innerHTML = '<div class="loading-card">Loading the card catalog…</div>';
       loadDeckPageCards().then(renderShopPage);
@@ -2047,12 +2087,8 @@
       /* Arriving at the Store is arriving at a booth: the list of what you have already
          picked up starts empty, and grouping falls to the seller's own order rather than
          the app's, which is what you will be scanning against. */
-      if (next === "store" && shopFilters.view !== "store") {
-        shopPickedUp = new Set();
-        shopFilters.sortKey = "name";
-        shopFilters.sortDir = "asc";
-        if (shopFilters.groupBy === "spot") shopFilters.groupBy = "letter";
-      }
+      if (next === "store" && shopFilters.view !== "store") enterStoreView();
+      shopFilters.viewPicked = true;
       shopFilters.view = next; renderShopPage(); return true;
     }
     if (event.target.closest("[data-sp-storeall]")) { shopFilters.storeAll = !shopFilters.storeAll; renderShopPage(); return true; }
