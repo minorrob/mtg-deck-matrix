@@ -13,3 +13,6 @@ sim/sim-ledger.json
 # in data/, not here.
 sim/sweep/*
 !sim/sweep/.gitkeep
+
+# Screenshots from tests/uat/journeys.mjs -- regenerated on every run.
+tests/uat/shots/
