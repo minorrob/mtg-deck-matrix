@@ -8,6 +8,7 @@ const Compliance = require("../compliance-model.js");
 const Scryfall = require("../scryfall-client.js");
 const Custom = require("../custom-model.js");
 const Generator = require("../deck-generator.js");
+const Edhrec = require("../edhrec-client.js");
 const fixture = JSON.parse(await readFile(new URL("./fixtures/scryfall/cards.json", import.meta.url), "utf8"));
 // The full app moved to matrix.html when the simplified viewer took over
 // index.html. These assertions are about the full app, so they follow it.
@@ -15,6 +16,13 @@ const indexSource = await readFile(new URL("../matrix.html", import.meta.url), "
 const appSource = await readFile(new URL("../app.js", import.meta.url), "utf8");
 
 import {makeScryfallStub, makeClient} from "./helpers/stub-scryfall.mjs";
+
+/* No EDHREC, deliberately. These assertions pin the deck the generator builds
+   from Scryfall alone, which is also the deck a commander with no EDHREC page
+   gets -- and running them against the live site would make the suite depend on
+   somebody else's uptime and on data that changes weekly. The case where the
+   signal IS present is covered in tests/edhrec-client.mjs and below. */
+const noEdhrec = async () => ({ok: false, status: 404, json: async () => ({})});
 // The stub Scryfall these tests run against now lives in helpers/, because
 // tests/deck-build.mjs needs the same generator output to map from.
 
@@ -106,7 +114,7 @@ const inputs = {
   preferSet: ""
 };
 const progress = [];
-const generated = await Generator.generateForSlot(inputs, {client, onProgress: (event) => progress.push(event), createdAt: "2026-08-23T00:00:00.000Z"});
+const generated = await Generator.generateForSlot(inputs, {client, fetchImpl: noEdhrec, onProgress: (event) => progress.push(event), createdAt: "2026-08-23T00:00:00.000Z"});
 
 assert.equal(generated.commander.name, "Slimefoot, the Stowaway", "the typed commander name must win");
 assert.equal(generated.variants.length, 3, "variantCount must decide how many lenses are built");
@@ -157,7 +165,7 @@ assert.ok(first.size - shared >= 20, `two lenses must differ by at least 20 card
     seedLinks: [],
     variantCount: 1,
     commanderLink: `https://partner.tcgplayer.com/c/1/2/3?u=${encodeURIComponent(`https://www.tcgplayer.com/product/${commanderCard.tcgplayer_id}?page=1`)}`
-  }, {client: linkClient});
+  }, {client: linkClient, fetchImpl: noEdhrec});
   assert.equal(linked.commander.name, "Slimefoot, the Stowaway", "a commander link must resolve through the affiliate wrapper");
   assert.equal(linked.variants.length, 1);
 }
@@ -171,7 +179,7 @@ assert.ok(first.size - shared >= 20, `two lenses must differ by at least 20 card
     themes: ["Counters / Proliferate"],
     budgetUsd: 120,
     variantCount: 1
-  }, {client: searchClient});
+  }, {client: searchClient, fetchImpl: noEdhrec});
   assert.ok(searched.commander, "an inputs-only slot must still resolve a commander");
   assert.equal(Generator.evaluateEntries(searched.builds[0].stages[0]).total, 100);
 }
@@ -285,8 +293,8 @@ assert.ok(fortress.protection > neutral.protection, "Fortress must ask for more 
 assert.ok(fortress.finisher < neutral.finisher, "Fortress must ask for fewer finishers");
 assert.ok(flavor.theme > fortress.theme, "Flavor must lean further into the theme than Fortress does");
 {
-  const {client: styleClient} = makeClient(fixture.data);
-  const styled = await Generator.generateForSlot({...inputs, variantCount: 1, seedLinks: [], playstyle: "Fortress"}, {client: styleClient});
+  const {client: styleClient, fetchImpl: noEdhrec} = makeClient(fixture.data);
+  const styled = await Generator.generateForSlot({...inputs, variantCount: 1, seedLinks: [], playstyle: "Fortress"}, {client: styleClient, fetchImpl: noEdhrec});
   const protectionCount = styled.builds[0].stages[0].filter((entry) => entry.role === "protection").length;
   assert.ok(protectionCount >= 6, `a Fortress build must actually fill the extra protection slots (filled ${protectionCount})`);
   assert.equal(Generator.evaluateEntries(styled.builds[0].stages[0]).total, 100);
@@ -335,5 +343,68 @@ assert.match(appSource, /String\(item\?\.name \|\| ""\)/, "itemKey must tolerate
 // The Choose tour steps go with the withdrawn tab; the tour must not offer a
 // walkthrough of a page nobody can reach.
 assert.doesNotMatch(appSource, /^\s{4}choose: \[/m, "the tour must not walk through a withdrawn view");
+
+
+// ---------------------------------------------------------------------------
+// EDHREC synergy, when there is a page for the commander.
+//
+// Two builds off the same pool and the same seed, one with the signal and one
+// without. The point of the whole feature is that they differ; a check that
+// only proved "it does not crash" would have passed just as happily if the
+// numbers were being read and thrown away.
+// ---------------------------------------------------------------------------
+{
+  const edhPage = JSON.parse(await readFile(new URL("./fixtures/edhrec-atraxa.json", import.meta.url), "utf8"));
+  const withEdh = async () => ({ok: true, json: async () => edhPage});
+  const same = {...inputs, variantCount: 1, seedLinks: [], createdAt: "2026-08-23T00:00:00.000Z"};
+
+  const {client: a} = makeClient(fixture.data);
+  const plain = await Generator.generateForSlot(same, {client: a, fetchImpl: noEdhrec});
+  const {client: b} = makeClient(fixture.data);
+  const tilted = await Generator.generateForSlot(same, {client: b, fetchImpl: withEdh});
+
+  const names = (r) => r.builds[0].stages[1].map((e) => e.card.name).sort();
+  assert.equal(tilted.builds.length, 1, "the signal must not stop a deck being built");
+  assert.equal(names(tilted).length, names(plain).length, "both are still a hundred cards");
+  assert.notDeepEqual(names(tilted), names(plain),
+    "EDHREC synergy must actually change which cards get picked, or it is being read and discarded");
+
+  /* That last one on its own would pass for the wrong reason. Present-vs-absent
+     also flips the weight fold-back, so the two builds would differ even if
+     every synergy number were being discarded. This isolates it: a page whose
+     cards are all outside the pool leaves the weights exactly as the real page
+     does, and changes nothing else. If the real page still builds a different
+     deck, the numbers -- not the weights -- are what moved it. */
+  const irrelevant = {container: {json_dict: {cardlists: [{header: "Top Cards", cardviews: [
+    {name: "A Card That Is In No Pool", synergy: 0.5, num_decks: 90, potential_decks: 100}
+  ]}]}}};
+  const {client: d} = makeClient(fixture.data);
+  const weightsOnly = await Generator.generateForSlot(same,
+    {client: d, fetchImpl: async () => ({ok: true, json: async () => irrelevant})});
+  assert.notDeepEqual(names(tilted), names(weightsOnly),
+    "with the weights held equal, the EDHREC numbers must still change the deck");
+  const overlap = [...Edhrec.parse(edhPage).cards.values()]
+    .filter((e) => fixture.data.some((c) => c.name.toLowerCase() === e.name.toLowerCase()));
+  assert.ok(overlap.length > 20,
+    `the EDHREC fixture must actually cover the card pool (${overlap.length} of ${fixture.data.length} overlap)`);
+
+  // And it must not break the deck it changes.
+  const legal = tilted.compliance || tilted.builds[0].compliance;
+  assert.deepEqual(legal[1].tier3, [], "the tilted Tuned build must still be Bracket 3 legal");
+
+  // A commander EDHREC has never heard of must build EXACTLY the deck it built
+  // before this signal existed -- that is what the weight fold-back is for, and
+  // a zeroed synergy term would silently cost the deck its whole swap ladder.
+  const {client: c} = makeClient(fixture.data);
+  const missing = await Generator.generateForSlot(same, {client: c, fetchImpl: noEdhrec});
+  assert.deepEqual(names(missing), names(plain),
+    "no EDHREC page must reproduce the old build card for card");
+  assert.ok(missing.builds[0].variant.tuned.length > 0,
+    "and must keep its Tuned ladder, which a zeroed weight silently emptied");
+  assert.ok((tilted.warnings || []).every((w) => !/no page/i.test(w)),
+    "a commander WITH a page must not be warned about");
+  assert.ok((missing.warnings || []).some((w) => /EDHREC has no page/.test(w)),
+    "a commander without one must say so, since it changes how cards were ranked");
+}
 
 console.log(`Generated ${generated.variants.length} compliant variants from ${fixture.data.length} fixture cards in ${calls.length} stubbed Scryfall calls.`);

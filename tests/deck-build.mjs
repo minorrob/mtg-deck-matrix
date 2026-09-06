@@ -33,7 +33,7 @@ const result = await Generator.generateForSlot({
   budgetUsd: 150,
   variantCount: 2,
   createdAt: "2026-09-06T00:00:00.000Z"
-}, {client});
+}, {client, fetchImpl: async () => ({ok: false, status: 404, json: async () => ({})})});
 
 assert.ok(result.commander, "the stub must resolve a commander");
 assert.ok(result.builds.length >= 1, "at least one variant must be built");

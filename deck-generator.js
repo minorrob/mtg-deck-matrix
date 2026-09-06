@@ -3,10 +3,14 @@
   const isNode = typeof module === "object" && module.exports && typeof require === "function";
   const lineup = isNode ? require("./lineup-model.js") : root && root.MtgLineupModel;
   const compliance = isNode ? require("./compliance-model.js") : root && root.MtgComplianceModel;
-  const api = factory(lineup, compliance);
+  /* Optional, unlike the other two: what people play with a given commander is an
+     improvement to the ranking, not a precondition for building a deck. The
+     generator ran without it for its whole life and still does. */
+  const edhrec = isNode ? require("./edhrec-client.js") : root && root.MtgEdhrec;
+  const api = factory(lineup, compliance, edhrec);
   if (isNode) module.exports = api;
   if (root) root.MtgDeckGenerator = api;
-})(typeof globalThis !== "undefined" ? globalThis : this, function (Lineup, Compliance) {
+})(typeof globalThis !== "undefined" ? globalThis : this, function (Lineup, Compliance, Edhrec) {
   "use strict";
 
   if (!Lineup || !Compliance) throw new Error("Deck generator requires the lineup and compliance models");
@@ -82,12 +86,20 @@
     Flavor: {theme: 5, draw: -2, removal: -2, finisher: -1}
   };
 
+  /* `edhrec` is Scryfall's global popularity rank; `synergy` is what EDHREC says
+     people play with THIS commander. They answer different questions -- Sol Ring
+     tops the first and says nothing under the second -- so the popularity budget
+     is split between them rather than one replacing the other. When no EDHREC
+     page exists for a commander the synergy term is a constant across the whole
+     pool, which leaves the ordering exactly as it was before this signal
+     existed. Spice keeps the smallest share of both on purpose: skipping the
+     cards everyone already owns is the entire point of that lens. */
   const LENSES = [
-    {key: "synergy-max", label: "Synergy maximizer", weights: {edhrec: 0.30, theme: 0.45, curve: 0.10, budget: 0.05, scarcity: 0.10}, quotaShift: {theme: 4, removal: -2, draw: -2}, offset: 0, priceCapFactor: 1, lands: 0, blurb: "Leans hardest into the theme you asked for."},
-    {key: "budget-value", label: "Budget value", weights: {edhrec: 0.30, theme: 0.20, curve: 0.15, budget: 0.30, scarcity: 0.05}, quotaShift: {}, offset: 0, priceCapFactor: 0.45, lands: 0, blurb: "Spends the least per point of effect."},
-    {key: "resilient-midrange", label: "Resilient midrange", weights: {edhrec: 0.30, theme: 0.22, curve: 0.18, budget: 0.15, scarcity: 0.15}, quotaShift: {protection: 3, removal: 2, theme: -5}, offset: 1, priceCapFactor: 1, lands: 1, blurb: "Answers first, wins second; hardest to knock over."},
-    {key: "aggro-tempo", label: "Aggressive tempo", weights: {edhrec: 0.28, theme: 0.27, curve: 0.25, budget: 0.10, scarcity: 0.10}, quotaShift: {finisher: 3, theme: 1, ramp: -2, wipe: -2}, offset: 1, priceCapFactor: 1, lands: -2, curveBias: -1, blurb: "Lowest curve, fastest clock, least patient."},
-    {key: "spice", label: "Off-meta spice", weights: {edhrec: 0.08, theme: 0.40, curve: 0.17, budget: 0.15, scarcity: 0.20}, quotaShift: {theme: 2, finisher: -1, draw: -1}, offset: 6, priceCapFactor: 1, lands: 0, blurb: "Deliberately skips the cards everyone already owns."}
+    {key: "synergy-max", label: "Synergy maximizer", weights: {edhrec: 0.12, synergy: 0.18, theme: 0.45, curve: 0.10, budget: 0.05, scarcity: 0.10}, quotaShift: {theme: 4, removal: -2, draw: -2}, offset: 0, priceCapFactor: 1, lands: 0, blurb: "Leans hardest into the theme you asked for."},
+    {key: "budget-value", label: "Budget value", weights: {edhrec: 0.15, synergy: 0.15, theme: 0.20, curve: 0.15, budget: 0.30, scarcity: 0.05}, quotaShift: {}, offset: 0, priceCapFactor: 0.45, lands: 0, blurb: "Spends the least per point of effect."},
+    {key: "resilient-midrange", label: "Resilient midrange", weights: {edhrec: 0.18, synergy: 0.12, theme: 0.22, curve: 0.18, budget: 0.15, scarcity: 0.15}, quotaShift: {protection: 3, removal: 2, theme: -5}, offset: 1, priceCapFactor: 1, lands: 1, blurb: "Answers first, wins second; hardest to knock over."},
+    {key: "aggro-tempo", label: "Aggressive tempo", weights: {edhrec: 0.14, synergy: 0.14, theme: 0.27, curve: 0.25, budget: 0.10, scarcity: 0.10}, quotaShift: {finisher: 3, theme: 1, ramp: -2, wipe: -2}, offset: 1, priceCapFactor: 1, lands: -2, curveBias: -1, blurb: "Lowest curve, fastest clock, least patient."},
+    {key: "spice", label: "Off-meta spice", weights: {edhrec: 0.04, synergy: 0.04, theme: 0.40, curve: 0.17, budget: 0.15, scarcity: 0.20}, quotaShift: {theme: 2, finisher: -1, draw: -1}, offset: 6, priceCapFactor: 1, lands: 0, blurb: "Deliberately skips the cards everyone already owns."}
   ];
 
   const clamp01 = (value) => Math.max(0, Math.min(1, Number(value) || 0));
@@ -176,10 +188,37 @@
     return clamp01(extra / 3);
   }
 
+  /* How well this card fits THIS commander, from EDHREC, in 0..1. */
+  function synergyScore(card, context) {
+    const index = context && context.edhrec;
+    if (!index || !Edhrec) return 0;
+    const value = Edhrec.rank(Edhrec.scoreFor(index, card.name));
+    return value == null ? 0 : value;
+  }
+
+  /* With no EDHREC page, the synergy weight goes BACK onto the global rank
+     rather than scoring zero.
+     Zero looks neutral and is not: it is neutral for ordering, but it shrinks
+     every score by the same amount and the swap ladder compares gains against
+     an absolute margin. Scoring zero cost decks their entire Tuned ladder --
+     the swaps were still the right swaps, they just no longer cleared 0.02.
+     Folding the weight back keeps the scale identical, so a commander EDHREC
+     has never heard of builds exactly the deck it built before this file
+     learned to ask. */
+  function popularityWeights(lens, context) {
+    const w = lens.weights;
+    const has = Boolean(context && context.edhrec && Edhrec);
+    return has
+      ? {edhrec: w.edhrec, synergy: w.synergy || 0}
+      : {edhrec: w.edhrec + (w.synergy || 0), synergy: 0};
+  }
+
   function scoreCard(card, role, context, lens, usedCounts) {
     const weights = lens.weights;
+    const pop = popularityWeights(lens, context);
     const ideal = ROLE_QUOTAS[role]?.ideal ?? 3;
-    const raw = weights.edhrec * edhrecScore(card.edhrecRank)
+    const raw = pop.edhrec * edhrecScore(card.edhrecRank)
+      + pop.synergy * synergyScore(card, context)
       + weights.theme * themeScore(card, context)
       + weights.curve * curveScore(card.cmc, ideal, lens.curveBias || 0)
       + weights.budget * budgetScore(card.price, context.perCardCap)
@@ -855,6 +894,17 @@
       signal: options.signal,
       createdAt: options.createdAt || ""
     };
+    /* One request, in parallel with nothing -- it is fast and the pool fetch that
+       follows is twenty. A commander with no EDHREC page resolves to null and
+       every scoring call falls back, which is the behaviour the generator had
+       before this signal existed. */
+    onProgress({phase: "edhrec", message: `Reading what people play with ${commander.name.split(",")[0]}…`});
+    context.edhrec = Edhrec
+      ? await Edhrec.load(commander.name, {fetchImpl: options.fetchImpl, signal: options.signal})
+      : null;
+    if (Edhrec && !context.edhrec) {
+      warnings.push(`EDHREC has no page for ${commander.name}, so cards were ranked on general popularity rather than on what people play with this commander.`);
+    }
     onProgress({phase: "seeds", message: "Resolving your card links…"});
     context.seeds = await resolveSeeds(inputs, client, context, warnings);
     context.seedKeys = new Set(context.seeds.map((seed) => cardKey(seed.name)));

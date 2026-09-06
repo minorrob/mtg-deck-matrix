@@ -315,7 +315,8 @@
       shell(`
         <h2 class="imp-h">${esc(result.commander.name)}</h2>
         <p class="imp-lede">${result.builds.length} build${result.builds.length === 1 ? "" : "s"} ·
-          ${esc(result.pool ? `${result.pool.spells.length} cards considered` : "built from Scryfall")}</p>
+          ${esc(result.pool ? `${result.pool.spells.length} cards considered` : "built from Scryfall")} ·
+          ${esc(rankedBy())}</p>
 
         ${result.builds.length > 1 ? `<div class="bp-picks" role="group" aria-label="Which build">
           ${result.builds.map((b, i) => `
@@ -378,6 +379,18 @@
         if (record) record.label = event.target.value.trim() || result.commander.name;
       });
       if (record && Store.measurable(record)) setTimeout(preview, 30);
+    }
+
+    /* Which signal ranked the cards, said plainly, because the two are not the
+       same deck. With an EDHREC page the pool is sorted by what people actually
+       play with this commander; without one it falls back to how widely a card
+       is played anywhere, which is a real signal about the card and no signal at
+       all about the commander. */
+    function rankedBy() {
+      const noPage = (result.warnings || []).some((w) => /EDHREC has no page/.test(w));
+      return noPage
+        ? "ranked on general popularity — EDHREC has no page for this commander"
+        : "ranked on what people play with this commander";
     }
 
     /* The generator's own variant name reads like a catalog entry ("Counters
