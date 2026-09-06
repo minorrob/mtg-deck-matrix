@@ -172,7 +172,8 @@ built-ins — there is no `package.json`, no dependency to install and no build
 step.
 
 ```
-for f in tests/*.mjs; do node "$f" || echo "FAIL $f"; done
+for f in tests/*.mjs; do node "$f" || echo "FAIL $f"; done   # all of them
+node tests/sim-engine.mjs                                    # or one, while working on it
 ```
 
 | | |
