@@ -1,7 +1,7 @@
 # User journeys, in a browser
 
 The twenty-three suites in `tests/` check that the modules are right. Nothing in
-them opens a page. This does: three people, ten journeys, two screen sizes, in a
+them opens a page. This does: three people, eleven journeys, two screen sizes, in a
 real Chromium.
 
 ## Why it exists as its own thing
@@ -60,7 +60,7 @@ None of THAT is visible if the collection behind the app is always empty.
 | **Continued** | uses it between games | six picked decks, a game log, ten added decks, 3,200 cards | their work where they left it, and to change something |
 | **Exit** | wants their data, or a clean slate | a full collection | to take it with them, wipe it, and put it back |
 
-## The ten journeys
+## The eleven journeys
 
 **First · lands** — `index.html` shows six decks and two ways to add one, and
 says where the rest of the app is without anybody scrolling. Nothing is required
@@ -100,6 +100,15 @@ lands somewhere it can actually shop, and that all four views stay one tap away
 from wherever that is — the Store toolbar offered only three, so landing there
 would have put the bench out of reach.
 
+**Continued · records a game** — the log had been read back at 250 games and
+never once *written* to by a test. Fills the form the way somebody does at the
+table, saves, and asserts the entry keeps what was typed, that the two fun scales
+are not crossed, and that it appears in the list underneath. It also asserts the
+form is usable without looking at it: the two scales are the same five words
+twice — Rough, Meh, Fine, Good, Great — so without a group name they are ten
+identical buttons in a row, and being chosen was a CSS class on all seventeen
+chips, which says nothing at all.
+
 **Continued · a season of games** — 250 logged games, about two years of weekly
 Commander. Asserts the log does not render all of them at once, does not become
 a page nobody reads, and can be narrowed. Before this, 250 games made the Game
@@ -126,6 +135,16 @@ the six picks. The export carries the picks, a date, the ten added decks and the
 3,200 collection cards; Reset All really resets; and re-importing brings back
 both the Deck page *and* My Decks. If any leg of that breaks, this is a place
 work goes in and does not come out of.
+
+## What every journey is held to
+
+Beyond what each one asserts, every step of every journey checks the view it is
+looking at for four things: no horizontal overflow, nothing under the 9.5px type
+floor, **no control without an accessible name**, and **nothing that looks
+selected without saying so**. The last two are properties of every screen rather
+than of any one journey, so a journey that visits a screen is the cheapest place
+to check them — which is how they came to cover the first-run empty states and
+the tour as well.
 
 ## Running it
 

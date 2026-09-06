@@ -19,7 +19,7 @@
   <!-- The Copilot's second source: findings computed from the measured deltas in
        data/deck-ratings.json, which the graph has no way to see. -->
   <script src="sim-lenses.js?v=1" defer></script>
-  <script src="graph-page.js?v=16" defer></script>
+  <script src="graph-page.js?v=18" defer></script>
 </head>
 <body class="graph-body">
   <header class="app-header">
@@ -43,7 +43,7 @@
       </div>
       <label class="gp-search">
         <span class="visually-hidden">Search cards</span>
-        <input type="search" id="q" placeholder="Search name or type&hellip;" autocomplete="off">
+        <input type="search" id="q" placeholder="Search name or type&hellip;" aria-label="Search cards by name or type" autocomplete="off">
       </label>
       <div id="facets"></div>
     </aside>
@@ -57,8 +57,8 @@
           &#128274; Tap to focus
         </button>
         <div class="gp-views" role="group" aria-label="View">
-          <button class="gp-view is-on" data-view="list" type="button">List</button>
-          <button class="gp-view" data-view="graph" type="button">Graph</button>
+          <button class="gp-view is-on" data-view="list" type="button" aria-pressed="true">List</button>
+          <button class="gp-view" data-view="graph" type="button" aria-pressed="false">Graph</button>
         </div>
       </div>
       <details class="gp-copilot" id="copilot" open hidden></details>

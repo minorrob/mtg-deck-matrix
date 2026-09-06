@@ -2634,13 +2634,13 @@
       details.innerHTML = `
         <summary>
           <span class="deck-number">${deck.id}</span>
-          <button type="button" class="deck-about-button" data-about-deck="${deck.id}" aria-haspopup="dialog">${icon("◆")}About</button>
+          <button type="button" class="deck-about-button" data-about-deck="${deck.id}" aria-haspopup="dialog" aria-label="${esc("About " + deck.title)}">${icon("◆")}About</button>
           <span class="deck-summary-copy"><strong>${esc(deck.title)}</strong><span>${chosenId ? `Picked: ${esc(variantById(chosenId).name)} · ` : ""}${variants.length} of ${deckTotal} shown</span></span>
           <span class="deck-chevron" aria-hidden="true">›</span>
         </summary>
         <div class="rank-order" role="group" aria-label="Sort Deck ${deck.id} variants by stage ranking">
           <span>Rank order</span>
-          ${STAGES.map((label, index) => `<button class="rank-order-button info-tip tip-action${rankStage === index + 1 ? " is-active" : ""}" data-rank-stage="${index + 1}" data-tooltip="${esc(stageTooltip(index, variants))}" aria-describedby="info-tooltip">${label}${tooltipHint()}</button>`).join("")}
+          ${STAGES.map((label, index) => `<button class="rank-order-button info-tip tip-action${rankStage === index + 1 ? " is-active" : ""}" aria-pressed="${rankStage === index + 1}" data-rank-stage="${index + 1}" data-tooltip="${esc(stageTooltip(index, variants))}" aria-describedby="info-tooltip">${label}${tooltipHint()}</button>`).join("")}
         </div>
         <div class="variant-track">${variants.length ? "" : `<div class="variant-filter-empty">${icon("⌕")}<strong>No variants match this filter in Deck ${deck.id}</strong><span>Try another mechanic, play style, or search term.</span></div>`}</div>`;
       const track = $(".variant-track", details);
@@ -2786,11 +2786,16 @@
           ${metricFamilyMarkup("engine", engine, `metric-engine-${variant.id}-compare`)}
           ${metricFamilyMarkup("growth", growth, `metric-growth-${variant.id}-compare`)}
         </div>
-        <div class="variant-card-actions">
-          <button class="comment-toggle tip-action info-tip${state.comments[variant.id] ? " has-comment" : ""}" type="button" aria-expanded="${openCommentId === variant.id}" data-tooltip="${esc(TOOLTIP_DEFINITIONS.addComment)}" aria-describedby="info-tooltip">${icon(state.comments[variant.id] ? "✓" : "“")}<span>${state.comments[variant.id] ? "Comment saved" : "Add a comment"}</span>${tooltipHint()}</button>
-          <button class="simulate-button tip-action info-tip" type="button" data-tooltip="${esc(TOOLTIP_DEFINITIONS.simulate)}" aria-describedby="info-tooltip">${icon("⟳")}<span>Simulate</span>${tooltipHint()}</button>
-          ${simulationSummary?.builds?.[variant.id] ? `<button class="why-variant-button tip-action info-tip" type="button" aria-haspopup="dialog" data-tooltip="${esc(TOOLTIP_DEFINITIONS.whyVariant)}" aria-describedby="info-tooltip">${icon("★")}<span>Why This Variant</span>${tooltipHint()}</button>` : ""}
-          <button class="detail-button tip-action info-tip" type="button" data-tooltip="${esc(TOOLTIP_DEFINITIONS.fullDetail)}" aria-describedby="info-tooltip">View full detail →${tooltipHint()}</button>
+        <!-- Fifty variants, four actions each: two hundred buttons called "Simulate",
+             "Add a comment", "Why This Variant" and "View full detail" with nothing
+             saying of what. On screen the card around them answers that; tabbing
+             through them it was two hundred identical names. The visible words stay
+             first in each label, so saying "click Simulate" still finds one. -->
+        <div class="variant-card-actions" role="group" aria-label="${esc(variant.name)}">
+          <button class="comment-toggle tip-action info-tip${state.comments[variant.id] ? " has-comment" : ""}" type="button" aria-expanded="${openCommentId === variant.id}" aria-label="${esc((state.comments[variant.id] ? "Comment saved" : "Add a comment") + " — " + variant.name)}" data-tooltip="${esc(TOOLTIP_DEFINITIONS.addComment)}" aria-describedby="info-tooltip">${icon(state.comments[variant.id] ? "✓" : "“")}<span>${state.comments[variant.id] ? "Comment saved" : "Add a comment"}</span>${tooltipHint()}</button>
+          <button class="simulate-button tip-action info-tip" type="button" aria-label="${esc("Simulate — " + variant.name)}" data-tooltip="${esc(TOOLTIP_DEFINITIONS.simulate)}" aria-describedby="info-tooltip">${icon("⟳")}<span>Simulate</span>${tooltipHint()}</button>
+          ${simulationSummary?.builds?.[variant.id] ? `<button class="why-variant-button tip-action info-tip" type="button" aria-haspopup="dialog" aria-label="${esc("Why This Variant — " + variant.name)}" data-tooltip="${esc(TOOLTIP_DEFINITIONS.whyVariant)}" aria-describedby="info-tooltip">${icon("★")}<span>Why This Variant</span>${tooltipHint()}</button>` : ""}
+          <button class="detail-button tip-action info-tip" type="button" aria-label="${esc("View full detail — " + variant.name)}" data-tooltip="${esc(TOOLTIP_DEFINITIONS.fullDetail)}" aria-describedby="info-tooltip">View full detail →${tooltipHint()}</button>
         </div>
         <div class="comment-editor" ${openCommentId === variant.id ? "" : "hidden"}>
           <label for="comment-${esc(variant.id)}">Feedback on this variant</label>
@@ -6522,10 +6527,10 @@
         </div>
         <div class="log-row">
           <span class="log-field"><span>Result</span>
-            <span class="log-chips">${[["win", "Won"], ["loss", "Lost"], ["draw", "Draw"]].map(([value, label]) => `<button type="button" class="filter-chip${draft.result === value ? " is-active" : ""}" data-log-result="${value}">${label}</button>`).join("")}</span>
+            <span class="log-chips" role="group" aria-label="Result">${[["win", "Won"], ["loss", "Lost"], ["draw", "Draw"]].map(([value, label]) => `<button type="button" class="filter-chip${draft.result === value ? " is-active" : ""}" aria-pressed="${draft.result === value}" data-log-result="${value}">${label}</button>`).join("")}</span>
           </span>
           <span class="log-field"><span>Players</span>
-            <span class="log-chips">${[3, 4, 5, 6].map((n) => `<button type="button" class="filter-chip${Number(draft.players) === n ? " is-active" : ""}" data-log-players="${n}">${n}</button>`).join("")}</span>
+            <span class="log-chips" role="group" aria-label="How many players">${[3, 4, 5, 6].map((n) => `<button type="button" class="filter-chip${Number(draft.players) === n ? " is-active" : ""}" aria-pressed="${Number(draft.players) === n}" data-log-players="${n}">${n}</button>`).join("")}</span>
           </span>
         </div>
         <div class="log-row">
@@ -6534,11 +6539,17 @@
           <label class="log-field"><span>Knocked out on turn</span><input type="number" min="0" max="40" inputmode="numeric" value="${esc(draft.eliminatedTurn ?? "")}" placeholder="survived" data-log="eliminatedTurn"></label>
         </div>
         <div class="log-row">
+          <!-- Ten buttons called Rough, Meh, Fine, Good, Great, and then the same
+               five again. On screen the question above each row says which is
+               which; with a screen reader they were ten identical names in a
+               row. The group carries the question, and every chip says whether
+               it is the one chosen -- which nothing here did: being picked was a
+               CSS class and nothing else, on all seventeen of them. -->
           <span class="log-field log-field-wide"><span>How was it for the table?</span>
-            <span class="log-chips">${[[1, "Rough"], [2, "Meh"], [3, "Fine"], [4, "Good"], [5, "Great"]].map(([value, label]) => `<button type="button" class="filter-chip${Number(draft.podFun) === value ? " is-active" : ""}" data-log-podfun="${value}">${label}</button>`).join("")}</span>
+            <span class="log-chips" role="group" aria-label="How was it for the table?">${[[1, "Rough"], [2, "Meh"], [3, "Fine"], [4, "Good"], [5, "Great"]].map(([value, label]) => `<button type="button" class="filter-chip${Number(draft.podFun) === value ? " is-active" : ""}" aria-pressed="${Number(draft.podFun) === value}" data-log-podfun="${value}">${label}</button>`).join("")}</span>
           </span>
           <span class="log-field log-field-wide"><span>How was it for you?</span>
-            <span class="log-chips">${[[1, "Rough"], [2, "Meh"], [3, "Fine"], [4, "Good"], [5, "Great"]].map(([value, label]) => `<button type="button" class="filter-chip${Number(draft.myFun) === value ? " is-active" : ""}" data-log-myfun="${value}">${label}</button>`).join("")}</span>
+            <span class="log-chips" role="group" aria-label="How was it for you?">${[[1, "Rough"], [2, "Meh"], [3, "Fine"], [4, "Good"], [5, "Great"]].map(([value, label]) => `<button type="button" class="filter-chip${Number(draft.myFun) === value ? " is-active" : ""}" aria-pressed="${Number(draft.myFun) === value}" data-log-myfun="${value}">${label}</button>`).join("")}</span>
           </span>
         </div>
         <label class="log-field log-field-wide"><span>Note <small>optional</small></span><input type="text" maxlength="180" value="${esc(draft.note || "")}" placeholder="What decided it?" data-log="note"></label>

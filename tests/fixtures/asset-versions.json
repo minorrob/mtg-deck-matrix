@@ -6,8 +6,8 @@
       "sha": "042805606397e215"
     },
     "app.js": {
-      "version": 112,
-      "sha": "b927ba4169520a99"
+      "version": 115,
+      "sha": "ab7f7ff62b01c195"
     },
     "build-panel.js": {
       "version": 4,
@@ -90,8 +90,8 @@
       "sha": "3f8b752cd397e0f6"
     },
     "deck-page.js": {
-      "version": 29,
-      "sha": "7b93776e14124528"
+      "version": 30,
+      "sha": "afc927eb190d94aa"
     },
     "deck-sources.js": {
       "version": 1,
@@ -118,8 +118,8 @@
       "sha": "71c521ba571226fd"
     },
     "graph-page.js": {
-      "version": 16,
-      "sha": "9dbcff010e10af82"
+      "version": 18,
+      "sha": "c210afcd2e530f7a"
     },
     "import-panel.js": {
       "version": 1,
@@ -146,8 +146,8 @@
       "sha": "64114effd22e3a11"
     },
     "shop-page.js": {
-      "version": 15,
-      "sha": "d2bc093e042fbdcd"
+      "version": 16,
+      "sha": "095f8fb626004bf3"
     },
     "sim-engine.js": {
       "version": 1,
@@ -174,8 +174,8 @@
       "sha": "c85be3019a99778e"
     },
     "viewer.js": {
-      "version": 16,
-      "sha": "bb6d0eb7a4554cc6"
+      "version": 17,
+      "sha": "b12029b6cfb3b892"
     },
     "xlsx-reader.js": {
       "version": 1,

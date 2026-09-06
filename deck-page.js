@@ -179,8 +179,18 @@
      list now ends with its own control, so closing is where finishing is. What stays
      visible when a panel is shut is the one line that identifies it: the deck and its
      commander, the compliance verdict, the search field. */
+  /* Which panel this closes. Open, all four of these say "Collapse" and nothing
+     else, so tabbing through the page met four identical buttons; shut, the line
+     that identifies the panel is the label already. */
+  const PANEL_NAME = {
+    slotDetail: "this slot", filters: "the filters", ready: "the readiness strip",
+    measured: "the measured record", head: "the deck header"
+  };
+
   function panelToggle(key, open, whenShut) {
-    return `<button type="button" class="dp-panel-t" data-dp-panel="${esc(key)}" aria-expanded="${open}">
+    const name = PANEL_NAME[key] || "this panel";
+    return `<button type="button" class="dp-panel-t" data-dp-panel="${esc(key)}" aria-expanded="${open}"${
+      open ? ` aria-label="Collapse ${esc(name)}"` : ""}>
       <span class="dp-car">\u25b6</span>${open ? "Collapse" : esc(whenShut)}</button>`;
   }
 

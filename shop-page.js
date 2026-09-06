@@ -221,10 +221,22 @@
     const on = (k) => k === "need" ? (row.need > 0 && !row.inHand && !row.ordered)
       : k === "ordered" ? (row.ordered > 0 && row.inHand < row.quantity)
       : row.inHand > 0;
-    return `<span class="sp-tri" data-sp-tri="${esc(row.key)}">
-      <button type="button" data-sp-s="need" aria-pressed="${on("need")}">Need${many ? " " + row.need : ""}</button>
-      <button type="button" data-sp-s="ordered" aria-pressed="${on("ordered")}">Order${many ? " " + row.ordered : ""}</button>
-      <button type="button" data-sp-s="hand" aria-pressed="${on("hand")}">In hand${many ? ` ${row.inHand}/${row.quantity}` : ""}</button>
+    /* The card's name is in another cell of the same row, and this table has no
+       row header to carry it -- `th` here is the sticky COLUMN header, so making
+       the name cell one would style it as a heading stuck to the top of the
+       screen. Without it a screen reader reads three hundred and eighty-four
+       buttons called "Need", "Order" and "In hand" and never says of what. The
+       visible word stays first in the label so saying "click Need" still finds
+       one. */
+    const of = (label) => `${label} — ${esc(row.name)}`;
+    return `<span class="sp-tri" data-sp-tri="${esc(row.key)}" role="group" aria-label="${esc(row.name)}">
+      <button type="button" data-sp-s="need" aria-pressed="${on("need")}" aria-label="${
+        of("Need" + (many ? " " + row.need : ""))}">Need${many ? " " + row.need : ""}</button>
+      <button type="button" data-sp-s="ordered" aria-pressed="${on("ordered")}" aria-label="${
+        of("Order" + (many ? " " + row.ordered : ""))}">Order${many ? " " + row.ordered : ""}</button>
+      <button type="button" data-sp-s="hand" aria-pressed="${on("hand")}" aria-label="${
+        of("In hand" + (many ? ` ${row.inHand}/${row.quantity}` : ""))}">In hand${
+        many ? ` ${row.inHand}/${row.quantity}` : ""}</button>
     </span>`;
   }
   /* The gallery panel, cut back to what it is for. The art already carries the name, the
@@ -256,7 +268,8 @@
           data-sp-paid="${esc(r.key)}" value="${r.paid === null ? "" : Number(r.paid).toFixed(2)}"
           placeholder="${known ? money(unitCost(r, null)).replace("$", "") : ""}"
           aria-label="What you paid for ${esc(r.name)}"></span>
-        ${r.need ? `<button type="button" class="sp-buy sp-gbuy" data-sp-buy="${esc(r.key)}">Buy${
+        ${r.need ? `<button type="button" class="sp-buy sp-gbuy" data-sp-buy="${esc(r.key)}" aria-label="Buy${
+          r.need > 1 ? " " + r.need : ""} — ${esc(r.name)}">Buy${
           r.need > 1 ? " " + r.need : ""}</button>` : ""}
       </div>`;
   }
@@ -435,7 +448,8 @@
           known && many ? `<span class="sp-store-ea">${money(unitCost(r, r.paid))} ea</span>` : ""}${
           known ? "" : '<span class="sp-store-ea">no price</span>'}
       </span>
-      <button type="button" class="sp-buy" data-sp-buy="${esc(r.key)}">Buy${many ? " " + r.need : ""}</button>
+      <button type="button" class="sp-buy" data-sp-buy="${esc(r.key)}" aria-label="Buy${
+        many ? " " + r.need : ""} — ${esc(r.name)}">Buy${many ? " " + r.need : ""}</button>
     </li>`;
   }
 

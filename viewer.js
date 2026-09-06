@@ -1659,7 +1659,10 @@
       : [["all", "All"], ["need", "Needed now"], ["tuned", "Tuned"], ["b3", "Bracket 3"]];
 
     root.appendChild(el("div", { class: "toolbar" }, [
+      // A placeholder is not a name: it is gone the moment you type, and it is
+      // the first thing a screen reader stops reading once there is a value.
       el("input", { type: "search", placeholder: isBench ? "Search the bench" : "Search the buy list",
+        "aria-label": isBench ? "Search the bench" : "Search the buy list",
         value: state.query, oninput: function (e) { state.query = e.target.value; render(); } }),
       el("div", { class: "filter" }, chips.map(function (c) {
         return el("button", { type: "button", "aria-pressed": filter === c[0] ? "true" : "false",

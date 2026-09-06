@@ -158,7 +158,7 @@
         "</div></details>";
     }).join("") +
     '<details class="gp-facet" data-key="mv" open><summary>Mana value &le; <span class="gp-on">' + state.mvMax + '</span></summary>' +
-    '<div class="gp-range"><input type="range" id="mv" min="0" max="20" step="1" value="' + state.mvMax + '"></div></details>';
+    '<div class="gp-range"><input type="range" id="mv" min="0" max="20" step="1" aria-label="Highest mana value to include" value="' + state.mvMax + '"></div></details>';
   }
 
   function cardTile(c) {
@@ -855,7 +855,13 @@
     }
   });
   function syncViews() {
-    document.querySelectorAll(".gp-view").forEach(function (b) { b.classList.toggle("is-on", b.dataset.view === state.view); });
+    // aria-pressed beside the class: which view you are looking at was styling
+    // and nothing else, so a screen reader heard three buttons and no answer.
+    document.querySelectorAll(".gp-view").forEach(function (b) {
+      var on = b.dataset.view === state.view;
+      b.classList.toggle("is-on", on);
+      b.setAttribute("aria-pressed", String(on));
+    });
   }
 
   /* Two sources, one Copilot.

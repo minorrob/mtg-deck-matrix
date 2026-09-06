@@ -127,6 +127,36 @@ async function healthy(page, screen, journey) {
       [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim()) &&
       parseFloat(getComputedStyle(el).fontSize) < 9.5).length);
   check(tiny === 0, screen, journey, `${tiny} elements below the 9.5px floor`);
+
+  /* Two things every control on every screen is held to, for anybody not using a
+     mouse and eyes. They live here rather than in a journey of their own because
+     they are properties of every view, and a journey that visits a view is the
+     cheapest place to check them.
+       A NAME. Placeholders do not count -- they are gone the moment you type.
+       A STATED SELECTION. Looking chosen was a CSS class on the game log's
+       seventeen chips and on the graph's view toggle, which says nothing to a
+       screen reader. */
+  const aria = await page.evaluate(() => {
+    const seen = (n) => n.offsetParent !== null || getComputedStyle(n).position === "fixed";
+    const named = (n) => ((n.getAttribute("aria-label") || "") ||
+      (n.labels && n.labels[0] ? n.labels[0].textContent : "") ||
+      n.textContent || n.title || "").replace(/\s+/g, " ").trim();
+    const controls = [...document.querySelectorAll("button, a[href], input, select, textarea")].filter(seen);
+    const SELECTED = /\b(is-active|is-on|is-selected|is-current)\b/;
+    return {
+      nameless: controls.filter((n) => !named(n))
+        .map((n) => `${n.tagName.toLowerCase()}.${String(n.className).split(" ")[0] || "(no class)"}`),
+      silent: controls.filter((n) => SELECTED.test(String(n.className)) &&
+        !n.hasAttribute("aria-pressed") && !n.hasAttribute("aria-selected") &&
+        !n.hasAttribute("aria-checked") && !n.hasAttribute("aria-current") &&
+        !n.hasAttribute("aria-expanded"))
+        .map((n) => String(n.className).split(" ").slice(0, 2).join("."))
+    };
+  });
+  check(aria.nameless.length === 0, screen, journey,
+    `${aria.nameless.length} controls with no accessible name: ${[...new Set(aria.nameless)].slice(0, 4).join(", ")}`);
+  check(aria.silent.length === 0, screen, journey,
+    `${aria.silent.length} controls look selected and do not say so: ${[...new Set(aria.silent)].slice(0, 4).join(", ")}`);
   page.errors.forEach((e) => fail(screen, journey, e));
   page.errors.length = 0;
 }
@@ -325,6 +355,73 @@ for (const screen of SCREENS) {
     console.log(`  continued · a trip       lands on "${landed}" · ${Math.round(shopScreens)} screens · ${views} views`);
     await shot(page, `${screen.tag}-continued-shop`);
     await healthy(page, screen.tag, "continued · a shopping trip");
+    await ctx.close();
+  }
+
+  // ═══ CONTINUED: records a game the moment it ends ═══
+  {
+    const {ctx, page} = await freshPage(screen);
+    await page.goto(`${BASE}/matrix.html`, {waitUntil: "domcontentloaded"});
+    await page.evaluate((s) => localStorage.setItem("mtg-deck-matrix-state-v1", JSON.stringify(s)), seed);
+    await page.reload({waitUntil: "domcontentloaded"});
+    await page.waitForTimeout(4500);
+    await page.click('.main-tab[data-view="log"]');
+    await page.waitForTimeout(2000);
+
+    /* The log had been read back at 250 games and never once WRITTEN to by a
+       test. Everything below is what somebody does at the table with a phone in
+       one hand. */
+    const box = page.locator("#view-log");
+    await box.locator("select").first().selectOption({index: 1});
+    await box.locator("button", {hasText: /^Won$/}).first().click();
+    await box.locator("button", {hasText: /^4$/}).first().click();
+    await box.locator("input[type=number]").first().fill("11");
+    await box.locator("button", {hasText: /^Great$/}).first().click();
+    await box.locator("button", {hasText: /^Good$/}).last().click();
+    await box.locator("input[type=text]").first().fill("Won on turn 11.");
+    await box.locator("button", {hasText: /^Save game$/}).first().click();
+    await page.waitForTimeout(1500);
+
+    const saved = await page.evaluate(() => {
+      const log = (JSON.parse(localStorage.getItem("mtg-deck-matrix-state-v1") || "{}").gameLog) || [];
+      return log[log.length - 1] || null;
+    });
+    check(Boolean(saved), screen.tag, "continued · records a game", "pressing Save stored nothing");
+    if (saved) {
+      check(saved.result === "win" && saved.players === 4 && saved.turns === 11,
+        screen.tag, "continued · records a game",
+        `the entry lost what was typed into it: ${JSON.stringify(saved)}`);
+      check(saved.podFun === 5 && saved.myFun === 4, screen.tag, "continued · records a game",
+        `the two fun scales are crossed or dropped: pod ${saved.podFun}, mine ${saved.myFun}`);
+    }
+    const onScreen = clean(await page.locator("#view-log .log-list").innerText().catch(() => ""));
+    check(/Won on turn 11\./.test(onScreen), screen.tag, "continued · records a game",
+      "the game saved but is not in the list underneath");
+
+    /* The two fun scales are the same five words twice -- Rough, Meh, Fine, Good,
+       Great -- so without a group name they are ten identical buttons in a row to
+       anybody not looking at the screen. And being chosen was a CSS class on all
+       seventeen chips, which says nothing at all. */
+    const aria = await page.evaluate(() => {
+      const v = document.getElementById("view-log");
+      const groups = [...v.querySelectorAll(".log-chips")];
+      return {
+        groups: groups.length,
+        named: groups.filter((g) => g.getAttribute("aria-label")).length,
+        distinct: new Set(groups.map((g) => g.getAttribute("aria-label"))).size,
+        chips: v.querySelectorAll(".log-chips button").length,
+        stated: v.querySelectorAll(".log-chips button[aria-pressed]").length
+      };
+    });
+    check(aria.named === aria.groups && aria.distinct === aria.groups, screen.tag,
+      "continued · records a game",
+      `${aria.named} of ${aria.groups} chip groups are named, ${aria.distinct} of them distinctly`);
+    check(aria.stated === aria.chips, screen.tag, "continued · records a game",
+      `${aria.stated} of ${aria.chips} chips say whether they are the one chosen`);
+    console.log(`  continued · a game       saved ${saved ? saved.result : "nothing"} in ${saved ? saved.turns : "?"} turns · ` +
+      `${aria.chips} chips in ${aria.groups} named groups`);
+    await shot(page, `${screen.tag}-continued-game`);
+    await healthy(page, screen.tag, "continued · records a game");
     await ctx.close();
   }
 
