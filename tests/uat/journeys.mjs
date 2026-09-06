@@ -121,6 +121,26 @@ async function healthy(page, screen, journey) {
   page.errors.length = 0;
 }
 
+/* Two years of weekly Commander, roughly. The result must not correlate with the
+   deck index: six decks cycled on i % 6 against a result on i % 3 gave deck zero
+   a 42-0 record and made the result filter look inert. */
+function seasonOfGames() {
+  const ids = Object.values(seed.compareSelections || {});
+  return Array.from({length: 250}, (unused, i) => {
+    const when = new Date(2024, 0, 1 + i * 3);
+    const roll = (i * 7 + 3) % 11;
+    return {
+      id: `uat-g${i}`, schema: 1, variantId: ids[i % ids.length],
+      result: roll < 3 ? "win" : roll === 4 ? "draw" : "loss",
+      playedOn: when.toISOString().slice(0, 10), players: 4,
+      turns: 9 + (i % 7), knockouts: i % 4, eliminatedTurn: 8 + (i % 5),
+      podFun: 1 + (i % 5), myFun: 1 + (i % 5),
+      note: i % 10 === 0 ? "A note long enough to matter to the row width." : "",
+      recordedAt: when.toISOString()
+    };
+  });
+}
+
 for (const screen of SCREENS) {
   console.log(`\n──────── ${screen.tag} ${screen.w}×${screen.h} ────────`);
 
@@ -198,6 +218,44 @@ for (const screen of SCREENS) {
       `came back to ${back} decks, left with ${rail}`);
     console.log(`  continued · returns      ${back} decks still there`);
     await healthy(page, screen.tag, "continued · returns");
+    await ctx.close();
+  }
+
+  // ═══ CONTINUED, at scale: two years of games ═══
+  {
+    const {ctx, page} = await freshPage(screen);
+    await page.goto(`${BASE}/matrix.html`, {waitUntil: "domcontentloaded"});
+    await page.evaluate(([s, g]) =>
+      localStorage.setItem("mtg-deck-matrix-state-v1", JSON.stringify({...s, gameLog: g})),
+      [seed, seasonOfGames()]);
+    await page.reload({waitUntil: "domcontentloaded"});
+    await page.waitForTimeout(5000);
+    await page.click('.main-tab[data-view="log"]');
+    await page.waitForTimeout(2500);
+
+    const rows = await page.locator(".log-list .log-row-card").count();
+    const tall = await page.evaluate(() => document.querySelector("#view-log").scrollHeight);
+    const screens = tall / screen.h;
+    check(rows <= 30, screen.tag, "continued · a season",
+      `${rows} entries rendered at once — the log has no ceiling`);
+    check(screens < 12, screen.tag, "continued · a season",
+      `the log is ${Math.round(screens)} screens tall, which is not a page anybody reads`);
+    check(await page.locator(".log-chip").count() > 0, screen.tag, "continued · a season",
+      "250 games and no way to narrow them");
+    console.log(`  continued · a season     ${rows} of 250 shown · ${Math.round(screens)} screens · ${await page.locator(".log-chip").count()} filters`);
+
+    // Narrowing has to actually narrow, and revealing has to actually reveal.
+    await page.locator("[data-log-filter-deck]").nth(1).click();
+    await page.waitForTimeout(900);
+    const oneDeck = clean(await page.locator(".log-filter-count").textContent().catch(() => ""));
+    await page.locator('[data-log-filter-result="win"]').click();
+    await page.waitForTimeout(900);
+    const justWins = clean(await page.locator(".log-filter-count").textContent().catch(() => ""));
+    check(oneDeck !== justWins, screen.tag, "continued · a season",
+      `adding a result filter changed nothing: "${oneDeck}" then "${justWins}"`);
+    console.log(`     one deck "${oneDeck}" → wins only "${justWins}"`);
+    await shot(page, `${screen.tag}-continued-season`);
+    await healthy(page, screen.tag, "continued · a season");
     await ctx.close();
   }
 

@@ -2448,6 +2448,25 @@ div.sp-band{padding:9px 13px;border-radius:12px 12px 0 0}
    back. It had already drifted up once, above the Shop's phone table and then above the
    trip dialog; it is back at the bottom, and tests/data-integrity.mjs fails if a later
    rule sets a 14px font. Append new sections above this comment, not below it. */
+/* Narrowing a log that has grown. Chips rather than selects, matching the
+   Copilot's deck row and the Shop's filter pills, because the useful question
+   is nearly always one deck or one result rather than a combination. */
+.log-filters { display: grid; gap: 8px; margin: 14px 0 10px; }
+.log-filter-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.log-chip {
+  padding: 5px 11px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--surface-2); color: var(--muted);
+  font-size: 12px; font-weight: 700;
+}
+.log-chip:hover { border-color: var(--forest-2); }
+.log-chip.is-on { background: var(--accent-soft); border-color: var(--forest-2); color: var(--ink); }
+.log-filter-count { margin-left: auto; font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.log-more { width: 100%; margin-top: 10px; }
+
+@media (max-width: 700px) {
+  .log-filter-count { margin-left: 0; width: 100%; }
+}
+
 /* The first-run empty page on Deck and Shop.
    Deliberately not .loading-card's shape: this state is permanent until the
    reader acts, so it gets a heading, a reason, and two buttons rather than the

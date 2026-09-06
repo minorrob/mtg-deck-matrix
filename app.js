@@ -6521,8 +6521,9 @@
           <button class="secondary-button" type="button" id="log-export"${log.length ? "" : " disabled"}>Export for the repo</button>
         </div>
       </div>
+      ${gameLogFilterBar(log)}
       <div class="log-list">${log.length
-        ? [...log].reverse().map((entry) => gameLogRow(entry)).join("")
+        ? gameLogVisible(log).map((entry) => gameLogRow(entry)).join("") + gameLogMore(log)
         : `<div class="empty-state"><h3>No games logged yet</h3><p>Record one after your next game — it takes about fifteen seconds.</p></div>`}</div>`;
 
     $$("[data-log]", root).forEach((field) => field.addEventListener("change", () => {
@@ -6551,6 +6552,84 @@
       saveState("Game removed from the log");
       renderGameLog();
     }));
+    /* Filters are a reading position, not a decision, so they live in module
+       state and are not saved: coming back to the log should show the whole
+       thing, not whatever narrowing was left behind three weeks ago. */
+    $$("[data-log-filter-deck]", root).forEach((button) => button.addEventListener("click", () => {
+      logFilters.deck = button.dataset.logFilterDeck;
+      logFilters.all = false;
+      renderGameLog();
+    }));
+    $$("[data-log-filter-result]", root).forEach((button) => button.addEventListener("click", () => {
+      logFilters.result = button.dataset.logFilterResult;
+      logFilters.all = false;
+      renderGameLog();
+    }));
+    $("[data-log-all]", root)?.addEventListener("click", () => {
+      logFilters.all = true;
+      renderGameLog();
+    });
+  }
+
+  /* A log that grows.
+   *
+   * Every entry was rendered, newest first, with nothing to narrow it by. That
+   * is right for the first month and wrong by the second: measured at 250 games
+   * -- about two years of weekly Commander -- the page was 18 screens tall on a
+   * desktop and 47 on a phone, with no way to find a particular game and no
+   * reason to scroll past the first few.
+   *
+   * So: filter by deck and by result, and show the most recent PAGE by default.
+   * The common question is "how have the last few gone", which is answered
+   * without scrolling; the rare one is "find that game against Atraxa", which
+   * the filters answer. Nothing is hidden -- the count says exactly how many
+   * more there are and one button shows them. */
+  const LOG_PAGE = 25;
+  let logFilters = {deck: "all", result: "all", all: false};
+
+  function gameLogMatches(log) {
+    return log.filter((entry) =>
+      (logFilters.deck === "all" || entry.variantId === logFilters.deck) &&
+      (logFilters.result === "all" || entry.result === logFilters.result));
+  }
+
+  const gameLogVisible = (log) => {
+    const matched = [...gameLogMatches(log)].reverse();
+    return logFilters.all ? matched : matched.slice(0, LOG_PAGE);
+  };
+
+  function gameLogMore(log) {
+    const hidden = gameLogMatches(log).length - LOG_PAGE;
+    if (logFilters.all || hidden <= 0) return "";
+    return `<button class="secondary-button log-more" type="button" data-log-all>` +
+      `Show ${hidden} older game${hidden === 1 ? "" : "s"}</button>`;
+  }
+
+  function gameLogFilterBar(log) {
+    if (log.length <= LOG_PAGE) return "";
+    // One chip per deck that actually appears in the log, with its count -- a
+    // filter offering decks you have never played is a filter that lies about
+    // what is in here.
+    const counts = new Map();
+    log.forEach((e) => counts.set(e.variantId, (counts.get(e.variantId) || 0) + 1));
+    const decks = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+    const chip = (attr, value, label, on) =>
+      `<button class="log-chip${on ? " is-on" : ""}" type="button" data-log-${attr}="${esc(value)}" ` +
+      `aria-pressed="${on}">${esc(label)}</button>`;
+    const shown = gameLogMatches(log).length;
+    return `<div class="log-filters">
+      <div class="log-filter-row">
+        ${chip("filter-deck", "all", `All decks (${log.length})`, logFilters.deck === "all")}
+        ${decks.map(([id, n]) => chip("filter-deck", id,
+          `${(variantById(id)?.name || id).split("—")[0].trim()} (${n})`,
+          logFilters.deck === id)).join("")}
+      </div>
+      <div class="log-filter-row">
+        ${[["all", "Any result"], ["win", "Won"], ["loss", "Lost"], ["draw", "Drew"]]
+          .map(([v, label]) => chip("filter-result", v, label, logFilters.result === v)).join("")}
+        <span class="log-filter-count">${shown} of ${log.length} shown</span>
+      </div>
+    </div>`;
   }
 
   function gameLogRow(entry) {

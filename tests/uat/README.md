@@ -1,7 +1,7 @@
 # User journeys, in a browser
 
 The twenty-three suites in `tests/` check that the modules are right. Nothing in
-them opens a page. This does: three people, six journeys, two screen sizes, in a
+them opens a page. This does: three people, seven journeys, two screen sizes, in a
 real Chromium.
 
 ## Why it exists as its own thing
@@ -35,7 +35,7 @@ None of that is visible if the app is full of decks before the test begins.
 | **Continued** | uses it between games | six picked decks, a game log | their work where they left it, and to change something |
 | **Exit** | wants their data, or a clean slate | a full collection | to take it with them, wipe it, and put it back |
 
-## The six journeys
+## The seven journeys
 
 **First · lands** — `index.html` shows six decks and two ways to add one.
 Nothing is required before it makes sense.
@@ -55,6 +55,12 @@ replace-everything dialog (there is nothing to replace), that the six arrive,
 and that it stays on the tab the button was pressed from.
 
 **Continued · leaves and returns** — the work is still there.
+
+**Continued · a season of games** — 250 logged games, about two years of weekly
+Commander. Asserts the log does not render all of them at once, does not become
+a page nobody reads, and can be narrowed. Before this, 250 games made the Game
+Log 18 screens tall on a desktop and 47 on a phone, with no filter and no
+ceiling — everything worked, and nothing was usable.
 
 **Exit · export, reset, import** — the export carries the picks and a date, Reset
 All really resets, and re-importing the file brings everything back including the
