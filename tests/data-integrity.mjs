@@ -1615,4 +1615,46 @@ assert.match(appSource, /target && target\.isConnected/,
   "and must not measure an element that has been replaced since it was found");
 
 
+/* THE EXPORT IS THE ONLY WAY OUT, so what it leaves behind is the one bug a
+   backup must not have.
+ *
+ * The Matrix (matrix.html) writes the export; My Decks (index.html) owns three
+ * other keys in the same origin -- decks somebody added, a collection they
+ * uploaded, their picks. None of it was in the file, and the button said
+ * "Exported your full state", so a person could back up, move browser, load the
+ * file, and find ten decks and three thousand cards gone.
+ *
+ * matrix.html loads neither viewer.js nor deck-store.js, so app.js names those
+ * keys as literals. Each one is pinned here against the module that owns it: a
+ * rename on either side fails this suite rather than quietly emptying the
+ * export again. */
+{
+  const viewerSource = await readFile(new URL("../viewer.js", import.meta.url), "utf8");
+  const storeSource = await readFile(new URL("../deck-store.js", import.meta.url), "utf8");
+  const owners = [
+    ["mtg-imported-decks.v1", storeSource, "deck-store.js"],
+    ["mtg-viewer-inventory.v1", viewerSource, "viewer.js"],
+    ["mtg-viewer.v1", viewerSource, "viewer.js"]
+  ];
+  owners.forEach(([key, source, where]) => {
+    assert.ok(source.includes(`"${key}"`),
+      `${where} no longer uses "${key}" — app.js exports that key and would now export nothing`);
+    assert.ok(appSource.includes(`"${key}"`),
+      `app.js must carry "${key}" in the export, or ${where}'s data leaves this browser with no way back`);
+  });
+  assert.match(appSource, /myDecks: readMyDecks\(\)/,
+    "the export payload must carry the My Decks block");
+  assert.match(appSource, /function restoreMyDecks\(/,
+    "and importing must put it back, or the export is a file nothing reads");
+  // Absent means "this file has nothing to say", not "delete them". Load Active
+  // ships data/active-state.json, which carries no block at all.
+  const restore = appSource.slice(appSource.indexOf("function restoreMyDecks("),
+    appSource.indexOf("function importStateFromFile("));
+  assert.match(restore, /if \(!mine \|\| typeof mine !== "object"\) return;/,
+    "a payload without a My Decks block must leave this browser's decks alone");
+  const active = JSON.parse(await readFile(new URL("../data/active-state.json", import.meta.url), "utf8"));
+  assert.equal(active.myDecks, undefined,
+    "data/active-state.json must not carry a My Decks block: Load Active would then wipe added decks");
+}
+
 console.log(`Validated ${variants.variants.length} variants and ${Object.keys(buyPlans.plans).length} connected buy profiles.`);

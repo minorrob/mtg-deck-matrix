@@ -441,6 +441,28 @@ for (const screen of SCREENS) {
       `${reopened} rows on a fresh visit — "show the rest" must not be what comes back`);
     console.log(`     after a reload: ${JSON.stringify(kept)} · ${reopened} rows`);
     await healthy(page, screen.tag, "continued · a collection");
+
+    /* Load Active is on the Matrix header and gets pressed out of habit. It
+       ships data/active-state.json, which is the workbook's Matrix state and
+       says nothing at all about anybody's own decks -- so it must leave them
+       alone. A payload with no My Decks block means "this file has no opinion",
+       never "delete them", and ten decks is what that distinction is worth. */
+    await page.goto(`${BASE}/matrix.html`, {waitUntil: "domcontentloaded"});
+    await page.waitForTimeout(4500);
+    if (!(await page.locator("#load-active-button").isVisible().catch(() => false))) {
+      await page.click("#header-toggle").catch(() => {});
+      await page.waitForTimeout(600);
+    }
+    await page.click("#load-active-button");
+    await page.waitForTimeout(4000);
+    const survived = await page.evaluate(() => {
+      const read = (k) => { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch { return null; } };
+      return {decks: ((read("mtg-imported-decks.v1") || {}).decks || []).length,
+        cards: ((read("mtg-viewer-inventory.v1") || {}).cards || []).length};
+    });
+    check(survived.decks === 10 && survived.cards > 3000, screen.tag, "continued · a collection",
+      `Load Active left ${survived.decks} added decks and ${survived.cards} collection cards`);
+    console.log(`     Load Active kept ${survived.decks} added decks, ${survived.cards.toLocaleString()} cards`);
     await ctx.close();
   }
 
@@ -448,8 +470,17 @@ for (const screen of SCREENS) {
   {
     const {ctx, page} = await freshPage(screen, {acceptDownloads: true});
     await page.goto(`${BASE}/matrix.html`, {waitUntil: "domcontentloaded"});
-    await page.evaluate((s) =>
-      localStorage.setItem("mtg-deck-matrix-state-v1", JSON.stringify(s)), seed);
+    /* Exit with the collection behind it, not just the six picks. The export is
+       written by the Matrix and My Decks keeps three keys of its own in the same
+       origin -- added decks, an uploaded collection, picks. None of them was in
+       the file, and the button said "Exported your full state", so somebody with
+       ten decks and three thousand cards could back up, move browser, load the
+       file and find both gone, having been told they had not been. */
+    await page.evaluate(([s, decks, inventory]) => {
+      localStorage.setItem("mtg-deck-matrix-state-v1", JSON.stringify(s));
+      localStorage.setItem("mtg-imported-decks.v1", JSON.stringify({schema: 1, decks}));
+      localStorage.setItem("mtg-viewer-inventory.v1", JSON.stringify(inventory));
+    }, [seed, GROWN.decks, GROWN.inventory]);
     await page.reload({waitUntil: "domcontentloaded"});
     await page.waitForTimeout(4500);
 
@@ -472,7 +503,15 @@ for (const screen of SCREENS) {
       check(n === 6, screen.tag, "exit · export", `the export carries ${n} picks, not 6`);
       check(Boolean(body.exportedAt), screen.tag, "exit · export",
         "the export has no exportedAt, so nothing can say how old it is");
-      console.log(`  exit · export            ${file.suggestedFilename()} · ${n} picks inside`);
+      const mine = body.myDecks || {};
+      const carried = ((mine.decks || {}).decks || []).length;
+      const held = ((mine.inventory || {}).cards || []).length;
+      check(carried === 10, screen.tag, "exit · export",
+        `the export carries ${carried} of the 10 added decks — the rest leave with nothing`);
+      check(held > 3000, screen.tag, "exit · export",
+        `the export carries ${held} collection cards, and the upload had over three thousand`);
+      console.log(`  exit · export            ${file.suggestedFilename()} · ${n} picks, ` +
+        `${carried} added decks, ${held.toLocaleString()} collection cards`);
     }
 
     await page.click("#reset-button");
@@ -492,6 +531,22 @@ for (const screen of SCREENS) {
       const rail = await page.locator(".dp-rail .rail-btn").count();
       check(rail === 6, screen.tag, "exit · import", `Deck shows ${rail} decks after re-importing`);
       console.log(`  exit · import            ${restored} picks, ${rail} decks on the Deck page`);
+
+      /* The other half of the round trip, on the page that owns it. A file that
+         restores the Matrix and leaves My Decks empty is a backup that loses the
+         part somebody typed in by hand. */
+      await page.goto("about:blank");
+      await page.goto(`${BASE}/index.html`, {waitUntil: "domcontentloaded"});
+      await page.waitForSelector(".deck-card", {timeout: 20000});
+      await page.waitForTimeout(800);
+      const cards = await page.locator(".deck-card").count();
+      check(cards === 16, screen.tag, "exit · import",
+        `My Decks came back with ${cards} decks, not the six built in plus the ten added`);
+      const benchTab = clean(await page.locator(".tab").filter({hasText: /Bench/}).first().textContent());
+      check(/\d{3,}/.test(benchTab), screen.tag, "exit · import",
+        `the uploaded collection did not survive the round trip: bench reads "${benchTab}"`);
+      console.log(`     back on My Decks: ${cards} decks · ${benchTab}`);
+      await healthy(page, screen.tag, "exit · import");
     }
     await healthy(page, screen.tag, "exit · import");
     await ctx.close();

@@ -40,6 +40,11 @@ none of this was seen either:
 - An upload too big for the browser's storage warned about it in a toast that
   the success message overwrote in the same tick — the one case where the
   warning matters is the one where it was invisible.
+- **The export did not carry any of it.** Ten added decks and 3,200 collection
+  cards were in localStorage keys the Matrix's export never read, and the button
+  that wrote the file said *"Exported your full state"*. Back up, move browser,
+  load the file, and both are gone — having been told in as many words that they
+  were not.
 
 None of THAT is visible if the collection behind the app is always empty.
 
@@ -88,12 +93,16 @@ is sorted by what a spare card is worth, that everything is still one button
 away, and that reaching it does not move the row under the reader's thumb. The
 buy list is asserted to be *un*capped: it is worked through in a shop rather than
 browsed, and a shopping list that hides its last forty cards behind a tap is a
-shopping list you get home without.
+shopping list you get home without. It also presses Load Active, which somebody
+does out of habit, and asserts the ten decks are still there afterwards: a
+payload with no My Decks block means "this file has no opinion", never "delete
+them".
 
-**Exit · export, reset, import** — the export carries the picks and a date, Reset
-All really resets, and re-importing the file brings everything back including the
-Deck page. If any leg of that breaks, this is a place work goes in and does not
-come out of.
+**Exit · export, reset, import** — run with the collection behind it, not just
+the six picks. The export carries the picks, a date, the ten added decks and the
+3,200 collection cards; Reset All really resets; and re-importing brings back
+both the Deck page *and* My Decks. If any leg of that breaks, this is a place
+work goes in and does not come out of.
 
 ## Running it
 

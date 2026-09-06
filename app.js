@@ -8469,7 +8469,47 @@
   // things this app actually persists -- the main `state` object and, separately, whatever
   // Custom decks were built on the Choose step -- into one file, versioned independently of
   // either's own internal schema so the export wrapper itself can evolve later.
-  const STATE_EXPORT_SCHEMA = 1;
+  /* 2 added `myDecks`: the added decks, the uploaded collection and the My Decks
+     picks, which schema 1 files do not carry. A file without the block leaves
+     what is on the device alone -- it has nothing to say about those decks, and
+     deleting ten of them because somebody loaded last month's backup would be a
+     worse bug than the one this fixed. */
+  const STATE_EXPORT_SCHEMA = 2;
+
+  /* The other page's storage.
+   *
+   * My Decks (index.html) keeps three things of its own in this same origin's
+   * localStorage: the decks somebody added by hand, the collection they
+   * uploaded, and their picks and list preferences. None of it was in the
+   * export, and the button that wrote the file said "Exported your full state"
+   * -- so a person with ten added decks and three thousand cards could back up,
+   * move to a new browser, load the file, and find both gone, having been told
+   * in as many words that they had not been.
+   *
+   * The names are literals here rather than imports because matrix.html does not
+   * load viewer.js or deck-store.js and should not have to. tests/data-integrity
+   * pins each one against the module that owns it, so a rename there fails the
+   * suite instead of quietly emptying the export again. */
+  const MY_DECKS_KEYS = {
+    decks: "mtg-imported-decks.v1",       // deck-store.js STORE_KEY
+    inventory: "mtg-viewer-inventory.v1", // viewer.js INVENTORY_KEY
+    picks: "mtg-viewer.v1"                // viewer.js STORE
+  };
+
+  function readMyDecks() {
+    const out = {};
+    Object.keys(MY_DECKS_KEYS).forEach((field) => {
+      try {
+        const raw = localStorage.getItem(MY_DECKS_KEYS[field]);
+        out[field] = raw ? JSON.parse(raw) : null;
+      } catch (error) {
+        // Unparseable is not the same as absent, but neither can be exported,
+        // and a backup that throws is worse than one that is honest about a gap.
+        out[field] = null;
+      }
+    });
+    return out;
+  }
 
   function serializeStatePayload() {
     let custom = null;
@@ -8479,7 +8519,21 @@
     } catch (error) {
       custom = null;
     }
-    return {app: "mtg-deck-matrix", exportSchema: STATE_EXPORT_SCHEMA, exportedAt: new Date().toISOString(), state, custom};
+    return {app: "mtg-deck-matrix", exportSchema: STATE_EXPORT_SCHEMA, exportedAt: new Date().toISOString(),
+      state, custom, myDecks: readMyDecks()};
+  }
+
+  /* Counts for the toast, so the message describes the file rather than the
+     feature. "Exported your full state" was true of the Matrix and false of the
+     rest, which is the only kind of wrong a backup message must not be. */
+  function myDecksSummary(payload) {
+    const mine = payload.myDecks || {};
+    const decks = ((mine.decks || {}).decks || []).length;
+    const cards = ((mine.inventory || {}).cards || []).length;
+    const bits = [];
+    if (decks) bits.push(`${decks} added deck${decks === 1 ? "" : "s"}`);
+    if (cards) bits.push(`${cards.toLocaleString()} collection card${cards === 1 ? "" : "s"}`);
+    return bits.join(" and ");
   }
 
   function exportFullState() {
@@ -8496,7 +8550,9 @@
     setTimeout(() => URL.revokeObjectURL(url), 2000);
     try { localStorage.setItem(LAST_EXPORT_KEY, String(Date.now())); } catch (error) { /* nothing to remember it with */ }
     refreshStateChrome();
-    showToast("Exported your full state — Compare picks, Deck boxes, Shop marks and prices.");
+    const also = myDecksSummary(payload);
+    showToast("Exported your full state — Compare picks, Deck boxes, Shop marks and prices"
+      + (also ? `, plus ${also}.` : "."));
   }
 
   /* Loading a file replaces everything on this device with no way back, which is the one
@@ -8624,6 +8680,7 @@
     customStore = Custom.load(localStorage);
     remergeCustom();
     persistCustom();
+    restoreMyDecks(payload);
     ensureDeckBoxesSeeded();
     ensureAssignedSeeded();
     saveState(`Loaded state${sourceLabel ? ` from ${sourceLabel}` : ""}`);
@@ -8634,7 +8691,29 @@
        button inside an empty Deck or Shop page, whose promise was to fill in the
        page it sits on rather than to send the reader somewhere else. */
     switchView(options.returnTo || "compare");
-    showToast(`Loaded state${sourceLabel ? ` from ${sourceLabel}` : ""}.`);
+    const also = payload.myDecks ? myDecksSummary(payload) : "";
+    showToast(`Loaded state${sourceLabel ? ` from ${sourceLabel}` : ""}`
+      + (also ? ` — including ${also}.` : "."));
+  }
+
+  /* Put the other page's storage back, and only when the file has an opinion
+     about it. A present-but-empty block means "no decks, no collection" and does
+     clear them; an ABSENT block means the file predates this and must not touch
+     what is here. data/active-state.json is the everyday case of the second:
+     it is the workbook's Matrix state and says nothing about anybody's decks,
+     so Load Active must leave them exactly where they are. */
+  function restoreMyDecks(payload) {
+    const mine = payload && payload.myDecks;
+    if (!mine || typeof mine !== "object") return;
+    Object.keys(MY_DECKS_KEYS).forEach((field) => {
+      try {
+        if (mine[field]) localStorage.setItem(MY_DECKS_KEYS[field], JSON.stringify(mine[field]));
+        else localStorage.removeItem(MY_DECKS_KEYS[field]);
+      } catch (error) {
+        // Storage refused -- most likely a collection larger than this browser
+        // will hold. The Matrix half of the load still stands.
+      }
+    });
   }
 
   function importStateFromFile(file) {
