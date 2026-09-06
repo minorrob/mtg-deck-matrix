@@ -21,6 +21,10 @@ empty app with — it is why none of these were ever seen:
   be somebody's first.
 - Three of the eleven Compare tour steps spotlighted a 6×6 pixel box, because
   every deck row is collapsed until somebody opens one.
+- Compare, Deck, Shop, the Game Log and the Tour are all on `matrix.html`, and
+  the only route there was a footer link — 1.0 screens below the fold on a
+  desktop and 2.9 on a phone. A first-time visitor saw six decks and no sign the
+  rest of the app existed, including the tour built to show them around.
 - The last Compare tour step collapsed its spotlight to a single pixel: it
   latched onto the "Loading the card catalog…" box, which was replaced a moment
   later, and measured a node no longer in the document.
@@ -58,8 +62,9 @@ None of THAT is visible if the collection behind the app is always empty.
 
 ## The eight journeys
 
-**First · lands** — `index.html` shows six decks and two ways to add one.
-Nothing is required before it makes sense.
+**First · lands** — `index.html` shows six decks and two ways to add one, and
+says where the rest of the app is without anybody scrolling. Nothing is required
+before it makes sense.
 
 **First · hits an empty tab** — Deck before picking anything. Asserts a real
 screen: what the tab is for, why it is empty, and three ways out (Compare, load

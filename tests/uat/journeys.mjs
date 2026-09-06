@@ -221,8 +221,24 @@ for (const screen of SCREENS) {
     const adds = await page.locator(".deck-add").count();
     check(decks === 6, screen.tag, "first · lands", `${decks} decks on the front page, expected 6`);
     check(adds >= 2, screen.tag, "first · lands", `${adds} ways to add a deck, expected 2`);
+
+    /* Compare, Deck, Shop, the Game Log and the Tour are all on matrix.html, and
+       for a while the only route there was a footer link -- 1.0 screens below the
+       fold on a desktop and 2.9 on a phone. A first-time visitor saw six decks
+       and no sign the rest of the app existed, the tour built to show them around
+       included. Above the fold or it may as well not be there. */
+    const routes = await page.evaluate(() => {
+      const seen = (a) => a.getBoundingClientRect().top < window.innerHeight && a.offsetParent;
+      return [...document.querySelectorAll('a[href="matrix.html"], a[href="graph.html"]')]
+        .filter(seen).map((a) => a.getAttribute("href"));
+    });
+    check(routes.includes("matrix.html"), screen.tag, "first · lands",
+      "nothing above the fold leads to Compare, Deck, Shop, the Game Log or the Tour");
+    check(routes.includes("graph.html"), screen.tag, "first · lands",
+      "nothing above the fold leads to the card graph");
     await healthy(page, screen.tag, "first · lands");
-    console.log(`  first · lands            ${decks} decks, ${adds} ways to add one`);
+    console.log(`  first · lands            ${decks} decks, ${adds} ways to add one, ` +
+      `${routes.length} routes onward without scrolling`);
 
     await page.goto(`${BASE}/matrix.html`, {waitUntil: "domcontentloaded"});
     await page.waitForTimeout(5000);

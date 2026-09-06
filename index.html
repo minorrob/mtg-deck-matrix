@@ -34,7 +34,7 @@
   <link rel="stylesheet" media="print" onload="this.media='all';this.onload=null"
         href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800;900&display=swap">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800;900&display=swap"></noscript>
-  <link rel="stylesheet" href="viewer.css?v=16">
+  <link rel="stylesheet" href="viewer.css?v=18">
   <!-- Adding a deck. Six small modules rather than one, because each is useful
        and testable on its own: the parser has no idea what a score is, and the
        simulator has no idea where a decklist came from. Loaded here in
@@ -75,6 +75,15 @@
         <h1>My Decks</h1>
         <span class="brand-sub" id="brand-sub">six Commander decks, what they do, and what they still need</span>
       </div>
+      <!-- The rest of the application. Compare, Deck, Shop, the Game Log and the
+           Tour all live on matrix.html, and the only route to any of it was a
+           footer link -- 1.0 screens below the fold on a desktop and 2.9 on a
+           phone. A first-time visitor saw six decks and no sign the rest was
+           there, including the one thing built to show them around. -->
+      <nav class="elsewhere" aria-label="The rest of this app">
+        <a href="matrix.html"><span class="long">Build &amp; shop</span><span class="short">Build</span></a>
+        <a href="graph.html"><span class="long">Card graph</span><span class="short">Graph</span></a>
+      </nav>
       <nav class="tabs" aria-label="Sections">
         <button class="tab" type="button" data-view="decks" aria-selected="true">Decks</button>
         <button class="tab" type="button" data-view="bench" id="tab-bench" aria-selected="false">

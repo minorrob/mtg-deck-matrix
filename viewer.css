@@ -116,7 +116,26 @@ button { font: inherit; color: inherit; }
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
-.tabs { display: flex; gap: 4px; margin-left: auto; }
+/* The rest of the application, above the fold.
+ *
+ * My Decks is the landing page; Compare, Deck, Shop, the Game Log and the Tour
+ * are all on matrix.html, and the only way there was a footer link a screen
+ * below the fold on a desktop and nearly three on a phone. Measured, on a first
+ * visit with nothing saved. So the route lives in the header, in the row that is
+ * on screen before anybody scrolls -- and reads as a link to somewhere else
+ * rather than a fourth tab, because the three beside it switch views on this
+ * page and these two leave it. */
+.brand { flex: 1 1 auto; }
+.elsewhere { display: flex; gap: 6px; align-items: center; }
+.elsewhere a {
+  color: var(--text-dim); font-size: 12.5px; font-weight: 700; text-decoration: none;
+  padding: 6px 11px; border: 1px solid var(--line); border-radius: 999px;
+  white-space: nowrap; background: var(--panel);
+}
+.elsewhere a:hover { color: var(--text); border-color: var(--text-faint); }
+.elsewhere .short { display: none; }
+
+.tabs { display: flex; gap: 4px; margin-left: 10px; }
 
 .tab {
   appearance: none; background: transparent; border: 0;
@@ -690,7 +709,18 @@ main { padding: 24px 0 140px; }
   .ribbon > span { white-space: nowrap; flex: none; }
 
   .topbar-row { flex-wrap: wrap; gap: 0; padding-top: 10px; }
-  .brand { flex: 1 0 100%; }
+  /* Brand and the two links share the first row; the tabs take the second. Two
+     header rows, which is what it was before these links existed -- a third row
+     on a sticky header costs more screen than the links are worth. */
+  .brand { flex: 1 1 auto; }
+  .elsewhere { margin-left: auto; }
+  /* "Build" alone was the phone label and it collides with the Build a deck
+     tile further down THIS page, which is a different thing entirely. The full
+     phrase fits beside the title at 390px -- measured -- so only the second
+     link shortens. */
+  .elsewhere a { padding: 6px 9px; font-size: 12px; }
+  .elsewhere a[href="graph.html"] .long { display: none; }
+  .elsewhere a[href="graph.html"] .short { display: inline; }
   .tabs { margin-left: 0; width: 100%; justify-content: space-between; }
   .tab { padding: 9px 4px 11px; font-size: 13.5px; min-height: 44px; flex: 1; justify-content: center; }
   .brand h1 { font-size: 18px; }
