@@ -57,7 +57,8 @@
     else dismissed[id] = {reason: reason, at: new Date().toISOString()};
     try { localStorage.setItem(DISMISS_KEY, JSON.stringify(dismissed)); } catch (err) { /* storage off */ }
   }
-  var state = {q: "", mvMax: 20, view: "list", f: {}, showAll: {}, clickFocuses: false, lens: null};
+  var state = {q: "", mvMax: 20, view: "list", f: {}, showAll: {}, clickFocuses: false, lens: null,
+    listShown: 0};
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
     return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]; }); };
@@ -235,11 +236,71 @@
   }
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeCard(); });
 
+  /* HOW BIG A FIRST PAGE OF RESULTS IS.
+   *
+   * Sized to the layout rather than to the data, because the grid is one column
+   * on a phone and four or five on a desktop -- so the same number of tiles is a
+   * very different amount of scrolling. This used to render 400 whatever the
+   * screen: measured, 16,437px on a desktop and 43,535px on a phone, or
+   * seventeen screens and fifty-six. Nothing was slow (content-visibility leaves
+   * the off-screen tiles unpainted) and the legend was honest about the number.
+   * It was simply more page than anybody scrolls, and there was no way to the
+   * other 7,310 at all.
+   *
+   * Read on every render rather than once at load, so rotating a phone resizes
+   * the page instead of keeping the number the other orientation chose. */
+  function listPage() {
+    return window.matchMedia("(max-width: 720px)").matches ? 24 : 96;
+  }
+
+  /* Reset the page when the RESULTS change, not when a filter is touched. A
+     signature cannot be forgotten the way a reset call in each of six handlers
+     can, and "show more" leaves the rows alone, so it keeps what it revealed. */
+  var listSig = null, listRows = [];
+
+  function listFoot(shown, total) {
+    if (shown >= total) return "";
+    return '<button class="gp-show-rest" type="button" data-more-cards>Show ' +
+      Math.min(total - shown, listPage()).toLocaleString() + " more</button>" +
+      '<p class="gp-legend">' + shown.toLocaleString() + " of " + total.toLocaleString() +
+      " cards. Narrowing the filters gets you there quicker than scrolling does.</p>";
+  }
+
   function renderList(rows) {
-    $("result").innerHTML = rows.length
-      ? '<div class="gp-grid">' + rows.slice(0, 400).map(cardTile).join("") + "</div>" +
-        (rows.length > 400 ? '<p class="gp-legend">Showing the first 400 of ' + rows.length + ". Narrow the filters to see the rest.</p>" : "")
-      : '<p class="gp-empty">Nothing matches those filters.</p>';
+    listRows = rows;
+    if (!rows.length) {
+      $("result").innerHTML = '<p class="gp-empty">Nothing matches those filters.</p>';
+      listSig = null;
+      return;
+    }
+    var sig = rows.length + "|" + rows[0].id + "|" + rows[rows.length - 1].id;
+    if (sig !== listSig) { listSig = sig; state.listShown = 0; }
+
+    var shown = Math.min(rows.length, state.listShown || listPage());
+    state.listShown = shown;
+    $("result").innerHTML = '<div class="gp-grid">' + rows.slice(0, shown).map(cardTile).join("") + "</div>" +
+      '<div class="gp-list-foot">' + listFoot(shown, rows.length) + "</div>";
+  }
+
+  /* APPEND, rather than re-render.
+   *
+   * Going back through render() would rebuild #result, destroying and recreating
+   * every tile already on screen -- ninety-six of them, each carrying
+   * content-visibility and an image -- so that the reader's position had to be
+   * saved and put back around it. Adding the new tiles to the end of the grid
+   * touches nothing that is already there instead, so there is no scroll to
+   * restore. Driven by a real wheel and a real click, the card under the
+   * reader's eye moves 0px. */
+  function showMoreCards() {
+    var grid = $("result").querySelector(".gp-grid");
+    var foot = $("result").querySelector(".gp-list-foot");
+    if (!grid || !foot) return;
+    var from = state.listShown;
+    var to = Math.min(listRows.length, from + listPage());
+    if (to <= from) return;
+    grid.insertAdjacentHTML("beforeend", listRows.slice(from, to).map(cardTile).join(""));
+    state.listShown = to;
+    foot.innerHTML = listFoot(to, listRows.length);
   }
 
   /* The graph is deliberately ego-centric and capped. Two cards are joined when
@@ -758,6 +819,7 @@
     if (view) { state.view = view.dataset.view; syncViews(); render(); return; }
     var more = e.target.closest("[data-more]");
     if (more) { state.showAll[more.dataset.more] = true; render(); return; }
+    if (e.target.closest("[data-more-cards]")) { showMoreCards(); return; }
     if (e.target.id === "clear") { state.f = {}; state.q = ""; state.mvMax = 20; state.showAll = {}; state.lens = null; $("q").value = ""; render(); return; }
     var grp = e.target.closest(".gp-group");
     if (grp) {

@@ -321,7 +321,11 @@ main { padding: 24px 0 140px; }
 .stat-commander:hover { background: var(--panel-2); }
 .stat-commander:focus-visible { outline: 2px solid var(--ember); outline-offset: -2px; }
 .stat-commander img {
-  width: 44px; max-width: 100%; max-height: 100%; height: auto;
+  /* Same reservation as every other card face in this app. height:auto leaves
+     the box at 0px until the art loads, so the strip is one height before and
+     another after. */
+  width: 44px; max-width: 100%; max-height: 100%; aspect-ratio: 488 / 680;
+  object-fit: cover;
   border-radius: 3px; display: block; flex: none;
   box-shadow: 0 2px 8px -3px rgba(20,40,31,.28);
 }

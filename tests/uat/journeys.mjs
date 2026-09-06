@@ -342,6 +342,75 @@ for (const screen of SCREENS) {
     await ctx.close();
   }
 
+  // ═══ FIRST: opens the card graph, which is 7,710 cards ═══
+  {
+    const {ctx, page} = await freshPage(screen);
+    await page.goto(`${BASE}/graph.html`, {waitUntil: "domcontentloaded"});
+    await page.waitForSelector(".gp-card", {timeout: 25000});
+    /* content-visibility means the document height is an ESTIMATE until the
+       tiles render, so measure nothing until it stops moving. A scroll computed
+       from an unsettled page lands past the end, and the browser then satisfies
+       that request as the real heights arrive -- which this harness twice read
+       as the app scrolling itself. */
+    await page.evaluate(() => new Promise((done) => {
+      let last = -1, same = 0;
+      const tick = () => {
+        const h = document.documentElement.scrollHeight;
+        if (h === last) { if (++same >= 5) return done(h); } else { same = 0; last = h; }
+        requestAnimationFrame(tick);
+      };
+      tick();
+    }));
+
+    const tall = await page.evaluate(() => document.documentElement.scrollHeight);
+    const tiles = await page.locator(".gp-card").count();
+    const screens = tall / screen.h;
+    check(screens < 10, screen.tag, "first · the graph",
+      `the card list is ${Math.round(screens)} screens tall on a first look`);
+    const legend = clean(await page.locator(".gp-legend").first().textContent().catch(() => ""));
+    check(/of 7,710 cards/.test(legend), screen.tag, "first · the graph",
+      `the list must say how much of the catalog it is showing, said "${legend}"`);
+    console.log(`  first · the graph        ${tiles} of 7,710 · ${Math.round(screens)} screens · "${legend.slice(0, 34)}…"`);
+
+    /* Wheel and click, not scrollTo and .click(): a programmatic scroll on this
+       page is what produced two invented "jumps" that a real gesture does not. */
+    for (let i = 0; i < 60; i += 1) {
+      const onScreen = await page.evaluate(() => {
+        const b = document.querySelector(".gp-show-rest");
+        if (!b) return true;
+        const r = b.getBoundingClientRect();
+        return r.top > 0 && r.bottom < window.innerHeight;
+      });
+      if (onScreen) break;
+      await page.mouse.wheel(0, 400);
+      await page.waitForTimeout(110);
+    }
+    await page.waitForTimeout(500);
+    const held = await page.evaluate(() => {
+      const vis = [...document.querySelectorAll(".gp-card")].filter((n) => {
+        const r = n.getBoundingClientRect();
+        return r.top > 40 && r.bottom < window.innerHeight - 40;
+      });
+      const t = vis[Math.floor(vis.length / 2)];
+      return {name: t.querySelector("b").textContent, top: Math.round(t.getBoundingClientRect().top)};
+    });
+    await page.locator(".gp-show-rest").click();
+    await page.waitForTimeout(1200);
+    const grew = await page.evaluate((name) => {
+      const b = [...document.querySelectorAll(".gp-card b")].find((x) => x.textContent === name);
+      return {tiles: document.querySelectorAll(".gp-card").length,
+        top: b ? Math.round(b.closest(".gp-card").getBoundingClientRect().top) : null};
+    }, held.name);
+    check(grew.tiles > tiles, screen.tag, "first · the graph",
+      `asking for more left ${grew.tiles} tiles, the same as before`);
+    check(grew.top !== null && Math.abs(grew.top - held.top) <= 2, screen.tag, "first · the graph",
+      `"${held.name}" moved ${grew.top - held.top}px when more cards arrived`);
+    console.log(`     more → ${grew.tiles} tiles, "${held.name}" moved ${grew.top - held.top}px`);
+    await shot(page, `${screen.tag}-first-graph`);
+    await healthy(page, screen.tag, "first · the graph");
+    await ctx.close();
+  }
+
   // ═══ CONTINUED, at scale: a collection that grew ═══
   {
     const {ctx, page} = await freshPage(screen);

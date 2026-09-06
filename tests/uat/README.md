@@ -1,7 +1,7 @@
 # User journeys, in a browser
 
 The twenty-three suites in `tests/` check that the modules are right. Nothing in
-them opens a page. This does: three people, eight journeys, two screen sizes, in a
+them opens a page. This does: three people, nine journeys, two screen sizes, in a
 real Chromium.
 
 ## Why it exists as its own thing
@@ -60,7 +60,7 @@ None of THAT is visible if the collection behind the app is always empty.
 | **Continued** | uses it between games | six picked decks, a game log, ten added decks, 3,200 cards | their work where they left it, and to change something |
 | **Exit** | wants their data, or a clean slate | a full collection | to take it with them, wipe it, and put it back |
 
-## The eight journeys
+## The nine journeys
 
 **First · lands** — `index.html` shows six decks and two ways to add one, and
 says where the rest of the app is without anybody scrolling. Nothing is required
@@ -69,6 +69,15 @@ before it makes sense.
 **First · hits an empty tab** — Deck before picking anything. Asserts a real
 screen: what the tab is for, why it is empty, and three ways out (Compare, load
 the six, take the tour). This is the journey that had a dead end.
+
+**First · opens the card graph** — 7,710 cards. Asserts the first look is a
+page somebody scrolls rather than seventeen screens of it (fifty-six on a
+phone), that the legend says how much of the catalog is on screen, and that
+asking for more leaves the card under the reader's eye exactly where it was.
+Driven with a wheel and a real click: a programmatic `scrollTo` on this page
+lands past the end of a document whose height `content-visibility` has only
+estimated, and the browser then satisfies that request as the real heights
+arrive — which this harness twice read as the app scrolling itself.
 
 **First · takes the tour** — from the empty Deck page, not from the header,
 because on a phone the header is folded. Asserts the tour opens by saying

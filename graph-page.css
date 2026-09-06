@@ -62,8 +62,24 @@
    the ones off screen is what keeps that click feeling immediate. */
 .gp-card { content-visibility: auto; contain-intrinsic-size: auto 84px; }
 .gp-more { border-style: dashed; color: var(--accent); font-weight: 800; }
+
+/* The way to the next page of results, under the last tile it follows. */
+.gp-show-rest {
+  appearance: none; cursor: pointer; width: 100%; margin-top: 10px;
+  background: var(--surface); border: 1px dashed var(--line); color: var(--accent);
+  border-radius: 12px; padding: 11px 16px; font: inherit; font-size: 13.5px; font-weight: 800;
+}
+.gp-show-rest:hover { border-color: var(--forest-2); color: var(--forest); }
 .gp-card.is-ego { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold-soft); }
-.gp-card img { width: 44px; border-radius: 3px; display: block; background: var(--surface-2); }
+/* aspect-ratio, not height:auto. A width with no reserved height leaves the
+   image box at 0px until the art arrives: measured, the tile is 69px tall before
+   and 79px after, so a grid of them grows under the reader for as long as the
+   images take. 488x680 is the card face's own ratio, and reserving it is what
+   app.css already does for every card thumb on the other two pages. */
+.gp-card img {
+  width: 44px; aspect-ratio: 488 / 680; object-fit: cover;
+  border-radius: 3px; display: block; background: var(--surface-2);
+}
 .gp-card b { display: block; font-size: 13px; line-height: 1.25; }
 .gp-card .meta { color: var(--muted); font-size: 11px; margin-top: 2px; }
 .gp-tags { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
