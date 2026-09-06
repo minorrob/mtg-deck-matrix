@@ -2,8 +2,8 @@
   "note": "Written by tests/asset-versions.mjs --update. Each entry records the content a ?v= was last bumped for; the test fails when content moves and the version does not.",
   "assets": {
     "app.css": {
-      "version": 76,
-      "sha": "042805606397e215"
+      "version": 79,
+      "sha": "36d47b2f5a3d4eee"
     },
     "app.js": {
       "version": 115,

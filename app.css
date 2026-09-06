@@ -1250,6 +1250,20 @@ footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px;
    raising a declared size, because there was none to raise. */
 .log-field > span:first-child small { margin-left: 4px; font-size: 9.5px; font-weight: 700; text-transform: none; letter-spacing: 0; }
 .log-field input, .log-field select { min-height: 42px; padding: 6px 9px; border: 1px solid var(--line); border-radius: 9px; background: #fff; color: var(--ink); font-size: 14px; font-weight: 700; }
+/* The only fields in the app with no focus style of their own: every other form
+   surface here states one, and these were left to whatever the browser draws.
+   An explicit ring is worth having on its own, and :focus-within is in the
+   selector because an <input type="date"> keeps its month, day and year
+   segments in a shadow root -- Tab puts focus on one of THOSE, so the input
+   stays document.activeElement while matching :focus-within rather than :focus.
+   I measured this field showing no ring at all before the rule existed and could
+   not reproduce that afterwards, so the shadow-root behaviour is the reason for
+   the selector and not a claim about what was broken. */
+.log-field input:focus-visible, .log-field select:focus-visible,
+.log-field input:focus, .log-field select:focus,
+.log-field input:focus-within, .log-field select:focus-within {
+  outline: 2px solid var(--forest-2); outline-offset: 1px; border-color: var(--forest-2);
+}
 .log-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .log-chips .filter-chip { min-height: 42px; padding: 6px 14px; font-size: 13px; }
 .log-actions { display: flex; align-items: center; gap: 11px; }

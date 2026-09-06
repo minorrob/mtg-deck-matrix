@@ -368,6 +368,35 @@ for (const screen of SCREENS) {
     await page.click('.main-tab[data-view="log"]');
     await page.waitForTimeout(2000);
 
+    /* WHERE THE KEYBOARD IS, VISIBLY. Taken COLD -- before anything on this page
+       has been typed into -- because Chromium's :focus-visible heuristic turns
+       permissive once the last interaction was a keypress, so a walk taken after
+       filling the form tells you less. The ring is read off the computed style
+       rather than from :focus-visible matching, for the same reason.
+       This is a floor, not a trap: it holds every control on the form to showing
+       SOMETHING when the keyboard reaches it, which is what a blanket
+       `outline: none` would take away. It does not discriminate finer than that,
+       and it did not catch the missing rule that prompted it -- removing that
+       rule again leaves this passing. Said plainly so nobody reads more into a
+       green run than it earns. */
+    await page.evaluate(() => document.body.focus());
+    let litUp = 0, tabbed = 0;
+    for (let i = 0; i < 26; i += 1) {
+      await page.keyboard.press("Tab");
+      const lit = await page.evaluate(() => {
+        const n = document.activeElement;
+        if (!n || n === document.body || !n.closest("#view-log")) return null;
+        const css = getComputedStyle(n);
+        return (css.outlineStyle !== "none" && parseFloat(css.outlineWidth) > 0) ||
+          css.boxShadow !== "none";
+      });
+      if (lit === null) continue;
+      tabbed += 1;
+      if (lit) litUp += 1;
+    }
+    check(tabbed > 0 && litUp === tabbed, screen.tag, "continued · records a game",
+      `${tabbed - litUp} of ${tabbed} controls on this form show nothing when the keyboard reaches them`);
+
     /* The log had been read back at 250 games and never once WRITTEN to by a
        test. Everything below is what somebody does at the table with a phone in
        one hand. */
@@ -419,7 +448,7 @@ for (const screen of SCREENS) {
     check(aria.stated === aria.chips, screen.tag, "continued · records a game",
       `${aria.stated} of ${aria.chips} chips say whether they are the one chosen`);
     console.log(`  continued · a game       saved ${saved ? saved.result : "nothing"} in ${saved ? saved.turns : "?"} turns · ` +
-      `${aria.chips} chips in ${aria.groups} named groups`);
+      `${aria.chips} chips in ${aria.groups} named groups · ${litUp}/${tabbed} visible on tab`);
     await shot(page, `${screen.tag}-continued-game`);
     await healthy(page, screen.tag, "continued · records a game");
     await ctx.close();
