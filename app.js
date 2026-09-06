@@ -901,6 +901,11 @@
       nearRung: window.MtgSlotModel.nearestRung(plan, ensureBuyState(variant.id),
         (state.deckRung || {})[variant.id]),
       audit: deckAuditFor(variant, plan, rung),
+      /* How this deck has actually gone, if it has been played. The measured
+         strip reports what the simulation says; this is the other half of that
+         sentence, and the Deck page is where somebody is deciding what to change
+         about the deck -- which is exactly when a record is worth seeing. */
+      record: deckRecordFor(variant, plan, rung),
       measuring: measuringDeck === variant.id ? measuringLine : null,
       active: (state.deckActive && state.deckActive[variant.id]) || {},
       openSlot: deckPageState.openSlot,
@@ -918,6 +923,30 @@
         slotDetail: !deckPageState.closedPanels.slotDetail
       },
       variants
+    };
+  }
+
+  /* This deck's own record, against the rung it is standing on.
+     Same module and the same restraint as the Game Log panel: an interval that
+     contains the prediction reads as "cannot tell", never as a difference. */
+  function deckRecordFor(variant, plan, rung) {
+    const Rec = window.MtgGameRecord;
+    const log = (state.gameLog || []).filter((entry) => entry && entry.variantId === variant.id);
+    if (!Rec || !log.length) return null;
+    const Slot = window.MtgSlotModel;
+    const build = simulationSummary?.builds?.[variant.id];
+    const sim = (rung && build?.[Slot.RUNG_LABEL[rung]]) || build?.Tuned || null;
+    const predicted = sim && sim.winPct != null ? Number(sim.winPct) : null;
+    const deck = Rec.summarize(log, {labels: {[variant.id]: variant.name}}).decks[0];
+    const result = Rec.compare(deck, predicted);
+    return {
+      games: deck.games,
+      headline: Rec.headline(deck),
+      predicted,
+      verdict: result.verdict,
+      says: Rec.phrase(result),
+      podFun: deck.podFun,
+      avgTurns: deck.avgTurns
     };
   }
 

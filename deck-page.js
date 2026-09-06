@@ -727,6 +727,23 @@
               shown for reference and never subtracted from these.`
           : ""}</p>` : "";
 
+    /* What the games actually did, beside what the simulation predicted. Only
+       when this deck has been played: an empty record is not a finding, and a
+       row of dashes would be worse than no row. */
+    const rec = ctx.record;
+    const played = rec ? `
+      <div class="dp-rec${rec.verdict === "below" ? " is-below" : rec.verdict === "above" ? " is-above" : ""}">
+        <div class="dp-rec-nums">
+          <span><b class="dp-num${rec.headline.provisional ? " is-soft" : ""}">${esc(rec.headline.text)}</b>
+            ${rec.headline.provisional ? "could be" : "won"}</span>
+          <span><b class="dp-num">${rec.predicted == null ? "—" : Math.round(rec.predicted * 100) + "%"}</b> predicted</span>
+          <span><b class="dp-num">${rec.games}</b> played</span>
+          ${rec.podFun == null ? "" : `<span><b class="dp-num">${rec.podFun}</b> table fun</span>`}
+          ${rec.avgTurns == null ? "" : `<span><b class="dp-num">${rec.avgTurns}</b> turns long</span>`}
+        </div>
+        <p class="dp-meas-note">${esc(rec.says)}</p>
+      </div>` : "";
+
     return `<details class="dp-meas${tone}"${open ? " open" : ""}>
       <summary>
         <span class="dp-meas-v">${audit.state === "adrift" ? "⚠" : audit.state === "measured" ? "◎" : "✓"}
@@ -735,6 +752,7 @@
         <span class="dp-meas-n">${esc(audit.note)}</span>
       </summary>
       <div class="dp-meas-body">
+        ${played}
         ${runs}
         ${busy ? `<p class="dp-meas-run">Measuring… ${esc(busy)}</p>` : `
           <div class="dp-meas-acts">

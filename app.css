@@ -2346,6 +2346,20 @@ div.sp-band{padding:9px 13px;border-radius:12px 12px 0 0}
 .dp-meas-t td { padding: 3px 0; font-size: 17px; font-weight: 800; text-align: right; }
 .dp-meas-t .dp-meas-se { font-size: 12px; font-weight: 600; color: var(--muted); padding-left: 8px; }
 .dp-meas-note { margin: 6px 0 0; font-size: 12px; line-height: 1.5; color: var(--muted); }
+
+/* The deck's own record, above the runs. It is the other half of the sentence
+   the strip above it starts: one number is what the simulation says, this is
+   what happened. */
+.dp-rec {
+  margin: 10px 0 4px; padding: 9px 11px;
+  border: 1px solid var(--line); border-left-width: 3px; border-radius: 9px;
+  background: var(--paper);
+}
+.dp-rec.is-below { border-left-color: var(--red); }
+.dp-rec.is-above { border-left-color: var(--forest-2); }
+.dp-rec-nums { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 11.5px; color: var(--muted); }
+.dp-rec-nums b { font-size: 15px; margin-right: 3px; }
+.dp-rec-nums b.is-soft { font-size: 12.5px; font-weight: 700; }
 .dp-meas-run { margin: 10px 0 0; font-size: 13px; font-weight: 700; color: var(--forest-2, #1c5a42); }
 .dp-meas-acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 
