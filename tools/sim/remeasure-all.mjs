@@ -47,7 +47,7 @@ const SEEDS = Number(args.seeds || 6);
    new data and the part that is only the new regime. Without this the two are confounded
    and "every score fell" says nothing about why. */
 const NO_BODIES = Boolean(args["no-bodies"]);
-const ENGINE = NO_BODIES ? "v2.4-uniform" : "v2.5";
+const ENGINE = NO_BODIES ? "v2.4-uniform" : "v2.6";
 
 const config = await loadConfig();
 const opponents = await loadOpponents();
@@ -171,21 +171,45 @@ moves.forEach((m) => { Object.assign(summary.builds[m.id][m.rung], m.fields); })
 summary.generatedAt = new Date().toISOString();
 summary.engine = ENGINE;
 summary.engineNotes = Object.assign({}, summary.engineNotes, {
-  [ENGINE]: "Measured on v2.5: the v2.4 model, with two changes that both re-base every " +
-    "number. First, creatures fight with their PRINTED power and toughness. Until this " +
-    "generation no card file carried those fields, so the engine estimated every body as " +
-    "max(1, round(cmc * 0.9)) -- a one-mana 2/1 played as a 1/1, a seven-mana 4/4 as a " +
-    "6/6, in a model whose whole business is combat. Second, all 200 rungs were measured " +
-    "TOGETHER on one protocol, six seeds of 20,000 games, rather than each carrying " +
-    "whatever size and seed its own optimizer stopped at. The second change matters more " +
-    "than it sounds: the v2.4 Max figures in particular came from a promotion pass that " +
-    "kept the swaps that measured best, which is a selection bias, and removing it moves " +
-    "some Max rungs by twenty points. No card moved -- the hundreds are exactly those in " +
-    "data/rung-lists.json."
+  [ENGINE]: "Measured on v2.6: the v2.5 model, with two corrections to what the engine " +
+    "READS from a card before it plays anything. First, a land that goes and gets a basic " +
+    "now enters tapped. entersTapped was read off the fetch's own text, and a fetch does " +
+    "not print \"enters tapped\" because the fetch is not the land that does -- so Evolving " +
+    "Wilds and Terramorphic Expanse modelled as UNTAPPED FIVE-COLOUR LANDS available the " +
+    "turn they were played, which is strictly better than any land in Magic, and both " +
+    "Panoramas as untapped tri-lands while really charging {1} on top of the sacrifice. " +
+    "Five lands change; the three decks holding them fall 0.17 to 0.53 and the other " +
+    "three do not move at all. Second, a Treasure behind a condition inside an activated " +
+    "ability is no longer ramp: Currency Converter's cost is a bare {T}, so it modelled as " +
+    "a one-mana Treasure engine when the Treasure needs a card discarded, exiled with the " +
+    "artifact, and a land at that. One card changes, and it is in no shipped deck. No card " +
+    "moved between rungs -- the hundreds are exactly those in data/rung-lists.json."
 });
+/* THE CAVEATS ARE MEASUREMENTS TOO, and they were being carried forward.
+   caveats.inversions and caveats.podFunOverCeiling name the variants where the
+   ladder's two promises fail -- a Pod Fun rung that out-powers Tuned, and one that
+   wins past the ceiling it exists to stay under. tests/data-integrity.mjs checks
+   the NAMES, so a re-measure that moved every score kept passing while the
+   magnitudes beside those names still described the previous engine. Recompute
+   them from the numbers this run just wrote, by the same rules the test applies. */
+const band = summary.winRateBand || {};
+const inversions = [];
+const overCeiling = [];
+for (const [variantId, deckBuilds] of Object.entries(summary.builds)) {
+  const tuned = deckBuilds.Tuned;
+  const podFun = deckBuilds["Pod Fun"];
+  if (tuned?.powerScore != null && podFun?.powerScore != null && podFun.powerScore > tuned.powerScore + 0.05) {
+    inversions.push({variantId, by: Number((podFun.powerScore - tuned.powerScore).toFixed(2))});
+  }
+  if (podFun?.winPct != null && band.ceiling != null && podFun.winPct > band.ceiling + 0.005) {
+    overCeiling.push({variantId, winPct: podFun.winPct, ceiling: band.ceiling});
+  }
+}
+summary.caveats = Object.assign({}, summary.caveats, {inversions, podFunOverCeiling: overCeiling});
+
 summary.regimeNote = `All ${moves.length} rungs re-measured together by ` +
-  `tools/sim/remeasure-all.mjs on ${SEEDS} seeds of ${GAMES.toLocaleString()} games, after ` +
-  `printed power and toughness reached the engine for the first time. Before this run each ` +
+  `tools/sim/remeasure-all.mjs on ${SEEDS} seeds of ${GAMES.toLocaleString()} games, on the ` +
+  `protocol established when printed power and toughness reached the engine. Before that run each ` +
   `rung carried whatever size and seed its own optimizer stopped at, so the numbers on the ` +
   `Compare page were only loosely comparable with each other; now every one of them was ` +
   `measured the same way. No card moved: the hundreds are exactly those in ` +

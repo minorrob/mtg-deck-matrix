@@ -22,6 +22,8 @@
     "Tokens are modeled as extra power on the creature that makes them, not as separate bodies.",
     "Alternate win conditions and storm are scored as a large threat rather than an instant win.",
     "Mana fixing is ideal within the colors actually available from lands in play.",
+    "A land that goes and gets a basic is modeled as entering tapped, because the basic it fetches arrives tapped; neither the mana some of them charge to crack nor the land itself being spent is modeled.",
+    "Where a keyword states its real effect only in reminder text -- basic landcycling, investigate -- the card is credited with nothing for it, because reminder text is stripped before a card is read.",
     "A Defender creature contributes no attack power unless the deck also contains an effect that lets it attack anyway, and deals damage equal to its toughness instead of its power when the deck contains an effect that says so.",
     "A noncreature commander (a planeswalker printed with \"can be your commander\") is cast and taxed normally but never joins combat as an attacker or blocker.",
     "Opponents are nine parameterized archetype curves (three power tiers, six playstyles), not simulated decks with real cards.",
@@ -146,7 +148,11 @@
     return {pips, generic, value};
   }
 
-  function producedColors(card, typeLine, text) {
+  /* What the land taps for ITSELF, before any land it might go and get. Split out
+     because "does this land make its own colour" is also the question that decides
+     whether it is a fetch, and asking producedColors would get the fetch fallback's
+     answer instead of the card's. */
+  function ownProducedColors(card, typeLine, text) {
     const produced = new Set();
     if (BASIC_COLOR[card.name]) produced.add(BASIC_COLOR[card.name]);
     // Matches every symbol in the run right after "add" — not just the first —
@@ -159,6 +165,11 @@
       });
     });
     if (/add one mana of any color|add \{c\}\{c\}|any color/.test(text)) COLORS.forEach((color) => produced.add(color));
+    return produced;
+  }
+
+  function producedColors(card, typeLine, text) {
+    const produced = ownProducedColors(card, typeLine, text);
     // A land that goes and gets a basic makes whatever that basic makes. These
     // carry an empty color identity, so falling through to it left Evolving
     // Wilds, Terramorphic Expanse and Fabled Passage producing no color --
@@ -173,6 +184,37 @@
     }
     if (/\bLand\b/.test(typeLine) && !produced.size) (card.colorIdentity || []).forEach((color) => produced.add(String(color).toUpperCase()));
     return Array.from(produced);
+  }
+
+  /* A LAND WHOSE ONLY COLOUR IS THE BASIC IT GOES AND GETS.
+   *
+   * producedColors above credits a fetch with every colour it can reach, which is
+   * right -- you choose the basic. entersTapped then decided the timing off the
+   * fetch's own text, and a fetch does not say "enters tapped" because the fetch
+   * is not the land that does. So Evolving Wilds and Terramorphic Expanse modelled
+   * as UNTAPPED FIVE-COLOUR LANDS, available the turn they were played: strictly
+   * better than any land in Magic. Naya and Bant Panorama modelled as untapped
+   * tri-lands while really charging {1} on top of the sacrifice.
+   *
+   * What the real cards do: Evolving Wilds, Terramorphic Expanse and both
+   * Panoramas fetch the basic TAPPED, so the colour is a turn away in every case.
+   * Fabled Passage untaps it only while you control four or fewer lands. So the
+   * fetch enters tapped here, which costs it the {C} the Panoramas really do tap
+   * for on that turn and still does not charge the mana to crack them -- two
+   * errors pointing opposite ways, with the colour landing on the right turn.
+   *
+   * Myriad Landscape and Krosan Verge already read as tapped, because they print
+   * the words; this makes the other five agree with them. */
+  function fetchesItsColors(card, typeLine, rawText) {
+    if (!/\bLand\b/.test(typeLine)) return false;
+    if (!PUTS_LAND_ONTO_BATTLEFIELD.test(rawText)) return false;
+    /* Only when the land makes no coloured mana of its own. A real dual that also
+       fetches is not one of these -- and it is read from the UNSTRIPPED text, the
+       same text producedColors gets, because a true dual prints its whole mana
+       ability as reminder text: "({T}: Add {W} or {U}.)" is the entirety of
+       Tundra. Ask this question of the stripped text and every dual in Magic
+       becomes a fetch. */
+    return ownProducedColors(card, typeLine, rawText).size === 0;
   }
 
   const BASIC_TYPES = "land|plains|island|swamp|mountain|forest";
@@ -193,7 +235,18 @@
       const colon = line.indexOf(":");
       if (colon < 0) return true;                       // triggered or static
       const cost = line.slice(0, colon);
-      return !/\{\d|sacrifice|discard|pay/.test(cost); // a bare {T} still counts
+      if (/\{\d|sacrifice|discard|pay/.test(cost)) return false;  // a bare {T} still counts
+      /* ...and what the bare {T} buys has to BE the Treasure, not a Treasure it
+         might reach. Currency Converter reads "{T}: Put a card exiled with this
+         artifact into its owner's graveyard. If it's a land card, create a
+         Treasure token." The cost is a bare {T}, so the test above passed it and
+         the card modelled as a one-mana Treasure engine -- when the Treasure needs
+         a card discarded, exiled with this artifact, and a land at that.
+         Only activated abilities are read this way. A triggered Treasure that
+         names a condition -- Smothering Tithe's "if the player doesn't" -- is the
+         ordinary shape of a trigger, and those are still ramp. */
+      const clause = line.slice(colon + 1).split(".").find((sentence) => /create a treasure token/.test(sentence)) || "";
+      return !/\bif\b|\bunless\b/.test(clause);
     });
   }
 
@@ -326,7 +379,10 @@
       typeLine,
       isLand,
       isBasicLand: /\bBasic Land\b/.test(typeLine),
-      entersTapped: /enters (?:the battlefield )?tapped/.test(text),
+      // A fetch is tapped too: the basic it goes and gets arrives tapped, so the
+      // colour is a turn away however the fetch itself is printed. See
+      // fetchesItsColors.
+      entersTapped: /enters (?:the battlefield )?tapped/.test(text) || fetchesItsColors(card, typeLine, rawText),
       produces: producedColors(card, typeLine, rawText),
       isCommander: Boolean(card.isCommander),
       isCreature,

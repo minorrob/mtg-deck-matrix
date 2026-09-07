@@ -3046,7 +3046,7 @@
       // The ratings and the guides are generated separately and may lag; the
       // page is fully usable without either, so a miss is not an error.
       return Promise.all([
-        fetchJson("data/deck-ratings.json?v=4").catch(function () { return null; }),
+        fetchJson("data/deck-ratings.json?v=5").catch(function () { return null; }),
         fetchJson("data/deck-guides.json?v=1").catch(function () { return null; }),
         fetchJson("data/deck-swaps.json?v=1").catch(function () { return null; })
       ]);

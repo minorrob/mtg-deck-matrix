@@ -166,6 +166,24 @@ to re-run on every click, and honest about being approximate; anything that repo
 measurement is lying by about a tenth of a point, which is exactly the size of the differences
 people care about.
 
+### What it reads before it plays anything
+
+A model can be exactly right and still be wrong about the card in front of it. Two such
+errors were live until 2026-09-07, both found by reading `classifyCard` against the real
+catalog rather than by noticing a score look odd:
+
+- **A land that goes and gets a basic was an untapped land of every colour it could reach.**
+  `entersTapped` was read off the fetch's own text, and a fetch does not print *"enters
+  tapped"* — the fetch is not the land that does. Evolving Wilds and Terramorphic Expanse
+  modelled as untapped five-colour lands, available the turn they were played. Five lands
+  change; the three decks holding one fall 0.17 to 0.53 and the other three do not move.
+- **A Treasure behind a condition was ramp.** Currency Converter's activation cost is a bare
+  `{T}`, so it read as a one-mana Treasure engine — when the Treasure needs a card discarded,
+  exiled with the artifact, and a land at that. One card changes.
+
+Both are pinned by tests named after the card that exposed them, and
+`docs/simulation-fidelity.md` §0 has the full accounting. The engine is **v2.6**.
+
 ### The deck, and the person holding it
 
 A score is a deck and a pilot multiplied together. Until 2026-09-07 there was one pilot, so

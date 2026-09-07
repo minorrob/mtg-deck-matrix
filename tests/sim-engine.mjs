@@ -490,4 +490,104 @@ assert.match(readme, /run-batch\.mjs/, "the README must show how to run a simula
   assert.ok(unbanded(0.5) > 0.8, "an even share of the pod still earns most of the credit");
 }
 
+/* ---------------- what the engine reads before it plays anything ----------------
+ *
+ * These are the inputs, not the model. Every one of them was found by reading
+ * classifyCard against the real catalog rather than by watching a score look
+ * wrong, and each is pinned to the card that exposed it -- because a
+ * classification bug does not announce itself: it produces a plausible number
+ * from a card the engine has misunderstood.
+ */
+{
+  const facts = JSON.parse(await readFile(new URL("../data/card-facts.json", import.meta.url), "utf8")).cards;
+  const read = (name, overrides) => Engine.classifyCard({
+    name,
+    typeLine: (facts[name] || {}).typeLine || (facts[name] || {}).type || "",
+    oracleText: (facts[name] || {}).oracleText || "",
+    manaCost: (facts[name] || {}).manaCost || "",
+    keywords: (facts[name] || {}).keywords || [],
+    cmc: (facts[name] || {}).cmc,
+    colorIdentity: (facts[name] || {}).colorIdentity,
+    ...(overrides || {})
+  });
+
+  // A LAND THAT GOES AND GETS A BASIC IS A COLOUR NEXT TURN, NOT THIS ONE.
+  // entersTapped was read off the fetch's own text, and a fetch does not print
+  // "enters tapped" because the fetch is not the land that does. So Evolving
+  // Wilds and Terramorphic Expanse modelled as UNTAPPED FIVE-COLOUR LANDS,
+  // available the turn they were played -- strictly better than any land in Magic.
+  for (const name of ["Evolving Wilds", "Terramorphic Expanse", "Fabled Passage", "Naya Panorama", "Bant Panorama"]) {
+    const land = read(name);
+    assert.equal(land.isLand, true, `${name} should be a land`);
+    assert.equal(land.entersTapped, true, `${name} must not be an untapped source of the colour it fetches`);
+    assert.ok(land.produces.length >= 3, `${name} keeps the colours it can go and get`);
+  }
+  // ...and the ones that DO print the words still agree.
+  assert.equal(read("Myriad Landscape").entersTapped, true);
+  assert.equal(read("Krosan Verge").entersTapped, true);
+
+  // A real untapped land is untouched by any of that.
+  for (const name of ["Command Tower", "Exotic Orchard"]) {
+    assert.equal(read(name).entersTapped, false, `${name} is untapped and must stay untapped`);
+    assert.equal(read(name).produces.length, 5, `${name} makes every colour`);
+  }
+
+  // A TRUE DUAL PRINTS ITS MANA ABILITY AS REMINDER TEXT, because the ability
+  // comes from the basic land types on the type line -- "({T}: Add {W} or {U}.)"
+  // is the entirety of Tundra. The fetch test therefore has to ask its question
+  // of the UNSTRIPPED text: ask it of the stripped text and every dual in Magic
+  // has no mana ability of its own, which makes every dual a fetch.
+  const tundra = Engine.classifyCard({name: "Tundra", typeLine: "Land — Plains Island",
+    oracleText: "({T}: Add {W} or {U}.)"});
+  assert.deepEqual(tundra.produces.slice().sort(), ["U", "W"], "a dual keeps its colours with no colour identity to fall back on");
+  assert.equal(tundra.entersTapped, false, "a dual is not a fetch");
+  const shock = Engine.classifyCard({name: "Sacred Foundry", typeLine: "Land — Mountain Plains",
+    oracleText: "({T}: Add {R} or {W}.)\nAs this land enters, you may pay 2 life. If you don't, it enters tapped."});
+  assert.deepEqual(shock.produces.slice().sort(), ["R", "W"]);
+
+  // The shape where the two texts actually disagree, and the reason the fetch test
+  // is asked of the raw one: a land with a basic land type -- so its mana ability
+  // is printed as reminder text -- that ALSO goes and gets a basic. Read the
+  // stripped text and it has no mana ability of its own, which makes it a fetch and
+  // takes its untapped colours away. No printed card is this today; a pasted deck
+  // is not limited to printed cards this catalog happens to carry.
+  const both = Engine.classifyCard({name: "Fixture Verge", typeLine: "Land — Plains Island",
+    oracleText: "({T}: Add {W} or {U}.)\n{T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle."});
+  assert.deepEqual(both.produces.slice().sort(), ["U", "W"], "it makes its own colours");
+  assert.equal(both.entersTapped, false,
+    "a land that makes its own colour is not a fetch, however much else it also does");
+
+  // WHERE A KEYWORD STATES ITS EFFECT ONLY IN REMINDER TEXT, the card is credited
+  // with nothing -- deliberately, because reminder text is stripped before a card
+  // is read and these two would otherwise be read out of the parentheses.
+  const landcycler = Engine.classifyCard({name: "Fixture Landcycler", typeLine: "Creature — Test",
+    manaCost: "{2}{G}",
+    oracleText: "Basic landcycling {1}{G} ({1}{G}, Discard this card: Search your library for a basic land card, reveal it, put it into your hand, then shuffle.)"});
+  assert.equal(landcycler.isRamp, false, "basic landcycling puts a land in HAND: card selection, not acceleration");
+  const investigator = Engine.classifyCard({name: "Fixture Investigator", typeLine: "Creature — Test",
+    manaCost: "{1}{U}",
+    oracleText: "When this creature enters, investigate. (Create a Clue token. It's an artifact with \"{2}, Sacrifice this artifact: Draw a card.\")"});
+  assert.equal(investigator.isDraw, false, "a Clue draws for {2} and a sacrifice: gated, so uncredited");
+  assert.equal(investigator.isRamp, false);
+
+  // AND THE REMINDER-TEXT BUG THAT STARTED ALL OF THIS. Ward's reminder puts
+  // "counter" in the same sentence as "Double strike", so doubl(e|ing)[^.]*counter
+  // matched and a deck-wide +1/+1 counter doubler was set off a card with no
+  // counter interaction at all.
+  const guardian = Engine.classifyCard({name: "Bronze Guardian", typeLine: "Artifact Creature — Golem",
+    manaCost: "{4}{W}", power: "*", toughness: "4",
+    oracleText: "Double strike\nWard {2} (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays {2}.)\nOther artifacts you control have ward {2}."});
+  assert.equal(guardian.doublesCounters, false, "reminder text is not rules text");
+  // A TREASURE YOU MIGHT REACH IS NOT A TREASURE YOU MAKE. Currency Converter's
+  // cost is a bare {T}, so the cost test passed it and a one-mana Treasure engine
+  // was born -- when the Treasure needs a card discarded, exiled with this
+  // artifact, and a land at that.
+  assert.equal(read("Currency Converter").isRamp, false,
+    "a Treasure behind \"If it's a land card\" is not ramp");
+  // A trigger that names a condition is the ordinary shape of a trigger.
+  assert.equal(read("Smothering Tithe").isRamp, true, "Smothering Tithe is still ramp");
+  assert.equal(read("Pitiless Plunderer").isRamp, true, "Pitiless Plunderer is still ramp");
+
+}
+
 console.log(`Simulation engine verified: deterministic under seed, discriminating between decks (My Fun and Pod Fun both range-checked), and capped by the runner at ${tinyConfig.maxTotalSimulations} games.`);

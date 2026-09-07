@@ -209,6 +209,88 @@ and why.
 
 ---
 
+## 0 · What the engine reads before it plays anything — **corrected, engine v2.6**
+
+*Landed 2026-09-07. Numbered zero because it comes before everything else in this document:
+a model can be perfect and still be wrong about the card in front of it, and every section
+below assumes the engine understood the hundred it was handed.*
+
+This section exists because of an evaluation on `claude/serene-curie-w23aan` (PR #54), which
+read `classifyCard` against the real catalog rather than watching a score look wrong. Two of
+its findings were still live on `main`, and both were about a card the engine had
+misunderstood while producing a perfectly plausible number.
+
+**A fetch land was an untapped land of every colour it could reach.** `entersTapped` was read
+off the fetch's own text — and a fetch does not print *"enters tapped"*, because the fetch is
+not the land that does. So:
+
+| card | modelled as | actually |
+|---|---|---|
+| Evolving Wilds | untapped, W U B R G, turn it is played | fetches a basic **tapped** |
+| Terramorphic Expanse | untapped, W U B R G | fetches a basic **tapped** |
+| Fabled Passage | untapped, W U B R G | tapped unless you control ≤4 lands |
+| Naya Panorama | untapped, R G W | **{1}** on top of the sacrifice, and tapped |
+| Bant Panorama | untapped, G W U | as above |
+
+Two five-colour lands available the turn they are played is strictly better than any land in
+Magic. Five lands change. Myriad Landscape and Krosan Verge already read as tapped, because
+they print the words; this makes the other five agree with them. The fetch now enters tapped,
+which costs it the `{C}` the Panoramas really do tap for that turn and still does not charge
+the mana to crack them — two errors pointing opposite ways, with the colour landing on the
+right turn.
+
+**The question has to be asked of the unstripped text.** A true dual prints its whole mana
+ability as reminder text, because the ability comes from the basic land types on the type
+line — `({T}: Add {W} or {U}.)` is the entirety of Tundra. Ask "does this land make its own
+colour" of the *stripped* text and every dual in Magic has no mana ability, which makes every
+dual a fetch. `producedColors` already reads the raw text for exactly this reason; the fetch
+test now does too, and `tests/sim-engine.mjs` pins it with a land that both fetches and
+prints its ability only in parentheses.
+
+**A Treasure you might reach was a Treasure you make.** `makesTreasureFreely` tested only the
+cost before the colon. Currency Converter's is a bare `{T}` — so it modelled as a one-mana
+Treasure engine, when the Treasure needs a card discarded, exiled with the artifact, and a
+land at that. What a bare `{T}` buys now has to *be* the Treasure, not a Treasure it might
+reach. Exactly one card in the catalog changes, and it is in no shipped deck; Smothering
+Tithe's *"if the player doesn't"* is the ordinary shape of a trigger and is still ramp.
+
+**What it cost.** Only the three decks holding fetches move, and only downward:
+
+| deck | v2.5 | v2.6 | change |
+|---|---:|---:|---:|
+| D1 Quintorius | 78.13 | 77.60 | −0.53 |
+| D2 Chulane | 57.85 | 57.53 | −0.32 |
+| D3 Atraxa | 82.50 | 82.33 | −0.17 |
+| D4 Felothar | 65.70 | 65.70 | — |
+| D5 Shadrix | 79.57 | 79.57 | — |
+| D6 Krenko | 65.05 | 65.05 | — |
+
+Three decks unchanged to the digit is the confirmation that the change is scoped to what it
+claims: those three hold no fetch land.
+
+**Across all 200 rungs**, re-measured together on six seeds of 20,000 games
+(`tools/sim/remeasure-all.mjs --write`, 1,058 s): **134 lower, 0 higher, mean −0.31**, biggest
+fall 4o Max at −1.57. *Nothing rose*, and that is the check worth making: both corrections
+only take away credit the engine was giving — a fetch that was untapped is now tapped, a
+Treasure that was ramp is now not. A rung that had gone **up** would have meant the change
+did something other than what it says.
+
+The two published caveats — `inversions` and `podFunOverCeiling` — name the same five
+variants each as before, but their magnitudes were being carried forward from the previous
+engine while the test only checked the names. `remeasure-all.mjs` now recomputes both from
+the numbers it just wrote.
+
+**Already landed by another route, and worth recording so it is not rediscovered:** reminder
+text is stripped before a card is read. Ward's reminder put *"counter"* in the same sentence
+as *"Double strike"* on Bronze Guardian, so `doubl(e|ing)[^.]*counter` matched and a deck-wide
++1/+1 counter doubler was set off a card with no counter interaction at all. That fix is on
+`main`; what was missing was a test saying so, and the two keywords whose real effect lives
+*only* in the reminder — **basic landcycling** (a land to your hand, so card selection rather
+than acceleration) and **investigate** (a Clue, which draws only for `{2}` and a sacrifice, so
+gated) — are now deliberately and testably uncredited rather than accidentally so.
+
+---
+
 ## 3a · The pilot was a constant, and now it is a parameter — **built**
 
 *Landed 2026-09-07 as `pilot-policy.js`. This section records what it found, including two
