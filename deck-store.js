@@ -98,7 +98,12 @@
         // list that prints it as free is worse than one that prints a dash.
         price: fact.price == null || fact.price === "" ? null : Number(fact.price),
         gameChanger: Boolean(fact.gameChanger),
-        image: fact.image || fact.imageLarge || ""
+        image: fact.image || fact.imageLarge || "",
+        /* A card added from a link that Scryfall could not place. It carries where it came
+           from so the deck can say so, and so manual-cards.js can ask again later. */
+        manual: Boolean(fact.manual),
+        source: fact.manual ? (fact.source || "") : "",
+        sourceSite: fact.manual ? (fact.sourceSite || "") : ""
       };
     });
     return {
@@ -148,7 +153,19 @@
       found.push(`${dropped.length} name${dropped.length === 1 ? "" : "s"} you left out: ` +
         `${dropped.slice(0, 4).join(", ")}${dropped.length > 4 ? "…" : ""}`);
     }
-    const blank = record.cards.filter((c) => !c.typeLine);
+    /* A card added from a link is missing its text for a reason the reader chose, and the
+       reason is temporary -- manual-cards.js asks Scryfall again on every load. Saying
+       "no printed text" about it reads as a failure; saying where it came from reads as
+       the state it is actually in. */
+    const manual = record.cards.filter((c) => c.manual);
+    if (manual.length) {
+      found.push(`${manual.length} card${manual.length === 1 ? "" : "s"} added from a link ` +
+        `that Scryfall does not have yet: ${manual.slice(0, 4).map((c) => c.name).join(", ")}` +
+        `${manual.length > 4 ? "…" : ""}. ` +
+        `${manual.length === 1 ? "It is" : "They are"} in the deck; ` +
+        `the simulation cannot play ${manual.length === 1 ? "it" : "them"} until the card is indexed.`);
+    }
+    const blank = record.cards.filter((c) => !c.typeLine && !c.manual);
     if (blank.length) {
       found.push(`${blank.length} card${blank.length === 1 ? " has" : "s have"} no printed text, ` +
         `so the simulation would be guessing about ${blank.length === 1 ? "it" : "them"}.`);

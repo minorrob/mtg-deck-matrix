@@ -34,7 +34,8 @@ check("every key names a module, and no key is listed twice", () => {
 });
 
 const sources = Object.fromEntries(await Promise.all(
-  ["app.js", "viewer.js", "graph-page.js", "custom-model.js", "deck-store.js", "shop-filters.js"]
+  ["app.js", "viewer.js", "graph-page.js", "custom-model.js", "deck-store.js", "shop-filters.js",
+    "manual-cards.js", "user-state.js"]
     .map(async (f) => [f, await readFile(new URL(`../${f}`, import.meta.url), "utf8")])
 ));
 const allSource = Object.values(sources).join("\n");
@@ -154,6 +155,77 @@ check("the committed default load is a real backup of nothing but named keys", a
   const picks = Object.keys(state.buySelections || {});
   assert.equal(picks.length, 6, `the default load carries the six built decks, not ${picks.length}`);
   assert.deepEqual(picks.sort(), ["1b", "2c", "3o", "4e", "5o", "7e"]);
+});
+
+/* ---------------------------------------------------------------------------
+   CLEARING IS A DECISION, NOT JUST A DELETION.
+   The bug: Clear session emptied the page, and then adding ONE deck of your own brought
+   all six shipped decks back -- with their collection, their bench and their ownership
+   figures -- because the app decided what to show by asking "has this browser saved
+   anything?" and saving your deck changed the answer. 459 bench copies of someone else's
+   cards, for the crime of adding a deck. What follows pins the recorded decision that
+   replaced the inference.
+   --------------------------------------------------------------------------- */
+
+check("a browser that has never opened the app starts empty, and says so out loud", () => {
+  const jar = store();
+  assert.equal(User.startsEmpty(jar), true);
+  assert.equal(User.catalogSource(jar), "empty", "the answer is written down, not re-guessed");
+});
+
+check("a browser that already had state keeps the six", () => {
+  const jar = store();
+  jar.setItem("mtg-imported-decks.v1", "[]");
+  assert.equal(User.startsEmpty(jar), false);
+  assert.equal(User.catalogSource(jar), "default");
+});
+
+check("adding a deck after a clear does not bring the six back", () => {
+  const jar = store();
+  jar.setItem("mtg-viewer-inventory.v1", '{"cards":[]}');
+  jar.setItem("mtg-deck-matrix-state-v1", "{}");
+  assert.equal(User.startsEmpty(jar), false, "before the clear, the six are there");
+
+  User.clearAll(jar, null);
+  User.setCatalogSource(jar, "empty");          // what Clear session does
+  assert.equal(User.startsEmpty(jar), true);
+
+  jar.setItem("mtg-imported-decks.v1", '[{"id":"U1"}]');   // and now you add a deck
+  assert.equal(User.startsEmpty(jar), true,
+    "THE BUG: this used to flip back to false and resurrect six decks and a bench");
+});
+
+check("Load default is the one thing that brings them back", () => {
+  const jar = store();
+  User.setCatalogSource(jar, "empty");
+  assert.equal(User.startsEmpty(jar), true);
+  User.setCatalogSource(jar, "default");
+  assert.equal(User.startsEmpty(jar), false);
+});
+
+check("the note about which catalog to start from is not counted as something you saved", () => {
+  const jar = store();
+  User.setCatalogSource(jar, "empty");
+  assert.equal(User.present(jar).length, 0,
+    "or Clear session offers to clear the note it just wrote");
+  assert.equal(User.isFresh(jar), true);
+  const gone = User.clearAll(jar, null);
+  assert.ok(gone.keys.includes(User.CATALOG_KEY),
+    "it is still removed by a clear -- it is just not advertised");
+});
+
+check("a junk value falls back to deciding rather than to a broken third state", () => {
+  const jar = store();
+  jar.setItem(User.CATALOG_KEY, "banana");
+  assert.equal(User.catalogSource(jar), "");
+  assert.equal(User.startsEmpty(jar), true, "nothing else saved, so: empty");
+});
+
+check("both pages ask the same question, and neither one infers it any more", () => {
+  assert.match(sources["viewer.js"], /User\.startsEmpty\(window\.localStorage\)/);
+  assert.match(sources["graph-page.js"], /User\.startsEmpty\(window\.localStorage\)/);
+  assert.ok(!/isFresh\(window\.localStorage\) && !\(IMPORTS/.test(sources["viewer.js"]),
+    "the old inference must be gone, not merely unused");
 });
 
 console.log(`\nuser-state: ${checks} checks passed across ${User.keys().length} saved keys.`);

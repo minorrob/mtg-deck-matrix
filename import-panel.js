@@ -172,6 +172,33 @@
      */
     let fixes = {};        // asked name -> chosen card, or null for "leave it out"
     let lookups = [];      // one resolveName result per unmatched name
+    let linkText = {};     // asked name -> what is typed in that row's link box
+    let linkState = {};    // asked name -> {busy, tone, message} for that row's link box
+    let focusLink = "";    // the row whose link box should hold focus after a redraw
+
+    /* THE CARDS THE LIST ALREADY HAS are never offered as a match for a name it does not.
+       Commander is singleton: a candidate the deck already holds is not the card somebody
+       meant, it is a second copy of a card they already have, and picking it builds an
+       illegal hundred. Basics are the exception the format itself makes -- a list may hold
+       any number of them -- so they stay available. */
+    function alreadyInDeck() {
+      return (deck && deck.cards || [])
+        .filter((entry) => !(entry.card && (entry.card.isBasicLand || /\bBasic Land\b/.test(entry.card.typeLine || ""))))
+        .map((entry) => entry.name)
+        .filter(Boolean);
+    }
+
+    /* A card chosen for ONE unmatched name cannot also be the answer to another. Two typos
+       of the same card in one list is a real paste; silently letting both through is a
+       duplicate nobody asked for. */
+    function chosenElsewhere(asked) {
+      const taken = {};
+      Object.keys(fixes).forEach((name) => {
+        if (name === asked || !fixes[name] || !fixes[name].name) return;
+        taken[String(fixes[name].name).toLowerCase()] = name;
+      });
+      return taken;
+    }
 
     async function renderFixNames() {
       const names = deck.unresolved.slice();
@@ -183,11 +210,14 @@
       const list = host.querySelector("[data-imp-fix]");
       fixes = {};
       lookups = [];
+      linkText = {};
+      linkState = {};
       try {
         lookups = await opts.resolveNames(names, {
+          exclude: alreadyInDeck(),
           onEach: (result, index) => {
             say(`Looked up ${index + 1} of ${names.length}…`);
-            list.innerHTML = renderFixRows(lookups.concat([result]), names);
+            list.innerHTML = renderFixRows(lookups.concat([result]));
           }
         });
       } catch (err) {
@@ -209,10 +239,23 @@
       drawFix();
     }
 
-    function renderFixRows(results, names) {
+    function renderFixRows(results) {
       return results.map((result) => {
         const chosen = fixes[result.name];
         const chosenKey = chosen ? String(chosen.name).toLowerCase() : "";
+        const taken = chosenElsewhere(result.name);
+        /* A card that arrived by link is not among the five guesses, so it is drawn as its
+           own option -- already picked, and saying where it came from. */
+        const fromLink = chosen && chosen.viaLink
+          ? `<button type="button" class="imp-fix-opt is-on is-link"
+                data-fix-for="${esc(result.name)}" data-fix-unlink aria-pressed="true">
+              <b>${esc(chosen.name)}</b>
+              <span>${esc(chosen.manual
+                ? "From your link · Scryfall does not have this card yet"
+                : "From your link · " + (chosen.viaLink || "matched on Scryfall"))}</span>
+            </button>`
+          : "";
+        const state = linkState[result.name] || {};
         return `<div class="imp-fix-row">
           <div class="imp-fix-asked">
             <b>${esc(result.name)}</b>
@@ -221,32 +264,92 @@
               : "no match found"}</span>
           </div>
           <div class="imp-fix-options">
-            ${result.candidates.map((entry) => `
-              <button type="button" class="imp-fix-opt${String(entry.name).toLowerCase() === chosenKey ? " is-on" : ""}"
+            ${fromLink}
+            ${result.candidates.map((entry) => {
+              const key = String(entry.name).toLowerCase();
+              const usedFor = taken[key];
+              return `<button type="button" class="imp-fix-opt${key === chosenKey ? " is-on" : ""}${usedFor ? " is-taken" : ""}"
                 data-fix-for="${esc(result.name)}" data-fix-pick="${esc(entry.name)}"
-                aria-pressed="${String(entry.name).toLowerCase() === chosenKey ? "true" : "false"}">
+                ${usedFor ? "disabled" : ""}
+                aria-pressed="${key === chosenKey ? "true" : "false"}">
                 <b>${esc(entry.name)}</b>
-                <span>${esc(entry.why)}${entry.card && (entry.card.typeLine || entry.card.type)
-                  ? " · " + esc(entry.card.typeLine || entry.card.type) : ""}</span>
-              </button>`).join("")}
+                <span>${usedFor
+                  ? "Already used for " + esc(usedFor)
+                  : esc(entry.why) + (entry.card && (entry.card.typeLine || entry.card.type)
+                    ? " · " + esc(entry.card.typeLine || entry.card.type) : "")}</span>
+              </button>`;
+            }).join("")}
             <button type="button" class="imp-fix-opt is-drop${chosen === null ? " is-on" : ""}"
               data-fix-for="${esc(result.name)}" data-fix-drop
               aria-pressed="${chosen === null ? "true" : "false"}">
               <b>Leave it out</b><span>The deck is one card shorter</span>
             </button>
           </div>
-          <p class="imp-fix-links">Not here? Look it up on
+          ${opts.resolveLink ? `
+          <div class="imp-fix-link">
+            <label>
+              <span>Know the card? Paste a link to it</span>
+              <input type="url" spellcheck="false" data-fix-link="${esc(result.name)}"
+                value="${esc(linkText[result.name] || "")}"
+                placeholder="https://scryfall.com/card/… · tcgplayer.com/product/…"
+                ${state.busy ? "disabled" : ""}>
+            </label>
+            <button class="btn ghost" type="button" data-fix-linkgo="${esc(result.name)}"
+              ${state.busy ? "disabled" : ""}>${state.busy ? "Reading…" : "Use link"}</button>
+          </div>
+          ${state.message ? `<p class="imp-fix-linknote${state.tone ? " is-" + state.tone : ""}">${esc(state.message)}</p>` : ""}
+          ` : ""}
+          <p class="imp-fix-links">Not sure? Look it up on
             <a href="${esc(Resolve.scryfallSearchUrl(result.name))}" target="_blank" rel="noopener noreferrer">Scryfall</a> or
             <a href="${esc(Resolve.storeSearchUrl(result.name))}" target="_blank" rel="noopener noreferrer">TCGplayer</a>,
-            then paste the list again with the right name.</p>
+            then paste the link back here.</p>
         </div>`;
       }).join("");
+    }
+
+    /* One row's link box. The ladder is in card-link.js; this is what the reader sees of it.
+       A link that resolves to a real card picks that card. A link that resolves to nothing
+       still answers -- it becomes a manual card, which is a real entry in the deck that says
+       out loud what it is missing. Either way the row is decided and the reader moves on. */
+    async function useLink(asked) {
+      const raw = (linkText[asked] || "").trim();
+      if (!raw) {
+        linkState[asked] = {tone: "warn", message: "Paste the address of the card's page first."};
+        return drawFix();
+      }
+      linkState[asked] = {busy: true, message: "Reading that link…"};
+      drawFix();
+      let answer;
+      try {
+        answer = await opts.resolveLink(raw, {name: asked});
+      } catch (error) {
+        answer = {error: String(error && error.message || error)};
+      }
+      if (!answer || (!answer.card && !answer.manual)) {
+        linkState[asked] = {tone: "warn",
+          message: (answer && answer.error) || "That link did not lead to a card."};
+        focusLink = asked;
+        return drawFix();
+      }
+      const card = answer.card || answer.manual;
+      const taken = chosenElsewhere(asked);
+      if (taken[String(card.name).toLowerCase()]) {
+        linkState[asked] = {tone: "warn",
+          message: `${card.name} is already the answer to ${taken[String(card.name).toLowerCase()]}.`};
+        focusLink = asked;
+        return drawFix();
+      }
+      fixes[asked] = Object.assign({}, card, {viaLink: answer.via || "matched on Scryfall"});
+      linkState[asked] = {tone: "ok", message: answer.card
+        ? `${card.name}, from ${answer.link && answer.link.site ? answer.link.site : "that link"}.`
+        : `Added as ${card.name}. Scryfall does not have this card yet, so it goes in without its rules text and the app will ask again later.`};
+      drawFix();
     }
 
     function drawFix() {
       const undecided = lookups.filter((result) => fixes[result.name] === undefined).length;
       const list = host.querySelector("[data-imp-fix]");
-      if (list) list.innerHTML = renderFixRows(lookups, deck.unresolved);
+      if (list) list.innerHTML = renderFixRows(lookups);
       const lede = host.querySelector(".imp-lede");
       if (lede) {
         lede.textContent = undecided
@@ -266,6 +369,11 @@
         const asked = button.dataset.fixFor;
         if (button.hasAttribute("data-fix-drop")) {
           fixes[asked] = fixes[asked] === null ? undefined : null;
+        } else if (button.hasAttribute("data-fix-unlink")) {
+          // Pressing the card a link found puts the row back to undecided, the same way
+          // pressing an already-chosen candidate does.
+          fixes[asked] = undefined;
+          linkState[asked] = {};
         } else {
           const result = lookups.find((r) => r.name === asked);
           const entry = result && result.candidates.find((c) => c.name === button.dataset.fixPick);
@@ -274,6 +382,23 @@
         }
         drawFix();
       }));
+
+      /* The link box holds its value in state rather than in the DOM, because every pick
+         on this screen redraws the whole list and a half-typed address must survive it. */
+      host.querySelectorAll("[data-fix-link]").forEach((input) => {
+        input.addEventListener("input", () => { linkText[input.dataset.fixLink] = input.value; });
+        input.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") { event.preventDefault(); useLink(input.dataset.fixLink); }
+        });
+      });
+      host.querySelectorAll("[data-fix-linkgo]").forEach((button) => {
+        button.addEventListener("click", () => useLink(button.dataset.fixLinkgo));
+      });
+      if (focusLink) {
+        const input = host.querySelector(`[data-fix-link="${CSS && CSS.escape ? CSS.escape(focusLink) : focusLink}"]`);
+        focusLink = "";
+        if (input) { input.focus(); input.select(); }
+      }
     }
 
     function applyFixes() {
@@ -283,8 +408,15 @@
       const fetched = {};
       const dropped = [];
       Object.keys(fixes).forEach((asked) => {
-        if (fixes[asked]) fetched[asked] = fixes[asked];
-        else if (fixes[asked] === null) dropped.push(asked);
+        if (fixes[asked]) {
+          // viaLink is a note for this screen only; it must not travel into the deck.
+          const {viaLink, ...card} = fixes[asked];
+          fetched[asked] = card;
+          /* A card Scryfall could not place is remembered as a population, not as a
+             one-off: manual-cards.js asks about all of them again on every load, and the
+             day this one is indexed it stops being manual wherever it sits. */
+          if (card.manual && opts.onManualCard) opts.onManualCard(card);
+        } else if (fixes[asked] === null) dropped.push(asked);
       });
       deck = Import.applyFallback(deck, fetched);
       // Kept so the review can say "you left this out" rather than "this failed".

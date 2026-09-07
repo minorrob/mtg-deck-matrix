@@ -34,6 +34,12 @@
     {key: "mtg-deck-matrix-state-v1", owner: "app.js", what: "deck picks, buys, Shop marks, prices and the game log"},
     {key: "mtg-deck-matrix-custom-v1", owner: "custom-model.js", what: "decks built on the Choose step"},
     {key: "mtg-imported-decks.v1", owner: "deck-store.js", what: "decks you added or built"},
+    {key: "mtg-manual-cards.v1", owner: "manual-cards.js", what: "cards you added from a link that Scryfall does not have yet"},
+    /* Not a thing the reader saved -- a note about which catalog this browser starts
+       from. It is backed up and cleared with everything else, but it is not counted as
+       "something saved", so clearing a browser that holds only this still reports the
+       clean slate it is. */
+    {key: "mtg-catalog-source.v1", owner: "user-state.js", meta: true, what: "which catalog this browser starts from"},
     {key: "mtg-viewer-inventory.v1", owner: "viewer.js", what: "the collection you uploaded"},
     {key: "mtg-viewer.v1", owner: "viewer.js", what: "cards ticked on the Bench and To Buy"},
     {key: "mtg-viewer-archived.v1", owner: "viewer.js", what: "which decks you archived"},
@@ -67,6 +73,17 @@
   function present(storage) {
     if (!storage) return [];
     return KEYS.filter(function (k) {
+      if (k.meta) return false;
+      try { return storage.getItem(k.key) !== null; } catch (err) { return false; }
+    });
+  }
+
+  /* clearAll has to remove the meta keys too, or a clear leaves a note behind about a
+     catalog that is no longer there. present() is what the reader is TOLD about; this is
+     what is actually removed. */
+  function held(storage) {
+    if (!storage) return [];
+    return KEYS.filter(function (k) {
       try { return storage.getItem(k.key) !== null; } catch (err) { return false; }
     });
   }
@@ -78,7 +95,7 @@
    * queries -- there is no list of them, and there is no other writer on this origin.
    */
   function clearAll(storage, session) {
-    var gone = present(storage).map(function (k) { return k.key; });
+    var gone = held(storage).map(function (k) { return k.key; });
     gone.forEach(function (key) {
       try { storage.removeItem(key); } catch (err) { /* nothing more to do about it */ }
     });
@@ -100,6 +117,55 @@
   /** True when this browser looks like one that has never opened the app. */
   function isFresh(storage) { return present(storage).length === 0; }
 
+  /* WHICH CATALOG THIS BROWSER STARTS FROM, decided once and then left alone.
+   * ------------------------------------------------------------------------
+   * It used to be inferred on every render: "show the six shipped decks unless this
+   * browser has saved nothing at all". Which meant Clear session emptied the page, and
+   * then adding a single deck of your own brought all six back -- along with their
+   * collection, their bench and their ownership figures -- because saving that deck made
+   * the browser no longer empty. Somebody who had deliberately cleared everything got
+   * 459 bench copies of someone else's cards for the crime of adding a deck.
+   *
+   * The inference was never the point; it was a guess at a decision. So the decision is
+   * recorded instead:
+   *
+   *   "empty"    start with nothing. Set by Clear session, and by the first boot of a
+   *              browser that had nothing saved. Adding decks does not change it.
+   *   "default"  start with the six shipped decks and the collection behind them. Set by
+   *              Load default, and by the first boot of a browser that already had state.
+   *
+   * `resolve` is the one both pages call: it answers, and on a browser that has never
+   * decided it writes down the answer so the same question cannot be answered differently
+   * five minutes later.
+   */
+  var CATALOG_KEY = "mtg-catalog-source.v1";
+
+  function catalogSource(storage) {
+    if (!storage) return "";
+    try {
+      var value = storage.getItem(CATALOG_KEY);
+      return value === "empty" || value === "default" ? value : "";
+    } catch (err) { return ""; }
+  }
+
+  function setCatalogSource(storage, value) {
+    if (!storage) return value;
+    try {
+      if (value === "empty" || value === "default") storage.setItem(CATALOG_KEY, value);
+      else storage.removeItem(CATALOG_KEY);
+    } catch (err) { /* storage off or full; the inference below still answers */ }
+    return value;
+  }
+
+  function resolveCatalogSource(storage) {
+    var recorded = catalogSource(storage);
+    if (recorded) return recorded;
+    return setCatalogSource(storage, isFresh(storage) ? "empty" : "default");
+  }
+
+  /** True when this browser should show no shipped decks and no shipped ownership. */
+  function startsEmpty(storage) { return resolveCatalogSource(storage) === "empty"; }
+
   /**
    * EVERYTHING, AS ONE FILE.
    *
@@ -116,7 +182,10 @@
    */
   function snapshot(storage) {
     var values = {};
-    present(storage).forEach(function (k) {
+    /* held(), not present(): a backup has to cover exactly what a clear destroys, and the
+       clear takes the meta keys too. Restoring a backup of a cleared browser should give
+       back a cleared browser, not one that re-guesses. */
+    held(storage).forEach(function (k) {
       try { values[k.key] = storage.getItem(k.key); } catch (err) { /* skip it */ }
     });
     return {
@@ -149,5 +218,8 @@
   }
 
   return {KEYS: KEYS, SESSION_PREFIX: SESSION_PREFIX, keys: keys, present: present,
-          clearAll: clearAll, isFresh: isFresh, snapshot: snapshot, restore: restore};
+          clearAll: clearAll, isFresh: isFresh, snapshot: snapshot, restore: restore,
+          CATALOG_KEY: CATALOG_KEY, catalogSource: catalogSource,
+          setCatalogSource: setCatalogSource, resolveCatalogSource: resolveCatalogSource,
+          startsEmpty: startsEmpty};
 });

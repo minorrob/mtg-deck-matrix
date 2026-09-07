@@ -157,6 +157,10 @@
       return;
     }
     var gone = User.clearAll(window.localStorage, window.sessionStorage);
+    /* Clearing is a decision, not just a deletion: this browser starts empty from now on,
+       and adding a deck of your own must not bring the six shipped ones back with their
+       collection and their bench. Recorded here so the next boot cannot re-infer it. */
+    if (User.setCatalogSource) User.setCatalogSource(window.localStorage, "empty");
     if (options.onCleared) options.onCleared(gone);
   }
 

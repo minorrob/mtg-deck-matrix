@@ -33,6 +33,12 @@
  * own eyes -- which is the honest version of "check a second source" for a page with no
  * credentials.
  *
+ * NEVER OFFERS A CARD THE LIST ALREADY HAS. Commander is a singleton format, so a candidate
+ * already sitting in the deck is not a possible answer -- it is a way to build an illegal
+ * hundred. `options.exclude` is the names to keep off every rung, and the caller fills it
+ * with the cards that resolved, minus the basics, because a basic land is the one card a
+ * decklist is allowed to repeat.
+ *
  * PURE apart from the client it is handed. tests/card-resolve.mjs runs the whole ladder
  * against a stub.
  */
@@ -122,13 +128,17 @@
   /* Every rung's findings land here, with the first reason a card was found kept: a card
      that autocomplete offered AND fuzzy guessed is one candidate, described by the
      stronger of the two. */
-  function collector() {
+  function collector(blocked) {
     var seen = Object.create(null);
     var out = [];
+    var off = blocked || Object.create(null);
     return {
       add: function (card, why, rung) {
         if (!card || !card.name) return;
         var k = key(card.name);
+        /* A card the list already holds is not a candidate at any rung -- not from the
+           registry, not from autocomplete, not as Scryfall's confident fuzzy guess. */
+        if (off[k]) return;
         if (seen[k]) return;
         seen[k] = 1;
         out.push({card: card, name: card.name, why: why, rung: rung});
@@ -152,7 +162,12 @@
     var asked = clean(name);
     var opts = options || {};
     var limit = opts.limit || CAP;
-    var found = collector();
+    var blocked = Object.create(null);
+    (opts.exclude || []).forEach(function (name) {
+      var k = key(name);
+      if (k && k !== key(asked)) blocked[k] = 1;
+    });
+    var found = collector(blocked);
     var searched = [];
     var errors = [];
 
@@ -167,6 +182,7 @@
       searched.push("registry");
       var near = [];
       for (var n = 0; n < localNames.length; n += 1) {
+        if (blocked[key(localNames[n])]) continue;
         var score = diceScore(asked, localNames[n]);
         if (score >= 0.45) near.push({name: localNames[n], score: score});
       }
@@ -250,7 +266,12 @@
         shortlist = shortlist.map(function (entry) {
           var full = byName[key(entry.name)];
           return full ? Object.assign({}, entry, {card: full, name: full.name}) : entry;
-        }).filter(function (entry) { return entry.card.typeLine || entry.card.type_line || entry.rung !== "registry"; });
+        }).filter(function (entry) {
+          /* Scryfall can answer under a different name than the registry offered, and that
+             name may be one the deck already has. Check again on the way out. */
+          if (blocked[key(entry.name)]) return false;
+          return entry.card.typeLine || entry.card.type_line || entry.rung !== "registry";
+        });
       });
     }
     exact = shortlist.filter(function (entry) { return key(entry.name) === key(asked); })[0] || exact;
