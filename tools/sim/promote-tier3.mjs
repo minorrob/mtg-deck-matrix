@@ -406,7 +406,7 @@ if (args.write) {
       games: GAMES, holdoutGames: GAMES, score: Number(m.score.toFixed(1)),
       powerScore: Number(m.score.toFixed(1)), winPct: Number(m.winRate.toFixed(4)),
       tier: 3, iterations: 0, verdict: row.promoted ? "tier-3-promoted" : "no-tier-3-headroom",
-      swaps: row.promoted, engine: "v2.4",
+      swaps: row.promoted, engine: "v2.5",
       note: row.promoted
         ? `${row.promoted} Game Changer${row.promoted === 1 ? "" : "s"} promoted into the rung; ${row.gcInFinal} in the finished deck, against Bracket 3's limit of three`
         : "no in-color Game Changer could be added without breaking the deck",

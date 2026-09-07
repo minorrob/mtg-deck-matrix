@@ -516,7 +516,7 @@ for (const variantId of ["1o", "2c", "3e", "4c", "5o", "6f"]) {
 // The published numbers. Every rung either reports a full measurement or says
 // plainly that it was not measured; nothing is inferred at render time, and no
 // figure survives from an engine that asked a different question.
-const ENGINE = "v2.4";
+const ENGINE = "v2.5";
 const MEASURED_RUNGS = ["Base", "Tuned", "Pod Fun", "Max"];
 assert.equal(simulationSummary.engine, ENGINE, `the summary must name the engine that produced it`);
 assert(simulationSummary.engineNotes?.[ENGINE], "simulation summary must document the engine generation it references");
@@ -601,13 +601,18 @@ for (const variantId of LIGHTWEIGHT_ALT_CASE_IDS) {
   assert(Number.isInteger(altCase.currentRank) && altCase.currentRank >= 1, `${variantId}: must carry the current commander's rank among the measured field`);
   assert(Number.isInteger(altCase.candidatesMeasured) && altCase.candidatesMeasured > 0, `${variantId}: must report how many alternative commanders were actually measured`);
   assert(Number.isInteger(altCase.gamesEach) && altCase.gamesEach > 0, `${variantId}: must report the game count each candidate was measured over`);
-  // Forty of the lighter-weight evaluations are still the v2.2 pass that measured
-  // fifteen candidate commanders apiece. The four decks that became my own were
-  // re-measured on the engine this file names, against a different and narrower
-  // field -- the legends already inside each deck -- so they carry that generation
-  // instead. Either way the case has to name the engine that produced its numbers.
-  const REMEASURED_ALT_CASES = new Set(["1b", "3o", "4e", "7e"]);
-  assert.equal(altCase.engine, REMEASURED_ALT_CASES.has(variantId) ? ENGINE : "v2.2", `${variantId}: lighter-weight evaluations must be tagged with the engine generation that measured them`);
+  /* Forty of the lighter-weight evaluations are still the v2.2 pass that measured fifteen
+     candidate commanders apiece. Four were re-measured on v2.4 against a narrower field --
+     the legends already inside each deck. Neither set has been re-measured since, so both
+     tags are LITERALS here rather than "whatever generation the file currently names": tying
+     a historical fact to a moving constant made the v2.5 re-bake demand that four cases
+     re-label themselves as something nobody had measured them on. */
+  const ALT_CASE_ENGINE = new Map([["1b", "v2.4"], ["3o", "v2.4"], ["4e", "v2.4"], ["7e", "v2.4"]]);
+  assert.equal(altCase.engine, ALT_CASE_ENGINE.get(variantId) || "v2.2", `${variantId}: lighter-weight evaluations must be tagged with the engine generation that measured them`);
+  /* And whichever generation it names has to be documented, because this file now holds
+     three of them and a tag nobody can look up is worse than no tag. */
+  assert(simulationSummary.engineNotes?.[altCase.engine],
+    `${variantId}: names engine ${altCase.engine}, which engineNotes does not describe`);
   assert((buyPlans.plans[variantId].altTuned || []).length === 0, `${variantId}: has only the lighter-weight evaluation, so altTuned must stay empty`);
   assert(altCase.honestRead.length > 40, `${variantId}: alt-commander case must carry a substantive caution paragraph, not a stub`);
 }

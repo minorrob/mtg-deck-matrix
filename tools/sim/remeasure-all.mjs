@@ -42,6 +42,12 @@ const WRITE = Boolean(args.write);
 const ONLY = args.variant || null;
 const GAMES = Number(args.games || 20000);
 const SEEDS = Number(args.seeds || 6);
+/* The baseline pass. Measures the same hundreds on the same uniform protocol but with the
+   printed bodies withheld, so the move a rung makes can be split into the part that is the
+   new data and the part that is only the new regime. Without this the two are confounded
+   and "every score fell" says nothing about why. */
+const NO_BODIES = Boolean(args["no-bodies"]);
+const ENGINE = NO_BODIES ? "v2.4-uniform" : "v2.5";
 
 const config = await loadConfig();
 const opponents = await loadOpponents();
@@ -70,8 +76,8 @@ function cardFor(name, quantity, isCommander) {
     typeLine: fact.typeLine || "",
     manaCost: fact.manaCost || "",
     oracleText: fact.oracleText || "",
-    power: fact.power,
-    toughness: fact.toughness,
+    power: NO_BODIES ? undefined : fact.power,
+    toughness: NO_BODIES ? undefined : fact.toughness,
     keywords: fact.keywords || [],
     colorIdentity: fact.colorIdentity || [],
     price: Number(fact.price || 0),
@@ -126,7 +132,8 @@ for (const id of ids) {
         funPct: scored.funScore,
         avgWinTurn: scored.avgWinTurn,
         games: GAMES * SEEDS,
-        se: scored.se
+        se: scored.se,
+        engine: ENGINE
       }
     });
     done += 1;
@@ -156,9 +163,26 @@ if (!WRITE) {
   process.exit(0);
 }
 
+if (NO_BODIES) {
+  console.log("\n--no-bodies is a baseline pass; it never writes. Compare its report with the real one.");
+  process.exit(0);
+}
 moves.forEach((m) => { Object.assign(summary.builds[m.id][m.rung], m.fields); });
 summary.generatedAt = new Date().toISOString();
-summary.engine = "sim-engine.js, printed bodies";
+summary.engine = ENGINE;
+summary.engineNotes = Object.assign({}, summary.engineNotes, {
+  [ENGINE]: "Measured on v2.5: the v2.4 model, with two changes that both re-base every " +
+    "number. First, creatures fight with their PRINTED power and toughness. Until this " +
+    "generation no card file carried those fields, so the engine estimated every body as " +
+    "max(1, round(cmc * 0.9)) -- a one-mana 2/1 played as a 1/1, a seven-mana 4/4 as a " +
+    "6/6, in a model whose whole business is combat. Second, all 200 rungs were measured " +
+    "TOGETHER on one protocol, six seeds of 20,000 games, rather than each carrying " +
+    "whatever size and seed its own optimizer stopped at. The second change matters more " +
+    "than it sounds: the v2.4 Max figures in particular came from a promotion pass that " +
+    "kept the swaps that measured best, which is a selection bias, and removing it moves " +
+    "some Max rungs by twenty points. No card moved -- the hundreds are exactly those in " +
+    "data/rung-lists.json."
+});
 summary.regimeNote = `All ${moves.length} rungs re-measured together by ` +
   `tools/sim/remeasure-all.mjs on ${SEEDS} seeds of ${GAMES.toLocaleString()} games, after ` +
   `printed power and toughness reached the engine for the first time. Before this run each ` +
