@@ -1067,6 +1067,87 @@
     });
   }
 
+  /* HOW YOU PLAY IT -- the other question the engine can answer.
+     -----------------------------------------------------------
+     The header score is a deck and a pilot multiplied together, and until now there
+     was one pilot, so it could not be factored. This runs the same hundred under two
+     ways of playing and then once more per decision with that decision handed back,
+     so the sentence it produces -- "you can play this deck competitively by attacking
+     whoever is closest to winning" -- names a decision that was measured on THIS deck
+     rather than one that sounds plausible.
+
+     Held in memory only, keyed by the hundred's own hash. It is a reading of the deck,
+     not a fact about it: nothing is written to the record, nothing reaches localStorage,
+     and a cleared session has nothing of it left to clear. Re-running costs seconds. */
+  var PILOT_LENS = {};
+
+  function pilotLens(deck, button) {
+    if (!window.MtgDeckMeasure || !window.MtgPilotPolicy || !window.MtgMeasureReport) {
+      return toast("The pilot lens did not load.");
+    }
+    var lineup = deck.imported
+      ? (function () {
+          var record = IMPORTS.filter(function (r) { return r.id === deck.id; })[0];
+          return record ? Store.toLineup(record) : null;
+        }())
+      : deckCards(deck).map(function (row) {
+          return {
+            name: row.card.name, quantity: row.qty,
+            isCommander: row.card.purpose === "Commander" || row.card.name === deck.commander
+          };
+        });
+    if (!lineup || !lineup.length) return toast("This deck has no list to read.");
+
+    /* card-facts.json is 403 KB and is not fetched until the first card popup, so
+       FACTS is null on a page nobody has clicked a card on. Reading it directly
+       measured a hundred cards with no type line and no mana cost: every deck came
+       back 28.5, both pilots identical, and the panel rendered it without complaint.
+       Load it first, and let measureLens refuse the run if it still arrives empty. */
+    var label = button.textContent;
+    button.disabled = true;
+    button.textContent = "Reading…";
+    Promise.all([loadFacts(), measureContext()]).then(function (parts) {
+      var facts = parts[0], context = parts[1];
+      var cards = window.MtgDeckMeasure.hydrate(lineup, facts);
+      var hash = window.MtgDeckMeasure.lineupHash(cards);
+      if (PILOT_LENS[hash]) {
+        button.disabled = false; button.textContent = label;
+        return showPilotLens(deck, PILOT_LENS[hash]);
+      }
+      if (!context) { button.disabled = false; button.textContent = label;
+        return toast("The simulation could not be loaded."); }
+      // One frame, so the disabled button paints before the engine takes the thread.
+      setTimeout(function () {
+        var lens;
+        try {
+          lens = window.MtgDeckMeasure.measureLens(cards, {
+            config: context.config, seats: context.seats,
+            deckName: String(deck.label || "").split(" ")[0],
+            onRun: function (index, total) { button.textContent = "Run " + (index + 1) + " of " + total; }
+          });
+        } catch (error) {
+          return toast(String(error && error.message || "The pilot lens could not run."));
+        } finally {
+          button.disabled = false;
+          button.textContent = label;
+        }
+        PILOT_LENS[hash] = lens;
+        showPilotLens(deck, lens);
+      }, 30);
+    });
+  }
+
+  function showPilotLens(deck, lens) {
+    var wrap = el("div", { class: "mr-sheet" });
+    wrap.appendChild(el("h2", { class: "mr-title", text: "How you play it" }));
+    wrap.appendChild(el("p", { class: "mr-sub", text: deck.label
+      + " — the same hundred cards, played two ways, on the same seeds." }));
+    var box = el("div");
+    box.innerHTML = window.MtgMeasureReport.pilotHtml(lens);
+    wrap.appendChild(box);
+    openSheet("How you play it", [wrap]);
+  }
+
   /* WHAT THE RE-RUN DID, before it is allowed to replace anything.
      ---------------------------------------------------------------
      You change three cards and press it again; the only question that matters is whether
@@ -1746,18 +1827,28 @@
       var report = el("div");
       report.innerHTML = window.MtgMeasureReport.html(measured);
       howPanel.appendChild(report);
-      /* Only an added deck can be re-run: the six ship with a measurement taken by the
-         same engine on the same protocol, and re-running them in a browser would replace
-         a published number with a local one. */
+      /* Two buttons doing different things. "Run it again" REPLACES the number above,
+         so only an added deck gets it -- the six ship with a measurement taken by the
+         same engine on the same protocol, and re-running them here would replace a
+         published number with a local one. "How you play it" replaces nothing: it is a
+         second reading held in memory, so every deck can have it, and the six are the
+         most interesting ones to read that way. */
+      var howActs = el("div", { class: "mr-acts" });
       if (deck.imported) {
-        howPanel.appendChild(el("div", { class: "mr-acts" }, [
-          el("button", { class: "btn", type: "button", text: "Run it again",
-            onclick: function (e) { measureDeck(deck, e.currentTarget); } })
-        ]));
-        howPanel.appendChild(el("p", { class: "mr-note", text:
-          "Change cards on this page, then run it again — the new result is shown against "
-          + "this one before it replaces it." }));
+        howActs.appendChild(el("button", { class: "btn", type: "button", text: "Run it again",
+          onclick: function (e) { measureDeck(deck, e.currentTarget); } }));
       }
+      if (window.MtgPilotPolicy) {
+        howActs.appendChild(el("button", { class: "btn", type: "button", text: "How you play it",
+          onclick: function (e) { pilotLens(deck, e.currentTarget); } }));
+      }
+      if (howActs.childNodes.length) howPanel.appendChild(howActs);
+      howPanel.appendChild(el("p", { class: "mr-note", text: deck.imported
+        ? "Change cards on this page, then run it again — the new result is shown against "
+          + "this one before it replaces it. \u201cHow you play it\u201d replaces nothing: "
+          + "it reads the same hundred under two pilots and says which decisions are worth points."
+        : "\u201cHow you play it\u201d reads this same hundred under two pilots — one playing "
+          + "casually, one playing to win — and says which decisions the difference is made of." }));
       right.appendChild(howPanel);
     }
 

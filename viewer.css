@@ -1076,6 +1076,39 @@ main { padding: 24px 0 140px; }
 .mr-diff-parts li.is-up b { color: #14603f; }
 .mr-diff-parts li.is-down b { color: #8a3a12; }
 
+/* The pilot lens: two scores and the distance between them.
+   --------------------------------------------------------
+   Deliberately NOT laid out like the header score. That one is a verdict on a
+   hundred cards; this is a pair, and a pair read as a single big number would
+   invite exactly the comparison the panel spends a paragraph asking a reader not
+   to make. So: two equal ends, the gap between them, and the gap is the only
+   thing coloured. */
+.mr-pilot-pair { display: flex; align-items: stretch; gap: 10px; margin-bottom: 14px; }
+.mr-pilot-end { flex: 1 1 0; min-width: 0; padding: 12px 14px; border-radius: var(--radius-sm);
+  background: var(--panel-2); border: 1px solid var(--line); text-align: center; }
+.mr-pilot-end span { display: block; font-size: 11.5px; color: var(--text-dim); }
+.mr-pilot-end b { display: block; font-family: var(--serif); font-size: 30px; line-height: 1.15; }
+.mr-pilot-end i { display: block; font-style: normal; font-size: 11.5px; color: var(--text-faint); }
+.mr-pilot-gap { flex: 0 0 auto; align-self: center; text-align: center; padding: 0 4px; }
+.mr-pilot-gap b { display: block; font-family: var(--serif); font-size: 22px; line-height: 1.2;
+  font-variant-numeric: tabular-nums; color: var(--text-faint); }
+.mr-pilot-gap span { display: block; font-size: 10.5px; color: var(--text-faint); max-width: 78px; line-height: 1.3; }
+.mr-pilot-gap.is-up b { color: var(--patina); }
+.mr-pilot-gap.is-down b { color: var(--ember); }
+.mr-advice { padding: 10px 0; border-top: 1px solid var(--line); }
+.mr-advice:first-of-type { border-top: 0; }
+.mr-advice b { display: block; font-size: 13.5px; line-height: 1.45; }
+.mr-advice p { margin: 4px 0 0; font-size: 12.5px; line-height: 1.55; color: var(--text-dim); }
+.mr-advice.is-lead { padding: 12px 14px; margin-bottom: 6px; border: 0;
+  border-radius: var(--radius-sm); background: var(--panel-2); }
+.mr-advice.is-lead b { font-family: var(--serif); font-size: 17px; line-height: 1.3; }
+.mr-pilot .mr-note i { font-style: italic; }
+@media (max-width: 520px) {
+  .mr-pilot-pair { flex-wrap: wrap; }
+  .mr-pilot-gap { order: 3; flex: 1 0 100%; }
+  .mr-pilot-gap span { max-width: none; }
+}
+
 /* The three doors, above the decks.
    ---------------------------------
    Add and Build used to sit at the END of the deck grid, which holds at six decks and

@@ -84,7 +84,8 @@ count of what is left to find. A narrow screen lands there rather than on the ta
 **Game Log** records what actually happened in under thirty seconds between rounds, and reads
 it back against what the simulation predicted — gated on a Wilson score interval, so twelve
 games never becomes a claim. When the sample cannot support a verdict it says so, and it names
-what it cannot separate: the deck, the pilot, or the pod.
+what it cannot separate: the deck, the pilot, or the pod. The simulation can now separate one
+of those three on its own — see *The deck, and the person holding it* below.
 
 Two lists reach the Shop, and they are not the same kind of thing. The **deck plan** is
 derived: what the boxes want, minus what the ledger says you own. The **pull list** is not —
@@ -164,6 +165,42 @@ only run whose number may be recorded. A *preview* is one seed and 2,000 games �
 to re-run on every click, and honest about being approximate; anything that reports one as a
 measurement is lying by about a tenth of a point, which is exactly the size of the differences
 people care about.
+
+### The deck, and the person holding it
+
+A score is a deck and a pilot multiplied together. Until 2026-09-07 there was one pilot, so
+it could not be factored — the three opponents were nine parameterised archetypes, and our
+side of the table had one mulligan rule, one cast order and one attack target.
+
+`pilot-policy.js` makes five decisions into data — which sevens you keep, what you cast
+first, who you attack, whether you tap out, and what you hold back — and names three answers.
+`BALANCED` is the pilot that was already there, held to that by a test that requires a
+no-policy run and a `BALANCED` run to be identical metric for metric across six decks and
+three seeds. **No published number moved.**
+
+Press *How you play it* on any deck and the app runs the same hundred four times — played
+casually, played to win, and twice more with one decision handed back — and says which
+decision the difference is made of:
+
+```
+Krenko, Mob Boss     casual 59.73    competitive 76.47    +16.74    win 30.1% -> 47.4%
+  who you attack             attacking whoever is closest to winning              +11.10
+  whether you tap out        keeping the mana for an answer up from turn four      +4.57
+```
+
+Those credits are runs, not inferences, which is why the sentence differs by deck: Krenko's
+headroom is nearly all in who it attacks, Atraxa's nearly all in holding an answer up.
+
+**The two lens numbers do not belong beside the header score.** Both are measured on a
+stricter interaction rule — an answer counts only when the mana for it was genuinely left
+over, where the published protocol counts one you *could* have held up — and that is worth
+about twelve points to every deck. Read the pair against itself. The panel says so.
+
+The most useful thing the lens found was about the model rather than about any deck.
+Attacking "the leader" turns out to mean two different things: the biggest board is worth
++1.70, and whoever is closest to winning is worth +10.93, because the shipped combo profile
+wins on turn 9 with almost no board. `docs/simulation-fidelity.md` §3a has the full table,
+including the two measurement errors the ablation exposed.
 
 ### The four rungs
 
@@ -310,7 +347,7 @@ data/source/                             the workbooks and documents those files
 tools/                                   importers and one-off migrations (⚠ several write data/)
 tools/sim/                               the simulation pipeline: request → pool → optimize → bake
 sim/                                     config.json, opponents.json, status.json — the rest is ignored
-tests/                                   33 Node suites, built-ins only
+tests/                                   35 Node suites, built-ins only
 tests/uat/                               the browser journeys, and a README worth reading
 graph/                                   the Neo4j ingest that bakes data/graph.json — local only
 prototype/  payload/  payload_v3/        historical; nothing running references them
@@ -329,7 +366,7 @@ each tag says why that module is there and what breaks without it.
 
 ### Tests
 
-Thirty-four suites, run individually or all at once. They use only Node built-ins — there is
+Thirty-five suites, run individually or all at once. They use only Node built-ins — there is
 no `package.json`, no dependency to install and no build step.
 
 ```
@@ -363,6 +400,7 @@ and something got pushed on the strength of it.
 | `card-images` | the picture for a card the app does not ship: shipped facts, then this browser's cache, then the image the deck record already carries, then Scryfall — bounded, least-recently-used, and safe when storage refuses to write |
 | `measure-report` | what the score is made of: that the breakdown adds up to the number, that rounding for display never moves it, that the run says how much work it did and how fast, and that a re-run says whether the change is real before it replaces anything |
 | `guide-agent` | the agent that writes "How to play it": that every card it names is one of the hundred it was sent, that it is never asked for a number the app can measure, and that the checks pass on the six guides a person wrote by hand |
+| `pilot-policy` | the person holding the cards: that the published pilot is still exactly the published pilot when it becomes a parameter, that each measurable decision reverts to one the other pilot actually makes, and that the advice never attributes a gap it did not measure |
 | `friends-deck` | a real 100-card export somebody handed over, pinned as a fixture: that every card in it is in the registry and reachable on the graph, and that the one name in it which is not a card is answered with the real cards a person would have meant |
 
 ### Journeys, in a real browser

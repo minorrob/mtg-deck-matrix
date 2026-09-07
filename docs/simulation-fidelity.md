@@ -209,6 +209,110 @@ and why.
 
 ---
 
+## 3a · The pilot was a constant, and now it is a parameter — **built**
+
+*Landed 2026-09-07 as `pilot-policy.js`. This section records what it found, including two
+things it found about the model rather than about any deck.*
+
+**The asymmetry.** Count the parameters in `sim-engine.js`. The three opponents are nine
+archetype curves across three power tiers and six playstyles, sampled per seat and jittered
+per game — a table that can be a kitchen-table pod on one run and a bracket-3 night on the
+next. Our side of it had one mulligan rule, one cast-priority table, one attack target. Every
+score in this repository is a deck and a pilot multiplied together, and with one pilot it
+could not be factored.
+
+`pilot-policy.js` makes five decisions into data — which sevens you keep, what you cast
+first, who you attack, whether you tap out, and what you hold back — and names three answers
+to them. `BALANCED` is the pilot that was already there, and `tests/pilot-policy.mjs` requires
+every metric of a no-policy run and a `BALANCED` run to be identical across six decks and
+three seeds, so every published number stays exactly what it is.
+
+### What each decision is worth
+
+Six shipped decks, three seeds of 8,000 games, mean delta against a shared baseline.
+Reproduce with `node tools/sim/pilot-ablation.mjs --seeds 3 --games 8000`.
+
+| decision | mean | win rate |
+|---|---:|---|
+| hold the cheapest answer up from turn four | **+11.54** | 28.8% → 37.1% |
+| attack whoever is closest to winning | **+10.93** | 28.8% → 47.0% |
+| hold it up from turn two instead | +6.32 | 28.8% → 34.8% |
+| spread the damage | +2.19 | |
+| attack the biggest board | +1.70 | |
+| creature-first cast order | +0.48 | |
+| develop-and-tutor cast order | +0.00 | |
+| jam the commander | −0.10 | |
+| mulligan to five for a working hand | −0.51 | |
+| develop before deploying the commander | −1.49 | |
+| keep one blocker home | −10.42 | 28.8% → 14.4% |
+| keep two blockers home | −13.35 | 28.8% → 10.3% |
+
+**Attacking the leader is not attacking the biggest board, and the gap between them is the
+finding.** The shipped combo profile wins on turn 9 with a threat output of 2; the tokens
+profile wins on turn 11 with an output of 12. Hit the biggest board and you hit tokens, for
++1.70. Hit whoever is closest to winning and you hit combo, for +10.93. That is the single
+largest legitimate pilot decision in the model, it is real Commander advice, and it varies
+by deck — worth +11.10 to Krenko and +0.96 to Atraxa.
+
+### Two things this found about the model, not about any deck
+
+**Blocker retention cannot be priced, because there are no blocks.** Keeping one creature
+home costs 10.42 points and two-thirds of the win rate. That is not bad play; it is
+`blockReduction = min(0.55, totalToughness × 0.025)`, which on the shipped decks' average
+toughness of 3.2 is pinned at its cap from a board of seven creatures onward. Past that point
+a held-back body buys nothing while its lost attack is paid in full. **This is the concrete
+case for section 3.** The parameter ships implemented, tested, and set to zero; when combat
+is real, −10.42 is the number it has to beat.
+
+**One instant in hand was an infinite supply of answers.** `heldAnswers` is recounted from
+hand at the top of every turn, and a held answer pushes back a seat's win turn — but the card
+was never removed from hand. So a single Swords to Plowshares delayed every combo on the
+table, every turn, all game, and was never cast. It made deliberately holding mana up measure
+**+15.66**, five points more than any real decision. Both lens policies now spend the card;
+the published pilot does not, because every published number was produced under the old
+counting, and changing it would re-base all two hundred rungs for a second time in one week.
+`tests/pilot-policy.mjs` pins both halves.
+
+**And the interaction metric is a counterfactual.** The published protocol counts an answer
+as available when you *could* have held it up with everything untapped, whether or not you
+did — so a pilot who taps out every turn is credited for interaction it never had. Measured,
+that generosity is worth **12.41 points** to the average deck. Both lens policies use the
+honest rule instead, which is why the two lens scores sit below the header score and belong
+read against each other rather than against it. The app says so on the panel.
+
+### What it produces
+
+Four runs of the same hundred — casual, competitive, and the competitive line again with one
+decision handed back per ablation — and the sentence the app could not previously write. On
+the shipped six, that sentence is not the same sentence:
+
+| deck | casual | competitive | gap | leading decision |
+|---|---:|---:|---:|---|
+| D1 Quintorius | 59.20 | 76.83 | +17.63 | who you attack |
+| D2 Chulane | 47.17 | 64.10 | +16.93 | who you attack (+8.27) |
+| D3 Atraxa | 66.47 | 80.33 | +13.86 | whether you tap out (+6.63) |
+| D4 Felothar | 54.20 | 70.37 | +16.17 | who you attack (+8.34) |
+| D5 Shadrix | 64.73 | 80.27 | +15.54 | whether you tap out (+6.17) |
+| D6 Krenko | 59.73 | 76.47 | +16.74 | who you attack (+11.10) |
+
+Krenko's headroom is nearly all in who it attacks; Atraxa's is nearly all in holding an
+answer up. That difference is why the attribution is measured per deck rather than asserted
+from this table.
+
+One result the competitive policy keeps despite the model disliking it: **developing before
+deploying the commander costs points on every one of the six** (−0.93 to −4.10). A policy is
+a way of playing, not a pile of the moves that scored best, so it stays — and the advice
+reports it as a cost rather than hiding it.
+
+### What is still not modelled
+
+The pilot decides; it does not yet decide *well*. There is no lookahead, no reading of the
+board, no holding a wipe for the turn it is worth most. `castPriority` is a table with
+policy offsets, not a plan. And two of the five decisions — blocking and, with it, the whole
+question of what a creature is for — wait on section 3.
+
+---
+
 ## 4 · Smaller distortions, recorded so they are not rediscovered
 
 - **The opponents are profiles, not decks.** `sim/opponents.json` describes nine playstyles
@@ -217,7 +321,8 @@ and why.
 - **No stack, no priority, no responses.** Counterspells are modelled as interaction
   availability rather than as answers to specific spells.
 - **No mulligan skill.** The keep rule is a heuristic on land count; a real player's keep
-  depends on the matchup and the seat.
+  depends on the matchup and the seat. It is now a *parameter* — see section 3a — but a
+  parameterised heuristic is still a heuristic.
 - **Colour screw is approximate.** The mana model tracks sources and pips but not the order
   lands enter, so a hand that is one turn short of its second colour is scored as if it were
   not.
