@@ -1084,6 +1084,10 @@
           attacking.forEach((creature, index) => { groups[index % groups.length].attackers.push(creature); });
           groups.forEach((group) => {
             if (!group.attackers.length) return;
+            /* The seat blocks, so the pricing here is ITS life and the neutral
+               weight -- our pilot's lifeWeight says what OUR life is worth to us,
+               and lending it to an opponent would be reading our own mind onto
+               theirs. */
             const out = Combat.fight(group.attackers, group.seat.creatures, {life: group.seat.life});
             group.seat.life -= out.damageToPlayer;
             life += out.lifelinkGain;
@@ -1191,7 +1195,10 @@
           const count = Math.round(ready.length * AIMED_AT_US);
           if (count > 0) {
             const attackers = ready.slice(0, count);
-            const out = combatOrThrow().fight(attackers, battlefieldCreatures, {life});
+            // ...and here WE block, so this is where Playstyle enters combat.
+            const out = combatOrThrow().fight(attackers, battlefieldCreatures, {
+              life, lifeWeight: policy ? policy.combat.lifeWeight : 1
+            });
             life -= out.damageToPlayer;
             out.blockersDead.forEach((dead) => {
               const at = battlefieldCreatures.indexOf(dead);

@@ -42,8 +42,8 @@
       "sha": "0834a1d637e65152"
     },
     "combat.js": {
-      "version": 1,
-      "sha": "fe6b45f2a4ec0aba"
+      "version": 2,
+      "sha": "218a98465449d00c"
     },
     "compliance-model.js": {
       "version": 2,
@@ -190,8 +190,8 @@
       "sha": "1056e1b45d077b4e"
     },
     "pilot-policy.js": {
-      "version": 1,
-      "sha": "ecadb75d92480dae"
+      "version": 3,
+      "sha": "e0645dacaa692f32"
     },
     "scryfall-client.js": {
       "version": 7,
@@ -210,8 +210,8 @@
       "sha": "6a8eceea117da582"
     },
     "sim-engine.js": {
-      "version": 5,
-      "sha": "09a835d92064d447"
+      "version": 6,
+      "sha": "ded77aa656d2d569"
     },
     "sim-lenses.js": {
       "version": 1,

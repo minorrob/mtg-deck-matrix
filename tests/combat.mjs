@@ -198,6 +198,82 @@ check("two blockers gang up when one cannot do it alone", () => {
   assert.equal(blocks[0].blockers.length, 2, "8 worth of attacker for one 4-point body is worth it");
 });
 
+check("a blocked creature whose blockers all died deals nothing, unless it tramples", () => {
+  /* Verified against the Comprehensive Rules rather than assumed: a blocked
+     creature with no blockers left assigns no combat damage -- it is still
+     blocked -- EXCEPT with trample, where lethal has been assigned to everything
+     there was to assign it to and the rest goes to the player. This is the rule
+     the double-strike case turns on. */
+  const plain = Combat.trade(c(6, 6, {hasDoubleStrike: true}), [c(2, 2)]);
+  assert.equal(plain.blockersKilled.length, 1, "the first-strike hit kills the 2/2");
+  assert.equal(plain.trampleOver, 0, "and the second hit goes nowhere: it is still blocked");
+  const trampling = Combat.trade(c(6, 6, {hasDoubleStrike: true, hasTrample: true}), [c(2, 2)]);
+  assert.equal(trampling.trampleOver, 10, "with trample the second hit is all six, on top of the first step's four");
+});
+
+/* ---------------- what a point of life is worth ---------------- */
+
+check("life is worth more the less of it there is, and not linearly", () => {
+  const full = Combat.lifePrice(40);
+  assert.ok(Combat.lifePrice(20) > full * 1.9, "halving your life more than doubles what a point is worth");
+  assert.ok(Combat.lifePrice(4) > Combat.lifePrice(20) * 4);
+  assert.ok(full < 1.67,
+    "at forty life a point must be cheap enough that a 2/3 (worth 5) declines to chump a 3/3 for 3");
+});
+
+check("the same block flips somewhere sensible on the way down", () => {
+  // The specification's example, walked down the life total. A 2/3 in front of a
+  // 3/3 is a pure chump: the blocker dies and the attacker lives.
+  const at = (life) => Combat.declareBlocks([c(3, 3)], [c(2, 3)], {life}).length;
+  assert.equal(at(40), 0, "not at forty");
+  assert.equal(at(20), 0, "not at twenty");
+  assert.equal(at(6), 1, "yes at six");
+  assert.equal(at(3), 1, "and certainly at three, where it is lethal anyway");
+});
+
+check("a block that costs nothing is made at any life total", () => {
+  // 3/3 in front of a 2/2: the attacker dies, the blocker lives. Free.
+  for (const life of [40, 20, 5]) {
+    assert.equal(Combat.declareBlocks([c(2, 2)], [c(3, 3)], {life}).length, 1, `free block declined at ${life}`);
+  }
+});
+
+check("the best block is chosen, not the first profitable one", () => {
+  /* Two 2/2s together kill a 4/4 and lose one of them: worth 8 gained for 4
+     lost. One 5/5 kills it and lives: worth 8 gained for nothing. The single
+     blocker is strictly better and has to win even though it is not the cheapest
+     body on the board. */
+  const pair = [c(2, 2), c(2, 2)];
+  const big = c(5, 5);
+  const blocks = Combat.declareBlocks([c(4, 4)], [...pair, big], {life: 40});
+  assert.equal(blocks.length, 1);
+  assert.deepEqual(blocks[0].blockers, [big], "the block that loses nothing beats the block that trades");
+});
+
+check("trample means blocking saves less life, and the decision knows it", () => {
+  // A 6/6 trampler blocked by a 2/2 still puts 4 through, so the block buys 2
+  // points of life for a whole creature -- which is a bad deal at any life total
+  // where the player is not dying.
+  const priced = Combat.blockValue(c(6, 6, {hasTrample: true}), [c(2, 2)], {life: 12});
+  assert.equal(priced.lifeSaved, 2, "six power, four of it trampling over");
+  assert.ok(priced.value < 0, "so the block is not worth making");
+  const noTrample = Combat.blockValue(c(6, 6), [c(2, 2)], {life: 12});
+  assert.equal(noTrample.lifeSaved, 6, "without trample the same block saves all six");
+  assert.ok(noTrample.value > priced.value, "and is worth more");
+});
+
+check("playstyle moves the threshold, in the direction it should", () => {
+  /* Where Playstyle enters combat. A pilot that treats life as a resource to
+     spend blocks less; one that does not enjoy being hit blocks more. Same board,
+     same life, same attacker -- only the weight differs. */
+  const attacker = [c(3, 3)];
+  const blocker = [c(2, 3)];
+  const competitive = Combat.declareBlocks(attacker, blocker, {life: 9, lifeWeight: 0.7});
+  const casual = Combat.declareBlocks(attacker, blocker, {life: 9, lifeWeight: 1.4});
+  assert.equal(competitive.length, 0, "the competitive pilot takes nine-to-six and keeps the body");
+  assert.equal(casual.length, 1, "the casual one does not want to be on six");
+});
+
 /* ---------------- resolving the whole step ---------------- */
 
 check("unblocked damage reaches the player, and lifelink pays it back", () => {
@@ -318,6 +394,51 @@ check("the commander is worth more than its body", () => {
     const estimate = Engine.simulateGames(cards, seats, {...config, games: 900}, 20260904);
     assert.ok(board.metrics.avgPeakBoard > estimate.metrics.avgPeakBoard,
       "the same hundred should hold MORE creatures when its tokens are creatures");
+  });
+
+  check("holding a blocker back really does prevent damage, and really does cost the game", () => {
+    /* THE FINDING THE VALUE FUNCTION WAS BUILT TO TEST, and it went the other way.
+     *
+     * docs/simulation-fidelity.md predicted that real blocks would make keeping a
+     * creature home worth something -- under the estimate it measured -10.42, and
+     * the stated cause was a capped block-reduction term. Some of that was the cap;
+     * most of it was not. Measured on D6 over 3,000 games:
+     *
+     *   keepBack 0   34,333 damage aimed at us, 16,924 prevented (49%)   win 12.1%
+     *   keepBack 1   32,823 damage aimed at us, 22,633 prevented (69%)   win  5.9%
+     *
+     * The blocker does its job -- twenty percentage points more of the incoming
+     * damage is stopped. It is simply not worth it, because you must kill THREE
+     * players and any one of them need only kill you once. Both halves are pinned
+     * here so that if either ever stops being true, somebody has to say why. */
+    const krenko = master.decks.find((d) => d.id === "D6");
+    const cards = hundred(krenko);
+    const Policy = require("../pilot-policy.js");
+    const honest = {fromUntappedMana: true, answerIsSpent: true};
+    const run = (keepBack) => Engine.simulateGames(cards, seats, {
+      ...config, combat: "board", games: 900,
+      policy: Policy.makePolicy({key: "k", hold: {...honest}, combat: {keepBack}})
+    }, 20260904).metrics;
+    const none = run(0);
+    const one = run(1);
+    assert.ok(one.winRate < none.winRate,
+      "keeping a body home costs win rate -- offence is worth more than defence when three players have to die");
+    assert.equal(Policy.BALANCED.combat.keepBack, 0, "so it stays at zero");
+  });
+
+  check("playstyle reaches combat, and changes what a deck measures", () => {
+    // lifeWeight is the pilot's price on its own life. It only means anything
+    // under board combat, where there are blocks to decide.
+    const cards = hundred(master.decks[0]);
+    const Policy = require("../pilot-policy.js");
+    const honest = {fromUntappedMana: true, answerIsSpent: true};
+    const at = (lifeWeight) => Engine.simulateGames(cards, seats, {
+      ...config, combat: "board", games: 900,
+      policy: Policy.makePolicy({key: "w", hold: {...honest}, combat: {lifeWeight}})
+    }, 20260904).metrics.winRate;
+    assert.notEqual(at(0.7), at(1.4), "the two pilots do not play the same combat");
+    assert.equal(Policy.CASUAL.combat.lifeWeight > Policy.COMPETITIVE.combat.lifeWeight, true,
+      "the casual pilot prices its life higher and blocks more");
   });
 
   check("a misspelled combat mode is refused, not quietly measured the old way", () => {

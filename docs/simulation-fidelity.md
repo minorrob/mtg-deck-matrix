@@ -171,27 +171,100 @@ one seat's creatures reduces the pressure it was putting on the other two. That 
 faithful and awkward at the same time: attacking a seat helps the other seats survive, and
 winning needs all three dead.
 
-**It does not yet make a held-back blocker worth having.** This was the design's own headline
-claim — §3a records −10.42 as the number combat had to beat. Measured under board combat:
+**It does not make a held-back blocker worth having, and the design was wrong about why.**
+§3a recorded −10.42 as the number combat had to beat and named a capped block-reduction term
+as the cause. Design piece 4 — the value function that prices life against board — is now
+built (below). Measured:
 
-| | estimate | board |
-|---|---:|---:|
-| keep one creature home | −10.15 | **−9.29** |
-| keep two creatures home | −13.13 | **−10.33** |
+| | estimate | board, clean-profit rule | board, value function |
+|---|---:|---:|---:|
+| keep one creature home | −10.15 | −9.29 | **−8.78** |
+| keep two creatures home | −13.13 | −10.33 | **−10.32** |
 
-Better, and not by enough to matter. Three reasons, all identifiable: only a third of a seat's
-creatures come at us, so there is little to block; the block policy is the conservative one,
-so a held-back creature often declines to block anyway; and the value function that prices
-life against board — design piece 4, where Playstyle enters — is exactly what is missing.
-**The parameter therefore still ships at zero**, and this is still the number to beat.
+**Some of the −10.42 was the cap. Most of it was not.** Instrumented on D6 over 3,000 games:
+
+| | damage aimed at us | prevented | win rate |
+|---|---:|---:|---:|
+| attack with everything | 34,333 | 16,924 (49%) | 12.1% |
+| keep one home | 32,823 | 22,633 (69%) | **5.9%** |
+
+The blocker does exactly its job — twenty percentage points more of the incoming damage is
+stopped, about 1.9 extra damage a game. It is still not worth a seventeenth of the offence,
+and the reason is structural rather than a modelling error: **you must kill three players and
+any one of them need only kill you once.** Offence compounds toward three eliminations;
+defence buys life against a table with three sources of it. That is a real property of
+four-player Commander, not an artifact, and it is why "block less than feels right" is
+ordinary multiplayer advice.
+
+So `keepBack` stays at zero — no longer because the model cannot price a blocker, but because
+it prices it and the answer is no. `tests/combat.mjs` pins both halves: that the blocker
+prevents more damage, and that it loses more games.
+
+### Design piece 4: the block-or-take value function — **built**
+
+The decision is a value comparison, not a rule:
+
+```
+life saved x its price now  +  what the attacker is worth if it dies
+    >  what the blockers that die were worth
+```
+
+A point of life is priced against the starting total — `0.35 x (40 / life)` — cheap at forty,
+ruinous at five. That constant comes from the specification's own example: a 2/3 (worth 5)
+declining to chump a 3/3 for 3 damage requires the price at forty life to be under 1.67. The
+same block becomes correct below about eight life, which is roughly when a real player starts
+chumping.
+
+Every legal option is priced and the best one wins, which is not the same as the first
+profitable one: two 2/2s that kill a 4/4 and lose one of them is a worse block than one 5/5
+that kills it and lives, and the value function picks the 5/5 even though it is not the
+cheapest body available.
+
+**This is where Playstyle enters combat.** `policy.combat.lifeWeight` multiplies that price:
+the competitive pilot (0.7) treats its life total as a resource to spend and blocks less; the
+casual one (1.4) does not enjoy being hit and blocks more. `blocking` is now a sixth
+measurable decision in the pilot ablation.
+
+**And it is worth almost nothing.** Measured across the six decks under board combat
+(`node tools/sim/pilot-ablation.mjs --lens --combat board`), the blocking decision is worth
+**−0.05 to +0.25 points** — against +1.30 to +7.00 for the attack target in the same runs.
+Doubling what a pilot thinks its life is worth barely changes a score, because the value
+comparison rarely lands near its threshold: most blocks are either free (always taken) or
+plainly bad (never taken), and the marginal ones are rare enough not to matter. The knob is
+wired, tested and honest; it is not, on this evidence, a lever. Under the estimate engine it
+is worth exactly zero, and the ablation tool now labels it `(needs --combat board)` rather
+than printing a bare zero somebody could misread.
+
+**A second thing the board changes: who you attack matters less.** The attack target is worth
++8.27 to +11.10 under the estimate and **+1.30 to +7.00** under board combat, and the headline
+advice flips for all six decks from "attack whoever is closest to winning" to "keep the mana
+for an answer up". That is what blockers do — they stop you pointing damage wherever you like,
+so choosing the target buys less. It is a good sign for the model and a reminder that the
+advice on the deck page is advice *about the engine it was measured on*.
+
+### The combat rules, checked against the rules
+
+Written from the Comprehensive Rules rather than from memory, because a rule that is subtly
+wrong produces a plausible score forever:
+
+- **702.19b** — a trampler assigns lethal to every blocker before any damage reaches the
+  player; if it cannot kill them all, nothing tramples over.
+- **702.2c** — any nonzero damage from a deathtouch source counts as lethal for that
+  assignment, so a deathtouch trampler needs one point per blocker and carries the rest.
+- **A blocked creature whose blockers have all died deals no damage at all** — unless it has
+  trample, in which case the whole of it reaches the player. This is the rule the double-strike
+  case turns on, and it is why a 6/6 double-strike trampler blocked by a 2/2 deals ten.
 
 ### Why it is off by default
 
-Turning it on re-bases all 200 rungs by 8 to 14 points, and the two findings above say the
-model is not finished: the pilot cannot yet decide a block, and the seats do not block each
-other. Publishing numbers from a combat step whose central promise has not landed would trade
-one confident wrong number for another. The mechanism is built, tested against worked combats,
-and measured; switching it on is a decision to take separately.
+Turning it on re-bases all 200 rungs by 8 to 14 points. The pilot can now decide a block, so
+that objection is gone; what remains is that **the seats do not block each other.** Our damage
+goes through a real combat step and theirs, to each other, does not — so the model is
+internally inconsistent in a direction that penalises us, and the fall in the table above
+carries some unknown amount of that rather than of the deck. Publishing on it would trade one
+confident wrong number for another. The mechanism is built, checked against the Comprehensive
+Rules, tested against worked combats, and measured; switching it on is a decision to take
+separately, and seat-versus-seat combat is what should come first.
 
 ---
 

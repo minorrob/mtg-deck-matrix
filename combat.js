@@ -146,41 +146,86 @@
     };
   }
 
-  /* THE BLOCK-OR-TAKE DECISION, in its first and most conservative form.
+  /* WHAT A POINT OF LIFE IS WORTH, RIGHT NOW.
    *
-   * Block when it is a clean profit -- the attacker dies and the blocker lives,
-   * or the trade is worth more than it costs. Take the damage otherwise, because
-   * a creature spent is a creature that is not attacking next turn, against two
-   * other people. Chump-block only when the damage coming is the game.
+   * From the specification: "A player with only 1 creature on the board with 3
+   * toughness, but attacked for 3, and the game just started so the player has 40
+   * health, will likely take the 3 damage vs. losing the creature." And the
+   * generalisation: three of forty is nothing, three of four is the game. Life is
+   * worth more the less of it there is, and not linearly.
    *
-   * The full version prices life against board at THIS life total: three of forty
-   * is nothing, three of four is the game, and the curve between them is where
-   * Playstyle lives (docs/simulation-fidelity.md §3). This one has a single
-   * threshold and says so. */
+   * So a point of life is priced against the starting total: cheap at forty,
+   * ruinous at five. LIFE_AT_FULL is in the same units as worth() -- power plus
+   * toughness -- and is set so the specification's own example comes out right:
+   * a 2/3 (worth 5) declining to block a 3/3 needs 3 x price < 5, so the price at
+   * forty life must be under 1.67. At 0.35 it is, and the same block becomes
+   * correct below about eight life, which is roughly when a real player starts
+   * chump-blocking. */
+  const LIFE_AT_FULL = 0.35;
+  const STARTING_LIFE = 40;
+  function lifePrice(life) {
+    return LIFE_AT_FULL * (STARTING_LIFE / Math.max(1, life));
+  }
+
+  /* THE BLOCK-OR-TAKE DECISION. A value comparison, not a rule.
+   *
+   * Blocking spends creatures to save life. Taking spends life to keep creatures.
+   * Which is correct depends on what each is worth at THIS life total and on THIS
+   * board, so the comparison is:
+   *
+   *     life saved x its price now  +  what the attacker is worth if it dies
+   *         >  what the blockers that die were worth
+   *
+   * A block where the attacker dies and the blocker lives costs nothing and is
+   * always taken. A block that trades an equal body for an equal body is taken
+   * only when the life it saves is worth the difference. And a chump block --
+   * losing a creature and killing nothing -- is only ever right when the life is
+   * worth more than the creature, which at forty life it is not and at four life
+   * it always is.
+   *
+   * `lifeWeight` is where Playstyle enters: a competitive pilot treats its life
+   * total as a resource to spend and its board as the thing that wins, so it
+   * prices life lower and blocks less; a casual one does not enjoy being hit and
+   * prices it higher. */
+  function blockValue(attacker, blockers, options) {
+    const opts = options || {};
+    const outcome = trade(attacker, blockers);
+    const unblocked = (attacker.power || 0) * (attacker.hasDoubleStrike ? 2 : 1);
+    // Trample means blocking saves less life than it looks like it will.
+    const lifeSaved = Math.max(0, unblocked - outcome.trampleOver);
+    const lost = outcome.blockersKilled.reduce((sum, b) => sum + worth(b), 0);
+    const gained = outcome.attackerDies ? worth(attacker) : 0;
+    const price = lifePrice(opts.life != null ? opts.life : STARTING_LIFE) * (opts.lifeWeight != null ? opts.lifeWeight : 1);
+    return {value: lifeSaved * price + gained - lost, lifeSaved, lost, gained, outcome};
+  }
+
   function declareBlocks(attackers, blockers, options) {
     const opts = options || {};
-    const life = opts.life != null ? opts.life : 40;
+    const life = opts.life != null ? opts.life : STARTING_LIFE;
     /* What is actually arriving, which is not the sum of the printed powers: a
        double striker deals its power twice. Counting it once said six was coming
        from a creature that deals twelve, so a player at eight life declined the
        block that was the only thing between them and the game. */
     const incoming = attackers.reduce((sum, a) => sum + (a.power || 0) * (a.hasDoubleStrike ? 2 : 1), 0);
-    // Lethal on the table changes every answer: a creature is worth nothing to a
-    // player who is dead.
+    // A creature is worth nothing to a player who is dead, so lethal on the table
+    // overrides the value comparison rather than being priced by it.
     const lethal = incoming >= life;
     const available = blockers.filter((b) => !b.tapped);
     const used = new Set();
     const assignments = [];
 
     // Biggest attacker first: it is the one most worth stopping, and the one a
-    // blocker is most likely to be unable to handle alone.
+    // blocker is least likely to handle alone.
     const ordered = attackers.slice().sort((a, b) => (b.power || 0) - (a.power || 0));
     for (const attacker of ordered) {
       const eligible = available.filter((b) => !used.has(b) && canBlock(b, attacker));
       if (!eligible.length) continue;
       if (attacker.hasMenace && eligible.length < 2) continue;
 
-      const pick = chooseBlockers(attacker, eligible, {lethal, minimum: attacker.hasMenace ? 2 : 1});
+      const pick = chooseBlockers(attacker, eligible, {
+        lethal, life, lifeWeight: opts.lifeWeight,
+        minimum: attacker.hasMenace ? 2 : 1
+      });
       if (!pick.length) continue;
       pick.forEach((b) => used.add(b));
       assignments.push({attacker, blockers: pick});
@@ -188,33 +233,37 @@
     return assignments;
   }
 
-  /* Which bodies to put in front of one attacker, or none. Cheapest first, so a
-     block that works is made with the least valuable creature that can make it. */
+  // How many blockers to consider for one attacker before giving up on finding a
+  // better pair. Every candidate costs a trade() and this runs twice a turn for
+  // sixteen turns across twenty thousand games; cheapest-first ordering means the
+  // ones past the cut are the ones a player would not spend anyway.
+  const CANDIDATE_CAP = 6;
+
+  /* Which bodies to put in front of one attacker, or none. Every legal option is
+     priced and the best one wins -- which is not the same as the first one that
+     is profitable, because two small creatures killing a big attacker can beat
+     one big creature bouncing off it. */
   function chooseBlockers(attacker, eligible, options) {
     const opts = options || {};
     const minimum = opts.minimum || 1;
-    const cheapest = eligible.slice().sort((a, b) => worth(a) - worth(b));
+    const cheapest = eligible.slice().sort((a, b) => worth(a) - worth(b)).slice(0, CANDIDATE_CAP);
+    let best = null;
 
-    // One blocker, if one is enough and the exchange is worth making.
-    for (const blocker of cheapest) {
-      if (minimum > 1) break;
-      const outcome = trade(attacker, [blocker]);
-      const lost = outcome.blockersKilled.length ? worth(blocker) : 0;
-      const gained = outcome.attackerDies ? worth(attacker) : 0;
-      if (outcome.attackerDies && gained >= lost) return [blocker];
-    }
-    // Two, when one cannot do it alone -- or when menace requires it.
+    const consider = (group) => {
+      if (group.length < minimum) return;
+      const priced = blockValue(attacker, group, opts);
+      if (!best || priced.value > best.value) best = {value: priced.value, group};
+    };
+    if (minimum <= 1) cheapest.forEach((blocker) => consider([blocker]));
     for (let i = 0; i < cheapest.length; i += 1) {
-      for (let j = i + 1; j < cheapest.length; j += 1) {
-        const pair = [cheapest[i], cheapest[j]];
-        const outcome = trade(attacker, pair);
-        const lost = outcome.blockersKilled.reduce((sum, b) => sum + worth(b), 0);
-        if (outcome.attackerDies && worth(attacker) >= lost) return pair;
-      }
+      for (let j = i + 1; j < cheapest.length; j += 1) consider([cheapest[i], cheapest[j]]);
     }
-    // Nothing profitable. Throw a body in front of it only if the damage is fatal.
-    if (opts.lethal && cheapest.length >= minimum) return cheapest.slice(0, minimum);
-    return [];
+    if (!best) return [];
+    // Taking the damage is always an option, and it is worth exactly nothing --
+    // so a block has to be worth more than nothing to be made. Unless the damage
+    // is lethal, when there is no "later" for the creature to be saved for.
+    if (best.value > 0) return best.group;
+    return opts.lethal ? best.group : [];
   }
 
   /* Resolve a declared combat. Returns what reaches the player, what the attacker
@@ -257,7 +306,8 @@
 
   return {
     SIMPLIFICATIONS, COMMANDER_WORTH,
-    worth, canBlock, kills, dealsIn, trade,
+    worth, canBlock, kills, dealsIn, trade, lifePrice, blockValue,
+    LIFE_AT_FULL, STARTING_LIFE,
     declareBlocks, chooseBlockers, resolveCombat, fight
   };
 });

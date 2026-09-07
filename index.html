@@ -43,14 +43,14 @@
        dependency order; every one of them is a UMD module that also runs under
        Node, which is how tests/ reaches them. -->
   <script src="lineup-model.js?v=5" defer></script>
-  <script src="sim-engine.js?v=5" defer></script>
+  <script src="sim-engine.js?v=6" defer></script>
   <!-- The other half of the engine's asymmetry. The three opponents have always been
        nine parameterized archetypes; our side had one hard-coded pilot. This makes the
        pilot a parameter, with the published pilot as its default. -->
-  <script src="pilot-policy.js?v=1" defer></script>
+  <script src="pilot-policy.js?v=3" defer></script>
   <!-- Creatures, blocks, and things dying. Opt-in behind config.combat = "board";
        the engine's arithmetic estimate is still what every published number used. -->
-  <script src="combat.js?v=1" defer></script>
+  <script src="combat.js?v=2" defer></script>
   <script src="scryfall-client.js?v=7" defer></script>
   <script src="deck-import.js?v=2" defer></script>
   <script src="deck-sources.js?v=1" defer></script>
