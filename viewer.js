@@ -1989,7 +1989,14 @@
 
   function takeInventory(parsed, source) {
     if (!parsed.cards.length) {
-      return toast("No cards were found in that file.");
+      /* The commonest way to land here is the template, downloaded and sent straight back
+         without anything typed into it -- the example sheet is ignored by design, so an
+         untouched template really does contain no cards. Saying so is more use than
+         "no cards were found", which reads as the reader having done something wrong. */
+      return toast(/template/i.test(source || "")
+        ? "That is the template with nothing typed into it yet. Fill in the first sheet — "
+          + "the example sheet is ignored on purpose."
+        : "No cards were found in that file.");
     }
     INVENTORY = {cards: parsed.cards, uploadedAt: new Date().toISOString(), source: source};
     var saved = saveInventory();
@@ -2597,6 +2604,7 @@
 
   function restoreBackup(file) {
     var User = window.MtgUserState;
+    if (!User) return toast("The backup module did not load, so nothing was restored.");
     var reader = new FileReader();
     reader.onerror = function () { toast("That file could not be read."); };
     reader.onload = function () {
