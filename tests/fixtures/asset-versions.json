@@ -13,6 +13,10 @@
       "version": 4,
       "sha": "20ae1f37aec98908"
     },
+    "card-classify.js": {
+      "version": 1,
+      "sha": "bbe09724aa0cad69"
+    },
     "compliance-model.js": {
       "version": 2,
       "sha": "5843be95892058c1"
@@ -118,12 +122,12 @@
       "sha": "64ca6d7289743a4f"
     },
     "graph-page.css": {
-      "version": 13,
-      "sha": "71c521ba571226fd"
+      "version": 14,
+      "sha": "1fd27b6c55dac703"
     },
     "graph-page.js": {
-      "version": 18,
-      "sha": "c210afcd2e530f7a"
+      "version": 19,
+      "sha": "823027f11c851e6a"
     },
     "import-panel.js": {
       "version": 1,
@@ -138,8 +142,8 @@
       "sha": "b076eb50c7ab1bb0"
     },
     "scryfall-client.js": {
-      "version": 4,
-      "sha": "8c18fa7667e5e413"
+      "version": 5,
+      "sha": "e06ea9d3827ebe6c"
     },
     "shop-export.js": {
       "version": 1,

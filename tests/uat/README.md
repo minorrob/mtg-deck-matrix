@@ -1,7 +1,7 @@
 # User journeys, in a browser
 
 The twenty-three suites in `tests/` check that the modules are right. Nothing in
-them opens a page. This does: three people, eleven journeys, two screen sizes, in a
+them opens a page. This does: three people, twelve journeys, two screen sizes, in a
 real Chromium.
 
 ## Why it exists as its own thing
@@ -60,7 +60,7 @@ None of THAT is visible if the collection behind the app is always empty.
 | **Continued** | uses it between games | six picked decks, a game log, ten added decks, 3,200 cards | their work where they left it, and to change something |
 | **Exit** | wants their data, or a clean slate | a full collection | to take it with them, wipe it, and put it back |
 
-## The eleven journeys
+## The twelve journeys
 
 **First · lands** — `index.html` shows six decks and two ways to add one, and
 says where the rest of the app is without anybody scrolling. Nothing is required
@@ -78,6 +78,24 @@ Driven with a wheel and a real click: a programmatic `scrollTo` on this page
 lands past the end of a document whose height `content-visibility` has only
 estimated, and the browser then satisfies that request as the real heights
 arrive — which this harness twice read as the app scrolling itself.
+
+**First · names the card they came to look at** — the graph is drawn around ONE
+card, and choosing it used to mean finding it in the list and pressing Focus
+inside its popup. That works for the 7,710 the corpus was baked with; for
+anything else there was no way in at all, which is most of Magic. Types a name
+the catalog does not hold, asserts the page fetches it, reads it with the same
+classifier the corpus was baked with, draws the graph around it and says in the
+count that the catalog grew — then types a card banned in Commander and asserts
+it is refused by name with the reason. Scryfall is stubbed with its own real
+answers, saved under `fixtures/`: the point is this page's path through a lookup,
+and a journey that fails when a third party is slow is one people learn to
+ignore.
+
+It also checks the Copilot's three filters. Twenty findings across six decks is a
+reading list; deck, kind and source cut it down. What is asserted is the rule
+that makes them safe to leave switched on — what does not match FOLDS, with its
+count on the drawer label, rather than vanishing. A filter that hides evidence is
+one you have to remember you set.
 
 **First · takes the tour** — from the empty Deck page, not from the header,
 because on a phone the header is folded. Asserts the tour opens by saying
