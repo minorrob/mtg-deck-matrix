@@ -1070,19 +1070,38 @@ returns the closest build it found, shows where it landed on **every** axis next
 and names the target it sacrificed and why. That is the same rule the score readout follows: a
 number you cannot interrogate is worth less than no number.
 
-### What Playstyle requires of the engine
+### What Playstyle requires of the engine — **built, 2026-09-07**
 
 Playstyle is the only input here that is not already measured, and it is not a scoring weight —
-it is a set of decisions the simulated pilot makes. Five places in `sim-engine.js` currently
-hard-code one answer each:
+it is a set of decisions the simulated pilot makes. Five places in `sim-engine.js` hard-coded
+one answer each. They are now parameters, in `pilot-policy.js`, with the pilot that was
+already there as the default — `tests/pilot-policy.mjs` requires a no-policy run and a
+`BALANCED` run to be identical metric for metric, so no published number moved.
 
-| Decision | Today | Under a policy |
-|---|---|---|
-| **Mulligan** | `keepableHand`: 2–5 lands and ≥2 cheap plays | Competitive throws back a hand that cannot function; casual keeps a seven that does something |
-| **What to cast** | `castPriority`: one fixed weight table | Competitive casts what wins; casual casts what is on curve and fun |
-| **Who to attack** | not modelled at all | Competitive hits the player who is ahead; casual spreads damage |
-| **Holding answers** | removal is cast when castable | Competitive holds it for the threat that beats them |
-| **Tapping out** | implicit in cast priority | Competitive taps out for the win; casual keeps blockers |
+| Decision | Was | Under a policy | Worth |
+|---|---|---|---:|
+| **Mulligan** | `keepableHand`: 2–5 lands and ≥2 cheap plays | Competitive throws back a hand that cannot function and goes to five; casual keeps almost any seven with lands in it | −0.51 |
+| **What to cast** | `castPriority`: one fixed weight table | Offsets onto that table: competitive tutors and develops, casual casts creatures | +0.48 |
+| **Who to attack** | the lowest-life seat, always | Four targets: the weakest, the biggest board, whoever is closest to winning, or everyone a bit | **+10.93** |
+| **Holding answers** | instants sat at the bottom of the cast order | Competitive reserves the cheapest instant answer's cost from turn four and does not spend it on that card | **+11.54** |
+| **Tapping out** | implicit in cast priority | The same reserve decision; the blocker half waits on real combat | −10.42 |
+
+Worth is the mean across the six shipped decks, three seeds of 8,000 games
+(`node tools/sim/pilot-ablation.mjs`). The two large ones pull apart by deck: who you attack
+is worth +11.10 to Krenko and +0.96 to Atraxa, which is why the app measures the attribution
+per deck rather than quoting this table at you.
+
+**Attacking "the leader" turned out to mean two different things, and only one of them is
+worth anything.** The shipped combo profile wins on turn 9 with a threat output of 2; the
+tokens profile wins on turn 11 with an output of 12. Attacking the biggest board is worth
++1.70. Attacking whoever is closest to winning is worth +10.93. The distinction is real
+Commander advice and the model found it before I did.
+
+**Blocker retention is not shipped**, because the model cannot price it: keeping one creature
+home costs 10.42 points, and the reason is that `blockReduction` is capped and sits at its cap
+on any real board, so a held-back body buys nothing while its lost attack is paid in full. The
+parameter is implemented, tested and set to zero. It becomes meaningful when combat does —
+see `docs/simulation-fidelity.md` §3 and §3a.
 
 ### Why this makes the iterative build worth doing
 
@@ -1099,20 +1118,27 @@ deck's weaknesses from the pilot's. The second is that **the difference between 
 the same hundred is itself a measurement, and it is the most actionable one the app could
 produce.**
 
-Measure a deck under each policy and keep the profile:
+Measure a deck under each policy and keep the profile. The real one, from
+`node tools/sim/pilot-ablation.mjs --lens`:
 
 ```
-Krenko, Mob Boss     casual 65.0     competitive 82.0     +17.0
-  Closes the game        4.1 of 10       9.2 of 10        +5.1
-  Wins games            22.4 of 35      31.0 of 35        +8.6
-  Has answers            7.0 of 10       7.3 of 10        +0.3
+Krenko, Mob Boss     casual 59.73    competitive 76.47    +16.74    win 30.1% -> 47.4%
+  who you attack             attacking whoever is closest to winning       +11.10
+  whether you tap out        keeping the mana for an answer up from t4      +4.57
+  what you cast first        casting the tutor and the ramp before the creature  +3.00
+  which sevens you keep      throwing back a seven that cannot function     -0.86
+  when the commander lands   developing mana and cards before deploying it  -0.93
 ```
+
+Each of those five numbers is the competitive score minus the same line with that one
+decision handed back to the casual pilot — a run, not an inference. That is what lets the
+app say *which* decision the gap is made of rather than listing the ones that differ.
 
 The **shape** of that profile is the finding, and it is arithmetic rather than judgement:
 
 | Profile | What it means | What it becomes on screen |
 |---|---|---|
-| Large gap, competitive higher | The list is fine; the pilot is leaving points on the table | *"You can play this deck competitively by attacking the leader — seventeen points of it are in how fast you close."* |
+| Large gap, competitive higher | The list is fine; the pilot is leaving points on the table | *"You can play this deck competitively by attacking whoever is closest to winning."* — and the detail names the measured share, 11.1 of the 16.7. |
 | Small gap either way | The deck plays itself, however it is piloted | *"It scores the same whoever is driving."* Exactly what somebody lending a deck to a friend needs to know. |
 | Competitive **lower** | The deck punishes greed — tapping out or drawing the table's attention costs it | *"Playing this one hard makes you the archenemy and it loses more, not less."* |
 
@@ -1138,10 +1164,24 @@ them how to get more out of the deck they already own.
 - **The Copilot** — a lens like any other, with its own evidence: *"Krenko scores 17 points
   higher played competitively, and all of it is in how fast it closes."*
 
-**Status: proposed.** Nothing here is built. The pilot policy has to exist before any slider
-means anything or any profile can be measured, and the printed-body re-bake (§8) has to land
-before any target is set against a measured number, because a target aimed at a mis-measured
-engine is a target at the wrong number.
+**Status: the measurement is built; two of the three surfaces are not.** `pilot-policy.js`,
+`MtgDeckMeasure.measureLens`, `tools/sim/pilot-ablation.mjs` and the *How you play it* panel
+on the deck page all landed on 2026-09-07, and the printed-body re-bake (§8) landed before
+them, so the numbers above are measured against a corrected engine.
+
+What is not built: the sliders themselves, and the two other surfaces. **How to play it**
+and the **Copilot** should both read the same profile the panel reads — the advice comes back
+from `MtgPilotPolicy.advise()` as `{key, headline, detail, weight}`, which is already the
+shape a lens or a guide section wants. And `docs/ai-agents.md` §2 can now be grounded: the
+deck-strategy agent has a measured profile to write from instead of a card list.
+
+Two things the build changed about the plan above. The lens **cannot be compared with the
+header score** — both policies are measured on a stricter interaction rule, worth about 12
+points to every deck, so the pair belongs read against itself. And **the pilot's own
+sentences are written by the app, not by a model**: `advise()` produces them from the measured
+credits, because every claim in them is a number the app already has, and a model asked to
+restate a number is a model that can get it wrong. A model still has a job here — the guide's
+prose around the finding — but not this part of it.
 
 ## Sources
 

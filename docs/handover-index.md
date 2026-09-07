@@ -90,7 +90,7 @@ Read these in order and the system makes sense. Roughly two hours.
 4. **`slot-model.js`** (901 lines) — the one projection the Deck page and the Shop page both
    read. Turns lineup groups into rows, collapses twelve storage keys into the five rungs a
    person sees, and owns the price bands and ownership vocabulary.
-5. **`sim-engine.js`** (1,370 lines) — start with the `SIMPLIFICATIONS` array at the top.
+5. **`sim-engine.js`** (1,482 lines) — start with the `SIMPLIFICATIONS` array at the top.
    Fourteen numbered admissions of what the model does not do. Read them before reading any
    score anywhere in this app.
 6. **`deck-measure.js`** (259 lines) — the protocol. Two tiers (preview: one seed, 2,000
@@ -151,8 +151,9 @@ is loaded by at least one page; none is dead.
 
 | File | Lines | Global | Owns | Loaded by |
 |---|---|---|---|---|
-| `sim-engine.js` | 1,370 | `MtgSimEngine` | The Monte Carlo model itself. Exports `SIMPLIFICATIONS`, `DEFAULT_WEIGHTS`, `classifyCard`, `prepareDeck`, `playGame`, `simulateGames`, `compositeScore`, `scoreParts`, `analyzeGaps` | index, matrix |
-| `deck-measure.js` | 259 | `MtgDeckMeasure` | Running the engine in a browser on the published protocol. Exports `measure`, `hydrate`, `seedsFor`, `lineupHash`, `FULL`, `PREVIEW`. Throws at load without the engine | index, matrix |
+| `sim-engine.js` | 1,482 | `MtgSimEngine` | The Monte Carlo model itself. Exports `SIMPLIFICATIONS`, `DEFAULT_WEIGHTS`, `classifyCard`, `prepareDeck`, `playGame`, `simulateGames`, `compositeScore`, `scoreParts`, `analyzeGaps`. Takes an optional `config.policy`; with none it is the pilot it has always been | index, matrix |
+| `pilot-policy.js` | 527 | `MtgPilotPolicy` | The person holding the cards. Five decisions as data, three named answers (`BALANCED` is a strict no-op), five measurable ablations, and `advise()`, which turns the gap between two runs into sentences. Exports `POLICIES`, `ABLATIONS`, `without`, `allocateCombatDamage`, `heldBackCreatures`, `manaToReserve`, `partDeltas`, `advise` | index, matrix |
+| `deck-measure.js` | 378 | `MtgDeckMeasure` | Running the engine in a browser on the published protocol. Exports `measure`, `measureLens`, `hydrate`, `seedsFor`, `lineupHash`, `FULL`, `PREVIEW`, `LENS_PLAN`. Throws at load without the engine, and refuses a lens on cards with no printed text | index, matrix |
 | `measure-report.js` | 275 | `MtgMeasureReport` | What the score is made of: the nine weighted parts, the receipt (games/seeds/ms/games-per-second), which cards carried the deck, and a before/after comparison. Newest module in the repo | index |
 | `deck-audit.js` | 248 | `MtgDeckAudit` | Whether the number on screen still describes the deck on screen — and the rule that a locally measured score is never subtracted from a published one | matrix |
 | `sim-lenses.js` | 260 | `MtgSimLenses` | Copilot findings derived from `data/deck-ratings.json` deltas — including the negative delta, an upgrade that measures worse than what you have | graph |

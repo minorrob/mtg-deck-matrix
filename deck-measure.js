@@ -41,6 +41,19 @@
 
   if (!Engine) throw new Error("Deck measurement requires sim-engine.js to be loaded first");
 
+  /* pilot-policy.js is needed only by measureLens below, so it is resolved
+     lazily and never required for an ordinary measurement. */
+  let policyModule;
+  function Pilot() {
+    if (policyModule !== undefined) return policyModule;
+    policyModule = null;
+    try {
+      if (typeof module === "object" && module.exports && typeof require === "function") policyModule = require("./pilot-policy.js");
+      else if (typeof globalThis !== "undefined" && globalThis.MtgPilotPolicy) policyModule = globalThis.MtgPilotPolicy;
+    } catch (error) { policyModule = null; }
+    return policyModule;
+  }
+
   // The published protocol, and the reason each number is what it is. Six seeds
   // spaced far enough apart that the hash mixer cannot correlate them; 20,000
   // games each because that is where the seed-to-seed spread stops shrinking.
@@ -258,8 +271,102 @@
     };
   }
 
+  /* THE LENS. The published protocol asks one question -- how good is this
+     hundred -- and answers it with one pilot. This asks the other one: how much
+     of that number is the deck, and how much is the person holding it?
+   *
+   * Runs the same cards under the casual and the competitive policy on the same
+   * seeds, then runs the competitive line again once per named decision with that
+   * decision handed back to the casual pilot. Each of those says what one decision
+   * was worth ON THIS DECK, which is what turns "it scores twelve more played to
+   * win" into "attacking whoever is closest to winning is ten of those points".
+   *
+   * COST. Two policies plus n ablations is 2 + n full measurements. The defaults
+   * -- three seeds of 20,000, and the two decisions that mattered most across the
+   * shipped six -- are four runs of 60,000 games. Deliberately shorter than the
+   * published six-seed protocol: this measures a difference between two runs, and
+   * a difference converges faster than either of its halves.
+   *
+   * NOT COMPARABLE WITH THE HEADLINE. Both policies are measured on the honest
+   * interaction rule -- an answer counts only when the mana to cast it was
+   * genuinely left over -- where the published score counts an answer you could
+   * have held up whether or not you did. That is worth about ten points to every
+   * deck, so these two numbers sit below the headline and belong beside each
+   * other, not beside it. */
+  const LENS_PLAN = {seeds: 3, games: 20000, ablations: ["target", "hold"]};
+
+  function measureLens(cards, options) {
+    const opts = options || {};
+    const Policy = Pilot();
+    if (!Policy) throw new Error("The pilot lens requires pilot-policy.js to be loaded");
+    const config = opts.config || {};
+    const seats = opts.seats || buildSeats(opts.opponents, config.table);
+    const seedCount = opts.seedCount || LENS_PLAN.seeds;
+    const games = opts.games || LENS_PLAN.games;
+    const wanted = opts.ablations === undefined ? LENS_PLAN.ablations : opts.ablations;
+
+    /* A HUNDRED CARDS WITH NO TEXT MEASURES SOMETHING, AND IT IS NOT THIS DECK.
+       hydrate() takes a facts table; hand it an empty one and every card comes back
+       with no type line, no mana cost and no oracle text, which the engine reads as a
+       hundred free spells that are not lands. It does not error. It returns a number
+       -- the same number for every deck, under every pilot -- and a panel will print
+       it. That shipped for exactly one browser run, because card-facts.json is fetched
+       lazily and this code read the variable before anything had asked for it. */
+    const known = cards.filter((card) => card && card.typeLine).length;
+    if (cards.length && known * 2 < cards.length) {
+      throw new Error(`Only ${known} of ${cards.length} cards have printed text — the card facts have not loaded, so there is nothing to read`);
+    }
+    const startedAt = Date.now();
+
+    const jobs = [
+      {key: "casual", policy: Policy.CASUAL},
+      {key: "competitive", policy: Policy.COMPETITIVE},
+      ...wanted.map((key) => ({key: `without:${key}`, ablation: key, policy: Policy.without(key)}))
+    ];
+    const runs = {};
+    jobs.forEach((job, index) => {
+      if (typeof opts.onRun === "function") opts.onRun(index, jobs.length, job.policy.label);
+      runs[job.key] = measure(cards, {...opts, config: {...config, policy: job.policy}, seats, seedCount, games});
+    });
+
+    const casual = runs.casual;
+    const competitive = runs.competitive;
+    /* What one decision was worth: the competitive score minus the same line with
+       that decision reverted. Positive means the competitive answer earned points
+       on this deck; negative means this deck would rather you did it the other way,
+       which is a finding and not an error. */
+    const credits = wanted.map((key) => ({
+      key,
+      points: Number((competitive.score - runs[`without:${key}`].score).toFixed(2)),
+      score: runs[`without:${key}`].score
+    }));
+
+    const gap = Number((competitive.score - casual.score).toFixed(2));
+    /* Is the gap bigger than the two measurements' own disagreement? Each run
+       reports the standard error of its per-seed scores; the difference of two
+       independent means carries the root of the sum of their squares. */
+    const noise = Number(Math.sqrt((casual.se || 0) ** 2 + (competitive.se || 0) ** 2).toFixed(3));
+
+    return {
+      casual,
+      competitive,
+      credits,
+      gap,
+      noise,
+      decisive: Math.abs(gap) > Math.max(2 * noise, Policy.MEANINGFUL),
+      advice: Policy.advise(casual, competitive, {credits, deckName: opts.deckName}),
+      elapsedMs: Date.now() - startedAt,
+      games: games * seedCount * jobs.length,
+      protocol: {seeds: seedCount, gamesPerSeed: games, runs: jobs.length, ablations: wanted},
+      hash: lineupHash(cards),
+      measuredAt: new Date().toISOString()
+    };
+  }
+
   return {
     measure,
+    measureLens,
+    LENS_PLAN,
     hydrate,
     colorsOf,
     buildSeats,

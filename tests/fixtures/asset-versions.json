@@ -126,8 +126,8 @@
       "sha": "ea1dd37c6ce291cf"
     },
     "deck-measure.js": {
-      "version": 5,
-      "sha": "a39931a0a01eb7e7"
+      "version": 6,
+      "sha": "4bebf270eb280b94"
     },
     "deck-page.js": {
       "version": 30,
@@ -182,8 +182,12 @@
       "sha": "75469daa02f73aaf"
     },
     "measure-report.js": {
-      "version": 3,
-      "sha": "a2c162c1f92c3b32"
+      "version": 4,
+      "sha": "1056e1b45d077b4e"
+    },
+    "pilot-policy.js": {
+      "version": 1,
+      "sha": "ecadb75d92480dae"
     },
     "scryfall-client.js": {
       "version": 7,
@@ -202,8 +206,8 @@
       "sha": "6a8eceea117da582"
     },
     "sim-engine.js": {
-      "version": 3,
-      "sha": "8ae76e90738422a3"
+      "version": 4,
+      "sha": "3eb7a4fb0d9faeb3"
     },
     "sim-lenses.js": {
       "version": 1,
@@ -226,12 +230,12 @@
       "sha": "434751e1995a6cf2"
     },
     "viewer.css": {
-      "version": 29,
-      "sha": "f7e4236c640a758a"
+      "version": 30,
+      "sha": "76caf7a8585da1a3"
     },
     "viewer.js": {
-      "version": 32,
-      "sha": "bd22e7229808d034"
+      "version": 33,
+      "sha": "ba82a482c319ee2b"
     },
     "xlsx-reader.js": {
       "version": 1,

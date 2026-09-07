@@ -88,7 +88,9 @@ check("the globals viewer.js reaches for are the ones the modules attach", () =>
     // deck page so the two can never drift.
     "window.MtgMeasureReport": "measure-report.js",
     // The picture for a card the shipped facts file does not carry.
-    "window.MtgCardImages": "card-images.js"
+    "window.MtgCardImages": "card-images.js",
+    // The pilot, so a score can be factored into the deck and the person holding it.
+    "window.MtgPilotPolicy": "pilot-policy.js"
   };
   [...new Set(wanted)].forEach((name) => {
     assert.ok(attached[name], `viewer.js reads ${name}, which nothing on this page defines`);

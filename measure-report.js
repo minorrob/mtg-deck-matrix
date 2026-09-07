@@ -267,8 +267,76 @@
     return out + '</div>';
   }
 
+  /* THE PILOT LENS. Not a third score -- a pair, and the distance between them.
+   *
+   * The header number answers "how good is this hundred". This answers the other
+   * question: how much of that number is the deck, and how much is the person
+   * holding it? Two runs of the same cards under two ways of playing, plus one
+   * run per decision with that decision handed back, so the sentence at the top
+   * names a decision that was measured rather than one that sounds right.
+   *
+   * The two numbers belong beside each other and NOT beside the header score --
+   * they are measured on a stricter interaction rule (an answer counts only when
+   * you actually kept the mana for it). The panel says so rather than leaving a
+   * reader to wonder why the deck they were told scores 78 reads 60 here. */
+  function pilotHtml(lens) {
+    if (!lens || !lens.casual || !lens.competitive) return "";
+    var gapClass = lens.gap > 0 ? "is-up" : (lens.gap < 0 ? "is-down" : "");
+    var sign = function (v) { return (v > 0 ? "+" : "") + v.toFixed(1); };
+    var out = '<div class="mr mr-pilot">';
+
+    out += '<div class="mr-pilot-pair">'
+      + '<div class="mr-pilot-end"><span>Played casually</span><b>' + esc(lens.casual.score.toFixed(1)) + '</b>'
+      + '<i>wins ' + pct(lens.casual.winRate) + '</i></div>'
+      + '<div class="mr-pilot-gap ' + gapClass + '"><b>' + esc(sign(lens.gap)) + '</b>'
+      + '<span>' + (lens.decisive ? "outside the noise" : "inside the noise") + '</span></div>'
+      + '<div class="mr-pilot-end"><span>Played to win</span><b>' + esc(lens.competitive.score.toFixed(1)) + '</b>'
+      + '<i>wins ' + pct(lens.competitive.winRate) + '</i></div>'
+      + '</div>';
+
+    (lens.advice || []).forEach(function (item, index) {
+      out += '<div class="mr-advice' + (index === 0 ? " is-lead" : "") + '">'
+        + '<b>' + esc(item.headline) + '</b>'
+        + '<p>' + esc(item.detail) + '</p></div>';
+    });
+
+    var credits = (lens.credits || []).slice().sort(function (a, b) { return b.points - a.points; });
+    if (credits.length) {
+      out += '<h4 class="mr-h">What each decision was worth, on this deck</h4><ul class="mr-diff-parts">';
+      credits.forEach(function (credit) {
+        var entry = DECISIONS[credit.key] || {label: credit.key};
+        out += '<li class="' + (credit.points > 0 ? "is-up" : "is-down") + '">'
+          + '<b>' + esc(entry.label) + '</b>'
+          + '<span>' + esc(sign(credit.points)) + ' points</span></li>';
+      });
+      out += '</ul>';
+    }
+
+    if (lens.protocol) {
+      out += '<p class="mr-receipt">' + esc(count(lens.games) + " games — "
+        + lens.protocol.runs + " runs of " + lens.protocol.seeds + " seeds x "
+        + count(lens.protocol.gamesPerSeed) + (lens.elapsedMs ? " — in " + took(lens.elapsedMs) : "")) + '</p>';
+    }
+    out += '<p class="mr-note">These two sit below the score in the header on purpose. '
+      + 'The header counts an answer you <i>could</i> have held up; these count only one you '
+      + 'actually kept the mana for. Read the two against each other, not against the header.</p>';
+    return out + '</div>';
+  }
+
+  /* Short labels for the decisions the lens can price. The long-form wording
+     lives in pilot-policy.js, which is where the decisions are defined; these are
+     the four-word versions a table row can carry. */
+  var DECISIONS = {
+    target: {label: "Who you attack"},
+    hold: {label: "Whether you tap out"},
+    mulligan: {label: "Which sevens you keep"},
+    commander: {label: "When the commander lands"},
+    order: {label: "What you cast first"}
+  };
+
   return {
-    html: html, compare: compare, compareHtml: compareHtml,
+    html: html, compare: compare, compareHtml: compareHtml, pilotHtml: pilotHtml,
+    DECISIONS: DECISIONS,
     receipt: receipt, parts: parts, carries: carries, drags: drags,
     took: took, esc: esc
   };
