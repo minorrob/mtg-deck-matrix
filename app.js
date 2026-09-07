@@ -73,6 +73,9 @@
   let bakedBuyCatalog;
   let customStore;
   let customDeckIds = new Set();
+  /* null until the first Compare render decides; a boolean thereafter, held here rather
+     than in `state` because it is where you are in a page, not something you chose. */
+  let libraryOpen = null;
   const slotRuns = new Map();
   let state;
   let toastTimer;
@@ -166,6 +169,60 @@
     Object.entries(state.compareSelections).forEach(([deckId, variantId]) => {
       if (!variantById(variantId)) delete state.compareSelections[deckId];
     });
+    if (Array.isArray(state.compareLibrary)) {
+      state.compareLibrary = state.compareLibrary.filter((id) => variantById(id));
+    }
+  }
+
+  /* ------------------------------------------------------- the Compare shelf ----
+   *
+   * WHAT IS ON COMPARE, as opposed to what exists. The catalog holds fifty variants in
+   * ten deck roles and Compare showed every one of them on every visit, which is a lot of
+   * page to scroll past on a browser that has one deck in it -- and a deck you generated
+   * yourself sat below all fifty, behind a divider, which is what "overshadowed" means.
+   *
+   * So a baked role is on the shelf when one of its variants is: either taken from the
+   * library, or already picked. Picked counts on its own so that a browser that had six
+   * decks before this existed still has six after it, and so Load default still lands on
+   * the six built rather than on nothing.
+   *
+   * A generated deck is always on the shelf. It is the thing you made; it does not have
+   * to ask.
+   */
+  const libraryIds = () => new Set(Array.isArray(state.compareLibrary) ? state.compareLibrary : []);
+  function onCompareShelf(deck) {
+    if (isCustomDeck(deck.id)) return true;
+    if (state.compareSelections[deck.id]) return true;
+    const shelf = libraryIds();
+    return catalog.variants.some((variant) => variant.deckId === deck.id && shelf.has(variant.id));
+  }
+  /* One variant, not the whole role: taking "Proliferate Counters" out of the library puts
+     that one card on the shelf, and its four siblings stay in the library until asked for.
+     A picked variant is on the shelf whether or not anybody added it. */
+  function onShelf(variant) {
+    return isCustomDeck(variant.deckId)
+      || state.compareSelections[variant.deckId] === variant.id
+      || libraryIds().has(variant.id);
+  }
+  function addToShelf(ids) {
+    const shelf = libraryIds();
+    ids.forEach((id) => shelf.add(id));
+    state.compareLibrary = [...shelf];
+    saveState();
+  }
+  function removeFromShelf(ids) {
+    const shelf = libraryIds();
+    ids.forEach((id) => shelf.delete(id));
+    state.compareLibrary = [...shelf];
+    /* A variant that is picked cannot be taken off the shelf without unpicking it, or the
+       Deck and Shop tabs would go on building a hundred nobody can see the source of. */
+    ids.forEach((id) => {
+      const variant = variantById(id);
+      if (variant && state.compareSelections[variant.deckId] === id) {
+        delete state.compareSelections[variant.deckId];
+      }
+    });
+    saveState();
   }
 
   function persistCustom(message = "") {
@@ -313,6 +370,15 @@
          arrived: before it, a slot had one selection and no reset target. */
       stateVersion: STATE_VERSION,
       compareSelections: {},
+      /* WHICH PRE-DEFINED VARIANTS ARE ON THE COMPARE SHELF.
+         The catalog holds fifty across ten deck roles, and Compare used to show all of
+         them, always. That is a lot of page for a browser that has one deck in it: a deck
+         you added yourself sat a screen and a half below fifty you did not. So the shelf
+         starts empty and you stock it -- "Add from the library" is a picker over the same
+         fifty, and a role appears here once one of its variants is on the shelf or picked.
+         Nothing is deleted: every one of the fifty is still in the catalog, still measured,
+         still one click from coming back. */
+      compareLibrary: [],
       rankStages: {},
       buySelections: {},
       /* Active and Assigned. buySelections is Active -- the hundred the deck is counted,
@@ -2606,42 +2672,81 @@
     const filters = state.compareFilters;
     const mechanics = Array.from(new Set(catalog.variants.flatMap((variant) => variant.mechanics || []))).sort();
     const playstyles = catalog.variants[0]?.scores?.playstyle?.[0]?.map((score) => score.label) || [];
-    const visibleTotal = catalog.variants.filter(matchesCompareFilters).length;
     const activeFilterCount = [filters.mechanic, filters.playstyle].filter((value) => value !== "all").length + (filters.query ? 1 : 0);
+    /* The library is what is NOT on the shelf. Its own filters are for finding something
+       in it, so they narrow the library and never the decks already on Compare -- a filter
+       that hid a deck you had picked would look like the pick had been lost. */
+    const shelved = catalog.decks.filter(onCompareShelf);
+    const library = catalog.variants.filter((variant) => !isCustomDeck(variant.deckId) && !onShelf(variant));
+    const offShelf = library.length;
+    const libraryHits = library.filter(matchesCompareFilters);
+    /* Whether the drawer is open survives the re-render, because adding a variant IS a
+       re-render: closing it after every add would mean reopening it for every second
+       card you wanted. It starts open on a browser with nothing on the shelf, since then
+       it is the only thing to do on this tab. */
+    if (libraryOpen === null) libraryOpen = !shelved.length;
     root.innerHTML = `
       <div class="page-intro">
         <div>
-          <h2 id="compare-title">Choose your ${catalog.decks.length === 6 ? "six" : "decks"}</h2>
-          <p>Open each deck role, compare its approaches, and pick one. Your choices stay private on this device.</p>
+          <h2 id="compare-title">Choose your decks</h2>
+          <p>Open each deck role, compare its approaches, and pick one. Add more roles from the
+             library; your choices stay private on this device.</p>
         </div>
         <div class="intro-side">
-          <div class="selection-meter"><strong>${selected.length}/${catalog.decks.length}</strong><span>decks selected</span></div>
+          <!-- Against what is ON Compare, not against the whole catalog. "6/10" read as four
+               decks still to choose when there was nothing left to choose from. -->
+          <div class="selection-meter"><strong>${selected.length}/${shelved.length || catalog.decks.length}</strong><span>decks selected</span></div>
           <div class="intro-actions">
             <button class="mini-button mini-go" id="save-picks" ${selected.length ? "" : "disabled"}>Deck →</button>
             <button class="mini-button" id="email-picks" title="Email your selections" aria-label="Email selections" ${selected.length ? "" : "disabled"}>✉</button>
           </div>
         </div>
       </div>
-      <section class="compare-filter-panel">
-        <div class="compare-filter-heading"><div>${icon("⌕")}<span><b>Find a variant</b><small>${visibleTotal} of ${catalog.variants.length} shown${activeFilterCount ? ` · ${activeFilterCount} active filters` : ""}</small></span></div>${activeFilterCount ? `<button id="clear-compare-filters">Clear</button>` : ""}</div>
+      <details class="compare-filter-panel compare-library" id="compare-library" ${libraryOpen ? "open" : ""}>
+        <summary class="compare-filter-heading">
+          <div>${icon("⌕")}<span><b>Add from the library</b><small>${offShelf} of ${catalog.variants.length} researched variants not on Compare${activeFilterCount ? ` · ${activeFilterCount} active filters` : ""}</small></span></div>
+          <span class="deck-chevron" aria-hidden="true">›</span>
+        </summary>
         <div class="compare-filter-grid">
           <label class="compare-search"><span>Search</span><input id="compare-search" type="search" value="${esc(filters.query)}" placeholder="Commander, role, tag, or text…"></label>
           ${compareSelect("mechanic", "Mechanic", [["all","All mechanics"], ...mechanics.map((value) => [value,value])], filters.mechanic)}
           ${compareSelect("playstyle", "Play style", [["all","All play styles"], ...playstyles.map((value) => [value,`${value} · 4+`])], filters.playstyle)}
           ${compareSelect("profileStage", "Score stage", [["1","Base"],["2","Tuned"],["3","Maxed"]], filters.profileStage)}
+          ${activeFilterCount ? `<button class="mini-button" id="clear-compare-filters">Clear filters</button>` : ""}
         </div>
-      </section>
+        <div id="library-list"></div>
+      </details>
       <div id="deck-groups"></div>`;
 
     const groups = $("#deck-groups", root);
+    if (!shelved.length) {
+      groups.innerHTML = `<div class="empty-state library-first-run">
+        <h3>Nothing on Compare yet</h3>
+        <p>Compare is where deck roles are weighed against each other, and it starts empty
+           so that a deck you added is not buried under fifty you did not.
+           ${catalog.variants.length} researched variants are in the library above — open it,
+           find one, and it appears here with its scores, its cost and its full hundred.</p>
+        <div class="empty-actions">
+          <button class="mini-button mini-go" id="open-library">Open the library</button>
+        </div>
+      </div>`;
+      $("#open-library", groups).addEventListener("click", () => {
+        const panel = $("#compare-library", root);
+        if (!panel) return;
+        panel.open = true;
+        libraryOpen = true;
+        panel.scrollIntoView({block: "nearest"});
+        $("#compare-search", root)?.focus();
+      });
+    }
     let dividedAsCustom = null;
-    catalog.decks.forEach((deck) => {
+    shelved.forEach((deck) => {
       const chosenId = state.compareSelections[deck.id];
       const rankStage = Number(state.rankStages[deck.id] || 2);
       const allDeckVariants = catalog.variants.filter((variant) => variant.deckId === deck.id);
       const deckTotal = allDeckVariants.length;
       const variants = allDeckVariants
-        .filter(matchesCompareFilters)
+        .filter(onShelf)
         .sort((a, b) => (a.ranks?.[rankStage - 1] || a.order) - (b.ranks?.[rankStage - 1] || b.order));
       if (customDeckIds.size && isCustomDeck(deck.id) !== dividedAsCustom) {
         dividedAsCustom = isCustomDeck(deck.id);
@@ -2659,14 +2764,19 @@
         <summary>
           <span class="deck-number">${deck.id}</span>
           <button type="button" class="deck-about-button" data-about-deck="${deck.id}" aria-haspopup="dialog" aria-label="${esc("About " + deck.title)}">${icon("◆")}About</button>
-          <span class="deck-summary-copy"><strong>${esc(deck.title)}</strong><span>${chosenId ? `Picked: ${esc(variantById(chosenId).name)} · ` : ""}${variants.length} of ${deckTotal} shown</span></span>
+          <span class="deck-summary-copy"><strong>${esc(deck.title)}</strong><span>${chosenId ? `Picked: ${esc(variantById(chosenId).name)} · ` : ""}${isCustomDeck(deck.id) ? `${variants.length} approach${variants.length === 1 ? "" : "es"}` : `${variants.length} of ${deckTotal} on Compare`}</span></span>
           <span class="deck-chevron" aria-hidden="true">›</span>
         </summary>
+        ${isCustomDeck(deck.id) ? "" : `<p class="deck-group-rest">${
+          variants.length >= deckTotal
+            ? "Every approach to this role is on Compare."
+            : `${deckTotal - variants.length} more approach${deckTotal - variants.length === 1 ? "" : "es"} to this role ${deckTotal - variants.length === 1 ? "is" : "are"} in the library.`
+        } ${variants.length < deckTotal ? `<button class="link-button" data-shelf-add-deck="${deck.id}">Add them all</button> · ` : ""}<button class="link-button" data-shelf-drop-deck="${deck.id}">Take this role off Compare</button></p>`}
         <div class="rank-order" role="group" aria-label="Sort Deck ${deck.id} variants by stage ranking">
           <span>Rank order</span>
           ${STAGES.map((label, index) => `<button class="rank-order-button info-tip tip-action${rankStage === index + 1 ? " is-active" : ""}" aria-pressed="${rankStage === index + 1}" data-rank-stage="${index + 1}" data-tooltip="${esc(stageTooltip(index, variants))}" aria-describedby="info-tooltip">${label}${tooltipHint()}</button>`).join("")}
         </div>
-        <div class="variant-track">${variants.length ? "" : `<div class="variant-filter-empty">${icon("⌕")}<strong>No variants match this filter in Deck ${deck.id}</strong><span>Try another mechanic, play style, or search term.</span></div>`}</div>`;
+        <div class="variant-track"></div>`;
       const track = $(".variant-track", details);
       variants.forEach((variant) => track.appendChild(makeVariantCard(variant, rankStage, allDeckVariants)));
       // The About button sits inside <summary>; without stopPropagation its click would also
@@ -2692,6 +2802,79 @@
       });
       groups.appendChild(details);
     });
+
+    /* THE LIBRARY, grouped by the role each variant answers. Compact on purpose -- it is a
+       list you scan for a name, not a set of tiles you compare. Comparing is what the shelf
+       above is for, and a variant moves up there with one click. */
+    const libraryHost = $("#library-list", root);
+    if (!library.length) {
+      libraryHost.innerHTML = `<p class="library-empty">Every researched variant is on Compare.</p>`;
+    } else if (!libraryHits.length) {
+      libraryHost.innerHTML = `<p class="library-empty">Nothing in the library matches those filters.</p>`;
+    } else {
+      const byDeck = new Map();
+      libraryHits.forEach((variant) => {
+        if (!byDeck.has(variant.deckId)) byDeck.set(variant.deckId, []);
+        byDeck.get(variant.deckId).push(variant);
+      });
+      libraryHost.innerHTML = catalog.decks
+        .filter((deck) => byDeck.has(deck.id))
+        .map((deck) => {
+          const rows = byDeck.get(deck.id);
+          const stage = Number(state.rankStages[deck.id] || 2);
+          return `<div class="library-role">
+            <div class="library-role-head">
+              <b>${esc(deck.title)}</b>
+              <button class="mini-button" data-shelf-add-deck="${deck.id}">Add ${rows.length === 1 ? "it" : `all ${rows.length}`}</button>
+            </div>
+            ${rows.map((variant) => {
+              const score = variant.scores?.profile?.[stage - 1];
+              return `<button class="library-row" type="button" data-shelf-add="${esc(variant.id)}">
+                <span class="library-add" aria-hidden="true">+</span>
+                <span class="library-name"><b>${esc(variant.name)}</b><small>${esc(variant.commander || "")}</small></span>
+                <span class="library-tags">${(variant.mechanics || []).slice(0, 3).map((m) => `<span>${esc(m)}</span>`).join("")}</span>
+                ${score ? `<span class="library-score">${Number(score).toFixed(1)}</span>` : ""}
+              </button>`;
+            }).join("")}
+          </div>`;
+        }).join("");
+    }
+    $("#compare-library", root)?.addEventListener("toggle", (event) => { libraryOpen = event.target.open; });
+    $$("[data-shelf-add]", libraryHost).forEach((button) => button.addEventListener("click", () => {
+      const variant = variantById(button.dataset.shelfAdd);
+      addToShelf([button.dataset.shelfAdd]);
+      openDeckId = variant ? variant.deckId : openDeckId;
+      showToast(`${variant ? variant.name : "That variant"} is on Compare.`);
+      renderCompare();
+    }));
+    $$("[data-shelf-drop-deck]", root).forEach((button) => button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      event.preventDefault();
+      const deckId = Number(button.dataset.shelfDropDeck);
+      const deck = catalog.decks.find((d) => d.id === deckId);
+      const picked = state.compareSelections[deckId];
+      /* Taking a role off Compare unpicks it, which changes what Deck and Shop are
+         building. That is a real consequence and it is said before it happens rather than
+         explained afterwards -- and only when there IS a pick to lose. */
+      if (picked && !window.confirm(`Take ${deck ? deck.title : "this role"} off Compare?\n\n`
+        + `${variantById(picked)?.name || "The picked variant"} is picked for it, so the pick goes too `
+        + `and Deck and Shop stop counting it. Everything is one click from coming back: `
+        + `it is all still in the library.`)) return;
+      removeFromShelf(catalog.variants.filter((variant) => variant.deckId === deckId).map((variant) => variant.id));
+      showToast(`${deck ? deck.title : "That role"} is back in the library.`);
+      renderCompare();
+    }));
+    $$("[data-shelf-add-deck]", root).forEach((button) => button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      event.preventDefault();
+      const deckId = Number(button.dataset.shelfAddDeck);
+      const ids = catalog.variants.filter((variant) => variant.deckId === deckId && !onShelf(variant))
+        .map((variant) => variant.id);
+      addToShelf(ids);
+      openDeckId = deckId;
+      showToast(`${ids.length} approach${ids.length === 1 ? "" : "es"} added to Compare.`);
+      renderCompare();
+    }));
 
     // Picks are already written on every change, so this is navigation, not a
     // save -- which is why it no longer takes a button bar to say so.

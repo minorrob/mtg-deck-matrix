@@ -6,12 +6,12 @@
       "sha": "0d91ba2c64356efa"
     },
     "app.css": {
-      "version": 81,
-      "sha": "3137ed0655799fdf"
+      "version": 82,
+      "sha": "a18e9d2a0d56618a"
     },
     "app.js": {
-      "version": 120,
-      "sha": "64215b17e79c0737"
+      "version": 123,
+      "sha": "ab2630b6fc2a2674"
     },
     "build-panel.js": {
       "version": 4,
@@ -20,6 +20,10 @@
     "card-classify.js": {
       "version": 1,
       "sha": "bbe09724aa0cad69"
+    },
+    "card-resolve.js": {
+      "version": 2,
+      "sha": "87d3e04ed0aeb4c5"
     },
     "card-table.css": {
       "version": 5,
@@ -110,8 +114,8 @@
       "sha": "d91fd61911ff9b9b"
     },
     "deck-import.js": {
-      "version": 1,
-      "sha": "f40a303e042c6b6f"
+      "version": 2,
+      "sha": "ea1dd37c6ce291cf"
     },
     "deck-measure.js": {
       "version": 1,
@@ -126,8 +130,8 @@
       "sha": "ef5fc76341934d92"
     },
     "deck-store.js": {
-      "version": 2,
-      "sha": "d6384dd278fca982"
+      "version": 3,
+      "sha": "7d954edd6a94c062"
     },
     "docx-writer.js": {
       "version": 1,
@@ -154,8 +158,8 @@
       "sha": "d55d265b7b522739"
     },
     "import-panel.js": {
-      "version": 1,
-      "sha": "676450bbfc055b03"
+      "version": 4,
+      "sha": "0280c48b047007a9"
     },
     "inventory-import.js": {
       "version": 1,
@@ -166,8 +170,8 @@
       "sha": "b076eb50c7ab1bb0"
     },
     "scryfall-client.js": {
-      "version": 5,
-      "sha": "e06ea9d3827ebe6c"
+      "version": 6,
+      "sha": "700271a6ccc2d65c"
     },
     "shop-export.js": {
       "version": 1,
@@ -206,12 +210,12 @@
       "sha": "7c3e663ee641fb2d"
     },
     "viewer.css": {
-      "version": 24,
-      "sha": "9ae94d69ca23b0d5"
+      "version": 25,
+      "sha": "8d35602db13c931a"
     },
     "viewer.js": {
-      "version": 25,
-      "sha": "c5782766c2ceea56"
+      "version": 26,
+      "sha": "e581e1bb4a58046e"
     },
     "xlsx-reader.js": {
       "version": 1,

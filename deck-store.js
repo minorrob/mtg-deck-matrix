@@ -113,6 +113,8 @@
       cards,
       total: cards.reduce((n, c) => n + c.quantity, 0),
       unresolved: resolved.unresolved || [],
+      // Names the reader was offered candidates for and deliberately left out.
+      dropped: resolved.dropped || [],
       warnings: resolved.warnings || [],
       measured: resolved.measured || null,
       // Only a generated deck has this: which rung of which lens, at what budget
@@ -131,10 +133,20 @@
     const found = [];
     if (!record.commander) found.push("No commander is named.");
     if (record.total !== 100) found.push(`${record.total} cards, not 100.`);
-    if ((record.unresolved || []).length) {
-      found.push(`${record.unresolved.length} card name${record.unresolved.length === 1 ? "" : "s"} ` +
-        `could not be matched: ${record.unresolved.slice(0, 4).join(", ")}` +
-        `${record.unresolved.length > 4 ? "…" : ""}`);
+    /* A name the reader was SHOWN candidates for and chose to leave out is not the same
+       thing as a name the app could not place, and reporting them the same way tells
+       somebody their decision was a failure. Dropped names are named, once, as a
+       decision. */
+    const dropped = record.dropped || [];
+    const stuck = (record.unresolved || []).filter((name) => dropped.indexOf(name) < 0);
+    if (stuck.length) {
+      found.push(`${stuck.length} card name${stuck.length === 1 ? "" : "s"} ` +
+        `could not be matched: ${stuck.slice(0, 4).join(", ")}` +
+        `${stuck.length > 4 ? "…" : ""}`);
+    }
+    if (dropped.length) {
+      found.push(`${dropped.length} name${dropped.length === 1 ? "" : "s"} you left out: ` +
+        `${dropped.slice(0, 4).join(", ")}${dropped.length > 4 ? "…" : ""}`);
     }
     const blank = record.cards.filter((c) => !c.typeLine);
     if (blank.length) {

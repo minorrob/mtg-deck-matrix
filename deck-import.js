@@ -258,11 +258,30 @@
    * normalizer the rest of the resolve uses.
    */
   function applyFallback(deck, fetched) {
-    const index = buildIndex(Object.keys(fetched || {}).map((name) => ({name, ...fetched[name]})));
+    /* KEYED BY WHAT WAS ASKED FOR, and that has to survive the card's own name.
+       The obvious `{name, ...fetched[name]}` looks like it keys by the requested name and
+       does not: the spread comes second, so a card carrying its own `name` overwrites it
+       and the index ends up keyed by the ANSWER. That is harmless while the caller keys by
+       card.name -- which the Scryfall bulk lookup does -- and silently drops everything the
+       moment a caller keys by something else. The fix-the-names step is exactly that
+       caller: it maps "Sol Rng" to the Sol Ring card, and every one of its choices was
+       being thrown away. So the requested name is looked up directly, and the card keeps
+       the name it really has for display. */
+    const asked = new Map();
+    Object.keys(fetched || {}).forEach((name) => {
+      const card = fetched[name];
+      if (!card) return;
+      asked.set(normalizeName(name), card);
+      asked.set(foldName(name), card);
+      if (card.name) {
+        if (!asked.has(normalizeName(card.name))) asked.set(normalizeName(card.name), card);
+        if (!asked.has(foldName(card.name))) asked.set(foldName(card.name), card);
+      }
+    });
     const stillMissing = [];
     const added = [];
     (deck.unresolved || []).forEach((name) => {
-      const card = lookup(index, name);
+      const card = asked.get(normalizeName(name)) || asked.get(foldName(name)) || null;
       if (!card) { stillMissing.push(name); return; }
       added.push({
         name: card.name || name,

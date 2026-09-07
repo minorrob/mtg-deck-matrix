@@ -30,7 +30,9 @@ const MODULES = ["lineup-model", "sim-engine", "scryfall-client", "deck-import",
   // Building one from nothing takes the same road as far as deck-store, then
   // three more: the compliance rules, the generator, and the map onto a record.
   "compliance-model", "edhrec-client", "deck-generator", "deck-build", "build-panel",
-  "xlsx-reader", "inventory-import"];
+  "xlsx-reader", "inventory-import",
+  // The name resolver. Without it an unmatched name is a dead end, which is what it was.
+  "card-resolve"];
 
 check("every module the import path needs is on the page", () => {
   MODULES.forEach((name) => {
@@ -76,7 +78,9 @@ check("the globals viewer.js reaches for are the ones the modules attach", () =>
     // bench and the upgrades are drawn with.
     "window.MtgUserState": "user-state.js",
     "window.MtgAdminMenu": "admin-menu.js",
-    "window.MtgCardTable": "card-table.js"
+    "window.MtgCardTable": "card-table.js",
+    // What to do when a pasted name is not a card.
+    "window.MtgCardResolve": "card-resolve.js"
   };
   [...new Set(wanted)].forEach((name) => {
     assert.ok(attached[name], `viewer.js reads ${name}, which nothing on this page defines`);
