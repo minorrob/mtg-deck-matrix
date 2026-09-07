@@ -26,7 +26,7 @@ in one list, with a Store view built for a phone at a vendor's booth; **Game
 Log** records what actually happened and reads it back against what the
 simulation predicted.
 
-**`graph.html` · the card graph** is 7,710 Commander-legal cards, what connects
+**`graph.html` · the card graph** is 7,764 Commander-legal cards, what connects
 them, and a Copilot that says which twenty are worth a look. Type a name into
 **Focus card** and the graph is drawn around it — including a card the catalog
 was never baked with, which is looked up on Scryfall, checked for Commander
@@ -226,7 +226,7 @@ ends looking like a pass.
 
 `tests/uat/journeys.mjs` opens the pages as three people — a first-timer with
 empty storage, somebody a year in with ten added decks and 3,200 cards, and
-somebody leaving with their data — across twelve journeys at two screen sizes. It
+somebody leaving with their data — across twenty-one journeys at two screen sizes. It
 needs Playwright and a static server, neither of which this repo depends on, so
 it **skips rather than fails** when either is missing. See `tests/uat/README.md`.
 

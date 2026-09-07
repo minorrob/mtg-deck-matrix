@@ -10,8 +10,8 @@
       "sha": "a18e9d2a0d56618a"
     },
     "app.js": {
-      "version": 123,
-      "sha": "ab2630b6fc2a2674"
+      "version": 124,
+      "sha": "9cc80027d387fa64"
     },
     "build-panel.js": {
       "version": 4,
@@ -98,8 +98,8 @@
       "sha": "5f58e9270e04b9a0"
     },
     "data/simulation-summary.json": {
-      "version": 1,
-      "sha": "f2e7caa5b393b6b9"
+      "version": 2,
+      "sha": "d8489577b3613430"
     },
     "data/variants.json": {
       "version": 1,
@@ -154,8 +154,8 @@
       "sha": "0b348802ff31d3d0"
     },
     "graph-page.js": {
-      "version": 26,
-      "sha": "da22258ab1a6b8f7"
+      "version": 27,
+      "sha": "687e7f352c369c2b"
     },
     "header.css": {
       "version": 3,

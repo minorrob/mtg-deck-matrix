@@ -1,4 +1,4 @@
-/* Three people, six journeys, two screen sizes, in a real browser.
+/* Three people, twenty-one journeys, two screen sizes, in a real browser.
  *
  * See README.md for who the three are and why this is separate from the Node
  * suites. The short version: every browser check written before this one seeded

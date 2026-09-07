@@ -1,7 +1,7 @@
 # User journeys, in a browser
 
-The twenty-three suites in `tests/` check that the modules are right. Nothing in
-them opens a page. This does: three people, twelve journeys, two screen sizes, in a
+The thirty-two suites in `tests/` check that the modules are right. Nothing in
+them opens a page. This does: three people, twenty-one journeys, two screen sizes, in a
 real Chromium.
 
 ## Why it exists as its own thing
@@ -60,7 +60,7 @@ None of THAT is visible if the collection behind the app is always empty.
 | **Continued** | uses it between games | six picked decks, a game log, ten added decks, 3,200 cards | their work where they left it, and to change something |
 | **Exit** | wants their data, or a clean slate | a full collection | to take it with them, wipe it, and put it back |
 
-## The twelve journeys
+## The twenty-one journeys
 
 **First · lands** — `index.html` shows six decks and two ways to add one, and
 says where the rest of the app is without anybody scrolling. Nothing is required
@@ -78,7 +78,7 @@ as a line of loose text where a tile should be.
 screen: what the tab is for, why it is empty, and three ways out (Compare, load
 the six, take the tour). This is the journey that had a dead end.
 
-**First · opens the card graph** — 7,710 cards. Asserts the first look is a
+**First · opens the card graph** — 7,764 cards. Asserts the first look is a
 page somebody scrolls rather than seventeen screens of it (fifty-six on a
 phone), that the legend says how much of the catalog is on screen, and that
 asking for more leaves the card under the reader's eye exactly where it was.
@@ -89,7 +89,7 @@ arrive — which this harness twice read as the app scrolling itself.
 
 **First · names the card they came to look at** — the graph is drawn around ONE
 card, and choosing it used to mean finding it in the list and pressing Focus
-inside its popup. That works for the 7,710 the corpus was baked with; for
+inside its popup. That works for the 7,764 the corpus was baked with; for
 anything else there was no way in at all, which is most of Magic. Types a name
 the catalog does not hold, asserts the page fetches it, reads it with the same
 classifier the corpus was baked with, draws the graph around it and says in the
