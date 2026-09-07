@@ -80,6 +80,14 @@
    below 760px there is no header row -- so this appears exactly where it stops existing,
    and never alongside it. */
 .ct-sortby, .ct-sortdir { display: none; }
+.ct-sortby {
+  align-items: center; gap: 5px; padding: 0 4px 0 11px; min-height: 32px;
+  border: 1px solid var(--ct-line); border-radius: 999px; background: var(--ct-panel);
+}
+.ct-sortby-lab {
+  font-size: 11px; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; color: var(--ct-dim);
+}
+.ct-sortby select { min-height: 30px; border: 0; background: none; padding-left: 0; }
 .ct-sortdir {
   min-height: 32px; min-width: 34px; padding: 4px 9px;
   border: 1px solid var(--ct-line); border-radius: 999px;
@@ -182,6 +190,11 @@
      offer and the card popup already shows; printed as four more labelled lines they
      were most of the row's height and none of its answer. */
   .ct-row .ct-cell[data-minor] { display: none; }
-  .ct-swap { grid-template-columns: minmax(0,1fr); }
-  .ct-swap .ct-arrow { text-align: left; }
+  /* The card going in on its own line, the card coming out on the next with the arrow
+     beside it. Stacked into one column the arrow got a line of its own, which reads as a
+     bullet rather than as "replaces". */
+  .ct-swap { grid-template-columns: 16px minmax(0, 1fr); gap: 2px 6px; }
+  .ct-swap .ct-in { grid-column: 1 / -1; }
+  .ct-swap .ct-arrow { grid-column: 1; text-align: left; }
+  .ct-swap .ct-out { grid-column: 2; }
 }

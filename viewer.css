@@ -199,6 +199,9 @@ main { padding: 24px 0 140px; }
    one button is the difference. It is a panel rather than a line of grey text because
    somebody who has just cleared everything needs somewhere to go next. */
 .empty-note {
+  /* Spans the deck grid rather than sitting in its first cell: it is the state of the
+     whole list, not one deck-shaped hole in it. */
+  grid-column: 1 / -1;
   margin: 0; padding: 26px 24px; text-align: center;
   color: var(--text-dim); font-size: 13.5px; line-height: 1.55;
 }

@@ -35,8 +35,8 @@
         href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800;900&display=swap">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800;900&display=swap"></noscript>
   <link rel="stylesheet" href="header.css?v=3">
-  <link rel="stylesheet" href="card-table.css?v=4">
-  <link rel="stylesheet" href="viewer.css?v=23">
+  <link rel="stylesheet" href="card-table.css?v=5">
+  <link rel="stylesheet" href="viewer.css?v=24">
   <!-- Adding a deck. Six small modules rather than one, because each is useful
        and testable on its own: the parser has no idea what a score is, and the
        simulator has no idea where a decklist came from. Loaded here in
@@ -79,7 +79,7 @@
   <script src="user-state.js?v=2" defer></script>
   <script src="admin-menu.js?v=2" defer></script>
   <!-- One table for the Bench, Upgrades and the Shop: filters, header sort, group by. -->
-  <script src="card-table.js?v=2" defer></script>
+  <script src="card-table.js?v=3" defer></script>
   <script src="viewer.js?v=23" defer></script>
 </head>
 <body>
@@ -138,7 +138,9 @@
     <div id="page"></div>
 
     <footer class="foot">
-      <span>Built from the Deck Master workbook.</span>
+      <!-- Not "the Deck Master workbook", which is a filename on one person's computer
+           and means nothing to anybody else reading this page. -->
+      <span>Private to this browser &middot; no account needed.</span>
       <a href="matrix.html">Full deck matrix &amp; shopping tools →</a>
       <a href="graph.html">Card graph →</a>
     </footer>

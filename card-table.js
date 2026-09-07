@@ -212,7 +212,10 @@
        is half a table. */
     if (opts.sort && opts.columns) {
       var sortable = opts.columns.filter(function (c) { return c.sortable !== false; });
-      bits.push('<label class="ct-sortby"><span class="ct-sr">Sort by</span>' +
+      /* The word "Sort" is visible on the control rather than only announced. Without it
+         the select shows a column name -- "Deck" -- next to a filter button that also says
+         "Deck", and the two read as the same control offered twice. */
+      bits.push('<label class="ct-sortby"><span class="ct-sortby-lab">Sort</span>' +
         '<select data-ct-sortby aria-label="Sort by">' +
         sortable.map(function (c) {
           return '<option value="' + esc(c.key) + '"' + (opts.sort.key === c.key ? " selected" : "") +
