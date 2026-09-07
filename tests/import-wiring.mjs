@@ -83,7 +83,10 @@ check("the globals viewer.js reaches for are the ones the modules attach", () =>
     "window.MtgCardResolve": "card-resolve.js",
     // ...and when the answer is a link rather than one of the five guesses.
     "window.MtgCardLink": "card-link.js",
-    "window.MtgManualCards": "manual-cards.js"
+    "window.MtgManualCards": "manual-cards.js",
+    // What the score is made of, rendered the same way on the review screen and the
+    // deck page so the two can never drift.
+    "window.MtgMeasureReport": "measure-report.js"
   };
   [...new Set(wanted)].forEach((name) => {
     assert.ok(attached[name], `viewer.js reads ${name}, which nothing on this page defines`);

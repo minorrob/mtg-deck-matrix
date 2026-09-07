@@ -40,7 +40,11 @@
  *   node tools/sim/rate-decks.mjs --games 2000 --seeds 2   # a quick look
  */
 import path from "node:path";
+import {createRequire} from "node:module";
 import {ROOT, Engine, buildTable, loadConfig, loadOpponents, readJson, writeJson, parseArgs} from "./lib.mjs";
+
+// The module the browser measures with, so the tool and the app cannot disagree.
+const Measure = createRequire(import.meta.url)(path.join(ROOT, "deck-measure.js"));
 
 const args = parseArgs(process.argv.slice(2));
 const GAMES = Number(args.games || 20000);
@@ -132,35 +136,25 @@ function hydrate(list, facts, catalog, prices, commander) {
 
 /* ---------------- measurement ---------------- */
 
+/* ONE MEASUREMENT PATH, not two that agree by coincidence.
+   This used to be its own copy of the seed loop and the averaging, sitting beside
+   deck-measure.js's copy; tests/deck-measure.mjs exists precisely because the two could
+   drift. Now the tool calls the module the browser calls, on the same seeds and the same
+   game count, and the breakdown and per-card figures the readout needs come along for
+   free. The two machine-specific fields are dropped: how long a run took on whichever
+   laptop baked the file is not a fact about the deck, and committing it would churn the
+   diff on every re-bake. */
 function measure(cards, seats, config) {
-  const runs = SEEDS.map((seed) => Engine.simulateGames(cards, seats, {
-    ...config,
-    games: GAMES,
-    scoreWeights: config.scoreWeights,
-    powerWeights: config.scoreWeights,
-    targets: config.targets,
-    // sim/config.json's winRateBand belongs to the Pod Fun rung, which asks a
-    // different question (hold the win rate under 45%). These are performance
-    // measurements, so the win-rate term rises across the whole range.
-    winRateBand: null
-  }, seed).metrics);
-  const mean = (pick) => runs.reduce((sum, run) => sum + pick(run), 0) / runs.length;
-  const scores = runs.map((run) => run.score);
-  const scoreMean = scores.reduce((sum, value) => sum + value, 0) / scores.length;
-  const variance = scores.reduce((sum, value) => sum + (value - scoreMean) ** 2, 0) / Math.max(1, scores.length - 1);
-  const round = (value, places) => Number(value.toFixed(places));
-  return {
-    score: round(scoreMean, 2),
-    se: round(Math.sqrt(variance / scores.length), 3),
-    winRate: round(mean((run) => run.winRate), 4),
-    screwPct: round(mean((run) => run.screwPct), 4),
-    floodPct: round(mean((run) => run.floodPct), 4),
-    avgCommanderTurn: round(mean((run) => run.avgCommanderTurn), 2),
-    commanderCastRate: round(mean((run) => run.commanderCastRate), 4),
-    deadCardsAtT8: round(mean((run) => run.deadCardsAtT8), 2),
-    avgWinTurn: round(mean((run) => run.avgWinTurn), 2),
-    perSeedScores: scores.map((value) => round(value, 1))
-  };
+  if (SEED_COUNT !== 6 || FIRST_SEED !== 20260904 || GAMES !== 20000) {
+    // Deliberately loud: a bake on a different protocol is a different number, and the
+    // file it writes is the one the app publishes.
+    console.warn(`  ! baking on a non-default protocol: ${SEED_COUNT} seeds of ${GAMES} from ${FIRST_SEED}`);
+  }
+  const out = Measure.measure(cards, {
+    config, seats, games: GAMES, seedCount: SEED_COUNT
+  });
+  const {elapsedMs, gamesPerSecond, ...stable} = out;
+  return stable;
 }
 
 function shapeOf(cards) {

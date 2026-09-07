@@ -70,8 +70,8 @@
       "sha": "dcb139d39ac4e9d8"
     },
     "data/deck-ratings.json": {
-      "version": 1,
-      "sha": "425abec39421e6ea"
+      "version": 3,
+      "sha": "a6cccd665cc6bbb4"
     },
     "data/deck-swaps.json": {
       "version": 1,
@@ -122,8 +122,8 @@
       "sha": "ea1dd37c6ce291cf"
     },
     "deck-measure.js": {
-      "version": 1,
-      "sha": "3f8b752cd397e0f6"
+      "version": 3,
+      "sha": "1fbaed3c94b93272"
     },
     "deck-page.js": {
       "version": 30,
@@ -154,16 +154,16 @@
       "sha": "0b348802ff31d3d0"
     },
     "graph-page.js": {
-      "version": 24,
-      "sha": "531228fb86937d05"
+      "version": 26,
+      "sha": "da22258ab1a6b8f7"
     },
     "header.css": {
       "version": 3,
       "sha": "d55d265b7b522739"
     },
     "import-panel.js": {
-      "version": 5,
-      "sha": "206c3fcfbb73bdb7"
+      "version": 6,
+      "sha": "6d1b05c5f8378082"
     },
     "inventory-import.js": {
       "version": 1,
@@ -176,6 +176,10 @@
     "manual-cards.js": {
       "version": 1,
       "sha": "75469daa02f73aaf"
+    },
+    "measure-report.js": {
+      "version": 3,
+      "sha": "a2c162c1f92c3b32"
     },
     "scryfall-client.js": {
       "version": 7,
@@ -194,8 +198,8 @@
       "sha": "6a8eceea117da582"
     },
     "sim-engine.js": {
-      "version": 1,
-      "sha": "10f73f59238db98e"
+      "version": 3,
+      "sha": "8ae76e90738422a3"
     },
     "sim-lenses.js": {
       "version": 1,
@@ -218,12 +222,12 @@
       "sha": "6151052eeab72c5d"
     },
     "viewer.css": {
-      "version": 27,
-      "sha": "d1c174d2d26e244a"
+      "version": 29,
+      "sha": "f7e4236c640a758a"
     },
     "viewer.js": {
-      "version": 28,
-      "sha": "e84c22e0a7620bb9"
+      "version": 30,
+      "sha": "e63781ecebf38ab5"
     },
     "xlsx-reader.js": {
       "version": 1,

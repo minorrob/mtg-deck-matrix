@@ -142,8 +142,10 @@
     const seeds = seedsFor(opts.seedCount || plan.seeds);
 
     const runs = [];
+    const cardRuns = [];
+    const startedAt = Date.now();
     seeds.forEach((seed, index) => {
-      const metrics = Engine.simulateGames(cards, seats, {
+      const run = Engine.simulateGames(cards, seats, {
         ...config,
         games,
         scoreWeights: config.scoreWeights,
@@ -153,8 +155,9 @@
         // different question. This is a performance measurement, so the win-rate
         // term rises across the whole range.
         winRateBand: null
-      }, seed).metrics;
-      runs.push(metrics);
+      }, seed);
+      runs.push(run.metrics);
+      cardRuns.push(run.perCardStats);
       if (typeof opts.onSeed === "function") {
         const mean = runs.reduce((sum, r) => sum + r.score, 0) / runs.length;
         opts.onSeed(index + 1, seeds.length, Number(mean.toFixed(2)));
@@ -167,9 +170,66 @@
     const variance = scores.reduce((sum, v) => sum + (v - scoreMean) ** 2, 0) / Math.max(1, scores.length - 1);
     const round = (v, places) => Number(v.toFixed(places));
 
+    /* HOW THE NUMBER WAS MADE, averaged over the seeds the same way the score is. The
+       engine computes these on every run and they used to be thrown away at this line,
+       which is why the app could print "51.33" and nothing else. */
+    const partsBySeed = runs.map((run) => run.scoreParts || []);
+    const scoreParts = (partsBySeed[0] || []).map((part, index) => {
+      const across = (pick) => partsBySeed.reduce((sum, list) => sum + pick(list[index] || part), 0) / partsBySeed.length;
+      return {
+        key: part.key, label: part.label, weight: part.weight,
+        norm: round(across((p) => p.norm), 3),
+        points: round(across((p) => p.points), 2),
+        max: round(part.max, 2),
+        lost: round(across((p) => p.lost), 2),
+        // The words come from the last seed rather than being averaged: they quote raw
+        // measurements, and a sentence stitched from six means would be a sentence nobody
+        // measured. The numbers beside them are the averages.
+        reads: (partsBySeed[partsBySeed.length - 1][index] || part).reads
+      };
+    }).sort((a, b) => b.lost - a.lost);
+
+    /* WHICH CARDS CARRIED IT AND WHICH SAT IN HAND. The engine has counted this all along
+       -- drawn, cast, the turn it landed, whether the game was won when it was cast -- and
+       nothing has ever shown it. Averaged across seeds, one row per card. */
+    const cardIndex = new Map();
+    cardRuns.forEach((list) => (list || []).forEach((stat) => {
+      const row = cardIndex.get(stat.name) || {name: stat.name, n: 0,
+        isLand: Boolean(stat.isLand), isCommander: Boolean(stat.isCommander),
+        drawnRate: 0, castRate: 0, avgCastTurn: 0, deadRate: 0, winRateWhenCast: 0};
+      row.n += 1;
+      row.drawnRate += stat.drawnRate;
+      row.castRate += stat.castRate;
+      row.avgCastTurn += stat.avgCastTurn;
+      row.deadRate += stat.deadRate;
+      row.winRateWhenCast += stat.winRateWhenCast;
+      cardIndex.set(stat.name, row);
+    }));
+    const perCard = Array.from(cardIndex.values()).map((row) => ({
+      name: row.name,
+      isLand: row.isLand,
+      isCommander: row.isCommander,
+      drawnRate: round(row.drawnRate / row.n, 4),
+      castRate: round(row.castRate / row.n, 4),
+      avgCastTurn: round(row.avgCastTurn / row.n, 2),
+      deadRate: round(row.deadRate / row.n, 4),
+      winRateWhenCast: round(row.winRateWhenCast / row.n, 4)
+    }));
+
+    const elapsedMs = Date.now() - startedAt;
+    const totalGames = games * seeds.length;
+
     return {
       score: round(scoreMean, 2),
       se: round(Math.sqrt(variance / scores.length), 3),
+      scoreParts,
+      perCard,
+      /* SO THE CLAIM CAN BE CHECKED. "Six seeds, 20,000 games each" is a claim about work
+         done, and a claim about work done that carries no timing is one the reader has to
+         take on faith. They should not have to. */
+      elapsedMs,
+      games: totalGames,
+      gamesPerSecond: Math.round(totalGames / Math.max(0.001, elapsedMs / 1000)),
       winRate: round(mean((r) => r.winRate), 4),
       screwPct: round(mean((r) => r.screwPct), 4),
       floodPct: round(mean((r) => r.floodPct), 4),

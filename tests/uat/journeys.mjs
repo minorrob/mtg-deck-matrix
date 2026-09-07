@@ -601,13 +601,22 @@ for (const screen of SCREENS) {
       const review = await friend.page.evaluate(() => ({
         lede: (document.querySelector(".imp-lede") || {}).textContent || "",
         problems: [...document.querySelectorAll(".imp-problems li")].map((n) => n.textContent.trim()),
-        score: (document.querySelector(".imp-num") || {}).textContent || ""
+        score: (document.querySelector(".mr-score b") || {}).textContent || "",
+        // The readout, not just the number: "51.33" on its own was the complaint.
+        parts: [...document.querySelectorAll(".mr-part")].map((n) =>
+          (n.querySelector("b") || {}).textContent || ""),
+        receipt: (document.querySelector(".mr-receipt") || {}).textContent || ""
       }));
       const cards = Number((review.lede.match(/(\d+) cards/) || [])[1] || 0);
       check(cards === 100, screen.tag, "first · a friend's deck",
         `the deck came out at ${cards} cards, not 100 — problems: ${JSON.stringify(review.problems)}`);
       check(Number(review.score) > 0, screen.tag, "first · a friend's deck",
         `a hundred cards with a commander must be scored, got "${review.score}"`);
+      check(review.parts.length >= 6, screen.tag, "first · a friend's deck",
+        `the score is shown with ${review.parts.length} of its parts — a bare number was the complaint`);
+      check(/games/.test(review.receipt) && /a second/.test(review.receipt), screen.tag,
+        "first · a friend's deck",
+        `the run does not say how much work it did: "${review.receipt}"`);
 
       await friend.page.click("[data-imp-save]");
       await friend.page.waitForTimeout(2000);

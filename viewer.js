@@ -642,6 +642,29 @@
     closeCard.restore = null;
   }
 
+  /* A sheet with arbitrary contents. openCard builds the card one; this is the same
+     shell for everything else that needs the reader's whole attention -- so far, the
+     "you re-ran it, here is what changed" screen, which has to be answered before it
+     overwrites a number somebody may have been relying on. */
+  function openSheet(label, nodes, options) {
+    closeCard();
+    closeCard.restore = document.activeElement;
+    document.body.style.overflow = "hidden";
+    var body = el("div", { class: "sheet-body" }, [
+      el("button", { class: "sheet-x", type: "button", "aria-label": "Close",
+        onclick: closeCard, text: "\u00d7" })
+    ].concat(nodes));
+    var sheet = el("div", { class: "sheet", id: "sheet", role: "dialog",
+      "aria-modal": "true", "aria-label": label }, [body]);
+    /* A comparison must be answered, not dismissed: clicking away from it would leave
+       the reader unsure which of the two numbers is now the deck's. */
+    if (!(options && options.mustAnswer)) {
+      sheet.addEventListener("click", function (e) { if (e.target === sheet) closeCard(); });
+    }
+    document.body.appendChild(sheet);
+    return body;
+  }
+
   function openCard(name) {
     closeCard();
     closeCard.restore = document.activeElement;
@@ -982,16 +1005,58 @@
       // One frame, so the disabled button paints before the engine takes the
       // thread for three and a half seconds.
       setTimeout(function () {
-        record.measured = window.MtgDeckMeasure.measure(cards, {
+        var before = record.measured || null;
+        var result = window.MtgDeckMeasure.measure(cards, {
           config: context.config, seats: context.seats,
           onSeed: function (done, total) { button.textContent = "Seed " + done + " of " + total; }
         });
+        /* A FIRST RUN IS A RESULT. A SECOND RUN IS A COMPARISON. Overwriting a number
+           somebody changed cards to move, without first saying which way it moved, throws
+           away the only thing the re-run was for. */
+        if (before) return showRerun(record, before, result);
+        record.measured = result;
         saveImports();
         rebuild();
-        toast(record.label + " scores " + record.measured.score.toFixed(2) + ".");
+        toast(record.label + " scores " + result.score.toFixed(2) + ".");
         render();
       }, 30);
     });
+  }
+
+  /* WHAT THE RE-RUN DID, before it is allowed to replace anything.
+     ---------------------------------------------------------------
+     You change three cards and press it again; the only question that matters is whether
+     the deck got better, and by more than the noise. So both numbers are shown, the parts
+     that moved are named, and the reader decides which measurement the deck keeps. */
+  function showRerun(record, before, after) {
+    var Report = window.MtgMeasureReport;
+    var diff = Report && Report.compare(after, before);
+    var wrap = el("div", { class: "mr-sheet" });
+    wrap.appendChild(el("h2", { class: "mr-title", text: "You ran it again" }));
+    wrap.appendChild(el("p", { class: "mr-sub",
+      text: record.label + " — " + (after.games ? after.games.toLocaleString("en-US") + " games, "
+        + Report.took(after.elapsedMs) : "measured again") }));
+    var box = el("div");
+    box.innerHTML = (diff ? Report.compareHtml(diff) : "") + Report.html(after, {compact: true});
+    wrap.appendChild(box);
+    var acts = el("div", { class: "mr-acts" }, [
+      el("button", { class: "btn ghost", type: "button", text: "Keep the old score",
+        onclick: function () {
+          closeCard();
+          toast("Kept the earlier measurement of " + before.score.toFixed(2) + ".");
+        } }),
+      el("button", { class: "btn primary", type: "button", text: "Use the new score",
+        onclick: function () {
+          record.measured = after;
+          saveImports();
+          rebuild();
+          closeCard();
+          toast(record.label + " now scores " + after.score.toFixed(2) + ".");
+          render();
+        } })
+    ]);
+    wrap.appendChild(acts);
+    openSheet("How the new run compares", [wrap], {mustAnswer: true});
   }
 
   /* Taking one back out. The master was never written to, so this is a filter
@@ -1619,6 +1684,38 @@
       ]));
     }
     right.appendChild(shapePanel);
+
+    /* HOW IT PLAYED -- the panel that says what the number on the header means.
+       ----------------------------------------------------------------------
+       The header shows a score and nothing else, and "51.33" against a deck somebody just
+       built reads as a verdict. This is the receipt: what was run and how fast, which of
+       the nine measures earned points and which lost them, and which cards carried the
+       deck or sat in hand. measure-report.js renders it; the engine has been computing
+       every figure in it since it was written. */
+    var measured = rating && rating.builds && rating.builds.v1;
+    if (measured && window.MtgMeasureReport && (measured.scoreParts || measured.perCard)) {
+      var howPanel = el("div", { class: "panel" }, [
+        el("h3", {}, [el("span", { text: "How it played" }),
+          el("span", { class: "tally", text: measured.protocol && measured.protocol.preview
+            ? "a quick preview" : "the published protocol" })])
+      ]);
+      var report = el("div");
+      report.innerHTML = window.MtgMeasureReport.html(measured);
+      howPanel.appendChild(report);
+      /* Only an added deck can be re-run: the six ship with a measurement taken by the
+         same engine on the same protocol, and re-running them in a browser would replace
+         a published number with a local one. */
+      if (deck.imported) {
+        howPanel.appendChild(el("div", { class: "mr-acts" }, [
+          el("button", { class: "btn", type: "button", text: "Run it again",
+            onclick: function (e) { measureDeck(deck, e.currentTarget); } })
+        ]));
+        howPanel.appendChild(el("p", { class: "mr-note", text:
+          "Change cards on this page, then run it again — the new result is shown against "
+          + "this one before it replaces it." }));
+      }
+      right.appendChild(howPanel);
+    }
 
     /* upgrades */
     var adds = deck.upgrades.filter(function (u) { return u.action === "ADD"; });
@@ -2814,7 +2911,7 @@
       // The ratings and the guides are generated separately and may lag; the
       // page is fully usable without either, so a miss is not an error.
       return Promise.all([
-        fetchJson("data/deck-ratings.json?v=1").catch(function () { return null; }),
+        fetchJson("data/deck-ratings.json?v=3").catch(function () { return null; }),
         fetchJson("data/deck-guides.json?v=1").catch(function () { return null; }),
         fetchJson("data/deck-swaps.json?v=1").catch(function () { return null; })
       ]);
