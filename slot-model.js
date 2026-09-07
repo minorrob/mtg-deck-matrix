@@ -239,7 +239,11 @@
       if (!/create a treasure token/.test(line)) return false;
       const colon = line.indexOf(":");
       if (colon < 0) return true;
-      return !/\{\d|sacrifice|discard|pay/.test(line.slice(0, colon));
+      if (/\{\d|sacrifice|discard|pay/.test(line.slice(0, colon))) return false;
+      // What a bare {T} buys has to be the Treasure itself, not a Treasure it
+      // might reach: Currency Converter's is behind "If it's a land card".
+      const clause = line.slice(colon + 1).split(".").find((sentence) => /create a treasure token/.test(sentence)) || "";
+      return !/\bif\b|\bunless\b/.test(clause);
     });
   }
 

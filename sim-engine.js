@@ -22,6 +22,8 @@
     "Tokens are modeled as extra power on the creature that makes them, not as separate bodies.",
     "Alternate win conditions and storm are scored as a large threat rather than an instant win.",
     "Mana fixing is ideal within the colors actually available from lands in play.",
+    "A land that goes and gets a basic is modeled as entering tapped, because the basic it fetches arrives tapped; neither the mana some of them charge to crack nor the land itself being spent is modeled.",
+    "Where a keyword states its real effect only in reminder text -- basic landcycling, investigate -- the card is credited with nothing for it, because reminder text is stripped before a card is read.",
     "A Defender creature contributes no attack power unless the deck also contains an effect that lets it attack anyway, and deals damage equal to its toughness instead of its power when the deck contains an effect that says so.",
     "A noncreature commander (a planeswalker printed with \"can be your commander\") is cast and taxed normally but never joins combat as an attacker or blocker.",
     "Opponents are nine parameterized archetype curves (three power tiers, six playstyles), not simulated decks with real cards.",
@@ -77,6 +79,29 @@
   const DEATHTOUCH_DETERRENCE = 2;
   const FIRST_STRIKE_DETERRENCE = 1;
 
+  /* THE PILOT, WHEN THERE IS ONE. Everything below this line has always had
+     exactly one answer for our side of the table -- one mulligan rule, one cast
+     order, one attack target -- while the three opponents were nine parameterized
+     archetypes sampled per seat. pilot-policy.js is the other half of that
+     asymmetry, and it is deliberately OPTIONAL: with no config.policy nothing
+     here is ever called, no module is loaded, and the run is the run this file
+     has always produced. tests/pilot-policy.mjs fails if that stops being true. */
+  let pilotModule;
+  function pilot() {
+    if (pilotModule !== undefined) return pilotModule;
+    pilotModule = null;
+    try {
+      if (typeof module === "object" && module.exports && typeof require === "function") pilotModule = require("./pilot-policy.js");
+      else if (typeof globalThis !== "undefined" && globalThis.MtgPilotPolicy) pilotModule = globalThis.MtgPilotPolicy;
+    } catch (error) { pilotModule = null; }
+    return pilotModule;
+  }
+  function pilotOrThrow() {
+    const found = pilot();
+    if (!found) throw new Error("A pilot policy was supplied but pilot-policy.js is not loaded");
+    return found;
+  }
+
   function clamp01(value) {
     return Math.max(0, Math.min(1, Number(value) || 0));
   }
@@ -123,7 +148,11 @@
     return {pips, generic, value};
   }
 
-  function producedColors(card, typeLine, text) {
+  /* What the land taps for ITSELF, before any land it might go and get. Split out
+     because "does this land make its own colour" is also the question that decides
+     whether it is a fetch, and asking producedColors would get the fetch fallback's
+     answer instead of the card's. */
+  function ownProducedColors(card, typeLine, text) {
     const produced = new Set();
     if (BASIC_COLOR[card.name]) produced.add(BASIC_COLOR[card.name]);
     // Matches every symbol in the run right after "add" — not just the first —
@@ -136,6 +165,11 @@
       });
     });
     if (/add one mana of any color|add \{c\}\{c\}|any color/.test(text)) COLORS.forEach((color) => produced.add(color));
+    return produced;
+  }
+
+  function producedColors(card, typeLine, text) {
+    const produced = ownProducedColors(card, typeLine, text);
     // A land that goes and gets a basic makes whatever that basic makes. These
     // carry an empty color identity, so falling through to it left Evolving
     // Wilds, Terramorphic Expanse and Fabled Passage producing no color --
@@ -150,6 +184,37 @@
     }
     if (/\bLand\b/.test(typeLine) && !produced.size) (card.colorIdentity || []).forEach((color) => produced.add(String(color).toUpperCase()));
     return Array.from(produced);
+  }
+
+  /* A LAND WHOSE ONLY COLOUR IS THE BASIC IT GOES AND GETS.
+   *
+   * producedColors above credits a fetch with every colour it can reach, which is
+   * right -- you choose the basic. entersTapped then decided the timing off the
+   * fetch's own text, and a fetch does not say "enters tapped" because the fetch
+   * is not the land that does. So Evolving Wilds and Terramorphic Expanse modelled
+   * as UNTAPPED FIVE-COLOUR LANDS, available the turn they were played: strictly
+   * better than any land in Magic. Naya and Bant Panorama modelled as untapped
+   * tri-lands while really charging {1} on top of the sacrifice.
+   *
+   * What the real cards do: Evolving Wilds, Terramorphic Expanse and both
+   * Panoramas fetch the basic TAPPED, so the colour is a turn away in every case.
+   * Fabled Passage untaps it only while you control four or fewer lands. So the
+   * fetch enters tapped here, which costs it the {C} the Panoramas really do tap
+   * for on that turn and still does not charge the mana to crack them -- two
+   * errors pointing opposite ways, with the colour landing on the right turn.
+   *
+   * Myriad Landscape and Krosan Verge already read as tapped, because they print
+   * the words; this makes the other five agree with them. */
+  function fetchesItsColors(card, typeLine, rawText) {
+    if (!/\bLand\b/.test(typeLine)) return false;
+    if (!PUTS_LAND_ONTO_BATTLEFIELD.test(rawText)) return false;
+    /* Only when the land makes no coloured mana of its own. A real dual that also
+       fetches is not one of these -- and it is read from the UNSTRIPPED text, the
+       same text producedColors gets, because a true dual prints its whole mana
+       ability as reminder text: "({T}: Add {W} or {U}.)" is the entirety of
+       Tundra. Ask this question of the stripped text and every dual in Magic
+       becomes a fetch. */
+    return ownProducedColors(card, typeLine, rawText).size === 0;
   }
 
   const BASIC_TYPES = "land|plains|island|swamp|mountain|forest";
@@ -170,7 +235,18 @@
       const colon = line.indexOf(":");
       if (colon < 0) return true;                       // triggered or static
       const cost = line.slice(0, colon);
-      return !/\{\d|sacrifice|discard|pay/.test(cost); // a bare {T} still counts
+      if (/\{\d|sacrifice|discard|pay/.test(cost)) return false;  // a bare {T} still counts
+      /* ...and what the bare {T} buys has to BE the Treasure, not a Treasure it
+         might reach. Currency Converter reads "{T}: Put a card exiled with this
+         artifact into its owner's graveyard. If it's a land card, create a
+         Treasure token." The cost is a bare {T}, so the test above passed it and
+         the card modelled as a one-mana Treasure engine -- when the Treasure needs
+         a card discarded, exiled with this artifact, and a land at that.
+         Only activated abilities are read this way. A triggered Treasure that
+         names a condition -- Smothering Tithe's "if the player doesn't" -- is the
+         ordinary shape of a trigger, and those are still ramp. */
+      const clause = line.slice(colon + 1).split(".").find((sentence) => /create a treasure token/.test(sentence)) || "";
+      return !/\bif\b|\bunless\b/.test(clause);
     });
   }
 
@@ -303,7 +379,10 @@
       typeLine,
       isLand,
       isBasicLand: /\bBasic Land\b/.test(typeLine),
-      entersTapped: /enters (?:the battlefield )?tapped/.test(text),
+      // A fetch is tapped too: the basic it goes and gets arrives tapped, so the
+      // colour is a turn away however the fetch itself is printed. See
+      // fetchesItsColors.
+      entersTapped: /enters (?:the battlefield )?tapped/.test(text) || fetchesItsColors(card, typeLine, rawText),
       produces: producedColors(card, typeLine, rawText),
       isCommander: Boolean(card.isCommander),
       isCreature,
@@ -426,15 +505,31 @@
     return deck;
   }
 
-  function keepableHand(hand, profiles) {
+  /* WHICH SEVENS YOU KEEP. The defaults are the rule this file has always used:
+     two to five lands and two plays you can make in the first three turns. A
+     policy widens or narrows it -- a casual pilot keeps almost any seven with
+     lands in it; a competitive one also wants something proactive in there and
+     will go to five looking for it. */
+  function keepableHand(hand, profiles, policy) {
+    const rule = policy && policy.mulligan;
+    const minLands = rule ? rule.minLands : 2;
+    const maxLands = rule ? rule.maxLands : 5;
+    const minEarly = rule ? rule.minEarlyPlays : 2;
+    const earlyCmc = rule ? rule.earlyCmc : 3;
+    const minProactive = rule ? (rule.minProactive || 0) : 0;
     let lands = 0;
     let earlyPlays = 0;
+    let proactive = 0;
     hand.forEach((index) => {
       const profile = profiles[index];
       if (profile.isLand) lands += 1;
-      else if (profile.cmc <= 3) earlyPlays += 1;
+      else {
+        if (profile.cmc <= earlyCmc) earlyPlays += 1;
+        if (minProactive && (profile.isRamp || profile.isDraw || profile.isTutor)) proactive += 1;
+      }
     });
-    return lands >= 2 && lands <= 5 && earlyPlays >= 2;
+    if (lands < minLands || lands > maxLands || earlyPlays < minEarly) return false;
+    return proactive >= minProactive;
   }
 
   function castable(profile, mana, sources, commanderTax = 0) {
@@ -446,17 +541,23 @@
     return true;
   }
 
-  function castPriority(profile, turn, state) {
-    if (profile.isRamp && turn <= 6) return 100 - profile.cmc;
-    if (profile.isDraw) return 80 - profile.cmc + (state.cardsInHand <= 2 ? 12 : 0);
-    if (profile.isWipe) return state.opponentBoard >= 6 ? 90 : 20;
-    if (profile.isFinisher) return 62 + Math.min(10, profile.power);
-    if (profile.isCreature) return 58 + Math.min(8, profile.power) - profile.cmc * 0.5;
-    if (profile.isRecursion) return 55;
-    if (profile.isTutor) return 52;
-    if (profile.isRemoval) return profile.instantSpeed ? 12 : 48;
-    if (profile.isProtection) return profile.instantSpeed ? 10 : 44;
-    return 30;
+  /* WHAT YOU CAST FIRST. A policy supplies OFFSETS onto this table, never a
+     replacement for it -- so the shape of the ordering (ramp before draw before
+     creatures, instants held back) survives, and a policy says only how much
+     harder or softer it leans. All-zero offsets are this function unchanged. */
+  const NO_CAST_BIAS = {ramp: 0, draw: 0, wipe: 0, finisher: 0, creature: 0, recursion: 0, tutor: 0, removal: 0, protection: 0, other: 0, wipeThreshold: 6};
+  function castPriority(profile, turn, state, policy) {
+    const bias = (policy && policy.cast) || NO_CAST_BIAS;
+    if (profile.isRamp && turn <= 6) return 100 - profile.cmc + bias.ramp;
+    if (profile.isDraw) return 80 - profile.cmc + (state.cardsInHand <= 2 ? 12 : 0) + bias.draw;
+    if (profile.isWipe) return (state.opponentBoard >= bias.wipeThreshold ? 90 : 20) + bias.wipe;
+    if (profile.isFinisher) return 62 + Math.min(10, profile.power) + bias.finisher;
+    if (profile.isCreature) return 58 + Math.min(8, profile.power) - profile.cmc * 0.5 + bias.creature;
+    if (profile.isRecursion) return 55 + bias.recursion;
+    if (profile.isTutor) return 52 + bias.tutor;
+    if (profile.isRemoval) return (profile.instantSpeed ? 12 : 48) + bias.removal;
+    if (profile.isProtection) return (profile.instantSpeed ? 10 : 44) + bias.protection;
+    return 30 + bias.other;
   }
 
   function sampleProfile(table, rng) {
@@ -497,14 +598,20 @@
   function playGame(deck, table, config, seed, cardStats) {
     const rng = createRng(seed);
     const profiles = deck.profiles;
+    // No policy is the published pilot: every branch guarded on `policy` below
+    // falls through to the code this file has always run.
+    const policy = config.policy ? pilotOrThrow().get(config.policy) : null;
     const seats = [];
     for (let index = 0; index < 3; index += 1) seats.push(seatFrom(sampleProfile(table, rng), rng));
     let library = shuffle(deck.library, rng);
     let hand = [];
     let mulligans = 0;
+    const mulliganCap = (policy && policy.mulligan.maxMulligans != null)
+      ? policy.mulligan.maxMulligans
+      : (config.mulligans ?? 3);
     for (;;) {
       hand = library.slice(0, 7);
-      if (mulligans >= (config.mulligans ?? 3) || keepableHand(hand, profiles)) break;
+      if (mulligans >= mulliganCap || keepableHand(hand, profiles, policy)) break;
       mulligans += 1;
       library = shuffle(deck.library, rng);
     }
@@ -665,16 +772,33 @@
       if (turn >= 3 && turn <= 6 && mana < turn - 1) manaBehind += 1;
       opponentBoard = seats.reduce((sum, seat) => sum + byTurn(seat.threat, turn) * seat.deviation, 0);
       const state = {cardsInHand: hand.length, opponentBoard};
+      /* TAPPING OUT, OR NOT. A pilot who holds an answer up is refusing to spend
+         the mana that answer costs. Reserving nothing -- the published pilot --
+         leaves this at zero and the loop below spends exactly as it always has.
+         Colour is not reserved: this model has no notion of which land is tapped
+         (see SIMPLIFICATIONS). */
+      const reserved = policy
+        ? pilotOrThrow().manaToReserve(hand.map((index) => profiles[index]), mana, turn, policy)
+        : 0;
+      const commanderGate = policy ? policy.cast.commanderThreshold : 95;
       for (;;) {
         let bestPosition = -1;
         let bestPriority = -Infinity;
+        const spendable = mana - reserved;
         const ourPower = battlefieldCreatures.reduce((sum, creature) => sum + creature.power, 0);
         hand.forEach((index, position) => {
           const profile = profiles[index];
           if (profile.isLand) return;
           if (profile.isWipe && profile.wipesOwnBoard && ourPower > opponentBoard * 0.6) return;
-          if (!castable(profile, mana, sources)) return;
-          const priority = castPriority(profile, turn, state);
+          /* The card you are holding the mana for is the card you are holding.
+             Without this, a reserving pilot keeps the mana and then spends it on
+             the very answer it was kept for -- the cast loop reaches instants
+             last, so they go out whenever nothing better is castable. Guarded on
+             `reserved`, which is zero for the published pilot and for every
+             policy that taps out, so this line is unreachable for them. */
+          if (reserved > 0 && profile.instantSpeed && (profile.isRemoval || profile.isProtection)) return;
+          if (!castable(profile, spendable, sources)) return;
+          const priority = castPriority(profile, turn, state, policy);
           if (priority > bestPriority) {
             bestPriority = priority;
             bestPosition = position;
@@ -682,8 +806,8 @@
         });
         const commanderProfile = deck.commander?.profile;
         const commanderCost = commanderProfile ? commanderProfile.cmc + commanderTax : Infinity;
-        const commanderCastable = commanderProfile && !commanderOnField && castable(commanderProfile, mana, sources, commanderTax);
-        if (commanderCastable && (bestPosition < 0 || bestPriority < 95)) {
+        const commanderCastable = commanderProfile && !commanderOnField && castable(commanderProfile, spendable, sources, commanderTax);
+        if (commanderCastable && (bestPosition < 0 || bestPriority < commanderGate)) {
           mana -= commanderCost;
           commanderOnField = true;
           commanderTax += 2;
@@ -732,7 +856,7 @@
         }
         if (profile.isTutor) {
           const options = [library.shift(), library.shift(), library.shift()].filter((entry) => entry !== undefined);
-          options.sort((a, b) => castPriority(profiles[b], turn, state) - castPriority(profiles[a], turn, state));
+          options.sort((a, b) => castPriority(profiles[b], turn, state, policy) - castPriority(profiles[a], turn, state, policy));
           if (options.length) {
             hand.push(options[0]);
             drawn.add(options[0]);
@@ -776,11 +900,18 @@
       // removal by presence in hand alone inverted the metric: a six-mana instant
       // sat there uncastable and scored interaction on every turn, while a
       // one-mana instant that could actually be held up scored the same or less.
+      /* THE COUNTERFACTUAL, AND THE FACT. The published protocol asks whether the
+         answer COULD have been held up with everything untapped, which credits a
+         pilot who tapped out for interaction they did not have. A policy that
+         holds mana up is measured on what it actually kept, so its interaction
+         figure is a fact rather than a might-have-been -- and that is why the two
+         lens scores compare with each other and not with the published number. */
+      const answerMana = (policy && policy.hold.fromUntappedMana) ? mana : lands + rocks;
       heldAnswers = hand.filter((index) => {
         const answer = profiles[index];
         return answer.instantSpeed
           && (answer.isRemoval || answer.isProtection)
-          && castable(answer, lands + rocks, sources);
+          && castable(answer, answerMana, sources);
       }).length;
       if (turn >= 3 && turn <= 7) {
         measuredTurns += 1;
@@ -793,7 +924,14 @@
       // no further "unblocked factor" on top of it.
       let attackPower = 0;
       let lifelinkGain = 0;
-      battlefieldCreatures.filter((creature) => !creature.sick && creature.canAttack).forEach((creature) => {
+      const eligibleAttackers = battlefieldCreatures.filter((creature) => !creature.sick && creature.canAttack);
+      /* KEEPING BLOCKERS HOME. Null for the published pilot, which attacks with
+         everything. A creature in this set gives up its attack and is counted
+         twice in the block-reduction estimate below -- a body held back is
+         certainly there to block, where an attacker only notionally is. */
+      const heldBack = policy ? pilotOrThrow().heldBackCreatures(eligibleAttackers, policy) : null;
+      eligibleAttackers.forEach((creature) => {
+        if (heldBack && heldBack.has(creature)) return;
         const connected = creature.power * connectRateFor(creature);
         attackPower += connected;
         if (creature.hasLifelink) lifelinkGain += connected;
@@ -802,8 +940,14 @@
       if (attackPower > 0) {
         const living = seats.filter((seat) => seat.life > 0);
         if (living.length) {
-          const target = living.reduce((lowest, seat) => (seat.life < lowest.life ? seat : lowest), living[0]);
-          target.life -= attackPower;
+          if (policy) {
+            pilotOrThrow()
+              .allocateCombatDamage(living, attackPower, turn, policy, (seat, at) => byTurn(seat.threat, at) * seat.deviation)
+              .forEach((assignment) => { assignment.seat.life -= assignment.amount; });
+          } else {
+            const target = living.reduce((lowest, seat) => (seat.life < lowest.life ? seat : lowest), living[0]);
+            target.life -= attackPower;
+          }
           life += lifelinkGain;
         }
       }
@@ -863,7 +1007,10 @@
       // strike add a flat deterrence bonus on top of raw toughness (see the constants above) --
       // a rough stand-in for "this blocker trades with anything" rather than a real combat
       // simulation.
-      const totalToughness = battlefieldCreatures.reduce((sum, creature) => sum + (creature.toughness || 1) + (creature.hasDeathtouch ? DEATHTOUCH_DETERRENCE : 0) + (creature.hasFirstStrike ? FIRST_STRIKE_DETERRENCE : 0), 0);
+      const totalToughness = battlefieldCreatures.reduce((sum, creature) => {
+        const worth = (creature.toughness || 1) + (creature.hasDeathtouch ? DEATHTOUCH_DETERRENCE : 0) + (creature.hasFirstStrike ? FIRST_STRIKE_DETERRENCE : 0);
+        return sum + worth * (heldBack && heldBack.has(creature) ? 2 : 1);
+      }, 0);
       const blockReduction = Math.min(0.55, totalToughness * 0.025);
       for (const seat of seats) {
         if (seat.life <= 0) continue;
@@ -880,9 +1027,30 @@
         }
         let seatWin = seat.winTurn;
         if (heldAnswers > 0 && turn >= seatWin - 1) {
-          seatWin += 1.5;
+          seatWin += policy ? policy.hold.delayTurns : 1.5;
           seat.winTurn = seatWin;
           heldAnswers -= 1;
+          /* AND THEN THE ANSWER IS GONE. heldAnswers is recounted from hand at the
+             top of every turn, so without this one instant in hand pushes back every
+             combo on the table, every turn, for the whole game and is never cast --
+             a single Swords to Plowshares as an infinite supply of answers. Measured:
+             it made deliberately holding mana up worth +15.66, five points more than
+             any real decision, because the pilot was being paid for a card it never
+             spent.
+
+             Gated on the policy, so the published protocol -- which has always
+             counted this way, and whose every number was produced under it -- is
+             untouched. Both lens policies turn it on, which is what makes the two
+             halves of the gap comparable. */
+          if (policy && policy.hold.answerIsSpent) {
+            let cheapest = -1;
+            hand.forEach((index, position) => {
+              const answer = profiles[index];
+              if (!answer.instantSpeed || !(answer.isRemoval || answer.isProtection)) return;
+              if (cheapest < 0 || answer.cmc < profiles[hand[cheapest]].cmc) cheapest = position;
+            });
+            if (cheapest >= 0) cast.add(hand.splice(cheapest, 1)[0]);
+          }
         }
         if (turn >= seatWin) {
           lost = true;

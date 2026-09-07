@@ -516,7 +516,7 @@ for (const variantId of ["1o", "2c", "3e", "4c", "5o", "6f"]) {
 // The published numbers. Every rung either reports a full measurement or says
 // plainly that it was not measured; nothing is inferred at render time, and no
 // figure survives from an engine that asked a different question.
-const ENGINE = "v2.5";
+const ENGINE = "v2.6";
 const MEASURED_RUNGS = ["Base", "Tuned", "Pod Fun", "Max"];
 assert.equal(simulationSummary.engine, ENGINE, `the summary must name the engine that produced it`);
 assert(simulationSummary.engineNotes?.[ENGINE], "simulation summary must document the engine generation it references");
