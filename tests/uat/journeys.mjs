@@ -384,6 +384,112 @@ for (const screen of SCREENS) {
       await away.ctx.close();
     }
 
+    /* ADDING A DECK WITH A NAME THAT IS NOT A CARD.
+     *
+     * This journey did not exist, and its absence is why the bug shipped: every import
+     * test used a clean list, so an unmatched name never came up. In real use it comes up
+     * constantly -- a typo, a rename, or a name a language model invented -- and the app
+     * used to report it on the review screen and offer a Save button that saved a 99-card
+     * deck the simulator would then refuse to score. Every road out was worse than the
+     * road in.
+     *
+     * Scryfall is stubbed rather than called. The container cannot reach it, and a check
+     * that skips when a third party is slow is a check nobody trusts. The stub answers
+     * autocomplete by prefix and collection by exact name, which is enough to drive every
+     * rung of card-resolve.js. */
+    {
+      const fix = await freshPage(screen);
+      const KNOWN = {
+        "Sol Ring": "Artifact",
+        "Splinter": "Sorcery",
+        "Splinter, Radical Rat": "Legendary Creature — Rat Ninja",
+        "Splinter, the Mentor": "Legendary Creature — Rat Ninja",
+        "Command Tower": "Land",
+        "Swamp": "Basic Land — Swamp"
+      };
+      await fix.page.route("**://api.scryfall.com/**", async (route) => {
+        const url = new URL(route.request().url());
+        const json = (body) => route.fulfill({status: 200, contentType: "application/json", body: JSON.stringify(body)});
+        const card = (name) => ({name, type_line: KNOWN[name], legalities: {commander: "legal"}});
+        if (url.pathname === "/cards/autocomplete") {
+          const q = (url.searchParams.get("q") || "").toLowerCase();
+          return json({data: Object.keys(KNOWN).filter((n) => n.toLowerCase().startsWith(q))});
+        }
+        if (url.pathname === "/cards/collection") {
+          const body = JSON.parse(route.request().postData() || "{}");
+          const data = [], not_found = [];
+          (body.identifiers || []).forEach((id) => (KNOWN[id.name] ? data.push(card(id.name)) : not_found.push(id)));
+          return json({data, not_found});
+        }
+        return route.fulfill({status: 404, contentType: "application/json", body: JSON.stringify({object: "error"})});
+      });
+      await fix.page.goto(`${BASE}/index.html`, {waitUntil: "domcontentloaded"});
+      await fix.page.waitForSelector(".start-tile", {timeout: 20000});
+      await fix.page.click(".start-tile.deck-add");
+      await fix.page.waitForSelector("[data-imp-text]", {timeout: 10000});
+      await fix.page.fill("[data-imp-text]", [
+        "1 Splinter, Radical Rat",          // real, and the commander
+        "1 Splinter, Vengeful Sensei",      // invented: several plausible answers
+        "1 Sol Rng",                        // a typo: one right answer
+        "1 Zzzqqq Nonexistent Blorp",       // not a card at all: none
+        "1 Command Tower", "20 Swamp"
+      ].join("\n"));
+      await fix.page.click("[data-imp-read]");
+      await fix.page.waitForSelector(".imp-fix-row", {timeout: 25000});
+      await fix.page.waitForTimeout(1500);
+
+      const asked = await fix.page.evaluate(() => [...document.querySelectorAll(".imp-fix-row")].map((row) => ({
+        name: row.querySelector(".imp-fix-asked b").textContent,
+        options: [...row.querySelectorAll(".imp-fix-opt")].map((o) => o.querySelector("b").textContent),
+        chosen: [...row.querySelectorAll(".imp-fix-opt.is-on")].map((o) => o.querySelector("b").textContent),
+        links: row.querySelectorAll(".imp-fix-links a").length
+      })));
+      check(asked.length === 3, screen.tag, "first · bad names",
+        `${asked.length} unmatched names were asked about, expected 3`);
+      const invented = asked.find((row) => /Vengeful/.test(row.name));
+      const typo = asked.find((row) => /Sol Rng/.test(row.name));
+      const nonsense = asked.find((row) => /Zzzqqq/.test(row.name));
+      check(invented && invented.options.length >= 3, screen.tag, "first · bad names",
+        `an invented name must be answered with candidates, got ${invented ? invented.options.length : 0}`);
+      check(typo && typo.chosen.includes("Sol Ring"), screen.tag, "first · bad names",
+        `a typo with one right answer must be pre-chosen, got ${typo ? JSON.stringify(typo.chosen) : "no row"}`);
+      check(nonsense && nonsense.options.length === 1 && /Leave it out/.test(nonsense.options[0]),
+        screen.tag, "first · bad names",
+        "a name that is not a card must be said to be one, with a way out");
+      check(asked.every((row) => row.links === 2), screen.tag, "first · bad names",
+        "every unmatched name must offer a second place to look it up by hand");
+      /* THE DEAD END ITSELF: the way onward must be held until every name has an answer.
+         It used to be a Save button that was always live. */
+      check(await fix.page.locator("[data-imp-fixdone]").isDisabled(), screen.tag, "first · bad names",
+        "the way onward is open while two names are still undecided");
+      await shot(fix.page, `${screen.tag}-first-badnames`);
+
+      await fix.page.locator('[data-fix-pick="Splinter, the Mentor"]').first().click();
+      await fix.page.locator(".imp-fix-row", {hasText: "Zzzqqq"}).locator("[data-fix-drop]").click();
+      await fix.page.waitForTimeout(400);
+      check(!(await fix.page.locator("[data-imp-fixdone]").isDisabled()), screen.tag, "first · bad names",
+        "every name is answered and the way onward is still shut");
+      await fix.page.click("[data-imp-fixdone]");
+      await fix.page.waitForSelector(".imp-problems, .imp-score", {timeout: 15000});
+      await fix.page.waitForTimeout(800);
+
+      const after = await fix.page.evaluate(() => ({
+        lede: (document.querySelector(".imp-lede") || {}).textContent || "",
+        problems: [...document.querySelectorAll(".imp-problems li")].map((n) => n.textContent.trim())
+      }));
+      const count = Number((after.lede.match(/(\d+) cards/) || [])[1] || 0);
+      check(count === 24, screen.tag, "first · bad names",
+        `the two chosen cards did not land in the deck: ${count} cards, expected 24`);
+      check(!after.problems.some((p) => /could not be matched/.test(p)), screen.tag, "first · bad names",
+        `a name the reader answered is still reported as a failure: ${JSON.stringify(after.problems)}`);
+      check(after.problems.some((p) => /you left out/.test(p)), screen.tag, "first · bad names",
+        "a name left out on purpose must be named as a decision, not swallowed");
+      console.log(`  first · bad names        3 asked · "${typo ? typo.chosen[0] : "?"}" pre-chosen · ` +
+        `${count} cards after · ${JSON.stringify(after.problems.filter((p) => /left out/.test(p)))}`);
+      await healthy(fix.page, screen.tag, "first · bad names");
+      await fix.ctx.close();
+    }
+
     await page.goto(`${BASE}/matrix.html`, {waitUntil: "domcontentloaded"});
     await page.waitForTimeout(5000);
     check(await picksIn(page) === 0, screen.tag, "first · lands", "a first visit already has picks");

@@ -819,6 +819,33 @@
     });
   }
 
+  /* THE NAMES THAT DID NOT MATCH, and what they might have meant.
+     card-resolve.js owns the ladder; this hands it the two things it cannot get for
+     itself -- a Scryfall client, and the list of every Commander-legal card name, which
+     is the rung that catches a plain typo without a request at all. The registry is
+     fetched once, lazily: it is 1.6 MB and most imports never need it. */
+  var UNIVERSE_NAMES = null;
+  function localCardNames() {
+    if (UNIVERSE_NAMES) return Promise.resolve(UNIVERSE_NAMES);
+    return fetchJson("data/commander-universe.json?v=1")
+      .then(function (file) {
+        UNIVERSE_NAMES = (file.cards || []).map(function (row) { return row[0]; });
+        return UNIVERSE_NAMES;
+      })
+      .catch(function () { UNIVERSE_NAMES = []; return UNIVERSE_NAMES; });
+  }
+  function resolveNames(names, options) {
+    var Resolve = window.MtgCardResolve;
+    if (!Resolve || !window.MtgScryfall) {
+      return Promise.reject(new Error("The card lookup did not load."));
+    }
+    if (!scryfall) scryfall = window.MtgScryfall.createClient();
+    return localCardNames().then(function (localNames) {
+      return Resolve.resolveNames(names, scryfall,
+        Object.assign({localNames: localNames}, options || {}));
+    });
+  }
+
   function measureContext() {
     if (simContext) return Promise.resolve(simContext);
     return Promise.all([
@@ -835,13 +862,14 @@
 
   function openImport() {
     var missing = ["MtgDeckImport", "MtgDeckSources", "MtgDeckStore", "MtgDeckMeasure",
-      "MtgImportPanel", "MtgSimEngine"].filter(function (name) { return !window[name]; });
+      "MtgImportPanel", "MtgSimEngine", "MtgCardResolve"].filter(function (name) { return !window[name]; });
     if (missing.length) return toast("The import tools did not load (" + missing[0] + ").");
 
     window.MtgImportPanel.createPanel({
       existing: function () { return IMPORTS; },
       localCards: localCards,
       lookupCards: lookupCards,
+      resolveNames: resolveNames,
       measureContext: measureContext,
       onSaved: function (record) {
         IMPORTS = Store.add(IMPORTS, record);

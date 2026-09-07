@@ -335,9 +335,28 @@ assert.match(appSource, /const Generator = window\.MtgDeckGenerator/, "app.js mu
 assert.match(appSource, /function renderChoose\(\)/, "app.js must render the Choose view");
 assert.match(appSource, /if \(view === "choose"\) renderChoose\(\);/, "switchView must route the Choose tab");
 assert.match(appSource, /Custom\.mergeIntoCatalogs\(customStore, bakedCatalog, bakedBuyCatalog\)/, "generated decks must merge into copies of the baked catalog, never into the files");
-assert.match(appSource, /\$\{visibleTotal\} of \$\{catalog\.variants\.length\} shown/, "the Compare counter must follow the merged catalog");
-assert.match(appSource, /\$\{selected\.length\}\/\$\{catalog\.decks\.length\}/, "the Compare selection meter must follow the merged deck count");
-assert.match(appSource, /\$\{variants\.length\} of \$\{deckTotal\} shown/, "each deck row must count its own variants");
+/* The counter now describes the LIBRARY -- what is not on Compare yet -- because Compare
+   stopped showing all fifty variants on every visit. It still has to follow the merged
+   catalog rather than the baked one, or a generated deck would be counted as something
+   left to add. */
+assert.match(appSource, /\$\{offShelf\} of \$\{catalog\.variants\.length\} researched variants not on Compare/,
+  "the library counter must follow the merged catalog");
+assert.match(appSource, /const library = catalog\.variants\.filter\(\(variant\) => !isCustomDeck\(variant\.deckId\) && !onShelf\(variant\)\)/,
+  "a generated deck is never in the library: it is on Compare because you made it");
+/* The meter counts against what is ON Compare, which includes every generated deck --
+   `shelved` is filtered from the merged catalog, so a generated deck still raises the
+   denominator. It falls back to the whole catalog only when the shelf is empty, where
+   there is nothing to count against yet. */
+assert.match(appSource, /\$\{selected\.length\}\/\$\{shelved\.length \|\| catalog\.decks\.length\}/,
+  "the Compare selection meter must follow what is on Compare, out of the merged catalog");
+assert.match(appSource, /const shelved = catalog\.decks\.filter\(onCompareShelf\)/,
+  "the shelf is filtered from the merged catalog, so a generated deck is always on it");
+assert.match(appSource, /if \(isCustomDeck\(deck\.id\)\) return true;/,
+  "a generated deck never has to be added from the library: you made it");
+assert.match(appSource, /\$\{variants\.length\} of \$\{deckTotal\} on Compare/,
+  "each researched deck row must say how many of its own variants are on Compare");
+assert.match(appSource, /\$\{variants\.length\} approach\$\{variants\.length === 1 \? "" : "es"\}/,
+  "a generated deck counts approaches rather than a fraction of five: there is no library behind it");
 assert.match(appSource, /deck-group-divider/, "generated decks must be separated from the curated ones");
 assert.match(appSource, /String\(item\?\.name \|\| ""\)/, "itemKey must tolerate plans that carry no precon");
 // The Choose tour steps go with the withdrawn tab; the tour must not offer a

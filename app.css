@@ -84,6 +84,57 @@ main { width: min(1560px, 100%); min-height: 70vh; margin: 0 auto; padding: 18px
 .compare-filter-grid { display: grid; grid-template-columns: minmax(220px,1.5fr) repeat(3,minmax(145px,1fr)); gap: 8px; }
 .compare-filter-grid label > span { display: block; margin: 0 0 4px 2px; color: var(--muted); font-size: 9.5px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; }
 .compare-filter-grid input, .compare-filter-grid select { width: 100%; min-height: 43px; padding: 0 10px; border: 1px solid #bdb196; border-radius: 9px; color: var(--ink); background: #fff; font-size: 12px; }
+
+/* ------------------------------------------------------------ the library ----
+ * Compare used to show all fifty researched variants on every visit, in ten groups of
+ * five, with anything you generated yourself below the lot of them behind a divider. The
+ * fifty are still here and still measured; they are just in a drawer now, and Compare
+ * shows what you have taken out of it. This is that drawer: a list you scan for a name,
+ * not a set of tiles you compare -- comparing is what the shelf below it is for.
+ */
+.compare-library > summary { cursor: pointer; list-style: none; margin-bottom: 0; }
+.compare-library > summary::-webkit-details-marker { display: none; }
+.compare-library[open] > summary { margin-bottom: 10px; }
+.compare-library > summary .deck-chevron { transition: transform .16s ease; color: var(--forest); }
+.compare-library[open] > summary .deck-chevron { transform: rotate(90deg); }
+.compare-library > summary:hover b { color: var(--forest-2); }
+.compare-library .compare-filter-grid { grid-template-columns: minmax(200px,1.5fr) repeat(3,minmax(135px,1fr)) auto; align-items: end; }
+.compare-library .compare-filter-grid .mini-button { min-height: 43px; }
+
+#library-list { margin-top: 12px; max-height: 52vh; overflow: auto; }
+.library-role + .library-role { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.library-role-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 5px; }
+.library-role-head b { color: var(--forest); font: 800 13px/1.2 Georgia,serif; }
+.library-row {
+  display: grid; grid-template-columns: 20px minmax(0,1.6fr) minmax(0,1.4fr) auto;
+  align-items: center; gap: 10px; width: 100%; text-align: left;
+  padding: 7px 9px; border: 1px solid transparent; border-radius: 9px;
+  background: none; font: inherit; color: var(--ink); cursor: pointer;
+}
+.library-row:hover, .library-row:focus-visible { border-color: var(--forest-2); background: #fffdf6; outline: none; }
+.library-add { color: var(--forest-2); font-size: 16px; font-weight: 900; line-height: 1; }
+.library-name b { display: block; font-size: 13px; font-weight: 700; }
+.library-name small { display: block; margin-top: 1px; color: var(--muted); font-size: 11px; }
+.library-tags { display: flex; flex-wrap: wrap; gap: 3px; }
+.library-tags span { padding: 1px 7px; border-radius: 999px; background: var(--surface-2); color: var(--muted); font-size: 10px; font-weight: 700; }
+.library-score { color: var(--forest); font-size: 13px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.library-empty { margin: 12px 2px 2px; color: var(--muted); font-size: 12.5px; }
+.library-first-run p { max-width: 62ch; }
+
+/* The line under a role's summary that says what is not here and offers it. */
+.deck-group-rest { margin: 0 0 8px; padding: 0 4px; color: var(--muted); font-size: 11.5px; }
+.link-button {
+  padding: 0; border: 0; background: none; color: var(--accent);
+  font: inherit; font-size: 11.5px; font-weight: 800; cursor: pointer; text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.link-button:hover { color: var(--forest); }
+
+@media (max-width: 760px) {
+  .compare-library .compare-filter-grid { grid-template-columns: minmax(0,1fr); }
+  .library-row { grid-template-columns: 20px minmax(0,1fr) auto; }
+  .library-tags { display: none; }
+}
 .compare-filter-grid input:focus, .compare-filter-grid select:focus { outline: 3px solid rgba(32,88,68,.14); border-color: var(--forest-2); }
 .variant-filter-empty { width: min(88vw,390px); min-height: 210px; display: grid; place-items: center; align-content: center; gap: 7px; padding: 24px; border: 1px dashed #b8aa8d; border-radius: 14px; color: var(--muted); background: #faf6eb; text-align: center; scroll-snap-align: center; }
 .variant-filter-empty strong { color: var(--forest); font-family: Georgia,serif; }

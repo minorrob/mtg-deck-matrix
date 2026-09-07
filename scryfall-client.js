@@ -264,6 +264,18 @@
       return cards;
     }
 
+    /* Scryfall's own name suggester: up to twenty names that could complete what was
+       typed. It is the first thing to ask about a name that did not match, because it
+       answers for a typo and stays silent for an invented card -- which is the difference
+       that decides what to offer the reader. Returns names, not cards: turning them into
+       cards is one /cards/collection request rather than twenty. */
+    async function autocomplete(partial, autoOptions = {}) {
+      const clean = String(partial || "").trim();
+      if (clean.length < 2) return [];
+      const data = await request(`/cards/autocomplete?q=${encodeURIComponent(clean)}`, {signal: autoOptions.signal});
+      return Array.isArray(data?.data) ? data.data : [];
+    }
+
     async function named(name, namedOptions = {}) {
       const clean = String(name || "").trim();
       if (!clean) return null;
@@ -323,6 +335,7 @@
       search,
       named,
       collection,
+      autocomplete,
       byTcgplayerId,
       resolveTcgplayerUrl,
       parseTcgplayerUrl,

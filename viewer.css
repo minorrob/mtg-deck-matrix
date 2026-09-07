@@ -930,6 +930,41 @@ main { padding: 24px 0 140px; }
 .imp-problems li:last-child { margin-bottom: 0; }
 
 .imp-unmatched { margin: 0 0 14px; font-size: 13px; color: var(--text-dim); }
+
+/* ------------------------------------------------- the names that did not match ----
+ * A pasted list with one bad name used to reach the review screen, say "1 card name could
+ * not be matched", and offer a Save button that saved a 99-card deck the simulator would
+ * then refuse to score. This is the step that was missing: what the name might have been,
+ * and a way to say which.
+ *
+ * One row per bad name, its candidates as tappable cards, and "Leave it out" as a real
+ * option beside them -- because sometimes the answer is that the card is not a card.
+ */
+.imp-fix { max-height: 48vh; overflow: auto; margin: 0 0 14px; }
+.imp-fix-row { padding: 12px 0; border-top: 1px solid var(--line-soft); }
+.imp-fix-row:first-child { border-top: 0; padding-top: 4px; }
+.imp-fix-asked { display: flex; align-items: baseline; gap: 8px; margin-bottom: 7px; }
+.imp-fix-asked b { font-size: 14.5px; color: var(--text); }
+.imp-fix-asked span { color: var(--text-dim); font-size: 12px; }
+.imp-fix-options { display: grid; gap: 5px; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); }
+.imp-fix-opt {
+  display: block; width: 100%; text-align: left; cursor: pointer;
+  padding: 7px 10px; border: 1px solid var(--line); border-radius: var(--radius-sm);
+  background: var(--panel); font: inherit; color: var(--text);
+}
+.imp-fix-opt:hover { border-color: var(--patina); }
+.imp-fix-opt:focus-visible { outline: 2px solid var(--patina); outline-offset: 1px; }
+.imp-fix-opt b { display: block; font-size: 13px; font-weight: 700; }
+.imp-fix-opt span { display: block; margin-top: 1px; color: var(--text-dim); font-size: 11.5px; line-height: 1.35; }
+/* The chosen one, in the app's own "this is on" green. */
+.imp-fix-opt.is-on { border-color: var(--patina); background: var(--patina-soft); }
+.imp-fix-opt.is-on b { color: #14603f; }
+/* Leaving a card out is a real answer, not a failure -- dashed rather than red. */
+.imp-fix-opt.is-drop { border-style: dashed; }
+.imp-fix-opt.is-drop.is-on { border-style: solid; border-color: var(--amber); background: #fdf1d8; }
+.imp-fix-opt.is-drop.is-on b { color: #7a5406; }
+.imp-fix-links { margin: 7px 0 0; color: var(--text-faint); font-size: 11.5px; }
+.imp-fix-links a { color: var(--ember); }
 .imp-unmatched summary { cursor: pointer; color: var(--text-dim); }
 .imp-unmatched p { margin: 8px 0 0; font-size: 12.5px; color: var(--text-faint); line-height: 1.6; }
 
