@@ -1052,7 +1052,7 @@
     if (simSeats) return Promise.resolve(simSeats);
     return Promise.all([
       fetch("sim/config.json?v=1", {cache: "default"}).then((r) => r.json()),
-      fetch("sim/opponents.json?v=1", {cache: "default"}).then((r) => r.json())
+      fetch("sim/opponents.json?v=2", {cache: "default"}).then((r) => r.json())
     ]).then(([config, opponents]) => {
       simSeats = {config, seats: window.MtgDeckMeasure.buildSeats(opponents, config.table)};
       return simSeats;

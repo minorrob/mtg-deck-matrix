@@ -10,8 +10,8 @@
       "sha": "a18e9d2a0d56618a"
     },
     "app.js": {
-      "version": 126,
-      "sha": "c4a4917005d3cd1e"
+      "version": 127,
+      "sha": "a70c59f39f881eca"
     },
     "build-panel.js": {
       "version": 4,
@@ -40,6 +40,10 @@
     "card-table.js": {
       "version": 3,
       "sha": "0834a1d637e65152"
+    },
+    "combat.js": {
+      "version": 1,
+      "sha": "fe6b45f2a4ec0aba"
     },
     "compliance-model.js": {
       "version": 2,
@@ -74,8 +78,8 @@
       "sha": "dcb139d39ac4e9d8"
     },
     "data/deck-ratings.json": {
-      "version": 4,
-      "sha": "2dd99fc16203fe9c"
+      "version": 5,
+      "sha": "72afaf2da50a857a"
     },
     "data/deck-swaps.json": {
       "version": 1,
@@ -102,8 +106,8 @@
       "sha": "5f58e9270e04b9a0"
     },
     "data/simulation-summary.json": {
-      "version": 3,
-      "sha": "cb1c7299788ab1be"
+      "version": 4,
+      "sha": "1fdb19b2e25df208"
     },
     "data/variants.json": {
       "version": 1,
@@ -158,8 +162,8 @@
       "sha": "0b348802ff31d3d0"
     },
     "graph-page.js": {
-      "version": 28,
-      "sha": "0d878295e7143393"
+      "version": 29,
+      "sha": "17b60901f94a4f5e"
     },
     "header.css": {
       "version": 3,
@@ -206,8 +210,8 @@
       "sha": "6a8eceea117da582"
     },
     "sim-engine.js": {
-      "version": 4,
-      "sha": "3eb7a4fb0d9faeb3"
+      "version": 5,
+      "sha": "09a835d92064d447"
     },
     "sim-lenses.js": {
       "version": 1,
@@ -218,12 +222,12 @@
       "sha": "1c1040245521cd80"
     },
     "sim/opponents.json": {
-      "version": 1,
-      "sha": "3d2c66d42af520e0"
+      "version": 2,
+      "sha": "d98c8cccb4861914"
     },
     "slot-model.js": {
-      "version": 13,
-      "sha": "40931aa79a531d88"
+      "version": 14,
+      "sha": "672a4a09347200ae"
     },
     "user-state.js": {
       "version": 5,
@@ -234,8 +238,8 @@
       "sha": "76caf7a8585da1a3"
     },
     "viewer.js": {
-      "version": 33,
-      "sha": "ba82a482c319ee2b"
+      "version": 34,
+      "sha": "19e2ee77239589ec"
     },
     "xlsx-reader.js": {
       "version": 1,

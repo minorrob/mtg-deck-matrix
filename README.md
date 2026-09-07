@@ -365,7 +365,7 @@ data/source/                             the workbooks and documents those files
 tools/                                   importers and one-off migrations (⚠ several write data/)
 tools/sim/                               the simulation pipeline: request → pool → optimize → bake
 sim/                                     config.json, opponents.json, status.json — the rest is ignored
-tests/                                   35 Node suites, built-ins only
+tests/                                   36 Node suites, built-ins only
 tests/uat/                               the browser journeys, and a README worth reading
 graph/                                   the Neo4j ingest that bakes data/graph.json — local only
 prototype/  payload/  payload_v3/        historical; nothing running references them
@@ -384,7 +384,7 @@ each tag says why that module is there and what breaks without it.
 
 ### Tests
 
-Thirty-five suites, run individually or all at once. They use only Node built-ins — there is
+Thirty-six suites, run individually or all at once. They use only Node built-ins — there is
 no `package.json`, no dependency to install and no build step.
 
 ```
@@ -418,6 +418,7 @@ and something got pushed on the strength of it.
 | `card-images` | the picture for a card the app does not ship: shipped facts, then this browser's cache, then the image the deck record already carries, then Scryfall — bounded, least-recently-used, and safe when storage refuses to write |
 | `measure-report` | what the score is made of: that the breakdown adds up to the number, that rounding for display never moves it, that the run says how much work it did and how fast, and that a re-run says whether the change is real before it replaces anything |
 | `guide-agent` | the agent that writes "How to play it": that every card it names is one of the hundred it was sent, that it is never asked for a number the app can measure, and that the checks pass on the six guides a person wrote by hand |
+| `combat` | creatures, blocks and things dying: worked combats with the answer written beside them — flying, menace, deathtouch, first and double strike, trample past a body it killed, and the block a player declines at forty life and makes at three |
 | `pilot-policy` | the person holding the cards: that the published pilot is still exactly the published pilot when it becomes a parameter, that each measurable decision reverts to one the other pilot actually makes, and that the advice never attributes a gap it did not measure |
 | `friends-deck` | a real 100-card export somebody handed over, pinned as a fixture: that every card in it is in the registry and reachable on the graph, and that the one name in it which is not a card is answered with the real cards a person would have meant |
 

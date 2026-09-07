@@ -967,7 +967,7 @@
     if (simContext) return Promise.resolve(simContext);
     return Promise.all([
       fetchJson("sim/config.json?v=1"),
-      fetchJson("sim/opponents.json?v=1")
+      fetchJson("sim/opponents.json?v=2")
     ]).then(function (parts) {
       simContext = {
         config: parts[0],

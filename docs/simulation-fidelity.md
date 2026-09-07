@@ -102,7 +102,100 @@ repeats it under every score. It is not a fix.
 
 ---
 
-## 3 · Combat is a scalar, and it should be a board — **designed, not built**
+## 3 · Combat is a scalar, and it should be a board — **built, and OFF by default**
+
+*Landed 2026-09-07 as `combat.js` plus `config.combat`. The design that follows this section
+is unchanged and still describes the destination; this records how far the first piece got,
+what it measured, and the two places it did not do what the design predicted.*
+
+**How to run it.** `config.combat` is `"estimate"` (the arithmetic below, and what every
+published number in this repository used) or `"board"`. A no-op guarantee is pinned the same
+way the pilot's is: `tests/combat.mjs` requires a run with no setting and a run under
+`"estimate"` to be identical metric for metric across six decks and two seeds. A misspelled
+mode throws rather than quietly measuring the old model.
+
+**What was built.** Design pieces 1, 3 and 5, and the conservative half of 4:
+
+- **The opponents have boards.** Each archetype gained one number, `bodySize` in
+  `sim/opponents.json` — how its threat curve divides into bodies, which is the whole
+  difference between a tokens seat and a voltron seat. The counts fall out of the curves that
+  already existed: at turn eight, tokens has eight creatures, voltron has one, combo has one.
+- **Blocks are declared on both sides,** by the "block when it is a clean profit" policy the
+  design asks for first, with the chump-block reserved for lethal damage.
+- **Damage is assigned** across multiple blockers, with deathtouch (one point is lethal),
+  trample (the excess carries, but only past bodies it actually killed), first strike, double
+  strike, menace, flying and reach.
+- **Things die,** on both sides, and stay dead.
+- **Attacking taps a creature,** so a creature that attacked is not there to block on the way
+  back — which is what was supposed to make holding one home a decision.
+
+**Two corrections found by measuring rather than by reasoning:**
+
+*A token is a body.* `boardWidth` folds each token-making clause into its parent as +2 power.
+That is right for an arithmetic model and exactly wrong for combat: it turns a go-wide deck
+into a handful of enormous creatures, and enormous creatures get chump-blocked where the same
+power spread out does not. On the first run, D6 Krenko — whose entire plan is Goblins — fell
+the furthest of the six. Each clause is now its own 2/2, so the deck's total power is
+unchanged and only its distribution moves.
+
+*A killed creature has to stay killed.* The first board refresh topped a seat up to the level
+its curve implied, which handed back everything we had just killed. Attacking a board achieved
+nothing: surviving seats went 1.32 → 1.74 and the first elimination slid from turn 8.7 to 9.1.
+Seats now track what they have ever deployed and add only the difference.
+
+### What it measures
+
+Six decks, two seeds of 5,000, `estimate` against `board`:
+
+| deck | estimate | board | change | win rate | speed |
+|---|---:|---:|---:|---|---|
+| D1 Quintorius | 77.25 | 64.55 | −12.70 | 41.8% → 24.3% | 17k → 10k games/s |
+| D2 Chulane | 56.85 | 45.40 | −11.45 | 19.1% → 4.0% | 21k → 15k |
+| D3 Atraxa | 82.05 | 73.90 | −8.15 | 46.2% → 33.6% | 22k → 15k |
+| D4 Felothar | 65.60 | 55.40 | −10.20 | 32.6% → 18.1% | 22k → 14k |
+| D5 Shadrix | 79.90 | 71.90 | −8.00 | 43.1% → 32.1% | 13k → 15k |
+| D6 Krenko | 65.50 | 51.25 | −14.25 | 31.4% → 11.4% | 30k → 14k |
+
+**The slowdown is about 1.5×, not the five to ten the design expected.** Roughly 14,000 games
+a second against 22,000, so the published protocol would go from four seconds to six — which
+removes the product decision the design spent three paragraphs on.
+
+### The two things it did NOT do
+
+**It is not the absorption that costs the points.** The obvious reading of that table is that
+blockers eat the damage. Measured, the opposite: the share of declared attacking power that
+reaches a player under board combat is **0.80 to 0.84**, where the estimate assumes a flat
+**0.70**. More gets through, not less. The score falls for two other reasons — attackers die
+in combat and stop compounding, and peer damage now tracks each seat's real board, so killing
+one seat's creatures reduces the pressure it was putting on the other two. That second one is
+faithful and awkward at the same time: attacking a seat helps the other seats survive, and
+winning needs all three dead.
+
+**It does not yet make a held-back blocker worth having.** This was the design's own headline
+claim — §3a records −10.42 as the number combat had to beat. Measured under board combat:
+
+| | estimate | board |
+|---|---:|---:|
+| keep one creature home | −10.15 | **−9.29** |
+| keep two creatures home | −13.13 | **−10.33** |
+
+Better, and not by enough to matter. Three reasons, all identifiable: only a third of a seat's
+creatures come at us, so there is little to block; the block policy is the conservative one,
+so a held-back creature often declines to block anyway; and the value function that prices
+life against board — design piece 4, where Playstyle enters — is exactly what is missing.
+**The parameter therefore still ships at zero**, and this is still the number to beat.
+
+### Why it is off by default
+
+Turning it on re-bases all 200 rungs by 8 to 14 points, and the two findings above say the
+model is not finished: the pilot cannot yet decide a block, and the seats do not block each
+other. Publishing numbers from a combat step whose central promise has not landed would trade
+one confident wrong number for another. The mechanism is built, tested against worked combats,
+and measured; switching it on is a decision to take separately.
+
+---
+
+## 3 · The design in full — pieces 2, 4 and 6 are still ahead
 
 **What the engine does today.** There is no combat. There is an arithmetic estimate of it:
 total attacking power, multiplied by a per-creature connect rate (0.85 for flying or menace,
