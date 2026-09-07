@@ -58,6 +58,13 @@
   display: inline-block; padding: 0 5px; border-radius: 999px;
   background: var(--gold-soft); color: #6b4c07; font-size: 10px; font-weight: 800;
 }
+/* Whether a card can sit in a command zone is the first thing asked of a legendary
+   creature, so it is said here rather than only inside the popup. */
+.gp-focus-flag.is-cmdr { background: #d8ecdf; color: #14603f; }
+/* A card the corpus does not hold. Said plainly, because picking it costs a request
+   to Scryfall and the reader should know that before they press it. */
+.gp-focus-flag.is-away { background: var(--surface-2); color: var(--muted); font-weight: 700; }
+.gp-focus-opt.is-away b { color: var(--accent); }
 .gp-focus-msg { margin: 6px 0 0; font-size: 11.5px; line-height: 1.45; color: var(--muted); }
 .gp-focus-msg.is-bad { color: var(--red); }
 .gp-focus-msg.is-ok { color: var(--forest-2); }
@@ -146,6 +153,9 @@
 .gp-tag { padding: 1px 6px; border-radius: 999px; background: var(--surface-2); font-size: 10px; font-weight: 700; color: var(--muted); }
 .gp-tag.own { background: var(--gold-soft); color: #6b4c07; }
 .gp-tag.deck { background: #dff1e6; color: var(--forest); }
+/* Its own hue, not the deck green: "is in one of your decks" and "could be the deck"
+   are different claims and were the same color. */
+.gp-tag.cmdr { background: #ece0f7; color: #503273; }
 
 /* The reason groups, as a chip row above the canvas. It doubles as the legend:
    a reader can learn WHY a card has 90 neighbors without reading the graph at
@@ -196,13 +206,23 @@
   #cy { height: min(58vh, 460px); }
 }
 
-/* Tapping a node shows the card; re-centering is a button inside that popup. The
-   lock is the opt-in inverse for anyone who would rather drill straight in. */
-.gp-lock {
-  min-height: 30px; padding: 4px 11px; border: 1px solid var(--line); border-radius: 999px;
-  background: var(--surface); font-size: 12px; font-weight: 800; color: var(--muted); cursor: pointer;
+/* WHAT A CLICK ON A CARD DOES, said in the words of what it does.
+   This was one button reading "Tap to focus", which named the setting rather than
+   the effect and left the reader to work out which of two states they were in from
+   a padlock. It is now a label and a two-state pill, because the question is not
+   "is the lock on" but "where does a click take me": Off shows the card's picture,
+   On re-centers the graph on it. */
+.gp-navmode { display: inline-flex; align-items: center; gap: 8px; }
+.gp-navmode-label { color: var(--muted); font-size: 12px; font-weight: 800; }
+.gp-seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+.gp-seg-btn {
+  min-height: 30px; padding: 4px 13px; border: 0; background: var(--surface);
+  font: inherit; font-size: 12px; font-weight: 800; color: var(--muted); cursor: pointer;
 }
-.gp-lock.is-on { border-color: var(--gold); background: var(--gold-soft); color: #6b4c07; }
+.gp-seg-btn + .gp-seg-btn { border-left: 1px solid var(--line); }
+.gp-seg-btn:hover { color: var(--ink); }
+.gp-seg-btn.is-on { background: var(--forest); color: #fff8e8; }
+.gp-seg-btn:focus-visible { outline: 2px solid var(--forest-2); outline-offset: -2px; }
 
 body.gp-locked { overflow: hidden; }
 .gp-modal {
@@ -242,15 +262,28 @@ body.gp-locked { overflow: hidden; }
 }
 
 /* The copilot strip. Deliberately above the results and deliberately quiet: it
-   states a finding, its evidence, and offers a filter. It never acts. */
-.gp-copilot { margin: 0 0 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+   states a finding, its evidence, and offers a filter. It never acts.
+   Closed by default, which makes the header the only part most readers ever see -- so
+   the header has to look like something you press. It was a white bar with a small grey
+   plus on the right, indistinguishable from a heading. It now has its own fill, a
+   chevron that turns, and a hover state, which is the whole vocabulary of "this opens". */
+.gp-copilot { margin: 0 0 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); overflow: hidden; }
 .gp-copilot > summary {
   display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 10px 13px;
   cursor: pointer; list-style: none; font-size: 13px;
+  background: linear-gradient(180deg, #f7f1de, #ece4d0);
+  border-bottom: 1px solid transparent;
 }
+.gp-copilot > summary:hover { background: linear-gradient(180deg, #fdf8e8, #e6dcc2); }
+.gp-copilot > summary:focus-visible { outline: 2px solid var(--forest-2); outline-offset: -2px; }
+.gp-copilot[open] > summary { border-bottom-color: var(--line); }
+.gp-copilot > summary strong { color: var(--forest); }
 .gp-copilot > summary::-webkit-details-marker { display: none; }
-.gp-copilot > summary::after { content: "＋"; margin-left: auto; color: var(--muted); }
-.gp-copilot[open] > summary::after { content: "－"; }
+.gp-copilot > summary::after {
+  content: "\203a"; margin-left: auto; color: var(--forest); font-size: 19px; line-height: 1;
+  transition: transform .16s ease;
+}
+.gp-copilot[open] > summary::after { transform: rotate(90deg); }
 .gp-cp-n { color: var(--muted); font-size: 12px; }
 .gp-cp-live { padding: 2px 9px; border-radius: 999px; background: var(--gold-soft); color: #6b4c07; font-size: 11.5px; font-weight: 800; }
 .gp-cp-grid { display: grid; gap: 9px; padding: 0 13px 13px; grid-template-columns: repeat(auto-fill, minmax(258px, 1fr)); }

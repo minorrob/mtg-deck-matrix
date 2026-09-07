@@ -47,6 +47,35 @@ if (existsSync(`${cacheDir}/default_cards.jsonl`)) {
   console.log("no default_cards.jsonl -- falling back to one printing per card; run 01-fetch.mjs to fix prices");
 }
 
+/* WHO CAN BE A COMMANDER, from the file that asked Scryfall rather than from a
+   regex over the type line. This was `/Legendary/ && /Creature/` against the whole
+   type line, and it was wrong in both directions: the 29 Kamigawa flip cards read
+   "Creature - ... // Legendary Creature - ..." so both halves matched a card whose
+   FRONT face is not legendary, and the 21 planeswalkers that say "can be your
+   commander" matched neither half. Grist, the Hunger Tide is legal by a rule no
+   type line states at all. tools/commander-universe.mjs writes the answer down;
+   this reads it. Without the file the old heuristic still runs, so a bake on a
+   fresh checkout produces something rather than nothing -- and says that it did. */
+const commanderNames = await (async () => {
+  try {
+    const uni = JSON.parse(await readFile("data/commander-universe.json", "utf8"));
+    const names = new Set(uni.cards.filter((c) => c[6]).map((c) => c[0]));
+    console.log(`commanders from data/commander-universe.json (${names.size})`);
+    return names;
+  } catch (err) {
+    console.log("no data/commander-universe.json -- falling back to the type-line guess, "
+      + "which misses planeswalker commanders; run tools/commander-universe.mjs to fix");
+    return null;
+  }
+})();
+function canBeCommander(card) {
+  if (commanderNames) return commanderNames.has(card.name);
+  const front = card.card_faces?.[0]?.type_line || card.type_line || "";
+  return (/\bLegendary\b/.test(front) && /Creature/.test(front))
+    || /can be your commander/i.test(card.oracle_text || "")
+    || (card.card_faces || []).some((f) => /can be your commander/i.test(f.oracle_text || ""));
+}
+
 const cards = [], fills = [], causes = [], triggers = [], produces = [], consumes = [],
       requires = [], mechanics = [], tribes = [], printings = [];
 let seen = 0, legal = 0;
@@ -68,7 +97,7 @@ for await (const c of jsonl(`${cacheDir}/oracle_cards.jsonl`)) {
   cards.push([c.oracle_id, c.name, mv, ci, typeLine, c.rarity || "", (pi && pi.set) || c.set_name || "",
               usd, foil,
               c.edhrec_rank || "", isLand ? "true" : "false",
-              /\bLegendary\b/.test(typeLine) && /Creature/.test(typeLine) ? "true" : "false",
+              canBeCommander(c) ? "true" : "false",
               (c.image_uris?.normal || faces[0]?.image_uris?.normal || ""),
               (pi && pi.tcg) || c.purchase_uris?.tcgplayer || "",
               pi ? pi.printings : 1]);

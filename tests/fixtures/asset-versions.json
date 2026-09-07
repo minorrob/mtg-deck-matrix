@@ -1,13 +1,17 @@
 {
   "note": "Written by tests/asset-versions.mjs --update. Each entry records the content a ?v= was last bumped for; the test fails when content moves and the version does not.",
   "assets": {
+    "admin-menu.js": {
+      "version": 2,
+      "sha": "0d91ba2c64356efa"
+    },
     "app.css": {
-      "version": 80,
-      "sha": "8442ddb28dd0780b"
+      "version": 81,
+      "sha": "3137ed0655799fdf"
     },
     "app.js": {
-      "version": 119,
-      "sha": "957e25fba3747780"
+      "version": 120,
+      "sha": "64215b17e79c0737"
     },
     "build-panel.js": {
       "version": 4,
@@ -16,6 +20,14 @@
     "card-classify.js": {
       "version": 1,
       "sha": "bbe09724aa0cad69"
+    },
+    "card-table.css": {
+      "version": 5,
+      "sha": "013d18d439a0b9dc"
+    },
+    "card-table.js": {
+      "version": 3,
+      "sha": "0834a1d637e65152"
     },
     "compliance-model.js": {
       "version": 2,
@@ -41,6 +53,10 @@
       "version": 1,
       "sha": "f3c35612e8d8f44b"
     },
+    "data/commander-universe.json": {
+      "version": 1,
+      "sha": "45f581a1c5a7b6ad"
+    },
     "data/deck-guides.json": {
       "version": 1,
       "sha": "dcb139d39ac4e9d8"
@@ -54,16 +70,20 @@
       "sha": "ec9c4f6a1466a388"
     },
     "data/graph.json": {
-      "version": 1,
-      "sha": "5c666f73f9f2b8de"
+      "version": 2,
+      "sha": "e22f02d77bcfaafa"
     },
     "data/lenses.json": {
       "version": 1,
       "sha": "664bd76816f35f8b"
     },
     "data/master-v2.json": {
+      "version": 2,
+      "sha": "20125228500e5aec"
+    },
+    "data/my-load.json": {
       "version": 1,
-      "sha": "5270481c2c4c58ad"
+      "sha": "e7389843b5bde808"
     },
     "data/pull-list.json": {
       "version": 1,
@@ -122,12 +142,16 @@
       "sha": "64ca6d7289743a4f"
     },
     "graph-page.css": {
-      "version": 14,
-      "sha": "1fd27b6c55dac703"
+      "version": 16,
+      "sha": "0b348802ff31d3d0"
     },
     "graph-page.js": {
-      "version": 19,
-      "sha": "823027f11c851e6a"
+      "version": 23,
+      "sha": "a72ca4bcda4fb961"
+    },
+    "header.css": {
+      "version": 3,
+      "sha": "d55d265b7b522739"
     },
     "import-panel.js": {
       "version": 1,
@@ -177,13 +201,17 @@
       "version": 13,
       "sha": "40931aa79a531d88"
     },
+    "user-state.js": {
+      "version": 2,
+      "sha": "7c3e663ee641fb2d"
+    },
     "viewer.css": {
-      "version": 20,
-      "sha": "22707f1228ef7542"
+      "version": 24,
+      "sha": "9ae94d69ca23b0d5"
     },
     "viewer.js": {
-      "version": 18,
-      "sha": "1543e81a73c181ea"
+      "version": 25,
+      "sha": "c5782766c2ceea56"
     },
     "xlsx-reader.js": {
       "version": 1,

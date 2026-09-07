@@ -97,70 +97,56 @@ button { font: inherit; color: inherit; }
 
 /* ---------------------------------------------------------------- header */
 
-.topbar {
-  position: sticky; top: 0; z-index: 40;
-  background: rgba(244,239,223,.88);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--line-soft);
+/* The banner itself is header.css, shared with matrix.html and graph.html. What is left
+   here is this page's own tab row, restyled for the dark ground it now sits on: the same
+   three tabs, in the same order, over card art instead of parchment. */
+
+.tabs {
+  position: relative; z-index: 1;
+  display: flex; gap: 6px; max-width: 1560px; margin: 0 auto;
 }
-
-.topbar-row {
-  display: flex; align-items: center; gap: 16px;
-  padding: 12px 0 0;
-}
-
-.brand { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
-.brand h1 { font-size: 20px; white-space: nowrap; }
-.brand .brand-sub {
-  font-size: 12px; color: var(--text-faint);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-
-/* The rest of the application, above the fold.
- *
- * My Decks is the landing page; Compare, Deck, Shop, the Game Log and the Tour
- * are all on matrix.html, and the only way there was a footer link a screen
- * below the fold on a desktop and nearly three on a phone. Measured, on a first
- * visit with nothing saved. So the route lives in the header, in the row that is
- * on screen before anybody scrolls -- and reads as a link to somewhere else
- * rather than a fourth tab, because the three beside it switch views on this
- * page and these two leave it. */
-.brand { flex: 1 1 auto; }
-.elsewhere { display: flex; gap: 6px; align-items: center; }
-.elsewhere a {
-  color: var(--text-dim); font-size: 12.5px; font-weight: 700; text-decoration: none;
-  padding: 6px 11px; border: 1px solid var(--line); border-radius: 999px;
-  white-space: nowrap; background: var(--panel);
-}
-.elsewhere a:hover { color: var(--text); border-color: var(--text-faint); }
-.elsewhere .short { display: none; }
-
-.tabs { display: flex; gap: 4px; margin-left: 10px; }
-
 .tab {
-  appearance: none; background: transparent; border: 0;
-  border-bottom: 2px solid transparent;
-  padding: 8px 14px 12px; cursor: pointer;
-  color: var(--text-dim); font-size: 14px; font-weight: 600;
+  appearance: none; cursor: pointer; white-space: nowrap;
   display: flex; align-items: center; gap: 7px;
-  white-space: nowrap;
+  min-height: 40px; padding: 6px 16px;
+  border: 1px solid rgba(255,255,255,.26); border-radius: 12px;
+  background: rgba(255,255,255,.09); color: #e4f1ea;
+  font-size: 14px; font-weight: 800;
 }
-.tab:hover { color: var(--text); }
-.tab[aria-selected="true"] { color: var(--text); border-bottom-color: var(--ember); }
+.tab:hover { background: rgba(255,255,255,.16); }
+.tab:focus-visible { outline: 2px solid #fff4d7; outline-offset: 2px; }
+.tab[aria-selected="true"] {
+  color: #0d3325; border-color: #ffd98a;
+  background: linear-gradient(180deg, #fff8e4, #ffe4a2);
+  box-shadow: 0 5px 15px rgba(0,0,0,.3), inset 0 1px 0 #fffdf4;
+}
 .tab .count {
-  font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 999px;
-  background: var(--panel-2); color: var(--text-dim); font-variant-numeric: tabular-nums;
+  font-size: 11px; font-weight: 800; padding: 1px 6px; border-radius: 999px;
+  background: rgba(255,255,255,.16); color: #e4f1ea; font-variant-numeric: tabular-nums;
 }
-.tab[aria-selected="true"] .count { background: var(--ember-soft); color: var(--ember); }
+.tab[aria-selected="true"] .count { background: rgba(13,51,37,.14); color: #0d3325; }
+
+@media (max-width: 560px) {
+  .tabs { gap: 4px; }
+  .tab { padding: 6px 10px; font-size: 13px; }
+}
 
 /* The one-line state of the whole collection, directly under the tabs. */
 .ribbon {
   display: flex; flex-wrap: wrap; gap: 6px 20px;
-  padding: 9px 0 11px; font-size: 12.5px; color: var(--text-dim);
-  border-top: 1px solid var(--line-soft);
+  padding: 11px 0 0; font-size: 12.5px; color: var(--text-dim);
 }
 .ribbon b { color: var(--text); font-weight: 700; font-variant-numeric: tabular-nums; }
 .ribbon .sep { color: var(--line); }
+/* Every figure is a link to the page it summarizes, and has to look like one without
+   turning a quiet strip into seven blue words: the underline appears on hover, and the
+   number it carries changes color to say which one you are about to follow. */
+.ribbon-stat {
+  color: inherit; text-decoration: none; border-radius: 6px; padding: 1px 3px; margin: -1px -3px;
+}
+.ribbon-stat:hover, .ribbon-stat:focus-visible { background: var(--panel); outline: none; }
+.ribbon-stat:hover b, .ribbon-stat:focus-visible b { color: var(--ember); }
+.ribbon-stat:focus-visible { box-shadow: 0 0 0 2px var(--patina); }
 
 /* ------------------------------------------------------------------ page */
 
@@ -208,8 +194,67 @@ main { padding: 24px 0 140px; }
 /* Archived decks. Closed, headed by the count, and saying in the summary what archiving
    actually did -- a deck that vanished from the list AND from the buy total, with no
    word about either, reads as data loss. */
+/* WHAT AN EMPTY LIST MEANS, and only while it is empty. A cleared session lands on a
+   bench of nothing, which looks exactly like an app that failed to load; one sentence and
+   one button is the difference. It is a panel rather than a line of grey text because
+   somebody who has just cleared everything needs somewhere to go next. */
 .empty-note {
-  margin: 0; padding: 26px 4px; color: var(--text-dim); font-size: 13.5px; line-height: 1.55;
+  /* Spans the deck grid rather than sitting in its first cell: it is the state of the
+     whole list, not one deck-shaped hole in it. */
+  grid-column: 1 / -1;
+  margin: 0; padding: 26px 24px; text-align: center;
+  color: var(--text-dim); font-size: 13.5px; line-height: 1.55;
+}
+.empty-note h3 { margin: 0 0 6px; font-size: 17px; color: var(--text); }
+.empty-note p { margin: 0 auto 14px; max-width: 52ch; }
+
+/* How the score is made, under the heading and above the decks. Closed by default: the
+   summary carries the sample size, which is the part somebody skims for, and the method
+   is one click away for the reader who wants to check it. */
+.score-method { margin: 0 0 18px; padding: 12px 16px; }
+.score-method > summary {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px;
+  cursor: pointer; list-style: none;
+}
+.score-method > summary::-webkit-details-marker { display: none; }
+.score-method > summary::after {
+  content: "\203a"; margin-left: auto; color: var(--text-dim); font-size: 18px; line-height: 1;
+  transition: transform .16s ease;
+}
+.score-method[open] > summary::after { transform: rotate(90deg); }
+.score-method > summary b { font-size: 14.5px; color: var(--text); }
+.score-method > summary span { font-size: 12.5px; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.score-method-body { margin-top: 12px; border-top: 1px solid var(--line-soft); padding-top: 12px; }
+.score-method-body .play-line { margin: 0 0 10px; font-size: 13.5px; line-height: 1.6; }
+.score-weights {
+  display: flex; flex-wrap: wrap; gap: 5px; margin: 0 0 12px; padding: 0; list-style: none;
+}
+.score-weights li {
+  padding: 3px 9px; border: 1px solid var(--line); border-radius: 999px;
+  background: var(--panel-2); font-size: 12px; color: var(--text-dim);
+}
+.score-weights li b { color: var(--text); font-variant-numeric: tabular-nums; }
+/* The limits are the paragraph that earns the rest of it, so they are marked rather
+   than buried: a tool that claims to model everything has not been checked. */
+.score-limits { border-left: 3px solid var(--amber); padding-left: 11px; color: var(--text); }
+.score-src { font-size: 12px !important; color: var(--text-faint); }
+
+/* The two controls the shared table adds on this page: the tick that puts a card in the
+   tray, and the "i" that opens it. Everything else about the table is card-table.css. */
+.ct-tick { display: flex; align-items: center; }
+.ct-tick input { width: 17px; height: 17px; accent-color: var(--patina); cursor: pointer; }
+.ct-row.is-picked { background: var(--ember-soft); }
+.ct-info {
+  width: 24px; height: 24px; border: 1px solid var(--line); border-radius: 50%;
+  background: var(--panel-2); color: var(--text-dim);
+  font: inherit; font-size: 11.5px; font-style: italic; font-weight: 800; cursor: pointer;
+}
+.ct-info:hover { border-color: var(--patina); color: var(--text); }
+.ct-why { font-size: 12.5px; color: var(--text-dim); line-height: 1.45; }
+.ct-gc {
+  display: inline-block; margin-left: 5px; padding: 0 6px; border-radius: 999px;
+  background: #ffeec2; color: #7a5406; font-size: 10px; font-weight: 900;
+  letter-spacing: .04em; text-transform: uppercase; vertical-align: 1px;
 }
 .archive-drawer > summary { cursor: pointer; color: var(--text-dim); font-size: 13px; }
 .archive-rows { display: grid; gap: 8px; margin-top: 12px; }
@@ -330,12 +375,19 @@ main { padding: 24px 0 140px; }
 
 /* ---------------------------------------------------------- deck detail */
 
-.back-link {
+/* `.deck-back`, not `.back-link`. There are two "go back" controls on this page and
+   they are not the same control: the one in the banner is the shared nav chip, styled by
+   header.css and pinned to a fixed height so it lands in the same place on all three
+   pages. This one is the plain link out of a deck's detail view. They collided under one
+   name -- viewer.css loads after header.css, so this rule's `padding` and
+   `margin-bottom: 10px` won, and the chip in the banner sat four pixels higher on My
+   Decks than on the Matrix and the graph. */
+.deck-back {
   appearance: none; background: none; border: 0; cursor: pointer;
   color: var(--text-dim); font-size: 13.5px; padding: 4px 0; margin-bottom: 10px;
   display: inline-flex; align-items: center; gap: 6px;
 }
-.back-link:hover { color: var(--text); }
+.deck-back:hover { color: var(--text); }
 
 .detail-head {
   display: flex; gap: 18px; flex-wrap: wrap; align-items: flex-start;
@@ -609,10 +661,6 @@ main { padding: 24px 0 140px; }
 
 @media (max-width: 760px) {
   .wrap { padding: 0 13px; }
-  .brand .brand-sub { display: none; }
-  .topbar-row { padding-top: 10px; }
-  .tabs { margin-left: auto; }
-  .tab { padding: 8px 9px 11px; font-size: 13px; }
   .detail-head h2 { font-size: 24px; }
   .detail-head .hook { font-size: 15px; }
   .turn { grid-template-columns: 1fr; gap: 2px; }
@@ -757,24 +805,12 @@ main { padding: 24px 0 140px; }
     -webkit-overflow-scrolling: touch; gap: 0 14px;
   }
   .ribbon::-webkit-scrollbar { display: none; }
-  .ribbon > span { white-space: nowrap; flex: none; }
+  .ribbon > span, .ribbon > .ribbon-stat { white-space: nowrap; flex: none; }
 
-  .topbar-row { flex-wrap: wrap; gap: 0; padding-top: 10px; }
-  /* Brand and the two links share the first row; the tabs take the second. Two
-     header rows, which is what it was before these links existed -- a third row
-     on a sticky header costs more screen than the links are worth. */
-  .brand { flex: 1 1 auto; }
-  .elsewhere { margin-left: auto; }
-  /* "Build" alone was the phone label and it collides with the Build a deck
-     tile further down THIS page, which is a different thing entirely. The full
-     phrase fits beside the title at 390px -- measured -- so only the second
-     link shortens. */
-  .elsewhere a { padding: 6px 9px; font-size: 12px; }
-  .elsewhere a[href="graph.html"] .long { display: none; }
-  .elsewhere a[href="graph.html"] .short { display: inline; }
-  .tabs { margin-left: 0; width: 100%; justify-content: space-between; }
-  .tab { padding: 9px 4px 11px; font-size: 13.5px; min-height: 44px; flex: 1; justify-content: center; }
-  .brand h1 { font-size: 18px; }
+  /* The three tabs share the width rather than bunching left, so each is a real
+     target at 390px. */
+  .tabs { width: 100%; }
+  .tab { flex: 1; justify-content: center; min-height: 44px; padding: 6px 4px; font-size: 13.5px; }
 
   main { padding-bottom: 190px; }
 
@@ -1084,11 +1120,26 @@ main { padding: 24px 0 140px; }
 .inv-bar b { color: var(--text); font-weight: 700; }
 .inv-bar > div:first-child { flex: 1 1 260px; min-width: 0; }
 .inv-bar.is-on { border-style: solid; border-color: var(--patina); background: var(--patina-soft); }
-.inv-acts { display: flex; gap: 6px; flex-wrap: wrap; }
-.inv-file { cursor: pointer; }
+.inv-acts { display: flex; gap: 6px; flex-wrap: wrap; align-items: flex-start; }
+
+/* The button and, under it, the answer to "what should the file look like".
+   The button loses a few pixels of height to pay for the line beneath it: the
+   strip is the same height it was, and the question that actually stops people
+   is now answered in the place they are already looking rather than in a help
+   page nobody opens. */
+.inv-upload { display: inline-flex; flex-direction: column; align-items: stretch; gap: 3px; }
+.inv-file { cursor: pointer; padding-top: 6px; padding-bottom: 6px; }
+.inv-template {
+  padding: 0; border: 0; background: none; cursor: pointer;
+  font: inherit; font-size: 11.5px; color: var(--ember); text-align: center;
+  text-decoration: underline; text-underline-offset: 2px;
+}
+.inv-template:hover { color: var(--text); }
+.inv-template:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; border-radius: 4px; }
 
 @media (max-width: 560px) {
   .inv-bar .btn, .inv-bar .inv-file { flex: 1 1 100%; text-align: center; }
+  .inv-upload { flex: 1 1 100%; }
 }
 
 /* iOS zooms a focused field whose text is under 16px and does not zoom back.

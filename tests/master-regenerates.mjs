@@ -46,12 +46,23 @@ const sorted = (v) => {
 // allowlist applied at every level, so each card -- holding none of the top-level
 // keys -- serialized to {} and the comparison compared nothing at all. This test
 // passed a deliberately corrupted file before that was caught.
+/* Fields the WORKBOOK does not decide, added afterwards by a tool that reads Scryfall.
+   The workbook is a build sheet and carries no rarity; tools/commander-universe.mjs
+   writes it in so the buy list and the bench can be filtered by it. Comparing it against
+   a fresh import would fail on every card forever, so it is stripped here -- and asserted
+   separately below, because a field that is only ever ignored is a field that can go
+   missing without anybody noticing. */
+const ENRICHED = ["rarity"];
 const stable = (json) => {
   const copy = {...json};
   delete copy.generatedAt;
-  copy.cards = copy.cards.map((card) => card.priceSource === "scryfall"
-    ? {...card, price: "(live)", toBuyCost: "(live)"}
-    : card);
+  copy.cards = copy.cards.map((card) => {
+    const out = card.priceSource === "scryfall"
+      ? {...card, price: "(live)", toBuyCost: "(live)"}
+      : {...card};
+    ENRICHED.forEach((field) => { delete out[field]; });
+    return out;
+  });
   return JSON.stringify(sorted(copy));
 };
 
@@ -91,6 +102,15 @@ try {
     `${COMMITTED} does not match what ${SOURCE} regenerates to. It is a build artifact, not a document -- ` +
     "edit the workbook and re-run tools/import_master_v2.py. If this fired after a merge, the JSON side of " +
     "that merge was resolved by hand and should be thrown away and rebuilt.");
+
+  // Same bargain as the live prices: a field taken out of the comparison has to be
+  // checked on its own, or a re-import that dropped every rarity would pass here and
+  // leave the Rarity filter with nothing to offer.
+  const RARITIES = new Set(["common", "uncommon", "rare", "mythic", "special", "bonus"]);
+  const unrated = committed.cards.filter((card) => !RARITIES.has(card.rarity));
+  assert.equal(unrated.length, 0,
+    `${unrated.length} cards carry no rarity (${unrated.slice(0, 5).map((c) => c.name).join(", ")}). ` +
+    "Re-run: node tools/commander-universe.mjs --repair");
 
   // Blanking a field is only safe if something else still watches it. A row
   // that lost its Scryfall price would otherwise slip through as "(live)"

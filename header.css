@@ -1,0 +1,215 @@
+/* One header, three pages.
+ * ------------------------
+ * My Decks, the Deck Matrix and the card graph are three views of one thing, and until
+ * now each one announced itself differently: the Matrix wore a dark banner with card art,
+ * the graph wore the same banner with no art, and My Decks wore a light parchment bar
+ * with a different typeface. Worse than the mismatch was the wandering: the link back to
+ * My Decks sat above the title on two pages and inside a row of tabs on the third, so the
+ * one control a reader uses to move between pages was in a different place on each.
+ *
+ * So the banner is the Matrix's, everywhere, and the two nav slots are pinned:
+ *
+ *   .hdr-nav      one row, always first, always the same height
+ *     .back-link    LEFT   -- where you came from, or where you are
+ *     .hdr-links    RIGHT  -- where else you can go, plus Admin
+ *   .brand-row    the title, on its own line under them
+ *   (then whatever tabs the page has of its own)
+ *
+ * WHY THIS FILE AND NOT app.css. index.html loads viewer.css and the other two load
+ * app.css, and the two name the same palette differently -- `--ink` is the dark text in
+ * one and the light page ground in the other. A header that reached for either would come
+ * out inverted on one page. Everything here is either a literal or a token this file
+ * defines, so it renders identically whichever stylesheet it lands beside.
+ */
+
+/* NOT `overflow: hidden`, which is where it started and what clipped the Admin menu.
+   The menu hangs below the banner by design -- it is a dropdown -- and on a phone, where
+   the header is short, everything below the first row or two of it was cut off and
+   unclickable. The art it was clipping cannot overflow anyway: .banner-art is
+   absolutely positioned to the header's own box and its images are object-fit: cover
+   inside that. The clip is on the art instead, where the only thing that could spill is. */
+.app-header {
+  position: sticky; top: 0; z-index: 50;
+  padding: max(10px, env(safe-area-inset-top)) 14px 9px;
+  color: #fff8e8;
+  background: linear-gradient(135deg, #082b1f, #1a6b4a 68%, #a8781f);
+  box-shadow: 0 5px 18px rgba(17, 43, 35, .28);
+}
+/* Bounded by inset: 0 rather than by the header's clip, which is why dropping that
+   clip changed nothing about how this paints. */
+.app-header::after {
+  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: linear-gradient(90deg, rgba(7,30,22,.97) 0%, rgba(11,44,33,.78) 43%,
+    rgba(15,58,43,.14) 75%, rgba(96,64,22,.16) 100%);
+}
+/* Three card crops, right of centre, under a gradient that keeps the text legible over
+   them. They are the header's whole visual identity and cost nothing to read past. */
+.banner-art {
+  position: absolute; inset: 0 0 0 42%; z-index: 0; display: grid;
+  grid-template-columns: repeat(3, 1fr); opacity: .84; overflow: hidden;
+  filter: saturate(1.18) contrast(1.05); pointer-events: none;
+}
+.banner-art img { width: 100%; height: 100%; object-fit: cover; object-position: center 28%; }
+
+/* THE ROW THAT MAKES THE THREE PAGES LINE UP. Fixed order, fixed height, first thing
+   under the top edge on every page -- so the way back is under the same pixel wherever
+   you are, and so is the way onward. */
+/* The row is a fixed height too, for the same reason: it is the one thing that must be
+   in the same place on every page, and a row that grows to fit its tallest child is a row
+   whose height depends on which page you are looking at. */
+.hdr-nav {
+  /* z-index 3, not 1, and this is not decoration. `position: relative` plus a z-index
+     makes this row its own stacking context, so the Admin dropdown inside it is stacked
+     against the row rather than against the header -- its own z-index 60 counts only
+     within here. At 1 the row tied with .header-toggle, which comes later in the DOM and
+     therefore painted on top of the open menu: on a phone the chevron sat over "Export a
+     backup" and swallowed the click. */
+  position: relative; z-index: 3;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  /* A FIXED height, not a minimum. With a minimum the row is as tall as its tallest
+     child, and its tallest child is a different set of buttons on each page -- three on
+     My Decks, three on the Matrix, one on the graph -- so the row came out 40px on one
+     and 38px on the others and the chip inside it sat four pixels lower. Pinned, both
+     children centre against the same box everywhere. */
+  height: 40px; box-sizing: border-box; padding-top: 4px;
+  max-width: 1560px; margin: 0 auto 6px;
+}
+.hdr-links { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
+
+.back-link {
+  /* A FIXED height, not a minimum. The chip is a link on two pages and a plain span on
+     the third, and the two glyphs it carries -- an arrow and a diamond -- render at
+     different heights, so "at least 26px" came out 26px on the Matrix and the graph and
+     29px on My Decks. Three pixels is enough to see when you move between pages, which
+     is exactly what this row exists to stop. */
+  display: inline-flex; align-items: center; gap: 6px; height: 26px; line-height: 1;
+  padding: 3px 12px 3px 10px; box-sizing: border-box;
+  border: 1px solid rgba(255,255,255,.3); border-radius: 999px;
+  color: #d9e8df; background: rgba(8,31,24,.45);
+  font-size: 10px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase;
+  text-decoration: none; white-space: nowrap; backdrop-filter: blur(4px);
+}
+.back-link:hover, .back-link:focus-visible { color: #0f3a2b; background: #fff4d7; outline: none; }
+.back-link .back-arrow { font-size: 13px; line-height: 1; transition: transform .16s ease; }
+.back-link:hover .back-arrow { transform: translateX(-2px); }
+/* The page you are already on. Same chip in the same slot, so the row does not change
+   shape between pages -- but not a link, because it goes nowhere. */
+.back-link.is-here { color: #f0d089; border-style: dashed; background: rgba(8,31,24,.3); cursor: default; }
+.back-link.is-here:hover { color: #f0d089; background: rgba(8,31,24,.3); }
+.back-link.is-here .back-arrow { transition: none; }
+.back-link.is-here:hover .back-arrow { transform: none; }
+
+.brand-row {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  max-width: 1560px; margin: 0 auto 9px;
+}
+.eyebrow {
+  margin: 0 0 2px; color: #e6cc91;
+  font-size: 10px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase;
+}
+.app-header h1 {
+  margin: 0; font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(23px, 5vw, 34px); line-height: 1; color: #fff8e8;
+}
+/* A word under the title on My Decks: how many decks, and what the page is for. */
+.brand-note { margin: 3px 0 0; color: #cfe0d6; font-size: 11.5px; font-weight: 600; }
+
+.header-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
+.save-status { max-width: 120px; color: #d9e8df; font-size: 11px; line-height: 1.25; text-align: right; }
+
+.state-io-button, .tour-button {
+  display: inline-flex; align-items: center; gap: 5px; min-height: 34px; padding: 6px 10px;
+  border: 1px solid rgba(255,255,255,.3); border-radius: 999px;
+  color: #d9e8df; background: rgba(8,31,24,.4);
+  font: inherit; font-size: 10px; font-weight: 900; cursor: pointer;
+  backdrop-filter: blur(4px); white-space: nowrap; text-decoration: none;
+}
+.tour-button { border-color: rgba(255,255,255,.42); color: #fff6dd; background: rgba(8,31,24,.58); }
+.state-io-button:hover, .state-io-button:focus-visible,
+.tour-button:hover, .tour-button:focus-visible { color: #0f3a2b; background: #fff4d7; outline: none; }
+
+/* ---------------------------------------------------------------- Admin ----
+ * Five buttons in the banner -- Export, Import, Load Active, Undo load, Reset All --
+ * were five things nobody presses in a normal session taking the space of the two they
+ * press every time. They fold behind one button, which is also where the two that did
+ * not exist yet now live: Load default, and Clear session.
+ */
+.admin { position: relative; }
+.admin-pop {
+  position: absolute; z-index: 60; top: calc(100% + 6px); right: 0; width: 288px;
+  padding: 6px; border: 1px solid #dcd2b9; border-radius: 12px;
+  background: #fffefa; box-shadow: 0 14px 34px rgba(17, 43, 35, .3);
+  color: #16221d; text-align: left;
+}
+.admin-pop[hidden] { display: none; }
+.admin-item {
+  display: block; width: 100%; text-align: left; cursor: pointer;
+  padding: 8px 10px; border: 0; border-radius: 8px; background: none;
+  font: inherit; color: #16221d;
+}
+.admin-item:hover, .admin-item:focus-visible { background: #ece4d0; outline: none; }
+.admin-item b { display: block; font-size: 13px; font-weight: 700; }
+.admin-item span { display: block; margin-top: 1px; font-size: 11.5px; line-height: 1.4; color: #586761; }
+.admin-item.is-warn b { color: #c0392b; }
+.admin-sep { height: 1px; margin: 5px 8px; background: #dcd2b9; }
+.admin-note {
+  margin: 2px 0 4px; padding: 0 10px;
+  font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #586761;
+}
+.admin-note.is-stale { color: #b8791a; }
+/* The file input that Import rides on has to look like every other row in the menu. */
+.admin-item.is-file { position: relative; }
+.admin-item.is-file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+/* The header is sticky and, on a phone, was a quarter of the screen at 390px -- most of
+   it a title that gets read once a session. It folds to the nav row and the tabs, and the
+   chevron on its bottom edge brings the rest back. */
+.header-toggle { display: none; }
+@media (max-width: 700px) {
+  .header-toggle {
+    position: relative; z-index: 1; display: block; width: 100%; min-height: 22px;
+    /* Below .hdr-nav on purpose: this is a full-width strip and the Admin menu opens
+       across it. */
+    margin: 5px 0 -4px; padding: 0; border: 0; background: none; color: #d7e6df;
+    cursor: pointer; line-height: 1;
+  }
+  .header-toggle > span {
+    display: inline-block; padding: 1px 16px; border-radius: 999px;
+    background: rgba(255,255,255,.12); font-size: 13px; transition: transform .16s ease;
+  }
+  .header-toggle:focus-visible > span { outline: 2px solid #fff4d7; outline-offset: 2px; }
+  .app-header[data-collapsed="1"] .header-toggle > span { transform: rotate(180deg); }
+  .app-header[data-collapsed="1"] .brand-row { display: none; }
+  /* The art stays -- shorter, behind the tabs rather than behind a title that is gone. */
+  .app-header[data-collapsed="1"] .banner-art { left: 0; opacity: .3; }
+  .app-header { padding-bottom: 5px; }
+  .app-header h1 { font-size: 21px; }
+  .eyebrow { font-size: 9.5px; letter-spacing: .1em; }
+  .brand-row { flex-wrap: wrap; margin-bottom: 7px; }
+  .header-actions { flex: 1 1 100%; justify-content: flex-start; gap: 6px; }
+  .state-io-button, .tour-button { min-height: 30px; padding: 4px 9px; font-size: 9.5px; }
+  /* Shorter buttons, so the row that holds them is shorter -- still one height for all
+     three pages, just this width's height. */
+  .hdr-nav { height: 36px; }
+  .admin-pop { width: min(288px, calc(100vw - 28px)); }
+}
+@media (max-width: 560px) {
+  /* At this width the glyph and one word is still a target, and the second word is what
+     pushes the row onto a third line. Only links that offer a short form shorten. */
+  .state-io-button .long { display: none; }
+  .state-io-button .short[hidden] { display: inline; }
+}
+@media (max-width: 620px) {
+  /* Less art, more room for the words over it. */
+  .banner-art { left: 48%; opacity: .55; }
+}
+@media (min-width: 760px) {
+  .app-header { padding-left: 24px; padding-right: 24px; }
+}
+/* A phone held sideways has 520px of height for everything. The title is the first thing
+   worth giving up; the nav row is the last. */
+@media (max-height: 520px) and (orientation: landscape) {
+  .brand-row { display: none; }
+  .app-header { padding-top: max(7px, env(safe-area-inset-top)); }
+}

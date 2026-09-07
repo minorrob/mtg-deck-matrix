@@ -187,7 +187,7 @@ two versions of one deck, never as absolute odds.
 
 ## Tests
 
-Twenty-five suites, run individually or all at once. They use only Node
+Twenty-seven suites, run individually or all at once. They use only Node
 built-ins — there is no `package.json`, no dependency to install and no build
 step.
 
@@ -214,6 +214,8 @@ ends looking like a pass.
 | `game-record` | what the game log may claim, and the Wilson interval that gates it |
 | `inventory-import` `master-regenerates` `xlsx-writer` `docx-writer` `shop-export` | reading what you own, and writing what you need |
 | `import-wiring` `manual-rung` | the modules each page loads, and hand-added options |
+| `card-table` | the one filter, sort and group-by engine behind the bench, the upgrades and the Shop |
+| `user-state` | every key this browser saves: that a backup covers what a clear destroys, and that nothing writes a key the clear would miss |
 
 ### Journeys, in a real browser
 

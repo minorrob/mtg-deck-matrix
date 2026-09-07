@@ -827,9 +827,20 @@ assert.match(appSource, /state = \{\.\.\.blankState\(\), \.\.\.payload\.state\}/
   assert.match(importBody, /window\.confirm\(/, "importing a state file must ask for confirmation before replacing local data");
   assert.match(loadActiveBody.slice(0, loadActiveBody.indexOf("\n  }\n") + 5), /window\.confirm\(/, "Load Active must ask for confirmation before replacing local data");
 }
-assert.match(htmlSource, /id="export-state-button"/, "an Export button must exist in the header");
-assert.match(htmlSource, /id="import-state-input"/, "an Import file input must exist in the header");
-assert.match(htmlSource, /id="load-active-button"/, "a Load Active button must exist in the header");
+/* The five state buttons were in the banner and are now rows in the Admin menu, which
+   is built at runtime -- so the page can only be asked for the button that opens it, and
+   the items themselves are pinned against app.js where they are written. Naming them
+   here is what stops a rename from quietly leaving the reader with no way to export
+   before a clear. */
+assert.match(htmlSource, /id="admin-button"/, "the Admin button must exist in the header");
+assert.match(htmlSource, /id="admin-menu"/, "and the menu it opens");
+assert.match(htmlSource, /src="user-state\.js/, "the matrix must load the list of saved keys");
+assert.match(htmlSource, /src="admin-menu\.js/, "and the menu that clears them");
+for (const label of ["Export a backup", "Import a backup", "Load default", "Reset picks", "Clear session"]) {
+  assert.ok(appSource.includes(`label: "${label}"`), `the Admin menu must offer "${label}"`);
+}
+assert.match(appSource, /Admin\.clearSession\(\{/, "Clear session must go through the shared confirm-and-back-up flow");
+assert.match(appSource, /onExport: exportFullState/, "and must offer a backup before it clears");
 
 /* Compare reads its per-stage figures out of variants.json by index, and those
    arrays are written by tools rather than by the page. When the Max rung gained

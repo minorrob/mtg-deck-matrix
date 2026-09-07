@@ -34,7 +34,9 @@
   <link rel="stylesheet" media="print" onload="this.media='all';this.onload=null"
         href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800;900&display=swap">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800;900&display=swap"></noscript>
-  <link rel="stylesheet" href="viewer.css?v=20">
+  <link rel="stylesheet" href="header.css?v=3">
+  <link rel="stylesheet" href="card-table.css?v=5">
+  <link rel="stylesheet" href="viewer.css?v=24">
   <!-- Adding a deck. Six small modules rather than one, because each is useful
        and testable on its own: the parser has no idea what a score is, and the
        simulator has no idea where a decklist came from. Loaded here in
@@ -63,47 +65,82 @@
        ZIP walk plus DecompressionStream, so a real Excel file is read here
        without asking anybody to export it as CSV first. -->
   <script src="xlsx-reader.js?v=1" defer></script>
+  <!-- And the writer, for the blank collection template the bench offers. It was missing
+       and the reader was here, which is the asymmetry a wiring test exists to catch:
+       "download template" would have reported the tool missing at the one moment
+       somebody needed it. docx-writer comes first because the xlsx writer borrows its
+       ZIP builder -- an .xlsx and a .docx are both ZIPs, and there is one copy of that. -->
+  <script src="docx-writer.js?v=1" defer></script>
+  <script src="xlsx-writer.js?v=1" defer></script>
   <script src="inventory-import.js?v=1" defer></script>
-  <script src="viewer.js?v=18" defer></script>
+  <!-- The reader's own data, named key by key, and the menu that clears it. Shared with
+       the other page: a clear that missed a key one page writes and the other reads would
+       leave a browser half-empty in a way neither page could see. -->
+  <script src="user-state.js?v=2" defer></script>
+  <script src="admin-menu.js?v=2" defer></script>
+  <!-- One table for the Bench, Upgrades and the Shop: filters, header sort, group by. -->
+  <script src="card-table.js?v=3" defer></script>
+  <script src="viewer.js?v=25" defer></script>
 </head>
 <body>
 
-<header class="topbar">
-  <div class="wrap">
-    <div class="topbar-row">
-      <div class="brand">
-        <h1>My Decks</h1>
-        <span class="brand-sub" id="brand-sub">six Commander decks, what they do, and what they still need</span>
-      </div>
-      <!-- The rest of the application. Compare, Deck, Shop, the Game Log and the
-           Tour all live on matrix.html, and the only route to any of it was a
-           footer link -- 1.0 screens below the fold on a desktop and 2.9 on a
-           phone. A first-time visitor saw six decks and no sign the rest was
-           there, including the one thing built to show them around. -->
-      <nav class="elsewhere" aria-label="The rest of this app">
-        <a href="matrix.html"><span class="long">Build &amp; shop</span><span class="short">Build</span></a>
-        <a href="graph.html"><span class="long">Card graph</span><span class="short">Graph</span></a>
-      </nav>
-      <nav class="tabs" aria-label="Sections">
-        <button class="tab" type="button" data-view="decks" aria-selected="true">Decks</button>
-        <button class="tab" type="button" data-view="bench" id="tab-bench" aria-selected="false">
-          Bench <span class="count">0</span>
-        </button>
-        <button class="tab" type="button" data-view="buy" id="tab-buy" aria-selected="false">
-          To Buy <span class="count">0</span>
-        </button>
-      </nav>
+<header class="app-header">
+    <div class="banner-art" aria-hidden="true">
+      <img src="https://api.scryfall.com/cards/named?format=image&amp;version=art_crop&amp;fuzzy=Felothar+the+Steadfast" alt="">
+      <img src="https://api.scryfall.com/cards/named?format=image&amp;version=art_crop&amp;fuzzy=Slinza%2C+the+Spiked+Stampede" alt="">
+      <img src="https://api.scryfall.com/cards/named?format=image&amp;version=art_crop&amp;fuzzy=Sauron%2C+the+Dark+Lord" alt="">
     </div>
-    <div id="ribbon-slot"></div>
-  </div>
-</header>
+    <!-- The same two nav slots as the Matrix and the graph. My Decks is where you already
+         are, so the left chip names the page rather than linking anywhere -- the row keeps
+         its shape, which is the whole point of pinning it. -->
+    <div class="hdr-nav">
+      <span class="back-link is-here"><span class="back-arrow" aria-hidden="true">&#9670;</span> My Decks</span>
+      <div class="hdr-links">
+        <a class="state-io-button" href="matrix.html" title="Compare variants, build the hundred, and shop for it">&#9635; <span class="long">Deck matrix</span><span class="short" hidden>Matrix</span></a>
+        <a class="state-io-button" href="graph.html" title="Explore every Commander-legal card and what connects them">&#128376; <span class="long">Card graph</span><span class="short" hidden>Graph</span></a>
+        <div class="admin">
+          <button class="state-io-button" id="admin-button" type="button"
+            aria-haspopup="menu" aria-expanded="false">&#9881; Admin</button>
+          <div class="admin-pop" id="admin-menu" role="menu" hidden></div>
+        </div>
+      </div>
+    </div>
+    <div class="brand-row" id="header-brand">
+      <div>
+        <p class="eyebrow">Commander field guide</p>
+        <h1>My Decks</h1>
+        <p class="brand-note" id="brand-sub">six Commander decks, what they do, and what they still need</p>
+      </div>
+    </div>
+    <nav class="tabs" aria-label="Sections">
+      <button class="tab" type="button" data-view="decks" aria-selected="true">Decks</button>
+      <button class="tab" type="button" data-view="bench" id="tab-bench" aria-selected="false">
+        Bench <span class="count">0</span>
+      </button>
+      <!-- Upgrades where To Buy was. The buy list lives on the Shop tab of the Deck
+           Matrix, which is the same list with a better table and the only place that can
+           mark a card bought; two buy lists that disagreed was the problem this fixes.
+           Upgrades is the thing that had no home at all -- a card in, a card out, and
+           why -- and it belongs beside the bench. -->
+      <button class="tab" type="button" data-view="upgrades" id="tab-upgrades" aria-selected="false">
+        Upgrades <span class="count">0</span>
+      </button>
+    </nav>
+    <button class="header-toggle" id="header-toggle" type="button" aria-expanded="false" aria-controls="header-brand"
+      aria-label="Show the title">
+      <span aria-hidden="true">&#8964;</span>
+    </button>
+  </header>
+  <div class="wrap"><div id="ribbon-slot"></div></div>
 
 <main>
   <div class="wrap">
     <div id="page"></div>
 
     <footer class="foot">
-      <span>Built from the Deck Master workbook.</span>
+      <!-- Not "the Deck Master workbook", which is a filename on one person's computer
+           and means nothing to anybody else reading this page. -->
+      <span>Private to this browser &middot; no account needed.</span>
       <a href="matrix.html">Full deck matrix &amp; shopping tools →</a>
       <a href="graph.html">Card graph →</a>
     </footer>

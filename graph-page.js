@@ -135,10 +135,14 @@
        if (picked.length === 1 && picked[0] === "C") return false;
        return have.every(function (v) { return picked.indexOf(v) >= 0; });
      }},
-    {key: "owned",     label: "Ownership",  from: function (c) {
+    /* `mine: true` -- these two describe the reader, not Magic, and they are dropped
+       whole on a browser that has saved nothing. Ownership would otherwise offer one
+       option, "not owned", against all 7,764 cards, which is a control that filters
+       nothing; In a deck would offer none at all. See stripMine below. */
+    {key: "owned",     label: "Ownership",  mine: true, from: function (c) {
       var out = []; if (c.own > 0) out.push("in hand"); if (c.ordered > 0) out.push("on order");
       if (c.bench > 0) out.push("bench"); if (!c.own && !c.ordered) out.push("not owned"); return out; }},
-    {key: "decks",     label: "In a deck",  from: function (c) { return (c.decks || []).map(function (d) { return d.deck; }); }},
+    {key: "decks",     label: "In a deck",  mine: true, from: function (c) { return (c.decks || []).map(function (d) { return d.deck; }); }},
     {key: "type",      label: "Card type",  from: function (c) {
       return ["Creature", "Instant", "Sorcery", "Artifact", "Enchantment", "Planeswalker", "Land", "Battle"]
         .filter(function (t) { return (c.type || "").indexOf(t) >= 0; }); }},
@@ -195,7 +199,7 @@
   function renderFacets() {
     var host = $("facets"), open = {};
     host.querySelectorAll("details.gp-facet").forEach(function (d) { open[d.dataset.key] = d.open; });
-    host.innerHTML = FACETS.map(function (f) {
+    host.innerHTML = FACETS.filter(function (f) { return !(f.mine && MINE_STRIPPED); }).map(function (f) {
       var all = optionsFor(f), picked = state.f[f.key] || [];
       if (!all.length) return "";
       var cap = state.showAll[f.key] ? all.length : 24;
@@ -226,6 +230,11 @@
       (c.price ? " &middot; $" + Number(c.price).toFixed(2) : " &middot; no price") + "</span>" +
       '<span class="gp-tags">' +
         (owned ? '<span class="gp-tag own">' + owned + "</span>" : "") +
+        /* Whether a card can sit in a command zone changes what every other tag on it
+           means, so it is said first and everywhere -- here, in the popup, and in the
+           focus suggestions. The flag comes from Scryfall's own is:commander rather
+           than from a type-line guess; see tools/commander-universe.mjs. */
+        (c.isCommander ? '<span class="gp-tag cmdr">commander</span>' : "") +
         (c.decks || []).map(function (d) { return '<span class="gp-tag deck">' + esc(d.deck) + "</span>"; }).join("") +
         (c.roles || []).slice(0, 3).map(function (r) { return '<span class="gp-tag">' + esc(r) + "</span>"; }).join("") +
       "</span></span></button>";
@@ -236,7 +245,7 @@
    *
    * The graph is ego-centric -- one card in the middle, its reasons around it -- and until
    * now the only way to choose that card was to find it in the list and press Focus inside
-   * its popup. That works for the 7,710 cards the corpus was baked with. For a card it was
+   * its popup. That works for the 7,764 cards the corpus was baked with. For a card it was
    * not baked with, which is most of Magic, there was no way in at all: you could not name
    * the card, so you could not ask the question.
    *
@@ -348,12 +357,59 @@
    * sorts before a comma; nobody typing "Krenko" means the first one. EDHREC's rank is
    * already on every card and is the closest thing here to "the card they meant". Cards
    * with no rank sort last rather than first, which is what a 0 would otherwise do. */
+  /* ------------------------------------------------- the whole legal universe ----
+   *
+   * data/graph.json is the RICH corpus: 7,764 cards carrying rules-derived edges, EDHREC
+   * co-play, prices and ownership. It is not everything: 31,830 cards are Commander-legal,
+   * and at ~920 bytes a card the rest of them in that shape is 29 MB, which is not a page
+   * anybody opens twice on a phone at a table.
+   *
+   * So the rest ship as a flat registry -- name, color identity, rarity, mana value,
+   * primary type, EDHREC rank, and whether the card can be a commander -- 1.6 MB, fetched
+   * the first time somebody types into the focus box and never on a page load. Typing a
+   * card that is not in the corpus finds it here, says what it is, and hands it to the
+   * Scryfall lookup that brings it in as a visitor.
+   *
+   * The point of it is that "every Commander-legal card" stops being a claim the page
+   * makes and becomes a list it can show you.
+   */
+  var UNIVERSE = null;         // [{name, ci, rarity, mv, type, rank, commander}]
+  var universeState = "idle";  // idle | loading | ready | failed
+  var COMMANDERS = null;       // name -> true, for flagging cards already in the corpus
+
+  function loadUniverse() {
+    if (universeState !== "idle") return;
+    universeState = "loading";
+    fetch("data/commander-universe.json?v=1", {cache: "default"})
+      .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+      .then(function (file) {
+        UNIVERSE = (file.cards || []).map(function (row) {
+          return {name: row[0], ci: row[1], rarity: row[2], mv: row[3],
+                  type: row[4], rank: row[5], commander: Boolean(row[6])};
+        });
+        COMMANDERS = Object.create(null);
+        UNIVERSE.forEach(function (c) { if (c.commander) COMMANDERS[c.name] = true; });
+        universeState = "ready";
+        // Somebody typed while it was arriving; answer the question they already asked.
+        var input = $("focus-q");
+        if (input && input.value.trim().length >= 2 && document.activeElement === input) {
+          openFocusMenu(input.value.trim());
+        }
+        renderFocusKept();
+      })
+      .catch(function () { universeState = "failed"; });
+  }
+
+  var RARITY_WORD = {c: "common", u: "uncommon", r: "rare", m: "mythic", s: "special", b: "bonus"};
+
   function focusMatches(query) {
     if (!DATA || query.length < 2) return [];
     var q = query.toLowerCase();
     var exact = [], starts = [], has = [];
+    var seen = Object.create(null);
     DATA.cards.forEach(function (c) {
       var n = (c.name || "").toLowerCase();
+      seen[n] = true;
       if (n === q) { exact.push(c); return; }
       var at = n.indexOf(q);
       if (at === 0) starts.push(c); else if (at > 0) has.push(c);
@@ -362,7 +418,30 @@
     var by = function (a, b) {
       return played(a) - played(b) || (a.name < b.name ? -1 : (a.name > b.name ? 1 : 0));
     };
-    return exact.sort(by).concat(starts.sort(by), has.sort(by)).slice(0, 8);
+    var here = exact.sort(by).concat(starts.sort(by), has.sort(by));
+
+    /* Then the rest of the universe, after everything the corpus already holds -- a card
+       with edges and a price is a better answer than a name, so it goes first. These are
+       marked `outside` and carry only what the registry knows. */
+    var away = [];
+    if (UNIVERSE) {
+      UNIVERSE.forEach(function (row) {
+        var n = row.name.toLowerCase();
+        if (seen[n] || n.indexOf(q) < 0) return;
+        away.push({
+          id: "universe:" + row.name, name: row.name, outside: true,
+          type: row.type, rarity: RARITY_WORD[row.rarity] || "", mv: row.mv,
+          ci: row.ci, rank: row.rank, isCommander: row.commander
+        });
+      });
+      away.sort(function (a, b) {
+        var an = a.name.toLowerCase(), bn = b.name.toLowerCase();
+        return (an.indexOf(q) - bn.indexOf(q))
+          || (played(a) - played(b))
+          || (an < bn ? -1 : (an > bn ? 1 : 0));
+      });
+    }
+    return here.concat(away).slice(0, 8);
   }
 
   var focusState = {open: false, options: [], active: -1, busy: false};
@@ -387,21 +466,29 @@
           '<span class="gp-focus-sub">anything Commander-legal, in or out of the catalog</span></button>';
       }
       var c = o.card;
+      var flags = (c.isCommander ? ' <span class="gp-focus-flag is-cmdr">can be a commander</span>' : "")
+        + (c.visitor ? ' <span class="gp-focus-flag">looked up</span>' : "")
+        + (c.outside ? ' <span class="gp-focus-flag is-away">not in the corpus &mdash; will be looked up</span>' : "");
+      /* A card the corpus does not hold is picked by NAME rather than by id: there is no
+         node to focus yet, so choosing it runs the Scryfall lookup that makes one. */
+      var attr = c.outside
+        ? ' data-focus-lookup="' + esc(c.name) + '"'
+        : ' data-focus-pick="' + esc(c.id) + '"';
       /* tabindex -1 on both: this is a combobox, so the arrow keys move through the
          options while focus and the tab order stay on the input. Leaving them tabbable
          let Tab walk into a menu that aria-activedescendant had just told a screen reader
          nobody had moved into. */
       return '<button type="button" role="option" tabindex="-1" id="focus-opt-' + i + '" aria-selected="' + on + '"' +
-        ' class="gp-focus-opt' + (on ? " is-active" : "") + '" data-focus-pick="' + esc(c.id) + '">' +
+        ' class="gp-focus-opt' + (on ? " is-active" : "") + (c.outside ? " is-away" : "") + '"' + attr + ">" +
         "<b>" + esc(c.name) + "</b>" +
-        '<span class="gp-focus-sub">' + esc(c.type || "") +
-        (c.visitor ? ' <span class="gp-focus-flag">looked up</span>' : "") + "</span></button>";
+        '<span class="gp-focus-sub">' + esc(c.type || "") + flags + "</span></button>";
     }).join("");
     if (focusState.active >= 0) input.setAttribute("aria-activedescendant", "focus-opt-" + focusState.active);
     else input.removeAttribute("aria-activedescendant");
   }
 
   function openFocusMenu(query) {
+    loadUniverse();          // first keystroke, not page load
     var found = focusMatches(query);
     focusState.options = found.map(function (c) { return {kind: "card", card: c}; });
     /* The way out is always on the list, not behind a second guess. A name that matches
@@ -510,6 +597,25 @@
      toggle in the bar flips single-click to focus for anyone who prefers it. */
   function byId(id) { for (var i = 0; i < DATA.cards.length; i++) if (DATA.cards[i].id === id) return DATA.cards[i]; return null; }
 
+  /* ONE ANSWER TO "I CLICKED A CARD", for the list and the canvas alike.
+     They used to disagree: the canvas honoured the toggle in the bar and the list
+     tiles always opened the picture, so the same setting meant something on one
+     view and nothing on the other. Both come through here now. */
+  function cardClicked(id) {
+    if (state.clickFocuses) focusOn(id); else openCard(id);
+  }
+
+  /* The pill is two buttons rather than one that flips, because a single button
+     showing "On" cannot say whether that is the state or the offer. Two say both. */
+  function setClickMode(on) {
+    state.clickFocuses = !!on;
+    document.querySelectorAll("[data-clickmode]").forEach(function (b) {
+      var sel = (b.dataset.clickmode === "on") === state.clickFocuses;
+      b.classList.toggle("is-on", sel);
+      b.setAttribute("aria-pressed", String(sel));
+    });
+  }
+
   function openCard(id) {
     var c = byId(id);
     if (!c) return;
@@ -532,6 +638,7 @@
               (c.printings > 1 ? " of " + c.printings + " printings" : "") + "</span>" : "") + "</p>" +
           (owned.length ? '<p class="gp-modal-own">' + esc(owned.join(" &middot; ").replace(/&middot;/g, "·")) + "</p>" : "") +
           '<div class="gp-tags">' +
+            (c.isCommander ? '<span class="gp-tag cmdr">can be your commander</span>' : "") +
             (c.decks || []).map(function (d) { return '<span class="gp-tag deck">' + esc(d.deck) + "</span>"; }).join("") +
             (c.roles || []).map(function (r) { return '<span class="gp-tag">' + esc(r) + "</span>"; }).join("") +
           "</div>" +
@@ -972,7 +1079,7 @@
     });
     CY.on("tap", "node[kind = 'card'], node[kind = 'ego']", function (evt) {
       var id = evt.target.id();
-      if (state.clickFocuses) { EGO = id; groupState = {open: {}, only: null}; render(); } else openCard(id);
+      cardClicked(id);
     });
     CY.on("dbltap", "node[kind = 'card']", function (evt) {
       closeCard(); EGO = evt.target.id(); groupState = {open: {}, only: null}; render();
@@ -1191,6 +1298,7 @@
       var pick = focusState.options[focusState.active] || focusState.options[0];
       if (!pick) return;
       if (pick.kind === "lookup") lookUpCard(pick.query);
+      else if (pick.card && pick.card.outside) lookUpCard(pick.card.name);
       else { e.target.value = pick.card.name; closeFocusMenu(); focusOn(pick.card.id); }
     }
   });
@@ -1208,7 +1316,7 @@
     // Anywhere else shuts the suggestions, the way any menu behaves.
     if (focusState.open && !e.target.closest(".gp-focus")) closeFocusMenu();
     var tile = e.target.closest(".gp-card");
-    if (tile && !tile.dataset.more) { openCard(tile.dataset.id); return; }
+    if (tile && !tile.dataset.more) { cardClicked(tile.dataset.id); return; }
     var view = e.target.closest(".gp-view");
     if (view) { state.view = view.dataset.view; syncViews(); render(); return; }
     var more = e.target.closest("[data-more]");
@@ -1240,13 +1348,8 @@
     }
     var undo = e.target.closest("[data-undismiss]");
     if (undo) { setDismissed(undo.dataset.undismiss, null); render(); return; }
-    var lock = e.target.closest("#click-focus");
-    if (lock) {
-      state.clickFocuses = !state.clickFocuses;
-      lock.classList.toggle("is-on", state.clickFocuses);
-      lock.setAttribute("aria-pressed", String(state.clickFocuses));
-      return;
-    }
+    var mode = e.target.closest("[data-clickmode]");
+    if (mode) { setClickMode(mode.dataset.clickmode === "on"); return; }
     if (e.target.id === "pane-toggle") {
       var pane = $("pane"), open = !pane.hidden;
       pane.hidden = open; e.target.setAttribute("aria-expanded", String(!open));
@@ -1300,7 +1403,7 @@
 
   Promise.all([
     fetch("data/deck-ratings.json?v=1", {cache: "default"}).then(function (r) { return r.ok ? r.json() : null; }),
-    fetch("data/master-v2.json?v=1", {cache: "default"}).then(function (r) { return r.ok ? r.json() : null; })
+    fetch("data/master-v2.json?v=2", {cache: "default"}).then(function (r) { return r.ok ? r.json() : null; })
   ]).catch(function () { return [null, null]; })
     .then(function (parts) {
       var ratings = parts && parts[0];
@@ -1317,10 +1420,39 @@
     if (DATA && state.view === "graph") render();
   });
 
-  fetch("data/graph.json?v=1", {cache: "default"})
+  /* WHOSE CARDS THESE ARE.
+   *
+   * data/graph.json is baked from the collection as well as from Magic: every card
+   * carries how many are in hand, how many are on order, how many are on the bench and
+   * which decks name it. That is the whole point of the graph for the person it was baked
+   * for -- and it is a lie told to everybody else, who opened the page and saw "in hand"
+   * against cards they have never owned and deck badges for decks they have never built.
+   *
+   * So on a browser that has saved nothing, those four fields are dropped and the two
+   * facets that read them go with them. What is left -- 7,764 cards, their rules, their
+   * prices and every edge between them -- is Magic, and belongs to the reader as much as
+   * to anybody. It comes back the moment there is a session to describe.
+   */
+  var MINE = ["own", "ordered", "bench", "decks"];
+  var MINE_STRIPPED = false;
+  function stripMine(json) {
+    var User = window.MtgUserState;
+    if (!User || !User.isFresh(window.localStorage)) return json;
+    MINE_STRIPPED = true;
+    return Object.assign({}, json, {
+      decks: [],
+      cards: json.cards.map(function (c) {
+        var out = Object.assign({}, c);
+        MINE.forEach(function (k) { out[k] = k === "decks" ? [] : 0; });
+        return out;
+      })
+    });
+  }
+
+  fetch("data/graph.json?v=2", {cache: "default"})
     .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
     .then(function (json) {
-      DATA = json;
+      DATA = stripMine(json);
       /* The cards somebody looked up last time, put back before anything is indexed, so
          they are ordinary members of the catalog for the rest of the page's life. Any that
          the bake has since caught up with are dropped rather than added twice. */
@@ -1331,12 +1463,9 @@
       visitors.forEach(function (v) { DATA.cards.push(v); });
       indexCards();
       mergeLenses();     // sim lenses name decks; now there are cards to name
-      if (window.matchMedia("(max-width: 860px)").matches) {
-        $("pane").hidden = true;
-        // Eleven findings is most of a phone screen before a single card shows.
-        // Collapsed still announces the count, which is the part that matters.
-        $("copilot").open = false;
-      }
+      // The Copilot is closed by default now on every width -- graph.html no longer
+      // carries `open` -- so this only has the pane left to fold on a phone.
+      if (window.matchMedia("(max-width: 860px)").matches) $("pane").hidden = true;
       render();
     })
     .catch(function (err) {

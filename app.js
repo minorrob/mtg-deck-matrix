@@ -8667,20 +8667,56 @@
     return `${Math.round(hours / 24)} d ago`;
   }
 
-  /* The two things worth knowing about your file, kept honest after every change to it. */
-  function refreshStateChrome() {
-    const undo = $("#undo-load-button");
-    if (undo) {
-      let has = false;
-      try { has = Boolean(localStorage.getItem(LOAD_UNDO_KEY)); } catch (error) { has = false; }
-      undo.hidden = !has;
-    }
-    const chip = $("#export-age");
-    if (chip) {
-      const ago = sinceExport();
-      chip.textContent = ago ? `exported ${ago}` : "never exported";
-      chip.classList.toggle("is-stale", !ago);
-    }
+  /* Both things worth knowing about your file -- when you last exported, and whether
+     there is a load to undo -- now live in the Admin menu, which rebuilds them every time
+     it opens. Nothing in the banner needs refreshing, so this is the one place that would
+     have gone quietly stale and no longer can. */
+  function refreshStateChrome() { /* the Admin menu asks these questions when it opens */ }
+
+  /* THE ADMIN MENU. Everything here was a button in the banner except the last two, which
+     did not exist: Load default, which is this repository's own copy of the six decks and
+     the collection behind them, and Clear session, which is the only way to see this app
+     the way somebody opening it for the first time sees it. */
+  function mountAdminMenu() {
+    const Admin = window.MtgAdminMenu;
+    if (!Admin) return;
+    Admin.mount({
+      items: () => {
+        let undoable = false;
+        try { undoable = Boolean(localStorage.getItem(LOAD_UNDO_KEY)); } catch (error) { undoable = false; }
+        const when = sinceExport();
+        return [
+          {kind: "note", text: when ? `exported ${when}` : "never exported", stale: !when},
+          {kind: "item", label: "Export a backup", run: exportFullState,
+            hint: "One file with every selection, buy, Shop mark and added deck on this device."},
+          {kind: "file", label: "Import a backup", accept: ".json,application/json", onFile: importStateFromFile,
+            hint: "Replaces everything currently saved here."},
+          {kind: "sep"},
+          {kind: "item", label: "Load default", run: loadActiveState,
+            hint: "The six decks and the collection behind them, as kept in this repository."},
+          undoable && {kind: "item", label: "Undo the last load", run: undoLoad,
+            hint: "Put back whatever was here before."},
+          {kind: "sep"},
+          {kind: "item", label: "Reset picks", run: resetState,
+            hint: "Clears deck picks, comments, buys and filters. Added decks and your collection stay."},
+          {kind: "item", label: "Clear session", warn: true,
+            hint: "Everything, including added decks and your collection. Offers a backup first.",
+            run: () => Admin.clearSession({
+              onExport: exportFullState,
+              say: showToast,
+              onCleared: (gone) => {
+                showToast(`${gone.keys.length} saved thing${gone.keys.length === 1 ? "" : "s"} cleared. Reloading\u2026`);
+                /* A reload rather than a re-render. Half this page's state lives in module
+                   variables that were read at boot -- the catalog merge, the metadata
+                   cache, the custom decks -- and putting a browser back to "never opened"
+                   from the inside means finding every one of them. Starting over is what
+                   the reader asked for anyway. */
+                setTimeout(() => window.location.reload(), 700);
+              }
+            })}
+        ];
+      }
+    });
   }
 
   function isPlausibleStatePayload(payload) {
@@ -8920,21 +8956,13 @@
       initializeDetailsControls();
       renderCompare();
       $$(".main-tab").forEach((button) => button.addEventListener("click", () => switchView(button.dataset.view)));
-      $("#reset-button").addEventListener("click", resetState);
       $("#tour-button").addEventListener("click", startTour);
-      $("#undo-load-button")?.addEventListener("click", undoLoad);
+      mountAdminMenu();
       refreshStateChrome();
       setHeaderCollapsed(readHeaderCollapsed());
       $("#header-toggle")?.addEventListener("click", () => {
         setHeaderCollapsed($(".app-header")?.dataset.collapsed !== "1");
       });
-      $("#export-state-button").addEventListener("click", exportFullState);
-      $("#import-state-input").addEventListener("change", (event) => {
-        const file = event.target.files?.[0];
-        event.target.value = "";
-        if (file) importStateFromFile(file);
-      });
-      $("#load-active-button").addEventListener("click", loadActiveState);
       $("#tour-close").addEventListener("click", closeTour);
       $("#tour-back").addEventListener("click", () => moveTour(-1));
       $("#tour-next").addEventListener("click", () => moveTour(1));
