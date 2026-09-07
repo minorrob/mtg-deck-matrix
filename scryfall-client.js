@@ -114,6 +114,11 @@
     const oracleText = faceValue(raw, "oracle_text");
     return {
       scryfallId: raw.id || "",
+      /* The identity of a CARD, as against a printing. Two Skullclamps from different
+         sets are two scryfallIds and one oracleId, and the card graph is keyed by the
+         latter -- so a card looked up here can be matched against the baked corpus
+         rather than added to it a second time under a new id. */
+      oracleId: raw.oracle_id || "",
       name: raw.name || "",
       manaCost: faceValue(raw, "mana_cost"),
       cmc: Number(raw.cmc || 0),

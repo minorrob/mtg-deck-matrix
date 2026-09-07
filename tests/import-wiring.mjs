@@ -17,6 +17,8 @@ const deckPage = await read("../deck-page.js");
 const panel = await read("../import-panel.js");
 const store = await read("../deck-store.js");
 const css = await read("../viewer.css");
+const graphPage = await read("../graph.html");
+const graphJs = await read("../graph-page.js");
 
 let checks = 0;
 const check = (label, fn) => { fn(); checks += 1; void label; };
@@ -209,5 +211,45 @@ check("the workbook names where each score came from", () => {
     "a deck with no score for its hundred says so rather than borrowing one");
 });
 
+/* ---------------- the card graph's own two ---------------- */
+
+/* Typing a card the corpus does not hold takes two modules the graph page never used to
+   need: the Scryfall client that fetches it and the classifier that reads what it does.
+   Drop either tag and the page still loads, still renders 7,710 cards, and answers the
+   one thing you asked it with a message about scripts -- which is exactly the failure a
+   browser never throws on and nobody notices until they try it. */
+const GRAPH_MODULES = ["sim-lenses", "card-classify", "scryfall-client", "graph-page"];
+
+check("the graph page loads the two modules a lookup needs", () => {
+  GRAPH_MODULES.forEach((name) => {
+    assert.match(graphPage, new RegExp(`src="${name}\\.js`),
+      `graph.html does not load ${name}.js, so focusing a card outside the catalog would fail`);
+  });
+});
+
+check("they load ahead of the page that calls them", () => {
+  const at = (name) => graphPage.indexOf(`src="${name}.js`);
+  assert.ok(at("card-classify") < at("graph-page"), "card-classify.js must come before graph-page.js");
+  assert.ok(at("scryfall-client") < at("graph-page"), "scryfall-client.js must come before graph-page.js");
+});
+
+check("a card looked up is read by the shared vocabulary, not by a second copy", () => {
+  /* The whole point of card-classify.js is that there is ONE copy of what a card does. A
+     regex list growing back inside the graph page is how the two answers start to differ,
+     invisibly, in a picture where they sit side by side. */
+  assert.match(graphJs, /MtgCardClassify/,
+    "the graph page must classify a looked-up card through the shared module");
+  assert.ok(!/ROLE_PATTERNS|SUPPLY_TEXT|listen:\s*\//.test(graphJs),
+    "graph-page.js is carrying its own copy of the classifier tables");
+});
+
+check("a card the lookup returns is checked for Commander legality before it is drawn", () => {
+  // The graph is a Commander graph. Drawing Dockside Extortionist in it without a word
+  // would put a banned card in the middle of a picture about decks it cannot go in.
+  assert.match(graphJs, /legalities[\s\S]{0,80}commander !== "legal"/,
+    "graph-page.js must refuse a card that is not legal in Commander");
+});
+
 console.log(`import-wiring: ${checks} checks passed · ` +
-  `${MODULES.length} modules on My Decks, 5 more on the matrix page`);
+  `${MODULES.length} modules on My Decks, 5 more on the matrix page, ` +
+  `${GRAPH_MODULES.length} on the card graph`);

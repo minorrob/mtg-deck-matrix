@@ -21,7 +21,13 @@ Log** records what actually happened and reads it back against what the
 simulation predicted.
 
 **`graph.html` · the card graph** is 7,710 Commander-legal cards, what connects
-them, and a Copilot that says which twenty are worth a look.
+them, and a Copilot that says which twenty are worth a look. Type a name into
+**Focus card** and the graph is drawn around it — including a card the catalog
+was never baked with, which is looked up on Scryfall, checked for Commander
+legality and read by `card-classify.js`, the same module the corpus was baked
+with. The Copilot's findings filter by deck, by kind and by whether they come
+from the card rules or from the simulator; nothing is ever hidden, only folded
+into a drawer with its count on the label.
 
 Two lists reach the Shop, and they are not the same kind of thing. The **deck
 plan** is derived: what the six boxes want, minus what the ledger says you own.
@@ -175,7 +181,7 @@ two versions of one deck, never as absolute odds.
 
 ## Tests
 
-Twenty-four suites, run individually or all at once. They use only Node
+Twenty-five suites, run individually or all at once. They use only Node
 built-ins — there is no `package.json`, no dependency to install and no build
 step.
 
@@ -193,6 +199,7 @@ ends looking like a pass.
 | | |
 |---|---|
 | `asset-versions` | one `?v=` per file across every page, and a changed file has a changed version |
+| `card-classify` | the one copy of "what does this card do", re-derived against 1,501 cards the bake already committed |
 | `assignment-model` `slot-model` `lineup-compliance` | the slot projection, the hundred it composes to, and the rungs across all fifty plans |
 | `compliance-model` | the Commander bracket rules, shared between the page and the simulator |
 | `data-integrity` | the baked catalog and the source patterns the app depends on |
@@ -206,7 +213,7 @@ ends looking like a pass.
 
 `tests/uat/journeys.mjs` opens the pages as three people — a first-timer with
 empty storage, somebody a year in with ten added decks and 3,200 cards, and
-somebody leaving with their data — across eleven journeys at two screen sizes. It
+somebody leaving with their data — across twelve journeys at two screen sizes. It
 needs Playwright and a static server, neither of which this repo depends on, so
 it **skips rather than fails** when either is missing. See `tests/uat/README.md`.
 

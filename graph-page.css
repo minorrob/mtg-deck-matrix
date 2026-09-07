@@ -19,6 +19,66 @@
 }
 .gp-search { display: block; margin-bottom: 12px; }
 
+/* Focus, above the filters, because it is a different question.
+   ------------------------------------------------------------
+   Everything below narrows the list; this picks the one card the graph is drawn around.
+   The suggestions are a real listbox rather than a datalist so the rows can carry a type
+   line, mark a looked-up card as one, and always end with the way out to the rest of
+   Magic -- which is the row that turns "the card I want is not in the catalog" from a
+   dead end into one click. */
+.gp-focus { position: relative; margin-bottom: 12px; }
+.gp-focus-lab {
+  display: block; font-size: 11.5px; font-weight: 800; letter-spacing: .05em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 5px;
+}
+.gp-focus input {
+  width: 100%; min-height: 34px; padding: 6px 10px; border: 1px solid var(--line);
+  border-radius: 9px; background: var(--surface); font: inherit; font-size: 13px;
+}
+.gp-focus input:focus-visible { outline: 2px solid var(--forest-2); outline-offset: 1px; }
+.gp-focus-help { margin: 4px 0 0; font-size: 11px; line-height: 1.4; color: var(--muted); }
+.gp-focus-menu {
+  position: absolute; z-index: 30; left: 0; right: 0; top: 100%; margin-top: 3px;
+  max-height: 268px; overflow-y: auto;
+  border: 1px solid var(--line); border-radius: 10px; background: var(--surface);
+  box-shadow: 0 12px 26px rgba(20, 40, 31, .16);
+}
+.gp-focus-opt {
+  display: block; width: 100%; text-align: left; cursor: pointer;
+  border: 0; border-bottom: 1px solid var(--line); background: none;
+  padding: 7px 10px; font: inherit; font-size: 12.5px; color: var(--ink);
+}
+.gp-focus-opt:last-child { border-bottom: 0; }
+.gp-focus-opt b { display: block; font-size: 13px; font-weight: 700; }
+.gp-focus-opt:hover, .gp-focus-opt.is-active { background: var(--surface-2); }
+.gp-focus-opt.is-lookup { color: var(--accent); font-weight: 700; }
+.gp-focus-opt.is-lookup b { display: inline; color: var(--ink); }
+.gp-focus-sub { display: block; color: var(--muted); font-size: 11px; margin-top: 1px; }
+.gp-focus-flag {
+  display: inline-block; padding: 0 5px; border-radius: 999px;
+  background: var(--gold-soft); color: #6b4c07; font-size: 10px; font-weight: 800;
+}
+.gp-focus-msg { margin: 6px 0 0; font-size: 11.5px; line-height: 1.45; color: var(--muted); }
+.gp-focus-msg.is-bad { color: var(--red); }
+.gp-focus-msg.is-ok { color: var(--forest-2); }
+/* Where a looked-up card goes to be seen and to be dropped. A card that appeared in the
+   catalog from nowhere and cannot leave is worse than one that was never added. */
+.gp-focus-kept { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 8px; }
+.gp-focus-kept-lab {
+  font-size: 10px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted); width: 100%;
+}
+.gp-focus-chip {
+  display: inline-flex; align-items: center;
+  border: 1px solid var(--gold); border-radius: 999px; background: var(--gold-soft);
+}
+.gp-focus-chip button {
+  border: 0; background: none; cursor: pointer; font: inherit; font-size: 11.5px;
+  font-weight: 700; color: #6b4c07; padding: 3px 4px 3px 9px;
+}
+.gp-focus-chip .gp-focus-drop { padding: 3px 8px 3px 4px; font-size: 13px; opacity: .7; }
+.gp-focus-chip .gp-focus-drop:hover { opacity: 1; }
+
 .gp-facet { border-top: 1px solid var(--line); padding: 9px 0 4px; }
 .gp-facet > summary {
   display: flex; align-items: center; justify-content: space-between; gap: 6px;
@@ -263,35 +323,41 @@ body.gp-locked { overflow: hidden; }
   .gp-cp-acts .gp-btn { width: 100%; }
 }
 
-/* Tonight's deck.
-   -------------
-   A Copilot with twenty findings across six decks is a reading list. Somebody
-   packing a bag has one deck in their hands. This is a lens on the lenses: it
-   folds the rest away rather than hiding them, and every deck keeps its chip
-   whatever its count, because "Krenko 0" is an answer and a missing chip is not. */
-.gp-tonight {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 5px;
+/* Which findings you want to read right now.
+   ------------------------------------------
+   A Copilot with twenty findings across six decks is a reading list. Somebody packing a
+   bag has one deck in their hands; somebody with an hour and a budget wants the
+   opportunities and none of the warnings. Three axes, one rule: nothing is hidden. What
+   does not match folds into a drawer with its count on the label, and every value keeps
+   its chip whatever its count, because "Krenko 0" is an answer and a missing chip is not. */
+.gp-cpf {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 5px;
   padding: 0 13px 11px;
 }
-.gp-tonight-lab {
+.gp-cpf-row { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
+.gp-cpf-lab {
   font-size: 10px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase;
-  color: var(--muted); margin-right: 3px;
+  color: var(--muted); margin-right: 3px; min-width: 92px;
 }
-.gp-tonight-b {
+.gp-cpf-b {
   appearance: none; cursor: pointer;
   border: 1px solid var(--line); border-radius: 999px;
   background: var(--surface); color: var(--muted);
   padding: 4px 10px; font: inherit; font-size: 12px; font-weight: 700;
 }
-.gp-tonight-b b { font-weight: 900; opacity: .55; font-variant-numeric: tabular-nums; }
-.gp-tonight-b:hover { border-color: var(--forest-2); color: var(--ink); }
-.gp-tonight-b.is-on {
+.gp-cpf-b b { font-weight: 900; opacity: .55; font-variant-numeric: tabular-nums; }
+.gp-cpf-b:hover { border-color: var(--forest-2); color: var(--ink); }
+.gp-cpf-b.is-on {
   background: var(--forest-2); border-color: var(--forest-2); color: #fff;
 }
-.gp-tonight-b.is-on b { opacity: .8; }
-.gp-tonight-b.is-clear { border-style: dashed; }
+.gp-cpf-b.is-on b { opacity: .8; }
+.gp-cpf-b.is-clear { border-style: dashed; margin-left: 95px; }
+/* Every finding is behind a filter, and the drawer below says how many. Without this the
+   panel reads as an empty Copilot, which is a different and much worse claim. */
+.gp-cp-none { margin: 0 13px 11px; font-size: 12.5px; color: var(--muted); }
 
 @media (max-width: 640px) {
-  .gp-tonight { padding: 0 11px 10px; }
-  .gp-tonight-lab { flex: 1 1 100%; margin-bottom: 2px; }
+  .gp-cpf { padding: 0 11px 10px; }
+  .gp-cpf-lab { flex: 1 1 100%; margin-bottom: 2px; min-width: 0; }
+  .gp-cpf-b.is-clear { margin-left: 0; }
 }

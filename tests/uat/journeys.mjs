@@ -664,6 +664,119 @@ for (const screen of SCREENS) {
     await ctx.close();
   }
 
+  // ═══ FIRST: names the card they came to look at ═══
+  /* The graph is drawn around ONE card, and until now the only way to choose that card
+     was to find it in the list and press Focus inside its popup. That works for the 7,710
+     cards the corpus was baked with; for anything else there was no way in at all, which
+     is most of Magic. This journey types a name that is NOT in the catalog and asserts the
+     page goes and gets it -- and refuses the one that is banned.
+
+     Scryfall is stubbed with its own real answers, saved under fixtures/. The point is to
+     exercise this page's path through a lookup, and a journey that fails when a third
+     party is slow is a journey people learn to ignore. */
+  {
+    const {ctx, page} = await freshPage(screen);
+    const answers = {
+      "nine lives": readFileSync(join(HERE, "fixtures", "scryfall-nine-lives.json"), "utf8"),
+      "dockside": readFileSync(join(HERE, "fixtures", "scryfall-dockside-extortionist.json"), "utf8")
+    };
+    await page.route(/api\.scryfall\.com\/cards\/named/, (route) => {
+      const asked = decodeURIComponent(route.request().url()).toLowerCase();
+      const key = Object.keys(answers).find((k) => asked.includes(k));
+      if (!key) return route.fulfill({status: 404, contentType: "application/json",
+        body: JSON.stringify({object: "error", status: 404, details: "No card"})});
+      route.fulfill({status: 200, contentType: "application/json", body: answers[key]});
+    });
+    await page.goto(`${BASE}/graph.html`, {waitUntil: "domcontentloaded"});
+    await page.waitForSelector(".gp-card", {timeout: 25000});
+    const openPane = async () => {
+      if (await page.locator("#pane").isVisible()) return;
+      await page.locator("#pane-toggle").click();
+      await page.waitForTimeout(350);
+    };
+    await openPane();
+    check(await page.locator("#focus-q").isVisible(), screen.tag, "first · names a card",
+      "the Filters pane has no way to name the card the graph is drawn around");
+
+    // A card the catalog HAS comes up as you type, without a round trip.
+    await page.locator("#focus-q").fill("Krenko");
+    await page.waitForTimeout(400);
+    const names = await page.evaluate(() => [...document.querySelectorAll("[data-focus-pick]")]
+      .map((b) => (b.querySelector("b") || {}).textContent || ""));
+    check(names.some((n) => /Krenko/.test(n)), screen.tag, "first · names a card",
+      `typing a card in the catalog suggested ${JSON.stringify(names)}`);
+    check(await page.locator("[data-focus-lookup]").count() > 0, screen.tag, "first · names a card",
+      "there is no way on to the rest of Magic when the catalog's matches are not the card you meant");
+
+    // And a card it does NOT have is fetched, read and drawn.
+    await page.locator("#focus-q").fill("Nine Lives");
+    await page.waitForTimeout(400);
+    await page.locator("[data-focus-lookup]").first().click();
+    await page.waitForTimeout(2500);
+    const looked = await page.evaluate(() => ({
+      msg: (document.getElementById("focus-msg") || {}).textContent || "",
+      count: (document.getElementById("count") || {}).textContent || "",
+      legend: (document.getElementById("legend") || {}).textContent || "",
+      chips: [...document.querySelectorAll(".gp-focus-chip")].map((c) => c.textContent.replace("×", "").trim()),
+      onGraph: (document.querySelector('[data-view="graph"]') || {}).getAttribute
+        ? document.querySelector('[data-view="graph"]').getAttribute("aria-pressed") : null
+    }));
+    check(/Nine Lives/.test(looked.msg), screen.tag, "first · names a card",
+      `looking up a card outside the catalog said "${clean(looked.msg)}"`);
+    check(looked.onGraph === "true", screen.tag, "first · names a card",
+      "a card was looked up but the graph was never shown");
+    check(/Center: Nine Lives/.test(clean(looked.legend)), screen.tag, "first · names a card",
+      `the graph is not centered on the card that was asked for: "${clean(looked.legend).slice(0, 90)}"`);
+    check(/looked up/.test(looked.count), screen.tag, "first · names a card",
+      `the count does not say the catalog grew: "${clean(looked.count)}"`);
+    check(looked.chips.some((c) => /Nine Lives/.test(c)), screen.tag, "first · names a card",
+      "a looked-up card cannot be seen or dropped once it is in");
+    console.log(`  first · names a card     ${clean(looked.count)} · "${clean(looked.legend).slice(0, 40)}…"`);
+
+    // A card that is not legal in Commander is refused, by name, with the reason.
+    await openPane();
+    await page.locator("#focus-q").fill("Dockside Extortionist");
+    await page.waitForTimeout(400);
+    await page.locator("[data-focus-lookup]").first().click();
+    await page.waitForTimeout(2000);
+    const refused = clean(await page.locator("#focus-msg").textContent());
+    check(/banned|not legal/i.test(refused), screen.tag, "first · names a card",
+      `a card banned in Commander was not refused: "${refused}"`);
+    check(!/Dockside/.test(await page.locator("#focus-kept").textContent()), screen.tag,
+      "first · names a card", "a banned card was refused and kept anyway");
+    console.log(`     banned card refused: "${refused.slice(0, 70)}…"`);
+
+    /* THE COPILOT'S OWN FILTERS. Twenty findings across six decks is a reading list, and
+       three axes cut it down. The rule being checked is the one that makes them safe to
+       leave on: what does not match FOLDS, with its count on the label, rather than
+       vanishing -- a filter that hides evidence is one you have to remember you set. */
+    await page.evaluate(() => { const d = document.getElementById("copilot"); if (d) d.open = true; });
+    await page.waitForTimeout(300);
+    const axes = await page.evaluate(() => [...document.querySelectorAll(".gp-cpf-row")]
+      .map((r) => (r.querySelector(".gp-cpf-lab") || {}).textContent || ""));
+    check(axes.length >= 3, screen.tag, "first · names a card",
+      `the Copilot offers ${axes.length} ways to narrow twenty findings: ${JSON.stringify(axes)}`);
+    const before = await page.locator("#copilot > .gp-cp-grid > .gp-cp").count();
+    await page.locator('[data-cpf="kind"]').first().click();
+    await page.waitForTimeout(500);
+    const after = await page.evaluate(() => ({
+      shown: document.querySelectorAll("#copilot > .gp-cp-grid > .gp-cp").length,
+      drawer: [...document.querySelectorAll(".gp-cp-set > summary")]
+        .map((x) => x.textContent.replace(/\s+/g, " ").trim()),
+      summary: (document.querySelector("#copilot summary") || {}).textContent || ""
+    }));
+    check(after.shown < before, screen.tag, "first · names a card",
+      `filtering the Copilot by kind changed nothing: ${before} findings before and after`);
+    check(after.drawer.some((d) => /outside these filters/.test(d)), screen.tag, "first · names a card",
+      `the findings that do not match were hidden rather than folded: ${JSON.stringify(after.drawer)}`);
+    check(/of \d+ showing/.test(clean(after.summary)), screen.tag, "first · names a card",
+      `the Copilot does not say it is filtered: "${clean(after.summary)}"`);
+    console.log(`     copilot ${before} → ${after.shown} on one filter · "${after.drawer[0]}"`);
+    await shot(page, `${screen.tag}-first-focus`);
+    await healthy(page, screen.tag, "first · names a card");
+    await ctx.close();
+  }
+
   // ═══ CONTINUED, at scale: a collection that grew ═══
   {
     const {ctx, page} = await freshPage(screen);

@@ -18,22 +18,78 @@
     try { return JSON.parse(localStorage.getItem(DISMISS_KEY) || "{}") || {}; }
     catch (err) { return {}; }
   })();
-  /* Which deck is being played tonight, if any.
-     A Copilot with twenty findings across six decks is a reading list. Somebody
-     packing a bag for a game tonight has one deck in their hands and wants the
-     three findings about it -- so this is a lens on the lenses, not a filter on
-     the cards, and it never hides anything: the rest fold into a drawer with
-     their count still on the label. */
-  var TONIGHT_KEY = "mtg-graph-tonight.v1";
-  var tonight = (function () {
-    try { return localStorage.getItem(TONIGHT_KEY) || ""; } catch (err) { return ""; }
-  })();
-  function setTonight(deck) {
-    tonight = tonight === deck ? "" : deck;
+  /* WHICH FINDINGS YOU WANT TO READ RIGHT NOW.
+   *
+   * A Copilot with twenty findings across six decks is a reading list. Somebody packing a
+   * bag for a game tonight has one deck in their hands and wants the three findings about
+   * it; somebody with an hour and a budget wants the opportunities and none of the
+   * warnings; somebody who trusts the simulator over the rules engine wants to read its
+   * findings first. Three questions, three axes, one rule.
+   *
+   * THE RULE IS THAT NOTHING IS HIDDEN. A finding about another deck is not wrong, it is
+   * just not tonight's problem, so it folds into a drawer with its count still on the
+   * label rather than disappearing. That is what makes this safe to leave switched on: a
+   * filter that hides evidence is a filter you have to remember you set.
+   *
+   * These are lenses on the LENSES, never on the cards. Clicking one changes what the
+   * Copilot shows and nothing about the card list underneath it.
+   */
+  var CP_KEY = "mtg-graph-copilot-filters.v1";
+  var CP_AXES = [
+    {key: "deck",   label: "Playing tonight"},
+    {key: "kind",   label: "Kind"},
+    {key: "source", label: "From"}
+  ];
+  var cpFilter = (function () {
+    var empty = {deck: [], kind: [], source: []};
     try {
-      if (tonight) localStorage.setItem(TONIGHT_KEY, tonight);
-      else localStorage.removeItem(TONIGHT_KEY);
+      var raw = JSON.parse(localStorage.getItem(CP_KEY) || "null");
+      if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+        CP_AXES.forEach(function (a) { if (Array.isArray(raw[a.key])) empty[a.key] = raw[a.key]; });
+        return empty;
+      }
+      /* One deck used to be remembered on its own, under its own key. Somebody who set it
+         last week should find it still set, on the axis it became. */
+      var legacy = localStorage.getItem("mtg-graph-tonight.v1");
+      if (legacy) empty.deck = [legacy];
     } catch (err) { /* storage off */ }
+    return empty;
+  })();
+  function saveCpFilter() {
+    try {
+      var any = CP_AXES.some(function (a) { return cpFilter[a.key].length; });
+      if (any) localStorage.setItem(CP_KEY, JSON.stringify(cpFilter));
+      else localStorage.removeItem(CP_KEY);
+      localStorage.removeItem("mtg-graph-tonight.v1");
+    } catch (err) { /* storage off */ }
+  }
+  function toggleCpFilter(axis, value) {
+    var list = cpFilter[axis] || (cpFilter[axis] = []);
+    var at = list.indexOf(value);
+    if (at >= 0) list.splice(at, 1); else list.push(value);
+    saveCpFilter();
+  }
+  function clearCpFilter() {
+    CP_AXES.forEach(function (a) { cpFilter[a.key] = []; });
+    saveCpFilter();
+  }
+  /* What a finding answers on each axis. A lens naming no deck belongs to all of them,
+     because "50 cards you own are in no deck" is true tonight too -- so an empty deck
+     list passes any deck selection rather than failing every one. */
+  function cpValues(lens, axis) {
+    if (axis === "deck") return decksOf(lens);
+    if (axis === "kind") return [lens.kind];
+    return [lens.source === "simulation" ? "simulation" : "rules"];
+  }
+  function cpPasses(lens, skipAxis) {
+    return CP_AXES.every(function (a) {
+      if (a.key === skipAxis) return true;
+      var picked = cpFilter[a.key] || [];
+      if (!picked.length) return true;
+      var have = cpValues(lens, a.key);
+      if (a.key === "deck" && !have.length) return true;
+      return have.some(function (v) { return picked.indexOf(v) >= 0; });
+    });
   }
 
   /* Which decks a finding is about.
@@ -95,14 +151,14 @@
     {key: "rarity",    label: "Rarity",     from: function (c) { return [c.rarity]; }}
   ];
 
-  function indexCards() {
-    DATA.cards.forEach(function (c) {
-      var v = {};
-      FACETS.forEach(function (f) { v[f.key] = f.from(c) || []; });
-      c._f = v;
-      c._search = ((c.name || "") + " " + (c.type || "")).toLowerCase();
-    });
+  function indexCard(c) {
+    var v = {};
+    FACETS.forEach(function (f) { v[f.key] = f.from(c) || []; });
+    c._f = v;
+    c._search = ((c.name || "") + " " + (c.type || "")).toLowerCase();
+    return c;
   }
+  function indexCards() { DATA.cards.forEach(indexCard); }
 
   function matches(card, skipKey) {
     if (state.lens && !state.lens._set[card.id]) return false;
@@ -173,6 +229,277 @@
         (c.decks || []).map(function (d) { return '<span class="gp-tag deck">' + esc(d.deck) + "</span>"; }).join("") +
         (c.roles || []).slice(0, 3).map(function (r) { return '<span class="gp-tag">' + esc(r) + "</span>"; }).join("") +
       "</span></span></button>";
+  }
+
+  /* ---------------------------------------------------------------------------
+   * FOCUS: THE ONE CARD THE GRAPH IS DRAWN AROUND.
+   *
+   * The graph is ego-centric -- one card in the middle, its reasons around it -- and until
+   * now the only way to choose that card was to find it in the list and press Focus inside
+   * its popup. That works for the 7,710 cards the corpus was baked with. For a card it was
+   * not baked with, which is most of Magic, there was no way in at all: you could not name
+   * the card, so you could not ask the question.
+   *
+   * So: type a name. Cards in the catalog come up as you type. Anything else is looked up
+   * on Scryfall, checked for Commander legality, and read by card-classify.js -- the same
+   * module graph/ingest/02-build-csv.mjs used to bake the corpus, so a card that arrives
+   * this way is connected by exactly the rules its neighbors were connected by. It is
+   * marked as a visitor wherever it appears, because two things are true of it that are
+   * not true of the rest: nobody owns it, and EDHREC co-play was never computed for it.
+   */
+  var VISITOR_KEY = "mtg-graph-visitors.v1";
+  var VISITOR_CAP = 40;
+  var visitors = (function () {
+    try { return JSON.parse(localStorage.getItem(VISITOR_KEY) || "[]") || []; }
+    catch (err) { return []; }
+  })();
+  function saveVisitors() {
+    try {
+      if (visitors.length) localStorage.setItem(VISITOR_KEY, JSON.stringify(visitors));
+      else localStorage.removeItem(VISITOR_KEY);
+    } catch (err) { /* storage off */ }
+  }
+
+  /* A looked-up card in the shape data/graph.json uses, so nothing downstream has to know
+     where it came from. Ownership is zero and decks are empty because that is the truth:
+     the bake already contains the whole collection, so a card missing from it is a card
+     nobody has. */
+  function visitorFrom(card) {
+    var Classify = window.MtgCardClassify;
+    var what = Classify.classify(card);
+    return {
+      id: card.oracleId || card.scryfallId,
+      name: card.name,
+      mv: Number(card.cmc) || 0,
+      ci: (card.colorIdentity || []).join(""),
+      type: card.typeLine || "",
+      rarity: card.rarity || "",
+      set: card.setName || "",
+      price: Number(card.price) || 0,
+      priceFoil: Number(card.ceiling) || 0,
+      rank: Number(card.edhrecRank) || 0,
+      isLand: Boolean(card.isLand),
+      isCommander: Boolean(card.canBeCommander),
+      image: card.imageLarge || card.image || "",
+      buy: card.tcgplayerUrl || "",
+      printings: 1,
+      cheapestSet: card.setName || "",
+      own: 0, ordered: 0, bench: 0, decks: [],
+      roles: what.roles, requires: what.requires, causes: what.causes,
+      triggers: what.triggers, produces: what.produces,
+      mechanics: what.mechanics, tribes: what.tribes,
+      visitor: true
+    };
+  }
+
+  function addVisitor(record) {
+    if (!DATA) return null;
+    var already = byId(record.id);
+    if (already) return already;
+    visitors = visitors.filter(function (v) { return v.id !== record.id; });
+    visitors.push(record);
+    while (visitors.length > VISITOR_CAP) visitors.shift();
+    saveVisitors();
+    DATA.cards.push(indexCard(record));
+    return record;
+  }
+  function forgetVisitor(id) {
+    visitors = visitors.filter(function (v) { return v.id !== id; });
+    saveVisitors();
+    for (var i = 0; i < DATA.cards.length; i++) {
+      if (DATA.cards[i].id === id && DATA.cards[i].visitor) { DATA.cards.splice(i, 1); break; }
+    }
+    if (EGO === id) EGO = null;
+    render();
+  }
+  function visitorCount() {
+    return DATA ? DATA.cards.filter(function (c) { return c.visitor; }).length : 0;
+  }
+
+  function focusOn(id) {
+    EGO = id;
+    state.view = "graph";
+    syncViews();
+    // A new center has different reasons, so an expanded group from the old one would
+    // open something the reader never asked for.
+    groupState = {open: {}, only: null};
+    render();
+    /* On a phone the pane is a full-width block ABOVE the canvas, so leaving it open after
+       a pick puts the whole filter list between you and the graph you just asked for. It
+       has done its job; it closes, the way any sheet does once you have chosen from it. */
+    if (window.matchMedia("(max-width: 860px)").matches) {
+      var pane = $("pane"), toggle = $("pane-toggle");
+      if (pane && !pane.hidden) {
+        pane.hidden = true;
+        if (toggle) toggle.setAttribute("aria-expanded", "false");
+      }
+    }
+    var cy = $("cy");
+    if (cy && !cy.hidden) cy.scrollIntoView({behavior: "smooth", block: "nearest"});
+  }
+
+  /* WHAT COMES UP AS YOU TYPE, AND IN WHAT ORDER.
+   *
+   * An exact name first, then names that START with what you typed -- that is what somebody
+   * halfway through spelling a card means -- then names that merely contain it.
+   *
+   * Inside each group the order is by how much Magic plays the card, not alphabetical.
+   * Alphabetical put "Krenko's Command" above "Krenko, Mob Boss", because an apostrophe
+   * sorts before a comma; nobody typing "Krenko" means the first one. EDHREC's rank is
+   * already on every card and is the closest thing here to "the card they meant". Cards
+   * with no rank sort last rather than first, which is what a 0 would otherwise do. */
+  function focusMatches(query) {
+    if (!DATA || query.length < 2) return [];
+    var q = query.toLowerCase();
+    var exact = [], starts = [], has = [];
+    DATA.cards.forEach(function (c) {
+      var n = (c.name || "").toLowerCase();
+      if (n === q) { exact.push(c); return; }
+      var at = n.indexOf(q);
+      if (at === 0) starts.push(c); else if (at > 0) has.push(c);
+    });
+    var played = function (c) { return Number(c.rank) > 0 ? Number(c.rank) : Infinity; };
+    var by = function (a, b) {
+      return played(a) - played(b) || (a.name < b.name ? -1 : (a.name > b.name ? 1 : 0));
+    };
+    return exact.sort(by).concat(starts.sort(by), has.sort(by)).slice(0, 8);
+  }
+
+  var focusState = {open: false, options: [], active: -1, busy: false};
+
+  function renderFocusMenu() {
+    var menu = $("focus-menu"), input = $("focus-q");
+    if (!menu || !input) return;
+    if (!focusState.open || !focusState.options.length) {
+      menu.hidden = true; menu.innerHTML = "";
+      input.setAttribute("aria-expanded", "false");
+      input.removeAttribute("aria-activedescendant");
+      return;
+    }
+    menu.hidden = false;
+    input.setAttribute("aria-expanded", "true");
+    menu.innerHTML = focusState.options.map(function (o, i) {
+      var on = i === focusState.active;
+      if (o.kind === "lookup") {
+        return '<button type="button" role="option" tabindex="-1" id="focus-opt-' + i + '" aria-selected="' + on + '"' +
+          ' class="gp-focus-opt is-lookup' + (on ? " is-active" : "") + '" data-focus-lookup="' + esc(o.query) + '">' +
+          "Look up <b>" + esc(o.query) + "</b> on Scryfall" +
+          '<span class="gp-focus-sub">anything Commander-legal, in or out of the catalog</span></button>';
+      }
+      var c = o.card;
+      /* tabindex -1 on both: this is a combobox, so the arrow keys move through the
+         options while focus and the tab order stay on the input. Leaving them tabbable
+         let Tab walk into a menu that aria-activedescendant had just told a screen reader
+         nobody had moved into. */
+      return '<button type="button" role="option" tabindex="-1" id="focus-opt-' + i + '" aria-selected="' + on + '"' +
+        ' class="gp-focus-opt' + (on ? " is-active" : "") + '" data-focus-pick="' + esc(c.id) + '">' +
+        "<b>" + esc(c.name) + "</b>" +
+        '<span class="gp-focus-sub">' + esc(c.type || "") +
+        (c.visitor ? ' <span class="gp-focus-flag">looked up</span>' : "") + "</span></button>";
+    }).join("");
+    if (focusState.active >= 0) input.setAttribute("aria-activedescendant", "focus-opt-" + focusState.active);
+    else input.removeAttribute("aria-activedescendant");
+  }
+
+  function openFocusMenu(query) {
+    var found = focusMatches(query);
+    focusState.options = found.map(function (c) { return {kind: "card", card: c}; });
+    /* The way out is always on the list, not behind a second guess. A name that matches
+       nothing in the catalog is the obvious case; a name that matches four cards none of
+       which is the one you meant is the case that used to be a dead end. */
+    if (query.length >= 3) focusState.options.push({kind: "lookup", query: query});
+    focusState.open = focusState.options.length > 0;
+    focusState.active = -1;
+    renderFocusMenu();
+  }
+  function closeFocusMenu() {
+    focusState.open = false; focusState.options = []; focusState.active = -1;
+    renderFocusMenu();
+  }
+  /* Tabbing out of the box shuts the menu, the way any menu behaves. Deferred one turn
+     because focusout fires BEFORE focusin lands, so the new element is not the active one
+     yet -- checked a tick later, a click on an option inside the box does not close it out
+     from under itself. */
+  document.addEventListener("focusout", function (e) {
+    if (!e.target.closest || !e.target.closest(".gp-focus")) return;
+    setTimeout(function () {
+      var here = document.activeElement;
+      if (focusState.open && (!here || !here.closest || !here.closest(".gp-focus"))) closeFocusMenu();
+    }, 0);
+  });
+  function focusSay(text, tone) {
+    var msg = $("focus-msg");
+    if (!msg) return;
+    msg.textContent = text || "";
+    msg.className = "gp-focus-msg" + (tone ? " is-" + tone : "");
+  }
+
+  /* The looked-up cards you are keeping, with a way to drop each one. Without this a
+     visitor is a card that appeared in your catalog from nowhere and cannot leave. */
+  function renderFocusKept() {
+    var host = $("focus-kept");
+    if (!host || !DATA) return;
+    var live = DATA.cards.filter(function (c) { return c.visitor; });
+    if (!live.length) { host.hidden = true; host.innerHTML = ""; return; }
+    host.hidden = false;
+    host.innerHTML = '<span class="gp-focus-kept-lab">Looked up</span>' + live.map(function (c) {
+      return '<span class="gp-focus-chip"><button type="button" data-focus-pick="' + esc(c.id) + '">' +
+        esc(c.name) + '</button><button type="button" class="gp-focus-drop" data-focus-forget="' + esc(c.id) +
+        '" aria-label="Forget ' + esc(c.name) + '">&times;</button></span>';
+    }).join("");
+  }
+
+  function lookUpCard(query) {
+    var Scry = window.MtgScryfall, Classify = window.MtgCardClassify;
+    if (!Scry || !Classify) {
+      focusSay("The lookup needs two scripts this page could not load. Reload and try again.", "bad");
+      return;
+    }
+    if (focusState.busy) return;
+    /* data/graph.json is seven megabytes, so on a slow connection there is a real window
+       where the box is on screen and the catalog is not here yet. Without this the lookup
+       reads a card list that does not exist and dies on a TypeError, which looks to the
+       reader like the card was refused. */
+    if (!DATA) {
+      focusSay("The catalog is still loading. Try again in a moment.", "bad");
+      return;
+    }
+    focusState.busy = true;
+    closeFocusMenu();
+    focusSay("Looking up \u201c" + query + "\u201d\u2026");
+    var client = Scry.createClient({});
+    /* Fuzzy, not exact: somebody typing a card by hand gets the apostrophe, the comma
+       after the first name, or the accent wrong, and an exact lookup answers 404 to all
+       three. Scryfall's own fuzzy match is what the rest of this app already uses. */
+    client.named(query)
+      .then(function (card) {
+        focusState.busy = false;
+        if (!card) { focusSay("No card called \u201c" + query + "\u201d.", "bad"); return; }
+        if (card.legalities && card.legalities.commander !== "legal") {
+          focusSay(card.name + " is not legal in Commander (" +
+            (card.legalities.commander || "unknown") + "), so it is not in this graph.", "bad");
+          return;
+        }
+        var here = byId(card.oracleId) || DATA.cards.filter(function (c) {
+          return (c.name || "").toLowerCase() === card.name.toLowerCase();
+        })[0];
+        if (here) {
+          focusSay(card.name + " is already in the catalog.", "ok");
+          $("focus-q").value = here.name;
+          focusOn(here.id);
+          return;
+        }
+        var added = addVisitor(visitorFrom(card));
+        focusSay(card.name + " looked up and drawn. Nobody owns it and EDHREC co-play was " +
+          "never computed for it, so its connections come from its rules text alone.", "ok");
+        $("focus-q").value = added.name;
+        focusOn(added.id);      // renders, which draws the kept chips too
+      })
+      .catch(function (err) {
+        focusState.busy = false;
+        focusSay("Scryfall could not be reached (" + (err && err.message ? err.message : "network error") +
+          "). The catalog below still works.", "bad");
+      });
   }
 
   /* Tapping a node shows the card. Re-centering lives INSIDE the popup as a button.
@@ -545,7 +872,12 @@
         ", with " + offCanvas + " more in the chips above" : "") +
       ". Cards are picked for relevance to your collection first: in a deck, then owned, then EDHREC co-play. " +
       "Click a group label to open it, a chip to isolate one reason, or any card to re-center. " +
-      "Faded cards fall outside your filters.";
+      "Faded cards fall outside your filters." +
+      (ego.visitor
+        ? " <strong>" + esc(ego.name) + " was looked up rather than baked into the catalog</strong>, so " +
+          "nobody owns it and EDHREC co-play was never computed for it \u2014 everything around it is here " +
+          "because of what its rules text says, read by the same rules as every other card."
+        : "");
     /* Cytoscape is the one thing on this page that comes from a CDN, so it is the
        one thing that can be missing on a working connection -- a blocked domain, a
        corporate proxy, an offline laptop. Measured here on a cold load: the request
@@ -700,26 +1032,24 @@
     var live = LENSES.filter(function (l) { return !dismissed[l.id]; });
     var set = LENSES.filter(function (l) { return dismissed[l.id]; });
 
-    // Tonight's deck splits `live` in two rather than filtering it: a finding
-    // about another deck is not wrong, it is just not tonight's problem.
-    var mine = live, others = [];
-    if (tonight) {
-      mine = live.filter(function (l) {
-        var d = decksOf(l);
-        return !d.length || d.indexOf(tonight) >= 0;
-      });
-      others = live.filter(function (l) { return mine.indexOf(l) < 0; });
-    }
+    // The filters split `live` in two rather than shortening it: a finding about another
+    // deck, or of a kind you are not reading for, is not wrong -- it is just not the
+    // question you asked. It folds, with its count on the label.
+    var mine = live.filter(function (l) { return cpPasses(l); });
+    var others = live.filter(function (l) { return mine.indexOf(l) < 0; });
+    var picked = CP_AXES.reduce(function (n, a) { return n + cpFilter[a.key].length; }, 0);
 
     host.innerHTML =
       "<summary><strong>Copilot</strong> <span class=\"gp-cp-n\">" +
-        (tonight ? mine.length + " for " + esc(tonight) + " tonight" : live.length + " things worth a look") +
+        (picked ? mine.length + " of " + live.length + " showing" : live.length + " things worth a look") +
         (set.length ? " · " + set.length + " set aside" : "") + "</span>" +
         (active ? ' <span class="gp-cp-live">showing: ' + esc(active.title) + "</span>" : "") + "</summary>" +
-      tonightBar() +
+      filterBar() +
       '<div class="gp-cp-grid">' + mine.map(card).join("") + "</div>" +
+      (mine.length ? "" : '<p class="gp-cp-none">Nothing matches those filters. The ' + others.length +
+        " other finding" + (others.length === 1 ? " is" : "s are") + " in the drawer below.</p>") +
       (others.length
-        ? '<details class="gp-cp-set"><summary>' + others.length + " about the other decks</summary>" +
+        ? '<details class="gp-cp-set"><summary>' + others.length + " outside these filters</summary>" +
           '<div class="gp-cp-grid">' + others.map(card).join("") + "</div></details>"
         : "") +
       (set.length
@@ -727,27 +1057,36 @@
           '<div class="gp-cp-grid">' + set.map(card).join("") + "</div></details>"
         : "");
 
-    /* The chip row. Every deck is offered whether or not it has a finding, with
-       the count on it -- "Krenko 0" is an answer, and hiding the chip would make
-       a clean deck look like a missing one. */
-    function tonightBar() {
-      var names = ((DATA && DATA.decks) || []).map(function (d) { return d.name; });
-      if (names.length < 2) return "";
-      var counts = {};
-      names.forEach(function (n) {
-        counts[n] = live.filter(function (l) { return decksOf(l).indexOf(n) >= 0; }).length;
-      });
-      return '<div class="gp-tonight" role="group" aria-label="Which deck are you playing tonight">' +
-        '<span class="gp-tonight-lab">Playing tonight</span>' +
-        names.map(function (n) {
-          var on = tonight === n;
-          return '<button type="button" class="gp-tonight-b' + (on ? " is-on" : "") +
-            '" data-tonight="' + esc(n) + '" aria-pressed="' + on + '">' + esc(n) +
-            ' <b>' + counts[n] + "</b></button>";
-        }).join("") +
-        (tonight
-          ? '<button type="button" class="gp-tonight-b is-clear" data-tonight="">Any deck</button>'
-          : "") +
+    /* THE CHIP ROWS. Every value is offered whether or not it has a finding, with the
+       count on it -- "Krenko 0" is an answer, and hiding the chip would make a clean deck
+       look like a missing one.
+
+       Counts are taken against what the OTHER axes allow, which is the standard faceted
+       rule and the only one that does not lie: counted against everything, a chip promises
+       findings the current filters would not show you; counted against everything
+       including itself, every unpicked chip in a picked axis reads zero. */
+    function filterBar() {
+      var deckNames = ((DATA && DATA.decks) || []).map(function (d) { return d.name; });
+      var axes = [
+        {key: "deck",   label: "Playing tonight", values: deckNames.map(function (n) { return [n, n]; })},
+        {key: "kind",   label: "Kind", values: ["warning", "attention", "opportunity"].map(function (k) { return [k, KIND[k]]; })},
+        {key: "source", label: "From", values: [["rules", "Card rules"], ["simulation", "Simulation"]]}
+      ].filter(function (a) { return a.values.length > 1; });
+      if (!axes.length) return "";
+      return '<div class="gp-cpf">' + axes.map(function (a) {
+        var pool = live.filter(function (l) { return cpPasses(l, a.key); });
+        return '<div class="gp-cpf-row" role="group" aria-label="' + esc(a.label) + '">' +
+          '<span class="gp-cpf-lab">' + esc(a.label) + "</span>" +
+          a.values.map(function (pair) {
+            var on = cpFilter[a.key].indexOf(pair[0]) >= 0;
+            var n = pool.filter(function (l) { return cpValues(l, a.key).indexOf(pair[0]) >= 0; }).length;
+            return '<button type="button" class="gp-cpf-b' + (on ? " is-on" : "") +
+              '" data-cpf="' + esc(a.key) + '" data-cpv="' + esc(pair[0]) + '" aria-pressed="' + on + '">' +
+              esc(pair[1]) + " <b>" + n + "</b></button>";
+          }).join("") + "</div>";
+      }).join("") +
+        (picked ? '<button type="button" class="gp-cpf-b is-clear" data-cpf-clear>Clear ' + picked +
+          " filter" + (picked === 1 ? "" : "s") + "</button>" : "") +
         "</div>";
     }
 
@@ -791,8 +1130,15 @@
   function render() {
     renderLenses();
     var rows = visible();
-    $("count").textContent = rows.length.toLocaleString() + " of " + DATA.cards.length.toLocaleString() + " cards";
+    /* The denominator is everything the page can show, looked-up cards included, or the
+       line reads "7,711 of 7,710" and looks like a bug. What those extra cards are is said
+       after it, because a catalog that quietly grew is the thing worth mentioning. */
+    var extra = visitorCount();
+    $("count").textContent = rows.length.toLocaleString() + " of " +
+      DATA.cards.length.toLocaleString() + " cards" +
+      (extra ? " \u00b7 " + extra + " looked up" : "");
     renderFacets();
+    renderFocusKept();
     var graph = state.view === "graph";
     $("result").hidden = graph; $("cy").hidden = !graph; $("legend").hidden = !graph;
     $("groups").hidden = !graph;
@@ -810,9 +1156,57 @@
     if (e.target.id === "mv") { state.mvMax = Number(e.target.value); render(); }
   });
   document.addEventListener("input", function (e) {
-    if (e.target.id === "q") { state.q = e.target.value.trim(); render(); }
+    if (e.target.id === "q") { state.q = e.target.value.trim(); render(); return; }
+    if (e.target.id === "focus-q") {
+      var q = e.target.value.trim();
+      focusSay("");
+      if (!q) closeFocusMenu(); else openFocusMenu(q);
+    }
+  });
+  /* Arrow keys through the suggestions, Enter to take one, Escape to shut it. A combobox
+     that can only be driven with a mouse is a combobox half the keyboard sweep this page
+     already passed would fail on. */
+  document.addEventListener("keydown", function (e) {
+    if (e.target.id !== "focus-q") return;
+    if (e.key === "Escape") { closeFocusMenu(); return; }
+    if (!focusState.open) {
+      if (e.key === "Enter" && e.target.value.trim().length >= 3) {
+        e.preventDefault(); lookUpCard(e.target.value.trim());
+      }
+      return;
+    }
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      /* -1 is the typed text itself, which the cycle passes back through: arrowing off the
+         end returns you to what you wrote rather than wrapping straight onto the first
+         option, so you can always get back to editing it. */
+      var n = focusState.options.length;
+      var next = focusState.active + (e.key === "ArrowDown" ? 1 : -1);
+      focusState.active = next >= n ? -1 : (next < -1 ? n - 1 : next);
+      renderFocusMenu();
+      return;
+    }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      var pick = focusState.options[focusState.active] || focusState.options[0];
+      if (!pick) return;
+      if (pick.kind === "lookup") lookUpCard(pick.query);
+      else { e.target.value = pick.card.name; closeFocusMenu(); focusOn(pick.card.id); }
+    }
   });
   document.addEventListener("click", function (e) {
+    var pickFocus = e.target.closest("[data-focus-pick]");
+    if (pickFocus) {
+      var picked = byId(pickFocus.dataset.focusPick);
+      if (picked) { $("focus-q").value = picked.name; closeFocusMenu(); focusOn(picked.id); }
+      return;
+    }
+    var lookup = e.target.closest("[data-focus-lookup]");
+    if (lookup) { lookUpCard(lookup.dataset.focusLookup); return; }
+    var forget = e.target.closest("[data-focus-forget]");
+    if (forget) { forgetVisitor(forget.dataset.focusForget); return; }
+    // Anywhere else shuts the suggestions, the way any menu behaves.
+    if (focusState.open && !e.target.closest(".gp-focus")) closeFocusMenu();
     var tile = e.target.closest(".gp-card");
     if (tile && !tile.dataset.more) { openCard(tile.dataset.id); return; }
     var view = e.target.closest(".gp-view");
@@ -820,6 +1214,9 @@
     var more = e.target.closest("[data-more]");
     if (more) { state.showAll[more.dataset.more] = true; render(); return; }
     if (e.target.closest("[data-more-cards]")) { showMoreCards(); return; }
+    /* Clear all clears FILTERS. A looked-up card is not a filter -- it is a card you added
+       to the catalog -- so it survives, and the chips below the focus box are how it goes.
+       Wiping it here would make "Clear all" a destructive act nobody expects. */
     if (e.target.id === "clear") { state.f = {}; state.q = ""; state.mvMax = 20; state.showAll = {}; state.lens = null; $("q").value = ""; render(); return; }
     var grp = e.target.closest(".gp-group");
     if (grp) {
@@ -829,8 +1226,9 @@
     }
     var lensBtn = e.target.closest("[data-lens]");
     if (lensBtn) { applyLens(lensBtn.dataset.lens); return; }
-    var pick = e.target.closest("[data-tonight]");
-    if (pick) { setTonight(pick.dataset.tonight); renderLenses(); return; }
+    var cpf = e.target.closest("[data-cpf]");
+    if (cpf) { toggleCpFilter(cpf.dataset.cpf, cpf.dataset.cpv); renderLenses(); return; }
+    if (e.target.closest("[data-cpf-clear]")) { clearCpFilter(); renderLenses(); return; }
     var dis = e.target.closest("[data-dismiss]");
     if (dis) {
       setDismissed(dis.dataset.dismiss, dis.dataset.reason);
@@ -923,6 +1321,14 @@
     .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
     .then(function (json) {
       DATA = json;
+      /* The cards somebody looked up last time, put back before anything is indexed, so
+         they are ordinary members of the catalog for the rest of the page's life. Any that
+         the bake has since caught up with are dropped rather than added twice. */
+      var known = {};
+      json.cards.forEach(function (c) { known[c.id] = 1; });
+      visitors = visitors.filter(function (v) { return v && v.id && !known[v.id]; });
+      saveVisitors();
+      visitors.forEach(function (v) { DATA.cards.push(v); });
       indexCards();
       mergeLenses();     // sim lenses name decks; now there are cards to name
       if (window.matchMedia("(max-width: 860px)").matches) {

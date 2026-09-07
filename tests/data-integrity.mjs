@@ -1697,8 +1697,20 @@ assert.match(appSource, /target && target\.isConnected/,
   const missing = suites.filter((name) => !readme.includes("`" + name + "`"));
   assert.deepEqual(missing, [],
     `README.md does not name ${missing.join(", ")} — a suite nobody knows to run is a suite nobody runs`);
-  assert.ok(readme.includes(`${suites.length}`) || /Twenty-four/i.test(readme),
-    "README.md must say how many suites there are, and mean it");
+  /* The count, in digits or in words. Derived for THIS many suites rather than pinned to
+     a fixed string: the guard was written as `|| /Twenty-four/` and went on passing a
+     README that said twenty-four when there were twenty-five, which is the exact staleness
+     it exists to catch. */
+  const ONES = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+    "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen",
+    "eighteen", "nineteen", "twenty"];
+  const TENS = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
+  const inWords = (n) => n <= 20 ? ONES[n]
+    : n < 100 ? TENS[Math.floor(n / 10)] + (n % 10 ? "-" + ONES[n % 10] : "")
+    : String(n);
+  const words = inWords(suites.length);
+  assert.ok(new RegExp(`\\b(${suites.length}|${words})\\b`, "i").test(readme),
+    `README.md must say there are ${suites.length} suites (in digits or as "${words}"), and mean it`);
   assert.ok(!/Buy Picks|Live Decks|Shop List|Step 0/.test(readme),
     "README.md still names a tab this app retired");
 }
