@@ -1,0 +1,50 @@
+<section data-screen="lab" hidden>
+ <div class="v-heading"><div><div class="v-eyebrow">Play Lab</div><h1>Start with a spark.</h1><p class="v-sub">A play style, a commander, or a list. Make it yours.</p></div><button class="v-button" id="v-lab-help" type="button" aria-label="How Play Lab works" title="How Play Lab works">?</button></div>
+ <div class="v-lab-layout"><div class="v-panel v-input-panel"><h2>Your starting point</h2><fieldset class="v-lab-inputs" id="v-lab-inputs"><div class="v-fields">
+ <label class="v-field v-wide">Starting point<select class="v-select" id="v-start"><option value="commander">Select Commander</option><option value="list">My collection / existing list</option></select></label>
+ <div class="v-wide v-entry" data-entry="commander">
+ <div><div class="v-eyebrow">Commander choice</div><h3>Find a Commander → Auto-build 99</h3><p class="v-small">Choose any legal commander, owned or not. Purchase needs are checked when you finalize.</p></div>
+ <label class="v-field">Search commander catalog<input id="v-commander-name" placeholder="Type a name, or browse below" autocomplete="off"></label>
+ <div class="v-actions"><button class="v-button" id="v-find-commander" type="button">Search</button><button class="v-button" id="v-clear-commanders" type="button">Clear search & filters</button></div>
+ <div class="v-commander-filters"><label class="v-field">Commander mechanics<select class="v-select" id="v-commander-mechanic"><option value="all">Any mechanic</option><option>Counters</option><option>Proliferate</option><option>Tokens</option><option>Goblins</option><option>Creature value</option><option>Landfall</option><option>Blink</option></select></label><label class="v-field">EDHREC rank<select class="v-select" id="v-commander-rank"><option value="all">Any rank</option><option value="top">Top 100</option><option value="middle">101–500</option><option value="lower">501+</option><option value="unknown">Rank unavailable</option></select></label></div>
+ <details id="v-commander-picker" class="v-commander-picker"><summary>Select Commander <span id="v-commander-match-count">4 matches</span></summary><div id="v-commander-options"></div></details>
+ <div id="v-commander-result" class="v-small" aria-live="polite"></div>
+ <p class="v-small v-rank-note">4 sample commanders · EDHREC snapshot, 7 Sep 2026. Rank measures popularity. Results ordered by rank; colors show deck color identity.</p>
+ <button class="v-button" id="v-use-link" type="button">Can't find it? Use a card link</button>
+ <div id="v-link-entry" hidden><label class="v-field">Card link<input id="v-commander-link" type="url" placeholder="https://…"></label><button class="v-button" id="v-save-link" type="button">Save to supplemental catalog</button><p class="v-small">Preview: saves the name and link as unverified. Card lookup and rules verification are part of the build plan.</p></div>
+ </div>
+ <div class="v-wide v-entry" data-entry="list" hidden><label class="v-field">Collection group<select class="v-select" id="v-input-group"></select></label><button class="v-button" id="v-lab-create-group" type="button">Create collection group</button><div class="v-small" id="v-list-readiness" aria-live="polite"></div></div>
+ <div class="v-section-divider"><h3>Deck Definition</h3><p>Shape the whole deck: strategy, budget, pace and card availability.</p></div>
+ <label class="v-field">Base bracket<select class="v-select" id="v-base"><option value="1">B1</option><option value="2" selected>B2</option><option value="3">B3</option></select></label><label class="v-field">Maximum bracket<select class="v-select" id="v-ceiling"><option value="2">B2</option><option value="3" selected>B3</option></select></label>
+ <label class="v-field">Purchase cap, USD<input id="v-budget" type="number" min="0" value="50"></label><label class="v-field">Play style<select class="v-select" id="v-style"><option>Counters / value</option><option>Tokens / combat</option><option>Control / interaction</option><option>Combo / engine</option><option>Let the lab suggest</option></select></label>
+ <details class="v-mechanics v-wide"><summary>Deck mechanics <span id="v-mechanic-count">Any</span> ▾</summary><div class="v-mechanic-options"><label><input type="checkbox" value="+1/+1 counters" data-mechanic> +1/+1 counters</label><label><input type="checkbox" value="Proliferate" data-mechanic> Proliferate</label><label><input type="checkbox" value="Tokens" data-mechanic> Tokens</label><label><input type="checkbox" value="Sacrifice" data-mechanic> Sacrifice</label><label><input type="checkbox" value="Graveyard" data-mechanic> Graveyard</label><label><input type="checkbox" value="Landfall" data-mechanic> Landfall</label><label><input type="checkbox" value="Spellslinger" data-mechanic> Spellslinger</label><label><input type="checkbox" value="Blink" data-mechanic> Blink</label></div></details>
+ <label class="v-field v-wide">Collection reuse<select class="v-select" id="v-reuse"><option>Prefer owned; consider ordered</option><option>Bench cards only</option><option>Owned cards only</option><option>Buy as required</option></select></label><label class="v-g-toggle v-wide"><input type="checkbox" id="v-include-decks">Include In deck cards in build proposals</label>
+ <label class="v-field">Competitiveness <output id="v-competitive-label">4 / 5</output><input id="v-competitive" type="range" min="1" max="5" value="4"></label><label class="v-field">Speed <output id="v-speed-label">3 / 5</output><input id="v-speed" type="range" min="1" max="5" value="3"></label><label class="v-field v-wide">Saltiness <output id="v-salt-label">2 / 5</output><input id="v-salt" type="range" min="1" max="5" value="2"><span class="v-small" id="v-salt-description">Friendly, with light disruption.</span></label>
+ </div><div class="v-notice" id="v-intent" aria-live="polite"></div><div class="v-small" id="v-entry-summary" aria-live="polite"></div></fieldset></div>
+<aside class="v-panel v-run-panel" aria-label="Run progress">
+ <div class="v-detailhead"><div><div class="v-eyebrow">Play Lab</div><h2>Your run</h2></div><button class="v-button" id="v-run-motion" type="button" aria-pressed="false" aria-label="Pause step animations">Ⅱ</button></div>
+ <p class="v-small" id="v-run-description">Preview the journey from your intent to a completed deck.</p>
+ <div class="v-actions"><button class="v-button v-primary" id="v-autobuild" type="button" disabled>Run →</button><button class="v-button" id="v-run-cancel" type="button" hidden>Cancel</button></div>
+ <p class="v-small v-preview-label">Interaction preview · no simulation runs</p>
+ <ol class="v-run-steps">
+  <li data-run-step="0" data-phase="active"><span class="v-run-orb" aria-hidden="true"><i></i><i></i><i></i><img alt="" width="22" height="22"></span><div><strong>User Input Captured</strong><span class="v-run-state">Waiting for your input</span></div></li>
+  <li data-run-step="1" data-phase="pending"><span class="v-run-orb" aria-hidden="true"><i></i><i></i><i></i><img alt="" width="22" height="22"></span><div><strong>Initial 99 Cards Chosen</strong><span class="v-run-state">Pending</span></div></li>
+  <li data-run-step="2" data-phase="pending"><span class="v-run-orb" aria-hidden="true"><i></i><i></i><i></i><img alt="" width="22" height="22"></span><div><strong>Simulator &amp; 99 Refined</strong><span class="v-run-state">Pending</span></div></li>
+  <li data-run-step="3" data-phase="pending"><span class="v-run-orb" aria-hidden="true"><i></i><i></i><i></i><img alt="" width="22" height="22"></span><div><strong>Simulator Loops Complete</strong><span class="v-run-state">Pending</span></div></li>
+  <li data-run-step="4" data-phase="pending"><span class="v-run-orb" aria-hidden="true"><i></i><i></i><i></i><img alt="" width="22" height="22"></span><div><button class="v-step-link" id="v-run-report" type="button" disabled>Simulation Report</button><span class="v-run-state">Pending</span></div></li>
+  <li data-run-step="5" data-phase="pending"><span class="v-run-orb" aria-hidden="true"><i></i><i></i><i></i><img alt="" width="22" height="22"></span><div><button class="v-step-link" id="v-run-deck" type="button" disabled>Completed Deck</button><span class="v-run-state">Pending</span></div></li>
+ </ol>
+ <p class="v-small" id="v-run-live" role="status" aria-live="polite">Select a commander or a complete list to begin.</p>
+ <div class="v-actions"><button class="v-button" id="v-report-history" type="button">Report history</button></div>
+ <p class="v-small" id="v-report-storage">Preview reports stay in this session.</p>
+</aside>
+<template id="v-lab-help-content">
+ <div class="v-eyebrow">Explore → test → decide</div>
+ <div class="v-step"><strong>01 / Find your commander</strong><p>Search by name or browse mechanics and popularity. Choose a commander, set your intent, then auto-build the other 99. An existing list keeps its starting cards for review.</p></div>
+ <div class="v-step"><strong>02 / Test the possibilities</strong><p>Compare swaps against a chosen four-deck pod. Inspect supported mechanics, matchup evidence and uncertainty.</p></div>
+ <div class="v-step"><strong>03 / Make the call</strong><p>Accept or reject changes. Finalize 100 slots, then match copies you own or have ordered and identify what remains to buy.</p></div>
+ <div class="v-step"><strong>04 / Put it together</strong><p>Receive, reserve and move cards into the deck. In deck records physical placement. Lock controls reuse in other proposals.</p></div>
+ <p class="v-small">This design preview demonstrates progress, report history and deck navigation. It does not run the simulator or generate an optimized list.</p>
+</template>
+
+</div></section>

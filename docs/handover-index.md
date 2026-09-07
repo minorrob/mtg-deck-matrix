@@ -3,6 +3,12 @@
 *What a new reader — human or model — needs in order to evaluate this app, explain it, and
 keep building it without breaking it.*
 
+**Review-branch note (September 7):** this index is a dated architectural snapshot; several
+counts and open-PR statements below predate the later commits. The current CrankMagic review
+package is mapped in [`design/crankmagic/README.md`](../design/crankmagic/README.md). It includes
+the final standalone mockup, plans, editable sources and fresh verification. Upstream
+`118fe39` is merged on the review branch; production redesign still awaits sign-off.
+
 Written 2026-09-07 by reading the repository at commit `8f0a0c0` on branch
 `claude/mtg-deck-matrix-ui-fixes-f7om91`. Every path below was checked to exist and every
 claim about a file's contents came from opening it. Where something could not be verified
