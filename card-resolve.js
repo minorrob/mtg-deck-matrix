@@ -180,13 +180,32 @@
     var localNames = opts.localNames || [];
     if (localNames.length) {
       searched.push("registry");
+      /* SCORED THE SAME WAY THE SHORTLIST IS RANKED, which it was not. The rung used
+         trigrams alone, and trigrams are blind to the failure this whole ladder exists
+         for: "Splinter, Vengeful Sensei" shares few enough letter-triples with
+         "Splinter, Hamato Yoshi" to score 0.31, so offline the registry offered NOTHING
+         for a name whose first word is a real legend and whose title is invented. Shared
+         WORDS see it at 0.50. likeness() is the better of the two and is what every other
+         line in this file ranks by; the rung now uses it as well.
+
+         This is the rung that answers on a hotel wifi, which is exactly where somebody
+         opens a deck a friend sent them. */
       var near = [];
       for (var n = 0; n < localNames.length; n += 1) {
         if (blocked[key(localNames[n])]) continue;
-        var score = diceScore(asked, localNames[n]);
+        var score = likeness(asked, localNames[n]);
         if (score >= 0.45) near.push({name: localNames[n], score: score});
       }
-      near.sort(function (a, b) { return b.score - a.score; });
+      var wantComma = titled(asked);
+      near.sort(function (a, b) {
+        /* Ties are the normal case here -- eight Splinters all score 0.50 -- and the cut
+           to five happens before anything else gets a say, so the tie-break has to be
+           here rather than only in the final ranking. A "Name, Title" query means a
+           legend; offer the legends. */
+        return (b.score - a.score)
+          || (wantComma ? (titled(b.name) ? 1 : 0) - (titled(a.name) ? 1 : 0) : 0)
+          || a.name.localeCompare(b.name);
+      });
       near.slice(0, limit).forEach(function (entry) {
         found.add({name: entry.name}, "Closest name in the card list", "registry");
       });
