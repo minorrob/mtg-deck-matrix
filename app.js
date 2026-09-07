@@ -8564,7 +8564,10 @@
   const MY_DECKS_KEYS = {
     decks: "mtg-imported-decks.v1",       // deck-store.js STORE_KEY
     inventory: "mtg-viewer-inventory.v1", // viewer.js INVENTORY_KEY
-    picks: "mtg-viewer.v1"                // viewer.js STORE
+    picks: "mtg-viewer.v1",               // viewer.js STORE
+    // Which decks are put down. Exported with the rest, or restoring a backup brings
+    // back sixteen decks somebody had deliberately cut to four.
+    archived: "mtg-viewer-archived.v1"    // viewer.js ARCHIVE_KEY
   };
 
   function readMyDecks() {

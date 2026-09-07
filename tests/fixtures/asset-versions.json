@@ -6,8 +6,8 @@
       "sha": "8442ddb28dd0780b"
     },
     "app.js": {
-      "version": 118,
-      "sha": "924e7aad243b8189"
+      "version": 119,
+      "sha": "957e25fba3747780"
     },
     "build-panel.js": {
       "version": 4,
@@ -178,12 +178,12 @@
       "sha": "40931aa79a531d88"
     },
     "viewer.css": {
-      "version": 19,
-      "sha": "c85be3019a99778e"
+      "version": 20,
+      "sha": "22707f1228ef7542"
     },
     "viewer.js": {
-      "version": 17,
-      "sha": "b12029b6cfb3b892"
+      "version": 18,
+      "sha": "1543e81a73c181ea"
     },
     "xlsx-reader.js": {
       "version": 1,
