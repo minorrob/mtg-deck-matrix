@@ -135,10 +135,14 @@
        if (picked.length === 1 && picked[0] === "C") return false;
        return have.every(function (v) { return picked.indexOf(v) >= 0; });
      }},
-    {key: "owned",     label: "Ownership",  from: function (c) {
+    /* `mine: true` -- these two describe the reader, not Magic, and they are dropped
+       whole on a browser that has saved nothing. Ownership would otherwise offer one
+       option, "not owned", against all 7,764 cards, which is a control that filters
+       nothing; In a deck would offer none at all. See stripMine below. */
+    {key: "owned",     label: "Ownership",  mine: true, from: function (c) {
       var out = []; if (c.own > 0) out.push("in hand"); if (c.ordered > 0) out.push("on order");
       if (c.bench > 0) out.push("bench"); if (!c.own && !c.ordered) out.push("not owned"); return out; }},
-    {key: "decks",     label: "In a deck",  from: function (c) { return (c.decks || []).map(function (d) { return d.deck; }); }},
+    {key: "decks",     label: "In a deck",  mine: true, from: function (c) { return (c.decks || []).map(function (d) { return d.deck; }); }},
     {key: "type",      label: "Card type",  from: function (c) {
       return ["Creature", "Instant", "Sorcery", "Artifact", "Enchantment", "Planeswalker", "Land", "Battle"]
         .filter(function (t) { return (c.type || "").indexOf(t) >= 0; }); }},
@@ -195,7 +199,7 @@
   function renderFacets() {
     var host = $("facets"), open = {};
     host.querySelectorAll("details.gp-facet").forEach(function (d) { open[d.dataset.key] = d.open; });
-    host.innerHTML = FACETS.map(function (f) {
+    host.innerHTML = FACETS.filter(function (f) { return !(f.mine && MINE_STRIPPED); }).map(function (f) {
       var all = optionsFor(f), picked = state.f[f.key] || [];
       if (!all.length) return "";
       var cap = state.showAll[f.key] ? all.length : 24;
@@ -1416,10 +1420,39 @@
     if (DATA && state.view === "graph") render();
   });
 
+  /* WHOSE CARDS THESE ARE.
+   *
+   * data/graph.json is baked from the collection as well as from Magic: every card
+   * carries how many are in hand, how many are on order, how many are on the bench and
+   * which decks name it. That is the whole point of the graph for the person it was baked
+   * for -- and it is a lie told to everybody else, who opened the page and saw "in hand"
+   * against cards they have never owned and deck badges for decks they have never built.
+   *
+   * So on a browser that has saved nothing, those four fields are dropped and the two
+   * facets that read them go with them. What is left -- 7,764 cards, their rules, their
+   * prices and every edge between them -- is Magic, and belongs to the reader as much as
+   * to anybody. It comes back the moment there is a session to describe.
+   */
+  var MINE = ["own", "ordered", "bench", "decks"];
+  var MINE_STRIPPED = false;
+  function stripMine(json) {
+    var User = window.MtgUserState;
+    if (!User || !User.isFresh(window.localStorage)) return json;
+    MINE_STRIPPED = true;
+    return Object.assign({}, json, {
+      decks: [],
+      cards: json.cards.map(function (c) {
+        var out = Object.assign({}, c);
+        MINE.forEach(function (k) { out[k] = k === "decks" ? [] : 0; });
+        return out;
+      })
+    });
+  }
+
   fetch("data/graph.json?v=2", {cache: "default"})
     .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
     .then(function (json) {
-      DATA = json;
+      DATA = stripMine(json);
       /* The cards somebody looked up last time, put back before anything is indexed, so
          they are ordinary members of the catalog for the rest of the page's life. Any that
          the bake has since caught up with are dropped rather than added twice. */

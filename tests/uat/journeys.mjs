@@ -737,7 +737,28 @@ for (const screen of SCREENS) {
     const legend = clean(await page.locator(".gp-legend").first().textContent().catch(() => ""));
     check(/of 7,7\d\d cards/.test(legend), screen.tag, "first · the graph",
       `the list must say how much of the catalog it is showing, said "${legend}"`);
-    console.log(`  first · the graph        ${tiles} tiles · ${Math.round(screens)} screens · "${legend.slice(0, 34)}…"`);
+    /* WHOSE CARDS THESE ARE. data/graph.json is baked from the collection as well as from
+       Magic, so every card carried "in hand", "on order", "bench" and the decks that name
+       it. For the person it was baked for that is the point of the page; for everybody
+       else it was a claim about cards they have never owned. On a browser that has saved
+       nothing those four fields are dropped, and the two facets that read them go with
+       them. What is left is Magic, and the list stays full -- 7,764 cards. */
+    const whose = await page.evaluate(() => ({
+      facets: [...document.querySelectorAll(".gp-facet summary")].map((n) => n.textContent.trim().split(/\s/)[0]),
+      owned: document.querySelectorAll(".gp-tag.own").length,
+      decks: document.querySelectorAll(".gp-tag.deck").length,
+      commanders: document.querySelectorAll(".gp-tag.cmdr").length
+    }));
+    check(whose.owned === 0 && whose.decks === 0, screen.tag, "first · the graph",
+      `a browser that has saved nothing is shown ${whose.owned} "in hand" and ${whose.decks} deck tags`);
+    check(!whose.facets.includes("Ownership") && !whose.facets.includes("In"), screen.tag, "first · the graph",
+      `Ownership and In-a-deck are offered with nothing behind them: ${JSON.stringify(whose.facets)}`);
+    check(whose.commanders > 0, screen.tag, "first · the graph",
+      "no card says it can be a commander, which is the first thing asked of a legendary creature");
+    check(tiles > 20, screen.tag, "first · the graph",
+      `the card list is ${tiles} tiles — it is not me-specific and must stay full`);
+    console.log(`  first · the graph        ${tiles} tiles · ${Math.round(screens)} screens · ` +
+      `${whose.facets.length} facets, ${whose.commanders} commander tags, no ownership · "${legend.slice(0, 24)}…"`);
 
     /* Wheel and click, not scrollTo and .click(): a programmatic scroll on this
        page is what produced two invented "jumps" that a real gesture does not. */
@@ -860,16 +881,23 @@ for (const screen of SCREENS) {
       "first · names a card", "a banned card was refused and kept anyway");
     console.log(`     banned card refused: "${refused.slice(0, 70)}…"`);
 
-    /* THE COPILOT'S OWN FILTERS. Twenty findings across six decks is a reading list, and
-       three axes cut it down. The rule being checked is the one that makes them safe to
-       leave on: what does not match FOLDS, with its count on the label, rather than
-       vanishing -- a filter that hides evidence is one you have to remember you set. */
+    /* THE COPILOT'S OWN FILTERS. Twenty findings is a reading list, and its axes cut it
+       down. The rule being checked is the one that makes them safe to leave on: what does
+       not match FOLDS, with its count on the label, rather than vanishing -- a filter that
+       hides evidence is one you have to remember you set.
+
+       Kind and From are always there; Deck is only there when there are decks, and this
+       persona's browser has saved nothing, so it is not. That is the point rather than a
+       gap: an axis whose every option is "no deck" is a control that filters nothing. */
     await page.evaluate(() => { const d = document.getElementById("copilot"); if (d) d.open = true; });
     await page.waitForTimeout(300);
     const axes = await page.evaluate(() => [...document.querySelectorAll(".gp-cpf-row")]
       .map((r) => (r.querySelector(".gp-cpf-lab") || {}).textContent || ""));
-    check(axes.length >= 3, screen.tag, "first · names a card",
+    check(axes.length >= 2 && axes.includes("Kind") && axes.includes("From"), screen.tag,
+      "first · names a card",
       `the Copilot offers ${axes.length} ways to narrow twenty findings: ${JSON.stringify(axes)}`);
+    check(!axes.includes("Deck"), screen.tag, "first · names a card",
+      "a browser with no decks is offered a Deck filter, which can only filter to nothing");
     const before = await page.locator("#copilot > .gp-cp-grid > .gp-cp").count();
     await page.locator('[data-cpf="kind"]').first().click();
     await page.waitForTimeout(500);
