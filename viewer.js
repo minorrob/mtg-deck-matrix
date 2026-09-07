@@ -117,7 +117,7 @@
      the deck objects; both describe the catalog that was, and a stale index is
      how an added card would come back "not found" from the row that holds it. */
   function rebuild() {
-    DATA = Store ? Store.merge(MASTER, IMPORTS) : MASTER;
+    DATA = dropArchived(Store ? Store.merge(MASTER, IMPORTS) : MASTER);
     applyInventory();
     byName.index = null;
     // merge builds new deck objects, so a deck page already open is holding the
@@ -254,6 +254,98 @@
     var ok = Store.write(window.localStorage, IMPORTS);
     if (!ok) toast("This browser would not save the deck — it is here until you reload.");
     return ok;
+  }
+
+  /* ------------------------------------------------------------- archive */
+
+  /* PUT A DECK DOWN WITHOUT THROWING IT AWAY.
+   *
+   * Six decks was a list you could hold in your head. Sixteen is not, and most of them
+   * are not what anybody is working on this month -- so the page needs a way to say "not
+   * now" that is neither deleting the deck nor scrolling past it forever.
+   *
+   * Archiving hides a deck from the list AND stops it counting: its shortfall leaves To
+   * Buy, because a deck you are not building is not a deck you are shopping for -- that is
+   * the whole reason to archive one, and a To Buy total that still included it would make
+   * the feature pointless.
+   *
+   * What it does NOT claim is where the physical cards went. A deck you archive may still
+   * be sleeved in its box. With an uploaded collection the allocation genuinely re-runs
+   * and its copies land on the bench, which is right because the collection is a count of
+   * what exists; without one, the workbook's own bench figure is left exactly alone rather
+   * than added to on a guess. So the bench usually does not move, and nothing on screen
+   * says it will.
+   *
+   * It applies to all sixteen, not just the added ones. The six come from the repository
+   * and cannot be deleted -- there is nothing local to delete -- but "I am not playing
+   * Atraxa this year" is the same sentence about any of them. */
+  var ARCHIVE_KEY = "mtg-viewer-archived.v1";
+  var ARCHIVED = [];
+
+  function loadArchived() {
+    try {
+      var raw = JSON.parse(window.localStorage.getItem(ARCHIVE_KEY) || "null");
+      ARCHIVED = Array.isArray(raw) ? raw.filter(function (id) { return typeof id === "string"; }) : [];
+    } catch (err) { ARCHIVED = []; }
+  }
+  function saveArchived() {
+    try {
+      if (ARCHIVED.length) window.localStorage.setItem(ARCHIVE_KEY, JSON.stringify(ARCHIVED));
+      else window.localStorage.removeItem(ARCHIVE_KEY);
+    } catch (err) { toast("This browser would not remember that — it holds until you reload."); }
+  }
+  function isArchived(id) { return ARCHIVED.indexOf(id) >= 0; }
+
+  function setArchived(id, on) {
+    var at = ARCHIVED.indexOf(id);
+    if (on && at < 0) ARCHIVED.push(id);
+    if (!on && at >= 0) ARCHIVED.splice(at, 1);
+    saveArchived();
+    rebuild();
+    render();
+  }
+
+  /* The archived decks, read off the unfiltered catalog rather than the visible one --
+     which no longer has them, that being the point. */
+  function archivedDecks() {
+    var base = Store ? Store.merge(MASTER, IMPORTS) : MASTER;
+    return ((base && base.decks) || []).filter(function (d) { return isArchived(d.id); });
+  }
+
+  /* Everything downstream of this reads DATA, so filtering here is the whole feature:
+     the grid, the ranking, the bench, the buy list and the collection allocation all
+     stop seeing the deck at once, and none of them needs to know why. */
+  function dropArchived(data) {
+    if (!data || !ARCHIVED.length) return data;
+    var gone = {};
+    ARCHIVED.forEach(function (id) { gone[id] = 1; });
+    var decks = (data.decks || []).filter(function (d) { return !gone[d.id]; });
+    if (decks.length === (data.decks || []).length) return data;
+    var strip = function (map) {
+      var out = {};
+      Object.keys(map || {}).forEach(function (id) { if (!gone[id]) out[id] = map[id]; });
+      return out;
+    };
+    var sum = function (map) {
+      return Object.keys(map || {}).reduce(function (n, id) { return n + (Number(map[id]) || 0); }, 0);
+    };
+    var cards = (data.cards || []).map(function (card) {
+      var target = strip(card.target);
+      /* RECOMPUTED, NOT LEFT ALONE. buyCount is a column in the workbook, and leaving it
+         at the workbook's figure made archiving a half-measure: a deck's upgrade rows left
+         the buy list (those are derived from the deck) and its shortfall rows stayed
+         (that column is not). Checked against data/master-v2.json, the column IS exactly
+         `what every deck wants, minus what you own, minus what is on the way` on all 648
+         rows -- so this is the workbook's own arithmetic run over the decks that are
+         left, not an attribution invented here. */
+      var short = Math.max(0, sum(target) - (Number(card.own) || 0) - (Number(card.ordered) || 0));
+      return Object.assign({}, card, {
+        target: target, actual: strip(card.actual),
+        buyCount: short,
+        toBuyCost: card.price ? short * card.price : 0
+      });
+    });
+    return Object.assign({}, data, {decks: decks, cards: cards});
   }
 
   /* --------------------------------------------------------- card reading */
@@ -797,22 +889,131 @@
     go("#/decks");
   }
 
+  /* The small control in the corner of a deck card.
+     ------------------------------------------------
+     Two actions, and they are not the same act. ARCHIVE puts a deck down: it comes off
+     the list and out of the arithmetic, and one click brings it back. DELETE destroys the
+     record, and is offered only for a deck added on this device -- the six live in the
+     repository, so there is nothing local to delete and a button claiming otherwise would
+     be lying about what it does.
+
+     Opened by its own button rather than on hover, because hover does not exist on the
+     device this page is mostly read on. */
+  var openMenuFor = null;
+
+  function closeDeckMenus() {
+    openMenuFor = null;
+    Array.prototype.forEach.call(document.querySelectorAll(".deck-menu-pop"), function (n) {
+      n.hidden = true;
+    });
+    Array.prototype.forEach.call(document.querySelectorAll(".deck-menu-b"), function (n) {
+      n.setAttribute("aria-expanded", "false");
+    });
+  }
+  document.addEventListener("click", function (e) {
+    if (!e.target.closest || !e.target.closest(".deck-menu")) closeDeckMenus();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && openMenuFor) closeDeckMenus();
+  });
+
+  function deckMenu(deck) {
+    var pop = el("div", { class: "deck-menu-pop", role: "menu", hidden: true });
+    var item = function (label, hint, run) {
+      return el("button", { class: "deck-menu-i", type: "button", role: "menuitem",
+        onclick: function () { closeDeckMenus(); run(); } }, [
+        el("b", { text: label }),
+        el("span", { text: hint })
+      ]);
+    };
+    pop.appendChild(item("Archive", "Off this list and out of the buy list. Nothing is deleted.",
+      function () {
+        setArchived(deck.id, true);
+        toast(deck.label + " archived \u2014 it is in the drawer at the bottom.");
+      }));
+    if (deck.imported) {
+      pop.appendChild(item("Delete", "Destroys the deck you added. The six are not affected.",
+        function () { removeImport(deck); }));
+    } else {
+      pop.appendChild(el("p", { class: "deck-menu-note",
+        text: "This one ships with the app, so there is nothing here to delete \u2014 "
+          + "archiving is how it goes away." }));
+    }
+
+    var button = el("button", {
+      class: "deck-menu-b", type: "button", "aria-haspopup": "menu", "aria-expanded": "false",
+      "aria-label": "More for " + deck.label, title: "More for " + deck.label,
+      onclick: function (e) {
+        var opening = pop.hidden;
+        closeDeckMenus();
+        if (!opening) return;
+        pop.hidden = false;
+        openMenuFor = deck.id;
+        e.currentTarget.setAttribute("aria-expanded", "true");
+      }
+    }, ["\u22ef"]);
+    return el("div", { class: "deck-menu" }, [button, pop]);
+  }
+
   /* --------------------------------------------------------------- decks  */
 
   function renderDecks(root) {
     var decks = orderedDecks();
 
+    /* THE THREE DOORS, ABOVE THE DECKS RATHER THAN AFTER THEM.
+     *
+     * Add and Build used to sit at the end of the grid, on the reasoning that they are
+     * what you reach for after looking at what is already there. That holds at six decks
+     * and stops holding at sixteen: the tiles end up a screen and a half down, behind
+     * every deck you were not looking for, and the two things somebody arrives wanting to
+     * do are the two hardest to find.
+     *
+     * Explore cards joins them because it is the same kind of thing -- a way in, not a
+     * deck -- and because the card graph had no route from here except the small link in
+     * the bar and one in the footer. */
+    var start = el("div", { class: "start-grid" });
+    start.appendChild(el("button", { class: "start-tile deck-add", type: "button",
+      onclick: openImport }, [
+      el("span", { class: "plus", "aria-hidden": "true", text: "+" }),
+      el("b", { text: "Add a deck" }),
+      el("span", { text: "Paste a list from Moxfield or anywhere else, or give an "
+        + "Archidekt link. It is scored on the same simulation as these." })
+    ]));
+    start.appendChild(el("button", { class: "start-tile deck-add is-build", type: "button",
+      onclick: openBuild }, [
+      el("span", { class: "plus", "aria-hidden": "true", text: "\u2726" }),
+      el("b", { text: "Build one" }),
+      el("span", { text: "Name a commander and a theme. It is built from live "
+        + "Scryfall data into a legal hundred, at three prices." })
+    ]));
+    /* A link, not a button: it goes to another page, and a person who wants it in a new
+       tab should be able to have one. */
+    start.appendChild(el("a", { class: "start-tile is-explore", href: "graph.html" }, [
+      el("span", { class: "plus", "aria-hidden": "true", text: "\u25c9" }),
+      el("b", { text: "Explore cards" }),
+      el("span", { text: "7,710 Commander-legal cards, what connects them, and a Copilot "
+        + "that says which are worth a look." })
+    ]));
+    root.appendChild(start);
+
     var added = decks.filter(function (d) { return d.imported; }).length;
     root.appendChild(el("div", { class: "section-head" }, [
-      el("h2", { text: added
-        ? decks.length + " decks"
-        : "The six decks" }),
-      el("p", { text: RATINGS
-        ? "Ranked by simulated score. Tap a deck for how to play it and what is still missing."
-        : "Tap a deck for how to play it, the full hundred, and what is still missing." })
+      el("h2", { text: "My Decks" }),
+      el("p", { text: (added ? decks.length + " decks. " : "")
+        + (RATINGS
+          ? "Ranked by simulated score. Tap a deck for how to play it and what is still missing."
+          : "Tap a deck for how to play it, the full hundred, and what is still missing.") })
     ]));
 
     var grid = el("div", { class: "deck-grid" });
+    /* Every deck archived is a reachable state, and an empty grid with a drawer under it
+       reads as the app having lost them. The drawer below says how many and offers them
+       back; this says the list is empty on purpose. */
+    if (!decks.length) {
+      grid.appendChild(el("p", { class: "empty-note", text: archivedDecks().length
+        ? "Every deck is archived. They are in the drawer below, one click from coming back."
+        : "No decks yet. Add one or build one above." }));
+    }
     decks.forEach(function (deck) {
       var stats = deckStats(deck), guide = guideFor(deck.id), rating = ratingFor(deck.id);
       var meta = [];
@@ -838,7 +1039,12 @@
           text: deck.measured ? "Added deck" : "Added · not scored" }));
       }
 
-      grid.appendChild(el("button", {
+      /* The card stays one big button -- it has one job, which is to open the deck -- and
+         the menu is its SIBLING rather than a button inside a button, which is invalid
+         markup and a hit target nobody can predict. The slot exists to position it. */
+      var slot = el("div", { class: "deck-slot" });
+      slot.appendChild(deckMenu(deck));
+      slot.appendChild(el("button", {
         class: "deck-card", type: "button",
         onclick: function () { go("#/deck/" + deck.id); }
       }, [
@@ -860,26 +1066,39 @@
         el("div", { class: "meta-row" }, meta),
         readyBar(stats)
       ]));
+      grid.appendChild(slot);
     });
 
-    // The two tiles that add one. Last in the grid, because they are what you
-    // reach for after looking at what is already there -- and side by side,
-    // because which one you want depends only on whether the deck exists yet.
-    grid.appendChild(el("button", { class: "deck-add", type: "button",
-      onclick: openImport }, [
-      el("span", { class: "plus", "aria-hidden": "true", text: "+" }),
-      el("b", { text: "Add a deck" }),
-      el("span", { text: "Paste a list from Moxfield or anywhere else, or give an "
-        + "Archidekt link. It is scored on the same simulation as these." })
-    ]));
-    grid.appendChild(el("button", { class: "deck-add is-build", type: "button",
-      onclick: openBuild }, [
-      el("span", { class: "plus", "aria-hidden": "true", text: "\u2726" }),
-      el("b", { text: "Build one" }),
-      el("span", { text: "Name a commander and a theme. It is built from live "
-        + "Scryfall data into a legal hundred, at three prices." })
-    ]));
     root.appendChild(grid);
+
+    /* WHAT YOU PUT DOWN, AND HOW TO PICK IT BACK UP.
+     *
+     * Closed, and headed by the count. An archived deck is not gone and the page has to
+     * keep saying so, or the first reaction to a missing deck is that the app lost it --
+     * and the second is to add it again. */
+    var away = archivedDecks();
+    if (away.length) {
+      var drawer = el("details", { class: "panel archive-drawer", style: "margin-top:18px" });
+      drawer.appendChild(el("summary", { text: away.length +
+        (away.length === 1 ? " archived deck" : " archived decks") +
+        " \u00b7 off the list above and out of the buy list, not deleted" }));
+      var rows = el("div", { class: "archive-rows" });
+      away.forEach(function (deck) {
+        rows.appendChild(el("div", { class: "archive-row" }, [
+          el("div", {}, [
+            el("b", { text: deck.label }),
+            el("span", { class: "archive-sub", text: deck.commander +
+              (deck.imported ? " \u00b7 added on this device" : "") })
+          ]),
+          el("button", { class: "btn", type: "button", text: "Put it back",
+            onclick: function () { setArchived(deck.id, false); toast(deck.label + " is back in the list."); } }),
+          deck.imported ? el("button", { class: "btn ghost", type: "button", text: "Delete",
+            onclick: function () { removeImport(deck); } }) : null
+        ]));
+      });
+      drawer.appendChild(rows);
+      root.appendChild(drawer);
+    }
 
     /* Only how the score is made. The import still records where the workbook
        contradicts itself -- in data/master-v2.json under dataNotes, and on
@@ -1049,8 +1268,9 @@
     root.appendChild(el("button", { class: "back-link", type: "button",
       onclick: function () { go("#/decks"); } }, "← All decks"));
 
-    /* An added deck says where it came from, and offers the way back out. The
-       six do neither, because neither is true of them. */
+    /* An added deck says where it came from and offers both ways out. The six say where
+       they came from too -- the repository -- which is why one of those ways is missing
+       for them and the other is not. */
     if (deck.imported) {
       var gen = deck.generated;
       root.appendChild(el("div", { class: "imp-banner" }, [
@@ -1070,9 +1290,30 @@
         deck.measured ? null : el("button", { class: "btn", type: "button",
           text: "Measure it", style: "margin-left:auto",
           onclick: function (e) { measureDeck(deck, e.currentTarget); } }),
-        el("button", { class: "btn ghost", type: "button",
+        el("button", { class: "btn", type: "button",
           style: deck.measured ? "" : "margin-left:0",
-          onclick: function () { removeImport(deck); }, text: "Remove" })
+          onclick: function () {
+            setArchived(deck.id, true);
+            toast(deck.label + " archived \u2014 it is in the drawer at the bottom of My Decks.");
+            go("#/decks");
+          }, text: "Archive" }),
+        el("button", { class: "btn ghost", type: "button",
+          onclick: function () { removeImport(deck); }, text: "Delete" })
+      ]));
+    }
+    /* The six can be put down too. A control that exists on fifteen deck cards and not
+       on the sixteenth reads as a bug, and "I am not playing Atraxa this year" is the
+       same sentence whichever deck it is about. Delete is the one that genuinely does
+       not apply: these live in the repository, so there is nothing local to destroy. */
+    if (!deck.imported) {
+      root.appendChild(el("div", { class: "imp-banner" }, [
+        el("span", { text: "Ships with the app, so there is nothing local to delete." }),
+        el("button", { class: "btn", type: "button", text: "Archive", style: "margin-left:auto",
+          onclick: function () {
+            setArchived(deck.id, true);
+            toast(deck.label + " archived \u2014 it is in the drawer at the bottom of My Decks.");
+            go("#/decks");
+          } })
       ]));
     }
 
@@ -1704,6 +1945,30 @@
     }, isBench ? GROUP_PAGE : 0);
   }
 
+  /* Somebody followed a link to a deck they have since put down. Say which deck, say
+     what archived means, and offer the one button that undoes it -- rather than dropping
+     them on the deck list, which looks exactly like the deck having been deleted. */
+  function renderArchivedDeck(root, id) {
+    var deck = archivedDecks().filter(function (d) { return d.id === id; })[0];
+    root.appendChild(el("div", { class: "section-head" }, [
+      el("h2", { text: deck ? deck.label : "That deck is archived" }),
+      el("p", { text: "Archived, so it is off the deck list and its cards are out of the "
+        + "buy list. Nothing about it has been deleted." })
+    ]));
+    root.appendChild(el("div", { class: "panel", style: "display:flex;gap:10px;flex-wrap:wrap;align-items:center" }, [
+      el("span", { style: "color:var(--text-dim);font-size:13.5px",
+        text: deck ? deck.commander : "It is not in this browser's list at all." }),
+      deck ? el("button", { class: "btn primary", type: "button", text: "Put it back",
+        onclick: function () {
+          setArchived(deck.id, false);
+          toast(deck.label + " is back in the list.");
+          go("#/deck/" + deck.id);
+        } }) : null,
+      el("button", { class: "btn", type: "button", text: "Back to my decks",
+        onclick: function () { go("#/decks"); } })
+    ]));
+  }
+
   /* ------------------------------------------------------------ the tray */
 
   function shareText() {
@@ -1831,6 +2096,12 @@
     if (parts[0] === "deck" && parts[1]) {
       var deck = DATA.decks.filter(function (d) { return d.id === parts[1]; })[0];
       if (deck) { state.view = "deck"; state.deck = deck; render(); return; }
+      /* A bookmark, or the browser's back button after archiving. The deck is not gone,
+         it is put down -- and dropping through to the deck list would say the opposite,
+         silently, to somebody who followed a link that used to work. */
+      if (isArchived(parts[1])) {
+        state.view = "archived"; state.archivedId = parts[1]; state.deck = null; render(); return;
+      }
     }
     state.view = ["decks", "bench", "buy"].indexOf(parts[0]) >= 0 ? parts[0] : "decks";
     state.deck = null;
@@ -1843,9 +2114,11 @@
      deck changes all three, and a stale "6 decks" over seven is the kind of
      wrong that reads as a bug in the numbers themselves. */
   function renderCounts() {
-    // "six Commander decks" stops being true the moment somebody adds a seventh.
+    /* "six Commander decks" stops being true the moment somebody adds a seventh -- or
+       archives one of the six, which the original test for "has anybody added a deck"
+       did not catch: five decks on screen under a line still promising six. */
     var sub = document.getElementById("brand-sub");
-    if (sub && DATA.decks.some(function (d) { return d.imported; })) {
+    if (sub && DATA.decks.length !== 6) {
       sub.textContent = DATA.decks.length + " Commander decks, what they do, and what they still need";
     }
     var slot = document.getElementById("ribbon-slot");
@@ -1862,11 +2135,13 @@
     renderCounts();
 
     document.querySelectorAll(".tab").forEach(function (t) {
-      var on = t.dataset.view === state.view || (state.view === "deck" && t.dataset.view === "decks");
+      var on = t.dataset.view === state.view
+        || ((state.view === "deck" || state.view === "archived") && t.dataset.view === "decks");
       t.setAttribute("aria-selected", on ? "true" : "false");
     });
 
     if (state.view === "deck") renderDeck(root, state.deck);
+    else if (state.view === "archived") renderArchivedDeck(root, state.archivedId);
     else if (state.view === "bench") renderPicker(root, "bench");
     else if (state.view === "buy") renderPicker(root, "buy");
     else renderDecks(root);
@@ -1915,6 +2190,7 @@
       // added deck is on the page at load rather than appearing a beat later.
       IMPORTS = Store ? Store.read(window.localStorage) : [];
       loadInventory();
+      loadArchived();
       rebuild();
       // The ratings and the guides are generated separately and may lag; the
       // page is fully usable without either, so a miss is not an error.

@@ -8,10 +8,16 @@ there is no account.
 
 **`index.html` · My Decks** is the front door: every deck you have, what it does,
 how far from finished it is. Three tabs — **Decks**, **Bench** (spare copies) and
-**To Buy** — plus two ways to gain a deck: paste one you already have, or
-describe one and have it built. Upload what you own as csv, xlsx or a pasted
-note and the collection is allocated to your decks copy by copy, the remainder
-landing on the bench.
+**To Buy**. The Decks tab opens with three ways in, above the list rather than
+after it: **Add a deck** (paste one you already have), **Build one** (describe it
+and have it built) and **Explore cards** (the card graph). Decks added or built
+land in the list below them. Each deck card carries a **⋯** menu: *Archive* takes
+a deck off the list and its cards out of the buy total without deleting anything,
+and one click in the drawer at the bottom brings it back; *Delete* destroys a deck
+you added, and is not offered for the six that ship with the app because there is
+nothing local to delete. Upload what you own as csv, xlsx or a pasted note and the
+collection is allocated to your decks copy by copy, the remainder landing on the
+bench.
 
 **`matrix.html` · the Matrix** is the build-and-buy half. **Compare** picks one
 variant per deck role out of fifty; **Deck** turns that pick into an exact

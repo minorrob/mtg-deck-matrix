@@ -177,6 +177,51 @@ main { padding: 24px 0 140px; }
 
 /* ------------------------------------------------------------ deck grid */
 
+/* The slot exists so the corner menu can be a SIBLING of the card rather than a button
+   inside a button, which is invalid markup and a hit target nobody can predict. */
+.deck-slot { position: relative; display: grid; }
+.deck-menu { position: absolute; z-index: 3; top: 8px; right: 8px; }
+.deck-menu-b {
+  appearance: none; cursor: pointer; line-height: 1;
+  min-width: 30px; min-height: 30px; padding: 0 6px;
+  border: 1px solid var(--line); border-radius: 8px;
+  background: var(--panel-2); color: var(--text-dim);
+  font: inherit; font-size: 15px; font-weight: 900;
+}
+.deck-menu-b:hover, .deck-menu-b[aria-expanded="true"] { border-color: var(--patina); color: var(--text); }
+.deck-menu-pop {
+  position: absolute; z-index: 4; top: calc(100% + 4px); right: 0; width: 246px;
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  background: var(--panel); box-shadow: var(--shadow); overflow: hidden;
+}
+.deck-menu-i {
+  display: block; width: 100%; text-align: left; cursor: pointer;
+  border: 0; border-bottom: 1px solid var(--line); background: none;
+  padding: 9px 11px; font: inherit; color: var(--text);
+}
+.deck-menu-i:last-child { border-bottom: 0; }
+.deck-menu-i:hover { background: var(--panel-2); }
+.deck-menu-i b { display: block; font-size: 13px; font-weight: 700; }
+.deck-menu-i span { display: block; font-size: 11.5px; line-height: 1.4; color: var(--text-dim); margin-top: 2px; }
+.deck-menu-note { margin: 0; padding: 9px 11px; font-size: 11.5px; line-height: 1.4; color: var(--text-dim); }
+
+/* Archived decks. Closed, headed by the count, and saying in the summary what archiving
+   actually did -- a deck that vanished from the list AND from the buy total, with no
+   word about either, reads as data loss. */
+.empty-note {
+  margin: 0; padding: 26px 4px; color: var(--text-dim); font-size: 13.5px; line-height: 1.55;
+}
+.archive-drawer > summary { cursor: pointer; color: var(--text-dim); font-size: 13px; }
+.archive-rows { display: grid; gap: 8px; margin-top: 12px; }
+.archive-row {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 9px 11px; border: 1px solid var(--line); border-radius: var(--radius-sm);
+  background: var(--panel-2);
+}
+.archive-row > div:first-child { margin-right: auto; min-width: 0; }
+.archive-row b { display: block; font-size: 13.5px; }
+.archive-sub { display: block; font-size: 11.5px; color: var(--text-dim); margin-top: 1px; }
+
 .deck-grid {
   display: grid; gap: 14px;
   grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
@@ -219,7 +264,9 @@ main { padding: 24px 0 140px; }
 }
 .detail-head { position: relative; }
 
-.deck-card-top { display: flex; align-items: flex-start; gap: 12px; }
+/* Room on the right for the corner menu, which is absolutely positioned over this row.
+   Without it the colour pips sit under the button and the last one is unreadable. */
+.deck-card-top { display: flex; align-items: flex-start; gap: 12px; padding-right: 34px; }
 
 .rank-badge {
   flex: none; width: 42px; height: 40px; border-radius: 10px;
@@ -867,19 +914,50 @@ main { padding: 24px 0 140px; }
 
 .imp-actions { display: flex; justify-content: flex-end; gap: 8px; }
 
-/* The tile that opens all this, sitting at the end of the deck grid. It is a
-   dashed outline rather than a filled card because it is not a deck yet. */
-.deck-add {
+/* The three doors, above the decks.
+   ---------------------------------
+   Add and Build used to sit at the END of the deck grid, which holds at six decks and
+   stops holding at sixteen: they end up a screen and a half down, behind every deck you
+   were not looking for. Explore cards joins them because it is the same kind of thing --
+   a way in, not a deck.
+
+   Their own grid, at three across on a desktop, so they read as a row of choices rather
+   than as three more cards in a list of decks. */
+.start-grid {
+  display: grid; gap: 12px; margin: 0 0 22px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+/* The look belongs to all three, not to "the ones that add a deck". It used to live on
+   .deck-add, and Explore cards -- which is a link, and adds nothing -- came out as a line
+   of unstyled text where a tile should be. A dashed outline rather than a filled card,
+   because none of the three is a deck. */
+.start-tile {
   display: grid; place-items: center; gap: 6px;
-  min-height: 190px; padding: 20px; cursor: pointer;
+  min-height: 150px; padding: 20px; cursor: pointer;
   background: transparent; color: var(--text-dim);
   border: 1px dashed var(--line); border-radius: var(--radius);
-  font: inherit; text-align: center;
+  font: inherit; text-align: center; text-decoration: none;
 }
-.deck-add:hover { border-color: var(--patina); color: var(--text); }
-.deck-add .plus { font-size: 26px; line-height: 1; color: var(--text-faint); }
-.deck-add b { font-family: var(--serif); font-size: 16px; font-weight: 600; color: var(--text); }
-.deck-add span { font-size: 12.5px; line-height: 1.45; max-width: 24ch; }
+.start-tile:hover { border-color: var(--patina); color: var(--text); }
+.start-tile .plus { font-size: 26px; line-height: 1; color: var(--text-faint); }
+.start-tile b { font-family: var(--serif); font-size: 16px; font-weight: 600; color: var(--text); }
+.start-tile > span:not(.plus) { font-size: 12.5px; line-height: 1.45; max-width: 24ch; }
+.start-tile.is-build .plus { font-size: 22px; color: var(--patina); }
+.start-tile.is-explore .plus { font-size: 20px; color: var(--patina); }
+
+@media (max-width: 720px) {
+  /* On a phone three full tiles is most of the screen before a single deck. They keep
+     their glyph and their name and drop the sentence, which is the part you only need
+     the first time. */
+  .start-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .start-tile { min-height: 0; padding: 12px 6px; }
+  .start-tile > span:not(.plus) { display: none; }
+  .start-tile b { font-size: 13px; }
+}
+
+/* .deck-add is what it says: the tiles that add a deck. It carries no look of its own --
+   that is .start-tile above, shared with Explore cards, which adds nothing -- and stays as
+   the name for "a way to get a new deck", which is a question tests ask and CSS does not. */
 
 /* Building one from nothing. The panel borrows import's shell and fields
    wholesale -- it is the same errand through a different door -- and adds only
@@ -967,10 +1045,8 @@ main { padding: 24px 0 140px; }
   word-break: break-word;
 }
 
-/* The second add tile. Same shape as Add a deck, marked only by its glyph --
-   the two are peers, and making one look primary would be a claim that one is
-   the usual way in. */
-.deck-add.is-build .plus { font-size: 22px; color: var(--patina); }
+/* Each tile is marked only by its glyph -- they are peers, and making one look primary
+   would be a claim that one is the usual way in. */
 
 @media (max-width: 560px) {
   .bp-row { grid-template-columns: 1fr; }

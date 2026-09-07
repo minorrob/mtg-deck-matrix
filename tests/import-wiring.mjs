@@ -85,8 +85,22 @@ check("the workbook's catalog is read, never assigned into", () => {
   // for the rest of the session and look fine until a reload.
   const writes = viewer.match(/MASTER\.\w+\s*(=[^=]|\.push\()/g) || [];
   assert.deepEqual(writes, [], `viewer.js writes to the master: ${writes.join(", ")}`);
-  assert.match(viewer, /DATA = Store \? Store\.merge\(MASTER, IMPORTS\)/,
+  assert.match(viewer, /DATA = dropArchived\(Store \? Store\.merge\(MASTER, IMPORTS\)/,
     "DATA is the merge of the two, not one of them");
+});
+
+check("archiving is applied once, where the catalog is built", () => {
+  /* Everything on this page reads DATA: the grid, the ranking, the bench, the buy list
+     and the collection allocation. Filtering archived decks anywhere else would leave
+     one of them disagreeing with the others -- a deck off the list but still shopped
+     for, which is the exact half-measure this feature exists to avoid. So the filter
+     belongs to rebuild() and nowhere else. */
+  const rebuild = viewer.slice(viewer.indexOf("function rebuild()"),
+    viewer.indexOf("function applyInventory("));
+  assert.match(rebuild, /dropArchived\(/, "rebuild() must be where archived decks are dropped");
+  const elsewhere = (viewer.match(/isArchived\(/g) || []).length;
+  assert.ok(elsewhere <= 4,
+    `isArchived is consulted ${elsewhere} times; the filter should live in one place, not be re-asked all over the page`);
 });
 
 check("the merged catalog is rebuilt, and its memos dropped with it", () => {

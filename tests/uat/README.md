@@ -66,6 +66,14 @@ None of THAT is visible if the collection behind the app is always empty.
 says where the rest of the app is without anybody scrolling. Nothing is required
 before it makes sense.
 
+It also asserts the three doors sit ABOVE the deck list, each with a frame, one
+of them leading to the card graph, under a list headed "My Decks". Add and Build
+used to sit at the end of the grid, which holds at six decks and stops holding at
+sixteen: they end up behind every deck you were not looking for. The frame is
+checked because it is the failure that actually happened — the look lived on the
+class for "tiles that add a deck", and Explore cards, which adds nothing, came out
+as a line of loose text where a tile should be.
+
 **First · hits an empty tab** — Deck before picking anything. Asserts a real
 screen: what the tab is for, why it is empty, and three ways out (Compare, load
 the six, take the tour). This is the journey that had a dead end.
@@ -170,6 +178,16 @@ the six picks. The export carries the picks, a date, the ten added decks and the
 3,200 collection cards; Reset All really resets; and re-importing brings back
 both the Deck page *and* My Decks. If any leg of that breaks, this is a place
 work goes in and does not come out of.
+
+Sixteen decks is also where archiving earns its keep, so the round trip is
+checked here: a deck leaves the list, its cards leave the buy total, both survive
+a reload, and one click in the drawer restores the exact numbers it started with.
+The buy total is the leg that used to only half work — a deck's upgrade rows left
+with it and its shortfall rows stayed, because the shortfall is a column in the
+workbook rather than something derived from the decks. And the two menus are held
+apart: an added deck offers Archive and Delete, one of the six offers Archive
+only, because there is nothing local to delete and a button claiming otherwise
+would be lying about what it does.
 
 ## What every journey is held to
 

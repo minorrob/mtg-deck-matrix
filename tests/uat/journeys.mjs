@@ -252,6 +252,37 @@ for (const screen of SCREENS) {
     check(decks === 6, screen.tag, "first · lands", `${decks} decks on the front page, expected 6`);
     check(adds >= 2, screen.tag, "first · lands", `${adds} ways to add a deck, expected 2`);
 
+    /* THE THREE DOORS, ABOVE THE DECKS. Add and Build used to sit at the END of the deck
+       grid, which holds at six decks and stops holding at sixteen: they end up behind
+       every deck you were not looking for. Explore cards joins them because it is the
+       same kind of thing -- a way in, not a deck -- and because the graph had no route
+       from this page but a link in the bar and one in the footer. */
+    const doors = await page.evaluate(() => {
+      const tiles = [...document.querySelectorAll(".start-tile")];
+      const head = document.querySelector(".section-head h2");
+      const card = document.querySelector(".deck-card");
+      const box = (n) => n ? Math.round(n.getBoundingClientRect().top) : null;
+      return {
+        names: tiles.map((t) => ((t.querySelector("b") || {}).textContent || "").trim()),
+        // A tile with no border is a line of text where a tile should be: it happened.
+        framed: tiles.filter((t) => getComputedStyle(t).borderStyle !== "none").length,
+        graph: tiles.filter((t) => t.getAttribute("href") === "graph.html").length,
+        tileTop: box(tiles[0]), headTop: box(head), cardTop: box(card),
+        heading: head ? head.textContent.trim() : ""
+      };
+    });
+    check(doors.names.length === 3, screen.tag, "first · lands",
+      `${doors.names.length} ways in above the decks: ${JSON.stringify(doors.names)}`);
+    check(doors.graph === 1, screen.tag, "first · lands",
+      "no tile beside Add and Build leads to the card graph");
+    check(doors.framed === doors.names.length, screen.tag, "first · lands",
+      `${doors.names.length - doors.framed} of the tiles have no frame, so they read as loose text`);
+    check(doors.tileTop < doors.headTop && doors.headTop < doors.cardTop, screen.tag, "first · lands",
+      `the tiles are not above the deck list: tiles ${doors.tileTop}, heading ${doors.headTop}, first deck ${doors.cardTop}`);
+    check(doors.heading === "My Decks", screen.tag, "first · lands",
+      `the deck list is headed "${doors.heading}"`);
+    console.log(`     ${doors.names.join(" · ")} above "${doors.heading}"`);
+
     /* Compare, Deck, Shop, the Game Log and the Tour are all on matrix.html, and
        for a while the only route there was a footer link -- 1.0 screens below the
        fold on a desktop and 2.9 on a phone. A first-time visitor saw six decks
@@ -997,6 +1028,93 @@ for (const screen of SCREENS) {
       check(/\d{3,}/.test(benchTab), screen.tag, "exit · import",
         `the uploaded collection did not survive the round trip: bench reads "${benchTab}"`);
       console.log(`     back on My Decks: ${cards} decks · ${benchTab}`);
+      await healthy(page, screen.tag, "exit · import");
+
+      /* PUTTING A DECK DOWN, WHICH IS WHAT SIXTEEN DECKS IS FOR.
+         Archiving is not deleting, and the difference has to be visible in three places
+         or it is not worth having: the deck leaves the list, its cards leave the buy
+         total, and both come back on one click. The buy total is the one that used to
+         only half work -- a deck's upgrade rows left with it and its shortfall rows
+         stayed, because the shortfall is a column in the workbook rather than something
+         derived from the decks. */
+      const buyCount = async () =>
+        Number(clean(await page.locator("#tab-buy .count").textContent()).replace(/\D/g, "")) || 0;
+      const wasDecks = cards, wasBuy = await buyCount();
+      const archivedName = clean(await page.locator(".deck-card h3").first().textContent());
+      await page.locator(".deck-menu-b").first().click();
+      await page.waitForTimeout(300);
+      const items = await page.evaluate(() => [...document.querySelectorAll(".deck-menu-pop:not([hidden]) .deck-menu-i b")]
+        .map((b) => b.textContent.trim()));
+      check(items.includes("Archive"), screen.tag, "exit · import",
+        `the deck card offers no way to put a deck down: ${JSON.stringify(items)}`);
+      await page.locator('.deck-menu-pop:not([hidden]) .deck-menu-i').first().click();
+      await page.waitForTimeout(900);
+      const nowDecks = await page.locator(".deck-card").count();
+      const nowBuy = await buyCount();
+      const drawer = clean(await page.locator(".archive-drawer > summary").textContent().catch(() => ""));
+      check(nowDecks === wasDecks - 1, screen.tag, "exit · import",
+        `archiving a deck left ${nowDecks} on the list, from ${wasDecks}`);
+      check(nowBuy < wasBuy, screen.tag, "exit · import",
+        `archiving a deck left the buy list at ${nowBuy}, the same as before — its cards are still being shopped for`);
+      check(/archived deck/.test(drawer), screen.tag, "exit · import",
+        `a deck vanished from the list with nothing saying where it went (drawer read "${drawer}")`);
+      await page.reload({waitUntil: "domcontentloaded"});
+      await page.waitForSelector(".deck-card", {timeout: 20000});
+      await page.waitForTimeout(800);
+      check(await page.locator(".deck-card").count() === wasDecks - 1, screen.tag, "exit · import",
+        "the archive did not survive a reload");
+      await page.evaluate(() => { document.querySelector(".archive-drawer").open = true; });
+      await page.waitForTimeout(200);
+      await page.locator(".archive-row .btn").first().click();
+      await page.waitForTimeout(900);
+      const backDecks = await page.locator(".deck-card").count();
+      const backBuy = await buyCount();
+      check(backDecks === wasDecks && backBuy === wasBuy, screen.tag, "exit · import",
+        `putting it back left ${backDecks} decks and ${backBuy} to buy, from ${wasDecks} and ${wasBuy}`);
+      console.log(`     archived "${archivedName}": ${wasDecks}→${nowDecks} decks, ${wasBuy}→${nowBuy} to buy, ` +
+        `back to ${backDecks} and ${backBuy}`);
+
+      /* DELETE IS THE OTHER HALF, AND IT IS NOT THE SAME ACT. It destroys the record, so
+         it is offered only for a deck added on this device -- the six ship with the app
+         and there is nothing local to destroy, and a button claiming otherwise would be
+         lying about what it does. Both are checked because a menu that offers Delete on
+         all sixteen is the failure, not a missing feature. */
+      const menuFor = (added) => page.evaluate((wantAdded) => {
+        const slot = [...document.querySelectorAll(".deck-slot")].find((s) =>
+          /Added deck|Added · not scored/.test(s.textContent) === wantAdded);
+        if (!slot) return null;
+        slot.querySelector(".deck-menu-b").click();
+        const items = [...slot.querySelectorAll(".deck-menu-pop:not([hidden]) .deck-menu-i b")]
+          .map((b) => b.textContent.trim());
+        return {items, name: (slot.querySelector("h3") || {}).textContent};
+      }, added);
+      const shipped = await menuFor(false);
+      check(shipped && !shipped.items.includes("Delete"), screen.tag, "exit · import",
+        `a deck that ships with the app offers Delete: ${JSON.stringify(shipped && shipped.items)}`);
+      const mine = await menuFor(true);
+      check(mine && mine.items.includes("Delete") && mine.items.includes("Archive"),
+        screen.tag, "exit · import",
+        `a deck added on this device offers ${JSON.stringify(mine && mine.items)}, expected both`);
+      // The harness already accepts every dialog and records it; a second handler here
+      // would try to accept one that is already answered.
+      page.dialogs.length = 0;
+      await page.evaluate(() => {
+        const slot = [...document.querySelectorAll(".deck-slot")]
+          .find((s) => /Added deck|Added · not scored/.test(s.textContent));
+        [...slot.querySelectorAll(".deck-menu-pop:not([hidden]) .deck-menu-i")]
+          .find((b) => /Delete/.test(b.textContent)).click();
+      });
+      await page.waitForTimeout(1000);
+      const left = await page.locator(".deck-card").count();
+      const stored = await page.evaluate(() =>
+        (JSON.parse(localStorage.getItem("mtg-imported-decks.v1") || "{}").decks || []).length);
+      check(left === backDecks - 1 && stored === 9, screen.tag, "exit · import",
+        `deleting an added deck left ${left} on screen and ${stored} in storage, from ${backDecks} and 10`);
+      // Destroying a deck is the one act on this page that should ask first.
+      check(page.dialogs.length === 1, screen.tag, "exit · import",
+        `Delete destroyed a deck with ${page.dialogs.length} confirmations`);
+      console.log(`     menus: shipped ${JSON.stringify(shipped.items)}, added ${JSON.stringify(mine.items)} · ` +
+        `deleted "${mine.name}" → ${left} decks, ${stored} stored`);
       await healthy(page, screen.tag, "exit · import");
     }
     await healthy(page, screen.tag, "exit · import");

@@ -1662,7 +1662,8 @@ assert.match(appSource, /target && target\.isConnected/,
   const owners = [
     ["mtg-imported-decks.v1", storeSource, "deck-store.js"],
     ["mtg-viewer-inventory.v1", viewerSource, "viewer.js"],
-    ["mtg-viewer.v1", viewerSource, "viewer.js"]
+    ["mtg-viewer.v1", viewerSource, "viewer.js"],
+    ["mtg-viewer-archived.v1", viewerSource, "viewer.js"]
   ];
   owners.forEach(([key, source, where]) => {
     assert.ok(source.includes(`"${key}"`),
