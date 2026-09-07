@@ -284,6 +284,19 @@
       return normalizeCard(data);
     }
 
+    /* One exact printing: /cards/<set>/<collector number>. A Scryfall card page URL is
+       already those two things, so a pasted link resolves without a search and without a
+       guess -- see card-link.js. */
+    async function bySetNumber(set, number, setOptions = {}) {
+      const code = String(set || "").trim().toLowerCase();
+      const collector = String(number || "").trim();
+      if (!code || !collector) return null;
+      const data = await request(
+        `/cards/${encodeURIComponent(code)}/${encodeURIComponent(collector)}`,
+        {signal: setOptions.signal});
+      return normalizeCard(data);
+    }
+
     async function byTcgplayerId(id, idOptions = {}) {
       const numeric = Number(id);
       if (!Number.isFinite(numeric) || numeric <= 0) return null;
@@ -336,6 +349,7 @@
       named,
       collection,
       autocomplete,
+      bySetNumber,
       byTcgplayerId,
       resolveTcgplayerUrl,
       parseTcgplayerUrl,

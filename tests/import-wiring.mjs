@@ -80,7 +80,10 @@ check("the globals viewer.js reaches for are the ones the modules attach", () =>
     "window.MtgAdminMenu": "admin-menu.js",
     "window.MtgCardTable": "card-table.js",
     // What to do when a pasted name is not a card.
-    "window.MtgCardResolve": "card-resolve.js"
+    "window.MtgCardResolve": "card-resolve.js",
+    // ...and when the answer is a link rather than one of the five guesses.
+    "window.MtgCardLink": "card-link.js",
+    "window.MtgManualCards": "manual-cards.js"
   };
   [...new Set(wanted)].forEach((name) => {
     assert.ok(attached[name], `viewer.js reads ${name}, which nothing on this page defines`);

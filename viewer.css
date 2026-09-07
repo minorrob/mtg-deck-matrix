@@ -963,6 +963,35 @@ main { padding: 24px 0 140px; }
 .imp-fix-opt.is-drop { border-style: dashed; }
 .imp-fix-opt.is-drop.is-on { border-style: solid; border-color: var(--amber); background: #fdf1d8; }
 .imp-fix-opt.is-drop.is-on b { color: #7a5406; }
+/* A candidate already spoken for by another unmatched name. Kept visible rather than
+   removed: the reader picked it a moment ago and hiding it reads as the app losing a card. */
+.imp-fix-opt.is-taken { opacity: .5; cursor: not-allowed; border-style: dotted; }
+.imp-fix-opt.is-taken:hover { border-color: var(--line); }
+/* A card that arrived by link, which is not one of the five guesses and should not look
+   like one. */
+.imp-fix-opt.is-link.is-on { border-color: var(--ember); background: #fdefe6; }
+.imp-fix-opt.is-link.is-on b { color: #8a3a12; }
+
+/* The link box. One row, growing box first, on a phone it stacks. */
+.imp-fix-link { display: flex; align-items: flex-end; gap: 8px; margin-top: 8px; }
+.imp-fix-link label { display: block; flex: 1 1 auto; min-width: 0; }
+.imp-fix-link label span {
+  display: block; margin-bottom: 3px; font-size: 11.5px; color: var(--text-dim);
+}
+.imp-fix-link input {
+  width: 100%; box-sizing: border-box; padding: 7px 9px; font: inherit; font-size: 12.5px;
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  background: var(--panel); color: var(--text);
+}
+.imp-fix-link input:focus-visible { outline: 2px solid var(--patina); outline-offset: 1px; }
+.imp-fix-link .btn { flex: 0 0 auto; white-space: nowrap; }
+.imp-fix-linknote { margin: 5px 0 0; font-size: 11.5px; line-height: 1.45; color: var(--text-dim); }
+.imp-fix-linknote.is-ok { color: #14603f; }
+.imp-fix-linknote.is-warn { color: #8a3a12; }
+@media (max-width: 560px) {
+  .imp-fix-link { flex-direction: column; align-items: stretch; }
+}
+
 .imp-fix-links { margin: 7px 0 0; color: var(--text-faint); font-size: 11.5px; }
 .imp-fix-links a { color: var(--ember); }
 .imp-unmatched summary { cursor: pointer; color: var(--text-dim); }
@@ -1138,7 +1167,14 @@ main { padding: 24px 0 140px; }
   font-size: 12.5px; color: var(--text-dim);
 }
 .imp-banner b { color: var(--text); font-weight: 700; }
-.imp-banner .btn { margin-left: auto; padding: 5px 12px; font-size: 12.5px; }
+/* THE BUTTONS TRAVEL TOGETHER. `margin-left: auto` on every button pushes EACH of them
+   as far right as the one after it allows, so two buttons come out as one stranded in
+   the middle of the bar and one at the end. The auto belongs to the group. */
+.imp-banner-acts { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.imp-banner .btn { padding: 5px 12px; font-size: 12.5px; }
+@media (max-width: 560px) {
+  .imp-banner-acts { width: 100%; margin-left: 0; justify-content: flex-end; }
+}
 
 /* The strip above the bench.
    ------------------------

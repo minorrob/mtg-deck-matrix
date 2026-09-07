@@ -367,6 +367,12 @@ for (const screen of SCREENS) {
       await away.page.waitForTimeout(2500);
       const after = await away.page.evaluate(() => ({
         keys: Object.keys(localStorage).filter((k) => k.startsWith("mtg-")),
+        /* What the reader saved, as against the app's own note about which catalog this
+           browser starts from. The note is WRITTEN BY the clear -- it is how "empty stays
+           empty" survives adding a deck afterwards -- so counting it as a survivor would
+           be reporting the fix as the bug. */
+        saved: window.MtgUserState ? window.MtgUserState.present(localStorage).map((k) => k.key) : null,
+        catalog: localStorage.getItem("mtg-catalog-source.v1"),
         decks: document.querySelectorAll(".deck-card").length,
         note: (document.querySelector(".empty-note h3") || {}).textContent || ""
       }));
@@ -374,8 +380,13 @@ for (const screen of SCREENS) {
         `${away.page.dialogs.length} prompts before destroying everything, expected 2 (backup, then confirm)`);
       check(/backup/i.test(away.page.dialogs[0] || ""), screen.tag, "first · clear session",
         "the first prompt does not offer a backup");
-      check(after.keys.length === 0, screen.tag, "first · clear session",
-        `${after.keys.length} saved keys survived the clear: ${after.keys.join(", ")}`);
+      check(after.saved !== null && after.saved.length === 0, screen.tag, "first · clear session",
+        `${(after.saved || after.keys).length} saved keys survived the clear: ${(after.saved || after.keys).join(", ")}`);
+      check(after.catalog === "empty", screen.tag, "first · clear session",
+        `after clearing, this browser starts from "${after.catalog}" — it must start empty, ` +
+        `and stay empty when a deck is added`);
+      check(after.keys.every((k) => k === "mtg-catalog-source.v1"), screen.tag, "first · clear session",
+        `keys beyond the catalog note survived: ${after.keys.join(", ")}`);
       check(after.decks === 0 && /No decks yet/i.test(after.note), screen.tag, "first · clear session",
         `after clearing, ${after.decks} decks are still on the page`);
       console.log(`  first · load default     ${loaded.decks} decks, ${loaded.bench} on the bench, ` +
@@ -488,6 +499,134 @@ for (const screen of SCREENS) {
         `${count} cards after · ${JSON.stringify(after.problems.filter((p) => /left out/.test(p)))}`);
       await healthy(fix.page, screen.tag, "first · bad names");
       await fix.ctx.close();
+    }
+
+    /* A FRIEND'S DECK, ON A BROWSER THAT HAS NEVER OPENED THE APP.
+     *
+     * tests/fixtures/splinter-deck.txt is a real export somebody handed over: 80 lines,
+     * 100 cards, a Universes Beyond commander, and one name that is not a card. It is the
+     * whole first-time experience in one paste, and it is the thing to get right, because
+     * the person doing it has no reason to give the app a second try.
+     *
+     * Three promises are checked here that nothing else checks:
+     *   1. every real name in a stranger's deck can be placed;
+     *   2. the one bad name is answered with real cards, and never with a card the deck
+     *      already holds -- this list carries four Splinter legends already;
+     *   3. adding it leaves ONE deck on the page. Not seven. A browser that started empty
+     *      stays empty apart from what its owner put in it.
+     */
+    {
+      const friend = await freshPage(screen);
+      const LIST = readFileSync(join(HERE, "..", "fixtures", "splinter-deck.txt"), "utf8");
+      const REAL = LIST.split(/\r?\n/).filter(Boolean)
+        .map((line) => (/^\s*\d+\s+(.+?)\s*$/.exec(line) || [])[1])
+        .filter((name) => name && name !== "Splinter, Vengeful Sensei");
+      /* The stub has to know more than this deck. The registry rung offers names and the
+         ladder then turns them into cards in one request -- so a stub that only knows the
+         deck answers "no such card" for every candidate it just offered, and the reader
+         sees an empty list. Real Scryfall knows all of them. */
+      const REG = JSON.parse(readFileSync(join(HERE, "..", "..", "data", "commander-universe.json"), "utf8"));
+      const KNOWN = new Set(REAL.concat(
+        REG.cards.map((row) => row[0]).filter((n) => /^Splinter/i.test(n))));
+      await friend.page.route("**://api.scryfall.com/**", async (route) => {
+        const url = new URL(route.request().url());
+        const json = (body) => route.fulfill({status: 200, contentType: "application/json", body: JSON.stringify(body)});
+        const card = (name) => ({
+          name, type_line: /Splinter|Leo|Donatello|Karai|Shredder|April/.test(name)
+            ? "Legendary Creature — Rat Ninja" : "Artifact",
+          legalities: {commander: "legal"}, cmc: 2, mana_cost: "{1}{B}",
+          color_identity: ["B", "U"], prices: {usd: "1.00"},
+          image_uris: {small: `${BASE}/og.png`, normal: `${BASE}/og.png`}
+        });
+        if (url.pathname === "/cards/autocomplete") {
+          const q = (url.searchParams.get("q") || "").toLowerCase();
+          return json({data: [...KNOWN].filter((n) => n.toLowerCase().startsWith(q)).slice(0, 20)});
+        }
+        if (url.pathname === "/cards/collection") {
+          const body = JSON.parse(route.request().postData() || "{}");
+          const data = [], not_found = [];
+          (body.identifiers || []).forEach((id) =>
+            (KNOWN.has(id.name) ? data.push(card(id.name)) : not_found.push(id)));
+          return json({data, not_found});
+        }
+        // One exact printing, which is what a pasted Scryfall card link resolves to.
+        if (/^\/cards\/[a-z0-9]+\/\d+/.test(url.pathname)) return json(card("Splinter's Technique"));
+        return route.fulfill({status: 404, contentType: "application/json", body: JSON.stringify({object: "error"})});
+      });
+      await friend.page.goto(`${BASE}/index.html`, {waitUntil: "domcontentloaded"});
+      await friend.page.waitForSelector(".start-tile", {timeout: 20000});
+      await friend.page.click(".start-tile.deck-add");
+      await friend.page.waitForSelector("[data-imp-text]", {timeout: 10000});
+      await friend.page.fill("[data-imp-text]", LIST);
+      await friend.page.click("[data-imp-read]");
+      await friend.page.waitForSelector(".imp-fix-row", {timeout: 30000});
+      await friend.page.waitForTimeout(2000);
+
+      const rows = await friend.page.evaluate(() => [...document.querySelectorAll(".imp-fix-row")].map((row) => ({
+        name: row.querySelector(".imp-fix-asked b").textContent,
+        options: [...row.querySelectorAll(".imp-fix-opt")].map((o) => o.querySelector("b").textContent),
+        hasLink: Boolean(row.querySelector("[data-fix-link]"))
+      })));
+      check(rows.length === 1 && /Vengeful Sensei/.test(rows[0].name), screen.tag, "first · a friend's deck",
+        `${rows.length} names could not be placed, expected exactly 1: ${rows.map((r) => r.name).join(", ")}`);
+      const offered = (rows[0] || {options: []}).options.filter((n) => !/Leave it out/.test(n));
+      check(offered.length >= 3, screen.tag, "first · a friend's deck",
+        `only ${offered.length} candidates for the bad name: ${JSON.stringify(offered)}`);
+      check(offered.every((n) => /^Splinter/i.test(n)), screen.tag, "first · a friend's deck",
+        `a candidate unrelated to the name asked about: ${JSON.stringify(offered)}`);
+      /* The deck already holds four Splinter legends. Offering one of them would build a
+         hundred with two copies of a singleton card. */
+      const held = ["Splinter, Radical Rat", "Splinter, Hamato Yoshi", "Splinter, the Mentor"];
+      check(!offered.some((n) => held.includes(n)), screen.tag, "first · a friend's deck",
+        `a card already in the deck was offered as the answer: ${JSON.stringify(offered)}`);
+      check(rows[0] && rows[0].hasLink, screen.tag, "first · a friend's deck",
+        "there is no way to give the card by link when none of the guesses is right");
+
+      /* THE LINK. None of the guesses is the card, so the reader pastes the page they are
+         looking at. It resolves to one exact printing and the row is decided. */
+      await friend.page.fill("[data-fix-link]", "https://scryfall.com/card/tmnt/42/splinters-technique");
+      await friend.page.click("[data-fix-linkgo]");
+      await friend.page.waitForTimeout(1500);
+      const linked = await friend.page.evaluate(() => ({
+        note: (document.querySelector(".imp-fix-linknote") || {}).textContent || "",
+        chosen: [...document.querySelectorAll(".imp-fix-opt.is-on")].map((o) => o.querySelector("b").textContent)
+      }));
+      check(linked.chosen.includes("Splinter's Technique"), screen.tag, "first · a friend's deck",
+        `the link did not decide the row: ${JSON.stringify(linked)}`);
+      await shot(friend.page, `${screen.tag}-first-friends-deck`);
+
+      await friend.page.click("[data-imp-fixdone]");
+      await friend.page.waitForSelector(".imp-score", {timeout: 20000});
+      await friend.page.waitForTimeout(2500);
+      const review = await friend.page.evaluate(() => ({
+        lede: (document.querySelector(".imp-lede") || {}).textContent || "",
+        problems: [...document.querySelectorAll(".imp-problems li")].map((n) => n.textContent.trim()),
+        score: (document.querySelector(".imp-num") || {}).textContent || ""
+      }));
+      const cards = Number((review.lede.match(/(\d+) cards/) || [])[1] || 0);
+      check(cards === 100, screen.tag, "first · a friend's deck",
+        `the deck came out at ${cards} cards, not 100 — problems: ${JSON.stringify(review.problems)}`);
+      check(Number(review.score) > 0, screen.tag, "first · a friend's deck",
+        `a hundred cards with a commander must be scored, got "${review.score}"`);
+
+      await friend.page.click("[data-imp-save]");
+      await friend.page.waitForTimeout(2000);
+      // Saving lands on the deck's own page, which is the right place to be sent; My Decks
+      // is where the count lives.
+      await friend.page.goto(`${BASE}/index.html#/decks`, {waitUntil: "domcontentloaded"});
+      await friend.page.waitForTimeout(2500);
+      const mine = await friend.page.evaluate(() => ({
+        decks: document.querySelectorAll(".deck-card").length,
+        titles: [...document.querySelectorAll(".deck-card h3, .deck-card .deck-name")].map((n) => n.textContent.trim()),
+        images: [...document.querySelectorAll("img")].filter((i) => i.getAttribute("src")).length
+      }));
+      check(mine.decks === 1, screen.tag, "first · a friend's deck",
+        `after adding one deck to an empty browser there are ${mine.decks} decks: ${JSON.stringify(mine.titles)}`);
+      await healthy(friend.page, screen.tag, "first · a friend's deck");
+      console.log(`  first · a friend's deck  100 cards, 1 name asked about, ` +
+        `${offered.length} real candidates, decided by link · scored ${review.score} · ` +
+        `${mine.decks} deck on the page`);
+      await friend.ctx.close();
     }
 
     await page.goto(`${BASE}/matrix.html`, {waitUntil: "domcontentloaded"});
@@ -1032,6 +1171,13 @@ for (const screen of SCREENS) {
     await page.evaluate(([decks, inventory]) => {
       localStorage.setItem("mtg-imported-decks.v1", JSON.stringify({schema: 1, decks}));
       localStorage.setItem("mtg-viewer-inventory.v1", JSON.stringify(inventory));
+      /* THIS PERSONA HAS THE SIX. Which catalog a browser starts from is a recorded
+         decision now, not a guess at one -- so a fixture for somebody who has been using
+         the app with the shipped decks has to say so, the same way their browser would
+         after they pressed Load default. Without it this is a browser that started empty
+         and then had ten decks pasted into it, which is a different person entirely (and
+         is the journey two blocks up). */
+      localStorage.setItem("mtg-catalog-source.v1", "default");
     }, [GROWN.decks, GROWN.inventory]);
     // A full load, not a hash change: navigating to a URL that differs only by
     // its fragment is a same-document navigation, so the app would still be the

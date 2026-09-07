@@ -1437,7 +1437,10 @@
   var MINE_STRIPPED = false;
   function stripMine(json) {
     var User = window.MtgUserState;
-    if (!User || !User.isFresh(window.localStorage)) return json;
+    /* Same decision as My Decks makes, from the same place: a browser that starts empty
+       shows no ownership and no deck membership, however many decks have been added since.
+       See user-state.js -- inferring it per-render was the bug. */
+    if (!User || !User.startsEmpty || !User.startsEmpty(window.localStorage)) return json;
     MINE_STRIPPED = true;
     return Object.assign({}, json, {
       decks: [],

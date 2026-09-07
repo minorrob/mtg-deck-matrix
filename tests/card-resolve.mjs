@@ -182,4 +182,63 @@ check("the page loads the resolver, and the import refuses to open without it", 
   const viewer = null; void viewer;
 });
 
+/* ---------------------------------------------------------------------------
+   NEVER OFFER A CARD THE LIST ALREADY HAS.
+   Commander is singleton. A candidate already sitting in the deck is not what the reader
+   meant by a name that did not match -- it is a second copy, and picking it builds an
+   illegal hundred. The exclusion has to hold at EVERY rung, because each one reaches a
+   different corpus: the registry never touches the network, autocomplete does, and the
+   fill request at the end can rename a registry hit into something the deck already has.
+   --------------------------------------------------------------------------- */
+
+await acheck("a card already in the list is not offered, however it was found", async () => {
+  const client = stubClient();
+  const withOut = await Resolve.resolveName("Sol Rng", client, {localNames: KNOWN});
+  assert.ok(withOut.candidates.some((c) => c.name === "Sol Ring"),
+    "without the exclusion, Sol Ring is the obvious answer");
+
+  const withIn = await Resolve.resolveName("Sol Rng", stubClient(), {
+    localNames: KNOWN,
+    exclude: ["Sol Ring"]
+  });
+  assert.ok(!withIn.candidates.some((c) => c.name === "Sol Ring"),
+    "the deck already has Sol Ring, so it cannot be the answer to another name");
+});
+
+await acheck("the exclusion survives the rung that renames a registry hit", async () => {
+  /* The registry offers a bare name; the fill request turns it into a real card and can
+     come back under a different spelling. If the deck already has THAT spelling, the
+     candidate has to go on the way out, not just on the way in. */
+  const client = stubClient({
+    collection: (ids) => ({
+      cards: ids.map((i) => ({name: i.name === "Splinter" ? "Splinter, Radical Rat" : i.name,
+        typeLine: "Creature"})),
+      missing: []
+    })
+  });
+  const out = await Resolve.resolveName("Splinter, Vengeful Sensei", client, {
+    localNames: KNOWN,
+    exclude: ["Splinter, Radical Rat"]
+  });
+  assert.ok(!out.candidates.some((c) => c.name === "Splinter, Radical Rat"),
+    "renamed into a card the deck holds, so it is dropped");
+});
+
+await acheck("excluding the name being asked about does not silence the whole lookup", async () => {
+  const out = await Resolve.resolveName("Sol Ring", stubClient(), {
+    localNames: KNOWN,
+    exclude: ["Sol Ring"]
+  });
+  assert.ok(out.candidates.length > 0,
+    "a name cannot exclude itself, or a re-run of the same list answers nothing");
+});
+
+check("the import screen builds that exclusion from the deck, minus the basics", () => {
+  /* Basics are the one card a decklist may legally repeat, so they stay available: a
+     misspelled Mountain in a list that already has ten Mountains still means Mountain. */
+  assert.match(panel, /exclude: alreadyInDeck\(\)/);
+  assert.match(panel, /isBasicLand/);
+  assert.match(panel, /function chosenElsewhere/);
+});
+
 console.log(`\ncard-resolve: ${checks} checks passed.`);

@@ -132,10 +132,17 @@
    * Deck Matrix has a session, and taking their decks away here because they have not
    * ticked anything on this page would be the same bug in the other direction.
    */
+  /* WHETHER THE SIX SHIPPED DECKS BELONG ON THIS PAGE.
+     It used to be inferred -- "this browser has saved nothing, so show nothing" -- and
+     the inference broke the moment you saved anything. Clear session, then add one deck
+     of your own, and all six came back with their collection and their bench, because
+     saving your deck made the browser no longer empty. The decision is recorded now;
+     see user-state.js. Adding decks does not change it, and Load default is the only
+     thing that brings the six back. */
   function freshBrowser() {
     var User = window.MtgUserState;
-    if (!User) return false;                       // cannot tell, so change nothing
-    return User.isFresh(window.localStorage) && !(IMPORTS && IMPORTS.length);
+    if (!User || !User.startsEmpty) return false;  // cannot tell, so change nothing
+    return User.startsEmpty(window.localStorage);
   }
 
   function blankMaster(master) {
@@ -545,11 +552,13 @@
     var deck = (DATA.decks || []).filter(function (d) { return d.id === id; })[0];
     if (deck && deck.imported) {
       if (!deck.measured) return null;
-      return { id: id, commander: deck.commander, builds: { v1: {
-        score: deck.measured.score,
-        winRate: deck.measured.winRate,
-        bracket: null
-      } } };
+      /* THE WHOLE MEASUREMENT, not three fields of it. Copying `score` and `winRate`
+         by hand left screwPct and floodPct undefined, and the Shape panel printed
+         "Mana screw NaN%" over an imported deck -- the one place the app looked least
+         like it knew what it was doing. measure() returns every one of these; pass
+         them all and a new metric shows up without being wired in twice. */
+      return { id: id, commander: deck.commander,
+        builds: { v1: Object.assign({bracket: null}, deck.measured) } };
     }
     if (!RATINGS) return null;
     return (RATINGS.decks || []).filter(function (r) { return r.id === id && sameCommander(r, id); })[0] || null;
@@ -846,6 +855,47 @@
     });
   }
 
+  /* A LINK IS AN ANSWER TOO. card-link.js does the reading; this hands it a Scryfall
+     client and the name the reader was being asked about, so a link that says nothing
+     about the card's name still produces a card called the right thing. */
+  function resolveLink(url, options) {
+    var Link = window.MtgCardLink;
+    if (!Link || !window.MtgScryfall) {
+      return Promise.reject(new Error("The card lookup did not load."));
+    }
+    if (!scryfall) scryfall = window.MtgScryfall.createClient();
+    return Link.resolveLink(url, scryfall, options || {});
+  }
+
+  /* The population of cards Scryfall could not place, and the standing offer to ask again.
+     Runs once on load, costs one request for all of them, and says nothing at all when
+     there is nothing to say -- which is the normal case. */
+  function rememberManualCard(card) {
+    var Manual = window.MtgManualCards;
+    if (Manual) Manual.add(window.localStorage, card);
+  }
+
+  function recheckManualCards() {
+    var Manual = window.MtgManualCards;
+    if (!Manual || !window.MtgScryfall || !Store) return;
+    var pending = Manual.read(window.localStorage);
+    if (!pending.length) return;
+    if (!scryfall) scryfall = window.MtgScryfall.createClient();
+    Manual.recheck(pending, scryfall).then(function (result) {
+      if (!result.found.length) return;
+      Manual.write(window.localStorage, result.still);
+      var promoted = Manual.promote(IMPORTS, result.found);
+      if (!promoted.changed) return;
+      IMPORTS = promoted.records;
+      saveImports();
+      rebuild();
+      render();
+      toast(result.found.length === 1
+        ? "Scryfall now has " + result.found[0].name + ". It counts as a real card."
+        : "Scryfall now has " + result.found.length + " of the cards you added by link.");
+    }).catch(function () { /* offline is not a failure worth reporting here */ });
+  }
+
   function measureContext() {
     if (simContext) return Promise.resolve(simContext);
     return Promise.all([
@@ -862,7 +912,8 @@
 
   function openImport() {
     var missing = ["MtgDeckImport", "MtgDeckSources", "MtgDeckStore", "MtgDeckMeasure",
-      "MtgImportPanel", "MtgSimEngine", "MtgCardResolve"].filter(function (name) { return !window[name]; });
+      "MtgImportPanel", "MtgSimEngine", "MtgCardResolve", "MtgCardLink",
+      "MtgManualCards"].filter(function (name) { return !window[name]; });
     if (missing.length) return toast("The import tools did not load (" + missing[0] + ").");
 
     window.MtgImportPanel.createPanel({
@@ -870,6 +921,8 @@
       localCards: localCards,
       lookupCards: lookupCards,
       resolveNames: resolveNames,
+      resolveLink: resolveLink,
+      onManualCard: rememberManualCard,
       measureContext: measureContext,
       onSaved: function (record) {
         IMPORTS = Store.add(IMPORTS, record);
@@ -1423,18 +1476,19 @@
             rel: "noopener", text: " open it there ↗" }) : null,
           deck.measured ? "" : " · not scored yet"
         ]),
-        deck.measured ? null : el("button", { class: "btn", type: "button",
-          text: "Measure it", style: "margin-left:auto",
-          onclick: function (e) { measureDeck(deck, e.currentTarget); } }),
-        el("button", { class: "btn", type: "button",
-          style: deck.measured ? "" : "margin-left:0",
-          onclick: function () {
-            setArchived(deck.id, true);
-            toast(deck.label + " archived \u2014 it is in the drawer at the bottom of My Decks.");
-            go("#/decks");
-          }, text: "Archive" }),
-        el("button", { class: "btn ghost", type: "button",
-          onclick: function () { removeImport(deck); }, text: "Delete" })
+        el("div", { class: "imp-banner-acts" }, [
+          deck.measured ? null : el("button", { class: "btn", type: "button",
+            text: "Measure it",
+            onclick: function (e) { measureDeck(deck, e.currentTarget); } }),
+          el("button", { class: "btn", type: "button",
+            onclick: function () {
+              setArchived(deck.id, true);
+              toast(deck.label + " archived \u2014 it is in the drawer at the bottom of My Decks.");
+              go("#/decks");
+            }, text: "Archive" }),
+          el("button", { class: "btn ghost", type: "button",
+            onclick: function () { removeImport(deck); }, text: "Delete" })
+        ])
       ]));
     }
     /* The six can be put down too. A control that exists on fifteen deck cards and not
@@ -1444,12 +1498,14 @@
     if (!deck.imported) {
       root.appendChild(el("div", { class: "imp-banner" }, [
         el("span", { text: "Ships with the app, so there is nothing local to delete." }),
-        el("button", { class: "btn", type: "button", text: "Archive", style: "margin-left:auto",
+        el("div", { class: "imp-banner-acts" }, [
+        el("button", { class: "btn", type: "button", text: "Archive",
           onclick: function () {
             setArchived(deck.id, true);
             toast(deck.label + " archived \u2014 it is in the drawer at the bottom of My Decks.");
             go("#/decks");
           } })
+        ])
       ]));
     }
 
@@ -2683,6 +2739,9 @@
       if (!payload || !payload.values || !User) throw new Error("The default load file is not readable.");
       User.clearAll(window.localStorage, window.sessionStorage);
       var out = User.restore(window.localStorage, payload);
+      // Pressing this IS the decision to start from the shipped six, so record it rather
+      // than leaving the next boot to guess.
+      if (User.setCatalogSource) User.setCatalogSource(window.localStorage, "default");
       toast("Loaded the default: " + plural(out.restored.length, "saved thing") + ". Reloading…");
       setTimeout(function () { window.location.reload(); }, 700);
     }).catch(function (err) {
@@ -2782,6 +2841,9 @@
         if (e.key === "Escape" && document.getElementById("sheet")) closeCard();
       });
       route();
+      /* After the page is on screen, not before: a card you added by link is already in
+         your deck, and asking Scryfall whether it exists yet must never delay the load. */
+      recheckManualCards();
     }).catch(function (err) {
       document.getElementById("page").appendChild(el("div", { class: "panel" }, [
         el("h3", { text: "Could not load the deck data" }),

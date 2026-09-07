@@ -33,6 +33,12 @@
  * own eyes -- which is the honest version of "check a second source" for a page with no
  * credentials.
  *
+ * NEVER OFFERS A CARD THE LIST ALREADY HAS. Commander is a singleton format, so a candidate
+ * already sitting in the deck is not a possible answer -- it is a way to build an illegal
+ * hundred. `options.exclude` is the names to keep off every rung, and the caller fills it
+ * with the cards that resolved, minus the basics, because a basic land is the one card a
+ * decklist is allowed to repeat.
+ *
  * PURE apart from the client it is handed. tests/card-resolve.mjs runs the whole ladder
  * against a stub.
  */
@@ -122,13 +128,17 @@
   /* Every rung's findings land here, with the first reason a card was found kept: a card
      that autocomplete offered AND fuzzy guessed is one candidate, described by the
      stronger of the two. */
-  function collector() {
+  function collector(blocked) {
     var seen = Object.create(null);
     var out = [];
+    var off = blocked || Object.create(null);
     return {
       add: function (card, why, rung) {
         if (!card || !card.name) return;
         var k = key(card.name);
+        /* A card the list already holds is not a candidate at any rung -- not from the
+           registry, not from autocomplete, not as Scryfall's confident fuzzy guess. */
+        if (off[k]) return;
         if (seen[k]) return;
         seen[k] = 1;
         out.push({card: card, name: card.name, why: why, rung: rung});
@@ -152,7 +162,12 @@
     var asked = clean(name);
     var opts = options || {};
     var limit = opts.limit || CAP;
-    var found = collector();
+    var blocked = Object.create(null);
+    (opts.exclude || []).forEach(function (name) {
+      var k = key(name);
+      if (k && k !== key(asked)) blocked[k] = 1;
+    });
+    var found = collector(blocked);
     var searched = [];
     var errors = [];
 
@@ -165,12 +180,32 @@
     var localNames = opts.localNames || [];
     if (localNames.length) {
       searched.push("registry");
+      /* SCORED THE SAME WAY THE SHORTLIST IS RANKED, which it was not. The rung used
+         trigrams alone, and trigrams are blind to the failure this whole ladder exists
+         for: "Splinter, Vengeful Sensei" shares few enough letter-triples with
+         "Splinter, Hamato Yoshi" to score 0.31, so offline the registry offered NOTHING
+         for a name whose first word is a real legend and whose title is invented. Shared
+         WORDS see it at 0.50. likeness() is the better of the two and is what every other
+         line in this file ranks by; the rung now uses it as well.
+
+         This is the rung that answers on a hotel wifi, which is exactly where somebody
+         opens a deck a friend sent them. */
       var near = [];
       for (var n = 0; n < localNames.length; n += 1) {
-        var score = diceScore(asked, localNames[n]);
+        if (blocked[key(localNames[n])]) continue;
+        var score = likeness(asked, localNames[n]);
         if (score >= 0.45) near.push({name: localNames[n], score: score});
       }
-      near.sort(function (a, b) { return b.score - a.score; });
+      var wantComma = titled(asked);
+      near.sort(function (a, b) {
+        /* Ties are the normal case here -- eight Splinters all score 0.50 -- and the cut
+           to five happens before anything else gets a say, so the tie-break has to be
+           here rather than only in the final ranking. A "Name, Title" query means a
+           legend; offer the legends. */
+        return (b.score - a.score)
+          || (wantComma ? (titled(b.name) ? 1 : 0) - (titled(a.name) ? 1 : 0) : 0)
+          || a.name.localeCompare(b.name);
+      });
       near.slice(0, limit).forEach(function (entry) {
         found.add({name: entry.name}, "Closest name in the card list", "registry");
       });
@@ -250,7 +285,12 @@
         shortlist = shortlist.map(function (entry) {
           var full = byName[key(entry.name)];
           return full ? Object.assign({}, entry, {card: full, name: full.name}) : entry;
-        }).filter(function (entry) { return entry.card.typeLine || entry.card.type_line || entry.rung !== "registry"; });
+        }).filter(function (entry) {
+          /* Scryfall can answer under a different name than the registry offered, and that
+             name may be one the deck already has. Check again on the way out. */
+          if (blocked[key(entry.name)]) return false;
+          return entry.card.typeLine || entry.card.type_line || entry.rung !== "registry";
+        });
       });
     }
     exact = shortlist.filter(function (entry) { return key(entry.name) === key(asked); })[0] || exact;
