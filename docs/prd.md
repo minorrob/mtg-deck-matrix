@@ -3,9 +3,9 @@
 *What this app is for, what it deliberately is not, and where every claim in it comes from.*
 
 Reconstructed 2026-09-07 from the repository itself: `docs/handover-index.md`, the commit
-history on `origin/main` (208 commits, of which 62 carry a merged pull-request number),
-`BACKLOG.md`, the three design notes in `docs/`, the merged pull-request bodies, and the
-code. Nothing here is invented. Where the record is ambiguous or where two sources disagree,
+history on `origin/main` (208 commits, 67 of whose subjects carry a `(#N)` pull-request
+suffix), `BACKLOG.md`, the three design notes in `docs/`, the merged pull-request bodies, and
+the code. Nothing here is invented. Where the record is ambiguous or where two sources disagree,
 this document says so rather than picking a side.
 
 Two conventions of this repository make that possible and are worth knowing before reading
@@ -408,8 +408,7 @@ absolute: **the simulator measures** — scores, win rates, curve, mana, role co
 compliance; **Claude explains and suggests** — what the deck is trying to do, how a turn
 should go, what to look for."
 
-`guide-agent.js` (currently uncommitted on this branch) states the same division as three
-rules: **the app measures** (card counts, curve, role counts, mana, the score — all computed
+`guide-agent.js` states the same division as three rules: **the app measures** (card counts, curve, role counts, mana, the score — all computed
 and handed to the model as fact, so the model is never asked for a number it could get
 wrong); **the model explains** (prose, and only prose); **the app checks** (every card named
 must be one of the hundred that was sent — "not 'a real card' — one of THESE cards", a set
@@ -429,6 +428,10 @@ Two further consequences follow from having no server:
   in, 4 reach the screen, 12 stopped. It blocks *Black Lotus* for legality, not for existing.
   The author of that document got a card name wrong while writing about card names and the
   gate caught it; that anecdote is in the document because it is the argument.
+
+`docs/ai-agents.md` is the companion to that cost evaluation and covers the work rather than
+the money: the prompt, the schema and the checks for each agent, and where the API does not
+belong.
 
 ---
 
@@ -483,13 +486,20 @@ crossing between them changed 23,203 lines of generated JSON around 96 lines of 
 
 ## 7 · Requirements that came directly from the user
 
-Each is stated in product terms, with how it was met and where. Quoted text is verbatim from
-a commit message, a pull-request body or a module header, as marked.
+Each is stated in product terms, with how it was met and where.
+
+**A note on the quotations.** Some complaints survive word for word in the repository, quoted
+in the module or commit that answered them; those are marked **verbatim** with the file or
+commit that carries them. Others reach us only as the answering change's paraphrase of them —
+the original message is not in the repository at all — and those are marked **paraphrase**,
+with whatever fragment of the original the record does preserve. The distinction matters
+because a paraphrase is the implementer's reading of the ask, and reading the ask wrongly is
+one of the failure modes this list documents (see 14 and 16).
 
 1. **"What does 51.33 mean? Is that a percentage? What was the deck's performance against the
    different measures? Can I get a better readout? Could I see which cards are
-   underperforming / carrying the deck?"** *(quoted verbatim in `measure-report.js` and PR
-   #77.)*
+   underperforming / carrying the deck?"** — **verbatim**; `measure-report.js` reproduces it
+   under the heading `THE COMPLAINT, VERBATIM`, and PR #77 opens with it.
    **Requirement:** a score must explain itself — what it is out of, what it is made of,
    how much work produced it, and which cards moved it.
    **Met by:** `measure-report.js` — the number said plainly with the win rate beside it; a
@@ -501,7 +511,9 @@ a commit message, a pull-request body or a module header, as marked.
    **Where:** the deck page ("How it played") and the import review screen.
    **Status:** in PR #77, open as a draft, one commit ahead of `origin/main` on this branch.
 
-2. **"The fifty variants overshadow any deck I add."**
+2. **The fifty researched variants overshadow any deck I add.** — **paraphrase.** The
+   surviving fragment is one word: PR #75 says of the fifty on every visit with a generated
+   deck below them behind a divider, "That is what *overshadowed* meant."
    **Requirement:** the researched catalog must not bury the reader's own decks.
    **Met by:** Compare became a shelf you stock. The fifty moved into a library;
    `state.compareLibrary` holds the shelf and rides along in exports. A role appears once one
@@ -511,11 +523,13 @@ a commit message, a pull-request body or a module header, as marked.
    shelf, "because it is the thing you made, and it does not have to ask."
    **Where:** `app.js`, PR #75.
 
-3. **A card name that is not a card must not block the import.**
-   **Requirement (from the original complaint): the screen "just blocks and there is no path
-   forward."** The import said "1 card name could not be matched" and offered a Save button
-   that saved a 99-card deck the simulator would then refuse to score — "a dead end with the
-   answer one request away" (`card-resolve.js`).
+3. **A card name that is not a card blocks the import with no path forward.** —
+   **paraphrase.** What the record preserves is the implementer's restatement:
+   `card-resolve.js` calls it "a dead end with the answer one request away", and PR #75 adds
+   "every road out was worse than the road in."
+   **Requirement:** an unmatched name must become a question, not a wall. The import said
+   "1 card name could not be matched" and offered a Save button that saved a 99-card deck the
+   simulator would then refuse to score.
    **Met by:** a four-rung resolve ladder producing at most five candidates, each carrying
    *why* it is offered, with **Leave it out** as a real answer and search links for a name no
    rung could place; then a link box, because sometimes the reader has the card open in
@@ -526,7 +540,9 @@ a commit message, a pull-request body or a module header, as marked.
    `card-link`, `manual-cards`, `friends-deck`. PRs #75 and #76.
    **Note on why this shipped broken:** "no test ever imported a list with a bad name in it."
 
-4. **"When everything is cleared, the bench and all of my state shouldn't be present."**
+4. **When everything is cleared, the bench and all of my state should not be present.** —
+   **paraphrase.** PR #76 records only the verdict, not the words: the behaviour "is the
+   opposite of what was asked for."
    **Requirement:** a cleared browser must behave like one that has never opened the app, and
    must stay that way.
    **Met by:** the inference is gone. Clear session emptied the page, and then adding **one**
@@ -540,7 +556,8 @@ a commit message, a pull-request body or a module header, as marked.
    **Where:** `user-state.js`, `viewer.js`, `graph-page.js`. `tests/user-state.mjs` pins the
    clear-then-add-a-deck scenario as reported. PR #76.
 
-5. **"Build cost does not update."** *(quoted as "Rob's report" in `26ba78c`.)*
+5. **"Build cost does not update."** — **verbatim**; `26ba78c` opens "Rob's report: Build
+   cost does not update. Two separate causes."
    **Requirement:** the stage control at the top of Compare must restage the cards, not just
    filter their scores.
    **Met by:** Compare has two stage controls — the page-level Score stage select and each
@@ -548,8 +565,8 @@ a commit message, a pull-request body or a module header, as marked.
    column describes the Tier 3 rung it names.
    **Where:** `app.js`, PR #19.
 
-6. **"Put the Where dropdown back."** *(`3a1754e`: "I folded Where into the new pair last
-   time. Rob asked for it back.")*
+6. **Put the Where dropdown back.** — **paraphrase**, but a close one: `3a1754e` reads "I
+   folded Where into the new pair last time. Rob asked for it back."
    **Requirement:** the Deck page must be able to answer *which pile is this copy physically
    in* as its own question.
    **Met by:** the Deck page carries all three controls and they compose — **Where** (this
@@ -557,7 +574,8 @@ a commit message, a pull-request body or a module header, as marked.
    **Active** (about the deck's claim on the slot).
    **Where:** `deck-page.js`, PR #35, reverting part of PR #34.
 
-7. **"Give me a way to clear every box at once."**
+7. **Give me a way to clear every box at once.** — **paraphrase**; the record preserves the
+   shape of the ask rather than its words: "Deselect is what was asked for."
    **Requirement:** a bulk deselect on the Deck page.
    **Met by:** Select all / Deselect all on their own row under Rank order. "Deselect is what
    was asked for; select is here because a one-way door costing eighty-five clicks to walk
@@ -565,9 +583,10 @@ a commit message, a pull-request body or a module header, as marked.
    **Where:** `deck-page.js`, PR #37. The reasoning is preserved verbatim in a source comment
    at `deck-page.js:928`.
 
-8. **"I audited all six boxes card by card — make the app say what the audit says."**
-   *(`71e200f`: "Rob audited all six boxes card by card and sent the result: one row per deck
-   and card, with its status and count, every deck summing to a hundred.")*
+8. **Make the app say what the physical audit says.** — **paraphrase** of an artefact rather
+   than a message: `71e200f` records "Rob audited all six boxes card by card and sent the
+   result: one row per deck and card, with its status and count, every deck summing to a
+   hundred."
    **Requirement:** the app's hundreds must equal the physically audited hundreds.
    **Met by:** selections re-solved so each deck composes the audited hundred, plus the two
    changes needed to represent what the audit contained.
@@ -584,7 +603,8 @@ a commit message, a pull-request body or a module header, as marked.
    **Where:** PRs #24, #27, #36. `tests/assignment-model.mjs` pins that choosing a rung
    changes Active and nothing else.
 
-10. **"Max should be a real Tier 3 build, not a label over Tuned."**
+10. **Max should be a real Tier 3 build, not a label over Tuned.** — **paraphrase**, taken
+    from the answering commit's own title (`756e4bb`).
     **Requirement:** the Max rung must actually spend the Bracket 3 allowance.
     **Met by:** forty of the fifty Max rungs composed byte-identical to the Tuned hundred.
     `tools/sim/promote-tier3.mjs` promotes in-colour, priced Game Changers already sitting in
@@ -595,7 +615,9 @@ a commit message, a pull-request body or a module header, as marked.
     on a seed the selection never saw, with promotions removed until it holds up.
     **Where:** commit `756e4bb`, then PRs #18 and #19.
 
-11. **"Measure my own six decks on a different brief."**
+11. **Measure my own six decks on a different brief.** — **paraphrase**; the surviving
+    fragment is in published data, where `data/simulation-summary.json`'s `caveats.note`
+    calls the 60% ceiling and the zero-spend bench search "their instruction".
     **Requirement:** the owner's own Pod Fun rung is searched over his own bench at zero spend,
     with the win rate held under **60%** rather than 45%.
     **Met by:** done as asked, and declared rather than hidden. All six sit above the file's
@@ -605,7 +627,10 @@ a commit message, a pull-request body or a module header, as marked.
     **Where:** `data/simulation-summary.json`. `tests/data-integrity.mjs` fails on an
     undeclared ceiling breach.
 
-12. **"Trade a basic land for a real card in Obuun's and Quintorius's shells."**
+12. **Trade a basic land for a real card in Obuun's and Quintorius's shells.** —
+    **paraphrase** of a document rather than a message: `989c1de` records that "the handoff
+    workbook asked Obuun for eleven Mountains and a Command Tower, and Quintorius for five and
+    a Tectonic Reformation."
     **Requirement:** a shell that wants eleven Mountains and a Command Tower must be
     expressible.
     **Met by:** fixed at the shell, because "a basic-land slot is one slot carrying a
@@ -614,8 +639,9 @@ a commit message, a pull-request body or a module header, as marked.
     re-optimizing the other 99 slots.
     **Where:** `tools/reshell-basic-swap.mjs`, PR #44.
 
-13. **"Minimal tokens, very small cost, but highly reliable/trustworthy"** — the constraint
-    given for any Claude feature *(quoted in `docs/claude-api-evaluation.md` §3.)*
+13. **"Minimal tokens, very small cost, but highly reliable/trustworthy"** — **verbatim**;
+    `docs/claude-api-evaluation.md` §3 quotes it as "Rob's constraint" for any Claude
+    feature.
     **Requirement:** cheap, and trustworthy in a way that is architectural rather than
     prompt-shaped.
     **Met by:** the evaluation, with two runnable scripts behind every number. The most
@@ -626,7 +652,8 @@ a commit message, a pull-request body or a module header, as marked.
     **Where:** `docs/claude-api-evaluation.md`, `tools/claude-api-cost.mjs`,
     `tools/claude-api-grounding.mjs`, and `guide-agent.js` (uncommitted on this branch).
 
-14. **"We don't need to retain all 50 variants at all."**
+14. **"We don't need to retain all 50 variants at all."** — **verbatim**; PR #74 quotes it
+    and says how it was read.
     **Requirement:** ambiguous, and read narrowly on purpose.
     **Met by:** read as being about *my load* — the sentence above it — rather than the shipped
     corpus. `data/my-load.json` carries only the six built variants; `data/variants.json` still
@@ -634,8 +661,9 @@ a commit message, a pull-request body or a module header, as marked.
     confirmation: "Say the word and I will cut the repo copy too."
     **Status: open.** No confirmation is recorded anywhere in the repository. See §8.
 
-15. **"Sitting with the cards in front of me, tell me whether the hundred is legal and whether
-    it can cast itself."**
+15. **Sitting with the cards in front of me, tell me whether the hundred is legal and whether
+    it can cast itself.** — **paraphrase**; PR #28 states the gap in the implementer's words,
+    calling these "the two questions you are actually asking with the cards in your hands."
     **Requirement:** the two questions a physical build cannot answer by eye.
     **Met by:** a readiness strip. Legality runs the boxed hundred through
     `compliance-model.js` at the deck's bracket; castability is `Slot.manaHealth`, counting
@@ -646,8 +674,10 @@ a commit message, a pull-request body or a module header, as marked.
     against `sim-engine.js` across the whole catalog, because a drifted second copy is worse
     than no readout.
 
-16. **"Make card clicks show the card, and make focusing the graph deliberate."**
-    **Requirement:** the ask was a lock toggle — flip a mode, then clicks show the card.
+16. **A lock toggle: flip a mode, and then clicks show the card instead of drilling in.** —
+    **paraphrase**, from the answering commit `c4cdb10`, which opens "The ask was a lock
+    toggle" and then explains why it did something else.
+    **Requirement:** as asked, a mode. As shipped, not a mode.
     **Met by:** answered differently first, with the reasoning recorded: "a mode is a cost paid
     on every click… 'What is this card?' is what you do constantly; re-centring is deliberate."
     So tapping a card shows the card and focusing became a button inside the popup. Later
@@ -655,7 +685,8 @@ a commit message, a pull-request body or a module header, as marked.
     which the list honours too — "which it never did."
     **Where:** PR #66, revised in PR #74.
 
-17. **"A load I can undo, and a way to see how long since I exported."**
+17. **A load I can undo, and a way to see how long since I exported.** — **paraphrase**;
+    PR #28 states the gap rather than the request.
     **Requirement:** loading a file used to be irreversible, "which is the wrong property for
     the one file that holds every box decision."
     **Met by:** every `applyStatePayload` stashes the prior state first; an **Undo load**
@@ -665,15 +696,19 @@ a commit message, a pull-request body or a module header, as marked.
 
 18. **Still open, from the most recent round of feedback** *(named as such at the foot of PR
     #76 and PR #77):* engine fidelity — storm count, ritual chains and one-card wins — and the
-    how-to-play generator agent. The second is in flight on this branch as `guide-agent.js`
-    and `tools/generate-guides.mjs`, neither of which is committed yet.
+    how-to-play generator agent. The second has since landed as `guide-agent.js`,
+    `tools/generate-guides.mjs` and `tests/guide-agent.mjs`; nothing has been generated with
+    it, because that needs a key this repository does not hold. The first is written up in
+    `docs/simulation-fidelity.md`.
 
 ---
 
 ## 8 · Open requirements and known gaps
 
 Severity below is about the reader's trust in a number or their ability to finish a build
-night, not about effort.
+night, not about effort. The simulator's input model — the sliders and the bracket ceiling
+that would let somebody ask for a particular deck rather than the highest-scoring one — is
+its own section: §11.
 
 ### High — affects every published number
 
@@ -696,9 +731,16 @@ body says the facts file has the figures "for all 579 names the six decks use", 
 what the file holds today either.)
 
 This was found while building `tools/sim/rate-decks.mjs`, recorded only in the body of
-unmerged PR #54, and written into `docs/handover-index.md` on 2026-09-07. It was deliberately
-left alone because fixing it moves every number for a second reason at once. **Anyone
-planning to touch scoring should decide about this first.**
+unmerged PR #54, and written into `docs/handover-index.md` on 2026-09-07. It has since been
+**measured and not fixed**: `tools/add-power-toughness.mjs` extracts a body for 880 of the 880
+creatures in `data/cards.json` out of the Scryfall bulk file already cached under
+`graph/.cache/`, with no network, and writes nothing without `--write`. Re-measuring the six
+shipped decks on the full protocol with printed bodies instead of estimated ones costs every
+one of them between 2.10 and 14.82 points, and **moves the ranking** — Chulane falls from
+fourth to sixth, which is itself the clearest evidence that the estimate was the thing being
+measured. `data/cards.json` still carries no such field, so every published number in this
+repository is still an estimated-body number. `docs/simulation-fidelity.md` §1 has the full
+table. **Anyone planning to touch scoring should decide about this first.**
 
 ### High — the engine cannot see whole archetypes
 
@@ -707,7 +749,8 @@ Storm count, ritual chains and one-card wins are not modeled. A real mono-red li
 same about every spellslinger list it is shown. The mitigation in place is honesty: the
 module header says to report a score for an imported deck with the archetype in view "or it
 reads as an insult rather than a measurement." Named as still-open feedback at the foot of
-PRs #76 and #77.
+PRs #76 and #77, and written up with what closing it would cost in
+`docs/simulation-fidelity.md` §2.
 
 ### Medium — deferred decisions in `BACKLOG.md`
 
@@ -751,9 +794,11 @@ Six items, ordered by how much they would change a build night. Item 2 is shippe
   `tools/extract_data.py` reads two HTML files one directory above the checkout that are not
   present. The files can only be patched by later tools.
 - **Forty-four of the fifty variants have no play guide.** `guideFor()` returns null and the
-  panel is simply absent. `docs/claude-api-evaluation.md` §6 proposes the concrete next step
-  — about $1, reviewed as a diff — and it has not been taken. `guide-agent.js` and
-  `tools/generate-guides.mjs` exist uncommitted on this branch.
+  panel is simply absent. `guide-agent.js` and `tools/generate-guides.mjs` now exist — the
+  prompt, the schema, the checks and the runner — but no guide has been generated, because
+  running them needs an API key that is deliberately not in this repository. The default run
+  prints the cost and sends nothing: forty-seven decks with no guide, $2.17, or $1.08
+  batched.
 
 ### Low — ambiguity and drift
 
@@ -771,7 +816,14 @@ Six items, ordered by how much they would change a build night. Item 2 is shippe
   correctly.
 - **`docs/handover-index.md` §8 describes "an out-of-sequence #80" among the merged PRs.**
   There is no pull request #80 in this repository (the API returns 404). `756e4bb` is an
-  ordinary non-merge commit whose subject happens to carry a `(#80)` suffix.
+  ordinary non-merge commit whose subject happens to carry a `(#80)` suffix. The same section
+  says 62 of the commits on `main` "are merge commits carrying a PR number"; on `origin/main`
+  there are 20 merge commits in total, and 67 subjects carrying a `(#N)` suffix.
+- **The social card names two tabs that no longer exist.** `og.png` — served as `og:image`
+  and `twitter:image` from both `index.html` and `matrix.html`, so it is what every share of
+  the site renders — reads *"Compare · Buy Picks · Shop List"* under the title. Those last two
+  were retired in PR #14. It is the one place a retired tab name still reaches a reader, and
+  `tests/data-integrity.mjs` cannot see it because it checks prose, not images.
 - **`import-quintorius-owned.html`** is a standalone one-shot migration page that nothing
   links to. Kept for a browser that never ran it.
 - **Two workbooks in `data/source/` are mode `600` where the rest are `644`.** Not verified
@@ -795,8 +847,7 @@ the app's job. `deck-audit.js` explains why a re-run measures two hundreds rathe
 There is no linter for this; the convention holds because the reasoning is the only place
 some of these decisions are recorded.
 
-**Every behaviour has a test.** 32 committed Node suites under `tests/` (33 on disk at the
-time of writing, the extra being the uncommitted `guide-agent`), using only Node built-ins.
+**Every behaviour has a test.** 33 Node suites under `tests/`, using only Node built-ins.
 `runtests.sh` runs them all and its own header explains why a shell loop will not do: the
 obvious one-liner exits 0 whatever happens, because the exit code belongs to the last `echo`.
 "That happened, and something got pushed on the strength of it."
@@ -855,9 +906,10 @@ this app retired.
 ## 10 · Release history
 
 Merged pull requests in order, oldest first. Titles are the repository's own and are already
-product statements; the line beside each says what changed for the reader. PRs #1–#8 predate
-the numbered-merge convention. **#2**, **#54** and **#77** are open drafts and are listed
-separately at the end.
+product statements; the line beside each says what changed for the reader. PRs #3–#8 arrived
+as classic `Merge pull request #N` commits before the squash-with-a-number convention; #1's
+work reached `main` inside the #7 merge; #70 landed as `e25d882` with no number in its
+subject. **#2**, **#54** and **#77** are open drafts and are listed separately at the end.
 
 | PR | Title | What changed for the reader |
 |---|---|---|
@@ -945,11 +997,101 @@ current branch's one commit ahead of `origin/main`.
 
 ---
 
+## 11 · The simulator's input model — proposed, not built
+
+The optimizer today searches for a hundred that scores well against one fixed objective. What
+it cannot do is search for the deck *you* want, because it has no way to be told. This is the
+input model for that, agreed in conversation on 2026-09-07 and recorded here before anything
+is written.
+
+### The correction that shaped it
+
+The first proposal had **Bracket** and **Playstyle** as two points on one power axis, and that
+was wrong. In the owner's words:
+
+> "Bracket and Friendly Casual → Highly competitive are NOT the same. You can play to win at
+> all costs in a B2 or B3 game. It comes down to what is limiting you; your choices you make
+> (or can make) while playing AND the limit on what can make up the deck to begin with due to
+> regulation."
+
+Two different limiters. **Bracket bounds what may be in the hundred; Playstyle governs the
+choices made with the hundred you have.** A ruthless pilot inside a Bracket 2 card pool is a
+coherent, common thing, and a model that cannot express it will keep blaming the deck for the
+pilot.
+
+The engine confirms the distinction, and the asymmetry is visible in the source. Opponents are
+already parameterised by playstyle — `sim/opponents.json` samples from precon, upgraded-casual,
+tuned, combo, stax, aristocrats, voltron, tokens and group-hug, jittering every number. But the
+**pilot has exactly one policy**: `castPriority` (`sim-engine.js`) is a fixed table of weights
+and `keepableHand` is a single rule — two to five lands and two plays costing three or less,
+always, for every deck and every seat. So the app can simulate playing *against* nine
+playstyles and cannot simulate playing *as* any of them.
+
+### The inputs
+
+Three kinds, and the kind matters more than the count. All sliders are **1–5**: brackets are
+1–5 so the vocabulary matches across the screen, five points is about the limit of what a
+person distinguishes on a preference scale, and ten steps would promise a precision smaller
+than the measurement noise — the same false precision that made a bare "51.33" unreadable.
+
+| Kind | Input | Control | What it bounds |
+|---|---|---|---|
+| **Regulation** | **Bracket** | Dropdown, "up to B*n*" | What may legally be in the hundred. A **maximum**, not a target — a build may land below it, and the result says where it landed. Checked by `compliance-model.js`, not optimised. |
+| **Budget** | **Cost** | 1–5 | Dollars. Very low → no limit. |
+| **Budget** | **Reuse** | 1–5 | How much of the hundred must come from cards already owned. Only owned → buy as required. |
+| **Policy** | **Playstyle** | 1–5 | How the simulated pilot chooses, turn by turn. Friendly casual → highly competitive. |
+| **Shape** | **Speed** | 1–5 | How early the deck wants to close. Measured as `avgWinTurn`. |
+| **Shape** | **Complexity** | 1–5 | How much thinking a turn takes. Measured as decision density. |
+
+**Reported beside the result, never asked for:** table experience (`podFunScore`), interaction
+availability, win rate, and the achieved bracket. Table experience in particular was proposed
+as a seventh slider and rejected: under this model it is an *outcome* of Playstyle rather than
+an independent dial, and asking for it separately would let a user request a combination the
+model cannot mean.
+
+### What it must never do
+
+Fail. Five targets at five points is 3,125 combinations and most of them describe a deck that
+does not exist — cheap, owned-only, fast, and up to Bracket 4 is not a thing. So the run
+returns the closest build it found, shows where it landed on **every** axis next to the target,
+and names the target it sacrificed and why. That is the same rule the score readout follows: a
+number you cannot interrogate is worth less than no number.
+
+### What Playstyle requires of the engine
+
+Playstyle is the only input here that is not already measured, and it is not a scoring weight —
+it is a set of decisions the simulated pilot makes. Five places in `sim-engine.js` currently
+hard-code one answer each:
+
+| Decision | Today | Under a policy |
+|---|---|---|
+| **Mulligan** | `keepableHand`: 2–5 lands and ≥2 cheap plays | Competitive throws back a hand that cannot function; casual keeps a seven that does something |
+| **What to cast** | `castPriority`: one fixed weight table | Competitive casts what wins; casual casts what is on curve and fun |
+| **Who to attack** | not modelled at all | Competitive hits the player who is ahead; casual spreads damage |
+| **Holding answers** | removal is cast when castable | Competitive holds it for the threat that beats them |
+| **Tapping out** | implicit in cast priority | Competitive taps out for the win; casual keeps blockers |
+
+### Why this makes the iterative build worth doing
+
+Run the same hundred under two policies. The difference separates the weaknesses that belong
+to the **deck** from the ones that belong to the **pilot**, and only the first kind should
+cause a card swap. A deck that scores 65 played casually and 82 played competitively does not
+need new cards; it needs its owner to attack the leader. Optimising cards against a single
+fixed pilot policy — which is what the sweep does today — silently blames the list for both.
+
+**Status: proposed.** Nothing here is built. The pilot policy has to exist before any slider
+means anything, and the printed-body re-bake (§8) has to land before any target is set against
+a measured number, because a target aimed at a mis-measured engine is a target at the wrong
+number.
+
 ## Sources
 
 - `docs/handover-index.md` — the technical map, written 2026-09-07 against commit `8f0a0c0`
-- `git log origin/main` — 208 commits, 62 carrying a merged PR number. Note that local `main`
-  is stale at `f519b8e` (#71) while `origin/main` is at `c0686fe` (#76)
+- `git log origin/main` — 208 commits. 67 subjects carry a `(#N)` suffix, covering #9–#53,
+  #55–#69, #71–#76 and one `(#80)` that matches no pull request; six older merges appear as
+  `Merge pull request #3`…`#8`; #70 landed as `e25d882` with no number in its subject; and
+  #1's work reached `main` inside the #7 merge. Note that local `main` is stale at `f519b8e`
+  (#71) while `origin/main` is at `c0686fe` (#76)
 - Merged pull-request bodies on `github.com/minorrob/mtg-deck-matrix`
 - `BACKLOG.md`, `docs/claude-api-evaluation.md`, `docs/mechanics-design-v2.2.md`,
   `docs/simulation-refresh-instructions.md`, `docs/handover-prompt.md`

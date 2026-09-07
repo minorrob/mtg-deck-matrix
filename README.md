@@ -11,9 +11,11 @@ no framework, no account. Everything about you lives in the browser you opened i
 is uploaded. It is built for a phone at a card shop, so the header folds, the Shop has a view
 for a vendor's booth, and no font or library is allowed to block first paint.
 
-It looks like a printed reference rather than a dashboard: cream paper (`#f4efdf`) over
-forest green (`#0f3a2b`), gold rules, Fraunces headings over Inter body text, and card art
-where the card is the thing being talked about.
+It looks like a printed reference rather than a dashboard: a parchment page (`#f4efdf`) under
+a deep-green-to-gold banner carrying three card crops, gold rules, Fraunces headings over
+Inter body text, and card art wherever the card is the thing being talked about. One header,
+`header.css`, serves all three pages, so the way back and the way onward land on the same
+pixel at 1400px and at 390px.
 
 ## Run it
 
@@ -273,6 +275,15 @@ mono-red list built around Mana Geyser, Seething Song and Reiterate scores 34.55
 six baked decks' 71 to 86. That is not a verdict on the deck; it is the engine saying it cannot
 see how the deck wins, and it will say the same about every spellslinger list it is shown.
 
+And one gap is larger than the caveats in the engine admit: **no creature's printed power or
+toughness has ever reached it.** `data/cards.json` carries no such field, so almost every
+creature ever simulated was played at `max(1, round(cmc × 0.9))` on both sides of the slash.
+`tools/add-power-toughness.mjs` recovers a real body for all 880 of them from a bulk file
+already on disk, and re-measuring the six shipped decks with printed bodies costs each of them
+between 2.10 and 14.82 points and moves the ranking. It has been measured and not applied,
+because applying it moves every published number at once. `docs/simulation-fidelity.md` §1
+has the table.
+
 **Read the numbers as a comparison between two versions of one deck, never as absolute odds.**
 Figures measured on different engine versions are not comparable at all, and the app never
 subtracts one from the other — `data/simulation-summary.json`'s `engineBoundaryNote` says why,
@@ -281,8 +292,9 @@ and `deck-audit.js` enforces it in code.
 **One rule about anything generated rather than measured:** the app measures and any model
 explains. Card counts, the curve, role counts, mana and the score are computed and handed over
 as fact; prose is prose; and every card a model names is checked against the hundred that was
-sent before it can reach the screen. `docs/claude-api-evaluation.md` works this out in full,
-including why there is nowhere in a static site to keep an API key.
+sent before it can reach the screen. `docs/ai-agents.md` covers each agent's prompt, schema
+and checks; `docs/claude-api-evaluation.md` covers the money and why there is nowhere in a
+static site to keep an API key.
 
 ## How the repository is laid out
 
@@ -415,7 +427,9 @@ moved.
 |---|---|
 | `docs/prd.md` | What this app is for, feature by feature, with the requirements that came directly from the user, the measurement system as a product requirement, the data provenance, and the open gaps with honest severity |
 | `docs/handover-index.md` | The technical map: every module and what it owns, every data file and what generates it, every test, every tool, every external service, and what is deliberately absent |
-| `docs/claude-api-evaluation.md` | What an AI feature would cost here, why no API key can live in the browser, and the registry gate that stops an invented card name reaching the screen |
+| `docs/simulation-fidelity.md` | Where the model and Magic still disagree, in order of how much each gap distorts a score, with what closing each one would cost |
+| `docs/ai-agents.md` | What Claude is asked to do here, how each ask is grounded, and what each one costs |
+| `docs/claude-api-evaluation.md` | Why no API key can live in the browser, and the registry gate that stops an invented card name reaching the screen |
 | `docs/handover-prompt.md` | A copy-and-paste prompt for handing this project to a fresh session on another machine |
 | `docs/mechanics-design-v2.2.md` | How counters and combat keywords were modeled, and which mechanics were deliberately left out |
 | `docs/simulation-refresh-instructions.md` | A historical brief: how the measurement protocol was specified when the catalog was thirty variants on engine v2.1 |
