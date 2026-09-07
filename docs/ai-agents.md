@@ -96,8 +96,20 @@ the measurement too: advice that contradicts a measured figure is rejected.
 naming the cards involved and the situation. ~900 tokens in (the hundred plus the
 breakdown), ~600 out. **About 1.9 cents a deck.**
 
-**Status.** Not built. It should wait until the readout has been used for a while, because
-the interesting question is which parts of the breakdown people actually ask about.
+**The grounding this was missing, and now has a shape.** Measure the same hundred under two
+pilot policies — friendly casual and highly competitive — and the *difference* is the advice.
+A deck that scores 65 casual and 82 competitive does not need new cards; it needs its owner to
+attack the leader, and the breakdown says so precisely: if the seventeen points are
+concentrated in *Closes the game*, the advice is about the clock; if they are in *Has answers
+when it needs them*, it is about holding removal rather than casting it on sight. The app
+computes which part moved and by how much; the model writes the sentence.
+
+That is a better prompt than "advise me about this deck" by some distance, because the answer
+is checkable against a number rather than against taste. See `docs/prd.md` §11 — the pilot
+policy has to exist in `sim-engine.js` first.
+
+**Status.** Not built, and now blocked on something specific rather than on judgement: the
+engine has one pilot policy, so there is no second run to difference against.
 
 ---
 
@@ -116,6 +128,11 @@ a cent. Twenty findings batched is under half a cent.
 **The check** is the same one that makes the lens trustworthy: every card named must be in
 the lens's own `filter.ids`. The model may only talk about the cards the finding is already
 about.
+
+**A finding worth adding once the pilot policy exists:** *"Krenko scores 17 points higher
+played competitively, and all of it is in how fast it closes."* That is a lens like any other
+— a number, its evidence, and a filter — and it is advice about the game rather than about the
+shopping list, which the Copilot currently has none of.
 
 **The risk to avoid.** The Copilot's value is that it is *measured*. An agent that turns a
 count into a recommendation must not add a claim the count does not support — so the schema

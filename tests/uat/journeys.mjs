@@ -6,7 +6,7 @@
  * first-time visitor is the persona that finds the dead ends.
  *
  * SKIPS RATHER THAN FAILS when Playwright or the dev server is missing. This
- * repo has no package.json and the twenty-three Node suites need nothing but
+ * repo has no package.json and the thirty-three Node suites need nothing but
  * Node; a missing browser is a missing tool, not a failing app, and a test that
  * cannot tell those apart is one people learn to ignore.
  */

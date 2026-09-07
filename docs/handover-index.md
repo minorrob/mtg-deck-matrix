@@ -442,9 +442,9 @@ Scryfall with real recorded answers from `tests/uat/fixtures/`, and writes scree
 each one caught, and explains why testing with a pre-seeded collection had made all of them
 invisible.
 
-**Documentation drift found here.** `tests/uat/README.md` says "twelve journeys" and
-`journeys.mjs`'s own header says "six journeys"; the file contains 21. Both also say
-"twenty-three suites" where there are now 32.
+**Documentation drift found here, and fixed in the commit that added this file:**
+`tests/uat/README.md` said "twelve journeys" and `journeys.mjs`'s own header said "six"; the
+file contains 21. Both also said "twenty-three suites". Both now say what is true.
 
 ---
 
@@ -539,14 +539,16 @@ Four places, in the order worth checking:
    cost and why a key cannot live in the browser), `mechanics-design-v2.2.md` (117 lines,
    the mechanics modeling rationale), `simulation-refresh-instructions.md` (118 lines, a
    historical protocol brief).
-4. **`git log` itself.** 203 commits on `main`, 62 of them merge commits carrying a PR
-   number. Commit bodies are long and explanatory — `8f0a0c0` quotes the user complaint that
+4. **`git log` itself.** 208 commits on `origin/main`. Sixty-seven carry a PR number in
+   the subject, of which only **20** are actual merge commits — the rest arrived as squash
+   merges, which is why `--merges` undercounts the history badly. Commit bodies are long and
+   explanatory — `8f0a0c0` quotes the user complaint that
    motivated the change verbatim before describing the fix.
 
 ### Merged PRs
 
-62 PR-numbered merges on `origin/main`. Numbers present: **#9–#53, #55–#69, #71–#76** and
-an out-of-sequence **#80**. Two gaps, both explained:
+Sixty-seven PR numbers appear in `origin/main` subjects: **#9–#53, #55–#69, #71–#76**, plus
+one that is not a pull request at all. Three things to know:
 
 - **#54** is still **open and marked draft** ("Stop the engine reading reminder text as
   rules text"). Its work reached `main` as **#53** instead. Do not read its absence as lost
@@ -554,6 +556,9 @@ an out-of-sequence **#80**. Two gaps, both explained:
   the project and contains a live finding (see *Open threads* below).
 - **#70** merged without a numbered merge commit: it is `e25d882`, "Build decks from
   nothing…".
+- **#80 is not a pull request.** `GET /pulls/80` returns 404. The `(#80)` on `756e4bb`
+  ("Make Max a real Tier 3 build instead of a label over Tuned") is a TASK number that ended
+  up in a commit subject. Do not go looking for the PR; read the commit.
 
 PRs #1–#8 predate the numbered convention and appear as
 `Merge pull request #N from minorrob/claude/...` lines.
@@ -841,8 +846,10 @@ else in the repository. **Verified today:**
 - So **every published measurement in this repo — the fifty-variant sweep, the ladders, the
   six deck ratings — estimated every creature's size rather than reading it.**
 
-`data/card-facts.json` does carry real printed figures, but only partially: 326 creatures in
-it, of which **62** have `power`/`toughness` populated. (PR #54's body says the facts file
+`data/card-facts.json` does carry real printed figures, but only partially: **62 rows** in it
+have `power`/`toughness` populated, and only **60** of those are creatures — the other two are
+Vehicles (Rocketeer Boostbuggy, Unlicensed Hearse), which have a printed body and become
+creatures when crewed. Against 326 creatures in the file, that is under a fifth. (PR #54's body says the facts file
 has the figures "for all 579 names the six decks use"; that is not what the file holds
 today.) Feeding real bodies into the engine would be a genuine improvement and would move
 every number for a second reason at once, which is exactly why it was deliberately left
@@ -852,15 +859,19 @@ alone. Anyone planning to touch scoring should decide about this first.
 
 None of these break anything. All are worth knowing before you trust a number in prose.
 
-| Where | Says | Actually |
-|---|---|---|
-| `README.md`, `tests/uat/README.md`, `tests/import-wiring.mjs`, `graph/README.md` | the graph corpus is **7,710** cards | `data/graph.json` `counts.cards` is **7,764**; `graph-page.js` and `journeys.mjs` say 7,764 |
-| `tests/uat/README.md` | "twelve journeys", "twenty-three suites" | 21 journey labels; 32 suites |
-| `tests/uat/journeys.mjs` header | "six journeys" | 21 |
-| `README.md` | Pod Fun over the 45% ceiling is "all six" ★ builds | `caveats.podFunOverCeiling` has **15** entries, of which the six are a subset |
-| `data/simulation-summary.json` `caveats.note` | "The six decks **My** actually plays…" | reads like a find-and-replace artifact where a name should be |
-| The two catalogs | — | The Matrix's ★ picks include Betor (1b) and Purphoros (3o); `master-v2.json` has Felothar (D4) and Krenko (D6). Four of six commanders agree; two do not |
-| local `main` | at #71 | `origin/main` is at #76 |
+Everything marked **fixed** was corrected in the commits that landed this file; it is kept
+here so the next reader can see what kind of thing goes stale in this repository, and check
+whether it has again.
+
+| Where | Said | Actually | State |
+|---|---|---|---|
+| `README.md`, `tests/uat/README.md`, `tests/import-wiring.mjs`, `graph/README.md` | the graph corpus is **7,710** cards | `data/graph.json` `counts.cards` is **7,764** | **fixed** |
+| `tests/uat/README.md`, `journeys.mjs` header | "twelve journeys" / "six journeys", "twenty-three suites" | 21 journey labels; 33 suites | **fixed** |
+| `data/simulation-summary.json` `caveats.note` | "The six decks **My** actually plays…" | a find-and-replace artifact where a name should be | **fixed** |
+| `og.png` | "Compare · Buy Picks · Shop List" | those two tabs were retired in PR #14. It is the `og:image` on both `index.html` and `matrix.html`, so every share of the site shows them. `tests/data-integrity.mjs` forbids the names in prose and cannot see inside an image | **open** — needs the image regenerating |
+| `README.md` | Pod Fun over the 45% ceiling is "all six" ★ builds | `caveats.podFunOverCeiling` has **15** entries, of which the six are a subset | open |
+| The two catalogs | — | The Matrix's ★ picks include Betor (1b) and Purphoros (3o); `master-v2.json` has Felothar (D4) and Krenko (D6). Four of six commanders agree; two do not | open, and not verified as a bug rather than a deliberate divergence |
+| local `main` | at #71 | `origin/main` was at #76 when this was written. Read `origin/main`, not `main` | a trap, not a bug |
 
 `data/deck-swaps.json` also names a source file (`six-optimized.json`) that is not in the
 repository, and `data/game-history.json` is an empty shell that no committed game log has

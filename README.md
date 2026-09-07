@@ -275,14 +275,14 @@ mono-red list built around Mana Geyser, Seething Song and Reiterate scores 34.55
 six baked decks' 71 to 86. That is not a verdict on the deck; it is the engine saying it cannot
 see how the deck wins, and it will say the same about every spellslinger list it is shown.
 
-And one gap is larger than the caveats in the engine admit: **no creature's printed power or
-toughness has ever reached it.** `data/cards.json` carries no such field, so almost every
-creature ever simulated was played at `max(1, round(cmc × 0.9))` on both sides of the slash.
-`tools/add-power-toughness.mjs` recovers a real body for all 880 of them from a bulk file
-already on disk, and re-measuring the six shipped decks with printed bodies costs each of them
-between 2.10 and 14.82 points and moves the ranking. It has been measured and not applied,
-because applying it moves every published number at once. `docs/simulation-fidelity.md` §1
-has the table.
+And one gap is larger than anything that list names: **no creature's printed power or
+toughness has ever reached the engine.** `data/cards.json` carries no such field, so almost
+every creature ever simulated was played at `max(1, round(cmc × 0.9))` on both sides of the
+slash. `tools/add-power-toughness.mjs` recovers a real body for all 880 creatures in the
+catalog from a bulk file already on disk; re-measuring the six shipped decks with printed
+bodies costs each of them between 2.10 and 14.82 points and moves the ranking. It has been
+measured and deliberately not applied, because applying it moves every published number at
+once. `docs/simulation-fidelity.md` §1 has the table.
 
 **Read the numbers as a comparison between two versions of one deck, never as absolute odds.**
 Figures measured on different engine versions are not comparable at all, and the app never

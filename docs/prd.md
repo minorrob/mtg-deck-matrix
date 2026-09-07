@@ -701,6 +701,19 @@ one of the failure modes this list documents (see 14 and 16).
     it, because that needs a key this repository does not hold. The first is written up in
     `docs/simulation-fidelity.md`.
 
+19. **"Bracket and Friendly Casual → Highly competitive are NOT the same. You can play to win
+    at all costs in a B2 or B3 game. It comes down to what is limiting you; your choices you
+    make (or can make) while playing AND the limit on what can make up the deck to begin
+    with due to regulation."** — **verbatim**, 2026-09-07, quoted in §11.
+    **Requirement:** the optimizer must be tellable what deck to look for, and the two
+    limiters must not be collapsed onto one axis. Bracket bounds what may be in the hundred;
+    playstyle governs the choices made with the hundred you have.
+    **Met by:** not yet built. The input model is written down in §11 before anything is
+    written, including the observation that the engine already parameterises *opponents* by
+    playstyle while the pilot has exactly one fixed policy — so the app can simulate playing
+    against nine playstyles and cannot simulate playing as any of them.
+    **Status: open.**
+
 ---
 
 ## 8 · Open requirements and known gaps
@@ -1079,10 +1092,56 @@ cause a card swap. A deck that scores 65 played casually and 82 played competiti
 need new cards; it needs its owner to attack the leader. Optimising cards against a single
 fixed pilot policy — which is what the sweep does today — silently blames the list for both.
 
+### The gap between the policies is the advice
+
+The pilot policy pays for itself twice. The first return is the one above — separating the
+deck's weaknesses from the pilot's. The second is that **the difference between two runs of
+the same hundred is itself a measurement, and it is the most actionable one the app could
+produce.**
+
+Measure a deck under each policy and keep the profile:
+
+```
+Krenko, Mob Boss     casual 65.0     competitive 82.0     +17.0
+  Closes the game        4.1 of 10       9.2 of 10        +5.1
+  Wins games            22.4 of 35      31.0 of 35        +8.6
+  Has answers            7.0 of 10       7.3 of 10        +0.3
+```
+
+The **shape** of that profile is the finding, and it is arithmetic rather than judgement:
+
+| Profile | What it means | What it becomes on screen |
+|---|---|---|
+| Large gap, competitive higher | The list is fine; the pilot is leaving points on the table | *"You can play this deck competitively by attacking the leader — seventeen points of it are in how fast you close."* |
+| Small gap either way | The deck plays itself, however it is piloted | *"It scores the same whoever is driving."* Exactly what somebody lending a deck to a friend needs to know. |
+| Competitive **lower** | The deck punishes greed — tapping out or drawing the table's attention costs it | *"Playing this one hard makes you the archenemy and it loses more, not less."* |
+
+**Which parts moved is the advice**, and the breakdown already exists per run, so the
+per-part difference is free. A gap concentrated in *Closes the game* is about the clock —
+attack the player who is ahead, tap out for the win. A gap in *Has answers when it needs
+them* is about holding removal for the threat that beats you rather than casting it on sight.
+A gap in *Casts its spells* is about mulligan discipline. The app computes which part moved
+and by how much; a model writes the sentence, grounded in exactly that figure and in the
+cards the deck actually holds.
+
+This is the same division everything else here follows: **the app measures, the model
+explains.** The difference is that here the measurement is one the app cannot currently make
+at all, and it is the difference between telling somebody their deck is worth 71 and telling
+them how to get more out of the deck they already own.
+
+**Where it surfaces.** Three places, all of which already exist as panels:
+
+- **How to play it** — a closing section on piloting, written from the profile rather than
+  from the card list.
+- **Deck strategy** (`docs/ai-agents.md` §2) — this profile is the grounding that section was
+  missing.
+- **The Copilot** — a lens like any other, with its own evidence: *"Krenko scores 17 points
+  higher played competitively, and all of it is in how fast it closes."*
+
 **Status: proposed.** Nothing here is built. The pilot policy has to exist before any slider
-means anything, and the printed-body re-bake (§8) has to land before any target is set against
-a measured number, because a target aimed at a mis-measured engine is a target at the wrong
-number.
+means anything or any profile can be measured, and the printed-body re-bake (§8) has to land
+before any target is set against a measured number, because a target aimed at a mis-measured
+engine is a target at the wrong number.
 
 ## Sources
 
