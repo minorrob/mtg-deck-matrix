@@ -876,3 +876,14 @@ whether it has again.
 `data/deck-swaps.json` also names a source file (`six-optimized.json`) that is not in the
 repository, and `data/game-history.json` is an empty shell that no committed game log has
 ever filled. Neither is a fault — they are places where the record stops.
+
+## Review-branch addition · September 7, 2026
+
+Prepared for the CrankMagic design review; production integration has not started.
+
+| Path | Ownership and provenance |
+|---|---|
+| `data/commander-glossary.json` | Single editable glossary authority: 335 term definitions and aliases, rule references, revision metadata, and separately labeled subjective workbook ratings. Seeded from the user's glossary workbook, corrected/expanded against Wizards' rules. Edit directly; no source/override merge or automatic re-import. |
+| `docs/glossary.md` | Editorial authority, consumers, contextual term matching, hover/focus/touch behavior, asset provenance and integration boundary. |
+| `tools/check-glossary.mjs` | Node-only structural validation for IDs, aliases, source references and the single-authority contract. Run directly; not yet added to the production suite runner. |
+| `assets/mana/{W,U,B,R,G,2,3}.svg` | Unmodified Scryfall mana symbols prepared for offline display. Not yet referenced by production pages. |
