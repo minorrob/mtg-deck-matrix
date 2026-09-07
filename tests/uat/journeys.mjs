@@ -146,10 +146,13 @@ async function healthy(page, screen, journey) {
     return {
       nameless: controls.filter((n) => !named(n))
         .map((n) => `${n.tagName.toLowerCase()}.${String(n.className).split(" ")[0] || "(no class)"}`),
+      /* aria-sort belongs on the list: a column header that is the sort control says
+         which way it is sorting with aria-sort, not with aria-pressed. Leaving it out
+         made the one correct spelling of "this one is on" the only one that failed. */
       silent: controls.filter((n) => SELECTED.test(String(n.className)) &&
         !n.hasAttribute("aria-pressed") && !n.hasAttribute("aria-selected") &&
         !n.hasAttribute("aria-checked") && !n.hasAttribute("aria-current") &&
-        !n.hasAttribute("aria-expanded"))
+        !n.hasAttribute("aria-sort") && !n.hasAttribute("aria-expanded"))
         .map((n) => String(n.className).split(" ").slice(0, 2).join("."))
     };
   });
@@ -237,6 +240,9 @@ function grownCollection() {
   };
 }
 const GROWN = grownCollection();
+// viewer.js caps a band before offering the rest behind a button: fifty where a row is
+// one line, twenty-two where it folds into five. Counted in screens, not rows.
+const GROUP_CAP = 50;
 
 for (const screen of SCREENS) {
   console.log(`\n──────── ${screen.tag} ${screen.w}×${screen.h} ────────`);
@@ -246,10 +252,32 @@ for (const screen of SCREENS) {
     const {ctx, page} = await freshPage(screen);
 
     await page.goto(`${BASE}/index.html`, {waitUntil: "domcontentloaded"});
-    await page.waitForSelector(".deck-card", {timeout: 20000});
-    const decks = await page.locator(".deck-card").count();
+    await page.waitForSelector(".start-tile", {timeout: 20000});
+
+    /* A BROWSER THAT HAS NEVER OPENED THIS APP HAS NO DECKS.
+     *
+     * data/master-v2.json carries the card catalog AND one person's build of six decks.
+     * Loading both meant a stranger opened the page to somebody else's decks and a
+     * 176-card bench presented as their own, with nothing saying whose they were -- and
+     * "Clear session" left them exactly where it found them. The build half is now gated
+     * on this browser having saved something; the catalog is not, so search, the card
+     * list and the graph are all untouched. */
+    const blank = await page.evaluate(() => ({
+      decks: document.querySelectorAll(".deck-card").length,
+      note: (document.querySelector(".empty-note h3") || {}).textContent || "",
+      load: [...document.querySelectorAll(".empty-note button")].map((b) => b.textContent.trim()),
+      ribbon: (document.querySelector(".ribbon") || {}).textContent || ""
+    }));
+    check(blank.decks === 0, screen.tag, "first · lands",
+      `${blank.decks} decks on a browser that has saved nothing — they are not this reader's`);
+    check(/No decks yet/i.test(blank.note), screen.tag, "first · lands",
+      `an empty deck list with no explanation reads as a failed load, not an empty list (saw "${blank.note}")`);
+    check(blank.load.includes("Load default"), screen.tag, "first · lands",
+      "nothing on an empty page offers the decks kept in the repository");
+    check(/\b0 decks\b/.test(blank.ribbon.replace(/\s+/g, " ")), screen.tag, "first · lands",
+      `the ribbon still counts somebody else's decks: ${blank.ribbon.replace(/\s+/g, " ").slice(0, 60)}`);
+
     const adds = await page.locator(".deck-add").count();
-    check(decks === 6, screen.tag, "first · lands", `${decks} decks on the front page, expected 6`);
     check(adds >= 2, screen.tag, "first · lands", `${adds} ways to add a deck, expected 2`);
 
     /* THE THREE DOORS, ABOVE THE DECKS. Add and Build used to sit at the END of the deck
@@ -260,7 +288,7 @@ for (const screen of SCREENS) {
     const doors = await page.evaluate(() => {
       const tiles = [...document.querySelectorAll(".start-tile")];
       const head = document.querySelector(".section-head h2");
-      const card = document.querySelector(".deck-card");
+      const card = document.querySelector(".deck-grid > *");
       const box = (n) => n ? Math.round(n.getBoundingClientRect().top) : null;
       return {
         names: tiles.map((t) => ((t.querySelector("b") || {}).textContent || "").trim()),
@@ -298,8 +326,63 @@ for (const screen of SCREENS) {
     check(routes.includes("graph.html"), screen.tag, "first · lands",
       "nothing above the fold leads to the card graph");
     await healthy(page, screen.tag, "first · lands");
-    console.log(`  first · lands            ${decks} decks, ${adds} ways to add one, ` +
+    console.log(`  first · lands            ${blank.decks} decks on a clean browser, ${adds} ways to add one, ` +
       `${routes.length} routes onward without scrolling`);
+
+    /* AND LOAD DEFAULT FILLS IT, then Clear session empties it again.
+     *
+     * In its own browser: pressing Load default writes a saved session, and the rest of
+     * this persona is the person who has never saved one. Testing them in the same
+     * context is how a first-run screen comes to be checked against a returning user. */
+    {
+      const away = await freshPage(screen);
+      await away.page.goto(`${BASE}/index.html`, {waitUntil: "domcontentloaded"});
+      await away.page.waitForSelector(".empty-note button", {timeout: 20000});
+      away.page.dialogs.length = 0;
+      await away.page.locator(".empty-note button", {hasText: "Load default"}).first().click();
+      await away.page.waitForSelector(".deck-card", {timeout: 20000});
+      const loaded = await away.page.evaluate(() => ({
+        decks: document.querySelectorAll(".deck-card").length,
+        bench: Number((document.querySelector("#tab-bench .count") || {}).textContent || 0),
+        upgrades: Number((document.querySelector("#tab-upgrades .count") || {}).textContent || 0),
+        keys: Object.keys(localStorage)
+      }));
+      check(away.page.dialogs.length === 1, screen.tag, "first · load default",
+        `${away.page.dialogs.length} confirmations before replacing what is saved, expected exactly 1`);
+      check(loaded.decks === 6, screen.tag, "first · load default",
+        `Load default gave ${loaded.decks} decks, expected 6`);
+      check(loaded.bench > 0 && loaded.upgrades > 0, screen.tag, "first · load default",
+        `the bench and the upgrades did not follow the decks: ${loaded.bench} and ${loaded.upgrades}`);
+      check(loaded.keys.includes("mtg-deck-matrix-state-v1"), screen.tag, "first · load default",
+        "nothing was written, so a reload would lose it");
+
+      /* AND BACK. "Clear session" promises a browser that looks like one that has never
+         opened the app; the only way to check a promise like that is to make it, and then
+         look. It asks twice -- once offering a backup, once to confirm -- and the second
+         answer is the one that clears. */
+      away.page.dialogs.length = 0;
+      await away.page.click("#admin-button");
+      await away.page.waitForTimeout(300);
+      await away.page.locator(".admin-item", {hasText: "Clear session"}).first().click();
+      await away.page.waitForTimeout(2500);
+      const after = await away.page.evaluate(() => ({
+        keys: Object.keys(localStorage).filter((k) => k.startsWith("mtg-")),
+        decks: document.querySelectorAll(".deck-card").length,
+        note: (document.querySelector(".empty-note h3") || {}).textContent || ""
+      }));
+      check(away.page.dialogs.length === 2, screen.tag, "first · clear session",
+        `${away.page.dialogs.length} prompts before destroying everything, expected 2 (backup, then confirm)`);
+      check(/backup/i.test(away.page.dialogs[0] || ""), screen.tag, "first · clear session",
+        "the first prompt does not offer a backup");
+      check(after.keys.length === 0, screen.tag, "first · clear session",
+        `${after.keys.length} saved keys survived the clear: ${after.keys.join(", ")}`);
+      check(after.decks === 0 && /No decks yet/i.test(after.note), screen.tag, "first · clear session",
+        `after clearing, ${after.decks} decks are still on the page`);
+      console.log(`  first · load default     ${loaded.decks} decks, ${loaded.bench} on the bench, ` +
+        `${loaded.upgrades} upgrades — and back to ${after.decks} after a clear`);
+      await shot(away.page, `${screen.tag}-first-loaded-mydecks`);
+      await away.ctx.close();
+    }
 
     await page.goto(`${BASE}/matrix.html`, {waitUntil: "domcontentloaded"});
     await page.waitForTimeout(5000);
@@ -626,7 +709,7 @@ for (const screen of SCREENS) {
     await ctx.close();
   }
 
-  // ═══ FIRST: opens the card graph, which is 7,710 cards ═══
+  // ═══ FIRST: opens the card graph, which is the whole rich corpus ═══
   {
     const {ctx, page} = await freshPage(screen);
     await page.goto(`${BASE}/graph.html`, {waitUntil: "domcontentloaded"});
@@ -652,9 +735,9 @@ for (const screen of SCREENS) {
     check(screens < 10, screen.tag, "first · the graph",
       `the card list is ${Math.round(screens)} screens tall on a first look`);
     const legend = clean(await page.locator(".gp-legend").first().textContent().catch(() => ""));
-    check(/of 7,710 cards/.test(legend), screen.tag, "first · the graph",
+    check(/of 7,7\d\d cards/.test(legend), screen.tag, "first · the graph",
       `the list must say how much of the catalog it is showing, said "${legend}"`);
-    console.log(`  first · the graph        ${tiles} of 7,710 · ${Math.round(screens)} screens · "${legend.slice(0, 34)}…"`);
+    console.log(`  first · the graph        ${tiles} tiles · ${Math.round(screens)} screens · "${legend.slice(0, 34)}…"`);
 
     /* Wheel and click, not scrollTo and .click(): a programmatic scroll on this
        page is what produced two invented "jumps" that a real gesture does not. */
@@ -697,7 +780,7 @@ for (const screen of SCREENS) {
 
   // ═══ FIRST: names the card they came to look at ═══
   /* The graph is drawn around ONE card, and until now the only way to choose that card
-     was to find it in the list and press Focus inside its popup. That works for the 7,710
+     was to find it in the list and press Focus inside its popup. That works for the cards
      cards the corpus was baked with; for anything else there was no way in at all, which
      is most of Magic. This journey types a name that is NOT in the catalog and asserts the
      page goes and gets it -- and refuses the one that is banned.
@@ -834,55 +917,53 @@ for (const screen of SCREENS) {
 
     const benchTall = await page.evaluate(() => document.documentElement.scrollHeight);
     const benchScreens = benchTall / screen.h;
-    const rows = await page.locator(".pick-row").count();
+    const rows = await page.locator(".ct-row").count();
     check(benchScreens < 10, screen.tag, "continued · a collection",
       `the bench is ${Math.round(benchScreens)} screens tall — 1,940 spare cards in one list`);
     check(rows < 120, screen.tag, "continued · a collection",
       `${rows} rows rendered at once — the bench has no ceiling`);
 
-    // The count has to name what is held back, or the cap is just a lie of
-    // omission: a reader who cannot see the other 1,890 must at least be told.
-    const capped = clean(await page.locator(".section-head p").nth(1).textContent());
-    check(/^\d+ of [\d,]+ cards/.test(capped), screen.tag, "continued · a collection",
-      `a capped group must say how many it is holding back, said "${capped}"`);
+    // The button has to name what is held back, or the cap is a lie of omission: a
+    // reader who cannot see the other 1,890 must at least be told there are 1,890.
+    const capped = clean(await page.locator(".ct-more").first().textContent());
+    check(/^Show the other [\d,]+ cards?$/.test(capped), screen.tag, "continued · a collection",
+      `a capped list must say how many it is holding back, said "${capped}"`);
 
-    // Sorted by what a spare card is worth, not by its initial: the first fifty
-    // of two thousand is only a useful answer if the fifty were chosen.
-    const top = Number(clean(await page.locator(".pick-row .money").first().textContent()).replace(/[^0-9.]/g, ""));
-    const tenth = Number(clean(await page.locator(".pick-row .money").nth(9).textContent()).replace(/[^0-9.]/g, ""));
-    check(top >= tenth && top > 5, screen.tag, "continued · a collection",
-      `the bench opens on $${top} then $${tenth} — it is not showing the valuable spares first`);
+    /* Sorted by what a spare card is WORTH -- its price times how many of it there are --
+       not by its initial: the first fifty of two thousand is only a useful answer if the
+       fifty were chosen. The column says so in its header, and the header is the control. */
+    const worth = await page.$$eval(".ct-row .ct-cell:last-of-type",
+      (ns) => ns.slice(0, 10).map((n) => Number(n.textContent.replace(/[^0-9.]/g, "")) || 0));
+    check(worth[0] >= worth[9] && worth[0] > 5, screen.tag, "continued · a collection",
+      `the bench opens on $${worth[0]} then $${worth[9]} — it is not showing the valuable spares first`);
+    const sorted = await page.locator(".ct-sort.is-on").first().textContent();
+    check(/Worth/.test(sorted), screen.tag, "continued · a collection",
+      `the lit column header says "${clean(sorted)}", so the reader cannot tell what the order is`);
     console.log(`  continued · a collection ${decks} decks · bench ${rows} rows, ${Math.round(benchScreens)} screens · "${capped}"`);
 
     // Everything is still reachable, and reaching it does not move the reader.
     await page.evaluate(() => {
-      const b = document.querySelector(".show-rest");
+      const b = document.querySelector(".ct-more");
       window.scrollTo(0, window.scrollY + b.getBoundingClientRect().top - 400);
     });
     await page.waitForTimeout(150);
     const anchored = await page.evaluate(() => {
-      const rowsAbove = [...document.querySelector(".show-rest").previousElementSibling
-        .querySelectorAll(".pick-row")];
-      const last = rowsAbove[rowsAbove.length - 1];
+      const all = [...document.querySelectorAll(".ct-row")];
+      const last = all[all.length - 1];
       return {name: last.querySelector("b").textContent, top: Math.round(last.getBoundingClientRect().top)};
     });
     // .click() would scroll the button into view first and measure its own move.
-    await page.evaluate(() => document.querySelector(".show-rest").click());
-    await page.waitForTimeout(500);
+    await page.evaluate(() => document.querySelector(".ct-more").click());
+    await page.waitForTimeout(600);
     const after = await page.evaluate((name) => {
-      // The ROW, not the <b> inside it. Measuring the row before and the label
-      // after reported a 9px shift on desktop and 11px on a phone that was
-      // nothing but the label's own offset inside its row -- a harness bug that
-      // looked exactly like a layout bug, on a check written to catch one.
-      const b = [...document.querySelectorAll(".pick-row b")].find((x) => x.textContent === name);
-      return {rows: document.querySelectorAll(".pick-row").length,
-        top: b ? Math.round(b.closest(".pick-row").getBoundingClientRect().top) : null};
+      // The ROW, not the <b> inside it: measuring the row before and the label after
+      // reported a shift that was nothing but the label's offset inside its row.
+      const b = [...document.querySelectorAll(".ct-row b")].find((x) => x.textContent === name);
+      return {rows: document.querySelectorAll(".ct-row").length,
+        top: b ? Math.round(b.closest(".ct-row").getBoundingClientRect().top) : null};
     }, anchored.name);
     check(after.rows > 1500, screen.tag, "continued · a collection",
       `showing the rest gave ${after.rows} rows — the whole bench must still be reachable`);
-    // Two pixels, not twelve: measured, the row does not move at all, so the
-    // margin here is for sub-pixel rounding and nothing else. A loose threshold
-    // on a check like this passes the bug it was written to catch.
     check(after.top !== null && Math.abs(after.top - anchored.top) <= 2, screen.tag,
       "continued · a collection",
       `"${anchored.name}" moved ${after.top - anchored.top}px when the rest was shown`);
@@ -891,51 +972,151 @@ for (const screen of SCREENS) {
     await shot(page, `${screen.tag}-continued-collection`);
     await healthy(page, screen.tag, "continued · a collection");
 
-    /* The buy list is deliberately NOT capped. It is worked through in a shop
-       rather than browsed, and a shopping list that hides its last forty cards
-       behind a tap is a shopping list you get home without. */
-    await page.locator(".tab").filter({hasText: /^\s*To Buy/}).first().click();
-    await page.waitForTimeout(600);
-    await page.locator(".filter button").filter({hasText: /^All$/}).first().click();
-    await page.waitForTimeout(400);
-    const buyRest = await page.locator(".show-rest").count();
-    const buyRows = await page.locator(".pick-row").count();
-    check(buyRest === 0 && buyRows > 100, screen.tag, "continued · a collection",
-      `the buy list showed ${buyRows} rows behind ${buyRest} "show the rest" buttons`);
-    console.log(`     buy list ${buyRows} rows, uncapped`);
-    await healthy(page, screen.tag, "continued · a collection");
+    /* THE FILTERS, AND THE PROMISE THEIR COUNTS MAKE.
+     *
+     * Nine dimensions as chip rows would be nine rows of chrome above the list that is
+     * the actual page, so each is one button that opens its options. The number on an
+     * option is computed against every OTHER filter, which is the only thing it can
+     * honestly mean: click this, and you get that many. A count that does not match what
+     * the click produces is worse than no count. */
+    await page.goto(`${BASE}/index.html#/bench`, {waitUntil: "domcontentloaded"});
+    await page.waitForSelector(".ct-row", {timeout: 20000});
+    const bar = await page.$$eval(".ct-facet-btn", (ns) => ns.map((n) => n.textContent.trim()));
+    check(bar.length >= 5, screen.tag, "continued · filters",
+      `${bar.length} filterable dimensions on the bench: ${JSON.stringify(bar)}`);
+    const barRows = await page.evaluate(() => {
+      const r = document.querySelector(".ct-bar").getBoundingClientRect();
+      return {height: Math.round(r.height), top: Math.round(r.top)};
+    });
+    check(barRows.height <= 110, screen.tag, "continued · filters",
+      `the filter row is ${barRows.height}px tall before anything is opened — that is chrome, not page`);
 
-    /* How the lists are arranged is a preference, and this persona's whole
-       complaint is work that is not where they left it. */
-    await page.locator(".tab").filter({hasText: /^\s*Bench/}).first().click();
-    await page.waitForTimeout(400);
-    await page.locator(".filter button").filter({hasText: "A to Z"}).first().click();
+    await page.locator(".ct-facet-btn", {hasText: "Rarity"}).first().click();
     await page.waitForTimeout(300);
+    const option = await page.evaluate(() => {
+      const b = document.querySelector(".ct-menu .ct-opt");
+      return b ? {label: b.textContent.replace(/\s+/g, " ").trim(),
+                  value: b.getAttribute("data-ct-value"),
+                  promised: Number(b.querySelector(".ct-n").textContent)} : null;
+    });
+    if (check(option !== null, screen.tag, "continued · filters", "the Rarity menu opened empty")) {
+      await page.locator(`.ct-opt[data-ct-value="${option.value}"]`).first().click();
+      await page.waitForTimeout(400);
+      const got = await page.evaluate(() => {
+        // Expand every capped band first, or the cap is counted as the filter's answer.
+        document.querySelectorAll(".ct-more").forEach((b) => b.click());
+        return document.querySelectorAll(".ct-row").length;
+      });
+      check(got === option.promised, screen.tag, "continued · filters",
+        `"${option.label}" promised ${option.promised} rows and gave ${got}`);
+      console.log(`     ${bar.length} filters, ${barRows.height}px of chrome · "${option.label}" → ${got} rows`);
+    }
+    await healthy(page, screen.tag, "continued · filters");
+
+    /* How a list is arranged is a preference, and this persona's whole complaint is
+       work that is not where they left it. The filter and the sort both have to survive
+       a reload; the search box and the expanded bands deliberately do not. */
+    /* Sorting, by whichever control this width offers. The header row IS the sort control
+       on a desktop; below 760px the columns fold into the rows and take the header with
+       them, so the same choice is a select in the filter bar. A phone that can filter and
+       not sort is half a table, and that is what it was. */
+    const headerSort = await page.locator(".ct-head").isVisible();
+    if (headerSort) {
+      await page.locator(".ct-sort", {hasText: "Card"}).first().click();
+    } else {
+      check(await page.locator("[data-ct-sortby]").isVisible(), screen.tag, "continued · a collection",
+        "no way to sort at this width: the header is folded and nothing replaced it");
+      await page.selectOption("[data-ct-sortby]", "name");
+    }
+    await page.waitForTimeout(400);
     await page.goto("about:blank");
     await page.goto(`${BASE}/index.html#/bench`, {waitUntil: "domcontentloaded"});
-    await page.waitForSelector(".pick-row", {timeout: 20000});
+    await page.waitForSelector(".ct-row", {timeout: 20000});
     await page.waitForTimeout(400);
-    const kept = await page.locator('.filter button[aria-pressed="true"]').allTextContents();
-    check(kept.includes("A to Z"), screen.tag, "continued · a collection",
-      `the sort was set to A to Z and came back as ${JSON.stringify(kept)}`);
-    const reopened = await page.locator(".pick-row").count();
-    check(reopened < 120, screen.tag, "continued · a collection",
-      `${reopened} rows on a fresh visit — "show the rest" must not be what comes back`);
-    console.log(`     after a reload: ${JSON.stringify(kept)} · ${reopened} rows`);
+    const kept = await page.evaluate(() => ({
+      sort: (document.querySelector(".ct-sort.is-on") || {}).textContent
+        || (document.querySelector("[data-ct-sortby] option:checked") || {}).textContent || "",
+      chosen: [...document.querySelectorAll(".ct-facet.is-on .ct-facet-btn")].map((b) => b.textContent.trim()),
+      rows: document.querySelectorAll(".ct-row").length,
+      query: (document.querySelector("[data-ct-query]") || {}).value
+    }));
+    check(/Card/.test(kept.sort), screen.tag, "continued · a collection",
+      `the sort was set to Card and came back as "${clean(kept.sort)}"`);
+    check(kept.chosen.length === 1, screen.tag, "continued · a collection",
+      `the filter came back as ${JSON.stringify(kept.chosen)}`);
+    check(kept.rows <= GROUP_CAP, screen.tag, "continued · a collection",
+      `${kept.rows} rows on a fresh visit — "show the rest" must not be what comes back`);
+    console.log(`     after a reload: sorted on ${JSON.stringify(clean(kept.sort))}, ` +
+      `filtered by ${JSON.stringify(kept.chosen)} · ${kept.rows} rows`);
     await healthy(page, screen.tag, "continued · a collection");
 
-    /* Load Active is on the Matrix header and gets pressed out of habit. It
+    /* UPGRADES: the card going in, the card coming out, and why -- side by side.
+       It had no home at all before; the information existed as a paragraph inside each
+       deck page, where nobody could sort it by price or filter it to one deck. */
+    await page.locator(".tab").filter({hasText: /^\s*Upgrades/}).first().click();
+    await page.waitForTimeout(700);
+    const swaps = await page.evaluate(() => {
+      const row = document.querySelector(".ct-row");
+      if (!row) return null;
+      return {
+        rows: document.querySelectorAll(".ct-row").length,
+        inCard: (row.querySelector(".ct-in b") || {}).textContent || "",
+        outCard: (row.querySelector(".ct-out b") || {}).textContent || "",
+        why: (row.querySelector(".ct-why") || {}).textContent || "",
+        facets: [...document.querySelectorAll(".ct-facet-btn")].map((b) => b.textContent.trim())
+      };
+    });
+    if (check(swaps !== null, screen.tag, "continued · upgrades", "the Upgrades tab is empty")) {
+      check(swaps.inCard.length > 2 && swaps.outCard.length > 2, screen.tag, "continued · upgrades",
+        `a swap must name both ends: in "${swaps.inCard}", out "${swaps.outCard}"`);
+      check(swaps.why.length > 15, screen.tag, "continued · upgrades",
+        `"${swaps.inCard}" is recommended with no reason given`);
+      check(swaps.facets.length >= 5, screen.tag, "continued · upgrades",
+        `${swaps.facets.length} ways to narrow the upgrades: ${JSON.stringify(swaps.facets)}`);
+      console.log(`     upgrades ${swaps.rows} swaps · "${swaps.inCard}" → "${swaps.outCard}" · ` +
+        `${swaps.facets.length} filters`);
+    }
+    await shot(page, `${screen.tag}-continued-upgrades`);
+    await healthy(page, screen.tag, "continued · upgrades");
+
+    /* THE BUY LIST IS ON THE MATRIX NOW, and the ribbon is how you get there. There were
+       two buy lists that disagreed -- this page's, derived from the master plus the
+       ledger, and the Shop's, which also knows the written pull list, what has been paid
+       and where each card is being bought. One of them had to go, and the ribbon figure
+       that summarizes it has to lead to the one that stayed. */
+    await page.goto(`${BASE}/index.html`, {waitUntil: "domcontentloaded"});
+    await page.waitForSelector(".ribbon-stat", {timeout: 20000});
+    const ribbon = await page.$$eval(".ribbon-stat", (ns) => ns.map((n) => ({
+      text: n.textContent.replace(/\s+/g, " ").trim(), href: n.getAttribute("href")
+    })));
+    const owed = ribbon.find((r) => /still to buy/.test(r.text));
+    const boxed = ribbon.find((r) => /cards boxed/.test(r.text));
+    check(ribbon.length === 7, screen.tag, "continued · the ribbon",
+      `${ribbon.length} of the ribbon's figures lead anywhere, expected all 7`);
+    check(owed && owed.href === "matrix.html#shop", screen.tag, "continued · the ribbon",
+      `"still to buy" goes to ${owed ? owed.href : "nowhere"}`);
+    check(boxed && boxed.href === "matrix.html#deck", screen.tag, "continued · the ribbon",
+      `"cards boxed" goes to ${boxed ? boxed.href : "nowhere"}`);
+    check((await page.locator("#tab-buy").count()) === 0, screen.tag, "continued · the ribbon",
+      "there are two buy lists again");
+    console.log(`     ribbon: ${ribbon.length} figures link out · "${owed ? owed.text : "?"}" → ${owed ? owed.href : "?"}`);
+    await healthy(page, screen.tag, "continued · the ribbon");
+
+    /* Load default is in the Matrix's Admin menu and gets pressed out of habit. It
        ships data/active-state.json, which is the workbook's Matrix state and
        says nothing at all about anybody's own decks -- so it must leave them
        alone. A payload with no My Decks block means "this file has no opinion",
        never "delete them", and ten decks is what that distinction is worth. */
     await page.goto(`${BASE}/matrix.html`, {waitUntil: "domcontentloaded"});
     await page.waitForTimeout(4500);
-    if (!(await page.locator("#load-active-button").isVisible().catch(() => false))) {
+    // Load default is a row in the Admin menu now, not a button in the banner.
+    if (!(await page.locator("#admin-button").isVisible().catch(() => false))) {
       await page.click("#header-toggle").catch(() => {});
       await page.waitForTimeout(600);
     }
-    await page.click("#load-active-button");
+    await page.click("#admin-button");
+    await page.waitForTimeout(400);
+    await page.locator(".admin-item", {hasText: "Load default"}).first().click();
     await page.waitForTimeout(4000);
     const survived = await page.evaluate(() => {
       const read = (k) => { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch { return null; } };
@@ -943,8 +1124,8 @@ for (const screen of SCREENS) {
         cards: ((read("mtg-viewer-inventory.v1") || {}).cards || []).length};
     });
     check(survived.decks === 10 && survived.cards > 3000, screen.tag, "continued · a collection",
-      `Load Active left ${survived.decks} added decks and ${survived.cards} collection cards`);
-    console.log(`     Load Active kept ${survived.decks} added decks, ${survived.cards.toLocaleString()} cards`);
+      `Load default left ${survived.decks} added decks and ${survived.cards} collection cards`);
+    console.log(`     Load default kept ${survived.decks} added decks, ${survived.cards.toLocaleString()} cards`);
     await ctx.close();
   }
 
@@ -966,15 +1147,22 @@ for (const screen of SCREENS) {
     await page.reload({waitUntil: "domcontentloaded"});
     await page.waitForTimeout(4500);
 
-    // On a phone the header is folded, so these controls need it opened first --
-    // which is what a person does too.
-    if (!(await page.locator("#export-state-button").isVisible().catch(() => false))) {
-      await page.click("#header-toggle").catch(() => {});
-      await page.waitForTimeout(600);
-    }
+    /* On a phone the header is folded, so the Admin button needs it opened first --
+       which is what a person does too. Export, Import, Load default, Reset and Clear are
+       all rows in that menu now; they were five buttons in the banner, which is five
+       things nobody presses in a normal session taking the space of the two they do. */
+    const openAdmin = async () => {
+      if (!(await page.locator("#admin-button").isVisible().catch(() => false))) {
+        await page.click("#header-toggle").catch(() => {});
+        await page.waitForTimeout(600);
+      }
+      await page.click("#admin-button");
+      await page.waitForTimeout(400);
+    };
+    await openAdmin();
 
     const wait = page.waitForEvent("download", {timeout: 25000});
-    await page.click("#export-state-button");
+    await page.locator(".admin-item", {hasText: "Export a backup"}).first().click();
     const file = await wait.catch(() => null);
     let saved = null;
     if (check(Boolean(file), screen.tag, "exit · export", "Export produced no file")) {
@@ -996,14 +1184,16 @@ for (const screen of SCREENS) {
         `${carried} added decks, ${held.toLocaleString()} collection cards`);
     }
 
-    await page.click("#reset-button");
+    await openAdmin();
+    await page.locator(".admin-item", {hasText: "Reset picks"}).first().click();
     await page.waitForTimeout(2500);
     const wiped = await picksIn(page);
     check(wiped === 0, screen.tag, "exit · reset", `Reset All left ${wiped} picks behind`);
     console.log(`  exit · reset             ${wiped} picks`);
 
     if (saved) {
-      await page.setInputFiles("#import-state-input", saved);
+      await openAdmin();
+      await page.setInputFiles(".admin-item.is-file input[type=file]", saved);
       await page.waitForTimeout(4000);
       const restored = await picksIn(page);
       check(restored === 6, screen.tag, "exit · import",
@@ -1037,8 +1227,12 @@ for (const screen of SCREENS) {
          only half work -- a deck's upgrade rows left with it and its shortfall rows
          stayed, because the shortfall is a column in the workbook rather than something
          derived from the decks. */
+      /* The buy list moved to the Matrix's Shop, so the figure that has to fall when a
+         deck is archived is the ribbon's, which is the same number in the place a reader
+         now reads it. */
       const buyCount = async () =>
-        Number(clean(await page.locator("#tab-buy .count").textContent()).replace(/\D/g, "")) || 0;
+        Number(clean(await page.locator(".ribbon-stat", {hasText: "still to buy"}).first().textContent())
+          .replace(/\D/g, "")) || 0;
       const wasDecks = cards, wasBuy = await buyCount();
       const archivedName = clean(await page.locator(".deck-card h3").first().textContent());
       await page.locator(".deck-menu-b").first().click();

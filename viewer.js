@@ -33,18 +33,21 @@
     picks: new Map(),     // "<source>|<name>" -> {name, price, source, where}
     shareTo: "",
     query: "",
-    benchFilter: "all",
-    /* Most valuable first, not A-Z. The bench is spare copies, and the question
-       asked of it -- at ten cards or at two thousand -- is "is there anything in
-       here worth doing something about", which alphabetical order answers last.
-       It matters more the bigger the bench gets: past the cap below only the
-       first page is on screen, and the first fifty cards beginning with A is an
-       arbitrary answer where the fifty most valuable is a real one. A-Z is one
-       click away, and a card you can name is what the search box is for. */
-    benchSort: "price",   // price | name
-    buyFilter: "need",    // the store list opens on what the decks are short of
-    buyGroup: "price",    // price | color | kind -- how the buy list is grouped
-    expanded: {}          // group name -> true; deliberately not saved, see below
+    /* One table, two lists, one shape of state each.
+       `f` is the filter -- chosen values per facet, plus `query` and `open` (which
+       facet menu is showing). `sort` is the column and direction.
+
+       The bench opens on VALUE descending, not A-Z. The question asked of it, at ten
+       cards or at two thousand, is "is there anything in here worth doing something
+       about", which alphabetical order answers last -- and past the page cap only the
+       first page is on screen, so the first fifty cards beginning with A is an
+       arbitrary answer where the fifty most valuable is a real one.
+
+       Upgrades opens on deck, because the question there is "what would I change about
+       THIS deck", and a list mixing six decks by price answers a question nobody asked. */
+    bench: {f: {}, sort: {key: "value", dir: "desc"}},
+    upgrades: {f: {}, sort: {key: "deck", dir: "asc"}},
+    archivedId: null
   };
 
   /* ------------------------------------------------------------- plumbing */
@@ -83,13 +86,10 @@
            does not survive a reload is a preference the app forgot. These were
            being changed, save() was being called, and none of them was in the
            object -- so picking "By color" lasted exactly until the next visit.
-           `query` and `expanded` stay out on purpose: a search box that comes
-           back pre-filled, or two thousand rows that come back expanded, is the
-           app deciding something the reader did not ask for twice. */
-        benchFilter: state.benchFilter,
-        benchSort: state.benchSort,
-        buyFilter: state.buyFilter,
-        buyGroup: state.buyGroup
+           `query` stays out on purpose: a search box that comes back pre-filled is
+           the app deciding something the reader did not ask for twice. */
+        bench: {f: withoutOpen(state.bench.f), sort: state.bench.sort},
+        upgrades: {f: withoutOpen(state.upgrades.f), sort: state.upgrades.sort}
       }));
     } catch (err) { /* private mode, or storage off; the page still works */ }
   }
@@ -98,12 +98,11 @@
     try {
       var raw = JSON.parse(localStorage.getItem(STORE) || "{}");
       state.shareTo = raw.shareTo || "";
-      // Each read back only if it is still a value this build offers, so a
-      // renamed mode in a saved file cannot leave a tab filtered by nothing.
-      if (["all", "spare", "dupe"].indexOf(raw.benchFilter) >= 0) state.benchFilter = raw.benchFilter;
-      if (["price", "name"].indexOf(raw.benchSort) >= 0) state.benchSort = raw.benchSort;
-      if (["all", "need", "tuned", "b3"].indexOf(raw.buyFilter) >= 0) state.buyFilter = raw.buyFilter;
-      if (["price", "color", "kind"].indexOf(raw.buyGroup) >= 0) state.buyGroup = raw.buyGroup;
+      // Read back only against the facets and columns this build offers, so a saved
+      // file from an older one cannot leave a tab filtered by a dimension that is gone
+      // -- which looks exactly like a list that lost half its rows for no reason.
+      readTable(state.bench, raw.bench, benchFacets(), BENCH_COLUMNS);
+      readTable(state.upgrades, raw.upgrades, upgradeFacets(), UPGRADE_COLUMNS);
       (raw.picks || []).forEach(function (p) { state.picks.set(p.source + "|" + p.name, p); });
     } catch (err) { /* ignore anything unparseable */ }
   }
@@ -116,8 +115,44 @@
      the old one. byName caches a name index and orderedDecks stamps _rank onto
      the deck objects; both describe the catalog that was, and a stale index is
      how an added card would come back "not found" from the row that holds it. */
+  /* A BROWSER THAT HAS NEVER OPENED THIS APP HAS NO DECKS.
+   *
+   * data/master-v2.json carries two things at once: the card catalog, which belongs to
+   * the repository, and one person's build of six decks -- what is boxed, what is owed,
+   * what is on the bench -- which does not. Loading both meant a stranger, and anybody
+   * who had just pressed Clear session, opened the page to somebody else's six decks and
+   * a 176-card bench presented as their own, with no way to tell the difference.
+   *
+   * So the build half is gated. A fresh browser gets the catalog with every deck and
+   * every ownership figure zeroed: the card list still works, search still works, the
+   * graph is untouched, and My Decks is empty with a note saying how it fills. Add a
+   * deck, build one, or press Load default, and the six come back.
+   *
+   * `fresh` is the whole browser, not this page: somebody who has only ever used the
+   * Deck Matrix has a session, and taking their decks away here because they have not
+   * ticked anything on this page would be the same bug in the other direction.
+   */
+  function freshBrowser() {
+    var User = window.MtgUserState;
+    if (!User) return false;                       // cannot tell, so change nothing
+    return User.isFresh(window.localStorage) && !(IMPORTS && IMPORTS.length);
+  }
+
+  function blankMaster(master) {
+    return Object.assign({}, master, {
+      decks: [],
+      cards: master.cards.map(function (c) {
+        return Object.assign({}, c, {
+          target: {}, actual: {}, own: 0, ordered: 0, qty: 0,
+          bench: 0, benchTarget: 0, benchActual: 0, buyCount: 0, toBuyCost: 0, status: ""
+        });
+      })
+    });
+  }
+
   function rebuild() {
-    DATA = dropArchived(Store ? Store.merge(MASTER, IMPORTS) : MASTER);
+    var base = freshBrowser() ? blankMaster(MASTER) : MASTER;
+    DATA = dropArchived(Store ? Store.merge(base, IMPORTS) : base);
     applyInventory();
     byName.index = null;
     // merge builds new deck objects, so a deck page already open is holding the
@@ -977,7 +1012,7 @@
       el("span", { class: "plus", "aria-hidden": "true", text: "+" }),
       el("b", { text: "Add a deck" }),
       el("span", { text: "Paste a list from Moxfield or anywhere else, or give an "
-        + "Archidekt link. It is scored on the same simulation as these." })
+        + "Archidekt link. It is scored on the same simulation as the rest." })
     ]));
     start.appendChild(el("button", { class: "start-tile deck-add is-build", type: "button",
       onclick: openBuild }, [
@@ -991,7 +1026,7 @@
     start.appendChild(el("a", { class: "start-tile is-explore", href: "graph.html" }, [
       el("span", { class: "plus", "aria-hidden": "true", text: "\u25c9" }),
       el("b", { text: "Explore cards" }),
-      el("span", { text: "7,710 Commander-legal cards, what connects them, and a Copilot "
+      el("span", { text: "Every Commander-legal card, what connects them, and a Copilot "
         + "that says which are worth a look." })
     ]));
     root.appendChild(start);
@@ -999,20 +1034,40 @@
     var added = decks.filter(function (d) { return d.imported; }).length;
     root.appendChild(el("div", { class: "section-head" }, [
       el("h2", { text: "My Decks" }),
-      el("p", { text: (added ? decks.length + " decks. " : "")
-        + (RATINGS
-          ? "Ranked by simulated score. Tap a deck for how to play it and what is still missing."
-          : "Tap a deck for how to play it, the full hundred, and what is still missing.") })
+      el("p", { text: !decks.length
+        ? "Nothing here yet. The three doors above are how it fills."
+        : (added ? decks.length + " decks. " : "")
+          + (RATINGS
+            ? "Ranked by simulated score. Tap a deck for how to play it and what is still missing."
+            : "Tap a deck for how to play it, the full hundred, and what is still missing.") })
     ]));
+
+    /* Directly under the heading and above the decks: "why should I believe this number"
+       is asked the moment the first score is seen, not at the foot of the page. */
+    var method = scorePanel();
+    if (method) root.appendChild(method);
 
     var grid = el("div", { class: "deck-grid" });
     /* Every deck archived is a reachable state, and an empty grid with a drawer under it
        reads as the app having lost them. The drawer below says how many and offers them
        back; this says the list is empty on purpose. */
     if (!decks.length) {
-      grid.appendChild(el("p", { class: "empty-note", text: archivedDecks().length
-        ? "Every deck is archived. They are in the drawer below, one click from coming back."
-        : "No decks yet. Add one or build one above." }));
+      if (archivedDecks().length) {
+        grid.appendChild(el("p", { class: "empty-note",
+          text: "Every deck is archived. They are in the drawer below, one click from coming back." }));
+      } else {
+        /* The state a cleared session lands in. Three doors are already above this, so
+           this is the fourth -- the one that fills the page with the decks kept in the
+           repository -- plus a sentence saying that is what the other three are for. */
+        grid.appendChild(el("div", { class: "panel empty-note" }, [
+          el("h3", { text: "No decks yet" }),
+          el("p", { class: "play-line", text: "Nothing is saved in this browser. Add a deck from a "
+            + "list you already have, build one from a commander and a theme, or load the six "
+            + "decks kept in this repository and start from those." }),
+          el("button", { class: "btn primary", type: "button", text: "Load default",
+            onclick: loadDefault })
+        ]));
+      }
     }
     decks.forEach(function (deck) {
       var stats = deckStats(deck), guide = guideFor(deck.id), rating = ratingFor(deck.id);
@@ -1099,21 +1154,74 @@
       drawer.appendChild(rows);
       root.appendChild(drawer);
     }
+  }
 
-    /* Only how the score is made. The import still records where the workbook
-       contradicts itself -- in data/master-v2.json under dataNotes, and on
-       stdout when tools/import_master_v2.py runs -- but that is bookkeeping for
-       whoever is fixing the sheet, not something to put in front of a reader. */
-    if (RATINGS && RATINGS.method) {
-      root.appendChild(el("details", { class: "panel", style: "margin-top:20px" }, [
-        el("summary", { style: "cursor:pointer;color:var(--text-dim);font-size:13px",
-          text: "How the score is measured" }),
-        el("ul", { class: "note-list", style: "margin-top:10px" },
-          [RATINGS.method].concat(RATINGS.notes || []).slice(0, 4).map(function (n) {
-            return el("li", { text: n });
-          }))
-      ]));
-    }
+  /* ------------------------------------------------- how the score is made ----
+   *
+   * WHO THIS IS FOR. Somebody who has played Commander for years and has been handed a
+   * number by a piece of software before. They do not want reassurance, they want the
+   * method -- how many games, against what, weighted how, and what counts as a real
+   * difference -- and they want to know what it does NOT model, because a tool that
+   * claims to model everything is a tool that has not been checked.
+   *
+   * So the panel says the sample size first, the opponents second, the weights third,
+   * the significance rule fourth, and the limits last, in that order and in one screen.
+   * Every figure is read out of data/deck-ratings.json and sim/opponents.json rather
+   * than typed here: a re-run that changes the sample changes this paragraph.
+   *
+   * It sits under the heading rather than at the foot of the page, because the question
+   * "why should I believe this number" is asked when the number is first seen.
+   */
+  var SCORE_WEIGHTS = [
+    ["35%", "win rate"], ["15%", "mana screw"], ["10%", "flood"],
+    ["10%", "commander reliability"], ["10%", "interaction in hand"],
+    ["10%", "clock"], ["5%", "dead cards"], ["5%", "own fun"]
+  ];
+  function scorePanel() {
+    if (!RATINGS || !RATINGS.method) return null;
+    // Nothing has been scored yet, so there is no number to explain.
+    if (!DATA.decks.length) return null;
+    var seeds = (RATINGS.seeds || []).length;
+    var per = Number(RATINGS.gamesPerSeed) || 0;
+    var total = seeds * per;
+    var games = total ? total.toLocaleString() : null;
+
+    var open = el("details", { class: "panel score-method" }, [
+      el("summary", {}, [
+        el("b", { text: "How the score is measured" }),
+        el("span", { text: games
+          ? games + " simulated games per list · " + seeds + " independent seeds · a nine-archetype pod"
+          : "the method, the sample and the limits" })
+      ]),
+      el("div", { class: "score-method-body" }, [
+        el("p", { class: "play-line", text:
+          "Every hundred is played out"
+          + (games ? " " + games + " times — " + per.toLocaleString() + " games on each of "
+              + seeds + " independent seeds" : "")
+          + ", one deck at a time in a four-player pod. The other three seats are drawn from "
+          + "nine written opponent profiles — starter precon, upgraded casual, tuned Bracket 3, "
+          + "combo, stax, aristocrats, voltron, tokens and group hug — so a deck is measured "
+          + "against a spread of what it will actually sit down against rather than one "
+          + "gauntlet it can be tuned to beat. The six decks never play each other." }),
+        el("p", { class: "play-line", text:
+          "Score is a 0–100 composite of how the games went, not a win percentage:" }),
+        el("ul", { class: "score-weights" }, SCORE_WEIGHTS.map(function (w) {
+          return el("li", {}, [el("b", { text: w[0] }), " " + w[1]]);
+        })),
+        el("p", { class: "play-line", text:
+          "Two builds count as different only when the gap between them is larger than twice "
+          + "their combined seed-to-seed standard error. Anything smaller is printed as it fell "
+          + "and should be read as a tie — which is why a more expensive build sometimes scores "
+          + "no better here, and why this says so instead of rounding it away." }),
+        el("p", { class: "play-line score-limits", text:
+          "What it does not model: politics, threat assessment, and the table talking you out "
+          + "of an attack. Opponents play their archetype, not the room. Treat the score as a "
+          + "measure of how the deck functions — mana, curve, commander, interaction, clock — "
+          + "and not as a prediction of any particular game night." }),
+        el("p", { class: "play-line score-src", text: RATINGS.method })
+      ])
+    ]);
+    return open;
   }
 
   /* -------------------------------------------------------- deck detail  */
@@ -1265,7 +1373,7 @@
     var guide = guideFor(deck.id), rating = ratingFor(deck.id);
     var extra = placeholders(deck);
 
-    root.appendChild(el("button", { class: "back-link", type: "button",
+    root.appendChild(el("button", { class: "deck-back", type: "button",
       onclick: function () { go("#/decks"); } }, "← All decks"));
 
     /* An added deck says where it came from and offers both ways out. The six say where
@@ -1527,222 +1635,10 @@
 
   function cssEscape(s) { return s.replace(/["\\]/g, "\\$&"); }
 
-  function pickTable(rows, cols) {
-    if (!rows.length) {
-      return el("div", { class: "pick-table" }, el("div", { class: "empty",
-        text: "Nothing here right now." }));
-    }
-    var table = el("div", { class: "pick-table" }, [
-      el("div", { class: "pick-head" }, [
-        el("span", {}), el("span", { text: "Card" }), el("span", { class: "where", text: cols.where }),
-        el("span", { class: "st", text: cols.status }), el("span", { class: "money", text: "Price" })
-      ])
-    ]);
-    rows.forEach(function (row) {
-      var key = pickKey(row), on = state.picks.has(key);
-      var node = el("label", {
-        class: "pick-row" + (on ? " is-picked" : ""),
-        "data-pick": key
-      }, [
-        el("input", { type: "checkbox", checked: on, onchange: function (e) {
-          togglePick(row, e.target.checked);
-        } }),
-        el("span", { class: "n" }, [
-          el("b", { text: row.name + (row.copies > 1 ? "  x" + row.copies : "") }),
-          el("span", { text: row.sub || "" })
-        ]),
-        el("span", { class: "where", text: row.where || "" }),
-        el("span", { class: "st" }, row.status
-          ? el("span", { class: "chip " + (row.chip || ""), text: row.status }) : null),
-        el("span", { class: "money num", text: row.price ? money(row.price) : "—" }),
-        el("button", {
-          class: "info", type: "button", title: "Show " + row.name,
-          "aria-label": "Show " + row.name,
-          onclick: function (e) { e.preventDefault(); e.stopPropagation(); openCard(row.name); }
-        }, "i")
-      ]);
-      table.appendChild(node);
-    });
-    return table;
-  }
-
-  function matchesQuery(row) {
-    if (!state.query) return true;
-    var q = state.query.toLowerCase();
-    return (row.name + " " + (row.sub || "") + " " + (row.where || "")).toLowerCase().indexOf(q) >= 0;
-  }
-
-  function benchRows() {
-    return DATA.cards.filter(function (c) { return c.bench > 0; }).map(function (c) {
-      var uses = DATA.decks.filter(function (d) { return (c.target[d.id] || 0) > 0; })
-        .map(function (d) { return d.label; });
-      return {
-        source: "Bench", name: c.name, price: c.price, copies: c.bench,
-        sub: [c.type, c.purpose].filter(Boolean).join(" · "),
-        where: uses.length ? "also in " + uses.join(", ") : "spare",
-        status: c.status, chip: c.status === "Bench-Sub" || c.status === "Extra-Sub" ? "patina" : "",
-        group: uses.length ? "Spare copies of cards a deck uses" : "Not in any deck"
-      };
-    }).sort(benchOrder());
-  }
-
-  /* Price descending, with unpriced cards last rather than first: a card nobody
-     has a price for is unknown, not free, and a list that opens on two hundred
-     dashes has buried the answer. Ties break on name so the order is stable
-     between renders -- an unstable sort makes a row move under a finger that
-     was reaching for it. */
-  function benchOrder() {
-    if (state.benchSort === "name") {
-      return function (a, b) { return a.name.localeCompare(b.name); };
-    }
-    return function (a, b) {
-      var ap = a.price || 0, bp = b.price || 0;
-      return (bp * (b.copies || 1)) - (ap * (a.copies || 1)) || a.name.localeCompare(b.name);
-    };
-  }
-
-  var BUY_KIND = {
-    need:  { status: "Needed now", chip: "rose",   group: "Needed to finish a deck" },
-    tuned: { status: "Tuned",      chip: "patina", group: "Tuned upgrades" },
-    b3:    { status: "Bracket 3",  chip: "amber",  group: "Bracket 3 upgrades" }
-  };
-
-  /* What a card is doing on the buy list is a property of the card, not of which
-     loop happened to reach it first. A Tuned add that a deck already targets
-     shows up both as a plan hole and as an upgrade; it belongs under Tuned, or
-     the Tuned filter comes back empty. So the plan is read first and the holes
-     are classified against it. */
-  function buyPlan() {
-    var plan = {};
-    DATA.decks.forEach(function (deck) {
-      deck.upgrades.filter(function (u) { return u.action === "ADD"; }).forEach(function (u) {
-        plan[u.card] = plan[u.card] ||
-          { kind: "tuned", deck: deck.label, replaces: u.replaces, price: u.price };
-      });
-      deck.b3.forEach(function (s) {
-        plan[s.add] = plan[s.add] ||
-          { kind: "b3", deck: deck.label, replaces: s.replaces, price: s.price,
-            gameChanger: s.gameChanger, why: s.why };
-      });
-    });
-    return plan;
-  }
-
-  function buyRows() {
-    var plan = buyPlan(), rows = [], seen = {};
-
-    function push(name, price, copies, kind, deckLabel, replaces, gc) {
-      if (seen[name]) return;
-      seen[name] = true;
-      var c = byName(name), meta = BUY_KIND[kind];
-      var sub = c ? [c.type, c.purpose].filter(Boolean).join(" · ") : "";
-      if (replaces) sub += (sub ? " · " : "") + "replaces " + replaces;
-      var inCart = c && c.cartVendor === "WF";
-      rows.push({
-        source: "To Buy", name: name, price: price, copies: copies || 1,
-        sub: sub, where: deckLabel ? "for " + deckLabel : "",
-        status: inCart ? "In WF cart" : (gc ? "Game Changer" : meta.status),
-        chip: inCart ? "patina" : (gc ? "amber" : meta.chip), kind: kind, group: meta.group,
-        color: c ? c.color : "", type: c ? c.type : "", inCart: inCart
-      });
-    }
-
-    // Holes in a deck's current plan.
-    DATA.cards.forEach(function (c) {
-      if (c.buyCount <= 0) return;
-      var p = plan[c.name];
-      var wants = DATA.decks.filter(function (d) { return (c.target[d.id] || 0) > 0; })
-        .map(function (d) { return d.label; });
-      // A targeted card the decks are short of is needed now, whatever plan
-      // it also appears in; the upgrade loops below only add what is not.
-      push(c.name, c.price, c.buyCount, "need",
-        wants.join(", ") || (p && p.deck) || "", p && p.replaces, p && p.gameChanger);
-    });
-
-    // Upgrades not yet owned, in plan order.
-    ["tuned", "b3"].forEach(function (kind) {
-      Object.keys(plan).forEach(function (name) {
-        var p = plan[name];
-        if (p.kind !== kind) return;
-        var c = byName(name);
-        if (c && (c.status === "In Hand" || c.status === "Ordered")) return;
-        push(name, p.price !== null && p.price !== undefined ? p.price : (c && c.price),
-          1, kind, p.deck, p.replaces, p.gameChanger);
-      });
-    });
-    return rows;
-  }
-
-  /* A group longer than this is not read, it is scrolled past.
-   *
-   * The bench after a collection upload is the case that proves it: 1,940 spare
-   * cards rendered as one list is 118,000 pixels -- 126 screens on a desktop and
-   * 156 on a phone. Nothing errored and nothing was slow; it simply was not a
-   * page anybody opens twice.
-   *
-   * So a long group shows its first page and says exactly how many it is holding
-   * back, with one button for the rest. The same bargain the game log makes, for
-   * the same reason. A group shorter than the cap is untouched, so a normal buy
-   * list still arrives whole and the small bench nobody has uploaded to looks
-   * exactly as it did.
-   *
-   * Fifty rather than the log's twenty-five because these rows are half the
-   * height.
-   *
-   * ONLY THE BENCH IS CAPPED, and the buy list deliberately is not. They look
-   * alike and they are not the same kind of list. The bench is browsed -- it is
-   * bounded by the size of somebody's collection, which is thousands, and the
-   * question asked of it is answered by the top of the list or by the search
-   * box. The buy list is worked through, item by item, in a shop: it is bounded
-   * by what the decks actually need, and a shopping list that hides its last
-   * forty cards behind a tap is a shopping list you get home without. */
-  var GROUP_PAGE = 50;
-
-  function groupedTable(root, rows, cols, cap) {
-    var order = [], groups = {};
-    rows.forEach(function (r) {
-      if (!groups[r.group]) { groups[r.group] = []; order.push(r.group); }
-      groups[r.group].push(r);
-    });
-    if (!rows.length) {
-      root.appendChild(el("div", { class: "pick-table" },
-        el("div", { class: "empty", text: "Nothing matches." })));
-      return;
-    }
-    order.forEach(function (name) {
-      var list = groups[name];
-      var sum = list.reduce(function (n, r) { return n + (r.price || 0) * (r.copies || 1); }, 0);
-      var open = !cap || state.expanded[name] || list.length <= cap;
-      var shown = open ? list : list.slice(0, cap);
-      var hidden = list.length - shown.length;
-      root.appendChild(el("div", { class: "section-head group-head", style: "margin:18px 0 8px" }, [
-        el("h2", { style: "font-size:16px", text: name }),
-        el("p", { text: (open ? plural(list.length, "card")
-          : shown.length + " of " + plural(list.length, "card")) + " · " + money(sum) }),
-        // Select all has always meant the whole group, which is right and was
-        // invisible: while a group is capped the button says the number it is
-        // about to tick, so nobody selects two thousand cards expecting fifty.
-        el("button", { class: "pick-all", type: "button", onclick: function () {
-          var allOn = list.every(function (r) { return state.picks.has(pickKey(r)); });
-          list.forEach(function (r) { togglePick(r, !allOn); });
-        }, text: open ? "Select all" : "Select all " + list.length })
-      ]));
-      root.appendChild(pickTable(shown, cols));
-      if (hidden > 0) {
-        root.appendChild(el("button", {
-          class: "show-rest", type: "button",
-          text: "Show the other " + plural(hidden, "card"),
-          onclick: function () { state.expanded[name] = true; renderInPlace(); }
-        }));
-      }
-    });
-  }
-
-  /* The buy list is read in a shop, off a phone. Price bands put the expensive
-     cards first so they get checked against the case before the commons; the
-     color view follows how a singles binder is sorted. Cards already in the
-     Wake Forest cart are bought online and sit in a group of their own at the
-     bottom in every view. */
+  /* Cards are read in a shop, off a phone. Price bands put the expensive ones first
+     so they get checked against the case before the commons; the color buckets follow
+     how a singles binder is sorted. Shared by the bench, the upgrades and every
+     grouping either of them offers. */
   var PRICE_BANDS = [["$6 and up", 6], ["$4 to $6", 4], ["$1 to $4", 1], ["Under $1", 0]];
   var COLOR_NAME = { W: "White", U: "Blue", B: "Black", R: "Red", G: "Green", C: "Colorless", L: "Lands" };
   var COLOR_ORDER = ["White", "Blue", "Black", "Red", "Green", "Multicolor", "Colorless", "Lands"];
@@ -1754,30 +1650,194 @@
     if (row.type && /Land/.test(row.type) && !/Creature/.test(row.type)) return "Lands";
     var c = row.color || "";
     if (COLOR_NAME[c]) return COLOR_NAME[c];
-    return "Multicolor";
+    return c ? "Multicolor" : "Colorless";
   }
-  function regroupBuyRows(rows, mode) {
-    var out = rows.map(function (r) {
-      var g = r.inCart ? "In your Wake Forest cart — buying online, skip at the store"
-        : mode === "price" ? priceBand(r.price)
-        : mode === "color" ? colorGroup(r)
-        : r.group;
-      return Object.assign({}, r, { group: g });
+
+  /* The type somebody would name a card by, out of a type line that can carry four.
+     "Legendary Creature - Human Wizard" is a Creature; a Land Creature is a Land,
+     because that is where it is filed in a binder and how it is shopped for. */
+  var PRIMARY_TYPES = ["Land", "Creature", "Planeswalker", "Battle", "Artifact",
+                       "Enchantment", "Instant", "Sorcery"];
+  function primaryType(line) {
+    for (var i = 0; i < PRIMARY_TYPES.length; i += 1) {
+      if (String(line || "").indexOf(PRIMARY_TYPES[i]) >= 0) return PRIMARY_TYPES[i];
+    }
+    return "Other";
+  }
+  var RARITY_LABEL = {common: "Common", uncommon: "Uncommon", rare: "Rare",
+                      mythic: "Mythic", special: "Special", bonus: "Bonus"};
+  var RARITY_ORDER = ["Mythic", "Rare", "Uncommon", "Common", "Special", "Bonus"];
+  function rarityLabel(r) { return RARITY_LABEL[r] || ""; }
+
+  function benchRows() {
+    return DATA.cards.filter(function (c) { return c.bench > 0; }).map(function (c) {
+      var uses = DATA.decks.filter(function (d) { return (c.target[d.id] || 0) > 0; })
+        .map(function (d) { return d.label; });
+      return {
+        source: "Bench", name: c.name, price: c.price, copies: c.bench,
+        /* What a stack of spare copies is WORTH is the question the bench is read
+           for, and it is the unit price times how many of them there are -- not the
+           unit price, which is what the column used to sort on. */
+        value: (c.price || 0) * (c.bench || 1),
+        sub: [c.type, c.purpose].filter(Boolean).join(" · "),
+        /* The deck names alone. It used to read "also in Chulane, Atraxa", which is a
+           sentence and not a cell: on a phone the column label is printed in front of the
+           value, so it came out "ALSO IN also in Chulane, Atraxa". */
+        where: uses.length ? uses.join(", ") : "spare",
+        decks: uses,
+        type: primaryType(c.type), typeLine: c.type || "",
+        color: colorGroup(c), rarity: rarityLabel(c.rarity),
+        band: priceBand(c.price),
+        status: c.status, chip: c.status === "Bench-Sub" || c.status === "Extra-Sub" ? "patina" : "",
+        shelf: uses.length ? "Spare copy of a card a deck uses" : "Not in any deck"
+      };
     });
-    var rank = function (r) {
-      if (r.inCart) return 99;
-      if (mode === "price") return PRICE_BANDS.map(function (b) { return b[0]; }).indexOf(r.group);
-      if (mode === "color") return COLOR_ORDER.indexOf(r.group);
-      return 0;
-    };
-    out.sort(function (a, b) {
-      var d = rank(a) - rank(b);
-      if (d) return d;
-      if (mode === "color" && !a.inCart) return ((b.price || 0) - (a.price || 0)) || a.name.localeCompare(b.name);
-      return a.name.localeCompare(b.name);
+  }
+
+  /* ------------------------------------------------------- upgrade rows ----
+   * Two written sources, one list. `upgrades` are the Tuned adds the workbook
+   * already folded into the hundred; `b3` are the Bracket 3 swaps it did not.
+   * Both name a card going in and, usually, a card coming out -- which is the pair
+   * this table exists to show side by side, because "buy Underworld Breach" and
+   * "cut Primary Research to do it" are one decision, not two.
+   */
+  function upgradeRows() {
+    var rows = [];
+    DATA.decks.forEach(function (deck) {
+      function push(kind, entry) {
+        var card = byName(entry.add);
+        var owned = card && (card.status === "In Hand" || card.status === "Ordered");
+        rows.push({
+          source: "To Buy", kind: kind, name: entry.add, out: entry.replaces || "",
+          why: entry.why || "", price: entry.price || (card && card.price) || 0,
+          deck: deck.label, deckId: deck.id, gameChanger: Boolean(entry.gameChanger),
+          type: primaryType(entry.type || (card && card.type)),
+          typeLine: entry.type || (card && card.type) || "",
+          color: colorGroup({type: entry.type || (card && card.type),
+                             color: entry.color || (card && card.color)}),
+          rarity: rarityLabel(card && card.rarity),
+          band: priceBand(entry.price || (card && card.price)),
+          /* Owned means the swap costs nothing but the shuffle, which is the first
+             thing to know about it and the reason this is a status and not a price. */
+          status: owned ? (card.status === "Ordered" ? "On order" : "Already owned") : "Still to buy",
+          copies: 1
+        });
+      }
+      (deck.upgrades || []).filter(function (u) { return u.action === "ADD"; })
+        .forEach(function (u) { push("Tuned", {add: u.card, replaces: u.replaces, price: u.price}); });
+      (deck.b3 || []).forEach(function (b) { push("Bracket 3", b); });
     });
+    return rows;
+  }
+
+  /* ------------------------------------------------------- the table ----
+   * Declared, not written twice. What differs between the bench and the upgrades is
+   * which dimensions exist and which columns render; everything about filtering,
+   * counting, sorting and banding is card-table.js, which the Shop uses too.
+   */
+  var BENCH_COLUMNS = [
+    {key: "name", label: "Card"},
+    {key: "where", label: "Also in"},
+    {key: "type", label: "Type"},
+    {key: "color", label: "Color"},
+    {key: "rarity", label: "Rarity", value: function (r) { return RARITY_ORDER.indexOf(r.rarity); }},
+    {key: "copies", label: "Copies", numeric: true},
+    {key: "price", label: "Each", numeric: true, value: function (r) { return r.price == null ? -1 : r.price; }},
+    {key: "value", label: "Worth", numeric: true}
+  ];
+  var UPGRADE_COLUMNS = [
+    {key: "name", label: "In, and out"},
+    {key: "why", label: "Why"},
+    {key: "deck", label: "Deck"},
+    {key: "kind", label: "Rung"},
+    {key: "status", label: "Status"},
+    {key: "price", label: "Price", numeric: true, value: function (r) { return r.price == null ? -1 : r.price; }}
+  ];
+  var BAND_ORDER = PRICE_BANDS.map(function (b) { return b[0]; });
+
+  function benchFacets() {
+    return [
+      {key: "deck", label: "Deck", of: function (r) { return r.decks.length ? r.decks : ["Not in any deck"]; }},
+      {key: "color", label: "Color", order: COLOR_ORDER},
+      {key: "band", label: "Price", order: BAND_ORDER},
+      {key: "type", label: "Type", order: PRIMARY_TYPES.concat(["Other"])},
+      {key: "rarity", label: "Rarity", order: RARITY_ORDER}
+    ];
+  }
+  function upgradeFacets() {
+    return [
+      {key: "deck", label: "Deck"},
+      {key: "kind", label: "Rung", order: ["Tuned", "Bracket 3"]},
+      {key: "status", label: "Status", order: ["Still to buy", "On order", "Already owned"]},
+      {key: "color", label: "Color", order: COLOR_ORDER},
+      {key: "band", label: "Price", order: BAND_ORDER},
+      {key: "type", label: "Type", order: PRIMARY_TYPES.concat(["Other"])},
+      {key: "rarity", label: "Rarity", order: RARITY_ORDER}
+    ];
+  }
+  function benchGroups() {
+    return [
+      {key: "shelf", label: "In a deck or not"},
+      {key: "deck", label: "Deck", of: function (r) { return r.decks; }, empty: "Not in any deck"},
+      {key: "color", label: "Color", order: COLOR_ORDER},
+      {key: "band", label: "Price", order: BAND_ORDER, empty: "No price yet"},
+      {key: "type", label: "Type", order: PRIMARY_TYPES.concat(["Other"])},
+      {key: "rarity", label: "Rarity", order: RARITY_ORDER, empty: "Rarity unknown"}
+    ];
+  }
+  function upgradeGroups() {
+    return [
+      {key: "deck", label: "Deck"},
+      {key: "kind", label: "Rung", order: ["Tuned", "Bracket 3"]},
+      {key: "status", label: "Status", order: ["Still to buy", "On order", "Already owned"]},
+      {key: "color", label: "Color", order: COLOR_ORDER},
+      {key: "band", label: "Price", order: BAND_ORDER, empty: "No price yet"}
+    ];
+  }
+
+  /* Which facet menu is open is a fact about this second, not a preference: saved, it
+     would reopen a dropdown on a page somebody has not touched yet. */
+  function withoutOpen(f) {
+    var out = {};
+    Object.keys(f || {}).forEach(function (k) { if (k !== "open") out[k] = f[k]; });
     return out;
   }
+
+  /* A saved filter is only read back where the dimension still exists AND the value is
+     still one this build offers. A file from an older build that names a facet that is
+     gone, or a rarity spelled the old way, would otherwise leave the list filtered by
+     something with no control on screen -- which reads as rows having vanished. */
+  function readTable(target, raw, facets, columns) {
+    if (!raw || typeof raw !== "object") return;
+    var keys = {};
+    facets.forEach(function (x) { keys[x.key] = true; });
+    var f = {};
+    Object.keys(raw.f || {}).forEach(function (k) {
+      if (k === "query") return;                       // deliberately not restored
+      if (!keys[k] || !Array.isArray(raw.f[k])) return;
+      var vals = raw.f[k].filter(function (v) { return typeof v === "string"; });
+      if (vals.length) f[k] = vals;
+    });
+    if (typeof raw.f === "object" && raw.f && typeof raw.f.group === "string") {
+      f.group = raw.f.group;
+    }
+    target.f = f;
+    if (raw.sort && columns.some(function (c) { return c.key === raw.sort.key; })
+      && (raw.sort.dir === "asc" || raw.sort.dir === "desc")) {
+      target.sort = {key: raw.sort.key, dir: raw.sort.dir};
+    }
+  }
+
+  /* THE BUY LIST IS NOT HERE ANY MORE, and this is where it was.
+   *
+   * There were two of them: this one, derived from the master plus the ownership ledger,
+   * and the Shop on the Deck Matrix, derived from the slot model plus the written pull
+   * list. They disagreed -- the Shop knows about the pull list, about what has been paid,
+   * about where a card is being bought and about marking one bought, and none of that
+   * could reach here. Two buy lists that disagree is worse than one that is a click away,
+   * so the tab went and the Shop is the buy list. #/buy redirects to it, and the ribbon's
+   * "still to buy" and "on order" open it directly.
+   */
 
   /* ------------------------------------------------------ uploaded counts */
 
@@ -1785,43 +1845,114 @@
      and explains what will happen; or a file, in which case it says what came of
      it and offers the way back. There is no third state, because an upload that
      half-applied would be worse than one that failed. */
+  var INV_ACCEPT = ".csv,.tsv,.txt,.xlsx,text/csv,text/plain";
+
+  /* The file picker plus the way to find out what the file should look like. The link
+     under the button rather than beside it: "what am I even uploading" is the question
+     that stops somebody, and it should be answered where they are already looking. */
+  function uploadControl(label, primary) {
+    return el("div", { class: "inv-upload" }, [
+      el("label", { class: "btn" + (primary ? " primary" : "") + " inv-file" }, [
+        label,
+        el("input", { type: "file", accept: INV_ACCEPT, hidden: true, onchange: onInventoryFile })
+      ]),
+      el("button", { class: "inv-template", type: "button", text: "download template",
+        title: "An .xlsx with the columns this reader wants, and a second sheet of examples",
+        onclick: downloadInventoryTemplate })
+    ]);
+  }
+
   function inventoryBar() {
     if (!INVENTORY) {
-      var box = el("div", { class: "inv-bar" }, [
+      return el("div", { class: "inv-bar" }, [
         el("div", {}, [
-          el("b", { text: "These counts come from the Deck Master workbook." }),
-          el("span", { text: " Upload what you actually own and the decks are filled from it "
-            + "instead — whatever is left over lands here." })
+          el("b", { text: "These counts come from the starting card base, not one you uploaded." }),
+          el("span", { text: " Upload the cards you actually own and the decks are filled "
+            + "from that instead — whatever is left over lands here." })
         ]),
-        el("label", { class: "btn primary inv-file" }, [
-          "Upload what I own",
-          el("input", { type: "file", accept: ".csv,.tsv,.txt,.xlsx,text/csv,text/plain",
-            hidden: true, onchange: onInventoryFile })
-        ])
+        uploadControl("Upload what I own", true)
       ]);
-      return box;
     }
     var r = INVENTORY.result || {totals: {}};
     var t = r.totals || {};
     var when = String(INVENTORY.uploadedAt || "").slice(0, 10);
     return el("div", { class: "inv-bar is-on" }, [
       el("div", {}, [
-        el("b", { text: plural(t.cards || 0, "card") + " from your upload" }),
-        el("span", { text: " · " + plural(t.used || 0, "copy", "copies") + " went into decks · "
-          + plural(t.spare || 0, "copy", "copies") + " on the bench"
+        /* Says what the numbers ARE, not where a file came from. Before an upload the
+           counts are the workbook's audit; after one they are the cards you told this app
+           you own, and the bench is what those cards did not fill. */
+        el("b", { text: "These counts come from your uploaded, currently owned card base." }),
+        el("span", { text: " " + plural(t.cards || 0, "card") + " read · "
+          + plural(t.used || 0, "copy", "copies") + " went into decks · "
+          + plural(t.spare || 0, "copy", "copies") + " spare on the bench"
           + (t.short ? " · " + plural(t.short, "copy", "copies") + " still needed" : "")
           + (when ? " · read " + when : "") })
       ]),
       el("div", { class: "inv-acts" }, [
-        el("label", { class: "btn inv-file" }, [
-          "Replace",
-          el("input", { type: "file", accept: ".csv,.tsv,.txt,.xlsx,text/csv,text/plain",
-            hidden: true, onchange: onInventoryFile })
-        ]),
+        uploadControl("Replace", false),
         el("button", { class: "btn ghost", type: "button", text: "Use the workbook's counts",
           onclick: clearInventory })
       ])
     ]);
+  }
+
+  /* WHAT THE UPLOAD SHOULD LOOK LIKE, as a file rather than as a sentence.
+     ---------------------------------------------------------------------
+     Two sheets. The first is empty but for the headers and is the one to type into; the
+     second is called "example" and carries a few rows showing what each column takes.
+     The reader ignores any sheet called example, so the template can be filled in and
+     sent straight back without deleting anything -- which is what people do with a
+     template, and what would otherwise import four made-up cards. */
+  function downloadInventoryTemplate() {
+    var Writer = window.MtgXlsxWriter;
+    if (!Writer) return toast("The spreadsheet writer did not load.");
+    /* Name and Quantity are the two the reader actually needs; the rest are there because
+       every collection export in the wild carries them and deleting a column is more
+       work than leaving it. */
+    var columns = [
+      { key: "name", label: "Name", width: 34 },
+      { key: "quantity", label: "Quantity", width: 11 },
+      { key: "set", label: "Set", width: 26 },
+      { key: "condition", label: "Condition", width: 12 },
+      { key: "foil", label: "Foil", width: 8 },
+      { key: "notes", label: "Notes", width: 30 }
+    ];
+    var book = { sheets: [
+      { name: "cards", columns: columns, rows: [] },
+      { name: "example", columns: columns, rows: [
+        { name: "Sol Ring", quantity: 2, set: "Commander 2021", condition: "NM", foil: "no",
+          notes: "one of them is already in the Atraxa box" },
+        { name: "Llanowar Elves", quantity: 1, set: "Dominaria United", condition: "LP", foil: "no", notes: "" },
+        { name: "Rhystic Study", quantity: 1, set: "Jumpstart", condition: "NM", foil: "yes", notes: "sleeved" },
+        { name: "Forest", quantity: 40, set: "", condition: "", foil: "no", notes: "basics, any printing" }
+      ]}
+    ]};
+    var blob = new Blob([Writer.build(book)], { type: Writer.MIME });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement("a");
+    link.href = url;
+    link.download = "mtg-collection-template.xlsx";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    toast("Template downloaded. Type into the first sheet — the example sheet is ignored on upload.");
+  }
+
+  /* WHICH SHEET WE READ, and why it is not simply the first one.
+     The template we hand out has two sheets: `cards`, which is empty apart from
+     the headers, and `example`, which shows what a filled-in row looks like. People
+     fill in the first and send the workbook straight back without deleting anything
+     -- that is what a template is for -- so a reader that took the first non-empty
+     sheet would import Sol Ring, Llanowar Elves, Rhystic Study and forty Forests
+     that nobody owns. A sheet called `example` is therefore never read, and if it
+     is the only sheet in the file the upload fails rather than lying.
+     Beyond that the rule is the old one: the first sheet with anything on it. */
+  function pickInventorySheet(sheets) {
+    var usable = sheets.filter(function (s) {
+      return s && s.rows && s.rows.length && !/^examples?$/i.test(String(s.name || "").trim());
+    });
+    return usable[0] || null;
   }
 
   /* A .xlsx arrives as bytes and everything else as text, and the difference has
@@ -1841,8 +1972,8 @@
         if (!Xlsx) return toast("The spreadsheet reader did not load.");
         Xlsx.read(new Uint8Array(reader.result))
           .then(function (book) {
-            var sheet = (book.sheets || [])[0];
-            if (!sheet || !sheet.rows.length) throw new Error("The first sheet is empty.");
+            var sheet = pickInventorySheet(book.sheets || []);
+            if (!sheet) throw new Error("No sheet in that workbook had anything on it.");
             takeInventory(Inv.parseTable(sheet.rows), file.name + " · " + sheet.name);
           })
           .catch(function (err) { toast(String(err && err.message || err)); });
@@ -1880,69 +2011,331 @@
     render();
   }
 
-  function renderPicker(root, kind) {
-    var isBench = kind === "bench";
-    var all = isBench ? benchRows() : buyRows();
-    var filter = isBench ? state.benchFilter : state.buyFilter;
+  /* HOW MANY ROWS BEFORE THE REST GOES BEHIND A BUTTON.
+     Fifty on a desktop, where a row is one line. On a phone the columns fold into the row
+     and take their labels with them, so a row is five lines and fifty of them is nineteen
+     screens -- measured, on the 2,161-card bench. The cap is a promise about how much
+     page arrives, so it is counted in screens rather than in rows.
+     Only the bench is capped: the upgrade list is bounded by what six decks recommend,
+     which is dozens, and hiding the last of those behind a tap buys nothing. */
+  function groupPage() {
+    return window.matchMedia && window.matchMedia("(max-width: 760px)").matches ? 22 : 50;
+  }
 
+  /* ------------------------------------------------------- bench + upgrades ----
+   * Two lists, one table. Both go through renderTable, which owns the filter bar, the
+   * header sort, the bands and the wiring; each caller supplies its rows, its columns
+   * and how to draw one.
+   */
+  function renderTable(root, opts) {
+    var Table = window.MtgCardTable;
+    if (!Table) {
+      root.appendChild(el("div", { class: "panel", text: "The table module did not load." }));
+      return;
+    }
+    var view = opts.state;                       // {f, sort}
+    var facets = opts.facets, columns = opts.columns;
+
+    var host = el("div", { class: "ct" });
+    root.appendChild(host);
+    /* Which bands the reader has opened. Local to this render rather than saved: two
+       thousand rows coming back expanded on the next visit is the app deciding something
+       nobody asked for twice. */
+    var expanded = {};
+
+    function draw() {
+      var kept = Table.filter(opts.rows, facets, Object.assign({searchIn: opts.searchIn}, view.f));
+      var sorted = Table.sortRows(kept, columns, view.sort.key, view.sort.dir);
+      var group = (opts.groups || []).filter(function (g) { return g.key === view.f.group; })[0] || null;
+      var bands = Table.groupRows(sorted, group);
+
+      var html = Table.filterBar(opts.rows, facets, view.f,
+        {searchLabel: opts.searchLabel, groups: opts.groups,
+         columns: columns, sort: view.sort});
+      html += '<div class="ct-table" style="--ct-cols:' + opts.cols + '">';
+      /* One tick box before the named columns and one "i" after them, so the header
+         lands over the data it describes rather than a column to the left of it. */
+      html += Table.head(columns, view.sort, {before: 1, after: 1});
+      if (!sorted.length) {
+        html += '<div class="ct-empty">' + Table.esc(opts.nothing || "Nothing matches these filters.") + "</div>";
+      } else {
+        bands.forEach(function (band, i) {
+          var list = band[1];
+          if (band[0]) {
+            var worth = list.reduce(function (n, r) { return n + (r.price || 0) * (r.copies || 1); }, 0);
+            html += '<div class="ct-band">' + Table.esc(band[0]) +
+              "<span>" + plural(list.length, "card") + " · " + money(worth) + "</span></div>";
+          }
+          /* A LIST LONGER THAN THE CAP IS NOT READ, IT IS SCROLLED PAST.
+             The bench after a collection upload is the case that proves it: 1,940 spare
+             cards rendered at once is 118,000 pixels -- 126 screens on a desktop and 156
+             on a phone. So a long band shows its first page and says exactly how many it
+             is holding back, with one button for the rest. Filtering and sorting are the
+             better answers and are one click away above; this is for the reader who
+             wants the whole thing anyway. */
+          var key = band[0] || "*";
+          var open = !opts.cap || expanded[key] || list.length <= opts.cap;
+          var shown = open ? list : list.slice(0, opts.cap);
+          shown.forEach(function (row) { html += opts.row(row, Table); });
+          if (!open) {
+            html += '<button class="ct-more" type="button" data-ct-more="' + Table.esc(key) + '">' +
+              "Show the other " + plural(list.length - shown.length, "card") + "</button>";
+          }
+          void i;
+        });
+      }
+      html += "</div>";
+      host.innerHTML = html;
+      if (opts.after) opts.after(host);
+    }
+
+    /* One listener on the host rather than one per control: the bar is rebuilt on every
+       change, so anything bound to a button inside it would be bound to a node that is
+       already gone by the time it is pressed. */
+    host.addEventListener("click", function (e) {
+      var facet = e.target.closest("[data-ct-facet]");
+      if (facet) {
+        var key = facet.dataset.ctFacet;
+        view.f = Object.assign({}, view.f, {open: view.f.open === key ? null : key});
+        draw();
+        return;
+      }
+      var pick = e.target.closest("[data-ct-pick]");
+      if (pick) {
+        var open = view.f.open;
+        view.f = Table.toggle(view.f, pick.dataset.ctPick, pick.dataset.ctValue);
+        view.f.open = open;                    // the menu stays up: people pick more than one
+        save();
+        draw();
+        return;
+      }
+      if (e.target.closest("[data-ct-clear]")) {
+        view.f = {};
+        save();
+        draw();
+        return;
+      }
+      var more = e.target.closest("[data-ct-more]");
+      if (more) {
+        /* Redraw in place and put the scroll position back. The button sits at the BOTTOM
+           of what has just been read; throwing the reader to the top is how a "show more"
+           comes to feel like a mistake. */
+        var y = window.scrollY;
+        expanded[more.dataset.ctMore] = true;
+        draw();
+        window.scrollTo(0, y);
+        return;
+      }
+      var sort = e.target.closest("[data-ct-sort]");
+      if (sort) {
+        var col = columns.filter(function (c) { return c.key === sort.dataset.ctSort; })[0];
+        view.sort = Table.nextSort(view.sort, sort.dataset.ctSort, col && col.numeric ? "desc" : "asc");
+        save();
+        draw();
+        return;
+      }
+      if (e.target.closest("[data-ct-sortdir]")) {
+        view.sort = {key: view.sort.key, dir: view.sort.dir === "asc" ? "desc" : "asc"};
+        save();
+        draw();
+        return;
+      }
+      if (opts.onClick) opts.onClick(e, draw);
+    });
+    host.addEventListener("change", function (e) {
+      if (e.target.matches("[data-ct-group]")) {
+        view.f = Object.assign({}, view.f, {group: e.target.value || undefined});
+        save();
+        draw();
+      }
+      if (e.target.matches("[data-ct-sortby]")) {
+        var col = columns.filter(function (c) { return c.key === e.target.value; })[0];
+        view.sort = {key: e.target.value, dir: col && col.numeric ? "desc" : "asc"};
+        save();
+        draw();
+      }
+    });
+    host.addEventListener("input", function (e) {
+      if (!e.target.matches("[data-ct-query]")) return;
+      var at = e.target.selectionStart;
+      view.f = Object.assign({}, view.f, {query: e.target.value});
+      draw();
+      var box = host.querySelector("[data-ct-query]");
+      if (box) { box.focus(); box.setSelectionRange(at, at); }
+    });
+    /* Clicking anywhere else closes an open facet menu, the way any menu closes.
+     *
+     * ON THE CAPTURE PHASE, and this is the whole reason the menu would not open at all.
+     * On the bubble phase this listener runs AFTER the one on the host -- which has by
+     * then replaced host.innerHTML, so the button that was clicked is detached and
+     * `host.contains(e.target)` is false. Every click that opened a menu immediately
+     * closed it again. Capture runs document before host, while the target is still in
+     * the tree, so the test asks the question about the DOM that was actually clicked.
+     *
+     * It removes itself once its host is gone: render() replaces #page on every route
+     * change, and a listener per visit to the bench is a leak that grows all session. */
+    function closeOnOutside(e) {
+      if (!document.contains(host)) {
+        document.removeEventListener("click", closeOnOutside, true);
+        return;
+      }
+      if (!view.f.open) return;
+      if (host.contains(e.target)) return;
+      view.f = Object.assign({}, view.f, {open: null});
+      draw();
+    }
+    document.addEventListener("click", closeOnOutside, true);
+
+    draw();
+    return draw;
+  }
+
+  /* The tick box and the "i" are the same two controls on both tables, so they are
+     written once. The row itself is a label, so the whole row is the tick target. */
+  function ctPick(row, T) {
+    var key = pickKey(row);
+    return '<label class="ct-row' + (state.picks.has(key) ? " is-picked" : "") +
+      '" data-pick="' + T.esc(key) + '" data-ct-row="' + T.esc(key) + '">' +
+      '<span class="ct-tick"><input type="checkbox"' + (state.picks.has(key) ? " checked" : "") +
+      ' aria-label="Select ' + T.esc(row.name) + '"></span>';
+  }
+  function ctInfo(row, T) {
+    return '<button class="ct-info" type="button" data-ct-card="' + T.esc(row.name) +
+      '" title="Show ' + T.esc(row.name) + '" aria-label="Show ' + T.esc(row.name) + '">i</button></label>';
+  }
+
+  /* Shared by both tables: a tick changes the tray, and the "i" opens the card. */
+  function ctRowClick(rowsByKey) {
+    return function (e) {
+      var info = e.target.closest("[data-ct-card]");
+      if (info) { e.preventDefault(); e.stopPropagation(); openCard(info.dataset.ctCard); return; }
+      var box = e.target.closest("[data-ct-row]");
+      if (box && e.target.matches('input[type="checkbox"]')) {
+        var row = rowsByKey[box.dataset.ctRow];
+        if (row) togglePick(row, e.target.checked);
+      }
+    };
+  }
+
+  function renderBench(root) {
+    var rows = benchRows();
     root.appendChild(el("div", { class: "section-head" }, [
-      el("h2", { text: isBench ? "The bench" : "Still to buy" }),
-      el("p", { text: isBench
-        ? "Spare copies not committed to any of the decks. Tick what you want to move, then Share."
-        : "Everything the decks still need, plus every upgrade not yet bought. Tick and Share." })
+      el("h2", { text: "The bench" }),
+      el("p", { text: "Spare copies not committed to any of the decks. Sort on a column, "
+        + "narrow it with the filters, and tick what you want to move." })
     ]));
 
     // The bench IS the leftover, so the upload that produces it belongs here.
-    if (isBench) root.appendChild(inventoryBar());
+    root.appendChild(inventoryBar());
 
-    var chips = isBench
-      ? [["all", "All"], ["spare", "Not in any deck"], ["dupe", "Spare copies"]]
-      : [["all", "All"], ["need", "Needed now"], ["tuned", "Tuned"], ["b3", "Bracket 3"]];
+    if (!rows.length) { root.appendChild(emptyNote("bench")); return; }
 
-    root.appendChild(el("div", { class: "toolbar" }, [
-      // A placeholder is not a name: it is gone the moment you type, and it is
-      // the first thing a screen reader stops reading once there is a value.
-      el("input", { type: "search", placeholder: isBench ? "Search the bench" : "Search the buy list",
-        "aria-label": isBench ? "Search the bench" : "Search the buy list",
-        value: state.query, oninput: function (e) { state.query = e.target.value; render(); } }),
-      el("div", { class: "filter" }, chips.map(function (c) {
-        return el("button", { type: "button", "aria-pressed": filter === c[0] ? "true" : "false",
-          text: c[1], onclick: function () {
-            if (isBench) state.benchFilter = c[0]; else state.buyFilter = c[0];
-            render();
-          } });
-      }))
+    var byKey = {};
+    rows.forEach(function (r) { byKey[pickKey(r)] = r; });
+    renderTable(root, {
+      state: state.bench, rows: rows, columns: BENCH_COLUMNS,
+      facets: benchFacets(), groups: benchGroups(),
+      searchLabel: "Search the bench", searchIn: ["name", "sub", "where"],
+      cols: "26px minmax(0,2fr) minmax(0,1.4fr) 84px 88px 84px 60px 62px 74px 30px",
+      nothing: "No spare copy matches these filters.", cap: groupPage(),
+      onClick: ctRowClick(byKey),
+      row: function (row, T) {
+        return ctPick(row, T) +
+          '<span class="ct-cell ct-name"><b>' + T.esc(row.name) +
+            (row.copies > 1 ? "  x" + row.copies : "") + "</b>" +
+            (row.sub ? '<span class="ct-sub">' + T.esc(row.sub) + "</span>" : "") + "</span>" +
+          '<span class="ct-cell" data-label="Also in">' + T.esc(row.where) + "</span>" +
+          /* data-minor: still a column on a desktop, folded away on a phone. Eight
+             labelled lines per row made a 22-row page nine screens tall, and four of the
+             eight are dimensions you FILTER by rather than read -- the filters above still
+             offer every one of them, and the "i" opens the card itself. */
+          '<span class="ct-cell" data-minor data-label="Type">' + T.esc(row.type) + "</span>" +
+          '<span class="ct-cell" data-minor data-label="Color">' + T.esc(row.color) + "</span>" +
+          '<span class="ct-cell" data-minor data-label="Rarity">' + T.esc(row.rarity || "—") + "</span>" +
+          '<span class="ct-cell ct-num" data-label="Copies">' + row.copies + "</span>" +
+          '<span class="ct-cell ct-num" data-minor data-label="Each">' + (row.price ? money(row.price) : "—") + "</span>" +
+          '<span class="ct-cell ct-num" data-label="Worth"><b>' + money(row.value) + "</b></span>" +
+          ctInfo(row, T);
+      }
+    });
+  }
+
+  function renderUpgrades(root) {
+    var rows = upgradeRows();
+    var owed = rows.filter(function (r) { return r.status === "Still to buy"; });
+    var cost = owed.reduce(function (n, r) { return n + (r.price || 0); }, 0);
+    root.appendChild(el("div", { class: "section-head" }, [
+      el("h2", { text: "Upgrades" }),
+      el("p", { text: "Every change the plan recommends, as the card going in and the card "
+        + "coming out. " + plural(owed.length, "card") + " still to buy · " + money(cost) + "." })
     ]));
 
-    var rows = all.filter(matchesQuery).filter(function (r) {
-      if (filter === "all") return true;
-      if (isBench) return filter === "spare" ? r.where === "spare" : r.where !== "spare";
-      return r.kind === filter;
+    if (!rows.length) { root.appendChild(emptyNote("upgrades")); return; }
+
+    var byKey = {};
+    rows.forEach(function (r) { byKey[pickKey(r)] = r; });
+    renderTable(root, {
+      state: state.upgrades, rows: rows, columns: UPGRADE_COLUMNS,
+      facets: upgradeFacets(), groups: upgradeGroups(),
+      searchLabel: "Search the upgrades", searchIn: ["name", "out", "why", "deck"],
+      cols: "26px minmax(0,1.5fr) minmax(0,1.9fr) 116px 84px 96px 74px 30px",
+      nothing: "No recommended change matches these filters.",
+      onClick: ctRowClick(byKey),
+      row: function (row, T) {
+        return ctPick(row, T) +
+          '<span class="ct-cell ct-name"><span class="ct-swap">' +
+            '<span class="ct-in"><b>' + T.esc(row.name) + "</b>" +
+              (row.gameChanger ? '<span class="ct-gc">Game Changer</span>' : "") + "</span>" +
+            '<span class="ct-arrow" aria-hidden="true">→</span>' +
+            '<span class="ct-out">' + (row.out ? "<b>" + T.esc(row.out) + "</b>"
+              : '<span class="ct-sub">nothing comes out</span>') + "</span>" +
+          "</span></span>" +
+          '<span class="ct-cell ct-why" data-label="Why">' +
+            T.esc(row.why || (row.kind === "Tuned"
+              ? "A Tuned add the plan already counts in the hundred."
+              : "A Bracket 3 swap: legal at Bracket 3, and not part of the hundred yet.")) + "</span>" +
+          '<span class="ct-cell" data-label="Deck">' + T.esc(row.deck) + "</span>" +
+          '<span class="ct-cell" data-minor data-label="Rung">' + T.esc(row.kind) + "</span>" +
+          '<span class="ct-cell" data-label="Status">' + T.esc(row.status) + "</span>" +
+          '<span class="ct-cell ct-num" data-label="Price">' + (row.price ? money(row.price) : "—") + "</span>" +
+          ctInfo(row, T);
+      }
     });
+  }
 
-    if (isBench) {
-      // Mirrors the buy list's group-by row, in the same place, because it does
-      // the same job: it says how this list is arranged and lets you rearrange it.
-      var sorts = [["price", "Most valuable"], ["name", "A to Z"]];
-      root.appendChild(el("div", { class: "filter", style: "margin:-4px 0 10px" }, sorts.map(function (m) {
-        return el("button", { type: "button", "aria-pressed": state.benchSort === m[0] ? "true" : "false",
-          text: m[1], onclick: function () { state.benchSort = m[0]; save(); render(); } });
-      })));
+  /* WHAT AN EMPTY LIST MEANS, said only while it is empty.
+   *
+   * A cleared session lands on a bench of nothing and an upgrade list of nothing, which
+   * looks identical to an app that failed to load. The difference is one sentence, and
+   * it only helps while it is true -- a note explaining how a list fills, printed above
+   * a full list, is noise somebody learns to skip past. */
+  var EMPTY_NOTE = {
+    bench: {
+      title: "Nothing on the bench yet",
+      body: "The bench is what is left over: copies you own that no deck has a slot for. "
+        + "Upload the cards you actually own with the button above, or get some decks — "
+        + "whatever they do not take lands here."
+    },
+    upgrades: {
+      title: "No upgrades to show yet",
+      body: "Upgrades are the changes a deck plan recommends — a card going in, a card "
+        + "coming out, and why. They appear once there is a deck to recommend them for."
     }
-
-    if (!isBench) {
-      var modes = [["price", "By price"], ["color", "By color"], ["kind", "By reason"]];
-      root.appendChild(el("div", { class: "filter", style: "margin:-4px 0 10px" }, modes.map(function (m) {
-        return el("button", { type: "button", "aria-pressed": state.buyGroup === m[0] ? "true" : "false",
-          text: m[1], onclick: function () { state.buyGroup = m[0]; save(); render(); } });
-      })));
-      rows = regroupBuyRows(rows, state.buyGroup);
-    }
-
-    groupedTable(root, rows, {
-      where: isBench ? "Where else" : "For which deck",
-      status: "Status"
-    }, isBench ? GROUP_PAGE : 0);
+  };
+  function emptyNote(kind) {
+    var n = EMPTY_NOTE[kind];
+    /* Two ways out, and which one is offered depends on what is missing. A browser with
+       nothing in it wants the default load; one that has decks but an empty bench wants
+       the deck list, because the answer is up there. */
+    var blank = freshBrowser();
+    return el("div", { class: "panel empty-note" }, [
+      el("h3", { text: n.title }),
+      el("p", { class: "play-line", text: n.body }),
+      blank
+        ? el("button", { class: "btn primary", type: "button", text: "Load default", onclick: loadDefault })
+        : el("button", { class: "btn primary", type: "button", text: "Go to the decks",
+            onclick: function () { go("#/decks"); } })
+    ]);
   }
 
   /* Somebody followed a link to a deck they have since put down. Say which deck, say
@@ -2067,18 +2460,26 @@
       return n + d.b3.length + d.upgrades.filter(function (u) { return u.action === "ADD"; }).length;
     }, 0);
 
+    /* EVERY FIGURE GOES SOMEWHERE. The ribbon read as a caption -- seven numbers you
+       could look at and not touch -- when each one is the summary of a page that already
+       exists. The cards-boxed figure is the Deck view; "on order" and "still to buy" are
+       the Shop; "bench copies" is the bench. A number that answers a question should be
+       the way to the rest of the answer. */
     var bits = [
-      [String(DATA.decks.length), "decks"],
+      [String(DATA.decks.length), "decks", "#/decks", "Back to the deck list"],
       [String(boxed) + "/" + DATA.decks.reduce(function (n, d) { return n + (d.targetCards || 100); }, 0),
-        "cards boxed"],
-      [String(ordered), "on order"], [String(toBuy), "still to buy"],
-      [money(buyCost), "to finish"], [String(bench), "bench copies"],
-      [String(upgrades), "upgrades planned"]
+        "cards boxed", "matrix.html#deck", "Open the Deck view in Build & shop"],
+      [String(ordered), "on order", "matrix.html#shop", "Open the Shop"],
+      [String(toBuy), "still to buy", "matrix.html#shop", "Open the Shop"],
+      [money(buyCost), "to finish", "matrix.html#shop", "Open the Shop"],
+      [String(bench), "bench copies", "#/bench", "Open the bench"],
+      [String(upgrades), "upgrades planned", "#/upgrades", "Open the upgrades"]
     ];
     var row = el("div", { class: "ribbon" });
     bits.forEach(function (b, i) {
       if (i) row.appendChild(el("span", { class: "sep", text: "·" }));
-      row.appendChild(el("span", {}, [el("b", { text: b[0] }), " " + b[1]]));
+      row.appendChild(el("a", { class: "ribbon-stat", href: b[2], title: b[3] },
+        [el("b", { text: b[0] }), " " + b[1]]));
     });
     return row;
   }
@@ -2103,7 +2504,12 @@
         state.view = "archived"; state.archivedId = parts[1]; state.deck = null; render(); return;
       }
     }
-    state.view = ["decks", "bench", "buy"].indexOf(parts[0]) >= 0 ? parts[0] : "decks";
+    /* #/buy is gone: the buy list lives on the Shop tab of the Deck Matrix, which is the
+       same list with a better table and the only place that can mark a card bought. An
+       old bookmark or a link in somebody's notes still has to land somewhere sensible,
+       so it lands there rather than on a tab that no longer exists. */
+    if (parts[0] === "buy") { window.location.replace("matrix.html#shop"); return; }
+    state.view = ["decks", "bench", "upgrades"].indexOf(parts[0]) >= 0 ? parts[0] : "decks";
     state.deck = null;
     state.query = "";
     render();
@@ -2119,14 +2525,18 @@
        did not catch: five decks on screen under a line still promising six. */
     var sub = document.getElementById("brand-sub");
     if (sub && DATA.decks.length !== 6) {
-      sub.textContent = DATA.decks.length + " Commander decks, what they do, and what they still need";
+      sub.textContent = DATA.decks.length
+        ? DATA.decks.length + " Commander deck" + (DATA.decks.length === 1 ? "" : "s")
+          + ", what they do, and what they still need"
+        // A cleared browser. "0 Commander decks, what they do" describes nothing.
+        : "Nothing saved here yet — add a deck, build one, or load the default";
     }
     var slot = document.getElementById("ribbon-slot");
     if (slot) { slot.textContent = ""; slot.appendChild(renderRibbon()); }
     var bench = document.getElementById("tab-bench");
     if (bench) bench.querySelector(".count").textContent = String(benchRows().length);
-    var buy = document.getElementById("tab-buy");
-    if (buy) buy.querySelector(".count").textContent = String(buyRows().length);
+    var up = document.getElementById("tab-upgrades");
+    if (up) up.querySelector(".count").textContent = String(upgradeRows().length);
   }
 
   function render() {
@@ -2142,30 +2552,144 @@
 
     if (state.view === "deck") renderDeck(root, state.deck);
     else if (state.view === "archived") renderArchivedDeck(root, state.archivedId);
-    else if (state.view === "bench") renderPicker(root, "bench");
-    else if (state.view === "buy") renderPicker(root, "buy");
+    else if (state.view === "bench") renderBench(root);
+    else if (state.view === "upgrades") renderUpgrades(root);
     else renderDecks(root);
 
     syncTray();
-    if (state.view !== "deck" && !holdScroll) window.scrollTo(0, 0);
-    holdScroll = false;
+    /* A re-render means a new page, so it starts at the top -- with no exception any
+       more. There used to be one: expanding a capped group rebuilt the whole page from
+       a button at the bottom of it, so the position had to be saved and put back. The
+       shared table redraws only itself, in place, so filtering and sorting never move
+       the page at all and there is nothing left to restore. */
+    if (state.view !== "deck") window.scrollTo(0, 0);
   }
 
-  /* A re-render normally means a new page, so it starts at the top. Expanding a
-     capped group is the exception: the button that does it sits at the BOTTOM of
-     what you have just read, and throwing the reader back to the top is how a
-     "show more" button comes to feel like a mistake. */
-  var holdScroll = false;
-  function renderInPlace() {
-    // render() empties #page before rebuilding it, so the document briefly has
-    // no height and the browser clamps the scroll position to the new maximum.
-    // Suppressing the scrollTo(0, 0) alone is not enough -- measured, it still
-    // moved the reader 933px up the page. The position has to be taken before
-    // the rebuild and put back after it.
-    var y = window.scrollY;
-    holdScroll = true;
-    render();
-    window.scrollTo(0, y);
+  /* -------------------------------------------------------------- admin ----
+   *
+   * The same button, the same menu and the same clear as the Deck Matrix, because they
+   * are two views of one browser: a clear pressed on either has to leave the other one
+   * empty too, and a backup taken on either has to be readable by the other.
+   *
+   * The backup is MtgUserState.snapshot -- every key the app writes, as raw strings.
+   * The Matrix also writes its own richer payload, and this reads both: a file with a
+   * `values` block is a browser snapshot, a file with `myDecks` is a Matrix export, and
+   * refusing one of them because it came from the other page would be the app being
+   * precious about a format the reader never chose.
+   */
+  function browserBackup() {
+    var User = window.MtgUserState;
+    if (!User) return toast("The backup module did not load.");
+    var snap = User.snapshot(window.localStorage);
+    if (!snap.keys.length) return toast("There is nothing saved in this browser to back up.");
+    var blob = new Blob([JSON.stringify(snap, null, 2)], { type: "application/json" });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement("a");
+    link.href = url;
+    link.download = "mtg-browser-backup-" + new Date().toISOString().slice(0, 10) + ".json";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+    try { localStorage.setItem("mtg-last-export-v1", String(Date.now())); } catch (err) { /* fine */ }
+    toast("Backed up " + plural(snap.keys.length, "saved thing") + " from this browser.");
+  }
+
+  function restoreBackup(file) {
+    var User = window.MtgUserState;
+    var reader = new FileReader();
+    reader.onerror = function () { toast("That file could not be read."); };
+    reader.onload = function () {
+      var payload;
+      try { payload = JSON.parse(String(reader.result || "")); }
+      catch (err) { return toast("That file is not readable JSON."); }
+      try {
+        if (payload && payload.values) {
+          var out = User.restore(window.localStorage, payload);
+          toast("Restored " + plural(out.restored.length, "saved thing")
+            + (out.skipped.length ? " · " + out.skipped.length + " it did not recognize" : "")
+            + ". Reloading…");
+        } else if (payload && payload.myDecks) {
+          /* A Deck Matrix export. Only the four keys this page owns are taken from it;
+             the Matrix half of the file is its own business and restoring it from here
+             would be this page overwriting a page it cannot see. */
+          var mine = payload.myDecks, took = 0;
+          var MAP = {decks: (Store && Store.STORE_KEY) || "mtg-imported-decks.v1",
+                     inventory: INVENTORY_KEY, picks: STORE, archived: ARCHIVE_KEY};
+          Object.keys(MAP).forEach(function (field) {
+            try {
+              if (mine[field]) { localStorage.setItem(MAP[field], JSON.stringify(mine[field])); took += 1; }
+              else localStorage.removeItem(MAP[field]);
+            } catch (err) { /* storage refused; the rest still lands */ }
+          });
+          toast("Restored " + plural(took, "thing") + " from a Deck Matrix backup. Reloading…");
+        } else {
+          return toast("That is not a backup of this app.");
+        }
+      } catch (err) {
+        return toast(String(err && err.message || err));
+      }
+      setTimeout(function () { window.location.reload(); }, 700);
+    };
+    reader.readAsText(file);
+  }
+
+  /* LOAD DEFAULT: this repository's own copy of the six decks, the collection behind
+     them and the card statuses -- the thing to press on a browser that has never seen
+     this app, or after a clear. It is a file in the repo rather than anything
+     account-shaped, so anybody who opens the page can press it and see the same decks. */
+  function loadDefault() {
+    if (!window.confirm("Load the default decks and collection?\n\n"
+      + "This replaces the decks, the uploaded collection and the ticks currently saved "
+      + "in this browser with the copy kept in the repository.")) return;
+    fetchJson("data/my-load.json?v=1").then(function (payload) {
+      var User = window.MtgUserState;
+      if (!payload || !payload.values || !User) throw new Error("The default load file is not readable.");
+      User.clearAll(window.localStorage, window.sessionStorage);
+      var out = User.restore(window.localStorage, payload);
+      toast("Loaded the default: " + plural(out.restored.length, "saved thing") + ". Reloading…");
+      setTimeout(function () { window.location.reload(); }, 700);
+    }).catch(function (err) {
+      toast("Could not load the default (" + (err && err.message || err) + ").");
+    });
+  }
+
+  function mountAdminMenu() {
+    var Admin = window.MtgAdminMenu;
+    if (!Admin) return;
+    Admin.mount({
+      items: function () {
+        var when = null;
+        try { when = Admin.ago(Number(localStorage.getItem("mtg-last-export-v1")) || 0); }
+        catch (err) { when = null; }
+        return [
+          {kind: "note", text: when ? "backed up " + when : "never backed up", stale: !when},
+          {kind: "item", label: "Export a backup", run: browserBackup,
+            hint: "One file with everything this browser has saved — decks, collection, ticks and marks."},
+          {kind: "file", label: "Import a backup", accept: ".json,application/json", onFile: restoreBackup,
+            hint: "Reads a backup from either page. Replaces what is saved here."},
+          {kind: "sep"},
+          {kind: "item", label: "Load default", run: loadDefault,
+            hint: "The six decks and the collection behind them, as kept in this repository."},
+          {kind: "sep"},
+          {kind: "item", label: "Clear session", warn: true,
+            hint: "Everything, including added decks and your collection. Offers a backup first.",
+            run: function () {
+              Admin.clearSession({
+                onExport: browserBackup,
+                say: toast,
+                onCleared: function (gone) {
+                  toast(plural(gone.keys.length, "saved thing") + " cleared. Reloading…");
+                  /* A reload rather than a re-render: half this page's state lives in
+                     module variables read at boot, and putting a browser back to "never
+                     opened" from the inside means finding every one of them. */
+                  setTimeout(function () { window.location.reload(); }, 700);
+                }
+              });
+            }}
+        ];
+      }
+    });
   }
 
   /* --------------------------------------------------------------- start */
@@ -2184,7 +2708,7 @@
 
   function boot() {
     load();
-    fetchJson("data/master-v2.json?v=1").then(function (master) {
+    fetchJson("data/master-v2.json?v=2").then(function (master) {
       MASTER = master;
       // Decks added on this device are read before the first render, so an
       // added deck is on the page at load rather than appearing a beat later.
@@ -2216,6 +2740,7 @@
       document.querySelectorAll(".tab").forEach(function (t) {
         t.addEventListener("click", function () { go("#/" + t.dataset.view); });
       });
+      mountAdminMenu();
       window.addEventListener("hashchange", function () { closeCard(); route(); });
       document.addEventListener("keydown", function (e) {
         if (e.key === "Escape" && document.getElementById("sheet")) closeCard();

@@ -67,10 +67,16 @@ check("the globals viewer.js reaches for are the ones the modules attach", () =>
     "window.MtgScryfall": "scryfall-client.js",
     "window.MtgInventoryImport": "inventory-import.js",
     "window.MtgXlsxReader": "xlsx-reader.js",
+    "window.MtgXlsxWriter": "xlsx-writer.js",
     "window.MtgDeckGenerator": "deck-generator.js",
     "window.MtgDeckBuild": "deck-build.js",
     "window.MtgBuildPanel": "build-panel.js",
-    "window.MtgEdhrec": "edhrec-client.js"
+    "window.MtgEdhrec": "edhrec-client.js",
+    // The reader's own saved keys, the menu that clears them, and the shared table the
+    // bench and the upgrades are drawn with.
+    "window.MtgUserState": "user-state.js",
+    "window.MtgAdminMenu": "admin-menu.js",
+    "window.MtgCardTable": "card-table.js"
   };
   [...new Set(wanted)].forEach((name) => {
     assert.ok(attached[name], `viewer.js reads ${name}, which nothing on this page defines`);
@@ -85,8 +91,15 @@ check("the workbook's catalog is read, never assigned into", () => {
   // for the rest of the session and look fine until a reload.
   const writes = viewer.match(/MASTER\.\w+\s*(=[^=]|\.push\()/g) || [];
   assert.deepEqual(writes, [], `viewer.js writes to the master: ${writes.join(", ")}`);
-  assert.match(viewer, /DATA = dropArchived\(Store \? Store\.merge\(MASTER, IMPORTS\)/,
+  assert.match(viewer, /DATA = dropArchived\(Store \? Store\.merge\(base, IMPORTS\)/,
     "DATA is the merge of the two, not one of them");
+  // `base` is MASTER, or a copy of it with the six decks and every ownership figure
+  // zeroed when this browser has never saved anything. The copy is what makes a cleared
+  // session look cleared; the guard is that it is a COPY and the master is untouched.
+  assert.match(viewer, /var base = freshBrowser\(\) \? blankMaster\(MASTER\) : MASTER;/,
+    "a fresh browser reads a blanked copy of the master, not the master");
+  assert.match(viewer, /function blankMaster\(master\) \{\s*return Object\.assign\(\{\}, master, \{/,
+    "blankMaster copies rather than editing what it was handed");
 });
 
 check("archiving is applied once, where the catalog is built", () => {

@@ -41,59 +41,8 @@ body { margin: 0; min-width: 320px; background: var(--paper); color: var(--ink);
 button, input, select { font: inherit; }
 button { touch-action: manipulation; }
 
-.app-header {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  padding: max(10px, env(safe-area-inset-top)) 14px 9px;
-  color: #fff8e8;
-  background: linear-gradient(135deg, #082b1f, #1a6b4a 68%, #a8781f);
-  box-shadow: 0 5px 18px rgba(17, 43, 35, .28);
-  overflow: hidden;
-}
-.app-header::after { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; background: linear-gradient(90deg, rgba(7,30,22,.97) 0%, rgba(11,44,33,.78) 43%, rgba(15,58,43,.14) 75%, rgba(96,64,22,.16) 100%); }
-.banner-art { position: absolute; inset: 0 0 0 42%; z-index: 0; display: grid; grid-template-columns: repeat(3,1fr); opacity: .84; filter: saturate(1.18) contrast(1.05); pointer-events: none; }
-.banner-art img { width: 100%; height: 100%; object-fit: cover; object-position: center 28%; }
-.back-link { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 6px; min-height: 26px; margin-bottom: 5px; padding: 3px 12px 3px 10px; border: 1px solid rgba(255,255,255,.3); border-radius: 999px; color: #d9e8df; background: rgba(8,31,24,.45); font-size: 10px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; text-decoration: none; white-space: nowrap; backdrop-filter: blur(4px); }
-.back-link:hover, .back-link:focus-visible { color: var(--forest); background: #fff4d7; outline: none; }
-.back-link .back-arrow { font-size: 13px; line-height: 1; transition: transform .16s ease; }
-.back-link:hover .back-arrow { transform: translateX(-2px); }
-.brand-row { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 1560px; margin: 0 auto 9px; }
-.eyebrow { margin: 0 0 2px; color: #e6cc91; font-size: 10px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
-h1 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp(23px, 5vw, 34px); line-height: 1; }
-.export-age { align-self: center; color: #cfe0d6; font-size: 9.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
-.export-age.is-stale { color: #f0d089; }
-.save-status { max-width: 120px; color: #d9e8df; font-size: 11px; line-height: 1.25; text-align: right; }
-.header-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
-.tour-button { min-height: 34px; padding: 6px 10px; border: 1px solid rgba(255,255,255,.42); border-radius: 999px; color: #fff6dd; background: rgba(8,31,24,.58); font-size: 10px; font-weight: 900; cursor: pointer; backdrop-filter: blur(4px); }
-.tour-button:hover, .tour-button:focus-visible { color: var(--forest); background: #fff4d7; outline: none; }
-.state-io-button { display: inline-flex; align-items: center; min-height: 34px; padding: 6px 10px; border: 1px solid rgba(255,255,255,.3); border-radius: 999px; color: #d9e8df; background: rgba(8,31,24,.4); font-size: 10px; font-weight: 900; cursor: pointer; backdrop-filter: blur(4px); white-space: nowrap; }
-.state-io-button:hover, .state-io-button:focus-visible { color: var(--forest); background: #fff4d7; outline: none; }
-
-/* The header is sticky and, on a phone, was a quarter of the screen at 390px and a
-   third at 360px -- most of it a title and five buttons that get touched once a
-   session. On a phone it folds to the tab bar by default, and the chevron on its
-   bottom edge brings the rest back. Hidden entirely above 700px, where the full
-   header costs 13% and needs no folding. */
-.header-toggle { display: none; }
-@media (max-width: 700px) {
-  .header-toggle { position: relative; z-index: 1; display: block; width: 100%; min-height: 22px;
-    margin: 5px 0 -4px; padding: 0; border: 0; background: none; color: #d7e6df; cursor: pointer; line-height: 1; }
-  .header-toggle > span { display: inline-block; padding: 1px 16px; border-radius: 999px;
-    background: rgba(255,255,255,.12); font-size: 13px; transition: transform .16s ease; }
-  .header-toggle:focus-visible > span { outline: 2px solid #fff4d7; outline-offset: 2px; }
-  .app-header[data-collapsed="1"] .header-toggle > span { transform: rotate(180deg); }
-  .app-header[data-collapsed="1"] .brand-row { display: none; }
-  /* The art is the header's whole visual identity, so it stays -- just shorter, sitting
-     behind the tabs rather than behind a title that is no longer there. */
-  .app-header[data-collapsed="1"] .banner-art { left: 0; opacity: .3; }
-  .app-header { padding-bottom: 5px; }
-  h1 { font-size: 21px; }
-  .eyebrow { font-size: 9.5px; letter-spacing: .1em; }
-  .brand-row { flex-wrap: wrap; margin-bottom: 7px; }
-  .header-actions { flex: 1 1 100%; justify-content: flex-start; gap: 6px; }
-  .tour-button, .state-io-button { min-height: 30px; padding: 4px 9px; font-size: 9.5px; }
-}
+/* The header itself is in header.css, shared with index.html and graph.html. It used to
+   live here, which is why the other two pages each had a different one. */
 
 .main-tabs { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; width: min(1060px, 100%); margin: auto; }
 .main-tab { min-height: 43px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid rgba(255,255,255,.26); border-radius: 12px; color: #e4f1ea; background: rgba(255,255,255,.09); font-size: 13px; font-weight: 800; cursor: pointer; }
@@ -786,7 +735,6 @@ details[open] > summary .section-expander::after { content: "−"; }
 footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px; padding: 18px 16px calc(24px + env(safe-area-inset-bottom)); color: #d7e3dd; background: var(--forest); font-size: 11px; }
 
 @media (min-width: 760px) {
-  .app-header { padding-left: 24px; padding-right: 24px; }
   main { padding: 26px 22px 50px; }
   .page-intro { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 15px; }
   .selection-meter { display: block; min-width: 132px; padding: 10px 13px; text-align: center; }
@@ -828,7 +776,6 @@ footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px;
 }
 
 @media (max-width: 620px) {
-  .banner-art { left: 48%; opacity: .55; }
   .compare-filter-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .compare-search { grid-column: 1/-1; }
   /* Narrow cards can't hold four columns; drop the note to its own full-width row so it stays
@@ -877,8 +824,6 @@ footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px;
 }
 
 @media (max-height: 520px) and (orientation: landscape) {
-  .brand-row { display: none; }
-  .app-header { padding-top: max(7px, env(safe-area-inset-top)); }
   .shop-toolbar { top: calc(59px + env(safe-area-inset-top)); }
 }
 

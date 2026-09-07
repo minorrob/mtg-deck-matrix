@@ -6,8 +6,9 @@
   <meta name="theme-color" content="#0f3a2b">
   <title>Card Graph &middot; My Decks</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%95%B8%EF%B8%8F%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="app.css?v=80">
-  <link rel="stylesheet" href="graph-page.css?v=14">
+  <link rel="stylesheet" href="header.css?v=3">
+  <link rel="stylesheet" href="app.css?v=81">
+  <link rel="stylesheet" href="graph-page.css?v=16">
   <!-- async, not defer. A deferred script BLOCKS every deferred script after it,
        so an unreachable CDN held the whole page -- card list, Copilot, filters --
        for as long as that one request took to fail. Measured at 12.7s on a
@@ -23,20 +24,33 @@
        so a card looked up here is read by exactly the rules the corpus was baked with. -->
   <script src="card-classify.js?v=1" defer></script>
   <script src="scryfall-client.js?v=5" defer></script>
-  <script src="graph-page.js?v=19" defer></script>
+  <script src="graph-page.js?v=21" defer></script>
 </head>
 <body class="graph-body">
   <header class="app-header">
-    <a class="back-link" href="index.html"><span class="back-arrow" aria-hidden="true">&#8592;</span> My Decks</a>
-    <div class="brand-row">
-      <div>
-        <p class="eyebrow">Card graph</p>
-        <h1>Every card, and what connects them</h1>
-      </div>
-      <div class="header-actions">
-        <a class="state-io-button" href="matrix.html">Deck matrix &rarr;</a>
+    <div class="banner-art" aria-hidden="true">
+      <img src="https://api.scryfall.com/cards/named?format=image&amp;version=art_crop&amp;fuzzy=Felothar+the+Steadfast" alt="">
+      <img src="https://api.scryfall.com/cards/named?format=image&amp;version=art_crop&amp;fuzzy=Slinza%2C+the+Spiked+Stampede" alt="">
+      <img src="https://api.scryfall.com/cards/named?format=image&amp;version=art_crop&amp;fuzzy=Sauron%2C+the+Dark+Lord" alt="">
+    </div>
+    <div class="hdr-nav">
+      <a class="back-link" href="index.html">
+        <span class="back-arrow" aria-hidden="true">&#8592;</span> My Decks
+      </a>
+      <div class="hdr-links">
+        <a class="state-io-button" href="matrix.html" title="Compare variants, build the hundred, and shop for it">&#9635; Deck matrix</a>
       </div>
     </div>
+    <div class="brand-row" id="header-brand">
+      <div>
+        <p class="eyebrow">Card graph</p>
+        <h1>MtG Commander Card Universe</h1>
+      </div>
+    </div>
+    <button class="header-toggle" id="header-toggle" type="button" aria-expanded="false" aria-controls="header-brand"
+      aria-label="Show the title">
+      <span aria-hidden="true">&#8964;</span>
+    </button>
   </header>
 
   <main class="gp">
@@ -48,16 +62,20 @@
       <!-- FOCUS, above the filters, because it is a different question.
            Everything below narrows the list; this picks the one card the graph is drawn
            around. It used to be reachable only by finding the card in the list and
-           pressing Focus inside its popup, which works when the card is one of the 7,710
-           and is a dead end when it is not. -->
+           pressing Focus inside its popup, which works when the card is one of the 7,764
+           in the corpus and is a dead end when it is not. Typing now searches the whole
+           Commander-legal universe -- data/commander-universe.json, fetched on the first
+           keystroke -- so every legal card can be named and every card that can be a
+           commander says so. -->
       <div class="gp-focus">
         <label class="gp-focus-lab" for="focus-q">Focus card</label>
         <input type="search" id="focus-q" placeholder="Any Commander-legal card&hellip;"
                autocomplete="off" role="combobox" aria-expanded="false"
                aria-autocomplete="list" aria-controls="focus-menu"
                aria-describedby="focus-help">
-        <p class="gp-focus-help" id="focus-help">Draws the graph around it. Cards outside the
-          catalog are looked up and read by the same rules.</p>
+        <p class="gp-focus-help" id="focus-help">Any of the 31,830 Commander-legal cards.
+          Draws the graph around it; cards outside the corpus are looked up and read by the
+          same rules.</p>
         <!-- tabindex -1 on the list itself: it scrolls, and a browser puts any scrollable
              box in the tab order so a keyboard can reach the scrollbar. Here that meant Tab
              landed on the list rather than leaving the box, which is neither the combobox
@@ -78,16 +96,25 @@
       <div class="gp-bar">
         <button class="gp-pane-toggle" id="pane-toggle" type="button" aria-expanded="false">Filters</button>
         <span class="gp-count" id="count">loading&hellip;</span>
-        <button class="gp-lock" id="click-focus" type="button" aria-pressed="false"
-          title="Off: tapping a node shows the card, with a Focus button inside it. On: tapping re-centers straight away.">
-          &#128274; Tap to focus
-        </button>
+        <div class="gp-navmode">
+          <span class="gp-navmode-label" id="navmode-label">Card Click to Navigate Graph</span>
+          <div class="gp-seg" role="group" aria-labelledby="navmode-label">
+            <button class="gp-seg-btn is-on" data-clickmode="off" type="button" aria-pressed="true"
+              title="Clicking a card shows its picture, with a Focus button inside.">Off</button>
+            <button class="gp-seg-btn" data-clickmode="on" type="button" aria-pressed="false"
+              title="Clicking a card re-centers the graph on it.">On</button>
+          </div>
+        </div>
         <div class="gp-views" role="group" aria-label="View">
           <button class="gp-view is-on" data-view="list" type="button" aria-pressed="true">List</button>
           <button class="gp-view" data-view="graph" type="button" aria-pressed="false">Graph</button>
         </div>
       </div>
-      <details class="gp-copilot" id="copilot" open hidden></details>
+      <!-- Closed by default. It is a strip of findings ABOVE the results, and open it
+           pushed the card list off the first screen for a reader who came to look at
+           cards. The summary carries the count, so what it is holding is legible
+           without opening it. -->
+      <details class="gp-copilot" id="copilot" hidden></details>
       <div id="result"></div>
       <div class="gp-groups" id="groups" hidden></div>
       <div id="cy" hidden></div>
