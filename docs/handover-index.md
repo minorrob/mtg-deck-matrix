@@ -894,3 +894,4 @@ Prepared for the CrankMagic design review; production integration has not starte
 | `docs/glossary.md` | Editorial authority, consumers, contextual term matching, hover/focus/touch behavior, asset provenance and integration boundary. |
 | `tools/check-glossary.mjs` | Node-only structural validation for IDs, aliases, source references and the single-authority contract. Run directly; not yet added to the production suite runner. |
 | `assets/mana/{W,U,B,R,G,2,3}.svg` | Unmodified Scryfall mana symbols prepared for offline display. Not yet referenced by production pages. |
+| `design/crankmagic/evaluations.md` | Astra's simulator, pilot, optimization, collection, architecture, UX and AI assessment, linked to the detailed review findings and measured verification. |

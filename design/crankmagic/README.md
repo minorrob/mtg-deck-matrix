@@ -4,6 +4,7 @@ The final review package is now versioned with the application. **The production
 
 - Open [mtg-facelift-mockup.html](mtg-facelift-mockup.html) directly in a browser. Fonts, card images and logo are embedded. The prototype uses sample records and an explicitly labeled simulated progress sequence, not a real optimization run. It can retain its own preview reports locally; it does not manage the production card library.
 - Read [improvement-plan.md](improvement-plan.md), [collection-workflow.md](collection-workflow.md), [simulation-fidelity-plan.md](simulation-fidelity-plan.md) and [end-to-end-plan.md](end-to-end-plan.md).
+- Read [evaluations.md](evaluations.md) for the simulator, pilot-policy, optimizer, inventory, architecture, data, UX and AI assessments, with links to the detailed evidence and critiques.
 - Read [verification.md](verification.md) for this branch's fresh checks and the limits of those checks.
 
 ## Editing and reproduction
