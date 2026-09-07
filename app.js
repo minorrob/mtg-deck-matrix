@@ -638,7 +638,7 @@
 
   function loadDeckPageCards() {
     if (deckPageCards) return Promise.resolve(deckPageCards);
-    return fetch("data/cards.json?v=1")
+    return fetch("data/cards.json?v=2")
       .then((r) => r.json())
       .then((payload) => {
         const map = {};

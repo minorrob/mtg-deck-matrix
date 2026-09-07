@@ -72,9 +72,18 @@ for await (const line of lines) {
   rows += 1;
   let card;
   try { card = JSON.parse(line); } catch (error) { continue; }
-  if (!card.name || !wanted.has(card.name) || bodies.has(card.name)) continue;
+  if (!card.name) continue;
+  /* A double-faced card is stored under "Front // Back", and the repository stores it under
+     the front's name alone -- so an exact match on the bulk's name misses Fable of the
+     Mirror-Breaker, whose back is the 2/2 that actually fights. Index every name the card
+     answers to: the joined one, the front, and each face. */
+  const aliases = new Set([card.name, card.name.split(" // ")[0]]);
+  (card.card_faces || []).forEach((face) => { if (face.name) aliases.add(face.name); });
   const body = bodyOf(card);
-  if (body) bodies.set(card.name, body);
+  if (!body) continue;
+  for (const alias of aliases) {
+    if (wanted.has(alias) && !bodies.has(alias)) bodies.set(alias, body);
+  }
 }
 
 const creaturesIn = (list) => list.filter((c) => /Creature/.test(c.typeLine || ""));

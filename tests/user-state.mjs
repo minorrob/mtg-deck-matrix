@@ -35,7 +35,7 @@ check("every key names a module, and no key is listed twice", () => {
 
 const sources = Object.fromEntries(await Promise.all(
   ["app.js", "viewer.js", "graph-page.js", "custom-model.js", "deck-store.js", "shop-filters.js",
-    "manual-cards.js", "user-state.js"]
+    "manual-cards.js", "user-state.js", "card-images.js"]
     .map(async (f) => [f, await readFile(new URL(`../${f}`, import.meta.url), "utf8")])
 ));
 const allSource = Object.values(sources).join("\n");

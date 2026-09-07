@@ -76,6 +76,8 @@ function shape(card, source) {
     typeLine: card.typeLine || meta.typeLine || "",
     manaCost: card.manaCost || meta.manaCost || "",
     oracleText: card.oracleText || meta.oracleText || "",
+    power: card.power || meta.power,
+    toughness: card.toughness || meta.toughness,
     keywords: card.keywords || meta.keywords || [],
     colorIdentity: card.colorIdentity || meta.colorIdentity || [],
     commanderLegal: true,

@@ -42,6 +42,8 @@ const startingShell = result.finalCards.map((card, index) => {
     isFlexibleSlot: false,
     image: meta.image || "",
     oracleText: meta.oracleText || "",
+    power: meta.power,
+    toughness: meta.toughness,
     keywords: meta.keywords || [],
     colorIdentity: meta.colorIdentity || [],
     tcgplayerUrl: meta.tcgplayerUrl || "",

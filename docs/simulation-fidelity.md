@@ -102,7 +102,114 @@ repeats it under every score. It is not a fix.
 
 ---
 
-## 3 · Smaller distortions, recorded so they are not rediscovered
+## 3 · Combat is a scalar, and it should be a board — **designed, not built**
+
+**What the engine does today.** There is no combat. There is an arithmetic estimate of it:
+total attacking power, multiplied by a per-creature connect rate (0.85 for flying or menace,
+0.78 for trample, 0.70 otherwise), reduced by a toughness-weighted estimate of what the
+defenders soak, plus a flat deterrence of 2 for deathtouch and 1 for first strike. No
+attacker is ever assigned to a blocker. Nothing ever dies in combat. Nobody ever decides
+anything.
+
+That estimate was a reasonable place to start and it is now the ceiling on everything else.
+A deck's whole plan can be "make many small bodies and go wide", or "one huge trampler", or
+"hold three untapped blockers and win late", and the current model scores all three as a
+number times 0.7.
+
+### What a real combat step needs
+
+Six pieces, and the fourth is the one that turns a rules engine into a model of a *game*.
+
+**1 · A board, not a total.** Each seat holds creatures with printed power and toughness
+(now available — §1), damage marked this turn, tapped or untapped, and the keywords that
+change combat: flying, reach, menace, trample, deathtouch, first strike, double strike,
+vigilance, lifelink, indestructible, protection.
+
+**2 · Modifiers over time.** Power and toughness are a starting point, not a constant.
+`+1/+1` counters accumulate; `-1/-1` counters cancel against them; proliferate adds one of
+whatever is already there; anthems apply while their source is on the battlefield; poison
+counters are a second life total with its own loss condition at ten. A creature's body at
+the moment of combat is printed plus every modifier standing at that moment, and the whole
+point of a counters deck is that this number is not the printed one by turn six.
+
+**3 · Declaration, on both sides.** The attacker chooses who attacks and whom they attack.
+The defender chooses, per attacker, which creatures block it — an assignment problem, not a
+flag. Multiple attackers meeting multiple blockers is the normal case in a four-player game
+and it is where every interesting decision lives.
+
+**4 · The block-or-take decision, with a real threshold.** This is the piece that makes the
+model a model. From the specification:
+
+> "A player with only 1 creature on the board with 3 toughness, but attacked for 3, and the
+> game just started so the player has 40 health, will likely take the 3 damage vs. losing
+> the creature, dropping the player to 37 health and the creature survives."
+
+Exactly right, and it generalises. Blocking spends a creature to save life; taking spends
+life to keep a creature. Which is correct depends on what each is worth *at that moment*:
+
+| Input | Why it moves the answer |
+|---|---|
+| Life remaining | 3 of 40 is nothing; 3 of 4 is the game. Life is worth more the less of it there is, and not linearly. |
+| The blocker's board value | A creature that taps for mana, draws a card each turn, or is the commander is worth far more than its toughness. |
+| Whether the block is profitable | Blocking a 2/2 with a 3/3 kills the attacker and keeps the blocker. That is not a cost at all, it is a gain, and it happens constantly. |
+| Deathtouch, first strike, trample | Deathtouch makes every block a trade. First strike makes an even-looking block one-sided. Trample means blocking saves less life than it looks like it will. |
+| Who else is at the table | In a four-player game the seat that blocks is the seat that is short a creature next turn, against two other people. |
+
+So the decision is a value comparison, not a rule: **block when the life saved is worth more
+than the creature spent, priced at this life total and this board.** That function is where
+Playstyle enters (`docs/prd.md` §11) — a competitive pilot values its life total lower early
+and its board higher, a casual one blocks to keep bodies alive because losing creatures is
+what feels bad.
+
+**5 · Damage assignment.** An attacker blocked by two creatures assigns its power across
+them in an order the attacker chooses; deathtouch makes one point lethal, so a 1/1 deathtouch
+blocker eats any attacker; trample carries the excess to the player, which is why blocking a
+trampler saves less than blocking anything else. First strike is a separate damage step
+before the normal one, and double strike is both.
+
+**6 · Instants, and the fact that a turn is not a turn.** A defender holding two untapped
+lands and a combat trick is a different defender. The current engine has no concept of
+holding mana up for something, so a pump spell, a removal spell at instant speed and a fog
+are all just cards that were cast at some point. Modelling this needs, at minimum: mana held
+open, a hand the pilot is willing to spend from at instant speed, and the same block-or-take
+value function extended to "or change the outcome for two mana".
+
+### What it costs
+
+The engine runs about 28,700 games a second today. Real combat — a board, an assignment
+search per attack, two damage steps — will not. A five- to ten-fold slowdown is the honest
+expectation, which turns a 120,000-game measurement from four seconds into thirty or forty.
+
+That is a product decision, not only an engineering one, and there are three ways out:
+
+- **Accept it.** The published measurement is a tool run, not something a reader waits on;
+  only the browser's "Measure it properly" would feel it.
+- **Two combat models.** A fast estimate for the optimizer's inner loop, which runs tens of
+  thousands of times, and the real one for the published measurement. The risk is the one
+  this repository already has a test for: two paths that are supposed to agree and slowly
+  do not.
+- **Fewer games.** The protocol is six seeds of 20,000 because that is where the seed-to-seed
+  spread stopped shrinking with the *current* engine. A more detailed engine may converge
+  faster, or slower; that has to be re-measured rather than assumed.
+
+### The order to build it
+
+1. **The board.** Creatures as objects with bodies and keywords, replacing the scalar. No
+   decisions yet — attack with everything, block with nothing — and check that the score
+   moves in ways that make sense on decks whose plan is known.
+2. **Blocking and damage assignment**, with a fixed, obvious policy: block when it is a
+   clean profit, otherwise take it.
+3. **The value function** — life priced against board, with the Playstyle parameter.
+4. **Counters and modifiers over time.**
+5. **Instants held up.**
+
+Each step is measurable against the last, which is the only way a change this size stays
+honest: every one of them re-bases the numbers, and every one of them has to say by how much
+and why.
+
+---
+
+## 4 · Smaller distortions, recorded so they are not rediscovered
 
 - **The opponents are profiles, not decks.** `sim/opponents.json` describes nine playstyles
   statistically rather than playing real hundreds. A deck that beats "tuned" beats a

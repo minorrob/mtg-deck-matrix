@@ -93,6 +93,8 @@ function literal(card) {
     name: card.name, quantity: 1, isCommander: false,
     typeLine: meta.typeLine || "", manaCost: meta.manaCost || "",
     oracleText: meta.oracleText || "", keywords: meta.keywords || [],
+    power: meta.power || "", keywords: meta.keywords || [],
+    toughness: meta.toughness || "", keywords: meta.keywords || [],
     colorIdentity: meta.colorIdentity || [], commanderLegal: true,
     gameChanger: true, price: priceOf(card), tags: []
   };
@@ -227,6 +229,8 @@ for (const [variantId, plan] of Object.entries(buyPlans.plans)) {
         newlyAudited.set(key, {
           name: card.name, typeLine: card.typeLine || "", manaCost: card.manaCost || "",
           oracleText: card.oracleText || "", keywords: card.keywords || [],
+          power: card.power || "", keywords: card.keywords || [],
+          toughness: card.toughness || "", keywords: card.keywords || [],
           colorIdentity: card.colorIdentity || [], gameChanger: true,
           price: priceOf(card), ceiling: Math.max(priceOf(card), Number(card.ceiling ?? card.price ?? 0)),
           image: card.image || "", tcgplayerUrl: card.tcgplayerUrl || "",
@@ -243,6 +247,8 @@ for (const [variantId, plan] of Object.entries(buyPlans.plans)) {
         replaces: target.name, gameChanger: true, tags: [], whereToBuy: "Singles case",
         tcgplayerUrl: card.tcgplayerUrl || "", image: card.image || "",
         oracleText: card.oracleText || "", keywords: card.keywords || [],
+        power: card.power || "", keywords: card.keywords || [],
+        toughness: card.toughness || "", keywords: card.keywords || [],
         colorIdentity: card.colorIdentity || [], commanderLegal: true,
         brief: {
           value: `$${priceOf(card).toFixed(2)}. A Game Changer — this is what puts the deck in Bracket 3.`,

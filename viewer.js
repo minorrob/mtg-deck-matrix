@@ -602,7 +602,7 @@
   function loadFacts() {
     if (FACTS) return Promise.resolve(FACTS);
     if (!factsPending) {
-      factsPending = fetchJson("data/card-facts.json?v=1").then(function (f) {
+      factsPending = fetchJson("data/card-facts.json?v=2").then(function (f) {
         FACTS = f.cards || {};
         return FACTS;
       }).catch(function () { FACTS = {}; return FACTS; });
@@ -695,19 +695,63 @@
 
     loadFacts().then(function (facts) {
       var f = facts[name];
-      if (f && f.normal) {
-        var img = el("img", { src: f.normal, alt: name });
+      fillBack(back, name, f, card);
+      /* THE PICTURE, FROM WHEREVER IT IS. The shipped facts file covers 668 cards, so every
+         card in a deck somebody pasted in used to open on "is not in the card data" over a
+         blank rectangle -- a real card, whose name the app knows, that Scryfall has had a
+         picture of the whole time. card-images.js runs the ladder and caches what it
+         finds; here we only draw. */
+      front.textContent = "";
+      front.appendChild(el("div", { class: "fallback", text: name }));
+      cardImage(name).then(function (image) {
+        if (!image) {
+          front.textContent = "";
+          front.appendChild(el("div", { class: "fallback",
+            text: f ? "No image for " + name : "No picture found for " + name }));
+          return;
+        }
+        var img = el("img", { src: image.normal, alt: name });
         img.addEventListener("error", function () {
+          /* A cached URL that has stopped resolving is worse than none: drop it so the
+             next open asks again rather than drawing the same broken box forever. */
+          if (window.MtgCardImages && image.cached) window.MtgCardImages.forget(window.localStorage, name);
           front.textContent = "";
           front.appendChild(el("div", { class: "fallback", text: "No image for " + name }));
         });
+        front.textContent = "";
         front.appendChild(img);
-      } else {
-        front.appendChild(el("div", { class: "fallback",
-          text: f ? "No image for " + name : name + " is not in the card data" }));
-      }
-      fillBack(back, name, f, card);
+      });
     });
+  }
+
+  /* One card's picture: the shipped facts, then this browser's cache, then the image the
+     deck record already carries from its import, then Scryfall. See card-images.js. */
+  function cardImage(name) {
+    var Images = window.MtgCardImages;
+    if (!Images) return Promise.resolve(null);
+    if (!scryfall && window.MtgScryfall) scryfall = window.MtgScryfall.createClient();
+    return loadFacts().then(function (facts) {
+      return Images.resolve(name, {
+        facts: facts,
+        storage: window.localStorage,
+        client: scryfall,
+        local: function (wanted) { return heldCard(wanted); }
+      });
+    }).catch(function () { return null; });
+  }
+
+  /* The card as the app already holds it -- in an added deck's record, or in the population
+     of cards somebody added from a link. Both carry an image and neither needs a request. */
+  function heldCard(name) {
+    var lower = String(name).toLowerCase();
+    for (var i = 0; i < (IMPORTS || []).length; i += 1) {
+      var cards = IMPORTS[i].cards || [];
+      for (var j = 0; j < cards.length; j += 1) {
+        if (String(cards[j].name).toLowerCase() === lower && cards[j].image) return cards[j];
+      }
+    }
+    var Manual = window.MtgManualCards;
+    return Manual ? Manual.get(window.localStorage, name) : null;
   }
 
   function fillBack(back, name, f, card) {
@@ -2911,7 +2955,7 @@
       // The ratings and the guides are generated separately and may lag; the
       // page is fully usable without either, so a miss is not an error.
       return Promise.all([
-        fetchJson("data/deck-ratings.json?v=3").catch(function () { return null; }),
+        fetchJson("data/deck-ratings.json?v=4").catch(function () { return null; }),
         fetchJson("data/deck-guides.json?v=1").catch(function () { return null; }),
         fetchJson("data/deck-swaps.json?v=1").catch(function () { return null; })
       ]);

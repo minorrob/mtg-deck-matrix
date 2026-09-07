@@ -131,6 +131,8 @@ function makeItem(card, replaces, {category, stage, suffix, reason, measuredNote
       typeLine: card.typeLine || "",
       manaCost: card.manaCost || "",
       oracleText: card.oracleText || "",
+      power: card.power,
+      toughness: card.toughness,
       keywords: card.keywords || [],
       colorIdentity: card.colorIdentity || [],
       gameChanger: Boolean(card.gameChanger),
@@ -162,6 +164,8 @@ function makeItem(card, replaces, {category, stage, suffix, reason, measuredNote
     tcgplayerUrl: card.tcgplayerUrl || "",
     image: card.image || "",
     oracleText: card.oracleText || "",
+    power: card.power,
+    toughness: card.toughness,
     keywords: card.keywords || [],
     colorIdentity: card.colorIdentity || [],
     commanderLegal: true,
@@ -281,6 +285,8 @@ for (const [variantId, plan] of Object.entries(buyPlans.plans)) {
         name: card.name, quantity: 1, isCommander: false,
         typeLine: meta.typeLine || "", manaCost: meta.manaCost || "",
         oracleText: meta.oracleText || "", keywords: meta.keywords || [],
+        power: meta.power || "", keywords: meta.keywords || [],
+        toughness: meta.toughness || "", keywords: meta.keywords || [],
         colorIdentity: meta.colorIdentity || [], commanderLegal: true,
         gameChanger: Boolean(card.gameChanger), price: priceOf(card)
       }]);

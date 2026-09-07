@@ -86,7 +86,9 @@ check("the globals viewer.js reaches for are the ones the modules attach", () =>
     "window.MtgManualCards": "manual-cards.js",
     // What the score is made of, rendered the same way on the review screen and the
     // deck page so the two can never drift.
-    "window.MtgMeasureReport": "measure-report.js"
+    "window.MtgMeasureReport": "measure-report.js",
+    // The picture for a card the shipped facts file does not carry.
+    "window.MtgCardImages": "card-images.js"
   };
   [...new Set(wanted)].forEach((name) => {
     assert.ok(attached[name], `viewer.js reads ${name}, which nothing on this page defines`);

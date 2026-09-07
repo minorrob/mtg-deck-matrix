@@ -90,12 +90,18 @@ check("each step of the ladder is reported once, not summed and reported twice",
 });
 
 check("a deck whose upgrades measure worse is a warning, not an opportunity", () => {
-  // Atraxa's B3 path measures -4.98 with significance. This is the finding the
-  // whole module exists for, so it is asserted by name rather than by shape.
+  /* Atraxa's B3 path measures worse than its Tuned hundred, with significance. This is the
+     finding the whole module exists for -- an upgrade path that costs money and loses
+     points -- so it is asserted by name rather than by shape.
+
+     The magnitude moved from -4.98 to -5.58 when the engine started reading printed power
+     and toughness instead of estimating every creature's body from its mana value. The
+     finding did not change; the measurement behind it got better. Pinned to the digit so
+     that the next time it moves, somebody has to say why. */
   const atraxa = lenses.find((l) => l.id === "sim-worse-d3-b3");
   assert.ok(atraxa, "the Atraxa B3 finding is missing");
   assert.equal(atraxa.kind, "warning");
-  assert.equal(atraxa.impact.score, -4.98);
+  assert.equal(atraxa.impact.score, -5.58);
   assert.equal(atraxa.action.verb, "hold");
   assert.match(atraxa.action.label, /Do not buy/);
   assert.ok(atraxa.impact.dollars < 0, "money not spent is a negative amount");
@@ -105,7 +111,8 @@ check("a deck whose upgrades pay says what they cost per point", () => {
   const felothar = lenses.find((l) => l.id === "sim-pays-d4-b3");
   assert.ok(felothar);
   assert.equal(felothar.kind, "opportunity");
-  assert.equal(felothar.impact.score, 4.47);
+  // 4.47 before the engine read printed bodies; 4.78 after. Same finding, better number.
+  assert.equal(felothar.impact.score, 4.78);
   assert.equal(felothar.action.verb, "buy");
   assert.match(felothar.why, /points per \$100 spent/);
 });
@@ -150,7 +157,7 @@ check("the biggest thing at stake is first", () => {
   const scores = lenses.map((l) => Math.abs(l.impact.score || 0));
   const sorted = scores.slice().sort((a, b) => b - a);
   assert.deepEqual(scores, sorted, "lenses are ordered by points at stake");
-  assert.equal(lenses[0].impact.score, -4.98,
+  assert.equal(lenses[0].impact.score, -5.58,
     "the five-point drop leads, ahead of every gain and every observation");
 });
 

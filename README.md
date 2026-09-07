@@ -329,7 +329,7 @@ each tag says why that module is there and what breaks without it.
 
 ### Tests
 
-Thirty-three suites, run individually or all at once. They use only Node built-ins — there is
+Thirty-four suites, run individually or all at once. They use only Node built-ins — there is
 no `package.json`, no dependency to install and no build step.
 
 ```
@@ -360,6 +360,7 @@ and something got pushed on the strength of it.
 | `card-resolve` | what to do when a pasted name is not a card: the ladder that finds candidates, and the panel that asks rather than dead-ends |
 | `card-link` | a link to the card, read for whatever it will give: the exact-printing rung, the slug guess, and the manual card a link that resolves to nothing still becomes |
 | `manual-cards` | the population of cards Scryfall does not have yet: one request to ask about all of them, exact matches only, and the promotion written back into every deck holding one |
+| `card-images` | the picture for a card the app does not ship: shipped facts, then this browser's cache, then the image the deck record already carries, then Scryfall — bounded, least-recently-used, and safe when storage refuses to write |
 | `measure-report` | what the score is made of: that the breakdown adds up to the number, that rounding for display never moves it, that the run says how much work it did and how fast, and that a re-run says whether the change is real before it replaces anything |
 | `guide-agent` | the agent that writes "How to play it": that every card it names is one of the hundred it was sent, that it is never asked for a number the app can measure, and that the checks pass on the six guides a person wrote by hand |
 | `friends-deck` | a real 100-card export somebody handed over, pinned as a fixture: that every card in it is in the registry and reachable on the graph, and that the one name in it which is not a card is answered with the real cards a person would have meant |

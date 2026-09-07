@@ -124,6 +124,8 @@ function hydrate(list, facts, catalog, prices, commander) {
       typeLine: fact.typeLine || audited.typeLine || "",
       manaCost: fact.manaCost || audited.manaCost || "",
       oracleText: fact.oracleText || audited.oracleText || "",
+      power: fact.power || audited.power,
+      toughness: fact.toughness || audited.toughness,
       keywords: fact.keywords || audited.keywords || [],
       colorIdentity: fact.colorIdentity || audited.colorIdentity || [],
       // The Master's own price column, so a build's cost matches what the

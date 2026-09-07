@@ -94,6 +94,13 @@
         quantity: Number(entry.quantity || 1),
         isCommander: Boolean(entry.isCommander),
         typeLine: fact.typeLine || fact.type || "",
+        /* THE PRINTED BODY. Without these the engine falls through to estimating a
+           creature as max(1, round(cmc * 0.9)) -- a one-mana 2/1 played as a 1/1, a
+           seven-mana 4/4 as a 6/6 -- in a simulation whose whole business is combat. The
+           fields were absent from every card file until tools/add-power-toughness.mjs put
+           them there; passing them through is what makes them count. */
+        power: fact.power,
+        toughness: fact.toughness,
         manaCost: fact.manaCost || "",
         oracleText: fact.oracleText || "",
         keywords: fact.keywords || [],
@@ -237,6 +244,11 @@
       commanderCastRate: round(mean((r) => r.commanderCastRate), 4),
       deadCardsAtT8: round(mean((r) => r.deadCardsAtT8), 2),
       avgWinTurn: round(mean((r) => r.avgWinTurn), 2),
+      /* The two experience metrics, averaged like everything else. The engine computes
+         them on every run; publishing a rung's Pod Fun figure without them meant carrying
+         the previous run's number forward beside a score that had moved. */
+      funScore: round(mean((r) => r.funScore || 0), 4),
+      podFunScore: round(mean((r) => r.podFunScore || 0), 4),
       perSeedScores: scores.map((v) => round(v, 1)),
       // Stamped so a reader can tell a preview from a measurement without
       // having to know which button produced it.

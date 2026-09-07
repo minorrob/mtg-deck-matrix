@@ -234,6 +234,8 @@ for (const plan of Object.values(buyPlans.plans)) {
       manaCost: pick.card.manaCost || "",
       typeLine: pick.card.typeLine || "",
       oracleText: pick.card.oracleText || "",
+      power: pick.card.power,
+      toughness: pick.card.toughness,
       keywords: pick.card.keywords || [],
       colorIdentity: pick.card.colorIdentity || [],
       gameChanger: Boolean(pick.card.gameChanger),
