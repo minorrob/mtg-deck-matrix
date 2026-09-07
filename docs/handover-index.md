@@ -886,7 +886,9 @@ ever filled. Neither is a fault — they are places where the record stops.
 
 ## Review-branch addition · September 7, 2026
 
-Prepared for the CrankMagic design review; production integration has not started.
+Prepared for the CrankMagic design review. Production application integration is
+now authorized; simulator work is explicitly on hold. See
+`docs/crankmagic-build-status.md` for the implementation boundary and remaining work.
 
 | Path | Ownership and provenance |
 |---|---|

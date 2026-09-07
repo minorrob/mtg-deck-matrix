@@ -82,6 +82,11 @@
      "null", which is the difference between a blank and a value that sorts. */
   function cellXml(value, col, row, header) {
     const ref = cellRef(col, row);
+    // Excel cannot store more than 32,767 UTF-16 units in one cell. Callers
+    // split large audit payloads into numbered parts; never silently truncate.
+    if (typeof value === "string" && value.length > 32767) {
+      throw new Error(`Cell ${ref} exceeds Excel's text limit. Split the value into numbered rows.`);
+    }
     if (value === null || value === undefined || value === "") return `<c r="${ref}"/>`;
     if (typeof value === "number" && Number.isFinite(value)) {
       return `<c r="${ref}"><v>${value}</v></c>`;
@@ -116,7 +121,8 @@
       : "";
     return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">${pane}${cols}<sheetData>${
-      rows.join("")}</sheetData></worksheet>`;
+      rows.join("")}</sheetData>${columns.length && sheet.autoFilter !== false
+        ? `<autoFilter ref="A1:${cellRef(columns.length - 1, rows.length || 1)}"/>` : ""}</worksheet>`;
   }
 
   const CONTENT_TYPES = (count) => `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -139,11 +145,11 @@ ${Array.from({length: count}, (_u, i) =>
      entry is a corrupt file rather than an unstyled one. */
   const STYLES = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>
-<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>
+<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font></fonts>
+<fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF254F78"/><bgColor indexed="64"/></patternFill></fill></fills>
 <borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>
 <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
-<cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs>
+<cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment horizontal="left" vertical="top" wrapText="1"/></xf><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment horizontal="left" vertical="top" wrapText="1"/></xf></cellXfs>
 </styleSheet>`;
 
   /**

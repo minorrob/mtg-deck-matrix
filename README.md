@@ -347,7 +347,7 @@ data/source/                             the workbooks and documents those files
 tools/                                   importers and one-off migrations (⚠ several write data/)
 tools/sim/                               the simulation pipeline: request → pool → optimize → bake
 sim/                                     config.json, opponents.json, status.json — the rest is ignored
-tests/                                   35 Node suites, built-ins only
+tests/                                   39 Node suites, built-ins only
 tests/uat/                               the browser journeys, and a README worth reading
 graph/                                   the Neo4j ingest that bakes data/graph.json — local only
 prototype/  payload/  payload_v3/        historical; nothing running references them
@@ -366,7 +366,7 @@ each tag says why that module is there and what breaks without it.
 
 ### Tests
 
-Thirty-five suites, run individually or all at once. They use only Node built-ins — there is
+Thirty-nine suites, run individually or all at once. They use only Node built-ins — there is
 no `package.json`, no dependency to install and no build step.
 
 ```
@@ -461,6 +461,27 @@ moved.
   pull request rather than merging.
 
 ## Read further
+
+### CrankMagic application work in progress
+
+The approved production implementation is being assembled at `crankmagic.html`
+on `astra/simulation-fidelity-plan`. `docs/crankmagic-build-status.md` records the
+remaining integration work. Simulator changes are explicitly on hold.
+
+New Node suites run automatically with `bash runtests.sh -q`:
+
+- `collection-model`: copy conservation, acquisition, reservations, placement,
+  replacements, archive, Sell / Trade and duplicate imports.
+- `collection-exchange`: staged parsing, printing identity, checksummed backups,
+  safe spreadsheet text and enriched workbook projections.
+- `crankmagic-core`: hard construction limits, atomic compound changes and linked
+  option promotion without duplicate ownership.
+- `crankmagic-workbook`: exact printing round trips, selective spreadsheet edits,
+  Excel limits and an optional independent reader (`XLSX_PYTHON`).
+
+`node tests/uat/crankmagic-journeys.mjs` exercises the new app through Chromium,
+including native IndexedDB conflicts, quota aborts, offline reopening, mobile
+navigation and the complete order/receipt/placement/backup journey.
 
 | | |
 |---|---|

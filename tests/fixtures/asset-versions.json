@@ -13,9 +13,73 @@
       "version": 126,
       "sha": "c4a4917005d3cd1e"
     },
+    "assets/crankmagic/commander-atraxa.webp": {
+      "version": 1,
+      "sha": "d03485ee89d314db"
+    },
+    "assets/crankmagic/commander-chulane.webp": {
+      "version": 1,
+      "sha": "4b6ce73547357fb2"
+    },
+    "assets/crankmagic/commander-krenko.webp": {
+      "version": 1,
+      "sha": "ee0bb3c0df1c3c17"
+    },
+    "assets/crankmagic/commander-shadrix.webp": {
+      "version": 1,
+      "sha": "ace1b51076ede727"
+    },
+    "assets/crankmagic/crankmagic-logo-wand-v3-256.webp": {
+      "version": 1,
+      "sha": "06ab25dd3f2bc561"
+    },
+    "assets/crankmagic/satoshi-400.woff2": {
+      "version": 1,
+      "sha": "50dca57f0b77918e"
+    },
+    "assets/crankmagic/satoshi-500.woff2": {
+      "version": 1,
+      "sha": "af02a72246f53ad4"
+    },
+    "assets/crankmagic/satoshi-700.woff2": {
+      "version": 1,
+      "sha": "353a7fbfb4475f0c"
+    },
+    "assets/mana/2.svg": {
+      "version": 1,
+      "sha": "5f14c1b2a9e89296"
+    },
+    "assets/mana/3.svg": {
+      "version": 1,
+      "sha": "cc90e556b8f73152"
+    },
+    "assets/mana/B.svg": {
+      "version": 1,
+      "sha": "5dcca7a7b7ed92ce"
+    },
+    "assets/mana/G.svg": {
+      "version": 1,
+      "sha": "5a741e9f498fd99b"
+    },
+    "assets/mana/R.svg": {
+      "version": 1,
+      "sha": "c3c60f00e8f402d2"
+    },
+    "assets/mana/U.svg": {
+      "version": 1,
+      "sha": "ed6ec190796f9dba"
+    },
+    "assets/mana/W.svg": {
+      "version": 1,
+      "sha": "b4cc36093b2df3e8"
+    },
     "build-panel.js": {
       "version": 4,
       "sha": "20ae1f37aec98908"
+    },
+    "card-catalog.js": {
+      "version": 1,
+      "sha": "054c09e0200558a1"
     },
     "card-classify.js": {
       "version": 1,
@@ -41,9 +105,77 @@
       "version": 3,
       "sha": "0834a1d637e65152"
     },
+    "collection-exchange.js": {
+      "version": 1,
+      "sha": "c61a2bcf8b28540e"
+    },
+    "collection-model.js": {
+      "version": 1,
+      "sha": "50352e4a21d655df"
+    },
+    "collection-repository.js": {
+      "version": 1,
+      "sha": "648d7df185b0953b"
+    },
     "compliance-model.js": {
       "version": 2,
       "sha": "5843be95892058c1"
+    },
+    "crankmagic-app.js": {
+      "version": 1,
+      "sha": "11f970bc63f8003b"
+    },
+    "crankmagic-assets.js": {
+      "version": 1,
+      "sha": "3476ee35f0acecd7"
+    },
+    "crankmagic-brand.js": {
+      "version": 1,
+      "sha": "7ae1f76ec8505160"
+    },
+    "crankmagic-collection.js": {
+      "version": 1,
+      "sha": "8e898a24a574a1de"
+    },
+    "crankmagic-decks.js": {
+      "version": 1,
+      "sha": "0499357e36340607"
+    },
+    "crankmagic-design.css": {
+      "version": 1,
+      "sha": "09ec296518cdef75"
+    },
+    "crankmagic-discover.js": {
+      "version": 1,
+      "sha": "b781397170b36e01"
+    },
+    "crankmagic-exchange-ui.js": {
+      "version": 1,
+      "sha": "db0617b9e556932a"
+    },
+    "crankmagic-glossary.js": {
+      "version": 1,
+      "sha": "52e344df8ef38d24"
+    },
+    "crankmagic-graph.js": {
+      "version": 1,
+      "sha": "ff0a5e9f0e0502b9"
+    },
+    "crankmagic-lab.js": {
+      "version": 1,
+      "sha": "908eeb8bb51711d1"
+    },
+    "crankmagic-plan-editor.js": {
+      "version": 1,
+      "sha": "6b97ae1d80fb6e5a"
+    },
+    "crankmagic-sw.js": {
+      "version": 1,
+      "sha": "e760c3f735be4fcb"
+    },
+    "crankmagic.css": {
+      "version": 1,
+      "sha": "28df9deb61f4473b"
     },
     "custom-model.js": {
       "version": 3,
@@ -64,6 +196,10 @@
     "data/cards.json": {
       "version": 2,
       "sha": "7b4fc592dc9ec58e"
+    },
+    "data/commander-glossary.json": {
+      "version": 1,
+      "sha": "3bca78d0b852572a"
     },
     "data/commander-universe.json": {
       "version": 1,
@@ -100,6 +236,10 @@
     "data/pull-list.json": {
       "version": 1,
       "sha": "5f58e9270e04b9a0"
+    },
+    "data/rung-lists.json": {
+      "version": 1,
+      "sha": "88236fee7f36dd65"
     },
     "data/simulation-summary.json": {
       "version": 3,
@@ -145,6 +285,10 @@
       "version": 1,
       "sha": "b6aff451bbef0894"
     },
+    "draft-builder.js": {
+      "version": 1,
+      "sha": "992ef61fe4098a2c"
+    },
     "edhrec-client.js": {
       "version": 1,
       "sha": "40f86ac14065b1d7"
@@ -160,6 +304,10 @@
     "graph-page.js": {
       "version": 28,
       "sha": "0d878295e7143393"
+    },
+    "guide-agent.js": {
+      "version": 1,
+      "sha": "83c20995bc50cb07"
     },
     "header.css": {
       "version": 3,
@@ -238,12 +386,12 @@
       "sha": "ba82a482c319ee2b"
     },
     "xlsx-reader.js": {
-      "version": 1,
-      "sha": "73cf11df9d616bca"
+      "version": 2,
+      "sha": "b0bbed5589c2f043"
     },
     "xlsx-writer.js": {
-      "version": 1,
-      "sha": "d7a5f2cc915a434a"
+      "version": 2,
+      "sha": "05fd48698e0bb05a"
     }
   }
 }

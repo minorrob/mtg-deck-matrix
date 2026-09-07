@@ -34,7 +34,7 @@ import {existsSync} from "node:fs";
 import {createHash} from "node:crypto";
 
 const ROOT = new URL("../", import.meta.url);
-const PAGES = ["index.html", "matrix.html", "graph.html"];
+const PAGES = ["index.html", "matrix.html", "graph.html", "crankmagic.html"];
 const MANIFEST = new URL("./fixtures/asset-versions.json", import.meta.url);
 const UPDATE = process.argv.includes("--update");
 
@@ -48,16 +48,18 @@ const note = (file, where, version) => {
   refs.get(file).set(where, version);
 };
 
-for (const page of PAGES) {
-  const src = await readFile(new URL(page, ROOT), "utf8");
-  for (const m of src.matchAll(/(?:src|href)="([A-Za-z0-9._-]+\.(?:js|css))\?v=(\d+)"/g)) {
-    note(m[1], page, Number(m[2]));
-  }
-}
-for (const module of ["app.js", "viewer.js", "graph-page.js"]) {
-  const src = await readFile(new URL(module, ROOT), "utf8");
-  for (const m of src.matchAll(/"((?:data|sim)\/[A-Za-z0-9._/-]+)\?v=(\d+)"/g)) {
-    note(m[1], module, Number(m[2]));
+// Follow loaded local modules/styles, including the worker's explicit offline
+// inventory. Font/image changes need the same protection as JavaScript. Remote
+// card URLs and data: embedded font payloads are deliberately outside this scan.
+const queue = [...PAGES, "app.js", "viewer.js", "graph-page.js"], scanned = new Set();
+while (queue.length) {
+  const file = queue.shift();
+  if (scanned.has(file)) continue;
+  scanned.add(file);
+  const src = await readFile(new URL(file, ROOT), "utf8");
+  for (const m of src.matchAll(/["'(]((?:[A-Za-z0-9._-]+\/)*[A-Za-z0-9._-]+\.(?:js|css|json|svg|png|webp|woff2))\?v=(\d+)/g)) {
+    note(m[1], file, Number(m[2]));
+    if (/\.(?:js|css)$/.test(m[1])) queue.push(m[1]);
   }
 }
 
@@ -90,7 +92,7 @@ for (const [file, seen] of [...refs].sort()) {
   const version = [...seen.values()][0];
   let body;
   try {
-    body = await readFile(new URL(file, ROOT), "utf8");
+    body = await readFile(new URL(file, ROOT));
   } catch {
     assert.fail(`${file} is referenced with ?v=${version} but is not in the repo`);
   }

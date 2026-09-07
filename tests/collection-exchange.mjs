@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {createRequire} from 'node:module';
+const require=createRequire(import.meta.url),E=require('../collection-exchange.js'),M=require('../collection-model.js'),C=require('../card-catalog.js'),P=require('../deck-import.js');
+let checks=0;const ok=(v)=>{assert.ok(v);checks++;};
+const csv='Card name,Quantity,Set,Collector number,Finish,Notes\r\n"Chulane, Teller of Tales",2,eld,326,foil,"one line\nand another"\r\nSol Ring,1,cmm,411,nonfoil,"quoted ""note"""';
+const parsed=E.parse(csv);assert.equal(parsed.issues.length,0);assert.equal(parsed.rows[0].name,'Chulane, Teller of Tales');assert.equal(parsed.rows[0].notes,'one line\nand another');assert.equal(parsed.rows[1].printing.set,'cmm');checks+=4;
+ok(E.parse('Card name,Quantity\nSol Ring,1.5').issues.length);ok(E.parse('Card name,Quantity\nSol Ring,bad').issues.length);assert.throws(()=>E.parseCSV('"unterminated'),/not closed/);checks++;
+const paste=E.parse('1 Sol Ring\n99 Wastes',{deckParser:P});assert.equal(paste.rows.length,2);assert.equal(paste.rows[1].quantity,99);checks+=2;
+let s=M.empty(),n=0;const run=(type,args)=>{s=M.apply(s,{type,id:'exchange'+(++n),...args}).state;};
+const c=C.normalize({name:'Sol Ring',legalities:{commander:'legal'},typeLine:'Artifact',manaCost:'{1}',colors:[],colorIdentity:[],price:null});run('cards',{cards:[c]});run('acquire',{lot:{id:'physical1',cardId:c.id,quantity:2,printing:{id:'printing-uuid',set:'cmm',collector:'411',finish:'foil'},notes:'=not a formula'}});
+const book=E.workbook(s),library=book.sheets.find(x=>x.name==='Library');assert.equal(library.rows[0].id,'physical1');assert.equal(library.rows[0].printingId,'printing-uuid');assert.equal(library.rows[0].quantity,2);assert.equal(library.rows[0].notes,'=not a formula');assert.equal(book.sheets.find(x=>x.name==='Card metadata').rows[0].price,null);checks+=5;
+const archive=await E.backup({state:s,history:[]});assert.deepEqual((await E.readBackup(JSON.stringify(archive))).state,s);checks++;
+const corrupt=structuredClone(archive);corrupt.payload.state.lots[0].quantity++;await assert.rejects(()=>E.readBackup(corrupt),/checksum/);checks++;
+const reordered={history:[],state:s};assert.equal(await E.hash(reordered),await E.hash({state:s,history:[]}));checks++;
+const exported=E.csv([{name:'+2 Mace',note:'=SUM(A1)'}],[{key:'name',label:'Name'},{key:'note',label:'Notes'}]);ok(exported.includes("'+2 Mace"));ok(exported.includes("'=SUM"));
+assert.notEqual(C.key('Card / Name'),C.key('Card Name'));assert.equal(C.key('Sol Ring'),C.key('sol ring'));checks+=2;
+const sheets=book.sheets.map(s=>s.name);for(const name of ['Summary','Library','Deck plans','Allocations','Upgrade and bracket options','Acquisition queue','Sell and Trade','Card metadata','History','Metadata dictionary'])ok(sheets.includes(name));
+console.log(`collection-exchange: ${checks} checks passed; explicit quantities, printing identity, lossless backups and safe export.`);

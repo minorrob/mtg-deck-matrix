@@ -83,14 +83,14 @@
   <!-- Reading what you own out of whatever file it lives in. xlsx-reader is a
        ZIP walk plus DecompressionStream, so a real Excel file is read here
        without asking anybody to export it as CSV first. -->
-  <script src="xlsx-reader.js?v=1" defer></script>
+  <script src="xlsx-reader.js?v=2" defer></script>
   <!-- And the writer, for the blank collection template the bench offers. It was missing
        and the reader was here, which is the asymmetry a wiring test exists to catch:
        "download template" would have reported the tool missing at the one moment
        somebody needed it. docx-writer comes first because the xlsx writer borrows its
        ZIP builder -- an .xlsx and a .docx are both ZIPs, and there is one copy of that. -->
   <script src="docx-writer.js?v=1" defer></script>
-  <script src="xlsx-writer.js?v=1" defer></script>
+  <script src="xlsx-writer.js?v=2" defer></script>
   <script src="inventory-import.js?v=1" defer></script>
   <!-- The reader's own data, named key by key, and the menu that clears it. Shared with
        the other page: a clear that missed a key one page writes and the other reads would
