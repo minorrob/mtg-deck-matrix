@@ -3,11 +3,13 @@
 *What a new reader — human or model — needs in order to evaluate this app, explain it, and
 keep building it without breaking it.*
 
-**Review-branch note (September 7):** this index is a dated architectural snapshot; several
+**Production application update (September 7):** The CrankMagic non-simulator build is now implemented. Start with [crankmagic-architecture.md](crankmagic-architecture.md) and [crankmagic-build-status.md](crankmagic-build-status.md) for its modules, entries, persistence and current validation. The map below describes the retained legacy application and design history. Simulator changes remain on hold.
+
+**Historical review-branch note (September 7):** this index is a dated architectural snapshot; several
 counts and open-PR statements below predate the later commits. The current CrankMagic review
 package is mapped in [`design/crankmagic/README.md`](../design/crankmagic/README.md). It includes
 the final standalone mockup, plans, editable sources and fresh verification. Upstream
-`118fe39` is merged on the review branch; production redesign still awaits sign-off.
+`118fe39` is merged on the review branch; production execution was subsequently authorized.
 
 Written 2026-09-07 by reading the repository at commit `8f0a0c0` on branch
 `claude/mtg-deck-matrix-ui-fixes-f7om91`. Every path below was checked to exist and every

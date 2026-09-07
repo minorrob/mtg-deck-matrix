@@ -34,7 +34,7 @@ import {existsSync} from "node:fs";
 import {createHash} from "node:crypto";
 
 const ROOT = new URL("../", import.meta.url);
-const PAGES = ["index.html", "matrix.html", "graph.html", "crankmagic.html"];
+const PAGES = ["index.html", "matrix.html", "graph.html", "crankmagic.html", "legacy-decks.html", "legacy-graph.html"];
 const MANIFEST = new URL("./fixtures/asset-versions.json", import.meta.url);
 const UPDATE = process.argv.includes("--update");
 

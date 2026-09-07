@@ -1,6 +1,23 @@
+# CrankMagic release journeys
+
+Run `node tests/uat/journeys.mjs` with the repo served on port 8790. The runner executes
+`crankmagic-journeys.mjs` (new-user assembly, exact prints, source correction, concurrency,
+quota abort, backup/restore, construction, graph, offline and mobile),
+`crankmagic-recovery.mjs` (legacy migration, copy transfers, manual verification, XLSX edits,
+evidence comparison, stale forms and damaged-store recovery), and `legacy-journeys.mjs`
+(the complete retained measurement-workspace regression suite below).
+
+Set `UAT_BASE` to override the URL. `UAT_PLAYWRIGHT` can point to an installed Playwright
+index.js; `UAT_CHROMIUM` selects its Chromium binary. Windows production journeys also
+find Chrome at its normal Program Files path. A missing browser/server fails the release
+gate. Each journey uses a fresh isolated browser context; no personal profile is modified.
+The 39 Node suites remain separately required via `bash runtests.sh -q`.
+
+# Retained legacy journey rationale
+
 # User journeys, in a browser
 
-The thirty-two suites in `tests/` check that the modules are right. Nothing in
+The original Node suites in `tests/` check that the modules are right. Nothing in
 them opens a page. This does: three people, twenty-one journeys, two screen sizes, in a
 real Chromium.
 

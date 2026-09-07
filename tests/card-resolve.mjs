@@ -149,7 +149,7 @@ import {readFile} from "node:fs/promises";
 const panel = await readFile(new URL("../import-panel.js", import.meta.url), "utf8");
 const store = await readFile(new URL("../deck-store.js", import.meta.url), "utf8");
 const importer = await readFile(new URL("../deck-import.js", import.meta.url), "utf8");
-const page = await readFile(new URL("../index.html", import.meta.url), "utf8");
+const page = await readFile(new URL("../legacy-decks.html", import.meta.url), "utf8");
 
 check("the panel asks about unmatched names instead of walking past them", () => {
   assert.match(panel, /if \(deck\.unresolved && deck\.unresolved\.length && opts\.resolveNames\) await renderFixNames\(\);/,

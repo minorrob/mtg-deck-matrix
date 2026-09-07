@@ -1,57 +1,72 @@
-# CrankMagic production build
+# CrankMagic production application build
 
-Authorized September 7, 2026: implement the approved application plan with static hosting and local persistence. **Simulator work is on hold until the user explicitly releases it.** Another session owns that work.
+Authorized September 7, 2026: implement the approved application with static hosting
+and local persistence. **Simulator work remains on hold until the user releases it.**
+Another session owns that work.
 
-## Boundaries
+## Delivered application scope
 
-- Work on `astra/simulation-fidelity-plan`, never main. Current application base includes upstream `118fe39`.
-- Fetched `bba5d08` on execution start; its simulator/data refresh is intentionally not merged during the hold.
-- Do not edit simulation engines, pilot policies, measurement protocols, baked measurements, simulation configuration or simulation tools. The application may consume existing verified card data and imported versioned reports. Do not invent progress or scores.
-- Keep the approved mockup as the design reference. Production state must never come from its sample records.
-- No paid API requests without the applicable spending authorization. Existing static guides and imported validated advice remain usable.
-- Before pushing: `bash runtests.sh -q`, production browser journeys and relevant new checks. Publish only a draft PR; no merge to main or deployment.
+- [x] Pure collection model: exact printing lots, whole quantities, commitments,
+  allocation, In deck placement, source corrections, partial actions, swaps, archive,
+  Sell / Trade, audit effects, linked upgrade/bracket options and reversible changes.
+- [x] Native IndexedDB transactions, cross-tab revisions, staged migration, undo,
+  checksummed backup/restore, quota abort, explicit damaged-record recovery and optional
+  user-selected backup mirror.
+- [x] Public catalog, supplemental records and reviewed exact verification; name/link
+  resolution; staged CSV/TSV/text/XLSX; separate EDHREC commander ranking snapshot.
+- [x] Approved CrankMagic brand, dark blue/Satoshi shell, mist, sticky navigation,
+  semantic left-aligned sortable/filterable tables, groups, selected columns and glossary.
+- [x] My Decks/overviews/comparison, Collection/groups, Shop/acquisition/assembly,
+  partial status corrections, donor review, workbook export and User Functions.
+- [x] Play Lab Commander choice versus Deck Definition, real constrained initial
+  construction and existing-list paths, report/advice history and a visible simulator hold.
+- [x] Discover graph/wheel zoom/navigation, evidence-labeled alternatives, review/accept,
+  dismissed recommendations, and recorded games.
+- [x] Enriched Excel export and reviewed edited import, full printing fields, safe text
+  cells, chunked audit records, and a zero-token advice request/response pack workflow.
+- [x] Main-entry integration and documentation. `index.html` is CrankMagic;
+  `crankmagic.html` is a matching compatibility shell; `graph.html` opens Discover.
+  Retained legacy pages preserve measurement/migration regression coverage.
 
-## Implementation checklist
+See [crankmagic-architecture.md](crankmagic-architecture.md) for module ownership,
+formats, invariants, limits, services and the integration boundary. The approved mockup
+and evaluations remain committed under `design/crankmagic/`; they are design history,
+not sample records in production storage.
 
-- [ ] Pure collection model: quantities, printings, commitments, placement, allocation, swaps, archive, Sell / Trade, audit and reversible corrections.
-- [ ] IndexedDB transactions, optimistic revisions, migration review, undo, backup/checksum/restore, quota and concurrency handling.
-- [ ] Card catalog, exact identity resolution, supplemental records, commander selection and staged CSV/text/XLSX intake.
-- [ ] Shared CrankMagic shell, brand/mist, dark mode, responsive navigation, accessible tables, glossary and card inspector.
-- [ ] My Decks and overviews; Collection and groups; Shop and assembly; imports/exports and User Functions.
-- [ ] Play Lab Deck Definition and initial draft creation, report history/import and a clearly paused simulation boundary.
-- [ ] Discover graph, navigation, actionable evidence-labeled recommendations and game logs.
-- [ ] Enriched Excel exports and edited import reconciliation; optional local advice-pack workflow.
-- [ ] Offline, failure/recovery, keyboard/mobile, large-collection, conservation and end-to-end checks.
-- [ ] Final documentation, asset versions, review of simulator hold, commit, full checks and draft PR.
+## Validation on this branch
 
-Update this record as work is completed; unchecked items are not delivered functionality.
+- `bash runtests.sh -q`: **39 suites passed**, with `XLSX_PYTHON` pointing to the
+  bundled Python/openpyxl runtime. The README suite-index mismatch found during the
+  first run was corrected; the complete runner then passed.
+- Core application checks include 71 collection-model checks, 31 exchange checks,
+  44 core/conservation/provenance checks and 25 workbook checks with the independent
+  spreadsheet reader. The model checks validate/project 10,000 lots without expanding
+  quantities into individual repeated records.
+- `node tools/check-glossary.mjs`: 335 canonical terms and 389 names/aliases valid.
+- `node tests/asset-versions.mjs`: 104 referenced assets, one version per file, with
+  hashes matching their recorded bumps across production and retained legacy pages.
+- New real Chromium journeys: **41 assembly/main-flow checks + 30 recovery checks**
+  passed. Includes native concurrency, quota abort, source corrections, exact printing,
+  backup round trip, offline/mobile, migration, physical-location conservation, manual
+  verification, edited XLSX import, stale forms and damaged-store recovery. A 50,000-lot
+  native library saves and remains paginated, sortable and filterable (267 ms native
+  replacement in the measured run; hardware/storage conditions affect timings).
+- `node tests/uat/journeys.mjs`: **all 530 browser checks passed** — 41 new main-flow,
+  30 recovery and the full retained 459-check legacy suite, after entry migration.
+- Desktop visuals were inspected for the actual deck overview, Lab and Discover.
+  New browser runs collect page errors; passing results have none. Chromium plus
+  phone-width emulation is tested; other browser/device certification is not asserted.
 
-## Implementation checkpoint
+## Simulator and release boundary
 
-The new shared application is running at `crankmagic.html`. All five views are
-wired to transactional local data, with a separate constructive initial-list
-tool and an explicit simulator hold. The original entry pages remain pending the
-final compatibility pass; their only current changes are shared spreadsheet
-asset-version bumps.
+Engine, pilot, measurement, opponent/protocol configuration and baked score data are
+unchanged from integrated upstream `118fe39`. The newer `bba5d08` / main `04491fc`
+simulator refresh was fetched and deliberately not merged during the hold. Existing
+simulator tests are run for compatibility, not as new simulator development. The
+legacy measurement page fixture path in one test moved; its measurement assertions
+remain intact. Reconcile the newer simulator branch only when integration is authorized.
 
-Validated at this checkpoint:
-
-- 71 `collection-model` checks, 31 `collection-exchange` checks and 23
-  `crankmagic-core` checks.
-- 25 `crankmagic-workbook` checks with the independent openpyxl reader enabled.
-  This found and fixed an existing self-closing-cell parser bug that shifted
-  fields after a blank cell. Large audit records are split into numbered parts
-  before reaching Excel's cell text limit.
-- 41 checks in the new Chromium journey, covering native IndexedDB, partial
-  orders/receipts/placement/corrections, exact printing lots, Sell / Trade,
-  concurrent writers, transaction abort on quota failure, backup/restore,
-  initial construction, graph navigation, offline reopening and mobile layout.
-- The existing full Node run passed every suite except the documentation index
-  check for newly added test names. That documentation was corrected and the
-  affected suite reran successfully. A complete final run remains required.
-
-Still required before release: complete catalog fallback and legacy reconciliation,
-improve recommendation/report comparison surfaces, exercise large libraries and
-additional recovery cases, finish entry-page integration and documentation, run
-both the established browser journeys and the new journeys, and perform the final
-asset/simulator-boundary review. No push or draft PR has been made yet.
+No paid AI calls or API keys. No telemetry or uploads of private library records.
+No merge to main and no deployment. Work stays on `astra/simulation-fidelity-plan`.
+The complete release gates passed before the branch push. Publish for review as a draft
+PR only; the simulator hold and deployment/merge boundary remain in force.

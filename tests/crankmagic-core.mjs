@@ -16,4 +16,28 @@ assert.throws(()=>run('editDeck',{deckId:'deckA',commanders:[pool[1].id]}),/revi
 run('acquire',{lot:{id:'incoming1',cardId:basic.id,quantity:1,source:'incoming'}});ok(M.eligibility(state,state.lots.find(l=>l.id==='incoming1'),{includeIncoming:true}).eligible);
 const comma=E.parse('1 Chulane, Teller of Tales\n1 Sol Ring',{deckParser:P});eq(comma.rows[0].name,'Chulane, Teller of Tales');eq(comma.rows.length,2);
 const exact=E.parse('Card name,Quantity,Printing ID,Signed,Altered\nSol Ring,2,printuuid,true,false');eq(exact.rows[0].printing.id,'printuuid');eq(exact.rows[0].printing.signed,true);eq(exact.rows[0].printing.altered,false);
-console.log(`crankmagic-core: ${checks} checks passed; bounded construction, atomic compound changes, option promotion and exact import fields.`);
+// Unknown prices and newly accepted alternatives cannot silently relax caps.
+run('editDeck',{deckId:'deckA',definition:{...definition,budget:1}});
+assert.throws(()=>run('swap',{deckId:'deckA',slotId:target.id,cardId:pool[2].id}),/exceeds/);checks++;
+run('editDeck',{deckId:'deckA',definition});
+const supplemental=C.normalize({name:'Test transcription',typeLine:'Artifact',verified:false,legalities:{commander:'unverified'}});
+run('acquire',{cards:[supplemental],lot:{id:'manual-copy',cardId:supplemental.id,quantity:2,printing:{set:'tst',collector:'007',finish:'foil'}}});
+run('createGroup',{groupId:'manual-group',name:'Transcribed cards'});
+run('groupEntries',{groupId:'manual-group',entries:[{cardId:supplemental.id,quantity:1}]});
+const ownedBefore=M.counters(state).owned;
+run('verifyIdentity',{cardId:supplemental.id,card:pool[4],confirmed:true});
+eq(M.counters(state).owned,ownedBefore);eq(M.lot(state,'manual-copy').printing.collector,'007');eq(M.lot(state,'manual-copy').cardId,pool[4].id);eq(state.groups[0].entries[0].cardId,pool[4].id);
+run('createGroup',{groupId:'destination-group',name:'Destination'});
+run('moveGroupEntries',{from:'manual-group',to:'destination-group',entryIds:[state.groups[0].entries[0].id]});
+eq(state.groups[0].entries.length,0);eq(state.groups[1].entries.length,1);eq(M.counters(state).owned,ownedBefore);
+const V=require('../collection-evidence.js'),report={kind:'report',deckFingerprint:M.fingerprint(state.decks[0]),protocol:'fixture-only',versions:{engine:'fixture1',cards:'fixture1'},conditions:{opponents:['a','b','c'],seeds:[1,2],games:10},metrics:{wins:{value:.2,unit:'probability'}}};
+let comparison=V.compare(report,{...report,metrics:{wins:{value:.4,unit:'probability'}}});eq(comparison.compatible,true);eq(comparison.rows[0].delta,.2);
+comparison=V.compare(report,{...report,conditions:{...report.conditions,opponents:['d','e','f']}});eq(comparison.compatible,false);eq(comparison.rows[0].delta,null);
+comparison=V.compare(report,{...report,conditions:undefined});ok(comparison.reasons.includes('Comparison conditions were not supplied'));assert.throws(()=>V.validate({...report,metrics:null}),/metrics/);checks++;
+// The native store limit must be feasible without per-copy state expansion.
+const large=structuredClone(state),template=large.lots[0];large.lots=Array.from({length:10000},(_,i)=>({...structuredClone(template),id:'scale:'+i,allocation:null,groupIds:[]}));
+const started=performance.now();M.validate(large);const projected=M.projection(large);ok(projected.length>=10000);eq(M.counters(large).owned,10000*template.quantity);const elapsed=performance.now()-started;
+const invalidQuantity=structuredClone(state);invalidQuantity.lots[0].quantity='2';assert.throws(()=>M.validate(invalidQuantity),/must be numbers/);checks++;
+const Client=require('../crankmagic-card-client.js');let requests=0;const client=Client.create({storage:null,delayMs:0,fetchImpl:async()=>{requests++;return new Response(JSON.stringify({object:'card',id:'fixture-print',oracle_id:'fixture-oracle',name:'Test full facts',type_line:'Legendary Creature — Wizard',power:'4',toughness:'4',collector_number:'005',mana_cost:'{3}{U}',legalities:{commander:'legal'},scryfall_uri:'https://scryfall.com/card/tst/005/test-full-facts'}),{status:200,headers:{'Content-Type':'application/json'}});}});
+const full=await client.named('Test full facts',{exact:true});eq(full.power,'4');eq(full.toughness,'4');eq(full.collectorNumber,'005');await client.named('Test full facts',{exact:true});eq(requests,1);
+console.log(`crankmagic-core: ${checks} checks passed; bounded construction, compound changes, identity conservation, full printing facts, report provenance; 10,000 lots validated/projected in ${Math.round(elapsed)} ms.`);

@@ -3,7 +3,7 @@
  * calls a model or claims measured strength. Simulation refinement is on hold. */
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;root.CrankDraft=api;})(globalThis,function(){
   'use strict';
-  const role=c=>{const t=c.typeLine||'',o=c.oracleText||'';if(/Land/.test(t))return 'land';if(/add .?\{|search your library for.{0,45}land/i.test(o))return 'ramp';if(/draw (a|one|two|three|\d+) card/i.test(o))return 'draw';if(/destroy|exile target|counter target/i.test(o))return 'interaction';return 'engine';};
+  const role=c=>{const t=c.typeLine||'',roles=c.roles||[];if(/Land/.test(t))return 'land';if(roles.includes('ramp'))return 'ramp';if(roles.includes('draw'))return 'draw';if(roles.some(r=>['removal','wipe','protection'].includes(r)))return 'interaction';return 'engine';};
   function build({commanders,cards,definition,available={},benchOnly=false,pinned=[]}){
     const colors=new Set(commanders.flatMap(c=>c.colorIdentity||[])),issues=[],chosen=new Map(),all=new Map(cards.map(c=>[c.id,c]));let spend=0;
     const legal=c=>c.verified&&c.legalities?.commander==='legal'&&(c.colorIdentity||[]).every(x=>colors.has(x));

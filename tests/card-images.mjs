@@ -148,7 +148,7 @@ check("a name is matched however it is punctuated", () => {
 });
 
 check("the page loads it and the card sheet uses it", () => {
-  const page = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const page = readFileSync(new URL("../legacy-decks.html", import.meta.url), "utf8");
   const viewer = readFileSync(new URL("../viewer.js", import.meta.url), "utf8");
   assert.match(page, /src="card-images\.js/);
   assert.match(viewer, /function cardImage/);

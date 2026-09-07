@@ -17,3 +17,6 @@ sim/sweep/*
 # Screenshots from tests/uat/journeys.mjs -- regenerated on every run.
 tests/uat/shots/
 tests/uat/crankmagic-failure.png
+
+# Local implementation helpers and downloaded inspection sources.
+/work/

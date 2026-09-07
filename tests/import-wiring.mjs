@@ -10,14 +10,14 @@ import {readFile} from "node:fs/promises";
 
 const read = async (p) => readFile(new URL(p, import.meta.url), "utf8");
 const viewer = await read("../viewer.js");
-const page = await read("../index.html");
+const page = await read("../legacy-decks.html");
 const matrix = await read("../matrix.html");
 const app = await read("../app.js");
 const deckPage = await read("../deck-page.js");
 const panel = await read("../import-panel.js");
 const store = await read("../deck-store.js");
 const css = await read("../viewer.css");
-const graphPage = await read("../graph.html");
+const graphPage = await read("../legacy-graph.html");
 const graphJs = await read("../graph-page.js");
 
 let checks = 0;
