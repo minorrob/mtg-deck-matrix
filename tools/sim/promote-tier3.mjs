@@ -93,6 +93,8 @@ function literal(card) {
     name: card.name, quantity: 1, isCommander: false,
     typeLine: meta.typeLine || "", manaCost: meta.manaCost || "",
     oracleText: meta.oracleText || "", keywords: meta.keywords || [],
+    power: meta.power || "", keywords: meta.keywords || [],
+    toughness: meta.toughness || "", keywords: meta.keywords || [],
     colorIdentity: meta.colorIdentity || [], commanderLegal: true,
     gameChanger: true, price: priceOf(card), tags: []
   };
@@ -227,6 +229,8 @@ for (const [variantId, plan] of Object.entries(buyPlans.plans)) {
         newlyAudited.set(key, {
           name: card.name, typeLine: card.typeLine || "", manaCost: card.manaCost || "",
           oracleText: card.oracleText || "", keywords: card.keywords || [],
+          power: card.power || "", keywords: card.keywords || [],
+          toughness: card.toughness || "", keywords: card.keywords || [],
           colorIdentity: card.colorIdentity || [], gameChanger: true,
           price: priceOf(card), ceiling: Math.max(priceOf(card), Number(card.ceiling ?? card.price ?? 0)),
           image: card.image || "", tcgplayerUrl: card.tcgplayerUrl || "",
@@ -243,6 +247,8 @@ for (const [variantId, plan] of Object.entries(buyPlans.plans)) {
         replaces: target.name, gameChanger: true, tags: [], whereToBuy: "Singles case",
         tcgplayerUrl: card.tcgplayerUrl || "", image: card.image || "",
         oracleText: card.oracleText || "", keywords: card.keywords || [],
+        power: card.power || "", keywords: card.keywords || [],
+        toughness: card.toughness || "", keywords: card.keywords || [],
         colorIdentity: card.colorIdentity || [], commanderLegal: true,
         brief: {
           value: `$${priceOf(card).toFixed(2)}. A Game Changer — this is what puts the deck in Bracket 3.`,
@@ -400,7 +406,7 @@ if (args.write) {
       games: GAMES, holdoutGames: GAMES, score: Number(m.score.toFixed(1)),
       powerScore: Number(m.score.toFixed(1)), winPct: Number(m.winRate.toFixed(4)),
       tier: 3, iterations: 0, verdict: row.promoted ? "tier-3-promoted" : "no-tier-3-headroom",
-      swaps: row.promoted, engine: "v2.4",
+      swaps: row.promoted, engine: "v2.5",
       note: row.promoted
         ? `${row.promoted} Game Changer${row.promoted === 1 ? "" : "s"} promoted into the rung; ${row.gcInFinal} in the finished deck, against Bracket 3's limit of three`
         : "no in-color Game Changer could be added without breaking the deck",

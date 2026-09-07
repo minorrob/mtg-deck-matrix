@@ -35,6 +35,7 @@
     {key: "mtg-deck-matrix-custom-v1", owner: "custom-model.js", what: "decks built on the Choose step"},
     {key: "mtg-imported-decks.v1", owner: "deck-store.js", what: "decks you added or built"},
     {key: "mtg-manual-cards.v1", owner: "manual-cards.js", what: "cards you added from a link that Scryfall does not have yet"},
+    {key: "mtg-card-images.v1", owner: "card-images.js", what: "card pictures looked up for decks you added"},
     /* Not a thing the reader saved -- a note about which catalog this browser starts
        from. It is backed up and cleared with everything else, but it is not counted as
        "something saved", so clearing a browser that holds only this still reports the

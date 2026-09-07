@@ -638,7 +638,7 @@
 
   function loadDeckPageCards() {
     if (deckPageCards) return Promise.resolve(deckPageCards);
-    return fetch("data/cards.json?v=1")
+    return fetch("data/cards.json?v=2")
       .then((r) => r.json())
       .then((payload) => {
         const map = {};
@@ -9111,7 +9111,7 @@
         // Additive: real simulation results for the new ladders. Never blocks startup --
         // the commander-compare preview and Calibrate simulation readout just render nothing
         // extra if this is unavailable, same as any other optional metadata in this app.
-        fetch("data/simulation-summary.json?v=1", {cache: "default"}).then((response) => response.ok ? response.json() : null).catch(() => null),
+        fetch("data/simulation-summary.json?v=3", {cache: "default"}).then((response) => response.ok ? response.json() : null).catch(() => null),
         // Read for the corner ribbon alone. Loading this file does NOT apply it
         // -- that stays an explicit Load Active click -- so a browser mid-build
         // keeps its own picks while still being told which six are the

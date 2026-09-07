@@ -32,7 +32,7 @@ for (const file of files) {
   records.set(record.variantId, record);
 }
 
-const ENGINE = "v2.4";
+const ENGINE = "v2.5";
 const RUNGS = [
   ["base", "Base", "the cheapest hundred that is still this deck, measured exactly as it stands"],
   ["tuned", "Tuned", "optimized for raw power at Tier 2, $60 a card"],

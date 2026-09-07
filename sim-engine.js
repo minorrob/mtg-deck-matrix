@@ -1080,28 +1080,91 @@
     return clamp01(Math.max(DOMINANCE_FLOOR, 1 - overshoot * (1 - OVERSHOOT_FLOOR)));
   }
 
+  /* WHERE THE NUMBER COMES FROM, ITEM BY ITEM.
+   * ------------------------------------------
+   * The score is a weighted sum of nine normalized measurements, and for a long time it
+   * was only ever returned as the sum -- one number, on a page, with no way to ask what
+   * made it. "51.33" against a deck somebody just built reads as a verdict rather than a
+   * measurement, and a verdict you cannot interrogate is worth less than no number at all.
+   *
+   * So the parts are computed once, here, and both the total and the breakdown come from
+   * the same array. They cannot disagree, because there is only one of them.
+   *
+   * Each part carries:
+   *   norm    0..1, how well the deck did on that measurement
+   *   weight  its share of the hundred
+   *   points  weight * norm * 100 -- what it actually contributed
+   *   max     weight * 100 -- what it could have contributed
+   *   lost    max - points, which is the column to sort on when looking for the problem
+   *   reads   the raw measurement in words, because "0.42" is not an answer to "why"
+   */
+  function scoreParts(metrics, weights = DEFAULT_WEIGHTS, targets = DEFAULT_TARGETS, commanderCmc = 4, band = null) {
+    const pct = (v) => `${(v * 100).toFixed(1)}%`;
+    const rows = [
+      {key: "winRate", label: "Wins games",
+       norm: winRateBandNorm(metrics.winRate, band), weight: weights.winRate ?? 0,
+       reads: `wins ${pct(metrics.winRate)} of games` +
+         (band ? ` (banded: this rung is judged against ${pct(band.floor ?? 0)}–${pct(band.ceiling ?? 1)})` : ` against a 25% share of a four-player pod`)},
+      {key: "screw", label: "Casts its spells",
+       norm: Math.max(0, 1 - metrics.screwPct / Math.max(0.01, targets.screwPct * 2)),
+       weight: weights.screw ?? 0,
+       reads: `mana screwed in ${pct(metrics.screwPct)} of games, against a ${pct(targets.screwPct)} target`},
+      {key: "flood", label: "Draws action, not lands",
+       norm: Math.max(0, 1 - metrics.floodPct / Math.max(0.01, targets.floodPct * 2)),
+       weight: weights.flood ?? 0,
+       reads: `flooded in ${pct(metrics.floodPct)} of games, against a ${pct(targets.floodPct)} target`},
+      {key: "commander", label: "Gets the commander down",
+       norm: metrics.avgCommanderTurn
+         ? Math.max(0, Math.min(1, 1 - (metrics.avgCommanderTurn - (commanderCmc + targets.commanderTurnAllowance)) / 4)) * metrics.commanderCastRate
+         : 0,
+       weight: weights.commander ?? 0,
+       reads: metrics.avgCommanderTurn
+         ? `cast on turn ${metrics.avgCommanderTurn.toFixed(1)} in ${pct(metrics.commanderCastRate)} of games ` +
+           `(a ${commanderCmc}-drop should land by turn ${commanderCmc + targets.commanderTurnAllowance})`
+         : "the commander was never cast"},
+      {key: "interaction", label: "Has answers when it needs them",
+       norm: Math.min(1, metrics.interactionAvailability / Math.max(0.05, targets.interactionAvailability)),
+       weight: weights.interaction ?? 0,
+       reads: `an answer in hand on ${pct(metrics.interactionAvailability)} of turns, against a ${pct(targets.interactionAvailability)} target`},
+      {key: "clock", label: "Closes the game",
+       norm: metrics.avgWinTurn ? Math.max(0, Math.min(1, (16 - metrics.avgWinTurn) / 8)) : 0,
+       weight: weights.clock ?? 0,
+       reads: metrics.avgWinTurn
+         ? `wins on turn ${metrics.avgWinTurn.toFixed(1)} on average; turn 8 is full marks, turn 16 is none`
+         : "no game was won, so there is no clock to measure"},
+      {key: "deadCards", label: "Keeps its hand live",
+       norm: Math.max(0, 1 - metrics.deadCardsAtT8 / Math.max(1, targets.deadCardsAtT8 * 2)),
+       weight: weights.deadCards ?? 0,
+       reads: `${metrics.deadCardsAtT8.toFixed(1)} uncastable cards in hand at turn 8, against a ${targets.deadCardsAtT8} target`},
+      {key: "fun", label: "Is a deck you enjoy piloting",
+       norm: funScoreFor(metrics), weight: weights.fun ?? 0,
+       reads: `decisions per game and board presence, scored ${(funScoreFor(metrics) * 100).toFixed(0)} of 100`},
+      {key: "podFun", label: "Is a deck the table enjoys",
+       norm: podFunScoreFor(metrics), weight: weights.podFun ?? 0,
+       reads: `how long the other three seats stayed in the game, scored ${(podFunScoreFor(metrics) * 100).toFixed(0)} of 100`}
+    ];
+    const scoring = rows.filter((row) => row.weight > 0);
+    /* THE TOTAL COMES OFF THE RAW NORMS, not off the rounded ones. Summing values already
+       rounded to three places moved D4 Felothar from 71.90 to 71.88 -- a published number
+       changing because of how it was displayed, which is the one thing a breakdown must
+       never do. Rounding is for the reader; the score is computed once, at full precision,
+       exactly as it was before this function existed. */
+    const total = scoring.reduce((sum, row) => sum + row.weight * row.norm, 0);
+    const parts = scoring.map((row) => {
+      const points = row.weight * row.norm * 100;
+      const max = row.weight * 100;
+      return Object.assign({}, row, {
+        norm: Math.round(row.norm * 1000) / 1000,
+        points: Math.round(points * 100) / 100,
+        max: Math.round(max * 100) / 100,
+        lost: Math.round((max - points) * 100) / 100
+      });
+    });
+    return {parts, score: Math.round(total * 1000) / 10};
+  }
+
   function compositeScore(metrics, weights = DEFAULT_WEIGHTS, targets = DEFAULT_TARGETS, commanderCmc = 4, band = null) {
-    const winRateNorm = winRateBandNorm(metrics.winRate, band);
-    const screwNorm = Math.max(0, 1 - metrics.screwPct / Math.max(0.01, targets.screwPct * 2));
-    const floodNorm = Math.max(0, 1 - metrics.floodPct / Math.max(0.01, targets.floodPct * 2));
-    const commanderNorm = metrics.avgCommanderTurn
-      ? Math.max(0, Math.min(1, 1 - (metrics.avgCommanderTurn - (commanderCmc + targets.commanderTurnAllowance)) / 4)) * metrics.commanderCastRate
-      : 0;
-    const interactionNorm = Math.min(1, metrics.interactionAvailability / Math.max(0.05, targets.interactionAvailability));
-    const clockNorm = metrics.avgWinTurn ? Math.max(0, Math.min(1, (16 - metrics.avgWinTurn) / 8)) : 0;
-    const deadNorm = Math.max(0, 1 - metrics.deadCardsAtT8 / Math.max(1, targets.deadCardsAtT8 * 2));
-    const funNorm = funScoreFor(metrics);
-    const podFunNorm = podFunScoreFor(metrics);
-    const score = weights.winRate * winRateNorm
-      + weights.screw * screwNorm
-      + weights.flood * floodNorm
-      + weights.commander * commanderNorm
-      + weights.interaction * interactionNorm
-      + weights.clock * clockNorm
-      + weights.deadCards * deadNorm
-      + (weights.fun ?? 0) * funNorm
-      + (weights.podFun ?? 0) * podFunNorm;
-    return Math.round(score * 1000) / 10;
+    return scoreParts(metrics, weights, targets, commanderCmc, band).score;
   }
 
   // A 95% interval on the win rate, so a swap that moves the number by less than
@@ -1117,6 +1180,12 @@
     const deck = prepareDeck(cards);
     const cardStats = new Map(deck.profiles.map((profile) => [profile.name, {
       name: profile.name,
+      /* Carried so a readout can leave lands out of "the cards that carried the deck".
+         A land is cast the turn it is drawn, every time, so it tops any list ranked on
+         how often a draw became a cast -- which tells the reader nothing except that
+         their deck contains lands. */
+      isLand: Boolean(profile.isLand),
+      isCommander: Boolean(profile.isCommander),
       drawn: 0,
       cast: 0,
       dead: 0,
@@ -1177,7 +1246,12 @@
     const commanderCmc = deck.commander?.profile.cmc || 4;
     metrics.funScore = funScoreFor(metrics);
     metrics.podFunScore = podFunScoreFor(metrics);
-    metrics.score = compositeScore(metrics, config.scoreWeights || DEFAULT_WEIGHTS, config.targets || DEFAULT_TARGETS, commanderCmc, config.winRateBand || null);
+    /* The total and the breakdown from one computation, so the page can say what made
+       the number rather than only what the number is. */
+    const scored = scoreParts(metrics, config.scoreWeights || DEFAULT_WEIGHTS,
+      config.targets || DEFAULT_TARGETS, commanderCmc, config.winRateBand || null);
+    metrics.score = scored.score;
+    metrics.scoreParts = scored.parts;
     // The deck's power under the performance vector, regardless of which
     // objective this run is optimizing. The constrained Fun rung needs this to
     // check that chasing pod experience has not quietly cost real strength.
@@ -1187,6 +1261,8 @@
     metrics.winRateInterval = winRateInterval(metrics);
     const perCardStats = Array.from(cardStats.values()).map((stat) => ({
       name: stat.name,
+      isLand: stat.isLand,
+      isCommander: stat.isCommander,
       drawnRate: stat.drawn / Math.max(1, metrics.games),
       castRate: stat.drawn ? stat.cast / stat.drawn : 0,
       avgCastTurn: stat.cast ? stat.castTurnTotal / stat.cast : 0,
@@ -1284,6 +1360,7 @@
     summarize,
     emptyMetrics,
     compositeScore,
+    scoreParts,
     winRateBandNorm,
     funScoreFor,
     podFunScoreFor,

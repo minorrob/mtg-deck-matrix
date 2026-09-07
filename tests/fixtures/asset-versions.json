@@ -10,8 +10,8 @@
       "sha": "a18e9d2a0d56618a"
     },
     "app.js": {
-      "version": 123,
-      "sha": "ab2630b6fc2a2674"
+      "version": 126,
+      "sha": "c4a4917005d3cd1e"
     },
     "build-panel.js": {
       "version": 4,
@@ -20,6 +20,10 @@
     "card-classify.js": {
       "version": 1,
       "sha": "bbe09724aa0cad69"
+    },
+    "card-images.js": {
+      "version": 1,
+      "sha": "66dff126c332f0b0"
     },
     "card-link.js": {
       "version": 1,
@@ -54,12 +58,12 @@
       "sha": "1c50c0409672016a"
     },
     "data/card-facts.json": {
-      "version": 1,
-      "sha": "95c74463c1ceec90"
+      "version": 2,
+      "sha": "e18f2884aab1613f"
     },
     "data/cards.json": {
-      "version": 1,
-      "sha": "f3c35612e8d8f44b"
+      "version": 2,
+      "sha": "7b4fc592dc9ec58e"
     },
     "data/commander-universe.json": {
       "version": 1,
@@ -70,8 +74,8 @@
       "sha": "dcb139d39ac4e9d8"
     },
     "data/deck-ratings.json": {
-      "version": 1,
-      "sha": "425abec39421e6ea"
+      "version": 4,
+      "sha": "2dd99fc16203fe9c"
     },
     "data/deck-swaps.json": {
       "version": 1,
@@ -98,8 +102,8 @@
       "sha": "5f58e9270e04b9a0"
     },
     "data/simulation-summary.json": {
-      "version": 1,
-      "sha": "f2e7caa5b393b6b9"
+      "version": 3,
+      "sha": "cb1c7299788ab1be"
     },
     "data/variants.json": {
       "version": 1,
@@ -122,8 +126,8 @@
       "sha": "ea1dd37c6ce291cf"
     },
     "deck-measure.js": {
-      "version": 1,
-      "sha": "3f8b752cd397e0f6"
+      "version": 5,
+      "sha": "a39931a0a01eb7e7"
     },
     "deck-page.js": {
       "version": 30,
@@ -154,16 +158,16 @@
       "sha": "0b348802ff31d3d0"
     },
     "graph-page.js": {
-      "version": 24,
-      "sha": "531228fb86937d05"
+      "version": 28,
+      "sha": "0d878295e7143393"
     },
     "header.css": {
       "version": 3,
       "sha": "d55d265b7b522739"
     },
     "import-panel.js": {
-      "version": 5,
-      "sha": "206c3fcfbb73bdb7"
+      "version": 6,
+      "sha": "6d1b05c5f8378082"
     },
     "inventory-import.js": {
       "version": 1,
@@ -176,6 +180,10 @@
     "manual-cards.js": {
       "version": 1,
       "sha": "75469daa02f73aaf"
+    },
+    "measure-report.js": {
+      "version": 3,
+      "sha": "a2c162c1f92c3b32"
     },
     "scryfall-client.js": {
       "version": 7,
@@ -194,8 +202,8 @@
       "sha": "6a8eceea117da582"
     },
     "sim-engine.js": {
-      "version": 1,
-      "sha": "10f73f59238db98e"
+      "version": 3,
+      "sha": "8ae76e90738422a3"
     },
     "sim-lenses.js": {
       "version": 1,
@@ -214,16 +222,16 @@
       "sha": "40931aa79a531d88"
     },
     "user-state.js": {
-      "version": 4,
-      "sha": "6151052eeab72c5d"
+      "version": 5,
+      "sha": "434751e1995a6cf2"
     },
     "viewer.css": {
-      "version": 27,
-      "sha": "d1c174d2d26e244a"
+      "version": 29,
+      "sha": "f7e4236c640a758a"
     },
     "viewer.js": {
-      "version": 28,
-      "sha": "e84c22e0a7620bb9"
+      "version": 32,
+      "sha": "bd22e7229808d034"
     },
     "xlsx-reader.js": {
       "version": 1,

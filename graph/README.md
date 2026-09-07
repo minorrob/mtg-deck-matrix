@@ -48,7 +48,7 @@ node graph/ingest/08-build-lenses.mjs              # -> data/lenses.json
 only cards that are owned, assigned, or carry an EDHREC edge, and somebody
 importing their own deck arrives with a commander the graph has never heard of --
 which matters more than one missing card, because a commander anchors every
-`PLAYED_WITH` edge it sources. It costs 2.2 MB (4,902 cards to 7,710) and
+`PLAYED_WITH` edge it sources. It costs 2.2 MB (4,902 cards to 7,764) and
 tests/deck-import.mjs fails if the shipped graph was built without it.
 
 About five minutes end to end, most of it the Scryfall download. Everything is

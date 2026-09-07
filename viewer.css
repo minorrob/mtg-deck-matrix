@@ -1013,6 +1013,68 @@ main { padding: 24px 0 140px; }
 .imp-caveat { margin: 8px 0 0; font-size: 12px; line-height: 1.55; color: var(--text-faint); }
 
 .imp-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.imp-measure { margin-top: 12px; }
+
+/* THE READOUT.
+   -----------
+   One number was never an answer. This is the number, what was run to get it, which of
+   the nine measures earned points and which lost them, and which cards carried the deck.
+   Shared by the import review and the deck page, so the two can never drift. */
+.mr { font-size: 13px; color: var(--text); }
+.mr-head { display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap;
+  padding: 12px 14px; border-radius: var(--radius-sm);
+  background: var(--panel-2); border: 1px solid var(--line); }
+.mr-score { display: flex; flex-direction: column; align-items: center; flex: 0 0 auto; }
+.mr-score b { font-family: var(--serif); font-size: 38px; line-height: 1; color: var(--patina); }
+.mr-score span { margin-top: 2px; font-size: 10.5px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--text-faint); }
+.mr-said { flex: 1 1 220px; min-width: 0; }
+.mr-what { margin: 0; font-size: 13px; line-height: 1.5; }
+.mr-receipt { margin: 6px 0 0; font-size: 12px; color: var(--text-dim); }
+.mr-seeds { margin: 3px 0 0; font-size: 11.5px; color: var(--text-faint); }
+.mr-h { margin: 16px 0 8px; font-size: 11px; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--text-dim); font-weight: 700; }
+.mr-parts { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.mr-part-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.mr-part-top b { font-size: 13px; font-weight: 700; }
+.mr-part-top span { font-size: 12px; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.mr-bar { height: 6px; margin: 4px 0 3px; border-radius: 3px; background: var(--line-soft); overflow: hidden; }
+.mr-bar i { display: block; height: 100%; background: var(--patina); }
+/* Under half marks is the row to look at, so it stops being the same green as the rest.
+   The class is set where the number is known. Matching on the style string instead --
+   i[style*="width:1"] and friends -- painted "100.0%" amber, because "100.0" contains a
+   "1": the one bar that had earned full marks was the one flagged as the problem. */
+.mr-part .mr-bar i.is-low { background: var(--amber); }
+.mr-why { margin: 0; font-size: 11.5px; line-height: 1.45; color: var(--text-dim); }
+.mr-cards { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.mr-cardlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+.mr-cardlist b { display: block; font-size: 12.5px; }
+.mr-cardlist span { display: block; font-size: 11.5px; line-height: 1.4; color: var(--text-dim); }
+.mr-limit { margin: 14px 0 0; font-size: 11.5px; line-height: 1.5; color: var(--text-faint); }
+.mr-acts { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+.mr-note { margin: 8px 0 0; font-size: 11.5px; color: var(--text-faint); line-height: 1.5; }
+
+/* Two runs, side by side, before either becomes the deck's number. */
+.mr-sheet { max-width: 620px; }
+.mr-title { margin: 0 0 2px; font-family: var(--serif); font-size: 24px; }
+.mr-sub { margin: 0 0 14px; font-size: 12.5px; color: var(--text-dim); }
+.mr-diff { padding: 12px 14px; margin-bottom: 14px; border-radius: var(--radius-sm);
+  background: var(--panel-2); border: 1px solid var(--line); }
+.mr-diff-head { display: flex; align-items: baseline; gap: 10px; font-family: var(--serif); }
+.mr-was { font-size: 26px; color: var(--text-faint); }
+.mr-arrow { font-size: 18px; color: var(--text-faint); }
+.mr-now { font-size: 34px; line-height: 1; }
+.mr-now.is-up { color: var(--patina); }
+.mr-now.is-down { color: var(--ember); }
+.mr-delta { margin-left: auto; font-size: 16px; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.mr-verdict { margin: 8px 0 0; font-size: 12.5px; line-height: 1.5; }
+.mr-diff-parts { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 4px; }
+.mr-diff-parts li { display: flex; align-items: baseline; justify-content: space-between;
+  gap: 10px; font-size: 12px; }
+.mr-diff-parts li b { font-weight: 600; }
+.mr-diff-parts li span { color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.mr-diff-parts li.is-up b { color: #14603f; }
+.mr-diff-parts li.is-down b { color: #8a3a12; }
 
 /* The three doors, above the decks.
    ---------------------------------

@@ -239,7 +239,7 @@ for (const variantId of variantIds) {
     commander: plan.commander,
     locks: locksFor(variantId),
     sweptAt: new Date().toISOString(),
-    engine: "v2.4",
+    engine: "v2.5",
     table: config.table,
     rungs,
     inversion

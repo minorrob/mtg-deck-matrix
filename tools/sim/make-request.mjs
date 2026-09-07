@@ -109,6 +109,8 @@ const cards = args.cards
         isCommander: Boolean(card.isCommander),
         typeLine: card.typeLine || meta.typeLine || "",
         oracleText: card.oracleText || meta.oracleText || "",
+        power: card.power || meta.power,
+        toughness: card.toughness || meta.toughness,
         manaCost: card.manaCost || meta.manaCost || "",
         keywords: card.keywords || meta.keywords || [],
         colorIdentity: card.colorIdentity || meta.colorIdentity || [],

@@ -517,30 +517,18 @@
       renderScore(quick, false);
     }
 
+    /* The score, and what it is made of. It used to be one number, one line of three
+       figures, and a paragraph of apology -- which is why the first question anybody asked
+       on seeing it was "what does 51.33 mean?". measure-report.js answers that from the
+       parts the engine has always computed. */
     function renderScore(result, isFull) {
       const box = host.querySelector("[data-imp-score]");
       if (!box) return;
-      // The engine plays creatures, mana and combat. It cannot see a storm
-      // count, so a spell-based deck scores low for a reason that is about the
-      // engine and not about the deck -- and the reader is told so here rather
-      // than left to conclude their deck is bad.
-      box.innerHTML = `
-        <div class="imp-result${isFull ? " is-full" : ""}">
-          <div class="imp-num num">${result.score.toFixed(isFull ? 2 : 1)}</div>
-          <div class="imp-num-side">
-            <b>${isFull ? "Measured" : "Preview"}</b>
-            <span>${isFull
-              ? `six seeds · ${result.protocol.gamesPerSeed.toLocaleString()} games each · ±${result.se}`
-              : `one seed · ${result.protocol.gamesPerSeed.toLocaleString()} games · approximate`}</span>
-          </div>
-          ${isFull ? "" : `<button class="btn" type="button" data-imp-full>Measure it properly</button>`}
-        </div>
-        <p class="imp-caveat">Wins ${(result.winRate * 100).toFixed(1)}% ·
-          commander down turn ${result.avgCommanderTurn} ·
-          flooded ${(result.floodPct * 100).toFixed(0)}% of games.
-          The simulation plays creatures, mana and combat; it cannot see a storm
-          count or a one-card combo, so a deck that wins that way scores low here
-          for a reason that is about the model, not the deck.</p>`;
+      const Report = root0().MtgMeasureReport;
+      box.innerHTML = (Report ? Report.html(result, {compact: true}) : "")
+        + (isFull ? "" : `<div class="imp-actions imp-measure">
+            <button class="btn primary" type="button" data-imp-full>Measure it properly</button>
+          </div>`);
       const full = box.querySelector("[data-imp-full]");
       if (full) full.addEventListener("click", () => runFull(full));
     }

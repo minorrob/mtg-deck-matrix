@@ -1238,7 +1238,7 @@
     renderLenses();
     var rows = visible();
     /* The denominator is everything the page can show, looked-up cards included, or the
-       line reads "7,711 of 7,710" and looks like a bug. What those extra cards are is said
+       line reads "7,765 of 7,764" and looks like a bug. What those extra cards are is said
        after it, because a catalog that quietly grew is the thing worth mentioning. */
     var extra = visitorCount();
     $("count").textContent = rows.length.toLocaleString() + " of " +
@@ -1402,7 +1402,7 @@
     .then(function (j) { GRAPH_LENSES = (j && j.lenses) || []; mergeLenses(); });
 
   Promise.all([
-    fetch("data/deck-ratings.json?v=1", {cache: "default"}).then(function (r) { return r.ok ? r.json() : null; }),
+    fetch("data/deck-ratings.json?v=4", {cache: "default"}).then(function (r) { return r.ok ? r.json() : null; }),
     fetch("data/master-v2.json?v=2", {cache: "default"}).then(function (r) { return r.ok ? r.json() : null; })
   ]).catch(function () { return [null, null]; })
     .then(function (parts) {

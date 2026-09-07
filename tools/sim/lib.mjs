@@ -111,6 +111,8 @@ function literalCardsFor(plan, audited, selection) {
       typeLine: entry.item.typeLine || meta.typeLine || "",
       manaCost: entry.item.manaCost || meta.manaCost || "",
       oracleText: entry.item.oracleText || meta.oracleText || "",
+      power: entry.item.power || meta.power,
+      toughness: entry.item.toughness || meta.toughness,
       keywords: entry.item.keywords || meta.keywords || [],
       colorIdentity: entry.item.colorIdentity || meta.colorIdentity || [],
       commanderLegal: entry.item.commanderLegal !== false && (meta.legalities?.commander || "legal") === "legal",

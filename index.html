@@ -36,18 +36,21 @@
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800;900&display=swap"></noscript>
   <link rel="stylesheet" href="header.css?v=3">
   <link rel="stylesheet" href="card-table.css?v=5">
-  <link rel="stylesheet" href="viewer.css?v=27">
+  <link rel="stylesheet" href="viewer.css?v=29">
   <!-- Adding a deck. Six small modules rather than one, because each is useful
        and testable on its own: the parser has no idea what a score is, and the
        simulator has no idea where a decklist came from. Loaded here in
        dependency order; every one of them is a UMD module that also runs under
        Node, which is how tests/ reaches them. -->
   <script src="lineup-model.js?v=5" defer></script>
-  <script src="sim-engine.js?v=1" defer></script>
+  <script src="sim-engine.js?v=3" defer></script>
   <script src="scryfall-client.js?v=7" defer></script>
   <script src="deck-import.js?v=2" defer></script>
   <script src="deck-sources.js?v=1" defer></script>
-  <script src="deck-measure.js?v=1" defer></script>
+  <script src="deck-measure.js?v=5" defer></script>
+  <!-- What the score is made of. The engine has computed every figure in here since it
+       was written and threw all of them away one function above the screen. -->
+  <script src="measure-report.js?v=3" defer></script>
   <script src="deck-store.js?v=4" defer></script>
   <!-- What to do when a pasted name is not a card. The ladder is Scryfall's autocomplete
        and fuzzy endpoints plus a trigram match against every Commander-legal name, which
@@ -58,7 +61,10 @@
        cannot becomes a manual card, kept as a population and asked about again later. -->
   <script src="card-link.js?v=1" defer></script>
   <script src="manual-cards.js?v=1" defer></script>
-  <script src="import-panel.js?v=5" defer></script>
+  <!-- The picture for a card the app does not ship. The facts file covers 668; a pasted
+       deck is a hundred it has never heard of. -->
+  <script src="card-images.js?v=1" defer></script>
+  <script src="import-panel.js?v=6" defer></script>
   <!-- Building one from nothing: the generator has been in this repo since the
        Choose tab existed and has been unreachable since that tab was retired.
        deck-build.js maps what it produces onto the same record an import makes. -->
@@ -85,11 +91,11 @@
   <!-- The reader's own data, named key by key, and the menu that clears it. Shared with
        the other page: a clear that missed a key one page writes and the other reads would
        leave a browser half-empty in a way neither page could see. -->
-  <script src="user-state.js?v=4" defer></script>
+  <script src="user-state.js?v=5" defer></script>
   <script src="admin-menu.js?v=3" defer></script>
   <!-- One table for the Bench, Upgrades and the Shop: filters, header sort, group by. -->
   <script src="card-table.js?v=3" defer></script>
-  <script src="viewer.js?v=28" defer></script>
+  <script src="viewer.js?v=32" defer></script>
 </head>
 <body>
 

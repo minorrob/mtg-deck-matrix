@@ -83,7 +83,12 @@ check("the globals viewer.js reaches for are the ones the modules attach", () =>
     "window.MtgCardResolve": "card-resolve.js",
     // ...and when the answer is a link rather than one of the five guesses.
     "window.MtgCardLink": "card-link.js",
-    "window.MtgManualCards": "manual-cards.js"
+    "window.MtgManualCards": "manual-cards.js",
+    // What the score is made of, rendered the same way on the review screen and the
+    // deck page so the two can never drift.
+    "window.MtgMeasureReport": "measure-report.js",
+    // The picture for a card the shipped facts file does not carry.
+    "window.MtgCardImages": "card-images.js"
   };
   [...new Set(wanted)].forEach((name) => {
     assert.ok(attached[name], `viewer.js reads ${name}, which nothing on this page defines`);
@@ -249,7 +254,7 @@ check("the workbook names where each score came from", () => {
 
 /* Typing a card the corpus does not hold takes two modules the graph page never used to
    need: the Scryfall client that fetches it and the classifier that reads what it does.
-   Drop either tag and the page still loads, still renders 7,710 cards, and answers the
+   Drop either tag and the page still loads, still renders 7,764 cards, and answers the
    one thing you asked it with a message about scripts -- which is exactly the failure a
    browser never throws on and nobody notices until they try it. */
 const GRAPH_MODULES = ["sim-lenses", "card-classify", "scryfall-client", "graph-page"];
