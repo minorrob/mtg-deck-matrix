@@ -282,14 +282,10 @@
             <p class="cm-card-view-cost">${cost || C.colors(String(c.ci || (rec.colorIdentity || []).join('')).split(''))}</p>
             ${rec.rarity || rec.setName ? `<p class="cm-muted">${e([rec.rarity, rec.setName].filter(Boolean).join(' · '))}${Number.isFinite(rec.price) && rec.price > 0 ? ` · ${e(C.money(rec.price))}` : ''}</p>` : ''}
             <p class="cm-card-view-bracket"><span class="cm-badge${bracket[0] === 'Game Changer' ? ' warn' : ''}">${e(bracket[0])}</span> <small>${e(bracket[1])}</small></p>
-          </div>
-          <!-- UNDER THE ART, NOT BESIDE THE TITLE. Four separate links -- two buys and two
-               menus -- took four lines out of the pane and pushed the rules text down to a
-               single visible row. They are one menu now, in the column that already has
-               room: the art is 150px wide and everything under it was empty space. -->
-          <div class="cm-card-view-tools">
-            ${b('Inspect card', 'card', {card: CrankCatalog.key(c.name)}, true)}
-            <details class="cm-inline-menu" name="cm-card-view-menu"><summary class="v-button cm-card-view-menu-btn">Add and/or Buy ▾</summary><div class="cm-menu cm-inline-menu-body">
+            <!-- ADD AND/OR BUY SITS WITH THE PRICE AND THE BRACKET, the two things it acts
+                 on, rather than in a stack under the art with Inspect, which acts on the art. -->
+            <div class="cm-card-view-buy">
+            <details class="cm-inline-menu" name="cm-card-view-menu"><summary class="v-button cm-card-view-menu-btn">Add and/or Buy</summary><div class="cm-menu cm-inline-menu-body">
               <a href="${e(buy)}" target="_blank" rel="noopener">Buy at TCGplayer ↗</a>
               <a href="${e(kingdom)}" target="_blank" rel="noopener">Buy at Card Kingdom ↗</a>
               <hr>
@@ -302,12 +298,22 @@
               ${draftDecks.map((d) => `<button type="button" data-action="discover-to-deck" data-card="${e(c.name)}" data-deck="${e(d.id)}">${e(d.name)}</button>`).join('')
                 || '<p class="cm-muted">No draft decks. A finalized list changes through its own page.</p>'}
             </div></details>
-            ${graph && graph.previous() ? b('◀ Back to ' + graph.previous().name.split(',')[0], 'graph-back') : ''}
+            </div>
+          </div>
+          <!-- INSPECT BELONGS TO THE ART, so it sits directly beneath it in the art's own
+               column, where there was nothing but empty space. -->
+          <div class="cm-card-view-tools">
+            ${b('Inspect card', 'card', {card: CrankCatalog.key(c.name)}, true)}
           </div>
         </div>
-        ${rec.oracleText ? `<p class="cm-oracle cm-card-view-oracle">${e(rec.oracleText)}</p>` : ''}
+        ${graph && graph.previous() ? `<div class="cm-card-view-back">${b('◀ Back to ' + graph.previous().name.split(',')[0], 'graph-back')}</div>` : ''}
+        <!-- NO ORACLE BOX. The card image above is the whole card, rules text included, so
+             reprinting it underneath said the same thing twice and pushed the terms -- the
+             part of this pane you cannot get from the picture -- below the fold. -->
         ${picked.size ? `<div class="cm-actions cm-pick-actions">${b(`Add ${picked.size} selected to a group…`, 'results-group', {}, true)}${b('Clear selection', 'results-clear')}</div>` : (gmode === 'select' ? '<p class="cm-muted">Tap cards on the graph to tick them. Tap again to untick.</p>' : '')}
-        ${chips.length ? `<h3>Joined to other cards by</h3><p class="cm-muted">Tap once for only the cards that share it, again to hide them instead, a third time to clear. They stack.</p><div class="cm-term-chips">${chips.join('')}</div>` : ''}
+        ${chips.length ? `<h3 class="cm-chips-head">Joined to other cards by
+          <details class="cm-inline-menu cm-hint"><summary class="cm-hint-btn" aria-label="How these work" title="How these work">i</summary><div class="cm-menu cm-inline-menu-body cm-hint-body">Tap once for only the cards that share it, again to hide them instead, a third time to clear. They stack.</div></details>
+        </h3><div class="cm-term-chips">${chips.join('')}</div>` : ''}
         ${lastInfo && lastInfo.total ? `<p class="cm-muted cm-card-view-foot">${lastInfo.total} cards on the canvas · ${lastInfo.byDepth.filter(Boolean).join(' / ')} by ring · ${lastInfo.crossLinks} cross-links${lastInfo.crossLinks > 60 ? ' (too many to draw at once: rest on a card, or inspect it, to see its own)' : ''}</p>` : ''}`;
       $('#cm-graph-size').textContent = lastInfo && lastInfo.total ? `${lastInfo.total} on canvas` : '';
       sizePane();
