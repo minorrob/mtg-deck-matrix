@@ -147,14 +147,4 @@ check("a name is matched however it is punctuated", () => {
   assert.ok(Images.cached(store, "teferis protection"), "punctuation must not make a second entry");
 });
 
-check("the page loads it and the card sheet uses it", () => {
-  const page = readFileSync(new URL("../legacy-decks.html", import.meta.url), "utf8");
-  const viewer = readFileSync(new URL("../viewer.js", import.meta.url), "utf8");
-  assert.match(page, /src="card-images\.js/);
-  assert.match(viewer, /function cardImage/);
-  assert.match(viewer, /MtgCardImages/);
-  assert.match(viewer, /forget\(window\.localStorage, name\)/,
-    "a cached URL that stopped resolving must be dropped, not redrawn forever");
-});
-
 console.log(`\ncard-images: ${checks} checks passed.`);

@@ -187,16 +187,9 @@ check("the compact readout is the same numbers without the card lists", () => {
   assert.match(compact, /Where the points went/);
 });
 
-check("both screens draw it, and the deck page offers the re-run", () => {
-  const viewer = readFileSync(at("../viewer.js"), "utf8");
+check("the import panel draws it", () => {
   const panel = readFileSync(at("../import-panel.js"), "utf8");
-  const page = readFileSync(at("../legacy-decks.html"), "utf8");
-  assert.match(page, /src="measure-report\.js/);
   assert.match(panel, /MtgMeasureReport/);
-  assert.match(viewer, /How it played/);
-  assert.match(viewer, /function showRerun/);
-  assert.match(viewer, /if \(before\) return showRerun\(record, before, result\)/,
-    "a re-run must be compared before it overwrites the score it is being compared with");
 });
 
 console.log(`\nmeasure-report: ${checks} checks passed.`);

@@ -43,9 +43,14 @@ The approved standalone mockup remains under `design/crankmagic/` for design ref
   history/undo, comparison reset, optional mirror file and explicit Clear all.
 
 `index.html` is the main shell; `crankmagic.html` is the same compatibility entry.
-`graph.html` opens Discover. `matrix.html`, `legacy-decks.html` and `legacy-graph.html`
-retain the earlier measurement workspace and its separate browser records during the
-simulator hold. Its historical guide is [docs/legacy-readme.md](docs/legacy-readme.md).
+`graph.html` opens Discover. Those three are the whole app.
+
+The earlier measurement workspace — `matrix.html`, `legacy-decks.html` and
+`legacy-graph.html`, with `app.js`, `viewer.js`, `graph-page.js` and `shop-page.js`
+behind them — was retired once CrankMagic covered its ground; nothing linked to it and
+it had stopped being tested against the live data. Its historical guide is
+[docs/legacy-readme.md](docs/legacy-readme.md), and the browser records it left behind
+are still folded into every backup by `user-state.js`, so an old library is not stranded.
 
 ## Simulator hold and evidence
 
@@ -104,7 +109,7 @@ installation. Workbook tests optionally use `XLSX_PYTHON` with openpyxl for inde
 spreadsheet verification. See [tests/uat/README.md](tests/uat/README.md).
 
 Changed assets require a new `?v=` everywhere referenced, then
-`node tests/asset-versions.mjs --update`. There are 50 Node suites:
+`node tests/asset-versions.mjs --update`. There are 49 Node suites:
 
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`
@@ -138,7 +143,6 @@ Changed assets require a new `?v=` everywhere referenced, then
 - `generators` — `tests/generators.mjs`
 - `guide-agent` — `tests/guide-agent.mjs`
 - `guide-measured` — `tests/guide-measured.mjs`
-- `import-wiring` — `tests/import-wiring.mjs`
 - `inventory-import` — `tests/inventory-import.mjs`
 - `lab-report` — `tests/lab-report.mjs`
 - `lineup-compliance` — `tests/lineup-compliance.mjs`

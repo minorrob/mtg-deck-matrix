@@ -168,7 +168,7 @@ check("a manual card carries every field the deck record reads", () => {
     {name: "Pastel Ooze", now: () => "2026-09-07T00:00:00.000Z"});
   for (const field of ["name", "typeLine", "manaCost", "oracleText", "keywords",
     "colorIdentity", "cmc", "price", "gameChanger", "image", "manual", "source", "addedAt"]) {
-    assert.ok(field in card, `deck-store's toRecord reads ${field}`);
+    assert.ok(field in card, `a deck record reads ${field}`);
   }
   assert.equal(card.typeLine, "", "no type line, because inventing one would be a lie");
   assert.equal(card.price, 0);
@@ -196,17 +196,8 @@ await acheck("a caller that will not take a manual card is told so plainly", asy
 
 /* --------------------------------------------------------------- it is wired in */
 
-const page = readFileSync(new URL("../legacy-decks.html", import.meta.url), "utf8");
 const panel = readFileSync(new URL("../import-panel.js", import.meta.url), "utf8");
-const viewer = readFileSync(new URL("../viewer.js", import.meta.url), "utf8");
 const client = readFileSync(new URL("../scryfall-client.js", import.meta.url), "utf8");
-
-check("the page loads it, and the import will not open without it", () => {
-  assert.match(page, /src="card-link\.js/);
-  assert.match(page, /src="manual-cards\.js/);
-  assert.match(viewer, /"MtgCardLink"/);
-  assert.match(viewer, /"MtgManualCards"/);
-});
 
 check("the fix screen offers the link box and hands the answer back", () => {
   assert.match(panel, /data-fix-link=/);

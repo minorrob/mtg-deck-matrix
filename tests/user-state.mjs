@@ -33,18 +33,39 @@ check("every key names a module, and no key is listed twice", () => {
   assert.equal(seen.size, User.keys().length);
 });
 
+/* THE MODULES THAT STILL EXIST TO WRITE A KEY. matrix.html, legacy-decks.html and
+   legacy-graph.html were retired, and app.js, viewer.js, graph-page.js and shop-page.js
+   went with them -- so fifteen of these keys now have no writer at all. They stay listed
+   here and in user-state.js on purpose: a key nothing writes is still a key somebody's
+   browser is holding, and the backup folds every one of them into the export. What the
+   list must not do is claim a live writer that is not there, so the ones whose module is
+   gone are named rather than quietly skipped. */
+const RETIRED = new Set(["app.js", "viewer.js", "graph-page.js", "shop-page.js"]);
 const sources = Object.fromEntries(await Promise.all(
-  ["app.js", "viewer.js", "graph-page.js", "custom-model.js", "deck-store.js", "shop-filters.js",
+  ["custom-model.js", "deck-store.js", "shop-filters.js",
     "manual-cards.js", "user-state.js", "card-images.js"]
     .map(async (f) => [f, await readFile(new URL(`../${f}`, import.meta.url), "utf8")])
 ));
 const allSource = Object.values(sources).join("\n");
+const appModule = await readFile(new URL("../crankmagic-app.js", import.meta.url), "utf8");
 
-check("every key is one the code actually writes, in the module it names", () => {
+check("every key with a living writer is one that module actually writes", () => {
   for (const k of User.KEYS) {
+    if (RETIRED.has(k.owner)) continue;      // no writer left; kept so a backup still carries it
     assert.ok(allSource.includes(`"${k.key}"`),
-      `${k.key} is listed here but no page writes it — either it is stale or the writer renamed it`);
+      `${k.key} is listed here but ${k.owner} does not write it — either it is stale or the writer renamed it`);
   }
+});
+
+check("a key whose writer was retired is still listed, so a backup can carry it", () => {
+  /* This is the whole reason user-state.js outlives the pages: crankmagic-app.js folds
+     MtgUserState.snapshot(localStorage) into every backup, and it can only carry what
+     this list names. Losing an entry here silently drops somebody's old records. */
+  const orphaned = User.KEYS.filter((k) => RETIRED.has(k.owner));
+  assert.ok(orphaned.length >= 10,
+    `only ${orphaned.length} keys are attributed to the retired pages; the list has been trimmed`);
+  assert.match(appModule, /MtgUserState\.snapshot\(localStorage\)/,
+    "the backup must still capture the retired pages' storage");
 });
 
 check("every saved key carries a version marker, so one can be spotted on sight", () => {
@@ -219,13 +240,6 @@ check("a junk value falls back to deciding rather than to a broken third state",
   jar.setItem(User.CATALOG_KEY, "banana");
   assert.equal(User.catalogSource(jar), "");
   assert.equal(User.startsEmpty(jar), true, "nothing else saved, so: empty");
-});
-
-check("both pages ask the same question, and neither one infers it any more", () => {
-  assert.match(sources["viewer.js"], /User\.startsEmpty\(window\.localStorage\)/);
-  assert.match(sources["graph-page.js"], /User\.startsEmpty\(window\.localStorage\)/);
-  assert.ok(!/isFresh\(window\.localStorage\) && !\(IMPORTS/.test(sources["viewer.js"]),
-    "the old inference must be gone, not merely unused");
 });
 
 console.log(`\nuser-state: ${checks} checks passed across ${User.keys().length} saved keys.`);

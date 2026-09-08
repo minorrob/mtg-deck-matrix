@@ -147,9 +147,7 @@ check("the last resort is a search a person can read, not an API this app cannot
 /* ---------------- and the panel that has to use it ---------------- */
 import {readFile} from "node:fs/promises";
 const panel = await readFile(new URL("../import-panel.js", import.meta.url), "utf8");
-const store = await readFile(new URL("../deck-store.js", import.meta.url), "utf8");
 const importer = await readFile(new URL("../deck-import.js", import.meta.url), "utf8");
-const page = await readFile(new URL("../legacy-decks.html", import.meta.url), "utf8");
 
 check("the panel asks about unmatched names instead of walking past them", () => {
   assert.match(panel, /if \(deck\.unresolved && deck\.unresolved\.length && opts\.resolveNames\) await renderFixNames\(\);/,
@@ -161,8 +159,6 @@ check("the panel asks about unmatched names instead of walking past them", () =>
 });
 
 check("a name left out on purpose is not reported as a failure", () => {
-  assert.match(store, /const dropped = record\.dropped \|\| \[\];/);
-  assert.match(store, /name\$\{dropped\.length === 1 \? "" : "s"\} you left out/);
   assert.match(panel, /dropped: \(deck\.dropped \|\| \[\]\)\.concat\(dropped\)/);
 });
 
@@ -175,11 +171,6 @@ check("applyFallback keys by the name that was ASKED for", () => {
     "the index must not be rebuilt from the card's own names");
   assert.match(importer, /asked\.set\(normalizeName\(name\), card\)/);
   assert.match(importer, /asked\.get\(normalizeName\(name\)\) \|\| asked\.get\(foldName\(name\)\)/);
-});
-
-check("the page loads the resolver, and the import refuses to open without it", () => {
-  assert.match(page, /src="card-resolve\.js/);
-  const viewer = null; void viewer;
 });
 
 /* ---------------------------------------------------------------------------

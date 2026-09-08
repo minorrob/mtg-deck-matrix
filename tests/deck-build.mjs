@@ -196,13 +196,5 @@ check(() => assert.ok(/different from Cheapest legal/.test(Build.describe(collap
 check(() => assert.equal(Build.shownBelow(built, 1).key, "base",
   "the rung below the second is always the first"));
 
-// ---------------------------------------------------------------------------
-// Wired into the page
-// ---------------------------------------------------------------------------
-const indexHtml = await readFile(new URL("../legacy-decks.html", import.meta.url), "utf8");
-check(() => assert.ok(/deck-build\.js/.test(indexHtml), "My Decks must load deck-build.js"));
-check(() => assert.ok(/deck-generator\.js/.test(indexHtml), "My Decks must load the generator"));
-check(() => assert.ok(/build-panel\.js/.test(indexHtml), "My Decks must load the build panel"));
-
 console.log(`deck-build: ${checks} checks passed · ${result.builds.length} generated ladders, ` +
   `${Build.offeredRungs(built).length} distinct rungs, tuned at $${spend.total.toFixed(0)}`);

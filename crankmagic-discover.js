@@ -240,7 +240,13 @@
       const slot = $('#cm-graph-back');
       if (!slot) return;
       const prior = graph && graph.previous();
-      slot.innerHTML = prior ? b('◀ Back to ' + prior.name.split(',')[0], 'graph-back') : '';
+      /* "Back to Prior Card", not "Back to Atraxa". The card's name set the button's width,
+         so the button moved every time the focus did -- and it sits in a row with a wrapping
+         hint beside it, where a control that changes width reflows its neighbours. The name
+         is still there for anyone who wants it, on the title. */
+      slot.innerHTML = prior
+        ? `<button type="button" class="v-button" data-action="graph-back" title="Back to ${e(prior.name)}">◀ Back to Prior Card</button>`
+        : '';
     }
     function drawCardView(c, info, keepInfo) {
       if (!keepInfo) lastInfo = info;

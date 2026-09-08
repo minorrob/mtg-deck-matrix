@@ -11,7 +11,7 @@
  * visible by reading either file:
  *
  *   deck-generator.js was rewritten to rank cards by EDHREC synergy, and
- *   index.html was bumped to v=5 while matrix.html stayed at v=3 -- a number set
+ *   index.html was bumped to v=5 while the second page stayed at v=3 -- a number set
  *   the day BEFORE the rewrite. Anybody who had opened the Matrix before that
  *   kept the old generator forever. lineup-model.js and scryfall-client.js
  *   disagreed the same way, in the other direction.
@@ -34,7 +34,7 @@ import {existsSync} from "node:fs";
 import {createHash} from "node:crypto";
 
 const ROOT = new URL("../", import.meta.url);
-const PAGES = ["index.html", "matrix.html", "graph.html", "crankmagic.html", "legacy-decks.html", "legacy-graph.html"];
+const PAGES = ["index.html", "graph.html", "crankmagic.html"];
 const MANIFEST = new URL("./fixtures/asset-versions.json", import.meta.url);
 const UPDATE = process.argv.includes("--update");
 
@@ -51,7 +51,7 @@ const note = (file, where, version) => {
 // Follow loaded local modules/styles, including the worker's explicit offline
 // inventory. Font/image changes need the same protection as JavaScript. Remote
 // card URLs and data: embedded font payloads are deliberately outside this scan.
-const queue = [...PAGES, "app.js", "viewer.js", "graph-page.js"], scanned = new Set();
+const queue = [...PAGES], scanned = new Set();
 while (queue.length) {
   const file = queue.shift();
   if (scanned.has(file)) continue;

@@ -66,14 +66,17 @@ assert.throws(()=>run('swap',{deckId:'deckA',slotId:target.id,cardId:pool[2].id}
 run('editDeck',{deckId:'deckA',definition});
 const supplemental=C.normalize({name:'Test transcription',typeLine:'Artifact',verified:false,legalities:{commander:'unverified'}});
 run('acquire',{cards:[supplemental],lot:{id:'manual-copy',cardId:supplemental.id,quantity:2,printing:{set:'tst',collector:'007',finish:'foil'}}});
+/* By id, not by index: a library now opens with the four starter groups, so the one
+   this test creates is never groups[0]. */
+const group=id=>state.groups.find(g=>g.id===id);
 run('createGroup',{groupId:'manual-group',name:'Transcribed cards'});
 run('groupEntries',{groupId:'manual-group',entries:[{cardId:supplemental.id,quantity:1}]});
 const ownedBefore=M.counters(state).owned;
 run('verifyIdentity',{cardId:supplemental.id,card:pool[4],confirmed:true});
-eq(M.counters(state).owned,ownedBefore);eq(M.lot(state,'manual-copy').printing.collector,'007');eq(M.lot(state,'manual-copy').cardId,pool[4].id);eq(state.groups[0].entries[0].cardId,pool[4].id);
+eq(M.counters(state).owned,ownedBefore);eq(M.lot(state,'manual-copy').printing.collector,'007');eq(M.lot(state,'manual-copy').cardId,pool[4].id);eq(group('manual-group').entries[0].cardId,pool[4].id);
 run('createGroup',{groupId:'destination-group',name:'Destination'});
-run('moveGroupEntries',{from:'manual-group',to:'destination-group',entryIds:[state.groups[0].entries[0].id]});
-eq(state.groups[0].entries.length,0);eq(state.groups[1].entries.length,1);eq(M.counters(state).owned,ownedBefore);
+run('moveGroupEntries',{from:'manual-group',to:'destination-group',entryIds:[group('manual-group').entries[0].id]});
+eq(group('manual-group').entries.length,0);eq(group('destination-group').entries.length,1);eq(M.counters(state).owned,ownedBefore);
 const V=require('../collection-evidence.js'),report={kind:'report',deckFingerprint:M.fingerprint(state.decks[0]),protocol:'fixture-only',versions:{engine:'fixture1',cards:'fixture1'},conditions:{opponents:['a','b','c'],seeds:[1,2],games:10},metrics:{wins:{value:.2,unit:'probability'}}};
 let comparison=V.compare(report,{...report,metrics:{wins:{value:.4,unit:'probability'}}});eq(comparison.compatible,true);eq(comparison.rows[0].delta,.2);
 comparison=V.compare(report,{...report,conditions:{...report.conditions,opponents:['d','e','f']}});eq(comparison.compatible,false);eq(comparison.rows[0].delta,null);
