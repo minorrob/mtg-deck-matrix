@@ -203,9 +203,13 @@
       }
       const img = rec.image || c.image || '';
       const cost = rec.manaCost ? C.mana(rec.manaCost) : '';
+      /* The frame around the art takes the card's identity: one colour for one colour,
+         gold for three or more, a quiet grey for colourless. */
+      const ci = String(c.ci || (rec.colorIdentity || []).join('')).split('').filter(Boolean);
+      const tint = ci.length >= 3 ? '#e0b660' : ci.length === 2 ? ({W: '#f2dfa0', U: '#5fb2ff', B: '#9a8fae', R: '#f07a66', G: '#6fc493'})[ci[0]] : ci.length === 1 ? ({W: '#f2dfa0', U: '#5fb2ff', B: '#9a8fae', R: '#f07a66', G: '#6fc493'})[ci[0]] : '#6f8199';
       view.innerHTML = `
         <div class="cm-card-view-head">
-          ${img ? `<img class="cm-card-view-art" src="${e(img)}" alt="" loading="lazy">` : '<div class="cm-card-view-art cm-card-view-blank"></div>'}
+          ${img ? `<img class="cm-card-view-art" src="${e(img)}" alt="" loading="lazy" style="--ci-a:${tint}">` : '<div class="cm-card-view-art cm-card-view-blank"></div>'}
           <div class="cm-card-view-title">
             <h2>${e(c.name)}</h2>
             <p>${e(rec.typeLine || c.type || '')}</p>
