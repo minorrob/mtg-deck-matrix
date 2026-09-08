@@ -416,17 +416,21 @@
 
 /* ====================== DISCOVER: THE CARD INFO PANE ======================
    Each control sits with its subject rather than in one stack: Inspect under the art it
-   inspects, Add and/or Buy under the price and bracket line it acts on, and Back -- which is
-   navigation, not card information -- out of the stack entirely, in the pane's top-right
-   corner where it lines up with the outside corner of the graph beside it. All three are
-   thin, because none of them is the card. */
-#matrix-v2 .cm-card-view{position:relative}
+   inspects, and Add and/or Buy under the price and bracket line it acts on. Both are thin,
+   because neither of them is the card. */
 #matrix-v2 .cm-card-view-tools .v-button,
 #matrix-v2 .cm-card-view-buy .cm-card-view-menu-btn,
-#matrix-v2 .cm-card-view-back .v-button{min-height:28px;padding:3px 11px;font-size:12.5px}
+#matrix-v2 .cm-graph-back .v-button{min-height:28px;padding:3px 11px;font-size:12.5px}
 .cm-card-view-buy{margin-top:8px}
 #matrix-v2 .cm-card-view-buy .cm-card-view-menu-btn{display:inline-flex;align-items:center;gap:6px}
-.cm-card-view-back{position:absolute;top:10px;right:12px;z-index:4}
+
+/* BACK RIDES WITH THE GRAPH'S OWN CONTROLS. Inside the pane it was absolutely positioned
+   over the top-right corner, which put it on top of the card's name -- and it never belonged
+   to the card anyway: it undoes a move on the canvas. It is the last item in the mode row
+   now, pushed to the far right, so it lands on the graph box's top-right outside corner and
+   overlaps nothing. Empty when there is nowhere to go back to, and margin-left:auto on an
+   empty span costs nothing. */
+#matrix-v2 .cm-graph-back{margin-left:auto;display:inline-flex}
 
 /* THE CHIPS ARE THE POINT OF THIS PANE. They were in a 138px scroller, so a card joined by
    nine terms showed four and hid the rest behind a scrollbar nobody looks for -- in a pane

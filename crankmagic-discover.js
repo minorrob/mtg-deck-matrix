@@ -95,7 +95,7 @@
       <p class="cm-muted cm-graph-hint">Pinch to zoom · drag to pan · tap a card to explore · double-tap to reset · zoom in to label the focus's connections and name the outer rings. With a mouse: wheel to zoom, arrow keys / + / − / 0.</p>
       <div class="cm-graph-grid cm-graph-grid-tall">
         <div class="cm-graph-col">
-          <div class="cm-graph-modes" role="group" aria-label="What a tap on the graph does">${[['navigate', 'Navigate'], ['inspect', 'Inspect'], ['select', 'Select']].map(([m, label]) => `<button type="button" class="v-button${gmode === m ? ' is-on' : ''}" data-action="graph-mode" data-mode="${m}" aria-pressed="${gmode === m}">${label}</button>`).join('')}<span class="cm-muted cm-graph-mode-hint" id="cm-graph-mode-hint">${modeHint(gmode)}</span></div>
+          <div class="cm-graph-modes" role="group" aria-label="What a tap on the graph does">${[['navigate', 'Navigate'], ['inspect', 'Inspect'], ['select', 'Select']].map(([m, label]) => `<button type="button" class="v-button${gmode === m ? ' is-on' : ''}" data-action="graph-mode" data-mode="${m}" aria-pressed="${gmode === m}">${label}</button>`).join('')}<span class="cm-muted cm-graph-mode-hint" id="cm-graph-mode-hint">${modeHint(gmode)}</span><span class="cm-graph-back" id="cm-graph-back"></span></div>
           <canvas class="cm-graph" id="cm-graph" tabindex="0" role="img" aria-label="Interactive card relationship graph. Drag to pan. Pinch or mouse wheel to zoom. In Navigate a tap re-centres on a card; in Inspect a tap opens its terms; in Select a tap ticks it for a group. A tap on a line opens why two cards are joined. Keyboard arrows pan, plus and minus zoom, zero resets."></canvas>
           <div class="cm-graph-pop" id="cm-graph-pop" role="dialog" aria-label="Connection details" hidden></div>
         </div>
@@ -230,6 +230,18 @@
       multiplies: 'multiplies', produces: 'produces', requires: 'requires',
       grants: 'grants', extends: 'extends', tribes: 'tribes'};
     let lastInfo = null, lastDrawn = '';
+
+    /* BACK BELONGS TO THE GRAPH, NOT TO THE CARD. It undoes a move on the canvas, so it
+       sits at the top-right of the graph column -- the outside corner of the box it acts
+       on -- rather than inside the pane, where it was painting over the card's own name.
+       It is written from here rather than with the row around it because it changes with
+       every focus and the row is drawn once. */
+    function drawBack() {
+      const slot = $('#cm-graph-back');
+      if (!slot) return;
+      const prior = graph && graph.previous();
+      slot.innerHTML = prior ? b('◀ Back to ' + prior.name.split(',')[0], 'graph-back') : '';
+    }
     function drawCardView(c, info, keepInfo) {
       if (!keepInfo) lastInfo = info;
       /* Same card, same picture, same picks: leave the pane alone. Rewriting it moves the
@@ -237,6 +249,7 @@
       const key = JSON.stringify([c && c.id, lastInfo && [lastInfo.total, lastInfo.byDepth, lastInfo.crossLinks], gmode, [...picked].sort(), selection, keepInfo ? Date.now() : 0]);
       if (!keepInfo && key === lastDrawn) return;
       lastDrawn = key;
+      drawBack();
       if (!c) { view.innerHTML = '<h2>Nothing matches</h2><p>No card carries the filters you have picked.</p>'; $('#cm-graph-size').textContent = ''; return; }
       const rec = C.catalog.exact(c.name) || {};
       const t = CrankGraph.termsOf(c);
@@ -306,7 +319,6 @@
             ${b('Inspect card', 'card', {card: CrankCatalog.key(c.name)}, true)}
           </div>
         </div>
-        ${graph && graph.previous() ? `<div class="cm-card-view-back">${b('◀ Back to ' + graph.previous().name.split(',')[0], 'graph-back')}</div>` : ''}
         <!-- NO ORACLE BOX. The card image above is the whole card, rules text included, so
              reprinting it underneath said the same thing twice and pushed the terms -- the
              part of this pane you cannot get from the picture -- below the fold. -->
