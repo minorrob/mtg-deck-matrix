@@ -48,19 +48,25 @@
 
   root.CrankGraph = {
     termsOf,
-    mount({canvas, cards, played = [], focus, onSelect, onNeighbors, onPick, type = 'mechanic', depth = 2, breadth = 12}) {
+    mount({canvas, cards, played = [], focus, history = [], onSelect, onNeighbors, onPick, onHit, type = 'mechanic', depth = 2, breadth = 12}) {
       const ctx = canvas.getContext('2d');
       const byId = new Map(cards.map((c) => [c.id, c]));
-      const trail = [];
+      /* The path walked so far. A filter remounts the graph over a narrower set of cards;
+         the trail comes along, minus any card the filter removed, so Back and the pinned
+         previous focus survive narrowing. */
+      const trail = [...(history || [])].filter((id) => byId.has(id));
       let center = focus || (cards[0] && cards[0].id);
       let nodes = [], edges = [], scale = 1, pan = {x: 0, y: 0}, drag = null;
       let width = 600, height = 550, frame = 0, disposed = false;
       const pointers = new Map();
       let pinch = null, lastTap = {at: 0, x: 0, y: 0}, touched = false;
-      /* navigate: a tap re-centres on the card. select: a tap ticks it, for "add these to
-         a group" -- the loop the graph exists for happens ON the graph, not in a list. */
+      /* navigate: a tap re-centres on the card. inspect: a tap opens the card's terms and
+         its connection to the focus in a pop-up, without moving. select: a tap ticks it,
+         for "add these to a group" -- the loop the graph exists for happens ON the graph,
+         not in a list. An edge tap opens its definition in every mode. */
       let mode = 'navigate';
       const selected = new Set();
+      let highlight = null;   // [idA, idB] of the edge a pop-up is about
 
       /* THE CARD ART. A node is the card, not a blue circle standing in for it. Images
          load lazily -- only the cards on the canvas, from Scryfall's small rendition --
@@ -162,6 +168,19 @@
         return out.sort((a, b) => b.score - a.score || a.card.name.localeCompare(b.card.name)).slice(0, limit);
       }
 
+      /* A link entry for one known pair, in the shape links() returns -- for the card the
+         reader just left, which must stay on ring 1 whether or not it made the top cut. */
+      function linkTo(c, other) {
+        if (!other || other.id === c.id) return null;
+        if (type === 'played') {
+          const e = (coPlay.get(c.id) || []).find((x) => x.from === other.id || x.to === other.id);
+          return e ? {card: other, kind: 'EDHREC co-play', tag: `${(e.inclusion * 100).toFixed(1)}% of decks`,
+            reason: `EDHREC co-play · ${e.decks} decks · ${(e.inclusion * 100).toFixed(1)}% inclusion`, score: e.inclusion} : null;
+        }
+        const r = relate(c, other);
+        return r ? {card: other, ...r} : null;
+      }
+
       /* ------------------------------------------------------------- the layout */
 
       function ring(k) {
@@ -180,12 +199,31 @@
         const root = {card: c, x: 0, y: 0, r: radius(0), depth: 0, angle: 0, span: Math.PI * 2};
         nodes.push(root);
         const direct = links(c, breadth, placed);
+
+        /* WHERE YOU CAME FROM. The card the reader just left stays on ring 1 whether or not
+           it made the focus's top cut, pinned to the left with a wider sector and a fuller
+           fan beneath it, so a hop reads as a step along a path with the previous
+           neighbourhood still in view. Only the immediate previous focus gets this; two
+           hops back it is a node like any other. */
+        const prev = trail.length ? byId.get(trail[trail.length - 1]) : null;
+        if (prev && prev.id !== c.id) {
+          const at = direct.findIndex((n) => n.card.id === prev.id);
+          if (at >= 0) direct.unshift(direct.splice(at, 1)[0]);
+          else { const back = linkTo(c, prev); if (back) { if (direct.length >= breadth) direct.pop(); direct.unshift(back); } }
+        }
         direct.forEach((n) => placed.add(n.card.id));
+        const hasPrev = Boolean(prev && direct.length && direct[0].card.id === prev.id);
+        const prevSpan = hasPrev ? Math.min(Math.PI / 2, (Math.PI * 2 / direct.length) * 2.2) : 0;
+        const restSpan = direct.length - (hasPrev ? 1 : 0) > 0 ? (Math.PI * 2 - prevSpan) / (direct.length - (hasPrev ? 1 : 0)) : Math.PI * 2;
+        let cursor = Math.PI + prevSpan / 2 + restSpan / 2;
 
         let frontier = direct.map((n, i) => {
-          const angle = (i / direct.length) * Math.PI * 2 - Math.PI / 2;
-          const span = (Math.PI * 2) / direct.length;
-          const node = {card: n.card, reason: n.reason, kind: n.kind, tag: n.tag, parent: root,
+          const pinned = hasPrev && i === 0;
+          let angle, span;
+          if (!hasPrev) { angle = (i / direct.length) * Math.PI * 2 - Math.PI / 2; span = (Math.PI * 2) / direct.length; }
+          else if (pinned) { angle = Math.PI; span = prevSpan; }
+          else { angle = cursor; cursor += restSpan; span = restSpan; }
+          const node = {card: n.card, reason: n.reason, kind: n.kind, tag: n.tag, parent: root, pinned,
             x: Math.cos(angle) * ring(1), y: Math.sin(angle) * ring(1), r: radius(1), depth: 1, angle, span};
           edges.push({a: root, b: node, tree: true, kind: n.kind});
           return node;
@@ -211,7 +249,11 @@
           for (const parent of frontier) {
             if (spent >= share || nodes.length >= CAP) break;
             const bonus = extra > 0 ? 1 : 0;
-            const want = Math.min(maxFan, perParent + bonus, share - spent, CAP - nodes.length);
+            /* The pinned previous focus keeps a fan the size the focus itself gets, so its
+               old neighbourhood is still visible; everyone else gets the ring's share. */
+            const want = parent.pinned && d === 2
+              ? Math.min(breadth, Math.max(perParent * 3, 6), share - spent, CAP - nodes.length)
+              : Math.min(maxFan, perParent + bonus, share - spent, CAP - nodes.length);
             if (bonus && want > perParent) extra -= 1;
             const kids = links(parent.card, want, placed);
             kids.forEach((k) => placed.add(k.card.id));
@@ -286,6 +328,14 @@
             ctx.strokeStyle = played ? (e.b.depth === 1 ? '#c6a86d99' : '#c6a86d55') : (e.b.depth === 1 ? '#5384b699' : '#5384b655');
             ctx.lineWidth = e.b.depth === 1 ? 1.2 : 1; ctx.stroke();
           }
+          /* The trail, and the edge a pop-up is about, over everything else: the step the
+             reader just took in amber, the connection they asked about in gold. */
+          for (const e of edges) {
+            const lit = highlight && ((e.a.card.id === highlight[0] && e.b.card.id === highlight[1]) || (e.a.card.id === highlight[1] && e.b.card.id === highlight[0]));
+            if (!e.b.pinned && !lit) continue;
+            ctx.beginPath(); ctx.moveTo(e.a.x, e.a.y); ctx.lineTo(e.b.x, e.b.y);
+            ctx.strokeStyle = lit ? '#ffd166' : '#e0b660bb'; ctx.lineWidth = lit ? 2.6 : 2.2; ctx.stroke();
+          }
 
           /* ROOM TO LETTER. A name is drawn only where the ring has room for it: the arc
              between neighbours, on screen, must be wide enough for a label. Thirty names on
@@ -336,8 +386,8 @@
               ctx.fillText((n.card.ci || 'C').split('').join(' '), n.x, n.y + (focus ? 4 : 3));
             }
             const isSel = selected.has(n.card.id);
-            ctx.strokeStyle = isSel ? '#ffd166' : focus ? '#c0e8ff' : n.depth === 1 ? '#71b6e3' : '#4f89b8';
-            ctx.lineWidth = isSel ? 3 : focus ? 1.5 : 1;
+            ctx.strokeStyle = isSel ? '#ffd166' : n.pinned ? '#e0b660' : focus ? '#c0e8ff' : n.depth === 1 ? '#71b6e3' : '#4f89b8';
+            ctx.lineWidth = isSel ? 3 : n.pinned ? 2 : focus ? 1.5 : 1;
             ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2); ctx.stroke();
             if (isSel) {
               // a small check badge, so a selected card reads as selected at any zoom
@@ -347,9 +397,9 @@
             }
             /* Names per ring, gated on zoom: ring 1 always, ring 2 from 0.8, ring 3 from
                1.3. Below those the text would be a smaller smear than the circle it labels. */
-            const showName = n.depth === 0 || (roomy(n.depth) && (n.depth === 1 || (n.depth === 2 && scale >= .8) || (n.depth === 3 && scale >= 1.3)));
+            const showName = n.depth === 0 || n.pinned || (roomy(n.depth) && (n.depth === 1 || (n.depth === 2 && scale >= .8) || (n.depth === 3 && scale >= 1.3)));
             if (showName) {
-              const name = n.card.name;
+              const name = (n.pinned ? '◀ ' : '') + n.card.name;
               const max = n.depth === 0 ? 28 : n.depth === 1 ? 24 : 18;
               ctx.fillStyle = n.depth <= 1 ? '#edf7ff' : '#c9dcf2';
               ctx.font = (focus ? 'bold 13' : n.depth === 1 ? '11' : '10') + 'px Satoshi, sans-serif'; ctx.textAlign = 'center';
@@ -367,6 +417,33 @@
         const x = (e.clientX - r.left - width / 2 - pan.x) / scale, y = (e.clientY - r.top - height / 2 - pan.y) / scale;
         // smallest hit first, so a ring-3 dot inside a ring-1 halo is still pickable
         return [...nodes].sort((a, b) => a.r - b.r).find((n) => Math.hypot(n.x - x, n.y - y) < n.r + 8);
+      }
+      /* The nearest edge to a tap, in screen pixels, when no node was hit. Tree edges and
+         cross-links alike: a cross-link is exactly the connection a reader asks "why?"
+         about. The ends of a segment are excluded so a tap beside a node is not an edge. */
+      function pickEdge(e) {
+        const r = canvas.getBoundingClientRect();
+        const px = e.clientX - r.left, py = e.clientY - r.top;
+        const sx = (n) => width / 2 + pan.x + n.x * scale, sy = (n) => height / 2 + pan.y + n.y * scale;
+        let best = null, bestD = 7;
+        for (const edge of edges) {
+          const ax = sx(edge.a), ay = sy(edge.a), bx = sx(edge.b), by = sy(edge.b);
+          const dx = bx - ax, dy = by - ay, len2 = dx * dx + dy * dy || 1;
+          let t = ((px - ax) * dx + (py - ay) * dy) / len2; t = Math.max(.1, Math.min(.9, t));
+          const d = Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+          if (d < bestD) { bestD = d; best = edge; }
+        }
+        return best;
+      }
+      const screenOf = (n) => ({x: width / 2 + pan.x + n.x * scale, y: height / 2 + pan.y + n.y * scale, r: n.r * scale});
+      function relation(idA, idB) {
+        const a = byId.get(idA), b = byId.get(idB);
+        if (!a || !b || a.id === b.id) return null;
+        const co = (coPlay.get(a.id) || []).find((x) => x.from === b.id || x.to === b.id) || null;
+        const r = relate(a, b);
+        if (!r && !co) return null;
+        return {shared: r ? r.shared : [], feeds: r ? r.feeds : [], fed: r ? r.fed : [], kind: r ? r.kind : 'EDHREC co-play',
+          reason: r ? r.reason : null, coPlay: co ? {decks: co.decks, inclusion: co.inclusion} : null};
       }
       function select(id, history = true) {
         if (!byId.has(id)) return;
@@ -429,7 +506,16 @@
           if (n && mode === 'select') {
             if (selected.has(n.card.id)) selected.delete(n.card.id); else selected.add(n.card.id);
             draw(); onPick && onPick(n.card, new Set(selected));
+          } else if (n && mode === 'inspect') {
+            const at = screenOf(n);
+            onHit && onHit({kind: 'node', card: n.card, depth: n.depth, pinned: !!n.pinned, relation: relation(center, n.card.id), x: at.x, y: at.y + at.r});
           } else if (n) select(n.card.id);
+          else {
+            const edge = pickEdge(e);
+            const r = canvas.getBoundingClientRect();
+            if (edge) onHit && onHit({kind: 'edge', a: edge.a.card, b: edge.b.card, tree: edge.tree, edgeKind: edge.kind, relation: relation(edge.a.card.id, edge.b.card.id), x: e.clientX - r.left, y: e.clientY - r.top});
+            else onHit && onHit(null);
+          }
         }
         drag = null;
       }
@@ -467,21 +553,27 @@
 
       const api = {
         select,
-        back() { if (trail.length) select(trail.pop(), false); },
+        back() { while (trail.length) { const id = trail.pop(); if (byId.has(id)) { select(id, false); return; } } },
+        history() { return [...trail]; },
         setType(value) { type = value; layout(); fit(); draw(); },
         setDepth(value) { depth = clampDepth(value); layout(); fit(); draw(); },
         setBreadth(value) { breadth = clampBreadth(value); layout(); fit(); draw(); },
         reset() { fit(); draw(); },
         terms(id) { return termsOf(byId.get(id || center)); },
         get settings() { return {type, depth, breadth, nodes: nodes.length, mode}; },
-        setMode(value) { mode = value === 'select' ? 'select' : 'navigate'; draw(); },
+        setMode(value) { mode = ['select', 'inspect'].includes(value) ? value : 'navigate'; draw(); },
+        /* The edge a pop-up is about, lit in gold until the pop-up closes. */
+        setHighlight(pair) { highlight = pair && pair.length === 2 ? [pair[0], pair[1]] : null; draw(); },
+        relation,
+        /* The card the reader came from, if it is on the canvas. */
+        previous() { const p = nodes.find((n) => n.pinned); return p ? p.card : null; },
         setSelected(ids) { selected.clear(); for (const id of ids || []) selected.add(id); draw(); },
         get selected() { return new Set(selected); },
         /* Which cards are on the canvas right now -- what "tick all shown" means. */
         visible() { return nodes.map((n) => n.card); },
         /* Where each node is on the canvas right now, in CSS pixels -- what a pop-up
            anchors to, and what a test clicks. */
-        positions() { return nodes.map((n) => ({id: n.card.id, name: n.card.name, depth: n.depth, x: width / 2 + pan.x + n.x * scale, y: height / 2 + pan.y + n.y * scale, r: n.r * scale})); },
+        positions() { return nodes.map((n) => ({id: n.card.id, name: n.card.name, depth: n.depth, pinned: !!n.pinned, parent: n.parent ? n.parent.card.id : null, x: width / 2 + pan.x + n.x * scale, y: height / 2 + pan.y + n.y * scale, r: n.r * scale})); },
         current() { return byId.get(center) || null; },
         destroy() {
           disposed = true; cancelAnimationFrame(frame); observer.disconnect();
