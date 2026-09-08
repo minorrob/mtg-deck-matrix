@@ -508,6 +508,15 @@ views.lab=async()=>{
   const rawFrom=m=>({winRate:(m.winRate&&m.winRate.value||0)/100,avgWinTurn:m.averageWinTurn&&m.averageWinTurn.value||0,
     commanderCastRate:(m.commanderCastRate&&m.commanderCastRate.value||0)/100,screwPct:(m.manaScrew&&m.manaScrew.value||0)/100,
     floodPct:(m.manaFlood&&m.manaFlood.value||0)/100,deadCardsAtT8:m.deadCardsAtTurnEight&&m.deadCardsAtTurnEight.value||0});
+  /* The engine writes a loss cause as "<seat key> combo" or a bare word like "damage".
+     "Combo combo" is what the first reading of that gives you, which is nobody's idea of
+     a sentence. */
+  const title=t=>String(t||'').replace(/^\w/,ch=>ch.toUpperCase());
+  const lossLabel=cause=>{
+    const text=String(cause||'').trim();
+    const seat=text.match(/^(.*)\s+combo$/);
+    return seat?`${title(seat[1])} seat's combo`:title(text)||'Unknown';
+  };
   function reportHTML(r){
     if(!r)return '<p>No measurement has been run on this list yet.</p>';
     const m=r.metrics||{};
@@ -523,15 +532,15 @@ views.lab=async()=>{
         ${row('Idle turns for the other seats',m.idleTurnsForOthers)}${row('Seats still playing at the end',m.seatsStillPlayingAtTheEnd)}
         ${row('First elimination',m.firstEliminationTurn)}${row('Cards the engine could read',m.cardsTheEngineCouldRead)}
       </div>
-      ${(r.lossCauses||[]).length?`<h3 class="cm-section-heading">What ended the games this deck lost</h3>
-        <div class="cm-count-list">${r.lossCauses.map(x=>`<span>${e(String(x.cause).replace(/^seat[-\s]?/i,'').replace(/\b\w/,ch=>ch.toUpperCase()))} <strong>${(x.rate*100).toFixed(1)}% of games</strong></span>`).join('')}</div>
-        <p class="cm-muted">The one figure here that answers "why did I lose" rather than "how often". A deck losing to one seat's combo needs a different card than a deck losing to damage.</p>`:''}
       <p class="cm-muted">${e(r.protocol)} · ${(r.conditions&&r.conditions.seedCount)||'?'} seeds of ${((r.conditions&&r.conditions.gamesPerSeed)||0).toLocaleString()} games · ${((r.run&&r.run.games)||0).toLocaleString()} games in ${(((r.run&&r.run.elapsedMs)||0)/1000).toFixed(1)}s</p>
       ${(r.scoreParts||[]).length?`<h3 class="cm-section-heading">How the score was made</h3>
         <div class="cm-table-wrap"><table class="cm-table"><thead><tr><th>What it measures</th><th>Scored</th><th>Of</th><th>What the engine saw</th></tr></thead><tbody>${r.scoreParts.map(x=>`<tr><td>${e(x.label)}</td><td>${e(String(x.points))}</td><td>${e(String(x.max))}</td><td class="cm-muted">${e(x.reads||'')}</td></tr>`).join('')}</tbody></table></div>
         <p class="cm-muted">Ordered by points lost, so the row that costs this deck the most is first. These are the nine terms the composite is built from; nothing else moves the number.</p>`:''}
       ${targets.length?`<h3 class="cm-section-heading">Against the targets for this build</h3>
         <div class="cm-count-list">${targets.map(t=>`<span>${t.ok?'✓':'✕'} ${e(t.label)} <strong>${e(t.reads)}</strong></span>`).join('')}</div>`:''}
+      ${(r.lossCauses||[]).length?`<h3 class="cm-section-heading">What ended the games this deck lost</h3>
+        <div class="cm-count-list">${r.lossCauses.map(x=>`<span>${e(lossLabel(x.cause))} <strong>${(x.rate*100).toFixed(1)}% of games</strong></span>`).join('')}</div>
+        <p class="cm-muted">The one figure here that answers "why did I lose" rather than "how often". A deck losing to one seat's combo needs a different card than a deck losing to damage.</p>`:''}
       ${(r.perCard||[]).length?`<details class="cm-details"><summary>Per-card: what the engine drew, played and won with (${r.perCard.length} rows)</summary>
         <p class="cm-muted">Ranked by the figure that actually separates one card from another here: how often a card was drawn and still sat uncastable in hand on turn eight. Cast rate cannot rank a list — a game runs long enough that nearly every drawn spell is eventually cast, so almost the whole list sits near 100%. Lands are marked; a land's cast rate is how often a drawn copy reached the battlefield. "Dead" is exactly 100% minus cast, which is why it is not a column.</p>
         <div class="cm-table-wrap"><table class="cm-table"><thead><tr><th>Card</th><th>Seen</th><th>Played when seen</th><th>Average turn</th><th>Stuck at turn 8</th><th>Win rate when cast</th></tr></thead><tbody>${r.perCard.slice().sort((a,b)=>(b.stuckRate||0)-(a.stuckRate||0)||a.castRate-b.castRate).map(x=>`<tr><td>${e(x.name)}${x.isCommander?' <small class="cm-muted">commander</small>':x.isLand?' <small class="cm-muted">land</small>':''}</td><td>${((x.drawnRate||0)*100).toFixed(0)}%</td><td>${(x.castRate*100).toFixed(0)}%</td><td>${x.avgCastTurn||'—'}</td><td>${((x.stuckRate||0)*100).toFixed(0)}%</td><td>${(x.winRateWhenCast*100).toFixed(0)}%</td></tr>`).join('')}</tbody></table></div></details>`:''}
