@@ -40,7 +40,16 @@ $('#cm-lab-run').onclick=async()=>{const run=$('#cm-lab-run'),error=$('#cm-lab-e
   : 'Select a commander before running.');const v=Object.fromEntries(new FormData(lab));definition=M.defaultDefinition({baseBracket:Number(v.baseBracket),bracketCeiling:Number(v.bracketCeiling),budget:v.budget===''?null:Number(v.budget),perCardCap:v.perCardCap===''?null:Number(v.perCardCap),mechanics:v.mechanic?[v.mechanic]:[],playStyle:v.playStyle,speed:Number(v.speed),competitiveness:Number(v.competitiveness),saltiness:Number(v.saltiness),restrictions:v.restrictions,reuse:{includeSellTrade:!!v.sellTrade}});groupId=v.group;deckId=v.existingDeck;draftName=v.deckName;pool=v.pool;includeInDeck=!!v.inDeck;includeReserved=!!v.reserved;const leaders=await Promise.all([leader,partner].filter(Boolean).map(c=>C.catalog.details(c)));let built;
 if(mode==='list'){let rows;if(deckId)rows=M.deck(C.state,deckId).slots.filter(r=>r.purpose==='main').map(r=>({...r,id:undefined}));else {const g=C.state.groups.find(x=>x.id===groupId);if(!g)throw Error('Choose a Collection group or existing deck.');rows=g.entries.map(r=>({...r,id:undefined}));if(!rows.length)rows=C.state.lots.filter(l=>l.groupIds.includes(g.id)).map(l=>({cardId:l.cardId,quantity:l.quantity,printing:l.printing}));}if(!rows.length)throw Error('The chosen group has no cards yet. Import or enter a list first.');built={slots:rows,cards:rows.map(r=>C.state.cards[r.cardId]),issues:[],method:'Existing list copied exactly into a new draft; no simulation executed'};}
 else {await C.catalog.loadGraph();const available={};for(const l of C.state.lots)if(M.eligibility(C.state,l,{includeInDeck,includeReserved,includeSellTrade:!!v.sellTrade}).eligible)available[l.cardId]=(available[l.cardId]||0)+l.quantity;built=CrankDraft.build({commanders:leaders,cards:C.catalog.all(),definition,available,benchOnly:pool==='owned'});}
-const id='deck:'+C.uid(),cardMap=new Map([...built.cards,...leaders].map(c=>[c.id,c]));const create={type:'createDeck',deckId:id,name:draftName||leader.name+' · '+(definition.mechanics[0]||'new draft'),commanders:leaders.map(c=>c.id),cards:[...cardMap.values()],slots:built.slots,definition,notes:[built.method,...(built.notes||[])].join('\n')};const preview=M.apply(C.state,{...create,id:C.uid()}).state;built.issues.push(...M.legality(preview,M.deck(preview,id)));await C.commit({type:'batch',commands:[create,{type:'preferences',values:{lastLabRun:{deckId:id,method:built.method,issues:built.issues,at:new Date().toISOString()}}}],summary:'Saved initial deck draft; simulator stages remain on hold'});}
+/* REFUSE THE EMPTY DRAFT. When the pool or the price caps starve the builder of every
+   candidate, saving the result and toasting "Saved initial deck draft" is a lie the
+   reader only discovers when Measure says there is nothing to measure. Zero of the 99 is
+   an error, shown in the error box with the builder's own reasons; fewer than 99 is
+   saved but said out loud. */
+const chosen99=built.slots.filter(r=>!leaders.some(c=>c.id===r.cardId)).reduce((n,r)=>n+r.quantity,0);
+if(!chosen99)throw Error('The builder could not choose any of the 99. '+(built.issues.join(' ')||'Check the pool and price limits.'));
+const chosenTotal=built.slots.reduce((n,r)=>n+r.quantity,0);
+const id='deck:'+C.uid(),cardMap=new Map([...built.cards,...leaders].map(c=>[c.id,c]));const create={type:'createDeck',deckId:id,name:draftName||leader.name+' · '+(definition.mechanics[0]||'new draft'),commanders:leaders.map(c=>c.id),cards:[...cardMap.values()],slots:built.slots,definition,notes:[built.method,...(built.notes||[])].join('\n')};const preview=M.apply(C.state,{...create,id:C.uid()}).state;built.issues.push(...M.legality(preview,M.deck(preview,id)));await C.commit({type:'batch',commands:[create,{type:'preferences',values:{lastLabRun:{deckId:id,method:built.method,issues:built.issues,at:new Date().toISOString()}}}],summary:chosenTotal===100?'Saved initial deck draft; simulator stages remain on hold':`Saved a PARTIAL draft — ${chosenTotal} of 100 cards. Loosen the limits and run again, or edit the list by hand.`});
+if(chosenTotal!==100)C.notice(built.issues.filter(x=>/could be chosen/.test(x)).join(' ')||`Only ${chosenTotal} of 100 cards were chosen.`,true);}
 catch(err){error.textContent=err.message;error.hidden=false;}finally{run.disabled=false;}};};let partner=null;
 /* THE MEASUREMENT. Everything that could make this dishonest is refused before the
    engine is started: a deck whose cards the engine cannot read, a second run while one
@@ -51,6 +60,11 @@ let runner=null;
 actions['lab-measure']=async el=>{
   const deck=M.deck(C.state,el.dataset.deck),status=$('#cm-lab-sim-status');
   const lineup=CrankSim.lineupFor(C.state,deck),cover=CrankSim.coverage(lineup);
+  if(!cover.total){
+    const last=C.state.preferences.lastLabRun;
+    const why=last&&last.deckId===deck.id&&(last.issues||[]).length?' The builder reported: '+last.issues.join(' '):'';
+    throw Error('This deck has no cards to measure yet.'+why+' Add cards with Edit card list, or run the draft again with looser limits.');
+  }
   CrankSim.assertMeasurable(cover,'published');
   const plan=CrankSim.protocolFor('published');
   runner=runner||CrankSim.createRunner();

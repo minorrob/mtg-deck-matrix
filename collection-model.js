@@ -88,6 +88,20 @@
       case 'lock':{const d=deck(s,c.deckId);d.locked=!!c.locked;summary=`${d.locked?'Locked':'Unlocked'} ${d.name}`;break;}
       case 'archive':{const d=deck(s,c.deckId);ensure(!d.archived,'Deck already archived.');d.archived=true;version(d);for(const l of [...s.lots].filter(l=>l.allocation?.deckId===d.id))release(l,c.destination);summary=`Archived ${d.name}; released allocations and retained actual box locations`;break;}
       case 'restoreDeck':{const d=deck(s,c.deckId);d.archived=false;d.status='draft';d.locked=false;summary=`Restored ${d.name} as a draft for availability review`;break;}
+      /* PERMANENT DELETION, and only of an archived deck. Archiving is the reversible step
+         and it already released every allocation, so by the time a deck can be deleted no
+         lot is reserved for it. What can still point at it: a lot's PHYSICAL location (the
+         copies are in that deck box on the shelf), which goes back to the bench because the
+         box no longer exists as a plan; the deck's reports, advice and games, which describe
+         an exact list that is being erased; and two preferences. All of it goes, because
+         "permanently" is the word the button uses. */
+      case 'deleteDeck':{const d=deck(s,c.deckId);ensure(d.archived,'Archive the deck first; only an archived deck can be deleted permanently.');ensure(c.confirmed===true,'Confirm permanent deletion.');
+        for(const l of s.lots){if(l.allocation?.deckId===d.id)l.allocation=null;if(l.location?.kind==='deck'&&l.location.deckId===d.id)l.location={kind:'bench',box:''};}
+        s.decks=s.decks.filter(x=>x.id!==d.id);
+        for(const k of ['reports','advice','games'])s[k]=s[k].filter(r=>r.deckId!==d.id);
+        if(Array.isArray(s.preferences.comparisonPicks))s.preferences.comparisonPicks=s.preferences.comparisonPicks.filter(x=>x!==d.id);
+        if(s.preferences.lastLabRun?.deckId===d.id)delete s.preferences.lastLabRun;
+        summary=`Deleted ${d.name} permanently, with its reports, advice and game log`;break;}
       case 'acquire':{for(const raw of c.cards||[])addCard(raw);const l=newLot(c.lot);if(c.groupId)l.groupIds.push(group(s,c.groupId).id);if(c.deckId)allocate(l,deck(s,c.deckId),slot(s,c.deckId,c.slotId),l.quantity);summary=`Recorded ${l.quantity} ${l.source} ${card(s,l.cardId).name}`;break;}
       case 'importLots':{ensure(text(c.batchId,200),'An import needs a batch identifier.');if(s.imports.some(b=>b.id===c.batchId))return {state:current,summary:'This batch was already imported.',duplicate:true};for(const raw of c.cards||[])addCard(raw);for(const raw of c.lots||[]){const l=newLot(raw);if(c.groupId)l.groupIds.push(group(s,c.groupId).id);}s.imports.push({id:c.batchId,at:now,mode:c.mode||'acquisitions',rows:c.lots.length,source:text(c.source,500)});summary=`Imported ${c.lots.length} reviewed inventory rows`;break;}
       case 'source':{let l=lot(s,c.lotId);ensure(SOURCES.includes(c.source),'Choose Owned, Ordered or Incoming trade.');if(l.source==='owned'&&c.source!=='owned')warning(l);l=split(l,c.quantity);l.source=c.source;if(l.source==='owned'){l.location=l.location||{kind:'bench',box:''};l.receivedAt=now;}else {l.location=null;l.offer='none';}summary=`Corrected acquisition to ${c.source}: ${card(s,l.cardId).name}`;break;}
