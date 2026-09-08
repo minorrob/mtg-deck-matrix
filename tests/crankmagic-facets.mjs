@@ -181,23 +181,61 @@ check("an archived deck is not offered as a filter", () => {
 
 /* ---------------------------------------------------------------- the selection */
 
-check("toggling adds then removes, and an empty facet disappears", () => {
+check("a pick cycles include, exclude, gone", () => {
+  /* Two states could not say "the counters deck WITHOUT the proliferate", which is a
+     question a reader asks about their own deck constantly. */
   let sel = Facets.toggle({}, "roles", "ramp");
   assert.deepEqual(sel, {roles: ["ramp"]});
-  sel = Facets.toggle(sel, "roles", "draw");
-  assert.deepEqual(sel.roles, ["ramp", "draw"]);
+  assert.equal(Facets.stateOf(sel, "roles", "ramp"), "include");
   sel = Facets.toggle(sel, "roles", "ramp");
-  assert.deepEqual(sel.roles, ["draw"]);
-  sel = Facets.toggle(sel, "roles", "draw");
-  assert.deepEqual(sel, {}, "the last pick removed should leave no empty array behind");
+  assert.deepEqual(sel, {roles: ["!ramp"]});
+  assert.equal(Facets.stateOf(sel, "roles", "ramp"), "exclude");
+  sel = Facets.toggle(sel, "roles", "ramp");
+  assert.deepEqual(sel, {}, "the third tap leaves no empty array behind");
+  assert.equal(Facets.stateOf(sel, "roles", "ramp"), "off");
+});
+
+check("inclusions and exclusions stack, in one facet and across them", () => {
+  const draw = Facets.apply(CARDS, {roles: ["draw"]}, null).length;
+  const drawNotRamp = Facets.apply(CARDS, {roles: ["draw", "!ramp"]}, null);
+  assert.ok(drawNotRamp.length > 0 && drawNotRamp.length < draw,
+    `${drawNotRamp.length} of ${draw} draw cards do not also ramp`);
+  assert.ok(drawNotRamp.every((c) => !(c.roles || []).includes("ramp")));
+  const alsoNotBlue = Facets.apply(CARDS, {roles: ["draw", "!ramp"], mechanics: ["!flying"]}, null);
+  assert.ok(alsoNotBlue.length <= drawNotRamp.length);
+  assert.ok(alsoNotBlue.every((c) => !(c.mechanics || []).includes("flying")));
+});
+
+check("an exclusion is absolute, in any mode, with or without an inclusion", () => {
+  /* A card carrying an excluded term is out whatever else it carries -- otherwise
+     any-mode would quietly let it back in through another pick. */
+  const only = Facets.apply(CARDS, {mechanics: ["!flying"]}, null);
+  const all = Facets.apply(CARDS, {}, null);
+  assert.ok(only.length < all.length && only.every((c) => !(c.mechanics || []).includes("flying")));
+  const anyMode = Facets.apply(CARDS, {roles: ["draw", "!ramp"]}, null, {any: true});
+  assert.ok(anyMode.every((c) => !(c.roles || []).includes("ramp")),
+    "any-mode must not readmit a card the reader excluded");
+  assert.ok(anyMode.length >= Facets.apply(CARDS, {roles: ["draw", "!ramp"]}, null).length);
+});
+
+check("set() is the two-state control, and the chip's x means gone", () => {
+  let sel = Facets.set({}, "roles", "ramp", "include");
+  assert.deepEqual(sel, {roles: ["ramp"]});
+  sel = Facets.set(sel, "roles", "ramp", "exclude");
+  assert.deepEqual(sel, {roles: ["!ramp"]});
+  sel = Facets.set(sel, "roles", "ramp", "off");
+  assert.deepEqual(sel, {});
+  assert.deepEqual(Facets.set({roles: ["!ramp", "draw"]}, "roles", "ramp", "off"), {roles: ["draw"]},
+    "clearing one pick leaves the others alone");
 });
 
 check("chips name the facet a pick came from, so it can be removed on its own", () => {
-  const chips = Facets.chips({roles: ["ramp"], colors: ["W"]});
+  const chips = Facets.chips({roles: ["ramp", "!draw"], colors: ["W"]});
   assert.deepEqual(chips, [
-    {key: "roles", label: "Role", value: "ramp"},
-    {key: "colors", label: "Color", value: "W"}
-  ]);
+    {key: "roles", label: "Role", value: "ramp", exclude: false},
+    {key: "roles", label: "Role", value: "draw", exclude: true},
+    {key: "colors", label: "Color", value: "W", exclude: false}
+  ], "a chip names the term and which way it points, never the raw stored form");
   assert.equal(Facets.count({roles: ["ramp"], colors: ["W"]}), 2);
 });
 

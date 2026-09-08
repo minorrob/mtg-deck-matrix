@@ -68,3 +68,15 @@
 .cm-inspector-price{margin:2px 0 0}
 .cm-inspector-price strong{font-size:18px}
 .cm-inspector-buy .cm-text-button{font-size:13px;padding:2px 0}
+
+/* THREE STATES, NOT TWO. A term can be asked for, asked against, or left alone, and a
+   checkbox can only say two of those -- so the Filters pane's values are buttons that
+   cycle the same way the focused card's own terms do. Excluded reads red and carries a
+   minus, because "not this" and "this" must not be a difference of shade alone. */
+.cm-facet-pick{display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:5px 8px;border:1px solid transparent;border-radius:6px;background:none;color:#dbe7f7;font:inherit;font-size:13px;min-height:32px}
+.cm-facet-pick:hover{background:#243248}
+.cm-facet-pick small{margin-left:auto;flex-shrink:0}
+.cm-facet-pick.is-on{background:#ffd16622;border-color:#ffd166;color:#ffe9b3}
+.cm-facet-pick.is-not,.cm-chip.is-not{background:#5a262e5c;border-color:#d8807f;color:#ffd3cd}
+.cm-facet-pick.is-not span:first-child,.cm-chip.is-not{text-decoration:line-through;text-decoration-color:#d8807f88}
+.cm-chip.is-not small{text-decoration:none}

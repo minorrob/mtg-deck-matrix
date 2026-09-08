@@ -75,7 +75,7 @@
             <div class="cm-facet-values">${rows.length > 40
               ? `<label class="cm-search"><span class="cm-muted">Filter ${e(facet.label.toLowerCase())}</span><input type="search" data-facet-search="${e(facet.key)}" placeholder="Type to narrow"></label>` : ''}
               <div class="cm-facet-list" data-facet-list="${e(facet.key)}">${rows.map((row) => `
-                <label class="cm-checkbox" data-value="${e(String(row.value).toLowerCase())}"><input type="checkbox" data-facet-pick="${e(facet.key)}" value="${e(row.value)}"><span>${e(row.value)}</span> <small class="cm-muted">${row.count}</small></label>`).join('')}
+                <button type="button" class="cm-facet-pick" data-action="facet-term" data-facet-pick="${e(facet.key)}" data-key="${e(facet.key)}" data-value="${e(row.value)}" data-lower="${e(String(row.value).toLowerCase())}"><span>${e(row.value)}</span> <small class="cm-muted">${row.count}</small></button>`).join('')}
               </div>
             </div>
           </details>`;
@@ -127,8 +127,8 @@
        stays the place to read the card; this is the place to read the connection. */
     const TERM_LABEL = Object.fromEntries(CrankFacets.FACETS.map((f) => [f.key, f.label]));
     function termChip(key, value) {
-      const on = (selection[key] || []).includes(value);
-      return `<button class="cm-chip${on ? ' is-on' : ''}" data-action="facet-term" data-key="${e(key)}" data-value="${e(value)}" aria-pressed="${on}">${e(value)}<small>${e(TERM_LABEL[key] || key)}</small></button>`;
+      const on = CrankFacets.stateOf(selection, key, value);
+      return `<button class="cm-chip${on === 'include' ? ' is-on' : on === 'exclude' ? ' is-not' : ''}" data-action="facet-term" data-key="${e(key)}" data-value="${e(value)}" aria-pressed="${on !== 'off'}" title="${on === 'include' ? 'Showing only cards with this — tap to exclude them instead' : on === 'exclude' ? 'Hiding cards with this — tap to clear' : 'Tap to show only cards with this'}">${on === 'exclude' ? '<span aria-hidden="true">− </span>' : ''}${e(value)}<small>${e(TERM_LABEL[key] || key)}</small></button>`;
     }
     /* A shared term is a mechanic when the card lists it as one, a role otherwise. */
     const keyOf = (card, term) => ((card.mechanics || []).includes(term) ? 'mechanics' : 'roles');
@@ -217,10 +217,7 @@
       const t = CrankGraph.termsOf(c);
       const chips = [];
       if (t) for (const [group, key] of Object.entries(TERM_FACET)) {
-        for (const value of t[group] || []) {
-          const on = (selection[key] || []).includes(value);
-          chips.push(`<button class="cm-chip${on ? ' is-on' : ''}" data-action="facet-term" data-key="${e(key)}" data-value="${e(value)}" aria-pressed="${on}">${e(value)}<small>${e(CrankFacets.FACETS.find((f) => f.key === key)?.label || key)}</small></button>`);
-        }
+        for (const value of t[group] || []) chips.push(termChip(key, value));
       }
       const img = rec.image || c.image || '';
       const cost = rec.manaCost ? C.mana(rec.manaCost) : '';
@@ -278,7 +275,7 @@
         ${rec.oracleText ? `<p class="cm-oracle cm-card-view-oracle">${e(rec.oracleText)}</p>` : ''}
         <div class="cm-actions">${b('Inspect card', 'card', {card: CrankCatalog.key(c.name)}, true)}${graph && graph.previous() ? b('◀ Back to ' + graph.previous().name.split(',')[0], 'graph-back') : ''}</div>
         ${picked.size ? `<div class="cm-actions cm-pick-actions">${b(`Add ${picked.size} selected to a group…`, 'results-group', {}, true)}${b('Clear selection', 'results-clear')}</div>` : (gmode === 'select' ? '<p class="cm-muted">Tap cards on the graph to tick them. Tap again to untick.</p>' : '')}
-        ${chips.length ? `<h3>Joined to other cards by</h3><p class="cm-muted">Tap one to filter the graph to cards that share it.</p><div class="cm-term-chips">${chips.join('')}</div>` : ''}
+        ${chips.length ? `<h3>Joined to other cards by</h3><p class="cm-muted">Tap once for only the cards that share it, again to hide them instead, a third time to clear. They stack.</p><div class="cm-term-chips">${chips.join('')}</div>` : ''}
         ${lastInfo && lastInfo.total ? `<p class="cm-muted cm-card-view-foot">${lastInfo.total} cards on the canvas · ${lastInfo.byDepth.filter(Boolean).join(' / ')} by ring · ${lastInfo.crossLinks} cross-links${lastInfo.crossLinks > 60 ? ' (too many to draw at once: rest on a card, or inspect it, to see its own)' : ''}</p>` : ''}`;
       $('#cm-graph-size').textContent = lastInfo && lastInfo.total ? `${lastInfo.total} on canvas` : '';
     }
@@ -293,15 +290,21 @@
         : `${data.cards.length.toLocaleString()} cards. Narrow them with Filters, with the focused card's own terms, or search for one by name.`;
       $('#cm-facet-summary').textContent = picks ? `· ${picks} applied · ${shown.length.toLocaleString()} cards` : '· none applied';
       $('#cm-facet-chips').innerHTML = CrankFacets.chips(selection)
-        .map((chip) => `<button class="cm-chip" data-action="facet-drop" data-key="${e(chip.key)}" data-value="${e(chip.value)}">${e(chip.label)}: ${e(chip.value)} <span aria-hidden="true">×</span><span class="cm-visually-hidden"> — remove this filter</span></button>`)
+        .map((chip) => `<button class="cm-chip${chip.exclude ? ' is-not' : ''}" data-action="facet-drop" data-key="${e(chip.key)}" data-value="${e(chip.value)}">${chip.exclude ? '<span aria-hidden="true">−</span> ' : ''}${e(chip.label)}: ${e(chip.value)}${chip.exclude ? '<span class="cm-visually-hidden"> — excluded</span>' : ''} <span aria-hidden="true">×</span><span class="cm-visually-hidden"> — remove this filter</span></button>`)
         .join('') + (picks ? b('Clear filters', 'facet-clear') : '');
       for (const facet of facets) {
         const n = (selection[facet.key] || []).length;
         const label = $(`[data-facet-count="${facet.key}"]`);
         if (label) label.textContent = n ? `· ${n}` : '';
       }
-      const keep = keepFocus && shown.some((c) => c.id === keepFocus);
-      if (shown.length) mount(shown, keep ? keepFocus : shown[0].id);
+      /* THE FOCUSED CARD SURVIVES ITS OWN FILTERS. Excluding "deathtouch" from Atraxa's
+         neighbourhood used to remove Atraxa, because Atraxa has deathtouch -- the reader
+         lost the card they were asking about, and the chip they had just tapped moved out
+         from under their finger. A filter narrows the neighbourhood; the subject is not
+         part of what is being narrowed. */
+      const focused = keepFocus && data.cards.find((c) => c.id === keepFocus);
+      const world = focused && !shown.some((c) => c.id === keepFocus) ? [focused, ...shown] : shown;
+      if (world.length) mount(world, focused ? keepFocus : world[0].id);
       else { graph?.destroy(); graph = null; drawCardView(null, null); }
     }
 
@@ -314,20 +317,19 @@
     const currentFocus = () => graph?.current()?.id;
 
     /* Delegated: refresh() rewrites these regions, so listeners bound to nodes would not survive. */
-    $('#cm-facet-panel').addEventListener('change', (ev) => {
-      const key = ev.target.dataset?.facetPick; if (!key) return;
-      selection = CrankFacets.toggle(selection, key, ev.target.value); refresh(currentFocus());
-    });
+    /* The pane's values are three-state buttons now, handled by the facet-term action like
+       every other term control. There is nothing left here for a change event to catch. */
     $('#cm-facet-panel').addEventListener('input', (ev) => {
       const key = ev.target.dataset?.facetSearch; if (!key) return;
       const q = ev.target.value.trim().toLowerCase();
-      for (const row of $(`[data-facet-list="${key}"]`).querySelectorAll('[data-value]')) row.hidden = Boolean(q) && !row.dataset.value.includes(q);
+      for (const row of $(`[data-facet-list="${key}"]`).querySelectorAll('[data-lower]')) row.hidden = Boolean(q) && !row.dataset.lower.includes(q);
     });
     $('#cm-facet-details').addEventListener('change', (ev) => { if (ev.target.name === 'facetMode') { mode = ev.target.value; refresh(currentFocus()); } });
     $('#cm-depth').addEventListener('input', (ev) => { depth = Number(ev.target.value); $('#cm-depth-out').textContent = depth; graph?.setDepth(depth); });
     $('#cm-breadth').addEventListener('input', (ev) => { breadth = Number(ev.target.value); $('#cm-breadth-out').textContent = breadth; graph?.setBreadth(breadth); });
 
-    actions['facet-drop'] = (el) => { selection = CrankFacets.toggle(selection, el.dataset.key, el.dataset.value); redrawTicks(); refresh(currentFocus()); };
+    /* The × on an applied chip means gone, not "next state". */
+    actions['facet-drop'] = (el) => { selection = CrankFacets.set(selection, el.dataset.key, el.dataset.value, 'off'); redrawTicks(); refresh(currentFocus()); };
     /* Adding a card from Discover, without leaving the graph. A collection group takes it
        as a planned entry; a draft deck takes it as a main slot. A finalized list is not
        offered, because changing one is a reviewed act on its own page and not a one-tap
@@ -390,7 +392,14 @@
     };
 
     function redrawTicks() {
-      for (const box of $('#cm-facet-panel').querySelectorAll('[data-facet-pick]')) box.checked = (selection[box.dataset.facetPick] || []).includes(box.value);
+      for (const pick of $('#cm-facet-panel').querySelectorAll('[data-facet-pick]')) {
+        const state = CrankFacets.stateOf(selection, pick.dataset.facetPick, pick.dataset.value);
+        pick.classList.toggle('is-on', state === 'include');
+        pick.classList.toggle('is-not', state === 'exclude');
+        pick.setAttribute('aria-pressed', state === 'off' ? 'false' : 'true');
+        pick.title = state === 'include' ? 'Showing only cards with this — tap to exclude them instead'
+          : state === 'exclude' ? 'Hiding cards with this — tap to clear' : 'Tap to show only cards with this';
+      }
     }
 
     $('#cm-graph-query').addEventListener('input', (ev) => {
