@@ -134,13 +134,22 @@
     const keyOf = (card, term) => ((card.mechanics || []).includes(term) ? 'mechanics' : 'roles');
     function relationHTML(rel, from, to) {
       if (!rel) return `<p class="cm-muted">No rules-derived connection between these two on this graph.</p>`;
+      /* Every way these two are joined, not only the strongest -- the edge label had room
+         for one sentence, the pop-up does not. Each chip is also the filter for that term,
+         so "they share proliferate" is one tap from "show me everything that proliferates". */
       const chips = [
-        ...rel.shared.map((t) => termChip(keyOf(from, t), t)),
+        ...rel.fires.map((t) => termChip('causes', t)),
+        ...rel.firedBy.map((t) => termChip('triggers', t)),
+        ...rel.multiplied.map((t) => termChip('multiplies', t)),
+        ...rel.multiplies.map((t) => termChip('multiplies', t)),
+        ...rel.extended.map((t) => termChip('extends', t)),
+        ...rel.extendedBy.map((t) => termChip('extends', t)),
         ...rel.feeds.map((t) => termChip('produces', t)),
-        ...rel.fed.map((t) => termChip('requires', t))
+        ...rel.fed.map((t) => termChip('requires', t)),
+        ...rel.shared.map((t) => termChip(keyOf(from, t), t))
       ];
       const co = rel.coPlay ? `<p class="cm-muted">EDHREC co-play · ${(rel.coPlay.inclusion * 100).toFixed(1)}% of ${rel.coPlay.decks.toLocaleString()} decks</p>` : '';
-      return `${chips.length ? `<p class="cm-muted">${e(rel.kind)}</p><div class="cm-term-chips">${chips.join('')}</div>` : ''}${co}`;
+      return `${chips.length ? `<p class="cm-muted">${e(rel.reason || rel.kind)}</p><div class="cm-term-chips">${chips.join('')}</div>` : ''}${co}`;
     }
     function ownTermsHTML(card) {
       const t = CrankGraph.termsOf(card); if (!t) return '';
@@ -182,7 +191,9 @@
     /* THE CARD VIEW. What the old side lists could not be: the card itself. Art, cost,
        type, the printed text, and then the terms it is joined on -- each a filter. The
        catalog record has the text and the art; the graph row has the terms. */
-    const TERM_FACET = {mechanics: 'mechanics', roles: 'roles', produces: 'produces', requires: 'requires', causes: 'causes', triggers: 'triggers', tribes: 'tribes'};
+    const TERM_FACET = {mechanics: 'mechanics', roles: 'roles', triggers: 'triggers', causes: 'causes',
+      multiplies: 'multiplies', produces: 'produces', requires: 'requires',
+      grants: 'grants', extends: 'extends', tribes: 'tribes'};
     let lastInfo = null, lastDrawn = '';
     function drawCardView(c, info, keepInfo) {
       if (!keepInfo) lastInfo = info;

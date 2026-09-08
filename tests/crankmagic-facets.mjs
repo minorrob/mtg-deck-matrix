@@ -18,10 +18,21 @@ const check = (label, fn) => { fn(); checks += 1; void label; };
 
 /* ------------------------------------------------------- the facets that exist */
 
-check("the ten public facets are the ones the old graph page carried", () => {
+check("the public facets are the old graph page's, plus both sides of every relation", () => {
   const keys = Facets.available(null).map((f) => f.key);
-  assert.deepEqual(keys, ["roles","colors","type","mechanics","tribes","triggers","causes","produces","requires","rarity"],
+  assert.deepEqual(keys, ["roles","colors","type","mechanics","tribes",
+    "triggers","causes","multiplies","produces","requires","grants","extends","rarity"],
     "an empty library shows the card facets and neither personal one");
+});
+
+check("every directed facet has a facet for the other side of its join", () => {
+  /* A filter for what a card fires on is only half useful without one for what causes
+     that event; the four pairs are the reason the graph can be walked rather than read. */
+  const keys = new Set(Facets.available(null).map((f) => f.key));
+  for (const [a, b] of [["triggers","causes"], ["produces","requires"], ["grants","extends"]]) {
+    assert.ok(keys.has(a) && keys.has(b), `${a}/${b} is offered as half a pair`);
+  }
+  assert.ok(keys.has("multiplies"), "and the compounding side of make-and-multiply");
 });
 
 check("an empty library is offered no Ownership control", () => {
@@ -206,6 +217,38 @@ check("any-mode within a facet is an OR, and colour keeps its own rule either wa
   const pair = CARDS.find((c) => c.ci && c.ci.length === 2);
   const [a] = pair.ci.split("");
   assert.ok(!Facets.matches(pair, {colors: [a]}, {any: true}), `${pair.name} must still fail a mono-${a} deck in any-mode: colour is one question about the whole identity`);
+});
+
+
+/* ------------------------------------------- the directed facets, over the real bake */
+
+check("Multiplies names things cards actually produce or trigger on", () => {
+  const values = VALUES.multiplies.map((r) => r.value);
+  assert.ok(values.length >= 8, `only ${values.length} multiplier kinds in the bake`);
+  const other = new Set([...VALUES.produces.map((r) => r.value), ...VALUES.triggers.map((r) => r.value)]);
+  const orphans = values.filter((v) => v !== "trigger" && !other.has(v));
+  assert.deepEqual(orphans, [],
+    `nothing in the catalog produces or fires on: ${orphans.join(", ")} — those multipliers can never pair`);
+});
+
+check("a multiplier is rarer than the thing it multiplies", () => {
+  const makers = Facets.apply(CARDS, {produces: ["token"]}, null).length;
+  const doublers = Facets.apply(CARDS, {multiplies: ["token"]}, null).length;
+  assert.ok(doublers > 0, "no token doublers in a Commander catalog is a parsing bug");
+  assert.ok(doublers < makers / 5, `${doublers} token doublers against ${makers} token makers reads as a false-positive pattern`);
+});
+
+check("Grants is not a list of creatures that merely have the keyword", () => {
+  const flying = Facets.apply(CARDS, {grants: ["flying"]}, null);
+  const withFlying = CARDS.filter((c) => (c.mechanics || []).includes("flying"));
+  assert.ok(flying.length > 0 && withFlying.length > flying.length * 3,
+    `${flying.length} cards grant flying against ${withFlying.length} that have it — the grant rule is not discriminating`);
+});
+
+check("Extends is a subset of Grants: you cannot spread what you do not give", () => {
+  const wrong = CARDS.filter((c) => (c.extends || []).some((q) => q !== "keywords" && !(c.grants || []).includes(q)));
+  assert.deepEqual(wrong.slice(0, 5).map((c) => c.name), [],
+    `${wrong.length} cards extend a quality they do not grant`);
 });
 
 console.log(`crankmagic-facets: ${checks} checks passed · ${Facets.available(null).length} card facets over ${CARDS.length} cards`);
