@@ -138,12 +138,12 @@
       "sha": "8e261856adfcb4eb"
     },
     "crankmagic-app.js": {
-      "version": 17,
-      "sha": "63ad916057c1715d"
+      "version": 18,
+      "sha": "7fb147ab0407566c"
     },
     "crankmagic-assets.js": {
-      "version": 5,
-      "sha": "eb33d44680a63a7f"
+      "version": 6,
+      "sha": "aecdd9038a61cc9c"
     },
     "crankmagic-brand.js": {
       "version": 1,
@@ -158,16 +158,16 @@
       "sha": "9c90710ff8d9936a"
     },
     "crankmagic-decks.js": {
-      "version": 6,
-      "sha": "43f75887d83fed15"
+      "version": 7,
+      "sha": "1c2eb6f109d83e9b"
     },
     "crankmagic-design.css": {
       "version": 1,
       "sha": "09ec296518cdef75"
     },
     "crankmagic-discover.js": {
-      "version": 8,
-      "sha": "ff9467181ccc30b1"
+      "version": 9,
+      "sha": "086c3c7eebdc8d1e"
     },
     "crankmagic-evidence.js": {
       "version": 2,
@@ -186,12 +186,12 @@
       "sha": "52e344df8ef38d24"
     },
     "crankmagic-graph.js": {
-      "version": 5,
-      "sha": "c4e901110ba4d6a4"
+      "version": 6,
+      "sha": "7962e4c5aef3e25e"
     },
     "crankmagic-lab.js": {
-      "version": 8,
-      "sha": "c8adf05ebdad4507"
+      "version": 9,
+      "sha": "159ecf1d2e4cb29b"
     },
     "crankmagic-plan-editor.js": {
       "version": 1,
@@ -206,12 +206,12 @@
       "sha": "2212f13d71f11dfb"
     },
     "crankmagic-sw.js": {
-      "version": 17,
-      "sha": "ff513c049e7584b5"
+      "version": 18,
+      "sha": "b126a2950004ed23"
     },
     "crankmagic.css": {
-      "version": 9,
-      "sha": "fe14b5eb18053872"
+      "version": 10,
+      "sha": "a5950183c689bdf3"
     },
     "custom-model.js": {
       "version": 3,
@@ -254,8 +254,8 @@
       "sha": "45f581a1c5a7b6ad"
     },
     "data/deck-guides.json": {
-      "version": 2,
-      "sha": "9a6439e520a46bc0"
+      "version": 3,
+      "sha": "395de95bd103a897"
     },
     "data/deck-ratings.json": {
       "version": 6,
@@ -341,6 +341,10 @@
       "version": 29,
       "sha": "fa54302f3c237b7a"
     },
+    "guide-measured.js": {
+      "version": 1,
+      "sha": "ccc1246e8e83504f"
+    },
     "header.css": {
       "version": 3,
       "sha": "d55d265b7b522739"
@@ -418,8 +422,8 @@
       "sha": "76caf7a8585da1a3"
     },
     "viewer.js": {
-      "version": 36,
-      "sha": "3ba610cf712f9d86"
+      "version": 37,
+      "sha": "f7ed13be3971a068"
     },
     "xlsx-reader.js": {
       "version": 2,

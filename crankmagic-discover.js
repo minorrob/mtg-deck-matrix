@@ -221,7 +221,7 @@
         <div class="cm-actions">${b('Inspect card', 'card', {card: CrankCatalog.key(c.name)}, true)}${graph && graph.previous() ? b('◀ Back to ' + graph.previous().name.split(',')[0], 'graph-back') : ''}</div>
         ${picked.size ? `<div class="cm-actions cm-pick-actions">${b(`Add ${picked.size} selected to a group…`, 'results-group', {}, true)}${b('Clear selection', 'results-clear')}</div>` : (gmode === 'select' ? '<p class="cm-muted">Tap cards on the graph to tick them. Tap again to untick.</p>' : '')}
         ${chips.length ? `<h3>Joined to other cards by</h3><p class="cm-muted">Tap one to filter the graph to cards that share it.</p><div class="cm-term-chips">${chips.join('')}</div>` : ''}
-        ${lastInfo && lastInfo.total ? `<p class="cm-muted cm-card-view-foot">${lastInfo.total} cards on the canvas · ${lastInfo.byDepth.filter(Boolean).join(' / ')} by ring · ${lastInfo.crossLinks} cross-links</p>` : ''}`;
+        ${lastInfo && lastInfo.total ? `<p class="cm-muted cm-card-view-foot">${lastInfo.total} cards on the canvas · ${lastInfo.byDepth.filter(Boolean).join(' / ')} by ring · ${lastInfo.crossLinks} cross-links${lastInfo.crossLinks > 60 ? ' (too many to draw at once: rest on a card, or inspect it, to see its own)' : ''}</p>` : ''}`;
       $('#cm-graph-size').textContent = lastInfo && lastInfo.total ? `${lastInfo.total} on canvas` : '';
     }
 

@@ -104,7 +104,7 @@ installation. Workbook tests optionally use `XLSX_PYTHON` with openpyxl for inde
 spreadsheet verification. See [tests/uat/README.md](tests/uat/README.md).
 
 Changed assets require a new `?v=` everywhere referenced, then
-`node tests/asset-versions.mjs --update`. There are 42 Node suites:
+`node tests/asset-versions.mjs --update`. There are 43 Node suites:
 
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`
@@ -134,6 +134,7 @@ Changed assets require a new `?v=` everywhere referenced, then
 - `friends-deck` — `tests/friends-deck.mjs`
 - `game-record` — `tests/game-record.mjs`
 - `guide-agent` — `tests/guide-agent.mjs`
+- `guide-measured` — `tests/guide-measured.mjs`
 - `import-wiring` — `tests/import-wiring.mjs`
 - `inventory-import` — `tests/inventory-import.mjs`
 - `lineup-compliance` — `tests/lineup-compliance.mjs`

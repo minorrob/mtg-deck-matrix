@@ -1,4 +1,107 @@
 {
-  "note": "Deck guides live here. The six reference decks were archived to data/archive/deck-guides.json on the clean start; generate new ones with tools/generate-guides.mjs.",
-  "decks": []
+ "schemaVersion": 1,
+ "generatedAt": "2026-09-08",
+ "note": "Hand-written guides, keyed by commander name. Decks without one get a guide generated from their list and measurement by guide-measured.js. The six reference decks were archived to data/archive/deck-guides.json on the clean start.",
+ "decks": [
+  {
+   "id": "SPL",
+   "label": "Splinter",
+   "commander": "Splinter, Radical Rat",
+   "nickname": "Foot Clan Doubles",
+   "hook": "Every Ninja trigger happens twice. The reveal from Yuriko, the Tiger's Shadow, the half-your-life from Shredder, Shadow Master, the kill from Throat Slitter, the draw from Oroku Saki, Shredder Rising — Splinter, Radical Rat doubles all of them, and his blue activation makes any Ninja unblockable so the damage lands.",
+   "colorIdentity": [
+    "W",
+    "U",
+    "B"
+   ],
+   "archetype": "Ninja tribal · ninjutsu tempo",
+   "difficulty": {
+    "tier": "Intermediate",
+    "why": "Ninjutsu is a two-step: attack with something small that cannot be blocked, then swap in the Ninja whose trigger you want doubled. Getting the order of the returns and the mana right is the whole game."
+   },
+   "whatItDoes": "Cheap evasive bodies — Changeling Outcast, Slither Blade, Triton Shorestalker, Ninja Teen and Prosperous Thief — attack early and are returned to hand by ninjutsu (Yuriko, the Tiger's Shadow, Silver-Fur Master, Throat Slitter, Mistblade Shinobi, Moon-Circuit Hacker, Walker of Secret Ways, Thousand-Faced Shadow, Nashi, Moon Sage's Scion, Kaito, Bane of Nightmares) or by sneak (Splinter, Hamato Yoshi, Oroku Saki, Shredder Rising, Karai, Future of the Foot, Donatello's Technique, The Last Ronin's Technique). Satoru Umezawa gives every creature card in your hand ninjutsu and digs three cards deep each time you use it; Silver-Fur Master makes each activation cheaper. With Splinter, Radical Rat on the table every combat-damage trigger fires twice: Yuriko, the Tiger's Shadow draws two cards and drains twice, Oroku Saki, Shredder Rising draws two, Throat Slitter destroys two creatures, and Shredder, Shadow Master halves a life total twice. Cover of Darkness and Turtle Lair keep the Ninjas unblockable once the cheap bodies have done their work.",
+   "howItWins": "Yuriko, the Tiger's Shadow is the clock: each Ninja that connects reveals the top card of your library and every opponent loses life equal to its mana value, twice with Splinter, Radical Rat out — Krang & Shredder, Game Over and Kaito, Bane of Nightmares off the top are six-, five- and four-point hits, doubled. Shredder, Shadow Master ends games on his own once the commander is down: two triggers take a player to a quarter of their life, and his copies attack the other opponents at the same time. Endless Foot Assault and The Last Ronin's Technique go wide when the table has stabilised against single attackers.",
+   "turns": [
+    {
+     "when": "Turns 1-3",
+     "do": "Land, a rock — Sol Ring, Arcane Signet, Talisman of Dominance, Talisman of Hierarchy, Talisman of Progress or Fellwar Stone — and a one-drop that cannot be blocked: Changeling Outcast, Slither Blade or Triton Shorestalker. Splinter, Radical Rat comes down on three; Lightning Greaves or Swiftfoot Boots go on him first, because the deck is worth half without him."
+    },
+    {
+     "when": "Turns 4-6",
+     "do": "Attack with the unblockable body and, in the declare-blockers step, swap it for the Ninja you want doubled: Yuriko, the Tiger's Shadow first, then Silver-Fur Master, Throat Slitter or Mistblade Shinobi as the board demands. Satoru Umezawa turns every creature in hand into a ninjutsu threat and finds the next one. Hold Counterspell or Arcane Denial for the board wipe, and Duty Beyond Death for the combat trick that would blow you out."
+    },
+    {
+     "when": "Turn 7 and after",
+     "do": "Shredder, Shadow Master or Kaito, Bane of Nightmares come in for the kill; Spark Double copies whichever of Splinter, Radical Rat and Yuriko, the Tiger's Shadow is winning. Toxic Deluge and Game Over reset a table that went wider than you, and your Ninjas can be back in hand before either resolves if you sequence the returns on the turn you cast the wipe."
+    }
+   ],
+   "mulligan": "Keep three or four lands (there are 38, and the curve is low) with a one-drop that cannot be blocked and a Ninja to swap in. A hand of only ninjutsu creatures with nothing evasive to attack with does nothing until the fourth turn; a hand of only evasive one-drops is fine, because Satoru Umezawa or the commander turns them into the engine.",
+   "keyCards": [
+    {
+     "name": "Yuriko, the Tiger's Shadow",
+     "why": "Commander ninjutsu straight from the command zone, and the deck's clock: with the commander out, every connect is two cards and two drains."
+    },
+    {
+     "name": "Satoru Umezawa",
+     "why": "Every creature card in hand gains ninjutsu, and each activation looks at three cards. He makes the deck run on any hand."
+    },
+    {
+     "name": "Silver-Fur Master",
+     "why": "Ninjutsu costs one less and the other Ninjas get bigger; he is the cheapest way to make every swap profitable."
+    },
+    {
+     "name": "Shredder, Shadow Master",
+     "why": "Doubled, his combat-damage trigger takes a player to a quarter of their life while his copies hit the other seats."
+    },
+    {
+     "name": "Changeling Outcast",
+     "why": "A Ninja by changeling that cannot be blocked: the ideal body to attack with and return, and it counts for Cover of Darkness and Turtle Lair."
+    },
+    {
+     "name": "Cover of Darkness",
+     "why": "Naming Ninja gives the whole team fear, so the swaps keep landing after the one-drops are gone."
+    }
+   ],
+   "watchFor": [
+    "Everything routes through combat damage. An attack tax or a big untapped blocker slows the deck badly, and the outs are Path to Exile, Feed the Swarm, Darksteel Mutation, Grounded for Life and the two wipes.",
+    "Splinter, Radical Rat costs three and dies to everything; without him the triggers are single and this is an ordinary Ninja list. Lightning Greaves and Swiftfoot Boots are worth more here than in most decks.",
+    "Sneak and ninjutsu both return your unblocked attacker, so each swap gives up the damage that creature would have dealt. Once Yuriko, the Tiger's Shadow is connecting, stop swapping her out."
+   ],
+   "shape": {
+    "lands": 38,
+    "creatures": 33,
+    "planeswalkers": 2,
+    "battles": 0,
+    "instants": 8,
+    "sorceries": 4,
+    "artifacts": 12,
+    "enchantments": 5,
+    "avgMv": 2.74,
+    "curve": {
+     "0": 0,
+     "1": 10,
+     "2": 20,
+     "3": 19,
+     "4": 5,
+     "5": 5,
+     "6": 3,
+     "7+": 0
+    },
+    "roles": {
+     "sac-outlet": 1,
+     "counters": 4,
+     "draw": 6,
+     "protection": 8,
+     "ramp": 7,
+     "removal": 4,
+     "wipe": 2,
+     "graveyard": 2,
+     "recursion": 1,
+     "finisher": 1
+    },
+    "total": 100
+   },
+   "upgradePath": "The list is already the deck. The first upgrade is another one-mana body that cannot be blocked and a second free counterspell, not another Ninja."
+  }
+ ]
 }
