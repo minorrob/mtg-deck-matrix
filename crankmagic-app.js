@@ -12,16 +12,20 @@ function mana(cost){return `<span class="cm-mana" aria-label="Mana cost ${esc(co
 function button(label,action,data={},primary=false){return `<button type="button" class="v-button${primary?' primary':''}" data-action="${esc(action)}" ${Object.entries(data).map(([k,v])=>`data-${k}="${esc(v)}"`).join(' ')}>${esc(label)}</button>`;}
 function options(items,value){return items.map(x=>{const [v,l]=Array.isArray(x)?x:[x,x];return `<option value="${esc(v)}"${String(v)===String(value)?' selected':''}>${esc(l)}</option>`;}).join('');}
 /* A REQUIRED FIELD WEARS A MOUNTAIN. The red asterisk of every form on the web, except it
-   is the Mountain pip -- red is the game's own colour for "this one is not optional".
+   is the red asterisk every form on the web uses, because that is the one mark a reader
+   already knows without being taught it. It briefly wore the Mountain pip instead -- red is
+   the game's own colour for "not optional" -- but a symbol a reader has to decode is a worse
+   asterisk than an asterisk, however apt.
+
    It is driven by the field's OWN `required`, so the mark and the constraint cannot drift
-   apart: you cannot get the pip without the validation, or the validation without the pip.
-   `data-required` is the pip alone, for the case HTML cannot express -- a field that is
+   apart: you cannot get the mark without the validation, or the validation without the mark.
+   `data-required` is the mark alone, for the case HTML cannot express -- a field that is
    required only in the sense that ONE of a set must be filled, where marking each `required`
-   would demand all of them. The image is decorative; `aria-required` carries the meaning. */
-const REQUIRED_PIP='<img class="cm-req" src="assets/mana/R.svg?v=1" alt="" aria-hidden="true" title="Required">';
+   would demand all of them. The glyph is decorative; `aria-required` carries the meaning. */
+const REQUIRED_PIP='<span class="cm-req" aria-hidden="true" title="Required">*</span>';
 const requires=attrs=>/(^|\s)(required|data-required)(\s|=|$)/.test(attrs);
-/* The pip is wrapped WITH its label text in one span: `label` is display:grid in this
-   stylesheet, so a bare <img> beside a bare text node is a second grid ROW, and the mark
+/* The mark is wrapped WITH its label text in one span: `label` is display:grid in this
+   stylesheet, so a bare glyph beside a bare text node is a second grid ROW, and the mark
    landed on a line of its own under the words it belongs to. */
 const labelled=(label,attrs)=>requires(attrs)?`<span class="cm-req-label">${esc(label)}${REQUIRED_PIP}</span>`:esc(label);
 function field(label,name,value='',attrs=''){return `<label>${labelled(label,attrs)}<input name="${esc(name)}" value="${esc(value)}" ${requires(attrs)?'aria-required="true"':''} ${attrs}></label>`;}
@@ -137,7 +141,7 @@ document.addEventListener('error',e=>{const img=e.target;if(img.matches?.('.cm-c
 document.addEventListener('click',async e=>{const el=e.target.closest('[data-action]');if(!el||el.disabled)return;const fn=actions[el.dataset.action];if(!fn)return;e.preventDefault();try{await fn(el,e);}catch(error){if(error.name!=='AbortError')notice(error.message,true);}});
 $('#cm-user-menu').addEventListener('beforetoggle',e=>{if(e.newState==='open'){const r=$('#cm-user-functions').getBoundingClientRect(),m=$('#cm-user-menu');m.style.right='16px';m.style.left='auto';m.style.top=(r.bottom+8)+'px';if(repo)exportFile().then(f=>{shareFile=f;}).catch(()=>{shareFile=null;});}});$('#cm-user-menu').addEventListener('click',e=>{if(e.target.closest('[data-action]'))$('#cm-user-menu').hidePopover();});
 window.addEventListener('hashchange',()=>{render();main.focus({preventScroll:true});});window.addEventListener('online',status);window.addEventListener('offline',status);
-try{repo=await CrankRepository.open();state=await repo.getState();catalog=await CrankCatalog.create({repository:repo,client:CrankCardClient.create(),link:MtgCardLink,urls:CrankAssets,savedCards:state.cards});let terms=[];try{terms=(await catalog.load(CrankAssets.glossary)).entries;}catch(e){notice(e.message,true);}glossary=CrankGlossary.create(terms);for(const module of globalThis.CrankFeatures||[])module(C);repo.subscribe(async info=>{if(info.closed)return notice('Local database was upgraded in another tab. Reload before editing.',true);if(!committing&&info.revision!==state.revision){await refresh();notice('Library refreshed after a change in another tab. Review any open form before saving.');}});await render();if(navigator.storage?.persist)navigator.storage.persist().catch(()=>{});if('serviceWorker' in navigator)navigator.serviceWorker.register('crankmagic-sw.js?v=55',{scope:'./'}).catch(error=>notice('Offline app caching is unavailable: '+error.message,true));}
+try{repo=await CrankRepository.open();state=await repo.getState();catalog=await CrankCatalog.create({repository:repo,client:CrankCardClient.create(),link:MtgCardLink,urls:CrankAssets,savedCards:state.cards});let terms=[];try{terms=(await catalog.load(CrankAssets.glossary)).entries;}catch(e){notice(e.message,true);}glossary=CrankGlossary.create(terms);for(const module of globalThis.CrankFeatures||[])module(C);repo.subscribe(async info=>{if(info.closed)return notice('Local database was upgraded in another tab. Reload before editing.',true);if(!committing&&info.revision!==state.revision){await refresh();notice('Library refreshed after a change in another tab. Review any open form before saving.');}});await render();if(navigator.storage?.persist)navigator.storage.persist().catch(()=>{});if('serviceWorker' in navigator)navigator.serviceWorker.register('crankmagic-sw.js?v=56',{scope:'./'}).catch(error=>notice('Offline app caching is unavailable: '+error.message,true));}
 catch(error){main.innerHTML=head('Local library needs attention','Your data has not been changed',error.message)+note('CrankMagic requires HTTPS or localhost and browser storage. If a saved record is damaged, download its original contents and restore a verified backup.',true);if(repo){const raw=await repo.exportData();main.innerHTML+='<div class="cm-actions">'+button('Download original recovery record','recovery-export')+button('Restore a verified backup','recovery-restore')+'</div>';$('#cm-user-menu').innerHTML=button('Download original recovery record','recovery-export')+button('Restore a verified backup','recovery-restore');actions['recovery-export']=()=>download('CrankMagic-recovery-original.json',JSON.stringify({format:'crankmagic-recovery-record',capturedAt:new Date().toISOString(),...raw},null,2));actions['recovery-restore']=()=>form('Recover from a verified backup','<label class="cm-full">CrankMagic JSON backup<input name="file" type="file" accept=".json" required></label>'+field('Type RECOVER to confirm replacement','confirm','','required')+note('The damaged original record is retained in the restored library’s legacy archive. No quantities are inferred from it.'),async(v,f)=>{if(v.confirm!=='RECOVER')throw Error('Type RECOVER exactly.');const file=f.elements.file.files[0];if(file.size>100000000)throw Error('Backup exceeds 100 MB.');const payload=await E.readBackup(await file.text());await repo.recover(payload,raw.state);location.reload();},'Recover library');}}
 
 })();

@@ -335,10 +335,20 @@
 #matrix-v2 .cm-lab-start select:hover,
 #matrix-v2 .cm-lab-start select:focus-visible{border-color:var(--v-decision);outline-color:var(--v-decision)}
 
-/* A REQUIRED FIELD WEARS A MOUNTAIN. The red asterisk every form on the web uses, said in the
-   game's own vocabulary: red is Magic's colour for the thing you cannot opt out of. */
-.cm-req{width:13px;height:13px;margin-left:6px;vertical-align:-1px;
-  filter:drop-shadow(0 0 3px #e2534b66) saturate(1.5)}
+/* A REQUIRED FIELD WEARS THE ASTERISK. The one mark a reader already knows without being
+   taught it -- which is the whole job, and the reason it beat the Mountain pip that was here
+   first, however well red suited the meaning. */
+.cm-req{margin-left:5px;color:var(--v-required);font-size:15px;line-height:1;font-weight:700;
+  vertical-align:-2px}
+
+/* IN STARTING POINT THE MARK SITS ON THE CONTROL, not on the sentence. That label is a whole
+   instruction rather than a field name, and at full width the select drops to its own line --
+   so a mark trailing the text was stranded at the far right of a line it had nothing to do
+   with. It is the select's own next sibling now, top-aligned, so it holds the select's
+   top-right corner wherever the select ends up. */
+.cm-start-control{display:inline-flex;align-items:flex-start;gap:5px;margin-top:6px}
+#matrix-v2 .cm-start-control select{margin-top:0}
+.cm-start-control .cm-req{margin:0;font-size:16px;line-height:1.1}
 
 /* FIELDS THAT LOOK LIKE FIELDS -- the third plane Deep Field exists to add. Inputs were
    filled var(--v-raised) against a #191b24 panel: DARKER than the surface holding them, so every
@@ -352,7 +362,7 @@
 #matrix-v2 input:focus-visible,#matrix-v2 select:focus-visible,#matrix-v2 textarea:focus-visible{
   outline:2px solid var(--v-accent);outline-offset:1px;border-color:var(--v-accent)}
 #matrix-v2 ::placeholder{color:var(--v-muted)}
-.cm-req-label{display:inline-flex;align-items:center}
+.cm-req-label{display:inline-flex;align-items:baseline}
 
 /* ================================== THE GUIDED TOUR ==================================
    A scrim, a hole cut in it, and a card beside the hole. The hole is drawn with a huge

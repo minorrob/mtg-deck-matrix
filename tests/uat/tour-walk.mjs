@@ -69,9 +69,13 @@ try {
   await page.locator("#cm-lab-run-pane").waitFor({timeout: 90000});
   await page.evaluate(() => document.querySelectorAll("#cm-main details").forEach((d) => {d.open = true;}));
   await page.waitForTimeout(600);
-  await page.getByLabel("Search commander name").fill("Krenko, Mob Boss");
+  /* By NAME, not by label. getByLabel matches the label element's text content, and a
+     required field's label carries a trailing asterisk -- so an exact label match breaks
+     every time a field becomes required, which is a change to presentation, not to the form.
+     The accessible name is clean ("Deck name"); it is the locator that was brittle. */
+  await page.locator("#cm-lab-form [name=commanderQuery]").fill("Krenko, Mob Boss");
   await page.locator("[data-lab-commander]").filter({has: page.getByText("Krenko, Mob Boss", {exact: true})}).first().click();
-  await page.getByLabel("Deck name", {exact: true}).fill("Tour walk");
+  await page.locator("#cm-lab-form [name=deckName]").fill("Tour walk");
   await page.locator("#cm-lab-run").click();
   await page.locator("#cm-lab-save:not([disabled])").waitFor({timeout: 180000});
   await page.waitForTimeout(45000);            // the draft fetches printed text for 99 cards
