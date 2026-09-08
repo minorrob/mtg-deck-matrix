@@ -97,15 +97,18 @@ check("a deck whose upgrades measure worse is a warning, not an opportunity", ()
      The magnitude has moved three times and the finding has not: -4.98 when every creature's
      body was estimated from its mana value, -5.58 once the engine read printed power and
      toughness, -5.6 once a fetch land stopped being an untapped source of every colour
-     it could reach, and -6.27 on v2.7, where mana became typed, exclusive and spendable.
-     That last one is the largest move and the reason is the deck: Atraxa is four colours,
-     so she had the most fake fixing to lose when one source stopped paying every pip.
-     Each time the measurement got better and the advice stayed the same.
+     it could reach, -6.27 on v2.7, where mana became typed, exclusive and spendable, and
+     -5.38 on v2.8. The v2.7 move was the largest and the reason was the deck: Atraxa is
+     four colours, so she had the most fake fixing to lose when one source stopped paying
+     every pip. v2.8 gives some of it back, and not because the upgrade improved: every
+     seat now takes the first draw the rules give it and no mulliganed hand is a card
+     short, which lifts both hundreds and narrows the gap between them.
+     Five measurements, five magnitudes, one finding.
      Pinned to the digit so that the next time it moves, somebody has to say why. */
   const atraxa = lenses.find((l) => l.id === "sim-worse-d3-b3");
   assert.ok(atraxa, "the Atraxa B3 finding is missing");
   assert.equal(atraxa.kind, "warning");
-  assert.equal(atraxa.impact.score, -6.27);
+  assert.equal(atraxa.impact.score, -5.38);
   assert.equal(atraxa.action.verb, "hold");
   assert.match(atraxa.action.label, /Do not buy/);
   assert.ok(atraxa.impact.dollars < 0, "money not spent is a negative amount");
@@ -116,10 +119,12 @@ check("a deck whose upgrades pay says what they cost per point", () => {
   assert.ok(felothar);
   assert.equal(felothar.kind, "opportunity");
   // 4.47 before the engine read printed bodies; 4.78 after, unmoved by the fetch-land
-  // correction -- D4 holds no land that goes and gets a basic -- and 4.56 on v2.7, where
-  // typed mana costs the b3 upgrade a little of what it appeared to gain. Still an
+  // correction -- D4 holds no land that goes and gets a basic -- 4.56 on v2.7, where
+  // typed mana costs the b3 upgrade a little of what it appeared to gain, and 4.47 again
+  // on v2.8. Landing back on the first figure is a coincidence of rounding, not a return
+  // to the first model: nothing about v2.8 undoes what printed bodies changed. Still an
   // opportunity, still worth the money, and that is the point of pinning it.
-  assert.equal(felothar.impact.score, 4.56);
+  assert.equal(felothar.impact.score, 4.47);
   assert.equal(felothar.action.verb, "buy");
   assert.match(felothar.why, /points per \$100 spent/);
 });
@@ -164,8 +169,8 @@ check("the biggest thing at stake is first", () => {
   const scores = lenses.map((l) => Math.abs(l.impact.score || 0));
   const sorted = scores.slice().sort((a, b) => b - a);
   assert.deepEqual(scores, sorted, "lenses are ordered by points at stake");
-  assert.equal(lenses[0].impact.score, -6.27,
-    "the six-point drop leads, ahead of every gain and every observation");
+  assert.equal(lenses[0].impact.score, -5.38,
+    "Atraxa's drop leads, ahead of every gain and every observation");
 });
 
 check("money breaks a tie between two findings worth the same", () => {

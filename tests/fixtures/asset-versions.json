@@ -10,8 +10,8 @@
       "sha": "a18e9d2a0d56618a"
     },
     "app.js": {
-      "version": 130,
-      "sha": "d478f2dde54753f2"
+      "version": 131,
+      "sha": "d16acdfd4fc08759"
     },
     "assets/crankmagic/commander-atraxa.webp": {
       "version": 1,
@@ -282,8 +282,8 @@
       "sha": "5f58e9270e04b9a0"
     },
     "data/simulation-summary.json": {
-      "version": 6,
-      "sha": "c33784cdb70b5b93"
+      "version": 7,
+      "sha": "24f84c17c173f08c"
     },
     "deck-audit.js": {
       "version": 1,

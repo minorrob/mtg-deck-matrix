@@ -8,6 +8,7 @@
 import assert from "node:assert/strict";
 import {createRequire} from "node:module";
 import {readFile} from "node:fs/promises";
+import {readFileSync} from "node:fs";
 
 const require = createRequire(import.meta.url);
 const Sim = require("../crankmagic-sim.js");
@@ -175,6 +176,41 @@ check("a win the engine cannot watch reaches the reader, in the metrics and in t
   assert.match(combo.limits[4], /you win the game/);
   assert.match(combo.limits[4], /Thassa's Oracle/, "naming the card is what makes the warning actionable");
   assert.doesNotThrow(() => Evidence.validate(combo));
+});
+
+check("the three figures the report was dropping now reach it", () => {
+  /* All three existed in the engine and were thrown away at the line that built the
+     report: how much of a difference is seed noise, whether "turn 12.5 on average" is one
+     hump or two, and which cards the number does not describe. */
+  const report = Sim.packFor({...fakeResult, endTurnCounts: [{turn: 9, games: 4}, {turn: 12, games: 10}, {turn: 15, games: 2}]}, {
+    protocol: "published", table: "default", seatCount: 3, firstSeed: 20260904, cardsVersion: "v2",
+    coverage: {total: 100, known: 98, ratio: 0.98, unreadable: ["Mystery Booster Test Card", "Un-card"]}
+  });
+  assert.deepEqual(report.perSeedScores, [62.1, 62.9], "per-seed scores travel with the report");
+  assert.equal(report.endTurnCounts.length, 3);
+  assert.deepEqual(report.endTurnCounts.map((r) => r.turn), [9, 12, 15], "the histogram keeps the turn each count belongs to");
+  assert.deepEqual(report.coverage.unreadable, ["Mystery Booster Test Card", "Un-card"]);
+  // A run with no histogram still packs an array, so the renderer never reads undefined.
+  assert.deepEqual(Sim.packFor(fakeResult, {protocol: "preview", coverage: {}}).endTurnCounts, []);
+});
+
+check("the histogram is the same games the average is taken over", () => {
+  /* A distribution that does not add up to the run is worse than none: it invites the
+     reader to compare a shape against a mean that describes a different set of games. */
+  const engine = require("../sim-engine.js");
+  const lineup = [{name: "Krenko, Mob Boss", quantity: 1, isCommander: true, typeLine: "Legendary Creature — Goblin Warrior", manaCost: "{2}{R}{R}", oracleText: "{T}: Create X 1/1 red Goblin creature tokens, where X is the number of Goblins you control."}]
+    .concat([{name: "Mountain", quantity: 99, typeLine: "Basic Land — Mountain", oracleText: ""}]);
+  const config = JSON.parse(readFileSync(new URL("../sim/config.json", import.meta.url), "utf8"));
+  const opponents = JSON.parse(readFileSync(new URL("../sim/opponents.json", import.meta.url), "utf8"));
+  const mix = opponents.tables["mixed-pod"], weight = mix.reduce((sum, e) => sum + e.weight, 0);
+  const seats = mix.map((e) => ({...opponents.profiles[e.profile], weight: e.weight / weight}));
+  const {metrics: result} = engine.simulateGames(lineup, seats, {...config, games: 200, maxTurns: 16}, 7);
+  const counted = (result.endTurnCounts || []).reduce((n, row) => n + row.games, 0);
+  assert.equal(counted, result.games, `the histogram holds ${counted} games and the run played ${result.games}`);
+  assert.ok((result.endTurnCounts || []).every((row) => row.games > 0), "empty turns are trimmed, not padded with zeroes");
+  const mean = result.endTurnCounts.reduce((sum, row) => sum + row.turn * row.games, 0) / counted;
+  assert.ok(Math.abs(mean - result.avgEndTurn) < 0.01,
+    `the histogram's own mean is ${mean.toFixed(3)} and the reported average end turn is ${result.avgEndTurn.toFixed(3)}`);
 });
 
 check("the engine counts and names the win paths it cannot watch", () => {

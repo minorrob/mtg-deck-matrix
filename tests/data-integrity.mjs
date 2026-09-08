@@ -522,7 +522,12 @@ for (const variantId of ["1o", "2c", "3e", "4c", "5o", "6f"]) {
 // The published numbers. Every rung either reports a full measurement or says
 // plainly that it was not measured; nothing is inferred at render time, and no
 // figure survives from an engine that asked a different question.
-const ENGINE = "v2.6";
+/* READ, NOT TYPED. This said "v2.6" while the engine had moved twice, so the assertion
+   below was pinning the summary to a generation nobody was running any more -- and would
+   have gone on passing after a sweep that re-badged the file without re-measuring it.
+   Reading it from crankmagic-sim.js makes the assertion mean what it says: the summary
+   names the engine the code in this tree would produce. */
+const ENGINE = createRequire(import.meta.url)("../crankmagic-sim.js").ENGINE_GENERATION;
 const MEASURED_RUNGS = ["Base", "Tuned", "Pod Fun", "Max"];
 assert.equal(simulationSummary.engine, ENGINE, `the summary must name the engine that produced it`);
 assert(simulationSummary.engineNotes?.[ENGINE], "simulation summary must document the engine generation it references");
