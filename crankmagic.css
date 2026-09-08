@@ -424,6 +424,23 @@
 .cm-card-view-buy{margin-top:8px}
 #matrix-v2 .cm-card-view-buy .cm-card-view-menu-btn{display:inline-flex;align-items:center;gap:6px}
 
+/* A CELL YOU CAN TYPE IN HAS TO LOOK LIKE ONE. Paid and Quantity are editable in place, and
+   a number that is silently clickable is a number nobody clicks -- so the cell carries a
+   faint dotted underline that firms up on hover, the way a spreadsheet's does. Everything
+   else in the row stays flat text, which is what makes these two read as different. */
+#matrix-v2 .cm-cell-edit{display:inline-block;width:100%;min-height:0;padding:2px 6px;margin:-2px -6px;
+  background:none;border:0;border-radius:6px;color:inherit;font:inherit;text-align:inherit;
+  box-shadow:inset 0 -1px 0 #4b597580;cursor:text}
+#matrix-v2 .cm-cell-edit:hover{background:#222c40;box-shadow:inset 0 -1px 0 var(--v-accent)}
+#matrix-v2 .cm-cell-edit:focus-visible{outline:2px solid #9addff;outline-offset:1px}
+#matrix-v2 .cm-cell-input{width:100%;min-width:70px;min-height:0;height:30px;margin:0;padding:0 7px;
+  background:#161d2b;border:1px solid var(--v-accent);border-radius:6px;color:var(--v-ink);font:inherit}
+#matrix-v2 .cm-cell-input::-webkit-outer-spin-button,
+#matrix-v2 .cm-cell-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+#matrix-v2 .cm-cell-input{appearance:textfield;-moz-appearance:textfield}
+/* The fold toggle sits with the other row-shaping controls, not with the filters. */
+#matrix-v2 .cm-fold-toggle{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;font-size:13px}
+
 /* THE COUNT STRIP. Three of the row menu's entries are a number and a yes, so they open
    this beside the menu rather than a dialog over the table: fewer, the count, more, and a
    green check that is the commit. Deliberately NOT scoped to #matrix-v2 -- the row menu is

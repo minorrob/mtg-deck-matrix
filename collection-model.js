@@ -84,7 +84,27 @@
     function split(l,n){n=quantity(n??l.quantity);ensure(n<=l.quantity,'That quantity exceeds the available copies.');if(n===l.quantity)return l;const part={...clone(l),id:id('lot'),quantity:n};l.quantity-=n;s.lots.push(part);return part;}
     function warning(l){if(l.allocation||l.location?.kind==='deck'||l.offer==='held')ensure(c.confirmed===true,'Review and confirm the affected deck, physical location or pending deal before changing this copy.');}
     function version(d){d.versions.push({id:id('version'),at:now,slots:clone(d.slots),commanders:[...d.commanders],definition:clone(d.definition)});d.version=(d.version||0)+1;}
-    function newLot(raw){card(s,raw.cardId);const l={id:raw.id||id('lot'),cardId:raw.cardId,quantity:quantity(raw.quantity),source:raw.source||'owned',printing:print(raw.printing),location:raw.source&&raw.source!=='owned'?null:clone(raw.location||{kind:'bench',box:''}),allocation:null,offer:'none',groupIds:[],notes:text(raw.notes,5000),paid:raw.paid??null,acquiredAt:now,provenance:clone(raw.provenance||{type:c.type,operation:c.id})};s.lots.push(l);return l;}
+    /* THE SAME COPY, NOT A SECOND ROW.
+     Recording another Sol Ring you already own made a second lot, and the table drew two
+     rows that were identical down to the punctuation -- which reads as a bug even though
+     the model was faithful. A lot is a *purchase*, but a reader looking at the roster is
+     counting *copies*, so two records that differ in nothing become one record of two.
+     Everything that could make them genuinely different keeps them apart: a different
+     print, a different source, a different box, a different price, a group, a deck slot,
+     a pending deal. An allocated copy is spoken for, so it is never a merge target. */
+  function sameCopy(raw,groupId){
+    if(!raw||!raw.cardId)return null;
+    const want=print(raw.printing), source=raw.source||'owned';
+    const location=source!=='owned'?null:clone(raw.location||{kind:'bench',box:''});
+    const paid=raw.paid??null, notes=text(raw.notes,5000);
+    const groups=groupId?[group(s,groupId).id]:[];
+    const alike=(a,b)=>JSON.stringify(a??null)===JSON.stringify(b??null);
+    return s.lots.find(l=>l.cardId===raw.cardId&&l.source===source&&!l.allocation&&l.offer==='none'
+      &&alike(l.printing,want)&&alike(l.location,location)
+      &&(l.paid??null)===paid&&l.notes===notes&&alike([...l.groupIds].sort(),[...groups].sort()))||null;
+  }
+
+  function newLot(raw){card(s,raw.cardId);const l={id:raw.id||id('lot'),cardId:raw.cardId,quantity:quantity(raw.quantity),source:raw.source||'owned',printing:print(raw.printing),location:raw.source&&raw.source!=='owned'?null:clone(raw.location||{kind:'bench',box:''}),allocation:null,offer:'none',groupIds:[],notes:text(raw.notes,5000),paid:raw.paid??null,acquiredAt:now,provenance:clone(raw.provenance||{type:c.type,operation:c.id})};s.lots.push(l);return l;}
     function allocate(l,d,r,n){ensure(l.source!=='wanted','A wanted card is a plan to buy, not a copy. Mark it Ordered or Owned before reserving it.');ensure(!d.archived&&d.status==='final','Finalize this deck before reserving copies.');ensure(compatible(l,r),'That printing does not match this requirement.');ensure(l.offer!=='held','Release the pending deal before assigning this copy.');const amount=quantity(n??Math.min(l.quantity,shortfall(s,d,r)));ensure(amount<=shortfall(s,d,r),'That slot is already fulfilled.');const part=split(l,amount);part.allocation={deckId:d.id,slotId:r.id};return part;}
     function satisfy(d,only){for(const r of d.slots.filter(r=>r.committed&&(!only||r.id===only))){for(const l of [...s.lots].sort((a,b)=>(a.source==='owned'?0:1)-(b.source==='owned'?0:1))){if(!shortfall(s,d,r))break;if(l.source==='wanted'||l.allocation||l.offer==='held'||l.location?.kind==='deck'||l.offer==='available'&&d.definition.reuse?.includeSellTrade===false||!compatible(l,r)||l.keepBench)continue;allocate(l,d,r,Math.min(l.quantity,shortfall(s,d,r)));}}}
     function release(l,destination){l.allocation=null;if(destination==='bench'){l.keepBench=true;return;}if(l.source!=='owned'||l.offer==='held')return;for(const d of s.decks.filter(d=>d.status==='final'&&!d.archived&&(!destination||d.id===destination)).sort((a,b)=>(a.priority||0)-(b.priority||0)||a.createdAt.localeCompare(b.createdAt))){for(const r of d.slots.filter(r=>r.committed)){const need=shortfall(s,d,r);if(!need||!compatible(l,r)||l.offer==='available'&&d.definition.reuse?.includeSellTrade===false)continue;const n=Math.min(l.quantity,need),part=allocate(l,d,r,n);if(part===l)return;}}}
@@ -115,7 +135,7 @@
         if(Array.isArray(s.preferences.comparisonPicks))s.preferences.comparisonPicks=s.preferences.comparisonPicks.filter(x=>x!==d.id);
         if(s.preferences.lastLabRun?.deckId===d.id)delete s.preferences.lastLabRun;
         summary=`Deleted ${d.name} permanently, with its reports, advice and game log`;break;}
-      case 'acquire':{for(const raw of c.cards||[])addCard(raw);const l=newLot(c.lot);if(c.groupId)l.groupIds.push(group(s,c.groupId).id);if(c.deckId)allocate(l,deck(s,c.deckId),slot(s,c.deckId,c.slotId),l.quantity);summary=`Recorded ${l.quantity} ${l.source} ${card(s,l.cardId).name}`;break;}
+      case 'acquire':{for(const raw of c.cards||[])addCard(raw);const same=c.deckId?null:sameCopy(c.lot,c.groupId);if(same){same.quantity=quantity(same.quantity+quantity(c.lot.quantity));summary=`Recorded ${quantity(c.lot.quantity)} more ${same.source} ${card(s,same.cardId).name} — ${same.quantity} in that record now`;break;}const l=newLot(c.lot);if(c.groupId)l.groupIds.push(group(s,c.groupId).id);if(c.deckId)allocate(l,deck(s,c.deckId),slot(s,c.deckId,c.slotId),l.quantity);summary=`Recorded ${l.quantity} ${l.source} ${card(s,l.cardId).name}`;break;}
       case 'importLots':{ensure(text(c.batchId,200),'An import needs a batch identifier.');if(s.imports.some(b=>b.id===c.batchId))return {state:current,summary:'This batch was already imported.',duplicate:true};for(const raw of c.cards||[])addCard(raw);for(const raw of c.lots||[]){const l=newLot(raw);if(c.groupId)l.groupIds.push(group(s,c.groupId).id);}s.imports.push({id:c.batchId,at:now,mode:c.mode||'acquisitions',rows:c.lots.length,source:text(c.source,500)});summary=`Imported ${c.lots.length} reviewed inventory rows`;break;}
       case 'source':{let l=lot(s,c.lotId);ensure(SOURCES.includes(c.source),'Choose Owned, Ordered, Incoming trade or Wanted.');if(l.source==='owned'&&c.source!=='owned')warning(l);l=split(l,c.quantity);l.source=c.source;if(l.source==='owned'){l.location=l.location||{kind:'bench',box:''};l.receivedAt=now;}else {l.location=null;l.offer='none';}summary=`Corrected acquisition to ${c.source}: ${card(s,l.cardId).name}`;break;}
       case 'allocate':{let l=lot(s,c.lotId);warning(l);l=split(l,c.quantity);l.allocation=null;if(l.offer==='held')ensure(false,'Cancel the pending deal before transferring the copy.');allocate(l,deck(s,c.deckId),slot(s,c.deckId,c.slotId),l.quantity);summary='Reserved copies; physical location unchanged';break;}
@@ -126,6 +146,14 @@
       case 'removeOption':{const d=deck(s,c.deckId),r=slot(s,d.id,c.slotId);ensure(r.purpose!=='main','Replace a main slot instead.');const releaseLots=s.lots.filter(l=>l.allocation?.deckId===d.id&&l.allocation.slotId===r.id);d.slots=d.slots.filter(x=>x.id!==r.id);for(const l of releaseLots)release(l,c.destination);summary='Removed an optional commitment';break;}
       case 'fulfill':{const d=deck(s,c.deckId);ensure(d.status==='final'&&!d.archived,'Finalize an available deck first.');satisfy(d);summary=`Reserved eligible unassigned copies for ${d.name}`;break;}
       case 'offer':{let l=lot(s,c.lotId);ensure(l.source==='owned','Only owned copies can be offered.');l=split(l,c.quantity);if(c.offer==='held'){warning(l);l.allocation=null;}ensure(['none','available','held'].includes(c.offer),'Invalid offer state.');l.offer=c.offer;summary=`Updated Sell / Trade: ${card(s,l.cardId).name}`;break;}
+      /* A COUNT IS A NUMBER YOU CAN BE WRONG ABOUT. Ordering four and receiving three used
+         to mean disposing of one, which is a different sentence about a different event.
+         Setting the count says what is true now. Lowering it is still a loss of copies, so
+         it asks the same confirmation every other shrinking change asks; the slot it was
+         filling recomputes its shortfall from the lots, so nothing else has to be told. */
+      case 'quantity':{const l=lot(s,c.lotId),next=quantity(c.quantity);
+        if(next<l.quantity)warning(l);
+        l.quantity=next;summary=`${card(s,l.cardId).name}: ${next} ${l.source}`;break;}
       case 'dispose':{let l=lot(s,c.lotId);ensure(l.source==='owned','Only owned copies can leave the library.');warning(l);l=split(l,c.quantity);s.lots=s.lots.filter(x=>x.id!==l.id);summary=`Recorded ${text(c.reason,60)||'disposition'} of ${l.quantity} ${card(s,l.cardId).name}`;break;}
       case 'removePending':{const l=lot(s,c.lotId);ensure(l.source!=='owned','Use a recorded disposition for owned cards.');warning(l);const part=split(l,c.quantity);s.lots=s.lots.filter(x=>x.id!==part.id);summary='Cancelled a pending acquisition; any deck requirement is still visible';break;}
       case 'editLot':{const l=lot(s,c.lotId);if(c.printing)l.printing=print(c.printing);if(c.notes!==undefined)l.notes=text(c.notes,5000);if(c.paid!==undefined){ensure(c.paid===null||Number.isFinite(c.paid)&&c.paid>=0,'Purchase cost must be a nonnegative number or unknown.');l.paid=c.paid;}if(c.keepBench!==undefined)l.keepBench=!!c.keepBench;summary='Updated copy details';break;}
