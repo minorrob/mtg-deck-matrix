@@ -353,3 +353,59 @@
   outline:2px solid var(--v-accent);outline-offset:1px;border-color:var(--v-accent)}
 #matrix-v2 ::placeholder{color:var(--v-muted)}
 .cm-req-label{display:inline-flex;align-items:center}
+
+/* ================================== THE GUIDED TOUR ==================================
+   A scrim, a hole cut in it, and a card beside the hole. The hole is drawn with a huge
+   box-shadow rather than a clip-path or four positioned panels: one element, one repaint per
+   step, and it animates its own position for free. pointer-events stay off the scrim so the
+   reader can still use the page underneath -- a tour you cannot click through is a tour you
+   have to finish before you can try what it just described. */
+.cm-tour-layer{position:fixed;inset:0;z-index:80;pointer-events:none}
+.cm-tour-scrim{position:absolute;inset:0}
+.cm-tour-spotlight{position:absolute;border-radius:10px;border:2px solid var(--v-accent);
+  box-shadow:0 0 0 9999px #060a12b0,0 0 22px #72baff55;
+  transition:left .22s ease,top .22s ease,width .22s ease,height .22s ease}
+/* A popover, so it reaches the top layer where the user-functions menu already lives -- see
+   the note on `raise` in crankmagic-tour.js. The UA sheet centres a popover with inset:0 and
+   margin:auto, both of which have to go, because this one is positioned onto its target. */
+.cm-tour-popover{position:fixed;inset:auto;margin:0;width:min(420px,calc(100vw - 24px));
+  pointer-events:auto;background:var(--v-panel);border:1px solid var(--v-line-strong);
+  border-radius:12px;padding:17px 19px 15px;box-shadow:0 18px 52px #000a;color:var(--v-ink);
+  transition:left .22s ease,top .22s ease}
+.cm-tour-popover:not(:popover-open){display:none}
+.cm-tour-progress{margin:0 0 7px;font-size:11px;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--v-decision)}
+#matrix-v2 .cm-tour-popover h2{margin:0 0 8px;font-size:18px;letter-spacing:-.01em}
+.cm-tour-copy p{margin:0;font-size:13.5px;line-height:1.6;color:var(--v-muted)}
+.cm-tour-acts{display:flex;align-items:center;gap:8px;margin-top:15px;flex-wrap:wrap}
+.cm-tour-spacer{flex:1}
+#matrix-v2 .cm-tour-acts .v-button{min-height:34px;padding:6px 13px;font-size:13px}
+#matrix-v2 .cm-tour-quiet{background:transparent;border-color:transparent;color:var(--v-muted);padding-left:4px;padding-right:4px}
+#matrix-v2 .cm-tour-quiet:hover{color:var(--v-ink);border-color:var(--v-line-strong)}
+@media(prefers-reduced-motion:reduce){.cm-tour-spotlight,.cm-tour-popover{transition:none}}
+
+/* THE CHOOSER. Seven jobs, not seven screens -- so each card leads with the job in the
+   reader's own words and closes with what they will have, which is the part that makes one
+   of seven worth picking. */
+.cm-tour-lede{margin:0 0 16px;max-width:62ch}
+.cm-tour-picks{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px}
+#matrix-v2 .cm-tour-pick{display:grid;grid-template-columns:34px minmax(0,1fr);gap:12px;
+  align-items:start;text-align:left;padding:13px 14px;font:inherit;
+  background:var(--v-raised);border:1px solid var(--v-line-strong);border-radius:10px;
+  color:var(--v-ink);cursor:pointer}
+#matrix-v2 .cm-tour-pick:hover{border-color:var(--v-accent);background:#28324a}
+.cm-tour-icon{font-size:21px;line-height:1.1;color:var(--v-decision)}
+.cm-tour-pick-body{display:grid;gap:4px;min-width:0}
+.cm-tour-pick-body strong{font-size:14px;letter-spacing:-.01em}
+.cm-tour-pick-body small{font-size:12.5px;line-height:1.45;color:var(--v-muted)}
+.cm-tour-pick-body em{font-style:normal;font-size:11.5px;line-height:1.4;color:var(--v-decision)}
+/* THE HEADER FITS THREE BUTTONS ONLY WHEN ONE OF THEM IS AN ICON. Adding Take a Tour as a
+   third labelled control wrapped the whole group onto its own row at 768px, and the wordmark
+   then painted straight across it -- caught by tests/browser-geometry.mjs, which exists for
+   exactly this. The tour label is the one to shed: it is the newest, and its flag icon
+   carries a tooltip and an aria-label. */
+@media(max-width:1050px){#matrix-v2 .cm-tour-btn .cm-btn-label{display:none}}
+@media(max-width:760px){
+  .cm-tour-picks{grid-template-columns:1fr}
+  .cm-tour-popover{width:calc(100vw - 20px)}
+}
