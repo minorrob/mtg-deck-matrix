@@ -6,7 +6,12 @@ const leader=C.normalize({name:'Test Commander',typeLine:'Legendary Creature —
 const basic=C.normalize({name:'Island',typeLine:'Basic Land — Island',colorIdentity:['U'],legalities:{commander:'legal'},oracleText:'{T}: Add {U}.',price:.1});
 const pool=Array.from({length:130},(_,i)=>C.normalize({name:'Fixture '+i,typeLine:i%4===0?'Artifact':'Creature',manaValue:i%5+1,colorIdentity:['U'],legalities:{commander:'legal'},oracleText:i%3===0?'Draw two cards.':i%3===1?'Destroy target creature.':'{T}: Add {U}.',price:1}));
 let definition=M.defaultDefinition(),built=D.build({commanders:[leader],cards:[leader,basic,...pool],definition});eq(built.slots.reduce((n,r)=>n+r.quantity,0),100);ok(built.method.includes('not simulated'));eq(built.slots.find(r=>r.cardId===basic.id).quantity,36);
-const zero=D.build({commanders:[leader],cards:[leader,basic,...pool],definition:{...definition,budget:0}});eq(zero.slots.length,0);ok(zero.issues.some(x=>x.includes('No limit was relaxed')));
+// A price cap of zero starves every candidate -- but not the commander. It was chosen by
+// name before any limit existed, so it is the one card a cap may never refuse; a deck of
+// the commander alone is the honest result, and the issue says why nothing else fitted.
+const zero=D.build({commanders:[leader],cards:[leader,basic,...pool],definition:{...definition,budget:0}});eq(zero.slots.length,1);eq(zero.slots[0].cardId,leader.id);ok(zero.issues.some(x=>x.includes('No limit was relaxed')&&x.includes('$0')));
+// And an owned-only pool with nothing owned says so in words a reader can act on.
+const starved=D.build({commanders:[leader],cards:[leader,basic,...pool],definition,benchOnly:true,available:{}});eq(starved.slots.length,1);ok(starved.issues.some(x=>/library holds none/.test(x)&&/All legal catalog cards/.test(x)));
 const unavailable=D.build({commanders:[leader],cards:[leader,basic,...pool],definition,benchOnly:true,available:{[leader.id]:1,[basic.id]:50,[pool[0].id]:1}});eq(unavailable.slots.reduce((n,r)=>n+r.quantity,0),38);ok(unavailable.issues.length);
 const unknown=D.build({commanders:[leader],cards:[leader,basic,{...pool[0],price:null}],definition:{...definition,perCardCap:2}});ok(!unknown.slots.some(r=>r.cardId===pool[0].id));
 let state=M.empty(),n=0;const run=(type,args={})=>state=M.apply(state,{type,id:'core'+(++n),...args}).state;
@@ -40,4 +45,20 @@ const started=performance.now();M.validate(large);const projected=M.projection(l
 const invalidQuantity=structuredClone(state);invalidQuantity.lots[0].quantity='2';assert.throws(()=>M.validate(invalidQuantity),/must be numbers/);checks++;
 const Client=require('../crankmagic-card-client.js');let requests=0;const client=Client.create({storage:null,delayMs:0,fetchImpl:async()=>{requests++;return new Response(JSON.stringify({object:'card',id:'fixture-print',oracle_id:'fixture-oracle',name:'Test full facts',type_line:'Legendary Creature — Wizard',power:'4',toughness:'4',collector_number:'005',mana_cost:'{3}{U}',legalities:{commander:'legal'},scryfall_uri:'https://scryfall.com/card/tst/005/test-full-facts'}),{status:200,headers:{'Content-Type':'application/json'}});}});
 const full=await client.named('Test full facts',{exact:true});eq(full.power,'4');eq(full.toughness,'4');eq(full.collectorNumber,'005');await client.named('Test full facts',{exact:true});eq(requests,1);
+{// Permanent deletion is gated on archive and cleans up everything that pointed at the deck.
+ let d=M.empty(),k=0;const step=(type,args={})=>d=M.apply(d,{type,id:'del'+(++k),...args}).state;
+ step('batch',{commands:[{type:'cards',cards:[leader,basic,...pool]},{type:'createDeck',deckId:'gone',name:'Gone',commanders:[leader.id],slots:[{cardId:leader.id,quantity:1},{cardId:basic.id,quantity:99}]}]});
+ step('finalize',{deckId:'gone'});
+ step('acquire',{lot:{id:'boxed',cardId:basic.id,quantity:1,source:'owned'}});
+ step('place',{lotId:'boxed',quantity:1,deckId:'gone'});
+ ok(d.lots.find(l=>l.id==='boxed').location.kind==='deck');
+ step('game',{deckId:'gone',outcome:'win',turns:9,opponents:'',notes:''});
+ step('preferences',{values:{comparisonPicks:['gone'],lastLabRun:{deckId:'gone',method:'x',issues:[],at:'now'}}});
+ assert.throws(()=>step('deleteDeck',{deckId:'gone',confirmed:true}),/Archive the deck first/);checks++;
+ step('archive',{deckId:'gone'});
+ assert.throws(()=>step('deleteDeck',{deckId:'gone'}),/Confirm permanent deletion/);checks++;
+ step('deleteDeck',{deckId:'gone',confirmed:true});
+ eq(d.decks.length,0);eq(d.games.length,0);eq(d.preferences.comparisonPicks,[]);eq(d.preferences.lastLabRun,undefined);
+ const boxed=d.lots.find(l=>l.id==='boxed');eq(boxed.location.kind,'bench');eq(boxed.allocation,null);eq(M.counters(d).owned,1);
+ M.validate(d);checks++;}
 console.log(`crankmagic-core: ${checks} checks passed; bounded construction, compound changes, identity conservation, full printing facts, report provenance; 10,000 lots validated/projected in ${Math.round(elapsed)} ms.`);
