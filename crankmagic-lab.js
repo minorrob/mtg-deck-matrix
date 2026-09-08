@@ -50,7 +50,19 @@ views.lab=async()=>{
   const last=C.state.preferences.lastLabRun,saved=last?C.state.decks.find(x=>x.id===last.deckId):null;
   if(preview&&!leader)leader=leadersOf(preview)[0]||null;
   C.main.innerHTML=C.head('Deck Lab · Find a commander → build the 99','The deck you want to play.','Start with a commander or an existing list. Define the deck, draft the initial cards, measure them, then save what you decide to keep.',b('?','lab-help'))
-    +`<div class="cm-lab-grid"><section class="v-panel"><form id="cm-lab-form"><div class="cm-lab-start"><h2>Starting point</h2>${s('Select to proceed by defining the Commander or uploading an Existing Build','mode',[['commander','Select Commander → Auto-build 99'],['list','Existing list or Collection group']],mode,'required')}</div>
+    +`<div class="cm-lab-grid"><section class="v-panel"><form id="cm-lab-form"><div class="cm-lab-start"><h2>Starting point</h2>
+    <!-- Written out rather than built by select(), because the required mark belongs on the
+         CONTROL here, not trailing the sentence. The shared helper puts the mark after the
+         label text, which is right for a short field label and wrong for a whole instruction:
+         at full width the select drops to its own line and the mark was left stranded at the
+         far right of a line it had nothing to do with. As the select's own next sibling it
+         sits on the select's top-right corner wherever the select ends up. -->
+    <label class="cm-start-label">Select to proceed by defining the Commander or uploading an Existing Build
+      <span class="cm-start-control">
+        <select name="mode" aria-label="Select to proceed by defining the Commander or uploading an Existing Build" required aria-required="true">${C.options([['commander','Select Commander → Auto-build 99'],['list','Existing list or Collection group']],mode)}</select>
+        <span class="cm-req" aria-hidden="true" title="Required">*</span>
+      </span>
+    </label></div>
     <details class="cm-lab-section" id="cm-lab-commander" ${mode==='commander'?'open':''} ${mode==='commander'?'':'hidden'}><summary class="cm-section-heading">Commander choice</summary><p class="cm-muted">Search or enter a commander from among the ${(Math.floor(C.catalog.all().filter(c=>c.commander&&c.legalities?.commander==='legal').length/100)*100).toLocaleString()}+ legal commanders in MtG. You can paste a Scryfall link instead of a name. These filters only choose the commander.</p>
     <div class="cm-form-grid">${f('Search commander name','commanderQuery',leader?.name||'','required autocomplete="off" placeholder="Name, printed variant name, or a Scryfall link"')}${s('Play style filter','commanderMechanic',[['','Any play style'],...choices],'')}${s('EDHREC rank filter','rank',[['','Any rank'],['100','Top 100'],['500','Top 500'],['1000','Top 1,000']],'')}
     <div><span class="cm-muted" style="font-size:13px">Colour identity within</span><div class="cm-color-pills">${COLORS.map(([k,name])=>`<label class="cm-color-pill" title="${e(name)}"><input type="checkbox" name="commanderColor" value="${k}" ${pickerColors.includes(k)?'checked':''}><img src="assets/mana/${k}.svg?v=1" alt="">${k}</label>`).join('')}<label class="cm-color-pill" title="Colorless commanders only"><input type="checkbox" name="commanderColor" value="C" ${pickerColors.includes('C')?'checked':''}>C</label></div></div></div>
