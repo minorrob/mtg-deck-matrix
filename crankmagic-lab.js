@@ -8,13 +8,15 @@
  * only thing that writes to My Decks, and it is available from the moment the starting
  * point is filled in: a commander alone can be saved and drafted later.
  *
- * MEASUREMENT IS CONNECTED; REFINEMENT IS NOT. "Measure" runs the real engine through
+ * MEASUREMENT AND REFINEMENT ARE BOTH CONNECTED. "Measure" runs the real engine through
  * crankmagic-sim.js, in a worker, on the published protocol, against the preview or the
  * saved deck, and files a comparable report. A card the engine cannot read is fetched from
  * Scryfall first -- two requests for a hundred cards -- rather than handed back to the
- * reader as a wall. The two refinement steps between the draft and the report need a
- * candidate search that has not been built, so they stay waiting and say why. A step that
- * did not happen never lights up: the orb state is derived from stored evidence.
+ * reader as a wall. The two steps between the draft and the report are a measured hill
+ * climb: the weakest cards come out of the report's per-card rows, the candidates come
+ * out of the graph's relations to the commander, and a swap survives only if a fresh
+ * measurement says so. A step that did not happen never lights up: the orb state is
+ * derived from stored evidence, and every dark step says what would light it.
  *
  * THE PICKER REACHES EVERY LEGAL COMMANDER. The catalog registers 3,411 of them; the old
  * pane showed the 45 most popular and nothing said so, which read as "only the commanders
@@ -190,7 +192,7 @@ views.lab=async()=>{
     const id='deck:'+C.uid();
     const commands=[{type:'createDeck',deckId:id,name,commanders:leaders.map(c=>c.id),cards,slots,definition:preview?preview.definition:definition,notes:[method,...notes].join('\n')}];
     if(preview?.report)commands.push({type:'report',deckId:id,report:preview.report});
-    commands.push({type:'preferences',values:{lastLabRun:{deckId:id,method,issues,at:new Date().toISOString(),previewAt:preview?.at||null},labPreview:null}});
+    commands.push({type:'preferences',values:{lastLabRun:{deckId:id,method,issues,at:new Date().toISOString(),previewAt:preview?.at||null,refine:preview?.refine||null},labPreview:null}});
     preview=null;
     await C.commit({type:'batch',commands,summary:`Saved ${name} to My Decks`+(commands.some(c=>c.type==='report')?' with its measurement':'')});
   };
@@ -212,6 +214,182 @@ views.lab=async()=>{
   };
 
   /* MEASURE the preview or the saved deck. What the engine cannot read is fetched first. */
+  /* ------------------------------------------------------- STEPS THREE AND FOUR
+   *
+   * "Simulator & 99 Refined" and "Simulator loops complete" had never run. They sat dark
+   * under a sentence saying a candidate search had not been built -- a dead end dressed as
+   * an explanation, because the reader has a drafted list, a measured score and nowhere
+   * to go from either.
+   *
+   * THIS IS A MEASURED HILL CLIMB, and each of its three questions is answered with
+   * evidence the app already holds:
+   *
+   *   which card to drop    a per-card readout from the pass's own baseline run. A card
+   *                         the engine drew and could not cast, or cast and never won
+   *                         with, is the weakest card in the list -- not the cheapest one
+   *                         and not the lowest ranked. It measures that baseline itself,
+   *                         so refining never waits on a published measurement: the
+   *                         report is step five and this is step three.
+   *   what to try instead   the graph. CrankGraph.relate scores a candidate against the
+   *                         commander on the same directed relations Discover draws, so
+   *                         the pass proposes cards that DO something with this commander
+   *                         rather than cards that are good in the abstract.
+   *   whether it worked     a measurement. A swap is kept only when the new score beats
+   *                         the old by more than that run's own standard error.
+   *
+   * ON THE PROTOCOL. The search runs on `preview` -- one seed of 2,000 games -- because
+   * `published` is 120,000 games a try and a search needs dozens of tries. Preview scores
+   * are not comparable with published ones and the protocol name says so; nothing here
+   * writes a published number. Measure again when the list settles.
+   *
+   * ON THE BUDGET. Tries are bounded by TIME, not by count, so a round takes about as
+   * long on a phone as on a laptop, and the pane says how many swaps it managed.
+   *
+   * ON THE REPORT. A kept swap changes the hundred, so the report describing the old
+   * hundred is dropped rather than left to look current. That is the same rule the rest
+   * of the app follows: a list change makes a result historical.
+   */
+  const REFINE_MS=45000, MAX_ROUNDS=3;
+  let simInputsCache=null;
+  const simInputs=()=>(simInputsCache||=Promise.all([fetch(CrankAssets.simConfig).then(r=>r.json()),fetch(CrankAssets.simOpponents).then(r=>r.json())]));
+  const sayStatus=t=>{const el=$('#cm-lab-sim-status');if(el)el.textContent=t;};
+
+  /* The engine cannot read a card with no rules text, and a swap that quietly drops
+     coverage changes the number for the wrong reason. */
+  async function ensureReadable(cards){
+    const need=(cards||[]).filter(c=>c&&!c.oracleText&&!/\bLand\b/.test(c.typeLine||''));
+    if(!need.length)return [];
+    const got=await C.catalog.hydrate(need,{onProgress:m=>sayStatus(`Fetching card text · ${m.done} of ${m.total}`)});
+    if(got.hydrated.length)await C.commit({type:'cards',cards:got.hydrated},{renderView:false});
+    return got.missing;
+  }
+  async function scoreSlots(slots,commanders,onProgress){
+    const lineup=CrankSim.lineupFor(C.state,{id:null,commanders,slots});
+    const [config,opponents]=await simInputs();
+    runner=runner||CrankSim.createRunner();
+    return runner.measure({protocol:'preview',lineup,config,opponents,table:config.table,onProgress});
+  }
+
+  /* Worth trying: legal in the commander's colours, not already in the list, not a basic,
+     and joined to the commander on the graph's own relations. Ordered by the strength of
+     that join, then by how much the format plays the card. */
+  function candidatesFor(leaders,slots,limit){
+    const identity=new Set(leaders.flatMap(c=>c.colorIdentity||[]));
+    const inDeck=new Set(slots.map(r=>r.cardId));
+    const rows=[];
+    for(const c of C.catalog.all()){
+      if(inDeck.has(c.id)||/\bBasic\b/.test(c.typeLine||''))continue;
+      if(c.legalities&&c.legalities.commander==='banned')continue;
+      if((c.colorIdentity||[]).some(x=>!identity.has(x)))continue;
+      let score=0;
+      for(const leader of leaders){const r=CrankGraph.relate(leader,c);if(r)score+=r.score;}
+      if(score)rows.push({card:c,score});
+    }
+    return rows.sort((a,b)=>b.score-a.score||((a.card.rank||1e9)-(b.card.rank||1e9))).slice(0,limit||120).map(r=>r.card);
+  }
+
+  /* The weakest cards as the engine found them. A card with no measured row is treated as
+     average rather than as bad: absence of evidence is not evidence of weakness. Lands,
+     the commander and pinned slots are never dropped. */
+  function weakestSlots(result,slots,leaders,limit){
+    const byName=new Map((result.perCard||[]).map(r=>[r.name,r]));
+    const leaderIds=new Set(leaders.map(c=>c.id));
+    return slots.filter(r=>!leaderIds.has(r.cardId)&&!r.pinned)
+      .map(r=>({slot:r,card:cardOf(r.cardId)}))
+      .filter(x=>x.card&&!/\bLand\b/.test(x.card.typeLine||''))
+      .map(x=>{const m=byName.get(x.card.name);
+        const weak=((m&&m.deadRate)??.2)*2+(1-((m&&m.castRate)??.5))+(.5-((m&&m.winRateWhenCast)??.5));
+        return {...x,weak};})
+      .sort((a,b)=>b.weak-a.weak).slice(0,limit||12);
+  }
+
+  async function refineRound(){
+    if(!preview)throw Error('Run the initial draft first; the pass refines a list, not an idea.');
+    if(runner&&runner.busy)throw Error('A measurement is already running.');
+    const leaders=preview.commanders.map(cardOf).filter(Boolean);
+    if(!leaders.length)throw Error('This draft has no commander to refine around.');
+    let slots=preview.slots.map(r=>({...r}));
+    await ensureReadable(slots.map(r=>cardOf(r.cardId)));
+    sayStatus('Measuring the list as it stands…');
+    let base=await scoreSlots(slots,preview.commanders,m=>sayStatus(`Measuring the list as it stands · ${m.done} of ${m.total}`));
+    const startedAt=Date.now(),kept=[];
+    sayStatus('Looking for cards that fit this commander…');
+    const pool=candidatesFor(leaders,slots,120);
+    if(pool.length){await C.commit({type:'cards',cards:pool},{renderView:false});await ensureReadable(pool);}
+    let tried=0,next=0;
+    for(const out of weakestSlots(base,slots,leaders,12)){
+      if(Date.now()-startedAt>REFINE_MS||next>=pool.length)break;
+      while(next<pool.length&&Date.now()-startedAt<=REFINE_MS){
+        const cand=pool[next++];
+        const swapped=slots.map(r=>r.cardId===out.slot.cardId?{...r,cardId:cand.id}:r);
+        tried+=1;
+        sayStatus(`Trying ${cand.name} for ${out.card.name} · ${tried} tried · ${Math.max(0,Math.round((REFINE_MS-(Date.now()-startedAt))/1000))}s left`);
+        let trial=null;
+        try{trial=await scoreSlots(swapped,preview.commanders);}catch{continue;}
+        /* Beat the baseline by more than the run's own noise, or it is not an improvement. */
+        if(trial.score>base.score+Math.max(base.se||0,.25)){
+          kept.push({out:out.card.name,in:cand.name,from:base.score,to:trial.score});
+          slots=swapped;base=trial;break;
+        }
+      }
+    }
+    const outOfTime=Date.now()-startedAt>REFINE_MS;
+    const prior=preview.refine||null;
+    const refine={rounds:(prior&&prior.rounds||0)+1,tried:(prior&&prior.tried||0)+tried,
+      swaps:[...(prior&&prior.swaps||[]),...kept],score:base.score,protocol:'preview',
+      stopped:kept.length?(outOfTime?'time':'more to try'):'converged',at:new Date().toISOString()};
+    /* The hundred changed, so the report about the old hundred is not this deck's report. */
+    await keepPreview({...preview,slots,refine,report:kept.length?null:preview.report});
+    redrawRun();
+    return {kept:kept.length,tried,score:base.score,outOfTime};
+  }
+
+  actions['lab-refine']=async()=>{
+    const r=await refineRound();
+    C.notice(r.kept
+      ? `Refined: ${r.kept} swap${r.kept===1?'':'s'} kept out of ${r.tried} tried. Preview score ${r.score}. Measure again for a publishable number.`
+      : `No swap out of ${r.tried} beat the current list${r.outOfTime?' in the time allowed':''}. The 99 stands.`);
+  };
+
+  actions['lab-loop']=async()=>{
+    let rounds=0,kept=0,tried=0,last=null;
+    while(rounds<MAX_ROUNDS){
+      last=await refineRound();
+      rounds+=1;kept+=last.kept;tried+=last.tried;
+      if(!last.kept)break;
+    }
+    const converged=last&&!last.kept;
+    if(preview)await keepPreview({...preview,refine:{...preview.refine,stopped:converged?'converged':'rounds',loopedAt:new Date().toISOString()}});
+    redrawRun();
+    C.notice(converged
+      ? `Looped ${rounds} round${rounds===1?'':'s'}: ${kept} swap${kept===1?'':'s'} kept from ${tried} tried, and the last round changed nothing. Measure it for a publishable score.`
+      : `Stopped after ${rounds} rounds with ${kept} swaps kept from ${tried} tried — it was still improving. Loop again to keep going.`);
+  };
+
+  /* THE REPORT, ON THE STEP THAT NAMES IT. "Simulation Report" was a label; the numbers
+     behind the score badge were in a different view, or nowhere for a preview. */
+  function reportHTML(r){
+    if(!r)return '<p>No measurement has been run on this list yet.</p>';
+    const m=r.metrics||{};
+    const row=(label,metric,suffix)=>metric&&metric.value!==null&&metric.value!==undefined
+      ? `<span>${e(label)} <strong>${e(String(metric.value))}${e(suffix||metric.unit&&(' '+metric.unit)||'')}</strong></span>` : '';
+    return `<div class="cm-count-list">
+        ${row('Score',m.score)}${row('Standard error',m.scoreStandardError)}${row('Win rate',m.winRate)}
+        ${row('Average winning turn',m.averageWinTurn)}${row('Commander cast rate',m.commanderCastRate)}
+        ${row('Average commander turn',m.averageCommanderTurn)}${row('Turn-capped games',m.incompleteGames)}
+        ${row('Mana screw',m.manaScrew)}${row('Mana flood',m.manaFlood)}${row('Dead cards by turn 8',m.deadCardsAtTurnEight)}
+        ${row('Pod experience',m.podExperience)}${row('Cards the engine could read',m.cardsTheEngineCouldRead)}
+      </div>
+      <p class="cm-muted">${e(r.protocol)} · ${(r.conditions&&r.conditions.seedCount)||'?'} seeds of ${((r.conditions&&r.conditions.gamesPerSeed)||0).toLocaleString()} games · ${((r.run&&r.run.games)||0).toLocaleString()} games in ${(((r.run&&r.run.elapsedMs)||0)/1000).toFixed(1)}s</p>
+      ${(r.perCard||[]).length?`<details class="cm-details"><summary>Per-card: what the engine drew, cast and won with (${r.perCard.length} cards)</summary><div class="cm-table-wrap"><table class="cm-table"><thead><tr><th>Card</th><th>Cast rate</th><th>Average cast turn</th><th>Dead rate</th><th>Win rate when cast</th></tr></thead><tbody>${r.perCard.slice().sort((a,b)=>a.castRate-b.castRate).slice(0,60).map(x=>`<tr><td>${e(x.name)}</td><td>${(x.castRate*100).toFixed(0)}%</td><td>${x.avgCastTurn||'—'}</td><td>${(x.deadRate*100).toFixed(0)}%</td><td>${(x.winRateWhenCast*100).toFixed(0)}%</td></tr>`).join('')}</tbody></table></div></details>`:''}
+      ${note((r.limits||[]).join(' '))}`;
+  }
+  actions['lab-report']=el=>{
+    const saved=el.dataset.deck?C.state.decks.find(x=>x.id===el.dataset.deck):null;
+    const r=saved?C.state.reports.filter(x=>x.deckId===saved.id&&x.origin==='measured').slice(-1)[0]:preview&&preview.report;
+    modal('Simulation report'+(saved?' · '+saved.name:preview?' · '+preview.name:''),reportHTML(r));
+  };
+
   actions['lab-measure']=async el=>{
     const status=$('#cm-lab-sim-status');
     const saved=el.dataset.deck?M.deck(C.state,el.dataset.deck):null;
@@ -262,23 +440,44 @@ function runPane(saved){
   const count=preview?total(preview.slots):saved?M.readiness(C.state,saved).target:0;
   const measuredSaved=saved?C.state.reports.filter(r=>r.deckId===saved.id&&r.origin==='measured').slice(-1)[0]:null;
   const measured=preview?preview.report:measuredSaved;
+  const refine=preview?preview.refine:(saved&&C.state.preferences.lastLabRun&&C.state.preferences.lastLabRun.deckId===saved.id?C.state.preferences.lastLabRun.refine:null);
   const stepState=i=>{
     if(i===0)return (leader||subject)?'complete':'active';
     if(i===1)return count===100?'complete':subject?'active':'waiting';
-    if(i===4)return measured?'complete':'waiting';
+    if(i===2)return refine&&refine.rounds?'complete':subject&&count>1?'active':'waiting';
+    if(i===3)return refine&&refine.stopped==='converged'?'complete':refine&&refine.rounds?'active':'waiting';
+    if(i===4)return measured?'complete':subject?'active':'waiting';
     if(i===5)return saved&&!preview?'complete':'waiting';
     return 'waiting';
+  };
+  /* WHAT WOULD LIGHT THIS ONE. A dark step with no explanation is a dead end; the reader
+     should never have to guess which button they have not pressed yet. */
+  const stepNote=i=>{
+    const st=stepState(i);
+    if(i===1&&subject&&count!==100)return `${count} of 100`;
+    if(i===2)return st==='waiting'?'Run the initial draft first — there has to be a 99 to refine'
+      :st==='active'?'Refine the 99: it measures the list, drops what the engine could not cast, and keeps only swaps that score better'
+      :`${refine.rounds} round${refine.rounds===1?'':'s'} · ${refine.swaps.length} swap${refine.swaps.length===1?'':'s'} kept of ${refine.tried} tried`;
+    if(i===3)return st==='waiting'?'Refine once first'
+      :st==='active'?'Loop until a round changes nothing'
+      :'A whole round found no improvement';
+    if(i===4)return st==='waiting'?'Measure this draft to produce one':st==='active'?'Not measured yet':'';
+    if(i===5)return st==='complete'?'':'Save this deck to finish';
+    return '';
   };
   const simLabel=measured?`Measured ${measured.metrics.score.value} points · ${measured.protocol}`:subject?'Not measured yet':'Build a draft first';
   const last=C.state.preferences.lastLabRun;
   const canSaveNow=Boolean(leader||preview);
-  return `<aside class="v-panel cm-run-panel" id="cm-lab-run-pane"><div class="cm-actions"><button class="v-button primary" id="cm-lab-run" type="button">Run initial draft</button>${preview?b('Measure this draft','lab-measure'):saved?b('Measure this deck','lab-measure',{deck:saved.id}):''}<span class="cm-pause-pill" id="cm-lab-sim-status">${e(simLabel)}</span></div>
+  return `<aside class="v-panel cm-run-panel" id="cm-lab-run-pane"><div class="cm-actions"><button class="v-button primary" id="cm-lab-run" type="button">Run initial draft</button>${preview?b('Measure this draft','lab-measure'):saved?b('Measure this deck','lab-measure',{deck:saved.id}):''}${preview&&count>1?b('Refine the 99','lab-refine')+b('Loop until it settles','lab-loop'):''}<span class="cm-pause-pill" id="cm-lab-sim-status">${e(simLabel)}</span></div>
     <div class="cm-lab-save-row"><button class="v-button" id="cm-lab-save" type="button" data-action="lab-save" ${canSaveNow?'':'disabled'}>Save this deck</button><span class="cm-muted">${preview?'Writes this draft to My Decks.':'Writes the commander and definition to My Decks; draft or edit the 99 any time after.'}</span></div>
-    <ol class="cm-run-steps">${STEPS.map((label,i)=>{const st=stepState(i);return `<li><span class="cm-run-orb ${st}" id="cm-step-${i}" aria-label="${st==='complete'?'Complete':st==='active'?'Active':'Waiting'}"><i></i><i></i><i></i><img src="assets/mana/G.svg?v=1" alt=""></span>${e(label)}${i===1&&subject&&count!==100?` <small class="cm-muted">· ${count} of 100</small>`:''}</li>`;}).join('')}</ol>
+    <ol class="cm-run-steps">${STEPS.map((label,i)=>{const st=stepState(i),hint=stepNote(i);
+      /* The report step is the report: its own name opens it once one exists. */
+      const name=i===4&&measured?`<button type="button" class="cm-text-button" data-action="lab-report"${saved&&!preview?` data-deck="${e(saved.id)}"`:''}>${e(label)}</button>`:e(label);
+      return `<li><span class="cm-run-orb ${st}" id="cm-step-${i}" aria-label="${st==='complete'?'Complete':st==='active'?'Active':'Waiting'}"><i></i><i></i><i></i><img src="assets/mana/G.svg?v=1" alt=""></span><span class="cm-run-step-body">${name}${hint?`<small class="cm-muted">${e(hint)}</small>`:''}</span></li>`;}).join('')}</ol>
     <div id="cm-lab-result">${preview?`<h3>${e(preview.name)} <span class="cm-badge">Draft · not saved</span></h3>${note(preview.method)}<p>${count} of 100 cards${preview.estimatedPrice!==null&&preview.estimatedPrice!==undefined?` · about ${e(C.money(preview.estimatedPrice))} at recorded prices`:''}${preview.unknownPrices?` · ${preview.unknownPrices} without a price`:''}.</p>${(preview.issues||[]).map(x=>`<p class="cm-muted">${e(x)}</p>`).join('')}<div class="cm-actions">${b('Review draft cards','lab-review')}${b('Discard draft','lab-discard')}</div>`
       :saved?`<h3>${e(saved.name)} <span class="cm-badge good">Saved</span></h3>${note(last.method)}${(last.issues||[]).map(x=>`<p class="cm-muted">${e(x)}</p>`).join('')}<div class="cm-actions">${b('Open in My Decks','deck',{deck:saved.id})}${b('Review deck cards','deck-cards',{deck:saved.id})}${b('Reports & advice','deck-evidence',{deck:saved.id})}</div>`
       :'<p class="cm-muted">Run initial draft builds a list you can review and measure here. Nothing reaches My Decks until you choose Save this deck; no cards are purchased, owned or reserved by any step.</p>'}</div>
-    <p class="cm-muted">Measuring runs the engine in the background on the published protocol — six seeds of 20,000 games — and stores a report you can compare with another run of the same protocol. The two refinement steps need a candidate search that is not built yet, so they stay waiting. Finalize the saved list in My Decks when you accept it.</p></aside>`;
+    <p class="cm-muted">Measuring runs the engine in the background on the published protocol — six seeds of 20,000 games — and stores a report you can compare with another run of the same protocol. Refining searches on the quick protocol instead (one seed of 2,000 games, fast enough to try dozens of swaps and too small to publish): it drops the cards the engine drew and could not cast, tries cards the graph joins to your commander, and keeps a swap only when the score beats the old one by more than that run's own error. A kept swap changes the hundred, so the published report is dropped with it — measure again when the list settles. Finalize the saved list in My Decks when you accept it.</p></aside>`;
 }
 
 actions['lab-help']=()=>modal('Explore · Test · Decide',`<h3>Built around your game</h3><p>Choose a commander from the legal catalog — every one of them, by name, printed variant name, play style, colour identity or rank — or begin with a list you already have. Deck Definition records your hard limits and play preferences.</p><p><strong>Run initial draft</strong> builds a starting list from card metadata and keeps it here as a preview; a total price cap is planned so the list completes, or it tells you what cap would. <strong>Measure</strong> runs the simulator on the preview or a saved deck — real games, in the background, on the same protocol as every published rating — fetching any card text the engine lacks first. <strong>Save this deck</strong> is the only step that writes to My Decks, and it works from the commander alone.</p><p>The simulator's three opponents are sampled archetype profiles, not four real decks with hands and boards, so a score compares lists under one model rather than predicting an evening. Every report carries that caveat with it.</p>${note('No AI API key or paid model call is required for current workflows. Reports belong to the exact list they describe.')}`);

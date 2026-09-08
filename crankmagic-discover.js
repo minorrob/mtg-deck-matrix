@@ -227,6 +227,13 @@
       const bracket = BRACKETS[c.bracket || (c.gameChanger || rec.gameChanger ? 'gameChanger' : '')]
         || ['No bracket restriction', 'Legal at every bracket.'];
       const buy = rec.buy || c.buy || C.buyLink(rec.name ? rec : c);
+      /* WHERE TO BUY IT AND WHERE TO PUT IT, on the line under the price rather than in a
+         menu two screens away. Card Kingdom has no product ids here, so it gets its own
+         search by name, which lands on the card. */
+      const kingdom = 'https://www.cardkingdom.com/catalog/search?search=header&filter%5Bname%5D=' + encodeURIComponent(c.name);
+      const cardId = CrankCatalog.key(c.name);
+      const groups = C.state.groups || [];
+      const draftDecks = (C.state.decks || []).filter((d) => !d.archived && d.status === 'draft');
       /* The frame around the art takes the card's identity: one colour for one colour,
          gold for three or more, a quiet grey for colourless. */
       const ci = String(c.ci || (rec.colorIdentity || []).join('')).split('').filter(Boolean);
@@ -240,7 +247,19 @@
             <p class="cm-card-view-cost">${cost} ${C.colors(String(c.ci || (rec.colorIdentity || []).join('')).split(''))}</p>
             ${rec.rarity || rec.setName ? `<p class="cm-muted">${e([rec.rarity, rec.setName].filter(Boolean).join(' · '))}${Number.isFinite(rec.price) && rec.price > 0 ? ` · ${e(C.money(rec.price))}` : ''}</p>` : ''}
             <p class="cm-card-view-bracket"><span class="cm-badge${bracket[0] === 'Game Changer' ? ' warn' : ''}">${e(bracket[0])}</span> <small>${e(bracket[1])}</small></p>
-            <p><a class="cm-text-button" href="${e(buy)}" target="_blank" rel="noopener">Open on TCGplayer ↗</a>${Number.isFinite(c.price) && c.price > 0 && !Number.isFinite(rec.price) ? ` <small class="cm-muted">${e(C.money(c.price))}</small>` : ''}</p>
+            <div class="cm-card-view-links">
+              <a class="cm-text-button" href="${e(buy)}" target="_blank" rel="noopener">Buy at TCGplayer ↗</a>
+              <a class="cm-text-button" href="${e(kingdom)}" target="_blank" rel="noopener">Buy at Card Kingdom ↗</a>
+              <details class="cm-inline-menu" name="cm-card-view-menu"><summary class="cm-text-button">Add to Collection</summary><div class="cm-menu cm-inline-menu-body">
+                <button type="button" data-action="add-card" data-card="${e(cardId)}">Your library…</button>
+                ${groups.map((g) => `<button type="button" data-action="discover-to-group" data-card="${e(c.name)}" data-group="${e(g.id)}">${e(g.name)}</button>`).join('')
+                  || '<p class="cm-muted">No collection groups yet.</p>'}
+              </div></details>
+              <details class="cm-inline-menu" name="cm-card-view-menu"><summary class="cm-text-button">Add to Deck</summary><div class="cm-menu cm-inline-menu-body">
+                ${draftDecks.map((d) => `<button type="button" data-action="discover-to-deck" data-card="${e(c.name)}" data-deck="${e(d.id)}">${e(d.name)}</button>`).join('')
+                  || '<p class="cm-muted">No draft decks. A finalized list changes through its own page.</p>'}
+              </div></details>
+            </div>
           </div>
         </div>
         ${rec.oracleText ? `<p class="cm-oracle cm-card-view-oracle">${e(rec.oracleText)}</p>` : ''}
@@ -296,6 +315,36 @@
     $('#cm-breadth').addEventListener('input', (ev) => { breadth = Number(ev.target.value); $('#cm-breadth-out').textContent = breadth; graph?.setBreadth(breadth); });
 
     actions['facet-drop'] = (el) => { selection = CrankFacets.toggle(selection, el.dataset.key, el.dataset.value); redrawTicks(); refresh(currentFocus()); };
+    /* Adding a card from Discover, without leaving the graph. A collection group takes it
+       as a planned entry; a draft deck takes it as a main slot. A finalized list is not
+       offered, because changing one is a reviewed act on its own page and not a one-tap
+       side effect of browsing. */
+    async function cardFor(name) {
+      const known = C.catalog.exact(name);
+      if (!known) throw Error(name + ' is not in the catalog. Open it and use Verify first.');
+      return C.catalog.details(known).catch(() => known);
+    }
+    actions['discover-to-group'] = async (el) => {
+      const group = C.state.groups.find((g) => g.id === el.dataset.group);
+      if (!group) throw Error('That collection group no longer exists.');
+      const card = await cardFor(el.dataset.card);
+      if (group.entries.some((r) => r.cardId === card.id)) throw Error(card.name + ' is already planned in ' + group.name + '.');
+      await C.commit({type: 'groupEntries', groupId: group.id, cards: [card],
+        entries: [...group.entries.map((r) => ({cardId: r.cardId, quantity: r.quantity, printing: r.printing})), {cardId: card.id, quantity: 1}],
+        replace: true, summary: `Added ${card.name} to ${group.name}`}, {renderView: false});
+      C.notice(`${card.name} added to ${group.name}. Planning a card is not owning it.`);
+    };
+    actions['discover-to-deck'] = async (el) => {
+      const deck = C.M.deck(C.state, el.dataset.deck);
+      if (deck.status !== 'draft') throw Error('Only a draft list can take a card this way.');
+      const card = await cardFor(el.dataset.card);
+      if (deck.slots.some((r) => r.cardId === card.id && r.purpose === 'main')) throw Error(card.name + ' is already in ' + deck.name + '.');
+      const slots = deck.slots.filter((r) => r.purpose === 'main').map((r) => ({cardId: r.cardId, quantity: r.quantity, purpose: 'main', printing: r.printing, pinned: r.pinned}));
+      await C.commit({type: 'batch', commands: [{type: 'cards', cards: [card]},
+        {type: 'editDeck', deckId: deck.id, slots: [...slots, {cardId: card.id, quantity: 1, purpose: 'main'}]}],
+        summary: `Added ${card.name} to ${deck.name}`}, {renderView: false});
+      C.notice(`${card.name} added to ${deck.name} — ${slots.length + 1} cards in the list now.`);
+    };
     actions['facet-term'] = (el) => { selection = CrankFacets.toggle(selection, el.dataset.key, el.dataset.value); redrawTicks(); refresh(currentFocus()); };
     actions['facet-clear'] = () => { selection = {}; redrawTicks(); refresh(currentFocus()); };
     actions['graph-mode'] = (el) => {
