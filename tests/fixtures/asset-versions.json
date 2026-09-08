@@ -134,8 +134,8 @@
       "sha": "8e261856adfcb4eb"
     },
     "crankmagic-app.js": {
-      "version": 56,
-      "sha": "2fc0989fc05b3e40"
+      "version": 58,
+      "sha": "5c077b20370b9303"
     },
     "crankmagic-assets.js": {
       "version": 10,
@@ -202,16 +202,16 @@
       "sha": "81ae2c4b7634afa7"
     },
     "crankmagic-sw.js": {
-      "version": 56,
-      "sha": "14cfe55a7459e874"
+      "version": 58,
+      "sha": "aa1f019700c6d87a"
     },
     "crankmagic-tour.js": {
       "version": 1,
       "sha": "3d7c77f21fe91edc"
     },
     "crankmagic.css": {
-      "version": 33,
-      "sha": "b39a569545b34d6b"
+      "version": 34,
+      "sha": "c0597d0338cf66c6"
     },
     "custom-model.js": {
       "version": 3,
@@ -378,8 +378,8 @@
       "sha": "e0645dacaa692f32"
     },
     "scryfall-client.js": {
-      "version": 8,
-      "sha": "324a8ee230a27dec"
+      "version": 9,
+      "sha": "73bac4a0e5ba03f2"
     },
     "shop-export.js": {
       "version": 1,
