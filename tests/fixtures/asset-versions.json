@@ -13,6 +13,10 @@
       "version": 129,
       "sha": "35bcc91d4a367203"
     },
+    "assets/crankmagic/apple-touch-icon.png": {
+      "version": 1,
+      "sha": "ee62ab991aa3e3cb"
+    },
     "assets/crankmagic/commander-atraxa.webp": {
       "version": 1,
       "sha": "d03485ee89d314db"
@@ -134,8 +138,8 @@
       "sha": "8e261856adfcb4eb"
     },
     "crankmagic-app.js": {
-      "version": 16,
-      "sha": "de2d8712a89e3fa6"
+      "version": 17,
+      "sha": "63ad916057c1715d"
     },
     "crankmagic-assets.js": {
       "version": 5,
@@ -150,20 +154,20 @@
       "sha": "4c937886d914b612"
     },
     "crankmagic-collection.js": {
-      "version": 4,
-      "sha": "2efb4c9a56b268c1"
+      "version": 5,
+      "sha": "9c90710ff8d9936a"
     },
     "crankmagic-decks.js": {
-      "version": 5,
-      "sha": "4792f50282fd8610"
+      "version": 6,
+      "sha": "43f75887d83fed15"
     },
     "crankmagic-design.css": {
       "version": 1,
       "sha": "09ec296518cdef75"
     },
     "crankmagic-discover.js": {
-      "version": 7,
-      "sha": "380ccddf748dd15a"
+      "version": 8,
+      "sha": "ff9467181ccc30b1"
     },
     "crankmagic-evidence.js": {
       "version": 2,
@@ -186,8 +190,8 @@
       "sha": "c4e901110ba4d6a4"
     },
     "crankmagic-lab.js": {
-      "version": 7,
-      "sha": "3306b79fd15cdcfe"
+      "version": 8,
+      "sha": "c8adf05ebdad4507"
     },
     "crankmagic-plan-editor.js": {
       "version": 1,
@@ -202,12 +206,12 @@
       "sha": "2212f13d71f11dfb"
     },
     "crankmagic-sw.js": {
-      "version": 16,
-      "sha": "81819b6b2a3d4ff5"
+      "version": 17,
+      "sha": "ff513c049e7584b5"
     },
     "crankmagic.css": {
-      "version": 8,
-      "sha": "a9a1e98d79a3b1e6"
+      "version": 9,
+      "sha": "fe14b5eb18053872"
     },
     "custom-model.js": {
       "version": 3,
