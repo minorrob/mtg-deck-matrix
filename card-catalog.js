@@ -51,8 +51,19 @@
   function matchesMechanic(c,label){const entry=MECHANICS.find(([l])=>folded(l)===folded(label));if(!entry)return folded(haystack(c)).includes(folded(label));return entry[1].test(haystack(c));}
   /* The labels a card earns, for "plays as" lines and picker rows. */
   function playStyles(c){return MECHANICS.filter(([l])=>matchesMechanic(c,l)).map(([l])=>l);}
-  async function create(options){const byName=new Map(),byId=new Map();let graph=null,universeDate='',rankDate='',graphLoading=null;const fetcher=options.fetchImpl||fetch;
-    function add(raw){const prior=byName.get(folded(raw.name)),next=normalize(raw,prior);byName.set(folded(next.name),next);byId.set(next.id,next);return next;}
+  async function create(options){const byName=new Map(),byAlias=new Map(),byId=new Map();let graph=null,universeDate='',rankDate='',graphLoading=null;const fetcher=options.fetchImpl||fetch;
+    /* THE NAME ON THE CARD IN YOUR HAND. byName is keyed on the ORACLE name, which is the
+       name the rules use and not always the name printed on the card: a Secret Lair prints
+       Jodah, the Unifier as "SpongeBob SquarePants". search() has matched flavour names
+       for a while, but resolve() and exact() did not -- they missed locally and fell
+       through to Scryfall, so a pasted list or an import carrying a printed name needed
+       the network, and offline it simply failed. The catalog ships all 513 of them; it
+       should answer for them too. Kept in a SEPARATE map so an oracle name always wins:
+       a flavour name can never shadow a real card. */
+    function add(raw){const prior=byName.get(folded(raw.name)),next=normalize(raw,prior);byName.set(folded(next.name),next);byId.set(next.id,next);
+      for(const alias of next.flavorNames||[]){const a=folded(alias);if(a&&!byName.has(a))byAlias.set(a,next);}
+      return next;}
+    const named=name=>{const n=folded(name);return byName.get(n)||byAlias.get(n)||null;};
     async function load(url){const cached=await options.repository?.cacheGet(url);try{const response=await fetcher(url,{cache:'default'});if(!response.ok)throw Error('HTTP '+response.status);const data=await response.json();options.repository?.cachePut(url,data).catch(()=>{});return data;}catch(error){if(cached)return cached;throw Error('The public card catalog is unavailable offline. Reconnect once to download it, or import a backup containing your cards. '+error.message);}}
     const settled=await Promise.allSettled([load(options.urls.universe),load(options.urls.cards),load(options.urls.facts),options.urls.ranks?load(options.urls.ranks):Promise.resolve(null),options.urls.flavorNames?load(options.urls.flavorNames):Promise.resolve(null)]);
     if(settled[0].status==='fulfilled'){const data=settled[0].value;universeDate=data.generatedAt;for(const [name,ci,rarity,mv,type,rank,commander] of data.cards)add({name,ci,rarity,mv,type,rank,commander:!!commander,verified:true,legalities:{commander:'legal'},updatedAt:universeDate});}
@@ -106,7 +117,7 @@
       const within=colors&&colors.length?new Set(colors):null,q=folded(query),terms=likeTerms(target);
       const out=[];
       for(const c of byId.values()){
-        if(q&&!folded(c.name).includes(q)&&!(c.flavorName&&folded(c.flavorName).includes(q)))continue;
+        if(q&&!folded(c.name).includes(q)&&!(c.flavorNames||[]).some(f=>folded(f).includes(q)))continue;
         if(within&&!(c.colorIdentity||[]).every(x=>within.has(x)))continue;
         if(c.legalities&&c.legalities.commander==='banned')continue;
         const row=likeness(target,terms,c);
@@ -114,7 +125,7 @@
       }
       return out.sort((a,b)=>b.score-a.score||a.card.name.localeCompare(b.card.name)).slice(0,limit);
     }
-    async function resolve(value,{signal,printing}={}){const name=String(value||'').trim();if(printing?.set&&printing?.collector){const found=await options.client.bySetNumber(printing.set,printing.collector,{signal});if(!found)return null;if(folded(found.name)!==folded(name))throw Error(`That printing is ${found.name}, not ${name}. Review the row before import.`);return add({...found,collector:printing.collector,verified:true,source:'Scryfall exact printing',updatedAt:new Date().toISOString()});}const local=byName.get(folded(name));if(local)return local;if(/^https?:\/\//i.test(name)){const result=await options.link.resolveLink(name,{client:options.client,allowManual:false,signal});return result.card?add({...result.card,verified:true,source:name,updatedAt:new Date().toISOString()}):null;}const found=await options.client.named(name,{exact:true,signal});return found?add({...found,verified:true,source:'Scryfall exact name',updatedAt:new Date().toISOString()}):null;}
+    async function resolve(value,{signal,printing}={}){const name=String(value||'').trim();if(printing?.set&&printing?.collector){const found=await options.client.bySetNumber(printing.set,printing.collector,{signal});if(!found)return null;if(folded(found.name)!==folded(name))throw Error(`That printing is ${found.name}, not ${name}. Review the row before import.`);return add({...found,collector:printing.collector,verified:true,source:'Scryfall exact printing',updatedAt:new Date().toISOString()});}const local=named(name);if(local)return local;if(/^https?:\/\//i.test(name)){const result=await options.link.resolveLink(name,{client:options.client,allowManual:false,signal});return result.card?add({...result.card,verified:true,source:name,updatedAt:new Date().toISOString()}):null;}const found=await options.client.named(name,{exact:true,signal});return found?add({...found,verified:true,source:'Scryfall exact name',updatedAt:new Date().toISOString()}):null;}
     /* THE LOWEST-COST PAPER PRINTING. A Scryfall name lookup answers with one printing and
        that printing's price, which is whichever edition Scryfall considers canonical -- often
        not the cheap one. A buyer wants the cheap one. One prints search, cheapest first,
@@ -157,7 +168,7 @@
       return {hydrated,missing};
     }
     async function loadGraph(){if(graph)return graph;if(!graphLoading)graphLoading=load(options.urls.graph).then(data=>{graph=data;for(const c of data.cards){const prior=byName.get(folded(c.name));add({...c,oracleId:c.id,legalities:prior?.legalities||{commander:'legal'},verified:true});}return data;}).catch(error=>{graphLoading=null;throw error;});return graphLoading;}
-    return {add,search,similar,resolve,details,cheapest,hydrate,loadGraph,exact:name=>byName.get(folded(name))||null,get:id=>byId.get(id)||null,all:()=>[...byId.values()],load,universeDate,rankDate,available:()=>byId.size};
+    return {add,search,similar,resolve,details,cheapest,hydrate,loadGraph,exact:named,get:id=>byId.get(id)||named(id),all:()=>[...byId.values()],load,universeDate,rankDate,available:()=>byId.size};
   }
   return {key,folded,normalize,safeURL,create,MECHANICS,matchesMechanic,playStyles};
 });

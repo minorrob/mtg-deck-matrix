@@ -401,7 +401,16 @@
     const power = estimatePower(card, cmc, typeLine, rawText);
     const toughness = estimateToughness(card, cmc, typeLine, rawText);
     const tokenMakers = (text.match(/create (?:a|an|two|three|x|\d+)[^.]{0,40}token/g) || []).length;
-    const rampMatch = /add \{[wubrgc]\}\{[wubrgc]\}|search your library for (?:a|up to two|two) (?:basic )?land/.test(text) ? 2 : 1;
+    /* HOW MANY LANDS A FETCH ACTUALLY FETCHES. The old alternation read "search your
+       library for (a|up to two|two) land" as two mana, which put `a` -- one land -- in
+       with the two-land clauses: 31 cards in the catalog, Rampant Growth, Solemn
+       Simulacrum and Sakura-Tribe Elder among them, each adding two permanent mana
+       sources for fetching one. It was inconsistent in both directions, because it also
+       required the literal word "land": Nature's Lore fetches one and read 1 (right, by
+       accident), while Skyshroud Claim, Nissa's Pilgrimage and Archaeomancer's Map fetch
+       TWO and read 1, because they name a basic land type instead. So the count now comes
+       from the number word, and the type it names may be "land" or any basic. */
+    const rampMatch = /add \{[wubrgc]\}\{[wubrgc]\}|search your library for (?:up to two|two) [^.]{0,40}?(?:land|plains|island|swamp|mountain|forest)/.test(text) ? 2 : 1;
     const entersWithCountersMatch = /enters(?: the battlefield)? with (a|an|one|two|three|four|five|\d+)[^.]{0,20}\+1\/\+1 counters?/.exec(text);
     const addsCounterMatch = /put[s]? (?:a|an|one|two|three|four|five|\d+|x)[^.]{0,20}\+1\/\+1 counters? on/.exec(text);
     const COUNTER_WORDS = {a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5};
@@ -787,7 +796,11 @@
       library = shuffle(deck.library, rng);
     }
     library = library.slice(7);
-    for (let bottom = 0; bottom < mulligans && hand.length; bottom += 1) {
+    /* RULE 103.5c. Commander gives the first mulligan free: you take a new seven and
+       put nothing on the bottom for it. Only the second and later mulligans cost a card.
+       The engine bottomed one for every mulligan including the first, so every hand that
+       had been mulliganed at all was a card short of a legal one. */
+    for (let bottom = 0; bottom < mulligans - 1 && hand.length; bottom += 1) {
       let worst = 0;
       hand.forEach((index, position) => {
         if (profiles[index].cmc > profiles[hand[worst]].cmc) worst = position;
@@ -937,7 +950,12 @@
     const maxTurns = config.maxTurns || 16;
     for (let turn = 1; turn <= maxTurns && !won && !lost; turn += 1) {
       endTurn = turn;
-      if (turn > 1 || (seed & 1) === 0) {
+      /* RULE 103.8c. In a multiplayer game nobody skips their first draw -- the
+         starting-player-skips-a-draw rule is two-player only. The engine used to draw on
+         turn one for even seeds and not for odd ones, which is a coin flip between "on
+         the play" and "on the draw" imported from a format this is not. Half of every
+         published measurement was played a card down. */
+      {
         const card = library.shift();
         if (card === undefined) {
           lost = true;
@@ -1533,6 +1551,7 @@
       winRate: 0,
       avgWinTurn: 0,
       avgEndTurn: 0,
+      endTurnCounts: [],
       screwPct: 0,
       floodPct: 0,
       mulliganRate: 0,
@@ -1568,6 +1587,14 @@
       winRate: totals.wins / games,
       avgWinTurn: totals.wins ? totals.winTurnSum / totals.wins : 0,
       avgEndTurn: totals.endTurnSum / games,
+      /* Trimmed to the turns that actually happened, so the reader is not handed forty
+         zeroes to find a shape in. */
+      endTurnCounts: (() => {
+        const counts = totals.endTurnCounts || [];
+        let last = counts.length - 1;
+        while (last > 0 && !counts[last]) last -= 1;
+        return counts.slice(0, last + 1).map((games_, turn) => ({turn, games: games_})).filter((row) => row.games > 0);
+      })(),
       screwPct: totals.screwed / games,
       floodPct: totals.flooded / games,
       mulliganRate: totals.mulligans / games,
@@ -1796,6 +1823,11 @@
       wins: 0,
       winTurnSum: 0,
       endTurnSum: 0,
+      /* WHETHER "TURN 12.5 ON AVERAGE" IS ONE HUMP OR TWO. A mean end turn cannot tell a
+         deck that reliably ends on twelve from one that ends on seven or seventeen, and
+         those are different decks. One integer per turn, kept for the price of an
+         increment. */
+      endTurnCounts: new Array(41).fill(0),
       screwed: 0,
       flooded: 0,
       mulligans: 0,
@@ -1827,6 +1859,7 @@
       const result = playGame(deck, table, config, hashSeed(seed, index), cardStats);
       totals.games += 1;
       totals.endTurnSum += result.endTurn;
+      totals.endTurnCounts[Math.min(result.endTurn, totals.endTurnCounts.length - 1)] += 1;
       totals.mulligans += result.mulligans;
       totals.interactionSum += result.interactionRate;
       totals.deadSum += result.deadCardsAtEight;

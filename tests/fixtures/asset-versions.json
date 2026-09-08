@@ -10,8 +10,8 @@
       "sha": "a18e9d2a0d56618a"
     },
     "app.js": {
-      "version": 130,
-      "sha": "d478f2dde54753f2"
+      "version": 131,
+      "sha": "d16acdfd4fc08759"
     },
     "assets/crankmagic/commander-atraxa.webp": {
       "version": 1,
@@ -78,8 +78,8 @@
       "sha": "20ae1f37aec98908"
     },
     "card-catalog.js": {
-      "version": 7,
-      "sha": "d60711e26b712317"
+      "version": 8,
+      "sha": "9b6014b968ccd7ec"
     },
     "card-classify.js": {
       "version": 3,
@@ -134,8 +134,8 @@
       "sha": "8e261856adfcb4eb"
     },
     "crankmagic-app.js": {
-      "version": 51,
-      "sha": "2cf26a4bd6249ca3"
+      "version": 52,
+      "sha": "a00f7f3a8b9edf2e"
     },
     "crankmagic-assets.js": {
       "version": 10,
@@ -186,8 +186,8 @@
       "sha": "0cec9f09dca45e56"
     },
     "crankmagic-lab.js": {
-      "version": 20,
-      "sha": "276eabe4b0796199"
+      "version": 21,
+      "sha": "47093bda55124d40"
     },
     "crankmagic-plan-editor.js": {
       "version": 1,
@@ -198,16 +198,16 @@
       "sha": "23a8f6e75dd90cbe"
     },
     "crankmagic-sim.js": {
-      "version": 16,
-      "sha": "fd100145b13cec71"
+      "version": 17,
+      "sha": "81ae2c4b7634afa7"
     },
     "crankmagic-sw.js": {
-      "version": 51,
-      "sha": "b037554ce8e5c789"
+      "version": 52,
+      "sha": "a4178e31da1880d8"
     },
     "crankmagic.css": {
-      "version": 28,
-      "sha": "3bd34b0e6a31bd87"
+      "version": 29,
+      "sha": "cad9c380be601504"
     },
     "custom-model.js": {
       "version": 3,
@@ -254,8 +254,8 @@
       "sha": "395de95bd103a897"
     },
     "data/deck-ratings.json": {
-      "version": 7,
-      "sha": "77ca5ad8d9696ee3"
+      "version": 8,
+      "sha": "ac5bada8b4a96db1"
     },
     "data/deck-swaps.json": {
       "version": 2,
@@ -282,8 +282,8 @@
       "sha": "5f58e9270e04b9a0"
     },
     "data/simulation-summary.json": {
-      "version": 6,
-      "sha": "c33784cdb70b5b93"
+      "version": 7,
+      "sha": "24f84c17c173f08c"
     },
     "deck-audit.js": {
       "version": 1,
@@ -338,8 +338,8 @@
       "sha": "0b348802ff31d3d0"
     },
     "graph-page.js": {
-      "version": 33,
-      "sha": "01e19293cafb1853"
+      "version": 34,
+      "sha": "047cc6fb14d816d7"
     },
     "guide-measured.js": {
       "version": 1,
@@ -390,8 +390,8 @@
       "sha": "6a8eceea117da582"
     },
     "sim-engine.js": {
-      "version": 11,
-      "sha": "454ece70b4b3fc6b"
+      "version": 12,
+      "sha": "c44d69e68609103b"
     },
     "sim-lenses.js": {
       "version": 2,
@@ -422,8 +422,8 @@
       "sha": "76caf7a8585da1a3"
     },
     "viewer.js": {
-      "version": 38,
-      "sha": "10f262a6f8532e83"
+      "version": 39,
+      "sha": "216770bd88e22a90"
     },
     "xlsx-reader.js": {
       "version": 2,

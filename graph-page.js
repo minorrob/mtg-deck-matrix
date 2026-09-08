@@ -1402,7 +1402,7 @@
     .then(function (j) { GRAPH_LENSES = (j && j.lenses) || []; mergeLenses(); });
 
   Promise.all([
-    fetch("data/deck-ratings.json?v=7", {cache: "default"}).then(function (r) { return r.ok ? r.json() : null; }),
+    fetch("data/deck-ratings.json?v=8", {cache: "default"}).then(function (r) { return r.ok ? r.json() : null; }),
     fetch("data/archive/master-v2.json?v=2", {cache: "default"}).then(function (r) { return r.ok ? r.json() : null; })
   ]).catch(function () { return [null, null]; })
     .then(function (parts) {
