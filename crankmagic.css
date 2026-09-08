@@ -191,3 +191,54 @@
   .cm-picker-choose{min-height:36px;display:flex;flex-direction:column;justify-content:center}
   .cm-picker-row .cm-text-button{min-height:36px;display:inline-flex;align-items:center}
 }
+
+/* THE PAUSE PILL BELONGS TO THE CANVAS, NOT THE HEADER. Its x position is the wordmark's
+   right edge, which on a desktop parks it just past 'CrankMagic' and clear of the tail.
+   On a phone the wordmark ends near the middle of a 390px bar, so the same rule leaves a
+   button apparently floating in the centre of the header with nothing to own it. Pin it
+   to the top right of the animation container instead, and shrink it back to the pill it
+   is -- 32px still clears the 30px floor the tap-target rule was written for. */
+@media(max-width:760px){
+  #matrix-v2 .v-aether-toggle{left:auto;right:0;top:0;opacity:.45}
+  #matrix-v2 .v-aether-toggle:focus-visible,#matrix-v2 .v-aether-toggle[aria-label="Resume aether animation"]{opacity:1}
+}
+@media(max-width:760px) and (pointer:coarse){
+  #matrix-v2 .v-aether-toggle{width:32px;height:32px;border-radius:8px}
+}
+
+/* THE SHOP ON A CONVENTION FLOOR. One row of controls, no page head, no stat ribbon, and
+   a Buy button on the row rather than behind a menu and a form. Everything here is inside
+   the phone breakpoint; the desktop table is unchanged. */
+.cm-shop-bar{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:10px 0}
+#matrix-v2 .cm-shop-bar .v-button{min-height:38px;padding:7px 11px;font-size:13px;white-space:nowrap}
+#matrix-v2 .cm-shop-bar .cm-shop-search-btn{min-width:38px;padding:0;justify-content:center;font-size:16px}
+.cm-shop-search{margin:0 0 12px}
+#matrix-v2 .cm-table-shop .cm-row-buy{min-height:34px;padding:4px 13px;font-size:13px;font-weight:700}
+#matrix-v2 .cm-table-shop .cm-row-actions{min-height:34px;min-width:32px;padding:4px 8px;font-size:14px}
+.cm-table-shop td.cm-row-actions-cell{white-space:nowrap;vertical-align:middle}
+#matrix-v2 .cm-table-shop .cm-row-buy+.cm-row-actions{margin-left:5px}
+@media(max-width:640px){
+  /* The five shop columns plus Buy have to fit inside 375px without a sideways scroll,
+     so the table gives up the 90px minimum every other column keeps and the name column
+     its 190px, and takes fixed widths instead: everything but the card name is a short
+     token, and the name gets whatever is left. */
+  .cm-table-shop{table-layout:fixed;width:100%}
+  .cm-table-shop th,.cm-table-shop td{min-width:0;padding:9px 4px;font-size:12px;vertical-align:middle;overflow-wrap:anywhere}
+  .cm-table-shop th{font-size:10px}
+  .cm-table-shop td:first-child,.cm-table-shop th:first-child{min-width:0;padding-left:0;width:auto}
+  .cm-table-shop td:nth-child(2),.cm-table-shop th:nth-child(2){width:34px}
+  .cm-table-shop td:nth-child(3),.cm-table-shop th:nth-child(3){width:58px}
+  .cm-table-shop td:nth-child(4),.cm-table-shop th:nth-child(4){width:36px}
+  .cm-table-shop td:nth-child(5),.cm-table-shop th:nth-child(5){width:50px}
+  .cm-table-shop td:last-child,.cm-table-shop th:last-child{min-width:0;width:78px;padding-right:0}
+  .cm-table-shop .cm-colors{flex-wrap:wrap;gap:2px}
+  .cm-table-shop .cm-card-name{font-size:12px;line-height:1.3;min-height:34px;align-items:center}
+  #matrix-v2 .cm-table-shop .cm-row-buy{min-height:34px;padding:4px 9px;font-size:12px}
+  #matrix-v2 .cm-table-shop .cm-row-actions{min-height:34px;min-width:26px;padding:4px 5px}
+  #matrix-v2 .cm-shop-bar .v-button{min-height:36px;padding:6px 10px;font-size:12px}
+  #matrix-v2 .cm-shop-bar .cm-shop-search-btn{min-width:36px}
+}
+/* Rarity as its initial, coloured the way the set symbol is: at a booth the letter is
+   what a player is checking against the seller's binder tab. */
+.cm-rarity{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;font-size:11px;font-weight:700;color:#10141d;background:#b9b3a8}
+.cm-rarity-U{background:#c3ced9}.cm-rarity-R{background:#d9be6a}.cm-rarity-M{background:#e08750}.cm-rarity-S{background:#c8a2d8}.cm-rarity-B{background:#8fbfa4}
