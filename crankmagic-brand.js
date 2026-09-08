@@ -92,7 +92,13 @@
   width=Math.max(1,b.width);height=Math.min(b.height+24,root.querySelector('.v-top').getBoundingClientRect().bottom-b.top-1);
   canvas.parentElement.style.height=height+'px';
   start=s.left-b.left;join=Math.min(width-18,lastLine.right-b.left+4);end=Math.min(width-4,join+230);
-  axis=lastLine.top-b.top+lastLine.height/2;base=axis;radius=lastLine.height/2+1.3;pitch=Math.max(235,(join-start)/1.35);
+  // The coil rides the SEAM between the wordmark and the subline rather than the middle
+  // of the subline. Centred on the subline it drew the main strand straight through the
+  // words; on the seam it passes between 'CrankMagic' and the sentence under it, which is
+  // where a wisp belongs. Anchored to the FIRST line so a wrapped subline does not drag it
+  // down a row -- the tail still ends at the last line, which is what `join` measures.
+  const firstLine=lines[0]||s;
+  axis=firstLine.top-b.top;base=axis;radius=lastLine.height/2+1.3;pitch=Math.max(235,(join-start)/1.35);
   rise=lines.length>1?Math.min(13,lastLine.height-3):24;
   // Pause lives beside the wordmark, so it never covers the dissolving tail.
   const name=block.querySelector('.v-brand'),nameRange=document.createRange();nameRange.selectNodeContents(name);

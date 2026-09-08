@@ -861,6 +861,16 @@
           profile.produces.forEach((color) => { sources[color] += 1; });
         }
         cast.add(played);
+        /* A LAND DROP IS THE CARD BEING PLAYED. `cast` already knew that -- it is why a
+           land never counted as dead -- but the counter did not, so all 36 lands in a
+           hundred read "0% cast, 0% dead" and the table's whole visible half was zeros.
+           Counted here, a land's rate answers a real question: how often a drawn copy
+           actually reached the battlefield rather than sitting behind a colour it could
+           not use or a drop already spent. */
+        if (cardStats) {
+          const stat = cardStats.get(profile.name);
+          if (stat) { stat.cast += 1; stat.castTurnTotal += turn; }
+        }
       } else if (turn <= 6 && lands < 5) {
         // Only a drop missed while still short on mana is screw; running out of
         // lands in hand after five are already down is just a normal curve.
@@ -933,6 +943,14 @@
           deathDrain += commanderProfile.death.drain;
           deathDraw += commanderProfile.death.draw;
           resolveCountersAndProliferate(commanderProfile);
+          /* THE COMMANDER'S CAST IS A CAST. This branch casts from the command zone and
+             returns before reaching the cast bookkeeping below, so the per-card table
+             reported 0% for the one card the header reports at 99.98% -- the single most
+             obviously wrong row in the readout. */
+          if (cardStats) {
+            const stat = cardStats.get(commanderProfile.name);
+            if (stat) { stat.cast += 1; stat.castTurnTotal += turn; }
+          }
           continue;
         }
         if (bestPosition < 0) break;
@@ -1044,7 +1062,26 @@
         measuredTurns += 1;
         if (heldAnswers > 0) interactionTurns += 1;
       }
-      if (turn === 8) deadCardsAtEight = hand.filter((index) => !castable(profiles[index], lands + rocks, sources) && !profiles[index].isLand).length;
+      if (turn === 8) {
+        const stranded = hand.filter((index) => !castable(profiles[index], lands + rocks, sources) && !profiles[index].isLand);
+        deadCardsAtEight = stranded.length;
+        /* THE SAME FILTER, KEPT PER CARD. deadCardsAtEight has always been counted here and
+           thrown away as a single number. Which cards those were is the one per-card figure
+           that separates one nonland from another in this model: cast rate cannot, because a
+           game runs long enough that essentially every drawn spell is eventually cast, so it
+           sits at 99-100% for the whole list and ranks nothing. Being stuck in hand on turn
+           eight is a real, varying fault -- too expensive, or off-colour for these sources. */
+        if (cardStats) {
+          const already = new Set();
+          stranded.forEach((index) => {
+            const name = profiles[index].name;
+            if (already.has(name)) return;
+            already.add(name);
+            const stat = cardStats.get(name);
+            if (stat) stat.stuckAtEight += 1;
+          });
+        }
+      }
 
       // attackPower already carries each attacker's connect rate (flying/menace/trample get
       // more of their power through than a flat rate would), so it is applied directly below --
@@ -1567,7 +1604,8 @@
       dead: 0,
       castTurnTotal: 0,
       gamesWithCast: 0,
-      winsWhenCast: 0
+      winsWhenCast: 0,
+      stuckAtEight: 0
     }]));
     const totals = {
       games: 0,
@@ -1645,10 +1683,16 @@
       isLand: stat.isLand,
       isCommander: stat.isCommander,
       drawnRate: stat.drawn / Math.max(1, metrics.games),
-      castRate: stat.drawn ? stat.cast / stat.drawn : 0,
+      /* GAMES, not events, over games. `cast` counts every cast; `drawn` counts games in
+         which the card was drawn at all -- so a row standing for 36 Mountains divided 5
+         plays a game by 1 game and reported 500%. gamesWithCast asks the same question
+         ("of the games you saw it, how often did you get to play it?") with a denominator
+         it cannot exceed, and is identical to the old figure for a single-copy card. */
+      castRate: stat.drawn ? stat.gamesWithCast / stat.drawn : 0,
       avgCastTurn: stat.cast ? stat.castTurnTotal / stat.cast : 0,
       deadRate: stat.drawn ? stat.dead / stat.drawn : 0,
       winRateWhenCast: stat.gamesWithCast ? stat.winsWhenCast / stat.gamesWithCast : 0,
+      stuckRate: stat.drawn ? stat.stuckAtEight / stat.drawn : 0,
       games: stat.drawn
     }));
     return {metrics, perCardStats, commanderCmc, profiles: deck.profiles};

@@ -134,16 +134,16 @@
       "sha": "8e261856adfcb4eb"
     },
     "crankmagic-app.js": {
-      "version": 33,
-      "sha": "72addf5e6a5e7eba"
+      "version": 34,
+      "sha": "5d233053b7164593"
     },
     "crankmagic-assets.js": {
       "version": 10,
       "sha": "274e6d88b04626fd"
     },
     "crankmagic-brand.js": {
-      "version": 1,
-      "sha": "7ae1f76ec8505160"
+      "version": 2,
+      "sha": "0e17962a44024bd8"
     },
     "crankmagic-card-client.js": {
       "version": 1,
@@ -186,8 +186,8 @@
       "sha": "0cec9f09dca45e56"
     },
     "crankmagic-lab.js": {
-      "version": 14,
-      "sha": "fc889a97e06ec1a4"
+      "version": 15,
+      "sha": "2cd1791207f8327f"
     },
     "crankmagic-plan-editor.js": {
       "version": 1,
@@ -198,12 +198,12 @@
       "sha": "23a8f6e75dd90cbe"
     },
     "crankmagic-sim.js": {
-      "version": 11,
-      "sha": "2212f13d71f11dfb"
+      "version": 12,
+      "sha": "a419f05dc62d3505"
     },
     "crankmagic-sw.js": {
-      "version": 33,
-      "sha": "d9863caac2513824"
+      "version": 34,
+      "sha": "4f1039d1a44bb2b6"
     },
     "crankmagic.css": {
       "version": 18,
@@ -302,8 +302,8 @@
       "sha": "ea1dd37c6ce291cf"
     },
     "deck-measure.js": {
-      "version": 7,
-      "sha": "6707b640029723da"
+      "version": 8,
+      "sha": "7e8a0113df297e61"
     },
     "deck-page.js": {
       "version": 30,
@@ -390,8 +390,8 @@
       "sha": "6a8eceea117da582"
     },
     "sim-engine.js": {
-      "version": 7,
-      "sha": "50511d93b7be633a"
+      "version": 8,
+      "sha": "e068b06480b40701"
     },
     "sim-lenses.js": {
       "version": 2,

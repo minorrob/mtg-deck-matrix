@@ -41,10 +41,10 @@
      them lazily off the global. Versions must match the ?v= the pages use, or a browser
      that has one page cached serves the worker a different engine than the page. */
   const ENGINE_SCRIPTS = [
-    "sim-engine.js?v=7",
+    "sim-engine.js?v=8",
     "combat.js?v=2",
     "pilot-policy.js?v=3",
-    "deck-measure.js?v=7"
+    "deck-measure.js?v=8"
   ];
 
   /* NAMED PROTOCOLS, AND WHY THE NAME IS PART OF THE NUMBER.
@@ -73,6 +73,20 @@
       seedCount: 1,
       games: 2000,
       note: "One seed of 2,000 games. Fast enough to iterate on, too small to publish."
+    },
+    /* THE SEARCH TIER, and why one seed could not be it. A one-seed run has a standard
+       error of exactly zero -- there is nothing to take a variance over -- so the Deck
+       Lab's refinement pass was accepting any swap that gained a quarter of a point
+       against a measurement whose real spread is two or three. Every "kept" swap was a
+       coin flip wearing a number. Three seeds give the run an error it can be judged
+       against, 4,000 games each keeps a trial under half a second, and the name says --
+       as loudly as `preview` does -- that it is not comparable with a published rating. */
+    refine: {
+      id: "refine-" + ENGINE_GENERATION + "-3x4000",
+      label: "Refinement pass",
+      seedCount: 3,
+      games: 4000,
+      note: "Three seeds of 4,000 games. Enough spread to have a real standard error, small enough to run dozens of times inside a search."
     }
   };
 

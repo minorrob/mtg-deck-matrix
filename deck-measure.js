@@ -216,13 +216,14 @@
     cardRuns.forEach((list) => (list || []).forEach((stat) => {
       const row = cardIndex.get(stat.name) || {name: stat.name, n: 0,
         isLand: Boolean(stat.isLand), isCommander: Boolean(stat.isCommander),
-        drawnRate: 0, castRate: 0, avgCastTurn: 0, deadRate: 0, winRateWhenCast: 0};
+        drawnRate: 0, castRate: 0, avgCastTurn: 0, deadRate: 0, winRateWhenCast: 0, stuckRate: 0};
       row.n += 1;
       row.drawnRate += stat.drawnRate;
       row.castRate += stat.castRate;
       row.avgCastTurn += stat.avgCastTurn;
       row.deadRate += stat.deadRate;
       row.winRateWhenCast += stat.winRateWhenCast;
+      row.stuckRate += stat.stuckRate || 0;
       cardIndex.set(stat.name, row);
     }));
     const perCard = Array.from(cardIndex.values()).map((row) => ({
@@ -233,7 +234,11 @@
       castRate: round(row.castRate / row.n, 4),
       avgCastTurn: round(row.avgCastTurn / row.n, 2),
       deadRate: round(row.deadRate / row.n, 4),
-      winRateWhenCast: round(row.winRateWhenCast / row.n, 4)
+      winRateWhenCast: round(row.winRateWhenCast / row.n, 4),
+      /* Drawn, and still uncastable in hand on turn eight. The one per-card figure in this
+         model that separates one nonland from another -- see sim-engine's note where it is
+         counted. deadRate is exactly 1 - castRate and always was, so it ranks nothing. */
+      stuckRate: round(row.stuckRate / row.n, 4)
     }));
 
     const elapsedMs = Date.now() - startedAt;
