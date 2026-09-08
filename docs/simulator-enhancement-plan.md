@@ -123,19 +123,22 @@ Already shipped this session: the nine score parts with points, maximum and the
 engine's own sentence; the targets for the chosen build; per-card rows ranked on a
 figure that varies.
 
+Also shipped since: loss causes, idle turns for the other seats, seats still playing at
+the end, first elimination turn, and how often an answer was in hand. All of these were
+counted by the engine already and dropped at the line that built the report. On a
+mono-red Krenko hundred they read: 17.3% of games lost to the combo seat's combo against
+4.9% to damage, 1.89 idle turns, 1.54 seats surviving, first elimination on turn 8.9, and
+an answer in hand on 3.6% of turns against a 40% target.
+
 Still available and not yet surfaced:
 
 | Figure | Where it already lives | What it would tell the reader |
 |---|---|---|
 | Per-seed scores | `result.perSeedScores` | How much of a difference is seed noise |
-| Loss causes | `metrics.lossCauses` | *What killed you* — damage, or a specific seat's combo |
-| First elimination turn | `totals.firstEliminationSum` | Whether this deck ends the game early for someone |
-| Idle turns | `totals.idleTurnSum` | The direct cost the table pays for a fast kill |
-| Interaction availability | scored, not printed | Whether answers were in hand when needed |
 | Coverage detail | `report.coverage.unreadable` | Which cards the number does not describe |
+| Turn distribution | not kept, but cheap to keep | Whether "turn 12.5 on average" is one hump or two |
 
-**Cost: none beyond rendering.** `lossCauses` is the most valuable of these: it is the
-only field that answers "why did I lose" rather than "how often".
+**Cost: none beyond rendering**, except the last, which needs a histogram kept per run.
 
 ---
 
@@ -143,8 +146,8 @@ only field that answers "why did I lose" rather than "how often".
 
 1. **Typed, exclusive mana payment** (item 3) and **spend the held answer** (item 5).
    Same area, same discipline, biggest correctness gain per hour.
-2. **Loss causes and per-seed scores in the report.** Free, and it makes 1's effect
-   visible.
+2. **Per-seed scores and the turn distribution in the report.** Free or nearly so, and
+   they make item 1's effect visible. (Loss causes and the pod detail are done.)
 3. **Refuse to score a win path the engine cannot see** (item 2's guard). Cheap, and
    it stops the Lab confidently giving wrong advice about spellslinger lists.
 4. **Storm count, rituals, copies, named win conditions** (item 2 proper). New engine

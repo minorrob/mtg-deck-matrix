@@ -23,6 +23,9 @@ standing instruction is **merge any clear fix directly** rather than queuing it.
 | Three-way filters (include / exclude / off) on Discover and the graph | `crankmagic-facets.js`, `crankmagic-discover.js` |
 | Deck Lab: opens fresh, a Clear button, skippable archive and delete confirmations | `crankmagic-lab.js`, `crankmagic-decks.js` |
 | **Deck Lab loop rebuilt** — see below | `crankmagic-lab.js`, `crankmagic-sim.js`, `sim-engine.js`, `deck-measure.js` |
+| Deck Lab form folds to three sections; only the relevant half is present | `crankmagic-lab.js`, `crankmagic.css` |
+| Discover pane: one "Add and/or Buy" menu under the art, pane flush with the graph | `crankmagic-discover.js`, `crankmagic.css` |
+| Loss causes, pod detail and the commander's own per-card row published | `sim-engine.js`, `deck-measure.js`, `crankmagic-sim.js` |
 
 ### The Deck Lab loop, in detail
 
@@ -67,7 +70,22 @@ All three fixed. The remaining 100%s are real and are documented in
 a drawn card is a cast card. The loop now ranks on **stranded at turn eight** instead,
 which varies.
 
-**No published number moved.** `cardStats` is a readout and has never fed a score.
+**No published number moved.** `cardStats` is a readout and has never fed a score. The
+Krenko hundred measures 58.6 before and after every change described here.
+
+### What the report shows now
+
+The nine score parts the composite is built from, each with points, maximum and the
+sentence the engine wrote about it, ordered by points lost. Then the targets for the
+chosen build with a tick or a cross. Then every per-card row, ranked by stranded-at-turn-8,
+with lands and the commander marked.
+
+Five figures the engine had counted since it was written and dropped at the line that
+built the report are now published too. **`lossCauses` is the important one** — the only
+figure in the engine that answers "why did I lose" rather than "how often". On a mono-red
+Krenko hundred: 28.5% of games won, and of the rest, 17.3% lost to the combo seat's combo
+against 4.9% to damage. That is a different card to go and find. The other four are what
+the Pod experience index is made of, published beside it rather than folded into it.
 
 ## What is next, in the owner's stated order
 
@@ -81,8 +99,6 @@ which varies.
 
 Open and unstarted:
 
-- **Deck Lab "Start from" an existing deck or Collection group.** The fresh-open and
-  Clear halves shipped; re-evaluating a deck you already have did not.
 - **The refresh plug-in itself.** The specification is written and complete in
   `docs/crankmagic-refresh.md`; nobody has built the plug-in.
 - **Salvage Yard variant-assignment dropdown.**
