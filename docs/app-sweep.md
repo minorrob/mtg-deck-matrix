@@ -71,7 +71,18 @@ been unrunnable for as long as that move is old, and nothing said so.
 
 Ordered by what they buy, not by effort.
 
+**Status: 1-5 are done** (PR #105). What each one turned up on its first run is recorded
+under it. 6 and 7 are open, with the reasons below.
+
 ### 1. Make the generators run in CI, not just the tests
+**DONE.** `tests/generators.mjs` resolves every repo-shaped path each tool names, and runs
+the four that offer a check mode. Its first run found three more instances of the
+rate-decks bug: `tools/sim/remeasure-all.mjs` read `data/rung-lists.json` and
+`data/variants.json`, and `tools/build_card_facts.py` and `tools/build_guide_shapes.py`
+read `data/master-v2.json` — all four moved to `data/archive/` and none had been
+repointed. All fixed and re-run. `.github/workflows/tests.yml` now runs every suite on
+every push; there was no test workflow at all before.
+
 
 The `rate-decks.mjs` breakage is the shape of the problem: a committed data file whose
 generator cannot run is a number nobody can reproduce, and the suite passes anyway
@@ -81,6 +92,17 @@ reach its inputs. Cost: small. It would have caught this on the commit that move
 workbook.
 
 ### 2. Give the two-implementation test more to compare
+**DONE.** Mana value turned out to be compared already — the sweep was wrong about that.
+What was not: the type reading under everything else, and the instant/one-shot split.
+`slot-model.js` now exports `isRitualSpell` (one copy of the rule instead of an inline
+duplicate) and `tests/slot-model.mjs` compares it, plus land, creature and basic-land, over
+all 2,025 catalog cards. No drift today. **Ramp amount cannot be compared, because only the
+engine computes one** — and writing that check found that `rampAmount` credits a spell
+fetching ONE land with two mana (13 cards, Rampant Growth and Solemn Simulacrum among
+them), while Nature's Lore gets one for the same effect. Recorded as item 6 of
+`docs/simulator-enhancement-plan.md`; the fix moves published numbers, so it belongs in the
+v2.7 re-sweep, and the test pins today's behaviour with a comment pointing there.
+
 
 `tests/slot-model.mjs` compares roles and colour production between the page and the
 engine. It should also compare **mana value, the ramp amount, and the instant/one-shot
@@ -88,6 +110,14 @@ split**, which are the other judgements both halves make independently. Cost: sm
 it extends the one mechanism that has actually caught things.
 
 ### 3. Pin the browser journeys the way the suites are pinned
+**DONE.** `tests/uat/geometry.mjs` holds the three properties; `tests/browser-geometry.mjs`
+serves the repo on its own port and runs them at 320, 375, 390, 430, 768 and 1400 across
+four pages, and is picked up by `runtests.sh`. It skips loudly with no browser and is
+required in CI and in the release gate. **Its first run found two live bugs**: the hero
+card fan pushed the page 9px wide at 768 (a rotated decorative card giving the whole page
+a horizontal scrollbar), and the Deck Lab's sub-section headers were 28px tall on every
+phone. Both fixed.
+
 
 Everything in this session's UI verification was a throwaway Playwright script in a
 scratch directory. `tests/uat/journeys.mjs` exists and is not run by `runtests.sh`.
@@ -96,6 +126,13 @@ scratch directory. `tests/uat/journeys.mjs` exists and is not run by `runtests.s
 is the difference between "I checked" and "it is checked".
 
 ### 4. Decide what happens when the engine cannot see a deck's win
+**DONE.** `unwatchedWinPaths` is published as `winPathsTheEngineCannotWatch`, the engine
+now returns the card names too, an extra `limits` line names them in the exported report,
+and the Deck Lab prints the warning above the score rather than below it. The Lab's refine
+loop stops once on such a list and says why: optimizing swaps on a score that cannot see
+the combo tunes everything except the way the deck wins. Clicking again proceeds, because
+tuning the shell is sometimes exactly what was wanted.
+
 
 v2.7 counts `unwatchedWinPaths` — cards saying "you win the game", whose condition is the
 part not modelled. The number is computed and nothing shows it. **The report should say
@@ -104,6 +141,11 @@ scoring a combo deck as a pile of creatures. Cost: small (it is a rendering chan
 one guard). This is the highest-value honesty fix left.
 
 ### 5. Bound the service worker's cache list
+**DONE.** Two caches — shell and data — each keyed on a hash of its own list rather than on
+the worker's `?v=`. A CSS fix no longer re-downloads `data/graph.json`. `tests/service-worker.mjs`
+runs the real worker source against a fake Cache Storage and holds it to the property in
+both directions.
+
 
 `crankmagic-sw.js` names every asset with a `?v=`, and the count has grown to 108. Every
 version bump rewrites the file and invalidates the whole cache. **Split the manifest**:
@@ -111,6 +153,11 @@ the shell (HTML, CSS, the app modules) from the data files, so a data refresh do
 evict the shell. Cost: medium. Symptom today is a slow first load after any change.
 
 ### 6. Give `data/` a size budget
+**OPEN.** Still worth doing, and still medium-to-large: it needs a generator change and a
+new shape for `graph.json`. Item 5 removed the worst symptom (the 7.1 MB was being
+re-downloaded on every unrelated change), which lowers the urgency without closing the
+issue — the file is still fetched in full before Discover can rank anything.
+
 
 `graph.json` is 7.1 MB and is fetched in full before the Discover graph can rank
 anything — which is why the Deck Lab's refine pass had to learn to wait for it. **Split
@@ -118,6 +165,10 @@ it**: the relation fields the graph actually walks, and the rest. Cost: medium t
 and it needs a generator change. Worth doing before the corpus grows again.
 
 ### 7. Retire the second app
+**OPEN, and not mine to close.** Whether `legacy-decks.html` and `matrix.html` are still
+wanted is a product decision. If they stay, they should load the shared header instead of
+a copy of it.
+
 
 `legacy-decks.html` and `matrix.html` still carry their own header, their own CSS and
 their own copy of the OG tags — four files to keep in step every time the brand changes,

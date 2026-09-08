@@ -134,8 +134,8 @@
       "sha": "8e261856adfcb4eb"
     },
     "crankmagic-app.js": {
-      "version": 50,
-      "sha": "a9f355ade8826ca5"
+      "version": 51,
+      "sha": "2cf26a4bd6249ca3"
     },
     "crankmagic-assets.js": {
       "version": 10,
@@ -186,8 +186,8 @@
       "sha": "0cec9f09dca45e56"
     },
     "crankmagic-lab.js": {
-      "version": 19,
-      "sha": "f7ee5392af5dc14b"
+      "version": 20,
+      "sha": "276eabe4b0796199"
     },
     "crankmagic-plan-editor.js": {
       "version": 1,
@@ -198,16 +198,16 @@
       "sha": "23a8f6e75dd90cbe"
     },
     "crankmagic-sim.js": {
-      "version": 15,
-      "sha": "804756bfecf27aa7"
+      "version": 16,
+      "sha": "fd100145b13cec71"
     },
     "crankmagic-sw.js": {
-      "version": 50,
-      "sha": "4bd2ebf30973bce4"
+      "version": 51,
+      "sha": "b037554ce8e5c789"
     },
     "crankmagic.css": {
-      "version": 27,
-      "sha": "a4b891f7bd71b0f4"
+      "version": 28,
+      "sha": "3bd34b0e6a31bd87"
     },
     "custom-model.js": {
       "version": 3,
@@ -390,8 +390,8 @@
       "sha": "6a8eceea117da582"
     },
     "sim-engine.js": {
-      "version": 10,
-      "sha": "d25e661e79db4ab0"
+      "version": 11,
+      "sha": "454ece70b4b3fc6b"
     },
     "sim-lenses.js": {
       "version": 2,
@@ -410,8 +410,8 @@
       "sha": "d98c8cccb4861914"
     },
     "slot-model.js": {
-      "version": 16,
-      "sha": "cf70729c9a4a3297"
+      "version": 17,
+      "sha": "355a3539fa0cd726"
     },
     "user-state.js": {
       "version": 5,

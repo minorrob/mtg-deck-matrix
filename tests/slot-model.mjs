@@ -564,6 +564,59 @@ ok("the page and the simulation agree about what a card is FOR, card for card", 
   assert.equal(valueDrift.length, 0, `mana value differs on ${valueDrift.length} cards, e.g. ${valueDrift.slice(0, 3).map((c) => c.name).join(", ")}`);
 });
 
+ok("the page and the simulation agree about what a card IS, card for card", () => {
+  /* Roles, colours, mana cost and mana value are already compared above. What was not
+     was the type reading underneath all of them -- and the instant/one-shot split, which
+     is the judgement that decides whether mana is still on the table next turn. Reading
+     Seething Song as a permanent rock is how a spellslinger deck got measured as a mana
+     engine; that bug was in the engine, and nothing would have caught the same bug had it
+     been in the page's copy instead. Now both copies are held to each other. */
+  const engine = require("../sim-engine.js");
+  const ritual = [], land = [], creature = [], basic = [];
+  for (const card of cardsPayload.cards) {
+    const theirs = engine.classifyCard(card), type = Slot.cardType(card);
+    if (Slot.isRitualSpell(card) !== Boolean(theirs.isRitual)) {
+      ritual.push(`${card.name}: page ${Slot.isRitualSpell(card)} vs engine ${Boolean(theirs.isRitual)}`);
+    }
+    if ((type === "Land") !== Boolean(theirs.isLand)) land.push(`${card.name} [${card.typeLine}] -> ${type}`);
+    // Dryad Arbor is both; the page's ladder answers Land first, so the engine's pair is
+    // what the page's single answer has to agree with.
+    if ((type === "Creature") !== Boolean(theirs.isCreature && !theirs.isLand)) {
+      creature.push(`${card.name} [${card.typeLine}] -> ${type}`);
+    }
+    // Two different methods on purpose: the page holds a list of the twelve basic names,
+    // the engine reads the type line. Either can be wrong about a new printing.
+    if (Slot.isBasicLand(card) !== Boolean(theirs.isBasicLand)) {
+      basic.push(`${card.name} [${card.typeLine}]: page ${Slot.isBasicLand(card)} vs engine ${Boolean(theirs.isBasicLand)}`);
+    }
+  }
+  assert.equal(ritual.length, 0, `the ritual / one-shot split differs on ${ritual.length} cards, e.g. ${ritual.slice(0, 3).join(" | ")}`);
+  assert.equal(land.length, 0, `land differs on ${land.length} cards, e.g. ${land.slice(0, 3).join(" | ")}`);
+  assert.equal(creature.length, 0, `creature differs on ${creature.length} cards, e.g. ${creature.slice(0, 3).join(" | ")}`);
+  assert.equal(basic.length, 0, `basic land differs on ${basic.length} cards, e.g. ${basic.slice(0, 3).join(" | ")}`);
+
+  /* HOW MUCH a ramp spell ramps is a judgement only the engine makes: rampAmount decides
+     how many mana a rock adds to the pool, and the page never shows a number for it. So
+     there is nothing to compare -- which is the right answer, not a gap. This tripwire
+     fires if the page ever grows its own copy, because then there would be. */
+  const pageRamp = Object.keys(Slot).filter((key) => /ramp/i.test(key) && /amount|count|value/i.test(key));
+  assert.deepEqual(pageRamp, [],
+    `the page now computes a ramp amount (${pageRamp.join(", ")}); compare it against sim-engine's rampAmount here`);
+  assert.equal(engine.classifyCard({name: "Sol Ring", typeLine: "Artifact", manaCost: "{1}", oracleText: "{T}: Add {C}{C}."}).rampAmount, 2,
+    "two pips in one activation is two mana");
+  assert.equal(engine.classifyCard({name: "Signet", typeLine: "Artifact", manaCost: "{2}", oracleText: "{1}, {T}: Add {W}{U}."}).rampAmount, 2);
+  /* PINNED AS IT IS, NOT AS IT SHOULD BE. rampAmount reads "search your library for
+     a|up to two|two land" as two mana, so a spell that fetches exactly ONE land is
+     credited with two -- 13 cards in today's catalog, Rampant Growth and Solemn
+     Simulacrum among them. That is a measurement bug, and correcting it moves every
+     published green number, so it belongs in the v2.7 re-sweep and not in a suite
+     change. Pinned here so the re-sweep has to come back and edit this line. */
+  assert.equal(engine.classifyCard({name: "Rampant Growth", typeLine: "Sorcery", manaCost: "{1}{G}", oracleText: "Search your library for a basic land card, put it onto the battlefield tapped, then shuffle."}).rampAmount, 2,
+    "one land fetched, two mana credited -- see docs/simulator-enhancement-plan.md");
+  assert.equal(engine.classifyCard({name: "Nature's Lore", typeLine: "Sorcery", manaCost: "{1}{G}", oracleText: "Search your library for a Forest card, put that card onto the battlefield, then shuffle."}).rampAmount, 1,
+    "the same one-land fetch worded without the word land reads as one, which is the other half of the inconsistency");
+});
+
 ok("a slot's best fit is the card that does the same job at the same cost", () => {
   const target = {type: "Instant", manaValue: 2, roles: ["removal"]};
   const swords = cards[Lineup.normalizeName("Swords to Plowshares")];

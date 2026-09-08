@@ -52,14 +52,14 @@ const ENGINE = NO_BODIES ? "v2.4-uniform" : "v2.6";
 const config = await loadConfig();
 const opponents = await loadOpponents();
 const seats = buildTable(opponents, config.table).seats;
-const rungs = await readJson(path.join(ROOT, "data", "rung-lists.json"));
+const rungs = await readJson(path.join(ROOT, "data", "archive", "rung-lists.json"));
 const summary = await readJson(path.join(ROOT, "data", "simulation-summary.json"));
 const facts = (await readJson(path.join(ROOT, "data", "card-facts.json"))).cards;
 /* WHICH CARD IS THE COMMANDER. The pinned hundreds carry names and quantities and nothing
    else, so without this every deck is measured with an empty command zone -- which costs
    the whole "Gets the commander down" term and most of the win rate, and showed up as a
    uniform 25-point fall that looked like a data disaster rather than a missing flag. */
-const commanders = new Map((await readJson(path.join(ROOT, "data", "variants.json")))
+const commanders = new Map((await readJson(path.join(ROOT, "data", "archive", "variants.json")))
   .variants.map((variant) => [variant.id, variant.commander]));
 const catalog = new Map((await readJson(path.join(ROOT, "data", "cards.json"))).cards
   .map((card) => [card.name.toLowerCase(), card]));

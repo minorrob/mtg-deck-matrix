@@ -332,6 +332,19 @@
    * removal" means the same thing sitting in a slot as it does in the simulation.
    * tests/slot-model.mjs asserts the pair agree across the whole catalog.
    */
+  /* THE INSTANT/ONE-SHOT SPLIT, in one place. A spell that adds mana and is gone is a
+     ritual; a permanent that adds mana is a rock; a spell that fetches a land is neither.
+     Both halves of the app decide this independently -- the page to label a slot, the
+     engine to decide whether the mana is still there next turn -- so it is exported and
+     compared rather than written twice and hoped over. */
+  const ADDS_MANA = /add (?:\{[wubrgc]\}|one|two|three|four|five|six|seven|\d+)/;
+  function isRitualSpell(card) {
+    const typeLine = String((card && card.typeLine) || "");
+    const text = stripReminder(String((card && card.oracleText) || "").toLowerCase().replace(/[’]/g, "'"));
+    return /Instant|Sorcery/.test(typeLine) && ADDS_MANA.test(text)
+      && !PUTS_LAND_ONTO_BATTLEFIELD.test(text);
+  }
+
   const ROLE_KEYS = ["ramp", "draw", "removal", "wipe", "protection", "recursion", "tutor", "finisher"];
   const ROLE_LABEL = {
     ramp: "ramp", draw: "draw", removal: "removal", wipe: "a sweeper",
@@ -359,11 +372,9 @@
     const add = (role, hit) => { if (hit) roles.push(role); };
     /* A RITUAL IS NOT RAMP. Dark Ritual, Cabal Ritual and Culling the Weak add mana once,
        this turn, and are then in the graveyard; ramp is a permanent that keeps making it.
-       Kept identical to sim-engine's rule, which tests/slot-model.mjs compares card for
-       card -- and which is what caught this. */
-    const oneShotMana = /Instant|Sorcery/.test(typeLine)
-      && /add (?:\{[wubrgc]\}|one|two|three|four|five|six|seven|\d+)/.test(text)
-      && !PUTS_LAND_ONTO_BATTLEFIELD.test(text);
+       The rule lives in isRitualSpell, one copy, and tests/slot-model.mjs compares that
+       copy against sim-engine's card for card -- which is what caught this. */
+    const oneShotMana = isRitualSpell(card);
     add("ramp", !isLand && !oneShotMana && (/\{t\}: add|add \{[wubrgc]\}/.test(text)
       || PUTS_LAND_ONTO_BATTLEFIELD.test(text)
       || /you may play an additional land/.test(text)
@@ -909,7 +920,7 @@
     ACQUISITION: ACQ, PLACE, ownedKey, normalizeOwned, ownedCount, acquisitionOf, acquisitionFor,
     SPOTS, vendorSpot, rungHeading, cardImage,
     MANA_COLORS, manaCostOf, producesColors, manaHealth,
-    ROLE_KEYS, ROLE_LABEL, manaValueOf, cardRoles, slotFit,
+    ROLE_KEYS, ROLE_LABEL, manaValueOf, cardRoles, slotFit, isRitualSpell,
     TYPE_ORDER, cardType, isBasicLand, whyFor, whyText, whySource,
     deckSlots, shopRows, withPullList, scopeRow
   };
