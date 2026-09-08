@@ -114,8 +114,8 @@
       "sha": "c61a2bcf8b28540e"
     },
     "collection-model.js": {
-      "version": 2,
-      "sha": "0226a0a713fd0f80"
+      "version": 3,
+      "sha": "fd0ae34133179aeb"
     },
     "collection-repository.js": {
       "version": 2,
@@ -134,12 +134,12 @@
       "sha": "8e261856adfcb4eb"
     },
     "crankmagic-app.js": {
-      "version": 3,
-      "sha": "757aab2a49aa6847"
+      "version": 5,
+      "sha": "4ba6f4b1d70f233d"
     },
     "crankmagic-assets.js": {
-      "version": 2,
-      "sha": "65200e867f6802a3"
+      "version": 3,
+      "sha": "b27c477315b194f0"
     },
     "crankmagic-brand.js": {
       "version": 1,
@@ -166,8 +166,8 @@
       "sha": "b92bd427dfc39443"
     },
     "crankmagic-evidence.js": {
-      "version": 1,
-      "sha": "7811350f2432c584"
+      "version": 2,
+      "sha": "a508878778b63a71"
     },
     "crankmagic-exchange-ui.js": {
       "version": 2,
@@ -182,8 +182,8 @@
       "sha": "ff0a5e9f0e0502b9"
     },
     "crankmagic-lab.js": {
-      "version": 2,
-      "sha": "7832b7cae27f2720"
+      "version": 3,
+      "sha": "2a406da53b355c63"
     },
     "crankmagic-legacy.js": {
       "version": 1,
@@ -197,9 +197,13 @@
       "version": 1,
       "sha": "23a8f6e75dd90cbe"
     },
+    "crankmagic-sim.js": {
+      "version": 1,
+      "sha": "0272d8e61765eeeb"
+    },
     "crankmagic-sw.js": {
-      "version": 3,
-      "sha": "213ed84c5d04f2b4"
+      "version": 5,
+      "sha": "5bcb1b1313c5c5bb"
     },
     "crankmagic.css": {
       "version": 1,
@@ -298,8 +302,8 @@
       "sha": "ea1dd37c6ce291cf"
     },
     "deck-measure.js": {
-      "version": 6,
-      "sha": "4bebf270eb280b94"
+      "version": 7,
+      "sha": "6707b640029723da"
     },
     "deck-page.js": {
       "version": 30,
@@ -382,12 +386,16 @@
       "sha": "6a8eceea117da582"
     },
     "sim-engine.js": {
-      "version": 6,
-      "sha": "ded77aa656d2d569"
+      "version": 7,
+      "sha": "50511d93b7be633a"
     },
     "sim-lenses.js": {
       "version": 1,
       "sha": "eebb89d7271ea9e7"
+    },
+    "sim-worker.js": {
+      "version": 1,
+      "sha": "d1858fe31518cf4e"
     },
     "sim/config.json": {
       "version": 1,

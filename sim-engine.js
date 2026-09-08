@@ -1332,6 +1332,13 @@
       interactionAvailability: 0,
       deadCardsAtT8: 0,
       lossCauses: {},
+      /* GAMES THAT NEITHER ENDED. A game that reaches maxTurns with nobody dead is not
+         a loss -- it is a game the compute budget cut short -- but winRate is wins/games,
+         so it lands in the denominator looking exactly like one. Slow decks pay for the
+         cutoff. Reported separately here rather than folded into the score, because
+         changing the score would rewrite every published rung; a reader who can see
+         "18% of these games never finished" can discount the win rate themselves. */
+      incompleteRate: 0,
       participationRate: 0,
       avgPeakBoard: 0,
       reasonablePaceRate: 0,
@@ -1360,6 +1367,7 @@
       interactionAvailability: totals.interactionSum / games,
       deadCardsAtT8: totals.deadSum / games,
       lossCauses: totals.lossCauses,
+      incompleteRate: (totals.incomplete || 0) / games,
       participationRate: totals.participatedSum / games,
       avgPeakBoard: totals.peakBoardSum / games,
       reasonablePaceRate: totals.reasonablePaceSum / games,
@@ -1574,6 +1582,7 @@
       interactionSum: 0,
       deadSum: 0,
       lossCauses: {},
+      incomplete: 0,
       participatedSum: 0,
       peakBoardSum: 0,
       reasonablePaceSum: 0,
@@ -1595,6 +1604,10 @@
         totals.winTurnSum += result.endTurn;
       } else if (result.lossCause) {
         totals.lossCauses[result.lossCause] = (totals.lossCauses[result.lossCause] || 0) + 1;
+      } else {
+        // Neither won nor lost: the turn cap ended it. Until now this fell through
+        // every branch and was counted nowhere but `games`.
+        totals.incomplete += 1;
       }
       if (result.screwed) totals.screwed += 1;
       if (result.flooded) totals.flooded += 1;

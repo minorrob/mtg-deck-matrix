@@ -104,7 +104,7 @@ installation. Workbook tests optionally use `XLSX_PYTHON` with openpyxl for inde
 spreadsheet verification. See [tests/uat/README.md](tests/uat/README.md).
 
 Changed assets require a new `?v=` everywhere referenced, then
-`node tests/asset-versions.mjs --update`. There are 40 Node suites:
+`node tests/asset-versions.mjs --update`. There are 41 Node suites:
 
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`
@@ -118,6 +118,7 @@ Changed assets require a new `?v=` everywhere referenced, then
 - `combat` — `tests/combat.mjs`
 - `compliance-model` — `tests/compliance-model.mjs`
 - `crankmagic-core` — `tests/crankmagic-core.mjs`
+- `crankmagic-sim` — `tests/crankmagic-sim.mjs`
 - `crankmagic-workbook` — `tests/crankmagic-workbook.mjs`
 - `data-integrity` — `tests/data-integrity.mjs`
 - `deck-audit` — `tests/deck-audit.mjs`

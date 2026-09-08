@@ -253,6 +253,11 @@
       winRate: round(mean((r) => r.winRate), 4),
       screwPct: round(mean((r) => r.screwPct), 4),
       floodPct: round(mean((r) => r.floodPct), 4),
+      /* Games the turn cap ended rather than anybody winning. Carried through from the
+         engine because a reader comparing a slow deck with a fast one needs to see how
+         much of the gap is the cutoff -- winRate is wins/games, and a censored game sits
+         in that denominator looking exactly like a loss. */
+      incompleteRate: round(mean((r) => r.incompleteRate || 0), 4),
       avgCommanderTurn: round(mean((r) => r.avgCommanderTurn), 2),
       commanderCastRate: round(mean((r) => r.commanderCastRate), 4),
       deadCardsAtT8: round(mean((r) => r.deadCardsAtT8), 2),

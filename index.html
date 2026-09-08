@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#10121b">
   <meta name="color-scheme" content="dark">
   <meta name="description" content="CrankMagic — a private Commander deck workshop and card library. Plan, collect, assemble and explore your cards with local persistence.">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://cards.scryfall.io https://api.scryfall.com https://svgs.scryfall.io; font-src 'self' data:; connect-src 'self' https://api.scryfall.com https://json.edhrec.com https://archidekt.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; worker-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://cards.scryfall.io https://api.scryfall.com https://svgs.scryfall.io; font-src 'self' data:; connect-src 'self' https://api.scryfall.com https://json.edhrec.com https://archidekt.com; object-src 'none'; base-uri 'self'; form-action 'self'">
   <title>CrankMagic · Commander workshop</title>
   <link rel="icon" href="assets/crankmagic/crankmagic-logo-wand-v3-256.webp?v=1">
   <link rel="stylesheet" href="crankmagic-design.css?v=1">
@@ -20,9 +20,9 @@
   <script src="xlsx-writer.js?v=2" defer></script>
   <script src="xlsx-reader.js?v=2" defer></script>
   <script src="user-state.js?v=5" defer></script>
-  <script src="crankmagic-assets.js?v=2" defer></script>
+  <script src="crankmagic-assets.js?v=3" defer></script>
   <script src="crankmagic-card-client.js?v=1" defer></script>
-  <script src="collection-model.js?v=2" defer></script>
+  <script src="collection-model.js?v=3" defer></script>
   <script src="collection-repository.js?v=2" defer></script>
   <script src="collection-exchange.js?v=1" defer></script>
   <script src="card-classify.js?v=1" defer></script>
@@ -33,15 +33,16 @@
   <script src="crankmagic-decks.js?v=2" defer></script>
   <script src="crankmagic-collection.js?v=2" defer></script>
   <script src="crankmagic-exchange-ui.js?v=2" defer></script>
-  <script src="crankmagic-lab.js?v=2" defer></script>
+  <script src="crankmagic-sim.js?v=1" defer></script>
+  <script src="crankmagic-lab.js?v=3" defer></script>
   <script src="crankmagic-discover.js?v=2" defer></script>
   <script src="custom-model.js?v=3" defer></script>
   <script src="crankmagic-legacy.js?v=1" defer></script>
   <script src="crankmagic-advisor.js?v=1" defer></script>
   <script src="collection-evidence.js?v=1" defer></script>
-  <script src="crankmagic-evidence.js?v=1" defer></script>
+  <script src="crankmagic-evidence.js?v=2" defer></script>
   <script src="crankmagic-plan-editor.js?v=1" defer></script>
-  <script src="crankmagic-app.js?v=3" defer></script>
+  <script src="crankmagic-app.js?v=5" defer></script>
   <script src="crankmagic-brand.js?v=1" defer></script>
 </head>
 <body>
