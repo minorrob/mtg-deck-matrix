@@ -519,8 +519,13 @@ views.lab=async()=>{
         ${row('Average winning turn',m.averageWinTurn)}${row('Commander cast rate',m.commanderCastRate)}
         ${row('Average commander turn',m.averageCommanderTurn)}${row('Turn-capped games',m.incompleteGames)}
         ${row('Mana screw',m.manaScrew)}${row('Mana flood',m.manaFlood)}${row('Dead cards by turn 8',m.deadCardsAtTurnEight)}
-        ${row('Pod experience',m.podExperience)}${row('Cards the engine could read',m.cardsTheEngineCouldRead)}
+        ${row('Pod experience',m.podExperience)}${row('Answer in hand',m.answerInHand)}
+        ${row('Idle turns for the other seats',m.idleTurnsForOthers)}${row('Seats still playing at the end',m.seatsStillPlayingAtTheEnd)}
+        ${row('First elimination',m.firstEliminationTurn)}${row('Cards the engine could read',m.cardsTheEngineCouldRead)}
       </div>
+      ${(r.lossCauses||[]).length?`<h3 class="cm-section-heading">What ended the games this deck lost</h3>
+        <div class="cm-count-list">${r.lossCauses.map(x=>`<span>${e(String(x.cause).replace(/^seat[-\s]?/i,'').replace(/\b\w/,ch=>ch.toUpperCase()))} <strong>${(x.rate*100).toFixed(1)}% of games</strong></span>`).join('')}</div>
+        <p class="cm-muted">The one figure here that answers "why did I lose" rather than "how often". A deck losing to one seat's combo needs a different card than a deck losing to damage.</p>`:''}
       <p class="cm-muted">${e(r.protocol)} · ${(r.conditions&&r.conditions.seedCount)||'?'} seeds of ${((r.conditions&&r.conditions.gamesPerSeed)||0).toLocaleString()} games · ${((r.run&&r.run.games)||0).toLocaleString()} games in ${(((r.run&&r.run.elapsedMs)||0)/1000).toFixed(1)}s</p>
       ${(r.scoreParts||[]).length?`<h3 class="cm-section-heading">How the score was made</h3>
         <div class="cm-table-wrap"><table class="cm-table"><thead><tr><th>What it measures</th><th>Scored</th><th>Of</th><th>What the engine saw</th></tr></thead><tbody>${r.scoreParts.map(x=>`<tr><td>${e(x.label)}</td><td>${e(String(x.points))}</td><td>${e(String(x.max))}</td><td class="cm-muted">${e(x.reads||'')}</td></tr>`).join('')}</tbody></table></div>
