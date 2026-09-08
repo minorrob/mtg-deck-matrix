@@ -100,7 +100,7 @@ await ok("the simulator is still deliberately absent, so a first visit does not 
 
 /* ------------------------------------------- the property the split exists for */
 
-const bumpShell = (text) => text.replace("crankmagic.css?v=28", "crankmagic.css?v=29");
+const bumpShell = (text) => text.replace("crankmagic.css?v=29", "crankmagic.css?v=30");
 const bumpData = (text) => text.replace("data/cards.json?v=3", "data/cards.json?v=4");
 
 await ok("editing the CSS changes the shell key and leaves the data cache exactly where it was", async () => {

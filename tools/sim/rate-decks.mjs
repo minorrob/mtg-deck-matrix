@@ -42,6 +42,9 @@
 import path from "node:path";
 import {createRequire} from "node:module";
 import {ROOT, Engine, buildTable, loadConfig, loadOpponents, readJson, writeJson, parseArgs} from "./lib.mjs";
+/* The generation is READ, never typed. Typing it is how data/deck-ratings.json came to
+   say v2.7 while the engine that produced its numbers was v2.8. */
+const Sim = createRequire(import.meta.url)(path.join(ROOT, "crankmagic-sim.js"));
 
 // The module the browser measures with, so the tool and the app cannot disagree.
 const Measure = createRequire(import.meta.url)(path.join(ROOT, "deck-measure.js"));
@@ -286,8 +289,9 @@ const out = {
      module filename above, and not the same answer as data/simulation-summary.json,
      which describes the legacy viewer's 200 rungs and moves on its own schedule.
      tests/crankmagic-sim.mjs pins crankmagic-sim.js's ENGINE_GENERATION to THIS, so a
-     CrankMagic report can never be filed under a generation that did not produce it. */
-  generation: "v2.7",
+     CrankMagic report can never be filed under a generation that did not produce it --
+     which is why it is read from there rather than written out by hand here. */
+  generation: Sim.ENGINE_GENERATION,
   table: config.table,
   seeds: SEEDS,
   gamesPerSeed: GAMES,

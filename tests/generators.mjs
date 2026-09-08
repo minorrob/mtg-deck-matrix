@@ -23,6 +23,7 @@
  */
 import assert from "node:assert/strict";
 import {readdirSync, statSync, readFileSync, existsSync} from "node:fs";
+import {createRequire} from "node:module";
 import {execFileSync} from "node:child_process";
 import path from "node:path";
 import {fileURLToPath} from "node:url";
@@ -119,6 +120,50 @@ for (const [tool, args] of CHECKABLE) {
   }
   ok(failure === null,
     `${tool} ${args.join(" ")} does not pass its own check, so the file it generates no longer matches it:\n${failure}`);
+}
+
+/* ------------------------------------------- 3. the generation is never typed */
+
+/* A NUMBER FILED UNDER A GENERATION THAT DID NOT PRODUCE IT is the one dishonesty the
+   whole measurement discipline exists to prevent, and it happened twice in one afternoon
+   because three separate files each carried the generation as a string literal:
+   remeasure-all.mjs said "v2.6", rate-decks.mjs said "v2.7", and the engine said "v2.8".
+   All three now read it from crankmagic-sim.js. This holds them there, and holds the two
+   committed data files to the same answer. */
+{
+  const Sim = createRequire(import.meta.url)(path.join(ROOT, "crankmagic-sim.js"));
+  const generation = Sim.ENGINE_GENERATION;
+  ok(/^v\d+\.\d+$/.test(generation), `the engine generation reads "${generation}", which is not a generation`);
+
+  for (const tool of ["tools/sim/remeasure-all.mjs", "tools/sim/rate-decks.mjs"]) {
+    // Comments may name a generation -- explaining why the literal went is the point.
+    const source = readFileSync(path.join(ROOT, tool), "utf8")
+      .replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+    const typed = [...source.matchAll(/["'](v\d+\.\d+)["']/g)].map((m) => m[1])
+      .filter((v) => !/v2\.4-uniform/.test(v));
+    assert.deepEqual(typed, [],
+      `${tool} still writes a generation as a literal (${typed.join(", ")}). Read it from ` +
+      "crankmagic-sim.js instead, or the day the engine moves this tool files its numbers under the old one.");
+    checks++;
+  }
+
+  const ratings = JSON.parse(readFileSync(path.join(ROOT, "data/deck-ratings.json"), "utf8"));
+  ok(ratings.generation === generation,
+    `data/deck-ratings.json says ${ratings.generation} and the engine says ${generation}`);
+
+  const summary = JSON.parse(readFileSync(path.join(ROOT, "data/simulation-summary.json"), "utf8"));
+  ok(summary.engine === generation,
+    `data/simulation-summary.json says ${summary.engine} and the engine says ${generation}; re-sweep it or say why in engineBoundaryNote`);
+
+  /* And every generation the summary names has to have a paragraph saying what it changed.
+     The note used to be inline in the sweep tool, keyed on whatever generation was current,
+     so a bump silently filed the PREVIOUS generation's description under the new name. */
+  const {GENERATION_NOTES, boundaryNote} = await import(new URL("../tools/sim/generation-notes.mjs", import.meta.url));
+  ok(GENERATION_NOTES[generation], `tools/sim/generation-notes.mjs has no note for ${generation}`);
+  ok(summary.engineNotes[generation] === GENERATION_NOTES[generation],
+    `the summary's note for ${generation} is not the one generation-notes.mjs holds`);
+  ok(summary.engineBoundaryNote === boundaryNote(generation),
+    "the summary's boundary note does not match the one the sweep tool would write, so it is describing a different sweep");
 }
 
 /* A check mode nobody runs is no better than no check mode, so every tool that accepts

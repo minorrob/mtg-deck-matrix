@@ -605,16 +605,20 @@ ok("the page and the simulation agree about what a card IS, card for card", () =
   assert.equal(engine.classifyCard({name: "Sol Ring", typeLine: "Artifact", manaCost: "{1}", oracleText: "{T}: Add {C}{C}."}).rampAmount, 2,
     "two pips in one activation is two mana");
   assert.equal(engine.classifyCard({name: "Signet", typeLine: "Artifact", manaCost: "{2}", oracleText: "{1}, {T}: Add {W}{U}."}).rampAmount, 2);
-  /* PINNED AS IT IS, NOT AS IT SHOULD BE. rampAmount reads "search your library for
-     a|up to two|two land" as two mana, so a spell that fetches exactly ONE land is
-     credited with two -- 13 cards in today's catalog, Rampant Growth and Solemn
-     Simulacrum among them. That is a measurement bug, and correcting it moves every
-     published green number, so it belongs in the v2.7 re-sweep and not in a suite
-     change. Pinned here so the re-sweep has to come back and edit this line. */
-  assert.equal(engine.classifyCard({name: "Rampant Growth", typeLine: "Sorcery", manaCost: "{1}{G}", oracleText: "Search your library for a basic land card, put it onto the battlefield tapped, then shuffle."}).rampAmount, 2,
-    "one land fetched, two mana credited -- see docs/simulator-enhancement-plan.md");
+  /* FIXED IN v2.8, AND PINNED BOTH WAYS. The old rule read "search your library for
+     (a|up to two|two) land" as two mana, so a spell fetching ONE land was credited with
+     two -- 31 cards -- and it also required the literal word "land", so Skyshroud Claim
+     and Nissa's Pilgrimage fetched TWO and were credited one. The count now comes from
+     the number word and the type may be "land" or any basic, which makes the two
+     wordings agree for the first time. */
+  assert.equal(engine.classifyCard({name: "Rampant Growth", typeLine: "Sorcery", manaCost: "{1}{G}", oracleText: "Search your library for a basic land card, put it onto the battlefield tapped, then shuffle."}).rampAmount, 1,
+    "one land fetched is one mana");
   assert.equal(engine.classifyCard({name: "Nature's Lore", typeLine: "Sorcery", manaCost: "{1}{G}", oracleText: "Search your library for a Forest card, put that card onto the battlefield, then shuffle."}).rampAmount, 1,
-    "the same one-land fetch worded without the word land reads as one, which is the other half of the inconsistency");
+    "the same one-land fetch worded without the word land also reads as one");
+  assert.equal(engine.classifyCard({name: "Cultivate", typeLine: "Sorcery", manaCost: "{2}{G}", oracleText: "Search your library for up to two basic land cards, reveal those cards, and put one onto the battlefield tapped and the other into your hand, then shuffle."}).rampAmount, 2,
+    "two lands fetched is two mana");
+  assert.equal(engine.classifyCard({name: "Skyshroud Claim", typeLine: "Sorcery", manaCost: "{3}{G}", oracleText: "Search your library for up to two Forest cards, put them onto the battlefield, then shuffle."}).rampAmount, 2,
+    "and two lands named by their basic type is the case the old rule read as one");
 });
 
 ok("a slot's best fit is the card that does the same job at the same cost", () => {

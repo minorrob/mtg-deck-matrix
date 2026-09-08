@@ -263,3 +263,10 @@
 @media(pointer:coarse){
   #matrix-v2 summary{min-height:36px;padding-top:5px;padding-bottom:5px}
 }
+
+/* WHEN THE GAMES ENDED. A bar per turn, sized against the busiest one. Deliberately
+   plain: the shape is the whole point, and axis furniture would compete with it. */
+.cm-turn-hist{display:flex;align-items:flex-end;gap:3px;height:110px;margin:12px 0;padding:0 2px}
+.cm-turn-hist>div{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px}
+.cm-turn-hist i{display:block;width:100%;min-height:2px;border-radius:3px 3px 0 0;background:linear-gradient(#8dd0ff,#3d6bac)}
+.cm-turn-hist span{font-size:10px;color:#a5b7ce;line-height:1}

@@ -566,6 +566,16 @@ views.lab=async()=>{
       ${(r.perCard||[]).length?`<details class="cm-details"><summary>Per-card: what the engine drew, played and won with (${r.perCard.length} rows)</summary>
         <p class="cm-muted">Ranked by the figure that actually separates one card from another here: how often a card was drawn and still sat uncastable in hand on turn eight. Cast rate cannot rank a list — a game runs long enough that nearly every drawn spell is eventually cast, so almost the whole list sits near 100%. Lands are marked; a land's cast rate is how often a drawn copy reached the battlefield. "Dead" is exactly 100% minus cast, which is why it is not a column.</p>
         <div class="cm-table-wrap"><table class="cm-table"><thead><tr><th>Card</th><th>Seen</th><th>Played when seen</th><th>Average turn</th><th>Stuck at turn 8</th><th>Win rate when cast</th></tr></thead><tbody>${r.perCard.slice().sort((a,b)=>(b.stuckRate||0)-(a.stuckRate||0)||a.castRate-b.castRate).map(x=>`<tr><td>${e(x.name)}${x.isCommander?' <small class="cm-muted">commander</small>':x.isLand?' <small class="cm-muted">land</small>':''}</td><td>${((x.drawnRate||0)*100).toFixed(0)}%</td><td>${(x.castRate*100).toFixed(0)}%</td><td>${x.avgCastTurn||'—'}</td><td>${((x.stuckRate||0)*100).toFixed(0)}%</td><td>${(x.winRateWhenCast*100).toFixed(0)}%</td></tr>`).join('')}</tbody></table></div></details>`:''}
+      ${(r.perSeedScores||[]).length>1?`<h3 class="cm-section-heading">How much of this is seed noise</h3>
+        <div class="cm-count-list">${r.perSeedScores.map((x,i)=>`<span>Seed ${i+1} <strong>${Number(x).toFixed(2)}</strong></span>`).join('')}<span>Spread <strong>${(Math.max(...r.perSeedScores)-Math.min(...r.perSeedScores)).toFixed(2)} points</strong></span></div>
+        <p class="cm-muted">Each seed is an independent set of games on the same hundred. A spread wider than the standard error above means the difference you are looking at between two lists may be the shuffle rather than the list.</p>`:''}
+      ${(r.endTurnCounts||[]).length?(()=>{const rows=r.endTurnCounts,total=rows.reduce((n,x)=>n+x.games,0),peak=Math.max(...rows.map(x=>x.games));
+        return `<h3 class="cm-section-heading">When the games ended</h3>
+        <div class="cm-turn-hist">${rows.map(x=>`<div><i style="height:${Math.max(2,Math.round(x.games/peak*100))}%"></i><span>${x.turn}</span></div>`).join('')}</div>
+        <p class="cm-muted">Games by the turn they finished, out of ${total.toLocaleString()}. An average of ${m.averageWinTurn?m.averageWinTurn.value:'—'} means something different for one hump than for two, and only this says which it is.</p>`;})():''}
+      ${(r.coverage&&(r.coverage.unreadable||[]).length)?`<details class="cm-details"><summary>${r.coverage.unreadable.length} card${r.coverage.unreadable.length===1?'':'s'} the engine could not read</summary>
+        <p class="cm-muted">These carry no oracle text the engine could classify, so they were played as blanks. The score above is a claim about the other ${(r.coverage.known||0)} cards.</p>
+        <div class="cm-count-list">${r.coverage.unreadable.slice(0,60).map(x=>`<span>${e(typeof x==='string'?x:(x&&x.name)||'Unknown')}</span>`).join('')}</div></details>`:''}
       ${note((r.limits||[]).join(' '))}`;
   }
   actions['lab-report']=el=>{

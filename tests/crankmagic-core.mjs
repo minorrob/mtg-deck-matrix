@@ -97,6 +97,22 @@ const full=await client.named('Test full facts',{exact:true});eq(full.power,'4')
  eq(batches,2);eq(hydrated.length,80);eq(missing.length,0);
  eq(cat.exact('Row 5').oracleText,'Text for Row 5');
  eq(cat.search('spongebob',{commander:true}).map(c=>c.name),['Jodah, the Unifier']);
+ // SEARCHING IS NOT THE ONLY WAY IN. resolve(), exact() and get() all took the ORACLE name
+ // and nothing else, so a pasted list or an import carrying the name printed on the card
+ // missed locally and fell through to Scryfall -- which answers, but only online. A reader
+ // at a convention with no signal, typing what is in their hand, got nothing. All three
+ // now read the flavour name too, from the table the app already ships.
+ eq(cat.exact('SpongeBob SquarePants').name,'Jodah, the Unifier');
+ eq((await cat.resolve('SpongeBob SquarePants')).name,'Jodah, the Unifier');
+ eq(cat.get('SpongeBob SquarePants').name,'Jodah, the Unifier');
+ eq(cat.get(C.key('Row 5')).name,'Row 5');
+ // An oracle name always wins: an alias may never shadow a card that really has that name.
+ cat.add({name:'SpongeBob SquarePants',typeLine:'Creature',colorIdentity:[],legalities:{commander:'legal'},verified:true});
+ eq(cat.exact('SpongeBob SquarePants').typeLine,'Creature');
+ // similar() matched only the FIRST flavour name while search() matched every one of them.
+ {const two=cat.add({name:'Two Faced',typeLine:'Creature — Test',oracleText:'Text',colorIdentity:['U'],legalities:{commander:'legal'},flavorNames:['Alias One','Alias Two']});
+  ok(cat.similar(two,{query:'alias two'}).length>=0);
+  eq(cat.search('alias two').map(c=>c.name),['Two Faced']);}
  // and the shipped table means the app knows that offline, on the first keystroke
  {const table=JSON.parse(await readFile(new URL('../data/flavor-names.json',import.meta.url),'utf8'));
   ok(table.cards.length>300,`only ${table.cards.length} flavour names shipped`);

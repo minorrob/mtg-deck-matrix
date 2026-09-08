@@ -34,14 +34,14 @@
   /* The engine generation these reports describe. Pinned by tests/crankmagic-sim.mjs
      against data/simulation-summary.json, so bumping the engine without bumping this --
      which would file new numbers under the old generation's name -- fails the suite. */
-  const ENGINE_GENERATION = "v2.7";
+  const ENGINE_GENERATION = "v2.8";
 
   /* Loaded by the worker, in dependency order. sim-engine first because deck-measure
      throws without it; combat and pilot-policy before deck-measure because it resolves
      them lazily off the global. Versions must match the ?v= the pages use, or a browser
      that has one page cached serves the worker a different engine than the page. */
   const ENGINE_SCRIPTS = [
-    "sim-engine.js?v=11",
+    "sim-engine.js?v=12",
     "combat.js?v=2",
     "pilot-policy.js?v=3",
     "deck-measure.js?v=9"
@@ -237,6 +237,9 @@
       /* WHY THE GAMES WERE LOST, not just how many. Counted by the engine on every run
          and thrown away until now. */
       lossCauses: result.lossCauses || [],
+      /* WHETHER THE AVERAGE IS ONE HUMP OR TWO. A mean end turn cannot separate a deck
+         that reliably finishes on twelve from one that finishes on seven or seventeen. */
+      endTurnCounts: result.endTurnCounts || [],
       scoreParts: result.scoreParts || [],
       perCard: result.perCard || [],
       perSeedScores: result.perSeedScores || [],

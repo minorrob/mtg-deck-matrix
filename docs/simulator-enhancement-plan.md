@@ -25,6 +25,36 @@ changes that would make the Lab's recommendations worth acting on.**
 
 ---
 
+## Status, 8 September 2026
+
+Items **3, 5 and 6 are done**, and item **4** with them. Items 3 and 5 shipped in engine
+v2.7 and this document had not been updated to say so. Items 4 and 6 shipped in **v2.8**,
+together, because each of them moves every published number and the generation rule says
+that costs a re-sweep — so they were done in one, and the 200 viewer rungs and the six
+decks were re-measured together on v2.8.
+
+**What v2.8 changed, and by how much.** Measured, not estimated: the six decks were run
+three ways — on v2.7, with the ramp fix alone, and on full v2.8.
+
+| Deck | v2.7 | ramp fix only | v2.8 | ramp Δ | opening Δ |
+|---|---|---|---|---|---|
+| D1 Quintorius | 73.90 | 73.45 | 78.83 | −0.45 | +5.38 |
+| D2 Chulane | 53.57 | 53.52 | 58.73 | −0.05 | +5.21 |
+| D3 Atraxa | 73.15 | 73.13 | 78.55 | −0.02 | +5.42 |
+| D4 Felothar | 63.97 | 63.97 | 70.65 | 0.00 | +6.68 |
+| D5 Shadrix | 75.73 | 75.73 | 80.30 | 0.00 | +4.57 |
+| D6 Krenko | 64.13 | 63.72 | 68.67 | −0.41 | +4.95 |
+
+So **the whole of the rise is the opening procedure**, not the ramp fix. That is the
+honest reading and it is worth stating plainly: these six lists carry one card of the 33
+whose ramp reading changed (Skyshroud Claim, in D2, and it went up). The ramp fix will
+matter in the Deck Lab, where any green list can draft Rampant Growth or Solemn
+Simulacrum, and it barely touches the six published decks. Nobody should read +5 points
+as "the decks got better"; the engine stopped playing half its games a card down and
+stopped shorting every mulliganed hand.
+
+---
+
 ## The six things the engine cannot see
 
 ### 1. Every drawn spell is eventually cast
@@ -79,6 +109,11 @@ instants and sorceries outnumber its creatures three to one is the cheap detecto
 
 ### 3. Mana is untyped where it matters
 
+**DONE in v2.7.** Typed, exclusive payment landed: a pool of typed mana, each source
+contributing once, each pip paid from it and removed. `{C}` is colourless again rather
+than every colour. `tests/slot-model.mjs` compares the page's copy of the rules against
+the engine's over the whole catalog.
+
 **The symptom.** `add {C}{C}` is treated as every colour; castability checks each
 colour pip independently against a source count. Sol Ring can pay a coloured pip. One
 multicolour source can appear to cover two incompatible simultaneous requirements.
@@ -95,6 +130,11 @@ correctness gained to work done in this whole document.
 
 ### 4. The opening procedure is wrong in two known ways
 
+**DONE in v2.8.** Both conditions corrected, and the re-sweep they cost has been run. The
+size of the effect is in the status table at the top of this document: +4.6 to +6.7 points
+on the six published decks, which is what half the games being played a card down and
+every mulliganed hand being a card short was worth.
+
 Rule 103.5c gives ordinary multiplayer Commander a free first mulligan; the engine
 bottoms a card on it. Rule 103.8c has every seat draw on its first turn; the engine
 skips the first draw for half its seeds.
@@ -108,6 +148,10 @@ reason it has not been done casually.
 
 ### 5. Held answers are counted without being spent
 
+**DONE in v2.7.** A held answer is now paid for cheapest-first out of an `answerPool`
+taken from the same typed mana the turn had, so two answers cannot be counted against one
+untapped land and a tapped-out pilot receives no protection credit.
+
 The lens policies now remove the card, which fixed repeated reuse across turns. What
 still does not happen: the mana is not debited, the coloured payment is not checked,
 and no legal target is required. So multiple available answers can be counted against
@@ -117,7 +161,7 @@ the same resources, and a tapped-out pilot can receive protection credit.
 
 ### 6. A spell that fetches one land is credited with two mana
 
-Found while extending `tests/slot-model.mjs`. `rampAmount` is:
+**DONE in v2.8, in both directions.** Found while extending `tests/slot-model.mjs`. `rampAmount` is:
 
 ```js
 /add \{[wubrgc]\}\{[wubrgc]\}|search your library for (?:a|up to two|two) (?:basic )?land/.test(text) ? 2 : 1
@@ -130,12 +174,22 @@ it is inconsistent rather than uniformly generous: Nature's Lore and Three Visit
 one land and are credited one, because they say "a Forest card" and never the word
 "land". So two functionally identical cards ramp at different rates.
 
-The fix is one regex: drop `a|` from that alternation and let a single fetch read as 1.
+It was worse than the plan first said: 31 cards, not 13 — the smaller figure counted only
+the ones that also read as ramp. And the mirror-image case was real too. Because the rule
+required the literal word "land", **Skyshroud Claim, Nissa's Pilgrimage and
+Archaeomancer's Map fetch TWO and were credited one**, since they name a basic land type
+instead. Fixing only the direction the plan named would have left the same defect
+pointing the other way.
 
-**Cost: trivial to write, and it moves every published green number**, which is why it is
-not a hardening change. It belongs in the v2.7 re-sweep (task #185), and
-`tests/slot-model.mjs` pins today's behaviour with a comment pointing here, so the
-re-sweep has to come back and edit that line rather than quietly inheriting the bug.
+The count now comes from the number word, and the type it names may be "land" or any
+basic:
+
+```js
+/add \{[wubrgc]\}\{[wubrgc]\}|search your library for (?:up to two|two) [^.]{0,40}?(?:land|plains|island|swamp|mountain|forest)/
+```
+
+`tests/slot-model.mjs` pins all four cases — one land by either wording reads 1, two lands
+by either wording reads 2.
 
 ---
 
@@ -152,36 +206,39 @@ mono-red Krenko hundred they read: 17.3% of games lost to the combo seat's combo
 4.9% to damage, 1.89 idle turns, 1.54 seats surviving, first elimination on turn 8.9, and
 an answer in hand on 3.6% of turns against a 40% target.
 
-Still available and not yet surfaced:
+**All three of the remaining ones shipped in v2.8:**
 
-| Figure | Where it already lives | What it would tell the reader |
+| Figure | Where it lives | What it tells the reader |
 |---|---|---|
-| Per-seed scores | `result.perSeedScores` | How much of a difference is seed noise |
-| Coverage detail | `report.coverage.unreadable` | Which cards the number does not describe |
-| Turn distribution | not kept, but cheap to keep | Whether "turn 12.5 on average" is one hump or two |
+| Per-seed scores | `result.perSeedScores` | How much of a difference is seed noise. The report prints each seed and the spread, so a two-point gap next to a three-point spread reads as the shuffle rather than the list. |
+| Coverage detail | `report.coverage.unreadable` | Which cards the number does not describe, named, behind a fold. |
+| Turn distribution | `result.endTurnCounts` | Whether "turn 12.5 on average" is one hump or two. One integer per turn, kept for the price of an increment, drawn as a bar per turn. |
 
-**Cost: none beyond rendering**, except the last, which needs a histogram kept per run.
+Nothing on this list is left.
 
 ---
 
 ## Order of work
 
-1. **Typed, exclusive mana payment** (item 3) and **spend the held answer** (item 5).
-   Same area, same discipline, biggest correctness gain per hour.
-2. **Per-seed scores and the turn distribution in the report.** Free or nearly so, and
-   they make item 1's effect visible. (Loss causes and the pod detail are done.)
-3. **Refuse to score a win path the engine cannot see** (item 2's guard). Cheap, and
-   it stops the Lab confidently giving wrong advice about spellslinger lists.
-4. **Storm count, rituals, copies, named win conditions** (item 2 proper). New engine
-   generation.
-5. **Opening procedure** (item 4). New engine generation, re-sweep the ladders.
+1. ~~**Typed, exclusive mana payment** (item 3) and **spend the held answer** (item 5).~~
+   **Done, v2.7.**
+2. ~~**Per-seed scores and the turn distribution in the report.**~~ **Done, v2.8**, along
+   with the coverage detail.
+3. ~~**Refuse to score a win path the engine cannot see** (item 2's guard).~~ **Done**:
+   the count is published and named, the report says it above the score, and the Deck
+   Lab's refine loop stops once on such a list and explains why.
+4. ~~**Opening procedure** (item 4) and **the ramp count** (item 6).~~ **Done, v2.8**,
+   together, with the 200 rungs and the six decks re-measured on the new generation.
+5. **Storm count, rituals, copies, named win conditions** (item 2 proper). New engine
+   generation. **This is the next one.**
 6. **Interaction that can deny a cast** (item 1). Only inside the four-seat
    foundation; a sampled version is a label, not a fix.
 
-Items 4, 5 and 6 each change every published number, so each needs its own engine
+Items 5 and 6 each change every published number, so each needs its own engine
 generation, its own re-sweep, and old results quarantined rather than reinterpreted.
-That rule is not negotiable and it is why the order above front-loads everything that
-does not trip it.
+That rule is not negotiable, and it is why v2.8 did the opening procedure and the ramp
+count in one generation rather than two: both trip it, so paying for one sweep instead of
+two is the only saving available, and it is the right one.
 
 ---
 

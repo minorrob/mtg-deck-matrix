@@ -34,6 +34,7 @@
 import path from "node:path";
 import {createRequire} from "node:module";
 import {ROOT, buildTable, loadConfig, loadOpponents, readJson, writeJson, parseArgs} from "./lib.mjs";
+import {noteFor, boundaryNote} from "./generation-notes.mjs";
 
 const Measure = createRequire(import.meta.url)(path.join(ROOT, "deck-measure.js"));
 
@@ -47,7 +48,13 @@ const SEEDS = Number(args.seeds || 6);
    new data and the part that is only the new regime. Without this the two are confounded
    and "every score fell" says nothing about why. */
 const NO_BODIES = Boolean(args["no-bodies"]);
-const ENGINE = NO_BODIES ? "v2.4-uniform" : "v2.6";
+/* THE GENERATION IS READ, NOT TYPED. This constant said "v2.6" while the engine had moved
+   to v2.7 and then v2.8, which is precisely the failure the generation rule exists to
+   prevent: a number filed under a generation that did not produce it. It now comes from
+   the one place that defines it. */
+const ENGINE = NO_BODIES
+  ? "v2.4-uniform"
+  : createRequire(import.meta.url)(path.join(ROOT, "crankmagic-sim.js")).ENGINE_GENERATION;
 
 const config = await loadConfig();
 const opponents = await loadOpponents();
@@ -170,21 +177,11 @@ if (NO_BODIES) {
 moves.forEach((m) => { Object.assign(summary.builds[m.id][m.rung], m.fields); });
 summary.generatedAt = new Date().toISOString();
 summary.engine = ENGINE;
-summary.engineNotes = Object.assign({}, summary.engineNotes, {
-  [ENGINE]: "Measured on v2.6: the v2.5 model, with two corrections to what the engine " +
-    "READS from a card before it plays anything. First, a land that goes and gets a basic " +
-    "now enters tapped. entersTapped was read off the fetch's own text, and a fetch does " +
-    "not print \"enters tapped\" because the fetch is not the land that does -- so Evolving " +
-    "Wilds and Terramorphic Expanse modelled as UNTAPPED FIVE-COLOUR LANDS available the " +
-    "turn they were played, which is strictly better than any land in Magic, and both " +
-    "Panoramas as untapped tri-lands while really charging {1} on top of the sacrifice. " +
-    "Five lands change; the three decks holding them fall 0.17 to 0.53 and the other " +
-    "three do not move at all. Second, a Treasure behind a condition inside an activated " +
-    "ability is no longer ramp: Currency Converter's cost is a bare {T}, so it modelled as " +
-    "a one-mana Treasure engine when the Treasure needs a card discarded, exiled with the " +
-    "artifact, and a land at that. One card changes, and it is in no shipped deck. No card " +
-    "moved between rungs -- the hundreds are exactly those in data/archive/rung-lists.json."
-});
+summary.engineNotes = Object.assign({}, summary.engineNotes, {[ENGINE]: noteFor(ENGINE)});
+/* The sentence a reader meets first, rewritten for the generation this run measured. It
+   used to be left alone by this tool, so after a sweep it still said the rungs had NOT
+   been re-measured -- true when it was written and false the moment the sweep landed. */
+summary.engineBoundaryNote = boundaryNote(ENGINE);
 /* THE CAVEATS ARE MEASUREMENTS TOO, and they were being carried forward.
    caveats.inversions and caveats.podFunOverCeiling name the variants where the
    ladder's two promises fail -- a Pod Fun rung that out-powers Tuned, and one that
