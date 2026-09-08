@@ -36,3 +36,18 @@
 
 .cm-card-view-bracket{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:6px 0 2px}
 .cm-card-view-bracket small{line-height:1.35}
+
+/* A step's name and the fine print under it saying what would light it. */
+.cm-run-steps li{align-items:flex-start}
+.cm-run-step-body{display:flex;flex-direction:column;gap:2px;min-width:0;padding-top:8px}
+.cm-run-step-body small{line-height:1.35}
+
+/* Buy links and add-to menus on the card pane: the same size as the rarity and price line
+   above them, underlined, because they are links and should look like links. */
+.cm-card-view-links{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;margin:6px 0 0;font-size:13px}
+.cm-card-view-links .cm-text-button{font-size:13px;padding:0}
+.cm-inline-menu{position:relative;display:inline-block}
+.cm-inline-menu>summary{list-style:none;cursor:pointer;font-size:13px;color:#8cc9ff;text-decoration:underline;text-underline-offset:4px}
+.cm-inline-menu>summary::-webkit-details-marker{display:none}
+.cm-inline-menu>summary:after{content:' \25be'}
+.cm-inline-menu-body{position:absolute;left:0;top:calc(100% + 6px);z-index:8;min-width:190px;max-height:260px;overflow:auto}
