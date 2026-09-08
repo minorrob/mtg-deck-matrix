@@ -13,10 +13,6 @@
       "version": 129,
       "sha": "35bcc91d4a367203"
     },
-    "assets/crankmagic/apple-touch-icon.png": {
-      "version": 1,
-      "sha": "ee62ab991aa3e3cb"
-    },
     "assets/crankmagic/commander-atraxa.webp": {
       "version": 1,
       "sha": "d03485ee89d314db"
@@ -82,8 +78,8 @@
       "sha": "20ae1f37aec98908"
     },
     "card-catalog.js": {
-      "version": 5,
-      "sha": "ed8430ced8e448ca"
+      "version": 6,
+      "sha": "aa478cca3a04e76a"
     },
     "card-classify.js": {
       "version": 2,
@@ -138,8 +134,8 @@
       "sha": "8e261856adfcb4eb"
     },
     "crankmagic-app.js": {
-      "version": 20,
-      "sha": "62005651d5ec0566"
+      "version": 21,
+      "sha": "8f8d87e5076b2f80"
     },
     "crankmagic-assets.js": {
       "version": 7,
@@ -154,8 +150,8 @@
       "sha": "4c937886d914b612"
     },
     "crankmagic-collection.js": {
-      "version": 5,
-      "sha": "9c90710ff8d9936a"
+      "version": 6,
+      "sha": "dc012f0a07ed4895"
     },
     "crankmagic-decks.js": {
       "version": 7,
@@ -206,12 +202,12 @@
       "sha": "2212f13d71f11dfb"
     },
     "crankmagic-sw.js": {
-      "version": 20,
-      "sha": "79af88cdc12f3105"
+      "version": 21,
+      "sha": "5a423955226721ca"
     },
     "crankmagic.css": {
-      "version": 10,
-      "sha": "a5950183c689bdf3"
+      "version": 11,
+      "sha": "179402fc38e87793"
     },
     "custom-model.js": {
       "version": 3,

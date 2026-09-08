@@ -102,6 +102,31 @@ const full=await client.named('Test full facts',{exact:true});eq(full.power,'4')
  ok(C.matchesMechanic(purphoros,'ETB triggers'));ok(C.matchesMechanic(purphoros,'Drain & burn'));ok(!C.matchesMechanic(purphoros,'Mill'));
  ok(C.MECHANICS.length>=25);
 }
+{// A replacement is FOR a card. The picker used to offer the catalog's most popular cards,
+ // which suggested The Restoration of Eiganjo for Abrade; similar() ranks by likeness to
+ // the card being replaced and refuses anything outside the deck's colour identity.
+ const fetchImpl=async url=>new Response(JSON.stringify(String(url).includes('universe')?{generatedAt:'2026',cards:[]}:String(url).includes('facts')?{cards:{}}:{cards:[]}),{status:200,headers:{'Content-Type':'application/json'}});
+ const cat=await C.create({client:{},fetchImpl,urls:{universe:'u/universe.json',cards:'u/cards.json',facts:'u/facts.json',ranks:null,graph:'u/graph.json'},savedCards:{}});
+ const make=(name,o)=>cat.add({name,typeLine:'Instant',colorIdentity:['R'],legalities:{commander:'legal'},verified:true,price:1,...o});
+ const abrade=make('Abrade',{oracleText:'Choose one — Abrade deals 3 damage to target creature; or destroy target artifact.',price:.28});
+ const twin=make('Cut Down',{oracleText:'Destroy target creature with total power and toughness 5 or less.',price:.35});
+ const dear=make('Vandalblast',{oracleText:'Destroy target artifact you do not control.',price:22});
+ const wrongColor=make('The Restoration of Eiganjo',{typeLine:'Enchantment — Saga',colorIdentity:['W'],oracleText:'Search your library for a Plains card.',price:.4});
+ const nothing=make('Sol Ring',{typeLine:'Artifact',colorIdentity:[],oracleText:'{T}: Add {C}{C}.',price:1.69});
+ const ranked=cat.similar(abrade,{colors:['R'],limit:10});
+ const names=ranked.map(r=>r.card.name);
+ ok(!names.includes('Abrade'));// a card is not its own replacement
+ ok(!names.includes('The Restoration of Eiganjo'));// out of colour identity
+ ok(names.includes('Sol Ring'));// colourless is legal in every deck
+ eq(names[0],'Cut Down');// same job, same money
+ ok(names.indexOf('Cut Down')<names.indexOf('Vandalblast'),'a $22 answer to a 28c slot must not lead');
+ ok(/price/.test(ranked[0].why)||ranked[0].why.length>0);
+ // the query still narrows, and likeness still orders what is left
+ eq(cat.similar(abrade,{colors:['R'],query:'vandal'}).map(r=>r.card.name),['Vandalblast']);
+ // with no card to be like, it falls back to the plain name search
+ eq(cat.similar(null,{query:'sol'}).map(r=>r.card.name),['Sol Ring']);
+ void [twin,dear,wrongColor,nothing];
+}
 {// details() prices a card at its lowest-cost paper printing, not the printing Scryfall
  // happens to answer with -- one prints search, cheapest first -- and says which set that is.
  const fetchImpl=async url=>new Response(JSON.stringify(String(url).includes('universe')?{generatedAt:'2026',cards:[]}:String(url).includes('facts')?{cards:{}}:{cards:[]}),{status:200,headers:{'Content-Type':'application/json'}});
