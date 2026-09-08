@@ -49,6 +49,14 @@ run('batch',{commands:[{type:'cards',cards:[leader,basic,...pool]},{type:'create
 const prior=structuredClone(state);assert.throws(()=>run('batch',{commands:[{type:'acquire',lot:{cardId:basic.id,quantity:3}},{type:'acquire',lot:{cardId:basic.id,quantity:-1}}]}));eq(state,prior);
 assert.throws(()=>run('editDeck',{deckId:'deckA',commanders:[pool[1].id]}),/reviewed commander/);checks++;
 run('acquire',{lot:{id:'incoming1',cardId:basic.id,quantity:1,source:'incoming'}});ok(M.eligibility(state,state.lots.find(l=>l.id==='incoming1'),{includeIncoming:true}).eligible);
+// WANTED is a plan to buy, not a copy: counted on its own, never eligible for a build, never
+// reservable to a slot; it becomes owned by the same correction as an order arriving, and
+// a wanted card nobody wants any more is cancelled like any pending acquisition.
+{const before=M.counters(state);run('acquire',{lot:{id:'want1',cardId:pool[2].id,quantity:2,source:'wanted'}});const after=M.counters(state);eq(after.wanted,2);eq(after.toBuy,before.toBuy);eq(after.owned,before.owned);
+ const want=state.lots.find(l=>l.id==='want1');eq(want.location,null);eq(M.eligibility(state,want,{includeOrdered:true,includeIncoming:true}),{eligible:false,reason:'Not acquired'});
+ const slotA=state.decks[0].slots.find(r=>r.cardId===basic.id);assert.throws(()=>run('allocate',{lotId:'want1',deckId:'deckA',slotId:slotA.id,quantity:1}),/plan to buy/);checks++;
+ run('source',{lotId:'want1',source:'owned',quantity:2});const owned=state.lots.find(l=>l.id==='want1');eq(owned.source,'owned');eq(owned.location.kind,'bench');eq(M.counters(state).wanted,0);eq(M.counters(state).owned,before.owned+2);
+ run('acquire',{lot:{id:'want2',cardId:pool[3].id,quantity:1,source:'wanted'}});eq(M.counters(state).wanted,1);run('removePending',{lotId:'want2',quantity:1});ok(!state.lots.some(l=>l.id==='want2'));eq(M.counters(state).wanted,0);}
 const comma=E.parse('1 Chulane, Teller of Tales\n1 Sol Ring',{deckParser:P});eq(comma.rows[0].name,'Chulane, Teller of Tales');eq(comma.rows.length,2);
 const exact=E.parse('Card name,Quantity,Printing ID,Signed,Altered\nSol Ring,2,printuuid,true,false');eq(exact.rows[0].printing.id,'printuuid');eq(exact.rows[0].printing.signed,true);eq(exact.rows[0].printing.altered,false);
 // Unknown prices and newly accepted alternatives cannot silently relax caps.
