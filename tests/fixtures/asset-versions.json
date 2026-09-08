@@ -10,8 +10,8 @@
       "sha": "a18e9d2a0d56618a"
     },
     "app.js": {
-      "version": 128,
-      "sha": "a2b410b5de712f28"
+      "version": 129,
+      "sha": "35bcc91d4a367203"
     },
     "assets/crankmagic/commander-atraxa.webp": {
       "version": 1,
@@ -114,8 +114,8 @@
       "sha": "c61a2bcf8b28540e"
     },
     "collection-model.js": {
-      "version": 3,
-      "sha": "fd0ae34133179aeb"
+      "version": 4,
+      "sha": "84dfd8ea01e12789"
     },
     "collection-repository.js": {
       "version": 2,
@@ -134,12 +134,12 @@
       "sha": "8e261856adfcb4eb"
     },
     "crankmagic-app.js": {
-      "version": 6,
-      "sha": "5298526e05ec616d"
+      "version": 7,
+      "sha": "aad08844497c8be8"
     },
     "crankmagic-assets.js": {
-      "version": 4,
-      "sha": "d6d8292756aaa1dd"
+      "version": 5,
+      "sha": "eb33d44680a63a7f"
     },
     "crankmagic-brand.js": {
       "version": 1,
@@ -170,8 +170,8 @@
       "sha": "a508878778b63a71"
     },
     "crankmagic-exchange-ui.js": {
-      "version": 2,
-      "sha": "81b8a4b05a2f9cbe"
+      "version": 3,
+      "sha": "c3eef9a30fa17cb5"
     },
     "crankmagic-glossary.js": {
       "version": 1,
@@ -182,8 +182,8 @@
       "sha": "ff0a5e9f0e0502b9"
     },
     "crankmagic-lab.js": {
-      "version": 3,
-      "sha": "2a406da53b355c63"
+      "version": 4,
+      "sha": "9d4c3fb0e2d24785"
     },
     "crankmagic-legacy.js": {
       "version": 1,
@@ -202,8 +202,8 @@
       "sha": "0272d8e61765eeeb"
     },
     "crankmagic-sw.js": {
-      "version": 6,
-      "sha": "75ae034878aca4f3"
+      "version": 7,
+      "sha": "4a48bc2e5ca0e117"
     },
     "crankmagic.css": {
       "version": 1,
@@ -234,8 +234,8 @@
       "sha": "e18f2884aab1613f"
     },
     "data/cards.json": {
-      "version": 2,
-      "sha": "7b4fc592dc9ec58e"
+      "version": 3,
+      "sha": "1496b39e70ab1bdd"
     },
     "data/commander-glossary.json": {
       "version": 1,
