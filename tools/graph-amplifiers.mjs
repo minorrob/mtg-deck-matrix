@@ -3,6 +3,7 @@
 //   node tools/graph-amplifiers.mjs            # fetch rules text, write data/graph.json
 //   node tools/graph-amplifiers.mjs --check    # re-derive and report, change nothing
 //   node tools/graph-amplifiers.mjs --audit    # also report where the OLD fields disagree
+//   node tools/graph-amplifiers.mjs --all      # rewrite every classified field, not just the new three
 //
 // WHY THIS EXISTS RATHER THAN A NEO4J RE-RUN. graph/ingest/ builds data/graph.json out
 // of a 90 MB Scryfall bulk file and a Neo4j load, which is the right pipeline for a
@@ -30,9 +31,16 @@ const Classify = require("../card-classify.js");
 const GRAPH = new URL("../data/graph.json", import.meta.url);
 const CACHE_DIR = new URL("../graph/.cache/", import.meta.url);
 const CACHE = new URL("oracle-text.json", CACHE_DIR);
-const FIELDS = ["multiplies", "grants", "extends"];
+const NEW_FIELDS = ["multiplies", "grants", "extends"];
+const OLD_FIELDS = ["roles", "requires", "causes", "triggers", "produces", "mechanics", "tribes"];
 const check = process.argv.includes("--check");
 const audit = process.argv.includes("--audit");
+/* --all rewrites the fields the Neo4j bake produced as well. That is not a liberty: the
+   pipeline and the page share card-classify.js, and tests/card-classify.mjs asserts the
+   two agree card for card. When the vocabulary changes -- retiring the "proliferate
+   event", say -- the bake has to follow or the test is measuring a fossil. */
+const all = process.argv.includes("--all");
+const FIELDS = all ? OLD_FIELDS.concat(NEW_FIELDS) : NEW_FIELDS;
 
 const graph = JSON.parse(await readFile(GRAPH, "utf8"));
 const cards = graph.cards || [];
@@ -45,7 +53,9 @@ try { cache = JSON.parse(await readFile(CACHE, "utf8")); } catch { cache = {}; }
 const before = Object.keys(cache).length;
 if (before) console.log(`${before} cards' rules text already cached`);
 
-const wanted = cards.map((c) => c.id).filter((id) => id && !cache[id]);
+/* A cached entry from before game_changer was captured is refetched: a missing flag and
+   a false one look the same in JSON, and the difference is a whole bracket. */
+const wanted = cards.map((c) => c.id).filter((id) => id && (!cache[id] || cache[id].game_changer === undefined));
 if (wanted.length && check) {
   console.log(`${wanted.length} cards have no cached text; --check reports on the rest`);
 } else if (wanted.length) {
@@ -68,6 +78,7 @@ if (wanted.length && check) {
       cache[raw.oracle_id] = {
         name: raw.name, type_line: raw.type_line || "", oracle_text: raw.oracle_text || "",
         keywords: raw.keywords || [],
+        game_changer: Boolean(raw.game_changer),
         card_faces: (raw.card_faces || []).map((f) => ({oracle_text: f.oracle_text || "", type_line: f.type_line || ""}))
       };
     }
@@ -82,7 +93,8 @@ if (wanted.length && check) {
 /* -------------------------------------------------------------- the classify */
 
 const sorted = (list) => (list || []).slice().sort().join("|");
-let seen = 0, changed = 0, missing = 0;
+let seen = 0, changed = 0, missing = 0, gameChangers = 0;
+const brackets = new Map();
 const disagree = [];
 const totals = Object.fromEntries(FIELDS.map((f) => [f, new Map()]));
 
@@ -99,8 +111,24 @@ for (const card of cards) {
     if (!check) card[field] = what[field];
     for (const v of what[field]) totals[field].set(v, (totals[field].get(v) || 0) + 1);
   }
-  if (audit) {
-    for (const field of ["roles", "requires", "causes", "triggers", "produces", "mechanics", "tribes"]) {
+  /* GAME CHANGER is Scryfall's own flag, not something rules text can be read for -- it is
+     a curated list, and a deck holding one of them is bracket 3 at least. The bake never
+     carried it, so the Discover pane could not say what bracket a card commits you to. */
+  if (!check) { if (text.game_changer) card.gameChanger = true; else delete card.gameChanger; }
+  if (text.game_changer) gameChangers += 1;
+  /* THE BRACKET SIGNAL, decided here rather than in the page. The page only ever holds a
+     graph row for most cards -- no rules text at all -- so a regex in the browser reported
+     "no restriction" for Armageddon and Time Warp, which is the one answer that must never
+     be wrong. Read once, from text that is always present, and stored as a word. */
+  const body = Classify.rulesText({oracleText: text.oracle_text, card_faces: text.card_faces});
+  const bracket = text.game_changer ? "gameChanger"
+    : /destroy all lands|destroy all nonbasic lands|each player sacrifices (?:a|an|two|three|\d+) lands?|return all lands to their owners/.test(body) ? "massLand"
+    : /takes? an extra turn after this one|takes? two extra turns/.test(body) ? "extraTurns"
+    : "";
+  if (!check) { if (bracket) card.bracket = bracket; else delete card.bracket; }
+  if (bracket) brackets.set(bracket, (brackets.get(bracket) || 0) + 1);
+  if (audit && !all) {
+    for (const field of OLD_FIELDS) {
       if (sorted(card[field]) !== sorted(what[field])) {
         disagree.push(`${card.name} [${field}]: bake "${sorted(card[field])}", now "${sorted(what[field])}"`);
       }
@@ -108,7 +136,8 @@ for (const card of cards) {
   }
 }
 
-console.log(`${seen} classified, ${missing} without rules text, ${changed} field${changed === 1 ? "" : "s"} ${check ? "would change" : "written"}`);
+console.log(`${seen} classified, ${missing} without rules text, ${changed} field${changed === 1 ? "" : "s"} ${check ? "would change" : "written"}, ${gameChangers} Game Changers`);
+console.log("  bracket signals · " + [...brackets.entries()].map(([k, n]) => `${k} ${n}`).join(", "));
 for (const field of FIELDS) {
   const rows = [...totals[field].entries()].sort((a, b) => b[1] - a[1]);
   const carrying = cards.filter((c) => (c[field] || []).length).length;
@@ -124,7 +153,9 @@ if (check) process.exit(0);
 /* The Filters pane reads graph.facets for the options it offers, so a field the cards
    carry and the facets do not is a filter nobody can reach. */
 for (const field of FIELDS) {
-  graph.facets[field] = [...totals[field].keys()].sort();
+  if (graph.facets[field] !== undefined || NEW_FIELDS.includes(field)) {
+    graph.facets[field] = [...totals[field].keys()].sort();
+  }
 }
 graph.amplifiersAt = new Date().toISOString();
 await writeFile(GRAPH, JSON.stringify(graph), "utf8");

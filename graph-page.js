@@ -1452,7 +1452,7 @@
     });
   }
 
-  fetch("data/graph.json?v=3", {cache: "default"})
+  fetch("data/graph.json?v=5", {cache: "default"})
     .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
     .then(function (json) {
       DATA = stripMine(json);

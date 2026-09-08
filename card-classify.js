@@ -47,8 +47,6 @@
     {id: "end-step",       listen: /at the beginning of (?:your |each )?end step/, cause: null},
     {id: "upkeep",         listen: /at the beginning of (?:your |each )?upkeep/, cause: null},
     {id: "cast-spell",     listen: /whenever you cast (?:a|an|your)/, cause: null},
-    {id: "proliferate",    listen: /proliferate/,
-                           cause:  /put (?:a|an|one|two|three|x|\d+)[^.]{0,40}counters? on|enters with (?:a|an|one|two|three|x|\d+)[^.]{0,30}counters?/},
     {id: "counter-placed", listen: /whenever (?:one or more )?\+1\/\+1 counters? (?:is|are) put/,
                            cause:  /put (?:a|an|one|two|three|x|\d+)[^.]{0,30}\+1\/\+1 counters?/},
     {id: "life-gain",      listen: /whenever you gain life/, cause: /you gain \d+ life|gain (?:that much|x) life|lifelink/},
@@ -64,7 +62,14 @@
     {id: "treasure", produce: /create (?:a|an|one|two|three|x|\d+)[^.]{0,30}treasure/, consume: /sacrifice[^.]{0,20}treasure/},
     {id: "card",     produce: /draw (?:a|one|two|three|x|\d+) cards?/, consume: /discard (?:a|your|two|\d+)/},
     {id: "life",     produce: /you gain \d+ life|gain (?:that much|x) life/, consume: /you lose \d+ life|pay \d+ life/},
-    {id: "counter",  produce: /put (?:a|an|one|two|three|x|\d+)[^.]{0,30}\+1\/\+1 counters?/, consume: /remove (?:a|an|one|two|x|\d+)[^.]{0,30}counters?/},
+    /* EVERY KIND OF COUNTER, not only +1/+1. This is the pattern the old "proliferate
+       event" carried, filed where it belongs: proliferate does not FIRE when a counter is
+       placed, it makes more of whatever counters are already there. So a card that puts
+       loyalty, charge, shield or +1/+1 counters PRODUCES the thing proliferate MULTIPLIES,
+       and the pair falls out of the produces/multiplies join instead of a fake trigger.
+       The +1/+1-specific vocabularies (the counters role, the counters requirement) stay
+       +1/+1-specific: a payoff that reads "+1/+1 counter" means that one. */
+    {id: "counter",  produce: /put (?:a|an|one|two|three|four|x|\d+)[^.]{0,40}counters? on|enters (?:the battlefield )?with (?:a|an|one|two|three|x|\d+)[^.]{0,30}counters?/, consume: /remove (?:a|an|one|two|x|\d+)[^.]{0,30}counters?/},
     {id: "token",    produce: /create (?:a|an|one|two|three|x|\d+)[^.]{0,60}token/, consume: null}
   ];
 

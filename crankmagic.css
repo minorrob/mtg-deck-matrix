@@ -33,3 +33,6 @@
 /* The counters are a ribbon across the page, not a huddle at the left: equal columns, so
    "0 owned copies" through "Sell / Trade" sit evenly however many of them there are. */
 .cm-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:18px 22px;align-items:end}
+
+.cm-card-view-bracket{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:6px 0 2px}
+.cm-card-view-bracket small{line-height:1.35}
