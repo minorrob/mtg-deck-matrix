@@ -364,7 +364,10 @@ def main():
         "decks": decks,
         "cards": cards,
     }
-    dest = os.path.join(ROOT, "data", "master-v2.json")
+    # The archive, not data/ -- the six reference decks were archived out of the app on
+    # the clean start, and this build artifact belongs with them. Writing to the old path
+    # quietly recreates a file the app is meant no longer to have.
+    dest = os.path.join(ROOT, "data", "archive", "master-v2.json")
     with open(dest, "w", encoding="utf-8") as fh:
         json.dump(out, fh, indent=1, ensure_ascii=False)
         fh.write("\n")
