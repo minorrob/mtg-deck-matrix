@@ -196,4 +196,16 @@ check("the whole catalog narrows to a small, real answer", () => {
   assert.ok(rows.every((c) => /Creature/.test(c.type)));
 });
 
+check("any-mode within a facet is an OR, and colour keeps its own rule either way", () => {
+  const all = Facets.apply(CARDS, {roles: ["ramp", "draw"]}, null).length;
+  const any = Facets.apply(CARDS, {roles: ["ramp", "draw"]}, null, {any: true}).length;
+  const ramp = Facets.apply(CARDS, {roles: ["ramp"]}, null).length;
+  const draw = Facets.apply(CARDS, {roles: ["draw"]}, null).length;
+  assert.ok(any >= Math.max(ramp, draw), `any-mode returned ${any}, fewer than ramp (${ramp}) or draw (${draw}) alone`);
+  assert.ok(any <= ramp + draw && any > all, `any (${any}) must sit between all (${all}) and ramp+draw (${ramp + draw})`);
+  const pair = CARDS.find((c) => c.ci && c.ci.length === 2);
+  const [a] = pair.ci.split("");
+  assert.ok(!Facets.matches(pair, {colors: [a]}, {any: true}), `${pair.name} must still fail a mono-${a} deck in any-mode: colour is one question about the whole identity`);
+});
+
 console.log(`crankmagic-facets: ${checks} checks passed · ${Facets.available(null).length} card facets over ${CARDS.length} cards`);

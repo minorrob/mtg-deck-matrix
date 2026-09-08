@@ -1,81 +1,495 @@
-/* A bounded, navigable neighborhood of actual catalog relationships. Typed
- * structural edges and EDHREC co-play are kept distinct from simulated evidence.
- * Canvas has an equivalent keyboard-accessible neighbor list supplied by UI. */
-(function(root){'use strict';root.CrankGraph={mount({canvas,cards,played=[],focus,onSelect,onNeighbors,type='mechanic'}){const ctx=canvas.getContext('2d'),byId=new Map(cards.map(c=>[c.id,c])),trail=[];let center=focus||cards[0]?.id,nodes=[],scale=1,pan={x:0,y:0},drag=null,width=600,height=550,frame=0,disposed=false;
-const pointers=new Map();let pinch=null,lastTap={at:0,x:0,y:0},touched=false;
-const clampScale=v=>Math.max(.35,Math.min(4,v));
-/* The ring the neighbours sit on, in canvas units. Kept inside the shorter axis so a
-   tall narrow phone gets a circle rather than an ellipse running off both sides. */
-function ringX(){return Math.max(150,Math.min(240,width*.30));}
-function ringY(){return Math.max(120,Math.min(200,height*.30));}
-/* Zoom so the whole neighbourhood is on screen. Labels sit outside the nodes and names
-   under them, so the margin is generous on purpose: fitting the circles exactly still
-   clips the words, and the words are the point. */
-function fit(){
-  if(!nodes.length){scale=1;pan={x:0,y:0};return;}
-  const rx=Math.max(...nodes.map(n=>Math.abs(n.x)+n.r))+70,ry=Math.max(...nodes.map(n=>Math.abs(n.y)+n.r))+42;
-  scale=clampScale(Math.min(1,Math.min(width/2/rx,height/2/ry)));
-  pan={x:0,y:0};
-}
-/* The midpoint of the two active pointers and the distance between them. */
-function span(){const [a,b]=[...pointers.values()];return {x:(a.x+b.x)/2,y:(a.y+b.y)/2,d:Math.max(1,Math.hypot(a.x-b.x,a.y-b.y))};}
-function links(c){if(!c)return[];if(type==='played')return played.filter(e=>e.from===c.id||e.to===c.id).map(e=>({card:byId.get(e.from===c.id?e.to:e.from),kind:'EDHREC co-play',tag:`${(e.inclusion*100).toFixed(1)}% of decks`,reason:`EDHREC co-play · ${e.decks} decks · ${(e.inclusion*100).toFixed(1)}% inclusion`})).filter(e=>e.card).slice(0,12);const generic=new Set(['creatures','lands','artifacts','enchantments','instants','sorceries','planeswalkers']),terms=new Set([...(c.mechanics||[]),...(c.roles||[]).filter(x=>!generic.has(x))]);return cards.filter(x=>x.id!==c.id).map(x=>{const shared=[...(x.mechanics||[]),...(x.roles||[]).filter(t=>!generic.has(t))].filter(t=>terms.has(t)),feeds=(c.produces||[]).filter(t=>(x.requires||[]).includes(t)),fed=(c.requires||[]).filter(t=>(x.produces||[]).includes(t));const kind=feeds.length?'Produces → needs':fed.length?'Needs ← produces':'Shared mechanics / roles';
-   const tag=feeds.length?'→ '+feeds[0]:fed.length?'← '+fed[0]:shared.slice(0,2).join(', ');
-   return {card:x,shared,kind,tag,score:shared.length*2+(feeds.length+fed.length)*3,reason:feeds.length?'Produces → needs · '+feeds.join(', '):fed.length?'Needs ← produces · '+fed.join(', '):'Shared mechanics / roles · '+shared.slice(0,3).join(', ')};}).filter(x=>x.score).sort((a,b)=>b.score-a.score||a.card.name.localeCompare(b.card.name)).slice(0,12);}
-function layout(){const c=byId.get(center),neighbors=links(c);nodes=c?[{card:c,x:0,y:0,r:39},...neighbors.map((n,i)=>({card:n.card,reason:n.reason,kind:n.kind,tag:n.tag,x:Math.cos(i/neighbors.length*Math.PI*2)*ringX(),y:Math.sin(i/neighbors.length*Math.PI*2)*ringY(),r:22}))]:[];onNeighbors?.(c,neighbors,trail.length);draw();}
-function resize(){const r=canvas.getBoundingClientRect();const first=!width||!height;width=r.width;height=r.height;const d=Math.min(devicePixelRatio||1,2);canvas.width=width*d;canvas.height=height*d;ctx.setTransform(d,0,0,d,0,0);
- /* The ring is a function of the canvas, so a rotation or a pane opening has to move the
-    nodes, not just repaint them at the old radius. */
- layout();if(first||!touched)fit();draw();}
-function draw(){if(disposed)return;cancelAnimationFrame(frame);frame=requestAnimationFrame(()=>{ctx.clearRect(0,0,width,height);ctx.save();ctx.translate(width/2+pan.x,height/2+pan.y);ctx.scale(scale,scale);for(const n of nodes.slice(1)){ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(n.x,n.y);ctx.strokeStyle=type==='played'?'#c6a86d88':'#5384b677';ctx.lineWidth=1;ctx.stroke();}
-  /* The edge labels, drawn after every line so no line crosses a label. Skipped when
-     zoomed out past legibility -- an unreadable smear of text is worse than none, and
-     the reader can pinch in to get them back. */
-  if(scale>=.95)for(const n of nodes.slice(1)){
-   const tag=String(n.tag||'').trim();if(!tag)continue;
-   const text=tag.length>20?tag.slice(0,19)+'…':tag;
-   const mx=n.x*.62,my=n.y*.62;
-   ctx.font='10px Satoshi, sans-serif';ctx.textAlign='center';
-   const w=ctx.measureText(text).width+10;
-   ctx.fillStyle='#0f1826d9';ctx.beginPath();ctx.roundRect(mx-w/2,my-8,w,16,8);ctx.fill();
-   ctx.strokeStyle=type==='played'?'#c6a86d55':'#5384b655';ctx.lineWidth=1;ctx.stroke();
-   ctx.fillStyle=type==='played'?'#e6cf9d':'#a8cdf0';ctx.fillText(text,mx,my+3.5);}for(const [i,n] of nodes.entries()){const glow=ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,n.r+12);glow.addColorStop(0,i?'#385b83':'#638abd');glow.addColorStop(1,'#263c5700');ctx.fillStyle=glow;ctx.beginPath();ctx.arc(n.x,n.y,n.r+12,0,Math.PI*2);ctx.fill();ctx.fillStyle=i?'#203a58':'#386794';ctx.strokeStyle=i?'#71b6e3':'#c0e8ff';ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#edf7ff';ctx.font=(i?'11':'bold 13')+'px Satoshi, sans-serif';ctx.textAlign='center';const name=n.card.name;ctx.fillText(name.length>28?name.slice(0,26)+'…':name,n.x,n.y+n.r+17);ctx.fillStyle='#bddbff';ctx.font='12px Satoshi, sans-serif';ctx.fillText((n.card.ci||'C').split('').join(' '),n.x,n.y+4);}ctx.restore();});}
-function pick(e){const r=canvas.getBoundingClientRect(),x=(e.clientX-r.left-width/2-pan.x)/scale,y=(e.clientY-r.top-height/2-pan.y)/scale;return nodes.find(n=>Math.hypot(n.x-x,n.y-y)<n.r+8);}
-function select(id,history=true){if(!byId.has(id))return;if(history&&id!==center)trail.push(center);center=id;layout();fit();draw();onSelect?.(byId.get(id));}
-function wheel(e){e.preventDefault();const r=canvas.getBoundingClientRect(),x=e.clientX-r.left-width/2,y=e.clientY-r.top-height/2,old=scale;touched=true;scale=clampScale(scale*Math.exp(-e.deltaY*.001));pan.x=x-(x-pan.x)*scale/old;pan.y=y-(y-pan.y)*scale/old;draw();}
-function down(e){pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
- /* Capture is an optimisation, not a requirement, and it THROWS -- on a pointer the
-    browser no longer considers active, and on synthetic events. Letting that escape
-    skipped everything below it, which is how the second finger of a pinch ended up
-    registering no pinch at all. */
- try{canvas.setPointerCapture(e.pointerId);}catch(err){/* keep going without it */}
- if(pointers.size===2){/* second finger down: freeze the current view and remember the span between them */
-  pinch=span();pinch.scale=scale;pinch.pan={x:pan.x,y:pan.y};drag=null;return;}
- if(pointers.size===1)drag={x:e.clientX,y:e.clientY,px:pan.x,py:pan.y,moved:false};}
-function move(e){
- if(pointers.has(e.pointerId))pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
- if(pinch&&pointers.size===2){
-  const now=span(),r=canvas.getBoundingClientRect();
-  /* Zoom about the point BETWEEN the fingers, so the card you pinched over stays under
-     them. Anchoring at the canvas centre instead is the thing that makes a pinch feel
-     like it is fighting you. */
-  const cx=now.x-r.left-width/2,cy=now.y-r.top-height/2;
-  touched=true;scale=clampScale(pinch.scale*(now.d/pinch.d));
-  const k=scale/pinch.scale;
-  pan.x=cx-(cx-pinch.pan.x)*k+(now.x-pinch.x);
-  pan.y=cy-(cy-pinch.pan.y)*k+(now.y-pinch.y);
-  draw();return;}
- if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.moved=drag.moved||Math.hypot(dx,dy)>5;pan={x:drag.px+dx,y:drag.py+dy};draw();}
-function up(e){
- pointers.delete(e.pointerId);
- if(pointers.size<2)pinch=null;
- if(drag&&!drag.moved){
-  /* A phone has no keyboard, so the '0' reset needs a gesture. Two taps in the same
-     spot inside 300ms resets the view; a single tap still selects. */
-  const now=Date.now();
-  if(now-lastTap.at<300&&Math.hypot(e.clientX-lastTap.x,e.clientY-lastTap.y)<24){lastTap={at:0,x:0,y:0};fit();draw();drag=null;return;}
-  lastTap={at:now,x:e.clientX,y:e.clientY};
-  const n=pick(e);if(n)select(n.card.id);}
- drag=null;}
-function key(e){if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','+','-','0'].includes(e.key)){e.preventDefault();if(e.key==='0'){fit();}else if(e.key==='+')scale=clampScale(scale*1.2);else if(e.key==='-')scale=clampScale(scale/1.2);else {pan.x+=e.key==='ArrowLeft'?25:e.key==='ArrowRight'?-25:0;pan.y+=e.key==='ArrowUp'?25:e.key==='ArrowDown'?-25:0;}draw();}}
-canvas.addEventListener('wheel',wheel,{passive:false});canvas.addEventListener('pointerdown',down);canvas.addEventListener('pointermove',move);canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',up);canvas.addEventListener('keydown',key);const observer=new ResizeObserver(resize);observer.observe(canvas);layout();resize();return {select,back(){if(trail.length)select(trail.pop(),false);},setType(value){type=value;layout();},reset(){fit();draw();},destroy(){disposed=true;cancelAnimationFrame(frame);observer.disconnect();for(const [name,fn] of [['wheel',wheel],['pointerdown',down],['pointermove',move],['pointerup',up],['pointercancel',up],['keydown',key]])canvas.removeEventListener(name,fn);}};}};})(globalThis);
+/* The card graph: a neighbourhood you can walk, drawn to the breadth it actually has.
+ *
+ * WHAT IT SHOWS. One card in focus, the cards it is joined to, and the cards THEY are
+ * joined to, out to a depth the reader chooses. Two kinds of edge, never mixed: typed
+ * structural links from card text (shared mechanics and roles, and produces→requires
+ * pairs such as a Treasure maker feeding a card that needs artifacts), and EDHREC
+ * co-play. Neither is simulated evidence and the labels say which is which.
+ *
+ * WHY IT IS NOT A STAR ANY MORE. The first version put twelve neighbours on a ring around
+ * the focus and stopped. That answers "what touches Atraxa" and nothing else: it cannot
+ * show that six of those twelve are also joined to each other, which is the whole point
+ * of a graph over a list. This one walks out to a depth, keeps every node's fan-out
+ * bounded so the picture stays legible, and then draws the CROSS-LINKS -- every edge
+ * between any two cards that made it onto the canvas, not just the spokes -- so a
+ * cluster of proliferate cards reads as a cluster.
+ *
+ * HOW IT STAYS READABLE. Three controls, all bounded:
+ *   depth    1-3   how many hops from the focus
+ *   breadth  6-30  how many neighbours the focus itself gets
+ *   cap      ~180  the most nodes ever placed, whatever the settings
+ * Children sit in the angular sector of their parent rather than on a shared ring, so
+ * what belongs to what is visible without reading a single label. Rings shrink with
+ * depth, names appear per ring only once the zoom makes them legible, and edge labels
+ * (why two cards are joined) sit on the focus's own spokes above 0.95 zoom.
+ *
+ * SPEED. links() used to scan all 7,764 cards for every node; at depth 3 that is a
+ * million comparisons per layout. An inverted index -- term → the cards carrying it --
+ * is built once per mount, so a node's candidates are the union of a few hundred ids
+ * rather than the whole catalog.
+ */
+(function (root) {
+  'use strict';
+
+  const GENERIC = new Set(['creatures', 'lands', 'artifacts', 'enchantments', 'instants', 'sorceries', 'planeswalkers']);
+  const CAP = 180;
+
+  /* The words a card is joinable on, for a UI to offer as filters: "Atraxa is in focus;
+     here are proliferate, counters, ... -- tap one to see the cards joined to it that
+     way." Static, because the Card View needs it before a mount has finished. */
+  function termsOf(c) {
+    if (!c) return null;
+    return {
+      mechanics: [...(c.mechanics || [])], roles: (c.roles || []).filter((r) => !GENERIC.has(r)),
+      produces: [...(c.produces || [])], requires: [...(c.requires || [])],
+      causes: [...(c.causes || [])], triggers: [...(c.triggers || [])], tribes: [...(c.tribes || [])]
+    };
+  }
+
+  root.CrankGraph = {
+    termsOf,
+    mount({canvas, cards, played = [], focus, onSelect, onNeighbors, onPick, type = 'mechanic', depth = 2, breadth = 12}) {
+      const ctx = canvas.getContext('2d');
+      const byId = new Map(cards.map((c) => [c.id, c]));
+      const trail = [];
+      let center = focus || (cards[0] && cards[0].id);
+      let nodes = [], edges = [], scale = 1, pan = {x: 0, y: 0}, drag = null;
+      let width = 600, height = 550, frame = 0, disposed = false;
+      const pointers = new Map();
+      let pinch = null, lastTap = {at: 0, x: 0, y: 0}, touched = false;
+      /* navigate: a tap re-centres on the card. select: a tap ticks it, for "add these to
+         a group" -- the loop the graph exists for happens ON the graph, not in a list. */
+      let mode = 'navigate';
+      const selected = new Set();
+
+      /* THE CARD ART. A node is the card, not a blue circle standing in for it. Images
+         load lazily -- only the cards on the canvas, from Scryfall's small rendition --
+         and the frame repaints once each arrives. A card with no image, or one that fails,
+         keeps the plain disc, so the picture never waits on the network to be usable. */
+      const images = new Map();
+      let repaintQueued = false;
+      function art(c) {
+        const url = String(c.image || '');
+        if (!url) return null;
+        const key = c.id;
+        if (images.has(key)) { const img = images.get(key); return img && img !== 'failed' && img.complete && img.naturalWidth ? img : null; }
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => { if (!repaintQueued) { repaintQueued = true; setTimeout(() => { repaintQueued = false; draw(); }, 60); } };
+        img.onerror = () => images.set(key, 'failed');
+        img.src = url.replace('/normal/', '/small/').replace('/large/', '/small/');
+        images.set(key, img);
+        return null;
+      }
+
+      const clampScale = (v) => Math.max(.25, Math.min(5, v));
+      depth = clampDepth(depth); breadth = clampBreadth(breadth);
+      function clampDepth(v) { return Math.max(1, Math.min(3, Math.round(Number(v) || 1))); }
+      function clampBreadth(v) { return Math.max(6, Math.min(30, Math.round(Number(v) || 12))); }
+
+      /* ---------------------------------------------------------- the term index */
+
+      /* The words a card can be joined on. Mechanics and non-generic roles join by
+         sharing; produces and requires join by feeding. Kept per card as Sets so a
+         pair check is set intersection and not array scanning. */
+      function termsOf(c) {
+        return {
+          shared: new Set([...(c.mechanics || []), ...(c.roles || []).filter((r) => !GENERIC.has(r))]),
+          produces: new Set(c.produces || []),
+          requires: new Set(c.requires || [])
+        };
+      }
+      const TERMS = new Map(cards.map((c) => [c.id, termsOf(c)]));
+
+      const index = {shared: new Map(), produces: new Map(), requires: new Map()};
+      for (const c of cards) {
+        const t = TERMS.get(c.id);
+        for (const k of ['shared', 'produces', 'requires']) {
+          for (const term of t[k]) {
+            if (!index[k].has(term)) index[k].set(term, []);
+            index[k].get(term).push(c.id);
+          }
+        }
+      }
+      const coPlay = new Map();
+      for (const e of played) {
+        if (!coPlay.has(e.from)) coPlay.set(e.from, []);
+        if (!coPlay.has(e.to)) coPlay.set(e.to, []);
+        coPlay.get(e.from).push(e); coPlay.get(e.to).push(e);
+      }
+
+      /* Score one pair. A feeds→needs pair is worth more than a shared keyword, because
+         it is a relationship the cards have and not a word they have in common. */
+      function relate(a, b) {
+        const ta = TERMS.get(a.id), tb = TERMS.get(b.id);
+        const shared = [...ta.shared].filter((t) => tb.shared.has(t));
+        const feeds = [...ta.produces].filter((t) => tb.requires.has(t));
+        const fed = [...ta.requires].filter((t) => tb.produces.has(t));
+        const score = shared.length * 2 + (feeds.length + fed.length) * 3;
+        if (!score) return null;
+        const kind = feeds.length ? 'Produces → needs' : fed.length ? 'Needs ← produces' : 'Shared mechanics / roles';
+        const tag = feeds.length ? '→ ' + feeds[0] : fed.length ? '← ' + fed[0] : shared.slice(0, 2).join(', ');
+        const reason = feeds.length ? 'Produces → needs · ' + feeds.join(', ')
+          : fed.length ? 'Needs ← produces · ' + fed.join(', ')
+          : 'Shared mechanics / roles · ' + shared.slice(0, 3).join(', ');
+        return {shared, feeds, fed, score, kind, tag, reason};
+      }
+
+      /* The best `limit` neighbours of one card, excluding any already placed. */
+      function links(c, limit, exclude) {
+        if (!c) return [];
+        if (type === 'played') {
+          return (coPlay.get(c.id) || [])
+            .map((e) => ({card: byId.get(e.from === c.id ? e.to : e.from), e}))
+            .filter((x) => x.card && !exclude.has(x.card.id))
+            .sort((a, b) => b.e.inclusion - a.e.inclusion)
+            .slice(0, limit)
+            .map(({card, e}) => ({card, kind: 'EDHREC co-play', tag: `${(e.inclusion * 100).toFixed(1)}% of decks`,
+              reason: `EDHREC co-play · ${e.decks} decks · ${(e.inclusion * 100).toFixed(1)}% inclusion`, score: e.inclusion}));
+        }
+        const t = TERMS.get(c.id);
+        const candidates = new Set();
+        for (const term of t.shared) for (const id of index.shared.get(term) || []) candidates.add(id);
+        for (const term of t.produces) for (const id of index.requires.get(term) || []) candidates.add(id);
+        for (const term of t.requires) for (const id of index.produces.get(term) || []) candidates.add(id);
+        candidates.delete(c.id);
+        const out = [];
+        for (const id of candidates) {
+          if (exclude.has(id)) continue;
+          const x = byId.get(id); if (!x) continue;
+          const r = relate(c, x); if (r) out.push({card: x, ...r});
+        }
+        return out.sort((a, b) => b.score - a.score || a.card.name.localeCompare(b.card.name)).slice(0, limit);
+      }
+
+      /* ------------------------------------------------------------- the layout */
+
+      function ring(k) {
+        const base = Math.max(140, Math.min(230, Math.min(width, height) * .30));
+        return base * (k === 1 ? 1 : k === 2 ? 1.95 : 2.8);
+      }
+      const radius = (k) => (k === 0 ? 39 : k === 1 ? 20 : k === 2 ? 12 : 8);
+
+      /* Breadth-first to `depth`, each node's children bounded and placed inside the
+         parent's angular sector so clusters stay attached to what they hang off. */
+      function layout() {
+        const c = byId.get(center);
+        nodes = []; edges = [];
+        if (!c) { onNeighbors && onNeighbors(null, [], trail.length, {total: 0, byDepth: []}); draw(); return; }
+        const placed = new Set([c.id]);
+        const root = {card: c, x: 0, y: 0, r: radius(0), depth: 0, angle: 0, span: Math.PI * 2};
+        nodes.push(root);
+        const direct = links(c, breadth, placed);
+        direct.forEach((n) => placed.add(n.card.id));
+
+        let frontier = direct.map((n, i) => {
+          const angle = (i / direct.length) * Math.PI * 2 - Math.PI / 2;
+          const span = (Math.PI * 2) / direct.length;
+          const node = {card: n.card, reason: n.reason, kind: n.kind, tag: n.tag, parent: root,
+            x: Math.cos(angle) * ring(1), y: Math.sin(angle) * ring(1), r: radius(1), depth: 1, angle, span};
+          edges.push({a: root, b: node, tree: true, kind: n.kind});
+          return node;
+        });
+        nodes.push(...frontier);
+
+        /* HOW THE CAP IS SPENT. Every ring the reader asked for gets a share of what is
+           left under CAP, so depth 3 is a third ring and not a second ring that ate the
+           whole budget: an inner ring takes ~60% of the remainder, the outermost the
+           rest. Within a ring the share is split evenly across parents, the earliest
+           (best-scored) parents taking any leftover, and each parent's fan is bounded by
+           the reader's breadth too -- children of the focus get at most a third of it,
+           theirs a fifth -- because the question at depth 3 is "is there a web out
+           here", not "list them all". */
+        let remaining = CAP - nodes.length;
+        for (let d = 2; d <= depth && remaining > 0 && frontier.length; d += 1) {
+          const share = d < depth ? Math.max(frontier.length, Math.round(remaining * .6)) : remaining;
+          const perParent = Math.max(1, Math.floor(share / frontier.length));
+          let extra = Math.max(0, share - perParent * frontier.length);
+          const maxFan = Math.max(1, Math.round(breadth / (d === 2 ? 3 : 5)));
+          const next = [];
+          let spent = 0;
+          for (const parent of frontier) {
+            if (spent >= share || nodes.length >= CAP) break;
+            const bonus = extra > 0 ? 1 : 0;
+            const want = Math.min(maxFan, perParent + bonus, share - spent, CAP - nodes.length);
+            if (bonus && want > perParent) extra -= 1;
+            const kids = links(parent.card, want, placed);
+            kids.forEach((k) => placed.add(k.card.id));
+            spent += kids.length;
+            const usable = parent.span * .82;
+            kids.forEach((k, i) => {
+              const angle = parent.angle - usable / 2 + (kids.length === 1 ? usable / 2 : (i / (kids.length - 1)) * usable);
+              const node = {card: k.card, reason: k.reason, kind: k.kind, tag: k.tag, parent,
+                x: Math.cos(angle) * ring(d), y: Math.sin(angle) * ring(d), r: radius(d), depth: d,
+                angle, span: usable / Math.max(1, kids.length)};
+              edges.push({a: parent, b: node, tree: true, kind: k.kind});
+              nodes.push(node); next.push(node);
+            });
+          }
+          remaining = CAP - nodes.length;
+          frontier = next;
+        }
+
+        /* THE CROSS-LINKS: every relationship between two cards that both made it onto
+           the canvas, beyond the tree that placed them. This is the many-to-many the
+           picture exists to show. O(n²) over at most CAP nodes on precomputed Sets. */
+        const treeKey = new Set(edges.map((e) => e.a.card.id + '|' + e.b.card.id));
+        for (let i = 1; i < nodes.length; i += 1) {
+          for (let j = i + 1; j < nodes.length; j += 1) {
+            const a = nodes[i], b = nodes[j];
+            if (treeKey.has(a.card.id + '|' + b.card.id) || treeKey.has(b.card.id + '|' + a.card.id)) continue;
+            const r = type === 'played' ? coPlayPair(a.card.id, b.card.id) : relate(a.card, b.card);
+            if (r) edges.push({a, b, tree: false, kind: r.kind});
+          }
+        }
+        const byDepth = [1, 2, 3].map((d) => nodes.filter((n) => n.depth === d).length);
+        onNeighbors && onNeighbors(c, direct, trail.length, {total: nodes.length, byDepth, crossLinks: edges.filter((e) => !e.tree).length});
+        draw();
+      }
+      function coPlayPair(x, y) {
+        const e = (coPlay.get(x) || []).find((e) => e.from === y || e.to === y);
+        return e ? {kind: 'EDHREC co-play'} : null;
+      }
+
+      /* Zoom so the whole neighbourhood is on screen, with room for the names under the
+         outer ring. Deeper layouts are wider, so this is what keeps depth 3 from opening
+         as a picture of the middle of itself. */
+      function fit() {
+        if (!nodes.length) { scale = 1; pan = {x: 0, y: 0}; return; }
+        const rx = Math.max(...nodes.map((n) => Math.abs(n.x) + n.r)) + 70;
+        const ry = Math.max(...nodes.map((n) => Math.abs(n.y) + n.r)) + 42;
+        scale = clampScale(Math.min(1, Math.min(width / 2 / rx, height / 2 / ry)));
+        pan = {x: 0, y: 0};
+      }
+
+      /* --------------------------------------------------------------- drawing */
+
+      function draw() {
+        if (disposed) return;
+        cancelAnimationFrame(frame);
+        frame = requestAnimationFrame(() => {
+          ctx.clearRect(0, 0, width, height);
+          ctx.save();
+          ctx.translate(width / 2 + pan.x, height / 2 + pan.y);
+          ctx.scale(scale, scale);
+          const played = type === 'played';
+
+          // cross-links first and faintest, so the tree reads on top of the web
+          for (const e of edges) {
+            if (e.tree) continue;
+            ctx.beginPath(); ctx.moveTo(e.a.x, e.a.y); ctx.lineTo(e.b.x, e.b.y);
+            ctx.strokeStyle = played ? '#c6a86d2e' : '#5384b62e'; ctx.lineWidth = 1; ctx.stroke();
+          }
+          for (const e of edges) {
+            if (!e.tree) continue;
+            ctx.beginPath(); ctx.moveTo(e.a.x, e.a.y); ctx.lineTo(e.b.x, e.b.y);
+            ctx.strokeStyle = played ? (e.b.depth === 1 ? '#c6a86d99' : '#c6a86d55') : (e.b.depth === 1 ? '#5384b699' : '#5384b655');
+            ctx.lineWidth = e.b.depth === 1 ? 1.2 : 1; ctx.stroke();
+          }
+
+          /* ROOM TO LETTER. A name is drawn only where the ring has room for it: the arc
+             between neighbours, on screen, must be wide enough for a label. Thirty names on
+             ring 1 at fit zoom are a smear; the same thirty at 2x zoom read fine. Gating on
+             spacing rather than on zoom alone means breadth 12 reads at depth 3 and breadth
+             30 asks the reader to zoom in, which is what the hint says. */
+          const perRing = [0, 1, 2, 3].map((d) => nodes.filter((n) => n.depth === d).length);
+          const spacing = (d) => (2 * Math.PI * ring(d) * scale) / Math.max(1, perRing[d]);
+          const roomy = (d) => d === 0 || spacing(d) >= (d === 1 ? 44 : 60);
+
+          /* Why two cards are joined, on the focus's own spokes, once zoomed in enough to
+             read. Deeper edges carry the same information in the Card View; lettering all
+             of them would bury the picture under its own captions. */
+          if (scale >= .95 && roomy(1)) {
+            for (const n of nodes) {
+              if (n.depth !== 1) continue;
+              const tag = String(n.tag || '').trim(); if (!tag) continue;
+              const text = tag.length > 20 ? tag.slice(0, 19) + '…' : tag;
+              const mx = n.x * .62, my = n.y * .62;
+              ctx.font = '10px Satoshi, sans-serif'; ctx.textAlign = 'center';
+              const w = ctx.measureText(text).width + 10;
+              ctx.fillStyle = '#0f1826d9'; ctx.beginPath(); ctx.roundRect(mx - w / 2, my - 8, w, 16, 8); ctx.fill();
+              ctx.strokeStyle = played ? '#c6a86d55' : '#5384b655'; ctx.lineWidth = 1; ctx.stroke();
+              ctx.fillStyle = played ? '#e6cf9d' : '#a8cdf0'; ctx.fillText(text, mx, my + 3.5);
+            }
+          }
+
+          // nodes, outer rings first so the focus is painted last and on top
+          const order = [...nodes].sort((a, b) => b.depth - a.depth);
+          for (const n of order) {
+            const focus = n.depth === 0;
+            const glow = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.r + (focus ? 12 : 6));
+            glow.addColorStop(0, focus ? '#638abd' : n.depth === 1 ? '#385b83' : '#2b4666');
+            glow.addColorStop(1, '#263c5700');
+            ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(n.x, n.y, n.r + (focus ? 12 : 6), 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = focus ? '#386794' : n.depth === 1 ? '#203a58' : '#1b3049';
+            ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2); ctx.fill();
+            const img = art(n.card);
+            if (img) {
+              /* The art box of a Magic card sits in roughly the top half. A square crop of
+                 that region, drawn to cover the disc, gives the painting and not the text. */
+              ctx.save(); ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2); ctx.clip();
+              const sw = img.naturalWidth * .84, sx = img.naturalWidth * .08, sy = img.naturalHeight * .11;
+              ctx.drawImage(img, sx, sy, sw, sw, n.x - n.r, n.y - n.r, n.r * 2, n.r * 2);
+              ctx.restore();
+            } else if (n.depth <= 1) {
+              ctx.fillStyle = '#bddbff'; ctx.font = (focus ? '12' : '9') + 'px Satoshi, sans-serif'; ctx.textAlign = 'center';
+              ctx.fillText((n.card.ci || 'C').split('').join(' '), n.x, n.y + (focus ? 4 : 3));
+            }
+            const isSel = selected.has(n.card.id);
+            ctx.strokeStyle = isSel ? '#ffd166' : focus ? '#c0e8ff' : n.depth === 1 ? '#71b6e3' : '#4f89b8';
+            ctx.lineWidth = isSel ? 3 : focus ? 1.5 : 1;
+            ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2); ctx.stroke();
+            if (isSel) {
+              // a small check badge, so a selected card reads as selected at any zoom
+              ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.arc(n.x + n.r * .7, n.y - n.r * .7, Math.max(6, n.r * .32), 0, Math.PI * 2); ctx.fill();
+              ctx.fillStyle = '#1b1b1b'; ctx.font = 'bold ' + Math.max(8, n.r * .4) + 'px Satoshi, sans-serif'; ctx.textAlign = 'center';
+              ctx.fillText('✓', n.x + n.r * .7, n.y - n.r * .7 + Math.max(3, n.r * .14));
+            }
+            /* Names per ring, gated on zoom: ring 1 always, ring 2 from 0.8, ring 3 from
+               1.3. Below those the text would be a smaller smear than the circle it labels. */
+            const showName = n.depth === 0 || (roomy(n.depth) && (n.depth === 1 || (n.depth === 2 && scale >= .8) || (n.depth === 3 && scale >= 1.3)));
+            if (showName) {
+              const name = n.card.name;
+              const max = n.depth === 0 ? 28 : n.depth === 1 ? 24 : 18;
+              ctx.fillStyle = n.depth <= 1 ? '#edf7ff' : '#c9dcf2';
+              ctx.font = (focus ? 'bold 13' : n.depth === 1 ? '11' : '10') + 'px Satoshi, sans-serif'; ctx.textAlign = 'center';
+              ctx.fillText(name.length > max ? name.slice(0, max - 2) + '…' : name, n.x, n.y + n.r + (n.depth <= 1 ? 15 : 12));
+            }
+          }
+          ctx.restore();
+        });
+      }
+
+      /* ------------------------------------------------------------- pointing */
+
+      function pick(e) {
+        const r = canvas.getBoundingClientRect();
+        const x = (e.clientX - r.left - width / 2 - pan.x) / scale, y = (e.clientY - r.top - height / 2 - pan.y) / scale;
+        // smallest hit first, so a ring-3 dot inside a ring-1 halo is still pickable
+        return [...nodes].sort((a, b) => a.r - b.r).find((n) => Math.hypot(n.x - x, n.y - y) < n.r + 8);
+      }
+      function select(id, history = true) {
+        if (!byId.has(id)) return;
+        if (history && id !== center) trail.push(center);
+        center = id; touched = false;
+        layout(); fit(); draw();
+        onSelect && onSelect(byId.get(id));
+      }
+      function span() {
+        const [a, b] = [...pointers.values()];
+        return {x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, d: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y))};
+      }
+      function wheel(e) {
+        e.preventDefault();
+        const r = canvas.getBoundingClientRect(), x = e.clientX - r.left - width / 2, y = e.clientY - r.top - height / 2, old = scale;
+        touched = true; scale = clampScale(scale * Math.exp(-e.deltaY * .001));
+        pan.x = x - (x - pan.x) * scale / old; pan.y = y - (y - pan.y) * scale / old; draw();
+      }
+      function down(e) {
+        pointers.set(e.pointerId, {x: e.clientX, y: e.clientY});
+        /* Capture is an optimisation, not a requirement, and it THROWS on a pointer the
+           browser no longer considers active. Letting that escape once skipped the pinch
+           arming below it. */
+        try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* carry on without it */ }
+        if (pointers.size === 2) { pinch = span(); pinch.scale = scale; pinch.pan = {x: pan.x, y: pan.y}; drag = null; return; }
+        if (pointers.size === 1) drag = {x: e.clientX, y: e.clientY, px: pan.x, py: pan.y, moved: false};
+      }
+      function move(e) {
+        if (pointers.has(e.pointerId)) pointers.set(e.pointerId, {x: e.clientX, y: e.clientY});
+        if (pinch && pointers.size === 2) {
+          /* Zoom about the point BETWEEN the fingers, so the card you pinched over stays
+             under them; anchoring at the canvas centre is what makes a pinch fight you. */
+          const now = span(), r = canvas.getBoundingClientRect();
+          const cx = now.x - r.left - width / 2, cy = now.y - r.top - height / 2;
+          touched = true; scale = clampScale(pinch.scale * (now.d / pinch.d));
+          const k = scale / pinch.scale;
+          pan.x = cx - (cx - pinch.pan.x) * k + (now.x - pinch.x);
+          pan.y = cy - (cy - pinch.pan.y) * k + (now.y - pinch.y);
+          draw(); return;
+        }
+        if (!drag) return;
+        const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+        drag.moved = drag.moved || Math.hypot(dx, dy) > 5;
+        pan = {x: drag.px + dx, y: drag.py + dy}; draw();
+      }
+      function up(e) {
+        pointers.delete(e.pointerId);
+        if (pointers.size < 2) pinch = null;
+        if (drag && !drag.moved) {
+          /* A phone has no '0' key: two taps in the same spot inside 300ms resets the view.
+             Touch only, and never in select mode -- a mouse has the key and the button,
+             and someone ticking neighbours quickly at low zoom lands two clicks within
+             24px of each other without meaning "reset". */
+          const now = Date.now();
+          if (e.pointerType === 'touch' && mode !== 'select' && now - lastTap.at < 300 && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < 24) {
+            lastTap = {at: 0, x: 0, y: 0}; fit(); draw(); drag = null; return;
+          }
+          lastTap = {at: now, x: e.clientX, y: e.clientY};
+          const n = pick(e);
+          if (n && mode === 'select') {
+            if (selected.has(n.card.id)) selected.delete(n.card.id); else selected.add(n.card.id);
+            draw(); onPick && onPick(n.card, new Set(selected));
+          } else if (n) select(n.card.id);
+        }
+        drag = null;
+      }
+      function key(e) {
+        if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', '+', '-', '0'].includes(e.key)) return;
+        e.preventDefault();
+        if (e.key === '0') fit();
+        else if (e.key === '+') { touched = true; scale = clampScale(scale * 1.2); }
+        else if (e.key === '-') { touched = true; scale = clampScale(scale / 1.2); }
+        else { pan.x += e.key === 'ArrowLeft' ? 25 : e.key === 'ArrowRight' ? -25 : 0; pan.y += e.key === 'ArrowUp' ? 25 : e.key === 'ArrowDown' ? -25 : 0; }
+        draw();
+      }
+      function resize() {
+        const r = canvas.getBoundingClientRect(); const first = !width || !height;
+        /* The canvas is stretched to the pane beside it, and that pane is rewritten from
+           this module's own layout callback. Re-laying out on a sub-pixel wobble is how
+           that becomes a loop; a real resize is whole pixels. */
+        if (!first && Math.abs(r.width - width) < 1 && Math.abs(r.height - height) < 1) return;
+        width = r.width; height = r.height;
+        const d = Math.min(devicePixelRatio || 1, 2);
+        canvas.width = width * d; canvas.height = height * d; ctx.setTransform(d, 0, 0, d, 0, 0);
+        // the rings are a function of the canvas, so a rotation must move the nodes, not just repaint
+        layout(); if (first || !touched) fit(); draw();
+      }
+
+      canvas.addEventListener('wheel', wheel, {passive: false});
+      canvas.addEventListener('pointerdown', down);
+      canvas.addEventListener('pointermove', move);
+      canvas.addEventListener('pointerup', up);
+      canvas.addEventListener('pointercancel', up);
+      canvas.addEventListener('keydown', key);
+      const observer = new ResizeObserver(resize);
+      observer.observe(canvas);
+      layout(); resize();
+
+      const api = {
+        select,
+        back() { if (trail.length) select(trail.pop(), false); },
+        setType(value) { type = value; layout(); fit(); draw(); },
+        setDepth(value) { depth = clampDepth(value); layout(); fit(); draw(); },
+        setBreadth(value) { breadth = clampBreadth(value); layout(); fit(); draw(); },
+        reset() { fit(); draw(); },
+        terms(id) { return termsOf(byId.get(id || center)); },
+        get settings() { return {type, depth, breadth, nodes: nodes.length, mode}; },
+        setMode(value) { mode = value === 'select' ? 'select' : 'navigate'; draw(); },
+        setSelected(ids) { selected.clear(); for (const id of ids || []) selected.add(id); draw(); },
+        get selected() { return new Set(selected); },
+        /* Which cards are on the canvas right now -- what "tick all shown" means. */
+        visible() { return nodes.map((n) => n.card); },
+        /* Where each node is on the canvas right now, in CSS pixels -- what a pop-up
+           anchors to, and what a test clicks. */
+        positions() { return nodes.map((n) => ({id: n.card.id, name: n.card.name, depth: n.depth, x: width / 2 + pan.x + n.x * scale, y: height / 2 + pan.y + n.y * scale, r: n.r * scale})); },
+        current() { return byId.get(center) || null; },
+        destroy() {
+          disposed = true; cancelAnimationFrame(frame); observer.disconnect();
+          for (const [name, fn] of [['wheel', wheel], ['pointerdown', down], ['pointermove', move], ['pointerup', up], ['pointercancel', up], ['keydown', key]]) canvas.removeEventListener(name, fn);
+        }
+      };
+      canvas.crankGraph = api;
+      return api;
+    }
+  };
+})(globalThis);
