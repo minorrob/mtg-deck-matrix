@@ -150,3 +150,44 @@
   .cm-card-view{height:auto!important;min-height:0;--cm-pane-stacked:1}
   .cm-card-view-oracle{min-height:0;max-height:260px}
 }
+
+/* THE HEADER ON A PHONE. The brand block is `flex:1; min-width:0`, so it shrinks below
+   the width its own text needs -- and nothing stopped that text painting straight out of
+   the box and across the two buttons beside it. Measured: the wordmark ended at x=202 on
+   every phone width, while the buttons began at x=194 (430px), x=154 (390px), x=139
+   (375px) and x=84 (320px). It overlapped by 8px on the widest phone and 118px on the
+   narrowest. Two fixes, because either one alone leaves it tight:
+   the wordmark can no longer overflow its box, and the buttons stop spending 220px on
+   two words each when there is no room for them. */
+#matrix-v2 .v-brand{white-space:nowrap;overflow:hidden;text-overflow:clip}
+#matrix-v2 .v-brand-subline{overflow:hidden}
+#matrix-v2 .v-brand-block{min-width:0;flex:1 1 auto}
+.cm-btn-icon{display:none}
+@media(max-width:560px){
+  /* Icon-only. Both buttons keep an aria-label, so the accessible name is the full
+     wording whatever the label span is doing, and the tap target stays 36px square. */
+  .cm-btn-icon{display:inline;font-size:15px;line-height:1}
+  .cm-btn-label,.cm-btn-chevron{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  #matrix-v2 .cm-user-menu>.v-button{min-width:38px;min-height:38px;padding:0;justify-content:center}
+  #matrix-v2 .v-brand{font-size:23px}
+  #matrix-v2 .v-brand-subline{font-size:9px;max-width:none}
+}
+@media(max-width:360px){
+  /* No room for the mark and the words at this width; the logo carries the brand. */
+  #matrix-v2 .v-brand-logo{display:none}
+  #matrix-v2 .v-brand{font-size:21px}
+}
+
+/* TAP TARGETS ON A TOUCH SCREEN. Three controls came out under 30px tall on a 375px
+   phone: the aether pause pill at 26x26 sitting right beside the wordmark, every table
+   header's sort button at 24px, and the commander picker's name button at 16px -- that
+   last one a side effect of shortening those rows for the desktop, where a mouse does
+   not care. Height only; nothing moves or reflows. */
+@media(pointer:coarse){
+  #matrix-v2 .v-aether-toggle{width:38px;height:38px;border-radius:8px}
+}
+@media(max-width:760px){
+  .cm-table th button{min-height:36px;align-items:center}
+  .cm-picker-choose{min-height:36px;display:flex;flex-direction:column;justify-content:center}
+  .cm-picker-row .cm-text-button{min-height:36px;display:inline-flex;align-items:center}
+}
