@@ -242,3 +242,24 @@
    what a player is checking against the seller's binder tab. */
 .cm-rarity{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;font-size:11px;font-weight:700;color:#10141d;background:#b9b3a8}
 .cm-rarity-U{background:#c3ced9}.cm-rarity-R{background:#d9be6a}.cm-rarity-M{background:#e08750}.cm-rarity-S{background:#c8a2d8}.cm-rarity-B{background:#8fbfa4}
+
+/* TWO THINGS tests/browser-geometry.mjs FOUND ON ITS FIRST RUN.
+   The pass is the one written down in tests/uat/geometry.mjs: no sideways scroll, no tap
+   target under 32px, nothing in the header painting over anything else, at six widths on
+   four pages. Both of these had been on the live site and neither had been noticed. */
+
+/* 1. THE HERO FAN PUSHED THE PAGE 9px WIDE AT 768. The three cards are rotated 20 degrees,
+   which makes their painted box wider than their layout box, and the right-hand one
+   reached x=777 on a 768px screen -- a decorative card giving the whole page a horizontal
+   scrollbar. Clipping at the main column costs nothing that was on screen and closes the
+   whole class of bug: any future overhang is clipped rather than scrolled to. `clip`
+   rather than `hidden` because hidden would make this a scroll container and break the
+   sticky run panel inside it. */
+#cm-main{overflow-x:clip}
+
+/* 2. THE DECK LAB'S SUB-SECTION HEADERS WERE 28px. Every folding section is a <summary>,
+   which is the whole control -- tapping the words is how the section opens -- and the
+   sub-section ones inherited a heading's line box rather than a button's height. */
+@media(pointer:coarse){
+  #matrix-v2 summary{min-height:36px;padding-top:5px;padding-bottom:5px}
+}

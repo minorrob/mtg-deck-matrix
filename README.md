@@ -104,10 +104,11 @@ installation. Workbook tests optionally use `XLSX_PYTHON` with openpyxl for inde
 spreadsheet verification. See [tests/uat/README.md](tests/uat/README.md).
 
 Changed assets require a new `?v=` everywhere referenced, then
-`node tests/asset-versions.mjs --update`. There are 44 Node suites:
+`node tests/asset-versions.mjs --update`. There are 47 Node suites:
 
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`
+- `browser-geometry` — `tests/browser-geometry.mjs`
 - `card-classify` — `tests/card-classify.mjs`
 - `card-images` — `tests/card-images.mjs`
 - `card-link` — `tests/card-link.mjs`
@@ -134,6 +135,7 @@ Changed assets require a new `?v=` everywhere referenced, then
 - `edhrec-client` — `tests/edhrec-client.mjs`
 - `friends-deck` — `tests/friends-deck.mjs`
 - `game-record` — `tests/game-record.mjs`
+- `generators` — `tests/generators.mjs`
 - `guide-agent` — `tests/guide-agent.mjs`
 - `guide-measured` — `tests/guide-measured.mjs`
 - `import-wiring` — `tests/import-wiring.mjs`
@@ -144,6 +146,7 @@ Changed assets require a new `?v=` everywhere referenced, then
 - `master-regenerates` — `tests/master-regenerates.mjs`
 - `measure-report` — `tests/measure-report.mjs`
 - `pilot-policy` — `tests/pilot-policy.mjs`
+- `service-worker` — `tests/service-worker.mjs`
 - `shop-export` — `tests/shop-export.mjs`
 - `sim-engine` — `tests/sim-engine.mjs`
 - `sim-lenses` — `tests/sim-lenses.mjs`

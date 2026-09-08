@@ -282,6 +282,10 @@ views.lab=async()=>{
      spent three seconds of its forty-five, kept nine swaps and stopped. Bounded by time
      instead: a round is thirty seconds of measured search, and it uses them. */
   const REFINE_MS=30000, LOOP_MS=150000, MAX_ROUNDS=5;
+  /* Which exact hundred the reader has already been warned about. Keyed on the list, so
+     changing a card asks again rather than inheriting a stale acknowledgement. */
+  let blindOk=null;
+  const signatureOf=slots=>slots.map(r=>r.cardId).sort().join('|');
   const PER_SLOT=14;      // candidates screened against one weak slot before moving on
   const SCREEN_KEEP=2;    // of those, how many earn a confirmation run
   const MIN_GAIN=0.5;     // points a swap must add on top of the run's own noise
@@ -421,6 +425,18 @@ views.lab=async()=>{
 
     sayStatus(`${label||'Measuring'} the list as it stands…`);
     let base=await scoreSlots(slots,preview.commanders,'refine',m=>sayStatus(`${label||'Measuring'} the list as it stands · ${m.done} of ${m.total}`));
+    /* THE ENGINE WILL NOT RANK A DECK IT CANNOT SEE WIN. Refine keeps the swap that
+       raises the score, so on a list whose win is a card saying "you win the game" --
+       Thassa's Oracle, Approach, Aetherflux -- it optimizes the creatures and spells
+       AROUND the combo and calls the result better. That is not a search that failed;
+       it is a search that answered a different question, confidently. It stops once,
+       says which cards it cannot read, and continues if you ask again with the same
+       list, because sometimes tuning the shell is exactly what you wanted. */
+    if(base.unwatchedWinPaths&&blindOk!==signatureOf(slots)){
+      blindOk=signatureOf(slots);
+      const names=(base.unwatchedWinCards||[]).join(', ');
+      throw Error(`This list wins through ${base.unwatchedWinPaths} card${base.unwatchedWinPaths===1?'':'s'} the engine cannot watch${names?' ('+names+')':''}: it reads "you win the game" but not the condition attached to it. Ranking swaps on this score tunes everything except the way the deck actually wins. Click again to search the shell anyway.`);
+    }
     let screenBase=await scoreSlots(slots,preview.commanders,'preview');
     const kept=[];let tried=0,confirmed=0,next=0;
     for(const out of weakestSlots(base,slots,leaders,20)){
@@ -523,14 +539,20 @@ views.lab=async()=>{
     const targets=r.targets||targetsFor(rawFrom(m),definition,simConfig);
     const row=(label,metric,suffix)=>metric&&metric.value!==null&&metric.value!==undefined
       ? `<span>${e(label)} <strong>${e(String(metric.value))}${e(suffix||metric.unit&&(' '+metric.unit)||'')}</strong></span>` : '';
-    return `<div class="cm-count-list">
+    /* SAID BEFORE THE SCORE, NOT AFTER IT. A reader who scrolls to a number and stops
+       has to meet this first, because it is the sentence that says what the number
+       leaves out. */
+    const blind=(m.winPathsTheEngineCannotWatch&&m.winPathsTheEngineCannotWatch.value)||0;
+    const blindNote=blind?note(`This list carries ${blind} card${blind===1?'':'s'} that say "you win the game"${(r.unwatchedWinCards||[]).length?' — '+(r.unwatchedWinCards||[]).join(', '):''}. The engine reads the card and not the condition on it, so the way this deck really wins is not in the score below; it is scored as the creatures and spells around that card. Rank it against another combo list, not against a creature deck.`,true):'';
+    return blindNote+`<div class="cm-count-list">
         ${row('Score',m.score)}${row('Standard error',m.scoreStandardError)}${row('Win rate',m.winRate)}
         ${row('Average winning turn',m.averageWinTurn)}${row('Commander cast rate',m.commanderCastRate)}
         ${row('Average commander turn',m.averageCommanderTurn)}${row('Turn-capped games',m.incompleteGames)}
         ${row('Mana screw',m.manaScrew)}${row('Mana flood',m.manaFlood)}${row('Dead cards by turn 8',m.deadCardsAtTurnEight)}
         ${row('Pod experience',m.podExperience)}${row('Answer in hand',m.answerInHand)}
         ${row('Idle turns for the other seats',m.idleTurnsForOthers)}${row('Seats still playing at the end',m.seatsStillPlayingAtTheEnd)}
-        ${row('First elimination',m.firstEliminationTurn)}${row('Cards the engine could read',m.cardsTheEngineCouldRead)}
+        ${row('First elimination',m.firstEliminationTurn)}${row('Spells cast per game',m.spellsCastPerGame)}
+        ${row('Biggest turn',m.biggestTurn)}${row('Cards the engine could read',m.cardsTheEngineCouldRead)}
       </div>
       <p class="cm-muted">${e(r.protocol)} · ${(r.conditions&&r.conditions.seedCount)||'?'} seeds of ${((r.conditions&&r.conditions.gamesPerSeed)||0).toLocaleString()} games · ${((r.run&&r.run.games)||0).toLocaleString()} games in ${(((r.run&&r.run.elapsedMs)||0)/1000).toFixed(1)}s</p>
       ${(r.scoreParts||[]).length?`<h3 class="cm-section-heading">How the score was made</h3>

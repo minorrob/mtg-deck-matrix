@@ -156,6 +156,34 @@ check("a measured report is marked measured, so it cannot be read as an import",
   assert.equal(pack().origin, "measured");
 });
 
+check("a win the engine cannot watch reaches the reader, in the metrics and in the limits", () => {
+  /* v2.7 started counting cards that say "you win the game" and showed the count to
+     nobody. A deck built on Thassa's Oracle is not a weak deck; it is a deck this
+     measurement does not describe, and a score printed without that sentence beside it
+     is the score of a different deck. */
+  const clean = pack();
+  assert.equal(clean.metrics.winPathsTheEngineCannotWatch.value, 0);
+  assert.equal(clean.limits.length, 4, "a list with no unwatched win keeps the four standing limits");
+
+  const combo = Sim.packFor({...fakeResult, unwatchedWinPaths: 2, unwatchedWinCards: ["Thassa's Oracle", "Approach of the Second Sun"]}, {
+    protocol: "published", table: "default", seatCount: 3, firstSeed: 20260904,
+    cardsVersion: "v2", coverage: {total: 100, known: 100, ratio: 1, unreadable: []}
+  });
+  assert.equal(combo.metrics.winPathsTheEngineCannotWatch.value, 2);
+  assert.deepEqual(combo.unwatchedWinCards, ["Thassa's Oracle", "Approach of the Second Sun"]);
+  assert.equal(combo.limits.length, 5, "the extra limit is added, not swapped in");
+  assert.match(combo.limits[4], /you win the game/);
+  assert.match(combo.limits[4], /Thassa's Oracle/, "naming the card is what makes the warning actionable");
+  assert.doesNotThrow(() => Evidence.validate(combo));
+});
+
+check("the engine counts and names the win paths it cannot watch", () => {
+  const engine = require("../sim-engine.js");
+  assert.equal(engine.classifyCard({name: "Thassa's Oracle", typeLine: "Creature — Merfolk Wizard", manaCost: "{U}{U}",
+    oracleText: "When Thassa's Oracle enters the battlefield, look at the top X cards of your library... If X is greater than or equal to the number of cards in your library, you win the game."}).altWin, true);
+  assert.equal(engine.classifyCard({name: "Sol Ring", typeLine: "Artifact", manaCost: "{1}", oracleText: "{T}: Add {C}{C}."}).altWin, false);
+});
+
 check("what the model cannot do travels with the number, not just on screen", () => {
   const report = pack();
   assert.ok(report.limits.length >= 4);

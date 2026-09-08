@@ -1593,7 +1593,8 @@
          Counted and reported, never scored: a deck built around one of these is not a weak
          deck, it is a deck this measurement does not describe, and the difference has to
          reach the reader rather than be quietly folded into a creature's body. */
-      unwatchedWinPaths: totals.unwatchedWinPaths || 0
+      unwatchedWinPaths: totals.unwatchedWinPaths || 0,
+      unwatchedWinCards: totals.unwatchedWinCards || []
     };
   }
 
@@ -1814,7 +1815,11 @@
       stormPeakSum: 0,
       /* Counted once off the list rather than per game: it is a property of the hundred,
          not of how a game went. */
-      unwatchedWinPaths: deck.profiles.filter((profile) => profile.altWin).length
+      unwatchedWinPaths: deck.profiles.filter((profile) => profile.altWin).length,
+      /* The names too, because "1 card this engine cannot watch" is a warning and
+         "Thassa's Oracle" is an explanation. Capped: the message that carries them is a
+         sentence, not a list. */
+      unwatchedWinCards: deck.profiles.filter((profile) => profile.altWin).map((profile) => profile.name).slice(0, 6)
     };
     const games = Number(config.games || config.gamesPerIteration || 500);
     const batchSize = Number(config.batchSize || 100);

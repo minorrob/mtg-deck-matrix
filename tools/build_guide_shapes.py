@@ -90,7 +90,7 @@ def shape_of(deck_id, rows, facts):
 
 def main():
     write = "--write" in sys.argv[1:]
-    master = json.load(open(os.path.join(ROOT, "data", "master-v2.json"), encoding="utf-8"))
+    master = json.load(open(os.path.join(ROOT, "data", "archive", "master-v2.json"), encoding="utf-8"))
     facts = {key(n): f for n, f in json.load(
         open(os.path.join(ROOT, "data", "card-facts.json"), encoding="utf-8"))["cards"].items()}
     guides_path = os.path.join(ROOT, "data", "deck-guides.json")

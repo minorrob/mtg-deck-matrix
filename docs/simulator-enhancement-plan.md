@@ -25,7 +25,7 @@ changes that would make the Lab's recommendations worth acting on.**
 
 ---
 
-## The five things the engine cannot see
+## The six things the engine cannot see
 
 ### 1. Every drawn spell is eventually cast
 
@@ -114,6 +114,28 @@ and no legal target is required. So multiple available answers can be counted ag
 the same resources, and a tapped-out pilot can receive protection credit.
 
 **Cost: small**, and it belongs with item 3 — both are "spend the resource you claimed".
+
+### 6. A spell that fetches one land is credited with two mana
+
+Found while extending `tests/slot-model.mjs`. `rampAmount` is:
+
+```js
+/add \{[wubrgc]\}\{[wubrgc]\}|search your library for (?:a|up to two|two) (?:basic )?land/.test(text) ? 2 : 1
+```
+
+The alternation puts `a` beside `up to two` and `two`, so **Rampant Growth, Solemn
+Simulacrum, Sakura-Tribe Elder, Farhaven Elf, Crop Rotation** and eight more — 13 cards
+in today's catalog — each add two permanent mana sources when they fetch one land. Worse,
+it is inconsistent rather than uniformly generous: Nature's Lore and Three Visits fetch
+one land and are credited one, because they say "a Forest card" and never the word
+"land". So two functionally identical cards ramp at different rates.
+
+The fix is one regex: drop `a|` from that alternation and let a single fetch read as 1.
+
+**Cost: trivial to write, and it moves every published green number**, which is why it is
+not a hardening change. It belongs in the v2.7 re-sweep (task #185), and
+`tests/slot-model.mjs` pins today's behaviour with a comment pointing here, so the
+re-sweep has to come back and edit that line rather than quietly inheriting the bug.
 
 ---
 

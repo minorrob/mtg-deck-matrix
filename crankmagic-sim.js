@@ -41,7 +41,7 @@
      them lazily off the global. Versions must match the ?v= the pages use, or a browser
      that has one page cached serves the worker a different engine than the page. */
   const ENGINE_SCRIPTS = [
-    "sim-engine.js?v=10",
+    "sim-engine.js?v=11",
     "combat.js?v=2",
     "pilot-policy.js?v=3",
     "deck-measure.js?v=9"
@@ -221,8 +221,19 @@
         seatsStillPlayingAtTheEnd: {value: result.avgSurvivingSeats ?? null, unit: "seats"},
         firstEliminationTurn: {value: result.avgFirstElimination ?? null, unit: "turns"},
         answerInHand: {value: pct(result.interactionAvailability), unit: "% of turns"},
+        /* How much a game actually happened, and the most that happened in one turn. A
+           storm deck lives on the second figure and nothing reported it. */
+        spellsCastPerGame: {value: result.avgSpellsPerGame ?? null, unit: "spells"},
+        biggestTurn: {value: result.avgStormPeak ?? null, unit: "spells"},
+        /* THE HONEST LIMIT OF THE NUMBER ABOVE IT. Counted since v2.7 and shown to
+           nobody: cards whose text is "you win the game", whose condition is the part
+           this engine does not model. A deck built on one is not a weak deck, it is a
+           deck this measurement does not describe -- and a reader who cannot see the
+           difference will read the score as the former. */
+        winPathsTheEngineCannotWatch: {value: result.unwatchedWinPaths ?? 0, unit: "cards"},
         cardsTheEngineCouldRead: {value: cover.known ?? null, unit: "cards"}
       },
+      unwatchedWinCards: result.unwatchedWinCards || [],
       /* WHY THE GAMES WERE LOST, not just how many. Counted by the engine on every run
          and thrown away until now. */
       lossCauses: result.lossCauses || [],
@@ -242,7 +253,9 @@
         "There is no stack, no priority and no real blocking unless board combat was enabled; attacks use modelled connection rates.",
         "No recorded human games back this number. It compares lists under one model; it does not predict a real evening.",
         "Turn-capped games are reported separately as incompleteGames and are still counted in the win-rate denominator."
-      ],
+      ].concat(result.unwatchedWinPaths
+        ? [`This list carries ${result.unwatchedWinPaths} card${result.unwatchedWinPaths === 1 ? "" : "s"} that simply say "you win the game"${(result.unwatchedWinCards || []).length ? " (" + (result.unwatchedWinCards || []).join(", ") + ")" : ""}. The engine reads the card but not the condition attached to it, so whatever this deck really does to win is not in the score above — it is scored as the creatures and spells around that card.`]
+        : []),
       coverage: cover,
       origin: "measured"
     };

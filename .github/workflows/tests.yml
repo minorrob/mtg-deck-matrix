@@ -1,0 +1,43 @@
+name: Tests
+
+# Every Node suite, on every push and pull request.
+#
+# There was no test workflow at all before this: the suites existed and ran on somebody's
+# machine when somebody remembered. That is how tools/sim/rate-decks.mjs came to read a
+# file that had moved months earlier -- every suite passed the whole time, on a laptop,
+# checking the file the generator had once written and never the generator.
+#
+# Chromium is installed so tests/browser-geometry.mjs runs for real. That suite skips
+# itself when no browser is present, which is right for a contributor with a plain Node
+# install and wrong for CI, so GEOMETRY_REQUIRED turns the skip into a failure here.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  suites:
+    runs-on: ubuntu-latest
+    env:
+      GEOMETRY_REQUIRED: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # No package.json on purpose -- the app itself has no dependencies. Playwright is
+      # installed here alone, for the one suite that drives a browser.
+      - name: Install Playwright and Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.0
+          npx playwright install --with-deps chromium
+
+      - name: Run every suite
+        run: bash runtests.sh -q

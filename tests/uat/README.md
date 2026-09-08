@@ -1,6 +1,9 @@
 # CrankMagic release journeys
 
 Run `node tests/uat/journeys.mjs` with the repo served on port 8790. The runner executes
+`../browser-geometry.mjs` (the geometry pass: no sideways scroll, no tap target under 32px
+and no header overlap at 320, 375, 390, 430, 768 and 1400 across four pages — it serves the
+repo itself, so it needs no port, and it is required rather than skippable here),
 `crankmagic-journeys.mjs` (new-user assembly, exact prints, source correction, concurrency,
 quota abort, backup/restore, construction, graph, offline and mobile),
 `crankmagic-recovery.mjs` (legacy migration, copy transfers, manual verification, XLSX edits,
@@ -11,7 +14,7 @@ Set `UAT_BASE` to override the URL. `UAT_PLAYWRIGHT` can point to an installed P
 index.js; `UAT_CHROMIUM` selects its Chromium binary. Windows production journeys also
 find Chrome at its normal Program Files path. A missing browser/server fails the release
 gate. Each journey uses a fresh isolated browser context; no personal profile is modified.
-The 39 Node suites remain separately required via `bash runtests.sh -q`.
+The 47 Node suites remain separately required via `bash runtests.sh -q`, and CI runs them on every push.
 
 # Retained legacy journey rationale
 

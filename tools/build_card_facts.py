@@ -141,7 +141,7 @@ def wanted(master):
 
 
 def main():
-    master = json.load(open(os.path.join(ROOT, "data", "master-v2.json"), encoding="utf-8"))
+    master = json.load(open(os.path.join(ROOT, "data", "archive", "master-v2.json"), encoding="utf-8"))
     catalog = json.load(open(os.path.join(ROOT, "data", "cards.json"), encoding="utf-8"))["cards"]
     local = {key(v["name"]): v for v in catalog}
 
