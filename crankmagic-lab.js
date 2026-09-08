@@ -264,10 +264,55 @@ views.lab=async()=>{
    * hundred is dropped rather than left to look current. That is the same rule the rest
    * of the app follows: a list change makes a result historical.
    */
-  const REFINE_MS=45000, MAX_ROUNDS=3;
+  /* THE BUDGET, AND WHY IT IS A BUDGET. The first version was bounded by "twelve weak
+     slots, and for each one take the first candidate that beats the baseline" -- so it
+     spent three seconds of its forty-five, kept nine swaps and stopped. Bounded by time
+     instead: a round is thirty seconds of measured search, and it uses them. */
+  const REFINE_MS=30000, LOOP_MS=150000, MAX_ROUNDS=5;
+  const PER_SLOT=14;      // candidates screened against one weak slot before moving on
+  const SCREEN_KEEP=2;    // of those, how many earn a confirmation run
+  const MIN_GAIN=0.5;     // points a swap must add on top of the run's own noise
   let simInputsCache=null;
-  const simInputs=()=>(simInputsCache||=Promise.all([fetch(CrankAssets.simConfig).then(r=>r.json()),fetch(CrankAssets.simOpponents).then(r=>r.json())]));
+  let simConfig=null;   // kept so reportHTML can reach the targets without an await
+  const simInputs=()=>(simInputsCache||=Promise.all([fetch(CrankAssets.simConfig).then(r=>r.json()),fetch(CrankAssets.simOpponents).then(r=>r.json())]).then(pair=>{simConfig=pair[0];return pair;}));
   const sayStatus=t=>{const el=$('#cm-lab-sim-status');if(el)el.textContent=t;};
+  const pct=v=>`${(Number(v||0)*100).toFixed(1)}%`;
+
+  /* WHAT "GOOD ENOUGH" MEANS, and the fact that a person chose it rather than measured it.
+   *
+   * "Run until the stats are in the target range" needs a target, and the engine has none:
+   * it returns a 0-100 composite and a set of rates. So the targets come from the Deck
+   * Definition the reader already filled in, and they are a DECLARED CONVENTION -- written
+   * here in the open so they can be argued with, not buried in a weighting.
+   *
+   * Win rate: every seat of a four-player pod has a 25% share of the wins. Competitiveness
+   * 3 is "hold your own", so its target is that share; 1 is a deck not trying to beat the
+   * table and 5 is one that is. Clock: speed is how soon you want the game over, read off
+   * the average winning turn. Everything else is sim/config.json's own targets -- the same
+   * numbers the score is already computed against, so the pass and the score agree. */
+  const WIN_TARGET={1:.15,2:.20,3:.25,4:.30,5:.35};
+  const CLOCK_TARGET={1:16,2:14,3:12,4:11,5:10};
+  const band=(n,fallback)=>Math.min(5,Math.max(1,Number(n)||fallback));
+  function targetsFor(result,def,config){
+    if(!result)return [];
+    const t=(config&&config.targets)||{},comp=band(def.competitiveness,3),speed=band(def.speed,3);
+    const winWant=WIN_TARGET[comp],clockWant=CLOCK_TARGET[speed];
+    const screwWant=t.screwPct??.1,floodWant=t.floodPct??.08,deadWant=t.deadCardsAtT8??2;
+    return [
+      {key:'winRate',label:'Wins its share',ok:result.winRate>=winWant,
+       reads:`${pct(result.winRate)} of games won · target ${pct(winWant)} at competitiveness ${comp}`},
+      {key:'clock',label:'Closes on time',ok:!result.avgWinTurn||result.avgWinTurn<=clockWant,
+       reads:result.avgWinTurn?`wins on turn ${result.avgWinTurn.toFixed(1)} · target turn ${clockWant} at speed ${speed}`:'no game was won, so there is no clock'},
+      {key:'commander',label:'Gets the commander down',ok:result.commanderCastRate>=.9,
+       reads:`commander cast in ${pct(result.commanderCastRate)} of games · target 90%`},
+      {key:'screw',label:'Casts its spells',ok:result.screwPct<=screwWant,
+       reads:`mana screwed in ${pct(result.screwPct)} · target ${pct(screwWant)}`},
+      {key:'flood',label:'Draws action, not lands',ok:result.floodPct<=floodWant,
+       reads:`flooded in ${pct(result.floodPct)} · target ${pct(floodWant)}`},
+      {key:'deadCards',label:'Keeps its hand live',ok:result.deadCardsAtT8<=deadWant,
+       reads:`${Number(result.deadCardsAtT8||0).toFixed(1)} uncastable cards in hand at turn 8 · target ${deadWant}`}
+    ];
+  }
 
   /* The engine cannot read a card with no rules text, and a swap that quietly drops
      coverage changes the number for the wrong reason. */
@@ -278,11 +323,11 @@ views.lab=async()=>{
     if(got.hydrated.length)await C.commit({type:'cards',cards:got.hydrated},{renderView:false});
     return got.missing;
   }
-  async function scoreSlots(slots,commanders,onProgress){
+  async function scoreSlots(slots,commanders,protocol,onProgress){
     const lineup=CrankSim.lineupFor(C.state,{id:null,commanders,slots});
     const [config,opponents]=await simInputs();
     runner=runner||CrankSim.createRunner();
-    return runner.measure({protocol:'preview',lineup,config,opponents,table:config.table,onProgress});
+    return runner.measure({protocol:protocol||'refine',lineup,config,opponents,table:config.table,onProgress});
   }
 
   /* Worth trying: legal in the commander's colours, not already in the list, not a basic,
@@ -303,89 +348,157 @@ views.lab=async()=>{
     return rows.sort((a,b)=>b.score-a.score||((a.card.rank||1e9)-(b.card.rank||1e9))).slice(0,limit||120).map(r=>r.card);
   }
 
-  /* The weakest cards as the engine found them. A card with no measured row is treated as
-     average rather than as bad: absence of evidence is not evidence of weakness. Lands,
-     the commander and pinned slots are never dropped. */
+  /* THE WEAKEST CARDS, ON A FIGURE THAT ACTUALLY VARIES.
+   *
+   * This used to rank on cast rate and dead rate. Neither discriminates: a game in this
+   * model runs long enough that essentially every drawn spell is eventually cast, so the
+   * whole nonland list sits at 99-100% cast and 0% dead, and the ranking was noise wearing
+   * a formula. What varies is being STRANDED -- drawn, and still uncastable in hand on
+   * turn eight -- which is exactly "too expensive, or off-colour for these sources", and
+   * how the deck's own win rate moves in the games a card was cast in. A card with no
+   * measured row is treated as average: absence of evidence is not evidence of weakness.
+   * Lands, the commander and pinned slots are never dropped. */
   function weakestSlots(result,slots,leaders,limit){
     const byName=new Map((result.perCard||[]).map(r=>[r.name,r]));
     const leaderIds=new Set(leaders.map(c=>c.id));
+    const deckWin=Number(result.winRate)||0;
     return slots.filter(r=>!leaderIds.has(r.cardId)&&!r.pinned)
       .map(r=>({slot:r,card:cardOf(r.cardId)}))
       .filter(x=>x.card&&!/\bLand\b/.test(x.card.typeLine||''))
       .map(x=>{const m=byName.get(x.card.name);
-        const weak=((m&&m.deadRate)??.2)*2+(1-((m&&m.castRate)??.5))+(.5-((m&&m.winRateWhenCast)??.5));
-        return {...x,weak};})
-      .sort((a,b)=>b.weak-a.weak).slice(0,limit||12);
+        const stuck=m&&m.stuckRate!=null?m.stuckRate:.1;
+        const cast=m&&m.castRate!=null?m.castRate:.95;
+        const lift=(m&&m.winRateWhenCast!=null?m.winRateWhenCast:deckWin)-deckWin;
+        const late=Math.max(0,((m&&m.avgCastTurn)||0)-6)/12;
+        return {...x,weak:stuck*3+(1-cast)*2-lift*4+late,stat:m||null};})
+      .sort((a,b)=>b.weak-a.weak).slice(0,limit||16);
   }
 
-  async function refineRound(){
+  /* ONE ROUND: measure, rank the weak slots, then SCREEN CHEAPLY AND CONFIRM PROPERLY.
+   *
+   * The acceptance test used to be `trial.score > base.score + max(base.se, 0.25)` on a
+   * one-seed run. A one-seed run has a standard error of exactly zero -- there is nothing
+   * to take a variance over -- so the bar was a flat quarter point against a measurement
+   * whose real spread is two or three, and every "kept" swap was a coin flip. Now the
+   * cheap one-seed runs only RANK candidates, and the decision is made on three seeds of
+   * 4,000 games against a three-seed baseline, by more than twice that run's own error. */
+  async function refineRound(budgetMs,label){
     if(!preview)throw Error('Run the initial draft first; the pass refines a list, not an idea.');
     if(runner&&runner.busy)throw Error('A measurement is already running.');
     const leaders=preview.commanders.map(cardOf).filter(Boolean);
     if(!leaders.length)throw Error('This draft has no commander to refine around.');
+    /* THE CANDIDATE POOL IS THE GRAPH, and the graph is a 7 MB fetch the Lab starts and
+       never waits for. Clicking Refine before it landed left candidatesFor with nothing to
+       relate anything to: an empty pool, "no swap out of 0 tried", and a second of running
+       time. That reads as a search that ran and found nothing, which is the one thing it
+       must not do. Wait for it here, and say what the wait is for. */
+    sayStatus('Loading the card relationship graph…');
+    await C.catalog.loadGraph();
+    const [config]=await simInputs();
+    const startedAt=Date.now(),budget=Number(budgetMs)||REFINE_MS;
+    const left=()=>budget-(Date.now()-startedAt);
+    const clock=()=>`${Math.max(0,Math.round(left()/1000))}s left`;
     let slots=preview.slots.map(r=>({...r}));
     await ensureReadable(slots.map(r=>cardOf(r.cardId)));
-    sayStatus('Measuring the list as it stands…');
-    let base=await scoreSlots(slots,preview.commanders,m=>sayStatus(`Measuring the list as it stands · ${m.done} of ${m.total}`));
-    const startedAt=Date.now(),kept=[];
     sayStatus('Looking for cards that fit this commander…');
-    const pool=candidatesFor(leaders,slots,120);
-    if(pool.length){await C.commit({type:'cards',cards:pool},{renderView:false});await ensureReadable(pool);}
-    let tried=0,next=0;
-    for(const out of weakestSlots(base,slots,leaders,12)){
-      if(Date.now()-startedAt>REFINE_MS||next>=pool.length)break;
-      while(next<pool.length&&Date.now()-startedAt<=REFINE_MS){
+    const pool=candidatesFor(leaders,slots,320);
+    if(!pool.length)throw Error('Nothing in the catalog is joined to this commander on the graph, so there is no candidate to try. Open Discover once so the graph loads, then refine again.');
+    await C.commit({type:'cards',cards:pool},{renderView:false});
+    await ensureReadable(pool);
+
+    sayStatus(`${label||'Measuring'} the list as it stands…`);
+    let base=await scoreSlots(slots,preview.commanders,'refine',m=>sayStatus(`${label||'Measuring'} the list as it stands · ${m.done} of ${m.total}`));
+    let screenBase=await scoreSlots(slots,preview.commanders,'preview');
+    const kept=[];let tried=0,confirmed=0,next=0;
+    for(const out of weakestSlots(base,slots,leaders,20)){
+      if(left()<=1200||next>=pool.length)break;
+      if(!slots.some(r=>r.cardId===out.slot.cardId))continue;   // already swapped this round
+      const shortlist=[];
+      for(let n=0;n<PER_SLOT&&next<pool.length&&left()>1200;n+=1){
         const cand=pool[next++];
+        if(slots.some(r=>r.cardId===cand.id))continue;
         const swapped=slots.map(r=>r.cardId===out.slot.cardId?{...r,cardId:cand.id}:r);
         tried+=1;
-        sayStatus(`Trying ${cand.name} for ${out.card.name} · ${tried} tried · ${Math.max(0,Math.round((REFINE_MS-(Date.now()-startedAt))/1000))}s left`);
-        let trial=null;
-        try{trial=await scoreSlots(swapped,preview.commanders);}catch{continue;}
-        /* Beat the baseline by more than the run's own noise, or it is not an improvement. */
-        if(trial.score>base.score+Math.max(base.se||0,.25)){
-          kept.push({out:out.card.name,in:cand.name,from:base.score,to:trial.score});
-          slots=swapped;base=trial;break;
+        sayStatus(`Screening ${cand.name} for ${out.card.name} · ${tried} tried · ${clock()}`);
+        let t=null;try{t=await scoreSlots(swapped,preview.commanders,'preview');}catch{continue;}
+        if(t.score>screenBase.score)shortlist.push({cand,swapped,screen:t.score});
+      }
+      shortlist.sort((a,b)=>b.screen-a.screen);
+      for(const pick of shortlist.slice(0,SCREEN_KEEP)){
+        if(left()<=800)break;
+        confirmed+=1;
+        sayStatus(`Confirming ${pick.cand.name} for ${out.card.name} on three seeds · ${clock()}`);
+        let trial=null;try{trial=await scoreSlots(pick.swapped,preview.commanders,'refine');}catch{continue;}
+        const bar=base.score+Math.max((base.se||0)*2,MIN_GAIN);
+        if(trial.score>bar){
+          kept.push({out:out.card.name,in:pick.cand.name,from:base.score,to:trial.score});
+          slots=pick.swapped;base=trial;
+          screenBase=await scoreSlots(slots,preview.commanders,'preview');
+          break;
         }
       }
     }
-    const outOfTime=Date.now()-startedAt>REFINE_MS;
+    const targets=targetsFor(base,definition,config);
+    const missed=targets.filter(t=>!t.ok);
+    const outOfTime=left()<=1200;
     const prior=preview.refine||null;
     const refine={rounds:(prior&&prior.rounds||0)+1,tried:(prior&&prior.tried||0)+tried,
-      swaps:[...(prior&&prior.swaps||[]),...kept],score:base.score,protocol:'preview',
-      stopped:kept.length?(outOfTime?'time':'more to try'):'converged',at:new Date().toISOString()};
+      confirmed:(prior&&prior.confirmed||0)+confirmed,
+      swaps:[...(prior&&prior.swaps||[]),...kept],score:base.score,se:base.se,protocol:'refine',
+      targets,targetsMet:missed.length===0,
+      stopped:missed.length?(kept.length?(outOfTime?'time':'more to try'):'converged'):'targets met',
+      at:new Date().toISOString()};
     /* The hundred changed, so the report about the old hundred is not this deck's report. */
     await keepPreview({...preview,slots,refine,report:kept.length?null:preview.report});
     redrawRun();
-    return {kept:kept.length,tried,score:base.score,outOfTime};
+    return {kept:kept.length,tried,confirmed,score:base.score,outOfTime,targets,missed};
   }
 
+  const targetLine=missed=>missed.length
+    ? `Still short on ${missed.length===1?'one target':missed.length+' targets'}: ${missed.map(t=>t.label.toLowerCase()).join(', ')}.`
+    : 'Every target for this build is met.';
+
   actions['lab-refine']=async()=>{
-    const r=await refineRound();
+    const r=await refineRound(REFINE_MS);
     C.notice(r.kept
-      ? `Refined: ${r.kept} swap${r.kept===1?'':'s'} kept out of ${r.tried} tried. Preview score ${r.score}. Measure again for a publishable number.`
-      : `No swap out of ${r.tried} beat the current list${r.outOfTime?' in the time allowed':''}. The 99 stands.`);
+      ? `Refined: ${r.kept} swap${r.kept===1?'':'s'} kept from ${r.tried} screened and ${r.confirmed} confirmed. Score ${r.score}. ${targetLine(r.missed)}`
+      : `No swap out of ${r.tried} screened and ${r.confirmed} confirmed beat the current list${r.outOfTime?' in the time allowed':''}. The 99 stands. ${targetLine(r.missed)}`);
   };
 
+  /* THE LOOP: rounds until the targets are met, the budget is gone, or a round changes
+     nothing. Each round re-measures first, so every swap is judged against the list as it
+     actually stands rather than against the list the search started from. */
   actions['lab-loop']=async()=>{
-    let rounds=0,kept=0,tried=0,last=null;
-    while(rounds<MAX_ROUNDS){
-      last=await refineRound();
+    const began=Date.now();let rounds=0,kept=0,tried=0,last=null;
+    while(rounds<MAX_ROUNDS&&Date.now()-began<LOOP_MS){
+      const budget=Math.min(REFINE_MS,LOOP_MS-(Date.now()-began));
+      if(budget<5000)break;
+      last=await refineRound(budget,`Round ${rounds+1} of up to ${MAX_ROUNDS} ·`);
       rounds+=1;kept+=last.kept;tried+=last.tried;
-      if(!last.kept)break;
+      if(!last.missed.length||!last.kept)break;
     }
-    const converged=last&&!last.kept;
-    if(preview)await keepPreview({...preview,refine:{...preview.refine,stopped:converged?'converged':'rounds',loopedAt:new Date().toISOString()}});
+    const met=last&&!last.missed.length;
+    if(preview)await keepPreview({...preview,refine:{...preview.refine,stopped:met?'targets met':(last&&last.kept?'rounds':'converged'),loopedAt:new Date().toISOString()}});
     redrawRun();
-    C.notice(converged
-      ? `Looped ${rounds} round${rounds===1?'':'s'}: ${kept} swap${kept===1?'':'s'} kept from ${tried} tried, and the last round changed nothing. Measure it for a publishable score.`
-      : `Stopped after ${rounds} rounds with ${kept} swaps kept from ${tried} tried — it was still improving. Loop again to keep going.`);
+    C.notice(met
+      ? `Looped ${rounds} round${rounds===1?'':'s'}: ${kept} swap${kept===1?'':'s'} kept from ${tried} screened, and every target for this build is now met. Measure it for a publishable score.`
+      : last&&!last.kept
+        ? `Looped ${rounds} round${rounds===1?'':'s'}: ${kept} swap${kept===1?'':'s'} kept from ${tried} screened, and the last round found nothing better. ${targetLine(last.missed)} The engine cannot see every way a deck wins — read the report before trusting this.`
+        : `Stopped after ${rounds} round${rounds===1?'':'s'} with ${kept} swap${kept===1?'':'s'} kept from ${tried} screened — it was still improving. ${targetLine((last&&last.missed)||[])} Loop again to keep going.`);
   };
 
   /* THE REPORT, ON THE STEP THAT NAMES IT. "Simulation Report" was a label; the numbers
      behind the score badge were in a different view, or nowhere for a preview. */
+  /* The evidence pack stores every rate as a percentage in a {value, unit} box, because
+     that is what gets exported and read a month later. The targets are computed on rates.
+     One adapter, here, rather than a second copy of the target table in report shape. */
+  const rawFrom=m=>({winRate:(m.winRate&&m.winRate.value||0)/100,avgWinTurn:m.averageWinTurn&&m.averageWinTurn.value||0,
+    commanderCastRate:(m.commanderCastRate&&m.commanderCastRate.value||0)/100,screwPct:(m.manaScrew&&m.manaScrew.value||0)/100,
+    floodPct:(m.manaFlood&&m.manaFlood.value||0)/100,deadCardsAtT8:m.deadCardsAtTurnEight&&m.deadCardsAtTurnEight.value||0});
   function reportHTML(r){
     if(!r)return '<p>No measurement has been run on this list yet.</p>';
     const m=r.metrics||{};
+    const targets=r.targets||targetsFor(rawFrom(m),definition,simConfig);
     const row=(label,metric,suffix)=>metric&&metric.value!==null&&metric.value!==undefined
       ? `<span>${e(label)} <strong>${e(String(metric.value))}${e(suffix||metric.unit&&(' '+metric.unit)||'')}</strong></span>` : '';
     return `<div class="cm-count-list">
@@ -396,7 +509,14 @@ views.lab=async()=>{
         ${row('Pod experience',m.podExperience)}${row('Cards the engine could read',m.cardsTheEngineCouldRead)}
       </div>
       <p class="cm-muted">${e(r.protocol)} · ${(r.conditions&&r.conditions.seedCount)||'?'} seeds of ${((r.conditions&&r.conditions.gamesPerSeed)||0).toLocaleString()} games · ${((r.run&&r.run.games)||0).toLocaleString()} games in ${(((r.run&&r.run.elapsedMs)||0)/1000).toFixed(1)}s</p>
-      ${(r.perCard||[]).length?`<details class="cm-details"><summary>Per-card: what the engine drew, cast and won with (${r.perCard.length} cards)</summary><div class="cm-table-wrap"><table class="cm-table"><thead><tr><th>Card</th><th>Cast rate</th><th>Average cast turn</th><th>Dead rate</th><th>Win rate when cast</th></tr></thead><tbody>${r.perCard.slice().sort((a,b)=>a.castRate-b.castRate).slice(0,60).map(x=>`<tr><td>${e(x.name)}</td><td>${(x.castRate*100).toFixed(0)}%</td><td>${x.avgCastTurn||'—'}</td><td>${(x.deadRate*100).toFixed(0)}%</td><td>${(x.winRateWhenCast*100).toFixed(0)}%</td></tr>`).join('')}</tbody></table></div></details>`:''}
+      ${(r.scoreParts||[]).length?`<h3 class="cm-section-heading">How the score was made</h3>
+        <div class="cm-table-wrap"><table class="cm-table"><thead><tr><th>What it measures</th><th>Scored</th><th>Of</th><th>What the engine saw</th></tr></thead><tbody>${r.scoreParts.map(x=>`<tr><td>${e(x.label)}</td><td>${e(String(x.points))}</td><td>${e(String(x.max))}</td><td class="cm-muted">${e(x.reads||'')}</td></tr>`).join('')}</tbody></table></div>
+        <p class="cm-muted">Ordered by points lost, so the row that costs this deck the most is first. These are the nine terms the composite is built from; nothing else moves the number.</p>`:''}
+      ${targets.length?`<h3 class="cm-section-heading">Against the targets for this build</h3>
+        <div class="cm-count-list">${targets.map(t=>`<span>${t.ok?'✓':'✕'} ${e(t.label)} <strong>${e(t.reads)}</strong></span>`).join('')}</div>`:''}
+      ${(r.perCard||[]).length?`<details class="cm-details"><summary>Per-card: what the engine drew, played and won with (${r.perCard.length} rows)</summary>
+        <p class="cm-muted">Ranked by the figure that actually separates one card from another here: how often a card was drawn and still sat uncastable in hand on turn eight. Cast rate cannot rank a list — a game runs long enough that nearly every drawn spell is eventually cast, so almost the whole list sits near 100%. Lands are marked; a land's cast rate is how often a drawn copy reached the battlefield. "Dead" is exactly 100% minus cast, which is why it is not a column.</p>
+        <div class="cm-table-wrap"><table class="cm-table"><thead><tr><th>Card</th><th>Seen</th><th>Played when seen</th><th>Average turn</th><th>Stuck at turn 8</th><th>Win rate when cast</th></tr></thead><tbody>${r.perCard.slice().sort((a,b)=>(b.stuckRate||0)-(a.stuckRate||0)||a.castRate-b.castRate).map(x=>`<tr><td>${e(x.name)}${x.isCommander?' <small class="cm-muted">commander</small>':x.isLand?' <small class="cm-muted">land</small>':''}</td><td>${((x.drawnRate||0)*100).toFixed(0)}%</td><td>${(x.castRate*100).toFixed(0)}%</td><td>${x.avgCastTurn||'—'}</td><td>${((x.stuckRate||0)*100).toFixed(0)}%</td><td>${(x.winRateWhenCast*100).toFixed(0)}%</td></tr>`).join('')}</tbody></table></div></details>`:''}
       ${note((r.limits||[]).join(' '))}`;
   }
   actions['lab-report']=el=>{
@@ -460,7 +580,7 @@ function runPane(saved){
     if(i===0)return (leader||subject)?'complete':'active';
     if(i===1)return count===100?'complete':subject?'active':'waiting';
     if(i===2)return refine&&refine.rounds?'complete':subject&&count>1?'active':'waiting';
-    if(i===3)return refine&&refine.stopped==='converged'?'complete':refine&&refine.rounds?'active':'waiting';
+    if(i===3)return refine&&(refine.stopped==='converged'||refine.stopped==='targets met')?'complete':refine&&refine.rounds?'active':'waiting';
     if(i===4)return measured?'complete':subject?'active':'waiting';
     if(i===5)return saved&&!preview?'complete':'waiting';
     return 'waiting';
@@ -472,9 +592,10 @@ function runPane(saved){
     if(i===1&&subject&&count!==100)return `${count} of 100`;
     if(i===2)return st==='waiting'?'Run the initial draft first — there has to be a 99 to refine'
       :st==='active'?'Refine the 99: it measures the list, drops what the engine could not cast, and keeps only swaps that score better'
-      :`${refine.rounds} round${refine.rounds===1?'':'s'} · ${refine.swaps.length} swap${refine.swaps.length===1?'':'s'} kept of ${refine.tried} tried`;
+      :`${refine.rounds} round${refine.rounds===1?'':'s'} · ${refine.swaps.length} swap${refine.swaps.length===1?'':'s'} kept of ${refine.tried} screened`;
     if(i===3)return st==='waiting'?'Refine once first'
-      :st==='active'?'Loop until a round changes nothing'
+      :st==='active'?`Loop until every target for this build is met${refine&&refine.targets?` — ${refine.targets.filter(t=>!t.ok).length} still short`:''}`
+      :refine&&refine.stopped==='targets met'?'Every target for this build is met'
       :'A whole round found no improvement';
     if(i===4)return st==='waiting'?'Measure this draft to produce one':st==='active'?'Not measured yet':'';
     if(i===5)return st==='complete'?'':'Save this deck to finish';
