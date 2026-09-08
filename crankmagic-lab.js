@@ -80,9 +80,25 @@ views.lab=async()=>{
     document.querySelector('[data-action=lab-unpartner]').hidden=!partner;
     const leaders=[leader,partner].filter(Boolean);
     $('#cm-lab-selected').innerHTML=leaders.map(c=>`<div class="cm-selected-commander">${c.image?`<img class="cm-card-thumb cm-card-thumb-lg" src="${e(c.image)}" alt="">`:'<span class="cm-card-thumb cm-card-thumb-lg"></span>'}<div><strong>${e(c.name)}</strong> ${C.colors(c.colorIdentity)} ${c.manaCost?C.mana(c.manaCost):''}<p>${e(c.typeLine)}${CrankCatalog.playStyles(c).length?' · '+e(CrankCatalog.playStyles(c).slice(0,4).join(' · ')):''}</p><div class="cm-actions">${b('Inspect commander','card',{card:c.id})}</div></div></div>`).join('')||note('Choose a commander above.');
-    const save=$('#cm-lab-save');if(save)save.disabled=!canSave();
+    syncStartButtons();
   }
   function canSave(){return mode==='list'?Boolean(lab.elements.group.value||lab.elements.existingDeck.value):Boolean(leader);}
+  /* Step 1's button and step 5's answer the same question -- is there a starting point --
+     and the form can change that without a re-render, so both are re-checked wherever it
+     does. Reading the form rather than the module's copy of it is deliberate: the module
+     learns about a picked commander a beat later. */
+  function syncStartButtons(){
+    const ready=canSave();
+    for(const id of ['#cm-lab-run','#cm-lab-save']){
+      const el=$(id);if(!el)continue;
+      el.disabled=!ready;
+      const row=el.closest('li'),small=row&&row.querySelector('[data-step-note]');
+      /* The reason moves with the button. Flipping `disabled` alone left "Choose a
+         commander" printed under a step you had just chosen a commander for. */
+      if(ready)el.removeAttribute('title');else if(small)el.title=small.dataset.stepWhy;
+      if(small){const text=ready?small.dataset.stepNote:small.dataset.stepWhy;small.textContent=text;small.hidden=!text;}
+    }
+  }
   function adoptGroupCommander(){
     const g=C.state.groups.find(x=>x.id===lab.elements.group.value);
     if(!g||!g.commanderCardId)return;
@@ -98,7 +114,7 @@ views.lab=async()=>{
     const el=ev.target.closest('[data-lab-commander]');if(el){leader=C.catalog.get(el.dataset.labCommander);lab.elements.commanderQuery.value=leader.name;chosen();results.innerHTML='';}
   });
   for(const name of ['commanderQuery','commanderMechanic','rank'])lab.elements[name].addEventListener('input',()=>{shownLimit=45;search();});
-  lab.addEventListener('change',ev=>{if(ev.target.name==='commanderColor'){pickerColors=[...lab.querySelectorAll('[name=commanderColor]:checked')].map(i=>i.value);shownLimit=45;search();}if(ev.target.name==='group'||ev.target.name==='existingDeck'){const save=$('#cm-lab-save');if(save)save.disabled=!canSave();}});
+  lab.addEventListener('change',ev=>{if(ev.target.name==='commanderColor'){pickerColors=[...lab.querySelectorAll('[name=commanderColor]:checked')].map(i=>i.value);shownLimit=45;search();}if(ev.target.name==='group'||ev.target.name==='existingDeck'){syncStartButtons();}});
   /* ONE SECTION OPEN AT A TIME, AND THE OTHER ONE NOT THERE AT ALL. The form asks two
      different questions depending on the starting point, and it used to ask both at once:
      a full commander picker sitting above an Existing cards block that did nothing, or
@@ -110,7 +126,7 @@ views.lab=async()=>{
     if(commander){commander.hidden=mode!=='commander';commander.open=mode==='commander';}
     if(existing){existing.hidden=mode!=='list';existing.open=mode==='list';}
     if(definition)definition.open=false;
-    const save=$('#cm-lab-save');if(save)save.disabled=!canSave();
+    syncStartButtons();
   }
   lab.elements.mode.addEventListener('change',ev=>{mode=ev.target.value;applyMode();});
   lab.elements.group.addEventListener('change',adoptGroupCommander);
@@ -181,7 +197,7 @@ views.lab=async()=>{
   /* The run pane is redrawn in place after a draft or a measurement, so the Run button is
      a new element each time and is wired again each time. */
   function wireRun(){const run=$('#cm-lab-run');if(run)run.onclick=runDraft;}
-  function redrawRun(){const last=C.state.preferences.lastLabRun,saved=last?C.state.decks.find(x=>x.id===last.deckId):null;const pane=$('#cm-lab-run-pane');if(pane)pane.outerHTML=runPane(saved);const save=$('#cm-lab-save');if(save)save.disabled=!canSave();wireRun();}
+  function redrawRun(){const last=C.state.preferences.lastLabRun,saved=last?C.state.decks.find(x=>x.id===last.deckId):null;const pane=$('#cm-lab-run-pane');if(pane)pane.outerHTML=runPane(saved);syncStartButtons();wireRun();}
   wireRun();
 
   /* SAVE THIS DECK: the one write to My Decks. From a preview when there is one, from the
@@ -652,7 +668,7 @@ function runPane(saved){
     if(i===2)return st==='waiting'?'Run the initial draft first — there has to be a 99 to refine'
       :st==='active'?'Refine the 99: it measures the list, drops what the engine could not cast, and keeps only swaps that score better'
       :`${refine.rounds} round${refine.rounds===1?'':'s'} · ${refine.swaps.length} swap${refine.swaps.length===1?'':'s'} kept of ${refine.tried} screened`;
-    if(i===3)return st==='waiting'?'Refine once first'
+    if(i===3)return st==='waiting'?'Refines over and over until a whole round finds nothing better'
       :st==='active'?`Loop until every target for this build is met${refine&&refine.targets?` — ${refine.targets.filter(t=>!t.ok).length} still short`:''}`
       :refine&&refine.stopped==='targets met'?'Every target for this build is met'
       :'A whole round found no improvement';
@@ -660,15 +676,73 @@ function runPane(saved){
     if(i===5)return st==='complete'?'':'Save this deck to finish';
     return '';
   };
+  /* THE ORDER, ON THE BUTTONS THEMSELVES.
+     Six buttons in a row, every one of them enabled, told a new reader nothing: not which
+     to press first, not which would fail, and not why. Refine even sat AFTER Measure while
+     belonging before it -- measuring is the publishable run you do once the list has
+     stopped moving, and refining is what stops it moving. So each button now sits in the
+     step it advances, in the list that was already tracking exactly this, carrying the
+     number of its turn and disabled with the reason showing until the step before it has
+     happened. One sequence, told once, instead of an unordered row above a list of the
+     same thing.
+
+     Ready is not the same question as complete. A step is COMPLETE when its work is done;
+     its button is READY when the work it needs has been done. Refine is ready the moment
+     there is a 99 and stays ready after it has run, because refining twice is a real
+     thing to want. */
+  const started=mode==='list'?Boolean(groupId||deckId):Boolean(leader);
+  const NEEDS_START='Choose a commander, or an existing list, on the left';
+  const NEEDS_DRAFT='Run the initial draft first';
+  const doFor=i=>{
+    if(i===1)return {label:'Run initial draft',id:'cm-lab-run',ready:started,why:NEEDS_START};
+    if(i===2)return {label:'Refine the 99',action:'lab-refine',ready:Boolean(preview&&count>1),why:NEEDS_DRAFT};
+    if(i===3)return {label:'Loop until it settles',action:'lab-loop',ready:Boolean(preview&&count>1),
+      why:`${NEEDS_DRAFT} — looping is refining over and over`};
+    if(i===4)return {label:preview?'Measure this draft':'Measure this deck',action:'lab-measure',
+      data:!preview&&saved?{deck:saved.id}:null,ready:Boolean(subject),
+      why:`${NEEDS_DRAFT} — there has to be a list to measure`};
+    if(i===5)return {label:'Save this deck',id:'cm-lab-save',action:'lab-save',ready:Boolean(leader||preview),why:NEEDS_START};
+    return null;
+  };
+  /* The number a reader counts by is the button's turn, not the step's index: step one is
+     the form on the left and has no button, so numbering steps would start the buttons at
+     two. */
+  const turnOf=i=>i;   // steps 1-5 carry buttons 1-5; step 0 carries none
+  /* EXACTLY ONE BUTTON IS BLUE, and it is the one to press next: the lowest-numbered step
+     that can be run and has not already happened. It starts on 1 and walks down the list as
+     each step completes, so the pane answers "what now" without being read. Falling back to
+     1 when nothing is runnable keeps the class on the button through the disabled state --
+     syncStartButtons only flips `disabled`, so a button that is not already marked primary
+     could not turn blue when the form makes it live. */
+  const nextTurn=(()=>{for(let i=1;i<=5;i+=1){const d=doFor(i);if(d&&d.ready&&stepState(i)!=='complete')return i;}return 1;})();
+  const doButton=i=>{
+    const spec=doFor(i);
+    if(!spec)return '';
+    const attrs=[`type="button"`,`class="v-button cm-run-do${i===nextTurn?' primary':''}"`,
+      spec.id?`id="${spec.id}"`:'',spec.action?`data-action="${spec.action}"`:'',
+      ...(spec.data?Object.entries(spec.data).map(([k,v])=>`data-${k}="${e(v)}"`):[]),
+      `aria-label="${e(spec.label)}"`,
+      spec.ready?'':'disabled',
+      spec.ready?'':`title="${e(spec.why)}"`].filter(Boolean).join(' ');
+    return `<button ${attrs}><span class="cm-run-num" aria-hidden="true">${turnOf(i)}</span>Run</button>`;
+  };
+
   const simLabel=measured?`Measured ${measured.metrics.score.value} points · ${measured.protocol}`:subject?'Not measured yet':'Build a draft first';
   const last=C.state.preferences.lastLabRun;
-  const canSaveNow=Boolean(leader||preview);
-  return `<aside class="v-panel cm-run-panel" id="cm-lab-run-pane"><div class="cm-actions"><button class="v-button primary" id="cm-lab-run" type="button">Run initial draft</button>${leader||preview||saved?b('Clear','lab-clear'):''}${preview?b('Measure this draft','lab-measure'):saved?b('Measure this deck','lab-measure',{deck:saved.id}):''}${preview&&count>1?b('Refine the 99','lab-refine')+b('Loop until it settles','lab-loop'):''}<span class="cm-pause-pill" id="cm-lab-sim-status">${e(simLabel)}</span></div>
-    <div class="cm-lab-save-row"><button class="v-button" id="cm-lab-save" type="button" data-action="lab-save" ${canSaveNow?'':'disabled'}>Save this deck</button><span class="cm-muted">${preview?'Writes this draft to My Decks.':'Writes the commander and definition to My Decks; draft or edit the 99 any time after.'}</span></div>
-    <ol class="cm-run-steps">${STEPS.map((label,i)=>{const st=stepState(i),hint=stepNote(i);
+  return `<aside class="v-panel cm-run-panel" id="cm-lab-run-pane"><div class="cm-actions cm-run-top"><span class="cm-pause-pill" id="cm-lab-sim-status">${e(simLabel)}</span>${leader||preview||saved?b('Clear and start again','lab-clear'):''}</div>
+    <p class="cm-muted cm-run-lede">Five steps, in order. A step you cannot take yet says what it is waiting for.</p>
+    <ol class="cm-run-steps">${STEPS.map((label,i)=>{const st=stepState(i),spec=doFor(i);
+      /* Whatever blocks the button is said ON THE PAGE, not only in its title: a title is a
+         hover, and the phone layout -- where this pane sits under the form and is the first
+         thing a new reader meets -- has no hover to give. The blocker WINS over the step's
+         own note, because a note that describes a step you cannot take yet reads as an
+         instruction to take it. Once the button is live the note takes over and says what
+         pressing it does. */
+      const note=stepNote(i),why=spec&&spec.why||'',hint=(spec&&!spec.ready&&why)||note;
       /* The report step is the report: its own name opens it once one exists. */
       const name=i===4&&measured?`<button type="button" class="cm-text-button" data-action="lab-report"${saved&&!preview?` data-deck="${e(saved.id)}"`:''}>${e(label)}</button>`:e(label);
-      return `<li><span class="cm-run-orb ${st}" id="cm-step-${i}" aria-label="${st==='complete'?'Complete':st==='active'?'Active':'Waiting'}"><i></i><i></i><i></i><img src="assets/mana/G.svg?v=1" alt=""></span><span class="cm-run-step-body">${name}${hint?`<small class="cm-muted">${e(hint)}</small>`:''}</span></li>`;}).join('')}</ol>
+      return `<li><span class="cm-run-orb ${st}" id="cm-step-${i}" aria-label="${st==='complete'?'Complete':st==='active'?'Active':'Waiting'}"><i></i><i></i><i></i><img src="assets/mana/G.svg?v=1" alt=""></span><span class="cm-run-step-body">${name}</span>${doButton(i)}${note||why?`<small class="cm-muted cm-run-why" data-step-note="${e(note)}" data-step-why="${e(why)}"${hint?'':' hidden'}>${e(hint)}</small>`:''}</li>`;}).join('')}</ol>
+    <p class="cm-muted cm-run-lede">${preview?'Saving writes this draft to My Decks.':'Saving writes the commander and definition to My Decks; draft or edit the 99 any time after.'}</p>
     <div id="cm-lab-result">${preview?`<h3>${e(preview.name)} <span class="cm-badge">Draft · not saved</span></h3>${note(preview.method)}<p>${count} of 100 cards${preview.estimatedPrice!==null&&preview.estimatedPrice!==undefined?` · about ${e(C.money(preview.estimatedPrice))} at recorded prices`:''}${preview.unknownPrices?` · ${preview.unknownPrices} without a price`:''}.</p>${(preview.issues||[]).map(x=>`<p class="cm-muted">${e(x)}</p>`).join('')}<div class="cm-actions">${b('Review draft cards','lab-review')}${b('Discard draft','lab-discard')}</div>`
       :saved?`<h3>${e(saved.name)} <span class="cm-badge good">Saved</span></h3>${note(last.method)}${(last.issues||[]).map(x=>`<p class="cm-muted">${e(x)}</p>`).join('')}<div class="cm-actions">${b('Open in My Decks','deck',{deck:saved.id})}${b('Review deck cards','deck-cards',{deck:saved.id})}${b('Reports & advice','deck-evidence',{deck:saved.id})}</div>`
       :'<p class="cm-muted">Run initial draft builds a list you can review and measure here. Nothing reaches My Decks until you choose Save this deck; no cards are purchased, owned or reserved by any step.</p>'}</div>

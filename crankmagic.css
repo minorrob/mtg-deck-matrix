@@ -37,10 +37,9 @@
 .cm-card-view-bracket{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:6px 0 2px}
 .cm-card-view-bracket small{line-height:1.35}
 
-/* A step's name and the fine print under it saying what would light it. */
-.cm-run-steps li{align-items:flex-start}
-.cm-run-step-body{display:flex;flex-direction:column;gap:2px;min-width:0;padding-top:8px}
-.cm-run-step-body small{line-height:1.35}
+/* A step's name. The fine print that used to sit inside it now has its own row -- see
+   .cm-run-why further down. */
+.cm-run-step-body{min-width:0}
 
 /* Buy links and add-to menus on the card pane: the same size as the rarity and price line
    above them, underlined, because they are links and should look like links. */
@@ -270,3 +269,37 @@
 .cm-turn-hist>div{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px}
 .cm-turn-hist i{display:block;width:100%;min-height:2px;border-radius:3px 3px 0 0;background:linear-gradient(#8dd0ff,#3d6bac)}
 .cm-turn-hist span{font-size:10px;color:#a5b7ce;line-height:1}
+
+/* THE RUN PANE AS A NUMBERED SEQUENCE. Each step's button lives in its own row, carries
+   the number of its turn, and is disabled until the step before it has happened -- the
+   global button:disabled rule already greys it and blocks the click, and the title says
+   what is missing. The row is a three-part grid so the buttons line up down the right
+   edge whatever length the step names are. */
+/* Two rows: the step name and its button share the first, and whatever the step is
+   waiting for runs the full width beneath them. Beside the button that sentence had a
+   ~140px column to live in and wrapped to four lines, which made a five-step list taller
+   than the screen it is meant to orient you on. */
+.cm-run-steps li{display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:5px 12px;align-items:center}
+.cm-run-steps li>.cm-run-orb{grid-column:1;grid-row:1/-1;align-self:center}
+.cm-run-step-body{grid-column:2;grid-row:1}
+.cm-run-why{grid-column:2/-1;grid-row:2;margin:0;line-height:1.4}
+#matrix-v2 .cm-run-steps li>.cm-run-do{grid-column:3;grid-row:1;justify-self:end}
+#matrix-v2 .cm-run-do{min-height:36px;padding:6px 12px;font-size:13px;gap:8px;white-space:nowrap}
+.cm-run-num{display:inline-grid;place-items:center;width:19px;height:19px;flex:0 0 19px;border-radius:50%;
+  background:#3a4a64;color:#e8f1ff;font-size:11px;font-weight:700;line-height:1}
+#matrix-v2 .cm-run-do.primary .cm-run-num{background:#0b2340;color:#cfe8ff}
+/* A disabled step reads as not-yet rather than broken: the number keeps its shape and the
+   whole control fades together. The primary also SHEDS ITS FILL when it cannot be pressed --
+   faded blue is still blue, and the point of the sequence is that exactly one control is
+   blue at a time and it is the one you press next. */
+#matrix-v2 .cm-run-do:disabled{opacity:.5}
+#matrix-v2 .cm-run-do.primary:disabled{background:#1c2537;border-color:#3a4a64;color:#dce8f8}
+#matrix-v2 .cm-run-do.primary:disabled .cm-run-num{background:#3a4a64;color:#e8f1ff}
+.cm-run-top{justify-content:space-between;margin-bottom:10px}
+.cm-run-lede{margin:0 0 14px}
+@media(max-width:760px){
+  /* The button drops under its step rather than squeezing the name to nothing. */
+  .cm-run-steps li{grid-template-columns:38px minmax(0,1fr)}
+  #matrix-v2 .cm-run-steps li>.cm-run-do{grid-column:2;grid-row:2;justify-self:start}
+  .cm-run-why{grid-column:2;grid-row:3}
+}
