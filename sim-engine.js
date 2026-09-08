@@ -1311,6 +1311,19 @@
           if (cast.has(index)) stat.gamesWithCast += 1;
         }
       });
+      /* THE COMMAND ZONE IS A ZONE YOU ALWAYS HAVE. The commander is never in `drawn` --
+         it was never in the library -- so its rate divided by zero and the table printed
+         0% for the one card the header reports at 99.98%. Counted as seen in every game,
+         which is what the command zone means, and cast in the games it came down in. */
+      const zone = deck.commander;
+      if (zone && !drawn.has(zone.index)) {
+        const stat = cardStats.get(zone.profile.name);
+        if (stat) {
+          stat.drawn += 1;
+          if (commanderTurn) { stat.gamesWithCast += 1; if (won) stat.winsWhenCast += 1; }
+          else stat.dead += 1;
+        }
+      }
     }
 
     const landRatio = cardsSeen ? landsDrawn / cardsSeen : 0;

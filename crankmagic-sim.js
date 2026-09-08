@@ -41,10 +41,10 @@
      them lazily off the global. Versions must match the ?v= the pages use, or a browser
      that has one page cached serves the worker a different engine than the page. */
   const ENGINE_SCRIPTS = [
-    "sim-engine.js?v=8",
+    "sim-engine.js?v=9",
     "combat.js?v=2",
     "pilot-policy.js?v=3",
-    "deck-measure.js?v=8"
+    "deck-measure.js?v=9"
   ];
 
   /* NAMED PROTOCOLS, AND WHY THE NAME IS PART OF THE NUMBER.
@@ -213,8 +213,19 @@
         manaFlood: {value: pct(result.floodPct), unit: "%"},
         deadCardsAtTurnEight: {value: result.deadCardsAtT8, unit: "cards"},
         podExperience: {value: result.funScore, unit: "index"},
+        /* The three figures Pod experience is made of, published beside the index rather
+           than folded into it: how many turns the other seats spent unable to act, how
+           many of them were still in the game at the end, and when the first one went
+           out. An index nobody can decompose is a number nobody can argue with. */
+        idleTurnsForOthers: {value: result.avgIdleTurns ?? null, unit: "turns"},
+        seatsStillPlayingAtTheEnd: {value: result.avgSurvivingSeats ?? null, unit: "seats"},
+        firstEliminationTurn: {value: result.avgFirstElimination ?? null, unit: "turns"},
+        answerInHand: {value: pct(result.interactionAvailability), unit: "% of turns"},
         cardsTheEngineCouldRead: {value: cover.known ?? null, unit: "cards"}
       },
+      /* WHY THE GAMES WERE LOST, not just how many. Counted by the engine on every run
+         and thrown away until now. */
+      lossCauses: result.lossCauses || [],
       scoreParts: result.scoreParts || [],
       perCard: result.perCard || [],
       perSeedScores: result.perSeedScores || [],

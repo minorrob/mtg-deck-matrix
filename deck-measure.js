@@ -273,6 +273,25 @@
       funScore: round(mean((r) => r.funScore || 0), 4),
       podFunScore: round(mean((r) => r.podFunScore || 0), 4),
       perSeedScores: scores.map((v) => round(v, 1)),
+      /* WHAT KILLED YOU, which is the only figure in the engine that answers "why did I
+         lose" rather than "how often". Counted on every run since the engine was written
+         and dropped at this line ever since -- so a reader could see 11% and not that
+         nine tenths of the other 89% was one seat's combo landing on turn nine. Summed
+         across seeds, then divided by the games behind them, so it reads as a share of
+         all games rather than of one seed's. */
+      lossCauses: (() => {
+        const total = {};
+        runs.forEach((run) => Object.entries(run.lossCauses || {}).forEach(([cause, n]) => { total[cause] = (total[cause] || 0) + n; }));
+        const played = Math.max(1, games * seeds.length);
+        return Object.entries(total).sort((a, b) => b[1] - a[1])
+          .map(([cause, n]) => ({cause, games: n, rate: round(n / played, 4)}));
+      })(),
+      /* The other three the engine keeps about the TABLE rather than about this seat.
+         Pod experience is already published as one index; these are what it is made of. */
+      avgIdleTurns: round(mean((r) => r.avgIdleTurns || 0), 2),
+      avgSurvivingSeats: round(mean((r) => r.avgSurvivingSeats || 0), 2),
+      avgFirstElimination: round(mean((r) => r.avgFirstElimination || 0), 2),
+      interactionAvailability: round(mean((r) => r.interactionAvailability || 0), 4),
       // Stamped so a reader can tell a preview from a measurement without
       // having to know which button produced it.
       protocol: {seeds: seeds.length, gamesPerSeed: games, preview: Boolean(opts.preview)},
