@@ -82,8 +82,8 @@
       "sha": "aa478cca3a04e76a"
     },
     "card-classify.js": {
-      "version": 2,
-      "sha": "4b0f0cb713a719ad"
+      "version": 3,
+      "sha": "6bd25049434d16e6"
     },
     "card-images.js": {
       "version": 1,
@@ -134,12 +134,12 @@
       "sha": "8e261856adfcb4eb"
     },
     "crankmagic-app.js": {
-      "version": 21,
-      "sha": "8f8d87e5076b2f80"
+      "version": 23,
+      "sha": "628136fa2c7829f7"
     },
     "crankmagic-assets.js": {
-      "version": 7,
-      "sha": "66f57c44bf09e3e2"
+      "version": 9,
+      "sha": "269d068ba65a0b29"
     },
     "crankmagic-brand.js": {
       "version": 1,
@@ -162,8 +162,8 @@
       "sha": "09ec296518cdef75"
     },
     "crankmagic-discover.js": {
-      "version": 10,
-      "sha": "289d7e1716e88c0f"
+      "version": 12,
+      "sha": "7ed65593d4debb85"
     },
     "crankmagic-evidence.js": {
       "version": 2,
@@ -202,12 +202,12 @@
       "sha": "2212f13d71f11dfb"
     },
     "crankmagic-sw.js": {
-      "version": 21,
-      "sha": "5a423955226721ca"
+      "version": 23,
+      "sha": "402d74b627a4333f"
     },
     "crankmagic.css": {
-      "version": 11,
-      "sha": "179402fc38e87793"
+      "version": 12,
+      "sha": "fa96dad0a638e13f"
     },
     "custom-model.js": {
       "version": 3,
@@ -262,8 +262,8 @@
       "sha": "de8605e0cccb1014"
     },
     "data/graph.json": {
-      "version": 3,
-      "sha": "0131b343dcd04d48"
+      "version": 5,
+      "sha": "2d1a287b7eeeb371"
     },
     "data/lenses.json": {
       "version": 1,
@@ -334,8 +334,8 @@
       "sha": "0b348802ff31d3d0"
     },
     "graph-page.js": {
-      "version": 30,
-      "sha": "ab8cb6fc34cf4bbe"
+      "version": 32,
+      "sha": "231ec9ee80a9d12a"
     },
     "guide-measured.js": {
       "version": 1,

@@ -180,4 +180,49 @@ ok("relate is honest about a pair with nothing between them", () => {
   assert.equal(Graph.relate(card("Sol Ring"), card("Sol Ring")), null, "a card is not joined to itself");
 });
 
+
+/* ------------------------------------------------- what the bake stopped claiming */
+
+ok("proliferate is a multiplier, not an event anything fires on", () => {
+  /* The old bake modelled proliferate as an EVENT: a card that put counters "caused" it
+     and a card that says proliferate "listened" for it. Neither is what happens. Putting
+     counters does not fire Atraxa; proliferate makes more of the counters already there.
+     So the pseudo-event is gone and the pair is produces(counter) x multiplies(counter). */
+  const named = graph.cards.filter((c) => (c.causes || []).includes("proliferate") || (c.triggers || []).includes("proliferate"));
+  assert.deepEqual(named.slice(0, 3).map((c) => c.name), [],
+    `${named.length} cards still carry the retired proliferate event`);
+  const doubling = card("Doubling Season"), atraxa = card("Atraxa, Praetors' Voice");
+  assert.ok(atraxa.multiplies.includes("counter"), "Atraxa multiplies counters");
+  assert.ok(doubling.produces.includes("counter"), "Doubling Season makes them");
+  const r = Graph.relate(doubling, atraxa);
+  assert.equal(r.kind, "Makes → multiplies");
+  assert.match(r.reason, /Makes → multiplies · counter/);
+});
+
+ok("a counter is a counter, not only a +1/+1 counter", () => {
+  /* Proliferate compounds loyalty, charge and shield counters too, so the resource has to
+     mean all of them -- while the +1/+1-specific role and requirement stay specific. */
+  const makers = graph.cards.filter((c) => (c.produces || []).includes("counter")).length;
+  const plusOne = graph.cards.filter((c) => (c.roles || []).includes("counters")).length;
+  assert.ok(makers > plusOne, `${makers} counter makers against ${plusOne} +1/+1 payoffs — the resource is still narrow`);
+});
+
+ok("the bake says what bracket a card commits a deck to", () => {
+  /* The page holds a graph row and no rules text for most cards, so this cannot be a
+     regex in the browser: it reported "no restriction" for Armageddon. */
+  assert.equal(card("Rhystic Study").bracket, "gameChanger");
+  assert.equal(card("Rhystic Study").gameChanger, true);
+  assert.equal(card("Armageddon").bracket, "massLand");
+  assert.equal(card("Time Warp").bracket, "extraTurns");
+  assert.equal(card("Sol Ring").bracket, undefined, "an unrestricted card carries no bracket signal at all");
+  const changers = graph.cards.filter((c) => c.gameChanger).length;
+  assert.ok(changers > 20 && changers < 200, `${changers} Game Changers is not the shape of a curated list`);
+});
+
+ok("every card carries a TCGplayer link to buy it by", () => {
+  const without = graph.cards.filter((c) => !c.buy);
+  assert.ok(without.length < graph.cards.length * .02,
+    `${without.length} of ${graph.cards.length} cards have nowhere to buy them`);
+});
+
 console.log(`crankmagic-graph: ${checks} checks passed over ${graph.cards.length} cards`);

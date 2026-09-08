@@ -12,7 +12,7 @@
  *   The Filters pane   — ten card facets plus what you own, from crankmagic-facets.js,
  *                        with an any/all switch so "proliferate OR counters" is sayable.
  *   The focused card   — its own mechanics, roles and produces/requires, as chips in the
- *                        Card View. Tap "proliferate" with Atraxa in focus and the view
+ *                        Card View. Tap "counter" with Atraxa in focus and the view
  *                        becomes the cards joined to her that way.
  *   The graph's reach  — depth (1-3 hops) and breadth (how many neighbours the focus
  *                        gets), because "show me the web" and "show me the six that
@@ -214,6 +214,19 @@
       }
       const img = rec.image || c.image || '';
       const cost = rec.manaCost ? C.mana(rec.manaCost) : '';
+      /* WHAT BRACKET THIS CARD COMMITS YOU TO. The bracket system is about decks, but three
+         kinds of card decide one: a Game Changer (Scryfall's own curated flag, baked into
+         the graph) puts a deck at 3 or above, and mass land denial and looping extra turns
+         are ruled out below 4. Everything else is legal at every bracket, and saying so is
+         worth a line -- "no restriction" is an answer a reader came here for. */
+      const BRACKETS = {
+        gameChanger: ['Game Changer', 'A deck playing this is bracket 3 or higher. Three of them is the Tier 3 limit.'],
+        massLand: ['Mass land denial', 'Not permitted below bracket 4.'],
+        extraTurns: ['Extra turns', 'Keep these sparse and non-repeatable below bracket 4.']
+      };
+      const bracket = BRACKETS[c.bracket || (c.gameChanger || rec.gameChanger ? 'gameChanger' : '')]
+        || ['No bracket restriction', 'Legal at every bracket.'];
+      const buy = rec.buy || c.buy || C.buyLink(rec.name ? rec : c);
       /* The frame around the art takes the card's identity: one colour for one colour,
          gold for three or more, a quiet grey for colourless. */
       const ci = String(c.ci || (rec.colorIdentity || []).join('')).split('').filter(Boolean);
@@ -226,6 +239,8 @@
             <p>${e(rec.typeLine || c.type || '')}</p>
             <p class="cm-card-view-cost">${cost} ${C.colors(String(c.ci || (rec.colorIdentity || []).join('')).split(''))}</p>
             ${rec.rarity || rec.setName ? `<p class="cm-muted">${e([rec.rarity, rec.setName].filter(Boolean).join(' · '))}${Number.isFinite(rec.price) && rec.price > 0 ? ` · ${e(C.money(rec.price))}` : ''}</p>` : ''}
+            <p class="cm-card-view-bracket"><span class="cm-badge${bracket[0] === 'Game Changer' ? ' warn' : ''}">${e(bracket[0])}</span> <small>${e(bracket[1])}</small></p>
+            <p><a class="cm-text-button" href="${e(buy)}" target="_blank" rel="noopener">Open on TCGplayer ↗</a>${Number.isFinite(c.price) && c.price > 0 && !Number.isFinite(rec.price) ? ` <small class="cm-muted">${e(C.money(c.price))}</small>` : ''}</p>
           </div>
         </div>
         ${rec.oracleText ? `<p class="cm-oracle cm-card-view-oracle">${e(rec.oracleText)}</p>` : ''}
