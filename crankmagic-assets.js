@@ -1,2 +1,9 @@
-/* One named URL per public input; none of these assets asserts user ownership. */
-(function(root){'use strict';const data={ranks:"data/commander-ranks.json?v=1",universe:"data/commander-universe.json?v=1",cards:"data/cards.json?v=2",facts:"data/card-facts.json?v=2",graph:"data/graph.json?v=2",master:"data/master-v2.json?v=2",guides:"data/deck-guides.json?v=1",swaps:"data/deck-swaps.json?v=1",glossary:"data/commander-glossary.json?v=1",variants:"data/variants.json?v=1",rungs:"data/rung-lists.json?v=1",simConfig:"sim/config.json?v=1",simOpponents:"sim/opponents.json?v=2"};if(typeof module==='object'&&module.exports)module.exports=data;if(root)root.CrankAssets=data;})(typeof globalThis!=='undefined'?globalThis:this);
+/* One named URL per public input; none of these assets asserts user ownership.
+ *
+ * CLEAN START. The six reference decks and the fifty variants are not here. They were
+ * archived to data/archive/ so a new library opens empty rather than pre-populated with
+ * somebody else's decks -- an app whose first screen shows six decks you did not build
+ * is not a workshop, it is a demo. guides and swaps still point at live files; those
+ * files now hold no decks, so the features stay wired and simply find nothing until
+ * there is something to find. */
+(function(root){'use strict';const data={ranks:"data/commander-ranks.json?v=1",universe:"data/commander-universe.json?v=1",cards:"data/cards.json?v=2",facts:"data/card-facts.json?v=2",graph:"data/graph.json?v=2",guides:"data/deck-guides.json?v=2",swaps:"data/deck-swaps.json?v=2",glossary:"data/commander-glossary.json?v=1",simConfig:"sim/config.json?v=1",simOpponents:"sim/opponents.json?v=2"};if(typeof module==='object'&&module.exports)module.exports=data;if(root)root.CrankAssets=data;})(typeof globalThis!=='undefined'?globalThis:this);

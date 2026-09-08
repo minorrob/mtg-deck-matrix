@@ -4,7 +4,7 @@
  * The deck viewer's headline numbers come from this file, so they have to be
  * reproducible from the workbook rather than from a scratch directory that no
  * longer exists. Everything the run needs is committed: the hundreds come out of
- * data/master-v2.json, the card text out of data/card-facts.json, the opponents
+ * data/archive/master-v2.json, the card text out of data/card-facts.json, the opponents
  * out of sim/opponents.json, and the scoring out of sim/config.json.
  *
  * Three builds per deck, each one a real hundred:

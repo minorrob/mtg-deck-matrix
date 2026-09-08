@@ -13,7 +13,7 @@ const Sim = require("../sim-lenses.js");
 
 const load = async (p) => JSON.parse(await readFile(new URL(p, import.meta.url), "utf8"));
 const ratings = await load("../data/deck-ratings.json");
-const master = await load("../data/master-v2.json");
+const master = await load("../data/archive/master-v2.json");
 const graph = await load("../data/graph.json");
 
 let checks = 0;

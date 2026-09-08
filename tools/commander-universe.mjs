@@ -2,7 +2,7 @@
 //
 //   node tools/commander-universe.mjs                   # rebuild data/commander-universe.json
 //   node tools/commander-universe.mjs --repair          # also correct data/graph.json and
-//                                                       # backfill rarity onto data/master-v2.json
+//                                                       # backfill rarity onto data/archive/master-v2.json
 //   node tools/commander-universe.mjs --repair --cache  # reuse graph/.cache instead of refetching
 //
 // WHY THIS EXISTS, AND WHY IT IS NOT JUST A BIGGER graph.json.
@@ -216,7 +216,7 @@ if (process.argv.includes("--repair")) {
      and "show me the rares I still owe" is a question somebody standing at a case
      asks first. Five of the 648 are modal or transforming cards the sheet files
      under their front face, so a miss falls back to the "Front // Back" name. */
-  const master = JSON.parse(await readFile("data/master-v2.json", "utf8"));
+  const master = JSON.parse(await readFile("data/archive/master-v2.json", "utf8"));
   const byOracleName = new Map(legal.map((c) => [c.name, c]));
   const byFrontName = new Map();
   for (const c of legal) {
@@ -235,13 +235,13 @@ if (process.argv.includes("--repair")) {
      can review for the 648 lines that actually changed. priceSource is the last key
      of every card, checked here rather than assumed, so the insertion point is
      unambiguous and a file that stops looking like this fails loudly. */
-  let text = await readFile("data/master-v2.json", "utf8");
+  let text = await readFile("data/archive/master-v2.json", "utf8");
   const marks = [...text.matchAll(/\n(\s*)"priceSource": ("[^"]*")/g)];
   if (marks.length !== master.cards.length) {
     throw new Error(`expected one priceSource per card, found ${marks.length} for ${master.cards.length} cards`);
   }
   if (/"rarity"/.test(text)) {
-    console.log("rarity already on data/master-v2.json -- left alone");
+    console.log("rarity already on data/archive/master-v2.json -- left alone");
   } else {
     let out = "", at = 0, priced = 0;
     marks.forEach((m, i) => {
@@ -251,8 +251,8 @@ if (process.argv.includes("--repair")) {
       at = end;
     });
     out += text.slice(at);
-    await writeFile("data/master-v2.json", out);
-    console.log(`rarity on data/master-v2.json  ${priced} of ${master.cards.length} cards`
+    await writeFile("data/archive/master-v2.json", out);
+    console.log(`rarity on data/archive/master-v2.json  ${priced} of ${master.cards.length} cards`
       + (unknown.length ? `  no match: ${unknown.join(", ")}` : ""));
   }
 }

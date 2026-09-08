@@ -13,7 +13,7 @@
 // copy of the six built decks: the picks, the ownership ledger, the paid prices, the
 // salvage yard and the per-deck holds. That file is already scoped to the six variants
 // being built -- 1b, 2c, 3o, 4e, 5o, 7e -- so the default load carries those and nothing
-// else. The other 44 variants stay in data/variants.json where the Compare tab can still
+// else. The other 44 variants stay in data/archive/variants.json where the Compare tab can still
 // reach them; they are the catalog, not somebody's saved session.
 import {readFile, writeFile} from "node:fs/promises";
 import {createRequire} from "node:module";

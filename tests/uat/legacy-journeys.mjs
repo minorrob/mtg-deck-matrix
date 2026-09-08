@@ -256,7 +256,7 @@ for (const screen of SCREENS) {
 
     /* A BROWSER THAT HAS NEVER OPENED THIS APP HAS NO DECKS.
      *
-     * data/master-v2.json carries the card catalog AND one person's build of six decks.
+     * data/archive/master-v2.json carries the card catalog AND one person's build of six decks.
      * Loading both meant a stranger opened the page to somebody else's decks and a
      * 176-card bench presented as their own, with nothing saying whose they were -- and
      * "Clear session" left them exactly where it found them. The build half is now gated

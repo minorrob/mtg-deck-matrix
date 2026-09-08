@@ -172,7 +172,7 @@ for (const [variantId, plan] of Object.entries(buyPlans.plans)) {
 // generated from what the simulation measured (tools/sim/bake-ladders.mjs), so
 // the workbook is no longer authoritative about what is in a deck. What replaces
 // it is a stronger promise and the one the site's honesty actually rests on --
-// the score printed under a build belongs to that build. data/rung-lists.json is
+// the score printed under a build belongs to that build. data/archive/rung-lists.json is
 // the pinned copy of what each rung measured; composing the plan through the
 // lineup model has to reproduce it card for card, or a published number is
 // describing a deck nobody can buy.
@@ -181,7 +181,7 @@ for (const [variantId, plan] of Object.entries(buyPlans.plans)) {
 // on fifty variants instead of six: an item whose replaces-pointer resolves to
 // the wrong twin, a chain that leaves a slot empty, a rung that quietly composes
 // to a hundred and one.
-const rungLists = JSON.parse(await readFile(new URL("../data/rung-lists.json", import.meta.url), "utf8"));
+const rungLists = JSON.parse(await readFile(new URL("../data/archive/rung-lists.json", import.meta.url), "utf8"));
 const RUNG_CHAINS = {
   Base: [],
   Tuned: ["required", "tuned2"],

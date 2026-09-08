@@ -428,7 +428,7 @@ if (args.write) {
   // never reach the repository -- so the check would be unrepeatable and a later
   // hand-edit to a plan could silently detach a published score from the deck it
   // describes. This is the pinned copy the test suite composes against.
-  await writeJson(path.join(ROOT, "data/rung-lists.json"), {
+  await writeJson(path.join(ROOT, "data/archive/rung-lists.json"), {
     schemaVersion: 1,
     generatedAt: new Date().toISOString(),
     note: "The exact hundred measured for each rung. Composing the plan through lineup-model.js must reproduce these lists card for card.",

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* Costs the three Claude-powered features this app could carry, against the
    data the app actually ships. Every prompt below is assembled from the real
-   files -- data/rung-lists.json for the hundred, data/deck-guides.json for the
+   files -- data/archive/rung-lists.json for the hundred, data/deck-guides.json for the
    shape and for the output schema, data/commander-universe.json for the
    registry -- so the sizes are the sizes a real call would send, not a guess.
 

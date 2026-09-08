@@ -9052,7 +9052,7 @@
   async function loadActiveState(returnTo) {
     let payload;
     try {
-      const response = await fetch("data/active-state.json?v=3", {cache: "default"});
+      const response = await fetch("data/active-state.json?v=4", {cache: "default"});
       if (!response.ok) {
         showToast(response.status === 404 ? "No active-state.json is committed to the repo yet." : `Could not load active state (${response.status}).`);
         return;
@@ -9100,23 +9100,23 @@
          served however long a browser holds the old one. Bump it when the
          shape of a data file changes, exactly as app.js?v= is bumped. */
       [bakedCatalog, bakedBuyCatalog, simulationSummary, activeStateFile, pullList] = await Promise.all([
-        fetch("data/variants.json?v=1", {cache: "default"}).then((response) => {
+        fetch("data/archive/variants.json?v=1", {cache: "default"}).then((response) => {
           if (!response.ok) throw new Error("Variant catalog did not load");
           return response.json();
         }),
-        fetch("data/buy-plans.json?v=1", {cache: "default"}).then((response) => {
+        fetch("data/buy-plans.json?v=2", {cache: "default"}).then((response) => {
           if (!response.ok) throw new Error("Buy catalog did not load");
           return response.json();
         }),
         // Additive: real simulation results for the new ladders. Never blocks startup --
         // the commander-compare preview and Calibrate simulation readout just render nothing
         // extra if this is unavailable, same as any other optional metadata in this app.
-        fetch("data/simulation-summary.json?v=4", {cache: "default"}).then((response) => response.ok ? response.json() : null).catch(() => null),
+        fetch("data/simulation-summary.json?v=5", {cache: "default"}).then((response) => response.ok ? response.json() : null).catch(() => null),
         // Read for the corner ribbon alone. Loading this file does NOT apply it
         // -- that stays an explicit Load Active click -- so a browser mid-build
         // keeps its own picks while still being told which six are the
         // published slate.
-        fetch("data/active-state.json?v=3", {cache: "default"}).then((response) => response.ok ? response.json() : null).catch(() => null),
+        fetch("data/active-state.json?v=4", {cache: "default"}).then((response) => response.ok ? response.json() : null).catch(() => null),
         // The written pull list. Additive and never blocking: without it the Shop shows
         // exactly what the decks are owed, which is what it showed before the list existed.
         fetch("data/pull-list.json?v=1", {cache: "default"}).then((response) => response.ok ? response.json() : null).catch(() => null)

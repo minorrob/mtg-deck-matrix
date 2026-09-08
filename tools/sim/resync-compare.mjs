@@ -2,7 +2,7 @@
 // the site actually composes.
 //
 //   node tools/sim/resync-compare.mjs           # report what would change
-//   node tools/sim/resync-compare.mjs --write   # write data/variants.json
+//   node tools/sim/resync-compare.mjs --write   # write data/archive/variants.json
 //
 // Compare reads almost everything off variants.json by stage index, and those
 // arrays were written when Maxed WAS the Tuned hundred. Promoting Game Changers
@@ -199,8 +199,8 @@ console.log(`\n${changes.length} corrections across ${new Set(changes.map((c) =>
 console.log("left alone (editorial, not derived): ranks, scores, rarity, summaries");
 
 if (args.write) {
-  await writeJson(path.join(ROOT, "data/variants.json"), variants);
-  console.log("written to data/variants.json");
+  await writeJson(path.join(ROOT, "data/archive/variants.json"), variants);
+  console.log("written to data/archive/variants.json");
 } else {
   console.log("(dry run — pass --write to save)");
 }

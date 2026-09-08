@@ -15,7 +15,7 @@
  *                           alone: on both these variants it long ago stopped
  *                           tracking the shell (5o shares no ids with it at all),
  *                           so writing into it would describe a build nobody has.
- *   data/rung-lists.json    the pinned hundred for all four measured rungs, since
+ *   data/archive/rung-lists.json    the pinned hundred for all four measured rungs, since
  *                           a shell card is in every one of them.
  *   data/active-state.json  the shell id lists behind Active and Assigned, so the
  *                           new slot is filled rather than showing up as a hole.
@@ -157,5 +157,5 @@ fs.writeFileSync(url("rung-lists.json"), `${JSON.stringify(rungLists, null, 2)}\
 // active-state.json ships at one-space indent; re-indenting it would bury a
 // three-line change in a half-million-line diff.
 fs.writeFileSync(url("active-state.json"), `${JSON.stringify(state, null, 1)}\n`);
-console.log("\nWritten: data/buy-plans.json, data/rung-lists.json, data/active-state.json");
+console.log("\nWritten: data/buy-plans.json, data/archive/rung-lists.json, data/active-state.json");
 console.log("Next:    node tools/sim/remeasure-variant.mjs --variant 3o,5o --write");

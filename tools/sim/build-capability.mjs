@@ -29,7 +29,7 @@
 // published: an option this tool offers is not a recommendation it makes.
 //
 // These items are flagged `capabilityOption` and are deliberately NOT part of
-// the pinned rung composition. data/rung-lists.json records the exact hundred
+// the pinned rung composition. data/archive/rung-lists.json records the exact hundred
 // the sweep measured for each rung, and lineup-compliance.mjs composes each
 // plan back against it card for card. Folding an unmeasured-by-the-sweep option
 // into that composition would break the one invariant this project actually

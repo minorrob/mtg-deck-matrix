@@ -45,7 +45,7 @@
 
   /* ---------------- the four measured builds ----------------
    * Five rungs appear on a slot, but only four of them are whole-deck builds that
-   * the simulation ever measured, and data/rung-lists.json pins exactly those four.
+   * the simulation ever measured, and data/archive/rung-lists.json pins exactly those four.
    * Enhance is deliberately absent: it is a set of optional per-slot substitutions
    * layered on Tuned, not a hundred anyone ran games with.
    *

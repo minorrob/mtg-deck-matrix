@@ -44,11 +44,11 @@ export function slugify(name) {
 async function commanderNames() {
   const explicit = arg("--name");
   if (explicit) return [explicit];
-  const master = JSON.parse(await readFile("data/master-v2.json", "utf8"));
+  const master = JSON.parse(await readFile("data/archive/master-v2.json", "utf8"));
   const names = new Set(Object.values(master.decks || {}).map((d) => d.commander).filter(Boolean));
   for (const c of master.cards) if (c.purpose === "Commander") names.add(c.name);
   if (process.argv.includes("--all")) {
-    const variants = JSON.parse(await readFile("data/variants.json", "utf8"));
+    const variants = JSON.parse(await readFile("data/archive/variants.json", "utf8"));
     for (const v of variants.variants) if (v.commander) names.add(v.commander);
   }
   return [...names];

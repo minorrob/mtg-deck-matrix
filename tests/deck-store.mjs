@@ -14,7 +14,7 @@ const Store = require("../deck-store.js");
 const Import = require("../deck-import.js");
 
 const load = async (p) => JSON.parse(await readFile(new URL(p, import.meta.url), "utf8"));
-const master = await load("../data/master-v2.json");
+const master = await load("../data/archive/master-v2.json");
 const paste = await readFile(new URL("./fixtures/moxfield-mono-red.txt", import.meta.url), "utf8");
 
 let checks = 0;

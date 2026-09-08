@@ -334,7 +334,7 @@ check("the commander is worth more than its body", () => {
   const Engine = require("../sim-engine.js");
   const Measure = require("../deck-measure.js");
   const load = async (f) => JSON.parse(await readFile(new URL(f, import.meta.url), "utf8"));
-  const master = await load("../data/master-v2.json");
+  const master = await load("../data/archive/master-v2.json");
   const facts = (await load("../data/card-facts.json")).cards;
   const config = await load("../sim/config.json");
   const opponents = await load("../sim/opponents.json");

@@ -1,4 +1,4 @@
-// data/master-v2.json is a BUILD ARTIFACT of data/source/*.xlsx, not a document.
+// data/archive/master-v2.json is a BUILD ARTIFACT of data/source/*.xlsx, not a document.
 // This asserts it still is.
 //
 // WHY THIS TEST EXISTS. Two sessions edit this repository, and the last patch that
@@ -21,7 +21,7 @@ import assert from "node:assert/strict";
 
 const run = promisify(execFile);
 const SOURCE = "data/source/Treys_MtG_Master_v3.xlsx";
-const COMMITTED = "data/master-v2.json";
+const COMMITTED = "data/archive/master-v2.json";
 
 // generatedAt is a timestamp; everything else that the workbook decides must
 // match exactly.

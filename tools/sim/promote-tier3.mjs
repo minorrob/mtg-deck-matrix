@@ -387,7 +387,7 @@ if (args.write) {
 
   // The pinned hundred moves with the deck, or the published score stops
   // describing what is printed underneath it.
-  const rungLists = await readJson(path.join(ROOT, "data/rung-lists.json"));
+  const rungLists = await readJson(path.join(ROOT, "data/archive/rung-lists.json"));
   report.forEach((row) => {
     const entry = rungLists.variants[row.variantId];
     if (entry && entry.Max) {
@@ -395,7 +395,7 @@ if (args.write) {
     }
   });
   rungLists.generatedAt = new Date().toISOString();
-  await writeJson(path.join(ROOT, "data/rung-lists.json"), rungLists);
+  await writeJson(path.join(ROOT, "data/archive/rung-lists.json"), rungLists);
 
   const summary = await readJson(path.join(ROOT, "data/simulation-summary.json"));
   report.forEach((row) => {

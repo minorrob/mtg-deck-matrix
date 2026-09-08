@@ -13,7 +13,7 @@
 //
 // The replacement is measured, not asserted. Each candidate is simulated in the
 // list it would join and the best-scoring legal one is taken, then the repaired
-// rung is measured again and data/rung-lists.json is re-pinned to it -- because
+// rung is measured again and data/archive/rung-lists.json is re-pinned to it -- because
 // the pinned list is the contract that a published score describes the deck
 // printed underneath it, and a repaired deck is a different deck.
 
@@ -166,7 +166,7 @@ console.log(`\n${report.length} variant(s) repaired`);
 // The pinned lists are the contract. A repaired deck is a different hundred, so
 // the pin moves with it or the next composition check is comparing a deck to a
 // list it no longer is.
-const rungLists = await readJson(path.join(ROOT, "data/rung-lists.json"));
+const rungLists = await readJson(path.join(ROOT, "data/archive/rung-lists.json"));
 let repinned = 0;
 for (const row of report) {
   const entry = rungLists.variants[row.variantId];
@@ -178,13 +178,13 @@ for (const row of report) {
   if (entry.Max) entry.Max = shape(maxedCards(row.plan, audited));
   repinned += 1;
 }
-console.log(`${repinned} variant(s) re-pinned in data/rung-lists.json`);
+console.log(`${repinned} variant(s) re-pinned in data/archive/rung-lists.json`);
 
 if (args.write) {
   await writeJson(path.join(ROOT, "data/buy-plans.json"), buyPlans);
   rungLists.generatedAt = new Date().toISOString();
-  await writeJson(path.join(ROOT, "data/rung-lists.json"), rungLists);
-  console.log("written to data/buy-plans.json and data/rung-lists.json");
+  await writeJson(path.join(ROOT, "data/archive/rung-lists.json"), rungLists);
+  console.log("written to data/buy-plans.json and data/archive/rung-lists.json");
 } else {
   console.log("(dry run — pass --write to save)");
 }
