@@ -424,6 +424,31 @@
 .cm-card-view-buy{margin-top:8px}
 #matrix-v2 .cm-card-view-buy .cm-card-view-menu-btn{display:inline-flex;align-items:center;gap:6px}
 
+/* THE COUNT STRIP. Three of the row menu's entries are a number and a yes, so they open
+   this beside the menu rather than a dialog over the table: fewer, the count, more, and a
+   green check that is the commit. Deliberately NOT scoped to #matrix-v2 -- the row menu is
+   a popover appended to <body>, outside that subtree, which is why every .cm-menu rule
+   above is unscoped too. .cm-menu makes every button a full-width block and sets a 210px
+   floor, both right for a menu and wrong for four controls on one line, so both are undone
+   here rather than loosened there. */
+.cm-menu.cm-step{display:flex;align-items:center;gap:6px;width:max-content;min-width:0;padding:7px}
+.cm-menu.cm-step button{display:inline-grid;place-items:center;width:34px;height:34px;padding:0;
+  border:1px solid #4b5975;border-radius:8px;background:#2a3448;color:#eef4fd;
+  font-size:13px;line-height:1;text-align:center}
+.cm-menu.cm-step button:hover{background:#354464}
+/* The check is the only green in this app, which is the point: it is the one control here
+   that changes anything, and it should not have to be read to be found. */
+.cm-menu.cm-step .cm-step-ok{background:#2f7d51;border-color:#48b075;color:#f0fff6;font-size:16px;font-weight:700}
+.cm-menu.cm-step .cm-step-ok:hover{background:#3a9963}
+.cm-menu.cm-step input{width:58px;height:34px;min-height:0;margin:0;padding:0 6px;text-align:center;
+  background:#161d2b;border:1px solid #4b5975;border-radius:8px;color:#eef4fd;font:inherit;font-size:14px}
+.cm-menu.cm-step input:focus-visible{outline:2px solid #9addff;outline-offset:1px}
+/* The browser's own spinner is a third and fourth arrow inside a control that already has
+   two, pointing the other way. */
+.cm-menu.cm-step input{appearance:textfield;-moz-appearance:textfield}
+.cm-menu.cm-step input::-webkit-outer-spin-button,
+.cm-menu.cm-step input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+
 /* BACK RIDES WITH THE GRAPH'S OWN CONTROLS. Inside the pane it was absolutely positioned
    over the top-right corner, which put it on top of the card's name -- and it never belonged
    to the card anyway: it undoes a move on the canvas. It is the last item in the mode row

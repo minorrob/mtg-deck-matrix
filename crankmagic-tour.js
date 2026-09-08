@@ -6,7 +6,7 @@
  * what the journey actually got you, because a tour that ends with "that is the end of the
  * tour" has taught you where the buttons are and not what the app is for.
  *
- * THE ENGINE IS PORTED FROM app.js, the legacy matrix.html viewer, which had already paid
+ * THE ENGINE IS PORTED FROM the retired matrix.html viewer, which had already paid
  * for four lessons. They are carried over deliberately and each one is a bug that shipped:
  *
  *   1. FIND AND MEASURE IN THE SAME BREATH, and decide the retry on the MEASUREMENT rather
@@ -151,7 +151,7 @@ const TOURS=[
      copy:'By deck, source, type, colour or allocation. Grouping is how you find the eleven copies of the same land spread across four decks.'},
     {view:'collection',selectors:['[data-action=new-group]'],
      title:'A group is a box that is not yet a deck',
-     copy:'A precon you took apart, a trade binder, the pile you came home from a convention with.'},
+     copy:'You start with four — Main Deck, Bench, To Trade, To Buy — and they are ordinary groups: rename them, delete the ones you do not use, add your own. A precon you took apart, a trade binder, the pile you came home from a convention with.'},
     {view:'collection',selectors:['[data-action=roster-columns]'],
      title:'Choose what the table shows',
      copy:'And what it shows is what an export carries — set the columns once and every export matches.'},

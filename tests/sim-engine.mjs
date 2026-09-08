@@ -403,29 +403,18 @@ assert.equal(brokenResultWritten, false, "a refused run must never write a resul
 await rm(scratch, {recursive: true, force: true});
 
 // ---------------------------------------------------------------------------
-// Page wiring: the Simulate screen and the skill that drives the loop
+// The skill that drives the loop, and the app that must never do it in a browser
+//
+// The screen-wiring assertions here used to read the retired matrix.html viewer. What
+// they were protecting that still matters is the last one: no key, and no API call, in
+// anything a reader loads.
 // ---------------------------------------------------------------------------
-const appSource = await readFile(new URL("../app.js", import.meta.url), "utf8");
-// The full app moved to matrix.html when the simplified viewer took over
-// index.html. These assertions are about the full app, so they follow it.
-const indexSource = await readFile(new URL("../matrix.html", import.meta.url), "utf8");
+for (const module of ["../crankmagic-sim.js", "../crankmagic-lab.js"]) {
+  const source = await readFile(new URL(module, import.meta.url), "utf8");
+  assert.doesNotMatch(source, /api\.anthropic\.com|ANTHROPIC_API_KEY/,
+    `${module} must never call an API to simulate: there is no key in a browser`);
+}
 const skill = await readFile(new URL("../.claude/skills/simulate-deck/SKILL.md", import.meta.url), "utf8");
-
-assert.match(indexSource, /<dialog class="sim-dialog" id="sim-dialog">/, "matrix.html must carry the simulation dialog");
-assert.match(appSource, /function openSimDialog\(variant\)/, "app.js must open a simulation dialog");
-assert.match(appSource, /class="simulate-button tip-action/, "every variant card must offer a Simulate button");
-assert.match(appSource, /data-live-simulate/, "Live Decks must offer a Simulate button too");
-assert.match(appSource, /Lineup\.defaultSelection\(plan\)/, "the request must be built from the plan's Tuned build, not the browser's tick boxes");
-/* Polling is the one place no-store is right, and the reason is the opposite of
-   the committed data's: sim/status.json is being rewritten by a local process
-   while this reads it, so a reused byte is a stale run. The committed data went
-   the other way -- versioned URLs and the browser cache -- and this assertion
-   names the poll specifically so that change cannot quietly take it too. */
-assert.match(appSource, /SIM_STATUS_PATH\}\?t=\$\{Date\.now\(\)\}`, \{cache: "no-store"\}/,
-  "status polling must not be served from cache");
-assert.match(appSource, /SIM_STATUS_PATH\}\?t=\$\{Date\.now\(\)\}/, "status polling must bust the URL cache as well");
-assert.match(appSource, /forgetVariantSelection\(simDialogVariant\.id\)/, "applying an optimized list must drop the stale buy selection");
-assert.doesNotMatch(appSource, /api\.anthropic\.com|ANTHROPIC_API_KEY/, "the browser must never call an API to simulate");
 
 assert.match(skill, /never edit `sim\/config\.json`/i, "the skill must state that it cannot raise a cap");
 assert.match(skill, /\| 11 \|/, "the skill must document the cap exit code");

@@ -4,7 +4,7 @@
 // lineup-compliance.mjs cannot cover this. It composes data/buy-plans.json, and manual
 // cards are deliberately NOT written there -- the buy catalog is regenerated from the
 // build kit, so anything stored in it is lost on the next rebuild. They live in
-// state.manualCards and app.js grafts them onto each plan at runtime. So the invariant
+// state.manualCards and the app grafts them onto each plan at runtime. So the invariant
 // that matters -- a hand-added card is one more choice inside a slot, and choosing it
 // leaves the deck at a hundred cards -- has to be checked against the grafted plan,
 // which is what this does.
@@ -19,7 +19,6 @@ const Slot = require("../slot-model.js");
 const buyPlans = JSON.parse(await readFile(new URL("../data/buy-plans.json", import.meta.url), "utf8"));
 const cards = JSON.parse(await readFile(new URL("../data/cards.json", import.meta.url), "utf8"));
 const activeState = JSON.parse(await readFile(new URL("../data/active-state.json", import.meta.url), "utf8"));
-const appSource = await readFile(new URL("../app.js", import.meta.url), "utf8");
 
 const audited = new Map(cards.cards.map((card) => [Lineup.normalizeName(card.name), card]));
 const manualCards = activeState.state?.manualCards || {};
@@ -27,7 +26,7 @@ const variantIds = Object.keys(manualCards);
 let checks = 0;
 const ok = (name, run) => { run(); checks += 1; console.log(`  ok  ${name}`); };
 
-// The same graft app.js applies after every catalog rebuild.
+// The same graft the app applies after every catalog rebuild.
 const grafted = (variantId) => ({...buyPlans.plans[variantId], manual: manualCards[variantId].map((card) => ({...card}))});
 
 ok("the seeded options are filed against real variants", () => {
@@ -138,20 +137,6 @@ ok("sending one back leaves the deck at a hundred cards", () => {
   }
 });
 
-ok("the return control is read before the pick that sits under it", () => {
-  // Match the handler expressions, not any mention -- the comment above the return
-  // branch names the pick branch, and an indexOf for the bare selector finds that.
-  const returnAt = appSource.indexOf('closest("[data-dp-manual-return]")');
-  const pickAt = appSource.indexOf('closest("[data-dp-pick]")');
-  assert.ok(returnAt > 0 && pickAt > 0, "both handlers must exist");
-  assert.ok(returnAt < pickAt,
-    "the return button overlaps its tile, so its handler has to run before the tile's pick handler");
-  assert.match(appSource, /function returnManualCard\(slotId, entryId\)/);
-  // Ownership is read, never invented: the yard means cards you own.
-  assert.match(appSource, /const owned = card\.source === "salvage" \|\| Boolean\(state\.found\?\.\[key\]\)/,
-    "a card that was never bought must not be put on the bench");
-});
-
 ok("the measured rungs are untouched by what was added by hand", () => {
   // Manual is not in RUNG_CHAIN, so composing Base, Tuned, Fun or Max must return the
   // same hundred whether or not the deck carries hand-added options.
@@ -175,34 +160,12 @@ ok("nothing hand-added is filed against a commander", () => {
         `${id}: ${card.name} is filed against the commander ${commander.name}`);
     }
   }
-  assert.match(appSource, /if \(slot\?\.type === "Commander"\) return say\(/,
-    "submitManualCard must refuse the commander slot even if the panel is stale");
-});
-
-ok("the loose pool is owned copies no box is holding, and nothing else", () => {
-  // Two guards, and both matter. Without the ownership read the box would offer cards
-  // that have not been bought; without the committed count it would offer the same
-  // physical copy to two decks at once.
-  assert.match(appSource, /const held = Slot\.ownedCount\(owned, entry\.name\)\.inHand \|\| 0;/,
-    "a card must be owned before it is offered as loose");
-  assert.match(appSource, /if \(held <= \(committed\.get\(key\) \|\| 0\)\) return;/,
-    "a copy already in a ticked box must not be offered to another deck");
-  assert.match(appSource, /if \(mine\.has\(key\)\) return;/,
-    "a card this deck already reaches through its own slots must not be offered again");
 });
 
 ok("Manual sorts last on a slot, after every measured rung", () => {
   assert.equal(Slot.RUNG_ORDER[Slot.RUNG_ORDER.length - 1], "manual",
     `manual must sort last; RUNG_ORDER is ${Slot.RUNG_ORDER.join(", ")}`);
   assert.equal(Slot.RUNG_LABEL.manual, "Manual");
-});
-
-ok("hand-added cards are stored in state, not in the buy catalog", () => {
-  assert.match(appSource, /state\.manualCards\[ctx\.deckId\] = list;/,
-    "submitManualCard must write to state.manualCards");
-  assert.doesNotMatch(appSource, /buyCatalog\.plans\[[^\]]+\]\.manual\.push/,
-    "manual cards must never be pushed into the buy catalog, which is regenerated");
-  assert.match(appSource, /function applyManualCards\(\)/, "the graft must survive a catalog rebuild");
 });
 
 const seeded = variantIds.reduce((sum, id) => sum + manualCards[id].length, 0);

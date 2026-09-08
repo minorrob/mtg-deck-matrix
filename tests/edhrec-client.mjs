@@ -152,14 +152,6 @@ check(() => assert.ok(Edhrec.scoreFor(index, anyName.toUpperCase()),
 check(() => assert.ok(Edhrec.scoreFor(index, "  " + anyName + "  "),
   "lookup must tolerate the whitespace a paste brings"));
 
-// ---------------------------------------------------------------------------
-// Wired into the page
-// ---------------------------------------------------------------------------
-const indexHtml = await readFile(new URL("../legacy-decks.html", import.meta.url), "utf8");
-check(() => assert.ok(/edhrec-client\.js/.test(indexHtml), "My Decks must load edhrec-client.js"));
-check(() => assert.ok(indexHtml.indexOf("edhrec-client.js") < indexHtml.indexOf("deck-generator.js"),
-  "it must load before the generator that reads it"));
-
 const topSynergy = [...index.cards.values()]
   .filter((e) => e.tags.highSynergy).sort((a, b) => (b.synergy || 0) - (a.synergy || 0))[0];
 console.log(`edhrec-client: ${checks} checks passed · ${index.cards.size} cards from ${index.rows} rows ` +

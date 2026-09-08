@@ -1,3 +1,9 @@
+/* The page-wiring block that used to sit at the end of this file read matrix.html, app.js
+   and app.css -- the retired viewer, its script and its stylesheet. What it was protecting
+   is now protected by construction: the generator is not loaded by any page at all. It is
+   a Node module the simulator toolchain requires directly (tools/sim/lib.mjs), so a
+   load-order bug is no longer expressible. Everything above still measures the generator
+   itself, which is the part that was ever doing work. */
 import assert from "node:assert/strict";
 import {createRequire} from "node:module";
 import {readFile} from "node:fs/promises";
@@ -10,10 +16,6 @@ const Custom = require("../custom-model.js");
 const Generator = require("../deck-generator.js");
 const Edhrec = require("../edhrec-client.js");
 const fixture = JSON.parse(await readFile(new URL("./fixtures/scryfall/cards.json", import.meta.url), "utf8"));
-// The full app moved to matrix.html when the simplified viewer took over
-// index.html. These assertions are about the full app, so they follow it.
-const indexSource = await readFile(new URL("../matrix.html", import.meta.url), "utf8");
-const appSource = await readFile(new URL("../app.js", import.meta.url), "utf8");
 
 import {makeScryfallStub, makeClient} from "./helpers/stub-scryfall.mjs";
 
@@ -299,70 +301,6 @@ assert.ok(flavor.theme > fortress.theme, "Flavor must lean further into the them
   assert.ok(protectionCount >= 6, `a Fortress build must actually fill the extra protection slots (filled ${protectionCount})`);
   assert.equal(Generator.evaluateEntries(styled.builds[0].stages[0]).total, 100);
 }
-
-// ---------------------------------------------------------------------------
-// Page wiring
-// ---------------------------------------------------------------------------
-for (const module of ["lineup-model.js", "compliance-model.js", "scryfall-client.js", "custom-model.js", "deck-generator.js"]) {
-  assert.ok(indexSource.includes(module), `matrix.html must load ${module}`);
-}
-assert.ok(indexSource.indexOf("compliance-model.js") < indexSource.indexOf("deck-generator.js"), "the generator must load after the compliance model it depends on");
-assert.ok(indexSource.indexOf("deck-generator.js") < indexSource.indexOf("app.js?"), "generator modules must load before app.js");
-// Choose is withdrawn from the page for now, so the tab and section are gone on
-// purpose. What must stay true is that withdrawing it is a two-element change
-// and nothing else: the generator, the Scryfall client, the custom store and the
-// renderer are all still wired, so putting the tab and section back in
-// matrix.html brings the whole step back with them.
-assert.doesNotMatch(indexSource, /data-view="choose"/, "the Choose tab is withdrawn for now");
-assert.doesNotMatch(indexSource, /id="view-choose"/, "the Choose section is withdrawn for now");
-assert.match(appSource, /function renderChooseView\(\)/, "the Choose renderer must survive the tab being withdrawn");
-assert.match(appSource, /if \(!\$\("#view-choose"\)\) return;/, "renderChoose must no-op rather than throw while its section is absent");
-assert.match(appSource, /Generator\.generateForSlot/, "the generator must still be wired to the slot runner");
-
-const cssSource = await readFile(new URL("../app.css", import.meta.url), "utf8");
-// Derive the count instead of hard-coding it: the tab bar and its grid must agree,
-// and that guard should survive tabs being added or withdrawn.
-const tabCount = (indexSource.match(/class="main-tab[ "]/g) || []).length;
-const gridMatch = cssSource.match(/\.main-tabs \{[^}]*repeat\((\d+), minmax\(0, 1fr\)\)/);
-assert.ok(gridMatch, "the tab bar must declare a fixed-column grid");
-assert.equal(Number(gridMatch[1]), tabCount,
-  `the tab bar grid (${gridMatch[1]} columns) must make room for exactly the ${tabCount} tabs in matrix.html`);
-assert.match(cssSource, /\.choose-grid \{/, "the Choose grid must be styled");
-assert.match(cssSource, /\.deck-group-divider \{/, "the generated-deck divider must be styled");
-
-assert.match(appSource, /const Custom = window\.MtgCustomModel/, "app.js must bind the custom deck model");
-assert.match(appSource, /const Generator = window\.MtgDeckGenerator/, "app.js must bind the deck generator");
-assert.match(appSource, /function renderChoose\(\)/, "app.js must render the Choose view");
-assert.match(appSource, /if \(view === "choose"\) renderChoose\(\);/, "switchView must route the Choose tab");
-assert.match(appSource, /Custom\.mergeIntoCatalogs\(customStore, bakedCatalog, bakedBuyCatalog\)/, "generated decks must merge into copies of the baked catalog, never into the files");
-/* The counter now describes the LIBRARY -- what is not on Compare yet -- because Compare
-   stopped showing all fifty variants on every visit. It still has to follow the merged
-   catalog rather than the baked one, or a generated deck would be counted as something
-   left to add. */
-assert.match(appSource, /\$\{offShelf\} of \$\{catalog\.variants\.length\} researched variants not on Compare/,
-  "the library counter must follow the merged catalog");
-assert.match(appSource, /const library = catalog\.variants\.filter\(\(variant\) => !isCustomDeck\(variant\.deckId\) && !onShelf\(variant\)\)/,
-  "a generated deck is never in the library: it is on Compare because you made it");
-/* The meter counts against what is ON Compare, which includes every generated deck --
-   `shelved` is filtered from the merged catalog, so a generated deck still raises the
-   denominator. It falls back to the whole catalog only when the shelf is empty, where
-   there is nothing to count against yet. */
-assert.match(appSource, /\$\{selected\.length\}\/\$\{shelved\.length \|\| catalog\.decks\.length\}/,
-  "the Compare selection meter must follow what is on Compare, out of the merged catalog");
-assert.match(appSource, /const shelved = catalog\.decks\.filter\(onCompareShelf\)/,
-  "the shelf is filtered from the merged catalog, so a generated deck is always on it");
-assert.match(appSource, /if \(isCustomDeck\(deck\.id\)\) return true;/,
-  "a generated deck never has to be added from the library: you made it");
-assert.match(appSource, /\$\{variants\.length\} of \$\{deckTotal\} on Compare/,
-  "each researched deck row must say how many of its own variants are on Compare");
-assert.match(appSource, /\$\{variants\.length\} approach\$\{variants\.length === 1 \? "" : "es"\}/,
-  "a generated deck counts approaches rather than a fraction of five: there is no library behind it");
-assert.match(appSource, /deck-group-divider/, "generated decks must be separated from the curated ones");
-assert.match(appSource, /String\(item\?\.name \|\| ""\)/, "itemKey must tolerate plans that carry no precon");
-// The Choose tour steps go with the withdrawn tab; the tour must not offer a
-// walkthrough of a page nobody can reach.
-assert.doesNotMatch(appSource, /^\s{4}choose: \[/m, "the tour must not walk through a withdrawn view");
-
 
 // ---------------------------------------------------------------------------
 // EDHREC synergy, when there is a page for the commander.

@@ -7,7 +7,6 @@ const Lineup = require("../lineup-model.js");
 const buyPlans = JSON.parse(await readFile(new URL("../data/buy-plans.json", import.meta.url), "utf8"));
 const cards = JSON.parse(await readFile(new URL("../data/cards.json", import.meta.url), "utf8"));
 const baseRebuild = JSON.parse(await readFile(new URL("../data/base-rebuild.json", import.meta.url), "utf8"));
-const appSource = await readFile(new URL("../app.js", import.meta.url), "utf8");
 const audited = new Map(cards.cards.map((card) => [Lineup.normalizeName(card.name), card]));
 const BASIC_NAMES = new Set(["plains", "island", "swamp", "mountain", "forest", "wastes", "snow covered plains", "snow covered island", "snow covered swamp", "snow covered mountain", "snow covered forest"]);
 const LADDER_PREREQS = {enhance2: ["tuned2"], max2: ["tuned2", "enhance2"], funMax: ["funTuned"], altMax: ["altTuned"]};
@@ -368,12 +367,6 @@ for (const [role, minimum] of Object.entries({ramp: 8, draw: 8, protect: 3})) {
 const gruulDefault = selectedCards(gruul, Lineup.defaultSelection(gruul));
 assert.ok(roleCount(gruulDefault, "interaction", (card) => card.name === "Song of the Dryads") >= 8, "Gruul Landfall default lineup must retain its eight-card interaction floor");
 
-assert.match(appSource, /selectedDeckCards\(plan, ensureBuyState\(variant\.id\)\)/, "Buy Picks counters must use literal selected cards");
-assert.doesNotMatch(appSource, /card\.isFlexibleSlot \|\| selectedShell\.has/, "runtime may not force hidden flexible slots into compliance");
-assert.match(appSource, /<input type="checkbox" \$\{card\.lineupActive \? "checked"/, "Live Deck cards must be independent toggles, not a slot-exclusive radio group");
-assert.doesNotMatch(appSource, /type="radio" name="live-slot-/, "Live Deck cards must not be constrained back into slot-exclusive radio groups");
-assert.match(appSource, /Ready to play/, "Live Decks must calculate readiness");
-assert.match(appSource, /startingShellKind\s*!==\s*["']official-precon["']/, "Only verified official precons may unlock a whole shell as one bought item");
 
 for (const [variantId, plan] of Object.entries(buyPlans.plans)) {
   assert.ok(["official-precon", "custom-shell"].includes(plan.startingShellKind), `${variantId}: starting shell acquisition mode must be explicit`);

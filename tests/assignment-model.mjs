@@ -17,7 +17,6 @@ const Slot = require("../slot-model.js");
 const buyPlans = JSON.parse(await readFile(new URL("../data/buy-plans.json", import.meta.url), "utf8"));
 const cardsDoc = JSON.parse(await readFile(new URL("../data/cards.json", import.meta.url), "utf8"));
 const activeState = JSON.parse(await readFile(new URL("../data/active-state.json", import.meta.url), "utf8"));
-const appSource = await readFile(new URL("../app.js", import.meta.url), "utf8");
 const deckPageSource = await readFile(new URL("../deck-page.js", import.meta.url), "utf8");
 
 const state = activeState.state;
@@ -169,41 +168,6 @@ ok("Rugged Highlands is not offered in Atraxa", () => {
   assert.deepEqual(offered, [], `Rugged Highlands is a candidate on ${offered.join(", ")}`);
 });
 
-/* ---------- what the code promises ---------- */
-ok("choosing a rung writes Active only", () => {
-  const handler = appSource.slice(appSource.indexOf('closest("[data-dp-pick]")'),
-                                 appSource.indexOf('closest("[data-dp-pick]")') + 1400);
-  assert.ok(handler.indexOf("assignedSelections") < 0,
-    "picking a rung must not touch the reviewed recommendation");
-});
-
-ok("reset returns Active to Assigned and nothing else", () => {
-  const handler = appSource.slice(appSource.indexOf('closest("[data-dp-reset]")'),
-                                  appSource.indexOf('closest("[data-dp-reset]")') + 1200);
-  assert.match(handler, /assignSelection\(current, assigned\);/, "a deck reset copies Assigned onto Active");
-  assert.match(handler, /Lineup\.applyChoice\(plan, current, seat\.pick\.entryId\)/,
-    "a slot reset applies that slot's recommendation alone");
-  assert.ok(handler.indexOf("state.manualCards") < 0, "a reset must not touch hand-added candidates");
-  assert.ok(handler.indexOf("delete ") < 0, "a reset must not delete anything");
-});
-
-ok("Make Assigned is a separate, deliberate action", () => {
-  assert.match(appSource, /data-dp-makeassigned/, "there must be a control for it");
-  const handler = appSource.slice(appSource.indexOf('closest("[data-dp-makeassigned]")'),
-                                  appSource.indexOf('closest("[data-dp-makeassigned]")') + 900);
-  assert.match(handler, /state\.assignedSelections\[ctx\.deckId\] = next;/,
-    "it writes the recommendation");
-  assert.ok(handler.indexOf("ensureBuyState(ctx.deckId), Lineup") < 0,
-    "and does not also move Active");
-});
-
-ok("a bulk stage falls back to Assigned wherever the rung is blank", () => {
-  assert.match(appSource, /function withAssignedFallback\(variantId, plan, selection\)/,
-    "the fallback must exist");
-  assert.match(appSource, /withAssignedFallback\(ctx\.deckId, plan, Slot\.selectionForRung\(plan, el\.dataset\.dpRung\)\)/,
-    "and the rung buttons must go through it");
-});
-
 ok("a bulk stage keeps every deck at a hundred", () => {
   for (const id of live) {
     const plan = graft(id);
@@ -239,24 +203,10 @@ ok("the two states are told apart on screen", () => {
 });
 
 /* ---------- older saved states ---------- */
-ok("a legacy export migrates without losing anything", () => {
-  assert.match(appSource, /const STATE_VERSION = 4;/, "the saved shape must carry a version");
-  assert.match(appSource, /stateVersion: Number\(saved\.stateVersion\) \|\| 1,/,
-    "an unversioned file must read as version 1, not as the current one");
-  assert.match(appSource, /function ensureAssignedSeeded\(\)/, "migration seeds the recommendation");
-  assert.match(appSource, /state\.assignedSelections\[variantId\] = cloneSelection\(state\.buySelections\[variantId\]\);/,
-    "whatever an older file was selecting IS its recommendation");
-  assert.match(appSource, /const already = state\.assignedSelections\[variantId\];\s*\n\s*if \(already && Object\.keys\(already\)\.length\) return;/,
-    "a state that already carries recommendations must keep them");
-  // Everything the reader owns comes through the load untouched.
-  for (const key of ["found", "boughtQuantities", "purchasePrices", "liveSalvage",
-                     "deckHolds", "comments", "liveTransfers", "manualCards", "deckActive"]) {
-    assert.ok(appSource.indexOf(`${key}: saved.${key}`) >= 0, `${key} must survive a load`);
-  }
-  // Game logs are a list rather than a map, so they are restored with a shape check.
-  assert.match(appSource, /gameLog: Array\.isArray\(saved\.gameLog\) \? saved\.gameLog : \[\]/,
-    "game logs must survive a load");
-  // Upgrade is Enhance's old name and is still read.
+ok("the two names for the same rung are both still read", () => {
+  /* The rest of this check used to read the retired viewer's loader, which is where the
+     migration lived. What survives it -- and still matters, because the shipped state file
+     below carries both -- is that Enhance answers to its old name too. */
   assert.ok(Lineup.ARRAY_KEYS.includes("upgrade"), "the legacy Upgrade array must still be read");
   assert.ok(Lineup.ARRAY_KEYS.includes("enhance"), "alongside Enhance");
 });

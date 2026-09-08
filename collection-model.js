@@ -20,7 +20,16 @@
   const quantity=value=>{const n=Number(value);if(!Number.isSafeInteger(n)||n<1||n>1000000)throw Error('Quantity must be a whole number between 1 and 1,000,000.');return n;};
   const ensure=(condition,message)=>{if(!condition)throw Error(message);};
   const safeId=value=>typeof value==='string'&&/^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,2047}$/.test(value)&&!['constructor','prototype','__proto__'].includes(value);
-  function empty(){return {schemaVersion:VERSION,revision:0,cards:{},decks:[],lots:[],groups:[],reports:[],games:[],advice:[],imports:[],preferences:{},legacy:null,createdAt:null,updatedAt:null};}
+  /* THE FOUR PILES EVERY COLLECTION ALREADY HAS. A new library opened on an empty Groups
+     tab asks the reader to invent a filing system before they own a card, and the answer
+     is the same four every time: what is in the deck, what is on the bench, what is going
+     out, what is coming in. They start empty and delete like any other group -- these are
+     a starting point, not a schema. The preference flag is what makes deleting them stick:
+     a library that has already been offered them is never offered them again. */
+  const STARTER_GROUPS=[['group:main-deck','Main Deck'],['group:bench','Bench'],
+    ['group:to-trade','To Trade'],['group:to-buy','To Buy']];
+  const starterGroups=()=>STARTER_GROUPS.map(([id,name])=>({id,name,entries:[],createdAt:null}));
+  function empty(){return {schemaVersion:VERSION,revision:0,cards:{},decks:[],lots:[],groups:starterGroups(),reports:[],games:[],advice:[],imports:[],preferences:{starterGroups:true},legacy:null,createdAt:null,updatedAt:null};}
   const deck=(s,id)=>{const d=s.decks.find(d=>d.id===id);ensure(d,'Deck not found. Reload and try again.');return d;};
   const slot=(s,did,sid)=>{const d=deck(s,did),r=d.slots.find(r=>r.id===sid);ensure(r,'That deck slot no longer exists.');return r;};
   const lot=(s,id)=>{const r=s.lots.find(r=>r.id===id);ensure(r,'That card record no longer exists.');return r;};
@@ -151,5 +160,5 @@
     return {state:s,summary,event:{id:c.id,type:c.type,at:now,revision:s.revision,summary,operation:c,effects}};
   }
   function fingerprint(d){return JSON.stringify({commanders:[...d.commanders].sort(),slots:d.slots.filter(r=>r.purpose==='main').map(r=>[r.cardId,r.quantity]).sort((a,b)=>a[0].localeCompare(b[0]))});}
-  return {VERSION,empty,clone,text,quantity,print,compatible,validate,apply,defaultDefinition,legality,definitionIssues,projection,counters,readiness,eligibility,fingerprint,shortfall,deck,slot,lot,inDeck};
+  return {VERSION,empty,starterGroups,clone,text,quantity,print,compatible,validate,apply,defaultDefinition,legality,definitionIssues,projection,counters,readiness,eligibility,fingerprint,shortfall,deck,slot,lot,inDeck};
 });

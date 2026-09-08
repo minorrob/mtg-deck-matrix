@@ -7,10 +7,6 @@ const Lineup = require("../lineup-model.js");
 const Compliance = require("../compliance-model.js");
 const buyPlans = JSON.parse(await readFile(new URL("../data/buy-plans.json", import.meta.url), "utf8"));
 const cards = JSON.parse(await readFile(new URL("../data/cards.json", import.meta.url), "utf8"));
-const appSource = await readFile(new URL("../app.js", import.meta.url), "utf8");
-// The full app moved to matrix.html when the simplified viewer took over
-// index.html. These assertions are about the full app, so they follow it.
-const indexSource = await readFile(new URL("../matrix.html", import.meta.url), "utf8");
 const audited = new Map(cards.cards.map((card) => [Lineup.normalizeName(card.name), card]));
 const resolveMeta = (item) => audited.get(Lineup.normalizeName(item.name)) || {};
 
@@ -96,13 +92,11 @@ assert.deepEqual(Compliance.deriveComplianceTags({oracleText: "Draw three cards.
 const loopTagged = Compliance.evaluateCardList(makeDeck({extras: [{name: "Endless Weekend", quantity: 1, typeLine: "Sorcery", colorIdentity: ["G"], tags: ["extra turn loop risk"]}]}));
 assert.ok(loopTagged.tier3.some((issue) => issue.card === "Endless Weekend" && issue.rule === "Tier 3 should not chain or loop extra turns."), "derived loop tag must trip the extra-turn rule");
 
-// The rules must live in exactly one place: the shared module.
-assert.match(appSource, /const Compliance = window\.MtgComplianceModel/, "app.js must bind the shared compliance model");
-assert.match(appSource, /Compliance\.evaluateCardList\(literalCards/, "evaluateDeckCompliance must delegate to the shared module");
-assert.doesNotMatch(appSource, /const TIER3_EARLY_COMBO_PAIRS = \[/, "combo pairs may not be re-duplicated in app.js");
-assert.doesNotMatch(appSource, /const BASIC_LANDS = new Set/, "the basic-land list may not be re-duplicated in app.js");
-assert.match(indexSource, /compliance-model\.js\?v=\d+/, "matrix.html must load the compliance model");
-assert.ok(indexSource.indexOf("compliance-model.js") < indexSource.indexOf("app.js?"), "compliance model must load before app.js");
-assert.ok(indexSource.indexOf("lineup-model.js") < indexSource.indexOf("compliance-model.js"), "lineup model must load before the compliance model");
+/* The rules must live in exactly one place, and now that the page which bound them is
+   retired the only consumer left is the simulator toolchain -- which requires the module
+   directly, so the duplication this used to guard against cannot reappear in a page. */
+const generator = await readFile(new URL("../deck-generator.js", import.meta.url), "utf8");
+assert.match(generator, /require\("\.\/compliance-model\.js"\)|MtgComplianceModel/,
+  "the generator must reach the shared compliance model rather than its own copy");
 
 console.log(`Compliance module parity holds across ${Object.keys(buyPlans.plans).length} plans and all rule fixtures.`);

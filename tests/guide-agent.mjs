@@ -235,9 +235,10 @@ check("the generator is a tool, and the key is not in the repository", () => {
   assert.match(tool, /process\.env\.ANTHROPIC_API_KEY/);
   assert.ok(!/sk-ant-/.test(tool), "an API key is in the source");
   assert.match(tool, /--call/, "the default must not spend money");
-  const page = readFileSync(at("../legacy-decks.html"), "utf8");
-  assert.ok(!/guide-agent\.js/.test(page),
-    "the browser must not load the agent: there is no key there and nowhere to keep one");
+  for (const page of ["../index.html", "../crankmagic.html"]) {
+    assert.ok(!/guide-agent\.js/.test(readFileSync(at(page), "utf8")),
+      "the browser must not load the agent: there is no key there and nowhere to keep one");
+  }
 });
 
 console.log(`\nguide-agent: ${checks} checks passed.`);

@@ -1,18 +1,6 @@
 {
   "note": "Written by tests/asset-versions.mjs --update. Each entry records the content a ?v= was last bumped for; the test fails when content moves and the version does not.",
   "assets": {
-    "admin-menu.js": {
-      "version": 3,
-      "sha": "d275db4eda109550"
-    },
-    "app.css": {
-      "version": 82,
-      "sha": "a18e9d2a0d56618a"
-    },
-    "app.js": {
-      "version": 131,
-      "sha": "d16acdfd4fc08759"
-    },
     "assets/crankmagic/commander-atraxa.webp": {
       "version": 1,
       "sha": "d03485ee89d314db"
@@ -73,10 +61,6 @@
       "version": 1,
       "sha": "b4cc36093b2df3e8"
     },
-    "build-panel.js": {
-      "version": 4,
-      "sha": "20ae1f37aec98908"
-    },
     "card-catalog.js": {
       "version": 8,
       "sha": "9b6014b968ccd7ec"
@@ -85,25 +69,9 @@
       "version": 3,
       "sha": "6bd25049434d16e6"
     },
-    "card-images.js": {
-      "version": 1,
-      "sha": "66dff126c332f0b0"
-    },
     "card-link.js": {
       "version": 1,
       "sha": "b977a10c3c5e4174"
-    },
-    "card-resolve.js": {
-      "version": 4,
-      "sha": "94b2bb9b2eaeea27"
-    },
-    "card-table.css": {
-      "version": 5,
-      "sha": "013d18d439a0b9dc"
-    },
-    "card-table.js": {
-      "version": 3,
-      "sha": "0834a1d637e65152"
     },
     "collection-evidence.js": {
       "version": 1,
@@ -114,8 +82,8 @@
       "sha": "c61a2bcf8b28540e"
     },
     "collection-model.js": {
-      "version": 6,
-      "sha": "82da982054a33540"
+      "version": 7,
+      "sha": "5832ae1852b209f2"
     },
     "collection-repository.js": {
       "version": 2,
@@ -125,17 +93,13 @@
       "version": 2,
       "sha": "218a98465449d00c"
     },
-    "compliance-model.js": {
-      "version": 2,
-      "sha": "5843be95892058c1"
-    },
     "crankmagic-advisor.js": {
       "version": 1,
       "sha": "8e261856adfcb4eb"
     },
     "crankmagic-app.js": {
-      "version": 61,
-      "sha": "8e90483973bccf95"
+      "version": 62,
+      "sha": "51172858fd2fcad0"
     },
     "crankmagic-assets.js": {
       "version": 10,
@@ -150,8 +114,8 @@
       "sha": "4c937886d914b612"
     },
     "crankmagic-collection.js": {
-      "version": 7,
-      "sha": "2395ee6f6a4ec90a"
+      "version": 8,
+      "sha": "6cadbfadac875b1a"
     },
     "crankmagic-decks.js": {
       "version": 8,
@@ -162,16 +126,16 @@
       "sha": "648ccea39441caa9"
     },
     "crankmagic-discover.js": {
-      "version": 23,
-      "sha": "7a27e20a549afbe2"
+      "version": 24,
+      "sha": "1efcb7cde4c1f6c0"
     },
     "crankmagic-evidence.js": {
       "version": 2,
       "sha": "a508878778b63a71"
     },
     "crankmagic-exchange-ui.js": {
-      "version": 3,
-      "sha": "c3eef9a30fa17cb5"
+      "version": 4,
+      "sha": "c6a6bae80177023b"
     },
     "crankmagic-facets.js": {
       "version": 4,
@@ -202,36 +166,20 @@
       "sha": "81ae2c4b7634afa7"
     },
     "crankmagic-sw.js": {
-      "version": 61,
-      "sha": "2bad8f79d012684e"
+      "version": 62,
+      "sha": "715e51d2e00ee0df"
     },
     "crankmagic-tour.js": {
-      "version": 3,
-      "sha": "1593ebe346b150e4"
+      "version": 4,
+      "sha": "e9f0e839419fa9f1"
     },
     "crankmagic.css": {
-      "version": 36,
-      "sha": "1ad5ae3461f7aab1"
+      "version": 37,
+      "sha": "d8ac6eb61560f0a7"
     },
     "custom-model.js": {
       "version": 3,
       "sha": "4c2b2793f05a10be"
-    },
-    "data/active-state.json": {
-      "version": 4,
-      "sha": "99a12046fbcc6408"
-    },
-    "data/archive/master-v2.json": {
-      "version": 2,
-      "sha": "20125228500e5aec"
-    },
-    "data/archive/variants.json": {
-      "version": 1,
-      "sha": "a8ffdb3fea4b4254"
-    },
-    "data/buy-plans.json": {
-      "version": 2,
-      "sha": "441d9944b3c50f73"
     },
     "data/card-facts.json": {
       "version": 2,
@@ -257,10 +205,6 @@
       "version": 3,
       "sha": "395de95bd103a897"
     },
-    "data/deck-ratings.json": {
-      "version": 8,
-      "sha": "ac5bada8b4a96db1"
-    },
     "data/deck-swaps.json": {
       "version": 2,
       "sha": "de8605e0cccb1014"
@@ -273,34 +217,6 @@
       "version": 5,
       "sha": "2d1a287b7eeeb371"
     },
-    "data/lenses.json": {
-      "version": 1,
-      "sha": "664bd76816f35f8b"
-    },
-    "data/my-load.json": {
-      "version": 1,
-      "sha": "e7389843b5bde808"
-    },
-    "data/pull-list.json": {
-      "version": 1,
-      "sha": "5f58e9270e04b9a0"
-    },
-    "data/simulation-summary.json": {
-      "version": 7,
-      "sha": "24f84c17c173f08c"
-    },
-    "deck-audit.js": {
-      "version": 1,
-      "sha": "fe146f4e47bd58d7"
-    },
-    "deck-build.js": {
-      "version": 2,
-      "sha": "e9c86f90d56f2f2a"
-    },
-    "deck-generator.js": {
-      "version": 6,
-      "sha": "d91fd61911ff9b9b"
-    },
     "deck-import.js": {
       "version": 2,
       "sha": "ea1dd37c6ce291cf"
@@ -309,17 +225,9 @@
       "version": 9,
       "sha": "8fe4b98dae79727f"
     },
-    "deck-page.js": {
-      "version": 30,
-      "sha": "afc927eb190d94aa"
-    },
     "deck-sources.js": {
       "version": 1,
       "sha": "ef5fc76341934d92"
-    },
-    "deck-store.js": {
-      "version": 4,
-      "sha": "106d87847ac0a7e0"
     },
     "docx-writer.js": {
       "version": 1,
@@ -329,49 +237,13 @@
       "version": 5,
       "sha": "98e77f94e37fc012"
     },
-    "edhrec-client.js": {
-      "version": 1,
-      "sha": "40f86ac14065b1d7"
-    },
-    "game-record.js": {
-      "version": 1,
-      "sha": "64ca6d7289743a4f"
-    },
-    "graph-page.css": {
-      "version": 16,
-      "sha": "0b348802ff31d3d0"
-    },
-    "graph-page.js": {
-      "version": 34,
-      "sha": "047cc6fb14d816d7"
-    },
     "guide-measured.js": {
       "version": 1,
       "sha": "ccc1246e8e83504f"
     },
-    "header.css": {
-      "version": 3,
-      "sha": "d55d265b7b522739"
-    },
-    "import-panel.js": {
-      "version": 6,
-      "sha": "6d1b05c5f8378082"
-    },
-    "inventory-import.js": {
-      "version": 1,
-      "sha": "1edfae29892d2fe1"
-    },
     "lineup-model.js": {
       "version": 5,
       "sha": "b076eb50c7ab1bb0"
-    },
-    "manual-cards.js": {
-      "version": 1,
-      "sha": "75469daa02f73aaf"
-    },
-    "measure-report.js": {
-      "version": 4,
-      "sha": "1056e1b45d077b4e"
     },
     "pilot-policy.js": {
       "version": 3,
@@ -381,25 +253,9 @@
       "version": 9,
       "sha": "73bac4a0e5ba03f2"
     },
-    "shop-export.js": {
-      "version": 1,
-      "sha": "5ded3157ad4ed0ef"
-    },
-    "shop-filters.js": {
-      "version": 6,
-      "sha": "64114effd22e3a11"
-    },
-    "shop-page.js": {
-      "version": 18,
-      "sha": "6a8eceea117da582"
-    },
     "sim-engine.js": {
       "version": 12,
       "sha": "c44d69e68609103b"
-    },
-    "sim-lenses.js": {
-      "version": 2,
-      "sha": "9e448dc9fd33dd3b"
     },
     "sim-worker.js": {
       "version": 1,
@@ -413,21 +269,9 @@
       "version": 2,
       "sha": "d98c8cccb4861914"
     },
-    "slot-model.js": {
-      "version": 17,
-      "sha": "355a3539fa0cd726"
-    },
     "user-state.js": {
       "version": 5,
       "sha": "434751e1995a6cf2"
-    },
-    "viewer.css": {
-      "version": 30,
-      "sha": "76caf7a8585da1a3"
-    },
-    "viewer.js": {
-      "version": 39,
-      "sha": "216770bd88e22a90"
     },
     "xlsx-reader.js": {
       "version": 2,
