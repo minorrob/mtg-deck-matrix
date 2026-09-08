@@ -20,3 +20,6 @@ tests/uat/crankmagic-failure.png
 
 # Local implementation helpers and downloaded inspection sources.
 /work/
+
+# Rules text pulled for a rebake. Regenerable; the bake it feeds is committed.
+graph/.cache/

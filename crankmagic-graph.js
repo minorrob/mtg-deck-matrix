@@ -42,12 +42,130 @@
     return {
       mechanics: [...(c.mechanics || [])], roles: (c.roles || []).filter((r) => !GENERIC.has(r)),
       produces: [...(c.produces || [])], requires: [...(c.requires || [])],
-      causes: [...(c.causes || [])], triggers: [...(c.triggers || [])], tribes: [...(c.tribes || [])]
+      causes: [...(c.causes || [])], triggers: [...(c.triggers || [])],
+      multiplies: [...(c.multiplies || [])], grants: [...(c.grants || [])],
+      extends: [...(c.extends || [])], tribes: [...(c.tribes || [])]
     };
   }
 
+  /* Event ids read like database columns and the canvas is not a database. The chips
+     stay raw -- they are filter values and must match the facet exactly -- but an edge
+     label and a pop-up sentence get the English. */
+  const EVENT_LABEL = {
+    'creature-etb': 'a creature entering', 'land-drop': 'a land drop', 'creature-dies': 'a creature dying',
+    'attack': 'an attack', 'combat-begin': 'combat', 'end-step': 'the end step', 'upkeep': 'upkeep',
+    'cast-spell': 'a spell cast', 'proliferate': 'proliferate', 'counter-placed': 'a +1/+1 counter',
+    'life-gain': 'life gain', 'life-loss': 'life loss', 'draw-card': 'a draw', 'sacrifice': 'a sacrifice',
+    'graveyard-entry': 'the graveyard', 'trigger': 'its triggers'
+  };
+  const say = (id) => EVENT_LABEL[id] || String(id).replace(/-/g, ' ');
+  const sayAll = (list, n) => list.slice(0, n || 3).map(say).join(', ');
+
+  /* THE TERM SETS a pair is scored on. Kept as Sets because every question asked of
+     them is "does the other card carry this term", and set membership is the cheap way
+     to ask it a few hundred thousand times a layout. */
+  const TERM_KEYS = ['shared', 'produces', 'requires', 'causes', 'triggers', 'multiplies', 'grants', 'extends'];
+  function termSets(c) {
+    const t = {
+      shared: new Set([...(c.mechanics || []), ...(c.roles || []).filter((r) => !GENERIC.has(r))]),
+      produces: new Set(c.produces || []),
+      requires: new Set(c.requires || []),
+      causes: new Set(c.causes || []),
+      triggers: new Set(c.triggers || []),
+      multiplies: new Set(c.multiplies || []),
+      grants: new Set(c.grants || []),
+      extends: new Set(c.extends || [])
+    };
+    /* What this card OFFERS a multiplier: a resource it makes or an ability it fires.
+       Built once per card rather than once per pair -- a depth-3 layout asks about a
+       hundred thousand pairs, and a fresh Set per question was most of the frame. */
+    t.offered = new Set([...t.produces, ...t.triggers]);
+    return t;
+  }
+
+  /* Intersection, walking the smaller side, handing back one shared empty array when
+     there is nothing -- which is the answer for the overwhelming majority of pairs. */
+  const NONE = Object.freeze([]);
+  function inter(a, b) {
+    if (!a.size || !b.size) return NONE;
+    const small = a.size <= b.size ? a : b, big = small === a ? b : a;
+    let out = null;
+    for (const term of small) if (big.has(term)) (out || (out = [])).push(term);
+    return out || NONE;
+  }
+
+    /* SCORE ONE PAIR -- and the five ways two cards can be joined, weakest first.
+     *
+     *   shared      both say the same word. The cheapest kind of link and the one the
+     *               graph used to have on its own: a fact about vocabulary, not play.
+     *   feeds/fed   one produces what the other needs. A relationship, not a word.
+     *   extended    one hands out a quality, the other spreads it across your board.
+     *   fires       one CAUSES an event, the other TRIGGERS on it. Krenko makes
+     *               creatures enter; Purphoros fires when they do. This is the chain
+     *               a Commander deck actually is, and the graph could not see it until
+     *               now -- both sides were already in the data and nothing read them
+     *               against each other.
+     *   multiplied  one makes a thing, the other makes MORE of it. Krenko and Parallel
+     *               Lives; a card whose ability triggers and Panharmonicon.
+     *
+     * Direction matters and is kept: a → b is not the same sentence as b → a, and the
+     * pop-up prints the arrow the reader is looking at. */
+    const GENERIC_MULT = 'trigger';
+    function relateTerms(ta, tb) {
+      const shared = inter(ta.shared, tb.shared);
+      const feeds = inter(ta.produces, tb.requires);
+      const fed = inter(ta.requires, tb.produces);
+      const fires = inter(ta.causes, tb.triggers);
+      const firedBy = inter(ta.triggers, tb.causes);
+      /* A generic doubler ("if a triggered ability of a Wizard you control triggers...")
+         names no event, so it pairs with anything that has a trigger at all -- true, but
+         the weakest of these, and scored that way. */
+      let multiplied = inter(ta.offered, tb.multiplies);
+      let multiplies = inter(tb.offered, ta.multiplies);
+      const genericTo = !multiplied.length && tb.multiplies.has(GENERIC_MULT) && ta.triggers.size > 0;
+      const genericFrom = !multiplies.length && ta.multiplies.has(GENERIC_MULT) && tb.triggers.size > 0;
+      if (genericTo) multiplied = [GENERIC_MULT];
+      if (genericFrom) multiplies = [GENERIC_MULT];
+      /* A quality one card hands out and the other widens. An ability-sharer cannot
+         name in advance what it will be spreading, so it carries the id "keywords" and
+         the chips name the qualities coming from the other side. */
+      let extended = inter(ta.grants, tb.extends);
+      let extendedBy = inter(tb.grants, ta.extends);
+      if (!extended.length && tb.extends.has('keywords') && ta.grants.size) extended = [...ta.grants].slice(0, 3);
+      if (!extendedBy.length && ta.extends.has('keywords') && tb.grants.size) extendedBy = [...tb.grants].slice(0, 3);
+
+      const multWeight = (genericTo ? 2 : 0) + (genericFrom ? 2 : 0)
+        + ((multiplied.length - (genericTo ? 1 : 0)) + (multiplies.length - (genericFrom ? 1 : 0))) * 4;
+      const score = shared.length * 2 + (feeds.length + fed.length) * 3
+        + (fires.length + firedBy.length) * 4 + multWeight
+        + (extended.length + extendedBy.length) * 3;
+      if (!score) return null;
+
+      /* One pair can be joined several ways at once. The label names the strongest,
+         because an edge has room for one sentence and the pop-up prints them all. */
+      const say2 = (list) => sayAll(list, 2);
+      const cases = [
+        [fires.length,      'Causes → triggers on',  '→ ' + say(fires[0]),      'Causes → triggers on · ' + sayAll(fires)],
+        [firedBy.length,    'Triggers on ← caused',  '← ' + say(firedBy[0]),    'Triggers on ← caused by · ' + sayAll(firedBy)],
+        [multiplied.length, 'Makes → multiplies',    '→ ×' + say(multiplied[0]),'Makes → multiplies · ' + say2(multiplied)],
+        [multiplies.length, 'Multiplies ← makes',    '← ×' + say(multiplies[0]),'Multiplies ← makes · ' + say2(multiplies)],
+        [feeds.length,      'Produces → needs',      '→ ' + feeds[0],           'Produces → needs · ' + feeds.join(', ')],
+        [fed.length,        'Needs ← produces',      '← ' + fed[0],             'Needs ← produces · ' + fed.join(', ')],
+        [extended.length,   'Grants → extends',      '→ ' + say2(extended),     'Grants → extends across your board · ' + say2(extended)],
+        [extendedBy.length, 'Extends ← grants',      '← ' + say2(extendedBy),   'Extends ← grants · ' + say2(extendedBy)],
+        [shared.length,     'Shared mechanics / roles', shared.slice(0, 2).join(', '), 'Shared mechanics / roles · ' + shared.slice(0, 3).join(', ')]
+      ];
+      const [, kind, tag, reason] = cases.find((c) => c[0]) || [];
+      return {shared, feeds, fed, fires, firedBy, multiplied, multiplies, extended, extendedBy,
+              score, kind, tag, reason};
+    }
+
   root.CrankGraph = {
     termsOf,
+    TERM_KEYS,
+    /* The scoring the canvas uses, reachable without one. */
+    relate: (a, b) => (a && b && a !== b ? relateTerms(termSets(a), termSets(b)) : null),
+
     mount({canvas, cards, played = [], focus, history = [], onSelect, onNeighbors, onPick, onHit, type = 'mechanic', depth = 2, breadth = 12}) {
       const ctx = canvas.getContext('2d');
       const byId = new Map(cards.map((c) => [c.id, c]));
@@ -68,6 +186,19 @@
       const selected = new Set();
       let highlight = null;   // [idA, idB] of the edge a pop-up is about
       let hover = null;       // the node under a mouse, whose cross-links are drawn on their own
+      /* RESTING ON A CARD NAMES IT. Names are drawn per ring only where there is room, so
+         at a wide reach most discs are unlabelled and the only way to learn what one is
+         was to click it. Half a second of stillness is the difference between passing over
+         a node and asking about it, so that is when the name appears -- and it stays until
+         the pointer moves off, rather than fading on a timer the reader did not set. */
+      let named = null, nameTimer = null;
+      const HOVER_NAME_MS = 500;
+      function nameAfterRest(n) {
+        if (nameTimer) { clearTimeout(nameTimer); nameTimer = null; }
+        if (named && named !== n) { named = null; }
+        if (!n) return;
+        nameTimer = setTimeout(() => { nameTimer = null; if (hover === n && !disposed) { named = n; draw(); } }, HOVER_NAME_MS);
+      }
       /* THE WEB, ON REQUEST. Every cross-link between sixty-one cards is 1,600 lines, and at
          fit zoom that is a blue fog the reader cannot see through. So the web is drawn whole
          only while it is small enough to read; past that, a card's own cross-links appear
@@ -105,22 +236,36 @@
       /* The words a card can be joined on. Mechanics and non-generic roles join by
          sharing; produces and requires join by feeding. Kept per card as Sets so a
          pair check is set intersection and not array scanning. */
-      function termsOf(c) {
-        return {
-          shared: new Set([...(c.mechanics || []), ...(c.roles || []).filter((r) => !GENERIC.has(r))]),
-          produces: new Set(c.produces || []),
-          requires: new Set(c.requires || [])
-        };
-      }
-      const TERMS = new Map(cards.map((c) => [c.id, termsOf(c)]));
+      const TERMS = new Map(cards.map((c) => [c.id, termSets(c)]));
+      const KEYS = TERM_KEYS;
 
-      const index = {shared: new Map(), produces: new Map(), requires: new Map()};
+      /* THE CANDIDATE CAP. "Causes a creature to enter" is 889 cards and "produces a
+         token" is 1,154; a node scores every candidate and then keeps twelve. Scoring
+         two thousand cards per node to keep twelve is most of a depth-3 layout, and the
+         ones that lose are the ones nobody plays -- so each term's list is sorted by
+         EDHREC rank once per mount and cut here. A card outside the cut can still reach
+         the canvas through any of its other terms; what it cannot do is arrive on the
+         strength of the single commonest word it knows. */
+      const PER_TERM = 400;
+      const rankOf = (c) => (Number.isFinite(c.rank) && c.rank > 0 ? c.rank : Infinity);
+      const index = {};
+      for (const k of KEYS) index[k] = new Map();
       for (const c of cards) {
         const t = TERMS.get(c.id);
-        for (const k of ['shared', 'produces', 'requires']) {
+        for (const k of KEYS) {
           for (const term of t[k]) {
             if (!index[k].has(term)) index[k].set(term, []);
-            index[k].get(term).push(c.id);
+            index[k].get(term).push(c);
+          }
+        }
+      }
+      for (const k of KEYS) {
+        for (const [term, list] of index[k]) {
+          if (list.length > PER_TERM) {
+            list.sort((a, b) => rankOf(a) - rankOf(b) || a.name.localeCompare(b.name));
+            index[k].set(term, list.slice(0, PER_TERM).map((c) => c.id));
+          } else {
+            index[k].set(term, list.map((c) => c.id));
           }
         }
       }
@@ -131,22 +276,9 @@
         coPlay.get(e.from).push(e); coPlay.get(e.to).push(e);
       }
 
-      /* Score one pair. A feeds→needs pair is worth more than a shared keyword, because
-         it is a relationship the cards have and not a word they have in common. */
-      function relate(a, b) {
-        const ta = TERMS.get(a.id), tb = TERMS.get(b.id);
-        const shared = [...ta.shared].filter((t) => tb.shared.has(t));
-        const feeds = [...ta.produces].filter((t) => tb.requires.has(t));
-        const fed = [...ta.requires].filter((t) => tb.produces.has(t));
-        const score = shared.length * 2 + (feeds.length + fed.length) * 3;
-        if (!score) return null;
-        const kind = feeds.length ? 'Produces → needs' : fed.length ? 'Needs ← produces' : 'Shared mechanics / roles';
-        const tag = feeds.length ? '→ ' + feeds[0] : fed.length ? '← ' + fed[0] : shared.slice(0, 2).join(', ');
-        const reason = feeds.length ? 'Produces → needs · ' + feeds.join(', ')
-          : fed.length ? 'Needs ← produces · ' + fed.join(', ')
-          : 'Shared mechanics / roles · ' + shared.slice(0, 3).join(', ');
-        return {shared, feeds, fed, score, kind, tag, reason};
-      }
+      /* The pair scoring lives at module scope (relateTerms) so a Node test can hold it
+         to what it claims without standing up a canvas. */
+      const relate = (a, b) => relateTerms(TERMS.get(a.id), TERMS.get(b.id));
 
       /* The best `limit` neighbours of one card, excluding any already placed. */
       function links(c, limit, exclude) {
@@ -162,9 +294,21 @@
         }
         const t = TERMS.get(c.id);
         const candidates = new Set();
-        for (const term of t.shared) for (const id of index.shared.get(term) || []) candidates.add(id);
-        for (const term of t.produces) for (const id of index.requires.get(term) || []) candidates.add(id);
-        for (const term of t.requires) for (const id of index.produces.get(term) || []) candidates.add(id);
+        /* Who could possibly be joined to this card: the other side of every relation,
+           looked up in the inverted index rather than by scanning 7,764 cards. */
+        const pull = (from, into) => { for (const term of t[from]) for (const id of index[into].get(term) || []) candidates.add(id); };
+        pull('shared', 'shared');
+        pull('produces', 'requires'); pull('requires', 'produces');
+        pull('causes', 'triggers');   pull('triggers', 'causes');
+        pull('produces', 'multiplies'); pull('triggers', 'multiplies');
+        pull('multiplies', 'produces'); pull('multiplies', 'triggers');
+        pull('grants', 'extends');    pull('extends', 'grants');
+        /* The generic trigger doublers name no event, so neither index lookup finds them:
+           a card with any trigger reaches them, and they reach back to any card with one. */
+        if (t.triggers.size) for (const id of index.multiplies.get(GENERIC_MULT) || []) candidates.add(id);
+        if (t.multiplies.has(GENERIC_MULT)) for (const list of index.triggers.values()) for (const id of list) candidates.add(id);
+        if (t.extends.has('keywords')) for (const list of index.grants.values()) for (const id of list) candidates.add(id);
+        if (t.grants.size) for (const id of index.extends.get('keywords') || []) candidates.add(id);
         candidates.delete(c.id);
         const out = [];
         for (const id of candidates) {
@@ -172,7 +316,28 @@
           const x = byId.get(id); if (!x) continue;
           const r = relate(c, x); if (r) out.push({card: x, ...r});
         }
-        return out.sort((a, b) => b.score - a.score || a.card.name.localeCompare(b.card.name)).slice(0, limit);
+        /* Ties are the common case now: a dozen cards all fire on a creature entering and
+           all score the same. Alphabetical put "Access Denied" at the top of Purphoros's
+           ring, which reads as arbitrary because it is. EDHREC rank is the tiebreak a
+           reader expects -- the cards people actually play with this one, first. */
+        out.sort((a, b) => b.score - a.score || rankOf(a.card) - rankOf(b.card)
+          || a.card.name.localeCompare(b.card.name));
+        if (out.length <= limit) return out;
+        /* ONE RING, MORE THAN ONE SENTENCE. Score alone gave Purphoros fourteen neighbours
+           all labelled "Triggers on ← caused by · a creature entering": true, and useless
+           to read, because the picture then says one thing fourteen times. So a single
+           kind may take at most three fifths of the fan and the rest is filled from what
+           is left, still in score order. The strongest relation still leads; it just does
+           not get to be the only one on screen. */
+        const perKind = Math.max(3, Math.ceil(limit * .6));
+        const counts = new Map(), picked = [], rest = [];
+        for (const x of out) {
+          const n = counts.get(x.kind) || 0;
+          if (picked.length < limit && n < perKind) { counts.set(x.kind, n + 1); picked.push(x); }
+          else rest.push(x);
+        }
+        for (const x of rest) { if (picked.length >= limit) break; picked.push(x); }
+        return picked;
       }
 
       /* A link entry for one known pair, in the shape links() returns -- for the card the
@@ -421,6 +586,19 @@
               ctx.fillText(name.length > max ? name.slice(0, max - 2) + '…' : name, n.x, n.y + n.r + (n.depth <= 1 ? 15 : 12));
             }
           }
+
+          /* The rested-on card's name, drawn after every node so it is never buried, and
+             above the disc so the cursor is not sitting on top of the answer. */
+          if (named && nodes.includes(named)) {
+            const label = named.card.name;
+            ctx.font = 'bold 12px Satoshi, sans-serif'; ctx.textAlign = 'center';
+            const w = ctx.measureText(label).width + 14, h = 20;
+            const y = named.y - named.r - 14;
+            ctx.fillStyle = '#0b1420f2';
+            ctx.beginPath(); ctx.roundRect(named.x - w / 2, y - h / 2, w, h, 9); ctx.fill();
+            ctx.strokeStyle = '#7fb2dd88'; ctx.lineWidth = 1; ctx.stroke();
+            ctx.fillStyle = '#eaf4ff'; ctx.fillText(label, named.x, y + 4);
+          }
           ctx.restore();
         });
       }
@@ -457,7 +635,12 @@
         const co = (coPlay.get(a.id) || []).find((x) => x.from === b.id || x.to === b.id) || null;
         const r = relate(a, b);
         if (!r && !co) return null;
-        return {shared: r ? r.shared : [], feeds: r ? r.feeds : [], fed: r ? r.fed : [], kind: r ? r.kind : 'EDHREC co-play',
+        const none = [];
+        return {shared: r ? r.shared : none, feeds: r ? r.feeds : none, fed: r ? r.fed : none,
+          fires: r ? r.fires : none, firedBy: r ? r.firedBy : none,
+          multiplied: r ? r.multiplied : none, multiplies: r ? r.multiplies : none,
+          extended: r ? r.extended : none, extendedBy: r ? r.extendedBy : none,
+          kind: r ? r.kind : 'EDHREC co-play',
           reason: r ? r.reason : null, coPlay: co ? {decks: co.decks, inclusion: co.inclusion} : null};
       }
       function select(id, history = true) {
@@ -500,7 +683,7 @@
           draw(); return;
         }
         if (!drag) {
-          if (e.pointerType === 'mouse') { const n = pick(e); if (n !== hover) { hover = n; canvas.style.cursor = n ? 'pointer' : ''; draw(); } }
+          if (e.pointerType === 'mouse') { const n = pick(e); if (n !== hover) { hover = n; canvas.style.cursor = n ? 'pointer' : ''; nameAfterRest(n); draw(); } }
           return;
         }
         const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
@@ -564,7 +747,7 @@
       canvas.addEventListener('pointermove', move);
       canvas.addEventListener('pointerup', up);
       canvas.addEventListener('pointercancel', up);
-      canvas.addEventListener('pointerleave', () => { if (hover) { hover = null; canvas.style.cursor = ''; draw(); } });
+      canvas.addEventListener('pointerleave', () => { nameAfterRest(null); if (hover || named) { hover = null; named = null; canvas.style.cursor = ''; draw(); } });
       canvas.addEventListener('keydown', key);
       const observer = new ResizeObserver(resize);
       observer.observe(canvas);
@@ -595,7 +778,7 @@
         positions() { return nodes.map((n) => ({id: n.card.id, name: n.card.name, depth: n.depth, pinned: !!n.pinned, parent: n.parent ? n.parent.card.id : null, x: width / 2 + pan.x + n.x * scale, y: height / 2 + pan.y + n.y * scale, r: n.r * scale})); },
         current() { return byId.get(center) || null; },
         destroy() {
-          disposed = true; cancelAnimationFrame(frame); observer.disconnect();
+          disposed = true; if (nameTimer) clearTimeout(nameTimer); cancelAnimationFrame(frame); observer.disconnect();
           for (const [name, fn] of [['wheel', wheel], ['pointerdown', down], ['pointermove', move], ['pointerup', up], ['pointercancel', up], ['keydown', key]]) canvas.removeEventListener(name, fn);
         }
       };

@@ -82,12 +82,12 @@
       "sha": "20ae1f37aec98908"
     },
     "card-catalog.js": {
-      "version": 4,
-      "sha": "591ff9d408372b2f"
+      "version": 5,
+      "sha": "ed8430ced8e448ca"
     },
     "card-classify.js": {
-      "version": 1,
-      "sha": "bbe09724aa0cad69"
+      "version": 2,
+      "sha": "4b0f0cb713a719ad"
     },
     "card-images.js": {
       "version": 1,
@@ -138,12 +138,12 @@
       "sha": "8e261856adfcb4eb"
     },
     "crankmagic-app.js": {
-      "version": 19,
-      "sha": "389ec01c8d4de1ba"
+      "version": 20,
+      "sha": "62005651d5ec0566"
     },
     "crankmagic-assets.js": {
-      "version": 6,
-      "sha": "aecdd9038a61cc9c"
+      "version": 7,
+      "sha": "66f57c44bf09e3e2"
     },
     "crankmagic-brand.js": {
       "version": 1,
@@ -166,8 +166,8 @@
       "sha": "09ec296518cdef75"
     },
     "crankmagic-discover.js": {
-      "version": 9,
-      "sha": "086c3c7eebdc8d1e"
+      "version": 10,
+      "sha": "289d7e1716e88c0f"
     },
     "crankmagic-evidence.js": {
       "version": 2,
@@ -178,16 +178,16 @@
       "sha": "c3eef9a30fa17cb5"
     },
     "crankmagic-facets.js": {
-      "version": 2,
-      "sha": "7f85e7353ac4c0f3"
+      "version": 3,
+      "sha": "26b5e22531ba00df"
     },
     "crankmagic-glossary.js": {
       "version": 1,
       "sha": "52e344df8ef38d24"
     },
     "crankmagic-graph.js": {
-      "version": 6,
-      "sha": "7962e4c5aef3e25e"
+      "version": 7,
+      "sha": "0cec9f09dca45e56"
     },
     "crankmagic-lab.js": {
       "version": 9,
@@ -206,8 +206,8 @@
       "sha": "2212f13d71f11dfb"
     },
     "crankmagic-sw.js": {
-      "version": 19,
-      "sha": "3ade1a75a41aedd4"
+      "version": 20,
+      "sha": "79af88cdc12f3105"
     },
     "crankmagic.css": {
       "version": 10,
@@ -266,8 +266,8 @@
       "sha": "de8605e0cccb1014"
     },
     "data/graph.json": {
-      "version": 2,
-      "sha": "e22f02d77bcfaafa"
+      "version": 3,
+      "sha": "0131b343dcd04d48"
     },
     "data/lenses.json": {
       "version": 1,
@@ -338,8 +338,8 @@
       "sha": "0b348802ff31d3d0"
     },
     "graph-page.js": {
-      "version": 29,
-      "sha": "fa54302f3c237b7a"
+      "version": 30,
+      "sha": "ab8cb6fc34cf4bbe"
     },
     "guide-measured.js": {
       "version": 1,

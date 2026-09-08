@@ -12,8 +12,11 @@
  *
  * TWO KINDS OF FACET, and the difference matters.
  *
- *   Ten of them describe Magic -- role, colour, type, mechanics, what a card produces or
- *   requires. They come from data/graph.json, which is public card data.
+ *   Thirteen of them describe Magic -- role, colour, type, mechanics, and the four
+ *   directed relations a chain is built out of: what a card triggers on and what causes
+ *   that event, what it produces and what requires it, what it multiplies, what quality
+ *   it grants and what extends one. They come from data/graph.json, which is public card
+ *   data; tools/graph-amplifiers.mjs bakes the last three.
  *
  *   Two describe YOU -- what you own, and which of your decks a card is in. The old
  *   graph baked those into graph.json from the old app's state, and card-catalog.js
@@ -57,10 +60,20 @@
     {key: "type", label: "Card type", from: (c) => CARD_TYPES.filter((t) => String(c.type || "").includes(t))},
     {key: "mechanics", label: "Mechanic", from: (c) => c.mechanics || []},
     {key: "tribes", label: "Tribe", from: (c) => c.tribes || []},
-    {key: "triggers", label: "Fires on", from: (c) => c.triggers || []},
+
+    /* THE FOUR DIRECTED ONES, in the order a chain is built. A card TRIGGERS on an event,
+       another CAUSES it; a card PRODUCES a resource, another REQUIRES it; a card MULTIPLIES
+       what a third makes or fires; a card GRANTS a quality and another EXTENDS it across
+       the board. Picking one side and reading the other is how the graph is walked, so
+       both sides are offered as filters rather than only the halves the old page had. */
+    {key: "triggers", label: "Triggers on", from: (c) => c.triggers || []},
     {key: "causes", label: "Causes", from: (c) => c.causes || []},
+    {key: "multiplies", label: "Multiplies", from: (c) => c.multiplies || []},
     {key: "produces", label: "Produces", from: (c) => c.produces || []},
     {key: "requires", label: "Requires", from: (c) => c.requires || []},
+    {key: "grants", label: "Grants", from: (c) => c.grants || []},
+    {key: "extends", label: "Extends", from: (c) => c.extends || []},
+
     {key: "rarity", label: "Rarity", from: (c) => (c.rarity ? [c.rarity] : [])},
 
     {key: "owned", label: "Ownership", mine: true, from: (c) => c.__mine ? c.__mine.owned : []},
