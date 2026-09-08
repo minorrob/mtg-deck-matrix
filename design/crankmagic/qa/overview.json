@@ -1,0 +1,18 @@
+{
+  "checks": 311,
+  "passed": true,
+  "offline": true,
+  "widths": [
+    320,
+    390,
+    736,
+    1024,
+    1440
+  ],
+  "systemAppearances": [
+    "light",
+    "dark"
+  ],
+  "productTheme": "dark",
+  "errors": []
+}

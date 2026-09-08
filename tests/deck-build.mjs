@@ -199,7 +199,7 @@ check(() => assert.equal(Build.shownBelow(built, 1).key, "base",
 // ---------------------------------------------------------------------------
 // Wired into the page
 // ---------------------------------------------------------------------------
-const indexHtml = await readFile(new URL("../index.html", import.meta.url), "utf8");
+const indexHtml = await readFile(new URL("../legacy-decks.html", import.meta.url), "utf8");
 check(() => assert.ok(/deck-build\.js/.test(indexHtml), "My Decks must load deck-build.js"));
 check(() => assert.ok(/deck-generator\.js/.test(indexHtml), "My Decks must load the generator"));
 check(() => assert.ok(/build-panel\.js/.test(indexHtml), "My Decks must load the build panel"));

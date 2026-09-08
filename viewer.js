@@ -1294,7 +1294,7 @@
     ]));
     /* A link, not a button: it goes to another page, and a person who wants it in a new
        tab should be able to have one. */
-    start.appendChild(el("a", { class: "start-tile is-explore", href: "graph.html" }, [
+    start.appendChild(el("a", { class: "start-tile is-explore", href: "legacy-graph.html" }, [
       el("span", { class: "plus", "aria-hidden": "true", text: "\u25c9" }),
       el("b", { text: "Explore cards" }),
       el("span", { text: "Every Commander-legal card, what connects them, and a Copilot "

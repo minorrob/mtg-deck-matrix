@@ -1,0 +1,4365 @@
+{
+  "schemaVersion": 1,
+  "revision": "2026-09-07.3",
+  "purpose": "Canonical UI glossary. Definitions are explanations, not executable rules or simulation weights.",
+  "editorialBasis": {
+    "seedWorkbook": "MTG_Commander_Glossary.xlsx",
+    "seedSha256": "4fadd449904e88d93ccc8f4934c4a1bead46aa5caf09f45798c074fdaca0d24c",
+    "updatedOn": "2026-09-07",
+    "note": "Seed wording has been replaced where necessary. Edit this file directly; there is no source/override merge."
+  },
+  "references": {
+    "comprehensive": {
+      "title": "Magic Comprehensive Rules",
+      "url": "https://media.wizards.com/2026/downloads/MagicCompRules%2020260819.txt",
+      "effectiveDate": "2026-08-07",
+      "checkedOn": "2026-09-07"
+    },
+    "keywords": {
+      "title": "Wizards common keyword glossary",
+      "url": "https://magic.wizards.com/en/keyword-glossary",
+      "checkedOn": "2026-09-07"
+    },
+    "proliferate": {
+      "title": "Phyrexia: All Will Be One release notes",
+      "url": "https://magic.wizards.com/en/news/feature/phyrexia-all-will-be-one-release-notes",
+      "checkedOn": "2026-09-07"
+    }
+  },
+  "entries": [
+    {
+      "id": "1-1-counter",
+      "term": "+1/+1 counter",
+      "category": "counter",
+      "aliases": [
+        "+1/+1 counters"
+      ],
+      "definition": "A marker on a permanent that adds one to both power and toughness. It is different from a temporary +1/+1 effect.",
+      "rule": "122.1a",
+      "references": [
+        "comprehensive#122.1a"
+      ]
+    },
+    {
+      "id": "infinity-infinity",
+      "term": "∞ (Infinity)",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Grants an extra printed ability for as long as the permanent has been harnessed (see the Harness keyword action).",
+      "references": [
+        "comprehensive#702.186"
+      ],
+      "rule": "702.186"
+    },
+    {
+      "id": "abandon",
+      "term": "Abandon",
+      "category": "variant-action",
+      "aliases": [],
+      "definition": "In Archenemy, turn a face-up ongoing scheme face down and put it on the bottom of its owner’s scheme deck.",
+      "rule": "701.33",
+      "references": [
+        "comprehensive#701.33"
+      ]
+    },
+    {
+      "id": "ability-word",
+      "term": "Ability word",
+      "category": "concept",
+      "aliases": [],
+      "definition": "An italicized label grouping similarly themed abilities. It has no rules meaning on its own; the text following it determines the effect.",
+      "rule": "207.2c",
+      "references": [
+        "comprehensive#207.2c"
+      ]
+    },
+    {
+      "id": "absorb",
+      "term": "Absorb",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Prevents N damage from any single source each time that source would deal damage to this creature.",
+      "references": [
+        "comprehensive#702.64"
+      ],
+      "rule": "702.64"
+    },
+    {
+      "id": "activate",
+      "term": "Activate",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Use an activated ability by choosing it and paying its costs. Most go on the stack; mana abilities normally resolve immediately without using the stack.",
+      "references": [
+        "comprehensive#701.2"
+      ],
+      "rule": "701.2"
+    },
+    {
+      "id": "activated-ability",
+      "term": "Activated ability",
+      "category": "ability-type",
+      "aliases": [
+        "activated abilities"
+      ],
+      "definition": "An ability you choose to use by paying its cost, written as cost: effect. Most use the stack; mana abilities are an important exception.",
+      "references": [
+        "comprehensive#602",
+        "comprehensive#605"
+      ]
+    },
+    {
+      "id": "adapt",
+      "term": "Adapt",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "If the permanent has no +1/+1 counters on it yet, put N of them on it.",
+      "references": [
+        "comprehensive#701.46"
+      ],
+      "rule": "701.46"
+    },
+    {
+      "id": "affinity",
+      "term": "Affinity",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Reduces the spell's cost by {1} for each permanent of the stated type you control.",
+      "references": [
+        "comprehensive#702.41"
+      ],
+      "rule": "702.41"
+    },
+    {
+      "id": "afflict",
+      "term": "Afflict",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Whenever it becomes blocked, the defending player loses N life.",
+      "references": [
+        "comprehensive#702.130"
+      ],
+      "rule": "702.130"
+    },
+    {
+      "id": "afterlife",
+      "term": "Afterlife",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "When it dies, create N 1/1 white and black flying Spirit tokens.",
+      "references": [
+        "comprehensive#702.135"
+      ],
+      "rule": "702.135"
+    },
+    {
+      "id": "aftermath",
+      "term": "Aftermath",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "This half of a split card can be cast only from the graveyard, and is exiled afterward instead of returning there.",
+      "references": [
+        "comprehensive#702.127"
+      ],
+      "rule": "702.127"
+    },
+    {
+      "id": "airbend",
+      "term": "Airbend",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Exile the stated permanents and/or spells; while exiled, their owners may cast them for {2} instead of their normal cost.",
+      "references": [
+        "comprehensive#701.65"
+      ],
+      "rule": "701.65"
+    },
+    {
+      "id": "amass",
+      "term": "Amass",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Choose an Army you control or create a 0/0 black Army if you have none, then put N +1/+1 counters on it. Amass with a named creature type also gives that Army the specified type.",
+      "references": [
+        "comprehensive#701.47"
+      ],
+      "rule": "701.47"
+    },
+    {
+      "id": "amplify",
+      "term": "Amplify",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "As this enters, reveal any number of cards from your hand that share a creature type with it. It enters with N +1/+1 counters for each card revealed.",
+      "references": [
+        "comprehensive#702.38"
+      ],
+      "rule": "702.38"
+    },
+    {
+      "id": "annihilator",
+      "term": "Annihilator",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Whenever it attacks, the defending player must sacrifice N permanents.",
+      "references": [
+        "comprehensive#702.86"
+      ],
+      "rule": "702.86"
+    },
+    {
+      "id": "artifact",
+      "term": "Artifact",
+      "category": "card-type",
+      "aliases": [
+        "artifacts"
+      ],
+      "definition": "A permanent card type, often representing an object. Artifacts can be colored and can have other types, such as creature.",
+      "references": [
+        "comprehensive#301"
+      ]
+    },
+    {
+      "id": "ascend",
+      "term": "Ascend",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "With ascend on a permanent, controlling ten or more permanents gives you the city’s blessing. On an instant or sorcery, check as it resolves. The blessing lasts for the game even if your permanent count falls.",
+      "references": [
+        "comprehensive#702.131"
+      ],
+      "rule": "702.131"
+    },
+    {
+      "id": "assemble",
+      "term": "Assemble",
+      "category": "variant-action",
+      "aliases": [],
+      "definition": "Put a Contraption onto the battlefield under the Unstable rules. This is a variant-game term, not ordinary Commander deck assembly.",
+      "rule": "701.45",
+      "references": [
+        "comprehensive#701.45"
+      ]
+    },
+    {
+      "id": "assist",
+      "term": "Assist",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Lets another player help cover the generic mana portion of this spell's cost as you cast it.",
+      "references": [
+        "comprehensive#702.132"
+      ],
+      "rule": "702.132"
+    },
+    {
+      "id": "attach",
+      "term": "Attach",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Move an Aura, Equipment, or Fortification from wherever it is onto the object or player it's enchanting, equipping, or fortifying.",
+      "references": [
+        "comprehensive#701.3"
+      ],
+      "rule": "701.3"
+    },
+    {
+      "id": "aura",
+      "term": "Aura",
+      "category": "subtype",
+      "aliases": [],
+      "definition": "An enchantment subtype. An Aura attaches to the kind of object or player specified by its enchant ability; casting an Aura normally requires a target.",
+      "rule": "303.4",
+      "references": [
+        "comprehensive#303.4"
+      ]
+    },
+    {
+      "id": "aura-swap",
+      "term": "Aura Swap",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Pay a cost to exchange this Aura on the battlefield for a different Aura card in your hand.",
+      "references": [
+        "comprehensive#702.65"
+      ],
+      "rule": "702.65"
+    },
+    {
+      "id": "awaken",
+      "term": "Awaken",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Casting for the awaken cost adds an effect that puts N +1/+1 counters on a target land you control and makes it a 0/0 Elemental creature with haste. It is still a land.",
+      "references": [
+        "comprehensive#702.113"
+      ],
+      "rule": "702.113"
+    },
+    {
+      "id": "backup",
+      "term": "Backup",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "When it enters, put +1/+1 counters on a target creature; if that's a different creature, it also temporarily gains this creature's other printed abilities.",
+      "references": [
+        "comprehensive#702.165"
+      ],
+      "rule": "702.165"
+    },
+    {
+      "id": "banding",
+      "term": "Banding",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Allows attacking bands. In relevant combat involving banding, the player controlling the creature with banding chooses how the opposing creature assigns its damage.",
+      "references": [
+        "comprehensive#702.22"
+      ],
+      "rule": "702.22"
+    },
+    {
+      "id": "bargain",
+      "term": "Bargain",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "As an extra cost, you may sacrifice an artifact, enchantment, or token; other text on the card checks whether you did.",
+      "references": [
+        "comprehensive#702.166"
+      ],
+      "rule": "702.166"
+    },
+    {
+      "id": "basic",
+      "term": "Basic",
+      "category": "supertype",
+      "aliases": [],
+      "definition": "A supertype, usually on lands. Basic lands are exempt from the usual Commander singleton restriction. Having a basic land type alone does not make a land basic.",
+      "rule": "205.4c",
+      "references": [
+        "comprehensive#205.4c"
+      ]
+    },
+    {
+      "id": "battle",
+      "term": "Battle",
+      "category": "card-type",
+      "aliases": [],
+      "definition": "A permanent card type with defense counters. A designated player protects it; battles can be attacked, and their subtype and text determine what happens when defense runs out.",
+      "rule": "310",
+      "references": [
+        "comprehensive#310"
+      ]
+    },
+    {
+      "id": "battle-cry",
+      "term": "Battle Cry",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Whenever it attacks, every other attacking creature gets +1/+0 until end of turn.",
+      "references": [
+        "comprehensive#702.91"
+      ],
+      "rule": "702.91"
+    },
+    {
+      "id": "battlefield",
+      "term": "Battlefield",
+      "category": "zone",
+      "aliases": [],
+      "definition": "The shared zone containing permanents in play. Entering this zone and casting a spell are different events.",
+      "rule": "403",
+      "references": [
+        "comprehensive#403"
+      ]
+    },
+    {
+      "id": "beginning-of-combat",
+      "term": "Beginning of combat",
+      "category": "turn-step",
+      "aliases": [
+        "combat trigger"
+      ],
+      "definition": "The combat step before attackers are declared. Beginning-of-combat abilities trigger here, so Shadrix’s ability does not require attacking.",
+      "references": [
+        "comprehensive#507"
+      ]
+    },
+    {
+      "id": "behold",
+      "term": "Behold",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Reveal a card from your hand, or point to a permanent you control on the battlefield, that matches a stated quality.",
+      "references": [
+        "comprehensive#701.4"
+      ],
+      "rule": "701.4"
+    },
+    {
+      "id": "bestow",
+      "term": "Bestow",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Pay an alternate cost to cast it as an Aura granting its bonuses to the enchanted creature; if it stops being attached, it becomes a creature of its own.",
+      "references": [
+        "comprehensive#702.103"
+      ],
+      "rule": "702.103"
+    },
+    {
+      "id": "blight",
+      "term": "Blight",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Put N -1/-1 counters on a creature you control.",
+      "references": [
+        "comprehensive#701.68"
+      ],
+      "rule": "701.68"
+    },
+    {
+      "id": "blink-flicker",
+      "term": "Blink / Flicker",
+      "category": "concept",
+      "aliases": [
+        "blink",
+        "flicker"
+      ],
+      "definition": "Community shorthand -- not an official rules term -- for effects that briefly exile a permanent and then return it to the battlefield, re-triggering any 'enters the battlefield' abilities it has.",
+      "references": [
+        "comprehensive#400.7"
+      ]
+    },
+    {
+      "id": "blitz",
+      "term": "Blitz",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Cast for an alternate cost to gain haste and a 'draw a card when it dies' bonus, but it's sacrificed at the next end step.",
+      "references": [
+        "comprehensive#702.152"
+      ],
+      "rule": "702.152"
+    },
+    {
+      "id": "bloodthirst",
+      "term": "Bloodthirst",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Enters with extra +1/+1 counters if an opponent was already dealt damage this turn.",
+      "references": [
+        "comprehensive#702.54"
+      ],
+      "rule": "702.54"
+    },
+    {
+      "id": "board-wipe",
+      "term": "Board Wipe",
+      "category": "concept",
+      "aliases": [
+        "board wipes",
+        "wipe",
+        "wipes"
+      ],
+      "definition": "Community shorthand -- not an official rules term -- for a spell or ability that destroys, exiles, or otherwise removes most or all creatures (or other permanents) at once.",
+      "references": [
+        "comprehensive"
+      ]
+    },
+    {
+      "id": "boast",
+      "term": "Boast",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "An activated ability usable only once per turn, and only on a creature that has already attacked this turn.",
+      "references": [
+        "comprehensive#702.142"
+      ],
+      "rule": "702.142"
+    },
+    {
+      "id": "bolster",
+      "term": "Bolster",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Put N +1/+1 counters on the creature you control with the least toughness (or tied for least).",
+      "references": [
+        "comprehensive#701.39"
+      ],
+      "rule": "701.39"
+    },
+    {
+      "id": "bushido",
+      "term": "Bushido",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Gets +N/+N until end of turn whenever it blocks or becomes blocked.",
+      "references": [
+        "comprehensive#702.45"
+      ],
+      "rule": "702.45"
+    },
+    {
+      "id": "buyback",
+      "term": "Buyback",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Pay an additional cost so the spell returns to your hand instead of your graveyard after it resolves.",
+      "references": [
+        "comprehensive#702.27"
+      ],
+      "rule": "702.27"
+    },
+    {
+      "id": "cascade",
+      "term": "Cascade",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "When cast, exile cards from your library until you hit a cheaper nonland spell, which you may cast for free.",
+      "references": [
+        "comprehensive#702.85"
+      ],
+      "rule": "702.85"
+    },
+    {
+      "id": "cast",
+      "term": "Cast",
+      "category": "keyword-action",
+      "aliases": [
+        "casts",
+        "casting"
+      ],
+      "definition": "Take a card, put it on the stack as a spell, and pay its costs so it can eventually resolve.",
+      "references": [
+        "comprehensive#601"
+      ],
+      "rule": "701.5"
+    },
+    {
+      "id": "casualty",
+      "term": "Casualty",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "As an additional cost, sacrifice a creature with power N or greater to get a copy of the spell you're casting.",
+      "references": [
+        "comprehensive#702.153"
+      ],
+      "rule": "702.153"
+    },
+    {
+      "id": "champion",
+      "term": "Champion",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "When it enters, you must exile another permanent of the stated type or this one is sacrificed; the exiled card returns when this permanent leaves the battlefield.",
+      "references": [
+        "comprehensive#702.72"
+      ],
+      "rule": "702.72"
+    },
+    {
+      "id": "changeling",
+      "term": "Changeling",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "This card is considered every creature type there is, in every zone, always.",
+      "references": [
+        "comprehensive#702.73"
+      ],
+      "rule": "702.73"
+    },
+    {
+      "id": "cipher",
+      "term": "Cipher",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Exile it 'encoded' on a creature you control; whenever that creature deals combat damage to a player, you may cast a free copy of the encoded card.",
+      "references": [
+        "comprehensive#702.99"
+      ],
+      "rule": "702.99"
+    },
+    {
+      "id": "clash",
+      "term": "Clash",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Reveal the top card of your library, optionally moving it to the bottom; in a clash against another player, whoever reveals the higher mana value wins.",
+      "references": [
+        "comprehensive#701.30"
+      ],
+      "rule": "701.30"
+    },
+    {
+      "id": "cleanup-step",
+      "term": "Cleanup step",
+      "category": "turn-step",
+      "aliases": [],
+      "definition": "The step that normally enforces maximum hand size, removes marked damage and ends until-end-of-turn effects. Priority is given only in specified circumstances.",
+      "rule": "514",
+      "references": [
+        "comprehensive#514"
+      ]
+    },
+    {
+      "id": "cleave",
+      "term": "Cleave",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "You may cast this spell for its cleave cost. If you do, ignore its bracketed words for that spell; the printed card is not permanently changed.",
+      "references": [
+        "comprehensive#702.148"
+      ],
+      "rule": "702.148"
+    },
+    {
+      "id": "cloak",
+      "term": "Cloak",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Put a card onto the battlefield face down as a 2/2 creature with ward {2}. If it is a creature card with a mana cost, you may pay that cost to turn it face up when you have priority.",
+      "references": [
+        "comprehensive#701.58"
+      ],
+      "rule": "701.58"
+    },
+    {
+      "id": "collect-evidence",
+      "term": "Collect Evidence",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Exile any number of cards from your graveyard whose combined mana value meets or exceeds the stated total.",
+      "references": [
+        "comprehensive#701.59"
+      ],
+      "rule": "701.59"
+    },
+    {
+      "id": "color-identity",
+      "term": "Color Identity",
+      "category": "concept",
+      "aliases": [],
+      "definition": "The deck-construction colors derived from mana symbols, color indicators and color-defining abilities. Reminder text is excluded; applicable back faces count.",
+      "references": [
+        "comprehensive#903.4"
+      ]
+    },
+    {
+      "id": "colorless",
+      "term": "Colorless",
+      "category": "characteristic",
+      "aliases": [],
+      "definition": "Having no color. Colorless mana is a type of mana, while generic costs are amounts that may be paid with any mana type.",
+      "rule": "105",
+      "references": [
+        "comprehensive#105"
+      ]
+    },
+    {
+      "id": "combat-damage",
+      "term": "Combat damage",
+      "category": "concept",
+      "aliases": [],
+      "definition": "Damage dealt by attacking and blocking creatures during a combat damage step. Fighting and most spell damage are not combat damage.",
+      "rule": "510",
+      "references": [
+        "comprehensive#510"
+      ]
+    },
+    {
+      "id": "command-zone",
+      "term": "Command Zone",
+      "category": "concept",
+      "aliases": [],
+      "definition": "A public zone used for commanders, emblems and certain variant-game objects. A commander can move here only as the rules or an effect permit; leaving the battlefield does not always send it here automatically.",
+      "references": [
+        "comprehensive"
+      ]
+    },
+    {
+      "id": "commander",
+      "term": "Commander",
+      "category": "format",
+      "aliases": [],
+      "definition": "The designated card or legal pairing leading a Commander deck. Its identity determines deck-building color restrictions, and special command-zone, tax and damage rules apply.",
+      "rule": "903",
+      "references": [
+        "comprehensive#903"
+      ]
+    },
+    {
+      "id": "commander-damage-21-rule",
+      "term": "Commander Damage (21 rule)",
+      "category": "concept",
+      "aliases": [
+        "commander damage"
+      ],
+      "definition": "A player who has been dealt 21 or more combat damage by the same commander over the course of the game loses, regardless of their remaining life total.",
+      "references": [
+        "comprehensive#903.10"
+      ]
+    },
+    {
+      "id": "commander-tax",
+      "term": "Commander Tax",
+      "category": "concept",
+      "aliases": [],
+      "definition": "Casting your commander from the command zone costs an additional {2} for every earlier time you've cast it from there that game.",
+      "references": [
+        "comprehensive#903.8"
+      ]
+    },
+    {
+      "id": "companion",
+      "term": "Companion",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "If the starting deck meets its restriction, designate a legal companion outside the deck. Once per game, pay {3} as a special action at sorcery timing to put it into your hand. Commander color identity and singleton rules still apply.",
+      "references": [
+        "comprehensive#702.139"
+      ],
+      "rule": "702.139"
+    },
+    {
+      "id": "compleated",
+      "term": "Compleated",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "If you paid life for any Phyrexian mana symbols in its cost, the permanent enters with two fewer starting loyalty counters for each symbol paid that way.",
+      "references": [
+        "comprehensive#702.150"
+      ],
+      "rule": "702.150"
+    },
+    {
+      "id": "connive",
+      "term": "Connive",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Draw a card, then discard a card; if the discarded card was a nonland, put a +1/+1 counter on the conniving permanent.",
+      "references": [
+        "comprehensive#701.50"
+      ],
+      "rule": "701.50"
+    },
+    {
+      "id": "conspire",
+      "term": "Conspire",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Tap two untapped creatures that each share a color with the spell to create a copy of it as you cast it.",
+      "references": [
+        "comprehensive#702.78"
+      ],
+      "rule": "702.78"
+    },
+    {
+      "id": "controller",
+      "term": "Controller",
+      "category": "concept",
+      "aliases": [],
+      "definition": "The player currently controlling a spell, ability or permanent. Its controller may differ from its owner.",
+      "rule": "109.4",
+      "references": [
+        "comprehensive#109.4"
+      ]
+    },
+    {
+      "id": "convert",
+      "term": "Convert",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "The equivalent of Transform for card frames other than the standard double-faced card, such as some Universes Beyond mechanics.",
+      "references": [
+        "comprehensive#701.28"
+      ],
+      "rule": "701.28"
+    },
+    {
+      "id": "convoke",
+      "term": "Convoke",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Tap untapped creatures you control to help pay this spell's cost; colored creatures cover colored mana, any creature covers generic mana.",
+      "references": [
+        "comprehensive#702.51"
+      ],
+      "rule": "702.51"
+    },
+    {
+      "id": "counter",
+      "term": "Counter",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Cancel a spell or ability so it doesn't resolve and none of its effects happen; a countered spell goes to its owner's graveyard.",
+      "references": [
+        "comprehensive#701.6"
+      ],
+      "rule": "701.6"
+    },
+    {
+      "id": "counters-general",
+      "term": "Counters (general)",
+      "category": "concept",
+      "aliases": [
+        "counters"
+      ],
+      "definition": "A marker placed on a permanent or player -- +1/+1, -1/-1, loyalty, poison, and many other kinds -- that modifies its characteristics or interacts with a specific rule. A counter isn't a token, and it ceases to exist (rather than being 'removed') if its object changes zones.",
+      "references": [
+        "comprehensive#122"
+      ]
+    },
+    {
+      "id": "craft",
+      "term": "Craft",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Pay a cost and exile this permanent along with specified extra materials to return it to the battlefield transformed.",
+      "references": [
+        "comprehensive#702.167"
+      ],
+      "rule": "702.167"
+    },
+    {
+      "id": "create",
+      "term": "Create",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Put a token with the specified characteristics directly onto the battlefield.",
+      "references": [
+        "comprehensive#701.7"
+      ],
+      "rule": "701.7"
+    },
+    {
+      "id": "creature",
+      "term": "Creature",
+      "category": "card-type",
+      "aliases": [
+        "creatures"
+      ],
+      "definition": "A permanent card type with power and toughness. Creatures can attack and block, subject to abilities and game rules.",
+      "references": [
+        "comprehensive#302"
+      ]
+    },
+    {
+      "id": "creature-subtype",
+      "term": "Creature subtype",
+      "category": "subtype",
+      "aliases": [
+        "Phyrexian",
+        "Angel",
+        "Horror",
+        "Goblin",
+        "Goblins",
+        "Warrior",
+        "Elder",
+        "Dragon",
+        "Human",
+        "Druid",
+        "Inkling"
+      ],
+      "definition": "A creature type listed after the dash. A creature can have several. These types do not automatically grant abilities; other cards may refer to them.",
+      "references": [
+        "comprehensive#205.3m"
+      ]
+    },
+    {
+      "id": "crew",
+      "term": "Crew",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Tap any number of other untapped creatures you control with total power at least N. This Vehicle becomes an artifact creature until end of turn. The creatures do not attach to it.",
+      "references": [
+        "comprehensive#702.122"
+      ],
+      "rule": "702.122"
+    },
+    {
+      "id": "cumulative-upkeep",
+      "term": "Cumulative Upkeep",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Each upkeep it gains another age counter, and you must pay its cost once per age counter or sacrifice it.",
+      "references": [
+        "comprehensive#702.24"
+      ],
+      "rule": "702.24"
+    },
+    {
+      "id": "cycling",
+      "term": "Cycling",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "From your hand, pay the stated cost and discard the card to draw a new one.",
+      "references": [
+        "comprehensive#702.29"
+      ],
+      "rule": "702.29"
+    },
+    {
+      "id": "damage",
+      "term": "Damage",
+      "category": "concept",
+      "aliases": [],
+      "definition": "An event with consequences determined by its source and recipient. Damage to players normally loses life; loss of life from another cause is not damage.",
+      "rule": "120",
+      "references": [
+        "comprehensive#120"
+      ]
+    },
+    {
+      "id": "dash",
+      "term": "Dash",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Cast for an alternate cost to gain haste, then return it to your hand at the beginning of the next end step instead of it staying in play.",
+      "references": [
+        "comprehensive#702.109"
+      ],
+      "rule": "702.109"
+    },
+    {
+      "id": "daybound-and-nightbound",
+      "term": "Daybound and Nightbound",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "These abilities link a transforming double-faced permanent to day and night. It enters on the appropriate face and transforms as that designation changes, rather than by ordinary transform instructions.",
+      "references": [
+        "comprehensive#702.145"
+      ],
+      "rule": "702.145"
+    },
+    {
+      "id": "deathtouch",
+      "term": "Deathtouch",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Nonzero damage from this source is enough to destroy a creature when state-based actions are checked. Indestructible and damage prevention still matter.",
+      "references": [
+        "comprehensive#702.2"
+      ],
+      "rule": "702.2"
+    },
+    {
+      "id": "decayed",
+      "term": "Decayed",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Can't block, and is sacrificed at the end of combat any turn it attacks.",
+      "references": [
+        "comprehensive#702.147"
+      ],
+      "rule": "702.147"
+    },
+    {
+      "id": "defender",
+      "term": "Defender",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "This creature cannot attack unless an effect specifically allows it to attack as though it did not have defender. It can block normally.",
+      "references": [
+        "comprehensive#702.3"
+      ],
+      "rule": "702.3"
+    },
+    {
+      "id": "delve",
+      "term": "Delve",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Exile cards from your graveyard to pay for the generic mana in this spell's cost.",
+      "references": [
+        "comprehensive#702.66"
+      ],
+      "rule": "702.66"
+    },
+    {
+      "id": "demonstrate",
+      "term": "Demonstrate",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "When you cast it, you may copy it with new targets; if you do, a chosen opponent also gets a copy of it.",
+      "references": [
+        "comprehensive#702.144"
+      ],
+      "rule": "702.144"
+    },
+    {
+      "id": "destroy",
+      "term": "Destroy",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Move a permanent from the battlefield to its owner's graveyard specifically as the result of a 'destroy' effect or lethal/deathtouch damage.",
+      "references": [
+        "comprehensive#701.8"
+      ],
+      "rule": "701.8"
+    },
+    {
+      "id": "detain",
+      "term": "Detain",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Until the caster's next turn, the permanent can't attack or block, and its activated abilities can't be activated.",
+      "references": [
+        "comprehensive#701.35"
+      ],
+      "rule": "701.35"
+    },
+    {
+      "id": "dethrone",
+      "term": "Dethrone",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Whenever it attacks the player with the most life (or tied for most), put a +1/+1 counter on it.",
+      "references": [
+        "comprehensive#702.105"
+      ],
+      "rule": "702.105"
+    },
+    {
+      "id": "devoid",
+      "term": "Devoid",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Makes the card colorless even if its mana cost includes colored mana symbols.",
+      "references": [
+        "comprehensive#702.114"
+      ],
+      "rule": "702.114"
+    },
+    {
+      "id": "devour",
+      "term": "Devour",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "As this enters, you may sacrifice creatures. It enters with N +1/+1 counters for each creature sacrificed. A quality-specific version instead names which permanents can be sacrificed.",
+      "references": [
+        "comprehensive#702.82"
+      ],
+      "rule": "702.82"
+    },
+    {
+      "id": "dies",
+      "term": "Dies",
+      "category": "event",
+      "aliases": [],
+      "definition": "A permanent going from the battlefield to a graveyard. Exiling it or returning it to hand is not dying.",
+      "rule": "700.4",
+      "references": [
+        "comprehensive#700.4"
+      ]
+    },
+    {
+      "id": "discard",
+      "term": "Discard",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Move a card from your hand to your graveyard.",
+      "references": [
+        "comprehensive#701.9"
+      ],
+      "rule": "701.9"
+    },
+    {
+      "id": "discover",
+      "term": "Discover",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Exile cards from the top of your library until you hit a nonland card at or under the stated mana value; cast it free if it qualifies, or put it into your hand.",
+      "references": [
+        "comprehensive#701.57"
+      ],
+      "rule": "701.57"
+    },
+    {
+      "id": "disguise",
+      "term": "Disguise",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "You may cast this face down for {3} as a 2/2 creature with ward {2}, no name, subtypes or mana cost. Pay its disguise cost to turn it face up as a special action when you have priority.",
+      "references": [
+        "comprehensive#702.168"
+      ],
+      "rule": "702.168"
+    },
+    {
+      "id": "disturb",
+      "term": "Disturb",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Cast it, transformed, from your graveyard by paying its disturb cost instead of its mana cost.",
+      "references": [
+        "comprehensive#702.146"
+      ],
+      "rule": "702.146"
+    },
+    {
+      "id": "double",
+      "term": "Double",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Double the stated value -- power and/or toughness, a life total, an amount of mana, or a number of counters -- to twice what it currently is.",
+      "references": [
+        "comprehensive#701.10"
+      ],
+      "rule": "701.10"
+    },
+    {
+      "id": "double-strike",
+      "term": "Double Strike",
+      "category": "keyword-ability",
+      "aliases": [
+        "double-strike"
+      ],
+      "definition": "Deals combat damage in both the first-strike and regular damage steps if it is still in combat and able to deal damage.",
+      "references": [
+        "keywords"
+      ],
+      "rule": "702.4"
+    },
+    {
+      "id": "draw-a-card",
+      "term": "Draw a card",
+      "category": "action",
+      "aliases": [
+        "draw cards"
+      ],
+      "definition": "Move the top card of your library to your hand. Draw multiple cards one at a time. Putting a card into your hand by another instruction does not count as drawing.",
+      "rule": "121.1",
+      "references": [
+        "comprehensive#121.1"
+      ]
+    },
+    {
+      "id": "dredge",
+      "term": "Dredge",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "If your library has at least N cards, you may replace a draw by milling N cards and returning this card from your graveyard to your hand.",
+      "references": [
+        "comprehensive#702.52"
+      ],
+      "rule": "702.52"
+    },
+    {
+      "id": "earthbend",
+      "term": "Earthbend",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Turn a target land into a 0/0 creature with haste and +1/+1 counters, which returns to the battlefield tapped if it dies or is exiled.",
+      "references": [
+        "comprehensive#701.66"
+      ],
+      "rule": "701.66"
+    },
+    {
+      "id": "echo",
+      "term": "Echo",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "At your upkeep, if this permanent came under your control since your previous upkeep began, sacrifice it unless you pay its echo cost.",
+      "references": [
+        "comprehensive#702.30"
+      ],
+      "rule": "702.30"
+    },
+    {
+      "id": "embalm",
+      "term": "Embalm",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Exile it from your graveyard to create a token copy of it that's white, has no mana cost, and is also a Zombie.",
+      "references": [
+        "comprehensive#702.128"
+      ],
+      "rule": "702.128"
+    },
+    {
+      "id": "emblems",
+      "term": "Emblems",
+      "category": "concept",
+      "aliases": [],
+      "definition": "Objects in the command zone carrying abilities defined by the effect that created them. Emblems are not cards or permanents.",
+      "references": [
+        "comprehensive"
+      ]
+    },
+    {
+      "id": "emerge",
+      "term": "Emerge",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Cast it by sacrificing a creature and paying a cost reduced by that creature's mana value.",
+      "references": [
+        "comprehensive#702.119"
+      ],
+      "rule": "702.119"
+    },
+    {
+      "id": "enchant",
+      "term": "Enchant",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Printed on every Aura, it states what kind of thing the Aura can target and stay attached to (for example, 'enchant creature').",
+      "references": [
+        "comprehensive#702.5"
+      ],
+      "rule": "702.5"
+    },
+    {
+      "id": "enchantment",
+      "term": "Enchantment",
+      "category": "card-type",
+      "aliases": [
+        "enchantments"
+      ],
+      "definition": "A permanent card type that stays on the battlefield after resolving. Its text defines its effects; Aura is one enchantment subtype.",
+      "references": [
+        "comprehensive#303"
+      ]
+    },
+    {
+      "id": "encore",
+      "term": "Encore",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Pay the cost and exile this card from your graveyard, as a sorcery, to make one token copy per opponent. They gain haste and must attack their assigned opponent if able. Sacrifice them at the next end step; they do not enter attacking.",
+      "references": [
+        "comprehensive#702.141"
+      ],
+      "rule": "702.141"
+    },
+    {
+      "id": "end-step",
+      "term": "End step",
+      "category": "turn-step",
+      "aliases": [],
+      "definition": "The first step of the ending phase. Beginning-of-end-step abilities trigger here; players can then act before cleanup.",
+      "references": [
+        "comprehensive#513"
+      ]
+    },
+    {
+      "id": "endure",
+      "term": "Endure",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Choose to either put N +1/+1 counters on the permanent, or create an N/N white Spirit creature token.",
+      "references": [
+        "comprehensive#701.63"
+      ],
+      "rule": "701.63"
+    },
+    {
+      "id": "enlist",
+      "term": "Enlist",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "As this attacks, you may tap another untapped, nonattacking creature you control that can ignore or has cleared summoning sickness. When you do, add that creature’s power to this creature’s power until end of turn.",
+      "references": [
+        "comprehensive#702.154"
+      ],
+      "rule": "702.154"
+    },
+    {
+      "id": "enters-the-battlefield",
+      "term": "Enters the battlefield",
+      "category": "event",
+      "aliases": [
+        "enters",
+        "entering",
+        "enter the battlefield"
+      ],
+      "definition": "An object arriving on the battlefield, whether cast, created as a token or moved by an effect. Enters abilities can trigger even when no spell was cast.",
+      "rule": "603.6a",
+      "references": [
+        "comprehensive#603.6a"
+      ]
+    },
+    {
+      "id": "entwine",
+      "term": "Entwine",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Pay an additional cost to choose every mode of a modal spell instead of just the number normally allowed.",
+      "references": [
+        "comprehensive#702.42"
+      ],
+      "rule": "702.42"
+    },
+    {
+      "id": "epic",
+      "term": "Epic",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "You can't cast any more spells for the rest of the game, but you copy this spell every upkeep from now on.",
+      "references": [
+        "comprehensive#702.50"
+      ],
+      "rule": "702.50"
+    },
+    {
+      "id": "equip",
+      "term": "Equip",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "A sorcery-speed activated ability on Equipment cards that attaches the Equipment to a creature you control for the stated cost.",
+      "references": [
+        "comprehensive#702.6"
+      ],
+      "rule": "702.6"
+    },
+    {
+      "id": "equipment",
+      "term": "Equipment",
+      "category": "subtype",
+      "aliases": [],
+      "definition": "An artifact subtype that can attach to a creature. Equipping normally targets a creature you control, and the Equipment normally remains when that creature leaves.",
+      "rule": "301.5",
+      "references": [
+        "comprehensive#301.5"
+      ]
+    },
+    {
+      "id": "escalate",
+      "term": "Escalate",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "On a modal spell, pay an additional cost for each mode you choose beyond the first.",
+      "references": [
+        "comprehensive#702.120"
+      ],
+      "rule": "702.120"
+    },
+    {
+      "id": "escape",
+      "term": "Escape",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Cast it from the graveyard by paying its escape cost, which requires exiling other cards from your graveyard as part of the cost.",
+      "references": [
+        "comprehensive#702.138"
+      ],
+      "rule": "702.138"
+    },
+    {
+      "id": "eternalize",
+      "term": "Eternalize",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Exile it from your graveyard to create a 4/4 black Zombie token copy of it with no mana cost.",
+      "references": [
+        "comprehensive#702.129"
+      ],
+      "rule": "702.129"
+    },
+    {
+      "id": "evoke",
+      "term": "Evoke",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "You may cast this for its evoke cost instead of its mana cost. If you do, an ability triggers when it enters that causes you to sacrifice it; players can respond to that trigger.",
+      "references": [
+        "comprehensive#702.74"
+      ],
+      "rule": "702.74"
+    },
+    {
+      "id": "evolve",
+      "term": "Evolve",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Whenever a creature with greater power or toughness enters under your control, put a +1/+1 counter on this one.",
+      "references": [
+        "comprehensive#702.100"
+      ],
+      "rule": "702.100"
+    },
+    {
+      "id": "exalted",
+      "term": "Exalted",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Whenever a creature you control attacks by itself, that creature gets +1/+1 until end of turn.",
+      "references": [
+        "comprehensive#702.83"
+      ],
+      "rule": "702.83"
+    },
+    {
+      "id": "exchange",
+      "term": "Exchange",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Swap two specified things -- life totals, control of two permanents, or cards between two zones -- between players; if any part of the swap is impossible, none of it happens.",
+      "references": [
+        "comprehensive#701.12"
+      ],
+      "rule": "701.12"
+    },
+    {
+      "id": "exert",
+      "term": "Exert",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Choose to have a permanent not untap during your next untap step, usually to unlock a bonus tied to attacking.",
+      "references": [
+        "comprehensive#701.43"
+      ],
+      "rule": "701.43"
+    },
+    {
+      "id": "exhaust",
+      "term": "Exhaust",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "The following activated ability may be activated only once for that particular object. Leaving and returning makes a new object; this is not a shared once-per-game limit across copies.",
+      "references": [
+        "comprehensive#702.177"
+      ],
+      "rule": "702.177"
+    },
+    {
+      "id": "exile",
+      "term": "Exile",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Move a card, token, or permanent to the exile zone from wherever it currently is.",
+      "references": [
+        "comprehensive#701.13"
+      ],
+      "rule": "701.13"
+    },
+    {
+      "id": "exploit",
+      "term": "Exploit",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "When it enters, you may sacrifice a creature to trigger an effect defined elsewhere on the card.",
+      "references": [
+        "comprehensive#702.110"
+      ],
+      "rule": "702.110"
+    },
+    {
+      "id": "explore",
+      "term": "Explore",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Reveal the top card of your library; a land goes to your hand, otherwise the permanent gets a +1/+1 counter and you may put the revealed card into the graveyard.",
+      "references": [
+        "comprehensive#701.44"
+      ],
+      "rule": "701.44"
+    },
+    {
+      "id": "extort",
+      "term": "Extort",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Whenever you cast a spell, you may pay {W/B} to drain 1 life from each opponent, gaining the life they lose.",
+      "references": [
+        "comprehensive#702.101"
+      ],
+      "rule": "702.101"
+    },
+    {
+      "id": "fabricate",
+      "term": "Fabricate",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "When it enters, choose: put N +1/+1 counters on it, or create N 1/1 Servo tokens instead.",
+      "references": [
+        "comprehensive#702.123"
+      ],
+      "rule": "702.123"
+    },
+    {
+      "id": "face-a-villainous-choice",
+      "term": "Face a Villainous Choice",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Choose one of two listed options, then carry out everything described under the chosen option.",
+      "references": [
+        "comprehensive#701.55"
+      ],
+      "rule": "701.55"
+    },
+    {
+      "id": "fading",
+      "term": "Fading",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Enters with N fade counters. At your upkeep, remove one; if you cannot, sacrifice it. Removing the last fade counter does not itself cause the sacrifice.",
+      "references": [
+        "comprehensive#702.32"
+      ],
+      "rule": "702.32"
+    },
+    {
+      "id": "fateseal",
+      "term": "Fateseal",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Look at the top N cards of an opponent's library, then put each one on the bottom or back on top, in any order you choose.",
+      "references": [
+        "comprehensive#701.29"
+      ],
+      "rule": "701.29"
+    },
+    {
+      "id": "fear",
+      "term": "Fear",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Can be blocked only by artifact creatures and/or black creatures.",
+      "references": [
+        "comprehensive#702.36"
+      ],
+      "rule": "702.36"
+    },
+    {
+      "id": "fight",
+      "term": "Fight",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Have two creatures each deal damage equal to their power to the other; this isn't combat damage.",
+      "references": [
+        "comprehensive#701.14"
+      ],
+      "rule": "701.14"
+    },
+    {
+      "id": "firebending",
+      "term": "Firebending",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Whenever it attacks, add red mana that doesn't empty at the usual step/phase boundary until combat ends.",
+      "references": [
+        "comprehensive#702.189"
+      ],
+      "rule": "702.189"
+    },
+    {
+      "id": "first-strike",
+      "term": "First Strike",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Deals its combat damage in an earlier damage step, before creatures without first or double strike, so it can destroy them before they hit back.",
+      "references": [
+        "comprehensive#702.7"
+      ],
+      "rule": "702.7"
+    },
+    {
+      "id": "flanking",
+      "term": "Flanking",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Whenever it becomes blocked by a creature without flanking, that blocker gets -1/-1 until end of turn.",
+      "references": [
+        "comprehensive#702.25"
+      ],
+      "rule": "702.25"
+    },
+    {
+      "id": "flash",
+      "term": "Flash",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Lets you cast the card any time you could cast an instant, not just during your main phase.",
+      "references": [
+        "comprehensive#702.8"
+      ],
+      "rule": "702.8"
+    },
+    {
+      "id": "flashback",
+      "term": "Flashback",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Can be cast from the graveyard by paying its flashback cost instead of its mana cost; it's exiled afterward rather than returning to the graveyard.",
+      "references": [
+        "comprehensive#702.34"
+      ],
+      "rule": "702.34"
+    },
+    {
+      "id": "flying",
+      "term": "Flying",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Can be blocked only by creatures with flying or reach. Other blocking restrictions still apply.",
+      "references": [
+        "keywords"
+      ],
+      "rule": "702.9"
+    },
+    {
+      "id": "for-mirrodin",
+      "term": "For Mirrodin!",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "When this Equipment enters, it creates a 2/2 red Rebel token and attaches itself to it.",
+      "references": [
+        "comprehensive#702.163"
+      ],
+      "rule": "702.163"
+    },
+    {
+      "id": "forage",
+      "term": "Forage",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Pay this cost by either exiling three cards from your graveyard or sacrificing a Food token.",
+      "references": [
+        "comprehensive#701.61"
+      ],
+      "rule": "701.61"
+    },
+    {
+      "id": "forecast",
+      "term": "Forecast",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Once per turn during your upkeep, you may reveal it from your hand to activate a bonus ability printed on it.",
+      "references": [
+        "comprehensive#702.57"
+      ],
+      "rule": "702.57"
+    },
+    {
+      "id": "foretell",
+      "term": "Foretell",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "During your turn, pay {2} to exile this card from your hand face down. On a later turn, you may cast it for its foretell cost, following normal timing restrictions.",
+      "references": [
+        "comprehensive#702.143"
+      ],
+      "rule": "702.143"
+    },
+    {
+      "id": "fortification",
+      "term": "Fortification",
+      "category": "subtype",
+      "aliases": [],
+      "definition": "An artifact subtype similar to Equipment, but it attaches to a land using fortify.",
+      "rule": "301.6",
+      "references": [
+        "comprehensive#301.6"
+      ]
+    },
+    {
+      "id": "fortify",
+      "term": "Fortify",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Pay the fortify cost to attach this Fortification to a target land you control. Activate only as a sorcery.",
+      "references": [
+        "comprehensive#702.67"
+      ],
+      "rule": "702.67"
+    },
+    {
+      "id": "freerunning",
+      "term": "Freerunning",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Cast for an alternate cost if an Assassin creature or your commander dealt combat damage to a player this turn.",
+      "references": [
+        "comprehensive#702.173"
+      ],
+      "rule": "702.173"
+    },
+    {
+      "id": "frenzy",
+      "term": "Frenzy",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Gets +N/+0 until end of turn whenever it attacks and isn't blocked.",
+      "references": [
+        "comprehensive#702.68"
+      ],
+      "rule": "702.68"
+    },
+    {
+      "id": "fuse",
+      "term": "Fuse",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "When casting a split card with fuse from your hand, you may cast both halves together as one spell, paying both costs.",
+      "references": [
+        "comprehensive#702.102"
+      ],
+      "rule": "702.102"
+    },
+    {
+      "id": "gift",
+      "term": "Gift",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "As you cast the spell, you may promise its stated gift to an opponent. The gift is delivered on resolution for an instant or sorcery, or by an enters trigger for a permanent. Other text may reward promising it.",
+      "references": [
+        "comprehensive#702.174"
+      ],
+      "rule": "702.174"
+    },
+    {
+      "id": "goad",
+      "term": "Goad",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Until your next turn, the creature must attack each combat if able and must attack a player other than you if able. These are requirements, not permission to ignore attack restrictions.",
+      "references": [
+        "comprehensive#701.15"
+      ],
+      "rule": "701.15"
+    },
+    {
+      "id": "graft",
+      "term": "Graft",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Enters with N +1/+1 counters. Whenever another creature enters under any player’s control, you may move a +1/+1 counter from this permanent onto that creature.",
+      "references": [
+        "comprehensive#702.58"
+      ],
+      "rule": "702.58"
+    },
+    {
+      "id": "gravestorm",
+      "term": "Gravestorm",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "When cast, create a copy of it for each permanent put into a graveyard from the battlefield this turn.",
+      "references": [
+        "comprehensive#702.69"
+      ],
+      "rule": "702.69"
+    },
+    {
+      "id": "graveyard",
+      "term": "Graveyard",
+      "category": "zone",
+      "aliases": [],
+      "definition": "A player’s discard pile. It is normally public, and cards remain here until an effect moves them.",
+      "rule": "404",
+      "references": [
+        "comprehensive#404"
+      ]
+    },
+    {
+      "id": "hand",
+      "term": "Hand",
+      "category": "zone",
+      "aliases": [],
+      "definition": "The cards a player currently holds. Other players normally cannot see their faces unless an effect reveals them.",
+      "rule": "402",
+      "references": [
+        "comprehensive#402"
+      ]
+    },
+    {
+      "id": "harmonize",
+      "term": "Harmonize",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Cast from your graveyard for the harmonize cost, optionally tapping one untapped creature you control to reduce the generic portion by its power. Exile the card when it leaves the stack.",
+      "references": [
+        "comprehensive#702.180"
+      ],
+      "rule": "702.180"
+    },
+    {
+      "id": "harness",
+      "term": "Harness",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Give the permanent the 'harnessed' marker, which unlocks bonus text elsewhere on the card, such as the ∞ keyword ability.",
+      "references": [
+        "comprehensive#701.64"
+      ],
+      "rule": "701.64"
+    },
+    {
+      "id": "haste",
+      "term": "Haste",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Ignores summoning sickness: the creature can attack and use abilities with the tap or untap symbol without waiting for your next turn.",
+      "references": [
+        "keywords"
+      ],
+      "rule": "702.10"
+    },
+    {
+      "id": "haunt",
+      "term": "Haunt",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "When it dies (or resolves, for a spell), it exiles itself 'haunting' a target creature, letting its ability trigger again from exile.",
+      "references": [
+        "comprehensive#702.55"
+      ],
+      "rule": "702.55"
+    },
+    {
+      "id": "heal",
+      "term": "Heal",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Remove damage that has already been marked on a permanent, as if it had never been dealt.",
+      "references": [
+        "comprehensive#701.69"
+      ],
+      "rule": "701.69"
+    },
+    {
+      "id": "hexproof",
+      "term": "Hexproof",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Can't be targeted by spells or abilities your opponents control.",
+      "references": [
+        "keywords"
+      ],
+      "rule": "702.11"
+    },
+    {
+      "id": "hidden-agenda",
+      "term": "Hidden Agenda",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "As it enters the command zone face down, secretly write down a card name that other abilities on it can reference.",
+      "references": [
+        "comprehensive#702.106"
+      ],
+      "rule": "702.106"
+    },
+    {
+      "id": "hideaway",
+      "term": "Hideaway",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "When this enters, look at the top N cards of your library, exile one face down and put the rest on the bottom in a random order. Separate card text determines how the hidden card can be used.",
+      "references": [
+        "comprehensive#702.75"
+      ],
+      "rule": "702.75"
+    },
+    {
+      "id": "horsemanship",
+      "term": "Horsemanship",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Can be blocked only by other creatures that also have horsemanship.",
+      "references": [
+        "comprehensive#702.31"
+      ],
+      "rule": "702.31"
+    },
+    {
+      "id": "impending",
+      "term": "Impending",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Cast for the impending cost with N time counters. If cast that way, it is not a creature while it has time counters; remove one at the beginning of your end step.",
+      "references": [
+        "comprehensive#702.176"
+      ],
+      "rule": "702.176"
+    },
+    {
+      "id": "improvise",
+      "term": "Improvise",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Tap untapped artifacts you control to help pay the generic mana in this spell's cost.",
+      "references": [
+        "comprehensive#702.126"
+      ],
+      "rule": "702.126"
+    },
+    {
+      "id": "increment",
+      "term": "Increment",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Whenever you cast a spell, if the actual mana spent is greater than this creature’s power or toughness, put a +1/+1 counter on it. Mana spent, not printed mana value, is what matters.",
+      "references": [
+        "comprehensive#702.191"
+      ],
+      "rule": "702.191"
+    },
+    {
+      "id": "incubate",
+      "term": "Incubate",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Create an Incubator token with N +1/+1 counters. Its {2} ability transforms it from an artifact into a 0/0 Phyrexian artifact creature; the counters remain.",
+      "references": [
+        "comprehensive#701.53"
+      ],
+      "rule": "701.53"
+    },
+    {
+      "id": "indestructible",
+      "term": "Indestructible",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Can't be destroyed by damage or by effects that say 'destroy'; other effects (like toughness dropping to 0) can still remove it.",
+      "references": [
+        "keywords"
+      ],
+      "rule": "702.12"
+    },
+    {
+      "id": "infect",
+      "term": "Infect",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Damage it deals to players becomes poison counters, and damage to creatures becomes -1/-1 counters.",
+      "references": [
+        "comprehensive#702.90"
+      ],
+      "rule": "702.90"
+    },
+    {
+      "id": "ingest",
+      "term": "Ingest",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Whenever it deals combat damage to a player, that player exiles the top card of their library.",
+      "references": [
+        "comprehensive#702.115"
+      ],
+      "rule": "702.115"
+    },
+    {
+      "id": "instant",
+      "term": "Instant",
+      "category": "card-type",
+      "aliases": [
+        "instants"
+      ],
+      "definition": "A spell type normally cast whenever you have priority, including during an opponent’s turn. It normally goes to the graveyard after resolving.",
+      "references": [
+        "comprehensive#304"
+      ]
+    },
+    {
+      "id": "intimidate",
+      "term": "Intimidate",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Can be blocked only by artifact creatures and by creatures that share a color with it.",
+      "references": [
+        "comprehensive#702.13"
+      ],
+      "rule": "702.13"
+    },
+    {
+      "id": "investigate",
+      "term": "Investigate",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Create a Clue artifact token that can later be sacrificed, with mana, to draw a card.",
+      "references": [
+        "comprehensive#701.16"
+      ],
+      "rule": "701.16"
+    },
+    {
+      "id": "job-select",
+      "term": "Job Select",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "When this Equipment enters, create a 1/1 colorless Hero creature token and attach this Equipment to it.",
+      "references": [
+        "comprehensive#702.182"
+      ],
+      "rule": "702.182"
+    },
+    {
+      "id": "jump-start",
+      "term": "Jump-Start",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Cast an instant or sorcery from your graveyard by discarding a card as an extra cost; it's exiled afterward.",
+      "references": [
+        "comprehensive#702.133"
+      ],
+      "rule": "702.133"
+    },
+    {
+      "id": "keyword",
+      "term": "Keyword",
+      "category": "concept",
+      "aliases": [
+        "keywords"
+      ],
+      "definition": "A named rules shortcut, such as flying or vigilance. Keyword actions such as proliferate describe an action; ability words are labels without rules meaning of their own.",
+      "references": [
+        "comprehensive#702",
+        "comprehensive#701"
+      ]
+    },
+    {
+      "id": "kicker",
+      "term": "Kicker",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "You may pay an additional cost as you cast it to unlock an extra effect defined on the card.",
+      "references": [
+        "comprehensive#702.33"
+      ],
+      "rule": "702.33"
+    },
+    {
+      "id": "kindred",
+      "term": "Kindred",
+      "category": "card-type",
+      "aliases": [
+        "tribal"
+      ],
+      "definition": "A card type that lets a noncreature card have creature subtypes. Older cards printed as Tribal use Kindred in current Oracle text.",
+      "rule": "308",
+      "references": [
+        "comprehensive#308"
+      ]
+    },
+    {
+      "id": "land",
+      "term": "Land",
+      "category": "card-type",
+      "aliases": [
+        "lands"
+      ],
+      "definition": "A permanent normally played during your main phase with an empty stack, once each turn. Playing a land is not casting a spell.",
+      "references": [
+        "comprehensive#305"
+      ]
+    },
+    {
+      "id": "landwalk",
+      "term": "Landwalk",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Can't be blocked as long as the defending player controls a land of the specified type, such as an Island for islandwalk.",
+      "references": [
+        "comprehensive#702.14"
+      ],
+      "rule": "702.14"
+    },
+    {
+      "id": "learn",
+      "term": "Learn",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "You may discard a card and draw a card. If you do not discard, you may reveal a Lesson you own from outside the game and put it into your hand. Standard Commander does not allow the outside-the-game option.",
+      "references": [
+        "comprehensive#701.48"
+      ],
+      "rule": "701.48"
+    },
+    {
+      "id": "legendary",
+      "term": "Legendary",
+      "category": "supertype",
+      "aliases": [],
+      "definition": "A supertype subject to the legend rule: if you control two or more legendary permanents with the same name, normally choose one and put the rest into their owners’ graveyards.",
+      "references": [
+        "comprehensive#704.5j"
+      ]
+    },
+    {
+      "id": "level-up",
+      "term": "Level Up",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Pay a cost, sorcery speed only, to add a level counter; higher printed level thresholds unlock improved stats and abilities.",
+      "references": [
+        "comprehensive#702.87"
+      ],
+      "rule": "702.87"
+    },
+    {
+      "id": "library",
+      "term": "Library",
+      "category": "zone",
+      "aliases": [],
+      "definition": "A player’s deck during the game, normally face down. Drawing normally takes its top card into that player’s hand.",
+      "rule": "401",
+      "references": [
+        "comprehensive#401"
+      ]
+    },
+    {
+      "id": "lifelink",
+      "term": "Lifelink",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Damage dealt by this source also gains its controller that much life, at the same time. This is not a triggered ability.",
+      "references": [
+        "keywords",
+        "comprehensive#702.15"
+      ],
+      "rule": "702.15"
+    },
+    {
+      "id": "living-metal",
+      "term": "Living Metal",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "During your turn, this Vehicle is also an artifact creature, letting it attack and block without needing to be crewed.",
+      "references": [
+        "comprehensive#702.161"
+      ],
+      "rule": "702.161"
+    },
+    {
+      "id": "living-weapon",
+      "term": "Living Weapon",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "When this Equipment enters, it creates a 0/0 Germ token and immediately attaches itself to it.",
+      "references": [
+        "comprehensive#702.92"
+      ],
+      "rule": "702.92"
+    },
+    {
+      "id": "loyalty-counter",
+      "term": "Loyalty counter",
+      "category": "counter",
+      "aliases": [],
+      "definition": "A counter on a planeswalker tracking loyalty. Adding or removing these counters is commonly a cost of a loyalty ability.",
+      "rule": "122.1b",
+      "references": [
+        "comprehensive#122.1b"
+      ]
+    },
+    {
+      "id": "madness",
+      "term": "Madness",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "If a card with madness would be discarded, it's exiled instead, and you may cast it for its madness cost or it goes to the graveyard.",
+      "references": [
+        "comprehensive#702.35"
+      ],
+      "rule": "702.35"
+    },
+    {
+      "id": "main-phase",
+      "term": "Main phase",
+      "category": "turn-step",
+      "aliases": [],
+      "definition": "One of the phases before and after combat. Sorcery timing normally requires your main phase, an empty stack and priority.",
+      "rule": "505",
+      "references": [
+        "comprehensive#505"
+      ]
+    },
+    {
+      "id": "mana",
+      "term": "Mana",
+      "category": "resource",
+      "aliases": [],
+      "definition": "A resource used to pay costs, such as casting spells and activating abilities. Mana can be white, blue, black, red, green or colorless. A land is a card that may produce mana; the land itself is not mana.",
+      "rule": "106.1",
+      "references": [
+        "comprehensive#106.1"
+      ]
+    },
+    {
+      "id": "mana-ability",
+      "term": "Mana ability",
+      "category": "ability-type",
+      "aliases": [],
+      "definition": "An eligible activated or triggered ability that can produce mana and meets the special mana-ability criteria. Such abilities normally resolve immediately rather than using the stack.",
+      "rule": "605",
+      "references": [
+        "comprehensive#605"
+      ]
+    },
+    {
+      "id": "mana-cost",
+      "term": "Mana cost",
+      "category": "characteristic",
+      "aliases": [],
+      "definition": "The symbols printed in a card’s cost. Colored symbols require that color; a numeral is generic mana payable with any type. The total cost can change when casting.",
+      "references": [
+        "comprehensive#202",
+        "comprehensive#107.4"
+      ]
+    },
+    {
+      "id": "mana-value",
+      "term": "Mana value",
+      "category": "characteristic",
+      "aliases": [],
+      "definition": "The numeric total of a mana cost, regardless of color. X is normally zero off the stack and its chosen value on the stack. Discounts and extra costs do not change mana value.",
+      "rule": "202.3",
+      "references": [
+        "comprehensive#202.3"
+      ]
+    },
+    {
+      "id": "manifest",
+      "term": "Manifest",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Put a card onto the battlefield face down as a 2/2 creature with no name, text, subtypes or mana cost. If it is a creature card with a mana cost, you may pay that cost to turn it face up when you have priority.",
+      "references": [
+        "comprehensive#701.40"
+      ],
+      "rule": "701.40"
+    },
+    {
+      "id": "manifest-dread",
+      "term": "Manifest Dread",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Look at the top two cards of your library, manifest one of them face down as a 2/2, and put the other into your graveyard.",
+      "references": [
+        "comprehensive#701.62"
+      ],
+      "rule": "701.62"
+    },
+    {
+      "id": "max-speed",
+      "term": "Max Speed",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Grants an extra ability once your Speed (from Start Your Engines!) reaches its cap of 4.",
+      "references": [
+        "comprehensive#702.178"
+      ],
+      "rule": "702.178"
+    },
+    {
+      "id": "mayhem",
+      "term": "Mayhem",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Lets you cast it from your graveyard, often for a discount, only during the same turn you discarded it.",
+      "references": [
+        "comprehensive#702.187"
+      ],
+      "rule": "702.187"
+    },
+    {
+      "id": "meld",
+      "term": "Meld",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Put two cards that form a designated meld pair onto the battlefield together, back faces up, forming a single combined permanent.",
+      "references": [
+        "comprehensive#701.42"
+      ],
+      "rule": "701.42"
+    },
+    {
+      "id": "melee",
+      "term": "Melee",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Whenever it attacks, it gets +1/+1 until end of turn for each opponent you attacked with a creature this combat.",
+      "references": [
+        "comprehensive#702.121"
+      ],
+      "rule": "702.121"
+    },
+    {
+      "id": "menace",
+      "term": "Menace",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Can't be blocked except by two or more creatures.",
+      "references": [
+        "comprehensive#702.111"
+      ],
+      "rule": "702.111"
+    },
+    {
+      "id": "mentor",
+      "term": "Mentor",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Whenever it attacks, put a +1/+1 counter on a different attacking creature with lower power.",
+      "references": [
+        "comprehensive#702.134"
+      ],
+      "rule": "702.134"
+    },
+    {
+      "id": "mill",
+      "term": "Mill",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Put the top N cards of the specified player’s library into their graveyard. Those cards are normally revealed by entering that public zone.",
+      "references": [
+        "comprehensive#701.17"
+      ],
+      "rule": "701.17"
+    },
+    {
+      "id": "miracle",
+      "term": "Miracle",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "If it's the very first card you draw in a turn, you may reveal it to cast it for a reduced cost.",
+      "references": [
+        "comprehensive#702.94"
+      ],
+      "rule": "702.94"
+    },
+    {
+      "id": "mobilize",
+      "term": "Mobilize",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "When this attacks, create N tapped-and-attacking 1/1 red Warrior tokens. Sacrifice them at the next end step.",
+      "references": [
+        "comprehensive#702.181"
+      ],
+      "rule": "702.181"
+    },
+    {
+      "id": "mode",
+      "term": "Mode",
+      "category": "concept",
+      "aliases": [
+        "modes"
+      ],
+      "definition": "One selectable option of a modal spell or ability. The instructions specify how many options to choose and whether an option can be chosen again.",
+      "references": [
+        "comprehensive#700.2"
+      ]
+    },
+    {
+      "id": "modular",
+      "term": "Modular",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Enters with N +1/+1 counters. When it dies, you may put that many +1/+1 counters on a target artifact creature, using the number it had just before dying.",
+      "references": [
+        "comprehensive#702.43"
+      ],
+      "rule": "702.43"
+    },
+    {
+      "id": "monstrosity",
+      "term": "Monstrosity",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "If the permanent isn't already monstrous, put N +1/+1 counters on it and flag it as 'monstrous,' a marker other text can check for.",
+      "references": [
+        "comprehensive#701.37"
+      ],
+      "rule": "701.37"
+    },
+    {
+      "id": "more-than-meets-the-eye",
+      "term": "More Than Meets the Eye",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Cast it already transformed, by paying this alternate cost instead of its mana cost.",
+      "references": [
+        "comprehensive#702.162"
+      ],
+      "rule": "702.162"
+    },
+    {
+      "id": "morph",
+      "term": "Morph",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Can be cast face down as a vanilla 2/2 for {3}, then turned face up later by paying its morph cost.",
+      "references": [
+        "comprehensive#702.37"
+      ],
+      "rule": "702.37"
+    },
+    {
+      "id": "mutate",
+      "term": "Mutate",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Cast for an alternate cost to merge with a target non-Human creature you own instead of entering separately, combining into one permanent with every ability of both.",
+      "references": [
+        "comprehensive#702.140"
+      ],
+      "rule": "702.140"
+    },
+    {
+      "id": "myriad",
+      "term": "Myriad",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "When this attacks, for each opponent other than the defending player you may make a tapped-and-attacking token copy attacking that opponent or a planeswalker they control. Exile those tokens at end of combat.",
+      "references": [
+        "comprehensive#702.116"
+      ],
+      "rule": "702.116"
+    },
+    {
+      "id": "ninjutsu",
+      "term": "Ninjutsu",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Pay its ninjutsu cost and return an unblocked attacker you control to its owner’s hand to put this card from your hand onto the battlefield tapped and attacking. It does not trigger attack abilities.",
+      "references": [
+        "comprehensive#702.49"
+      ],
+      "rule": "702.49"
+    },
+    {
+      "id": "offering",
+      "term": "Offering",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "You may sacrifice a permanent of the stated type to reduce this spell's cost and cast it any time you could cast an instant.",
+      "references": [
+        "comprehensive#702.48"
+      ],
+      "rule": "702.48"
+    },
+    {
+      "id": "offspring",
+      "term": "Offspring",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Pay an additional cost as you cast it; if you do, it creates a 1/1 token copy of itself when it enters.",
+      "references": [
+        "comprehensive#702.175"
+      ],
+      "rule": "702.175"
+    },
+    {
+      "id": "open-an-attraction",
+      "term": "Open an Attraction",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Move the top card of your Attraction deck onto the battlefield face up under your control.",
+      "references": [
+        "comprehensive#701.51"
+      ],
+      "rule": "701.51"
+    },
+    {
+      "id": "outlast",
+      "term": "Outlast",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Pay a cost and tap it, only as a sorcery, to put a +1/+1 counter on it.",
+      "references": [
+        "comprehensive#702.107"
+      ],
+      "rule": "702.107"
+    },
+    {
+      "id": "overload",
+      "term": "Overload",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Pay an alternative cost to change the spell's wording from 'target' to 'each,' letting it affect every legal object instead of just one.",
+      "references": [
+        "comprehensive#702.96"
+      ],
+      "rule": "702.96"
+    },
+    {
+      "id": "owner",
+      "term": "Owner",
+      "category": "concept",
+      "aliases": [],
+      "definition": "For a card, normally the player who began the game with it in their deck. Gaining control does not change ownership.",
+      "rule": "108.3",
+      "references": [
+        "comprehensive#108.3"
+      ]
+    },
+    {
+      "id": "paradigm",
+      "term": "Paradigm",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "The first resolution of a spell you control with this name creates a repeating trigger for your precombat main phases. It creates an exiled copy you may cast without paying its mana cost. The original spell is exiled.",
+      "references": [
+        "comprehensive#702.192"
+      ],
+      "rule": "702.192"
+    },
+    {
+      "id": "partner",
+      "term": "Partner",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Two legendary creatures with partner may both be commanders. Named partners, Friends forever, Choose a Background and other partner variants have their own pairing restrictions; they are not all interchangeable.",
+      "references": [
+        "comprehensive#702.124"
+      ],
+      "rule": "702.124"
+    },
+    {
+      "id": "permanent",
+      "term": "Permanent",
+      "category": "concept",
+      "aliases": [
+        "permanents"
+      ],
+      "definition": "A card or token on the battlefield. A creature spell waiting on the stack is not yet a permanent.",
+      "references": [
+        "comprehensive#110"
+      ]
+    },
+    {
+      "id": "persist",
+      "term": "Persist",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "When it dies with no -1/-1 counters on it, it returns to the battlefield with one -1/-1 counter.",
+      "references": [
+        "comprehensive#702.79"
+      ],
+      "rule": "702.79"
+    },
+    {
+      "id": "phasing",
+      "term": "Phasing",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "During your untap step, your phased-in permanents with phasing phase out and your phased-out permanents phase in. Phased-out objects are treated as absent; this is not leaving and reentering the battlefield.",
+      "references": [
+        "comprehensive#702.26"
+      ],
+      "rule": "702.26"
+    },
+    {
+      "id": "planeswalk",
+      "term": "Planeswalk",
+      "category": "variant-action",
+      "aliases": [],
+      "definition": "In Planechase, replace the current face-up plane or phenomenon with the next card from the planar deck. This action is separate from planeswalker cards.",
+      "rule": "701.31",
+      "references": [
+        "comprehensive#701.31"
+      ]
+    },
+    {
+      "id": "planeswalker",
+      "term": "Planeswalker",
+      "category": "card-type",
+      "aliases": [
+        "planeswalkers"
+      ],
+      "definition": "A permanent with loyalty counters and abilities that often add or remove loyalty. It can be attacked; it is not a creature unless an effect makes it one.",
+      "references": [
+        "comprehensive#306"
+      ]
+    },
+    {
+      "id": "play",
+      "term": "Play",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "The umbrella term covering both casting a spell and playing a land, whichever is appropriate to the card.",
+      "references": [
+        "comprehensive#701.18"
+      ],
+      "rule": "701.18"
+    },
+    {
+      "id": "plot",
+      "term": "Plot",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "As a sorcery, pay this card’s plot cost to exile it from your hand. On a later turn, you may cast it without paying its mana cost, but only at sorcery timing.",
+      "references": [
+        "comprehensive#702.170"
+      ],
+      "rule": "702.170"
+    },
+    {
+      "id": "poison-counter",
+      "term": "Poison counter",
+      "category": "counter",
+      "aliases": [
+        "poison counters"
+      ],
+      "definition": "A counter on a player. In standard Commander, ten poison counters cause that player to lose; starting at 40 life does not change that threshold.",
+      "rule": "104.3d",
+      "references": [
+        "comprehensive#104.3d"
+      ]
+    },
+    {
+      "id": "poisonous",
+      "term": "Poisonous",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Whenever it deals combat damage to a player, that player also gets N poison counters.",
+      "references": [
+        "comprehensive#702.70"
+      ],
+      "rule": "702.70"
+    },
+    {
+      "id": "populate",
+      "term": "Populate",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Create a token that's an exact copy of a creature token you already control.",
+      "references": [
+        "comprehensive#701.36"
+      ],
+      "rule": "701.36"
+    },
+    {
+      "id": "power-toughness",
+      "term": "Power / Toughness",
+      "category": "characteristic",
+      "aliases": [],
+      "definition": "The first number is power: how much combat damage a creature normally deals. The second is toughness: damage equal to that amount is normally lethal.",
+      "references": [
+        "comprehensive#208"
+      ]
+    },
+    {
+      "id": "power-up",
+      "term": "Power-up",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "An activated ability, usable only once, that costs less if the permanent entered the battlefield this turn.",
+      "references": [
+        "comprehensive#702.193"
+      ],
+      "rule": "702.193"
+    },
+    {
+      "id": "priority",
+      "term": "Priority",
+      "category": "timing",
+      "aliases": [],
+      "definition": "Permission to cast a spell, activate an ability or take a special action. Players receive priority in turn order; the stack resolves one object after everyone passes in succession.",
+      "rule": "117",
+      "references": [
+        "comprehensive#117"
+      ]
+    },
+    {
+      "id": "proliferate",
+      "term": "Proliferate",
+      "category": "keyword-action",
+      "aliases": [
+        "proliferating"
+      ],
+      "definition": "Choose any number of permanents and/or players that already have at least one counter, and give each of them one additional counter of every kind they already have.",
+      "references": [
+        "proliferate"
+      ],
+      "rule": "701.34"
+    },
+    {
+      "id": "protection",
+      "term": "Protection",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Protection from a quality prevents damage from matching sources, targeting by matching spells or abilities, and the relevant enchanting, equipping, fortifying and blocking. It does not stop untargeted destruction or sacrifice.",
+      "references": [
+        "comprehensive#702.16"
+      ],
+      "rule": "702.16"
+    },
+    {
+      "id": "prototype",
+      "term": "Prototype",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Lets you cast it using a secondary, smaller printed power/toughness and mana cost instead of its normal ones.",
+      "references": [
+        "comprehensive#702.160"
+      ],
+      "rule": "702.160"
+    },
+    {
+      "id": "provoke",
+      "term": "Provoke",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "When it attacks, you may force a chosen creature to block it, untapping that creature if needed.",
+      "references": [
+        "comprehensive#702.39"
+      ],
+      "rule": "702.39"
+    },
+    {
+      "id": "prowess",
+      "term": "Prowess",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.",
+      "references": [
+        "comprehensive#702.108"
+      ],
+      "rule": "702.108"
+    },
+    {
+      "id": "prowl",
+      "term": "Prowl",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Cast for a reduced cost if a creature of the listed type you controlled dealt combat damage to a player this turn.",
+      "references": [
+        "comprehensive#702.76"
+      ],
+      "rule": "702.76"
+    },
+    {
+      "id": "ramp",
+      "term": "Ramp",
+      "category": "concept",
+      "aliases": [],
+      "definition": "Community shorthand -- not an official rules term -- for effects that let you play extra lands or otherwise generate more mana than your current turn would normally allow.",
+      "references": [
+        "comprehensive"
+      ]
+    },
+    {
+      "id": "rampage",
+      "term": "Rampage",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Whenever it becomes blocked, it gets +N/+N until end of turn for each blocker beyond the first.",
+      "references": [
+        "comprehensive#702.23"
+      ],
+      "rule": "702.23"
+    },
+    {
+      "id": "ravenous",
+      "term": "Ravenous",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Enters with X +1/+1 counters, matching the X paid in its cost, and draws you a card if X was 5 or more.",
+      "references": [
+        "comprehensive#702.156"
+      ],
+      "rule": "702.156"
+    },
+    {
+      "id": "reach",
+      "term": "Reach",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Lets a creature block creatures with flying, in addition to blocking normally.",
+      "references": [
+        "keywords"
+      ],
+      "rule": "702.17"
+    },
+    {
+      "id": "read-ahead",
+      "term": "Read Ahead",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Choose a chapter as this Saga enters and start with that many lore counters. During that turn, only a chapter exactly matching its current lore-counter count can trigger; skipped chapters do not trigger.",
+      "references": [
+        "comprehensive#702.155"
+      ],
+      "rule": "702.155"
+    },
+    {
+      "id": "rebound",
+      "term": "Rebound",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "If you cast this spell from your hand, exile it as it resolves instead of putting it into the graveyard. At your next upkeep, you may cast it from exile without paying its mana cost.",
+      "references": [
+        "comprehensive#702.88"
+      ],
+      "rule": "702.88"
+    },
+    {
+      "id": "reconfigure",
+      "term": "Reconfigure",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "As a sorcery, pay the cost to attach this Equipment to a target creature you control or unattach it. While attached, it stops being a creature.",
+      "references": [
+        "comprehensive#702.151"
+      ],
+      "rule": "702.151"
+    },
+    {
+      "id": "recover",
+      "term": "Recover",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "When a creature you control dies, you may pay its cost to return this card to your hand instead of letting it be exiled.",
+      "references": [
+        "comprehensive#702.59"
+      ],
+      "rule": "702.59"
+    },
+    {
+      "id": "recruit",
+      "term": "Recruit",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Draw a card, then discard a card; if the discarded card was a nonland, create a 1/1 white Human Soldier token.",
+      "references": [
+        "comprehensive#701.70"
+      ],
+      "rule": "701.70"
+    },
+    {
+      "id": "regenerate",
+      "term": "Regenerate",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Replaces destruction: remove marked damage, tap the permanent, and remove it from combat. A regeneration shield normally lasts until used or the turn ends.",
+      "references": [
+        "comprehensive#701.19"
+      ],
+      "rule": "701.19"
+    },
+    {
+      "id": "reinforce",
+      "term": "Reinforce",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Discard it from your hand, paying its cost, to put +1/+1 counters on a target creature.",
+      "references": [
+        "comprehensive#702.77"
+      ],
+      "rule": "702.77"
+    },
+    {
+      "id": "renown",
+      "term": "Renown",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "When this deals combat damage to a player, if it is not renowned, put N +1/+1 counters on it and it becomes renowned. Losing those counters does not remove the designation.",
+      "references": [
+        "comprehensive#702.112"
+      ],
+      "rule": "702.112"
+    },
+    {
+      "id": "replacement-effect",
+      "term": "Replacement effect",
+      "category": "effect",
+      "aliases": [],
+      "definition": "An effect that changes an event before it happens, often signaled by instead or as. It does not use the stack as a response to that event.",
+      "rule": "614",
+      "references": [
+        "comprehensive#614"
+      ]
+    },
+    {
+      "id": "replicate",
+      "term": "Replicate",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Pay its cost additional times as you cast it to get that many extra copies.",
+      "references": [
+        "comprehensive#702.56"
+      ],
+      "rule": "702.56"
+    },
+    {
+      "id": "resolve",
+      "term": "Resolve",
+      "category": "timing",
+      "aliases": [
+        "resolves",
+        "resolving"
+      ],
+      "definition": "Carry out the instructions of a spell or ability on the stack. Players normally cannot act between its instructions.",
+      "rule": "608",
+      "references": [
+        "comprehensive#608"
+      ]
+    },
+    {
+      "id": "retrace",
+      "term": "Retrace",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "You may cast it from your graveyard by discarding a land card as an additional cost.",
+      "references": [
+        "comprehensive#702.81"
+      ],
+      "rule": "702.81"
+    },
+    {
+      "id": "reveal",
+      "term": "Reveal",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Show a card to all players for as long as the effect requires, without it changing zones.",
+      "references": [
+        "comprehensive#701.20"
+      ],
+      "rule": "701.20"
+    },
+    {
+      "id": "riot",
+      "term": "Riot",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "As it enters, choose either an extra +1/+1 counter or haste.",
+      "references": [
+        "comprehensive#702.136"
+      ],
+      "rule": "702.136"
+    },
+    {
+      "id": "ripple",
+      "term": "Ripple",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "When cast, you may reveal the top N cards of your library, cast any revealed cards with the same name without paying their mana costs, then put the others on the bottom in any order.",
+      "references": [
+        "comprehensive#702.60"
+      ],
+      "rule": "702.60"
+    },
+    {
+      "id": "roll-to-visit-your-attractions",
+      "term": "Roll to Visit Your Attractions",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Roll a six-sided die; every Attraction you control with that number lit up has its visit ability trigger.",
+      "references": [
+        "comprehensive#701.52"
+      ],
+      "rule": "701.52"
+    },
+    {
+      "id": "sacrifice",
+      "term": "Sacrifice",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Move a permanent you control directly to its owner's graveyard; because this isn't destruction, indestructible and regeneration don't stop it.",
+      "references": [
+        "comprehensive#701.21"
+      ],
+      "rule": "701.21"
+    },
+    {
+      "id": "sacrifice-outlet",
+      "term": "Sacrifice outlet",
+      "category": "strategy",
+      "aliases": [],
+      "definition": "Community shorthand for a card that lets you sacrifice your own permanents, often as a repeatable cost.",
+      "rule": "701.21",
+      "references": [
+        "comprehensive#701.21"
+      ]
+    },
+    {
+      "id": "saddle",
+      "term": "Saddle",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "As a sorcery, tap other untapped creatures you control with total power at least N to make this permanent saddled for the turn. Separate abilities give the benefit.",
+      "references": [
+        "comprehensive#702.171"
+      ],
+      "rule": "702.171"
+    },
+    {
+      "id": "scavenge",
+      "term": "Scavenge",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Pay the cost and exile this card from your graveyard to put +1/+1 counters equal to its power on a target creature. Activate only as a sorcery.",
+      "references": [
+        "comprehensive#702.97"
+      ],
+      "rule": "702.97"
+    },
+    {
+      "id": "scry",
+      "term": "Scry",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Look at the top N cards of your library, then put each one on the bottom or back on top, in any order you choose.",
+      "references": [
+        "comprehensive#701.22"
+      ],
+      "rule": "701.22"
+    },
+    {
+      "id": "search",
+      "term": "Search",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Look through every card in a zone -- including hidden ones like a library -- to find a card matching a description.",
+      "references": [
+        "comprehensive#701.23"
+      ],
+      "rule": "701.23"
+    },
+    {
+      "id": "set-in-motion",
+      "term": "Set in Motion",
+      "category": "variant-action",
+      "aliases": [],
+      "definition": "In Archenemy, reveal or turn face up a scheme as instructed to set it in motion. The scheme’s corresponding ability then triggers.",
+      "rule": "701.32",
+      "references": [
+        "comprehensive#701.32"
+      ]
+    },
+    {
+      "id": "shadow",
+      "term": "Shadow",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Can only block, or be blocked by, other creatures that also have shadow.",
+      "references": [
+        "comprehensive#702.28"
+      ],
+      "rule": "702.28"
+    },
+    {
+      "id": "shroud",
+      "term": "Shroud",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Can't be targeted by any spell or ability, even a helpful one you control.",
+      "references": [
+        "comprehensive#702.18"
+      ],
+      "rule": "702.18"
+    },
+    {
+      "id": "shuffle",
+      "term": "Shuffle",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Randomize the order of a library or a face-down pile of cards so no player knows their order.",
+      "references": [
+        "comprehensive#701.24"
+      ],
+      "rule": "701.24"
+    },
+    {
+      "id": "singleton-deck-construction",
+      "term": "Singleton Deck Construction",
+      "category": "concept",
+      "aliases": [
+        "singleton"
+      ],
+      "definition": "Commander normally permits one card per English name, except basic lands and cards with explicit deck-construction exceptions. The deck totals 100 including its commander configuration.",
+      "references": [
+        "comprehensive#903.5"
+      ]
+    },
+    {
+      "id": "skulk",
+      "term": "Skulk",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Can't be blocked by creatures with greater power than it.",
+      "references": [
+        "comprehensive#702.118"
+      ],
+      "rule": "702.118"
+    },
+    {
+      "id": "sneak",
+      "term": "Sneak",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "During the declare blockers step, cast it for an alternate cost by returning an unblocked attacker to hand; it enters tapped and attacking in that creature's place.",
+      "references": [
+        "comprehensive#702.190"
+      ],
+      "rule": "702.190"
+    },
+    {
+      "id": "snow",
+      "term": "Snow",
+      "category": "supertype",
+      "aliases": [],
+      "definition": "A supertype used by some cards and costs. A snow cost requires mana produced by a snow source; snow is not a mana color.",
+      "rule": "107.4h",
+      "references": [
+        "comprehensive#107.4h"
+      ]
+    },
+    {
+      "id": "solved",
+      "term": "Solved",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Ability text on a Case card that only takes effect once that Case has been solved.",
+      "references": [
+        "comprehensive#702.169"
+      ],
+      "rule": "702.169"
+    },
+    {
+      "id": "sorcery",
+      "term": "Sorcery",
+      "category": "card-type",
+      "aliases": [
+        "sorceries"
+      ],
+      "definition": "A spell type normally cast during your main phase with an empty stack and priority. It normally goes to the graveyard after resolving.",
+      "references": [
+        "comprehensive#307"
+      ]
+    },
+    {
+      "id": "soulbond",
+      "term": "Soulbond",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Pairs with another unpaired creature you control, so a bonus defined elsewhere on the card applies while both remain paired.",
+      "references": [
+        "comprehensive#702.95"
+      ],
+      "rule": "702.95"
+    },
+    {
+      "id": "soulshift",
+      "term": "Soulshift",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "When it dies, you may return a Spirit card with mana value N or less from your graveyard to your hand.",
+      "references": [
+        "comprehensive#702.46"
+      ],
+      "rule": "702.46"
+    },
+    {
+      "id": "space-sculptor",
+      "term": "Space Sculptor",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "A one-card mechanic that assigns every relevant creature to one of three sectors, so other abilities can target by sector.",
+      "references": [
+        "comprehensive#702.158"
+      ],
+      "rule": "702.158"
+    },
+    {
+      "id": "spectacle",
+      "term": "Spectacle",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Cast for a reduced cost if an opponent already lost life this turn.",
+      "references": [
+        "comprehensive#702.137"
+      ],
+      "rule": "702.137"
+    },
+    {
+      "id": "spell",
+      "term": "Spell",
+      "category": "concept",
+      "aliases": [],
+      "definition": "A card or spell copy on the stack. A creature on the battlefield is a permanent rather than a creature spell.",
+      "rule": "112",
+      "references": [
+        "comprehensive#112"
+      ]
+    },
+    {
+      "id": "splice",
+      "term": "Splice",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "From your hand, reveal it as you cast a matching spell to add its rules text to that spell, paying its splice cost as you do.",
+      "references": [
+        "comprehensive#702.47"
+      ],
+      "rule": "702.47"
+    },
+    {
+      "id": "split-second",
+      "term": "Split Second",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "While this spell is on the stack, players cannot cast spells or activate non-mana abilities. Triggered abilities, mana abilities and special actions can still happen.",
+      "references": [
+        "comprehensive#702.61"
+      ],
+      "rule": "702.61"
+    },
+    {
+      "id": "spree",
+      "term": "Spree",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Choose one or more modes on a spell, each with its own additional cost that you pay as part of casting it.",
+      "references": [
+        "comprehensive#702.172"
+      ],
+      "rule": "702.172"
+    },
+    {
+      "id": "squad",
+      "term": "Squad",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Pay its cost extra times as you cast it; when it enters, create a token copy of it for each extra payment.",
+      "references": [
+        "comprehensive#702.157"
+      ],
+      "rule": "702.157"
+    },
+    {
+      "id": "stack",
+      "term": "Stack",
+      "category": "zone",
+      "aliases": [],
+      "definition": "The shared zone where spells and most activated and triggered abilities wait to resolve. The last object added normally resolves first.",
+      "rule": "405",
+      "references": [
+        "comprehensive#405"
+      ]
+    },
+    {
+      "id": "start-your-engines",
+      "term": "Start Your Engines!",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "If you have no speed, this starts it at 1. Once each of your turns, when an opponent loses life, your speed can increase by 1, up to 4.",
+      "references": [
+        "comprehensive#702.179"
+      ],
+      "rule": "702.179"
+    },
+    {
+      "id": "starting-life-total-40",
+      "term": "Starting Life Total (40)",
+      "category": "concept",
+      "aliases": [],
+      "definition": "Commander players begin the game at 40 life instead of the usual 20, reflecting the format's slower, multiplayer-oriented pace.",
+      "references": [
+        "comprehensive"
+      ]
+    },
+    {
+      "id": "state-based-actions",
+      "term": "State-based actions",
+      "category": "timing",
+      "aliases": [],
+      "definition": "Automatic checks, such as destroying a lethally damaged creature or removing a token outside the battlefield. They do not use the stack.",
+      "rule": "704",
+      "references": [
+        "comprehensive#704"
+      ]
+    },
+    {
+      "id": "static-ability",
+      "term": "Static ability",
+      "category": "ability-type",
+      "aliases": [],
+      "definition": "An ability that applies continuously while relevant, rather than being activated or triggering from an event.",
+      "rule": "604",
+      "references": [
+        "comprehensive#604"
+      ]
+    },
+    {
+      "id": "station",
+      "term": "Station",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "As a sorcery, tap another untapped creature you control to put charge counters on this permanent equal to that creature’s power. Its printed thresholds determine which abilities it gains.",
+      "references": [
+        "comprehensive#702.184"
+      ],
+      "rule": "702.184"
+    },
+    {
+      "id": "storied",
+      "term": "Storied",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "If you control three or more permanents that are artifacts, Sagas, and/or legendary, you gain the permanent 'enduring story' marker that other cards can key off of.",
+      "references": [
+        "comprehensive#702.195"
+      ],
+      "rule": "702.195"
+    },
+    {
+      "id": "storm",
+      "term": "Storm",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "When cast, create a copy of it for every other spell already cast this turn.",
+      "references": [
+        "comprehensive#702.40"
+      ],
+      "rule": "702.40"
+    },
+    {
+      "id": "summoning-sickness",
+      "term": "Summoning sickness",
+      "category": "concept",
+      "aliases": [],
+      "definition": "A creature normally cannot attack or use its tap/untap-symbol abilities unless you have controlled it continuously since your most recent turn began. Haste bypasses this restriction.",
+      "references": [
+        "comprehensive#302.6"
+      ]
+    },
+    {
+      "id": "sunburst",
+      "term": "Sunburst",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Enters with one counter for each color of mana spent to cast it: +1/+1 counters if it enters as a creature, otherwise charge counters.",
+      "references": [
+        "comprehensive#702.44"
+      ],
+      "rule": "702.44"
+    },
+    {
+      "id": "support",
+      "term": "Support",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Put a +1/+1 counter on each of up to N target creatures, typically other creatures if the ability is on a permanent.",
+      "references": [
+        "comprehensive#701.41"
+      ],
+      "rule": "701.41"
+    },
+    {
+      "id": "surge",
+      "term": "Surge",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Cast for a reduced cost if you or a teammate already cast another spell earlier this turn.",
+      "references": [
+        "comprehensive#702.117"
+      ],
+      "rule": "702.117"
+    },
+    {
+      "id": "surveil",
+      "term": "Surveil",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Look at the top N cards of your library, then put each one into your graveyard or back on top, in any order you choose.",
+      "references": [
+        "comprehensive#701.25"
+      ],
+      "rule": "701.25"
+    },
+    {
+      "id": "suspect",
+      "term": "Suspect",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "A suspected creature has menace and cannot block. It remains suspected until it leaves the battlefield or an effect specifically ends the designation.",
+      "references": [
+        "comprehensive#701.60"
+      ],
+      "rule": "701.60"
+    },
+    {
+      "id": "suspend",
+      "term": "Suspend",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Rather than cast this from your hand, pay its suspend cost to exile it with time counters when you could begin casting it. Remove one at the beginning of each upkeep of yours. Removing the last counter triggers an option to cast it without paying its mana cost; additional costs still apply. A creature cast this way has haste until you lose control of it.",
+      "references": [
+        "comprehensive#702.62"
+      ],
+      "rule": "702.62"
+    },
+    {
+      "id": "tap-and-untap",
+      "term": "Tap and Untap",
+      "category": "keyword-action",
+      "aliases": [
+        "tap",
+        "tapped",
+        "untap",
+        "untapped"
+      ],
+      "definition": "Turn a permanent sideways to show it's been used (tap), or turn it back upright (untap).",
+      "references": [
+        "keywords"
+      ],
+      "rule": "701.26"
+    },
+    {
+      "id": "target",
+      "term": "Target",
+      "category": "concept",
+      "aliases": [
+        "targets",
+        "targeting"
+      ],
+      "definition": "An object or player chosen where the rules or text require a target. Targets must satisfy the stated restrictions and are checked again on resolution.",
+      "rule": "115",
+      "references": [
+        "comprehensive#115"
+      ]
+    },
+    {
+      "id": "teamwork",
+      "term": "Teamwork",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "As an extra cost to cast the spell, you may tap creatures you control with total power N or more.",
+      "references": [
+        "comprehensive#702.194"
+      ],
+      "rule": "702.194"
+    },
+    {
+      "id": "the-ring-tempts-you",
+      "term": "The Ring Tempts You",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Choose (or re-choose) a creature as your Ring-bearer; the more times this has happened in the game, the more bonus abilities your Ring emblem grants that creature.",
+      "references": [
+        "comprehensive#701.54"
+      ],
+      "rule": "701.54"
+    },
+    {
+      "id": "tiered",
+      "term": "Tiered",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Choose one mode on a modal spell and pay the extra cost tied specifically to that mode.",
+      "references": [
+        "comprehensive#702.183"
+      ],
+      "rule": "702.183"
+    },
+    {
+      "id": "time-travel",
+      "term": "Time Travel",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Add or remove a time counter from any number of your own permanents or exiled cards that already have time counters.",
+      "references": [
+        "comprehensive#701.56"
+      ],
+      "rule": "701.56"
+    },
+    {
+      "id": "tokens-general",
+      "term": "Token",
+      "category": "concept",
+      "aliases": [
+        "tokens"
+      ],
+      "definition": "A game object represented by a marker rather than a card. After leaving the battlefield, it ceases to exist at the next state-based-action check; applicable zone-change abilities can trigger.",
+      "references": [
+        "comprehensive#111.7"
+      ]
+    },
+    {
+      "id": "toxic",
+      "term": "Toxic",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Combat damage it deals to a player also gives that player poison counters equal to its toxic number.",
+      "references": [
+        "comprehensive#702.164"
+      ],
+      "rule": "702.164"
+    },
+    {
+      "id": "training",
+      "term": "Training",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Whenever it attacks alongside another attacker with greater power, put a +1/+1 counter on it.",
+      "references": [
+        "comprehensive#702.149"
+      ],
+      "rule": "702.149"
+    },
+    {
+      "id": "trample",
+      "term": "Trample",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "After assigning lethal damage to every blocker, an attacking creature may assign excess damage to the player, planeswalker or battle it is attacking. Lethal assignment need not actually destroy a blocker.",
+      "references": [
+        "comprehensive#702.19"
+      ],
+      "rule": "702.19"
+    },
+    {
+      "id": "transfigure",
+      "term": "Transfigure",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Pay the cost and sacrifice this permanent to search for a creature card with the same mana value, put it onto the battlefield and shuffle. Activate only as a sorcery.",
+      "references": [
+        "comprehensive#702.71"
+      ],
+      "rule": "702.71"
+    },
+    {
+      "id": "transform",
+      "term": "Transform",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Turn a double-faced permanent over so its other printed face is up.",
+      "references": [
+        "comprehensive#701.27"
+      ],
+      "rule": "701.27"
+    },
+    {
+      "id": "transmute",
+      "term": "Transmute",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Pay the cost and discard this card from your hand to search for a card with the same mana value, reveal it, put it into your hand and shuffle. Activate only as a sorcery.",
+      "references": [
+        "comprehensive#702.53"
+      ],
+      "rule": "702.53"
+    },
+    {
+      "id": "tribute",
+      "term": "Tribute",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "As it enters, a chosen opponent decides whether to let it enter with extra +1/+1 counters.",
+      "references": [
+        "comprehensive#702.104"
+      ],
+      "rule": "702.104"
+    },
+    {
+      "id": "triggered-ability",
+      "term": "Triggered ability",
+      "category": "ability-type",
+      "aliases": [
+        "triggered abilities",
+        "trigger",
+        "triggers"
+      ],
+      "definition": "An ability that triggers when its stated event occurs, usually identified by when, whenever or at. Most wait on the stack before resolving.",
+      "references": [
+        "comprehensive#603"
+      ]
+    },
+    {
+      "id": "triple",
+      "term": "Triple",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "The same idea as Double, but power and/or toughness become three times their current value instead of two.",
+      "references": [
+        "comprehensive#701.11"
+      ],
+      "rule": "701.11"
+    },
+    {
+      "id": "tutor",
+      "term": "Tutor",
+      "category": "concept",
+      "aliases": [],
+      "definition": "Community shorthand -- not an official rules term -- for an effect that searches your library for a named or qualifying card; the official rules word for the underlying action is Search.",
+      "references": [
+        "comprehensive"
+      ]
+    },
+    {
+      "id": "umbra-armor",
+      "term": "Umbra Armor",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "If the permanent it's attached to would be destroyed, instead its damage is removed and this Aura is destroyed.",
+      "references": [
+        "comprehensive#702.89"
+      ],
+      "rule": "702.89"
+    },
+    {
+      "id": "undaunted",
+      "term": "Undaunted",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Costs {1} less to cast for each opponent you have, which scales well in multiplayer games like Commander.",
+      "references": [
+        "comprehensive#702.125"
+      ],
+      "rule": "702.125"
+    },
+    {
+      "id": "undying",
+      "term": "Undying",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "When it dies with no +1/+1 counters on it, it returns to the battlefield with one +1/+1 counter.",
+      "references": [
+        "comprehensive#702.93"
+      ],
+      "rule": "702.93"
+    },
+    {
+      "id": "unearth",
+      "term": "Unearth",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Pay the cost from your graveyard, as a sorcery, to return this permanent with haste. Exile it at the next end step, or if it would leave the battlefield for another zone.",
+      "references": [
+        "comprehensive#702.84"
+      ],
+      "rule": "702.84"
+    },
+    {
+      "id": "unleash",
+      "term": "Unleash",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "You may have this enter with an extra +1/+1 counter. It cannot block while it has any +1/+1 counter, regardless of where that counter came from.",
+      "references": [
+        "comprehensive#702.98"
+      ],
+      "rule": "702.98"
+    },
+    {
+      "id": "upkeep",
+      "term": "Upkeep",
+      "category": "turn-step",
+      "aliases": [],
+      "definition": "The step after untap and before draw. Beginning-of-upkeep abilities trigger here, and players can act after those triggers are put on the stack.",
+      "rule": "503",
+      "references": [
+        "comprehensive#503"
+      ]
+    },
+    {
+      "id": "vanishing",
+      "term": "Vanishing",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Enters with time counters that are removed one at a time each upkeep; sacrifice it once the last one is gone.",
+      "references": [
+        "comprehensive#702.63"
+      ],
+      "rule": "702.63"
+    },
+    {
+      "id": "vehicle",
+      "term": "Vehicle",
+      "category": "subtype",
+      "aliases": [],
+      "definition": "An artifact subtype, commonly with crew. A Vehicle is not automatically a creature just because it has printed power and toughness. Crewing does not attach the creatures to it.",
+      "rule": "301.7",
+      "references": [
+        "comprehensive#301.7"
+      ]
+    },
+    {
+      "id": "venture-into-the-dungeon",
+      "term": "Venture into the Dungeon",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Move your venture marker one room deeper into your dungeon card (starting a new one if you don't have one), completing the dungeon when you reach its final room.",
+      "references": [
+        "comprehensive#701.49"
+      ],
+      "rule": "701.49"
+    },
+    {
+      "id": "vigilance",
+      "term": "Vigilance",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Attacking does not tap this creature. It still needs to be untapped to block.",
+      "references": [
+        "keywords",
+        "comprehensive#702.20"
+      ],
+      "rule": "702.20"
+    },
+    {
+      "id": "visit",
+      "term": "Visit",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "The effect an Attraction card has whenever its lit-up number matches the result of an Attraction die roll.",
+      "references": [
+        "comprehensive#702.159"
+      ],
+      "rule": "702.159"
+    },
+    {
+      "id": "vote",
+      "term": "Vote",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Starting with a specified player and going in turn order, each player picks one option from a listed set of choices to help determine the spell's outcome.",
+      "references": [
+        "comprehensive#701.38"
+      ],
+      "rule": "701.38"
+    },
+    {
+      "id": "ward",
+      "term": "Ward",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Whenever it becomes the target of an opponent's spell or ability, that spell or ability is countered unless its controller pays the stated cost.",
+      "references": [
+        "comprehensive#702.21"
+      ],
+      "rule": "702.21"
+    },
+    {
+      "id": "warp",
+      "term": "Warp",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Cast from your hand for its warp cost. Exile the resulting permanent at the next end step. Its owner may cast it on a later turn while it remains exiled, paying the applicable costs; warp does not make that later cast free.",
+      "references": [
+        "comprehensive#702.185"
+      ],
+      "rule": "702.185"
+    },
+    {
+      "id": "waterbend",
+      "term": "Waterbend",
+      "category": "keyword-action",
+      "aliases": [],
+      "definition": "Pay a cost in which you may tap untapped artifacts or creatures instead of paying its generic mana.",
+      "references": [
+        "comprehensive#701.67"
+      ],
+      "rule": "701.67"
+    },
+    {
+      "id": "web-slinging",
+      "term": "Web-slinging",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Cast for an alternate cost by also returning a tapped creature you control to its owner's hand.",
+      "references": [
+        "comprehensive#702.188"
+      ],
+      "rule": "702.188"
+    },
+    {
+      "id": "wither",
+      "term": "Wither",
+      "category": "keyword-ability",
+      "aliases": [],
+      "definition": "Damage it deals to creatures becomes that many -1/-1 counters instead of being marked as ordinary damage.",
+      "references": [
+        "comprehensive#702.80"
+      ],
+      "rule": "702.80"
+    }
+  ],
+  "effectCategoryRatings": {
+    "status": "subjective-reference-only",
+    "simulationEligible": false,
+    "rows": [
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 2
+        },
+        "values": {
+          "Effect Category": "Deal Damage",
+          "Primary Color": "Red",
+          "Dependency Score (1-10)": 2,
+          "Strength (1-10)": 6,
+          "Fun (1-10)": 6
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 3
+        },
+        "values": {
+          "Effect Category": "Prevent Damage",
+          "Primary Color": "White",
+          "Dependency Score (1-10)": 4,
+          "Strength (1-10)": 4,
+          "Fun (1-10)": 4
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 4
+        },
+        "values": {
+          "Effect Category": "Remove Damage Already Marked (Heal)",
+          "Primary Color": "White",
+          "Dependency Score (1-10)": 6,
+          "Strength (1-10)": 3,
+          "Fun (1-10)": 5
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 5
+        },
+        "values": {
+          "Effect Category": "Destroy Permanent",
+          "Primary Color": "Black",
+          "Dependency Score (1-10)": 2,
+          "Strength (1-10)": 7,
+          "Fun (1-10)": 5
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 6
+        },
+        "values": {
+          "Effect Category": "Sacrifice Permanent",
+          "Primary Color": "Black",
+          "Dependency Score (1-10)": 6,
+          "Strength (1-10)": 5,
+          "Fun (1-10)": 6
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 7
+        },
+        "values": {
+          "Effect Category": "Exile (To/From Exile Zone)",
+          "Primary Color": "White",
+          "Dependency Score (1-10)": 3,
+          "Strength (1-10)": 8,
+          "Fun (1-10)": 5
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 8
+        },
+        "values": {
+          "Effect Category": "Return Card/Permanent to Hand",
+          "Primary Color": "Blue",
+          "Dependency Score (1-10)": 4,
+          "Strength (1-10)": 5,
+          "Fun (1-10)": 4
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 9
+        },
+        "values": {
+          "Effect Category": "Return Permanent to Battlefield",
+          "Primary Color": "Multicolor",
+          "Dependency Score (1-10)": 6,
+          "Strength (1-10)": 7,
+          "Fun (1-10)": 8
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 10
+        },
+        "values": {
+          "Effect Category": "Mill (Library to Graveyard)",
+          "Primary Color": "Blue",
+          "Dependency Score (1-10)": 7,
+          "Strength (1-10)": 3,
+          "Fun (1-10)": 3
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 11
+        },
+        "values": {
+          "Effect Category": "Discard (Hand to Graveyard)",
+          "Primary Color": "Black",
+          "Dependency Score (1-10)": 5,
+          "Strength (1-10)": 4,
+          "Fun (1-10)": 3
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 12
+        },
+        "values": {
+          "Effect Category": "Draw Card(s)",
+          "Primary Color": "Blue",
+          "Dependency Score (1-10)": 2,
+          "Strength (1-10)": 7,
+          "Fun (1-10)": 9
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 13
+        },
+        "values": {
+          "Effect Category": "Search Library (Tutor)",
+          "Primary Color": "Black",
+          "Dependency Score (1-10)": 3,
+          "Strength (1-10)": 8,
+          "Fun (1-10)": 4
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 14
+        },
+        "values": {
+          "Effect Category": "Shuffle Library",
+          "Primary Color": "Colorless",
+          "Dependency Score (1-10)": 8,
+          "Strength (1-10)": 1,
+          "Fun (1-10)": 2
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 15
+        },
+        "values": {
+          "Effect Category": "Create Token",
+          "Primary Color": "White",
+          "Dependency Score (1-10)": 4,
+          "Strength (1-10)": 6,
+          "Fun (1-10)": 8
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 16
+        },
+        "values": {
+          "Effect Category": "Create Copy (Spell/Permanent)",
+          "Primary Color": "Blue",
+          "Dependency Score (1-10)": 5,
+          "Strength (1-10)": 7,
+          "Fun (1-10)": 9
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 17
+        },
+        "values": {
+          "Effect Category": "Add/Remove +1/+1 or -1/-1 Counters",
+          "Primary Color": "Green",
+          "Dependency Score (1-10)": 4,
+          "Strength (1-10)": 5,
+          "Fun (1-10)": 7
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 18
+        },
+        "values": {
+          "Effect Category": "Add/Use Other Counter or Persistent Marker",
+          "Primary Color": "Colorless",
+          "Dependency Score (1-10)": 6,
+          "Strength (1-10)": 5,
+          "Fun (1-10)": 6
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 19
+        },
+        "values": {
+          "Effect Category": "Modify Power/Toughness (Non-Counter)",
+          "Primary Color": "Green",
+          "Dependency Score (1-10)": 3,
+          "Strength (1-10)": 4,
+          "Fun (1-10)": 6
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 20
+        },
+        "values": {
+          "Effect Category": "Grant Extra Ability/Keyword",
+          "Primary Color": "White",
+          "Dependency Score (1-10)": 5,
+          "Strength (1-10)": 5,
+          "Fun (1-10)": 6
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 21
+        },
+        "values": {
+          "Effect Category": "Gain Life",
+          "Primary Color": "White",
+          "Dependency Score (1-10)": 3,
+          "Strength (1-10)": 4,
+          "Fun (1-10)": 5
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 22
+        },
+        "values": {
+          "Effect Category": "Lose Life / Drain Life",
+          "Primary Color": "Black",
+          "Dependency Score (1-10)": 4,
+          "Strength (1-10)": 5,
+          "Fun (1-10)": 6
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 23
+        },
+        "values": {
+          "Effect Category": "Poison the Opponent",
+          "Primary Color": "Multicolor",
+          "Dependency Score (1-10)": 6,
+          "Strength (1-10)": 7,
+          "Fun (1-10)": 3
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 24
+        },
+        "values": {
+          "Effect Category": "Reduce or Increase a Cost",
+          "Primary Color": "Colorless",
+          "Dependency Score (1-10)": 4,
+          "Strength (1-10)": 5,
+          "Fun (1-10)": 5
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 25
+        },
+        "values": {
+          "Effect Category": "Add or Retain Mana (Outside Normal Cost Payment)",
+          "Primary Color": "Green",
+          "Dependency Score (1-10)": 3,
+          "Strength (1-10)": 6,
+          "Fun (1-10)": 8
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 26
+        },
+        "values": {
+          "Effect Category": "Tap or Untap a Permanent",
+          "Primary Color": "Blue",
+          "Dependency Score (1-10)": 5,
+          "Strength (1-10)": 4,
+          "Fun (1-10)": 5
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 27
+        },
+        "values": {
+          "Effect Category": "Transform, Flip, or Turn Face Up/Down",
+          "Primary Color": "Colorless",
+          "Dependency Score (1-10)": 5,
+          "Strength (1-10)": 5,
+          "Fun (1-10)": 7
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 28
+        },
+        "values": {
+          "Effect Category": "Modify an Action Restriction (Add/Remove)",
+          "Primary Color": "White",
+          "Dependency Score (1-10)": 4,
+          "Strength (1-10)": 5,
+          "Fun (1-10)": 4
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 29
+        },
+        "values": {
+          "Effect Category": "Force an Opponent's Action or Choice",
+          "Primary Color": "Red",
+          "Dependency Score (1-10)": 5,
+          "Strength (1-10)": 5,
+          "Fun (1-10)": 6
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 30
+        },
+        "values": {
+          "Effect Category": "Modify Combat Blocking Legality (Evasion/Anti-Evasion)",
+          "Primary Color": "Multicolor",
+          "Dependency Score (1-10)": 3,
+          "Strength (1-10)": 6,
+          "Fun (1-10)": 6
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 31
+        },
+        "values": {
+          "Effect Category": "Grant Immunity (Target/Destroy/Damage/Block)",
+          "Primary Color": "Multicolor",
+          "Dependency Score (1-10)": 3,
+          "Strength (1-10)": 6,
+          "Fun (1-10)": 4
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 32
+        },
+        "values": {
+          "Effect Category": "Alter Casting Timing or Legal Zone to Cast From",
+          "Primary Color": "Blue",
+          "Dependency Score (1-10)": 4,
+          "Strength (1-10)": 5,
+          "Fun (1-10)": 6
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 33
+        },
+        "values": {
+          "Effect Category": "Alternative or Additional Cost Mechanism",
+          "Primary Color": "Colorless",
+          "Dependency Score (1-10)": 5,
+          "Strength (1-10)": 5,
+          "Fun (1-10)": 6
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 34
+        },
+        "values": {
+          "Effect Category": "Exchange/Swap Two Things (Players, Zones, or Objects)",
+          "Primary Color": "Blue",
+          "Dependency Score (1-10)": 5,
+          "Strength (1-10)": 6,
+          "Fun (1-10)": 5
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 35
+        },
+        "values": {
+          "Effect Category": "Reveal Information",
+          "Primary Color": "Blue",
+          "Dependency Score (1-10)": 6,
+          "Strength (1-10)": 3,
+          "Fun (1-10)": 5
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 36
+        },
+        "values": {
+          "Effect Category": "Look at and Reorder Library Cards",
+          "Primary Color": "Blue",
+          "Dependency Score (1-10)": 3,
+          "Strength (1-10)": 4,
+          "Fun (1-10)": 6
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 37
+        },
+        "values": {
+          "Effect Category": "Multiplayer Choice or Vote Mechanic",
+          "Primary Color": "Colorless",
+          "Dependency Score (1-10)": 6,
+          "Strength (1-10)": 4,
+          "Fun (1-10)": 8
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 38
+        },
+        "values": {
+          "Effect Category": "Command Zone or Emblem Interaction",
+          "Primary Color": "N/A (Format Rule)",
+          "Dependency Score (1-10)": 7,
+          "Strength (1-10)": 6,
+          "Fun (1-10)": 7
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 39
+        },
+        "values": {
+          "Effect Category": "Deck Construction / Format Rule",
+          "Primary Color": "N/A (Format Rule)",
+          "Dependency Score (1-10)": 8,
+          "Strength (1-10)": 5,
+          "Fun (1-10)": 6
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 40
+        },
+        "values": {
+          "Effect Category": "Alter a Loss Condition / End the Game",
+          "Primary Color": "N/A (Format Rule)",
+          "Dependency Score (1-10)": 3,
+          "Strength (1-10)": 8,
+          "Fun (1-10)": 7
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 41
+        },
+        "values": {
+          "Effect Category": "Set a Starting Game Resource",
+          "Primary Color": "N/A (Format Rule)",
+          "Dependency Score (1-10)": 1,
+          "Strength (1-10)": 3,
+          "Fun (1-10)": 5
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 42
+        },
+        "values": {
+          "Effect Category": "Attach a Permanent (Aura/Equipment/Vehicle-Style)",
+          "Primary Color": "White",
+          "Dependency Score (1-10)": 6,
+          "Strength (1-10)": 4,
+          "Fun (1-10)": 6
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 43
+        },
+        "values": {
+          "Effect Category": "Fight (Non-Combat Creature Damage)",
+          "Primary Color": "Green",
+          "Dependency Score (1-10)": 4,
+          "Strength (1-10)": 5,
+          "Fun (1-10)": 6
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 44
+        },
+        "values": {
+          "Effect Category": "Counter a Spell or Ability",
+          "Primary Color": "Blue",
+          "Dependency Score (1-10)": 2,
+          "Strength (1-10)": 7,
+          "Fun (1-10)": 3
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 45
+        },
+        "values": {
+          "Effect Category": "Special Subsystem Mechanic (Dungeon/Attraction/Ring/etc.)",
+          "Primary Color": "Colorless",
+          "Dependency Score (1-10)": 9,
+          "Strength (1-10)": 4,
+          "Fun (1-10)": 7
+        }
+      },
+      {
+        "source": {
+          "sheet": "Effect Category Ratings",
+          "row": 46
+        },
+        "values": {
+          "Effect Category": "No Direct Game Effect (Definitional Only)",
+          "Primary Color": "Colorless",
+          "Dependency Score (1-10)": 1,
+          "Strength (1-10)": 1,
+          "Fun (1-10)": 2
+        }
+      }
+    ]
+  }
+}

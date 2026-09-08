@@ -190,7 +190,7 @@ check("the compact readout is the same numbers without the card lists", () => {
 check("both screens draw it, and the deck page offers the re-run", () => {
   const viewer = readFileSync(at("../viewer.js"), "utf8");
   const panel = readFileSync(at("../import-panel.js"), "utf8");
-  const page = readFileSync(at("../index.html"), "utf8");
+  const page = readFileSync(at("../legacy-decks.html"), "utf8");
   assert.match(page, /src="measure-report\.js/);
   assert.match(panel, /MtgMeasureReport/);
   assert.match(viewer, /How it played/);

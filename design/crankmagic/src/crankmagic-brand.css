@@ -1,0 +1,16 @@
+@font-face{font-family:CrankOxanium;src:url(data:font/ttf;base64,__OXANIUM_WORDMARK_FONT__) format('truetype');font-style:normal;font-weight:700;font-display:swap}
+#matrix-v2{--v-brand-blue:light-dark(#1456b8,#86cdff);--v-brand-shine:light-dark(#268fc0,#c3eeff);--v-aether-thread:light-dark(#187fd0,#68bcff);--v-aether-core:light-dark(#237cd5,#8dddff)}
+#matrix-v2 .v-brand-block{position:relative}
+#matrix-v2 .v-brand-copy{position:static;padding-bottom:0}
+#matrix-v2 .v-brand,#matrix-v2 .v-brand-subline,#matrix-v2 .v-brand-logo{position:relative;z-index:1}
+#matrix-v2 .v-brand{font-family:CrankOxanium,Satoshi,sans-serif;font-size:29px;font-weight:700;line-height:1.15;letter-spacing:-.65px;color:var(--v-brand-blue);background:linear-gradient(110deg,var(--v-brand-blue) 12%,var(--v-brand-shine) 60%,var(--v-brand-blue) 100%);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+#matrix-v2 .v-brand-logo{align-self:center;width:52px;height:52px;flex-basis:52px;margin-top:0}
+#matrix-v2 .v-aether-wrap{position:absolute;left:0;top:0;width:100%;height:calc(100% + 12px);pointer-events:none}
+#matrix-v2 .v-aether,#matrix-v2 .v-aether-front{position:absolute;left:0;top:0;z-index:0;display:block;width:100%;height:100%;pointer-events:none}
+#matrix-v2 .v-aether-front{z-index:2}
+#matrix-v2 .v-aether-toggle{position:absolute;z-index:3;left:var(--v-aether-control-x,250px);top:0;display:grid;place-items:center;width:26px;height:26px;border:0;border-radius:5px;background:var(--v-panel);color:var(--v-muted);font:700 11px Satoshi,sans-serif;opacity:0;pointer-events:auto;cursor:pointer}
+#matrix-v2 .v-brand-block:hover .v-aether-toggle,#matrix-v2 .v-aether-toggle:focus-visible,#matrix-v2 .v-aether-toggle[aria-label="Resume aether animation"]{opacity:1}
+@media(hover:none){#matrix-v2 .v-aether-toggle{opacity:.6}}
+@media(max-width:520px){#matrix-v2 .v-brand{font-size:27px}#matrix-v2 .v-brand-logo{width:46px;height:46px;flex-basis:46px}}
+@media(prefers-reduced-motion:reduce){#matrix-v2 .v-aether-toggle{display:none}}
+@media(forced-colors:active){#matrix-v2 .v-brand{-webkit-text-fill-color:CanvasText;background:none;color:CanvasText}#matrix-v2 .v-aether-wrap{display:none}}

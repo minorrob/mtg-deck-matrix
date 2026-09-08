@@ -31,6 +31,12 @@
 
   const u16 = (b, at) => b[at] | (b[at + 1] << 8);
   const u32 = (b, at) => (b[at] | (b[at + 1] << 8) | (b[at + 2] << 16) | (b[at + 3] << 24)) >>> 0;
+  const MAX_PART = 100 * 1024 * 1024, MAX_TOTAL = 250 * 1024 * 1024;
+  const CRC_TABLE = Uint32Array.from({length: 256}, (_, n) => {
+    for (let bit = 0; bit < 8; bit++) n = n & 1 ? 0xedb88320 ^ (n >>> 1) : n >>> 1;
+    return n >>> 0;
+  });
+  function crc32(bytes) { let crc = 0xffffffff; for (const b of bytes) crc = CRC_TABLE[(crc ^ b) & 255] ^ (crc >>> 8); return (crc ^ 0xffffffff) >>> 0; }
 
   /* Walk the central directory rather than the local headers.
      A local header may carry zero lengths and defer them to a data descriptor
@@ -45,19 +51,26 @@
     }
     if (eocd < 0) throw new Error("That is not a ZIP file, so it is not a .xlsx either.");
     const count = u16(bytes, eocd + 10);
+    if (count > 4096) throw new Error("This workbook has too many ZIP parts.");
     let at = u32(bytes, eocd + 16);
+    let total = 0;
     const out = [];
     const decoder = new TextDecoder();
     for (let n = 0; n < count; n += 1) {
-      if (u32(bytes, at) !== 0x02014b50) break;
+      if (at + 46 > bytes.length || u32(bytes, at) !== 0x02014b50) throw new Error("The workbook ZIP directory is incomplete.");
       const method = u16(bytes, at + 10);
       const compressed = u32(bytes, at + 20);
+      const size = u32(bytes, at + 24), crc = u32(bytes, at + 16);
+      total += size;
+      if (size > MAX_PART || total > MAX_TOTAL) throw new Error("The expanded workbook is too large. Split it into smaller files.");
       const nameLen = u16(bytes, at + 28);
       const extraLen = u16(bytes, at + 30);
       const commentLen = u16(bytes, at + 32);
       const localAt = u32(bytes, at + 42);
       const name = decoder.decode(bytes.subarray(at + 46, at + 46 + nameLen));
-      out.push({name, method, compressed, localAt});
+      if (out.some(entry => entry.name === name)) throw new Error("Duplicate workbook ZIP part: " + name);
+      if (at + 46 + nameLen + extraLen + commentLen > bytes.length) throw new Error("The workbook ZIP directory is truncated.");
+      out.push({name, method, compressed, localAt, size, crc});
       at += 46 + nameLen + extraLen + commentLen;
     }
     return out;
@@ -68,7 +81,10 @@
       throw new Error("This browser cannot decompress a .xlsx. Save the sheet as CSV instead.");
     }
     const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
-    return new Uint8Array(await new Response(stream).arrayBuffer());
+    const reader = stream.getReader(), chunks = []; let length = 0;
+    while (true) { const {value, done} = await reader.read(); if (done) break; length += value.length;
+      if (length > MAX_PART) { await reader.cancel(); throw new Error("An expanded workbook part exceeds the size limit."); } chunks.push(value); }
+    const output = new Uint8Array(length); let offset = 0; for (const chunk of chunks) { output.set(chunk, offset); offset += chunk.length; } return output;
   }
 
   /** The bytes of one entry, inflated if it needs to be. */
@@ -78,10 +94,12 @@
     const at = entry.localAt;
     if (u32(bytes, at) !== 0x04034b50) throw new Error(`Bad local header for ${entry.name}`);
     const start = at + 30 + u16(bytes, at + 26) + u16(bytes, at + 28);
+    if (start + entry.compressed > bytes.length) throw new Error("A workbook part is truncated: " + entry.name);
     const body = bytes.subarray(start, start + entry.compressed);
-    if (entry.method === 0) return body;                 // STORED
-    if (entry.method === 8) return inflate(body);        // DEFLATE
-    throw new Error(`${entry.name} uses compression method ${entry.method}, which is not supported.`);
+    if (![0, 8].includes(entry.method)) throw new Error(`${entry.name} uses compression method ${entry.method}, which is not supported.`);
+    const output = entry.method === 0 ? body : await inflate(body);
+    if (output.length !== entry.size || crc32(output) !== entry.crc) throw new Error("The workbook has a corrupt part: " + entry.name);
+    return output;
   }
 
   const decode = (bytes) => new TextDecoder().decode(bytes);
@@ -118,12 +136,17 @@
 
   function sheetRows(xml, strings) {
     const rows = [];
-    (xml.match(/<row\b[\s\S]*?<\/row>|<row\b[^>]*\/>/g) || []).forEach((rowXml) => {
+    // Match self-closing cells/rows first. The old alternation consumed the
+    // next populated cell as part of a blank one, shifting notes into price
+    // columns during an edited-library round trip.
+    (xml.match(/<row\b[^>]*\/>|<row\b[^>]*>[\s\S]*?<\/row>/g) || []).forEach((rowXml) => {
       const cells = [];
-      (rowXml.match(/<c\b[\s\S]*?<\/c>|<c\b[^>]*\/>/g) || []).forEach((cellXml) => {
+      (rowXml.match(/<c\b[^>]*\/>|<c\b[^>]*>[\s\S]*?<\/c>/g) || []).forEach((cellXml) => {
         const ref = (cellXml.match(/\sr="([A-Z]+\d+)"/) || [])[1] || "";
         const type = (cellXml.match(/\st="([^"]+)"/) || [])[1] || "n";
         const at = ref ? colOf(ref) : cells.length;
+        if (at > 511) throw new Error("This sheet exceeds the supported 512 import columns.");
+        if (Object.hasOwn(cells, at)) throw new Error("Duplicate cell reference in the workbook: " + ref);
         let value = "";
         if (type === "inlineStr") {
           const runs = cellXml.match(/<t[^>]*>([\s\S]*?)<\/t>/g) || [];
@@ -140,6 +163,7 @@
         cells[at] = value;
       });
       rows.push(cells);
+      if (rows.length > 200001) throw new Error("This sheet exceeds the supported import row limit.");
     });
     return rows;
   }

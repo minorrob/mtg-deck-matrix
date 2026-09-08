@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "checks": 65,
+  "offline": true,
+  "widths": [
+    320,
+    390,
+    736,
+    1024,
+    1440
+  ],
+  "errors": []
+}

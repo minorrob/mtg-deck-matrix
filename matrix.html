@@ -35,7 +35,7 @@
   <script src="admin-menu.js?v=3" defer></script>
   <script src="app.js?v=127" defer></script>
   <script src="docx-writer.js?v=1" defer></script>
-  <script src="xlsx-writer.js?v=1" defer></script>
+  <script src="xlsx-writer.js?v=2" defer></script>
   <script src="shop-export.js?v=1" defer></script>
   <!-- Measuring a deck in the browser: the engine, the protocol, and the check on
        whether the number on screen still describes the deck on screen. deck-measure
@@ -51,6 +51,7 @@
   <script src="shop-filters.js?v=6" defer></script>
 </head>
 <body>
+<div role="note" style="padding:12px;background:#10243c;color:#e2efff;text-align:center;font:14px sans-serif">Legacy measurement workspace · separate from your CrankMagic library. Simulator integration is on hold. <a href="index.html" style="color:#b7dcff">Open CrankMagic</a></div>
   <header class="app-header">
     <div class="banner-art" aria-hidden="true">
       <img src="https://api.scryfall.com/cards/named?format=image&amp;version=art_crop&amp;fuzzy=Felothar+the+Steadfast" alt="">
@@ -60,11 +61,11 @@
     <!-- The two nav slots, in the same place on all three pages: where you came from on
          the left, where else you can go on the right. -->
     <div class="hdr-nav">
-      <a class="back-link" href="index.html">
+      <a class="back-link" href="legacy-decks.html">
         <span class="back-arrow" aria-hidden="true">&#8592;</span> My Decks
       </a>
       <div class="hdr-links">
-        <a class="state-io-button" href="graph.html" title="Explore every Commander-legal card and what connects them">&#128376; Card graph</a>
+        <a class="state-io-button" href="legacy-graph.html" title="Explore every Commander-legal card and what connects them">&#128376; Card graph</a>
         <button class="tour-button" id="tour-button" type="button">&#9654; Tour</button>
         <div class="admin">
           <button class="state-io-button" id="admin-button" type="button"
