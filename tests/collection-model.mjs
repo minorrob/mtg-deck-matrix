@@ -9,7 +9,7 @@ function expectFailure(type,args,pattern){const before=JSON.stringify(s);assert.
 const cards=[{id:'leader',name:'Leader',typeLine:'Legendary Creature — Wizard',commander:true,verified:true,colorIdentity:[],legalities:{commander:'legal'}},{id:'land',name:'Wastes',typeLine:'Basic Land',verified:true,colorIdentity:[],legalities:{commander:'legal'}},{id:'ring',name:'Sol Ring',typeLine:'Artifact',verified:true,colorIdentity:[],legalities:{commander:'legal'}},{id:'stone',name:'Mind Stone',typeLine:'Artifact',verified:true,colorIdentity:[],legalities:{commander:'legal'}}];
 run('cards',{cards});
 for(let i=1;i<=5;i++){run('createDeck',{deckId:'d'+i,name:'Deck '+i,commanders:['leader'],slots:[{id:'cmd'+i,cardId:'leader',quantity:1},{id:'lands'+i,cardId:'land',quantity:98},{id:'rock'+i,cardId:'ring',quantity:1}]});run('finalize',{deckId:'d'+i});}
-assert.deepEqual(M.counters(s),{owned:0,ordered:0,incoming:0,toBuy:500,inDeck:0,sellTrade:0});checks++;
+assert.deepEqual(M.counters(s),{owned:0,ordered:0,incoming:0,wanted:0,toBuy:500,inDeck:0,sellTrade:0});checks++;
 run('acquire',{lot:{id:'rings',cardId:'ring',quantity:3,printing:{set:'cmm',finish:'nonfoil'}}});
 for(let i=1;i<=5;i++)run('fulfill',{deckId:'d'+i});
 assert.equal(M.counters(s).owned,3);assert.equal(M.counters(s).toBuy,497);assert.equal(s.lots.filter(l=>l.allocation).length,3);checks+=3;
