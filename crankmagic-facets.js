@@ -155,20 +155,39 @@
     return out;
   }
 
-  /* Within a facet the picks are ANDed -- "a creature that is also a Rat" -- and across
-     facets too. That is what the old page did, and it is what makes the count fall
-     predictably as you tick. A facet with nothing ticked is not a filter. */
+  /* A PICK IS THREE-WAY, and the third state is the one that was missing. Tapping a term
+     once asks for the cards that carry it; tapping again asks for the cards that do NOT
+     ("show me the counters deck without the proliferate"); tapping a third time lets go.
+     An exclusion is stored as the value with a "!" in front of it, so a selection stays a
+     plain object of string arrays -- one shape to save in preferences, put in a URL and
+     compare. A value cannot begin with "!" in any of these vocabularies. */
+  const NOT = "!";
+  const isExclude = (v) => String(v).startsWith(NOT);
+  const bare = (v) => (isExclude(v) ? String(v).slice(NOT.length) : v);
+  const split = (picked) => ({
+    yes: picked.filter((v) => !isExclude(v)),
+    no: picked.filter(isExclude).map(bare)
+  });
+
+  /* Within a facet the included picks are ANDed -- "a creature that is also a Rat" -- and
+     across facets too. That is what the old page did, and it is what makes the count fall
+     predictably as you tick. Exclusions are always ANDed and always absolute: a card
+     carrying an excluded term is out, whatever else it carries and whichever mode is on.
+     A facet with nothing picked is not a filter. */
   function matches(card, selection, options) {
     const any = Boolean(options && options.any);
     for (const facet of FACETS) {
       const picked = (selection && selection[facet.key]) || [];
       if (!picked.length) continue;
       const have = facet.from(card) || [];
+      const {yes, no} = split(picked);
+      if (no.some((v) => have.includes(v))) return false;
+      if (!yes.length) continue;
       /* Colour keeps its own rule in either mode: "legal in a deck of these colours" is
          not a list of alternatives, it is one question about the whole identity. */
-      const ok = facet.match ? facet.match(have, picked)
-        : any ? picked.some((v) => have.includes(v))
-        : picked.every((v) => have.includes(v));
+      const ok = facet.match ? facet.match(have, yes)
+        : any ? yes.some((v) => have.includes(v))
+        : yes.every((v) => have.includes(v));
       if (!ok) return false;
     }
     return true;
@@ -185,25 +204,45 @@
   }
 
   /* The picks as flat rows, so the UI can print a chip per pick and offer to remove it
-     one at a time rather than only offering Clear all. */
+     one at a time rather than only offering Clear all. `exclude` says which way the pick
+     points; `value` is the term either way, so a chip reads the same in both states. */
   function chips(selection) {
     const out = [];
     for (const facet of FACETS) {
-      for (const value of (selection && selection[facet.key]) || []) {
-        out.push({key: facet.key, label: facet.label, value});
+      for (const picked of (selection && selection[facet.key]) || []) {
+        out.push({key: facet.key, label: facet.label, value: bare(picked), exclude: isExclude(picked)});
       }
     }
     return out;
   }
 
+  /* The cycle: not picked -> include -> exclude -> not picked. */
   function toggle(selection, key, value) {
     const next = {...(selection || {})};
-    const picked = next[key] ? [...next[key]] : [];
-    const at = picked.indexOf(value);
-    if (at >= 0) picked.splice(at, 1); else picked.push(value);
+    const picked = (next[key] || []).filter((v) => bare(v) !== value);
+    const was = (next[key] || []).find((v) => bare(v) === value);
+    if (was === undefined) picked.push(value);
+    else if (!isExclude(was)) picked.push(NOT + value);
     if (picked.length) next[key] = picked; else delete next[key];
     return next;
   }
 
-  return {FACETS, CARD_TYPES, available, values, apply, matches, decorate, mineFrom, count, chips, toggle};
+  /* Which way a term currently points, for a control that has to draw three states. */
+  function stateOf(selection, key, value) {
+    const was = ((selection && selection[key]) || []).find((v) => bare(v) === value);
+    return was === undefined ? "off" : isExclude(was) ? "exclude" : "include";
+  }
+
+  /* A checkbox is two-state and cannot express the third. Ticking one means include and
+     clearing it means gone, whichever state the term was in. */
+  function set(selection, key, value, state) {
+    const next = {...(selection || {})};
+    const picked = (next[key] || []).filter((v) => bare(v) !== value);
+    if (state === "include") picked.push(value);
+    if (state === "exclude") picked.push(NOT + value);
+    if (picked.length) next[key] = picked; else delete next[key];
+    return next;
+  }
+
+  return {FACETS, CARD_TYPES, NOT, available, values, apply, matches, decorate, mineFrom, count, chips, toggle, stateOf, set};
 });

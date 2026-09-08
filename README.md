@@ -155,6 +155,7 @@ Changed assets require a new `?v=` everywhere referenced, then
 
 - [Current implementation status](docs/crankmagic-build-status.md)
 - [Architecture](docs/crankmagic-architecture.md)
+- [Keeping the catalog current](docs/crankmagic-refresh.md) — what a periodic refresh regenerates, in what order, and what it must never do
 - [Approved plan and standalone mock](design/crankmagic/README.md)
 - [Astra's simulator/application evaluations](design/crankmagic/evaluations.md)
 - [Held simulator improvement plan](design/crankmagic/simulation-fidelity-plan.md)

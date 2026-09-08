@@ -173,6 +173,21 @@ views.lab=async()=>{
 
   /* SAVE THIS DECK: the one write to My Decks. From a preview when there is one, from the
      commander alone when there is not. A measured preview brings its report along. */
+  /* CLEAR IS A FRESH RUN, NOT A DELETION. It puts the form back to its opening state and
+     lets the pane go with it -- the commander, the definition, the unsaved draft and the
+     pointer at whatever was last saved. A deck already in My Decks is not touched: this
+     forgets that the Lab was looking at it, which is the thing that made every new run
+     start inside the last one. */
+  actions['lab-clear']=async()=>{
+    const had=preview?preview.name:null;
+    leader=null;partner=null;mode='commander';groupId='';deckId='';draftName='';
+    definition=M.defaultDefinition();pool='all';includeInDeck=false;includeReserved=false;
+    preview=null;shownLimit=45;pickerColors=[];
+    await C.commit({type:'preferences',values:{labPreview:null,lastLabRun:null}},{renderView:false});
+    C.go('lab');
+    C.notice(had?`Cleared. The unsaved draft of ${e(had)} is gone; anything already saved is untouched in My Decks.`:'Cleared. Anything already saved is untouched in My Decks; the Lab is back to a blank run.');
+  };
+
   actions['lab-save']=async()=>{
     const v=readForm();
     const leaders=preview?leadersOf(preview):[leader,partner].filter(Boolean);
@@ -468,7 +483,7 @@ function runPane(saved){
   const simLabel=measured?`Measured ${measured.metrics.score.value} points · ${measured.protocol}`:subject?'Not measured yet':'Build a draft first';
   const last=C.state.preferences.lastLabRun;
   const canSaveNow=Boolean(leader||preview);
-  return `<aside class="v-panel cm-run-panel" id="cm-lab-run-pane"><div class="cm-actions"><button class="v-button primary" id="cm-lab-run" type="button">Run initial draft</button>${preview?b('Measure this draft','lab-measure'):saved?b('Measure this deck','lab-measure',{deck:saved.id}):''}${preview&&count>1?b('Refine the 99','lab-refine')+b('Loop until it settles','lab-loop'):''}<span class="cm-pause-pill" id="cm-lab-sim-status">${e(simLabel)}</span></div>
+  return `<aside class="v-panel cm-run-panel" id="cm-lab-run-pane"><div class="cm-actions"><button class="v-button primary" id="cm-lab-run" type="button">Run initial draft</button>${leader||preview||saved?b('Clear','lab-clear'):''}${preview?b('Measure this draft','lab-measure'):saved?b('Measure this deck','lab-measure',{deck:saved.id}):''}${preview&&count>1?b('Refine the 99','lab-refine')+b('Loop until it settles','lab-loop'):''}<span class="cm-pause-pill" id="cm-lab-sim-status">${e(simLabel)}</span></div>
     <div class="cm-lab-save-row"><button class="v-button" id="cm-lab-save" type="button" data-action="lab-save" ${canSaveNow?'':'disabled'}>Save this deck</button><span class="cm-muted">${preview?'Writes this draft to My Decks.':'Writes the commander and definition to My Decks; draft or edit the 99 any time after.'}</span></div>
     <ol class="cm-run-steps">${STEPS.map((label,i)=>{const st=stepState(i),hint=stepNote(i);
       /* The report step is the report: its own name opens it once one exists. */
