@@ -146,7 +146,13 @@ for (const [variantId, plan] of Object.entries(buyPlans.plans)) {
 }
 
 assert.equal(cards.missing.length, 0, "all modeled cards must resolve in the authoritative audit");
-assert.equal(cards.cards.length, buyPlans.cardAudit.cardsVerified, "audit summary must match the static card catalog");
+/* The catalog is shared: the legacy buy plans audited it, and CrankMagic now grows it
+   whenever an imported deck names a card it did not hold. So an equality here would
+   fail every time somebody imports a real decklist, which is not a defect. What must
+   still hold is that the catalog never loses a card the audit verified -- the audit's
+   conclusions are only good while every card it checked is still there. */
+assert.ok(cards.cards.length >= buyPlans.cardAudit.cardsVerified,
+  `the catalog holds ${cards.cards.length} cards but the audit verified ${buyPlans.cardAudit.cardsVerified} — cards have been removed, so the audit no longer describes it`);
 assert.match(buyPlans.enhanceDefinition, /\$20/, "Enhance definition must state the $20 limit");
 assert.match(buyPlans.maxDefinition, /Tier 3/i, "Max must be defined by the Tier 3 capability ceiling");
 assert.match(buyPlans.maxDefinition, /rather than card price/i, "Max may not be classified by cost");
