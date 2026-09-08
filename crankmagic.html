@@ -9,14 +9,15 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://cards.scryfall.io https://api.scryfall.com https://svgs.scryfall.io; font-src 'self' data:; connect-src 'self' https://api.scryfall.com https://json.edhrec.com https://archidekt.com; object-src 'none'; base-uri 'self'; form-action 'self'">
   <title>CrankMagic · Commander workshop</title>
   <link rel="canonical" href="https://minorrob.github.io/mtg-deck-matrix/crankmagic.html">
-  <!-- ICONS, PNG FIRST. A WebP was the only icon on offer here, and iOS builds a link
-       preview by fetching the page's icon and image: an icon it cannot decode fails the
-       whole rich link, and Messages then refuses to send the message rather than falling
-       back to a plain link. The PNG is listed first so any fetcher that takes the first
-       icon it understands gets one it certainly understands. -->
+  <!-- ICONS, PNG ONLY. iOS builds a link preview by fetching the page's icon and image,
+       and an icon it cannot decode degrades the preview. Listing the PNG first fixed the
+       send -- Messages had been refusing to send at all rather than falling back to a
+       plain link -- but the WebP was still declared, and at 256x256 it was the LARGEST
+       icon on offer: a fetcher that picks the biggest icon rather than the first one it
+       understands still got the format that failed. There is nothing for a second icon
+       to add here, so there is no second icon. -->
   <link rel="icon" type="image/png" sizes="180x180" href="assets/crankmagic/apple-touch-icon.png">
-  <link rel="icon" type="image/webp" sizes="256x256" href="assets/crankmagic/crankmagic-logo-wand-v3-256.webp?v=1">
-  <link rel="apple-touch-icon" href="assets/crankmagic/apple-touch-icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/crankmagic/apple-touch-icon.png">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="CrankMagic">
   <meta property="og:title" content="CrankMagic">
