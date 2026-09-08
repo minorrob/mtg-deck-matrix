@@ -10,7 +10,7 @@
   <title>CrankMagic · Commander workshop</title>
   <link rel="icon" href="assets/crankmagic/crankmagic-logo-wand-v3-256.webp?v=1">
   <link rel="stylesheet" href="crankmagic-design.css?v=1">
-  <link rel="stylesheet" href="crankmagic.css?v=2">
+  <link rel="stylesheet" href="crankmagic.css?v=4">
   <script src="lineup-model.js?v=5" defer></script>
   <script src="scryfall-client.js?v=7" defer></script>
   <script src="card-link.js?v=1" defer></script>
@@ -29,21 +29,20 @@
   <script src="card-catalog.js?v=2" defer></script>
   <script src="draft-builder.js?v=3" defer></script>
   <script src="crankmagic-glossary.js?v=1" defer></script>
-  <script src="crankmagic-graph.js?v=1" defer></script>
+  <script src="crankmagic-graph.js?v=3" defer></script>
   <script src="crankmagic-decks.js?v=3" defer></script>
   <script src="crankmagic-collection.js?v=2" defer></script>
   <script src="crankmagic-exchange-ui.js?v=3" defer></script>
   <script src="crankmagic-sim.js?v=1" defer></script>
   <script src="crankmagic-lab.js?v=4" defer></script>
   <script src="crankmagic-facets.js?v=1" defer></script>
-  <script src="crankmagic-discover.js?v=3" defer></script>
+  <script src="crankmagic-discover.js?v=5" defer></script>
   <script src="custom-model.js?v=3" defer></script>
-  <script src="crankmagic-legacy.js?v=1" defer></script>
   <script src="crankmagic-advisor.js?v=1" defer></script>
   <script src="collection-evidence.js?v=1" defer></script>
   <script src="crankmagic-evidence.js?v=2" defer></script>
   <script src="crankmagic-plan-editor.js?v=1" defer></script>
-  <script src="crankmagic-app.js?v=8" defer></script>
+  <script src="crankmagic-app.js?v=11" defer></script>
   <script src="crankmagic-brand.js?v=1" defer></script>
 </head>
 <body>
@@ -51,7 +50,7 @@
   <a class="cm-skip" href="#cm-main">Skip to content</a>
   <header class="v-top">
     <div class="v-brand-block"><img class="v-brand-logo" src="assets/crankmagic/crankmagic-logo-wand-v3-256.webp?v=1" alt="" width="52" height="52"><div class="v-brand-copy"><div class="v-brand">CrankMagic</div><div class="v-brand-subline">An Intelligent MtG: Commander Deck Creator &amp; Card Libary</div><div class="v-aether-wrap"><canvas class="v-aether" width="440" height="28" aria-hidden="true"></canvas><canvas class="v-aether-front" width="440" height="28" aria-hidden="true"></canvas><button class="v-aether-toggle" type="button" aria-label="Pause aether animation" title="Pause aether animation">Ⅱ</button></div></div></div>
-    <div class="cm-user-menu"><button class="v-button" id="cm-user-functions" popovertarget="cm-user-menu" aria-haspopup="menu">User Functions <span aria-hidden="true">⌄</span></button><div id="cm-user-menu" class="cm-menu" popover><p id="cm-save-status">Opening local library…</p><button data-action="backup">Export a full backup</button><button data-action="restore">Import a backup</button><button data-action="export-excel">Export enriched Excel</button><button data-action="legacy">Review legacy data</button><a href="matrix.html">Legacy measurement workspace</a><button data-action="history">History &amp; undo</button><button data-action="undo" id="cm-undo">Undo last change</button><button data-action="reset-picks">Reset comparison picks</button><button data-action="mirror">Choose a backup mirror file</button><button data-action="clear" class="cm-danger">Clear all data</button></div></div>
+    <div class="cm-user-menu"><button class="v-button" id="cm-user-functions" popovertarget="cm-user-menu" aria-haspopup="menu">User Functions <span aria-hidden="true">⌄</span></button><div id="cm-user-menu" class="cm-menu" popover><p id="cm-save-status">Opening local library…</p><p>Back up and restore</p><button data-action="backup">Save a backup file</button><button data-action="mirror">Keep a file up to date automatically…</button><button data-action="restore">Restore from a backup file</button><button data-action="export-excel">Export as Excel</button><hr><p>Undo</p><button data-action="undo" id="cm-undo">Undo last change</button><button data-action="history">See every change…</button><hr><p>Start over</p><button data-action="reset-picks">Reset comparison picks</button><button data-action="clear" class="cm-danger">Clear all data</button></div></div>
   </header>
   <div class="cm-layout"><aside class="cm-sidebar"><nav class="v-nav-links" aria-label="Main pages"><a href="#decks" data-nav="decks">My Decks</a><a href="#collection" data-nav="collection">Collection</a><a href="#discover" data-nav="discover">Discover</a><a href="#lab" data-nav="lab">Play Lab</a><a href="#shop" data-nav="shop">Shop</a></nav><div class="cm-nav-note"><strong>Your cards. Your library.</strong><p>Saved in this browser. Export a backup to keep a copy elsewhere.</p><button class="cm-text-button" data-action="backup">Back up now ↗</button></div></aside>
     <main id="cm-main" tabindex="-1"><div class="v-panel cm-starting" role="status"><div class="v-eyebrow">Your Commander workshop</div><h1>Opening your library</h1><p>Loading local records and the public card catalog…</p></div></main>
