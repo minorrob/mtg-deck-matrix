@@ -190,7 +190,7 @@ views.lab=async()=>{
     const id='deck:'+C.uid();
     const commands=[{type:'createDeck',deckId:id,name,commanders:leaders.map(c=>c.id),cards,slots,definition:preview?preview.definition:definition,notes:[method,...notes].join('\n')}];
     if(preview?.report)commands.push({type:'report',deckId:id,report:preview.report});
-    commands.push({type:'preferences',values:{lastLabRun:{deckId:id,method,issues,at:new Date().toISOString()},labPreview:null}});
+    commands.push({type:'preferences',values:{lastLabRun:{deckId:id,method,issues,at:new Date().toISOString(),previewAt:preview?.at||null},labPreview:null}});
     preview=null;
     await C.commit({type:'batch',commands,summary:`Saved ${name} to My Decks`+(commands.some(c=>c.type==='report')?' with its measurement':'')});
   };
@@ -238,13 +238,20 @@ views.lab=async()=>{
     if(runner.busy)throw Error('A measurement is already running.');
     const [config,opponents]=await Promise.all([fetch(CrankAssets.simConfig).then(r=>r.json()),fetch(CrankAssets.simOpponents).then(r=>r.json())]);
     status.textContent='Measuring… seed 0 of '+plan.seedCount;
+    /* The preview this run is about. A reader may save or discard it while the engine is
+       running; the report then goes to the deck that was saved from it, or nowhere, never to
+       whatever preview happens to be current when the worker returns. */
+    const startedAt=preview?.at||null;
     try{
-      const result=await runner.measure({protocol:'published',lineup,config,opponents,table:config.table,onProgress:m=>{status.textContent=`Measuring… seed ${m.done} of ${m.total} · ${m.mean} points so far`;}});
+      const result=await runner.measure({protocol:'published',lineup,config,opponents,table:config.table,onProgress:m=>{const el=$('#cm-lab-sim-status');if(el)el.textContent=`Measuring… seed ${m.done} of ${m.total} · ${m.mean} points so far`;}});
       const report=CrankSim.packFor(result,{protocol:'published',table:config.table,seatCount:(opponents.tables[config.table]||[]).length,cardsVersion:CrankAssets.cards,coverage:cover});
-      if(saved)await C.commit({type:'report',deckId:saved.id,report});
-      else{await keepPreview({...preview,report});redrawRun();}
-      C.notice(`Measured ${report.metrics.score.value} points from ${result.games.toLocaleString()} games in ${(result.elapsedMs/1000).toFixed(1)}s.`+(saved?'':' Save this deck to keep the report with it.'));
-    }catch(err){status.textContent=err.message;throw err;}
+      const score=`Measured ${report.metrics.score.value} points from ${result.games.toLocaleString()} games in ${(result.elapsedMs/1000).toFixed(1)}s.`;
+      if(saved){await C.commit({type:'report',deckId:saved.id,report});C.notice(score);return;}
+      if(preview&&preview.at===startedAt){await keepPreview({...preview,report});redrawRun();C.notice(score+' Save this deck to keep the report with it.');return;}
+      const last=C.state.preferences.lastLabRun,savedFrom=last&&last.previewAt&&last.previewAt===startedAt?C.state.decks.find(x=>x.id===last.deckId):null;
+      if(savedFrom){await C.commit({type:'report',deckId:savedFrom.id,report});C.notice(score+` Filed with ${savedFrom.name}, which was saved while it ran.`);return;}
+      C.notice(score+' The draft it measured was discarded before it finished, so the report was not kept.',true);
+    }catch(err){const el=$('#cm-lab-sim-status');if(el)el.textContent=err.message;throw err;}
   };
 };
 

@@ -67,6 +67,13 @@
       let mode = 'navigate';
       const selected = new Set();
       let highlight = null;   // [idA, idB] of the edge a pop-up is about
+      let hover = null;       // the node under a mouse, whose cross-links are drawn on their own
+      /* THE WEB, ON REQUEST. Every cross-link between sixty-one cards is 1,600 lines, and at
+         fit zoom that is a blue fog the reader cannot see through. So the web is drawn whole
+         only while it is small enough to read; past that, a card's own cross-links appear
+         when the mouse rests on it or a pop-up is about it, and the count stays in the Card
+         View so nobody thinks the connections went away. */
+      const WEB_LIMIT = 60;
 
       /* THE CARD ART. A node is the card, not a blue circle standing in for it. Images
          load lazily -- only the cards on the canvas, from Scryfall's small rendition --
@@ -316,11 +323,16 @@
           ctx.scale(scale, scale);
           const played = type === 'played';
 
-          // cross-links first and faintest, so the tree reads on top of the web
+          // cross-links first and faintest, so the tree reads on top of the web -- the whole
+          // web only while it is small; otherwise just the hovered or inspected card's own
+          const crossCount = edges.reduce((n, e) => n + (e.tree ? 0 : 1), 0);
+          const focusId = hover ? hover.card.id : highlight ? highlight[1] : null;
           for (const e of edges) {
             if (e.tree) continue;
+            const own = focusId && (e.a.card.id === focusId || e.b.card.id === focusId);
+            if (crossCount > WEB_LIMIT && !own) continue;
             ctx.beginPath(); ctx.moveTo(e.a.x, e.a.y); ctx.lineTo(e.b.x, e.b.y);
-            ctx.strokeStyle = played ? '#c6a86d2e' : '#5384b62e'; ctx.lineWidth = 1; ctx.stroke();
+            ctx.strokeStyle = own ? (played ? '#e6cf9d99' : '#8fc3f2aa') : (played ? '#c6a86d2e' : '#5384b62e'); ctx.lineWidth = own ? 1.4 : 1; ctx.stroke();
           }
           for (const e of edges) {
             if (!e.tree) continue;
@@ -346,15 +358,18 @@
           const spacing = (d) => (2 * Math.PI * ring(d) * scale) / Math.max(1, perRing[d]);
           const roomy = (d) => d === 0 || spacing(d) >= (d === 1 ? 44 : 60);
 
-          /* Why two cards are joined, on the focus's own spokes, once zoomed in enough to
-             read. Deeper edges carry the same information in the Card View; lettering all
-             of them would bury the picture under its own captions. */
-          if (scale >= .95 && roomy(1)) {
+          /* Why two cards are joined, lettered on the spokes whenever the ring is sparse
+             enough to carry the words: the focus's own spokes from about two-thirds zoom,
+             and ring 2's when it holds few nodes or the reader has zoomed in. Lettering a
+             crowded ring would bury the picture under its own captions. */
+          const labelRing1 = scale >= .6 && spacing(1) >= 56, labelRing2 = spacing(2) >= 84 && scale >= .9;
+          if (labelRing1 || labelRing2) {
             for (const n of nodes) {
-              if (n.depth !== 1) continue;
+              if (!((n.depth === 1 && labelRing1) || (n.depth === 2 && labelRing2))) continue;
               const tag = String(n.tag || '').trim(); if (!tag) continue;
               const text = tag.length > 20 ? tag.slice(0, 19) + '…' : tag;
-              const mx = n.x * .62, my = n.y * .62;
+              const p = n.parent || {x: 0, y: 0};
+              const mx = p.x + (n.x - p.x) * .58, my = p.y + (n.y - p.y) * .58;
               ctx.font = '10px Satoshi, sans-serif'; ctx.textAlign = 'center';
               const w = ctx.measureText(text).width + 10;
               ctx.fillStyle = '#0f1826d9'; ctx.beginPath(); ctx.roundRect(mx - w / 2, my - 8, w, 16, 8); ctx.fill();
@@ -484,7 +499,10 @@
           pan.y = cy - (cy - pinch.pan.y) * k + (now.y - pinch.y);
           draw(); return;
         }
-        if (!drag) return;
+        if (!drag) {
+          if (e.pointerType === 'mouse') { const n = pick(e); if (n !== hover) { hover = n; canvas.style.cursor = n ? 'pointer' : ''; draw(); } }
+          return;
+        }
         const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
         drag.moved = drag.moved || Math.hypot(dx, dy) > 5;
         pan = {x: drag.px + dx, y: drag.py + dy}; draw();
@@ -546,6 +564,7 @@
       canvas.addEventListener('pointermove', move);
       canvas.addEventListener('pointerup', up);
       canvas.addEventListener('pointercancel', up);
+      canvas.addEventListener('pointerleave', () => { if (hover) { hover = null; canvas.style.cursor = ''; draw(); } });
       canvas.addEventListener('keydown', key);
       const observer = new ResizeObserver(resize);
       observer.observe(canvas);

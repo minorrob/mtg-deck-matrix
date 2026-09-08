@@ -3047,7 +3047,7 @@
       // page is fully usable without either, so a miss is not an error.
       return Promise.all([
         fetchJson("data/deck-ratings.json?v=6").catch(function () { return null; }),
-        fetchJson("data/deck-guides.json?v=2").catch(function () { return null; }),
+        fetchJson("data/deck-guides.json?v=3").catch(function () { return null; }),
         fetchJson("data/deck-swaps.json?v=2").catch(function () { return null; })
       ]);
     }).then(function (extra) {
