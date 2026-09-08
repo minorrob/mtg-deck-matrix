@@ -127,7 +127,7 @@ const TOURS=[
      copy:'By role, colour, type or mechanic — so "what goes with my commander" becomes "what goes with my commander and costs under three".'},
     {view:'discover',selectors:['#cm-card-view','#cm-graph-pop'],
      title:'Read it here',
-     copy:'Click any card and the pane fills in: the printing itself, rules text and all, plus its set, its price and the bracket it puts a deck in. Inspect sits under the art, Add and/or Buy under the bracket line, and Back — to whatever you were looking at before — waits in the top corner.'},
+     copy:'Click any card and the pane fills in: the printing itself, rules text and all, plus its set, its price and the bracket it puts a deck in. Inspect sits under the art and Add and/or Buy under the bracket line; Back — to whatever you were looking at before — waits above the graph, at its top-right corner, because it undoes a move on the canvas rather than anything about this card.'},
     {view:'discover',selectors:['.cm-term-chips','.cm-chips-head'],
      title:'What it is joined by',
      copy:'Every term this card shares with others, and all of them at once — no scrolling for the one that mattered. Tap one for only the cards that share it, again to hide those instead, a third time to clear. They stack, so two taps on two terms is an intersection.'},
