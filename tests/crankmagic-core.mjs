@@ -102,6 +102,19 @@ const full=await client.named('Test full facts',{exact:true});eq(full.power,'4')
  ok(C.matchesMechanic(purphoros,'ETB triggers'));ok(C.matchesMechanic(purphoros,'Drain & burn'));ok(!C.matchesMechanic(purphoros,'Mill'));
  ok(C.MECHANICS.length>=25);
 }
+{// details() prices a card at its lowest-cost paper printing, not the printing Scryfall
+ // happens to answer with -- one prints search, cheapest first -- and says which set that is.
+ const fetchImpl=async url=>new Response(JSON.stringify(String(url).includes('universe')?{generatedAt:'2026',cards:[]}:String(url).includes('facts')?{cards:{}}:{cards:[]}),{status:200,headers:{'Content-Type':'application/json'}});
+ let searched=[];
+ const client={named:async name=>({name,typeLine:'Artifact',oracleText:'{T}: Add {C}{C}.',manaCost:'{1}',colorIdentity:[],legalities:{commander:'legal'},keywords:[],price:6.5,set:'c21',setName:'Commander 2021'}),
+   search:async (q,opts)=>{searched.push([q,opts]);return [{name:'Sol Ring',price:1.69,set:'mkc',setName:'Murders at Karlov Manor Commander'},{name:'Sol Ring',price:0,set:'lea',setName:'Limited Edition Alpha'},{name:'Sol Ring',price:6.5,set:'c21',setName:'Commander 2021'},{name:'Sol Ring',price:2.1,set:'cmm',setName:'Commander Masters'}];}};
+ const cat=await C.create({client,fetchImpl,urls:{universe:'u/universe.json',cards:'u/cards.json',facts:'u/facts.json',ranks:null,graph:'u/graph.json'},savedCards:{}});
+ const first=await cat.details({name:'Sol Ring',verified:false});
+ eq(first.price,1.69);eq(first.cheapestSet,'Murders at Karlov Manor Commander');eq(first.priceSource,'Scryfall cheapest paper printing');eq(first.printings,3);
+ ok(searched[0][0].includes('game:paper')&&searched[0][1].unique==='prints'&&searched[0][1].order==='usd');
+ const again=await cat.details(first);eq(searched.length,1);eq(again.price,1.69);
+ const plain=await cat.details({name:'Sol Ring',verified:false,oracleText:'x',manaCost:'{1}'},{cheapest:false});ok(plain);eq(searched.length,1);
+}
 {// Permanent deletion is gated on archive and cleans up everything that pointed at the deck.
  let d=M.empty(),k=0;const step=(type,args={})=>d=M.apply(d,{type,id:'del'+(++k),...args}).state;
  step('batch',{commands:[{type:'cards',cards:[leader,basic,...pool]},{type:'createDeck',deckId:'gone',name:'Gone',commanders:[leader.id],slots:[{cardId:leader.id,quantity:1},{cardId:basic.id,quantity:99}]}]});
