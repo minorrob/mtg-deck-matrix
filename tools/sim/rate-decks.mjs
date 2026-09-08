@@ -200,7 +200,7 @@ function bracketOf(cards) {
 const config = await loadConfig();
 const opponents = await loadOpponents();
 const seats = buildTable(opponents, config.table).seats;
-const master = await readJson(path.join(ROOT, "data", "master-v2.json"));
+const master = await readJson(path.join(ROOT, "data", "archive", "master-v2.json"));
 const facts = (await readJson(path.join(ROOT, "data", "card-facts.json"))).cards;
 const catalog = new Map((await readJson(path.join(ROOT, "data", "cards.json"))).cards.map((card) => [norm(card.name), card]));
 const prices = new Map(master.cards.map((row) => [norm(row.name), Number(row.price || 0)]));
@@ -282,6 +282,12 @@ const out = {
   schemaVersion: 1,
   generatedAt: new Date().toISOString(),
   engine: "sim-engine.js",
+  /* THE GENERATION THESE SIX NUMBERS WERE MEASURED ON. Not the same question as the
+     module filename above, and not the same answer as data/simulation-summary.json,
+     which describes the legacy viewer's 200 rungs and moves on its own schedule.
+     tests/crankmagic-sim.mjs pins crankmagic-sim.js's ENGINE_GENERATION to THIS, so a
+     CrankMagic report can never be filed under a generation that did not produce it. */
+  generation: "v2.7",
   table: config.table,
   seeds: SEEDS,
   gamesPerSeed: GAMES,

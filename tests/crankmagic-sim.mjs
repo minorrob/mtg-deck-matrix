@@ -22,11 +22,23 @@ const check = (label, fn) => { fn(); checks += 1; void label; };
 /* ------------------------------------------------ the generation is not a guess */
 
 const summary = await load("../data/simulation-summary.json");
+const ratings = await load("../data/deck-ratings.json");
 
-check("the generation these reports claim is the generation the engine publishes", () => {
-  assert.equal(Sim.ENGINE_GENERATION, summary.engine,
-    "crankmagic-sim.js names " + Sim.ENGINE_GENERATION + " but data/simulation-summary.json " +
-    "publishes " + summary.engine + " — a report would be filed under the wrong engine");
+/* PINNED TO CRANKMAGIC'S OWN RATINGS, not to the legacy viewer's summary. This used to
+   compare against data/simulation-summary.json, which describes the 200 rungs the OTHER
+   app publishes -- a different set of measurements on its own schedule. The two agreed
+   until v2.7, when CrankMagic's six decks were re-measured and the viewer's rungs were
+   not: re-badging 200 numbers nobody re-ran would have been the exact dishonesty the
+   check exists to prevent, so the check now names the file it is actually about. */
+check("the generation these reports claim is the generation that measured them", () => {
+  assert.equal(Sim.ENGINE_GENERATION, ratings.generation,
+    "crankmagic-sim.js names " + Sim.ENGINE_GENERATION + " but data/deck-ratings.json " +
+    "was measured on " + ratings.generation + " — a report would be filed under the wrong engine");
+});
+
+check("the legacy viewer's rungs say which generation measured them, whatever it is", () => {
+  assert.ok(summary.engine, "the summary must name its own engine generation");
+  assert.ok(summary.engineNotes?.[summary.engine], "and must document it");
 });
 
 check("every engine script the worker loads exists and carries a version", () => {

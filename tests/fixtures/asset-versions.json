@@ -10,8 +10,8 @@
       "sha": "a18e9d2a0d56618a"
     },
     "app.js": {
-      "version": 129,
-      "sha": "35bcc91d4a367203"
+      "version": 130,
+      "sha": "d478f2dde54753f2"
     },
     "assets/crankmagic/commander-atraxa.webp": {
       "version": 1,
@@ -134,8 +134,8 @@
       "sha": "8e261856adfcb4eb"
     },
     "crankmagic-app.js": {
-      "version": 48,
-      "sha": "dd9d151b698e4979"
+      "version": 49,
+      "sha": "4f20f572d0d2a342"
     },
     "crankmagic-assets.js": {
       "version": 10,
@@ -198,12 +198,12 @@
       "sha": "23a8f6e75dd90cbe"
     },
     "crankmagic-sim.js": {
-      "version": 14,
-      "sha": "ed722fcb678588f1"
+      "version": 15,
+      "sha": "804756bfecf27aa7"
     },
     "crankmagic-sw.js": {
-      "version": 48,
-      "sha": "94524196418b9132"
+      "version": 49,
+      "sha": "2e0b601d38aa2f61"
     },
     "crankmagic.css": {
       "version": 26,
@@ -254,8 +254,8 @@
       "sha": "395de95bd103a897"
     },
     "data/deck-ratings.json": {
-      "version": 6,
-      "sha": "9b0903453d14758a"
+      "version": 7,
+      "sha": "77ca5ad8d9696ee3"
     },
     "data/deck-swaps.json": {
       "version": 2,
@@ -282,8 +282,8 @@
       "sha": "5f58e9270e04b9a0"
     },
     "data/simulation-summary.json": {
-      "version": 5,
-      "sha": "f69acc0f0fe0b96c"
+      "version": 6,
+      "sha": "c33784cdb70b5b93"
     },
     "deck-audit.js": {
       "version": 1,
@@ -338,8 +338,8 @@
       "sha": "0b348802ff31d3d0"
     },
     "graph-page.js": {
-      "version": 32,
-      "sha": "231ec9ee80a9d12a"
+      "version": 33,
+      "sha": "01e19293cafb1853"
     },
     "guide-measured.js": {
       "version": 1,
@@ -390,8 +390,8 @@
       "sha": "6a8eceea117da582"
     },
     "sim-engine.js": {
-      "version": 9,
-      "sha": "c9f325cca0687da8"
+      "version": 10,
+      "sha": "d25e661e79db4ab0"
     },
     "sim-lenses.js": {
       "version": 2,
@@ -410,8 +410,8 @@
       "sha": "d98c8cccb4861914"
     },
     "slot-model.js": {
-      "version": 15,
-      "sha": "fa7e92aa90a2df66"
+      "version": 16,
+      "sha": "cf70729c9a4a3297"
     },
     "user-state.js": {
       "version": 5,
@@ -422,8 +422,8 @@
       "sha": "76caf7a8585da1a3"
     },
     "viewer.js": {
-      "version": 37,
-      "sha": "f7ed13be3971a068"
+      "version": 38,
+      "sha": "10f262a6f8532e83"
     },
     "xlsx-reader.js": {
       "version": 2,
