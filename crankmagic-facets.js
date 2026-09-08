@@ -145,21 +145,26 @@
   /* Within a facet the picks are ANDed -- "a creature that is also a Rat" -- and across
      facets too. That is what the old page did, and it is what makes the count fall
      predictably as you tick. A facet with nothing ticked is not a filter. */
-  function matches(card, selection) {
+  function matches(card, selection, options) {
+    const any = Boolean(options && options.any);
     for (const facet of FACETS) {
       const picked = (selection && selection[facet.key]) || [];
       if (!picked.length) continue;
       const have = facet.from(card) || [];
-      const ok = facet.match ? facet.match(have, picked) : picked.every((v) => have.includes(v));
+      /* Colour keeps its own rule in either mode: "legal in a deck of these colours" is
+         not a list of alternatives, it is one question about the whole identity. */
+      const ok = facet.match ? facet.match(have, picked)
+        : any ? picked.some((v) => have.includes(v))
+        : picked.every((v) => have.includes(v));
       if (!ok) return false;
     }
     return true;
   }
 
-  function apply(cards, selection, state) {
+  function apply(cards, selection, state, options) {
     const decorated = decorate(cards, state);
     if (!selection || !Object.values(selection).some((v) => v && v.length)) return decorated;
-    return decorated.filter((c) => matches(c, selection));
+    return decorated.filter((c) => matches(c, selection, options));
   }
 
   function count(selection) {

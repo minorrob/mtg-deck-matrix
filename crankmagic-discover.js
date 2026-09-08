@@ -1,30 +1,41 @@
-/* Discover: the card graph, and the filters that make 7,764 cards navigable.
+/* Discover: the card graph, the filters that make 7,764 cards navigable, and the path
+ * from "these cards go together" to "put them in a group".
  *
- * The graph alone can only show you the neighbourhood of a card you can already name.
- * That is a fine tool for "what goes with Yuriko" and a useless one for "show me the
- * black Rats I do not own yet" -- which is the question a deckbuilder actually has. The
- * previous app's graph page carried twelve facets for exactly that reason; they are back
- * here, driven by crankmagic-facets.js, which does the counting and matching and is
- * tested in Node without a browser.
+ * THE SHAPE OF THE PAGE. The graph on the left, as tall as the pane beside it; on the
+ * right, the Card View -- the card in focus, as a card: its art, its text, its cost, and
+ * the terms it is joined to other cards by, each of which is a filter you can tap. There
+ * is no list of neighbours and no list of results: the graph IS the list, and a card you
+ * want to read opens in the inspector pop-up. That was the reader's call and it is right;
+ * a list beside a picture of the same thing is the picture admitting it is not enough.
  *
- * FILTERING NARROWS THE GRAPH ITSELF, not just a list beside it. CrankGraph.mount takes
- * the card set it will draw and search for neighbours within, so a filtered view is a
- * remount over the narrowed set: the links you can follow are links between cards that
- * passed the filter. A filter that only greyed out tiles would still walk you into cards
- * you had just excluded.
+ * THREE WAYS TO NARROW, and they compose:
+ *   The Filters pane   — ten card facets plus what you own, from crankmagic-facets.js,
+ *                        with an any/all switch so "proliferate OR counters" is sayable.
+ *   The focused card   — its own mechanics, roles and produces/requires, as chips in the
+ *                        Card View. Tap "proliferate" with Atraxa in focus and the view
+ *                        becomes the cards joined to her that way.
+ *   The graph's reach  — depth (1-3 hops) and breadth (how many neighbours the focus
+ *                        gets), because "show me the web" and "show me the six that
+ *                        matter" are different questions.
  *
- * MOBILE. The pane is a <details> per facet inside a responsive grid, closed by default,
- * with each value list scrolling inside its own box. On a phone the canvas is 390px tall
- * and the graph grid is one column, so the matching-card list under the count matters
- * more than the canvas does -- it is the part you can actually use with a thumb, and it
- * is why the results are a list and not only a picture.
+ * FILTERING NARROWS THE GRAPH ITSELF. CrankGraph.mount takes the card set it will draw
+ * and walk, so a filtered view is a remount over the narrowed set: every hop you follow
+ * stays inside the filter.
+ *
+ * AND THEN A GROUP. Switch to Select, tap the cards you want on the canvas, and "Add
+ * selected to a group" writes them into a Collection group -- as planned entries, never
+ * as a claim of ownership. Find the cards, keep the cards, without leaving the graph.
  */
 (globalThis.CrankFeatures ||= []).push(function (C) {
-  const {esc: e, button: b, actions, views, $} = C;
+  const {esc: e, button: b, actions, views, $, note, form, select: s} = C;
   let graph = null;
   /* Held across renders of this view so a filter survives following a card into the
      inspector and coming back. Cleared only by Clear filters. */
   let selection = {};
+  let mode = 'all';            // within a facet: 'all' picks must match, or 'any'
+  let depth = 2, breadth = 12; // the graph's reach, remembered like the filters
+  let picking = false;         // select mode on the canvas
+  let picked = new Set();      // card ids ticked on the canvas
 
   views.discover = async (params) => {
     C.main.innerHTML = C.head('The connected card catalog', 'Follow the possibilities.',
@@ -35,14 +46,11 @@
     if (C.route().view !== 'discover') return;
 
     /* The graph plus anything in the library it does not know about -- a card imported
-       from a link, or one printed after the graph snapshot. Shaped like a graph row so
-       the facets and the canvas can read it without a special case. */
+       from a link, or one printed after the graph snapshot -- shaped like a graph row. */
     const data = {...loaded, cards: [...loaded.cards]};
     const names = new Set(data.cards.map((c) => c.name));
     for (const c of Object.values(C.state.cards)) {
-      if (!names.has(c.name)) {
-        data.cards.push({...c, id: c.oracleId || c.id, type: c.typeLine, ci: (c.colorIdentity || []).join('')});
-      }
+      if (!names.has(c.name)) data.cards.push({...c, id: c.oracleId || c.id, type: c.typeLine, ci: (c.colorIdentity || []).join(''), image: c.image});
     }
 
     const wanted = C.catalog.get(params.get('card'));
@@ -55,6 +63,11 @@
 
       <details class="cm-details" id="cm-facet-details">
         <summary><strong>Filters</strong> <span id="cm-facet-summary" class="cm-muted"></span></summary>
+        <div class="cm-facet-mode">
+          <span class="cm-muted">Within a facet, a card must match</span>
+          <label class="cm-checkbox"><input type="radio" name="facetMode" value="all" ${mode === 'all' ? 'checked' : ''}> all picks</label>
+          <label class="cm-checkbox"><input type="radio" name="facetMode" value="any" ${mode === 'any' ? 'checked' : ''}> any pick</label>
+        </div>
         <div class="cm-filter-panel" id="cm-facet-panel">${facets.map((facet) => {
           const rows = values[facet.key] || [];
           return `<details class="cm-details" data-facet="${e(facet.key)}">
@@ -68,92 +81,101 @@
           </details>`;
         }).join('')}</div>
       </details>
-      <div class="cm-facet-status"><p role="status" id="cm-facet-count"></p><div class="cm-actions" id="cm-facet-chips"></div></div>
 
-      <div class="cm-graph-grid">
-        <div>
-          <canvas class="cm-graph" id="cm-graph" tabindex="0" role="img" aria-label="Interactive card relationship graph. Drag to pan. Pinch or mouse wheel to zoom. Keyboard arrows pan, plus and minus zoom, zero resets. Use the adjacent card list for navigation."></canvas>
-          <!-- The focused card and its Inspect button sit DIRECTLY under the canvas. They
-               used to live in the right-hand panel, which is fine on a desktop and wrong
-               on a phone: the grid collapses to one column there, so everything in the
-               left column came first and the reader had to scroll past the whole result
-               list to inspect the card they had just tapped. The control that acts on the
-               selection belongs beside the selection. -->
-          <div class="cm-graph-focus" id="cm-graph-focus"></div>
-          <p class="cm-muted">Pinch to zoom · drag to pan · tap a card to explore · double-tap to reset. With a mouse: wheel to zoom, and arrow keys / + / − / 0 also work. Zoom in to label each line with why the two cards are joined.</p>
+      <div class="cm-facet-status">
+        <p role="status" id="cm-facet-count"></p>
+        <div class="cm-actions" id="cm-facet-chips"></div>
+        <div class="cm-graph-reach">
+          <label>Depth <output id="cm-depth-out">${depth}</output><input type="range" id="cm-depth" min="1" max="3" step="1" value="${depth}" aria-label="How many hops from the focused card"></label>
+          <label>Breadth <output id="cm-breadth-out">${breadth}</output><input type="range" id="cm-breadth" min="6" max="30" step="1" value="${breadth}" aria-label="How many neighbours the focused card gets"></label>
+          <span class="cm-muted" id="cm-graph-size"></span>
         </div>
-        <aside class="v-panel">
-          <h3>Follow a connection</h3>
-          <div class="cm-neighbors" id="cm-graph-neighbors"></div>
-          <h3>Matching cards</h3>
-          <div class="cm-neighbors" id="cm-facet-results"></div>
-        </aside>
+      </div>
+
+      <p class="cm-muted cm-graph-hint">Pinch to zoom · drag to pan · tap a card to explore · double-tap to reset · zoom in to label the focus's connections and name the outer rings. With a mouse: wheel to zoom, arrow keys / + / − / 0.</p>
+      <div class="cm-graph-grid cm-graph-grid-tall">
+        <div class="cm-graph-col">
+          <canvas class="cm-graph" id="cm-graph" tabindex="0" role="img" aria-label="Interactive card relationship graph. Drag to pan. Pinch or mouse wheel to zoom. Tap a card to explore it, or switch to Select to tick cards for a group. Keyboard arrows pan, plus and minus zoom, zero resets."></canvas>
+        </div>
+        <aside class="v-panel cm-card-view" id="cm-card-view" aria-live="polite"></aside>
       </div>`;
 
-    const focusPanel = $('#cm-graph-focus'), neighborPanel = $('#cm-graph-neighbors');
+    const view = $('#cm-card-view');
 
     function mount(cards, focusId) {
       graph?.destroy();
       graph = CrankGraph.mount({
-        canvas: $('#cm-graph'), cards, played: data.played, focus: focusId,
-        onNeighbors(c, neighbors) {
-          focusPanel.innerHTML = `<div><h2>${e(c?.name || 'No card')}</h2><p>${e(c?.type || '')} ${C.colors(String(c?.ci || '').split(''))}</p></div><div class="cm-actions">${c ? b('Inspect card', 'card', {card: CrankCatalog.key(c.name)}) : ''}</div>`;
-          const groups = new Map();
-          for (const n of neighbors) {
-            const kind = n.kind || 'Related';
-            if (!groups.has(kind)) groups.set(kind, []);
-            groups.get(kind).push(n);
-          }
-          neighborPanel.innerHTML = [...groups.entries()].map(([kind, rows]) =>
-            `<h4 class="cm-edge-kind">${e(kind)} <span class="cm-muted">${rows.length}</span></h4>`
-            + rows.map((n) => `<button data-action="graph-card" data-id="${e(n.card.id)}">${e(n.card.name)}<small>${e(n.reason)}</small></button>`).join('')
-          ).join('') || '<p>No captured links of this type. Try another relationship or card.</p>';
-        }
+        canvas: $('#cm-graph'), cards, played: data.played, focus: focusId, depth, breadth,
+        onNeighbors(c, neighbors, trailLength, info) {
+          drawCardView(c, info);
+          if (graph) { graph.setMode(picking ? 'select' : 'navigate'); graph.setSelected(picked); }
+        },
+        onPick(card, ids) { picked = ids; drawCardView(graph.current(), null, true); }
       });
     }
 
-    /* One place decides what the filtered world is, and everything -- the count, the
-       chips, the result list and the graph itself -- is drawn from it. */
+    /* THE CARD VIEW. What the old side lists could not be: the card itself. Art, cost,
+       type, the printed text, and then the terms it is joined on -- each a filter. The
+       catalog record has the text and the art; the graph row has the terms. */
+    const TERM_FACET = {mechanics: 'mechanics', roles: 'roles', produces: 'produces', requires: 'requires', causes: 'causes', triggers: 'triggers', tribes: 'tribes'};
+    let lastInfo = null, lastDrawn = '';
+    function drawCardView(c, info, keepInfo) {
+      if (!keepInfo) lastInfo = info;
+      /* Same card, same picture, same picks: leave the pane alone. Rewriting it moves the
+         canvas beside it, which re-lays out the graph, which calls back here. */
+      const key = JSON.stringify([c && c.id, lastInfo && [lastInfo.total, lastInfo.byDepth, lastInfo.crossLinks], picking, [...picked].sort(), selection, keepInfo ? Date.now() : 0]);
+      if (!keepInfo && key === lastDrawn) return;
+      lastDrawn = key;
+      if (!c) { view.innerHTML = '<h2>Nothing matches</h2><p>No card carries the filters you have picked.</p>'; $('#cm-graph-size').textContent = ''; return; }
+      const rec = C.catalog.exact(c.name) || {};
+      const t = CrankGraph.termsOf(c);
+      const chips = [];
+      if (t) for (const [group, key] of Object.entries(TERM_FACET)) {
+        for (const value of t[group] || []) {
+          const on = (selection[key] || []).includes(value);
+          chips.push(`<button class="cm-chip${on ? ' is-on' : ''}" data-action="facet-term" data-key="${e(key)}" data-value="${e(value)}" aria-pressed="${on}">${e(value)}<small>${e(CrankFacets.FACETS.find((f) => f.key === key)?.label || key)}</small></button>`);
+        }
+      }
+      const img = rec.image || c.image || '';
+      const cost = rec.manaCost ? C.mana(rec.manaCost) : '';
+      view.innerHTML = `
+        <div class="cm-card-view-head">
+          ${img ? `<img class="cm-card-view-art" src="${e(img)}" alt="" loading="lazy">` : '<div class="cm-card-view-art cm-card-view-blank"></div>'}
+          <div class="cm-card-view-title">
+            <h2>${e(c.name)}</h2>
+            <p>${e(rec.typeLine || c.type || '')}</p>
+            <p class="cm-card-view-cost">${cost} ${C.colors(String(c.ci || (rec.colorIdentity || []).join('')).split(''))}</p>
+            ${rec.rarity || rec.setName ? `<p class="cm-muted">${e([rec.rarity, rec.setName].filter(Boolean).join(' · '))}${Number.isFinite(rec.price) && rec.price > 0 ? ` · ${e(C.money(rec.price))}` : ''}</p>` : ''}
+          </div>
+        </div>
+        ${rec.oracleText ? `<p class="cm-oracle cm-card-view-oracle">${e(rec.oracleText)}</p>` : ''}
+        <div class="cm-actions">${b('Inspect card', 'card', {card: CrankCatalog.key(c.name)}, true)}<button class="v-button${picking ? ' is-on' : ''}" data-action="graph-pickmode" aria-pressed="${picking}">${picking ? 'Selecting: tap cards' : 'Select cards'}</button></div>
+        ${picked.size ? `<div class="cm-actions cm-pick-actions">${b(`Add ${picked.size} selected to a group…`, 'results-group', {}, true)}${b('Clear selection', 'results-clear')}</div>` : (picking ? '<p class="cm-muted">Tap cards on the graph to tick them. Tap again to untick.</p>' : '')}
+        ${chips.length ? `<h3>Joined to other cards by</h3><p class="cm-muted">Tap one to filter the graph to cards that share it.</p><div class="cm-term-chips">${chips.join('')}</div>` : ''}
+        ${lastInfo && lastInfo.total ? `<p class="cm-muted cm-card-view-foot">${lastInfo.total} cards on the canvas · ${lastInfo.byDepth.filter(Boolean).join(' / ')} by ring · ${lastInfo.crossLinks} cross-links</p>` : ''}`;
+      $('#cm-graph-size').textContent = lastInfo && lastInfo.total ? `${lastInfo.total} on canvas` : '';
+    }
+
+    /* One place decides what the filtered world is; the count, the chips and the graph
+       are all drawn from it. */
     function refresh(keepFocus) {
-      const shown = CrankFacets.apply(data.cards, selection, C.state);
+      const shown = CrankFacets.apply(data.cards, selection, C.state, {any: mode === 'any'});
       const picks = CrankFacets.count(selection);
-
       $('#cm-facet-count').textContent = picks
-        ? `${shown.length.toLocaleString()} of ${data.cards.length.toLocaleString()} cards match ${picks} filter${picks === 1 ? '' : 's'}.`
-        : `${data.cards.length.toLocaleString()} cards. Narrow them with Filters, or search for one by name.`;
-
+        ? `${shown.length.toLocaleString()} of ${data.cards.length.toLocaleString()} cards match ${picks} filter${picks === 1 ? '' : 's'}${picks > 1 ? ` (${mode} within a facet)` : ''}.`
+        : `${data.cards.length.toLocaleString()} cards. Narrow them with Filters, with the focused card's own terms, or search for one by name.`;
       $('#cm-facet-summary').textContent = picks ? `· ${picks} applied · ${shown.length.toLocaleString()} cards` : '· none applied';
-
       $('#cm-facet-chips').innerHTML = CrankFacets.chips(selection)
         .map((chip) => `<button class="cm-chip" data-action="facet-drop" data-key="${e(chip.key)}" data-value="${e(chip.value)}">${e(chip.label)}: ${e(chip.value)} <span aria-hidden="true">×</span><span class="cm-visually-hidden"> — remove this filter</span></button>`)
         .join('') + (picks ? b('Clear filters', 'facet-clear') : '');
-
       for (const facet of facets) {
         const n = (selection[facet.key] || []).length;
         const label = $(`[data-facet-count="${facet.key}"]`);
         if (label) label.textContent = n ? `· ${n}` : '';
       }
-
-      /* The graph must never offer a card the filter excluded, so it is remounted over
-         the narrowed set. If the card in focus did not survive, focus the first that
-         did rather than showing an empty canvas. */
       const keep = keepFocus && shown.some((c) => c.id === keepFocus);
-      if (shown.length) {
-        mount(shown, keep ? keepFocus : shown[0].id);
-      } else {
-        graph?.destroy();
-        graph = null;
-        focusPanel.innerHTML = '<h2>Nothing matches</h2><p>No card carries every filter you have picked.</p>';
-        neighborPanel.innerHTML = '';
-      }
-
-      $('#cm-facet-results').innerHTML = shown.slice(0, 60)
-        .map((c) => `<button data-action="graph-card" data-id="${e(c.id)}">${e(c.name)}<small>${e(c.type || '')}</small></button>`).join('')
-        || '<p>Clear a filter to see cards again.</p>';
-      if (shown.length > 60) {
-        $('#cm-facet-results').insertAdjacentHTML('beforeend',
-          `<p class="cm-muted">Showing the first 60 of ${shown.length.toLocaleString()}. Narrow further to see the rest.</p>`);
-      }
+      if (shown.length) mount(shown, keep ? keepFocus : shown[0].id);
+      else { graph?.destroy(); graph = null; drawCardView(null, null); }
     }
 
     const startFocus = data.cards.find((c) => c.name === wanted?.name)
@@ -162,33 +184,49 @@
       || data.cards[0];
     refresh(startFocus?.id);
 
-    /* Delegated, because refresh() rewrites the chip row and the graph's own panels on
-       every change; listeners bound to those nodes would not survive. */
+    const currentFocus = () => graph?.current()?.id;
+
+    /* Delegated: refresh() rewrites these regions, so listeners bound to nodes would not survive. */
     $('#cm-facet-panel').addEventListener('change', (ev) => {
-      const key = ev.target.dataset?.facetPick;
-      if (!key) return;
-      selection = CrankFacets.toggle(selection, key, ev.target.value);
-      refresh(graph ? undefined : null);
+      const key = ev.target.dataset?.facetPick; if (!key) return;
+      selection = CrankFacets.toggle(selection, key, ev.target.value); refresh(currentFocus());
     });
-
     $('#cm-facet-panel').addEventListener('input', (ev) => {
-      const key = ev.target.dataset?.facetSearch;
-      if (!key) return;
+      const key = ev.target.dataset?.facetSearch; if (!key) return;
       const q = ev.target.value.trim().toLowerCase();
-      for (const row of $(`[data-facet-list="${key}"]`).querySelectorAll('[data-value]')) {
-        row.hidden = Boolean(q) && !row.dataset.value.includes(q);
-      }
+      for (const row of $(`[data-facet-list="${key}"]`).querySelectorAll('[data-value]')) row.hidden = Boolean(q) && !row.dataset.value.includes(q);
     });
+    $('#cm-facet-details').addEventListener('change', (ev) => { if (ev.target.name === 'facetMode') { mode = ev.target.value; refresh(currentFocus()); } });
+    $('#cm-depth').addEventListener('input', (ev) => { depth = Number(ev.target.value); $('#cm-depth-out').textContent = depth; graph?.setDepth(depth); });
+    $('#cm-breadth').addEventListener('input', (ev) => { breadth = Number(ev.target.value); $('#cm-breadth-out').textContent = breadth; graph?.setBreadth(breadth); });
 
-    actions['facet-drop'] = (el) => { selection = CrankFacets.toggle(selection, el.dataset.key, el.dataset.value); redrawTicks(); refresh(); };
-    actions['facet-clear'] = () => { selection = {}; redrawTicks(); refresh(); };
+    actions['facet-drop'] = (el) => { selection = CrankFacets.toggle(selection, el.dataset.key, el.dataset.value); redrawTicks(); refresh(currentFocus()); };
+    actions['facet-term'] = (el) => { selection = CrankFacets.toggle(selection, el.dataset.key, el.dataset.value); redrawTicks(); refresh(currentFocus()); };
+    actions['facet-clear'] = () => { selection = {}; redrawTicks(); refresh(currentFocus()); };
+    actions['graph-pickmode'] = () => { picking = !picking; graph?.setMode(picking ? 'select' : 'navigate'); drawCardView(graph?.current(), null, true); };
+    actions['results-clear'] = () => { picked = new Set(); graph?.setSelected(picked); drawCardView(graph?.current(), null, true); };
 
-    /* A chip removed has to untick the box it came from, or the pane and the chips
-       disagree about what is filtered and the reader believes the pane. */
+    /* FIND THE CARDS, KEEP THE CARDS. A group is a plan, not a claim of ownership: these
+       land as planned entries, exactly as an imported list does. */
+    actions['results-group'] = () => {
+      const chosen = [...picked].map((id) => data.cards.find((c) => c.id === id)).filter(Boolean);
+      if (!chosen.length) throw Error('Switch to Select and tap at least one card on the graph first.');
+      form(`Add ${chosen.length} card${chosen.length === 1 ? '' : 's'} to a group`,
+        `${s('Collection group', 'group', [['', 'Create a new group'], ...C.state.groups.map((g) => [g.id, g.name])], '')}${C.field('New group name', 'name', 'From the graph')}<div class="cm-full">${note('Planned entries only. Nothing here says you own a copy.')}<p class="cm-muted">${chosen.slice(0, 12).map((c) => e(c.name)).join(' · ')}${chosen.length > 12 ? ` · and ${chosen.length - 12} more` : ''}</p></div>`,
+        async (v) => {
+          const cards = chosen.map((c) => C.catalog.exact(c.name)).filter(Boolean);
+          if (cards.length !== chosen.length) throw Error('Some cards could not be matched to the catalog. Try Inspect card on them first.');
+          const gid = v.group || 'group:' + C.uid();
+          const commands = [];
+          if (!v.group) commands.push({type: 'createGroup', groupId: gid, name: v.name || 'From the graph'});
+          commands.push({type: 'groupEntries', groupId: gid, cards, entries: cards.map((c) => ({cardId: c.id, quantity: 1}))});
+          await C.commit({type: 'batch', commands, summary: `Added ${cards.length} card${cards.length === 1 ? '' : 's'} to a Collection group`}, {renderView: false});
+          picked = new Set(); graph?.setSelected(picked); drawCardView(graph?.current(), null, true);
+        }, 'Add to group');
+    };
+
     function redrawTicks() {
-      for (const box of $('#cm-facet-panel').querySelectorAll('[data-facet-pick]')) {
-        box.checked = (selection[box.dataset.facetPick] || []).includes(box.value);
-      }
+      for (const box of $('#cm-facet-panel').querySelectorAll('[data-facet-pick]')) box.checked = (selection[box.dataset.facetPick] || []).includes(box.value);
     }
 
     $('#cm-graph-query').addEventListener('input', (ev) => {
