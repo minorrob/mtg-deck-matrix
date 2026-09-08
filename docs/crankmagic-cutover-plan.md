@@ -132,7 +132,7 @@ Not the full 459-check journey suite.
 Confirm the deployed site serves the new `index.html` and that `legacy-decks.html`,
 `legacy-graph.html` and `matrix.html` still load.
 
-**Step 6 · Then, and only then, the simulator.** Connect the held Play Lab stages, and take
+**Step 6 · Then, and only then, the simulator.** Connect the held Deck Lab stages, and take
 the branch's own review seriously — it contains four criticisms of my simulator work that
 are correct and that I had not made myself:
 

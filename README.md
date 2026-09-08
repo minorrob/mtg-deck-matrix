@@ -34,7 +34,7 @@ The approved standalone mockup remains under `design/crankmagic/` for design ref
   flow and shows all collection records.
 - **Discover**: navigable metadata/co-play graph, mouse-wheel zoom, keyboard neighbors,
   pan, back trail, card inspection and supplemental catalog lookup.
-- **Play Lab**: any legal catalog commander by name or mechanics/EDHREC commander rank;
+- **Deck Lab**: any legal catalog commander by name or mechanics/EDHREC commander rank;
   optional second commander; an existing list/group; separate Deck Definition; real
   initial construction under price/copy limits. The user reviews and finalizes the list.
 - **Shop**: acquisition and assembly views, partial orders/receipts, source corrections,

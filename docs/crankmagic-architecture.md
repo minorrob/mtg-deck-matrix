@@ -8,7 +8,7 @@ evaluations in `design/crankmagic/` remain the rationale and future integration 
 
 `index.html` and the compatibility URL `crankmagic.html` load the same static shell.
 `graph.html` forwards to `index.html#discover`. Hash routes select My Decks,
-Collection, Discover, Play Lab and Shop. No framework, application server, package
+Collection, Discover, Deck Lab and Shop. No framework, application server, package
 installation or build step is needed to serve them. All assets are repository files
 except public card lookups/images requested while using the app.
 

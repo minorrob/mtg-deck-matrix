@@ -9,7 +9,37 @@ let definition=M.defaultDefinition(),built=D.build({commanders:[leader],cards:[l
 // A price cap of zero starves every candidate -- but not the commander. It was chosen by
 // name before any limit existed, so it is the one card a cap may never refuse; a deck of
 // the commander alone is the honest result, and the issue says why nothing else fitted.
-const zero=D.build({commanders:[leader],cards:[leader,basic,...pool],definition:{...definition,budget:0}});eq(zero.slots.length,1);eq(zero.slots[0].cardId,leader.id);ok(zero.issues.some(x=>x.includes('No limit was relaxed')&&x.includes('$0')));
+const zero=D.build({commanders:[leader],cards:[leader,basic,...pool],definition:{...definition,budget:0}});eq(zero.slots.length,1);eq(zero.slots[0].cardId,leader.id);ok(zero.issues.some(x=>x.includes('No hard limit was crossed')&&x.includes('$0')));
+// A CAP IS PLANNED, NOT MERELY OBEYED. Under $60 the same pool must still yield a full
+// hundred within the cap, with basics doing the cheap work and a high-ranked staple at
+// several times an even share ($4 under $60) still finding room as a splurge.
+{
+  const staple=C.normalize({name:'Pricey Staple',typeLine:'Artifact',manaValue:1,colorIdentity:[],legalities:{commander:'legal'},oracleText:'{T}: Add {C}{C}.',price:4,edhrecRank:1});
+  const bulk=Array.from({length:150},(_,i)=>C.normalize({name:'Bulk '+i,typeLine:i%5===0?'Artifact':'Creature',manaValue:i%4+1,colorIdentity:['U'],legalities:{commander:'legal'},oracleText:i%3===0?'Draw a card.':i%3===1?'Destroy target creature.':'{T}: Add {U}.',price:.3+(i%7)*.4,edhrecRank:2000+i}));
+  const capped=D.build({commanders:[leader],cards:[leader,basic,staple,...bulk],definition:{...definition,budget:60}});
+  eq(capped.slots.reduce((n,r)=>n+r.quantity,0),100);ok(capped.estimatedPrice<=60+1e-9);
+  ok(capped.slots.find(r=>r.cardId===basic.id).quantity>=20);
+  ok(capped.slots.some(r=>r.cardId===staple.id));ok(capped.splurged>=4);
+  ok(capped.notes.some(x=>/Total cap \$60/.test(x)));
+  // and the note never claims a slider steered it
+  ok(capped.notes.some(x=>/does not steer by them/.test(x)));
+  // an impossible cap says what cap would do, in dollars, above the cap it was given
+  const tight=D.build({commanders:[leader],cards:[leader,basic,staple,...bulk],definition:{...definition,budget:12}});
+  ok(tight.slots.reduce((n,r)=>n+r.quantity,0)<100);
+  const figure=Number((tight.issues.find(x=>/Raising the total cap/.test(x))||'').match(/about \$(\d+)/)?.[1]);
+  ok(figure>12);
+  // bracket: a ceiling of 2 takes no Game Changers, a ceiling of 3 at most three
+  const gc=Array.from({length:6},(_,i)=>C.normalize({name:'Changer '+i,typeLine:'Enchantment',manaValue:2,colorIdentity:['U'],legalities:{commander:'legal'},oracleText:'Draw a card.',price:1,edhrecRank:5+i,gameChanger:true}));
+  const low=D.build({commanders:[leader],cards:[leader,basic,...gc,...bulk],definition:{...definition,bracketCeiling:2}});
+  eq(low.slots.filter(r=>gc.some(c=>c.id===r.cardId)).length,0);
+  const mid=D.build({commanders:[leader],cards:[leader,basic,...gc,...bulk],definition:{...definition,bracketCeiling:3}});
+  ok(mid.slots.filter(r=>gc.some(c=>c.id===r.cardId)).length<=3&&mid.slots.filter(r=>gc.some(c=>c.id===r.cardId)).length>=1);
+  // mono-colour lands are mostly basics: nonbasic lands are capped
+  const utility=Array.from({length:30},(_,i)=>C.normalize({name:'Utility Land '+i,typeLine:'Land',manaValue:0,colorIdentity:[],legalities:{commander:'legal'},oracleText:'{T}: Add {C}.',price:.5,edhrecRank:50+i}));
+  const mono=D.build({commanders:[leader],cards:[leader,basic,...utility,...bulk],definition});
+  ok(mono.slots.filter(r=>utility.some(c=>c.id===r.cardId)).reduce((n,r)=>n+r.quantity,0)<=14);
+  eq(mono.slots.filter(r=>utility.some(c=>c.id===r.cardId)).reduce((n,r)=>n+r.quantity,0)+mono.slots.find(r=>r.cardId===basic.id).quantity,36);
+}
 // And an owned-only pool with nothing owned says so in words a reader can act on.
 const starved=D.build({commanders:[leader],cards:[leader,basic,...pool],definition,benchOnly:true,available:{}});eq(starved.slots.length,1);ok(starved.issues.some(x=>/library holds none/.test(x)&&/All legal catalog cards/.test(x)));
 const unavailable=D.build({commanders:[leader],cards:[leader,basic,...pool],definition,benchOnly:true,available:{[leader.id]:1,[basic.id]:50,[pool[0].id]:1}});eq(unavailable.slots.reduce((n,r)=>n+r.quantity,0),38);ok(unavailable.issues.length);
@@ -45,6 +75,25 @@ const started=performance.now();M.validate(large);const projected=M.projection(l
 const invalidQuantity=structuredClone(state);invalidQuantity.lots[0].quantity='2';assert.throws(()=>M.validate(invalidQuantity),/must be numbers/);checks++;
 const Client=require('../crankmagic-card-client.js');let requests=0;const client=Client.create({storage:null,delayMs:0,fetchImpl:async()=>{requests++;return new Response(JSON.stringify({object:'card',id:'fixture-print',oracle_id:'fixture-oracle',name:'Test full facts',type_line:'Legendary Creature — Wizard',power:'4',toughness:'4',collector_number:'005',mana_cost:'{3}{U}',legalities:{commander:'legal'},scryfall_uri:'https://scryfall.com/card/tst/005/test-full-facts'}),{status:200,headers:{'Content-Type':'application/json'}});}});
 const full=await client.named('Test full facts',{exact:true});eq(full.power,'4');eq(full.toughness,'4');eq(full.collectorNumber,'005');await client.named('Test full facts',{exact:true});eq(requests,1);
+{// hydrate() fills the printed body of graph-only rows -- one /cards/collection request per
+ // 75 names -- and a printed variant name (SpongeBob SquarePants on the Secret Lair Jodah) is
+ // searchable once known, because that is what a reader at a table will type.
+ const fetchImpl=async url=>new Response(JSON.stringify(String(url).includes('universe')?{generatedAt:'2026',cards:[]}:String(url).includes('facts')?{cards:{}}:{cards:[]}),{status:200,headers:{'Content-Type':'application/json'}});
+ let batches=0;
+ const client={named:async()=>null,collection:async ids=>{batches++;return {cards:ids.map(({name})=>({name,typeLine:'Creature — Test',oracleText:'Text for '+name,manaCost:'{1}',colorIdentity:['U'],legalities:{commander:'legal'},keywords:[],flavorName:name==='Jodah, the Unifier'?'SpongeBob SquarePants':''})),missing:[]};}};
+ const cat=await C.create({client,fetchImpl,urls:{universe:'u/universe.json',cards:'u/cards.json',facts:'u/facts.json',ranks:null,graph:'u/graph.json'},savedCards:{}});
+ const rows=Array.from({length:80},(_,i)=>cat.add({name:i?'Row '+i:'Jodah, the Unifier',typeLine:'Creature',colorIdentity:['U'],legalities:{commander:'legal'},verified:true,commander:i===0}));
+ ok(rows.every(c=>!c.oracleText));
+ const {hydrated,missing}=await cat.hydrate(rows);
+ eq(batches,2);eq(hydrated.length,80);eq(missing.length,0);
+ eq(cat.exact('Row 5').oracleText,'Text for Row 5');
+ eq(cat.search('spongebob',{commander:true}).map(c=>c.name),['Jodah, the Unifier']);
+ eq(cat.search('',{commander:true,colors:['U']}).length,1);eq(cat.search('',{commander:true,colors:['R']}).length,0);
+ // the play-style vocabulary reaches a card the old substring list missed
+ const purphoros=C.normalize({name:'Purphoros, God of the Forge',typeLine:'Legendary Enchantment Creature — God',oracleText:'Whenever another creature you control enters, Purphoros deals 2 damage to each opponent.',colorIdentity:['R'],legalities:{commander:'legal'}});
+ ok(C.matchesMechanic(purphoros,'ETB triggers'));ok(C.matchesMechanic(purphoros,'Drain & burn'));ok(!C.matchesMechanic(purphoros,'Mill'));
+ ok(C.MECHANICS.length>=25);
+}
 {// Permanent deletion is gated on archive and cleans up everything that pointed at the deck.
  let d=M.empty(),k=0;const step=(type,args={})=>d=M.apply(d,{type,id:'del'+(++k),...args}).state;
  step('batch',{commands:[{type:'cards',cards:[leader,basic,...pool]},{type:'createDeck',deckId:'gone',name:'Gone',commanders:[leader.id],slots:[{cardId:leader.id,quantity:1},{cardId:basic.id,quantity:99}]}]});

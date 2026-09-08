@@ -78,8 +78,8 @@
       "sha": "20ae1f37aec98908"
     },
     "card-catalog.js": {
-      "version": 2,
-      "sha": "ca6f84a948a7f7b9"
+      "version": 3,
+      "sha": "12f22a680cb62efa"
     },
     "card-classify.js": {
       "version": 1,
@@ -134,8 +134,8 @@
       "sha": "8e261856adfcb4eb"
     },
     "crankmagic-app.js": {
-      "version": 13,
-      "sha": "ae8750911a10e240"
+      "version": 14,
+      "sha": "4a71513e0031ded3"
     },
     "crankmagic-assets.js": {
       "version": 5,
@@ -150,12 +150,12 @@
       "sha": "4c937886d914b612"
     },
     "crankmagic-collection.js": {
-      "version": 2,
-      "sha": "c410e76261e61e47"
+      "version": 3,
+      "sha": "c76156e68c7be46c"
     },
     "crankmagic-decks.js": {
-      "version": 4,
-      "sha": "868c0a9608f943bf"
+      "version": 5,
+      "sha": "4792f50282fd8610"
     },
     "crankmagic-design.css": {
       "version": 1,
@@ -186,8 +186,8 @@
       "sha": "6e64815ded35f8f1"
     },
     "crankmagic-lab.js": {
-      "version": 6,
-      "sha": "358f01f920870de4"
+      "version": 7,
+      "sha": "3306b79fd15cdcfe"
     },
     "crankmagic-plan-editor.js": {
       "version": 1,
@@ -198,16 +198,16 @@
       "sha": "23a8f6e75dd90cbe"
     },
     "crankmagic-sim.js": {
-      "version": 1,
-      "sha": "0272d8e61765eeeb"
+      "version": 11,
+      "sha": "2212f13d71f11dfb"
     },
     "crankmagic-sw.js": {
-      "version": 13,
-      "sha": "2e043d96c95913b1"
+      "version": 14,
+      "sha": "ba34b0a91708db11"
     },
     "crankmagic.css": {
-      "version": 6,
-      "sha": "8ee9d6686e7a29b4"
+      "version": 7,
+      "sha": "c5e27606d51e6faa"
     },
     "custom-model.js": {
       "version": 3,
@@ -318,8 +318,8 @@
       "sha": "b6aff451bbef0894"
     },
     "draft-builder.js": {
-      "version": 4,
-      "sha": "4ff58246b53c9875"
+      "version": 5,
+      "sha": "98e77f94e37fc012"
     },
     "edhrec-client.js": {
       "version": 1,
@@ -366,8 +366,8 @@
       "sha": "e0645dacaa692f32"
     },
     "scryfall-client.js": {
-      "version": 7,
-      "sha": "a2d38a39c771d99e"
+      "version": 8,
+      "sha": "324a8ee230a27dec"
     },
     "shop-export.js": {
       "version": 1,
