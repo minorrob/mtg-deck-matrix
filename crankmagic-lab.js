@@ -51,17 +51,17 @@ views.lab=async()=>{
   if(preview&&!leader)leader=leadersOf(preview)[0]||null;
   C.main.innerHTML=C.head('Deck Lab · Find a commander → build the 99','The deck you want to play.','Start with a commander or an existing list. Define the deck, draft the initial cards, measure them, then save what you decide to keep.',b('?','lab-help'))
     +`<div class="cm-lab-grid"><section class="v-panel"><form id="cm-lab-form"><h2>Starting point</h2>${s('Start from','mode',[['commander','Select Commander → Auto-build 99'],['list','Existing list or Collection group']],mode)}
-    <h3 class="cm-section-heading">Commander choice</h3><p class="cm-muted">Every verified legal commander in the catalog — ${C.catalog.all().filter(c=>c.commander&&c.legalities?.commander==='legal').length.toLocaleString()} of them — including cards you may need to buy. These filters only choose the commander.</p>
+    <details class="cm-lab-section" id="cm-lab-commander" ${mode==='commander'?'open':''} ${mode==='commander'?'':'hidden'}><summary class="cm-section-heading">Commander choice</summary><p class="cm-muted">Every verified legal commander in the catalog — ${C.catalog.all().filter(c=>c.commander&&c.legalities?.commander==='legal').length.toLocaleString()} of them — including cards you may need to buy. These filters only choose the commander.</p>
     <div class="cm-form-grid">${f('Search commander name','commanderQuery',leader?.name||'','autocomplete="off" placeholder="Name, or a printed variant name"')}${s('Play style filter','commanderMechanic',[['','Any play style'],...choices],'')}${s('EDHREC rank filter','rank',[['','Any rank'],['100','Top 100'],['500','Top 500'],['1000','Top 1,000']],'')}
     <div><span class="cm-muted" style="font-size:13px">Colour identity within</span><div class="cm-color-pills">${COLORS.map(([k,name])=>`<label class="cm-color-pill" title="${e(name)}"><input type="checkbox" name="commanderColor" value="${k}" ${pickerColors.includes(k)?'checked':''}><img src="assets/mana/${k}.svg?v=1" alt="">${k}</label>`).join('')}<label class="cm-color-pill" title="Colorless commanders only"><input type="checkbox" name="commanderColor" value="C" ${pickerColors.includes('C')?'checked':''}>C</label></div></div></div>
-    <div class="cm-commander-results" id="cm-lab-results"></div>
+    <details class="cm-lab-section cm-lab-subsection" id="cm-lab-picker" open><summary class="cm-section-heading">Matching commanders</summary><div class="cm-commander-results" id="cm-lab-results"></div></details>
     <div class="cm-actions">${b('Search exact name / link','lab-resolve')}${b('Record an unlisted commander','lab-manual')}${b('Add partner / second commander','lab-partner')}${b('Remove second commander','lab-unpartner')}</div>
     <div id="cm-lab-selected"></div>
-    <p class="cm-muted">EDHREC commander popularity · past 2 years · snapshot: ${e(C.catalog.rankDate?.slice(0,10)||'date unavailable')}. Results are ordered by rank; unranked commanders follow. A rank filter excludes unknown and combined-pair ranks.</p>
-    <div id="cm-existing-list" ${mode==='list'?'':'hidden'}><h3 class="cm-section-heading">Existing cards</h3>${s('Collection group','group',[['','Choose a group'],...C.state.groups.map(g=>[g.id,g.name])],groupId)}${s('Or an existing deck','existingDeck',[['','Choose a deck'],...C.state.decks.filter(x=>!x.archived).map(x=>[x.id,x.name])],deckId)}<div class="cm-actions" style="margin-top:12px">${b('Create group / import list','import-list')}${b('Create empty group','new-group')}</div></div>
-    <h3 class="cm-section-heading">Deck Definition</h3><p class="cm-muted">These inputs apply to the full list and the way you want it to play.</p>
+    <p class="cm-muted">EDHREC commander popularity · past 2 years · snapshot: ${e(C.catalog.rankDate?.slice(0,10)||'date unavailable')}. Results are ordered by rank; unranked commanders follow. A rank filter excludes unknown and combined-pair ranks.</p></details>
+    <details class="cm-lab-section" id="cm-existing-list" ${mode==='list'?'open':''} ${mode==='list'?'':'hidden'}><summary class="cm-section-heading">Existing cards</summary>${s('Collection group','group',[['','Choose a group'],...C.state.groups.map(g=>[g.id,g.name])],groupId)}${s('Or an existing deck','existingDeck',[['','Choose a deck'],...C.state.decks.filter(x=>!x.archived).map(x=>[x.id,x.name])],deckId)}<div class="cm-actions" style="margin-top:12px">${b('Create group / import list','import-list')}${b('Create empty group','new-group')}</div></details>
+    <details class="cm-lab-section" id="cm-lab-definition"><summary class="cm-section-heading">Deck Definition</summary><p class="cm-muted">These inputs apply to the full list and the way you want it to play.</p>
     <div class="cm-form-grid">${f('Deck name','deckName',draftName,'placeholder="My new Commander deck"')}${s('Primary play style','mechanic',[['','Open to exploration'],...choices],definition.mechanics[0]||'')}${s('Base bracket','baseBracket',[1,2,3,4,5],definition.baseBracket)}${s('Bracket ceiling','bracketCeiling',[1,2,3,4,5],definition.bracketCeiling)}${f('Total deck price cap ($)','budget',definition.budget??'','type="number" min="0" step="0.01" placeholder="No cap"')}${f('Per-card cap ($)','perCardCap',definition.perCardCap??'','type="number" min="0" step="0.01" placeholder="No cap"')}${s('Play style','playStyle',['Balanced','Aggressive','Reactive','Value engine','Combo'],definition.playStyle)}${s('Speed','speed',[1,2,3,4,5],definition.speed)}${s('Competitiveness','competitiveness',[1,2,3,4,5],definition.competitiveness)}${s('Saltiness','saltiness',[[1,'1 · Extremely friendly'],[2,'2 · Friendly'],[3,'3 · Assertive'],[4,'4 · Disruptive'],[5,'5 · Any legal winning mechanic']],definition.saltiness)}${s('Initial card pool','pool',[['all','All legal catalog cards'],['owned','Use my eligible owned copies']],pool)}<label class="cm-checkbox"><input name="inDeck" type="checkbox" ${includeInDeck?'checked':''}>Consider cards currently In deck</label><label class="cm-checkbox"><input name="reserved" type="checkbox" ${includeReserved?'checked':''}>Consider unlocked reserved copies</label><label class="cm-checkbox"><input name="sellTrade" type="checkbox" ${definition.reuse.includeSellTrade!==false?'checked':''}>Include available Sell / Trade copies</label><label class="cm-full">Restrictions and preferences<textarea name="restrictions">${e(definition.restrictions)}</textarea></label></div>
-    ${note('A total price cap is planned, not merely obeyed: basics do the cheap work, no single card takes more than a few times an even share of the cap, and the list always completes or says what cap would complete it. Unknown prices are excluded when a cap is set. Bracket ceiling limits Game Changers (none below 3, three at 3). Play style, speed and saltiness still require your review: the simulator measures a finished list, it does not yet refine one against these inputs.')}
+    ${note('A total price cap is planned, not merely obeyed: basics do the cheap work, no single card takes more than a few times an even share of the cap, and the list always completes or says what cap would complete it. Unknown prices are excluded when a cap is set. Bracket ceiling limits Game Changers (none below 3, three at 3). Play style, speed and saltiness still require your review: the simulator measures a finished list, it does not yet refine one against these inputs.')}</details>
     <p class="cm-error" id="cm-lab-error" hidden role="alert"></p></form></section>${runPane(saved)}</div>`;
 
   const results=$('#cm-lab-results'),lab=$('#cm-lab-form');
@@ -99,10 +99,23 @@ views.lab=async()=>{
   });
   for(const name of ['commanderQuery','commanderMechanic','rank'])lab.elements[name].addEventListener('input',()=>{shownLimit=45;search();});
   lab.addEventListener('change',ev=>{if(ev.target.name==='commanderColor'){pickerColors=[...lab.querySelectorAll('[name=commanderColor]:checked')].map(i=>i.value);shownLimit=45;search();}if(ev.target.name==='group'||ev.target.name==='existingDeck'){const save=$('#cm-lab-save');if(save)save.disabled=!canSave();}});
-  lab.elements.mode.addEventListener('change',ev=>{mode=ev.target.value;$('#cm-existing-list').hidden=mode!=='list';const save=$('#cm-lab-save');if(save)save.disabled=!canSave();});
+  /* ONE SECTION OPEN AT A TIME, AND THE OTHER ONE NOT THERE AT ALL. The form asks two
+     different questions depending on the starting point, and it used to ask both at once:
+     a full commander picker sitting above an Existing cards block that did nothing, or
+     the reverse. Now the half that does not apply is removed rather than dimmed, the half
+     that does is open, and Deck Definition folds away until it is wanted -- it is the same
+     set of inputs either way, and it is the longest thing on the page. */
+  function applyMode(){
+    const commander=$('#cm-lab-commander'),existing=$('#cm-existing-list'),definition=$('#cm-lab-definition');
+    if(commander){commander.hidden=mode!=='commander';commander.open=mode==='commander';}
+    if(existing){existing.hidden=mode!=='list';existing.open=mode==='list';}
+    if(definition)definition.open=false;
+    const save=$('#cm-lab-save');if(save)save.disabled=!canSave();
+  }
+  lab.elements.mode.addEventListener('change',ev=>{mode=ev.target.value;applyMode();});
   lab.elements.group.addEventListener('change',adoptGroupCommander);
   if(mode==='list')adoptGroupCommander();
-  search();chosen();
+  applyMode();search();chosen();
   C.catalog.loadGraph().then(()=>{if(C.main.contains(lab))search();}).catch(()=>{});
 
   actions['lab-resolve']=async()=>{const c=await C.catalog.resolve(lab.elements.commanderQuery.value);if(!c||!c.commander||c.legalities.commander!=='legal')throw Error('No verified legal commander found. Check the name or provide its Scryfall link.');if(!C.state.cards[c.id])await C.commit({type:'cards',cards:[c]},{renderView:false});leader=c;lab.elements.commanderQuery.value=c.name;chosen();};

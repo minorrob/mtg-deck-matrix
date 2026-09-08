@@ -104,6 +104,31 @@
 
     const view = $('#cm-card-view');
 
+    /* THE PANE ENDS WHERE THE GRAPH ENDS. A grid row is as tall as its tallest item's
+       content, so a pane holding art, rules text and forty relation chips made the row
+       137px taller than the canvas beside it however tall the canvas was -- and CSS has
+       no way to say "be exactly as tall as my sibling" when the sibling is the shorter
+       one. So the height is read off the graph column and written here, once per draw and
+       on resize; the pane scrolls inside it. Skipped on a narrow screen, where the two
+       stack and the pane should be as tall as its content. */
+    let paneFrame = 0;
+    function sizePane() {
+      cancelAnimationFrame(paneFrame);
+      paneFrame = requestAnimationFrame(() => {
+        const column = document.querySelector('.cm-graph-col'), canvas = $('#cm-graph');
+        if (!column || !canvas || !view) return;
+        const stacked = getComputedStyle(view).getPropertyValue('--cm-pane-stacked').trim() === '1';
+        if (stacked) { view.style.height = ''; return; }
+        /* From the column's TOP to the canvas's BOTTOM, not the column's own height: the
+           column is stretched by the same row the pane is inflating, so reading its height
+           reads the pane's height back and the two agree on being too tall. The canvas's
+           position does not depend on the pane, so this measurement cannot chase itself. */
+        const height = Math.round(canvas.getBoundingClientRect().bottom - column.getBoundingClientRect().top);
+        if (height > 200) view.style.height = height + 'px';
+      });
+    }
+    addEventListener('resize', sizePane);
+
     function mount(cards, focusId) {
       const history = graph ? graph.history() : [];
       graph?.destroy();
@@ -128,7 +153,7 @@
     const TERM_LABEL = Object.fromEntries(CrankFacets.FACETS.map((f) => [f.key, f.label]));
     function termChip(key, value) {
       const on = CrankFacets.stateOf(selection, key, value);
-      return `<button class="cm-chip${on === 'include' ? ' is-on' : on === 'exclude' ? ' is-not' : ''}" data-action="facet-term" data-key="${e(key)}" data-value="${e(value)}" aria-pressed="${on !== 'off'}" title="${on === 'include' ? 'Showing only cards with this — tap to exclude them instead' : on === 'exclude' ? 'Hiding cards with this — tap to clear' : 'Tap to show only cards with this'}">${on === 'exclude' ? '<span aria-hidden="true">− </span>' : ''}${e(value)}<small>${e(TERM_LABEL[key] || key)}</small></button>`;
+      return `<button class="cm-chip${on === 'include' ? ' is-on' : on === 'exclude' ? ' is-not' : ''}" data-action="facet-term" data-key="${e(key)}" data-value="${e(value)}" aria-pressed="${on !== 'off'}" title="${on === 'include' ? 'Showing only cards with this — tap to exclude them instead' : on === 'exclude' ? 'Hiding cards with this — tap to clear' : 'Tap to show only cards with this'}">${e(value)}<small>${e(TERM_LABEL[key] || key)}</small></button>`;
     }
     /* A shared term is a mechanic when the card lists it as one, a role otherwise. */
     const keyOf = (card, term) => ((card.mechanics || []).includes(term) ? 'mechanics' : 'roles');
@@ -257,27 +282,35 @@
             <p class="cm-card-view-cost">${cost || C.colors(String(c.ci || (rec.colorIdentity || []).join('')).split(''))}</p>
             ${rec.rarity || rec.setName ? `<p class="cm-muted">${e([rec.rarity, rec.setName].filter(Boolean).join(' · '))}${Number.isFinite(rec.price) && rec.price > 0 ? ` · ${e(C.money(rec.price))}` : ''}</p>` : ''}
             <p class="cm-card-view-bracket"><span class="cm-badge${bracket[0] === 'Game Changer' ? ' warn' : ''}">${e(bracket[0])}</span> <small>${e(bracket[1])}</small></p>
-            <div class="cm-card-view-links">
-              <a class="cm-text-button" href="${e(buy)}" target="_blank" rel="noopener">Buy at TCGplayer ↗</a>
-              <a class="cm-text-button" href="${e(kingdom)}" target="_blank" rel="noopener">Buy at Card Kingdom ↗</a>
-              <details class="cm-inline-menu" name="cm-card-view-menu"><summary class="cm-text-button">Add to Collection</summary><div class="cm-menu cm-inline-menu-body">
-                <button type="button" data-action="add-card" data-card="${e(cardId)}">Your library…</button>
-                ${groups.map((g) => `<button type="button" data-action="discover-to-group" data-card="${e(c.name)}" data-group="${e(g.id)}">${e(g.name)}</button>`).join('')
-                  || '<p class="cm-muted">No collection groups yet.</p>'}
-              </div></details>
-              <details class="cm-inline-menu" name="cm-card-view-menu"><summary class="cm-text-button">Add to Deck</summary><div class="cm-menu cm-inline-menu-body">
-                ${draftDecks.map((d) => `<button type="button" data-action="discover-to-deck" data-card="${e(c.name)}" data-deck="${e(d.id)}">${e(d.name)}</button>`).join('')
-                  || '<p class="cm-muted">No draft decks. A finalized list changes through its own page.</p>'}
-              </div></details>
-            </div>
+          </div>
+          <!-- UNDER THE ART, NOT BESIDE THE TITLE. Four separate links -- two buys and two
+               menus -- took four lines out of the pane and pushed the rules text down to a
+               single visible row. They are one menu now, in the column that already has
+               room: the art is 150px wide and everything under it was empty space. -->
+          <div class="cm-card-view-tools">
+            ${b('Inspect card', 'card', {card: CrankCatalog.key(c.name)}, true)}
+            <details class="cm-inline-menu" name="cm-card-view-menu"><summary class="v-button cm-card-view-menu-btn">Add and/or Buy ▾</summary><div class="cm-menu cm-inline-menu-body">
+              <a href="${e(buy)}" target="_blank" rel="noopener">Buy at TCGplayer ↗</a>
+              <a href="${e(kingdom)}" target="_blank" rel="noopener">Buy at Card Kingdom ↗</a>
+              <hr>
+              <p>Add to collection</p>
+              <button type="button" data-action="add-card" data-card="${e(cardId)}">Your library…</button>
+              ${groups.map((g) => `<button type="button" data-action="discover-to-group" data-card="${e(c.name)}" data-group="${e(g.id)}">${e(g.name)}</button>`).join('')
+                || '<p class="cm-muted">No collection groups yet.</p>'}
+              <hr>
+              <p>Add to deck</p>
+              ${draftDecks.map((d) => `<button type="button" data-action="discover-to-deck" data-card="${e(c.name)}" data-deck="${e(d.id)}">${e(d.name)}</button>`).join('')
+                || '<p class="cm-muted">No draft decks. A finalized list changes through its own page.</p>'}
+            </div></details>
+            ${graph && graph.previous() ? b('◀ Back to ' + graph.previous().name.split(',')[0], 'graph-back') : ''}
           </div>
         </div>
         ${rec.oracleText ? `<p class="cm-oracle cm-card-view-oracle">${e(rec.oracleText)}</p>` : ''}
-        <div class="cm-actions">${b('Inspect card', 'card', {card: CrankCatalog.key(c.name)}, true)}${graph && graph.previous() ? b('◀ Back to ' + graph.previous().name.split(',')[0], 'graph-back') : ''}</div>
         ${picked.size ? `<div class="cm-actions cm-pick-actions">${b(`Add ${picked.size} selected to a group…`, 'results-group', {}, true)}${b('Clear selection', 'results-clear')}</div>` : (gmode === 'select' ? '<p class="cm-muted">Tap cards on the graph to tick them. Tap again to untick.</p>' : '')}
         ${chips.length ? `<h3>Joined to other cards by</h3><p class="cm-muted">Tap once for only the cards that share it, again to hide them instead, a third time to clear. They stack.</p><div class="cm-term-chips">${chips.join('')}</div>` : ''}
         ${lastInfo && lastInfo.total ? `<p class="cm-muted cm-card-view-foot">${lastInfo.total} cards on the canvas · ${lastInfo.byDepth.filter(Boolean).join(' / ')} by ring · ${lastInfo.crossLinks} cross-links${lastInfo.crossLinks > 60 ? ' (too many to draw at once: rest on a card, or inspect it, to see its own)' : ''}</p>` : ''}`;
       $('#cm-graph-size').textContent = lastInfo && lastInfo.total ? `${lastInfo.total} on canvas` : '';
+      sizePane();
     }
 
     /* One place decides what the filtered world is; the count, the chips and the graph
@@ -411,7 +444,7 @@
     });
     $('[name=edgeType]').addEventListener('change', (ev) => graph?.setType(ev.target.value));
 
-    return () => { document.removeEventListener('keydown', onKey); document.removeEventListener('click', onDocClick); graph?.destroy(); graph = null; };
+    return () => { document.removeEventListener('keydown', onKey); document.removeEventListener('click', onDocClick); removeEventListener('resize', sizePane); cancelAnimationFrame(paneFrame); graph?.destroy(); graph = null; };
   };
 
   actions['graph-lookup'] = () => C.cardPicker('Find a card to explore', async (c) => {
