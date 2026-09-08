@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
 import {createRequire} from 'node:module';
 const require=createRequire(import.meta.url),M=require('../collection-model.js'),D=require('../draft-builder.js'),C=require('../card-catalog.js'),E=require('../collection-exchange.js'),P=require('../deck-import.js');let checks=0;
 const eq=(a,b)=>{assert.deepEqual(a,b);checks++;},ok=x=>{assert.ok(x);checks++;};
@@ -96,6 +97,17 @@ const full=await client.named('Test full facts',{exact:true});eq(full.power,'4')
  eq(batches,2);eq(hydrated.length,80);eq(missing.length,0);
  eq(cat.exact('Row 5').oracleText,'Text for Row 5');
  eq(cat.search('spongebob',{commander:true}).map(c=>c.name),['Jodah, the Unifier']);
+ // and the shipped table means the app knows that offline, on the first keystroke
+ {const table=JSON.parse(await readFile(new URL('../data/flavor-names.json',import.meta.url),'utf8'));
+  ok(table.cards.length>300,`only ${table.cards.length} flavour names shipped`);
+  const universe=JSON.parse(await readFile(new URL('../data/commander-universe.json',import.meta.url),'utf8'));
+  const known=new Set(universe.cards.map(r=>String(r[0]).toLowerCase()));
+  const orphans=table.cards.filter(([,name])=>!known.has(String(name).toLowerCase()));
+  eq(orphans.slice(0,3).map(r=>r[1]),[],`${orphans.length} flavour names point at cards the universe does not carry`);
+  const sponge=table.cards.find(([flavor])=>flavor==='SpongeBob SquarePants');
+  ok(sponge&&sponge[1]==='Jodah, the Unifier','the card in the report must be in the table');
+  const bigger=table.cards.find(([flavor])=>/Bigger Boat/.test(flavor));
+  ok(bigger&&bigger[1]==='Abrade','a card can be printed under a name the rules never use');}
  eq(cat.search('',{commander:true,colors:['U']}).length,1);eq(cat.search('',{commander:true,colors:['R']}).length,0);
  // the play-style vocabulary reaches a card the old substring list missed
  const purphoros=C.normalize({name:'Purphoros, God of the Forge',typeLine:'Legendary Enchantment Creature — God',oracleText:'Whenever another creature you control enters, Purphoros deals 2 damage to each opponent.',colorIdentity:['R'],legalities:{commander:'legal'}});

@@ -187,6 +187,16 @@
     function modeHint(m) { return m === 'inspect' ? 'Tap a card for its terms and its link to the focus; tap a line for why two cards are joined.' : m === 'select' ? 'Tap cards to tick them, then add them to a group from the Card View.' : 'Tap a card to make it the focus; the card you came from stays at the left.'; }
     const onKey = (ev) => { if (ev.key === 'Escape') hidePop(); };
     document.addEventListener('keydown', onKey);
+    /* A dropdown left hanging over the page after the click that used it is the reader
+       wondering whether it worked. One closes when you pick from it and when you look
+       away; opening one closes the others. */
+    const closeMenus = (except) => { for (const d of document.querySelectorAll('.cm-inline-menu[open]')) if (d !== except) d.open = false; };
+    const onDocClick = (ev) => {
+      const menu = ev.target.closest && ev.target.closest('.cm-inline-menu');
+      if (!menu || ev.target.closest('.cm-inline-menu-body')) return closeMenus(null);
+      closeMenus(menu);
+    };
+    document.addEventListener('click', onDocClick);
 
     /* THE CARD VIEW. What the old side lists could not be: the card itself. Art, cost,
        type, the printed text, and then the terms it is joined on -- each a filter. The
@@ -244,7 +254,10 @@
           <div class="cm-card-view-title">
             <h2>${e(c.name)}</h2>
             <p>${e(rec.typeLine || c.type || '')}</p>
-            <p class="cm-card-view-cost">${cost} ${C.colors(String(c.ci || (rec.colorIdentity || []).join('')).split(''))}</p>
+            <!-- The mana cost already says the colours. Printing the identity pips beside
+                 it gave Atraxa eight symbols for a four-colour card; the pips are for the
+                 cards that have no cost to read, which is the lands. -->
+            <p class="cm-card-view-cost">${cost || C.colors(String(c.ci || (rec.colorIdentity || []).join('')).split(''))}</p>
             ${rec.rarity || rec.setName ? `<p class="cm-muted">${e([rec.rarity, rec.setName].filter(Boolean).join(' · '))}${Number.isFinite(rec.price) && rec.price > 0 ? ` · ${e(C.money(rec.price))}` : ''}</p>` : ''}
             <p class="cm-card-view-bracket"><span class="cm-badge${bracket[0] === 'Game Changer' ? ' warn' : ''}">${e(bracket[0])}</span> <small>${e(bracket[1])}</small></p>
             <div class="cm-card-view-links">
@@ -389,7 +402,7 @@
     });
     $('[name=edgeType]').addEventListener('change', (ev) => graph?.setType(ev.target.value));
 
-    return () => { document.removeEventListener('keydown', onKey); graph?.destroy(); graph = null; };
+    return () => { document.removeEventListener('keydown', onKey); document.removeEventListener('click', onDocClick); graph?.destroy(); graph = null; };
   };
 
   actions['graph-lookup'] = () => C.cardPicker('Find a card to explore', async (c) => {
