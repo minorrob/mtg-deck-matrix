@@ -72,15 +72,21 @@
 
       <div class="cm-graph-grid">
         <div>
-          <canvas class="cm-graph" id="cm-graph" tabindex="0" role="img" aria-label="Interactive card relationship graph. Drag to pan. Mouse wheel to zoom. Keyboard arrows pan, plus and minus zoom, zero resets. Use the adjacent card list for navigation."></canvas>
-          <p class="cm-muted">Wheel over the canvas to zoom · drag to pan · click a card to explore. Arrow keys / + / − / 0 also work.</p>
-          <h3>Matching cards</h3>
-          <div class="cm-neighbors" id="cm-facet-results"></div>
+          <canvas class="cm-graph" id="cm-graph" tabindex="0" role="img" aria-label="Interactive card relationship graph. Drag to pan. Pinch or mouse wheel to zoom. Keyboard arrows pan, plus and minus zoom, zero resets. Use the adjacent card list for navigation."></canvas>
+          <!-- The focused card and its Inspect button sit DIRECTLY under the canvas. They
+               used to live in the right-hand panel, which is fine on a desktop and wrong
+               on a phone: the grid collapses to one column there, so everything in the
+               left column came first and the reader had to scroll past the whole result
+               list to inspect the card they had just tapped. The control that acts on the
+               selection belongs beside the selection. -->
+          <div class="cm-graph-focus" id="cm-graph-focus"></div>
+          <p class="cm-muted">Pinch to zoom · drag to pan · tap a card to explore · double-tap to reset. With a mouse: wheel to zoom, and arrow keys / + / − / 0 also work. Zoom in to label each line with why the two cards are joined.</p>
         </div>
         <aside class="v-panel">
-          <div id="cm-graph-focus"></div>
           <h3>Follow a connection</h3>
           <div class="cm-neighbors" id="cm-graph-neighbors"></div>
+          <h3>Matching cards</h3>
+          <div class="cm-neighbors" id="cm-facet-results"></div>
         </aside>
       </div>`;
 
@@ -91,9 +97,17 @@
       graph = CrankGraph.mount({
         canvas: $('#cm-graph'), cards, played: data.played, focus: focusId,
         onNeighbors(c, neighbors) {
-          focusPanel.innerHTML = `<h2>${e(c?.name || 'No card')}</h2><p>${e(c?.type || '')}</p>${C.colors(String(c?.ci || '').split(''))}${c ? b('Inspect card', 'card', {card: CrankCatalog.key(c.name)}) : ''}`;
-          neighborPanel.innerHTML = neighbors.map((n) => `<button data-action="graph-card" data-id="${e(n.card.id)}">${e(n.card.name)}<small>${e(n.reason)}</small></button>`).join('')
-            || '<p>No captured links of this type. Try another relationship or card.</p>';
+          focusPanel.innerHTML = `<div><h2>${e(c?.name || 'No card')}</h2><p>${e(c?.type || '')} ${C.colors(String(c?.ci || '').split(''))}</p></div><div class="cm-actions">${c ? b('Inspect card', 'card', {card: CrankCatalog.key(c.name)}) : ''}</div>`;
+          const groups = new Map();
+          for (const n of neighbors) {
+            const kind = n.kind || 'Related';
+            if (!groups.has(kind)) groups.set(kind, []);
+            groups.get(kind).push(n);
+          }
+          neighborPanel.innerHTML = [...groups.entries()].map(([kind, rows]) =>
+            `<h4 class="cm-edge-kind">${e(kind)} <span class="cm-muted">${rows.length}</span></h4>`
+            + rows.map((n) => `<button data-action="graph-card" data-id="${e(n.card.id)}">${e(n.card.name)}<small>${e(n.reason)}</small></button>`).join('')
+          ).join('') || '<p>No captured links of this type. Try another relationship or card.</p>';
         }
       });
     }
