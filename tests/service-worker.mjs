@@ -100,8 +100,18 @@ await ok("the simulator is still deliberately absent, so a first visit does not 
 
 /* ------------------------------------------- the property the split exists for */
 
-const bumpShell = (text) => text.replace("crankmagic.css?v=29", "crankmagic.css?v=30");
-const bumpData = (text) => text.replace("data/cards.json?v=3", "data/cards.json?v=4");
+/* Bump whatever version the file currently carries rather than naming one. Written with the
+   literals "crankmagic.css?v=29" and "data/cards.json?v=3", these were silent no-ops the
+   moment either file was bumped for real -- and a no-op edit produces an unchanged cache
+   key, which is exactly the failure the two checks below exist to catch. So the test asserted
+   nothing, and did it while passing. */
+const bump = (file) => (text) => {
+  const at = new RegExp(`(${file.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\?v=)(\\d+)`);
+  assert.match(text, at, `${file} carries no ?v= in the worker, so this test cannot change it`);
+  return text.replace(at, (_, prefix, n) => prefix + (Number(n) + 1));
+};
+const bumpShell = bump("crankmagic.css");
+const bumpData = bump("data/cards.json");
 
 await ok("editing the CSS changes the shell key and leaves the data cache exactly where it was", async () => {
   const after = await installed(bumpShell(SOURCE));
