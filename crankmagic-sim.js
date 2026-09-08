@@ -2,7 +2,7 @@
  *
  * CrankMagic shipped with the simulator deliberately disconnected: crankmagic-evidence.js
  * says "Never loads the simulator", the model's `report` command records origin 'imported',
- * and the Play Lab's last four steps sit behind a "Simulation on hold" pill. That was the
+ * and the Deck Lab's last four steps sit behind a "Simulation on hold" pill. That was the
  * right call while the two halves lived on different branches. This module is the join.
  *
  * WHY A SEPARATE MODULE RATHER THAN CALLS FROM THE LAB. Three reasons, and they are the

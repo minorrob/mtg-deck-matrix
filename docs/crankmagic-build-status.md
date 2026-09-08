@@ -18,7 +18,7 @@ Another session owns that work.
   semantic left-aligned sortable/filterable tables, groups, selected columns and glossary.
 - [x] My Decks/overviews/comparison, Collection/groups, Shop/acquisition/assembly,
   partial status corrections, donor review, workbook export and User Functions.
-- [x] Play Lab Commander choice versus Deck Definition, real constrained initial
+- [x] Deck Lab Commander choice versus Deck Definition, real constrained initial
   construction and existing-list paths, report/advice history and a visible simulator hold.
 - [x] Discover graph/wheel zoom/navigation, evidence-labeled alternatives, review/accept,
   dismissed recommendations, and recorded games.

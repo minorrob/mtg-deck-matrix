@@ -120,6 +120,9 @@
          rather than added to it a second time under a new id. */
       oracleId: raw.oracle_id || "",
       name: raw.name || "",
+      /* The printed alternate name of a variant -- "SpongeBob SquarePants" on the Secret
+         Lair Jodah -- so a reader who types what the card says finds the card. */
+      flavorName: raw.flavor_name || "",
       manaCost: faceValue(raw, "mana_cost"),
       cmc: Number(raw.cmc || 0),
       typeLine,
