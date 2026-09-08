@@ -159,6 +159,21 @@
     if (!fetchImpl) throw new Error("Scryfall client requires a fetch implementation");
     const baseUrl = options.baseUrl || API_BASE;
     const delayMs = Number.isFinite(options.delayMs) ? Number(options.delayMs) : 120;
+    /* HOW LONG THE WHOLE REQUEST MAY TAKE, retries included.
+     *
+     * There was no timeout at all: `signal` was passed straight through from the caller and
+     * every caller passed undefined, so a fetch that never settles left an await that never
+     * returned. That is not hypothetical -- it is what the deck page does offline. Opening a
+     * deck calls catalog.details() for the commander, details() awaits client.named(), and
+     * with the request hung the deck overview never reaches the line that writes its HTML.
+     * The reader is left looking at the PREVIOUS page: no deck, no spinner, no error, and
+     * nothing to retry. Every caller already handles a rejection gracefully -- details()
+     * returns the card it had, cheapest() returns the card it had -- so making a stalled
+     * request reject is the difference between "renders from what we know" and "hangs".
+     *
+     * It is a DEADLINE for the whole call rather than a per-attempt timeout, so the longest
+     * the app can ever wait is this one number and not this number times MAX_ATTEMPTS. */
+    const timeoutMs = Number.isFinite(options.timeoutMs) ? Number(options.timeoutMs) : 10000;
     const cache = options.cache || sessionCache();
     const now = options.now || (() => Date.now());
     const sleep = options.sleep || ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
@@ -202,18 +217,65 @@
       const key = `${init.method || "GET"} ${path}${init.body ? ` ${init.body}` : ""}`;
       const cached = readCache(key);
       if (cached !== null) return cached;
+      /* OFFLINE IS ANSWERED IMMEDIATELY, not waited out. The deadline above stops a stalled
+         request hanging the app, but ten seconds of the wrong page is still ten seconds --
+         and when the browser says it is offline the request cannot succeed, so there is
+         nothing to wait for. `false` is trustworthy in a way `true` is not: navigator.onLine
+         only proves there is no network interface, never that a host is reachable, so this
+         short-circuits on an explicit false and otherwise lets the deadline do its work. */
+      if (typeof navigator === "object" && navigator && navigator.onLine === false) {
+        stats.errors += 1;
+        throw new Error("Offline: Scryfall was not asked. Saved card records are unaffected.");
+      }
       let attempt = 0;
       let lastError = null;
+      const deadline = Date.now() + timeoutMs;
+      let expired = false;   // OUR abort, not the caller's -- the two must not be confused
       while (attempt < MAX_ATTEMPTS) {
         attempt += 1;
+        /* One controller per attempt, aborting on whichever comes first: the caller's own
+           signal, or what is left of the deadline. The caller's signal is chained rather
+           than replaced, so cancelling a lookup still cancels it. */
+        const controller = typeof AbortController === "function" ? new AbortController() : null;
+        const relay = () => controller?.abort();
+        if (controller && init.signal) {
+          if (init.signal.aborted) relay();
+          else init.signal.addEventListener("abort", relay, {once: true});
+        }
+        /* The deadline is RACED, not merely signalled. Aborting only works if the fetch
+           implementation honours the signal, and the guarantee "this call returns within
+           timeoutMs" must not depend on that cooperation -- a fetch that ignores its signal
+           would otherwise hang the caller exactly as before. The abort is still sent, so the
+           real request is genuinely cancelled rather than left in flight; the race is what
+           makes the caller's await end either way. */
+        /* The caller's cancellation is raced for the same reason as the deadline, and keeps
+           its AbortError name so the loop below can tell "the caller changed their mind"
+           from "the network stalled" -- the first propagates, the second is swallowed by
+           the callers that already expect a lookup to be able to fail. */
+        const cancelled = init.signal && new Promise((_, reject) => {
+          const stop = () => reject(Object.assign(new Error("Request cancelled"), {name: "AbortError"}));
+          if (init.signal.aborted) stop();
+          else init.signal.addEventListener("abort", stop, {once: true});
+        });
+        cancelled?.catch(() => {});
+        let fire = null;
+        const expiry = new Promise((_, reject) => {
+          fire = setTimeout(() => {
+            expired = true;
+            controller?.abort();
+            reject(new Error(`Scryfall did not answer within ${timeoutMs}ms`));
+          }, Math.max(0, deadline - Date.now()));
+        });
+        expiry.catch(() => {});   // raced, so its rejection is handled there or nowhere
+        const timer = fire;
         try {
-          const payload = await enqueue(async () => {
+          const payload = await Promise.race([expiry, ...(cancelled ? [cancelled] : []), enqueue(async () => {
             stats.requests += 1;
             const response = await fetchImpl(`${baseUrl}${path}`, {
               method: init.method || "GET",
               headers: {Accept: "application/json", "User-Agent": USER_AGENT, ...(init.body ? {"Content-Type": "application/json"} : {}), ...(init.headers || {})},
               body: init.body,
-              signal: init.signal
+              signal: controller ? controller.signal : init.signal
             });
             if (response.status === 404) {
               stats.notFound += 1;
@@ -222,20 +284,32 @@
             if (response.status === 429 || response.status >= 500) return {status: response.status, retry: true};
             if (!response.ok) throw new Error(`Scryfall responded ${response.status}`);
             return {status: response.status, data: await response.json()};
-          });
+          })]);
           if (payload.retry) {
             stats.retries += 1;
             lastError = new Error(`Scryfall responded ${payload.status}`);
+            if (Date.now() >= deadline) break;
             await sleep(250 * (2 ** (attempt - 1)));
             continue;
           }
           writeCache(key, payload.data);
           return payload.data;
         } catch (error) {
-          if (error?.name === "AbortError") throw error;
+          /* The caller cancelling is not a failure to retry -- it propagates. Our own
+             deadline expiring is, and it ends the attempts rather than starting another
+             that cannot outlast a deadline already passed. */
+          if (error?.name === "AbortError" && !expired) throw error;
+          if (expired) {
+            lastError = new Error(`Scryfall did not answer within ${timeoutMs}ms`);
+            break;
+          }
           lastError = error;
           stats.retries += 1;
+          if (Date.now() >= deadline) break;
           await sleep(250 * (2 ** (attempt - 1)));
+        } finally {
+          if (timer !== null) clearTimeout(timer);
+          init.signal?.removeEventListener?.("abort", relay);
         }
       }
       stats.errors += 1;
