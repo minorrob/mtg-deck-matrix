@@ -8,7 +8,7 @@
   const folded=s=>String(s||'').normalize('NFKC').trim().toLowerCase();
   function key(name){return 'card:'+btoa(String.fromCharCode(...new TextEncoder().encode(folded(name)))).replaceAll('+','-').replaceAll('/','_').replaceAll('=','');}
   function safeURL(raw){try{const u=new URL(raw);return u.protocol==='https:'?u.href:'';}catch{return '';}}
-  function normalize(raw,prior={}){const c={...prior,...raw},name=String(c.name||'').trim();if(!name)throw Error('A card needs a name.');const type=c.typeLine||c.type_line||c.type||'',oracle=c.oracleText||c.oracle_text||'',identity=c.colorIdentity||c.color_identity||String(c.ci||'').split('');const tags=Classify.classify({typeLine:type,oracleText:oracle,keywords:c.keywords||[],card_faces:c.faces||c.card_faces||[]});const price=c.price===null?null:Number(c.price);return {id:key(name),oracleId:c.oracleId||c.oracle_id||'',scryfallId:c.scryfallId||'',name,typeLine:type,oracleText:oracle,manaCost:c.manaCost||c.mana_cost||'',manaValue:c.manaValue??c.cmc??c.mv??null,colorIdentity:identity,colors:c.colors||[],keywords:c.keywords||[],power:c.power??null,toughness:c.toughness??null,rarity:c.rarity||'',commander:!!(c.commander||c.isCommander||c.canBeCommander||(/Legendary/.test(type)&&/Creature/.test(type))||/can be your commander/i.test(oracle)),verified:c.verified??!!c.legalities?.commander,legalities:c.legalities||{},mechanics:raw.mechanics||tags.mechanics||[],roles:raw.roles||tags.roles||[],tribes:raw.tribes||tags.tribes||[],requires:raw.requires||tags.requires||[],causes:raw.causes||tags.causes||[],triggers:raw.triggers||tags.triggers||[],produces:raw.produces||tags.produces||[],multiplies:raw.multiplies||tags.multiplies||[],grants:raw.grants||tags.grants||[],extends:raw.extends||tags.extends||[],price:Number.isFinite(price)&&price>0?price:null,priceUpdated:c.priceUpdated||'',priceSource:c.priceSource||'Scryfall snapshot',image:safeURL(c.imageLarge||c.normal||c.image||c.small||('https://api.scryfall.com/cards/named?exact='+encodeURIComponent(name)+'&format=image&version=normal')),set:c.setCode||c.set||'',setName:c.setName||'',collector:c.collector||c.collectorNumber||c.collector_number||'',cheapestSet:c.cheapestSet||'',cheapestSetCode:c.cheapestSetCode||'',printings:c.printings||null,flavorName:c.flavorName||c.flavor_name||'',commanderRank:c.commanderRank??null,rank:c.edhrecRank||c.rank||null,source:c.source||'Bundled Scryfall snapshot',updatedAt:c.updatedAt||'',url:safeURL(c.url||c.scryfallUri||c.scryfall_uri||''),gameChanger:!!(c.gameChanger||c.game_changer),layout:c.layout||'',faces:c.faces||c.card_faces||[]};}
+  function normalize(raw,prior={}){const c={...prior,...raw},name=String(c.name||'').trim();if(!name)throw Error('A card needs a name.');const type=c.typeLine||c.type_line||c.type||'',oracle=c.oracleText||c.oracle_text||'',identity=c.colorIdentity||c.color_identity||String(c.ci||'').split('');const tags=Classify.classify({typeLine:type,oracleText:oracle,keywords:c.keywords||[],card_faces:c.faces||c.card_faces||[]});const price=c.price===null?null:Number(c.price);return {id:key(name),oracleId:c.oracleId||c.oracle_id||'',scryfallId:c.scryfallId||'',name,typeLine:type,oracleText:oracle,manaCost:c.manaCost||c.mana_cost||'',manaValue:c.manaValue??c.cmc??c.mv??null,colorIdentity:identity,colors:c.colors||[],keywords:c.keywords||[],power:c.power??null,toughness:c.toughness??null,rarity:c.rarity||'',commander:!!(c.commander||c.isCommander||c.canBeCommander||(/Legendary/.test(type)&&/Creature/.test(type))||/can be your commander/i.test(oracle)),verified:c.verified??!!c.legalities?.commander,legalities:c.legalities||{},mechanics:raw.mechanics||tags.mechanics||[],roles:raw.roles||tags.roles||[],tribes:raw.tribes||tags.tribes||[],requires:raw.requires||tags.requires||[],causes:raw.causes||tags.causes||[],triggers:raw.triggers||tags.triggers||[],produces:raw.produces||tags.produces||[],multiplies:raw.multiplies||tags.multiplies||[],grants:raw.grants||tags.grants||[],extends:raw.extends||tags.extends||[],price:Number.isFinite(price)&&price>0?price:null,priceUpdated:c.priceUpdated||'',priceSource:c.priceSource||'Scryfall snapshot',image:safeURL(c.imageLarge||c.normal||c.image||c.small||('https://api.scryfall.com/cards/named?exact='+encodeURIComponent(name)+'&format=image&version=normal')),set:c.setCode||c.set||'',setName:c.setName||'',collector:c.collector||c.collectorNumber||c.collector_number||'',cheapestSet:c.cheapestSet||'',cheapestSetCode:c.cheapestSetCode||'',printings:c.printings||null,flavorName:c.flavorName||c.flavor_name||'',commanderRank:c.commanderRank??null,rank:c.edhrecRank||c.rank||null,source:c.source||'Bundled Scryfall snapshot',updatedAt:c.updatedAt||'',url:safeURL(c.url||c.scryfallUri||c.scryfall_uri||''),buy:safeURL(c.buy||c.tcgplayerUrl||''),gameChanger:!!(c.gameChanger||c.game_changer),layout:c.layout||'',faces:c.faces||c.card_faces||[]};}
   /* THE PLAY-STYLE VOCABULARY. Each entry is a label a reader recognises and the rules
      text that earns it, matched against oracle text, keywords, mechanics, roles and the
      classifier's cause/trigger tags -- so a card the graph knows only as tags still
@@ -62,6 +62,48 @@
     if(settled[3].status==='fulfilled'&&settled[3].value){const ranks=settled[3].value;rankDate=ranks.generatedAt;const ranked=new Map(ranks.cards.map(c=>[folded(c.name),c]));for(const c of [...byId.values()]){const match=ranked.get(folded(c.name))||ranked.get(folded(c.name.split(' // ')[0]));if(match)add({...c,commanderRank:match.rank});}}
     // An empty offline catalog must not prevent opening backup restore or User Functions.
     function search(query,{commander=false,mechanic='',rankMax=null,limit=80,colors=null}={}){const q=folded(query),m=folded(mechanic),within=colors&&colors.length?new Set(colors):null;return [...byId.values()].filter(c=>(!commander||c.commander&&c.legalities.commander==='legal')&&(!q||folded(c.name).includes(q)||(c.flavorName&&folded(c.flavorName).includes(q)))&&(!m||matchesMechanic(c,m))&&(!within||(c.colorIdentity||[]).every(x=>within.has(x)))&&(rankMax===null||c.commanderRank!==null&&c.commanderRank<=rankMax)).sort((a,b)=>((folded(a.name)===q||folded(a.flavorName)===q)?-1:(folded(b.name)===q||folded(b.flavorName)===q)?1:0)||((commander?a.commanderRank:a.rank)||Infinity)-((commander?b.commanderRank:b.rank)||Infinity)||a.name.localeCompare(b.name)).slice(0,limit);}
+    /* LIKE FOR LIKE. A replacement picker that offers the catalog's most popular cards is
+       offering nothing: the reader is not replacing a card with a good card, they are
+       replacing it with THIS card's understudy -- about this price, doing about this job,
+       legal where this one was. Ranked in that order, and every row says why it is there.
+         colours   a hard filter. An illegal card is not a replacement.
+         price     closeness, not cheapness. A $30 card is a bad answer for a $2 slot and
+                   so is a bulk common; both change what the deck costs to build.
+         what it does   shared mechanics, roles, triggers, causes, multipliers, grants --
+                   the terms the graph joins cards on, which is what makes a swap a swap.
+         what it is     the same primary type, weighed last: a sorcery that does the
+                   creature's job is often the better card. */
+    const LIKE_FIELDS=['mechanics','roles','causes','triggers','multiplies','grants','extends'];
+    const GENERIC_ROLE=new Set(['creatures','lands','artifacts','enchantments','instants','sorceries','planeswalkers']);
+    function likeTerms(c){const out=new Set();for(const field of LIKE_FIELDS)for(const t of c[field]||[]){if(field==='roles'&&GENERIC_ROLE.has(t))continue;out.add(field+':'+t);}return out;}
+    const primaryType=c=>String(c.typeLine||'').split('—')[0].trim().replace(/^(Legendary|Basic|Snow|Artifact |Enchantment )+/,'').trim()||String(c.typeLine||'').split('—')[0].trim();
+    function likeness(target,terms,c){
+      if(c.id===target.id)return null;
+      const shared=[];for(const t of likeTerms(c))if(terms.has(t))shared.push(t.split(':')[1]);
+      const p=Number(c.price),p0=Number(target.price);
+      /* Closeness on a log scale: within a factor of two is close, a factor of ten is not.
+         A card with no recorded price is neither rewarded nor ruled out. */
+      const near=p>0&&p0>0?Math.max(0,1-Math.abs(Math.log(p/p0))/Math.log(8)):.35;
+      const sameType=primaryType(c)===primaryType(target);
+      const score=Math.min(5,shared.length)*3+near*12+(sameType?3:0)
+        +(Number.isFinite(c.rank)&&c.rank>0?Math.max(0,3-Math.log10(c.rank)):0);
+      const why=[p>0&&p0>0?(Math.abs(p-p0)<=Math.max(.5,p0*.25)?'about the same price':p<p0?'cheaper':'dearer'):'price unknown',
+        shared.length?shared.slice(0,3).join(', '):'no shared terms',sameType?primaryType(c):'different type'].filter(Boolean);
+      return {card:c,score,shared,near,sameType,why:why.join(' · ')};
+    }
+    function similar(target,{colors=null,query='',limit=30}={}){
+      if(!target)return search(query,{limit}).map(c=>({card:c,score:0,shared:[],why:''}));
+      const within=colors&&colors.length?new Set(colors):null,q=folded(query),terms=likeTerms(target);
+      const out=[];
+      for(const c of byId.values()){
+        if(q&&!folded(c.name).includes(q)&&!(c.flavorName&&folded(c.flavorName).includes(q)))continue;
+        if(within&&!(c.colorIdentity||[]).every(x=>within.has(x)))continue;
+        if(c.legalities&&c.legalities.commander==='banned')continue;
+        const row=likeness(target,terms,c);
+        if(row)out.push(row);
+      }
+      return out.sort((a,b)=>b.score-a.score||a.card.name.localeCompare(b.card.name)).slice(0,limit);
+    }
     async function resolve(value,{signal,printing}={}){const name=String(value||'').trim();if(printing?.set&&printing?.collector){const found=await options.client.bySetNumber(printing.set,printing.collector,{signal});if(!found)return null;if(folded(found.name)!==folded(name))throw Error(`That printing is ${found.name}, not ${name}. Review the row before import.`);return add({...found,collector:printing.collector,verified:true,source:'Scryfall exact printing',updatedAt:new Date().toISOString()});}const local=byName.get(folded(name));if(local)return local;if(/^https?:\/\//i.test(name)){const result=await options.link.resolveLink(name,{client:options.client,allowManual:false,signal});return result.card?add({...result.card,verified:true,source:name,updatedAt:new Date().toISOString()}):null;}const found=await options.client.named(name,{exact:true,signal});return found?add({...found,verified:true,source:'Scryfall exact name',updatedAt:new Date().toISOString()}):null;}
     /* THE LOWEST-COST PAPER PRINTING. A Scryfall name lookup answers with one printing and
        that printing's price, which is whichever edition Scryfall considers canonical -- often
@@ -105,7 +147,7 @@
       return {hydrated,missing};
     }
     async function loadGraph(){if(graph)return graph;if(!graphLoading)graphLoading=load(options.urls.graph).then(data=>{graph=data;for(const c of data.cards){const prior=byName.get(folded(c.name));add({...c,oracleId:c.id,legalities:prior?.legalities||{commander:'legal'},verified:true});}return data;}).catch(error=>{graphLoading=null;throw error;});return graphLoading;}
-    return {add,search,resolve,details,cheapest,hydrate,loadGraph,exact:name=>byName.get(folded(name))||null,get:id=>byId.get(id)||null,all:()=>[...byId.values()],load,universeDate,rankDate,available:()=>byId.size};
+    return {add,search,similar,resolve,details,cheapest,hydrate,loadGraph,exact:name=>byName.get(folded(name))||null,get:id=>byId.get(id)||null,all:()=>[...byId.values()],load,universeDate,rankDate,available:()=>byId.size};
   }
   return {key,folded,normalize,safeURL,create,MECHANICS,matchesMechanic,playStyles};
 });
