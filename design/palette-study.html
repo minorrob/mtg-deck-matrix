@@ -1,0 +1,430 @@
+<title>CrankMagic Palette Study</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* ---------------------------------------------------------------- document tokens
+   The study itself is theme-aware. The SPECIMENS are not: they are previews of a dark
+   application, and a specimen that changed with the reader's OS would no longer be a
+   preview of anything. Every specimen colour is therefore literal and scoped. */
+:root{
+  --ink:#1b1a21; --ink-soft:#54525f; --ink-faint:#84828f;
+  --paper:#f7f5f2; --card:#ffffff; --rule:#dedad3;
+  --mark:#8a3324;
+  --display:"Fraunces","Iowan Old Style",Georgia,serif;
+  --body:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --app:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ink:#ece9e3; --ink-soft:#a8a49b; --ink-faint:#7d7a72;
+    --paper:#16151a; --card:#1e1d23; --rule:#33313a; --mark:#e08a6f;
+  }
+}
+:root[data-theme="dark"]{
+  --ink:#ece9e3; --ink-soft:#a8a49b; --ink-faint:#7d7a72;
+  --paper:#16151a; --card:#1e1d23; --rule:#33313a; --mark:#e08a6f;
+}
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);line-height:1.6;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1100px;margin:0 auto;padding:0 28px 96px}
+
+/* ---------------------------------------------------------------- masthead */
+header.top{padding:60px 0 34px;border-bottom:2px solid var(--ink);margin-bottom:8px}
+.kicker{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--mark);margin:0 0 14px}
+h1{font-family:var(--display);font-weight:600;font-size:clamp(38px,6vw,62px);line-height:1.02;
+  letter-spacing:-.02em;margin:0 0 18px;text-wrap:balance}
+.standfirst{font-size:17px;color:var(--ink-soft);max-width:62ch;margin:0}
+.standfirst strong{color:var(--ink);font-weight:600}
+
+/* ---------------------------------------------------------------- the brief */
+.brief{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:0;
+  border-bottom:1px solid var(--rule);margin-bottom:56px}
+.brief div{padding:22px 22px 24px 0}
+.brief div+div{padding-left:22px;border-left:1px solid var(--rule)}
+.brief h3{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-faint);margin:0 0 8px;font-weight:500}
+.brief p{margin:0;font-size:14px;color:var(--ink-soft)}
+
+/* ---------------------------------------------------------------- palette band */
+.band{margin:0 0 78px}
+.band-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:14px;
+  padding-bottom:12px;border-bottom:1px solid var(--rule);margin-bottom:24px}
+.band-num{font-family:var(--mono);font-size:12px;color:var(--mark);letter-spacing:.1em}
+.band-head h2{font-family:var(--display);font-weight:600;font-size:31px;letter-spacing:-.015em;margin:0}
+.band-tag{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-faint);margin-left:auto}
+.band-lede{font-size:15.5px;color:var(--ink-soft);max-width:66ch;margin:0 0 26px}
+.band-lede strong{color:var(--ink);font-weight:600}
+
+.split{display:grid;grid-template-columns:250px minmax(0,1fr);gap:30px;align-items:start}
+@media(max-width:860px){.split{grid-template-columns:1fr}}
+
+/* swatch rail ---------------------------------------------------- */
+.swatches{display:flex;flex-direction:column;gap:0;border:1px solid var(--rule);border-radius:3px;
+  overflow:hidden}
+.sw{display:grid;grid-template-columns:38px minmax(0,1fr);align-items:center;gap:11px;
+  padding:9px 12px 9px 0;background:var(--card)}
+.sw+.sw{border-top:1px solid var(--rule)}
+.sw i{display:block;height:38px;border-right:1px solid var(--rule)}
+.sw b{display:block;font-size:12.5px;font-weight:600;line-height:1.25}
+.sw code{font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);letter-spacing:.02em}
+
+.tradeoff{margin-top:16px;font-size:13px;color:var(--ink-soft);border-left:2px solid var(--mark);
+  padding-left:13px}
+.tradeoff b{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--mark);margin-bottom:5px;font-weight:500}
+
+/* ================================================================ SPECIMEN
+   One markup, three token sets. Everything below reads its colour from --g (ground),
+   --p (panel), --r (raised: the plane a control sits on), --l (line), --a (accent),
+   --w (warm/decision), --t (text), --tm (muted text). Change the six, change the app. */
+.spec{border-radius:6px;overflow:hidden;border:1px solid var(--l);background:var(--g);
+  font-family:var(--app);color:var(--t);font-size:13px;line-height:1.5}
+.spec-bar{display:flex;align-items:center;gap:9px;padding:10px 14px;background:var(--p);
+  border-bottom:1px solid var(--l)}
+.spec-logo{width:19px;height:19px;border-radius:50%;flex:0 0 19px;
+  background:radial-gradient(circle at 32% 26%,#dcf8ff 0%,var(--a) 48%,transparent 78%)}
+.spec-bar strong{font-size:14px;letter-spacing:-.01em}
+.spec-bar span{font-size:10.5px;color:var(--tm);margin-left:2px}
+.spec-tabs{margin-left:auto;display:flex;gap:3px}
+.spec-tabs em{font-style:normal;font-size:11px;padding:4px 9px;border-radius:4px;color:var(--tm)}
+.spec-tabs em.on{background:var(--r);color:var(--t);box-shadow:inset 0 -2px var(--a)}
+
+.spec-body{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px;padding:16px}
+@media(max-width:700px){.spec-body{grid-template-columns:1fr}}
+
+.start{background:var(--wbg);border:1px solid var(--wln);border-left:3px solid var(--w);
+  border-radius:7px;padding:12px 13px 14px;margin-bottom:14px}
+.start h4{margin:0 0 9px;font-size:15px;color:var(--wtx);letter-spacing:-.01em}
+.start label{display:block;font-size:11px;color:var(--wtx);opacity:.85;margin-bottom:5px}
+.start select{width:100%;font:inherit;font-size:12px;font-weight:600;padding:8px 9px;border-radius:5px;
+  background:var(--wfd);color:var(--wtx);border:1px solid var(--wln)}
+
+.grp{margin-bottom:13px}
+.grp h5{margin:0 0 3px;font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--a)}
+.grp p{margin:0 0 9px;font-size:11.5px;color:var(--tm)}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+@media(max-width:700px){.fields{grid-template-columns:1fr}}
+.fields label{font-size:11px;color:var(--tm);display:block}
+.fields input,.fields select{width:100%;font:inherit;font-size:12px;margin-top:4px;padding:8px 9px;
+  border-radius:5px;background:var(--r);border:1px solid var(--l2);color:var(--t)}
+.req{display:inline-grid;place-items:center;width:12px;height:12px;border-radius:50%;
+  margin-left:5px;vertical-align:-1px;background:var(--req);color:#2a0906;
+  font-size:8px;font-weight:700;line-height:1}
+
+/* the numbered run pane, as shipped */
+.run{background:var(--p);border:1px solid var(--l);border-radius:7px;padding:13px}
+.pill{display:inline-block;font-size:10.5px;padding:4px 8px;border-radius:5px;
+  background:var(--wbg);border:1px solid var(--wln);color:var(--w);margin-bottom:11px}
+.step{display:grid;grid-template-columns:26px minmax(0,1fr) auto;gap:9px;align-items:center;
+  margin-bottom:11px}
+.orb{width:26px;height:26px;border-radius:50%;border:1px solid var(--l2);background:var(--r)}
+.orb.done{border-color:var(--okl);background:var(--okb)}
+.orb.live{border-color:var(--a);background:var(--ab);box-shadow:0 0 11px var(--ag)}
+.step span{font-size:11.5px}
+.btn{font:inherit;font-size:11px;font-weight:600;padding:5px 10px;border-radius:5px;
+  display:inline-flex;align-items:center;gap:6px;border:1px solid var(--l2);
+  background:var(--r);color:var(--t)}
+.btn i{font-style:normal;display:inline-grid;place-items:center;width:16px;height:16px;
+  border-radius:50%;background:var(--l2);font-size:9.5px;font-weight:700}
+.btn.go{background:var(--a);border-color:var(--a);color:var(--aon)}
+.btn.go i{background:var(--agi);color:var(--a)}
+.btn.off{opacity:.5}
+
+/* the shop table */
+/* `color` is set here rather than inherited: opened as a bare file this page has no
+   doctype (the artifact host supplies one), and in quirks mode a table does not inherit
+   colour from its ancestors -- which rendered every card name in the document's own dark
+   ink on the specimen's dark ground. */
+.tbl{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:14px;color:var(--t)}
+.tbl th{text-align:left;font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--tm);
+  font-weight:600;padding:7px 9px;border-bottom:1px solid var(--l)}
+.tbl td{padding:8px 9px;border-bottom:1px solid var(--l);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:0}
+.tbl b{font-weight:600}
+.money{font-variant-numeric:tabular-nums;text-align:right}
+.buy{font:inherit;font-size:10.5px;font-weight:600;padding:4px 10px;border-radius:4px;
+  background:var(--okb);border:1px solid var(--okl);color:var(--okt)}
+.rar{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:3px;
+  font-size:9.5px;font-weight:700}
+.rar.m{background:#7a3a12;color:#ffd9a8}
+.rar.r{background:#6b5a16;color:#ffeaa0}
+.rar.u{background:#3f4d59;color:#d4e6f5}
+.pips{display:inline-flex;gap:2px;vertical-align:-2px}
+.pip{width:13px;height:13px;border-radius:50%;display:inline-grid;place-items:center;
+  font-size:8px;font-weight:700;color:#1a1206}
+.pip.W{background:#f4efd8}.pip.U{background:#8fbfe0}.pip.B{background:#a49a94}
+.pip.R{background:#e79383}.pip.G{background:#93c6a4}
+
+/* --------------------------------------------------- the three token sets */
+.p1{ /* Deep Field */
+  --g:#12161f; --p:#1a2030; --r:#232c40; --l:#2e3850; --l2:#4b5975;
+  --t:#eef4fd; --tm:#93a6c2; --a:#72baff; --aon:#06131f; --ab:#0e3358; --ag:#1a6fbd55; --agi:#0b2340;
+  --w:#e0b273; --wbg:#2a2519; --wln:#6d5c3d; --wtx:#f6e3c6; --wfd:#332c1d;
+  --okb:#17382a; --okl:#2f7355; --okt:#9fe6c4; --req:#ef6b60}
+.p2{ /* Guild Slate */
+  --g:#141416; --p:#1d1e21; --r:#292a2e; --l:#33343a; --l2:#4a4c54;
+  --t:#f0eff0; --tm:#9d9ca3; --a:#c9a227; --aon:#181401; --ab:#3a2f08; --ag:#8f7a1e55; --agi:#3a2f08;
+  --w:#b7c7d8; --wbg:#22262b; --wln:#4a545f; --wtx:#e7eef5; --wfd:#2b3037;
+  --okb:#1e3324; --okl:#3f6b4c; --okt:#a6ddb6; --req:#d8453c}
+.p3{ /* Twilight Archive */
+  --g:#171420; --p:#211d2d; --r:#2c2740; --l:#37314b; --l2:#544a72;
+  --t:#f0eaf5; --tm:#a89bbd; --a:#4fd4c0; --aon:#04211d; --ab:#0e3b36; --ag:#20a89355; --agi:#0e3b36;
+  --w:#e8c88a; --wbg:#2b2419; --wln:#6a5636; --wtx:#f7e9cf; --wfd:#352c1e;
+  --okb:#14352f; --okl:#2c6f62; --okt:#9ae4d4; --req:#ff7a6b}
+
+/* ---------------------------------------------------------------- close */
+.close{border-top:2px solid var(--ink);padding-top:26px;margin-top:14px}
+.close h2{font-family:var(--display);font-weight:600;font-size:26px;margin:0 0 14px;letter-spacing:-.015em}
+.rec{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+.rec div{font-size:14px;color:var(--ink-soft)}
+.rec h4{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--mark);margin:0 0 7px;font-weight:500}
+.rec p{margin:0 0 9px}
+.rec strong{color:var(--ink);font-weight:600}
+footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--rule);
+  font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
+</style>
+
+<div class="wrap">
+
+<header class="top">
+  <p class="kicker">CrankMagic · Interface colour · September 2026</p>
+  <h1>Three ways out of one blue.</h1>
+  <p class="standfirst">Every surface in CrankMagic today is a shade of the same navy — ground, panel, table row and text field all within about eight points of lightness of each other. That is why the Deck Lab's three sections read as one block, and why a field you can type into recedes behind the card holding it. <strong>The fix is not more blue. It is planes and a second colour.</strong> Below, the same four app surfaces rendered three times, changing nothing but six tokens.</p>
+</header>
+
+<div class="brief">
+  <div>
+    <h3>What is broken</h3>
+    <p>Inputs are filled <code>#141824</code> against a <code>#191b24</code> panel — darker than the surface they sit on, so controls sink instead of lift.</p>
+  </div>
+  <div>
+    <h3>What each must do</h3>
+    <p>Separate three planes; carry one action colour; carry one decision colour that is not the action colour; leave the five mana pips legible.</p>
+  </div>
+  <div>
+    <h3>How to read this</h3>
+    <p>The specimen markup is identical in all three. Only the six tokens differ, so any difference you see is the palette and nothing else.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ ONE -->
+<section class="band">
+  <div class="band-head">
+    <span class="band-num">01</span>
+    <h2>Deep Field</h2>
+    <span class="band-tag">Least risk · keeps the brand</span>
+  </div>
+  <p class="band-lede">The blue stays; it just stops being the only thing. Three genuinely separated planes, a warm amber reserved for <strong>the one decision you owe the app right now</strong>, and controls that sit above their panel rather than below it. Nothing in the existing wordmark, the mist animation, or the mana pips has to change.</p>
+
+  <div class="split">
+    <div>
+      <div class="swatches">
+        <div class="sw"><i style="background:#12161f"></i><div><b>Ground</b><code>#12161f</code></div></div>
+        <div class="sw"><i style="background:#1a2030"></i><div><b>Panel</b><code>#1a2030</code></div></div>
+        <div class="sw"><i style="background:#232c40"></i><div><b>Control</b><code>#232c40</code></div></div>
+        <div class="sw"><i style="background:#72baff"></i><div><b>Action</b><code>#72baff</code></div></div>
+        <div class="sw"><i style="background:#e0b273"></i><div><b>Decision</b><code>#e0b273</code></div></div>
+        <div class="sw"><i style="background:#ef6b60"></i><div><b>Required</b><code>#ef6b60</code></div></div>
+      </div>
+      <div class="tradeoff"><b>Costs</b>Still recognisably a blue dashboard. If the complaint is "too monochromatic", this answers the legibility half of it and only part of the character half.</div>
+    </div>
+
+    <div class="spec p1">
+      <div class="spec-bar">
+        <span class="spec-logo"></span><strong>CrankMagic</strong><span>the deck you want to play</span>
+        <span class="spec-tabs"><em>Decks</em><em class="on">Deck Lab</em><em>Discover</em><em>Shop</em></span>
+      </div>
+      <div class="spec-body">
+        <div>
+          <div class="start">
+            <h4>Starting point</h4>
+            <label>Select to proceed by defining the Commander or uploading an Existing Build</label>
+            <select><option>Select Commander → Auto-build 99</option></select>
+          </div>
+          <div class="grp">
+            <h5>Commander choice</h5>
+            <p>Search or enter a commander from among the 3,400+ legal commanders in MtG.</p>
+            <div class="fields">
+              <label>Search commander name<span class="req" title="Required">R</span><input value="Krenko, Mob Boss"></label>
+              <label>Play style filter<select><option>Any play style</option></select></label>
+              <label>EDHREC rank filter<select><option>Any rank</option></select></label>
+              <label>Deck name<span class="req" title="Required">R</span><input value="Goblin Mob"></label>
+            </div>
+          </div>
+          <table class="tbl">
+            <tr><th>Card</th><th>Colour</th><th>Rarity</th><th class="money">Price</th><th></th></tr>
+            <tr><td><b>Skullclamp</b></td><td><span class="pips"><span class="pip B">B</span></span></td><td><span class="rar u">U</span></td><td class="money">$3.41</td><td><button class="buy">Buy</button></td></tr>
+            <tr><td><b>Purphoros, God of the Forge</b></td><td><span class="pips"><span class="pip R">R</span></span></td><td><span class="rar m">M</span></td><td class="money">$12.80</td><td><button class="buy">Buy</button></td></tr>
+            <tr><td><b>Coat of Arms</b></td><td><span class="pips"><span class="pip W">W</span><span class="pip U">U</span><span class="pip G">G</span></span></td><td><span class="rar r">R</span></td><td class="money">$18.05</td><td><button class="buy">Buy</button></td></tr>
+          </table>
+        </div>
+        <div class="run">
+          <span class="pill">Not measured yet</span>
+          <div class="step"><span class="orb done"></span><span>Initial 99 Cards Chosen</span><button class="btn"><i>1</i>Run</button></div>
+          <div class="step"><span class="orb live"></span><span>Simulator &amp; 99 Refined</span><button class="btn go"><i>2</i>Run</button></div>
+          <div class="step"><span class="orb"></span><span>Simulator loops complete</span><button class="btn off"><i>3</i>Run</button></div>
+          <div class="step"><span class="orb"></span><span>Simulation Report</span><button class="btn off"><i>4</i>Run</button></div>
+          <div class="step"><span class="orb"></span><span>Completed Deck</span><button class="btn off"><i>5</i>Run</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================================ TWO -->
+<section class="band">
+  <div class="band-head">
+    <span class="band-num">02</span>
+    <h2>Guild Slate</h2>
+    <span class="band-tag">Most Magic · card colours lead</span>
+  </div>
+  <p class="band-lede">Take the hue out of the interface entirely. A neutral graphite ground means <strong>the five mana pips become the only saturated things on the screen</strong> — so colour in this app always means a card's colour, never a chrome decision. The action colour is the gold of a card border, which is also the only warm note the chrome is allowed.</p>
+
+  <div class="split">
+    <div>
+      <div class="swatches">
+        <div class="sw"><i style="background:#141416"></i><div><b>Ground</b><code>#141416</code></div></div>
+        <div class="sw"><i style="background:#1d1e21"></i><div><b>Panel</b><code>#1d1e21</code></div></div>
+        <div class="sw"><i style="background:#292a2e"></i><div><b>Control</b><code>#292a2e</code></div></div>
+        <div class="sw"><i style="background:#c9a227"></i><div><b>Action</b><code>#c9a227</code></div></div>
+        <div class="sw"><i style="background:#b7c7d8"></i><div><b>Decision</b><code>#b7c7d8</code></div></div>
+        <div class="sw"><i style="background:#d8453c"></i><div><b>Required</b><code>#d8453c</code></div></div>
+      </div>
+      <div class="tradeoff"><b>Costs</b>The blue mist in the header becomes the only blue in the product, so it reads as an accent rather than the ground it grew out of. Gold on graphite also needs care at small sizes — it is the one pairing here that can go muddy.</div>
+    </div>
+
+    <div class="spec p2">
+      <div class="spec-bar">
+        <span class="spec-logo"></span><strong>CrankMagic</strong><span>the deck you want to play</span>
+        <span class="spec-tabs"><em>Decks</em><em class="on">Deck Lab</em><em>Discover</em><em>Shop</em></span>
+      </div>
+      <div class="spec-body">
+        <div>
+          <div class="start">
+            <h4>Starting point</h4>
+            <label>Select to proceed by defining the Commander or uploading an Existing Build</label>
+            <select><option>Select Commander → Auto-build 99</option></select>
+          </div>
+          <div class="grp">
+            <h5>Commander choice</h5>
+            <p>Search or enter a commander from among the 3,400+ legal commanders in MtG.</p>
+            <div class="fields">
+              <label>Search commander name<span class="req" title="Required">R</span><input value="Krenko, Mob Boss"></label>
+              <label>Play style filter<select><option>Any play style</option></select></label>
+              <label>EDHREC rank filter<select><option>Any rank</option></select></label>
+              <label>Deck name<span class="req" title="Required">R</span><input value="Goblin Mob"></label>
+            </div>
+          </div>
+          <table class="tbl">
+            <tr><th>Card</th><th>Colour</th><th>Rarity</th><th class="money">Price</th><th></th></tr>
+            <tr><td><b>Skullclamp</b></td><td><span class="pips"><span class="pip B">B</span></span></td><td><span class="rar u">U</span></td><td class="money">$3.41</td><td><button class="buy">Buy</button></td></tr>
+            <tr><td><b>Purphoros, God of the Forge</b></td><td><span class="pips"><span class="pip R">R</span></span></td><td><span class="rar m">M</span></td><td class="money">$12.80</td><td><button class="buy">Buy</button></td></tr>
+            <tr><td><b>Coat of Arms</b></td><td><span class="pips"><span class="pip W">W</span><span class="pip U">U</span><span class="pip G">G</span></span></td><td><span class="rar r">R</span></td><td class="money">$18.05</td><td><button class="buy">Buy</button></td></tr>
+          </table>
+        </div>
+        <div class="run">
+          <span class="pill">Not measured yet</span>
+          <div class="step"><span class="orb done"></span><span>Initial 99 Cards Chosen</span><button class="btn"><i>1</i>Run</button></div>
+          <div class="step"><span class="orb live"></span><span>Simulator &amp; 99 Refined</span><button class="btn go"><i>2</i>Run</button></div>
+          <div class="step"><span class="orb"></span><span>Simulator loops complete</span><button class="btn off"><i>3</i>Run</button></div>
+          <div class="step"><span class="orb"></span><span>Simulation Report</span><button class="btn off"><i>4</i>Run</button></div>
+          <div class="step"><span class="orb"></span><span>Completed Deck</span><button class="btn off"><i>5</i>Run</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================================ THREE -->
+<section class="band">
+  <div class="band-head">
+    <span class="band-num">03</span>
+    <h2>Twilight Archive</h2>
+    <span class="band-tag">Most character · furthest from today</span>
+  </div>
+  <p class="band-lede">A plum-ink ground and a teal action colour. This is the one that stops looking like a dashboard: the app reads as <strong>a spellbook you are keeping notes in</strong>, which is closer to what CrankMagic actually is than a metrics console. Teal is far enough from every mana colour that an action can never be mistaken for a card property.</p>
+
+  <div class="split">
+    <div>
+      <div class="swatches">
+        <div class="sw"><i style="background:#171420"></i><div><b>Ground</b><code>#171420</code></div></div>
+        <div class="sw"><i style="background:#211d2d"></i><div><b>Panel</b><code>#211d2d</code></div></div>
+        <div class="sw"><i style="background:#2c2740"></i><div><b>Control</b><code>#2c2740</code></div></div>
+        <div class="sw"><i style="background:#4fd4c0"></i><div><b>Action</b><code>#4fd4c0</code></div></div>
+        <div class="sw"><i style="background:#e8c88a"></i><div><b>Decision</b><code>#e8c88a</code></div></div>
+        <div class="sw"><i style="background:#ff7a6b"></i><div><b>Required</b><code>#ff7a6b</code></div></div>
+      </div>
+      <div class="tradeoff"><b>Costs</b>The biggest change, and the one most likely to fight the existing card art — plum sits behind every card thumbnail in the product. The header mist would need recolouring to teal to stay coherent.</div>
+    </div>
+
+    <div class="spec p3">
+      <div class="spec-bar">
+        <span class="spec-logo"></span><strong>CrankMagic</strong><span>the deck you want to play</span>
+        <span class="spec-tabs"><em>Decks</em><em class="on">Deck Lab</em><em>Discover</em><em>Shop</em></span>
+      </div>
+      <div class="spec-body">
+        <div>
+          <div class="start">
+            <h4>Starting point</h4>
+            <label>Select to proceed by defining the Commander or uploading an Existing Build</label>
+            <select><option>Select Commander → Auto-build 99</option></select>
+          </div>
+          <div class="grp">
+            <h5>Commander choice</h5>
+            <p>Search or enter a commander from among the 3,400+ legal commanders in MtG.</p>
+            <div class="fields">
+              <label>Search commander name<span class="req" title="Required">R</span><input value="Krenko, Mob Boss"></label>
+              <label>Play style filter<select><option>Any play style</option></select></label>
+              <label>EDHREC rank filter<select><option>Any rank</option></select></label>
+              <label>Deck name<span class="req" title="Required">R</span><input value="Goblin Mob"></label>
+            </div>
+          </div>
+          <table class="tbl">
+            <tr><th>Card</th><th>Colour</th><th>Rarity</th><th class="money">Price</th><th></th></tr>
+            <tr><td><b>Skullclamp</b></td><td><span class="pips"><span class="pip B">B</span></span></td><td><span class="rar u">U</span></td><td class="money">$3.41</td><td><button class="buy">Buy</button></td></tr>
+            <tr><td><b>Purphoros, God of the Forge</b></td><td><span class="pips"><span class="pip R">R</span></span></td><td><span class="rar m">M</span></td><td class="money">$12.80</td><td><button class="buy">Buy</button></td></tr>
+            <tr><td><b>Coat of Arms</b></td><td><span class="pips"><span class="pip W">W</span><span class="pip U">U</span><span class="pip G">G</span></span></td><td><span class="rar r">R</span></td><td class="money">$18.05</td><td><button class="buy">Buy</button></td></tr>
+          </table>
+        </div>
+        <div class="run">
+          <span class="pill">Not measured yet</span>
+          <div class="step"><span class="orb done"></span><span>Initial 99 Cards Chosen</span><button class="btn"><i>1</i>Run</button></div>
+          <div class="step"><span class="orb live"></span><span>Simulator &amp; 99 Refined</span><button class="btn go"><i>2</i>Run</button></div>
+          <div class="step"><span class="orb"></span><span>Simulator loops complete</span><button class="btn off"><i>3</i>Run</button></div>
+          <div class="step"><span class="orb"></span><span>Simulation Report</span><button class="btn off"><i>4</i>Run</button></div>
+          <div class="step"><span class="orb"></span><span>Completed Deck</span><button class="btn off"><i>5</i>Run</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="close">
+  <h2>What I would do</h2>
+  <div class="rec">
+    <div>
+      <h4>The recommendation</h4>
+      <p><strong>Deep Field</strong>, shipped now. It is what is already in the branch: the three planes and the amber Starting point block are live in Deck Lab today, and they fix the specific thing you noticed without asking the header animation, the card art, or the six deck pages to be revisited.</p>
+    </div>
+    <div>
+      <h4>The one worth a real look</h4>
+      <p><strong>Guild Slate</strong> is the strongest idea here — "colour only ever means a card's colour" is a rule the whole app could be held to, and it would make the Shop and Collection tables read faster. It is a week, not an afternoon.</p>
+    </div>
+    <div>
+      <h4>What is separable</h4>
+      <p>The <strong>Required</strong> and <strong>Decision</strong> tokens are independent of the ground. The Mountain pip on required fields and the amber Starting point work under all three, so those can ship regardless of which ground you pick.</p>
+    </div>
+  </div>
+  <footer>Specimen markup is identical across all three bands · only six custom properties differ · CrankMagic design notes</footer>
+</section>
+
+</div>
