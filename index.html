@@ -8,21 +8,34 @@
   <meta name="description" content="CrankMagic — a private Commander deck workshop and card library. Plan, collect, assemble and explore your cards with local persistence.">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; worker-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://cards.scryfall.io https://api.scryfall.com https://svgs.scryfall.io; font-src 'self' data:; connect-src 'self' https://api.scryfall.com https://json.edhrec.com https://archidekt.com; object-src 'none'; base-uri 'self'; form-action 'self'">
   <title>CrankMagic · Commander workshop</title>
-  <link rel="icon" href="assets/crankmagic/crankmagic-logo-wand-v3-256.webp?v=1">
+  <link rel="canonical" href="https://minorrob.github.io/mtg-deck-matrix/">
+  <!-- ICONS, PNG FIRST. A WebP was the only icon on offer here, and iOS builds a link
+       preview by fetching the page's icon and image: an icon it cannot decode fails the
+       whole rich link, and Messages then refuses to send the message rather than falling
+       back to a plain link. The PNG is listed first so any fetcher that takes the first
+       icon it understands gets one it certainly understands. -->
+  <link rel="icon" type="image/png" sizes="180x180" href="assets/crankmagic/apple-touch-icon.png">
+  <link rel="icon" type="image/webp" sizes="256x256" href="assets/crankmagic/crankmagic-logo-wand-v3-256.webp?v=1">
+  <link rel="apple-touch-icon" href="assets/crankmagic/apple-touch-icon.png">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="CrankMagic">
   <meta property="og:title" content="CrankMagic">
-  <meta property="og:description" content="An intelligent MtG: Commander deck creator & card library. Plan, collect, assemble and explore your cards.">
+  <meta property="og:description" content="An intelligent MtG: Commander deck creator and card library. Plan, collect, assemble and explore your cards.">
+  <!-- og:url is this page, not the site root. A canonical that disagrees with the URL
+       being shared sends the preview fetcher somewhere else to try again. -->
   <meta property="og:url" content="https://minorrob.github.io/mtg-deck-matrix/">
-  <meta property="og:image" content="https://minorrob.github.io/mtg-deck-matrix/assets/crankmagic/og-card.jpg?v=1">
+  <!-- No ?v= on the preview assets: the version is for the app's own cache, and a query
+       string on an image is one more thing between a link previewer and a picture. -->
+  <meta property="og:image" content="https://minorrob.github.io/mtg-deck-matrix/assets/crankmagic/og-card.jpg">
+  <meta property="og:image:secure_url" content="https://minorrob.github.io/mtg-deck-matrix/assets/crankmagic/og-card.jpg">
+  <meta property="og:image:type" content="image/jpeg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="The CrankMagic wand logo over the name CrankMagic and its subtitle, wrapped in blue mist.">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="CrankMagic">
-  <meta name="twitter:description" content="An intelligent MtG: Commander deck creator & card library.">
-  <meta name="twitter:image" content="https://minorrob.github.io/mtg-deck-matrix/assets/crankmagic/og-card.jpg?v=1">
-  <link rel="apple-touch-icon" href="assets/crankmagic/apple-touch-icon.png?v=1">
+  <meta name="twitter:description" content="An intelligent MtG: Commander deck creator and card library.">
+  <meta name="twitter:image" content="https://minorrob.github.io/mtg-deck-matrix/assets/crankmagic/og-card.jpg">
   <link rel="stylesheet" href="crankmagic-design.css?v=1">
   <link rel="stylesheet" href="crankmagic.css?v=10">
   <script src="lineup-model.js?v=5" defer></script>
