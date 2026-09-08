@@ -1,0 +1,38 @@
+{
+  "Atraxa": {
+    "mana": "One white, one blue, one black and one green mana.",
+    "abilities": [
+      ["Keywords", "Flying, vigilance, deathtouch and lifelink."],
+      ["End-step trigger", "At the beginning of your end step, proliferate: choose any number of permanents and/or players and add one more counter of every kind already on each."],
+      ["Counter setup", "Proliferate grows existing counters; it cannot place the first counter of a new kind."]
+    ],
+    "use": "Seed useful counters before your end step, then keep Atraxa protected so each turn compounds them. Vigilance lets her pressure an opponent while remaining available to block."
+  },
+  "Krenko": {
+    "mana": "Two generic and two red mana.",
+    "abilities": [
+      ["Activated ability", "Tap Krenko to create 1/1 red Goblin tokens equal to the number of Goblins you control when the ability resolves."],
+      ["Counts himself", "Krenko is a Goblin, so he contributes to that count while on the battlefield."],
+      ["Timing", "This is an activated ability, not a trigger. Summoning sickness prevents tapping him for it unless he has haste."]
+    ],
+    "use": "Build a Goblin board first, then use haste or a protected activation window to multiply it. Turn those tokens into damage while keeping a way to rebuild after a wipe."
+  },
+  "Shadrix": {
+    "mana": "Three generic, one white and one black mana.",
+    "abilities": [
+      ["Keywords", "Flying and double strike."],
+      ["Combat trigger", "At the beginning of combat on your turn, you may choose two different modes, each targeting a different player. Shadrix does not need to attack."],
+      ["Three modes", "A player creates a flying 2/1 Inkling; draws a card and loses 1 life; or puts a +1/+1 counter on each creature they control."]
+    ],
+    "use": "Give yourself the mode your board needs most and offer a different player the least dangerous benefit. Counters build Shadrix’s double-strike threat; decline the optional choices when both would help opponents too much."
+  },
+  "Chulane": {
+    "mana": "Two generic, one green, one white and one blue mana.",
+    "abilities": [
+      ["Keyword", "Vigilance."],
+      ["Creature-cast trigger", "Whenever you cast a creature spell, draw a card, then you may put a land card from your hand onto the battlefield. This triggers on casting, not on entering."],
+      ["Activated ability", "Pay three generic mana and tap Chulane to return a target creature you control to its owner’s hand."]
+    ],
+    "use": "Sequence inexpensive creatures to draw and develop lands. When the mana is worthwhile, return and recast a useful creature to repeat its value while retaining protection for Chulane."
+  }
+}

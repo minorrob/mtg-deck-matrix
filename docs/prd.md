@@ -1,3 +1,5 @@
+> CrankMagic application execution update: the current implementation, changed entry points, copy model, migrations and simulator hold are documented in [crankmagic-architecture.md](crankmagic-architecture.md). This original PRD remains design history where superseded by the user-approved CrankMagic plan.
+
 # Product requirements
 
 *What this app is for, what it deliberately is not, and where every claim in it comes from.*

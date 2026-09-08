@@ -1,0 +1,14 @@
+@font-face {
+  font-family: 'Oxanium';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/l/font?kit=RrQPboN_4yJ0JmiMUW7sIGjd1IA9G82XeXiMHXlwO9eTEuQvwvU&skey=c0faa3e28022c872&v=v21) format('truetype');
+}
+@font-face {
+  font-family: 'Oxanium';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/l/font?kit=RrQPboN_4yJ0JmiMUW7sIGjd1IA9G82ueXiMHXlwO9eTEuQvwvU&skey=c0faa3e28022c872&v=v21) format('truetype');
+}

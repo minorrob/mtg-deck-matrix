@@ -102,6 +102,25 @@
     return found;
   }
 
+  /* REAL COMBAT, WHEN IT IS ASKED FOR. Same contract as the pilot above: with no
+     config.combat nothing here is called, no module is loaded, and the run is the
+     arithmetic estimate this file has always produced. */
+  let combatModule;
+  function combat() {
+    if (combatModule !== undefined) return combatModule;
+    combatModule = null;
+    try {
+      if (typeof module === "object" && module.exports && typeof require === "function") combatModule = require("./combat.js");
+      else if (typeof globalThis !== "undefined" && globalThis.MtgCombat) combatModule = globalThis.MtgCombat;
+    } catch (error) { combatModule = null; }
+    return combatModule;
+  }
+  function combatOrThrow() {
+    const found = combat();
+    if (!found) throw new Error("Board combat was asked for but combat.js is not loaded");
+    return found;
+  }
+
   function clamp01(value) {
     return Math.max(0, Math.min(1, Number(value) || 0));
   }
@@ -570,6 +589,38 @@
     return table[table.length - 1];
   }
 
+  /* WHAT ONE OF A SEAT'S CREATURES IS. The threat curve says how much power the
+     seat has at turn T; bodySize says how that power is divided, which is the
+     whole difference between a tokens seat and a voltron seat and the only thing
+     a blocker cares about. Square bodies, because most Commander creatures are
+     near enough square and inventing a second number per archetype would be
+     inventing rather than deriving. */
+  function seatCreature(seat) {
+    const size = Math.max(1, Math.round(seat.bodySize));
+    return {power: size, toughness: size, damage: 0, sick: true, tapped: false, seatBody: true};
+  }
+
+  /* Deploy what the seat's curve says it has by now -- and only what it has not
+     already deployed.
+   *
+     THE FIRST VERSION TOPPED UP TO A LEVEL, and a level is not a board. Kill four
+     of a seat's creatures and the next turn handed them all back, so attacking
+     into a board achieved nothing and the seats stopped dying: measured on D6,
+     surviving seats went 1.32 -> 1.74 and the first elimination slid from turn
+     8.7 to 9.1, which is most of why the win rate collapsed. A creature killed
+     has to stay killed, so the seat tracks what it has EVER put down and adds
+     only the difference. Losing one costs it that body for the rest of the game,
+     which is the entire reason attacking a board is worth doing. */
+  function refreshSeatBoard(seat, turn) {
+    const want = Math.max(0, Math.round(byTurn(seat.threat, turn) * seat.deviation / Math.max(0.5, seat.bodySize)));
+    while (seat.deployed < want) {
+      seat.creatures.push(seatCreature(seat));
+      seat.deployed += 1;
+    }
+  }
+
+  const seatPower = (seat) => seat.creatures.reduce((sum, creature) => sum + creature.power, 0);
+
   function seatFrom(profileDefinition, rng) {
     const jitter = profileDefinition.jitter || 0.2;
     const deviation = 1 + (rng() * 2 - 1) * jitter;
@@ -584,6 +635,12 @@
       deviation,
       winTurn,
       threat: profileDefinition.threatDamageByTurn,
+      // Only read under board combat; the estimate path never looks at it.
+      bodySize: Number(profileDefinition.bodySize) || 2,
+      creatures: [],
+      // How many this seat has ever put on the battlefield, so a body it lost is
+      // one it does not get back.
+      deployed: 0,
       interaction: profileDefinition.interactionChanceByTurn,
       wipeChance: profileDefinition.wipeChanceByTurn,
       wipeVulnerability: Number.isFinite(Number(profileDefinition.wipeVulnerability)) ? Number(profileDefinition.wipeVulnerability) : 1
@@ -601,6 +658,17 @@
     // No policy is the published pilot: every branch guarded on `policy` below
     // falls through to the code this file has always run.
     const policy = config.policy ? pilotOrThrow().get(config.policy) : null;
+    /* "estimate" is the arithmetic this file has always done: attacking power
+       times a connect rate, reduced by a toughness-weighted guess at blocking,
+       with nothing ever assigned to anything and nothing ever dying. "board"
+       gives the three seats creatures and runs a real combat step against them.
+       Default is estimate, so every published number stays what it is. */
+    const combatMode = String(config.combat || "estimate");
+    if (combatMode !== "estimate" && combatMode !== "board") {
+      throw new Error(`Unknown combat mode "${combatMode}" -- it is "estimate" or "board"`);
+    }
+    const boardCombat = combatMode === "board";
+    const Combat = boardCombat ? combatOrThrow() : null;
     const seats = [];
     for (let index = 0; index < 3; index += 1) seats.push(seatFrom(sampleProfile(table, rng), rng));
     let library = shuffle(deck.library, rng);
@@ -687,15 +755,46 @@
     // creature and never reaches here; a creature that both enters with counters and has, say,
     // a doubler in play, does) needs its starting counters scaled by the doubler exactly once,
     // the same as any other counter placed after it.
+    /* A TOKEN IS A BODY, WHEN THERE IS A BOARD FOR IT TO STAND ON.
+     *
+     * boardWidth counts a card's token-making clauses, and the estimate folds
+     * each one into the parent as +2 power -- which is the right shape for an
+     * arithmetic model and exactly wrong for a real combat step. It turns a
+     * go-wide deck into a handful of enormous creatures, and a handful of
+     * enormous creatures get chump-blocked all day where the same power spread
+     * across many bodies does not. Measured on the first run of board combat,
+     * with tokens still folded in: D6 Krenko, whose entire plan is Goblins, fell
+     * 17.15 points and from a 31.4% win rate to 6.5% -- the worst of the six, and
+     * the one the change was most supposed to help.
+     *
+     * So under board combat each clause becomes its own 2/2 instead. Two power,
+     * the same two the estimate credited, so the deck's TOTAL power is unchanged
+     * and the only thing that moves is how it is divided -- which is the thing
+     * under test. */
+    const TOKEN_BODY = 2;
+    const tokenBodies = (profile) => {
+      if (!boardCombat || !profile.boardWidth) return [];
+      return Array.from({length: profile.boardWidth}, () => ({
+        basePower: TOKEN_BODY, baseToughness: TOKEN_BODY, counters: 0,
+        power: TOKEN_BODY, toughness: TOKEN_BODY,
+        sick: true, tapped: false, commander: false, canAttack: true, isToken: true,
+        hasFlying: false, hasMenace: false, hasTrample: false,
+        hasDeathtouch: false, hasFirstStrike: false, hasLifelink: false
+      }));
+    };
     const makeCreatureEntry = (profile, powerOverride) => {
       const startingCounters = profile.entersWithCounters ? scaledCounters(profile.entersWithCounters) : 0;
+      // Under board combat the token half is deployed separately, so the parent
+      // keeps only its own printed body.
+      const width = boardCombat ? 0 : profile.boardWidth;
       return {
-        basePower: powerOverride + profile.boardWidth * 2,
+        basePower: powerOverride + width * 2,
         baseToughness: profile.toughness,
         counters: startingCounters,
-        power: powerOverride + profile.boardWidth * 2 + startingCounters,
+        power: powerOverride + width * 2 + startingCounters,
         toughness: profile.toughness + startingCounters,
         sick: true,
+        tapped: false,
         commander: false,
         canAttack: !profile.isDefender || defendersCanAttack,
         hasFlying: profile.hasFlying,
@@ -770,7 +869,15 @@
 
       let mana = lands + rocks;
       if (turn >= 3 && turn <= 6 && mana < turn - 1) manaBehind += 1;
-      opponentBoard = seats.reduce((sum, seat) => sum + byTurn(seat.threat, turn) * seat.deviation, 0);
+      if (boardCombat) {
+        seats.forEach((seat) => { if (seat.life > 0) refreshSeatBoard(seat, turn); });
+        // Our creatures untap; theirs are ready by the time they attack.
+        battlefieldCreatures.forEach((creature) => { creature.tapped = false; });
+        seats.forEach((seat) => seat.creatures.forEach((creature) => { creature.sick = false; }));
+      }
+      opponentBoard = boardCombat
+        ? seats.reduce((sum, seat) => sum + (seat.life > 0 ? seatPower(seat) : 0), 0)
+        : seats.reduce((sum, seat) => sum + byTurn(seat.threat, turn) * seat.deviation, 0);
       const state = {cardsInHand: hand.length, opponentBoard};
       /* TAPPING OUT, OR NOT. A pilot who holds an answer up is refusing to spend
          the mana that answer costs. Reserving nothing -- the published pilot --
@@ -818,6 +925,7 @@
           if (commanderProfile.isCreature) {
             const commanderPower = (commanderProfile.isDefender && defendersDealToughnessDamage) ? commanderProfile.toughness : commanderProfile.power;
             battlefieldCreatures.push({...makeCreatureEntry(commanderProfile, commanderPower), commander: true});
+            tokenBodies(commanderProfile).forEach((token) => battlefieldCreatures.push(token));
           }
           drainAll += commanderProfile.drain.all;
           drainOne += commanderProfile.drain.one;
@@ -868,12 +976,30 @@
           // combo/stax seat barely notices (they don't rely on a board), a
           // token seat loses far more than the base amount.
           seats.forEach((seat) => { seat.deviation *= Math.max(0, 1 - (1 - 0.55) * seat.wipeVulnerability); });
+          /* A wipe that only scales a threat curve leaves the creatures standing.
+             Under board combat it kills the same share of real bodies -- a stax
+             seat barely notices, a tokens seat loses most of what it has. */
+          if (boardCombat) {
+            seats.forEach((seat) => {
+              const kept = Math.floor(seat.creatures.length * Math.max(0, 1 - 0.45 * seat.wipeVulnerability));
+              seat.creatures.length = Math.min(seat.creatures.length, kept);
+            });
+          }
           if (profile.wipesOwnBoard) battlefieldCreatures.length = 0;
         }
         if (profile.isDrainSpell) seats.forEach((seat) => { seat.life -= profile.drainSpellAmount; });
         if (profile.isRemoval && !profile.instantSpeed) {
           const target = seats.reduce((best, seat) => (byTurn(seat.threat, turn) > byTurn(best.threat, turn) ? seat : best), seats[0]);
           target.deviation *= 0.8;
+          /* ...and under board combat it takes the biggest thing off that board,
+             which is what removal does and what scaling a curve cannot express. */
+          if (boardCombat && target.creatures.length) {
+            let biggest = 0;
+            target.creatures.forEach((creature, index) => {
+              if (creature.power > target.creatures[biggest].power) biggest = index;
+            });
+            target.creatures.splice(biggest, 1);
+          }
         }
         drainAll += profile.drain.all;
         drainOne += profile.drain.one;
@@ -883,6 +1009,7 @@
         if (profile.isCreature) {
           const creaturePower = (profile.isDefender && defendersDealToughnessDamage) ? profile.toughness : profile.power;
           battlefieldCreatures.push(makeCreatureEntry(profile, creaturePower));
+          tokenBodies(profile).forEach((token) => battlefieldCreatures.push(token));
         }
         // After the push, so a self-targeting ETB (a creature that also says "put a +1/+1
         // counter on this creature") can land on itself via biggestCreature() rather than an
@@ -937,7 +1064,48 @@
         if (creature.hasLifelink) lifelinkGain += connected;
       });
       battlefieldCreatures.forEach((creature) => { creature.sick = false; });
-      if (attackPower > 0) {
+      if (boardCombat) {
+        /* THE ATTACK, AGAINST A BOARD. attackPower and lifelinkGain above are the
+           estimate's arithmetic and are ignored here: the attackers are the
+           creatures themselves, the defending seat blocks with what it has, and
+           both sides lose what dies. */
+        const attacking = eligibleAttackers.filter((creature) => !heldBack || !heldBack.has(creature));
+        const living = seats.filter((seat) => seat.life > 0);
+        if (attacking.length && living.length) {
+          const threatOf = (seat, at) => (boardCombat ? seatPower(seat) : byTurn(seat.threat, at) * seat.deviation);
+          const shares = policy
+            ? pilotOrThrow().allocateCombatDamage(living, 1, turn, policy, threatOf)
+            : [{seat: living.reduce((low, seat) => (seat.life < low.life ? seat : low), living[0]), amount: 1}];
+          /* A share of the damage becomes a share of the ATTACKERS: one combat per
+             seat that gets any. Spread deals a third to each, so a third of the
+             creatures go to each -- which is the closest a real combat step comes
+             to a policy written for a scalar. */
+          const groups = shares.map((share) => ({seat: share.seat, attackers: []}));
+          attacking.forEach((creature, index) => { groups[index % groups.length].attackers.push(creature); });
+          groups.forEach((group) => {
+            if (!group.attackers.length) return;
+            /* The seat blocks, so the pricing here is ITS life and the neutral
+               weight -- our pilot's lifeWeight says what OUR life is worth to us,
+               and lending it to an opponent would be reading our own mind onto
+               theirs. */
+            const out = Combat.fight(group.attackers, group.seat.creatures, {life: group.seat.life});
+            group.seat.life -= out.damageToPlayer;
+            life += out.lifelinkGain;
+            out.blockersDead.forEach((dead) => {
+              const at = group.seat.creatures.indexOf(dead);
+              if (at >= 0) group.seat.creatures.splice(at, 1);
+            });
+            out.attackersDead.forEach((dead) => {
+              const at = battlefieldCreatures.indexOf(dead);
+              if (at >= 0) battlefieldCreatures.splice(at, 1);
+              if (dead.commander) commanderOnField = false;
+            });
+          });
+          // Attacking taps a creature, so it is not there to block on the way
+          // back -- which is what makes keeping one home a real decision.
+          attacking.forEach((creature) => { if (!creature.hasVigilance) creature.tapped = true; });
+        }
+      } else if (attackPower > 0) {
         const living = seats.filter((seat) => seat.life > 0);
         if (living.length) {
           if (policy) {
@@ -995,9 +1163,13 @@
       // which is what makes a game closable: by the time we can attack, the table
       // has already softened itself up.
       const living = seats.filter((seat) => seat.life > 0);
-      const peerDamage = living.reduce((sum, seat) => sum + byTurn(seat.threat, turn) * seat.deviation, 0) * (1 - AIMED_AT_US);
+      /* Under board combat a seat's output is its actual creatures, not its
+         curve -- otherwise the same power is counted twice, once as bodies that
+         attack us and once as a number that hits its peers. */
+      const outputOf = (seat) => (boardCombat ? seatPower(seat) : byTurn(seat.threat, turn) * seat.deviation);
+      const peerDamage = living.reduce((sum, seat) => sum + outputOf(seat), 0) * (1 - AIMED_AT_US);
       living.forEach((seat) => {
-        const fromOthers = (peerDamage - byTurn(seat.threat, turn) * seat.deviation * (1 - AIMED_AT_US)) / Math.max(1, living.length - 1);
+        const fromOthers = (peerDamage - outputOf(seat) * (1 - AIMED_AT_US)) / Math.max(1, living.length - 1);
         seat.life -= fromOthers;
       });
       // Creatures we control soak damage by blocking, which is the only defensive
@@ -1014,13 +1186,41 @@
       const blockReduction = Math.min(0.55, totalToughness * 0.025);
       for (const seat of seats) {
         if (seat.life <= 0) continue;
-        life -= byTurn(seat.threat, turn) * seat.deviation * AIMED_AT_US * (1 - blockReduction);
+        if (boardCombat) {
+          /* THEIR ATTACK, AGAINST OUR BOARD. A share of the seat's creatures come
+             at us and we choose the blocks -- with whatever did not attack this
+             turn, because a creature that attacked is tapped. That is the whole
+             of why holding one back is a decision rather than a loss. */
+          const ready = seat.creatures.filter((creature) => !creature.sick);
+          const count = Math.round(ready.length * AIMED_AT_US);
+          if (count > 0) {
+            const attackers = ready.slice(0, count);
+            // ...and here WE block, so this is where Playstyle enters combat.
+            const out = combatOrThrow().fight(attackers, battlefieldCreatures, {
+              life, lifeWeight: policy ? policy.combat.lifeWeight : 1
+            });
+            life -= out.damageToPlayer;
+            out.blockersDead.forEach((dead) => {
+              const at = battlefieldCreatures.indexOf(dead);
+              if (at >= 0) battlefieldCreatures.splice(at, 1);
+              if (dead.commander) commanderOnField = false;
+            });
+            out.attackersDead.forEach((dead) => {
+              const at = seat.creatures.indexOf(dead);
+              if (at >= 0) seat.creatures.splice(at, 1);
+            });
+          }
+        } else {
+          life -= byTurn(seat.threat, turn) * seat.deviation * AIMED_AT_US * (1 - blockReduction);
+        }
         if (rng() < byTurn(seat.interaction, turn) && battlefieldCreatures.length) {
           battlefieldCreatures.sort((a, b) => b.power - a.power);
           const removed = battlefieldCreatures.shift();
           if (removed?.commander) commanderOnField = false;
         }
         if (rng() < (seat.wipeChance || 0)) {
+          // A wipe is symmetrical: it takes their boards too, not only ours.
+          if (boardCombat) seats.forEach((other) => { other.creatures.length = 0; });
           battlefieldCreatures.length = 0;
           drainAll *= 0.5;
           drainOne *= 0.5;
@@ -1132,6 +1332,13 @@
       interactionAvailability: 0,
       deadCardsAtT8: 0,
       lossCauses: {},
+      /* GAMES THAT NEITHER ENDED. A game that reaches maxTurns with nobody dead is not
+         a loss -- it is a game the compute budget cut short -- but winRate is wins/games,
+         so it lands in the denominator looking exactly like one. Slow decks pay for the
+         cutoff. Reported separately here rather than folded into the score, because
+         changing the score would rewrite every published rung; a reader who can see
+         "18% of these games never finished" can discount the win rate themselves. */
+      incompleteRate: 0,
       participationRate: 0,
       avgPeakBoard: 0,
       reasonablePaceRate: 0,
@@ -1160,6 +1367,7 @@
       interactionAvailability: totals.interactionSum / games,
       deadCardsAtT8: totals.deadSum / games,
       lossCauses: totals.lossCauses,
+      incompleteRate: (totals.incomplete || 0) / games,
       participationRate: totals.participatedSum / games,
       avgPeakBoard: totals.peakBoardSum / games,
       reasonablePaceRate: totals.reasonablePaceSum / games,
@@ -1374,6 +1582,7 @@
       interactionSum: 0,
       deadSum: 0,
       lossCauses: {},
+      incomplete: 0,
       participatedSum: 0,
       peakBoardSum: 0,
       reasonablePaceSum: 0,
@@ -1395,6 +1604,10 @@
         totals.winTurnSum += result.endTurn;
       } else if (result.lossCause) {
         totals.lossCauses[result.lossCause] = (totals.lossCauses[result.lossCause] || 0) + 1;
+      } else {
+        // Neither won nor lost: the turn cap ended it. Until now this fell through
+        // every branch and was counted nowhere but `games`.
+        totals.incomplete += 1;
       }
       if (result.screwed) totals.screwed += 1;
       if (result.flooded) totals.flooded += 1;

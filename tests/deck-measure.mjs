@@ -14,7 +14,7 @@ const require = createRequire(import.meta.url);
 const Measure = require("../deck-measure.js");
 
 const load = async (p) => JSON.parse(await readFile(new URL(p, import.meta.url), "utf8"));
-const master = await load("../data/master-v2.json");
+const master = await load("../data/archive/master-v2.json");
 const facts = (await load("../data/card-facts.json")).cards;
 const ratings = await load("../data/deck-ratings.json");
 const config = await load("../sim/config.json");

@@ -105,7 +105,12 @@
         wipeThreshold: 6, commanderThreshold: 95,
         ...(spec.cast || {})
       },
-      combat: {target: "weakest", keepBack: 0, ...(spec.combat || {})},
+      /* `lifeWeight` is where Playstyle reaches combat: what a point of life is
+         worth to this pilot, as a multiplier on the price combat.js computes from
+         the life total. Below 1 is a pilot that treats life as a resource to
+         spend and blocks less; above 1 is one that does not enjoy being hit. 1 is
+         the neutral pricing, and it is what the published pilot uses. */
+      combat: {target: "weakest", keepBack: 0, lifeWeight: 1, ...(spec.combat || {})},
       /* THE TWO HONEST RULES, both off by default because the published protocol
          does not use them. `fromUntappedMana`: an answer counts as available only
          when the mana for it was genuinely left over, not when it could have been.
@@ -138,7 +143,7 @@
     blurb: "Keeps the seven, jams the commander, casts creatures, taps out every turn, and finishes off whoever is already low.",
     mulligan: {minLands: 2, maxLands: 6, minEarlyPlays: 1, maxMulligans: 1},
     cast: {creature: 6, recursion: 4, finisher: 2, tutor: -12, wipe: -25, commanderThreshold: 200},
-    combat: {target: "weakest", keepBack: 0},
+    combat: {target: "weakest", keepBack: 0, lifeWeight: 1.4},
     hold: {reserve: false, fromUntappedMana: true, answerIsSpent: true}
   });
 
@@ -175,7 +180,7 @@
     blurb: "Mulligans to a functional hand, develops before deploying, tutors, holds an answer up, and attacks whoever is closest to winning.",
     mulligan: {minLands: 2, maxLands: 5, minEarlyPlays: 2, minProactive: 1, maxMulligans: 4},
     cast: {ramp: 5, draw: 5, tutor: 20, wipe: 10, creature: -6, removal: -4, commanderThreshold: 62},
-    combat: {target: "clock", keepBack: 0},
+    combat: {target: "clock", keepBack: 0, lifeWeight: 0.7},
     hold: {reserve: true, fromTurn: 4, fromUntappedMana: true, answerIsSpent: true}
   });
 
@@ -218,6 +223,19 @@
       doing: "developing mana and cards before deploying the commander",
       instead: "deploying the commander as soon as it is castable",
       override: {cast: {commanderThreshold: CASUAL.cast.commanderThreshold}}
+    },
+    {
+      key: "blocking",
+      decision: "what a point of life is worth",
+      doing: "spending life to keep creatures on the board",
+      instead: "blocking to stay on a comfortable life total",
+      /* INERT WITHOUT BLOCKS. lifeWeight prices a block, and the estimate engine
+         has no blocks to price -- so this decision measures exactly zero there,
+         and a bare zero in a report invites the reader to conclude that blocking
+         does not matter rather than that the engine could not see it. Anything
+         reporting a credit has to say which engine it ran on. */
+      needs: "board",
+      override: {combat: {lifeWeight: CASUAL.combat.lifeWeight}}
     },
     {
       key: "order",

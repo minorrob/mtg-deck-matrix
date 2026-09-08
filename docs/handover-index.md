@@ -3,6 +3,14 @@
 *What a new reader — human or model — needs in order to evaluate this app, explain it, and
 keep building it without breaking it.*
 
+**Production application update (September 7):** The CrankMagic non-simulator build is now implemented. Start with [crankmagic-architecture.md](crankmagic-architecture.md) and [crankmagic-build-status.md](crankmagic-build-status.md) for its modules, entries, persistence and current validation. The map below describes the retained legacy application and design history. Simulator changes remain on hold.
+
+**Historical review-branch note (September 7):** this index is a dated architectural snapshot; several
+counts and open-PR statements below predate the later commits. The current CrankMagic review
+package is mapped in [`design/crankmagic/README.md`](../design/crankmagic/README.md). It includes
+the final standalone mockup, plans, editable sources and fresh verification. Upstream
+`118fe39` is merged on the review branch; production execution was subsequently authorized.
+
 Written 2026-09-07 by reading the repository at commit `8f0a0c0` on branch
 `claude/mtg-deck-matrix-ui-fixes-f7om91`. Every path below was checked to exist and every
 claim about a file's contents came from opening it. Where something could not be verified
@@ -877,3 +885,17 @@ whether it has again.
 `data/deck-swaps.json` also names a source file (`six-optimized.json`) that is not in the
 repository, and `data/game-history.json` is an empty shell that no committed game log has
 ever filled. Neither is a fault — they are places where the record stops.
+
+## Review-branch addition · September 7, 2026
+
+Prepared for the CrankMagic design review. Production application integration is
+now authorized; simulator work is explicitly on hold. See
+`docs/crankmagic-build-status.md` for the implementation boundary and remaining work.
+
+| Path | Ownership and provenance |
+|---|---|
+| `data/commander-glossary.json` | Single editable glossary authority: 335 term definitions and aliases, rule references, revision metadata, and separately labeled subjective workbook ratings. Seeded from the user's glossary workbook, corrected/expanded against Wizards' rules. Edit directly; no source/override merge or automatic re-import. |
+| `docs/glossary.md` | Editorial authority, consumers, contextual term matching, hover/focus/touch behavior, asset provenance and integration boundary. |
+| `tools/check-glossary.mjs` | Node-only structural validation for IDs, aliases, source references and the single-authority contract. Run directly; not yet added to the production suite runner. |
+| `assets/mana/{W,U,B,R,G,2,3}.svg` | Unmodified Scryfall mana symbols prepared for offline display. Not yet referenced by production pages. |
+| `design/crankmagic/evaluations.md` | Astra's simulator, pilot, optimization, collection, architecture, UX and AI assessment, linked to the detailed review findings and measured verification. |

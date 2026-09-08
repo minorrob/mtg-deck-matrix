@@ -121,7 +121,7 @@ for await (const c of jsonl(`${cacheDir}/oracle_cards.jsonl`)) {
 }
 
 // --- your overlays --------------------------------------------------------
-const master = JSON.parse(await readFile("data/master-v2.json", "utf8"));
+const master = JSON.parse(await readFile("data/archive/master-v2.json", "utf8"));
 const owns = [], assigned = [];
 // The deck labels come from the Master, never from a constant here. They were
 // hardcoded once -- D4 "Betor", D6 "Purphoros" -- and when the 2026-09-05 rebuild

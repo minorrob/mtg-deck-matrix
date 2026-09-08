@@ -32,7 +32,7 @@ const Measure = require("../../deck-measure.js");
 const Policy = require("../../pilot-policy.js");
 
 const load = async (p) => JSON.parse(await readFile(new URL(p, import.meta.url), "utf8"));
-const master = await load("../../data/master-v2.json");
+const master = await load("../../data/archive/master-v2.json");
 const facts = (await load("../../data/card-facts.json")).cards;
 const config = await load("../../sim/config.json");
 const opponents = await load("../../sim/opponents.json");
@@ -47,6 +47,10 @@ const has = (name) => argv.includes(`--${name}`);
 const seedCount = Number(flag("seeds", 3));
 const games = Number(flag("games", 8000));
 const only = flag("deck", null);
+// Which combat step to measure under. Some decisions -- blocking above all --
+// mean nothing to an engine that has no blocks, and are labelled rather than
+// silently reported as zero.
+const combatMode = flag("combat", "estimate");
 const decks = only ? master.decks.filter((d) => d.id === only) : master.decks;
 if (!decks.length) { console.error(`No deck "${only}". Known: ${master.decks.map((d) => d.id).join(", ")}`); process.exit(1); }
 
@@ -111,10 +115,11 @@ function runKnobs() {
   for (const [label, spec] of KNOBS) {
     if (spec === null) { console.log(label); continue; }
     const policy = Policy.makePolicy({key: "ablate", label, ...spec});
+    void combatMode;
     const scores = [];
     const wins = [];
     for (const deck of decks) {
-      const m = Measure.measure(hundred(deck), {config: {...config, policy}, seats, seedCount, games});
+      const m = Measure.measure(hundred(deck), {config: {...config, combat: combatMode, policy}, seats, seedCount, games});
       scores.push(m.score);
       wins.push(m.winRate);
     }
@@ -146,10 +151,11 @@ function runKnobs() {
 
 function runLens() {
   console.log(`The two shipped policies and what each decision was worth, per deck.`);
-  console.log(`${seedCount} seeds of ${games.toLocaleString()} games, ${2 + Policy.ABLATIONS.length} runs per deck.\n`);
+  console.log(`${seedCount} seeds of ${games.toLocaleString()} games, ${2 + Policy.ABLATIONS.length} runs per deck, `
+    + `${combatMode} combat.\n`);
   for (const deck of decks) {
     const lens = Measure.measureLens(hundred(deck), {
-      config, seats, seedCount, games,
+      config: {...config, combat: combatMode}, seats, seedCount, games,
       deckName: String(deck.commander).split(",")[0],
       ablations: Policy.ABLATIONS.map((entry) => entry.key)
     });
@@ -159,7 +165,9 @@ function runLens() {
       + `   win ${(lens.casual.winRate * 100).toFixed(1)}% -> ${(lens.competitive.winRate * 100).toFixed(1)}%`);
     lens.credits.slice().sort((a, b) => b.points - a.points).forEach((credit) => {
       const entry = Policy.ABLATIONS.find((item) => item.key === credit.key);
-      console.log(`    ${signed(credit.points).padStart(7)}  ${entry.decision.padEnd(30)} ${entry.doing}`);
+      // A decision the running engine cannot see is labelled, not left as a zero.
+      const inert = entry.needs && entry.needs !== combatMode ? `  (needs --combat ${entry.needs})` : "";
+      console.log(`    ${signed(credit.points).padStart(7)}  ${entry.decision.padEnd(30)} ${entry.doing}${inert}`);
     });
     console.log(`    > ${lens.advice[0].headline}`);
     console.log("");

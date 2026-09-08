@@ -22,7 +22,7 @@ const at = (p) => new URL(p, import.meta.url);
 const config = JSON.parse(readFileSync(at("../sim/config.json"), "utf8"));
 const opponents = JSON.parse(readFileSync(at("../sim/opponents.json"), "utf8"));
 const facts = JSON.parse(readFileSync(at("../data/card-facts.json"), "utf8")).cards;
-const rungs = JSON.parse(readFileSync(at("../data/rung-lists.json"), "utf8"));
+const rungs = JSON.parse(readFileSync(at("../data/archive/rung-lists.json"), "utf8"));
 
 const COMMANDER = "Quintorius, Loremaster";
 const list = Object.values(rungs.variants)
@@ -190,7 +190,7 @@ check("the compact readout is the same numbers without the card lists", () => {
 check("both screens draw it, and the deck page offers the re-run", () => {
   const viewer = readFileSync(at("../viewer.js"), "utf8");
   const panel = readFileSync(at("../import-panel.js"), "utf8");
-  const page = readFileSync(at("../index.html"), "utf8");
+  const page = readFileSync(at("../legacy-decks.html"), "utf8");
   assert.match(page, /src="measure-report\.js/);
   assert.match(panel, /MtgMeasureReport/);
   assert.match(viewer, /How it played/);

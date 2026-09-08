@@ -155,7 +155,7 @@ check(() => assert.ok(Edhrec.scoreFor(index, "  " + anyName + "  "),
 // ---------------------------------------------------------------------------
 // Wired into the page
 // ---------------------------------------------------------------------------
-const indexHtml = await readFile(new URL("../index.html", import.meta.url), "utf8");
+const indexHtml = await readFile(new URL("../legacy-decks.html", import.meta.url), "utf8");
 check(() => assert.ok(/edhrec-client\.js/.test(indexHtml), "My Decks must load edhrec-client.js"));
 check(() => assert.ok(indexHtml.indexOf("edhrec-client.js") < indexHtml.indexOf("deck-generator.js"),
   "it must load before the generator that reads it"));

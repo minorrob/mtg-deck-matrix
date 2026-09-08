@@ -1,6 +1,6 @@
 {
  "schemaVersion": 1,
- "generatedAt": "2026-09-05T13:19:23+00:00",
+ "generatedAt": "2026-09-08T01:11:52+00:00",
  "source": "Treys_MtG_Master_v3.xlsx",
  "crossChecked": 0,
  "note": "Formula columns (Status, Qty, Own, Extra, Buy Count, $ To Buy) are recomputed here: the workbook ships with no cached formula results.",
@@ -689,8 +689,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "B3 Option",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Anim Pakal, Thousandth Moon",
@@ -733,8 +732,7 @@
    "buyCount": 1,
    "toBuyCost": 3.69,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Anointed Procession",
@@ -777,8 +775,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "B3 Option",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Ashnod's Altar",
@@ -821,8 +818,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "B3 Option",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Beast Whisperer",
@@ -865,8 +861,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "B3 Option",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Blood Artist",
@@ -909,8 +904,7 @@
    "buyCount": 1,
    "toBuyCost": 2.79,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Boros Charm",
@@ -953,8 +947,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "B3 Option",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Brightclimb Pathway",
@@ -997,8 +990,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "B3 Option",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Den of the Bugbear",
@@ -1041,8 +1033,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "B3 Option",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Dictate of Erebos",
@@ -1085,8 +1076,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "B3 Option",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Doran, the Siege Tower",
@@ -1129,8 +1119,7 @@
    "buyCount": 1,
    "toBuyCost": 8.48,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Elenda, the Dusk Rose",
@@ -1173,8 +1162,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "B3 Option",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Fable of the Mirror-Breaker",
@@ -1217,8 +1205,7 @@
    "buyCount": 1,
    "toBuyCost": 6.72,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Farewell",
@@ -1261,8 +1248,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "B3 Option",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Goblin Piledriver",
@@ -1305,8 +1291,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "B3 Option",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Goblin Recruiter",
@@ -1349,8 +1334,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "B3 Option",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Guardian Project",
@@ -1393,8 +1377,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "B3 Option",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Ichormoon Gauntlet",
@@ -1437,8 +1420,7 @@
    "buyCount": 1,
    "toBuyCost": 4.8,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Idol of Oblivion",
@@ -1481,8 +1463,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "B3 Option",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Inspiring Vantage",
@@ -1525,8 +1506,7 @@
    "buyCount": 1,
    "toBuyCost": 1.95,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Jeska's Will",
@@ -1571,8 +1551,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "B3 Option",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Muxus, Goblin Grandee",
@@ -1615,8 +1594,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "B3 Option",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Nature's Lore",
@@ -1659,8 +1637,7 @@
    "buyCount": 1,
    "toBuyCost": 2.69,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Panharmonicon",
@@ -1703,8 +1680,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "B3 Option",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Pashalik Mons",
@@ -1747,8 +1723,7 @@
    "buyCount": 1,
    "toBuyCost": 3.9,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Phyrexian Arena",
@@ -1791,8 +1766,7 @@
    "buyCount": 1,
    "toBuyCost": 3.74,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Pir, Imaginative Rascal",
@@ -1835,8 +1809,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "B3 Option",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Pitiless Plunderer",
@@ -1879,8 +1852,7 @@
    "buyCount": 1,
    "toBuyCost": 3.42,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Professional Face-Breaker",
@@ -1923,8 +1895,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "B3 Option",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Rhystic Study",
@@ -1967,8 +1938,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "B3 Option",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Smothering Tithe",
@@ -2011,8 +1981,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "B3 Option",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Sunbaked Canyon",
@@ -2055,8 +2024,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "B3 Option",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Teleportation Circle",
@@ -2099,8 +2067,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "B3 Option",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "The Meathook Massacre",
@@ -2143,8 +2110,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "B3 Option",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Underworld Breach",
@@ -2187,8 +2153,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "B3 Option",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Vorinclex, Monstrous Raider",
@@ -2231,8 +2196,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "B3 Option",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "War Room",
@@ -2275,8 +2239,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "B3 Option",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Enchanted River's Grasp",
@@ -2303,7 +2266,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": 0.16,
+   "price": 0.15,
    "type": "Enchantment",
    "subType": "Aura",
    "color": "U",
@@ -2321,8 +2284,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Fearsome Goblin Pair",
@@ -2349,7 +2311,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": 0.24,
+   "price": 0.22,
    "type": "Creature",
    "subType": "Goblin Soldier",
    "color": "Multi",
@@ -2365,8 +2327,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "uncommon"
+   "priceSource": "scryfall"
   },
   {
    "name": "Front Porch Sentries",
@@ -2393,7 +2354,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": 0.09,
+   "price": 0.06,
    "type": "Creature",
    "subType": "Goblin Soldier",
    "color": "B",
@@ -2409,8 +2370,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Getaway Barrel",
@@ -2437,7 +2397,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": 0.35,
+   "price": 0.28,
    "type": "Artifact",
    "subType": "",
    "color": "R",
@@ -2453,8 +2413,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "rare"
+   "priceSource": "scryfall"
   },
   {
    "name": "Mirkwood Nurturer",
@@ -2497,8 +2456,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Mirkwood Pathmaker",
@@ -2525,7 +2483,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": 0.26,
+   "price": 0.22,
    "type": "Creature",
    "subType": "Elf Ranger",
    "color": "G",
@@ -2541,8 +2499,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "uncommon"
+   "priceSource": "scryfall"
   },
   {
    "name": "Moment of Glory",
@@ -2569,7 +2526,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": 0.08,
+   "price": 0.07,
    "type": "Sorcery",
    "subType": "",
    "color": "W",
@@ -2586,8 +2543,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Ordinary Bear",
@@ -2614,7 +2570,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": 0.25,
+   "price": 0.26,
    "type": "Creature",
    "subType": "Bear",
    "color": "G",
@@ -2628,8 +2584,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Tidings of War",
@@ -2656,7 +2611,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": 0.2,
+   "price": 0.25,
    "type": "Sorcery",
    "subType": "",
    "color": "R",
@@ -2673,8 +2628,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Access Tunnel",
@@ -2718,8 +2672,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Airship Engine Room",
@@ -2763,8 +2716,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Arno Dorian",
@@ -2791,7 +2743,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": 0.23,
+   "price": 0.24,
    "type": "Legendary Creature",
    "subType": "Human Assassin",
    "color": "Multi",
@@ -2808,8 +2760,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "uncommon"
+   "priceSource": "scryfall"
   },
   {
    "name": "Bayek of Siwa",
@@ -2853,8 +2804,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "rare"
+   "priceSource": "scryfall"
   },
   {
    "name": "Blizzard Strix",
@@ -2898,8 +2848,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "uncommon"
+   "priceSource": "scryfall"
   },
   {
    "name": "Boggart Cursecrafter",
@@ -2942,8 +2891,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "uncommon"
+   "priceSource": "scryfall"
   },
   {
    "name": "Bolrac-Clan Crusher",
@@ -2986,8 +2934,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "uncommon"
+   "priceSource": "scryfall"
   },
   {
    "name": "Chaos Spewer",
@@ -3030,8 +2977,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Clan Guildmage",
@@ -3075,8 +3021,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "uncommon"
+   "priceSource": "scryfall"
   },
   {
    "name": "Dai Li Indoctrination",
@@ -3120,8 +3065,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Dawn's Light Archer",
@@ -3148,7 +3092,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": 0.13,
+   "price": 0.14,
    "type": "Creature",
    "subType": "Elf Archer",
    "color": "G",
@@ -3165,8 +3109,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Deepchannel Duelist",
@@ -3193,7 +3136,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": 0.29,
+   "price": 0.28,
    "type": "Creature",
    "subType": "Merfolk Soldier",
    "color": "Multi",
@@ -3210,8 +3153,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "uncommon"
+   "priceSource": "scryfall"
   },
   {
    "name": "Desmond Miles",
@@ -3238,7 +3180,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": 0.43,
+   "price": 0.42,
    "type": "Legendary Creature",
    "subType": "Human Assassin",
    "color": "B",
@@ -3255,8 +3197,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "rare"
+   "priceSource": "scryfall"
   },
   {
    "name": "Destroy Evil",
@@ -3300,8 +3241,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Dwarven Mattock",
@@ -3345,8 +3285,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "uncommon"
+   "priceSource": "scryfall"
   },
   {
    "name": "Eldrazi Ravager",
@@ -3391,8 +3330,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "uncommon"
+   "priceSource": "scryfall"
   },
   {
    "name": "Endbringer",
@@ -3437,8 +3375,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "rare"
+   "priceSource": "scryfall"
   },
   {
    "name": "Gangly Stompling",
@@ -3482,8 +3419,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Glamer Gifter",
@@ -3526,8 +3462,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "uncommon"
+   "priceSource": "scryfall"
   },
   {
    "name": "Great Fierce Bee",
@@ -3571,8 +3506,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Hemlock Vial",
@@ -3616,8 +3550,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "uncommon"
+   "priceSource": "scryfall"
   },
   {
    "name": "Ironsoul Enforcer",
@@ -3660,8 +3593,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Kithkeeper",
@@ -3705,8 +3637,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "uncommon"
+   "priceSource": "scryfall"
   },
   {
    "name": "Lake-town Lookout",
@@ -3750,8 +3681,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Lys Alana Dignitary",
@@ -3795,8 +3725,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Lys Alana Informant",
@@ -3839,8 +3768,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Make Your Move",
@@ -3883,8 +3811,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Meanders Guide",
@@ -3928,8 +3855,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Midnight Tilling",
@@ -3972,8 +3898,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Mirrorform",
@@ -4000,7 +3925,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": 1.61,
+   "price": 1.49,
    "type": "Instant",
    "subType": "",
    "color": "U",
@@ -4016,8 +3941,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "mythic"
+   "priceSource": "scryfall"
   },
   {
    "name": "Moonglove Extractor",
@@ -4044,7 +3968,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": 0.09,
+   "price": 0.08,
    "type": "Creature",
    "subType": "Elf Warlock",
    "color": "B",
@@ -4060,8 +3984,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Perpetual Timepiece",
@@ -4105,8 +4028,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "uncommon"
+   "priceSource": "scryfall"
   },
   {
    "name": "Prideful Feastling",
@@ -4150,8 +4072,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Rocketeer Boostbuggy",
@@ -4178,7 +4099,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": 0.21,
+   "price": 0.2,
    "type": "Artifact",
    "subType": "Vehicle",
    "color": "Multi",
@@ -4195,8 +4116,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "uncommon"
+   "priceSource": "scryfall"
   },
   {
    "name": "Rugged Highlands",
@@ -4240,8 +4160,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Surly Farrier",
@@ -4284,8 +4203,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Timber Gorge",
@@ -4328,8 +4246,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Ultima, Origin of Oblivion",
@@ -4374,8 +4291,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "rare"
+   "priceSource": "scryfall"
   },
   {
    "name": "Wanderwine Distracter",
@@ -4418,8 +4334,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Zendikar's Roil",
@@ -4462,8 +4377,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "uncommon"
+   "priceSource": "scryfall"
   },
   {
    "name": "Temple of Silence",
@@ -4507,8 +4421,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Bristlebane Battler",
@@ -4552,8 +4465,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Containment Construct",
@@ -4596,8 +4508,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Earth Kingdom Jailer",
@@ -4641,8 +4552,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Gundabad Opportunist",
@@ -4685,8 +4595,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Impassioned Orator",
@@ -4729,8 +4638,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Nightmare Sower",
@@ -4774,8 +4682,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Rhox Faithmender",
@@ -4819,8 +4726,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Sacred Peaks",
@@ -4864,8 +4770,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Scoured Barrens",
@@ -4909,8 +4814,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Shore Lurker",
@@ -4954,8 +4858,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Sun-Dappled Celebrant",
@@ -4999,8 +4902,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Troll Negotiations",
@@ -5043,8 +4945,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Voracious Tome-Skimmer",
@@ -5087,8 +4988,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Wilderness Reclamation",
@@ -5131,8 +5031,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Dundoolin Weaver",
@@ -5175,8 +5074,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Akoum Hellhound",
@@ -5219,8 +5117,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Alexios, Deimos of Kosmos",
@@ -5265,8 +5162,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Auntie's Sentence",
@@ -5310,8 +5206,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Awaken the Erstwhile",
@@ -5338,7 +5233,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": 0.44,
+   "price": 0.43,
    "type": "Sorcery",
    "subType": "",
    "color": "B",
@@ -5354,8 +5249,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "scryfall",
-   "rarity": "rare"
+   "priceSource": "scryfall"
   },
   {
    "name": "Burning Curiosity",
@@ -5382,7 +5276,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": 0.2,
+   "price": 0.19,
    "type": "Sorcery",
    "subType": "",
    "color": "R",
@@ -5399,8 +5293,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Cinder Strike",
@@ -5444,8 +5337,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Civic Stalwart",
@@ -5488,8 +5380,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Curious Farm Animals",
@@ -5516,7 +5407,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": 0.27,
+   "price": 0.28,
    "type": "Creature",
    "subType": "Boar Elk Bird Ox",
    "color": "W",
@@ -5533,8 +5424,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Currency Converter",
@@ -5579,8 +5469,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "scryfall",
-   "rarity": "rare"
+   "priceSource": "scryfall"
   },
   {
    "name": "Dismal Backwater",
@@ -5624,8 +5513,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Dwarven Mauler",
@@ -5669,8 +5557,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "scryfall",
-   "rarity": "uncommon"
+   "priceSource": "scryfall"
   },
   {
    "name": "Dwarven Shortsword",
@@ -5715,8 +5602,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Explorer's Scope",
@@ -5759,8 +5645,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Faerie Duelist",
@@ -5803,8 +5688,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Fateful Tempest",
@@ -5848,8 +5732,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Gloom Ripper",
@@ -5876,7 +5759,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": 0.27,
+   "price": 0.26,
    "type": "Creature",
    "subType": "Elf Assassin",
    "color": "B",
@@ -5893,8 +5776,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "scryfall",
-   "rarity": "rare"
+   "priceSource": "scryfall"
   },
   {
    "name": "Goldvein Pick",
@@ -5938,8 +5820,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Guardian of the Halls",
@@ -5983,8 +5864,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Haystack",
@@ -6011,7 +5891,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": 0.39,
+   "price": 0.34,
    "type": "Artifact",
    "subType": "",
    "color": "W",
@@ -6027,8 +5907,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "scryfall",
-   "rarity": "uncommon"
+   "priceSource": "scryfall"
   },
   {
    "name": "Knight of Old Benalia",
@@ -6072,8 +5951,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Kyoshi Island Plaza",
@@ -6100,7 +5978,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": 0.31,
+   "price": 0.33,
    "type": "Legendary Enchantment",
    "subType": "Shrine",
    "color": "G",
@@ -6117,8 +5995,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "scryfall",
-   "rarity": "uncommon"
+   "priceSource": "scryfall"
   },
   {
    "name": "Monastery Raid",
@@ -6162,8 +6039,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "scryfall",
-   "rarity": "uncommon"
+   "priceSource": "scryfall"
   },
   {
    "name": "Naya Panorama",
@@ -6207,8 +6083,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Negate",
@@ -6251,8 +6126,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Octopus Form",
@@ -6279,7 +6153,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": 0.25,
+   "price": 0.26,
    "type": "Instant",
    "subType": "Lesson",
    "color": "U",
@@ -6296,8 +6170,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Riverguard's Reflexes",
@@ -6324,7 +6197,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": 0.19,
+   "price": 0.22,
    "type": "Instant",
    "subType": "",
    "color": "W",
@@ -6341,8 +6214,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Senate Griffin",
@@ -6385,8 +6257,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Simic Guildgate",
@@ -6429,8 +6300,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Stony-Voiced Goblins",
@@ -6473,8 +6343,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Sylvan Brushstrider",
@@ -6517,8 +6386,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Temporal Cleansing",
@@ -6562,8 +6430,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Thirsting Shade",
@@ -6607,8 +6474,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Timid Shieldbearer",
@@ -6651,8 +6517,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Tweeze",
@@ -6696,8 +6561,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Undercity's Embrace",
@@ -6741,8 +6605,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Unexpected Assistance",
@@ -6786,8 +6649,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Unwelcome Sprite",
@@ -6830,8 +6692,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Voldaren Epicure",
@@ -6875,8 +6736,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Wild Pack Squad",
@@ -6903,7 +6763,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": 0.17,
+   "price": 0.16,
    "type": "Creature",
    "subType": "Human Mercenary",
    "color": "W",
@@ -6919,8 +6779,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Wildvine Pummeler",
@@ -6965,8 +6824,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Despark",
@@ -7009,8 +6867,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Extra",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Hanweir Garrison",
@@ -7053,8 +6910,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Extra",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Krenko's Command",
@@ -7097,8 +6953,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Extra",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Blight Rot",
@@ -7141,8 +6996,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Extra",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Evolving Wilds",
@@ -7185,8 +7039,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Extra",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Forest",
@@ -7229,8 +7082,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Extra",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Island",
@@ -7273,8 +7125,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Extra",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Mountain",
@@ -7317,8 +7168,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Extra",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Origin of Metalbending",
@@ -7362,8 +7212,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Extra",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Plains",
@@ -7406,8 +7255,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Extra",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Pretending Poxbearers",
@@ -7450,8 +7298,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Swamp",
@@ -7494,8 +7341,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Extra",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Terror",
@@ -7539,8 +7385,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Extra",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Weathered Sentinels",
@@ -7584,8 +7429,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Extra",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Wood Elves",
@@ -7628,8 +7472,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Extra",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Venat, Heart of Hydaelyn",
@@ -7674,8 +7517,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Extra",
-   "priceSource": "scryfall",
-   "rarity": "rare"
+   "priceSource": "scryfall"
   },
   {
    "name": "Wave of Reckoning",
@@ -7718,8 +7560,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Betor, Ancestor's Voice",
@@ -7764,8 +7605,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Fell the Mighty",
@@ -7808,8 +7648,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Felothar the Steadfast",
@@ -7854,8 +7693,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Goblin Rabblemaster",
@@ -7899,8 +7737,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Hinterland Harbor",
@@ -7944,8 +7781,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Painful Truths",
@@ -7988,8 +7824,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Pawn of Ulamog",
@@ -8032,8 +7867,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Protector of the Wastes",
@@ -8078,8 +7912,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Purphoros's Intervention",
@@ -8122,8 +7955,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Conspicuous Snoop",
@@ -8166,8 +7998,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Goblin Chieftain",
@@ -8210,8 +8041,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Goblin Trashmaster",
@@ -8254,8 +8084,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Mirkwood",
@@ -8299,8 +8128,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Vampire Hexmage",
@@ -8344,8 +8172,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Abigale, Eloquent First-Year",
@@ -8389,8 +8216,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Abrade",
@@ -8433,8 +8259,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Advanced Reconstruction",
@@ -8479,8 +8304,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Aetheric Amplifier",
@@ -8525,8 +8349,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Ancient Greenwarden",
@@ -8570,8 +8393,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Angel of Indemnity",
@@ -8616,8 +8438,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Anger",
@@ -8660,8 +8481,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Anointer Priest",
@@ -8705,8 +8525,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Ao, the Dawn Sky",
@@ -8750,8 +8569,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "scryfall",
-   "rarity": "mythic"
+   "priceSource": "scryfall"
   },
   {
    "name": "Arbaaz Mir",
@@ -8794,8 +8612,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Arcades, the Strategist",
@@ -8839,8 +8656,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Arcane Sanctum",
@@ -8884,8 +8700,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "scryfall",
-   "rarity": "uncommon"
+   "priceSource": "scryfall"
   },
   {
    "name": "Archaeomancer's Map",
@@ -8929,8 +8744,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Atraxa, Praetors' Voice",
@@ -8975,8 +8789,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Atsushi, the Blazing Sky",
@@ -9021,8 +8834,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Augusta, Order Returned",
@@ -9067,8 +8879,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Axebane Guardian",
@@ -9111,8 +8922,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Bag of Holding",
@@ -9157,8 +8967,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "scryfall",
-   "rarity": "uncommon"
+   "priceSource": "scryfall"
   },
   {
    "name": "Balefire Liege",
@@ -9203,8 +9012,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Bant Panorama",
@@ -9248,8 +9056,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Barrage of Expendables",
@@ -9292,8 +9099,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Battlefield Forge",
@@ -9337,8 +9143,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Bilbo Baggins, Burglar",
@@ -9382,8 +9187,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Bitterthorn, Nissa's Animus",
@@ -9428,8 +9232,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Blight Pile",
@@ -9472,8 +9275,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Blossoming Sands",
@@ -9518,8 +9320,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Boar-q-pine",
@@ -9562,8 +9363,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Boggart Mischief",
@@ -9607,8 +9407,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Bronze Guardian",
@@ -9653,8 +9452,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Burdened Stoneback",
@@ -9698,8 +9496,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Burnished Hart",
@@ -9743,8 +9540,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Canopy Gargantuan",
@@ -9788,8 +9584,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "scryfall",
-   "rarity": "rare"
+   "priceSource": "scryfall"
   },
   {
    "name": "Cast Out",
@@ -9834,8 +9629,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Extra",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Cathar Commando",
@@ -9878,8 +9672,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Cathartic Reunion",
@@ -9922,8 +9715,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Ceaseless Conflict",
@@ -9967,8 +9759,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Chain Assassination",
@@ -10013,8 +9804,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "scryfall",
-   "rarity": "uncommon"
+   "priceSource": "scryfall"
   },
   {
    "name": "Clachan Festival",
@@ -10058,8 +9848,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "scryfall",
-   "rarity": "uncommon"
+   "priceSource": "scryfall"
   },
   {
    "name": "Claim Jumper",
@@ -10103,8 +9892,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Clifftop Retreat",
@@ -10148,8 +9936,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Cloud's Limit Break",
@@ -10194,8 +9981,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Coiling Oracle",
@@ -10238,8 +10024,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Collective Effort",
@@ -10283,8 +10068,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Combustion Technique",
@@ -10328,8 +10112,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Command Tower",
@@ -10372,8 +10155,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Conspiracy Theorist",
@@ -10417,8 +10199,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Counterspell",
@@ -10461,8 +10242,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Court Street Denizen",
@@ -10505,8 +10285,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Crashing Drawbridge",
@@ -10549,8 +10328,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Dawn-Blessed Pennant",
@@ -10594,8 +10372,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Day of Black Sun",
@@ -10638,8 +10415,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Deputy of Detention",
@@ -10682,8 +10458,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Disenchant",
@@ -10726,8 +10501,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Dragon Fodder",
@@ -10770,8 +10544,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Dragonlord Dromoka",
@@ -10816,8 +10589,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Drogskol Shieldmate",
@@ -10861,8 +10633,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Drowned Catacomb",
@@ -10906,8 +10677,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "scryfall",
-   "rarity": "rare"
+   "priceSource": "scryfall"
   },
   {
    "name": "Drumbellower",
@@ -10951,8 +10721,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Emeria, the Sky Ruin",
@@ -10997,8 +10766,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Enraged Flamecaster",
@@ -11041,8 +10809,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Ephemerate",
@@ -11086,8 +10853,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Excava, the Risen Past",
@@ -11131,8 +10897,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Exotic Orchard",
@@ -11175,8 +10940,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Fabled Passage",
@@ -11220,8 +10984,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Faeburrow Elder",
@@ -11265,8 +11028,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Fall of the First Civilization",
@@ -11311,8 +11073,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Fanatical Firebrand",
@@ -11356,8 +11117,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Farhaven Elf",
@@ -11400,8 +11160,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Farseek",
@@ -11444,8 +11203,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Feed the Swarm",
@@ -11489,8 +11247,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Fertilid",
@@ -11534,8 +11291,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Extra",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Fields of Strife",
@@ -11580,8 +11336,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Filigree Familiar",
@@ -11625,8 +11380,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Flux Channeler",
@@ -11669,8 +11423,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Fortified Village",
@@ -11714,8 +11467,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Foundry Street Denizen",
@@ -11758,8 +11510,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Freyalise, Llanowar's Fury",
@@ -11804,8 +11555,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Furycalm Snarl",
@@ -11849,8 +11599,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Ghor-Clan Wrecker",
@@ -11894,8 +11643,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Ghost Vacuum",
@@ -11939,8 +11687,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Gilt-Leaf's Embrace",
@@ -11984,8 +11731,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Glamermite",
@@ -12029,8 +11775,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Glittering Massif",
@@ -12075,8 +11820,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Go for the Throat",
@@ -12119,8 +11863,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Goblin Gathering",
@@ -12163,8 +11906,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Goblin Rally",
@@ -12207,8 +11949,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Gollum, Riddle Master",
@@ -12252,8 +11993,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Grazing Gladehart",
@@ -12296,8 +12036,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "scryfall",
-   "rarity": "common"
+   "priceSource": "scryfall"
   },
   {
    "name": "Gristle Glutton",
@@ -12340,8 +12079,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Guardian of Faith",
@@ -12385,8 +12123,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "scryfall",
-   "rarity": "rare"
+   "priceSource": "scryfall"
   },
   {
    "name": "Guardian Scalelord",
@@ -12430,8 +12167,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Heirloom Auntie",
@@ -12475,8 +12211,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Hofri Ghostforge",
@@ -12520,8 +12255,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Ikra Shidiqi, the Usurper",
@@ -12565,8 +12299,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Indomitable Ancients",
@@ -12609,8 +12342,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Indulging Patrician",
@@ -12654,8 +12386,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Intangible Virtue",
@@ -12699,8 +12430,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Isolated Chapel",
@@ -12744,8 +12474,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Jungle Barrier",
@@ -12788,8 +12517,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Kami of Ancient Law",
@@ -12832,8 +12560,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Karmic Guide",
@@ -12878,8 +12605,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Karn's Bastion",
@@ -12923,8 +12649,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Kin-Tree Invocation",
@@ -12967,8 +12692,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Kirol, History Buff // Pack a Punch",
@@ -13013,8 +12737,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Knight of the White Orchid",
@@ -13058,8 +12781,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Kor Cartographer",
@@ -13102,8 +12824,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Kulrath Zealot",
@@ -13147,8 +12868,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Laelia, the Blade Reforged",
@@ -13193,8 +12913,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Lethal Scheme",
@@ -13238,8 +12957,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Lingering Souls",
@@ -13283,8 +13001,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Long Goodbye",
@@ -13328,8 +13045,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Lorehold Archivist // Restore Relic",
@@ -13374,8 +13090,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Lorehold Campus",
@@ -13420,8 +13135,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Lorehold Charm",
@@ -13466,8 +13180,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Lotus Field",
@@ -13511,8 +13224,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Loyal Inventor",
@@ -13556,8 +13268,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Maralen, Fae Ascendant",
@@ -13601,8 +13312,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Meandering Towershell",
@@ -13646,8 +13356,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Merfolk Skydiver",
@@ -13691,8 +13400,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Millikin",
@@ -13735,8 +13443,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Ministrant of Obligation",
@@ -13779,8 +13486,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Mirrodin Avenged",
@@ -13824,8 +13530,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Mistmeadow Witch",
@@ -13868,8 +13573,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Mistveil Plains",
@@ -13914,8 +13618,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Momentary Blink",
@@ -13959,8 +13662,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Monologue Tax",
@@ -14003,8 +13705,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Moonlit Lamenter",
@@ -14048,8 +13749,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Moonshaker Cavalry",
@@ -14093,8 +13793,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Mortify",
@@ -14137,8 +13836,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Mulch",
@@ -14181,8 +13879,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Myriad Landscape",
@@ -14226,8 +13923,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Naktamun Lorespinner // Wheel of Fortune",
@@ -14271,8 +13967,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Night Market",
@@ -14317,8 +14012,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Overgrown Battlement",
@@ -14361,8 +14055,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Extra",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Patchwork Banner",
@@ -14406,8 +14099,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Path of Ancestry",
@@ -14451,8 +14143,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Path to Exile",
@@ -14496,8 +14187,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Pilgrim's Eye",
@@ -14541,8 +14231,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Extra",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Plaguemaw Beast",
@@ -14585,8 +14274,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Platypus-Bear",
@@ -14630,8 +14318,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Portcullis Vine",
@@ -14675,8 +14362,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Extra",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Primary Research",
@@ -14720,8 +14406,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Prophetic Prism",
@@ -14765,8 +14450,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Extra",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Purphoros, God of the Forge",
@@ -14811,8 +14495,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Putrefy",
@@ -14855,8 +14538,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Quintorius, Field Historian",
@@ -14900,8 +14582,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Quintorius, History Chaser",
@@ -14946,8 +14627,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Quintorius, Loremaster",
@@ -14992,8 +14672,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Radiant Summit",
@@ -15037,8 +14716,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Ragged Short Spear",
@@ -15082,8 +14760,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Raid Bombardment",
@@ -15126,8 +14803,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Raise the Alarm",
@@ -15170,8 +14846,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Ratonhnhaké꞉ton",
@@ -15216,8 +14891,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Reaping Willow",
@@ -15261,8 +14935,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Rebellious Captives",
@@ -15306,8 +14979,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Reckless Ransacking",
@@ -15351,8 +15023,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Reclamation Sage",
@@ -15395,8 +15066,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Reflector Mage",
@@ -15440,8 +15110,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Relic Retriever",
@@ -15485,8 +15154,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Reluctant Dounguard",
@@ -15530,8 +15198,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Remorseful Cleric",
@@ -15575,8 +15242,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Repel Calamity",
@@ -15619,8 +15285,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Requiem Angel",
@@ -15664,8 +15329,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Return to Dust",
@@ -15709,8 +15373,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Rip Apart",
@@ -15754,8 +15417,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Ritual of Soot",
@@ -15798,8 +15460,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Roon of the Hidden Realm",
@@ -15843,8 +15504,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Rugged Prairie",
@@ -15888,8 +15548,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Salvation Colossus",
@@ -15933,8 +15592,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Sapling of Colfenor",
@@ -15979,8 +15637,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Satyr Wayfinder",
@@ -16023,8 +15680,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Secret Rendezvous",
@@ -16067,8 +15723,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "scryfall",
-   "rarity": "uncommon"
+   "priceSource": "scryfall"
   },
   {
    "name": "Seize the Spoils",
@@ -16112,8 +15767,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Selfless Spirit",
@@ -16157,8 +15811,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Serra Paragon",
@@ -16203,8 +15856,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Sevinne's Reclamation",
@@ -16249,8 +15901,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Extra",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Shalai, Voice of Plenty",
@@ -16294,8 +15945,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Sheltering Word",
@@ -16339,8 +15989,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Shinestriker",
@@ -16383,8 +16032,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Sidar Kondo of Jamuraa",
@@ -16428,8 +16076,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Siren's Ruse",
@@ -16473,8 +16120,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Skyclave Apparition",
@@ -16518,8 +16164,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Skyshroud Claim",
@@ -16562,8 +16207,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Smuggler's Copter",
@@ -16607,8 +16251,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Song of the Dryads",
@@ -16651,8 +16294,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Soul of New Phyrexia",
@@ -16696,8 +16338,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Sourbread Auntie",
@@ -16740,8 +16381,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Spectral Procession",
@@ -16784,8 +16424,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Spiral into Solitude",
@@ -16829,8 +16468,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Spirit of Resilience",
@@ -16874,8 +16512,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Squee, Dubious Monarch",
@@ -16920,8 +16557,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Squee, Goblin Nabob",
@@ -16964,8 +16600,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Staff of the Storyteller",
@@ -17010,8 +16645,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Stone Quarry",
@@ -17055,8 +16689,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Stony Strength",
@@ -17099,8 +16732,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Stratosoarer",
@@ -17144,8 +16776,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Study Hall",
@@ -17190,8 +16821,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Sun Titan",
@@ -17235,8 +16865,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Sunscorched Divide",
@@ -17279,8 +16908,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Sword of the Animist",
@@ -17324,8 +16952,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Sylvan Caryatid",
@@ -17369,8 +16996,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Sylvan Ranger",
@@ -17413,8 +17039,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Temple of Enlightenment",
@@ -17458,8 +17083,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Temple of Triumph",
@@ -17504,8 +17128,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Tempt with Vengeance",
@@ -17549,8 +17172,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Terramorphic Expanse",
@@ -17593,8 +17215,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Teshar, Ancestor's Apostle",
@@ -17638,8 +17259,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Tezzeret's Gambit",
@@ -17683,8 +17303,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "The Eternal Wanderer",
@@ -17729,8 +17348,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "The Restoration of Eiganjo",
@@ -17775,8 +17393,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Thousand-Year Elixir",
@@ -17820,8 +17437,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Thrill of Possibility",
@@ -17865,8 +17481,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Thrummingbird",
@@ -17910,8 +17525,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Tidus, Yuna's Guardian",
@@ -17955,8 +17569,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Tireless Provisioner",
@@ -17999,8 +17612,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Tocasia's Welcome",
@@ -18043,8 +17655,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Tome of Legends",
@@ -18088,8 +17699,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Tragic Arrogance",
@@ -18133,8 +17743,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Tree of Redemption",
@@ -18177,8 +17786,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Treefolk Umbra",
@@ -18222,8 +17830,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Turbulent Steppe",
@@ -18267,8 +17874,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Unbury",
@@ -18312,8 +17918,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "scryfall",
-   "rarity": "uncommon"
+   "priceSource": "scryfall"
   },
   {
    "name": "Valakut Exploration",
@@ -18357,8 +17962,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Valorous Stance",
@@ -18402,8 +18006,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Vanguard of the Restless",
@@ -18448,8 +18051,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Venerable Warsinger",
@@ -18493,8 +18095,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Vindicate",
@@ -18537,8 +18138,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Viral Drake",
@@ -18583,8 +18183,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Wakestone Gargoyle",
@@ -18628,8 +18227,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Wall of Mulch",
@@ -18672,8 +18270,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Wall of Resurgence",
@@ -18717,8 +18314,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Wavesifter",
@@ -18762,8 +18358,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Wayward Swordtooth",
@@ -18807,8 +18402,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Weathered Wayfarer",
@@ -18852,8 +18446,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Extra",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "White Orchid Phantom",
@@ -18898,8 +18491,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Winds of Abandon",
@@ -18944,8 +18536,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Wind-Scarred Crag",
@@ -18990,8 +18581,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Wingmantle Chaplain",
@@ -19035,8 +18625,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Winnowing",
@@ -19080,8 +18669,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Yavimaya Elder",
@@ -19125,8 +18713,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Zack Fair",
@@ -19170,8 +18757,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Spectacular Tactics",
@@ -19215,8 +18801,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Sunpetal Grove",
@@ -19260,8 +18845,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Giant's Boulder",
@@ -19306,8 +18890,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Ordeal of Nylea",
@@ -19351,8 +18934,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Unforgiving Aim",
@@ -19397,8 +18979,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Bench-Sub",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Old Fat Spider Can't See Me",
@@ -19443,8 +19024,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Rage into the Valley",
@@ -19488,8 +19068,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Stone by Sunlight",
@@ -19533,8 +19112,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Gran-Gran",
@@ -19561,7 +19139,7 @@
    "own": 1,
    "cartVendor": "",
    "ordered": 0,
-   "price": 0.28,
+   "price": 0.29,
    "type": "Legendary Creature",
    "subType": "Human Peasant Ally",
    "color": "U",
@@ -19578,8 +19156,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "scryfall",
-   "rarity": "uncommon"
+   "priceSource": "scryfall"
   },
   {
    "name": "Shared Animosity",
@@ -19622,8 +19199,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Aetherize",
@@ -19666,8 +19242,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Anguished Unmaking",
@@ -19711,8 +19286,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Arboreal Grazer",
@@ -19756,8 +19330,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Argentum Masticore",
@@ -19802,8 +19375,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Artisan of Kozilek",
@@ -19848,8 +19420,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "scryfall",
-   "rarity": "uncommon"
+   "priceSource": "scryfall"
   },
   {
    "name": "Ash Barrens",
@@ -19893,8 +19464,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Assault Formation",
@@ -19939,8 +19509,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Azorius Chancery",
@@ -19984,8 +19553,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Azorius Signet",
@@ -20028,8 +19596,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Bastion of Remembrance",
@@ -20073,8 +19640,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Beetleback Chief",
@@ -20117,8 +19683,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Big Score",
@@ -20161,8 +19726,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Blasphemous Act",
@@ -20206,8 +19770,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Buried Ruin",
@@ -20251,8 +19814,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Carven Caryatid",
@@ -20296,8 +19858,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Castle Ardenvale",
@@ -20341,8 +19902,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Castle Embereth",
@@ -20386,8 +19946,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Caves of Koilos",
@@ -20430,8 +19989,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Chaos Warp",
@@ -20474,8 +20032,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Charming Prince",
@@ -20518,8 +20075,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Chocobo Knights",
@@ -20562,8 +20118,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Chulane, Teller of Tales",
@@ -20608,8 +20163,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Cloudblazer",
@@ -20653,8 +20207,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Contagion Clasp",
@@ -20698,8 +20251,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Corpse Knight",
@@ -20742,8 +20294,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Cruel Celebrant",
@@ -20786,8 +20337,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Cultivate",
@@ -20830,8 +20380,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Danitha Capashen, Paragon",
@@ -20875,8 +20424,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "scryfall",
-   "rarity": "uncommon"
+   "priceSource": "scryfall"
   },
   {
    "name": "Day of Judgment",
@@ -20919,8 +20467,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Deadly Dispute",
@@ -20963,8 +20510,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Deepglow Skate",
@@ -21007,8 +20553,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Dreadhorde Invasion",
@@ -21052,8 +20597,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Elspeth, Sun's Nemesis",
@@ -21098,8 +20642,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Empty the Warrens",
@@ -21143,8 +20686,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Evolution Sage",
@@ -21187,8 +20729,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Faithless Looting",
@@ -21232,8 +20773,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Fateful Absence",
@@ -21277,8 +20817,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Forgotten Ancient",
@@ -21322,8 +20861,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Frontline Medic",
@@ -21367,8 +20905,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Generous Gift",
@@ -21412,8 +20949,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Genesis Chamber",
@@ -21456,8 +20992,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Glacial Fortress",
@@ -21501,8 +21036,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Goblin Bombardment",
@@ -21545,8 +21079,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Goblin Instigator",
@@ -21589,8 +21122,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Goblin Matron",
@@ -21633,8 +21165,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Goblin Ringleader",
@@ -21678,8 +21209,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Goblin Warchief",
@@ -21723,8 +21253,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Golgari Signet",
@@ -21767,8 +21296,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Grateful Apparition",
@@ -21812,8 +21340,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Hidden Stockpile",
@@ -21857,8 +21384,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Hordeling Outburst",
@@ -21901,8 +21427,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Huatli, the Sun's Heart",
@@ -21946,8 +21471,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Ichor Wellspring",
@@ -21990,8 +21514,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Impact Tremors",
@@ -22034,8 +21557,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Inexorable Tide",
@@ -22078,8 +21600,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Inspiring Call",
@@ -22123,8 +21644,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Jaddi Offshoot",
@@ -22168,8 +21688,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Keeper of the Accord",
@@ -22213,8 +21732,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Kher Keep",
@@ -22258,8 +21776,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Knight of Autumn",
@@ -22302,8 +21819,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Krenko, Mob Boss",
@@ -22346,8 +21862,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Krosan Verge",
@@ -22391,8 +21906,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Legion Warboss",
@@ -22436,8 +21950,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Light Up the Stage",
@@ -22481,8 +21994,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Migration Path",
@@ -22526,8 +22038,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Mogg War Marshal",
@@ -22571,8 +22082,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Mulldrifter",
@@ -22617,8 +22127,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Myr Battlesphere",
@@ -22662,8 +22171,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Nadier's Nightblade",
@@ -22706,8 +22214,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Nyx-Fleece Ram",
@@ -22750,8 +22257,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Odric, Lunarch Marshal",
@@ -22794,8 +22300,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Ogre Battledriver",
@@ -22838,8 +22343,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Orzhov Basilica",
@@ -22883,8 +22387,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Ossification",
@@ -22927,8 +22430,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Outpost Siege",
@@ -22973,8 +22475,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Peregrine Drake",
@@ -23018,8 +22519,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Promise of Loyalty",
@@ -23063,8 +22563,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Quest for the Goblin Lord",
@@ -23108,8 +22607,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Quintorius Kand",
@@ -23154,8 +22652,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Radiant Grove",
@@ -23199,8 +22696,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Rampart Architect",
@@ -23244,8 +22740,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Read the Bones",
@@ -23289,8 +22784,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Rootborn Defenses",
@@ -23334,8 +22828,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Sandsteppe Citadel",
@@ -23379,8 +22872,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Seaside Citadel",
@@ -23424,8 +22916,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Selesnya Signet",
@@ -23468,8 +22959,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Shadrix Silverquill",
@@ -23514,8 +23004,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Siege-Gang Commander",
@@ -23559,8 +23048,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Simic Signet",
@@ -23603,8 +23091,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Skirk Prospector",
@@ -23647,8 +23134,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Soulherder",
@@ -23692,8 +23178,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Steady Progress",
@@ -23736,8 +23221,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Strixhaven Stadium",
@@ -23782,8 +23266,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Swords to Plowshares",
@@ -23827,8 +23310,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Tekuthal, Inquiry Dominus",
@@ -23873,8 +23355,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Temple of the False God",
@@ -23917,8 +23398,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Thrilling Discovery",
@@ -23962,8 +23442,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Throne of Geth",
@@ -24006,8 +23485,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Tithe Taker",
@@ -24051,8 +23529,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Tower Defense",
@@ -24095,8 +23572,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Vandalblast",
@@ -24140,8 +23616,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Vault of the Archangel",
@@ -24185,8 +23660,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Village Rites",
@@ -24229,8 +23703,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Viscera Seer",
@@ -24273,8 +23746,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Voyager Staff",
@@ -24317,8 +23789,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "scryfall",
-   "rarity": "uncommon"
+   "priceSource": "scryfall"
   },
   {
    "name": "Walking Bulwark",
@@ -24362,8 +23833,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Wall of Limbs",
@@ -24408,8 +23878,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Wall of Omens",
@@ -24453,8 +23922,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Wall of Reverence",
@@ -24498,8 +23966,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Wall of Roots",
@@ -24543,8 +24010,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Welcoming Vampire",
@@ -24588,8 +24054,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Witty Roastmaster",
@@ -24632,8 +24097,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Zetalpa, Primal Dawn",
@@ -24677,8 +24141,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Zulaport Cutthroat",
@@ -24721,8 +24184,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Arcane Signet",
@@ -24765,8 +24227,7 @@
    "buyCount": 2,
    "toBuyCost": 0.82,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Mind Stone",
@@ -24810,8 +24271,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Orzhov Signet",
@@ -24854,8 +24314,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Sol Ring",
@@ -24898,8 +24357,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Brushland",
@@ -24942,8 +24400,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Remove",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Colfenor, the Last Yew",
@@ -24987,8 +24444,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Remove",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Concealed Courtyard",
@@ -25032,8 +24488,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Remove",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Costly Plunder",
@@ -25076,8 +24531,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Remove",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Doomed Traveler",
@@ -25120,8 +24574,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Remove",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Eternal Witness",
@@ -25164,8 +24617,7 @@
    "buyCount": 1,
    "toBuyCost": 2.52,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Fire Diamond",
@@ -25208,8 +24660,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Remove",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Gather the Townsfolk",
@@ -25252,8 +24703,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Remove",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Goblin Motivator",
@@ -25296,8 +24746,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Remove",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Goblin Oriflamme",
@@ -25340,8 +24789,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Remove",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Great Furnace",
@@ -25384,8 +24832,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Remove",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Hunted Witness",
@@ -25428,8 +24875,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Remove",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Inspiring Overseer",
@@ -25473,8 +24919,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Remove",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Llanowar Wastes",
@@ -25517,8 +24962,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Remove",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Priest of Fell Rites",
@@ -25562,8 +25006,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Remove",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Rummaging Goblin",
@@ -25606,8 +25049,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Remove",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Shineshadow Snarl",
@@ -25651,8 +25093,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Remove",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Sign in Blood",
@@ -25695,8 +25136,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Remove",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Silverquill Campus",
@@ -25740,8 +25180,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Remove",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Slaughter Specialist",
@@ -25785,8 +25224,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Remove",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Solemn Simulacrum",
@@ -25830,8 +25268,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Remove",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Suture Priest",
@@ -25875,8 +25312,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Remove",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Utter End",
@@ -25919,8 +25355,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Remove",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Wall of Blossoms",
@@ -25964,8 +25399,7 @@
    "buyCount": 1,
    "toBuyCost": 0.29,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Elas il-Kor, Sadistic Pilgrim",
@@ -26010,8 +25444,7 @@
    "buyCount": 1,
    "toBuyCost": 3.11,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Kambal, Consul of Allocation",
@@ -26054,8 +25487,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "B3 Option",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Mentor of the Meek",
@@ -26098,8 +25530,7 @@
    "buyCount": 1,
    "toBuyCost": 0.14,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Molten Echoes",
@@ -26142,8 +25573,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "B3 Option",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Night's Whisper",
@@ -26186,8 +25616,7 @@
    "buyCount": 1,
    "toBuyCost": 0.29,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Ophiomancer",
@@ -26230,8 +25659,7 @@
    "buyCount": 1,
    "toBuyCost": 0.96,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Ruby Medallion",
@@ -26274,8 +25702,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "B3 Option",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Rundvelt Hordemaster",
@@ -26318,8 +25745,7 @@
    "buyCount": 1,
    "toBuyCost": 4.87,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Skullclamp",
@@ -26363,8 +25789,7 @@
    "buyCount": 1,
    "toBuyCost": 5.89,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Teysa Karlov",
@@ -26407,8 +25832,7 @@
    "buyCount": 1,
    "toBuyCost": 2.67,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Tree of Perdition",
@@ -26452,8 +25876,7 @@
    "buyCount": 1,
    "toBuyCost": 2.94,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Everflowing Chalice",
@@ -26497,8 +25920,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Ordered",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Fellwar Stone",
@@ -26541,8 +25963,7 @@
    "buyCount": 1,
    "toBuyCost": 0.85,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Divert Disaster",
@@ -26586,8 +26007,7 @@
    "buyCount": 1,
    "toBuyCost": 0.26,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Mask of Memory",
@@ -26631,8 +26051,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Remove",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Prismatic Lens",
@@ -26676,8 +26095,7 @@
    "buyCount": 1,
    "toBuyCost": 0.4,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Coldsteel Heart",
@@ -26721,8 +26139,7 @@
    "buyCount": 1,
    "toBuyCost": 1.72,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Siege Smash",
@@ -26767,8 +26184,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "In Hand",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Bandit's Haul",
@@ -26813,8 +26229,7 @@
    "buyCount": 0,
    "toBuyCost": 0.0,
    "status": "Remove",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Cathartic Pyre",
@@ -26858,8 +26273,7 @@
    "buyCount": 1,
    "toBuyCost": 0.31,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Boros Signet",
@@ -26902,8 +26316,7 @@
    "buyCount": 1,
    "toBuyCost": 0.52,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Lorehold Command",
@@ -26948,8 +26361,7 @@
    "buyCount": 1,
    "toBuyCost": 0.41,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Unlicensed Hearse",
@@ -26994,8 +26406,7 @@
    "buyCount": 1,
    "toBuyCost": 0.38,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Rally the Ancestors",
@@ -27038,8 +26449,7 @@
    "buyCount": 1,
    "toBuyCost": 0.33,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Reconstruct History",
@@ -27083,8 +26493,7 @@
    "buyCount": 1,
    "toBuyCost": 0.11,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Lorehold Excavation",
@@ -27128,8 +26537,7 @@
    "buyCount": 1,
    "toBuyCost": 0.21,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Bloodthirsty Adversary",
@@ -27173,8 +26581,7 @@
    "buyCount": 1,
    "toBuyCost": 0.35,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Unexpected Windfall",
@@ -27218,8 +26625,7 @@
    "buyCount": 1,
    "toBuyCost": 3.34,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Squee, the Immortal",
@@ -27262,8 +26668,7 @@
    "buyCount": 1,
    "toBuyCost": 1.37,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Reliquary Tower",
@@ -27307,8 +26712,7 @@
    "buyCount": 1,
    "toBuyCost": 3.58,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Llanowar Elves",
@@ -27351,8 +26755,7 @@
    "buyCount": 1,
    "toBuyCost": 0.27,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Kiora's Follower",
@@ -27395,8 +26798,7 @@
    "buyCount": 1,
    "toBuyCost": 0.34,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Shrieking Drake",
@@ -27440,8 +26842,7 @@
    "buyCount": 1,
    "toBuyCost": 0.23,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Whitemane Lion",
@@ -27485,8 +26886,7 @@
    "buyCount": 1,
    "toBuyCost": 0.09,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Man-o'-War",
@@ -27529,8 +26929,7 @@
    "buyCount": 1,
    "toBuyCost": 0.08,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Dream Stalker",
@@ -27573,8 +26972,7 @@
    "buyCount": 1,
    "toBuyCost": 0.17,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Stonecloaker",
@@ -27619,8 +27017,7 @@
    "buyCount": 1,
    "toBuyCost": 0.11,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Temur Sabertooth",
@@ -27663,8 +27060,7 @@
    "buyCount": 1,
    "toBuyCost": 0.96,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Restoration Angel",
@@ -27709,8 +27105,7 @@
    "buyCount": 1,
    "toBuyCost": 0.33,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Tatyova, Benthic Druid",
@@ -27753,8 +27148,7 @@
    "buyCount": 1,
    "toBuyCost": 0.15,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Elvish Visionary",
@@ -27797,8 +27191,7 @@
    "buyCount": 1,
    "toBuyCost": 0.1,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Risen Reef",
@@ -27841,8 +27234,7 @@
    "buyCount": 1,
    "toBuyCost": 0.31,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Fblthp, the Lost",
@@ -27886,8 +27278,7 @@
    "buyCount": 1,
    "toBuyCost": 0.27,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Intruder Alarm",
@@ -27931,8 +27322,7 @@
    "buyCount": 1,
    "toBuyCost": 3.68,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Astral Cornucopia",
@@ -27976,8 +27366,7 @@
    "buyCount": 1,
    "toBuyCost": 0.24,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Ezuri, Stalker of Spheres",
@@ -28021,8 +27410,7 @@
    "buyCount": 1,
    "toBuyCost": 0.79,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Contentious Plan",
@@ -28066,8 +27454,7 @@
    "buyCount": 1,
    "toBuyCost": 0.39,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Serum Snare",
@@ -28110,8 +27497,7 @@
    "buyCount": 1,
    "toBuyCost": 0.35,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Fuel for the Cause",
@@ -28154,8 +27540,7 @@
    "buyCount": 1,
    "toBuyCost": 0.34,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Infectious Inquiry",
@@ -28198,8 +27583,7 @@
    "buyCount": 1,
    "toBuyCost": 0.52,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Cankerbloom",
@@ -28244,8 +27628,7 @@
    "buyCount": 1,
    "toBuyCost": 0.36,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Vraska's Fall",
@@ -28288,8 +27671,7 @@
    "buyCount": 1,
    "toBuyCost": 0.39,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Magistrate's Scepter",
@@ -28333,8 +27715,7 @@
    "buyCount": 1,
    "toBuyCost": 3.09,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Darksteel Reactor",
@@ -28379,8 +27760,7 @@
    "buyCount": 1,
    "toBuyCost": 0.36,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Saruli Caretaker",
@@ -28424,8 +27804,7 @@
    "buyCount": 1,
    "toBuyCost": 0.27,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Shield-Wall Sentinel",
@@ -28469,8 +27848,7 @@
    "buyCount": 1,
    "toBuyCost": 0.35,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Kami of Old Stone",
@@ -28511,8 +27889,7 @@
    "buyCount": 1,
    "toBuyCost": 0.1,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Wall of Junk",
@@ -28556,8 +27933,7 @@
    "buyCount": 1,
    "toBuyCost": 0.31,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Hornet Nest",
@@ -28601,8 +27977,7 @@
    "buyCount": 1,
    "toBuyCost": 0.35,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Arbor Adherent",
@@ -28646,8 +28021,7 @@
    "buyCount": 1,
    "toBuyCost": 1.87,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Slaughter the Strong",
@@ -28690,8 +28064,7 @@
    "buyCount": 1,
    "toBuyCost": 0.13,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Belligerent Brontodon",
@@ -28734,8 +28107,7 @@
    "buyCount": 1,
    "toBuyCost": 0.25,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Stalwart Shield-Bearers",
@@ -28779,8 +28151,7 @@
    "buyCount": 1,
    "toBuyCost": 1.88,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Wall of Blood",
@@ -28824,8 +28195,7 @@
    "buyCount": 1,
    "toBuyCost": 2.02,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Perimeter Captain",
@@ -28869,8 +28239,7 @@
    "buyCount": 1,
    "toBuyCost": 0.67,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Triskaidekaphobia",
@@ -28915,8 +28284,7 @@
    "buyCount": 1,
    "toBuyCost": 0.21,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Blot Out the Sky",
@@ -28959,8 +28327,7 @@
    "buyCount": 1,
    "toBuyCost": 1.47,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Combat Calligrapher",
@@ -29005,8 +28372,7 @@
    "buyCount": 1,
    "toBuyCost": 0.3,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Felisa, Fang of Silverquill",
@@ -29051,8 +28417,7 @@
    "buyCount": 1,
    "toBuyCost": 1.97,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Breena, the Demagogue",
@@ -29096,8 +28461,7 @@
    "buyCount": 1,
    "toBuyCost": 1.03,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "mythic"
+   "priceSource": "workbook"
   },
   {
    "name": "Priest of Forgotten Gods",
@@ -29140,8 +28504,7 @@
    "buyCount": 1,
    "toBuyCost": 0.59,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Deathbringer Liege",
@@ -29186,8 +28549,7 @@
    "buyCount": 1,
    "toBuyCost": 1.08,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Windborn Muse",
@@ -29231,8 +28593,7 @@
    "buyCount": 1,
    "toBuyCost": 0.54,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Fracture",
@@ -29275,8 +28636,7 @@
    "buyCount": 1,
    "toBuyCost": 0.33,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Kambal, Profiteering Mayor",
@@ -29320,8 +28680,7 @@
    "buyCount": 1,
    "toBuyCost": 6.03,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Mirkwood Bats",
@@ -29365,8 +28724,7 @@
    "buyCount": 1,
    "toBuyCost": 1.43,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Battle Hymn",
@@ -29409,8 +28767,7 @@
    "buyCount": 1,
    "toBuyCost": 1.55,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Krenko, Tin Street Kingpin",
@@ -29453,8 +28810,7 @@
    "buyCount": 1,
    "toBuyCost": 2.63,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "rare"
+   "priceSource": "workbook"
   },
   {
    "name": "Reckless Bushwhacker",
@@ -29499,8 +28855,7 @@
    "buyCount": 1,
    "toBuyCost": 0.19,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Massive Raid",
@@ -29543,8 +28898,7 @@
    "buyCount": 1,
    "toBuyCost": 0.22,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "common"
+   "priceSource": "workbook"
   },
   {
    "name": "Swiftfoot Boots",
@@ -29588,8 +28942,7 @@
    "buyCount": 1,
    "toBuyCost": 2.3,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   },
   {
    "name": "Thornbite Staff",
@@ -29634,8 +28987,7 @@
    "buyCount": 1,
    "toBuyCost": 8.73,
    "status": "To Buy",
-   "priceSource": "workbook",
-   "rarity": "uncommon"
+   "priceSource": "workbook"
   }
  ]
 }

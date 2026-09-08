@@ -1,7 +1,7 @@
 /* My Commander Decks — the fast view.
  *
  * Three tabs and nothing else: the six decks, the bench, and what is still to
- * buy. Everything it shows comes from data/master-v2.json, which is generated
+ * buy. Everything it shows comes from data/archive/master-v2.json, which is generated
  * from the Deck Master workbook by tools/import_master_v2.py; the ratings and
  * the play guides are separate files and the page renders without them if they
  * are missing, because they are regenerated on a different cadence.
@@ -117,7 +117,7 @@
      how an added card would come back "not found" from the row that holds it. */
   /* A BROWSER THAT HAS NEVER OPENED THIS APP HAS NO DECKS.
    *
-   * data/master-v2.json carries two things at once: the card catalog, which belongs to
+   * data/archive/master-v2.json carries two things at once: the card catalog, which belongs to
    * the repository, and one person's build of six decks -- what is boxed, what is owed,
    * what is on the bench -- which does not. Loading both meant a stranger, and anybody
    * who had just pressed Clear session, opened the page to somebody else's six decks and
@@ -376,7 +376,7 @@
       /* RECOMPUTED, NOT LEFT ALONE. buyCount is a column in the workbook, and leaving it
          at the workbook's figure made archiving a half-measure: a deck's upgrade rows left
          the buy list (those are derived from the deck) and its shortfall rows stayed
-         (that column is not). Checked against data/master-v2.json, the column IS exactly
+         (that column is not). Checked against data/archive/master-v2.json, the column IS exactly
          `what every deck wants, minus what you own, minus what is on the way` on all 648
          rows -- so this is the workbook's own arithmetic run over the decks that are
          left, not an attribution invented here. */
@@ -967,7 +967,7 @@
     if (simContext) return Promise.resolve(simContext);
     return Promise.all([
       fetchJson("sim/config.json?v=1"),
-      fetchJson("sim/opponents.json?v=1")
+      fetchJson("sim/opponents.json?v=2")
     ]).then(function (parts) {
       simContext = {
         config: parts[0],
@@ -1294,7 +1294,7 @@
     ]));
     /* A link, not a button: it goes to another page, and a person who wants it in a new
        tab should be able to have one. */
-    start.appendChild(el("a", { class: "start-tile is-explore", href: "graph.html" }, [
+    start.appendChild(el("a", { class: "start-tile is-explore", href: "legacy-graph.html" }, [
       el("span", { class: "plus", "aria-hidden": "true", text: "\u25c9" }),
       el("b", { text: "Explore cards" }),
       el("span", { text: "Every Commander-legal card, what connects them, and a Copilot "
@@ -3035,7 +3035,7 @@
 
   function boot() {
     load();
-    fetchJson("data/master-v2.json?v=2").then(function (master) {
+    fetchJson("data/archive/master-v2.json?v=2").then(function (master) {
       MASTER = master;
       // Decks added on this device are read before the first render, so an
       // added deck is on the page at load rather than appearing a beat later.
@@ -3046,9 +3046,9 @@
       // The ratings and the guides are generated separately and may lag; the
       // page is fully usable without either, so a miss is not an error.
       return Promise.all([
-        fetchJson("data/deck-ratings.json?v=5").catch(function () { return null; }),
-        fetchJson("data/deck-guides.json?v=1").catch(function () { return null; }),
-        fetchJson("data/deck-swaps.json?v=1").catch(function () { return null; })
+        fetchJson("data/deck-ratings.json?v=6").catch(function () { return null; }),
+        fetchJson("data/deck-guides.json?v=2").catch(function () { return null; }),
+        fetchJson("data/deck-swaps.json?v=2").catch(function () { return null; })
       ]);
     }).then(function (extra) {
       RATINGS = extra[0];

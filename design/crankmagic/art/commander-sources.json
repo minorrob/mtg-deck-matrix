@@ -1,0 +1,38 @@
+[
+  {
+    "image": "https://cards.scryfall.io/normal/front/d/0/d0d33d52-3d28-4635-b985-51e126289259.jpg?1783930136",
+    "path": "commander-atraxa.webp",
+    "facts": "data/card-facts.json at e5810ed",
+    "set": "2xm",
+    "key": "atraxa",
+    "name": "Atraxa, Praetors' Voice",
+    "derivative": "312 x 435 WebP, quality 61; the mock embeds this derivative."
+  },
+  {
+    "image": "https://cards.scryfall.io/normal/front/8/2/824b2d73-2151-4e5e-9f05-8f63e2bdcaa9.jpg?1783909065",
+    "path": "commander-krenko.webp",
+    "facts": "data/card-facts.json at e5810ed",
+    "set": "fdn",
+    "key": "krenko",
+    "name": "Krenko, Mob Boss",
+    "derivative": "312 x 435 WebP, quality 61; the mock embeds this derivative."
+  },
+  {
+    "image": "https://cards.scryfall.io/normal/front/2/1/214a695b-208e-4fd5-9ceb-23c882eadcf7.jpg?1783903745",
+    "path": "commander-shadrix.webp",
+    "facts": "data/card-facts.json at e5810ed",
+    "set": "soc",
+    "key": "shadrix",
+    "name": "Shadrix Silverquill",
+    "derivative": "312 x 435 WebP, quality 61; the mock embeds this derivative."
+  },
+  {
+    "image": "https://cards.scryfall.io/normal/front/d/1/d1499a4b-1af1-4913-8e26-57d0707264db.jpg?1783912982",
+    "path": "commander-chulane.webp",
+    "facts": "data/card-facts.json at e5810ed",
+    "set": "mkc",
+    "key": "chulane",
+    "name": "Chulane, Teller of Tales",
+    "derivative": "312 x 435 WebP, quality 61; the mock embeds this derivative."
+  }
+]

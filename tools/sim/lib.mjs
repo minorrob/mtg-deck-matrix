@@ -93,7 +93,7 @@ export function buildTable(opponents, tableName) {
 
 export async function loadCatalog() {
   const [variants, buyPlans, cards] = await Promise.all([
-    readJson(path.join(ROOT, "data/variants.json")),
+    readJson(path.join(ROOT, "data/archive/variants.json")),
     readJson(path.join(ROOT, "data/buy-plans.json")),
     readJson(path.join(ROOT, "data/cards.json"))
   ]);

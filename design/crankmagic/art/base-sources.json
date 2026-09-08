@@ -1,0 +1,51 @@
+[
+  {
+    "image": "https://cards.scryfall.io/art_crop/front/d/0/d0d33d52-3d28-4635-b985-51e126289259.jpg?1783930136",
+    "artist": "Victor Adame Minguez",
+    "name": "Atraxa, Praetors' Voice",
+    "source": "https://scryfall.com/card/2xm/190/atraxa-praetors-voice?utm_source=api",
+    "embeddedIn": "../src/base-v3.html"
+  },
+  {
+    "image": "https://cards.scryfall.io/art_crop/front/8/2/824b2d73-2151-4e5e-9f05-8f63e2bdcaa9.jpg?1783909065",
+    "artist": "Lie Setiawan",
+    "name": "Krenko, Mob Boss",
+    "source": "https://scryfall.com/card/fdn/204/krenko-mob-boss?utm_source=api",
+    "embeddedIn": "../src/base-v3.html"
+  },
+  {
+    "image": "https://cards.scryfall.io/art_crop/front/2/1/214a695b-208e-4fd5-9ceb-23c882eadcf7.jpg?1783903745",
+    "artist": "Raymond Swanland",
+    "name": "Shadrix Silverquill",
+    "source": "https://scryfall.com/card/soc/330/shadrix-silverquill?utm_source=api",
+    "embeddedIn": "../src/base-v3.html"
+  },
+  {
+    "image": "https://cards.scryfall.io/art_crop/front/1/d/1d58d08d-cd62-416d-8d8e-7d9c56d5c4da.jpg?1783904546",
+    "artist": "Simon Dominic",
+    "name": "Evolution Sage",
+    "source": "https://scryfall.com/card/ecc/105/evolution-sage?utm_source=api",
+    "embeddedIn": "../src/base-v3.html"
+  },
+  {
+    "image": "https://cards.scryfall.io/art_crop/front/3/c/3c520263-6bad-4521-ba9e-192ca8223b07.jpg?1783915442",
+    "artist": "Heonhwa",
+    "name": "Flux Channeler",
+    "source": "https://scryfall.com/card/cmm/847/flux-channeler?utm_source=api",
+    "embeddedIn": "../src/base-v3.html"
+  },
+  {
+    "image": "https://cards.scryfall.io/art_crop/front/e/4/e4ed0052-d6dd-4f69-8313-10863baefac9.jpg?1783906021",
+    "artist": "Steve Argyle",
+    "name": "Everflowing Chalice",
+    "source": "https://scryfall.com/card/eoc/137/everflowing-chalice?utm_source=api",
+    "embeddedIn": "../src/base-v3.html"
+  },
+  {
+    "image": "https://cards.scryfall.io/art_crop/front/1/5/15175742-11ae-4819-a5bd-412084b0b686.jpg?1783903744",
+    "artist": "Aleksi Briclot",
+    "name": "Astral Cornucopia",
+    "source": "https://scryfall.com/card/soc/342/astral-cornucopia?utm_source=api",
+    "embeddedIn": "../src/base-v3.html"
+  }
+]

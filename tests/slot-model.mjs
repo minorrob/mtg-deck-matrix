@@ -300,7 +300,7 @@ ok("every spot a price can produce is one the filter offers, and bands nest insi
 });
 
 /* ---------- the four measured builds ---------- */
-const rungLists = JSON.parse(await readFile(new URL("../data/rung-lists.json", import.meta.url), "utf8"));
+const rungLists = JSON.parse(await readFile(new URL("../data/archive/rung-lists.json", import.meta.url), "utf8"));
 const RUNG_PIN = {base: "Base", tuned: "Tuned", fun: "Pod Fun", max: "Max"};
 
 ok("the rung buttons are exactly the builds rung-lists.json pins", () => {

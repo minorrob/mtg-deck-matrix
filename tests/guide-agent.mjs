@@ -19,8 +19,8 @@ let checks = 0;
 const check = (label, fn) => { fn(); checks += 1; console.log("  ok  " + label); };
 
 const at = (p) => new URL(p, import.meta.url);
-const guides = JSON.parse(readFileSync(at("../data/deck-guides.json"), "utf8"));
-const master = JSON.parse(readFileSync(at("../data/master-v2.json"), "utf8"));
+const guides = JSON.parse(readFileSync(at("../data/archive/deck-guides.json"), "utf8"));
+const master = JSON.parse(readFileSync(at("../data/archive/master-v2.json"), "utf8"));
 const universe = JSON.parse(readFileSync(at("../data/commander-universe.json"), "utf8"));
 const registry = universe.cards.map((row) => row[universe.fields.indexOf("name")]);
 
@@ -101,9 +101,14 @@ check("the counts it may quote are handed to it, so it never has to count", () =
 
 check("merged, it is the record the viewer already renders", () => {
   const record = Agent.merge(GOOD, DECK);
+  /* The shape is pinned against the archived six rather than the live file. The clean
+     start emptied data/deck-guides.json -- the feature stays wired and finds nothing
+     until a guide is generated -- but the record shape a generated guide has to match
+     is still the shape the viewer renders, and the archive is where an example of it
+     survives. */
   const shipped = Object.keys(guides.decks[0]);
   assert.deepEqual(Object.keys(record), shipped,
-    "the merged record's fields must match what data/deck-guides.json already holds");
+    "the merged record's fields must match the guide shape the viewer renders");
   assert.equal(record.commander, DECK.commander);
   assert.equal(record.shape, DECK.shape, "the shape is the app's, not the model's");
 });
@@ -230,7 +235,7 @@ check("the generator is a tool, and the key is not in the repository", () => {
   assert.match(tool, /process\.env\.ANTHROPIC_API_KEY/);
   assert.ok(!/sk-ant-/.test(tool), "an API key is in the source");
   assert.match(tool, /--call/, "the default must not spend money");
-  const page = readFileSync(at("../index.html"), "utf8");
+  const page = readFileSync(at("../legacy-decks.html"), "utf8");
   assert.ok(!/guide-agent\.js/.test(page),
     "the browser must not load the agent: there is no key there and nowhere to keep one");
 });

@@ -196,7 +196,7 @@ await acheck("a caller that will not take a manual card is told so plainly", asy
 
 /* --------------------------------------------------------------- it is wired in */
 
-const page = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const page = readFileSync(new URL("../legacy-decks.html", import.meta.url), "utf8");
 const panel = readFileSync(new URL("../import-panel.js", import.meta.url), "utf8");
 const viewer = readFileSync(new URL("../viewer.js", import.meta.url), "utf8");
 const client = readFileSync(new URL("../scryfall-client.js", import.meta.url), "utf8");

@@ -15,7 +15,7 @@
  * the same way for the first time: the same seeds, the same game count, the same objective
  * per rung, and no residue of whatever size and seed each optimizer happened to stop at.
  *
- * WHAT IT DOES NOT DO. It does not optimize. The hundreds in data/rung-lists.json are the
+ * WHAT IT DOES NOT DO. It does not optimize. The hundreds in data/archive/rung-lists.json are the
  * hundreds; not one card moves. This measures what is already published and nothing else,
  * which is why it can be re-run at any time and why its output is comparable with itself.
  *
@@ -114,7 +114,7 @@ const started = Date.now();
 for (const id of ids) {
   const published = summary.builds[id] || {};
   const commander = commanders.get(id) || null;
-  if (!commander) { console.warn(`  ! ${id}: no commander in data/variants.json, skipping`); continue; }
+  if (!commander) { console.warn(`  ! ${id}: no commander in data/archive/variants.json, skipping`); continue; }
   for (const [rungName, list] of Object.entries(rungs.variants[id])) {
     if (!Array.isArray(list) || !list.length) continue;
     const was = published[rungName];
@@ -183,7 +183,7 @@ summary.engineNotes = Object.assign({}, summary.engineNotes, {
     "ability is no longer ramp: Currency Converter's cost is a bare {T}, so it modelled as " +
     "a one-mana Treasure engine when the Treasure needs a card discarded, exiled with the " +
     "artifact, and a land at that. One card changes, and it is in no shipped deck. No card " +
-    "moved between rungs -- the hundreds are exactly those in data/rung-lists.json."
+    "moved between rungs -- the hundreds are exactly those in data/archive/rung-lists.json."
 });
 /* THE CAVEATS ARE MEASUREMENTS TOO, and they were being carried forward.
    caveats.inversions and caveats.podFunOverCeiling name the variants where the
@@ -213,6 +213,6 @@ summary.regimeNote = `All ${moves.length} rungs re-measured together by ` +
   `rung carried whatever size and seed its own optimizer stopped at, so the numbers on the ` +
   `Compare page were only loosely comparable with each other; now every one of them was ` +
   `measured the same way. No card moved: the hundreds are exactly those in ` +
-  `data/rung-lists.json.`;
+  `data/archive/rung-lists.json.`;
 await writeJson(path.join(ROOT, "data", "simulation-summary.json"), summary);
 console.log(`\nwrote data/simulation-summary.json — ${moves.length} rungs.`);

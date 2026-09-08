@@ -77,7 +77,7 @@
   /**
    * Build the lenses.
    *
-   * `ratings` is data/deck-ratings.json; `master` is data/master-v2.json and is
+   * `ratings` is data/deck-ratings.json; `master` is data/archive/master-v2.json and is
    * optional -- without it the advice is the same, minus the prices.
    */
   function build(ratings, options) {

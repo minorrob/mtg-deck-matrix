@@ -7,7 +7,7 @@
 // game. So the first check runs several decks under several seeds with no policy
 // and under BALANCED, and requires every metric back identical. If that ever
 // fails, data/deck-ratings.json, data/simulation-summary.json and every rung in
-// data/rung-lists.json are describing a game the engine no longer plays.
+// data/archive/rung-lists.json are describing a game the engine no longer plays.
 import assert from "node:assert/strict";
 import {createRequire} from "node:module";
 import {readFile} from "node:fs/promises";
@@ -18,7 +18,7 @@ const Measure = require("../deck-measure.js");
 const Policy = require("../pilot-policy.js");
 
 const load = async (p) => JSON.parse(await readFile(new URL(p, import.meta.url), "utf8"));
-const master = await load("../data/master-v2.json");
+const master = await load("../data/archive/master-v2.json");
 const facts = (await load("../data/card-facts.json")).cards;
 const config = await load("../sim/config.json");
 const opponents = await load("../sim/opponents.json");
