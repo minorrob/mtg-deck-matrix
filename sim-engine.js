@@ -146,6 +146,18 @@
     return hash >>> 0;
   }
 
+  /* "Add {B}{B}{B}", "Add five mana of any one color", "Add {C}{C}" -- the shapes a
+     ritual is written in, and how much it makes. */
+  const ADDS_MANA = /add (?:\{[wubrgc]\}|one|two|three|four|five|six|seven|\d+)/;
+  const WORD_COUNT = {one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7};
+  function ritualAmount(text) {
+    const symbols = (String(text).match(/add\s+((?:\{[wubrgc]\}\s*)+)/) || [])[1];
+    if (symbols) return (symbols.match(/\{[wubrgc]\}/g) || []).length;
+    const worded = String(text).match(/add (one|two|three|four|five|six|seven|\d+) mana/);
+    if (worded) return WORD_COUNT[worded[1]] || Number(worded[1]) || 1;
+    return 1;
+  }
+
   function parseManaCost(manaCost) {
     const tokens = String(manaCost || "").match(/\{([^}]+)\}/g) || [];
     const pips = {W: 0, U: 0, B: 0, R: 0, G: 0};
@@ -183,7 +195,11 @@
         if (COLORS.includes(color)) produced.add(color);
       });
     });
-    if (/add one mana of any color|add \{c\}\{c\}|any color/.test(text)) COLORS.forEach((color) => produced.add(color));
+    /* "Add {C}{C}" is Sol Ring, and {C} is COLOURLESS -- it is not a colour and it cannot
+       pay a coloured pip. Reading it as "any colour" is the single biggest piece of false
+       fixing in this engine: it put a Sol Ring in every deck's colour requirements and let
+       a mono-red list cast {U}{U} spells. Only "any color" wording produces every colour. */
+    if (/add one mana of any color|any color/.test(text)) COLORS.forEach((color) => produced.add(color));
     return produced;
   }
 
@@ -427,11 +443,31 @@
       // Farseek and Wood Elves never say -- they name a basic land type. Between
       // them that is most of the ramp actually played in this format, and every
       // green deck was being scored without it.
-      isRamp: !isLand && (/\{t\}: add|add \{[wubrgc]\}/.test(text)
+      /* A RITUAL IS NOT RAMP, and reading it as ramp is how a spellslinger deck got
+         measured. Seething Song adds five red mana ONCE, this turn, and then it is in the
+         graveyard -- it was being counted as a permanent mana rock that made five mana
+         every turn for the rest of the game. Dark Ritual likewise. The test is the type
+         line: a one-shot spell that adds mana is a ritual, a permanent that adds mana is
+         a rock, and a spell that fetches a land is neither. */
+      isRitual: /Instant|Sorcery/.test(typeLine) && !PUTS_LAND_ONTO_BATTLEFIELD.test(text) && ADDS_MANA.test(text),
+      ritualMana: ritualAmount(text),
+      isRamp: !isLand && !(/Instant|Sorcery/.test(typeLine) && ADDS_MANA.test(text) && !PUTS_LAND_ONTO_BATTLEFIELD.test(text))
+        && (/\{t\}: add|add \{[wubrgc]\}/.test(text)
         || PUTS_LAND_ONTO_BATTLEFIELD.test(text)
         || /you may play an additional land/.test(text)
         || makesTreasureFreely(text)),
       rampAmount: rampMatch,
+      /* THE SPELL COUNT ON THE TURN IT IS CAST. "Storm" is the keyword; the wording is
+         also printed in full on cards that do not carry it. Either way what the card does
+         is happen once more for every spell cast before it this turn, which is a figure
+         this engine can now supply. */
+      isStorm: /\bstorm\b|copy it for each spell cast before it this turn/.test(text),
+      /* A WIN THIS ENGINE CANNOT WATCH. "You win the game" has a condition attached, and
+         the condition is exactly what is not modelled here -- Thassa's Oracle counts a
+         library, Approach counts its own previous cast, Aetherflux counts a life total.
+         Flagged, never scored: a deck carrying one of these is reported as having a win
+         path the measurement does not describe, rather than quietly given a big body. */
+      altWin: /you win the game/.test(text),
       isDraw: /draw (?:a|one|two|three|four|x|\d+) cards?|draws? that many cards|draw cards equal/.test(text) && !/each opponent draws/.test(text),
       drawAmount: /draw (?:two|three|four|\d+) cards|draw cards equal|draws? that many/.test(text) ? 2 : 1,
       isRemoval: /destroy target|exile target (?:creature|permanent|artifact|enchantment|planeswalker|nonland)|deals? \d+ damage to (?:target|any target)|fights? target|return target (?:creature|permanent|nonland permanent) to its owner's hand|target creature gets [-−]/.test(text),
@@ -551,14 +587,81 @@
     return proactive >= minProactive;
   }
 
-  function castable(profile, mana, sources, commanderTax = 0) {
-    const cost = profile.cmc + commanderTax;
-    if (cost > mana) return false;
-    for (const color of COLORS) {
-      if (profile.pips[color] > (sources[color] || 0)) return false;
-    }
-    return true;
+  /* ------------------------------------------------------------------ MANA, TYPED
+   *
+   * The old model kept `sources` -- a count, per colour, of permanents that make that
+   * colour -- and asked each colour of a cost against it independently. Three things were
+   * wrong with that, and all three flattered the deck:
+   *
+   *   ONE SOURCE PAID EVERY PIP. A single Watery Grave counts in sources.U and sources.B,
+   *   so {U}{B} passed on one land. Every dual in the list was worth its two colours at
+   *   once, in the same spell.
+   *   NOTHING WAS EVER SPENT. sources never decremented, so the same land paid for the
+   *   first spell of the turn and the fourth. Only the scalar `mana` was debited.
+   *   COLOURLESS PAID COLOURED. A rock with no produced colours was credited with all
+   *   five (see the ramp branch), and "Add {C}{C}" was read as "any colour".
+   *
+   * Now every source is one mana with a colour MASK, the turn's pool is those masks, and
+   * paying a cost removes the sources it used. A cost is payable when its pips can be
+   * matched to distinct sources -- the scarcest colour first, and within a colour the
+   * least flexible source that can pay it, so a dual is kept back for the pip that has
+   * nothing else. On costs this small (at most five pips over five colours) that ordering
+   * is an exact matching, and the assignment it finds IS the payment. */
+  const COLOR_BIT = {W: 1, U: 2, B: 4, R: 8, G: 16};
+  const bits = (mask) => { let n = 0; while (mask) { n += mask & 1; mask >>= 1; } return n; };
+
+  /* The pool is two parallel arrays -- one entry per DISTINCT mask, with a count -- because
+     a hundred-card deck has a handful of distinct mana types and copying five numbers at
+     the top of a turn is free where copying a 32-slot table is not. */
+  function poolFrom(perm) { return {mask: perm.mask.slice(), left: perm.count.slice()}; }
+  function permAdd(perm, mask, n) {
+    const at = perm.mask.indexOf(mask);
+    if (at >= 0) perm.count[at] += n; else { perm.mask.push(mask); perm.count.push(n); }
   }
+  const poolSize = (pool) => pool.left.reduce((sum, n) => sum + n, 0);
+
+  /* Try to pay. Returns the sources used as a list of pool indices, or null if it cannot
+     be paid -- so the caller tests and pays with one call and they can never disagree.
+     `cap` is the most mana that may be spent at all, which is how a pilot reserving mana
+     for an answer refuses to spend it here. */
+  function payment(profile, pool, commanderTax, cap) {
+    const cost = profile.cmc + commanderTax;
+    if (cost > cap) return null;
+    const spent = pool.left.slice();
+    let available = 0;
+    for (const n of spent) available += n;
+    if (cost > available) return null;
+    /* Coloured pips first, scarcest colour first: a colour that only one source can make
+       must take that source before a colour with three candidates does. */
+    const wanted = COLORS.filter((color) => profile.pips[color] > 0)
+      .map((color) => {
+        let supply = 0;
+        for (let i = 0; i < pool.mask.length; i += 1) if (pool.mask[i] & COLOR_BIT[color]) supply += spent[i];
+        return {color, supply};
+      })
+      .sort((a, b) => a.supply - b.supply);
+    for (const {color} of wanted) {
+      for (let need = profile.pips[color]; need > 0; need -= 1) {
+        let best = -1, bestBits = 99;
+        for (let i = 0; i < pool.mask.length; i += 1) {
+          if (!spent[i] || !(pool.mask[i] & COLOR_BIT[color])) continue;
+          const width = bits(pool.mask[i]);
+          if (width < bestBits) { bestBits = width; best = i; }
+        }
+        if (best < 0) return null;
+        spent[best] -= 1;
+      }
+    }
+    /* Generic from whatever is left, least flexible first, so a Sol Ring's colourless
+       mana pays the {2} of {2}{R}{R} and the Mountains stay free for the pips. */
+    let generic = cost - COLORS.reduce((sum, color) => sum + profile.pips[color], 0);
+    const order = pool.mask.map((mask, i) => i).sort((a, b) => bits(pool.mask[a]) - bits(pool.mask[b]));
+    for (const i of order) {
+      while (generic > 0 && spent[i] > 0) { spent[i] -= 1; generic -= 1; }
+    }
+    return generic > 0 ? null : spent;
+  }
+  const castable = (profile, cap, pool, commanderTax = 0) => payment(profile, pool, commanderTax, cap) !== null;
 
   /* WHAT YOU CAST FIRST. A policy supplies OFFSETS onto this table, never a
      replacement for it -- so the shape of the ordering (ramp before draw before
@@ -694,8 +797,11 @@
 
     const drawn = new Set(hand);
     const cast = new Set();
+    /* Every mana this board can make, by colour mask. lands and rocks stay as they were --
+       the screw, flood and mana-behind signals are counted off them and none of that
+       changes -- but what a cost is actually PAID from is this. */
+    const manaPerm = {mask: [], count: []};
     const battlefieldCreatures = [];
-    const sources = {W: 0, U: 0, B: 0, R: 0, G: 0};
     let lands = 0;
     let rocks = 0;
     let life = 40;
@@ -707,7 +813,7 @@
     let measuredTurns = 0;
     let landsDrawn = 0;
     // Lands played tapped this turn; they come online at the next land drop.
-    let tappedPending = {count: 0, colors: []};
+    let tappedPending = {count: 0, masks: []};
     let cardsSeen = hand.length;
     let missedDrops = 0;
     let manaBehind = 0;
@@ -718,6 +824,10 @@
     let lossCause = "";
     let opponentBoard = 0;
     let drainAll = 0;
+    /* SPELLS CAST THIS TURN, which is what storm counts, and this game, which is what a
+       reader wants to know about a deck that is trying to chain them. */
+    let spellsThisTurn = 0, spellsThisGame = 0, stormPeak = 0;
+    let stormBurst = 0;   // one turn's worth of storm damage, spent and cleared below
     let drainOne = 0;
     let sacOutlets = 0;
     let deathDrain = 0;
@@ -846,19 +956,22 @@
       // difference between a Guildgate and a real dual.
       if (tappedPending.count) {
         lands += tappedPending.count;
-        tappedPending.colors.forEach((color) => { sources[color] += 1; });
-        tappedPending = {count: 0, colors: []};
+        tappedPending.masks.forEach((mask) => { permAdd(manaPerm, mask, 1); });
+        tappedPending = {count: 0, masks: []};
       }
       const landInHand = hand.findIndex((index) => profiles[index].isLand);
       if (landInHand >= 0) {
         const [played] = hand.splice(landInHand, 1);
         const profile = profiles[played];
+        /* A land is ONE mana, of whichever colours it can make -- not one source per
+           colour it lists. A triome used to count three times. */
+        const landMask = profile.produces.reduce((mask, color) => mask | COLOR_BIT[color], 0);
         if (profile.entersTapped) {
           tappedPending.count += 1;
-          profile.produces.forEach((color) => { tappedPending.colors.push(color); });
+          tappedPending.masks.push(landMask);
         } else {
           lands += 1;
-          profile.produces.forEach((color) => { sources[color] += 1; });
+          permAdd(manaPerm, landMask, 1);
         }
         cast.add(played);
         /* A LAND DROP IS THE CARD BEING PLAYED. `cast` already knew that -- it is why a
@@ -877,7 +990,10 @@
         missedDrops += 1;
       }
 
-      let mana = lands + rocks;
+      const pool = poolFrom(manaPerm);
+      let mana = poolSize(pool);
+      spellsThisTurn = 0;
+      stormBurst = 0;
       if (turn >= 3 && turn <= 6 && mana < turn - 1) manaBehind += 1;
       if (boardCombat) {
         seats.forEach((seat) => { if (seat.life > 0) refreshSeatBoard(seat, turn); });
@@ -914,7 +1030,7 @@
              `reserved`, which is zero for the published pilot and for every
              policy that taps out, so this line is unreachable for them. */
           if (reserved > 0 && profile.instantSpeed && (profile.isRemoval || profile.isProtection)) return;
-          if (!castable(profile, spendable, sources)) return;
+          if (!castable(profile, spendable, pool)) return;
           const priority = castPriority(profile, turn, state, policy);
           if (priority > bestPriority) {
             bestPriority = priority;
@@ -923,9 +1039,15 @@
         });
         const commanderProfile = deck.commander?.profile;
         const commanderCost = commanderProfile ? commanderProfile.cmc + commanderTax : Infinity;
-        const commanderCastable = commanderProfile && !commanderOnField && castable(commanderProfile, spendable, sources, commanderTax);
+        const commanderPaid = commanderProfile && !commanderOnField
+          ? payment(commanderProfile, pool, commanderTax, spendable) : null;
+        const commanderCastable = commanderPaid !== null;
         if (commanderCastable && (bestPosition < 0 || bestPriority < commanderGate)) {
-          mana -= commanderCost;
+          /* Spent, not subtracted. The sources this cost used are gone for the rest of the
+             turn, which is the whole point of the typed pool. */
+          pool.left = commanderPaid;
+          mana = poolSize(pool);
+          void commanderCost;
           commanderOnField = true;
           commanderTax += 2;
           if (!commanderTurn) commanderTurn = turn;
@@ -956,7 +1078,29 @@
         if (bestPosition < 0) break;
         const [played] = hand.splice(bestPosition, 1);
         const profile = profiles[played];
-        mana -= profile.cmc;
+        const paid = payment(profile, pool, 0, spendable);
+        /* castable() said yes a moment ago on this same pool, so this cannot be null --
+           but if the two ever disagree, stop rather than cast a spell nobody paid for. */
+        if (paid === null) { hand.push(played); break; }
+        pool.left = paid;
+        /* A RITUAL PUTS MANA BACK, this turn only. It used to be classified as ramp, so
+           Seething Song was a permanent rock making five mana every turn for the rest of
+           the game -- which is most of why a spellslinger list measured the way it did.
+           The mana it makes is its own colours, or colourless when it names none. */
+        if (profile.isRitual) {
+          const ritualMask = profile.produces.reduce((mask, color) => mask | COLOR_BIT[color], 0);
+          const at = pool.mask.indexOf(ritualMask);
+          if (at >= 0) pool.left[at] += profile.ritualMana;
+          else { pool.mask.push(ritualMask); pool.left.push(profile.ritualMana); }
+        }
+        mana = poolSize(pool);
+        spellsThisTurn += 1;
+        spellsThisGame += 1;
+        if (spellsThisTurn > stormPeak) stormPeak = spellsThisTurn;
+        /* STORM: the spell happens once more for every spell cast BEFORE it this turn.
+           Counted as a one-turn burst rather than folded into the permanent drain, because
+           that is what it is -- it does not happen again next turn. */
+        if (profile.isStorm) stormBurst += Math.max(0, spellsThisTurn - 1) * Math.max(1, profile.drain.all || 1);
         cast.add(played);
         if (cardStats) {
           const stat = cardStats.get(profile.name);
@@ -967,8 +1111,10 @@
         }
         if (profile.isRamp) {
           rocks += profile.rampAmount;
-          profile.produces.forEach((color) => { sources[color] += 1; });
-          if (!profile.produces.length) COLORS.forEach((color) => { sources[color] += 1; });
+          /* A rock that makes no colour makes COLOURLESS mana. It used to be credited with
+             all five, which is how Sol Ring came to fix a five-colour manabase. */
+          const rockMask = profile.produces.reduce((mask, color) => mask | COLOR_BIT[color], 0);
+          permAdd(manaPerm, rockMask, Math.max(1, profile.rampAmount));
         }
         if (profile.isDraw) {
           for (let extra = 0; extra < profile.drawAmount; extra += 1) {
@@ -1051,19 +1197,29 @@
          holds mana up is measured on what it actually kept, so its interaction
          figure is a fact rather than a might-have-been -- and that is why the two
          lens scores compare with each other and not with the published number. */
+      const answerPool = (policy && policy.hold.fromUntappedMana) ? {mask: pool.mask, left: pool.left.slice()} : poolFrom(manaPerm);
       const answerMana = (policy && policy.hold.fromUntappedMana) ? mana : lands + rocks;
-      heldAnswers = hand.filter((index) => {
-        const answer = profiles[index];
-        return answer.instantSpeed
-          && (answer.isRemoval || answer.isProtection)
-          && castable(answer, answerMana, sources);
-      }).length;
+      /* ONE ANSWER AT A TIME, PAID FOR. This was a filter: every instant in hand was asked
+         whether it was castable against the SAME untouched mana, so three answers all said
+         yes on a board that could pay for one, and the interaction figure counted a hand
+         it could not actually hold up. Cheapest first, each one paying out of what the one
+         before it left, which is what holding answers up actually costs. */
+      heldAnswers = 0;
+      hand.map((index) => profiles[index])
+        .filter((answer) => answer.instantSpeed && (answer.isRemoval || answer.isProtection))
+        .sort((a, b) => a.cmc - b.cmc)
+        .forEach((answer) => {
+          const paid = payment(answer, answerPool, 0, answerMana);
+          if (paid === null) return;
+          answerPool.left = paid;
+          heldAnswers += 1;
+        });
       if (turn >= 3 && turn <= 7) {
         measuredTurns += 1;
         if (heldAnswers > 0) interactionTurns += 1;
       }
       if (turn === 8) {
-        const stranded = hand.filter((index) => !castable(profiles[index], lands + rocks, sources) && !profiles[index].isLand);
+        const stranded = hand.filter((index) => !castable(profiles[index], mana, pool) && !profiles[index].isLand);
         deadCardsAtEight = stranded.length;
         /* THE SAME FILTER, KEPT PER CARD. deadCardsAtEight has always been counted here and
            thrown away as a single number. Which cards those were is the one per-card figure
@@ -1184,7 +1340,8 @@
           }
         }
       }
-      if (drainAll) seats.forEach((seat) => { seat.life -= drainAll; });
+      const drainThisTurn = drainAll + stormBurst;
+      if (drainThisTurn) seats.forEach((seat) => { seat.life -= drainThisTurn; });
       if (drainOne) {
         const alive = seats.filter((seat) => seat.life > 0);
         if (alive.length) alive.reduce((lowest, seat) => (seat.life < lowest.life ? seat : lowest), alive[0]).life -= drainOne;
@@ -1363,7 +1520,9 @@
       life,
       participated,
       peakBoard,
-      reasonablePace
+      reasonablePace,
+      spellsThisGame,
+      stormPeak
     };
   }
 
@@ -1423,7 +1582,18 @@
       reasonablePaceRate: totals.reasonablePaceSum / games,
       avgIdleTurns: totals.idleTurnSum / games,
       avgSurvivingSeats: totals.survivingSeatSum / games,
-      avgFirstElimination: totals.firstEliminationSum / games
+      avgFirstElimination: totals.firstEliminationSum / games,
+      /* HOW MANY SPELLS A GAME ACTUALLY GOT CAST, and the most that went in one turn.
+         A storm deck lives or dies on the second figure and nothing here reported it. */
+      avgSpellsPerGame: totals.spellSum / games,
+      avgStormPeak: totals.stormPeakSum / games,
+      /* WIN PATHS THIS ENGINE CANNOT WATCH. "You win the game" always carries a condition,
+         and the condition is the part that is not modelled -- Thassa's Oracle counts a
+         library, Approach counts its own previous cast, Aetherflux counts a life total.
+         Counted and reported, never scored: a deck built around one of these is not a weak
+         deck, it is a deck this measurement does not describe, and the difference has to
+         reach the reader rather than be quietly folded into a creature's body. */
+      unwatchedWinPaths: totals.unwatchedWinPaths || 0
     };
   }
 
@@ -1639,7 +1809,12 @@
       reasonablePaceSum: 0,
       idleTurnSum: 0,
       survivingSeatSum: 0,
-      firstEliminationSum: 0
+      firstEliminationSum: 0,
+      spellSum: 0,
+      stormPeakSum: 0,
+      /* Counted once off the list rather than per game: it is a property of the hundred,
+         not of how a game went. */
+      unwatchedWinPaths: deck.profiles.filter((profile) => profile.altWin).length
     };
     const games = Number(config.games || config.gamesPerIteration || 500);
     const batchSize = Number(config.batchSize || 100);
@@ -1672,6 +1847,8 @@
       totals.idleTurnSum += result.idleTurns;
       totals.survivingSeatSum += result.survivingSeats;
       totals.firstEliminationSum += result.firstElimination;
+      totals.spellSum += result.spellsThisGame;
+      totals.stormPeakSum += result.stormPeak;
       if (onBatch && (index + 1) % batchSize === 0) onBatch({completed: index + 1, total: games, metrics: summarize(totals)});
     }
     const metrics = summarize(totals);

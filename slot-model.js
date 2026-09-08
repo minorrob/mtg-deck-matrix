@@ -260,7 +260,11 @@
         if (MANA_COLORS.includes(color)) produced.add(color);
       });
     });
-    if (/add one mana of any color|add \{c\}\{c\}|any color/.test(text)) MANA_COLORS.forEach((color) => produced.add(color));
+    /* {C} is COLOURLESS and cannot pay a coloured pip -- see the same note in
+       sim-engine.js, which this has to agree with card for card or tests/slot-model.mjs
+       fails. Reading "Add {C}{C}" as "any colour" gave Sol Ring, Ashnod's Altar, Basalt
+       Monolith and ten more a five-colour manabase they do not have. */
+    if (/add one mana of any color|any color/.test(text)) MANA_COLORS.forEach((color) => produced.add(color));
     // A land that goes and gets a basic makes what that basic makes. These carry
     // an empty color identity, so the fallback below left Evolving Wilds and the
     // Panoramas producing nothing at all. Only a fetch that puts the land onto
@@ -353,7 +357,14 @@
     const isCreature = /Creature/.test(typeLine);
     const roles = [];
     const add = (role, hit) => { if (hit) roles.push(role); };
-    add("ramp", !isLand && (/\{t\}: add|add \{[wubrgc]\}/.test(text)
+    /* A RITUAL IS NOT RAMP. Dark Ritual, Cabal Ritual and Culling the Weak add mana once,
+       this turn, and are then in the graveyard; ramp is a permanent that keeps making it.
+       Kept identical to sim-engine's rule, which tests/slot-model.mjs compares card for
+       card -- and which is what caught this. */
+    const oneShotMana = /Instant|Sorcery/.test(typeLine)
+      && /add (?:\{[wubrgc]\}|one|two|three|four|five|six|seven|\d+)/.test(text)
+      && !PUTS_LAND_ONTO_BATTLEFIELD.test(text);
+    add("ramp", !isLand && !oneShotMana && (/\{t\}: add|add \{[wubrgc]\}/.test(text)
       || PUTS_LAND_ONTO_BATTLEFIELD.test(text)
       || /you may play an additional land/.test(text)
       || makesTreasureFreely(text)));

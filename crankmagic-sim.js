@@ -34,14 +34,14 @@
   /* The engine generation these reports describe. Pinned by tests/crankmagic-sim.mjs
      against data/simulation-summary.json, so bumping the engine without bumping this --
      which would file new numbers under the old generation's name -- fails the suite. */
-  const ENGINE_GENERATION = "v2.6";
+  const ENGINE_GENERATION = "v2.7";
 
   /* Loaded by the worker, in dependency order. sim-engine first because deck-measure
      throws without it; combat and pilot-policy before deck-measure because it resolves
      them lazily off the global. Versions must match the ?v= the pages use, or a browser
      that has one page cached serves the worker a different engine than the page. */
   const ENGINE_SCRIPTS = [
-    "sim-engine.js?v=9",
+    "sim-engine.js?v=10",
     "combat.js?v=2",
     "pilot-policy.js?v=3",
     "deck-measure.js?v=9"
