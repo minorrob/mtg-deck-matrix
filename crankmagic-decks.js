@@ -81,18 +81,33 @@ actions['new-deck']=()=>{
     v=>v.how==='group'?groupDeck(v.groupId):commanderDeck(),'Continue');
 };
 actions['edit-deck']=el=>{const d=M.deck(C.state,el.dataset.deck);form('Deck Definition',f('Deck name','name',d.name,'required maxlength="160"')+f('Core mechanics (comma separated)','mechanics',d.definition.mechanics.join(', '))+s('Base bracket','baseBracket',[1,2,3,4,5],d.definition.baseBracket)+s('Bracket ceiling','bracketCeiling',[1,2,3,4,5],d.definition.bracketCeiling)+f('Total price cap ($; blank means no cap)','budget',d.definition.budget??'','type="number" min="0" step="0.01"')+f('Per-card price cap ($)','perCardCap',d.definition.perCardCap??'','type="number" min="0" step="0.01"')+s('Collection group this deck draws from','groupId',[['','None'],...C.state.groups.map(g=>[g.id,g.name])],d.groupId||'')+`<label class="cm-full">Deck notes<textarea name="notes">${e(d.notes)}</textarea></label>`,data=>commit({type:'editDeck',deckId:d.id,name:data.name,notes:data.notes,groupId:data.groupId||null,definition:{...d.definition,baseBracket:Number(data.baseBracket),bracketCeiling:Number(data.bracketCeiling),mechanics:data.mechanics.split(',').map(x=>x.trim()).filter(Boolean),budget:data.budget===''?null:Number(data.budget),perCardCap:data.perCardCap===''?null:Number(data.perCardCap)}}));};
+/* ATTACHING AN EXISTING GROUP IS THE OTHER ROAD IN: you uploaded a sheet, the cards are in a
+   group, and now you want a deck around them. So attaching offers to bring the group's cards
+   across as the deck's list -- offered only where it cannot destroy anything, on a draft
+   whose list is still empty or just its commander. Filing copies into the group by hand is
+   gone: a copy reserved for the deck is in the deck's group by being reserved for the deck. */
 actions['attach-group']=el=>{
-  const d=M.deck(C.state,el.dataset.deck),group=attached(d);
+  const d=M.deck(C.state,el.dataset.deck);
   if(!C.state.groups.length)throw Error('Create a collection group first, from the Collection page.');
-  if(group){
-    const loose=C.state.lots.filter(l=>l.allocation?.deckId===d.id&&!l.groupIds.includes(group.id)),lotIds=loose.map(l=>l.id);
-    if(!lotIds.length)throw Error(`Every copy reserved for ${d.name} is already filed under ${group.name}. Change the group from Edit definition.`);
-    const copies=loose.reduce((n,l)=>n+l.quantity,0);
-    C.review(`File these copies into ${group.name}`,note(`${lotIds.length} record${lotIds.length===1?'':'s'} reserved for ${d.name} — ${copies} cop${copies===1?'y':'ies'} — join ${group.name}. Nothing leaves a group it is already in, and no ownership or reservation changes.`),{type:'groupLots',groupId:group.id,lotIds});
-    return;
-  }
-  form('Attach a collection group',`<div class="cm-full">${s('Collection group','groupId',C.state.groups.map(g=>[g.id,g.name]),'')}</div>`+note('The deck reserves copies filed under this group before any other matching copy, and gains a one-click way to file its own copies in. Change or clear it later from Edit definition.'),
-    v=>commit({type:'editDeck',deckId:d.id,groupId:v.groupId}),'Attach group');
+  const choices=C.state.groups.filter(g=>g.id!==d.groupId);
+  if(!choices.length)throw Error(`${d.name} is already attached to your only collection group.`);
+  const main=()=>d.slots.filter(r=>r.purpose==='main');
+  const bare=d.status==='draft'&&main().length<=1;
+  /* The offer is about the group you pick, which you pick after the dialog opens -- keying it
+     off the first one in the list hid it whenever that one happened to be empty. */
+  const anyRows=choices.some(g=>groupRows(g).length);
+  form(d.groupId?'Change the collection group':'Attach a collection group',
+    `<div class="cm-full">${s('Collection group','groupId',choices.map(g=>[g.id,g.name]),'')}</div>`
+    +(bare&&anyRows?`<label class="cm-checkbox cm-full"><input type="checkbox" name="adopt" checked>Bring the group\u2019s cards across as this deck\u2019s list</label>`:'')
+    +note('This deck\u2019s cards appear under this group in the Collection, and a copy filed there is reserved for this deck before any other matching copy.'),
+    v=>{
+      const g=C.state.groups.find(x=>x.id===v.groupId);
+      const rows=g?groupRows(g):[];
+      const take=v.adopt&&bare&&rows.length;
+      const keep=main().map(r=>({cardId:r.cardId,quantity:r.quantity,printing:r.printing,purpose:'main'}));
+      const slots=rows.some(r=>d.commanders.includes(r.cardId))?rows:[...keep,...rows];
+      return commit({type:'editDeck',deckId:d.id,groupId:v.groupId,...(take?{slots}:{})});
+    },d.groupId?'Change group':'Attach group');
 };
 actions.finalize=el=>{const d=M.deck(C.state,el.dataset.deck);C.review('Finalize '+d.name,note('This reserves eligible available copies and creates To buy requirements for the remainder. It does not claim you own any missing cards. Prices and bracket expectations require your review.'),{type:'finalize',deckId:d.id});};
 actions.lock=el=>{const d=M.deck(C.state,el.dataset.deck);C.review(d.locked?'Unlock deck':'Lock deck',note('All copies remain visible. A lock excludes the deck’s copies from automatic build consideration unless you explicitly allow that donor.'),{type:'lock',deckId:d.id,locked:!d.locked});};
@@ -111,12 +126,9 @@ actions['deck-insight-menu']=el=>{const d=M.deck(C.state,el.dataset.deck);popMen
 actions['deck-manage-menu']=el=>{const d=M.deck(C.state,el.dataset.deck);popMenu(el,`<p>${e(d.name)}</p>${b('Log a game','log-game',{deck:d.id})}${b('Export deck list','deck-export',{deck:d.id})}<hr>${b('Edit definition','edit-deck',{deck:d.id})}${b('Archive deck','archive',{deck:d.id})}`);};
 actions['group-menu']=el=>{
   const d=M.deck(C.state,el.dataset.deck),g=attached(d);
-  popMenu(el,g?`<p>Draws from ${e(g.name)}</p>${b('View the group','deck-group',{group:g.id})}${b('File this deck’s copies in','attach-group',{deck:d.id})}${b('Change the group','change-group',{deck:d.id})}${b('Detach the group','detach-group',{deck:d.id})}`
+  popMenu(el,g?`<p>This deck lives in ${e(g.name)}</p>${b('View the group','deck-group',{group:g.id})}${b('Add planned cards','add-group-entry',{group:g.id})}${b('Change the group','attach-group',{deck:d.id})}${b('Detach the group','detach-group',{deck:d.id})}`
     :`<p>No collection group attached</p>${b('Attach a collection group','attach-group',{deck:d.id})}`);
 };
-actions['change-group']=el=>{const d=M.deck(C.state,el.dataset.deck);
-  if(!C.state.groups.length)throw Error('Create a collection group first, from the Collection page.');
-  form('Change the collection group',`<div class="cm-full">${s('Collection group','groupId',C.state.groups.map(g=>[g.id,g.name]),d.groupId||'')}</div>`+note('The deck reserves copies filed under this group before any other matching copy.'),v=>commit({type:'editDeck',deckId:d.id,groupId:v.groupId}),'Change group');};
 actions['detach-group']=el=>{const d=M.deck(C.state,el.dataset.deck);return commit({type:'editDeck',deckId:d.id,groupId:null});};
 actions['deck-menu']=el=>{const d=M.deck(C.state,el.dataset.deck);document.querySelectorAll('.cm-tile-menu').forEach(m=>m.remove());const menu=document.createElement('div');menu.className='cm-menu cm-tile-menu';menu.setAttribute('popover','auto');
   const picked=(C.state.preferences.comparisonPicks||[]).includes(d.id);
