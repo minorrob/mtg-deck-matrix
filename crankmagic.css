@@ -424,6 +424,79 @@
 .cm-card-view-buy{margin-top:8px}
 #matrix-v2 .cm-card-view-buy .cm-card-view-menu-btn{display:inline-flex;align-items:center;gap:6px}
 
+/* ============== DISCOVER: THE CANVAS BOX AND PRESENTATION MODE ==============
+   The canvas gets a box of its own so two things can sit INSIDE it rather than beside it:
+   the maximise control, in its top-right corner under Back to Prior Card, and the
+   connection pop-up, which is now positioned against the canvas instead of the whole
+   column -- which is what stops it drifting up over the controls when the pane resizes. */
+#matrix-v2 .cm-graph-box{position:relative;min-width:0}
+#matrix-v2 .cm-graph-box>.cm-graph{display:block;width:100%}
+#matrix-v2 .cm-stage-btn{position:absolute;top:10px;right:10px;z-index:5;
+  display:inline-grid;place-items:center;width:32px;height:32px;padding:0;
+  border:1px solid var(--v-line-strong);border-radius:8px;background:#1b2334d9;
+  color:var(--v-muted);backdrop-filter:blur(3px);cursor:pointer}
+#matrix-v2 .cm-stage-btn:hover{background:#28344c;color:var(--v-ink);border-color:var(--v-accent)}
+#matrix-v2 .cm-stage-btn[aria-pressed=true]{color:var(--v-accent);border-color:var(--v-accent)}
+/* The two hint sentences share one popover, so they read as one explanation of the canvas
+   rather than two paragraphs competing with it for the page. */
+#matrix-v2 .cm-graph-modes .cm-hint-body{width:min(340px,calc(100vw - 40px))}
+#matrix-v2 .cm-graph-modes .cm-hint-body p{margin:0 0 8px}
+#matrix-v2 .cm-graph-modes .cm-hint-body p:last-child{margin:0}
+
+/* PRESENTATION MODE. Everything below is one reader's decision: give the canvas the room.
+   The nav rail collapses, the page title and its subtitle go (the eyebrow stays, so the
+   page still says where you are, and the search and filter rows rise under it), the card
+   pane halves and stacks its art above the text, and the canvas takes what that frees.
+   Nothing is removed that you would have to leave the mode to get back. */
+/* One column, not a zero-width first one: display:none takes the rail OUT of the grid, so
+   a `0 1fr` template drops main into the zero track and the page becomes 2px wide. */
+#matrix-v2.cm-stage .cm-layout{grid-template-columns:minmax(0,1fr)}
+#matrix-v2.cm-stage .cm-sidebar{display:none}
+#matrix-v2.cm-stage #cm-main{padding:14px clamp(12px,1.4vw,20px) 18px}
+#matrix-v2.cm-stage .cm-page-head{margin-bottom:10px}
+#matrix-v2.cm-stage .cm-page-head h1,
+#matrix-v2.cm-stage .cm-page-head>div>p{display:none}
+#matrix-v2.cm-stage .cm-toolbar{margin:6px 0}
+#matrix-v2.cm-stage .cm-facet-status{margin:0}
+#matrix-v2.cm-stage .cm-graph-grid-tall{--cm-graph-h:clamp(420px,calc(100vh - 178px),1400px);gap:14px}
+#matrix-v2.cm-stage .cm-graph-grid{grid-template-columns:minmax(0,1fr) 210px}
+/* The pane is half as wide, so the head stops being two columns: 150px of art beside
+   70px of text is not a layout, it is two things that do not fit. */
+#matrix-v2.cm-stage .cm-card-view-head{grid-template-columns:minmax(0,1fr);
+  grid-template-rows:auto auto auto;gap:8px}
+/* The three parts of the head are placed by hand at full width -- art in column one,
+   Inspect under it, the title spanning both rows in column two -- so a one-column template
+   alone does not stack them: the title stays pinned to a column that no longer exists and
+   the art overflows a zero-width track. Each one is re-placed. Order is unchanged from the
+   wide layout read top to bottom: the picture, the button that belongs to the picture,
+   then everything the card says about itself. */
+#matrix-v2.cm-stage .cm-card-view-art{grid-column:1;grid-row:1;width:118px}
+#matrix-v2.cm-stage .cm-card-view-tools{grid-column:1;grid-row:2;width:118px;margin-top:0}
+#matrix-v2.cm-stage .cm-card-view-title{grid-column:1;grid-row:3}
+#matrix-v2.cm-stage .cm-card-view-title h2{font-size:16px}
+#matrix-v2.cm-stage .cm-card-view{padding:14px;gap:6px}
+#matrix-v2.cm-stage .cm-card-view-buy{margin-top:6px}
+#matrix-v2.cm-stage .cm-chips-head{font-size:13px;margin-top:8px}
+/* Half the width means twice the wrapping, so the two blocks that wrap most are tightened
+   rather than cut: every term is still there and still tappable, just smaller. A card
+   joined by a dozen terms still overruns the pane, and the pane scrolls -- which is the
+   same answer this pane has always given, and better than hiding a term behind a fold. */
+#matrix-v2.cm-stage .cm-card-view-title p{font-size:12px;margin:2px 0}
+#matrix-v2.cm-stage .cm-term-chips{gap:4px}
+#matrix-v2.cm-stage .cm-term-chips .cm-chip{font-size:11px;padding:3px 7px}
+#matrix-v2.cm-stage .cm-term-chips .cm-chip small{font-size:9px}
+#matrix-v2.cm-stage .cm-card-view-foot{font-size:11px;line-height:1.35}
+/* A phone has no room to give and no rail to collapse, so the mode is desktop-only and
+   the control that offers it goes with it. */
+@media(max-width:860px){
+  #matrix-v2 .cm-stage-btn{display:none}
+  #matrix-v2.cm-stage .cm-layout{grid-template-columns:1fr}
+  #matrix-v2.cm-stage .cm-sidebar{display:block}
+  #matrix-v2.cm-stage .cm-graph-grid{grid-template-columns:1fr}
+  #matrix-v2.cm-stage .cm-page-head h1,
+  #matrix-v2.cm-stage .cm-page-head>div>p{display:revert}
+}
+
 /* A CELL YOU CAN TYPE IN HAS TO LOOK LIKE ONE. Paid and Quantity are editable in place, and
    a number that is silently clickable is a number nobody clicks -- so the cell carries a
    faint dotted underline that firms up on hover, the way a spreadsheet's does. Everything
