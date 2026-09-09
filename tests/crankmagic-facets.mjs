@@ -289,4 +289,24 @@ check("Extends is a subset of Grants: you cannot spread what you do not give", (
     `${wrong.length} cards extend a quality they do not grant`);
 });
 
+/* The join the graph paints its gold band from. It has to agree with the Ownership facet
+   -- a band on a card the filter calls "not owned" is two answers to one question. */
+check("ownedNames is the Ownership facet's own rule, on its own", () => {
+  const state = {
+    cards: {a: {name: "Sol Ring"}, b: {name: "Mana Crypt"}, c: {name: "Arcane Signet"}, d: {name: "Mind Stone"}},
+    lots: [{cardId: "a", source: "owned"}, {cardId: "b", source: "ordered"},
+           {cardId: "c", source: "wanted"}, {cardId: "d", source: "owned"}, {cardId: "gone", source: "owned"}],
+    decks: [],
+  };
+  assert.deepEqual([...Facets.ownedNames(state)].sort(), ["Mind Stone", "Sol Ring"],
+    "only source owned, only cards the library can name");
+  assert.deepEqual([...Facets.ownedNames(null)], [], "an empty library owns nothing");
+  const decorated = Facets.decorate([{name: "Sol Ring"}, {name: "Mana Crypt"}], state);
+  for (const card of decorated) {
+    const banded = Facets.ownedNames(state).has(card.name);
+    const filtered = card.__mine.owned.some((v) => v !== "not owned" && v !== "on order" && v !== "incoming trade");
+    assert.equal(banded, filtered, `${card.name}: the band and the filter disagree`);
+  }
+});
+
 console.log(`crankmagic-facets: ${checks} checks passed · ${Facets.available(null).length} card facets over ${CARDS.length} cards`);

@@ -110,6 +110,20 @@
     return byName;
   }
 
+  /* The ownership join on its own, for callers that want the answer rather than the filter:
+     the graph paints an owned card's gold band from this. Same rule as the Ownership facet
+     -- a lot whose source is "owned", matched by name, because a graph node's id comes from
+     graph.json and a lot's from the catalog and the two only meet on the name. */
+  function ownedNames(state) {
+    const set = new Set();
+    for (const lot of (state && state.lots) || []) {
+      if (lot.source !== "owned") continue;
+      const card = state.cards && state.cards[lot.cardId];
+      if (card && card.name) set.add(card.name);
+    }
+    return set;
+  }
+
   /* Attach each card's personal facts once, rather than looking them up per filter pass.
      `__mine` is deliberately ugly: it is a computed attachment, not card data, and it
      should look wrong if it ever ends up somewhere that expects a catalog row. */
@@ -244,5 +258,5 @@
     return next;
   }
 
-  return {FACETS, CARD_TYPES, NOT, available, values, apply, matches, decorate, mineFrom, count, chips, toggle, stateOf, set};
+  return {FACETS, CARD_TYPES, NOT, available, values, apply, matches, decorate, mineFrom, ownedNames, count, chips, toggle, stateOf, set};
 });

@@ -166,7 +166,7 @@
     /* The scoring the canvas uses, reachable without one. */
     relate: (a, b) => (a && b && a !== b ? relateTerms(termSets(a), termSets(b)) : null),
 
-    mount({canvas, cards, played = [], focus, history = [], onSelect, onNeighbors, onPick, onHit, type = 'mechanic', depth = 2, breadth = 12}) {
+    mount({canvas, cards, played = [], focus, history = [], owned = null, onSelect, onNeighbors, onPick, onHit, type = 'mechanic', depth = 2, breadth = 12}) {
       const ctx = canvas.getContext('2d');
       const byId = new Map(cards.map((c) => [c.id, c]));
       /* The path walked so far. A filter remounts the graph over a narrower set of cards;
@@ -564,6 +564,16 @@
             } else if (n.depth <= 1) {
               ctx.fillStyle = '#bddbff'; ctx.font = (focus ? '12' : '9') + 'px Satoshi, sans-serif'; ctx.textAlign = 'center';
               ctx.fillText((n.card.ci || 'C').split('').join(' '), n.x, n.y + (focus ? 4 : 3));
+            }
+            /* A CARD YOU OWN WEARS A GOLD BAND, just outside its disc. Outside rather than
+               instead of the ring the node already has, because that ring says what the
+               reader is doing -- selected, pinned, focused, which ring it sits in -- and
+               owning a card is a fact about the card. Scaled with the disc so it reads as
+               a band on ring 1 and still as a band out on ring 3. */
+            if (owned && owned.has(n.card.name)) {
+              const band = Math.max(1.5, n.r * .11);
+              ctx.strokeStyle = '#f2c96b'; ctx.lineWidth = band;
+              ctx.beginPath(); ctx.arc(n.x, n.y, n.r + band / 2 + 1, 0, Math.PI * 2); ctx.stroke();
             }
             const isSel = selected.has(n.card.id);
             ctx.strokeStyle = isSel ? '#ffd166' : n.pinned ? '#e0b660' : focus ? '#c0e8ff' : n.depth === 1 ? '#71b6e3' : '#4f89b8';
