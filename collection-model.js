@@ -151,6 +151,27 @@
          into its box as a deck. This moves the whole reservation at once, and takes it apart
          the same way; it changes no ownership and releases no reservation. */
       case 'placeDeck':{const d=deck(s,c.deckId);ensure(!d.archived,'Archived decks cannot receive cards.');const into=c.destination!=='bench';ensure(!into||d.status==='final','Finalize this deck before putting it in a box.');let moved=0;for(const l of s.lots){if(l.allocation?.deckId!==d.id||l.source!=='owned')continue;const here=l.location?.kind==='deck'&&l.location.deckId===d.id;if(into===here)continue;if(l.location?.kind==='deck'&&l.location.deckId!==(into?d.id:null))warning(l);l.location=into?{kind:'deck',deckId:d.id,box:text(c.box,300)||d.name}:{kind:'bench',box:text(c.box,300)};moved+=l.quantity;}summary=into?`Put ${moved} reserved cop${moved===1?'y':'ies'} in ${d.name}`:`Returned ${moved} cop${moved===1?'y':'ies'} from ${d.name} to the bench`;break;}
+      /* THE SAME CHANGE, TO A HANDFUL OF RECORDS. Coming back from a convention with eleven
+         cards to mark received meant eleven dialogs, eleven revisions and eleven things to
+         undo, so nobody did it and the library drifted. One command, one receipt, one undo.
+         Each record goes through the same guards its single-record command uses -- and if
+         one refuses, the whole batch refuses, because a partly applied batch is a state
+         nobody asked for and nobody can see. */
+      case 'bulk':{
+        ensure(Array.isArray(c.lotIds)&&c.lotIds.length,'Select at least one card record.');
+        ensure(c.lotIds.length<=500,'Change at most 500 records at once.');
+        ensure(new Set(c.lotIds).size===c.lotIds.length,'A record cannot appear twice in one batch.');
+        let copies=0;
+        for(const lotId of c.lotIds){
+          const l=lot(s,lotId);copies+=l.quantity;
+          if(c.op==='source'){ensure(SOURCES.includes(c.source),'Choose Owned, Ordered, Incoming trade or Wanted.');if(l.source==='owned'&&c.source!=='owned')warning(l);l.source=c.source;if(l.source==='owned'){l.location=l.location||{kind:'bench',box:''};l.receivedAt=now;}else{l.location=null;l.offer='none';}}
+          else if(c.op==='bench'){ensure(l.source==='owned','Record receipt or purchase before moving this card.');if(l.location?.kind==='deck')warning(l);l.location={kind:'bench',box:text(c.box,300)};}
+          else if(c.op==='release'){warning(l);release(l,'bench');}
+          else if(c.op==='offer'){ensure(l.source==='owned','Only owned copies can be offered.');ensure(['none','available','held'].includes(c.offer),'Invalid Sell / Trade state.');if(c.offer==='held'){warning(l);l.allocation=null;}l.offer=c.offer;}
+          else ensure(false,'Unknown bulk operation.');
+        }
+        const what=c.op==='source'?`Marked ${c.source}`:c.op==='bench'?'Moved to the bench':c.op==='release'?'Released to To buy':c.offer==='none'?'Cleared Sell / Trade':c.offer==='held'?'Held for a pending deal':'Offered for Sell / Trade';
+        summary=`${what}: ${c.lotIds.length} record${c.lotIds.length===1?'':'s'}, ${copies} cop${copies===1?'y':'ies'}`;break;}
       case 'release':{let l=lot(s,c.lotId);warning(l);l=split(l,c.quantity);release(l,c.destination||'bench');summary='Released allocation; retained the actual physical location';break;}
       case 'swap':{const d=deck(s,c.deckId),r=slot(s,d.id,c.slotId);ensure(!d.archived,'Restore the archived deck first.');for(const raw of c.cards||[])addCard(raw);card(s,c.cardId);version(d);const released=s.lots.filter(l=>l.allocation?.deckId===d.id&&l.allocation.slotId===r.id);for(const l of released)l.allocation=null;r.cardId=c.cardId;r.printing=clone(c.printing||{});r.pinned=!!c.pinned;if(c.commander)d.commanders=d.commanders.map(cid=>cid===c.commander?c.cardId:cid);const issues=d.status==='final'?acceptance(s,d):[];ensure(!issues.length,issues.join('\n'));for(const l of released)release(l,c.destination);if(d.status==='final'){if(c.lotId){let l=lot(s,c.lotId);warning(l);l=split(l,Math.min(l.quantity,shortfall(s,d,r)));l.allocation=null;allocate(l,d,r,l.quantity);}satisfy(d,r.id);}summary=`Replaced a slot in ${d.name}; ownership unchanged`;break;}
       case 'option':{const d=deck(s,c.deckId);ensure(!d.archived,'Restore the deck first.');const parent=slot(s,d.id,c.replaces);ensure(parent.purpose==='main','Choose a main-deck slot.');for(const raw of c.cards||[])addCard(raw);const [r]=rows([{...c.option,committed:!!c.reserve,replaces:parent.id,purpose:c.option.purpose||'upgrade'}]);ensure(r.purpose!=='main','An option is separate from the main hundred.');d.slots.push(r);if(d.status==='final'&&c.reserve)satisfy(d,r.id);summary='Saved a linked upgrade or bracket option outside the main hundred';break;}

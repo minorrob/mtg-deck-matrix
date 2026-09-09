@@ -55,4 +55,37 @@ expectFailure('placeDeck',{deckId:'box',destination:'bench'},/confirm/);
 run('placeDeck',{deckId:'box',destination:'bench',confirmed:true});
 assert.equal(boxed().placed,0,'And comes back out the same way');assert.equal(boxed().owned,100,'Taking a deck apart releases no reservation');checks+=2;
 run('archive',{deckId:'box'});expectFailure('placeDeck',{deckId:'box',confirmed:true},/Archived/);
+// A BATCH IS ONE CHANGE. Eleven cards marked received after a convention is one errand,
+// and it has to be one receipt and one undo -- and all-or-nothing, because a batch that
+// applied to six of eleven records leaves a state nobody asked for and nobody can see.
+run('createDeck',{deckId:'lots',name:'Batch',commanders:['leader'],slots:[{id:'cmdl',cardId:'leader',quantity:1},{id:'landsl',cardId:'land',quantity:98},{id:'rockl',cardId:'ring',quantity:1}]});
+run('finalize',{deckId:'lots'});
+run('acquire',{lot:{id:'b1',cardId:'ring',quantity:2,source:'ordered',printing:{set:'mh3'}}});
+run('acquire',{lot:{id:'b2',cardId:'stone',quantity:1,source:'ordered',printing:{set:'mh3'}}});
+run('acquire',{lot:{id:'b3',cardId:'land',quantity:4,source:'wanted',printing:{set:'mh3'}}});
+const ordered=M.counters(s).ordered,wanted=M.counters(s).wanted,ownedBefore=M.counters(s).owned;
+run('bulk',{op:'source',source:'owned',lotIds:['b1','b2','b3']});
+assert.equal(M.counters(s).owned,ownedBefore+7,'Every ticked record, whatever it was, is owned now');
+assert.equal(M.counters(s).ordered,ordered-3);assert.equal(M.counters(s).wanted,wanted-4);checks+=3;
+assert.equal(M.lot(s,'b1').location.kind,'bench','A received copy lands on the bench, not in a deck');checks++;
+// All or nothing: one unknown record in the list and the whole batch is refused.
+expectFailure('bulk',{op:'source',source:'owned',lotIds:['b1','nope']},/no longer exists/);
+expectFailure('bulk',{op:'source',source:'owned',lotIds:['b1','b1']},/twice/);
+expectFailure('bulk',{op:'source',source:'owned',lotIds:[]},/at least one/);
+expectFailure('bulk',{op:'teleport',lotIds:['b1']},/Unknown bulk operation/);
+// The single-record guards still hold inside a batch: an owned copy leaving owned, and a
+// reservation being released, each need the same confirmation they need on their own.
+run('fulfill',{deckId:'lots'});
+assert.ok(s.lots.some(l=>l.allocation?.deckId==='lots'),'The batch-received copies filled the new deck');checks++;
+const reserved=s.lots.filter(l=>l.allocation?.deckId==='lots').map(l=>l.id);
+expectFailure('bulk',{op:'release',lotIds:reserved},/confirm/);
+run('bulk',{op:'release',lotIds:reserved,confirmed:true});
+assert.equal(s.lots.filter(l=>l.allocation?.deckId==='lots').length,0,'Released every ticked reservation');
+assert.equal(M.counters(s).owned,ownedBefore+7,'Releasing a reservation unowns nothing');checks+=2;
+run('bulk',{op:'offer',offer:'available',lotIds:['b1','b2'],confirmed:true});
+assert.equal(M.lot(s,'b1').offer,'available');assert.equal(M.lot(s,'b2').offer,'available');checks+=2;
+run('bulk',{op:'bench',box:'Long box 3',lotIds:['b1','b2'],confirmed:true});
+assert.equal(M.lot(s,'b1').location.box,'Long box 3');checks++;
+expectFailure('bulk',{op:'source',source:'nonsense',lotIds:['b1'],confirmed:true},/Owned, Ordered/);
+
 console.log(`collection-model: ${checks} checks passed; planned cards never become owned without acquisition.`);
