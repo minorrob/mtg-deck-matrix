@@ -54,8 +54,8 @@ actions.deck=el=>go('decks',{deck:el.dataset.deck});actions['deck-cards']=el=>go
    pick a commander and the ninety-nine come later. From what you already have, the group is
    the deck: it names its own commander -- the one Commander-legal card in it -- and the deck
    is created attached to that group, so the thing it draws from is set from the first day. */
-function commanderDeck(){
-  return C.cardPicker('Choose your commander',c=>form('Name your new deck',f('Deck name','name',c.name+' deck','required maxlength="160"')+f('Core mechanic','mechanic',c.mechanics[0]||c.keywords[0]||''),async data=>{const id='deck:'+C.uid();await commit({type:'createDeck',deckId:id,name:data.name,commanders:[c.id],cards:[c],slots:[{cardId:c.id,quantity:1}],definition:{mechanics:data.mechanic?[data.mechanic]:[]}});go('decks',{deck:id});},'Create draft'),{commander:true});
+function commanderDeck(groupId){
+  return C.cardPicker('Choose your commander',c=>form('Name your new deck',f('Deck name','name',c.name+' deck','required maxlength="160"')+f('Core mechanic','mechanic',c.mechanics[0]||c.keywords[0]||''),async data=>{const id='deck:'+C.uid();await commit({type:'createDeck',deckId:id,name:data.name,commanders:[c.id],cards:[c],slots:[{cardId:c.id,quantity:1}],definition:{mechanics:data.mechanic?[data.mechanic]:[]},...(groupId?{groupId}:{})});go('decks',{deck:id});},'Create draft'),{commander:true});
 }
 const groupRows=g=>g.entries.length?g.entries.map(r=>({cardId:r.cardId,quantity:r.quantity,printing:r.printing})):C.state.lots.filter(l=>l.groupIds.includes(g.id)).map(l=>({cardId:l.cardId,quantity:l.quantity,printing:l.printing}));
 const filledGroups=()=>C.state.groups.filter(g=>groupRows(g).length);
@@ -63,6 +63,7 @@ function groupDeck(groupId){
   const g=C.state.groups.find(x=>x.id===groupId);
   if(!g)throw Error('Choose a collection group.');
   const rows=groupRows(g);
+  if(!rows.length)throw Error(`${g.name} holds no cards yet, so there is nothing to start a deck from. Import a list into it, or start from a commander.`);
   const leaders=rows.map(r=>C.state.cards[r.cardId]).filter(c=>c&&c.commander&&c.legalities?.commander==='legal');
   if(!leaders.length)throw Error(`${g.name} holds no Commander-legal creature, so there is nothing to lead the deck. Add one, or start from a commander instead.`);
   return form(`New deck from ${g.name}`,f('Deck name','name',leaders[0].name+' deck','required maxlength="160"')+s('Commander','commanderId',leaders.map(c=>[c.id,c.name]),leaders[0].id)+note(`${rows.reduce((n,r)=>n+r.quantity,0)} cards come across from ${g.name}, and the deck stays attached to that group.`),
@@ -71,14 +72,23 @@ function groupDeck(groupId){
         slots:rows.some(r=>r.cardId===data.commanderId)?rows:[{cardId:data.commanderId,quantity:1},...rows]});
       go('decks',{deck:id});},'Create draft');
 }
+/* NOTHING HERE IS A QUESTION YOU HAVE TO ANSWER. Both selects open on the answer most
+   people want -- a commander, and a fresh group made with the deck -- so Continue works
+   without touching either. The group select had no such default: it opened on whichever
+   group happened to sort first and read as a demand to pick one. Its first option is now
+   the thing that already happens when you say nothing. */
 actions['new-deck']=()=>{
-  const groups=filledGroups();
-  if(!groups.length)return commanderDeck();
+  const sources=filledGroups();
+  if(!sources.length)return commanderDeck();
   return form('Start a new deck',
-    s('Start from','how',[['commander','A commander — build the 99 from there'],['group','A collection group I already have']],'commander')
-    +`<div class="cm-full">${s('Collection group','groupId',groups.map(g=>[g.id,g.name]),'')}</div>`
-    +note('From a commander you name the leader and add cards later. From a group the cards come across as they are, the group’s own Commander-legal card leads, and the deck stays attached to that group.'),
-    v=>v.how==='group'?groupDeck(v.groupId):commanderDeck(),'Continue');
+    s('Start from','how',[['commander','A commander — build the 99 from there'],['group','The cards in a collection group']],'commander')
+    +`<div class="cm-full">${s('Collection group','groupId',[['','Create a new collection group'],...C.state.groups.map(g=>[g.id,g.name])],'')}</div>`
+    +note('Leave the group alone and one is made with the deck, named after it. Choose an existing group and the deck lives there instead — and if you are also starting from that group, its cards come across as the deck’s list.'),
+    v=>{
+      if(v.how!=='group')return commanderDeck(v.groupId||undefined);
+      if(!v.groupId)throw Error('Choose which collection group to start from — a new empty group has no cards to start from. Or start from a commander instead.');
+      return groupDeck(v.groupId);
+    },'Continue');
 };
 actions['edit-deck']=el=>{const d=M.deck(C.state,el.dataset.deck);form('Deck Definition',f('Deck name','name',d.name,'required maxlength="160"')+f('Core mechanics (comma separated)','mechanics',d.definition.mechanics.join(', '))+s('Base bracket','baseBracket',[1,2,3,4,5],d.definition.baseBracket)+s('Bracket ceiling','bracketCeiling',[1,2,3,4,5],d.definition.bracketCeiling)+f('Total price cap ($; blank means no cap)','budget',d.definition.budget??'','type="number" min="0" step="0.01"')+f('Per-card price cap ($)','perCardCap',d.definition.perCardCap??'','type="number" min="0" step="0.01"')+s('Collection group this deck draws from','groupId',[['','None'],...C.state.groups.map(g=>[g.id,g.name])],d.groupId||'')+`<label class="cm-full">Deck notes<textarea name="notes">${e(d.notes)}</textarea></label>`,data=>commit({type:'editDeck',deckId:d.id,name:data.name,notes:data.notes,groupId:data.groupId||null,definition:{...d.definition,baseBracket:Number(data.baseBracket),bracketCeiling:Number(data.bracketCeiling),mechanics:data.mechanics.split(',').map(x=>x.trim()).filter(Boolean),budget:data.budget===''?null:Number(data.budget),perCardCap:data.perCardCap===''?null:Number(data.perCardCap)}}));};
 /* ATTACHING AN EXISTING GROUP IS THE OTHER ROAD IN: you uploaded a sheet, the cards are in a
