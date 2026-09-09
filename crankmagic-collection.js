@@ -54,7 +54,7 @@ const pickedIds=()=>[...picked];
 function batchBar(){
   const n=picked.size;
   if(!n)return '';
-  return `<div class="cm-batch-bar"><strong>${n} record${n===1?'':'s'} ticked</strong>${b('Mark Received / Owned','batch-source',{source:'owned'},true)}${b('Mark Ordered','batch-source',{source:'ordered'})}${b('Add to a group','batch-group')}${b('Move physically to Bench','batch-bench')}${b('Release reservation → To buy','batch-release')}${b('Offer for Sell / Trade','batch-offer')}<button type="button" class="cm-text-button" data-action="batch-clear">Clear</button></div>`;
+  return `<div class="cm-batch-bar"><strong>${n} record${n===1?'':'s'} ticked</strong>${b('Mark Received / Owned','batch-source',{source:'owned'},true)}${b('Mark Ordered','batch-source',{source:'ordered'})}${b('Add to a group','batch-group')}${b('Put in a deck box','batch-place')}${b('Move physically to Bench','batch-bench')}${b('Release reservation → To buy','batch-release')}${b('Offer for Sell / Trade','batch-offer')}<button type="button" class="cm-text-button" data-action="batch-clear">Clear</button></div>`;
 }
 function matches(r){const c=r.card,q=filter.q.toLowerCase();return (!q||[c.name,c.typeLine,c.oracleText,r.notes].join(' ').toLowerCase().includes(q))&&(!filter.type||c.typeLine.split('—')[0].includes(filter.type))&&(!filter.subtype||c.typeLine.toLowerCase().includes(filter.subtype.toLowerCase()))&&(!filter.mechanic||[c.oracleText,...c.mechanics,...c.keywords].join(' ').toLowerCase().includes(filter.mechanic.toLowerCase()))&&(!filter.color||(filter.color==='C'?c.colorIdentity.length===0:c.colorIdentity.includes(filter.color)))&&(!filter.source||r.source===filter.source)&&(!filter.placement||r.placement===filter.placement)&&(!filter.offer||(filter.offer==='bench'?r.kind==='lot'&&r.source==='owned'&&!r.allocation&&r.location?.kind!=='deck':filter.offer==='held'?r.offer==='held':r.offer==='available'))&&(filter.min===''||c.manaValue!==null&&c.manaValue>=Number(filter.min))&&(filter.max===''||c.manaValue!==null&&c.manaValue<=Number(filter.max))&&(filter.price===''||c.price!==null&&c.price<=Number(filter.price));}
 /* SHOPPING A CONVENTION FLOOR. On a phone the Shop page is not a spreadsheet to study; it
@@ -188,6 +188,18 @@ function batch(title,body,command){
 }
 actions['batch-clear']=()=>{picked.clear();C.render();};
 actions['batch-source']=el=>batch(el.dataset.source==='owned'?'Mark these copies received':'Mark these copies ordered',note(el.dataset.source==='owned'?'Every ticked record becomes an owned copy on the bench. Quantities, prints, reservations and groups are untouched.':'Every ticked record becomes an order. An owned copy corrected back to Ordered loses its physical location, which is why this asks first.'),{type:'bulk',op:'source',source:el.dataset.source});
+/* WHICH BOX A COPY SITS IN IS A FACT ABOUT THE COPY, so it is recorded here rather than as
+   a deck-wide button on the deck page: tick the copies you sleeved and say where they went.
+   Only copies already reserved for that deck can go in it -- the model refuses the rest by
+   name, so a mistaken tick says which card and why instead of quietly moving it. */
+actions['batch-place']=()=>{
+  const lotIds=pickedIds();
+  if(!lotIds.length)throw Error('Tick at least one copy record first.');
+  const decks=C.state.decks.filter(d=>!d.archived&&d.status==='final');
+  if(!decks.length)throw Error('Finalize a deck first — a draft holds no reservations to confirm.');
+  form('Put these copies in a deck box',s('Deck','deckId',decks.map(d=>[d.id,d.name]),'')+f('Box label (optional)','box')+note('Records where these copies physically are. Ownership and reservations do not change. A ticked copy that is not reserved for this deck is refused by name.'),
+    v=>C.review('Put these copies in a deck box',note(`${lotIds.length} record${lotIds.length===1?'':'s'} move into ${e(M.deck(C.state,v.deckId).name)}.`),{type:'bulk',op:'place',deckId:v.deckId,box:v.box,lotIds}),'Review placement');
+};
 actions['batch-bench']=()=>batch('Move these copies to the bench',note('Records the bench as where these copies physically are. Reservations are untouched — use Release reservation to give the deck requirements back to To buy.'),{type:'bulk',op:'bench'});
 actions['batch-release']=()=>batch('Release these reservations',note('The deck requirements they filled become To buy again. The copies stay owned, in the same physical place.',true),{type:'bulk',op:'release'});
 actions['batch-offer']=()=>batch('Offer these copies for Sell / Trade',note('Marks every ticked owned copy available to sell or trade. Reservations are untouched.'),{type:'bulk',op:'offer',offer:'available'});

@@ -35,10 +35,8 @@ expectFailure('option',{deckId:'d1',replaces:'rock1',option:{cardId:'stone',quan
 expectFailure('spreadsheetEdits',{baseRevision:s.revision-1,edits:[]},/changed/);
 const invalid=structuredClone(s);invalid.lots.push({...invalid.lots[0]});assert.throws(()=>M.validate(invalid),/Duplicate/);checks++;
 run('createDeck',{deckId:'short',name:'Incomplete',commanders:['leader'],slots:[{cardId:'leader',quantity:1}]});expectFailure('finalize',{deckId:'short'},/100/);
-// THE LAST STEP OF THE BUY. Reserved is not sleeved, and a hundred cards go into the box as
-// a deck rather than one confirmation at a time -- which is why "in deck" used to read 0 on a
-// deck whose every card had been bought. Ready is about owning the hundred; placed is about
-// where the cards physically are, and the two are separate facts that both have to hold.
+// WHERE A COPY PHYSICALLY IS, in bulk: reserved is not sleeved, and the deck goes into its
+// box a tick at a time from the Collection rather than by a button on the deck page.
 run('createDeck',{deckId:'box',name:'Boxed',commanders:['leader'],slots:[{id:'cmdb',cardId:'leader',quantity:1},{id:'landsb',cardId:'land',quantity:98},{id:'rockb',cardId:'ring',quantity:1}]});
 run('finalize',{deckId:'box'});
 run('acquire',{lot:{id:'boxleader',cardId:'leader',quantity:1}});
@@ -46,15 +44,18 @@ run('acquire',{lot:{id:'boxlands',cardId:'land',quantity:98,printing:{set:'unf'}
 run('acquire',{lot:{id:'boxring',cardId:'ring',quantity:1,printing:{set:'unf'}}});
 run('fulfill',{deckId:'box'});
 const boxed=()=>M.readiness(s,M.deck(s,'box'));
-assert.equal(boxed().target,100);assert.equal(boxed().owned,100,'Buying the hundred covers the hundred');checks+=2;
-assert.equal(boxed().placed,0,'A reservation is not a physical move');assert.equal(boxed().ready,true,'Ready means you own the hundred, not that you confirmed it card by card');checks+=2;
-const beforeBox=M.counters(s).inDeck;
-run('placeDeck',{deckId:'box',confirmed:true});
-assert.equal(boxed().placed,100,'The deck goes into its box as a deck');assert.equal(boxed().boxed,true);assert.equal(M.counters(s).inDeck,beforeBox+100);checks+=3;
-expectFailure('placeDeck',{deckId:'box',destination:'bench'},/confirm/);
-run('placeDeck',{deckId:'box',destination:'bench',confirmed:true});
-assert.equal(boxed().placed,0,'And comes back out the same way');assert.equal(boxed().owned,100,'Taking a deck apart releases no reservation');checks+=2;
-run('archive',{deckId:'box'});expectFailure('placeDeck',{deckId:'box',confirmed:true},/Archived/);
+assert.equal(boxed().owned,100,'Buying the hundred covers the hundred');assert.equal(boxed().placed,0,'A reservation is not a physical move');checks+=2;
+assert.equal(boxed().ready,true,'Ready means you own the hundred, not that you confirmed it card by card');checks++;
+const reservedForBox=s.lots.filter(l=>l.allocation?.deckId==='box').map(l=>l.id);
+run('bulk',{op:'place',deckId:'box',lotIds:reservedForBox,confirmed:true});
+assert.equal(boxed().placed,100,'Ticked copies go into the box together');assert.equal(boxed().boxed,true);checks+=2;
+run('bulk',{op:'bench',lotIds:reservedForBox,confirmed:true});
+assert.equal(boxed().placed,0,'And come back out the same way');assert.equal(boxed().owned,100,'Which releases no reservation');checks+=2;
+// A copy reserved for one deck cannot be filed into another deck's box by a stray tick.
+run('acquire',{lot:{id:'stray',cardId:'stone',quantity:1,printing:{set:'stray'}}});
+expectFailure('bulk',{op:'place',deckId:'box',lotIds:['stray'],confirmed:true},/not reserved for/);
+run('archive',{deckId:'box'});expectFailure('bulk',{op:'place',deckId:'box',lotIds:reservedForBox,confirmed:true},/Archived/);
+
 // A BATCH IS ONE CHANGE. Eleven cards marked received after a convention is one errand,
 // and it has to be one receipt and one undo -- and all-or-nothing, because a batch that
 // applied to six of eleven records leaves a state nobody asked for and nobody can see.
