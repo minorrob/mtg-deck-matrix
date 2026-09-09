@@ -44,6 +44,22 @@
 /* The counters are a ribbon across the page, not a huddle at the left: equal columns, so
    "0 owned copies" through "Sell / Trade" sit evenly however many of them there are. */
 .cm-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:18px 22px;align-items:end}
+/* The ribbon counts the rows on screen, so when a filter is on it has to say so -- the
+   figure and the caption are one sentence, and the caption sits inside the ribbon's rules. */
+.cm-stats:has(+.cm-stats-scope){border-bottom:0;margin-bottom:0;padding-bottom:14px}
+.cm-stats-scope{margin:0 0 24px;padding-bottom:18px;border-bottom:1px solid var(--v-line)}
+
+/* THE FILTER PANEL IS TWELVE COLUMNS OF ONE SHAPE: a label above a control that fills its
+   track. It did not used to be. A <select> sizes to its widest option and a text <input>
+   to a default twenty characters, so a track holding "Quintorius, History Chaser" or a
+   free-text box blew past its 145px minimum and shoved its neighbours sideways -- which
+   on a narrow window reads as the controls covering each other. Every control now fills
+   its own track and nothing decides the layout but the grid. Bottom-aligned, so a label
+   that wraps to two lines does not drop its control out of the row. */
+.cm-filter-panel{grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:14px 18px;align-items:end}
+.cm-filter-panel>label{min-width:0}
+.cm-filter-panel input,.cm-filter-panel select{width:100%;min-width:0}
+@media(max-width:760px){.cm-filter-panel{grid-template-columns:1fr}}
 
 .cm-card-view-bracket{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:6px 0 2px}
 .cm-card-view-bracket small{line-height:1.35}
