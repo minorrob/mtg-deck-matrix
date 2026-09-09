@@ -130,7 +130,7 @@ const TOURS=[
      copy:'Click any card and the pane fills in: the printing itself, rules text and all, plus its set, its price and the bracket it puts a deck in. Inspect sits under the art and Add and/or Buy under the bracket line; Back — to whatever you were looking at before — waits above the graph, at its top-right corner, because it undoes a move on the canvas rather than anything about this card.'},
     {view:'discover',selectors:['.cm-stage-btn','.cm-graph-box'],
      title:'Give the graph the screen',
-     copy:'The icon in the canvas corner collapses the nav, drops the page title, lifts search and filters to the top and halves the card pane — the graph gets about 60% more width and everything you were using stays where it is. Press it again, or Escape, to come back.'},
+     copy:'The icon in the canvas corner collapses the nav, drops the page title and halves the card pane — the graph gets about 60% more width and runs past the bottom of the window, so you scroll into it. Search and filters fold behind the sliders button at the top right; the match count, depth and breadth stay on screen. Press the corner icon again, or Escape, to come back.'},
     {view:'discover',selectors:['.cm-term-chips','.cm-chips-head'],
      title:'What it is joined by',
      copy:'Every term this card shares with others, and all of them at once — no scrolling for the one that mattered. Tap one for only the cards that share it, again to hide those instead, a third time to clear. They stack, so two taps on two terms is an intersection.'},
