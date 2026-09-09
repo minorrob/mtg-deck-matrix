@@ -61,6 +61,16 @@
 .cm-filter-panel input,.cm-filter-panel select{width:100%;min-width:0}
 @media(max-width:760px){.cm-filter-panel{grid-template-columns:1fr}}
 
+/* THE TICK COLUMN AND ITS BAR. The bar is not a floating overlay: it sits where it acts,
+   directly above the table, and exists only while something is ticked, so the page has no
+   permanent furniture for a thing the reader does occasionally. */
+.cm-tick-cell{min-width:0!important;width:34px;padding-right:0!important}
+#matrix-v2 .cm-tick-cell input[type=checkbox]{width:17px;height:17px;min-height:0;margin:0;padding:0;cursor:pointer}
+.cm-table tr.cm-row-ticked>td{background:#1d2b41}
+.cm-batch-bar{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin:16px 0 4px;padding:12px 15px;background:#1e2c43;border:1px solid #4a6a95;border-radius:10px}
+.cm-batch-bar strong{margin-right:4px;white-space:nowrap}
+#matrix-v2 .cm-batch-bar .v-button{min-height:36px;padding:7px 12px;font-size:12px}
+
 .cm-card-view-bracket{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:6px 0 2px}
 .cm-card-view-bracket small{line-height:1.35}
 
