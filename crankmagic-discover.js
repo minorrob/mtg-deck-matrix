@@ -48,7 +48,7 @@
    * have to manage. The class goes on the app root because the nav rail it collapses
    * lives outside this view.
    */
-  let stage = false;
+  let stage = false, tools = false;
   const STAGE_ICONS = {
     on: '<svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 1.8H1.8V6M10 1.8h4.2V6M6 14.2H1.8V10M10 14.2h4.2V10"/></svg>',
     off: '<svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1.8 5.6H6V1.4M14.2 5.6H10V1.4M1.8 10.4H6v4.2M14.2 10.4H10v4.2"/></svg>'
@@ -56,7 +56,19 @@
   const stageButton = () => `<button type="button" class="cm-stage-btn" data-action="graph-stage"
     aria-pressed="${stage}" aria-label="${stage ? 'Restore the default layout' : 'Give the graph the screen'}"
     title="${stage ? 'Restore the default layout' : 'Give the graph the screen'}">${stage ? STAGE_ICONS.off : STAGE_ICONS.on}</button>`;
-  const applyStage = () => document.getElementById('matrix-v2')?.classList.toggle('cm-stage', stage);
+  const TOOLS_ICON = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 4.5h12M2 8h12M2 11.5h12"/><circle cx="5.5" cy="4.5" r="1.6" fill="currentColor" stroke="none"/><circle cx="10.5" cy="8" r="1.6" fill="currentColor" stroke="none"/><circle cx="6.5" cy="11.5" r="1.6" fill="currentColor" stroke="none"/></svg>';
+  /* Collapsed by default once the mode is on: a reader who asked for the canvas to have the
+     screen did not ask to keep looking at a search box they are not typing in. One click
+     brings both rows back, and the button stays put so the way back is where it was. */
+  const toolsButton = () => `<button type="button" class="cm-tools-toggle" data-action="graph-tools"
+    aria-expanded="${tools}" aria-controls="cm-facet-details"
+    aria-label="${tools ? 'Hide search and filters' : 'Show search and filters'}"
+    title="${tools ? 'Hide search and filters' : 'Show search and filters'}">${TOOLS_ICON}</button>`;
+  const applyStage = () => {
+    const root = document.getElementById('matrix-v2');
+    root?.classList.toggle('cm-stage', stage);
+    root?.classList.toggle('cm-tools-open', stage && tools);
+  };
   let graph = null;
   /* Held across renders of this view so a filter survives following a card into the
      inspector and coming back. Cleared only by Clear filters. */
@@ -87,7 +99,8 @@
     const values = CrankFacets.values(data.cards, C.state);
 
     C.main.innerHTML = C.head('The connected card catalog', 'Follow the possibilities.',
-      'Structural links and observed co-play are different kinds of evidence. Neither claims a simulated improvement.')
+      'Structural links and observed co-play are different kinds of evidence. Neither claims a simulated improvement.',
+      toolsButton())
       + `<div class="cm-toolbar"><label class="cm-search">Find a card<input id="cm-graph-query" placeholder="Card name" list="cm-graph-names"><datalist id="cm-graph-names"></datalist></label>${C.select('Connections', 'edgeType', [['mechanic', 'Shared mechanics / roles'], ['played', 'EDHREC co-play']], 'mechanic')}${b('Search catalog / link', 'graph-lookup')}${b('Back', 'graph-back')}${b('Reset view', 'graph-reset')}</div>
 
       <details class="cm-details" id="cm-facet-details">
@@ -469,9 +482,13 @@
     /* The canvas is drawn to its own measured size and watched by a ResizeObserver, so the
        layout change is enough to redraw it; sizePane() is nudged because the pane's height
        is written in pixels off the canvas rather than read from the grid. */
-    actions['graph-stage'] = () => { stage = !stage; applyStage(); hidePop();
+    actions['graph-stage'] = () => { stage = !stage; if (!stage) tools = false; applyStage(); hidePop();
+      $('.cm-tools-toggle')?.replaceWith(Object.assign(document.createElement('div'), {innerHTML: toolsButton()}).firstElementChild);
       const host = $('.cm-graph-box'); if (host) host.querySelector('.cm-stage-btn')?.replaceWith(
         Object.assign(document.createElement('div'), {innerHTML: stageButton()}).firstElementChild);
+      requestAnimationFrame(() => { sizePane(); dispatchEvent(new Event('resize')); }); };
+    actions['graph-tools'] = (el) => { tools = !tools; applyStage();
+      el.outerHTML = toolsButton();
       requestAnimationFrame(() => { sizePane(); dispatchEvent(new Event('resize')); }); };
     actions['graph-pop-close'] = () => hidePop();
     actions['graph-tick'] = (el) => { const id = el.dataset.id; if (picked.has(id)) picked.delete(id); else picked.add(id); graph?.setSelected(picked); el.classList.toggle('is-on', picked.has(id)); el.textContent = picked.has(id) ? 'Ticked ✓' : 'Tick for a group'; drawCardView(graph?.current(), null, true); };
@@ -516,7 +533,7 @@
     });
     $('[name=edgeType]').addEventListener('change', (ev) => graph?.setType(ev.target.value));
 
-    return () => { document.getElementById('matrix-v2')?.classList.remove('cm-stage');
+    return () => { document.getElementById('matrix-v2')?.classList.remove('cm-stage', 'cm-tools-open');
       document.removeEventListener('keydown', onKey); document.removeEventListener('click', onDocClick); removeEventListener('resize', sizePane); cancelAnimationFrame(paneFrame); graph?.destroy(); graph = null; };
   };
 

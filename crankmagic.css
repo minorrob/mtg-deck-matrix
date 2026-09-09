@@ -457,8 +457,33 @@
 #matrix-v2.cm-stage .cm-page-head h1,
 #matrix-v2.cm-stage .cm-page-head>div>p{display:none}
 #matrix-v2.cm-stage .cm-toolbar{margin:6px 0}
+/* SEARCH AND FILTERS FOLD AWAY IN THIS MODE. They are the rows a reader uses in bursts and
+   then stops looking at, and in a mode whose whole point is canvas they cost two bands of
+   the screen to sit idle. The sliders button in the page head brings both back in one
+   click and puts them back where they were, so nothing has to be re-found. Everything the
+   rows report -- the match count, the applied chips, depth and breadth -- stays on screen,
+   because those are readouts you steer by rather than fields you fill in. */
+#matrix-v2 .cm-tools-toggle{display:none;place-items:center;width:32px;height:32px;padding:0;
+  border:1px solid var(--v-line-strong);border-radius:8px;background:var(--v-raised);
+  color:var(--v-muted);cursor:pointer}
+#matrix-v2.cm-stage .cm-tools-toggle{display:inline-grid}
+#matrix-v2 .cm-tools-toggle:hover{background:#2b3a55;color:var(--v-ink);border-color:var(--v-accent)}
+#matrix-v2 .cm-tools-toggle[aria-expanded=true]{color:var(--v-accent);border-color:var(--v-accent)}
+#matrix-v2.cm-stage .cm-toolbar,
+#matrix-v2.cm-stage #cm-facet-details,
+#matrix-v2.cm-stage #cm-filter-host{display:none}
+#matrix-v2.cm-stage.cm-tools-open .cm-toolbar{display:flex}
+#matrix-v2.cm-stage.cm-tools-open #cm-facet-details{display:block}
+#matrix-v2.cm-stage.cm-tools-open #cm-filter-host{display:block}
+/* The head is one row now -- the eyebrow and this button -- so it stops being a block. */
+#matrix-v2.cm-stage .cm-page-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
 #matrix-v2.cm-stage .cm-facet-status{margin:0}
-#matrix-v2.cm-stage .cm-graph-grid-tall{--cm-graph-h:clamp(420px,calc(100vh - 178px),1400px);gap:14px}
+/* Taller than the window on purpose. Fitting the canvas to the viewport is right for the
+   default layout, where the page is a page; in presentation mode the canvas IS the page,
+   and a ring of thirty neighbours wants room the fold does not have. It runs about 40%
+   past the bottom and the page scrolls to it. The pane follows: sizePane() writes its
+   height from the canvas, so the two stay level without a second number to keep in sync. */
+#matrix-v2.cm-stage .cm-graph-grid-tall{--cm-graph-h:clamp(560px,calc((100vh - 178px) * 1.4),1800px);gap:14px}
 #matrix-v2.cm-stage .cm-graph-grid{grid-template-columns:minmax(0,1fr) 210px}
 /* The pane is half as wide, so the head stops being two columns: 150px of art beside
    70px of text is not a layout, it is two things that do not fit. */
