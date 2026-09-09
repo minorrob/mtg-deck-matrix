@@ -88,4 +88,23 @@ run('bulk',{op:'bench',box:'Long box 3',lotIds:['b1','b2'],confirmed:true});
 assert.equal(M.lot(s,'b1').location.box,'Long box 3');checks++;
 expectFailure('bulk',{op:'source',source:'nonsense',lotIds:['b1'],confirmed:true},/Owned, Ordered/);
 
+// A DECK CAN BE ATTACHED TO A COLLECTION GROUP, and the attachment has to mean something
+// or it is a field that lies. It breaks the tie when two copies could fill one requirement,
+// it survives being changed and cleared, and it cannot outlive the group it points at.
+run('createGroup',{groupId:'shelf',name:'Bench box'});
+run('createDeck',{deckId:'tie',name:'Tie break',commanders:['leader'],slots:[{id:'cmdt',cardId:'leader',quantity:1},{id:'landst',cardId:'land',quantity:98},{id:'rockt',cardId:'ring',quantity:1}],groupId:'shelf'});
+assert.equal(M.deck(s,'tie').groupId,'shelf','A deck created with a group keeps it');checks++;
+expectFailure('createDeck',{deckId:'bad',name:'No such group',commanders:['leader'],slots:[{cardId:'leader',quantity:1}],groupId:'ghost'},/Collection group not found/);
+run('acquire',{lot:{id:'loose',cardId:'stone',quantity:1,printing:{set:'zzz'}}});
+run('acquire',{lot:{id:'filed',cardId:'stone',quantity:1,printing:{set:'zzz'}},groupId:'shelf'});
+run('editDeck',{deckId:'tie',slots:[{id:'cmdt',cardId:'leader',quantity:1},{id:'landst',cardId:'land',quantity:98},{id:'rockt',cardId:'stone',quantity:1}]});
+run('finalize',{deckId:'tie'});
+assert.equal(M.lot(s,'filed').allocation?.deckId,'tie','The copy filed under the deck\u2019s group is reserved first');
+assert.equal(M.lot(s,'loose').allocation,null,'and the identical loose copy is left alone');checks+=2;
+run('editDeck',{deckId:'tie',groupId:null});assert.equal(M.deck(s,'tie').groupId,null,'The attachment can be cleared');checks++;
+run('editDeck',{deckId:'tie',groupId:'shelf'});
+run('deleteGroup',{groupId:'shelf'});
+assert.equal(M.deck(s,'tie').groupId,null,'Deleting a group cannot leave a deck pointing at nothing');checks++;
+M.validate(s);checks++;
+
 console.log(`collection-model: ${checks} checks passed; planned cards never become owned without acquisition.`);

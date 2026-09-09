@@ -371,7 +371,9 @@ views.lab=async()=>{
       slots=leaders.map(c=>({cardId:c.id,quantity:1,purpose:'main'}));cards=leaders;name=(v.deckName||'').trim()||leaders[0].name+' · new deck';method='Saved from the Deck Lab before any draft was run';notes=[];issues=[];
     }
     const id='deck:'+C.uid();
-    const commands=[{type:'createDeck',deckId:id,name,commanders:leaders.map(c=>c.id),cards,slots,definition:preview?preview.definition:definition,notes:[method,...notes].join('\n')}];
+    /* A deck built from a collection group stays attached to it: the group it came from is
+       the group it draws from, and saying so here saves the reader attaching it by hand. */
+    const commands=[{type:'createDeck',deckId:id,name,commanders:leaders.map(c=>c.id),cards,slots,definition:preview?preview.definition:definition,notes:[method,...notes].join('\n'),groupId:v.group||null}];
     if(preview?.report)commands.push({type:'report',deckId:id,report:preview.report});
     commands.push({type:'preferences',values:{lastLabRun:{deckId:id,method,issues,at:new Date().toISOString(),previewAt:preview?.at||null,refine:preview?.refine||null},labPreview:null}});
     preview=null;

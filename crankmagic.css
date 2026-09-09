@@ -70,6 +70,10 @@
 .cm-batch-bar{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin:16px 0 4px;padding:12px 15px;background:#1e2c43;border:1px solid #4a6a95;border-radius:10px}
 .cm-batch-bar strong{margin-right:4px;white-space:nowrap}
 #matrix-v2 .cm-batch-bar .v-button{min-height:36px;padding:7px 12px;font-size:12px}
+/* The group chip in a deck's hero is a link to that group, so it looks like the badges
+   beside it and behaves like the underlined text buttons elsewhere. */
+button.cm-badge-link{border:0;font:inherit;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+button.cm-badge-link:hover{background:#35507a;color:#eaf5ff}
 
 .cm-card-view-bracket{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:6px 0 2px}
 .cm-card-view-bracket small{line-height:1.35}
