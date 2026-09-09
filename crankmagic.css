@@ -74,6 +74,12 @@
    beside it and behaves like the underlined text buttons elsewhere. */
 button.cm-badge-link{border:0;font:inherit;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 button.cm-badge-link:hover{background:#35507a;color:#eaf5ff}
+/* The card's name is what a reader scans the roster for; everything else in the row is a
+   fact about the copy. It carries the weight so the eye lands on it first. */
+.cm-table .cm-card-name,.cm-table .cm-card-name span{font-weight:800;letter-spacing:.005em}
+/* A single control in a dialog spans the grid, so it lines up with the sentence under it
+   rather than ending halfway across and reading as a stray button. */
+#matrix-v2 .cm-form-grid>.cm-full>label>select,#matrix-v2 .cm-form-grid>.cm-full>label>input{width:100%}
 
 .cm-card-view-bracket{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:6px 0 2px}
 .cm-card-view-bracket small{line-height:1.35}
