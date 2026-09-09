@@ -59,7 +59,7 @@ views.lab=async()=>{
          sits on the select's top-right corner wherever the select ends up. -->
     <label class="cm-start-label">Select to proceed by defining the Commander or uploading an Existing Build
       <span class="cm-start-control">
-        <select name="mode" aria-label="Select to proceed by defining the Commander or uploading an Existing Build" required aria-required="true">${C.options([['commander','Select Commander → Auto-build 99'],['list','Existing list or Collection group']],mode)}</select>
+        <select name="mode" aria-label="Select to proceed by defining the Commander or uploading an Existing Build" required aria-required="true">${C.options([['commander','Select Commander → Auto-build 99'],['list','Existing deck']],mode)}</select>
         <span class="cm-req" aria-hidden="true" title="Required">*</span>
       </span>
     </label>
@@ -68,7 +68,8 @@ views.lab=async()=>{
          path -- so a reader building from a list had no way to say "only what I own" at
          all. Here it is a checkbox in the one section that is always open, and it means the
          same thing on both roads: the draft may only use copies you actually have. -->
-    <label class="cm-checkbox cm-start-owned"><input name="ownedOnly" type="checkbox" ${pool==='owned'?'checked':''}>Use only cards I own</label></div>
+    <label class="cm-checkbox cm-start-owned"><input name="ownedOnly" type="checkbox" ${pool==='owned'?'checked':''}>Use only cards I own</label>
+    <p class="cm-error cm-full" id="cm-lab-error" hidden role="alert"></p></div>
     <details class="cm-lab-section" id="cm-lab-commander" ${mode==='commander'?'open':''} ${mode==='commander'?'':'hidden'}><summary class="cm-section-heading">Commander choice</summary><p class="cm-muted">Search or enter a commander from among the ${(Math.floor(C.catalog.all().filter(c=>c.commander&&c.legalities?.commander==='legal').length/100)*100).toLocaleString()}+ legal commanders in MtG. You can paste a Scryfall link instead of a name. These filters only choose the commander.</p>
     <div class="cm-form-grid">${f('Search commander name','commanderQuery',leader?.name||'',`${mode==='commander'?'required ':''}autocomplete="off" placeholder="Name, printed variant name, or a Scryfall link"`)}${s('Play style filter','commanderMechanic',[['','Any play style'],...choices],'')}${s('EDHREC rank filter','rank',[['','Any rank'],['100','Top 100'],['500','Top 500'],['1000','Top 1,000']],'')}
     <div><span class="cm-muted" style="font-size:13px">Colour identity within</span><div class="cm-color-pills">${COLORS.map(([k,name])=>`<label class="cm-color-pill" title="${e(name)}"><input type="checkbox" name="commanderColor" value="${k}" ${pickerColors.includes(k)?'checked':''}><img src="assets/mana/${k}.svg?v=1" alt="">${k}</label>`).join('')}<label class="cm-color-pill" title="Colorless commanders only"><input type="checkbox" name="commanderColor" value="C" ${pickerColors.includes('C')?'checked':''}>C</label></div></div></div>
@@ -76,11 +77,11 @@ views.lab=async()=>{
     <div class="cm-actions">${b('Record an unlisted commander','lab-manual')}${b('Add partner / second commander','lab-partner')}${b('Remove second commander','lab-unpartner')}</div>
     <div id="cm-lab-selected"></div>
     <p class="cm-muted">EDHREC commander popularity · past 2 years · snapshot: ${e(C.catalog.rankDate?.slice(0,10)||'date unavailable')}. Results are ordered by rank; unranked commanders follow. A rank filter excludes unknown and combined-pair ranks.</p></details>
-    <details class="cm-lab-section" id="cm-existing-list" ${mode==='list'?'open':''} ${mode==='list'?'':'hidden'}><summary class="cm-section-heading">Existing cards</summary><p class="cm-start-pick">Start from <strong>one</strong> of these<span class="cm-req" aria-hidden="true" title="Required">*</span></p>${s('Collection group','group',[['','Choose a group'],...C.state.groups.map(g=>[g.id,g.name])],groupId)}${s('Or an existing deck','existingDeck',[['','Choose a deck'],...C.state.decks.filter(x=>!x.archived).map(x=>[x.id,x.name])],deckId)}<div id="cm-list-commander">${listCommanderField()}</div><div class="cm-actions" style="margin-top:12px">${b('Create group / import list','import-list')}${b('Create empty group','new-group')}</div></details>
+    <details class="cm-lab-section" id="cm-existing-list" ${mode==='list'?'open':''} ${mode==='list'?'':'hidden'}><summary class="cm-section-heading">Existing deck</summary><p class="cm-start-pick">Start from a deck you already have<span class="cm-req" aria-hidden="true" title="Required">*</span></p>${s('Existing deck','existingDeck',[['','Choose a deck'],...C.state.decks.filter(x=>!x.archived).map(x=>[x.id,x.name])],deckId,mode==='list'?'required':'')}<div id="cm-list-commander">${listCommanderField()}</div><div class="cm-actions" style="margin-top:12px">${b('Create a deck','new-deck')}${b('Import a list','import-list')}</div></details>
     <details class="cm-lab-section" id="cm-lab-definition"><summary class="cm-section-heading">Deck Definition</summary><p class="cm-muted">These inputs apply to the full list and the way you want it to play.</p>
     <div class="cm-form-grid">${f('Deck name','deckName',draftName,'placeholder="Named for you if you leave it blank"')}${s('Primary play style','mechanic',[['','Open to exploration'],...choices],definition.mechanics[0]||'')}${s('Base bracket','baseBracket',[1,2,3,4,5],definition.baseBracket)}${s('Bracket ceiling','bracketCeiling',[1,2,3,4,5],definition.bracketCeiling)}${f('Total deck price cap ($)','budget',definition.budget??'','type="number" min="0" step="0.01" placeholder="No cap"')}${f('Per-card cap ($)','perCardCap',definition.perCardCap??'','type="number" min="0" step="0.01" placeholder="No cap"')}${s('Play style','playStyle',['Balanced','Aggressive','Reactive','Value engine','Combo'],definition.playStyle)}${s('Speed','speed',[1,2,3,4,5],definition.speed)}${s('Competitiveness','competitiveness',[1,2,3,4,5],definition.competitiveness)}${s('Saltiness','saltiness',[[1,'1 · Extremely friendly'],[2,'2 · Friendly'],[3,'3 · Assertive'],[4,'4 · Disruptive'],[5,'5 · Any legal winning mechanic']],definition.saltiness)}<label class="cm-checkbox"><input name="inDeck" type="checkbox" ${includeInDeck?'checked':''}>Consider cards currently In deck</label><label class="cm-checkbox"><input name="reserved" type="checkbox" ${includeReserved?'checked':''}>Consider unlocked reserved copies</label><label class="cm-checkbox"><input name="sellTrade" type="checkbox" ${definition.reuse.includeSellTrade!==false?'checked':''}>Include available Sell / Trade copies</label><label class="cm-full">Restrictions and preferences<textarea name="restrictions">${e(definition.restrictions)}</textarea></label></div>
     ${note('A total price cap is planned, not merely obeyed: basics do the cheap work, no single card takes more than a few times an even share of the cap, and the list always completes or says what cap would complete it. Unknown prices are excluded when a cap is set. Bracket ceiling limits Game Changers (none below 3, three at 3). Play style, speed and saltiness still require your review: the simulator measures a finished list, it does not yet refine one against these inputs.')}</details>
-    <p class="cm-error" id="cm-lab-error" hidden role="alert"></p></form></section>${runPane(saved)}</div>`;
+    </form></section>${runPane(saved)}</div>`;
 
   const results=$('#cm-lab-results'),lab=$('#cm-lab-form');
   function search(){
@@ -118,13 +119,19 @@ views.lab=async()=>{
      which is before `lab` is bound, and a const in its dead zone throws on the identifier --
      `?.` does not save you from that. Before the form exists the module's last values stand
      in, which is what a restored render wants anyway. */
-  function listRows(){
+  /* THE LIST IS A DECK'S HUNDRED. A collection group used to be the other way in, which
+     meant the Lab had to guess a leader out of whatever the group held -- twelve candidates
+     and no way to know. A deck already names its commander and already carries the group it
+     draws from, so choosing a deck answers both questions and there is one road, not two. */
+  function chosenDeck(){
     const form=document.getElementById('cm-lab-form');
-    const deckPick=form?form.elements.existingDeck.value:deckId;
-    if(deckPick)return M.deck(C.state,deckPick).slots.filter(r=>r.purpose==='main');
-    const g=C.state.groups.find(x=>x.id===(form?form.elements.group.value:groupId));
-    if(!g)return [];
-    return g.entries.length?g.entries:C.state.lots.filter(l=>l.groupIds.includes(g.id));
+    const id=form?form.elements.existingDeck.value:deckId;
+    return id&&C.state.decks.some(d=>d.id===id)?M.deck(C.state,id):null;
+  }
+  function listRows(){
+    const d=chosenDeck();
+    if(!d)return [];
+    return d.slots.filter(r=>r.purpose==='main');
   }
   function listCards(){
     const ids=[...new Set(listRows().map(r=>r.cardId))];
@@ -133,26 +140,38 @@ views.lab=async()=>{
   /* A declaration, not a const arrow: the markup above calls this while it is being built,
      and a const in its dead zone throws where a hoisted function simply works. */
   function legalCommanders(){return listCards().filter(c=>c.commander&&c.legalities?.commander==='legal');}
+  /* ONE CONTROL FOR ONE QUESTION. This used to be a dropdown of the list's legal commanders
+     beside a button that opened every commander in Magic -- two fields doing one job, and the
+     button's list did not contain the deck's own leader, which read as the dropdown being
+     wrong. The deck declares its commander, so that is the answer; the dropdown offers the
+     other legal commanders in the same deck, and nothing offers anything outside it. */
+  /* MATCH ON THE NAME, NOT ONLY THE ID. A card reaches this list through the catalog, whose
+     id for a card is not the id the library filed it under, so comparing ids alone put the
+     deck's own commander in the dropdown twice -- once as itself and once as its catalog
+     twin. The name is the identity these two agree on. */
+  const sameCard=(c,name)=>!!c&&!!name&&c.name===name;
   function listCommanderField(){
-    const found=legalCommanders();
-    const chosenId=leader?leader.id:'';
-    const options=[['','Detected from the list'],...found.map(c=>[c.id,c.name])];
-    if(chosenId&&!found.some(c=>c.id===chosenId))options.push([chosenId,leader.name]);
-    return s('Commander for this list','listCommander',options,chosenId)
-      +`<p class="cm-muted cm-list-commander-note">${found.length===1?'One legal commander in this list, taken as the leader.'
-        :found.length?`${found.length} legal commanders in this list. Pick the one that leads.`
-        :'No legal commander in this list yet.'} ${b('Choose any commander','lab-list-commander')}</p>`;
+    const d=chosenDeck(),found=legalCommanders();
+    const declaredName=d&&d.commanders.length?(C.state.cards[d.commanders[0]]||{}).name||'':'';
+    const chosen=(leader&&found.find(c=>c.id===leader.id||c.name===leader.name))||found.find(c=>sameCard(c,declaredName))||null;
+    const options=found.map(c=>[c.id,c.name]);
+    if(!options.length)options.push(['','No legal commander in this deck yet']);
+    return s('Commander for this deck','listCommander',options,chosen?chosen.id:'')
+      +`<p class="cm-muted cm-list-commander-note">${!d?'Choose a deck above and its commander appears here.'
+        :sameCard(chosen,declaredName)?`${e(declaredName)} leads, as this deck declares. Change it to any other legal commander in the deck.`
+        :found.length?'Any legal commander in this deck can lead it.'
+        :'This deck holds no Commander-legal creature yet.'}</p>`;
   }
   function refreshListCommander(){
     const host=document.getElementById('cm-list-commander');if(!host)return;
     const found=legalCommanders();
     if(!leader&&found.length===1)leader=found[0];
-    if(leader&&found.length&&!found.some(c=>c.id===leader.id)&&!document.getElementById('cm-lab-form')?.elements.listCommander?.value)leader=found[0];
+    if(leader&&found.length&&!found.some(c=>c.id===leader.id||c.name===leader.name)&&!document.getElementById('cm-lab-form')?.elements.listCommander?.value)leader=found[0];
     host.innerHTML=listCommanderField();
     syncStartButtons();
   }
 
-  function canSave(){return mode==='list'?Boolean(lab.elements.group.value||lab.elements.existingDeck.value):Boolean(leader);}
+  function canSave(){return mode==='list'?Boolean(lab.elements.existingDeck.value):Boolean(leader);}
   /* Step 1's button and step 5's answer the same question -- is there a starting point --
      and the form can change that without a re-render, so both are re-checked wherever it
      does. Reading the form rather than the module's copy of it is deliberate: the module
@@ -169,13 +188,16 @@ views.lab=async()=>{
       if(small){const text=ready?small.dataset.stepNote:small.dataset.stepWhy;small.textContent=text;small.hidden=!text;}
     }
   }
-  function adoptGroupCommander(){
-    const g=C.state.groups.find(x=>x.id===lab.elements.group.value);
-    if(!g||!g.commanderCardId)return;
-    const card=C.state.cards[g.commanderCardId];
-    if(!card)return;
-    leader=C.catalog.get(card.id)||C.catalog.exact(card.name)||card;
-    lab.elements.commanderQuery.value=leader.name;
+  /* The deck says who leads it. Choosing a deck adopts that commander outright, rather than
+     leaving the reader to find it among the hundred cards the deck happens to contain. */
+  function adoptDeckCommander(){
+    const d=chosenDeck();
+    leader=null;
+    if(d&&d.commanders.length){
+      const card=C.state.cards[d.commanders[0]];
+      if(card)leader=C.catalog.get(card.id)||C.catalog.exact(card.name)||card;
+    }
+    if(leader&&lab.elements.commanderQuery)lab.elements.commanderQuery.value=leader.name;
     chosen();
   }
   results.addEventListener('click',ev=>{
@@ -204,7 +226,7 @@ views.lab=async()=>{
     const text=(ev.clipboardData||{}).getData?.('text')||'';
     if(/^\s*https?:\/\//i.test(text))setTimeout(resolveTyped,0);   // after the paste lands in the field
   });
-  lab.addEventListener('change',ev=>{if(ev.target.name==='commanderColor'){pickerColors=[...lab.querySelectorAll('[name=commanderColor]:checked')].map(i=>i.value);shownLimit=45;search();}if(ev.target.name==='group'||ev.target.name==='existingDeck'){leader=null;refreshListCommander();syncStartButtons();}
+  lab.addEventListener('change',ev=>{if(ev.target.name==='commanderColor'){pickerColors=[...lab.querySelectorAll('[name=commanderColor]:checked')].map(i=>i.value);shownLimit=45;search();}if(ev.target.name==='existingDeck'){adoptDeckCommander();refreshListCommander();syncStartButtons();}
     if(ev.target.name==='listCommander'){const id=ev.target.value;leader=id?(C.catalog.get(id)||C.state.cards[id]||null):null;refreshListCommander();}});
   /* ONE SECTION OPEN AT A TIME, AND THE OTHER ONE NOT THERE AT ALL. The form asks two
      different questions depending on the starting point, and it used to ask both at once:
@@ -223,15 +245,15 @@ views.lab=async()=>{
        Run did nothing at all. Chrome logs "An invalid form control with name='commanderQuery'
        is not focusable" and shows the reader nothing. The requirement follows the mode now:
        a commander name is required when you are starting from a commander. */
-    const query=lab.elements.commanderQuery;
+    const query=lab.elements.commanderQuery,pick=lab.elements.existingDeck;
     if(query)query.required=mode==='commander';
+    if(pick)pick.required=mode==='list';
     if(mode==='list')refreshListCommander();
     syncStartButtons();
   }
   lab.elements.mode.addEventListener('change',ev=>{mode=ev.target.value;applyMode();});
-  lab.elements.group.addEventListener('change',adoptGroupCommander);
-  actions['lab-list-commander']=()=>C.cardPicker('Choose the commander for this list',c=>{leader=c;$('#cm-dialog').close();refreshListCommander();},{commander:true});
-  if(mode==='list'){adoptGroupCommander();refreshListCommander();}
+  lab.elements.existingDeck.addEventListener('change',()=>{adoptDeckCommander();refreshListCommander();});
+  if(mode==='list'){adoptDeckCommander();refreshListCommander();}
   applyMode();search();chosen();
   C.catalog.loadGraph().then(()=>{if(C.main.contains(lab))search();}).catch(()=>{});
 
@@ -274,7 +296,7 @@ views.lab=async()=>{
   function readForm(){
     const v=Object.fromEntries(new FormData(lab));
     definition=M.defaultDefinition({baseBracket:Number(v.baseBracket),bracketCeiling:Number(v.bracketCeiling),budget:v.budget===''?null:Number(v.budget),perCardCap:v.perCardCap===''?null:Number(v.perCardCap),mechanics:v.mechanic?[v.mechanic]:[],playStyle:v.playStyle,speed:Number(v.speed),competitiveness:Number(v.competitiveness),saltiness:Number(v.saltiness),restrictions:v.restrictions,reuse:{includeSellTrade:!!v.sellTrade}});
-    groupId=v.group;deckId=v.existingDeck;draftName=v.deckName;pool=v.ownedOnly?'owned':'all';includeInDeck=!!v.inDeck;includeReserved=!!v.reserved;
+    deckId=v.existingDeck;groupId=chosenDeck()?.groupId||'';draftName=v.deckName;pool=v.ownedOnly?'owned':'all';includeInDeck=!!v.inDeck;includeReserved=!!v.reserved;
     return v;
   }
 
@@ -290,9 +312,9 @@ views.lab=async()=>{
       let built;
       if(mode==='list'){
         let rows;
-        if(deckId)rows=M.deck(C.state,deckId).slots.filter(r=>r.purpose==='main').map(r=>({...r,id:undefined}));
-        else{const g=C.state.groups.find(x=>x.id===groupId);if(!g)throw Error('Choose a Collection group or existing deck.');rows=g.entries.map(r=>({...r,id:undefined}));if(!rows.length)rows=C.state.lots.filter(l=>l.groupIds.includes(g.id)).map(l=>({cardId:l.cardId,quantity:l.quantity,printing:l.printing}));}
-        if(!rows.length)throw Error('The chosen group has no cards yet. Import or enter a list first.');
+        if(!deckId)throw Error('Choose the deck to start from.');
+        rows=M.deck(C.state,deckId).slots.filter(r=>r.purpose==='main').map(r=>({...r,id:undefined}));
+        if(!rows.length)throw Error('That deck has no cards in its main list yet. Edit its card list first.');
         if(pool==='owned'){const all=rows.length;rows=ownedOnly(rows);
           if(!rows.length)throw Error(`Use only cards I own is ticked and none of the ${all} cards in this list are recorded as owned. Untick it, or mark those copies Received / Owned in Collection.`);}
         built={slots:rows,cards:rows.map(r=>C.state.cards[r.cardId]),issues:[],notes:[],method:'Existing list copied exactly into a new draft; no simulation executed',estimatedPrice:null,unknownPrices:0};
@@ -317,7 +339,7 @@ views.lab=async()=>{
       /* Null-safe on the list road: a group can be chosen before any commander is known,
          and `leader.name` there was a crash waiting for the first reader to leave the name
          blank. The list's own name is the better default anyway. */
-      const source=deckId?M.deck(C.state,deckId).name:C.state.groups.find(g=>g.id===groupId)?.name;
+      const source=deckId&&C.state.decks.some(d=>d.id===deckId)?M.deck(C.state,deckId).name:null;
       const name=draftName||(leader?leader.name+' · '+(definition.mechanics[0]||'new draft'):(source||'New draft'));
       const next={commanders:leaders.map(c=>c.id),slots:built.slots.map(r=>({cardId:r.cardId,quantity:r.quantity,purpose:r.purpose||'main',pinned:!!r.pinned})),definition,name,method:built.method,notes:built.notes||[],issues:[...built.issues,...(fetchNote?[fetchNote]:[])],estimatedPrice:built.estimatedPrice,unknownPrices:built.unknownPrices||0,at:new Date().toISOString(),report:null};
       /* Legality of the list as it would be saved, checked on a copy of the state. */
@@ -363,9 +385,9 @@ views.lab=async()=>{
       slots=preview.slots;cards=[...slots.map(r=>cardOf(r.cardId)),...leaders].filter(Boolean);name=(v.deckName||'').trim()||preview.name;method=preview.method;notes=preview.notes||[];issues=preview.issues||[];
     }else if(mode==='list'){
       let rows;
-      if(deckId)rows=M.deck(C.state,deckId).slots.filter(r=>r.purpose==='main').map(r=>({...r,id:undefined}));
-      else{const g=C.state.groups.find(x=>x.id===groupId);if(!g)throw Error('Choose a Collection group or existing deck.');rows=g.entries.map(r=>({...r,id:undefined}));if(!rows.length)rows=C.state.lots.filter(l=>l.groupIds.includes(g.id)).map(l=>({cardId:l.cardId,quantity:l.quantity,printing:l.printing}));}
-      if(!rows.length)throw Error('The chosen group has no cards yet. Import or enter a list first.');
+      if(!deckId)throw Error('Choose the deck to start from.');
+      rows=M.deck(C.state,deckId).slots.filter(r=>r.purpose==='main').map(r=>({...r,id:undefined}));
+      if(!rows.length)throw Error('That deck has no cards in its main list yet. Edit its card list first.');
       slots=rows;cards=[...rows.map(r=>C.state.cards[r.cardId]),...leaders].filter(Boolean);name=(v.deckName||'').trim()||(leaders[0]?.name||'New deck');method='Existing list copied exactly into a new deck; no simulation executed';notes=[];issues=[];
     }else{
       slots=leaders.map(c=>({cardId:c.id,quantity:1,purpose:'main'}));cards=leaders;name=(v.deckName||'').trim()||leaders[0].name+' · new deck';method='Saved from the Deck Lab before any draft was run';notes=[];issues=[];
@@ -373,7 +395,7 @@ views.lab=async()=>{
     const id='deck:'+C.uid();
     /* A deck built from a collection group stays attached to it: the group it came from is
        the group it draws from, and saying so here saves the reader attaching it by hand. */
-    const commands=[{type:'createDeck',deckId:id,name,commanders:leaders.map(c=>c.id),cards,slots,definition:preview?preview.definition:definition,notes:[method,...notes].join('\n'),groupId:v.group||null}];
+    const commands=[{type:'createDeck',deckId:id,name,commanders:leaders.map(c=>c.id),cards,slots,definition:preview?preview.definition:definition,notes:[method,...notes].join('\n'),groupId:groupId||null}];
     if(preview?.report)commands.push({type:'report',deckId:id,report:preview.report});
     commands.push({type:'preferences',values:{lastLabRun:{deckId:id,method,issues,at:new Date().toISOString(),previewAt:preview?.at||null,refine:preview?.refine||null},labPreview:null}});
     preview=null;
@@ -829,7 +851,7 @@ function runPane(saved){
      its button is READY when the work it needs has been done. Refine is ready the moment
      there is a 99 and stays ready after it has run, because refining twice is a real
      thing to want. */
-  const started=mode==='list'?Boolean(groupId||deckId):Boolean(leader);
+  const started=mode==='list'?Boolean(deckId):Boolean(leader);
   const NEEDS_START='Choose a commander, or an existing list, on the left';
   const NEEDS_DRAFT='Run the initial draft first';
   const doFor=i=>{
