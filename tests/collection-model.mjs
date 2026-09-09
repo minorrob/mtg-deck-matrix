@@ -108,4 +108,32 @@ run('deleteGroup',{groupId:'shelf'});
 assert.equal(M.deck(s,'tie').groupId,null,'Deleting a group cannot leave a deck pointing at nothing');checks++;
 M.validate(s);checks++;
 
+// A DECK'S GROUP IS THE DECK. Made with it, named after it, carrying its cards by being its
+// group rather than by holding a second copy of the list.
+run('createDeck',{deckId:'own',name:'Goblins go wide',commanders:['leader'],slots:[{id:'c1',cardId:'leader',quantity:1},{id:'l1',cardId:'land',quantity:98},{id:'r1',cardId:'ring',quantity:1}]});
+const ownGroup=M.deck(s,'own').groupId;
+assert.ok(ownGroup,'A new deck arrives with a collection group');
+assert.equal(s.groups.find(g=>g.id===ownGroup).name,'Goblins go wide','named after the deck');checks+=2;
+run('editDeck',{deckId:'own',name:'Goblins, wider'});
+assert.equal(s.groups.find(g=>g.id===ownGroup).name,'Goblins, wider','and follows the deck when it is renamed');checks++;
+run('finalize',{deckId:'own'});
+const inOwn=M.projection(s).filter(r=>r.groupIds.includes(ownGroup));
+assert.ok(inOwn.length,'The deck\u2019s cards report the deck\u2019s group');
+assert.ok(inOwn.every(r=>r.deckId==='own'),'and only this deck\u2019s cards do');
+assert.equal(inOwn.reduce((n,r)=>n+r.quantity,0),100,'all hundred of them, owned or still To buy');checks+=3;
+assert.equal(s.groups.find(g=>g.id===ownGroup).entries.length,0,'stored once, in the deck, not copied into the group');checks++;
+// Opting out, and naming an existing group instead.
+run('createDeck',{deckId:'bare',name:'No group',commanders:['leader'],slots:[{cardId:'leader',quantity:1}],groupId:null});
+assert.equal(M.deck(s,'bare').groupId,null,'groupId null opts out deliberately');checks++;
+run('createGroup',{groupId:'shared',name:'Shared shelf'});
+run('createDeck',{deckId:'joins',name:'Joins one',commanders:['leader'],slots:[{cardId:'leader',quantity:1}],groupId:'shared'});
+assert.equal(M.deck(s,'joins').groupId,'shared','an existing group can be named instead');checks++;
+// The group made with a deck goes when the deck goes; a shared one stays.
+run('archive',{deckId:'own'});run('deleteDeck',{deckId:'own',confirmed:true});
+assert.equal(s.groups.some(g=>g.id===ownGroup),false,'A deck\u2019s own group leaves with it');checks++;
+run('groupLots',{groupId:'shared',lotIds:[s.lots[0].id]});
+run('archive',{deckId:'joins'});run('deleteDeck',{deckId:'joins',confirmed:true});
+assert.equal(s.groups.some(g=>g.id==='shared'),true,'A group holding copies of its own stays');checks++;
+M.validate(s);checks++;
+
 console.log(`collection-model: ${checks} checks passed; planned cards never become owned without acquisition.`);
