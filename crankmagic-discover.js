@@ -28,6 +28,35 @@
  */
 (globalThis.CrankFeatures ||= []).push(function (C) {
   const {esc: e, button: b, actions, views, $, note, form, select: s} = C;
+
+  /* PRESENTATION MODE.
+   *
+   * The graph is the thing on this page, and on a laptop it was getting a third of the
+   * screen: a 180px nav rail, a page title and its subtitle, a hint paragraph, and a
+   * 405px card pane all took their cut first. None of that is wrong when you are reading;
+   * all of it is in the way when you are exploring.
+   *
+   * So one button gives the canvas the room. The nav collapses, the title and its
+   * subtitle go (the eyebrow stays, so the page still says where you are), the search and
+   * filter rows rise to sit under it, the card pane halves and stacks its art above the
+   * text instead of beside it, and the canvas grows to fill what that frees. Everything
+   * the mode is for stays reachable at full function -- search, filters, the three tap
+   * modes, the card's identity and the terms it is joined by. Nothing is hidden that you
+   * would have to leave the mode to get back.
+   *
+   * It is a toggle, not a drag: two states a reader can predict beat a continuum they
+   * have to manage. The class goes on the app root because the nav rail it collapses
+   * lives outside this view.
+   */
+  let stage = false;
+  const STAGE_ICONS = {
+    on: '<svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 1.8H1.8V6M10 1.8h4.2V6M6 14.2H1.8V10M10 14.2h4.2V10"/></svg>',
+    off: '<svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1.8 5.6H6V1.4M14.2 5.6H10V1.4M1.8 10.4H6v4.2M14.2 10.4H10v4.2"/></svg>'
+  };
+  const stageButton = () => `<button type="button" class="cm-stage-btn" data-action="graph-stage"
+    aria-pressed="${stage}" aria-label="${stage ? 'Restore the default layout' : 'Give the graph the screen'}"
+    title="${stage ? 'Restore the default layout' : 'Give the graph the screen'}">${stage ? STAGE_ICONS.off : STAGE_ICONS.on}</button>`;
+  const applyStage = () => document.getElementById('matrix-v2')?.classList.toggle('cm-stage', stage);
   let graph = null;
   /* Held across renders of this view so a filter survives following a card into the
      inspector and coming back. Cleared only by Clear filters. */
@@ -92,16 +121,19 @@
         </div>
       </div>
 
-      <p class="cm-muted cm-graph-hint">Pinch to zoom · drag to pan · tap a card to explore · double-tap to reset · zoom in to label the focus's connections and name the outer rings. With a mouse: wheel to zoom, arrow keys / + / − / 0.</p>
       <div class="cm-graph-grid cm-graph-grid-tall">
         <div class="cm-graph-col">
-          <div class="cm-graph-modes" role="group" aria-label="What a tap on the graph does">${[['navigate', 'Navigate'], ['inspect', 'Inspect'], ['select', 'Select']].map(([m, label]) => `<button type="button" class="v-button${gmode === m ? ' is-on' : ''}" data-action="graph-mode" data-mode="${m}" aria-pressed="${gmode === m}">${label}</button>`).join('')}<span class="cm-muted cm-graph-mode-hint" id="cm-graph-mode-hint">${modeHint(gmode)}</span><span class="cm-graph-back" id="cm-graph-back"></span></div>
-          <canvas class="cm-graph" id="cm-graph" tabindex="0" role="img" aria-label="Interactive card relationship graph. Drag to pan. Pinch or mouse wheel to zoom. In Navigate a tap re-centres on a card; in Inspect a tap opens its terms; in Select a tap ticks it for a group. A tap on a line opens why two cards are joined. Keyboard arrows pan, plus and minus zoom, zero resets."></canvas>
-          <div class="cm-graph-pop" id="cm-graph-pop" role="dialog" aria-label="Connection details" hidden></div>
+          <div class="cm-graph-modes" role="group" aria-label="What a tap on the graph does">${[['navigate', 'Navigate'], ['inspect', 'Inspect'], ['select', 'Select']].map(([m, label]) => `<button type="button" class="v-button${gmode === m ? ' is-on' : ''}" data-action="graph-mode" data-mode="${m}" aria-pressed="${gmode === m}">${label}</button>`).join('')}<details class="cm-inline-menu cm-hint cm-graph-hint"><summary class="cm-hint-btn" aria-label="How the graph works" title="How the graph works">i</summary><div class="cm-menu cm-inline-menu-body cm-hint-body"><p id="cm-graph-mode-hint">${modeHint(gmode)}</p><p>Pinch to zoom · drag to pan · tap a card to explore · double-tap to reset · zoom in to label the focus's connections and name the outer rings. With a mouse: wheel to zoom, arrow keys / + / − / 0.</p></div></details><span class="cm-graph-back" id="cm-graph-back"></span></div>
+          <div class="cm-graph-box">
+            <canvas class="cm-graph" id="cm-graph" tabindex="0" role="img" aria-label="Interactive card relationship graph. Drag to pan. Pinch or mouse wheel to zoom. In Navigate a tap re-centres on a card; in Inspect a tap opens its terms; in Select a tap ticks it for a group. A tap on a line opens why two cards are joined. Keyboard arrows pan, plus and minus zoom, zero resets."></canvas>
+            ${stageButton()}
+            <div class="cm-graph-pop" id="cm-graph-pop" role="dialog" aria-label="Connection details" hidden></div>
+          </div>
         </div>
         <aside class="v-panel cm-card-view" id="cm-card-view" aria-live="polite"></aside>
       </div>`;
 
+    applyStage();
     const view = $('#cm-card-view');
 
     /* THE PANE ENDS WHERE THE GRAPH ENDS. A grid row is as tall as its tallest item's
@@ -210,7 +242,16 @@
     }
     function hidePop() { const pop = $('#cm-graph-pop'); if (pop && !pop.hidden) { pop.hidden = true; pop.innerHTML = ''; } graph?.setHighlight(null); }
     function modeHint(m) { return m === 'inspect' ? 'Tap a card for its terms and its link to the focus; tap a line for why two cards are joined.' : m === 'select' ? 'Tap cards to tick them, then add them to a group from the Card View.' : 'Tap a card to make it the focus; the card you came from stays at the left.'; }
-    const onKey = (ev) => { if (ev.key === 'Escape') hidePop(); };
+    /* Escape is the way out of presentation mode as well as out of a pop-up, in that order:
+       the mode hides the nav rail, so it needs an exit that does not depend on finding the
+       small control that opened it. The pop-up wins when one is open, because that is the
+       thing the reader most recently put on screen. */
+    const onKey = (ev) => {
+      if (ev.key !== 'Escape') return;
+      const pop = $('#cm-graph-pop');
+      if (pop && !pop.hidden) { hidePop(); return; }
+      if (stage) actions['graph-stage']();
+    };
     document.addEventListener('keydown', onKey);
     /* A dropdown left hanging over the page after the click that used it is the reader
        wondering whether it worked. One closes when you pick from it and when you look
@@ -425,6 +466,13 @@
       $('#cm-graph-mode-hint').textContent = modeHint(gmode);
       drawCardView(graph?.current(), null, true);
     };
+    /* The canvas is drawn to its own measured size and watched by a ResizeObserver, so the
+       layout change is enough to redraw it; sizePane() is nudged because the pane's height
+       is written in pixels off the canvas rather than read from the grid. */
+    actions['graph-stage'] = () => { stage = !stage; applyStage(); hidePop();
+      const host = $('.cm-graph-box'); if (host) host.querySelector('.cm-stage-btn')?.replaceWith(
+        Object.assign(document.createElement('div'), {innerHTML: stageButton()}).firstElementChild);
+      requestAnimationFrame(() => { sizePane(); dispatchEvent(new Event('resize')); }); };
     actions['graph-pop-close'] = () => hidePop();
     actions['graph-tick'] = (el) => { const id = el.dataset.id; if (picked.has(id)) picked.delete(id); else picked.add(id); graph?.setSelected(picked); el.classList.toggle('is-on', picked.has(id)); el.textContent = picked.has(id) ? 'Ticked ✓' : 'Tick for a group'; drawCardView(graph?.current(), null, true); };
     actions['results-clear'] = () => { picked = new Set(); graph?.setSelected(picked); drawCardView(graph?.current(), null, true); };
@@ -468,7 +516,8 @@
     });
     $('[name=edgeType]').addEventListener('change', (ev) => graph?.setType(ev.target.value));
 
-    return () => { document.removeEventListener('keydown', onKey); document.removeEventListener('click', onDocClick); removeEventListener('resize', sizePane); cancelAnimationFrame(paneFrame); graph?.destroy(); graph = null; };
+    return () => { document.getElementById('matrix-v2')?.classList.remove('cm-stage');
+      document.removeEventListener('keydown', onKey); document.removeEventListener('click', onDocClick); removeEventListener('resize', sizePane); cancelAnimationFrame(paneFrame); graph?.destroy(); graph = null; };
   };
 
   actions['graph-lookup'] = () => C.cardPicker('Find a card to explore', async (c) => {
