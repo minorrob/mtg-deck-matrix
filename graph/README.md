@@ -42,7 +42,20 @@ cat graph/schema/constraints.cypher \
 
 node graph/ingest/07-export-app.mjs --commanders   # -> data/graph.json
 node graph/ingest/08-build-lenses.mjs              # -> data/lenses.json
+node tools/graph-amplifiers.mjs --all              # reconcile the bake with card-classify.js
 ```
+
+**The last line is not optional, and leaving it off is silent.** Steps 02 and
+07 carry their own copy of the classification rules; `card-classify.js` is the
+one the app and the tests read, and the two drift every time a rule moves. The
+`--all` pass re-derives every classified field on the exported bake from that
+shared classifier, so the file that ships and the code that reads it agree.
+
+Concretely, the last drift was the retired proliferate *event*: step 02 still
+emits it, `card-classify.js` refiled it as a `multiplies: counter` relation, and
+a rebuild without `--all` shipped 986 cards causing an event nothing listens
+for. `tests/card-classify.mjs` and `tests/crankmagic-graph.mjs` both fail on
+it -- which is the safety net, not the plan.
 
 `--commanders` is not optional, despite the name. Without it the export keeps
 only cards that are owned, assigned, or carry an EDHREC edge, and somebody
@@ -51,7 +64,7 @@ which matters more than one missing card, because a commander anchors every
 `PLAYED_WITH` edge it sources. It costs 2.2 MB (4,902 cards to 7,764) and
 tests/deck-import.mjs fails if the shipped graph was built without it.
 
-About five minutes end to end, most of it the Scryfall download. Everything is
+About six minutes end to end, most of it the Scryfall download. Everything is
 rebuilt from source, so a wiped `.data` costs only the wait.
 
 Then `queries/` holds parameterised Cypher. Neo4j Browser at :7474 is the
