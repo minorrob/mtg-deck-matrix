@@ -84,7 +84,10 @@
      cause:  re("you may play an additional land|" + LAND_PUT + "|" + LAND_SEARCH)},
     {id: "creature-dies",
      listen: re("whenever " + LEAD + ART + DIES_NOUN + "[^.,]{0,40}\\b(?:dies|die)\\b"),
-     cause:  re("sacrifices? (?:a|an|another|two|three|x|\\d+|that|target|all) creatures?|destroy target creature|destroy (?:all|each) creatures?|each (?:player|opponent) sacrifices (?:a|an|two|\\d+|x) creatures?|deals? \\d+ damage to target creature|all creatures get -")},
+     /* Only what kills no matter what: a sacrifice or a destroy. Damage and -N/-N depend on
+        the creature's toughness, so a bolt is removal but not a cause of death -- a payoff
+        that fires when a creature dies must not be drawn to every burn spell. */
+     cause:  re("sacrifices? (?:a|an|another|two|three|x|\\d+|that|target|all) creatures?|destroy target creature|destroy (?:all|each) creatures?|each (?:player|opponent) sacrifices (?:a|an|two|\\d+|x) creatures?")},
     /* "Whenever you attack" and "whenever one or more creatures you control attack" listen;
        "whenever this creature attacks" is the card's own trigger, not a listener. */
     {id: "attack",         listen: re("whenever you attack\\b|whenever " + LEAD + ART + DIES_NOUN + "[^.]{0,30}\\battacks?\\b"),
@@ -183,7 +186,11 @@
     {id: "recursion",  re: /return target .{0,40}from your graveyard|return .{0,30}from your graveyard to (?:the battlefield|your hand)|(?:cast|play)[^.]{0,50}from your graveyard|from your graveyard to the battlefield/},
     {id: "tutor",      re: /search your library for (?:a|an|up to \w+|any number of) (?:cards?|artifacts?|creatures?|enchantments?|instants?|sorcer(?:y|ies)|permanents?|planeswalkers?|legendary|nonland|[a-z]+ cards?)/},
     {id: "sac-outlet", re: re(SAC_OUTLET)},
-    {id: "finisher",   re: /you win the game|each opponent loses (?:\d+|x|half|that much|life)|extra combat phase|loses the game/}
+    /* A finisher ends the game: you win, they lose, extra combats, or a drain that SCALES --
+       "loses X life", "loses that much life", "life equal to". A flat "each opponent loses
+       1 life" per trigger is an engine's exhaust, not a finisher, and 48 aristocrats
+       pieces carried the role until the audit. */
+    {id: "finisher",   re: /you win the game|loses the game|(?:each|target) (?:opponent|player) loses (?:x|half|that much|life equal|(?:[5-9]|\d{2,}) life)|deals? (?:x|that much) damage to each (?:opponent|player)|extra combat phase/}
   ];
 
   /* --- THE OTHER HALF OF "CREATE" ------------------------------------------
