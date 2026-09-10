@@ -51,7 +51,7 @@
   function matchesMechanic(c,label){const entry=MECHANICS.find(([l])=>folded(l)===folded(label));if(!entry)return folded(haystack(c)).includes(folded(label));return entry[1].test(haystack(c));}
   /* The labels a card earns, for "plays as" lines and picker rows. */
   function playStyles(c){return MECHANICS.filter(([l])=>matchesMechanic(c,l)).map(([l])=>l);}
-  async function create(options){const byName=new Map(),byAlias=new Map(),byId=new Map();let graph=null,universeDate='',rankDate='',graphLoading=null;const fetcher=options.fetchImpl||fetch;
+  async function create(options){const byName=new Map(),byAlias=new Map(),byId=new Map();let graph=null,universeDate='',rankDate='',priceDate='',graphDate='',graphLoading=null;const fetcher=options.fetchImpl||fetch;
     /* THE NAME ON THE CARD IN YOUR HAND. byName is keyed on the ORACLE name, which is the
        name the rules use and not always the name printed on the card: a Secret Lair prints
        Jodah, the Unifier as "SpongeBob SquarePants". search() has matched flavour names
@@ -67,7 +67,7 @@
     async function load(url){const cached=await options.repository?.cacheGet(url);try{const response=await fetcher(url,{cache:'default'});if(!response.ok)throw Error('HTTP '+response.status);const data=await response.json();options.repository?.cachePut(url,data).catch(()=>{});return data;}catch(error){if(cached)return cached;throw Error('The public card catalog is unavailable offline. Reconnect once to download it, or import a backup containing your cards. '+error.message);}}
     const settled=await Promise.allSettled([load(options.urls.universe),load(options.urls.cards),load(options.urls.facts),options.urls.ranks?load(options.urls.ranks):Promise.resolve(null),options.urls.flavorNames?load(options.urls.flavorNames):Promise.resolve(null)]);
     if(settled[0].status==='fulfilled'){const data=settled[0].value;universeDate=data.generatedAt;for(const [name,ci,rarity,mv,type,rank,commander] of data.cards)add({name,ci,rarity,mv,type,rank,commander:!!commander,verified:true,legalities:{commander:'legal'},updatedAt:universeDate});}
-    if(settled[1].status==='fulfilled')for(const c of settled[1].value.cards)add(c);
+    if(settled[1].status==='fulfilled'){priceDate=settled[1].value.generatedAt||'';for(const c of settled[1].value.cards)add(c);}
     if(settled[2].status==='fulfilled')for(const [name,c] of Object.entries(settled[2].value.cards))add({name,...c});
     for(const c of Object.values(options.savedCards||{}))add(c);
     if(settled[3].status==='fulfilled'&&settled[3].value){const ranks=settled[3].value;rankDate=ranks.generatedAt;const ranked=new Map(ranks.cards.map(c=>[folded(c.name),c]));for(const c of [...byId.values()]){const match=ranked.get(folded(c.name))||ranked.get(folded(c.name.split(' // ')[0]));if(match)add({...c,commanderRank:match.rank});}}
@@ -142,11 +142,34 @@
         return add({...c,price:low.price,priceSource:CHEAPEST,priceUpdated:new Date().toISOString().slice(0,10),cheapestSet:low.setName||low.set||'',cheapestSetCode:low.set||'',printings:priced.length});
       }catch{return c;}
     }
-    async function details(c,{signal,cheapest:wantCheapest=true}={}){
+    async function details(c,{signal,cheapest:wantCheapest=true,onFail}={}){
       let out=c;
-      if(!(c.verified&&c.oracleText&&c.manaCost!==undefined)){try{const raw=await options.client.named(c.name,{exact:true,signal});if(raw)out=add({...raw,verified:true,source:'Scryfall exact name',updatedAt:new Date().toISOString()});}catch{return c;}}
+      if(!(c.verified&&c.oracleText&&c.manaCost!==undefined)){try{const raw=await options.client.named(c.name,{exact:true,signal});if(raw)out=add({...raw,verified:true,source:'Scryfall exact name',updatedAt:new Date().toISOString()});}catch(error){onFail?.(error,c);return c;}}
       if(wantCheapest&&out.verified&&out.priceSource!==CHEAPEST)out=await cheapest(out,{signal});
       return out;
+    }
+    /* LEGALITY IS NOT A FACT YOU BAKE ONCE. The catalog ships the ban list as it stood the
+       day it was built, and hydrate() deliberately skips a card that already carries its
+       text -- so the best-known cards, which are exactly the ones a ban list moves, are the
+       ones never read again. This re-reads a whole list from Scryfall regardless, in one
+       request per 75 names, and it is called where the answer starts costing money.
+       Unreachable is reported and never guessed: the caller says which facts it stood on. */
+    async function recheck(cards,{signal,onProgress}={}){
+      const want=[],seen=new Set();
+      for(const c of cards||[]){const n=folded(c&&c.name);if(!n||seen.has(n))continue;seen.add(n);want.push(c);}
+      if(!want.length)return {checked:[],missing:[],reachable:true};
+      if(!options.client?.collection)return {checked:[],missing:[],reachable:false};
+      const checked=[],missing=[],stamp=new Date().toISOString();
+      try{
+        for(let i=0;i<want.length;i+=75){
+          const batch=want.slice(i,i+75);
+          const result=await options.client.collection(batch.map(c=>({name:c.name})),{signal});
+          for(const raw of result.cards||[])checked.push(add({...raw,verified:true,source:'Scryfall legality check',updatedAt:stamp}));
+          missing.push(...(result.missing||[]));
+          onProgress?.({done:Math.min(want.length,i+75),total:want.length});
+        }
+      }catch(error){return {checked,missing,reachable:false,error:error.message};}
+      return {checked,missing,reachable:true};
     }
     /* THE PRINTED BODY, FOR CARDS THE CATALOG KNOWS ONLY AS ROWS. A graph row has roles and
        mechanics but no rules text; the engine cannot read it and a reader cannot review it.
@@ -167,8 +190,8 @@
       }
       return {hydrated,missing};
     }
-    async function loadGraph(){if(graph)return graph;if(!graphLoading)graphLoading=load(options.urls.graph).then(data=>{graph=data;for(const c of data.cards){const prior=byName.get(folded(c.name));add({...c,oracleId:c.id,legalities:prior?.legalities||{commander:'legal'},verified:true});}return data;}).catch(error=>{graphLoading=null;throw error;});return graphLoading;}
-    return {add,search,similar,resolve,details,cheapest,hydrate,loadGraph,exact:named,get:id=>byId.get(id)||named(id),all:()=>[...byId.values()],load,universeDate,rankDate,available:()=>byId.size};
+    async function loadGraph(){if(graph)return graph;if(!graphLoading)graphLoading=load(options.urls.graph).then(data=>{graph=data;graphDate=data.generatedAt||'';for(const c of data.cards){const prior=byName.get(folded(c.name));add({...c,oracleId:c.id,legalities:prior?.legalities||{commander:'legal'},verified:true});}return data;}).catch(error=>{graphLoading=null;throw error;});return graphLoading;}
+    return {add,search,similar,resolve,details,cheapest,hydrate,recheck,loadGraph,exact:named,get:id=>byId.get(id)||named(id),all:()=>[...byId.values()],load,universeDate,rankDate,dates:()=>({catalog:universeDate,prices:priceDate,ranks:rankDate,graph:graphDate}),available:()=>byId.size};
   }
   return {key,folded,normalize,safeURL,create,MECHANICS,matchesMechanic,playStyles};
 });

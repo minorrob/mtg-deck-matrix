@@ -96,7 +96,7 @@
       const name = cardName(lot.cardId);
       if (!name) continue;
       const row = bucket(name);
-      if (lot.source === "owned") row.owned.add(lot.location && lot.location.kind === "deck" ? "in a deck box" : "on the bench");
+      if (lot.source === "owned") row.owned.add(lot.location && lot.location.kind === "deck" ? "in deck box" : "on the bench");
       if (lot.source === "ordered") row.owned.add("on order");
       if (lot.source === "incoming") row.owned.add("incoming trade");
     }

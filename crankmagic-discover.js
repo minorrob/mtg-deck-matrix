@@ -449,7 +449,9 @@
     async function cardFor(name) {
       const known = C.catalog.exact(name);
       if (!known) throw Error(name + ' is not in the catalog. Open it and use Verify first.');
-      return C.catalog.details(known).catch(() => known);
+      return C.catalog.details(known, {onFail: () => {
+        C.notice(`Could not reach Scryfall for ${known.name}; showing the facts already saved.`, true);
+      }}).catch(() => known);
     }
     actions['discover-to-group'] = async (el) => {
       const group = C.state.groups.find((g) => g.id === el.dataset.group);

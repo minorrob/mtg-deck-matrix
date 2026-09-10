@@ -13,7 +13,7 @@ const art=d=>{const name=commander(d).toLowerCase();for(const n of ['atraxa','kr
    where the cards physically are. "In deck" used to lead, and it meant the physical box,
    so a deck you had finished buying read 0 and the ribbon looked broken rather than
    merely unconfirmed. */
-function stats(d){const r=M.readiness(C.state,d);return `<div class="cm-stats"><div><strong>${r.target}</strong><span>planned</span></div><div><strong>${r.owned}</strong><span>owned &amp; reserved</span></div><div><strong>${r.ordered}</strong><span>ordered</span></div><div><strong>${r.toBuy}</strong><span>${d.status==='draft'?'not yet reserved':'to buy'}</span></div><div><strong>${r.placed}</strong><span>in the deck box</span></div></div>`;}
+function stats(d){const r=M.readiness(C.state,d);return `<div class="cm-stats"><div><strong>${r.target}</strong><span>planned</span></div><div><strong>${r.owned}</strong><span>owned &amp; reserved</span></div><div><strong>${r.ordered}</strong><span>ordered</span></div><div><strong>${r.toBuy}</strong><span>${d.status==='draft'?'not yet reserved':'to buy'}</span></div><div><strong>${r.placed}</strong><span>in deck box</span></div></div>`;}
 views.decks=async params=>{const did=params.get('deck');if(did){await overview(M.deck(C.state,did));return;}const decks=C.state.decks.filter(d=>showArchived||!d.archived);
 /* THE SHOWCASE. The page opens on cards, not on a sentence: a fan of the reader's own
    commanders when they have decks, and three well-known ones while they do not. The fan
@@ -22,7 +22,8 @@ const fanDecks=decks.filter(d=>!d.archived).slice(0,3),fanSrc=fanDecks.length?fa
 const fanSlots=fanSrc.length===1?['center']:fanSrc.length===2?['left','right']:['left','right','center'];
 const fan=fanSrc.length?`<div class="cm-cardfan" aria-hidden="true">${fanSrc.map(([src,name],i)=>`<div class="cm-fan-card cm-fan-${fanSlots[i]}" style="background-image:url('${e(src)}')"><span>${e(name.toUpperCase())}</span></div>`).join('')}</div>`:'';
 C.main.innerHTML=`<section class="cm-showcase"><div><div class="v-eyebrow cm-eyebrow-warm">Your Commander workshop</div><h1>Build it.<br><span>Make it yours.</span></h1><p class="cm-sub">Deck plans, the cards they need, and the games you want to play.</p><div class="cm-actions">${b('Create a deck','new-deck',{},true)}${b('Open Deck Lab','open-lab')}${b('Compare selected','compare-decks')}</div></div>${fan}</section>`+`<div class="cm-toolbar cm-toolbar-split"><h2>Your decks</h2><label class="cm-checkbox cm-show-archived"><input id="cm-show-archived" type="checkbox" ${showArchived?'checked':''}>Show archived</label></div>`+(decks.length?`<div class="cm-deck-grid">${decks.map(d=>{const r=M.readiness(C.state,d);return `<article class="cm-deck-tile">${art(d)?`<img class="cm-deck-art" src="${e(art(d))}" alt="" loading="lazy">`:''}<button data-action="deck" data-deck="${e(d.id)}"><span class="cm-badge ${r.ready?'good':''}">${d.archived?'Archived':r.ready?'Ready to play':'In progress'}</span><small>${e(d.name)}</small><h3>${e(commander(d)||'Choose a commander')}</h3><p>${e(d.definition.mechanics.join(' · ')||'Mechanic to explore')}</p></button><footer><span>${C.colors(C.state.cards[d.commanders[0]]?.colorIdentity)} · B${d.definition.baseBracket}</span><span class="cm-muted">${r.owned} / ${r.target} in hand${d.locked?' · Locked':''}</span><span class="cm-tile-tools"><button type="button" class="cm-text-button" data-action="compare-pick" data-deck="${e(d.id)}" aria-pressed="${(C.state.preferences.comparisonPicks||[]).includes(d.id)}">${(C.state.preferences.comparisonPicks||[]).includes(d.id)?'✓ Compare':'Compare'}</button><button type="button" class="cm-tile-menu-btn" data-action="deck-menu" data-deck="${e(d.id)}" aria-haspopup="menu" aria-label="Deck options for ${e(d.name)}">⋯</button></span></footer></article>`;}).join('')}</div>`:`<section class="v-panel cm-empty"><h2>A fresh library. A new deck.</h2><p>Start from a commander and let the Lab build the 99, or paste a list you already have. Adding a plan creates no owned copies.</p><div class="cm-actions">${b('Select a commander','open-lab',{},true)}${b('Import a list','import-list')}${b('Import a backup','restore')}</div></section>`);$('#cm-show-archived').addEventListener('change',ev=>{showArchived=ev.target.checked;C.render();});};
-async function overview(d){const cards=d.slots.filter(r=>r.purpose==='main').map(r=>({c:C.state.cards[r.cardId],q:r.quantity})),types=['Land','Creature','Artifact','Enchantment','Instant','Sorcery','Planeswalker'],curve=Array(8).fill(0);for(const {c,q} of cards)if(!/Land/.test(c.typeLine))curve[Math.min(7,Number(c.manaValue)||0)]+=q;const max=Math.max(1,...curve),issues=[...M.legality(C.state,d),...M.definitionIssues(C.state,d)];const leaders=await Promise.all(d.commanders.map(id=>C.catalog.details(C.state.cards[id])));let guide=null;try{const data=await C.catalog.load(CrankAssets.guides);guide=data.decks.find(g=>g.commander===leaders[0]?.name);}catch{}if(C.route().view!=='decks'||C.route().params.get('deck')!==d.id)return;const swot=structural(d,cards);
+async function overview(d){const cards=d.slots.filter(r=>r.purpose==='main').map(r=>({c:C.state.cards[r.cardId],q:r.quantity})),types=['Land','Creature','Artifact','Enchantment','Instant','Sorcery','Planeswalker'],curve=Array(8).fill(0);for(const {c,q} of cards)if(!/Land/.test(c.typeLine))curve[Math.min(7,Number(c.manaValue)||0)]+=q;const max=Math.max(1,...curve),issues=[...M.legality(C.state,d),...M.definitionIssues(C.state,d)];let offline=null;const leaders=await Promise.all(d.commanders.map(id=>C.catalog.details(C.state.cards[id],{onFail:error=>{offline=error;}})));
+  if(offline)C.notice('Could not reach Scryfall, so this page is showing the card facts already saved. Card data age is in User Functions.',true);let guide=null;try{const data=await C.catalog.load(CrankAssets.guides);guide=data.decks.find(g=>g.commander===leaders[0]?.name);}catch{}if(C.route().view!=='decks'||C.route().params.get('deck')!==d.id)return;const swot=structural(d,cards);
 const ready=M.readiness(C.state,d),heroArt=art(d);
 C.main.innerHTML=`<section class="cm-deck-hero"${heroArt?` style="--hero:url('${e(heroArt)}')"`:''}><div class="cm-deck-hero-copy"><div class="v-eyebrow cm-eyebrow-warm">My Decks / Deck overview</div><h1>${e(d.name)}</h1><p>${e(commander(d))} ${C.colors(C.state.cards[d.commanders[0]]?.colorIdentity)} <span class="cm-badge ${ready.ready?'good':''}">${d.archived?'Archived':d.status==='draft'?'Draft':ready.ready?'Ready to play':'In progress'}</span> <span class="cm-badge">Bracket ${e(String(d.definition.baseBracket))}–${e(String(d.definition.bracketCeiling))}</span>${attached(d)?` <button type="button" class="cm-badge cm-badge-link" data-action="deck-group" data-group="${e(d.groupId)}" title="Open this group in the Collection">Group: ${e(attached(d).name)}</button>`:''}${d.locked?' <span class="cm-badge warn">Locked</span>':''}</p></div><div class="cm-actions">${b('View deck cards','deck-cards',{deck:d.id},true)}${b('Edit definition','edit-deck',{deck:d.id})}${d.status==='draft'?b('Edit card list','edit-list',{deck:d.id}):''}</div></section>`+stats(d)+/* THREE THINGS YOU DO TO A DECK, AND TWO DRAWERS FOR THE REST. Nine buttons in one row
    made the two that matter -- where the deck's cards come from, and whether it is settled --
@@ -119,8 +120,33 @@ actions['attach-group']=el=>{
       return commit({type:'editDeck',deckId:d.id,groupId:v.groupId,...(take?{slots}:{})});
     },d.groupId?'Change group':'Attach group');
 };
-actions.finalize=el=>{const d=M.deck(C.state,el.dataset.deck);C.review('Finalize '+d.name,note('This reserves eligible available copies and creates To buy requirements for the remainder. It does not claim you own any missing cards. Prices and bracket expectations require your review.'),{type:'finalize',deckId:d.id});};
-actions.lock=el=>{const d=M.deck(C.state,el.dataset.deck);C.review(d.locked?'Unlock deck':'Lock deck',note('All copies remain visible. A lock excludes the deck’s copies from automatic build consideration unless you explicitly allow that donor.'),{type:'lock',deckId:d.id,locked:!d.locked});};
+/* FINALIZING IS WHERE LEGALITY STARTS COSTING MONEY: it is the step that turns a plan into
+   reservations and a To buy list. So the hundred are re-read from Scryfall first, and the
+   deck's own card records take the fresh ban list -- by name, onto the ids the deck already
+   uses, so nothing is duplicated. The model's existing rule then refuses a banned card by
+   name, as it always would have if the facts had been current. When Scryfall cannot be
+   reached the check is skipped and said so, rather than passing silently on old facts. */
+async function refreshLegality(d){
+  const cards=[...new Set(d.slots.filter(r=>r.purpose==='main').map(r=>r.cardId).concat(d.commanders))]
+    .map(id=>C.state.cards[id]).filter(Boolean);
+  if(!cards.length)return true;
+  const result=await C.catalog.recheck(cards);
+  if(!result.reachable){
+    C.notice('Could not reach Scryfall, so this deck was checked against the card catalog as it was last refreshed. Card data age is in User Functions.',true);
+    return false;
+  }
+  const fresh=new Map(result.checked.map(c=>[c.name.toLowerCase(),c]));
+  const moved=cards.map(c=>{const f=fresh.get(c.name.toLowerCase());
+    return f&&JSON.stringify(f.legalities||{})!==JSON.stringify(c.legalities||{})?{...c,legalities:f.legalities,verified:true}:null;}).filter(Boolean);
+  if(moved.length)await commit({type:'cards',cards:moved},{renderView:false});
+  return true;
+}
+actions.finalize=async el=>{
+  const d=M.deck(C.state,el.dataset.deck);
+  const current=await refreshLegality(d);
+  C.review('Finalize '+M.deck(C.state,d.id).name,note(`This reserves eligible available copies and creates To buy requirements for the remainder. It does not claim you own any missing cards. Prices and bracket expectations require your review.${current?' Every card in the list was re-checked against Scryfall just now.':''}`),{type:'finalize',deckId:d.id});
+};
+actions.lock=async el=>{const d=M.deck(C.state,el.dataset.deck);if(!d.locked)await refreshLegality(d);C.review(d.locked?'Unlock deck':'Lock deck',note('All copies remain visible. A lock excludes the deck’s copies from automatic build consideration unless you explicitly allow that donor.'),{type:'lock',deckId:d.id,locked:!d.locked});};
 actions.fulfill=el=>C.review('Reserve available copies',note('Unassigned eligible copies fulfill matching needs. This changes reservations; it does not physically move cards.'),{type:'fulfill',deckId:el.dataset.deck});
 function popMenu(el,html,width=250){
   document.querySelectorAll('.cm-tile-menu').forEach(m=>m.remove());
