@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-09-10T21:09:42.204Z",
+ "generatedAt": "2026-09-10T22:51:35.157Z",
  "lenses": [
   {
    "id": "short-shadrix",
@@ -274,6 +274,20 @@
    }
   },
   {
+   "id": "unmet-chulane-graveyard",
+   "kind": "warning",
+   "title": "Chulane: 2 graveyard payoffs, 1 enabler",
+   "why": "Ancient Greenwarden, Eternal Witness need graveyard and the deck barely supplies it.",
+   "evidence": "hard REQUIRES with fewer than two FILLS in the same deck",
+   "count": 2,
+   "filter": {
+    "ids": [
+     "3bcf090c-e890-4a9f-a8aa-6079e4ec9947",
+     "30b24e8e-3b0e-4d8e-90f3-f66eb7c1858c"
+    ]
+   }
+  },
+  {
    "id": "unmet-atraxa-graveyard",
    "kind": "warning",
    "title": "Atraxa: 1 graveyard payoff, 1 enabler",
@@ -283,19 +297,6 @@
    "filter": {
     "ids": [
      "a37f8381-83a4-4b6b-8176-c90f6a61da74"
-    ]
-   }
-  },
-  {
-   "id": "unmet-chulane-graveyard",
-   "kind": "warning",
-   "title": "Chulane: 1 graveyard payoff, 1 enabler",
-   "why": "Eternal Witness needs graveyard and the deck barely supplies it.",
-   "evidence": "hard REQUIRES with fewer than two FILLS in the same deck",
-   "count": 1,
-   "filter": {
-    "ids": [
-     "30b24e8e-3b0e-4d8e-90f3-f66eb7c1858c"
     ]
    }
   },

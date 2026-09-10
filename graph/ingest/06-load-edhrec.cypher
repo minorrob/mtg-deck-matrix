@@ -1,4 +1,7 @@
 // PLAYED_WITH: measured co-occurrence from EDHREC, scoped to a commander.
+// Replaced wholesale: a pair that fell below the page's threshold since the last fetch
+// must not survive as a stale edge.
+MATCH ()-[p:PLAYED_WITH]->() CALL (p) { DELETE p } IN TRANSACTIONS OF 20000 ROWS;
 LOAD CSV WITH HEADERS FROM 'file:///played_with.csv' AS r
 CALL (r) {
   MATCH (cmd:Card {oracleId: r.commanderId}), (c:Card {oracleId: r.cardId})

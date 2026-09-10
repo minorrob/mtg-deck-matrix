@@ -44,7 +44,7 @@
       produces: [...(c.produces || [])], requires: [...(c.requires || [])],
       causes: [...(c.causes || [])], triggers: [...(c.triggers || [])],
       multiplies: [...(c.multiplies || [])], grants: [...(c.grants || [])],
-      extends: [...(c.extends || [])], tribes: [...(c.tribes || [])]
+      extends: [...(c.extends || [])], tribes: [...(c.tribes || [])], wants: [...(c.wants || [])], makes: [...(c.makes || [])]
     };
   }
 
@@ -56,7 +56,9 @@
     'attack': 'an attack', 'combat-begin': 'combat', 'end-step': 'the end step', 'upkeep': 'upkeep',
     'cast-spell': 'a spell cast', 'proliferate': 'proliferate', 'counter-placed': 'a +1/+1 counter',
     'life-gain': 'life gain', 'life-loss': 'life loss', 'draw-card': 'a draw', 'sacrifice': 'a sacrifice',
-    'graveyard-entry': 'the graveyard', 'trigger': 'its triggers'
+    'graveyard-entry': 'the graveyard', 'trigger': 'its triggers',
+    'cast-creature': 'a creature spell cast', 'cast-instant-sorcery': 'an instant or sorcery cast',
+    'cast-enchantment': 'an enchantment cast', 'cast-artifact': 'an artifact cast', 'cast-legendary': 'a legendary spell cast'
   };
   const say = (id) => EVENT_LABEL[id] || String(id).replace(/-/g, ' ');
   const sayAll = (list, n) => list.slice(0, n || 3).map(say).join(', ');
@@ -64,12 +66,24 @@
   /* THE TERM SETS a pair is scored on. Kept as Sets because every question asked of
      them is "does the other card carry this term", and set membership is the cheap way
      to ask it a few hundred thousand times a layout. */
-  const TERM_KEYS = ['shared', 'produces', 'requires', 'causes', 'triggers', 'multiplies', 'grants', 'extends'];
+  const TERM_KEYS = ['shared', 'fills', 'produces', 'requires', 'causes', 'triggers', 'multiplies', 'grants', 'extends', 'tribes', 'wants', 'makes', 'offered'];
   function termSets(c) {
     const t = {
       shared: new Set([...(c.mechanics || []), ...(c.roles || []).filter((r) => !GENERIC.has(r))]),
+      /* WHAT THIS CARD SUPPLIES, for the demand side to ask about. Roles are the shared
+         supply/demand vocabulary -- REQUIRES names "creatures", "counters", "graveyard",
+         and FILLS names the same words -- so this is the set a REQUIRES is checked
+         against. It used to be checked against `produces`, whose ids are resources
+         (token, mana, card) and share not one word with the roles, so the feeds/fed
+         join never fired once across the whole corpus. */
+      fills: new Set(c.roles || []),
       produces: new Set(c.produces || []),
       requires: new Set(c.requires || []),
+      tribes: new Set(c.tribes || []),
+      wants: new Set(c.wants || []),
+      makes: new Set(c.makes || []),
+      /* The tribe a card OFFERS a payoff: what it is, and what it makes tokens of. */
+      offersTribe: new Set([...(c.tribes || []), ...(c.makes || [])]),
       causes: new Set(c.causes || []),
       triggers: new Set(c.triggers || []),
       multiplies: new Set(c.multiplies || []),
@@ -80,6 +94,10 @@
        Built once per card rather than once per pair -- a depth-3 layout asks about a
        hundred thousand pairs, and a fresh Set per question was most of the frame. */
     t.offered = new Set([...t.produces, ...t.triggers]);
+    /* Torbran multiplies damage, and the card that offers damage is the one that CAUSES
+       life loss, not one that listens for it. The one event whose multiplier pairs with
+       the causer rather than the listener. */
+    if (t.causes.has('life-loss')) t.offered.add('life-loss');
     return t;
   }
 
@@ -98,7 +116,9 @@
      *
      *   shared      both say the same word. The cheapest kind of link and the one the
      *               graph used to have on its own: a fact about vocabulary, not play.
-     *   feeds/fed   one produces what the other needs. A relationship, not a word.
+     *   feeds/fed   one supplies what the other needs -- bodies for a sac outlet,
+     *               +1/+1 counters for a counters payoff. A relationship, not a word.
+     *   tribal      one names a tribe as its payoff, the other is that tribe.
      *   extended    one hands out a quality, the other spreads it across your board.
      *   fires       one CAUSES an event, the other TRIGGERS on it. Krenko makes
      *               creatures enter; Purphoros fires when they do. This is the chain
@@ -112,9 +132,18 @@
      * pop-up prints the arrow the reader is looking at. */
     const GENERIC_MULT = 'trigger';
     function relateTerms(ta, tb) {
-      const shared = inter(ta.shared, tb.shared);
-      const feeds = inter(ta.produces, tb.requires);
-      const fed = inter(ta.requires, tb.produces);
+      const feeds = inter(ta.fills, tb.requires);
+      const fed = inter(ta.requires, tb.fills);
+      /* A role that is also the supply for the other card's demand is reported once, as
+         the relationship, not again as a shared word. */
+      const sharedRaw = inter(ta.shared, tb.shared);
+      const shared = (feeds.length || fed.length) ? sharedRaw.filter((t) => !feeds.includes(t) && !fed.includes(t)) : sharedRaw;
+      /* THE TRIBE. Krenko names Goblins; Goblin Chieftain is one and names them too.
+         Neither event, resource nor quality joins them, and until this they were strangers
+         on the canvas. A payoff → member edge is the card's text naming the other card's
+         type line. */
+      const tribal = inter(ta.wants, tb.offersTribe);
+      const tribalBy = inter(ta.offersTribe, tb.wants);
       const fires = inter(ta.causes, tb.triggers);
       const firedBy = inter(ta.triggers, tb.causes);
       /* A generic doubler ("if a triggered ability of a Wizard you control triggers...")
@@ -136,9 +165,14 @@
 
       const multWeight = (genericTo ? 2 : 0) + (genericFrom ? 2 : 0)
         + ((multiplied.length - (genericTo ? 1 : 0)) + (multiplies.length - (genericFrom ? 1 : 0))) * 4;
-      const score = shared.length * 2 + (feeds.length + fed.length) * 3
+      /* Being a creature satisfies "needs creatures": true of most of the deck, so a
+         generic role feeding a demand is worth one, a specific one (counters, graveyard,
+         a sac outlet) three. */
+      const feedWeight = (list) => list.reduce((n, t) => n + (GENERIC.has(t) ? 1 : 3), 0);
+      const score = shared.length * 2 + feedWeight(feeds) + feedWeight(fed)
         + (fires.length + firedBy.length) * 4 + multWeight
-        + (extended.length + extendedBy.length) * 3;
+        + (extended.length + extendedBy.length) * 3
+        + (tribal.length + tribalBy.length) * 3;
       if (!score) return null;
 
       /* One pair can be joined several ways at once. The label names the strongest,
@@ -149,15 +183,17 @@
         [firedBy.length,    'Triggers on ← caused',  '← ' + say(firedBy[0]),    'Triggers on ← caused by · ' + sayAll(firedBy)],
         [multiplied.length, 'Makes → multiplies',    '→ ×' + say(multiplied[0]),'Makes → multiplies · ' + say2(multiplied)],
         [multiplies.length, 'Multiplies ← makes',    '← ×' + say(multiplies[0]),'Multiplies ← makes · ' + say2(multiplies)],
-        [feeds.length,      'Produces → needs',      '→ ' + feeds[0],           'Produces → needs · ' + feeds.join(', ')],
-        [fed.length,        'Needs ← produces',      '← ' + fed[0],             'Needs ← produces · ' + fed.join(', ')],
+        [tribal.length,     'Tribal payoff → member', '→ ' + tribal[0],         'Tribal payoff → member · ' + tribal.slice(0, 2).join(', ')],
+        [tribalBy.length,   'Member ← tribal payoff', '← ' + tribalBy[0],       'Member ← tribal payoff · ' + tribalBy.slice(0, 2).join(', ')],
+        [feeds.length,      'Supplies → needs',      '→ ' + feeds[0],           'Supplies → needs · ' + feeds.join(', ')],
+        [fed.length,        'Needs ← supplies',      '← ' + fed[0],             'Needs ← supplies · ' + fed.join(', ')],
         [extended.length,   'Grants → extends',      '→ ' + say2(extended),     'Grants → extends across your board · ' + say2(extended)],
         [extendedBy.length, 'Extends ← grants',      '← ' + say2(extendedBy),   'Extends ← grants · ' + say2(extendedBy)],
         [shared.length,     'Shared mechanics / roles', shared.slice(0, 2).join(', '), 'Shared mechanics / roles · ' + shared.slice(0, 3).join(', ')]
       ];
       const [, kind, tag, reason] = cases.find((c) => c[0]) || [];
       return {shared, feeds, fed, fires, firedBy, multiplied, multiplies, extended, extendedBy,
-              score, kind, tag, reason};
+              tribal, tribalBy, score, kind, tag, reason};
     }
 
   root.CrankGraph = {
@@ -298,11 +334,15 @@
            looked up in the inverted index rather than by scanning 7,764 cards. */
         const pull = (from, into) => { for (const term of t[from]) for (const id of index[into].get(term) || []) candidates.add(id); };
         pull('shared', 'shared');
-        pull('produces', 'requires'); pull('requires', 'produces');
-        pull('causes', 'triggers');   pull('triggers', 'causes');
-        pull('produces', 'multiplies'); pull('triggers', 'multiplies');
-        pull('multiplies', 'produces'); pull('multiplies', 'triggers');
-        pull('grants', 'extends');    pull('extends', 'grants');
+        /* Supply and demand share the role vocabulary, so a card's fills are looked up in
+           the requires index and the other way round. This used to pull produces against
+           requires -- resource ids against role ids -- and so never found a candidate. */
+        pull('fills', 'requires'); pull('requires', 'fills');
+        pull('causes', 'triggers'); pull('triggers', 'causes');
+        pull('offered', 'multiplies'); pull('multiplies', 'offered');
+        pull('grants', 'extends'); pull('extends', 'grants');
+        /* The tribe: a payoff's wants against what the others are or make, and back. */
+        pull('wants', 'tribes'); pull('wants', 'makes'); pull('tribes', 'wants'); pull('makes', 'wants');
         /* The generic trigger doublers name no event, so neither index lookup finds them:
            a card with any trigger reaches them, and they reach back to any card with one. */
         if (t.triggers.size) for (const id of index.multiplies.get(GENERIC_MULT) || []) candidates.add(id);

@@ -65,7 +65,9 @@ which matters more than one missing card, because a commander anchors every
 tests/deck-import.mjs fails if the shipped graph was built without it.
 
 About six minutes end to end, most of it the Scryfall download. Everything is
-rebuilt from source, so a wiped `.data` costs only the wait.
+rebuilt from source, so a wiped `.data` costs only the wait -- and since 2026-09
+the load itself replaces every derived edge rather than merging onto the old ones,
+so a reload over a live database is a rebuild too.
 
 Then `queries/` holds parameterised Cypher. Neo4j Browser at :7474 is the
 exploration surface while the model is still being shaped.
@@ -88,6 +90,7 @@ exploration surface while the model is still being shaped.
 | `PRODUCES` / `CONSUMES` | the two sides of a Resource |
 | `REQUIRES` | demand: hard means dead without it |
 | `FILLS` | supply, weighted |
+| `IS_TRIBE` / `WANTS_TRIBE` / `MAKES_TRIBE` | what a creature is, the tribe a card is a payoff for, and the tribe of the tokens it makes -- the join a tribal deck is built on |
 | `OWNS` | qty, ordered, bench, state — **the dynamic part** |
 | `ASSIGNED_TO` | per deck: target, actual, state |
 

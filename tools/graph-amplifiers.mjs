@@ -31,7 +31,7 @@ const Classify = require("../card-classify.js");
 const GRAPH = new URL("../data/graph.json", import.meta.url);
 const CACHE_DIR = new URL("../graph/.cache/", import.meta.url);
 const CACHE = new URL("oracle-text.json", CACHE_DIR);
-const NEW_FIELDS = ["multiplies", "grants", "extends"];
+const NEW_FIELDS = ["multiplies", "grants", "extends", "wants", "makes"];
 const OLD_FIELDS = ["roles", "requires", "causes", "triggers", "produces", "mechanics", "tribes"];
 const check = process.argv.includes("--check");
 const audit = process.argv.includes("--audit");
@@ -93,6 +93,21 @@ if (wanted.length && check) {
 /* -------------------------------------------------------------- the classify */
 
 const sorted = (list) => (list || []).slice().sort().join("|");
+/* THE CREATURE-TYPE VOCABULARY. WANTS and MAKES name a tribe only when it is a real one,
+   and "real" here means a tribe some card IN THIS FILE carries: that is the set the page
+   passes when it classifies a typed card (graph.facets.tribes), the set the test passes,
+   and the only set a join inside the file can land on. The Neo4j bake classifies against
+   the format-wide list, which is broader; this pass trims the shipped file to its own
+   vocabulary, and tools/graph-amplifiers.mjs --check reporting nothing to change is the
+   proof the two agree. The cached type lines are the fallback for a file with no facet. */
+const KNOWN_TRIBES = new Set(graph.facets && graph.facets.tribes || []);
+if (!KNOWN_TRIBES.size) {
+  for (const text of Object.values(cache)) {
+    for (const t of Classify.tribesOf(text.type_line)) KNOWN_TRIBES.add(t);
+    for (const f of text.card_faces || []) for (const t of Classify.tribesOf(f.type_line)) KNOWN_TRIBES.add(t);
+  }
+}
+console.log(`${KNOWN_TRIBES.size} creature types in the shipped vocabulary`);
 let seen = 0, changed = 0, missing = 0, gameChangers = 0;
 const brackets = new Map();
 const disagree = [];
@@ -103,9 +118,9 @@ for (const card of cards) {
   if (!text) { missing += 1; continue; }
   seen += 1;
   const what = Classify.classify({
-    typeLine: text.type_line, oracleText: text.oracle_text,
+    name: text.name, typeLine: text.type_line, oracleText: text.oracle_text,
     keywords: text.keywords, card_faces: text.card_faces
-  });
+  }, {tribes: KNOWN_TRIBES});
   for (const field of FIELDS) {
     if (sorted(card[field]) !== sorted(what[field])) changed += 1;
     if (!check) card[field] = what[field];

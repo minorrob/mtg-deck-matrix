@@ -77,8 +77,20 @@ function canBeCommander(card) {
 }
 
 const cards = [], fills = [], causes = [], triggers = [], produces = [], consumes = [],
-      requires = [], mechanics = [], tribes = [], printings = [];
+      requires = [], mechanics = [], tribes = [], wants = [], makes = [], printings = [];
 let seen = 0, legal = 0;
+
+/* FIRST PASS: the creature-type vocabulary. WANTS -- the tribe a card is a payoff for --
+   is read off capitalised words in rules text, and a capitalised word is a tribe only if
+   some creature in the format carries it on its type line. Collected before any card is
+   classified so the second pass can hand the classifier the whole set. */
+const knownTribes = new Set();
+for await (const c of jsonl(`${cacheDir}/oracle_cards.jsonl`)) {
+  if (c.legalities?.commander !== "legal") continue;
+  for (const t of Classify.tribesOf(c.type_line)) knownTribes.add(t);
+  for (const f of c.card_faces || []) for (const t of Classify.tribesOf(f.type_line)) knownTribes.add(t);
+}
+console.log(`${knownTribes.size} creature types across the format`);
 
 for await (const c of jsonl(`${cacheDir}/oracle_cards.jsonl`)) {
   seen++;
@@ -108,7 +120,7 @@ for await (const c of jsonl(`${cacheDir}/oracle_cards.jsonl`)) {
   // the graph page never needs -- how often a cause fires, and whether a requirement is
   // hard -- so those come back alongside rather than being re-derived from a second copy
   // of the patterns.
-  const what = Classify.classify(c);
+  const what = Classify.classify(c, {tribes: knownTribes});
   const detail = Classify.edgeDetail(c);
   for (const e of what.triggers) triggers.push([c.oracle_id, e, detail.triggersYoursOnly]);
   for (const e of what.causes) causes.push([c.oracle_id, e, detail.causeRate]);
@@ -118,6 +130,8 @@ for await (const c of jsonl(`${cacheDir}/oracle_cards.jsonl`)) {
   for (const r of what.roles) fills.push([c.oracle_id, r, 1]);
   for (const m of what.mechanics) mechanics.push([c.oracle_id, m]);
   for (const t of what.tribes) tribes.push([c.oracle_id, t]);
+  for (const t of what.wants) wants.push([c.oracle_id, t]);
+  for (const t of what.makes) makes.push([c.oracle_id, t]);
 }
 
 // --- your overlays --------------------------------------------------------
@@ -150,6 +164,8 @@ const files = {
   "requires.csv":   rows(["oracleId","role","strength"], requires),
   "mechanics.csv":  rows(["oracleId","mechanic"], mechanics),
   "tribes.csv":     rows(["oracleId","tribe"], tribes),
+  "wants.csv":      rows(["oracleId","tribe"], wants),
+  "makes.csv":      rows(["oracleId","tribe"], makes),
   "owns.csv":       rows(["name","own","ordered","bench"], owns),
   "assigned.csv":   rows(["name","deckId","deckName","target","actual","state"], assigned)
 };
