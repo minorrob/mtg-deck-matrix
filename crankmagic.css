@@ -74,6 +74,15 @@
    beside it and behaves like the underlined text buttons elsewhere. */
 button.cm-badge-link{border:0;font:inherit;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 button.cm-badge-link:hover{background:#35507a;color:#eaf5ff}
+/* HOW OLD THE CARD DATA IS. One line in the sidebar, the four figures in the menu. Amber,
+   not red: stale data is a thing to notice on your way past, not an error to stop for. */
+.cm-data-age{margin:8px 0 0;font-size:11px;color:#8fa6c4}
+.cm-data-dates{margin:4px 0 10px;padding-bottom:8px;border-bottom:1px solid #3b465d}
+.cm-data-row{display:flex;justify-content:space-between;gap:14px;padding:3px 12px;font-size:12px;color:#b8cee8}
+.cm-data-row>span:last-child{color:#9db8d8;white-space:nowrap}
+.cm-data-stale,.cm-data-stale>span:last-child{color:#f0c86e}
+/* Unranked is a fact about EDHREC's published list, not about the commander. */
+.cm-unranked{color:#8fa6c4;font-style:italic;cursor:help}
 /* The card's name is what a reader scans the roster for; everything else in the row is a
    fact about the copy. It carries the weight so the eye lands on it first. */
 .cm-table .cm-card-name,.cm-table .cm-card-name span{font-weight:800;letter-spacing:.005em}

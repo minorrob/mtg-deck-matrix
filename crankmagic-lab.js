@@ -90,8 +90,8 @@ views.lab=async()=>{
     let rows=C.catalog.search(q,{commander:true,mechanic:mech,rankMax,limit:Infinity,colors:pickerColors.filter(k=>k!=='C')});
     if(colorless)rows=rows.filter(c=>!(c.colorIdentity||[]).length);
     const shown=rows.slice(0,shownLimit),narrowed=q||mech||rankMax||pickerColors.length;
-    results.innerHTML=rows.length?`<p class="cm-muted cm-picker-count">${rows.length.toLocaleString()} legal commander${rows.length===1?'':'s'} match · showing ${shown.length} by EDHREC popularity${narrowed?'':' — type a name, or filter by play style or colour'}</p>`
-      +shown.map(c=>{const styles=CrankCatalog.playStyles(c).slice(0,2).join(' · ');return `<div class="cm-commander-result cm-picker-row"><button type="button" class="cm-picker-choose" data-lab-commander="${e(c.id)}"><strong>${e(c.name)}</strong>${c.flavorName?`<em>${e(c.flavorName)}</em>`:''}</button><span class="cm-picker-cost">${c.manaValue!==null&&c.manaValue!==undefined?`<small class="cm-muted">MV ${e(String(c.manaValue))}</small>`:''}</span>${C.colors(c.colorIdentity)}<span class="cm-picker-meta">${c.commanderRank?'#'+Number(c.commanderRank).toLocaleString()+' · ':''}${e(styles||c.mechanics[0]||c.keywords[0]||'Explore abilities')}</span><button type="button" class="cm-text-button" data-lab-inspect="${e(c.id)}">Inspect</button></div>`;}).join('')
+    results.innerHTML=rows.length?`<p class="cm-muted cm-picker-count">${rows.length.toLocaleString()} legal commander${rows.length===1?'':'s'} match · showing ${shown.length} by EDHREC popularity${narrowed?'':' — type a name, or filter by play style or colour'}. Only the most-played thousand carry a rank; the rest follow, marked unranked.</p>`
+      +shown.map(c=>{const styles=CrankCatalog.playStyles(c).slice(0,2).join(' · ');return `<div class="cm-commander-result cm-picker-row"><button type="button" class="cm-picker-choose" data-lab-commander="${e(c.id)}"><strong>${e(c.name)}</strong>${c.flavorName?`<em>${e(c.flavorName)}</em>`:''}</button><span class="cm-picker-cost">${c.manaValue!==null&&c.manaValue!==undefined?`<small class="cm-muted">MV ${e(String(c.manaValue))}</small>`:''}</span>${C.colors(c.colorIdentity)}<span class="cm-picker-meta">${c.commanderRank?'#'+Number(c.commanderRank).toLocaleString()+' · ':'<span class="cm-unranked" title="EDHREC publishes the most-played thousand; this commander is not among them.">unranked</span> · '}${e(styles||c.mechanics[0]||c.keywords[0]||'Explore abilities')}</span><button type="button" class="cm-text-button" data-lab-inspect="${e(c.id)}">Inspect</button></div>`;}).join('')
       +(rows.length>shown.length?`<button type="button" class="v-button" data-lab-more>Show ${Math.min(45,rows.length-shown.length)} more of ${rows.length.toLocaleString()}</button>`:'')
       :'<p>No matching local commander. Search the exact name or provide its Scryfall link.</p>';
   }
@@ -332,8 +332,11 @@ views.lab=async()=>{
          and neither can the reader reviewing the draft. Two requests, not a wall later. */
       let fetchNote='';
       try{
-        const {missing}=await C.catalog.hydrate([...built.cards,...leaders],{onProgress:m=>{status.textContent=`Fetching card text · ${m.done} of ${m.total}`;}});
+const {missing,reachable}=await C.catalog.recheck([...built.cards,...leaders],{onProgress:m=>{status.textContent=`Reading card text and legality · ${m.done} of ${m.total}`;}});
         if(missing.length)fetchNote=`Scryfall did not return ${missing.length} card${missing.length===1?'':'s'}: ${missing.slice(0,5).join(', ')}${missing.length>5?'…':''}.`;
+        if(!reachable)fetchNote='Scryfall could not be reached, so this draft was built and checked against the card catalog as it was last refreshed.';
+        const banned=[...built.cards,...leaders].map(c=>C.catalog.get(c.id)||c).filter(c=>c.legalities&&c.legalities.commander&&c.legalities.commander!=='legal');
+        if(banned.length)fetchNote=`${banned.map(c=>c.name).join(', ')} ${banned.length===1?'is':'are'} no longer Commander-legal. Replace ${banned.length===1?'it':'them'} before saving this deck.`;
       }catch(err){fetchNote='Card text could not be fetched now ('+err.message+'). Measure will ask again.';}
       const cards=[...built.cards,...leaders].filter(Boolean).map(c=>C.catalog.get(c.id)||c);
       /* Null-safe on the list road: a group can be chosen before any commander is known,
