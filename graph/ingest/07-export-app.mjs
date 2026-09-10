@@ -69,6 +69,8 @@ RETURN c.oracleId AS id, c.name AS name, c.manaValue AS mv, c.colorIdentity AS c
        [(c)-[:PRODUCES]->(r:Resource) | r.id]     AS produces,
        [(c)-[:HAS_MECHANIC]->(m:Mechanic) | m.id] AS mechanics,
        [(c)-[:IS_TRIBE]->(t:Tribe) | t.id]        AS tribes,
+       [(c)-[:WANTS_TRIBE]->(t:Tribe) | t.id]     AS wants,
+       [(c)-[:MAKES_TRIBE]->(t:Tribe) | t.id]     AS makes,
        [(c)-[a:ASSIGNED_TO]->(d:Deck) | {deck: d.name, target: a.target, actual: a.actual}] AS decks
 ORDER BY c.name`);
 
@@ -91,7 +93,7 @@ const payload = {
   scope: process.argv.includes("--commanders") ? "collection + edhrec + all commanders" : "collection + edhrec",
   counts: {cards: cards.length, playedWith: played.length},
   facets: {
-    roles: facet("roles"), mechanics: facet("mechanics"), tribes: facet("tribes"),
+    roles: facet("roles"), mechanics: facet("mechanics"), tribes: facet("tribes"), wants: facet("wants"), makes: facet("makes"),
     causes: facet("causes"), triggers: facet("triggers"), produces: facet("produces"),
     requires: facet("requires"), rarity: facet("rarity"),
     colors: ["W", "U", "B", "R", "G", "C"],

@@ -60,6 +60,11 @@
     {key: "type", label: "Card type", from: (c) => CARD_TYPES.filter((t) => String(c.type || "").includes(t))},
     {key: "mechanics", label: "Mechanic", from: (c) => c.mechanics || []},
     {key: "tribes", label: "Tribe", from: (c) => c.tribes || []},
+    /* The tribe a card is a payoff FOR -- "Goblins you control get +1/+1". Tribe says
+       what a card is; this says what it is for, and the pair is how a tribal deck is
+       walked: pick a tribe here, read the lords; pick it there, read the bodies. */
+    {key: "wants", label: "Wants tribe", from: (c) => c.wants || []},
+    {key: "makes", label: "Makes tribe", from: (c) => c.makes || []},
 
     /* THE FOUR DIRECTED ONES, in the order a chain is built. A card TRIGGERS on an event,
        another CAUSES it; a card PRODUCES a resource, another REQUIRES it; a card MULTIPLIES

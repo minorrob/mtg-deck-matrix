@@ -1,6 +1,17 @@
 // Loads the CSVs from 02-build-csv.mjs. Run after schema/constraints.cypher.
 //   cat graph/schema/constraints.cypher graph/ingest/03-load.cypher | cypher-shell -u neo4j -p mtggraph
 
+// DERIVED EDGES ARE REPLACED, NOT MERGED ONTO. Every edge below is a function of the
+// rules text and the classifier; a reload that only MERGEs keeps every edge the previous
+// classifier drew, and the database drifts from its own source without a single error.
+// The 2026-09 audit found 3,085 CAUSES edges to an event the classifier had retired and
+// 1,007 IS_TRIBE edges to "//" and "Legendary" still standing after a rebuild. Cards,
+// Printings and the overlays (OWNS, ASSIGNED_TO) are keyed and safe to MERGE; these are not.
+MATCH ()-[r:FILLS|CAUSES|TRIGGERS_ON|PRODUCES|CONSUMES|REQUIRES|HAS_MECHANIC|IS_TRIBE|WANTS_TRIBE|MAKES_TRIBE]->()
+CALL (r) { DELETE r } IN TRANSACTIONS OF 20000 ROWS;
+MATCH (n) WHERE (n:Event OR n:Resource OR n:Role OR n:Mechanic OR n:Tribe) AND NOT (n)--()
+CALL (n) { DELETE n } IN TRANSACTIONS OF 20000 ROWS;
+
 LOAD CSV WITH HEADERS FROM 'file:///cards.csv' AS r
 CALL (r) {
   MERGE (c:Card {oracleId: r.oracleId})
@@ -51,6 +62,18 @@ IN TRANSACTIONS OF 5000 ROWS;
 
 LOAD CSV WITH HEADERS FROM 'file:///tribes.csv' AS r
 CALL (r) { MATCH (c:Card {oracleId: r.oracleId}) MERGE (t:Tribe {id: r.tribe}) MERGE (c)-[:IS_TRIBE]->(t) }
+IN TRANSACTIONS OF 5000 ROWS;
+
+// The tribe a card is a payoff FOR, as opposed to the tribe it is. Goblin Chieftain
+// IS_TRIBE Goblin and WANTS_TRIBE Goblin; Coat of Arms wants none by name.
+LOAD CSV WITH HEADERS FROM 'file:///wants.csv' AS r
+CALL (r) { MATCH (c:Card {oracleId: r.oracleId}) MERGE (t:Tribe {id: r.tribe}) MERGE (c)-[:WANTS_TRIBE]->(t) }
+IN TRANSACTIONS OF 5000 ROWS;
+
+// The tribe of the tokens a card creates: Krenko MAKES_TRIBE Goblin. The supply side of
+// the tribal join, for payoffs whose members are tokens rather than cards.
+LOAD CSV WITH HEADERS FROM 'file:///makes.csv' AS r
+CALL (r) { MATCH (c:Card {oracleId: r.oracleId}) MERGE (t:Tribe {id: r.tribe}) MERGE (c)-[:MAKES_TRIBE]->(t) }
 IN TRANSACTIONS OF 5000 ROWS;
 
 // --- your overlays. These are the only mutable part of the graph. -----------

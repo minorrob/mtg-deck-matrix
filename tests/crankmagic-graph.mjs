@@ -130,6 +130,79 @@ ok("a doubler that names no event still reaches cards that have triggers", () =>
 
 /* --------------------------------------------------------------- grant and extend */
 
+/* ------------------------------------------------------------ supply and demand */
+
+ok("a card that needs bodies is joined to one that supplies them", () => {
+  /* Goblin Bombardment says "sacrifice a creature:"; it needs creatures. Krenko is one and
+     makes more. This join compared resource ids against role ids until 2026-09 and had
+     never fired once across the corpus -- the case exists so it cannot go quiet again. */
+  const r = relate("Krenko, Mob Boss", "Goblin Bombardment");
+  assert.ok(r, "Krenko and Goblin Bombardment must be joined");
+  assert.ok(r.feeds.includes("creatures"), `feeds was ${JSON.stringify(r.feeds)}`);
+  const back = relate("Goblin Bombardment", "Krenko, Mob Boss");
+  assert.ok(back.fed.includes("creatures"), `fed was ${JSON.stringify(back.fed)}`);
+  assert.equal(back.score, r.score);
+});
+
+ok("a specific supply outweighs a generic one", () => {
+  /* Being a creature satisfies "needs creatures" and most of the deck can say so; making
+     +1/+1 counters for a counters payoff is a relationship. Walking Ballista needs counters,
+     Cathars' Crusade puts them on everything. */
+  const specific = relate("Cathars' Crusade", "Walking Ballista");
+  assert.ok(specific && specific.feeds.includes("counters"), `feeds was ${JSON.stringify(specific && specific.feeds)}`);
+  const generic = relate("Krenko, Mob Boss", "Goblin Bombardment");
+  const only = (r, term) => r.feeds.length === 1 && r.feeds[0] === term && !r.fires.length && !r.firedBy.length && !r.multiplied.length && !r.multiplies.length && !r.tribal.length && !r.tribalBy.length;
+  if (only(specific, "counters") && only(generic, "creatures")) {
+    assert.ok(specific.score > generic.score, `counters scored ${specific.score}, creatures ${generic.score}`);
+  }
+});
+
+/* --------------------------------------------------------------------- the tribe */
+
+ok("a tribal payoff is joined to a member of its tribe", () => {
+  /* Goblin Chieftain: "Other Goblin creatures you control get +1/+1 and have haste."
+     Krenko is a Goblin. No event, resource or quality joins them; the type line does. */
+  const r = relate("Goblin Chieftain", "Krenko, Mob Boss");
+  assert.ok(r, "Goblin Chieftain and Krenko must be joined");
+  assert.ok(r.tribal.includes("Goblin"), `tribal was ${JSON.stringify(r.tribal)}`);
+  const back = relate("Krenko, Mob Boss", "Goblin Chieftain");
+  assert.ok(back.tribalBy.includes("Goblin"), `tribalBy was ${JSON.stringify(back.tribalBy)}`);
+});
+
+ok("a token maker is joined to the payoff for the tokens it makes", () => {
+  /* Slimefoot pays off Saprolings; Sporemound makes them. Sporemound is a Fungus, so the
+     type line never says Saproling -- the tokens do, and MAKES is where that is read. */
+  const r = relate("Slimefoot, the Stowaway", "Sporemound");
+  assert.ok(r, "Slimefoot and Sporemound must be joined");
+  assert.ok(r.tribal.includes("Saproling"), `tribal was ${JSON.stringify(r.tribal)}`);
+});
+
+ok("a creature-cast commander is joined to a creature", () => {
+  /* Chulane draws whenever you cast a creature spell. A generic cast-spell event has no
+     cause side -- every card is a spell -- so a typed one does: being a creature is the
+     cause. Without it a creature deck built around a creature-cast commander read as
+     ninety strangers, below the random-pair baseline. */
+  const creature = graph.cards.find((c) => /^Creature/.test(c.type || "") && !(c.triggers || []).length && !(c.wants || []).length);
+  const r = relate("Chulane, Teller of Tales", creature.name);
+  assert.ok(r, `Chulane and ${creature.name} must be joined`);
+  assert.ok(r.firedBy.includes("cast-creature"), `firedBy was ${JSON.stringify(r.firedBy)}`);
+  const bolt = relate("Chulane, Teller of Tales", "Lightning Bolt");
+  assert.ok(!bolt || !bolt.firedBy.includes("cast-creature"), "an instant is not a creature spell");
+});
+
+ok("being a tribe is not wanting it", () => {
+  /* Two Humans with nothing in common share a type line and nothing else. The tribal
+     join needs one side to NAME the tribe, or every creature type becomes a clique. */
+  const humans = graph.cards.filter((c) => (c.tribes || []).includes("Human") && !(c.wants || []).length);
+  assert.ok(humans.length > 50, "the bake must carry plenty of Humans that are payoffs for nothing");
+  let joinedByTribe = 0;
+  for (let i = 1; i < Math.min(humans.length, 60); i += 1) {
+    const r = Graph.relate(humans[0], humans[i]);
+    if (r && (r.tribal.length || r.tribalBy.length)) joinedByTribe += 1;
+  }
+  assert.equal(joinedByTribe, 0, `${joinedByTribe} Human pairs were joined by tribe alone`);
+});
+
 ok("a card that grants a quality is joined to one that spreads it", () => {
   const r = relate("Swiftfoot Boots", "Heroic Intervention");
   assert.ok(r.extended.includes("hexproof"), `extended was ${JSON.stringify(r.extended)}`);

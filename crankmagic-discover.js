@@ -215,7 +215,9 @@
         ...rel.multiplies.map((t) => termChip('multiplies', t)),
         ...rel.extended.map((t) => termChip('extends', t)),
         ...rel.extendedBy.map((t) => termChip('extends', t)),
-        ...rel.feeds.map((t) => termChip('produces', t)),
+        ...rel.tribal.map((t) => termChip('tribes', t)),
+        ...rel.tribalBy.map((t) => termChip('wants', t)),
+        ...rel.feeds.map((t) => termChip('roles', t)),
         ...rel.fed.map((t) => termChip('requires', t)),
         ...rel.shared.map((t) => termChip(keyOf(from, t), t))
       ];
@@ -283,7 +285,7 @@
        catalog record has the text and the art; the graph row has the terms. */
     const TERM_FACET = {mechanics: 'mechanics', roles: 'roles', triggers: 'triggers', causes: 'causes',
       multiplies: 'multiplies', produces: 'produces', requires: 'requires',
-      grants: 'grants', extends: 'extends', tribes: 'tribes'};
+      grants: 'grants', extends: 'extends', tribes: 'tribes', wants: 'wants', makes: 'makes'};
     let lastInfo = null, lastDrawn = '';
 
     /* BACK BELONGS TO THE GRAPH, NOT TO THE CARD. It undoes a move on the canvas, so it

@@ -27,7 +27,10 @@ const ok = (label, fn) => { fn(); checks += 1; process.stdout.write(`  ok  ${lab
 
 const norm = (n) => String(n || "").toLowerCase().replace(/\s+/g, " ").trim();
 const baked = new Map(graph.cards.map((c) => [norm(c.name), c]));
-const FIELDS = ["roles", "requires", "causes", "triggers", "produces", "multiplies", "grants", "extends", "mechanics", "tribes"];
+const FIELDS = ["roles", "requires", "causes", "triggers", "produces", "multiplies", "grants", "extends", "mechanics", "tribes", "wants", "makes"];
+/* WANTS names a tribe only from the vocabulary the bake was built with; the page passes
+   the same facet, so this is the call the page makes. */
+const TRIBES = new Set(graph.facets.tribes || []);
 const sorted = (list) => (list || []).slice().sort().join("|");
 
 const overlap = cards.filter((c) => baked.has(norm(c.name)));
@@ -40,7 +43,7 @@ ok("the catalog and the bake share enough cards to be worth comparing", () => {
 ok(`re-deriving ${overlap.length} baked cards from their rules text reproduces the bake`, () => {
   const wrong = [];
   overlap.forEach((card) => {
-    const mine = Classify.classify(card);
+    const mine = Classify.classify(card, {tribes: TRIBES});
     const theirs = baked.get(norm(card.name));
     FIELDS.forEach((field) => {
       if (sorted(mine[field]) !== sorted(theirs[field])) {
@@ -60,7 +63,9 @@ ok("every vocabulary the bake uses is one this module can still produce", () => 
     roles: new Set(Classify.ROLE_PATTERNS.map((r) => r.id)
       .concat(Classify.SUPPLY_ROLES.map((r) => r.id), Classify.SUPPLY_TEXT.map((r) => r.id))),
     requires: new Set(Classify.REQUIRES.map((r) => r.role)),
-    causes: new Set(Classify.EVENTS.filter((e) => e.cause).map((e) => e.id)),
+    /* A typed cast is caused by the type line rather than the rules text, so its
+       cause side is causeType; both are causes the bake may name. */
+    causes: new Set(Classify.EVENTS.filter((e) => e.cause || e.causeType).map((e) => e.id)),
     triggers: new Set(Classify.EVENTS.filter((e) => e.listen).map((e) => e.id)),
     produces: new Set(Classify.RESOURCES.filter((r) => r.produce).map((r) => r.id)),
     multiplies: new Set(Classify.MULTIPLIERS.map((m) => m.id)),
