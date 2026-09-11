@@ -166,6 +166,7 @@
             <div class="cm-graph-pop" id="cm-graph-pop" role="dialog" aria-label="Connection details" hidden></div>
           </div>
         </div>
+        <div class="cm-pane-gutter" id="cm-pane-gutter" role="separator" aria-orientation="vertical" tabindex="0" aria-label="Resize the card pane. Drag it, or use the arrow keys. Double-click to reset." title="Drag to resize · double-click to reset"><i></i></div>
         <aside class="v-panel cm-card-view" id="cm-card-view" aria-live="polite"><div class="cm-pane-tabs" role="tablist" aria-label="Card pane">${tabButton('card', 'Card Info')}${tabButton('list', 'List')}</div><div id="cm-pane-body"></div></aside>
       </div>`;
 
@@ -198,6 +199,40 @@
       });
     }
     addEventListener('resize', sizePane);
+
+    /* THE DIVIDER. The pane's width is the reader's to set: drag the gutter, or focus it and
+       use the arrow keys; double-click puts it back. Remembered per device and per mode --
+       the width that suits a laptop on a table in stage mode is not the width that suits a
+       desk -- so it lives in localStorage rather than in the library, which travels. As the
+       pane narrows the list sheds columns in a fixed order (Link, then Color, then Price;
+       the name and the tick stay), and grows them back as it widens. */
+    const paneKey = () => `crankmagic:paneWidth:${stage ? 'stage' : 'default'}`;
+    function paneWidthStored() { try { const v = Number(localStorage.getItem(paneKey())); return v > 0 ? v : null; } catch { return null; } }
+    function setPaneWidth(w, persist) {
+      const grid = document.querySelector('.cm-graph-grid'); if (!grid) return;
+      if (w === null) grid.style.removeProperty('--cm-pane-w'); else grid.style.setProperty('--cm-pane-w', Math.round(w) + 'px');
+      if (persist) { try { if (w === null) localStorage.removeItem(paneKey()); else localStorage.setItem(paneKey(), String(Math.round(w))); } catch { /* private mode: the width lasts for the visit */ } }
+    }
+    function clampPane(w) { const grid = document.querySelector('.cm-graph-grid'); const max = grid ? Math.max(260, grid.clientWidth * 0.6) : 900; return Math.min(max, Math.max(240, w)); }
+    /* Which columns each width can carry. Dropped from the markup rather than hidden with
+       CSS: under a fixed table layout a display:none column still keeps its width. */
+    const BAND_DROPS = {l: [], m: ['link'], s: ['link', 'color'], xs: ['link', 'color', 'price']};
+    function bandPane() { if (!pane) return; const w = pane.clientWidth; const band = w >= 380 ? 'l' : w >= 330 ? 'm' : w >= 290 ? 's' : 'xs'; if (pane.dataset.w === band) return; const had = pane.dataset.w; pane.dataset.w = band; if (had && paneTab === 'list') drawList(); }
+    const paneObserver = new ResizeObserver(bandPane); paneObserver.observe(pane); bandPane();
+    const gutter = $('#cm-pane-gutter');
+    let dragging = null;
+    const settle = () => { sizePane(); dispatchEvent(new Event('resize')); };
+    gutter.addEventListener('pointerdown', (ev) => { if (ev.button) return; dragging = {right: gutter.parentElement.getBoundingClientRect().right}; gutter.setPointerCapture(ev.pointerId); gutter.classList.add('is-dragging'); ev.preventDefault(); });
+    gutter.addEventListener('pointermove', (ev) => { if (dragging) setPaneWidth(clampPane(dragging.right - ev.clientX - 6), false); });
+    const endDrag = () => { if (!dragging) return; dragging = null; gutter.classList.remove('is-dragging'); const w = parseFloat(gutter.parentElement.style.getPropertyValue('--cm-pane-w')); if (w) setPaneWidth(w, true); settle(); };
+    gutter.addEventListener('pointerup', endDrag); gutter.addEventListener('pointercancel', endDrag);
+    gutter.addEventListener('dblclick', () => { setPaneWidth(null, true); settle(); });
+    gutter.addEventListener('keydown', (ev) => {
+      const step = ev.key === 'ArrowLeft' ? 24 : ev.key === 'ArrowRight' ? -24 : 0;
+      if (!step && ev.key !== 'Home') return;
+      ev.preventDefault(); if (step) setPaneWidth(clampPane(pane.clientWidth + step), true); else setPaneWidth(null, true); settle();
+    });
+    setPaneWidth(paneWidthStored(), false);
 
     function mount(cards, focusId) {
       const history = graph ? graph.history() : [];
@@ -398,7 +433,7 @@
       all.sort((x, y) => { if (key === 'ring') return (x.depth - y.depth) * dir || x.name.localeCompare(y.name); const val = (r) => key === 'color' ? r.ci.length + r.ci : r[key]; const a = val(x), b = val(y); if (a === null || a === undefined) return 1; if (b === null || b === undefined) return -1; return (typeof a === 'number' ? a - b : String(a).localeCompare(String(b))) * dir || x.name.localeCompare(y.name); });
       const pages = Math.max(1, Math.ceil(all.length / LIST_PAGE)); listPage = Math.min(listPage, pages - 1);
       const rows = all.slice(listPage * LIST_PAGE, listPage * LIST_PAGE + LIST_PAGE);
-      const cols = stage ? LIST_COLS.filter(([k]) => k !== 'price') : LIST_COLS;
+      const drop = BAND_DROPS[pane.dataset.w] || []; const cols = LIST_COLS.filter(([k]) => !(stage && k === 'price') && !drop.includes(k));
       const allTicked = rows.length > 0 && rows.every((r) => picked.has(r.id));
       const pickedRows = all.filter((r) => picked.has(r.id));
       const paging = `<div class="cm-paging cm-list-paging"><span>${all.length} card${all.length === 1 ? '' : 's'}${pages > 1 ? ` · page ${listPage + 1} of ${pages}` : ''}</span><div class="cm-actions"><button type="button" class="v-button compact" data-action="list-page" data-step="-1" ${listPage === 0 ? 'disabled' : ''}>Previous</button><button type="button" class="v-button compact" data-action="list-page" data-step="1" ${listPage + 1 >= pages ? 'disabled' : ''}>Next</button></div></div>`;
@@ -638,7 +673,7 @@
     /* The canvas is drawn to its own measured size and watched by a ResizeObserver, so the
        layout change is enough to redraw it; sizePane() is nudged because the pane's height
        is written in pixels off the canvas rather than read from the grid. */
-    actions['graph-stage'] = () => { stage = !stage; if (!stage) tools = false; applyStage(); hidePop();
+    actions['graph-stage'] = () => { stage = !stage; if (!stage) tools = false; applyStage(); hidePop(); setPaneWidth(paneWidthStored(), false);
       $('.cm-tools-toggle')?.replaceWith(Object.assign(document.createElement('div'), {innerHTML: toolsButton()}).firstElementChild);
       const host = $('.cm-graph-box'); if (host) host.querySelector('.cm-stage-btn')?.replaceWith(
         Object.assign(document.createElement('div'), {innerHTML: stageButton()}).firstElementChild);
@@ -692,7 +727,7 @@
     $('[name=edgeType]').addEventListener('change', (ev) => graph?.setType(ev.target.value));
 
     return () => { document.getElementById('matrix-v2')?.classList.remove('cm-stage', 'cm-tools-open');
-      document.removeEventListener('keydown', onKey); document.removeEventListener('click', onDocClick); removeEventListener('resize', sizePane); cancelAnimationFrame(paneFrame); graph?.destroy(); graph = null; };
+      document.removeEventListener('keydown', onKey); document.removeEventListener('click', onDocClick); removeEventListener('resize', sizePane); paneObserver.disconnect(); cancelAnimationFrame(paneFrame); graph?.destroy(); graph = null; };
   };
 
   actions['graph-lookup'] = () => C.cardPicker('Find a card to explore', async (c) => {
