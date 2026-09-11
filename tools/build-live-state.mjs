@@ -31,6 +31,14 @@ export async function bundledLookup({scryfall=null}={}){
   for(const [name,ci,rarity,mv,type,rank,commander] of universe.cards)add({name,ci,rarity,mv,type,rank,commander:!!commander,verified:true,legalities:{commander:'legal'},updatedAt:universe.generatedAt});
   for(const c of cards.cards)add(c);
   if(scryfall){const stamp=new Date().toISOString();for(const raw of Object.values(scryfall)){if(!raw||raw.object!=='card')continue;add({...Scryfall.normalizeCard(raw),verified:true,source:'Scryfall exact name',updatedAt:stamp});}}
+  /* A REBUILD NEVER LOSES A PRICE THE COMMITTED FILE HAD. The bundled catalog prices about
+     four in five of the live cards; the rest were priced by a Scryfall fetch handed to this
+     tool once with --scryfall. A rebuild run without that file used to drop those prices --
+     124 of them, and the Shop's total with them -- so the committed state is read first and
+     every price it carries is kept unless the run brings a fresher one. */
+  try{const prior=JSON.parse(await readFile(TARGET,'utf8'));const cards=prior&&prior.payload&&prior.payload.state&&prior.payload.state.cards||{};
+    for(const c of Object.values(cards)){if(!Number.isFinite(c.price))continue;const have=byName.get(Catalog.folded(c.name));if(have&&!Number.isFinite(have.price))add({...have,price:c.price,priceUpdated:c.priceUpdated||have.priceUpdated,priceSource:c.priceSource||have.priceSource,cheapestSet:c.cheapestSet||have.cheapestSet,printings:c.printings||have.printings});}}
+  catch{/* No committed file yet: nothing to carry forward. */}
   const alias=new Map();for(const [flavor,name] of flavors.cards||[]){const c=byName.get(Catalog.folded(name));if(c&&!byName.has(Catalog.folded(flavor)))alias.set(Catalog.folded(flavor),c);}
   const byFront=new Map();for(const c of byName.values()){const f=Catalog.folded(Live.front(c.name));if(f!==Catalog.folded(c.name)&&!byFront.has(f))byFront.set(f,c);}
   return name=>{const k=Catalog.folded(name);return byName.get(k)||alias.get(k)||byFront.get(k)||null;};
