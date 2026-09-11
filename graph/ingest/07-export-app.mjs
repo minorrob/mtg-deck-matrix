@@ -89,6 +89,18 @@ console.log(`  ${played.length.toLocaleString()} PLAYED_WITH edges`);
 
 const decks = await cypher(`MATCH (d:Deck) RETURN d.id AS id, d.name AS name ORDER BY d.id`);
 
+/* AN ABSENT FIELD AND AN EMPTY ONE MEAN THE SAME THING, and one of them is free. Every
+   reader asks `c.field || []`, so a card that fills no role, wants no tribe and offers no
+   stat need not say so eleven times -- across 7,777 cards that was 0.77 MB of "[]" in a
+   file every visitor downloads before the first card is drawn. Power and toughness go the
+   same way: most cards are not creatures and have neither. */
+const EMPTIABLE = ["roles", "requires", "causes", "triggers", "produces", "mechanics", "tribes",
+  "wants", "makes", "wantsStat", "offersStat", "decks", "multiplies", "grants", "extends"];
+for (const card of cards) {
+  for (const key of EMPTIABLE) if (Array.isArray(card[key]) && !card[key].length) delete card[key];
+  for (const key of ["pow", "tou"]) if (card[key] === null || card[key] === "") delete card[key];
+}
+
 // Facet values, computed here so the side pane does not have to scan on load.
 const facet = (key) => [...new Set(cards.flatMap((c) => Array.isArray(c[key]) ? c[key] : [c[key]]).filter(Boolean))].sort();
 const payload = {

@@ -127,7 +127,9 @@ for (const card of cards) {
   }, {tribes: KNOWN_TRIBES});
   for (const field of FIELDS) {
     if (sorted(card[field]) !== sorted(what[field])) changed += 1;
-    if (!check) card[field] = what[field];
+    /* Written only when it says something. The export drops empty arrays to keep the
+       shipped file small, and re-adding them here would undo that on every run. */
+    if (!check) { if (what[field].length) card[field] = what[field]; else delete card[field]; }
     for (const v of what[field]) totals[field].set(v, (totals[field].get(v) || 0) + 1);
   }
   /* GAME CHANGER is Scryfall's own flag, not something rules text can be read for -- it is
