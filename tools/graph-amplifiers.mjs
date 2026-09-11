@@ -4,6 +4,9 @@
 //   node tools/graph-amplifiers.mjs --check    # re-derive and report, change nothing
 //   node tools/graph-amplifiers.mjs --audit    # also report where the OLD fields disagree
 //   node tools/graph-amplifiers.mjs --all      # rewrite every classified field, not just the new three
+//   node tools/graph-amplifiers.mjs --from-bulk graph/.cache/oracle_cards.jsonl
+//                                              # fill the text cache from the Scryfall bulk file
+//                                              # 01-fetch already pulled, instead of asking the API
 //
 // WHY THIS EXISTS RATHER THAN A NEO4J RE-RUN. graph/ingest/ builds data/graph.json out
 // of a 90 MB Scryfall bulk file and a Neo4j load, which is the right pipeline for a
@@ -57,6 +60,30 @@ try { cache = JSON.parse(await readFile(CACHE, "utf8")); } catch { cache = {}; }
 const before = Object.keys(cache).length;
 if (before) console.log(`${before} cards' rules text already cached`);
 
+/* --from-bulk: the bake's own oracle_cards.jsonl carries every field this cache keeps, for
+   every legal card, so a whole-format pass needs no API round at all. Same shape as the
+   API answer below, so --check and the classify step cannot tell the two apart. */
+const bulk = process.argv.indexOf("--from-bulk") >= 0 ? process.argv[process.argv.indexOf("--from-bulk") + 1] : null;
+if (bulk) {
+  const {createReadStream} = await import("node:fs");
+  const {createInterface} = await import("node:readline");
+  const need = new Set(cards.map((c) => c.id));
+  let filled = 0;
+  for await (const line of createInterface({input: createReadStream(bulk), crlfDelay: Infinity})) {
+    const t = line.trim().replace(/,$/, ""); if (!t || t === "[" || t === "]") continue;
+    const raw = JSON.parse(t);
+    if (!need.has(raw.oracle_id)) continue;
+    cache[raw.oracle_id] = {
+      name: raw.name, type_line: raw.type_line || "", oracle_text: raw.oracle_text || "",
+      keywords: raw.keywords || [], game_changer: Boolean(raw.game_changer),
+      card_faces: (raw.card_faces || []).map((f) => ({oracle_text: f.oracle_text || "", type_line: f.type_line || ""}))
+    };
+    filled += 1;
+  }
+  await mkdir(CACHE_DIR, {recursive: true});
+  await writeFile(CACHE, JSON.stringify(cache), "utf8");
+  console.log(`${filled} cards' rules text filled from ${bulk}`);
+}
 /* A cached entry from before game_changer was captured is refetched: a missing flag and
    a false one look the same in JSON, and the difference is a whole bracket. */
 const wanted = cards.map((c) => c.id).filter((id) => id && (!cache[id] || cache[id].game_changer === undefined));

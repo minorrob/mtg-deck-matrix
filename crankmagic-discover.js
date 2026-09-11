@@ -107,6 +107,21 @@
       if (!names.has(c.name)) data.cards.push({...c, id: c.oracleId || c.id, type: c.typeLine, ci: (c.colorIdentity || []).join(''), image: c.image});
     }
 
+    /* THE UNIVERSE, EXPLAINED ONCE. The count beside the filters is the whole format, and
+       a reader is entitled to ask why that number and not another. Every figure here is
+       read off the file itself, so it cannot drift from what the graph is drawing. */
+    function universeHint(g) {
+      const total = (g.counts && g.counts.cards) || g.cards.length, links = (g.counts && g.counts.playedWith) || (g.played || []).length;
+      const commanders = g.cards.filter((c) => c.isCommander).length;
+      const whole = /^every/i.test(g.scope || '');
+      const when = g.generatedAt ? new Date(g.generatedAt).toLocaleDateString(undefined, {year: 'numeric', month: 'long', day: 'numeric'}) : '';
+      const body = whole
+        ? `<p><strong>${total.toLocaleString()} cards</strong> is every card legal in Commander, as Scryfall lists the format — one entry per card, not per printing. <strong>${commanders.toLocaleString()}</strong> of them can lead a deck, and every one of those is here.</p>
+           <p>Two kinds of evidence join them. What a card <em>does</em> — what it causes, triggers on, produces, multiplies, the tribe it is or wants — is read off every card's rules text by the same classifier that reads a card you type. What people <em>actually play</em> comes from EDHREC: for each of the ${commanders.toLocaleString()} commanders, the cards its real decks run alongside it, <strong>${links.toLocaleString()}</strong> co-play links in all.</p>
+           <p>So if a card is legal, it is here; if any commander's players play it, that link is here too. A Commander deck cannot legally contain anything outside this set, which is why you can treat it as the definitive universe of cards you will care about — for any commander, not only the ones you own.</p>`
+        : `<p><strong>${total.toLocaleString()} cards</strong> — this build's scope is <em>${e(g.scope || 'unknown')}</em>: cards that were owned, named by a deck, linked by EDHREC to those decks' commanders, or able to lead a deck (${commanders.toLocaleString()}). Any other legal card can still be typed into Find a card and brought in as a visitor.</p>`;
+      return `<details class="cm-inline-menu cm-hint cm-universe-hint"><summary class="cm-hint-btn" aria-label="What is this universe of cards?" title="What is this universe of cards?">?</summary><div class="cm-menu cm-inline-menu-body cm-hint-body cm-universe-body"><h4>The universe</h4>${body}${when ? `<p class="cm-muted">Refreshed ${e(when)}.</p>` : ''}</div></details>`;
+    }
     const wanted = C.catalog.get(params.get('card'));
     const facets = CrankFacets.available(C.state);
     const values = CrankFacets.values(data.cards, C.state);
@@ -148,7 +163,7 @@
       </details>
 
       <div class="cm-facet-status">
-        <p role="status" id="cm-facet-count"></p>
+        <p role="status" id="cm-facet-count"></p>${universeHint(loaded)}
         <div class="cm-actions" id="cm-facet-chips"></div>
         <div class="cm-graph-reach">
           <label>Depth <output id="cm-depth-out">${depth}</output><input type="range" id="cm-depth" min="1" max="3" step="1" value="${depth}" aria-label="How many hops from the focused card"></label>

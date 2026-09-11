@@ -10,6 +10,13 @@
 // import: 70 of 78 names resolved narrow, 73 of 78 wide, and the one the narrow
 // scope lost was the commander.
 //   node graph/ingest/07-export-app.mjs --out data/graph.json
+//   node graph/ingest/07-export-app.mjs --universe --out data/graph.json
+//
+// --universe IS THE SCOPE THAT SHIPS NOW. Every Commander-legal card, every legal
+// commander, and the EDHREC co-play of every one of them (04-fetch-edhrec --universe).
+// The narrower scopes stay for a quick local bake. The whole format is the point: a
+// reader whose commander is nobody's deck here still lands with its whole neighbourhood,
+// and a card is in the file because it is legal, not because somebody here owned it.
 //
 // WHY AN EXPORT AND NOT A LIVE CONNECTION. The app is a static site with no
 // backend, which is what lets it work at a table with no wifi. Neo4j is the
@@ -50,7 +57,8 @@ const BASE = `EXISTS { (:Collection)-[:OWNS]->(c) }
    OR EXISTS { (c)-[:ASSIGNED_TO]->(:Deck) }
    OR EXISTS { (:Card)-[:PLAYED_WITH]->(c) }
    OR EXISTS { (c)-[:PLAYED_WITH]->(:Card) }`;
-const scope = process.argv.includes("--commanders") ? `${BASE} OR c.canBeCommander` : BASE;
+const universe = process.argv.includes("--universe");
+const scope = universe ? "c.commanderLegal" : process.argv.includes("--commanders") ? `${BASE} OR c.canBeCommander` : BASE;
 
 console.log("querying cards...");
 const cards = await cypher(`
@@ -105,7 +113,7 @@ for (const card of cards) {
 const facet = (key) => [...new Set(cards.flatMap((c) => Array.isArray(c[key]) ? c[key] : [c[key]]).filter(Boolean))].sort();
 const payload = {
   generatedAt: new Date().toISOString(),
-  scope: process.argv.includes("--commanders") ? "collection + edhrec + all commanders" : "collection + edhrec",
+  scope: universe ? "every Commander-legal card + every legal commander's EDHREC co-play" : process.argv.includes("--commanders") ? "collection + edhrec + all commanders" : "collection + edhrec",
   counts: {cards: cards.length, playedWith: played.length},
   facets: {
     roles: facet("roles"), mechanics: facet("mechanics"), tribes: facet("tribes"), wants: facet("wants"), makes: facet("makes"),
