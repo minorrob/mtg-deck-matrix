@@ -27,7 +27,7 @@ const ok = (label, fn) => { fn(); checks += 1; process.stdout.write(`  ok  ${lab
 
 const norm = (n) => String(n || "").toLowerCase().replace(/\s+/g, " ").trim();
 const baked = new Map(graph.cards.map((c) => [norm(c.name), c]));
-const FIELDS = ["roles", "requires", "causes", "triggers", "produces", "multiplies", "grants", "extends", "mechanics", "tribes", "wants", "makes"];
+const FIELDS = ["roles", "requires", "causes", "triggers", "produces", "multiplies", "grants", "extends", "mechanics", "tribes", "wants", "makes", "wantsStat", "offersStat"];
 /* WANTS names a tribe only from the vocabulary the bake was built with; the page passes
    the same facet, so this is the call the page makes. */
 const TRIBES = new Set(graph.facets.tribes || []);
@@ -70,7 +70,9 @@ ok("every vocabulary the bake uses is one this module can still produce", () => 
     produces: new Set(Classify.RESOURCES.filter((r) => r.produce).map((r) => r.id)),
     multiplies: new Set(Classify.MULTIPLIERS.map((m) => m.id)),
     grants: new Set(Classify.QUALITIES.map((q) => q.id)),
-    extends: new Set(Classify.QUALITIES.map((q) => q.id).concat("keywords"))
+    extends: new Set(Classify.QUALITIES.map((q) => q.id).concat("keywords")),
+    wantsStat: new Set(Classify.STAT_WANTS.map((q) => q.id)),
+    offersStat: new Set(Classify.STAT_WANTS.map((q) => q.id))
   };
   const missing = [];
   Object.keys(mine).forEach((field) => {

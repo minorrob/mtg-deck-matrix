@@ -94,7 +94,7 @@
                    the terms the graph joins cards on, which is what makes a swap a swap.
          what it is     the same primary type, weighed last: a sorcery that does the
                    creature's job is often the better card. */
-    const LIKE_FIELDS=['mechanics','roles','causes','triggers','multiplies','grants','extends','tribes','wants','makes'];
+    const LIKE_FIELDS=['mechanics','roles','causes','triggers','multiplies','grants','extends','tribes','wants','makes','wantsStat','offersStat'];
     const GENERIC_ROLE=new Set(['creatures','lands','artifacts','enchantments','instants','sorceries','planeswalkers']);
     function likeTerms(c){const out=new Set();for(const field of LIKE_FIELDS)for(const t of c[field]||[]){if(field==='roles'&&GENERIC_ROLE.has(t))continue;out.add(field+':'+t);}return out;}
     const primaryType=c=>String(c.typeLine||'').split('—')[0].trim().replace(/^(Legendary|Basic|Snow|Artifact |Enchantment )+/,'').trim()||String(c.typeLine||'').split('—')[0].trim();

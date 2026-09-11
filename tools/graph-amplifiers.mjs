@@ -31,7 +31,11 @@ const Classify = require("../card-classify.js");
 const GRAPH = new URL("../data/graph.json", import.meta.url);
 const CACHE_DIR = new URL("../graph/.cache/", import.meta.url);
 const CACHE = new URL("oracle-text.json", CACHE_DIR);
-const NEW_FIELDS = ["multiplies", "grants", "extends", "wants", "makes"];
+/* offersStat is deliberately NOT here. It is a function of power and toughness, which the
+   rules-text cache does not carry, so this pass would compute an empty array for every card
+   and wipe what the bake read off the printed numbers. The Neo4j pipeline owns that field;
+   tests/card-classify.mjs still holds both sides to the same classifier. */
+const NEW_FIELDS = ["multiplies", "grants", "extends", "wants", "makes", "wantsStat"];
 const OLD_FIELDS = ["roles", "requires", "causes", "triggers", "produces", "mechanics", "tribes"];
 const check = process.argv.includes("--check");
 const audit = process.argv.includes("--audit");

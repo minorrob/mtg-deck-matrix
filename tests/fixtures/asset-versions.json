@@ -62,12 +62,12 @@
       "sha": "b4cc36093b2df3e8"
     },
     "card-catalog.js": {
-      "version": 10,
-      "sha": "e39efe66721f19dd"
+      "version": 11,
+      "sha": "27682037bdfdbf03"
     },
     "card-classify.js": {
-      "version": 5,
-      "sha": "1ccd3b883f56c788"
+      "version": 6,
+      "sha": "90cffa7c0e094fb0"
     },
     "card-link.js": {
       "version": 1,
@@ -98,12 +98,12 @@
       "sha": "c3e25a8c22b78eea"
     },
     "crankmagic-app.js": {
-      "version": 95,
-      "sha": "7e72f55df2bb2ace"
+      "version": 96,
+      "sha": "ba5199ac60e23535"
     },
     "crankmagic-assets.js": {
-      "version": 15,
-      "sha": "0ab8a1e2fac2792f"
+      "version": 16,
+      "sha": "c1c20068fb2d5669"
     },
     "crankmagic-brand.js": {
       "version": 2,
@@ -126,8 +126,8 @@
       "sha": "648ccea39441caa9"
     },
     "crankmagic-discover.js": {
-      "version": 30,
-      "sha": "c31a1b6d1b808510"
+      "version": 31,
+      "sha": "0f4077caf5811a4a"
     },
     "crankmagic-evidence.js": {
       "version": 2,
@@ -138,16 +138,16 @@
       "sha": "b85c0bc0d9e90354"
     },
     "crankmagic-facets.js": {
-      "version": 7,
-      "sha": "556a4cbd3bae76fb"
+      "version": 8,
+      "sha": "fe57d5d9d7cb9b99"
     },
     "crankmagic-glossary.js": {
       "version": 1,
       "sha": "52e344df8ef38d24"
     },
     "crankmagic-graph.js": {
-      "version": 9,
-      "sha": "31df7452b75d12d2"
+      "version": 10,
+      "sha": "ea0c050452f25e69"
     },
     "crankmagic-lab.js": {
       "version": 31,
@@ -166,8 +166,8 @@
       "sha": "81ae2c4b7634afa7"
     },
     "crankmagic-sw.js": {
-      "version": 95,
-      "sha": "92220bbc253789a4"
+      "version": 96,
+      "sha": "383d710ff6348236"
     },
     "crankmagic-tour.js": {
       "version": 7,
@@ -214,8 +214,8 @@
       "sha": "ee4c0aed0d1458b1"
     },
     "data/graph.json": {
-      "version": 8,
-      "sha": "3375abf97fe3a6df"
+      "version": 9,
+      "sha": "3fa7ef2d20848d5f"
     },
     "deck-import.js": {
       "version": 2,

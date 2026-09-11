@@ -288,6 +288,28 @@
    * page has the facet) passes it as opts.tribes and anything outside it is dropped.
    * This is the join the graph could not draw before: Krenko and Goblin Chieftain
    * share no event, no resource and no quality, and were strangers on the canvas. */
+  /* --- WHAT A BODY IS FOR ---------------------------------------------------
+   *
+   * The model had no notion of a creature's STATS, so a deck built on toughness read as
+   * ninety strangers: Felothar assigns combat damage by toughness and eats creatures for
+   * cards equal to toughness, and every wall in the deck was joined to him only as a
+   * generic body for his sac outlet. The two sides here are different in kind and are
+   * read differently, which is the whole point.
+   *
+   * WANTS is a payoff, read off rules text: "equal to its toughness", "total power",
+   * "toughness 4 or greater", "as though they didn't have defender". 178 cards in the
+   * format care about toughness and 663 about power.
+   *
+   * OFFERS is a body, read off the printed numbers rather than any words -- a creature
+   * whose toughness is 4 or more AND at least two above its power is a wall in all but
+   * name, and a Defender or a Wall is one by type. Nothing in the rules text says so,
+   * which is exactly why no text pattern could ever have found it. */
+  var STAT_WANTS = [
+    {id: "toughness", re: /equal to (?:its|their|that creature's|this creature's|the sacrificed creature's) toughness|(?:total|combined|greatest) toughness|toughness (?:\d+|x) or (?:greater|more|higher)|assigns? combat damage equal to (?:its|their) toughness|toughness (?:is )?greater than (?:its|their) power|as though (?:it|they) didn't have defender|creatures? (?:you control )?with defender|with defender you control/},
+    {id: "power",     re: /equal to (?:its|their|that creature's|this creature's|the sacrificed creature's) power|(?:total|combined|greatest) power|power (?:\d+|x) or (?:greater|more|higher)/}
+  ];
+  var STAT_FLOOR = 4, STAT_GAP = 2;
+
   var TYPE_WORDS = /^(?:Legendary|Basic|Snow|World|Ongoing|Host|Token|Creature|Artifact|Enchantment|Land|Instant|Sorcery|Planeswalker|Battle|Kindred|Tribal|\/\/)$/;
   /* Dryad Arbor is "Land Creature — Forest Dryad": the land type shares the subtype
      slot with the creature type, and only one of them is a tribe. */
@@ -340,6 +362,20 @@
         if (!TYPE_WORDS.test(t) && !SUBTYPE_NOT_TRIBE.test(t)) push(out, t.replace("_", " "));
       });
     });
+    return out;
+  }
+
+  /* The stats a creature OFFERS a payoff. A power or toughness printed as * is not a
+     number and is skipped rather than guessed at. */
+  function statsOf(card) {
+    var typeLine = String((card && (card.typeLine || card.type_line || card.type)) || "");
+    var out = [];
+    if (!/\bCreature\b/.test(typeLine)) return out;
+    var p = Number(card && card.power), t = Number(card && card.toughness);
+    var keywords = ((card && card.keywords) || []).map(function (k) { return String(k).toLowerCase(); });
+    var defends = keywords.indexOf("defender") >= 0 || /\bWall\b/.test(typeLine);
+    if (defends || (isFinite(t) && isFinite(p) && t >= STAT_FLOOR && t >= p + STAT_GAP)) push(out, "toughness");
+    if (isFinite(p) && isFinite(t) && p >= STAT_FLOOR && p >= t + STAT_GAP) push(out, "power");
     return out;
   }
 
@@ -412,7 +448,8 @@
     var isLand = /\bLand\b/.test(typeLine);
     var allow = toSet(opts && opts.tribes);
     var out = {roles: [], requires: [], causes: [], triggers: [], produces: [], consumes: [],
-               multiplies: [], grants: [], extends: [], mechanics: [], tribes: [], wants: [], makes: []};
+               multiplies: [], grants: [], extends: [], mechanics: [], tribes: [], wants: [], makes: [],
+               wantsStat: [], offersStat: []};
 
     // A trigger doubler listens to whatever it doubles, so it reads as a co-payoff.
     var doublesEtb = /entering the battlefield causes a triggered ability[^.]{0,60}to trigger|triggers? an additional time/.test(text);
@@ -447,6 +484,8 @@
     tribesOf(typeLine).forEach(function (t) { push(out.tribes, t); });
     wantsOf(raw, allow).forEach(function (t) { push(out.wants, t); });
     makesOf(raw, allow).forEach(function (t) { push(out.makes, t); });
+    STAT_WANTS.forEach(function (q) { if (q.re.test(text)) push(out.wantsStat, q.id); });
+    statsOf(card).forEach(function (t) { push(out.offersStat, t); });
     return out;
   }
 
@@ -468,8 +507,9 @@
   return {
     EVENTS: EVENTS, RESOURCES: RESOURCES, REQUIRES: REQUIRES,
     SUPPLY_ROLES: SUPPLY_ROLES, SUPPLY_TEXT: SUPPLY_TEXT, ROLE_PATTERNS: ROLE_PATTERNS,
-    MULTIPLIERS: MULTIPLIERS, QUALITIES: QUALITIES,
+    MULTIPLIERS: MULTIPLIERS, QUALITIES: QUALITIES, STAT_WANTS: STAT_WANTS,
     stripReminder: stripReminder, rulesText: rulesText, rawText: rawText,
-    tribesOf: tribesOf, wantsOf: wantsOf, makesOf: makesOf, classify: classify, edgeDetail: edgeDetail
+    tribesOf: tribesOf, wantsOf: wantsOf, makesOf: makesOf, statsOf: statsOf,
+    classify: classify, edgeDetail: edgeDetail
   };
 });
