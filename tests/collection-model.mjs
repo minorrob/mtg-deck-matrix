@@ -214,6 +214,22 @@ assert.equal(M.lot(s,'stamped').paid,1.1);assert.equal(M.lot(s,'stamped').paidSo
 expectFailure('editLot',{lotId:'stamped',paid:-1},/nonnegative/);
 run('acquire',{lot:{id:'typed',cardId:'gem',quantity:1,paid:2}});assert.equal(M.lot(s,'typed').paidSource,'typed');checks++;
 
+// AN ORDER IS ONE THING. Ticked copies and one dialog become one order record across the
+// lots, shipping spread by copy, the sheet price stamped where nothing was paid; Arrived is
+// one command over the order; a receipt corrects only the lines it names.
+run('acquire',{lot:{id:'o1',cardId:'gem',quantity:2,source:'wanted'}});run('acquire',{lot:{id:'o2',cardId:'ring',quantity:1,source:'wanted',printing:{set:'ord'}}});run('acquire',{lot:{id:'o3',cardId:'stone',quantity:1,source:'wanted',printing:{set:'ord'}}});
+run('order',{lotIds:['o1','o2','o3'],order:{id:'order:test',vendor:'TCGplayer',ref:'#4242',expectedBy:'2026-09-20'},shipping:4,paidByLot:{o1:0.5,o2:1.5,o3:2},paidSource:'catalog'});
+assert.equal(M.lot(s,'o1').source,'ordered');assert.equal(M.lot(s,'o1').order.id,'order:test');assert.equal(M.lot(s,'o1').order.shipShare,1,'Shipping is spread per copy: $4 over 4 copies');assert.equal(M.lot(s,'o1').paid,0.5);assert.equal(M.lot(s,'o1').paidSource,'catalog');checks+=5;
+{const [o]=M.orders(s);assert.equal(o.copies,4);assert.equal(o.arrived,0);assert.equal(o.paid,0.5*2+1.5+2);assert.equal(o.shipping,4);assert.equal(o.vendor,'TCGplayer');checks+=5;}
+expectFailure('order',{lotIds:[],order:{vendor:'x'}},/at least one/);
+run('receipt',{lines:[{lotId:'o2',paid:1.75},{lotId:'o3',paid:2.25}]});
+assert.equal(M.lot(s,'o2').paid,1.75);assert.equal(M.lot(s,'o2').paidSource,'receipt');assert.equal(M.lot(s,'o1').paid,0.5,'A receipt touches only the lines it names');checks+=3;
+run('editOrder',{orderId:'order:test',order:{ref:'#4243'}});assert.equal(M.lot(s,'o3').order.ref,'#4243');assert.equal(M.lot(s,'o3').order.shipShare,1,'Editing the order keeps each line’s shipping share');checks+=2;
+const beforeArrival=s.revision;run('orderArrived',{orderId:'order:test'});
+assert.equal(s.revision,beforeArrival+1,'Arrived is one revision, so one undo');assert.ok(['o1','o2','o3'].every(id=>M.lot(s,id).source==='owned'&&M.lot(s,id).location.kind==='bench'));assert.equal(M.orders(s)[0].arrived,4);checks+=3;
+expectFailure('orderArrived',{orderId:'order:test'},/already arrived/);
+M.validate(s);checks++;
+
 // A planned entry is fulfilled a few copies at a time.
 run('createGroup',{groupId:'plans',name:'Plans'});run('groupEntries',{groupId:'plans',entries:[{cardId:'gem',quantity:3}]});
 const planned=s.groups.find(g=>g.id==='plans').entries[0].id;

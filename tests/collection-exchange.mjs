@@ -15,4 +15,10 @@ const reordered={history:[],state:s};assert.equal(await E.hash(reordered),await 
 const exported=E.csv([{name:'+2 Mace',note:'=SUM(A1)'}],[{key:'name',label:'Name'},{key:'note',label:'Notes'}]);ok(exported.includes("'+2 Mace"));ok(exported.includes("'=SUM"));
 assert.notEqual(C.key('Card / Name'),C.key('Card Name'));assert.equal(C.key('Sol Ring'),C.key('sol ring'));checks+=2;
 const sheets=book.sheets.map(s=>s.name);for(const name of ['Summary','Library','Deck plans','Allocations','Upgrade and bracket options','Acquisition queue','Sell and Trade','Card metadata','History','Metadata dictionary'])ok(sheets.includes(name));
+// A RECEIPT IS LINES WITH A NAME AND A PRICE, in whatever shape the vendor wrote them.
+{const got=E.parseReceipt('Order #12345\n1 Sol Ring $1.57\nArcane Signet x2 - $2.20\n2x Mind Stone — $0.90 each\nShipping $4.99\nTotal: $9.66');
+  assert.deepEqual(got.map(r=>[r.name,r.quantity,r.price]),[['Sol Ring',1,1.57],['Arcane Signet',2,1.1],['Mind Stone',2,0.45],['Shipping',1,4.99],['Total',1,9.66]]);checks++;
+  const csvGot=E.parseReceipt('Card name,Quantity,Price\nSol Ring,1,1.57\n"Fable of the Mirror-Breaker // Reflection of Kiki-Jiki",2,3.10');
+  assert.deepEqual(csvGot.map(r=>[r.name,r.quantity,r.price]),[['Sol Ring',1,1.57],['Fable of the Mirror-Breaker // Reflection of Kiki-Jiki',2,3.1]]);checks++;
+  assert.deepEqual(E.parseReceipt('no money here\n\n'),[]);checks++;}
 console.log(`collection-exchange: ${checks} checks passed; explicit quantities, printing identity, lossless backups and safe export.`);

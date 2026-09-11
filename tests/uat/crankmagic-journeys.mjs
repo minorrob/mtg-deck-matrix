@@ -117,6 +117,15 @@ try{
  ok(money.total>0);eq(money.total.toFixed(2),money.bands.reduce((n,x)=>n+x,0).toFixed(2));
  await page.locator('#cm-roster-query').fill('Lightning Bolt');await page.waitForTimeout(300);await row('Lightning Bolt','Journey Goblins').getByRole('button',{name:'Bought',exact:true}).click();await page.waitForTimeout(900);current=await state();
  const bolt=current.lots.find(l=>l.cardId===CrankKey('Lightning Bolt')&&l.source==='owned');ok(bolt&&bolt.source==='owned'&&bolt.allocation);eq(bolt.paidSource,'catalog');ok(bolt.paid>0);
+ /* ORDERS, ONE PER ORDER. Tick the Mountain rows, one dialog, and the ticked rows are one
+    order carrying vendor, reference and a shipping share; the Orders tab lists it once and
+    Arrived → bench lands every copy in one revision. */
+ await page.locator('#cm-roster-query').fill('Mountain');await page.waitForTimeout(300);await page.locator('.cm-tick-all').check();await click('Ordered…');
+ await page.getByLabel('Order reference').fill('J-1');await page.getByLabel('Shipping, spread across the lines ($)').fill('3');await click('Review order');await click('Confirm change');await waitDialog();await page.waitForTimeout(900);current=await state();
+ const orders=CrankOrders(current);eq(orders.length,1);eq(orders[0].ref,'J-1');ok(orders[0].copies>=60);eq(orders[0].shipping.toFixed(2),'3.00');ok(orders[0].lots.every(l=>l.source==='ordered'&&l.order.shipShare>0&&(!(current.cards[l.cardId].price>0)||l.paidSource==='catalog')));
+ const revBefore=current.revision;await click('Orders');await page.locator('.cm-orders').waitFor();eq(await page.locator('.cm-order-row').count(),1);
+ await click('Arrived → bench');await click('Confirm change');await waitDialog();await page.waitForTimeout(900);current=await state();eq(current.revision,revBefore+1);eq(CrankOrders(current)[0].arrived,CrankOrders(current)[0].copies);
+ await click('Acquisition list');await page.locator('#cm-shop-total').waitFor();await click('Clear filters');
  const afterLab=await state();
  await nav('Discover');await page.locator('#cm-graph').waitFor({timeout:45000});
  /* GRAPH NAVIGATION, through the controls the graph actually has now. This used to scroll to
@@ -140,3 +149,4 @@ try{
 }catch(error){console.error(error);console.error((await page.locator('body').innerText()).slice(0,8500));await page.screenshot({path:'tests/uat/crankmagic-failure.png',fullPage:true});process.exitCode=1;}finally{await browser.close();}
 function CrankKey(name){return 'card:'+Buffer.from(name.normalize('NFKC').trim().toLowerCase()).toString('base64url');}
 function CrankReadiness(s){const M=require('../../collection-model.js');return M.readiness(s,s.decks[0]);}
+function CrankOrders(s){return require('../../collection-model.js').orders(s);}
