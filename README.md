@@ -31,7 +31,19 @@ The approved standalone mockup remains under `design/crankmagic/` for design ref
   structural SWOT, recommendations, game history, compare, finalize, lock and archive.
 - **Collection**: exact printing lots, requirements, groups and planned lists. Source,
   purpose, reservation and physical location are separate. Clear filters leaves the deck
-  flow and shows all collection records.
+  flow and shows all collection records. Every row's **Actions → Status** fly-out carries
+  the ladder a card climbs before it is in hand — *Watching* (keeping an eye on it),
+  *Wanted* (on the to-buy list), *Ordered* or *Incoming trade*, *Owned* — with the current
+  rung marked and *Delete* at the bottom. On a copy record it changes the source; on a
+  deck's *To buy* requirement, a draft deck's *Draft list* row or a group's planned card it
+  creates the copy at that rung, filed with the deck or group and reserved to its slot once
+  the deck is finalized. Above Owned the ladder continues as placement: *Bench* (an owned
+  copy's default), *Reserved* to a deck, and *In deck box* once it is physically sleeved.
+  Moving an owned copy back down clears its box and, below Ordered, its reservation, and
+  asks first. The same ladder runs over ticked rows (*Set status*) and over a whole deck
+  from its page (*Card status*). Every deck has a collection group, made with it; a deck
+  saved from the Lab arrives as a draft whose cards sit in that group at *Draft list* until
+  their status is set. Group-by band headers fold, and the toolbar filters by group.
 - **Discover**: navigable metadata/co-play graph, mouse-wheel zoom, keyboard neighbors,
   pan, back trail, card inspection and supplemental catalog lookup.
 - **Deck Lab**: any legal catalog commander by name or mechanics/EDHREC commander rank;

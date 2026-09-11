@@ -18,7 +18,7 @@ let checks = 0;
 const ok = (label, fn) => {fn(); checks += 1; process.stdout.write(`  ok  ${label}\n`);};
 
 const source = readFileSync(new URL("../crankmagic-lab.js", import.meta.url), "utf8");
-const start = source.indexOf("  function reportHTML(r){");
+const start = source.indexOf("  function reportHTML(r,def){");
 assert.ok(start > 0, "reportHTML is not where this test expects it in crankmagic-lab.js");
 /* The function ends at the first line that is exactly two spaces and a brace, which is how
    every top-level function in this module closes. */

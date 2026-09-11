@@ -45,6 +45,143 @@ function restorePreview(){
 }
 async function keepPreview(next){preview=next;await C.commit({type:'preferences',values:{labPreview:next}},{renderView:false});}
 
+/* SHARED WITH THE DECK PAGE. The targets, the report renderer and the measuring run used to
+   live inside the Lab view, which meant the deck page could show a report only as raw JSON
+   until the Lab had been opened once in the session. They sit at module scope now and are
+   handed over on C, so Simulation history on My Decks draws the same report the Lab does and
+   can run the same measurement without sending the reader here. */
+let simInputsCache=null;
+let simConfig=null;   // the sim config once fetched; report targets fall back to the config defaults without it
+const simInputs=()=>(simInputsCache||=Promise.all([fetch(CrankAssets.simConfig).then(r=>r.json()),fetch(CrankAssets.simOpponents).then(r=>r.json())]).then(pair=>{simConfig=pair[0];return pair;}));
+const pct=v=>`${(Number(v||0)*100).toFixed(1)}%`;
+  /* WHAT "GOOD ENOUGH" MEANS, and the fact that a person chose it rather than measured it.
+   *
+   * "Run until the stats are in the target range" needs a target, and the engine has none:
+   * it returns a 0-100 composite and a set of rates. So the targets come from the Deck
+   * Definition the reader already filled in, and they are a DECLARED CONVENTION -- written
+   * here in the open so they can be argued with, not buried in a weighting.
+   *
+   * Win rate: every seat of a four-player pod has a 25% share of the wins. Competitiveness
+   * 3 is "hold your own", so its target is that share; 1 is a deck not trying to beat the
+   * table and 5 is one that is. Clock: speed is how soon you want the game over, read off
+   * the average winning turn. Everything else is sim/config.json's own targets -- the same
+   * numbers the score is already computed against, so the pass and the score agree. */
+  const WIN_TARGET={1:.15,2:.20,3:.25,4:.30,5:.35};
+  const CLOCK_TARGET={1:16,2:14,3:12,4:11,5:10};
+  const band=(n,fallback)=>Math.min(5,Math.max(1,Number(n)||fallback));
+  function targetsFor(result,def,config){
+    if(!result)return [];
+    const t=(config&&config.targets)||{},comp=band(def.competitiveness,3),speed=band(def.speed,3);
+    const winWant=WIN_TARGET[comp],clockWant=CLOCK_TARGET[speed];
+    const screwWant=t.screwPct??.1,floodWant=t.floodPct??.08,deadWant=t.deadCardsAtT8??2;
+    return [
+      {key:'winRate',label:'Wins its share',ok:result.winRate>=winWant,
+       reads:`${pct(result.winRate)} of games won · target ${pct(winWant)} at competitiveness ${comp}`},
+      {key:'clock',label:'Closes on time',ok:!result.avgWinTurn||result.avgWinTurn<=clockWant,
+       reads:result.avgWinTurn?`wins on turn ${result.avgWinTurn.toFixed(1)} · target turn ${clockWant} at speed ${speed}`:'no game was won, so there is no clock'},
+      {key:'commander',label:'Gets the commander down',ok:result.commanderCastRate>=.9,
+       reads:`commander cast in ${pct(result.commanderCastRate)} of games · target 90%`},
+      {key:'screw',label:'Casts its spells',ok:result.screwPct<=screwWant,
+       reads:`mana screwed in ${pct(result.screwPct)} · target ${pct(screwWant)}`},
+      {key:'flood',label:'Draws action, not lands',ok:result.floodPct<=floodWant,
+       reads:`flooded in ${pct(result.floodPct)} · target ${pct(floodWant)}`},
+      {key:'deadCards',label:'Keeps its hand live',ok:result.deadCardsAtT8<=deadWant,
+       reads:`${Number(result.deadCardsAtT8||0).toFixed(1)} uncastable cards in hand at turn 8 · target ${deadWant}`}
+    ];
+  }
+
+  /* THE REPORT, ON THE STEP THAT NAMES IT. "Simulation Report" was a label; the numbers
+     behind the score badge were in a different view, or nowhere for a preview. */
+  /* The evidence pack stores every rate as a percentage in a {value, unit} box, because
+     that is what gets exported and read a month later. The targets are computed on rates.
+     One adapter, here, rather than a second copy of the target table in report shape. */
+  const rawFrom=m=>({winRate:(m.winRate&&m.winRate.value||0)/100,avgWinTurn:m.averageWinTurn&&m.averageWinTurn.value||0,
+    commanderCastRate:(m.commanderCastRate&&m.commanderCastRate.value||0)/100,screwPct:(m.manaScrew&&m.manaScrew.value||0)/100,
+    floodPct:(m.manaFlood&&m.manaFlood.value||0)/100,deadCardsAtT8:m.deadCardsAtTurnEight&&m.deadCardsAtTurnEight.value||0});
+  /* The engine writes a loss cause as "<seat key> combo" or a bare word like "damage".
+     "Combo combo" is what the first reading of that gives you, which is nobody's idea of
+     a sentence. */
+  const title=t=>String(t||'').replace(/^\w/,ch=>ch.toUpperCase());
+  const lossLabel=cause=>{
+    const text=String(cause||'').trim();
+    const seat=text.match(/^(.*)\s+combo$/);
+    return seat?`${title(seat[1])} seat's combo`:title(text)||'Unknown';
+  };
+  function reportHTML(r,def){
+    if(!r)return '<p>No measurement has been run on this list yet.</p>';
+    const m=r.metrics||{};
+    const targets=r.targets||targetsFor(rawFrom(m),def||definition,simConfig);
+    const row=(label,metric,suffix)=>metric&&metric.value!==null&&metric.value!==undefined
+      ? `<span>${e(label)} <strong>${e(String(metric.value))}${e(suffix||metric.unit&&(' '+metric.unit)||'')}</strong></span>` : '';
+    /* SAID BEFORE THE SCORE, NOT AFTER IT. A reader who scrolls to a number and stops
+       has to meet this first, because it is the sentence that says what the number
+       leaves out. */
+    const blind=(m.winPathsTheEngineCannotWatch&&m.winPathsTheEngineCannotWatch.value)||0;
+    const blindNote=blind?note(`This list carries ${blind} card${blind===1?'':'s'} that say "you win the game"${(r.unwatchedWinCards||[]).length?' — '+(r.unwatchedWinCards||[]).join(', '):''}. The engine reads the card and not the condition on it, so the way this deck really wins is not in the score below; it is scored as the creatures and spells around that card. Rank it against another combo list, not against a creature deck.`,true):'';
+    return blindNote+`<div class="cm-count-list">
+        ${row('Score',m.score)}${row('Standard error',m.scoreStandardError)}${row('Win rate',m.winRate)}
+        ${row('Average winning turn',m.averageWinTurn)}${row('Commander cast rate',m.commanderCastRate)}
+        ${row('Average commander turn',m.averageCommanderTurn)}${row('Turn-capped games',m.incompleteGames)}
+        ${row('Mana screw',m.manaScrew)}${row('Mana flood',m.manaFlood)}${row('Dead cards by turn 8',m.deadCardsAtTurnEight)}
+        ${row('Pod experience',m.podExperience)}${row('Answer in hand',m.answerInHand)}
+        ${row('Idle turns for the other seats',m.idleTurnsForOthers)}${row('Seats still playing at the end',m.seatsStillPlayingAtTheEnd)}
+        ${row('First elimination',m.firstEliminationTurn)}${row('Spells cast per game',m.spellsCastPerGame)}
+        ${row('Biggest turn',m.biggestTurn)}${row('Cards the engine could read',m.cardsTheEngineCouldRead)}
+      </div>
+      <p class="cm-muted">${e(r.protocol)} · ${(r.conditions&&r.conditions.seedCount)||'?'} seeds of ${((r.conditions&&r.conditions.gamesPerSeed)||0).toLocaleString()} games · ${((r.run&&r.run.games)||0).toLocaleString()} games in ${(((r.run&&r.run.elapsedMs)||0)/1000).toFixed(1)}s</p>
+      ${(r.scoreParts||[]).length?`<h3 class="cm-section-heading">How the score was made</h3>
+        <div class="cm-table-wrap"><table class="cm-table"><thead><tr><th>What it measures</th><th>Scored</th><th>Of</th><th>What the engine saw</th></tr></thead><tbody>${r.scoreParts.map(x=>`<tr><td>${e(x.label)}</td><td>${e(String(x.points))}</td><td>${e(String(x.max))}</td><td class="cm-muted">${e(x.reads||'')}</td></tr>`).join('')}</tbody></table></div>
+        <p class="cm-muted">Ordered by points lost, so the row that costs this deck the most is first. These are the nine terms the composite is built from; nothing else moves the number.</p>`:''}
+      ${targets.length?`<h3 class="cm-section-heading">Against the targets for this build</h3>
+        <div class="cm-count-list">${targets.map(t=>`<span>${t.ok?'✓':'✕'} ${e(t.label)} <strong>${e(t.reads)}</strong></span>`).join('')}</div>`:''}
+      ${(r.lossCauses||[]).length?`<h3 class="cm-section-heading">What ended the games this deck lost</h3>
+        <div class="cm-count-list">${r.lossCauses.map(x=>`<span>${e(lossLabel(x.cause))} <strong>${(x.rate*100).toFixed(1)}% of games</strong></span>`).join('')}</div>
+        <p class="cm-muted">The one figure here that answers "why did I lose" rather than "how often". A deck losing to one seat's combo needs a different card than a deck losing to damage.</p>`:''}
+      ${(r.perCard||[]).length?`<details class="cm-details"><summary>Per-card: what the engine drew, played and won with (${r.perCard.length} rows)</summary>
+        <p class="cm-muted">Ranked by the figure that actually separates one card from another here: how often a card was drawn and still sat uncastable in hand on turn eight. Cast rate cannot rank a list — a game runs long enough that nearly every drawn spell is eventually cast, so almost the whole list sits near 100%. Lands are marked; a land's cast rate is how often a drawn copy reached the battlefield. "Dead" is exactly 100% minus cast, which is why it is not a column.</p>
+        <div class="cm-table-wrap"><table class="cm-table"><thead><tr><th>Card</th><th>Seen</th><th>Played when seen</th><th>Average turn</th><th>Stuck at turn 8</th><th>Win rate when cast</th></tr></thead><tbody>${r.perCard.slice().sort((a,b)=>(b.stuckRate||0)-(a.stuckRate||0)||a.castRate-b.castRate).map(x=>`<tr><td>${e(x.name)}${x.isCommander?' <small class="cm-muted">commander</small>':x.isLand?' <small class="cm-muted">land</small>':''}</td><td>${((x.drawnRate||0)*100).toFixed(0)}%</td><td>${(x.castRate*100).toFixed(0)}%</td><td>${x.avgCastTurn||'—'}</td><td>${((x.stuckRate||0)*100).toFixed(0)}%</td><td>${(x.winRateWhenCast*100).toFixed(0)}%</td></tr>`).join('')}</tbody></table></div></details>`:''}
+      ${(r.perSeedScores||[]).length>1?`<h3 class="cm-section-heading">How much of this is seed noise</h3>
+        <div class="cm-count-list">${r.perSeedScores.map((x,i)=>`<span>Seed ${i+1} <strong>${Number(x).toFixed(2)}</strong></span>`).join('')}<span>Spread <strong>${(Math.max(...r.perSeedScores)-Math.min(...r.perSeedScores)).toFixed(2)} points</strong></span></div>
+        <p class="cm-muted">Each seed is an independent set of games on the same hundred. A spread wider than the standard error above means the difference you are looking at between two lists may be the shuffle rather than the list.</p>`:''}
+      ${(r.endTurnCounts||[]).length?(()=>{const rows=r.endTurnCounts,total=rows.reduce((n,x)=>n+x.games,0),peak=Math.max(...rows.map(x=>x.games));
+        return `<h3 class="cm-section-heading">When the games ended</h3>
+        <div class="cm-turn-hist">${rows.map(x=>`<div><i style="height:${Math.max(2,Math.round(x.games/peak*100))}%"></i><span>${x.turn}</span></div>`).join('')}</div>
+        <p class="cm-muted">Games by the turn they finished, out of ${total.toLocaleString()}. An average of ${m.averageWinTurn?m.averageWinTurn.value:'—'} means something different for one hump than for two, and only this says which it is.</p>`;})():''}
+      ${(r.coverage&&(r.coverage.unreadable||[]).length)?`<details class="cm-details"><summary>${r.coverage.unreadable.length} card${r.coverage.unreadable.length===1?'':'s'} the engine could not read</summary>
+        <p class="cm-muted">These carry no oracle text the engine could classify, so they were played as blanks. The score above is a claim about the other ${(r.coverage.known||0)} cards.</p>
+        <div class="cm-count-list">${r.coverage.unreadable.slice(0,60).map(x=>`<span>${e(typeof x==='string'?x:(x&&x.name)||'Unknown')}</span>`).join('')}</div></details>`:''}
+      ${note((r.limits||[]).join(' '))}`;
+  }
+  /* MEASURE A SAVED DECK FROM WHEREVER IT IS SHOWN. The Lab's Measure step and the deck
+     page's Measure again are the same run on the same protocol; this is that run without the
+     Lab's preview bookkeeping. `say` is wherever progress should be written. The report is
+     filed with the deck the moment the run ends. */
+  async function measureDeck(deckId,say=()=>{}){
+    const d=M.deck(C.state,deckId);
+    let lineup=CrankSim.lineupFor(C.state,d),cover=CrankSim.coverage(lineup);
+    if(!cover.total)throw Error('This deck has no cards to measure yet. Add cards with Edit card list first.');
+    if(cover.ratio<.95){
+      say(`Fetching card text for ${cover.unreadable.length} cards…`);
+      const need=cover.unreadable.map(n=>C.catalog.exact(n)||{name:n});let missing=[];
+      try{const got=await C.catalog.hydrate(need,{onProgress:m=>say(`Fetching card text · ${m.done} of ${m.total}`)});missing=got.missing;if(got.hydrated.length)await C.commit({type:'cards',cards:got.hydrated},{renderView:false});}
+      catch(err){throw Error('The engine cannot read '+cover.unreadable.length+' cards and Scryfall could not be reached to fetch their text ('+err.message+'). Reconnect and measure again.');}
+      lineup=CrankSim.lineupFor(C.state,d);cover=CrankSim.coverage(lineup);
+      if(cover.ratio<.95)throw Error(`After asking Scryfall the engine still cannot read ${cover.unreadable.length} card${cover.unreadable.length===1?'':'s'}: ${cover.unreadable.slice(0,6).join(', ')}${cover.unreadable.length>6?' and '+(cover.unreadable.length-6)+' more':''}.${missing.length?' Scryfall did not know: '+missing.slice(0,4).join(', ')+'.':''}`);
+    }
+    CrankSim.assertMeasurable(cover,'published');
+    const plan=CrankSim.protocolFor('published');
+    runner=runner||CrankSim.createRunner();
+    if(runner.busy)throw Error('A measurement is already running.');
+    const [config,opponents]=await simInputs();
+    say('Measuring… seed 0 of '+plan.seedCount);
+    const result=await runner.measure({protocol:'published',lineup,config,opponents,table:config.table,onProgress:m=>say(`Measuring… seed ${m.done} of ${m.total} · ${m.mean} points so far`)});
+    const report=CrankSim.packFor(result,{protocol:'published',table:config.table,seatCount:(opponents.tables[config.table]||[]).length,cardsVersion:CrankAssets.cards,coverage:cover});
+    await C.commit({type:'report',deckId:d.id,report});
+    return {report,result};
+  }
+C.reportHTML=(r,def)=>reportHTML(r,def);
+C.measureDeck=measureDeck;
+
 views.lab=async()=>{
   preview=preview||restorePreview();
   const last=C.state.preferences.lastLabRun,saved=last?C.state.decks.find(x=>x.id===last.deckId):null;
@@ -397,8 +534,10 @@ const {missing,reachable}=await C.catalog.recheck([...built.cards,...leaders],{o
     }
     const id='deck:'+C.uid();
     /* A deck built from a collection group stays attached to it: the group it came from is
-       the group it draws from, and saying so here saves the reader attaching it by hand. */
-    const commands=[{type:'createDeck',deckId:id,name,commanders:leaders.map(c=>c.id),cards,slots,definition:preview?preview.definition:definition,notes:[method,...notes].join('\n'),groupId:groupId||null}];
+       the group it draws from, and saying so here saves the reader attaching it by hand. Any
+       other deck gets a group made with it and named for it -- saving here used to opt out,
+       which left a Lab deck's cards with no home in the Collection. */
+    const commands=[{type:'createDeck',deckId:id,name,commanders:leaders.map(c=>c.id),cards,slots,definition:preview?preview.definition:definition,notes:[method,...notes].join('\n'),...(groupId?{groupId}:{})}];
     if(preview?.report)commands.push({type:'report',deckId:id,report:preview.report});
     commands.push({type:'preferences',values:{lastLabRun:{deckId:id,method,issues,at:new Date().toISOString(),previewAt:preview?.at||null,refine:preview?.refine||null},labPreview:null}});
     preview=null;
@@ -469,47 +608,7 @@ const {missing,reachable}=await C.catalog.recheck([...built.cards,...leaders],{o
   const PER_SLOT=14;      // candidates screened against one weak slot before moving on
   const SCREEN_KEEP=2;    // of those, how many earn a confirmation run
   const MIN_GAIN=0.5;     // points a swap must add on top of the run's own noise
-  let simInputsCache=null;
-  let simConfig=null;   // kept so reportHTML can reach the targets without an await
-  const simInputs=()=>(simInputsCache||=Promise.all([fetch(CrankAssets.simConfig).then(r=>r.json()),fetch(CrankAssets.simOpponents).then(r=>r.json())]).then(pair=>{simConfig=pair[0];return pair;}));
   const sayStatus=t=>{const el=$('#cm-lab-sim-status');if(el)el.textContent=t;};
-  const pct=v=>`${(Number(v||0)*100).toFixed(1)}%`;
-
-  /* WHAT "GOOD ENOUGH" MEANS, and the fact that a person chose it rather than measured it.
-   *
-   * "Run until the stats are in the target range" needs a target, and the engine has none:
-   * it returns a 0-100 composite and a set of rates. So the targets come from the Deck
-   * Definition the reader already filled in, and they are a DECLARED CONVENTION -- written
-   * here in the open so they can be argued with, not buried in a weighting.
-   *
-   * Win rate: every seat of a four-player pod has a 25% share of the wins. Competitiveness
-   * 3 is "hold your own", so its target is that share; 1 is a deck not trying to beat the
-   * table and 5 is one that is. Clock: speed is how soon you want the game over, read off
-   * the average winning turn. Everything else is sim/config.json's own targets -- the same
-   * numbers the score is already computed against, so the pass and the score agree. */
-  const WIN_TARGET={1:.15,2:.20,3:.25,4:.30,5:.35};
-  const CLOCK_TARGET={1:16,2:14,3:12,4:11,5:10};
-  const band=(n,fallback)=>Math.min(5,Math.max(1,Number(n)||fallback));
-  function targetsFor(result,def,config){
-    if(!result)return [];
-    const t=(config&&config.targets)||{},comp=band(def.competitiveness,3),speed=band(def.speed,3);
-    const winWant=WIN_TARGET[comp],clockWant=CLOCK_TARGET[speed];
-    const screwWant=t.screwPct??.1,floodWant=t.floodPct??.08,deadWant=t.deadCardsAtT8??2;
-    return [
-      {key:'winRate',label:'Wins its share',ok:result.winRate>=winWant,
-       reads:`${pct(result.winRate)} of games won · target ${pct(winWant)} at competitiveness ${comp}`},
-      {key:'clock',label:'Closes on time',ok:!result.avgWinTurn||result.avgWinTurn<=clockWant,
-       reads:result.avgWinTurn?`wins on turn ${result.avgWinTurn.toFixed(1)} · target turn ${clockWant} at speed ${speed}`:'no game was won, so there is no clock'},
-      {key:'commander',label:'Gets the commander down',ok:result.commanderCastRate>=.9,
-       reads:`commander cast in ${pct(result.commanderCastRate)} of games · target 90%`},
-      {key:'screw',label:'Casts its spells',ok:result.screwPct<=screwWant,
-       reads:`mana screwed in ${pct(result.screwPct)} · target ${pct(screwWant)}`},
-      {key:'flood',label:'Draws action, not lands',ok:result.floodPct<=floodWant,
-       reads:`flooded in ${pct(result.floodPct)} · target ${pct(floodWant)}`},
-      {key:'deadCards',label:'Keeps its hand live',ok:result.deadCardsAtT8<=deadWant,
-       reads:`${Number(result.deadCardsAtT8||0).toFixed(1)} uncastable cards in hand at turn 8 · target ${deadWant}`}
-    ];
-  }
 
   /* The engine cannot read a card with no rules text, and a swap that quietly drops
      coverage changes the number for the wrong reason. */
@@ -696,68 +795,6 @@ const {missing,reachable}=await C.catalog.recheck([...built.cards,...leaders],{o
         : `Stopped after ${rounds} round${rounds===1?'':'s'} with ${kept} swap${kept===1?'':'s'} kept from ${tried} screened — it was still improving. ${targetLine((last&&last.missed)||[])} Loop again to keep going.`);
   };
 
-  /* THE REPORT, ON THE STEP THAT NAMES IT. "Simulation Report" was a label; the numbers
-     behind the score badge were in a different view, or nowhere for a preview. */
-  /* The evidence pack stores every rate as a percentage in a {value, unit} box, because
-     that is what gets exported and read a month later. The targets are computed on rates.
-     One adapter, here, rather than a second copy of the target table in report shape. */
-  const rawFrom=m=>({winRate:(m.winRate&&m.winRate.value||0)/100,avgWinTurn:m.averageWinTurn&&m.averageWinTurn.value||0,
-    commanderCastRate:(m.commanderCastRate&&m.commanderCastRate.value||0)/100,screwPct:(m.manaScrew&&m.manaScrew.value||0)/100,
-    floodPct:(m.manaFlood&&m.manaFlood.value||0)/100,deadCardsAtT8:m.deadCardsAtTurnEight&&m.deadCardsAtTurnEight.value||0});
-  /* The engine writes a loss cause as "<seat key> combo" or a bare word like "damage".
-     "Combo combo" is what the first reading of that gives you, which is nobody's idea of
-     a sentence. */
-  const title=t=>String(t||'').replace(/^\w/,ch=>ch.toUpperCase());
-  const lossLabel=cause=>{
-    const text=String(cause||'').trim();
-    const seat=text.match(/^(.*)\s+combo$/);
-    return seat?`${title(seat[1])} seat's combo`:title(text)||'Unknown';
-  };
-  function reportHTML(r){
-    if(!r)return '<p>No measurement has been run on this list yet.</p>';
-    const m=r.metrics||{};
-    const targets=r.targets||targetsFor(rawFrom(m),definition,simConfig);
-    const row=(label,metric,suffix)=>metric&&metric.value!==null&&metric.value!==undefined
-      ? `<span>${e(label)} <strong>${e(String(metric.value))}${e(suffix||metric.unit&&(' '+metric.unit)||'')}</strong></span>` : '';
-    /* SAID BEFORE THE SCORE, NOT AFTER IT. A reader who scrolls to a number and stops
-       has to meet this first, because it is the sentence that says what the number
-       leaves out. */
-    const blind=(m.winPathsTheEngineCannotWatch&&m.winPathsTheEngineCannotWatch.value)||0;
-    const blindNote=blind?note(`This list carries ${blind} card${blind===1?'':'s'} that say "you win the game"${(r.unwatchedWinCards||[]).length?' — '+(r.unwatchedWinCards||[]).join(', '):''}. The engine reads the card and not the condition on it, so the way this deck really wins is not in the score below; it is scored as the creatures and spells around that card. Rank it against another combo list, not against a creature deck.`,true):'';
-    return blindNote+`<div class="cm-count-list">
-        ${row('Score',m.score)}${row('Standard error',m.scoreStandardError)}${row('Win rate',m.winRate)}
-        ${row('Average winning turn',m.averageWinTurn)}${row('Commander cast rate',m.commanderCastRate)}
-        ${row('Average commander turn',m.averageCommanderTurn)}${row('Turn-capped games',m.incompleteGames)}
-        ${row('Mana screw',m.manaScrew)}${row('Mana flood',m.manaFlood)}${row('Dead cards by turn 8',m.deadCardsAtTurnEight)}
-        ${row('Pod experience',m.podExperience)}${row('Answer in hand',m.answerInHand)}
-        ${row('Idle turns for the other seats',m.idleTurnsForOthers)}${row('Seats still playing at the end',m.seatsStillPlayingAtTheEnd)}
-        ${row('First elimination',m.firstEliminationTurn)}${row('Spells cast per game',m.spellsCastPerGame)}
-        ${row('Biggest turn',m.biggestTurn)}${row('Cards the engine could read',m.cardsTheEngineCouldRead)}
-      </div>
-      <p class="cm-muted">${e(r.protocol)} · ${(r.conditions&&r.conditions.seedCount)||'?'} seeds of ${((r.conditions&&r.conditions.gamesPerSeed)||0).toLocaleString()} games · ${((r.run&&r.run.games)||0).toLocaleString()} games in ${(((r.run&&r.run.elapsedMs)||0)/1000).toFixed(1)}s</p>
-      ${(r.scoreParts||[]).length?`<h3 class="cm-section-heading">How the score was made</h3>
-        <div class="cm-table-wrap"><table class="cm-table"><thead><tr><th>What it measures</th><th>Scored</th><th>Of</th><th>What the engine saw</th></tr></thead><tbody>${r.scoreParts.map(x=>`<tr><td>${e(x.label)}</td><td>${e(String(x.points))}</td><td>${e(String(x.max))}</td><td class="cm-muted">${e(x.reads||'')}</td></tr>`).join('')}</tbody></table></div>
-        <p class="cm-muted">Ordered by points lost, so the row that costs this deck the most is first. These are the nine terms the composite is built from; nothing else moves the number.</p>`:''}
-      ${targets.length?`<h3 class="cm-section-heading">Against the targets for this build</h3>
-        <div class="cm-count-list">${targets.map(t=>`<span>${t.ok?'✓':'✕'} ${e(t.label)} <strong>${e(t.reads)}</strong></span>`).join('')}</div>`:''}
-      ${(r.lossCauses||[]).length?`<h3 class="cm-section-heading">What ended the games this deck lost</h3>
-        <div class="cm-count-list">${r.lossCauses.map(x=>`<span>${e(lossLabel(x.cause))} <strong>${(x.rate*100).toFixed(1)}% of games</strong></span>`).join('')}</div>
-        <p class="cm-muted">The one figure here that answers "why did I lose" rather than "how often". A deck losing to one seat's combo needs a different card than a deck losing to damage.</p>`:''}
-      ${(r.perCard||[]).length?`<details class="cm-details"><summary>Per-card: what the engine drew, played and won with (${r.perCard.length} rows)</summary>
-        <p class="cm-muted">Ranked by the figure that actually separates one card from another here: how often a card was drawn and still sat uncastable in hand on turn eight. Cast rate cannot rank a list — a game runs long enough that nearly every drawn spell is eventually cast, so almost the whole list sits near 100%. Lands are marked; a land's cast rate is how often a drawn copy reached the battlefield. "Dead" is exactly 100% minus cast, which is why it is not a column.</p>
-        <div class="cm-table-wrap"><table class="cm-table"><thead><tr><th>Card</th><th>Seen</th><th>Played when seen</th><th>Average turn</th><th>Stuck at turn 8</th><th>Win rate when cast</th></tr></thead><tbody>${r.perCard.slice().sort((a,b)=>(b.stuckRate||0)-(a.stuckRate||0)||a.castRate-b.castRate).map(x=>`<tr><td>${e(x.name)}${x.isCommander?' <small class="cm-muted">commander</small>':x.isLand?' <small class="cm-muted">land</small>':''}</td><td>${((x.drawnRate||0)*100).toFixed(0)}%</td><td>${(x.castRate*100).toFixed(0)}%</td><td>${x.avgCastTurn||'—'}</td><td>${((x.stuckRate||0)*100).toFixed(0)}%</td><td>${(x.winRateWhenCast*100).toFixed(0)}%</td></tr>`).join('')}</tbody></table></div></details>`:''}
-      ${(r.perSeedScores||[]).length>1?`<h3 class="cm-section-heading">How much of this is seed noise</h3>
-        <div class="cm-count-list">${r.perSeedScores.map((x,i)=>`<span>Seed ${i+1} <strong>${Number(x).toFixed(2)}</strong></span>`).join('')}<span>Spread <strong>${(Math.max(...r.perSeedScores)-Math.min(...r.perSeedScores)).toFixed(2)} points</strong></span></div>
-        <p class="cm-muted">Each seed is an independent set of games on the same hundred. A spread wider than the standard error above means the difference you are looking at between two lists may be the shuffle rather than the list.</p>`:''}
-      ${(r.endTurnCounts||[]).length?(()=>{const rows=r.endTurnCounts,total=rows.reduce((n,x)=>n+x.games,0),peak=Math.max(...rows.map(x=>x.games));
-        return `<h3 class="cm-section-heading">When the games ended</h3>
-        <div class="cm-turn-hist">${rows.map(x=>`<div><i style="height:${Math.max(2,Math.round(x.games/peak*100))}%"></i><span>${x.turn}</span></div>`).join('')}</div>
-        <p class="cm-muted">Games by the turn they finished, out of ${total.toLocaleString()}. An average of ${m.averageWinTurn?m.averageWinTurn.value:'—'} means something different for one hump than for two, and only this says which it is.</p>`;})():''}
-      ${(r.coverage&&(r.coverage.unreadable||[]).length)?`<details class="cm-details"><summary>${r.coverage.unreadable.length} card${r.coverage.unreadable.length===1?'':'s'} the engine could not read</summary>
-        <p class="cm-muted">These carry no oracle text the engine could classify, so they were played as blanks. The score above is a claim about the other ${(r.coverage.known||0)} cards.</p>
-        <div class="cm-count-list">${r.coverage.unreadable.slice(0,60).map(x=>`<span>${e(typeof x==='string'?x:(x&&x.name)||'Unknown')}</span>`).join('')}</div></details>`:''}
-      ${note((r.limits||[]).join(' '))}`;
-  }
   actions['lab-report']=el=>{
     const saved=el.dataset.deck?C.state.decks.find(x=>x.id===el.dataset.deck):null;
     const r=saved?C.state.reports.filter(x=>x.deckId===saved.id&&x.origin==='measured').slice(-1)[0]:preview&&preview.report;
@@ -798,7 +835,7 @@ const {missing,reachable}=await C.catalog.recheck([...built.cards,...leaders],{o
       const result=await runner.measure({protocol:'published',lineup,config,opponents,table:config.table,onProgress:m=>{const el=$('#cm-lab-sim-status');if(el)el.textContent=`Measuring… seed ${m.done} of ${m.total} · ${m.mean} points so far`;}});
       const report=CrankSim.packFor(result,{protocol:'published',table:config.table,seatCount:(opponents.tables[config.table]||[]).length,cardsVersion:CrankAssets.cards,coverage:cover});
       const score=`Measured ${report.metrics.score.value} points from ${result.games.toLocaleString()} games in ${(result.elapsedMs/1000).toFixed(1)}s.`;
-      if(saved){await C.commit({type:'report',deckId:saved.id,report});C.notice(score);return;}
+      if(saved){await C.commit({type:'report',deckId:saved.id,report});C.notice(score+' Filed under Simulation history in My Decks.');return;}
       if(preview&&preview.at===startedAt){await keepPreview({...preview,report});redrawRun();C.notice(score+' Save this deck to keep the report with it.');return;}
       const last=C.state.preferences.lastLabRun,savedFrom=last&&last.previewAt&&last.previewAt===startedAt?C.state.decks.find(x=>x.id===last.deckId):null;
       if(savedFrom){await C.commit({type:'report',deckId:savedFrom.id,report});C.notice(score+` Filed with ${savedFrom.name}, which was saved while it ran.`);return;}
@@ -907,7 +944,7 @@ function runPane(saved){
       const name=i===4&&measured?`<button type="button" class="cm-text-button" data-action="lab-report"${saved&&!preview?` data-deck="${e(saved.id)}"`:''}>${e(label)}</button>`:e(label);
       return `<li><span class="cm-run-orb ${st}" id="cm-step-${i}" aria-label="${st==='complete'?'Complete':st==='active'?'Active':'Waiting'}"><i></i><i></i><i></i><img src="assets/mana/G.svg?v=1" alt=""></span><span class="cm-run-step-body">${name}</span>${doButton(i)}${note||why?`<small class="cm-muted cm-run-why" data-step-note="${e(note)}" data-step-why="${e(why)}"${hint?'':' hidden'}>${e(hint)}</small>`:''}</li>`;}).join('')}</ol>
     <p class="cm-muted cm-run-lede">${preview?'Saving writes this draft to My Decks.':'Saving writes the commander and definition to My Decks; draft or edit the 99 any time after.'}</p>
-    <div id="cm-lab-result">${preview?`<h3>${e(preview.name)} <span class="cm-badge">Draft · not saved</span></h3>${note(preview.method)}<p>${count} of 100 cards${preview.estimatedPrice!==null&&preview.estimatedPrice!==undefined?` · about ${e(C.money(preview.estimatedPrice))} at recorded prices`:''}${preview.unknownPrices?` · ${preview.unknownPrices} without a price`:''}.</p>${(preview.issues||[]).map(x=>`<p class="cm-muted">${e(x)}</p>`).join('')}<div class="cm-actions">${b('Review draft cards','lab-review')}${b('Discard draft','lab-discard')}</div>`
+    <div id="cm-lab-result">${preview?`<h3>${e(preview.name)} <span class="cm-badge">Draft · not saved</span></h3>${note(preview.method)}<p>${count} of 100 cards${preview.estimatedPrice!==null&&preview.estimatedPrice!==undefined?` · about ${e(C.money(preview.estimatedPrice))} at recorded prices`:''}${preview.unknownPrices?` · ${preview.unknownPrices} without a price`:''}.</p>${preview.definition&&preview.definition.budget!==null&&preview.definition.budget!==undefined&&preview.estimatedPrice>preview.definition.budget?note(`About ${C.money(preview.estimatedPrice)} against the ${C.money(preview.definition.budget)} total cap in Deck Definition: the builder treats the cap as a target and could not get under it with these limits. Save the deck and Finalize will offer to raise or remove the cap, or trim the list first.`,true):''}${(preview.issues||[]).map(x=>`<p class="cm-muted">${e(x)}</p>`).join('')}<div class="cm-actions">${b('Review draft cards','lab-review')}${b('Discard draft','lab-discard')}</div>`
       :saved?`<h3>${e(saved.name)} <span class="cm-badge good">Saved</span></h3>${note(last.method)}${(last.issues||[]).map(x=>`<p class="cm-muted">${e(x)}</p>`).join('')}<div class="cm-actions">${b('Open in My Decks','deck',{deck:saved.id})}${b('Review deck cards','deck-cards',{deck:saved.id})}${b('Reports & advice','deck-evidence',{deck:saved.id})}</div>`
       :'<p class="cm-muted">Run initial draft builds a list you can review and measure here. Nothing reaches My Decks until you choose Save this deck; no cards are purchased, owned or reserved by any step.</p>'}</div>
     <p class="cm-muted">Measuring runs the engine in the background on the published protocol — six seeds of 20,000 games — and stores a report you can compare with another run of the same protocol. Refining searches on the quick protocol instead (one seed of 2,000 games, fast enough to try dozens of swaps and too small to publish): it drops the cards the engine drew and could not cast, tries cards the graph joins to your commander, and keeps a swap only when the score beats the old one by more than that run's own error. A kept swap changes the hundred, so the published report is dropped with it — measure again when the list settles. Finalize the saved list in My Decks when you accept it.</p></aside>`;

@@ -32,6 +32,7 @@
   --v-soft:light-dark(#e6f1ff,#0e3358);
   --v-bg:light-dark(#f5f7fa,#12161f);--v-panel:light-dark(#fff,#1a2030);
   --v-raised:light-dark(#eef2f8,#232c40);
+  --v-field:light-dark(#eef1f5,#2d3543);--v-field-line:light-dark(#b9c3d2,#5a677c);
   --v-line:light-dark(#d5dee8,#2e3850);--v-line-strong:light-dark(#b6c2d4,#4b5975);
   --v-muted:light-dark(#526276,#93a6c2);
   --v-decision:light-dark(#8a5a10,#e0b273);--v-decision-bg:light-dark(#fdf4e4,#2a2519);
@@ -89,7 +90,7 @@
 #matrix-v2 .v-entry{border-top:1px solid var(--v-line);padding-top:14px;display:grid;gap:12px;min-width:0}
 #matrix-v2 .v-fields>.v-wide{grid-column:1/-1}
 #matrix-v2 .v-fields{align-items:start}
-#matrix-v2 .v-entry input,#matrix-v2 .v-dialog input:not([type=file]){width:100%;min-width:0;box-sizing:border-box;border:1px solid var(--v-line);border-radius:7px;background:var(--v-bg);color:var(--v-ink);font:inherit;font-size:16px;padding:12px}
+#matrix-v2 .v-entry input,#matrix-v2 .v-dialog input:not([type=file]){width:100%;min-width:0;box-sizing:border-box;border:1px solid var(--v-field-line);border-radius:7px;background:var(--v-field);color:var(--v-ink);font:inherit;font-size:16px;padding:12px}
 #matrix-v2 .v-entry input::placeholder{color:var(--v-muted)}
 #matrix-v2 .v-entry[hidden],#matrix-v2 [hidden]{display:none!important}
 #matrix-v2 .v-entry .v-actions{margin-top:0}
@@ -112,7 +113,7 @@
 #matrix-v2 dialog.v-dialog{margin:auto;box-sizing:border-box;width:min(600px,calc(100% - 28px));max-height:90vh;overflow:auto;border:1px solid var(--v-line);border-radius:16px;background:var(--v-panel);color:var(--v-ink);padding:24px;font-family:Satoshi,sans-serif;box-shadow:0 24px 90px #0005}
 #matrix-v2 dialog::backdrop{background:#050b1480}
 #matrix-v2 .v-dialog .v-field{margin:12px 0}
-#matrix-v2 .v-dialog textarea{min-height:140px;resize:vertical;width:100%;box-sizing:border-box;background:var(--v-bg);color:var(--v-ink);border:1px solid var(--v-line);border-radius:8px;padding:12px;font:inherit}
+#matrix-v2 .v-dialog textarea{min-height:140px;resize:vertical;width:100%;box-sizing:border-box;background:var(--v-field);color:var(--v-ink);border:1px solid var(--v-field-line);border-radius:8px;padding:12px;font:inherit}
 #matrix-v2 .v-dialog input{min-width:0;max-width:100%}
 #matrix-v2 .v-dialog h2{margin:0}
 #matrix-v2 .v-dialog h3{margin-top:20px}
@@ -250,7 +251,7 @@
 
 #matrix-v2 .v-roster-scroll{overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin}
 #matrix-v2 #v-roster .v-filter-panel{grid-template-columns:repeat(3,minmax(0,1fr))}
-#matrix-v2 #v-roster .v-filter-panel input[type=number]{width:100%;box-sizing:border-box;font:inherit;padding:9px;background:var(--v-bg);color:var(--v-ink);border:1px solid var(--v-line);border-radius:6px}
+#matrix-v2 #v-roster .v-filter-panel input[type=number]{width:100%;box-sizing:border-box;font:inherit;padding:9px;background:var(--v-field);color:var(--v-ink);border:1px solid var(--v-field-line);border-radius:6px}
 #matrix-v2 .v-columns-panel{padding:16px;background:var(--v-panel);border:1px solid var(--v-line);border-radius:8px;margin-bottom:12px}
 #matrix-v2 .v-column-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0 18px}
 #matrix-v2 .v-column-options label{display:flex;align-items:center;gap:8px;min-height:32px;font-size:13px}

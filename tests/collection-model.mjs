@@ -9,7 +9,7 @@ function expectFailure(type,args,pattern){const before=JSON.stringify(s);assert.
 const cards=[{id:'leader',name:'Leader',typeLine:'Legendary Creature — Wizard',commander:true,verified:true,colorIdentity:[],legalities:{commander:'legal'}},{id:'land',name:'Wastes',typeLine:'Basic Land',verified:true,colorIdentity:[],legalities:{commander:'legal'}},{id:'ring',name:'Sol Ring',typeLine:'Artifact',verified:true,colorIdentity:[],legalities:{commander:'legal'}},{id:'stone',name:'Mind Stone',typeLine:'Artifact',verified:true,colorIdentity:[],legalities:{commander:'legal'}}];
 run('cards',{cards});
 for(let i=1;i<=5;i++){run('createDeck',{deckId:'d'+i,name:'Deck '+i,commanders:['leader'],slots:[{id:'cmd'+i,cardId:'leader',quantity:1},{id:'lands'+i,cardId:'land',quantity:98},{id:'rock'+i,cardId:'ring',quantity:1}]});run('finalize',{deckId:'d'+i});}
-assert.deepEqual(M.counters(s),{owned:0,ordered:0,incoming:0,wanted:0,toBuy:500,inDeck:0,sellTrade:0});checks++;
+assert.deepEqual(M.counters(s),{owned:0,ordered:0,incoming:0,wanted:0,watching:0,toBuy:500,inDeck:0,sellTrade:0});checks++;
 run('acquire',{lot:{id:'rings',cardId:'ring',quantity:3,printing:{set:'cmm',finish:'nonfoil'}}});
 for(let i=1;i<=5;i++)run('fulfill',{deckId:'d'+i});
 assert.equal(M.counters(s).owned,3);assert.equal(M.counters(s).toBuy,497);assert.equal(s.lots.filter(l=>l.allocation).length,3);checks+=3;
@@ -134,6 +134,64 @@ assert.equal(s.groups.some(g=>g.id===ownGroup),false,'A deck\u2019s own group le
 run('groupLots',{groupId:'shared',lotIds:[s.lots[0].id]});
 run('archive',{deckId:'joins'});run('deleteDeck',{deckId:'joins',confirmed:true});
 assert.equal(s.groups.some(g=>g.id==='shared'),true,'A group holding copies of its own stays');checks++;
+M.validate(s);checks++;
+
+// THE LADDER BELOW OWNED. Watching is a card you are keeping an eye on; Wanted is one you
+// mean to buy. Neither is a copy: never eligible, never reservable -- and a reserved copy
+// corrected down to either gives its deck the requirement back, box placement included.
+run('cards',{cards:[{id:'gem',name:'Gem',typeLine:'Artifact',verified:true,colorIdentity:[],legalities:{commander:'legal'}}]});
+run('createDeck',{deckId:'ladder',name:'Ladder',commanders:['leader'],slots:[{id:'cmdw',cardId:'leader',quantity:1},{id:'landsw',cardId:'land',quantity:98},{id:'gemw',cardId:'gem',quantity:1}]});
+const ladderGroup=M.deck(s,'ladder').groupId;
+run('acquire',{lot:{id:'eye',cardId:'gem',quantity:1,source:'watching'},groupId:ladderGroup});
+assert.equal(M.counters(s).watching,1,'A watched card is counted as watched');
+assert.equal(M.eligibility(s,M.lot(s,'eye')).eligible,false,'and is never eligible for a build');checks+=2;
+run('finalize',{deckId:'ladder'});
+assert.equal(M.lot(s,'eye').allocation,null,'Finalizing reserves no watched copy');
+assert.equal(M.shortfall(s,M.deck(s,'ladder'),M.slot(s,'ladder','gemw')),1,'so the requirement is still To buy');checks+=2;
+expectFailure('allocate',{lotId:'eye',deckId:'ladder',slotId:'gemw'},/plan to buy/);
+run('source',{lotId:'eye',source:'wanted'});assert.equal(M.lot(s,'eye').source,'wanted');checks++;
+run('source',{lotId:'eye',source:'ordered'});run('allocate',{lotId:'eye',deckId:'ladder',slotId:'gemw'});
+assert.equal(M.lot(s,'eye').allocation?.deckId,'ladder','An ordered copy can be reserved');checks++;
+expectFailure('source',{lotId:'eye',source:'wanted'},/confirm/);
+run('source',{lotId:'eye',source:'wanted',confirmed:true});
+assert.equal(M.lot(s,'eye').allocation,null,'Dropping a reserved copy to Wanted releases the reservation');
+assert.equal(M.shortfall(s,M.deck(s,'ladder'),M.slot(s,'ladder','gemw')),1,'and the deck wants the card again');checks+=2;
+run('source',{lotId:'eye',source:'owned'});run('allocate',{lotId:'eye',deckId:'ladder',slotId:'gemw'});run('place',{lotId:'eye',deckId:'ladder'});
+assert.equal(M.projection(s).find(r=>r.recordId==='eye').placement,'In deck box');checks++;
+expectFailure('bulk',{op:'source',source:'watching',lotIds:['eye']},/confirm/);
+run('bulk',{op:'source',source:'watching',lotIds:['eye'],confirmed:true});
+const eye=M.lot(s,'eye');assert.equal(eye.location,null,'Below Owned there is no box');assert.equal(eye.allocation,null,'and no reservation');assert.equal(eye.source,'watching');checks+=3;
+expectFailure('source',{lotId:'eye',source:'sometime'},/Owned, Ordered/);
+
+// A LIST BECOMES COPIES, AT A STATUS. The whole draft at once, filed with the deck; on a
+// finalized deck only what is still owed, reserved to its slots; and never twice.
+run('createDeck',{deckId:'sheet',name:'Sheet',commanders:['leader'],slots:[{id:'cmds',cardId:'leader',quantity:1},{id:'landss',cardId:'land',quantity:98},{id:'gems',cardId:'gem',quantity:1}]});
+const sheetGroup=M.deck(s,'sheet').groupId,ownedBeforeSheet=M.counters(s).owned,orderedBeforeSheet=M.counters(s).ordered;
+run('acquireSlots',{deckId:'sheet',slotIds:['landss','gems'],source:'owned'});
+assert.equal(M.counters(s).owned,ownedBeforeSheet+99,'One copy record per chosen card, at the quantity the list asks for');
+assert.equal(s.lots.filter(l=>l.groupIds.includes(sheetGroup)).length,2,'filed under the deck’s group');checks+=2;
+expectFailure('acquireSlots',{deckId:'sheet',slotIds:['landss','gems'],source:'owned'},/already has copies/);
+run('acquireSlots',{deckId:'sheet',source:'ordered'});
+assert.equal(M.counters(s).ordered,orderedBeforeSheet+1,'Saying it for the whole list only records what the group does not already hold');
+assert.equal(M.projection(s).filter(r=>r.kind==='lot'&&r.groupIds.includes(sheetGroup)).reduce((n,r)=>n+r.quantity,0),100,'the whole list is copies now, in the group');checks+=2;
+run('finalize',{deckId:'sheet'});
+const sheet=M.readiness(s,M.deck(s,'sheet'));
+assert.equal(sheet.toBuy,0,'Finalizing reserves the filed copies');assert.equal(sheet.owned+sheet.ordered,100);checks+=2;
+run('acquireSlots',{deckId:'sheet',slotIds:['gems'],source:'watching',quantities:{gems:2}});
+assert.equal(M.counters(s).watching,3,'A count per slot is taken as given, even on a finalized deck');
+assert.equal(s.lots.filter(l=>l.source==='watching'&&l.groupIds.includes(sheetGroup)&&!l.allocation).length,1,'and a watched copy is filed, not reserved');checks+=2;
+run('createDeck',{deckId:'due',name:'Due',commanders:['leader'],slots:[{id:'cmdd',cardId:'leader',quantity:1},{id:'landsd',cardId:'land',quantity:98},{id:'gemd',cardId:'gem',quantity:1}]});run('finalize',{deckId:'due'});
+assert.ok(M.readiness(s,M.deck(s,'due')).toBuy>0,'A fresh deck still owes cards');checks++;
+run('acquireSlots',{deckId:'due',source:'ordered'});
+assert.equal(M.readiness(s,M.deck(s,'due')).toBuy,0,'On a finalized deck the outstanding shortfall is what gets recorded, reserved to its slots');checks++;
+expectFailure('acquireSlots',{deckId:'due',source:'owned'},/already has copies/);
+
+// A planned entry is fulfilled a few copies at a time.
+run('createGroup',{groupId:'plans',name:'Plans'});run('groupEntries',{groupId:'plans',entries:[{cardId:'gem',quantity:3}]});
+const planned=s.groups.find(g=>g.id==='plans').entries[0].id;
+run('removeGroupEntries',{groupId:'plans',entryIds:[planned],quantity:1});assert.equal(s.groups.find(g=>g.id==='plans').entries[0].quantity,2);checks++;
+expectFailure('removeGroupEntries',{groupId:'plans',entryIds:[planned],quantity:5},/exceeds/);
+run('removeGroupEntries',{groupId:'plans',entryIds:[planned]});assert.equal(s.groups.find(g=>g.id==='plans').entries.length,0);checks++;
 M.validate(s);checks++;
 
 console.log(`collection-model: ${checks} checks passed; planned cards never become owned without acquisition.`);

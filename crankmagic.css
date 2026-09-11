@@ -5,7 +5,7 @@
    actually renders. Both now carry the same values; this is the one to edit. */
 #matrix-v2{display:block;min-height:100vh;border:0;border-radius:0;overflow:visible;
   background:#12161f;color:#eef4fd;color-scheme:dark;
-  --v-bg:#12161f;--v-panel:#1a2030;--v-raised:#232c40;
+  --v-bg:#12161f;--v-panel:#1a2030;--v-raised:#232c40;--v-field:#2d3543;--v-field-line:#5a677c;
   --v-line:#2e3850;--v-line-strong:#4b5975;
   --v-ink:#eef4fd;--v-muted:#93a6c2;
   --v-accent:#72baff;--v-on:#06131f;--v-soft:#0e3358;
@@ -391,10 +391,14 @@ button.cm-badge-link:hover{background:#35507a;color:#eaf5ff}
 /* FIELDS THAT LOOK LIKE FIELDS -- the third plane Deep Field exists to add. Inputs were
    filled var(--v-raised) against a #191b24 panel: DARKER than the surface holding them, so every
    control receded into its own container. A control you can type into or open sits ABOVE
-   its panel, never below it. */
+   its panel, never below it.
+   AND IN A DIFFERENT COLOUR. Raised was the panel blue a step lighter, so a page of fields
+   read as one sheet of the same blue at four brightnesses. --v-field is slate: the same hue
+   family with the saturation taken out, a shade lighter still, and a border that can be seen
+   before it is hovered. A box you type into now looks like a box you type into. */
 #matrix-v2 input:not([type=checkbox]):not([type=radio]):not([type=range]),
 #matrix-v2 select,#matrix-v2 textarea{
-  background:var(--v-raised);border:1px solid var(--v-line-strong);color:var(--v-ink)}
+  background:var(--v-field);border:1px solid var(--v-field-line);color:var(--v-ink)}
 #matrix-v2 input:not([type=checkbox]):not([type=radio]):not([type=range]):hover,
 #matrix-v2 select:hover,#matrix-v2 textarea:hover{border-color:var(--v-accent)}
 #matrix-v2 input:focus-visible,#matrix-v2 select:focus-visible,#matrix-v2 textarea:focus-visible{
@@ -577,7 +581,7 @@ button.cm-badge-link:hover{background:#35507a;color:#eaf5ff}
 #matrix-v2 .cm-cell-edit:hover{background:#222c40;box-shadow:inset 0 -1px 0 var(--v-accent)}
 #matrix-v2 .cm-cell-edit:focus-visible{outline:2px solid #9addff;outline-offset:1px}
 #matrix-v2 .cm-cell-input{width:100%;min-width:70px;min-height:0;height:30px;margin:0;padding:0 7px;
-  background:#161d2b;border:1px solid var(--v-accent);border-radius:6px;color:var(--v-ink);font:inherit}
+  background:var(--v-field);border:1px solid var(--v-accent);border-radius:6px;color:var(--v-ink);font:inherit}
 #matrix-v2 .cm-cell-input::-webkit-outer-spin-button,
 #matrix-v2 .cm-cell-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 #matrix-v2 .cm-cell-input{appearance:textfield;-moz-appearance:textfield}
@@ -601,7 +605,7 @@ button.cm-badge-link:hover{background:#35507a;color:#eaf5ff}
 .cm-menu.cm-step .cm-step-ok{background:#2f7d51;border-color:#48b075;color:#f0fff6;font-size:16px;font-weight:700}
 .cm-menu.cm-step .cm-step-ok:hover{background:#3a9963}
 .cm-menu.cm-step input{width:58px;height:34px;min-height:0;margin:0;padding:0 6px;text-align:center;
-  background:#161d2b;border:1px solid #4b5975;border-radius:8px;color:#eef4fd;font:inherit;font-size:14px}
+  background:#2d3543;border:1px solid #5a677c;border-radius:8px;color:#eef4fd;font:inherit;font-size:14px}
 .cm-menu.cm-step input:focus-visible{outline:2px solid #9addff;outline-offset:1px}
 /* The browser's own spinner is a third and fourth arrow inside a control that already has
    two, pointing the other way. */
@@ -641,3 +645,49 @@ button.cm-badge-link:hover{background:#35507a;color:#eaf5ff}
 /* The canvas footnote belongs on the pane's bottom edge, not floating a paragraph above it.
    id-scoped because .cm-muted also sets margin, and the footnote carries both classes. */
 #matrix-v2 .cm-card-view-foot{margin:auto 0 0;padding-top:8px}
+
+/* THE STATUS FLY-OUT. Watching, Wanted, Ordered, Incoming, Owned -- the rungs a card climbs
+   before it is in hand -- pop out to the left of the row menu, in order, the current one
+   marked and Delete under a rule at the bottom. Each rung carries a half-line saying what it
+   means, because "Wanted" and "Watching" are one word apart and a menu is not a glossary.
+   Unscoped like every other .cm-menu rule: the menu is a popover on <body>. */
+.cm-side-submenu{min-width:236px}
+.cm-side-submenu .cm-rung,.cm-menu .cm-rung{display:grid;gap:2px}
+.cm-menu .cm-rung small{display:block;font-size:11.5px;line-height:1.35;color:#9db8d8;font-weight:400;white-space:normal}
+.cm-menu .cm-rung.is-current,.cm-menu .cm-rung.is-current:hover{cursor:default;background:#2a3651;color:#dfe9f7}
+.cm-menu .cm-rung.is-current .cm-rung-label:before{content:'\25CF  ';color:#72baff}
+.cm-menu .cm-menu-fine{padding:6px 12px 8px;font-size:11.5px;line-height:1.4;color:#9db8d8}
+.cm-menu .cm-danger{color:#ffb4ab}
+
+/* GROUP HEADERS FOLD. The heading is the whole toggle, edge to edge, so there is nothing to
+   aim for; the caret says which way it is, and the count on the right says what is inside a
+   folded band without opening it. */
+#matrix-v2 .cm-table tr.cm-group-row td{padding:0}
+#matrix-v2 .cm-group-toggle{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:9px 14px;
+  background:none;border:0;color:inherit;font:inherit;font-weight:700;text-align:left;cursor:pointer;border-radius:0}
+#matrix-v2 .cm-group-toggle:hover{background:#243350}
+#matrix-v2 .cm-group-toggle:focus-visible{outline:2px solid var(--v-accent);outline-offset:-2px}
+#matrix-v2 .cm-group-toggle small{display:inline;margin:0 0 0 auto;font-weight:400;color:var(--v-muted);white-space:nowrap;max-width:none}
+.cm-group-caret{display:inline-block;width:14px;color:var(--v-accent)}
+#matrix-v2 .cm-status-line .cm-text-button{grid-column:auto;padding:0;font-size:inherit}
+/* The group select sits in the toolbar with the other row-shaping controls. */
+#matrix-v2 .cm-toolbar label:has(>select[name=groupPick]){min-width:170px;max-width:240px}
+/* SIMULATION HISTORY on the deck page: the error rides inline beside the score, and the
+   progress pill sits with the buttons that started it. */
+#matrix-v2 .cm-history-table small{display:inline;margin:0;max-width:none}
+#matrix-v2 .cm-history .cm-actions{align-items:center}
+#matrix-v2 .cm-history .cm-pause-pill{max-width:100%;white-space:normal}
+/* THE TILE'S TOP-RIGHT CORNER IS THE COMPARE TICK -- always there, so comparing is a tick
+   and the Compare button rather than a link to find in each footer. The pips get a row of
+   their own under the mechanic, so bracket and hand count no longer wrap around them. */
+.cm-deck-tile .cm-tile-pick{position:absolute;top:12px;right:12px;z-index:2;display:grid;place-items:center;width:36px;height:36px;border-radius:8px;background:#101725c8;border:1px solid #3a4a64;cursor:pointer}
+.cm-deck-tile .cm-tile-pick:hover{border-color:var(--v-accent)}
+#matrix-v2 .cm-deck-tile .cm-tile-pick input{width:18px;height:18px;min-height:0;margin:0;padding:0;cursor:pointer;accent-color:#72baff}
+.cm-deck-tile.is-picked{border-color:var(--v-accent);box-shadow:0 0 0 1px var(--v-accent)}
+.cm-deck-tile .cm-tile-mana{display:block;margin:0 0 2px}
+.cm-deck-tile footer{flex-wrap:wrap;align-items:center}
+#matrix-v2 .v-button[disabled]{opacity:.45;cursor:not-allowed}
+/* The card pop-up's standing: two labelled rows of chips, wrapping on a phone. */
+#matrix-v2 .cm-standing p{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:4px 0 8px}
+#matrix-v2 .cm-standing-label{min-width:88px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--v-muted)}
+#matrix-v2 .cm-standing .cm-chip strong{margin-left:4px}
