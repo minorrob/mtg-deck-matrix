@@ -856,3 +856,12 @@ button.cm-pill:hover{filter:brightness(1.15)}
 /* ORDERS. One row per order; the rule markers are pills, counted, never a dialog. */
 .cm-orders .cm-row-actions-cell .v-button{margin:2px 6px 2px 0}
 .cm-orders td{vertical-align:middle}
+
+/* THE UPGRADE PATH PANEL. Reason column takes the width; the rest are short tokens. */
+.cm-upgrades h2{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.cm-up-max{font-size:13px;font-weight:400}
+.cm-up-filters{margin:0 0 6px;font-size:13px}
+.cm-up-table td{vertical-align:middle}
+.cm-up-table td:first-child,.cm-up-table th:first-child{min-width:170px}
+.cm-up-why{font-size:12px;line-height:1.4;color:#c5d6ea;min-width:220px;max-width:460px}
+@media(max-width:640px){.cm-up-why{min-width:180px}}

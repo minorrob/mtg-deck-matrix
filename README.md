@@ -72,7 +72,10 @@ The approved standalone mockup remains under `design/crankmagic/` for design ref
   it happens, *Mark all found in box*, Print (black on white, boxes to tick) and Export.
   The deck page's stat row shows In box · To pull · Ordered · To buy and $ to finish against
   the cap, with a readiness bar; *Pull sheet (n)* leads the action row when there is
-  anything to pull.
+  anything to pull. The **Upgrade Path** panel under SWOT lists the deck's linked upgrades
+  as *Add · Replaces · Tier · Price · Why · Promote* with *Tuned only* and *Under $2*
+  (D5–D6: $1.50) filters, `$X to Max` and `GC k / 2` in its header; *Promote* is the
+  existing accept-option review, which asks first when it would be a third Game Changer.
 - **User Functions**: backup/restore, Load Live, enriched workbook export, legacy
   reconciliation, history/undo, comparison reset, optional mirror file and explicit Clear all.
 

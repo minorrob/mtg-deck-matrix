@@ -47,7 +47,7 @@ eq(state.lots.filter(l=>l.cardId===mountain.id&&l.source==='owned').reduce((n,l)
 ok(state.lots.find(l=>l.source==='ordered').allocation);
 // the upgrade is filed in its group AND attached to the slot it replaces, uncommitted
 const g=state.groups.find(g=>g.id===L.GROUP_UPGRADES);eq(g.name,'Upgrade Path');eq(g.entries.length,1);ok(/replaces Filler 4 · tier 1 · \$9.50 · Because\./.test(g.entries[0].notes));
-const option=d.slots.find(s=>s.purpose==='upgrade');eq(option.cardId,upgrade.id);eq(option.committed,false);eq(d.slots.find(s=>s.id===option.replaces).cardId,filler[4].id);
+const option=d.slots.find(s=>s.purpose==='upgrade');eq(option.cardId,upgrade.id);eq(option.committed,false);eq(option.tier,1);eq(option.why,'Because.');eq(option.price,9.5);eq(d.slots.find(s=>s.id===option.replaces).cardId,filler[4].id);
 // the shopping list lands in To Buy with its price, and disagrees with the model out loud
 const toBuy=state.groups.find(g=>g.id==='group:to-buy');eq(toBuy.entries.length,37);eq(toBuy.entries[0].notes,'$0.75 each');
 ok(summary.toBuy===37);
