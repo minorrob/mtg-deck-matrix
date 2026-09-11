@@ -47,7 +47,9 @@ The approved standalone mockup remains under `design/crankmagic/` for design ref
   with Sell / Trade under the rule. Active filters show as removable chips under the search
   with *Clear all*; the Columns dialog also holds *One row per card* (the Shop's default: a
   card three decks want is one line, `×3 · D2, D3, D5`, and *Bought* on it buys for all
-  three) and the page size (60 / 120 / All), remembered with the columns. The same ladder runs over ticked rows (*Set status*) and over a whole deck
+  three) and the page size (60 / 120 / All), remembered with the columns. Rows are 56 px
+  with the purpose as an inline chip, the card art appears beside the name on hover instead
+  of a thumbnail, and pagination repeats above any table longer than one page. The same ladder runs over ticked rows (*Set status*) and over a whole deck
   from its page (*Card status*). Every deck has a collection group, made with it; a deck
   saved from the Lab arrives as a draft whose cards sit in that group at *Draft list* until
   their status is set. Group-by band headers fold, and the toolbar filters by group.
