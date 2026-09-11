@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CrankMagic UX Gap Review</title>
+<style>
+:root{--bg:#0f1624;--panel:#161e2d;--panel2:#202737;--line:#39475d;--text:#e6eef8;--muted:#9fb2c9;--accent:#7cc4ff;--accent2:#3b7dd8;--warn:#f0b35a;--bad:#ef6b60;--good:#5cc98a;--teal:#4fc2c0}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 -apple-system,"Segoe UI",Inter,Roboto,sans-serif;padding:32px 20px 80px}
+main{max-width:1080px;margin:0 auto}
+h1{font-size:34px;margin:0 0 6px;letter-spacing:-.01em}
+h2{font-size:22px;margin:44px 0 12px;padding-top:18px;border-top:1px solid var(--line)}
+h3{font-size:17px;margin:26px 0 8px}
+p{margin:0 0 12px}
+.sub{color:var(--muted);max-width:760px}
+.eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--warn);margin-bottom:8px}
+table{border-collapse:collapse;width:100%;margin:10px 0 18px;font-size:14px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;line-height:1.5;white-space:nowrap}
+.p0{background:#4a1f1c;color:#ffb1aa}.p1{background:#4b3a12;color:#ffd58a}.p2{background:#193a4a;color:#9fdcff}.p3{background:#26304a;color:#c3d0ea}
+.kind{color:var(--muted);font-size:12px}
+.finding{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:14px 0}
+.finding header{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.finding header h3{margin:0;font-size:17px}
+.finding .uc{font-size:12px;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:760px){main>table{display:block;overflow-x:auto}.grid2{grid-template-columns:1fr}.mtable td{white-space:normal}.tile{width:100%}.filters{grid-template-columns:1fr 1fr}.form{grid-template-columns:1fr}}
+.mock .mtable{display:block;overflow-x:auto}
+.mock{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px;font-size:13px;position:relative;overflow:hidden}
+.mock{padding-top:26px}.mock .lbl{position:absolute;top:8px;right:10px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.mock.before{border-style:dashed;opacity:.9}
+.stat{display:inline-block;margin-right:26px}.stat b{font-size:22px;font-weight:500;margin-right:4px}.stat span{color:var(--muted);font-size:12px}
+.bar{display:flex;height:10px;border-radius:6px;overflow:hidden;background:#101725;margin:10px 0 6px}
+.bar i{display:block;height:100%}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.btn{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 14px;border-radius:8px;border:1px solid #4a5d7c;background:#1c2a44;color:#eaf5ff;font-weight:600;font-size:13px}
+.btn.primary{background:var(--accent);color:#0b1a2c;border-color:var(--accent)}
+.btn.small{min-height:28px;padding:0 10px;font-size:12px}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--accent);text-decoration:underline;text-underline-offset:3px;padding:0}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.pill{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;white-space:nowrap}
+.pill.own{background:#1f3d2c;color:#8fe0b0}.pill.ord{background:#1c3557;color:#9fcbff}.pill.buy{background:#4b3a12;color:#ffd58a}.pill.draft{background:#2a3242;color:#b9c4d6}.pill.pull{background:#173a3a;color:#7fe0de}
+.mtable{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0 0}
+.mtable th{font-size:10.5px;padding:6px 8px;border-bottom:1px solid var(--line)}
+.mtable td{padding:7px 8px;border-bottom:1px solid #2b3648;white-space:nowrap}
+.mtable tr.g td{background:#1a2333;color:var(--accent);font-weight:600;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.menu{background:#1a2333;border:1px solid var(--line);border-radius:10px;padding:6px;width:250px;font-size:13px}
+.menu .sec{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:8px 10px 3px}
+.menu div.it{padding:7px 10px;border-radius:6px}
+.menu div.it.hi{background:#243553}
+.menu div.it.danger{color:#ffb1aa}
+.menu hr{border:0;border-top:1px solid var(--line);margin:6px 0}
+.tile{position:relative;width:250px;height:290px;border-radius:14px;border:1px solid var(--line);overflow:hidden;background:#202737;display:flex;flex-direction:column;justify-content:flex-end}
+.tile .art{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,#5a3a1e,#1b1f2c 70%)}
+.tile .frame{position:absolute;left:12px;right:12px;top:10px;height:22px;border-radius:4px;background:#c9b676;color:#2a1f0a;font-size:11px;font-weight:700;padding:3px 8px}
+.tile .frame2{position:absolute;left:12px;right:12px;top:150px;height:18px;border-radius:3px;background:#c9b676a8;color:#2a1f0a;font-size:9px;padding:3px 8px}
+.tile .frame3{position:absolute;left:12px;right:12px;top:170px;height:60px;border-radius:3px;background:#e8e0c4a0;color:#2a1f0a;font-size:8px;padding:4px 8px;line-height:1.3}
+.tile .fade{position:absolute;inset:0;background:linear-gradient(0deg,#101725 12%,#101725ae 43%,#1017250a 83%)}
+.tile.after .fade{background:linear-gradient(0deg,#101725 34%,#101725d0 58%,#10172500 86%)}
+.tile.after .frame,.tile.after .frame2,.tile.after .frame3{display:none}
+.tile .badge{position:absolute;top:12px;left:12px;background:#243553;color:#cfe4ff;font-size:11px;padding:3px 8px;border-radius:6px;z-index:2}
+.tile.after .badge{position:static;display:inline-block;width:fit-content;margin:0 0 6px;background:#243553cc}
+.tile .body{position:relative;z-index:1;padding:0 16px 8px}
+.tile .body small{color:var(--muted);font-size:11px}
+.tile .body h4{margin:2px 0 4px;font-size:17px}
+.tile .body p{margin:0 0 6px;color:#c3d7ed;font-size:12px}
+.tile.after .body p{display:none}
+.tile footer{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:0 16px 14px;font-size:12px}
+.tile.before footer .mid{width:60px;line-height:1.3}
+.tile.before footer .cmp{align-self:flex-start;text-decoration:underline;padding:4px 0}
+.tile.after footer{display:grid;grid-template-columns:auto 1fr auto;align-items:center;padding:0 12px 12px;gap:6px}.tile.after footer .row{flex-wrap:nowrap;gap:4px}.tile{width:270px}
+.tile.after footer .cmp{justify-self:end}
+.dots{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border:1px solid #4a5d7c;border-radius:8px;background:#1c2a44}
+.mini{font-size:12px;color:var(--muted)}
+.callout{border-left:3px solid var(--accent);background:#14213a;padding:10px 14px;border-radius:0 8px 8px 0;margin:10px 0 14px;font-size:14px}
+.filters{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-items:end}
+.filters label{display:block;font-size:11px;color:var(--muted)}
+.filters .in{display:block;height:34px;border:1px solid #4a5d7c;border-radius:6px;background:#111a2b;margin-top:4px}
+.filters.before .in.tall{height:38px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;background:#243553;color:#cfe4ff;font-size:12px}
+.chip b{opacity:.7;font-weight:400}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form label{font-size:11px;color:var(--muted)}
+.form .in{display:block;height:32px;border:1px solid #4a5d7c;border-radius:6px;background:#111a2b;margin-top:3px;padding:6px 8px;font-size:12px;color:#eaf5ff}
+code{background:#1a2333;padding:1px 5px;border-radius:4px;font-size:12.5px;color:#cfe4ff}
+.foot{color:var(--muted);font-size:13px;margin-top:40px;border-top:1px solid var(--line);padding-top:16px}
+.check{margin:6px 0 0;padding-left:18px;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<main>
+<div class="eyebrow">CrankMagic · minorrob.github.io/mtg-deck-matrix · walkthrough 2026-09-11</div>
+<h1>UX gap review</h1>
+<p class="sub">Every view was driven in Chrome against the live six-deck library (My Decks, each deck page, Insight and Manage menus, Collection, Shop Acquisition and Assembly, Discover, Deck Lab, Edit definition, Log a game, Reports), then re-run headless at 1440 and 390px with geometry measured, and cross-checked against the repo source (<code>crankmagic-collection.js</code>, <code>crankmagic-decks.js</code>, <code>deck-page.js</code>, <code>crankmagic.css</code>, <code>BACKLOG.md</code>). Findings are ranked by what they cost on a build night or a store run, not by effort.</p>
+
+<h2>Core use cases the app is judged against</h2>
+<table>
+<tr><th style="width:120px">Use case</th><th>What Rob is doing</th><th>Expected pattern</th></tr>
+<tr><td><b>UC1 Buy</b></td><td>Finish six 100-card decks inside a hard budget ($100 pool, nothing over $30, per-deck cap $225), local store before TCGplayer, price-verified before money moves.</td><td>A shopping list with a price on every line, a running total, per-deck and per-vendor subtotals, a one-tap "bought / ordered" that records what was paid.</td></tr>
+<tr><td><b>UC2 Organize</b></td><td>Keep a 100% accurate record of what is physically in each deck box versus the bench, and assemble boxes at the table.</td><td>A per-deck pull sheet grouped by where each card is right now (this box · bench · another box · ordered · to buy), with a tick that writes back.</td></tr>
+<tr><td><b>UC3 Define</b></td><td>Six definitions with Base / Tuned / Max tiers, at most two Game Changers, an Upgrade Path of "X replaces Y for $Z because".</td><td>Upgrades visible on the deck page as replace-pairs with tier, price and reason, promotable in one action.</td></tr>
+<tr><td><b>UC4 Update</b></td><td>Report card events fast, often from a phone at Game Theory or CCS: bought, ordered, arrived, moved, replaced X with Y.</td><td>Primary action on the row, not in a 14-item menu; same columns and actions on phone and desktop.</td></tr>
+<tr><td><b>UC5 Spend vs performance</b></td><td>Know what each deck cost, its value against the cap, and whether it wins.</td><td>Cost basis and market value per deck, a game record that is read back (W-L, win %, $ per win) on the deck page.</td></tr>
+</table>
+
+<h2>Priority scale</h2>
+<p><span class="tag p0">P0</span> Fundamental gap in flow: a core use case cannot be completed in the app. &nbsp; <span class="tag p1">P1</span> Significant UX/UI improvement: the use case works but costs real time or errors. &nbsp; <span class="tag p2">P2</span> Consistency and clarity. &nbsp; <span class="tag p3">P3</span> Visual micro-adjustments (spacing, alignment, wrapping).</p>
+
+<h2>Ranked findings</h2>
+<table>
+<tr><th>#</th><th>Priority</th><th>Finding</th><th>Use case</th><th>Kind</th></tr>
+<tr><td>1</td><td><span class="tag p0">P0</span></td><td>The buy list has no money on it: no price column by default, no total, no per-deck or per-vendor subtotal; Buy / Mark Ordered never record what was paid</td><td>UC1, UC5</td><td class="kind">flow</td></tr>
+<tr><td>2</td><td><span class="tag p0">P0</span></td><td>"Owned but not in the box" is invisible: deck stats show 72 owned and 55 in box but never "17 to pull", and putting a card in the box is buried in a menu</td><td>UC2</td><td class="kind">flow + visual</td></tr>
+<tr><td>3</td><td><span class="tag p0">P0</span></td><td>Deck assembly is a 600-row alphabetical table across all six decks (9 pages), not a per-deck pull sheet</td><td>UC2</td><td class="kind">flow + visual</td></tr>
+<tr><td>4</td><td><span class="tag p1">P1</span></td><td>Orders have no lifecycle: Mark Ordered is a quantity stepper; nothing is recorded per order; no "this order arrived" batch action. Fix is per-order capture with prices stamped from the catalog, never a per-card screen</td><td>UC1, UC4</td><td class="kind">flow + visual</td></tr>
+<tr><td>5</td><td><span class="tag p1">P1</span></td><td>Upgrade Path has no home: "Review linked upgrades" drops into a scrolled Collection with draft rows interleaved; no "replaces X · tier · $ · why"</td><td>UC3</td><td class="kind">flow + visual</td></tr>
+<tr><td>6</td><td><span class="tag p1">P1</span></td><td>Game log is write-only in the UI: no date, no MVP / dead card, history hidden inside Insight → Reports; deck page shows no record</td><td>UC5</td><td class="kind">flow + visual</td></tr>
+<tr><td>7</td><td><span class="tag p1">P1</span></td><td>No budget guardrails shown: Deck Definition caps are blank, deck page has no cost basis, market value, value-vs-cap or remaining-pool figure</td><td>UC5</td><td class="kind">flow + visual</td></tr>
+<tr><td>8</td><td><span class="tag p1">P1</span></td><td>Row Actions menu is 14 undifferentiated items; destructive "Release reservation → To buy" sits between routine moves; the one action the row needs is not on the row</td><td>UC4</td><td class="kind">visual</td></tr>
+<tr><td>9</td><td><span class="tag p1">P1</span></td><td>Phone and desktop disagree: phone Store view shows Price and a Buy button, desktop Acquisition list shows neither</td><td>UC1, UC4</td><td class="kind">consistency</td></tr>
+<tr><td>10</td><td><span class="tag p2">P2</span></td><td>Status pills all use the same blue: Owned, Ordered, To buy, Draft list are indistinguishable at a glance</td><td>UC2, UC4</td><td class="kind">visual</td></tr>
+<tr><td>11</td><td><span class="tag p2">P2</span></td><td>Duplicate rows: one card appears three times (Draft ×2, To buy D2, To buy D3) with no grouping</td><td>UC1</td><td class="kind">visual</td></tr>
+<tr><td>12</td><td><span class="tag p2">P2</span></td><td>Filter panel opens by default and pushes the table below the fold (about 300px); active filters have no chip summary except Deck</td><td>all</td><td class="kind">visual</td></tr>
+<tr><td>13</td><td><span class="tag p2">P2</span></td><td>Route change keeps the old scroll offset; deck page opened from a scrolled view lands at the bottom</td><td>all</td><td class="kind">flow</td></tr>
+<tr><td>14</td><td><span class="tag p2">P2</span></td><td>Deep link to a deck before the repository has loaded shows "Deck not found. Reload and try again."</td><td>all</td><td class="kind">flow</td></tr>
+<tr><td>15</td><td><span class="tag p2">P2</span></td><td>"Mechanic to explore" placeholder shows on all six tiles because <code>definition.mechanics</code> is empty in the live load</td><td>UC3</td><td class="kind">data + visual</td></tr>
+<tr><td>16</td><td><span class="tag p2">P2</span></td><td>Phone Shop: prices wrap mid-number ("$0.6 / 9"), card names break mid-word ("Beast Wit hin")</td><td>UC1, UC4</td><td class="kind">visual</td></tr>
+<tr><td>17</td><td><span class="tag p3">P3</span></td><td>Deck tile: status badge sits on the card's printed title bar; frame text (type line, rules) shows through under the overlay copy</td><td>—</td><td class="kind">visual</td></tr>
+<tr><td>18</td><td><span class="tag p3">P3</span></td><td>Deck tile footer: "95 / 100 in hand" wraps to three lines; Compare (29px) and ⋯ (36px) sit on different baselines; "✓ Compare" changes width and shifts the row; "· B3" breaks onto its own line</td><td>—</td><td class="kind">visual</td></tr>
+<tr><td>19</td><td><span class="tag p3">P3</span></td><td>Button system: primary buttons 43px, text buttons 29px, menu button 36px, all in one row; button gap 10px against 14px text; chevrons in "Insight ▾ / Manage ▾ / User Functions ⌄" sit below the text baseline</td><td>—</td><td class="kind">visual</td></tr>
+<tr><td>20</td><td><span class="tag p3">P3</span></td><td>Filter panel: number inputs are 4px taller than selects, so "Minimum mana value" label floats 2–3px above its neighbors; "One row per card" checkbox is vertically off the Group-rows select</td><td>—</td><td class="kind">visual</td></tr>
+<tr><td>21</td><td><span class="tag p3">P3</span></td><td>Table rhythm: rows alternate 60px / 74px depending on whether the "Main deck" sublabel is present; 22×30px thumbnails are unreadable; "—" with an underline in Paid reads as struck-out</td><td>—</td><td class="kind">visual</td></tr>
+<tr><td>22</td><td><span class="tag p3">P3</span></td><td>Deck page stat row spreads five figures across 1330px with ~200px gaps, lowercase labels, and puts "in deck box" (the physical truth) last; the "Finalized: reservations…" banner repeats on every deck with no dismiss</td><td>—</td><td class="kind">visual</td></tr>
+<tr><td>23</td><td><span class="tag p3">P3</span></td><td>Small things: "↕" sort glyph on every header; zero-value bars labeled "0" above a "0" axis label; sidebar footer text in three sizes; pagination only at the bottom of a 9-page table; Group chip is an underlined link inside a chip while sibling chips are static</td><td>—</td><td class="kind">visual</td></tr>
+</table>
+
+<h2>Findings in detail, with mock-ups</h2>
+
+<div class="finding">
+<header><span class="tag p0">P0</span><h3>1 · Put money on the buy list</h3><span class="uc">UC1 Buy · UC5 Spend</span></header>
+<p>Shop → Acquisition list shows 85 lines with Type, Paid (always "—"), Source, Allocation, Deck, Quantity, Printing. The Price column exists (<code>columns</code> in <code>crankmagic-collection.js</code>) but is off in <code>defaults</code>, so on desktop Rob cannot see what a card costs, what the list totals, or what each deck still needs in dollars. The phone Store view does show Price, and its Buy action writes the lot with <code>paid:null</code>, so even a completed purchase leaves no cost basis. The v11 target says "$85.37, 85 cards, one order"; the app cannot say that number.</p>
+<div class="grid2">
+<div class="mock before"><span class="lbl">Now</span>
+<div class="stat"><b>0</b><span>owned copies</span></div><div class="stat"><b>10</b><span>ordered</span></div><div class="stat"><b>85</b><span>to buy</span></div>
+<table class="mtable"><tr><th>Card</th><th>Type</th><th>Paid</th><th>Source</th><th>Deck</th><th></th></tr>
+<tr><td>Adarkar Wastes</td><td>Land</td><td>—</td><td><span class="pill draft">To buy</span></td><td>D2</td><td>Actions ⌄</td></tr>
+<tr><td>Adarkar Wastes</td><td>Land</td><td>—</td><td><span class="pill draft">To buy</span></td><td>D3</td><td>Actions ⌄</td></tr>
+<tr><td>Ancient Lumberknot</td><td>Creature</td><td>—</td><td><span class="pill draft">To buy</span></td><td>D4</td><td>Actions ⌄</td></tr></table></div>
+<div class="mock"><span class="lbl">Proposed</span>
+<div class="stat"><b>85</b><span>to buy</span></div><div class="stat"><b>$85.37</b><span>at sheet prices</span></div><div class="stat"><b>$12.34</b><span>ordered, unpaid</span></div><div class="stat"><b>$14.63</b><span>left in $100 pool</span></div>
+<div class="bar"><i style="width:56%;background:var(--accent2)"></i><i style="width:24%;background:var(--warn)"></i><i style="width:8%;background:var(--bad)"></i></div>
+<div class="legend"><span><i style="background:var(--accent2)"></i>Under $1 · 48 cards · $21</span><span><i style="background:var(--warn)"></i>$1–5 · 33 · $58</span><span><i style="background:var(--bad)"></i>Over $5 · 4 · $27 · local only</span></div>
+<table class="mtable"><tr class="g"><td colspan="6">D2 Chulane Value Loop · 16 cards · $19.40</td></tr>
+<tr><th>Card</th><th>Price</th><th>Cap</th><th>Vendor</th><th>Deck</th><th></th></tr>
+<tr><td>Approach of the Second Sun</td><td>$6.66</td><td style="color:var(--bad)">$7.33 · local</td><td>Game Theory WF</td><td>D2</td><td><span class="btn primary small">Bought</span></td></tr>
+<tr><td>Adarkar Wastes ×2</td><td>$0.29</td><td>$0.29</td><td>TCG</td><td>D2, D3</td><td><span class="btn primary small">Bought</span></td></tr></table>
+<p class="mini" style="margin:8px 0 0">"Bought" stamps the catalog price as <code>paid</code> with no dialog; tick many rows and use the batch bar (finding 4) for a whole order.</p></div>
+</div>
+</div>
+
+<div class="finding">
+<header><span class="tag p0">P0</span><h3>2 · Show "to pull" on the deck page and make it one click</h3><span class="uc">UC2 Organize</span></header>
+<p>D3 reads "100 planned · 72 owned &amp; reserved · 4 ordered · 24 to buy · 55 in deck box". The number Rob acts on at the table is 72 − 55 = 17 cards he already owns that are sitting on the bench (or in another box) and belong in this one. It is never computed, and the action for it ("Put in deck ▸") is item 5 of 14 in a row menu. The readiness banner says "Put the deck in its box once you have sleeved it, or confirm copies one at a time from the Collection", which is the gap stated as instructions.</p>
+<div class="grid2">
+<div class="mock before"><span class="lbl">Now</span>
+<div class="stat"><b>100</b><span>planned</span></div><div class="stat"><b>72</b><span>owned &amp; reserved</span></div><div class="stat"><b>4</b><span>ordered</span></div><div class="stat"><b>24</b><span>to buy</span></div><div class="stat"><b>55</b><span>in deck box</span></div>
+<div class="row" style="margin-top:12px"><span class="btn small">Collection group</span><span class="btn small">Reserve available copies</span><span class="btn small">Lock deck</span><span class="btn small">Insight ▾</span><span class="btn small">Manage ▾</span></div></div>
+<div class="mock"><span class="lbl">Proposed</span>
+<div class="row" style="justify-content:space-between"><div><div class="stat"><b>55</b><span>in box</span></div><div class="stat" style="color:var(--teal)"><b>17</b><span>to pull</span></div><div class="stat"><b>4</b><span>ordered</span></div><div class="stat"><b>24</b><span>to buy</span></div></div><div class="stat"><b>$41.20</b><span>to finish · cap $225</span></div></div>
+<div class="bar"><i style="width:55%;background:var(--good)"></i><i style="width:17%;background:var(--teal)"></i><i style="width:4%;background:var(--accent2)"></i><i style="width:24%;background:var(--warn)"></i></div>
+<div class="legend"><span><i style="background:var(--good)"></i>In box 55</span><span><i style="background:var(--teal)"></i>Pull from bench 17</span><span><i style="background:var(--accent2)"></i>Ordered 4</span><span><i style="background:var(--warn)"></i>To buy 24</span></div>
+<div class="row" style="margin-top:12px"><span class="btn primary small">Pull sheet (17)</span><span class="btn small">Buy list (24)</span><span class="btn small">Upgrades (12)</span><span class="btn small">Log a game</span><span class="btn small">More ▾</span></div>
+<p class="mini" style="margin:8px 0 0">Same segmented bar on each My Decks tile in place of "72 / 100 in hand".</p></div>
+</div>
+</div>
+
+<div class="finding">
+<header><span class="tag p0">P0</span><h3>3 · A per-deck pull sheet instead of the Assembly table</h3><span class="uc">UC2 Organize</span></header>
+<p>Shop → Deck assembly is the same table as Acquisition with the Source filter widened: 499 records, 600 copies, alphabetical across all six decks, nine pages. Assembling D3 means filtering by deck, then reading Allocation cell by cell. <code>BACKLOG.md</code> item 3 already describes the right view; this walkthrough moves it to the top because every other physical workflow (the v6–v11 box audits, the "green = pull from bench, red = buy, yellow = remove" color key Rob uses in the workbook) is this view.</p>
+<div class="mock"><span class="lbl">Proposed · Deck page → Pull sheet (17)</span>
+<div class="row" style="justify-content:space-between;margin-bottom:6px"><b>D3 Atraxa Proliferate · pull sheet</b><span class="row"><span class="btn small">Print</span><span class="btn small">Export</span><span class="btn primary small">Mark all found in box</span></span></div>
+<table class="mtable">
+<tr class="g"><td colspan="4">Pull from bench · 14</td></tr>
+<tr><td>☐ Aetheric Amplifier</td><td>Artifact · 2</td><td><span class="pill pull">Bench · box B2</span></td><td><span class="btn small">In box</span></td></tr>
+<tr><td>☐ Azorius Signet</td><td>Artifact · 2</td><td><span class="pill pull">Bench · box B1</span></td><td><span class="btn small">In box</span></td></tr>
+<tr class="g"><td colspan="4">Move from another box · 3</td></tr>
+<tr><td>☐ Arcades, the Strategist</td><td>Creature · 4</td><td><span class="pill ord">D2 box</span></td><td><span class="btn small">Move here</span></td></tr>
+<tr class="g"><td colspan="4">Remove from this box (no longer in the list) · 2</td></tr>
+<tr><td>☐ Meandering Towershell</td><td>Creature · 5</td><td><span class="pill buy">Remove → bench</span></td><td><span class="btn small">To bench</span></td></tr>
+<tr class="g"><td colspan="4">Waiting · 4 ordered · 24 to buy (see Buy list)</td></tr>
+</table>
+<p class="mini" style="margin:8px 0 0">Grouped by where the card is now, then by color inside each group. Tick writes <code>location</code> back to the lot; the sheet keeps the same order after each write so the walk through the boxes continues.</p></div>
+</div>
+
+<div class="finding">
+<header><span class="tag p1">P1</span><h3>4 · Orders: capture per order, never per card</h3><span class="uc">UC1 Buy · UC4 Update</span></header>
+<p>Actions → Mark Ordered opens an inline stepper (◀ 1 ▶ ✓) and records nothing about the order. The first draft of this review proposed a capture dialog per line; Rob rejected it, correctly: nobody fills in 85 screens. Price capture therefore moves off the line entirely.</p>
+<ul class="check" style="font-size:14px;color:var(--text)">
+<li><b>Zero-screen default.</b> Marking a row Ordered or Bought stamps the catalog price as <code>paid</code>. No dialog. Totals and cost basis work at sheet-price accuracy, which is what the v11 math already uses.</li>
+<li><b>One dialog per order.</b> Tick rows (the tick column exists), press <code>Ordered…</code> once: vendor, order ref, shipping, expected date. Shipping is spread across the lines. Eighty-five cards, one screen.</li>
+<li><b>Paste the receipt for exact prices.</b> Import list already has an <code>ordered</code> mode and a <code>paid</code> column mapping; add "Paste order confirmation" that parses the TCGplayer / Game Theory email, matches names to To buy rows and overwrites the stamped price in one commit. Optional, and the only place real prices are ever typed.</li>
+<li><b>Arrival is one click</b> on the order row.</li>
+</ul>
+<div class="grid2">
+<div class="mock"><span class="lbl">Proposed · after ticking 85 rows</span>
+<div class="row" style="justify-content:space-between;margin-bottom:8px"><b>85 ticked · $85.37 at sheet prices</b><span class="row"><span class="btn primary small">Ordered…</span><span class="btn small">Bought in store</span><span class="btn small">Clear</span></span></div>
+<div class="form">
+<label>Vendor<span class="in">TCGplayer ▾</span></label>
+<label>Order ref (optional)<span class="in">TCG-77812</span></label>
+<label>Shipping<span class="in">$4.99 → spread over 85 lines</span></label>
+<label>Expected by<span class="in">2026-09-18</span></label>
+</div>
+<div class="row" style="margin-top:10px;justify-content:space-between"><span class="mini">Prices stamped from the catalog; paste the receipt later to correct them.</span><span class="btn primary small">Save order</span></div></div>
+<div class="mock"><span class="lbl">Proposed · Shop → Orders</span>
+<table class="mtable"><tr><th>Order</th><th>Vendor</th><th>Lines</th><th>Total</th><th>Status</th><th></th></tr>
+<tr><td>TCG-77812</td><td>TCGplayer</td><td>85</td><td>$85.37 + $4.99</td><td><span class="pill ord">Ordered</span></td><td><span class="btn primary small">Arrived → bench</span> <span class="btn small">Paste receipt</span></td></tr>
+<tr><td>GT 09-11</td><td>Game Theory WF</td><td>6</td><td>$12.34</td><td><span class="pill own">Received</span></td><td><span class="btn small">Edit</span></td></tr></table>
+<p class="mini" style="margin:8px 0 0">"Arrived" marks every line Owned on the bench in one commit and keeps each per-deck reservation.</p></div>
+</div>
+</div>
+
+<div class="finding">
+<header><span class="tag p1">P1</span><h3>5 · Give the Upgrade Path a home on the deck page</h3><span class="uc">UC3 Define</span></header>
+<p>The live load carries 67 upgrade rows (deck, card, replaces, tier, price, why). In the app they surface as "Draft list · Suggestion · Upgrade · Uncommitted suggestion" rows interleaved alphabetically with the main deck in Collection. "Review linked upgrades" navigates there scrolled part-way down. The replaced card, the tier and the reason are not shown anywhere.</p>
+<div class="mock"><span class="lbl">Proposed · Deck page panel</span>
+<div class="row" style="justify-content:space-between;margin-bottom:6px"><b>Upgrade Path · 12 · $148 to Max</b><span class="row"><span class="btn small">Tuned only</span><span class="btn small">Under $2</span></span></div>
+<table class="mtable"><tr><th>Add</th><th>Replaces</th><th>Tier</th><th>Price</th><th>Why</th><th></th></tr>
+<tr><td>Contagion Engine</td><td>Contagion Clasp</td><td>Max</td><td>$12.52</td><td>Two proliferates per activation; closes poison two turns sooner</td><td><span class="btn small">Promote</span></td></tr>
+<tr><td>Doran, the Siege Tower</td><td>Meandering Towershell</td><td>Tuned</td><td>$8.48</td><td>Toughness-as-power for the whole board</td><td><span class="btn small">Promote</span></td></tr>
+<tr><td>Cathars' Crusade</td><td>Branching Evolution</td><td>Max</td><td>$4.90</td><td>Counters on every ETB, proliferate-compounding</td><td><span class="btn small">Promote</span></td></tr></table>
+<p class="mini" style="margin:8px 0 0">Promote swaps the slot's Active card, moves the replaced card's plan to bench and adds the new card to the buy list with the price recorded. Game Changer rows carry a GC chip and the deck's GC count is shown in the panel header.</p></div>
+</div>
+
+<div class="finding">
+<header><span class="tag p1">P1</span><h3>6 · Read the game log back</h3><span class="uc">UC5</span></header>
+<p>Manage → Log a game captures Outcome, Turns, Opposing commanders, Seat, What happened. No date, no "card that won it / dead card in hand", the two fields the v11 doc says the next revision should come from. Recorded games are only listed inside Insight → Reports &amp; advice, a modal. The deck page and tile show nothing. <code>game-record.js</code> already computes the Wilson interval against the simulator; nothing on the page surfaces it.</p>
+<div class="grid2">
+<div class="mock"><span class="lbl">Proposed · Log a game</span>
+<div class="form">
+<label>Date<span class="in">2026-09-11</span></label>
+<label>Outcome · finish<span class="in">Win ▾ · 1 of 4</span></label>
+<label>Turns<span class="in">9</span></label>
+<label>Pod / bracket<span class="in">4 · B3</span></label>
+<label>Card that won it<span class="in">Tekuthal, Inquiry Dominus</span></label>
+<label>Dead card in hand<span class="in">Contentious Plan</span></label>
+</div></div>
+<div class="mock"><span class="lbl">Proposed · Deck page record</span>
+<div class="stat"><b>3–1</b><span>last 4</span></div><div class="stat"><b>75%</b><span>win, n=4</span></div><div class="stat"><b>$9.60</b><span>per win</span></div><div class="stat"><b>—</b><span>vs sim: too few games to tell</span></div>
+<table class="mtable" style="margin-top:8px"><tr><th>Date</th><th>Result</th><th>Turns</th><th>Won it</th><th>Dead</th></tr>
+<tr><td>09-11</td><td>W · 1/4</td><td>9</td><td>Tekuthal</td><td>Contentious Plan</td></tr>
+<tr><td>09-04</td><td>L · 3/4</td><td>11</td><td>—</td><td>Karn's Bastion</td></tr></table></div>
+</div>
+</div>
+
+<div class="finding">
+<header><span class="tag p1">P1</span><h3>7 · Budget guardrails on the definition and the page</h3><span class="uc">UC5</span></header>
+<p>Edit definition has "Total price cap" and "Per-card price cap" fields, both blank on all six decks, and no deck page figure reads them. The standing rules ($225 deck value cap, $30 per card, $100 pool, 110% cap on listings over $2, at most 2 Game Changers) exist only in project docs. With prices already in the catalog, the page can show cost basis (sum of <code>paid</code>), market value (sum of price × owned), value vs cap, and $ to finish.</p>
+<div class="mock"><span class="lbl">Proposed · Budget card on deck page</span>
+<div class="row" style="gap:26px"><div class="stat"><b>$41.20</b><span>to finish (base)</span></div><div class="stat"><b>$62.85</b><span>paid so far</span></div><div class="stat"><b>$188</b><span>market value · 84% of $225 cap</span></div><div class="stat"><b>1 / 2</b><span>Game Changers</span></div><div class="stat" style="color:var(--warn)"><b>2</b><span>lines over the 110% cap</span></div></div>
+<div class="bar"><i style="width:84%;background:linear-gradient(90deg,var(--good),var(--warn))"></i></div></div>
+</div>
+
+<div class="finding">
+<header><span class="tag p1">P1</span><h3>8 · Row actions: one primary on the row, the rest grouped</h3><span class="uc">UC4</span></header>
+<p>On an owned-reserved row the Actions menu lists 14 items in one column: Mark Ordered, Mark Received / Owned, Correct to Incoming trade, Put in deck ▸, Move physically to Bench, Sell / Trade, Record sale / trade out, Reserve for a deck, Release reservation → To buy, Edit print &amp; details, Add / move to group, Pin slot, Replacements &amp; options, Add another copy. The row's one obvious next step depends on its state (To buy → Bought; Ordered → Arrived; Owned-reserved → In box) and should be a button on the row, as the phone Store view already does for Buy.</p>
+<div class="grid2">
+<div class="mock before"><span class="lbl">Now</span><div class="menu"><div class="it">Aetheric Amplifier · 1</div><div class="it">Mark Ordered</div><div class="it">Mark Received / Owned</div><div class="it">Correct to Incoming trade</div><div class="it">Put in deck ▸</div><div class="it">Move physically to Bench</div><div class="it">Sell / Trade</div><div class="it">Record sale / trade out</div><div class="it">Reserve for a deck</div><div class="it hi">Release reservation → To buy</div><div class="it">Edit print &amp; details</div><div class="it">Add / move to group</div><div class="it">Pin slot</div><div class="it">Replacements &amp; options</div><div class="it">Add another copy</div></div></div>
+<div class="mock"><span class="lbl">Proposed</span>
+<div class="row" style="margin-bottom:10px"><span>Aetheric Amplifier</span><span class="pill own">Owned · bench</span><span class="btn primary small">Put in D3 box</span><span class="dots">⋯</span></div>
+<div class="menu"><div class="sec">Where it is</div><div class="it">Move to another box ▸</div><div class="it">Move to bench</div><div class="sec">Plan</div><div class="it">Reserve for a deck ▸</div><div class="it">Replacements &amp; options</div><div class="it">Pin slot</div><hr><div class="sec">Record</div><div class="it">Edit print, paid &amp; details</div><div class="it">Add another copy</div><div class="it">Add / move to group</div><hr><div class="it danger">Release reservation → To buy</div><div class="it danger">Sell / trade out</div></div>
+<p class="mini" style="margin:8px 0 0">Items that do not apply to the row's state are omitted, not disabled.</p></div>
+</div>
+</div>
+
+<div class="finding">
+<header><span class="tag p1">P1</span><h3>9 · One Shop, same on phone and desktop</h3><span class="uc">UC1 · UC4</span></header>
+<p><code>compactShop()</code> switches the phone to Card · Color · Type · Price · Paid · Buy · ⌄. Desktop keeps the Collection defaults and hides Price. Make the compact column set the Shop default at every width, keep "Columns" for overrides, and add the summary strip from finding 1 above both.</p>
+</div>
+
+<div class="finding">
+<header><span class="tag p2">P2</span><h3>10 · Status pills carry no color meaning</h3><span class="uc">UC2 · UC4</span></header>
+<p>Owned, Ordered, To buy, Draft list all render as the same slate-blue chip. Rob's workbook already has a color key he reads at speed. Apply it: <span class="pill own">Owned</span> <span class="pill pull">Owned · not in box</span> <span class="pill ord">Ordered</span> <span class="pill buy">To buy</span> <span class="pill draft">Draft</span>. Same tokens drive the segmented bars in findings 2 and 3, so the color means one thing everywhere.</p>
+</div>
+
+<div class="finding">
+<header><span class="tag p2">P2</span><h3>11 · Collapse duplicate rows</h3><span class="uc">UC1</span></header>
+<p>Adarkar Wastes appears as Draft list ×2, To buy · D2, To buy · D3 on the first page of Collection. In the Shop, group by card by default and show "×2 · D2, D3" with the per-deck split on expand. "One row per card" exists as a checkbox but is off and disables row actions when on; the grouped row should keep a Bought action that splits correctly.</p>
+</div>
+
+<div class="finding">
+<header><span class="tag p2">P2</span><h3>12 · Filters closed by default, active filters as chips</h3><span class="uc">all</span></header>
+<div class="grid2">
+<div class="mock before"><span class="lbl">Now · 300px of filters above the fold</span>
+<div class="filters before"><label>Card type<span class="in"></span></label><label>Subtype<span class="in"></span></label><label>Mechanic<span class="in"></span></label><label style="position:relative;top:-3px">Minimum mana value<span class="in tall"></span></label><label>Max mana value<span class="in tall"></span></label><label>Max price ($)<span class="in tall"></span></label><label>Collection group<span class="in"></span></label><label>Deck<span class="in"></span></label></div></div>
+<div class="mock"><span class="lbl">Proposed · chips, panel on demand</span>
+<div class="row"><span class="in" style="flex:1;height:36px;border:1px solid #4a5d7c;border-radius:8px;background:#111a2b;padding:8px 10px;color:var(--muted)">Name, type or rules text</span><span class="btn small">Filters (2)</span><span class="btn small">Columns</span></div>
+<div class="chips"><span class="chip"><b>Deck</b> D3 Atraxa ✕</span><span class="chip"><b>Source</b> To buy ✕</span><span class="chip" style="background:transparent;color:var(--accent)">Clear all</span></div>
+<p class="mini" style="margin:10px 0 0">All inputs and selects at one height (36px) so labels align; the "One row per card" toggle moves into the Columns dialog.</p></div>
+</div>
+</div>
+
+<div class="finding">
+<header><span class="tag p2">P2</span><h3>13–14 · Scroll reset and deep-link timing</h3><span class="uc">all</span></header>
+<p>Navigating from a scrolled Collection to a deck page lands at the deck page's bottom (SWOT panel) because the router does not reset <code>scrollTo(0,0)</code> on view change. Opening <code>#decks?deck=deck:live:D3</code> in a fresh tab before the repository has resolved renders "Unable to open this view · Deck not found. Reload and try again." The route should wait on the repository promise and render a skeleton, then the deck.</p>
+</div>
+
+<div class="finding">
+<header><span class="tag p2">P2</span><h3>15–16 · Placeholder copy and phone wrapping</h3><span class="uc">UC3 · UC4</span></header>
+<p>All six tiles say "Mechanic to explore" because <code>definition.mechanics</code> is empty in <code>live-load.json</code>; populate it (Spirit tribal · Tokens · ETB, Proliferate · Poison, …) from the strategy tags the guide already derives, and render nothing when empty. On the 390px Store view, Price cells wrap "$0.6 / 9" and card names break mid-word ("Beast Wit hin", "Blood Art ist") because the compact table applies letter-spacing and allows breaks anywhere. Price needs <code>white-space:nowrap</code> and a fixed 56px column; names need <code>overflow-wrap:normal; word-break:normal</code>.</p>
+</div>
+
+<div class="finding">
+<header><span class="tag p3">P3</span><h3>17–18 · Deck tile: badge placement, art crop, footer alignment</h3><span class="uc">visual</span></header>
+<p>Measured at 1440px: the tile is 278×320, the "In progress" badge sits at top:15px left:16px directly over the printed card name bar; the art is scaled 1.35 at 50% 30% so the type line and rules box show through under the overlay text; the bottom gradient is only 12% solid. In the footer, "95 / 100 in hand" is a 65px-wide span wrapping to 42px tall, Compare is a 29px text button and ⋯ a 36px box, so the three items sit on three baselines; "✓ Compare" is wider than "Compare" and shifts the row; in the Krenko tile "· B3" breaks after the color pips.</p>
+<div class="grid2">
+<div class="mock before"><span class="lbl">Now</span>
+<div class="tile before"><div class="art"></div><div class="frame">Quintorius, Loremaster &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3RW</div><div class="frame2">Legendary Creature — Elephant Cleric</div><div class="frame3">Vigilance. At the beginning of your end step, exile target noncreature, nonland card from your graveyard. Create a 3/2 red and white Spirit…</div><div class="fade"></div><span class="badge">In progress</span><div class="body"><small>D1 Quintorius Spirits</small><h4>Quintorius, Loremaster</h4><p>Mechanic to explore</p></div><footer><span>●● · B3</span><span class="mid" style="color:var(--muted)">95 / 100 in hand</span><span class="cmp">✓ Compare</span><span class="dots">⋯</span></footer></div></div>
+<div class="mock"><span class="lbl">Proposed</span>
+<div class="tile after"><div class="art" style="background:radial-gradient(ellipse at 50% 40%,#7a4a22,#1b1f2c 75%)"></div><div class="fade"></div><span class="badge">In progress · 5 to go</span><div class="body"><small>D1 Quintorius Spirits · Spirit tribal · Tokens</small><h4>Quintorius, Loremaster</h4><div class="bar" style="margin:6px 0 2px"><i style="width:83%;background:var(--good)"></i><i style="width:12%;background:var(--teal)"></i><i style="width:1%;background:var(--accent2)"></i><i style="width:4%;background:var(--warn)"></i></div></div><footer><span style="white-space:nowrap">●● · B3</span><span style="color:var(--muted);white-space:nowrap;text-align:center;font-size:10px">83 box · 12 pull · 4 buy</span><span class="row" style="gap:6px"><span class="btn ghost small" style="width:66px;justify-content:center;white-space:nowrap;font-size:11px">✓ Compare</span><span class="dots">⋯</span></span></footer></div>
+<ul class="check"><li>Art: <code>object-position:50% 22%; transform:scale(1.7)</code> crops to the art box; gradient solid to 34%.</li><li>Badge moves to the copy block; the title bar is no longer covered.</li><li>Footer: <code>grid-template-columns:auto 1fr auto; align-items:center</code>; every span <code>white-space:nowrap</code>; Compare fixed 74px with the check as a pseudo-element so width never changes; Compare and ⋯ both 32px tall.</li></ul></div>
+</div>
+</div>
+
+<div class="finding">
+<header><span class="tag p3">P3</span><h3>19–20 · Button system and filter alignment</h3><span class="uc">visual</span></header>
+<p>Measured: <code>.v-button</code> 43px (padding 10px 15px, 14px text, 21px line-height, radius 8), <code>.cm-text-button</code> 29px (4px 0), <code>.cm-tile-menu-btn</code> 36px (1px 6px). Rows that mix them (tile footers, deck action row, table Actions cells) have no shared vertical center. <code>.cm-actions</code> gap is 10px while the text inside buttons has 15px side padding, so the gap between two buttons reads tighter than the gap between a button's edge and its own label. The chevron glyphs in "Insight ▾", "Manage ▾", "User Functions ⌄" are typed characters that sit 2px below the baseline.</p>
+<div class="grid2">
+<div class="mock before"><span class="lbl">Now</span><div class="row" style="gap:10px;align-items:flex-start"><span class="btn" style="min-height:43px">Collection group</span><span class="btn" style="min-height:43px">Insight ⌄</span><span class="btn ghost" style="min-height:29px">Compare</span><span class="dots" style="width:36px;height:36px">⋯</span></div><p class="mini" style="margin-top:8px">43 / 43 / 29 / 36px, gap 10px, chevron low</p></div>
+<div class="mock"><span class="lbl">Proposed</span><div class="row" style="gap:12px"><span class="btn">Collection group</span><span class="btn">Insight <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 3.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></span><span class="btn ghost" style="min-height:36px">Compare</span><span class="dots" style="width:36px;height:36px">⋯</span></div><p class="mini" style="margin-top:8px">Three sizes only: 40px default, 32px compact (tables), 36px icon. Gap 12px = 0.85 × side padding. Chevron as an inline SVG, <code>align-items:center</code>.</p>
+<div class="filters" style="margin-top:12px"><label>Card type<span class="in"></span></label><label>Min mana value<span class="in"></span></label><label>Max price ($)<span class="in"></span></label><label>Deck<span class="in"></span></label></div><p class="mini" style="margin-top:6px">Inputs and selects share <code>height:36px</code>; labels align.</p></div>
+</div>
+</div>
+
+<div class="finding">
+<header><span class="tag p3">P3</span><h3>21 · Table rhythm, thumbnails, empty values</h3><span class="uc">visual</span></header>
+<div class="grid2">
+<div class="mock before"><span class="lbl">Now · 60px / 74px rows</span>
+<table class="mtable"><tr><td style="padding:12px 8px">▫ Abigale, Eloquent First-Year</td><td>Legendary Creature</td><td style="text-decoration:underline;color:var(--muted)">—</td><td><span class="pill draft">Owned</span></td></tr>
+<tr><td style="padding:10px 8px 4px">▫ Abrade<br><span class="mini">Main deck</span></td><td>Instant</td><td style="text-decoration:underline;color:var(--muted)">—</td><td><span class="pill draft">Owned</span></td></tr>
+<tr><td style="padding:12px 8px">▫ Access Tunnel</td><td>Land</td><td style="text-decoration:underline;color:var(--muted)">—</td><td><span class="pill draft">Owned</span></td></tr></table></div>
+<div class="mock"><span class="lbl">Proposed · one 56px row</span>
+<table class="mtable"><tr><td>Abigale, Eloquent First-Year <span class="pill draft" style="margin-left:6px">Bench</span></td><td>Legendary Creature</td><td style="color:var(--muted)">$ —</td><td><span class="pill own">Owned</span></td></tr>
+<tr><td>Abrade <span class="pill draft" style="margin-left:6px">D6 · main</span></td><td>Instant</td><td style="color:var(--muted)">$ —</td><td><span class="pill own">Owned</span></td></tr>
+<tr><td>Access Tunnel <span class="pill draft" style="margin-left:6px">Bench</span></td><td>Land</td><td style="color:var(--muted)">$ —</td><td><span class="pill own">Owned</span></td></tr></table>
+<ul class="check"><li>"Main deck / Upgrade" sublabel becomes an inline chip; every row is 56px.</li><li>Thumbnail: drop the 22×30 image on desktop; show a 240px card preview on name hover (the Discover inspector already has the image).</li><li>Editable cells: dotted underline plus a pencil on hover; empty money shows "$ —", not a bare underlined dash.</li><li>Sort glyph only on the active column and on hover; pagination repeated above the table.</li></ul></div>
+</div>
+</div>
+
+<div class="finding">
+<header><span class="tag p3">P3</span><h3>22–23 · Deck page stat row, banner, and the rest</h3><span class="uc">visual</span></header>
+<p>The stat row uses <code>grid-template-columns:repeat(auto-fit,minmax(112px,1fr))</code> across 1330px, so five figures sit ~230px apart with the label in 12px lowercase; the eye has to travel to compare 72 with 55. Cluster the figures (finding 2's layout) with 26px gaps and sentence-case labels. The "Finalized: reservations track what this list needs…" banner shows on every deck page with no dismiss and no state change behind it; make it a one-time tip with a close button, or fold it into the readiness strip's tooltip. Composition chart: zero-height bars still print "0" above the "0" axis label; hide the value label when it is 0. Sidebar footer "Your cards. Your library." uses three font sizes in five lines; set one size (12px) and one color. "Group: D3 Atraxa Proliferate" is an underlined link inside a chip while the two chips beside it are static; either all three are links or the group chip becomes a plain chip with a separate "Open group" text button.</p>
+</div>
+
+<h2>What is already in the backlog and how this review changes its order</h2>
+<table>
+<tr><th>BACKLOG.md item</th><th>This review</th></tr>
+<tr><td>3 · Pull sheet for building at the table</td><td>Promote to P0 (finding 3). It is the physical-record use case; findings 2 and 10 are its prerequisites.</td></tr>
+<tr><td>1 · Autosave to a file</td><td>Keep. Not a UX gap in the flows walked here; the header chip and Load Live cover the working pattern.</td></tr>
+<tr><td>5 · Curve and role coverage in the readiness strip</td><td>Keep at P2; pairs with finding 7's budget card as a second row on the deck page.</td></tr>
+<tr><td>6 · What changed since I last sleeved this deck</td><td>Becomes the "Remove from this box" group of the pull sheet (finding 3) rather than a separate diff view.</td></tr>
+<tr><td>4 · Copies as things</td><td>Keep. Finding 4's order record is the first slice of it (a lot gains vendor, paid, ref).</td></tr>
+</table>
+
+<h2>Confidence, by layer</h2>
+<p><b>Structure of the ranking</b> (P0 items are the ones that block UC1 and UC2): high. Each was reproduced in the live app and confirmed in source. <b>Individual mock-ups</b>: medium; they are one reasonable layout each, drawn to the app's existing tokens, and the first build night will move some fields. <b>Micro measurements</b> (px values in 17–21): taken from computed styles at 1440×900 and are exact for that viewport. "Final" here means final until the pull sheet and the priced buy list have been used at a table and at a store once.</p>
+
+<p class="foot">Companion file: <code>crankmagic-ux-changes-claude-code.md</code> carries the same findings as an execution plan for Claude Code, with file targets, acceptance checks and the order to build in. Sources: live app at minorrob.github.io/mtg-deck-matrix (revision 116 library), repo <code>minorrob/mtg-deck-matrix</code> main, project docs <code>deck-master-v3-build-spec.md</code>, <code>final-build-target-v7-FINAL-2026-09-09.md</code>, <code>crankmagic-load-live-2026-09-10.md</code>.</p>
+</main>
+</body>
+</html>
