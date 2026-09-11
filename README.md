@@ -80,7 +80,11 @@ The approved standalone mockup remains under `design/crankmagic/` for design ref
   of cap` with a bar (amber past 90 %, red past 100 %), `Game Changers k / 2`, lines paid
   over the 110 % cap — reads the same lots and prices as the Shop strip. Deck Definition
   shows the standing caps ($225 total, $30 a card) as placeholders and writes them when the
-  field is left blank.
+  field is left blank. **Log a game** records the date, finish in a pod of n, bracket, the
+  card that won it and the dead card in hand (pickers limited to the deck); the **Record**
+  card reads it back — W–L, win rate with its n, paid per win, the Wilson interval from
+  `game-record.js` ("too few games to tell" under eight decided games) and the last ten
+  games — and tiles carry `3–1` once games exist.
 - **User Functions**: backup/restore, Load Live, enriched workbook export, legacy
   reconciliation, history/undo, comparison reset, optional mirror file and explicit Clear all.
 
