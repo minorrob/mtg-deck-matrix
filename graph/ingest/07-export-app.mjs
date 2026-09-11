@@ -31,6 +31,8 @@
 // carries weights and is what the graph view draws.
 import {writeFile, mkdir} from "node:fs/promises";
 import {dirname} from "node:path";
+import {createRequire} from "node:module";
+const Payload = createRequire(import.meta.url)("../../graph-payload.js");
 
 const outFile = arg("--out") || "data/graph.json";
 const url = (process.env.NEO4J_HTTP || "http://localhost:7474") + "/db/neo4j/tx/commit";
@@ -126,6 +128,8 @@ const payload = {
   decks, cards, played
 };
 await mkdir(dirname(outFile), {recursive: true});
-await writeFile(outFile, JSON.stringify(payload));
-const mb = (JSON.stringify(payload).length / 1e6).toFixed(2);
-console.log(`wrote ${outFile}  (${mb} MB)`);
+/* Packed on the way out (see graph-payload.js): edges as index triples against the card
+   list, art and buy links as the one id each is built from. card-catalog.js unpacks. */
+const text = JSON.stringify(process.argv.includes("--plain") ? payload : Payload.pack(payload));
+await writeFile(outFile, text);
+console.log(`wrote ${outFile}  (${(text.length / 1e6).toFixed(2)} MB)`);

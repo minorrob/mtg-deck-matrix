@@ -26,7 +26,11 @@ for (const line of cardsCsv.split("\n").slice(1)) {
   if (!line) continue;
   const m = line.match(/^([^,]+),("(?:[^"]|"")*"|[^,]*),/);
   if (!m) continue;
-  idByName.set(m[2].replace(/^"|"$/g, "").replace(/""/g, '"'), m[1]);
+  const name = m[2].replace(/^"|"$/g, "").replace(/""/g, '"');
+  idByName.set(name, m[1]);
+  /* EDHREC names a double-faced commander by its front face; the Card node carries the
+     whole "A // B". Both spellings resolve, so the 141 flip commanders keep their edges. */
+  if (name.includes(" // ") && !idByName.has(name.split(" // ")[0])) idByName.set(name.split(" // ")[0], m[1]);
 }
 
 const rows = [];

@@ -49,7 +49,10 @@ const audit = process.argv.includes("--audit");
 const all = process.argv.includes("--all");
 const FIELDS = all ? OLD_FIELDS.concat(NEW_FIELDS) : NEW_FIELDS;
 
-const graph = JSON.parse(await readFile(GRAPH, "utf8"));
+const Payload = require("../graph-payload.js");
+const rawGraph = JSON.parse(await readFile(GRAPH, "utf8"));
+const packed = rawGraph.format === Payload.FORMAT;
+const graph = Payload.unpack(rawGraph);
 const cards = graph.cards || [];
 console.log(`${cards.length} cards in the bake`);
 
@@ -206,5 +209,5 @@ for (const field of FIELDS) {
   }
 }
 graph.amplifiersAt = new Date().toISOString();
-await writeFile(GRAPH, JSON.stringify(graph), "utf8");
+await writeFile(GRAPH, JSON.stringify(packed ? Payload.pack(graph) : graph), "utf8");
 console.log(`wrote data/graph.json`);

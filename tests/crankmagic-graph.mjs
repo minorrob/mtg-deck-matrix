@@ -17,8 +17,10 @@
 // app actually ships.
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
+import {createRequire} from "node:module";
 
-const graph = JSON.parse(await readFile(new URL("../data/graph.json", import.meta.url), "utf8"));
+const require = createRequire(import.meta.url);
+const graph = require("../graph-payload.js").unpack(JSON.parse(await readFile(new URL("../data/graph.json", import.meta.url), "utf8")));
 const source = await readFile(new URL("../crankmagic-graph.js", import.meta.url), "utf8");
 
 /* The module is a browser file with no export of its own: it assigns onto globalThis and

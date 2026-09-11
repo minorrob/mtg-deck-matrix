@@ -10,7 +10,7 @@ import {readFile} from "node:fs/promises";
 const require = createRequire(import.meta.url);
 const Facets = require("../crankmagic-facets.js");
 
-const graph = JSON.parse(await readFile(new URL("../data/graph.json", import.meta.url), "utf8"));
+const graph = require("../graph-payload.js").unpack(JSON.parse(await readFile(new URL("../data/graph.json", import.meta.url), "utf8")));
 const CARDS = graph.cards;
 
 let checks = 0;

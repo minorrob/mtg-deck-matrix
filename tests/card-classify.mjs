@@ -20,7 +20,7 @@ import {readFile} from "node:fs/promises";
 const require = createRequire(import.meta.url);
 const Classify = require("../card-classify.js");
 const cards = JSON.parse(await readFile(new URL("../data/cards.json", import.meta.url), "utf8")).cards || [];
-const graph = JSON.parse(await readFile(new URL("../data/graph.json", import.meta.url), "utf8"));
+const graph = require("../graph-payload.js").unpack(JSON.parse(await readFile(new URL("../data/graph.json", import.meta.url), "utf8")));
 
 let checks = 0;
 const ok = (label, fn) => { fn(); checks += 1; process.stdout.write(`  ok  ${label}\n`); };

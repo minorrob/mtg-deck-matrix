@@ -3,7 +3,7 @@
  * IDs; Oracle and printing IDs remain separate metadata, so hydration never
  * duplicates a physical copy. Search suggestions never auto-resolve an import.
  */
-(function(root,factory){const classifier=typeof module==='object'&&module.exports?require('./card-classify.js'):root.MtgCardClassify;const api=factory(classifier);if(typeof module==='object'&&module.exports)module.exports=api;if(root)root.CrankCatalog=api;})(typeof globalThis!=='undefined'?globalThis:this,function(Classify){
+(function(root,factory){const classifier=typeof module==='object'&&module.exports?require('./card-classify.js'):root.MtgCardClassify;const payload=typeof module==='object'&&module.exports?require('./graph-payload.js'):root.CrankGraphPayload;const api=factory(classifier,payload);if(typeof module==='object'&&module.exports)module.exports=api;if(root)root.CrankCatalog=api;})(typeof globalThis!=='undefined'?globalThis:this,function(Classify,Payload){
   'use strict';
   const folded=s=>String(s||'').normalize('NFKC').trim().toLowerCase();
   function key(name){return 'card:'+btoa(String.fromCharCode(...new TextEncoder().encode(folded(name)))).replaceAll('+','-').replaceAll('/','_').replaceAll('=','');}
@@ -190,7 +190,7 @@
       }
       return {hydrated,missing};
     }
-    async function loadGraph(){if(graph)return graph;if(!graphLoading)graphLoading=load(options.urls.graph).then(data=>{graph=data;graphDate=data.generatedAt||'';for(const c of data.cards){const prior=byName.get(folded(c.name));add({...c,oracleId:c.id,legalities:prior?.legalities||{commander:'legal'},verified:true});}return data;}).catch(error=>{graphLoading=null;throw error;});return graphLoading;}
+    async function loadGraph(){if(graph)return graph;if(!graphLoading)graphLoading=load(options.urls.graph).then(raw=>{const data=Payload?Payload.unpack(raw):raw;graph=data;graphDate=data.generatedAt||'';for(const c of data.cards){const prior=byName.get(folded(c.name));add({...c,oracleId:c.id,legalities:prior?.legalities||{commander:'legal'},verified:true});}return data;}).catch(error=>{graphLoading=null;throw error;});return graphLoading;}
     return {add,search,similar,resolve,details,cheapest,hydrate,recheck,loadGraph,exact:named,get:id=>byId.get(id)||named(id),all:()=>[...byId.values()],load,universeDate,rankDate,dates:()=>({catalog:universeDate,prices:priceDate,ranks:rankDate,graph:graphDate}),available:()=>byId.size};
   }
   /* WHAT A DECK IS ABOUT, READ OFF ITS LIST. definition.mechanics is the owner's word and
