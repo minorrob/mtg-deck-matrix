@@ -106,6 +106,7 @@ const CHECKABLE = [
   ["tools/compile-game-logs.mjs", ["--check"]],
   ["tools/flavor-names.mjs", ["--check"]],
   ["tools/graph-amplifiers.mjs", ["--check"]],
+  ["tools/build-live-state.mjs", ["--check"]],
 ];
 
 for (const [tool, args] of CHECKABLE) {
