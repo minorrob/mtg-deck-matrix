@@ -44,7 +44,10 @@ The approved standalone mockup remains under `design/crankmagic/` for design ref
   a To buy row, *Arrived* on an ordered copy, *Put in Dn box* on an owned copy reserved but
   not in its box, *Reserve…* on an unassigned bench copy, nothing on a copy already in its
   box — and the menu behind *Actions* is four sections: Status, Where it is, Plan, Record,
-  with Sell / Trade under the rule. The same ladder runs over ticked rows (*Set status*) and over a whole deck
+  with Sell / Trade under the rule. Active filters show as removable chips under the search
+  with *Clear all*; the Columns dialog also holds *One row per card* (the Shop's default: a
+  card three decks want is one line, `×3 · D2, D3, D5`, and *Bought* on it buys for all
+  three) and the page size (60 / 120 / All), remembered with the columns. The same ladder runs over ticked rows (*Set status*) and over a whole deck
   from its page (*Card status*). Every deck has a collection group, made with it; a deck
   saved from the Lab arrives as a draft whose cards sit in that group at *Draft list* until
   their status is set. Group-by band headers fold, and the toolbar filters by group.
