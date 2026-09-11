@@ -58,6 +58,10 @@ eq(summary.readiness[0].deck,'Goblins');
 // agrees with the shortfalls the model derives. This is the check that guards a commit.
 const real=await buildFile();
 eq(real.state.decks.length,6);ok(real.state.decks.every(d=>d.status==='final'));
+/* The six live decks name their mechanics now (filled from the catalog's reading, editable by
+   hand in live-load.json), and the reading of D3's list says what its name says. */
+ok(real.state.decks.every(d=>d.definition.mechanics.length>=2));
+{const d3=real.state.decks.find(d=>/^D3/.test(d.name)),main=d3.slots.filter(r=>r.purpose==='main').map(r=>real.state.cards[r.cardId]);ok(C.deckMechanics(main,real.state.cards[d3.commanders[0]]).some(m=>/Proliferate|Counters/.test(m)));}
 eq(real.issues.length,0);
 ok(real.summary.owned>700&&real.summary.toBuy>0&&real.summary.upgrades===67);
 M.validate(real.state);checks++;
