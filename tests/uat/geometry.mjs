@@ -48,7 +48,16 @@ function measure(minTap) {
   const menu = document.querySelector("#matrix-v2 .cm-user-menu");
   const top = document.querySelector("#matrix-v2 .v-top");
 
+  /* Every .v-button in one row is the same height as its neighbours: the button scale is
+     three sizes, and a row that mixes them is the 43/29/36 finding coming back. */
+  const uneven = [];
+  for (const row of document.querySelectorAll("#matrix-v2 .cm-actions, #matrix-v2 .cm-toolbar, #matrix-v2 .cm-batch-bar, #matrix-v2 .cm-shop-bar")) {
+    const hs = [...row.querySelectorAll(":scope > .v-button")].filter(visible).map((el) => Math.round(el.getBoundingClientRect().height));
+    if (hs.length > 1 && Math.max(...hs) - Math.min(...hs) > 1) uneven.push(`${name(row)} (${hs.join("/")})`);
+  }
+
   return {
+    uneven,
     overflow: document.documentElement.scrollWidth - window.innerWidth,
     innerWidth: window.innerWidth,
     small: controls.filter((c) => c.h < minTap),
@@ -93,6 +102,7 @@ export async function geometryPass({browser, base, widths = WIDTHS, pages = PAGE
         checks += 3;
 
         if (m.overflow > 1) fail(`${where}: the page scrolls sideways by ${m.overflow}px, so something is off the right edge`);
+        if (m.uneven.length) fail(`${where}: buttons in one row differ in height — ${m.uneven.slice(0, 3).join(", ")}`);
 
         if (phone && m.small.length) {
           fail(`${where}: ${m.small.length} control(s) under ${MIN_TAP}px tall — ${m.small.slice(0, 4).map((c) => `${c.name}@${c.h}px`).join(", ")}`);
