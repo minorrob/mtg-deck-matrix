@@ -5,6 +5,12 @@
 //   node graph/ingest/04-fetch-edhrec.mjs                    # commanders in your decks
 //   node graph/ingest/04-fetch-edhrec.mjs --all              # every commander in variants.json too
 //   node graph/ingest/04-fetch-edhrec.mjs --name "Krenko, Mob Boss"
+//   node graph/ingest/04-fetch-edhrec.mjs --universe         # every legal commander (~3,400 pages)
+//
+// --universe reads the commander flag off data/commander-universe.json, the file that
+// asked Scryfall `is:commander` (see tools/commander-universe.mjs for why a type-line
+// regex gets it wrong). It is the scope the shipped graph uses: the whole format, so
+// that anyone's commander lands with its neighbourhood rather than as an orphan.
 //
 // Cached on disk and rate limited. EDHREC serves this for free; do not hammer it.
 import {mkdir, readFile, writeFile, access} from "node:fs/promises";
@@ -35,8 +41,10 @@ async function getJson(url) {
   }
 }
 
+/* EDHREC names a double-faced commander by its front face: Aang, at the Crossroads //
+   Aang, Destined Savior lives at aang-at-the-crossroads. The full name 404s. */
 export function slugify(name) {
-  return name.toLowerCase().replace(/'/g, "").replace(/[,.]/g, "")
+  return name.split(" // ")[0].toLowerCase().replace(/'/g, "").replace(/[,.]/g, "")
     .normalize("NFD").replace(/[̀-ͯ]/g, "")
     .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
@@ -44,6 +52,11 @@ export function slugify(name) {
 async function commanderNames() {
   const explicit = arg("--name");
   if (explicit) return [explicit];
+  if (process.argv.includes("--universe")) {
+    const uni = JSON.parse(await readFile("data/commander-universe.json", "utf8"));
+    const at = Object.fromEntries(uni.fields.map((f, i) => [f, i]));
+    return uni.cards.filter((c) => c[at.commander]).map((c) => c[at.name]);
+  }
   const master = JSON.parse(await readFile("data/archive/master-v2.json", "utf8"));
   const names = new Set(Object.values(master.decks || {}).map((d) => d.commander).filter(Boolean));
   for (const c of master.cards) if (c.purpose === "Commander") names.add(c.name);
