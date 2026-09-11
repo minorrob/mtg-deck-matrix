@@ -886,3 +886,29 @@ button.cm-pill:hover{filter:brightness(1.15)}
 /* THE ROW MENU'S SECTIONS: small caps, a rule above each after the first. */
 .cm-menu .cm-menu-section{margin:8px 0 2px;padding:6px 12px 2px;border-top:1px solid #3b465d;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#8fa6c4}
 .cm-menu .cm-side-submenu .cm-menu-section{border-top:0}
+
+/* ================================== P2 · CONSISTENCY ==================================
+   Filter chips under the search; one height for every control in the filter panel; the
+   simulation history as cards on a phone; the hero's group link as a text button; the
+   deep-link skeleton. */
+.cm-fchips{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin:8px 0 4px}
+#matrix-v2 .cm-fchip{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 10px;border:1px solid #455a76;border-radius:20px;background:#1e3149;color:#bddeff;font:inherit;font-size:12px;cursor:pointer}
+#matrix-v2 .cm-fchip:hover{background:#2a456a}
+#matrix-v2 .cm-fchip strong{color:#eaf5ff;font-weight:700}
+#matrix-v2 .cm-fchips .cm-text-button{font-size:12px;padding:0}
+#matrix-v2 .cm-filter-panel input:not([type=checkbox]),#matrix-v2 .cm-filter-panel select{height:36px;min-height:36px;padding-top:0;padding-bottom:0}
+.cm-fold-note{font-size:12px;white-space:nowrap}
+#matrix-v2 .cm-hero-link{font-size:12px;padding:0;min-height:0;text-decoration:underline}
+.cm-skeleton h1{opacity:.7}
+@media(max-width:640px){
+  .cm-history-table,.cm-history-table tbody,.cm-history-table tr,.cm-history-table td{display:block}
+  .cm-history-table thead{display:none}
+  .cm-history-table tr{padding:10px 0 12px;border-bottom:1px solid var(--v-line)}
+  .cm-history-table td{border:0;padding:2px 0;min-width:0;display:flex;gap:10px;align-items:baseline}
+  .cm-history-table td::before{content:attr(data-label);flex:0 0 96px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--v-muted)}
+  /* Score and date lead: the first line a reader wants. */
+  .cm-history-table td[data-label=Score]{order:-2;font-size:18px}
+  .cm-history-table td[data-label=When]{order:-1}
+  .cm-history-table td[data-label=Score]::before,.cm-history-table td[data-label=When]::before{content:none}
+  .cm-history-table td[data-label=Report]{padding-top:8px}
+}
