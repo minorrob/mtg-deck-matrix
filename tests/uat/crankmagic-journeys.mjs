@@ -153,6 +153,12 @@ try{
  await page.locator('#cm-card-view').getByText('Sol Ring',{exact:false}).first().waitFor({timeout:45000});
  ok(page.url().includes('card='));
  await click('Back');checks+=1;
+ /* THE LIST TAB: the whole neighbourhood at the widest reach, sortable, a row opening the
+    card in Card Info without moving the focus. */
+ await page.getByRole('tab',{name:'List'}).click();await page.locator('.cm-list-table').waitFor({timeout:45000});const listed=await page.locator('.cm-list-row').count();ok(listed>0);ok(await page.evaluate(()=>document.querySelector('.cm-graph-grid').classList.contains('cm-list-open')));
+ await page.locator('.cm-list-table [data-action=list-sort][data-key=name]').click();eq(await page.locator('.cm-list-table th[aria-sort=ascending] button').innerText().then(t=>t.trim().split(/\s/)[0]),'Card');
+ const firstName=await page.locator('.cm-list-name').first().innerText();await page.locator('.cm-list-name').first().click();await page.locator('.cm-pane-tab.is-on').filter({hasText:'Card Info'}).waitFor();eq(await page.locator('#cm-pane-body h2').innerText(),firstName);
+ await page.getByRole('tab',{name:'List'}).click();await page.locator('.cm-list-tick').first().check();await page.locator('.cm-pick-actions').waitFor();await click('Clear selection');
  await page.evaluate(()=>navigator.serviceWorker.ready);await context.setOffline(true);await page.reload();await page.locator('#cm-graph').waitFor({timeout:45000});await nav('Collection');await page.getByRole('table').waitFor();eq((await state()).lots,afterLab.lots);await context.setOffline(false);
  await page.setViewportSize({width:390,height:844});await nav('My Decks');await page.getByRole('heading',{name:'Build it. Make it yours.'}).waitFor();ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await page.evaluate(()=>scrollTo(0,document.body.scrollHeight));const navBox=await page.getByRole('navigation',{name:'Main pages'}).boundingBox();ok(navBox.y>=0&&navBox.y<844);await nav('Collection');await page.getByRole('table').waitFor();ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
  eq(errors,[]);console.log(`crankmagic-journeys: ${checks} checks passed across real deck assembly, imports, printing lots, corrections, concurrency, quota abort, backup restore, initial construction, graph navigation, offline and mobile.`);

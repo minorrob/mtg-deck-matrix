@@ -54,7 +54,13 @@ The approved standalone mockup remains under `design/crankmagic/` for design ref
   saved from the Lab arrives as a draft whose cards sit in that group at *Draft list* until
   their status is set. Group-by band headers fold, and the toolbar filters by group.
 - **Discover**: navigable metadata/co-play graph, mouse-wheel zoom, keyboard neighbors,
-  pan, back trail, card inspection and supplemental catalog lookup.
+  pan, back trail, card inspection and supplemental catalog lookup. The pane beside the
+  graph has two tabs: **Card Info** (the focused card, its terms, *Add/Buy*) and **List**
+  — every card the focus reaches at the widest depth and breadth, whatever the sliders say,
+  under the same filters; sortable by its headers, paged, a tick per row for *Add selected
+  to a group* or a draft deck, *Add/Buy* on each row, and a row click opens the card in
+  Card Info without moving the graph. The pane widens while List is open; in presentation
+  mode the list keeps name, type and mana.
 - **Deck Lab**: any legal catalog commander by name or mechanics/EDHREC commander rank;
   optional second commander; an existing list/group; separate Deck Definition; real
   initial construction under price/copy limits. The user reviews and finalizes the list.
