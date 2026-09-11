@@ -912,3 +912,24 @@ button.cm-pill:hover{filter:brightness(1.15)}
   .cm-history-table td[data-label=Score]::before,.cm-history-table td[data-label=When]::before{content:none}
   .cm-history-table td[data-label=Report]{padding-top:8px}
 }
+
+/* ================================== P3 · POLISH ==================================
+   The ribbon on the roster pages, the table rhythm, the sublabel chip, the hover art,
+   editable cells, the sort glyph, the sidebar footer, the header gap, the eyebrow dot. */
+.cm-stats:not(.cm-deck-stats){max-width:900px;gap:18px 32px}
+#matrix-v2 .cm-table td{height:56px;vertical-align:middle}
+#matrix-v2 .cm-table td.cm-row-actions-cell{vertical-align:middle}
+#matrix-v2 .cm-table td:first-child small{display:inline-block;margin:0 0 0 8px;padding:1px 7px;border-radius:5px;background:#243048;color:#aebfd6;font-size:10.5px;line-height:1.5;max-width:none;vertical-align:middle}
+.cm-hover-art{position:fixed;z-index:70;width:180px;aspect-ratio:488/680;border-radius:9px;box-shadow:0 12px 34px #000b;pointer-events:none;background:#1b2740}
+#matrix-v2 .cm-cell-edit{box-shadow:none;border-bottom:1px dotted #5a677c;border-radius:0;padding-right:16px;position:relative}
+#matrix-v2 .cm-cell-edit::after{content:'\270E';position:absolute;right:2px;top:1px;font-size:11px;color:var(--v-accent);opacity:0}
+#matrix-v2 .cm-cell-edit:hover{background:none;border-bottom-color:var(--v-accent)}
+#matrix-v2 .cm-cell-edit:hover::after{opacity:1}
+.cm-table th .cm-sort-idle{opacity:0;transition:opacity .12s}
+.cm-table th:hover .cm-sort-idle{opacity:.8}
+.cm-nav-note,.cm-nav-note p,.cm-nav-note strong,.cm-nav-note .cm-text-button,.cm-nav-note .cm-data-age{font-size:12px;color:#a3b8d3}
+.cm-nav-note strong{font-weight:600}
+.cm-nav-note .cm-text-button{color:#8cc9ff}
+.cm-user-menu{gap:12px}
+.cm-eyebrow-warm:before{letter-spacing:0}
+@media(max-width:640px){#matrix-v2 .cm-table-shop td{height:auto}}
