@@ -38,7 +38,14 @@
   --v-decision:light-dark(#8a5a10,#e0b273);--v-decision-bg:light-dark(#fdf4e4,#2a2519);
   --v-decision-line:light-dark(#d8b57e,#6d5c3d);--v-decision-ink:light-dark(#4a3208,#f6e3c6);
   --v-decision-field:light-dark(#fbeeda,#332c1d);
-  --v-required:light-dark(#c0392f,#ef6b60)}
+  --v-required:light-dark(#c0392f,#ef6b60);
+  /* STATUS COLOURS. One hue per rung of "where is this card", used by every pill and every
+     segmented bar so a colour means the same thing on a tile, a deck page, a roster row and
+     a pull sheet. Green is in the box; teal is owned but has to be pulled from somewhere;
+     blue is on its way; amber costs money; the two greys are intentions, not copies; red
+     is a card sitting in a box it no longer belongs in. */
+  --st-inbox:#5cc98a;--st-pull:#4fc2c0;--st-ordered:#3b7dd8;--st-buy:#f0b35a;
+  --st-watch:#8f9bb3;--st-draft:#7f8ba0;--st-remove:#ef6b60}
 #matrix-v2 .v-showcase .v-primary{box-shadow:0 5px 18px light-dark(#0869cd28,#00000020)}
 #matrix-v2 .v-cardfan:before{background:light-dark(#b9d8f5,#244c72)}
 #matrix-v2 .v-meter{background:#bcdcff33}#matrix-v2 .v-meter span{background:#73bcff}

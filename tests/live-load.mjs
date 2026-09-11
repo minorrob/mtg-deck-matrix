@@ -67,6 +67,8 @@ M.validate(real.state);checks++;
 const saved=await E.readBackup(await readFile(new URL('../data/live-state.json',import.meta.url),'utf8'));
 M.validate(saved.state);checks++;
 eq(M.fingerprint(saved.state.decks[0]),M.fingerprint(real.state.decks[0]));
+// The segments on the live file: D3 owns 72, 55 of them in its box, so 17 are to pull.
+{const d3=saved.state.decks.find(d=>/^D3/.test(d.name)),r=M.readiness(saved.state,d3);eq(r.inBox,55);eq(r.pullFromBench+r.pullFromOtherBox,17);eq(r.ordered,4);eq(r.toBuy,24);eq(r.remove,0);ok(r.costToFinish>0);}
 assert.deepEqual(M.counters(saved.state),M.counters(real.state));checks++;
 assert.deepEqual(saved.state.lots.map(l=>[l.cardId,l.quantity,l.source,l.allocation?.slotId||'',l.location?.kind||'']),real.state.lots.map(l=>[l.cardId,l.quantity,l.source,l.allocation?.slotId||'',l.location?.kind||'']));checks++;
 eq(L.PASSWORD,'treycmload1');

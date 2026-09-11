@@ -13,7 +13,7 @@ const click=label=>page.getByRole('button',{name:label,exact:true}).click(),nav=
 const state=()=>page.evaluate(async()=>{const r=await CrankRepository.open();try{return await r.getState();}finally{r.close();}});
 const waitDialog=()=>page.getByRole('dialog').waitFor({state:'hidden'});
 const row=(name,source)=>page.locator('tbody tr').filter({has:page.getByRole('button',{name,exact:true})}).filter({hasText:source});
-async function actionsFor(name,source){await row(name,source).getByRole('button',{name:'Actions ⌄'}).click();}
+async function actionsFor(name,source){await row(name,source).getByRole('button',{name:'Actions',exact:true}).click();}
 /* Mark Ordered, Mark Received / Owned and No longer wanted no longer open a dialog: they
    open a count strip beside the menu, and the green check is the commit. The check carries
    the action's own label as its accessible name, so it is found inside the strip rather
@@ -92,7 +92,7 @@ try{
  /* The whole draft at a status, from the deck page: every remaining card becomes a Wanted
     copy filed with the deck, so the group now holds the hundred as copies. */
  await click('Clear filters');await nav('My Decks');await page.locator('.cm-deck-tile').filter({hasText:'Constructive run'}).getByRole('button').first().click();
- await click('Card status ▾');await click('Wanted');await click('Confirm change');await waitDialog();current=await state();
+ await click('Card status');await click('Wanted');await click('Confirm change');await waitDialog();current=await state();
  eq(current.lots.filter(l=>l.groupIds.includes(labDeck.groupId)).reduce((n,l)=>n+l.quantity,0),labTotal);
  ok(current.lots.some(l=>l.source==='wanted'&&l.groupIds.includes(labDeck.groupId)));
  /* Simulation history: a measured report filed with the deck is a row on its page, opens
