@@ -481,6 +481,14 @@
     SUPPLY_ROLES.forEach(function (r) { if (r.test(typeLine)) push(out.roles, r.id); });
     SUPPLY_TEXT.forEach(function (r) { if (r.re.test(text)) push(out.roles, r.id); });
     ((card && card.keywords) || []).forEach(function (k) { push(out.mechanics, String(k).toLowerCase()); });
+    /* HOW A LAND ENTERS is the first thing a mana base is chosen by, and no keyword says
+       it. Read off the land's own sentences: one that says it enters tapped and names a
+       condition -- unless, if you don't pay, if you control fewer than -- is conditional;
+       one that says it flat is tapped; a land that says neither enters untapped. Filed as
+       a mechanic so the filter pane, the term chips and the bake all carry it without a
+       new field. crankmagic-graph.js keeps it out of the relation scoring, because four
+       thousand lands sharing "enters-untapped" is not a synergy. */
+    if (isLand) push(out.mechanics, landEntry(text));
     tribesOf(typeLine).forEach(function (t) { push(out.tribes, t); });
     wantsOf(raw, allow).forEach(function (t) { push(out.wants, t); });
     makesOf(raw, allow).forEach(function (t) { push(out.makes, t); });
@@ -492,6 +500,22 @@
   /* The rate and strength the CSV bake carries alongside the plain edge. graph.json drops
      both, so the page never needs them -- but 02-build-csv.mjs does, and it must not keep
      a second copy of the patterns to get at them. */
+  var ENTERS_TAPPED = /\benters? (?:the battlefield )?tapped\b/;
+  var ENTRY_CONDITION = /\bunless\b|\bif you (?:don't|do not|control|have)\b|\bif (?:an opponent|it's not|it isn't|there are|you've)\b|\byou may (?:pay|reveal|have)\b|\bif it entered\b/;
+  function landEntry(text) {
+    var sentences = String(text || "").split(/(?<=[.!])\s+|\n+/);
+    var tapped = false, conditional = false;
+    sentences.forEach(function (s) {
+      /* selfless() has already turned the land's own name into "this creature", so the
+         sentence to keep reads "this creature enters tapped"; the ones to skip are about
+         something else entering -- other lands, tokens, what a fetched land does. */
+      if (!ENTERS_TAPPED.test(s) || /\b(?:other|another) (?:\w+ )?(?:lands?|permanents?|creatures?) (?:you control )?enters?\b|\blands you control enter\b|\btokens?\b|\bput (?:it|that|them|a|an)\b[^.]*\btapped\b/.test(s)) return;
+      tapped = true;
+      if (ENTRY_CONDITION.test(s)) conditional = true;
+    });
+    return conditional ? "enters-tapped-unless" : tapped ? "enters-tapped" : "enters-untapped";
+  }
+
   function edgeDetail(card) {
     var text = rulesText(card);
     return {

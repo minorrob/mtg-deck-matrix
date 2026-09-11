@@ -141,6 +141,9 @@ try{
  await click('Acquisition list');await page.locator('#cm-shop-total').waitFor();await click('Clear filters');
  const afterLab=await state();
  await nav('Discover');await page.locator('#cm-graph').waitFor({timeout:45000});
+ /* LANDS THAT ENTER UNTAPPED. Card type Land narrows to the lands; the enters-untapped
+    mechanic narrows again, to fewer than all of them and more than none. */
+ {await page.locator('#cm-facet-details > summary').click();await page.locator('[data-facet=type] > summary').click();await page.locator('.cm-facet-pick[data-key=type][data-value=Land]').click();const lands=await page.locator('#cm-facet-count').innerText();const n=t=>Number(t.replace(/,/g,'').match(/^(\d+) of/)[1]);ok(n(lands)>1000,lands);await page.locator('[data-facet=mechanics] > summary').click();await page.locator('.cm-facet-pick[data-key=mechanics][data-value=enters-untapped]').click();const untapped=await page.locator('#cm-facet-count').innerText();ok(n(untapped)>300&&n(untapped)<n(lands),`${lands} -> ${untapped}`);await click('Clear filters');await page.locator('#cm-facet-details > summary').click();}
  /* GRAPH NAVIGATION, through the controls the graph actually has now. This used to scroll to
     zoom and click a row in a neighbours list; that list was removed when the graph gained
     node and edge pop-ups, and #cm-graph-neighbors has not existed since -- the only trace

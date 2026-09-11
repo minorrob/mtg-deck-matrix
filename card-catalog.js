@@ -202,7 +202,7 @@
      generic roles that describe every deck; and a creature type that a third of the list
      shares, as "<Type> tribal". The top three, the commander's styles breaking ties. */
   const EVERGREEN=new Set(['flying','vigilance','haste','trample','first strike','double strike','deathtouch','lifelink','reach','menace','flash','hexproof','indestructible','ward','scry','cycling','kicker','equip','double','flashback','escape','evoke','surveil','blight']);
-  const GENERIC=new Set(['creatures','lands','artifacts','enchantments','instants','sorceries','planeswalkers','ramp','draw','removal','wipe','protection','tokens','counters','sac-outlet','graveyard','treasure']);
+  const GENERIC=new Set(['enters-untapped','enters-tapped','enters-tapped-unless','creatures','lands','artifacts','enchantments','instants','sorceries','planeswalkers','ramp','draw','removal','wipe','protection','tokens','counters','sac-outlet','graveyard','treasure']);
   const RAW_LABEL={'sac-outlet':'Sacrifice',graveyard:'Graveyard',recursion:'Recursion',proliferate:'Proliferate',defender:'Defender',landfall:'Landfall',mill:'Mill',treasure:'Treasure',tokens:'Tokens',counters:'Counters',storm:'Storm',lifegain:'Lifegain'};
   const titled=t=>RAW_LABEL[t]||String(t).replace(/-/g,' ').replace(/^\w/,ch=>ch.toUpperCase());
   function deckMechanics(cards,leader,limit=3){

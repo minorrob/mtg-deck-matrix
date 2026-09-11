@@ -13,6 +13,14 @@ Three more PRs after the plan, in the order the owner asked for them:
 | #146 | A draggable divider between canvas and pane, width kept per device and mode in localStorage; the list sheds Link, then Color, then Price as the pane narrows | squash |
 | #147 | The shipped graph is the whole format: every Commander-legal card (31,830), every legal commander (3,411), EDHREC co-play for each (701,916 links). A "?" beside the card count explains the universe from the file's own figures | see PR |
 
+**Then #148: lands by how they enter.** The classifier files every land under one of
+`enters-untapped`, `enters-tapped` or `enters-tapped-unless` (a condition: shocks, checks,
+fast and slow lands), read off the land's own sentences. It is a Mechanic facet value, so
+Card type = Land plus Mechanic = enters-untapped is the filter; the graph does not join
+lands on it and the deck-mechanics reading ignores it. The bake was rewritten with
+`tools/graph-amplifiers.mjs --all --from-bulk`; the next full pipeline run carries it
+through 02-build-csv.
+
 **How the graph was built this time.** Neo4j 5.26 Community was stood up inside the
 session container (no docker), pointed at `graph/.import`, and the pipeline ran
 unchanged through it: `01-fetch --prices`, `02-build-csv`, `03-load`, `04-fetch-edhrec
