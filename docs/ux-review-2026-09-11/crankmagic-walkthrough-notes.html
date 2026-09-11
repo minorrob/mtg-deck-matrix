@@ -1,0 +1,108 @@
+<title>CrankMagic Walkthrough Notes</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{--bg:#f6f4ef;--panel:#ffffff;--ink:#1d2330;--muted:#5d6675;--line:#d9d5cb;--accent:#1f6fd0;--accent-ink:#0e3f7e;--soft:#e7eef9;--warn:#b0641b;--warn-bg:#fbf0e3;--good:#2a7a4f;--good-bg:#e6f4ec;--mock-bg:#12161f;--mock-panel:#1a2030;--mock-raised:#232c40;--mock-field:#2d3543;--mock-ink:#eef4fd;--mock-muted:#93a6c2;--mock-line:#2e3850;--mock-accent:#72baff}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#14171d;--panel:#1c2028;--ink:#eceef2;--muted:#a3abb8;--line:#333945;--accent:#8ec2ff;--accent-ink:#cfe3ff;--soft:#22304a;--warn:#f0b880;--warn-bg:#3a2b19;--good:#8ad3a8;--good-bg:#1f3a2c}}
+:root[data-theme="dark"]{--bg:#14171d;--panel:#1c2028;--ink:#eceef2;--muted:#a3abb8;--line:#333945;--accent:#8ec2ff;--accent-ink:#cfe3ff;--soft:#22304a;--warn:#f0b880;--warn-bg:#3a2b19;--good:#8ad3a8;--good-bg:#1f3a2c}
+body{background:var(--bg);color:var(--ink);font-family:"Public Sans",system-ui,sans-serif;font-size:15px;line-height:1.55;padding-block:36px 64px;padding-inline:clamp(16px,4vw,48px)}
+.wrap{max-width:1040px;margin:0 auto}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;text-wrap:balance;line-height:1.15;margin:0}
+h1{font-size:clamp(30px,4.2vw,44px);font-weight:700}
+h2{font-size:24px;font-weight:700;margin-top:48px;padding-top:20px;border-top:1px solid var(--line)}
+h3{font-size:18px;font-weight:700}
+.kicker{font-family:"JetBrains Mono",monospace;font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.lede{max-width:66ch;color:var(--muted);font-size:16px;margin:14px 0 0}
+p{max-width:70ch}
+.tally{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:28px 0 0}
+.tally div{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.tally strong{display:block;font-family:Fraunces,serif;font-size:30px;line-height:1;font-variant-numeric:tabular-nums}
+.tally span{color:var(--muted);font-size:13px}
+.item{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;margin-top:26px;padding:20px 22px;background:var(--panel);border:1px solid var(--line);border-radius:12px}
+.item header{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 14px}
+.tag{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:var(--soft);color:var(--accent-ink)}
+.tag.fixed{background:var(--good-bg);color:var(--good)}
+.tag.gap{background:var(--warn-bg);color:var(--warn)}
+.where{font-size:13px;color:var(--muted)}
+.mock{background:var(--mock-bg);color:var(--mock-ink);border:1px solid var(--mock-line);border-radius:12px;padding:16px;font-size:13px;overflow-x:auto}
+.mock .lab{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mock-muted);margin-bottom:10px}
+.mock .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.mock .btn{display:inline-block;padding:8px 12px;border-radius:8px;border:1px solid #3a4a64;background:#1e2a3f;color:var(--mock-ink);font-weight:600;font-size:12.5px}
+.mock .btn.primary{background:#72baff;color:#06131f;border-color:#72baff}
+.mock .btn.ghost{opacity:.5}
+.mock .chip{display:inline-block;padding:4px 9px;border-radius:999px;background:#293a54;color:#d3eaff;font-size:12px}
+.mock .chip.on{background:#72baff;color:#06131f}
+.mock .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:14px;align-items:end;margin-top:6px}
+.mock .stats strong{display:block;font-size:26px;line-height:1.05;font-variant-numeric:tabular-nums}
+.mock .stats span{color:var(--mock-muted);font-size:12px}
+.mock .stats .money{color:#efc286}
+.mock table{border-collapse:collapse;width:100%;min-width:520px}
+.mock th,.mock td{color:var(--mock-ink);text-align:left;padding:9px 10px;border-bottom:1px solid var(--mock-line);font-size:12.5px;vertical-align:top}
+.mock th{color:#b5c9e5;font-size:11px;letter-spacing:.035em;text-transform:uppercase}
+.mock .band td{background:#1d2a3f;font-weight:700}
+.mock .tile{position:relative;width:250px;min-height:200px;border-radius:14px;border:1px solid #39475d;background:linear-gradient(0deg,#101725 18%,#1c2740 100%);padding:60px 18px 16px;display:flex;flex-direction:column;justify-content:flex-end;gap:4px}
+.mock .tile .glyph{position:absolute;top:14px;left:16px;right:16px;display:flex;justify-content:space-between;align-items:center}
+.mock .tile .glyph i{display:inline-block;width:32px;height:32px;border-radius:8px;border:1px solid #3a4a64;background:#101725c8}
+.mock .tile .name{font-family:Fraunces,serif;font-size:22px;font-weight:700;letter-spacing:-.01em;color:#f1f6ff}
+.mock .tile .initials{position:absolute;top:44px;left:18px;font-family:Fraunces,serif;font-size:56px;font-weight:700;color:#72baff22;letter-spacing:-.04em;line-height:1}
+.mock .jump{display:flex;gap:6px;flex-wrap:wrap;padding:8px 10px;border-radius:10px;background:#1a2030;border:1px solid var(--mock-line);position:sticky;top:0}
+.mock .jump span{padding:5px 10px;border-radius:999px;font-size:12px;color:#d3eaff;border:1px solid #3a4a64}
+.mock .jump span.on{background:#293a54;border-color:#72baff}
+.mock .pop{max-width:360px;border:1px solid #43536f;border-radius:11px;background:#202738;padding:12px 14px}
+.mock .pop p{margin:6px 0;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.mock .pop .k{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--mock-muted);min-width:82px}
+.mock .cardrow{display:grid;grid-template-columns:1fr auto;gap:8px;padding:10px 0;border-bottom:1px solid var(--mock-line)}
+.mock .cardrow small{display:block;color:var(--mock-muted)}
+ul{padding-left:20px}
+li{margin:4px 0}
+.foot{margin-top:48px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:16px}
+code{font-family:"JetBrains Mono",monospace;font-size:.92em;background:var(--soft);padding:1px 5px;border-radius:4px}
+@media (max-width:520px){.mock .tile{width:100%}}
+</style>
+<div class="wrap">
+<div class="kicker">CrankMagic · walkthrough after the status-ladder build</div>
+<h1>Where the flow still catches</h1>
+<p class="lede">Every page of the app, driven with your own Load Live collection (816 owned copies, six decks, 85 to buy), at desktop and phone widths. What was clearly wrong is fixed and merged; what remains is below, each with a mock-up where the change is visual. Chromium could not reach GitHub Pages from the build environment, so the walk ran on a local copy of the exact merged files.</p>
+<div class="tally"><div><strong>16</strong><span>views walked, 1400 px and 390 px</span></div><div><strong>5</strong><span>fixed in the same merge</span></div><div><strong>6</strong><span>proposed below, none blocking</span></div><div><strong>0</strong><span>page errors on any view</span></div></div>
+
+<h2>Fixed in this build</h2>
+<div class="item"><header><h3>Inspect glued the graph to the cursor</h3><span class="tag fixed">Fixed</span><span class="where">Discover</span></header><p>A tap on a card in Inspect threw inside the pointer-up handler before the drag was cleared, so every mouse move afterwards panned the canvas. The pop-up now opens, and the drag ends the moment the pointer lifts whatever the tap does.</p></div>
+<div class="item"><header><h3>"Unassigned" led the grouped roster</h3><span class="tag fixed">Fixed</span><span class="where">Collection · Group rows by Deck</span></header><p>374 bench records came first, before any deck. The no-value band now goes last, the way the other tables already order it.</p></div>
+<div class="item"><header><h3>The card pop-up said "Bench · Bench"</h3><span class="tag fixed">Fixed</span><span class="where">Card details</span></header><p>Placement and physical location both read "Bench" for a bench copy. The line drops a repeated word; the status and assignment chips above it are new.</p></div>
+<div class="item"><header><h3>"Pending simulator integration"</h3><span class="tag fixed">Fixed</span><span class="where">Deck overview · SWOT</span></header><p>The note predates Simulation history sitting two panels below it. It now points there.</p></div>
+<div class="item"><header><h3>Collection group offered twice</h3><span class="tag fixed">Fixed</span><span class="where">Collection · Filters</span></header><p>The select was in the toolbar and again in the filter panel. One control, in the toolbar.</p></div>
+
+<h2>Proposed</h2>
+
+<div class="item"><header><h3>The Shop counts cards but never money</h3><span class="tag gap">Flow gap</span><span class="where">Shop ribbon · both list types</span></header>
+<p>The ribbon says 85 to buy and stops. The question a person opens the Shop with is "what will this cost me", per deck and in total, and the recorded prices are already on every row. A money figure beside the count, and a per-deck subtotal when grouped by deck, answers it without a spreadsheet.</p>
+<div class="mock"><div class="lab">Mock-up · Shop ribbon</div><div class="stats"><div><strong>85</strong><span>to buy</span></div><div><strong class="money">$212.40</strong><span>at recorded prices</span></div><div><strong>10</strong><span>ordered</span></div><div><strong class="money">$31.10</strong><span>on the way</span></div><div><strong>3</strong><span>without a price</span></div></div><div class="lab" style="margin-top:14px">Grouped by deck</div><table><tr class="band"><td>D3 Atraxa Proliferate</td><td>24 records</td><td class="money">$96.20</td></tr><tr><td>Ancient Greenwarden</td><td>To buy</td><td>$4.15</td></tr><tr><td>Contentious Plan</td><td>To buy</td><td>$0.29</td></tr></table></div></div>
+
+<div class="item"><header><h3>940 records, 16 pages of 60</h3><span class="tag gap">Friction</span><span class="where">Collection · Shop</span></header>
+<p>Sixty rows a page is right for a phone and short for a desk: a library this size is sixteen Next clicks, and the folding bands only help when grouping is on. A page-size choice — 60, 120, all — remembered with the column preferences, keeps the phone default and lets the desktop read the whole thing.</p>
+<div class="mock"><div class="lab">Mock-up · pager</div><div class="row"><span>Page 1 of 16</span><span style="margin-left:auto;color:var(--mock-muted)">Rows per page</span><span class="chip on">60</span><span class="chip">120</span><span class="chip">All 940</span><span class="btn">Previous</span><span class="btn">Next</span></div></div></div>
+
+<div class="item"><header><h3>Tiles without art show an empty panel</h3><span class="tag gap">Visual</span><span class="where">My Decks</span></header>
+<p>Two of six tiles carried no image (the commander's art is fetched from Scryfall and was not cached), so the tile is a dark rectangle with text at the bottom. A typographic fallback — the commander's initials in the deck's colours, faint, where the art would be — keeps the grid reading as six cards rather than four cards and two gaps.</p>
+<div class="mock"><div class="lab">Mock-up · tile with no cached art</div><div class="tile"><div class="glyph"><span class="chip">In progress</span><i></i></div><div class="initials">QL</div><small style="color:#c3d7ed">D1 Quintorius Spirits</small><div class="name">Quintorius, Loremaster</div><small style="color:#c3d7ed">Spirit tribal · Tokens</small><div class="row" style="margin-top:6px"><span class="chip">R</span><span class="chip">W</span></div></div></div></div>
+
+<div class="item"><header><h3>The deck page is a long scroll with no map</h3><span class="tag gap">Navigation</span><span class="where">Deck overview · 2,900 px desktop, 5,200 px phone</span></header>
+<p>Composition, commander, strategy, SWOT and Simulation history stack in one column; on a phone the history — the newest panel — is five screens down. A jump bar under the ribbon, sticky on scroll, makes each panel one tap and tells a reader the history exists before they reach it.</p>
+<div class="mock"><div class="lab">Mock-up · sticky jump bar</div><div class="jump"><span class="on">Composition</span><span>Commander</span><span>How to play</span><span>SWOT</span><span>Simulation history · 3 runs</span></div></div></div>
+
+<div class="item"><header><h3>Simulation history is a wide table on a phone</h3><span class="tag gap">Visual</span><span class="where">Deck overview · 390 px</span></header>
+<p>Eight columns scroll sideways inside their wrap, which works but hides the score. Below 640 px each run could be a card: score and date on the first line, the rest underneath, View report as the row's one button.</p>
+<div class="mock"><div class="lab">Mock-up · one run, phone width</div><div class="cardrow"><div><strong>61.5 pts</strong> <span style="color:var(--mock-muted)">± 0.4 · published</span><small>Sep 11, 03:41 · 120,000 games · win rate 27% · avg win turn 11.2</small><small><span class="chip" style="background:#234638;color:#b8e5cd">Current list</span></small></div><span class="btn">View report</span></div></div></div>
+
+<div class="item"><header><h3>Status chips in the card pop-up are read-only</h3><span class="tag gap">Small</span><span class="where">Card details</span></header>
+<p>The new Status and Assignment rows say "Owned 1 · Bench 1" and stop. Tapping a chip could open the Collection filtered to that card (the button below already does this), which turns the summary into the shortcut it looks like.</p>
+<div class="mock"><div class="lab">Mock-up · chips as links</div><div class="pop"><p><span class="k">Status</span><span class="chip on">Owned 1</span><span class="chip">To buy 2</span></p><p><span class="k">Assignment</span><span class="chip">In deck box 1</span><span class="chip">Reserved 2</span></p></div></div></div>
+
+<h2>Looked at and left alone</h2>
+<ul>
+<li><strong>Deck Lab</strong> — the five-step run pane and the disabled-with-reason buttons read clearly; nothing to change.</li>
+<li><strong>Phone Shop</strong> — the compressed booth layout holds at 390 px with the Buy button on every row.</li>
+<li><strong>Filters panel</strong> — twelve controls in a grid; dense but each is labelled and the panel is opt-in.</li>
+<li><strong>Status fly-out</strong> — opens left of the menu with the current rung marked; on a phone it overlays the menu, which is the intended fallback.</li>
+</ul>
+<p class="foot">Walked on the merged files with the Load Live collection restored. Card art and prices come from Scryfall at runtime and were not reachable from the build environment, which is why art is absent in the walkthrough and not on the live site.</p>
+</div>
