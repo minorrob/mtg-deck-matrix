@@ -49,8 +49,21 @@ assert.equal(boxed().ready,true,'Ready means you own the hundred, not that you c
 const reservedForBox=s.lots.filter(l=>l.allocation?.deckId==='box').map(l=>l.id);
 run('bulk',{op:'place',deckId:'box',lotIds:reservedForBox,confirmed:true});
 assert.equal(boxed().placed,100,'Ticked copies go into the box together');assert.equal(boxed().boxed,true);checks+=2;
+// THE SEGMENTS: the same hundred cut by where it is. Every existing key is untouched.
+assert.equal(boxed().inBox,100);assert.equal(boxed().pullFromBench,0);assert.equal(boxed().pullFromOtherBox,0);assert.equal(boxed().remove,0);checks+=4;
 run('bulk',{op:'bench',lotIds:reservedForBox,confirmed:true});
 assert.equal(boxed().placed,0,'And come back out the same way');assert.equal(boxed().owned,100,'Which releases no reservation');checks+=2;
+assert.equal(boxed().pullFromBench,100,'Benched copies are the ones to pull');assert.equal(boxed().inBox,0);checks+=2;
+run('cards',{cards:[{id:'ring',name:'Sol Ring',typeLine:'Artifact',verified:true,colorIdentity:[],legalities:{commander:'legal'},price:2.5}]});
+assert.equal(boxed().marketValue,2.5,'Market value prices the owned reserved copies the catalog can price');
+assert.equal(boxed().costToFinish,0,'Nothing owed, nothing to finish');checks+=2;
+const ringLot=s.lots.find(l=>l.allocation?.deckId==='box'&&l.cardId==='ring').id;
+run('editLot',{lotId:ringLot,paid:1.25});assert.equal(boxed().paid,1.25,'Paid is summed per copy over reserved lots');checks++;
+run('bulk',{op:'place',deckId:'box',lotIds:[ringLot],confirmed:true});assert.equal(boxed().inBox,1);checks++;
+run('release',{lotId:ringLot,destination:'bench',confirmed:true});
+assert.equal(boxed().remove,1,'A copy still in the box after its reservation went is one to remove');
+assert.equal(boxed().costToFinish,2.5,'and the slot it left costs money again');checks+=2;
+run('allocate',{lotId:ringLot,deckId:'box',slotId:'rockb',confirmed:true});run('bulk',{op:'bench',lotIds:[ringLot],confirmed:true});assert.equal(boxed().remove,0);checks++;
 // A copy reserved for one deck cannot be filed into another deck's box by a stray tick.
 run('acquire',{lot:{id:'stray',cardId:'stone',quantity:1,printing:{set:'stray'}}});
 expectFailure('bulk',{op:'place',deckId:'box',lotIds:['stray'],confirmed:true},/not reserved for/);

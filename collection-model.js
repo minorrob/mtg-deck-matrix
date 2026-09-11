@@ -49,7 +49,23 @@
      "In progress" and "0 in deck" -- the number under the deck had stopped describing the
      deck. Owning the hundred and reserving it here is what makes a deck playable. Which box
      the cards are actually sitting in is a separate fact, and `placed` still carries it. */
-  function readiness(s,d){const rows=d.slots.filter(r=>r.purpose==='main'),target=rows.reduce((n,r)=>n+r.quantity,0);let owned=0,ordered=0,incoming=0,placed=0;for(const l of s.lots.filter(l=>l.allocation?.deckId===d.id&&rows.some(r=>r.id===l.allocation.slotId))){if(l.source==='owned')owned+=l.quantity;if(l.source==='ordered')ordered+=l.quantity;if(l.source==='incoming')incoming+=l.quantity;if(inDeck(s,l))placed+=l.quantity;}return {target,owned,ordered,incoming,placed,toBuy:Math.max(0,target-owned-ordered-incoming),ready:d.status==='final'&&!d.archived&&target===100&&owned===target,boxed:target>0&&placed===target};}
+  /* THE SAME HUNDRED, CUT THE WAY A BUILD NIGHT CUTS IT. `owned` says what you have; it
+     does not say where. 72 owned and 55 in the box is 17 cards to go and find, and that
+     figure was never computed anywhere -- so the deck page could not say "17 to pull" and
+     the pull sheet had nothing to list. The segments below add it without moving a single
+     existing key: inBox is `placed` under the name the UI uses; pullFromBench and
+     pullFromOtherBox are owned, reserved copies sitting somewhere else; remove is a copy in
+     this deck's box that the list no longer asks for. The three money figures follow the
+     same rule as everything else here: a price is the catalog's, `paid` is per copy, and a
+     copy with no price contributes nothing rather than a guess. */
+  function readiness(s,d){const rows=d.slots.filter(r=>r.purpose==='main'),target=rows.reduce((n,r)=>n+r.quantity,0);let owned=0,ordered=0,incoming=0,placed=0,pullFromBench=0,pullFromOtherBox=0,paid=0,marketValue=0;
+    for(const l of s.lots.filter(l=>l.allocation?.deckId===d.id&&rows.some(r=>r.id===l.allocation.slotId))){if(l.source==='owned')owned+=l.quantity;if(l.source==='ordered')ordered+=l.quantity;if(l.source==='incoming')incoming+=l.quantity;
+      if(inDeck(s,l))placed+=l.quantity;else if(l.source==='owned'){if(l.location?.kind==='deck')pullFromOtherBox+=l.quantity;else pullFromBench+=l.quantity;}
+      if(Number.isFinite(l.paid))paid+=l.paid*l.quantity;if(l.source==='owned'){const c=s.cards[l.cardId];if(c&&Number.isFinite(c.price))marketValue+=c.price*l.quantity;}}
+    const remove=s.lots.filter(l=>l.source==='owned'&&l.location?.kind==='deck'&&l.location.deckId===d.id&&l.allocation?.deckId!==d.id).reduce((n,l)=>n+l.quantity,0);
+    let costToFinish=0;if(d.status==='final'&&!d.archived)for(const r of rows){const need=shortfall(s,d,r),c=s.cards[r.cardId];if(need&&c&&Number.isFinite(c.price))costToFinish+=c.price*need;}
+    return {target,owned,ordered,incoming,placed,toBuy:Math.max(0,target-owned-ordered-incoming),ready:d.status==='final'&&!d.archived&&target===100&&owned===target,boxed:target>0&&placed===target,
+      inBox:placed,pullFromBench,pullFromOtherBox,remove,costToFinish:Math.round(costToFinish*100)/100,paid:Math.round(paid*100)/100,marketValue:Math.round(marketValue*100)/100};}
   /* A DECK'S GROUP IS A NAME FOR THE DECK, NOT A SECOND COPY OF IT. Filing every card of a
      hundred-card deck into its group would store the same hundred cards twice and leave two
      lists to keep in step -- which is how a deck ends up disagreeing with itself. So a row
