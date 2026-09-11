@@ -415,14 +415,18 @@
 
       /* Breadth-first to `depth`, each node's children bounded and placed inside the
          parent's angular sector so clusters stay attached to what they hang off. */
-      function layout() {
+      /* THE NEIGHBOURHOOD, CHOSEN. Which cards make the canvas and why, to a depth and a
+         breadth -- the walk the layout draws, separated from the drawing so the List tab can
+         ask for the whole reach (depth 3, breadth 30, under the same CAP) without touching
+         what is on screen. Returns local node and edge lists; layout() commits them. */
+      function build(depthWanted, breadthWanted, withLinks) {
         const c = byId.get(center);
-        nodes = []; edges = [];
-        if (!c) { onNeighbors && onNeighbors(null, [], trail.length, {total: 0, byDepth: []}); draw(); return; }
+        const nodes = [], edges = [];
+        if (!c) return {c: null, nodes, edges, direct: []};
         const placed = new Set([c.id]);
         const root = {card: c, x: 0, y: 0, r: radius(0), depth: 0, angle: 0, span: Math.PI * 2};
         nodes.push(root);
-        const direct = links(c, breadth, placed);
+        const direct = links(c, breadthWanted, placed);
 
         /* WHERE YOU CAME FROM. The card the reader just left stays on ring 1 whether or not
            it made the focus's top cut, pinned to the left with a wider sector and a fuller
@@ -433,7 +437,7 @@
         if (prev && prev.id !== c.id) {
           const at = direct.findIndex((n) => n.card.id === prev.id);
           if (at >= 0) direct.unshift(direct.splice(at, 1)[0]);
-          else { const back = linkTo(c, prev); if (back) { if (direct.length >= breadth) direct.pop(); direct.unshift(back); } }
+          else { const back = linkTo(c, prev); if (back) { if (direct.length >= breadthWanted) direct.pop(); direct.unshift(back); } }
         }
         direct.forEach((n) => placed.add(n.card.id));
         const hasPrev = Boolean(prev && direct.length && direct[0].card.id === prev.id);
@@ -463,11 +467,11 @@
            theirs a fifth -- because the question at depth 3 is "is there a web out
            here", not "list them all". */
         let remaining = CAP - nodes.length;
-        for (let d = 2; d <= depth && remaining > 0 && frontier.length; d += 1) {
-          const share = d < depth ? Math.max(frontier.length, Math.round(remaining * .6)) : remaining;
+        for (let d = 2; d <= depthWanted && remaining > 0 && frontier.length; d += 1) {
+          const share = d < depthWanted ? Math.max(frontier.length, Math.round(remaining * .6)) : remaining;
           const perParent = Math.max(1, Math.floor(share / frontier.length));
           let extra = Math.max(0, share - perParent * frontier.length);
-          const maxFan = Math.max(1, Math.round(breadth / (d === 2 ? 3 : 5)));
+          const maxFan = Math.max(1, Math.round(breadthWanted / (d === 2 ? 3 : 5)));
           const next = [];
           let spent = 0;
           for (const parent of frontier) {
@@ -476,7 +480,7 @@
             /* The pinned previous focus keeps a fan the size the focus itself gets, so its
                old neighbourhood is still visible; everyone else gets the ring's share. */
             const want = parent.pinned && d === 2
-              ? Math.min(breadth, Math.max(perParent * 3, 6), share - spent, CAP - nodes.length)
+              ? Math.min(breadthWanted, Math.max(perParent * 3, 6), share - spent, CAP - nodes.length)
               : Math.min(maxFan, perParent + bonus, share - spent, CAP - nodes.length);
             if (bonus && want > perParent) extra -= 1;
             const kids = links(parent.card, want, placed);
@@ -500,7 +504,7 @@
            the canvas, beyond the tree that placed them. This is the many-to-many the
            picture exists to show. O(n²) over at most CAP nodes on precomputed Sets. */
         const treeKey = new Set(edges.map((e) => e.a.card.id + '|' + e.b.card.id));
-        for (let i = 1; i < nodes.length; i += 1) {
+        for (let i = 1; withLinks && i < nodes.length; i += 1) {
           for (let j = i + 1; j < nodes.length; j += 1) {
             const a = nodes[i], b = nodes[j];
             if (treeKey.has(a.card.id + '|' + b.card.id) || treeKey.has(b.card.id + '|' + a.card.id)) continue;
@@ -508,8 +512,14 @@
             if (r) edges.push({a, b, tree: false, kind: r.kind});
           }
         }
+        return {c, nodes, edges, direct};
+      }
+      function layout() {
+        const built = build(depth, breadth, true);
+        nodes = built.nodes; edges = built.edges;
+        if (!built.c) { onNeighbors && onNeighbors(null, [], trail.length, {total: 0, byDepth: []}); draw(); return; }
         const byDepth = [1, 2, 3].map((d) => nodes.filter((n) => n.depth === d).length);
-        onNeighbors && onNeighbors(c, direct, trail.length, {total: nodes.length, byDepth, crossLinks: edges.filter((e) => !e.tree).length});
+        onNeighbors && onNeighbors(built.c, built.direct, trail.length, {total: nodes.length, byDepth, crossLinks: edges.filter((e) => !e.tree).length});
         draw();
       }
       function coPlayPair(x, y) {
@@ -848,6 +858,9 @@
            anchors to, and what a test clicks. */
         positions() { return nodes.map((n) => ({id: n.card.id, name: n.card.name, depth: n.depth, pinned: !!n.pinned, parent: n.parent ? n.parent.card.id : null, x: width / 2 + pan.x + n.x * scale, y: height / 2 + pan.y + n.y * scale, r: n.r * scale})); },
         current() { return byId.get(center) || null; },
+        /* Every card the focus reaches at the widest setting, in the order the layout would
+           place them, with the ring each sits on. The canvas is not redrawn. */
+        reach(d = 3, b = 30) { return build(clampDepth(d), clampBreadth(b), false).nodes.map((n) => ({card: n.card, depth: n.depth, kind: n.kind, reason: n.reason, tag: n.tag})); },
         destroy() {
           disposed = true; if (nameTimer) clearTimeout(nameTimer); cancelAnimationFrame(frame); observer.disconnect();
           for (const [name, fn] of [['wheel', wheel], ['pointerdown', down], ['pointermove', move], ['pointerup', up], ['pointercancel', up], ['keydown', key]]) canvas.removeEventListener(name, fn);

@@ -76,7 +76,15 @@
   let mode = 'all';            // within a facet: 'all' picks must match, or 'any'
   let depth = 2, breadth = 12; // the graph's reach, remembered like the filters
   let gmode = 'navigate';      // what a tap on the canvas does: navigate, inspect or select
-  let picked = new Set();      // card ids ticked on the canvas
+  let picked = new Set();      // card ids ticked on the canvas, or in the List tab
+  /* THE PANE HAS TWO TABS. Card Info is the pane as it was; List is every card the focus
+     reaches at the widest depth and breadth, whatever the sliders say -- the sliders shape
+     the picture, the list is the whole neighbourhood -- under the same filters, sortable by
+     its column headers, paged, with a tick per row for batch work and Add/Buy on each. It
+     is remembered across focus changes; the pane widens while it is open and the canvas
+     keeps the rest. */
+  let paneTab = 'card', listSort = {key: 'ring', dir: 1}, listPage = 0, listCard = null, lastFocusId = null;
+  const LIST_PAGE = 40;
 
   /* Below this many single-card values the fold costs more than it saves: a toggle to
      hide four rows is noise. Mechanic has 304 of them; everything shorter is left whole.
@@ -158,11 +166,13 @@
             <div class="cm-graph-pop" id="cm-graph-pop" role="dialog" aria-label="Connection details" hidden></div>
           </div>
         </div>
-        <aside class="v-panel cm-card-view" id="cm-card-view" aria-live="polite"></aside>
+        <aside class="v-panel cm-card-view" id="cm-card-view" aria-live="polite"><div class="cm-pane-tabs" role="tablist" aria-label="Card pane">${tabButton('card', 'Card Info')}${tabButton('list', 'List')}</div><div id="cm-pane-body"></div></aside>
       </div>`;
 
     applyStage();
-    const view = $('#cm-card-view');
+    const pane = $('#cm-card-view');
+    const view = $('#cm-pane-body');
+    applyTab();
 
     /* THE PANE ENDS WHERE THE GRAPH ENDS. A grid row is as tall as its tallest item's
        content, so a pane holding art, rules text and forty relation chips made the row
@@ -176,15 +186,15 @@
       cancelAnimationFrame(paneFrame);
       paneFrame = requestAnimationFrame(() => {
         const column = document.querySelector('.cm-graph-col'), canvas = $('#cm-graph');
-        if (!column || !canvas || !view) return;
-        const stacked = getComputedStyle(view).getPropertyValue('--cm-pane-stacked').trim() === '1';
-        if (stacked) { view.style.height = ''; return; }
+        if (!column || !canvas || !pane) return;
+        const stacked = getComputedStyle(pane).getPropertyValue('--cm-pane-stacked').trim() === '1';
+        if (stacked) { pane.style.height = ''; return; }
         /* From the column's TOP to the canvas's BOTTOM, not the column's own height: the
            column is stretched by the same row the pane is inflating, so reading its height
            reads the pane's height back and the two agree on being too tall. The canvas's
            position does not depend on the pane, so this measurement cannot chase itself. */
         const height = Math.round(canvas.getBoundingClientRect().bottom - column.getBoundingClientRect().top);
-        if (height > 200) view.style.height = height + 'px';
+        if (height > 200) pane.style.height = height + 'px';
       });
     }
     addEventListener('resize', sizePane);
@@ -197,6 +207,10 @@
         canvas: $('#cm-graph'), cards, played: data.played, focus: focusId, history, depth, breadth,
         owned: CrankFacets.ownedNames(C.state),
         onNeighbors(c, neighbors, trailLength, info) {
+          /* A new focus clears the card the list opened; a re-layout of the same focus (a
+             resize, a slider) does not, or opening a row would undo itself. */
+          if ((c && c.id) !== lastFocusId) { listCard = null; listPage = 0; }
+          lastFocusId = c && c.id;
           drawCardView(c, info);
           if (graph) { graph.setMode(gmode); graph.setSelected(picked); }
         },
@@ -323,8 +337,87 @@
         ? `<button type="button" class="v-button" data-action="graph-back" title="Back to ${e(prior.name)}">◀ Back to Prior Card</button>`
         : '';
     }
+    /* ADD/BUY, ONE MENU FOR THE PANE AND EVERY LIST ROW: the two vendors, the library, the
+       collection groups and the draft decks. */
+    function buyMenu(c, rec) {
+      const buy = rec.buy || c.buy || C.buyLink(rec.name ? rec : c);
+      const kingdom = 'https://www.cardkingdom.com/catalog/search?search=header&filter%5Bname%5D=' + encodeURIComponent(c.name);
+      const cardId = CrankCatalog.key(c.name);
+      const groups = C.state.groups || [];
+      const draftDecks = (C.state.decks || []).filter((d) => !d.archived && d.status === 'draft');
+      return `<details class="cm-inline-menu" name="cm-card-view-menu"><summary class="v-button cm-card-view-menu-btn">Add/Buy</summary><div class="cm-menu cm-inline-menu-body">
+              <a href="${e(buy)}" target="_blank" rel="noopener">Buy at TCGplayer ↗</a>
+              <a href="${e(kingdom)}" target="_blank" rel="noopener">Buy at Card Kingdom ↗</a>
+              <hr>
+              <p>Add to collection</p>
+              <button type="button" data-action="add-card" data-card="${e(cardId)}">Your library…</button>
+              ${groups.map((g) => `<button type="button" data-action="discover-to-group" data-card="${e(c.name)}" data-group="${e(g.id)}">${e(g.name)}</button>`).join('')
+                || '<p class="cm-muted">No collection groups yet.</p>'}
+              <hr>
+              <p>Add to deck</p>
+              ${draftDecks.map((d) => `<button type="button" data-action="discover-to-deck" data-card="${e(c.name)}" data-deck="${e(d.id)}">${e(d.name)}</button>`).join('')
+                || '<p class="cm-muted">No draft decks. A finalized list changes through its own page.</p>'}
+            </div></details>`;
+    }
+    function tabButton(id, label) { return `<button type="button" role="tab" class="cm-pane-tab${paneTab === id ? ' is-on' : ''}" aria-selected="${paneTab === id}" data-action="pane-tab" data-tab="${id}">${label}</button>`; }
+    function applyTab() {
+      for (const t of document.querySelectorAll('.cm-pane-tab')) { const on = t.dataset.tab === paneTab; t.classList.toggle('is-on', on); t.setAttribute('aria-selected', String(on)); }
+      document.querySelector('.cm-graph-grid')?.classList.toggle('cm-list-open', paneTab === 'list');
+    }
+    actions['pane-tab'] = (el) => { paneTab = el.dataset.tab; listCard = null; applyTab(); lastDrawn = ''; drawCardView(listCard || graph?.current(), null, true); requestAnimationFrame(() => { sizePane(); dispatchEvent(new Event('resize')); }); };
+    /* THE LIST. graph.reach() at the widest setting, over the filtered world the graph is
+       mounted on, so every filter still applies and only the sliders do not. */
+    const LIST_COLS = [['ring', 'Ring'], ['name', 'Card'], ['type', 'Type'], ['mana', 'Mana'], ['price', 'Price']];
+    function listRows() {
+      if (!graph) return [];
+      return graph.reach(3, 30).map((n) => { const rec = C.catalog.exact(n.card.name) || {}; return {id: n.card.id, card: n.card, rec, depth: n.depth, name: n.card.name, type: rec.typeLine || n.card.type || '', mana: rec.manaValue ?? n.card.mv ?? null, manaCost: rec.manaCost || '', price: Number.isFinite(rec.price) ? rec.price : null, ci: String(n.card.ci || (rec.colorIdentity || []).join(''))}; });
+    }
+    function drawList() {
+      const focus = graph?.current();
+      const all = listRows();
+      const key = listSort.key, dir = listSort.dir;
+      all.sort((x, y) => { if (key === 'ring') return (x.depth - y.depth) * dir || x.name.localeCompare(y.name); const a = x[key], b = y[key]; if (a === null || a === undefined) return 1; if (b === null || b === undefined) return -1; return (typeof a === 'number' ? a - b : String(a).localeCompare(String(b))) * dir || x.name.localeCompare(y.name); });
+      const pages = Math.max(1, Math.ceil(all.length / LIST_PAGE)); listPage = Math.min(listPage, pages - 1);
+      const rows = all.slice(listPage * LIST_PAGE, listPage * LIST_PAGE + LIST_PAGE);
+      const cols = stage ? LIST_COLS.filter(([k]) => k !== 'price') : LIST_COLS;
+      const allTicked = rows.length > 0 && rows.every((r) => picked.has(r.id));
+      const pickedRows = all.filter((r) => picked.has(r.id));
+      const paging = `<div class="cm-paging cm-list-paging"><span>${all.length} card${all.length === 1 ? '' : 's'}${pages > 1 ? ` · page ${listPage + 1} of ${pages}` : ''}</span><div class="cm-actions"><button type="button" class="v-button compact" data-action="list-page" data-step="-1" ${listPage === 0 ? 'disabled' : ''}>Previous</button><button type="button" class="v-button compact" data-action="list-page" data-step="1" ${listPage + 1 >= pages ? 'disabled' : ''}>Next</button></div></div>`;
+      view.innerHTML = `<div class="cm-list-head"><p class="cm-muted">${focus ? `Everything <strong>${e(focus.name)}</strong> reaches at depth 3, breadth 30 — the whole neighbourhood, whatever the sliders say. Filters still apply.` : 'Nothing in focus.'}</p>
+        ${pickedRows.length ? `<div class="cm-actions cm-pick-actions">${b(`Add ${pickedRows.length} selected to a group…`, 'results-group', {}, true)}<details class="cm-inline-menu"><summary class="v-button compact cm-card-view-menu-btn">With ${pickedRows.length} selected</summary><div class="cm-menu cm-inline-menu-body"><p>Add to a draft deck</p>${(C.state.decks || []).filter((d) => !d.archived && d.status === 'draft').map((d) => `<button type="button" data-action="list-to-deck" data-deck="${e(d.id)}">${e(d.name)}</button>`).join('') || '<p class="cm-muted">No draft decks.</p>'}</div></details>${b('Clear selection', 'results-clear')}</div>` : ''}</div>
+        ${paging}
+        <div class="cm-table-wrap cm-list-wrap"><table class="cm-table cm-list-table"><thead><tr><th scope="col" class="cm-tick-cell"><input type="checkbox" class="cm-list-tick-all" ${allTicked ? 'checked' : ''} aria-label="Tick every card on this page"></th>${cols.map(([k, l]) => `<th scope="col" aria-sort="${key === k ? (dir === 1 ? 'ascending' : 'descending') : 'none'}"><button type="button" data-action="list-sort" data-key="${k}">${l}${key === k ? ` <span aria-hidden="true">${dir === 1 ? '↑' : '↓'}</span>` : ' <span class="cm-sort-idle" aria-hidden="true">↕</span>'}</button></th>`).join('')}${stage ? '' : '<th scope="col">Add/Buy</th>'}</tr></thead><tbody>${rows.map((r) => `<tr class="cm-list-row${listCard && listCard.id === r.id ? ' is-on' : ''}${picked.has(r.id) ? ' cm-row-ticked' : ''}" data-id="${e(r.id)}"><td class="cm-tick-cell"><input type="checkbox" class="cm-list-tick" data-id="${e(r.id)}" ${picked.has(r.id) ? 'checked' : ''} aria-label="Tick ${e(r.name)}"></td>${cols.map(([k]) => k === 'ring' ? `<td><span class="cm-list-ring" title="Ring ${r.depth}">${r.depth}</span></td>` : k === 'name' ? `<td><button type="button" class="cm-card-name cm-list-name" data-action="list-card" data-id="${e(r.id)}">${e(r.name)}</button></td>` : k === 'type' ? `<td class="cm-list-type">${e(r.type.split('—')[0].trim())}</td>` : k === 'mana' ? `<td class="cm-list-mana">${r.manaCost ? C.mana(r.manaCost) : C.colors(r.ci.split('').filter(Boolean))}</td>` : `<td class="cm-price">${r.price !== null ? C.money(r.price) : '<span class="cm-muted">—</span>'}</td>`).join('')}${stage ? '' : `<td class="cm-list-buy">${buyMenu(r.card, r.rec)}</td>`}</tr>`).join('') || `<tr><td colspan="${cols.length + 2}">Nothing reaches from here under these filters.</td></tr>`}</tbody></table></div>${rows.length > 12 ? paging : ''}`;
+      $('#cm-graph-size').textContent = lastInfo && lastInfo.total ? `${lastInfo.total} on canvas · ${all.length} in reach` : '';
+      sizePane();
+    }
+    actions['list-sort'] = (el) => { const k = el.dataset.key; listSort = {key: k, dir: listSort.key === k ? -listSort.dir : 1}; drawList(); };
+    actions['list-page'] = (el) => { listPage += Number(el.dataset.step); drawList(); };
+    /* A row opens the card in Card Info -- the pane, not the graph: the focus stays put so
+       the list under it does not change while it is being read. */
+    actions['list-card'] = (el) => { const card = listRows().find((r) => r.id === el.dataset.id); if (!card) return; listCard = card.card; paneTab = 'card'; applyTab(); lastDrawn = ''; drawCardView(card.card, null, true); requestAnimationFrame(() => { sizePane(); dispatchEvent(new Event('resize')); }); };
+    actions['list-to-deck'] = async (el) => {
+      const deck = C.M.deck(C.state, el.dataset.deck);
+      if (deck.status !== 'draft') throw Error('Only a draft list can take cards this way.');
+      const chosen = listRows().filter((r) => picked.has(r.id));
+      const cards = [];
+      for (const r of chosen) { const known = C.catalog.exact(r.name); if (known && !deck.slots.some((x) => x.cardId === known.id && x.purpose === 'main') && !cards.some((k) => k.id === known.id)) cards.push(known); }
+      if (!cards.length) throw Error('Every selected card is already in that list, or not in the catalog.');
+      const slots = deck.slots.filter((r) => r.purpose === 'main').map((r) => ({cardId: r.cardId, quantity: r.quantity, purpose: 'main', printing: r.printing, pinned: r.pinned}));
+      await C.commit({type: 'batch', commands: [{type: 'cards', cards}, {type: 'editDeck', deckId: deck.id, slots: [...slots, ...cards.map((c) => ({cardId: c.id, quantity: 1, purpose: 'main'}))]}], summary: `Added ${cards.length} card${cards.length === 1 ? '' : 's'} to ${deck.name}`}, {renderView: false});
+      picked = new Set(); graph?.setSelected(picked); drawList();
+      C.notice(`${cards.length} card${cards.length === 1 ? '' : 's'} added to ${deck.name}.`);
+    };
+    pane.addEventListener('change', (ev) => {
+      const one = ev.target.closest('.cm-list-tick'), all = ev.target.closest('.cm-list-tick-all');
+      if (!one && !all) return;
+      if (one) { if (one.checked) picked.add(one.dataset.id); else picked.delete(one.dataset.id); }
+      else { for (const box of pane.querySelectorAll('.cm-list-tick')) { if (all.checked) picked.add(box.dataset.id); else picked.delete(box.dataset.id); } }
+      graph?.setSelected(picked); drawList();
+    });
     function drawCardView(c, info, keepInfo) {
       if (!keepInfo) lastInfo = info;
+      if (paneTab === 'list') { drawList(); return; }
+      if (listCard && (!c || c.id !== listCard.id)) c = listCard;
       /* Same card, same picture, same picks: leave the pane alone. Rewriting it moves the
          canvas beside it, which re-lays out the graph, which calls back here. */
       const key = JSON.stringify([c && c.id, lastInfo && [lastInfo.total, lastInfo.byDepth, lastInfo.crossLinks], gmode, [...picked].sort(), selection, keepInfo ? Date.now() : 0]);
@@ -352,14 +445,6 @@
       };
       const bracket = BRACKETS[c.bracket || (c.gameChanger || rec.gameChanger ? 'gameChanger' : '')]
         || ['No bracket restriction', 'Legal at every bracket.'];
-      const buy = rec.buy || c.buy || C.buyLink(rec.name ? rec : c);
-      /* WHERE TO BUY IT AND WHERE TO PUT IT, on the line under the price rather than in a
-         menu two screens away. Card Kingdom has no product ids here, so it gets its own
-         search by name, which lands on the card. */
-      const kingdom = 'https://www.cardkingdom.com/catalog/search?search=header&filter%5Bname%5D=' + encodeURIComponent(c.name);
-      const cardId = CrankCatalog.key(c.name);
-      const groups = C.state.groups || [];
-      const draftDecks = (C.state.decks || []).filter((d) => !d.archived && d.status === 'draft');
       /* The frame around the art takes the card's identity: one colour for one colour,
          gold for three or more, a quiet grey for colourless. */
       const ci = String(c.ci || (rec.colorIdentity || []).join('')).split('').filter(Boolean);
@@ -378,21 +463,7 @@
             <p class="cm-card-view-bracket"><span class="cm-badge${bracket[0] === 'Game Changer' ? ' warn' : ''}">${e(bracket[0])}</span> <small>${e(bracket[1])}</small></p>
             <!-- ADD AND/OR BUY SITS WITH THE PRICE AND THE BRACKET, the two things it acts
                  on, rather than in a stack under the art with Inspect, which acts on the art. -->
-            <div class="cm-card-view-buy">
-            <details class="cm-inline-menu" name="cm-card-view-menu"><summary class="v-button cm-card-view-menu-btn">Add and/or Buy</summary><div class="cm-menu cm-inline-menu-body">
-              <a href="${e(buy)}" target="_blank" rel="noopener">Buy at TCGplayer ↗</a>
-              <a href="${e(kingdom)}" target="_blank" rel="noopener">Buy at Card Kingdom ↗</a>
-              <hr>
-              <p>Add to collection</p>
-              <button type="button" data-action="add-card" data-card="${e(cardId)}">Your library…</button>
-              ${groups.map((g) => `<button type="button" data-action="discover-to-group" data-card="${e(c.name)}" data-group="${e(g.id)}">${e(g.name)}</button>`).join('')
-                || '<p class="cm-muted">No collection groups yet.</p>'}
-              <hr>
-              <p>Add to deck</p>
-              ${draftDecks.map((d) => `<button type="button" data-action="discover-to-deck" data-card="${e(c.name)}" data-deck="${e(d.id)}">${e(d.name)}</button>`).join('')
-                || '<p class="cm-muted">No draft decks. A finalized list changes through its own page.</p>'}
-            </div></details>
-            </div>
+            <div class="cm-card-view-buy">${buyMenu(c, rec)}</div>
           </div>
           <!-- INSPECT BELONGS TO THE ART, so it sits directly beneath it in the art's own
                column, where there was nothing but empty space. -->
@@ -529,13 +600,15 @@
       $('.cm-tools-toggle')?.replaceWith(Object.assign(document.createElement('div'), {innerHTML: toolsButton()}).firstElementChild);
       const host = $('.cm-graph-box'); if (host) host.querySelector('.cm-stage-btn')?.replaceWith(
         Object.assign(document.createElement('div'), {innerHTML: stageButton()}).firstElementChild);
-      requestAnimationFrame(() => { sizePane(); dispatchEvent(new Event('resize')); }); };
+      requestAnimationFrame(() => { sizePane(); dispatchEvent(new Event('resize')); redrawIfList(); }); };
     actions['graph-tools'] = (el) => { tools = !tools; applyStage();
       el.outerHTML = toolsButton();
       requestAnimationFrame(() => { sizePane(); dispatchEvent(new Event('resize')); }); };
     actions['graph-pop-close'] = () => hidePop();
     actions['graph-tick'] = (el) => { const id = el.dataset.id; if (picked.has(id)) picked.delete(id); else picked.add(id); graph?.setSelected(picked); el.classList.toggle('is-on', picked.has(id)); el.textContent = picked.has(id) ? 'Ticked ✓' : 'Tick for a group'; drawCardView(graph?.current(), null, true); };
     actions['results-clear'] = () => { picked = new Set(); graph?.setSelected(picked); drawCardView(graph?.current(), null, true); };
+    /* Presentation mode changes which columns the list shows. */
+    const redrawIfList = () => { if (paneTab === 'list') drawList(); };
 
     /* FIND THE CARDS, KEEP THE CARDS. A group is a plan, not a claim of ownership: these
        land as planned entries, exactly as an imported list does. */

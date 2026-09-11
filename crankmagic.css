@@ -933,3 +933,34 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-user-menu{gap:12px}
 .cm-eyebrow-warm:before{letter-spacing:0}
 @media(max-width:640px){#matrix-v2 .cm-table-shop td{height:auto}}
+
+/* ================================== DISCOVER · THE LIST TAB ==================================
+   Two tabs at the top of the pane. While List is open the pane widens and the canvas keeps
+   the rest; in presentation mode the pane is narrower and the list drops Price and Add/Buy. */
+.cm-pane-tabs{display:flex;gap:4px;margin:0 0 10px;border-bottom:1px solid var(--v-line)}
+#matrix-v2 .cm-pane-tab{min-height:36px;padding:0 14px;border:0;border-bottom:2px solid transparent;border-radius:6px 6px 0 0;background:none;color:var(--v-muted);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+#matrix-v2 .cm-pane-tab:hover{color:var(--v-ink);background:#243048}
+#matrix-v2 .cm-pane-tab.is-on{color:var(--v-ink);border-bottom-color:var(--v-accent)}
+#cm-pane-body{display:flex;flex-direction:column;gap:8px;min-height:0}
+.cm-graph-grid.cm-list-open{grid-template-columns:minmax(0,1fr) minmax(560px,1.4fr)}
+#matrix-v2.cm-stage .cm-graph-grid.cm-list-open{grid-template-columns:minmax(0,1fr) minmax(360px,.55fr)}
+.cm-list-head p{margin:0 0 6px;font-size:13px}
+.cm-list-wrap{margin:4px 0;border-top:0}
+#matrix-v2 .cm-list-table td{height:44px;padding:6px 7px;font-size:13px;min-width:0;vertical-align:middle}
+#matrix-v2 .cm-list-table td.cm-price{white-space:nowrap}
+#matrix-v2 .cm-list-table th{padding:6px 8px;min-width:0}
+#matrix-v2 .cm-list-table td:first-child,#matrix-v2 .cm-list-table th:first-child{min-width:0;width:34px}
+#matrix-v2 .cm-list-table td:nth-child(3){min-width:150px}
+#matrix-v2 .cm-list-table td:last-child,#matrix-v2 .cm-list-table th:last-child{min-width:0}
+#matrix-v2 .cm-list-name{background:none;border:0;padding:0;font:inherit;font-weight:700;color:#f1f6ff;text-align:left;cursor:pointer;overflow-wrap:anywhere}
+.cm-list-row.is-on td{background:#1e2c43}
+.cm-list-ring{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#2a3651;font-size:11px;font-weight:700;color:#cfe3f7}
+.cm-list-type{white-space:nowrap;color:#c5d6ea}
+.cm-list-mana .cm-mana img{width:16px;height:16px}
+#matrix-v2 .cm-list-buy .cm-card-view-menu-btn{min-height:32px;padding:0 10px;font-size:12px;white-space:nowrap}
+.cm-list-buy .cm-inline-menu-body{right:0;left:auto}
+.cm-list-paging{margin:2px 0;font-size:12px}
+#matrix-v2 .cm-list-paging .v-button{min-height:32px}
+#matrix-v2 .cm-list-table .cm-tick-cell input{width:17px;height:17px;min-height:0;margin:0}
+#matrix-v2.cm-stage .cm-list-table td:nth-child(3){min-width:120px}
+@media(max-width:860px){.cm-graph-grid.cm-list-open,#matrix-v2.cm-stage .cm-graph-grid.cm-list-open{grid-template-columns:1fr}}
