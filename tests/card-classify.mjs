@@ -249,8 +249,12 @@ ok("the bake carries the directed fields for every card, not only the ones teste
     `${empty.length} baked cards ship an empty array; the export is meant to drop them`);
   const multipliers = graph.cards.filter((c) => (c.multiplies || []).length).length;
   const granters = graph.cards.filter((c) => (c.grants || []).length).length;
-  assert.ok(multipliers > 100 && multipliers < 1500, `${multipliers} multipliers in ${graph.cards.length} cards`);
-  assert.ok(granters > 300 && granters < 3000, `${granters} granters in ${graph.cards.length} cards`);
+  /* As shares of the file, not counts: the bake went from 7,777 cards to the whole
+     format (31,830) and the fixed ceilings that fit the small file read the big one as
+     broken. Measured: multipliers 1.4%, granters 12% on the whole format. */
+  const share = (n) => n / graph.cards.length;
+  assert.ok(share(multipliers) > 0.005 && share(multipliers) < 0.05, `${multipliers} multipliers in ${graph.cards.length} cards`);
+  assert.ok(share(granters) > 0.03 && share(granters) < 0.2, `${granters} granters in ${graph.cards.length} cards`);
 });
 
 process.stdout.write(`\n${checks} checks passed over ${overlap.length} cards the bake and the catalog share.\n`);
