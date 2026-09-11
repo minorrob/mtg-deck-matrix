@@ -3,6 +3,36 @@
 Last updated 11 September 2026. Written so the next session can start work without
 reading a transcript.
 
+## 11 September 2026, later — the list rework, the divider, and the whole-format graph
+
+Three more PRs after the plan, in the order the owner asked for them:
+
+| PR | What | Merge |
+|---|---|---|
+| #145 | Discover list reads Card · Link · Color · Price with a caret-only Add/Buy; a row opens the inspect content in place; the pane keeps its width when List opens; the Filters bar toggles across its full height | squash |
+| #146 | A draggable divider between canvas and pane, width kept per device and mode in localStorage; the list sheds Link, then Color, then Price as the pane narrows | squash |
+| #147 | The shipped graph is the whole format: every Commander-legal card (31,830), every legal commander (3,411), EDHREC co-play for each (701,916 links). A "?" beside the card count explains the universe from the file's own figures | see PR |
+
+**How the graph was built this time.** Neo4j 5.26 Community was stood up inside the
+session container (no docker), pointed at `graph/.import`, and the pipeline ran
+unchanged through it: `01-fetch --prices`, `02-build-csv`, `03-load`, `04-fetch-edhrec
+--universe`, `05-build-edhrec-csv`, `06-load-edhrec`, `07-export-app --universe`, then
+`tools/graph-amplifiers.mjs --from-bulk`. The same steps on the owner's docker workshop
+produce the same file. EDHREC has no page for 29 Backgrounds (it files them as partners),
+so those ship without co-play edges.
+
+**Why the file is packed.** 700k edges as objects with two oracle ids each were 98 MB,
+past GitHub's 100 MB limit with the cards. `graph-payload.js` writes edges as
+`[from, to, inclusion, synergy, decks]` against the card list and art/buy links as the
+one id each is built from: 38 MB on disk, 11 MB gzipped. `card-catalog.js` unpacks on
+load, so nothing else sees the packed shape.
+
+**Latent bugs the bigger file exposed, fixed in #147.** The catalog now keeps its own
+price when a graph card merges over it (the bake's prices are a different day's). The
+Shop's band header now sums the parts of a folded row, so it agrees with the strip when
+an unassigned group holds priced wants. The bake reads a transform card's power off the
+first face that has one, matching `tools/add-power-toughness.mjs`.
+
 ## 11 September 2026 — the UX plan is executed
 
 `docs/ux-plan-2026-09-11.md` was carried out in order, one squash-merged PR per block, and

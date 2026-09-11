@@ -987,3 +987,4 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-pane-gutter.is-dragging{cursor:col-resize}
 @media(max-width:1050px){.cm-pane-gutter{display:none}#matrix-v2.cm-stage .cm-pane-gutter{display:flex}}
 @media(max-width:860px){#matrix-v2.cm-stage .cm-pane-gutter{display:none}}
+.cm-universe-hint{display:inline-flex;vertical-align:middle;margin:0 0 0 2px}.cm-universe-body{width:min(420px,calc(100vw - 40px))}.cm-universe-body h4{margin:0 0 6px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#9fc3e8}.cm-universe-body p{padding:0;margin:0 0 8px;font-size:13px;line-height:1.5;color:#dbe7f7}.cm-universe-body p:last-child{margin-bottom:0}.cm-facet-status{align-items:center}

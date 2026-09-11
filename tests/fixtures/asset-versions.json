@@ -62,8 +62,8 @@
       "sha": "b4cc36093b2df3e8"
     },
     "card-catalog.js": {
-      "version": 12,
-      "sha": "a941466384bcf118"
+      "version": 14,
+      "sha": "a583a210f87c7e42"
     },
     "card-classify.js": {
       "version": 6,
@@ -98,12 +98,12 @@
       "sha": "0e91b137b873ffd3"
     },
     "crankmagic-app.js": {
-      "version": 111,
-      "sha": "f60f4fcdbcc36b08"
+      "version": 115,
+      "sha": "6900735e3dc0c9c0"
     },
     "crankmagic-assets.js": {
-      "version": 17,
-      "sha": "3fa8088bca7e73d0"
+      "version": 18,
+      "sha": "5679c2dc72841117"
     },
     "crankmagic-brand.js": {
       "version": 2,
@@ -114,8 +114,8 @@
       "sha": "4c937886d914b612"
     },
     "crankmagic-collection.js": {
-      "version": 22,
-      "sha": "e0c501985e0209f7"
+      "version": 23,
+      "sha": "168aef19f5caccf8"
     },
     "crankmagic-decks.js": {
       "version": 24,
@@ -126,8 +126,8 @@
       "sha": "b6941b8c2f8965ba"
     },
     "crankmagic-discover.js": {
-      "version": 34,
-      "sha": "e3f7434fc22a46cb"
+      "version": 35,
+      "sha": "14e033a7ea1e9c5b"
     },
     "crankmagic-evidence.js": {
       "version": 2,
@@ -178,16 +178,16 @@
       "sha": "81ae2c4b7634afa7"
     },
     "crankmagic-sw.js": {
-      "version": 111,
-      "sha": "e35f2c77b4d873e6"
+      "version": 115,
+      "sha": "c1d9f9f94df4b4b4"
     },
     "crankmagic-tour.js": {
       "version": 7,
       "sha": "537d3f3592a26d07"
     },
     "crankmagic.css": {
-      "version": 63,
-      "sha": "d45a57771f6579d2"
+      "version": 64,
+      "sha": "eb7aa413ce01525e"
     },
     "custom-model.js": {
       "version": 3,
@@ -226,8 +226,8 @@
       "sha": "ee4c0aed0d1458b1"
     },
     "data/graph.json": {
-      "version": 10,
-      "sha": "4b236561b8d90c39"
+      "version": 11,
+      "sha": "44e8b1c31a5e6b34"
     },
     "deck-import.js": {
       "version": 2,
@@ -252,6 +252,10 @@
     "game-record.js": {
       "version": 1,
       "sha": "64ca6d7289743a4f"
+    },
+    "graph-payload.js": {
+      "version": 1,
+      "sha": "f92aa0002440f2e3"
     },
     "guide-measured.js": {
       "version": 1,

@@ -104,6 +104,11 @@ for await (const c of jsonl(`${cacheDir}/oracle_cards.jsonl`)) {
   const ci = (c.color_identity || []).join("");
   const isLand = /\bLand\b/.test(typeLine);
 
+  /* A transform card keeps its numbers on its faces, and the creature can be the back
+     face (Cryptolith Fragment is an artifact that flips into a 1/4). The body is the first
+     face that has one, so OFFERS_STAT and the exported power/toughness agree with what
+     tools/add-power-toughness.mjs wrote into the catalog. */
+  const body = c.power != null ? c : (faces.find((f) => f.power != null) || {});
   const pi = priceIndex.get(c.oracle_id);
   const usd = (pi && pi.usd) || Number(c.prices?.usd) || "";
   const foil = (pi && pi.foil) || Number(c.prices?.usd_foil) || "";
@@ -116,7 +121,7 @@ for await (const c of jsonl(`${cacheDir}/oracle_cards.jsonl`)) {
               (c.image_uris?.normal || faces[0]?.image_uris?.normal || ""),
               (pi && pi.tcg) || c.purchase_uris?.tcgplayer || "",
               pi ? pi.printings : 1,
-              c.power ?? faces[0]?.power ?? "", c.toughness ?? faces[0]?.toughness ?? ""]);
+              body.power ?? "", body.toughness ?? ""]);
   printings.push([c.id, c.oracle_id, c.set || "", c.collector_number || "",
                   c.finishes?.includes("foil") ? "true" : "false", Number(c.prices?.usd || 0) || ""]);
 
@@ -124,7 +129,7 @@ for await (const c of jsonl(`${cacheDir}/oracle_cards.jsonl`)) {
   // the graph page never needs -- how often a cause fires, and whether a requirement is
   // hard -- so those come back alongside rather than being re-derived from a second copy
   // of the patterns.
-  const what = Classify.classify(c, {tribes: knownTribes});
+  const what = Classify.classify(c.power != null ? c : {...c, power: body.power, toughness: body.toughness}, {tribes: knownTribes});
   const detail = Classify.edgeDetail(c);
   for (const e of what.triggers) triggers.push([c.oracle_id, e, detail.triggersYoursOnly]);
   for (const e of what.causes) causes.push([c.oracle_id, e, detail.causeRate]);

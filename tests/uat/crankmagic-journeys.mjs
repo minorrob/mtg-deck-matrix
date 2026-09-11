@@ -122,7 +122,10 @@ try{
  /* MONEY ON THE BUY LIST. The Shop opens grouped by deck with a strip above the table: the
     total at sheet prices equals the sum of the band headers' subtotals, and Bought on a row
     is one tap that records the copy and stamps the sheet price as what was paid. */
- await nav('Shop');await page.locator('#cm-shop-total').waitFor({timeout:45000});
+ /* Every row on one page: the strip counts every matched row and a band header only exists
+    for the rows on the page, so the two agree only with paging off. */
+ await page.evaluate(async()=>{const r=await CrankRepository.open();try{const s=await r.getState();await r.commit({id:crypto.randomUUID(),type:'preferences',values:{pageSize:'all'}},s.revision);}finally{r.close();}});
+ await nav('Shop');await page.locator('#cm-shop-total').waitFor({timeout:45000});await page.locator('.cm-band-dollars').first().waitFor();
  const money=await page.evaluate(()=>{const num=t=>Number(String(t).replace(/[^0-9.]/g,''));return {total:num(document.querySelector('#cm-shop-total').textContent),bands:[...document.querySelectorAll('.cm-band-dollars')].map(el=>num(el.textContent))};});
  ok(money.total>0);eq(money.total.toFixed(2),money.bands.reduce((n,x)=>n+x,0).toFixed(2));
  await page.locator('#cm-roster-query').fill('Lightning Bolt');await page.waitForTimeout(300);await row('Lightning Bolt','Journey Goblins').getByRole('button',{name:'Bought',exact:true}).click();await page.waitForTimeout(900);current=await state();
