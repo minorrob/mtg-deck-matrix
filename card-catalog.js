@@ -193,5 +193,32 @@
     async function loadGraph(){if(graph)return graph;if(!graphLoading)graphLoading=load(options.urls.graph).then(data=>{graph=data;graphDate=data.generatedAt||'';for(const c of data.cards){const prior=byName.get(folded(c.name));add({...c,oracleId:c.id,legalities:prior?.legalities||{commander:'legal'},verified:true});}return data;}).catch(error=>{graphLoading=null;throw error;});return graphLoading;}
     return {add,search,similar,resolve,details,cheapest,hydrate,recheck,loadGraph,exact:named,get:id=>byId.get(id)||named(id),all:()=>[...byId.values()],load,universeDate,rankDate,dates:()=>({catalog:universeDate,prices:priceDate,ranks:rankDate,graph:graphDate}),available:()=>byId.size};
   }
-  return {key,folded,normalize,safeURL,create,MECHANICS,matchesMechanic,playStyles};
+  /* WHAT A DECK IS ABOUT, READ OFF ITS LIST. definition.mechanics is the owner's word and
+     wins when it is set; when it is blank this says what the hundred cards themselves say.
+     Three sources, one score per term: the shared MECHANICS labels, counted over the
+     non-land cards that match them (halved, since "Counters" matches a lot of text) and
+     boosted when the commander plays that way; the classifier's own terms on the cards --
+     proliferate, defender, landfall -- counted whole, minus the evergreen keywords and the
+     generic roles that describe every deck; and a creature type that a third of the list
+     shares, as "<Type> tribal". The top three, the commander's styles breaking ties. */
+  const EVERGREEN=new Set(['flying','vigilance','haste','trample','first strike','double strike','deathtouch','lifelink','reach','menace','flash','hexproof','indestructible','ward','scry','cycling','kicker','equip','double','flashback','escape','evoke','surveil','blight']);
+  const GENERIC=new Set(['creatures','lands','artifacts','enchantments','instants','sorceries','planeswalkers','ramp','draw','removal','wipe','protection','tokens','counters','sac-outlet','graveyard','treasure']);
+  const RAW_LABEL={'sac-outlet':'Sacrifice',graveyard:'Graveyard',recursion:'Recursion',proliferate:'Proliferate',defender:'Defender',landfall:'Landfall',mill:'Mill',treasure:'Treasure',tokens:'Tokens',counters:'Counters',storm:'Storm',lifegain:'Lifegain'};
+  const titled=t=>RAW_LABEL[t]||String(t).replace(/-/g,' ').replace(/^\w/,ch=>ch.toUpperCase());
+  function deckMechanics(cards,leader,limit=3){
+    const list=(cards||[]).filter(c=>c&&!(/\bLand\b/.test(c.typeLine||'')&&!/Creature/.test(c.typeLine||'')));
+    if(!list.length)return [];
+    const styles=new Set(leader?playStyles(leader):[]),score=new Map(),bump=(label,n)=>score.set(label,(score.get(label)||0)+n);
+    /* A label that fits four cards in ten fits most decks -- "ETB triggers", "Combat" -- and
+       says little; it counts at a fifth so a real theme outranks it. */
+    for(const [label] of MECHANICS){const n=list.filter(c=>matchesMechanic(c,label)).length;if(n||styles.has(label))bump(label,n*(n>list.length*0.4?0.2:0.5)+(styles.has(label)?8:0));}
+    const raw=new Map();for(const c of list)for(const t of new Set([...(c.mechanics||[]),...(c.roles||[])]))if(!EVERGREEN.has(t))raw.set(t,(raw.get(t)||0)+1);
+    for(const [t,n] of raw){if(GENERIC.has(t)&&!RAW_LABEL[t])continue;if(n>=3)bump(titled(t),n);}
+    const tribes=new Map();for(const c of list)for(const t of c.tribes||[])tribes.set(t,(tribes.get(t)||0)+1);
+    for(const [t,n] of tribes)if(n>=Math.max(8,Math.round(list.length/3)))bump(t+' tribal',n+4);
+    const seen=new Set(),out=[];
+    for(const [label] of [...score].sort((a,b)=>b[1]-a[1]||(styles.has(b[0])?1:0)-(styles.has(a[0])?1:0)||a[0].localeCompare(b[0]))){const k=folded(label);if(seen.has(k))continue;seen.add(k);out.push(label);if(out.length>=limit)break;}
+    return out;
+  }
+  return {key,folded,normalize,safeURL,create,MECHANICS,matchesMechanic,playStyles,deckMechanics};
 });

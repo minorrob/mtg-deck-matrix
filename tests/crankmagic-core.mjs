@@ -4,6 +4,13 @@ import {createRequire} from 'node:module';
 const require=createRequire(import.meta.url),M=require('../collection-model.js'),D=require('../draft-builder.js'),C=require('../card-catalog.js'),E=require('../collection-exchange.js'),P=require('../deck-import.js');let checks=0;
 const eq=(a,b)=>{assert.deepEqual(a,b);checks++;},ok=x=>{assert.ok(x);checks++;};
 const leader=C.normalize({name:'Test Commander',typeLine:'Legendary Creature — Wizard',manaValue:3,colorIdentity:['U'],legalities:{commander:'legal'},oracleText:'Partner',keywords:['Partner'],price:1});
+/* WHAT A DECK IS ABOUT, READ OFF ITS LIST: the list's own theme outranks a label that fits
+   most decks, the commander's styles break ties, and a shared creature type is a tribe. */
+{const walls=Array.from({length:20},(_,i)=>C.normalize({name:'Wall '+i,typeLine:'Creature — Wall',colorIdentity:['G'],legalities:{commander:'legal'},oracleText:'Defender',keywords:['Defender']}));
+ const sac=Array.from({length:6},(_,i)=>C.normalize({name:'Altar '+i,typeLine:'Artifact',colorIdentity:[],legalities:{commander:'legal'},oracleText:'Sacrifice a creature: Add {C}.'}));
+ const lord=C.normalize({name:'Wall Lord',typeLine:'Legendary Creature — Elf',commander:true,colorIdentity:['G'],legalities:{commander:'legal'},oracleText:'Whenever a creature you control dies, draw a card.'});
+ const got=C.deckMechanics([...walls,...sac],lord);
+ assert.equal(got[0],'Wall tribal');assert.ok(got.includes('Defender'));assert.ok(got.includes('Sacrifice')||got.includes('Aristocrats'));assert.deepEqual(C.deckMechanics([],lord),[]);checks+=4;}
 const basic=C.normalize({name:'Island',typeLine:'Basic Land — Island',colorIdentity:['U'],legalities:{commander:'legal'},oracleText:'{T}: Add {U}.',price:.1});
 const pool=Array.from({length:130},(_,i)=>C.normalize({name:'Fixture '+i,typeLine:i%4===0?'Artifact':'Creature',manaValue:i%5+1,colorIdentity:['U'],legalities:{commander:'legal'},oracleText:i%3===0?'Draw two cards.':i%3===1?'Destroy target creature.':'{T}: Add {U}.',price:1}));
 let definition=M.defaultDefinition(),built=D.build({commanders:[leader],cards:[leader,basic,...pool],definition});eq(built.slots.reduce((n,r)=>n+r.quantity,0),100);ok(built.method.includes('not simulated'));eq(built.slots.find(r=>r.cardId===basic.id).quantity,36);

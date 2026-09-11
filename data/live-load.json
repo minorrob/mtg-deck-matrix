@@ -11,7 +11,12 @@
    "definition": {
     "baseBracket": 3,
     "bracketCeiling": 3,
-    "playStyle": "Balanced"
+    "playStyle": "Balanced",
+    "mechanics": [
+     "Graveyard",
+     "ETB triggers",
+     "Tokens"
+    ]
    },
    "notes": "Cards LEAVING your graveyard make 3/2 Spirits. Fill the bin, exile from it repeatedly, sac Spirits to free-cast what you exiled. Midrange grind. Win through recursion value and a wide Spirit alpha, not speed.",
    "cards": [
@@ -380,7 +385,12 @@
    "definition": {
     "baseBracket": 3,
     "bracketCeiling": 3,
-    "playStyle": "Balanced"
+    "playStyle": "Balanced",
+    "mechanics": [
+     "Landfall",
+     "Ramp",
+     "Draw"
+    ]
    },
    "notes": "Every creature CAST draws a card and gives a land drop. Blink/bounce cheap ETB bodies to loop value. Combo-value. Ramp hard, land Chulane, chain creatures, finish wide or on a loop.",
    "cards": [
@@ -745,7 +755,12 @@
    "definition": {
     "baseBracket": 3,
     "bracketCeiling": 3,
-    "playStyle": "Balanced"
+    "playStyle": "Balanced",
+    "mechanics": [
+     "Counters",
+     "Doublers & multipliers",
+     "Proliferate"
+    ]
    },
    "notes": "Free end-step proliferate compounds every counter. Win on poison, +1/+1 counters, or charge-counter engines. Four-colour grind. Survive, spread counters, let proliferate double them.",
    "cards": [
@@ -1130,7 +1145,12 @@
    "definition": {
     "baseBracket": 3,
     "bracketCeiling": 3,
-    "playStyle": "Balanced"
+    "playStyle": "Balanced",
+    "mechanics": [
+     "Defender",
+     "Combat",
+     "Sacrifice"
+    ]
    },
    "notes": "High-toughness walls that deal damage equal to toughness and can attack. Block all game, then alpha. Defensive fortress. Take no damage, one-sided wipe, swing once for lethal.",
    "cards": [
@@ -1471,7 +1491,12 @@
    "definition": {
     "baseBracket": 3,
     "bracketCeiling": 3,
-    "playStyle": "Balanced"
+    "playStyle": "Balanced",
+    "mechanics": [
+     "Tokens",
+     "Drain & burn",
+     "Draw"
+    ]
    },
    "notes": "Flood the board with tokens; each body drains on entry and again on death. Wide aristocrats grind. Bodies + drain payoffs + a sac outlet.",
    "cards": [
@@ -1788,7 +1813,12 @@
    "definition": {
     "baseBracket": 3,
     "bracketCeiling": 3,
-    "playStyle": "Balanced"
+    "playStyle": "Balanced",
+    "mechanics": [
+     "Goblin tribal",
+     "Tokens",
+     "ETB triggers"
+    ]
    },
    "notes": "Krenko doubles the goblin count each tap; ETB-damage engines turn tokens into reach. Fast mono-red swarm. Fastest clock of the six; win before the table stabilises.",
    "cards": [
@@ -5134,7 +5164,7 @@
    "card": "Beast Whisperer",
    "replaces": "Elvish Visionary",
    "tier": 3,
-   "price": 9.0,
+   "price": 9,
    "why": "A card on every creature spell instead of a card once."
   },
   {
@@ -5222,7 +5252,7 @@
    "card": "Beast Whisperer",
    "replaces": "Blight Rot",
    "tier": 3,
-   "price": 9.0,
+   "price": 9,
    "why": "A card on every creature spell in the deck with the most creatures."
   },
   {
