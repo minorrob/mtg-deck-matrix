@@ -230,6 +230,13 @@ assert.equal(s.revision,beforeArrival+1,'Arrived is one revision, so one undo');
 expectFailure('orderArrived',{orderId:'order:test'},/already arrived/);
 M.validate(s);checks++;
 
+// A GAME CARRIES WHERE YOU FINISHED, IN WHAT POD, AT WHAT BRACKET, AND WHICH CARDS MATTERED.
+run('game',{deckId:'d1',outcome:'win',playedAt:'2026-09-10',finish:1,pod:4,bracket:3,mvpCardId:'ring',deadCardId:'land',turns:9});
+{const g=s.games[s.games.length-1];assert.equal(g.finish,1);assert.equal(g.pod,4);assert.equal(g.bracket,3);assert.equal(g.mvpCardId,'ring');assert.equal(g.at,'2026-09-10');checks+=5;}
+expectFailure('game',{deckId:'d1',outcome:'loss',finish:5,pod:4},/place in the pod/);
+expectFailure('game',{deckId:'d1',outcome:'loss',mvpCardId:'nope'},/Resolve the card/);
+run('game',{deckId:'d1',outcome:'loss'});assert.equal(s.games[s.games.length-1].pod,null);checks++;
+
 // A planned entry is fulfilled a few copies at a time.
 run('createGroup',{groupId:'plans',name:'Plans'});run('groupEntries',{groupId:'plans',entries:[{cardId:'gem',quantity:3}]});
 const planned=s.groups.find(g=>g.id==='plans').entries[0].id;

@@ -100,6 +100,11 @@ try{
  /* The whole draft at a status, from the deck page: every remaining card becomes a Wanted
     copy filed with the deck, so the group now holds the hundred as copies. */
  await click('Clear filters');await nav('My Decks');await page.locator('.cm-deck-tile').filter({hasText:'Constructive run'}).getByRole('button').first().click();
+ /* LOG A GAME, READ IT BACK: the form's pickers are the deck's cards, and the Record card and
+    the tile caption show the result. */
+ await click('Log a game');await page.getByLabel('Card that won it').selectOption({label:'Krenko, Mob Boss'});await page.getByLabel('Finish').selectOption('1');await click('Save game record');await waitDialog();await page.locator('.cm-record-table').waitFor({timeout:8000});current=await state();
+ {const g=current.games[current.games.length-1];eq(g.outcome,'win');eq(g.finish,1);eq(g.pod,4);eq(g.mvpCardId,CrankKey('Krenko, Mob Boss'));}
+ eq(await page.locator('.cm-record-table tbody tr').count(),1);
  await click('Card status');await click('Wanted');await click('Confirm change');await waitDialog();current=await state();
  eq(current.lots.filter(l=>l.groupIds.includes(labDeck.groupId)).reduce((n,l)=>n+l.quantity,0),labTotal);
  ok(current.lots.some(l=>l.source==='wanted'&&l.groupIds.includes(labDeck.groupId)));

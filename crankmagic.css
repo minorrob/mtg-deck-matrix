@@ -877,3 +877,8 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-budget.cm-near{border-color:#6d5c3d}.cm-budget.cm-near .cm-budget-bar i{background:var(--st-buy)}
 .cm-budget.cm-over{border-color:#7a3b36}.cm-budget.cm-over .cm-budget-bar i{background:var(--st-remove)}
 .cm-amber{color:#f3c27b}
+
+/* THE RECORD CARD. Same figure row as the budget card; the last ten games as a table. */
+.cm-record h2{display:flex;align-items:center;gap:10px}
+.cm-record-figures{margin:0 0 6px}
+.cm-record-table td{vertical-align:middle}
