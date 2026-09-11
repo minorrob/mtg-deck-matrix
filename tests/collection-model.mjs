@@ -199,6 +199,21 @@ run('acquireSlots',{deckId:'due',source:'ordered'});
 assert.equal(M.readiness(s,M.deck(s,'due')).toBuy,0,'On a finalized deck the outstanding shortfall is what gets recorded, reserved to its slots');checks++;
 expectFailure('acquireSlots',{deckId:'due',source:'owned'},/already has copies/);
 
+// WHAT WAS PAID IS STAMPED WITH HOW WE KNOW. A one-tap Bought records the sheet price as
+// paid, marked catalog; a receipt or a typed figure says so; clearing it clears the mark.
+run('acquire',{lot:{id:'stamped',cardId:'gem',quantity:2,source:'wanted',paid:null}});
+assert.equal(M.lot(s,'stamped').paidSource,undefined);checks++;
+run('source',{lotId:'stamped',source:'ordered',paid:3.5,paidSource:'catalog'});
+assert.equal(M.lot(s,'stamped').paid,3.5);assert.equal(M.lot(s,'stamped').paidSource,'catalog');assert.ok(M.lot(s,'stamped').paidAt);checks+=3;
+run('source',{lotId:'stamped',source:'owned',paid:9,paidSource:'catalog'});
+assert.equal(M.lot(s,'stamped').paid,3.5,'A stamp never overwrites a figure already recorded');checks++;
+run('editLot',{lotId:'stamped',paid:4,paidSource:'receipt'});assert.equal(M.lot(s,'stamped').paidSource,'receipt');checks++;
+run('editLot',{lotId:'stamped',paid:null});assert.equal(M.lot(s,'stamped').paidSource,undefined);assert.equal(M.lot(s,'stamped').paidAt,undefined);checks+=2;
+run('bulk',{op:'source',source:'ordered',lotIds:['stamped'],paidByLot:{stamped:1.1},paidSource:'catalog',confirmed:true});
+assert.equal(M.lot(s,'stamped').paid,1.1);assert.equal(M.lot(s,'stamped').paidSource,'catalog');checks+=2;
+expectFailure('editLot',{lotId:'stamped',paid:-1},/nonnegative/);
+run('acquire',{lot:{id:'typed',cardId:'gem',quantity:1,paid:2}});assert.equal(M.lot(s,'typed').paidSource,'typed');checks++;
+
 // A planned entry is fulfilled a few copies at a time.
 run('createGroup',{groupId:'plans',name:'Plans'});run('groupEntries',{groupId:'plans',entries:[{cardId:'gem',quantity:3}]});
 const planned=s.groups.find(g=>g.id==='plans').entries[0].id;

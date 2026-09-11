@@ -165,6 +165,32 @@ check("the Order file carries its instructions with it", () => {
   assert.match(order.filename, /\.txt$/);
 });
 
+/* ---------------- the total, and the sheet cut by deck ---------------- */
+check("the total is Σ price × need, and says how many rows had no price", () => {
+  const sum = Export.toBuyTotal(rows);
+  assert.equal(sum.cards, 7);
+  assert.equal(sum.dollars, Math.round((1.35 + 6 + 0.99 * 2 + 1 + 24.5) * 100) / 100);
+  assert.equal(sum.unpriced, 1);
+});
+check("by deck: one section per deck with its own subtotal, unassigned last by name", () => {
+  const decks = Export.toBuyByDeck(rows);
+  assert.deepEqual(decks.map((d) => d.deck), ["Felothar", "Krenko", "Unassigned"]);
+  const krenko = decks.find((d) => d.deck === "Krenko");
+  assert.equal(krenko.count, 5);
+  assert.equal(krenko.dollars, Math.round((1.35 + 6 + 0.99 * 2 + 24.5) * 100) / 100);
+  assert.equal(decks.reduce((n, d) => n + d.dollars, 0).toFixed(2), Export.toBuyTotal(rows).dollars.toFixed(2));
+});
+check("a card two decks want is split by each deck's share when the row says so", () => {
+  const split = Export.toBuyByDeck([{name: "Sol Ring", color: "Colorless", price: 2, need: 3, deckNames: ["A", "B"], needByDeck: {A: 1, B: 2}}]);
+  assert.deepEqual(split.map((d) => [d.deck, d.count, d.dollars]), [["A", 1, 2], ["B", 2, 4]]);
+});
+check("the print sheet carries the total line, and per-deck headings when asked", () => {
+  const html = Export.toBuyHtml(rows, {date: "2026-09-11"});
+  assert.ok(html.includes("at sheet prices"));
+  const byDeck = Export.toBuyHtml(rows, {date: "2026-09-11", byDeck: true});
+  assert.ok(byDeck.includes("Krenko · 5 · $"));
+});
+
 console.log(`shop-export: ${checks} checks passed · ` +
   `to buy ${Export.toBuyGroups(rows).reduce((n, g) => n + g.count, 0)} copies in ` +
   `${Export.toBuyGroups(rows).length} bands · order ${Export.orderText(rows).split("\n").filter(Boolean).length} lines · ` +

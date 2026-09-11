@@ -95,6 +95,43 @@
     }).filter((band) => band.colors.length);
   }
 
+  /* What the sheet costs: Σ price × need over the rows that carry a price. A card with no
+     price adds nothing rather than a guess, and the subtitle says how many were unpriced. */
+  function toBuyTotal(rows) {
+    let dollars = 0, unpriced = 0, cards = 0;
+    for (const r of (rows || []).filter((x) => Number(x.need) > 0)) {
+      const p = Number(r.price), n = Number(r.need) || 1;
+      cards += n;
+      if (Number.isFinite(p) && p > 0) dollars += p * n; else unpriced += n;
+    }
+    return {dollars: Math.round(dollars * 100) / 100, unpriced, cards};
+  }
+
+  /* To Buy, deck by deck: the same rows cut by the deck that wants them, each deck with its
+     own subtotal, so the sheet answers "what does finishing D3 cost" without arithmetic.
+     A card two decks want is listed under each with that deck's share. */
+  function toBuyByDeck(rows) {
+    const decks = new Map();
+    for (const r of (rows || []).filter((x) => Number(x.need) > 0)) {
+      const names = (r.deckNames || []).length ? r.deckNames : ["Unassigned"];
+      const share = (r.needByDeck && typeof r.needByDeck === "object") ? r.needByDeck : null;
+      for (const deck of names) {
+        const n = share ? Number(share[deck]) || 0 : Number(r.need) || 1;
+        if (!n) continue;
+        if (!decks.has(deck)) decks.set(deck, {deck, cards: [], dollars: 0, count: 0});
+        const d = decks.get(deck), p = Number(r.price);
+        d.cards.push({name: r.name, color: r.color || "Colorless", price: money(r.price), quantity: n});
+        d.count += n;
+        if (Number.isFinite(p) && p > 0) d.dollars += p * n;
+      }
+    }
+    return [...decks.values()].sort((a, b) => a.deck.localeCompare(b.deck)).map((d) => {
+      d.cards.sort((a, b) => colorRank(a.color) - colorRank(b.color) || byName(a, b));
+      d.dollars = Math.round(d.dollars * 100) / 100;
+      return d;
+    });
+  }
+
   /**
    * Order: TCGplayer Mass Entry.
    *
@@ -178,17 +215,27 @@ ${note ? `<p class="noprint">${esc(note)}</p>` : ""}
 </body></html>`;
   }
 
+  const item = (card) => `<li><span class="nm">${esc(card.name)}` +
+    (card.quantity > 1 ? ` <span class="qty">×${card.quantity}</span>` : "") +
+    `</span><span class="pr">${esc(card.price)}</span></li>`;
+
   function toBuyHtml(rows, meta) {
-    const groups = toBuyGroups(rows);
-    const total = groups.reduce((n, g) => n + g.count, 0);
-    const body = groups.map((band) => `<section><h2>${esc(band.label)} · ${band.count}</h2>` +
-      band.colors.map((c) => `<div class="grp"><h3>${esc(c.color)}</h3><ul>` +
-        c.cards.map((card) => `<li><span class="nm">${esc(card.name)}` +
-          (card.quantity > 1 ? ` <span class="qty">×${card.quantity}</span>` : "") +
-          `</span><span class="pr">${esc(card.price)}</span></li>`).join("") +
-        "</ul></div>").join("") + "</section>").join("");
-    return page("To Buy", `${total} card${total === 1 ? "" : "s"} · ` +
-      `grouped by price, then color, A to Z · target prices, not what you will pay · ` +
+    const sum = toBuyTotal(rows);
+    const totalLine = `$${sum.dollars.toFixed(2)} at sheet prices` + (sum.unpriced ? ` · ${sum.unpriced} unpriced` : "");
+    let body;
+    if (meta && meta.byDeck) {
+      const decks = toBuyByDeck(rows);
+      body = decks.map((d) => `<section><h2>${esc(d.deck)} · ${d.count} · $${d.dollars.toFixed(2)}</h2><div class="grp"><ul>` +
+        d.cards.map(item).join("") + "</ul></div></section>").join("");
+    } else {
+      const groups = toBuyGroups(rows);
+      body = groups.map((band) => `<section><h2>${esc(band.label)} · ${band.count}</h2>` +
+        band.colors.map((c) => `<div class="grp"><h3>${esc(c.color)}</h3><ul>` +
+          c.cards.map(item).join("") + "</ul></div>").join("") + "</section>").join("");
+    }
+    return page("To Buy", `${sum.cards} card${sum.cards === 1 ? "" : "s"} · ${totalLine} · ` +
+      (meta && meta.byDeck ? "grouped by deck, color, A to Z" : "grouped by price, then color, A to Z") +
+      ` · target prices, not what you will pay · ` +
       ((meta && meta.date) || new Date().toISOString().slice(0, 10)),
       body || "<p>Nothing outstanding.</p>",
       "This tab will open your print dialog. Print it, fold it, take it to the booth.");
@@ -210,10 +257,10 @@ ${note ? `<p class="noprint">${esc(note)}</p>` : ""}
      what is on it; the renderers differ only in where it is going. */
   function toBuyDoc(rows, meta) {
     const groups = toBuyGroups(rows);
-    const total = groups.reduce((n, g) => n + g.count, 0);
+    const sum = toBuyTotal(rows);
     return {
       title: "To Buy",
-      subtitle: `${total} card${total === 1 ? "" : "s"} · grouped by price, then color, A to Z · ` +
+      subtitle: `${sum.cards} card${sum.cards === 1 ? "" : "s"} · $${sum.dollars.toFixed(2)} at sheet prices · grouped by price, then color, A to Z · ` +
         `target prices, not what you will pay · ${(meta && meta.date) || ""}`,
       sections: groups.map((band) => ({
         heading: `${band.label} · ${band.count}`,
@@ -256,7 +303,7 @@ ${note ? `<p class="noprint">${esc(note)}</p>` : ""}
     if (asked.toBuy) {
       files.push({id: "toBuy", label: "To Buy", kind: "print",
         filename: `to-buy-${stamp}.html`, mime: "text/html;charset=utf-8",
-        content: toBuyHtml(rows, {date: stamp})});
+        content: toBuyHtml(rows, {date: stamp, byDeck: !!(meta && meta.byDeck)})});
     }
     if (asked.toBuyDocx && Docx) {
       files.push({id: "toBuyDocx", label: "To Buy (Word)", kind: "docx",
@@ -290,6 +337,8 @@ ${note ? `<p class="noprint">${esc(note)}</p>` : ""}
     COLOR_ORDER,
     bandOf,
     toBuyGroups,
+    toBuyTotal,
+    toBuyByDeck,
     orderText,
     inHandRows,
     toBuyHtml,
