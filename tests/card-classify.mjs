@@ -118,6 +118,20 @@ ok("both faces of a two-faced card are read", () => {
   assert.ok(both.produces.includes("card"));
 });
 
+ok("how a land enters is read off its own sentences, not off anything else that enters", () => {
+  const land = (name, text) => Classify.classify({name, type_line: "Land", oracle_text: text}).mechanics.filter((m) => m.startsWith("enters"));
+  assert.deepEqual(land("Command Tower", "{T}: Add one mana of any color in your commander's color identity."), ["enters-untapped"]);
+  assert.deepEqual(land("Bojuka Bog", "Bojuka Bog enters tapped.\nWhen Bojuka Bog enters, exile target player's graveyard.\n{T}: Add {B}."), ["enters-tapped"]);
+  assert.deepEqual(land("Hallowed Fountain", "As Hallowed Fountain enters, you may pay 2 life. If you don't, it enters tapped."), ["enters-tapped-unless"]);
+  assert.deepEqual(land("Seachrome Coast", "Seachrome Coast enters tapped unless you control two or fewer other lands.\n{T}: Add {W} or {U}."), ["enters-tapped-unless"],
+    "\"other lands\" inside the condition is not about other lands entering");
+  assert.deepEqual(land("Glacial Fortress", "Glacial Fortress enters tapped unless you control a Plains or an Island."), ["enters-tapped-unless"]);
+  assert.deepEqual(land("Fabled Passage", "{T}, Sacrifice Fabled Passage: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle."), ["enters-untapped"],
+    "what a fetched land does is not how the fetch enters");
+  const artifact = Classify.classify({name: "Amulet of Vigor", type_line: "Artifact", oracle_text: "Whenever a permanent you control enters tapped, untap it."});
+  assert.ok(!artifact.mechanics.some((m) => m.startsWith("enters")), "only a land carries an entry reading");
+});
+
 ok("a card with a land face is filed as a land, exactly as the bake files it", () => {
   /* Surprising, and deliberate: `isLand` reads the whole type line, so a creature whose
      back face is a land counts as one and picks up no spell roles. That is what the bake

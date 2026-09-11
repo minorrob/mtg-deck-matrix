@@ -31,6 +31,12 @@
 (function (root) {
   'use strict';
 
+  /* How a land enters is a filter, not a join: every untapped land would otherwise be joined
+
+     to every other one on a 'shared mechanic'. */
+
+  const LAND_ENTRY = new Set(['enters-untapped', 'enters-tapped', 'enters-tapped-unless']);
+
   const GENERIC = new Set(['creatures', 'lands', 'artifacts', 'enchantments', 'instants', 'sorceries', 'planeswalkers']);
   const CAP = 180;
 
@@ -40,7 +46,7 @@
   function termsOf(c) {
     if (!c) return null;
     return {
-      mechanics: [...(c.mechanics || [])], roles: (c.roles || []).filter((r) => !GENERIC.has(r)),
+      mechanics: (c.mechanics || []).filter((m) => !LAND_ENTRY.has(m)), roles: (c.roles || []).filter((r) => !GENERIC.has(r)),
       produces: [...(c.produces || [])], requires: [...(c.requires || [])],
       causes: [...(c.causes || [])], triggers: [...(c.triggers || [])],
       multiplies: [...(c.multiplies || [])], grants: [...(c.grants || [])],
@@ -70,7 +76,7 @@
   const TERM_KEYS = ['shared', 'fills', 'produces', 'requires', 'causes', 'triggers', 'multiplies', 'grants', 'extends', 'tribes', 'wants', 'makes', 'offered', 'wantsStat', 'offersStat'];
   function termSets(c) {
     const t = {
-      shared: new Set([...(c.mechanics || []), ...(c.roles || []).filter((r) => !GENERIC.has(r))]),
+      shared: new Set([...(c.mechanics || []).filter((m) => !LAND_ENTRY.has(m)), ...(c.roles || []).filter((r) => !GENERIC.has(r))]),
       /* WHAT THIS CARD SUPPLIES, for the demand side to ask about. Roles are the shared
          supply/demand vocabulary -- REQUIRES names "creatures", "counters", "graveyard",
          and FILLS names the same words -- so this is the set a REQUIRES is checked
