@@ -76,6 +76,11 @@ The approved standalone mockup remains under `design/crankmagic/` for design ref
   as *Add · Replaces · Tier · Price · Why · Promote* with *Tuned only* and *Under $2*
   (D5–D6: $1.50) filters, `$X to Max` and `GC k / 2` in its header; *Promote* is the
   existing accept-option review, which asks first when it would be a third Game Changer.
+  A **budget card** under the hero — `$ to finish (base)`, `Paid so far`, `Market value · %
+  of cap` with a bar (amber past 90 %, red past 100 %), `Game Changers k / 2`, lines paid
+  over the 110 % cap — reads the same lots and prices as the Shop strip. Deck Definition
+  shows the standing caps ($225 total, $30 a card) as placeholders and writes them when the
+  field is left blank.
 - **User Functions**: backup/restore, Load Live, enriched workbook export, legacy
   reconciliation, history/undo, comparison reset, optional mirror file and explicit Clear all.
 
