@@ -52,7 +52,11 @@ card would do to the deck's curve or its color sources — see item 5.
 
 ---
 
-## 3 · A pull sheet for building at the table
+## 3 · ~~A pull sheet for building at the table~~ — shipped
+
+**Built.** `#pull?deck=` (Deck page → Pull sheet, Shop → Deck assembly): the deck's reserved
+copies grouped by where they sit, a tick per row that commits the placement, *Mark all found
+in box*, print and export. See `crankmagic-pull.js`.
 
 **The gap.** The Deck page is organized by the deck's structure — slots grouped by the job
 each one does. Physically pulling a hundred cards is a different task: you want them ordered
@@ -101,7 +105,12 @@ be pinned card-for-card against the engine to stop them drifting.
 
 ---
 
-## 6 · What changed since I last sleeved this deck
+## 6 · ~~What changed since I last sleeved this deck~~ — shipped as the pull sheet's third group
+
+**Built.** The pull sheet's *Remove from this box* group lists every owned copy physically
+in the deck's box that the list no longer reserves, with *To bench* per row; the model's
+`readiness.remove` is the count. No snapshot is needed: the box location and the reservation
+are both recorded, and the diff between them is the answer.
 
 **The gap.** Re-sleeving after a rung change means comparing a hundred cards against a
 hundred cards by eye. The app knows both lists and could simply say: pull these four, add

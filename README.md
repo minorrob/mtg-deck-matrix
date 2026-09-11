@@ -49,8 +49,22 @@ The approved standalone mockup remains under `design/crankmagic/` for design ref
 - **Deck Lab**: any legal catalog commander by name or mechanics/EDHREC commander rank;
   optional second commander; an existing list/group; separate Deck Definition; real
   initial construction under price/copy limits. The user reviews and finalizes the list.
-- **Shop**: acquisition and assembly views, partial orders/receipts, source corrections,
-  deck placement, donor-copy review and export of the filtered list.
+- **Shop**: the buy list with money on it — price, cap (sheet price under $2, 110% above,
+  local store first at $5 and over), vendor, deck and paid on every row at every width; a
+  strip above the table with the count, the total at sheet prices, what is ordered and
+  unpaid and what is left of the season's pool, then the three price bands; rows grouped
+  by deck with a subtotal per band. A card moves *buy → ordered → arrived* from the row:
+  **Bought** and **Ordered** on a To buy row, **Arrived** on an ordered copy, one tap each,
+  stamping the sheet price as what was paid (marked *catalog* until a receipt says
+  otherwise). Export carries price, cap, vendor and the subtotals; *Print buy list* prints
+  it by deck. **Deck assembly** opens a deck's pull sheet.
+- **Pull sheet** (`#pull?deck=`): one deck's reserved copies grouped by where they are —
+  pull from bench, move from another box, remove from this box — colour then name inside
+  each, with *In box* / *Move here* / *To bench* per row, a tick that records the walk as
+  it happens, *Mark all found in box*, Print (black on white, boxes to tick) and Export.
+  The deck page's stat row shows In box · To pull · Ordered · To buy and $ to finish against
+  the cap, with a readiness bar; *Pull sheet (n)* leads the action row when there is
+  anything to pull.
 - **User Functions**: backup/restore, Load Live, enriched workbook export, legacy
   reconciliation, history/undo, comparison reset, optional mirror file and explicit Clear all.
 
