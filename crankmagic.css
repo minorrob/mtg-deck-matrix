@@ -882,3 +882,7 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-record h2{display:flex;align-items:center;gap:10px}
 .cm-record-figures{margin:0 0 6px}
 .cm-record-table td{vertical-align:middle}
+
+/* THE ROW MENU'S SECTIONS: small caps, a rule above each after the first. */
+.cm-menu .cm-menu-section{margin:8px 0 2px;padding:6px 12px 2px;border-top:1px solid #3b465d;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#8fa6c4}
+.cm-menu .cm-side-submenu .cm-menu-section{border-top:0}
