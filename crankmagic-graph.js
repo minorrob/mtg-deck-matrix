@@ -698,10 +698,16 @@
         const r = relate(a, b);
         if (!r && !co) return null;
         const none = [];
+        /* Every list the pop-up reads, present even when empty: the tribal and stat lists
+           arrived in relate() after this was written, and a missing one threw inside the
+           pointerup handler -- which left the drag armed and the whole graph glued to the
+           cursor, the symptom a reader met as "Inspect does not inspect". */
         return {shared: r ? r.shared : none, feeds: r ? r.feeds : none, fed: r ? r.fed : none,
           fires: r ? r.fires : none, firedBy: r ? r.firedBy : none,
           multiplied: r ? r.multiplied : none, multiplies: r ? r.multiplies : none,
           extended: r ? r.extended : none, extendedBy: r ? r.extendedBy : none,
+          tribal: r && r.tribal ? r.tribal : none, tribalBy: r && r.tribalBy ? r.tribalBy : none,
+          statted: r && r.statted ? r.statted : none, stattedBy: r && r.stattedBy ? r.stattedBy : none,
           kind: r ? r.kind : 'EDHREC co-play',
           reason: r ? r.reason : null, coPlay: co ? {decks: co.decks, inclusion: co.inclusion} : null};
       }
@@ -755,14 +761,18 @@
       function up(e) {
         pointers.delete(e.pointerId);
         if (pointers.size < 2) pinch = null;
-        if (drag && !drag.moved) {
+        /* The drag is over the moment the pointer lifts. It used to be cleared at the end of
+           this handler, after the tap callbacks -- so a callback that threw left it armed and
+           every later mouse move panned the canvas. */
+        const tap = drag && !drag.moved; drag = null;
+        if (tap) {
           /* A phone has no '0' key: two taps in the same spot inside 300ms resets the view.
              Touch only, and never in select mode -- a mouse has the key and the button,
              and someone ticking neighbours quickly at low zoom lands two clicks within
              24px of each other without meaning "reset". */
           const now = Date.now();
           if (e.pointerType === 'touch' && mode !== 'select' && now - lastTap.at < 300 && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < 24) {
-            lastTap = {at: 0, x: 0, y: 0}; fit(); draw(); drag = null; return;
+            lastTap = {at: 0, x: 0, y: 0}; fit(); draw(); return;
           }
           lastTap = {at: now, x: e.clientX, y: e.clientY};
           const n = pick(e);
@@ -780,7 +790,6 @@
             else onHit && onHit(null);
           }
         }
-        drag = null;
       }
       function key(e) {
         if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', '+', '-', '0'].includes(e.key)) return;
