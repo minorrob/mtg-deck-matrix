@@ -1,7 +1,28 @@
 # CrankMagic — current state and handoff
 
-Last updated 8 September 2026. Written so the next session can start work without
+Last updated 11 September 2026. Written so the next session can start work without
 reading a transcript.
+
+## 11 September 2026 — the UX plan is being executed, PR by PR
+
+The work in flight is `docs/ux-plan-2026-09-11.md` (nine PRs in a fixed order). Status:
+
+| PR | State |
+|---|---|
+| 1 Foundations (tokens, readiness segments, button scale) | **merged**, #134, squash `6b69267` on `main` |
+| 2 P0 (money on the buy list, to-pull, pull sheet) | built as WIP commit `b83f88a` on `claude/fervent-hawking-f9565f`; one journey step to fix, gates and screenshots to run, PR to open |
+| 3–9 | not started |
+
+**Next:** `docs/handoff-2026-09-11-p0.md` — it has the exact resume commands, the one
+known failure and its fix, and the opening prompt for the next session. `bash runtests.sh -q`
+is 52 suites on the WIP branch (51 on `main`); the browser gates are in §2 of the plan.
+`tools/screens.mjs <name> [routes]` takes the plan's five screenshots with the live state
+loaded and prints the reconciled totals.
+
+Everything below this line describes the state as of 8 September and is still accurate for
+the modules it names.
+
+---
 
 ## Where things stand
 
