@@ -860,7 +860,7 @@
         current() { return byId.get(center) || null; },
         /* Every card the focus reaches at the widest setting, in the order the layout would
            place them, with the ring each sits on. The canvas is not redrawn. */
-        reach(d = 3, b = 30) { return build(clampDepth(d), clampBreadth(b), false).nodes.map((n) => ({card: n.card, depth: n.depth, kind: n.kind, reason: n.reason, tag: n.tag})); },
+        reach(d = 3, b = 30) { return build(clampDepth(d), clampBreadth(b), false).nodes.map((n) => ({card: n.card, depth: n.depth, kind: n.kind, reason: n.reason, tag: n.tag, parent: n.parent ? n.parent.card : null})); },
         destroy() {
           disposed = true; if (nameTimer) clearTimeout(nameTimer); cancelAnimationFrame(frame); observer.disconnect();
           for (const [name, fn] of [['wheel', wheel], ['pointerdown', down], ['pointermove', move], ['pointerup', up], ['pointercancel', up], ['keydown', key]]) canvas.removeEventListener(name, fn);

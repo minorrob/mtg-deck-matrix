@@ -339,13 +339,13 @@
     }
     /* ADD/BUY, ONE MENU FOR THE PANE AND EVERY LIST ROW: the two vendors, the library, the
        collection groups and the draft decks. */
-    function buyMenu(c, rec) {
+    function buyMenu(c, rec, compact = false) {
       const buy = rec.buy || c.buy || C.buyLink(rec.name ? rec : c);
       const kingdom = 'https://www.cardkingdom.com/catalog/search?search=header&filter%5Bname%5D=' + encodeURIComponent(c.name);
       const cardId = CrankCatalog.key(c.name);
       const groups = C.state.groups || [];
       const draftDecks = (C.state.decks || []).filter((d) => !d.archived && d.status === 'draft');
-      return `<details class="cm-inline-menu" name="cm-card-view-menu"><summary class="v-button cm-card-view-menu-btn">Add/Buy</summary><div class="cm-menu cm-inline-menu-body">
+      return `<details class="cm-inline-menu" name="cm-card-view-menu"><summary class="v-button cm-card-view-menu-btn${compact ? ' cm-buy-caret' : ''}"${compact ? ` title="Add/Buy" aria-label="Add or buy ${e(c.name)}"` : ''}>${compact ? (C.caret ? C.caret('down') : '▾') : 'Add/Buy'}</summary><div class="cm-menu cm-inline-menu-body">
               <a href="${e(buy)}" target="_blank" rel="noopener">Buy at TCGplayer ↗</a>
               <a href="${e(kingdom)}" target="_blank" rel="noopener">Buy at Card Kingdom ↗</a>
               <hr>
@@ -367,16 +367,35 @@
     actions['pane-tab'] = (el) => { paneTab = el.dataset.tab; listCard = null; applyTab(); lastDrawn = ''; drawCardView(listCard || graph?.current(), null, true); requestAnimationFrame(() => { sizePane(); dispatchEvent(new Event('resize')); }); };
     /* THE LIST. graph.reach() at the widest setting, over the filtered world the graph is
        mounted on, so every filter still applies and only the sliders do not. */
-    const LIST_COLS = [['ring', 'Ring'], ['name', 'Card'], ['type', 'Type'], ['mana', 'Mana'], ['price', 'Price']];
+    const LIST_COLS = [['name', 'Card'], ['link', 'Link'], ['color', 'Color'], ['price', 'Price']];
+    /* ONE PIP PER CARD, whatever it costs. A mono-coloured card shows its symbol once; a
+       colourless one the grey pip; a multicoloured one a pip of the same shape split into
+       wedges of its own colours -- and a four- or five-colour card the full five-way split,
+       which is the format's own sign for "all of them". */
+    const PIP = {W: '#fff0b4', U: '#53acff', B: '#696076', R: '#ee735f', G: '#66b889'};
+    const PIP_NAME = {W: 'White', U: 'Blue', B: 'Black', R: 'Red', G: 'Green'};
+    function colorPip(ci) {
+      const list = String(ci || '').split('').filter((x) => PIP[x]);
+      if (!list.length) return '<span class="cm-colors" title="Colorless"><i class="cm-color C"></i></span>';
+      if (list.length === 1) return `<span class="cm-colors" title="${PIP_NAME[list[0]]}"><img class="cm-pip" src="assets/mana/${list[0]}.svg?v=1" alt="${PIP_NAME[list[0]]}"></span>`;
+      const wedges = list.length >= 4 ? ['W', 'U', 'B', 'R', 'G'] : list, n = wedges.length;
+      const paths = wedges.map((c, i) => {
+        const a0 = -Math.PI / 2 + i * 2 * Math.PI / n, a1 = a0 + 2 * Math.PI / n;
+        const pt = (a) => `${(9 + 8 * Math.cos(a)).toFixed(2)} ${(9 + 8 * Math.sin(a)).toFixed(2)}`;
+        return `<path d="M9 9 L${pt(a0)} A8 8 0 ${2 * Math.PI / n > Math.PI ? 1 : 0} 1 ${pt(a1)} Z" fill="${PIP[c]}"/>`;
+      }).join('');
+      const label = list.map((c) => PIP_NAME[c]).join(' / ');
+      return `<span class="cm-colors" title="${e(label)}"><svg class="cm-pip cm-pip-multi" viewBox="0 0 18 18" role="img" aria-label="${e(label)}">${paths}<circle cx="9" cy="9" r="8" fill="none" stroke="#0b0f17" stroke-width=".8"/><circle cx="9" cy="9" r="2.2" fill="#0b0f17" opacity=".55"/></svg></span>`;
+    }
     function listRows() {
       if (!graph) return [];
-      return graph.reach(3, 30).map((n) => { const rec = C.catalog.exact(n.card.name) || {}; return {id: n.card.id, card: n.card, rec, depth: n.depth, name: n.card.name, type: rec.typeLine || n.card.type || '', mana: rec.manaValue ?? n.card.mv ?? null, manaCost: rec.manaCost || '', price: Number.isFinite(rec.price) ? rec.price : null, ci: String(n.card.ci || (rec.colorIdentity || []).join(''))}; });
+      return graph.reach(3, 30).map((n) => { const rec = C.catalog.exact(n.card.name) || {}; return {id: n.card.id, card: n.card, rec, depth: n.depth, name: n.card.name, type: rec.typeLine || n.card.type || '', link: n.tag || n.kind || '', parent: n.parent || null, mana: rec.manaValue ?? n.card.mv ?? null, manaCost: rec.manaCost || '', price: Number.isFinite(rec.price) ? rec.price : null, ci: String(n.card.ci || (rec.colorIdentity || []).join(''))}; });
     }
     function drawList() {
       const focus = graph?.current();
       const all = listRows();
       const key = listSort.key, dir = listSort.dir;
-      all.sort((x, y) => { if (key === 'ring') return (x.depth - y.depth) * dir || x.name.localeCompare(y.name); const a = x[key], b = y[key]; if (a === null || a === undefined) return 1; if (b === null || b === undefined) return -1; return (typeof a === 'number' ? a - b : String(a).localeCompare(String(b))) * dir || x.name.localeCompare(y.name); });
+      all.sort((x, y) => { if (key === 'ring') return (x.depth - y.depth) * dir || x.name.localeCompare(y.name); const val = (r) => key === 'color' ? r.ci.length + r.ci : r[key]; const a = val(x), b = val(y); if (a === null || a === undefined) return 1; if (b === null || b === undefined) return -1; return (typeof a === 'number' ? a - b : String(a).localeCompare(String(b))) * dir || x.name.localeCompare(y.name); });
       const pages = Math.max(1, Math.ceil(all.length / LIST_PAGE)); listPage = Math.min(listPage, pages - 1);
       const rows = all.slice(listPage * LIST_PAGE, listPage * LIST_PAGE + LIST_PAGE);
       const cols = stage ? LIST_COLS.filter(([k]) => k !== 'price') : LIST_COLS;
@@ -386,15 +405,38 @@
       view.innerHTML = `<div class="cm-list-head"><p class="cm-muted">${focus ? `Everything <strong>${e(focus.name)}</strong> reaches at depth 3, breadth 30 — the whole neighbourhood, whatever the sliders say. Filters still apply.` : 'Nothing in focus.'}</p>
         ${pickedRows.length ? `<div class="cm-actions cm-pick-actions">${b(`Add ${pickedRows.length} selected to a group…`, 'results-group', {}, true)}<details class="cm-inline-menu"><summary class="v-button compact cm-card-view-menu-btn">With ${pickedRows.length} selected</summary><div class="cm-menu cm-inline-menu-body"><p>Add to a draft deck</p>${(C.state.decks || []).filter((d) => !d.archived && d.status === 'draft').map((d) => `<button type="button" data-action="list-to-deck" data-deck="${e(d.id)}">${e(d.name)}</button>`).join('') || '<p class="cm-muted">No draft decks.</p>'}</div></details>${b('Clear selection', 'results-clear')}</div>` : ''}</div>
         ${paging}
-        <div class="cm-table-wrap cm-list-wrap"><table class="cm-table cm-list-table"><thead><tr><th scope="col" class="cm-tick-cell"><input type="checkbox" class="cm-list-tick-all" ${allTicked ? 'checked' : ''} aria-label="Tick every card on this page"></th>${cols.map(([k, l]) => `<th scope="col" aria-sort="${key === k ? (dir === 1 ? 'ascending' : 'descending') : 'none'}"><button type="button" data-action="list-sort" data-key="${k}">${l}${key === k ? ` <span aria-hidden="true">${dir === 1 ? '↑' : '↓'}</span>` : ' <span class="cm-sort-idle" aria-hidden="true">↕</span>'}</button></th>`).join('')}${stage ? '' : '<th scope="col">Add/Buy</th>'}</tr></thead><tbody>${rows.map((r) => `<tr class="cm-list-row${listCard && listCard.id === r.id ? ' is-on' : ''}${picked.has(r.id) ? ' cm-row-ticked' : ''}" data-id="${e(r.id)}"><td class="cm-tick-cell"><input type="checkbox" class="cm-list-tick" data-id="${e(r.id)}" ${picked.has(r.id) ? 'checked' : ''} aria-label="Tick ${e(r.name)}"></td>${cols.map(([k]) => k === 'ring' ? `<td><span class="cm-list-ring" title="Ring ${r.depth}">${r.depth}</span></td>` : k === 'name' ? `<td><button type="button" class="cm-card-name cm-list-name" data-action="list-card" data-id="${e(r.id)}">${e(r.name)}</button></td>` : k === 'type' ? `<td class="cm-list-type">${e(r.type.split('—')[0].trim())}</td>` : k === 'mana' ? `<td class="cm-list-mana">${r.manaCost ? C.mana(r.manaCost) : C.colors(r.ci.split('').filter(Boolean))}</td>` : `<td class="cm-price">${r.price !== null ? C.money(r.price) : '<span class="cm-muted">—</span>'}</td>`).join('')}${stage ? '' : `<td class="cm-list-buy">${buyMenu(r.card, r.rec)}</td>`}</tr>`).join('') || `<tr><td colspan="${cols.length + 2}">Nothing reaches from here under these filters.</td></tr>`}</tbody></table></div>${rows.length > 12 ? paging : ''}`;
+        <div class="cm-table-wrap cm-list-wrap"><table class="cm-table cm-list-table"><thead><tr><th scope="col" class="cm-tick-cell"><input type="checkbox" class="cm-list-tick-all" ${allTicked ? 'checked' : ''} aria-label="Tick every card on this page"></th>${cols.map(([k, l]) => `<th scope="col" class="cm-col-${k}" aria-sort="${key === k ? (dir === 1 ? 'ascending' : 'descending') : 'none'}"><button type="button" data-action="list-sort" data-key="${k}">${l}${key === k ? ` <span aria-hidden="true">${dir === 1 ? '↑' : '↓'}</span>` : ' <span class="cm-sort-idle" aria-hidden="true">↕</span>'}</button></th>`).join('')}${stage ? '' : '<th scope="col" class="cm-col-buy"><span class="cm-visually-hidden">Add/Buy</span></th>'}</tr></thead><tbody>${rows.map((r) => `<tr class="cm-list-row${listCard && listCard.id === r.id ? ' is-on' : ''}${picked.has(r.id) ? ' cm-row-ticked' : ''}" data-id="${e(r.id)}"><td class="cm-tick-cell"><input type="checkbox" class="cm-list-tick" data-id="${e(r.id)}" ${picked.has(r.id) ? 'checked' : ''} aria-label="Tick ${e(r.name)}"></td>${cols.map(([k]) => k === 'name' ? `<td class="cm-list-namecell"><button type="button" class="cm-card-name cm-list-name" data-action="list-card" data-id="${e(r.id)}" aria-expanded="${listCard && listCard.id === r.id ? 'true' : 'false'}">${e(r.name)}</button></td>` : k === 'link' ? `<td class="cm-list-link" title="${e(r.link)}">${e(r.link)}</td>` : k === 'color' ? `<td class="cm-list-color">${colorPip(r.ci)}</td>` : `<td class="cm-price">${r.price !== null ? C.money(r.price) : '<span class="cm-muted">—</span>'}</td>`).join('')}${stage ? '' : `<td class="cm-list-buy">${buyMenu(r.card, r.rec, true)}</td>`}</tr>${listCard && listCard.id === r.id ? `<tr class="cm-list-detail"><td colspan="${cols.length + (stage ? 1 : 2)}">${rowDetailHTML(r)}</td></tr>` : ''}`).join('') || `<tr><td colspan="${cols.length + 2}">Nothing reaches from here under these filters.</td></tr>`}</tbody></table></div>${rows.length > 12 ? paging : ''}`;
       $('#cm-graph-size').textContent = lastInfo && lastInfo.total ? `${lastInfo.total} on canvas · ${all.length} in reach` : '';
       sizePane();
     }
     actions['list-sort'] = (el) => { const k = el.dataset.key; listSort = {key: k, dir: listSort.key === k ? -listSort.dir : 1}; drawList(); };
     actions['list-page'] = (el) => { listPage += Number(el.dataset.step); drawList(); };
-    /* A row opens the card in Card Info -- the pane, not the graph: the focus stays put so
-       the list under it does not change while it is being read. */
-    actions['list-card'] = (el) => { const card = listRows().find((r) => r.id === el.dataset.id); if (!card) return; listCard = card.card; paneTab = 'card'; applyTab(); lastDrawn = ''; drawCardView(card.card, null, true); requestAnimationFrame(() => { sizePane(); dispatchEvent(new Event('resize')); }); };
+    /* A ROW OPENS IN PLACE. What Inspect shows for a tapped node -- the type line, how it
+       is joined to the card that placed it, its own terms, and the three things to do next
+       -- unfolds under the row. The focus stays put, the tab stays put, and moving the
+       graph is the one button that says so. Ring 2 and 3 cards hang off a ring 1 or 2 card,
+       not the focus, so the join named is the one the canvas actually draws. */
+    function rowDetailHTML(r) {
+      const parent = r.parent, rel = parent && graph ? graph.relation(r.id, parent.id) : null;
+      return `<div class="cm-list-pop"><p class="cm-muted">${e(r.type)}${r.depth ? ` · ring ${r.depth}` : ''}</p>
+        ${parent ? `<h4>Joined to ${e(parent.name)} by</h4>${relationHTML(rel, r.card, parent)}` : ''}
+        ${ownTermsHTML(r.card)}
+        <div class="cm-actions">${b('Focus here', 'graph-card', {id: r.id}, true)}${b('Inspect card', 'card', {card: CrankCatalog.key(r.name)})}<button type="button" class="v-button${picked.has(r.id) ? ' is-on' : ''}" data-action="graph-tick" data-id="${e(r.id)}">${picked.has(r.id) ? 'Ticked ✓' : 'Tick for a group'}</button></div></div>`;
+    }
+    actions['list-card'] = (el) => {
+      const id = el.dataset.id;
+      if (listCard && listCard.id === id) { listCard = null; drawList(); return; }
+      const row = listRows().find((r) => r.id === id); if (!row) return;
+      listCard = row.card; drawList();
+      pane.querySelector('.cm-list-detail')?.scrollIntoView({block: 'nearest'});
+    };
+    /* The whole row is the target, not only the name -- except the parts that are already
+       controls: the tick box, the Add/Buy menu, and anything inside the open detail. */
+    pane.addEventListener('click', (ev) => {
+      const row = ev.target.closest('.cm-list-row'); if (!row) return;
+      if (ev.target.closest('[data-action], .cm-tick-cell, .cm-list-buy, a, input, summary, details')) return;
+      actions['list-card']({dataset: {id: row.dataset.id}});
+    });
     actions['list-to-deck'] = async (el) => {
       const deck = C.M.deck(C.state, el.dataset.deck);
       if (deck.status !== 'draft') throw Error('Only a draft list can take cards this way.');

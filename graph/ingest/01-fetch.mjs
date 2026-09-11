@@ -19,7 +19,9 @@ import {pipeline} from "node:stream/promises";
 import {createGunzip} from "node:zlib";
 
 const outDir = argValue("--out") || "graph/.cache";
-const WANT = ["oracle_cards", "oracle_tags"];
+// --prices adds default_cards (every printing, ~80 MB gz) so 02b can price a card off
+// its cheapest printing rather than the one representative row oracle_cards carries.
+const WANT = ["oracle_cards", "oracle_tags", ...(process.argv.includes("--prices") ? ["default_cards"] : [])];
 
 function argValue(flag) {
   const i = process.argv.indexOf(flag);
