@@ -115,7 +115,7 @@
         entries.push({cardId:idOf(u.card),quantity:1,notes:noteText});
         const deckId=deckIds[u.deck],replaces=u.replaces?slotOf[u.deck].get(idOf(u.replaces)):null;
         if(!replaces){issues.push(`Upgrade ${u.card} (${u.deck}): "${u.replaces||'(none)'}" is not in that deck's target, so it is filed in the group only.`);continue;}
-        try{run({type:'option',deckId,replaces,option:{cardId:idOf(u.card),quantity:1,purpose:'upgrade',notes:noteText}});}
+        try{run({type:'option',deckId,replaces,option:{cardId:idOf(u.card),quantity:1,purpose:'upgrade',notes:noteText,tier:Number.isInteger(u.tier)?u.tier:null,why:u.why||'',price:Number.isFinite(u.price)?u.price:null}});}
         catch(err){issues.push(`Upgrade ${u.card} (${u.deck}) could not be attached to its slot: ${err.message}`);}
       }
       run({type:'groupEntries',groupId:GROUP_UPGRADES,replace:true,entries});
