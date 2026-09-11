@@ -57,7 +57,15 @@ The approved standalone mockup remains under `design/crankmagic/` for design ref
   **Bought** and **Ordered** on a To buy row, **Arrived** on an ordered copy, one tap each,
   stamping the sheet price as what was paid (marked *catalog* until a receipt says
   otherwise). Export carries price, cap, vendor and the subtotals; *Print buy list* prints
-  it by deck. **Deck assembly** opens a deck's pull sheet.
+  it by deck. **Deck assembly** opens a deck's pull sheet. Tick rows and **Ordered…** takes
+  one dialog (vendor, reference, shipping spread across the lines, expected date) for the
+  whole order; **Bought in store** does the same with the store as vendor and the copies
+  arriving at once; **Arrived** lands ticked ordered copies. The **Orders** tab
+  (`#shop?tab=orders`) is one row per order — paid including shipping, arrived count, the
+  house-rule markers (over $30, over the 110% cap, ≥ $5 not local) as counts — with
+  *Arrived → bench* (one change, one undo, reservations kept), *Paste receipt* (an order
+  confirmation or CSV, matched by name, applied to the lines it names and marked *receipt*;
+  also Import list → *Order confirmation*), *Edit* and *Lines*.
 - **Pull sheet** (`#pull?deck=`): one deck's reserved copies grouped by where they are —
   pull from bench, move from another box, remove from this box — colour then name inside
   each, with *In box* / *Move here* / *To bench* per row, a tick that records the walk as

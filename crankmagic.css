@@ -852,3 +852,7 @@ button.cm-pill:hover{filter:brightness(1.15)}
   .cm-pull-n{border:1px solid #000;background:none;color:#000}
   .cm-pull-color img{filter:grayscale(1)}
 }
+
+/* ORDERS. One row per order; the rule markers are pills, counted, never a dialog. */
+.cm-orders .cm-row-actions-cell .v-button{margin:2px 6px 2px 0}
+.cm-orders td{vertical-align:middle}

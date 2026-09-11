@@ -50,5 +50,17 @@
       if(Object.keys(item).length>1)edits.push(item);
     }return {baseRevision:s.revision,edits};
   }
-  return {parseCSV,mapping,parse,hash,stable,backup,readBackup,csv,workbook,editedRows,libraryColumns};
+  /* A RECEIPT, AS PASTED. An order confirmation from TCGplayer or a local store's e-mail is
+     lines of "1 Sol Ring $1.57", "Sol Ring x2 ... $3.14", "2x Sol Ring — $3.14" or a CSV with
+     a name and a price column; nothing about it is a schema. This pulls (name, quantity, price)
+     out of each line that has a name and a money figure, takes the LAST dollar figure on the
+     line as the line total and divides by the quantity for the per-copy price, and leaves the
+     rest for the preview to show as unmatched. It never invents a card: matching against the
+     library is the caller's job. */
+  function parseReceipt(input){const rows=[];const money=/\$?\s*(\d+(?:[.,]\d{1,2})?)\s*(?:USD)?/g;
+    const table=(()=>{try{return parseCSV(input);}catch{return null;}})();
+    if(table&&table.length>1&&table[0].length>=2){const map=mapping(table[0]);const price=table[0].findIndex(h=>/price|paid|total|cost|each/i.test(h));if(map.name>=0&&price>=0){for(let i=1;i<table.length;i++){const r=table[i],name=String(r[map.name]||'').trim(),q=map.quantity>=0?Number(r[map.quantity])||1:1,p=Number(String(r[price]||'').replace(/[^0-9.]/g,''));if(name&&Number.isFinite(p))rows.push({line:i+1,name,quantity:q,price:Math.round(p/(/total/i.test(table[0][price])?q:1)*100)/100});}return rows;}}
+    String(input||'').split(/\r?\n/).forEach((raw,i)=>{const line=raw.trim();if(!line)return;const figures=[...line.matchAll(money)].filter(m=>/\$/.test(m[0])||/\d[.,]\d{2}\b/.test(m[0]));if(!figures.length)return;const last=figures[figures.length-1];let name=line.slice(0,last.index).replace(/(?:each|ea\.?|@)?[\s\-–—:·|,=]+$/i,'').trim();let q=1;const lead=name.match(/^(\d+)\s*[x×]?\s+(.+)$/i),trail=name.match(/^(.+?)\s*[x×]\s*(\d+)\s*$/i);if(lead){q=Number(lead[1]);name=lead[2];}else if(trail){name=trail[1];q=Number(trail[2]);}name=name.replace(/[\s\-–—:·|,]+$/,'').trim();if(!name||!/[a-z]/i.test(name))return;const total=Number(last[1].replace(',','.'));rows.push({line:i+1,name,quantity:q>0?q:1,price:Math.round(total/(q>0?q:1)*100)/100});});
+    return rows;}
+  return {parseCSV,mapping,parse,parseReceipt,hash,stable,backup,readBackup,csv,workbook,editedRows,libraryColumns};
 });
