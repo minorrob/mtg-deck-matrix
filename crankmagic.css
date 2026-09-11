@@ -865,3 +865,15 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-up-table td:first-child,.cm-up-table th:first-child{min-width:170px}
 .cm-up-why{font-size:12px;line-height:1.4;color:#c5d6ea;min-width:220px;max-width:460px}
 @media(max-width:640px){.cm-up-why{min-width:180px}}
+
+/* THE BUDGET CARD. Figures in a row, one bar; amber past 90% of the cap, red past 100%. */
+.cm-budget{margin:-6px 0 20px;padding:14px 16px;background:#171d2a;border:1px solid #344258;border-radius:10px}
+.cm-budget-figures{display:flex;flex-wrap:wrap;gap:10px 28px}
+.cm-budget-figures>div{display:flex;flex-direction:column;gap:2px}
+.cm-budget-figures strong{font-size:18px;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+.cm-budget-figures span{font-size:12px;color:#b0c3dc}
+.cm-budget-bar{height:6px;margin-top:10px;border-radius:4px;background:#2a3448;overflow:hidden}
+.cm-budget-bar i{display:block;height:100%;background:var(--st-inbox);border-radius:4px}
+.cm-budget.cm-near{border-color:#6d5c3d}.cm-budget.cm-near .cm-budget-bar i{background:var(--st-buy)}
+.cm-budget.cm-over{border-color:#7a3b36}.cm-budget.cm-over .cm-budget-bar i{background:var(--st-remove)}
+.cm-amber{color:#f3c27b}
