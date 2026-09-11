@@ -1,7 +1,51 @@
 # CrankMagic — current state and handoff
 
-Last updated 8 September 2026. Written so the next session can start work without
+Last updated 11 September 2026. Written so the next session can start work without
 reading a transcript.
+
+## 11 September 2026 — the UX plan is executed
+
+`docs/ux-plan-2026-09-11.md` was carried out in order, one squash-merged PR per block, and
+Rob's follow-on (a List tab on the Discover pane) after it:
+
+| PR | What | Merge |
+|---|---|---|
+| #134 | Foundations: status tokens and pills, readiness segments, one button scale, SVG carets, geometry row check, `tools/screens.mjs` | `6b69267` |
+| #135 | P0: money on the buy list (`crankmagic-rules.js`, paid stamping, Shop strip, Bought/Ordered/Arrived, export), "to pull" on the deck page and tiles, jump bar, the pull sheet (`crankmagic-pull.js`) | `f7656dc` |
+| #136 | 3.4 Orders per order (`order` records, `crankmagic-orders.js`, receipts) | `eeee0dd` |
+| #137 | 3.5 Upgrade Path panel (options carry tier / why / price) | `e60f035` |
+| #138 | 3.6 Budget card, definition placeholders | `fb056d2` |
+| #139 | 3.7 Game record read-back (`game-record.js` now loaded by the app) | `5ad2fc5` |
+| #140 | 3.8 Row verb on the row, menu in four sections | `b51c247` |
+| #141 | P2 consistency (fold by card, filter chips, scroll reset, page size, phone cards…) | `757f50b` |
+| #142 | P3 polish, and the live-state rebuild keeping its prices | `4a925fe` |
+| #143 | Discover List tab beside Card Info, pane widens while open | this PR |
+
+**The one thing that went wrong on the way:** the rebuild of `data/live-state.json` in #137
+ran without the `--scryfall` file the original build used and dropped 124 prices; #142 made
+the builder carry forward every price the committed file holds. The reconciled live totals
+are now Σ per-deck `$ to finish` = **$111.87** = Shop strip = Σ band subtotals (they read
+$111.46 before #137 with fewer priced cards, and $74.69 between #137 and #142).
+
+**Gates as of #143:** `bash runtests.sh -q` 52 suites; `tests/uat/crankmagic-journeys.mjs`
+83 checks; `tests/browser-geometry.mjs` 78 checks at six widths. `tools/screens.mjs <name>`
+shoots the plan's five views with the live state and prints the totals; each PR's set is
+under `docs/screens/<name>/`.
+
+**Still open, for Rob (§7 of the plan):** `definition.mechanics` per deck in
+`data/live-load.json` (every tile says nothing under the commander until then), and vendor /
+order references on the ten ordered copies now that orders have a home. Rebuild with
+`node tools/build-live-state.mjs` — it keeps prices now.
+
+**Conventions learned:** bumping `crankmagic-sw.js?v=` edits `crankmagic-app.js`, so bump
+both or `asset-versions --update` refuses; after a squash merge reset the working branch to
+`origin/main` (force-with-lease) before the next PR; the deck overview waits on Scryfall,
+so screenshot tools wait for a per-route landmark; `Number(null)` is 0 — guard prices.
+
+Everything below describes the state as of 8 September and is still accurate for the
+modules it names.
+
+---
 
 ## Where things stand
 
