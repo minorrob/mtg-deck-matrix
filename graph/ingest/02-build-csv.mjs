@@ -77,7 +77,8 @@ function canBeCommander(card) {
 }
 
 const cards = [], fills = [], causes = [], triggers = [], produces = [], consumes = [],
-      requires = [], mechanics = [], tribes = [], wants = [], makes = [], printings = [];
+      requires = [], mechanics = [], tribes = [], wants = [], makes = [],
+      wantsStat = [], offersStat = [], printings = [];
 let seen = 0, legal = 0;
 
 /* FIRST PASS: the creature-type vocabulary. WANTS -- the tribe a card is a payoff for --
@@ -106,13 +107,16 @@ for await (const c of jsonl(`${cacheDir}/oracle_cards.jsonl`)) {
   const pi = priceIndex.get(c.oracle_id);
   const usd = (pi && pi.usd) || Number(c.prices?.usd) || "";
   const foil = (pi && pi.foil) || Number(c.prices?.usd_foil) || "";
+  /* Power and toughness travel with the card because OFFERS_STAT is read off the numbers,
+     not off any words -- see card-classify.js. A "*" is not a number and arrives empty. */
   cards.push([c.oracle_id, c.name, mv, ci, typeLine, c.rarity || "", (pi && pi.set) || c.set_name || "",
               usd, foil,
               c.edhrec_rank || "", isLand ? "true" : "false",
               canBeCommander(c) ? "true" : "false",
               (c.image_uris?.normal || faces[0]?.image_uris?.normal || ""),
               (pi && pi.tcg) || c.purchase_uris?.tcgplayer || "",
-              pi ? pi.printings : 1]);
+              pi ? pi.printings : 1,
+              c.power ?? faces[0]?.power ?? "", c.toughness ?? faces[0]?.toughness ?? ""]);
   printings.push([c.id, c.oracle_id, c.set || "", c.collector_number || "",
                   c.finishes?.includes("foil") ? "true" : "false", Number(c.prices?.usd || 0) || ""]);
 
@@ -132,6 +136,8 @@ for await (const c of jsonl(`${cacheDir}/oracle_cards.jsonl`)) {
   for (const t of what.tribes) tribes.push([c.oracle_id, t]);
   for (const t of what.wants) wants.push([c.oracle_id, t]);
   for (const t of what.makes) makes.push([c.oracle_id, t]);
+  for (const t of what.wantsStat) wantsStat.push([c.oracle_id, t]);
+  for (const t of what.offersStat) offersStat.push([c.oracle_id, t]);
 }
 
 // --- your overlays --------------------------------------------------------
@@ -154,7 +160,7 @@ for (const card of master.cards) {
 }
 
 const files = {
-  "cards.csv":      rows(["oracleId","name","manaValue","colorIdentity","typeLine","rarity","setName","priceUsd","priceFoil","edhrecRank","isLand","canBeCommander","image","tcgUri","printings"], cards),
+  "cards.csv":      rows(["oracleId","name","manaValue","colorIdentity","typeLine","rarity","setName","priceUsd","priceFoil","edhrecRank","isLand","canBeCommander","image","tcgUri","printings","power","toughness"], cards),
   "printings.csv":  rows(["scryfallId","oracleId","set","collectorNumber","hasFoil","priceUsd"], printings),
   "fills.csv":      rows(["oracleId","role","weight"], fills),
   "causes.csv":     rows(["oracleId","event","rate"], causes),
@@ -166,6 +172,8 @@ const files = {
   "tribes.csv":     rows(["oracleId","tribe"], tribes),
   "wants.csv":      rows(["oracleId","tribe"], wants),
   "makes.csv":      rows(["oracleId","tribe"], makes),
+  "wants_stat.csv": rows(["oracleId","stat"], wantsStat),
+  "offers_stat.csv":rows(["oracleId","stat"], offersStat),
   "owns.csv":       rows(["name","own","ordered","bench"], owns),
   "assigned.csv":   rows(["name","deckId","deckName","target","actual","state"], assigned)
 };

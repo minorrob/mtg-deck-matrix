@@ -7,9 +7,9 @@
 // The 2026-09 audit found 3,085 CAUSES edges to an event the classifier had retired and
 // 1,007 IS_TRIBE edges to "//" and "Legendary" still standing after a rebuild. Cards,
 // Printings and the overlays (OWNS, ASSIGNED_TO) are keyed and safe to MERGE; these are not.
-MATCH ()-[r:FILLS|CAUSES|TRIGGERS_ON|PRODUCES|CONSUMES|REQUIRES|HAS_MECHANIC|IS_TRIBE|WANTS_TRIBE|MAKES_TRIBE]->()
+MATCH ()-[r:FILLS|CAUSES|TRIGGERS_ON|PRODUCES|CONSUMES|REQUIRES|HAS_MECHANIC|IS_TRIBE|WANTS_TRIBE|MAKES_TRIBE|WANTS_STAT|OFFERS_STAT]->()
 CALL (r) { DELETE r } IN TRANSACTIONS OF 20000 ROWS;
-MATCH (n) WHERE (n:Event OR n:Resource OR n:Role OR n:Mechanic OR n:Tribe) AND NOT (n)--()
+MATCH (n) WHERE (n:Event OR n:Resource OR n:Role OR n:Mechanic OR n:Tribe OR n:Stat) AND NOT (n)--()
 CALL (n) { DELETE n } IN TRANSACTIONS OF 20000 ROWS;
 
 LOAD CSV WITH HEADERS FROM 'file:///cards.csv' AS r
@@ -21,6 +21,7 @@ CALL (r) {
       c.edhrecRank = toInteger(r.edhrecRank), c.isLand = (r.isLand = 'true'),
       c.canBeCommander = (r.canBeCommander = 'true'), c.image = r.image, c.commanderLegal = true,
       c.tcgUri = r.tcgUri, c.printings = toInteger(r.printings),
+      c.power = r.power, c.toughness = r.toughness,
       c.cheapestSet = r.setName
 } IN TRANSACTIONS OF 5000 ROWS;
 
@@ -74,6 +75,16 @@ IN TRANSACTIONS OF 5000 ROWS;
 // the tribal join, for payoffs whose members are tokens rather than cards.
 LOAD CSV WITH HEADERS FROM 'file:///makes.csv' AS r
 CALL (r) { MATCH (c:Card {oracleId: r.oracleId}) MERGE (t:Tribe {id: r.tribe}) MERGE (c)-[:MAKES_TRIBE]->(t) }
+IN TRANSACTIONS OF 5000 ROWS;
+
+// The stat a card pays off, and the stat a body offers. The first is read off rules text,
+// the second off the printed numbers -- a 0/4 Wall says nothing about being a wall.
+LOAD CSV WITH HEADERS FROM 'file:///wants_stat.csv' AS r
+CALL (r) { MATCH (c:Card {oracleId: r.oracleId}) MERGE (s:Stat {id: r.stat}) MERGE (c)-[:WANTS_STAT]->(s) }
+IN TRANSACTIONS OF 5000 ROWS;
+
+LOAD CSV WITH HEADERS FROM 'file:///offers_stat.csv' AS r
+CALL (r) { MATCH (c:Card {oracleId: r.oracleId}) MERGE (s:Stat {id: r.stat}) MERGE (c)-[:OFFERS_STAT]->(s) }
 IN TRANSACTIONS OF 5000 ROWS;
 
 // --- your overlays. These are the only mutable part of the graph. -----------

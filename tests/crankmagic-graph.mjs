@@ -190,6 +190,35 @@ ok("a creature-cast commander is joined to a creature", () => {
   assert.ok(!bolt || !bolt.firedBy.includes("cast-creature"), "an instant is not a creature spell");
 });
 
+/* --------------------------------------------------------------------- the stats */
+
+ok("a toughness payoff is joined to a body that has toughness", () => {
+  /* Felothar assigns combat damage by toughness and draws cards equal to the toughness of
+     what he eats. A wall's rules text never says it is a wall -- 0/4 does -- so this is the
+     one join read off printed numbers rather than words, and without it a wall deck related
+     to its own commander as ninety generic bodies. */
+  const wall = graph.cards.find((c) => (c.offersStat || []).includes("toughness") && !(c.wantsStat || []).length);
+  assert.ok(wall, "the bake must carry a body that offers toughness");
+  const r = relate("Felothar the Steadfast", wall.name);
+  assert.ok(r, `Felothar and ${wall.name} must be joined`);
+  assert.ok(r.statted.includes("toughness"), `statted was ${JSON.stringify(r.statted)}`);
+  const back = Graph.relate(wall, card("Felothar the Steadfast"));
+  assert.ok(back.stattedBy.includes("toughness"), `stattedBy was ${JSON.stringify(back.stattedBy)}`);
+});
+
+ok("a big body is not a toughness payoff, and a payoff is not a body", () => {
+  /* The two sides are read from different places and must not collapse into each other:
+     having toughness is not caring about it. */
+  const bodies = graph.cards.filter((c) => (c.offersStat || []).length && !(c.wantsStat || []).length);
+  assert.ok(bodies.length > 200, `only ${bodies.length} cards offer a stat without paying one off`);
+  let joined = 0;
+  for (let i = 1; i < Math.min(bodies.length, 60); i += 1) {
+    const r = Graph.relate(bodies[0], bodies[i]);
+    if (r && (r.statted.length || r.stattedBy.length)) joined += 1;
+  }
+  assert.equal(joined, 0, `${joined} pairs of plain bodies were joined by a stat`);
+});
+
 ok("being a tribe is not wanting it", () => {
   /* Two Humans with nothing in common share a type line and nothing else. The tribal
      join needs one side to NAME the tribe, or every creature type becomes a clique. */

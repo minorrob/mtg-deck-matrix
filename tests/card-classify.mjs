@@ -27,7 +27,7 @@ const ok = (label, fn) => { fn(); checks += 1; process.stdout.write(`  ok  ${lab
 
 const norm = (n) => String(n || "").toLowerCase().replace(/\s+/g, " ").trim();
 const baked = new Map(graph.cards.map((c) => [norm(c.name), c]));
-const FIELDS = ["roles", "requires", "causes", "triggers", "produces", "multiplies", "grants", "extends", "mechanics", "tribes", "wants", "makes"];
+const FIELDS = ["roles", "requires", "causes", "triggers", "produces", "multiplies", "grants", "extends", "mechanics", "tribes", "wants", "makes", "wantsStat", "offersStat"];
 /* WANTS names a tribe only from the vocabulary the bake was built with; the page passes
    the same facet, so this is the call the page makes. */
 const TRIBES = new Set(graph.facets.tribes || []);
@@ -70,7 +70,9 @@ ok("every vocabulary the bake uses is one this module can still produce", () => 
     produces: new Set(Classify.RESOURCES.filter((r) => r.produce).map((r) => r.id)),
     multiplies: new Set(Classify.MULTIPLIERS.map((m) => m.id)),
     grants: new Set(Classify.QUALITIES.map((q) => q.id)),
-    extends: new Set(Classify.QUALITIES.map((q) => q.id).concat("keywords"))
+    extends: new Set(Classify.QUALITIES.map((q) => q.id).concat("keywords")),
+    wantsStat: new Set(Classify.STAT_WANTS.map((q) => q.id)),
+    offersStat: new Set(Classify.STAT_WANTS.map((q) => q.id))
   };
   const missing = [];
   Object.keys(mine).forEach((field) => {
@@ -233,11 +235,20 @@ ok("extending is a board-wide grant, or a card that copies what is already there
 });
 
 ok("the bake carries the directed fields for every card, not only the ones tested here", () => {
-  const missing = graph.cards.filter((c) => !Array.isArray(c.multiplies) || !Array.isArray(c.grants) || !Array.isArray(c.extends));
-  assert.equal(missing.length, 0,
-    `${missing.length} baked cards have no multiplies/grants/extends - re-run tools/graph-amplifiers.mjs`);
-  const multipliers = graph.cards.filter((c) => c.multiplies.length).length;
-  const granters = graph.cards.filter((c) => c.grants.length).length;
+  /* PRESENCE IS NOT THE PROOF ANY MORE. The export drops an empty array rather than ship
+     7,777 copies of "[]", so "every card has a multiplies key" would now fail on a file
+     that is perfectly correct. What proves the amplifier ran is the stamp it writes and
+     the shape of what it found; what proves the trimming is honest is that no card carries
+     an empty one. Both are checked, and the population bands are unchanged. */
+  assert.ok(graph.amplifiersAt, "data/graph.json has no amplifiersAt stamp - re-run tools/graph-amplifiers.mjs");
+  const wrongType = graph.cards.filter((c) => ["multiplies", "grants", "extends"]
+    .some((f) => c[f] !== undefined && !Array.isArray(c[f])));
+  assert.equal(wrongType.length, 0, `${wrongType.length} baked cards carry a non-array directed field`);
+  const empty = graph.cards.filter((c) => Object.values(c).some((v) => Array.isArray(v) && !v.length));
+  assert.equal(empty.length, 0,
+    `${empty.length} baked cards ship an empty array; the export is meant to drop them`);
+  const multipliers = graph.cards.filter((c) => (c.multiplies || []).length).length;
+  const granters = graph.cards.filter((c) => (c.grants || []).length).length;
   assert.ok(multipliers > 100 && multipliers < 1500, `${multipliers} multipliers in ${graph.cards.length} cards`);
   assert.ok(granters > 300 && granters < 3000, `${granters} granters in ${graph.cards.length} cards`);
 });

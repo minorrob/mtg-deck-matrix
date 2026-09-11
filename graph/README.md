@@ -91,6 +91,7 @@ exploration surface while the model is still being shaped.
 | `REQUIRES` | demand: hard means dead without it |
 | `FILLS` | supply, weighted |
 | `IS_TRIBE` / `WANTS_TRIBE` / `MAKES_TRIBE` | what a creature is, the tribe a card is a payoff for, and the tribe of the tokens it makes -- the join a tribal deck is built on |
+| `WANTS_STAT` / `OFFERS_STAT` | the stat a card pays off, read from rules text, and the stat a body offers, read from the printed numbers |
 | `OWNS` | qty, ordered, bench, state — **the dynamic part** |
 | `ASSIGNED_TO` | per deck: target, actual, state |
 

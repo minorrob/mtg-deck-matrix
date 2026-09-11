@@ -44,7 +44,8 @@
       produces: [...(c.produces || [])], requires: [...(c.requires || [])],
       causes: [...(c.causes || [])], triggers: [...(c.triggers || [])],
       multiplies: [...(c.multiplies || [])], grants: [...(c.grants || [])],
-      extends: [...(c.extends || [])], tribes: [...(c.tribes || [])], wants: [...(c.wants || [])], makes: [...(c.makes || [])]
+      extends: [...(c.extends || [])], tribes: [...(c.tribes || [])], wants: [...(c.wants || [])], makes: [...(c.makes || [])],
+      wantsStat: [...(c.wantsStat || [])], offersStat: [...(c.offersStat || [])]
     };
   }
 
@@ -66,7 +67,7 @@
   /* THE TERM SETS a pair is scored on. Kept as Sets because every question asked of
      them is "does the other card carry this term", and set membership is the cheap way
      to ask it a few hundred thousand times a layout. */
-  const TERM_KEYS = ['shared', 'fills', 'produces', 'requires', 'causes', 'triggers', 'multiplies', 'grants', 'extends', 'tribes', 'wants', 'makes', 'offered'];
+  const TERM_KEYS = ['shared', 'fills', 'produces', 'requires', 'causes', 'triggers', 'multiplies', 'grants', 'extends', 'tribes', 'wants', 'makes', 'offered', 'wantsStat', 'offersStat'];
   function termSets(c) {
     const t = {
       shared: new Set([...(c.mechanics || []), ...(c.roles || []).filter((r) => !GENERIC.has(r))]),
@@ -82,6 +83,10 @@
       tribes: new Set(c.tribes || []),
       wants: new Set(c.wants || []),
       makes: new Set(c.makes || []),
+      /* A payoff for a stat, and a body that has it. The one join read off printed numbers
+         rather than words: a 0/4 Wall's text never says it is a wall. */
+      wantsStat: new Set(c.wantsStat || []),
+      offersStat: new Set(c.offersStat || []),
       /* The tribe a card OFFERS a payoff: what it is, and what it makes tokens of. */
       offersTribe: new Set([...(c.tribes || []), ...(c.makes || [])]),
       causes: new Set(c.causes || []),
@@ -119,6 +124,7 @@
      *   feeds/fed   one supplies what the other needs -- bodies for a sac outlet,
      *               +1/+1 counters for a counters payoff. A relationship, not a word.
      *   tribal      one names a tribe as its payoff, the other is that tribe.
+     *   statted     one pays off a stat, the other's printed numbers supply it.
      *   extended    one hands out a quality, the other spreads it across your board.
      *   fires       one CAUSES an event, the other TRIGGERS on it. Krenko makes
      *               creatures enter; Purphoros fires when they do. This is the chain
@@ -144,6 +150,8 @@
          type line. */
       const tribal = inter(ta.wants, tb.offersTribe);
       const tribalBy = inter(ta.offersTribe, tb.wants);
+      const statted = inter(ta.wantsStat, tb.offersStat);
+      const stattedBy = inter(ta.offersStat, tb.wantsStat);
       const fires = inter(ta.causes, tb.triggers);
       const firedBy = inter(ta.triggers, tb.causes);
       /* A generic doubler ("if a triggered ability of a Wizard you control triggers...")
@@ -172,7 +180,8 @@
       const score = shared.length * 2 + feedWeight(feeds) + feedWeight(fed)
         + (fires.length + firedBy.length) * 4 + multWeight
         + (extended.length + extendedBy.length) * 3
-        + (tribal.length + tribalBy.length) * 3;
+        + (tribal.length + tribalBy.length) * 3
+        + (statted.length + stattedBy.length) * 3;
       if (!score) return null;
 
       /* One pair can be joined several ways at once. The label names the strongest,
@@ -183,6 +192,8 @@
         [firedBy.length,    'Triggers on ← caused',  '← ' + say(firedBy[0]),    'Triggers on ← caused by · ' + sayAll(firedBy)],
         [multiplied.length, 'Makes → multiplies',    '→ ×' + say(multiplied[0]),'Makes → multiplies · ' + say2(multiplied)],
         [multiplies.length, 'Multiplies ← makes',    '← ×' + say(multiplies[0]),'Multiplies ← makes · ' + say2(multiplies)],
+        [statted.length,    'Stat payoff → body',    '→ ' + statted[0],         'Stat payoff → body · ' + statted.slice(0, 2).join(', ')],
+        [stattedBy.length,  'Body ← stat payoff',    '← ' + stattedBy[0],       'Body ← stat payoff · ' + stattedBy.slice(0, 2).join(', ')],
         [tribal.length,     'Tribal payoff → member', '→ ' + tribal[0],         'Tribal payoff → member · ' + tribal.slice(0, 2).join(', ')],
         [tribalBy.length,   'Member ← tribal payoff', '← ' + tribalBy[0],       'Member ← tribal payoff · ' + tribalBy.slice(0, 2).join(', ')],
         [feeds.length,      'Supplies → needs',      '→ ' + feeds[0],           'Supplies → needs · ' + feeds.join(', ')],
@@ -193,7 +204,7 @@
       ];
       const [, kind, tag, reason] = cases.find((c) => c[0]) || [];
       return {shared, feeds, fed, fires, firedBy, multiplied, multiplies, extended, extendedBy,
-              tribal, tribalBy, score, kind, tag, reason};
+              tribal, tribalBy, statted, stattedBy, score, kind, tag, reason};
     }
 
   root.CrankGraph = {
@@ -343,6 +354,7 @@
         pull('grants', 'extends'); pull('extends', 'grants');
         /* The tribe: a payoff's wants against what the others are or make, and back. */
         pull('wants', 'tribes'); pull('wants', 'makes'); pull('tribes', 'wants'); pull('makes', 'wants');
+        pull('wantsStat', 'offersStat'); pull('offersStat', 'wantsStat');
         /* The generic trigger doublers name no event, so neither index lookup finds them:
            a card with any trigger reaches them, and they reach back to any card with one. */
         if (t.triggers.size) for (const id of index.multiplies.get(GENERIC_MULT) || []) candidates.add(id);

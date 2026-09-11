@@ -39,8 +39,24 @@ The approved standalone mockup remains under `design/crankmagic/` for design ref
   initial construction under price/copy limits. The user reviews and finalizes the list.
 - **Shop**: acquisition and assembly views, partial orders/receipts, source corrections,
   deck placement, donor-copy review and export of the filtered list.
-- **User Functions**: backup/restore, enriched workbook export, legacy reconciliation,
-  history/undo, comparison reset, optional mirror file and explicit Clear all.
+- **User Functions**: backup/restore, Load Live, enriched workbook export, legacy
+  reconciliation, history/undo, comparison reset, optional mirror file and explicit Clear all.
+
+### Load Live
+
+`data/live-load.json` is the owner's collection written as a file a person can edit: the
+six deck targets, what is physically in each deck box, the bench, orders in flight, the
+outstanding buy list with prices, and the Upgrade Path cards with the slot each replaces
+(double-faced cards use their full `Front // Back` Scryfall name). `node
+tools/build-live-state.mjs` turns it into `data/live-state.json`, a complete CrankMagic
+backup in the app's own format, built through the collection model and validated: in-box
+copies reserved to their deck, bench and ordered copies reserved to whichever deck still
+needs them, upgrades filed under an "Upgrade Path" group and attached to the slot they
+replace, and the buy list checked against the shortfalls the model derives. **User
+Functions → Load Live** asks for the load password (`treycmload1`, a latch against
+accidents, not a lock: the file and the word are both public), fetches that file fresh,
+and runs the normal restore path on it; Undo restores the previous library. The same
+file also restores through **Restore from a backup file** with no password.
 
 `index.html` is the main shell; `crankmagic.html` is the same compatibility entry.
 `graph.html` opens Discover. Those three are the whole app.
@@ -97,6 +113,7 @@ for modules, invariants, services, formats, migrations, offline limits and prove
 ```sh
 bash runtests.sh -q
 node tools/check-glossary.mjs
+node tools/build-live-state.mjs --check   # after editing data/live-load.json
 # With the server above still running and Playwright available:
 node tests/uat/journeys.mjs
 ```
@@ -109,7 +126,7 @@ installation. Workbook tests optionally use `XLSX_PYTHON` with openpyxl for inde
 spreadsheet verification. See [tests/uat/README.md](tests/uat/README.md).
 
 Changed assets require a new `?v=` everywhere referenced, then
-`node tests/asset-versions.mjs --update`. There are 50 Node suites:
+`node tests/asset-versions.mjs --update`. There are 51 Node suites:
 
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`
@@ -147,6 +164,7 @@ Changed assets require a new `?v=` everywhere referenced, then
 - `inventory-import` — `tests/inventory-import.mjs`
 - `lab-report` — `tests/lab-report.mjs`
 - `lineup-compliance` — `tests/lineup-compliance.mjs`
+- `live-load` — `tests/live-load.mjs`
 - `manual-cards` — `tests/manual-cards.mjs`
 - `manual-rung` — `tests/manual-rung.mjs`
 - `master-regenerates` — `tests/master-regenerates.mjs`

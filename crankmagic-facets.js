@@ -66,6 +66,12 @@
     {key: "wants", label: "Wants tribe", from: (c) => c.wants || []},
     {key: "makes", label: "Makes tribe", from: (c) => c.makes || []},
 
+    /* The stat a card pays off, and the stat a body supplies. Offers is the only facet
+       computed from printed numbers rather than words, which is why a wall deck could not
+       be filtered for before it existed. */
+    {key: "wantsStat", label: "Pays off stat", from: (c) => c.wantsStat || []},
+    {key: "offersStat", label: "Offers stat", from: (c) => c.offersStat || []},
+
     /* THE FOUR DIRECTED ONES, in the order a chain is built. A card TRIGGERS on an event,
        another CAUSES it; a card PRODUCES a resource, another REQUIRES it; a card MULTIPLIES
        what a third makes or fires; a card GRANTS a quality and another EXTENDS it across

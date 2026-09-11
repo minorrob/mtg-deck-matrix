@@ -31,7 +31,11 @@ const Classify = require("../card-classify.js");
 const GRAPH = new URL("../data/graph.json", import.meta.url);
 const CACHE_DIR = new URL("../graph/.cache/", import.meta.url);
 const CACHE = new URL("oracle-text.json", CACHE_DIR);
-const NEW_FIELDS = ["multiplies", "grants", "extends", "wants", "makes"];
+/* offersStat is deliberately NOT here. It is a function of power and toughness, which the
+   rules-text cache does not carry, so this pass would compute an empty array for every card
+   and wipe what the bake read off the printed numbers. The Neo4j pipeline owns that field;
+   tests/card-classify.mjs still holds both sides to the same classifier. */
+const NEW_FIELDS = ["multiplies", "grants", "extends", "wants", "makes", "wantsStat"];
 const OLD_FIELDS = ["roles", "requires", "causes", "triggers", "produces", "mechanics", "tribes"];
 const check = process.argv.includes("--check");
 const audit = process.argv.includes("--audit");
@@ -123,7 +127,9 @@ for (const card of cards) {
   }, {tribes: KNOWN_TRIBES});
   for (const field of FIELDS) {
     if (sorted(card[field]) !== sorted(what[field])) changed += 1;
-    if (!check) card[field] = what[field];
+    /* Written only when it says something. The export drops empty arrays to keep the
+       shipped file small, and re-adding them here would undo that on every run. */
+    if (!check) { if (what[field].length) card[field] = what[field]; else delete card[field]; }
     for (const v of what[field]) totals[field].set(v, (totals[field].get(v) || 0) + 1);
   }
   /* GAME CHANGER is Scryfall's own flag, not something rules text can be read for -- it is

@@ -78,6 +78,11 @@
   let gmode = 'navigate';      // what a tap on the canvas does: navigate, inspect or select
   let picked = new Set();      // card ids ticked on the canvas
 
+  /* Below this many single-card values the fold costs more than it saves: a toggle to
+     hide four rows is noise. Mechanic has 304 of them; everything shorter is left whole.
+     Module scope, because the panel's markup reads it long before the view's body runs. */
+  const FOLD_TAIL = 12;
+
   views.discover = async (params) => {
     C.main.innerHTML = C.head('The connected card catalog', 'Follow the possibilities.',
       'Explore relationships, inspect the evidence, and follow a card into your plans.')
@@ -112,13 +117,23 @@
         </div>
         <div class="cm-filter-panel" id="cm-facet-panel">${facets.map((facet) => {
           const rows = values[facet.key] || [];
+          /* THE LONG TAIL, FOLDED. Mechanic carries 544 values and 304 of them sit on a
+             single card -- named abilities from the crossover and joke sets, "allons-y!",
+             "nitro-9", "the nuka-cola challenge". Every one is true of its card and none of
+             them can narrow anything, and together they bury the fifty that can. So a facet
+             whose tail is long enough to matter shows what two or more cards share and keeps
+             the rest one tap away. Typing in the search box reaches the tail without
+             expanding it, because a search is already a narrower question. */
+          const rare = rows.filter((r) => r.count < 2).length;
+          const folds = rare >= FOLD_TAIL && rows.length - rare >= 1;
           return `<details class="cm-details" data-facet="${e(facet.key)}">
             <summary>${e(facet.label)} <span class="cm-muted" data-facet-count="${e(facet.key)}"></span></summary>
             <div class="cm-facet-values">${rows.length > 40
               ? `<label class="cm-search"><span class="cm-muted">Filter ${e(facet.label.toLowerCase())}</span><input type="search" data-facet-search="${e(facet.key)}" placeholder="Type to narrow"></label>` : ''}
-              <div class="cm-facet-list" data-facet-list="${e(facet.key)}">${rows.map((row) => `
-                <button type="button" class="cm-facet-pick" data-action="facet-term" data-facet-pick="${e(facet.key)}" data-key="${e(facet.key)}" data-value="${e(row.value)}" data-lower="${e(String(row.value).toLowerCase())}"><span>${e(row.value)}</span> <small class="cm-muted">${row.count}</small></button>`).join('')}
+              <div class="cm-facet-list" data-facet-list="${e(facet.key)}" data-expanded="0">${rows.map((row) => `
+                <button type="button" class="cm-facet-pick" data-action="facet-term" data-facet-pick="${e(facet.key)}" data-key="${e(facet.key)}" data-value="${e(row.value)}" data-lower="${e(String(row.value).toLowerCase())}"${folds && row.count < 2 ? ' data-rare="1" hidden' : ''}><span>${e(row.value)}</span> <small class="cm-muted">${row.count}</small></button>`).join('')}
               </div>
+              ${folds ? `<button type="button" class="cm-text-button" data-facet-more="${e(facet.key)}">Show ${rare.toLocaleString()} more used by one card</button>` : ''}
             </div>
           </details>`;
         }).join('')}</div>
@@ -215,6 +230,8 @@
         ...rel.multiplies.map((t) => termChip('multiplies', t)),
         ...rel.extended.map((t) => termChip('extends', t)),
         ...rel.extendedBy.map((t) => termChip('extends', t)),
+        ...rel.statted.map((t) => termChip('offersStat', t)),
+        ...rel.stattedBy.map((t) => termChip('wantsStat', t)),
         ...rel.tribal.map((t) => termChip('tribes', t)),
         ...rel.tribalBy.map((t) => termChip('wants', t)),
         ...rel.feeds.map((t) => termChip('roles', t)),
@@ -285,7 +302,8 @@
        catalog record has the text and the art; the graph row has the terms. */
     const TERM_FACET = {mechanics: 'mechanics', roles: 'roles', triggers: 'triggers', causes: 'causes',
       multiplies: 'multiplies', produces: 'produces', requires: 'requires',
-      grants: 'grants', extends: 'extends', tribes: 'tribes', wants: 'wants', makes: 'makes'};
+      grants: 'grants', extends: 'extends', tribes: 'tribes', wants: 'wants', makes: 'makes',
+      wantsStat: 'wantsStat', offersStat: 'offersStat'};
     let lastInfo = null, lastDrawn = '';
 
     /* BACK BELONGS TO THE GRAPH, NOT TO THE CARD. It undoes a move on the canvas, so it
@@ -433,10 +451,30 @@
     /* Delegated: refresh() rewrites these regions, so listeners bound to nodes would not survive. */
     /* The pane's values are three-state buttons now, handled by the facet-term action like
        every other term control. There is nothing left here for a change event to catch. */
+    /* A row is hidden for one of two reasons and they must not fight: a search that does
+       not match it, or a folded tail it belongs to. A search wins -- typing a name finds it
+       whether or not the tail is open -- so the fold only applies when the box is empty. */
+    function applyFacetRows(key) {
+      const list = $(`[data-facet-list="${key}"]`); if (!list) return;
+      const box = $(`[data-facet-search="${key}"]`);
+      const q = (box ? box.value : '').trim().toLowerCase();
+      const open = list.dataset.expanded === '1';
+      for (const row of list.querySelectorAll('[data-lower]')) {
+        row.hidden = q ? !row.dataset.lower.includes(q) : (row.dataset.rare === '1' && !open);
+      }
+    }
     $('#cm-facet-panel').addEventListener('input', (ev) => {
       const key = ev.target.dataset?.facetSearch; if (!key) return;
-      const q = ev.target.value.trim().toLowerCase();
-      for (const row of $(`[data-facet-list="${key}"]`).querySelectorAll('[data-lower]')) row.hidden = Boolean(q) && !row.dataset.lower.includes(q);
+      applyFacetRows(key);
+    });
+    $('#cm-facet-panel').addEventListener('click', (ev) => {
+      const button = ev.target.closest('[data-facet-more]'); if (!button) return;
+      const key = button.dataset.facetMore, list = $(`[data-facet-list="${key}"]`); if (!list) return;
+      const open = list.dataset.expanded !== '1';
+      list.dataset.expanded = open ? '1' : '0';
+      const rare = list.querySelectorAll('[data-rare="1"]').length;
+      button.textContent = open ? 'Show only what two or more cards share' : `Show ${rare.toLocaleString()} more used by one card`;
+      applyFacetRows(key);
     });
     $('#cm-facet-details').addEventListener('change', (ev) => { if (ev.target.name === 'facetMode') { mode = ev.target.value; refresh(currentFocus()); } });
     $('#cm-depth').addEventListener('input', (ev) => { depth = Number(ev.target.value); $('#cm-depth-out').textContent = depth; graph?.setDepth(depth); });

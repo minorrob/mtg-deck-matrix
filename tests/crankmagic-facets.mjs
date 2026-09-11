@@ -20,7 +20,7 @@ const check = (label, fn) => { fn(); checks += 1; void label; };
 
 check("the public facets are the old graph page's, plus both sides of every relation", () => {
   const keys = Facets.available(null).map((f) => f.key);
-  assert.deepEqual(keys, ["roles","colors","type","mechanics","tribes","wants","makes",
+  assert.deepEqual(keys, ["roles","colors","type","mechanics","tribes","wants","makes","wantsStat","offersStat",
     "triggers","causes","multiplies","produces","requires","grants","extends","rarity"],
     "an empty library shows the card facets and neither personal one");
 });
@@ -29,7 +29,7 @@ check("every directed facet has a facet for the other side of its join", () => {
   /* A filter for what a card fires on is only half useful without one for what causes
      that event; the four pairs are the reason the graph can be walked rather than read. */
   const keys = new Set(Facets.available(null).map((f) => f.key));
-  for (const [a, b] of [["triggers","causes"], ["produces","requires"], ["grants","extends"], ["tribes","wants"]]) {
+  for (const [a, b] of [["triggers","causes"], ["produces","requires"], ["grants","extends"], ["tribes","wants"], ["wantsStat","offersStat"]]) {
     assert.ok(keys.has(a) && keys.has(b), `${a}/${b} is offered as half a pair`);
   }
   assert.ok(keys.has("multiplies"), "and the compounding side of make-and-multiply");

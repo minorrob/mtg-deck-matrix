@@ -60,6 +60,7 @@ RETURN c.oracleId AS id, c.name AS name, c.manaValue AS mv, c.colorIdentity AS c
        c.typeLine AS type, c.rarity AS rarity, c.setName AS set, c.priceUsd AS price,
        c.priceFoil AS priceFoil, c.edhrecRank AS rank, c.isLand AS isLand,
        c.canBeCommander AS isCommander, c.image AS image,
+       c.power AS pow, c.toughness AS tou,
        c.tcgUri AS buy, c.printings AS printings, c.cheapestSet AS cheapestSet,
        coalesce(o.qty,0) AS own, coalesce(o.ordered,0) AS ordered, coalesce(o.bench,0) AS bench,
        [(c)-[:FILLS]->(r:Role) | r.id]            AS roles,
@@ -71,6 +72,8 @@ RETURN c.oracleId AS id, c.name AS name, c.manaValue AS mv, c.colorIdentity AS c
        [(c)-[:IS_TRIBE]->(t:Tribe) | t.id]        AS tribes,
        [(c)-[:WANTS_TRIBE]->(t:Tribe) | t.id]     AS wants,
        [(c)-[:MAKES_TRIBE]->(t:Tribe) | t.id]     AS makes,
+       [(c)-[:WANTS_STAT]->(s:Stat) | s.id]       AS wantsStat,
+       [(c)-[:OFFERS_STAT]->(s:Stat) | s.id]      AS offersStat,
        [(c)-[a:ASSIGNED_TO]->(d:Deck) | {deck: d.name, target: a.target, actual: a.actual}] AS decks
 ORDER BY c.name`);
 
@@ -86,6 +89,18 @@ console.log(`  ${played.length.toLocaleString()} PLAYED_WITH edges`);
 
 const decks = await cypher(`MATCH (d:Deck) RETURN d.id AS id, d.name AS name ORDER BY d.id`);
 
+/* AN ABSENT FIELD AND AN EMPTY ONE MEAN THE SAME THING, and one of them is free. Every
+   reader asks `c.field || []`, so a card that fills no role, wants no tribe and offers no
+   stat need not say so eleven times -- across 7,777 cards that was 0.77 MB of "[]" in a
+   file every visitor downloads before the first card is drawn. Power and toughness go the
+   same way: most cards are not creatures and have neither. */
+const EMPTIABLE = ["roles", "requires", "causes", "triggers", "produces", "mechanics", "tribes",
+  "wants", "makes", "wantsStat", "offersStat", "decks", "multiplies", "grants", "extends"];
+for (const card of cards) {
+  for (const key of EMPTIABLE) if (Array.isArray(card[key]) && !card[key].length) delete card[key];
+  for (const key of ["pow", "tou"]) if (card[key] === null || card[key] === "") delete card[key];
+}
+
 // Facet values, computed here so the side pane does not have to scan on load.
 const facet = (key) => [...new Set(cards.flatMap((c) => Array.isArray(c[key]) ? c[key] : [c[key]]).filter(Boolean))].sort();
 const payload = {
@@ -94,6 +109,7 @@ const payload = {
   counts: {cards: cards.length, playedWith: played.length},
   facets: {
     roles: facet("roles"), mechanics: facet("mechanics"), tribes: facet("tribes"), wants: facet("wants"), makes: facet("makes"),
+    wantsStat: facet("wantsStat"), offersStat: facet("offersStat"),
     causes: facet("causes"), triggers: facet("triggers"), produces: facet("produces"),
     requires: facet("requires"), rarity: facet("rarity"),
     colors: ["W", "U", "B", "R", "G", "C"],
