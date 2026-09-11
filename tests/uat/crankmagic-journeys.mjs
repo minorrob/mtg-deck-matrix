@@ -12,21 +12,23 @@ page.on('pageerror',error=>errors.push(error.message));
 const click=label=>page.getByRole('button',{name:label,exact:true}).click(),nav=label=>page.getByRole('link',{name:label,exact:true}).click();
 const state=()=>page.evaluate(async()=>{const r=await CrankRepository.open();try{return await r.getState();}finally{r.close();}});
 const waitDialog=()=>page.getByRole('dialog').waitFor({state:'hidden'});
-const row=(name,source)=>page.locator('tbody tr').filter({has:page.getByRole('button',{name,exact:true})}).filter({hasText:source});
+/* A row is matched on a CELL that says exactly the source (or the deck), not on any text in
+   the row: the row's own verb buttons say "Ordered" and "Bought" too now. */
+const row=(name,source)=>page.locator('tbody tr').filter({has:page.getByRole('button',{name,exact:true})}).filter({has:page.locator('td').filter({hasText:new RegExp('^\\s*'+source.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\s*$')})});
 async function actionsFor(name,source){await row(name,source).getByRole('button',{name:'Actions',exact:true}).click();}
 /* Mark Ordered, Mark Received / Owned and No longer wanted no longer open a dialog: they
    open a count strip beside the menu, and the green check is the commit. The check carries
    the action's own label as its accessible name, so it is found inside the strip rather
    than by a name that would also match the menu entry that opened it. */
-async function count(label,n){
-  await page.getByRole('button',{name:label,exact:true}).click();
+async function count(label,n,scope=page){
+  await scope.getByRole('button',{name:label,exact:true}).click();
   const strip=page.locator('.cm-step');await strip.waitFor({timeout:8000});
   await strip.locator('input').fill(String(n));
   await strip.getByRole('button',{name:label,exact:true}).click();
   await strip.waitFor({state:'detached',timeout:8000});
 }
 /* The rungs live in the Status fly-out now: hover its toggle, and a rung opens the same strip. */
-async function rung(label,n){await page.locator('#cm-status-submenu-toggle').hover();await page.locator('#cm-status-submenu').getByRole('button',{name:label,exact:true}).waitFor();await count(label,n);}
+async function rung(label,n){await page.locator('#cm-status-submenu-toggle').hover();const sub=page.locator('#cm-status-submenu');await sub.getByRole('button',{name:label,exact:true}).waitFor();await count(label,n,sub);}
 async function newDeck(){await nav('My Decks');await click('Create a deck');await page.getByLabel('Card name or a Scryfall link').fill('Krenko, Mob Boss');await page.locator('[data-pick-card]').filter({has:page.getByText('Krenko, Mob Boss',{exact:true})}).click();await page.locator('#cm-dialog [name=name]').fill('Journey Goblins');await click('Create draft');await waitDialog();await click('Edit card list');await page.getByLabel('Cards (one per line, with quantity)').fill('1 Krenko, Mob Boss\n98 Mountain\n1 Lightning Bolt');await click('Resolve & save draft');await waitDialog();await click('Finalize & reserve');await click('Confirm change');await waitDialog();}
 try{
  await page.goto(BASE+'/'+ENTRY);await page.getByRole('heading',{name:'Build it. Make it yours.'}).waitFor({timeout:45000});eq((await state()).lots.length,0);
@@ -42,6 +44,9 @@ try{
  await page.locator('[data-pull-tick]').first().check();await page.locator('.cm-pull-row.is-done').waitFor({timeout:8000});current=await state();eq(current.lots.find(l=>l.source==='owned').location.kind,'deck');eq(CrankReadiness(current).inBox,10);
  eq(await page.locator('.cm-pull-group[data-group=bench] .cm-pull-n').innerText(),'0');
  await page.goto(rosterURL);await page.getByRole('table').waitFor();
+ /* The row's own verb: the owned, reserved, benched Mountains go into the box in one tap. */
+ await page.reload();await page.getByRole('table').waitFor();await page.evaluate(async()=>{const r=await CrankRepository.open();try{const s=await r.getState();const l=s.lots.find(l=>l.source==='owned');await r.commit({id:crypto.randomUUID(),type:'place',lotId:l.id,quantity:l.quantity,confirmed:true},s.revision);}finally{r.close();}});await page.reload();await page.getByRole('table').waitFor();
+ await row('Mountain','Owned').getByRole('button',{name:/^Put in .* box$/}).click();await page.waitForTimeout(700);current=await state();eq(current.lots.find(l=>l.source==='owned').location.kind,'deck');
  await actionsFor('Mountain','Owned');await page.locator('#cm-put-submenu-toggle').hover();await page.locator('#cm-put-submenu').getByRole('button',{name:'Journey Goblins'}).click();await click('Confirm change');await waitDialog();current=await state();eq(current.lots.find(l=>l.source==='owned').location.kind,'deck');
  await actionsFor('Mountain','Owned');await page.locator('#cm-status-submenu-toggle').hover();await page.locator('#cm-status-submenu').getByRole('button',{name:'Ordered',exact:true}).click();await page.getByLabel('Copies affected').fill('2');await click('Confirm change');await waitDialog();await page.waitForTimeout(700);current=await state();eq(current.lots.filter(l=>l.source==='owned').reduce((n,l)=>n+l.quantity,0),8);eq(current.lots.filter(l=>l.source==='ordered').reduce((n,l)=>n+l.quantity,0),32);
  await page.reload();await page.getByRole('table').waitFor();eq((await state()).lots.filter(l=>l.source==='owned')[0].quantity,8);
