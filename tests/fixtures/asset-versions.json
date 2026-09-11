@@ -82,8 +82,8 @@
       "sha": "eecf067a1db6cc2c"
     },
     "collection-model.js": {
-      "version": 16,
-      "sha": "ec6ba1c6c8bd517c"
+      "version": 17,
+      "sha": "7cb2d32bdf20d8ee"
     },
     "collection-repository.js": {
       "version": 2,
@@ -98,8 +98,8 @@
       "sha": "c3e25a8c22b78eea"
     },
     "crankmagic-app.js": {
-      "version": 99,
-      "sha": "b729906339553474"
+      "version": 100,
+      "sha": "f67f1dfc15b6fee5"
     },
     "crankmagic-assets.js": {
       "version": 17,
@@ -114,12 +114,12 @@
       "sha": "4c937886d914b612"
     },
     "crankmagic-collection.js": {
-      "version": 17,
-      "sha": "6334ec2154835076"
+      "version": 18,
+      "sha": "4be1bcf6f0d430a6"
     },
     "crankmagic-decks.js": {
-      "version": 18,
-      "sha": "04f7548abacd564b"
+      "version": 19,
+      "sha": "4646c784493814e8"
     },
     "crankmagic-design.css": {
       "version": 4,
@@ -157,25 +157,33 @@
       "version": 1,
       "sha": "6b97ae1d80fb6e5a"
     },
+    "crankmagic-pull.js": {
+      "version": 1,
+      "sha": "8a9cac0c5ce3e8d1"
+    },
     "crankmagic-route.js": {
       "version": 1,
       "sha": "23a8f6e75dd90cbe"
+    },
+    "crankmagic-rules.js": {
+      "version": 1,
+      "sha": "578e5850de7179e3"
     },
     "crankmagic-sim.js": {
       "version": 17,
       "sha": "81ae2c4b7634afa7"
     },
     "crankmagic-sw.js": {
-      "version": 99,
-      "sha": "37977e0fc6e2b6d1"
+      "version": 100,
+      "sha": "dbf819653c773b9e"
     },
     "crankmagic-tour.js": {
       "version": 7,
       "sha": "537d3f3592a26d07"
     },
     "crankmagic.css": {
-      "version": 52,
-      "sha": "e963f1d08d9e2f9d"
+      "version": 53,
+      "sha": "b19a4d43111e7c9e"
     },
     "custom-model.js": {
       "version": 3,
@@ -252,6 +260,10 @@
     "scryfall-client.js": {
       "version": 9,
       "sha": "73bac4a0e5ba03f2"
+    },
+    "shop-export.js": {
+      "version": 1,
+      "sha": "70a6f03ab9f97b78"
     },
     "sim-engine.js": {
       "version": 12,
