@@ -13,6 +13,15 @@ Three more PRs after the plan, in the order the owner asked for them:
 | #146 | A draggable divider between canvas and pane, width kept per device and mode in localStorage; the list sheds Link, then Color, then Price as the pane narrows | squash |
 | #147 | The shipped graph is the whole format: every Commander-legal card (31,830), every legal commander (3,411), EDHREC co-play for each (701,916 links). A "?" beside the card count explains the universe from the file's own figures | see PR |
 
+**Then #150: lands are a mode, and the filters are a dropdown.** Lands are off the
+graph entirely. "Lands only" (Filters → Lands) turns Discover into a full-width sortable
+list of every land that passes the other filters, with an Enters column and an Enters
+facet (untapped / tapped / tapped unless); picking a spell in Find a card leaves the
+mode. The filter panel floats over the page under the Filters bar instead of pushing
+the page down; Done, Escape, or a click outside closes it. Facet picks and facet groups
+carry a left rail and a bottom rule rather than a box. Vehicles and Equipment joined the
+play-style vocabulary that reads a deck's mechanics.
+
 **Then #148: lands by how they enter.** The classifier files every land under one of
 `enters-untapped`, `enters-tapped` or `enters-tapped-unless` (a condition: shocks, checks,
 fast and slow lands), read off the land's own sentences. It is a Mechanic facet value, so

@@ -144,12 +144,18 @@ try{
  /* ENTER FOCUSES THE BEST MATCH: a prefix is enough, and the exact name wins over a longer
     one that starts the same way. */
  await page.locator('#cm-graph-query').fill('sol rin');await page.locator('#cm-graph-query').press('Enter');await page.locator('#cm-pane-body h2').filter({hasText:'Sol Ring'}).waitFor();eq(await page.locator('#cm-graph-query').inputValue(),'Sol Ring');
- await page.locator('#cm-graph-query').fill('Command Tower');await page.locator('#cm-graph-query').press('Enter');await page.locator('#cm-pane-body h2').filter({hasText:'Command Tower'}).waitFor();checks+=1;
- /* LANDS THAT ENTER UNTAPPED. Card type Land narrows to the lands; the enters-untapped
-    mechanic narrows again, to fewer than all of them and more than none. */
- {await page.locator('#cm-facet-details > summary').click();await page.locator('[data-facet=type] > summary').click();await page.locator('.cm-facet-pick[data-key=type][data-value=Land]').click();const lands=await page.locator('#cm-facet-count').innerText();const n=t=>Number(t.replace(/,/g,'').match(/^(\d+) of/)[1]);ok(n(lands)>1000,lands);await page.locator('[data-facet=mechanics] > summary').click();await page.locator('.cm-facet-pick[data-key=mechanics][data-value=enters-untapped]').click();const untapped=await page.locator('#cm-facet-count').innerText();ok(n(untapped)>300&&n(untapped)<n(lands),`${lands} -> ${untapped}`);
- /* A card the filters keep off the canvas still becomes the focus when it is picked. */
- await page.locator('#cm-graph-query').fill('Sol Ring');await page.locator('#cm-pane-body h2').filter({hasText:'Sol Ring'}).waitFor();ok(await page.evaluate(()=>document.querySelector('#cm-graph').crankGraph.current().name==='Sol Ring'));await click('Clear filters');await page.locator('#cm-facet-details > summary').click();}
+ await page.locator('#cm-graph-query').fill('Arcane Signet');await page.locator('#cm-graph-query').press('Enter');await page.locator('#cm-pane-body h2').filter({hasText:'Arcane Signet'}).waitFor();checks+=1;
+ /* LANDS ONLY is a list, not a graph: the canvas goes, every land that passes the other
+    filters is a row, and Enters narrows it. The filter panel floats over the page. */
+ {const scrollBefore=await page.evaluate(()=>document.querySelector('#cm-facet-count').getBoundingClientRect().top);await page.locator('#cm-facet-details > summary').click();await page.locator('.cm-facet-drop').waitFor();eq(await page.evaluate(()=>document.querySelector('#cm-facet-count').getBoundingClientRect().top),scrollBefore,'opening the filters moves nothing under them');
+  await page.locator('[data-facet=lands] > summary').click();await page.locator('.cm-facet-pick[data-key=lands][data-value="lands only"]').click();await page.locator('.cm-graph-grid.cm-lands-mode').waitFor();ok(await page.locator('#cm-graph').isHidden(),'no canvas in lands mode');
+  const n=t=>Number(t.replace(/,/g,'').match(/(\d+) land/)[1]);const lands=n(await page.locator('.cm-list-head').innerText());ok(lands>1000,String(lands));ok(await page.locator('.cm-list-table th').allInnerTexts().then(t=>t.some(x=>/Enters/.test(x))));
+  await page.locator('[data-facet=enters] > summary').click();await page.locator('.cm-facet-pick[data-key=enters][data-value=untapped]').click();await page.waitForTimeout(400);const untapped=n(await page.locator('.cm-list-head').innerText());ok(untapped>300&&untapped<lands,`${lands} -> ${untapped}`);
+  await page.keyboard.press('Escape');ok(!(await page.evaluate(()=>document.querySelector('#cm-facet-details').open)),'Escape closes the dropdown');
+  /* A land picked in Find a card opens in the list; a spell picked while lands are on leaves the mode and becomes the focus. */
+  await page.locator('#cm-graph-query').fill('Command Tower');await page.locator('.cm-list-name[aria-expanded=true]').filter({hasText:'Command Tower'}).waitFor();
+  await page.locator('#cm-graph-query').fill('Sol Ring');await page.locator('#cm-pane-body h2').filter({hasText:'Sol Ring'}).waitFor();ok(await page.evaluate(()=>document.querySelector('#cm-graph').crankGraph.current().name==='Sol Ring'));ok(!(await page.evaluate(()=>document.querySelector('.cm-graph-grid').classList.contains('cm-lands-mode'))));
+  ok(!(await page.evaluate(()=>Object.keys(JSON.parse(document.querySelector('#cm-facet-chips')?.dataset.selection||'{}')).length)),'leaving the mode left no filters behind');if(await page.getByRole('button',{name:'Clear filters'}).count())await click('Clear filters');}
  /* GRAPH NAVIGATION, through the controls the graph actually has now. This used to scroll to
     zoom and click a row in a neighbours list; that list was removed when the graph gained
     node and edge pop-ups, and #cm-graph-neighbors has not existed since -- the only trace

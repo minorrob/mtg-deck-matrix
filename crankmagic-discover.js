@@ -83,7 +83,7 @@
      its column headers, paged, with a tick per row for batch work and Add/Buy on each. It
      is remembered across focus changes; the pane widens while it is open and the canvas
      keeps the rest. */
-  let paneTab = 'card', listSort = {key: 'ring', dir: 1}, listPage = 0, listCard = null, lastFocusId = null;
+  let paneTab = 'card', listSort = {key: 'ring', dir: 1}, listPage = 0, listCard = null, lastFocusId = null, landRows = [], revealCard = false;
   const LIST_PAGE = 40;
 
   /* Below this many single-card values the fold costs more than it saves: a toggle to
@@ -131,12 +131,14 @@
       toolsButton())
       + `<div class="cm-toolbar"><label class="cm-search">Find a card<input id="cm-graph-query" placeholder="Card name" list="cm-graph-names"><datalist id="cm-graph-names"></datalist></label>${C.select('Connections', 'edgeType', [['mechanic', 'Shared mechanics / roles'], ['played', 'EDHREC co-play']], 'mechanic')}${b('Search catalog / link', 'graph-lookup')}${b('Back', 'graph-back')}${b('Reset view', 'graph-reset')}</div>
 
-      <details class="cm-details" id="cm-facet-details">
-        <summary><strong>Filters</strong> <span id="cm-facet-summary" class="cm-muted"></span></summary>
+      <details class="cm-details cm-facet-drop-host" id="cm-facet-details">
+        <summary><strong>Filters</strong> <span id="cm-facet-summary" class="cm-muted"></span>${C.caret ? C.caret('down') : ''}</summary>
+        <div class="cm-facet-drop" role="dialog" aria-label="Filters">
         <div class="cm-facet-mode">
           <span class="cm-muted">Within a facet, a card must match</span>
           <label class="cm-checkbox"><input type="radio" name="facetMode" value="all" ${mode === 'all' ? 'checked' : ''}> all picks</label>
           <label class="cm-checkbox"><input type="radio" name="facetMode" value="any" ${mode === 'any' ? 'checked' : ''}> any pick</label>
+          <span class="cm-facet-drop-tools">${b('Clear all', 'facet-clear', {}, false, {cls: 'compact'})}${b('Done', 'facet-done', {}, true, {cls: 'compact'})}</span>
         </div>
         <div class="cm-filter-panel" id="cm-facet-panel">${facets.map((facet) => {
           const rows = values[facet.key] || [];
@@ -160,6 +162,7 @@
             </div>
           </details>`;
         }).join('')}</div>
+        </div>
       </details>
 
       <div class="cm-facet-status">
@@ -204,7 +207,7 @@
         const column = document.querySelector('.cm-graph-col'), canvas = $('#cm-graph');
         if (!column || !canvas || !pane) return;
         const stacked = getComputedStyle(pane).getPropertyValue('--cm-pane-stacked').trim() === '1';
-        if (stacked) { pane.style.height = ''; return; }
+        if (stacked || landsOnly()) { pane.style.height = ''; return; }
         /* From the column's TOP to the canvas's BOTTOM, not the column's own height: the
            column is stretched by the same row the pane is inflating, so reading its height
            reads the pane's height back and the two agree on being too tall. The canvas's
@@ -232,6 +235,8 @@
     /* Which columns each width can carry. Dropped from the markup rather than hidden with
        CSS: under a fixed table layout a display:none column still keeps its width. */
     const BAND_DROPS = {l: [], m: ['link'], s: ['link', 'color'], xs: ['link', 'color', 'price']};
+    /* In Lands only the Enters column is the point, so it is the last to go rather than the first. */
+    const LAND_DROPS = {l: [], m: ['color'], s: ['color', 'price'], xs: ['color', 'price']};
     function bandPane() { if (!pane) return; const w = pane.clientWidth; const band = w >= 380 ? 'l' : w >= 330 ? 'm' : w >= 290 ? 's' : 'xs'; if (pane.dataset.w === band) return; const had = pane.dataset.w; pane.dataset.w = band; if (had && paneTab === 'list') drawList(); }
     const paneObserver = new ResizeObserver(bandPane); paneObserver.observe(pane); bandPane();
     const gutter = $('#cm-pane-gutter');
@@ -347,6 +352,7 @@
       if (ev.key !== 'Escape') return;
       const pop = $('#cm-graph-pop');
       if (pop && !pop.hidden) { hidePop(); return; }
+      const drop = $('#cm-facet-details'); if (drop && drop.open) { drop.open = false; return; }
       if (stage) actions['graph-stage']();
     };
     document.addEventListener('keydown', onKey);
@@ -355,6 +361,9 @@
        away; opening one closes the others. */
     const closeMenus = (except) => { for (const d of document.querySelectorAll('.cm-inline-menu[open]')) if (d !== except) d.open = false; };
     const onDocClick = (ev) => {
+      /* The filter dropdown closes when the reader clicks anywhere outside it -- the page
+         under it is still the page, and a tap on it means "I am done here". */
+      const drop = $('#cm-facet-details'); if (drop && drop.open && ev.target.closest && !ev.target.closest('#cm-facet-details')) drop.open = false;
       const menu = ev.target.closest && ev.target.closest('.cm-inline-menu');
       if (!menu || ev.target.closest('.cm-inline-menu-body')) return closeMenus(null);
       closeMenus(menu);
@@ -437,26 +446,36 @@
       const label = list.map((c) => PIP_NAME[c]).join(' / ');
       return `<span class="cm-colors" title="${e(label)}"><svg class="cm-pip cm-pip-multi" viewBox="0 0 18 18" role="img" aria-label="${e(label)}">${paths}<circle cx="9" cy="9" r="8" fill="none" stroke="#0b0f17" stroke-width=".8"/><circle cx="9" cy="9" r="2.2" fill="#0b0f17" opacity=".55"/></svg></span>`;
     }
+    const ENTRY_LABEL = {'enters-untapped': 'untapped', 'enters-tapped': 'tapped', 'enters-tapped-unless': 'tapped unless'};
+    const entryOf = (c) => ENTRY_LABEL[(c.mechanics || []).find((m) => ENTRY_LABEL[m])] || '';
+    function rowOf(card, depth, link, parent) {
+      const rec = C.catalog.exact(card.name) || {};
+      return {id: card.id, card, rec, depth, name: card.name, type: rec.typeLine || card.type || '', link, parent, mana: rec.manaValue ?? card.mv ?? null, manaCost: rec.manaCost || '', price: Number.isFinite(rec.price) ? rec.price : null, ci: String(card.ci || (rec.colorIdentity || []).join(''))};
+    }
     function listRows() {
+      if (landsOnly()) return landRows.map((c) => rowOf(c, 0, entryOf(c), null));
       if (!graph) return [];
-      return graph.reach(3, 30).map((n) => { const rec = C.catalog.exact(n.card.name) || {}; return {id: n.card.id, card: n.card, rec, depth: n.depth, name: n.card.name, type: rec.typeLine || n.card.type || '', link: n.tag || n.kind || '', parent: n.parent || null, mana: rec.manaValue ?? n.card.mv ?? null, manaCost: rec.manaCost || '', price: Number.isFinite(rec.price) ? rec.price : null, ci: String(n.card.ci || (rec.colorIdentity || []).join(''))}; });
+      return graph.reach(3, 30).map((n) => rowOf(n.card, n.depth, n.tag || n.kind || '', n.parent || null));
     }
     function drawList() {
       const focus = graph?.current();
       const all = listRows();
       const key = listSort.key, dir = listSort.dir;
       all.sort((x, y) => { if (key === 'ring') return (x.depth - y.depth) * dir || x.name.localeCompare(y.name); const val = (r) => key === 'color' ? r.ci.length + r.ci : r[key]; const a = val(x), b = val(y); if (a === null || a === undefined) return 1; if (b === null || b === undefined) return -1; return (typeof a === 'number' ? a - b : String(a).localeCompare(String(b))) * dir || x.name.localeCompare(y.name); });
-      const pages = Math.max(1, Math.ceil(all.length / LIST_PAGE)); listPage = Math.min(listPage, pages - 1);
+      const pages = Math.max(1, Math.ceil(all.length / LIST_PAGE));
+      if (revealCard && listCard) { const at = all.findIndex((r) => r.id === listCard.id); if (at >= 0) listPage = Math.floor(at / LIST_PAGE); revealCard = false; }
+      listPage = Math.min(listPage, pages - 1);
       const rows = all.slice(listPage * LIST_PAGE, listPage * LIST_PAGE + LIST_PAGE);
-      const drop = BAND_DROPS[pane.dataset.w] || []; const cols = LIST_COLS.filter(([k]) => !(stage && k === 'price') && !drop.includes(k));
+      const lands = landsOnly();
+      const drop = (lands ? LAND_DROPS : BAND_DROPS)[pane.dataset.w] || []; const cols = LIST_COLS.filter(([k]) => !(stage && k === 'price') && !drop.includes(k)).map(([k, l]) => [k, lands && k === 'link' ? 'Enters' : l]);
       const allTicked = rows.length > 0 && rows.every((r) => picked.has(r.id));
       const pickedRows = all.filter((r) => picked.has(r.id));
       const paging = `<div class="cm-paging cm-list-paging"><span>${all.length} card${all.length === 1 ? '' : 's'}${pages > 1 ? ` · page ${listPage + 1} of ${pages}` : ''}</span><div class="cm-actions"><button type="button" class="v-button compact" data-action="list-page" data-step="-1" ${listPage === 0 ? 'disabled' : ''}>Previous</button><button type="button" class="v-button compact" data-action="list-page" data-step="1" ${listPage + 1 >= pages ? 'disabled' : ''}>Next</button></div></div>`;
-      view.innerHTML = `<div class="cm-list-head"><p class="cm-muted">${focus ? `Everything <strong>${e(focus.name)}</strong> reaches at depth 3, breadth 30 — the whole neighbourhood, whatever the sliders say. Filters still apply.` : 'Nothing in focus.'}</p>
+      view.innerHTML = `<div class="cm-list-head"><p class="cm-muted">${lands ? `<strong>${all.length.toLocaleString()} land${all.length === 1 ? '' : 's'}</strong> pass the filters. Sort by a column heading; a row opens the card.` : focus ? `Everything <strong>${e(focus.name)}</strong> reaches at depth 3, breadth 30 — the whole neighbourhood, whatever the sliders say. Filters still apply.` : 'Nothing in focus.'}</p>
         ${pickedRows.length ? `<div class="cm-actions cm-pick-actions">${b(`Add ${pickedRows.length} selected to a group…`, 'results-group', {}, true)}<details class="cm-inline-menu"><summary class="v-button compact cm-card-view-menu-btn">With ${pickedRows.length} selected</summary><div class="cm-menu cm-inline-menu-body"><p>Add to a draft deck</p>${(C.state.decks || []).filter((d) => !d.archived && d.status === 'draft').map((d) => `<button type="button" data-action="list-to-deck" data-deck="${e(d.id)}">${e(d.name)}</button>`).join('') || '<p class="cm-muted">No draft decks.</p>'}</div></details>${b('Clear selection', 'results-clear')}</div>` : ''}</div>
         ${paging}
         <div class="cm-table-wrap cm-list-wrap"><table class="cm-table cm-list-table"><thead><tr><th scope="col" class="cm-tick-cell"><input type="checkbox" class="cm-list-tick-all" ${allTicked ? 'checked' : ''} aria-label="Tick every card on this page"></th>${cols.map(([k, l]) => `<th scope="col" class="cm-col-${k}" aria-sort="${key === k ? (dir === 1 ? 'ascending' : 'descending') : 'none'}"><button type="button" data-action="list-sort" data-key="${k}">${l}${key === k ? ` <span aria-hidden="true">${dir === 1 ? '↑' : '↓'}</span>` : ' <span class="cm-sort-idle" aria-hidden="true">↕</span>'}</button></th>`).join('')}${stage ? '' : '<th scope="col" class="cm-col-buy"><span class="cm-visually-hidden">Add/Buy</span></th>'}</tr></thead><tbody>${rows.map((r) => `<tr class="cm-list-row${listCard && listCard.id === r.id ? ' is-on' : ''}${picked.has(r.id) ? ' cm-row-ticked' : ''}" data-id="${e(r.id)}"><td class="cm-tick-cell"><input type="checkbox" class="cm-list-tick" data-id="${e(r.id)}" ${picked.has(r.id) ? 'checked' : ''} aria-label="Tick ${e(r.name)}"></td>${cols.map(([k]) => k === 'name' ? `<td class="cm-list-namecell"><button type="button" class="cm-card-name cm-list-name" data-action="list-card" data-id="${e(r.id)}" aria-expanded="${listCard && listCard.id === r.id ? 'true' : 'false'}">${e(r.name)}</button></td>` : k === 'link' ? `<td class="cm-list-link" title="${e(r.link)}">${e(r.link)}</td>` : k === 'color' ? `<td class="cm-list-color">${colorPip(r.ci)}</td>` : `<td class="cm-price">${r.price !== null ? C.money(r.price) : '<span class="cm-muted">—</span>'}</td>`).join('')}${stage ? '' : `<td class="cm-list-buy">${buyMenu(r.card, r.rec, true)}</td>`}</tr>${listCard && listCard.id === r.id ? `<tr class="cm-list-detail"><td colspan="${cols.length + (stage ? 1 : 2)}">${rowDetailHTML(r)}</td></tr>` : ''}`).join('') || `<tr><td colspan="${cols.length + 2}">Nothing reaches from here under these filters.</td></tr>`}</tbody></table></div>${rows.length > 12 ? paging : ''}`;
-      $('#cm-graph-size').textContent = lastInfo && lastInfo.total ? `${lastInfo.total} on canvas · ${all.length} in reach` : '';
+      $('#cm-graph-size').textContent = lands ? '' : lastInfo && lastInfo.total ? `${lastInfo.total} on canvas · ${all.length} in reach` : '';
       sizePane();
     }
     actions['list-sort'] = (el) => { const k = el.dataset.key; listSort = {key: k, dir: listSort.key === k ? -listSort.dir : 1}; drawList(); };
@@ -471,7 +490,7 @@
       return `<div class="cm-list-pop"><p class="cm-muted">${e(r.type)}${r.depth ? ` · ring ${r.depth}` : ''}</p>
         ${parent ? `<h4>Joined to ${e(parent.name)} by</h4>${relationHTML(rel, r.card, parent)}` : ''}
         ${ownTermsHTML(r.card)}
-        <div class="cm-actions">${b('Focus here', 'graph-card', {id: r.id}, true)}${b('Inspect card', 'card', {card: CrankCatalog.key(r.name)})}<button type="button" class="v-button${picked.has(r.id) ? ' is-on' : ''}" data-action="graph-tick" data-id="${e(r.id)}">${picked.has(r.id) ? 'Ticked ✓' : 'Tick for a group'}</button></div></div>`;
+        <div class="cm-actions">${landsOnly() ? '' : b('Focus here', 'graph-card', {id: r.id}, true)}${b('Inspect card', 'card', {card: CrankCatalog.key(r.name)})}<button type="button" class="v-button${picked.has(r.id) ? ' is-on' : ''}" data-action="graph-tick" data-id="${e(r.id)}">${picked.has(r.id) ? 'Ticked ✓' : 'Tick for a group'}</button></div></div>`;
     }
     actions['list-card'] = (el) => {
       const id = el.dataset.id;
@@ -577,9 +596,22 @@
 
     /* One place decides what the filtered world is; the count, the chips and the graph
        are all drawn from it. */
+    const isLand = (c) => c.isLand === true || /\bLand\b/.test(String(c.type || ''));
+    const landsOnly = () => CrankFacets.stateOf(selection, 'lands', 'lands only') === 'include';
     function refresh(keepFocus) {
+      /* Enters is a question about lands, so it only means anything in Lands only; off the
+         mode it would empty the graph (no spell enters tapped or untapped). Dropped here,
+         so leaving the mode by any door -- the chip, Clear, picking a spell -- clears it. */
+      const wasLands = document.querySelector('.cm-graph-grid')?.classList.contains('cm-lands-mode') || false;
+      if (!landsOnly() && selection.enters && selection.enters.length) { selection = {...selection}; delete selection.enters; redrawTicks(); }
       const shown = CrankFacets.apply(data.cards, selection, C.state, {any: mode === 'any'});
       const picks = CrankFacets.count(selection);
+      /* LANDS ONLY is a different page: no canvas, no rings, the lands that pass the other
+         filters as a list the reader sorts. Off it, lands stay out of the graph's world --
+         they are not joined to anything on it, by design. */
+      const lands = landsOnly();
+      document.querySelector('.cm-graph-grid')?.classList.toggle('cm-lands-mode', lands);
+      document.getElementById('matrix-v2')?.classList.toggle('cm-lands', lands);
       $('#cm-facet-count').textContent = picks
         ? `${shown.length.toLocaleString()} of ${data.cards.length.toLocaleString()} cards match ${picks} filter${picks === 1 ? '' : 's'}${picks > 1 ? ` (${mode} within a facet)` : ''}.`
         : `${data.cards.length.toLocaleString()} cards. Narrow them with Filters, with the focused card's own terms, or search for one by name.`;
@@ -597,8 +629,16 @@
          lost the card they were asking about, and the chip they had just tapped moved out
          from under their finger. A filter narrows the neighbourhood; the subject is not
          part of what is being narrowed. */
+      if (lands) {
+        landRows = shown.filter(isLand); graph?.destroy(); graph = null; hidePop();
+        if (listCard && !landRows.some((c) => c.id === listCard.id)) listCard = null;
+        paneTab = 'list'; applyTab(); drawList(); drawBack(); return;
+      }
+      landRows = [];
+      if (wasLands && paneTab === 'list') { paneTab = 'card'; applyTab(); }
+      const pool = shown.filter((c) => !isLand(c));
       const focused = keepFocus && data.cards.find((c) => c.id === keepFocus);
-      const world = focused && !shown.some((c) => c.id === keepFocus) ? [focused, ...shown] : shown;
+      const world = focused && !pool.some((c) => c.id === keepFocus) ? [focused, ...pool] : pool;
       if (world.length) mount(world, focused ? keepFocus : world[0].id);
       else { graph?.destroy(); graph = null; drawCardView(null, null); }
     }
@@ -677,8 +717,14 @@
         summary: `Added ${card.name} to ${deck.name}`}, {renderView: false});
       C.notice(`${card.name} added to ${deck.name} — ${slots.length + 1} cards in the list now.`);
     };
-    actions['facet-term'] = (el) => { selection = CrankFacets.toggle(selection, el.dataset.key, el.dataset.value); redrawTicks(); refresh(currentFocus()); };
+    actions['facet-term'] = (el) => {
+      selection = CrankFacets.toggle(selection, el.dataset.key, el.dataset.value);
+      /* Picking how a land enters is asking for lands: the mode comes on with it. */
+      if (el.dataset.key === 'enters' && !landsOnly() && CrankFacets.stateOf(selection, 'enters', el.dataset.value) === 'include') selection = CrankFacets.set(selection, 'lands', 'lands only', 'include');
+      redrawTicks(); refresh(currentFocus());
+    };
     actions['facet-clear'] = () => { selection = {}; redrawTicks(); refresh(currentFocus()); };
+    actions['facet-done'] = () => { const drop = $('#cm-facet-details'); if (drop) drop.open = false; };
     actions['graph-mode'] = (el) => {
       gmode = el.dataset.mode; graph?.setMode(gmode); hidePop();
       for (const btn of document.querySelectorAll('[data-action=graph-mode]')) { const on = btn.dataset.mode === gmode; btn.classList.toggle('is-on', on); btn.setAttribute('aria-pressed', String(on)); }
@@ -756,6 +802,13 @@
        neighbourhood drawn around it. */
     function focusOn(c) {
       if (!c) return false;
+      if (isLand(c)) {
+        if (!landsOnly()) { selection = CrankFacets.set(selection, 'lands', 'lands only', 'include'); redrawTicks(); }
+        listCard = c; revealCard = true; refresh(c.id);
+        pane.querySelector('.cm-list-detail')?.scrollIntoView({block: 'nearest'});
+        return true;
+      }
+      if (landsOnly()) { selection = CrankFacets.set(selection, 'lands', 'lands only', 'off'); redrawTicks(); listCard = null; refresh(c.id); return true; }
       graph?.select(c.id);
       if (graph && graph.current() && graph.current().id === c.id) return true;
       refresh(c.id);
