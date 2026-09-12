@@ -732,12 +732,52 @@
       }
     }
 
+    /* FIND A CARD. Typing narrows the suggestions and an exact name focuses at once, as
+       before. Enter is the new part: it takes the best match for whatever is typed -- the
+       exact name, else the name that starts with it, else one that contains it, the most
+       played first -- and makes it the focus. A match that the filters keep off the canvas
+       goes through the route instead, which is how the picker brings a card in. */
+    const rankOf = (c) => (Number.isFinite(c.rank) ? c.rank : Infinity);
+    function bestMatch(q) {
+      q = q.trim().toLowerCase(); if (!q) return null;
+      const tier = (name) => (name === q ? 0 : name.startsWith(q) ? 1 : name.includes(q) ? 2 : 3);
+      let best = null, bestKey = null;
+      for (const c of data.cards) {
+        const t = tier(c.name.toLowerCase()); if (t === 3) continue;
+        const key = [t, rankOf(c), c.name];
+        if (!best || key[0] < bestKey[0] || key[0] === bestKey[0] && (key[1] < bestKey[1] || key[1] === bestKey[1] && key[2] < bestKey[2])) { best = c; bestKey = key; }
+      }
+      return best;
+    }
+    /* A card the filters keep off the canvas cannot be selected on it -- select() is a
+       no-op for an id the graph does not hold, which is what "I picked it and nothing
+       happened" was. refresh() already keeps a focus the filters would drop, so the
+       filtered-out case goes through it and the card arrives as the focus with its own
+       neighbourhood drawn around it. */
+    function focusOn(c) {
+      if (!c) return false;
+      graph?.select(c.id);
+      if (graph && graph.current() && graph.current().id === c.id) return true;
+      refresh(c.id);
+      return true;
+    }
     $('#cm-graph-query').addEventListener('input', (ev) => {
       const q = ev.target.value.toLowerCase();
       const hits = data.cards.filter((c) => c.name.toLowerCase().includes(q)).slice(0, 30);
       $('#cm-graph-names').innerHTML = hits.map((c) => `<option value="${e(c.name)}"></option>`).join('');
       const exact = data.cards.find((c) => c.name.toLowerCase() === q);
-      if (exact) graph?.select(exact.id);
+      if (exact) focusOn(exact);
+    });
+    /* Picking a suggestion fires input in every browser that has a datalist, and change on
+       the ones that only fire it on commit; both land here. */
+    $('#cm-graph-query').addEventListener('change', (ev) => { const exact = data.cards.find((c) => c.name.toLowerCase() === ev.target.value.trim().toLowerCase()); if (exact) focusOn(exact); });
+    $('#cm-graph-query').addEventListener('keydown', (ev) => {
+      if (ev.key !== 'Enter') return;
+      ev.preventDefault();
+      const hit = bestMatch(ev.target.value);
+      if (!hit) { C.notice(`No card on the graph matches “${ev.target.value.trim()}”. Search catalog / link looks further.`); return; }
+      ev.target.value = hit.name; ev.target.blur();
+      focusOn(hit);
     });
     $('[name=edgeType]').addEventListener('change', (ev) => graph?.setType(ev.target.value));
 
