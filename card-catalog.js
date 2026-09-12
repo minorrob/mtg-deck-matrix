@@ -28,6 +28,8 @@
     ['Artifacts',/\bartifacts?\b|affinity|improvise|metalcraft/],
     ['Enchantress',/\benchantments?\b|constellation|\bauras?\b/],
     ['Voltron',/\bequip\b|\bequipment\b|\bauras?\b|\battach\b|double strike|commander damage/],
+    ['Equipment',/\bequipment\b|\bequip\b|\breconfigure\b|living weapon|for mirrodin!/],
+    ['Vehicles',/\bvehicles?\b|\bcrew\b|\bpilots?\b|becomes an artifact creature/],
     ['Graveyard',/\bgraveyard\b|\bdredge\b|\bdelve\b|\bescape\b|flashback|\bunearth\b|graveyard-entry|recursion/],
     ['Reanimator',/return [^.]{0,60}from (?:your|a) graveyard to the battlefield|reanimate|\bunearth\b|\bpersist\b|\bundying\b/],
     ['Mill',/\bmills?\b|top [^.]{0,30}cards? of (?:their|your|that player's|target player's) library into (?:their|your|that player's) graveyard/],

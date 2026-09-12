@@ -42,6 +42,9 @@
   /* `mine: true` marks a facet that describes the reader rather than the card, so it can
      be dropped whole on an empty library. `match` overrides the default "card has every
      picked value"; only colour needs one. */
+  const LANDS_ONLY = "lands only";
+  const ENTRY = {"enters-untapped": "untapped", "enters-tapped": "tapped", "enters-tapped-unless": "tapped unless"};
+  const isLand = (c) => c.isLand === true || /\bLand\b/.test(String(c.type || ""));
   const FACETS = [
     {key: "roles", label: "Role", from: (c) => c.roles || []},
 
@@ -58,7 +61,14 @@
      }},
 
     {key: "type", label: "Card type", from: (c) => CARD_TYPES.filter((t) => String(c.type || "").includes(t))},
-    {key: "mechanics", label: "Mechanic", from: (c) => c.mechanics || []},
+    /* LANDS ARE A MODE, NOT A NODE. A mana base is chosen by colour and by how a land
+       enters, not by what it is joined to, so lands stay off the graph and "Lands only"
+       turns Discover into a sortable list of them. "Enters" is the entry reading the
+       classifier files on every land (see card-classify.js landEntry), offered here as
+       its own facet rather than buried among five hundred mechanics. */
+    {key: "lands", label: "Lands", from: (c) => (isLand(c) ? [LANDS_ONLY] : [])},
+    {key: "enters", label: "Enters", from: (c) => (c.mechanics || []).filter((m) => ENTRY[m]).map((m) => ENTRY[m])},
+    {key: "mechanics", label: "Mechanic", from: (c) => (c.mechanics || []).filter((m) => !ENTRY[m])},
     {key: "tribes", label: "Tribe", from: (c) => c.tribes || []},
     /* The tribe a card is a payoff FOR -- "Goblins you control get +1/+1". Tribe says
        what a card is; this says what it is for, and the pair is how a tribal deck is

@@ -20,7 +20,7 @@ const check = (label, fn) => { fn(); checks += 1; void label; };
 
 check("the public facets are the old graph page's, plus both sides of every relation", () => {
   const keys = Facets.available(null).map((f) => f.key);
-  assert.deepEqual(keys, ["roles","colors","type","mechanics","tribes","wants","makes","wantsStat","offersStat",
+  assert.deepEqual(keys, ["roles","colors","type","lands","enters","mechanics","tribes","wants","makes","wantsStat","offersStat",
     "triggers","causes","multiplies","produces","requires","grants","extends","rarity"],
     "an empty library shows the card facets and neither personal one");
 });

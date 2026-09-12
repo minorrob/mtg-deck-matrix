@@ -127,11 +127,11 @@ button.cm-badge-link:hover{background:#35507a;color:#eaf5ff}
    checkbox can only say two of those -- so the Filters pane's values are buttons that
    cycle the same way the focused card's own terms do. Excluded reads red and carries a
    minus, because "not this" and "this" must not be a difference of shade alone. */
-.cm-facet-pick{display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:5px 8px;border:1px solid transparent;border-radius:6px;background:none;color:#dbe7f7;font:inherit;font-size:13px;min-height:32px}
-.cm-facet-pick:hover{background:#243248}
+.cm-facet-pick{display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:4px 8px 4px 10px;border:0;border-left:2px solid #2b3549;border-bottom:1px solid #222c3d;border-radius:0 0 0 3px;background:none;color:#dbe7f7;font:inherit;font-size:13px;min-height:32px}
+.cm-facet-pick:hover{background:#243248;border-left-color:#79bdff}
 .cm-facet-pick small{margin-left:auto;flex-shrink:0}
-.cm-facet-pick.is-on{background:#ffd16622;border-color:#ffd166;color:#ffe9b3}
-.cm-facet-pick.is-not,.cm-chip.is-not{background:#5a262e5c;border-color:#d8807f;color:#ffd3cd}
+.cm-facet-pick.is-on{background:#ffd16614;border-left-color:#ffd166;border-bottom-color:#ffd16655;color:#ffe9b3}
+.cm-facet-pick.is-not,.cm-chip.is-not{background:#5a262e5c;border-color:#d8807f;color:#ffd3cd}.cm-facet-pick.is-not{border-left-color:#d8807f;border-bottom-color:#d8807f66}
 .cm-facet-pick.is-not span:first-child,.cm-chip.is-not,.cm-facet-pick.is-not{text-decoration:line-through;text-decoration-thickness:1.5px;text-decoration-color:#ff9d95}
 /* The struck-through label is the whole signal now. A leading minus sign said the same
    thing and widened every excluded chip, so a row of them reflowed as you clicked. */
@@ -988,3 +988,37 @@ button.cm-pill:hover{filter:brightness(1.15)}
 @media(max-width:1050px){.cm-pane-gutter{display:none}#matrix-v2.cm-stage .cm-pane-gutter{display:flex}}
 @media(max-width:860px){#matrix-v2.cm-stage .cm-pane-gutter{display:none}}
 .cm-universe-hint{display:inline-flex;vertical-align:middle;margin:0 0 0 2px}.cm-universe-body{width:min(420px,calc(100vw - 40px))}.cm-universe-body h4{margin:0 0 6px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#9fc3e8}.cm-universe-body p{padding:0;margin:0 0 8px;font-size:13px;line-height:1.5;color:#dbe7f7}.cm-universe-body p:last-child{margin-bottom:0}.cm-facet-status{align-items:center}
+
+/* THE FILTERS ARE A DROPDOWN, NOT A DRAWER. The panel floats over the page under the
+   Filters bar -- anchored to it, full width of the toolbar, its own scroll past 70vh --
+   so opening it moves nothing else on the page and closing it (Done, Escape, or a click
+   anywhere outside) puts the reader back exactly where they were. The bar itself is a
+   size smaller: a trigger, not a heading. */
+.cm-facet-drop-host{position:relative;padding:0 14px}
+.cm-facet-drop-host>summary{display:flex;align-items:center;gap:8px;min-height:36px;padding:7px 0;font-size:13px;list-style:none}
+.cm-facet-drop-host>summary::-webkit-details-marker{display:none}
+.cm-facet-drop-host>summary .cm-caret{margin-left:auto;transition:transform .15s}
+.cm-facet-drop-host[open]>summary .cm-caret{transform:rotate(180deg)}
+.cm-facet-drop-host[open]{padding-bottom:0;border-bottom-left-radius:0;border-bottom-right-radius:0}
+.cm-facet-drop{position:absolute;left:-1px;right:-1px;top:100%;z-index:25;background:#171d2af8;border:1px solid #4a6a95;border-top-color:#344258;border-radius:0 0 10px 10px;box-shadow:0 18px 44px #000b;backdrop-filter:blur(4px);max-height:min(70vh,760px);overflow:auto;padding:0 14px 14px}
+.cm-facet-drop .cm-facet-mode{position:sticky;top:0;z-index:1;margin:0 -14px 8px;padding:10px 14px;background:#171d2a;border-bottom:1px solid #2b3549}
+.cm-facet-drop-tools{margin-left:auto;display:inline-flex;gap:8px}
+/* Flowing columns rather than a grid: an open group grows down its own column and the
+   others pack around it, so opening Color does not punch a hole beside Role. */
+.cm-facet-drop .cm-filter-panel{margin:0;padding:0;border:0;background:none;display:block;columns:6 160px;column-gap:14px}
+.cm-facet-drop .cm-filter-panel>.cm-details{break-inside:avoid;margin:0 0 6px}
+.cm-facet-drop .cm-filter-panel>.cm-details{border:0;border-left:2px solid #2b3549;border-bottom:1px solid #222c3d;border-radius:0 0 0 4px;background:none;padding:0 0 0 10px}
+.cm-facet-drop .cm-filter-panel>.cm-details>summary{padding:8px 0;font-size:13px;font-weight:600}
+.cm-facet-drop .cm-filter-panel>.cm-details[open]{padding-bottom:8px;border-left-color:#79bdff}
+.cm-facet-drop .cm-facet-values{margin-top:4px}
+.cm-facet-drop .cm-facet-list{max-height:220px}
+.cm-facet-drop .cm-search input{min-height:32px;font-size:13px}
+@media(max-width:760px){.cm-facet-drop{left:-1px;right:-1px;max-height:75vh}.cm-facet-drop .cm-filter-panel{columns:1}.cm-facet-drop .cm-facet-mode{flex-wrap:wrap}.cm-facet-drop-tools{margin-left:0}}
+
+/* Lands only: no canvas, the list takes the whole grid, the reach sliders go. */
+.cm-graph-grid.cm-lands-mode{grid-template-columns:1fr}
+.cm-lands-mode .cm-graph-col,.cm-lands-mode .cm-pane-gutter,.cm-lands-mode .cm-pane-tabs{display:none}
+.cm-lands-mode .cm-card-view{height:auto!important;min-height:0}
+#matrix-v2.cm-lands .cm-graph-reach,#matrix-v2.cm-lands .cm-graph-modes{display:none}
+.cm-lands-mode .cm-list-table th.cm-col-link{width:120px}
+@media(max-width:760px){.cm-lands-mode .cm-list-table th.cm-col-link{width:96px}}
