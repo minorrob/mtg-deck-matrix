@@ -214,7 +214,7 @@ views.lab=async()=>{
     <div class="cm-actions">${b('Record an unlisted commander','lab-manual')}${b('Add partner / second commander','lab-partner')}${b('Remove second commander','lab-unpartner')}</div>
     <div id="cm-lab-selected"></div>
     <p class="cm-muted">EDHREC commander popularity · past 2 years · snapshot: ${e(C.catalog.rankDate?.slice(0,10)||'date unavailable')}. Results are ordered by rank; unranked commanders follow. A rank filter excludes unknown and combined-pair ranks.</p></details>
-    <details class="cm-lab-section" id="cm-existing-list" ${mode==='list'?'open':''} ${mode==='list'?'':'hidden'}><summary class="cm-section-heading">Existing deck</summary><p class="cm-start-pick">Start from a deck you already have<span class="cm-req" aria-hidden="true" title="Required">*</span></p>${s('Existing deck','existingDeck',[['','Choose a deck'],...C.state.decks.filter(x=>!x.archived).map(x=>[x.id,x.name])],deckId,mode==='list'?'required':'')}<div id="cm-list-commander">${listCommanderField()}</div><div class="cm-actions" style="margin-top:12px">${b('Create a deck','new-deck')}${b('Import a list','import-list')}</div></details>
+    <details class="cm-lab-section" id="cm-existing-list" ${mode==='list'?'open':''} ${mode==='list'?'':'hidden'}><summary class="cm-section-heading">Existing deck</summary><p class="cm-start-pick">Start from a deck you already have<span class="cm-req" aria-hidden="true" title="Required">*</span></p>${s('Existing deck','existingDeck',[['','Choose a deck'],...C.state.decks.filter(x=>!x.archived).map(x=>[x.id,x.name])],deckId,mode==='list'?'required':'')}<div id="cm-list-commander">${listCommanderField()}</div><div id="cm-list-source">${listSourceField()}</div><div class="cm-actions" style="margin-top:12px">${b('Create a deck','new-deck')}${b('Import a list','import-list')}</div></details>
     <details class="cm-lab-section" id="cm-lab-definition"><summary class="cm-section-heading">Deck Definition</summary><p class="cm-muted">These inputs apply to the full list and the way you want it to play.</p>
     <div class="cm-form-grid">${f('Deck name','deckName',draftName,'placeholder="Named for you if you leave it blank"')}${s('Primary play style','mechanic',[['','Open to exploration'],...choices],definition.mechanics[0]||'')}${s('Base bracket','baseBracket',[1,2,3,4,5],definition.baseBracket)}${s('Bracket ceiling','bracketCeiling',[1,2,3,4,5],definition.bracketCeiling)}${f('Total deck price cap ($)','budget',definition.budget??'','type="number" min="0" step="0.01" placeholder="No cap"')}${f('Per-card cap ($)','perCardCap',definition.perCardCap??'','type="number" min="0" step="0.01" placeholder="No cap"')}${s('Play style','playStyle',['Balanced','Aggressive','Reactive','Value engine','Combo'],definition.playStyle)}${s('Speed','speed',[1,2,3,4,5],definition.speed)}${s('Competitiveness','competitiveness',[1,2,3,4,5],definition.competitiveness)}${s('Saltiness','saltiness',[[1,'1 · Extremely friendly'],[2,'2 · Friendly'],[3,'3 · Assertive'],[4,'4 · Disruptive'],[5,'5 · Any legal winning mechanic']],definition.saltiness)}<label class="cm-checkbox"><input name="inDeck" type="checkbox" ${includeInDeck?'checked':''}>Consider cards currently In deck</label><label class="cm-checkbox"><input name="reserved" type="checkbox" ${includeReserved?'checked':''}>Consider unlocked reserved copies</label><label class="cm-full">Restrictions and preferences<textarea name="restrictions">${e(definition.restrictions)}</textarea></label></div>
     ${note('A total price cap is planned, not merely obeyed: basics do the cheap work, no single card takes more than a few times an even share of the cap, and the list always completes or says what cap would complete it. Unknown prices are excluded when a cap is set. Bracket ceiling limits Game Changers (none below 3, three at 3). Play style, speed and saltiness still require your review: the simulator measures a finished list, it does not yet refine one against these inputs.')}</details>
@@ -299,6 +299,25 @@ views.lab=async()=>{
         :found.length?'Any legal commander in this deck can lead it.'
         :'This deck holds no Commander-legal creature yet.'}</p>`;
   }
+  /* HOW THE 99 IS DEFINED. A deck already is a hundred cards twice over: the list it
+     reserves and the cards physically in it, substitutes included. Choosing the deck used to
+     copy the list and nothing else could be asked for; now the reader says which hundred the
+     Lab starts from -- or asks for a fresh draft with this deck's commander. The fresh draft
+     is never the default: a deck that exists is the starting point, not a prompt to replace it. */
+  var listSourcePick=null; // var, not let: the markup above calls listSourceField() while it is built
+  function physicalRows(d){const q=new Map();for(const l of C.state.lots)if(l.source==='owned'&&l.location?.kind==='deck'&&l.location.deckId===d.id)q.set(l.cardId,(q.get(l.cardId)||0)+l.quantity);return [...q].map(([cardId,quantity])=>({cardId,quantity,purpose:'main'}));}
+  function listSource(){return document.getElementById('cm-lab-form')?.elements.listSource?.value||'reserved';}
+  function startingRows(id,source){const d=M.deck(C.state,id),notes=[];let rows,method;
+    if(source==='physical'){rows=physicalRows(d);if(!rows.length)throw Error('Nothing is recorded as physically in that deck yet. Start from its Reserved list, or tick cards into it from the pull sheet first.');
+      const lead=d.commanders[0];if(lead&&!rows.some(r=>r.cardId===lead)){rows.unshift({cardId:lead,quantity:1,purpose:'main'});notes.push(`${C.state.cards[lead]?.name||'The commander'} was added: the deck declares it, but no copy is recorded as physically in the deck.`);}
+      method=`Physical deck copied into a new draft: the ${rows.reduce((n,r)=>n+r.quantity,0)} cards in it, substitutes included; no simulation executed`;}
+    else{rows=d.slots.filter(r=>r.purpose==='main').map(r=>({...r,id:undefined}));if(!rows.length)throw Error('That deck has no cards in its main list yet. Edit its card list first.');method='Reserved list copied exactly into a new draft; no simulation executed';}
+    return {rows,method,notes};}
+  function listSourceField(){const d=chosenDeck(),phys=d?physicalRows(d).reduce((n,r)=>n+r.quantity,0):0,res=d?d.slots.filter(r=>r.purpose==='main').reduce((n,r)=>n+r.quantity,0):0;
+    const cur=listSourcePick||(phys?'physical':'reserved');
+    const opt=(v,label,hint,on)=>`<label class="cm-list-source-opt"><input type="radio" name="listSource" value="${v}" ${on?'checked':''}><span><strong>${label}</strong><small>${hint}</small></span></label>`;
+    return `<fieldset class="cm-list-source"><legend>Define the 99 from</legend>${opt('physical','Physical Deck',d?`${phys} card${phys===1?'':'s'} physically in it, substitutes included`:'the cards physically in the deck',cur==='physical')}${opt('reserved','Reserved Deck',d?`its list of ${res}`:'the deck’s list',cur==='reserved')}${opt('auto','Auto-generate a new 99','a fresh draft with this commander, from the Deck Definition below',cur==='auto')}</fieldset>`;}
+  function refreshListSource(){const host=document.getElementById('cm-list-source');if(host)host.innerHTML=listSourceField();}
   function refreshListCommander(){
     const host=document.getElementById('cm-list-commander');if(!host)return;
     const found=legalCommanders();
@@ -389,8 +408,9 @@ views.lab=async()=>{
     syncStartButtons();
   }
   lab.elements.mode.addEventListener('change',ev=>{mode=ev.target.value;applyMode();});
-  lab.elements.existingDeck.addEventListener('change',()=>{adoptDeckCommander();refreshListCommander();});
-  if(mode==='list'){adoptDeckCommander();refreshListCommander();}
+  lab.addEventListener('change',ev=>{if(ev.target.name==='listSource')listSourcePick=ev.target.value;});
+  lab.elements.existingDeck.addEventListener('change',()=>{adoptDeckCommander();refreshListCommander();refreshListSource();});
+  if(mode==='list'){adoptDeckCommander();refreshListCommander();refreshListSource();}
   applyMode();search();chosen();
   C.catalog.loadGraph().then(()=>{if(C.main.contains(lab))search();}).catch(()=>{});
 
@@ -433,7 +453,8 @@ views.lab=async()=>{
   function readForm(){
     const v=Object.fromEntries(new FormData(lab));
     definition=M.defaultDefinition({baseBracket:Number(v.baseBracket),bracketCeiling:Number(v.bracketCeiling),budget:v.budget===''?null:Number(v.budget),perCardCap:v.perCardCap===''?null:Number(v.perCardCap),mechanics:v.mechanic?[v.mechanic]:[],playStyle:v.playStyle,speed:Number(v.speed),competitiveness:Number(v.competitiveness),saltiness:Number(v.saltiness),restrictions:v.restrictions,reuse:{includeSellTrade:!!v.sellTrade}});
-    deckId=v.existingDeck;groupId=chosenDeck()?.groupId||'';draftName=v.deckName;pool=v.ownedOnly?'owned':'all';includeInDeck=!!v.inDeck;includeReserved=!!v.reserved;
+    /* The existing-deck select keeps its value when the reader switches back to the commander road; it only means something on the list road. */
+    deckId=mode==='list'?v.existingDeck:'';groupId=mode==='list'?(chosenDeck()?.groupId||''):'';draftName=v.deckName;pool=v.ownedOnly?'owned':'all';includeInDeck=!!v.inDeck;includeReserved=!!v.reserved;
     return v;
   }
 
@@ -447,14 +468,12 @@ views.lab=async()=>{
       const v=readForm();
       const leaders=await Promise.all([leader,partner].filter(Boolean).map(c=>C.catalog.details(c)));
       let built;
-      if(mode==='list'){
-        let rows;
+      if(mode==='list'&&listSource()!=='auto'){
         if(!deckId)throw Error('Choose the deck to start from.');
-        rows=M.deck(C.state,deckId).slots.filter(r=>r.purpose==='main').map(r=>({...r,id:undefined}));
-        if(!rows.length)throw Error('That deck has no cards in its main list yet. Edit its card list first.');
+        let {rows,method,notes}=startingRows(deckId,listSource());
         if(pool==='owned'){const all=rows.length;rows=ownedOnly(rows);
           if(!rows.length)throw Error(`Use only cards I own is ticked and none of the ${all} cards in this list are recorded as owned. Untick it, or mark those copies Received / Owned in Collection.`);}
-        built={slots:rows,cards:rows.map(r=>C.state.cards[r.cardId]),issues:[],notes:[],method:'Existing list copied exactly into a new draft; no simulation executed',estimatedPrice:null,unknownPrices:0};
+        built={slots:rows,cards:rows.map(r=>C.state.cards[r.cardId]).filter(Boolean),issues:[],notes,method,estimatedPrice:null,unknownPrices:0};
       }else{
         status.textContent='Drafting…';
         await C.catalog.loadGraph();
@@ -523,13 +542,12 @@ const {missing,reachable}=await C.catalog.recheck([...built.cards,...leaders],{o
     let slots,cards,name,notes,method,issues;
     if(preview){
       slots=preview.slots;cards=[...slots.map(r=>cardOf(r.cardId)),...leaders].filter(Boolean);name=(v.deckName||'').trim()||preview.name;method=preview.method;notes=preview.notes||[];issues=preview.issues||[];
-    }else if(mode==='list'){
-      let rows;
+    }else if(mode==='list'&&listSource()!=='auto'){
       if(!deckId)throw Error('Choose the deck to start from.');
-      rows=M.deck(C.state,deckId).slots.filter(r=>r.purpose==='main').map(r=>({...r,id:undefined}));
-      if(!rows.length)throw Error('That deck has no cards in its main list yet. Edit its card list first.');
-      slots=rows;cards=[...rows.map(r=>C.state.cards[r.cardId]),...leaders].filter(Boolean);name=(v.deckName||'').trim()||(leaders[0]?.name||'New deck');method='Existing list copied exactly into a new deck; no simulation executed';notes=[];issues=[];
+      const start=startingRows(deckId,listSource());
+      slots=start.rows;cards=[...start.rows.map(r=>C.state.cards[r.cardId]),...leaders].filter(Boolean);name=(v.deckName||'').trim()||(leaders[0]?.name||'New deck');method=start.method.replace('a new draft','a new deck');notes=start.notes;issues=[];
     }else{
+      if(!leaders.length)throw Error('Choose a commander first.');
       slots=leaders.map(c=>({cardId:c.id,quantity:1,purpose:'main'}));cards=leaders;name=(v.deckName||'').trim()||leaders[0].name+' · new deck';method='Saved from the Deck Lab before any draft was run';notes=[];issues=[];
     }
     const id='deck:'+C.uid();
