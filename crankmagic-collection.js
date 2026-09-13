@@ -159,6 +159,9 @@ views.cards=params=>params.get('tab')==='buy'?show(params,true):params.get('view
 views.collection=params=>{const extra=Object.fromEntries(params);delete extra.sheet;goCards('library',params.get('sheet')?{...extra,view:'sheet'}:extra);};
 views.shop=params=>{const extra=Object.fromEntries(params);delete extra.tab;goCards(params.get('tab')==='orders'?'orders':'buy',extra);};
 actions['cards-tab']=el=>goCards(el.dataset.tab);
+/* The × on a scope chip drops that one scope -- the card, the deck or the group -- and keeps
+   the rest of the address as it is. */
+actions['clear-scope']=el=>{const r=C.route(),extra=Object.fromEntries(r.params),tab=extra.tab||'library';delete extra.tab;delete extra[el.dataset.key];if(el.dataset.key==='group')filter.group='';goCards(tab,extra);};
 actions['roster-more']=el=>{const {tab,view,group}=el.dataset,finals=C.state.decks.filter(d=>!d.archived&&d.status==='final');
   popAt(el,`${view==='sheet'?b('Export CSV','sheet-csv'):tab==='orders'?'':b('Export view','export-view')}${group?`<hr>${b('Manage group','manage-group',{group})}${b('Add planned card','add-group-entry',{group})}${b('Edit planned list','edit-group-entries',{group})}`:''}${finals.length?`<hr><p>Ready to add for</p>${finals.map(d=>{const r=M.readiness(C.state,d),k=r.pullFromBench+r.pullFromOtherBox+r.remove;return b(`${d.name}${k?` · ${k}`:''}`,'deck-pull',{deck:d.id});}).join('')}`:''}`);};
 C.HELP.cards={title:'Cards',body:`<p><strong>Library</strong> is every record: one row per copy lot or requirement — owned, ordered and to-buy copies with their status, deck, print and physical location. Click a row for the card; the verb beside it is the one its status calls for, and ⋯ is everything else.</p><p><strong>Status</strong> is one column: Physical deck, Substitute, Reserved and Bench for owned copies; Ordered; Watched; To buy for what a finalized deck still needs; Draft list, Suggestion and Planned for rows that are not copies yet. The colour is the state wherever it appears.</p><p>The counts row reads in the order a deck is built. On every deck <strong>Reserved = Owned + Ordered + To buy</strong>; Owned counts reserved copies; the Bench is what you own that no deck has reserved, and Sell / Trade is a flag on Bench copies. With a filter set, the row counts only what the table shows.</p><p><strong>To buy</strong> is the same table cut to what your decks still need, priced, with the cap the rules allow; Bought and Arrived are one tap on the row, and the strip above says what finishing costs. <strong>Orders</strong> is one row per order — what was paid, what has landed — with Arrived → bench and Paste receipt. <strong>Sheet</strong> is the Master spreadsheet read from the library: T is what a deck’s list claims, A what is physically in it; click a number and type.</p><p>Five filters are in view with search and group beside them; More filters holds subtype, mechanic, flags, offers, mana value and price. Paid and Quantity are cells you click and type in. Ready to add, for walking owned copies into a deck, is under More.</p>`};
@@ -225,16 +228,24 @@ function sheetEdit(btn,seed=''){
   if(!cell||cell.querySelector('input'))return;
   const current=Number(btn.dataset.value)||0,label=btn.getAttribute('aria-label')||'';
   const around={down:sheetNeighbour(btn,0,1),up:sheetNeighbour(btn,0,-1),right:sheetNeighbour(btn,1,0),left:sheetNeighbour(btn,-1,0)};
+  /* The editor takes the cell's width as it is, so the column does not jump when a number
+     is being typed. A deck cell also knows how many copies the deck may carry -- one, unless
+     the card is a basic land or its text allows more -- and refuses a larger number as it is
+     typed rather than after Enter. */
+  const card=C.state.cards[cardId]||sheetExtras.get(cardId),cap=deckId&&['t','a','boxed'].includes(col)&&card?M.maxCopies(card):Infinity;
+  const width=Math.round(cell.getBoundingClientRect().width);cell.style.width=cell.style.minWidth=cell.style.maxWidth=width+'px';
   const input=document.createElement('input');
-  input.type='number';input.min='0';input.step='1';input.inputMode='numeric';input.className='cm-cell-input cm-sheet-input';
-  input.value=seed||String(current);input.setAttribute('aria-label',label);
+  input.type='number';input.min='0';input.step='1';input.inputMode='numeric';input.className='cm-cell-input cm-sheet-input';if(Number.isFinite(cap))input.max=String(cap);
+  input.value=seed||String(current);input.setAttribute('aria-label',label);input.style.width=width+'px';
+  const capped=()=>{const v=Number(input.value);if(Number.isFinite(cap)&&v>cap){input.value=String(cap);C.notice(`${card.name}: a deck can carry ${cap===1?'one copy':cap+' copies'}. Only basic lands and cards whose text allows more can repeat.`,true);}};
+  input.addEventListener('input',capped);
   cell.textContent='';cell.append(input);cell.addEventListener('click',ev=>ev.stopPropagation());
   input.focus();if(!seed)input.select();
   let settled=false;
   const back=()=>{if(settled)return;settled=true;sheetFocus=btn.dataset.cell;C.render();};
   const save=async next=>{
     if(settled)return;settled=true;
-    const raw=input.value.trim(),value=raw===''?0:Number(raw);
+    capped();const raw=input.value.trim(),value=raw===''?0:Number(raw);
     sheetFocus=next||btn.dataset.cell;
     if(!Number.isInteger(value)||value<0){C.notice('Type a whole number, 0 or more.',true);C.render();return;}
     if(value===current){C.render();return;}
@@ -284,6 +295,9 @@ function sheet(params){
   $('#cm-sheet-query').addEventListener('input',ev=>{sheetQ=ev.target.value;draw();});
   $('[name=sheetOnly]').addEventListener('change',ev=>{sheetOnly=ev.target.value;draw();});
   $('[name=sheetDeck]').addEventListener('change',ev=>{sheetDeck=ev.target.value;draw();});
+  /* "Show all N rows" sits in the status line above the table, so it needs its own listener;
+     the table host's never heard it, and the link did nothing. */
+  $('#cm-sheet-status').addEventListener('click',ev=>{const all=ev.target.closest('[data-sheet-all]');if(all){sheetAll=all.dataset.sheetAll==='1';draw();}});
   host.addEventListener('click',ev=>{
     const all=ev.target.closest('[data-sheet-all]');if(all){sheetAll=all.dataset.sheetAll==='1';draw();return;}
     const so=ev.target.closest('[data-sheet-sort]');if(so){const key=so.dataset.sheetSort;sheetSort={key,dir:sheetSort.key===key?-sheetSort.dir:(key==='name'?1:-1)};draw();return;}
@@ -367,7 +381,7 @@ if(scope!==pickScope){pickScope=scope;picked.clear();}
    page is on screen. */
 if(!phoneWatch){phoneWatch=true;PHONE.addEventListener('change',()=>{if(C.route().view==='cards')C.render();});}
 const shopTools=`<div class="cm-shop-bar"><button type="button" class="v-button cm-shop-search-btn" data-action="shop-search" aria-label="Search cards" aria-expanded="${searchOpen}" title="Search cards"><span aria-hidden="true">\u{1F50D}</span></button>${b('Ready to add','pull-picker')}${b(expanded?'Hide filters':(gbGet()?'Filters •':'Filters'),'roster-filters')}${b('Tools','shop-tools',{},false,{caret:'down'})}</div><label class="cm-search cm-shop-search" id="cm-shop-search"${searchOpen?'':' hidden'}>Search cards<input id="cm-roster-query" value="${e(filter.q)}" placeholder="Name, type or rules text"></label>`;
-C.main.innerHTML=cardsHead(params,tab,'table',{tight})+(shop?'':'<div id="cm-roster-stats"></div>')+`<div class="cm-actions">${params.get('card')?`<span class="cm-chip">Card: ${e((C.state.cards[params.get('card')]||C.catalog.get(params.get('card')))?.name||'Card')}</span>`:''}${params.get('deck')?`<span class="cm-chip">Deck: ${e(M.deck(C.state,params.get('deck')).name)}</span>`:''}${params.get('group')?`<span class="cm-chip">Group: ${e(C.state.groups.find(g=>g.id===params.get('group'))?.name)}</span>`:''}</div>`+(tight?shopTools:`<div class="cm-toolbar"><label class="cm-search">Search cards<input id="cm-roster-query" value="${e(filter.q)}" placeholder="Name, type or rules text"></label>${b(expanded?'Hide filters':(activeFilters().length?`Filters (${activeFilters().length})`:'Filters'),'roster-filters')}${b('Columns','roster-columns')}${b('Clear filters','clear-filters')}${s('Collection group','groupPick',[['','All groups'],...C.state.groups.map(g=>[g.id,g.name])],params.get('group')||filter.group)}${s('Group rows by','groupBy',GROUP_CHOICES,gbGet())}${shop?'':viewSwitch('table')}</div>`)+`<div id="cm-filter-chips"></div><div id="cm-filter-host"></div>${shop?'<div id="cm-shop-strip"></div>':''}<div id="cm-roster-table"></div>`;
+C.main.innerHTML=cardsHead(params,tab,'table',{tight})+(shop?'':'<div id="cm-roster-stats"></div>')+`<div class="cm-actions">${[['card','Card',params.get('card')?(C.state.cards[params.get('card')]||C.catalog.get(params.get('card')))?.name||'Card':''],['deck','Deck',params.get('deck')?M.deck(C.state,params.get('deck')).name:''],['group','Group',params.get('group')?C.state.groups.find(g=>g.id===params.get('group'))?.name||'':'']].filter(([,,v])=>v).map(([k,l,v])=>`<span class="cm-chip cm-scope-chip">${l}: ${e(v)}<button type="button" class="cm-chip-x" data-action="clear-scope" data-key="${k}" aria-label="Remove the ${l} filter" title="Remove this filter">×</button></span>`).join('')}</div>`+(tight?shopTools:`<div class="cm-toolbar"><label class="cm-search">Search cards<input id="cm-roster-query" value="${e(filter.q)}" placeholder="Name, type or rules text"></label>${b(expanded?'Hide filters':(activeFilters().length?`Filters (${activeFilters().length})`:'Filters'),'roster-filters')}${b('Columns','roster-columns')}${b('Clear filters','clear-filters')}${s('Collection group','groupPick',[['','All groups'],...C.state.groups.map(g=>[g.id,g.name])],params.get('group')||filter.group)}${s('Group rows by','groupBy',GROUP_CHOICES,gbGet())}${shop?'':viewSwitch('table')}</div>`)+`<div id="cm-filter-chips"></div><div id="cm-filter-host"></div>${shop?'<div id="cm-shop-strip"></div>':''}<div id="cm-roster-table"></div>`;
 foldPrints=foldFor(shop);pageSize=C.state.preferences.pageSize==='all'?Infinity:(Number(C.state.preferences.pageSize)||60);
 /* FIVE FILTERS IN VIEW, THE REST ONE CLICK AWAY (search and group sit in the toolbar): type,
    mana, colour, status, deck. Subtype, mechanic, flags, offers, mana value and
@@ -385,7 +399,7 @@ const cell=(r,k)=>{
     :k==='price'?(!(r.card.price>0)?'<span class="cm-muted">—</span>':`<span class="cm-price">${C.money(r.card.price)}</span>`)
     :k==='cap'?capCell(r.card.price)
     :k==='vendor'?(value(r,k)?e(value(r,k)):'<span class="cm-muted">—</span>')
-    :k==='paid'?(Number.isFinite(value(r,k))?C.money(value(r,k)):'<span class="cm-muted">$ —</span>')
+    :k==='paid'?(Number.isFinite(value(r,k))?C.money(value(r,k)):r.kind==='lot'&&r.card.price>0?`<span class="cm-muted cm-paid-list" title="No paid amount recorded; the list price stands in. Click to set what you paid.">≈ ${C.money(r.card.price)}</span>`:'<span class="cm-muted">$ —</span>')
     :tight&&k==='type'?e(shortType(r.card))
     :tight&&k==='rarity'?shortRarity(r.card)
     :e(value(r,k)??'Unknown');

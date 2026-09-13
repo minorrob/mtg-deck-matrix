@@ -45,16 +45,16 @@ try{
  await page.locator('#cm-share-menu').getByRole('button',{name:'Show a QR code'}).click();await page.getByRole('dialog').waitFor();ok(await page.locator('#cm-dialog .cm-qr-code svg[viewBox="0 0 41 41"]').count()===1);eq(await page.locator('#cm-dialog .cm-qr-link a').innerText(),'https://minorrob.github.io/mtg-deck-matrix/');ok(!(await page.locator('#cm-share-menu').evaluate(m=>m.matches(':popover-open'))));
  await page.keyboard.press('Escape');await page.getByRole('dialog').waitFor({state:'hidden'});
  await newDeck();let current=await state();eq(current.decks[0].status,'final');eq(current.lots.length,0);ok(current.decks[0].slots.reduce((n,r)=>n+r.quantity,0)===100);
- await click('View deck cards');await page.getByRole('table').waitFor();eq(await page.locator('.cm-chip').innerText(),'Deck: Journey Goblins');
+ await click('View deck cards');await page.getByRole('table').waitFor();ok((await page.locator('.cm-chip').innerText()).startsWith('Deck: Journey Goblins'));
  await actionsFor('Mountain','To buy');await rung('Ordered',40);await page.waitForTimeout(700);current=await state();eq(current.lots[0].quantity,40);eq(current.lots[0].source,'ordered');
  await actionsFor('Mountain','Ordered');await rung('Owned',10);await page.waitForTimeout(700);current=await state();eq(current.lots.filter(l=>l.source==='owned').reduce((n,l)=>n+l.quantity,0),10);eq(current.lots.filter(l=>l.source==='ordered').reduce((n,l)=>n+l.quantity,0),30);
  /* THE PULL SHEET. Ten owned Mountains sit on the bench, reserved: the sheet lists them under
     Add from the Bench, one tick puts the lot in the box, the row stays, greyed, and the deck's
     In box figure moves by the lot. Then back to the Collection where the journey was. */
  const rosterURL=page.url();await page.goto(BASE+'/'+ENTRY+'#pull?deck='+encodeURIComponent(current.decks[0].id));await page.locator('.cm-pull').waitFor({timeout:45000});
- eq(await page.locator('.cm-pull-group[data-group=bench] .cm-pull-row').count(),1);eq(await page.locator('.cm-pull-group[data-group=bench] .cm-pull-n').innerText(),'10');
+ eq(await page.locator('.cm-pull-group[data-group=bench] .cm-pull-row').count(),1);eq(await page.locator('.cm-pull-group[data-group=bench] .cm-pull-n').innerText(),'10');/* Select all sits beside the count while anything is left in the group, and goes when nothing is. */eq(await page.locator('.cm-pull-group[data-group=bench] .cm-pull-select-all').count(),1);
  await page.locator('[data-pull-tick]').first().check();await page.locator('.cm-pull-row.is-done').waitFor({timeout:8000});current=await state();eq(current.lots.find(l=>l.source==='owned').location.kind,'deck');eq(CrankReadiness(current).inBox,10);
- eq(await page.locator('.cm-pull-group[data-group=bench] .cm-pull-n').innerText(),'0');
+ eq(await page.locator('.cm-pull-group[data-group=bench] .cm-pull-n').innerText(),'0');eq(await page.locator('.cm-pull-group[data-group=bench] .cm-pull-select-all').count(),0);
  await page.goto(rosterURL);await page.getByRole('table').waitFor();
  /* The row's own verb: the owned, reserved, benched Mountains go into the box in one tap. */
  await page.reload();await page.getByRole('table').waitFor();await page.evaluate(async()=>{const r=await CrankRepository.open();try{const s=await r.getState();const l=s.lots.find(l=>l.source==='owned');await r.commit({id:crypto.randomUUID(),type:'place',lotId:l.id,quantity:l.quantity,confirmed:true},s.revision);}finally{r.close();}});await page.reload();await page.getByRole('table').waitFor();
@@ -171,7 +171,7 @@ try{
  {const l=current.lots.find(l=>l.cardId===wastesKey);eq(l.location.deckId,journey.id);eq(l.allocation,null);eq(CrankReadiness(current).standIns,1);}
  await nav('Decks');ok(await page.locator('.cm-deck-tile').filter({hasText:'Journey Goblins'}).innerText().then(t=>/1 substitute/.test(t)));
  await page.locator('.cm-deck-tile').filter({hasText:'Journey Goblins'}).getByRole('button').first().click();await page.getByRole('button',{name:/^Ready to add/}).click();
- await page.locator('.cm-pull-group[data-group=standin]').waitFor();await page.locator('.cm-pull-group[data-group=standin] [data-pull-tick]').first().check();await page.waitForTimeout(900);current=await state();
+ await page.locator('.cm-pull-group[data-group=standin]').waitFor();/* This substitute "stays for now" (nothing real is ready for its seat), so Select all leaves it alone, as Mark all added does; the row's own tick still moves it. */eq(await page.locator('.cm-pull-group[data-group=standin] .cm-pull-select-all').count(),0);await page.locator('.cm-pull-group[data-group=standin] [data-pull-tick]').first().check();await page.waitForTimeout(900);current=await state();
  eq(current.lots.find(l=>l.cardId===wastesKey).location.kind,'bench');eq(CrankReadiness(current).standIns,0);
  /* The roster's search is shared with the Shop, so it is cleared before the Shop steps read money. */
  await nav('Cards');await page.locator('#cm-roster-table').waitFor();await click('Clear filters');await page.waitForTimeout(300);

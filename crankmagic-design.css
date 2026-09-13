@@ -179,7 +179,7 @@
 #matrix-v2 .v-brand-block{min-width:0;flex:1 1 380px;display:flex;align-items:center;gap:10px}
 #matrix-v2 .v-brand-copy{min-width:0}
 #matrix-v2 .v-brand-logo{display:block;width:48px;height:48px;object-fit:contain;flex:0 0 48px}
-#matrix-v2 .v-brand-subline{display:block;font-size:12px;line-height:1.45;color:var(--v-muted);margin-top:3px;max-width:440px}
+#matrix-v2 .v-brand-subline{display:block;font-size:12px;line-height:1.3;color:var(--v-muted);margin-top:0;max-width:440px}
 @media(max-width:520px){#matrix-v2 .v-brand-block{flex-basis:100%;gap:8px}#matrix-v2 .v-brand-logo{width:42px;height:42px;flex-basis:42px}#matrix-v2 .v-brand-subline{max-width:100%;font-size:11px}}
 #matrix-v2{color-scheme:dark}
 #matrix-v2 .v-user-functions{position:relative;flex:0 0 auto;margin-left:auto;z-index:20}
@@ -274,7 +274,7 @@
 #matrix-v2 .v-brand-block{position:relative}
 #matrix-v2 .v-brand-copy{position:static;padding-bottom:0}
 #matrix-v2 .v-brand,#matrix-v2 .v-brand-subline,#matrix-v2 .v-brand-logo{position:relative;z-index:1}
-#matrix-v2 .v-brand{font-family:CrankOxanium,Satoshi,sans-serif;font-size:29px;font-weight:700;line-height:1.15;letter-spacing:-.65px;color:var(--v-brand-blue);background:linear-gradient(110deg,var(--v-brand-blue) 12%,var(--v-brand-shine) 60%,var(--v-brand-blue) 100%);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+#matrix-v2 .v-brand{font-family:CrankOxanium,Satoshi,sans-serif;font-size:29px;font-weight:700;line-height:1.02;padding:3px 0;margin:-3px 0;letter-spacing:-.65px;color:var(--v-brand-blue);background:linear-gradient(110deg,var(--v-brand-blue) 12%,var(--v-brand-shine) 60%,var(--v-brand-blue) 100%);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 #matrix-v2 .v-brand-logo{align-self:center;width:52px;height:52px;flex-basis:52px;margin-top:0}
 #matrix-v2 .v-aether-wrap{position:absolute;left:0;top:0;width:100%;height:calc(100% + 12px);pointer-events:none}
 #matrix-v2 .v-aether,#matrix-v2 .v-aether-front{position:absolute;left:0;top:0;z-index:0;display:block;width:100%;height:100%;pointer-events:none}

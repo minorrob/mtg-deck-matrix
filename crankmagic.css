@@ -1289,3 +1289,17 @@ button.cm-pill:hover{filter:brightness(1.15)}
 #matrix-v2 .cm-sidebar .cm-subnav a.is-current{color:#f3f8ff;background:#1f2d45}
 #matrix-v2 .cm-sidebar .cm-subnav a:hover{background:#253048;color:#fff}
 @media(max-width:760px){.cm-subnav{display:none}}
+/* Ready to add: the Select all link sits beside a group's count, in the heading's row. */
+.cm-pull-group h2 .cm-pull-select-all{font-size:13px;font-weight:500;padding:0 4px;min-height:32px;text-underline-offset:3px}
+/* The Sheet's cell editor keeps the cell's width; the column must not jump while a number is typed. */
+#matrix-v2 .cm-sheet .cm-sheet-input{display:block;box-sizing:border-box;min-width:0;max-width:100%;height:36px;min-height:36px;margin:0;padding:0 8px;border:0;border-radius:0;box-shadow:inset 0 0 0 2px #79bdff;background:#0f1521;color:#e6f0ff;font:inherit;font-variant-numeric:tabular-nums;text-align:right;outline:none}
+/* A scope chip (Card, Deck, Group) carries an × that drops that one filter. */
+.cm-scope-chip{display:inline-flex;flex-direction:row;align-items:center;gap:6px;padding-right:4px;cursor:default}
+.cm-chip-x{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;min-width:32px;min-height:32px;margin:-8px -4px -8px 0;padding:0;border:0;border-radius:6px;background:none;color:inherit;font:inherit;font-size:16px;line-height:1;opacity:.75;cursor:pointer}
+.cm-chip-x:hover,.cm-chip-x:focus-visible{opacity:1;background:rgba(255,255,255,.1)}
+/* Deck page Progress: each figure wears the colour of its segment in the bar below, so the
+   bar carries no separate legend -- the figures are the key. The substitute key is hatched
+   like its overlay on the bar. */
+.cm-summary-figures .cm-key{display:inline-block;width:9px;height:9px;margin-right:6px;border-radius:2px;vertical-align:-1px;background:var(--st-inbox)}
+.cm-summary-figures .cm-key.pull{background:var(--st-pull)}.cm-summary-figures .cm-key.ordered{background:var(--st-ordered)}.cm-summary-figures .cm-key.buy{background:var(--st-buy)}
+.cm-summary-figures .cm-key.standin{background:repeating-linear-gradient(135deg,var(--st-standin) 0 3px,rgba(10,14,24,.55) 3px 6px)}

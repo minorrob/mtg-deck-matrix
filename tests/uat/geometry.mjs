@@ -99,7 +99,7 @@ export async function geometryPass({browser, base, widths = WIDTHS, pages = PAGE
         await page.locator(".cm-starting").waitFor({state: "detached", timeout: 30000}).catch(() => {});
         const m = await page.evaluate(measure, MIN_TAP);
         const where = `${label} at ${width}px`;
-        checks += 3;
+        checks += 4;
 
         if (m.overflow > 1) fail(`${where}: the page scrolls sideways by ${m.overflow}px, so something is off the right edge`);
         if (m.uneven.length) fail(`${where}: buttons in one row differ in height — ${m.uneven.slice(0, 3).join(", ")}`);
@@ -120,6 +120,11 @@ export async function geometryPass({browser, base, widths = WIDTHS, pages = PAGE
           }
           if (h.top && (h.brand.bottom > h.top.bottom + 1 || h.menu.bottom > h.top.bottom + 1)) {
             fail(`${where}: header content runs past the bar's own bottom edge`);
+          }
+          // The name is never cut: crankmagic-brand.js steps the wordmark down until it fits
+          // its column, so a clipped wordmark means that fit is not running or cannot succeed.
+          if (h.brandClipped > 0) {
+            fail(`${where}: the wordmark is cut off by ${h.brandClipped}px — the name does not fit its column`);
           }
         }
         log(`  ${where}: overflow ${m.overflow}px, ${m.small.length} small control(s), wordmark ${h.brand ? h.brand.right : "?"} vs buttons ${h.menu ? h.menu.x : "?"}`);
