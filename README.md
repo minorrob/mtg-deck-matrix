@@ -53,6 +53,18 @@ The approved standalone mockup remains under `design/crankmagic/` for design ref
   from its page (*Card status*). Every deck has a collection group, made with it; a deck
   saved from the Lab arrives as a draft whose cards sit in that group at *Draft list* until
   their status is set. Group-by band headers fold, and the toolbar filters by group. A deck card's row also carries the two slot flags: **Pin** keeps it whatever the Lab or a swap suggests; **Flag as option** marks it as the first to come out when a card has to leave the hundred (the row wears an *Option* chip, the deck page lists them under *Working list*, the Lab drops them first, and a filter finds them). Setting one clears the other; neither moves a copy. The filter panel's **Mana** select narrows rows to mana rocks, dorks, lands, basics or ramp spells, by the same reading Discover uses.
+- **Collection → Spreadsheet**: the Master sheet read from the library. One row per card;
+  Own, Ordered, Bench and To buy across it; for every deck a *T* column (how many the list
+  wants) and an *A* column (how many are physically in its box, with a small *+n* where more
+  are reserved than sleeved). Click a number and type the new one: a plain raise of Own or
+  Ordered saves on the spot, and anything that takes a copy from somewhere goes through the
+  review dialog first. A raised *T* reserves free copies and takes reserved ones from other
+  decks (they stay in their boxes until pulled, and those decks' pull sheets say so); an *A*
+  typed to 1 releases the copy from wherever it was, reserves it here and puts it in this
+  box, recording a new owned copy when the library holds none. The copies rule holds
+  throughout: one of a card per deck except basics and the cards whose text allows more.
+  Enter commits and moves down, Tab moves right, Escape puts the number back, the arrow keys
+  walk the cells, and *Export CSV* writes the rows in the Master's column order.
 - **Discover**: navigable metadata/co-play graph, mouse-wheel zoom, keyboard neighbors,
   pan, back trail, card inspection and supplemental catalog lookup. The pane beside the
   graph has two tabs: **Card Info** (the focused card, its terms, *Add/Buy*) and **List**

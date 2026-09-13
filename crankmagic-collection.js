@@ -116,7 +116,148 @@ const shortType=c=>{const head=(c.typeLine||'').split('—')[0].trim().split(/\s
 const shortRarity=c=>{const key=String(c.rarity||'').toLowerCase(),letter=RARITY_LETTER[key]||'';return letter?`<span class="cm-rarity cm-rarity-${letter}" title="${e(key[0].toUpperCase()+key.slice(1))}">${letter}</span>`:'';};
 let searchOpen=false,phoneWatch=false;
 function popAt(el,html){document.querySelectorAll('.cm-row-menu').forEach(m=>m.remove());const menu=document.createElement('div');menu.className='cm-menu cm-row-menu';menu.setAttribute('popover','auto');menu.innerHTML=html;document.body.append(menu);menu.showPopover();const place=()=>{if(!el.isConnected){if(menu.matches(':popover-open'))menu.hidePopover();return;}const rect=el.getBoundingClientRect();if(rect.bottom<0||rect.top>innerHeight){if(menu.matches(':popover-open'))menu.hidePopover();return;}menu.style.left=Math.max(8,Math.min(innerWidth-menu.offsetWidth-8,rect.right-menu.offsetWidth))+'px';menu.style.top=Math.max(8,Math.min(innerHeight-menu.offsetHeight-8,rect.bottom+5))+'px';menu.dispatchEvent(new Event('cm-moved'));};place();C.followAnchor(menu,place);menu.addEventListener('click',ev=>{if(ev.target.closest('[data-action]'))menu.hidePopover();});return menu;}
-views.collection=params=>show(params,false);views.shop=params=>show(params,true);
+views.collection=params=>params.get('sheet')?sheet(params):show(params,false);views.shop=params=>show(params,true);
+/* THE SPREADSHEET. Rob's Master sheet, read from the library instead of kept beside it: one
+   row per card; Own, Ordered, Bench and To buy across it; and for every deck two columns --
+   T, how many the list wants, and A, how many are physically in its box, with a small +n
+   where more are reserved than sleeved. Click a number, type, Enter. The library works out
+   what has to move and asks first whenever a copy is taken from somewhere: a raised T
+   reserves free copies and takes reserved ones from other decks (they stay in their boxes
+   until pulled, and those decks' pull sheets say so); an A typed to 1 releases the copy from
+   wherever it was, reserves it here and puts it in this box, recording a new owned copy when
+   the library holds none. A plain raise of Own or Ordered just saves. The copies rule holds
+   throughout: one of a card per deck except basics and the cards whose text allows more.
+   Enter commits and moves down, Tab commits and moves right, Escape puts the number back,
+   the arrow keys walk the cells, and a digit typed on a focused cell starts editing with it. */
+let sheetQ='',sheetOnly='',sheetDeck='',sheetSort={key:'name',dir:1},sheetAll=false,sheetFocus=null,sheetScroll=null;const sheetExtras=new Map(),SHEET_PAGE=200;
+const SHEET_SHOW=[['','All cards'],['listed','In a deck list'],['short','Short of a target'],['pending','Reserved, not in the box yet'],['owned','Owned copies'],['bench','On the bench'],['loose','In no deck list']];
+const cellKey=(cardId,col,deckId)=>`${cardId}|${col}|${deckId||''}`;
+function sheetRows(m){
+  const rows=[...m.rows];
+  for(const [id,c] of sheetExtras)if(!rows.some(r=>r.cardId===id))rows.push({cardId:id,card:c,own:0,ordered:0,planned:0,inBox:0,bench:0,toBuy:0,extra:true,perDeck:Object.fromEntries(m.decks.map(d=>[d.id,{t:0,a:0,boxed:0,slotId:null,lotIds:[],option:false,pinned:false}]))});
+  const q=sheetQ.trim().toLowerCase(),decks=m.decks;
+  const keep=r=>{
+    if(q&&!(r.card.name+' '+(r.card.typeLine||'')).toLowerCase().includes(q))return false;
+    if(sheetDeck&&!(r.perDeck[sheetDeck]&&(r.perDeck[sheetDeck].t>0||r.perDeck[sheetDeck].a>0)))return false;
+    const cells=decks.map(d=>r.perDeck[d.id]);
+    switch(sheetOnly){
+      case 'listed':return cells.some(p=>p.t>0);
+      case 'short':return cells.some((p,i)=>decks[i].status==='final'&&p.t>p.a);
+      case 'pending':return cells.some(p=>p.a>p.boxed);
+      case 'owned':return r.own>0;
+      case 'bench':return r.bench>0;
+      case 'loose':return !cells.some(p=>p.t>0);
+      default:return true;
+    }
+  };
+  const val=r=>{const k=sheetSort.key;if(k==='name')return r.card.name;if(k.startsWith('deck|')){const [,id,col]=k.split('|');return r.perDeck[id]?.[col]||0;}return r[k]||0;};
+  return rows.filter(keep).sort((a,b)=>{const av=val(a),bv=val(b);const c=typeof av==='number'&&typeof bv==='number'?av-bv:String(av).localeCompare(String(bv),undefined,{sensitivity:'base'});return c*sheetSort.dir||a.card.name.localeCompare(b.card.name,undefined,{sensitivity:'base'});});
+}
+function sheetNeighbour(btn,dx,dy){
+  const tr=btn.closest('tr');if(!tr)return null;
+  const cells=[...tr.querySelectorAll('.cm-sheet-cell')],i=cells.indexOf(btn);
+  if(dx){const n=cells[i+dx];return n?n.dataset.cell:null;}
+  if(dy){let row=tr;for(let k=0;k<Math.abs(dy)&&row;k++)row=dy>0?row.nextElementSibling:row.previousElementSibling;if(!row||!row.dataset.card)return null;const col=btn.dataset.cell.split('|').slice(1).join('|');const n=[...row.querySelectorAll('.cm-sheet-cell')].find(c=>c.dataset.cell.split('|').slice(1).join('|')===col);return n?n.dataset.cell:null;}
+  return null;
+}
+/* A typed number becomes the commands the library needs. A plain raise saves; anything that
+   takes a copy from somewhere, or removes one, goes through the review dialog with the
+   plan's own notes in it. */
+async function sheetApply(edit){
+  const p=M.plan(C.state,edit);
+  if(p.refused){C.notice(p.refused,true);await C.render();return;}
+  if(!p.command){C.notice(p.notes[0]||'No change.');await C.render();return;}
+  const y=scrollY,focus=sheetFocus;
+  if(!p.review){await C.commit(p.command);scrollTo(0,y);return;}
+  await C.render();scrollTo(0,y);sheetFocus=focus;
+  const name=(C.state.cards[edit.cardId]||edit.card)?.name||'',deckName=edit.deckId?M.deck(C.state,edit.deckId).name+' · ':'';
+  const what={own:'owned copies',ordered:'ordered copies',t:'copies in the list',boxed:'copies in the box',a:'copies assigned'}[edit.column];
+  C.review(`${name}: ${deckName}${what} → ${edit.value}`,`<ul class="cm-sheet-notes">${p.notes.map(n=>`<li>${e(n)}</li>`).join('')}</ul>`,p.command);
+}
+function sheetEdit(btn,seed=''){
+  const [cardId,col,deckId]=btn.dataset.cell.split('|'),cell=btn.closest('td');
+  if(!cell||cell.querySelector('input'))return;
+  const current=Number(btn.dataset.value)||0,label=btn.getAttribute('aria-label')||'';
+  const around={down:sheetNeighbour(btn,0,1),up:sheetNeighbour(btn,0,-1),right:sheetNeighbour(btn,1,0),left:sheetNeighbour(btn,-1,0)};
+  const input=document.createElement('input');
+  input.type='number';input.min='0';input.step='1';input.inputMode='numeric';input.className='cm-cell-input cm-sheet-input';
+  input.value=seed||String(current);input.setAttribute('aria-label',label);
+  cell.textContent='';cell.append(input);cell.addEventListener('click',ev=>ev.stopPropagation());
+  input.focus();if(!seed)input.select();
+  let settled=false;
+  const back=()=>{if(settled)return;settled=true;sheetFocus=btn.dataset.cell;C.render();};
+  const save=async next=>{
+    if(settled)return;settled=true;
+    const raw=input.value.trim(),value=raw===''?0:Number(raw);
+    sheetFocus=next||btn.dataset.cell;
+    if(!Number.isInteger(value)||value<0){C.notice('Type a whole number, 0 or more.',true);C.render();return;}
+    if(value===current){C.render();return;}
+    try{await sheetApply({cardId,column:col,deckId:deckId||null,value,card:sheetExtras.get(cardId)});}
+    catch(error){C.notice(error.message,true);C.render();}
+  };
+  input.addEventListener('keydown',ev=>{
+    if(ev.key==='Enter'){ev.preventDefault();save(ev.shiftKey?around.up:around.down);}
+    else if(ev.key==='Tab'){ev.preventDefault();save(ev.shiftKey?around.left:around.right);}
+    else if(ev.key==='Escape'){ev.preventDefault();back();}
+  });
+  input.addEventListener('blur',()=>save(null));
+}
+function sheet(params){
+  const m=M.matrix(C.state),decks=m.decks;
+  C.main.innerHTML=C.head('The master card roster','Spreadsheet.','One row per card, T and A per deck. Click a number and type the new one: the library works out what has to move, and asks first when a copy is taken from somewhere.',
+    b('Roster','open-roster')+b('Add a card row','sheet-add')+b('Export CSV','sheet-csv'))
+   +`<div class="cm-toolbar"><label class="cm-search">Search cards<input id="cm-sheet-query" value="${e(sheetQ)}" placeholder="Card name or type"></label>${s('Show','sheetOnly',SHEET_SHOW,sheetOnly)}${s('Deck','sheetDeck',[['','All decks'],...decks.map(d=>[d.id,d.name])],sheetDeck)}</div>`
+   +`<p class="cm-status-line" id="cm-sheet-status"></p><div id="cm-sheet-table"></div>`;
+  const host=$('#cm-sheet-table'),zero='<span class="cm-sheet-zero">0</span>',alt=i=>i%2?' cm-sheet-alt':'';
+  const draw=()=>{
+    const rows=sheetRows(m),shown=sheetAll?rows:rows.slice(0,SHEET_PAGE),filtered=!!(sheetQ.trim()||sheetOnly||sheetDeck);
+    $('#cm-sheet-status').innerHTML=`${rows.length} card${rows.length===1?'':'s'}${filtered?' matching':''} · whole library: ${m.own} owned, ${m.ordered} ordered, ${m.toBuy} to buy`
+      +(rows.length>shown.length?` · <button type="button" class="cm-text-button" data-sheet-all="1">Show all ${rows.length} rows</button>`:sheetAll&&rows.length>SHEET_PAGE?` · <button type="button" class="cm-text-button" data-sheet-all="0">Show the first ${SHEET_PAGE}</button>`:'');
+    const sortBtn=(key,label,title='')=>`<button type="button" class="cm-sheet-sort" data-sheet-sort="${e(key)}" title="${e(title||'Sort by '+label)}">${e(label)}${sheetSort.key===key?`<span aria-hidden="true">${sheetSort.dir>0?'▲':'▼'}</span>`:''}</button>`;
+    const ariaSort=key=>sheetSort.key===key?` aria-sort="${sheetSort.dir>0?'ascending':'descending'}"`:'';
+    const live=(r,col,deckId,n,{cls='',mark='',label='',title=''})=>`<td class="cm-sheet-num cm-sheet-live${cls}"><button type="button" class="cm-sheet-cell" data-cell="${e(cellKey(r.cardId,col,deckId))}" data-value="${n}" aria-label="${e(label)}" title="${e(title||'Click, or type a digit, to change')}">${n||zero}${mark}</button></td>`;
+    const ro=(n,cls='',title='')=>`<td class="cm-sheet-num${cls}"${title?` title="${e(title)}"`:''}>${n||zero}</td>`;
+    const head=`<thead><tr><th rowspan="2" class="cm-sheet-name"${ariaSort('name')}>${sortBtn('name','Card')}</th><th rowspan="2"${ariaSort('own')}>${sortBtn('own','Own','Owned copies, wherever they are')}</th><th rowspan="2"${ariaSort('ordered')}>${sortBtn('ordered','Ordered','Bought, not yet in hand')}</th><th rowspan="2"${ariaSort('bench')}>${sortBtn('bench','Bench','Owned copies in no deck box')}</th><th rowspan="2"${ariaSort('toBuy')}>${sortBtn('toBuy','To buy','Copies finalized decks list that nothing covers')}</th>`
+      +decks.map((d,i)=>`<th colspan="2" class="cm-sheet-deck${alt(i)}"><span class="cm-sheet-deck-name">${e(d.name)}</span><small>${d.status==='final'?(d.target===100?'final · 100':`final · ${d.target} cards`):`draft · ${d.target} cards`}</small></th>`).join('')
+      +`</tr><tr>`+decks.map((d,i)=>`<th class="${alt(i).trim()}"${ariaSort('deck|'+d.id+'|t')}>${sortBtn('deck|'+d.id+'|t','T','How many the list wants')}</th><th class="${alt(i).trim()}"${ariaSort('deck|'+d.id+'|boxed')}>${sortBtn('deck|'+d.id+'|boxed','A','How many are in its box')}</th>`).join('')+`</tr></thead>`;
+    const body=shown.map(r=>`<tr data-card="${e(r.cardId)}"><th scope="row" class="cm-sheet-name"><button type="button" class="cm-text-button cm-card-name" data-action="card" data-card="${e(r.cardId)}" title="${e(r.card.typeLine||'')}">${e(r.card.name)}</button>${r.extra?' <span class="cm-badge">New row</span>':''}</th>`
+      +live(r,'own','',r.own,{label:`Owned copies of ${r.card.name}`})+live(r,'ordered','',r.ordered,{label:`Ordered copies of ${r.card.name}`})+ro(r.bench)+ro(r.toBuy,r.toBuy?' is-short':'')
+      +decks.map((d,i)=>{const p=r.perDeck[d.id],short=d.status==='final'&&p.t>p.a,pend=p.a-p.boxed;
+        const marks=(p.option?'<span class="cm-sheet-opt" title="Flagged as an option: first to swap out">●</span>':'')+(p.pinned?'<span class="cm-sheet-opt cm-sheet-pinned" title="Pinned: kept whatever a swap suggests">■</span>':'');
+        return live(r,'t',d.id,p.t,{cls:alt(i)+(short?' is-short':''),mark:marks,label:`${d.name}: copies of ${r.card.name} in the list`,title:short?`${d.name} lists ${p.t}, ${p.a} covered`:''})
+          +(d.status==='final'?live(r,'boxed',d.id,p.boxed,{cls:alt(i)+(p.boxed&&p.boxed>=p.t?' is-done':''),mark:pend>0?`<sup class="cm-sheet-pend" title="${pend} more reserved to ${e(d.name)}, not in its box yet">+${pend}</sup>`:'',label:`${d.name}: copies of ${r.card.name} in its box`})
+            :`<td class="cm-sheet-num cm-sheet-muted${alt(i)}" title="A draft holds no copies; finalize it first">—</td>`);}).join('')+`</tr>`).join('');
+    const foot=`<tfoot><tr><th scope="row" class="cm-sheet-name">Whole library</th><td>${m.own}</td><td>${m.ordered}</td><td>${m.rows.reduce((n,r)=>n+r.bench,0)}</td><td class="${m.toBuy?'is-short':''}">${m.toBuy}</td>`
+      +decks.map((d,i)=>{const t=m.totals[d.id];return `<td class="${(t.t!==100?'is-short':'')+alt(i)}" title="${e(d.name)} lists ${t.t} cards">${t.t}</td><td class="${alt(i).trim()}" title="${t.boxed} in the box, ${t.a} reserved">${t.boxed}${t.a>t.boxed?`<sup class="cm-sheet-pend">+${t.a-t.boxed}</sup>`:''}</td>`;}).join('')+`</tr></tfoot>`;
+    host.innerHTML=`<div class="cm-sheet-wrap"><table class="cm-table cm-sheet" aria-label="Collection spreadsheet">${head}<tbody>${body||`<tr><td colspan="${5+decks.length*2}" class="cm-muted cm-sheet-empty">No cards match. Clear the search, or add a card row.</td></tr>`}</tbody>${foot}</table></div>`;
+    const wrap=$('.cm-sheet-wrap',host);
+    if(sheetScroll){wrap.scrollLeft=sheetScroll[0];wrap.scrollTop=sheetScroll[1];}
+    wrap.addEventListener('scroll',()=>{sheetScroll=[wrap.scrollLeft,wrap.scrollTop];},{passive:true});
+    if(sheetFocus){const el=wrap.querySelector(`[data-cell="${CSS.escape(sheetFocus)}"]`);sheetFocus=null;if(el){el.focus({preventScroll:true});el.scrollIntoView({block:'nearest',inline:'nearest'});}}
+  };
+  draw();
+  $('#cm-sheet-query').addEventListener('input',ev=>{sheetQ=ev.target.value;draw();});
+  $('[name=sheetOnly]').addEventListener('change',ev=>{sheetOnly=ev.target.value;draw();});
+  $('[name=sheetDeck]').addEventListener('change',ev=>{sheetDeck=ev.target.value;draw();});
+  host.addEventListener('click',ev=>{
+    const all=ev.target.closest('[data-sheet-all]');if(all){sheetAll=all.dataset.sheetAll==='1';draw();return;}
+    const so=ev.target.closest('[data-sheet-sort]');if(so){const key=so.dataset.sheetSort;sheetSort={key,dir:sheetSort.key===key?-sheetSort.dir:(key==='name'?1:-1)};draw();return;}
+    const cell=ev.target.closest('.cm-sheet-cell');if(cell){ev.stopPropagation();sheetEdit(cell);}
+  });
+  host.addEventListener('keydown',ev=>{
+    const cell=ev.target.closest('.cm-sheet-cell');if(!cell||ev.altKey||ev.ctrlKey||ev.metaKey)return;
+    if(/^[0-9]$/.test(ev.key)){ev.preventDefault();sheetEdit(cell,ev.key);return;}
+    const dx=ev.key==='ArrowLeft'?-1:ev.key==='ArrowRight'?1:0,dy=ev.key==='ArrowUp'?-1:ev.key==='ArrowDown'?1:0;
+    if(dx||dy){const next=sheetNeighbour(cell,dx,dy);if(next){ev.preventDefault();host.querySelector(`[data-cell="${CSS.escape(next)}"]`)?.focus();}}
+  });
+}
+actions['open-sheet']=()=>C.go('collection',{sheet:'1'});
+actions['open-roster']=()=>C.go('collection',{});
+actions['sheet-add']=()=>C.cardPicker('Add a card row to the spreadsheet',c=>{$('#cm-dialog').close();sheetExtras.set(c.id,c);sheetQ=c.name;sheetOnly='';sheetDeck='';sheetFocus=cellKey(c.id,'own','');C.render();C.notice(`${c.name} has a row. Type a number into it to record copies or list it in a deck.`);});
+/* The Master's column order, so the file drops straight back into the workbook. */
+actions['sheet-csv']=()=>{const m=M.matrix(C.state),rows=sheetRows(m),decks=m.decks,cell=v=>/[",\r\n]/.test(String(v))?'"'+String(v).replace(/"/g,'""')+'"':String(v);
+  const lines=[['Card','Own','Buy Count','Ordered','Bench',...decks.map(d=>d.name+' T'),...decks.map(d=>d.name+' A')],...rows.map(r=>[r.card.name,r.own,r.toBuy,r.ordered,r.bench,...decks.map(d=>r.perDeck[d.id].t),...decks.map(d=>r.perDeck[d.id].boxed)])].map(l=>l.map(cell).join(','));
+  C.download(`CrankMagic-spreadsheet-${new Date().toISOString().slice(0,10)}.csv`,lines.join('\r\n'),'text/csv;charset=utf-8');C.notice(`Exported ${rows.length} row${rows.length===1?'':'s'}: Card, Own, Buy Count, Ordered, Bench, then T and A per deck.`);};
 /* THE TWO NUMBERS YOU CORRECT MOST. What a card cost you and how many arrived are the
  * facts a receipt changes, and routing a two-character edit through a dialog was the whole
  * friction. On a real copy they are cells you click and type in. Everything else in the
@@ -180,7 +321,7 @@ if(scope!==pickScope){pickScope=scope;picked.clear();}
    page is on screen. */
 if(!phoneWatch){phoneWatch=true;PHONE.addEventListener('change',()=>{if(['shop','collection'].includes(C.route().view))C.render();});}
 const shopTools=`<div class="cm-shop-bar"><button type="button" class="v-button cm-shop-search-btn" data-action="shop-search" aria-label="Search cards" aria-expanded="${searchOpen}" title="Search cards"><span aria-hidden="true">\u{1F50D}</span></button>${b('Orders','shop-orders')}${b('Deck assembly','pull-picker')}${b(expanded?'Hide filters':(gbGet()?'Filters •':'Filters'),'roster-filters')}${b('Tools','shop-tools',{},false,{caret:'down'})}</div><label class="cm-search cm-shop-search" id="cm-shop-search"${searchOpen?'':' hidden'}>Search cards<input id="cm-roster-query" value="${e(filter.q)}" placeholder="Name, type or rules text"></label>`;
-C.main.innerHTML=(tight?'':C.head(shop?'Fulfill your plans':'The master card roster',shop?'From wish list to deck box.':'What you have. What you need.',shop?'Manage orders, store purchases, receipts and physical assembly. Every action is reversible.':'Owned, ordered and to-buy copies, with their purpose, print and physical location.',b('Add cards','add-card',{},true)+b('Import list / library','import-list')+b('Export view','export-view')+(shop?b('Print buy list','print-buy-list'):''))+(shop?`<div class="cm-actions">${b('Acquisition list','shop-mode',{mode:'acquire'},true)}${b('Orders','shop-orders')}${b('Deck assembly','pull-picker')}</div>`:`<div class="cm-actions">${b('New collection group','new-group')}${params.get('group')?b('Manage group','manage-group',{group:params.get('group')})+b('Add planned card','add-group-entry',{group:params.get('group')})+b('Edit planned list','edit-group-entries',{group:params.get('group')}):''}</div>`)+`<div id="cm-roster-stats"></div>`)+`<div class="cm-actions">${params.get('card')?`<span class="cm-chip">Card: ${e((C.state.cards[params.get('card')]||C.catalog.get(params.get('card')))?.name||'Card')}</span>`:''}${params.get('deck')?`<span class="cm-chip">Deck: ${e(M.deck(C.state,params.get('deck')).name)}</span>`:''}${params.get('group')?`<span class="cm-chip">Group: ${e(C.state.groups.find(g=>g.id===params.get('group'))?.name)}</span>`:''}</div>`+(tight?shopTools:`<div class="cm-toolbar"><label class="cm-search">Search cards<input id="cm-roster-query" value="${e(filter.q)}" placeholder="Name, type or rules text"></label>${b(expanded?'Hide filters':(activeFilters().length?`Filters (${activeFilters().length})`:'Filters'),'roster-filters')}${b('Columns','roster-columns')}${b('Clear filters','clear-filters')}${s('Collection group','groupPick',[['','All groups'],...C.state.groups.map(g=>[g.id,g.name])],params.get('group')||filter.group)}${s('Group rows by','groupBy',GROUP_CHOICES,gbGet())}</div>`)+`<div id="cm-filter-chips"></div><div id="cm-filter-host"></div>${shop?'<div id="cm-shop-strip"></div>':''}<div id="cm-roster-table"></div>`;
+C.main.innerHTML=(tight?'':C.head(shop?'Fulfill your plans':'The master card roster',shop?'From wish list to deck box.':'What you have. What you need.',shop?'Manage orders, store purchases, receipts and physical assembly. Every action is reversible.':'Owned, ordered and to-buy copies, with their purpose, print and physical location.',b('Add cards','add-card',{},true)+b('Import list / library','import-list')+b('Export view','export-view')+(shop?b('Print buy list','print-buy-list'):b('Spreadsheet','open-sheet')))+(shop?`<div class="cm-actions">${b('Acquisition list','shop-mode',{mode:'acquire'},true)}${b('Orders','shop-orders')}${b('Deck assembly','pull-picker')}</div>`:`<div class="cm-actions">${b('New collection group','new-group')}${params.get('group')?b('Manage group','manage-group',{group:params.get('group')})+b('Add planned card','add-group-entry',{group:params.get('group')})+b('Edit planned list','edit-group-entries',{group:params.get('group')}):''}</div>`)+`<div id="cm-roster-stats"></div>`)+`<div class="cm-actions">${params.get('card')?`<span class="cm-chip">Card: ${e((C.state.cards[params.get('card')]||C.catalog.get(params.get('card')))?.name||'Card')}</span>`:''}${params.get('deck')?`<span class="cm-chip">Deck: ${e(M.deck(C.state,params.get('deck')).name)}</span>`:''}${params.get('group')?`<span class="cm-chip">Group: ${e(C.state.groups.find(g=>g.id===params.get('group'))?.name)}</span>`:''}</div>`+(tight?shopTools:`<div class="cm-toolbar"><label class="cm-search">Search cards<input id="cm-roster-query" value="${e(filter.q)}" placeholder="Name, type or rules text"></label>${b(expanded?'Hide filters':(activeFilters().length?`Filters (${activeFilters().length})`:'Filters'),'roster-filters')}${b('Columns','roster-columns')}${b('Clear filters','clear-filters')}${s('Collection group','groupPick',[['','All groups'],...C.state.groups.map(g=>[g.id,g.name])],params.get('group')||filter.group)}${s('Group rows by','groupBy',GROUP_CHOICES,gbGet())}</div>`)+`<div id="cm-filter-chips"></div><div id="cm-filter-host"></div>${shop?'<div id="cm-shop-strip"></div>':''}<div id="cm-roster-table"></div>`;
 foldPrints=foldFor(shop);pageSize=C.state.preferences.pageSize==='all'?Infinity:(Number(C.state.preferences.pageSize)||60);
 if(expanded)$('#cm-filter-host').innerHTML=`<div class="cm-filter-panel">${tight?s('Group rows by','groupBy',GROUP_CHOICES,gbGet()):''}${s('Card type','type',[['','All types'],'Artifact','Creature','Enchantment','Instant','Land','Planeswalker','Sorcery','Battle'],filter.type)}${s('Mana','mana',[['','Any'],'Mana rock','Mana dork','Mana source','Ramp spell','Land','Basic land'],filter.mana)}${f('Subtype','subtype',filter.subtype)}${f('Mechanic / keyword','mechanic',filter.mechanic)}${s('Color identity','color',[['','All colors'],['W','White'],['U','Blue'],['B','Black'],['R','Red'],['G','Green'],['C','Colorless']],filter.color)}${s('Source','source',[['','All sources'],['owned','Owned'],['ordered','Ordered'],['incoming','Incoming trade'],['wanted','Wanted'],['watching','Watching'],['to-buy','To buy'],['draft','Draft / suggestion']],filter.source)}${s('Allocation / status','placement',[['','All allocations'],'In deck box','Reserved','Bench','Draft list','Suggestion'],filter.placement)}${s('Slot flag','flag',[['','Any flag'],['option','Option — first to swap out'],['pinned','Pinned — keep']],filter.flag)}${s('Bench / Sell / Trade','offer',[['','All cards'],['bench','Unassigned bench'],['available','Sell / Trade'],['held','Pending deals']],filter.offer)}${f('Minimum mana value','min',filter.min,'type="number" min="0"')}${f('Maximum mana value','max',filter.max,'type="number" min="0"')}${f('Maximum price ($)','price',filter.price,'type="number" min="0" step="0.01"')}${s('Deck','deck',[['','All decks'],...C.state.decks.filter(d=>!d.archived).map(d=>[d.id,d.name])],params.get('deck')||'')}</div>`;
 const scoped=()=>!!(params.get('card')||params.get('deck')||params.get('group')||Object.values(filter).some(v=>v!==''));

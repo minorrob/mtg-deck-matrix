@@ -264,4 +264,93 @@ M.validate(s);checks++;
   assert.equal(M.slot(s,'d1','rock1').option,false,'The replacement does not inherit the flag');assert.equal(M.slot(s,'d1','rock1').cardId,'stone');checks+=2;
   run('swap',{deckId:'d1',slotId:'rock1',cardId:'ring',cards:[]});
 }
+// THE SPREADSHEET'S COMMANDS. target is how many of a card a deck LISTS; assign is how many
+// copies are RESERVED to that slot and how many of those sit in the box. A deck cell typed
+// to 1 releases the copy from wherever it was, reserves it here and -- for the In box
+// column -- puts it in this box; a copy taken from another deck stays physically in that
+// deck's box until pulled, which is what the other deck's pull sheet then says. The matrix
+// is the sheet's numbers, and it never disagrees with readiness.
+{
+  const saved=s;s=M.empty();
+  run('cards',{cards:[...cards,
+    {id:'red',name:'Lightning Bolt',typeLine:'Instant',verified:true,colorIdentity:['R'],legalities:{commander:'legal'}},
+    {id:'seven',name:'Seven Dwarves',typeLine:'Creature — Dwarf',verified:true,colorIdentity:[],oracleText:'A deck can have up to seven cards named Seven Dwarves.',legalities:{commander:'legal'}},
+    {id:'rat',name:'Relentless Rats',typeLine:'Creature — Rat',verified:true,colorIdentity:[],oracleText:'A deck can have any number of cards named Relentless Rats.',legalities:{commander:'legal'}}]});
+  assert.equal(M.maxCopies(s.cards.land),Infinity);assert.equal(M.maxCopies(s.cards.ring),1);assert.equal(M.maxCopies(s.cards.seven),7);assert.equal(M.maxCopies(s.cards.rat),Infinity);checks+=4;
+  run('createDeck',{deckId:'A',name:'Deck A',commanders:['leader'],slots:[{id:'cmdA',cardId:'leader',quantity:1},{id:'landA',cardId:'land',quantity:97},{id:'ringA',cardId:'ring',quantity:1},{id:'stoneA',cardId:'stone',quantity:1}]});run('finalize',{deckId:'A'});
+  run('createDeck',{deckId:'B',name:'Deck B',commanders:['leader'],slots:[{id:'cmdB',cardId:'leader',quantity:1},{id:'landB',cardId:'land',quantity:98},{id:'ringB',cardId:'ring',quantity:1}]});run('finalize',{deckId:'B'});
+  run('createDeck',{deckId:'C',name:'Draft C',commanders:['leader'],slots:[{id:'cmdC',cardId:'leader',quantity:1},{id:'landC',cardId:'land',quantity:10}]});
+  const cell=(cid,did)=>M.matrix(s).rows.find(r=>r.cardId===cid).perDeck[did],rowOf=cid=>M.matrix(s).rows.find(r=>r.cardId===cid);
+  const agree=()=>{const m=M.matrix(s);for(const d of s.decks.filter(d=>!d.archived)){const r=M.readiness(s,d);assert.equal(m.totals[d.id].boxed,r.inBox,d.name+': the sheet\'s In box total is readiness\'s');assert.equal(m.totals[d.id].t,m.decks.find(x=>x.id===d.id).target);}assert.equal(m.toBuy,M.counters(s).toBuy,'the sheet\'s To buy is the library\'s');checks+=2;};
+  {const m=M.matrix(s);assert.deepEqual(m.decks.map(d=>d.id),['A','B','C']);assert.equal(m.rows.length,4,'one row per card any deck lists');assert.deepEqual(m.totals.A,{t:100,a:0,boxed:0,short:4});assert.equal(rowOf('ring').toBuy,2,'two final decks short one Sol Ring each');assert.equal(rowOf('land').toBuy,195,'a draft\'s list is not a purchase');assert.equal(m.own,0);checks+=6;agree();}
+  // A free copy: the Assigned cell reserves it, the In box cell sleeves it.
+  run('acquire',{lot:{id:'ring1',cardId:'ring',quantity:1}});
+  {const p=M.plan(s,{cardId:'ring',column:'a',deckId:'A',value:1});assert.equal(p.command.type,'assign');assert.equal(p.review,true);assert.ok(p.notes.some(n=>/1 free copy is reserved to Deck A/.test(n)),p.notes.join(' | '));checks+=3;
+   run(p.command.type,p.command);assert.deepEqual([cell('ring','A').a,cell('ring','A').boxed],[1,0]);assert.equal(M.readiness(s,M.deck(s,'A')).pullFromBench,1);checks+=2;agree();}
+  {const p=M.plan(s,{cardId:'ring',column:'boxed',deckId:'A',value:1});assert.ok(p.notes.some(n=>/1 copy goes into Deck A's box/.test(n)));run(p.command.type,p.command);assert.equal(cell('ring','A').boxed,1);assert.equal(M.inDeck(s,M.lot(s,'ring1')),true);checks+=3;agree();}
+  // Another deck's cell typed to 1 takes the copy: reserved here now, still in the other box
+  // until pulled, and never without a review.
+  expectFailure('assign',{deckId:'B',cardId:'ring',assigned:1},/confirm/i);
+  {const p=M.plan(s,{cardId:'ring',column:'a',deckId:'B',value:1});assert.ok(p.notes.some(n=>/1 copy comes from Deck A \(still in its box until pulled\)/.test(n)),p.notes.join(' | '));checks++;
+   const r=run(p.command.type,p.command);assert.match(r.summary,/from Deck A/);const l=M.lot(s,'ring1');assert.equal(l.allocation.deckId,'B');assert.equal(l.location.deckId,'A','physically still in A\'s box');assert.equal(M.inDeck(s,l),false);
+   assert.deepEqual([cell('ring','A').a,cell('ring','B').a,cell('ring','B').boxed],[0,1,0]);assert.equal(M.readiness(s,M.deck(s,'B')).pullFromOtherBox,1);assert.equal(M.readiness(s,M.deck(s,'A')).remove,1,'A\'s pull sheet says the ring comes out');checks+=7;agree();}
+  {const p=M.plan(s,{cardId:'ring',column:'boxed',deckId:'B',value:1});run(p.command.type,p.command);assert.equal(M.lot(s,'ring1').location.deckId,'B');assert.equal(cell('ring','B').boxed,1);checks+=2;agree();}
+  // Nothing in the library covers it: the sheet saying a copy is assigned records one owned.
+  {const p=M.plan(s,{cardId:'stone',column:'a',deckId:'A',value:1});assert.ok(p.notes.some(n=>/recorded as newly owned/.test(n)));checks++;
+   expectFailure('assign',{deckId:'A',cardId:'stone',assigned:1,acquire:false,confirmed:true},/No copy of Mind Stone/);
+   const owned=M.counters(s).owned;const r=run(p.command.type,p.command);assert.match(r.summary,/1 recorded as newly owned/);assert.equal(M.counters(s).owned,owned+1);const l=s.lots.find(l=>l.cardId==='stone');assert.equal(l.allocation.slotId,'stoneA');assert.equal(l.notes,'Recorded from the spreadsheet');checks+=4;agree();}
+  // Assigned falls: reservations go, the copy stays owned. Boxed falls: back to the bench.
+  {run('assign',{deckId:'B',cardId:'ring',assigned:1,boxed:0,confirmed:true});assert.equal(M.lot(s,'ring1').location.kind,'bench');assert.equal(cell('ring','B').boxed,0);checks+=2;
+   expectFailure('assign',{deckId:'B',cardId:'ring',assigned:0},/Review the reservations/);run('assign',{deckId:'B',cardId:'ring',assigned:0,confirmed:true});assert.equal(M.lot(s,'ring1').allocation,null);assert.equal(M.counters(s).owned,2);checks+=2;agree();}
+  expectFailure('assign',{deckId:'B',cardId:'ring',assigned:2,confirmed:true},/lists 1 copy/);
+  expectFailure('assign',{deckId:'B',cardId:'ring',assigned:1,boxed:2,confirmed:true},/Assign the copies before/);
+  expectFailure('assign',{deckId:'C',cardId:'land',assigned:1,confirmed:true},/Finalize/);
+  expectFailure('assign',{deckId:'A',cardId:'red',assigned:1,confirmed:true},/not in Deck A's list/);
+  assert.equal(M.plan(s,{cardId:'land',column:'a',deckId:'C',value:1}).refused,'Draft C is a draft; finalize it, or set its target.');checks++;
+  // TARGET: the copies rule, the colour identity and the commander are the limits; 100 is not.
+  expectFailure('target',{deckId:'A',cardId:'ring',quantity:2,confirmed:true},/one copy/);
+  expectFailure('target',{deckId:'A',cardId:'red',quantity:1,confirmed:true},/color identity/);
+  expectFailure('target',{deckId:'A',cardId:'leader',quantity:0,confirmed:true},/commander/);
+  expectFailure('target',{deckId:'A',cardId:'ring',quantity:1,confirmed:true},/already says/);
+  assert.equal(M.plan(s,{cardId:'ring',column:'t',deckId:'A',value:2}).refused,'Sol Ring: a deck can carry one copy.');checks++;
+  {const p=M.plan(s,{cardId:'stone',column:'t',deckId:'A',value:0});assert.equal(p.review,true,'removing a card that has copies asks first');assert.ok(p.notes.some(n=>/99 cards, not 100/.test(n)),p.notes.join(' | '));checks+=2;
+   expectFailure('target',{deckId:'A',cardId:'stone',quantity:0},/Review the reservations/);
+   const r=run('target',{deckId:'A',cardId:'stone',quantity:0,confirmed:true});assert.match(r.summary,/99 cards, not 100/);assert.equal(M.deck(s,'A').slots.some(x=>x.cardId==='stone'),false);assert.equal(s.lots.find(l=>l.cardId==='stone').allocation,null,'the copy is released, not deleted');assert.equal(M.deck(s,'A').status,'final');checks+=4;agree();}
+  // Raising a finalized deck's target reserves the free copy; a second deck asking gets To buy.
+  {run('target',{deckId:'B',cardId:'stone',quantity:1});assert.equal(cell('stone','B').a,1,'the freed Mind Stone is reserved to B on the spot');assert.equal(M.deck(s,'B').slots.filter(x=>x.purpose==='main').reduce((n,x)=>n+x.quantity,0),101);checks+=2;
+   run('target',{deckId:'A',cardId:'stone',quantity:1});assert.deepEqual([cell('stone','A').a,rowOf('stone').toBuy],[0,1]);checks++;agree();}
+  // Basics and "any number" cards take any count; "up to seven" takes seven and not eight.
+  run('target',{deckId:'C',cardId:'land',quantity:5});assert.equal(M.slot(s,'C','landC').quantity,5);checks++;
+  run('target',{deckId:'C',cardId:'land',quantity:0});assert.equal(M.deck(s,'C').slots.some(x=>x.cardId==='land'),false);checks++;
+  run('target',{deckId:'C',cardId:'seven',quantity:7,confirmed:true});expectFailure('target',{deckId:'C',cardId:'seven',quantity:8,confirmed:true},/7 copies/);
+  run('target',{deckId:'C',cardId:'rat',quantity:30});assert.equal(cell('rat','C').t,30);checks++;
+  // A card the library has never seen comes in with the command, as the picker sends it.
+  run('target',{deckId:'C',cardId:'gemx',quantity:1,cards:[{id:'gemx',name:'Fellwar Stone',typeLine:'Artifact',verified:true,colorIdentity:[],legalities:{commander:'legal'}}]});assert.equal(s.cards.gemx.name,'Fellwar Stone');checks++;
+  // A deck cell typed where the list says 0: target first, then assign, one reviewed batch.
+  {const p=M.plan(s,{cardId:'seven',column:'a',deckId:'A',value:2});assert.equal(p.command.type,'batch');assert.deepEqual(p.command.commands.map(c=>c.type),['target','assign']);assert.ok(p.notes.some(n=>/grows to 2 copies of Seven Dwarves \(it was not in the list\)/.test(n)));assert.ok(p.notes.some(n=>/2 copies are recorded as newly owned/.test(n)));checks+=4;
+   assert.equal(M.plan(s,{cardId:'seven',column:'a',deckId:'A',value:8}).refused,'Seven Dwarves: a deck can carry 7 copies.');checks++;}
+  // OWN and ORDERED across the row: raises record copies, falls take the free ones first
+  // and say when a reserved or boxed copy has to go too.
+  {let p=M.plan(s,{cardId:'ring',column:'own',value:3});assert.deepEqual([p.command.type,p.command.lot.quantity,p.review],['acquire',2,false]);run(p.command.type,p.command);assert.equal(rowOf('ring').own,3);checks+=2;
+   run('assign',{deckId:'A',cardId:'ring',assigned:1,boxed:1,confirmed:true});
+   p=M.plan(s,{cardId:'ring',column:'own',value:2});assert.equal(p.review,false,'a free copy goes first, no review');assert.equal(p.command.type,'dispose');run(p.command.type,p.command);assert.equal(rowOf('ring').own,2);assert.equal(cell('ring','A').boxed,1);checks+=4;
+   p=M.plan(s,{cardId:'ring',column:'own',value:0});assert.equal(p.review,true);assert.ok(p.notes.some(n=>/1 reserved to Deck A and in its box goes too/.test(n)),p.notes.join(' | '));run(p.command.type,p.command);assert.equal(rowOf('ring').own,0);assert.equal(M.counters(s).owned,1,'only the recorded Mind Stone is left');checks+=4;agree();
+   p=M.plan(s,{cardId:'ring',column:'ordered',value:2});assert.deepEqual([p.command.type,p.command.lot.source],['acquire','ordered']);run(p.command.type,p.command);assert.equal(rowOf('ring').ordered,2);checks+=2;
+   p=M.plan(s,{cardId:'ring',column:'ordered',value:0});assert.equal(p.command.type,'removePending');run(p.command.type,p.command);assert.equal(rowOf('ring').ordered,0);checks+=2;
+   assert.deepEqual(M.plan(s,{cardId:'ring',column:'own',value:0}),{command:null,review:false,notes:['No change.']});assert.equal(M.plan(s,{cardId:'ring',column:'nope',value:1}).refused,'Unknown column.');checks+=2;}
+  // A RAISED TARGET takes the copy from the other deck's box, reserved here, still there until
+  // pulled; where nothing exists anywhere it is simply To buy.
+  {run('acquire',{lot:{id:'ring2',cardId:'ring',quantity:1}});run('assign',{deckId:'B',cardId:'ring',assigned:1,boxed:1,confirmed:true});run('target',{deckId:'A',cardId:'ring',quantity:0,confirmed:true});
+   const p=M.plan(s,{cardId:'ring',column:'t',deckId:'A',value:1});assert.equal(p.command.type,'batch');assert.deepEqual(p.command.commands.map(c=>[c.type,c.partial||false]),[['target',false],['assign',true]]);assert.equal(p.review,true);assert.ok(p.notes.some(n=>/1 copy comes from Deck B \(still in its box until pulled\)/.test(n)),p.notes.join(' | '));checks+=4;
+   run('batch',p.command);assert.deepEqual([cell('ring','A').a,cell('ring','B').a,M.lot(s,'ring2').location.deckId],[1,0,'B']);assert.equal(M.readiness(s,M.deck(s,'B')).remove,1);checks+=2;agree();
+   const q=M.plan(s,{cardId:'seven',column:'t',deckId:'B',value:1});assert.equal(q.command.type,'target');assert.equal(q.review,false);assert.ok(q.notes.some(n=>/1 copy stays To buy/.test(n)),q.notes.join(' | '));checks+=3;}
+  // A card the library has never met rides in on the edit, and every command it plans carries the identity.
+  {const novel={id:'novel',name:'Arcane Signet',typeLine:'Artifact',verified:true,colorIdentity:[],legalities:{commander:'legal'}};
+   assert.throws(()=>M.plan(s,{cardId:'novel',column:'own',value:1}),/Resolve the card identity/);checks++;
+   const p=M.plan(s,{cardId:'novel',card:novel,column:'boxed',deckId:'A',value:1});assert.equal(p.command.type,'batch');assert.deepEqual(p.command.commands.map(c=>(c.cards||[]).length),[1,0]);checks+=2;
+   run('batch',p.command);assert.equal(s.cards.novel.name,'Arcane Signet');assert.deepEqual([cell('novel','A').t,cell('novel','A').boxed],[1,1]);checks+=2;
+   const q=M.plan(s,{cardId:'novel2',card:{...novel,id:'novel2',name:'Fellwar Stone'},column:'own',value:2});assert.equal(q.command.cards[0].name,'Fellwar Stone');run(q.command.type,q.command);assert.equal(rowOf('novel2').own,2);checks+=2;agree();}
+  M.validate(s);checks++;
+  s=saved;
+}
 console.log(`collection-model: ${checks} checks passed; planned cards never become owned without acquisition.`);

@@ -1,6 +1,42 @@
 # The Spreadsheet view of the Collection page
 
-*A plan, written 2026-09-13, for the next build session. Nothing here is built yet.*
+*A plan, written 2026-09-13. Built and shipped the same day; the sections below are the
+plan as written, and this note says what shipped and where it differs.*
+
+## What shipped
+
+- **Where it lives.** Collection → *Spreadsheet* (the button beside *Export view*), route
+  `#collection?sheet=1`; *Roster* goes back. It is a separate view of the Collection page
+  rather than a third list type inside the roster's table, because its rows (one per card,
+  seventeen numeric cells) share nothing with the roster's per-copy rows.
+- **Columns.** Card · Own · Ordered · Bench · To buy, then per deck **T** (how many the list
+  wants) and **A** (how many are physically in its box, with a small *+n* where more are
+  reserved than sleeved — the pull sheet's number). Own, Ordered, T and A are editable; a
+  draft deck's A is not, because a draft holds no copies.
+- **The model side.** `collection-model.js` gained `maxCopies(card)` (the copies rule, shared
+  with legality), `matrix(state)` (the sheet's numbers, checked against `readiness` in the
+  tests), `plan(state, edit)` (a typed number turned into commands, with `review` and the
+  notes the dialog shows) and two commands: `target` (a card's count in a deck's list, on a
+  draft or a finalized deck; a finalized list may leave 100 and the deck reads *In progress*
+  until it is back; the copies rule, the colour identity and the commander are the limits)
+  and `assign` (how many copies are reserved to the slot and how many of those are in the
+  box; takes free copies first, then copies reserved to other decks or sitting in other
+  boxes — which stay where they physically are until pulled — then records a newly owned
+  copy when the library holds none).
+- **Rob's two rules, as built.** An **A typed to 1** on a deck releases the copy from wherever
+  it was, reserves it to that deck and puts it in its box (raising T first when the card was
+  not in the list). A **raised T** reserves free copies and takes reserved ones from other
+  decks; the copy stays in the other deck's box and that deck's pull sheet says *remove*.
+  Both go through the review dialog with the plan's notes; a plain raise of Own or Ordered
+  saves on the spot.
+- **Keyboard.** Enter commits and moves down, Tab right, Escape restores, the arrow keys walk
+  the cells, a digit typed on a focused cell starts editing with it.
+- **Also.** Search, *Show* (short of a target, reserved-not-boxed, owned, bench, in no list),
+  a per-deck filter, header sorting, sticky header / first column / totals row, an
+  *Add a card row* picker for a card the library has never met, and *Export CSV* in the
+  Master's column order. 200 rows a page with *Show all*.
+- **Not built.** Ticks and batch actions on the sheet (the roster has them), and the
+  `assigned` view mode; the *+n* marker carries that number instead.
 
 ## What Rob asked for
 
