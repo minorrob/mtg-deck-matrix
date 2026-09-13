@@ -115,7 +115,7 @@ const RARITY_LETTER={common:'C',uncommon:'U',rare:'R',mythic:'M',special:'S',bon
 const shortType=c=>{const head=(c.typeLine||'').split('—')[0].trim().split(/\s+/).pop()||'';return TYPE_SHORT[head]||head;};
 const shortRarity=c=>{const key=String(c.rarity||'').toLowerCase(),letter=RARITY_LETTER[key]||'';return letter?`<span class="cm-rarity cm-rarity-${letter}" title="${e(key[0].toUpperCase()+key.slice(1))}">${letter}</span>`:'';};
 let searchOpen=false,phoneWatch=false;
-function popAt(el,html){document.querySelectorAll('.cm-row-menu').forEach(m=>m.remove());const menu=document.createElement('div');menu.className='cm-menu cm-row-menu';menu.setAttribute('popover','auto');menu.innerHTML=html;document.body.append(menu);menu.showPopover();const rect=el.getBoundingClientRect();menu.style.left=Math.max(8,Math.min(innerWidth-menu.offsetWidth-8,rect.right-menu.offsetWidth))+'px';menu.style.top=Math.max(8,Math.min(innerHeight-menu.offsetHeight-8,rect.bottom+5))+'px';menu.addEventListener('click',ev=>{if(ev.target.closest('[data-action]'))menu.hidePopover();});return menu;}
+function popAt(el,html){document.querySelectorAll('.cm-row-menu').forEach(m=>m.remove());const menu=document.createElement('div');menu.className='cm-menu cm-row-menu';menu.setAttribute('popover','auto');menu.innerHTML=html;document.body.append(menu);menu.showPopover();const place=()=>{if(!el.isConnected){if(menu.matches(':popover-open'))menu.hidePopover();return;}const rect=el.getBoundingClientRect();if(rect.bottom<0||rect.top>innerHeight){if(menu.matches(':popover-open'))menu.hidePopover();return;}menu.style.left=Math.max(8,Math.min(innerWidth-menu.offsetWidth-8,rect.right-menu.offsetWidth))+'px';menu.style.top=Math.max(8,Math.min(innerHeight-menu.offsetHeight-8,rect.bottom+5))+'px';menu.dispatchEvent(new Event('cm-moved'));};place();C.followAnchor(menu,place);menu.addEventListener('click',ev=>{if(ev.target.closest('[data-action]'))menu.hidePopover();});return menu;}
 views.collection=params=>show(params,false);views.shop=params=>show(params,true);
 /* THE TWO NUMBERS YOU CORRECT MOST. What a card cost you and how many arrived are the
  * facts a receipt changes, and routing a two-character edit through a dialog was the whole
@@ -587,7 +587,7 @@ function wireSubmenu(menu,id){
   sub.addEventListener('pointerenter',()=>clearTimeout(timer));sub.addEventListener('pointerleave',()=>{timer=setTimeout(close,220);});
   sub.addEventListener('keydown',ev=>{if(ev.key==='Escape'||ev.key==='ArrowRight'){ev.preventDefault();close();toggle.focus();}});
   sub.addEventListener('click',ev=>{if(ev.target.closest('[data-action=row-count],.cm-step,[disabled]'))return;close();});
-  menu.addEventListener('toggle',ev=>{if(ev.newState==='closed')close();});
+  menu.addEventListener('toggle',ev=>{if(ev.newState==='closed')close();});menu.addEventListener('cm-moved',close);
 }
 actions['row-actions']=el=>{const r=findRow(el.dataset.record);if(!r)throw Error('That row changed. Refresh the view.');document.querySelectorAll('.cm-row-menu').forEach(m=>m.remove());const menu=document.createElement('div');menu.className='cm-menu cm-row-menu';menu.setAttribute('popover','auto');
   const flyout=(id,label,body)=>`<button type="button" id="${id}-toggle" class="cm-submenu-toggle" aria-expanded="false" aria-controls="${id}" aria-haspopup="menu">${e(label)} ${C.caret('left')}</button><div id="${id}" class="cm-menu cm-side-submenu" popover="manual">${body}</div>`;
@@ -604,7 +604,7 @@ actions['row-actions']=el=>{const r=findRow(el.dataset.record);if(!r)throw Error
     +section('Plan',[r.kind==='lot'&&!M.PLANNED.includes(r.source)?b('Reserve for a deck','reserve-row',{record:r.recordId}):'',r.kind==='lot'&&r.allocation?b('Release reservation → To buy','release-row',{record:r.recordId}):'',r.deckId&&slotId?b('Replacements & options','replacement',{deck:r.deckId,slot:slotId}):'',r.deckId&&slotId?slotFlagButtons(r.deckId,slotId):''])
     +section('Record',[r.kind==='lot'?b('Edit print & details','edit-row',{record:r.recordId}):'',b('Add another copy','add-card',{card:r.cardId}),r.kind==='lot'?b('Add / move to group','group-row',{record:r.recordId}):'',r.kind==='entry'?b('Move / copy to group','group-entry-row',{record:r.recordId}):''])
     +(owned?`<hr>${b('Sell / Trade','offer-row',{record:r.recordId})}`:'');
-  document.body.append(menu);menu.showPopover();const rect=el.getBoundingClientRect();menu.style.left=Math.max(8,Math.min(innerWidth-menu.offsetWidth-8,rect.right-menu.offsetWidth))+'px';menu.style.top=Math.max(8,Math.min(innerHeight-menu.offsetHeight-8,rect.bottom+5))+'px';
+  document.body.append(menu);menu.showPopover();const place=()=>{if(!el.isConnected){if(menu.matches(':popover-open'))menu.hidePopover();return;}const rect=el.getBoundingClientRect();if(rect.bottom<0||rect.top>innerHeight){if(menu.matches(':popover-open'))menu.hidePopover();return;}menu.style.left=Math.max(8,Math.min(innerWidth-menu.offsetWidth-8,rect.right-menu.offsetWidth))+'px';menu.style.top=Math.max(8,Math.min(innerHeight-menu.offsetHeight-8,rect.bottom+5))+'px';menu.dispatchEvent(new Event('cm-moved'));};place();C.followAnchor(menu,place);
   wireSubmenu(menu,'cm-status-submenu');wireSubmenu(menu,'cm-put-submenu');
   menu.addEventListener('click',ev=>{const hit=ev.target.closest('[data-action]');if(hit&&hit.dataset.action!=='row-count')menu.hidePopover();});};
 /* THE ONE MOVE THAT LOSES SOMETHING. An owned copy sitting in a deck box, or reserved to a
@@ -668,8 +668,20 @@ actions['export-view']=()=>{const shop=C.route().view==='shop',chosen=shop?shopS
 /* A HOVER PREVIEW INSTEAD OF A 26px THUMBNAIL. The thumbnails in every row were too small to
    read and set the row height; the art now appears beside the name while the pointer rests
    on it. One element, moved rather than made, and never on a touch screen. */
-(function(){if(matchMedia('(hover:none)').matches)return;let art=null,timer=null;
-  const hide=()=>{clearTimeout(timer);if(art)art.hidden=true;};
-  document.addEventListener('mouseover',ev=>{const name=ev.target.closest('.cm-table .cm-card-name');if(!name)return hide();const src=name.querySelector('[data-art]')?.dataset.art;if(!src)return hide();clearTimeout(timer);timer=setTimeout(()=>{if(!art){art=document.createElement('img');art.className='cm-hover-art';art.alt='';document.body.append(art);}art.src=src;art.hidden=false;const r=name.getBoundingClientRect();art.style.left=Math.min(innerWidth-190,r.right+12)+'px';art.style.top=Math.max(8,Math.min(innerHeight-260,r.top-40))+'px';},180);});
+(function(){if(matchMedia('(hover:none)').matches)return;let box=null,img=null,timer=null,token=0;
+  const ensure=()=>{if(box)return;box=document.createElement('div');box.className='cm-hover-art';box.hidden=true;box.innerHTML='<span class="cm-spinner" aria-hidden="true"></span><img alt="">';img=box.querySelector('img');img.addEventListener('load',()=>box.classList.remove('is-loading'));img.addEventListener('error',()=>{box.classList.remove('is-loading');box.hidden=true;});document.body.append(box);};
+  const hide=()=>{clearTimeout(timer);token++;if(box)box.hidden=true;};
+  const place=name=>{const r=name.getBoundingClientRect();box.style.left=Math.min(innerWidth-190,r.right+12)+'px';box.style.top=Math.max(8,Math.min(innerHeight-260,r.top-40))+'px';};
+  /* The image is fetched when the row does not carry one yet -- a spinner stands in until it
+     lands -- and the address is kept on the row so the next hover is instant. */
+  document.addEventListener('mouseover',ev=>{const name=ev.target.closest('.cm-table .cm-card-name');if(!name)return hide();clearTimeout(timer);const my=++token;
+    timer=setTimeout(async()=>{ensure();place(name);box.hidden=false;box.classList.add('is-loading');img.removeAttribute('src');
+      let src=name.querySelector('[data-art]')?.dataset.art||'';
+      if(!src){const id=name.closest('tr')?.dataset.card,c=id?(C.state.cards[id]||C.catalog.get(id)):null;
+        try{const full=c?await C.catalog.details(c,{onFail:()=>{}}):null;src=(full&&full.image)||(c&&c.image)||'';}catch{src=(c&&c.image)||'';}
+        if(my!==token)return;
+        if(!src){box.classList.remove('is-loading');box.hidden=true;return;}
+        const holder=name.querySelector('[data-art]');if(holder)holder.dataset.art=src;}
+      img.src=src;if(img.complete&&img.naturalWidth)box.classList.remove('is-loading');},160);});
   document.addEventListener('mouseout',ev=>{if(ev.target.closest('.cm-table .cm-card-name'))hide();});
   window.addEventListener('scroll',hide,{passive:true});})();
