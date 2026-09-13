@@ -122,9 +122,9 @@ The approved standalone mockup remains under `design/crankmagic/` for design ref
   hundred, and the readiness bar hatches the seats substitutes cover. Tiles wear their stage
   as a border: green while *Defining*, blue while *Building*, purple once *Playable*, gold
   when *Complete*. The deck page's stat row shows In
-  physical deck · Substitutes · To pull · Ordered · To buy and $ to finish against the cap,
+  physical deck · Substitutes · Ready to add · Ordered · To buy and $ to finish against the cap,
   with a readiness bar; *Pull sheet (n)* leads the action row when there is
-  anything to pull. The **Upgrade Path** panel under SWOT lists the deck's linked upgrades
+  anything ready to add. The **Upgrade Path** panel under SWOT lists the deck's linked upgrades
   as *Add · Replaces · Tier · Price · Why · Promote* with *Tuned only* and *Under $2*
   (D5–D6: $1.50) filters, `$X to Max` and `GC k / 2` in its header; *Promote* is the
   existing accept-option review, which asks first when it would be a third Game Changer.
@@ -139,6 +139,11 @@ The approved standalone mockup remains under `design/crankmagic/` for design ref
   games — and tiles carry `3–1` once games exist.
 - **User Functions**: backup/restore, Load Live, enriched workbook export, legacy
   reconciliation, history/undo, comparison reset, optional mirror file and explicit Clear all.
+- **Share** (beside Take a Tour): *Subscribe to updates* opens a mail draft to the maintainer
+  asking to be added to the update list, *Share by e-mail* opens a draft with the subject and
+  body written and the To line left blank, and *Show a QR code* draws the app link as a QR
+  code in the page (`crankmagic-qr.js`, no network, checked module for module against segno
+  in `tests/qr.mjs`) for a phone to scan at the table.
 
 ### Load Live
 
@@ -243,7 +248,7 @@ installation. Workbook tests optionally use `XLSX_PYTHON` with openpyxl for inde
 spreadsheet verification. See [tests/uat/README.md](tests/uat/README.md).
 
 Changed assets require a new `?v=` everywhere referenced, then
-`node tests/asset-versions.mjs --update`. There are 53 Node suites:
+`node tests/asset-versions.mjs --update`. There are 54 Node suites:
 
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`
@@ -291,6 +296,7 @@ Changed assets require a new `?v=` everywhere referenced, then
 - `service-worker` — `tests/service-worker.mjs`
 - `scryfall-timeout` — `tests/scryfall-timeout.mjs`
 - `crankmagic-rules` — `tests/crankmagic-rules.mjs`
+- `qr` — `tests/qr.mjs`
 - `shop-export` — `tests/shop-export.mjs`
 - `sim-engine` — `tests/sim-engine.mjs`
 - `sim-lenses` — `tests/sim-lenses.mjs`

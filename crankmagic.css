@@ -457,7 +457,10 @@ button.cm-badge-link:hover{background:#35507a;color:#eaf5ff}
    then painted straight across it -- caught by tests/browser-geometry.mjs, which exists for
    exactly this. The tour label is the one to shed: it is the newest, and its flag icon
    carries a tooltip and an aria-label. */
-@media(max-width:1050px){#matrix-v2 .cm-tour-btn .cm-btn-label{display:none}}
+@media(max-width:1050px){#matrix-v2 .cm-tour-btn .cm-btn-label{display:none}#matrix-v2 .cm-tour-btn .cm-btn-icon,#matrix-v2 .cm-share-btn .cm-btn-icon{display:inline;font-size:15px;line-height:1}}
+/* Four controls now. Under 900px Send Feedback goes to its envelope too, or the group wraps
+   under the wordmark at 768px -- the browser-geometry suite catches exactly that. */
+@media(max-width:900px){#matrix-v2 .cm-feedback .cm-btn-label{display:none}#matrix-v2 .cm-feedback .cm-btn-icon{display:inline;font-size:15px;line-height:1}}
 @media(max-width:760px){
   .cm-tour-picks{grid-template-columns:1fr}
   .cm-tour-popover{width:calc(100vw - 20px)}
@@ -1210,3 +1213,35 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-deck-tile.cm-stage-playable{border-color:#8a5cf6}
 .cm-deck-tile.cm-stage-complete{border-color:#f0b35a;box-shadow:0 0 0 1px #f0b35a55}
 @media(max-width:640px){.cm-stats.cm-stats-row{grid-template-columns:repeat(2,minmax(0,1fr))}.cm-stats-row .cm-stat strong{font-size:20px}#matrix-v2 .cm-table td.cm-col-name,#matrix-v2 .cm-table th.cm-col-name{min-width:0}}
+
+/* A select is as wide as its longest option unless told otherwise; in the two-column form
+   grid that let "What does this input represent?" paint across "Collection group". */
+#matrix-v2 .cm-form-grid select{width:100%;max-width:100%;min-width:0;box-sizing:border-box}
+#matrix-v2 .cm-form-grid>label{min-width:0}
+
+/* SHARE: the header button behaves like Take a Tour (icon only under 1050px) and the QR
+   dialog puts the symbol on white with its quiet zone, big enough to scan from a phone. */
+@media(max-width:1050px){#matrix-v2 .cm-share-btn .cm-btn-label,#matrix-v2 .cm-share-btn .cm-btn-chevron{display:none}}
+.cm-qr{display:grid;justify-items:center;gap:14px;text-align:center}
+.cm-qr-code{width:min(72vw,340px);max-width:100%;aspect-ratio:1;background:#fff;border-radius:12px;box-shadow:0 10px 30px #0008;overflow:hidden}
+.cm-qr-code svg{display:block;width:100%;height:100%}
+.cm-qr-link{margin:0;font-size:15px;word-break:break-all}.cm-qr-link a{color:#8ecbff}
+.cm-qr .cm-note{text-align:left;margin:4px 0 0;max-width:460px}
+/* DECK LAB, Starting point: the instruction on the left, the control on the right, clear
+   space between them; on a narrow screen the control drops under the sentence, still right. */
+#matrix-v2 .cm-lab-start>label.cm-start-label{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 28px}
+#matrix-v2 .cm-start-label .cm-start-control{margin:0 0 0 auto}
+
+/* DECK LAB, Existing deck: the three ways the 99 is defined, as one radio group. */
+.cm-list-source{border:1px solid #38465e;border-radius:8px;padding:8px 12px 10px;margin:12px 0 0;display:grid;gap:4px;min-width:0}
+.cm-list-source legend{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#bdd6f2;padding:0 4px}
+.cm-list-source-opt{display:flex;gap:10px;align-items:flex-start;min-height:34px;padding:4px 2px;border-radius:6px;cursor:pointer}
+.cm-list-source-opt:hover{background:#243248}
+#matrix-v2 .cm-list-source-opt input{margin:3px 0 0;width:16px;height:16px;min-height:0;flex:0 0 16px}
+.cm-list-source-opt strong{display:block;font-size:13px}.cm-list-source-opt small{display:block;color:#9db8d8;font-size:12px;line-height:1.4}
+
+/* ONE COLOUR PER STATE, EVERYWHERE. Reserved is the light blue of the counts row's Reserved
+   tile, on the Collection's Allocation pill and on the card pop-up's deck chips alike. */
+.cm-pill.reserved{--st:var(--st-reserved)}
+/* The dialog's title row and its close button stay put while the rest scrolls. */
+#matrix-v2 .cm-dialog-head{position:sticky;top:0;z-index:3;background:#171d2a;margin:-25px -25px 20px;padding:25px 25px 12px}
