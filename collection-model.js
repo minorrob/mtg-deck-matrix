@@ -54,7 +54,7 @@
      unlimited; "up to seven cards named" is seven; everything else is one. Legality reads
      it, and so does the spreadsheet's target command, so the two never disagree. */
   function maxCopies(c){const o=c.oracleText||'';let allowed=/\bBasic\b/.test(c.typeLine||'')||/any number of cards named/i.test(o)?Infinity:1;const words={two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9};const m=o.match(/up to (two|three|four|five|six|seven|eight|nine|\d+) cards named/i);if(m)allowed=words[m[1].toLowerCase()]||Number(m[1]);return allowed;}
-  function physical(l){return l.source==='owned'?(l.location?.kind==='deck'?'In physical deck':'Bench'):PLANNED.includes(l.source)?'Not acquired':'Not received';}
+  function physical(l){return l.source==='owned'?(l.location?.kind==='deck'?'Physical deck':'Bench'):PLANNED.includes(l.source)?'Not acquired':'Not received';}
   function inDeck(s,l){return l.source==='owned'&&l.allocation&&l.location?.kind==='deck'&&l.location.deckId===l.allocation.deckId&&!deck(s,l.allocation.deckId).archived;}
   /* inDeck counts what is physically in a deck, substitutes included: the Master's In Deck. */
   function counters(s){const result={owned:0,ordered:0,watching:0,toBuy:0,inDeck:0,sellTrade:0};for(const l of s.lots){result[l.source]+=l.quantity;if(l.source==='owned'&&l.location?.kind==='deck')result.inDeck+=l.quantity;if(l.source==='owned'&&l.offer!=='none')result.sellTrade+=l.quantity;}for(const d of s.decks.filter(d=>d.status==='final'&&!d.archived))for(const r of d.slots.filter(r=>r.committed))result.toBuy+=shortfall(s,d,r);return result;}
@@ -65,8 +65,8 @@
      the cards are actually sitting in is a separate fact, and `placed` still carries it. */
   /* THE SAME HUNDRED, CUT THE WAY A BUILD NIGHT CUTS IT. `owned` says what you have; it
      does not say where. 72 owned and 55 in the physical deck is 17 cards to go and find, and that
-     figure was never computed anywhere -- so the deck page could not say "17 to pull" and
-     the pull sheet had nothing to list. The segments below add it without moving a single
+     figure was never computed anywhere -- so the deck page could not say "17 ready to add" and
+     the Ready to add list had nothing to list. The segments below add it without moving a single
      existing key: inBox is `placed` under the name the UI uses; pullFromBench and
      pullFromOtherBox are owned, reserved copies sitting somewhere else; remove is a copy in
      this deck that the list no longer asks for. The three money figures follow the
@@ -81,7 +81,7 @@
        ordered or still on the bench. It leaves when a real copy is ready to take a seat
        (swapReady: reserved copies on the bench or in another box) or when the box holds more
        substitutes than the list has empty seats (surplus). `remove` is the two together, the
-       number the pull sheet asks to take out now; `sleeved` is what is physically in the physical deck. */
+       number the Ready to add list asks to take out now; `sleeved` is what is physically in the physical deck. */
     const standIns=s.lots.filter(l=>l.source==='owned'&&l.location?.kind==='deck'&&l.location.deckId===d.id&&l.allocation?.deckId!==d.id).reduce((n,l)=>n+l.quantity,0);
     const gap=Math.max(0,target-placed),covered=Math.min(standIns,gap),surplus=standIns-covered,swapReady=Math.min(covered,pullFromBench+pullFromOtherBox),remove=surplus+swapReady,sleeved=placed+standIns;
     /* WATCHED, for a deck: the cards being considered for it -- its upgrade and bracket options,
@@ -99,7 +99,7 @@
      ones and its outstanding To buy requirements, always current, stored once. */
   const withDeckGroup=(s,row)=>{const d=row.deckId?s.decks.find(x=>x.id===row.deckId):null;
     return d&&d.groupId&&!row.groupIds.includes(d.groupId)?{...row,groupIds:[...row.groupIds,d.groupId]}:row;};
-  function projection(s){const rows=s.lots.map(l=>{const sl=l.allocation?slot(s,l.allocation.deckId,l.allocation.slotId):null;return withDeckGroup(s,{...clone(l),recordId:l.id,kind:'lot',card:card(s,l.cardId),deckId:l.allocation?.deckId||'',purpose:sl?sl.purpose:'',pinned:!!sl?.pinned,option:!!sl?.option,optionWhy:sl?.optionWhy||'',placement:inDeck(s,l)?'In physical deck':l.allocation?'Reserved':l.source==='owned'?(l.location?.kind==='deck'?'Substitute':'Bench'):'Unassigned',physical:physical(l),standIn:l.source==='owned'&&l.location?.kind==='deck'&&l.allocation?.deckId!==l.location.deckId,standInDeckId:l.source==='owned'&&l.location?.kind==='deck'&&l.allocation?.deckId!==l.location.deckId?l.location.deckId:''});});for(const d of s.decks.filter(d=>d.status==='final'&&!d.archived))for(const r of d.slots.filter(r=>r.committed)){const need=shortfall(s,d,r);if(need)rows.push(withDeckGroup(s,{recordId:`need:${d.id}:${r.id}`,kind:'need',deckId:d.id,slotId:r.id,cardId:r.cardId,card:card(s,r.cardId),source:'to-buy',quantity:need,purpose:r.purpose,pinned:!!r.pinned,option:!!r.option,optionWhy:r.optionWhy||'',printing:clone(r.printing||{}),placement:'Reserved',physical:'Not acquired',offer:'none',groupIds:[]}));}return rows;}
+  function projection(s){const rows=s.lots.map(l=>{const sl=l.allocation?slot(s,l.allocation.deckId,l.allocation.slotId):null;return withDeckGroup(s,{...clone(l),recordId:l.id,kind:'lot',card:card(s,l.cardId),deckId:l.allocation?.deckId||'',purpose:sl?sl.purpose:'',pinned:!!sl?.pinned,option:!!sl?.option,optionWhy:sl?.optionWhy||'',placement:inDeck(s,l)?'Physical deck':l.allocation?'Reserved':l.source==='owned'?(l.location?.kind==='deck'?'Substitute':'Bench'):'Unassigned',physical:physical(l),standIn:l.source==='owned'&&l.location?.kind==='deck'&&l.allocation?.deckId!==l.location.deckId,standInDeckId:l.source==='owned'&&l.location?.kind==='deck'&&l.allocation?.deckId!==l.location.deckId?l.location.deckId:''});});for(const d of s.decks.filter(d=>d.status==='final'&&!d.archived))for(const r of d.slots.filter(r=>r.committed)){const need=shortfall(s,d,r);if(need)rows.push(withDeckGroup(s,{recordId:`need:${d.id}:${r.id}`,kind:'need',deckId:d.id,slotId:r.id,cardId:r.cardId,card:card(s,r.cardId),source:'to-buy',quantity:need,purpose:r.purpose,pinned:!!r.pinned,option:!!r.option,optionWhy:r.optionWhy||'',printing:clone(r.printing||{}),placement:'Reserved',physical:'Not acquired',offer:'none',groupIds:[]}));}return rows;}
   /* THE MATRIX. One row per card the library knows anything about -- a copy at any status,
      a slot in a deck, a planned entry -- and per deck the four numbers a spreadsheet cell
      needs: t (the list's count), a (copies assigned: reserved to that slot from any source),
@@ -151,12 +151,12 @@
       const commands=[{type:'target',...intro,deckId:d.id,cardId:cardObj.id,quantity:value,confirmed:true}];let review=value<t&&a>0||value===0;
       /* Raising a finalized deck's count reserves the free copies (the command does that itself)
          and then takes copies reserved to other decks or sitting in other boxes -- they stay
-         where they physically are until pulled, and those decks' pull sheets say so. */
+         where they physically are until pulled, and those decks' Ready to add lists say so. */
       if(value>t&&d.status==='final'){
         const free=s.lots.filter(l=>l.cardId===cardObj.id&&!PLANNED.includes(l.source)&&!l.allocation&&l.offer!=='held'&&l.location?.kind!=='deck'&&!l.keepBench).reduce((n,l)=>n+l.quantity,0);
         const elsewhere=s.lots.filter(l=>l.cardId===cardObj.id&&!PLANNED.includes(l.source)&&l.offer!=='held'&&(l.allocation?l.allocation.deckId!==d.id:l.location?.kind==='deck')).sort((x,y)=>order(x)-order(y));
         let need=Math.max(0,value-a-free);
-        if(need&&elsewhere.length){for(const l of elsewhere){if(!need)break;const take=Math.min(need,l.quantity);notes.push(`${take} cop${take===1?'y':'ies'} come${take===1?'s':''} from ${l.allocation?deck(s,l.allocation.deckId).name:'the '+deck(s,l.location.deckId).name+' box'}${l.location?.kind==='deck'?' (still in that physical deck until pulled)':''}.`);need-=take;}
+        if(need&&elsewhere.length){for(const l of elsewhere){if(!need)break;const take=Math.min(need,l.quantity);notes.push(`${take} cop${take===1?'y':'ies'} come${take===1?'s':''} from ${l.allocation?deck(s,l.allocation.deckId).name:'the '+deck(s,l.location.deckId).name+' box'}${l.location?.kind==='deck'?' (still in that physical deck until it is moved)':''}.`);need-=take;}
           commands.push({type:'assign',deckId:d.id,cardId:cardObj.id,assigned:value-need,acquire:false,partial:true,confirmed:true});review=true;}
         if(need)notes.push(`${need} cop${need===1?'y stays':'ies stay'} To buy.`);
       }
@@ -195,7 +195,7 @@
       commands.push({type:'assign',...(commands.length?{}:intro),deckId:d.id,cardId:cardObj.id,assigned:wantA,boxed:wantBoxed,confirmed:true});
       if(wantA>a){const free=s.lots.filter(l=>l.cardId===cardObj.id&&l.source==='owned'&&!l.allocation&&l.offer!=='held').reduce((n,l)=>n+l.quantity,0),elsewhere=s.lots.filter(l=>l.cardId===cardObj.id&&!PLANNED.includes(l.source)&&l.offer!=='held'&&(l.allocation?l.allocation.deckId!==d.id:l.location?.kind==='deck')).sort((x,y)=>order(x)-order(y));let need=wantA-a;
         const fromFree=Math.min(need,free);need-=fromFree;if(fromFree)notes.push(`${fromFree} free cop${fromFree===1?'y is':'ies are'} reserved to ${d.name}.`);
-        for(const l of elsewhere){if(!need)break;const take=Math.min(need,l.quantity);notes.push(`${take} cop${take===1?'y':'ies'} come${take===1?'s':''} from ${l.allocation?deck(s,l.allocation.deckId).name:'the '+deck(s,l.location.deckId).name+' box'}${l.location?.kind==='deck'?' (still in that physical deck until pulled)':''}.`);need-=take;}
+        for(const l of elsewhere){if(!need)break;const take=Math.min(need,l.quantity);notes.push(`${take} cop${take===1?'y':'ies'} come${take===1?'s':''} from ${l.allocation?deck(s,l.allocation.deckId).name:'the '+deck(s,l.location.deckId).name+' box'}${l.location?.kind==='deck'?' (still in that physical deck until it is moved)':''}.`);need-=take;}
         if(need)notes.push(`${need} cop${need===1?'y is':'ies are'} recorded as newly owned: nothing in the library covers ${need===1?'it':'them'}.`);}
       else if(wantA<a)notes.push(`${a-wantA} reservation${a-wantA===1?'':'s'} released.`);
       if(wantBoxed>boxed)notes.push(`${wantBoxed-boxed} cop${wantBoxed-boxed===1?'y goes':'ies go'} into ${d.name}.`);else if(wantBoxed<boxed)notes.push(`${boxed-wantBoxed} cop${boxed-wantBoxed===1?'y comes':'ies come'} out of the physical deck to the bench.`);
@@ -372,7 +372,7 @@
       case 'allocate':{let l=lot(s,c.lotId);warning(l);l=split(l,c.quantity);l.allocation=null;if(l.offer==='held')ensure(false,'Cancel the pending deal before transferring the copy.');allocate(l,deck(s,c.deckId),slot(s,c.deckId,c.slotId),l.quantity);summary='Reserved copies; physical location unchanged';break;}
       /* INTO A BOX. A copy the deck's list calls for is reserved to that seat on the way in. One the
          list does not call for may still go in -- as a SUBSTITUTE, when the command says so: it fills
-         a seat while the real card is bought or on its way, and the pull sheet asks for it back the
+         a seat while the real card is bought or on its way, and the Ready to add list asks for it back the
          moment a real copy is ready. Nothing marks it; being in a box without a reservation to
          that deck is what a substitute is. */
       case 'place':{let l=lot(s,c.lotId);ensure(l.source==='owned','Record receipt or purchase before putting this card in a deck.');if(l.location?.kind==='deck'&&l.location.deckId!==c.deckId)warning(l);l=split(l,c.quantity);let standIn=false;

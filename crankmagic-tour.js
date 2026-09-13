@@ -201,7 +201,7 @@ const TOURS=[
      copy:'Everything your decks need and you do not have, priced at the cheapest paper printing the app could find.'},
     {view:'shop',selectors:['[data-action=shop-mode]'],
      title:'Two lists, one page',
-     copy:'The acquisition list is what to buy. Deck assembly is what to pull off the shelf once it has arrived.'},
+     copy:'The acquisition list is what to buy. Ready to add is what goes into each deck once it has arrived.'},
     {view:'shop',selectors:['[data-action=roster-filters]'],act:'openFilters',
      title:'Filter to today',
      copy:'At a booth you want the red cards under five dollars, not the whole list.'},

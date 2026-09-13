@@ -8,9 +8,9 @@ const STEPS=[
   {n:2,title:'Test',href:'#lab',text:'Measure it in the Deck Lab. Swap what underperforms.'},
   {n:3,title:'Finalize',href:'#decks',text:'Lock in the hundred. Note upgrades to try later.'},
   {n:4,title:'Acquire',href:'#shop',text:'Buy or order what you don’t own, inside the budget.'},
-  {n:5,title:'Assemble',href:'#collection',text:'Pull the cards into the physical deck. Substitutes hold seats until the real ones arrive.'},
+  {n:5,title:'Assemble',href:'#collection',text:'Add the cards you own to the physical deck. Substitutes hold seats until the real ones arrive.'},
   {n:6,title:'Play',href:'#decks',text:'All 100 in the physical deck: the deck is done. Log your games.'}];
-const LADDER=[['Watched','Considering it. No copy yet.'],['To Buy','A deck\u2019s list claims it. Nothing fills the claim yet.'],['Ordered','Paid for, or a trade arranged.'],['Owned','In hand: on the Bench, or reserved and waiting to be pulled.'],['In Physical Deck','Sleeved in the deck.']];
+const LADDER=[['Watched','Considering it. No copy yet.'],['To Buy','A deck\u2019s list claims it. Nothing fills the claim yet.'],['Ordered','Paid for, or a trade arranged.'],['Owned','In hand: on the Bench, or reserved and ready to add.'],['Physical Deck','Sleeved in the deck.']];
 views.how=async()=>{
   C.main.innerHTML=C.head('Six steps','How a deck comes together.','Start either way. Every step opens where it begins.',`<a class="v-button" href="#decks">Back to My Decks</a>`)
    +`<ol class="cm-how-flow" aria-label="The six steps">
