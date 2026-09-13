@@ -1,11 +1,11 @@
 /* The Deck Lab: choose a commander, define the deck, draft the 99, measure it, and only
  * then -- on a click that says so -- make it a deck.
  *
- * THE DRAFT IS A PREVIEW. "Run initial draft" used to create a deck in My Decks as a side
+ * THE DRAFT IS A PREVIEW. "Run initial draft" used to create a deck in Decks as a side
  * effect, so trying three budgets left three drafts behind. Now it builds a preview the
  * Lab keeps (and remembers across a reload, in preferences.labPreview, with the cards
  * themselves saved as identities -- never as copies you own). "Save this deck" is the
- * only thing that writes to My Decks, and it is available from the moment the starting
+ * only thing that writes to Decks, and it is available from the moment the starting
  * point is filled in: a commander alone can be saved and drafted later.
  *
  * MEASUREMENT AND REFINEMENT ARE BOTH CONNECTED. "Measure" runs the real engine through
@@ -48,7 +48,7 @@ async function keepPreview(next){preview=next;await C.commit({type:'preferences'
 /* SHARED WITH THE DECK PAGE. The targets, the report renderer and the measuring run used to
    live inside the Lab view, which meant the deck page could show a report only as raw JSON
    until the Lab had been opened once in the session. They sit at module scope now and are
-   handed over on C, so Simulation history on My Decks draws the same report the Lab does and
+   handed over on C, so Simulation history on Decks draws the same report the Lab does and
    can run the same measurement without sending the reader here. */
 let simInputsCache=null;
 let simConfig=null;   // the sim config once fetched; report targets fall back to the config defaults without it
@@ -191,7 +191,7 @@ views.lab=async()=>{
   preview=preview||restorePreview();
   const last=C.state.preferences.lastLabRun,saved=last?C.state.decks.find(x=>x.id===last.deckId):null;
   if(preview&&!leader)leader=leadersOf(preview)[0]||null;
-  C.main.innerHTML=C.pageHead('Deck Lab','','lab')
+  C.main.innerHTML=C.pageHead('Build','','lab')
     +`<div class="cm-lab-grid"><section class="v-panel"><form id="cm-lab-form"><div class="cm-lab-start"><h2>Starting point</h2>
     <!-- Written out rather than built by select(), because the required mark belongs on the
          CONTROL here, not trailing the sentence. The shared helper puts the mark after the
@@ -464,7 +464,7 @@ views.lab=async()=>{
   }
 
   /* RUN INITIAL DRAFT: build, fetch the printed text, keep as a preview. Nothing is
-     saved to My Decks. */
+     saved to Decks. */
   async function runDraft(){
     const run=$('#cm-lab-run'),error=$('#cm-lab-error'),status=$('#cm-lab-sim-status');run.disabled=true;error.hidden=true;
     try{
@@ -511,7 +511,7 @@ const {missing,reachable}=await C.catalog.recheck([...built.cards,...leaders],{o
       next.issues.push(...M.legality(probe,M.deck(probe,'deck:preview')));
       const count=total(next.slots);
       preview=next;
-      await C.commit({type:'batch',commands:[{type:'cards',cards},{type:'preferences',values:{labPreview:next}}],summary:count===100?'Drafted a starting list. Nothing is saved to My Decks until you choose Save this deck.':`Drafted a PARTIAL list — ${count} of 100 cards. Loosen the limits and run again, or save it and edit by hand.`},{renderView:false});
+      await C.commit({type:'batch',commands:[{type:'cards',cards},{type:'preferences',values:{labPreview:next}}],summary:count===100?'Drafted a starting list. Nothing is saved to Decks until you choose Save this deck.':`Drafted a PARTIAL list — ${count} of 100 cards. Loosen the limits and run again, or save it and edit by hand.`},{renderView:false});
       redrawRun();
       if(count!==100)C.notice(next.issues.filter(x=>/could be chosen/.test(x)).join(' ')||`Only ${count} of 100 cards were chosen.`,true);
     }catch(err){error.textContent=err.message;error.hidden=false;}
@@ -523,11 +523,11 @@ const {missing,reachable}=await C.catalog.recheck([...built.cards,...leaders],{o
   function redrawRun(){const last=C.state.preferences.lastLabRun,saved=last?C.state.decks.find(x=>x.id===last.deckId):null;const pane=$('#cm-lab-run-pane');if(pane)pane.outerHTML=runPane(saved);syncStartButtons();wireRun();}
   wireRun();
 
-  /* SAVE THIS DECK: the one write to My Decks. From a preview when there is one, from the
+  /* SAVE THIS DECK: the one write to Decks. From a preview when there is one, from the
      commander alone when there is not. A measured preview brings its report along. */
   /* CLEAR IS A FRESH RUN, NOT A DELETION. It puts the form back to its opening state and
      lets the pane go with it -- the commander, the definition, the unsaved draft and the
-     pointer at whatever was last saved. A deck already in My Decks is not touched: this
+     pointer at whatever was last saved. A deck already in Decks is not touched: this
      forgets that the Lab was looking at it, which is the thing that made every new run
      start inside the last one. */
   actions['lab-clear']=async()=>{
@@ -537,7 +537,7 @@ const {missing,reachable}=await C.catalog.recheck([...built.cards,...leaders],{o
     preview=null;shownLimit=45;pickerColors=[];
     await C.commit({type:'preferences',values:{labPreview:null,lastLabRun:null}},{renderView:false});
     C.go('lab');
-    C.notice(had?`Cleared. The unsaved draft of ${e(had)} is gone; anything already saved is untouched in My Decks.`:'Cleared. Anything already saved is untouched in My Decks; the Lab is back to a blank run.');
+    C.notice(had?`Cleared. The unsaved draft of ${e(had)} is gone; anything already saved is untouched in Decks.`:'Cleared. Anything already saved is untouched in Decks; the Lab is back to a blank run.');
   };
 
   actions['lab-save']=async()=>{
@@ -564,7 +564,7 @@ const {missing,reachable}=await C.catalog.recheck([...built.cards,...leaders],{o
     if(preview?.report)commands.push({type:'report',deckId:id,report:preview.report});
     commands.push({type:'preferences',values:{lastLabRun:{deckId:id,method,issues,at:new Date().toISOString(),previewAt:preview?.at||null,refine:preview?.refine||null},labPreview:null}});
     preview=null;
-    await C.commit({type:'batch',commands,summary:`Saved ${name} to My Decks`+(commands.some(c=>c.type==='report')?' with its measurement':'')});
+    await C.commit({type:'batch',commands,summary:`Saved ${name} to Decks`+(commands.some(c=>c.type==='report')?' with its measurement':'')});
   };
   /* FILE THE REPORT WITH THE DECK IT STARTED FROM, and create nothing. A simulation run on an
    existing deck is evidence about that deck: the report goes into its history carrying the
@@ -877,7 +877,7 @@ actions['lab-discard']=async()=>{await keepPreview(null);C.notice('Draft discard
       const result=await runner.measure({protocol:'published',lineup,config,opponents,table:config.table,onProgress:m=>{const el=$('#cm-lab-sim-status');if(el)el.textContent=`Measuring… seed ${m.done} of ${m.total} · ${m.mean} points so far`;}});
       const report=CrankSim.packFor(result,{protocol:'published',table:config.table,seatCount:(opponents.tables[config.table]||[]).length,cardsVersion:CrankAssets.cards,coverage:cover});
       const score=`Measured ${report.metrics.score.value} points from ${result.games.toLocaleString()} games in ${(result.elapsedMs/1000).toFixed(1)}s.`;
-      if(saved){report.list=listOf(saved);report.commanders=[...saved.commanders];await C.commit({type:'report',deckId:saved.id,report});C.notice(score+' Filed under Simulation history in My Decks.');return;}
+      if(saved){report.list=listOf(saved);report.commanders=[...saved.commanders];await C.commit({type:'report',deckId:saved.id,report});C.notice(score+' Filed under Simulation history in Decks.');return;}
       if(preview&&preview.at===startedAt){report.list=listOf(preview);report.commanders=[...preview.commanders];await keepPreview({...preview,report});redrawRun();const from=preview.fromDeckId?C.state.decks.find(d=>d.id===preview.fromDeckId):null;C.notice(score+(from?` Save this deck to keep the report with a new deck, or file it with ${from.name}.`:' Save this deck to keep the report with it.'));return;}
       const last=C.state.preferences.lastLabRun,savedFrom=last&&last.previewAt&&last.previewAt===startedAt?C.state.decks.find(x=>x.id===last.deckId):null;
       if(savedFrom){await C.commit({type:'report',deckId:savedFrom.id,report});C.notice(score+` Filed with ${savedFrom.name}, which was saved while it ran.`);return;}
@@ -985,13 +985,13 @@ function runPane(saved){
       /* The report step is the report: its own name opens it once one exists. */
       const name=i===4&&measured?`<button type="button" class="cm-text-button" data-action="lab-report"${saved&&!preview?` data-deck="${e(saved.id)}"`:''}>${e(label)}</button>`:e(label);
       return `<li><span class="cm-run-orb ${st}" id="cm-step-${i}" aria-label="${st==='complete'?'Complete':st==='active'?'Active':'Waiting'}"><i></i><i></i><i></i><img src="assets/mana/G.svg?v=1" alt=""></span><span class="cm-run-step-body">${name}</span>${doButton(i)}${note||why?`<small class="cm-muted cm-run-why" data-step-note="${e(note)}" data-step-why="${e(why)}"${hint?'':' hidden'}>${e(hint)}</small>`:''}</li>`;}).join('')}</ol>
-    <p class="cm-muted cm-run-lede">${preview?'Saving writes this draft to My Decks.':'Saving writes the commander and definition to My Decks; draft or edit the 99 any time after.'}</p>
+    <p class="cm-muted cm-run-lede">${preview?'Saving writes this draft to Decks.':'Saving writes the commander and definition to Decks; draft or edit the 99 any time after.'}</p>
     <div id="cm-lab-result">${preview?`<h3>${e(preview.name)} <span class="cm-badge">Draft · not saved</span></h3>${note(preview.method)}<p>${count} of 100 cards${preview.estimatedPrice!==null&&preview.estimatedPrice!==undefined?` · about ${e(C.money(preview.estimatedPrice))} at recorded prices`:''}${preview.unknownPrices?` · ${preview.unknownPrices} without a price`:''}.</p>${preview.definition&&preview.definition.budget!==null&&preview.definition.budget!==undefined&&preview.estimatedPrice>preview.definition.budget?note(`About ${C.money(preview.estimatedPrice)} against the ${C.money(preview.definition.budget)} total cap in Deck Definition: the builder treats the cap as a target and could not get under it with these limits. Save the deck and Finalize will offer to raise or remove the cap, or trim the list first.`,true):''}${(preview.issues||[]).map(x=>`<p class="cm-muted">${e(x)}</p>`).join('')}<div class="cm-actions">${b('Review draft cards','lab-review')}${preview.report&&preview.fromDeckId&&C.state.decks.some(d=>d.id===preview.fromDeckId)?b(`File report with ${C.state.decks.find(d=>d.id===preview.fromDeckId).name}`,'lab-file-report',{},true):''}${b('Discard draft','lab-discard')}</div>`
-      :saved?`<h3>${e(saved.name)} <span class="cm-badge good">Saved</span></h3>${note(last.method)}${(last.issues||[]).map(x=>`<p class="cm-muted">${e(x)}</p>`).join('')}<div class="cm-actions">${b('Open in My Decks','deck',{deck:saved.id})}${b('Review deck cards','deck-cards',{deck:saved.id})}${b('Reports & advice','deck-evidence',{deck:saved.id})}</div>`
-      :'<p class="cm-muted">Run initial draft builds a list you can review and measure here. Nothing reaches My Decks until you choose Save this deck; no cards are purchased, owned or reserved by any step.</p>'}</div>
-    <p class="cm-muted">Measuring runs the engine in the background on the published protocol — six seeds of 20,000 games — and stores a report you can compare with another run of the same protocol. Refining searches on the quick protocol instead (one seed of 2,000 games, fast enough to try dozens of swaps and too small to publish): it drops the cards the engine drew and could not cast, tries cards the graph joins to your commander, and keeps a swap only when the score beats the old one by more than that run's own error. A kept swap changes the hundred, so the published report is dropped with it — measure again when the list settles. Finalize the saved list in My Decks when you accept it.</p></aside>`;
+      :saved?`<h3>${e(saved.name)} <span class="cm-badge good">Saved</span></h3>${note(last.method)}${(last.issues||[]).map(x=>`<p class="cm-muted">${e(x)}</p>`).join('')}<div class="cm-actions">${b('Open in Decks','deck',{deck:saved.id})}${b('Review deck cards','deck-cards',{deck:saved.id})}${b('Reports & advice','deck-evidence',{deck:saved.id})}</div>`
+      :'<p class="cm-muted">Run initial draft builds a list you can review and measure here. Nothing reaches Decks until you choose Save this deck; no cards are purchased, owned or reserved by any step.</p>'}</div>
+    <p class="cm-muted">Measuring runs the engine in the background on the published protocol — six seeds of 20,000 games — and stores a report you can compare with another run of the same protocol. Refining searches on the quick protocol instead (one seed of 2,000 games, fast enough to try dozens of swaps and too small to publish): it drops the cards the engine drew and could not cast, tries cards the graph joins to your commander, and keeps a swap only when the score beats the old one by more than that run's own error. A kept swap changes the hundred, so the published report is dropped with it — measure again when the list settles. Finalize the saved list in Decks when you accept it.</p></aside>`;
 }
 
-C.HELP.lab={title:'Deck Lab',body:`<p>Start with a commander or an existing list. Define the deck, draft the initial cards, measure them, then save what you decide to keep.</p><h3>Built around your game</h3><p>Choose a commander from the legal catalog — every one of them, by name, printed variant name, play style, colour identity or rank — or begin with a list you already have. Deck Definition records your hard limits and play preferences.</p><p><strong>Run initial draft</strong> builds a starting list from card metadata and keeps it here as a preview; a total price cap is planned so the list completes, or it tells you what cap would. <strong>Measure</strong> runs the simulator on the preview or a saved deck — real games, in the background, on the same protocol as every published rating — fetching any card text the engine lacks first. <strong>Save this deck</strong> is the only step that writes to My Decks, and it works from the commander alone.</p><p>The simulator's three opponents are sampled archetype profiles, not four real decks with hands and boards, so a score compares lists under one model rather than predicting an evening. Every report carries that caveat with it.</p>${note('No AI API key or paid model call is required for current workflows. Reports belong to the exact list they describe.')}`};
+C.HELP.lab={title:'Build',body:`<p>Start with a commander or an existing list. Define the deck, draft the initial cards, measure them, then save what you decide to keep.</p><h3>Built around your game</h3><p>Choose a commander from the legal catalog — every one of them, by name, printed variant name, play style, colour identity or rank — or begin with a list you already have. Deck Definition records your hard limits and play preferences.</p><p><strong>Run initial draft</strong> builds a starting list from card metadata and keeps it here as a preview; a total price cap is planned so the list completes, or it tells you what cap would. <strong>Measure</strong> runs the simulator on the preview or a saved deck — real games, in the background, on the same protocol as every published rating — fetching any card text the engine lacks first. <strong>Save this deck</strong> is the only step that writes to Decks, and it works from the commander alone.</p><p>The simulator's three opponents are sampled archetype profiles, not four real decks with hands and boards, so a score compares lists under one model rather than predicting an evening. Every report carries that caveat with it.</p>${note('No AI API key or paid model call is required for current workflows. Reports belong to the exact list they describe.')}`};
 actions['lab-help']=()=>actions['page-help']({dataset:{help:'lab'}});
 });

@@ -1266,3 +1266,16 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-more-filters>div{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:14px 18px;align-items:end;padding-top:10px}
 @media(max-width:760px){.cm-more-filters>div{grid-template-columns:1fr}}
 .cm-terms-row{margin:6px 0 0}
+/* THE CARDS PAGE: three tabs under the name, and a Table | Sheet switch at the end of the toolbar. */
+.cm-tabs{display:flex;gap:2px;border-bottom:1px solid var(--v-line);margin:0 0 16px;overflow-x:auto}
+.cm-tabs [role=tab]{flex:0 0 auto;background:none;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;color:#b0c3de;font:inherit;font-weight:600;padding:8px 14px;min-height:40px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.cm-tabs [role=tab] small{font-weight:500;font-size:12px;color:#8fa6c4}
+.cm-tabs [role=tab][aria-selected=true]{color:#f3f8ff;border-bottom-color:#79bdff}
+.cm-tabs [role=tab][aria-selected=true] small{color:#c3d7ed}
+.cm-tabs [role=tab]:hover{color:#fff}
+.cm-seg{display:inline-flex;border:1px solid #39465f;border-radius:8px;overflow:hidden;align-self:end}
+.cm-seg button{background:#202638;color:#b0c3de;border:0;font:inherit;font-weight:600;padding:0 14px;min-height:40px;cursor:pointer}
+.cm-seg button+button{border-left:1px solid #39465f}
+.cm-seg button[aria-pressed=true]{background:#243d61;color:#f3f8ff}
+.cm-seg button:hover{color:#fff}
+@media(max-width:760px){.cm-tabs [role=tab]{padding:8px 10px}}

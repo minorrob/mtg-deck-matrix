@@ -98,8 +98,8 @@
       "sha": "c643e35c955e4884"
     },
     "crankmagic-app.js": {
-      "version": 141,
-      "sha": "441b3e18027129ea"
+      "version": 142,
+      "sha": "3986b3b3d26e9973"
     },
     "crankmagic-assets.js": {
       "version": 19,
@@ -114,12 +114,12 @@
       "sha": "4c937886d914b612"
     },
     "crankmagic-collection.js": {
-      "version": 37,
-      "sha": "9e0d3da2444337eb"
+      "version": 38,
+      "sha": "895a39a4749dfa68"
     },
     "crankmagic-decks.js": {
-      "version": 37,
-      "sha": "d80e14fd220caa0f"
+      "version": 38,
+      "sha": "142681096fc03cf6"
     },
     "crankmagic-design.css": {
       "version": 4,
@@ -134,8 +134,8 @@
       "sha": "a508878778b63a71"
     },
     "crankmagic-exchange-ui.js": {
-      "version": 8,
-      "sha": "9897b197617445c3"
+      "version": 9,
+      "sha": "7025527d5f3f9199"
     },
     "crankmagic-facets.js": {
       "version": 12,
@@ -150,24 +150,24 @@
       "sha": "e9461495f1d03882"
     },
     "crankmagic-how.js": {
-      "version": 4,
-      "sha": "c1410a7759712c1e"
+      "version": 5,
+      "sha": "dddcd6bfaa9e3cd6"
     },
     "crankmagic-lab.js": {
-      "version": 42,
-      "sha": "deb02d6d69cc2b54"
+      "version": 43,
+      "sha": "1cbe56f2ed59405f"
     },
     "crankmagic-orders.js": {
-      "version": 4,
-      "sha": "2de5d6a68630f68b"
+      "version": 5,
+      "sha": "9de2c7bf4a5b3c9e"
     },
     "crankmagic-plan-editor.js": {
       "version": 1,
       "sha": "6b97ae1d80fb6e5a"
     },
     "crankmagic-pull.js": {
-      "version": 9,
-      "sha": "e6814620a8b92517"
+      "version": 10,
+      "sha": "b6b2e735f8ba29d1"
     },
     "crankmagic-qr.js": {
       "version": 1,
@@ -186,16 +186,16 @@
       "sha": "81ae2c4b7634afa7"
     },
     "crankmagic-sw.js": {
-      "version": 141,
-      "sha": "36ea691d12e73782"
+      "version": 142,
+      "sha": "64bacaa65400ae72"
     },
     "crankmagic-tour.js": {
-      "version": 11,
-      "sha": "3b2ad08d38f01f90"
+      "version": 12,
+      "sha": "58f7d2808beeb08b"
     },
     "crankmagic.css": {
-      "version": 82,
-      "sha": "886cbea87120b28b"
+      "version": 83,
+      "sha": "edcfa36c854c5332"
     },
     "custom-model.js": {
       "version": 3,

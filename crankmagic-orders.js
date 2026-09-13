@@ -11,24 +11,22 @@
  * takes an order confirmation as text and corrects only the lines it names, marked
  * `receipt`. Edit changes the vendor, reference and date on every line at once.
  *
- * Loaded after crankmagic-collection.js: it wraps views.shop so #shop?tab=orders is this tab
- * and everything else is the Shop as before. */
+ * Loaded after crankmagic-collection.js: it wraps views.cards so #cards?tab=orders is this tab
+ * and every other tab is the Cards page as before. */
 (globalThis.CrankFeatures ||= []).push(function(C){const {M,E,esc:e,button:b,field:f,select:s,note,form,modal,commit,go,actions,views,$}=C;
 const R=globalThis.CrankRules;
-const shopView=views.shop;
-views.shop=params=>params.get('tab')==='orders'?ordersView(params):shopView(params);
-actions['shop-orders']=()=>go('shop',{tab:'orders'});actions['shop-acquire']=()=>go('shop');
+const cardsView=views.cards;
+views.cards=params=>params.get('tab')==='orders'?ordersView(params):cardsView(params);
+actions['shop-orders']=()=>go('cards',{tab:'orders'});actions['shop-acquire']=()=>go('cards',{tab:'buy'});
 const when=iso=>{const t=Date.parse(iso||'');return Number.isFinite(t)?new Date(t).toLocaleDateString(undefined,{dateStyle:'medium'}):(iso||'—');};
 const fold=n=>String(n||'').normalize('NFKD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
 /* The rule markers on a line: over $30, over the 110% cap, $5 and over from a mail-order vendor. */
 const flags=(l,vendor)=>R?R.warnings({price:C.state.cards[l.cardId]&&C.state.cards[l.cardId].price,paid:l.paid,vendor}):[];
-C.HELP.orders={title:'Orders',body:'<p>One row per order. Every ordered copy carries the order it came from: what was paid, when it is due, and whether it has landed. <strong>Arrived → bench</strong> lands the whole order at once; <strong>Paste receipt</strong> reads a vendor receipt into an order.</p>'};
-function ordersView(){const orders=M.orders(C.state);
-  C.main.innerHTML=C.pageHead('Orders',b('Paste receipt','paste-receipt')+b('Import list / library','import-list'),'orders')
-    +`<div class="cm-actions">${b('Acquisition list','shop-acquire')}${b('Orders','shop-orders',{},true)}${b('Ready to add','pull-picker')}</div>`
+function ordersView(params){const orders=M.orders(C.state);
+  C.main.innerHTML=C.cardsHead(params,'orders')
     +(orders.length?`<div class="cm-table-wrap"><table class="cm-table cm-orders"><thead><tr><th scope="col">Vendor</th><th scope="col">Reference</th><th scope="col">Placed</th><th scope="col">Expected</th><th scope="col">Lines</th><th scope="col">Copies</th><th scope="col">Paid</th><th scope="col">Arrived</th><th scope="col">Rules</th><th scope="col">Actions</th></tr></thead><tbody>${orders.map(o=>{const warn=o.lots.flatMap(l=>flags(l,o.vendor)),count=new Map();for(const w of warn)count.set(w,(count.get(w)||0)+1);const done=o.arrived>=o.copies;
       return `<tr class="cm-order-row" data-order="${e(o.id)}"><td><strong>${e(o.vendor||'—')}</strong></td><td>${e(o.ref||'—')}</td><td>${e(when(o.placedAt))}</td><td>${e(o.expectedBy||'—')}</td><td>${o.lots.length}</td><td>${o.copies}</td><td><span class="cm-price">${C.money(o.paid+o.shipping)}</span>${o.shipping?` <small class="cm-muted">incl. ${C.money(o.shipping)} shipping</small>`:''}</td><td>${C.pill(done?'All arrived':`${o.arrived} / ${o.copies}`,done?'inbox':'ordered')}</td><td>${count.size?[...count].map(([w,n])=>C.pill(`${n} ${e(w)}`,'remove')).join(' '):'<span class="cm-muted">—</span>'}</td><td class="cm-row-actions-cell">${done?'':b('Arrived → bench','order-arrived',{order:o.id},true,{cls:'compact'})}${b('Paste receipt','paste-receipt',{order:o.id},false,{cls:'compact'})}${b('Edit','order-edit',{order:o.id},false,{cls:'compact'})}${b('Lines','order-lines',{order:o.id},false,{cls:'compact'})}</td></tr>`;}).join('')}</tbody></table></div>`
-    :`<div class="cm-orders">${note('No orders yet. Tick rows on the Acquisition list and choose Ordered… — one dialog for the whole order — or Bought in store.')}</div>`);}
+    :`<div class="cm-orders">${note('No orders yet. Tick rows on the To buy tab and choose Ordered… — one dialog for the whole order — or Bought in store.')}</div>`);}
 actions['order-arrived']=el=>{const o=M.orders(C.state).find(x=>x.id===el.dataset.order);if(!o)throw Error('That order is no longer in the library.');
   C.review(`Arrived: ${o.vendor}${o.ref?' · '+o.ref:''}`,note(`${o.copies-o.arrived} cop${o.copies-o.arrived===1?'y':'ies'} land on the bench, still reserved to their decks. One change, one undo. Add them to their decks from each deck’s Ready to add.`),{type:'orderArrived',orderId:o.id});};
 actions['order-edit']=el=>{const o=M.orders(C.state).find(x=>x.id===el.dataset.order);if(!o)throw Error('That order is no longer in the library.');

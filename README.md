@@ -29,24 +29,30 @@ The approved standalone mockup remains under `design/crankmagic/` for design ref
 
 Every page opens on its name, with one primary action and at most three beside it; the
 rest of a page's actions sit under **More**, and what the page does and how its figures are
-counted sit behind its **?**. Glossary underlines in rules text are off until **Show term
+counted sit behind its **?**. The nav reads **Decks · Cards · Build · Discover**: Collection
+and Shop are one page, **Cards**, with tabs *Library · To buy · Orders* and the Spreadsheet as
+its *Sheet* view; `#collection` and `#shop` still open it. Glossary underlines in rules text are off until **Show term
 definitions** (deck page More menu, card pop-up) turns them on for the library.
 
-- **My Decks**: plans and assembly status; commander image/rules, composition, strategy,
+- **Decks** (`#decks`): plans and assembly status; commander image/rules, composition, strategy,
   structural SWOT, recommendations, game history, compare, finalize, lock and archive. Each
   tile wears its stage — Defining, Building, Playable, Complete — and one caption that says
   each figure once. A plain link on the page, **How a deck comes together** (`#how`), is a one-screen
-  map: six steps as a flow (the first split between building one in the Deck Lab and
+  map: six steps as a flow (the first split between building one in Build and
   bringing a list you already have, meeting at Test), each title opening where that step
   begins, and the card status ladder in order with what each word means.
-- **Collection**: exact printing lots, requirements, groups and planned lists. Source,
-  purpose, reservation and physical location are separate. The counts row reads, in the order
+- **Cards → Library** (`#cards`): exact printing lots, requirements, groups and planned lists.
+  **Status** is one column — *Physical deck · Substitute · Reserved · Bench* for owned copies,
+  *Ordered*, *Watched*, *To buy*, *Draft list · Suggestion · Planned* for rows that are not
+  copies yet — where Source and Allocation were two (both stay in the Columns dialog); the
+  colour is the state. Each row carries the one verb its status calls for (Bought, Arrived,
+  Put in, To bench, Reserve…) and ⋯ for the rest. Purpose and physical location are separate. The counts row reads, in the order
   a deck is built and each under its state's colour, *Reserved · Owned · Substitutes ·
   Physical Deck · Ordered · To Buy · Watched*; on every deck Reserved = Owned + Ordered + To
   Buy, Owned counts reserved copies, the Bench (owned copies no deck has reserved) is the
   table itself and the caption under the row, and Sell / Trade is a Bench flag, never a
-  count held against a deck (the equation itself is behind the page's **?**). Six filters
-  are in view — type, mana, colour, source, allocation, deck — and **More filters** folds
+  count held against a deck (the equation itself is behind the page's **?**). Five filters
+  are in view — type, mana, colour, status, deck — with search and group beside them, and **More filters** folds
   subtype, mechanic, flags, offers, mana value and price, opening itself whenever one of
   them is set. Clear filters leaves the deck
   flow and shows all collection records. Every row's **Actions → Status** fly-out carries
@@ -71,7 +77,7 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   from its page (*Card status*). Every deck has a collection group, made with it; a deck
   saved from the Lab arrives as a draft whose cards sit in that group at *Draft list* until
   their status is set. Group-by band headers fold, and the toolbar filters by group. A deck card's row also carries the two slot flags: **Pin** keeps it whatever the Lab or a swap suggests; **Flag as option** marks it as the first to come out when a card has to leave the hundred (the row wears an *Option* chip, the deck page lists them under *Working list*, the Lab drops them first, and a filter finds them). Setting one clears the other; neither moves a copy. The filter panel's **Mana** select narrows rows to mana rocks, dorks, lands, basics or ramp spells, by the same reading Discover uses.
-- **Collection → Spreadsheet**: the Master sheet read from the library. One row per card;
+- **Cards → Library → Sheet** (`#cards?view=sheet`): the Master sheet read from the library. One row per card;
   Own, Ordered, Bench and To buy across it; for every deck a *T* column (how many the list
   wants) and an *A* column (how many are physically in its box, with a small *+n* where more
   are reserved than sleeved). Click a number and type the new one: a plain raise of Own or
@@ -95,22 +101,23 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   to a group* or a draft deck, *Add/Buy* on each row, and a row click opens the card in
   Card Info without moving the graph. The pane widens while List is open; in presentation
   mode the list keeps name, type and mana. The **Filters** bar groups the facets by what they ask about — Card (type, color, mana value, mana: rocks, dorks, lands, basics, ramp spells, rarity), Rules, Lands, Yours — and each opens its options in a dialog over the page, A to Z with a search box, so picking a filter never shifts the page; *Lands only* is a toggle in the bar; the badge on a facet counts its picks.
-- **Deck Lab**: any legal catalog commander by name or mechanics/EDHREC commander rank;
+- **Build** (the Deck Lab, `#lab`): any legal catalog commander by name or mechanics/EDHREC commander rank;
   optional second commander; an existing list/group; separate Deck Definition; real
   initial construction under price/copy limits. The user reviews and finalizes the list.
-- **Shop**: the buy list with money on it — price, cap (sheet price under $2, 110% above,
+- **Cards → To buy** (`#cards?tab=buy`): the buy list with money on it — price, cap (sheet price under $2, 110% above,
   local store first at $5 and over), vendor, deck and paid on every row at every width; a
   strip above the table with the count, the total at sheet prices, what is ordered and
   unpaid and what is left of the season's pool, then the three price bands; rows grouped
   by deck with a subtotal per band. A card moves *buy → ordered → arrived* from the row:
-  **Bought** and **Ordered** on a To buy row, **Arrived** on an ordered copy, one tap each,
+  **Bought** on a To buy row, **Arrived** on an ordered copy, one tap each (Ordered is in the
+  row's Status ladder and the ticked-rows bar),
   stamping the sheet price as what was paid (marked *catalog* until a receipt says
   otherwise). Export carries price, cap, vendor and the subtotals; *Print buy list* prints
   it by deck. **Ready to add** opens a deck's Ready to add list. Tick rows and **Ordered…** takes
   one dialog (vendor, reference, shipping spread across the lines, expected date) for the
   whole order; **Bought in store** does the same with the store as vendor and the copies
   arriving at once; **Arrived** lands ticked ordered copies. The **Orders** tab
-  (`#shop?tab=orders`) is one row per order — paid including shipping, arrived count, the
+  (`#cards?tab=orders`) is one row per order — paid including shipping, arrived count, the
   house-rule markers (over $30, over the 110% cap, ≥ $5 not local) as counts — with
   *Arrived → bench* (one change, one undo, reservations kept), *Paste receipt* (an order
   confirmation or CSV, matched by name, applied to the lines it names and marked *receipt*;
