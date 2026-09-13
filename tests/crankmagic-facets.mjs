@@ -20,7 +20,7 @@ const check = (label, fn) => { fn(); checks += 1; void label; };
 
 check("the public facets are the old graph page's, plus both sides of every relation", () => {
   const keys = Facets.available(null).map((f) => f.key);
-  assert.deepEqual(keys, ["roles","colors","type","lands","enters","mechanics","tribes","wants","makes","wantsStat","offersStat",
+  assert.deepEqual(keys, ["roles","colors","type","mv","manaKind","lands","enters","mechanics","tribes","wants","makes","wantsStat","offersStat",
     "triggers","causes","multiplies","produces","requires","grants","extends","rarity"],
     "an empty library shows the card facets and neither personal one");
 });
@@ -33,6 +33,26 @@ check("every directed facet has a facet for the other side of its join", () => {
     assert.ok(keys.has(a) && keys.has(b), `${a}/${b} is offered as half a pair`);
   }
   assert.ok(keys.has("multiplies"), "and the compounding side of make-and-multiply");
+});
+
+check("mana value is a facet with one bucket for seven and up, and picks within it are alternatives", () => {
+  const vals = Facets.values(CARDS, null).mv.map((r) => r.value);
+  assert.deepEqual(vals.slice().sort((a, b) => (a === "7+" ? 99 : Number(a)) - (b === "7+" ? 99 : Number(b))), ["0","1","2","3","4","5","6","7+"]);
+  const two = Facets.apply(CARDS, {mv: ["2"]}, null).length, three = Facets.apply(CARDS, {mv: ["3"]}, null).length;
+  assert.equal(Facets.apply(CARDS, {mv: ["2", "3"]}, null).length, two + three, "two or three, not both at once");
+});
+
+check("the Mana reading names rocks, dorks, lands, basics and ramp spells, on a graph row or a catalog card", () => {
+  const by = (name) => CARDS.find((c) => c.name === name);
+  assert.deepEqual(Facets.manaKinds(by("Sol Ring")), ["Mana rock"]);
+  assert.deepEqual(Facets.manaKinds(by("Llanowar Elves")), ["Mana dork"]);
+  assert.deepEqual(Facets.manaKinds(by("Forest")), ["Land", "Basic land"]);
+  assert.deepEqual(Facets.manaKinds(by("Command Tower")), ["Land"]);
+  assert.deepEqual(Facets.manaKinds(by("Cultivate")), ["Ramp spell"]);
+  assert.deepEqual(Facets.manaKinds({typeLine: "Artifact", produces: ["mana"], roles: ["ramp"]}), ["Mana rock"], "a catalog card reads the same");
+  const vals = Facets.values(CARDS, null).manaKind.map((r) => r.value).sort();
+  assert.deepEqual(vals, ["Basic land", "Land", "Mana dork", "Mana rock", "Mana source", "Ramp spell"]);
+  assert.ok(Facets.apply(CARDS, {manaKind: ["Mana rock", "Mana dork"]}, null).length > Facets.apply(CARDS, {manaKind: ["Mana rock"]}, null).length, "rock or dork is more than rock");
 });
 
 check("an empty library is offered no Ownership control", () => {

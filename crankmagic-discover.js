@@ -61,7 +61,7 @@
      screen did not ask to keep looking at a search box they are not typing in. One click
      brings both rows back, and the button stays put so the way back is where it was. */
   const toolsButton = () => `<button type="button" class="cm-tools-toggle" data-action="graph-tools"
-    aria-expanded="${tools}" aria-controls="cm-facet-details"
+    aria-expanded="${tools}" aria-controls="cm-facet-bar"
     aria-label="${tools ? 'Hide search and filters' : 'Show search and filters'}"
     title="${tools ? 'Hide search and filters' : 'Show search and filters'}">${TOOLS_ICON}</button>`;
   const applyStage = () => {
@@ -125,45 +125,37 @@
     const wanted = C.catalog.get(params.get('card'));
     const facets = CrankFacets.available(C.state);
     const values = CrankFacets.values(data.cards, C.state);
+    /* THE FILTER BAR. One button per facet, grouped by what it asks about -- the card, its
+       rules, lands, yours -- each opening its options in a dialog over the page, so picking a
+       filter never moves the page under the pointer. A facet with a single value (Lands only)
+       is the toggle itself. The badge is the number of picks in that facet. */
+    const FACET_GROUPS = [['Card', ['type', 'colors', 'mv', 'manaKind', 'rarity']], ['Rules', ['roles', 'mechanics', 'tribes', 'wants', 'makes', 'wantsStat', 'offersStat', 'triggers', 'causes', 'multiplies', 'produces', 'requires', 'grants', 'extends']], ['Lands', ['lands', 'enters']], ['Yours', ['owned', 'decks']]];
+    const sortedRows = (key) => (values[key] || []).slice().sort((a, b) => key === 'mv'
+      ? (a.value === '7+' ? 99 : Number(a.value)) - (b.value === '7+' ? 99 : Number(b.value))
+      : String(a.value).localeCompare(String(b.value), undefined, {sensitivity: 'base', numeric: true}));
+    const pickButton = (key, row, folds) => `<button type="button" class="cm-facet-pick" data-action="facet-term" data-facet-pick="${e(key)}" data-key="${e(key)}" data-value="${e(row.value)}" data-lower="${e(String(row.value).toLowerCase())}"${folds && row.count < 2 ? ' data-rare="1" hidden' : ''}><span>${e(row.value)}</span> <small class="cm-muted">${row.count}</small></button>`;
+    function facetBar() {
+      const placed = new Set(FACET_GROUPS.flatMap(([, keys]) => keys)), extra = facets.filter((f) => !placed.has(f.key)).map((f) => f.key);
+      return FACET_GROUPS.map(([label, keys]) => [label, label === 'Rules' ? keys.concat(extra) : keys]).map(([label, keys]) => {
+        const items = keys.map((k) => facets.find((f) => f.key === k)).filter(Boolean).map((facet) => {
+          const rows = values[facet.key] || [];
+          if (rows.length === 1) return `<button type="button" class="cm-facet-btn cm-facet-pick" data-action="facet-term" data-facet-pick="${e(facet.key)}" data-key="${e(facet.key)}" data-value="${e(rows[0].value)}" title="${e(facet.label)}: ${e(rows[0].value)}">${e(facet.key === 'lands' ? 'Lands only' : facet.label)}</button>`;
+          return `<button type="button" class="cm-facet-btn" data-action="facet-open" data-facet="${e(facet.key)}" aria-haspopup="dialog">${e(facet.label)}<span class="cm-facet-n" data-facet-count="${e(facet.key)}"></span></button>`;
+        });
+        return items.length ? `<span class="cm-facet-group"><span class="cm-facet-group-name">${e(label)}</span>${items.join('')}</span>` : '';
+      }).join('');
+    }
 
     C.main.innerHTML = C.head('The connected card catalog', 'Follow the possibilities.',
       'Structural links and observed co-play are different kinds of evidence. Neither claims a simulated improvement.',
       toolsButton())
       + `<div class="cm-toolbar"><label class="cm-search">Find a card<input id="cm-graph-query" placeholder="Card name" list="cm-graph-names"><datalist id="cm-graph-names"></datalist></label>${C.select('Connections', 'edgeType', [['mechanic', 'Shared mechanics / roles'], ['played', 'EDHREC co-play']], 'mechanic')}${b('Search catalog / link', 'graph-lookup')}${b('Back', 'graph-back')}${b('Reset view', 'graph-reset')}</div>
 
-      <details class="cm-details cm-facet-drop-host" id="cm-facet-details">
-        <summary><strong>Filters</strong> <span id="cm-facet-summary" class="cm-muted"></span>${C.caret ? C.caret('down') : ''}</summary>
-        <div class="cm-facet-drop" role="dialog" aria-label="Filters">
-        <div class="cm-facet-mode">
-          <span class="cm-muted">Within a facet, a card must match</span>
-          <label class="cm-checkbox"><input type="radio" name="facetMode" value="all" ${mode === 'all' ? 'checked' : ''}> all picks</label>
-          <label class="cm-checkbox"><input type="radio" name="facetMode" value="any" ${mode === 'any' ? 'checked' : ''}> any pick</label>
-          <span class="cm-facet-drop-tools">${b('Clear all', 'facet-clear', {}, false, {cls: 'compact'})}${b('Done', 'facet-done', {}, true, {cls: 'compact'})}</span>
-        </div>
-        <div class="cm-filter-panel" id="cm-facet-panel">${facets.map((facet) => {
-          const rows = values[facet.key] || [];
-          /* THE LONG TAIL, FOLDED. Mechanic carries 544 values and 304 of them sit on a
-             single card -- named abilities from the crossover and joke sets, "allons-y!",
-             "nitro-9", "the nuka-cola challenge". Every one is true of its card and none of
-             them can narrow anything, and together they bury the fifty that can. So a facet
-             whose tail is long enough to matter shows what two or more cards share and keeps
-             the rest one tap away. Typing in the search box reaches the tail without
-             expanding it, because a search is already a narrower question. */
-          const rare = rows.filter((r) => r.count < 2).length;
-          const folds = rare >= FOLD_TAIL && rows.length - rare >= 1;
-          return `<details class="cm-details" data-facet="${e(facet.key)}">
-            <summary>${e(facet.label)} <span class="cm-muted" data-facet-count="${e(facet.key)}"></span></summary>
-            <div class="cm-facet-values">${rows.length > 40
-              ? `<label class="cm-search"><span class="cm-muted">Filter ${e(facet.label.toLowerCase())}</span><input type="search" data-facet-search="${e(facet.key)}" placeholder="Type to narrow"></label>` : ''}
-              <div class="cm-facet-list" data-facet-list="${e(facet.key)}" data-expanded="0">${rows.map((row) => `
-                <button type="button" class="cm-facet-pick" data-action="facet-term" data-facet-pick="${e(facet.key)}" data-key="${e(facet.key)}" data-value="${e(row.value)}" data-lower="${e(String(row.value).toLowerCase())}"${folds && row.count < 2 ? ' data-rare="1" hidden' : ''}><span>${e(row.value)}</span> <small class="cm-muted">${row.count}</small></button>`).join('')}
-              </div>
-              ${folds ? `<button type="button" class="cm-text-button" data-facet-more="${e(facet.key)}">Show ${rare.toLocaleString()} more used by one card</button>` : ''}
-            </div>
-          </details>`;
-        }).join('')}</div>
-        </div>
-      </details>
+      <div class="cm-facet-bar" id="cm-facet-bar" role="group" aria-label="Filters">
+        <span class="cm-facet-bar-head"><strong>Filters</strong> <span id="cm-facet-summary" class="cm-muted"></span></span>
+        ${facetBar()}
+        <span class="cm-facet-drop-tools">${b('Clear all', 'facet-clear', {}, false, {cls: 'compact'})}</span>
+      </div>
 
       <div class="cm-facet-status">
         <p role="status" id="cm-facet-count"></p>${universeHint(loaded)}
@@ -352,7 +344,6 @@
       if (ev.key !== 'Escape') return;
       const pop = $('#cm-graph-pop');
       if (pop && !pop.hidden) { hidePop(); return; }
-      const drop = $('#cm-facet-details'); if (drop && drop.open) { drop.open = false; return; }
       if (stage) actions['graph-stage']();
     };
     document.addEventListener('keydown', onKey);
@@ -361,9 +352,6 @@
        away; opening one closes the others. */
     const closeMenus = (except) => { for (const d of document.querySelectorAll('.cm-inline-menu[open]')) if (d !== except) d.open = false; };
     const onDocClick = (ev) => {
-      /* The filter dropdown closes when the reader clicks anywhere outside it -- the page
-         under it is still the page, and a tap on it means "I am done here". */
-      const drop = $('#cm-facet-details'); if (drop && drop.open && ev.target.closest && !ev.target.closest('#cm-facet-details')) drop.open = false;
       const menu = ev.target.closest && ev.target.closest('.cm-inline-menu');
       if (!menu || ev.target.closest('.cm-inline-menu-body')) return closeMenus(null);
       closeMenus(menu);
@@ -622,7 +610,7 @@
       for (const facet of facets) {
         const n = (selection[facet.key] || []).length;
         const label = $(`[data-facet-count="${facet.key}"]`);
-        if (label) label.textContent = n ? `· ${n}` : '';
+        if (label) label.textContent = n ? String(n) : '';
       }
       /* THE FOCUSED CARD SURVIVES ITS OWN FILTERS. Excluding "deathtouch" from Atraxa's
          neighbourhood used to remove Atraxa, because Atraxa has deathtouch -- the reader
@@ -666,11 +654,13 @@
         row.hidden = q ? !row.dataset.lower.includes(q) : (row.dataset.rare === '1' && !open);
       }
     }
-    $('#cm-facet-panel').addEventListener('input', (ev) => {
+    /* The facet's options live in a dialog now, so its search box, its long-tail fold and the
+       all/any rule are listened for on the document and let go with the view. */
+    const onFacetInput = (ev) => {
       const key = ev.target.dataset?.facetSearch; if (!key) return;
       applyFacetRows(key);
-    });
-    $('#cm-facet-panel').addEventListener('click', (ev) => {
+    };
+    const onFacetMore = (ev) => {
       const button = ev.target.closest('[data-facet-more]'); if (!button) return;
       const key = button.dataset.facetMore, list = $(`[data-facet-list="${key}"]`); if (!list) return;
       const open = list.dataset.expanded !== '1';
@@ -678,8 +668,9 @@
       const rare = list.querySelectorAll('[data-rare="1"]').length;
       button.textContent = open ? 'Show only what two or more cards share' : `Show ${rare.toLocaleString()} more used by one card`;
       applyFacetRows(key);
-    });
-    $('#cm-facet-details').addEventListener('change', (ev) => { if (ev.target.name === 'facetMode') { mode = ev.target.value; refresh(currentFocus()); } });
+    };
+    const onModeChange = (ev) => { if (ev.target.name === 'facetMode') { mode = ev.target.value; refresh(currentFocus()); } };
+    document.addEventListener('input', onFacetInput); document.addEventListener('click', onFacetMore); document.addEventListener('change', onModeChange);
     $('#cm-depth').addEventListener('input', (ev) => { depth = Number(ev.target.value); $('#cm-depth-out').textContent = depth; graph?.setDepth(depth); });
     $('#cm-breadth').addEventListener('input', (ev) => { breadth = Number(ev.target.value); $('#cm-breadth-out').textContent = breadth; graph?.setBreadth(breadth); });
 
@@ -724,7 +715,22 @@
       redrawTicks(); refresh(currentFocus());
     };
     actions['facet-clear'] = () => { selection = {}; redrawTicks(); refresh(currentFocus()); };
-    actions['facet-done'] = () => { const drop = $('#cm-facet-details'); if (drop) drop.open = false; };
+    actions['facet-done'] = () => { document.querySelector('dialog[open]')?.close(); };
+    /* A FACET OPENS IN A DIALOG: its options A to Z (mana value lowest first), a search box when
+       there are many, the same three-state picks as the chips, the all/any rule, Clear for this
+       facet and Done. Over the page rather than in it, so nothing shifts under the pointer. */
+    actions['facet-open'] = (el) => {
+      const key = el.dataset.facet, facet = facets.find((f) => f.key === key); if (!facet) return;
+      const rows = sortedRows(key), rare = rows.filter((r) => r.count < 2).length, folds = rare >= FOLD_TAIL && rows.length - rare >= 1;
+      C.modal(facet.label, `<div class="cm-facet-dialog" data-facet-dialog="${e(key)}">
+        <p class="cm-muted cm-facet-help">${rows.length.toLocaleString()} option${rows.length === 1 ? '' : 's'}${key === 'mv' ? ', lowest first' : ', A to Z'}. Tap once to show only cards with it, twice to hide them, a third time to let go.</p>
+        ${rows.length > 12 ? `<label class="cm-search"><span class="cm-muted">Find in ${e(facet.label.toLowerCase())}</span><input type="search" data-facet-search="${e(key)}" placeholder="Type to narrow"></label>` : ''}
+        <div class="cm-facet-list cm-facet-grid" data-facet-list="${e(key)}" data-expanded="0">${rows.map((row) => pickButton(key, row, folds)).join('')}</div>
+        ${folds ? `<button type="button" class="cm-text-button" data-facet-more="${e(key)}">Show ${rare.toLocaleString()} more used by one card</button>` : ''}
+        <div class="cm-facet-dialog-foot"><span class="cm-facet-mode"><span class="cm-muted">A card must match</span><label class="cm-checkbox"><input type="radio" name="facetMode" value="all" ${mode === 'all' ? 'checked' : ''}> all picks</label><label class="cm-checkbox"><input type="radio" name="facetMode" value="any" ${mode === 'any' ? 'checked' : ''}> any pick</label></span><span class="cm-facet-drop-tools">${b('Clear ' + facet.label.toLowerCase(), 'facet-clear-one', {key}, false, {cls: 'compact'})}${b('Done', 'facet-done', {}, true, {cls: 'compact'})}</span></div></div>`);
+      redrawTicks();
+    };
+    actions['facet-clear-one'] = (el) => { selection = {...selection}; delete selection[el.dataset.key]; redrawTicks(); refresh(currentFocus()); };
     actions['graph-mode'] = (el) => {
       gmode = el.dataset.mode; graph?.setMode(gmode); hidePop();
       for (const btn of document.querySelectorAll('[data-action=graph-mode]')) { const on = btn.dataset.mode === gmode; btn.classList.toggle('is-on', on); btn.setAttribute('aria-pressed', String(on)); }
@@ -768,7 +774,7 @@
     };
 
     function redrawTicks() {
-      for (const pick of $('#cm-facet-panel').querySelectorAll('[data-facet-pick]')) {
+      for (const pick of document.querySelectorAll('[data-facet-pick]')) {
         const state = CrankFacets.stateOf(selection, pick.dataset.facetPick, pick.dataset.value);
         pick.classList.toggle('is-on', state === 'include');
         pick.classList.toggle('is-not', state === 'exclude');
@@ -835,7 +841,7 @@
     $('[name=edgeType]').addEventListener('change', (ev) => graph?.setType(ev.target.value));
 
     return () => { document.getElementById('matrix-v2')?.classList.remove('cm-stage', 'cm-tools-open');
-      document.removeEventListener('keydown', onKey); document.removeEventListener('click', onDocClick); removeEventListener('resize', sizePane); paneObserver.disconnect(); cancelAnimationFrame(paneFrame); graph?.destroy(); graph = null; };
+      document.removeEventListener('keydown', onKey); document.removeEventListener('click', onDocClick); document.removeEventListener('input', onFacetInput); document.removeEventListener('click', onFacetMore); document.removeEventListener('change', onModeChange); removeEventListener('resize', sizePane); paneObserver.disconnect(); cancelAnimationFrame(paneFrame); graph?.destroy(); graph = null; };
   };
 
   actions['graph-lookup'] = () => C.cardPicker('Find a card to explore', async (c) => {

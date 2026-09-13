@@ -122,7 +122,7 @@ const TOURS=[
     {view:'discover',selectors:['#cm-depth','#cm-graph-size'],
      title:'How far to look',
      copy:'One step out is the obvious partners. Two or three is where the deck you had not thought of lives.'},
-    {view:'discover',selectors:['#cm-facet-summary','#cm-facet-details'],act:'openFacets',
+    {view:'discover',selectors:['#cm-facet-summary','#cm-facet-bar'],
      title:'Narrow it',
      copy:'By role, colour, type or mechanic — so "what goes with my commander" becomes "what goes with my commander and costs under three".'},
     {view:'discover',selectors:['#cm-card-view','#cm-graph-pop'],
@@ -268,7 +268,6 @@ const has={
 const ACTS={
   openCommander(){const d=$('#cm-lab-commander');if(d&&!d.hidden)d.open=true;},
   openDefinition(){const d=$('#cm-lab-definition');if(d)d.open=true;},
-  openFacets(){const d=$('#cm-facet-details');if(d)d.open=true;},
   openFilters(){const p=$('#cm-filter-host');if(p&&!p.children.length)$('[data-action=roster-filters]')?.click();},
   openMenu(){
     const m=$('#cm-user-menu');

@@ -45,6 +45,22 @@
   const LANDS_ONLY = "lands only";
   const ENTRY = {"enters-untapped": "untapped", "enters-tapped": "tapped", "enters-tapped-unless": "tapped unless"};
   const isLand = (c) => c.isLand === true || /\bLand\b/.test(String(c.type || ""));
+  /* THE MANA READING. Rocks, dorks, lands and ramp spells are how a mana base is built, and the
+     Collection asks the same question of its rows, so the reading lives here and both use it.
+     It takes a graph row (type, isLand) or a catalog card (typeLine): produces and roles are the
+     classifier's on either. A land is a land whatever else it does; a nonland that taps for
+     mana is a dork when it is a creature and a rock when it is an artifact; a ramp spell is
+     ramp by role that makes no mana itself (Cultivate, Rampant Growth). */
+  function manaKinds(c) {
+    const type = String(c.type || c.typeLine || ""), land = c.isLand === true || /\bLand\b/.test(type);
+    const produces = (c.produces || []).includes("mana"), ramp = (c.roles || []).includes("ramp");
+    const out = [];
+    if (land) { out.push("Land"); if (/\bBasic\b/.test(type)) out.push("Basic land"); return out; }
+    if (produces) out.push(/Creature/.test(type) ? "Mana dork" : /Artifact/.test(type) ? "Mana rock" : "Mana source");
+    else if (ramp) out.push("Ramp spell");
+    return out;
+  }
+  const anyOf = (have, picked) => picked.some((v) => have.includes(v));
   const FACETS = [
     {key: "roles", label: "Role", from: (c) => c.roles || []},
 
@@ -61,6 +77,11 @@
      }},
 
     {key: "type", label: "Card type", from: (c) => CARD_TYPES.filter((t) => String(c.type || "").includes(t))},
+    /* MANA VALUE as a facet: "costs under three" is a filter, not a search. Seven and up is
+       one bucket. A card has one mana value, so picks within this facet are alternatives
+       whatever the all/any rule says -- "two or three" cannot mean both at once. */
+    {key: "mv", label: "Mana value", from: (c) => (c.mv === null || c.mv === undefined || !Number.isFinite(Number(c.mv)) ? [] : [Number(c.mv) >= 7 ? "7+" : String(Number(c.mv))]), match: anyOf},
+    {key: "manaKind", label: "Mana", from: (c) => manaKinds(c), match: anyOf},
     /* LANDS ARE A MODE, NOT A NODE. A mana base is chosen by colour and by how a land
        enters, not by what it is joined to, so lands stay off the graph and "Lands only"
        turns Discover into a sortable list of them. "Enters" is the entry reading the
@@ -279,5 +300,5 @@
     return next;
   }
 
-  return {FACETS, CARD_TYPES, NOT, available, values, apply, matches, decorate, mineFrom, ownedNames, count, chips, toggle, stateOf, set};
+  return {FACETS, CARD_TYPES, NOT, available, values, apply, matches, decorate, mineFrom, ownedNames, count, chips, toggle, stateOf, set, manaKinds};
 });
