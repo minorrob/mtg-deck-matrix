@@ -65,7 +65,7 @@ function statsHTML(shown,scoped){
     if(r.kind!=='lot')continue;
     if(r.source!=='owned'){if(Object.hasOwn(t,r.source))t[r.source]+=r.quantity;continue;}
     t.owned+=r.quantity;
-    if(r.placement==='In deck box')t.inDeck+=r.quantity;
+    if(r.placement==='In deck box'||r.placement==='Stand-in')t.inDeck+=r.quantity;
     if(r.offer!=='none')t.sellTrade+=r.quantity;
   }
   return `<div class="cm-stats">${STAT_FIGURES.map(([k,l])=>`<div><strong>${t[k]}</strong><span>${l}</span></div>`).join('')}</div>`+(scoped?'<p class="cm-status-line cm-stats-scope">Counting the records this view shows. Clear the filters for your whole library.</p>':'');
@@ -151,7 +151,7 @@ function sheetRows(m){
       default:return true;
     }
   };
-  const val=r=>{const k=sheetSort.key;if(k==='name')return r.card.name;if(k.startsWith('deck|')){const [,id,col]=k.split('|');return r.perDeck[id]?.[col]||0;}return r[k]||0;};
+  const val=r=>{const k=sheetSort.key;if(k==='name')return r.card.name;if(k.startsWith('deck|')){const [,id,col]=k.split('|'),p=r.perDeck[id];return p?(col==='boxed'?p.boxed+p.sub:p[col]):0;}return r[k]||0;};
   return rows.filter(keep).sort((a,b)=>{const av=val(a),bv=val(b);const c=typeof av==='number'&&typeof bv==='number'?av-bv:String(av).localeCompare(String(bv),undefined,{sensitivity:'base'});return c*sheetSort.dir||a.card.name.localeCompare(b.card.name,undefined,{sensitivity:'base'});});
 }
 function sheetNeighbour(btn,dx,dy){
@@ -220,16 +220,16 @@ function sheet(params){
     const ro=(n,cls='',title='')=>`<td class="cm-sheet-num${cls}"${title?` title="${e(title)}"`:''}>${n||zero}</td>`;
     const head=`<thead><tr><th rowspan="2" class="cm-sheet-name"${ariaSort('name')}>${sortBtn('name','Card')}</th><th rowspan="2"${ariaSort('own')}>${sortBtn('own','Own','Owned copies, wherever they are')}</th><th rowspan="2"${ariaSort('ordered')}>${sortBtn('ordered','Ordered','Bought, not yet in hand')}</th><th rowspan="2"${ariaSort('bench')}>${sortBtn('bench','Bench','Owned copies in no deck box')}</th><th rowspan="2"${ariaSort('toBuy')}>${sortBtn('toBuy','To buy','Copies finalized decks list that nothing covers')}</th>`
       +decks.map((d,i)=>`<th colspan="2" class="cm-sheet-deck${alt(i)}"><span class="cm-sheet-deck-name">${e(d.name)}</span><small>${d.status==='final'?(d.target===100?'final · 100':`final · ${d.target} cards`):`draft · ${d.target} cards`}</small></th>`).join('')
-      +`</tr><tr>`+decks.map((d,i)=>`<th class="${alt(i).trim()}"${ariaSort('deck|'+d.id+'|t')}>${sortBtn('deck|'+d.id+'|t','T','How many the list wants')}</th><th class="${alt(i).trim()}"${ariaSort('deck|'+d.id+'|boxed')}>${sortBtn('deck|'+d.id+'|boxed','A','How many are in its box')}</th>`).join('')+`</tr></thead>`;
+      +`</tr><tr>`+decks.map((d,i)=>`<th class="${alt(i).trim()}"${ariaSort('deck|'+d.id+'|t')}>${sortBtn('deck|'+d.id+'|t','T','How many the list wants')}</th><th class="${alt(i).trim()}"${ariaSort('deck|'+d.id+'|boxed')}>${sortBtn('deck|'+d.id+'|boxed','A','How many are physically in its box, stand-ins included')}</th>`).join('')+`</tr></thead>`;
     const body=shown.map(r=>`<tr data-card="${e(r.cardId)}"><th scope="row" class="cm-sheet-name"><button type="button" class="cm-text-button cm-card-name" data-action="card" data-card="${e(r.cardId)}" title="${e(r.card.typeLine||'')}">${e(r.card.name)}</button>${r.extra?' <span class="cm-badge">New row</span>':''}</th>`
       +live(r,'own','',r.own,{label:`Owned copies of ${r.card.name}`})+live(r,'ordered','',r.ordered,{label:`Ordered copies of ${r.card.name}`})+ro(r.bench)+ro(r.toBuy,r.toBuy?' is-short':'')
       +decks.map((d,i)=>{const p=r.perDeck[d.id],short=d.status==='final'&&p.t>p.a,pend=p.a-p.boxed;
         const marks=(p.option?'<span class="cm-sheet-opt" title="Flagged as an option: first to swap out">●</span>':'')+(p.pinned?'<span class="cm-sheet-opt cm-sheet-pinned" title="Pinned: kept whatever a swap suggests">■</span>':'');
         return live(r,'t',d.id,p.t,{cls:alt(i)+(short?' is-short':''),mark:marks,label:`${d.name}: copies of ${r.card.name} in the list`,title:short?`${d.name} lists ${p.t}, ${p.a} covered`:''})
-          +(d.status==='final'?live(r,'boxed',d.id,p.boxed,{cls:alt(i)+(p.boxed&&p.boxed>=p.t?' is-done':''),mark:(pend>0?`<sup class="cm-sheet-pend" title="${pend} more reserved to ${e(d.name)}, not in its box yet">+${pend}</sup>`:'')+(p.sub?`<sup class="cm-sheet-sub" title="${p.sub} cop${p.sub===1?'y':'ies'} of ${e(r.card.name)} standing in ${e(d.name)}'s box: physically there, not called for by its list">ˢ${p.sub}</sup>`:''),label:`${d.name}: copies of ${r.card.name} in its box`})
+          +(d.status==='final'?live(r,'boxed',d.id,p.boxed+p.sub,{cls:alt(i)+(p.boxed&&p.boxed>=p.t?' is-done':''),mark:(pend>0?`<sup class="cm-sheet-pend" title="${pend} more reserved to ${e(d.name)}, not in its box yet">+${pend}</sup>`:'')+(p.sub?`<sup class="cm-sheet-sub" title="${p.sub} cop${p.sub===1?'y':'ies'} of ${e(r.card.name)} standing in ${e(d.name)}'s box: physically there, not called for by its list">ˢ${p.sub}</sup>`:''),label:`${d.name}: copies of ${r.card.name} physically in its box`})
             :`<td class="cm-sheet-num cm-sheet-muted${alt(i)}" title="A draft holds no copies; finalize it first">—</td>`);}).join('')+`</tr>`).join('');
     const foot=`<tfoot><tr><th scope="row" class="cm-sheet-name">Whole library</th><td>${m.own}</td><td>${m.ordered}</td><td>${m.rows.reduce((n,r)=>n+r.bench,0)}</td><td class="${m.toBuy?'is-short':''}">${m.toBuy}</td>`
-      +decks.map((d,i)=>{const t=m.totals[d.id];return `<td class="${(t.t!==100?'is-short':'')+alt(i)}" title="${e(d.name)} lists ${t.t} cards">${t.t}</td><td class="${alt(i).trim()}" title="${t.boxed} of the list in the box, ${t.a} reserved${t.sub?`, ${t.sub} stand-in${t.sub===1?'':'s'}: ${t.boxed+t.sub} cards sleeved`:''}">${t.boxed}${t.a>t.boxed?`<sup class="cm-sheet-pend">+${t.a-t.boxed}</sup>`:''}${t.sub?`<sup class="cm-sheet-sub">ˢ${t.sub}</sup>`:''}</td>`;}).join('')+`</tr></tfoot>`;
+      +decks.map((d,i)=>{const t=m.totals[d.id];return `<td class="${(t.t!==100?'is-short':'')+alt(i)}" title="${e(d.name)} lists ${t.t} cards">${t.t}</td><td class="${alt(i).trim()}" title="${t.boxed+t.sub} cards in the box: ${t.boxed} of the list${t.sub?` and ${t.sub} stand-in${t.sub===1?'':'s'}`:''}; ${t.a} reserved">${t.boxed+t.sub}${t.a>t.boxed?`<sup class="cm-sheet-pend">+${t.a-t.boxed}</sup>`:''}${t.sub?`<sup class="cm-sheet-sub">ˢ${t.sub}</sup>`:''}</td>`;}).join('')+`</tr></tfoot>`;
     host.innerHTML=`<div class="cm-sheet-wrap"><table class="cm-table cm-sheet" aria-label="Collection spreadsheet">${head}<tbody>${body||`<tr><td colspan="${5+decks.length*2}" class="cm-muted cm-sheet-empty">No cards match. Clear the search, or add a card row.</td></tr>`}</tbody>${foot}</table></div>`;
     const wrap=$('.cm-sheet-wrap',host);
     if(sheetScroll){wrap.scrollLeft=sheetScroll[0];wrap.scrollTop=sheetScroll[1];}
