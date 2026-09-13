@@ -31,7 +31,9 @@ Every page opens on its name, with one primary action and at most three beside i
 rest of a page's actions sit under **More**, and what the page does and how its figures are
 counted sit behind its **?**. The nav reads **Decks · Cards · Build · Discover**: Collection
 and Shop are one page, **Cards**, with tabs *Library · To buy · Orders* and the Spreadsheet as
-its *Sheet* view; `#collection` and `#shop` still open it. Glossary underlines in rules text are off until **Show term
+its *Sheet* view; `#collection` and `#shop` still open it. The nav opens the page you are on:
+under **Cards** its four sub-pages (Library · To buy · Orders · Sheet, with counts), under
+**Decks** your decks and the How page, the current one marked. Glossary underlines in rules text are off until **Show term
 definitions** (deck page More menu, card pop-up) turns them on for the library.
 
 - **Decks** (`#decks`): plans and assembly status; commander image/rules, composition, strategy,

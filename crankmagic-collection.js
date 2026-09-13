@@ -153,6 +153,8 @@ function cardsHead(params,tab,view='table',{tight=false}={}){const n=tabCounts()
   const tabs=`<div class="cm-tabs" role="tablist" aria-label="Cards">${TABS.map(([id,label])=>`<button type="button" role="tab" aria-selected="${id===tab}" data-action="cards-tab" data-tab="${id}">${label} <small>${n[id].toLocaleString()}</small></button>`).join('')}</div>`;
   return (tight?'':C.pageHead('Cards',b('Add cards','add-card',{},true)+b('Import list / library','import-list')+third+b('More','roster-more',{tab,view,group},false,{caret:'down'}),'cards'))+tabs;}
 C.cardsHead=cardsHead;
+C.SUBNAV.cards=()=>{const n=tabCounts(),r=C.route(),tab=r.view==='cards'?(r.params.get('tab')||'library'):tabOf(),sheet=r.view==='cards'&&r.params.get('view')==='sheet';
+  return [{label:'Library',hash:'#cards',count:n.library,current:tab==='library'&&!sheet},{label:'To buy',hash:'#cards?tab=buy',count:n.buy,current:tab==='buy'},{label:'Orders',hash:'#cards?tab=orders',count:n.orders,current:tab==='orders'},{label:'Sheet',hash:'#cards?view=sheet',current:sheet}];};
 views.cards=params=>params.get('tab')==='buy'?show(params,true):params.get('view')==='sheet'?sheet(params):show(params,false);
 views.collection=params=>{const extra=Object.fromEntries(params);delete extra.sheet;goCards('library',params.get('sheet')?{...extra,view:'sheet'}:extra);};
 views.shop=params=>{const extra=Object.fromEntries(params);delete extra.tab;goCards(params.get('tab')==='orders'?'orders':'buy',extra);};
