@@ -340,7 +340,23 @@ actions['deck-status-menu']=el=>{const d=M.deck(C.state,el.dataset.deck),ladder=
 actions['deck-status']=el=>{const d=M.deck(C.state,el.dataset.deck),source=el.dataset.source,label=C.source(source);
   C.review(`Set ${d.name}’s cards to ${label}`,note(d.status==='draft'?`One copy record per card in the draft list, at ${label}, filed under the deck’s collection group. Cards that already have copies filed there are skipped, so this can be run again after the list changes.`:`Only what the deck still owes: one copy record per outstanding card at ${label}, reserved to its slot.`),{type:'acquireSlots',deckId:d.id,source});};
 actions['deck-report']=el=>{const d=M.deck(C.state,el.dataset.deck),r=C.state.reports.find(x=>x.id===el.dataset.report&&x.deckId===d.id);if(!r)throw Error('That report is no longer in the library.');
-  modal(`Simulation report · ${d.name} · ${when(r.importedAt)}`,(r.deckFingerprint===M.fingerprint(d)?'':note('Historical: this run measured an earlier version of the list.'))+(C.reportHTML?C.reportHTML(r,d.definition):`<pre style="white-space:pre-wrap">${e(JSON.stringify(r,null,2))}</pre>`));};
+  modal(`Simulation report · ${d.name} · ${when(r.importedAt)}`,(r.deckFingerprint===M.fingerprint(d)?'':note('Historical: this run measured an earlier version of the list.'))+(r.list?.length?`<div class="cm-actions cm-report-actions">${b('Spin off as a new deck','report-spinoff',{deck:d.id,report:r.id},true)}<span class="cm-muted">The ${r.list.reduce((n,x)=>n+x.quantity,0)} cards this run measured become a finalized deck of their own, with this commander; this deck is untouched.</span></div>`:'')+(C.reportHTML?C.reportHTML(r,d.definition):`<pre style="white-space:pre-wrap">${e(JSON.stringify(r,null,2))}</pre>`));};
+/* A MEASURED HUNDRED AS ITS OWN DECK. The report carries the list it measured; spinning it off
+   creates a deck from exactly that list, finalizes it so its claims are real, and files a copy
+   of the report with it. Finalize can refuse (a cap, a legality change since the run): the
+   deck is then kept as a draft and the refusal is said. Overwriting the original deck with the
+   measured hundred is deliberately not offered here. */
+actions['report-spinoff']=async el=>{const d=M.deck(C.state,el.dataset.deck),r=C.state.reports.find(x=>x.id===el.dataset.report&&x.deckId===d.id);if(!r)throw Error('That report is no longer in the library.');if(!r.list?.length)throw Error('This report was filed before reports carried their list. Measure the deck again and spin off that run.');
+  const missing=r.list.filter(x=>!C.state.cards[x.cardId]);if(missing.length)throw Error(`${missing.length} card${missing.length===1?'':'s'} of that list ${missing.length===1?'is':'are'} no longer in the library.`);
+  const commanders=(r.commanders||[]).filter(id=>C.state.cards[id]).length?r.commanders.filter(id=>C.state.cards[id]):[...d.commanders];
+  const cards=[...r.list.map(x=>C.state.cards[x.cardId]),...commanders.map(id=>C.state.cards[id])].filter(Boolean),slots=r.list.map(x=>({cardId:x.cardId,quantity:x.quantity,purpose:'main'}));
+  const id='deck:'+C.uid(),score=scoreOf(r),name=`${d.name} · ${score?score+' pts · ':''}${when(r.importedAt)}`.slice(0,160);
+  const create={type:'createDeck',deckId:id,name,commanders,cards,slots,definition:d.definition,notes:`Spun off from a simulation report of ${d.name} (${when(r.importedAt)}, report ${r.id}).`};
+  const copy={type:'report',deckId:id,report:{...r,id:undefined,deckId:undefined,importedAt:undefined,spunOffFrom:{deckId:d.id,reportId:r.id}}};
+  /* renderView:false: the page to draw is the new deck's, not this one's again. */
+  try{await C.commit({type:'batch',commands:[create,{type:'finalize',deckId:id},copy],summary:`Spun off ${name} from a simulation report and finalized it`},{renderView:false});C.notice(`${name} is a finalized deck of its own.`);}
+  catch(err){await C.commit({type:'batch',commands:[create,copy],summary:`Spun off ${name} from a simulation report as a draft`},{renderView:false});C.notice(`${name} was saved as a draft, not finalized: ${err.message}`,true);}
+  actions.close();go('decks',{deck:id});};
 actions['measure-deck']=async el=>{const d=M.deck(C.state,el.dataset.deck);if(!C.measureDeck)throw Error('The simulator is not loaded.');
   const say=t=>{const pill=$('#cm-deck-sim-status');if(pill){pill.hidden=false;pill.textContent=t;}};say('Starting…');
   try{const {report,result}=await C.measureDeck(d.id,say);C.notice(`Measured ${report.metrics.score.value} points from ${result.games.toLocaleString()} games in ${(result.elapsedMs/1000).toFixed(1)}s. Filed under Simulation history.`);}

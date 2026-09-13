@@ -434,4 +434,20 @@ M.validate(s);checks++;
   M.validate(s);checks++;
   s=saved;
 }
+// REPORTS CARRY THEIR HUNDRED, and a hundred becomes a deck. A report filed with a list keeps
+// it; a planned entry added from it keeps its note and counts as Watched; and creating a deck
+// from the list, finalizing it and copying the report over it is one batch.
+{
+  const saved=s;s=M.empty();run('cards',{cards});
+  run('createDeck',{deckId:'A',name:'Deck A',commanders:['leader'],slots:[{id:'cmdA',cardId:'leader',quantity:1},{id:'landA',cardId:'land',quantity:98},{id:'ringA',cardId:'ring',quantity:1}]});run('finalize',{deckId:'A'});
+  const list=[{cardId:'leader',quantity:1},{cardId:'land',quantity:97},{cardId:'ring',quantity:1},{cardId:'stone',quantity:1}];
+  run('report',{deckId:'A',report:{kind:'report',origin:'measured',protocol:'published',deckFingerprint:'fp-of-the-measured-list',metrics:{score:{value:50}},list,commanders:['leader'],sourceDeckId:'A'}});
+  const r=s.reports[0];assert.deepEqual(r.list,list);assert.equal(r.sourceDeckId,'A');assert.equal(r.origin,'measured');checks+=3;
+  const gid=M.deck(s,'A').groupId;
+  run('groupEntries',{groupId:gid,cards:[cards.find(c=>c.id==='stone')],entries:[{cardId:'stone',quantity:1,notes:"Watched from the simulation of 2026-09-13: in the measured hundred, not in Deck A's list."}]});
+  const g=s.groups.find(x=>x.id===gid);assert.equal(g.entries.length,1);assert.match(g.entries[0].notes,/Watched from the simulation/);assert.equal(M.readiness(s,M.deck(s,'A')).watched,1);assert.equal(M.counters(s).owned,0,'a planned card is not a copy');checks+=4;
+  run('batch',{commands:[{type:'createDeck',deckId:'B',name:'Deck A · 50 pts',commanders:['leader'],cards:[],slots:list.map(x=>({...x,purpose:'main'})),definition:M.deck(s,'A').definition},{type:'finalize',deckId:'B'},{type:'report',deckId:'B',report:{...r,id:undefined,deckId:undefined,importedAt:undefined,spunOffFrom:{deckId:'A',reportId:r.id}}}]});
+  const b=M.deck(s,'B');assert.equal(b.status,'final');assert.equal(b.slots.reduce((n,x)=>n+x.quantity,0),100);const copy=s.reports.find(x=>x.deckId==='B');assert.equal(copy.spunOffFrom.reportId,r.id);assert.equal(copy.origin,'measured');assert.notEqual(copy.id,r.id);assert.equal(M.deck(s,'A').status,'final');checks+=6;
+  s=saved;
+}
 console.log(`collection-model: ${checks} checks passed; planned cards never become owned without acquisition.`);
