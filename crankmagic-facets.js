@@ -254,6 +254,33 @@
     return decorated.filter((c) => matches(c, selection, options));
   }
 
+  /* THE COUNT THAT ANSWERS "AND IF I PICK THIS?". values() counts the whole set so the
+     options never shuffle under the cursor; this counts ONE facet's values over the cards the
+     current picks leave, so the number beside "B" is the black cards you can still reach, not
+     every black card in the format. Within the facet the rule follows the mode: picks are
+     ANDed in "all", so the count is over the filtered set as it stands; in "any" a second pick
+     is an alternative, so the facet's own includes are lifted first (its excludes stay: an
+     excluded term is out whatever else is picked). A pure function, so the Node test can hold
+     it to the same answer the dialog shows. */
+  function narrowedCounts(cards, selection, state, key, options) {
+    const facet = FACETS.find((f) => f.key === key);
+    if (!facet) return new Map();
+    let sel = selection || {};
+    if (options && options.any && sel[key]) {
+      const kept = sel[key].filter(isExclude);
+      sel = {...sel};
+      if (kept.length) sel[key] = kept; else delete sel[key];
+    }
+    const counts = new Map();
+    for (const card of apply(cards, sel, state, options)) {
+      for (const v of facet.from(card) || []) {
+        if (v === undefined || v === null || v === "") continue;
+        counts.set(v, (counts.get(v) || 0) + 1);
+      }
+    }
+    return counts;
+  }
+
   function count(selection) {
     return Object.values(selection || {}).reduce((n, v) => n + ((v && v.length) || 0), 0);
   }
@@ -299,5 +326,5 @@
     return next;
   }
 
-  return {FACETS, CARD_TYPES, NOT, available, values, apply, matches, decorate, mineFrom, ownedNames, count, chips, toggle, stateOf, set, manaKinds};
+  return {FACETS, CARD_TYPES, NOT, available, values, narrowedCounts, apply, matches, decorate, mineFrom, ownedNames, count, chips, toggle, stateOf, set, manaKinds};
 });

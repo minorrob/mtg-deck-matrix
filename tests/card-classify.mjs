@@ -271,4 +271,53 @@ ok("the bake carries the directed fields for every card, not only the ones teste
   assert.ok(share(granters) > 0.03 && share(granters) < 0.2, `${granters} granters in ${graph.cards.length} cards`);
 });
 
+/* THE PRIMARY PURPOSE LADDER. One term per card, the first rung the card stands on, held to
+   named cards whose job at the table is not in dispute -- and to the two limits the ladder
+   declares: a card with only generic terms gets null, and an untap engine reads as its next
+   rung until the vocabulary carries untap. */
+{
+  const byName = new Map(graph.cards.map((c) => [c.name, c]));
+  const expect = {
+    "Krenko, Mob Boss": ["produces", "token"],
+    "Purphoros, God of the Forge": ["triggers", "creature-etb"],
+    "Impact Tremors": ["triggers", "creature-etb"],
+    "Shared Animosity": ["triggers", "attack"],
+    "Goblin Bombardment": ["roles", "sac-outlet"],
+    "Skirk Prospector": ["roles", "sac-outlet"],
+    "Sol Ring": ["roles", "ramp"],
+    "Swords to Plowshares": ["roles", "removal"],
+    "Blasphemous Act": ["roles", "wipe"],
+    "Demonic Tutor": ["roles", "tutor"],
+    "Rhystic Study": ["roles", "draw"],
+    "Parallel Lives": ["multiplies", "token"],
+    "Lightning Greaves": ["roles", "protection"],
+    "Assault Formation": ["wantsStat", "toughness"],
+    "Thornbite Staff": ["roles", "removal"]
+  };
+  for (const [name, [key, value]] of Object.entries(expect)) {
+    const card = byName.get(name);
+    assert.ok(card, `${name} is in the graph`);
+    const p = Classify.purposeOf(card);
+    assert.ok(p, `${name} has a primary purpose`);
+    assert.deepEqual([p.key, p.value], [key, value], `${name}: ${p.label} (${p.key}:${p.value})`);
+    assert.ok(p.label && p.why, `${name}: the purpose carries a label and a reason`);
+  }
+  assert.equal(Classify.purposeOf(byName.get("Coat of Arms")), null, "a card with only generic terms has no ring");
+  assert.equal(Classify.purposeOf(null), null);
+  /* Deterministic, and always a term the card itself carries -- so there is always a chip to ring. */
+  let withPurpose = 0, nonLand = 0;
+  for (const card of graph.cards) {
+    if (card.isLand) continue;
+    nonLand += 1;
+    const p = Classify.purposeOf(card);
+    if (!p) continue;
+    withPurpose += 1;
+    assert.ok((card[p.key] || []).includes(p.value), `${card.name}: ${p.key}:${p.value} is one of its own terms`);
+    assert.deepEqual(Classify.purposeOf(card), p, `${card.name}: the same answer twice`);
+  }
+  assert.ok(withPurpose / nonLand > 0.9, `${withPurpose} of ${nonLand} non-land cards have a purpose`);
+  assert.ok(Classify.PURPOSE_LADDER.length >= 20 && Classify.PURPOSE_LADDER[0][1] === "finisher", "the ladder starts at the finisher");
+  checks += 1;
+}
+
 process.stdout.write(`\n${checks} checks passed over ${overlap.length} cards the bake and the catalog share.\n`);

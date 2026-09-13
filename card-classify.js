@@ -528,12 +528,82 @@
     };
   }
 
+  /* --- PRIMARY PURPOSE -----------------------------------------------------
+   *
+   * One term per card: the job it is in a deck for. A card carries a dozen terms and the
+   * pane shows them all as chips; this names the ONE the reader should look at first, so the
+   * pane can ring it in gold. It is a ladder, not a score -- the first rung a card stands on
+   * wins -- because a ladder is deterministic, readable, and arguable one rung at a time. The
+   * order is the order a deckbuilder triages a card: how it ends the game, how it swings the
+   * board, what engine it is, what it pays off, what it supplies, and last what it simply is
+   * (its numbers, its tribe, its keyword).
+   *
+   * A rung with a fixed value ("roles", "wipe") matches when the card lists that value; a
+   * rung with no value takes the card's FIRST value in that field, skipping the generic type
+   * roles (creatures, artifacts...) and the generic "trigger" multiplier when a specific one
+   * is there. Field order inside a card is the classifier's own pattern order, so the answer
+   * is the same on every run and in the bake and the browser alike.
+   *
+   * Known limits, on purpose: the vocabulary has no untap, copy or blink term yet, so an untap
+   * engine such as Thornbite Staff reads as its next rung (removal) until those roles land.
+   * The result is always a term the card's own chips carry, so there is always something to
+   * ring; a card with only generic terms (Coat of Arms, whose text names nothing the
+   * patterns know) gets null, and no ring. */
+  var GENERIC_ROLE = {creatures: 1, lands: 1, artifacts: 1, enchantments: 1, instants: 1, sorceries: 1, planeswalkers: 1};
+  var LAND_ENTRY_MECHANIC = {"enters-untapped": 1, "enters-tapped": 1, "enters-tapped-unless": 1};
+  var PURPOSE_LADDER = [
+    ["roles", "finisher",   "Finisher",          "ends the game"],
+    ["roles", "wipe",       "Board wipe",        "clears the board"],
+    ["multiplies", null,    "Multiplier",        "makes more of what another card makes or fires"],
+    ["extends", null,       "Team quality",      "spreads a quality across your board"],
+    ["roles", "tutor",      "Tutor",             "finds the piece"],
+    ["roles", "sac-outlet", "Sacrifice outlet",  "turns bodies into a cost, on demand"],
+    ["roles", "removal",    "Removal",           "answers one thing"],
+    ["roles", "draw",       "Card draw",         "keeps the hand full"],
+    ["roles", "ramp",       "Ramp",              "mana ahead of the curve"],
+    ["produces", "token",   "Token maker",       "puts bodies on the board"],
+    ["triggers", null,      "Payoff",            "fires when this event happens"],
+    ["wants", null,         "Tribal payoff",     "rewards the tribe"],
+    ["wantsStat", null,     "Stat payoff",       "rewards a printed stat"],
+    ["roles", "recursion",  "Recursion",         "brings it back"],
+    ["roles", "protection", "Protection",        "keeps the engine alive"],
+    ["roles", "counters",   "Counters",          "supplies +1/+1 counters"],
+    ["roles", "graveyard",  "Graveyard filler",  "stocks the graveyard"],
+    ["grants", null,        "Grants a quality",  "hands a quality to one permanent"],
+    ["produces", null,      "Produces",          "makes a resource"],
+    ["requires", null,      "Needs",             "asks the deck for a supply"],
+    ["offersStat", null,    "Body",              "its printed numbers are the point"],
+    ["tribes", null,        "Tribe member",      "a body of its tribe"],
+    ["mechanics", null,     "Mechanic",          "its keyword is the point"]
+  ];
+  function purposeOf(card) {
+    if (!card) return null;
+    for (var i = 0; i < PURPOSE_LADDER.length; i++) {
+      var rung = PURPOSE_LADDER[i], key = rung[0], want = rung[1], list = card[key] || [];
+      if (!list.length) continue;
+      var value = null;
+      if (want !== null) { if (list.indexOf(want) >= 0) value = want; }
+      else {
+        var pool = list.filter(function (v) {
+          if (key === "roles") return !GENERIC_ROLE[v];
+          if (key === "mechanics") return !LAND_ENTRY_MECHANIC[v];
+          return true;
+        });
+        if (key === "multiplies" && pool.length > 1) pool = pool.filter(function (v) { return v !== "trigger"; }).concat(pool.indexOf("trigger") >= 0 ? ["trigger"] : []);
+        value = pool.length ? pool[0] : null;
+      }
+      if (value !== null) return {key: key, value: value, label: rung[2], why: rung[3]};
+    }
+    return null;
+  }
+
   return {
     EVENTS: EVENTS, RESOURCES: RESOURCES, REQUIRES: REQUIRES,
     SUPPLY_ROLES: SUPPLY_ROLES, SUPPLY_TEXT: SUPPLY_TEXT, ROLE_PATTERNS: ROLE_PATTERNS,
     MULTIPLIERS: MULTIPLIERS, QUALITIES: QUALITIES, STAT_WANTS: STAT_WANTS,
     stripReminder: stripReminder, rulesText: rulesText, rawText: rawText,
     tribesOf: tribesOf, wantsOf: wantsOf, makesOf: makesOf, statsOf: statsOf,
-    classify: classify, edgeDetail: edgeDetail
+    classify: classify, edgeDetail: edgeDetail,
+    PURPOSE_LADDER: PURPOSE_LADDER, purposeOf: purposeOf
   };
 });

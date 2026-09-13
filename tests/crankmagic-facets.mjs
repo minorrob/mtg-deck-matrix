@@ -329,4 +329,29 @@ check("ownedNames is the Ownership facet's own rule, on its own", () => {
   }
 });
 
+/* ------------------------------------------------------- counts under the filters */
+
+check("a facet's narrowed counts are the counts over the filtered set", () => {
+  const sel = {roles: ["ramp"]};
+  const shown = Facets.apply(CARDS, sel, null);
+  const counts = Facets.narrowedCounts(CARDS, sel, null, "colors");
+  const byHand = new Map();
+  for (const c of shown) for (const v of (c.ci ? String(c.ci).split("") : ["C"])) byHand.set(v, (byHand.get(v) || 0) + 1);
+  assert.deepEqual([...counts.entries()].sort(), [...byHand.entries()].sort(), "the dialog's number is the filtered count");
+  const whole = new Map(Facets.values(CARDS, null).colors.map((r) => [r.value, r.count]));
+  for (const [v, n] of counts) assert.ok(n <= whole.get(v), `${v}: ${n} narrowed never exceeds ${whole.get(v)} whole`);
+  assert.ok(counts.get("B") < whole.get("B") / 4, `B under a ramp filter is a small share of ${whole.get("B")}`);
+});
+
+check("in any mode a facet's own includes are lifted, its excludes kept", () => {
+  const sel = {colors: ["G", "!W"]};
+  const any = Facets.narrowedCounts(CARDS, sel, null, "colors", {any: true});
+  const all = Facets.narrowedCounts(CARDS, sel, null, "colors", {any: false});
+  const none = Facets.narrowedCounts(CARDS, {colors: ["!W"]}, null, "colors");
+  assert.deepEqual([...any.entries()].sort(), [...none.entries()].sort(), "any mode counts as if only the exclude were picked");
+  assert.ok((all.get("U") || 0) <= (any.get("U") || 0), "all mode counts within the picked colours");
+  assert.equal(any.get("W"), undefined, "an excluded colour has no cards left to count");
+  assert.equal(Facets.narrowedCounts(CARDS, {}, null, "nope").size, 0, "an unknown facet counts nothing");
+});
+
 console.log(`crankmagic-facets: ${checks} checks passed · ${Facets.available(null).length} card facets over ${CARDS.length} cards`);

@@ -1303,3 +1303,24 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-summary-figures .cm-key{display:inline-block;width:9px;height:9px;margin-right:6px;border-radius:2px;vertical-align:-1px;background:var(--st-inbox)}
 .cm-summary-figures .cm-key.pull{background:var(--st-pull)}.cm-summary-figures .cm-key.ordered{background:var(--st-ordered)}.cm-summary-figures .cm-key.buy{background:var(--st-buy)}
 .cm-summary-figures .cm-key.standin{background:repeating-linear-gradient(135deg,var(--st-standin) 0 3px,rgba(10,14,24,.55) 3px 6px)}
+/* DISCOVER: THE YOURS FILTERS ARE YOURS, so they wear the owned green rather than the graph's
+   blue-grey -- the same token the Physical deck figure and the owned band on the canvas use. */
+.cm-facet-group[data-group=yours] .cm-facet-btn{background:color-mix(in srgb,var(--st-inbox) 13%,#202638);border-color:color-mix(in srgb,var(--st-inbox) 45%,#39465f);color:#dff5e8}
+.cm-facet-group[data-group=yours] .cm-facet-btn:hover{background:color-mix(in srgb,var(--st-inbox) 24%,#202638);border-color:color-mix(in srgb,var(--st-inbox) 70%,#39465f)}
+.cm-facet-group[data-group=yours] .cm-facet-btn.is-on{background:color-mix(in srgb,var(--st-inbox) 30%,#202638);border-color:var(--st-inbox);color:#eafff2}
+.cm-facet-group[data-group=yours] .cm-facet-n{background:var(--st-inbox);color:#07130c}
+/* THE PRIMARY PURPOSE: one chip per card ringed in gold. A ring, not a fill, so it reads apart
+   from a picked chip's pale fill and the two can be true at once. */
+.cm-chip.cm-chip-primary{border-color:#d9b24c;box-shadow:0 0 0 1.5px #d9b24c,0 0 12px #d9b24c55}
+/* An option none of the current cards carry stays pickable but steps back. */
+.cm-facet-grid .cm-facet-pick.is-empty{opacity:.55}
+/* THE ART GROWS WITH THE PANE. Dragging the divider used to widen the text column and leave the
+   picture at 150px; now the picture takes a share of the pane's width, up to 70% larger (255px),
+   so a wide pane is a way to look at cards while walking the graph. The pane's width variable is
+   written on the grid by the divider and inherited here; unset, the picture is its old size. */
+.cm-card-view{--cm-art-w:clamp(150px,calc(var(--cm-pane-w,310px) * .42),255px)}
+.cm-card-view-head{grid-template-columns:var(--cm-art-w) minmax(0,1fr)}
+.cm-card-view-art,.cm-card-view-tools{width:var(--cm-art-w)}
+#matrix-v2.cm-stage .cm-card-view{--cm-art-w:clamp(118px,calc(var(--cm-pane-w,210px) * .5),255px)}
+#matrix-v2.cm-stage .cm-card-view-art,#matrix-v2.cm-stage .cm-card-view-tools{width:var(--cm-art-w)}
+@media(max-width:760px){.cm-card-view{--cm-art-w:110px}}

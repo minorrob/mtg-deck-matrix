@@ -214,6 +214,24 @@ try{
   await page.locator('#cm-graph-query').fill('Command Tower');await page.locator('.cm-list-name[aria-expanded=true]').filter({hasText:'Command Tower'}).waitFor();
   await page.locator('#cm-graph-query').fill('Sol Ring');await page.locator('#cm-pane-body h2').filter({hasText:'Sol Ring'}).waitFor();ok(await page.evaluate(()=>document.querySelector('#cm-graph').crankGraph.current().name==='Sol Ring'));ok(!(await page.evaluate(()=>document.querySelector('.cm-graph-grid').classList.contains('cm-lands-mode'))));
   ok(!(await page.evaluate(()=>Object.keys(JSON.parse(document.querySelector('#cm-facet-chips')?.dataset.selection||'{}')).length)),'leaving the mode left no filters behind');if(await page.getByRole('button',{name:'Clear filters'}).count())await click('Clear filters');}
+ /* PRIMARY PURPOSE, NARROWED COUNTS, A DECK'S COMMANDER. Sol Ring's ramp chip wears the one
+    gold ring in the pane and the hover says so; with that chip picked, a filter dialog's counts
+    are what the other filters leave and never more than the whole-graph figure; picking a deck
+    under Yours puts a commander in focus. */
+ {await page.locator('#cm-graph-query').fill('Sol Ring');await page.locator('#cm-pane-body h2').filter({hasText:'Sol Ring'}).waitFor();
+  const prime=page.locator('#cm-pane-body .cm-chip.cm-chip-primary');eq(await prime.count(),1,'one gold ring in the pane');eq(await prime.getAttribute('data-value'),'ramp');ok(/^Primary Purpose — Ramp/.test(await prime.getAttribute('title')||''),'the hover names the Primary Purpose');
+  ok(await page.locator('#cm-facet-bar .cm-facet-group[data-group=yours] .cm-facet-btn').count()>=1,'the Yours group is tagged');
+  await prime.click();await page.waitForTimeout(500);
+  await page.locator('#cm-facet-bar [data-action=facet-open][data-facet=colors]').click();await page.getByRole('dialog').waitFor();
+  const rows=await page.evaluate(()=>[...document.querySelectorAll('dialog .cm-facet-pick')].map(p=>({v:p.dataset.value,n:Number(p.querySelector('small').textContent.replace(/,/g,'')),note:p.dataset.count||''})));
+  ok(rows.length>=5&&rows.some(r=>/ of [\d,]+ in the whole graph/.test(r.note)),'counts are narrowed under the ramp filter');
+  const whole=r=>Number((r.note.match(/of ([\d,]+)/)||[,String(r.n)])[1].replace(/,/g,''));ok(rows.every(r=>r.n<=whole(r)),'a narrowed count never exceeds the whole-graph count');
+  ok(/Counts are under the filters you already have/.test(await page.locator('dialog .cm-facet-help').innerText()));
+  await page.keyboard.press('Escape');await page.getByRole('dialog').waitFor({state:'hidden'});await click('Clear filters');
+  await page.locator('#cm-facet-bar [data-action=facet-open][data-facet=decks]').click();await page.getByRole('dialog').waitFor();
+  const deckPick=page.locator('dialog .cm-facet-pick[data-key=decks]').first();ok(await deckPick.count()>0,'a deck to pick');await deckPick.click();await page.waitForTimeout(800);
+  const focus=await page.evaluate(()=>{const c=document.querySelector('#cm-graph').crankGraph.current();return {name:c.name,commander:!!c.isCommander};});ok(focus.name!=='Sol Ring'&&focus.commander,`picking a deck focused its commander (${focus.name})`);
+  await page.keyboard.press('Escape');await page.getByRole('dialog').waitFor({state:'hidden'});await click('Clear filters');}
  /* GRAPH NAVIGATION, through the controls the graph actually has now. This used to scroll to
     zoom and click a row in a neighbours list; that list was removed when the graph gained
     node and edge pop-ups, and #cm-graph-neighbors has not existed since -- the only trace
