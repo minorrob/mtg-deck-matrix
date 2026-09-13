@@ -163,7 +163,7 @@ const TOURS=[
      copy:'And what it shows is what an export carries — set the columns once and every export matches.'},
     {view:'collection',selectors:['[data-action=add-card]'],
      title:'One card at a time',
-     copy:'Including cards you do not own yet: add them marked as wanted and they turn up on the Shop list.'}]},
+     copy:'Including cards you do not own yet: add them marked as Watched and they turn up on the Shop list.'}]},
 
   {id:'perform',name:'Read a deck’s performance',icon:'🜔',
    job:'Is this deck good — and good at what?',

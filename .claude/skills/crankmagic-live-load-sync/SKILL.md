@@ -86,11 +86,13 @@ numbers agree; fix the workbook and rebuild.
    says he will commit himself.
 7. Report in one short table: decks · owned copies · in boxes · ordered · to buy ($) ·
    upgrades · options · planned, then the per-deck delta. Remind him a cached browser needs
-   one hard refresh before the new state is served, and that the in-box stand-ins (cards
-   physically in a box that the target does not call for -- the Master's Actual minus its
-   Target, including basics above the target count) stay in their boxes as *Stand-in*
-   copies: the deck tile reads *Playable · n stand-ins*, the pull sheet lists them and says
-   how many can come out now, and they leave the box only when he ticks them out.
+   one hard refresh before the new state is served, and that the substitutes (cards
+   physically in a deck that the target does not call for -- the Master's Actual minus its
+   Target, including basics above the target count) stay in their physical decks as
+   *Substitute* copies: the deck tile reads *Playable · n substitutes*, the pull sheet lists
+   them and says how many can come out now, and they leave only when he ticks them out. The
+   app's status words are Watched · Ordered · Owned; Wanted and Incoming trade no longer
+   exist (a schema-1 backup is migrated on load).
 
 ## The manual button, without a session
 GitHub → **Actions → Load Live → Run workflow** does steps 2–4 and 6 on the newest

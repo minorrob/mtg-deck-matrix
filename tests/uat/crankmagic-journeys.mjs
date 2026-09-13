@@ -33,7 +33,7 @@ async function newDeck(){await nav('My Decks');await click('Create a deck');awai
 try{
  await page.goto(BASE+'/'+ENTRY);await page.getByRole('heading',{name:'Build it. Make it yours.'}).waitFor({timeout:45000});eq((await state()).lots.length,0);
  /* HOW A DECK COMES TOGETHER: a plain link beside "Your decks" opens the six-step map; each step's title opens where that step begins. */
- await page.getByRole('link',{name:'How a deck comes together'}).click();await page.locator('.cm-how-flow').waitFor();eq(await page.locator('.cm-how-step').count(),6);eq(await page.locator('.cm-how-rungs li').count(),6);
+ await page.getByRole('link',{name:'How a deck comes together'}).click();await page.locator('.cm-how-flow').waitFor();eq(await page.locator('.cm-how-step').count(),6);eq(await page.locator('.cm-how-rungs li').count(),5);
  await page.locator('.cm-how-title',{hasText:'Acquire'}).click();await page.locator('#cm-roster-table').waitFor();ok(location=>true);ok(page.url().endsWith('#shop'));
  await newDeck();let current=await state();eq(current.decks[0].status,'final');eq(current.lots.length,0);ok(current.decks[0].slots.reduce((n,r)=>n+r.quantity,0)===100);
  await click('View deck cards');await page.getByRole('table').waitFor();eq(await page.locator('.cm-chip').innerText(),'Deck: Journey Goblins');
@@ -49,7 +49,7 @@ try{
  await page.goto(rosterURL);await page.getByRole('table').waitFor();
  /* The row's own verb: the owned, reserved, benched Mountains go into the box in one tap. */
  await page.reload();await page.getByRole('table').waitFor();await page.evaluate(async()=>{const r=await CrankRepository.open();try{const s=await r.getState();const l=s.lots.find(l=>l.source==='owned');await r.commit({id:crypto.randomUUID(),type:'place',lotId:l.id,quantity:l.quantity,confirmed:true},s.revision);}finally{r.close();}});await page.reload();await page.getByRole('table').waitFor();
- await row('Mountain','Owned').getByRole('button',{name:/^Put in .* box$/}).click();await page.waitForTimeout(700);current=await state();eq(current.lots.find(l=>l.source==='owned').location.kind,'deck');
+ await row('Mountain','Owned').getByRole('button',{name:/^Put in /}).click();await page.waitForTimeout(700);current=await state();eq(current.lots.find(l=>l.source==='owned').location.kind,'deck');
  await actionsFor('Mountain','Owned');await page.locator('#cm-put-submenu-toggle').hover();await page.locator('#cm-put-submenu').getByRole('button',{name:'Journey Goblins'}).click();await click('Confirm change');await waitDialog();current=await state();eq(current.lots.find(l=>l.source==='owned').location.kind,'deck');
  /* The Option flag: from the row's Actions, with a reason, and the row wears the chip. Clearing
     it is one click. Neither touches a copy. */
@@ -118,9 +118,9 @@ try{
  await click('Log a game');await page.getByLabel('Card that won it').selectOption({label:'Krenko, Mob Boss'});await page.getByLabel('Finish').selectOption('1');await click('Save game record');await waitDialog();await page.locator('.cm-record-table').waitFor({timeout:8000});current=await state();
  {const g=current.games[current.games.length-1];eq(g.outcome,'win');eq(g.finish,1);eq(g.pod,4);eq(g.mvpCardId,CrankKey('Krenko, Mob Boss'));}
  eq(await page.locator('.cm-record-table tbody tr').count(),1);
- await click('Card status');await click('Wanted');await click('Confirm change');await waitDialog();current=await state();
+ await click('Card status');await click('Watched');await click('Confirm change');await waitDialog();current=await state();
  eq(current.lots.filter(l=>l.groupIds.includes(labDeck.groupId)).reduce((n,l)=>n+l.quantity,0),labTotal);
- ok(current.lots.some(l=>l.source==='wanted'&&l.groupIds.includes(labDeck.groupId)));
+ ok(current.lots.some(l=>l.source==='watching'&&l.groupIds.includes(labDeck.groupId)));
  /* Simulation history: a measured report filed with the deck is a row on its page, opens
     as the Lab's own report, and the tile carries the score. */
  await page.evaluate(async deckId=>{const r=await CrankRepository.open();try{const s=await r.getState();const d=s.decks.find(x=>x.id===deckId);await r.commit({id:crypto.randomUUID(),type:'report',deckId,report:{kind:'report',origin:'measured',protocol:'published',deckFingerprint:CrankCollection.fingerprint(d),versions:{engine:'journey'},conditions:{seedCount:1,gamesPerSeed:1},metrics:{score:{value:61.5,unit:'points'},scoreStandardError:{value:0.4,unit:'points'},winRate:{value:27,unit:'%'},averageWinTurn:{value:11.2,unit:'turns'}},run:{games:1,elapsedMs:10},limits:['A journey report, not a measurement.']}},s.revision);}finally{r.close();}},labDeck.id);
@@ -149,7 +149,7 @@ try{
  await actionsFor('Wastes','Bench');await page.locator('#cm-standin-submenu-toggle').hover();{const sub=page.locator('#cm-standin-submenu');await sub.getByRole('button',{name:'Journey Goblins',exact:true}).waitFor();await sub.getByRole('button',{name:'Journey Goblins',exact:true}).click();}
  await page.getByRole('dialog').waitFor();await click('Confirm change');await waitDialog();await page.waitForTimeout(900);current=await state();
  {const l=current.lots.find(l=>l.cardId===wastesKey);eq(l.location.deckId,journey.id);eq(l.allocation,null);eq(CrankReadiness(current).standIns,1);}
- await nav('My Decks');ok(await page.locator('.cm-deck-tile').filter({hasText:'Journey Goblins'}).innerText().then(t=>/1 stand-in/.test(t)));
+ await nav('My Decks');ok(await page.locator('.cm-deck-tile').filter({hasText:'Journey Goblins'}).innerText().then(t=>/1 substitute/.test(t)));
  await page.locator('.cm-deck-tile').filter({hasText:'Journey Goblins'}).getByRole('button').first().click();await page.getByRole('button',{name:/^Pull sheet/}).click();
  await page.locator('.cm-pull-group[data-group=standin]').waitFor();await page.locator('.cm-pull-group[data-group=standin] [data-pull-tick]').first().check();await page.waitForTimeout(900);current=await state();
  eq(current.lots.find(l=>l.cardId===wastesKey).location.kind,'bench');eq(CrankReadiness(current).standIns,0);

@@ -42,8 +42,8 @@ const d=state.decks[0];eq(d.status,'final');eq(d.commanders[0],leader.id);
 ok(/Basic Land/.test(state.cards[mountain.id].typeLine));
 // in-box copies are located in the deck and reserved to their own slot
 const inBox=state.lots.filter(l=>l.location?.kind==='deck'&&l.allocation);eq(inBox.reduce((n,l)=>n+l.quantity,0),42);ok(inBox.every(l=>l.allocation?.deckId===d.id));
-// the copy in the box that is not in the target stays in the box as a stand-in, unreserved
-const stray=state.lots.find(l=>l.cardId===upgrade.id);eq(stray.location.kind,'deck');eq(stray.location.deckId,d.id);ok(/Stand-in in the D1 box/.test(stray.notes));eq(stray.allocation,null);eq(M.readiness(state,d).standIns,1);eq(M.projection(state).find(x=>x.recordId===stray.id).placement,'Stand-in');
+// the copy in the physical deck that is not in the target stays in the physical deck as a substitute, unreserved
+const stray=state.lots.find(l=>l.cardId===upgrade.id);eq(stray.location.kind,'deck');eq(stray.location.deckId,d.id);ok(/Substitute in D1/.test(stray.notes));eq(stray.allocation,null);eq(M.readiness(state,d).standIns,1);eq(M.projection(state).find(x=>x.recordId===stray.id).placement,'Substitute');
 // bench and ordered copies are reserved for the shortfall, owned first; the spare bench copy stays free
 const r=M.readiness(state,d);eq(r.target,100);eq(r.owned,42+1+19);eq(r.ordered,1);eq(r.toBuy,100-62-1);
 const filler1=state.lots.filter(l=>l.cardId===filler[1].id);eq(filler1.length,2);eq(filler1.filter(l=>l.allocation).length,1);eq(filler1.find(l=>!l.allocation).quantity,1);
@@ -84,8 +84,8 @@ M.validate(real.state);checks++;
 const saved=await E.readBackup(await readFile(new URL('../data/live-state.json',import.meta.url),'utf8'));
 M.validate(saved.state);checks++;
 eq(M.fingerprint(saved.state.decks[0]),M.fingerprint(real.state.decks[0]));
-// The segments on the live file (Master v13): D3 owns 80, 72 of them in its box, so 8 are to pull; 0 in the box are no longer on the list.
-{const d3=saved.state.decks.find(d=>/^D3/.test(d.name)),r=M.readiness(saved.state,d3);eq(r.inBox,72);eq(r.pullFromBench+r.pullFromOtherBox,8);eq(r.ordered,4);eq(r.toBuy,16);eq(r.standIns,20);eq(r.sleeved,92);eq(r.remove,8);/* 20 stand-ins fill seats; the 8 reserved copies on the bench can take 8 of them now */ok(r.costToFinish>0);}
+// The segments on the live file (Master v13): D3 owns 80, 72 of them in its box, so 8 are to pull; 0 in the physical deck are no longer on the list.
+{const d3=saved.state.decks.find(d=>/^D3/.test(d.name)),r=M.readiness(saved.state,d3);eq(r.inBox,72);eq(r.pullFromBench+r.pullFromOtherBox,8);eq(r.ordered,4);eq(r.toBuy,16);eq(r.standIns,20);eq(r.sleeved,92);eq(r.remove,8);/* 20 substitutes fill seats; the 8 reserved copies on the bench can take 8 of them now */ok(r.costToFinish>0);}
 assert.deepEqual(M.counters(saved.state),M.counters(real.state));checks++;
 assert.deepEqual(saved.state.lots.map(l=>[l.cardId,l.quantity,l.source,l.allocation?.slotId||'',l.location?.kind||'']),real.state.lots.map(l=>[l.cardId,l.quantity,l.source,l.allocation?.slotId||'',l.location?.kind||'']));checks++;
 eq(L.PASSWORD,'treycmload1');

@@ -11,8 +11,8 @@
  *
  * What the file says and what the library shows, one to one:
  *   decks[].cards        the 100-card target, finalized, one main slot per card
- *   owned.inDeck[D]      owned copies in that deck's box: reserved to the deck, located in it;
- *                        copies the list does not call for stay in the box as stand-ins
+ *   owned.inDeck[D]      owned copies in that deck: reserved to the deck, located in it;
+ *                        copies the list does not call for stay in the physical deck as substitutes
  *   owned.bench          owned copies on the bench; reserved to whichever deck still needs them
  *   ordered              copies in flight; reserved after owned copies, never located
  *   buy                  the outstanding shopping list, filed under the To Buy group with prices
@@ -38,7 +38,7 @@
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;if(root)root.CrankLiveLoad=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
   'use strict';
   const FORMAT='crankmagic-live-load', VERSION=1, PASSWORD='treycmload1', GROUP_UPGRADES='group:live:upgrades', GROUP_TO_BUY='group:to-buy';
-  const BASICS={'Plains':'W','Island':'U','Swamp':'B','Mountain':'R','Forest':'G','Wastes':''},PLANNED_SOURCES=['wanted','watching'];
+  const BASICS={'Plains':'W','Island':'U','Swamp':'B','Mountain':'R','Forest':'G','Wastes':''},PLANNED_SOURCES=['watching'];
   const fold=s=>String(s||'').normalize('NFKD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
   const front=s=>String(s||'').split(' // ')[0];
   const ensure=(ok,message)=>{if(!ok)throw Error(message);};
@@ -146,7 +146,7 @@
     /* Copies. Built directly, then validated as a whole: eight hundred commands that each
        clone the library would spend seconds proving what one validation proves. */
     const state=Model.clone(s);let serial=0;
-    const lot=(cardId,quantity,source,location,notes,groupId)=>{const l={id:'lot:live:'+(++serial),cardId,quantity,source,printing:Model.print({}),location,allocation:null,offer:'none',groupIds:groupId?[groupId]:[],notes:notes||'',paid:null,acquiredAt:stamp,provenance:{...provenance}};if(source!=='owned')l.location=null;state.lots.push(l);return l;};
+    const lot=(cardId,quantity,source,location,notes,groupId)=>{const l={id:'lot:live:'+(++serial),cardId,quantity,source,...(source==='ordered'?{channel:'bought'}:{}),printing:Model.print({}),location,allocation:null,offer:'none',groupIds:groupId?[groupId]:[],notes:notes||'',paid:null,acquiredAt:stamp,provenance:{...provenance}};if(source!=='owned')l.location=null;state.lots.push(l);return l;};
     const deckOf=id=>state.decks.find(d=>d.id===id);
     const allocated=(d,r)=>state.lots.filter(l=>l.allocation&&l.allocation.deckId===d.id&&l.allocation.slotId===r.id).reduce((k,l)=>k+l.quantity,0);
     const shortfall=(d,r)=>Math.max(0,r.quantity-allocated(d,r));
@@ -157,10 +157,10 @@
         let inBox=0;
         if(r&&deck.status==='final'){inBox=Math.min(qty,shortfall(deck,r));if(inBox)lot(cardId,inBox,'owned',{kind:'deck',deckId:deck.id,box:deck.name}).allocation={deckId:deck.id,slotId};}
         const rest=qty-inBox;
-        /* The rest is physically in the box and not called for by the list: a stand-in. It stays
+        /* The rest is physically in the physical deck and not called for by the list: a substitute. It stays
            where it is, unreserved; the app counts it, and the pull sheet asks for it back when a
            real copy is ready to take its seat. */
-        if(rest)lot(cardId,rest,'owned',{kind:'deck',deckId:deck.id,box:deck.name},`Stand-in in the ${d.id} box: the list does not call for ${r?'this many':'it'}.`);
+        if(rest)lot(cardId,rest,'owned',{kind:'deck',deckId:deck.id,box:deck.name},`Substitute in ${d.id}: the list does not call for ${r?'this many':'it'}.`);
       }
     }
     for(const [name,qty,forId] of doc.owned.bench)lot(idOf(name),qty,'owned',{kind:'bench',box:''},'',forId?groupOf[forId]:'');
@@ -171,7 +171,7 @@
       const deck=deckOf(deckIds[d.id]);if(deck.status!=='final')continue;
       for(const r of deck.slots.filter(r=>r.committed)){
         let need=shortfall(deck,r);if(!need)continue;
-        const pool=state.lots.filter(l=>l.cardId===r.cardId&&!l.allocation&&l.source!=='wanted').sort((a,b)=>(a.source==='owned'?0:1)-(b.source==='owned'?0:1));
+        const pool=state.lots.filter(l=>l.cardId===r.cardId&&!l.allocation&&l.source!=='watching').sort((a,b)=>(a.source==='owned'?0:1)-(b.source==='owned'?0:1));
         for(const l of pool){
           if(!need)break;
           const take=Math.min(need,l.quantity);
