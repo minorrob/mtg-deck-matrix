@@ -287,7 +287,7 @@ M.validate(s);checks++;
   run('acquire',{lot:{id:'ring1',cardId:'ring',quantity:1}});
   {const p=M.plan(s,{cardId:'ring',column:'a',deckId:'A',value:1});assert.equal(p.command.type,'assign');assert.equal(p.review,true);assert.ok(p.notes.some(n=>/1 free copy is reserved to Deck A/.test(n)),p.notes.join(' | '));checks+=3;
    run(p.command.type,p.command);assert.deepEqual([cell('ring','A').a,cell('ring','A').boxed],[1,0]);assert.equal(M.readiness(s,M.deck(s,'A')).pullFromBench,1);checks+=2;agree();}
-  {const p=M.plan(s,{cardId:'ring',column:'boxed',deckId:'A',value:1});assert.ok(p.notes.some(n=>/1 copy goes into Deck A's box/.test(n)));run(p.command.type,p.command);assert.equal(cell('ring','A').boxed,1);assert.equal(M.inDeck(s,M.lot(s,'ring1')),true);checks+=3;agree();}
+  {const p=M.plan(s,{cardId:'ring',column:'boxed',deckId:'A',value:1});assert.ok(p.notes.some(n=>/1 reserved copy goes into Deck A's box/.test(n)),p.notes.join(' | '));run(p.command.type,p.command);assert.equal(cell('ring','A').boxed,1);assert.equal(M.inDeck(s,M.lot(s,'ring1')),true);checks+=3;agree();}
   // Another deck's cell typed to 1 takes the copy: reserved here now, still in the other box
   // until pulled, and never without a review.
   expectFailure('assign',{deckId:'B',cardId:'ring',assigned:1},/confirm/i);
@@ -347,8 +347,8 @@ M.validate(s);checks++;
   // A card the library has never met rides in on the edit, and every command it plans carries the identity.
   {const novel={id:'novel',name:'Arcane Signet',typeLine:'Artifact',verified:true,colorIdentity:[],legalities:{commander:'legal'}};
    assert.throws(()=>M.plan(s,{cardId:'novel',column:'own',value:1}),/Resolve the card identity/);checks++;
-   const p=M.plan(s,{cardId:'novel',card:novel,column:'boxed',deckId:'A',value:1});assert.equal(p.command.type,'batch');assert.deepEqual(p.command.commands.map(c=>(c.cards||[]).length),[1,0]);checks+=2;
-   run('batch',p.command);assert.equal(s.cards.novel.name,'Arcane Signet');assert.deepEqual([cell('novel','A').t,cell('novel','A').boxed],[1,1]);checks+=2;
+   const p=M.plan(s,{cardId:'novel',card:novel,column:'boxed',deckId:'A',value:1});assert.equal(p.command.type,'acquire','not in the list: one copy recorded straight into the box as a stand-in');assert.equal((p.command.cards||[]).length,1);checks+=2;
+   run(p.command.type,p.command);assert.equal(s.cards.novel.name,'Arcane Signet');assert.deepEqual([cell('novel','A').t,cell('novel','A').boxed,cell('novel','A').sub],[0,0,1]);checks+=2;
    const q=M.plan(s,{cardId:'novel2',card:{...novel,id:'novel2',name:'Fellwar Stone'},column:'own',value:2});assert.equal(q.command.cards[0].name,'Fellwar Stone');run(q.command.type,q.command);assert.equal(rowOf('novel2').own,2);checks+=2;agree();}
   M.validate(s);checks++;
   s=saved;
@@ -397,6 +397,40 @@ M.validate(s);checks++;
   run('bulk',{op:'place',deckId:'B',lotIds:['r2'],asStandIn:true});assert.equal(M.lot(s,'r2').allocation?.slotId,'ringB','the list wanted it, so it is a real copy');assert.equal(B().inBox,1);checks+=2;
   run('bulk',{op:'place',deckId:'B',lotIds:['g1'],asStandIn:true});assert.deepEqual([M.lot(s,'g1').location.deckId,M.lot(s,'g1').allocation,B().standIns],['B',null,1]);checks++;
   {const m2=M.matrix(s),x=m2.rows.find(x=>x.cardId==='gem');assert.deepEqual([x.perDeck.A.sub,x.perDeck.B.sub,m2.totals.A.sub,m2.totals.B.sub,x.bench],[0,1,0,1,0]);checks++;}
+  M.validate(s);checks++;
+  s=saved;
+}
+// THE A COLUMN IS THE BOX. Typed on the spreadsheet, A is how many copies are physically in the
+// deck's box: real copies up to the list's count, stand-ins beyond it, all of them stand-ins
+// when the list does not name the card. Lowering takes stand-ins out first; raising fills real
+// seats first, then stands copies in from the bench, from other boxes, then newly recorded.
+{
+  const saved=s;s=M.empty();
+  run('cards',{cards:[...cards,{id:'gem',name:'Fellwar Stone',typeLine:'Artifact',verified:true,colorIdentity:[],legalities:{commander:'legal'}}]});
+  run('createDeck',{deckId:'A',name:'Deck A',commanders:['leader'],slots:[{id:'cmdA',cardId:'leader',quantity:1},{id:'landA',cardId:'land',quantity:97},{id:'ringA',cardId:'ring',quantity:1},{id:'stoneA',cardId:'stone',quantity:1}]});run('finalize',{deckId:'A'});
+  run('createDeck',{deckId:'B',name:'Deck B',commanders:['leader'],slots:[{id:'cmdB',cardId:'leader',quantity:1},{id:'landB',cardId:'land',quantity:98},{id:'ringB',cardId:'ring',quantity:1}]});run('finalize',{deckId:'B'});
+  const cell=(cid,did)=>M.matrix(s).rows.find(r=>r.cardId===cid).perDeck[did],rowOf=cid=>M.matrix(s).rows.find(r=>r.cardId===cid),A=()=>M.readiness(s,M.deck(s,'A'));
+  // Not in the list: A typed to 1 stands a free copy in; no review, nothing reserved.
+  run('acquire',{lot:{id:'g',cardId:'gem',quantity:2}});
+  {const p=M.plan(s,{cardId:'gem',column:'boxed',deckId:'A',value:1});assert.deepEqual([p.command.type,p.command.asStandIn,p.review],['place',true,false]);assert.ok(p.notes.some(n=>/not in Deck A's list, so it stands in/.test(n)),p.notes.join(' | '));checks+=2;
+   run(p.command.type,p.command);assert.deepEqual([cell('gem','A').boxed,cell('gem','A').sub,rowOf('gem').bench,A().standIns],[0,1,1,1]);checks++;}
+  // Above what exists: the last free copy, then a newly owned one recorded straight into the box.
+  {const p=M.plan(s,{cardId:'gem',column:'boxed',deckId:'A',value:3});assert.deepEqual(p.command.commands.map(c=>c.type),['place','acquire']);assert.equal(p.command.commands[1].lot.location.deckId,'A');assert.equal(p.review,true);assert.ok(p.notes.some(n=>/1 copy is recorded as newly owned, straight into Deck A's box/.test(n)),p.notes.join(' | '));checks+=4;
+   run('batch',p.command);assert.deepEqual([cell('gem','A').sub,rowOf('gem').own,rowOf('gem').bench,s.lots.filter(l=>l.cardId==='gem').length],[3,3,0,3],'the recorded copy is its own lot in the box, not merged onto the bench');checks++;}
+  // Lowering: stand-ins go back to the bench.
+  {const p=M.plan(s,{cardId:'gem',column:'boxed',deckId:'A',value:1});assert.ok(p.command.type==='batch'||p.command.type==='place');assert.ok(p.notes.some(n=>/2 stand-ins of Fellwar Stone go back to the bench/.test(n)),p.notes.join(' | '));checks+=2;
+   run(p.command.type,p.command);assert.deepEqual([cell('gem','A').sub,rowOf('gem').bench,A().standIns],[1,2,1]);checks++;}
+  // In the list: real seats first, extras are stand-ins; lowering benches stand-ins before real copies.
+  run('acquire',{lot:{id:'l',cardId:'land',quantity:97}});run('fulfill',{deckId:'A'});run('bulk',{op:'place',deckId:'A',lotIds:['l'],confirmed:true});
+  {const p=M.plan(s,{cardId:'land',column:'boxed',deckId:'A',value:99});assert.equal(p.command.type,'acquire');assert.equal(p.command.lot.quantity,2);assert.ok(p.notes.some(n=>/The list wants 97; the extra 2 are stand-ins/.test(n)),p.notes.join(' | '));checks+=3;
+   run(p.command.type,p.command);assert.deepEqual([cell('land','A').boxed,cell('land','A').sub,A().inBox,A().standIns,A().sleeved],[97,2,97,3,100]);checks++;}
+  {const p=M.plan(s,{cardId:'land',column:'boxed',deckId:'A',value:96});assert.deepEqual(p.command.commands.map(c=>c.type),['assign','place']);assert.ok(p.notes.some(n=>/1 copy comes out of the box to the bench, still reserved/.test(n)));checks+=2;
+   run('batch',p.command);assert.deepEqual([cell('land','A').boxed,cell('land','A').sub,A().pullFromBench,A().standIns],[96,0,1,1]);checks++;}
+  // From another box: a stand-in in B moves to A, still a stand-in.
+  run('bulk',{op:'place',deckId:'B',lotIds:[s.lots.find(l=>l.cardId==='gem'&&l.location?.kind==='bench').id],asStandIn:true,confirmed:true});
+  {const p=M.plan(s,{cardId:'gem',column:'boxed',deckId:'A',value:3});assert.ok(p.notes.some(n=>/moves from the Deck B box/.test(n)),p.notes.join(' | '));assert.equal(p.review,true);checks+=2;
+   run(p.command.type,p.command);assert.deepEqual([cell('gem','A').sub,cell('gem','B').sub],[3,0]);checks++;}
+  assert.deepEqual(M.plan(s,{cardId:'gem',column:'boxed',deckId:'A',value:3}),{command:null,review:false,notes:['No change.']});checks++;
   M.validate(s);checks++;
   s=saved;
 }

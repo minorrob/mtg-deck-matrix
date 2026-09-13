@@ -28,7 +28,11 @@ The approved standalone mockup remains under `design/crankmagic/` for design ref
 ## Application
 
 - **My Decks**: plans and assembly status; commander image/rules, composition, strategy,
-  structural SWOT, recommendations, game history, compare, finalize, lock and archive.
+  structural SWOT, recommendations, game history, compare, finalize, lock and archive. A
+  plain link beside *Your decks*, **How a deck comes together** (`#how`), is a one-screen
+  map: six steps as a flow (the first split between building one in the Deck Lab and
+  bringing a list you already have, meeting at Test), each title opening where that step
+  begins, and the card status ladder in order with what each word means.
 - **Collection**: exact printing lots, requirements, groups and planned lists. Source,
   purpose, reservation and physical location are separate. Clear filters leaves the deck
   flow and shows all collection records. Every row's **Actions → Status** fly-out carries
