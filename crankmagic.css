@@ -520,10 +520,10 @@ button.cm-badge-link:hover{background:#35507a;color:#eaf5ff}
 #matrix-v2 .cm-tools-toggle:hover{background:#2b3a55;color:var(--v-ink);border-color:var(--v-accent)}
 #matrix-v2 .cm-tools-toggle[aria-expanded=true]{color:var(--v-accent);border-color:var(--v-accent)}
 #matrix-v2.cm-stage .cm-toolbar,
-#matrix-v2.cm-stage #cm-facet-details,
+#matrix-v2.cm-stage #cm-facet-bar,
 #matrix-v2.cm-stage #cm-filter-host{display:none}
 #matrix-v2.cm-stage.cm-tools-open .cm-toolbar{display:flex}
-#matrix-v2.cm-stage.cm-tools-open #cm-facet-details{display:block}
+#matrix-v2.cm-stage #cm-facet-bar{display:none}#matrix-v2.cm-stage.cm-tools-open #cm-facet-bar{display:flex}
 #matrix-v2.cm-stage.cm-tools-open #cm-filter-host{display:block}
 /* The head is one row now -- the eyebrow and this button -- so it stops being a block. */
 #matrix-v2.cm-stage .cm-page-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -1056,4 +1056,30 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-list-pop-row .cm-actions .v-button,.cm-list-pop-row .cm-actions .v-button.is-on{min-height:32px;padding:0 11px;font-size:12px}
 .cm-list-pop-row .cm-actions .v-button{background:#34485f;border-color:#5b7196;color:#f6faff}
 .cm-list-pop-row .cm-actions .v-button.primary{background:#8cc7ff;color:#081320;border-color:#8cc7ff}
-
+/* THE DISCOVER FILTER BAR: facets grouped by what they ask about, each a button to a dialog; a
+   single-value facet is the toggle itself; the badge is the number of picks in that facet. */
+.cm-facet-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:6px 0 10px;padding:10px 14px;background:#171d2a;border:1px solid #344258;border-radius:10px}
+.cm-facet-bar-head{display:inline-flex;align-items:baseline;gap:8px;font-size:13px;margin-right:4px}
+.cm-facet-group{display:inline-flex;flex-wrap:wrap;align-items:center;gap:6px;padding-right:12px;border-right:1px solid #2b3549}
+.cm-facet-group:last-of-type{border-right:0}
+.cm-facet-group-name{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#8fb0d4;margin-right:2px}
+.cm-facet-btn{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 10px;border:1px solid #39465f;border-radius:7px;background:#202638;color:#e6f0ff;font:inherit;font-size:12.5px;cursor:pointer;width:auto;text-align:left}
+.cm-facet-btn:hover{background:#2b3d5c;border-left-color:#39465f}
+.cm-facet-btn.is-on{background:#ffd16622;border-color:#ffd166;color:#ffe9b3}
+.cm-facet-btn.is-not{background:#5a262e5c;border-color:#d8807f;color:#ffd3cd}
+.cm-facet-n{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#ffd166;color:#1b1b1b;font-size:11px;font-weight:700;display:inline-grid;place-items:center}
+.cm-facet-n:empty{display:none}
+.cm-facet-bar .cm-facet-drop-tools{margin-left:auto}
+.cm-facet-status #cm-facet-chips{min-height:30px}
+/* The facet dialog: its options as pills, A to Z, wrapped; the all/any rule and the two buttons in a footer. */
+.cm-facet-dialog{display:grid;gap:12px}
+.cm-facet-help{margin:0}
+.cm-facet-grid{display:flex;flex-wrap:wrap;gap:6px;max-height:min(52vh,520px);overflow:auto;padding:2px}
+.cm-facet-grid .cm-facet-pick{width:auto;border:1px solid #39465f;border-radius:20px;padding:5px 10px;background:#1e2a3f;gap:6px;min-height:32px}
+.cm-facet-grid .cm-facet-pick:hover{border-color:#79bdff;background:#243248}
+.cm-facet-grid .cm-facet-pick.is-on{border-color:#ffd166;background:#ffd16622}
+.cm-facet-grid .cm-facet-pick.is-not{border-color:#d8807f;background:#5a262e5c}
+.cm-facet-dialog-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid #2b3549;padding-top:12px}
+.cm-facet-dialog .cm-facet-mode{margin:0}
+@media(max-width:640px){.cm-facet-group{border-right:0;padding-right:0}.cm-facet-bar .cm-facet-drop-tools{margin-left:0}}
+.cm-facet-dialog-foot .cm-checkbox,.cm-facet-dialog-foot .cm-facet-mode>span{white-space:nowrap}
