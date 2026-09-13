@@ -1083,3 +1083,41 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-facet-dialog .cm-facet-mode{margin:0}
 @media(max-width:640px){.cm-facet-group{border-right:0;padding-right:0}.cm-facet-bar .cm-facet-drop-tools{margin-left:0}}
 .cm-facet-dialog-foot .cm-checkbox,.cm-facet-dialog-foot .cm-facet-mode>span{white-space:nowrap}
+/* THE SPREADSHEET: the Master's grid, sticky on three sides. Numbers are buttons that turn
+   into inputs in place; a deck's two columns share a tint so T and A read as a pair. */
+.cm-sheet-wrap{overflow:auto;max-height:calc(100vh - 150px);border:1px solid #2b3549;border-radius:10px;margin:14px 0;background:#131a27}
+#matrix-v2 .cm-sheet{width:max-content;min-width:100%;border-collapse:separate;border-spacing:0;font-size:13px;font-variant-numeric:tabular-nums}
+#matrix-v2 .cm-sheet th,#matrix-v2 .cm-sheet td{padding:0;min-width:0;height:auto;border-bottom:1px solid #222c3d;border-right:1px solid #1d2636;vertical-align:middle;background:#131a27}
+#matrix-v2 .cm-sheet thead th{position:sticky;top:0;z-index:3;background:#151b28;padding:6px 8px;font-size:11px;letter-spacing:.03em;color:#b5c9e5;text-align:center!important;white-space:nowrap;border-bottom:1px solid #2b3549}
+#matrix-v2 .cm-sheet thead tr:first-child th{height:48px}
+#matrix-v2 .cm-sheet thead tr+tr th{top:48px;height:26px;padding:2px 6px}
+#matrix-v2 .cm-sheet .cm-sheet-name{position:sticky;left:0;z-index:2;background:#151b28;text-align:left!important;min-width:200px;max-width:260px;padding:4px 10px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-right:1px solid #2b3549}
+#matrix-v2 .cm-sheet thead .cm-sheet-name,#matrix-v2 .cm-sheet tfoot .cm-sheet-name{z-index:4}
+#matrix-v2 .cm-sheet .cm-sheet-name .cm-card-name{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0;border:0;background:none;color:#e6f0ff;font:inherit;font-weight:700;text-align:left;cursor:pointer}
+#matrix-v2 .cm-sheet .cm-sheet-name .cm-card-name:hover{color:#fff;text-decoration:underline}
+#matrix-v2 .cm-sheet tfoot th,#matrix-v2 .cm-sheet tfoot td{position:sticky;bottom:0;z-index:3;background:#1a2233;font-weight:700;padding:7px 8px;text-align:right!important;border-top:2px solid #2f3b52;color:#e6f0ff}
+#matrix-v2 .cm-sheet tfoot .cm-sheet-name{text-align:left!important;background:#1a2233}
+#matrix-v2 .cm-sheet .cm-sheet-num{text-align:right!important;min-width:56px;padding:0 6px;color:#d9e6f5}
+#matrix-v2 .cm-sheet td.cm-sheet-num{padding:0}
+#matrix-v2 .cm-sheet td.cm-sheet-num:not(.cm-sheet-live){padding:0 8px}
+#matrix-v2 .cm-sheet .cm-sheet-alt{background:#171f2e}
+#matrix-v2 .cm-sheet thead .cm-sheet-alt{background:#1b2333}
+#matrix-v2 .cm-sheet tfoot .cm-sheet-alt{background:#1f2839}
+#matrix-v2 .cm-sheet .cm-sheet-deck-name{display:block;font-weight:700;letter-spacing:0;font-size:12px;color:#e6f0ff;max-width:150px;white-space:normal;line-height:1.15;text-transform:none}
+#matrix-v2 .cm-sheet thead th small{display:block;font-weight:400;font-size:10px;color:#8fa6c4;letter-spacing:0;margin-top:2px}
+#matrix-v2 .cm-sheet th .cm-sheet-sort{display:inline-flex;gap:4px;align-items:center;min-height:0;padding:0;border:0;background:none;color:inherit;font:inherit;cursor:pointer;text-align:inherit}
+#matrix-v2 .cm-sheet th[aria-sort] .cm-sheet-sort{color:#fff}
+#matrix-v2 .cm-sheet-cell{display:block;width:100%;min-height:36px;padding:6px 8px;margin:0;border:0;border-radius:0;background:none;color:inherit;font:inherit;font-variant-numeric:tabular-nums;text-align:right;cursor:cell}
+#matrix-v2 .cm-sheet-cell:hover{background:#222c40;box-shadow:inset 0 0 0 1px #4a6a94}
+#matrix-v2 .cm-sheet-cell:focus-visible{outline:2px solid #9addff;outline-offset:-2px}
+#matrix-v2 .cm-sheet-input{width:100%;min-width:56px;min-height:36px;padding:4px 6px;margin:0;border:0;border-radius:0;background:#243652;color:#fff;font:inherit;text-align:right;box-shadow:inset 0 0 0 2px #9addff}
+.cm-sheet-zero{color:#4c5b73}
+#matrix-v2 .cm-sheet .is-short,#matrix-v2 .cm-sheet .is-short .cm-sheet-cell{color:#ffd166}
+#matrix-v2 .cm-sheet .is-done .cm-sheet-cell{color:#8fe3a8}
+.cm-sheet-pend{font-size:10px;color:#9addff;margin-left:2px;vertical-align:super;font-weight:600}
+.cm-sheet-opt{color:#ffd166;font-size:8px;margin-left:3px;vertical-align:middle}
+.cm-sheet-opt.cm-sheet-pinned{color:#9addff}
+#matrix-v2 .cm-sheet .cm-sheet-muted{color:#4c5b73;text-align:center!important;padding:0 8px}
+#matrix-v2 .cm-sheet .cm-sheet-empty{padding:18px 14px;text-align:left!important}
+.cm-sheet-notes{margin:0 0 12px 18px;padding:0;line-height:1.5;font-size:13px}
+@media(max-width:640px){#matrix-v2 .cm-sheet .cm-sheet-name{min-width:132px;max-width:150px;font-size:12px}.cm-sheet-wrap{max-height:calc(100vh - 120px)}#matrix-v2 .cm-sheet .cm-sheet-num{min-width:48px}}

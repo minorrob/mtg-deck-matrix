@@ -124,6 +124,20 @@ try{
  await page.reload();await page.locator('.cm-history-table').waitFor({timeout:45000});eq(await page.locator('.cm-history-table tbody tr').count(),1);
  await click('View report');await page.getByRole('dialog').getByText('Score',{exact:false}).first().waitFor();await page.getByRole('button',{name:'Close dialog'}).click();
  await nav('My Decks');await page.locator('.cm-deck-tile').filter({hasText:'Constructive run'}).getByText('61.5 pts').waitFor();checks+=1;
+ /* THE SPREADSHEET. One row per card, T and A per deck; a typed number becomes the commands
+    the library needs. Own raised by one saves on the spot; a deck's A typed to 1 takes the
+    copy from wherever it is, reserves it here and puts it in the box, through the review
+    dialog, and the cell reads 1 afterwards. */
+ await nav('Collection');await page.locator('#cm-roster-table').waitFor();await click('Spreadsheet');await page.locator('.cm-sheet').waitFor();ok((await page.locator('.cm-sheet tbody tr').count())>1);
+ await page.locator('#cm-sheet-query').fill('Krenko, Mob Boss');await page.waitForTimeout(300);eq(await page.locator('.cm-sheet tbody tr').count(),1);
+ current=await state();const journey=current.decks.find(d=>d.name==='Journey Goblins'),krenkoKey=CrankKey('Krenko, Mob Boss');
+ const krenkoOwned=()=>current.lots.filter(l=>l.cardId===krenkoKey&&l.source==='owned').reduce((n,l)=>n+l.quantity,0),ownedBefore=krenkoOwned();
+ const sheetCell=(col,deckId='')=>page.locator(`.cm-sheet [data-cell="${krenkoKey}|${col}|${deckId}"]`);
+ await sheetCell('own').click();await page.locator('.cm-sheet-input').fill(String(ownedBefore+1));await page.keyboard.press('Enter');await page.waitForTimeout(900);current=await state();eq(krenkoOwned(),ownedBefore+1);
+ await sheetCell('boxed',journey.id).click();await page.locator('.cm-sheet-input').fill('1');await page.keyboard.press('Enter');await page.getByRole('dialog').waitFor();await click('Confirm change');await waitDialog();await page.waitForTimeout(900);current=await state();
+ ok(current.lots.some(l=>l.cardId===krenkoKey&&l.source==='owned'&&l.allocation?.deckId===journey.id&&l.location?.kind==='deck'&&l.location.deckId===journey.id),'the typed 1 reserved a copy to the deck and put it in its box');
+ eq(await sheetCell('boxed',journey.id).getAttribute('data-value'),'1');
+ await click('Roster');await page.locator('#cm-roster-table').waitFor();
  /* MONEY ON THE BUY LIST. The Shop opens grouped by deck with a strip above the table: the
     total at sheet prices equals the sum of the band headers' subtotals, and Bought on a row
     is one tap that records the copy and stamps the sheet price as what was paid. */
