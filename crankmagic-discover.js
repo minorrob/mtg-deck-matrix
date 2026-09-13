@@ -487,7 +487,7 @@
        not the focus, so the join named is the one the canvas actually draws. */
     function rowDetailHTML(r) {
       const parent = r.parent, rel = parent && graph ? graph.relation(r.id, parent.id) : null;
-      return `<div class="cm-list-pop"><p class="cm-muted">${e(r.type)}${r.depth ? ` · ring ${r.depth}` : ''}</p>
+      return `<div class="cm-list-pop cm-list-pop-row"><p class="cm-muted cm-pop-type">${e(r.type)}${r.depth ? ` · ring ${r.depth}` : ''}</p>
         ${parent ? `<h4>Joined to ${e(parent.name)} by</h4>${relationHTML(rel, r.card, parent)}` : ''}
         ${ownTermsHTML(r.card)}
         <div class="cm-actions">${landsOnly() ? '' : b('Focus here', 'graph-card', {id: r.id}, true)}${b('Inspect card', 'card', {card: CrankCatalog.key(r.name)})}<button type="button" class="v-button${picked.has(r.id) ? ' is-on' : ''}" data-action="graph-tick" data-id="${e(r.id)}">${picked.has(r.id) ? 'Ticked ✓' : 'Tick for a group'}</button></div></div>`;
