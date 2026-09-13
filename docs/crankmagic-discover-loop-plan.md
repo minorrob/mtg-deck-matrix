@@ -62,9 +62,21 @@ Rob's Discover walk, plus the groundwork the later phases read.
   characteristic and their signature in the classifier's vocabulary, the missing terms, and the
   detection rule the next two phases implement.
 
-## Phase B — the loop vocabulary (one PR)
+## Phase B — the loop vocabulary (shipped, PR after #167)
 
 Goal: the classifier can say *untap*, *copy*, *blink* and the rest, on every card in the graph.
+
+What landed: roles `untap` (529 cards), `copy` (322), `blink` (81), `counter-removal` (9),
+`extra-turn` (51 — the same 51 the bracket reading finds), `cost-reduction` (293), and the
+`tap-ability` mechanic (3,057 nonlands with `{T}` in a cost, kept out of the shared-term
+joins as land entry is). Granted abilities count: Thornbite Staff's *"whenever a creature
+dies, untap this creature"* is an untap of the wearer, and Deadeye Navigator's quoted blink is
+a blink. Self-untap, self-discount, self-counter-removal and clones that merely *enter* as a
+copy are excluded, and the classify suite pins both what the terms must say and what they
+must not. The ladder gained extra turn, untap engine, copier, blink, cost reduction and
+counter removal; Thornbite Staff rings untap, Kiki-Jiki rings copy. `graph/.cache/oracle-text.json`
+was refilled from Scryfall (31,830 cards) and `data/graph.json` re-derived with `--all`.
+The original brief follows for the record.
 
 - Add to `card-classify.js` `ROLE_PATTERNS`: `untap`, `copy`, `blink`, `counter-removal`,
   `extra-turn`, `cost-reduction`; add `tap-ability` as a mechanic on nonlands whose text has

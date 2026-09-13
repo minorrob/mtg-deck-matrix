@@ -165,7 +165,7 @@ A two-node `causes → triggers` cycle, and the one infinite shape the graph's e
 close on their own. It is the acceptance case for the cycle finder: if PR C cannot find this
 one, nothing else matters.
 
-## What the vocabulary needs (PR B)
+## What the vocabulary needs (PR B — shipped; the table is the specification it was built to)
 
 | Term | Kind | Reads | Why |
 |---|---|---|---|
@@ -178,12 +178,13 @@ one, nothing else matters.
 | `cost-reduction` | role | "cost {N} less to cast" | pattern 8 |
 | `persist`, `undying`, `storm`, `cascade` | mechanics | Scryfall keywords — confirm they survive the bake into `mechanics` | 2, 8 |
 
-Every addition is a pattern in `card-classify.js` (`ROLE_PATTERNS`), re-derived over the
-cached rules text by `node tools/graph-amplifiers.mjs --all` (the cache under `graph/.cache/`
-has to exist or be refilled from Scryfall), and pinned in `tests/card-classify.mjs` against the
-named cards above. The Primary Purpose ladder then gains three rungs — `untap`, `copy`, `blink`
-— between *Multiplier* and *Team quality*, so Thornbite Staff rings untap and Kiki-Jiki rings
-copy.
+Each is a pattern in `card-classify.js` (`ROLE_PATTERNS`), re-derived over the cached rules
+text by `node tools/graph-amplifiers.mjs --all` and pinned in `tests/card-classify.mjs` against
+the named cards above and against the cards that must *not* carry them (Sol Ring, Winter Orb,
+Clone, Banishing Light, Blasphemous Act's self-discount, the hatchlings' self-counter-removal).
+The Primary Purpose ladder gained `untap`, `copy` and `blink` between *Multiplier* and *Team
+quality*, so Thornbite Staff rings untap and Kiki-Jiki rings copy. `persist`, `undying`,
+`storm` and `cascade` do arrive in `mechanics` from Scryfall's keywords.
 
 ## The detection rule (PR C)
 
