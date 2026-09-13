@@ -63,8 +63,11 @@ The approved standalone mockup remains under `design/crankmagic/` for design ref
   typed to 1 releases the copy from wherever it was, reserves it here and puts it in this
   box, recording a new owned copy when the library holds none. The copies rule holds
   throughout: one of a card per deck except basics and the cards whose text allows more.
-  Enter commits and moves down, Tab moves right, Escape puts the number back, the arrow keys
-  walk the cells, and *Export CSV* writes the rows in the Master's column order.
+  A small *ˢn* on an *A* cell counts that card's stand-ins in that box, Bench counts copies in
+  no box at all, and *Show → Stand-ins in a box* lists them. Enter commits and moves down,
+  Tab moves right, Escape puts the number back, the arrow keys walk the cells, and *Export
+  CSV* writes the rows in the Master's column order, *A* being what is physically in the box,
+  stand-ins included, like the Master's Actual.
 - **Discover**: navigable metadata/co-play graph, mouse-wheel zoom, keyboard neighbors,
   pan, back trail, card inspection and supplemental catalog lookup. The pane beside the
   graph has two tabs: **Card Info** (the focused card, its terms, *Add/Buy*) and **List**
@@ -94,11 +97,20 @@ The approved standalone mockup remains under `design/crankmagic/` for design ref
   confirmation or CSV, matched by name, applied to the lines it names and marked *receipt*;
   also Import list → *Order confirmation*), *Edit* and *Lines*.
 - **Pull sheet** (`#pull?deck=`): one deck's reserved copies grouped by where they are —
-  pull from bench, move from another box, remove from this box — colour then name inside
-  each, with *In box* / *Move here* / *To bench* per row, a tick that records the walk as
-  it happens, *Mark all found in box*, Print (black on white, boxes to tick) and Export.
-  The deck page's stat row shows In box · To pull · Ordered · To buy and $ to finish against
-  the cap, with a readiness bar; *Pull sheet (n)* leads the action row when there is
+  pull from bench, move from another box — plus the **stand-ins** in this box, colour then
+  name inside each, with *In box* / *Move here* / *To bench* per row, a tick that records
+  the walk as it happens, *Mark all found in box*, Print (black on white, boxes to tick) and
+  Export. A stand-in is any owned copy physically in a deck box that the list does not call
+  for: it fills a seat while the real card is bought or on its way, so the deck is playable
+  before it is finished. Nothing marks it; being in the box without a reservation is what it
+  is. The sheet says how many can come out now (a real copy is ready to take the seat, or the
+  box holds more stand-ins than empty seats) and which fill seats until their cards arrive;
+  *Mark all found* puts the ready copies in and takes exactly that many stand-ins out. The
+  Collection puts a copy in as a stand-in from **Actions → Put in a deck box as a stand-in**
+  (a copy the list does call for is reserved on the way in instead), the *Allocation* filter
+  has *Stand-in*, tiles read *Playable · n stand-ins* once the box holds a hundred, and the
+  readiness bar hatches the seats stand-ins cover. The deck page's stat row shows In box ·
+  Stand-ins · To pull · Ordered · To buy and $ to finish against the cap, with a readiness bar; *Pull sheet (n)* leads the action row when there is
   anything to pull. The **Upgrade Path** panel under SWOT lists the deck's linked upgrades
   as *Add · Replaces · Tier · Price · Why · Promote* with *Tuned only* and *Under $2*
   (D5–D6: $1.50) filters, `$X to Max` and `GC k / 2` in its header; *Promote* is the

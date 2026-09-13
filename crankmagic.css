@@ -1121,3 +1121,14 @@ button.cm-pill:hover{filter:brightness(1.15)}
 #matrix-v2 .cm-sheet .cm-sheet-empty{padding:18px 14px;text-align:left!important}
 .cm-sheet-notes{margin:0 0 12px 18px;padding:0;line-height:1.5;font-size:13px}
 @media(max-width:640px){#matrix-v2 .cm-sheet .cm-sheet-name{min-width:132px;max-width:150px;font-size:12px}.cm-sheet-wrap{max-height:calc(100vh - 120px)}#matrix-v2 .cm-sheet .cm-sheet-num{min-width:48px}}
+/* STAND-INS: a copy filling a seat while the real card is on its way. Hatched wherever the
+   status colours appear, so it reads as a placeholder over the solid segments. */
+:root{--st-standin:#c39bff}
+.cm-readiness{position:relative}
+.cm-readiness .standin{position:absolute;top:0;bottom:0;border-radius:2px;pointer-events:none;background:repeating-linear-gradient(135deg,var(--st-standin) 0 3px,rgba(10,14,24,.55) 3px 6px)}
+.cm-readiness-legend .standin{background:repeating-linear-gradient(135deg,var(--st-standin) 0 2px,rgba(10,14,24,.55) 2px 4px)}
+.cm-pill.standin{--st:var(--st-standin)}
+.cm-badge-standin{background:#3a2a5a;color:#e2ccff}
+.cm-sheet-sub{font-size:10px;color:var(--st-standin);margin-left:2px;vertical-align:super;font-weight:700}
+.cm-pull-group[data-group=standin] .cm-pull-row.is-stay{opacity:.7}
+.cm-pull-stay-note{font-size:12px;color:#9db8d8;margin:-6px 0 10px;line-height:1.5}
