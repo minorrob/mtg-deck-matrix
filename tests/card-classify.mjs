@@ -292,7 +292,20 @@ ok("the bake carries the directed fields for every card, not only the ones teste
     "Parallel Lives": ["multiplies", "token"],
     "Lightning Greaves": ["roles", "protection"],
     "Assault Formation": ["wantsStat", "toughness"],
-    "Thornbite Staff": ["roles", "removal"]
+    /* The loop vocabulary: an untap engine rings untap, not the removal its wearer also gets. */
+    "Thornbite Staff": ["roles", "untap"],
+    "Umbral Mantle": ["roles", "untap"],
+    "Staff of Domination": ["roles", "untap"],
+    "Freed from the Real": ["roles", "untap"],
+    "Kiki-Jiki, Mirror Breaker": ["roles", "copy"],
+    "Splinter Twin": ["roles", "copy"],
+    "Deadeye Navigator": ["roles", "blink"],
+    "Ephemerate": ["roles", "blink"],
+    "Conjurer's Closet": ["roles", "blink"],
+    "Melira, Sylvok Outcast": ["roles", "counter-removal"],
+    "Solemnity": ["roles", "counter-removal"],
+    "Time Warp": ["roles", "extra-turn"],
+    "Goblin Electromancer": ["roles", "cost-reduction"]
   };
   for (const [name, [key, value]] of Object.entries(expect)) {
     const card = byName.get(name);
@@ -303,6 +316,19 @@ ok("the bake carries the directed fields for every card, not only the ones teste
     assert.ok(p.label && p.why, `${name}: the purpose carries a label and a reason`);
   }
   assert.equal(Classify.purposeOf(byName.get("Coat of Arms")), null, "a card with only generic terms has no ring");
+  /* The loop vocabulary is narrow on purpose: what it must NOT say is as pinned as what it must. */
+  const roles = (name) => byName.get(name).roles || [];
+  for (const [name, role] of [["Sol Ring", "untap"], ["Winter Orb", "untap"], ["Static Orb", "untap"], ["Stasis", "untap"], ["Clone", "copy"], ["Spark Double", "copy"],
+    ["Banishing Light", "blink"], ["Oblivion Ring", "blink"], ["Cloudstone Curio", "blink"], ["Blasphemous Act", "cost-reduction"], ["Ghalta, Primal Hunger", "cost-reduction"], ["Carnifex Demon", "counter-removal"]]) {
+    assert.ok(!roles(name).includes(role), `${name} must not read as ${role}: ${roles(name).join(", ")}`);
+  }
+  for (const name of ["Sol Ring", "Krenko, Mob Boss", "Thornbite Staff", "Kiki-Jiki, Mirror Breaker"]) assert.ok((byName.get(name).mechanics || []).includes("tap-ability"), `${name} has a tap ability`);
+  assert.ok(!(byName.get("Ephemerate").mechanics || []).includes("tap-ability"), "an instant has no tap ability");
+  for (const [name, keyword] of [["Kitchen Finks", "persist"], ["Bloodbraid Elf", "cascade"], ["Grapeshot", "storm"]]) assert.ok((byName.get(name).mechanics || []).includes(keyword), `${name} carries ${keyword}`);
+  const count = (role) => graph.cards.filter((c) => (c.roles || []).includes(role)).length;
+  for (const [role, lo, hi] of [["untap", 300, 900], ["copy", 150, 600], ["blink", 50, 250], ["counter-removal", 5, 40], ["extra-turn", 30, 90], ["cost-reduction", 150, 600]]) {
+    assert.ok(count(role) >= lo && count(role) <= hi, `${role}: ${count(role)} cards, expected ${lo}–${hi}`);
+  }
   assert.equal(Classify.purposeOf(null), null);
   /* Deterministic, and always a term the card itself carries -- so there is always a chip to ring. */
   let withPurpose = 0, nonLand = 0;
@@ -317,6 +343,8 @@ ok("the bake carries the directed fields for every card, not only the ones teste
   }
   assert.ok(withPurpose / nonLand > 0.9, `${withPurpose} of ${nonLand} non-land cards have a purpose`);
   assert.ok(Classify.PURPOSE_LADDER.length >= 20 && Classify.PURPOSE_LADDER[0][1] === "finisher", "the ladder starts at the finisher");
+  const rung = (v) => Classify.PURPOSE_LADDER.findIndex((r) => r[1] === v);
+  assert.ok(rung("untap") > rung("wipe") && rung("untap") < rung("copy") && rung("copy") < rung("blink") && rung("blink") < rung("removal"), "untap, copy and blink sit between the board wipe and removal");
   checks += 1;
 }
 

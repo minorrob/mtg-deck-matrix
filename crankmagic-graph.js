@@ -32,10 +32,11 @@
   'use strict';
 
   /* How a land enters is a filter, not a join: every untapped land would otherwise be joined
-
-     to every other one on a 'shared mechanic'. */
-
-  const LAND_ENTRY = new Set(['enters-untapped', 'enters-tapped', 'enters-tapped-unless']);
+     to every other one on a 'shared mechanic'. tap-ability is the same shape -- three
+     thousand mana rocks and dorks share it, and that is a fact about their cost, not a
+     synergy; it is here so an untap engine can be joined to what it untaps (the next phase),
+     not so every rock is joined to every dork. */
+  const LAND_ENTRY = new Set(['enters-untapped', 'enters-tapped', 'enters-tapped-unless', 'tap-ability']);
 
   const GENERIC = new Set(['creatures', 'lands', 'artifacts', 'enchantments', 'instants', 'sorceries', 'planeswalkers']);
   const CAP = 180;

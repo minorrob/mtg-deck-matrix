@@ -190,8 +190,40 @@
        "loses X life", "loses that much life", "life equal to". A flat "each opponent loses
        1 life" per trigger is an engine's exhaust, not a finisher, and 48 aristocrats
        pieces carried the role until the audit. */
-    {id: "finisher",   re: /you win the game|loses the game|(?:each|target) (?:opponent|player) loses (?:x|half|that much|life equal|(?:[5-9]|\d{2,}) life)|deals? (?:x|that much) damage to each (?:opponent|player)|extra combat phase/}
+    {id: "finisher",   re: /you win the game|loses the game|(?:each|target) (?:opponent|player) loses (?:x|half|that much|life equal|(?:[5-9]|\d{2,}) life)|deals? (?:x|that much) damage to each (?:opponent|player)|extra combat phase/},
+    /* --- THE LOOP VOCABULARY (docs/crankmagic-loop-patterns.md) ------------------
+       The terms a cycle is closed with. Each is written narrowly and named for the card
+       that motivated it; a missed loop costs an edge, a false one puts a lie on the canvas.
+       UNTAP is an untap of something OTHER than the card itself -- a self-untap is
+       pseudo-vigilance, not an engine -- and never a stax "can't untap" or an "untap step";
+       {Q} (untap as a cost) counts, because Umbral Mantle is the whole reason. "Untap it"
+       counts only when a target was named in the sentence before it (Zealous Conscripts).
+       "Untap this creature" inside a GRANTED ability -- Thornbite Staff's equipped creature
+       has "whenever a creature dies, untap this creature" -- is an untap of the wearer, so
+       the quoted form counts -- quotes only ever wrap a granted ability -- and the same
+       quoted form gives Deadeye Navigator its blink. */
+    {id: "untap",      re: /(?<!(?:doesn't|don't|does not|do not|can't|cannot|won't|not) )\buntap(?! steps?\b) (?:target|another target|all|each|up to \w+|any number of|x target|two target|three target|enchanted|equipped|the paired|that|those)\b|target [^.]{0,60}\. ?untap (?:it|them)\b|"[^"]{0,120}untap this (?:creature|permanent)|\{q\}/},
+    /* COPY is a token copy of a permanent, or a permanent that becomes one: Kiki-Jiki,
+       Splinter Twin, Helm of the Host. A clone that merely ENTERS as a copy is not an engine. */
+    {id: "copy",       re: /creates? (?:a|an|x|one|two|three|that many|[a-z]+) (?:[a-z]+ )?tokens? that(?:'s| is| are|'re) (?:a )?cop(?:y|ies) of|becomes a copy of|copy of target (?:creature|permanent|artifact)/},
+    /* BLINK is exile-and-return of a permanent: in one sentence (Ephemerate, Deadeye
+       Navigator, Conjurer's Closet) or across the sentence break Flickerwisp uses. An
+       Oblivion Ring returns "the exiled card" when it leaves, which is not the shape. */
+    {id: "blink",      re: /exile (?:target|another target|up to \w+ target|any number of target|each|all|the paired|enchanted|equipped|another) (?:[a-z-]+ )*?(?:creatures?|permanents?|artifacts?|enchantments?|tokens?)(?: you (?:control|own))?[^.]{0,60}(?:then )?return (?:it|them|that card|those cards|each of them)[^.]{0,50}to the battlefield|exile (?:target|another target|up to \w+ target) (?:[a-z-]+ )*?(?:creatures?|permanents?)[^.]{0,40}\. (?:then )?return (?:that card|it|them|those cards) to the battlefield|"[^"]{0,80}exile this (?:creature|permanent),? then return it to the battlefield/},
+    /* COUNTER-REMOVAL keeps -1/-1 counters off another creature (Melira, Solemnity, Vizier of
+       Remedies, Quillspike): the half of a persist loop that is not the outlet. A creature
+       that removes counters from ITSELF as a cost (the Shadowmoor hatchlings) is not that. */
+    {id: "counter-removal", re: /remove (?:a|an|all|x|any number of|up to \w+|that many|one|two|three) (?:[a-z+\/-]+ )?-1\/-1 counters? from (?:a|an|each|all|target|another|any number of)|(?:can't|cannot) have -1\/-1 counters? (?:put|placed) on|counters? can't be (?:put|placed) on|if (?:one or more )?-1\/-1 counters? would be (?:put|placed)[^.]{0,80}(?:instead|prevent)/},
+    {id: "extra-turn", re: /takes? (?:an|two|x) extra turns?|extra turn after this one/},
+    /* COST-REDUCTION on other spells or abilities; a spell discounting itself is not an engine. */
+    {id: "cost-reduction", re: /(?<!this )(?:spells?|abilities)(?: you (?:cast|activate))?[^.]{0,30}\bcosts? (?:\{[^}]+\} ?)+less|(?<!this spell )\bcosts? \{[^}]+\} less to (?:cast|activate)/}
   ];
+  /* TAP-ABILITY: the card has an activated ability with {T} in its cost -- the thing an
+     untapper untaps. Filed as a mechanic rather than a role: it is a fact about the card's
+     shape, and crankmagic-graph.js keeps it out of the shared-term scoring for the same
+     reason it keeps how a land enters out -- two thousand mana rocks sharing it is not a
+     synergy. */
+  var TAP_ABILITY = /\{t\}[^.:\n]{0,40}:/;
 
   /* --- THE OTHER HALF OF "CREATE" ------------------------------------------
    *
@@ -481,6 +513,7 @@
     SUPPLY_ROLES.forEach(function (r) { if (r.test(typeLine)) push(out.roles, r.id); });
     SUPPLY_TEXT.forEach(function (r) { if (r.re.test(text)) push(out.roles, r.id); });
     ((card && card.keywords) || []).forEach(function (k) { push(out.mechanics, String(k).toLowerCase()); });
+    if (!isLand && TAP_ABILITY.test(text)) push(out.mechanics, "tap-ability");
     /* HOW A LAND ENTERS is the first thing a mana base is chosen by, and no keyword says
        it. Read off the land's own sentences: one that says it enters tapped and names a
        condition -- unless, if you don't pay, if you control fewer than -- is conditional;
@@ -544,8 +577,6 @@
    * is there. Field order inside a card is the classifier's own pattern order, so the answer
    * is the same on every run and in the bake and the browser alike.
    *
-   * Known limits, on purpose: the vocabulary has no untap, copy or blink term yet, so an untap
-   * engine such as Thornbite Staff reads as its next rung (removal) until those roles land.
    * The result is always a term the card's own chips carry, so there is always something to
    * ring; a card with only generic terms (Coat of Arms, whose text names nothing the
    * patterns know) gets null, and no ring. */
@@ -553,20 +584,26 @@
   var LAND_ENTRY_MECHANIC = {"enters-untapped": 1, "enters-tapped": 1, "enters-tapped-unless": 1};
   var PURPOSE_LADDER = [
     ["roles", "finisher",   "Finisher",          "ends the game"],
+    ["roles", "extra-turn", "Extra turn",        "takes another turn"],
     ["roles", "wipe",       "Board wipe",        "clears the board"],
     ["multiplies", null,    "Multiplier",        "makes more of what another card makes or fires"],
+    ["roles", "untap",      "Untap engine",      "untaps a permanent for another go"],
+    ["roles", "copy",       "Copier",            "copies a permanent, again and again"],
+    ["roles", "blink",      "Blink",             "exiles a permanent and returns it to enter again"],
     ["extends", null,       "Team quality",      "spreads a quality across your board"],
     ["roles", "tutor",      "Tutor",             "finds the piece"],
     ["roles", "sac-outlet", "Sacrifice outlet",  "turns bodies into a cost, on demand"],
     ["roles", "removal",    "Removal",           "answers one thing"],
     ["roles", "draw",       "Card draw",         "keeps the hand full"],
     ["roles", "ramp",       "Ramp",              "mana ahead of the curve"],
+    ["roles", "cost-reduction", "Cost reduction", "the deck's spells cost less"],
     ["produces", "token",   "Token maker",       "puts bodies on the board"],
     ["triggers", null,      "Payoff",            "fires when this event happens"],
     ["wants", null,         "Tribal payoff",     "rewards the tribe"],
     ["wantsStat", null,     "Stat payoff",       "rewards a printed stat"],
     ["roles", "recursion",  "Recursion",         "brings it back"],
     ["roles", "protection", "Protection",        "keeps the engine alive"],
+    ["roles", "counter-removal", "Counter removal", "keeps the -1/-1 counters off"],
     ["roles", "counters",   "Counters",          "supplies +1/+1 counters"],
     ["roles", "graveyard",  "Graveyard filler",  "stocks the graveyard"],
     ["grants", null,        "Grants a quality",  "hands a quality to one permanent"],
