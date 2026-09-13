@@ -337,6 +337,7 @@ Changed assets require a new `?v=` everywhere referenced, then
 ## Design and execution record
 
 - [Current implementation status](docs/crankmagic-build-status.md)
+- [The persistent-app plan](docs/crankmagic-persistent-plan.md) — accounts, per-user sync and crankmagic.com on a hosted runtime; plan only, not started
 - [Architecture](docs/crankmagic-architecture.md)
 - [Keeping the catalog current](docs/crankmagic-refresh.md) — what a periodic refresh regenerates, in what order, and what it must never do
 - [Approved plan and standalone mock](design/crankmagic/README.md)
