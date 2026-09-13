@@ -139,6 +139,13 @@ The approved standalone mockup remains under `design/crankmagic/` for design ref
   games — and tiles carry `3–1` once games exist.
 - **User Functions**: backup/restore, Load Live, enriched workbook export, legacy
   reconciliation, history/undo, comparison reset, optional mirror file and explicit Clear all.
+- **Simulation reports carry their hundred.** A report filed from the Lab or the deck page
+  records the exact list it measured. In the Lab, a draft that started from an existing deck
+  offers *File report with <deck>* after measuring: the report joins that deck's history and
+  any measured card the deck neither lists nor holds physically becomes a planned card in the
+  deck's group (Watched, nothing more). On the deck page, a report's *Spin off as a new deck*
+  makes that hundred a finalized deck of its own with the same commander, the report copied
+  with it; the original deck is untouched.
 - **Share** (beside Take a Tour): *Subscribe to updates* opens a mail draft to the maintainer
   asking to be added to the update list, *Share by e-mail* opens a draft with the subject and
   body written and the To line left blank, and *Show a QR code* draws the app link as a QR

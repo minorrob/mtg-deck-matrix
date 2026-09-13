@@ -176,9 +176,14 @@ const pct=v=>`${(Number(v||0)*100).toFixed(1)}%`;
     say('Measuring… seed 0 of '+plan.seedCount);
     const result=await runner.measure({protocol:'published',lineup,config,opponents,table:config.table,onProgress:m=>say(`Measuring… seed ${m.done} of ${m.total} · ${m.mean} points so far`)});
     const report=CrankSim.packFor(result,{protocol:'published',table:config.table,seatCount:(opponents.tables[config.table]||[]).length,cardsVersion:CrankAssets.cards,coverage:cover});
+    report.list=listOf(d);report.commanders=[...d.commanders];
     await C.commit({type:'report',deckId:d.id,report});
     return {report,result};
   }
+/* THE HUNDRED A REPORT MEASURED, kept on the report itself. The fingerprint proves which
+   list it was; the list lets a later reader do something with it -- spin it off as a deck of
+   its own from the deck page -- without the Lab's preview still being around. */
+function listOf(subject){return (subject.slots||[]).filter(r=>r.purpose==='main').map(r=>({cardId:r.cardId,quantity:r.quantity}));}
 C.reportHTML=(r,def)=>reportHTML(r,def);
 C.measureDeck=measureDeck;
 
@@ -500,7 +505,7 @@ const {missing,reachable}=await C.catalog.recheck([...built.cards,...leaders],{o
          blank. The list's own name is the better default anyway. */
       const source=deckId&&C.state.decks.some(d=>d.id===deckId)?M.deck(C.state,deckId).name:null;
       const name=draftName||(leader?leader.name+' · '+(definition.mechanics[0]||'new draft'):(source||'New draft'));
-      const next={commanders:leaders.map(c=>c.id),slots:built.slots.map(r=>({cardId:r.cardId,quantity:r.quantity,purpose:r.purpose||'main',pinned:!!r.pinned,option:!!r.option,optionWhy:r.optionWhy||''})),definition,name,method:built.method,notes:built.notes||[],issues:[...built.issues,...(fetchNote?[fetchNote]:[])],estimatedPrice:built.estimatedPrice,unknownPrices:built.unknownPrices||0,at:new Date().toISOString(),report:null};
+      const next={fromDeckId:mode==='list'&&deckId&&C.state.decks.some(d=>d.id===deckId)?deckId:null,startedFrom:mode==='list'?listSource():'commander',commanders:leaders.map(c=>c.id),slots:built.slots.map(r=>({cardId:r.cardId,quantity:r.quantity,purpose:r.purpose||'main',pinned:!!r.pinned,option:!!r.option,optionWhy:r.optionWhy||''})),definition,name,method:built.method,notes:built.notes||[],issues:[...built.issues,...(fetchNote?[fetchNote]:[])],estimatedPrice:built.estimatedPrice,unknownPrices:built.unknownPrices||0,at:new Date().toISOString(),report:null};
       /* Legality of the list as it would be saved, checked on a copy of the state. */
       const probe=M.apply(C.state,{id:C.uid(),type:'createDeck',deckId:'deck:preview',name,commanders:next.commanders,cards,slots:next.slots,definition}).state;
       next.issues.push(...M.legality(probe,M.deck(probe,'deck:preview')));
@@ -561,7 +566,25 @@ const {missing,reachable}=await C.catalog.recheck([...built.cards,...leaders],{o
     preview=null;
     await C.commit({type:'batch',commands,summary:`Saved ${name} to My Decks`+(commands.some(c=>c.type==='report')?' with its measurement':'')});
   };
-  actions['lab-discard']=async()=>{await keepPreview(null);C.notice('Draft discarded. Nothing was saved.');redrawRun();};
+  /* FILE THE REPORT WITH THE DECK IT STARTED FROM, and create nothing. A simulation run on an
+   existing deck is evidence about that deck: the report goes into its history carrying the
+   hundred it measured, and any card in that hundred that the deck neither lists nor holds
+   physically becomes a planned card in the deck's group -- Watched, nothing more: no copy,
+   no reservation, no purchase. The reader spins the measured hundred off as a deck of its
+   own from the report on the deck page, when and if they want to. */
+actions['lab-file-report']=async()=>{
+  if(!preview||!preview.report)throw Error('Measure this draft first.');
+  const d=C.state.decks.find(x=>x.id===preview.fromDeckId);if(!d)throw Error('The deck this draft started from is no longer in the library.');
+  const list=listOf(preview),report={...preview.report,list,commanders:[...preview.commanders],sourceDeckId:d.id,startedFrom:preview.startedFrom||null};
+  const have=new Set([...d.slots.filter(r=>r.purpose==='main').map(r=>r.cardId),...C.state.lots.filter(l=>l.source==='owned'&&l.location?.kind==='deck'&&l.location.deckId===d.id).map(l=>l.cardId)]);
+  const g=d.groupId?C.state.groups.find(x=>x.id===d.groupId):null,already=new Set(g?g.entries.map(r=>r.cardId):[]);
+  const extras=list.filter(r=>!have.has(r.cardId)&&!already.has(r.cardId)&&C.state.cards[r.cardId]);
+  const when=new Date().toISOString().slice(0,10),commands=[{type:'report',deckId:d.id,report}];
+  if(extras.length&&g)commands.push({type:'groupEntries',groupId:g.id,cards:extras.map(r=>C.state.cards[r.cardId]),entries:extras.map(r=>({cardId:r.cardId,quantity:1,notes:`Watched from the simulation of ${when}: in the measured hundred, not in ${d.name}'s list.`}))});
+  commands.push({type:'preferences',values:{labPreview:null,lastLabRun:{deckId:d.id,method:preview.method,issues:preview.issues||[],at:new Date().toISOString(),previewAt:null,refine:preview.refine||null}}});
+  await C.commit({type:'batch',commands,summary:`Filed a simulation report with ${d.name}${extras.length?` and added ${extras.length} card${extras.length===1?'':'s'} to its Watched list`:''}`},{renderView:false});
+  preview=null;C.notice(`Report filed with ${d.name}.${extras.length?` ${extras.length} card${extras.length===1?' is':'s are'} now Watched by it${g?` (planned in ${g.name})`:''}.`:''}`);C.go('decks',{deck:d.id});};
+actions['lab-discard']=async()=>{await keepPreview(null);C.notice('Draft discarded. Nothing was saved.');redrawRun();};
 
   /* REVIEW THE DRAFT without saving it: the hundred, by role, with prices. */
   actions['lab-review']=()=>{
@@ -854,8 +877,8 @@ const {missing,reachable}=await C.catalog.recheck([...built.cards,...leaders],{o
       const result=await runner.measure({protocol:'published',lineup,config,opponents,table:config.table,onProgress:m=>{const el=$('#cm-lab-sim-status');if(el)el.textContent=`Measuring… seed ${m.done} of ${m.total} · ${m.mean} points so far`;}});
       const report=CrankSim.packFor(result,{protocol:'published',table:config.table,seatCount:(opponents.tables[config.table]||[]).length,cardsVersion:CrankAssets.cards,coverage:cover});
       const score=`Measured ${report.metrics.score.value} points from ${result.games.toLocaleString()} games in ${(result.elapsedMs/1000).toFixed(1)}s.`;
-      if(saved){await C.commit({type:'report',deckId:saved.id,report});C.notice(score+' Filed under Simulation history in My Decks.');return;}
-      if(preview&&preview.at===startedAt){await keepPreview({...preview,report});redrawRun();C.notice(score+' Save this deck to keep the report with it.');return;}
+      if(saved){report.list=listOf(saved);report.commanders=[...saved.commanders];await C.commit({type:'report',deckId:saved.id,report});C.notice(score+' Filed under Simulation history in My Decks.');return;}
+      if(preview&&preview.at===startedAt){report.list=listOf(preview);report.commanders=[...preview.commanders];await keepPreview({...preview,report});redrawRun();const from=preview.fromDeckId?C.state.decks.find(d=>d.id===preview.fromDeckId):null;C.notice(score+(from?` Save this deck to keep the report with a new deck, or file it with ${from.name}.`:' Save this deck to keep the report with it.'));return;}
       const last=C.state.preferences.lastLabRun,savedFrom=last&&last.previewAt&&last.previewAt===startedAt?C.state.decks.find(x=>x.id===last.deckId):null;
       if(savedFrom){await C.commit({type:'report',deckId:savedFrom.id,report});C.notice(score+` Filed with ${savedFrom.name}, which was saved while it ran.`);return;}
       C.notice(score+' The draft it measured was discarded before it finished, so the report was not kept.',true);
@@ -963,7 +986,7 @@ function runPane(saved){
       const name=i===4&&measured?`<button type="button" class="cm-text-button" data-action="lab-report"${saved&&!preview?` data-deck="${e(saved.id)}"`:''}>${e(label)}</button>`:e(label);
       return `<li><span class="cm-run-orb ${st}" id="cm-step-${i}" aria-label="${st==='complete'?'Complete':st==='active'?'Active':'Waiting'}"><i></i><i></i><i></i><img src="assets/mana/G.svg?v=1" alt=""></span><span class="cm-run-step-body">${name}</span>${doButton(i)}${note||why?`<small class="cm-muted cm-run-why" data-step-note="${e(note)}" data-step-why="${e(why)}"${hint?'':' hidden'}>${e(hint)}</small>`:''}</li>`;}).join('')}</ol>
     <p class="cm-muted cm-run-lede">${preview?'Saving writes this draft to My Decks.':'Saving writes the commander and definition to My Decks; draft or edit the 99 any time after.'}</p>
-    <div id="cm-lab-result">${preview?`<h3>${e(preview.name)} <span class="cm-badge">Draft · not saved</span></h3>${note(preview.method)}<p>${count} of 100 cards${preview.estimatedPrice!==null&&preview.estimatedPrice!==undefined?` · about ${e(C.money(preview.estimatedPrice))} at recorded prices`:''}${preview.unknownPrices?` · ${preview.unknownPrices} without a price`:''}.</p>${preview.definition&&preview.definition.budget!==null&&preview.definition.budget!==undefined&&preview.estimatedPrice>preview.definition.budget?note(`About ${C.money(preview.estimatedPrice)} against the ${C.money(preview.definition.budget)} total cap in Deck Definition: the builder treats the cap as a target and could not get under it with these limits. Save the deck and Finalize will offer to raise or remove the cap, or trim the list first.`,true):''}${(preview.issues||[]).map(x=>`<p class="cm-muted">${e(x)}</p>`).join('')}<div class="cm-actions">${b('Review draft cards','lab-review')}${b('Discard draft','lab-discard')}</div>`
+    <div id="cm-lab-result">${preview?`<h3>${e(preview.name)} <span class="cm-badge">Draft · not saved</span></h3>${note(preview.method)}<p>${count} of 100 cards${preview.estimatedPrice!==null&&preview.estimatedPrice!==undefined?` · about ${e(C.money(preview.estimatedPrice))} at recorded prices`:''}${preview.unknownPrices?` · ${preview.unknownPrices} without a price`:''}.</p>${preview.definition&&preview.definition.budget!==null&&preview.definition.budget!==undefined&&preview.estimatedPrice>preview.definition.budget?note(`About ${C.money(preview.estimatedPrice)} against the ${C.money(preview.definition.budget)} total cap in Deck Definition: the builder treats the cap as a target and could not get under it with these limits. Save the deck and Finalize will offer to raise or remove the cap, or trim the list first.`,true):''}${(preview.issues||[]).map(x=>`<p class="cm-muted">${e(x)}</p>`).join('')}<div class="cm-actions">${b('Review draft cards','lab-review')}${preview.report&&preview.fromDeckId&&C.state.decks.some(d=>d.id===preview.fromDeckId)?b(`File report with ${C.state.decks.find(d=>d.id===preview.fromDeckId).name}`,'lab-file-report',{},true):''}${b('Discard draft','lab-discard')}</div>`
       :saved?`<h3>${e(saved.name)} <span class="cm-badge good">Saved</span></h3>${note(last.method)}${(last.issues||[]).map(x=>`<p class="cm-muted">${e(x)}</p>`).join('')}<div class="cm-actions">${b('Open in My Decks','deck',{deck:saved.id})}${b('Review deck cards','deck-cards',{deck:saved.id})}${b('Reports & advice','deck-evidence',{deck:saved.id})}</div>`
       :'<p class="cm-muted">Run initial draft builds a list you can review and measure here. Nothing reaches My Decks until you choose Save this deck; no cards are purchased, owned or reserved by any step.</p>'}</div>
     <p class="cm-muted">Measuring runs the engine in the background on the published protocol — six seeds of 20,000 games — and stores a report you can compare with another run of the same protocol. Refining searches on the quick protocol instead (one seed of 2,000 games, fast enough to try dozens of swaps and too small to publish): it drops the cards the engine drew and could not cast, tries cards the graph joins to your commander, and keeps a swap only when the score beats the old one by more than that run's own error. A kept swap changes the hundred, so the published report is dropped with it — measure again when the list settles. Finalize the saved list in My Decks when you accept it.</p></aside>`;
