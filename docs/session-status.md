@@ -1,7 +1,81 @@
 # CrankMagic — current state and handoff
 
-Last updated 11 September 2026. Written so the next session can start work without
-reading a transcript.
+Last updated 13 September 2026, late. Written so the next session can start work without
+reading a transcript. **Read the first section before anything else.**
+
+## 13 September 2026 — where things stand, and the two sessions
+
+**Two cloud sessions share this repository and this working branch**
+(`claude/mtg-deck-matrix-ui-fixes-f7om91`), and both carry the title "MTG Deck Matrix UI
+fixes". Neither can read the other's conversation; git, the PR bodies and this file are the
+only shared record.
+
+| Session | Ran | Shipped | Left open |
+|---|---|---|---|
+| A — `session_01JxaMVGPFVWfBLPd3PXM1PR` (since 23 Aug, the long one) | 23 Aug → 11 Sep 04:10, then 12 Sep 20:12 → now | #133, #152–#168 | Phase C of the Discover / loop plan |
+| B — `session_01JomnBiZWAGVBCFXBt3QbQk` (Opus, opened when Rob said "merge #133 then I'll switch to Opus") | 11 Sep 04:15 → 12 Sep 19:44 | #134–#151, `tools/screens.mjs`, the `docs/screens/*` sets | **Licensing**: its analysis recommended a proprietary licence (BSL or dual-licence), `data/` scoped out of the grant, a Wizards Fan Content disclaimer, and it is waiting for a go-ahead to write `LICENSE`, `NOTICE` and a README section. No `LICENSE` file exists today. |
+
+A session resuming from a compaction summary sees only its own recent window. Session A's
+summaries of 12–13 September never contained session B's work, which is how a question
+about "old screenshots" was answered from the wrong record on 13 September: the last
+screenshots session A had sent before the switch were 4 September's, one of them the retired
+Trey's Deck Matrix. Anything either session needs the other to know goes in this file.
+
+**Merged 12–13 September, in order** (B = session B, A = session A):
+
+| PR | What | By |
+|---|---|---|
+| #150 | Lands are a mode, not a node; the filters are a dropdown over the page | B |
+| #151 | Ownership rebuilt from Rob's owned-cards sheet: 623 cards, 1,156 copies | B |
+| #152 | Load Live rebuilt from Master v13, with the Option flag and a workbook importer | A |
+| #153 | Deck page: one summary card, actions in the hero; menus follow their button; hover art with a spinner | A |
+| #154 | Discover filters: a grouped bar with a dialog per facet, mana value and a Mana facet | A |
+| #155 | Collection: a Spreadsheet view, the Master sheet read from the library | A |
+| #156 | Stand-ins: a copy in the box that the list does not call for fills a seat | A |
+| #157 | In box means the box: physical counts everywhere, and a How-it-works page | A |
+| #158 | Reserved, Owned, Substitutes, In Physical Deck: schema 2 and the six state decisions | A |
+| #159 | Share menu (Subscribe, e-mail, QR), Deck Lab starting points, card pop-up rows, Ready to add | A |
+| #160 | Simulation reports carry their hundred: file with the source deck, spin off a variant | A |
+| #161 | "Physical deck" wording; Ready to add in place of the pull sheet | A |
+| #162 | Option A of the simplification plan: the name is the heading, one primary action, six filters, glossary terms on request | A |
+| #163 | Cards: Collection and Shop as one page (Library · To buy · Orders, Sheet view, Status column); nav reads Decks · Cards · Build · Discover | A |
+| #164 | The sidebar opens the page you are on: Cards shows its tabs, Decks lists the decks | A |
+| #165 | `docs/crankmagic-persistent-plan.md` — accounts, sync, crankmagic.com on a hosted runtime; plan only | A |
+| #166 | Deck page Progress keys and Paid ≈ list price; Select all per Ready-to-add group; Sheet fixes; × on scope chips; header tightened, wordmark never clipped | A |
+| #167 | Discover: Primary Purpose in gold, filter counts under the filters, Yours in green, a deck pick focuses its commander, the picture grows with the pane; `docs/crankmagic-discover-loop-plan.md` and `docs/crankmagic-loop-patterns.md` | A |
+| #168 | The loop vocabulary — untap, copy, blink, counter removal, extra turn, cost reduction, tap-ability — read from rules text, the whole graph re-derived, Thornbite Staff rings untap | A |
+
+Also on 13 September: stale PRs #80, #2 and #54 closed (superseded); the 25 branches behind
+closed and merged PRs were verified safe to delete but the session's credential cannot delete
+branches (GitHub answers 403), so they are still on the remote — the one-line
+`git push origin --delete …` command was given to Rob in session A. `claude/fervent-hawking-f9565f`
+is session B's paused P0 work-in-progress (six commits, superseded by #135) and its hand-off
+notes; it was kept.
+
+**Plans that govern what comes next**
+
+- `docs/crankmagic-discover-loop-plan.md` — Phases A and B shipped (#167, #168). Phase C is
+  next: the three directed edges the new vocabulary allows, a cycle finder (acceptance: the
+  Krenko + Thornbite Staff + Bombardment loop, Niv-Mizzet + Curiosity), and a loop-mode depth
+  gauge. **Decision needed:** loop mode on by default when a deck is picked under Yours (proposed).
+- `docs/crankmagic-persistent-plan.md` — accounts, per-user sync, crankmagic.com on Vercel +
+  Supabase. Not started; nine decisions listed in the document.
+- `docs/ux-plan-2026-09-11.md` — executed by session B. Its §7 data items are still Rob's:
+  `definition.mechanics` per deck in `data/live-load.json`, and vendor / order references on
+  the ordered copies.
+
+**Gates now:** `GEOMETRY_REQUIRED=1 PAGE_BUDGET_REQUIRED=1 bash runtests.sh -q` runs **55
+suites** (the README states the count and `tests/data-integrity.mjs` checks it);
+`tests/uat/crankmagic-journeys.mjs` is at **158 checks**; the geometry and page-budget suites
+run in the browser and fail on a clipped wordmark. Walks in the sandbox show **no card art**:
+`tests/uat/scryfall-stub.mjs` answers every image with a one-pixel PNG, so panes and nodes
+fall back to their placeholder colours. That is the harness, not the app.
+
+**Housekeeping still open:** the `docs/screens/*` sets are from 8–12 September (refresh with
+`tools/screens.mjs <name>` or remove the folder); `prototype/slot-ladder.html` is the last
+old-style page the site still serves; the licensing go-ahead above.
+
+---
 
 ## 11 September 2026, later — the list rework, the divider, and the whole-format graph
 
@@ -204,8 +278,8 @@ Open and unstarted:
   `crankmagic-app.js`. Record with `node tests/asset-versions.mjs --update`. If you
   edit a file **after** bumping it, rebase the fixture:
   `git checkout origin/main -- tests/fixtures/asset-versions.json && node tests/asset-versions.mjs --update`.
-- **44 suites.** `README.md` states the count and `tests/data-integrity.mjs` checks
-  that it matches. Adding a suite means editing the README.
+- **55 suites** (44 when this section was first written). `README.md` states the count and
+  `tests/data-integrity.mjs` checks that it matches. Adding a suite means editing the README.
 - **A score is a claim about a protocol and an exact hundred.** Never carry a result
   across an engine generation, never reweight to make an average look right, and never
   publish anything measured on `preview` or `refine`.
