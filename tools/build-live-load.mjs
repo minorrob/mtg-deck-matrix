@@ -19,7 +19,8 @@
  * What each part of the file is derived from:
  *   decks[].cards    the D-T column, every row with a target; sums to 100 or the build stops
  *   owned.inDeck     the D-A column: what is physically in that box, whether or not the
- *                    v13 target still lists it (the state builder benches the strays with a note)
+ *                    v13 target still lists it (the state builder keeps the extras in the box as
+ *                    stand-ins: copies filling a seat while the real card is bought or on its way)
  *   owned.bench      Own minus everything in boxes
  *   ordered          ONLY copies still in flight. The Ordered column is a history of orders,
  *                    received ones included, so a copy counts as in flight when the decks

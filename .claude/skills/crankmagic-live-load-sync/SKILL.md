@@ -86,9 +86,11 @@ numbers agree; fix the workbook and rebuild.
    says he will commit himself.
 7. Report in one short table: decks · owned copies · in boxes · ordered · to buy ($) ·
    upgrades · options · planned, then the per-deck delta. Remind him a cached browser needs
-   one hard refresh before the new state is served, and that the in-box strays (cards
-   physically in a box that the target no longer lists) show as *Bench · From the Dn box*
-   with a note until he pulls them.
+   one hard refresh before the new state is served, and that the in-box stand-ins (cards
+   physically in a box that the target does not call for -- the Master's Actual minus its
+   Target, including basics above the target count) stay in their boxes as *Stand-in*
+   copies: the deck tile reads *Playable · n stand-ins*, the pull sheet lists them and says
+   how many can come out now, and they leave the box only when he ticks them out.
 
 ## The manual button, without a session
 GitHub → **Actions → Load Live → Run workflow** does steps 2–4 and 6 on the newest

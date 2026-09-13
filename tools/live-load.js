@@ -11,7 +11,8 @@
  *
  * What the file says and what the library shows, one to one:
  *   decks[].cards        the 100-card target, finalized, one main slot per card
- *   owned.inDeck[D]      owned copies in that deck's box: reserved to the deck, located in it
+ *   owned.inDeck[D]      owned copies in that deck's box: reserved to the deck, located in it;
+ *                        copies the list does not call for stay in the box as stand-ins
  *   owned.bench          owned copies on the bench; reserved to whichever deck still needs them
  *   ordered              copies in flight; reserved after owned copies, never located
  *   buy                  the outstanding shopping list, filed under the To Buy group with prices
@@ -156,7 +157,10 @@
         let inBox=0;
         if(r&&deck.status==='final'){inBox=Math.min(qty,shortfall(deck,r));if(inBox)lot(cardId,inBox,'owned',{kind:'deck',deckId:deck.id,box:deck.name}).allocation={deckId:deck.id,slotId};}
         const rest=qty-inBox;
-        if(rest)lot(cardId,rest,'owned',{kind:'bench',box:`From the ${d.id} box`},r?'':`Not in the ${d.id} target; move it to the bench.`);
+        /* The rest is physically in the box and not called for by the list: a stand-in. It stays
+           where it is, unreserved; the app counts it, and the pull sheet asks for it back when a
+           real copy is ready to take its seat. */
+        if(rest)lot(cardId,rest,'owned',{kind:'deck',deckId:deck.id,box:deck.name},`Stand-in in the ${d.id} box: the list does not call for ${r?'this many':'it'}.`);
       }
     }
     for(const [name,qty,forId] of doc.owned.bench)lot(idOf(name),qty,'owned',{kind:'bench',box:''},'',forId?groupOf[forId]:'');

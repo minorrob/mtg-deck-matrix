@@ -137,7 +137,21 @@ try{
  await sheetCell('boxed',journey.id).click();await page.locator('.cm-sheet-input').fill('1');await page.keyboard.press('Enter');await page.getByRole('dialog').waitFor();await click('Confirm change');await waitDialog();await page.waitForTimeout(900);current=await state();
  ok(current.lots.some(l=>l.cardId===krenkoKey&&l.source==='owned'&&l.allocation?.deckId===journey.id&&l.location?.kind==='deck'&&l.location.deckId===journey.id),'the typed 1 reserved a copy to the deck and put it in its box');
  eq(await sheetCell('boxed',journey.id).getAttribute('data-value'),'1');
- await click('Roster');await page.locator('#cm-roster-table').waitFor();
+ /* STAND-INS. A copy the deck's list does not call for goes into the box as a stand-in from the
+    Collection's row menu; the deck counts it, the pull sheet lists it, and a tick there sends
+    it back to the bench. */
+ await click('Add a card row');await page.getByLabel('Card name or a Scryfall link').fill('Wastes');await page.locator('[data-pick-card]').filter({has:page.getByText('Wastes',{exact:true})}).first().click();await page.waitForTimeout(600);
+ const wastesKey=CrankKey('Wastes');await page.locator(`.cm-sheet [data-cell="${wastesKey}|own|"]`).click();await page.locator('.cm-sheet-input').fill('1');await page.keyboard.press('Enter');await page.waitForTimeout(900);current=await state();ok(current.lots.some(l=>l.cardId===wastesKey&&l.source==='owned'));
+ await click('Roster');await page.locator('#cm-roster-table').waitFor();await page.locator('#cm-roster-query').fill('Wastes');await row('Wastes','Bench').waitFor();
+ await actionsFor('Wastes','Bench');await page.locator('#cm-standin-submenu-toggle').hover();{const sub=page.locator('#cm-standin-submenu');await sub.getByRole('button',{name:'Journey Goblins',exact:true}).waitFor();await sub.getByRole('button',{name:'Journey Goblins',exact:true}).click();}
+ await page.getByRole('dialog').waitFor();await click('Confirm change');await waitDialog();await page.waitForTimeout(900);current=await state();
+ {const l=current.lots.find(l=>l.cardId===wastesKey);eq(l.location.deckId,journey.id);eq(l.allocation,null);eq(CrankReadiness(current).standIns,1);}
+ await nav('My Decks');ok(await page.locator('.cm-deck-tile').filter({hasText:'Journey Goblins'}).innerText().then(t=>/1 stand-in/.test(t)));
+ await page.locator('.cm-deck-tile').filter({hasText:'Journey Goblins'}).getByRole('button').first().click();await page.getByRole('button',{name:/^Pull sheet/}).click();
+ await page.locator('.cm-pull-group[data-group=standin]').waitFor();await page.locator('.cm-pull-group[data-group=standin] [data-pull-tick]').first().check();await page.waitForTimeout(900);current=await state();
+ eq(current.lots.find(l=>l.cardId===wastesKey).location.kind,'bench');eq(CrankReadiness(current).standIns,0);
+ /* The roster's search is shared with the Shop, so it is cleared before the Shop steps read money. */
+ await nav('Collection');await page.locator('#cm-roster-table').waitFor();await click('Clear filters');await page.waitForTimeout(300);
  /* MONEY ON THE BUY LIST. The Shop opens grouped by deck with a strip above the table: the
     total at sheet prices equals the sum of the band headers' subtotals, and Bought on a row
     is one tap that records the copy and stamps the sheet price as what was paid. */
