@@ -101,7 +101,14 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   — every card the focus reaches at the widest depth and breadth, whatever the sliders say,
   under the same filters; sortable by its headers, paged, a tick per row for *Add selected
   to a group* or a draft deck, *Add/Buy* on each row, and a row click opens the card in
-  Card Info without moving the graph. The pane widens while List is open; in presentation
+  Card Info without moving the graph. In Card Info, the pop-ups and a List row's detail, the
+  term with the **gold ring** is the card's *Primary Purpose* — the one job it is in a deck
+  for, decided by a fixed ladder in `card-classify.js` (`purposeOf`: finisher, board wipe,
+  multiplier, team quality, tutor, sacrifice outlet, removal, draw, ramp, token maker, payoff,
+  … body, tribe). A filter dialog's counts are what the filters already applied leave
+  (`CrankFacets.narrowedCounts`), the whole-graph figure on the hover; the **Yours** filters
+  wear the owned green, picking a deck there puts its commander in focus, and dragging the
+  divider grows the card picture up to 70 %. The pane widens while List is open; in presentation
   mode the list keeps name, type and mana. The **Filters** bar groups the facets by what they ask about — Card (type, color, mana value, mana: rocks, dorks, lands, basics, ramp spells, rarity), Rules, Lands, Yours — and each opens its options in a dialog over the page, A to Z with a search box, so picking a filter never shifts the page; *Lands only* is a toggle in the bar; the badge on a facet counts its picks.
 - **Build** (the Deck Lab, `#lab`): any legal catalog commander by name or mechanics/EDHREC commander rank;
   optional second commander; an existing list/group; separate Deck Definition; real
@@ -340,6 +347,8 @@ Changed assets require a new `?v=` everywhere referenced, then
 
 - [Current implementation status](docs/crankmagic-build-status.md)
 - [The persistent-app plan](docs/crankmagic-persistent-plan.md) — accounts, per-user sync and crankmagic.com on a hosted runtime; plan only, not started
+- [The Discover / loop plan](docs/crankmagic-discover-loop-plan.md) — Primary Purpose, loop vocabulary, loop edges and loop-mode depth, the role lens; PR A shipped, B–D planned
+- [Loop patterns](docs/crankmagic-loop-patterns.md) — the combo, loop, stacking and blink shapes the graph should recognise, in the classifier's vocabulary
 - [Architecture](docs/crankmagic-architecture.md)
 - [Keeping the catalog current](docs/crankmagic-refresh.md) — what a periodic refresh regenerates, in what order, and what it must never do
 - [Approved plan and standalone mock](design/crankmagic/README.md)

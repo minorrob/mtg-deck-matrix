@@ -66,8 +66,8 @@
       "sha": "5913d397047bdbce"
     },
     "card-classify.js": {
-      "version": 7,
-      "sha": "015633f2a50deb8c"
+      "version": 8,
+      "sha": "002997789f5c47e8"
     },
     "card-link.js": {
       "version": 1,
@@ -98,8 +98,8 @@
       "sha": "c643e35c955e4884"
     },
     "crankmagic-app.js": {
-      "version": 144,
-      "sha": "92ea54dcae6f6e1a"
+      "version": 145,
+      "sha": "b05ea95b5710a948"
     },
     "crankmagic-assets.js": {
       "version": 19,
@@ -126,8 +126,8 @@
       "sha": "0f37e9d569d76ff4"
     },
     "crankmagic-discover.js": {
-      "version": 40,
-      "sha": "fb3de78553100c6d"
+      "version": 41,
+      "sha": "5a07c77f793fb3a8"
     },
     "crankmagic-evidence.js": {
       "version": 2,
@@ -138,8 +138,8 @@
       "sha": "7025527d5f3f9199"
     },
     "crankmagic-facets.js": {
-      "version": 12,
-      "sha": "cce78ceaaf80af17"
+      "version": 13,
+      "sha": "8a6492359349f009"
     },
     "crankmagic-glossary.js": {
       "version": 1,
@@ -186,16 +186,16 @@
       "sha": "81ae2c4b7634afa7"
     },
     "crankmagic-sw.js": {
-      "version": 144,
-      "sha": "a0f6b3f8e08520a2"
+      "version": 145,
+      "sha": "f320057dcf85dee7"
     },
     "crankmagic-tour.js": {
       "version": 12,
       "sha": "58f7d2808beeb08b"
     },
     "crankmagic.css": {
-      "version": 85,
-      "sha": "6ccb12ea7ed9ca3f"
+      "version": 86,
+      "sha": "37bf50d35c47a064"
     },
     "custom-model.js": {
       "version": 3,

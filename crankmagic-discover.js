@@ -92,7 +92,7 @@
   const FOLD_TAIL = 12;
 
   views.discover = async (params) => {
-    C.HELP.discover = {title: 'Discover', body: '<p>The connected card catalog: follow a card into the cards it is joined to, inspect the evidence for each link, and take what you find into a group or a deck.</p><p>Structural links (shared mechanics and roles) and observed co-play (EDHREC) are different kinds of evidence. Neither claims a simulated improvement.</p>'};
+    C.HELP.discover = {title: 'Discover', body: '<p>The connected card catalog: follow a card into the cards it is joined to, inspect the evidence for each link, and take what you find into a group or a deck.</p><p>Structural links (shared mechanics and roles) and observed co-play (EDHREC) are different kinds of evidence. Neither claims a simulated improvement.</p><p>In the card pane and the pop-ups, the term with the gold ring is the card’s <strong>Primary Purpose</strong>: the one job it is in a deck for, decided by a fixed ladder (finisher, board wipe, multiplier, team quality, tutor, sacrifice outlet, removal, draw, ramp, token maker, payoff, and so on down to its body and its tribe). In a filter dialog the count beside an option is what you would have under the filters already applied; the whole-graph figure is on the hover. Picking a deck under <strong>Yours</strong> puts its commander in focus, and dragging the divider beside the graph grows the card picture up to 70%.</p>'};
     C.main.innerHTML = C.pageHead('Discover') + '<p role="status">Loading graph metadata…</p>';
 
     const loaded = await C.catalog.loadGraph();
@@ -132,7 +132,14 @@
     const sortedRows = (key) => (values[key] || []).slice().sort((a, b) => key === 'mv'
       ? (a.value === '7+' ? 99 : Number(a.value)) - (b.value === '7+' ? 99 : Number(b.value))
       : String(a.value).localeCompare(String(b.value), undefined, {sensitivity: 'base', numeric: true}));
-    const pickButton = (key, row, folds) => `<button type="button" class="cm-facet-pick" data-action="facet-term" data-facet-pick="${e(key)}" data-key="${e(key)}" data-value="${e(row.value)}" data-lower="${e(String(row.value).toLowerCase())}"${folds && row.count < 2 ? ' data-rare="1" hidden' : ''}><span>${e(row.value)}</span> <small class="cm-muted">${row.count}</small></button>`;
+    /* THE COUNT IS WHAT YOU WOULD HAVE. Beside each option: the cards that carry it AMONG the
+       cards the filters already applied leave (CrankFacets.narrowedCounts), not every card in
+       the format -- "B: 20" under a role filter rather than "B: 7,179". The whole-graph figure
+       stays on the tooltip, the fold ("used by one card") still reads the whole graph so the
+       list does not reshuffle, and an option no current card carries steps back rather than
+       vanishing, so the reader can still see it exists. */
+    const countLabel = (row, narrow) => { const n = narrow ? (narrow.get(row.value) || 0) : row.count; return {n, note: narrow && n !== row.count ? `${n.toLocaleString()} of ${row.count.toLocaleString()} in the whole graph, under your other filters` : `${row.count.toLocaleString()} card${row.count === 1 ? '' : 's'} in the whole graph`}; };
+    const pickButton = (key, row, folds, narrow) => { const {n, note} = countLabel(row, narrow); return `<button type="button" class="cm-facet-pick${n === 0 ? ' is-empty' : ''}" data-action="facet-term" data-facet-pick="${e(key)}" data-key="${e(key)}" data-value="${e(row.value)}" data-lower="${e(String(row.value).toLowerCase())}" data-count="${e(note)}"${folds && row.count < 2 ? ' data-rare="1" hidden' : ''}><span>${e(row.value)}</span> <small class="cm-muted">${n.toLocaleString()}</small></button>`; };
     function facetBar() {
       const placed = new Set(FACET_GROUPS.flatMap(([, keys]) => keys)), extra = facets.filter((f) => !placed.has(f.key)).map((f) => f.key);
       return FACET_GROUPS.map(([label, keys]) => [label, label === 'Rules' ? keys.concat(extra) : keys]).map(([label, keys]) => {
@@ -141,7 +148,7 @@
           if (rows.length === 1) return `<button type="button" class="cm-facet-btn cm-facet-pick" data-action="facet-term" data-facet-pick="${e(facet.key)}" data-key="${e(facet.key)}" data-value="${e(rows[0].value)}" title="${e(facet.label)}: ${e(rows[0].value)}">${e(facet.key === 'lands' ? 'Lands only' : facet.label)}</button>`;
           return `<button type="button" class="cm-facet-btn" data-action="facet-open" data-facet="${e(facet.key)}" aria-haspopup="dialog">${e(facet.label)}<span class="cm-facet-n" data-facet-count="${e(facet.key)}"></span></button>`;
         });
-        return items.length ? `<span class="cm-facet-group"><span class="cm-facet-group-name">${e(label)}</span>${items.join('')}</span>` : '';
+        return items.length ? `<span class="cm-facet-group" data-group="${e(label.toLowerCase())}"><span class="cm-facet-group-name">${e(label)}</span>${items.join('')}</span>` : '';
       }).join('');
     }
 
@@ -270,9 +277,17 @@
        a line, with the card at the other end). Every term is a filter. The Card View pane
        stays the place to read the card; this is the place to read the connection. */
     const TERM_LABEL = Object.fromEntries(CrankFacets.FACETS.map((f) => [f.key, f.label]));
-    function termChip(key, value) {
+    /* THE PRIMARY PURPOSE WEARS A GOLD RING. A card carries a dozen terms; one of them is the
+       job it is in a deck for, and MtgCardClassify.purposeOf names it by a fixed ladder
+       (finisher, wipe, multiplier, team quality, tutor, outlet, removal ... down to its body
+       and its tribe). The pane, the pop-up and a list row all ring that chip, so the eye lands
+       on it first; the hover says so. `primary` is the {key, value} to ring, or null. */
+    const purposeOf = (card) => (card && globalThis.MtgCardClassify ? MtgCardClassify.purposeOf(card) : null);
+    function termChip(key, value, primary) {
       const on = CrankFacets.stateOf(selection, key, value);
-      return `<button class="cm-chip${on === 'include' ? ' is-on' : on === 'exclude' ? ' is-not' : ''}" data-action="facet-term" data-key="${e(key)}" data-value="${e(value)}" aria-pressed="${on !== 'off'}" title="${on === 'include' ? 'Showing only cards with this — tap to exclude them instead' : on === 'exclude' ? 'Hiding cards with this — tap to clear' : 'Tap to show only cards with this'}">${e(value)}<small>${e(TERM_LABEL[key] || key)}</small></button>`;
+      const prime = !!(primary && primary.key === key && primary.value === value);
+      const hint = on === 'include' ? 'Showing only cards with this — tap to exclude them instead' : on === 'exclude' ? 'Hiding cards with this — tap to clear' : 'Tap to show only cards with this';
+      return `<button class="cm-chip${on === 'include' ? ' is-on' : on === 'exclude' ? ' is-not' : ''}${prime ? ' cm-chip-primary' : ''}" data-action="facet-term" data-key="${e(key)}" data-value="${e(value)}" aria-pressed="${on !== 'off'}"${prime ? ' data-primary="1"' : ''} title="${prime ? `Primary Purpose — ${e(primary.label)}: ${e(primary.why)}. ` : ''}${hint}">${e(value)}<small>${e(TERM_LABEL[key] || key)}</small></button>`;
     }
     /* A shared term is a mechanic when the card lists it as one, a role otherwise. */
     const keyOf = (card, term) => ((card.mechanics || []).includes(term) ? 'mechanics' : 'roles');
@@ -281,28 +296,29 @@
       /* Every way these two are joined, not only the strongest -- the edge label had room
          for one sentence, the pop-up does not. Each chip is also the filter for that term,
          so "they share proliferate" is one tap from "show me everything that proliferates". */
+      const p = purposeOf(from);
       const chips = [
-        ...rel.fires.map((t) => termChip('causes', t)),
-        ...rel.firedBy.map((t) => termChip('triggers', t)),
-        ...rel.multiplied.map((t) => termChip('multiplies', t)),
-        ...rel.multiplies.map((t) => termChip('multiplies', t)),
-        ...rel.extended.map((t) => termChip('extends', t)),
-        ...rel.extendedBy.map((t) => termChip('extends', t)),
-        ...rel.statted.map((t) => termChip('offersStat', t)),
-        ...rel.stattedBy.map((t) => termChip('wantsStat', t)),
-        ...rel.tribal.map((t) => termChip('tribes', t)),
-        ...rel.tribalBy.map((t) => termChip('wants', t)),
-        ...rel.feeds.map((t) => termChip('roles', t)),
-        ...rel.fed.map((t) => termChip('requires', t)),
-        ...rel.shared.map((t) => termChip(keyOf(from, t), t))
+        ...rel.fires.map((t) => termChip('causes', t, p)),
+        ...rel.firedBy.map((t) => termChip('triggers', t, p)),
+        ...rel.multiplied.map((t) => termChip('multiplies', t, p)),
+        ...rel.multiplies.map((t) => termChip('multiplies', t, p)),
+        ...rel.extended.map((t) => termChip('extends', t, p)),
+        ...rel.extendedBy.map((t) => termChip('extends', t, p)),
+        ...rel.statted.map((t) => termChip('offersStat', t, p)),
+        ...rel.stattedBy.map((t) => termChip('wantsStat', t, p)),
+        ...rel.tribal.map((t) => termChip('tribes', t, p)),
+        ...rel.tribalBy.map((t) => termChip('wants', t, p)),
+        ...rel.feeds.map((t) => termChip('roles', t, p)),
+        ...rel.fed.map((t) => termChip('requires', t, p)),
+        ...rel.shared.map((t) => termChip(keyOf(from, t), t, p))
       ];
       const co = rel.coPlay ? `<p class="cm-muted">EDHREC co-play · ${(rel.coPlay.inclusion * 100).toFixed(1)}% of ${rel.coPlay.decks.toLocaleString()} decks</p>` : '';
       return `${chips.length ? `<p class="cm-muted">${e(rel.reason || rel.kind)}</p><div class="cm-term-chips">${chips.join('')}</div>` : ''}${co}`;
     }
     function ownTermsHTML(card) {
       const t = CrankGraph.termsOf(card); if (!t) return '';
-      const chips = [];
-      for (const [group, key] of Object.entries(TERM_FACET)) for (const value of t[group] || []) chips.push(termChip(key, value));
+      const chips = [], p = purposeOf(card);
+      for (const [group, key] of Object.entries(TERM_FACET)) for (const value of t[group] || []) chips.push(termChip(key, value, p));
       return chips.length ? `<h4>Its own terms</h4><div class="cm-term-chips">${chips.join('')}</div>` : '';
     }
     function showPop(hit) {
@@ -523,9 +539,9 @@
       if (!c) { view.innerHTML = '<h2>Nothing matches</h2><p>No card carries the filters you have picked.</p>'; $('#cm-graph-size').textContent = ''; return; }
       const rec = C.catalog.exact(c.name) || {};
       const t = CrankGraph.termsOf(c);
-      const chips = [];
+      const chips = [], purpose = purposeOf(c);
       if (t) for (const [group, key] of Object.entries(TERM_FACET)) {
-        for (const value of t[group] || []) chips.push(termChip(key, value));
+        for (const value of t[group] || []) chips.push(termChip(key, value, purpose));
       }
       const img = rec.image || c.image || '';
       const cost = rec.manaCost ? C.mana(rec.manaCost) : '';
@@ -572,7 +588,7 @@
              part of this pane you cannot get from the picture -- below the fold. -->
         ${picked.size ? `<div class="cm-actions cm-pick-actions">${b(`Add ${picked.size} selected to a group…`, 'results-group', {}, true)}${b('Clear selection', 'results-clear')}</div>` : (gmode === 'select' ? '<p class="cm-muted">Tap cards on the graph to tick them. Tap again to untick.</p>' : '')}
         ${chips.length ? `<h3 class="cm-chips-head">Joined to other cards by
-          <details class="cm-inline-menu cm-hint"><summary class="cm-hint-btn" aria-label="How these work" title="How these work">i</summary><div class="cm-menu cm-inline-menu-body cm-hint-body">Tap once for only the cards that share it, again to hide them instead, a third time to clear. They stack.</div></details>
+          <details class="cm-inline-menu cm-hint"><summary class="cm-hint-btn" aria-label="How these work" title="How these work">i</summary><div class="cm-menu cm-inline-menu-body cm-hint-body">Tap once for only the cards that share it, again to hide them instead, a third time to clear. They stack. The gold ring is the card’s Primary Purpose: the one term it is in a deck for.</div></details>
         </h3><div class="cm-term-chips">${chips.join('')}</div>` : ''}
         ${lastInfo && lastInfo.total ? `<p class="cm-muted cm-card-view-foot">${lastInfo.total} cards on the canvas · ${lastInfo.byDepth.filter(Boolean).join(' / ')} by ring · ${lastInfo.crossLinks} cross-links${lastInfo.crossLinks > 60 ? ' (too many to draw at once: rest on a card, or inspect it, to see its own)' : ''}</p>` : ''}`;
       $('#cm-graph-size').textContent = lastInfo && lastInfo.total ? `${lastInfo.total} on canvas` : '';
@@ -666,7 +682,7 @@
       button.textContent = open ? 'Show only what two or more cards share' : `Show ${rare.toLocaleString()} more used by one card`;
       applyFacetRows(key);
     };
-    const onModeChange = (ev) => { if (ev.target.name === 'facetMode') { mode = ev.target.value; refresh(currentFocus()); } };
+    const onModeChange = (ev) => { if (ev.target.name === 'facetMode') { mode = ev.target.value; refresh(currentFocus()); updateFacetCounts(); } };
     document.addEventListener('input', onFacetInput); document.addEventListener('click', onFacetMore); document.addEventListener('change', onModeChange);
     $('#cm-depth').addEventListener('input', (ev) => { depth = Number(ev.target.value); $('#cm-depth-out').textContent = depth; graph?.setDepth(depth); });
     $('#cm-breadth').addEventListener('input', (ev) => { breadth = Number(ev.target.value); $('#cm-breadth-out').textContent = breadth; graph?.setBreadth(breadth); });
@@ -705,13 +721,25 @@
         summary: `Added ${card.name} to ${deck.name}`}, {renderView: false});
       C.notice(`${card.name} added to ${deck.name} — ${slots.length + 1} cards in the list now.`);
     };
+    /* PICKING A DECK PUTS ITS COMMANDER IN FOCUS. "In a deck → Krenko Goblins" is a question
+       about that deck, and the card the deck is built around is where reading it starts; the
+       reader can walk anywhere from there. Only on the way in: clearing the pick, or excluding
+       the deck, leaves the focus where it is. Matched by name, the one id the graph and the
+       library share. */
+    function commanderRow(deckName) {
+      const deck = (C.state.decks || []).find((d) => d.name === deckName && !d.archived);
+      const lead = deck && deck.commanders && C.state.cards[deck.commanders[0]];
+      return lead ? data.cards.find((c) => c.name === lead.name) || null : null;
+    }
     actions['facet-term'] = (el) => {
       selection = CrankFacets.toggle(selection, el.dataset.key, el.dataset.value);
       /* Picking how a land enters is asking for lands: the mode comes on with it. */
       if (el.dataset.key === 'enters' && !landsOnly() && CrankFacets.stateOf(selection, 'enters', el.dataset.value) === 'include') selection = CrankFacets.set(selection, 'lands', 'lands only', 'include');
-      redrawTicks(); refresh(currentFocus());
+      let focusId = currentFocus();
+      if (el.dataset.key === 'decks' && CrankFacets.stateOf(selection, 'decks', el.dataset.value) === 'include') { const lead = commanderRow(el.dataset.value); if (lead) focusId = lead.id; }
+      redrawTicks(); refresh(focusId); updateFacetCounts();
     };
-    actions['facet-clear'] = () => { selection = {}; redrawTicks(); refresh(currentFocus()); };
+    actions['facet-clear'] = () => { selection = {}; redrawTicks(); refresh(currentFocus()); updateFacetCounts(); };
     actions['facet-done'] = () => { document.querySelector('dialog[open]')?.close(); };
     /* A FACET OPENS IN A DIALOG: its options A to Z (mana value lowest first), a search box when
        there are many, the same three-state picks as the chips, the all/any rule, Clear for this
@@ -719,15 +747,30 @@
     actions['facet-open'] = (el) => {
       const key = el.dataset.facet, facet = facets.find((f) => f.key === key); if (!facet) return;
       const rows = sortedRows(key), rare = rows.filter((r) => r.count < 2).length, folds = rare >= FOLD_TAIL && rows.length - rare >= 1;
+      const narrow = narrowedFor(key);
       C.modal(facet.label, `<div class="cm-facet-dialog" data-facet-dialog="${e(key)}">
-        <p class="cm-muted cm-facet-help">${rows.length.toLocaleString()} option${rows.length === 1 ? '' : 's'}${key === 'mv' ? ', lowest first' : ', A to Z'}. Tap once to show only cards with it, twice to hide them, a third time to let go.</p>
+        <p class="cm-muted cm-facet-help">${rows.length.toLocaleString()} option${rows.length === 1 ? '' : 's'}${key === 'mv' ? ', lowest first' : ', A to Z'}. Tap once to show only cards with it, twice to hide them, a third time to let go.${narrow ? ' Counts are under the filters you already have.' : ''}</p>
         ${rows.length > 12 ? `<label class="cm-search"><span class="cm-muted">Find in ${e(facet.label.toLowerCase())}</span><input type="search" data-facet-search="${e(key)}" placeholder="Type to narrow"></label>` : ''}
-        <div class="cm-facet-list cm-facet-grid" data-facet-list="${e(key)}" data-expanded="0">${rows.map((row) => pickButton(key, row, folds)).join('')}</div>
+        <div class="cm-facet-list cm-facet-grid" data-facet-list="${e(key)}" data-expanded="0">${rows.map((row) => pickButton(key, row, folds, narrow)).join('')}</div>
         ${folds ? `<button type="button" class="cm-text-button" data-facet-more="${e(key)}">Show ${rare.toLocaleString()} more used by one card</button>` : ''}
         <div class="cm-facet-dialog-foot"><span class="cm-facet-mode"><span class="cm-muted">A card must match</span><label class="cm-checkbox"><input type="radio" name="facetMode" value="all" ${mode === 'all' ? 'checked' : ''}> all picks</label><label class="cm-checkbox"><input type="radio" name="facetMode" value="any" ${mode === 'any' ? 'checked' : ''}> any pick</label></span><span class="cm-facet-drop-tools">${b('Clear ' + facet.label.toLowerCase(), 'facet-clear-one', {key}, false, {cls: 'compact'})}${b('Done', 'facet-done', {}, true, {cls: 'compact'})}</span></div></div>`);
       redrawTicks();
     };
-    actions['facet-clear-one'] = (el) => { selection = {...selection}; delete selection[el.dataset.key]; redrawTicks(); refresh(currentFocus()); };
+    actions['facet-clear-one'] = (el) => { selection = {...selection}; delete selection[el.dataset.key]; redrawTicks(); refresh(currentFocus()); updateFacetCounts(); };
+    /* The counts in an open facet dialog follow every pick made in it. */
+    function narrowedFor(key) { return CrankFacets.count(selection) ? CrankFacets.narrowedCounts(data.cards, selection, C.state, key, {any: mode === 'any'}) : null; }
+    function updateFacetCounts() {
+      const dialog = document.querySelector('[data-facet-dialog]'); if (!dialog) return;
+      const key = dialog.dataset.facetDialog, narrow = narrowedFor(key), byValue = new Map((values[key] || []).map((r) => [String(r.value), r]));
+      for (const pick of dialog.querySelectorAll('[data-facet-pick]')) {
+        const row = byValue.get(pick.dataset.value); if (!row) continue;
+        const {n, note} = countLabel(row, narrow);
+        const small = pick.querySelector('small'); if (small) small.textContent = n.toLocaleString();
+        pick.classList.toggle('is-empty', n === 0); pick.dataset.count = note;
+      }
+      const help = dialog.querySelector('.cm-facet-help'); if (help) help.textContent = help.textContent.replace(/ Counts are under the filters you already have\.$/, '') + (narrow ? ' Counts are under the filters you already have.' : '');
+      redrawTicks();
+    }
     actions['graph-mode'] = (el) => {
       gmode = el.dataset.mode; graph?.setMode(gmode); hidePop();
       for (const btn of document.querySelectorAll('[data-action=graph-mode]')) { const on = btn.dataset.mode === gmode; btn.classList.toggle('is-on', on); btn.setAttribute('aria-pressed', String(on)); }
@@ -776,8 +819,8 @@
         pick.classList.toggle('is-on', state === 'include');
         pick.classList.toggle('is-not', state === 'exclude');
         pick.setAttribute('aria-pressed', state === 'off' ? 'false' : 'true');
-        pick.title = state === 'include' ? 'Showing only cards with this — tap to exclude them instead'
-          : state === 'exclude' ? 'Hiding cards with this — tap to clear' : 'Tap to show only cards with this';
+        pick.title = (state === 'include' ? 'Showing only cards with this — tap to exclude them instead'
+          : state === 'exclude' ? 'Hiding cards with this — tap to clear' : 'Tap to show only cards with this') + (pick.dataset.count ? ' · ' + pick.dataset.count : '');
       }
     }
 
