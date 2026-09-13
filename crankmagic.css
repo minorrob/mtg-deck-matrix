@@ -1281,6 +1281,7 @@ button.cm-pill:hover{filter:brightness(1.15)}
 @media(max-width:760px){.cm-tabs [role=tab]{padding:8px 10px}}
 /* THE NAV OPENS THE PAGE YOU ARE ON: its sub-pages sit under the entry, indented, the current
    one marked. On a phone the nav is a row and the page's own tabs do this, so the list goes. */
+.cm-subnav,.cm-subnav li,#matrix-v2 .cm-sidebar .cm-subnav a{min-width:0;max-width:100%}
 .cm-subnav{list-style:none;margin:-2px 0 6px 14px;padding:0 0 0 10px;display:grid;gap:2px;border-left:2px solid #2b3549}
 #matrix-v2 .cm-sidebar .cm-subnav a{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 9px;min-height:32px;font-size:13px;font-weight:500;color:#a9bdd7;border-radius:7px;text-decoration:none;box-shadow:none;background:none}
 .cm-subnav a span{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

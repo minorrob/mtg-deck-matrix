@@ -74,7 +74,7 @@ const HELP={};
 const SUBNAV={},NAV_GROUP={how:'decks',pull:'decks',collection:'cards',shop:'cards'};
 function subnav(group){document.querySelectorAll('.cm-subnav').forEach(el=>el.remove());const items=SUBNAV[group]?.()||[],host=document.querySelector(`[data-nav="${group}"]`);if(!items.length||!host)return;
   const list=document.createElement('ul');list.className='cm-subnav';list.setAttribute('aria-label',`${host.textContent.trim()} pages`);
-  list.innerHTML=items.map(it=>`<li><a href="${esc(it.hash)}"${it.current?' class="is-current" aria-current="location"':''}><span>${esc(it.label)}</span>${it.count!==undefined?`<small>${esc(String(it.count))}</small>`:''}</a></li>`).join('');
+  list.innerHTML=items.map(it=>`<li><a href="${esc(it.hash)}" title="${esc(it.label)}"${it.current?' class="is-current" aria-current="location"':''}><span>${esc(it.label)}</span>${it.count!==undefined?`<small>${esc(String(it.count))}</small>`:''}</a></li>`).join('');
   host.insertAdjacentElement('afterend',list);}
 function helpButton(key){return `<button type="button" class="v-button cm-help-btn" data-action="page-help" data-help="${esc(key)}" aria-label="About this page" title="About this page">?</button>`;}
 function pageHead(name,controls='',help=''){return `<header class="cm-page-head"><div class="cm-page-title"><h1>${esc(name)}</h1>${help?helpButton(help):''}</div>${controls?`<div class="cm-actions">${controls}</div>`:''}</header>`;}
