@@ -127,7 +127,8 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
 - **Ready to add** (`#pull?deck=`): one deck's reserved copies grouped by where they are —
   pull from bench, move from another deck — plus the **substitutes** in this deck, colour then
   name inside each, with *In box* / *Move here* / *To bench* per row, a tick that records
-  the walk as it happens, *Mark all added*, Print (black on white, boxes to tick) and
+  the walk as it happens, *Select all* beside a group's count (the whole group in one
+  revision), *Mark all added*, Print (black on white, boxes to tick) and
   Export. A substitute is any owned copy physically in a deck that the list does not call
   for: it fills a seat while the real card is bought or on its way, so the deck is playable
   before it is finished. Nothing marks it; being in the box without a reservation is what it
@@ -146,7 +147,8 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   as *Add · Replaces · Tier · Price · Why · Promote* with *Tuned only* and *Under $2*
   (D5–D6: $1.50) filters, `$X to Max` and `GC k / 2` in its header; *Promote* is the
   existing accept-option review, which asks first when it would be a third Game Changer.
-  A **budget card** under the hero — `$ to finish (base)`, `Paid so far`, `Market value · %
+  A **budget card** under the hero — `$ to finish (base)`, `Paid so far` (≈ when an owned copy has no
+  recorded price and the list price stands in), `Market value · %
   of cap` with a bar (amber past 90 %, red past 100 %), `Game Changers k / 2`, lines paid
   over the 110 % cap — reads the same lots and prices as the Shop strip. Deck Definition
   shows the standing caps ($225 total, $30 a card) as placeholders and writes them when the

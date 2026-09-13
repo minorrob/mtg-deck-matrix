@@ -83,7 +83,13 @@
  function running(){return !paused&&!reduced.matches&&visible&&!document.hidden;}
  function tick(now){frame=0;if(!running()){sync();return;}if(!last)last=now;if(now-last>=32){time+=Math.min(now-last,70)/1000;last=now;draw(time);}frame=requestAnimationFrame(tick);}
  function sync(){cancelAnimationFrame(frame);frame=0;last=0;canvas.dataset.motion=paused||reduced.matches?'still':running()?'running':'suspended';control.hidden=reduced.matches;control.setAttribute('aria-label',paused?'Resume aether animation':'Pause aether animation');control.title=paused?'Resume aether animation':'Pause aether animation';control.textContent=paused?'▷':'Ⅱ';draw(time);if(running())frame=requestAnimationFrame(tick);}
+ // The name is never cut. When its column is narrower than the word -- a phone with the
+ // header's buttons beside it -- the wordmark steps down half a pixel at a time until it
+ // fits, and steps back up when there is room again; the stylesheet size is the ceiling.
+ const word=block.querySelector('.v-brand');
+ function fit(){word.style.fontSize='';let size=parseFloat(getComputedStyle(word).fontSize);for(let i=0;i<40&&word.scrollWidth>word.clientWidth&&size>14;i++){size-=.5;word.style.fontSize=size+'px';}}
  function resize(){
+  fit();
   const b=block.getBoundingClientRect(),s=sub.getBoundingClientRect();
   // Standalone frame sizing can briefly measure an incomplete inline layout.
   // Keep the last valid drawing until there is space for both text and trail.
