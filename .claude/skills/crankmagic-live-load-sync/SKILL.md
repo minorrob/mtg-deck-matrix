@@ -89,7 +89,7 @@ numbers agree; fix the workbook and rebuild.
    one hard refresh before the new state is served, and that the substitutes (cards
    physically in a deck that the target does not call for -- the Master's Actual minus its
    Target, including basics above the target count) stay in their physical decks as
-   *Substitute* copies: the deck tile reads *Playable · n substitutes*, the pull sheet lists
+   *Substitute* copies: the deck tile reads *Playable · n substitutes*, the Ready to add list lists
    them and says how many can come out now, and they leave only when he ticks them out. The
    app's status words are Watched · Ordered · Owned; Wanted and Incoming trade no longer
    exist (a schema-1 backup is migrated on load).

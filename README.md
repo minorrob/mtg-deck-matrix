@@ -47,7 +47,7 @@ The approved standalone mockup remains under `design/crankmagic/` for design ref
   deck's *To buy* requirement, a draft deck's *Draft list* row or a group's planned card it
   creates the copy at that rung, filed with the deck or group and reserved to its slot once
   the deck is finalized. Above Owned the ladder continues as placement: *Bench* (an owned
-  copy's default), *Reserved* to a deck, and *In physical deck* once it is physically sleeved.
+  copy's default), *Reserved* to a deck, and *Physical deck* once it is physically sleeved.
   Moving an owned copy back down clears its box and, below Ordered, its reservation, and
   asks first. Every row carries its one obvious verb as a button — *Bought* / *Ordered* on
   a To buy row, *Arrived* on an ordered copy, *Put in Dn* on an owned copy reserved but
@@ -68,7 +68,7 @@ The approved standalone mockup remains under `design/crankmagic/` for design ref
   are reserved than sleeved). Click a number and type the new one: a plain raise of Own or
   Ordered saves on the spot, and anything that takes a copy from somewhere goes through the
   review dialog first. A raised *T* reserves free copies and takes reserved ones from other
-  decks (they stay in their boxes until pulled, and those decks' pull sheets say so); an *A*
+  decks (they stay in their boxes until pulled, and those decks' Ready to add lists say so); an *A*
   typed to 1 releases the copy from wherever it was, reserves it here and puts it in this
   box, recording a new owned copy when the library holds none. The copies rule holds
   throughout: one of a card per deck except basics and the cards whose text allows more.
@@ -97,7 +97,7 @@ The approved standalone mockup remains under `design/crankmagic/` for design ref
   **Bought** and **Ordered** on a To buy row, **Arrived** on an ordered copy, one tap each,
   stamping the sheet price as what was paid (marked *catalog* until a receipt says
   otherwise). Export carries price, cap, vendor and the subtotals; *Print buy list* prints
-  it by deck. **Deck assembly** opens a deck's pull sheet. Tick rows and **Ordered…** takes
+  it by deck. **Ready to add** opens a deck's Ready to add list. Tick rows and **Ordered…** takes
   one dialog (vendor, reference, shipping spread across the lines, expected date) for the
   whole order; **Bought in store** does the same with the store as vendor and the copies
   arriving at once; **Arrived** lands ticked ordered copies. The **Orders** tab
@@ -106,10 +106,10 @@ The approved standalone mockup remains under `design/crankmagic/` for design ref
   *Arrived → bench* (one change, one undo, reservations kept), *Paste receipt* (an order
   confirmation or CSV, matched by name, applied to the lines it names and marked *receipt*;
   also Import list → *Order confirmation*), *Edit* and *Lines*.
-- **Pull sheet** (`#pull?deck=`): one deck's reserved copies grouped by where they are —
+- **Ready to add** (`#pull?deck=`): one deck's reserved copies grouped by where they are —
   pull from bench, move from another deck — plus the **substitutes** in this deck, colour then
   name inside each, with *In box* / *Move here* / *To bench* per row, a tick that records
-  the walk as it happens, *Mark all found in box*, Print (black on white, boxes to tick) and
+  the walk as it happens, *Mark all added*, Print (black on white, boxes to tick) and
   Export. A substitute is any owned copy physically in a deck that the list does not call
   for: it fills a seat while the real card is bought or on its way, so the deck is playable
   before it is finished. Nothing marks it; being in the box without a reservation is what it
@@ -123,7 +123,7 @@ The approved standalone mockup remains under `design/crankmagic/` for design ref
   as a border: green while *Defining*, blue while *Building*, purple once *Playable*, gold
   when *Complete*. The deck page's stat row shows In
   physical deck · Substitutes · Ready to add · Ordered · To buy and $ to finish against the cap,
-  with a readiness bar; *Pull sheet (n)* leads the action row when there is
+  with a readiness bar; *Ready to add (n)* leads the action row when there is
   anything ready to add. The **Upgrade Path** panel under SWOT lists the deck's linked upgrades
   as *Add · Replaces · Tier · Price · Why · Promote* with *Tuned only* and *Under $2*
   (D5–D6: $1.50) filters, `$X to Max` and `GC k / 2` in its header; *Promote* is the

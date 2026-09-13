@@ -313,7 +313,7 @@ views.lab=async()=>{
   function physicalRows(d){const q=new Map();for(const l of C.state.lots)if(l.source==='owned'&&l.location?.kind==='deck'&&l.location.deckId===d.id)q.set(l.cardId,(q.get(l.cardId)||0)+l.quantity);return [...q].map(([cardId,quantity])=>({cardId,quantity,purpose:'main'}));}
   function listSource(){return document.getElementById('cm-lab-form')?.elements.listSource?.value||'reserved';}
   function startingRows(id,source){const d=M.deck(C.state,id),notes=[];let rows,method;
-    if(source==='physical'){rows=physicalRows(d);if(!rows.length)throw Error('Nothing is recorded as physically in that deck yet. Start from its Reserved list, or tick cards into it from the pull sheet first.');
+    if(source==='physical'){rows=physicalRows(d);if(!rows.length)throw Error('Nothing is recorded as physically in that deck yet. Start from its Reserved list, or add cards to it from Ready to add first.');
       const lead=d.commanders[0];if(lead&&!rows.some(r=>r.cardId===lead)){rows.unshift({cardId:lead,quantity:1,purpose:'main'});notes.push(`${C.state.cards[lead]?.name||'The commander'} was added: the deck declares it, but no copy is recorded as physically in the deck.`);}
       method=`Physical deck copied into a new draft: the ${rows.reduce((n,r)=>n+r.quantity,0)} cards in it, substitutes included; no simulation executed`;}
     else{rows=d.slots.filter(r=>r.purpose==='main').map(r=>({...r,id:undefined}));if(!rows.length)throw Error('That deck has no cards in its main list yet. Edit its card list first.');method='Reserved list copied exactly into a new draft; no simulation executed';}

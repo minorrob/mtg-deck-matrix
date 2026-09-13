@@ -170,7 +170,7 @@ run('source',{lotId:'eye',source:'watching',confirmed:true});
 assert.equal(M.lot(s,'eye').allocation,null,'Dropping a reserved copy to Wanted releases the reservation');
 assert.equal(M.shortfall(s,M.deck(s,'ladder'),M.slot(s,'ladder','gemw')),1,'and the deck wants the card again');checks+=2;
 run('source',{lotId:'eye',source:'owned'});run('allocate',{lotId:'eye',deckId:'ladder',slotId:'gemw'});run('place',{lotId:'eye',deckId:'ladder'});
-assert.equal(M.projection(s).find(r=>r.recordId==='eye').placement,'In physical deck');checks++;
+assert.equal(M.projection(s).find(r=>r.recordId==='eye').placement,'Physical deck');checks++;
 expectFailure('bulk',{op:'source',source:'watching',lotIds:['eye']},/confirm/);
 run('bulk',{op:'source',source:'watching',lotIds:['eye'],confirmed:true});
 const eye=M.lot(s,'eye');assert.equal(eye.location,null,'Below Owned there is no box');assert.equal(eye.allocation,null,'and no reservation');assert.equal(eye.source,'watching');checks+=3;
@@ -268,7 +268,7 @@ M.validate(s);checks++;
 // copies are RESERVED to that slot and how many of those sit in the physical deck. A deck cell typed
 // to 1 releases the copy from wherever it was, reserves it here and -- for the In box
 // column -- puts it in this box; a copy taken from another deck stays physically in that
-// deck until pulled, which is what the other deck's pull sheet then says. The matrix
+// deck until it is moved, which is what the other deck's pull sheet then says. The matrix
 // is the sheet's numbers, and it never disagrees with readiness.
 {
   const saved=s;s=M.empty();
@@ -289,9 +289,9 @@ M.validate(s);checks++;
    run(p.command.type,p.command);assert.deepEqual([cell('ring','A').a,cell('ring','A').boxed],[1,0]);assert.equal(M.readiness(s,M.deck(s,'A')).pullFromBench,1);checks+=2;agree();}
   {const p=M.plan(s,{cardId:'ring',column:'boxed',deckId:'A',value:1});assert.ok(p.notes.some(n=>/1 reserved copy goes into Deck A/.test(n)),p.notes.join(' | '));run(p.command.type,p.command);assert.equal(cell('ring','A').boxed,1);assert.equal(M.inDeck(s,M.lot(s,'ring1')),true);checks+=3;agree();}
   // Another deck's cell typed to 1 takes the copy: reserved here now, still in the other box
-  // until pulled, and never without a review.
+  // until it is moved, and never without a review.
   expectFailure('assign',{deckId:'B',cardId:'ring',assigned:1},/confirm/i);
-  {const p=M.plan(s,{cardId:'ring',column:'a',deckId:'B',value:1});assert.ok(p.notes.some(n=>/1 copy comes from Deck A \(still in that physical deck until pulled\)/.test(n)),p.notes.join(' | '));checks++;
+  {const p=M.plan(s,{cardId:'ring',column:'a',deckId:'B',value:1});assert.ok(p.notes.some(n=>/1 copy comes from Deck A \(still in that physical deck until it is moved\)/.test(n)),p.notes.join(' | '));checks++;
    const r=run(p.command.type,p.command);assert.match(r.summary,/from Deck A/);const l=M.lot(s,'ring1');assert.equal(l.allocation.deckId,'B');assert.equal(l.location.deckId,'A','physically still in A');assert.equal(M.inDeck(s,l),false);
    assert.deepEqual([cell('ring','A').a,cell('ring','B').a,cell('ring','B').boxed],[0,1,0]);assert.equal(M.readiness(s,M.deck(s,'B')).pullFromOtherBox,1);assert.equal(M.readiness(s,M.deck(s,'A')).standIns,1,'the ring stands in A until B pulls it');checks+=7;agree();}
   {const p=M.plan(s,{cardId:'ring',column:'boxed',deckId:'B',value:1});run(p.command.type,p.command);assert.equal(M.lot(s,'ring1').location.deckId,'B');assert.equal(cell('ring','B').boxed,1);checks+=2;agree();}
@@ -341,7 +341,7 @@ M.validate(s);checks++;
   // A RAISED TARGET takes the copy from the other deck, reserved here, still there until
   // pulled; where nothing exists anywhere it is simply To buy.
   {run('acquire',{lot:{id:'ring2',cardId:'ring',quantity:1}});run('assign',{deckId:'B',cardId:'ring',assigned:1,boxed:1,confirmed:true});run('target',{deckId:'A',cardId:'ring',quantity:0,confirmed:true});
-   const p=M.plan(s,{cardId:'ring',column:'t',deckId:'A',value:1});assert.equal(p.command.type,'batch');assert.deepEqual(p.command.commands.map(c=>[c.type,c.partial||false]),[['target',false],['assign',true]]);assert.equal(p.review,true);assert.ok(p.notes.some(n=>/1 copy comes from Deck B \(still in that physical deck until pulled\)/.test(n)),p.notes.join(' | '));checks+=4;
+   const p=M.plan(s,{cardId:'ring',column:'t',deckId:'A',value:1});assert.equal(p.command.type,'batch');assert.deepEqual(p.command.commands.map(c=>[c.type,c.partial||false]),[['target',false],['assign',true]]);assert.equal(p.review,true);assert.ok(p.notes.some(n=>/1 copy comes from Deck B \(still in that physical deck until it is moved\)/.test(n)),p.notes.join(' | '));checks+=4;
    run('batch',p.command);assert.deepEqual([cell('ring','A').a,cell('ring','B').a,M.lot(s,'ring2').location.deckId],[1,0,'B']);assert.equal(M.readiness(s,M.deck(s,'B')).standIns,1,'B still holds it');checks+=2;agree();
    const q=M.plan(s,{cardId:'seven',column:'t',deckId:'B',value:1});assert.equal(q.command.type,'target');assert.equal(q.review,false);assert.ok(q.notes.some(n=>/1 copy stays To buy/.test(n)),q.notes.join(' | '));checks+=3;}
   // A card the library has never met rides in on the edit, and every command it plans carries the identity.
@@ -371,7 +371,7 @@ M.validate(s);checks++;
   expectFailure('place',{lotId:'g1',deckId:'C',quantity:1,asStandIn:true},/Finalize/);
   run('place',{lotId:'g1',deckId:'A',quantity:1,asStandIn:true});
   {const l=M.lot(s,'g1');assert.equal(l.location.deckId,'A');assert.equal(l.allocation,null);const r=A();assert.deepEqual([r.inBox,r.standIns,r.covered,r.surplus,r.swapReady,r.remove,r.sleeved,r.playable],[0,1,1,0,0,0,1,false]);checks+=3;
-   const row=M.projection(s).find(x=>x.recordId==='g1');assert.equal(row.placement,'Substitute');assert.equal(row.standIn,true);assert.equal(row.standInDeckId,'A');assert.equal(row.physical,'In physical deck');checks+=4;
+   const row=M.projection(s).find(x=>x.recordId==='g1');assert.equal(row.placement,'Substitute');assert.equal(row.standIn,true);assert.equal(row.standInDeckId,'A');assert.equal(row.physical,'Physical deck');checks+=4;
    const m=M.matrix(s),x=m.rows.find(x=>x.cardId==='gem');assert.deepEqual([x.own,x.inBox,x.subs,x.bench,x.perDeck.A.sub,x.perDeck.B.sub,m.totals.A.sub],[1,0,1,0,1,0,1]);checks++;}
   // A real copy arriving on the bench makes the substitute swappable; putting it in leaves the
   // substitute covering another empty seat.
