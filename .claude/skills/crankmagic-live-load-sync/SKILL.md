@@ -74,7 +74,7 @@ numbers agree; fix the workbook and rebuild.
    (and `bash runtests.sh -q` when anything but data changed).
 5. Headless check when anything beyond data changed: serve the repo, open `index.html`,
    User Functions → Load Live, wrong password rejected, `treycmload1` → review → replace;
-   six decks on My Decks; the deck page's *Working list* shows the options and planned
+   six decks on Decks; the deck page's *Working list* shows the options and planned
    cards; no console errors other than blocked Scryfall calls.
 6. Commit `data/live-load.json`, `data/live-state.json`, the workbook under `data/source/`
    and any tool change, with a message that states the workbook version and the card-level

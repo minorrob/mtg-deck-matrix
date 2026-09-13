@@ -24,10 +24,10 @@
    overflow bug shows up at first. */
 export const WIDTHS = [320, 375, 390, 430, 768, 1400];
 export const PAGES = [
-  ["decks", "My Decks"],
-  ["collection", "Collection"],
-  ["shop", "Shop"],
-  ["lab", "Deck Lab"],
+  ["decks", "Decks"],
+  ["cards", "Cards"],
+  ["cards?tab=buy", "Cards · To buy"],
+  ["lab", "Build"],
 ];
 const PHONE = 640;
 const MIN_TAP = 32;

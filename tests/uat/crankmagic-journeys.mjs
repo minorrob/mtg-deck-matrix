@@ -14,8 +14,12 @@ const state=()=>page.evaluate(async()=>{const r=await CrankRepository.open();try
 const waitDialog=()=>page.getByRole('dialog').waitFor({state:'hidden'});
 /* A row is matched on a CELL that says exactly the source (or the deck), not on any text in
    the row: the row's own verb buttons say "Ordered" and "Bought" too now. */
-const row=(name,source)=>page.locator('tbody tr').filter({has:page.getByRole('button',{name,exact:true})}).filter({has:page.locator('td').filter({hasText:new RegExp('^\\s*'+source.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\s*$')})});
+const FAMILY={Owned:['Owned','Physical deck','Substitute','Reserved','Bench'],Ordered:['Ordered'],Watched:['Watched']};
+const row=(name,source)=>page.locator('tbody tr').filter({has:page.getByRole('button',{name,exact:true})}).filter({has:page.locator('td').filter({hasText:new RegExp('^\\s*('+(FAMILY[source]||[source]).map(s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')(\\s|$)')})});
 async function actionsFor(name,source){await row(name,source).getByRole('button',{name:'Actions',exact:true}).click();}
+/* Status is one column now: an owned copy reads as where it is, and the cell also carries the
+   Option and Pinned badges. A journey that asks for the "Owned" row means the owned lot,
+   whichever of its four states the Status cell opens with. */
 /* Mark Ordered, Mark Received / Owned and No longer wanted no longer open a dialog: they
    open a count strip beside the menu, and the green check is the commit. The check carries
    the action's own label as its accessible name, so it is found inside the strip rather
@@ -29,12 +33,12 @@ async function count(label,n,scope=page){
 }
 /* The rungs live in the Status fly-out now: hover its toggle, and a rung opens the same strip. */
 async function rung(label,n){await page.locator('#cm-status-submenu-toggle').hover();const sub=page.locator('#cm-status-submenu');await sub.getByRole('button',{name:label,exact:true}).waitFor();await count(label,n,sub);}
-async function newDeck(){await nav('My Decks');await click('Create a deck');await page.getByLabel('Card name or a Scryfall link').fill('Krenko, Mob Boss');await page.locator('[data-pick-card]').filter({has:page.getByText('Krenko, Mob Boss',{exact:true})}).click();await page.locator('#cm-dialog [name=name]').fill('Journey Goblins');await click('Create draft');await waitDialog();await click('Edit card list');await page.getByLabel('Cards (one per line, with quantity)').fill('1 Krenko, Mob Boss\n98 Mountain\n1 Lightning Bolt');await click('Resolve & save draft');await waitDialog();await click('Finalize & reserve');await click('Confirm change');await waitDialog();}
+async function newDeck(){await nav('Decks');await click('Create a deck');await page.getByLabel('Card name or a Scryfall link').fill('Krenko, Mob Boss');await page.locator('[data-pick-card]').filter({has:page.getByText('Krenko, Mob Boss',{exact:true})}).click();await page.locator('#cm-dialog [name=name]').fill('Journey Goblins');await click('Create draft');await waitDialog();await click('Edit card list');await page.getByLabel('Cards (one per line, with quantity)').fill('1 Krenko, Mob Boss\n98 Mountain\n1 Lightning Bolt');await click('Resolve & save draft');await waitDialog();await click('Finalize & reserve');await click('Confirm change');await waitDialog();}
 try{
  await page.goto(BASE+'/'+ENTRY);await page.getByRole('heading',{name:'Build it. Make it yours.'}).waitFor({timeout:45000});eq((await state()).lots.length,0);
- /* HOW A DECK COMES TOGETHER: a plain link on My Decks opens the six-step map; each step's title opens where that step begins. */
+ /* HOW A DECK COMES TOGETHER: a plain link on Decks opens the six-step map; each step's title opens where that step begins. */
  await page.getByRole('link',{name:'How a deck comes together'}).click();await page.locator('.cm-how-flow').waitFor();eq(await page.locator('.cm-how-step').count(),6);eq(await page.locator('.cm-how-rungs li').count(),5);
- await page.locator('.cm-how-title',{hasText:'Acquire'}).click();await page.locator('#cm-roster-table').waitFor();ok(location=>true);ok(page.url().endsWith('#shop'));
+ await page.locator('.cm-how-title',{hasText:'Acquire'}).click();await page.locator('#cm-roster-table').waitFor();ok(page.url().endsWith('#cards?tab=buy'));eq(await page.getByRole('tab',{selected:true}).innerText().then(s=>s.split(/\s/)[0]),'To');
  /* SHARE. Three ways out of the header: a subscription draft to the maintainer, a share draft with the To line blank, and a QR code drawn in the page. */
  await click('Share');await page.locator('#cm-share-menu:popover-open').waitFor();
  ok((await page.locator('#cm-share-subscribe').getAttribute('href')).startsWith('mailto:minor.rob@gmail.com?subject=Subscribe%20me%20to%20CrankMagic%20updates'));ok((await page.locator('#cm-share-mail').getAttribute('href')).startsWith('mailto:?subject=CrankMagic'));ok((await page.locator('#cm-share-mail').getAttribute('href')).includes(encodeURIComponent('https://minorrob.github.io/mtg-deck-matrix/')));
@@ -77,7 +81,7 @@ try{
  await click('User Functions');const xlsxDownload=page.waitForEvent('download');await click('Export as Excel');const xlsxPath=await (await xlsxDownload).path();ok((await fs.stat(xlsxPath)).size>5000);
  await click('User Functions');await click('Clear all data');await page.getByLabel('Type CLEAR to confirm').fill('CLEAR');await click('Clear local data');await waitDialog();eq((await state()).lots.length,0);
  await click('User Functions');await click('Restore from a backup file');await page.getByLabel('CrankMagic JSON backup').setInputFiles(backupFile);await click('Validate backup');await page.getByLabel('Type RESTORE to replace the library').fill('RESTORE');await click('Restore reviewed backup');await waitDialog();current=await state();eq(current.lots,expected.lots);eq(current.decks,expected.decks);eq(current.groups,expected.groups);
- await nav('Deck Lab');await page.locator('#cm-lab-form').waitFor({timeout:45000});
+ await nav('Build');await page.locator('#cm-lab-form').waitFor({timeout:45000});
  /* Deck Lab's sections collapse now and Deck Definition starts closed, so the deck-name
     field is in the DOM but not fillable until it is opened. Opened here rather than right
     after nav(): the view renders asynchronously, so anything run before the form exists
@@ -106,7 +110,7 @@ try{
     list rows under that group -- each with a Status fly-out that turns a plan into a copy. */
  await click('Save this deck');await page.waitForTimeout(900);current=await state();
  const labDeck=current.decks.find(d=>d.name==='Constructive run');ok(labDeck&&labDeck.status==='draft');ok(labDeck.groupId&&current.groups.some(g=>g.id===labDeck.groupId));
- await nav('Collection');await page.getByRole('table').waitFor();
+ await nav('Cards');await page.getByRole('table').waitFor();
  await page.locator('select[name=groupPick]').selectOption(labDeck.groupId);await page.locator('.cm-chip').filter({hasText:'Group: Constructive run'}).waitFor();
  ok((await page.locator('tbody tr.cm-row-card').count())>1);
  const labTotal=labDeck.slots.filter(r=>r.purpose==='main').reduce((n,r)=>n+r.quantity,0);
@@ -122,7 +126,7 @@ try{
  await page.locator('select[name=groupBy]').selectOption('');
  /* The whole draft at a status, from the deck page: every remaining card becomes a Wanted
     copy filed with the deck, so the group now holds the hundred as copies. */
- await click('Clear filters');await nav('My Decks');await page.locator('.cm-deck-tile').filter({hasText:'Constructive run'}).getByRole('button').first().click();
+ await click('Clear filters');await nav('Decks');await page.locator('.cm-deck-tile').filter({hasText:'Constructive run'}).getByRole('button').first().click();
  /* LOG A GAME, READ IT BACK: the form's pickers are the deck's cards, and the Record card and
     the tile caption show the result. */
  await click('Log a game');await page.getByLabel('Card that won it').selectOption({label:'Krenko, Mob Boss'});await page.getByLabel('Finish').selectOption('1');await click('Save game record');await waitDialog();await page.locator('.cm-record-table').waitFor({timeout:8000});current=await state();
@@ -136,18 +140,18 @@ try{
  await page.evaluate(async deckId=>{const r=await CrankRepository.open();try{const s=await r.getState();const d=s.decks.find(x=>x.id===deckId);await r.commit({id:crypto.randomUUID(),type:'report',deckId,report:{kind:'report',origin:'measured',protocol:'published',deckFingerprint:CrankCollection.fingerprint(d),list:d.slots.filter(r=>r.purpose==='main').map(r=>({cardId:r.cardId,quantity:r.quantity})),commanders:[...d.commanders],versions:{engine:'journey'},conditions:{seedCount:1,gamesPerSeed:1},metrics:{score:{value:61.5,unit:'points'},scoreStandardError:{value:0.4,unit:'points'},winRate:{value:27,unit:'%'},averageWinTurn:{value:11.2,unit:'turns'}},run:{games:1,elapsedMs:10},limits:['A journey report, not a measurement.']}},s.revision);}finally{r.close();}},labDeck.id);
  await page.reload();await page.locator('.cm-history-table').waitFor({timeout:45000});eq(await page.locator('.cm-history-table tbody tr').count(),1);
  await click('View report');await page.getByRole('dialog').getByText('Score',{exact:false}).first().waitFor();await page.getByRole('button',{name:'Close dialog'}).click();
- await nav('My Decks');await page.locator('.cm-deck-tile').filter({hasText:'Constructive run'}).getByText('61.5 pts').waitFor();checks+=1;
+ await nav('Decks');await page.locator('.cm-deck-tile').filter({hasText:'Constructive run'}).getByText('61.5 pts').waitFor();checks+=1;
  /* SPIN OFF. The report carries the hundred it measured; from the report on the deck page that hundred becomes a deck of its own, with the report copied over and the original deck untouched. */
  await page.locator('.cm-deck-tile').filter({hasText:'Constructive run'}).first().getByRole('button').first().click();await page.locator('.cm-history-table').waitFor();await click('View report');await page.getByRole('dialog').getByRole('button',{name:'Spin off as a new deck'}).click();
  await page.waitForFunction(id=>location.hash.includes('deck=')&&!decodeURIComponent(location.hash).includes(id),labDeck.id,{timeout:45000});await page.locator('.cm-deck-summary').waitFor({timeout:45000});current=await state();
  const spun=current.decks.find(d=>d.name.startsWith('Constructive run · 61.5 pts'));ok(spun&&spun.id!==labDeck.id);eq(spun.slots.filter(r=>r.purpose==='main').reduce((n,r)=>n+r.quantity,0),labDeck.slots.filter(r=>r.purpose==='main').reduce((n,r)=>n+r.quantity,0));eq(spun.commanders,labDeck.commanders);
  ok(current.reports.some(r=>r.deckId===spun.id&&r.spunOffFrom&&r.spunOffFrom.deckId===labDeck.id));eq(current.decks.find(d=>d.id===labDeck.id).slots.length,labDeck.slots.length);
- await nav('My Decks');await page.locator('.cm-deck-tile').filter({hasText:'61.5 pts ·'}).first().waitFor();
+ await nav('Decks');await page.locator('.cm-deck-tile').filter({hasText:'61.5 pts ·'}).first().waitFor();
  /* THE SPREADSHEET. One row per card, T and A per deck; a typed number becomes the commands
     the library needs. Own raised by one saves on the spot; a deck's A typed to 1 takes the
     copy from wherever it is, reserves it here and puts it in the box, through the review
     dialog, and the cell reads 1 afterwards. */
- await nav('Collection');await page.locator('#cm-roster-table').waitFor();await click('Spreadsheet');await page.locator('.cm-sheet').waitFor();ok((await page.locator('.cm-sheet tbody tr').count())>1);
+ await nav('Cards');await page.locator('#cm-roster-table').waitFor();await click('Sheet');await page.locator('.cm-sheet').waitFor();ok((await page.locator('.cm-sheet tbody tr').count())>1);
  await page.locator('#cm-sheet-query').fill('Krenko, Mob Boss');await page.waitForTimeout(300);eq(await page.locator('.cm-sheet tbody tr').count(),1);
  current=await state();const journey=current.decks.find(d=>d.name==='Journey Goblins'),krenkoKey=CrankKey('Krenko, Mob Boss');
  const krenkoOwned=()=>current.lots.filter(l=>l.cardId===krenkoKey&&l.source==='owned').reduce((n,l)=>n+l.quantity,0),ownedBefore=krenkoOwned();
@@ -161,23 +165,23 @@ try{
     it back to the bench. */
  await click('Add a card row');await page.getByLabel('Card name or a Scryfall link').fill('Wastes');await page.locator('[data-pick-card]').filter({has:page.getByText('Wastes',{exact:true})}).first().click();await page.waitForTimeout(600);
  const wastesKey=CrankKey('Wastes');await page.locator(`.cm-sheet [data-cell="${wastesKey}|own|"]`).click();await page.locator('.cm-sheet-input').fill('1');await page.keyboard.press('Enter');await page.waitForTimeout(900);current=await state();ok(current.lots.some(l=>l.cardId===wastesKey&&l.source==='owned'));
- await click('Roster');await page.locator('#cm-roster-table').waitFor();await page.locator('#cm-roster-query').fill('Wastes');await row('Wastes','Bench').waitFor();
+ await click('Table');await page.locator('#cm-roster-table').waitFor();await page.locator('#cm-roster-query').fill('Wastes');await row('Wastes','Bench').waitFor();
  await actionsFor('Wastes','Bench');await page.locator('#cm-standin-submenu-toggle').hover();{const sub=page.locator('#cm-standin-submenu');await sub.getByRole('button',{name:'Journey Goblins',exact:true}).waitFor();await sub.getByRole('button',{name:'Journey Goblins',exact:true}).click();}
  await page.getByRole('dialog').waitFor();await click('Confirm change');await waitDialog();await page.waitForTimeout(900);current=await state();
  {const l=current.lots.find(l=>l.cardId===wastesKey);eq(l.location.deckId,journey.id);eq(l.allocation,null);eq(CrankReadiness(current).standIns,1);}
- await nav('My Decks');ok(await page.locator('.cm-deck-tile').filter({hasText:'Journey Goblins'}).innerText().then(t=>/1 substitute/.test(t)));
+ await nav('Decks');ok(await page.locator('.cm-deck-tile').filter({hasText:'Journey Goblins'}).innerText().then(t=>/1 substitute/.test(t)));
  await page.locator('.cm-deck-tile').filter({hasText:'Journey Goblins'}).getByRole('button').first().click();await page.getByRole('button',{name:/^Ready to add/}).click();
  await page.locator('.cm-pull-group[data-group=standin]').waitFor();await page.locator('.cm-pull-group[data-group=standin] [data-pull-tick]').first().check();await page.waitForTimeout(900);current=await state();
  eq(current.lots.find(l=>l.cardId===wastesKey).location.kind,'bench');eq(CrankReadiness(current).standIns,0);
  /* The roster's search is shared with the Shop, so it is cleared before the Shop steps read money. */
- await nav('Collection');await page.locator('#cm-roster-table').waitFor();await click('Clear filters');await page.waitForTimeout(300);
+ await nav('Cards');await page.locator('#cm-roster-table').waitFor();await click('Clear filters');await page.waitForTimeout(300);
  /* MONEY ON THE BUY LIST. The Shop opens grouped by deck with a strip above the table: the
     total at sheet prices equals the sum of the band headers' subtotals, and Bought on a row
     is one tap that records the copy and stamps the sheet price as what was paid. */
  /* Every row on one page: the strip counts every matched row and a band header only exists
     for the rows on the page, so the two agree only with paging off. */
  await page.evaluate(async()=>{const r=await CrankRepository.open();try{const s=await r.getState();await r.commit({id:crypto.randomUUID(),type:'preferences',values:{pageSize:'all'}},s.revision);}finally{r.close();}});
- await nav('Shop');await page.locator('#cm-shop-total').waitFor({timeout:45000});await page.locator('.cm-band-dollars').first().waitFor();
+ await nav('Cards');await page.getByRole('tab',{name:/^To buy/}).click();await page.locator('#cm-shop-total').waitFor({timeout:45000});await page.locator('.cm-band-dollars').first().waitFor();
  const money=await page.evaluate(()=>{const num=t=>Number(String(t).replace(/[^0-9.]/g,''));return {total:num(document.querySelector('#cm-shop-total').textContent),bands:[...document.querySelectorAll('.cm-band-dollars')].map(el=>num(el.textContent))};});
  ok(money.total>0);eq(money.total.toFixed(2),money.bands.reduce((n,x)=>n+x,0).toFixed(2));
  await page.locator('#cm-roster-query').fill('Lightning Bolt');await page.waitForTimeout(300);await row('Lightning Bolt','Journey Goblins').getByRole('button',{name:'Bought',exact:true}).click();await page.waitForTimeout(900);current=await state();
@@ -188,9 +192,9 @@ try{
  await page.locator('#cm-roster-query').fill('Mountain');await page.waitForTimeout(300);await page.locator('.cm-tick-all').check();await click('Ordered…');
  await page.getByLabel('Order reference').fill('J-1');await page.getByLabel('Shipping, spread across the lines ($)').fill('3');await click('Review order');await click('Confirm change');await waitDialog();await page.waitForTimeout(900);current=await state();
  const orders=CrankOrders(current);eq(orders.length,1);eq(orders[0].ref,'J-1');ok(orders[0].copies>=60);eq(orders[0].shipping.toFixed(2),'3.00');ok(orders[0].lots.every(l=>l.source==='ordered'&&l.order.shipShare>0&&(!(current.cards[l.cardId].price>0)||l.paidSource==='catalog')));
- const revBefore=current.revision;await click('Orders');await page.locator('.cm-orders').waitFor();eq(await page.locator('.cm-order-row').count(),1);
+ const revBefore=current.revision;await page.getByRole('tab',{name:/^Orders/}).click();await page.locator('.cm-orders').waitFor();eq(await page.locator('.cm-order-row').count(),1);
  await click('Arrived → bench');await click('Confirm change');await waitDialog();await page.waitForTimeout(900);current=await state();eq(current.revision,revBefore+1);eq(CrankOrders(current)[0].arrived,CrankOrders(current)[0].copies);
- await click('Acquisition list');await page.locator('#cm-shop-total').waitFor();await click('Clear filters');
+ await page.getByRole('tab',{name:/^To buy/}).click();await page.locator('#cm-shop-total').waitFor();await click('Clear filters');
  const afterLab=await state();
  await nav('Discover');await page.locator('#cm-graph').waitFor({timeout:45000});
  /* ENTER FOCUSES THE BEST MATCH: a prefix is enough, and the exact name wins over a longer
@@ -232,8 +236,8 @@ try{
  const firstName=await page.locator('.cm-list-name').first().innerText();await page.locator('.cm-list-name').first().click();await page.locator('.cm-list-detail').waitFor();ok(await page.locator('.cm-list-detail').innerText().then(t=>/Focus here/.test(t)));eq(await page.locator('.cm-list-name[aria-expanded=true]').innerText(),firstName);ok(await page.locator('.cm-pane-tab.is-on').innerText().then(t=>/List/.test(t)));await page.locator('.cm-list-name').first().click();eq(await page.locator('.cm-list-detail').count(),0);ok(await page.locator('.cm-list-table th').allInnerTexts().then(t=>t.some(x=>/Link/.test(x))&&t.some(x=>/Color/.test(x))&&!t.some(x=>/Ring|Type|Mana/.test(x))));
  {const g=page.locator('#cm-pane-gutter');const box=await g.boundingBox();const width=()=>page.locator('#cm-card-view').evaluate(e=>e.clientWidth);const before=await width();await page.mouse.move(box.x+box.width/2,box.y+200);await page.mouse.down();await page.mouse.move(box.x-160,box.y+200,{steps:8});await page.mouse.up();const after=await width();ok(after>before+120,`pane widened from ${before} to ${after}`);ok(await page.evaluate(()=>Number(localStorage.getItem('crankmagic:paneWidth:default'))>0));eq(await page.locator('#cm-card-view').getAttribute('data-w'),'l');const b2=await g.boundingBox();await page.mouse.move(b2.x+b2.width/2,b2.y+200);await page.mouse.down();await page.mouse.move(b2.x+340,b2.y+200,{steps:8});await page.mouse.up();ok(await width()<300,'pane narrowed');ok(await page.locator('.cm-list-table th.cm-col-link').isHidden());await g.dblclick();ok(Math.abs(await width()-before)<4,'double-click resets');eq(await page.evaluate(()=>localStorage.getItem('crankmagic:paneWidth:default')),null);}
  await page.getByRole('tab',{name:'List'}).click();await page.locator('.cm-list-tick').first().check();await page.locator('.cm-pick-actions').waitFor();await click('Clear selection');
- await page.evaluate(()=>navigator.serviceWorker.ready);await context.setOffline(true);await page.reload();await page.locator('#cm-graph').waitFor({timeout:45000});await nav('Collection');await page.getByRole('table').waitFor();eq((await state()).lots,afterLab.lots);await context.setOffline(false);
- await page.setViewportSize({width:390,height:844});await nav('My Decks');await page.getByRole('heading',{name:'My Decks',level:1}).waitFor();ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await page.evaluate(()=>scrollTo(0,document.body.scrollHeight));const navBox=await page.getByRole('navigation',{name:'Main pages'}).boundingBox();ok(navBox.y>=0&&navBox.y<844);await nav('Collection');await page.getByRole('table').waitFor();ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+ await page.evaluate(()=>navigator.serviceWorker.ready);await context.setOffline(true);await page.reload();await page.locator('#cm-graph').waitFor({timeout:45000});await nav('Cards');await page.getByRole('table').waitFor();eq((await state()).lots,afterLab.lots);await context.setOffline(false);
+ await page.setViewportSize({width:390,height:844});await nav('Decks');await page.getByRole('heading',{name:'Decks',level:1}).waitFor();ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await page.evaluate(()=>scrollTo(0,document.body.scrollHeight));const navBox=await page.getByRole('navigation',{name:'Main pages'}).boundingBox();ok(navBox.y>=0&&navBox.y<844);await nav('Cards');await page.getByRole('table').waitFor();ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
  eq(errors,[]);console.log(`crankmagic-journeys: ${checks} checks passed across real deck assembly, imports, printing lots, corrections, concurrency, quota abort, backup restore, initial construction, graph navigation, offline and mobile.`);
 }catch(error){console.error(error);console.error((await page.locator('body').innerText()).slice(0,8500));await page.screenshot({path:'tests/uat/crankmagic-failure.png',fullPage:true});process.exitCode=1;}finally{await browser.close();}
 function CrankKey(name){return 'card:'+Buffer.from(name.normalize('NFKC').trim().toLowerCase()).toString('base64url');}

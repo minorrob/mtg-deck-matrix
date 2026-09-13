@@ -100,5 +100,5 @@ export async function loadLiveState(page, base) {
   await page.getByLabel("Type RESTORE to replace the library").fill("RESTORE");
   await page.getByRole("button", {name: "Restore reviewed backup", exact: true}).click();
   await page.getByRole("dialog").waitFor({state: "hidden"});
-  await page.getByRole("heading", {name: "My Decks", level: 1}).waitFor({timeout: 60000});
+  await page.getByRole("heading", {name: "Decks", level: 1}).waitFor({timeout: 60000});
 }

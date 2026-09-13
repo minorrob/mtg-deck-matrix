@@ -14,8 +14,8 @@
  *                 asides rather than in headings, figures or controls,
  *
  * and holds each under the number written beside the page below. The numbers are the
- * measurement on the day the trim shipped (My Decks 17 words, the deck page 77, the
- * Collection 55, the Shop 28) with a little headroom, not aspirations: a page that needs
+ * measurement on the day the trim shipped (Decks 17 words, the deck page 77, the
+ * Cards Library 63, its To buy tab 28) with a little headroom, not aspirations: a page that needs
  * more has to say so here, in the diff, where a reviewer sees it.
  *
  * WHEN THERE IS NO BROWSER it prints SKIPPED and exits 0 (see tests/uat/browser-runner.mjs);
@@ -34,18 +34,18 @@ const DECK = "deck:live:D1";
    table, list or canvas of the page; words and controls are counted before it in document
    order. Budgets are words / controls / explainer words. */
 const PAGES = [
-  ["decks", "My Decks", ".cm-deck-grid", [24, 8, 4], [24, 8, 4]],
+  ["decks", "Decks", ".cm-deck-grid", [24, 8, 4], [24, 8, 4]],
   [`decks?deck=${DECK}`, "Deck page", ".cm-grid-2", [90, 10, 24], [90, 10, 24]],
-  ["collection", "Collection", "#cm-roster-table table", [70, 16, 16], [70, 16, 16]],
-  ["shop", "Shop", "#cm-roster-table table, .cm-shop-strip", [40, 16, 8], [12, 7, 4]],
-  ["collection?sheet=1", "Spreadsheet", "#cm-sheet-table table", [36, 10, 20], [36, 10, 20]],
-  ["lab", "Deck Lab", "#cm-lab-results", [90, 16, 40], [90, 16, 40]],
+  ["cards", "Cards · Library", "#cm-roster-table table", [76, 22, 16], [76, 22, 16]],
+  ["cards?tab=buy", "Cards · To buy", "#cm-roster-table table, .cm-shop-strip", [40, 18, 8], [16, 10, 4]],
+  ["cards?view=sheet", "Cards · Sheet", "#cm-sheet-table table", [46, 16, 20], [46, 16, 20]],
+  ["lab", "Build", "#cm-lab-results", [90, 16, 40], [90, 16, 40]],
   /* Discover's facet bar is still 25 chips in four rows; folding it into one Filters
      control is the next round's work, so its budget is today's reading, not the rule. */
   ["discover", "Discover", "#cm-graph", [330, 40, 14], [330, 40, 14]],
   [`pull?deck=${DECK}`, "Ready to add", ".cm-pull-group", [48, 8, 4], [48, 8, 4]],
   ["how", "How a deck comes together", ".cm-how-flow", [14, 3, 2], [14, 3, 2]],
-  ["shop?tab=orders", "Orders", ".cm-orders, .cm-table", [18, 8, 4], [18, 8, 4]],
+  ["cards?tab=orders", "Cards · Orders", ".cm-orders, .cm-table", [24, 10, 4], [24, 10, 4]],
 ];
 const WIDTHS = [[1400, "desktop", 3], [390, "phone", 4]];
 
