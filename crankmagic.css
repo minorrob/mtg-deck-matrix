@@ -1022,3 +1022,5 @@ button.cm-pill:hover{filter:brightness(1.15)}
 #matrix-v2.cm-lands .cm-graph-reach,#matrix-v2.cm-lands .cm-graph-modes{display:none}
 .cm-lands-mode .cm-list-table th.cm-col-link{width:120px}
 @media(max-width:760px){.cm-lands-mode .cm-list-table th.cm-col-link{width:96px}}
+/* THE WORKING LIST on the deck page, and the two slot flags wherever a deck card is shown. */
+.cm-badge-option{background:#4a3a1a;color:#ffd166}.cm-working .cm-grid-2{margin-bottom:0}.cm-working h3{display:flex;align-items:baseline;gap:8px;margin:0 0 10px}.cm-working h3 small{font-weight:400;font-size:13px}.cm-working-list{list-style:none;margin:0;padding:0;display:grid;gap:9px}.cm-working-list li{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:14px}.cm-working-list li .cm-muted{flex-basis:100%;line-height:1.35}.cm-working-list .v-button{padding:3px 10px;min-height:0;font-size:12px}

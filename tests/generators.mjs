@@ -107,10 +107,18 @@ const CHECKABLE = [
   ["tools/flavor-names.mjs", ["--check"]],
   ["tools/graph-amplifiers.mjs", ["--check"]],
   ["tools/build-live-state.mjs", ["--check"]],
+  /* The workbook importer reads the newest data/source/*Master*.xlsx through openpyxl. Where
+     Python has no openpyxl the check is skipped and says so, the way the geometry suite skips
+     without a browser; the Tests and Load Live workflows install it and run the check for real. */
+  ["tools/build-live-load.mjs", ["--check"], {needs: "openpyxl"}],
 ];
 
-for (const [tool, args] of CHECKABLE) {
+const available = {
+  openpyxl: (() => { try { execFileSync("python3", ["-c", "import openpyxl"], {stdio: "ignore"}); return true; } catch { return false; } })(),
+};
+for (const [tool, args, opts = {}] of CHECKABLE) {
   ok(existsSync(path.join(ROOT, tool)), `${tool} is listed as checkable but is not in the tree`);
+  if (opts.needs && !available[opts.needs]) { console.log(`  skipped ${tool} ${args.join(" ")}: python3 has no ${opts.needs}`); continue; }
   let failure = null;
   try {
     execFileSync(process.execPath, [path.join(ROOT, tool), ...args],

@@ -39,5 +39,14 @@ jobs:
           npm install --no-save --no-package-lock playwright@1.56.0
           npx playwright install --with-deps chromium
 
+      # tests/generators.mjs runs the workbook importer's --check against data/source/, which
+      # reads .xlsx through openpyxl; without it that one check skips itself, and here it
+      # should not.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install the workbook reader
+        run: pip install openpyxl
+
       - name: Run every suite
         run: bash runtests.sh -q

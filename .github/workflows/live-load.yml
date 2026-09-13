@@ -1,0 +1,89 @@
+name: Load Live
+
+# Rob's Master workbook is the truth for his cards. Run this by hand (Actions → Load Live →
+# Run workflow) after a new workbook is under data/source/ (GitHub → Add file → Upload files
+# is enough): it rebuilds data/live-load.json and data/live-state.json from the newest
+# workbook there -- or the one named in the run -- checks them the way the tests do, and
+# commits both, so User Functions → Load Live serves the new collection as soon as Pages
+# has redeployed. Nothing runs on its own: a pushed workbook waits until the run is asked
+# for. A workbook the importer refuses (a deck target that does not sum to 100, a name the
+# catalog cannot resolve) fails the run and the log says which.
+#
+# The Option and Planned lists per deck come from a "CrankMagic Plans" sheet in the workbook
+# when it has one (Deck, Kind, Card, Why), and are carried over from the committed file
+# otherwise, so a rebuild never loses them.
+
+on:
+  workflow_dispatch:
+    inputs:
+      workbook:
+        description: "Workbook path in the repo (default: the newest data/source/*Master*.xlsx)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: live-load
+  cancel-in-progress: false
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install the workbook reader
+        run: pip install openpyxl
+
+      - name: Pick the newest Master workbook
+        id: pick
+        run: |
+          book="${{ github.event.inputs.workbook }}"
+          if [ -z "$book" ]; then
+            book=$(ls -1 data/source/*Master*.xlsx | sort -V | tail -n 1)
+          fi
+          test -f "$book" || { echo "No workbook at $book"; exit 1; }
+          echo "workbook=$book" >> "$GITHUB_OUTPUT"
+          echo "Using $book"
+
+      - name: Rebuild data/live-load.json from the workbook
+        run: node tools/build-live-load.mjs "${{ steps.pick.outputs.workbook }}"
+
+      - name: Fetch card facts from Scryfall (best effort)
+        continue-on-error: true
+        run: node tools/scryfall-cache.mjs --out /tmp/scryfall-cache.json
+
+      - name: Rebuild data/live-state.json through the collection model
+        run: |
+          if [ -s /tmp/scryfall-cache.json ]; then
+            node tools/build-live-state.mjs --scryfall /tmp/scryfall-cache.json
+          else
+            node tools/build-live-state.mjs
+          fi
+
+      - name: Check the result the way the tests do
+        run: |
+          node tests/live-load.mjs
+          node tests/data-integrity.mjs
+
+      - name: Commit both files
+        run: |
+          if git diff --quiet -- data/live-load.json data/live-state.json; then
+            echo "No change to the Load Live files."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/live-load.json data/live-state.json
+          git commit -m "Load Live rebuilt from $(basename "${{ steps.pick.outputs.workbook }}")"
+          git push
