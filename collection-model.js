@@ -10,13 +10,13 @@
  */
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;if(root)root.CrankCollection=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
   'use strict';
-  /* 'wanted' is a card you mean to buy with no order placed and no vendor chosen -- the note
-     you make at a convention table. 'watching' is the rung below it: a card you are keeping
-     an eye on, an upgrade you might get to, with no intent to buy declared yet. Both are a
-     plan, not a copy: never physical, never eligible for a build, never reserved to a slot;
-     each becomes ordered or owned by the same 'source' correction the other kinds use, and
-     a reserved copy corrected down to either gives its deck the requirement back. */
-  const VERSION=1, SOURCES=['owned','ordered','incoming','wanted','watching'], PLANNED=['wanted','watching'], PURPOSES=['main','upgrade','bracket'];
+  /* 'watching' is a card you are considering -- an upgrade you might get to, a card you are
+     keeping an eye on -- with no decision to buy declared; a deck's To Buy claim is that
+     decision. It is a plan, not a copy: never physical, never eligible for a build, never
+     reserved to a slot; it becomes ordered or owned by the same 'source' correction the
+     other kinds use, and a reserved copy corrected down to it gives its deck the requirement
+     back. 'ordered' carries a channel: bought from a vendor, or a trade arranged. */
+  const VERSION=2, SOURCES=['owned','ordered','watching'], PLANNED=['watching'], CHANNELS=['bought','trade'], PURPOSES=['main','upgrade','bracket'];
   const clone=value=>JSON.parse(JSON.stringify(value));
   const text=(value,max=500)=>String(value??'').trim().slice(0,max);
   const quantity=value=>{const n=Number(value);if(!Number.isSafeInteger(n)||n<1||n>1000000)throw Error('Quantity must be a whole number between 1 and 1,000,000.');return n;};
@@ -31,6 +31,15 @@
   const STARTER_GROUPS=[['group:main-deck','Main Deck'],['group:bench','Bench'],
     ['group:to-trade','To Trade'],['group:to-buy','To Buy']];
   const starterGroups=()=>STARTER_GROUPS.map(([id,name])=>({id,name,entries:[],createdAt:null}));
+  /* SCHEMA 2. Wanted folds into Watched: a card you are considering; a deck's To Buy claim is
+     already the decision to buy. Incoming trade folds into Ordered with channel 'trade'. A
+     copy offered for Sell / Trade is never reserved, so an offered copy that still filled a
+     claim keeps the claim and drops the offer. Repository loads and backup reads run this
+     before validating, so a library or a file from schema 1 opens without a word. */
+  function migrate(raw){if(!raw||raw.schemaVersion!==1)return raw;const s=clone(raw);
+    for(const l of s.lots){if(l.source==='wanted'){l.source='watching';l.notes=[l.notes,'Was Wanted before Wanted and Watched became one status.'].filter(Boolean).join(' ').slice(0,5000);}
+      if(l.source==='incoming'){l.source='ordered';l.channel='trade';}if(l.source==='ordered'&&!l.channel)l.channel='bought';if(l.offer!=='none'&&l.allocation)l.offer='none';}
+    s.schemaVersion=2;return s;}
   function empty(){return {schemaVersion:VERSION,revision:0,cards:{},decks:[],lots:[],groups:starterGroups(),reports:[],games:[],advice:[],imports:[],preferences:{starterGroups:true},legacy:null,createdAt:null,updatedAt:null};}
   const deck=(s,id)=>{const d=s.decks.find(d=>d.id===id);ensure(d,'Deck not found. Reload and try again.');return d;};
   const slot=(s,did,sid)=>{const d=deck(s,did),r=d.slots.find(r=>r.id===sid);ensure(r,'That deck slot no longer exists.');return r;};
@@ -45,38 +54,43 @@
      unlimited; "up to seven cards named" is seven; everything else is one. Legality reads
      it, and so does the spreadsheet's target command, so the two never disagree. */
   function maxCopies(c){const o=c.oracleText||'';let allowed=/\bBasic\b/.test(c.typeLine||'')||/any number of cards named/i.test(o)?Infinity:1;const words={two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9};const m=o.match(/up to (two|three|four|five|six|seven|eight|nine|\d+) cards named/i);if(m)allowed=words[m[1].toLowerCase()]||Number(m[1]);return allowed;}
-  function physical(l){return l.source==='owned'?(l.location?.kind==='deck'?'In deck box':'Bench'):PLANNED.includes(l.source)?'Not acquired':'Not received';}
+  function physical(l){return l.source==='owned'?(l.location?.kind==='deck'?'In physical deck':'Bench'):PLANNED.includes(l.source)?'Not acquired':'Not received';}
   function inDeck(s,l){return l.source==='owned'&&l.allocation&&l.location?.kind==='deck'&&l.location.deckId===l.allocation.deckId&&!deck(s,l.allocation.deckId).archived;}
-  function counters(s){const result={owned:0,ordered:0,incoming:0,wanted:0,watching:0,toBuy:0,inDeck:0,sellTrade:0};for(const l of s.lots){result[l.source]+=l.quantity;if(inDeck(s,l))result.inDeck+=l.quantity;if(l.source==='owned'&&l.offer!=='none')result.sellTrade+=l.quantity;}for(const d of s.decks.filter(d=>d.status==='final'&&!d.archived))for(const r of d.slots.filter(r=>r.committed))result.toBuy+=shortfall(s,d,r);return result;}
+  /* inDeck counts what is physically in a deck, substitutes included: the Master's In Deck. */
+  function counters(s){const result={owned:0,ordered:0,watching:0,toBuy:0,inDeck:0,sellTrade:0};for(const l of s.lots){result[l.source]+=l.quantity;if(l.source==='owned'&&l.location?.kind==='deck')result.inDeck+=l.quantity;if(l.source==='owned'&&l.offer!=='none')result.sellTrade+=l.quantity;}for(const d of s.decks.filter(d=>d.status==='final'&&!d.archived))for(const r of d.slots.filter(r=>r.committed))result.toBuy+=shortfall(s,d,r);return result;}
   /* READY MEANS YOU COULD PLAY IT TONIGHT. It used to mean every copy had been confirmed
      into its physical box one card at a time, so a deck you had finished buying still read
      "In progress" and "0 in deck" -- the number under the deck had stopped describing the
      deck. Owning the hundred and reserving it here is what makes a deck playable. Which box
      the cards are actually sitting in is a separate fact, and `placed` still carries it. */
   /* THE SAME HUNDRED, CUT THE WAY A BUILD NIGHT CUTS IT. `owned` says what you have; it
-     does not say where. 72 owned and 55 in the box is 17 cards to go and find, and that
+     does not say where. 72 owned and 55 in the physical deck is 17 cards to go and find, and that
      figure was never computed anywhere -- so the deck page could not say "17 to pull" and
      the pull sheet had nothing to list. The segments below add it without moving a single
      existing key: inBox is `placed` under the name the UI uses; pullFromBench and
      pullFromOtherBox are owned, reserved copies sitting somewhere else; remove is a copy in
-     this deck's box that the list no longer asks for. The three money figures follow the
+     this deck that the list no longer asks for. The three money figures follow the
      same rule as everything else here: a price is the catalog's, `paid` is per copy, and a
      copy with no price contributes nothing rather than a guess. */
-  function readiness(s,d){const rows=d.slots.filter(r=>r.purpose==='main'),target=rows.reduce((n,r)=>n+r.quantity,0);let owned=0,ordered=0,incoming=0,placed=0,pullFromBench=0,pullFromOtherBox=0,paid=0,marketValue=0;
-    for(const l of s.lots.filter(l=>l.allocation?.deckId===d.id&&rows.some(r=>r.id===l.allocation.slotId))){if(l.source==='owned')owned+=l.quantity;if(l.source==='ordered')ordered+=l.quantity;if(l.source==='incoming')incoming+=l.quantity;
+  function readiness(s,d){const rows=d.slots.filter(r=>r.purpose==='main'),target=rows.reduce((n,r)=>n+r.quantity,0);let owned=0,ordered=0,placed=0,pullFromBench=0,pullFromOtherBox=0,paid=0,marketValue=0;
+    for(const l of s.lots.filter(l=>l.allocation?.deckId===d.id&&rows.some(r=>r.id===l.allocation.slotId))){if(l.source==='owned')owned+=l.quantity;if(l.source==='ordered')ordered+=l.quantity;
       if(inDeck(s,l))placed+=l.quantity;else if(l.source==='owned'){if(l.location?.kind==='deck')pullFromOtherBox+=l.quantity;else pullFromBench+=l.quantity;}
       if(Number.isFinite(l.paid))paid+=l.paid*l.quantity;if(l.source==='owned'){const c=s.cards[l.cardId];if(c&&Number.isFinite(c.price))marketValue+=c.price*l.quantity;}}
-    /* STAND-INS. An owned copy physically in this box that the list does not call for -- not
-       reserved to this deck -- is a stand-in: it fills a seat while the real card is bought,
+    /* SUBSTITUTES. An owned copy physically in this box that the list does not call for -- not
+       reserved to this deck -- is a substitute: it fills a seat while the real card is bought,
        ordered or still on the bench. It leaves when a real copy is ready to take a seat
        (swapReady: reserved copies on the bench or in another box) or when the box holds more
-       stand-ins than the list has empty seats (surplus). `remove` is the two together, the
-       number the pull sheet asks to take out now; `sleeved` is what is physically in the box. */
+       substitutes than the list has empty seats (surplus). `remove` is the two together, the
+       number the pull sheet asks to take out now; `sleeved` is what is physically in the physical deck. */
     const standIns=s.lots.filter(l=>l.source==='owned'&&l.location?.kind==='deck'&&l.location.deckId===d.id&&l.allocation?.deckId!==d.id).reduce((n,l)=>n+l.quantity,0);
     const gap=Math.max(0,target-placed),covered=Math.min(standIns,gap),surplus=standIns-covered,swapReady=Math.min(covered,pullFromBench+pullFromOtherBox),remove=surplus+swapReady,sleeved=placed+standIns;
+    /* WATCHED, for a deck: the cards being considered for it -- its upgrade and bracket options,
+       its planned list, and any watched copy filed in its group. */
+    const g=d.groupId?s.groups.find(x=>x.id===d.groupId):null,watched=d.slots.filter(r=>r.purpose!=='main').reduce((n,r)=>n+r.quantity,0)+(g?g.entries.reduce((n,r)=>n+r.quantity,0):0)+(g?s.lots.filter(l=>l.source==='watching'&&l.groupIds.includes(g.id)).reduce((n,l)=>n+l.quantity,0):0);
     let costToFinish=0;if(d.status==='final'&&!d.archived)for(const r of rows){const need=shortfall(s,d,r),c=s.cards[r.cardId];if(need&&c&&Number.isFinite(c.price))costToFinish+=c.price*need;}
-    return {target,owned,ordered,incoming,placed,toBuy:Math.max(0,target-owned-ordered-incoming),ready:d.status==='final'&&!d.archived&&target===100&&owned===target,boxed:target>0&&placed===target,
-      inBox:placed,pullFromBench,pullFromOtherBox,remove,standIns,covered,surplus,swapReady,sleeved,playable:d.status==='final'&&!d.archived&&target>0&&sleeved>=target,costToFinish:Math.round(costToFinish*100)/100,paid:Math.round(paid*100)/100,marketValue:Math.round(marketValue*100)/100};}
+    return {target,owned,ordered,placed,toBuy:Math.max(0,target-owned-ordered),ready:d.status==='final'&&!d.archived&&target===100&&owned===target,boxed:target>0&&placed===target,
+      inBox:placed,pullFromBench,pullFromOtherBox,remove,standIns,covered,surplus,swapReady,sleeved,playable:d.status==='final'&&!d.archived&&target>0&&sleeved>=target,complete:d.status==='final'&&!d.archived&&target===100&&placed===target,
+      reserved:target,substitutes:standIns,inPhysicalDeck:sleeved,watched,costToFinish:Math.round(costToFinish*100)/100,paid:Math.round(paid*100)/100,marketValue:Math.round(marketValue*100)/100};}
   /* A DECK'S GROUP IS A NAME FOR THE DECK, NOT A SECOND COPY OF IT. Filing every card of a
      hundred-card deck into its group would store the same hundred cards twice and leave two
      lists to keep in step -- which is how a deck ends up disagreeing with itself. So a row
@@ -85,11 +99,11 @@
      ones and its outstanding To buy requirements, always current, stored once. */
   const withDeckGroup=(s,row)=>{const d=row.deckId?s.decks.find(x=>x.id===row.deckId):null;
     return d&&d.groupId&&!row.groupIds.includes(d.groupId)?{...row,groupIds:[...row.groupIds,d.groupId]}:row;};
-  function projection(s){const rows=s.lots.map(l=>{const sl=l.allocation?slot(s,l.allocation.deckId,l.allocation.slotId):null;return withDeckGroup(s,{...clone(l),recordId:l.id,kind:'lot',card:card(s,l.cardId),deckId:l.allocation?.deckId||'',purpose:sl?sl.purpose:'',pinned:!!sl?.pinned,option:!!sl?.option,optionWhy:sl?.optionWhy||'',placement:inDeck(s,l)?'In deck box':l.allocation?'Reserved':l.source==='owned'?(l.location?.kind==='deck'?'Stand-in':'Bench'):'Unassigned',physical:physical(l),standIn:l.source==='owned'&&l.location?.kind==='deck'&&l.allocation?.deckId!==l.location.deckId,standInDeckId:l.source==='owned'&&l.location?.kind==='deck'&&l.allocation?.deckId!==l.location.deckId?l.location.deckId:''});});for(const d of s.decks.filter(d=>d.status==='final'&&!d.archived))for(const r of d.slots.filter(r=>r.committed)){const need=shortfall(s,d,r);if(need)rows.push(withDeckGroup(s,{recordId:`need:${d.id}:${r.id}`,kind:'need',deckId:d.id,slotId:r.id,cardId:r.cardId,card:card(s,r.cardId),source:'to-buy',quantity:need,purpose:r.purpose,pinned:!!r.pinned,option:!!r.option,optionWhy:r.optionWhy||'',printing:clone(r.printing||{}),placement:'Reserved',physical:'Not acquired',offer:'none',groupIds:[]}));}return rows;}
+  function projection(s){const rows=s.lots.map(l=>{const sl=l.allocation?slot(s,l.allocation.deckId,l.allocation.slotId):null;return withDeckGroup(s,{...clone(l),recordId:l.id,kind:'lot',card:card(s,l.cardId),deckId:l.allocation?.deckId||'',purpose:sl?sl.purpose:'',pinned:!!sl?.pinned,option:!!sl?.option,optionWhy:sl?.optionWhy||'',placement:inDeck(s,l)?'In physical deck':l.allocation?'Reserved':l.source==='owned'?(l.location?.kind==='deck'?'Substitute':'Bench'):'Unassigned',physical:physical(l),standIn:l.source==='owned'&&l.location?.kind==='deck'&&l.allocation?.deckId!==l.location.deckId,standInDeckId:l.source==='owned'&&l.location?.kind==='deck'&&l.allocation?.deckId!==l.location.deckId?l.location.deckId:''});});for(const d of s.decks.filter(d=>d.status==='final'&&!d.archived))for(const r of d.slots.filter(r=>r.committed)){const need=shortfall(s,d,r);if(need)rows.push(withDeckGroup(s,{recordId:`need:${d.id}:${r.id}`,kind:'need',deckId:d.id,slotId:r.id,cardId:r.cardId,card:card(s,r.cardId),source:'to-buy',quantity:need,purpose:r.purpose,pinned:!!r.pinned,option:!!r.option,optionWhy:r.optionWhy||'',printing:clone(r.printing||{}),placement:'Reserved',physical:'Not acquired',offer:'none',groupIds:[]}));}return rows;}
   /* THE MATRIX. One row per card the library knows anything about -- a copy at any status,
      a slot in a deck, a planned entry -- and per deck the four numbers a spreadsheet cell
      needs: t (the list's count), a (copies assigned: reserved to that slot from any source),
-     boxed (the owned ones physically in that deck's box), sub (copies of it standing in that
+     boxed (the owned ones physically in that deck), sub (copies of it standing in that
      box without a reservation) and the lot ids behind them. Own, ordered, bench (in no box at
      all) and to-buy across the row; per-deck totals underneath. Pure: the view
      draws it, the tests check it against readiness, and nothing here writes. */
@@ -116,7 +130,7 @@
     const col=edit.column;if(!['own','ordered','t','a','boxed'].includes(col))return {command:null,refused:'Unknown column.',review:false,notes:[]};
     const known=Object.hasOwn(s.cards,edit.cardId),cardObj=known?card(s,edit.cardId):edit.card;ensure(cardObj&&cardObj.id===edit.cardId,'Resolve the card identity first.');const intro=known?{}:{cards:[cardObj]};
     const value=edit.value===0?0:quantity(edit.value),name=cardObj.name;
-    const lots=kind=>s.lots.filter(l=>l.cardId===cardObj.id&&(kind==='owned'?l.source==='owned':(l.source==='ordered'||l.source==='incoming')));
+    const lots=kind=>s.lots.filter(l=>l.cardId===cardObj.id&&(kind==='owned'?l.source==='owned':l.source==='ordered'));
     const rank=l=>(l.allocation?2:0)+(l.location?.kind==='deck'?1:0),order=l=>(l.source==='owned'?0:4)+rank(l);
     if(col==='own'||col==='ordered'){
       const mine=lots(col==='owned'||col==='own'?'owned':'ordered'),have=mine.reduce((n,l)=>n+l.quantity,0),delta=value-have;
@@ -124,7 +138,7 @@
       if(delta>0)return {command:{type:'acquire',...intro,lot:{cardId:cardObj.id,quantity:delta,source:col==='own'?'owned':'ordered',location:{kind:'bench',box:''}}},review:false,notes:[`Records ${delta} more ${col==='own'?'owned':'ordered'} cop${delta===1?'y':'ies'} of ${name}${col==='own'?' on the bench':''}.`]};
       let left=-delta;const commands=[],notes=[];
       for(const l of mine.sort((a,b)=>rank(a)-rank(b))){if(!left)break;const take=Math.min(left,l.quantity);commands.push(col==='own'?{type:'dispose',lotId:l.id,quantity:take,reason:'spreadsheet',confirmed:true}:{type:'removePending',lotId:l.id,quantity:take,confirmed:true});
-        if(l.allocation)notes.push(`${take} reserved to ${deck(s,l.allocation.deckId).name}${l.location?.kind==='deck'?' and in its box':''} ${take===1?'goes':'go'} too.`);left-=take;}
+        if(l.allocation)notes.push(`${take} reserved to ${deck(s,l.allocation.deckId).name}${l.location?.kind==='deck'?' and in its physical deck':''} ${take===1?'goes':'go'} too.`);left-=take;}
       return {command:commands.length===1?commands[0]:{type:'batch',commands,summary:`${name}: ${col==='own'?'owned':'ordered'} ${have} → ${value}`},review:commands.some(k=>{const l=lot(s,k.lotId);return l.allocation||l.location?.kind==='deck';}),notes:[`${-delta} ${col==='own'?'owned cop'+(-delta===1?'y leaves':'ies leave')+' the library':'ordered cop'+(-delta===1?'y is':'ies are')+' cancelled'}.`,...notes]};
     }
     const d=deck(s,edit.deckId),slotRow=d.slots.find(r=>r.purpose==='main'&&r.cardId===cardObj.id),t=slotRow?slotRow.quantity:0;
@@ -142,16 +156,16 @@
         const free=s.lots.filter(l=>l.cardId===cardObj.id&&!PLANNED.includes(l.source)&&!l.allocation&&l.offer!=='held'&&l.location?.kind!=='deck'&&!l.keepBench).reduce((n,l)=>n+l.quantity,0);
         const elsewhere=s.lots.filter(l=>l.cardId===cardObj.id&&!PLANNED.includes(l.source)&&l.offer!=='held'&&(l.allocation?l.allocation.deckId!==d.id:l.location?.kind==='deck')).sort((x,y)=>order(x)-order(y));
         let need=Math.max(0,value-a-free);
-        if(need&&elsewhere.length){for(const l of elsewhere){if(!need)break;const take=Math.min(need,l.quantity);notes.push(`${take} cop${take===1?'y':'ies'} come${take===1?'s':''} from ${l.allocation?deck(s,l.allocation.deckId).name:'the '+deck(s,l.location.deckId).name+' box'}${l.location?.kind==='deck'?' (still in its box until pulled)':''}.`);need-=take;}
+        if(need&&elsewhere.length){for(const l of elsewhere){if(!need)break;const take=Math.min(need,l.quantity);notes.push(`${take} cop${take===1?'y':'ies'} come${take===1?'s':''} from ${l.allocation?deck(s,l.allocation.deckId).name:'the '+deck(s,l.location.deckId).name+' box'}${l.location?.kind==='deck'?' (still in that physical deck until pulled)':''}.`);need-=take;}
           commands.push({type:'assign',deckId:d.id,cardId:cardObj.id,assigned:value-need,acquire:false,partial:true,confirmed:true});review=true;}
         if(need)notes.push(`${need} cop${need===1?'y stays':'ies stay'} To buy.`);
       }
       return {command:commands.length===1?commands[0]:{type:'batch',commands,summary:`${d.name}: ${name} target ${t} → ${value}`},review,notes};
     }
     /* THE A COLUMN IS THE BOX, as the Master reads it: how many copies of this card are physically
-       in the deck's box. Up to the list's count they are real copies (reserved and sleeved); any
-       beyond it, or all of them when the list does not name the card, are stand-ins. Lowering
-       takes stand-ins out first, then real copies back to the bench (still reserved). Raising
+       in the deck. Up to the list's count they are real copies (reserved and sleeved); any
+       beyond it, or all of them when the list does not name the card, are substitutes. Lowering
+       takes substitutes out first, then real copies back to the bench (still reserved). Raising
        fills real seats first, then stands copies in: free bench copies, then copies in other
        boxes, then newly recorded ones straight into the box. */
     const subLots=s.lots.filter(l=>l.cardId===cardObj.id&&l.source==='owned'&&l.location?.kind==='deck'&&l.location.deckId===d.id&&l.allocation?.deckId!==d.id),sub=subLots.reduce((n,l)=>n+l.quantity,0);
@@ -160,17 +174,17 @@
       const physical=boxed+sub;if(value===physical)return {command:null,review:false,notes:['No change.']};
       const realWant=Math.min(value,t),subWant=value-realWant,commands=[],notes=[];let review=false;
       if(realWant!==boxed){const wantA=Math.max(a,realWant);commands.push({type:'assign',...intro,deckId:d.id,cardId:cardObj.id,assigned:wantA,boxed:realWant,confirmed:true});review=true;
-        if(realWant>boxed){const more=realWant-boxed,fromReserved=Math.min(more,a-boxed);if(fromReserved)notes.push(`${fromReserved} reserved cop${fromReserved===1?'y goes':'ies go'} into ${d.name}'s box.`);if(more>fromReserved)notes.push(`${more-fromReserved} more cop${more-fromReserved===1?'y is':'ies are'} reserved to ${d.name} and put in its box: free copies first, then copies from other decks, then newly owned ones.`);}
-        else notes.push(`${boxed-realWant} cop${boxed-realWant===1?'y comes':'ies come'} out of the box to the bench, still reserved.`);}
-      if(subWant<sub){let left=sub-subWant;for(const l of subLots){if(!left)break;const take=Math.min(left,l.quantity);commands.push({type:'place',lotId:l.id,quantity:take,confirmed:true});left-=take;}notes.push(`${sub-subWant} stand-in${sub-subWant===1?'':'s'} of ${name} ${sub-subWant===1?'goes':'go'} back to the bench.`);review=true;}
+        if(realWant>boxed){const more=realWant-boxed,fromReserved=Math.min(more,a-boxed);if(fromReserved)notes.push(`${fromReserved} reserved cop${fromReserved===1?'y goes':'ies go'} into ${d.name}.`);if(more>fromReserved)notes.push(`${more-fromReserved} more cop${more-fromReserved===1?'y is':'ies are'} reserved to ${d.name} and put in its physical deck: free copies first, then copies from other decks, then newly owned ones.`);}
+        else notes.push(`${boxed-realWant} cop${boxed-realWant===1?'y comes':'ies come'} out of the physical deck to the bench, still reserved.`);}
+      if(subWant<sub){let left=sub-subWant;for(const l of subLots){if(!left)break;const take=Math.min(left,l.quantity);commands.push({type:'place',lotId:l.id,quantity:take,confirmed:true});left-=take;}notes.push(`${sub-subWant} substitute${sub-subWant===1?'':'s'} of ${name} ${sub-subWant===1?'goes':'go'} back to the bench.`);review=true;}
       else if(subWant>sub){let need=subWant-sub;const free=s.lots.filter(l=>l.cardId===cardObj.id&&l.source==='owned'&&!l.allocation&&l.offer!=='held'&&l.location?.kind!=='deck').sort((x,y)=>(x.keepBench?1:0)-(y.keepBench?1:0));
-        for(const l of free){if(!need)break;const take=Math.min(need,l.quantity);commands.push({type:'place',lotId:l.id,quantity:take,deckId:d.id,asStandIn:true,confirmed:true});notes.push(`${take} free cop${take===1?'y goes':'ies go'} into ${d.name}'s box as ${take===1?'a stand-in':'stand-ins'}.`);need-=take;}
+        for(const l of free){if(!need)break;const take=Math.min(need,l.quantity);commands.push({type:'place',lotId:l.id,quantity:take,deckId:d.id,asStandIn:true,confirmed:true});notes.push(`${take} free cop${take===1?'y goes':'ies go'} into ${d.name} as ${take===1?'a substitute':'substitutes'}.`);need-=take;}
         const elsewhere=s.lots.filter(l=>l.cardId===cardObj.id&&l.source==='owned'&&l.offer!=='held'&&l.location?.kind==='deck'&&l.location.deckId!==d.id&&l.allocation?.deckId!==d.id).sort((x,y)=>(x.allocation?1:0)-(y.allocation?1:0));
-        for(const l of elsewhere){if(!need)break;const take=Math.min(need,l.quantity);commands.push({type:'place',lotId:l.id,quantity:take,deckId:d.id,asStandIn:true,confirmed:true});notes.push(`${take} cop${take===1?'y moves':'ies move'} from the ${deck(s,l.location.deckId).name} box${l.allocation?` (still reserved to ${deck(s,l.allocation.deckId).name})`:''}.`);review=true;need-=take;}
-        if(need){commands.push({type:'acquire',...intro,lot:{cardId:cardObj.id,quantity:need,source:'owned',location:{kind:'deck',deckId:d.id,box:d.name},notes:'Recorded from the spreadsheet'}});notes.push(`${need} cop${need===1?'y is':'ies are'} recorded as newly owned, straight into ${d.name}'s box as ${need===1?'a stand-in':'stand-ins'}.`);review=true;}
-        if(t===0)notes.push(`${name} is not in ${d.name}'s list, so ${value===1?'it stands in for a missing card':'they stand in for missing cards'}. Set T to make it part of the list.`);
-        else if(subWant)notes.push(`The list wants ${t}; the extra ${subWant} ${subWant===1?'is a stand-in':'are stand-ins'}.`);}
-      return {command:commands.length===1?commands[0]:{type:'batch',commands,summary:`${d.name}: ${value} ${name} in the box`},review,notes};
+        for(const l of elsewhere){if(!need)break;const take=Math.min(need,l.quantity);commands.push({type:'place',lotId:l.id,quantity:take,deckId:d.id,asStandIn:true,confirmed:true});notes.push(`${take} cop${take===1?'y moves':'ies move'} from ${deck(s,l.location.deckId).name}${l.allocation?` (still reserved to ${deck(s,l.allocation.deckId).name})`:''}.`);review=true;need-=take;}
+        if(need){commands.push({type:'acquire',...intro,lot:{cardId:cardObj.id,quantity:need,source:'owned',location:{kind:'deck',deckId:d.id,box:d.name},notes:'Recorded from the spreadsheet'}});notes.push(`${need} cop${need===1?'y is':'ies are'} recorded as newly owned, straight into ${d.name} as ${need===1?'a substitute':'substitutes'}.`);review=true;}
+        if(t===0)notes.push(`${name} is not in ${d.name}'s list, so ${value===1?'it is a substitute for a missing card':'they are substitutes for missing cards'}. Set T to make it part of the list.`);
+        else if(subWant)notes.push(`The list wants ${t}; the extra ${subWant} ${subWant===1?'is a substitute':'are substitutes'}.`);}
+      return {command:commands.length===1?commands[0]:{type:'batch',commands,summary:`${d.name}: ${value} ${name} in the physical deck`},review,notes};
     }
     if(col==='a'){
       if(d.status!=='final')return {command:null,refused:`${d.name} is a draft; finalize it, or set its target.`,review:false,notes:[]};
@@ -181,15 +195,15 @@
       commands.push({type:'assign',...(commands.length?{}:intro),deckId:d.id,cardId:cardObj.id,assigned:wantA,boxed:wantBoxed,confirmed:true});
       if(wantA>a){const free=s.lots.filter(l=>l.cardId===cardObj.id&&l.source==='owned'&&!l.allocation&&l.offer!=='held').reduce((n,l)=>n+l.quantity,0),elsewhere=s.lots.filter(l=>l.cardId===cardObj.id&&!PLANNED.includes(l.source)&&l.offer!=='held'&&(l.allocation?l.allocation.deckId!==d.id:l.location?.kind==='deck')).sort((x,y)=>order(x)-order(y));let need=wantA-a;
         const fromFree=Math.min(need,free);need-=fromFree;if(fromFree)notes.push(`${fromFree} free cop${fromFree===1?'y is':'ies are'} reserved to ${d.name}.`);
-        for(const l of elsewhere){if(!need)break;const take=Math.min(need,l.quantity);notes.push(`${take} cop${take===1?'y':'ies'} come${take===1?'s':''} from ${l.allocation?deck(s,l.allocation.deckId).name:'the '+deck(s,l.location.deckId).name+' box'}${l.location?.kind==='deck'?' (still in its box until pulled)':''}.`);need-=take;}
+        for(const l of elsewhere){if(!need)break;const take=Math.min(need,l.quantity);notes.push(`${take} cop${take===1?'y':'ies'} come${take===1?'s':''} from ${l.allocation?deck(s,l.allocation.deckId).name:'the '+deck(s,l.location.deckId).name+' box'}${l.location?.kind==='deck'?' (still in that physical deck until pulled)':''}.`);need-=take;}
         if(need)notes.push(`${need} cop${need===1?'y is':'ies are'} recorded as newly owned: nothing in the library covers ${need===1?'it':'them'}.`);}
       else if(wantA<a)notes.push(`${a-wantA} reservation${a-wantA===1?'':'s'} released.`);
-      if(wantBoxed>boxed)notes.push(`${wantBoxed-boxed} cop${wantBoxed-boxed===1?'y goes':'ies go'} into ${d.name}'s box.`);else if(wantBoxed<boxed)notes.push(`${boxed-wantBoxed} cop${boxed-wantBoxed===1?'y comes':'ies come'} out of the box to the bench.`);
-      return {command:commands.length===1?commands[0]:{type:'batch',commands,summary:`${d.name}: ${name} ${wantA} assigned, ${wantBoxed} in the box`},review:true,notes};
+      if(wantBoxed>boxed)notes.push(`${wantBoxed-boxed} cop${wantBoxed-boxed===1?'y goes':'ies go'} into ${d.name}.`);else if(wantBoxed<boxed)notes.push(`${boxed-wantBoxed} cop${boxed-wantBoxed===1?'y comes':'ies come'} out of the physical deck to the bench.`);
+      return {command:commands.length===1?commands[0]:{type:'batch',commands,summary:`${d.name}: ${name} ${wantA} assigned, ${wantBoxed} in the physical deck`},review:true,notes};
     }
     return {command:null,refused:'Unknown column.',review:false,notes:[]};
   }
-  function eligibility(s,l,options={}){if(l.source==='watching')return {eligible:false,reason:'Watching, not acquired'};if(l.source==='wanted')return {eligible:false,reason:'Not acquired'};if(l.offer==='held')return {eligible:false,reason:'Held for a pending deal'};if(l.source==='ordered'&&!options.includeOrdered)return {eligible:false,reason:'Not received'};if(l.source==='incoming'&&!options.includeIncoming)return {eligible:false,reason:'Incoming trade'};if(l.offer==='available'&&options.includeSellTrade===false)return {eligible:false,reason:'Sell / Trade excluded'};const donor=l.allocation?deck(s,l.allocation.deckId):null;if(donor?.locked&&!options.donorDecks?.includes(donor.id))return {eligible:false,reason:'Locked deck'};if(l.location?.kind==='deck'&&!options.includeInDeck)return {eligible:false,reason:'In another deck box'};if(l.allocation&&!options.includeReserved)return {eligible:false,reason:'Reserved for another deck'};return {eligible:true,reason:'Available in this build pool'};}
+  function eligibility(s,l,options={}){if(l.source==='watching')return {eligible:false,reason:'Watching, not acquired'};if(l.offer!=='none')return {eligible:false,reason:l.offer==='held'?'Held for a pending deal':'Offered for Sell / Trade'};if(l.source==='ordered'&&!options.includeOrdered)return {eligible:false,reason:'Not received'};const donor=l.allocation?deck(s,l.allocation.deckId):null;if(donor?.locked&&!options.donorDecks?.includes(donor.id))return {eligible:false,reason:'Locked deck'};if(l.location?.kind==='deck'&&!options.includeInDeck)return {eligible:false,reason:'In another physical deck'};if(l.allocation&&!options.includeReserved)return {eligible:false,reason:'Reserved for another deck'};return {eligible:true,reason:'Available in this build pool'};}
   function validate(s){
     ensure(s&&s.schemaVersion===VERSION,'Unsupported collection schema.');ensure(Number.isSafeInteger(s.revision)&&s.revision>=0,'Invalid collection revision.');
     for(const k of ['decks','lots','groups','reports','games','advice','imports'])ensure(Array.isArray(s[k]),`Missing ${k} records.`);
@@ -197,7 +211,7 @@
     ensure(s.preferences&&typeof s.preferences==='object'&&!Array.isArray(s.preferences),'Invalid preferences.');for(const k of ['columns','shopColumns','comparisonPicks','dismissedSuggestions','dismissedTips'])if(s.preferences[k]!==undefined)ensure(Array.isArray(s.preferences[k])&&s.preferences[k].every(x=>typeof x==='string'),'Invalid saved view preference.');const all=new Set();const id=(r,label)=>{ensure(r&&safeId(r.id),`Invalid ${label} ID.`);ensure(!all.has(r.id),`Duplicate record ID: ${r.id}`);all.add(r.id);};
     for(const [key,c] of Object.entries(s.cards)){ensure(safeId(key)&&c.id===key,'Invalid card identity.');ensure(typeof c.name==='string'&&c.name.trim()&&c.name.length<=250,'Invalid card name.');}
     for(const d of s.decks){id(d,'deck');ensure(['draft','final'].includes(d.status),'Invalid deck state.');ensure(Array.isArray(d.slots)&&Array.isArray(d.commanders)&&Array.isArray(d.versions),'Invalid deck structure.');ensure(typeof d.name==='string'&&d.name.trim()&&d.name.length<=160,'A deck needs a valid name.');defaultDefinition(d.definition);ensure(typeof d.archived==='boolean'&&typeof d.locked==='boolean','Invalid deck flags.');if(d.groupId)group(s,d.groupId);for(const r of d.slots){id(r,'slot');ensure(typeof r.quantity==='number','Stored quantities must be numbers.');quantity(r.quantity);card(s,r.cardId);ensure(PURPOSES.includes(r.purpose),'Invalid card purpose.');ensure(typeof r.committed==='boolean'&&(r.purpose!=='main'||r.committed),'Invalid slot commitment.');if(r.purpose!=='main'){ensure(d.slots.some(x=>x.id===r.replaces&&x.purpose==='main'),'An option must reference a main-deck slot.');if(r.purpose==='bracket')ensure(Number.isInteger(r.targetBracket)&&r.targetBracket>d.definition.baseBracket&&r.targetBracket<=d.definition.bracketCeiling,'Bracket option is outside the deck definition.');}}for(const cid of d.commanders)card(s,cid);}
-    for(const l of s.lots){id(l,'lot');card(s,l.cardId);ensure(typeof l.quantity==='number','Stored quantities must be numbers.');quantity(l.quantity);ensure(l.printing&&typeof l.printing==='object'&&!Array.isArray(l.printing),'Invalid printing record.');ensure(l.paid===null||Number.isFinite(l.paid)&&l.paid>=0,'Invalid purchase cost.');ensure(l.paidSource===undefined||['catalog','receipt','typed'].includes(l.paidSource),'Invalid paid source.');if(l.order!==undefined){ensure(l.order&&typeof l.order==='object'&&safeId(l.order.id)&&typeof l.order.vendor==='string'&&typeof l.order.ref==='string','Invalid order record.');ensure(l.order.shipShare===undefined||Number.isFinite(l.order.shipShare)&&l.order.shipShare>=0,'Invalid shipping share.');}if(l.source==='owned')ensure(l.location&&['bench','deck'].includes(l.location.kind),'Invalid owned-card location.');ensure(SOURCES.includes(l.source),'Invalid acquisition source.');ensure(['none','available','held'].includes(l.offer),'Invalid Sell / Trade state.');ensure(Array.isArray(l.groupIds)&&new Set(l.groupIds).size===l.groupIds.length,'Invalid group membership.');for(const gid of l.groupIds)group(s,gid);if(l.source!=='owned')ensure(!l.location&&l.offer==='none','Unreceived cards cannot have physical placement or an outgoing offer.');if(l.location?.kind==='deck')deck(s,l.location.deckId);if(l.allocation){const d=deck(s,l.allocation.deckId),r=slot(s,d.id,l.allocation.slotId);ensure(!d.archived&&d.status==='final','Only finalized, unarchived decks can reserve cards.');ensure(r.committed,'This optional card is a suggestion, not a commitment.');ensure(compatible(l,r),'The allocated printing does not match the deck requirement.');ensure(l.offer!=='held','A deal-held copy cannot also be allocated to a deck.');}}
+    for(const l of s.lots){id(l,'lot');card(s,l.cardId);ensure(typeof l.quantity==='number','Stored quantities must be numbers.');quantity(l.quantity);ensure(l.printing&&typeof l.printing==='object'&&!Array.isArray(l.printing),'Invalid printing record.');ensure(l.paid===null||Number.isFinite(l.paid)&&l.paid>=0,'Invalid purchase cost.');ensure(l.paidSource===undefined||['catalog','receipt','typed'].includes(l.paidSource),'Invalid paid source.');if(l.order!==undefined){ensure(l.order&&typeof l.order==='object'&&safeId(l.order.id)&&typeof l.order.vendor==='string'&&typeof l.order.ref==='string','Invalid order record.');ensure(l.order.shipShare===undefined||Number.isFinite(l.order.shipShare)&&l.order.shipShare>=0,'Invalid shipping share.');}if(l.source==='owned')ensure(l.location&&['bench','deck'].includes(l.location.kind),'Invalid owned-card location.');ensure(SOURCES.includes(l.source),'Invalid acquisition source.');ensure(['none','available','held'].includes(l.offer),'Invalid Sell / Trade state.');ensure(l.channel===undefined||CHANNELS.includes(l.channel),'Invalid order channel.');ensure(l.offer==='none'||!l.allocation,'A copy offered for Sell / Trade is not reserved by a deck.');ensure(Array.isArray(l.groupIds)&&new Set(l.groupIds).size===l.groupIds.length,'Invalid group membership.');for(const gid of l.groupIds)group(s,gid);if(l.source!=='owned')ensure(!l.location&&l.offer==='none','Unreceived cards cannot have physical placement or an outgoing offer.');if(l.location?.kind==='deck')deck(s,l.location.deckId);if(l.allocation){const d=deck(s,l.allocation.deckId),r=slot(s,d.id,l.allocation.slotId);ensure(!d.archived&&d.status==='final','Only finalized, unarchived decks can reserve cards.');ensure(r.committed,'This optional card is a suggestion, not a commitment.');ensure(compatible(l,r),'The allocated printing does not match the deck requirement.');ensure(l.offer!=='held','A deal-held copy cannot also be allocated to a deck.');}}
     for(const d of s.decks)for(const r of d.slots)ensure(countFor(s,d.id,r.id)<=r.quantity,'A deck slot is over-allocated.');
     for(const g of s.groups){id(g,'group');ensure(typeof g.name==='string'&&g.name.trim()&&Array.isArray(g.entries),'Invalid collection group.');for(const r of g.entries){id(r,'group entry');card(s,r.cardId);ensure(typeof r.quantity==='number','Stored quantities must be numbers.');quantity(r.quantity);}}
     for(const r of [...s.reports,...s.games,...s.advice])id(r,'evidence');ensure(s.lots.length<=50000,'This library exceeds the supported record limit.');return s;
@@ -249,20 +263,20 @@
       &&(l.paid??null)===paid&&l.notes===notes&&alike([...l.groupIds].sort(),[...groups].sort()))||null;
   }
 
-  function newLot(raw){card(s,raw.cardId);const l={id:raw.id||id('lot'),cardId:raw.cardId,quantity:quantity(raw.quantity),source:raw.source||'owned',printing:print(raw.printing),location:raw.source&&raw.source!=='owned'?null:clone(raw.location||{kind:'bench',box:''}),allocation:null,offer:'none',groupIds:[],notes:text(raw.notes,5000),paid:raw.paid??null,acquiredAt:now,provenance:clone(raw.provenance||{type:c.type,operation:c.id})};if(Number.isFinite(l.paid))stampPaid(l,l.paid,raw.paidSource);s.lots.push(l);return l;}
+  function newLot(raw){card(s,raw.cardId);const l={id:raw.id||id('lot'),cardId:raw.cardId,quantity:quantity(raw.quantity),source:raw.source||'owned',printing:print(raw.printing),location:raw.source&&raw.source!=='owned'?null:clone(raw.location||{kind:'bench',box:''}),allocation:null,offer:'none',groupIds:[],notes:text(raw.notes,5000),paid:raw.paid??null,acquiredAt:now,provenance:clone(raw.provenance||{type:c.type,operation:c.id})};if(Number.isFinite(l.paid))stampPaid(l,l.paid,raw.paidSource);if(l.source==='ordered')l.channel=raw.channel==='trade'?'trade':'bought';s.lots.push(l);return l;}
     /* WHAT WAS PAID, AND HOW WE KNOW. `paid` is per copy. paidSource says whether the figure is
        the catalog's sheet price stamped by a one-tap Bought, a receipt, or something typed;
        paidAt is when it was recorded, which is what the season's pool counts against. */
     function orderRecord(raw={}){return {id:raw.id,vendor:text(raw.vendor,100),ref:text(raw.ref,100),expectedBy:text(raw.expectedBy,40),placedAt:raw.placedAt||now,...(raw.shipShare!==undefined?{shipShare:raw.shipShare}:{})};}
     function stampPaid(l,amount,how){ensure(amount===null||Number.isFinite(amount)&&amount>=0,'Purchase cost must be a nonnegative number or unknown.');l.paid=amount;if(amount===null){delete l.paidSource;delete l.paidAt;return;}l.paidSource=['catalog','receipt','typed'].includes(how)?how:'typed';l.paidAt=now;}
-    function allocate(l,d,r,n){ensure(!PLANNED.includes(l.source),'A wanted or watched card is a plan to buy, not a copy. Mark it Ordered or Owned before reserving it.');ensure(!d.archived&&d.status==='final','Finalize this deck before reserving copies.');ensure(compatible(l,r),'That printing does not match this requirement.');ensure(l.offer!=='held','Release the pending deal before assigning this copy.');const amount=quantity(n??Math.min(l.quantity,shortfall(s,d,r)));ensure(amount<=shortfall(s,d,r),'That slot is already fulfilled.');const part=split(l,amount);part.allocation={deckId:d.id,slotId:r.id};return part;}
+    function allocate(l,d,r,n){ensure(!PLANNED.includes(l.source),'A Watched card is one you are considering, not a copy. Mark it Ordered or Owned before reserving it.');ensure(!d.archived&&d.status==='final','Finalize this deck before reserving copies.');ensure(compatible(l,r),'That printing does not match this requirement.');ensure(l.offer==='none','Take it off Sell / Trade before it fills a deck\'s claim.');const amount=quantity(n??Math.min(l.quantity,shortfall(s,d,r)));ensure(amount<=shortfall(s,d,r),'That slot is already fulfilled.');const part=split(l,amount);part.allocation={deckId:d.id,slotId:r.id};return part;}
     /* A DECK CAN BE ATTACHED TO A COLLECTION GROUP, and this is what the attachment does:
        when two copies could fill the same requirement, the one already filed under the
        deck's group is reserved first. Owned still beats unreceived -- the group only breaks
        a tie, so attaching a group can never reserve a copy that was not eligible anyway. */
     const filedFor=(l,d)=>d.groupId&&l.groupIds.includes(d.groupId)?0:1;
-    function satisfy(d,only){const here=l=>l.location?.kind==='deck'&&l.location.deckId===d.id?1:0;for(const r of d.slots.filter(r=>r.committed&&(!only||r.id===only))){for(const l of [...s.lots].sort((a,b)=>(a.source==='owned'?0:1)-(b.source==='owned'?0:1)||here(b)-here(a)||filedFor(a,d)-filedFor(b,d))){if(!shortfall(s,d,r))break;if(PLANNED.includes(l.source)||l.allocation||l.offer==='held'||(l.location?.kind==='deck'&&l.location.deckId!==d.id)||l.offer==='available'&&d.definition.reuse?.includeSellTrade===false||!compatible(l,r)||l.keepBench)continue;allocate(l,d,r,Math.min(l.quantity,shortfall(s,d,r)));}}}
-    function release(l,destination){l.allocation=null;if(destination==='bench'){l.keepBench=true;return;}if(l.source!=='owned'||l.offer==='held')return;const here=d=>l.location?.kind==='deck'&&l.location.deckId===d.id?1:0;for(const d of s.decks.filter(d=>d.status==='final'&&!d.archived&&(!destination||d.id===destination)).sort((a,b)=>here(b)-here(a)||(a.priority||0)-(b.priority||0)||a.createdAt.localeCompare(b.createdAt))){for(const r of d.slots.filter(r=>r.committed)){const need=shortfall(s,d,r);if(!need||!compatible(l,r)||l.offer==='available'&&d.definition.reuse?.includeSellTrade===false)continue;const n=Math.min(l.quantity,need),part=allocate(l,d,r,n);if(part===l)return;}}}
+    function satisfy(d,only){const here=l=>l.location?.kind==='deck'&&l.location.deckId===d.id?1:0;for(const r of d.slots.filter(r=>r.committed&&(!only||r.id===only))){for(const l of [...s.lots].sort((a,b)=>(a.source==='owned'?0:1)-(b.source==='owned'?0:1)||here(b)-here(a)||filedFor(a,d)-filedFor(b,d))){if(!shortfall(s,d,r))break;if(PLANNED.includes(l.source)||l.allocation||l.offer!=='none'||(l.location?.kind==='deck'&&l.location.deckId!==d.id)||!compatible(l,r)||l.keepBench)continue;allocate(l,d,r,Math.min(l.quantity,shortfall(s,d,r)));}}}
+    function release(l,destination){l.allocation=null;if(destination==='bench'){l.keepBench=true;return;}if(l.source!=='owned'||l.offer!=='none')return;const here=d=>l.location?.kind==='deck'&&l.location.deckId===d.id?1:0;for(const d of s.decks.filter(d=>d.status==='final'&&!d.archived&&(!destination||d.id===destination)).sort((a,b)=>here(b)-here(a)||(a.priority||0)-(b.priority||0)||a.createdAt.localeCompare(b.createdAt))){for(const r of d.slots.filter(r=>r.committed)){const need=shortfall(s,d,r);if(!need||!compatible(l,r))continue;const n=Math.min(l.quantity,need),part=allocate(l,d,r,n);if(part===l)return;}}}
     function rows(raw){return raw.map(r=>({id:r.id||id('slot'),cardId:r.cardId,quantity:quantity(r.quantity),purpose:r.purpose||'main',committed:(!r.purpose||r.purpose==='main')?true:!!r.committed,printing:clone(r.printing||{}),replaces:r.replaces||'',targetBracket:r.targetBracket??null,pinned:!!r.pinned,option:!!r.option,optionWhy:text(r.optionWhy,300),notes:text(r.notes,3000),
       /* An upgrade option says which tier it belongs to and why it earns its slot -- the two
          facts the Upgrade Path panel is read for. Null and empty on main slots. */
@@ -275,7 +289,7 @@
          or a finalized deck: a finalized list may leave 100 for a while (the deck reads In
          progress until it is back), but never breaks the copies rule or the colour identity,
          and never loses its commander. assign sets how many copies are RESERVED to that slot
-         and how many of those sit in the box: it takes free copies first, then copies from
+         and how many of those sit in the physical deck: it takes free copies first, then copies from
          other decks (which stay where they physically are until pulled), then records a new
          owned copy when the library holds none -- the spreadsheet asserting a card is in the
          box is the owner saying it exists. Both are reviewed by the view before they run. */
@@ -294,7 +308,7 @@
       case 'assign':{const d=deck(s,c.deckId);ensure(!d.archived&&d.status==='final','Finalize this deck before assigning copies to it.');for(const raw of c.cards||[])addCard(raw);const cardObj=card(s,c.cardId);
         const r=d.slots.find(x=>x.purpose==='main'&&x.cardId===cardObj.id);ensure(r,`${cardObj.name} is not in ${d.name}'s list; set its target first.`);
         const want=c.assigned===0?0:quantity(c.assigned);ensure(want<=r.quantity,`${d.name} lists ${r.quantity} cop${r.quantity===1?'y':'ies'} of ${cardObj.name}; raise the target to assign more.`);
-        const boxedWant=c.boxed===undefined||c.boxed===null?null:(c.boxed===0?0:quantity(c.boxed));ensure(boxedWant===null||boxedWant<=want,'Assign the copies before putting them in the box.');
+        const boxedWant=c.boxed===undefined||c.boxed===null?null:(c.boxed===0?0:quantity(c.boxed));ensure(boxedWant===null||boxedWant<=want,'Assign the copies before putting them in the physical deck.');
         const mine=()=>s.lots.filter(l=>l.allocation?.deckId===d.id&&l.allocation.slotId===r.id),have=mine().reduce((k,l)=>k+l.quantity,0);let taken=[],recorded=0;
         if(want<have){let left=have-want;for(const l of mine().sort((a,b)=>(inDeck(s,a)?1:0)-(inDeck(s,b)?1:0)||(a.source==='owned'?1:0)-(b.source==='owned'?1:0))){if(!left)break;ensure(c.confirmed===true,'Review the reservations this releases first.');const take=Math.min(left,l.quantity),part=split(l,take);part.allocation=null;release(part,c.destination||'bench');left-=take;}}
         else if(want>have){let need=want-have;
@@ -305,10 +319,10 @@
           if(need&&c.acquire!==false){const l=newLot({cardId:cardObj.id,quantity:need,source:'owned',location:{kind:'bench',box:''},notes:'Recorded from the spreadsheet'});allocate(l,d,r,need);recorded=need;need=0;}
           ensure(!need||c.partial===true,`No copy of ${cardObj.name} to assign to ${d.name}.`);}
         if(boxedWant!==null){const owned=()=>mine().filter(l=>l.source==='owned');const inBox=()=>owned().filter(l=>inDeck(s,l)).reduce((k,l)=>k+l.quantity,0);
-          if(boxedWant>inBox()){let left=boxedWant-inBox();for(const l of owned().filter(l=>!inDeck(s,l))){if(!left)break;if(l.location?.kind==='deck')warning(l);const take=Math.min(left,l.quantity),part=split(l,take);part.location={kind:'deck',deckId:d.id,box:d.name};left-=take;}ensure(!left,`Only ${boxedWant-left} owned cop${boxedWant-left===1?'y is':'ies are'} assigned; an ordered copy cannot be in the box yet.`);}
+          if(boxedWant>inBox()){let left=boxedWant-inBox();for(const l of owned().filter(l=>!inDeck(s,l))){if(!left)break;if(l.location?.kind==='deck')warning(l);const take=Math.min(left,l.quantity),part=split(l,take);part.location={kind:'deck',deckId:d.id,box:d.name};left-=take;}ensure(!left,`Only ${boxedWant-left} owned cop${boxedWant-left===1?'y is':'ies are'} assigned; an ordered copy cannot be in the physical deck yet.`);}
           else if(boxedWant<inBox()){let left=inBox()-boxedWant;for(const l of owned().filter(l=>inDeck(s,l))){if(!left)break;const take=Math.min(left,l.quantity),part=split(l,take);part.location={kind:'bench',box:''};left-=take;}}}
         const after=mine(),nowA=after.reduce((k,l)=>k+l.quantity,0),nowBox=after.filter(l=>inDeck(s,l)).reduce((k,l)=>k+l.quantity,0);
-        summary=`${d.name}: ${cardObj.name} ${nowA} assigned, ${nowBox} in the box${taken.length?` (from ${[...new Set(taken)].join(', ')})`:''}${recorded?`; ${recorded} recorded as newly owned`:''}`;break;}
+        summary=`${d.name}: ${cardObj.name} ${nowA} assigned, ${nowBox} in the physical deck${taken.length?` (from ${[...new Set(taken)].join(', ')})`:''}${recorded?`; ${recorded} recorded as newly owned`:''}`;break;}
       case 'pin':{const d=deck(s,c.deckId),r=slot(s,d.id,c.slotId);ensure(!d.archived,'Restore the deck first.');r.pinned=!!c.pinned;if(r.pinned){r.option=false;r.optionWhy='';}summary=`${r.pinned?'Pinned':'Unpinned'} ${card(s,r.cardId).name} in ${d.name}`;break;}
       /* AN OPTION IS THE FIRST CARD TO GO. Pinned says keep this whatever happens; Option says
          the opposite -- when a card has to come out of the hundred, start here. It changes
@@ -335,7 +349,7 @@
       /* PERMANENT DELETION, and only of an archived deck. Archiving is the reversible step
          and it already released every allocation, so by the time a deck can be deleted no
          lot is reserved for it. What can still point at it: a lot's PHYSICAL location (the
-         copies are in that deck box on the shelf), which goes back to the bench because the
+         copies are in that physical deck on the shelf), which goes back to the bench because the
          box no longer exists as a plan; the deck's reports, advice and games, which describe
          an exact list that is being erased; and two preferences. All of it goes, because
          "permanently" is the word the button uses. */
@@ -352,23 +366,23 @@
         summary=`Deleted ${d.name} permanently, with its reports, advice and game log`;break;}
       case 'acquire':{for(const raw of c.cards||[])addCard(raw);const same=c.deckId||c.lot?.location?.kind==='deck'?null:sameCopy(c.lot,c.groupId);if(same){same.quantity=quantity(same.quantity+quantity(c.lot.quantity));summary=`Recorded ${quantity(c.lot.quantity)} more ${same.source} ${card(s,same.cardId).name} — ${same.quantity} in that record now`;break;}const l=newLot(c.lot);if(c.groupId)l.groupIds.push(group(s,c.groupId).id);if(c.deckId)allocate(l,deck(s,c.deckId),slot(s,c.deckId,c.slotId),l.quantity);summary=`Recorded ${l.quantity} ${l.source} ${card(s,l.cardId).name}`;break;}
       case 'importLots':{ensure(text(c.batchId,200),'An import needs a batch identifier.');if(s.imports.some(b=>b.id===c.batchId))return {state:current,summary:'This batch was already imported.',duplicate:true};for(const raw of c.cards||[])addCard(raw);for(const raw of c.lots||[]){const l=newLot(raw);if(c.groupId)l.groupIds.push(group(s,c.groupId).id);}s.imports.push({id:c.batchId,at:now,mode:c.mode||'acquisitions',rows:c.lots.length,source:text(c.source,500)});summary=`Imported ${c.lots.length} reviewed inventory rows`;break;}
-      case 'source':{let l=lot(s,c.lotId);ensure(SOURCES.includes(c.source),'Choose Owned, Ordered, Incoming trade, Wanted or Watching.');if((l.source==='owned'&&c.source!=='owned')||(l.allocation&&PLANNED.includes(c.source)))warning(l);l=split(l,c.quantity);l.source=c.source;if(l.source==='owned'){l.location=l.location||{kind:'bench',box:''};l.receivedAt=now;}else {l.location=null;l.offer='none';}if(c.paid!==undefined&&!Number.isFinite(l.paid))stampPaid(l,c.paid,c.paidSource);
+      case 'source':{let l=lot(s,c.lotId);ensure(SOURCES.includes(c.source),'Choose Owned, Ordered or Watched.');if((l.source==='owned'&&c.source!=='owned')||(l.allocation&&PLANNED.includes(c.source)))warning(l);l=split(l,c.quantity);l.source=c.source;if(l.source==='ordered')l.channel=c.channel==='trade'?'trade':(l.channel||'bought');if(l.source==='owned'){l.location=l.location||{kind:'bench',box:''};l.receivedAt=now;}else {l.location=null;l.offer='none';}if(c.paid!==undefined&&!Number.isFinite(l.paid))stampPaid(l,c.paid,c.paidSource);
         /* Below Ordered a record is a plan again, and a plan holds no reservation: the deck's requirement goes back to To buy. */
         if(PLANNED.includes(l.source))l.allocation=null;summary=`Corrected acquisition to ${c.source}: ${card(s,l.cardId).name}`;break;}
       case 'allocate':{let l=lot(s,c.lotId);warning(l);l=split(l,c.quantity);l.allocation=null;if(l.offer==='held')ensure(false,'Cancel the pending deal before transferring the copy.');allocate(l,deck(s,c.deckId),slot(s,c.deckId,c.slotId),l.quantity);summary='Reserved copies; physical location unchanged';break;}
       /* INTO A BOX. A copy the deck's list calls for is reserved to that seat on the way in. One the
-         list does not call for may still go in -- as a STAND-IN, when the command says so: it fills
+         list does not call for may still go in -- as a SUBSTITUTE, when the command says so: it fills
          a seat while the real card is bought or on its way, and the pull sheet asks for it back the
          moment a real copy is ready. Nothing marks it; being in a box without a reservation to
-         that deck is what a stand-in is. */
+         that deck is what a substitute is. */
       case 'place':{let l=lot(s,c.lotId);ensure(l.source==='owned','Record receipt or purchase before putting this card in a deck.');if(l.location?.kind==='deck'&&l.location.deckId!==c.deckId)warning(l);l=split(l,c.quantity);let standIn=false;
         if(c.deckId){const d=deck(s,c.deckId);ensure(!d.archived,'Archived decks cannot receive cards.');
           if(l.allocation?.deckId!==d.id){const r=c.slotId?slot(s,d.id,c.slotId):d.slots.find(r=>compatible(l,r)&&shortfall(s,d,r)>=l.quantity);
             if(r){warning(l);l.allocation=null;allocate(l,d,r,l.quantity);}
-            else{ensure(c.asStandIn===true,'This deck has no matching unfulfilled requirement. Put it in as a stand-in, choose a replacement or acquire a second copy.');ensure(d.status==='final','Finalize the deck before standing a card in for it.');if(l.allocation)warning(l);standIn=true;}}
+            else{ensure(c.asStandIn===true,'This deck has no matching unfulfilled requirement. Put it in as a substitute, choose a replacement or acquire a second copy.');ensure(d.status==='final','Finalize the deck before putting a substitute in it.');if(l.allocation)warning(l);standIn=true;}}
           l.location={kind:'deck',deckId:d.id,box:text(c.box,300)||d.name};}
         else l.location={kind:'bench',box:text(c.box,300)};
-        summary=standIn?`${card(s,l.cardId).name} is in ${deck(s,c.deckId).name}'s box as a stand-in`:`Confirmed physical placement: ${c.deckId?deck(s,c.deckId).name:'Bench'}`;break;}
+        summary=standIn?`${card(s,l.cardId).name} is in ${deck(s,c.deckId).name} as a substitute`:`Confirmed physical placement: ${c.deckId?deck(s,c.deckId).name:'Bench'}`;break;}
       /* THE SAME CHANGE, TO A HANDFUL OF RECORDS. Coming back from a convention with eleven
          cards to mark received meant eleven dialogs, eleven revisions and eleven things to
          undo, so nobody did it and the library drifted. One command, one receipt, one undo.
@@ -382,23 +396,26 @@
         let copies=0;
         for(const lotId of c.lotIds){
           const l=lot(s,lotId);copies+=l.quantity;
-          if(c.op==='source'){ensure(SOURCES.includes(c.source),'Choose Owned, Ordered, Incoming trade, Wanted or Watching.');if((l.source==='owned'&&c.source!=='owned')||(l.allocation&&PLANNED.includes(c.source)))warning(l);l.source=c.source;if(l.source==='owned'){l.location=l.location||{kind:'bench',box:''};l.receivedAt=now;}else{l.location=null;l.offer='none';}if(PLANNED.includes(l.source))l.allocation=null;
+          if(c.op==='source'){ensure(SOURCES.includes(c.source),'Choose Owned, Ordered or Watched.');if((l.source==='owned'&&c.source!=='owned')||(l.allocation&&PLANNED.includes(c.source)))warning(l);l.source=c.source;if(l.source==='ordered')l.channel=c.channel==='trade'?'trade':(l.channel||'bought');if(l.source==='owned'){l.location=l.location||{kind:'bench',box:''};l.receivedAt=now;}else{l.location=null;l.offer='none';}if(PLANNED.includes(l.source))l.allocation=null;
             /* A batch may stamp each copy's sheet price as what was paid, where nothing was recorded yet. */
             if(c.paidByLot&&Object.hasOwn(c.paidByLot,lotId)&&!Number.isFinite(l.paid))stampPaid(l,c.paidByLot[lotId],c.paidSource);}
-          else if(c.op==='place'){const d=deck(s,c.deckId);ensure(!d.archived,'Archived decks cannot receive cards.');ensure(l.source==='owned','Record receipt or purchase before putting this card in a deck.');if(l.allocation?.deckId!==d.id){const r=c.asStandIn===true?d.slots.find(r=>compatible(l,r)&&shortfall(s,d,r)>=l.quantity):null;if(r){warning(l);l.allocation=null;allocate(l,d,r,l.quantity);}else{ensure(c.asStandIn===true,`${card(s,l.cardId).name} is not reserved for ${d.name}. Reserve it first, put it in the deck it is reserved for, or put it in as a stand-in.`);ensure(d.status==='final','Finalize the deck before standing cards in for it.');if(l.allocation)warning(l);}}if(l.location?.kind==='deck'&&l.location.deckId!==d.id)warning(l);l.location={kind:'deck',deckId:d.id,box:text(c.box,300)||d.name};}
+          else if(c.op==='place'){const d=deck(s,c.deckId);ensure(!d.archived,'Archived decks cannot receive cards.');ensure(l.source==='owned','Record receipt or purchase before putting this card in a deck.');if(l.allocation?.deckId!==d.id){const r=c.asStandIn===true?d.slots.find(r=>compatible(l,r)&&shortfall(s,d,r)>=l.quantity):null;if(r){warning(l);l.allocation=null;allocate(l,d,r,l.quantity);}else{ensure(c.asStandIn===true,`${card(s,l.cardId).name} is not reserved for ${d.name}. Reserve it first, put it in the deck it is reserved for, or put it in as a substitute.`);ensure(d.status==='final','Finalize the deck before putting substitutes in it.');if(l.allocation)warning(l);}}if(l.location?.kind==='deck'&&l.location.deckId!==d.id)warning(l);l.location={kind:'deck',deckId:d.id,box:text(c.box,300)||d.name};}
           else if(c.op==='bench'){ensure(l.source==='owned','Record receipt or purchase before moving this card.');if(l.location?.kind==='deck')warning(l);l.location={kind:'bench',box:text(c.box,300)};}
           else if(c.op==='release'){warning(l);release(l,'bench');}
           else if(c.op==='offer'){ensure(l.source==='owned','Only owned copies can be offered.');ensure(['none','available','held'].includes(c.offer),'Invalid Sell / Trade state.');if(c.offer==='held'){warning(l);l.allocation=null;}l.offer=c.offer;}
           else ensure(false,'Unknown bulk operation.');
         }
-        const what=c.op==='source'?`Marked ${c.source}`:c.op==='place'?`Put in ${deck(s,c.deckId).name}${c.asStandIn===true?', stand-ins where the list did not call for them':''}`:c.op==='bench'?'Moved to the bench':c.op==='release'?'Released to To buy':c.offer==='none'?'Cleared Sell / Trade':c.offer==='held'?'Held for a pending deal':'Offered for Sell / Trade';
+        const what=c.op==='source'?`Marked ${c.source}`:c.op==='place'?`Put in ${deck(s,c.deckId).name}${c.asStandIn===true?', substitutes where the list did not call for them':''}`:c.op==='bench'?'Moved to the bench':c.op==='release'?'Released to To buy':c.offer==='none'?'Cleared Sell / Trade':c.offer==='held'?'Held for a pending deal':'Offered for Sell / Trade';
         summary=`${what}: ${c.lotIds.length} record${c.lotIds.length===1?'':'s'}, ${copies} cop${copies===1?'y':'ies'}`;break;}
       case 'release':{let l=lot(s,c.lotId);warning(l);l=split(l,c.quantity);release(l,c.destination||'bench');summary='Released allocation; retained the actual physical location';break;}
       case 'swap':{const d=deck(s,c.deckId),r=slot(s,d.id,c.slotId);ensure(!d.archived,'Restore the archived deck first.');for(const raw of c.cards||[])addCard(raw);card(s,c.cardId);version(d);const released=s.lots.filter(l=>l.allocation?.deckId===d.id&&l.allocation.slotId===r.id);for(const l of released)l.allocation=null;r.cardId=c.cardId;r.printing=clone(c.printing||{});r.pinned=!!c.pinned;r.option=false;r.optionWhy='';if(c.commander)d.commanders=d.commanders.map(cid=>cid===c.commander?c.cardId:cid);const issues=d.status==='final'?acceptance(s,d):[];ensure(!issues.length,issues.join('\n'));for(const l of released)release(l,c.destination);if(d.status==='final'){if(c.lotId){let l=lot(s,c.lotId);warning(l);l=split(l,Math.min(l.quantity,shortfall(s,d,r)));l.allocation=null;allocate(l,d,r,l.quantity);}satisfy(d,r.id);}summary=`Replaced a slot in ${d.name}; ownership unchanged`;break;}
       case 'option':{const d=deck(s,c.deckId);ensure(!d.archived,'Restore the deck first.');const parent=slot(s,d.id,c.replaces);ensure(parent.purpose==='main','Choose a main-deck slot.');for(const raw of c.cards||[])addCard(raw);const [r]=rows([{...c.option,committed:!!c.reserve,replaces:parent.id,purpose:c.option.purpose||'upgrade'}]);ensure(r.purpose!=='main','An option is separate from the main hundred.');d.slots.push(r);if(d.status==='final'&&c.reserve)satisfy(d,r.id);summary='Saved a linked upgrade or bracket option outside the main hundred';break;}
       case 'removeOption':{const d=deck(s,c.deckId),r=slot(s,d.id,c.slotId);ensure(r.purpose!=='main','Replace a main slot instead.');const releaseLots=s.lots.filter(l=>l.allocation?.deckId===d.id&&l.allocation.slotId===r.id);d.slots=d.slots.filter(x=>x.id!==r.id);for(const l of releaseLots)release(l,c.destination);summary='Removed an optional commitment';break;}
       case 'fulfill':{const d=deck(s,c.deckId);ensure(d.status==='final'&&!d.archived,'Finalize an available deck first.');satisfy(d);summary=`Reserved eligible unassigned copies for ${d.name}`;break;}
-      case 'offer':{let l=lot(s,c.lotId);ensure(l.source==='owned','Only owned copies can be offered.');l=split(l,c.quantity);if(c.offer==='held'){warning(l);l.allocation=null;}ensure(['none','available','held'].includes(c.offer),'Invalid offer state.');l.offer=c.offer;summary=`Updated Sell / Trade: ${card(s,l.cardId).name}`;break;}
+      /* SELL / TRADE IS A BENCH FLAG. A copy put up for sale or trade stops filling a deck's claim
+         -- the deck reads To Buy again -- because a card that may leave cannot also be counted
+         as the deck's. */
+      case 'offer':{let l=lot(s,c.lotId);ensure(l.source==='owned','Only owned copies can be offered.');l=split(l,c.quantity);if(c.offer!=='none'&&l.allocation){warning(l);l.allocation=null;}ensure(['none','available','held'].includes(c.offer),'Invalid offer state.');l.offer=c.offer;summary=`Updated Sell / Trade: ${card(s,l.cardId).name}`;break;}
       /* A COUNT IS A NUMBER YOU CAN BE WRONG ABOUT. Ordering four and receiving three used
          to mean disposing of one, which is a different sentence about a different event.
          Setting the count says what is true now. Lowering it is still a loss of copies, so
@@ -417,7 +434,7 @@
          list of (copy, price) corrections marked `receipt`, and touches only the lines it names. */
       case 'order':{ensure(Array.isArray(c.lotIds)&&c.lotIds.length,'Tick at least one card to order.');ensure(c.lotIds.length<=500,'Order at most 500 records at once.');
         const record=orderRecord({...c.order,id:c.order&&c.order.id||id('order')}),copies=c.lotIds.reduce((n,lid)=>n+lot(s,lid).quantity,0),ship=Number.isFinite(c.shipping)&&c.shipping>0?c.shipping:0;
-        for(const lid of c.lotIds){const l=lot(s,lid);ensure(l.source!=='owned','An owned copy is not on order.');if(l.allocation&&PLANNED.includes(l.source))warning(l);l.source='ordered';l.location=null;l.offer='none';l.order={...record,shipShare:Number.isFinite(record.shipShare)?record.shipShare:Math.round(ship/copies*10000)/10000};if(c.paidByLot&&Object.hasOwn(c.paidByLot,lid)&&!Number.isFinite(l.paid))stampPaid(l,c.paidByLot[lid],c.paidSource||'catalog');}
+        for(const lid of c.lotIds){const l=lot(s,lid);ensure(l.source!=='owned','An owned copy is not on order.');if(l.allocation&&PLANNED.includes(l.source))warning(l);l.source='ordered';l.channel=record.vendor==='Trade'?'trade':'bought';l.location=null;l.offer='none';l.order={...record,shipShare:Number.isFinite(record.shipShare)?record.shipShare:Math.round(ship/copies*10000)/10000};if(c.paidByLot&&Object.hasOwn(c.paidByLot,lid)&&!Number.isFinite(l.paid))stampPaid(l,c.paidByLot[lid],c.paidSource||'catalog');}
         summary=`Ordered ${copies} cop${copies===1?'y':'ies'} from ${record.vendor||'a vendor'}${record.ref?' · '+record.ref:''}`;break;}
       case 'orderArrived':{const lots=s.lots.filter(l=>l.order&&l.order.id===c.orderId&&l.source!=='owned');ensure(lots.length,'Every copy on that order has already arrived.');for(const l of lots){l.source='owned';l.location={kind:'bench',box:''};l.receivedAt=now;}summary=`Arrived: ${lots.reduce((n,l)=>n+l.quantity,0)} copies to the bench, reservations kept`;break;}
       case 'editOrder':{const lots=s.lots.filter(l=>l.order&&l.order.id===c.orderId);ensure(lots.length,'That order no longer has any copies.');for(const l of lots)l.order=orderRecord({...l.order,...(c.order||{}),id:c.orderId,shipShare:l.order.shipShare});summary='Updated the order';break;}
@@ -442,7 +459,7 @@
          their slots as well, at the shortfall and no more. Copies already filed under the group
          for the same card count towards a draft's slot, so saying it twice does not double the
          library. `quantities` names a count per slot for the one-card case. */
-      case 'acquireSlots':{const d=deck(s,c.deckId);ensure(!d.archived,'Restore the archived deck first.');ensure(SOURCES.includes(c.source),'Choose Owned, Ordered, Incoming trade, Wanted or Watching.');const chosen=d.slots.filter(r=>r.committed&&(!c.slotIds||c.slotIds.includes(r.id)));ensure(chosen.length,'Choose at least one card in the list.');let made=0;
+      case 'acquireSlots':{const d=deck(s,c.deckId);ensure(!d.archived,'Restore the archived deck first.');ensure(SOURCES.includes(c.source),'Choose Owned, Ordered or Watched.');const chosen=d.slots.filter(r=>r.committed&&(!c.slotIds||c.slotIds.includes(r.id)));ensure(chosen.length,'Choose at least one card in the list.');let made=0;
         for(const r of chosen){const filed=d.groupId?s.lots.filter(l=>l.cardId===r.cardId&&!l.allocation&&l.groupIds.includes(d.groupId)).reduce((n,l)=>n+l.quantity,0):0;
           const n=c.quantities&&c.quantities[r.id]!==undefined?quantity(c.quantities[r.id]):d.status==='final'?shortfall(s,d,r):Math.max(0,r.quantity-filed);if(n<1)continue;
           const l=newLot({cardId:r.cardId,quantity:n,source:c.source,printing:clone(r.printing||{}),...(c.paidBySlot&&Number.isFinite(c.paidBySlot[r.id])?{paid:c.paidBySlot[r.id],paidSource:c.paidSource}:{})});if(d.groupId)l.groupIds.push(d.groupId);if(c.order)l.order=orderRecord(c.order);
@@ -466,6 +483,7 @@
       case 'legacy':s.legacy=clone(c.legacy);summary='Saved legacy reconciliation information without asserting ownership';break;
       default:throw Error('Unknown collection operation: '+c.type);
     }
+    for(const l of s.lots){if(l.source==='ordered'){if(!CHANNELS.includes(l.channel))l.channel='bought';}else if(l.channel!==undefined)delete l.channel;}
     s.revision=current.revision+1;s.createdAt=s.createdAt||now;s.updatedAt=now;validate(s);
     // A sale must retain the exact printing after its owned row has gone. The
     // same receipt exposes automatic reallocations instead of hiding them in
@@ -478,5 +496,5 @@
   function fingerprint(d){return JSON.stringify({commanders:[...d.commanders].sort(),slots:d.slots.filter(r=>r.purpose==='main').map(r=>[r.cardId,r.quantity]).sort((a,b)=>a[0].localeCompare(b[0]))});}
   /* THE ORDERS, READ BACK: one row per order id across the lots that carry it. */
   function orders(s){const by=new Map();for(const l of s.lots){if(!l.order)continue;const o=by.get(l.order.id)||{id:l.order.id,vendor:l.order.vendor,ref:l.order.ref,expectedBy:l.order.expectedBy,placedAt:l.order.placedAt,lots:[],copies:0,arrived:0,paid:0,shipping:0};o.lots.push(l);o.copies+=l.quantity;if(l.source==='owned')o.arrived+=l.quantity;if(Number.isFinite(l.paid))o.paid+=l.paid*l.quantity;o.shipping+=(l.order.shipShare||0)*l.quantity;by.set(o.id,o);}return [...by.values()].map(o=>({...o,paid:Math.round(o.paid*100)/100,shipping:Math.round(o.shipping*100)/100})).sort((a,b)=>String(b.placedAt).localeCompare(String(a.placedAt)));}
-  return {VERSION,SOURCES,PLANNED,empty,starterGroups,clone,text,quantity,print,compatible,validate,apply,defaultDefinition,legality,definitionIssues,projection,counters,readiness,eligibility,fingerprint,shortfall,deck,slot,lot,inDeck,orders,maxCopies,matrix,plan};
+  return {VERSION,SOURCES,PLANNED,CHANNELS,migrate,empty,starterGroups,clone,text,quantity,print,compatible,validate,apply,defaultDefinition,legality,definitionIssues,projection,counters,readiness,eligibility,fingerprint,shortfall,deck,slot,lot,inDeck,orders,maxCopies,matrix,plan};
 });

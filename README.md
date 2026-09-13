@@ -4,7 +4,7 @@
 
 A private Commander deck workshop and card library. Plan a deck, review its composition
 and commander, track exactly which prints you own, reserve copies, receive orders,
-assemble deck boxes, explore card relationships, and manage Sell / Trade records.
+assemble physical decks, explore card relationships, and manage Sell / Trade records.
 
 Dark blue/graphite, Satoshi, a local wand/gear logo and animated aether mist. Semantic
 left-aligned tables support sorting, filtering, grouping, chosen columns and compact
@@ -34,18 +34,23 @@ The approved standalone mockup remains under `design/crankmagic/` for design ref
   bringing a list you already have, meeting at Test), each title opening where that step
   begins, and the card status ladder in order with what each word means.
 - **Collection**: exact printing lots, requirements, groups and planned lists. Source,
-  purpose, reservation and physical location are separate. Clear filters leaves the deck
+  purpose, reservation and physical location are separate. The counts row reads, in the order
+  a deck is built and each under its state's colour, *Reserved · Owned · Substitutes · In
+  Physical Deck · Ordered · To Buy · Watched*; on every deck Reserved = Owned + Ordered + To
+  Buy, Owned counts reserved copies, the Bench (owned copies no deck has reserved) is the
+  table itself and the caption under the row, and Sell / Trade is a Bench flag, never a
+  count held against a deck. Clear filters leaves the deck
   flow and shows all collection records. Every row's **Actions → Status** fly-out carries
-  the ladder a card climbs before it is in hand — *Watching* (keeping an eye on it),
-  *Wanted* (on the to-buy list), *Ordered* or *Incoming trade*, *Owned* — with the current
+  the ladder a card climbs before it is in hand — *Watched* (considering it), *Ordered*
+  (bought, or a trade arranged; the record carries the channel), *Owned* — with the current
   rung marked and *Delete* at the bottom. On a copy record it changes the source; on a
   deck's *To buy* requirement, a draft deck's *Draft list* row or a group's planned card it
   creates the copy at that rung, filed with the deck or group and reserved to its slot once
   the deck is finalized. Above Owned the ladder continues as placement: *Bench* (an owned
-  copy's default), *Reserved* to a deck, and *In deck box* once it is physically sleeved.
+  copy's default), *Reserved* to a deck, and *In physical deck* once it is physically sleeved.
   Moving an owned copy back down clears its box and, below Ordered, its reservation, and
   asks first. Every row carries its one obvious verb as a button — *Bought* / *Ordered* on
-  a To buy row, *Arrived* on an ordered copy, *Put in Dn box* on an owned copy reserved but
+  a To buy row, *Arrived* on an ordered copy, *Put in Dn* on an owned copy reserved but
   not in its box, *Reserve…* on an unassigned bench copy, nothing on a copy already in its
   box — and the menu behind *Actions* is four sections: Status, Where it is, Plan, Record,
   with Sell / Trade under the rule. Active filters show as removable chips under the search
@@ -67,11 +72,12 @@ The approved standalone mockup remains under `design/crankmagic/` for design ref
   typed to 1 releases the copy from wherever it was, reserves it here and puts it in this
   box, recording a new owned copy when the library holds none. The copies rule holds
   throughout: one of a card per deck except basics and the cards whose text allows more.
-  A small *ˢn* on an *A* cell counts that card's stand-ins in that box, Bench counts copies in
-  no box at all, and *Show → Stand-ins in a box* lists them. Enter commits and moves down,
+  *T* is what the deck's list claims (Reserved), *A* is what is physically in the deck; a
+  small *ˢn* on an *A* cell counts that card's substitutes there, Bench counts copies in no
+  physical deck at all, and *Show → Substitutes in a physical deck* lists them. Enter commits and moves down,
   Tab moves right, Escape puts the number back, the arrow keys walk the cells, and *Export
   CSV* writes the rows in the Master's column order, *A* being what is physically in the box,
-  stand-ins included, like the Master's Actual.
+  substitutes included, like the Master's Actual.
 - **Discover**: navigable metadata/co-play graph, mouse-wheel zoom, keyboard neighbors,
   pan, back trail, card inspection and supplemental catalog lookup. The pane beside the
   graph has two tabs: **Card Info** (the focused card, its terms, *Add/Buy*) and **List**
@@ -101,20 +107,23 @@ The approved standalone mockup remains under `design/crankmagic/` for design ref
   confirmation or CSV, matched by name, applied to the lines it names and marked *receipt*;
   also Import list → *Order confirmation*), *Edit* and *Lines*.
 - **Pull sheet** (`#pull?deck=`): one deck's reserved copies grouped by where they are —
-  pull from bench, move from another box — plus the **stand-ins** in this box, colour then
+  pull from bench, move from another deck — plus the **substitutes** in this deck, colour then
   name inside each, with *In box* / *Move here* / *To bench* per row, a tick that records
   the walk as it happens, *Mark all found in box*, Print (black on white, boxes to tick) and
-  Export. A stand-in is any owned copy physically in a deck box that the list does not call
+  Export. A substitute is any owned copy physically in a deck that the list does not call
   for: it fills a seat while the real card is bought or on its way, so the deck is playable
   before it is finished. Nothing marks it; being in the box without a reservation is what it
   is. The sheet says how many can come out now (a real copy is ready to take the seat, or the
-  box holds more stand-ins than empty seats) and which fill seats until their cards arrive;
-  *Mark all found* puts the ready copies in and takes exactly that many stand-ins out. The
-  Collection puts a copy in as a stand-in from **Actions → Put in a deck box as a stand-in**
+  deck holds more substitutes than empty seats) and which fill seats until their cards arrive;
+  *Mark all found* puts the ready copies in and takes exactly that many substitutes out. The
+  Collection puts a copy in as a substitute from **Actions → Put in a physical deck as a substitute**
   (a copy the list does call for is reserved on the way in instead), the *Allocation* filter
-  has *Stand-in*, tiles read *Playable · n stand-ins* once the box holds a hundred, and the
-  readiness bar hatches the seats stand-ins cover. The deck page's stat row shows In box ·
-  Stand-ins · To pull · Ordered · To buy and $ to finish against the cap, with a readiness bar; *Pull sheet (n)* leads the action row when there is
+  has *Substitute*, tiles read *Playable · n substitutes* once the physical deck holds a
+  hundred, and the readiness bar hatches the seats substitutes cover. Tiles wear their stage
+  as a border: green while *Defining*, blue while *Building*, purple once *Playable*, gold
+  when *Complete*. The deck page's stat row shows In
+  physical deck · Substitutes · To pull · Ordered · To buy and $ to finish against the cap,
+  with a readiness bar; *Pull sheet (n)* leads the action row when there is
   anything to pull. The **Upgrade Path** panel under SWOT lists the deck's linked upgrades
   as *Add · Replaces · Tier · Price · Why · Promote* with *Tuned only* and *Under $2*
   (D5–D6: $1.50) filters, `$X to Max` and `GC k / 2` in its header; *Promote* is the
@@ -134,7 +143,7 @@ The approved standalone mockup remains under `design/crankmagic/` for design ref
 ### Load Live
 
 `data/live-load.json` is the owner's collection written as a file a person can read: the
-six deck targets, what is physically in each deck box, the bench, orders in flight, the
+six deck targets, what is physically in each deck, the bench, orders in flight, the
 outstanding buy list with prices, the Upgrade Path cards with the slot each replaces, and
 per deck the two working lists — `options`, cards in the hundred flagged as the first to
 swap out, and `planned`, cards meant to come in that are not in the hundred yet (double-faced

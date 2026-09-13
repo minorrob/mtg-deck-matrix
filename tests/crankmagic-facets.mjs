@@ -315,7 +315,7 @@ check("ownedNames is the Ownership facet's own rule, on its own", () => {
   const state = {
     cards: {a: {name: "Sol Ring"}, b: {name: "Mana Crypt"}, c: {name: "Arcane Signet"}, d: {name: "Mind Stone"}},
     lots: [{cardId: "a", source: "owned"}, {cardId: "b", source: "ordered"},
-           {cardId: "c", source: "wanted"}, {cardId: "d", source: "owned"}, {cardId: "gone", source: "owned"}],
+           {cardId: "c", source: "watching"}, {cardId: "d", source: "owned"}, {cardId: "gone", source: "owned"}],
     decks: [],
   };
   assert.deepEqual([...Facets.ownedNames(state)].sort(), ["Mind Stone", "Sol Ring"],
@@ -324,7 +324,7 @@ check("ownedNames is the Ownership facet's own rule, on its own", () => {
   const decorated = Facets.decorate([{name: "Sol Ring"}, {name: "Mana Crypt"}], state);
   for (const card of decorated) {
     const banded = Facets.ownedNames(state).has(card.name);
-    const filtered = card.__mine.owned.some((v) => v !== "not owned" && v !== "on order" && v !== "incoming trade");
+    const filtered = card.__mine.owned.some((v) => v !== "not owned" && v !== "on order");
     assert.equal(banded, filtered, `${card.name}: the band and the filter disagree`);
   }
 });
