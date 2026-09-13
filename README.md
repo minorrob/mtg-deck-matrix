@@ -27,19 +27,28 @@ The approved standalone mockup remains under `design/crankmagic/` for design ref
 
 ## Application
 
+Every page opens on its name, with one primary action and at most three beside it; the
+rest of a page's actions sit under **More**, and what the page does and how its figures are
+counted sit behind its **?**. Glossary underlines in rules text are off until **Show term
+definitions** (deck page More menu, card pop-up) turns them on for the library.
+
 - **My Decks**: plans and assembly status; commander image/rules, composition, strategy,
-  structural SWOT, recommendations, game history, compare, finalize, lock and archive. A
-  plain link beside *Your decks*, **How a deck comes together** (`#how`), is a one-screen
+  structural SWOT, recommendations, game history, compare, finalize, lock and archive. Each
+  tile wears its stage — Defining, Building, Playable, Complete — and one caption that says
+  each figure once. A plain link on the page, **How a deck comes together** (`#how`), is a one-screen
   map: six steps as a flow (the first split between building one in the Deck Lab and
   bringing a list you already have, meeting at Test), each title opening where that step
   begins, and the card status ladder in order with what each word means.
 - **Collection**: exact printing lots, requirements, groups and planned lists. Source,
   purpose, reservation and physical location are separate. The counts row reads, in the order
-  a deck is built and each under its state's colour, *Reserved · Owned · Substitutes · In
+  a deck is built and each under its state's colour, *Reserved · Owned · Substitutes ·
   Physical Deck · Ordered · To Buy · Watched*; on every deck Reserved = Owned + Ordered + To
   Buy, Owned counts reserved copies, the Bench (owned copies no deck has reserved) is the
   table itself and the caption under the row, and Sell / Trade is a Bench flag, never a
-  count held against a deck. Clear filters leaves the deck
+  count held against a deck (the equation itself is behind the page's **?**). Six filters
+  are in view — type, mana, colour, source, allocation, deck — and **More filters** folds
+  subtype, mechanic, flags, offers, mana value and price, opening itself whenever one of
+  them is set. Clear filters leaves the deck
   flow and shows all collection records. Every row's **Actions → Status** fly-out carries
   the ladder a card climbs before it is in hand — *Watched* (considering it), *Ordered*
   (bought, or a trade arranged; the record carries the channel), *Owned* — with the current
@@ -231,7 +240,8 @@ connectivity. New installations of the offline cache wait for old tabs to close.
 
 EDHREC commander ranks are a separately dated [Top Commanders](https://edhrec.com/commanders)
 **Past 2 Years** snapshot, distinct from Scryfall card rank. `tools/commander-ranks.mjs`
-refreshes it. The glossary has one authority: `data/commander-glossary.json`.
+refreshes it. The glossary has one authority: `data/commander-glossary.json`. Its
+underlines are off by default (`preferences.terms`); the text is the same either way.
 Public card requests go to Scryfall; private library records, backups and games are not
 uploaded. See the [architecture and schema handover](docs/crankmagic-architecture.md)
 for modules, invariants, services, formats, migrations, offline limits and provenance.
@@ -249,13 +259,15 @@ node tests/uat/journeys.mjs
 
 `UAT_PLAYWRIGHT` can point to Playwright's index.js; `UAT_CHROMIUM` can select a browser
 binary. The browser runner executes the production assembly/recovery journeys and the
-retained 459-check legacy suite at desktop and phone widths. It fails rather than
+retained 459-check legacy suite at desktop and phone widths. `tests/page-budget.mjs` holds
+every page to a word, control and explainer budget before its first table or list, on the
+committed live library at 1400 and 390 (`PAGE_BUDGET_REPORT=1` prints the measurements). It fails rather than
 reporting a pass when a browser or server is missing. Node tests need no runtime package
 installation. Workbook tests optionally use `XLSX_PYTHON` with openpyxl for independent
 spreadsheet verification. See [tests/uat/README.md](tests/uat/README.md).
 
 Changed assets require a new `?v=` everywhere referenced, then
-`node tests/asset-versions.mjs --update`. There are 54 Node suites:
+`node tests/asset-versions.mjs --update`. There are 55 Node suites:
 
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`
@@ -269,11 +281,11 @@ Changed assets require a new `?v=` everywhere referenced, then
 - `collection-model` — `tests/collection-model.mjs`
 - `combat` — `tests/combat.mjs`
 - `compliance-model` — `tests/compliance-model.mjs`
-- `crankmagic-core` — `tests/crankmagic-core.mjs`
 - `copy-merge` — `tests/copy-merge.mjs`
+- `crankmagic-core` — `tests/crankmagic-core.mjs`
 - `crankmagic-facets` — `tests/crankmagic-facets.mjs`
 - `crankmagic-graph` — `tests/crankmagic-graph.mjs`
-- `graph-payload` — `tests/graph-payload.mjs`
+- `crankmagic-rules` — `tests/crankmagic-rules.mjs`
 - `crankmagic-sim` — `tests/crankmagic-sim.mjs`
 - `crankmagic-workbook` — `tests/crankmagic-workbook.mjs`
 - `data-integrity` — `tests/data-integrity.mjs`
@@ -289,6 +301,7 @@ Changed assets require a new `?v=` everywhere referenced, then
 - `friends-deck` — `tests/friends-deck.mjs`
 - `game-record` — `tests/game-record.mjs`
 - `generators` — `tests/generators.mjs`
+- `graph-payload` — `tests/graph-payload.mjs`
 - `guide-agent` — `tests/guide-agent.mjs`
 - `guide-measured` — `tests/guide-measured.mjs`
 - `inventory-import` — `tests/inventory-import.mjs`
@@ -299,11 +312,11 @@ Changed assets require a new `?v=` everywhere referenced, then
 - `manual-rung` — `tests/manual-rung.mjs`
 - `master-regenerates` — `tests/master-regenerates.mjs`
 - `measure-report` — `tests/measure-report.mjs`
+- `page-budget` — `tests/page-budget.mjs`
 - `pilot-policy` — `tests/pilot-policy.mjs`
-- `service-worker` — `tests/service-worker.mjs`
-- `scryfall-timeout` — `tests/scryfall-timeout.mjs`
-- `crankmagic-rules` — `tests/crankmagic-rules.mjs`
 - `qr` — `tests/qr.mjs`
+- `scryfall-timeout` — `tests/scryfall-timeout.mjs`
+- `service-worker` — `tests/service-worker.mjs`
 - `shop-export` — `tests/shop-export.mjs`
 - `sim-engine` — `tests/sim-engine.mjs`
 - `sim-lenses` — `tests/sim-lenses.mjs`

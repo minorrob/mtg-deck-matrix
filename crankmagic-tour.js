@@ -177,7 +177,7 @@ const TOURS=[
     {view:'decks',params:firstDeck,selectors:['.cm-deck-hero'],
      title:'The header is the summary',
      copy:'What the deck plays, what it costs, and how it measured — before you open anything else.'},
-    {view:'decks',params:firstDeck,selectors:['.cm-stats'],
+    {view:'decks',params:firstDeck,selectors:['.cm-deck-summary','.cm-stats'],
      title:'What the score is',
      copy:'Points on a fixed protocol: six seeds of 20,000 games against sampled opponents. Comparable only with another score from that same protocol, and the app says so when two differ.'},
     {view:'decks',params:firstDeck,selectors:['[data-action=deck-evidence]','[data-action=compare-reports]'],
