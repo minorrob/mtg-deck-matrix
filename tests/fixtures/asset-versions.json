@@ -98,8 +98,8 @@
       "sha": "c643e35c955e4884"
     },
     "crankmagic-app.js": {
-      "version": 140,
-      "sha": "593595927b624725"
+      "version": 141,
+      "sha": "441b3e18027129ea"
     },
     "crankmagic-assets.js": {
       "version": 19,
@@ -114,20 +114,20 @@
       "sha": "4c937886d914b612"
     },
     "crankmagic-collection.js": {
-      "version": 36,
-      "sha": "207926e29a3a628b"
+      "version": 37,
+      "sha": "9e0d3da2444337eb"
     },
     "crankmagic-decks.js": {
-      "version": 36,
-      "sha": "602e3c6a7017c5bf"
+      "version": 37,
+      "sha": "d80e14fd220caa0f"
     },
     "crankmagic-design.css": {
       "version": 4,
       "sha": "b6941b8c2f8965ba"
     },
     "crankmagic-discover.js": {
-      "version": 39,
-      "sha": "60b606d0bba6765d"
+      "version": 40,
+      "sha": "fb3de78553100c6d"
     },
     "crankmagic-evidence.js": {
       "version": 2,
@@ -150,24 +150,24 @@
       "sha": "e9461495f1d03882"
     },
     "crankmagic-how.js": {
-      "version": 3,
-      "sha": "fd10e211840aa000"
+      "version": 4,
+      "sha": "c1410a7759712c1e"
     },
     "crankmagic-lab.js": {
-      "version": 41,
-      "sha": "3f05795d5f1c9480"
+      "version": 42,
+      "sha": "deb02d6d69cc2b54"
     },
     "crankmagic-orders.js": {
-      "version": 3,
-      "sha": "2b9fbd8f117b9034"
+      "version": 4,
+      "sha": "2de5d6a68630f68b"
     },
     "crankmagic-plan-editor.js": {
       "version": 1,
       "sha": "6b97ae1d80fb6e5a"
     },
     "crankmagic-pull.js": {
-      "version": 8,
-      "sha": "7f6223378b467e8e"
+      "version": 9,
+      "sha": "e6814620a8b92517"
     },
     "crankmagic-qr.js": {
       "version": 1,
@@ -186,16 +186,16 @@
       "sha": "81ae2c4b7634afa7"
     },
     "crankmagic-sw.js": {
-      "version": 140,
-      "sha": "080cb56a7e0c9514"
+      "version": 141,
+      "sha": "36ea691d12e73782"
     },
     "crankmagic-tour.js": {
-      "version": 10,
-      "sha": "554b9fb46c765ee9"
+      "version": 11,
+      "sha": "3b2ad08d38f01f90"
     },
     "crankmagic.css": {
-      "version": 81,
-      "sha": "c739fe2551572fbf"
+      "version": 82,
+      "sha": "886cbea87120b28b"
     },
     "custom-model.js": {
       "version": 3,

@@ -735,11 +735,11 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-readiness>i{display:block;height:100%;min-width:0}
 .cm-readiness .inbox{background:var(--st-inbox)}.cm-readiness .pull{background:var(--st-pull)}
 .cm-readiness .ordered{background:var(--st-ordered)}.cm-readiness .buy{background:var(--st-buy)}
-.cm-readiness-legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:8px 0 0;font-size:12px;color:var(--v-muted)}
-.cm-readiness-legend span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
-.cm-readiness-legend i{width:9px;height:9px;border-radius:2px;display:inline-block}
-.cm-readiness-legend .inbox{background:var(--st-inbox)}.cm-readiness-legend .pull{background:var(--st-pull)}
-.cm-readiness-legend .ordered{background:var(--st-ordered)}.cm-readiness-legend .buy{background:var(--st-buy)}
+
+
+
+
+
 
 /* ================================== MONEY ON THE BUY LIST ==================================
    The strip above the Shop's table: the count, the sheet total, what is ordered and unpaid,
@@ -790,9 +790,9 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-deck-readiness{padding:0 0 18px;border-bottom:1px solid var(--v-line);margin-bottom:20px}
 .cm-deck-actions{margin-bottom:14px}
 /* A tip with a close button: the note, and an × that is a real 32px target. */
-.cm-tip{display:flex;align-items:flex-start;gap:12px}
-.cm-tip>span{flex:1}
-#matrix-v2 .cm-tip-close{flex:0 0 32px;width:32px;height:32px;min-height:32px;padding:0;border:0;border-radius:6px;background:#2b3549;color:#e7f2ff;font-size:18px;line-height:1;cursor:pointer}
+
+
+#matrix-v2 
 /* THE JUMP BAR: sticky under the ribbon, five section names and the run count. Under the
    phone's sticky nav it sits at the nav's height. */
 .cm-jump{position:sticky;top:0;z-index:4;display:flex;flex-wrap:wrap;gap:2px 4px;margin:0 0 18px;padding:6px 0;background:#12161ff2;border-bottom:1px solid var(--v-line);backdrop-filter:blur(3px)}
@@ -809,7 +809,7 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-deck-tile .cm-pill{margin-top:6px;align-self:flex-start}
 .cm-deck-tile p{margin:0 0 8px}
 .cm-tile-ready{padding:0 20px 12px;display:grid;gap:6px}
-.cm-tile-caption{font-size:12px;color:#c3d7ed;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cm-tile-caption{font-size:12px;color:#c3d7ed;line-height:1.35}
 .cm-deck-tile footer>span{white-space:nowrap;display:inline-flex;align-items:center;gap:6px;min-width:0}
 .cm-deck-tile footer>span:nth-child(2){overflow:hidden;text-overflow:ellipsis}
 .cm-deck-tile .cm-tile-pick{width:32px;height:32px}
@@ -1036,7 +1036,7 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-summary-figures>div{display:flex;flex-direction:column;gap:2px}
 .cm-summary-figures strong{font-size:22px;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
 .cm-summary-figures span{font-size:12px;color:#b0c3dc}
-.cm-deck-summary .cm-readiness-legend{margin-top:0}
+.cm-deck-summary 
 .cm-deck-summary .cm-budget-bar{margin-top:auto}
 .cm-deck-summary.cm-near .cm-summary-cost{background:#2a2410}.cm-deck-summary.cm-over .cm-summary-cost{background:#3a1d1d}
 .cm-deck-hero .cm-deck-actions{margin-bottom:0;gap:8px}
@@ -1129,7 +1129,7 @@ button.cm-pill:hover{filter:brightness(1.15)}
 :root{--st-standin:#c39bff}
 .cm-readiness{position:relative}
 .cm-readiness .standin{position:absolute;top:0;bottom:0;border-radius:2px;pointer-events:none;background:repeating-linear-gradient(135deg,var(--st-standin) 0 3px,rgba(10,14,24,.55) 3px 6px)}
-.cm-readiness-legend .standin{background:repeating-linear-gradient(135deg,var(--st-standin) 0 2px,rgba(10,14,24,.55) 2px 4px)}
+
 .cm-pill.standin{--st:var(--st-standin)}
 .cm-badge-standin{background:#3a2a5a;color:#e2ccff}
 .cm-sheet-sub{font-size:10px;color:var(--st-standin);margin-left:2px;vertical-align:super;font-weight:700}
@@ -1245,3 +1245,24 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-pill.reserved{--st:var(--st-reserved)}
 /* The dialog's title row and its close button stay put while the rest scrolls. */
 #matrix-v2 .cm-dialog-head{position:sticky;top:0;z-index:3;background:#171d2a;margin:-25px -25px 20px;padding:25px 25px 12px}
+/* THE PAGE NAME IS THE HEADING: one row, the name and its "?" on the left, the actions on the
+   right; a crumb above a page that belongs to another (a deck, its Ready to add list). */
+.cm-page-title{display:flex;align-items:center;gap:12px;min-width:0}
+.cm-page-title h1{margin:0}
+#matrix-v2 .cm-help-btn{width:34px;min-width:34px;min-height:34px;padding:0;border-radius:50%;font-weight:700;font-size:15px;flex:0 0 auto}
+.cm-crumb{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#a9bdd7;text-decoration:none}
+.cm-crumb:after{content:'›';font-size:14px}
+.cm-crumb:hover{color:#fff}
+.cm-crumb+.cm-crumb{margin-left:8px}
+.cm-deck-hero .cm-crumb{color:#dbe7f7;position:relative}
+.cm-deck-hero .cm-help-btn{margin-left:auto}
+.cm-toolbar-split>.cm-how-link{margin-left:0}
+/* SIX FILTERS IN VIEW; the fold spans the panel and opens onto the same grid. */
+.cm-filter-panel>.cm-more-filters{grid-column:1/-1;border:0;padding:0;background:none}
+.cm-more-filters>summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:6px;min-height:32px;font-size:13px;font-weight:600;color:#8cc9ff}
+.cm-more-filters>summary::-webkit-details-marker{display:none}
+.cm-more-filters>summary:before{content:'▸';font-size:12px}
+.cm-more-filters[open]>summary:before{content:'▾'}
+.cm-more-filters>div{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:14px 18px;align-items:end;padding-top:10px}
+@media(max-width:760px){.cm-more-filters>div{grid-template-columns:1fr}}
+.cm-terms-row{margin:6px 0 0}

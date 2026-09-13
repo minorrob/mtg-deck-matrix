@@ -25,6 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GEOMETRY_REQUIRED: "1"
+      PAGE_BUDGET_REQUIRED: "1"
     steps:
       - uses: actions/checkout@v4
 

@@ -92,9 +92,8 @@
   const FOLD_TAIL = 12;
 
   views.discover = async (params) => {
-    C.main.innerHTML = C.head('The connected card catalog', 'Follow the possibilities.',
-      'Explore relationships, inspect the evidence, and follow a card into your plans.')
-      + '<p role="status">Loading graph metadata…</p>';
+    C.HELP.discover = {title: 'Discover', body: '<p>The connected card catalog: follow a card into the cards it is joined to, inspect the evidence for each link, and take what you find into a group or a deck.</p><p>Structural links (shared mechanics and roles) and observed co-play (EDHREC) are different kinds of evidence. Neither claims a simulated improvement.</p>'};
+    C.main.innerHTML = C.pageHead('Discover') + '<p role="status">Loading graph metadata…</p>';
 
     const loaded = await C.catalog.loadGraph();
     if (C.route().view !== 'discover') return;
@@ -146,9 +145,7 @@
       }).join('');
     }
 
-    C.main.innerHTML = C.head('The connected card catalog', 'Follow the possibilities.',
-      'Structural links and observed co-play are different kinds of evidence. Neither claims a simulated improvement.',
-      toolsButton())
+    C.main.innerHTML = C.pageHead('Discover', toolsButton(), 'discover')
       + `<div class="cm-toolbar"><label class="cm-search">Find a card<input id="cm-graph-query" placeholder="Card name" list="cm-graph-names"><datalist id="cm-graph-names"></datalist></label>${C.select('Connections', 'edgeType', [['mechanic', 'Shared mechanics / roles'], ['played', 'EDHREC co-play']], 'mechanic')}${b('Search catalog / link', 'graph-lookup')}${b('Back', 'graph-back')}${b('Reset view', 'graph-reset')}</div>
 
       <div class="cm-facet-bar" id="cm-facet-bar" role="group" aria-label="Filters">

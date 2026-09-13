@@ -12,7 +12,7 @@ const STEPS=[
   {n:6,title:'Play',href:'#decks',text:'All 100 in the physical deck: the deck is done. Log your games.'}];
 const LADDER=[['Watched','Considering it. No copy yet.'],['To Buy','A deck\u2019s list claims it. Nothing fills the claim yet.'],['Ordered','Paid for, or a trade arranged.'],['Owned','In hand: on the Bench, or reserved and ready to add.'],['Physical Deck','Sleeved in the deck.']];
 views.how=async()=>{
-  C.main.innerHTML=C.head('Six steps','How a deck comes together.','Start either way. Every step opens where it begins.',`<a class="v-button" href="#decks">Back to My Decks</a>`)
+  C.main.innerHTML=C.pageHead('How a deck comes together',`<a class="v-button" href="#decks">Back to My Decks</a>`)
    +`<ol class="cm-how-flow" aria-label="The six steps">
       <li class="cm-how-step cm-how-split">
         <a class="cm-how-path cm-how-path-a" href="#lab"><strong>Build one</strong><span>Pick a commander. The Deck Lab drafts the other 99.</span></a>
