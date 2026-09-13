@@ -52,7 +52,7 @@ The approved standalone mockup remains under `design/crankmagic/` for design ref
   of a thumbnail, and pagination repeats above any table longer than one page. The same ladder runs over ticked rows (*Set status*) and over a whole deck
   from its page (*Card status*). Every deck has a collection group, made with it; a deck
   saved from the Lab arrives as a draft whose cards sit in that group at *Draft list* until
-  their status is set. Group-by band headers fold, and the toolbar filters by group.
+  their status is set. Group-by band headers fold, and the toolbar filters by group. A deck card's row also carries the two slot flags: **Pin** keeps it whatever the Lab or a swap suggests; **Flag as option** marks it as the first to come out when a card has to leave the hundred (the row wears an *Option* chip, the deck page lists them under *Working list*, the Lab drops them first, and a filter finds them). Setting one clears the other; neither moves a copy.
 - **Discover**: navigable metadata/co-play graph, mouse-wheel zoom, keyboard neighbors,
   pan, back trail, card inspection and supplemental catalog lookup. The pane beside the
   graph has two tabs: **Card Info** (the focused card, its terms, *Add/Buy*) and **List**
@@ -105,19 +105,37 @@ The approved standalone mockup remains under `design/crankmagic/` for design ref
 
 ### Load Live
 
-`data/live-load.json` is the owner's collection written as a file a person can edit: the
+`data/live-load.json` is the owner's collection written as a file a person can read: the
 six deck targets, what is physically in each deck box, the bench, orders in flight, the
-outstanding buy list with prices, and the Upgrade Path cards with the slot each replaces
-(double-faced cards use their full `Front // Back` Scryfall name). `node
-tools/build-live-state.mjs` turns it into `data/live-state.json`, a complete CrankMagic
-backup in the app's own format, built through the collection model and validated: in-box
-copies reserved to their deck, bench and ordered copies reserved to whichever deck still
-needs them, upgrades filed under an "Upgrade Path" group and attached to the slot they
-replace, and the buy list checked against the shortfalls the model derives. **User
-Functions → Load Live** asks for the load password (`treycmload1`, a latch against
-accidents, not a lock: the file and the word are both public), fetches that file fresh,
-and runs the normal restore path on it; Undo restores the previous library. The same
-file also restores through **Restore from a backup file** with no password.
+outstanding buy list with prices, the Upgrade Path cards with the slot each replaces, and
+per deck the two working lists — `options`, cards in the hundred flagged as the first to
+swap out, and `planned`, cards meant to come in that are not in the hundred yet (double-faced
+cards use their full `Front // Back` Scryfall name). It is **built from the Master
+workbook**, not edited by hand: `node tools/build-live-load.mjs data/source/<Master>.xlsx`
+reads the Master sheet by header name (`Own`, `Buy Count`, `Ordered`, `$ Each`, `D1-T…D6-T`,
+`D1-A…D6-A`), the Deck Lists sheet for commanders, the Upgrade Path sheet, and an optional
+`CrankMagic Plans` sheet (Deck, Kind, Card, Why) for the two working lists; names,
+definitions, notes and the working lists are carried over from the committed file for any
+deck the workbook does not restate. It prints the per-deck delta against the committed
+file and refuses a workbook whose deck targets do not sum to 100 or whose names the
+catalog cannot resolve. `data/source/CrankMagic-Load-Live-template.xlsx` is the same
+layout with nothing else on it, for a collection kept somewhere other than the Master.
+
+`node tools/build-live-state.mjs [--scryfall cache.json]` then turns the file into
+`data/live-state.json`, a complete CrankMagic backup in the app's own format, built through
+the collection model and validated: every deck owns a collection group, in-box copies are
+reserved to their deck, bench and ordered copies are reserved to whichever deck still needs
+them, options become slot flags, planned cards become entries in the deck's group (or file
+a free copy there), upgrades are filed under an "Upgrade Path" group and attached to the
+slot they replace with their tier, price and reason, the buy list is checked against the
+shortfalls the model derives, and every price the committed state already held is kept.
+`node tools/scryfall-cache.mjs` fetches the rules text, prices and images the bundled
+catalog lacks for those cards. **Actions → Load Live** on GitHub runs all of it by hand on
+the newest workbook under `data/source/` and commits both files. **User Functions → Load
+Live** in the app asks for the load password (`treycmload1`, a latch against accidents, not
+a lock: the file and the word are both public), fetches that file fresh, and runs the
+normal restore path on it; Undo restores the previous library. The same file also restores
+through **Restore from a backup file** with no password.
 
 `index.html` is the main shell; `crankmagic.html` is the same compatibility entry.
 `graph.html` opens Discover. Those three are the whole app.
@@ -174,7 +192,8 @@ for modules, invariants, services, formats, migrations, offline limits and prove
 ```sh
 bash runtests.sh -q
 node tools/check-glossary.mjs
-node tools/build-live-state.mjs --check   # after editing data/live-load.json
+node tools/build-live-load.mjs --check    # newest data/source/*Master*.xlsx → live-load, report only
+node tools/build-live-state.mjs --check   # live-load → live-state, report only
 # With the server above still running and Playwright available:
 node tests/uat/journeys.mjs
 ```

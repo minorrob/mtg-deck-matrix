@@ -481,7 +481,7 @@ const {missing,reachable}=await C.catalog.recheck([...built.cards,...leaders],{o
          blank. The list's own name is the better default anyway. */
       const source=deckId&&C.state.decks.some(d=>d.id===deckId)?M.deck(C.state,deckId).name:null;
       const name=draftName||(leader?leader.name+' · '+(definition.mechanics[0]||'new draft'):(source||'New draft'));
-      const next={commanders:leaders.map(c=>c.id),slots:built.slots.map(r=>({cardId:r.cardId,quantity:r.quantity,purpose:r.purpose||'main',pinned:!!r.pinned})),definition,name,method:built.method,notes:built.notes||[],issues:[...built.issues,...(fetchNote?[fetchNote]:[])],estimatedPrice:built.estimatedPrice,unknownPrices:built.unknownPrices||0,at:new Date().toISOString(),report:null};
+      const next={commanders:leaders.map(c=>c.id),slots:built.slots.map(r=>({cardId:r.cardId,quantity:r.quantity,purpose:r.purpose||'main',pinned:!!r.pinned,option:!!r.option,optionWhy:r.optionWhy||''})),definition,name,method:built.method,notes:built.notes||[],issues:[...built.issues,...(fetchNote?[fetchNote]:[])],estimatedPrice:built.estimatedPrice,unknownPrices:built.unknownPrices||0,at:new Date().toISOString(),report:null};
       /* Legality of the list as it would be saved, checked on a copy of the state. */
       const probe=M.apply(C.state,{id:C.uid(),type:'createDeck',deckId:'deck:preview',name,commanders:next.commanders,cards,slots:next.slots,definition}).state;
       next.issues.push(...M.legality(probe,M.deck(probe,'deck:preview')));
@@ -667,7 +667,8 @@ const {missing,reachable}=await C.catalog.recheck([...built.cards,...leaders],{o
         const lift=(m&&m.winRateWhenCast!=null?m.winRateWhenCast:deckWin)-deckWin;
         const late=Math.max(0,((m&&m.avgCastTurn)||0)-6)/12;
         return {...x,weak:stuck*3+(1-cast)*2-lift*4+late,stat:m||null};})
-      .sort((a,b)=>b.weak-a.weak).slice(0,limit||16);
+      /* The owner's own ranking comes first: a slot flagged Option is the first to go. */
+      .sort((a,b)=>(b.slot.option?1:0)-(a.slot.option?1:0)||b.weak-a.weak).slice(0,limit||16);
   }
 
   /* ONE ROUND: measure, rank the weak slots, then SCREEN CHEAPLY AND CONFIRM PROPERLY.

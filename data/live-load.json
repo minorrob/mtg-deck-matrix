@@ -1,5846 +1,5888 @@
 {
-  "format": "crankmagic-live-load",
-  "version": 1,
-  "savedAt": "2026-09-12",
-  "note": "Rob's live collection. Edit by hand and commit; CrankMagic → User Functions → Load Live reads this file. Card names must match Scryfall exactly (double-faced cards use 'Front // Back'). Quantities are whole numbers. decks[].cards is the 100-card target; owned.inDeck is what is physically in each deck box; owned.bench is everything else owned; ordered is in flight; buy is the outstanding shopping list; upgrades are optional ceiling cards with the slot each replaces.",
-  "decks": [
-    {
-      "id": "D1",
-      "name": "D1 Quintorius Spirits",
-      "commander": "Quintorius, Loremaster",
-      "definition": {
-        "baseBracket": 3,
-        "bracketCeiling": 3,
-        "playStyle": "Balanced",
-        "mechanics": [
-          "Graveyard",
-          "ETB triggers",
-          "Tokens"
-        ]
-      },
-      "notes": "Cards LEAVING your graveyard make 3/2 Spirits. Fill the bin, exile from it repeatedly, sac Spirits to free-cast what you exiled. Midrange grind. Win through recursion value and a wide Spirit alpha, not speed.",
-      "cards": [
-        [
-          "Advanced Reconstruction",
-          1
-        ],
-        [
-          "Arcane Signet",
-          1
-        ],
-        [
-          "Archaeomancer's Map",
-          1
-        ],
-        [
-          "Atsushi, the Blazing Sky",
-          1
-        ],
-        [
-          "Augusta, Order Returned",
-          1
-        ],
-        [
-          "Bag of Holding",
-          1
-        ],
-        [
-          "Balefire Liege",
-          1
-        ],
-        [
-          "Battlefield Forge",
-          1
-        ],
-        [
-          "Big Score",
-          1
-        ],
-        [
-          "Bloodthirsty Adversary",
-          1
-        ],
-        [
-          "Boros Signet",
-          1
-        ],
-        [
-          "Cast Out",
-          1
-        ],
-        [
-          "Cathar Commando",
-          1
-        ],
-        [
-          "Cathartic Reunion",
-          1
-        ],
-        [
-          "Ceaseless Conflict",
-          1
-        ],
-        [
-          "Clifftop Retreat",
-          1
-        ],
-        [
-          "Command Tower",
-          1
-        ],
-        [
-          "Conspiracy Theorist",
-          1
-        ],
-        [
-          "Containment Construct",
-          1
-        ],
-        [
-          "Currency Converter",
-          1
-        ],
-        [
-          "Emeria, the Sky Ruin",
-          1
-        ],
-        [
-          "Evolving Wilds",
-          1
-        ],
-        [
-          "Excava, the Risen Past",
-          1
-        ],
-        [
-          "Exotic Orchard",
-          1
-        ],
-        [
-          "Fable of the Mirror-Breaker // Reflection of Kiki-Jiki",
-          1
-        ],
-        [
-          "Fabled Passage",
-          1
-        ],
-        [
-          "Faithless Looting",
-          1
-        ],
-        [
-          "Fellwar Stone",
-          1
-        ],
-        [
-          "Fields of Strife",
-          1
-        ],
-        [
-          "Furycalm Snarl",
-          1
-        ],
-        [
-          "Generous Gift",
-          1
-        ],
-        [
-          "Ghost Vacuum",
-          1
-        ],
-        [
-          "Glittering Massif",
-          1
-        ],
-        [
-          "Hofri Ghostforge",
-          1
-        ],
-        [
-          "Inspiring Vantage",
-          1
-        ],
-        [
-          "Karmic Guide",
-          1
-        ],
-        [
-          "Kirol, History Buff // Pack a Punch",
-          1
-        ],
-        [
-          "Knight of the White Orchid",
-          1
-        ],
-        [
-          "Laelia, the Blade Reforged",
-          1
-        ],
-        [
-          "Lorehold Archivist // Restore Relic",
-          1
-        ],
-        [
-          "Lorehold Campus",
-          1
-        ],
-        [
-          "Lorehold Charm",
-          1
-        ],
-        [
-          "Lorehold Command",
-          1
-        ],
-        [
-          "Lorehold Excavation",
-          1
-        ],
-        [
-          "Mind Stone",
-          1
-        ],
-        [
-          "Mistveil Plains",
-          1
-        ],
-        [
-          "Moonshaker Cavalry",
-          1
-        ],
-        [
-          "Mountain",
-          5
-        ],
-        [
-          "Path to Exile",
-          1
-        ],
-        [
-          "Perpetual Timepiece",
-          1
-        ],
-        [
-          "Plains",
-          8
-        ],
-        [
-          "Primary Research",
-          1
-        ],
-        [
-          "Quintorius Kand",
-          1
-        ],
-        [
-          "Quintorius, Field Historian",
-          1
-        ],
-        [
-          "Quintorius, History Chaser",
-          1
-        ],
-        [
-          "Quintorius, Loremaster",
-          1
-        ],
-        [
-          "Radiant Summit",
-          1
-        ],
-        [
-          "Rally the Ancestors",
-          1
-        ],
-        [
-          "Reconstruct History",
-          1
-        ],
-        [
-          "Release to Memory",
-          1
-        ],
-        [
-          "Relic Retriever",
-          1
-        ],
-        [
-          "Return to Dust",
-          1
-        ],
-        [
-          "Rip Apart",
-          1
-        ],
-        [
-          "Rugged Prairie",
-          1
-        ],
-        [
-          "Sacred Peaks",
-          1
-        ],
-        [
-          "Seize the Spoils",
-          1
-        ],
-        [
-          "Selfless Spirit",
-          1
-        ],
-        [
-          "Serra Paragon",
-          1
-        ],
-        [
-          "Sevinne's Reclamation",
-          1
-        ],
-        [
-          "Skyclave Apparition",
-          1
-        ],
-        [
-          "Sol Ring",
-          1
-        ],
-        [
-          "Spirit of Resilience",
-          1
-        ],
-        [
-          "Squee, the Immortal",
-          1
-        ],
-        [
-          "Stone Quarry",
-          1
-        ],
-        [
-          "Sun Titan",
-          1
-        ],
-        [
-          "Sunbaked Canyon",
-          1
-        ],
-        [
-          "Sunscorched Divide",
-          1
-        ],
-        [
-          "Swords to Plowshares",
-          1
-        ],
-        [
-          "Temple of Triumph",
-          1
-        ],
-        [
-          "Terramorphic Expanse",
-          1
-        ],
-        [
-          "Teshar, Ancestor's Apostle",
-          1
-        ],
-        [
-          "Thrilling Discovery",
-          1
-        ],
-        [
-          "Tocasia's Welcome",
-          1
-        ],
-        [
-          "Turbulent Steppe",
-          1
-        ],
-        [
-          "Valakut Exploration",
-          1
-        ],
-        [
-          "Venerable Warsinger",
-          1
-        ],
-        [
-          "Warleader's Call",
-          1
-        ],
-        [
-          "Wind-Scarred Crag",
-          1
-        ],
-        [
-          "Winds of Abandon",
-          1
-        ]
-      ]
-    },
-    {
-      "id": "D2",
-      "name": "D2 Chulane Value Loop",
-      "commander": "Chulane, Teller of Tales",
-      "definition": {
-        "baseBracket": 3,
-        "bracketCeiling": 3,
-        "playStyle": "Balanced",
-        "mechanics": [
-          "Landfall",
-          "Ramp",
-          "Draw"
-        ]
-      },
-      "notes": "Every creature CAST draws a card and gives a land drop. Blink/bounce cheap ETB bodies to loop value. Combo-value. Ramp hard, land Chulane, chain creatures, finish wide or on a loop.",
-      "cards": [
-        [
-          "Adarkar Wastes",
-          1
-        ],
-        [
-          "Ancient Greenwarden",
-          1
-        ],
-        [
-          "Approach of the Second Sun",
-          1
-        ],
-        [
-          "Arcane Signet",
-          1
-        ],
-        [
-          "Azorius Chancery",
-          1
-        ],
-        [
-          "Azorius Guildgate",
-          1
-        ],
-        [
-          "Bant Panorama",
-          1
-        ],
-        [
-          "Bilbo Baggins, Burglar // Take a Glance",
-          1
-        ],
-        [
-          "Blossoming Sands",
-          1
-        ],
-        [
-          "Bofur, Reliable Guardian // Concerted Care",
-          1
-        ],
-        [
-          "Brushland",
-          1
-        ],
-        [
-          "Cast Out",
-          1
-        ],
-        [
-          "Charming Prince",
-          1
-        ],
-        [
-          "Chulane, Teller of Tales",
-          1
-        ],
-        [
-          "Cloudblazer",
-          1
-        ],
-        [
-          "Coiling Oracle",
-          1
-        ],
-        [
-          "Command Tower",
-          1
-        ],
-        [
-          "Counterspell",
-          1
-        ],
-        [
-          "Cultivate",
-          1
-        ],
-        [
-          "Deputy of Detention",
-          1
-        ],
-        [
-          "Dream Stalker",
-          1
-        ],
-        [
-          "Dundoolin Weaver",
-          1
-        ],
-        [
-          "Elvish Visionary",
-          1
-        ],
-        [
-          "Ephemerate",
-          1
-        ],
-        [
-          "Eternal Witness",
-          1
-        ],
-        [
-          "Evolving Wilds",
-          1
-        ],
-        [
-          "Faeburrow Elder",
-          1
-        ],
-        [
-          "Farhaven Elf",
-          1
-        ],
-        [
-          "Farseek",
-          1
-        ],
-        [
-          "Fblthp, the Lost",
-          1
-        ],
-        [
-          "Fell the Mighty",
-          1
-        ],
-        [
-          "Fertilid",
-          1
-        ],
-        [
-          "Forest",
-          7
-        ],
-        [
-          "Freed from the Real",
-          1
-        ],
-        [
-          "Glacial Fortress",
-          1
-        ],
-        [
-          "Glamermite",
-          1
-        ],
-        [
-          "Hinterland Harbor",
-          1
-        ],
-        [
-          "Intruder Alarm",
-          1
-        ],
-        [
-          "Island",
-          4
-        ],
-        [
-          "Kami of Ancient Law",
-          1
-        ],
-        [
-          "Kiora's Follower",
-          1
-        ],
-        [
-          "Knight of Autumn",
-          1
-        ],
-        [
-          "Llanowar Elves",
-          1
-        ],
-        [
-          "Make Your Move",
-          1
-        ],
-        [
-          "Man-o'-War",
-          1
-        ],
-        [
-          "Meandering River",
-          1
-        ],
-        [
-          "Mirkwood Nurturer",
-          1
-        ],
-        [
-          "Mistmeadow Witch",
-          1
-        ],
-        [
-          "Momentary Blink",
-          1
-        ],
-        [
-          "Mulldrifter",
-          1
-        ],
-        [
-          "Negate",
-          1
-        ],
-        [
-          "Peregrine Drake",
-          1
-        ],
-        [
-          "Plains",
-          4
-        ],
-        [
-          "Reclamation Sage",
-          1
-        ],
-        [
-          "Reflector Mage",
-          1
-        ],
-        [
-          "Reliquary Tower",
-          1
-        ],
-        [
-          "Restoration Angel",
-          1
-        ],
-        [
-          "Roon of the Hidden Realm",
-          1
-        ],
-        [
-          "Satyr Wayfinder",
-          1
-        ],
-        [
-          "Seaside Citadel",
-          1
-        ],
-        [
-          "Selesnya Guildgate",
-          1
-        ],
-        [
-          "Shinestriker",
-          1
-        ],
-        [
-          "Shrieking Drake",
-          1
-        ],
-        [
-          "Simic Guildgate",
-          1
-        ],
-        [
-          "Simic Signet",
-          1
-        ],
-        [
-          "Skyshroud Claim",
-          1
-        ],
-        [
-          "Sol Ring",
-          1
-        ],
-        [
-          "Song of the Dryads",
-          1
-        ],
-        [
-          "Soulherder",
-          1
-        ],
-        [
-          "Stonecloaker",
-          1
-        ],
-        [
-          "Sylvan Ranger",
-          1
-        ],
-        [
-          "Tatyova, Benthic Druid",
-          1
-        ],
-        [
-          "Temple of Enlightenment",
-          1
-        ],
-        [
-          "Temur Sabertooth",
-          1
-        ],
-        [
-          "Terramorphic Expanse",
-          1
-        ],
-        [
-          "The Eternal Wanderer",
-          1
-        ],
-        [
-          "Thornwood Falls",
-          1
-        ],
-        [
-          "Tireless Provisioner",
-          1
-        ],
-        [
-          "Tranquil Expanse",
-          1
-        ],
-        [
-          "Unbreakable Formation",
-          1
-        ],
-        [
-          "Valorous Stance",
-          1
-        ],
-        [
-          "Wavesifter",
-          1
-        ],
-        [
-          "Whitemane Lion",
-          1
-        ],
-        [
-          "Wilderness Reclamation",
-          1
-        ],
-        [
-          "Wood Elves",
-          1
-        ],
-        [
-          "Yavimaya Coast",
-          1
-        ],
-        [
-          "Yavimaya Elder",
-          1
-        ],
-        [
-          "Zendikar's Roil",
-          1
-        ]
-      ]
-    },
-    {
-      "id": "D3",
-      "name": "D3 Atraxa Proliferate",
-      "commander": "Atraxa, Praetors' Voice",
-      "definition": {
-        "baseBracket": 3,
-        "bracketCeiling": 3,
-        "playStyle": "Balanced",
-        "mechanics": [
-          "Counters",
-          "Doublers & multipliers",
-          "Proliferate"
-        ]
-      },
-      "notes": "Free end-step proliferate compounds every counter. Win on poison, +1/+1 counters, or charge-counter engines. Four-colour grind. Survive, spread counters, let proliferate double them.",
-      "cards": [
-        [
-          "Adarkar Wastes",
-          1
-        ],
-        [
-          "Aetheric Amplifier",
-          1
-        ],
-        [
-          "Anguished Unmaking",
-          1
-        ],
-        [
-          "Arcane Sanctum",
-          1
-        ],
-        [
-          "Arcane Signet",
-          1
-        ],
-        [
-          "Astral Cornucopia",
-          1
-        ],
-        [
-          "Atraxa, Praetors' Voice",
-          1
-        ],
-        [
-          "Azorius Guildgate",
-          1
-        ],
-        [
-          "Azorius Signet",
-          1
-        ],
-        [
-          "Bitterthorn, Nissa's Animus",
-          1
-        ],
-        [
-          "Blight Rot",
-          1
-        ],
-        [
-          "Branching Evolution",
-          1
-        ],
-        [
-          "Brushland",
-          1
-        ],
-        [
-          "Cast Out",
-          1
-        ],
-        [
-          "Caves of Koilos",
-          1
-        ],
-        [
-          "Chromatic Lantern",
-          1
-        ],
-        [
-          "Command Tower",
-          1
-        ],
-        [
-          "Contagion Clasp",
-          1
-        ],
-        [
-          "Contentious Plan",
-          1
-        ],
-        [
-          "Deepglow Skate",
-          1
-        ],
-        [
-          "Despark",
-          1
-        ],
-        [
-          "Drowned Catacomb",
-          1
-        ],
-        [
-          "Everflowing Chalice",
-          1
-        ],
-        [
-          "Evolution Sage",
-          1
-        ],
-        [
-          "Evolving Wilds",
-          1
-        ],
-        [
-          "Exotic Orchard",
-          1
-        ],
-        [
-          "Ezuri, Stalker of Spheres",
-          1
-        ],
-        [
-          "Fall of the First Civilization",
-          1
-        ],
-        [
-          "Fellwar Stone",
-          1
-        ],
-        [
-          "Fertilid",
-          1
-        ],
-        [
-          "Flux Channeler",
-          1
-        ],
-        [
-          "Forest",
-          3
-        ],
-        [
-          "Forgotten Ancient",
-          1
-        ],
-        [
-          "Fuel for the Cause",
-          1
-        ],
-        [
-          "Fynn, the Fangbearer",
-          1
-        ],
-        [
-          "Go for the Throat",
-          1
-        ],
-        [
-          "Golgari Guildgate",
-          1
-        ],
-        [
-          "Grand Coliseum",
-          1
-        ],
-        [
-          "Grateful Apparition",
-          1
-        ],
-        [
-          "Guardian Scalelord",
-          1
-        ],
-        [
-          "Ichormoon Gauntlet",
-          1
-        ],
-        [
-          "Inexorable Tide",
-          1
-        ],
-        [
-          "Infectious Inquiry",
-          1
-        ],
-        [
-          "Innkeeper's Talent",
-          1
-        ],
-        [
-          "Island",
-          4
-        ],
-        [
-          "Karn's Bastion",
-          1
-        ],
-        [
-          "Llanowar Wastes",
-          1
-        ],
-        [
-          "Long Goodbye",
-          1
-        ],
-        [
-          "Lotus Field",
-          1
-        ],
-        [
-          "Magistrate's Scepter",
-          1
-        ],
-        [
-          "Meandering River",
-          1
-        ],
-        [
-          "Merfolk Skydiver",
-          1
-        ],
-        [
-          "Mirkwood",
-          1
-        ],
-        [
-          "Mortify",
-          1
-        ],
-        [
-          "Nature's Lore",
-          1
-        ],
-        [
-          "Night's Whisper",
-          1
-        ],
-        [
-          "Octopus Form",
-          1
-        ],
-        [
-          "Origin of Metalbending",
-          1
-        ],
-        [
-          "Orzhov Guildgate",
-          1
-        ],
-        [
-          "Plaguemaw Beast",
-          1
-        ],
-        [
-          "Plains",
-          1
-        ],
-        [
-          "Prologue to Phyresis",
-          1
-        ],
-        [
-          "Quarrel",
-          1
-        ],
-        [
-          "Reaping Willow",
-          1
-        ],
-        [
-          "Repel Calamity",
-          1
-        ],
-        [
-          "Rootborn Defenses",
-          1
-        ],
-        [
-          "Selesnya Guildgate",
-          1
-        ],
-        [
-          "Simic Signet",
-          1
-        ],
-        [
-          "Sol Ring",
-          1
-        ],
-        [
-          "Steady Progress",
-          1
-        ],
-        [
-          "Stony Strength",
-          1
-        ],
-        [
-          "Strixhaven Stadium",
-          1
-        ],
-        [
-          "Sunpetal Grove",
-          1
-        ],
-        [
-          "Swamp",
-          3
-        ],
-        [
-          "Tekuthal, Inquiry Dominus",
-          1
-        ],
-        [
-          "Temple of Silence",
-          1
-        ],
-        [
-          "Tezzeret's Gambit",
-          1
-        ],
-        [
-          "The Restoration of Eiganjo // Architect of Restoration",
-          1
-        ],
-        [
-          "Thornwood Falls",
-          1
-        ],
-        [
-          "Throne of Geth",
-          1
-        ],
-        [
-          "Thrummingbird",
-          1
-        ],
-        [
-          "Tidus, Yuna's Guardian",
-          1
-        ],
-        [
-          "Tome of Legends",
-          1
-        ],
-        [
-          "Tragic Arrogance",
-          1
-        ],
-        [
-          "Tranquil Expanse",
-          1
-        ],
-        [
-          "Troll Negotiations",
-          1
-        ],
-        [
-          "Unbreakable Formation",
-          1
-        ],
-        [
-          "Underground River",
-          1
-        ],
-        [
-          "Valorous Stance",
-          1
-        ],
-        [
-          "Viral Drake",
-          1
-        ],
-        [
-          "Vraska, Betrayal's Sting",
-          1
-        ],
-        [
-          "Wall of Resurgence",
-          1
-        ],
-        [
-          "Yavimaya Coast",
-          1
-        ]
-      ]
-    },
-    {
-      "id": "D4",
-      "name": "D4 Felothar Walls",
-      "commander": "Felothar the Steadfast",
-      "definition": {
-        "baseBracket": 3,
-        "bracketCeiling": 3,
-        "playStyle": "Balanced",
-        "mechanics": [
-          "Defender",
-          "Combat",
-          "Sacrifice"
-        ]
-      },
-      "notes": "High-toughness walls that deal damage equal to toughness and can attack. Block all game, then alpha. Defensive fortress. Take no damage, one-sided wipe, swing once for lethal.",
-      "cards": [
-        [
-          "Ancient Lumberknot",
-          1
-        ],
-        [
-          "Anguished Unmaking",
-          1
-        ],
-        [
-          "Arbor Adherent",
-          1
-        ],
-        [
-          "Arboreal Grazer",
-          1
-        ],
-        [
-          "Ash Barrens",
-          1
-        ],
-        [
-          "Assault Formation",
-          1
-        ],
-        [
-          "Axebane Guardian",
-          1
-        ],
-        [
-          "Beast Within",
-          1
-        ],
-        [
-          "Betor, Ancestor's Voice",
-          1
-        ],
-        [
-          "Blight Pile",
-          1
-        ],
-        [
-          "Blossoming Sands",
-          1
-        ],
-        [
-          "Canopy Gargantuan",
-          1
-        ],
-        [
-          "Carven Caryatid",
-          1
-        ],
-        [
-          "Caves of Koilos",
-          1
-        ],
-        [
-          "Collective Effort",
-          1
-        ],
-        [
-          "Command Tower",
-          1
-        ],
-        [
-          "Crashing Drawbridge",
-          1
-        ],
-        [
-          "Despark",
-          1
-        ],
-        [
-          "Destroy Evil",
-          1
-        ],
-        [
-          "Dragonlord Dromoka",
-          1
-        ],
-        [
-          "Drumbellower",
-          1
-        ],
-        [
-          "Eerie Ultimatum",
-          1
-        ],
-        [
-          "Expel the Interlopers",
-          1
-        ],
-        [
-          "Fateful Absence",
-          1
-        ],
-        [
-          "Fell the Mighty",
-          1
-        ],
-        [
-          "Felothar the Steadfast",
-          1
-        ],
-        [
-          "Forest",
-          6
-        ],
-        [
-          "Fortified Village",
-          1
-        ],
-        [
-          "Freyalise, Llanowar's Fury",
-          1
-        ],
-        [
-          "Golgari Guildgate",
-          1
-        ],
-        [
-          "Golgari Signet",
-          1
-        ],
-        [
-          "Guardian of Faith",
-          1
-        ],
-        [
-          "Haystack",
-          1
-        ],
-        [
-          "Huatli, the Sun's Heart",
-          1
-        ],
-        [
-          "Ikra Shidiqi, the Usurper",
-          1
-        ],
-        [
-          "Indomitable Ancients",
-          1
-        ],
-        [
-          "Isolated Chapel",
-          1
-        ],
-        [
-          "Jaddi Offshoot",
-          1
-        ],
-        [
-          "Krosan Verge",
-          1
-        ],
-        [
-          "Llanowar Wastes",
-          1
-        ],
-        [
-          "Mirkwood",
-          1
-        ],
-        [
-          "Myriad Landscape",
-          1
-        ],
-        [
-          "Nyx-Fleece Ram",
-          1
-        ],
-        [
-          "Orzhov Signet",
-          1
-        ],
-        [
-          "Overgrown Battlement",
-          1
-        ],
-        [
-          "Path of Ancestry",
-          1
-        ],
-        [
-          "Phyrexian Arena",
-          1
-        ],
-        [
-          "Plains",
-          7
-        ],
-        [
-          "Portcullis Vine",
-          1
-        ],
-        [
-          "Putrefy",
-          1
-        ],
-        [
-          "Sandsteppe Citadel",
-          1
-        ],
-        [
-          "Sapling of Colfenor",
-          1
-        ],
-        [
-          "Saruli Caretaker",
-          1
-        ],
-        [
-          "Selesnya Signet",
-          1
-        ],
-        [
-          "Shalai, Voice of Plenty",
-          1
-        ],
-        [
-          "Shield-Wall Sentinel",
-          1
-        ],
-        [
-          "Sidar Kondo of Jamuraa",
-          1
-        ],
-        [
-          "Slaughter the Strong",
-          1
-        ],
-        [
-          "Sol Ring",
-          1
-        ],
-        [
-          "Soul of New Phyrexia",
-          1
-        ],
-        [
-          "Sun Titan",
-          1
-        ],
-        [
-          "Sunpetal Grove",
-          1
-        ],
-        [
-          "Swamp",
-          8
-        ],
-        [
-          "Sylvan Caryatid",
-          1
-        ],
-        [
-          "Tower Defense",
-          1
-        ],
-        [
-          "Tree of Perdition",
-          1
-        ],
-        [
-          "Tree of Redemption",
-          1
-        ],
-        [
-          "Treefolk Umbra",
-          1
-        ],
-        [
-          "Valorous Stance",
-          1
-        ],
-        [
-          "Vindicate",
-          1
-        ],
-        [
-          "Wakestone Gargoyle",
-          1
-        ],
-        [
-          "Walking Bulwark",
-          1
-        ],
-        [
-          "Wall of Blossoms",
-          1
-        ],
-        [
-          "Wall of Limbs",
-          1
-        ],
-        [
-          "Wall of Mulch",
-          1
-        ],
-        [
-          "Wall of Omens",
-          1
-        ],
-        [
-          "Wall of Roots",
-          1
-        ],
-        [
-          "Wave of Reckoning",
-          1
-        ],
-        [
-          "Weathered Sentinels",
-          1
-        ],
-        [
-          "Welcoming Vampire",
-          1
-        ],
-        [
-          "Wingmantle Chaplain",
-          1
-        ],
-        [
-          "Wood Elves",
-          1
-        ]
-      ]
-    },
-    {
-      "id": "D5",
-      "name": "D5 Shadrix Aristocrats",
-      "commander": "Shadrix Silverquill",
-      "definition": {
-        "baseBracket": 3,
-        "bracketCeiling": 3,
-        "playStyle": "Balanced",
-        "mechanics": [
-          "Tokens",
-          "Drain & burn",
-          "Draw"
-        ]
-      },
-      "notes": "Flood the board with tokens; each body drains on entry and again on death. Wide aristocrats grind. Bodies + drain payoffs + a sac outlet.",
-      "cards": [
-        [
-          "Angel of Indemnity",
-          1
-        ],
-        [
-          "Anguished Unmaking",
-          1
-        ],
-        [
-          "Anointer Priest",
-          1
-        ],
-        [
-          "Arcane Signet",
-          1
-        ],
-        [
-          "Bastion of Remembrance",
-          1
-        ],
-        [
-          "Blight Rot",
-          1
-        ],
-        [
-          "Blood Artist",
-          1
-        ],
-        [
-          "Boggart Mischief",
-          1
-        ],
-        [
-          "Carrion Feeder",
-          1
-        ],
-        [
-          "Castle Ardenvale",
-          1
-        ],
-        [
-          "Caves of Koilos",
-          1
-        ],
-        [
-          "Clachan Festival",
-          1
-        ],
-        [
-          "Combat Calligrapher",
-          1
-        ],
-        [
-          "Command Tower",
-          1
-        ],
-        [
-          "Concealed Courtyard",
-          1
-        ],
-        [
-          "Corpse Knight",
-          1
-        ],
-        [
-          "Cruel Celebrant",
-          1
-        ],
-        [
-          "Deadly Dispute",
-          1
-        ],
-        [
-          "Earth Kingdom Jailer",
-          1
-        ],
-        [
-          "Elas il-Kor, Sadistic Pilgrim",
-          1
-        ],
-        [
-          "Elspeth, Sun's Nemesis",
-          1
-        ],
-        [
-          "Emptiness",
-          1
-        ],
-        [
-          "Filigree Familiar",
-          1
-        ],
-        [
-          "Fracture",
-          1
-        ],
-        [
-          "Genesis Chamber",
-          1
-        ],
-        [
-          "Hidden Stockpile",
-          1
-        ],
-        [
-          "Impassioned Orator",
-          1
-        ],
-        [
-          "Indulging Patrician",
-          1
-        ],
-        [
-          "Intangible Virtue",
-          1
-        ],
-        [
-          "Isolated Chapel",
-          1
-        ],
-        [
-          "Kambal, Profiteering Mayor",
-          1
-        ],
-        [
-          "Keeper of the Accord",
-          1
-        ],
-        [
-          "Lethal Scheme",
-          1
-        ],
-        [
-          "Lingering Souls",
-          1
-        ],
-        [
-          "Marauding Blight-Priest",
-          1
-        ],
-        [
-          "Mind Stone",
-          1
-        ],
-        [
-          "Mirkwood Bats",
-          1
-        ],
-        [
-          "Myr Battlesphere",
-          1
-        ],
-        [
-          "Nadier's Nightblade",
-          1
-        ],
-        [
-          "Night's Whisper",
-          1
-        ],
-        [
-          "Ophiomancer",
-          1
-        ],
-        [
-          "Orzhov Basilica",
-          1
-        ],
-        [
-          "Orzhov Signet",
-          1
-        ],
-        [
-          "Ossification",
-          1
-        ],
-        [
-          "Pawn of Ulamog",
-          1
-        ],
-        [
-          "Phyrexian Arena",
-          1
-        ],
-        [
-          "Pitiless Plunderer",
-          1
-        ],
-        [
-          "Plains",
-          13
-        ],
-        [
-          "Priest of Forgotten Gods",
-          1
-        ],
-        [
-          "Promise of Loyalty",
-          1
-        ],
-        [
-          "Prophetic Prism",
-          1
-        ],
-        [
-          "Raise the Alarm",
-          1
-        ],
-        [
-          "Rootborn Defenses",
-          1
-        ],
-        [
-          "Scoured Barrens",
-          1
-        ],
-        [
-          "Settle the Wreckage",
-          1
-        ],
-        [
-          "Sevinne's Reclamation",
-          1
-        ],
-        [
-          "Shadrix Silverquill",
-          1
-        ],
-        [
-          "Shineshadow Snarl",
-          1
-        ],
-        [
-          "Skullclamp",
-          1
-        ],
-        [
-          "Smuggler's Copter",
-          1
-        ],
-        [
-          "Sol Ring",
-          1
-        ],
-        [
-          "Spectral Procession",
-          1
-        ],
-        [
-          "Staff of the Storyteller",
-          1
-        ],
-        [
-          "Swamp",
-          13
-        ],
-        [
-          "Swords to Plowshares",
-          1
-        ],
-        [
-          "Teysa Karlov",
-          1
-        ],
-        [
-          "Tithe Taker",
-          1
-        ],
-        [
-          "Unbreakable Formation",
-          1
-        ],
-        [
-          "Vault of the Archangel",
-          1
-        ],
-        [
-          "Village Rites",
-          1
-        ],
-        [
-          "Viscera Seer",
-          1
-        ],
-        [
-          "Welcoming Vampire",
-          1
-        ],
-        [
-          "Windborn Muse",
-          1
-        ],
-        [
-          "Woe Strider",
-          1
-        ],
-        [
-          "Yahenni, Undying Partisan",
-          1
-        ],
-        [
-          "Zulaport Cutthroat",
-          1
-        ]
-      ]
-    },
-    {
-      "id": "D6",
-      "name": "D6 Krenko Goblins",
-      "commander": "Krenko, Mob Boss",
-      "definition": {
-        "baseBracket": 3,
-        "bracketCeiling": 3,
-        "playStyle": "Balanced",
-        "mechanics": [
-          "Goblin tribal",
-          "Tokens",
-          "ETB triggers"
-        ]
-      },
-      "notes": "Krenko doubles the goblin count each tap; ETB-damage engines turn tokens into reach. Fast mono-red swarm. Fastest clock of the six; win before the table stabilises.",
-      "cards": [
-        [
-          "Abrade",
-          1
-        ],
-        [
-          "Anger",
-          1
-        ],
-        [
-          "Arcane Signet",
-          1
-        ],
-        [
-          "Barrage of Expendables",
-          1
-        ],
-        [
-          "Battle Hymn",
-          1
-        ],
-        [
-          "Beetleback Chief",
-          1
-        ],
-        [
-          "Buried Ruin",
-          1
-        ],
-        [
-          "Castle Embereth",
-          1
-        ],
-        [
-          "Chancellor of the Forge",
-          1
-        ],
-        [
-          "Chaos Warp",
-          1
-        ],
-        [
-          "Cinder Strike",
-          1
-        ],
-        [
-          "Conspicuous Snoop",
-          1
-        ],
-        [
-          "Den of the Bugbear",
-          1
-        ],
-        [
-          "Dragon Fodder",
-          1
-        ],
-        [
-          "Empty the Warrens",
-          1
-        ],
-        [
-          "Evolving Wilds",
-          1
-        ],
-        [
-          "Faithless Looting",
-          1
-        ],
-        [
-          "Fanatical Firebrand",
-          1
-        ],
-        [
-          "Foundry Street Denizen",
-          1
-        ],
-        [
-          "Goblin Bombardment",
-          1
-        ],
-        [
-          "Goblin Burrows",
-          1
-        ],
-        [
-          "Goblin Chieftain",
-          1
-        ],
-        [
-          "Goblin Gathering",
-          1
-        ],
-        [
-          "Goblin Instigator",
-          1
-        ],
-        [
-          "Goblin Matron",
-          1
-        ],
-        [
-          "Goblin Piledriver",
-          1
-        ],
-        [
-          "Goblin Rabblemaster",
-          1
-        ],
-        [
-          "Goblin Ringleader",
-          1
-        ],
-        [
-          "Goblin Trashmaster",
-          1
-        ],
-        [
-          "Goblin Warchief",
-          1
-        ],
-        [
-          "Gristle Glutton",
-          1
-        ],
-        [
-          "Gundabad Opportunist",
-          1
-        ],
-        [
-          "Hobgoblin Bandit Lord",
-          1
-        ],
-        [
-          "Hordeling Outburst",
-          1
-        ],
-        [
-          "Idol of Oblivion",
-          1
-        ],
-        [
-          "Impact Tremors",
-          1
-        ],
-        [
-          "Kher Keep",
-          1
-        ],
-        [
-          "Krenko's Command",
-          1
-        ],
-        [
-          "Krenko, Mob Boss",
-          1
-        ],
-        [
-          "Krenko, Tin Street Kingpin",
-          1
-        ],
-        [
-          "Legion Warboss",
-          1
-        ],
-        [
-          "Light Up the Stage",
-          1
-        ],
-        [
-          "Lightning Greaves",
-          1
-        ],
-        [
-          "Massive Raid",
-          1
-        ],
-        [
-          "Mind Stone",
-          1
-        ],
-        [
-          "Mogg War Marshal",
-          1
-        ],
-        [
-          "Mountain",
-          30
-        ],
-        [
-          "Naktamun Lorespinner // Wheel of Fortune",
-          1
-        ],
-        [
-          "Ogre Battledriver",
-          1
-        ],
-        [
-          "Outpost Siege",
-          1
-        ],
-        [
-          "Pashalik Mons",
-          1
-        ],
-        [
-          "Patchwork Banner",
-          1
-        ],
-        [
-          "Purphoros, God of the Forge",
-          1
-        ],
-        [
-          "Quest for the Goblin Lord",
-          1
-        ],
-        [
-          "Raid Bombardment",
-          1
-        ],
-        [
-          "Reckless Bushwhacker",
-          1
-        ],
-        [
-          "Shared Animosity",
-          1
-        ],
-        [
-          "Siege-Gang Commander",
-          1
-        ],
-        [
-          "Skirk Fire Marshal",
-          1
-        ],
-        [
-          "Skirk Prospector",
-          1
-        ],
-        [
-          "Skullclamp",
-          1
-        ],
-        [
-          "Sol Ring",
-          1
-        ],
-        [
-          "Sourbread Auntie",
-          1
-        ],
-        [
-          "Swiftfoot Boots",
-          1
-        ],
-        [
-          "Thornbite Staff",
-          1
-        ],
-        [
-          "Thousand-Year Elixir",
-          1
-        ],
-        [
-          "Thrill of Possibility",
-          1
-        ],
-        [
-          "Tweeze",
-          1
-        ],
-        [
-          "Vandalblast",
-          1
-        ],
-        [
-          "Voldaren Epicure",
-          1
-        ],
-        [
-          "Witty Roastmaster",
-          1
-        ]
-      ]
-    }
-  ],
-  "owned": {
-    "inDeck": {
-      "D1": [
-        [
-          "Advanced Reconstruction",
-          1
-        ],
-        [
-          "Arcane Signet",
-          1
-        ],
-        [
-          "Archaeomancer's Map",
-          1
-        ],
-        [
-          "Atsushi, the Blazing Sky",
-          1
-        ],
-        [
-          "Augusta, Order Returned",
-          1
-        ],
-        [
-          "Bag of Holding",
-          1
-        ],
-        [
-          "Balefire Liege",
-          1
-        ],
-        [
-          "Battlefield Forge",
-          1
-        ],
-        [
-          "Big Score",
-          1
-        ],
-        [
-          "Cast Out",
-          1
-        ],
-        [
-          "Cathartic Reunion",
-          1
-        ],
-        [
-          "Ceaseless Conflict",
-          1
-        ],
-        [
-          "Clifftop Retreat",
-          1
-        ],
-        [
-          "Command Tower",
-          1
-        ],
-        [
-          "Containment Construct",
-          1
-        ],
-        [
-          "Currency Converter",
-          1
-        ],
-        [
-          "Emeria, the Sky Ruin",
-          1
-        ],
-        [
-          "Evolving Wilds",
-          1
-        ],
-        [
-          "Excava, the Risen Past",
-          1
-        ],
-        [
-          "Exotic Orchard",
-          1
-        ],
-        [
-          "Fable of the Mirror-Breaker // Reflection of Kiki-Jiki",
-          1
-        ],
-        [
-          "Fabled Passage",
-          1
-        ],
-        [
-          "Faithless Looting",
-          1
-        ],
-        [
-          "Fellwar Stone",
-          1
-        ],
-        [
-          "Fields of Strife",
-          1
-        ],
-        [
-          "Furycalm Snarl",
-          1
-        ],
-        [
-          "Generous Gift",
-          1
-        ],
-        [
-          "Ghost Vacuum",
-          1
-        ],
-        [
-          "Glittering Massif",
-          1
-        ],
-        [
-          "Hofri Ghostforge",
-          1
-        ],
-        [
-          "Inspiring Vantage",
-          1
-        ],
-        [
-          "Karmic Guide",
-          1
-        ],
-        [
-          "Kirol, History Buff // Pack a Punch",
-          1
-        ],
-        [
-          "Knight of the White Orchid",
-          1
-        ],
-        [
-          "Laelia, the Blade Reforged",
-          1
-        ],
-        [
-          "Lorehold Archivist // Restore Relic",
-          1
-        ],
-        [
-          "Lorehold Campus",
-          1
-        ],
-        [
-          "Lorehold Charm",
-          1
-        ],
-        [
-          "Lorehold Excavation",
-          1
-        ],
-        [
-          "Mind Stone",
-          1
-        ],
-        [
-          "Mistveil Plains",
-          1
-        ],
-        [
-          "Moonshaker Cavalry",
-          1
-        ],
-        [
-          "Mountain",
-          8
-        ],
-        [
-          "Naya Panorama",
-          1
-        ],
-        [
-          "Path to Exile",
-          1
-        ],
-        [
-          "Perpetual Timepiece",
-          1
-        ],
-        [
-          "Plains",
-          13
-        ],
-        [
-          "Primary Research",
-          1
-        ],
-        [
-          "Quintorius Kand",
-          1
-        ],
-        [
-          "Quintorius, Field Historian",
-          1
-        ],
-        [
-          "Quintorius, History Chaser",
-          1
-        ],
-        [
-          "Quintorius, Loremaster",
-          1
-        ],
-        [
-          "Radiant Summit",
-          1
-        ],
-        [
-          "Rally the Ancestors",
-          1
-        ],
-        [
-          "Reconstruct History",
-          1
-        ],
-        [
-          "Reliquary Tower",
-          1
-        ],
-        [
-          "Return to Dust",
-          1
-        ],
-        [
-          "Rugged Prairie",
-          1
-        ],
-        [
-          "Sacred Peaks",
-          1
-        ],
-        [
-          "Seize the Spoils",
-          1
-        ],
-        [
-          "Selfless Spirit",
-          1
-        ],
-        [
-          "Serra Paragon",
-          1
-        ],
-        [
-          "Sevinne's Reclamation",
-          1
-        ],
-        [
-          "Skyclave Apparition",
-          1
-        ],
-        [
-          "Spirit of Resilience",
-          1
-        ],
-        [
-          "Squee, the Immortal",
-          1
-        ],
-        [
-          "Sun Titan",
-          1
-        ],
-        [
-          "Sunbaked Canyon",
-          1
-        ],
-        [
-          "Sunscorched Divide",
-          1
-        ],
-        [
-          "Sword of the Animist",
-          1
-        ],
-        [
-          "Swords to Plowshares",
-          1
-        ],
-        [
-          "Temple of Triumph",
-          1
-        ],
-        [
-          "Terramorphic Expanse",
-          1
-        ],
-        [
-          "Teshar, Ancestor's Apostle",
-          1
-        ],
-        [
-          "Thrilling Discovery",
-          1
-        ],
-        [
-          "Tocasia's Welcome",
-          1
-        ],
-        [
-          "Turbulent Steppe",
-          1
-        ],
-        [
-          "Valakut Exploration",
-          1
-        ],
-        [
-          "Venerable Warsinger",
-          1
-        ],
-        [
-          "Wind-Scarred Crag",
-          1
-        ],
-        [
-          "Winds of Abandon",
-          1
-        ]
-      ],
-      "D2": [
-        [
-          "Ancient Greenwarden",
-          1
-        ],
-        [
-          "Arcane Signet",
-          1
-        ],
-        [
-          "Azorius Chancery",
-          1
-        ],
-        [
-          "Azorius Guildgate",
-          1
-        ],
-        [
-          "Bant Panorama",
-          1
-        ],
-        [
-          "Bilbo Baggins, Burglar // Take a Glance",
-          1
-        ],
-        [
-          "Blossoming Sands",
-          1
-        ],
-        [
-          "Bofur, Reliable Guardian // Concerted Care",
-          1
-        ],
-        [
-          "Cast Out",
-          1
-        ],
-        [
-          "Charming Prince",
-          1
-        ],
-        [
-          "Chulane, Teller of Tales",
-          1
-        ],
-        [
-          "Cloudblazer",
-          1
-        ],
-        [
-          "Coiling Oracle",
-          1
-        ],
-        [
-          "Counterspell",
-          1
-        ],
-        [
-          "Cultivate",
-          1
-        ],
-        [
-          "Deputy of Detention",
-          1
-        ],
-        [
-          "Dundoolin Weaver",
-          1
-        ],
-        [
-          "Elvish Visionary",
-          1
-        ],
-        [
-          "Ephemerate",
-          1
-        ],
-        [
-          "Eternal Witness",
-          1
-        ],
-        [
-          "Evolving Wilds",
-          1
-        ],
-        [
-          "Faeburrow Elder",
-          1
-        ],
-        [
-          "Farhaven Elf",
-          1
-        ],
-        [
-          "Farseek",
-          1
-        ],
-        [
-          "Fblthp, the Lost",
-          1
-        ],
-        [
-          "Fell the Mighty",
-          1
-        ],
-        [
-          "Fertilid",
-          1
-        ],
-        [
-          "Forest",
-          10
-        ],
-        [
-          "Freed from the Real",
-          1
-        ],
-        [
-          "Glacial Fortress",
-          1
-        ],
-        [
-          "Hinterland Harbor",
-          1
-        ],
-        [
-          "Intruder Alarm",
-          1
-        ],
-        [
-          "Island",
-          8
-        ],
-        [
-          "Kami of Ancient Law",
-          1
-        ],
-        [
-          "Knight of Autumn",
-          1
-        ],
-        [
-          "Llanowar Elves",
-          1
-        ],
-        [
-          "Man-o'-War",
-          1
-        ],
-        [
-          "Meandering River",
-          1
-        ],
-        [
-          "Mirkwood Nurturer",
-          1
-        ],
-        [
-          "Mistmeadow Witch",
-          1
-        ],
-        [
-          "Mulldrifter",
-          1
-        ],
-        [
-          "Negate",
-          1
-        ],
-        [
-          "Peregrine Drake",
-          1
-        ],
-        [
-          "Plains",
-          7
-        ],
-        [
-          "Reclamation Sage",
-          1
-        ],
-        [
-          "Reflector Mage",
-          1
-        ],
-        [
-          "Reliquary Tower",
-          1
-        ],
-        [
-          "Roon of the Hidden Realm",
-          1
-        ],
-        [
-          "Satyr Wayfinder",
-          1
-        ],
-        [
-          "Seaside Citadel",
-          1
-        ],
-        [
-          "Selesnya Guildgate",
-          1
-        ],
-        [
-          "Sheltering Word",
-          1
-        ],
-        [
-          "Shinestriker",
-          1
-        ],
-        [
-          "Shrieking Drake",
-          1
-        ],
-        [
-          "Simic Guildgate",
-          1
-        ],
-        [
-          "Simic Signet",
-          1
-        ],
-        [
-          "Siren's Ruse",
-          1
-        ],
-        [
-          "Skyshroud Claim",
-          1
-        ],
-        [
-          "Sol Ring",
-          1
-        ],
-        [
-          "Song of the Dryads",
-          1
-        ],
-        [
-          "Soulherder",
-          1
-        ],
-        [
-          "Stonecloaker",
-          1
-        ],
-        [
-          "Sylvan Ranger",
-          1
-        ],
-        [
-          "Tatyova, Benthic Druid",
-          1
-        ],
-        [
-          "Temple of Enlightenment",
-          1
-        ],
-        [
-          "Temur Sabertooth",
-          1
-        ],
-        [
-          "Terramorphic Expanse",
-          1
-        ],
-        [
-          "The Eternal Wanderer",
-          1
-        ],
-        [
-          "Tireless Provisioner",
-          1
-        ],
-        [
-          "Valorous Stance",
-          1
-        ],
-        [
-          "Voyager Staff",
-          1
-        ],
-        [
-          "Wavesifter",
-          1
-        ],
-        [
-          "Wood Elves",
-          1
-        ],
-        [
-          "Yavimaya Elder",
-          1
-        ],
-        [
-          "Zendikar's Roil",
-          1
-        ]
-      ],
-      "D3": [
-        [
-          "Aetheric Amplifier",
-          1
-        ],
-        [
-          "Anguished Unmaking",
-          1
-        ],
-        [
-          "Arcane Sanctum",
-          1
-        ],
-        [
-          "Astral Cornucopia",
-          1
-        ],
-        [
-          "Atraxa, Praetors' Voice",
-          1
-        ],
-        [
-          "Azorius Signet",
-          1
-        ],
-        [
-          "Bitterthorn, Nissa's Animus",
-          1
-        ],
-        [
-          "Blight Rot",
-          1
-        ],
-        [
-          "Branching Evolution",
-          1
-        ],
-        [
-          "Bristlebane Battler",
-          1
-        ],
-        [
-          "Cast Out",
-          1
-        ],
-        [
-          "Chromatic Lantern",
-          1
-        ],
-        [
-          "Contagion Clasp",
-          1
-        ],
-        [
-          "Deepglow Skate",
-          1
-        ],
-        [
-          "Despark",
-          1
-        ],
-        [
-          "Dismal Backwater",
-          1
-        ],
-        [
-          "Drowned Catacomb",
-          1
-        ],
-        [
-          "Everflowing Chalice",
-          1
-        ],
-        [
-          "Evolving Wilds",
-          1
-        ],
-        [
-          "Exotic Orchard",
-          1
-        ],
-        [
-          "Fall of the First Civilization",
-          1
-        ],
-        [
-          "Fertilid",
-          1
-        ],
-        [
-          "Flux Channeler",
-          1
-        ],
-        [
-          "Forest",
-          6
-        ],
-        [
-          "Fuel for the Cause",
-          1
-        ],
-        [
-          "Fynn, the Fangbearer",
-          1
-        ],
-        [
-          "Go for the Throat",
-          1
-        ],
-        [
-          "Gollum, Riddle Master",
-          1
-        ],
-        [
-          "Grateful Apparition",
-          1
-        ],
-        [
-          "Guardian Scalelord",
-          1
-        ],
-        [
-          "Guardian of the Halls",
-          1
-        ],
-        [
-          "Ichormoon Gauntlet",
-          1
-        ],
-        [
-          "Inexorable Tide",
-          1
-        ],
-        [
-          "Innkeeper's Talent",
-          1
-        ],
-        [
-          "Island",
-          6
-        ],
-        [
-          "Karn's Bastion",
-          1
-        ],
-        [
-          "Long Goodbye",
-          1
-        ],
-        [
-          "Lotus Field",
-          1
-        ],
-        [
-          "Merfolk Skydiver",
-          1
-        ],
-        [
-          "Mirkwood",
-          1
-        ],
-        [
-          "Mortify",
-          1
-        ],
-        [
-          "Nature's Lore",
-          1
-        ],
-        [
-          "Octopus Form",
-          1
-        ],
-        [
-          "Ordeal of Nylea",
-          1
-        ],
-        [
-          "Origin of Metalbending",
-          1
-        ],
-        [
-          "Painful Truths",
-          1
-        ],
-        [
-          "Plaguemaw Beast",
-          1
-        ],
-        [
-          "Plains",
-          6
-        ],
-        [
-          "Plunder the Trollshaws",
-          1
-        ],
-        [
-          "Rage into the Valley",
-          1
-        ],
-        [
-          "Reaping Willow",
-          1
-        ],
-        [
-          "Repel Calamity",
-          1
-        ],
-        [
-          "Rootborn Defenses",
-          1
-        ],
-        [
-          "Simic Signet",
-          1
-        ],
-        [
-          "Steady Progress",
-          1
-        ],
-        [
-          "Strixhaven Stadium",
-          1
-        ],
-        [
-          "Sunpetal Grove",
-          1
-        ],
-        [
-          "Swamp",
-          6
-        ],
-        [
-          "Sword of the Animist",
-          1
-        ],
-        [
-          "Tekuthal, Inquiry Dominus",
-          1
-        ],
-        [
-          "Temple of Silence",
-          1
-        ],
-        [
-          "Tezzeret's Gambit",
-          1
-        ],
-        [
-          "The Restoration of Eiganjo // Architect of Restoration",
-          1
-        ],
-        [
-          "Throne of Geth",
-          1
-        ],
-        [
-          "Thrummingbird",
-          1
-        ],
-        [
-          "Tidus, Yuna's Guardian",
-          1
-        ],
-        [
-          "Tome of Legends",
-          1
-        ],
-        [
-          "Tragic Arrogance",
-          1
-        ],
-        [
-          "Troll Negotiations",
-          1
-        ],
-        [
-          "Valorous Stance",
-          1
-        ],
-        [
-          "Viral Drake",
-          1
-        ],
-        [
-          "Wall of Resurgence",
-          1
-        ]
-      ],
-      "D4": [
-        [
-          "Arboreal Grazer",
-          1
-        ],
-        [
-          "Ash Barrens",
-          1
-        ],
-        [
-          "Axebane Guardian",
-          1
-        ],
-        [
-          "Belligerent Brontodon",
-          1
-        ],
-        [
-          "Betor, Ancestor's Voice",
-          1
-        ],
-        [
-          "Blight Pile",
-          1
-        ],
-        [
-          "Blossoming Sands",
-          1
-        ],
-        [
-          "Burnished Hart",
-          1
-        ],
-        [
-          "Canopy Gargantuan",
-          1
-        ],
-        [
-          "Carven Caryatid",
-          1
-        ],
-        [
-          "Caves of Koilos",
-          1
-        ],
-        [
-          "Chain Assassination",
-          1
-        ],
-        [
-          "Collective Effort",
-          1
-        ],
-        [
-          "Crashing Drawbridge",
-          1
-        ],
-        [
-          "Despark",
-          1
-        ],
-        [
-          "Destroy Evil",
-          1
-        ],
-        [
-          "Dragonlord Dromoka",
-          1
-        ],
-        [
-          "Drumbellower",
-          1
-        ],
-        [
-          "Eerie Ultimatum",
-          1
-        ],
-        [
-          "Fateful Absence",
-          1
-        ],
-        [
-          "Feed the Swarm",
-          1
-        ],
-        [
-          "Fell the Mighty",
-          1
-        ],
-        [
-          "Felothar the Steadfast",
-          1
-        ],
-        [
-          "Forest",
-          9
-        ],
-        [
-          "Fortified Village",
-          1
-        ],
-        [
-          "Freyalise, Llanowar's Fury",
-          1
-        ],
-        [
-          "Golgari Guildgate",
-          1
-        ],
-        [
-          "Golgari Signet",
-          1
-        ],
-        [
-          "Guardian of Faith",
-          1
-        ],
-        [
-          "Huatli, the Sun's Heart",
-          1
-        ],
-        [
-          "Ikra Shidiqi, the Usurper",
-          1
-        ],
-        [
-          "Indomitable Ancients",
-          1
-        ],
-        [
-          "Isolated Chapel",
-          1
-        ],
-        [
-          "Jaddi Offshoot",
-          1
-        ],
-        [
-          "Lys Alana Dignitary",
-          1
-        ],
-        [
-          "Mentor of the Meek",
-          1
-        ],
-        [
-          "Mirkwood",
-          1
-        ],
-        [
-          "Myriad Landscape",
-          1
-        ],
-        [
-          "Nyx-Fleece Ram",
-          1
-        ],
-        [
-          "Orzhov Signet",
-          1
-        ],
-        [
-          "Overgrown Battlement",
-          1
-        ],
-        [
-          "Path of Ancestry",
-          1
-        ],
-        [
-          "Phyrexian Arena",
-          1
-        ],
-        [
-          "Plains",
-          9
-        ],
-        [
-          "Portcullis Vine",
-          1
-        ],
-        [
-          "Prophetic Prism",
-          1
-        ],
-        [
-          "Putrefy",
-          1
-        ],
-        [
-          "Sandsteppe Citadel",
-          1
-        ],
-        [
-          "Sapling of Colfenor",
-          1
-        ],
-        [
-          "Selesnya Signet",
-          1
-        ],
-        [
-          "Shalai, Voice of Plenty",
-          1
-        ],
-        [
-          "Shield-Wall Sentinel",
-          1
-        ],
-        [
-          "Sidar Kondo of Jamuraa",
-          1
-        ],
-        [
-          "Slaughter the Strong",
-          1
-        ],
-        [
-          "Soul of New Phyrexia",
-          1
-        ],
-        [
-          "Sun Titan",
-          1
-        ],
-        [
-          "Sunpetal Grove",
-          1
-        ],
-        [
-          "Swamp",
-          9
-        ],
-        [
-          "Sylvan Caryatid",
-          1
-        ],
-        [
-          "Tree of Perdition",
-          1
-        ],
-        [
-          "Tree of Redemption",
-          1
-        ],
-        [
-          "Treefolk Umbra",
-          1
-        ],
-        [
-          "Valorous Stance",
-          1
-        ],
-        [
-          "Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal",
-          1
-        ],
-        [
-          "Vindicate",
-          1
-        ],
-        [
-          "Wakestone Gargoyle",
-          1
-        ],
-        [
-          "Walking Bulwark",
-          1
-        ],
-        [
-          "Wall of Limbs",
-          1
-        ],
-        [
-          "Wall of Mulch",
-          1
-        ],
-        [
-          "Wave of Reckoning",
-          1
-        ],
-        [
-          "Weathered Sentinels",
-          1
-        ],
-        [
-          "Welcoming Vampire",
-          1
-        ],
-        [
-          "Wingmantle Chaplain",
-          1
-        ],
-        [
-          "Winnowing",
-          1
-        ],
-        [
-          "Wood Elves",
-          1
-        ],
-        [
-          "Zetalpa, Primal Dawn",
-          1
-        ]
-      ],
-      "D5": [
-        [
-          "Angel of Indemnity",
-          1
-        ],
-        [
-          "Anointer Priest",
-          1
-        ],
-        [
-          "Arcane Signet",
-          1
-        ],
-        [
-          "Bastion of Remembrance",
-          1
-        ],
-        [
-          "Blight Rot",
-          1
-        ],
-        [
-          "Boggart Cursecrafter",
-          1
-        ],
-        [
-          "Boggart Mischief",
-          1
-        ],
-        [
-          "Castle Ardenvale",
-          1
-        ],
-        [
-          "Clachan Festival",
-          1
-        ],
-        [
-          "Combat Calligrapher",
-          1
-        ],
-        [
-          "Concealed Courtyard",
-          1
-        ],
-        [
-          "Corpse Knight",
-          1
-        ],
-        [
-          "Cruel Celebrant",
-          1
-        ],
-        [
-          "Deadly Dispute",
-          1
-        ],
-        [
-          "Dreadhorde Invasion",
-          1
-        ],
-        [
-          "Earth Kingdom Jailer",
-          1
-        ],
-        [
-          "Elas il-Kor, Sadistic Pilgrim",
-          1
-        ],
-        [
-          "Elspeth, Sun's Nemesis",
-          1
-        ],
-        [
-          "Emptiness",
-          1
-        ],
-        [
-          "Filigree Familiar",
-          1
-        ],
-        [
-          "Fracture",
-          1
-        ],
-        [
-          "Genesis Chamber",
-          1
-        ],
-        [
-          "Hidden Stockpile",
-          1
-        ],
-        [
-          "Impassioned Orator",
-          1
-        ],
-        [
-          "Indulging Patrician",
-          1
-        ],
-        [
-          "Intangible Virtue",
-          1
-        ],
-        [
-          "Isolated Chapel",
-          1
-        ],
-        [
-          "Kambal, Profiteering Mayor",
-          1
-        ],
-        [
-          "Keeper of the Accord",
-          1
-        ],
-        [
-          "Kithkeeper",
-          1
-        ],
-        [
-          "Lethal Scheme",
-          1
-        ],
-        [
-          "Lingering Souls",
-          1
-        ],
-        [
-          "Mind Stone",
-          1
-        ],
-        [
-          "Ministrant of Obligation",
-          1
-        ],
-        [
-          "Monologue Tax",
-          1
-        ],
-        [
-          "Myr Battlesphere",
-          1
-        ],
-        [
-          "Nadier's Nightblade",
-          1
-        ],
-        [
-          "Orzhov Basilica",
-          1
-        ],
-        [
-          "Orzhov Signet",
-          1
-        ],
-        [
-          "Ossification",
-          1
-        ],
-        [
-          "Pawn of Ulamog",
-          1
-        ],
-        [
-          "Pitiless Plunderer",
-          1
-        ],
-        [
-          "Plains",
-          17
-        ],
-        [
-          "Prideful Feastling",
-          1
-        ],
-        [
-          "Promise of Loyalty",
-          1
-        ],
-        [
-          "Raise the Alarm",
-          1
-        ],
-        [
-          "Read the Bones",
-          1
-        ],
-        [
-          "Requiem Angel",
-          1
-        ],
-        [
-          "Rootborn Defenses",
-          1
-        ],
-        [
-          "Scoured Barrens",
-          1
-        ],
-        [
-          "Secret Rendezvous",
-          1
-        ],
-        [
-          "Sevinne's Reclamation",
-          1
-        ],
-        [
-          "Shadrix Silverquill",
-          1
-        ],
-        [
-          "Skullclamp",
-          1
-        ],
-        [
-          "Smuggler's Copter",
-          1
-        ],
-        [
-          "Spectacular Tactics",
-          1
-        ],
-        [
-          "Spectral Procession",
-          1
-        ],
-        [
-          "Staff of the Storyteller",
-          1
-        ],
-        [
-          "Swamp",
-          16
-        ],
-        [
-          "Sword of the Animist",
-          1
-        ],
-        [
-          "Swords to Plowshares",
-          1
-        ],
-        [
-          "Terror",
-          1
-        ],
-        [
-          "Teysa Karlov",
-          1
-        ],
-        [
-          "Tithe Taker",
-          1
-        ],
-        [
-          "Vault of the Archangel",
-          1
-        ],
-        [
-          "Village Rites",
-          1
-        ],
-        [
-          "Viscera Seer",
-          1
-        ],
-        [
-          "Welcoming Vampire",
-          1
-        ],
-        [
-          "Zack Fair",
-          1
-        ],
-        [
-          "Zulaport Cutthroat",
-          1
-        ]
-      ],
-      "D6": [
-        [
-          "Abrade",
-          1
-        ],
-        [
-          "Akoum Hellhound",
-          1
-        ],
-        [
-          "Alexios, Deimos of Kosmos",
-          1
-        ],
-        [
-          "Anger",
-          1
-        ],
-        [
-          "Arcane Signet",
-          1
-        ],
-        [
-          "Barrage of Expendables",
-          1
-        ],
-        [
-          "Beetleback Chief",
-          1
-        ],
-        [
-          "Buried Ruin",
-          1
-        ],
-        [
-          "Castle Embereth",
-          1
-        ],
-        [
-          "Chaos Warp",
-          1
-        ],
-        [
-          "Cinder Strike",
-          1
-        ],
-        [
-          "Conspicuous Snoop",
-          1
-        ],
-        [
-          "Dragon Fodder",
-          1
-        ],
-        [
-          "Dwarven Mattock",
-          1
-        ],
-        [
-          "Empty the Warrens",
-          1
-        ],
-        [
-          "Evolving Wilds",
-          1
-        ],
-        [
-          "Explorer's Scope",
-          1
-        ],
-        [
-          "Faithless Looting",
-          1
-        ],
-        [
-          "Fanatical Firebrand",
-          1
-        ],
-        [
-          "Fearsome Goblin Pair",
-          1
-        ],
-        [
-          "Foundry Street Denizen",
-          1
-        ],
-        [
-          "Goblin Bombardment",
-          1
-        ],
-        [
-          "Goblin Chieftain",
-          1
-        ],
-        [
-          "Goblin Gathering",
-          1
-        ],
-        [
-          "Goblin Instigator",
-          1
-        ],
-        [
-          "Goblin Matron",
-          1
-        ],
-        [
-          "Goblin Rabblemaster",
-          1
-        ],
-        [
-          "Goblin Rally",
-          1
-        ],
-        [
-          "Goblin Ringleader",
-          1
-        ],
-        [
-          "Goblin Trashmaster",
-          1
-        ],
-        [
-          "Goblin Warchief",
-          1
-        ],
-        [
-          "Gundabad Opportunist",
-          1
-        ],
-        [
-          "Hanweir Garrison",
-          1
-        ],
-        [
-          "Hordeling Outburst",
-          1
-        ],
-        [
-          "Ichor Wellspring",
-          1
-        ],
-        [
-          "Impact Tremors",
-          1
-        ],
-        [
-          "Kher Keep",
-          1
-        ],
-        [
-          "Krenko's Command",
-          1
-        ],
-        [
-          "Krenko, Mob Boss",
-          1
-        ],
-        [
-          "Krenko, Tin Street Kingpin",
-          1
-        ],
-        [
-          "Legion Warboss",
-          1
-        ],
-        [
-          "Light Up the Stage",
-          1
-        ],
-        [
-          "Massive Raid",
-          1
-        ],
-        [
-          "Mind Stone",
-          1
-        ],
-        [
-          "Mogg War Marshal",
-          1
-        ],
-        [
-          "Mountain",
-          33
-        ],
-        [
-          "Naktamun Lorespinner // Wheel of Fortune",
-          1
-        ],
-        [
-          "Ogre Battledriver",
-          1
-        ],
-        [
-          "Outpost Siege",
-          1
-        ],
-        [
-          "Patchwork Banner",
-          1
-        ],
-        [
-          "Pilgrim's Eye",
-          1
-        ],
-        [
-          "Purphoros, God of the Forge",
-          1
-        ],
-        [
-          "Quest for the Goblin Lord",
-          1
-        ],
-        [
-          "Raid Bombardment",
-          1
-        ],
-        [
-          "Shared Animosity",
-          1
-        ],
-        [
-          "Siege-Gang Commander",
-          1
-        ],
-        [
-          "Skirk Prospector",
-          1
-        ],
-        [
-          "Skullclamp",
-          1
-        ],
-        [
-          "Sourbread Auntie",
-          1
-        ],
-        [
-          "Squee, Dubious Monarch",
-          1
-        ],
-        [
-          "Swiftfoot Boots",
-          1
-        ],
-        [
-          "Thornbite Staff",
-          1
-        ],
-        [
-          "Thousand-Year Elixir",
-          1
-        ],
-        [
-          "Thrill of Possibility",
-          1
-        ],
-        [
-          "Tweeze",
-          1
-        ],
-        [
-          "Underworld Breach",
-          1
-        ],
-        [
-          "Vandalblast",
-          1
-        ],
-        [
-          "Voldaren Epicure",
-          1
-        ],
-        [
-          "Witty Roastmaster",
-          1
-        ]
-      ]
-    },
-    "bench": [
-      [
-        "Abigale, Eloquent First-Year",
-        1
-      ],
-      [
-        "Access Tunnel",
-        1
-      ],
-      [
-        "Aetherize",
-        1
-      ],
-      [
-        "Air Nomad Legacy",
-        1
-      ],
-      [
-        "Airship Engine Room",
-        1
-      ],
-      [
-        "Ao, the Dawn Sky",
-        1
-      ],
-      [
-        "Arbaaz Mir",
-        1
-      ],
-      [
-        "Arcades, the Strategist",
-        1
-      ],
-      [
-        "Argentum Masticore",
-        1
-      ],
-      [
-        "Arno Dorian",
-        1
-      ],
-      [
-        "Artisan of Kozilek",
-        1
-      ],
-      [
-        "Ashling, Rekindled // Ashling, Rimebound",
-        1
-      ],
-      [
-        "Assault Formation",
-        1
-      ],
-      [
-        "Attercop",
-        2
-      ],
-      [
-        "Auntie's Sentence",
-        1
-      ],
-      [
-        "Awaken the Erstwhile",
-        1
-      ],
-      [
-        "Axebane Guardian",
-        2
-      ],
-      [
-        "Bard the Bowman",
-        1
-      ],
-      [
-        "Bayek of Siwa",
-        1
-      ],
-      [
-        "Bilbo's Deadly Slice",
-        1
-      ],
-      [
-        "Bile-Vial Boggart",
-        1
-      ],
-      [
-        "Blasphemous Act",
-        1
-      ],
-      [
-        "Blizzard Strix",
-        1
-      ],
-      [
-        "Bloodthirsty Adversary",
-        1
-      ],
-      [
-        "Boar-q-pine",
-        1
-      ],
-      [
-        "Bolrac-Clan Crusher",
-        1
-      ],
-      [
-        "Bombur, Gentle Dreamer",
-        1
-      ],
-      [
-        "Bothersome Noisemaker",
-        1
-      ],
-      [
-        "Boughside Wanderers",
-        1
-      ],
-      [
-        "Bronze Guardian",
-        1
-      ],
-      [
-        "Burdened Stoneback",
-        1
-      ],
-      [
-        "Burn, Burn, Tree and Fern",
-        1
-      ],
-      [
-        "Burning Curiosity",
-        1
-      ],
-      [
-        "Cathar Commando",
-        1
-      ],
-      [
-        "Changeling Wayfinder",
-        1
-      ],
-      [
-        "Chaos Spewer",
-        2
-      ],
-      [
-        "Chitinous Graspling",
-        1
-      ],
-      [
-        "Civic Stalwart",
-        1
-      ],
-      [
-        "Claim Jumper",
-        1
-      ],
-      [
-        "Clan Guildmage",
-        1
-      ],
-      [
-        "Cloud's Limit Break",
-        1
-      ],
-      [
-        "Combustion Technique",
-        1
-      ],
-      [
-        "Conspiracy Theorist",
-        1
-      ],
-      [
-        "Contagion Clasp",
-        1
-      ],
-      [
-        "Court Street Denizen",
-        1
-      ],
-      [
-        "Curious Farm Animals",
-        1
-      ],
-      [
-        "Dai Li Indoctrination",
-        1
-      ],
-      [
-        "Danitha Capashen, Paragon",
-        1
-      ],
-      [
-        "Dawn's Light Archer",
-        1
-      ],
-      [
-        "Dawn-Blessed Pennant",
-        1
-      ],
-      [
-        "Day of Black Sun",
-        1
-      ],
-      [
-        "Day of Judgment",
-        1
-      ],
-      [
-        "Deepchannel Duelist",
-        1
-      ],
-      [
-        "Desmond Miles",
-        1
-      ],
-      [
-        "Disenchant",
-        1
-      ],
-      [
-        "Divert Disaster",
-        1
-      ],
-      [
-        "Dori, Bearer of Friends",
-        1
-      ],
-      [
-        "Dreaded Bat-Cloud",
-        1
-      ],
-      [
-        "Drogskol Shieldmate",
-        1
-      ],
-      [
-        "Dundoolin Weaver",
-        2
-      ],
-      [
-        "Dwarven Mauler",
-        1
-      ],
-      [
-        "Dwarven Provisioner",
-        2
-      ],
-      [
-        "Dwarven Shortsword",
-        2
-      ],
-      [
-        "Eagle of the Great Shelf",
-        1
-      ],
-      [
-        "Eldrazi Ravager",
-        2
-      ],
-      [
-        "Enchanted River's Grasp",
-        2
-      ],
-      [
-        "Endbringer",
-        1
-      ],
-      [
-        "Enraged Flamecaster",
-        2
-      ],
-      [
-        "Esgaroth Garrison",
-        2
-      ],
-      [
-        "Explorer's Scope",
-        2
-      ],
-      [
-        "Explosive Prodigy",
-        1
-      ],
-      [
-        "Faerie Duelist",
-        1
-      ],
-      [
-        "Fancy Footwork",
-        1
-      ],
-      [
-        "Fateful Tempest",
-        1
-      ],
-      [
-        "Fearsome Goblin Pair",
-        1
-      ],
-      [
-        "Feisty Spikeling",
-        1
-      ],
-      [
-        "Fire Nation Cadets",
-        1
-      ],
-      [
-        "Flaring Cinder",
-        1
-      ],
-      [
-        "Foggy Swamp Vinebender",
-        1
-      ],
-      [
-        "Foraging Wickermaw",
-        2
-      ],
-      [
-        "Forest",
-        55
-      ],
-      [
-        "Front Porch Sentries",
-        4
-      ],
-      [
-        "Frontline Medic",
-        1
-      ],
-      [
-        "Fynn, the Fangbearer",
-        1
-      ],
-      [
-        "Gandalf, Wandering Wizard",
-        1
-      ],
-      [
-        "Gangly Stompling",
-        2
-      ],
-      [
-        "Gathering of Darkness",
-        1
-      ],
-      [
-        "Getaway Barrel",
-        1
-      ],
-      [
-        "Ghor-Clan Wrecker",
-        1
-      ],
-      [
-        "Giant Koi",
-        1
-      ],
-      [
-        "Giant's Boulder",
-        2
-      ],
-      [
-        "Gilt-Leaf's Embrace",
-        1
-      ],
-      [
-        "Glamer Gifter",
-        1
-      ],
-      [
-        "Glamermite",
-        1
-      ],
-      [
-        "Glider Kids",
-        1
-      ],
-      [
-        "Gloom Ripper",
-        1
-      ],
-      [
-        "Glóin the Mighty // Easy Pickings",
-        1
-      ],
-      [
-        "Goblin-town",
-        1
-      ],
-      [
-        "Goldvein Pick",
-        1
-      ],
-      [
-        "Gollum, Silent Slinker // Meager Meal",
-        1
-      ],
-      [
-        "Gran-Gran",
-        1
-      ],
-      [
-        "Grazing Gladehart",
-        1
-      ],
-      [
-        "Great Fierce Bee",
-        2
-      ],
-      [
-        "Gristle Glutton",
-        1
-      ],
-      [
-        "Guardian of the Halls",
-        3
-      ],
-      [
-        "Gundabad Opportunist",
-        2
-      ],
-      [
-        "Hanweir Garrison",
-        1
-      ],
-      [
-        "Haystack",
-        1
-      ],
-      [
-        "Heirloom Auntie",
-        1
-      ],
-      [
-        "Hemlock Vial",
-        1
-      ],
-      [
-        "Inspiring Call",
-        1
-      ],
-      [
-        "Iron Hills Stalwart",
-        1
-      ],
-      [
-        "Ironsoul Enforcer",
-        1
-      ],
-      [
-        "Island",
-        68
-      ],
-      [
-        "Jungle Barrier",
-        1
-      ],
-      [
-        "Kin-Tree Invocation",
-        1
-      ],
-      [
-        "Kindle the Inner Flame",
-        1
-      ],
-      [
-        "Kithkeeper",
-        1
-      ],
-      [
-        "Knight of Old Benalia",
-        1
-      ],
-      [
-        "Kor Cartographer",
-        1
-      ],
-      [
-        "Krenko's Command",
-        1
-      ],
-      [
-        "Krenko, Mob Boss",
-        1
-      ],
-      [
-        "Kulrath Zealot",
-        2
-      ],
-      [
-        "Kyoshi Island Plaza",
-        1
-      ],
-      [
-        "Lake-town",
-        1
-      ],
-      [
-        "Lake-town Lookout",
-        1
-      ],
-      [
-        "Lake-town Toymaker",
-        1
-      ],
-      [
-        "Large Bear",
-        1
-      ],
-      [
-        "Little Bear",
-        1
-      ],
-      [
-        "Long Lake Nuisance",
-        2
-      ],
-      [
-        "Loyal Inventor",
-        1
-      ],
-      [
-        "Luminollusk",
-        1
-      ],
-      [
-        "Lys Alana Informant",
-        1
-      ],
-      [
-        "Magnificent End",
-        1
-      ],
-      [
-        "Make Your Move",
-        1
-      ],
-      [
-        "Maralen, Fae Ascendant",
-        1
-      ],
-      [
-        "Meandering Towershell",
-        1
-      ],
-      [
-        "Meanders Guide",
-        2
-      ],
-      [
-        "Merrow Skyswimmer",
-        1
-      ],
-      [
-        "Midnight Tilling",
-        1
-      ],
-      [
-        "Migration Path",
-        1
-      ],
-      [
-        "Millikin",
-        1
-      ],
-      [
-        "Mirkwood",
-        2
-      ],
-      [
-        "Mirkwood Nurturer",
-        2
-      ],
-      [
-        "Mirkwood Pathmaker",
-        1
-      ],
-      [
-        "Mirrodin Avenged",
-        1
-      ],
-      [
-        "Mirrorform",
-        1
-      ],
-      [
-        "Moment of Glory",
-        2
-      ],
-      [
-        "Monastery Raid",
-        1
-      ],
-      [
-        "Moonglove Extractor",
-        3
-      ],
-      [
-        "Moonlit Lamenter",
-        1
-      ],
-      [
-        "Mountain",
-        47
-      ],
-      [
-        "Mulch",
-        1
-      ],
-      [
-        "Night Market",
-        1
-      ],
-      [
-        "Nightmare Sower",
-        2
-      ],
-      [
-        "Nori, Teller of Tales",
-        1
-      ],
-      [
-        "Northern Air Temple",
-        1
-      ],
-      [
-        "Odric, Lunarch Marshal",
-        1
-      ],
-      [
-        "Old Fat Spider",
-        1
-      ],
-      [
-        "Old Fat Spider Can't See Me",
-        1
-      ],
-      [
-        "Old Thrush",
-        1
-      ],
-      [
-        "Ordinary Bear",
-        1
-      ],
-      [
-        "Ori, Keeper of Songs",
-        2
-      ],
-      [
-        "Origin of Metalbending",
-        2
-      ],
-      [
-        "Overgrown Battlement",
-        2
-      ],
-      [
-        "Patient Instructor",
-        1
-      ],
-      [
-        "Pawn of Ulamog",
-        1
-      ],
-      [
-        "Pilgrim's Eye",
-        2
-      ],
-      [
-        "Plains",
-        41
-      ],
-      [
-        "Platypus-Bear",
-        2
-      ],
-      [
-        "Portcullis Vine",
-        1
-      ],
-      [
-        "Pretending Poxbearers",
-        2
-      ],
-      [
-        "Prophetic Prism",
-        1
-      ],
-      [
-        "Protector of the Wastes",
-        1
-      ],
-      [
-        "Purphoros's Intervention",
-        1
-      ],
-      [
-        "Quarrel",
-        2
-      ],
-      [
-        "Rage into the Valley",
-        1
-      ],
-      [
-        "Ragged Short Spear",
-        2
-      ],
-      [
-        "Ratonhnhaké꞉ton",
-        1
-      ],
-      [
-        "Ravening Warg",
-        1
-      ],
-      [
-        "Rebellious Captives",
-        1
-      ],
-      [
-        "Reckless Ransacking",
-        1
-      ],
-      [
-        "Relic Retriever",
-        1
-      ],
-      [
-        "Reluctant Dounguard",
-        1
-      ],
-      [
-        "Remorseful Cleric",
-        1
-      ],
-      [
-        "Rhox Faithmender",
-        1
-      ],
-      [
-        "Rimekin Recluse",
-        1
-      ],
-      [
-        "Rip Apart",
-        1
-      ],
-      [
-        "Ritual of Soot",
-        1
-      ],
-      [
-        "Riverguard's Reflexes",
-        2
-      ],
-      [
-        "Rocketeer Boostbuggy",
-        1
-      ],
-      [
-        "Roon of the Hidden Realm",
-        1
-      ],
-      [
-        "Rugged Highlands",
-        1
-      ],
-      [
-        "Salvation Colossus",
-        1
-      ],
-      [
-        "Senate Griffin",
-        1
-      ],
-      [
-        "Settle the Wreckage",
-        1
-      ],
-      [
-        "Shore Lurker",
-        1
-      ],
-      [
-        "Siege Smash",
-        1
-      ],
-      [
-        "Smaug, the Great Calamity // Spew Flame",
-        2
-      ],
-      [
-        "Spectacular Tactics",
-        2
-      ],
-      [
-        "Spiral into Solitude",
-        1
-      ],
-      [
-        "Squee, Goblin Nabob",
-        1
-      ],
-      [
-        "Stalactite Dagger",
-        1
-      ],
-      [
-        "Steady Progress",
-        1
-      ],
-      [
-        "Stir Up Trouble",
-        2
-      ],
-      [
-        "Stone by Sunlight",
-        1
-      ],
-      [
-        "Stony Strength",
-        1
-      ],
-      [
-        "Stony-Voiced Goblins",
-        1
-      ],
-      [
-        "Stratosoarer",
-        1
-      ],
-      [
-        "Study Hall",
-        1
-      ],
-      [
-        "Summit Sentinel",
-        1
-      ],
-      [
-        "Sun-Dappled Celebrant",
-        2
-      ],
-      [
-        "Surly Farrier",
-        1
-      ],
-      [
-        "Swamp",
-        51
-      ],
-      [
-        "Swampsnare Trap",
-        1
-      ],
-      [
-        "Sylvan Brushstrider",
-        1
-      ],
-      [
-        "Temple of the False God",
-        1
-      ],
-      [
-        "Temporal Cleansing",
-        1
-      ],
-      [
-        "Tempt with Vengeance",
-        1
-      ],
-      [
-        "Terror",
-        1
-      ],
-      [
-        "The Black Arrow",
-        1
-      ],
-      [
-        "The Misty Mountains Cold",
-        1
-      ],
-      [
-        "Thirsting Shade",
-        1
-      ],
-      [
-        "Thorin's Last Stand",
-        1
-      ],
-      [
-        "Thoughtweft Imbuer",
-        1
-      ],
-      [
-        "Thranduil's Decree",
-        1
-      ],
-      [
-        "Thrór's Map",
-        1
-      ],
-      [
-        "Tidings of War",
-        1
-      ],
-      [
-        "Timber Gorge",
-        1
-      ],
-      [
-        "Timid Shieldbearer",
-        1
-      ],
-      [
-        "Tower Defense",
-        1
-      ],
-      [
-        "Triskaidekaphobia",
-        1
-      ],
-      [
-        "Ultima, Origin of Oblivion",
-        1
-      ],
-      [
-        "Unbury",
-        1
-      ],
-      [
-        "Undercity's Embrace",
-        1
-      ],
-      [
-        "Uneasy Partings",
-        2
-      ],
-      [
-        "Unexpected Assistance",
-        2
-      ],
-      [
-        "Unforgiving Aim",
-        1
-      ],
-      [
-        "Unwelcome Sprite",
-        1
-      ],
-      [
-        "Vampire Hexmage",
-        2
-      ],
-      [
-        "Vanguard of the Restless",
-        1
-      ],
-      [
-        "Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal",
-        1
-      ],
-      [
-        "Viral Drake",
-        1
-      ],
-      [
-        "Voracious Tome-Skimmer",
-        1
-      ],
-      [
-        "Wanderwine Distracter",
-        1
-      ],
-      [
-        "Wartime Protestors",
-        1
-      ],
-      [
-        "Wave of Reckoning",
-        1
-      ],
-      [
-        "Wayward Swordtooth",
-        1
-      ],
-      [
-        "Weathered Sentinels",
-        1
-      ],
-      [
-        "Weathered Wayfarer",
-        2
-      ],
-      [
-        "Well-Worn Spatula",
-        1
-      ],
-      [
-        "White Orchid Phantom",
-        1
-      ],
-      [
-        "Wild Pack Squad",
-        1
-      ],
-      [
-        "Wilderness Reclamation",
-        1
-      ],
-      [
-        "Wildvine Pummeler",
-        3
-      ],
-      [
-        "Woodland Weavemaster",
-        1
-      ],
-      [
-        "Yip Yip!",
-        1
-      ],
-      [
-        "Zetalpa, Primal Dawn",
-        1
-      ],
-      [
-        "Óin the Brave",
-        1
-      ]
+ "format": "crankmagic-live-load",
+ "version": 1,
+ "savedAt": "2026-09-13T03:24:03Z",
+ "workbook": "Treys_MtG_Master_v13.xlsx",
+ "note": "Rob's live collection, built by tools/build-live-load.mjs from the Master workbook; CrankMagic → User Functions → Load Live reads this file. Card names are exact Scryfall names (double-faced cards use 'Front // Back'). decks[].cards is the 100-card target; owned.inDeck is what is physically in each deck box; owned.bench is everything else owned; ordered is in flight; buy is the outstanding shopping list; upgrades are optional ceiling cards with the slot each replaces; decks[].options are cards in the hundred flagged as the first to swap out; decks[].planned are cards meant to come into the deck that are not in its hundred yet. Rebuild from the workbook rather than editing quantities here; names, definitions, notes, options and planned lists are carried over per deck.",
+ "decks": [
+  {
+   "id": "D1",
+   "name": "D1 Quintorius Spirits",
+   "commander": "Quintorius, Loremaster",
+   "definition": {
+    "baseBracket": 3,
+    "bracketCeiling": 3,
+    "playStyle": "Balanced",
+    "mechanics": [
+     "Graveyard",
+     "ETB triggers",
+     "Tokens"
     ]
+   },
+   "notes": "Cards LEAVING your graveyard make 3/2 Spirits. Fill the bin, exile from it repeatedly, sac Spirits to free-cast what you exiled. Midrange grind. Win through recursion value and a wide Spirit alpha, not speed.",
+   "cards": [
+    [
+     "Advanced Reconstruction",
+     1
+    ],
+    [
+     "Arcane Signet",
+     1
+    ],
+    [
+     "Archaeomancer's Map",
+     1
+    ],
+    [
+     "Atsushi, the Blazing Sky",
+     1
+    ],
+    [
+     "Augusta, Order Returned",
+     1
+    ],
+    [
+     "Bag of Holding",
+     1
+    ],
+    [
+     "Balefire Liege",
+     1
+    ],
+    [
+     "Battlefield Forge",
+     1
+    ],
+    [
+     "Big Score",
+     1
+    ],
+    [
+     "Boros Signet",
+     1
+    ],
+    [
+     "Cast Out",
+     1
+    ],
+    [
+     "Cathartic Reunion",
+     1
+    ],
+    [
+     "Ceaseless Conflict",
+     1
+    ],
+    [
+     "Clifftop Retreat",
+     1
+    ],
+    [
+     "Command Tower",
+     1
+    ],
+    [
+     "Containment Construct",
+     1
+    ],
+    [
+     "Currency Converter",
+     1
+    ],
+    [
+     "Emeria, the Sky Ruin",
+     1
+    ],
+    [
+     "Evolving Wilds",
+     1
+    ],
+    [
+     "Excava, the Risen Past",
+     1
+    ],
+    [
+     "Exotic Orchard",
+     1
+    ],
+    [
+     "Fable of the Mirror-Breaker // Reflection of Kiki-Jiki",
+     1
+    ],
+    [
+     "Fabled Passage",
+     1
+    ],
+    [
+     "Faithless Looting",
+     1
+    ],
+    [
+     "Fellwar Stone",
+     1
+    ],
+    [
+     "Fields of Strife",
+     1
+    ],
+    [
+     "Furycalm Snarl",
+     1
+    ],
+    [
+     "Generous Gift",
+     1
+    ],
+    [
+     "Ghost Vacuum",
+     1
+    ],
+    [
+     "Glittering Massif",
+     1
+    ],
+    [
+     "Hofri Ghostforge",
+     1
+    ],
+    [
+     "Inspiring Vantage",
+     1
+    ],
+    [
+     "Karmic Guide",
+     1
+    ],
+    [
+     "Kirol, History Buff // Pack a Punch",
+     1
+    ],
+    [
+     "Knight of the White Orchid",
+     1
+    ],
+    [
+     "Laelia, the Blade Reforged",
+     1
+    ],
+    [
+     "Lorehold Archivist // Restore Relic",
+     1
+    ],
+    [
+     "Lorehold Campus",
+     1
+    ],
+    [
+     "Lorehold Charm",
+     1
+    ],
+    [
+     "Lorehold Command",
+     1
+    ],
+    [
+     "Lorehold Excavation",
+     1
+    ],
+    [
+     "Mind Stone",
+     1
+    ],
+    [
+     "Mistveil Plains",
+     1
+    ],
+    [
+     "Moonshaker Cavalry",
+     1
+    ],
+    [
+     "Mountain",
+     7
+    ],
+    [
+     "Naya Panorama",
+     1
+    ],
+    [
+     "Path to Exile",
+     1
+    ],
+    [
+     "Perpetual Timepiece",
+     1
+    ],
+    [
+     "Plains",
+     10
+    ],
+    [
+     "Primary Research",
+     1
+    ],
+    [
+     "Quintorius Kand",
+     1
+    ],
+    [
+     "Quintorius, Field Historian",
+     1
+    ],
+    [
+     "Quintorius, History Chaser",
+     1
+    ],
+    [
+     "Quintorius, Loremaster",
+     1
+    ],
+    [
+     "Radiant Summit",
+     1
+    ],
+    [
+     "Rally the Ancestors",
+     1
+    ],
+    [
+     "Reconstruct History",
+     1
+    ],
+    [
+     "Release to Memory",
+     1
+    ],
+    [
+     "Reliquary Tower",
+     1
+    ],
+    [
+     "Return to Dust",
+     1
+    ],
+    [
+     "Rugged Prairie",
+     1
+    ],
+    [
+     "Sacred Peaks",
+     1
+    ],
+    [
+     "Seize the Spoils",
+     1
+    ],
+    [
+     "Selfless Spirit",
+     1
+    ],
+    [
+     "Serra Paragon",
+     1
+    ],
+    [
+     "Sevinne's Reclamation",
+     1
+    ],
+    [
+     "Skyclave Apparition",
+     1
+    ],
+    [
+     "Spirit of Resilience",
+     1
+    ],
+    [
+     "Squee, the Immortal",
+     1
+    ],
+    [
+     "Sun Titan",
+     1
+    ],
+    [
+     "Sunbaked Canyon",
+     1
+    ],
+    [
+     "Sunscorched Divide",
+     1
+    ],
+    [
+     "Sword of the Animist",
+     1
+    ],
+    [
+     "Swords to Plowshares",
+     1
+    ],
+    [
+     "Temple of Triumph",
+     1
+    ],
+    [
+     "Terramorphic Expanse",
+     1
+    ],
+    [
+     "Teshar, Ancestor's Apostle",
+     1
+    ],
+    [
+     "Thrilling Discovery",
+     1
+    ],
+    [
+     "Tocasia's Welcome",
+     1
+    ],
+    [
+     "Turbulent Steppe",
+     1
+    ],
+    [
+     "Valakut Exploration",
+     1
+    ],
+    [
+     "Venerable Warsinger",
+     1
+    ],
+    [
+     "Warleader's Call",
+     1
+    ],
+    [
+     "Wind-Scarred Crag",
+     1
+    ],
+    [
+     "Winds of Abandon",
+     1
+    ]
+   ]
   },
-  "ordered": [
-    [
-      "Anguished Unmaking",
-      1
-    ],
-    [
-      "Caves of Koilos",
-      1
-    ],
-    [
-      "Evolution Sage",
-      1
-    ],
-    [
-      "Forgotten Ancient",
-      1
-    ],
-    [
-      "Krosan Verge",
-      1
-    ],
-    [
-      "Sol Ring",
-      2
-    ],
-    [
-      "Wall of Omens",
-      1
-    ],
-    [
-      "Wall of Roots",
-      1
-    ],
-    [
-      "Welcoming Vampire",
-      1
+  {
+   "id": "D2",
+   "name": "D2 Chulane Value Loop",
+   "commander": "Chulane, Teller of Tales",
+   "definition": {
+    "baseBracket": 3,
+    "bracketCeiling": 3,
+    "playStyle": "Balanced",
+    "mechanics": [
+     "Landfall",
+     "Ramp",
+     "Draw"
     ]
-  ],
-  "buy": [
+   },
+   "notes": "Every creature CAST draws a card and gives a land drop. Blink/bounce cheap ETB bodies to loop value. Combo-value. Ramp hard, land Chulane, chain creatures, finish wide or on a loop.",
+   "cards": [
     [
-      "Adarkar Wastes",
-      2,
-      0.4
+     "Adarkar Wastes",
+     1
     ],
     [
-      "Ancient Lumberknot",
-      1,
-      0.23
+     "Ancient Greenwarden",
+     1
     ],
     [
-      "Anguished Unmaking",
-      1,
-      1.46
+     "Approach of the Second Sun",
+     1
     ],
     [
-      "Approach of the Second Sun",
-      1,
-      6.66
+     "Arcane Signet",
+     1
     ],
     [
-      "Arbor Adherent",
-      1,
-      1.87
+     "Azorius Chancery",
+     1
     ],
     [
-      "Arcane Signet",
-      1,
-      0.41
+     "Azorius Guildgate",
+     1
     ],
     [
-      "Azorius Guildgate",
-      1,
-      0.12
+     "Bant Panorama",
+     1
     ],
     [
-      "Battle Hymn",
-      1,
-      1.55
+     "Bilbo Baggins, Burglar // Take a Glance",
+     1
     ],
     [
-      "Beast Within",
-      1,
-      0.6
+     "Blossoming Sands",
+     1
     ],
     [
-      "Blood Artist",
-      1,
-      2.79
+     "Bofur, Reliable Guardian // Concerted Care",
+     1
     ],
     [
-      "Boros Signet",
-      1,
-      0.52
+     "Brushland",
+     1
     ],
     [
-      "Brushland",
-      2,
-      1.71
+     "Cast Out",
+     1
     ],
     [
-      "Carrion Feeder",
-      1,
-      3.66
+     "Charming Prince",
+     1
     ],
     [
-      "Caves of Koilos",
-      1,
-      0.71
+     "Chulane, Teller of Tales",
+     1
     ],
     [
-      "Chancellor of the Forge",
-      1,
-      1.11
+     "Cloudblazer",
+     1
     ],
     [
-      "Command Tower",
-      4,
-      0.22
+     "Coiling Oracle",
+     1
     ],
     [
-      "Contentious Plan",
-      1,
-      0.39
+     "Command Tower",
+     1
     ],
     [
-      "Den of the Bugbear",
-      1,
-      1.33
+     "Counterspell",
+     1
     ],
     [
-      "Dream Stalker",
-      1,
-      0.17
+     "Cultivate",
+     1
     ],
     [
-      "Expel the Interlopers",
-      1,
-      0.25
+     "Deputy of Detention",
+     1
     ],
     [
-      "Ezuri, Stalker of Spheres",
-      1,
-      0.79
+     "Dream Stalker",
+     1
     ],
     [
-      "Fellwar Stone",
-      1,
-      0.85
+     "Dundoolin Weaver",
+     1
     ],
     [
-      "Goblin Burrows",
-      1,
-      0.3
+     "Elvish Visionary",
+     1
     ],
     [
-      "Goblin Piledriver",
-      1,
-      2.58
+     "Ephemerate",
+     1
     ],
     [
-      "Golgari Guildgate",
-      1,
-      0.1
+     "Eternal Witness",
+     1
     ],
     [
-      "Grand Coliseum",
-      1,
-      0.37
+     "Evolving Wilds",
+     1
     ],
     [
-      "Hobgoblin Bandit Lord",
-      1,
-      4.77
+     "Faeburrow Elder",
+     1
     ],
     [
-      "Idol of Oblivion",
-      1,
-      1.85
+     "Farhaven Elf",
+     1
     ],
     [
-      "Infectious Inquiry",
-      1,
-      0.52
+     "Farseek",
+     1
     ],
     [
-      "Kiora's Follower",
-      1,
-      0.34
+     "Fblthp, the Lost",
+     1
     ],
     [
-      "Lightning Greaves",
-      1,
-      4.59
+     "Fell the Mighty",
+     1
     ],
     [
-      "Llanowar Wastes",
-      2,
-      0.58
+     "Fertilid",
+     1
     ],
     [
-      "Lorehold Command",
-      1,
-      0.41
+     "Forest",
+     8
     ],
     [
-      "Magistrate's Scepter",
-      1,
-      3.09
+     "Freed from the Real",
+     1
     ],
     [
-      "Marauding Blight-Priest",
-      1,
-      0.19
+     "Glacial Fortress",
+     1
     ],
     [
-      "Meandering River",
-      1,
-      0.12
+     "Hinterland Harbor",
+     1
     ],
     [
-      "Mirkwood Bats",
-      1,
-      1.43
+     "Intruder Alarm",
+     1
     ],
     [
-      "Momentary Blink",
-      1,
-      0.26
+     "Island",
+     5
     ],
     [
-      "Night's Whisper",
-      2,
-      0.29
+     "Kami of Ancient Law",
+     1
     ],
     [
-      "Ophiomancer",
-      1,
-      0.96
+     "Kiora's Follower",
+     1
     ],
     [
-      "Orzhov Guildgate",
-      1,
-      0.13
+     "Knight of Autumn",
+     1
     ],
     [
-      "Pashalik Mons",
-      1,
-      3.9
+     "Llanowar Elves",
+     1
     ],
     [
-      "Phyrexian Arena",
-      1,
-      3.74
+     "Man-o'-War",
+     1
     ],
     [
-      "Priest of Forgotten Gods",
-      1,
-      0.59
+     "Meandering River",
+     1
     ],
     [
-      "Prologue to Phyresis",
-      1,
-      0.53
+     "Mirkwood Nurturer",
+     1
     ],
     [
-      "Reckless Bushwhacker",
-      1,
-      0.19
+     "Mistmeadow Witch",
+     1
     ],
     [
-      "Release to Memory",
-      1,
-      0.55
+     "Mulldrifter",
+     1
     ],
     [
-      "Restoration Angel",
-      1,
-      0.33
+     "Negate",
+     1
     ],
     [
-      "Saruli Caretaker",
-      1,
-      0.27
+     "Peregrine Drake",
+     1
     ],
     [
-      "Selesnya Guildgate",
-      1,
-      0.11
+     "Plains",
+     6
     ],
     [
-      "Shineshadow Snarl",
-      1,
-      0.27
+     "Reclamation Sage",
+     1
     ],
     [
-      "Skirk Fire Marshal",
-      1,
-      0.93
+     "Reflector Mage",
+     1
     ],
     [
-      "Sol Ring",
-      3,
-      1.45
+     "Reliquary Tower",
+     1
     ],
     [
-      "Stone Quarry",
-      1,
-      0.17
+     "Restoration Angel",
+     1
     ],
     [
-      "Thornwood Falls",
-      2,
-      0.1
+     "Roon of the Hidden Realm",
+     1
     ],
     [
-      "Tranquil Expanse",
-      2,
-      0.1
+     "Satyr Wayfinder",
+     1
     ],
     [
-      "Unbreakable Formation",
-      3,
-      0.74
+     "Seaside Citadel",
+     1
     ],
     [
-      "Underground River",
-      1,
-      2.39
+     "Selesnya Guildgate",
+     1
     ],
     [
-      "Vraska, Betrayal's Sting",
-      1,
-      0.94
+     "Shinestriker",
+     1
     ],
     [
-      "Wall of Blossoms",
-      1,
-      0.29
+     "Shrieking Drake",
+     1
     ],
     [
-      "Warleader's Call",
-      1,
-      2.98
+     "Simic Guildgate",
+     1
     ],
     [
-      "Whitemane Lion",
-      1,
-      0.09
+     "Simic Signet",
+     1
     ],
     [
-      "Windborn Muse",
-      1,
-      0.54
+     "Skyshroud Claim",
+     1
     ],
     [
-      "Woe Strider",
-      1,
-      0.21
+     "Sol Ring",
+     1
     ],
     [
-      "Yahenni, Undying Partisan",
-      1,
-      0.3
+     "Song of the Dryads",
+     1
     ],
     [
-      "Yavimaya Coast",
-      2,
-      0.36
+     "Soulherder",
+     1
+    ],
+    [
+     "Stonecloaker",
+     1
+    ],
+    [
+     "Sylvan Ranger",
+     1
+    ],
+    [
+     "Tatyova, Benthic Druid",
+     1
+    ],
+    [
+     "Temple of Enlightenment",
+     1
+    ],
+    [
+     "Temur Sabertooth",
+     1
+    ],
+    [
+     "Terramorphic Expanse",
+     1
+    ],
+    [
+     "The Eternal Wanderer",
+     1
+    ],
+    [
+     "Thornwood Falls",
+     1
+    ],
+    [
+     "Tireless Provisioner",
+     1
+    ],
+    [
+     "Tranquil Expanse",
+     1
+    ],
+    [
+     "Unbreakable Formation",
+     1
+    ],
+    [
+     "Valorous Stance",
+     1
+    ],
+    [
+     "Wavesifter",
+     1
+    ],
+    [
+     "Whitemane Lion",
+     1
+    ],
+    [
+     "Wood Elves",
+     1
+    ],
+    [
+     "Yavimaya Coast",
+     1
+    ],
+    [
+     "Yavimaya Elder",
+     1
+    ],
+    [
+     "Zendikar's Roil",
+     1
     ]
-  ],
-  "upgrades": [
-    {
-      "deck": "D1",
-      "card": "Jeska's Will",
-      "replaces": "Seize the Spoils",
-      "tier": 1,
-      "price": 38.27,
-      "why": "Mana equal to an opponent's hand plus three cards off the top. It is the turn where Quintorius goes from grinding to winning."
-    },
-    {
-      "deck": "D1",
-      "card": "Underworld Breach",
-      "replaces": "Primary Research",
-      "tier": 1,
-      "price": 10.54,
-      "why": "Every spell you cast from the graveyard is a card leaving the graveyard, so every one is also a Spirit. This is the deck's engine, not a value piece."
-    },
-    {
-      "deck": "D1",
-      "card": "Mizzix's Mastery",
-      "replaces": "Advanced Reconstruction",
-      "tier": 2,
-      "price": 7.52,
-      "why": "Exiles a spell out of the graveyard and copies it. Two Quintorius triggers and a free sorcery in one card."
-    },
-    {
-      "deck": "D1",
-      "card": "Anim Pakal, Thousandth Moon",
-      "replaces": "Ceaseless Conflict",
-      "tier": 2,
-      "price": 5.01,
-      "why": "Scales every combat instead of a five-mana spell that does not touch the graveyard."
-    },
-    {
-      "deck": "D1",
-      "card": "Goblin Bombardment",
-      "replaces": "Currency Converter",
-      "tier": 2,
-      "price": 4.02,
-      "why": "A free sacrifice outlet turns every Spirit into damage. The deck makes bodies and currently has no way to cash them in."
-    },
-    {
-      "deck": "D1",
-      "card": "Boros Charm",
-      "replaces": "Lorehold Charm",
-      "tier": 2,
-      "price": 4.83,
-      "why": "Four damage, or team indestructible through a wipe, or double strike. Three answers on one card instead of one."
-    },
-    {
-      "deck": "D1",
-      "card": "Feldon of the Third Path",
-      "replaces": "Squee, the Immortal",
-      "tier": 2,
-      "price": 1.38,
-      "why": "Repeatable creature recursion every turn, and the token is exiled at end of turn so the card leaves the graveyard again."
-    },
-    {
-      "deck": "D1",
-      "card": "Sunforger",
-      "replaces": "Perpetual Timepiece",
-      "tier": 3,
-      "price": 4.04,
-      "why": "Tutors any instant in the deck straight onto the stack. Consistency for a deck built on the right answer at the right time."
-    },
-    {
-      "deck": "D1",
-      "card": "Brought Back",
-      "replaces": "Cathartic Reunion",
-      "tier": 3,
-      "price": 1.83,
-      "why": "Two permanents back at instant speed for two mana, and two cards leaving the graveyard means two Spirits."
-    },
-    {
-      "deck": "D1",
-      "card": "Unbreakable Formation",
-      "replaces": "Thrilling Discovery",
-      "tier": 3,
-      "price": 1.55,
-      "why": "One mana of insurance against the wipe that otherwise ends your game."
-    },
-    {
-      "deck": "D2",
-      "card": "Heroic Intervention",
-      "replaces": "Unbreakable Formation",
-      "tier": 2,
-      "price": 15.52,
-      "why": "Hexproof and indestructible at instant speed. Cut on second review in favour of Unbreakable Formation at $0.74."
-    },
-    {
-      "deck": "D2",
-      "card": "Aetherflux Reservoir",
-      "replaces": "Approach of the Second Sun",
-      "tier": 2,
-      "price": 20.45,
-      "why": "Same-turn kill off either infinite loop. Cut on second review; Approach does it for a third of the price."
-    },
-    {
-      "deck": "D2",
-      "card": "Cloudstone Curio",
-      "replaces": "Fblthp, the Lost",
-      "tier": 1,
-      "price": 17.33,
-      "why": "With Chulane out, two cheap creatures bounce each other forever. This is the card that turns the deck from good value into a combo deck."
-    },
-    {
-      "deck": "D2",
-      "card": "Finale of Devastation",
-      "replaces": "Farseek",
-      "tier": 1,
-      "price": 37.89,
-      "why": "Tutors any creature to the battlefield, and for large X it is the game-ending pump. One card that is both the setup and the finish."
-    },
-    {
-      "deck": "D2",
-      "card": "Elesh Norn, Mother of Machines",
-      "replaces": "Satyr Wayfinder",
-      "tier": 1,
-      "price": 24.17,
-      "why": "Doubles every enter-the-battlefield trigger you have and shuts off every one your opponents have. In a deck built on ETBs this is two cards in one."
-    },
-    {
-      "deck": "D2",
-      "card": "Emiel the Blessed",
-      "replaces": "Mistmeadow Witch",
-      "tier": 2,
-      "price": 13.56,
-      "why": "A blink outlet that costs three and needs no blue, and it grows the creature it blinks."
-    },
-    {
-      "deck": "D2",
-      "card": "Guardian Project",
-      "replaces": "Kami of Ancient Law",
-      "tier": 2,
-      "price": 15.17,
-      "why": "A card every time a nontoken creature enters. Chulane already draws you one; this doubles it."
-    },
-    {
-      "deck": "D2",
-      "card": "Displacer Kitten",
-      "replaces": "Freed from the Real",
-      "tier": 2,
-      "price": 32.38,
-      "why": "Blinks a nonland permanent every time you cast a noncreature spell. Free value on cards you were casting anyway."
-    },
-    {
-      "deck": "D2",
-      "card": "Sylvan Library",
-      "replaces": "Reclamation Sage",
-      "tier": 2,
-      "price": 27.9,
-      "why": "The best card selection in green. Fixes the draws where Chulane never lands."
-    },
-    {
-      "deck": "D2",
-      "card": "Beast Whisperer",
-      "replaces": "Elvish Visionary",
-      "tier": 3,
-      "price": 9,
-      "why": "A card on every creature spell instead of a card once."
-    },
-    {
-      "deck": "D2",
-      "card": "Ghostly Flicker",
-      "replaces": "Coiling Oracle",
-      "tier": 3,
-      "price": 2.2,
-      "why": "Two blinks for one card, and it can reset lands as well as creatures."
-    },
-    {
-      "deck": "D3",
-      "card": "Contagion Engine",
-      "replaces": "Fall of the First Civilization",
-      "tier": 2,
-      "price": 13.67,
-      "why": "One-sided -1/-1 wipe plus a second proliferate every turn. Cut on second review; Fall of the First Civilization does the wipe job free."
-    },
-    {
-      "deck": "D3",
-      "card": "Cyclonic Rift",
-      "replaces": "Fuel for the Cause",
-      "tier": 1,
-      "price": 39.54,
-      "why": "Overloaded it bounces every nonland permanent your opponents control at instant speed. It is the single best turn this deck can have."
-    },
-    {
-      "deck": "D3",
-      "card": "Vorinclex, Monstrous Raider",
-      "replaces": "Viral Drake",
-      "tier": 1,
-      "price": 33.36,
-      "why": "Doubles every counter you place and halves every counter your opponents get. Atraxa's proliferate becomes twice as fast and their proliferate stops working."
-    },
-    {
-      "deck": "D3",
-      "card": "Teferi's Protection",
-      "replaces": "Repel Calamity",
-      "tier": 1,
-      "price": 33.07,
-      "why": "The wipe answer the deck does not have. Phases out everything you own and makes you untargetable until your next turn."
-    },
-    {
-      "deck": "D3",
-      "card": "Damning Verdict",
-      "replaces": "Tragic Arrogance",
-      "tier": 1,
-      "price": 11.11,
-      "why": "A one-sided wipe. Everything without a +1/+1 counter dies, and your board is made of +1/+1 counters."
-    },
-    {
-      "deck": "D3",
-      "card": "Heroic Intervention",
-      "replaces": "Valorous Stance",
-      "tier": 2,
-      "price": 15.52,
-      "why": "Two mana to save the entire board. The second layer of wipe insurance behind Teferi's Protection."
-    },
-    {
-      "deck": "D3",
-      "card": "Cathars' Crusade",
-      "replaces": "Wall of Resurgence",
-      "tier": 2,
-      "price": 10.77,
-      "why": "A +1/+1 counter on every creature you control every time a creature enters. It compounds with every token and every proliferate."
-    },
-    {
-      "deck": "D3",
-      "card": "Kalonian Hydra",
-      "replaces": "Plaguemaw Beast",
-      "tier": 2,
-      "price": 7.06,
-      "why": "Doubles the counters on every creature you control whenever it attacks."
-    },
-    {
-      "deck": "D3",
-      "card": "Herald of Secret Streams",
-      "replaces": "Guardian Scalelord",
-      "tier": 2,
-      "price": 7.75,
-      "why": "Every creature with a counter becomes unblockable. It turns a stalled counters board into lethal."
-    },
-    {
-      "deck": "D3",
-      "card": "Beast Whisperer",
-      "replaces": "Blight Rot",
-      "tier": 3,
-      "price": 9,
-      "why": "A card on every creature spell in the deck with the most creatures."
-    },
-    {
-      "deck": "D3",
-      "card": "Corpsejack Menace",
-      "replaces": "Ichormoon Gauntlet",
-      "tier": 3,
-      "price": 0.92,
-      "why": "Doubles every counter that would be placed on your creatures for four mana."
-    },
-    {
-      "deck": "D3",
-      "card": "Master Biomancer",
-      "replaces": "Steady Progress",
-      "tier": 3,
-      "price": 0.81,
-      "why": "Every creature you cast arrives with counters already on it. The Hexmage removes counters, which fights your own plan."
-    },
-    {
-      "deck": "D3",
-      "card": "Skrelv, Defector Mite",
-      "replaces": "Tezzeret's Gambit",
-      "tier": 3,
-      "price": 4.24,
-      "why": "One mana, and it gives a creature protection to dodge removal or to push damage through."
-    },
-    {
-      "deck": "D4",
-      "card": "Doran, the Siege Tower",
-      "replaces": "Nyx-Fleece Ram",
-      "tier": 2,
-      "price": 8.44,
-      "why": "A fifth global toughness-as-damage body. Cut from the order on second review; the deck has four already."
-    },
-    {
-      "deck": "D4",
-      "card": "Vigor",
-      "replaces": "Canopy Gargantuan",
-      "tier": 1,
-      "price": 14.34,
-      "why": "All damage to your creatures becomes +1/+1 counters instead. In a toughness deck it makes combat unlosable."
-    },
-    {
-      "deck": "D4",
-      "card": "Heroic Intervention",
-      "replaces": "Weathered Sentinels",
-      "tier": 1,
-      "price": 15.52,
-      "why": "Two mana to protect the board you spent the game assembling."
-    },
-    {
-      "deck": "D4",
-      "card": "Grand Abolisher",
-      "replaces": "Wall of Limbs",
-      "tier": 2,
-      "price": 18.21,
-      "why": "Opponents cannot cast spells or activate abilities during your turn. Your wipe and your alpha both resolve untouched."
-    },
-    {
-      "deck": "D4",
-      "card": "Ghostly Prison",
-      "replaces": "Slaughter the Strong",
-      "tier": 2,
-      "price": 6.58,
-      "why": "Taxes every attack against you. A defensive deck should be nearly unattackable."
-    },
-    {
-      "deck": "D4",
-      "card": "Angelic Chorus",
-      "replaces": "Shield-Wall Sentinel",
-      "tier": 2,
-      "price": 8.43,
-      "why": "Life equal to toughness every time a creature enters, and your creatures are all toughness."
-    },
-    {
-      "deck": "D4",
-      "card": "Wall of Blood",
-      "replaces": "Walking Bulwark",
-      "tier": 2,
-      "price": 2.15,
-      "why": "Toughness with no ceiling, and Betor counts total toughness."
-    },
-    {
-      "deck": "D4",
-      "card": "Shield of the Oversoul",
-      "replaces": "Treefolk Umbra",
-      "tier": 2,
-      "price": 1.85,
-      "why": "Indestructible and flying on top of the pump, so the creature survives wipes and gets through."
-    },
-    {
-      "deck": "D4",
-      "card": "Karador, Ghost Chieftain",
-      "replaces": "Sapling of Colfenor",
-      "tier": 2,
-      "price": 0.33,
-      "why": "A creature back from the graveyard every turn, for thirty-three cents."
-    },
-    {
-      "deck": "D4",
-      "card": "Stalwart Shield-Bearers",
-      "replaces": "Portcullis Vine",
-      "tier": 3,
-      "price": 1.9,
-      "why": "Plus zero plus two to the whole team pushes several creatures over Betor's next threshold at once."
-    },
-    {
-      "deck": "D4",
-      "card": "Perimeter Captain",
-      "replaces": "Jaddi Offshoot",
-      "tier": 3,
-      "price": 1.34,
-      "why": "Life every time a defender blocks, which is every combat in this deck."
-    },
-    {
-      "deck": "D4",
-      "card": "Kodama's Reach",
-      "replaces": "Carven Caryatid",
-      "tier": 3,
-      "price": 1.78,
-      "why": "Ramp and fixing in the three-color deck with the fewest mana sources to spare."
-    },
-    {
-      "deck": "D4",
-      "card": "Wall of Junk",
-      "replaces": "Wall of Mulch",
-      "tier": 3,
-      "price": 0.3,
-      "why": "A 0/6 that returns to your hand every time it blocks. Thirty cents for an infinite blocker."
-    },
-    {
-      "deck": "D5",
-      "card": "Ashnod's Altar",
-      "replaces": "Pawn of Ulamog",
-      "tier": 2,
-      "price": 16.65,
-      "why": "Fifth free outlet and two mana per body. Cut from the order on second review because four free outlets already exist; still the best single upgrade for the deck."
-    },
-    {
-      "deck": "D5",
-      "card": "Grave Pact",
-      "replaces": "Emptiness",
-      "tier": 1,
-      "price": 33.54,
-      "why": "Every creature that dies on your side makes each opponent sacrifice one. With tokens dying constantly it dismantles three boards at once."
-    },
-    {
-      "deck": "D5",
-      "card": "Dictate of Erebos",
-      "replaces": "Genesis Chamber",
-      "tier": 1,
-      "price": 17.01,
-      "why": "The same effect as Grave Pact with flash, so it lands after a wipe and punishes it."
-    },
-    {
-      "deck": "D5",
-      "card": "Divine Visitation",
-      "replaces": "Intangible Virtue",
-      "tier": 1,
-      "price": 0.44,
-      "why": "Every token you would make becomes a 4/4 Angel instead. Forty-four cents, and it is the biggest single upgrade on this entire tab."
-    },
-    {
-      "deck": "D5",
-      "card": "Bolas's Citadel",
-      "replaces": "Elspeth, Sun's Nemesis",
-      "tier": 1,
-      "price": 16.37,
-      "why": "Play off the top of your library paying life instead of mana. In a deck already gaining life it is close to a free win."
-    },
-    {
-      "deck": "D5",
-      "card": "Cathars' Crusade",
-      "replaces": "Anointer Priest",
-      "tier": 2,
-      "price": 10.77,
-      "why": "A +1/+1 counter on everything each time a creature enters. Your tokens stop being 1/1s."
-    },
-    {
-      "deck": "D5",
-      "card": "Black Market Connections",
-      "replaces": "Impassioned Orator",
-      "tier": 2,
-      "price": 8.77,
-      "why": "A treasure, a body and a card every turn, all optional, all at the cost of some life you are already gaining back."
-    },
-    {
-      "deck": "D5",
-      "card": "Elenda, the Dusk Rose",
-      "replaces": "Indulging Patrician",
-      "tier": 2,
-      "price": 5.28,
-      "why": "Grows on every death and then dies into an army of Vampires."
-    },
-    {
-      "deck": "D5",
-      "card": "Inkshield",
-      "replaces": "Rootborn Defenses",
-      "tier": 2,
-      "price": 5.59,
-      "why": "Prevents the attack that would kill you and turns the damage into that many 1/1 fliers."
-    },
-    {
-      "deck": "D5",
-      "card": "Felisa, Fang of Silverquill",
-      "replaces": "Tithe Taker",
-      "tier": 2,
-      "price": 1.92,
-      "why": "Counters on your creatures and a 2/1 Inkling every time one with a counter dies."
-    },
-    {
-      "deck": "D5",
-      "card": "Breena, the Demagogue",
-      "replaces": "Welcoming Vampire",
-      "tier": 2,
-      "price": 1.07,
-      "why": "Counters and cards every time an opponent is attacked, including by someone who is not you."
-    },
-    {
-      "deck": "D5",
-      "card": "Idol of Oblivion",
-      "replaces": "Staff of the Storyteller",
-      "tier": 3,
-      "price": 2.25,
-      "why": "A card each turn you made a token, which is nearly every turn."
-    },
-    {
-      "deck": "D5",
-      "card": "Diabolic Tutor",
-      "replaces": "Raise the Alarm",
-      "tier": 3,
-      "price": 2.3,
-      "why": "Any card in the deck for four mana. Slow, but it finds Grave Pact or the Altar when the game demands it."
-    },
-    {
-      "deck": "D6",
-      "card": "Kiki-Jiki, Mirror Breaker",
-      "replaces": "Goblin Instigator",
-      "tier": 1,
-      "price": 16.24,
-      "why": "Copy Krenko every turn. Each copy taps for goblins equal to your goblin count, and the count doubles as it goes."
-    },
-    {
-      "deck": "D6",
-      "card": "Umbral Mantle",
-      "replaces": "Thrill of Possibility",
-      "tier": 1,
-      "price": 10.5,
-      "why": "Three mana untaps Krenko. With enough goblins producing mana, that is arbitrarily many goblins in one turn."
-    },
-    {
-      "deck": "D6",
-      "card": "Coat of Arms",
-      "replaces": "Raid Bombardment",
-      "tier": 1,
-      "price": 21.13,
-      "why": "Every goblin gets plus one plus one for every other goblin. Thirty tokens becomes lethal instead of chip damage."
-    },
-    {
-      "deck": "D6",
-      "card": "Muxus, Goblin Grandee",
-      "replaces": "Beetleback Chief",
-      "tier": 1,
-      "price": 13.32,
-      "why": "Look at the top six and put every goblin onto the battlefield. It refills a wiped board in one card."
-    },
-    {
-      "deck": "D6",
-      "card": "Goblin Lackey",
-      "replaces": "Fanatical Firebrand",
-      "tier": 2,
-      "price": 9.37,
-      "why": "One damage on turn two puts Krenko or Muxus onto the battlefield for free."
-    },
-    {
-      "deck": "D6",
-      "card": "Goblin Recruiter",
-      "replaces": "Goblin Gathering",
-      "tier": 2,
-      "price": 6.55,
-      "why": "Stacks the top of your library with exactly the goblins you need, in the order you need them."
-    },
-    {
-      "deck": "D6",
-      "card": "Rundvelt Hordemaster",
-      "replaces": "Outpost Siege",
-      "tier": 2,
-      "price": 4.39,
-      "why": "Goblins you cast get menace and dead goblins come back off the top. Recursion in the color that has almost none."
+   ]
+  },
+  {
+   "id": "D3",
+   "name": "D3 Atraxa Proliferate",
+   "commander": "Atraxa, Praetors' Voice",
+   "definition": {
+    "baseBracket": 3,
+    "bracketCeiling": 3,
+    "playStyle": "Balanced",
+    "mechanics": [
+     "Counters",
+     "Doublers & multipliers",
+     "Proliferate"
+    ]
+   },
+   "notes": "Free end-step proliferate compounds every counter. Win on poison, +1/+1 counters, or charge-counter engines. Four-colour grind. Survive, spread counters, let proliferate double them.",
+   "cards": [
+    [
+     "Adarkar Wastes",
+     1
+    ],
+    [
+     "Aetheric Amplifier",
+     1
+    ],
+    [
+     "Anguished Unmaking",
+     1
+    ],
+    [
+     "Arcane Sanctum",
+     1
+    ],
+    [
+     "Arcane Signet",
+     1
+    ],
+    [
+     "Astral Cornucopia",
+     1
+    ],
+    [
+     "Atraxa, Praetors' Voice",
+     1
+    ],
+    [
+     "Azorius Guildgate",
+     1
+    ],
+    [
+     "Azorius Signet",
+     1
+    ],
+    [
+     "Bitterthorn, Nissa's Animus",
+     1
+    ],
+    [
+     "Blight Rot",
+     1
+    ],
+    [
+     "Branching Evolution",
+     1
+    ],
+    [
+     "Brushland",
+     1
+    ],
+    [
+     "Cast Out",
+     1
+    ],
+    [
+     "Caves of Koilos",
+     1
+    ],
+    [
+     "Chromatic Lantern",
+     1
+    ],
+    [
+     "Command Tower",
+     1
+    ],
+    [
+     "Contagion Clasp",
+     1
+    ],
+    [
+     "Contentious Plan",
+     1
+    ],
+    [
+     "Deepglow Skate",
+     1
+    ],
+    [
+     "Despark",
+     1
+    ],
+    [
+     "Dismal Backwater",
+     1
+    ],
+    [
+     "Drowned Catacomb",
+     1
+    ],
+    [
+     "Everflowing Chalice",
+     1
+    ],
+    [
+     "Evolution Sage",
+     1
+    ],
+    [
+     "Evolving Wilds",
+     1
+    ],
+    [
+     "Exotic Orchard",
+     1
+    ],
+    [
+     "Ezuri, Stalker of Spheres",
+     1
+    ],
+    [
+     "Fall of the First Civilization",
+     1
+    ],
+    [
+     "Fellwar Stone",
+     1
+    ],
+    [
+     "Fertilid",
+     1
+    ],
+    [
+     "Flux Channeler",
+     1
+    ],
+    [
+     "Forest",
+     3
+    ],
+    [
+     "Forgotten Ancient",
+     1
+    ],
+    [
+     "Fuel for the Cause",
+     1
+    ],
+    [
+     "Fynn, the Fangbearer",
+     1
+    ],
+    [
+     "Go for the Throat",
+     1
+    ],
+    [
+     "Golgari Guildgate",
+     1
+    ],
+    [
+     "Grand Coliseum",
+     1
+    ],
+    [
+     "Grateful Apparition",
+     1
+    ],
+    [
+     "Guardian Scalelord",
+     1
+    ],
+    [
+     "Ichormoon Gauntlet",
+     1
+    ],
+    [
+     "Inexorable Tide",
+     1
+    ],
+    [
+     "Infectious Inquiry",
+     1
+    ],
+    [
+     "Innkeeper's Talent",
+     1
+    ],
+    [
+     "Island",
+     4
+    ],
+    [
+     "Karn's Bastion",
+     1
+    ],
+    [
+     "Llanowar Wastes",
+     1
+    ],
+    [
+     "Long Goodbye",
+     1
+    ],
+    [
+     "Lotus Field",
+     1
+    ],
+    [
+     "Magistrate's Scepter",
+     1
+    ],
+    [
+     "Meandering River",
+     1
+    ],
+    [
+     "Merfolk Skydiver",
+     1
+    ],
+    [
+     "Mirkwood",
+     1
+    ],
+    [
+     "Mortify",
+     1
+    ],
+    [
+     "Nature's Lore",
+     1
+    ],
+    [
+     "Night's Whisper",
+     1
+    ],
+    [
+     "Octopus Form",
+     1
+    ],
+    [
+     "Origin of Metalbending",
+     1
+    ],
+    [
+     "Orzhov Guildgate",
+     1
+    ],
+    [
+     "Plaguemaw Beast",
+     1
+    ],
+    [
+     "Plains",
+     2
+    ],
+    [
+     "Prologue to Phyresis",
+     1
+    ],
+    [
+     "Reaping Willow",
+     1
+    ],
+    [
+     "Repel Calamity",
+     1
+    ],
+    [
+     "Rootborn Defenses",
+     1
+    ],
+    [
+     "Selesnya Guildgate",
+     1
+    ],
+    [
+     "Simic Signet",
+     1
+    ],
+    [
+     "Sol Ring",
+     1
+    ],
+    [
+     "Steady Progress",
+     1
+    ],
+    [
+     "Strixhaven Stadium",
+     1
+    ],
+    [
+     "Sunpetal Grove",
+     1
+    ],
+    [
+     "Swamp",
+     3
+    ],
+    [
+     "Tekuthal, Inquiry Dominus",
+     1
+    ],
+    [
+     "Temple of Silence",
+     1
+    ],
+    [
+     "Tezzeret's Gambit",
+     1
+    ],
+    [
+     "The Restoration of Eiganjo // Architect of Restoration",
+     1
+    ],
+    [
+     "Thornwood Falls",
+     1
+    ],
+    [
+     "Throne of Geth",
+     1
+    ],
+    [
+     "Thrummingbird",
+     1
+    ],
+    [
+     "Tidus, Yuna's Guardian",
+     1
+    ],
+    [
+     "Tome of Legends",
+     1
+    ],
+    [
+     "Tragic Arrogance",
+     1
+    ],
+    [
+     "Tranquil Expanse",
+     1
+    ],
+    [
+     "Troll Negotiations",
+     1
+    ],
+    [
+     "Unbreakable Formation",
+     1
+    ],
+    [
+     "Underground River",
+     1
+    ],
+    [
+     "Valorous Stance",
+     1
+    ],
+    [
+     "Viral Drake",
+     1
+    ],
+    [
+     "Vraska, Betrayal's Sting",
+     1
+    ],
+    [
+     "Wall of Resurgence",
+     1
+    ],
+    [
+     "Yavimaya Coast",
+     1
+    ]
+   ]
+  },
+  {
+   "id": "D4",
+   "name": "D4 Felothar Walls",
+   "commander": "Felothar the Steadfast",
+   "definition": {
+    "baseBracket": 3,
+    "bracketCeiling": 3,
+    "playStyle": "Balanced",
+    "mechanics": [
+     "Defender",
+     "Combat",
+     "Sacrifice"
+    ]
+   },
+   "notes": "High-toughness walls that deal damage equal to toughness and can attack. Block all game, then alpha. Defensive fortress. Take no damage, one-sided wipe, swing once for lethal.",
+   "cards": [
+    [
+     "Ancient Lumberknot",
+     1
+    ],
+    [
+     "Anguished Unmaking",
+     1
+    ],
+    [
+     "Arbor Adherent",
+     1
+    ],
+    [
+     "Arboreal Grazer",
+     1
+    ],
+    [
+     "Ash Barrens",
+     1
+    ],
+    [
+     "Assault Formation",
+     1
+    ],
+    [
+     "Axebane Guardian",
+     1
+    ],
+    [
+     "Beast Within",
+     1
+    ],
+    [
+     "Betor, Ancestor's Voice",
+     1
+    ],
+    [
+     "Blight Pile",
+     1
+    ],
+    [
+     "Blossoming Sands",
+     1
+    ],
+    [
+     "Canopy Gargantuan",
+     1
+    ],
+    [
+     "Carven Caryatid",
+     1
+    ],
+    [
+     "Caves of Koilos",
+     1
+    ],
+    [
+     "Collective Effort",
+     1
+    ],
+    [
+     "Command Tower",
+     1
+    ],
+    [
+     "Crashing Drawbridge",
+     1
+    ],
+    [
+     "Despark",
+     1
+    ],
+    [
+     "Destroy Evil",
+     1
+    ],
+    [
+     "Dragonlord Dromoka",
+     1
+    ],
+    [
+     "Drumbellower",
+     1
+    ],
+    [
+     "Eerie Ultimatum",
+     1
+    ],
+    [
+     "Expel the Interlopers",
+     1
+    ],
+    [
+     "Fateful Absence",
+     1
+    ],
+    [
+     "Fell the Mighty",
+     1
+    ],
+    [
+     "Felothar the Steadfast",
+     1
+    ],
+    [
+     "Forest",
+     8
+    ],
+    [
+     "Fortified Village",
+     1
+    ],
+    [
+     "Freyalise, Llanowar's Fury",
+     1
+    ],
+    [
+     "Golgari Guildgate",
+     1
+    ],
+    [
+     "Golgari Signet",
+     1
+    ],
+    [
+     "Guardian of Faith",
+     1
+    ],
+    [
+     "Huatli, the Sun's Heart",
+     1
+    ],
+    [
+     "Ikra Shidiqi, the Usurper",
+     1
+    ],
+    [
+     "Indomitable Ancients",
+     1
+    ],
+    [
+     "Isolated Chapel",
+     1
+    ],
+    [
+     "Krosan Verge",
+     1
+    ],
+    [
+     "Llanowar Wastes",
+     1
+    ],
+    [
+     "Mirkwood",
+     1
+    ],
+    [
+     "Myriad Landscape",
+     1
+    ],
+    [
+     "Nyx-Fleece Ram",
+     1
+    ],
+    [
+     "Orzhov Signet",
+     1
+    ],
+    [
+     "Overgrown Battlement",
+     1
+    ],
+    [
+     "Path of Ancestry",
+     1
+    ],
+    [
+     "Phyrexian Arena",
+     1
+    ],
+    [
+     "Plains",
+     8
+    ],
+    [
+     "Portcullis Vine",
+     1
+    ],
+    [
+     "Putrefy",
+     1
+    ],
+    [
+     "Sandsteppe Citadel",
+     1
+    ],
+    [
+     "Sapling of Colfenor",
+     1
+    ],
+    [
+     "Saruli Caretaker",
+     1
+    ],
+    [
+     "Selesnya Signet",
+     1
+    ],
+    [
+     "Shalai, Voice of Plenty",
+     1
+    ],
+    [
+     "Shield-Wall Sentinel",
+     1
+    ],
+    [
+     "Sidar Kondo of Jamuraa",
+     1
+    ],
+    [
+     "Slaughter the Strong",
+     1
+    ],
+    [
+     "Sol Ring",
+     1
+    ],
+    [
+     "Soul of New Phyrexia",
+     1
+    ],
+    [
+     "Sun Titan",
+     1
+    ],
+    [
+     "Sunpetal Grove",
+     1
+    ],
+    [
+     "Swamp",
+     8
+    ],
+    [
+     "Sylvan Caryatid",
+     1
+    ],
+    [
+     "Tree of Perdition",
+     1
+    ],
+    [
+     "Tree of Redemption",
+     1
+    ],
+    [
+     "Treefolk Umbra",
+     1
+    ],
+    [
+     "Valorous Stance",
+     1
+    ],
+    [
+     "Vindicate",
+     1
+    ],
+    [
+     "Wakestone Gargoyle",
+     1
+    ],
+    [
+     "Walking Bulwark",
+     1
+    ],
+    [
+     "Wall of Blossoms",
+     1
+    ],
+    [
+     "Wall of Limbs",
+     1
+    ],
+    [
+     "Wall of Mulch",
+     1
+    ],
+    [
+     "Wall of Omens",
+     1
+    ],
+    [
+     "Wall of Roots",
+     1
+    ],
+    [
+     "Wave of Reckoning",
+     1
+    ],
+    [
+     "Weathered Sentinels",
+     1
+    ],
+    [
+     "Welcoming Vampire",
+     1
+    ],
+    [
+     "Wingmantle Chaplain",
+     1
+    ],
+    [
+     "Wood Elves",
+     1
+    ]
+   ],
+   "options": [
+    {
+     "card": "Plains",
+     "why": "Four basics come out for the two dorks and two rocks coming in (any four)"
+    },
+    {
+     "card": "Forest",
+     "why": "Four basics come out for the two dorks and two rocks coming in (any four)"
+    },
+    {
+     "card": "Indomitable Ancients",
+     "why": "Vanilla body, zero abilities"
+    },
+    {
+     "card": "Soul of New Phyrexia",
+     "why": "Redundant protection, Shalai covers it"
+    },
+    {
+     "card": "Nyx-Fleece Ram",
+     "why": "Weak lifegain filler, no synergy"
     }
+   ],
+   "planned": [
+    {
+     "card": "Arcane Signet",
+     "why": "Mana rock (ramp)"
+    },
+    {
+     "card": "Fellwar Stone",
+     "why": "Mana rock (ramp)"
+    },
+    {
+     "card": "Llanowar Elves",
+     "why": "Mana dork (ramp)"
+    },
+    {
+     "card": "Avacyn's Pilgrim",
+     "why": "Mana dork (ramp)"
+    },
+    {
+     "card": "Eladamri's Call",
+     "why": "Tutor — only way to fetch Blight Pile by name"
+    },
+    {
+     "card": "Shamanic Revelation",
+     "why": "Draw + lifegain, scales with board width"
+    },
+    {
+     "card": "Dungrove Elder",
+     "why": "High-toughness threat (scales with Forests)"
+    },
+    {
+     "card": "Wall of Reverence",
+     "why": "High-toughness defender, lifegain payoff"
+    }
+   ]
+  },
+  {
+   "id": "D5",
+   "name": "D5 Shadrix Aristocrats",
+   "commander": "Shadrix Silverquill",
+   "definition": {
+    "baseBracket": 3,
+    "bracketCeiling": 3,
+    "playStyle": "Balanced",
+    "mechanics": [
+     "Tokens",
+     "Drain & burn",
+     "Draw"
+    ]
+   },
+   "notes": "Flood the board with tokens; each body drains on entry and again on death. Wide aristocrats grind. Bodies + drain payoffs + a sac outlet.",
+   "cards": [
+    [
+     "Angel of Indemnity",
+     1
+    ],
+    [
+     "Anguished Unmaking",
+     1
+    ],
+    [
+     "Anointer Priest",
+     1
+    ],
+    [
+     "Arcane Signet",
+     1
+    ],
+    [
+     "Bastion of Remembrance",
+     1
+    ],
+    [
+     "Blight Rot",
+     1
+    ],
+    [
+     "Blood Artist",
+     1
+    ],
+    [
+     "Boggart Mischief",
+     1
+    ],
+    [
+     "Castle Ardenvale",
+     1
+    ],
+    [
+     "Caves of Koilos",
+     1
+    ],
+    [
+     "Clachan Festival",
+     1
+    ],
+    [
+     "Combat Calligrapher",
+     1
+    ],
+    [
+     "Command Tower",
+     1
+    ],
+    [
+     "Concealed Courtyard",
+     1
+    ],
+    [
+     "Corpse Knight",
+     1
+    ],
+    [
+     "Cruel Celebrant",
+     1
+    ],
+    [
+     "Deadly Dispute",
+     1
+    ],
+    [
+     "Earth Kingdom Jailer",
+     1
+    ],
+    [
+     "Elas il-Kor, Sadistic Pilgrim",
+     1
+    ],
+    [
+     "Elspeth, Sun's Nemesis",
+     1
+    ],
+    [
+     "Emptiness",
+     1
+    ],
+    [
+     "Filigree Familiar",
+     1
+    ],
+    [
+     "Fracture",
+     1
+    ],
+    [
+     "Genesis Chamber",
+     1
+    ],
+    [
+     "Hidden Stockpile",
+     1
+    ],
+    [
+     "Impassioned Orator",
+     1
+    ],
+    [
+     "Indulging Patrician",
+     1
+    ],
+    [
+     "Intangible Virtue",
+     1
+    ],
+    [
+     "Isolated Chapel",
+     1
+    ],
+    [
+     "Kambal, Profiteering Mayor",
+     1
+    ],
+    [
+     "Keeper of the Accord",
+     1
+    ],
+    [
+     "Lethal Scheme",
+     1
+    ],
+    [
+     "Lingering Souls",
+     1
+    ],
+    [
+     "Marauding Blight-Priest",
+     1
+    ],
+    [
+     "Mind Stone",
+     1
+    ],
+    [
+     "Mirkwood Bats",
+     1
+    ],
+    [
+     "Myr Battlesphere",
+     1
+    ],
+    [
+     "Nadier's Nightblade",
+     1
+    ],
+    [
+     "Night's Whisper",
+     1
+    ],
+    [
+     "Ophiomancer",
+     1
+    ],
+    [
+     "Orzhov Basilica",
+     1
+    ],
+    [
+     "Orzhov Signet",
+     1
+    ],
+    [
+     "Ossification",
+     1
+    ],
+    [
+     "Pawn of Ulamog",
+     1
+    ],
+    [
+     "Phyrexian Arena",
+     1
+    ],
+    [
+     "Pitiless Plunderer",
+     1
+    ],
+    [
+     "Plains",
+     15
+    ],
+    [
+     "Priest of Forgotten Gods",
+     1
+    ],
+    [
+     "Promise of Loyalty",
+     1
+    ],
+    [
+     "Raise the Alarm",
+     1
+    ],
+    [
+     "Rootborn Defenses",
+     1
+    ],
+    [
+     "Scoured Barrens",
+     1
+    ],
+    [
+     "Sevinne's Reclamation",
+     1
+    ],
+    [
+     "Shadrix Silverquill",
+     1
+    ],
+    [
+     "Shineshadow Snarl",
+     1
+    ],
+    [
+     "Skullclamp",
+     1
+    ],
+    [
+     "Smuggler's Copter",
+     1
+    ],
+    [
+     "Sol Ring",
+     1
+    ],
+    [
+     "Spectral Procession",
+     1
+    ],
+    [
+     "Staff of the Storyteller",
+     1
+    ],
+    [
+     "Swamp",
+     14
+    ],
+    [
+     "Swords to Plowshares",
+     1
+    ],
+    [
+     "Teysa Karlov",
+     1
+    ],
+    [
+     "Tithe Taker",
+     1
+    ],
+    [
+     "Unbreakable Formation",
+     1
+    ],
+    [
+     "Vault of the Archangel",
+     1
+    ],
+    [
+     "Village Rites",
+     1
+    ],
+    [
+     "Viscera Seer",
+     1
+    ],
+    [
+     "Welcoming Vampire",
+     1
+    ],
+    [
+     "Windborn Muse",
+     1
+    ],
+    [
+     "Woe Strider",
+     1
+    ],
+    [
+     "Yahenni, Undying Partisan",
+     1
+    ],
+    [
+     "Zulaport Cutthroat",
+     1
+    ]
+   ]
+  },
+  {
+   "id": "D6",
+   "name": "D6 Krenko Goblins",
+   "commander": "Krenko, Mob Boss",
+   "definition": {
+    "baseBracket": 3,
+    "bracketCeiling": 3,
+    "playStyle": "Balanced",
+    "mechanics": [
+     "Goblin tribal",
+     "Tokens",
+     "ETB triggers"
+    ]
+   },
+   "notes": "Krenko doubles the goblin count each tap; ETB-damage engines turn tokens into reach. Fast mono-red swarm. Fastest clock of the six; win before the table stabilises.",
+   "cards": [
+    [
+     "Abrade",
+     1
+    ],
+    [
+     "Anger",
+     1
+    ],
+    [
+     "Arcane Signet",
+     1
+    ],
+    [
+     "Barrage of Expendables",
+     1
+    ],
+    [
+     "Battle Hymn",
+     1
+    ],
+    [
+     "Beetleback Chief",
+     1
+    ],
+    [
+     "Buried Ruin",
+     1
+    ],
+    [
+     "Castle Embereth",
+     1
+    ],
+    [
+     "Chancellor of the Forge",
+     1
+    ],
+    [
+     "Chaos Warp",
+     1
+    ],
+    [
+     "Cinder Strike",
+     1
+    ],
+    [
+     "Conspicuous Snoop",
+     1
+    ],
+    [
+     "Den of the Bugbear",
+     1
+    ],
+    [
+     "Dragon Fodder",
+     1
+    ],
+    [
+     "Empty the Warrens",
+     1
+    ],
+    [
+     "Evolving Wilds",
+     1
+    ],
+    [
+     "Faithless Looting",
+     1
+    ],
+    [
+     "Fanatical Firebrand",
+     1
+    ],
+    [
+     "Foundry Street Denizen",
+     1
+    ],
+    [
+     "Goblin Bombardment",
+     1
+    ],
+    [
+     "Goblin Burrows",
+     1
+    ],
+    [
+     "Goblin Chieftain",
+     1
+    ],
+    [
+     "Goblin Gathering",
+     1
+    ],
+    [
+     "Goblin Instigator",
+     1
+    ],
+    [
+     "Goblin Matron",
+     1
+    ],
+    [
+     "Goblin Piledriver",
+     1
+    ],
+    [
+     "Goblin Rabblemaster",
+     1
+    ],
+    [
+     "Goblin Ringleader",
+     1
+    ],
+    [
+     "Goblin Trashmaster",
+     1
+    ],
+    [
+     "Goblin Warchief",
+     1
+    ],
+    [
+     "Gundabad Opportunist",
+     1
+    ],
+    [
+     "Hobgoblin Bandit Lord",
+     1
+    ],
+    [
+     "Hordeling Outburst",
+     1
+    ],
+    [
+     "Idol of Oblivion",
+     1
+    ],
+    [
+     "Impact Tremors",
+     1
+    ],
+    [
+     "Kher Keep",
+     1
+    ],
+    [
+     "Krenko, Mob Boss",
+     1
+    ],
+    [
+     "Krenko, Tin Street Kingpin",
+     1
+    ],
+    [
+     "Krenko's Command",
+     1
+    ],
+    [
+     "Legion Warboss",
+     1
+    ],
+    [
+     "Light Up the Stage",
+     1
+    ],
+    [
+     "Lightning Greaves",
+     1
+    ],
+    [
+     "Massive Raid",
+     1
+    ],
+    [
+     "Mind Stone",
+     1
+    ],
+    [
+     "Mogg War Marshal",
+     1
+    ],
+    [
+     "Mountain",
+     31
+    ],
+    [
+     "Naktamun Lorespinner // Wheel of Fortune",
+     1
+    ],
+    [
+     "Ogre Battledriver",
+     1
+    ],
+    [
+     "Outpost Siege",
+     1
+    ],
+    [
+     "Pashalik Mons",
+     1
+    ],
+    [
+     "Patchwork Banner",
+     1
+    ],
+    [
+     "Purphoros, God of the Forge",
+     1
+    ],
+    [
+     "Quest for the Goblin Lord",
+     1
+    ],
+    [
+     "Raid Bombardment",
+     1
+    ],
+    [
+     "Reckless Bushwhacker",
+     1
+    ],
+    [
+     "Shared Animosity",
+     1
+    ],
+    [
+     "Siege-Gang Commander",
+     1
+    ],
+    [
+     "Skirk Fire Marshal",
+     1
+    ],
+    [
+     "Skirk Prospector",
+     1
+    ],
+    [
+     "Skullclamp",
+     1
+    ],
+    [
+     "Sol Ring",
+     1
+    ],
+    [
+     "Sourbread Auntie",
+     1
+    ],
+    [
+     "Swiftfoot Boots",
+     1
+    ],
+    [
+     "Thornbite Staff",
+     1
+    ],
+    [
+     "Thousand-Year Elixir",
+     1
+    ],
+    [
+     "Thrill of Possibility",
+     1
+    ],
+    [
+     "Tweeze",
+     1
+    ],
+    [
+     "Vandalblast",
+     1
+    ],
+    [
+     "Voldaren Epicure",
+     1
+    ],
+    [
+     "Witty Roastmaster",
+     1
+    ]
+   ],
+   "options": [
+    {
+     "card": "Gundabad Opportunist",
+     "why": "One-shot value, no goblin synergy"
+    },
+    {
+     "card": "Naktamun Lorespinner // Wheel of Fortune",
+     "why": "Generic value, no goblin synergy"
+    },
+    {
+     "card": "Mountain",
+     "why": "Trim one; the deck runs mana-heavy at 33"
+    },
+    {
+     "card": "Sourbread Auntie",
+     "why": "Awkward counter-tax on token making"
+    },
+    {
+     "card": "Thrill of Possibility",
+     "why": "Card-neutral filtering, outclassed by new draw"
+    },
+    {
+     "card": "Fanatical Firebrand",
+     "why": "Redundant with Skirk Prospector / Bombardment"
+    }
+   ],
+   "planned": [
+    {
+     "card": "Kindred Discovery",
+     "why": "Goblin tribal card draw engine"
+    },
+    {
+     "card": "Collective Inferno",
+     "why": "Goblin tribal payoff"
+    },
+    {
+     "card": "Howlsquad Heavy",
+     "why": "Goblin payoff (top EDHREC staple for this commander)"
+    },
+    {
+     "card": "General Kreat, the Boltbringer",
+     "why": "Goblin payoff (top EDHREC staple)"
+    },
+    {
+     "card": "Gamble",
+     "why": "Flexible tutor, reaches non-creature pieces"
+    },
+    {
+     "card": "Grub, Storied Matriarch // Grub, Notorious Auntie",
+     "why": "Goblin graveyard recursion + late threat"
+    }
+   ]
+  }
+ ],
+ "owned": {
+  "inDeck": {
+   "D1": [
+    [
+     "Advanced Reconstruction",
+     1
+    ],
+    [
+     "Arcane Signet",
+     1
+    ],
+    [
+     "Archaeomancer's Map",
+     1
+    ],
+    [
+     "Atsushi, the Blazing Sky",
+     1
+    ],
+    [
+     "Augusta, Order Returned",
+     1
+    ],
+    [
+     "Bag of Holding",
+     1
+    ],
+    [
+     "Balefire Liege",
+     1
+    ],
+    [
+     "Battlefield Forge",
+     1
+    ],
+    [
+     "Big Score",
+     1
+    ],
+    [
+     "Cast Out",
+     1
+    ],
+    [
+     "Cathartic Reunion",
+     1
+    ],
+    [
+     "Ceaseless Conflict",
+     1
+    ],
+    [
+     "Clifftop Retreat",
+     1
+    ],
+    [
+     "Command Tower",
+     1
+    ],
+    [
+     "Containment Construct",
+     1
+    ],
+    [
+     "Currency Converter",
+     1
+    ],
+    [
+     "Emeria, the Sky Ruin",
+     1
+    ],
+    [
+     "Evolving Wilds",
+     1
+    ],
+    [
+     "Excava, the Risen Past",
+     1
+    ],
+    [
+     "Exotic Orchard",
+     1
+    ],
+    [
+     "Fable of the Mirror-Breaker // Reflection of Kiki-Jiki",
+     1
+    ],
+    [
+     "Fabled Passage",
+     1
+    ],
+    [
+     "Faithless Looting",
+     1
+    ],
+    [
+     "Fellwar Stone",
+     1
+    ],
+    [
+     "Fields of Strife",
+     1
+    ],
+    [
+     "Furycalm Snarl",
+     1
+    ],
+    [
+     "Generous Gift",
+     1
+    ],
+    [
+     "Ghost Vacuum",
+     1
+    ],
+    [
+     "Glittering Massif",
+     1
+    ],
+    [
+     "Hofri Ghostforge",
+     1
+    ],
+    [
+     "Inspiring Vantage",
+     1
+    ],
+    [
+     "Karmic Guide",
+     1
+    ],
+    [
+     "Kirol, History Buff // Pack a Punch",
+     1
+    ],
+    [
+     "Knight of the White Orchid",
+     1
+    ],
+    [
+     "Laelia, the Blade Reforged",
+     1
+    ],
+    [
+     "Lorehold Archivist // Restore Relic",
+     1
+    ],
+    [
+     "Lorehold Campus",
+     1
+    ],
+    [
+     "Lorehold Charm",
+     1
+    ],
+    [
+     "Lorehold Excavation",
+     1
+    ],
+    [
+     "Mind Stone",
+     1
+    ],
+    [
+     "Mistveil Plains",
+     1
+    ],
+    [
+     "Moonshaker Cavalry",
+     1
+    ],
+    [
+     "Mountain",
+     8
+    ],
+    [
+     "Naya Panorama",
+     1
+    ],
+    [
+     "Path to Exile",
+     1
+    ],
+    [
+     "Perpetual Timepiece",
+     1
+    ],
+    [
+     "Plains",
+     13
+    ],
+    [
+     "Primary Research",
+     1
+    ],
+    [
+     "Quintorius Kand",
+     1
+    ],
+    [
+     "Quintorius, Field Historian",
+     1
+    ],
+    [
+     "Quintorius, History Chaser",
+     1
+    ],
+    [
+     "Quintorius, Loremaster",
+     1
+    ],
+    [
+     "Radiant Summit",
+     1
+    ],
+    [
+     "Rally the Ancestors",
+     1
+    ],
+    [
+     "Reconstruct History",
+     1
+    ],
+    [
+     "Reliquary Tower",
+     1
+    ],
+    [
+     "Return to Dust",
+     1
+    ],
+    [
+     "Rugged Prairie",
+     1
+    ],
+    [
+     "Sacred Peaks",
+     1
+    ],
+    [
+     "Seize the Spoils",
+     1
+    ],
+    [
+     "Selfless Spirit",
+     1
+    ],
+    [
+     "Serra Paragon",
+     1
+    ],
+    [
+     "Sevinne's Reclamation",
+     1
+    ],
+    [
+     "Skyclave Apparition",
+     1
+    ],
+    [
+     "Spirit of Resilience",
+     1
+    ],
+    [
+     "Squee, the Immortal",
+     1
+    ],
+    [
+     "Sun Titan",
+     1
+    ],
+    [
+     "Sunbaked Canyon",
+     1
+    ],
+    [
+     "Sunscorched Divide",
+     1
+    ],
+    [
+     "Sword of the Animist",
+     1
+    ],
+    [
+     "Swords to Plowshares",
+     1
+    ],
+    [
+     "Temple of Triumph",
+     1
+    ],
+    [
+     "Terramorphic Expanse",
+     1
+    ],
+    [
+     "Teshar, Ancestor's Apostle",
+     1
+    ],
+    [
+     "Thrilling Discovery",
+     1
+    ],
+    [
+     "Tocasia's Welcome",
+     1
+    ],
+    [
+     "Turbulent Steppe",
+     1
+    ],
+    [
+     "Valakut Exploration",
+     1
+    ],
+    [
+     "Venerable Warsinger",
+     1
+    ],
+    [
+     "Wind-Scarred Crag",
+     1
+    ],
+    [
+     "Winds of Abandon",
+     1
+    ]
+   ],
+   "D2": [
+    [
+     "Ancient Greenwarden",
+     1
+    ],
+    [
+     "Arcane Signet",
+     1
+    ],
+    [
+     "Azorius Chancery",
+     1
+    ],
+    [
+     "Azorius Guildgate",
+     1
+    ],
+    [
+     "Bant Panorama",
+     1
+    ],
+    [
+     "Bilbo Baggins, Burglar // Take a Glance",
+     1
+    ],
+    [
+     "Blossoming Sands",
+     1
+    ],
+    [
+     "Bofur, Reliable Guardian // Concerted Care",
+     1
+    ],
+    [
+     "Cast Out",
+     1
+    ],
+    [
+     "Charming Prince",
+     1
+    ],
+    [
+     "Chulane, Teller of Tales",
+     1
+    ],
+    [
+     "Cloudblazer",
+     1
+    ],
+    [
+     "Coiling Oracle",
+     1
+    ],
+    [
+     "Counterspell",
+     1
+    ],
+    [
+     "Cultivate",
+     1
+    ],
+    [
+     "Deputy of Detention",
+     1
+    ],
+    [
+     "Dundoolin Weaver",
+     1
+    ],
+    [
+     "Elvish Visionary",
+     1
+    ],
+    [
+     "Ephemerate",
+     1
+    ],
+    [
+     "Eternal Witness",
+     1
+    ],
+    [
+     "Evolving Wilds",
+     1
+    ],
+    [
+     "Faeburrow Elder",
+     1
+    ],
+    [
+     "Farhaven Elf",
+     1
+    ],
+    [
+     "Farseek",
+     1
+    ],
+    [
+     "Fblthp, the Lost",
+     1
+    ],
+    [
+     "Fell the Mighty",
+     1
+    ],
+    [
+     "Fertilid",
+     1
+    ],
+    [
+     "Forest",
+     10
+    ],
+    [
+     "Freed from the Real",
+     1
+    ],
+    [
+     "Glacial Fortress",
+     1
+    ],
+    [
+     "Hinterland Harbor",
+     1
+    ],
+    [
+     "Intruder Alarm",
+     1
+    ],
+    [
+     "Island",
+     8
+    ],
+    [
+     "Kami of Ancient Law",
+     1
+    ],
+    [
+     "Knight of Autumn",
+     1
+    ],
+    [
+     "Llanowar Elves",
+     1
+    ],
+    [
+     "Man-o'-War",
+     1
+    ],
+    [
+     "Meandering River",
+     1
+    ],
+    [
+     "Mirkwood Nurturer",
+     1
+    ],
+    [
+     "Mistmeadow Witch",
+     1
+    ],
+    [
+     "Mulldrifter",
+     1
+    ],
+    [
+     "Negate",
+     1
+    ],
+    [
+     "Peregrine Drake",
+     1
+    ],
+    [
+     "Plains",
+     7
+    ],
+    [
+     "Reclamation Sage",
+     1
+    ],
+    [
+     "Reflector Mage",
+     1
+    ],
+    [
+     "Reliquary Tower",
+     1
+    ],
+    [
+     "Roon of the Hidden Realm",
+     1
+    ],
+    [
+     "Satyr Wayfinder",
+     1
+    ],
+    [
+     "Seaside Citadel",
+     1
+    ],
+    [
+     "Selesnya Guildgate",
+     1
+    ],
+    [
+     "Sheltering Word",
+     1
+    ],
+    [
+     "Shinestriker",
+     1
+    ],
+    [
+     "Shrieking Drake",
+     1
+    ],
+    [
+     "Simic Guildgate",
+     1
+    ],
+    [
+     "Simic Signet",
+     1
+    ],
+    [
+     "Siren's Ruse",
+     1
+    ],
+    [
+     "Skyshroud Claim",
+     1
+    ],
+    [
+     "Sol Ring",
+     1
+    ],
+    [
+     "Song of the Dryads",
+     1
+    ],
+    [
+     "Soulherder",
+     1
+    ],
+    [
+     "Stonecloaker",
+     1
+    ],
+    [
+     "Sylvan Ranger",
+     1
+    ],
+    [
+     "Tatyova, Benthic Druid",
+     1
+    ],
+    [
+     "Temple of Enlightenment",
+     1
+    ],
+    [
+     "Temur Sabertooth",
+     1
+    ],
+    [
+     "Terramorphic Expanse",
+     1
+    ],
+    [
+     "The Eternal Wanderer",
+     1
+    ],
+    [
+     "Tireless Provisioner",
+     1
+    ],
+    [
+     "Valorous Stance",
+     1
+    ],
+    [
+     "Voyager Staff",
+     1
+    ],
+    [
+     "Wavesifter",
+     1
+    ],
+    [
+     "Wood Elves",
+     1
+    ],
+    [
+     "Yavimaya Elder",
+     1
+    ],
+    [
+     "Zendikar's Roil",
+     1
+    ]
+   ],
+   "D3": [
+    [
+     "Aetheric Amplifier",
+     1
+    ],
+    [
+     "Anguished Unmaking",
+     1
+    ],
+    [
+     "Arcane Sanctum",
+     1
+    ],
+    [
+     "Astral Cornucopia",
+     1
+    ],
+    [
+     "Atraxa, Praetors' Voice",
+     1
+    ],
+    [
+     "Azorius Signet",
+     1
+    ],
+    [
+     "Bitterthorn, Nissa's Animus",
+     1
+    ],
+    [
+     "Blight Rot",
+     1
+    ],
+    [
+     "Branching Evolution",
+     1
+    ],
+    [
+     "Bristlebane Battler",
+     1
+    ],
+    [
+     "Cast Out",
+     1
+    ],
+    [
+     "Chromatic Lantern",
+     1
+    ],
+    [
+     "Contagion Clasp",
+     1
+    ],
+    [
+     "Deepglow Skate",
+     1
+    ],
+    [
+     "Despark",
+     1
+    ],
+    [
+     "Dismal Backwater",
+     1
+    ],
+    [
+     "Drowned Catacomb",
+     1
+    ],
+    [
+     "Everflowing Chalice",
+     1
+    ],
+    [
+     "Evolving Wilds",
+     1
+    ],
+    [
+     "Exotic Orchard",
+     1
+    ],
+    [
+     "Fall of the First Civilization",
+     1
+    ],
+    [
+     "Fertilid",
+     1
+    ],
+    [
+     "Flux Channeler",
+     1
+    ],
+    [
+     "Forest",
+     6
+    ],
+    [
+     "Fuel for the Cause",
+     1
+    ],
+    [
+     "Fynn, the Fangbearer",
+     1
+    ],
+    [
+     "Go for the Throat",
+     1
+    ],
+    [
+     "Gollum, Riddle Master",
+     1
+    ],
+    [
+     "Grateful Apparition",
+     1
+    ],
+    [
+     "Guardian of the Halls",
+     1
+    ],
+    [
+     "Guardian Scalelord",
+     1
+    ],
+    [
+     "Ichormoon Gauntlet",
+     1
+    ],
+    [
+     "Inexorable Tide",
+     1
+    ],
+    [
+     "Innkeeper's Talent",
+     1
+    ],
+    [
+     "Island",
+     6
+    ],
+    [
+     "Karn's Bastion",
+     1
+    ],
+    [
+     "Long Goodbye",
+     1
+    ],
+    [
+     "Lotus Field",
+     1
+    ],
+    [
+     "Merfolk Skydiver",
+     1
+    ],
+    [
+     "Mirkwood",
+     1
+    ],
+    [
+     "Mortify",
+     1
+    ],
+    [
+     "Nature's Lore",
+     1
+    ],
+    [
+     "Octopus Form",
+     1
+    ],
+    [
+     "Ordeal of Nylea",
+     1
+    ],
+    [
+     "Origin of Metalbending",
+     1
+    ],
+    [
+     "Painful Truths",
+     1
+    ],
+    [
+     "Plaguemaw Beast",
+     1
+    ],
+    [
+     "Plains",
+     6
+    ],
+    [
+     "Plunder the Trollshaws",
+     1
+    ],
+    [
+     "Rage into the Valley",
+     1
+    ],
+    [
+     "Reaping Willow",
+     1
+    ],
+    [
+     "Repel Calamity",
+     1
+    ],
+    [
+     "Rootborn Defenses",
+     1
+    ],
+    [
+     "Simic Signet",
+     1
+    ],
+    [
+     "Steady Progress",
+     1
+    ],
+    [
+     "Strixhaven Stadium",
+     1
+    ],
+    [
+     "Sunpetal Grove",
+     1
+    ],
+    [
+     "Swamp",
+     6
+    ],
+    [
+     "Sword of the Animist",
+     1
+    ],
+    [
+     "Tekuthal, Inquiry Dominus",
+     1
+    ],
+    [
+     "Temple of Silence",
+     1
+    ],
+    [
+     "Tezzeret's Gambit",
+     1
+    ],
+    [
+     "The Restoration of Eiganjo // Architect of Restoration",
+     1
+    ],
+    [
+     "Throne of Geth",
+     1
+    ],
+    [
+     "Thrummingbird",
+     1
+    ],
+    [
+     "Tidus, Yuna's Guardian",
+     1
+    ],
+    [
+     "Tome of Legends",
+     1
+    ],
+    [
+     "Tragic Arrogance",
+     1
+    ],
+    [
+     "Troll Negotiations",
+     1
+    ],
+    [
+     "Valorous Stance",
+     1
+    ],
+    [
+     "Viral Drake",
+     1
+    ],
+    [
+     "Wall of Resurgence",
+     1
+    ]
+   ],
+   "D4": [
+    [
+     "Arboreal Grazer",
+     1
+    ],
+    [
+     "Ash Barrens",
+     1
+    ],
+    [
+     "Axebane Guardian",
+     1
+    ],
+    [
+     "Belligerent Brontodon",
+     1
+    ],
+    [
+     "Betor, Ancestor's Voice",
+     1
+    ],
+    [
+     "Blight Pile",
+     1
+    ],
+    [
+     "Blossoming Sands",
+     1
+    ],
+    [
+     "Burnished Hart",
+     1
+    ],
+    [
+     "Canopy Gargantuan",
+     1
+    ],
+    [
+     "Carven Caryatid",
+     1
+    ],
+    [
+     "Caves of Koilos",
+     1
+    ],
+    [
+     "Chain Assassination",
+     1
+    ],
+    [
+     "Collective Effort",
+     1
+    ],
+    [
+     "Crashing Drawbridge",
+     1
+    ],
+    [
+     "Despark",
+     1
+    ],
+    [
+     "Destroy Evil",
+     1
+    ],
+    [
+     "Dragonlord Dromoka",
+     1
+    ],
+    [
+     "Drumbellower",
+     1
+    ],
+    [
+     "Eerie Ultimatum",
+     1
+    ],
+    [
+     "Fateful Absence",
+     1
+    ],
+    [
+     "Feed the Swarm",
+     1
+    ],
+    [
+     "Fell the Mighty",
+     1
+    ],
+    [
+     "Felothar the Steadfast",
+     1
+    ],
+    [
+     "Forest",
+     9
+    ],
+    [
+     "Fortified Village",
+     1
+    ],
+    [
+     "Freyalise, Llanowar's Fury",
+     1
+    ],
+    [
+     "Golgari Guildgate",
+     1
+    ],
+    [
+     "Golgari Signet",
+     1
+    ],
+    [
+     "Guardian of Faith",
+     1
+    ],
+    [
+     "Huatli, the Sun's Heart",
+     1
+    ],
+    [
+     "Ikra Shidiqi, the Usurper",
+     1
+    ],
+    [
+     "Indomitable Ancients",
+     1
+    ],
+    [
+     "Isolated Chapel",
+     1
+    ],
+    [
+     "Jaddi Offshoot",
+     1
+    ],
+    [
+     "Lys Alana Dignitary",
+     1
+    ],
+    [
+     "Mentor of the Meek",
+     1
+    ],
+    [
+     "Mirkwood",
+     1
+    ],
+    [
+     "Myriad Landscape",
+     1
+    ],
+    [
+     "Nyx-Fleece Ram",
+     1
+    ],
+    [
+     "Orzhov Signet",
+     1
+    ],
+    [
+     "Overgrown Battlement",
+     1
+    ],
+    [
+     "Path of Ancestry",
+     1
+    ],
+    [
+     "Phyrexian Arena",
+     1
+    ],
+    [
+     "Plains",
+     9
+    ],
+    [
+     "Portcullis Vine",
+     1
+    ],
+    [
+     "Prophetic Prism",
+     1
+    ],
+    [
+     "Putrefy",
+     1
+    ],
+    [
+     "Sandsteppe Citadel",
+     1
+    ],
+    [
+     "Sapling of Colfenor",
+     1
+    ],
+    [
+     "Selesnya Signet",
+     1
+    ],
+    [
+     "Shalai, Voice of Plenty",
+     1
+    ],
+    [
+     "Shield-Wall Sentinel",
+     1
+    ],
+    [
+     "Sidar Kondo of Jamuraa",
+     1
+    ],
+    [
+     "Slaughter the Strong",
+     1
+    ],
+    [
+     "Soul of New Phyrexia",
+     1
+    ],
+    [
+     "Sun Titan",
+     1
+    ],
+    [
+     "Sunpetal Grove",
+     1
+    ],
+    [
+     "Swamp",
+     9
+    ],
+    [
+     "Sylvan Caryatid",
+     1
+    ],
+    [
+     "Tree of Perdition",
+     1
+    ],
+    [
+     "Tree of Redemption",
+     1
+    ],
+    [
+     "Treefolk Umbra",
+     1
+    ],
+    [
+     "Valorous Stance",
+     1
+    ],
+    [
+     "Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal",
+     1
+    ],
+    [
+     "Vindicate",
+     1
+    ],
+    [
+     "Wakestone Gargoyle",
+     1
+    ],
+    [
+     "Walking Bulwark",
+     1
+    ],
+    [
+     "Wall of Limbs",
+     1
+    ],
+    [
+     "Wall of Mulch",
+     1
+    ],
+    [
+     "Wave of Reckoning",
+     1
+    ],
+    [
+     "Weathered Sentinels",
+     1
+    ],
+    [
+     "Welcoming Vampire",
+     1
+    ],
+    [
+     "Wingmantle Chaplain",
+     1
+    ],
+    [
+     "Winnowing",
+     1
+    ],
+    [
+     "Wood Elves",
+     1
+    ],
+    [
+     "Zetalpa, Primal Dawn",
+     1
+    ]
+   ],
+   "D5": [
+    [
+     "Angel of Indemnity",
+     1
+    ],
+    [
+     "Anointer Priest",
+     1
+    ],
+    [
+     "Arcane Signet",
+     1
+    ],
+    [
+     "Bastion of Remembrance",
+     1
+    ],
+    [
+     "Blight Rot",
+     1
+    ],
+    [
+     "Boggart Cursecrafter",
+     1
+    ],
+    [
+     "Boggart Mischief",
+     1
+    ],
+    [
+     "Castle Ardenvale",
+     1
+    ],
+    [
+     "Clachan Festival",
+     1
+    ],
+    [
+     "Combat Calligrapher",
+     1
+    ],
+    [
+     "Concealed Courtyard",
+     1
+    ],
+    [
+     "Corpse Knight",
+     1
+    ],
+    [
+     "Cruel Celebrant",
+     1
+    ],
+    [
+     "Deadly Dispute",
+     1
+    ],
+    [
+     "Dreadhorde Invasion",
+     1
+    ],
+    [
+     "Earth Kingdom Jailer",
+     1
+    ],
+    [
+     "Elas il-Kor, Sadistic Pilgrim",
+     1
+    ],
+    [
+     "Elspeth, Sun's Nemesis",
+     1
+    ],
+    [
+     "Emptiness",
+     1
+    ],
+    [
+     "Filigree Familiar",
+     1
+    ],
+    [
+     "Fracture",
+     1
+    ],
+    [
+     "Genesis Chamber",
+     1
+    ],
+    [
+     "Hidden Stockpile",
+     1
+    ],
+    [
+     "Impassioned Orator",
+     1
+    ],
+    [
+     "Indulging Patrician",
+     1
+    ],
+    [
+     "Intangible Virtue",
+     1
+    ],
+    [
+     "Isolated Chapel",
+     1
+    ],
+    [
+     "Kambal, Profiteering Mayor",
+     1
+    ],
+    [
+     "Keeper of the Accord",
+     1
+    ],
+    [
+     "Kithkeeper",
+     1
+    ],
+    [
+     "Lethal Scheme",
+     1
+    ],
+    [
+     "Lingering Souls",
+     1
+    ],
+    [
+     "Mind Stone",
+     1
+    ],
+    [
+     "Ministrant of Obligation",
+     1
+    ],
+    [
+     "Monologue Tax",
+     1
+    ],
+    [
+     "Myr Battlesphere",
+     1
+    ],
+    [
+     "Nadier's Nightblade",
+     1
+    ],
+    [
+     "Orzhov Basilica",
+     1
+    ],
+    [
+     "Orzhov Signet",
+     1
+    ],
+    [
+     "Ossification",
+     1
+    ],
+    [
+     "Pawn of Ulamog",
+     1
+    ],
+    [
+     "Pitiless Plunderer",
+     1
+    ],
+    [
+     "Plains",
+     16
+    ],
+    [
+     "Prideful Feastling",
+     1
+    ],
+    [
+     "Promise of Loyalty",
+     1
+    ],
+    [
+     "Raise the Alarm",
+     1
+    ],
+    [
+     "Read the Bones",
+     1
+    ],
+    [
+     "Requiem Angel",
+     1
+    ],
+    [
+     "Rootborn Defenses",
+     1
+    ],
+    [
+     "Scoured Barrens",
+     1
+    ],
+    [
+     "Secret Rendezvous",
+     1
+    ],
+    [
+     "Sevinne's Reclamation",
+     1
+    ],
+    [
+     "Shadrix Silverquill",
+     1
+    ],
+    [
+     "Skullclamp",
+     1
+    ],
+    [
+     "Smuggler's Copter",
+     1
+    ],
+    [
+     "Spectacular Tactics",
+     1
+    ],
+    [
+     "Spectral Procession",
+     1
+    ],
+    [
+     "Staff of the Storyteller",
+     1
+    ],
+    [
+     "Swamp",
+     16
+    ],
+    [
+     "Sword of the Animist",
+     1
+    ],
+    [
+     "Swords to Plowshares",
+     1
+    ],
+    [
+     "Terror",
+     1
+    ],
+    [
+     "Teysa Karlov",
+     1
+    ],
+    [
+     "Tithe Taker",
+     1
+    ],
+    [
+     "Vault of the Archangel",
+     1
+    ],
+    [
+     "Village Rites",
+     1
+    ],
+    [
+     "Viscera Seer",
+     1
+    ],
+    [
+     "Welcoming Vampire",
+     1
+    ],
+    [
+     "Zack Fair",
+     1
+    ],
+    [
+     "Zulaport Cutthroat",
+     1
+    ]
+   ],
+   "D6": [
+    [
+     "Abrade",
+     1
+    ],
+    [
+     "Akoum Hellhound",
+     1
+    ],
+    [
+     "Alexios, Deimos of Kosmos",
+     1
+    ],
+    [
+     "Anger",
+     1
+    ],
+    [
+     "Arcane Signet",
+     1
+    ],
+    [
+     "Barrage of Expendables",
+     1
+    ],
+    [
+     "Beetleback Chief",
+     1
+    ],
+    [
+     "Buried Ruin",
+     1
+    ],
+    [
+     "Castle Embereth",
+     1
+    ],
+    [
+     "Chaos Warp",
+     1
+    ],
+    [
+     "Cinder Strike",
+     1
+    ],
+    [
+     "Conspicuous Snoop",
+     1
+    ],
+    [
+     "Dragon Fodder",
+     1
+    ],
+    [
+     "Dwarven Mattock",
+     1
+    ],
+    [
+     "Empty the Warrens",
+     1
+    ],
+    [
+     "Evolving Wilds",
+     1
+    ],
+    [
+     "Explorer's Scope",
+     1
+    ],
+    [
+     "Faithless Looting",
+     1
+    ],
+    [
+     "Fanatical Firebrand",
+     1
+    ],
+    [
+     "Fearsome Goblin Pair",
+     1
+    ],
+    [
+     "Foundry Street Denizen",
+     1
+    ],
+    [
+     "Goblin Bombardment",
+     1
+    ],
+    [
+     "Goblin Chieftain",
+     1
+    ],
+    [
+     "Goblin Gathering",
+     1
+    ],
+    [
+     "Goblin Instigator",
+     1
+    ],
+    [
+     "Goblin Matron",
+     1
+    ],
+    [
+     "Goblin Rabblemaster",
+     1
+    ],
+    [
+     "Goblin Rally",
+     1
+    ],
+    [
+     "Goblin Ringleader",
+     1
+    ],
+    [
+     "Goblin Trashmaster",
+     1
+    ],
+    [
+     "Goblin Warchief",
+     1
+    ],
+    [
+     "Gundabad Opportunist",
+     1
+    ],
+    [
+     "Hanweir Garrison",
+     1
+    ],
+    [
+     "Hordeling Outburst",
+     1
+    ],
+    [
+     "Ichor Wellspring",
+     1
+    ],
+    [
+     "Impact Tremors",
+     1
+    ],
+    [
+     "Kher Keep",
+     1
+    ],
+    [
+     "Krenko, Mob Boss",
+     1
+    ],
+    [
+     "Krenko, Tin Street Kingpin",
+     1
+    ],
+    [
+     "Krenko's Command",
+     1
+    ],
+    [
+     "Legion Warboss",
+     1
+    ],
+    [
+     "Light Up the Stage",
+     1
+    ],
+    [
+     "Massive Raid",
+     1
+    ],
+    [
+     "Mind Stone",
+     1
+    ],
+    [
+     "Mogg War Marshal",
+     1
+    ],
+    [
+     "Mountain",
+     32
+    ],
+    [
+     "Naktamun Lorespinner // Wheel of Fortune",
+     1
+    ],
+    [
+     "Ogre Battledriver",
+     1
+    ],
+    [
+     "Outpost Siege",
+     1
+    ],
+    [
+     "Patchwork Banner",
+     1
+    ],
+    [
+     "Pilgrim's Eye",
+     1
+    ],
+    [
+     "Purphoros, God of the Forge",
+     1
+    ],
+    [
+     "Quest for the Goblin Lord",
+     1
+    ],
+    [
+     "Raid Bombardment",
+     1
+    ],
+    [
+     "Shared Animosity",
+     1
+    ],
+    [
+     "Siege-Gang Commander",
+     1
+    ],
+    [
+     "Skirk Prospector",
+     1
+    ],
+    [
+     "Skullclamp",
+     1
+    ],
+    [
+     "Sourbread Auntie",
+     1
+    ],
+    [
+     "Squee, Dubious Monarch",
+     1
+    ],
+    [
+     "Swiftfoot Boots",
+     1
+    ],
+    [
+     "Thornbite Staff",
+     1
+    ],
+    [
+     "Thousand-Year Elixir",
+     1
+    ],
+    [
+     "Thrill of Possibility",
+     1
+    ],
+    [
+     "Tweeze",
+     1
+    ],
+    [
+     "Underworld Breach",
+     1
+    ],
+    [
+     "Vandalblast",
+     1
+    ],
+    [
+     "Voldaren Epicure",
+     1
+    ],
+    [
+     "Witty Roastmaster",
+     1
+    ]
+   ]
+  },
+  "bench": [
+   [
+    "Abigale, Eloquent First-Year",
+    1
+   ],
+   [
+    "Access Tunnel",
+    1
+   ],
+   [
+    "Aetherize",
+    1
+   ],
+   [
+    "Air Nomad Legacy",
+    1
+   ],
+   [
+    "Airship Engine Room",
+    1
+   ],
+   [
+    "Ao, the Dawn Sky",
+    1
+   ],
+   [
+    "Arbaaz Mir",
+    1
+   ],
+   [
+    "Arcades, the Strategist",
+    1
+   ],
+   [
+    "Argentum Masticore",
+    1
+   ],
+   [
+    "Arno Dorian",
+    1
+   ],
+   [
+    "Artisan of Kozilek",
+    1
+   ],
+   [
+    "Ashling, Rekindled // Ashling, Rimebound",
+    1
+   ],
+   [
+    "Assault Formation",
+    1
+   ],
+   [
+    "Attercop",
+    2
+   ],
+   [
+    "Auntie's Sentence",
+    1
+   ],
+   [
+    "Awaken the Erstwhile",
+    1
+   ],
+   [
+    "Axebane Guardian",
+    2
+   ],
+   [
+    "Azorius Guildgate",
+    1
+   ],
+   [
+    "Bard the Bowman",
+    1
+   ],
+   [
+    "Bayek of Siwa",
+    1
+   ],
+   [
+    "Bilbo's Deadly Slice",
+    1
+   ],
+   [
+    "Bile-Vial Boggart",
+    1
+   ],
+   [
+    "Blasphemous Act",
+    1
+   ],
+   [
+    "Blizzard Strix",
+    1
+   ],
+   [
+    "Bloodthirsty Adversary",
+    1
+   ],
+   [
+    "Boar-q-pine",
+    1
+   ],
+   [
+    "Bolrac-Clan Crusher",
+    1
+   ],
+   [
+    "Bombur, Gentle Dreamer",
+    1
+   ],
+   [
+    "Bothersome Noisemaker",
+    1
+   ],
+   [
+    "Boughside Wanderers",
+    1
+   ],
+   [
+    "Bronze Guardian",
+    1
+   ],
+   [
+    "Burdened Stoneback",
+    1
+   ],
+   [
+    "Burn, Burn, Tree and Fern",
+    1
+   ],
+   [
+    "Burning Curiosity",
+    1
+   ],
+   [
+    "Cathar Commando",
+    1
+   ],
+   [
+    "Changeling Wayfinder",
+    1
+   ],
+   [
+    "Chaos Spewer",
+    2
+   ],
+   [
+    "Chitinous Graspling",
+    1
+   ],
+   [
+    "Civic Stalwart",
+    1
+   ],
+   [
+    "Claim Jumper",
+    1
+   ],
+   [
+    "Clan Guildmage",
+    1
+   ],
+   [
+    "Cloud's Limit Break",
+    1
+   ],
+   [
+    "Combustion Technique",
+    1
+   ],
+   [
+    "Concealed Courtyard",
+    1
+   ],
+   [
+    "Conspiracy Theorist",
+    1
+   ],
+   [
+    "Contagion Clasp",
+    1
+   ],
+   [
+    "Court Street Denizen",
+    1
+   ],
+   [
+    "Curious Farm Animals",
+    1
+   ],
+   [
+    "Dai Li Indoctrination",
+    1
+   ],
+   [
+    "Danitha Capashen, Paragon",
+    1
+   ],
+   [
+    "Dawn-Blessed Pennant",
+    1
+   ],
+   [
+    "Dawn's Light Archer",
+    1
+   ],
+   [
+    "Day of Black Sun",
+    1
+   ],
+   [
+    "Day of Judgment",
+    1
+   ],
+   [
+    "Deepchannel Duelist",
+    1
+   ],
+   [
+    "Desmond Miles",
+    1
+   ],
+   [
+    "Disenchant",
+    1
+   ],
+   [
+    "Divert Disaster",
+    1
+   ],
+   [
+    "Dori, Bearer of Friends",
+    1
+   ],
+   [
+    "Dreaded Bat-Cloud",
+    1
+   ],
+   [
+    "Drogskol Shieldmate",
+    1
+   ],
+   [
+    "Dundoolin Weaver",
+    2
+   ],
+   [
+    "Dwarven Mauler",
+    1
+   ],
+   [
+    "Dwarven Provisioner",
+    2
+   ],
+   [
+    "Dwarven Shortsword",
+    2
+   ],
+   [
+    "Eagle of the Great Shelf",
+    1
+   ],
+   [
+    "Eldrazi Ravager",
+    2
+   ],
+   [
+    "Enchanted River's Grasp",
+    2
+   ],
+   [
+    "Endbringer",
+    1
+   ],
+   [
+    "Enraged Flamecaster",
+    2
+   ],
+   [
+    "Esgaroth Garrison",
+    2
+   ],
+   [
+    "Explorer's Scope",
+    2
+   ],
+   [
+    "Explosive Prodigy",
+    1
+   ],
+   [
+    "Faerie Duelist",
+    1
+   ],
+   [
+    "Fancy Footwork",
+    1
+   ],
+   [
+    "Fateful Tempest",
+    1
+   ],
+   [
+    "Fearsome Goblin Pair",
+    1
+   ],
+   [
+    "Feisty Spikeling",
+    1
+   ],
+   [
+    "Fire Nation Cadets",
+    1
+   ],
+   [
+    "Flaring Cinder",
+    1
+   ],
+   [
+    "Foggy Swamp Vinebender",
+    1
+   ],
+   [
+    "Foraging Wickermaw",
+    2
+   ],
+   [
+    "Forest",
+    55
+   ],
+   [
+    "Front Porch Sentries",
+    4
+   ],
+   [
+    "Frontline Medic",
+    1
+   ],
+   [
+    "Fynn, the Fangbearer",
+    1
+   ],
+   [
+    "Gandalf, Wandering Wizard",
+    1
+   ],
+   [
+    "Gangly Stompling",
+    2
+   ],
+   [
+    "Gathering of Darkness",
+    1
+   ],
+   [
+    "Getaway Barrel",
+    1
+   ],
+   [
+    "Ghor-Clan Wrecker",
+    1
+   ],
+   [
+    "Giant Koi",
+    1
+   ],
+   [
+    "Giant's Boulder",
+    2
+   ],
+   [
+    "Gilt-Leaf's Embrace",
+    1
+   ],
+   [
+    "Glamer Gifter",
+    1
+   ],
+   [
+    "Glamermite",
+    1
+   ],
+   [
+    "Glider Kids",
+    1
+   ],
+   [
+    "Glóin the Mighty // Easy Pickings",
+    1
+   ],
+   [
+    "Gloom Ripper",
+    1
+   ],
+   [
+    "Goblin-town",
+    1
+   ],
+   [
+    "Goldvein Pick",
+    1
+   ],
+   [
+    "Golgari Guildgate",
+    1
+   ],
+   [
+    "Gollum, Silent Slinker // Meager Meal",
+    1
+   ],
+   [
+    "Gran-Gran",
+    1
+   ],
+   [
+    "Grand Coliseum",
+    1
+   ],
+   [
+    "Grazing Gladehart",
+    1
+   ],
+   [
+    "Great Fierce Bee",
+    2
+   ],
+   [
+    "Gristle Glutton",
+    1
+   ],
+   [
+    "Guardian of the Halls",
+    3
+   ],
+   [
+    "Gundabad Opportunist",
+    2
+   ],
+   [
+    "Hanweir Garrison",
+    1
+   ],
+   [
+    "Haystack",
+    1
+   ],
+   [
+    "Heirloom Auntie",
+    1
+   ],
+   [
+    "Hemlock Vial",
+    1
+   ],
+   [
+    "Inspiring Call",
+    1
+   ],
+   [
+    "Iron Hills Stalwart",
+    1
+   ],
+   [
+    "Ironsoul Enforcer",
+    1
+   ],
+   [
+    "Island",
+    68
+   ],
+   [
+    "Jungle Barrier",
+    1
+   ],
+   [
+    "Kin-Tree Invocation",
+    1
+   ],
+   [
+    "Kindle the Inner Flame",
+    1
+   ],
+   [
+    "Kithkeeper",
+    1
+   ],
+   [
+    "Knight of Old Benalia",
+    1
+   ],
+   [
+    "Kor Cartographer",
+    1
+   ],
+   [
+    "Krenko, Mob Boss",
+    1
+   ],
+   [
+    "Krenko's Command",
+    1
+   ],
+   [
+    "Kulrath Zealot",
+    2
+   ],
+   [
+    "Kyoshi Island Plaza",
+    1
+   ],
+   [
+    "Lake-town",
+    1
+   ],
+   [
+    "Lake-town Lookout",
+    1
+   ],
+   [
+    "Lake-town Toymaker",
+    1
+   ],
+   [
+    "Large Bear",
+    1
+   ],
+   [
+    "Little Bear",
+    1
+   ],
+   [
+    "Long Lake Nuisance",
+    2
+   ],
+   [
+    "Loyal Inventor",
+    1
+   ],
+   [
+    "Luminollusk",
+    1
+   ],
+   [
+    "Lys Alana Informant",
+    1
+   ],
+   [
+    "Magnificent End",
+    1
+   ],
+   [
+    "Make Your Move",
+    1
+   ],
+   [
+    "Maralen, Fae Ascendant",
+    1
+   ],
+   [
+    "Meandering River",
+    1
+   ],
+   [
+    "Meandering Towershell",
+    1
+   ],
+   [
+    "Meanders Guide",
+    2
+   ],
+   [
+    "Merrow Skyswimmer",
+    1
+   ],
+   [
+    "Midnight Tilling",
+    1
+   ],
+   [
+    "Migration Path",
+    1
+   ],
+   [
+    "Millikin",
+    1
+   ],
+   [
+    "Mirkwood",
+    2
+   ],
+   [
+    "Mirkwood Nurturer",
+    2
+   ],
+   [
+    "Mirkwood Pathmaker",
+    1
+   ],
+   [
+    "Mirrodin Avenged",
+    1
+   ],
+   [
+    "Mirrorform",
+    1
+   ],
+   [
+    "Moment of Glory",
+    2
+   ],
+   [
+    "Monastery Raid",
+    1
+   ],
+   [
+    "Moonglove Extractor",
+    3
+   ],
+   [
+    "Moonlit Lamenter",
+    1
+   ],
+   [
+    "Mountain",
+    48
+   ],
+   [
+    "Mulch",
+    1
+   ],
+   [
+    "Night Market",
+    1
+   ],
+   [
+    "Nightmare Sower",
+    2
+   ],
+   [
+    "Nori, Teller of Tales",
+    1
+   ],
+   [
+    "Northern Air Temple",
+    1
+   ],
+   [
+    "Odric, Lunarch Marshal",
+    1
+   ],
+   [
+    "Óin the Brave",
+    1
+   ],
+   [
+    "Old Fat Spider",
+    1
+   ],
+   [
+    "Old Fat Spider Can't See Me",
+    1
+   ],
+   [
+    "Old Thrush",
+    1
+   ],
+   [
+    "Ordinary Bear",
+    1
+   ],
+   [
+    "Ori, Keeper of Songs",
+    2
+   ],
+   [
+    "Origin of Metalbending",
+    2
+   ],
+   [
+    "Orzhov Guildgate",
+    1
+   ],
+   [
+    "Overgrown Battlement",
+    2
+   ],
+   [
+    "Patient Instructor",
+    1
+   ],
+   [
+    "Pawn of Ulamog",
+    1
+   ],
+   [
+    "Pilgrim's Eye",
+    2
+   ],
+   [
+    "Plains",
+    42
+   ],
+   [
+    "Platypus-Bear",
+    2
+   ],
+   [
+    "Portcullis Vine",
+    1
+   ],
+   [
+    "Pretending Poxbearers",
+    2
+   ],
+   [
+    "Prophetic Prism",
+    1
+   ],
+   [
+    "Protector of the Wastes",
+    1
+   ],
+   [
+    "Purphoros's Intervention",
+    1
+   ],
+   [
+    "Quarrel",
+    2
+   ],
+   [
+    "Rage into the Valley",
+    1
+   ],
+   [
+    "Ragged Short Spear",
+    2
+   ],
+   [
+    "Ratonhnhaké꞉ton",
+    1
+   ],
+   [
+    "Ravening Warg",
+    1
+   ],
+   [
+    "Rebellious Captives",
+    1
+   ],
+   [
+    "Reckless Ransacking",
+    1
+   ],
+   [
+    "Relic Retriever",
+    1
+   ],
+   [
+    "Reluctant Dounguard",
+    1
+   ],
+   [
+    "Remorseful Cleric",
+    1
+   ],
+   [
+    "Rhox Faithmender",
+    1
+   ],
+   [
+    "Rimekin Recluse",
+    1
+   ],
+   [
+    "Rip Apart",
+    1
+   ],
+   [
+    "Ritual of Soot",
+    1
+   ],
+   [
+    "Riverguard's Reflexes",
+    2
+   ],
+   [
+    "Rocketeer Boostbuggy",
+    1
+   ],
+   [
+    "Roon of the Hidden Realm",
+    1
+   ],
+   [
+    "Rugged Highlands",
+    1
+   ],
+   [
+    "Salvation Colossus",
+    1
+   ],
+   [
+    "Selesnya Guildgate",
+    1
+   ],
+   [
+    "Senate Griffin",
+    1
+   ],
+   [
+    "Settle the Wreckage",
+    1
+   ],
+   [
+    "Shore Lurker",
+    1
+   ],
+   [
+    "Siege Smash",
+    1
+   ],
+   [
+    "Simic Guildgate",
+    1
+   ],
+   [
+    "Smaug, the Great Calamity // Spew Flame",
+    2
+   ],
+   [
+    "Spectacular Tactics",
+    2
+   ],
+   [
+    "Spiral into Solitude",
+    1
+   ],
+   [
+    "Squee, Goblin Nabob",
+    1
+   ],
+   [
+    "Stalactite Dagger",
+    1
+   ],
+   [
+    "Steady Progress",
+    1
+   ],
+   [
+    "Stir Up Trouble",
+    2
+   ],
+   [
+    "Stone by Sunlight",
+    1
+   ],
+   [
+    "Stony Strength",
+    1
+   ],
+   [
+    "Stony-Voiced Goblins",
+    1
+   ],
+   [
+    "Stratosoarer",
+    1
+   ],
+   [
+    "Study Hall",
+    1
+   ],
+   [
+    "Summit Sentinel",
+    1
+   ],
+   [
+    "Sun-Dappled Celebrant",
+    2
+   ],
+   [
+    "Surly Farrier",
+    1
+   ],
+   [
+    "Swamp",
+    51
+   ],
+   [
+    "Swampsnare Trap",
+    1
+   ],
+   [
+    "Sylvan Brushstrider",
+    1
+   ],
+   [
+    "Temple of the False God",
+    1
+   ],
+   [
+    "Temporal Cleansing",
+    1
+   ],
+   [
+    "Tempt with Vengeance",
+    1
+   ],
+   [
+    "Terror",
+    1
+   ],
+   [
+    "The Black Arrow",
+    1
+   ],
+   [
+    "The Misty Mountains Cold",
+    1
+   ],
+   [
+    "Thirsting Shade",
+    1
+   ],
+   [
+    "Thorin's Last Stand",
+    1
+   ],
+   [
+    "Thornwood Falls",
+    2
+   ],
+   [
+    "Thoughtweft Imbuer",
+    1
+   ],
+   [
+    "Thranduil's Decree",
+    1
+   ],
+   [
+    "Thrór's Map",
+    1
+   ],
+   [
+    "Tidings of War",
+    1
+   ],
+   [
+    "Timber Gorge",
+    1
+   ],
+   [
+    "Timid Shieldbearer",
+    1
+   ],
+   [
+    "Tower Defense",
+    1
+   ],
+   [
+    "Tranquil Expanse",
+    2
+   ],
+   [
+    "Triskaidekaphobia",
+    1
+   ],
+   [
+    "Ultima, Origin of Oblivion",
+    1
+   ],
+   [
+    "Unbury",
+    1
+   ],
+   [
+    "Undercity's Embrace",
+    1
+   ],
+   [
+    "Uneasy Partings",
+    2
+   ],
+   [
+    "Unexpected Assistance",
+    2
+   ],
+   [
+    "Unforgiving Aim",
+    1
+   ],
+   [
+    "Unwelcome Sprite",
+    1
+   ],
+   [
+    "Vampire Hexmage",
+    2
+   ],
+   [
+    "Vanguard of the Restless",
+    1
+   ],
+   [
+    "Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal",
+    1
+   ],
+   [
+    "Viral Drake",
+    1
+   ],
+   [
+    "Voracious Tome-Skimmer",
+    1
+   ],
+   [
+    "Wanderwine Distracter",
+    1
+   ],
+   [
+    "Wartime Protestors",
+    1
+   ],
+   [
+    "Wave of Reckoning",
+    1
+   ],
+   [
+    "Wayward Swordtooth",
+    1
+   ],
+   [
+    "Weathered Sentinels",
+    1
+   ],
+   [
+    "Weathered Wayfarer",
+    2
+   ],
+   [
+    "Well-Worn Spatula",
+    1
+   ],
+   [
+    "White Orchid Phantom",
+    1
+   ],
+   [
+    "Wild Pack Squad",
+    1
+   ],
+   [
+    "Wilderness Reclamation",
+    1
+   ],
+   [
+    "Wildvine Pummeler",
+    3
+   ],
+   [
+    "Woodland Weavemaster",
+    1
+   ],
+   [
+    "Yip Yip!",
+    1
+   ],
+   [
+    "Zetalpa, Primal Dawn",
+    1
+   ]
   ]
+ },
+ "ordered": [
+  [
+   "Anguished Unmaking",
+   1
+  ],
+  [
+   "Caves of Koilos",
+   1
+  ],
+  [
+   "Chocobo Knights",
+   1
+  ],
+  [
+   "Evolution Sage",
+   1
+  ],
+  [
+   "Forgotten Ancient",
+   1
+  ],
+  [
+   "Krosan Verge",
+   1
+  ],
+  [
+   "Radiant Grove",
+   1
+  ],
+  [
+   "Rampart Architect",
+   1
+  ],
+  [
+   "Sol Ring",
+   2
+  ],
+  [
+   "Wall of Omens",
+   1
+  ],
+  [
+   "Wall of Reverence",
+   1
+  ],
+  [
+   "Wall of Roots",
+   1
+  ]
+ ],
+ "buy": [
+  [
+   "Adarkar Wastes",
+   2,
+   0.4
+  ],
+  [
+   "Ancient Lumberknot",
+   1,
+   0.23
+  ],
+  [
+   "Anguished Unmaking",
+   1,
+   1.46
+  ],
+  [
+   "Approach of the Second Sun",
+   1,
+   6.66
+  ],
+  [
+   "Arbor Adherent",
+   1,
+   1.87
+  ],
+  [
+   "Arcane Signet",
+   1,
+   0.41
+  ],
+  [
+   "Battle Hymn",
+   1,
+   1.55
+  ],
+  [
+   "Beast Within",
+   1,
+   0.6
+  ],
+  [
+   "Blood Artist",
+   1,
+   2.79
+  ],
+  [
+   "Boros Signet",
+   1,
+   0.52
+  ],
+  [
+   "Brushland",
+   2,
+   1.71
+  ],
+  [
+   "Caves of Koilos",
+   1,
+   0.71
+  ],
+  [
+   "Chancellor of the Forge",
+   1,
+   1.11
+  ],
+  [
+   "Command Tower",
+   4,
+   0.22
+  ],
+  [
+   "Contentious Plan",
+   1,
+   0.39
+  ],
+  [
+   "Den of the Bugbear",
+   1,
+   1.33
+  ],
+  [
+   "Dream Stalker",
+   1,
+   0.17
+  ],
+  [
+   "Expel the Interlopers",
+   1,
+   0.25
+  ],
+  [
+   "Ezuri, Stalker of Spheres",
+   1,
+   0.79
+  ],
+  [
+   "Fellwar Stone",
+   1,
+   0.85
+  ],
+  [
+   "Goblin Burrows",
+   1,
+   0.3
+  ],
+  [
+   "Goblin Piledriver",
+   1,
+   2.58
+  ],
+  [
+   "Hobgoblin Bandit Lord",
+   1,
+   4.77
+  ],
+  [
+   "Idol of Oblivion",
+   1,
+   1.85
+  ],
+  [
+   "Infectious Inquiry",
+   1,
+   0.52
+  ],
+  [
+   "Kiora's Follower",
+   1,
+   0.34
+  ],
+  [
+   "Lightning Greaves",
+   1,
+   4.59
+  ],
+  [
+   "Llanowar Wastes",
+   2,
+   0.58
+  ],
+  [
+   "Lorehold Command",
+   1,
+   0.41
+  ],
+  [
+   "Magistrate's Scepter",
+   1,
+   3.09
+  ],
+  [
+   "Marauding Blight-Priest",
+   1,
+   0.19
+  ],
+  [
+   "Mirkwood Bats",
+   1,
+   1.43
+  ],
+  [
+   "Night's Whisper",
+   2,
+   0.29
+  ],
+  [
+   "Ophiomancer",
+   1,
+   0.96
+  ],
+  [
+   "Pashalik Mons",
+   1,
+   3.9
+  ],
+  [
+   "Phyrexian Arena",
+   1,
+   3.74
+  ],
+  [
+   "Priest of Forgotten Gods",
+   1,
+   0.59
+  ],
+  [
+   "Prologue to Phyresis",
+   1,
+   0.53
+  ],
+  [
+   "Reckless Bushwhacker",
+   1,
+   0.19
+  ],
+  [
+   "Release to Memory",
+   1,
+   0.55
+  ],
+  [
+   "Restoration Angel",
+   1,
+   0.33
+  ],
+  [
+   "Saruli Caretaker",
+   1,
+   0.27
+  ],
+  [
+   "Shineshadow Snarl",
+   1,
+   0.27
+  ],
+  [
+   "Skirk Fire Marshal",
+   1,
+   0.93
+  ],
+  [
+   "Sol Ring",
+   2,
+   1.45
+  ],
+  [
+   "Unbreakable Formation",
+   3,
+   0.74
+  ],
+  [
+   "Underground River",
+   1,
+   2.39
+  ],
+  [
+   "Vraska, Betrayal's Sting",
+   1,
+   0.94
+  ],
+  [
+   "Wall of Blossoms",
+   1,
+   0.29
+  ],
+  [
+   "Warleader's Call",
+   1,
+   2.98
+  ],
+  [
+   "Whitemane Lion",
+   1,
+   0.09
+  ],
+  [
+   "Windborn Muse",
+   1,
+   0.54
+  ],
+  [
+   "Woe Strider",
+   1,
+   0.21
+  ],
+  [
+   "Yahenni, Undying Partisan",
+   1,
+   0.3
+  ],
+  [
+   "Yavimaya Coast",
+   2,
+   0.36
+  ]
+ ],
+ "upgrades": [
+  {
+   "deck": "D1",
+   "card": "Jeska's Will",
+   "replaces": "Seize the Spoils",
+   "tier": 1,
+   "price": 38.27,
+   "why": "Mana equal to an opponent's hand plus three cards off the top. It is the turn where Quintorius goes from grinding to winning."
+  },
+  {
+   "deck": "D1",
+   "card": "Underworld Breach",
+   "replaces": "Primary Research",
+   "tier": 1,
+   "price": 10.54,
+   "why": "Every spell you cast from the graveyard is a card leaving the graveyard, so every one is also a Spirit. This is the deck's engine, not a value piece."
+  },
+  {
+   "deck": "D1",
+   "card": "Mizzix's Mastery",
+   "replaces": "Advanced Reconstruction",
+   "tier": 2,
+   "price": 7.52,
+   "why": "Exiles a spell out of the graveyard and copies it. Two Quintorius triggers and a free sorcery in one card."
+  },
+  {
+   "deck": "D1",
+   "card": "Anim Pakal, Thousandth Moon",
+   "replaces": "Ceaseless Conflict",
+   "tier": 2,
+   "price": 5.01,
+   "why": "Scales every combat instead of a five-mana spell that does not touch the graveyard."
+  },
+  {
+   "deck": "D1",
+   "card": "Boros Charm",
+   "replaces": "Lorehold Charm",
+   "tier": 2,
+   "price": 4.83,
+   "why": "Four damage, or team indestructible through a wipe, or double strike. Three answers on one card instead of one."
+  },
+  {
+   "deck": "D1",
+   "card": "Goblin Bombardment",
+   "replaces": "Currency Converter",
+   "tier": 2,
+   "price": 4.02,
+   "why": "A free sacrifice outlet turns every Spirit into damage. The deck makes bodies and currently has no way to cash them in."
+  },
+  {
+   "deck": "D1",
+   "card": "Feldon of the Third Path",
+   "replaces": "Squee, the Immortal",
+   "tier": 2,
+   "price": 1.38,
+   "why": "Repeatable creature recursion every turn, and the token is exiled at end of turn so the card leaves the graveyard again."
+  },
+  {
+   "deck": "D1",
+   "card": "Sunforger",
+   "replaces": "Perpetual Timepiece",
+   "tier": 3,
+   "price": 4.04,
+   "why": "Tutors any instant in the deck straight onto the stack. Consistency for a deck built on the right answer at the right time."
+  },
+  {
+   "deck": "D1",
+   "card": "Brought Back",
+   "replaces": "Cathartic Reunion",
+   "tier": 3,
+   "price": 1.83,
+   "why": "Two permanents back at instant speed for two mana, and two cards leaving the graveyard means two Spirits."
+  },
+  {
+   "deck": "D1",
+   "card": "Unbreakable Formation",
+   "replaces": "Thrilling Discovery",
+   "tier": 3,
+   "price": 1.55,
+   "why": "One mana of insurance against the wipe that otherwise ends your game."
+  },
+  {
+   "deck": "D2",
+   "card": "Finale of Devastation",
+   "replaces": "Farseek",
+   "tier": 1,
+   "price": 37.89,
+   "why": "Tutors any creature to the battlefield, and for large X it is the game-ending pump. One card that is both the setup and the finish."
+  },
+  {
+   "deck": "D2",
+   "card": "Elesh Norn, Mother of Machines",
+   "replaces": "Satyr Wayfinder",
+   "tier": 1,
+   "price": 24.17,
+   "why": "Doubles every enter-the-battlefield trigger you have and shuts off every one your opponents have. In a deck built on ETBs this is two cards in one."
+  },
+  {
+   "deck": "D2",
+   "card": "Cloudstone Curio",
+   "replaces": "Fblthp, the Lost",
+   "tier": 1,
+   "price": 17.33,
+   "why": "With Chulane out, two cheap creatures bounce each other forever. This is the card that turns the deck from good value into a combo deck."
+  },
+  {
+   "deck": "D2",
+   "card": "Displacer Kitten",
+   "replaces": "Freed from the Real",
+   "tier": 2,
+   "price": 32.38,
+   "why": "Blinks a nonland permanent every time you cast a noncreature spell. Free value on cards you were casting anyway."
+  },
+  {
+   "deck": "D2",
+   "card": "Sylvan Library",
+   "replaces": "Reclamation Sage",
+   "tier": 2,
+   "price": 27.9,
+   "why": "The best card selection in green. Fixes the draws where Chulane never lands."
+  },
+  {
+   "deck": "D2",
+   "card": "Aetherflux Reservoir",
+   "replaces": "Approach of the Second Sun",
+   "tier": 2,
+   "price": 20.45,
+   "why": "Same-turn kill off either infinite loop. Cut on second review; Approach does it for a third of the price."
+  },
+  {
+   "deck": "D2",
+   "card": "Heroic Intervention",
+   "replaces": "Unbreakable Formation",
+   "tier": 2,
+   "price": 15.52,
+   "why": "Hexproof and indestructible at instant speed. Cut on second review in favour of Unbreakable Formation at $0.74."
+  },
+  {
+   "deck": "D2",
+   "card": "Guardian Project",
+   "replaces": "Kami of Ancient Law",
+   "tier": 2,
+   "price": 15.17,
+   "why": "A card every time a nontoken creature enters. Chulane already draws you one; this doubles it."
+  },
+  {
+   "deck": "D2",
+   "card": "Emiel the Blessed",
+   "replaces": "Mistmeadow Witch",
+   "tier": 2,
+   "price": 13.56,
+   "why": "A blink outlet that costs three and needs no blue, and it grows the creature it blinks."
+  },
+  {
+   "deck": "D2",
+   "card": "Beast Whisperer",
+   "replaces": "Elvish Visionary",
+   "tier": 3,
+   "price": 9,
+   "why": "A card on every creature spell instead of a card once."
+  },
+  {
+   "deck": "D2",
+   "card": "Ghostly Flicker",
+   "replaces": "Coiling Oracle",
+   "tier": 3,
+   "price": 2.2,
+   "why": "Two blinks for one card, and it can reset lands as well as creatures."
+  },
+  {
+   "deck": "D3",
+   "card": "Cyclonic Rift",
+   "replaces": "Fuel for the Cause",
+   "tier": 1,
+   "price": 39.54,
+   "why": "Overloaded it bounces every nonland permanent your opponents control at instant speed. It is the single best turn this deck can have."
+  },
+  {
+   "deck": "D3",
+   "card": "Vorinclex, Monstrous Raider",
+   "replaces": "Viral Drake",
+   "tier": 1,
+   "price": 33.36,
+   "why": "Doubles every counter you place and halves every counter your opponents get. Atraxa's proliferate becomes twice as fast and their proliferate stops working."
+  },
+  {
+   "deck": "D3",
+   "card": "Teferi's Protection",
+   "replaces": "Repel Calamity",
+   "tier": 1,
+   "price": 33.07,
+   "why": "The wipe answer the deck does not have. Phases out everything you own and makes you untargetable until your next turn."
+  },
+  {
+   "deck": "D3",
+   "card": "Damning Verdict",
+   "replaces": "Tragic Arrogance",
+   "tier": 1,
+   "price": 11.11,
+   "why": "A one-sided wipe. Everything without a +1/+1 counter dies, and your board is made of +1/+1 counters."
+  },
+  {
+   "deck": "D3",
+   "card": "Heroic Intervention",
+   "replaces": "Valorous Stance",
+   "tier": 2,
+   "price": 15.52,
+   "why": "Two mana to save the entire board. The second layer of wipe insurance behind Teferi's Protection."
+  },
+  {
+   "deck": "D3",
+   "card": "Contagion Engine",
+   "replaces": "Fall of the First Civilization",
+   "tier": 2,
+   "price": 13.67,
+   "why": "One-sided -1/-1 wipe plus a second proliferate every turn. Cut on second review; Fall of the First Civilization does the wipe job free."
+  },
+  {
+   "deck": "D3",
+   "card": "Cathars' Crusade",
+   "replaces": "Wall of Resurgence",
+   "tier": 2,
+   "price": 10.77,
+   "why": "A +1/+1 counter on every creature you control every time a creature enters. It compounds with every token and every proliferate."
+  },
+  {
+   "deck": "D3",
+   "card": "Herald of Secret Streams",
+   "replaces": "Guardian Scalelord",
+   "tier": 2,
+   "price": 7.75,
+   "why": "Every creature with a counter becomes unblockable. It turns a stalled counters board into lethal."
+  },
+  {
+   "deck": "D3",
+   "card": "Kalonian Hydra",
+   "replaces": "Plaguemaw Beast",
+   "tier": 2,
+   "price": 7.06,
+   "why": "Doubles the counters on every creature you control whenever it attacks."
+  },
+  {
+   "deck": "D3",
+   "card": "Beast Whisperer",
+   "replaces": "Blight Rot",
+   "tier": 3,
+   "price": 9,
+   "why": "A card on every creature spell in the deck with the most creatures."
+  },
+  {
+   "deck": "D3",
+   "card": "Skrelv, Defector Mite",
+   "replaces": "Tezzeret's Gambit",
+   "tier": 3,
+   "price": 4.24,
+   "why": "One mana, and it gives a creature protection to dodge removal or to push damage through."
+  },
+  {
+   "deck": "D3",
+   "card": "Corpsejack Menace",
+   "replaces": "Ichormoon Gauntlet",
+   "tier": 3,
+   "price": 0.92,
+   "why": "Doubles every counter that would be placed on your creatures for four mana."
+  },
+  {
+   "deck": "D3",
+   "card": "Master Biomancer",
+   "replaces": "Steady Progress",
+   "tier": 3,
+   "price": 0.81,
+   "why": "Every creature you cast arrives with counters already on it. The Hexmage removes counters, which fights your own plan."
+  },
+  {
+   "deck": "D4",
+   "card": "Heroic Intervention",
+   "replaces": "Weathered Sentinels",
+   "tier": 1,
+   "price": 15.52,
+   "why": "Two mana to protect the board you spent the game assembling."
+  },
+  {
+   "deck": "D4",
+   "card": "Vigor",
+   "replaces": "Canopy Gargantuan",
+   "tier": 1,
+   "price": 14.34,
+   "why": "All damage to your creatures becomes +1/+1 counters instead. In a toughness deck it makes combat unlosable."
+  },
+  {
+   "deck": "D4",
+   "card": "Grand Abolisher",
+   "replaces": "Wall of Limbs",
+   "tier": 2,
+   "price": 18.21,
+   "why": "Opponents cannot cast spells or activate abilities during your turn. Your wipe and your alpha both resolve untouched."
+  },
+  {
+   "deck": "D4",
+   "card": "Doran, the Siege Tower",
+   "replaces": "Nyx-Fleece Ram",
+   "tier": 2,
+   "price": 8.44,
+   "why": "A fifth global toughness-as-damage body. Cut from the order on second review; the deck has four already."
+  },
+  {
+   "deck": "D4",
+   "card": "Angelic Chorus",
+   "replaces": "Shield-Wall Sentinel",
+   "tier": 2,
+   "price": 8.43,
+   "why": "Life equal to toughness every time a creature enters, and your creatures are all toughness."
+  },
+  {
+   "deck": "D4",
+   "card": "Ghostly Prison",
+   "replaces": "Slaughter the Strong",
+   "tier": 2,
+   "price": 6.58,
+   "why": "Taxes every attack against you. A defensive deck should be nearly unattackable."
+  },
+  {
+   "deck": "D4",
+   "card": "Wall of Blood",
+   "replaces": "Walking Bulwark",
+   "tier": 2,
+   "price": 2.15,
+   "why": "Toughness with no ceiling, and Betor counts total toughness."
+  },
+  {
+   "deck": "D4",
+   "card": "Shield of the Oversoul",
+   "replaces": "Treefolk Umbra",
+   "tier": 2,
+   "price": 1.85,
+   "why": "Indestructible and flying on top of the pump, so the creature survives wipes and gets through."
+  },
+  {
+   "deck": "D4",
+   "card": "Karador, Ghost Chieftain",
+   "replaces": "Sapling of Colfenor",
+   "tier": 2,
+   "price": 0.33,
+   "why": "A creature back from the graveyard every turn, for thirty-three cents."
+  },
+  {
+   "deck": "D4",
+   "card": "Stalwart Shield-Bearers",
+   "replaces": "Portcullis Vine",
+   "tier": 3,
+   "price": 1.9,
+   "why": "Plus zero plus two to the whole team pushes several creatures over Betor's next threshold at once."
+  },
+  {
+   "deck": "D4",
+   "card": "Kodama's Reach",
+   "replaces": "Carven Caryatid",
+   "tier": 3,
+   "price": 1.78,
+   "why": "Ramp and fixing in the three-color deck with the fewest mana sources to spare."
+  },
+  {
+   "deck": "D4",
+   "card": "Perimeter Captain",
+   "replaces": "Nyx-Fleece Ram",
+   "tier": 3,
+   "price": 1.34,
+   "why": "Life every time a defender blocks, which is every combat in this deck. (v12: Jaddi Offshoot left the deck; the Ram is the other lifegain wall.)"
+  },
+  {
+   "deck": "D4",
+   "card": "Wall of Junk",
+   "replaces": "Wall of Mulch",
+   "tier": 3,
+   "price": 0.3,
+   "why": "A 0/6 that returns to your hand every time it blocks. Thirty cents for an infinite blocker."
+  },
+  {
+   "deck": "D5",
+   "card": "Grave Pact",
+   "replaces": "Emptiness",
+   "tier": 1,
+   "price": 33.54,
+   "why": "Every creature that dies on your side makes each opponent sacrifice one. With tokens dying constantly it dismantles three boards at once."
+  },
+  {
+   "deck": "D5",
+   "card": "Dictate of Erebos",
+   "replaces": "Genesis Chamber",
+   "tier": 1,
+   "price": 17.01,
+   "why": "The same effect as Grave Pact with flash, so it lands after a wipe and punishes it."
+  },
+  {
+   "deck": "D5",
+   "card": "Bolas's Citadel",
+   "replaces": "Elspeth, Sun's Nemesis",
+   "tier": 1,
+   "price": 16.37,
+   "why": "Play off the top of your library paying life instead of mana. In a deck already gaining life it is close to a free win."
+  },
+  {
+   "deck": "D5",
+   "card": "Divine Visitation",
+   "replaces": "Intangible Virtue",
+   "tier": 1,
+   "price": 0.44,
+   "why": "Every token you would make becomes a 4/4 Angel instead. Forty-four cents, and it is the biggest single upgrade on this entire tab."
+  },
+  {
+   "deck": "D5",
+   "card": "Ashnod's Altar",
+   "replaces": "Pawn of Ulamog",
+   "tier": 2,
+   "price": 16.65,
+   "why": "Fifth free outlet and two mana per body. Cut from the order on second review because four free outlets already exist; still the best single upgrade for the deck."
+  },
+  {
+   "deck": "D5",
+   "card": "Cathars' Crusade",
+   "replaces": "Anointer Priest",
+   "tier": 2,
+   "price": 10.77,
+   "why": "A +1/+1 counter on everything each time a creature enters. Your tokens stop being 1/1s."
+  },
+  {
+   "deck": "D5",
+   "card": "Black Market Connections",
+   "replaces": "Impassioned Orator",
+   "tier": 2,
+   "price": 8.77,
+   "why": "A treasure, a body and a card every turn, all optional, all at the cost of some life you are already gaining back."
+  },
+  {
+   "deck": "D5",
+   "card": "Inkshield",
+   "replaces": "Rootborn Defenses",
+   "tier": 2,
+   "price": 5.59,
+   "why": "Prevents the attack that would kill you and turns the damage into that many 1/1 fliers."
+  },
+  {
+   "deck": "D5",
+   "card": "Elenda, the Dusk Rose",
+   "replaces": "Indulging Patrician",
+   "tier": 2,
+   "price": 5.28,
+   "why": "Grows on every death and then dies into an army of Vampires."
+  },
+  {
+   "deck": "D5",
+   "card": "Felisa, Fang of Silverquill",
+   "replaces": "Tithe Taker",
+   "tier": 2,
+   "price": 1.92,
+   "why": "Counters on your creatures and a 2/1 Inkling every time one with a counter dies."
+  },
+  {
+   "deck": "D5",
+   "card": "Breena, the Demagogue",
+   "replaces": "Welcoming Vampire",
+   "tier": 2,
+   "price": 1.07,
+   "why": "Counters and cards every time an opponent is attacked, including by someone who is not you."
+  },
+  {
+   "deck": "D5",
+   "card": "Diabolic Tutor",
+   "replaces": "Raise the Alarm",
+   "tier": 3,
+   "price": 2.3,
+   "why": "Any card in the deck for four mana. Slow, but it finds Grave Pact or the Altar when the game demands it."
+  },
+  {
+   "deck": "D5",
+   "card": "Idol of Oblivion",
+   "replaces": "Staff of the Storyteller",
+   "tier": 3,
+   "price": 2.25,
+   "why": "A card each turn you made a token, which is nearly every turn."
+  },
+  {
+   "deck": "D6",
+   "card": "Coat of Arms",
+   "replaces": "Raid Bombardment",
+   "tier": 1,
+   "price": 21.13,
+   "why": "Every goblin gets plus one plus one for every other goblin. Thirty tokens becomes lethal instead of chip damage."
+  },
+  {
+   "deck": "D6",
+   "card": "Kiki-Jiki, Mirror Breaker",
+   "replaces": "Goblin Instigator",
+   "tier": 1,
+   "price": 16.24,
+   "why": "Copy Krenko every turn. Each copy taps for goblins equal to your goblin count, and the count doubles as it goes."
+  },
+  {
+   "deck": "D6",
+   "card": "Muxus, Goblin Grandee",
+   "replaces": "Beetleback Chief",
+   "tier": 1,
+   "price": 13.32,
+   "why": "Look at the top six and put every goblin onto the battlefield. It refills a wiped board in one card."
+  },
+  {
+   "deck": "D6",
+   "card": "Umbral Mantle",
+   "replaces": "Thrill of Possibility",
+   "tier": 1,
+   "price": 10.5,
+   "why": "Three mana untaps Krenko. With enough goblins producing mana, that is arbitrarily many goblins in one turn."
+  },
+  {
+   "deck": "D6",
+   "card": "Goblin Lackey",
+   "replaces": "Fanatical Firebrand",
+   "tier": 2,
+   "price": 9.37,
+   "why": "One damage on turn two puts Krenko or Muxus onto the battlefield for free."
+  },
+  {
+   "deck": "D6",
+   "card": "Goblin Recruiter",
+   "replaces": "Goblin Gathering",
+   "tier": 2,
+   "price": 6.55,
+   "why": "Stacks the top of your library with exactly the goblins you need, in the order you need them."
+  },
+  {
+   "deck": "D6",
+   "card": "Rundvelt Hordemaster",
+   "replaces": "Outpost Siege",
+   "tier": 2,
+   "price": 4.39,
+   "why": "Goblins you cast get menace and dead goblins come back off the top. Recursion in the color that has almost none."
+  }
+ ]
 }

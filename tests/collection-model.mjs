@@ -245,4 +245,23 @@ expectFailure('removeGroupEntries',{groupId:'plans',entryIds:[planned],quantity:
 run('removeGroupEntries',{groupId:'plans',entryIds:[planned]});assert.equal(s.groups.find(g=>g.id==='plans').entries.length,0);checks++;
 M.validate(s);checks++;
 
+
+// THE TWO SLOT FLAGS. Pinned keeps a card whatever the Lab suggests; Option marks it as the
+// first to come out when a swap is needed. They exclude each other, the flag moves no copy,
+// and a card that is replaced takes its flag with it rather than handing it to the newcomer.
+{
+  run('flag',{deckId:'d1',slotId:'rock1',option:true,why:'Redundant with the Signet'});
+  assert.equal(M.slot(s,'d1','rock1').option,true);assert.equal(M.slot(s,'d1','rock1').optionWhy,'Redundant with the Signet');checks+=2;
+  assert.equal(M.projection(s).filter(r=>r.deckId==='d1'&&r.slotId==='rock1').every(r=>r.option===true),true,'Need rows for the slot carry the flag');checks++;
+  run('pin',{deckId:'d1',slotId:'rock1',pinned:true});
+  assert.equal(M.slot(s,'d1','rock1').option,false,'Pinning clears the option flag');assert.equal(M.slot(s,'d1','rock1').optionWhy,'');assert.equal(M.slot(s,'d1','rock1').pinned,true);checks+=3;
+  run('flag',{deckId:'d1',slotId:'rock1',option:true});
+  assert.equal(M.slot(s,'d1','rock1').pinned,false,'Flagging clears the pin');checks++;
+  expectFailure('flag',{deckId:'d1',slotId:'nope',option:true},/slot/i);
+  const before=JSON.stringify(s.lots);run('flag',{deckId:'d1',slotId:'rock1',option:false});assert.equal(JSON.stringify(s.lots),before,'A flag never touches a copy');assert.equal(M.slot(s,'d1','rock1').option,false);checks+=2;
+  run('flag',{deckId:'d1',slotId:'rock1',option:true,why:'Going'});
+  run('swap',{deckId:'d1',slotId:'rock1',cardId:'stone',cards:[]});
+  assert.equal(M.slot(s,'d1','rock1').option,false,'The replacement does not inherit the flag');assert.equal(M.slot(s,'d1','rock1').cardId,'stone');checks+=2;
+  run('swap',{deckId:'d1',slotId:'rock1',cardId:'ring',cards:[]});
+}
 console.log(`collection-model: ${checks} checks passed; planned cards never become owned without acquisition.`);
