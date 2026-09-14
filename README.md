@@ -225,6 +225,22 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   card reads it back — W–L, win rate with its n, paid per win, the Wilson interval from
   `game-record.js` ("too few games to tell" under eight decided games) and the last ten
   games — and tiles carry `3–1` once games exist.
+- **Make the change** (`#change?deck=`): the Change List for one physical deck — what to pull
+  from the box and what to put in, one physical swap per row as *Remove this card → Put this
+  card in*. A removal is a substitute the list does not call for; an addition is a reserved
+  copy sitting on the Bench or in another deck's box (available now) or still ordered or to
+  buy (waiting, listed but not tickable, saying what it waits for); a substitute is paired with
+  the card whose seat it fills where one is on the way. A tick is one revision — the copy out
+  to the Bench, the copy in placed here — so Undo takes it back; *Do all available* makes every
+  ready row in one change. Four readings above the rows hold the box to the mana formula
+  (start at 38 lands, sub one out for every two cheap ramp pieces, never below 33, one back
+  for a high curve) and to the floors in `crankmagic-rules.js` (removal, wipes, ramp, draw,
+  Game Changers) — the box now, after what can be done now, after everything arrives, and the
+  list as written — amber where a reading breaks one. *Export Excel* writes the rows and the
+  readings as a two-sheet workbook; *Print* gives boxes to tick. *Make the change (n)* sits in
+  the deck page's hero for a final deck, under the Cards page's **More** menu for every final
+  deck, and in the Discover trace pane. `crankmagic-change.js` is pure and held to the live
+  library in `tests/crankmagic-change.mjs`.
 - **User Functions**: backup/restore, Load Live, enriched workbook export, legacy
   reconciliation, history/undo, comparison reset, optional mirror file and explicit Clear all.
 - **Simulation reports carry their hundred.** A report filed from the Lab or the deck page
@@ -392,7 +408,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 57 Node suites:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 58 Node suites:
 
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`
@@ -415,6 +431,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `crankmagic-trace` — `tests/crankmagic-trace.mjs`
 - `crankmagic-rules` — `tests/crankmagic-rules.mjs`
 - `crankmagic-sim` — `tests/crankmagic-sim.mjs`
+- `crankmagic-change` — `tests/crankmagic-change.mjs`
 - `crankmagic-tabletop` — `tests/crankmagic-tabletop.mjs`
 - `crankmagic-trade` — `tests/crankmagic-trade.mjs`
 - `crankmagic-workbook` — `tests/crankmagic-workbook.mjs`

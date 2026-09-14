@@ -308,6 +308,17 @@ try{
  await page.locator('.cm-deck-tile').filter({hasText:'Journey Goblins'}).getByRole('button').first().click();await page.getByRole('button',{name:/^Ready to add/}).click();
  await page.locator('.cm-pull-group[data-group=standin]').waitFor();/* This substitute "stays for now" (nothing real is ready for its seat), so Select all leaves it alone, as Mark all added does; the row's own tick still moves it. */eq(await page.locator('.cm-pull-group[data-group=standin] .cm-pull-select-all').count(),0);await page.locator('.cm-pull-group[data-group=standin] [data-pull-tick]').first().check();await page.waitForTimeout(900);current=await state();
  eq(current.lots.find(l=>l.cardId===wastesKey).location.kind,'bench');eq(CrankReadiness(current).standIns,0);
+ /* MAKE THE CHANGE (Rob, 14 September). The deck page's hero offers the change list for a final
+    deck: four readings held to the mana formula and the floors, one physical swap per row with
+    the row count the header states, an Excel export of the same rows, a tick that is one
+    revision, and a way in from the Cards page's More menu. */
+ await nav('Decks');await page.locator('.cm-deck-tile').filter({hasText:'Journey Goblins'}).getByRole('button').first().click();await page.getByRole('button',{name:/^Make the change/}).click();
+ await page.locator('.cm-change').waitFor();eq(await page.locator('.cm-change-reading').count(),4);
+ {const counts=await page.locator('.cm-change-counts').innerText();const n=Number(/(\d+) rows?/.exec(counts)[1]);eq(await page.locator('.cm-change-row').count(),n);
+  const sleeved=CrankReadiness(await state()).sleeved;ok(new RegExp(`^${sleeved}\\b`).test((await page.locator('.cm-change-reading').first().locator('dd').first().innerText()).trim()));
+  const changeDownload=page.waitForEvent('download');await click('Export Excel');const changeFile=await changeDownload;ok(/-change-list\.xlsx$/.test(changeFile.suggestedFilename()));ok((await fs.stat(await changeFile.path())).size>2000);
+  const ticks=page.locator('[data-change-tick]:not([disabled])');if(await ticks.count()){const before=(await state()).revision;await ticks.first().check();await page.waitForTimeout(900);ok((await state()).revision>before);ok(await page.locator('.cm-change-row.is-done').count()>=1);}}
+ await nav('Cards');await page.locator('#cm-roster-table').waitFor();await click('More');await page.getByRole('button',{name:'Make the change for Journey Goblins'}).click();await page.locator('.cm-change').waitFor();
  /* The roster's search is shared with the Shop, so it is cleared before the Shop steps read money. */
  await nav('Cards');await page.locator('#cm-roster-table').waitFor();await click('Clear filters');await page.waitForTimeout(300);
  /* MONEY ON THE BUY LIST. The Shop opens grouped by deck with a strip above the table: the

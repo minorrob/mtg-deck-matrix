@@ -36,7 +36,9 @@ const DECK = "deck:live:D1";
    order. Budgets are words / controls / explainer words. */
 const PAGES = [
   ["decks", "Decks", ".cm-deck-grid", [24, 8, 4], [24, 8, 4]],
-  [`decks?deck=${DECK}`, "Deck page", ".cm-deck-summary", [44, 14, 4], [44, 14, 4]],
+  /* Deck page (14 September): Make the change (n) joins the hero for a final deck — the change
+     list Rob asked for needs a way in from the deck itself; 44 → 48 words, 14 → 15 controls. */
+  [`decks?deck=${DECK}`, "Deck page", ".cm-deck-summary", [48, 15, 4], [48, 15, 4]],
   /* Cards (14 September): the seven count chips are buttons now — Rob asked for the counts to
      filter — and List · Sheet · Table sit on the tab row of every tab; 22 → 26, 10 → 11. */
   ["cards", "Cards · Library", "#cm-roster-table table", [76, 26, 16], [76, 26, 16]],
