@@ -1,5 +1,5 @@
 /**
- * Rewrites data/active-state.json from an audited "Deck Truth" sheet.
+ * Rewrites data/archive/active-state.json from an audited "Deck Truth" sheet.
  *
  * The sheet is one row per (deck, card): which deck it belongs to, whether it is in hand,
  * on order or still to buy, and how many copies. It is the record of a physical audit, so
@@ -22,10 +22,10 @@ const require = createRequire(import.meta.url);
 const Slot = require("../slot-model.js");
 const Lineup = require("../lineup-model.js");
 
-const STATE = new URL("../data/active-state.json", import.meta.url);
+const STATE = new URL("../data/archive/active-state.json", import.meta.url);
 const rows = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
 const doc = JSON.parse(fs.readFileSync(STATE, "utf8"));
-const plans = JSON.parse(fs.readFileSync(new URL("../data/buy-plans.json", import.meta.url), "utf8")).plans;
+const plans = JSON.parse(fs.readFileSync(new URL("../data/archive/buy-plans.json", import.meta.url), "utf8")).plans;
 
 /* Hand-added cards live in the state, not the buy catalog, because the catalog is
    regenerated from the build kit and anything written into it would be lost. The app

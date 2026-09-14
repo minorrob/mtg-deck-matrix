@@ -21,9 +21,9 @@ import {createRequire} from "node:module";
 const require = createRequire(import.meta.url);
 const Slot = require("../slot-model.js");
 
-const STATE = new URL("../data/active-state.json", import.meta.url);
+const STATE = new URL("../data/archive/active-state.json", import.meta.url);
 const doc = JSON.parse(fs.readFileSync(STATE, "utf8"));
-const plans = JSON.parse(fs.readFileSync(new URL("../data/buy-plans.json", import.meta.url), "utf8")).plans;
+const plans = JSON.parse(fs.readFileSync(new URL("../data/archive/buy-plans.json", import.meta.url), "utf8")).plans;
 const catalog = JSON.parse(fs.readFileSync(new URL("../data/cards.json", import.meta.url), "utf8")).cards;
 const fetched = JSON.parse(fs.readFileSync(process.argv[2], "utf8")).data;
 /* A second, optional payload used only to fill in bench cards that arrived without

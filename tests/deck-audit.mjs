@@ -16,7 +16,7 @@ const Lineup = require("../lineup-model.js");
 const Slot = require("../slot-model.js");
 
 const load = async (p) => JSON.parse(await readFile(new URL(p, import.meta.url), "utf8"));
-const plans = (await load("../data/buy-plans.json")).plans;
+const plans = (await load("../data/archive/buy-plans.json")).plans;
 const catalog = await load("../data/cards.json");
 const config = await load("../sim/config.json");
 const opponents = await load("../sim/opponents.json");

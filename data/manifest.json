@@ -1,0 +1,195 @@
+{
+ "schema": "manifest@1",
+ "generatedAt": "2026-09-14T04:49:34.791Z",
+ "generator": "tools/data-manifest.mjs",
+ "count": 17,
+ "files": [
+  {
+   "file": "data/cards.json",
+   "schema": "cards@2",
+   "stamp": "2026-09-14T03:54:14.124Z",
+   "generator": "tools/build-card-records.mjs",
+   "bytes": 4071160,
+   "sha256": "d5c67cce69da8ab65394652b93c29288f2972f835fdf8ce4b6695ec4701c3e8f",
+   "version": 7,
+   "served": true,
+   "cache": "precached"
+  },
+  {
+   "file": "data/card-facts.json",
+   "schema": "card-facts@1",
+   "stamp": "2026-09-14T03:54:14.124Z",
+   "generator": "tools/build-card-records.mjs",
+   "bytes": 483221,
+   "sha256": "db3d0362512c8115aff537c59c0f30d3adec1da407e817f1d2fa6688c2397f01",
+   "version": 4,
+   "served": true,
+   "cache": "precached"
+  },
+  {
+   "file": "data/commander-universe.json",
+   "schema": "commander-universe@1",
+   "stamp": "2026-09-10T19:30:12.188Z",
+   "generator": "tools/commander-universe.mjs",
+   "bytes": 1601799,
+   "sha256": "f098aaa241b32b67c01c386c4767454f2088268cbbeab664c982f6284e59cc5a",
+   "version": 3,
+   "served": true,
+   "cache": "precached"
+  },
+  {
+   "file": "data/commander-ranks.json",
+   "schema": "commander-ranks@1",
+   "stamp": "2026-09-10T19:30:59.182Z",
+   "generator": "tools/commander-ranks.mjs",
+   "bytes": 163200,
+   "sha256": "0999201f1837990a9113e8e39b191beeb8cb9ede1dfc28c84ecf23ead113ce69",
+   "version": 3,
+   "served": true,
+   "cache": "precached"
+  },
+  {
+   "file": "data/flavor-names.json",
+   "schema": "flavor-names@1",
+   "stamp": "2026-09-10T19:30:53.628Z",
+   "generator": "tools/flavor-names.mjs",
+   "bytes": 35717,
+   "sha256": "1f4d85f1a875107b42713322b2a018bd5e379a72032a39d7122581635dafc615",
+   "version": 3,
+   "served": true,
+   "cache": "precached"
+  },
+  {
+   "file": "data/commander-glossary.json",
+   "schema": "commander-glossary@1",
+   "stamp": "2026-09-07.3",
+   "generator": "hand-maintained",
+   "bytes": 136973,
+   "sha256": "53a48ee6727fe50d008a1dfba1ab3c0e3c8b1a60c57566fd8f56f40093f1b4d7",
+   "version": 2,
+   "served": true,
+   "cache": "precached"
+  },
+  {
+   "file": "data/deck-guides.json",
+   "schema": "deck-guides@1",
+   "stamp": "2026-09-08",
+   "generator": "tools/generate-guides.mjs",
+   "bytes": 7152,
+   "sha256": "37c351c5b3741d08b00d796b0def76b4bd7bd1cad78082c9095c00b325b30e6b",
+   "version": 4,
+   "served": true,
+   "cache": "precached"
+  },
+  {
+   "file": "data/deck-ratings.json",
+   "schema": "deck-ratings@1",
+   "stamp": "2026-09-14T03:59:24.208Z",
+   "generator": "tools/sim/rate-decks.mjs",
+   "bytes": 460552,
+   "sha256": "e6ed09a8dff585bebb56838c5403e44446216ed28a8a64752029e6e596465b3c",
+   "version": null,
+   "served": false,
+   "cache": "not served"
+  },
+  {
+   "file": "data/simulation-summary.json",
+   "schema": "simulation-summary@3",
+   "stamp": "2026-09-08T16:42:22.145Z",
+   "generator": "tools/sim/rate-decks.mjs",
+   "bytes": 175079,
+   "sha256": "237c18e86263f0513ebfed5298488f2416bdc808a3341fa5db4daa12622b253b",
+   "version": null,
+   "served": false,
+   "cache": "not served"
+  },
+  {
+   "file": "data/graph.json",
+   "schema": "graph@2",
+   "stamp": "2026-09-11T17:28:45.280Z",
+   "generator": "tools/graph-amplifiers.mjs",
+   "bytes": 16611161,
+   "sha256": "aa0f1343e2ed327e92910a87352014cc12a26e81bd206edbb23786bb9a12de71",
+   "version": 17,
+   "served": true,
+   "cache": "on demand"
+  },
+  {
+   "file": "data/graph-played.json",
+   "schema": "graph-played@2",
+   "stamp": "2026-09-14T00:14:11.638Z",
+   "generator": "tools/graph-amplifiers.mjs",
+   "bytes": 21606876,
+   "sha256": "0d59ce296060e7225157559f5d2de9a09ea086157d88c5d81d03a6d0fddde251",
+   "version": 2,
+   "served": true,
+   "cache": "on demand"
+  },
+  {
+   "file": "data/live-load.json",
+   "schema": "live-load@1",
+   "stamp": "2026-09-14T03:18:19Z",
+   "generator": "tools/build-live-load.mjs",
+   "bytes": 78859,
+   "sha256": "d45d4a9b0b19a3afc2743dac93fa585a9b6d41a60882c74252a70dc0a4d8a115",
+   "version": null,
+   "served": false,
+   "cache": "not served"
+  },
+  {
+   "file": "data/live-state.json",
+   "schema": "live-state@1",
+   "stamp": "2026-09-14T04:15:15.371Z",
+   "generator": "tools/build-live-state.mjs",
+   "bytes": 970021,
+   "sha256": "718466bb840c4904ec925617fe3afe91eb5b8b4598ca87c49ebc2e5665276c24",
+   "version": null,
+   "served": false,
+   "cache": "fetched by Load Live"
+  },
+  {
+   "file": "data/game-history.json",
+   "schema": "game-history@1",
+   "stamp": "2026-09-14T03:27:05.508Z",
+   "generator": "tools/compile-game-logs.mjs",
+   "bytes": 335,
+   "sha256": "d3c5deab3722ebf8cfcc80b73562303a1149305ff7d686887296999c46a0b9e1",
+   "version": null,
+   "served": false,
+   "cache": "not served"
+  },
+  {
+   "file": "sim/config.json",
+   "schema": "sim-config@2",
+   "stamp": null,
+   "generator": "hand-maintained",
+   "bytes": 1712,
+   "sha256": "d11878e4eace6c3198e0ff971b07a2992ad42197a5438dca36c084f49250cd1b",
+   "version": 2,
+   "served": true,
+   "cache": "not served"
+  },
+  {
+   "file": "sim/opponents.json",
+   "schema": "sim-opponents@2",
+   "stamp": null,
+   "generator": "hand-maintained",
+   "bytes": 9320,
+   "sha256": "430f8d11c990e54496cef1a62fc4c2ba8df53648f708d33ce3c995aebf97270c",
+   "version": 3,
+   "served": true,
+   "cache": "not served"
+  },
+  {
+   "file": "sim/status.json",
+   "schema": "sim-status@1",
+   "stamp": "2026-09-14T03:18:19.406Z",
+   "generator": "tools/sim/lib.mjs",
+   "bytes": 129,
+   "sha256": "aef2f6d5a507acc2c02c1dcec63e894596b0eb394a0ce8e18d15238e02b97f31",
+   "version": null,
+   "served": false,
+   "cache": "not served"
+  }
+ ]
+}

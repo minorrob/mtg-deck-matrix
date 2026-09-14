@@ -1,4 +1,4 @@
-// Writes an optimized list back into data/buy-plans.json, in place, so it ships
+// Writes an optimized list back into data/archive/buy-plans.json, in place, so it ships
 // with the site instead of living in one browser's storage.
 //
 //   node tools/sim/bake-result.mjs --result sim/results/<id>.json
@@ -89,10 +89,10 @@ console.log(`  list          ${check.result.total} cards · ${check.result.types
 console.log(`  changes       ${(result.netChanges || []).length} against the previous Tuned build`);
 
 if (args["dry-run"]) {
-  console.log("  dry run       data/buy-plans.json was not written");
+  console.log("  dry run       data/archive/buy-plans.json was not written");
   process.exit(0);
 }
 
-await writeJson(path.join(ROOT, "data/buy-plans.json"), buyPlans);
-console.log(`  written to    ${relative(path.join(ROOT, "data/buy-plans.json"))}`);
+await writeJson(path.join(ROOT, "data/archive/buy-plans.json"), buyPlans);
+console.log(`  written to    ${relative(path.join(ROOT, "data/archive/buy-plans.json"))}`);
 console.log("  now run       node tests/data-integrity.mjs && node tests/lineup-compliance.mjs");

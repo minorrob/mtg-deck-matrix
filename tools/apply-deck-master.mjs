@@ -1,5 +1,5 @@
 /**
- * Rewrites data/active-state.json from the Deck Master workbook.
+ * Rewrites data/archive/active-state.json from the Deck Master workbook.
  *
  * The workbook is one row per (deck, slot) for the six live decks, plus a Salvage section
  * that is the bench: cards you own that no deck has claimed. It is the record of a physical
@@ -34,10 +34,10 @@ const require = createRequire(import.meta.url);
 const Slot = require("../slot-model.js");
 const Lineup = require("../lineup-model.js");
 
-const STATE = new URL("../data/active-state.json", import.meta.url);
+const STATE = new URL("../data/archive/active-state.json", import.meta.url);
 const rows = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
 const doc = JSON.parse(fs.readFileSync(STATE, "utf8"));
-const plans = JSON.parse(fs.readFileSync(new URL("../data/buy-plans.json", import.meta.url), "utf8")).plans;
+const plans = JSON.parse(fs.readFileSync(new URL("../data/archive/buy-plans.json", import.meta.url), "utf8")).plans;
 const catalog = JSON.parse(fs.readFileSync(new URL("../data/cards.json", import.meta.url), "utf8")).cards;
 
 /* Hand-added cards live in the state, not the buy catalog, because the catalog is
@@ -307,4 +307,4 @@ if (unsupplied.length) {
   console.log(`\n${unsupplied.length} sheet card${unsupplied.length === 1 ? "" : "s"} could not go into the deck:`);
   unsupplied.forEach((r) => console.log(`  ${r.id} ${r.name} x${r.count} - ${r.why}`));
 }
-console.log(write ? "\nwritten to data/active-state.json" : "\n(dry run - pass --write to save)");
+console.log(write ? "\nwritten to data/archive/active-state.json" : "\n(dry run - pass --write to save)");

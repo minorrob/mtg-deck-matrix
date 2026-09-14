@@ -17,13 +17,13 @@ import {existsSync} from "node:fs";
 const require = createRequire(import.meta.url);
 const Lineup = require("../lineup-model.js");
 const variants = JSON.parse(await readFile(new URL("../data/archive/variants.json", import.meta.url), "utf8"));
-const buyPlans = JSON.parse(await readFile(new URL("../data/buy-plans.json", import.meta.url), "utf8"));
+const buyPlans = JSON.parse(await readFile(new URL("../data/archive/buy-plans.json", import.meta.url), "utf8"));
 const cards = JSON.parse(await readFile(new URL("../data/cards.json", import.meta.url), "utf8"));
 const simulationSummary = JSON.parse(await readFile(new URL("../data/simulation-summary.json", import.meta.url), "utf8"));
 const rungLists = JSON.parse(await readFile(new URL("../data/archive/rung-lists.json", import.meta.url), "utf8"));
 const deckPageSource = await readFile(new URL("../deck-page.js", import.meta.url), "utf8");
 const slotModelSource = await readFile(new URL("../slot-model.js", import.meta.url), "utf8");
-const activeState = JSON.parse(await readFile(new URL("../data/active-state.json", import.meta.url), "utf8"));
+const activeState = JSON.parse(await readFile(new URL("../data/archive/active-state.json", import.meta.url), "utf8"));
 const auditedByName = new Map(cards.cards.map((card) => [card.name.toLowerCase(), card]));
 for (const card of cards.cards) for (const face of card.name.split(" // ")) auditedByName.set(face.toLowerCase(), card);
 
@@ -340,7 +340,7 @@ for (const basic of ["plains", "island", "swamp", "mountain", "forest"]) {
    anything, so the document behind it has to be in the repository, and the tool that reads
    it has to be too. A list nobody can regenerate is a list nobody can correct. */
 {
-  const pullList = JSON.parse(await readFile(new URL("../data/pull-list.json", import.meta.url), "utf8"));
+  const pullList = JSON.parse(await readFile(new URL("../data/archive/pull-list.json", import.meta.url), "utf8"));
   assert.ok(existsSync(new URL(`../${pullList.source}`, import.meta.url)),
     `the pull list names ${pullList.source}, which is not in the repository`);
   assert.ok(existsSync(new URL(`../${pullList.generatedBy}`, import.meta.url)),

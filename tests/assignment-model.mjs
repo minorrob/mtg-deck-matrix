@@ -14,9 +14,9 @@ import {readFile} from "node:fs/promises";
 const require = createRequire(import.meta.url);
 const Lineup = require("../lineup-model.js");
 const Slot = require("../slot-model.js");
-const buyPlans = JSON.parse(await readFile(new URL("../data/buy-plans.json", import.meta.url), "utf8"));
+const buyPlans = JSON.parse(await readFile(new URL("../data/archive/buy-plans.json", import.meta.url), "utf8"));
 const cardsDoc = JSON.parse(await readFile(new URL("../data/cards.json", import.meta.url), "utf8"));
-const activeState = JSON.parse(await readFile(new URL("../data/active-state.json", import.meta.url), "utf8"));
+const activeState = JSON.parse(await readFile(new URL("../data/archive/active-state.json", import.meta.url), "utf8"));
 const deckPageSource = await readFile(new URL("../deck-page.js", import.meta.url), "utf8");
 
 const state = activeState.state;

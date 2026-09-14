@@ -1,4 +1,4 @@
-# Seeds data/active-state.json's manualCards with the 32 hand-picked options that
+# Seeds data/archive/active-state.json's manualCards with the 32 hand-picked options that
 # opened the Manual rung: the alternates to the singles shared across decks, and the
 # further pulls from the Salvage yard.
 #
@@ -7,7 +7,7 @@
 # Needs network access -- card data is fetched live from Scryfall's collection
 # endpoint so nothing here is a stale transcription.
 #
-# This writes state, never data/buy-plans.json. That is the point: the buy catalog is
+# This writes state, never data/archive/buy-plans.json. That is the point: the buy catalog is
 # regenerated from the build kit, so a card written into it is lost on the next
 # rebuild, while state travels with Load Active and survives regeneration. It
 # supersedes the earlier apply-deck-swaps.py, which hard-swapped nineteen cards out of
@@ -66,8 +66,8 @@ SEED=[
  ('7e',"Explorer's Scope","Archaeomancer's Map",'salvage','Fetches two Plains and grants an extra land drop. This deck runs 26 Plains.'),
 ]
 
-bp=json.load(open(f'{REPO}/data/buy-plans.json'))
-sp=f'{REPO}/data/active-state.json'; ex=json.load(open(sp)); st=ex['state']
+bp=json.load(open(f'{REPO}/data/archive/buy-plans.json'))
+sp=f'{REPO}/data/archive/active-state.json'; ex=json.load(open(sp)); st=ex['state']
 ARRS=["startingShell","baseCards","required","upgrade","enhance","max","tuned2","enhance2","max2","funTuned","funMax","altTuned","altMax"]
 
 names=sorted({c for _,_,c,_,_ in SEED})

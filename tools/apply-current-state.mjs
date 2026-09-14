@@ -1,5 +1,5 @@
 /**
- * Rewrites the ownership half of data/active-state.json from Rob's Current State sheet.
+ * Rewrites the ownership half of data/archive/active-state.json from Rob's Current State sheet.
  *
  * WHAT THIS SHEET IS, AND WHAT IT IS NOT. One row per card: how many copies are on the
  * shelf, how many are paid for and still in the post, the price and a couple of facts
@@ -28,7 +28,7 @@ const require = createRequire(import.meta.url);
 const Slot = require("../slot-model.js");
 
 const HERE = new URL(".", import.meta.url);
-const STATE = new URL("../data/active-state.json", import.meta.url);
+const STATE = new URL("../data/archive/active-state.json", import.meta.url);
 const SOURCE = new URL("../data/source/Robs_MtG_Current_State.xlsx", import.meta.url);
 const DRY = process.argv.includes("--dry");
 

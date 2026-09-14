@@ -472,7 +472,7 @@ writes a committed data file** — run it deliberately, review the diff, and re-
 | ⚠ `import_summary_metrics.py` | The Summary sheet's per-build simulation results into `simulation-summary.json` | Superseded by `tools/sim/bake-sweep.mjs` |
 | ⚠ `import-pull-list.mjs` | The .docx pull list → `data/pull-list.json` (+ `active-state.json`) | When a new pull list is written |
 | ⚠ `build_card_facts.py` | Trimmed Scryfall facts for the names `master-v2` uses → `data/card-facts.json` | After a master rebuild |
-| ⚠ `build_deck_swaps.py` | Optimizer recommendations trimmed for the viewer → `data/deck-swaps.json` | When new optimizer output arrives |
+| ~~`build_deck_swaps.py`~~ | Removed with `data/deck-swaps.json` (the viewer that read it is retired; the frozen copy is `data/archive/deck-swaps.json`) | — |
 | ⚠ `build_guide_shapes.py` | Recomputes the arithmetic `shape` block of every deck guide | After a master rebuild — the prose stays hand-written |
 | ⚠ `build-my-load.mjs` | The "Load default" payload → `data/my-load.json`, from `active-state.json` or `--from backup.json` | When the shipped default should change |
 | ⚠ `commander-universe.mjs` | Rebuilds `data/commander-universe.json`; `--repair` also corrects `graph.json` and backfills rarity onto `master-v2.json` | After a Scryfall bulk refresh |

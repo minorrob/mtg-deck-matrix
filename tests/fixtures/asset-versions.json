@@ -94,16 +94,16 @@
       "sha": "218a98465449d00c"
     },
     "crankmagic-advisor.js": {
-      "version": 8,
-      "sha": "cac11ca669926cb2"
+      "version": 9,
+      "sha": "46db16db726209b1"
     },
     "crankmagic-app.js": {
-      "version": 155,
-      "sha": "49373b96bb440d24"
+      "version": 156,
+      "sha": "005228c9e640e977"
     },
     "crankmagic-assets.js": {
-      "version": 24,
-      "sha": "a253b8e1c3a71223"
+      "version": 25,
+      "sha": "ce75a7cdcf66420e"
     },
     "crankmagic-brand.js": {
       "version": 3,
@@ -194,8 +194,8 @@
       "sha": "d7bc7ed62b5a1cf5"
     },
     "crankmagic-sw.js": {
-      "version": 155,
-      "sha": "73625179fee0bed3"
+      "version": 156,
+      "sha": "e5d7f7aae048d83b"
     },
     "crankmagic-tour.js": {
       "version": 13,
@@ -232,10 +232,6 @@
     "data/deck-guides.json": {
       "version": 4,
       "sha": "37c351c5b3741d08"
-    },
-    "data/deck-swaps.json": {
-      "version": 2,
-      "sha": "de8605e0cccb1014"
     },
     "data/flavor-names.json": {
       "version": 3,

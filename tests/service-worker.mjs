@@ -81,7 +81,7 @@ const dataName = names.find((n) => n.includes(":data:"));
 
 await ok("every data file is in the data cache and nothing else is", () => {
   const data = [...first.caches.get(dataName)];
-  assert.ok(data.length >= 8, `only ${data.length} data files precached`);
+  assert.ok(data.length >= 7, `only ${data.length} data files precached`);
   assert.deepEqual(data.filter((f) => !f.startsWith("data/")), [],
     "a non-data file landed in the data cache, so refreshing the catalog would evict it");
   const shell = [...first.caches.get(shellName)];

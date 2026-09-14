@@ -137,7 +137,9 @@ library and the graph, and a backup that is the user's, not the catalog's.
    gone), `TYPE_ORDER`, `LOOP_MAX_LEN` and `DECK_ART`/`deckArt` on `crankmagic-rules.js`.*
 10. **Archive the five legacy files and delete the stub** (E4): move them under
     `data/archive/` with their tools and tests repointed in the same PR; drop
-    `deck-swaps.json` from the asset map and the worker.
+    `deck-swaps.json` from the asset map and the worker. *Shipped in #183: the five are under
+    `data/archive/` with every tool and test repointed; the stub, its asset entry, its worker
+    entry and the advisor's read of it are gone.*
 11. **Memoise the projections per revision.** `M.projection(C.state)` is recomputed on
     every render that needs it (the new deck-page Cards tab calls it twice); key a cache on
     `state.revision` inside the model so the Tabletop and the Trace can call it freely.
@@ -156,13 +158,22 @@ and the plans that follow.
 14. **A generated `data/manifest.json`** (the inventory's data, machine-readable): per file
     the schema, stamp, hash and generator; the worker's DATA list and the sidebar's data-age
     line read it, `asset-versions` compares against it, and a future server serves it.
+    *Shipped in #183: `tools/data-manifest.mjs` writes `data/manifest.json` (schema, stamp,
+    generator, size, SHA-256, served version and cache class per registered file) with a
+    `--check` the generators suite runs; `tests/data-manifest.mjs` holds the asset map and the
+    worker's lists to it. The worker and the sidebar still carry their own lists; reading the
+    manifest there is the step after.*
 15. **Commands as the exchange format.** The library already has a journal and revision
     checks; the persistent plan's sync should ship commands, not states, so two devices merge
     by replay and the backup format stays the one that exists.
 16. **Sharding rule for the static site**: no served data file over 5 MB; anything larger is
     split by a stable key (first letter of the folded name for card records; commander for
     co-play) and loaded on demand. The Card record set and the co-play pairs are the two files
-    that need it.
+    that need it. *Shipped as a rule in #183: `tests/data-manifest.mjs` fails a precached data
+    file over 5 MB, and a served file over 5 MB that is not on demand and named `large` in the
+    registry; the two graph files are the named exceptions (15.8 and 20.6 MB, on demand), to be
+    split by the folded name's first letter and by commander when the Trace needs them. The
+    Card record set is 3.9 MB and needs no split yet.*
 
 ## 4. Sequence
 

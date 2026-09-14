@@ -2,7 +2,7 @@
 // same deck.
 //
 //   node tools/sim/build-base.mjs                 # report what would change
-//   node tools/sim/build-base.mjs --write         # write it into data/buy-plans.json
+//   node tools/sim/build-base.mjs --write         # write it into data/archive/buy-plans.json
 //   node tools/sim/build-base.mjs --cap 2 --write # a different per-card ceiling
 //
 // Base is the entry price: the placeholders you sleeve up while the real cards
@@ -334,12 +334,12 @@ if (breaks.length) {
 console.log(`all ${RUNGS.length} rungs compose for every variant`);
 
 if (write) {
-  await writeJson(path.join(ROOT, "data/buy-plans.json"), buyPlans);
+  await writeJson(path.join(ROOT, "data/archive/buy-plans.json"), buyPlans);
   // Provenance. Which card stood in for which, per variant, so the workbook
   // fixture can still be compared card-for-card after the shell moved under it,
   // and so "why is this card in my Base?" has an answer that is not "the tool
   // decided".
-  await writeJson(path.join(ROOT, "data/base-rebuild.json"), {
+  await writeJson(path.join(ROOT, "data/archive/base-rebuild.json"), {
     schemaVersion: 1,
     generatedAt: new Date().toISOString(),
     note: "Base rungs rebuilt as the cheapest hundred that is still the same deck. Prices are real market prices; owned cards were left in place.",
@@ -352,7 +352,7 @@ if (write) {
       keptOverCap: row.kept.filter((entry) => entry.price >= 5).map((entry) => ({name: entry.name, price: entry.price, why: entry.why}))
     }]))
   });
-  console.log(`written to ${relative(path.join(ROOT, "data/buy-plans.json"))} and ${relative(path.join(ROOT, "data/base-rebuild.json"))}`);
+  console.log(`written to ${relative(path.join(ROOT, "data/archive/buy-plans.json"))} and ${relative(path.join(ROOT, "data/archive/base-rebuild.json"))}`);
 } else {
   console.log("(dry run — pass --write to save)");
 }
