@@ -40,10 +40,9 @@ check("every key names a module, and no key is listed twice", () => {
    browser is holding, and the backup folds every one of them into the export. What the
    list must not do is claim a live writer that is not there, so the ones whose module is
    gone are named rather than quietly skipped. */
-const RETIRED = new Set(["app.js", "viewer.js", "graph-page.js", "shop-page.js"]);
+const RETIRED = new Set(["app.js", "viewer.js", "graph-page.js", "shop-page.js", "deck-store.js", "shop-filters.js", "manual-cards.js", "deck-page.js", "import-panel.js", "build-panel.js", "admin-menu.js", "card-table.js"]);
 const sources = Object.fromEntries(await Promise.all(
-  ["custom-model.js", "deck-store.js", "shop-filters.js",
-    "manual-cards.js", "user-state.js", "card-images.js"]
+  ["custom-model.js", "user-state.js", "card-images.js"]
     .map(async (f) => [f, await readFile(new URL(`../${f}`, import.meta.url), "utf8")])
 ));
 const allSource = Object.values(sources).join("\n");

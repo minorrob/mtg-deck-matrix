@@ -10,7 +10,6 @@ import {readFile} from "node:fs/promises";
 
 const require = createRequire(import.meta.url);
 const Sources = require("../deck-sources.js");
-const Store = require("../deck-store.js");
 
 const fixture = JSON.parse(await readFile(new URL("./fixtures/archidekt-deck.json", import.meta.url), "utf8"));
 
@@ -101,8 +100,6 @@ check("a card no vendor prices reads as unknown, not as free", () => {
       oracleCard: {name: "Nobody Sells This", types: ["Instant"], colorIdentity: []}}}]
   }, {});
   assert.equal(unpriced.cards[0].card.price, null, "0 from every vendor means no price");
-  const record = Store.toRecord(unpriced, {id: "U1", label: "x"});
-  assert.equal(record.cards[0].price, null, "and the null survives into the stored record");
 });
 
 check("a short deck is reported as short rather than padded", () => {
@@ -119,16 +116,6 @@ check("a maybeboard category is not counted into the hundred", () => {
   const trimmed = Sources.fromArchidekt(withMaybe, {});
   assert.equal(trimmed.cards.length, deck.cards.length - 1,
     "a card the deck excludes is excluded here too");
-});
-
-/* ---------------- and it plugs into the store ---------------- */
-
-check("a URL-loaded deck becomes a record like a pasted one", () => {
-  const record = Store.toRecord(deck, {id: "U1", label: deck.name});
-  assert.equal(record.source, "archidekt");
-  assert.equal(record.commander, "Thelon of Havenwood");
-  assert.ok(record.cards[0].oracleText !== undefined);
-  assert.equal(record.cards.length, deck.cards.length);
 });
 
 /* ---------------- what load() does without a network ---------------- */
