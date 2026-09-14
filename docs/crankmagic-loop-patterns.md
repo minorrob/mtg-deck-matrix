@@ -186,7 +186,15 @@ The Primary Purpose ladder gained `untap`, `copy` and `blink` between *Multiplie
 quality*, so Thornbite Staff rings untap and Kiki-Jiki rings copy. `persist`, `undying`,
 `storm` and `cascade` do arrive in `mechanics` from Scryfall's keywords.
 
-## The detection rule (PR C)
+## The detection rule (PR C — shipped)
+
+*As built:* the rule below shipped in `crankmagic-loops.js` with two corrections found on the
+committed live state. A loop target must be **worth another go** — a tap ability that makes a
+token, a card, a counter or a treasure, or causes a loop event — which is what keeps mana rocks
+off every loop (Thornbite Staff untapping Sol Ring is not a cycle until mana is accounted for).
+And Shared Animosity is not a payoff: it fires on attack, an event no loop causes. Loop mode is
+a filter on the depth walk (every step crosses loop links only) rather than three fixed rungs.
+
 
 Within a deck's card set (or the focused card's neighbourhood), look for directed cycles of
 length 2–4 over these edges: `causes → triggers`, `produces → requires`, `untap → tap-ability`,

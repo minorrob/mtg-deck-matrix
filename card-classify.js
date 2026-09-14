@@ -109,7 +109,10 @@
     {id: "counter-placed", listen: /whenever (?:one or more )?\+1\/\+1 counters? (?:is|are) put|whenever (?:a|one or more) counters? (?:is|are) put on/,
                            cause:  re("puts? " + NUM + "[^.]{0,30}\\+1\\/\\+1 counters?|enters (?:the battlefield )?with (?:a|an|one|two|three|x|\\d+)[^.]{0,20}\\+1\\/\\+1 counters?|distribute [^.]{0,20}\\+1\\/\\+1 counters?|" + COUNTER_KEYWORDS)},
     {id: "life-gain",      listen: /whenever you gain life/, cause: /you gain (?:\d+|x|that much|twice that much|life)|gain (?:that much|x) life|lifelink/},
-    {id: "life-loss",      listen: /whenever (?:an? )?opponent loses life|whenever a player loses life/,
+    /* Damage dealt IS life lost, on the listening side as well as the causing one: Curiosity,
+       Snake Umbra and the Swords fire on "deals (combat) damage to a player / an opponent", and
+       Niv-Mizzet, which causes life loss, is the other half of their loop. */
+    {id: "life-loss",      listen: /whenever (?:an? )?opponent loses life|whenever a player loses life|whenever [^.]{0,50}deals (?:combat )?damage to (?:an opponent|a player|one or more (?:players|opponents)|that player's controller)/,
                            cause:  /each opponent loses (?:\d+|x|that much|half|life)|target (?:player|opponent) loses (?:\d+|x|that much|life)|each player loses (?:\d+|x) life|\bloses (?:\d+|x|that much|half) life|opponents? loses? life equal|deals? (?:\d+|x|that much) damage to (?:each opponent|each player|any target|target player|target opponent|each of your opponents|that player)|deals? damage (?:equal to|to each opponent)|loses life equal to/},
     {id: "draw-card",      listen: /whenever you draw/, cause: re("draws? " + NUM + " cards?|draws? cards? equal|draws? (?:an|two|x) additional cards?")},
     {id: "sacrifice",      listen: /whenever you sacrifice|whenever a player sacrifices/, cause: /sacrifices? (?:a|an|another|two|three|x|\d+)[^:\n]{0,40}:|sacrifice (?:a|an|another|two|three|x|\d+)[^.]{0,30}as an additional cost/},

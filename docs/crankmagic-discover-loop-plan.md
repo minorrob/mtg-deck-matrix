@@ -96,9 +96,40 @@ Real; `roles:copy` on Kiki-Jiki, Splinter Twin; `roles:blink` on Deadeye Navigat
 Conjurer's Closet; none of them on Sol Ring or a basic land. The whole 55-suite run and the
 journeys stay green.
 
-## Phase C — loop edges, loop-mode depth, edge priority by purpose (one PR)
+## Phase C — loop edges, loop-mode depth, edge priority by purpose (shipped, PR after #169)
 
 Goal: Discover closes cycles and shows them as loops; the depth gauge can walk loops only.
+
+**What shipped, and where it differs from the sketch below.** Everything is derived from
+oracle text through the classifier, so it holds for any commander deck; the live library's
+goblin deck is the worked example in the tests, not a special case.
+
+- *Loop pair edges* — `drives` / `drivenBy` in `relateTerms`: an engine (untap, copy, blink)
+  onto a card whose tap ability is worth another go. "Worth another go" is a rule, not a list:
+  the target must have a tap ability **and** produce a token, a card, a counter or a treasure,
+  or cause a loop event. A mana rock fails it, so Thornbite Staff → Sol Ring is no edge and
+  Sol Ring never enters loop mode. The edge outranks *Causes → triggers*; its label is the
+  engine's verb ("untaps it for another go"), and the source card's Primary Purpose already
+  wears the gold ring beside it, so the label did not need to repeat it.
+- *Supply → demand* — `loopFeeds` / `loopFed`: a repeatable supply (tokens, counters,
+  treasures, graveyard entries) into a card that wants that class (a sacrifice outlet, a
+  counters payoff). Krenko → Goblin Bombardment and Krenko → Goblin Chieftain are both loop
+  feeds; a shared word alone (Thornbite Staff and Lightning Greaves) is not.
+- *The cycle finder* is its own module, `crankmagic-loops.js`, driven by `tests/crankmagic-loops.mjs`:
+  directed cycles of two to four cards over resets (the pair edges), feeds and fires
+  (causes → triggers on a loop event). A cycle is *closed* when something on it resets a step
+  or every step is a trigger; payoffs are cards outside the cycle that fire on an event the
+  cycle causes and drain life or make cards, tokens, mana or treasure. Shared Animosity is
+  **not** a payoff (an attack trigger, not an event the loop causes); mana loops wait for cost
+  accounting, as before.
+- *Loop mode* is a filter on the walk, not a three-rung ladder: with it on, every step of the
+  depth gauge crosses only loop links, so the rings are whatever those links reach. It comes on
+  by itself with a deck pick under Yours, the toggle overrides it, and clearing the filters
+  clears the override.
+- *Loops this card is in* sits above the chips in the pane: each cycle one line of names with
+  the join between each pair, missing pieces dashed, payoffs beneath, closed loops first.
+
+The original sketch, kept for the record:
 
 - In `crankmagic-graph.js`, add the three pair cases the vocabulary now supports — untap →
   tap-ability, copy → creature-etb, blink → creature-etb — to `relateTerms`, scored above

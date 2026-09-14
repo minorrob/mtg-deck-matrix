@@ -84,6 +84,10 @@
      is remembered across focus changes; the pane widens while it is open and the canvas
      keeps the rest. */
   let paneTab = 'card', listSort = {key: 'ring', dir: 1}, listPage = 0, listCard = null, lastFocusId = null, landRows = [], revealCard = false;
+  /* LOOPS ONLY: the depth gauge walks only the joins that continue or pay off a loop. It follows
+     the deck pick -- a deck is a question about its loops, the open graph a question about
+     everything -- until the reader sets it by hand, and Clear filters hands it back. */
+  let loopMode = false, loopTouched = false, deckPicked = false, lastWorld = [], loopsCache = {key: '', loops: []};
   const LIST_PAGE = 40;
 
   /* Below this many single-card values the fold costs more than it saves: a toggle to
@@ -92,7 +96,7 @@
   const FOLD_TAIL = 12;
 
   views.discover = async (params) => {
-    C.HELP.discover = {title: 'Discover', body: '<p>The connected card catalog: follow a card into the cards it is joined to, inspect the evidence for each link, and take what you find into a group or a deck.</p><p>Structural links (shared mechanics and roles) and observed co-play (EDHREC) are different kinds of evidence. Neither claims a simulated improvement.</p><p>In the card pane and the pop-ups, the term with the gold ring is the card’s <strong>Primary Purpose</strong>: the one job it is in a deck for, decided by a fixed ladder (finisher, extra turn, board wipe, multiplier, untap engine, copier, blink, team quality, tutor, sacrifice outlet, removal, draw, ramp, token maker, payoff, and so on down to its body and its tribe). In a filter dialog the count beside an option is what you would have under the filters already applied; the whole-graph figure is on the hover. Picking a deck under <strong>Yours</strong> puts its commander in focus, and dragging the divider beside the graph grows the card picture up to 70%.</p>'};
+    C.HELP.discover = {title: 'Discover', body: '<p>The connected card catalog: follow a card into the cards it is joined to, inspect the evidence for each link, and take what you find into a group or a deck.</p><p>Structural links (shared mechanics and roles) and observed co-play (EDHREC) are different kinds of evidence. Neither claims a simulated improvement.</p><p>In the card pane and the pop-ups, the term with the gold ring is the card’s <strong>Primary Purpose</strong>: the one job it is in a deck for, decided by a fixed ladder (finisher, extra turn, board wipe, multiplier, untap engine, copier, blink, team quality, tutor, sacrifice outlet, removal, draw, ramp, token maker, payoff, and so on down to its body and its tribe). In a filter dialog the count beside an option is what you would have under the filters already applied; the whole-graph figure is on the hover. Picking a deck under <strong>Yours</strong> puts its commander in focus, and dragging the divider beside the graph grows the card picture up to 70%.</p><p><strong>Loops only</strong>, on by default when a deck is picked, walks only the joins that continue or pay off a loop: an untap, copy or blink onto a tap ability worth another go, a repeatable supply into a demand, an event one card causes and another fires on. <strong>Loops this card is in</strong> lists every cycle of four cards or fewer through the focus, each step named and the missing pieces dashed, with the cards that turn each pass into damage, cards or mana.</p>'};
     C.main.innerHTML = C.pageHead('Discover') + '<p role="status">Loading graph metadata…</p>';
 
     const loaded = await C.catalog.loadGraph();
@@ -167,6 +171,7 @@
         <div class="cm-graph-reach">
           <label>Depth <output id="cm-depth-out">${depth}</output><input type="range" id="cm-depth" min="1" max="3" step="1" value="${depth}" aria-label="How many hops from the focused card"></label>
           <label>Breadth <output id="cm-breadth-out">${breadth}</output><input type="range" id="cm-breadth" min="6" max="30" step="1" value="${breadth}" aria-label="How many neighbours the focused card gets"></label>
+          <label class="cm-checkbox cm-loop-toggle" title="Walk only the joins that continue or pay off a loop: an untap, copy or blink onto a tap ability worth another go; a repeatable supply into a demand; an event one card causes and another fires on. Off, every join counts."><input type="checkbox" id="cm-loop-mode"${loopMode ? ' checked' : ''}> Loops only</label>
           <span class="cm-muted" id="cm-graph-size"></span>
         </div>
       </div>
@@ -255,7 +260,7 @@
       graph?.destroy();
       hidePop();
       graph = CrankGraph.mount({
-        canvas: $('#cm-graph'), cards, played: data.played, focus: focusId, history, depth, breadth,
+        canvas: $('#cm-graph'), cards, played: data.played, focus: focusId, history, depth, breadth, loopMode,
         owned: CrankFacets.ownedNames(C.state),
         onNeighbors(c, neighbors, trailLength, info) {
           /* A new focus clears the card the list opened; a re-layout of the same focus (a
@@ -298,6 +303,8 @@
          so "they share proliferate" is one tap from "show me everything that proliferates". */
       const p = purposeOf(from);
       const chips = [
+        ...(rel.drives || []).map((t) => termChip('roles', t, p)),
+        ...(rel.drivenBy || []).map((t) => termChip('roles', t, p)),
         ...rel.fires.map((t) => termChip('causes', t, p)),
         ...rel.firedBy.map((t) => termChip('triggers', t, p)),
         ...rel.multiplied.map((t) => termChip('multiplies', t, p)),
@@ -476,7 +483,7 @@
         ${pickedRows.length ? `<div class="cm-actions cm-pick-actions">${b(`Add ${pickedRows.length} selected to a group…`, 'results-group', {}, true)}<details class="cm-inline-menu"><summary class="v-button compact cm-card-view-menu-btn">With ${pickedRows.length} selected</summary><div class="cm-menu cm-inline-menu-body"><p>Add to a draft deck</p>${(C.state.decks || []).filter((d) => !d.archived && d.status === 'draft').map((d) => `<button type="button" data-action="list-to-deck" data-deck="${e(d.id)}">${e(d.name)}</button>`).join('') || '<p class="cm-muted">No draft decks.</p>'}</div></details>${b('Clear selection', 'results-clear')}</div>` : ''}</div>
         ${paging}
         <div class="cm-table-wrap cm-list-wrap"><table class="cm-table cm-list-table"><thead><tr><th scope="col" class="cm-tick-cell"><input type="checkbox" class="cm-list-tick-all" ${allTicked ? 'checked' : ''} aria-label="Tick every card on this page"></th>${cols.map(([k, l]) => `<th scope="col" class="cm-col-${k}" aria-sort="${key === k ? (dir === 1 ? 'ascending' : 'descending') : 'none'}"><button type="button" data-action="list-sort" data-key="${k}">${l}${key === k ? ` <span aria-hidden="true">${dir === 1 ? '↑' : '↓'}</span>` : ' <span class="cm-sort-idle" aria-hidden="true">↕</span>'}</button></th>`).join('')}${stage ? '' : '<th scope="col" class="cm-col-buy"><span class="cm-visually-hidden">Add/Buy</span></th>'}</tr></thead><tbody>${rows.map((r) => `<tr class="cm-list-row${listCard && listCard.id === r.id ? ' is-on' : ''}${picked.has(r.id) ? ' cm-row-ticked' : ''}" data-id="${e(r.id)}"><td class="cm-tick-cell"><input type="checkbox" class="cm-list-tick" data-id="${e(r.id)}" ${picked.has(r.id) ? 'checked' : ''} aria-label="Tick ${e(r.name)}"></td>${cols.map(([k]) => k === 'name' ? `<td class="cm-list-namecell"><button type="button" class="cm-card-name cm-list-name" data-action="list-card" data-id="${e(r.id)}" aria-expanded="${listCard && listCard.id === r.id ? 'true' : 'false'}">${e(r.name)}</button></td>` : k === 'link' ? `<td class="cm-list-link" title="${e(r.link)}">${e(r.link)}</td>` : k === 'color' ? `<td class="cm-list-color">${colorPip(r.ci)}</td>` : `<td class="cm-price">${r.price !== null ? C.money(r.price) : '<span class="cm-muted">—</span>'}</td>`).join('')}${stage ? '' : `<td class="cm-list-buy">${buyMenu(r.card, r.rec, true)}</td>`}</tr>${listCard && listCard.id === r.id ? `<tr class="cm-list-detail"><td colspan="${cols.length + (stage ? 1 : 2)}">${rowDetailHTML(r)}</td></tr>` : ''}`).join('') || `<tr><td colspan="${cols.length + 2}">Nothing reaches from here under these filters.</td></tr>`}</tbody></table></div>${rows.length > 12 ? paging : ''}`;
-      $('#cm-graph-size').textContent = lands ? '' : lastInfo && lastInfo.total ? `${lastInfo.total} on canvas · ${all.length} in reach` : '';
+      $('#cm-graph-size').textContent = lands ? '' : lastInfo && lastInfo.total ? `${lastInfo.total} on canvas · ${all.length} in reach${loopMode ? ' · loops only' : ''}` : '';
       sizePane();
     }
     actions['list-sort'] = (el) => { const k = el.dataset.key; listSort = {key: k, dir: listSort.key === k ? -listSort.dir : 1}; drawList(); };
@@ -532,7 +539,7 @@
       if (listCard && (!c || c.id !== listCard.id)) c = listCard;
       /* Same card, same picture, same picks: leave the pane alone. Rewriting it moves the
          canvas beside it, which re-lays out the graph, which calls back here. */
-      const key = JSON.stringify([c && c.id, lastInfo && [lastInfo.total, lastInfo.byDepth, lastInfo.crossLinks], gmode, [...picked].sort(), selection, keepInfo ? Date.now() : 0]);
+      const key = JSON.stringify([c && c.id, lastInfo && [lastInfo.total, lastInfo.byDepth, lastInfo.crossLinks], gmode, [...picked].sort(), selection, loopMode, keepInfo ? Date.now() : 0]);
       if (!keepInfo && key === lastDrawn) return;
       lastDrawn = key;
       drawBack();
@@ -545,6 +552,20 @@
       }
       const img = rec.image || c.image || '';
       const cost = rec.manaCost ? C.mana(rec.manaCost) : '';
+      /* LOOPS THIS CARD IS IN. Over the deck's own cards when a deck is picked, else over what is
+         on the canvas. The mount's cached relation does the pair scoring, so the world's ids
+         must be the mount's -- both worlds are. Cached per focus and world, because the pane is
+         redrawn far more often than either changes. */
+      const world = deckPicked ? lastWorld : (graph ? graph.visible() : []);
+      const loopKey = c.id + '|' + world.length + '|' + world.map((x) => x.id).join(',');
+      if (loopsCache.key !== loopKey) loopsCache = {key: loopKey, loops: graph && globalThis.CrankLoops ? CrankLoops.find(world, (a, b) => graph.relation(a.id, b.id), c.id) : []};
+      const owned = CrankFacets.ownedNames(C.state);
+      const loopCard = (s, extra = '') => `<button type="button" class="cm-loop-card${owned.has(s.name) ? '' : ' is-missing'}${extra}" data-action="graph-card" data-id="${e(s.id)}" title="${owned.has(s.name) ? 'You own this' : 'Not in your library'} — tap to focus it">${e(s.name)}</button>`;
+      const loopsHTML = loopsCache.loops.length
+        ? `<h3 class="cm-chips-head">Loops this card is in <small class="cm-muted">${loopsCache.loops.length}</small>
+            <details class="cm-inline-menu cm-hint"><summary class="cm-hint-btn" aria-label="How these are found" title="How these are found">i</summary><div class="cm-menu cm-inline-menu-body cm-hint-body">A cycle of four cards or fewer through this card, over the joins a loop runs on: an untap, copy or blink onto a tap ability; a repeatable supply into a demand; an event one card causes and another fires on. A dashed card is not in your library. The second line is what turns each pass into damage, cards or mana.</div></details>
+          </h3><ol class="cm-loops">${loopsCache.loops.slice(0, 6).map((l) => `<li class="cm-loop${l.closed ? ' is-closed' : ''}">${l.steps.map((s) => loopCard(s) + `<span class="cm-loop-via">${e(s.via ? s.via.says : '')} →</span>`).join('')}<span class="cm-loop-back">back to ${e(l.steps[0].name.split(',')[0])}</span>${l.payoffs.length ? `<div class="cm-loop-pay"><span class="cm-muted">Pays off through</span>${l.payoffs.map((p) => loopCard(p, ' cm-loop-payoff')).join('')}</div>` : ''}</li>`).join('')}</ol>`
+        : (loopMode && deckPicked ? `<p class="cm-muted cm-loops-none">No closed loop of four cards or fewer runs through ${e(c.name)} in this deck.</p>` : '');
       /* WHAT BRACKET THIS CARD COMMITS YOU TO. The bracket system is about decks, but three
          kinds of card decide one: a Game Changer (Scryfall's own curated flag, baked into
          the graph) puts a deck at 3 or above, and mass land denial and looping extra turns
@@ -587,11 +608,13 @@
              reprinting it underneath said the same thing twice and pushed the terms -- the
              part of this pane you cannot get from the picture -- below the fold. -->
         ${picked.size ? `<div class="cm-actions cm-pick-actions">${b(`Add ${picked.size} selected to a group…`, 'results-group', {}, true)}${b('Clear selection', 'results-clear')}</div>` : (gmode === 'select' ? '<p class="cm-muted">Tap cards on the graph to tick them. Tap again to untick.</p>' : '')}
+        ${loopsHTML}
         ${chips.length ? `<h3 class="cm-chips-head">Joined to other cards by
           <details class="cm-inline-menu cm-hint"><summary class="cm-hint-btn" aria-label="How these work" title="How these work">i</summary><div class="cm-menu cm-inline-menu-body cm-hint-body">Tap once for only the cards that share it, again to hide them instead, a third time to clear. They stack. The gold ring is the card’s Primary Purpose: the one term it is in a deck for.</div></details>
         </h3><div class="cm-term-chips">${chips.join('')}</div>` : ''}
+        ${loopMode && lastInfo && lastInfo.total === 1 ? `<p class="cm-muted cm-card-view-foot">Loops only is on and no join from ${e(c.name)} continues a loop under these filters. Turn it off to see every connection.</p>` : ''}
         ${lastInfo && lastInfo.total ? `<p class="cm-muted cm-card-view-foot">${lastInfo.total} cards on the canvas · ${lastInfo.byDepth.filter(Boolean).join(' / ')} by ring · ${lastInfo.crossLinks} cross-links${lastInfo.crossLinks > 60 ? ' (too many to draw at once: rest on a card, or inspect it, to see its own)' : ''}</p>` : ''}`;
-      $('#cm-graph-size').textContent = lastInfo && lastInfo.total ? `${lastInfo.total} on canvas` : '';
+      $('#cm-graph-size').textContent = lastInfo && lastInfo.total ? `${lastInfo.total} on canvas${loopMode ? ' · loops only' : ''}` : '';
       sizePane();
     }
 
@@ -638,6 +661,10 @@
       landRows = [];
       if (wasLands && paneTab === 'list') { paneTab = 'card'; applyTab(); }
       const pool = shown.filter((c) => !isLand(c));
+      deckPicked = (selection.decks || []).some((v) => !String(v).startsWith(CrankFacets.NOT));
+      if (!loopTouched) loopMode = deckPicked;
+      const loopBox = $('#cm-loop-mode'); if (loopBox) loopBox.checked = loopMode;
+      lastWorld = pool; loopsCache = {key: '', loops: []};
       const focused = keepFocus && data.cards.find((c) => c.id === keepFocus);
       const world = focused && !pool.some((c) => c.id === keepFocus) ? [focused, ...pool] : pool;
       if (world.length) mount(world, focused ? keepFocus : world[0].id);
@@ -686,6 +713,7 @@
     document.addEventListener('input', onFacetInput); document.addEventListener('click', onFacetMore); document.addEventListener('change', onModeChange);
     $('#cm-depth').addEventListener('input', (ev) => { depth = Number(ev.target.value); $('#cm-depth-out').textContent = depth; graph?.setDepth(depth); });
     $('#cm-breadth').addEventListener('input', (ev) => { breadth = Number(ev.target.value); $('#cm-breadth-out').textContent = breadth; graph?.setBreadth(breadth); });
+    $('#cm-loop-mode').addEventListener('change', (ev) => { loopMode = ev.target.checked; loopTouched = true; loopsCache = {key: '', loops: []}; hidePop(); if (graph) graph.setLoopMode(loopMode); else drawCardView(null, null, true); });
 
     /* The × on an applied chip means gone, not "next state". */
     actions['facet-drop'] = (el) => { selection = CrankFacets.set(selection, el.dataset.key, el.dataset.value, 'off'); redrawTicks(); refresh(currentFocus()); };
@@ -739,7 +767,7 @@
       if (el.dataset.key === 'decks' && CrankFacets.stateOf(selection, 'decks', el.dataset.value) === 'include') { const lead = commanderRow(el.dataset.value); if (lead) focusId = lead.id; }
       redrawTicks(); refresh(focusId); updateFacetCounts();
     };
-    actions['facet-clear'] = () => { selection = {}; redrawTicks(); refresh(currentFocus()); updateFacetCounts(); };
+    actions['facet-clear'] = () => { selection = {}; loopTouched = false; redrawTicks(); refresh(currentFocus()); updateFacetCounts(); };
     actions['facet-done'] = () => { document.querySelector('dialog[open]')?.close(); };
     /* A FACET OPENS IN A DIALOG: its options A to Z (mana value lowest first), a search box when
        there are many, the same three-state picks as the chips, the all/any rule, Clear for this

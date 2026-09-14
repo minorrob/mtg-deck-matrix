@@ -232,6 +232,21 @@ try{
   const deckPick=page.locator('dialog .cm-facet-pick[data-key=decks]').first();ok(await deckPick.count()>0,'a deck to pick');await deckPick.click();await page.waitForTimeout(800);
   const focus=await page.evaluate(()=>{const c=document.querySelector('#cm-graph').crankGraph.current();return {name:c.name,commander:!!c.isCommander};});ok(focus.name!=='Sol Ring'&&focus.commander,`picking a deck focused its commander (${focus.name})`);
   await page.keyboard.press('Escape');await page.getByRole('dialog').waitFor({state:'hidden'});await click('Clear filters');}
+ /* LOOPS ONLY. Picking a deck turns the walk to loop joins by itself: its commander in focus,
+    the depth gauge crossing only the joins that continue or pay off a loop, the pane listing
+    the closed cycles through the focus or saying there are none; the toggle brings the whole
+    neighbourhood back, and clearing the filters clears the mode. Any deck works this way -- the
+    journey's own library here, the live library's goblin deck in tests/crankmagic-loops.mjs. */
+ {await page.locator('#cm-facet-bar [data-action=facet-open][data-facet=decks]').click();await page.getByRole('dialog').waitFor();
+  await page.locator('dialog .cm-facet-pick[data-key=decks]').first().click();await page.waitForTimeout(1500);await page.keyboard.press('Escape');await page.getByRole('dialog').waitFor({state:'hidden'});
+  ok(await page.locator('#cm-loop-mode').isChecked(),'a deck pick turns Loops only on');ok(await page.evaluate(()=>document.querySelector('#cm-graph').crankGraph.loopMode===true),'the graph walks in loop mode');
+  const g=()=>page.evaluate(()=>{const gr=document.querySelector('#cm-graph').crankGraph;return {focus:gr.current().name,commander:!!gr.current().isCommander,near:gr.positions().filter(p=>p.depth>0&&p.depth<=2).map(p=>p.name)};});
+  const on=await g();ok(on.commander,`the commander is in focus (${on.focus})`);ok(!on.near.includes('Sol Ring')&&!on.near.includes('Arcane Signet'),'the mana rocks stay out of loop mode');
+  ok(/loops only/.test(await page.locator('#cm-graph-size').innerText()),'the canvas count says loops only');
+  const loops=await page.locator('#cm-pane-body .cm-loops').count();const none=await page.locator('#cm-pane-body .cm-loops-none').count();eq(loops+none,1,'the pane lists the loops or says there are none');if(loops)ok(await page.locator('#cm-pane-body .cm-loops .cm-loop').count()>=1,'a listed loop has at least one line');
+  await page.locator('#cm-loop-mode').uncheck();await page.waitForTimeout(1000);ok(await page.evaluate(()=>document.querySelector('#cm-graph').crankGraph.loopMode===false),'the toggle turns loop mode off');ok(!/loops only/.test(await page.locator('#cm-graph-size').innerText()),'and the count no longer says so');
+  const off=await g();ok(off.near.length>=on.near.length,`${off.near.length} within two steps off loop mode, ${on.near.length} on`);eq(await page.locator('#cm-pane-body .cm-loops-none').count(),0,'off loop mode the no-loop note is gone');
+  await click('Clear filters');ok(!(await page.locator('#cm-loop-mode').isChecked()),'clearing the filters clears loop mode');}
  /* GRAPH NAVIGATION, through the controls the graph actually has now. This used to scroll to
     zoom and click a row in a neighbours list; that list was removed when the graph gained
     node and edge pop-ups, and #cm-graph-neighbors has not existed since -- the only trace

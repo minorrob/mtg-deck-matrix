@@ -41,6 +41,33 @@
   const GENERIC = new Set(['creatures', 'lands', 'artifacts', 'enchantments', 'instants', 'sorceries', 'planeswalkers']);
   const CAP = 180;
 
+  /* THE LOOP VOCABULARY (docs/crankmagic-loop-patterns.md). An ENGINE is a card whose role is
+     untap, copy or blink: it gives another permanent another go. What it gives that go TO is a
+     card with a tap ability whose tap does something a loop can feed on -- makes a token, a
+     card, a counter or a Treasure, or causes an event that is not merely "a spell was cast".
+     Sol Ring taps for mana and nothing else, and mana loops need cost accounting this graph
+     does not do yet, so a rock is not a loop target; Krenko and Kiki-Jiki are. LOOP_EVENTS are
+     the events a cycle runs on; a cast trigger is a payoff shape, not a cycle step. LOOP_SUPPLY
+     says which produced resource satisfies which demand, so "Krenko supplies Goblin
+     Bombardment" is a loop feed (tokens, repeatably) while "any creature supplies it" is not. */
+  const ENGINES = ['untap', 'copy', 'blink'];
+  const ENGINE_VERB = {untap: 'untaps', copy: 'copies', blink: 'blinks'};
+  const LOOP_PRODUCE = new Set(['token', 'card', 'counter', 'treasure']);
+  const LOOP_EVENTS = new Set(['creature-etb', 'creature-dies', 'sacrifice', 'draw-card', 'life-loss', 'life-gain', 'counter-placed', 'graveyard-entry', 'land-drop', 'attack', 'combat-begin']);
+  const LOOP_SUPPLY = {creatures: ['token'], counters: ['counter'], artifacts: ['treasure', 'token'], graveyard: ['graveyard-entry']};
+  function loopable(c) {
+    if (!(c.mechanics || []).includes('tap-ability')) return false;
+    if ((c.produces || []).some((r) => LOOP_PRODUCE.has(r))) return true;
+    return (c.causes || []).some((e) => LOOP_EVENTS.has(e));
+  }
+  /* Does this relation continue or pay off a loop? The rule loop mode walks by. */
+  function isLoopLink(r) {
+    if (!r) return false;
+    if (r.drives.length || r.drivenBy.length || r.loopFeeds.length || r.loopFed.length) return true;
+    if (r.fires.some((e) => LOOP_EVENTS.has(e)) || r.firedBy.some((e) => LOOP_EVENTS.has(e))) return true;
+    return r.multiplied.length > 0 || r.multiplies.length > 0;
+  }
+
   /* The words a card is joinable on, for a UI to offer as filters: "Atraxa is in focus;
      here are proliferate, counters, ... -- tap one to see the cards joined to it that
      way." Static, because the Card View needs it before a mount has finished. */
@@ -74,7 +101,7 @@
   /* THE TERM SETS a pair is scored on. Kept as Sets because every question asked of
      them is "does the other card carry this term", and set membership is the cheap way
      to ask it a few hundred thousand times a layout. */
-  const TERM_KEYS = ['shared', 'fills', 'produces', 'requires', 'causes', 'triggers', 'multiplies', 'grants', 'extends', 'tribes', 'wants', 'makes', 'offered', 'wantsStat', 'offersStat'];
+  const TERM_KEYS = ['shared', 'fills', 'produces', 'requires', 'causes', 'triggers', 'multiplies', 'grants', 'extends', 'tribes', 'wants', 'makes', 'offered', 'wantsStat', 'offersStat', 'engines', 'tapAbility'];
   function termSets(c) {
     const t = {
       shared: new Set([...(c.mechanics || []).filter((m) => !LAND_ENTRY.has(m)), ...(c.roles || []).filter((r) => !GENERIC.has(r))]),
@@ -100,7 +127,10 @@
       triggers: new Set(c.triggers || []),
       multiplies: new Set(c.multiplies || []),
       grants: new Set(c.grants || []),
-      extends: new Set(c.extends || [])
+      extends: new Set(c.extends || []),
+      /* The loop pair: an engine (untap, copy, blink) and a tap ability worth giving another go. */
+      engines: new Set(ENGINES.filter((r) => (c.roles || []).includes(r))),
+      tapAbility: new Set(loopable(c) ? ['tap-ability'] : [])
     };
     /* What this card OFFERS a multiplier: a resource it makes or an ability it fires.
        Built once per card rather than once per pair -- a depth-3 layout asks about a
@@ -161,6 +191,13 @@
       const stattedBy = inter(ta.offersStat, tb.wantsStat);
       const fires = inter(ta.causes, tb.triggers);
       const firedBy = inter(ta.triggers, tb.causes);
+      /* THE LOOP PAIR. Thornbite Staff untaps Krenko; Kiki-Jiki copies him; Felidar Guardian
+         blinks Kiki-Jiki. The engine names the verb, the other side has the tap ability. */
+      const drives = tb.tapAbility.size ? [...ta.engines] : NONE;
+      const drivenBy = ta.tapAbility.size ? [...tb.engines] : NONE;
+      /* A feed is a LOOP feed when the supplier makes the demanded thing repeatably. */
+      const loopFeeds = feeds.filter((role) => (LOOP_SUPPLY[role] || []).some((x) => ta.produces.has(x) || ta.causes.has(x)));
+      const loopFed = fed.filter((role) => (LOOP_SUPPLY[role] || []).some((x) => tb.produces.has(x) || tb.causes.has(x)));
       /* A generic doubler ("if a triggered ability of a Wizard you control triggers...")
          names no event, so it pairs with anything that has a trigger at all -- true, but
          the weakest of these, and scored that way. */
@@ -185,6 +222,7 @@
          a sac outlet) three. */
       const feedWeight = (list) => list.reduce((n, t) => n + (GENERIC.has(t) ? 1 : 3), 0);
       const score = shared.length * 2 + feedWeight(feeds) + feedWeight(fed)
+        + (drives.length + drivenBy.length) * 6
         + (fires.length + firedBy.length) * 4 + multWeight
         + (extended.length + extendedBy.length) * 3
         + (tribal.length + tribalBy.length) * 3
@@ -194,7 +232,10 @@
       /* One pair can be joined several ways at once. The label names the strongest,
          because an edge has room for one sentence and the pop-up prints them all. */
       const say2 = (list) => sayAll(list, 2);
+      const verb = (list) => list.map((e) => ENGINE_VERB[e] || e).join(', ');
       const cases = [
+        [drives.length,     'Loop engine → tap ability', '→ ' + verb([drives[0]]),   'Loop engine → tap ability · ' + verb(drives) + ' it for another go'],
+        [drivenBy.length,   'Tap ability ← loop engine', '← ' + verb([drivenBy[0]]), 'Tap ability ← loop engine · it ' + verb(drivenBy) + ' this'],
         [fires.length,      'Causes → triggers on',  '→ ' + say(fires[0]),      'Causes → triggers on · ' + sayAll(fires)],
         [firedBy.length,    'Triggers on ← caused',  '← ' + say(firedBy[0]),    'Triggers on ← caused by · ' + sayAll(firedBy)],
         [multiplied.length, 'Makes → multiplies',    '→ ×' + say(multiplied[0]),'Makes → multiplies · ' + say2(multiplied)],
@@ -211,16 +252,17 @@
       ];
       const [, kind, tag, reason] = cases.find((c) => c[0]) || [];
       return {shared, feeds, fed, fires, firedBy, multiplied, multiplies, extended, extendedBy,
-              tribal, tribalBy, statted, stattedBy, score, kind, tag, reason};
+              tribal, tribalBy, statted, stattedBy, drives, drivenBy, loopFeeds, loopFed, score, kind, tag, reason};
     }
 
   root.CrankGraph = {
     termsOf,
     TERM_KEYS,
+    ENGINES, LOOP_EVENTS, isLoopLink, loopable,
     /* The scoring the canvas uses, reachable without one. */
     relate: (a, b) => (a && b && a !== b ? relateTerms(termSets(a), termSets(b)) : null),
 
-    mount({canvas, cards, played = [], focus, history = [], owned = null, onSelect, onNeighbors, onPick, onHit, type = 'mechanic', depth = 2, breadth = 12}) {
+    mount({canvas, cards, played = [], focus, history = [], owned = null, onSelect, onNeighbors, onPick, onHit, type = 'mechanic', depth = 2, breadth = 12, loopMode = false}) {
       const ctx = canvas.getContext('2d');
       const byId = new Map(cards.map((c) => [c.id, c]));
       /* The path walked so far. A filter remounts the graph over a narrower set of cards;
@@ -237,6 +279,10 @@
          for "add these to a group" -- the loop the graph exists for happens ON the graph,
          not in a list. An edge tap opens its definition in every mode. */
       let mode = 'navigate';
+      /* LOOP MODE: the walk keeps only the edges that continue or pay off a loop (isLoopLink),
+         so depth means "hops along a loop" rather than "hops along any join". Ramp, draw-only
+         and shared-word neighbours wait until the toggle is off. */
+      let loops = Boolean(loopMode);
       const selected = new Set();
       let highlight = null;   // [idA, idB] of the edge a pop-up is about
       let hover = null;       // the node under a mouse, whose cross-links are drawn on their own
@@ -357,6 +403,7 @@
            requires -- resource ids against role ids -- and so never found a candidate. */
         pull('fills', 'requires'); pull('requires', 'fills');
         pull('causes', 'triggers'); pull('triggers', 'causes');
+        pull('engines', 'tapAbility'); pull('tapAbility', 'engines');
         pull('offered', 'multiplies'); pull('multiplies', 'offered');
         pull('grants', 'extends'); pull('extends', 'grants');
         /* The tribe: a payoff's wants against what the others are or make, and back. */
@@ -373,7 +420,7 @@
         for (const id of candidates) {
           if (exclude.has(id)) continue;
           const x = byId.get(id); if (!x) continue;
-          const r = relate(c, x); if (r) out.push({card: x, ...r});
+          const r = relate(c, x); if (r && (!loops || isLoopLink(r))) out.push({card: x, ...r});
         }
         /* Ties are the common case now: a dozen cards all fire on a creature entering and
            all score the same. Alphabetical put "Access Denied" at the top of Purphoros's
@@ -409,7 +456,7 @@
             reason: `EDHREC co-play · ${e.decks} decks · ${(e.inclusion * 100).toFixed(1)}% inclusion`, score: e.inclusion} : null;
         }
         const r = relate(c, other);
-        return r ? {card: other, ...r} : null;
+        return r && (!loops || isLoopLink(r)) ? {card: other, ...r} : null;
       }
 
       /* ------------------------------------------------------------- the layout */
@@ -516,7 +563,7 @@
             const a = nodes[i], b = nodes[j];
             if (treeKey.has(a.card.id + '|' + b.card.id) || treeKey.has(b.card.id + '|' + a.card.id)) continue;
             const r = type === 'played' ? coPlayPair(a.card.id, b.card.id) : relate(a.card, b.card);
-            if (r) edges.push({a, b, tree: false, kind: r.kind});
+            if (r && (type === 'played' || !loops || isLoopLink(r))) edges.push({a, b, tree: false, kind: r.kind});
           }
         }
         return {c, nodes, edges, direct};
@@ -725,6 +772,8 @@
           extended: r ? r.extended : none, extendedBy: r ? r.extendedBy : none,
           tribal: r && r.tribal ? r.tribal : none, tribalBy: r && r.tribalBy ? r.tribalBy : none,
           statted: r && r.statted ? r.statted : none, stattedBy: r && r.stattedBy ? r.stattedBy : none,
+          drives: r && r.drives ? r.drives : none, drivenBy: r && r.drivenBy ? r.drivenBy : none,
+          loopFeeds: r && r.loopFeeds ? r.loopFeeds : none, loopFed: r && r.loopFed ? r.loopFed : none,
           kind: r ? r.kind : 'EDHREC co-play',
           reason: r ? r.reason : null, coPlay: co ? {decks: co.decks, inclusion: co.inclusion} : null};
       }
@@ -846,11 +895,13 @@
         back() { while (trail.length) { const id = trail.pop(); if (byId.has(id)) { select(id, false); return; } } },
         history() { return [...trail]; },
         setType(value) { type = value; layout(); fit(); draw(); },
+        setLoopMode(value) { loops = Boolean(value); layout(); fit(); draw(); },
+        get loopMode() { return loops; },
         setDepth(value) { depth = clampDepth(value); layout(); fit(); draw(); },
         setBreadth(value) { breadth = clampBreadth(value); layout(); fit(); draw(); },
         reset() { fit(); draw(); },
         terms(id) { return termsOf(byId.get(id || center)); },
-        get settings() { return {type, depth, breadth, nodes: nodes.length, mode}; },
+        get settings() { return {type, depth, breadth, nodes: nodes.length, mode, loops}; },
         setMode(value) { mode = ['select', 'inspect'].includes(value) ? value : 'navigate'; draw(); },
         /* The edge a pop-up is about, lit in gold until the pop-up closes. */
         setHighlight(pair) { highlight = pair && pair.length === 2 ? [pair[0], pair[1]] : null; draw(); },

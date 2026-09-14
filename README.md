@@ -111,7 +111,13 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   the whole graph with `node tools/graph-amplifiers.mjs --all`. A filter dialog's counts are what the filters already applied leave
   (`CrankFacets.narrowedCounts`), the whole-graph figure on the hover; the **Yours** filters
   wear the owned green, picking a deck there puts its commander in focus, and dragging the
-  divider grows the card picture up to 70 %. The pane widens while List is open; in presentation
+  divider grows the card picture up to 70 %. **Loops only** (on by default when a deck is
+  picked under Yours) walks only the joins that continue or pay off a loop — an untap, copy or
+  blink onto a tap ability worth another go, a repeatable supply into a demand, an event one card
+  causes and another fires on — and **Loops this card is in** lists every cycle of four cards or
+  fewer through the focus (`crankmagic-loops.js`), each step named, missing pieces dashed, with
+  the cards that pay it off. Sol Ring is on no loop: a rock's tap makes mana and nothing a loop
+  feeds on, and mana loops wait for cost accounting. The pane widens while List is open; in presentation
   mode the list keeps name, type and mana. The **Filters** bar groups the facets by what they ask about — Card (type, color, mana value, mana: rocks, dorks, lands, basics, ramp spells, rarity), Rules, Lands, Yours — and each opens its options in a dialog over the page, A to Z with a search box, so picking a filter never shifts the page; *Lands only* is a toggle in the bar; the badge on a facet counts its picks.
 - **Build** (the Deck Lab, `#lab`): any legal catalog commander by name or mechanics/EDHREC commander rank;
   optional second commander; an existing list/group; separate Deck Definition; real
@@ -288,7 +294,7 @@ installation. Workbook tests optionally use `XLSX_PYTHON` with openpyxl for inde
 spreadsheet verification. See [tests/uat/README.md](tests/uat/README.md).
 
 Changed assets require a new `?v=` everywhere referenced, then
-`node tests/asset-versions.mjs --update`. There are 55 Node suites:
+`node tests/asset-versions.mjs --update`. There are 56 Node suites:
 
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`
@@ -306,6 +312,7 @@ Changed assets require a new `?v=` everywhere referenced, then
 - `crankmagic-core` — `tests/crankmagic-core.mjs`
 - `crankmagic-facets` — `tests/crankmagic-facets.mjs`
 - `crankmagic-graph` — `tests/crankmagic-graph.mjs`
+- `crankmagic-loops` — `tests/crankmagic-loops.mjs`
 - `crankmagic-rules` — `tests/crankmagic-rules.mjs`
 - `crankmagic-sim` — `tests/crankmagic-sim.mjs`
 - `crankmagic-workbook` — `tests/crankmagic-workbook.mjs`
