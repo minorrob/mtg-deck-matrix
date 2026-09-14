@@ -1644,3 +1644,30 @@ button.cm-pill:hover{filter:brightness(1.15)}
   .cm-change-row.is-done .cm-change-tick{background:#000}
   .cm-change-in .cm-pill{background:none!important;border:1px solid #000}
 }
+
+/* THE BOARD'S THREE ZONES AND ITS CANVASES (Rob, 14 September; docs/crankmagic-playspace-plan.md
+   §2.10, §2.11). The group piles used to arch across the middle, which put the sources where the
+   play space has to be and made them read as the same kind of object as the destinations along
+   the bottom. Sources are shelves down both sides now, the middle is the play space, and the
+   destinations have their own band at the foot -- three surfaces for three roles.
+
+   Every canvas is drawn here rather than fetched: the content policy admits no external images,
+   and shipping someone else's table art, or the game's own, is a licensing problem rather than a
+   design one. The zones sit on top of whichever canvas is chosen and keep their own opacity, so a
+   card's contrast never depends on the background. */
+.cm-tt-zone{position:absolute;z-index:0;border-radius:12px;background:#0b1019aa;border:1px solid #ffffff1a;box-shadow:inset 0 1px 0 #ffffff12,inset 0 -18px 26px #0008,0 6px 18px #0005;pointer-events:none}
+.cm-tt-zone.is-left{border-left-width:2px;border-left-color:#c6a86d44}
+.cm-tt-zone.is-right{border-right-width:2px;border-right-color:#c6a86d44}
+.cm-tt-band{position:absolute;left:6px;right:6px;z-index:0;border-radius:12px;background:linear-gradient(#0d1422aa,#0b101988);border:1px solid #ffffff12;border-top:2px solid #c6a86d55;box-shadow:inset 0 2px 0 #ffffff0c,inset 0 22px 30px #0007;pointer-events:none}
+.cm-tt-mat .cm-tt-pile,.cm-tt-mat .cm-tt-readings,.cm-tt-mat .cm-tt-group-pick{z-index:1}
+
+/* The canvases. Slate is the mat as it was; the other three change only the ground. */
+.cm-tt-mat.cm-canvas-felt{background:radial-gradient(ellipse at 30% 16%,#2f5c3d 0,transparent 58%),repeating-linear-gradient(45deg,#ffffff06 0 1px,transparent 1px 3px),repeating-linear-gradient(-45deg,#00000010 0 1px,transparent 1px 3px),linear-gradient(170deg,#1f4530,#13291d);border-color:#3f6b4c;box-shadow:0 0 0 6px #0f1a13,0 0 0 7px #4a7a58,inset 0 0 120px #0009,0 24px 48px #000a}
+.cm-tt-mat.cm-canvas-celestial{background:radial-gradient(1.2px 1.2px at 18% 24%,#dfe7f3aa,transparent 60%),radial-gradient(1px 1px at 62% 12%,#cfe0ffaa,transparent 60%),radial-gradient(1.4px 1.4px at 81% 62%,#fff2cfaa,transparent 60%),radial-gradient(1px 1px at 34% 78%,#e6ecff99,transparent 60%),radial-gradient(1px 1px at 8% 66%,#ffffff88,transparent 60%),radial-gradient(1.1px 1.1px at 92% 30%,#dfe7f399,transparent 60%),radial-gradient(ellipse at 50% 46%,#3a3f7a55 0,transparent 62%),linear-gradient(168deg,#141a33,#0b0f1e);border-color:#3b4472;box-shadow:0 0 0 6px #090d1a,0 0 0 7px #3b4472,inset 0 0 120px #0009,0 24px 48px #000a}
+.cm-tt-mat.cm-canvas-parchment{background:radial-gradient(ellipse at 26% 18%,#efe3c8 0,transparent 60%),repeating-linear-gradient(92deg,#00000005 0 2px,transparent 2px 5px),linear-gradient(170deg,#e5d8ba,#cdbd99);border-color:#b3a380;box-shadow:0 0 0 6px #4a412f,0 0 0 7px #7d6f52,inset 0 0 90px #00000022,0 24px 48px #0008}
+.cm-tt-mat.cm-canvas-parchment .cm-tt-zone{background:#5a4e3822;border-color:#00000018;box-shadow:inset 0 1px 0 #ffffff55,inset 0 -18px 26px #00000012}
+.cm-tt-mat.cm-canvas-parchment .cm-tt-band{background:linear-gradient(#5a4e3818,#5a4e3826);border-color:#00000018;border-top-color:#8a7752}
+.cm-tt-mat.cm-canvas-parchment .cm-tt-readings,.cm-tt-mat.cm-canvas-parchment .cm-tt-group-pick{color:#3b3222}
+.cm-tt-group-pick{flex-wrap:wrap;justify-content:center;max-width:calc(100% - 32px)}
+.cm-tt-group-pick select[name=tabletopCanvas]{min-width:118px}
+.cm-tt-group-pick .v-term{color:inherit}

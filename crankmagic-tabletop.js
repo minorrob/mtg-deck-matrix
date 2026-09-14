@@ -153,6 +153,51 @@
     return sizes;
   }
 
+  /* ------------------------------------------------------------------ TB6: the board's three zones */
+  /* WHERE THE SOURCE PILES STAND (Rob, 14 September; docs/crankmagic-playspace-plan.md §2.5).
+     The group piles are shelves down either side of the table with the play space between them,
+     and they are filled a column at a time, alternating: the first column on the left, the second
+     on the right, the third on the left again, and so on -- so a grouping with four piles stands
+     two and two rather than four deep on one side.
+
+     The sides GROW BY THE COLUMNS THEY NEED and no further. Most groupings make five to eight
+     piles, which is one column a side; only Role, Mechanic and Primary Purpose reach for a
+     second or a third. Three columns a side costs about 620px, which leaves a 1250px window no
+     usable middle, so `columnsFor` is capped by the width as well as by the count, and the tail
+     beyond what the shelves hold folds into the last pile the way the model already folds it.
+
+     Pure, so the test can hold the order and the arithmetic without a browser. */
+  /* THE CANVAS (Rob, 14 September): four tables to work on, every one drawn in CSS rather than
+     fetched — the page's content policy admits no external images, and shipping someone else's
+     table art, or the game's own, is a licensing problem rather than a design one. Whatever is
+     chosen, the three zones keep their own surfaces on top of it, so a card's contrast never
+     depends on the background. */
+  const CANVASES = [["slate", "Slate"], ["felt", "Green felt"], ["celestial", "Celestial"], ["parchment", "Parchment"]];
+  const canvasOf = (v) => (CANVASES.some(([k]) => k === v) ? v : "slate");
+
+  const SHELF = {pileW: 74, pileH: 150, gutter: 26, minMiddle: 560, maxRows: 4, maxColumns: 3};
+  /* How many rows a column holds at this height, and how many columns each side may take at
+     this width: never so many that the play space in the middle drops under `minMiddle`. */
+  function shelfShape(count, {width = 1200, height = 560, rows = 0} = {}) {
+    const perColumn = Math.max(1, Math.min(SHELF.maxRows, rows || Math.max(1, Math.floor(height / SHELF.pileH))));
+    const fits = Math.max(0, Math.floor((width - SHELF.minMiddle) / (2 * (SHELF.pileW + SHELF.gutter))));
+    const columnsPerSide = Math.max(1, Math.min(SHELF.maxColumns, fits));
+    const wanted = Math.ceil(Math.max(0, count) / perColumn);
+    const columns = Math.max(1, Math.min(columnsPerSide * 2, wanted));
+    return {perColumn, columns, columnsPerSide, left: Math.ceil(columns / 2), right: Math.floor(columns / 2), holds: columns * perColumn};
+  }
+  /* One seat per pile, in the order the piles come: column 0 left, column 1 right, column 2 left…
+     Piles past what the shelves hold get seat `null`, and the caller folds them. */
+  function shelfSeats(count, options = {}) {
+    const shape = shelfShape(count, options), seats = [];
+    for (let i = 0; i < Math.max(0, count); i += 1) {
+      const column = Math.floor(i / shape.perColumn);
+      if (column >= shape.columns) { seats.push(null); continue; }
+      seats.push({side: column % 2 === 0 ? "left" : "right", column: Math.floor(column / 2), row: i % shape.perColumn});
+    }
+    return {shape, seats};
+  }
+
   /* ------------------------------------------------------------------ TB2: lay out, page, select */
   const SIZES = {S: {w: 64, h: 90, gap: 10, cap: 14}, M: {w: 96, h: 134, gap: 12, cap: 18}, L: {w: 140, h: 196, gap: 14, cap: 20}};
   /* The one card on the stage: the picture at the size the reader chose, up to Scryfall's
@@ -339,8 +384,16 @@
     const readingsHTML = (top) => readings.length ? `<div class="cm-tt-readings" style="top:${top}px"><span>Readings of a plan, not places for a card — lay one out to look:</span>${readings.map((p) => `<button type="button" class="cm-tt-chip cm-tt-reading${p.id === homeId ? " is-open cm-tt-home" : ""}" data-tt="open" data-pile="${esc(p.id)}" aria-pressed="${p.id === homeId ? "true" : "false"}" aria-label="${esc(p.label)}, ${p.count} card${p.count === 1 ? "" : "s"}">${esc(p.label)} · ${p.count.toLocaleString()}</button>`).join("")}</div>` : "";
     const perRow = Math.max(3, Math.floor((width - 32) / 96)), span = (width - 32 - PILE_W) / Math.max(1, perRow - 1);
     const groupSelect = `<select name="tabletopGroupBy" aria-label="Group piles by">${model.groupings.map(([k, l]) => `<option value="${esc(k)}"${k === model.groupBy ? " selected" : ""}>${esc(l)}</option>`).join("")}</select>`;
+    /* A grouping's name is a term as well: what "Primary Purpose" or "Price band" means is a
+       question a reader has while choosing one, not afterwards. */
+    const groupingTerm = () => { const found = model.groupings.find(([k]) => k === model.groupBy); return found ? term(found[1]) : ""; };
     const orderSelect = `<select name="tabletopStatusOrder" aria-label="Status pile order"><option value="workflow"${model.statusSort === "count" ? "" : " selected"}>Workflow order</option><option value="count"${model.statusSort === "count" ? " selected" : ""}>Fullest first</option></select>`;
-    const groupPick = (top) => `<div class="cm-tt-group-pick" style="top:${top}px"><label>Group piles by ${groupSelect}</label><label>Status piles ${orderSelect}</label></div>`;
+    /* Every control names a term the glossary defines, so the words on the table can be asked
+       about where they are read (Rob, 14 September). `hooks.term(text)` is the caller's glossary;
+       without one the label is printed plain. */
+    const term = (text) => (hooks.term ? hooks.term(text) : esc(text));
+    const canvasSelect = `<select name="tabletopCanvas" data-tt="canvas" aria-label="Choose canvas">${CANVASES.map(([k, l]) => `<option value="${k}"${k === canvasOf(ui.canvas) ? " selected" : ""}>${esc(l)}</option>`).join("")}</select>`;
+    const groupPick = (top) => `<div class="cm-tt-group-pick" style="top:${top}px"><label>${term("Group piles by")} ${groupSelect}</label><label>${term("Status piles")} ${orderSelect}</label><label>Choose canvas ${canvasSelect}</label></div>`;
     let body = "", height = 0, stageHTML = "";
     if (mode === "rest") {
       let groupHTML = "", statusHTML = "", pickTop;
@@ -354,33 +407,38 @@
         groupHTML = groups.map((p, i) => pile(p, Math.round(16 + (i % perRow) * span), groupTop + Math.floor(i / perRow) * ROW, "group")).join("");
         height = groupTop + Math.ceil(gN / perRow) * ROW + 86;
       } else {
-        /* The semicircle: the group piles along an arch whose feet stand beside the status row
-           and whose crown is at the back under the grouping control, spaced evenly across the
-           chord so no two piles share a column. More piles than one arch holds go on a second
-           arch inside the first, and a third inside that. The inside of the arch is the stage
-           where a laid-out pile and the selection sit. */
-        const GAP = 112, arcTop = 200, cx = width / 2, chord = width - 64 - PILE_W;
-        const perArc = Math.max(3, Math.floor(chord / GAP) + 1);
-        const arcs = arcsOf(gN, perArc).map((size, k, sizes) => groups.slice(sizes.slice(0, k).reduce((a, b) => a + b, 0), sizes.slice(0, k + 1).reduce((a, b) => a + b, 0)));
-        let bottom = arcTop;
-        arcs.forEach((list, k) => {
-          const rx = Math.max(120, chord / 2 - k * 110), ry = Math.min(200, Math.max(70, rx * .36)), top = arcTop + k * 140, n = list.length;
-          list.forEach((p, i) => {
-            const u = n === 1 ? 0 : (i / (n - 1)) * 2 - 1;  /* -1 at the left foot, 0 at the crown, 1 at the right foot */
-            const x = cx + u * rx - PILE_W / 2, y = top + ry * (1 - Math.sqrt(Math.max(0, 1 - u * u)));
-            bottom = Math.max(bottom, y + PILE_H);
-            groupHTML += pile(p, Math.round(x), Math.round(y), "group");
-          });
-        });
+        /* THE THREE ZONES (Rob, 14 September; docs/crankmagic-playspace-plan.md §2.11). The group
+           piles were an arch across the middle of the mat, which put the sources where the play
+           space has to be and made them read as the same kind of object as the destinations along
+           the bottom. They are shelves down both sides now -- columns filled left, right, left,
+           growing by the columns they need (§2.5) -- with the play space between them and the
+           destinations in their own band at the foot. Sources, workspace, destinations: three
+           surfaces, three roles, legible before a word is read. */
         pickTop = 146;
-        /* THE STATUS ROW KEEPS ITS PLACARDS (Rob, 14 September): the row ran from 16px to the
-           far edge, and a placard is centred on its pile and wider than it -- so "Physical
-           deck - 96" at the left foot and "To buy" at the right were cut off by the mat. The
-           row is inset by half the widest status placard instead, and every word fits. */
+        const shelfTop = 196;
+        const room = Math.max(300, (Number(ui.viewportHeight) || 900) - 430);
+        const {shape, seats} = shelfSeats(gN, {width, height: room});
+        const colW = SHELF.pileW + SHELF.gutter;
+        const used = (side) => seats.reduce((n, x) => (x && x.side === side ? Math.max(n, x.column + 1) : n), 0);
+        const leftW = used("left") * colW, rightW = used("right") * colW;
+        groups.forEach((p, i) => {
+          const seat = seats[i];
+          if (!seat) return;  /* past what the shelves hold; the model has already folded the tail */
+          const x = seat.side === "left" ? 16 + seat.column * colW : width - 16 - SHELF.pileW - seat.column * colW;
+          groupHTML += pile(p, Math.round(x), shelfTop + seat.row * SHELF.pileH, "group");
+        });
+        const rows = Math.min(shape.perColumn, Math.max(1, Math.ceil(Math.min(gN, shape.holds) / Math.max(1, shape.columns))));
+        const shelfH = Math.max(SHELF.pileH, rows * SHELF.pileH);
+        /* The shelves' own surfaces, behind the piles, so each zone says what it is. */
+        const zonesHTML = (leftW ? `<div class="cm-tt-zone is-left" style="top:${shelfTop - 16}px;left:6px;width:${leftW + 10}px;height:${shelfH + 12}px" aria-hidden="true"></div>` : "")
+          + (rightW ? `<div class="cm-tt-zone is-right" style="top:${shelfTop - 16}px;right:6px;width:${rightW + 10}px;height:${shelfH + 12}px" aria-hidden="true"></div>` : "");
+        const statusTop = Math.round(shelfTop + shelfH + 40);
         const EDGE = Math.min(96, Math.max(16, Math.round((width - 32 - PILE_W) / 12)));
-        const statusTop = Math.round(bottom + 36), sSpan = (width - 2 * EDGE - PILE_W) / Math.max(1, sN - 1);
-        statusHTML = sts.map((p, i) => pile(p, Math.round(EDGE + i * sSpan), statusTop, "status")).join("") + readingsHTML(statusTop + ROW + READ_GAP);
+        const sSpan = (width - 2 * EDGE - PILE_W) / Math.max(1, sN - 1);
+        statusHTML = `<div class="cm-tt-band" style="top:${statusTop - 22}px;height:${ROW + READ_GAP + readH + 12}px" aria-hidden="true"></div>`
+          + sts.map((p, i) => pile(p, Math.round(EDGE + i * sSpan), statusTop, "status")).join("") + readingsHTML(statusTop + ROW + READ_GAP);
         height = statusTop + ROW + READ_GAP + readH + 30;
+        groupHTML = zonesHTML + groupHTML;
       }
       body = groupPick(pickTop) + groupHTML + statusHTML;
     } else {
@@ -436,10 +494,11 @@
       body = shelfHTML + stageHTML + statusHTML;
     }
     const legend = `${model.total.toLocaleString()} cards on the table · ${model.ghosts.toLocaleString()} ghost${model.ghosts === 1 ? "" : "s"} (ordered, to buy, a draft list — not held) · ${sN} status piles · ${gN} ${esc(model.groupings.find(([k]) => k === model.groupBy)[1].toLowerCase())} piles`;
-    host.innerHTML = `<div class="cm-tt-mat is-${mode}" tabindex="-1" style="height:${height}px">${railHTML}${body}<div class="cm-tt-legend">${legend}</div></div>`;
+    host.innerHTML = `<div class="cm-tt-mat is-${mode} cm-canvas-${canvasOf(ui.canvas)}" tabindex="-1" style="height:${height}px">${railHTML}${body}<div class="cm-tt-legend">${legend}</div></div>`;
     /* Clicks, keys and the context menu, delegated once per draw. */
     const sel = host.querySelector("select[name=tabletopGroupBy]"); if (sel && hooks.onGroupBy) sel.addEventListener("change", () => hooks.onGroupBy(sel.value));
     const ord = host.querySelector("select[name=tabletopStatusOrder]"); if (ord && hooks.onStatusOrder) ord.addEventListener("change", () => hooks.onStatusOrder(ord.value));
+    const can = host.querySelector("select[name=tabletopCanvas]"); if (can && hooks.onCanvas) can.addEventListener("change", () => hooks.onCanvas(can.value));
     host.onclick = (ev) => {
       const t = ev.target.closest("[data-tt]");
       if (!t) { if (mode !== "rest" && ev.target.closest(".cm-tt-mat") && !ev.target.closest("button, select, label, .cm-tt-card, .cm-tt-strip, .cm-tt-stage")) hooks.onClear && hooks.onClear(); return; }
@@ -540,5 +599,5 @@
     return {width, height, piles: sN + gN + 1, readings: readings.length, mode};
   }
 
-  return {GROUPINGS, TYPE_ORDER, BENCH, GHOST, TARGET, SIZES, STAGE, isGhost, primaryType, bandOf, bandOrder, arcsOf, pileOrder, layout, findPile, accepts, printSheet, table, mount};
+  return {GROUPINGS, TYPE_ORDER, BENCH, GHOST, TARGET, SIZES, STAGE, SHELF, CANVASES, canvasOf, shelfShape, shelfSeats, isGhost, primaryType, bandOf, bandOrder, arcsOf, pileOrder, layout, findPile, accepts, printSheet, table, mount};
 });
