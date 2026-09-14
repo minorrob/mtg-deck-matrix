@@ -17,6 +17,13 @@ let definition=M.defaultDefinition(),built=D.build({commanders:[leader],cards:[l
 // A price cap of zero starves every candidate -- but not the commander. It was chosen by
 // name before any limit existed, so it is the one card a cap may never refuse; a deck of
 // the commander alone is the honest result, and the issue says why nothing else fitted.
+/* THE TRACE SEED (T4): a Map card id -> bonus lifts the seeded cards into the draft ahead of the
+   unseeded, the roles still fill to their targets, and the method and notes say so. */
+{const favoured=pool.filter((c,i)=>i%7===0).slice(0,12),seed=new Map(favoured.map(c=>[c.id,300]));
+ const seeded=D.build({commanders:[leader],cards:[leader,basic,...pool],definition,seed});
+ eq(seeded.slots.reduce((n,r)=>n+r.quantity,0),100);ok(favoured.every(c=>seeded.slots.some(r=>r.cardId===c.id)));eq(seeded.seeded,favoured.length);
+ ok(seeded.method.includes('seeded from the trace'));ok(seeded.notes.some(x=>x.includes('Seeded from the trace')));eq(seeded.slots.find(r=>r.cardId===basic.id).quantity,36);
+ const plain=D.build({commanders:[leader],cards:[leader,basic,...pool],definition,seed:new Map()});eq(plain.method,built.method);eq(plain.seeded,0);}
 const zero=D.build({commanders:[leader],cards:[leader,basic,...pool],definition:{...definition,budget:0}});eq(zero.slots.length,1);eq(zero.slots[0].cardId,leader.id);ok(zero.issues.some(x=>x.includes('No hard limit was crossed')&&x.includes('$0')));
 // A CAP IS PLANNED, NOT MERELY OBEYED. Under $60 the same pool must still yield a full
 // hundred within the cap, with basics doing the cheap work and a high-ranked staple at

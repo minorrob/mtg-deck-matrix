@@ -256,6 +256,28 @@ try{
   await page.locator('select[name=lens]').selectOption('');await page.waitForTimeout(400);eq(await page.locator('.cm-lens-head').count(),0,'None is the plain list again');ok(await page.locator('.cm-list-table').count()>0,'with the neighbourhood table back');
   /* Back to the plain route and the Card Info tab, so the steps after this start where they did. */
   await page.goto(BASE+'/'+ENTRY+'#discover');await page.locator('#cm-graph').waitFor({timeout:30000});await page.waitForTimeout(800);await page.locator('.cm-pane-tab[data-tab=card]').click();await click('Clear filters');await page.waitForTimeout(500);}
+ /* THE TRACE (T2/T3). #discover?deck=<id>&trace=1 picks the deck, opens the pane's Trace tab and
+    puts the graph in trace mode: the commander at the centre, the lit list in the pane in the
+    walk's order, the transport working, an unticked strategy saved with the deck, and Card Info
+    ending the trace. The journey's deck is small, so the assertions are about the mechanism, not
+    the goblin deck's numbers (tests/crankmagic-trace.mjs holds those). */
+ {const traceDeck=(await state()).decks.find(d=>!d.archived);ok(traceDeck,'a deck for the trace');
+  await page.goto(BASE+'/'+ENTRY+'#discover?deck='+encodeURIComponent(traceDeck.id)+'&trace=1');await page.locator('.cm-trace-head').waitFor({timeout:30000});await page.waitForTimeout(600);
+  ok(new RegExp('^Trace: what '+traceDeck.name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+' builds from ').test((await page.locator('.cm-trace-head').innerText()).trim()),'the head names the deck and its commander');
+  eq(await page.locator('.cm-pane-tab[data-tab=trace]').getAttribute('aria-selected'),'true','the Trace tab is selected');
+  const tr=await page.evaluate(()=>{const g=document.querySelector('#cm-graph').crankGraph;const p=g.positions();return {tracing:g.tracing,total:g.traceState&&g.traceState.total,centre:g.current()&&g.current().isCommander,nodes:p.length,ghosts:p.filter(n=>n.ghost).length};});
+  ok(tr.tracing&&tr.centre,`the graph is in trace mode with the commander at the centre (${tr.nodes} nodes, ${tr.ghosts} ghosts)`);
+  eq(await page.locator('.cm-trace-row').count(),tr.total,'the pane lists exactly the cards the graph will light');
+  ok(await page.locator('.cm-trace-score strong').count()===4,'the score strip has its four figures');
+  await page.locator('[data-action=trace-ctl][data-ctl=end]').click();await page.waitForTimeout(400);
+  eq(await page.locator('.cm-trace-row.is-lit').count(),tr.total,'End lights every row');ok(/of \d+ lit$/.test((await page.locator('#cm-trace-at').innerText()).trim()),'and the counter says so');
+  const ticks=await page.locator('.cm-trace-strategies input[name=traceStrategy]:checked').count();
+  if(ticks>1){const first=page.locator('.cm-trace-strategies input[name=traceStrategy]:checked').first();const id=await first.getAttribute('value');await first.click();await page.waitForTimeout(1200);
+   const saved=(await state()).decks.find(d=>d.id===traceDeck.id).definition.strategies||[];ok(saved.length===ticks-1&&!saved.includes(id),`the unticked strategy is saved with the deck (${saved.join(', ')})`);
+   await page.locator('input[name=traceStrategy][value="'+id+'"]').click();await page.waitForTimeout(1200);}
+  await page.locator('.cm-pane-tab[data-tab=card]').click();await page.waitForTimeout(800);
+  ok(!(await page.evaluate(()=>document.querySelector('#cm-graph').crankGraph.tracing)),'Card Info ends the trace and the graph is the neighbourhood again');
+  await page.goto(BASE+'/'+ENTRY+'#discover');await page.locator('#cm-graph').waitFor({timeout:30000});await page.waitForTimeout(800);await click('Clear filters');await page.waitForTimeout(500);}
  /* LOOPS ONLY. Picking a deck turns the walk to loop joins by itself: its commander in focus,
     the depth gauge crossing only the joins that continue or pay off a loop, the pane listing
     the closed cycles through the focus or saying there are none; the toggle brings the whole
