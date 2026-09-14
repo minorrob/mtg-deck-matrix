@@ -103,6 +103,7 @@ for (const [label, why] of DELIBERATELY_ABSENT) {
    compares a committed output against what its generator would produce now. */
 const CHECKABLE = [
   ["tools/check-glossary.mjs", []],
+  ["tools/data-inventory.mjs", ["--check"]],
   ["tools/compile-game-logs.mjs", ["--check"]],
   ["tools/flavor-names.mjs", ["--check"]],
   ["tools/graph-amplifiers.mjs", ["--check"]],
