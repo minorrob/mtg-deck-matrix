@@ -241,6 +241,21 @@ try{
   const deckPick=page.locator('dialog .cm-facet-pick[data-key=decks]').first();ok(await deckPick.count()>0,'a deck to pick');await deckPick.click();await page.waitForTimeout(800);
   const focus=await page.evaluate(()=>{const c=document.querySelector('#cm-graph').crankGraph.current();return {name:c.name,commander:!!c.isCommander};});ok(focus.name!=='Sol Ring'&&focus.commander,`picking a deck focused its commander (${focus.name})`);
   await page.keyboard.press('Escape');await page.getByRole('dialog').waitFor({state:'hidden'});await click('Clear filters');}
+ /* THE ROLE LENS (Phase D). #discover?lens=Removal&deck=<id> picks the deck under Yours, opens
+    the List tab in the lens and puts the commander in focus; the head counts the deck's cards
+    in the role against the house minimum from the rules module, the select reaches the other
+    six lenses, and None is the plain list again. */
+ {const lensDeck=(await state()).decks.find(d=>!d.archived);ok(lensDeck,'a deck for the lens');
+  await page.goto(BASE+'/'+ENTRY+'#discover?lens=Removal&deck='+encodeURIComponent(lensDeck.id));await page.locator('.cm-lens-head').waitFor({timeout:30000});
+  ok(new RegExp('^Removal in '+lensDeck.name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).test((await page.locator('.cm-lens-head').innerText()).trim()),'the lens head names the role and the deck');
+  ok(/^\d+ \/ 8$/.test((await page.locator('.cm-lens-count').innerText()).trim()),'the count reads against the house minimum of 8');
+  eq(await page.locator('select[name=lens]').inputValue(),'Removal','the select shows the lens the route asked for');
+  const lensFocus=await page.evaluate(()=>{const c=document.querySelector('#cm-graph').crankGraph.current();return !!(c&&c.isCommander);});ok(lensFocus,'the commander is in focus');
+  await page.locator('select[name=lens]').selectOption('Ramp');await page.waitForTimeout(400);ok(/^Ramp in /.test((await page.locator('.cm-lens-head').innerText()).trim()),'the select changes the lens');
+  ok(/\/ 10$/.test((await page.locator('.cm-lens-count').innerText()).trim()),'Ramp counts against 10');
+  await page.locator('select[name=lens]').selectOption('');await page.waitForTimeout(400);eq(await page.locator('.cm-lens-head').count(),0,'None is the plain list again');ok(await page.locator('.cm-list-table').count()>0,'with the neighbourhood table back');
+  /* Back to the plain route and the Card Info tab, so the steps after this start where they did. */
+  await page.goto(BASE+'/'+ENTRY+'#discover');await page.locator('#cm-graph').waitFor({timeout:30000});await page.waitForTimeout(800);await page.locator('.cm-pane-tab[data-tab=card]').click();await click('Clear filters');await page.waitForTimeout(500);}
  /* LOOPS ONLY. Picking a deck turns the walk to loop joins by itself: its commander in focus,
     the depth gauge crossing only the joins that continue or pay off a loop, the pane listing
     the closed cycles through the focus or saying there are none; the toggle brings the whole

@@ -151,7 +151,7 @@ The original sketch, kept for the record:
 - Loops on the card: the pane lists "Loops this card is in" above the chips, each loop one line
   of names with the missing piece marked, from the same finder.
 
-## Phase D — the role lens (one PR, or folded into Option B PR 4)
+## Phase D — the role lens (shipped, PR #185)
 
 Goal: pick a deck, pick a role, see the deck's cards in that role beside the graph's candidates.
 
@@ -170,6 +170,19 @@ Acceptance: `#discover?lens=Removal&deck=D6` lists Abrade, Chaos Warp, Cinder St
 Goblin Trashmaster, Siege-Gang Commander on the left (six; seven once Vandalblast lands) with
 "6 / 8" in the warning treatment; D4 shows "9 / 8" plain. A swap creates an option and touches
 no target.
+
+*Shipped in #185 as `crankmagic-lens.js` (pure) drawn by Discover's List tab, with the house
+minimums on `crankmagic-rules.js` (`ROLE_MINIMUMS`: removal 8, wipe 2, ramp 10, draw 10; the
+other three lenses show their count plain). The route is `#discover?lens=<role>&deck=<deck id>`,
+reached from the deck page's More menu; the select in the pane reaches the other six. The
+acceptance numbers above were written against an earlier classifier: today D6 carries twelve
+removal cards (Vandalblast landed, and the pingers — Goblin Bombardment, Thornbite Staff —
+classify as removal), so D6 reads "12 / 8" plain, D5 "5 / 8" and "0 / 2" in the warning
+treatment, D4's ramp "13 / 10". `tests/crankmagic-lens.mjs` pins the rules on the live state
+and the swap: an uncommitted `option` on the chosen slot, the hundred unchanged, no copy
+reserved. Candidates come from the bench, the orders, the buy list, the linked upgrades and the
+commander's co-play neighbours, inside the colour identity, never a card already in the
+hundred.*
 
 ## Data: the Master's columns (optional, any time after B)
 
