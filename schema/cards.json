@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://minorrob.github.io/mtg-deck-matrix/schema/cards.json",
-  "title": "The card catalog the app boots from: one entry per card the six decks and the Lab can name",
+  "title": "The Card record set: every card the library, the decks, the ladders and the pop-ups name — identity, printed facts, the shown printing, one dated price, the graph's rank, and the classifier's terms",
   "type": "object",
   "properties": {
     "schema": {
       "type": "string",
-      "const": "cards@1"
+      "const": "cards@2"
     },
     "generatedAt": {
       "type": "string",
@@ -31,6 +31,10 @@
           "name": {
             "type": "string",
             "minLength": 1
+          },
+          "oracleId": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$"
           },
           "manaCost": {
             "type": "string"
@@ -98,6 +102,15 @@
           "image": {
             "type": "string"
           },
+          "imageSmall": {
+            "type": "string"
+          },
+          "tcgplayerUrl": {
+            "type": "string"
+          },
+          "scryfallUrl": {
+            "type": "string"
+          },
           "price": {
             "anyOf": [
               {
@@ -111,16 +124,152 @@
           "priceUpdated": {
             "type": "string"
           },
-          "tcgplayerUrl": {
+          "priceFoil": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cheapestSet": {
             "type": "string"
+          },
+          "rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "isCommander": {
+            "type": "boolean"
+          },
+          "printings": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "requires": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "causes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "triggers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "produces": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "multiplies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "grants": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "extends": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "mechanics": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "tribes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "wants": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "makes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "wantsStat": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "offersStat": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
           }
         },
         "required": [
           "name",
+          "oracleId",
           "typeLine",
           "colorIdentity",
-          "rarity"
-        ]
+          "rarity",
+          "price",
+          "priceUpdated",
+          "isCommander"
+        ],
+        "additionalProperties": false
       }
     },
     "missing": {
@@ -138,5 +287,6 @@
     "source",
     "cards",
     "missing"
-  ]
+  ],
+  "additionalProperties": false
 }

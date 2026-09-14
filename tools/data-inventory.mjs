@@ -119,6 +119,10 @@ const DECLARED = {
 };
 for (const [file, list] of Object.entries(DECLARED)) for (const t of list) if (!t.startsWith("(") && !existsSync(path.join(ROOT, t))) { console.error(`data-inventory: ${file} declares producer ${t}, which is not in the tree`); process.exit(1); }
 
+/* A tool the proximity scan mistakes for a producer: it names the file beside a write of a
+   different one. */
+const READS_ONLY = {"tools/reprice-variants.mjs": ["data/cards.json"]};
+
 /* ------------------------------------------------------------ judgement */
 const OVERRIDES = {
   "data/active-state.json": ["archive", "the retired viewer's state; read by tools and tests only, never fetched by a page since the legacy pages were retired"],
@@ -147,7 +151,7 @@ const rows = tracked.map((p) => {
   const a = describe(p);
   const who = readers.filter((r) => mentions(r.text, p));
   const groups = new Set(who.map((r) => r.group));
-  const found = who.filter((r) => (r.group === "tools" || r.group === "workflows") && writesTo(r.text, p)).map((r) => r.file);
+  const found = who.filter((r) => (r.group === "tools" || r.group === "workflows") && writesTo(r.text, p) && !(READS_ONLY[r.file] || []).includes(p)).map((r) => r.file);
   const producers = [...found, ...(DECLARED[p] || []).filter((t) => !found.includes(t)).map((t) => t.startsWith("(") ? t : t + " (declared)")];
   const tests = who.filter((r) => r.group === "tests").map((r) => path.basename(r.file));
   const precached = who.some((r) => r.group === "sw") && !runtimeCached.has(p);

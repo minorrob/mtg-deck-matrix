@@ -303,16 +303,21 @@ reporting a pass when a browser or server is missing. Node tests need no runtime
 installation. Workbook tests optionally use `XLSX_PYTHON` with openpyxl for independent
 spreadsheet verification. See [tests/uat/README.md](tests/uat/README.md).
 
+`data/cards.json` is the Card record set — one entry per card with its identity, printed facts, shown
+printing, one dated price and the classifier's terms — and `tools/build-card-records.mjs` is its one
+producer (`--add "Name"` fetches a card from Scryfall; `--check` proves the committed files are what a
+rebuild would write); `data/card-facts.json` and the graph's card block derive from it.
 Every data file under `data/` and `sim/` opens with `{schema, stamp, generator, count}`;
 `schema/index.mjs` registers each one with its producer and the tool whose `--check` vouches for
 it, `schema/*.json` describes its shape, and readers pass what they fetch through
 `CrankAssets.expect()`. Changed assets require a new `?v=` everywhere referenced, then
-`node tests/asset-versions.mjs --update`. There are 57 Node suites:
+`node tests/asset-versions.mjs --update`. There are 58 Node suites:
 
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`
 - `browser-geometry` — `tests/browser-geometry.mjs`
 - `card-classify` — `tests/card-classify.mjs`
+- `card-records` — `tests/card-records.mjs`
 - `card-images` — `tests/card-images.mjs`
 - `card-link` — `tests/card-link.mjs`
 - `card-resolve` — `tests/card-resolve.mjs`

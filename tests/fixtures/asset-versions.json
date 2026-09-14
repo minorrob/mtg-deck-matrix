@@ -98,12 +98,12 @@
       "sha": "e02ecad49be64f67"
     },
     "crankmagic-app.js": {
-      "version": 152,
-      "sha": "2c8f3ebeabaefd52"
+      "version": 153,
+      "sha": "9ba3d8c065b09c0f"
     },
     "crankmagic-assets.js": {
-      "version": 23,
-      "sha": "6642c913f773b732"
+      "version": 24,
+      "sha": "a253b8e1c3a71223"
     },
     "crankmagic-brand.js": {
       "version": 3,
@@ -190,8 +190,8 @@
       "sha": "81ae2c4b7634afa7"
     },
     "crankmagic-sw.js": {
-      "version": 152,
-      "sha": "20671c92181978e9"
+      "version": 153,
+      "sha": "232ce537d0e71d33"
     },
     "crankmagic-tour.js": {
       "version": 13,
@@ -206,12 +206,12 @@
       "sha": "4c2b2793f05a10be"
     },
     "data/card-facts.json": {
-      "version": 3,
-      "sha": "dc44b961fdcc1c45"
+      "version": 4,
+      "sha": "5987eba0e7bdd850"
     },
     "data/cards.json": {
-      "version": 6,
-      "sha": "5837bb474b845278"
+      "version": 7,
+      "sha": "3b5ee83d71974755"
     },
     "data/commander-glossary.json": {
       "version": 2,
@@ -242,8 +242,8 @@
       "sha": "0d59ce296060e722"
     },
     "data/graph.json": {
-      "version": 16,
-      "sha": "d6c73a533d578aab"
+      "version": 17,
+      "sha": "523584fbacbe13c9"
     },
     "deck-import.js": {
       "version": 2,

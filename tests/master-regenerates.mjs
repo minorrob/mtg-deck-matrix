@@ -124,7 +124,7 @@ try {
   assert.equal(lost.length, 0,
     `${lost.length} row(s) that carried a Scryfall price no longer do: ` +
     lost.map((card) => card.name).join(", ") +
-    ". Rebuild data/card-facts.json (python3 tools/build_card_facts.py) and import again.");
+    ". Rebuild data/card-facts.json (node tools/build-card-records.mjs) and import again.");
 
   console.log(`master-regenerates: ${committed.cards.length} cards reproduce from ${SOURCE} ` +
     `(${live.length} prices come from Scryfall and are checked for presence, not value).`);

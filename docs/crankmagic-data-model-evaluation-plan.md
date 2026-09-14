@@ -144,6 +144,10 @@ Named now so the evaluation checks them rather than rediscovers them:
   all seventeen registered data files, `schema/*.json` with a dependency-free validator and
   `tests/schemas.mjs`; readers check the schema through the asset map's `expect()`; five more
   producers gained `--check` and the generators suite runs every registered check.
+- **Critical 1 shipped (PR #179):** `data/cards.json` is the Card record set (`cards@2`, 2,131
+  records) with `tools/build-card-records.mjs` as its one producer; `data/card-facts.json` and
+  the graph's card block are lenses it writes; the four tools that wrote them by hand are
+  retired; `tests/card-records.mjs` pins that the lenses equal the record.
 
 ## 5. Sequence and sizing
 

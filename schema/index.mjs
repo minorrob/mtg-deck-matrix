@@ -13,7 +13,7 @@ export const HAND = "hand-maintained";
 export const STAMPS = ["generatedAt", "compiledAt", "savedAt", "createdAt", "amplifiersAt", "updatedAt", "revision"];
 
 export const REGISTRY = [
-  {file: "data/cards.json", id: "cards@1", generator: "tools/build-card-records.mjs", checkedBy: "tools/build-card-records.mjs", main: "cards"},
+  {file: "data/cards.json", id: "cards@2", generator: "tools/build-card-records.mjs", checkedBy: "tools/build-card-records.mjs", main: "cards"},
   {file: "data/card-facts.json", id: "card-facts@1", generator: "tools/build-card-records.mjs", checkedBy: "tools/build-card-records.mjs", main: "cards"},
   {file: "data/commander-universe.json", id: "commander-universe@1", generator: "tools/commander-universe.mjs", checkedBy: "tools/commander-universe.mjs", main: "cards"},
   {file: "data/commander-ranks.json", id: "commander-ranks@1", generator: "tools/commander-ranks.mjs", checkedBy: "tools/commander-ranks.mjs", main: "cards"},
