@@ -107,7 +107,10 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   — every card the focus reaches at the widest depth and breadth, whatever the sliders say,
   under the same filters; sortable by its headers, paged, a tick per row for *Add selected
   to a group* or a draft deck, *Add/Buy* on each row, and a row click opens the card in
-  Card Info without moving the graph. In Card Info, the pop-ups and a List row's detail, the
+  Card Info without moving the graph. In Inspect mode a tap on a node opens the **card
+  pop-up** beside it: the picture at large size, type, cost, rarity, set and price, the
+  Primary Purpose chip and *Joined to ‹focus› by* — its full term list is under **Inspect
+  card** as *Terms the graph reads*. In Card Info, the pop-ups and a List row's detail, the
   term with the **gold ring** is the card's *Primary Purpose* — the one job it is in a deck
   for, decided by a fixed ladder in `card-classify.js` (`purposeOf`: finisher, extra turn,
   board wipe, multiplier, untap engine, copier, blink, team quality, tutor, sacrifice outlet,

@@ -333,14 +333,26 @@
       if (!hit) { hidePop(); return; }
       const focus = graph?.current();
       if (hit.kind === 'node') {
-        const rec = C.catalog.exact(hit.card.name) || {};
+        /* THE CARD POP-UP IS THE CARD AND ITS CONNECTION, NOTHING ELSE. The picture at large
+           size, the four facts a player reads off a card (type, cost, rarity and set, price),
+           the one chip that is its Primary Purpose, and how it is joined to the focus. Its
+           full term list -- a dozen chips that made the pop-up a wall -- now lives under
+           Inspect card, where the rules text it comes from is. */
+        const rec = C.catalog.exact(hit.card.name) || {}, image = rec.image || hit.card.image || '', p = purposeOf(hit.card);
+        const facts = [rec.manaCost ? C.mana(rec.manaCost) : '', rec.rarity ? e(rec.rarity) : '', rec.setName || rec.set || hit.card.set ? e(rec.setName || rec.set || hit.card.set) : '', Number.isFinite(rec.price) ? e(C.money(rec.price)) : Number.isFinite(hit.card.price) ? e(C.money(hit.card.price)) : ''].filter(Boolean);
+        const initials = String(hit.card.name).split(/[\s,]+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join('');
+        pop.classList.add('cm-pop-card');
         pop.innerHTML = `<header><strong>${e(hit.card.name)}</strong><button type="button" class="cm-pop-close" data-action="graph-pop-close" aria-label="Close">×</button></header>
+          <div class="cm-pop-body"><div class="cm-pop-art">${image ? `<img src="${e(image)}" alt="" loading="lazy">` : `<div class="cm-pop-noart" aria-hidden="true">${e(initials)}</div>`}</div><div class="cm-pop-meta">
           <p class="cm-muted">${e(rec.typeLine || hit.card.type || '')}${hit.pinned ? ' · where you came from' : ''}</p>
-          ${focus && focus.id !== hit.card.id ? `<h4>Joined to ${e(focus.name)} by</h4>${relationHTML(hit.relation, hit.card, focus)}` : ''}
-          ${ownTermsHTML(hit.card)}
+          ${facts.length ? `<p class="cm-pop-facts">${facts.join(' · ')}</p>` : ''}
+          ${p ? `<div class="cm-term-chips">${termChip(p.key, p.value, p)}</div>` : ''}
+          ${focus && focus.id !== hit.card.id ? `<h4>Joined to ${e(focus.name)} by</h4>${relationHTML(hit.relation, hit.card, focus)}` : '<p class="cm-muted">This is the focus. Tap another card to read how it joins.</p>'}
+          </div></div>
           <div class="cm-actions">${b('Focus here', 'graph-card', {id: hit.card.id}, true)}${b('Inspect card', 'card', {card: CrankCatalog.key(hit.card.name)})}<button type="button" class="v-button${picked.has(hit.card.id) ? ' is-on' : ''}" data-action="graph-tick" data-id="${e(hit.card.id)}">${picked.has(hit.card.id) ? 'Ticked ✓' : 'Tick for a group'}</button></div>`;
         graph?.setHighlight(focus ? [focus.id, hit.card.id] : null);
       } else {
+        pop.classList.remove('cm-pop-card');
         pop.innerHTML = `<header><strong>${e(hit.a.name)} ↔ ${e(hit.b.name)}</strong><button type="button" class="cm-pop-close" data-action="graph-pop-close" aria-label="Close">×</button></header>
           <p class="cm-muted">${hit.tree ? 'On the tree that placed them' : 'A cross-link: both are on the canvas and they are joined to each other too'}</p>
           <h4>Joined by</h4>${relationHTML(hit.relation, hit.a, hit.b)}
@@ -348,10 +360,24 @@
         graph?.setHighlight([hit.a.id, hit.b.id]);
       }
       pop.hidden = false;
-      const col = pop.parentElement, canvas = $('#cm-graph');
-      const left = Math.max(6, Math.min(col.clientWidth - pop.offsetWidth - 6, hit.x - 40));
-      let top = canvas.offsetTop + hit.y + 10;
-      if (top + pop.offsetHeight > canvas.offsetTop + canvas.clientHeight - 6) top = Math.max(canvas.offsetTop + 6, canvas.offsetTop + hit.y - pop.offsetHeight - 10);
+      /* A card's pop-up opens to the RIGHT of its node, top edge level with it, so the node
+         stays in view beside its own picture; when the column has no room on the right it
+         opens on the left. A line's pop-up still hangs under the point that was tapped. */
+      const col = pop.parentElement, canvas = $('#cm-graph'), gap = (hit.r || 16) + 14;
+      /* The right bound is the whole grid, not the graph column: a card's pop-up may lie over
+         the pane, which is only the card it just replaced, but never over the node it is for. */
+      const bound = Math.max(col.clientWidth, (col.closest('.cm-graph-grid') || col).clientWidth);
+      let left, top;
+      if (hit.kind === 'node') {
+        left = hit.x + gap;
+        if (left + pop.offsetWidth > bound - 6) left = hit.x - gap - pop.offsetWidth;
+        left = Math.max(6, Math.min(bound - pop.offsetWidth - 6, left));
+        top = canvas.offsetTop + hit.y - 24;
+      } else {
+        left = Math.max(6, Math.min(col.clientWidth - pop.offsetWidth - 6, hit.x - 40));
+        top = canvas.offsetTop + hit.y + 10;
+      }
+      if (top + pop.offsetHeight > canvas.offsetTop + canvas.clientHeight - 6) top = Math.max(canvas.offsetTop + 6, canvas.offsetTop + canvas.clientHeight - pop.offsetHeight - 6);
       pop.style.left = left + 'px'; pop.style.top = top + 'px';
     }
     function hidePop() { const pop = $('#cm-graph-pop'); if (pop && !pop.hidden) { pop.hidden = true; pop.innerHTML = ''; } graph?.setHighlight(null); }
