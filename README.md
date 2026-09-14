@@ -358,7 +358,12 @@ Every data file under `data/` and `sim/` opens with `{schema, stamp, generator, 
 `schema/index.mjs` registers each one with its producer and the tool whose `--check` vouches for
 it, `schema/*.json` describes its shape, and readers pass what they fetch through
 `CrankAssets.expect()`. Changed assets require a new `?v=` everywhere referenced, then
-`node tests/asset-versions.mjs --update`. There are 55 Node suites:
+`node tests/asset-versions.mjs --update`. **Refreshing the data** — a set released, prices
+stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry names, in the
+order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
+changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
+`runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 56 Node suites:
 
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`
@@ -405,6 +410,7 @@ it, `schema/*.json` describes its shape, and readers pass what they fetch throug
 - `page-budget` — `tests/page-budget.mjs`
 - `pilot-policy` — `tests/pilot-policy.mjs`
 - `qr` — `tests/qr.mjs`
+- `refresh` — `tests/refresh.mjs`
 - `scryfall-timeout` — `tests/scryfall-timeout.mjs`
 - `schemas` — `tests/schemas.mjs`
 - `service-worker` — `tests/service-worker.mjs`
