@@ -1267,7 +1267,7 @@ button.cm-pill:hover{filter:brightness(1.15)}
 @media(max-width:760px){.cm-more-filters>div{grid-template-columns:1fr}}
 .cm-terms-row{margin:6px 0 0}
 /* THE CARDS PAGE: three tabs under the name, and a Table | Sheet switch at the end of the toolbar. */
-.cm-tabs{display:flex;gap:2px;border-bottom:1px solid var(--v-line);margin:0 0 16px;overflow-x:auto}
+.cm-tabs{display:flex;gap:2px;border-bottom:1px solid var(--v-line);margin:0 0 16px;overflow-x:auto;overflow-y:hidden;align-items:center;scrollbar-width:thin}
 .cm-tabs [role=tab]{flex:0 0 auto;background:none;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;color:#b0c3de;font:inherit;font-weight:600;padding:8px 14px;min-height:40px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
 .cm-tabs [role=tab] small{font-weight:500;font-size:12px;color:#8fa6c4}
 .cm-tabs [role=tab][aria-selected=true]{color:#f3f8ff;border-bottom-color:#79bdff}
@@ -1522,3 +1522,14 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-trace-tick-strategy small{margin-left:4px;padding:0 6px;border-radius:999px;background:#1c2536;color:#9fb2cc;font-size:11px;line-height:16px}
 .cm-trace-pickbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:12px;color:#c9d4e6;margin:0 0 8px}.cm-trace-pickbar.is-empty span{color:#8fa6c4}
 .cm-trace-row{grid-template-columns:16px 22px 20px minmax(0,1fr) auto}.cm-trace-row .cm-trace-pick{width:15px;height:15px;min-height:0;margin:0;grid-row:1/3;align-self:center}.cm-trace-row .via{grid-column:4}.cm-trace-row .loop,.cm-trace-row .cm-badge{grid-column:5}.cm-trace-row.is-ticked{background:#2a2a1c}.cm-trace-row.is-ticked.is-lit{background:#33301f}
+
+/* THE CARDS HEADER (Rob, 14 September): the counts as chips that filter, the views on the tab row. */
+.cm-tabs-views{margin-left:auto;padding:0 0 6px 12px;flex:0 0 auto}
+.cm-view-switch button[disabled]{opacity:.4;cursor:default}
+.cm-kpis{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;margin:4px 0 14px}
+.cm-kpi{display:inline-flex;align-items:baseline;gap:6px;padding:4px 10px 4px 8px;border-radius:999px;background:#151c2a;border:1px solid #2b3549;border-left:4px solid var(--st,#4a6a94);color:#dfe7f3;font:inherit;font-size:12px;cursor:pointer;min-height:28px}
+.cm-kpi strong{font-size:15px;font-variant-numeric:tabular-nums;color:#f2f6fb}.cm-kpi span{color:#9db8d8}
+.cm-kpi:hover{border-color:#4a6a94}.cm-kpi.is-on{background:#1f2f47;border-color:#79bdff;color:#fff}.cm-kpi.is-on span{color:#dfe7f3}
+.cm-kpi:focus-visible{outline:2px solid #9addff;outline-offset:2px}
+.cm-kpi-note{font-size:12px;color:#8fa6c4;margin-left:4px}
+@media(max-width:760px){.cm-tabs-views{width:100%;margin-left:0;padding:6px 0 8px}.cm-cards-tabs{flex-wrap:wrap}}
