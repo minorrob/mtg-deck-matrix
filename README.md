@@ -101,6 +101,16 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   Tab moves right, Escape puts the number back, the arrow keys walk the cells, and *Export
   CSV* writes the rows in the Master's column order, *A* being what is physically in the box,
   substitutes included, like the Master's Actual.
+- **Cards → Library → Tabletop** (`#cards?view=tabletop`): the same rows, under the same search and
+  Status · Card type · Colour · Deck filters, as piles on a slate sorting mat: the status piles
+  down front in the model's order (`M.STATUS`, Bench excepted), the Bench fanned along a raised
+  ledge at the back, and behind the status piles a semicircle of group piles under one grouping
+  (card type, colour, deck, collection group, mechanic, role, Primary Purpose, mana value, price
+  band; the choice is remembered). Every pile is a stack whose height is its count, with its
+  label and count on a paper placard; a slot stays where an emptied pile lived; ordered,
+  watched, to-buy, draft and suggested copies stand as dashed ghosts. A tap on a pile says what
+  it holds; laying a pile out, selecting and dragging come in the next two steps of
+  `docs/crankmagic-tabletop-plan.md` (`crankmagic-tabletop.js`, `tests/crankmagic-tabletop.mjs`).
 - **Discover**: navigable metadata/co-play graph, mouse-wheel zoom, keyboard neighbors,
   pan, back trail, card inspection and supplemental catalog lookup. The pane beside the
   graph has two tabs: **Card Info** (the focused card, its terms, *Add/Buy*) and **List**
@@ -332,7 +342,7 @@ Every data file under `data/` and `sim/` opens with `{schema, stamp, generator, 
 `schema/index.mjs` registers each one with its producer and the tool whose `--check` vouches for
 it, `schema/*.json` describes its shape, and readers pass what they fetch through
 `CrankAssets.expect()`. Changed assets require a new `?v=` everywhere referenced, then
-`node tests/asset-versions.mjs --update`. There are 64 Node suites:
+`node tests/asset-versions.mjs --update`. There are 65 Node suites:
 
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`
@@ -357,6 +367,7 @@ it, `schema/*.json` describes its shape, and readers pass what they fetch throug
 - `crankmagic-trace` — `tests/crankmagic-trace.mjs`
 - `crankmagic-rules` — `tests/crankmagic-rules.mjs`
 - `crankmagic-sim` — `tests/crankmagic-sim.mjs`
+- `crankmagic-tabletop` — `tests/crankmagic-tabletop.mjs`
 - `crankmagic-workbook` — `tests/crankmagic-workbook.mjs`
 - `data-integrity` — `tests/data-integrity.mjs`
 - `data-manifest` — `tests/data-manifest.mjs`

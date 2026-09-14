@@ -3,8 +3,8 @@
 Definition and plan for the third view of the Cards page Rob described on 14 September 2026.
 The Cards page has a list and a sheet; this is the view where the cards are cards. Mock-ups:
 `docs/mockups/tabletop-piles.html` (the table at rest), `docs/mockups/tabletop-laid-out.html`
-(a pile opened, two cards selected, the selection on the mat mid-drag). Nothing is built; it
-is a major enhancement scheduled after the data-model evaluation.
+(a pile opened, two cards selected, the selection on the mat mid-drag). TB1 is built (the
+table at rest, 14 September); TB2–TB4 follow.
 
 The app is for anyone building any deck: the piles are the statuses and groupings the model
 already has, so the view needs no data of its own and works on any library.
@@ -115,6 +115,17 @@ Needs, all small and all worth settling in the data-model evaluation first:
   Bench rail, the semicircle of group piles, the grouping dropdown, search and filters
   applied; counts against `readiness()` in a test; the view switch on Cards gains
   *Tabletop*. Walk at 1400 and 390.
+  *Shipped 14 September (#189).* `CrankTabletop.table(rows, {groupBy, statuses, statusOrder,
+  value})` is pure and tested (`tests/crankmagic-tabletop.mjs`: every row lands in exactly one
+  status pile or the Bench, the piles sum to the projection, nine groupings, no empty or
+  unlabelled band); `mount()` draws the mat. The status piles are `M.STATUS` in its order,
+  which answers TB0's vocabulary question without a new module: the list, the pills, the
+  readiness bar and the tabletop all read the same list. Ghosts are the copies the library
+  knows about but does not hold — Ordered, Watched, To buy, Draft list, Suggestion, Planned —
+  and no more: the deck-legal catalogue ghosts of §1 wait for TB3, where a ghost first becomes
+  an order. The grouping list is the tabletop's own `GROUPINGS` for now; folding the sheet's
+  *Group rows by* into it is the `crankmagic-groupings.js` item in §4, still open. A tap on
+  a pile names its top six cards; laying it out is TB2.
 - **TB2 — lay out, page, select.** Click a pile → rows and columns with pages and card
   size; select and multi-select; the recombine animation; the selection on the mat.
 - **TB3 — drag to a pile.** The drop-target contract on every pile, previews through the
