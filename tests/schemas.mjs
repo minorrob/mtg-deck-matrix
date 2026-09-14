@@ -42,7 +42,7 @@ for (const [key, id] of Object.entries(CrankAssets.schemas)) {
   const entry = byFile(file);
   ok(entry && entry.id === id, `crankmagic-assets.js says ${key} (${file}) is ${id}; the registry says ${entry ? entry.id : "nothing"}`);
 }
-assert.throws(() => CrankAssets.expect({schema: "cards@0"}, "cards"), /this build reads cards@1/); checks++;
-assert.equal(CrankAssets.expect({schema: "cards@1"}, "cards").schema, "cards@1"); checks++;
+assert.throws(() => CrankAssets.expect({schema: "cards@0"}, "cards"), /this build reads cards@2/); checks++;
+assert.equal(CrankAssets.expect({schema: "cards@2"}, "cards").schema, "cards@2"); checks++;
 
 console.log(`schemas: ${checks} checks passed — ${REGISTRY.length} data files carry their envelope and match schema/*.json; the asset map names ${Object.keys(CrankAssets.schemas).length} of them.`);

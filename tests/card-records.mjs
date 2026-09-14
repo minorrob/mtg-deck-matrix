@@ -40,7 +40,7 @@ let projected = 0;
 for (const [name, f] of Object.entries(facts)) {
   const r = byName.get(name);
   ok(r, `facts table names ${name}, which is not a record`);
-  for (const k of ["manaCost", "typeLine", "power", "toughness", "oracleText", "rarity", "setName", "setCode", "price"]) assert.deepEqual(f[k], r[k], `${name}.${k} in the facts table equals the record`);
+  for (const k of ["manaCost", "typeLine", "power", "toughness", "loyalty", "oracleText", "rarity", "setName", "setCode", "price"]) assert.deepEqual(f[k] ?? null, r[k] ?? null, `${name}.${k} in the facts table equals the record`);
   assert.deepEqual([f.small, f.normal, f.url], [r.imageSmall, r.image, r.tcgplayerUrl], `${name}: the facts table's pictures and link are the record's`);
   projected += 1;
 }

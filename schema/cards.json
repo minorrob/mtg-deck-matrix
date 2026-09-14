@@ -160,6 +160,24 @@
               }
             ]
           },
+          "gameChanger": {
+            "type": "boolean",
+            "const": true
+          },
+          "flavorName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "loyalty": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
           "roles": {
             "type": "array",
             "items": {

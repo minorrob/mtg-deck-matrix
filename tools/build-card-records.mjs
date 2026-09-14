@@ -30,8 +30,8 @@
  * Sources, all committed: the record set itself (the previous run's output, so the tool is
  * idempotent), the graph's card block (oracle id, rank, foil price, cheapest set, printing
  * count, commander flag, and the bake's price snapshot dated by the graph's stamp), and --
- * on the first run only -- the old facts file for the cards it alone carried. The newer of
- * the two dated price snapshots wins; every record ends with one price and one date. */
+ * on the first run only -- the old facts file for the cards it alone carried. The record's
+ * own dated price is the price; the graph's card block takes it. */
 import {readFileSync, writeFileSync, existsSync} from "node:fs";
 import {execFileSync} from "node:child_process";
 import path from "node:path";
@@ -105,7 +105,8 @@ for (const [name, f] of Object.entries(priorFacts.cards || {})) {
   if (g && g.name !== name && byName.has(g.name)) continue;            // a front face of a record we hold
   byName.set(name, {name, manaCost: f.manaCost || "", typeLine: f.typeLine || "", power: f.power ?? null, toughness: f.toughness ?? null, oracleText: f.oracleText || "",
     keywords: f.keywords || [], colorIdentity: f.colorIdentity || [], legalities: {commander: "legal"}, rarity: f.rarity || "", setName: f.setName || "", setCode: f.setCode || "",
-    image: f.normal || "", imageSmall: f.small || "", price: f.price ?? null, priceUpdated: "", tcgplayerUrl: f.url || ""});
+    ...(f.loyalty != null ? {loyalty: f.loyalty} : {}),
+    image: f.normal || "", imageSmall: f.small || "", price: f.price ?? null, priceUpdated: f.price != null ? day(priorFacts.generatedAt) : "", tcgplayerUrl: f.url || ""});
   adopted += 1;
 }
 const wanted = refresh ? [...byName.keys()].concat(toAdd.filter((n) => !byName.has(n))) : toAdd;
@@ -124,12 +125,17 @@ const records = [...byName.values()].sort((a, b) => a.name.localeCompare(b.name)
     legalities: c.legalities || {commander: "legal"}, rarity: c.rarity || (g && g.rarity) || "",
     setName: c.setName || "", setCode: c.setCode || "", image: c.image || "", imageSmall: c.imageSmall || (c.image ? c.image.replace("/normal/", "/small/") : ""),
     tcgplayerUrl: c.tcgplayerUrl || "", ...(c.scryfallUrl ? {scryfallUrl: c.scryfallUrl} : {}),
-    price: c.price ?? null, priceUpdated: c.priceUpdated || "", priceFoil: c.priceFoil ?? null, cheapestSet: c.cheapestSet || "",
+    price: c.price ?? null, priceUpdated: c.price != null ? (c.priceUpdated || bakeDay) : "", priceFoil: c.priceFoil ?? null, cheapestSet: c.cheapestSet || "",
     rank: g && Number.isFinite(g.rank) ? g.rank : (c.rank ?? null), isCommander: g ? Boolean(g.isCommander) : Boolean(c.isCommander), printings: g && g.printings ? g.printings : (c.printings ?? null),
+    ...(c.loyalty != null ? {loyalty: c.loyalty} : {}),
+    ...(c.gameChanger || (g && g.gameChanger) ? {gameChanger: true} : {}),
+    ...(c.flavorName ? {flavorName: c.flavorName} : {}),
   };
-  /* ONE PRICE, THE NEWER SNAPSHOT. The bake's price is dated by the graph's stamp; the
-     record's by its own priceUpdated. */
-  if (g && g.price != null && g.price !== r.price && (!r.priceUpdated || bakeDay >= day(r.priceUpdated))) { r.price = g.price; r.priceUpdated = bakeDay; }
+  /* ONE PRICE: THE RECORD'S OWN, DATED. The catalog's snapshot is the one every published
+     total was computed from, so the record keeps it and the graph's card block takes it (the
+     bake's price fills in only where the record has none); --refresh is how a price moves.
+     Foil price and cheapest set are the bake's reading and ride along. */
+  if (r.price == null && g && g.price != null) { r.price = g.price; r.priceUpdated = bakeDay; }
   if (g) { if (g.priceFoil != null) r.priceFoil = g.priceFoil; if (g.cheapestSet) r.cheapestSet = g.cheapestSet; }
   const what = Classify.classify({name: r.name, typeLine: r.typeLine, oracleText: r.oracleText, keywords: r.keywords, card_faces: [], power: r.power, toughness: r.toughness}, {tribes});
   for (const field of TERMS) if (what[field] && what[field].length) r[field] = what[field];
@@ -146,7 +152,8 @@ const masterNames = new Set();
 const facts = {};
 for (const name of [...masterNames].sort((a, b) => a.localeCompare(b))) {
   const r = recordByName.get(name);
-  const f = {}; for (const k of FACT_FIELDS) f[k] = r[k];
+  const f = {}; for (const k of FACT_FIELDS) if (!(k === "power" || k === "toughness") || r[k] != null) f[k] = r[k];   // a figure a card does not print is absent, as the engine has always read it
+  if (r.loyalty != null) f.loyalty = r.loyalty;
   f.small = r.imageSmall; f.normal = r.image; f.price = r.price; f.url = r.tcgplayerUrl;
   facts[name] = f;                                   // keyed as the master names it: a front face stays a front face
 }

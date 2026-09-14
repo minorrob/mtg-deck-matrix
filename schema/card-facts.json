@@ -93,6 +93,16 @@
           },
           "url": {
             "type": "string"
+          },
+          "loyalty": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ]
           }
         },
         "required": [

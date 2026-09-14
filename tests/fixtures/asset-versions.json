@@ -207,11 +207,11 @@
     },
     "data/card-facts.json": {
       "version": 4,
-      "sha": "5987eba0e7bdd850"
+      "sha": "db3d0362512c8115"
     },
     "data/cards.json": {
       "version": 7,
-      "sha": "3b5ee83d71974755"
+      "sha": "d5c67cce69da8ab6"
     },
     "data/commander-glossary.json": {
       "version": 2,
@@ -243,7 +243,7 @@
     },
     "data/graph.json": {
       "version": 17,
-      "sha": "523584fbacbe13c9"
+      "sha": "aa0f1343e2ed327e"
     },
     "deck-import.js": {
       "version": 2,
