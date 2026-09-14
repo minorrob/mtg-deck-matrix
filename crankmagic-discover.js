@@ -113,7 +113,7 @@
        from a link, or one printed after the graph snapshot -- shaped like a graph row. */
     const data = {...loaded, cards: [...loaded.cards]};
     const names = new Set(data.cards.map((c) => c.name));
-    for (const c of Object.values(C.state.cards)) {
+    for (const c of C.cards()) {
       if (!names.has(c.name)) data.cards.push({...c, id: c.oracleId || c.id, type: c.typeLine, ci: (c.colorIdentity || []).join(''), image: c.image});
     }
 
@@ -789,7 +789,7 @@
        library share. */
     function commanderRow(deckName) {
       const deck = (C.state.decks || []).find((d) => d.name === deckName && !d.archived);
-      const lead = deck && deck.commanders && C.state.cards[deck.commanders[0]];
+      const lead = deck && deck.commanders && C.card(deck.commanders[0]);
       return lead ? data.cards.find((c) => c.name === lead.name) || null : null;
     }
     actions['facet-term'] = (el) => {

@@ -104,13 +104,15 @@
    * -- measuring them would score a deck nobody owns and nobody is playing. The commander
    * is flagged rather than assumed to be first, because the engine's opening procedure
    * treats it differently and a mis-flagged commander is a silently wrong measurement. */
-  function lineupFor(state, deck) {
+  /* cardOf resolves a slot's card: the app passes its joined accessor (schema 3 keeps only a
+     reference in the library for a shipped card); a bare state reads its own copies. */
+  function lineupFor(state, deck, cardOf = (id) => state.cards[id]) {
     if (!state || !deck) throw new Error("A deck is required.");
     const commanders = new Set(deck.commanders || []);
     return (deck.slots || [])
       .filter((slot) => slot.purpose === "main")
       .map((slot) => {
-        const card = state.cards[slot.cardId];
+        const card = cardOf(slot.cardId);
         if (!card) throw new Error("Resolve every card identity before measuring.");
         return {
           name: card.name,

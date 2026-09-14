@@ -27,9 +27,10 @@ export const SOURCE=new URL('../data/live-load.json',import.meta.url), TARGET=ne
 export async function bundledLookup({scryfall=null}={}){
   const read=async f=>JSON.parse(await readFile(new URL('../data/'+f,import.meta.url),'utf8'));
   const universe=await read('commander-universe.json'),cards=await read('cards.json'),flavors=await read('flavor-names.json');
-  const byName=new Map(),add=raw=>{const prior=byName.get(Catalog.folded(raw.name));const next=Catalog.normalize(raw,prior||{});byName.set(Catalog.folded(next.name),next);return next;};
+  const byName=new Map(),byId=new Map(),add=raw=>{const prior=byName.get(Catalog.folded(raw.name));const next=Catalog.normalize(raw,prior||{});byName.set(Catalog.folded(next.name),next);byId.set(next.id,next);return next;};
+  Model.setRecordSource(id=>byId.get(id)||null);
   for(const [name,ci,rarity,mv,type,rank,commander] of universe.cards)add({name,ci,rarity,mv,type,rank,commander:!!commander,verified:true,legalities:{commander:'legal'},updatedAt:universe.generatedAt});
-  for(const c of cards.cards)add(c);
+  for(const c of cards.cards)add({...c,shipped:true});   // the record set: a library card that names one keeps its identity only (schema 3)
   if(scryfall){const stamp=new Date().toISOString();for(const raw of Object.values(scryfall)){if(!raw||raw.object!=='card')continue;add({...Scryfall.normalizeCard(raw),verified:true,source:'Scryfall exact name',updatedAt:stamp});}}
   /* A REBUILD NEVER LOSES A PRICE THE COMMITTED FILE HAD. The bundled catalog prices about
      four in five of the live cards; the rest were priced by a Scryfall fetch handed to this
@@ -41,7 +42,9 @@ export async function bundledLookup({scryfall=null}={}){
   catch{/* No committed file yet: nothing to carry forward. */}
   const alias=new Map();for(const [flavor,name] of flavors.cards||[]){const c=byName.get(Catalog.folded(name));if(c&&!byName.has(Catalog.folded(flavor)))alias.set(Catalog.folded(flavor),c);}
   const byFront=new Map();for(const c of byName.values()){const f=Catalog.folded(Live.front(c.name));if(f!==Catalog.folded(c.name)&&!byFront.has(f))byFront.set(f,c);}
-  return name=>{const k=Catalog.folded(name);return byName.get(k)||alias.get(k)||byFront.get(k)||null;};
+  const lookup=name=>{const k=Catalog.folded(name);return byName.get(k)||alias.get(k)||byFront.get(k)||null;};
+  lookup.byId=id=>byId.get(id)||null;
+  return lookup;
 }
 
 export async function buildFile(source=SOURCE,{scryfall=null}={}){
@@ -53,7 +56,9 @@ export async function buildFile(source=SOURCE,{scryfall=null}={}){
      payload alone, so the wrapper keys do not disturb it. */
   const backup={schema:'live-state@1',...built_backup,generator:'tools/build-live-state.mjs',count:built.state.decks.length};
   backup.note=`Built from data/live-load.json (saved ${doc.savedAt||'undated'}) by tools/build-live-state.mjs. Restore it in CrankMagic with User Functions → Restore from a backup file, or Load Live.`;
-  return {...built,doc,backup};
+  /* cardOf joins a library reference to its record, the way the app's C.card does. */
+  const cardOf=id=>{const c=built.state.cards[id];return c&&c.shipped===true?{...(lookup.byId(id)||{}),...c}:c||null;};
+  return {...built,doc,backup,cardOf};
 }
 
 export function describe({summary,issues}){

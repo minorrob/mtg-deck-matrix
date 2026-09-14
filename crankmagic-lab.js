@@ -33,7 +33,7 @@ const choices=CrankCatalog.MECHANICS.map(([label])=>label);
 const STEPS=['User Input Captured','Initial 99 Cards Chosen','Simulator & 99 Refined','Simulator loops complete','Simulation Report','Completed Deck'];
 const COLORS=[['W','White'],['U','Blue'],['B','Black'],['R','Red'],['G','Green']];
 const total=rows=>(rows||[]).reduce((n,r)=>n+Number(r.quantity||1),0);
-const cardOf=id=>C.state.cards[id]||C.catalog.get(id)||null;
+const cardOf=id=>C.card(id)||C.catalog.get(id)||null;
 const leadersOf=p=>(p?.commanders||[]).map(cardOf).filter(Boolean);
 
 /* A preview survives a reload only if every card it names is still known. */
@@ -158,14 +158,14 @@ const pct=v=>`${(Number(v||0)*100).toFixed(1)}%`;
      filed with the deck the moment the run ends. */
   async function measureDeck(deckId,say=()=>{}){
     const d=M.deck(C.state,deckId);
-    let lineup=CrankSim.lineupFor(C.state,d),cover=CrankSim.coverage(lineup);
+    let lineup=CrankSim.lineupFor(C.state,d,C.card),cover=CrankSim.coverage(lineup);
     if(!cover.total)throw Error('This deck has no cards to measure yet. Add cards with Edit card list first.');
     if(cover.ratio<.95){
       say(`Fetching card text for ${cover.unreadable.length} cards…`);
       const need=cover.unreadable.map(n=>C.catalog.exact(n)||{name:n});let missing=[];
       try{const got=await C.catalog.hydrate(need,{onProgress:m=>say(`Fetching card text · ${m.done} of ${m.total}`)});missing=got.missing;if(got.hydrated.length)await C.commit({type:'cards',cards:got.hydrated},{renderView:false});}
       catch(err){throw Error('The engine cannot read '+cover.unreadable.length+' cards and Scryfall could not be reached to fetch their text ('+err.message+'). Reconnect and measure again.');}
-      lineup=CrankSim.lineupFor(C.state,d);cover=CrankSim.coverage(lineup);
+      lineup=CrankSim.lineupFor(C.state,d,C.card);cover=CrankSim.coverage(lineup);
       if(cover.ratio<.95)throw Error(`After asking Scryfall the engine still cannot read ${cover.unreadable.length} card${cover.unreadable.length===1?'':'s'}: ${cover.unreadable.slice(0,6).join(', ')}${cover.unreadable.length>6?' and '+(cover.unreadable.length-6)+' more':''}.${missing.length?' Scryfall did not know: '+missing.slice(0,4).join(', ')+'.':''}`);
     }
     CrankSim.assertMeasurable(cover,'published');
@@ -277,7 +277,7 @@ views.lab=async()=>{
   }
   function listCards(){
     const ids=[...new Set(listRows().map(r=>r.cardId))];
-    return ids.map(id=>C.catalog.get(id)||C.state.cards[id]).filter(Boolean);
+    return ids.map(id=>C.catalog.get(id)||C.card(id)).filter(Boolean);
   }
   /* A declaration, not a const arrow: the markup above calls this while it is being built,
      and a const in its dead zone throws where a hoisted function simply works. */
@@ -294,7 +294,7 @@ views.lab=async()=>{
   const sameCard=(c,name)=>!!c&&!!name&&c.name===name;
   function listCommanderField(){
     const d=chosenDeck(),found=legalCommanders();
-    const declaredName=d&&d.commanders.length?(C.state.cards[d.commanders[0]]||{}).name||'':'';
+    const declaredName=d&&d.commanders.length?(C.card(d.commanders[0])||{}).name||'':'';
     const chosen=(leader&&found.find(c=>c.id===leader.id||c.name===leader.name))||found.find(c=>sameCard(c,declaredName))||null;
     const options=found.map(c=>[c.id,c.name]);
     if(!options.length)options.push(['','No legal commander in this deck yet']);
@@ -314,7 +314,7 @@ views.lab=async()=>{
   function listSource(){return document.getElementById('cm-lab-form')?.elements.listSource?.value||'reserved';}
   function startingRows(id,source){const d=M.deck(C.state,id),notes=[];let rows,method;
     if(source==='physical'){rows=physicalRows(d);if(!rows.length)throw Error('Nothing is recorded as physically in that deck yet. Start from its Reserved list, or add cards to it from Ready to add first.');
-      const lead=d.commanders[0];if(lead&&!rows.some(r=>r.cardId===lead)){rows.unshift({cardId:lead,quantity:1,purpose:'main'});notes.push(`${C.state.cards[lead]?.name||'The commander'} was added: the deck declares it, but no copy is recorded as physically in the deck.`);}
+      const lead=d.commanders[0];if(lead&&!rows.some(r=>r.cardId===lead)){rows.unshift({cardId:lead,quantity:1,purpose:'main'});notes.push(`${C.card(lead)?.name||'The commander'} was added: the deck declares it, but no copy is recorded as physically in the deck.`);}
       method=`Physical deck copied into a new draft: the ${rows.reduce((n,r)=>n+r.quantity,0)} cards in it, substitutes included; no simulation executed`;}
     else{rows=d.slots.filter(r=>r.purpose==='main').map(r=>({...r,id:undefined}));if(!rows.length)throw Error('That deck has no cards in its main list yet. Edit its card list first.');method='Reserved list copied exactly into a new draft; no simulation executed';}
     return {rows,method,notes};}
@@ -355,7 +355,7 @@ views.lab=async()=>{
     const d=chosenDeck();
     leader=null;
     if(d&&d.commanders.length){
-      const card=C.state.cards[d.commanders[0]];
+      const card=C.card(d.commanders[0]);
       if(card)leader=C.catalog.get(card.id)||C.catalog.exact(card.name)||card;
     }
     if(leader&&lab.elements.commanderQuery)lab.elements.commanderQuery.value=leader.name;
@@ -388,7 +388,7 @@ views.lab=async()=>{
     if(/^\s*https?:\/\//i.test(text))setTimeout(resolveTyped,0);   // after the paste lands in the field
   });
   lab.addEventListener('change',ev=>{if(ev.target.name==='commanderColor'){pickerColors=[...lab.querySelectorAll('[name=commanderColor]:checked')].map(i=>i.value);shownLimit=45;search();}if(ev.target.name==='existingDeck'){adoptDeckCommander();refreshListCommander();syncStartButtons();}
-    if(ev.target.name==='listCommander'){const id=ev.target.value;leader=id?(C.catalog.get(id)||C.state.cards[id]||null):null;refreshListCommander();}});
+    if(ev.target.name==='listCommander'){const id=ev.target.value;leader=id?(C.catalog.get(id)||C.card(id)||null):null;refreshListCommander();}});
   /* ONE SECTION OPEN AT A TIME, AND THE OTHER ONE NOT THERE AT ALL. The form asks two
      different questions depending on the starting point, and it used to ask both at once:
      a full commander picker sitting above an Existing cards block that did nothing, or
@@ -419,7 +419,7 @@ views.lab=async()=>{
   applyMode();search();chosen();
   C.catalog.loadGraph().then(()=>{if(C.main.contains(lab))search();}).catch(()=>{});
 
-  actions['lab-resolve']=async()=>{const c=await C.catalog.resolve(lab.elements.commanderQuery.value);if(!c||!c.commander||c.legalities.commander!=='legal')throw Error('No verified legal commander found. Check the name or provide its Scryfall link.');if(!C.state.cards[c.id])await C.commit({type:'cards',cards:[c]},{renderView:false});leader=c;lab.elements.commanderQuery.value=c.name;chosen();};
+  actions['lab-resolve']=async()=>{const c=await C.catalog.resolve(lab.elements.commanderQuery.value);if(!c||!c.commander||c.legalities.commander!=='legal')throw Error('No verified legal commander found. Check the name or provide its Scryfall link.');if(!C.card(c.id))await C.commit({type:'cards',cards:[c]},{renderView:false});leader=c;lab.elements.commanderQuery.value=c.name;chosen();};
   actions['lab-manual']=()=>C.manualCard(lab.elements.commanderQuery.value,c=>{leader=c;$('#cm-dialog').close();chosen();});
   actions['lab-unpartner']=()=>{partner=null;chosen();};
   actions['lab-partner']=()=>C.cardPicker('Select a legal partner / second commander',c=>{partner=c;$('#cm-dialog').close();chosen();},{commander:true});
@@ -478,7 +478,7 @@ views.lab=async()=>{
         let {rows,method,notes}=startingRows(deckId,listSource());
         if(pool==='owned'){const all=rows.length;rows=ownedOnly(rows);
           if(!rows.length)throw Error(`Use only cards I own is ticked and none of the ${all} cards in this list are recorded as owned. Untick it, or mark those copies Received / Owned in Collection.`);}
-        built={slots:rows,cards:rows.map(r=>C.state.cards[r.cardId]).filter(Boolean),issues:[],notes,method,estimatedPrice:null,unknownPrices:0};
+        built={slots:rows,cards:rows.map(r=>C.card(r.cardId)).filter(Boolean),issues:[],notes,method,estimatedPrice:null,unknownPrices:0};
       }else{
         status.textContent='Drafting…';
         await C.catalog.loadGraph();
@@ -550,7 +550,7 @@ const {missing,reachable}=await C.catalog.recheck([...built.cards,...leaders],{o
     }else if(mode==='list'&&listSource()!=='auto'){
       if(!deckId)throw Error('Choose the deck to start from.');
       const start=startingRows(deckId,listSource());
-      slots=start.rows;cards=[...start.rows.map(r=>C.state.cards[r.cardId]),...leaders].filter(Boolean);name=(v.deckName||'').trim()||(leaders[0]?.name||'New deck');method=start.method.replace('a new draft','a new deck');notes=start.notes;issues=[];
+      slots=start.rows;cards=[...start.rows.map(r=>C.card(r.cardId)),...leaders].filter(Boolean);name=(v.deckName||'').trim()||(leaders[0]?.name||'New deck');method=start.method.replace('a new draft','a new deck');notes=start.notes;issues=[];
     }else{
       if(!leaders.length)throw Error('Choose a commander first.');
       slots=leaders.map(c=>({cardId:c.id,quantity:1,purpose:'main'}));cards=leaders;name=(v.deckName||'').trim()||leaders[0].name+' · new deck';method='Saved from the Deck Lab before any draft was run';notes=[];issues=[];
@@ -578,9 +578,9 @@ actions['lab-file-report']=async()=>{
   const list=listOf(preview),report={...preview.report,list,commanders:[...preview.commanders],sourceDeckId:d.id,startedFrom:preview.startedFrom||null};
   const have=new Set([...d.slots.filter(r=>r.purpose==='main').map(r=>r.cardId),...C.state.lots.filter(l=>l.source==='owned'&&l.location?.kind==='deck'&&l.location.deckId===d.id).map(l=>l.cardId)]);
   const g=d.groupId?C.state.groups.find(x=>x.id===d.groupId):null,already=new Set(g?g.entries.map(r=>r.cardId):[]);
-  const extras=list.filter(r=>!have.has(r.cardId)&&!already.has(r.cardId)&&C.state.cards[r.cardId]);
+  const extras=list.filter(r=>!have.has(r.cardId)&&!already.has(r.cardId)&&C.card(r.cardId));
   const when=new Date().toISOString().slice(0,10),commands=[{type:'report',deckId:d.id,report}];
-  if(extras.length&&g)commands.push({type:'groupEntries',groupId:g.id,cards:extras.map(r=>C.state.cards[r.cardId]),entries:extras.map(r=>({cardId:r.cardId,quantity:1,notes:`Watched from the simulation of ${when}: in the measured hundred, not in ${d.name}'s list.`}))});
+  if(extras.length&&g)commands.push({type:'groupEntries',groupId:g.id,cards:extras.map(r=>C.card(r.cardId)),entries:extras.map(r=>({cardId:r.cardId,quantity:1,notes:`Watched from the simulation of ${when}: in the measured hundred, not in ${d.name}'s list.`}))});
   commands.push({type:'preferences',values:{labPreview:null,lastLabRun:{deckId:d.id,method:preview.method,issues:preview.issues||[],at:new Date().toISOString(),previewAt:null,refine:preview.refine||null}}});
   await C.commit({type:'batch',commands,summary:`Filed a simulation report with ${d.name}${extras.length?` and added ${extras.length} card${extras.length===1?'':'s'} to its Watched list`:''}`},{renderView:false});
   preview=null;C.notice(`Report filed with ${d.name}.${extras.length?` ${extras.length} card${extras.length===1?' is':'s are'} now Watched by it${g?` (planned in ${g.name})`:''}.`:''}`);C.go('decks',{deck:d.id});};
@@ -661,7 +661,7 @@ actions['lab-discard']=async()=>{await keepPreview(null);C.notice('Draft discard
     return got.missing;
   }
   async function scoreSlots(slots,commanders,protocol,onProgress){
-    const lineup=CrankSim.lineupFor(C.state,{id:null,commanders,slots});
+    const lineup=CrankSim.lineupFor(C.state,{id:null,commanders,slots},C.card);
     const [config,opponents]=await simInputs();
     runner=runner||CrankSim.createRunner();
     return runner.measure({protocol:protocol||'refine',lineup,config,opponents,table:config.table,onProgress});
@@ -848,7 +848,7 @@ actions['lab-discard']=async()=>{await keepPreview(null);C.notice('Draft discard
     const saved=el.dataset.deck?M.deck(C.state,el.dataset.deck):null;
     const subject=saved||(preview?{id:null,commanders:preview.commanders,slots:preview.slots}:null);
     if(!subject)throw Error('Run a draft or save a deck first.');
-    let lineup=CrankSim.lineupFor(C.state,subject),cover=CrankSim.coverage(lineup);
+    let lineup=CrankSim.lineupFor(C.state,subject,C.card),cover=CrankSim.coverage(lineup);
     if(!cover.total){
       const last=C.state.preferences.lastLabRun;
       const why=saved&&last&&last.deckId===saved.id&&(last.issues||[]).length?' The builder reported: '+last.issues.join(' '):'';
@@ -860,7 +860,7 @@ actions['lab-discard']=async()=>{await keepPreview(null);C.notice('Draft discard
       let missing=[];
       try{const got=await C.catalog.hydrate(need,{onProgress:m=>{status.textContent=`Fetching card text · ${m.done} of ${m.total}`;}});missing=got.missing;if(got.hydrated.length)await C.commit({type:'cards',cards:got.hydrated},{renderView:false});}
       catch(err){status.textContent='';throw Error('The engine cannot read '+cover.unreadable.length+' cards and Scryfall could not be reached to fetch their text ('+err.message+'). Reconnect and measure again.');}
-      lineup=CrankSim.lineupFor(C.state,subject);cover=CrankSim.coverage(lineup);
+      lineup=CrankSim.lineupFor(C.state,subject,C.card);cover=CrankSim.coverage(lineup);
       if(cover.ratio<.95){status.textContent='';throw Error(`After asking Scryfall the engine still cannot read ${cover.unreadable.length} card${cover.unreadable.length===1?'':'s'}: ${cover.unreadable.slice(0,6).join(', ')}${cover.unreadable.length>6?' and '+(cover.unreadable.length-6)+' more':''}.${missing.length?' Scryfall did not know: '+missing.slice(0,4).join(', ')+'.':''} Check those names in Collection, or replace them with Edit card list.`);}
     }
     CrankSim.assertMeasurable(cover,'published');

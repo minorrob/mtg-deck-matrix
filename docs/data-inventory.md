@@ -13,8 +13,8 @@ names the file and writes; **tests** are the suites that read it.
 
 | | |
 |---|---|
-| Artefacts | 37 (29 JSON, 8 workbooks and documents) · 58.2 MB |
-| Served to the app | 16 · 45.2 MB (6.2 MB precached by the worker, 36.4 MB cached on demand) |
+| Artefacts | 37 (29 JSON, 8 workbooks and documents) · 57.3 MB |
+| Served to the app | 16 · 44.3 MB (6.2 MB precached by the worker, 36.4 MB cached on demand) |
 | Tool inputs | 2 |
 | Source workbooks and documents | 8 |
 | Archive (already, or should be) | 10 |
@@ -49,7 +49,7 @@ names the file and writes; **tests** are the suites that read it.
 | `data/graph.json` | 15.8 MB | {schema, generator, count, generatedAt, scope, counts, …} · cards 31,830, facets 17 | format 2, schema graph@2 | 2026-09-11 | tools/commander-universe.mjs, tools/graph-amplifiers.mjs | crankmagic-assets.js, card-classify.js, graph-payload.js +2 | on demand | build-card-records.mjs, commander-universe.mjs, graph-amplifiers.mjs | card-classify.mjs, card-records.mjs, crankmagic-core.mjs +7 | — | **serve** |  |
 | `data/lenses.json` | 19 KB | {generatedAt, lenses} · lenses 10 | — | 2026-09-11 | (sim-lenses.js in a past sweep; no tool writes it today) | — |  | — | — | — | **tool input** | sim-lenses.js reads it in Node; the pages do not load that module |
 | `data/live-load.json` | 77 KB | {schema, format, version, generator, count, savedAt, …} · upgrades 67, buy 55 | format crankmagic-live-load, version 1, schema live-load@1 | 2026-09-14 | tools/build-live-load.mjs, tools/scryfall-cache.mjs | crankmagic-exchange-ui.js |  | build-live-load.mjs, build-live-state.mjs, live-load.js +1 | card-records.mjs, live-load.mjs | live-load.yml | **serve** |  |
-| `data/live-state.json` | 1.9 MB | {schema, format, version, generator, createdAt, checksum, …} | format crankmagic-backup, version 1, schema live-state@1 | 2026-09-14 | tools/build-live-state.mjs (declared), .github/workflows/live-load.yml (declared) | crankmagic-exchange-ui.js |  | build-live-state.mjs, screens.mjs | crankmagic-loops.mjs, live-load.mjs, browser-runner.mjs | live-load.yml | **serve** | fetched by Load Live (User Functions), not precached: it is a backup, replaced whole |
+| `data/live-state.json` | 947 KB | {schema, format, version, generator, createdAt, checksum, …} | format crankmagic-backup, version 1, schema live-state@1 | 2026-09-14 | tools/build-live-state.mjs (declared), .github/workflows/live-load.yml (declared) | crankmagic-exchange-ui.js |  | build-live-state.mjs, screens.mjs | crankmagic-loops.mjs, live-load.mjs, browser-runner.mjs | live-load.yml | **serve** | fetched by Load Live (User Functions), not precached: it is a backup, replaced whole |
 | `data/my-load.json` | 398 KB | {kind, version, savedAt, note, source, keys, …} | version 1 | 2026-09-07 | tools/build-my-load.mjs | — |  | build-my-load.mjs | user-state.mjs | — | **archive** | an early Load Live shape superseded by live-load.json |
 | `data/pull-list.json` | 38 KB | {source, generatedBy, dated, revision, note, cards, …} · cards 68 | — | — | tools/import-pull-list.mjs | — |  | import-pull-list.mjs | data-integrity.mjs, slot-model.mjs | — | **archive** | the pull sheet before it became a page; superseded by the Ready to add route |
 | `data/simulation-summary.json` | 171 KB | {schema, generator, schemaVersion, generatedAt, engine, table, …} · builds 50, altCommanderCases 47 | schemaVersion 3, schema simulation-summary@3, engine v2.8 | 2026-09-08 | tools/sim/rate-decks.mjs (declared), tools/import_summary_metrics.py (declared) | crankmagic-sim.js |  | import_summary_metrics.py, bake-sweep.mjs, generation-notes.mjs +4 | crankmagic-sim.mjs, data-integrity.mjs, generators.mjs +2 | — | **serve** |  |

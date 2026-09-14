@@ -306,12 +306,15 @@ spreadsheet verification. See [tests/uat/README.md](tests/uat/README.md).
 `data/cards.json` is the Card record set — one entry per card with its identity, printed facts, shown
 printing, one dated price and the classifier's terms — and `tools/build-card-records.mjs` is its one
 producer (`--add "Name"` fetches a card from Scryfall; `--check` proves the committed files are what a
-rebuild would write); `data/card-facts.json` and the graph's card block derive from it.
+rebuild would write); `data/card-facts.json` and the graph's card block derive from it. The library
+(schema 3) references the record: a card the record set carries is stored as its identity alone and
+read through the catalog, so a change to the record reaches every library; a card the record set
+does not carry is kept whole, because the library is the only copy.
 Every data file under `data/` and `sim/` opens with `{schema, stamp, generator, count}`;
 `schema/index.mjs` registers each one with its producer and the tool whose `--check` vouches for
 it, `schema/*.json` describes its shape, and readers pass what they fetch through
 `CrankAssets.expect()`. Changed assets require a new `?v=` everywhere referenced, then
-`node tests/asset-versions.mjs --update`. There are 58 Node suites:
+`node tests/asset-versions.mjs --update`. There are 59 Node suites:
 
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`
@@ -352,6 +355,7 @@ it, `schema/*.json` describes its shape, and readers pass what they fetch throug
 - `guide-measured` — `tests/guide-measured.mjs`
 - `inventory-import` — `tests/inventory-import.mjs`
 - `lab-report` — `tests/lab-report.mjs`
+- `library-references` — `tests/library-references.mjs`
 - `lineup-compliance` — `tests/lineup-compliance.mjs`
 - `live-load` — `tests/live-load.mjs`
 - `manual-cards` — `tests/manual-cards.mjs`
