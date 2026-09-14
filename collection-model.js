@@ -16,6 +16,21 @@
      reserved to a slot; it becomes ordered or owned by the same 'source' correction the
      other kinds use, and a reserved copy corrected down to it gives its deck the requirement
      back. 'ordered' carries a channel: bought from a vendor, or a trade arranged. */
+  /* THE STATUS VOCABULARY. One list of the words a copy or a plan can wear, in the order the
+     work happens, each with the tone its pill is painted. The Cards list, the pills, the deck
+     page, the readiness figures and the Tabletop read this list and spell nothing themselves. */
+  const STATUS=[
+    {id:'inbox',label:'Physical deck',tone:'inbox',order:0},{id:'standin',label:'Substitute',tone:'standin',order:1},
+    {id:'reserved',label:'Reserved',tone:'reserved',order:2},{id:'bench',label:'Bench',tone:'pull',order:3},
+    {id:'ordered',label:'Ordered',tone:'ordered',order:4},{id:'watched',label:'Watched',tone:'watch',order:5},
+    {id:'buy',label:'To buy',tone:'buy',order:6},{id:'draft',label:'Draft list',tone:'draft',order:7},
+    {id:'suggestion',label:'Suggestion',tone:'draft',order:8},{id:'planned',label:'Planned',tone:'draft',order:9},
+    {id:'unassigned',label:'Unassigned',tone:'draft',order:10}];
+  const statusByLabel=new Map(STATUS.map(s=>[s.label,s]));
+  /* The status a projection row wears: a need is To buy, a plan a Draft list, an option a Suggestion, a group entry Planned, then the copy's own source or placement. */
+  const statusOf=r=>r.kind==='need'?'To buy':r.kind==='draft'?'Draft list':r.kind==='option'?'Suggestion':r.kind==='entry'?'Planned':r.source==='watching'?'Watched':r.source==='ordered'?'Ordered':r.placement;
+  const statusOrder=label=>{const s=statusByLabel.get(label);return s?s.order:STATUS.length;};
+  const statusTone=label=>{const s=statusByLabel.get(label);return s?s.tone:'draft';};
   const VERSION=3, SOURCES=['owned','ordered','watching'], PLANNED=['watching'], CHANNELS=['bought','trade'], PURPOSES=['main','upgrade','bracket'];
   const clone=value=>JSON.parse(JSON.stringify(value));
   const text=(value,max=500)=>String(value??'').trim().slice(0,max);
@@ -116,7 +131,15 @@
      ones and its outstanding To buy requirements, always current, stored once. */
   const withDeckGroup=(s,row)=>{const d=row.deckId?s.decks.find(x=>x.id===row.deckId):null;
     return d&&d.groupId&&!row.groupIds.includes(d.groupId)?{...row,groupIds:[...row.groupIds,d.groupId]}:row;};
-  function projection(s){const rows=s.lots.map(l=>{const sl=l.allocation?slot(s,l.allocation.deckId,l.allocation.slotId):null;return withDeckGroup(s,{...clone(l),recordId:l.id,kind:'lot',card:card(s,l.cardId),deckId:l.allocation?.deckId||'',purpose:sl?sl.purpose:'',pinned:!!sl?.pinned,option:!!sl?.option,optionWhy:sl?.optionWhy||'',placement:inDeck(s,l)?'Physical deck':l.allocation?'Reserved':l.source==='owned'?(l.location?.kind==='deck'?'Substitute':'Bench'):'Unassigned',physical:physical(l),standIn:l.source==='owned'&&l.location?.kind==='deck'&&l.allocation?.deckId!==l.location.deckId,standInDeckId:l.source==='owned'&&l.location?.kind==='deck'&&l.allocation?.deckId!==l.location.deckId?l.location.deckId:''});});for(const d of s.decks.filter(d=>d.status==='final'&&!d.archived))for(const r of d.slots.filter(r=>r.committed)){const need=shortfall(s,d,r);if(need)rows.push(withDeckGroup(s,{recordId:`need:${d.id}:${r.id}`,kind:'need',deckId:d.id,slotId:r.id,cardId:r.cardId,card:card(s,r.cardId),source:'to-buy',quantity:need,purpose:r.purpose,pinned:!!r.pinned,option:!!r.option,optionWhy:r.optionWhy||'',printing:clone(r.printing||{}),placement:'Reserved',physical:'Not acquired',offer:'none',groupIds:[]}));}return rows;}
+  /* MEMOISED PER REVISION. Every page that needs the matrix asked for it again on every render
+     (the deck page's Cards tab twice). One computation per state; callers get fresh row objects
+     so a page that annotates a row cannot leak into the next. */
+  let projected={state:null,revision:-1,rows:null};
+  function projection(s){
+    if(projected.state!==s||projected.revision!==s.revision){projected={state:s,revision:s.revision,rows:projectionOf(s)};}
+    return projected.rows.map(r=>({...r}));
+  }
+  function projectionOf(s){const rows=s.lots.map(l=>{const sl=l.allocation?slot(s,l.allocation.deckId,l.allocation.slotId):null;return withDeckGroup(s,{...clone(l),recordId:l.id,kind:'lot',card:card(s,l.cardId),deckId:l.allocation?.deckId||'',purpose:sl?sl.purpose:'',pinned:!!sl?.pinned,option:!!sl?.option,optionWhy:sl?.optionWhy||'',placement:inDeck(s,l)?'Physical deck':l.allocation?'Reserved':l.source==='owned'?(l.location?.kind==='deck'?'Substitute':'Bench'):'Unassigned',physical:physical(l),standIn:l.source==='owned'&&l.location?.kind==='deck'&&l.allocation?.deckId!==l.location.deckId,standInDeckId:l.source==='owned'&&l.location?.kind==='deck'&&l.allocation?.deckId!==l.location.deckId?l.location.deckId:''});});for(const d of s.decks.filter(d=>d.status==='final'&&!d.archived))for(const r of d.slots.filter(r=>r.committed)){const need=shortfall(s,d,r);if(need)rows.push(withDeckGroup(s,{recordId:`need:${d.id}:${r.id}`,kind:'need',deckId:d.id,slotId:r.id,cardId:r.cardId,card:card(s,r.cardId),source:'to-buy',quantity:need,purpose:r.purpose,pinned:!!r.pinned,option:!!r.option,optionWhy:r.optionWhy||'',printing:clone(r.printing||{}),placement:'Reserved',physical:'Not acquired',offer:'none',groupIds:[]}));}return rows;}
   /* THE MATRIX. One row per card the library knows anything about -- a copy at any status,
      a slot in a deck, a planned entry -- and per deck the four numbers a spreadsheet cell
      needs: t (the list's count), a (copies assigned: reserved to that slot from any source),
@@ -517,5 +540,5 @@
   function fingerprint(d){return JSON.stringify({commanders:[...d.commanders].sort(),slots:d.slots.filter(r=>r.purpose==='main').map(r=>[r.cardId,r.quantity]).sort((a,b)=>a[0].localeCompare(b[0]))});}
   /* THE ORDERS, READ BACK: one row per order id across the lots that carry it. */
   function orders(s){const by=new Map();for(const l of s.lots){if(!l.order)continue;const o=by.get(l.order.id)||{id:l.order.id,vendor:l.order.vendor,ref:l.order.ref,expectedBy:l.order.expectedBy,placedAt:l.order.placedAt,lots:[],copies:0,arrived:0,paid:0,shipping:0};o.lots.push(l);o.copies+=l.quantity;if(l.source==='owned')o.arrived+=l.quantity;if(Number.isFinite(l.paid))o.paid+=l.paid*l.quantity;o.shipping+=(l.order.shipShare||0)*l.quantity;by.set(o.id,o);}return [...by.values()].map(o=>({...o,paid:Math.round(o.paid*100)/100,shipping:Math.round(o.shipping*100)/100})).sort((a,b)=>String(b.placedAt).localeCompare(String(a.placedAt)));}
-  return {VERSION,SOURCES,PLANNED,CHANNELS,setRecordSource,migrate,empty,starterGroups,clone,text,quantity,print,compatible,validate,apply,defaultDefinition,legality,definitionIssues,projection,counters,readiness,eligibility,fingerprint,shortfall,deck,slot,lot,inDeck,orders,maxCopies,matrix,plan};
+  return {VERSION,SOURCES,PLANNED,CHANNELS,STATUS,statusOf,statusOrder,statusTone,setRecordSource,migrate,empty,starterGroups,clone,text,quantity,print,compatible,validate,apply,defaultDefinition,legality,definitionIssues,projection,counters,readiness,eligibility,fingerprint,shortfall,deck,slot,lot,inDeck,orders,maxCopies,matrix,plan};
 });

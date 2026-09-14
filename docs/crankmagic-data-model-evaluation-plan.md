@@ -152,6 +152,9 @@ Named now so the evaluation checks them rather than rediscovers them:
   shipped card is stored as its identity, the catalog joins the record's facts, a schema-2
   library is reconciled once at boot, every module reads through `C.card(id)`, and the
   committed live state is 0.8 MB instead of 2.1 MB.
+- **Recommended 7, 8, 9, 11 shipped (PR #182):** the status vocabulary in the model, the
+  groupings module, the deck-page and graph literals on the rules module, the projection
+  memoised per revision; `tests/status-and-groupings.mjs`.
 
 ## 5. Sequence and sizing
 

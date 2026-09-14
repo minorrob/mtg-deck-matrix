@@ -1,6 +1,7 @@
 /* Deck plans own slots, the library owns copies. Reference decks enter as drafts
  * and their historical owned flags are deliberately never migrated here. */
 (globalThis.CrankFeatures ||= []).push(function(C){const {M,esc:e,button:b,field:f,select:s,note,form,modal,commit,go,actions,views,$}=C;let showArchived=false;
+const R=globalThis.CrankRules;   // the house rules and the deck-page literals live there
 const DECK_TABS=[['overview','Overview'],['cards','Cards'],['guide','Guide'],['upgrades','Upgrades'],['history','History']];
 /* The nav under Decks is the decks: the one you are reading is marked, so the sidebar is a
    deck switcher, and the How page sits under it as the map it is. */
@@ -40,7 +41,7 @@ function historyHTML(d){
    colours, say what the tile is from across the room. */
 const PIP={W:'#fff0b4',U:'#53acff',B:'#696076',R:'#ee735f',G:'#66b889'};
 function initials(d){const c=C.card(d.commanders[0]),ci=(c&&c.colorIdentity)||[],a=PIP[ci[0]]||'#b9b3a8',b2=PIP[ci[1]]||a;const text=(c?c.name:d.name).split(/[\s,]+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');return `<div class="cm-deck-initials" aria-hidden="true" style="--ci-a:${a};--ci-b:${b2}">${e(text||'?')}</div>`;}
-const art=d=>{const name=commander(d).toLowerCase();for(const n of ['atraxa','krenko','shadrix','chulane'])if(name.includes(n))return 'assets/crankmagic/commander-'+n+'.webp?v=1';return C.card(d.commanders[0])?.image||'';};
+const art=d=>R.deckArt(commander(d))||C.card(d.commanders[0])?.image||'';
 /* THE RIBBON READS LEFT TO RIGHT IN THE ORDER THE WORK HAPPENS: what the list asks for,
    what you have for it, what is on its way, what is still owed -- and last, separately,
    where the cards physically are. "In deck" used to lead, and it meant the physical box,
@@ -178,9 +179,9 @@ function cardsTab(d,cards,curve,max,types){
   for(const r of rows){const k=r.kind==='need'?r.slotId:r.allocation?.slotId;if(!k)continue;if(!bySlot.has(k))bySlot.set(k,[]);bySlot.get(k).push(r);}
   for(const r of M.projection(C.state))if(r.standInDeckId===d.id)subs.set(r.cardId,(subs.get(r.cardId)||0)+r.quantity);
   const sum=(list,f)=>list.filter(f).reduce((n,r)=>n+r.quantity,0);
-  const status=slot=>{if(d.status==='draft')return ['Draft list','draft'];const rs=bySlot.get(slot.id)||[];const need=sum(rs,r=>r.kind==='need'),ordered=sum(rs,r=>r.kind==='lot'&&r.source==='ordered'),ready=sum(rs,r=>r.kind==='lot'&&r.source==='owned'&&r.placement!=='Physical deck'),boxed=sum(rs,r=>r.placement==='Physical deck');
-    return need?[slot.quantity>1?`To buy ${need}`:'To buy','buy']:ordered?['Ordered','ordered']:ready?['Ready to add','pull']:boxed>=slot.quantity?['Physical deck','inbox']:['Reserved','watch'];};
-  const ORDER=['Commander','Creature','Planeswalker','Battle','Instant','Sorcery','Artifact','Enchantment','Land','Other'],groups=new Map(ORDER.map(k=>[k,[]]));
+  const status=slot=>{if(d.status==='draft')return ['Draft list',M.statusTone('Draft list')];const rs=bySlot.get(slot.id)||[];const need=sum(rs,r=>r.kind==='need'),ordered=sum(rs,r=>r.kind==='lot'&&r.source==='ordered'),ready=sum(rs,r=>r.kind==='lot'&&r.source==='owned'&&r.placement!=='Physical deck'),boxed=sum(rs,r=>r.placement==='Physical deck');
+    return need?[slot.quantity>1?`To buy ${need}`:'To buy','buy']:ordered?['Ordered',M.statusTone('Ordered')]:ready?['Ready to add','pull']:boxed>=slot.quantity?['Physical deck',M.statusTone('Physical deck')]:['Reserved',M.statusTone('Reserved')];};
+  const ORDER=R.TYPE_ORDER,groups=new Map(ORDER.map(k=>[k,[]]));
   for(const slot of d.slots.filter(r=>r.purpose==='main')){const c=C.card(slot.cardId);if(!c)continue;groups.get(d.commanders.includes(slot.cardId)?'Commander':ORDER.find(k=>k!=='Commander'&&k!=='Other'&&c.typeLine.includes(k))||'Other').push({slot,c});}
   const line=({slot,c})=>{const [label,tone]=status(slot),sub=subs.get(slot.cardId)||0;return `<li><span class="cm-deck-qty">${slot.quantity}</span><button type="button" class="cm-card-name" data-action="card" data-card="${e(c.id)}">${e(c.name)}</button><span class="cm-deck-mana">${C.mana(c.manaCost)}</span><span class="cm-price">${Number.isFinite(c.price)?C.money(c.price):''}</span><span class="cm-deck-flags">${C.pill(e(label),tone)}${sub?C.pill(`${sub} substitute${sub===1?'':'s'} in the box`,'standin'):''}${slot.option?C.pill('Option','watch'):''}${c.gameChanger?C.pill('GC','remove','title="Game Changer"'):''}</span></li>`;};
   const composition=cards.length?`<div class="cm-deck-composition"><div class="cm-curve" aria-label="Mana curve">${curve.map((n,i)=>`<div><span>${n||''}</span><i style="height:${n/max*88}px"></i><span>${i===7?'7+':i}</span></div>`).join('')}</div><div class="cm-count-list">${types.map(t=>`<span>${C.glossary.html(t)} <strong>${cards.filter(x=>x.c.typeLine.includes(t)).reduce((n,x)=>n+x.q,0)}</strong></span>`).join('')}<span>Ramp <strong>${cards.filter(x=>rolesOf(x.c).includes('ramp')).reduce((n,x)=>n+x.q,0)}</strong></span></div></div>`:'';
@@ -194,9 +195,9 @@ actions['deck-tab']=el=>go('decks',{deck:el.dataset.deck,tab:el.dataset.tab==='o
    new card, the old copy is released to another need or the bench, and the new card is a
    To buy row at its sheet price. Game Changers wear a chip and are counted against the
    bracket's limit of two in the header; promoting a third asks first. */
-const GC_LIMIT=2;
+const GC_LIMIT=R.GC_LIMIT;
 let upFilter={tuned:false,cheap:false};
-const cheapLine=d=>/^D[56]\b/.test(d.name)?1.5:2;
+const cheapLine=d=>Number.isFinite(d.definition?.upgradeLine)?d.definition.upgradeLine:R.UPGRADE_CHEAP_LINE;   // a deck may set its own line in its definition; the house line otherwise
 const gcCount=d=>d.slots.filter(r=>r.purpose==='main'&&C.card(r.cardId)&&C.card(r.cardId).gameChanger).reduce((n,r)=>n+r.quantity,0);
 function upgradesHTML(d){
   const all=d.slots.filter(r=>r.purpose==='upgrade'),line=cheapLine(d),gc=gcCount(d);

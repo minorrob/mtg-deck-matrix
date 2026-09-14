@@ -29,5 +29,14 @@
     if(Number.isFinite(k)&&Number.isFinite(p)&&capFor(p)!==null&&k>capFor(p))out.push('over the 110% cap');
     if(localOnly(p)&&vendor&&/tcgplayer|card kingdom/i.test(vendor))out.push('≥ $5 not local');
     return out;}
-  return {RULES,capFor,localOnly,BANDS,bandOf,warnings,round};
+  /* THE DECK-PAGE AND GRAPH LITERALS, named here rather than in the modules that use them. */
+  const GC_LIMIT=2;                                  // Game Changers the deck page allows in a main list before it warns
+  const UPGRADE_CHEAP_LINE=2;                        // the "cheap" filter on the Upgrade Path: at or under this many dollars
+  const TYPE_ORDER=['Commander','Creature','Planeswalker','Battle','Instant','Sorcery','Artifact','Enchantment','Land','Other'];
+  const LOOP_MAX_LEN=4;                              // the longest cycle the loop finder closes
+  /* Presentation data: the art a deck tile shows for a commander, by a word of its name; a
+     commander without one shows the record's own image. */
+  const DECK_ART={atraxa:'assets/crankmagic/commander-atraxa.webp?v=1',krenko:'assets/crankmagic/commander-krenko.webp?v=1',shadrix:'assets/crankmagic/commander-shadrix.webp?v=1',chulane:'assets/crankmagic/commander-chulane.webp?v=1'};
+  const deckArt=commanderName=>{const n=String(commanderName||'').toLowerCase();for(const [word,src] of Object.entries(DECK_ART))if(n.includes(word))return src;return '';};
+  return {RULES,capFor,localOnly,BANDS,bandOf,warnings,round,GC_LIMIT,UPGRADE_CHEAP_LINE,TYPE_ORDER,LOOP_MAX_LEN,DECK_ART,deckArt};
 });

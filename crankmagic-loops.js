@@ -87,7 +87,7 @@
   }
 
   function find(cards, relate, anchorId, options) {
-    const maxLen = (options && options.maxLen) || 4;
+    const maxLen = (options && options.maxLen) || (globalThis.CrankRules && globalThis.CrankRules.LOOP_MAX_LEN) || 4;
     const byId = new Map(cards.map((c) => [c.id, c]));
     if (!byId.has(anchorId)) return [];
     const adj = adjacency(cards, relate);

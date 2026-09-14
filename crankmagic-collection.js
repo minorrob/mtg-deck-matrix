@@ -35,8 +35,7 @@ function plans(d){
    Substitute, Reserved, Bench) were two columns saying one thing between them. Status is that
    one thing: an owned copy's placement; Ordered; Watched; To buy for a requirement; Draft
    list, Suggestion or Planned for a row that is not a copy yet. The colour is the state. */
-const STATUS_ORDER=['Physical deck','Substitute','Reserved','Bench','Ordered','Watched','To buy','Draft list','Suggestion','Planned'];
-const statusOf=r=>r.kind==='need'?'To buy':r.kind==='draft'?'Draft list':r.kind==='option'?'Suggestion':r.kind==='entry'?'Planned':r.source==='watching'?'Watched':r.source==='ordered'?'Ordered':r.placement;
+const statusOf=M.statusOf;   // the model's status vocabulary (M.STATUS); the words are spelled there and nowhere here
 function rows(params,shop){let all=M.projection(C.state);for(const d of C.state.decks.filter(d=>!d.archived))all.push(...plans(d));const gid=params.get('group')||filter.group;for(const g of C.state.groups)all.push(...g.entries.map(r=>({...r,recordId:'entry:'+g.id+':'+r.id,kind:'entry',card:C.card(r.cardId),source:'draft',placement:'Draft list',purpose:'',offer:'none',groupIds:[g.id],deckId:'',groupId:g.id})));if(params.get('card'))all=all.filter(r=>r.cardId===params.get('card'));if(params.get('deck'))all=all.filter(r=>r.deckId===params.get('deck')||r.standInDeckId===params.get('deck'));if(gid)all=all.filter(r=>r.groupIds.includes(gid));if(shop)all=all.filter(r=>r.kind==='need'||r.kind==='lot'&&r.source!=='owned');for(const r of all)r.status=statusOf(r);return all;}
 function value(r,key){const c=r.card;return ({name:c.name,type:c.typeLine.split('—')[0].trim(),subtype:c.typeLine.split('—')[1]?.trim()||'',mechanic:(c.mechanics.length?c.mechanics:c.keywords).join(', '),color:c.colorIdentity.join(''),rarity:({common:'Common',uncommon:'Uncommon',rare:'Rare',mythic:'Mythic',special:'Special',bonus:'Bonus',c:'Common',u:'Uncommon',r:'Rare',m:'Mythic',s:'Special',b:'Bonus'})[String(c.rarity||'').toLowerCase()]||'',mana:c.manaValue,price:c.price,cap:R.capFor(c.price),vendor:r.kind==='lot'?(r.order&&r.order.vendor||r.vendor||''):'',paid:r.kind==='lot'&&Number.isFinite(r.paid)?r.paid:null,source:C.source(r.source),placement:r.placement,status:r.status||statusOf(r),deck:r.deckId?M.deck(C.state,r.deckId).name:(r.standIn&&r.standInDeckId?M.deck(C.state,r.standInDeckId).name+' · substitute':''),box:r.kind==='lot'?C.readableLocation(r):'',purpose:r.purpose==='main'?'Main deck':r.purpose==='bracket'?'Bracket option':r.purpose==='upgrade'?'Upgrade':'',quantity:r.quantity,groups:r.groupIds.map(id=>C.state.groups.find(g=>g.id===id)?.name||'').join(', '),printing:[r.printing?.set,r.printing?.collector,r.printing?.finish,r.printing?.language,r.printing?.condition].filter(Boolean).join(' · ')||'Unspecified',offer:r.offer==='none'?'':r.offer==='held'?'Pending deal':'Sell / Trade'})[key];}
 /* GROUPING IS NOT THE SAME QUESTION AS SORTING. The Color column prints a card's identity
@@ -45,22 +44,9 @@ function value(r,key){const c=r.card;return ({name:c.name,type:c.typeLine.split(
    in one pile. So colour groups into the five, Colorless, and Multiple -- and the piles
    come out in WUBRG order rather than alphabetically, because that is the order a Magic
    player reads colours in. */
-const COLOR_PILE=['White','Blue','Black','Red','Green','Multiple','Colorless'];
-const COLOR_NAME={W:'White',U:'Blue',B:'Black',R:'Red',G:'Green'};
-function groupLabel(r,key){
-  if(key!=='color')return value(r,key);
-  const ci=r.card.colorIdentity||[];
-  return ci.length===0?'Colorless':ci.length>1?'Multiple':COLOR_NAME[ci[0]]||'Colorless';
-}
-function groupOrder(r,key){
-  const label=groupLabel(r,key);
-  /* The band for "no value" -- copies in no deck, no group -- is a to-do rather than a
-     shelf, and it goes last however the rest are ordered. */
-  if(key==='status'){const at=STATUS_ORDER.indexOf(label);return String(at<0?STATUS_ORDER.length:at).padStart(2,'0');}
-  if(key!=='color')return String(label??'')||'\uffff';
-  const at=COLOR_PILE.indexOf(label);
-  return String(at<0?COLOR_PILE.length:at).padStart(2,'0');
-}
+const G=globalThis.CrankGroupings;
+const groupLabel=(r,key)=>G.label(r,key,value);
+const groupOrder=(r,key)=>G.order(r,key,value,M.statusOrder);
 /* SIX FIGURES ABOUT WHAT YOU ARE LOOKING AT. They were computed from the whole library
    while every other number on the page followed the filters, so filtering to a hundred-card
    deck read "101 owned copies" above "100 copies" and one of the two had to be wrong. Both
@@ -121,7 +107,7 @@ function matches(r){const c=r.card,q=filter.q.toLowerCase();return (!q||[c.name,
    rows, the same filters, the same actions, only a narrower way in. */
 const PHONE=matchMedia('(max-width:640px)');
 const compactShop=shop=>!!shop&&PHONE.matches;
-const GROUP_CHOICES=[['','No grouping'],['deck','Deck'],['status','Status'],['vendor','Vendor'],['type','Type'],['color','Color'],['groups','Groups']];
+const GROUP_CHOICES=G.CHOICES;
 /* A row is buyable when money would change what it is: a deck requirement nothing fills
    yet, or a copy recorded as watched or ordered. An owned copy is not. */
 const buyable=r=>r.kind==='need'||r.kind==='lot'&&r.source!=='owned';
