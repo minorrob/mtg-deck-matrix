@@ -30,8 +30,12 @@ The approved standalone mockup remains under `design/crankmagic/` for design ref
 Every page opens on its name, with one primary action and at most three beside it; the
 rest of a page's actions sit under **More**, and what the page does and how its figures are
 counted sit behind its **?**. The nav reads **Decks · Cards · Build · Discover**: Collection
-and Shop are one page, **Cards**, with tabs *Library · To buy · Orders* and the Spreadsheet as
-its *Sheet* view; `#collection` and `#shop` still open it. The nav opens the page you are on:
+and Shop are one page, **Cards**, with tabs *Library · To buy · Orders* and three views on the
+tab row under *More* — **List · Sheet · Table** (the rows, the Master sheet, the tabletop; a
+view a tab lacks shows disabled with the reason, and the switch keeps the tab it is on) —
+over a row of count chips that filter (*Reserved · Owned · Substitutes · Physical deck ·
+Ordered · To buy · Watched*; a click keeps the rows in that status, a second lets them back);
+`#collection` and `#shop` still open it. The nav opens the page you are on:
 under **Cards** its four sub-pages (Library · To buy · Orders · Sheet, with counts), under
 **Decks** your decks and the How page, the current one marked. Glossary underlines in rules text are off until **Show term
 definitions** (deck page More menu, card pop-up) turns them on for the library.
@@ -101,7 +105,7 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   Tab moves right, Escape puts the number back, the arrow keys walk the cells, and *Export
   CSV* writes the rows in the Master's column order, *A* being what is physically in the box,
   substitutes included, like the Master's Actual.
-- **Cards → Library → Tabletop** (`#cards?view=tabletop`): the same rows, under the same search and
+- **Cards → Library or To buy → Table** (`#cards?view=tabletop`, `#cards?view=tabletop&tab=buy`): the same rows, under the same search and
   Status · Card type · Colour · Deck filters, as piles on a slate sorting mat: the status piles
   down front in the model's order (`M.STATUS`, Bench excepted), the Bench fanned along a raised
   ledge at the back, and behind the status piles a semicircle of group piles under one grouping

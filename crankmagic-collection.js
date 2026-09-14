@@ -58,6 +58,8 @@ const groupOrder=(r,key)=>G.order(r,key,value,M.statusOrder);
    Ordered + To Buy. Owned counts reserved copies; the Bench (owned, reserved by no deck) is the
    table itself and the caption under the row, never a number held against a deck, and Sell /
    Trade is a Bench flag rather than a count here. */
+/* The status each figure filters on when clicked: the model's labels, or the list's own 'owned' shorthand. */
+const KPI_STATUS={reserved:'Reserved',owned:'owned',subs:'Substitute',physical:'Physical deck',ordered:'Ordered',toBuy:'To buy',watched:'Watched'};
 const STAT_FIGURES=[['reserved','Reserved','plan'],['owned','Owned','have'],['subs','Substitutes','subs'],['physical','Physical Deck','physical'],['ordered','Ordered','coming'],['toBuy','To Buy','missing'],['watched','Watched','considering']];
 function statsHTML(shown,scoped){
   const t={reserved:0,owned:0,subs:0,physical:0,ordered:0,toBuy:0,watched:0};let bench=0,offered=0,orderedFree=0;
@@ -72,8 +74,8 @@ function statsHTML(shown,scoped){
     if(r.standIn)t.subs+=r.quantity;
     if(r.placement==='Physical deck'||r.placement==='Substitute')t.physical+=r.quantity;
   }
-  return `<div class="cm-stats cm-stats-row">${STAT_FIGURES.map(([k,l,g])=>`<div class="cm-stat cm-stat-${g}"><strong>${t[k]}</strong><span>${l}</span></div>`).join('')}</div>`
-    +`<p class="cm-status-line cm-stats-scope">${scoped?'Counting the rows this view shows.':[bench?`${bench} on the Bench${offered?` (${offered} Sell / Trade)`:''}`:'',orderedFree?`${orderedFree} ordered for no deck`:''].filter(Boolean).join(' · ')}</p>`;
+  /* The figures as one row of chips that filter the page: a click keeps the rows in that status, a second click lets them all back. */
+  return `<div class="cm-kpis" role="group" aria-label="Counts, click to filter">${STAT_FIGURES.map(([k,l,g])=>{const st=KPI_STATUS[k];const on=!!st&&filter.status===st;return `<button type="button" class="cm-kpi cm-stat-${g}${on?' is-on':''}" data-action="kpi-status" data-status="${e(st||'')}" aria-pressed="${on}" title="${on?'Show every status':`Show only ${l}`}"><strong>${t[k].toLocaleString()}</strong><span>${l}</span></button>`;}).join('')}<span class="cm-kpi-note">${scoped?'Counting the rows this view shows.':[bench?`${bench} on the Bench${offered?` (${offered} Sell / Trade)`:''}`:'',orderedFree?`${orderedFree} ordered for no deck`:''].filter(Boolean).join(' · ')}</span></div>`;
 }
 /* TICKING ROWS. Not a mode with a button to enter and leave -- the checkboxes are simply
    in the table, and the bar saying what you can do to them appears once one is ticked.
@@ -130,21 +132,27 @@ const TABS=[['library','Library'],['buy','To buy'],['orders','Orders']];
 const tabOf=()=>{const r=C.route();return r.view==='cards'?(r.params.get('tab')||'library'):r.view==='shop'?'buy':'library';},buyTab=()=>tabOf()==='buy';
 const goCards=(tab,extra={})=>C.go('cards',{...extra,tab:tab==='library'?'':tab});
 function tabCounts(){const all=M.projection(C.state);return {library:all.length,buy:all.filter(r=>r.kind==='need').reduce((n,r)=>n+r.quantity,0),orders:M.orders(C.state).length};}
-const viewSwitch=view=>`<div class="cm-seg" role="group" aria-label="View"><button type="button" aria-pressed="${view==='table'}"${view==='table'?'':' data-action="open-roster"'}>Table</button><button type="button" aria-pressed="${view==='sheet'}"${view==='sheet'?'':' data-action="open-sheet"'}>Sheet</button><button type="button" aria-pressed="${view==='tabletop'}"${view==='tabletop'?'':' data-action="open-tabletop"'}>Tabletop</button></div>`;
+/* THE THREE VIEWS, Rob's words: List (the rows), Sheet (the Master sheet), Table (the tabletop). They sit on the
+   tab row under More, so every view can reach every other. A view a tab does not have is shown disabled and says why. */
+const viewSwitch=(view,tab='library')=>{const has={table:true,sheet:tab==='library',tabletop:tab!=='orders'};const why={sheet:'The sheet reads the library',tabletop:'Orders have one view'};
+  return `<div class="cm-seg cm-view-switch" role="group" aria-label="View">${[['table','List','open-roster'],['sheet','Sheet','open-sheet'],['tabletop','Table','open-tabletop']].map(([id,label,action])=>`<button type="button" aria-pressed="${view===id}"${view===id?'':has[id]?` data-action="${action}"`:` disabled title="${why[id]||''}"`}>${label}</button>`).join('')}</div>`;};
 /* The head is the same on every tab -- Add cards, Import, one button for the tab's own work,
    More -- and the tabs under it say where you are. The phone's To buy layout keeps the tabs
    and drops the head, as it dropped the head before. */
 function cardsHead(params,tab,view='table',{tight=false}={}){const n=tabCounts(),group=params.get('group')||'';
-  const third=tab==='buy'?b('Print buy list','print-buy-list'):tab==='orders'?b('Paste receipt','paste-receipt'):view==='sheet'?b('Add a card row','sheet-add'):b('New collection group','new-group');
-  const tabs=`<div class="cm-tabs" role="tablist" aria-label="Cards">${TABS.map(([id,label])=>`<button type="button" role="tab" aria-selected="${id===tab}" data-action="cards-tab" data-tab="${id}">${label} <small>${n[id].toLocaleString()}</small></button>`).join('')}</div>`;
-  return (tight?'':C.pageHead('Cards',b('Add cards','add-card',{},true)+b('Import list / library','import-list')+third+b('More','roster-more',{tab,view,group},false,{caret:'down'}),'cards'))+tabs;}
+  const third=tab==='buy'?b('Print buy list','print-buy-list',{},false,{cls:'compact'}):tab==='orders'?b('Paste receipt','paste-receipt',{},false,{cls:'compact'}):view==='sheet'?b('Add a card row','sheet-add',{},false,{cls:'compact'}):b('New group','new-group',{},false,{cls:'compact'});
+  const tabs=`<div class="cm-tabs cm-cards-tabs" role="tablist" aria-label="Cards">${TABS.map(([id,label])=>`<button type="button" role="tab" aria-selected="${id===tab}" data-action="cards-tab" data-tab="${id}">${label} <small>${n[id].toLocaleString()}</small></button>`).join('')}<div class="cm-tabs-views">${viewSwitch(view,tab)}</div></div>`;
+  /* Add cards is the one thing done often, so it is the primary; Import and New group are done sometimes. All four are compact — the page's buttons share a row and a height (the geometry suite holds them to it), and Rob asked for smaller ones. */
+  return (tight?'':C.pageHead('Cards',b('Add cards','add-card',{},true,{cls:'compact'})+b('Import list','import-list',{},false,{cls:'compact'})+third+b('More','roster-more',{tab,view,group},false,{caret:'down',cls:'compact'}),'cards'))+tabs;}
 C.cardsHead=cardsHead;
 C.SUBNAV.cards=()=>{const n=tabCounts(),r=C.route(),tab=r.view==='cards'?(r.params.get('tab')||'library'):tabOf(),sheet=r.view==='cards'&&r.params.get('view')==='sheet';
   return [{label:'Library',hash:'#cards',count:n.library,current:tab==='library'&&!sheet},{label:'To buy',hash:'#cards?tab=buy',count:n.buy,current:tab==='buy'},{label:'Orders',hash:'#cards?tab=orders',count:n.orders,current:tab==='orders'},{label:'Sheet',hash:'#cards?view=sheet',current:sheet}];};
-views.cards=params=>params.get('tab')==='buy'?show(params,true):params.get('view')==='sheet'?sheet(params):params.get('view')==='tabletop'?tabletop(params):show(params,false);
+/* Library and To buy each have a List and a Table; the Sheet reads the library only; Orders has its list. */
+views.cards=params=>params.get('view')==='tabletop'&&params.get('tab')!=='orders'?tabletop(params,params.get('tab')==='buy'):params.get('tab')==='buy'?show(params,true):params.get('view')==='sheet'?sheet(params):show(params,false);
 views.collection=params=>{const extra=Object.fromEntries(params);delete extra.sheet;goCards('library',params.get('sheet')?{...extra,view:'sheet'}:extra);};
 views.shop=params=>{const extra=Object.fromEntries(params);delete extra.tab;goCards(params.get('tab')==='orders'?'orders':'buy',extra);};
 actions['cards-tab']=el=>goCards(el.dataset.tab);
+actions['kpi-status']=el=>{const st=el.dataset.status;if(!st)return;filter.status=filter.status===st?'':st;page=0;C.render();};
 /* The × on a scope chip drops that one scope -- the card, the deck or the group -- and keeps
    the rest of the address as it is. */
 actions['clear-scope']=el=>{const r=C.route(),extra=Object.fromEntries(r.params),tab=extra.tab||'library';delete extra.tab;delete extra[el.dataset.key];if(el.dataset.key==='group')filter.group='';goCards(tab,extra);};
@@ -257,14 +265,14 @@ const ttUI={open:null,from:null,page:0,size:'M',ticked:new Set(),selection:new S
 try{const s=localStorage.getItem('cm-tabletop-size');if(s&&['S','M','L'].includes(s))ttUI.size=s;}catch(err){/* a private window; M then */}
 let tabletopStatusOrder=C.state.preferences.tabletopStatusOrder==='count'?'count':'workflow';
 let ttModel=null;
-function tabletop(params){
-  const TT=globalThis.CrankTabletop;
-  C.main.innerHTML=cardsHead(params,'library','tabletop')
-   +`<div class="cm-toolbar"><label class="cm-search">Search cards<input id="cm-tt-query" value="${e(filter.q)}" placeholder="Card name, type or rules text"></label>${s('Status','ttStatus',[['','Any status'],...M.STATUS.map(x=>[x.label,x.label])],filter.status)}${s('Card type','ttType',[['','All types'],'Artifact','Creature','Enchantment','Instant','Land','Planeswalker','Sorcery','Battle'],filter.type)}${s('Color','ttColor',[['','Any colour'],['W','White'],['U','Blue'],['B','Black'],['R','Red'],['G','Green'],['C','Colorless']],filter.color)}${s('Deck','ttDeck',[['','Any deck'],...C.state.decks.filter(d=>!d.archived).map(d=>[d.id,d.name])],params.get('deck')||'')}${b('Clear filters','clear-filters')}</div>`
+function tabletop(params,shop=false){
+  const TT=globalThis.CrankTabletop,tab=shop?'buy':'library';
+  C.main.innerHTML=cardsHead(params,tab,'tabletop')
+   +`<div class="cm-toolbar"><label class="cm-search">Search cards<input id="cm-tt-query" value="${e(filter.q)}" placeholder="Card name, type or rules text"></label>${s('Status','ttStatus',[['','Any status'],['owned','Owned (any)'],...M.STATUS.map(x=>[x.label,x.label])],filter.status)}${s('Card type','ttType',[['','All types'],'Artifact','Creature','Enchantment','Instant','Land','Planeswalker','Sorcery','Battle'],filter.type)}${s('Color','ttColor',[['','Any colour'],['W','White'],['U','Blue'],['B','Black'],['R','Red'],['G','Green'],['C','Colorless']],filter.color)}${s('Deck','ttDeck',[['','Any deck'],...C.state.decks.filter(d=>!d.archived).map(d=>[d.id,d.name])],params.get('deck')||'')}${b('Clear filters','clear-filters')}</div>`
    +`<p class="cm-status-line" id="cm-tt-status"></p><div id="cm-tt-host" class="cm-tt-host"></div>`;
   const draw=()=>{
     if(!TT){$('#cm-tt-host').innerHTML='<p class="cm-muted">The tabletop module has not loaded yet.</p>';return;}
-    const all=rows(params,false).filter(matches).map(r=>({...r,status:statusOf(r)}));lastRows=all;
+    const all=rows(params,shop).filter(matches).map(r=>({...r,status:statusOf(r)}));lastRows=all;
     const model=TT.table(all,{groupBy:tabletopGroupBy,statuses:M.STATUS,statusOrder:M.statusOrder,value,maxGroupPiles:16,statusSort:tabletopStatusOrder});ttModel=model;
     $('#cm-tt-status').textContent=`${model.total.toLocaleString()} cop${model.total===1?'y':'ies'} on the table (${model.rows.toLocaleString()} rows) · Bench ${model.bench.count.toLocaleString()} · ${model.ghosts.toLocaleString()} ghost${model.ghosts===1?'':'s'}`+(Object.values(filter).some(v=>v!=='')||params.get('deck')?' · filtered':'');
     /* A selection that the filters no longer show is dropped; an open pile that vanished (a grouping change) closes. */
@@ -294,7 +302,7 @@ function tabletop(params){
   const host=C.main;
   host.querySelector('#cm-tt-query')?.addEventListener('input',ev=>{filter.q=ev.target.value;draw();});
   for(const [name,key] of [['ttStatus','status'],['ttType','type'],['ttColor','color']]){host.querySelector(`[name=${name}]`)?.addEventListener('change',ev=>{filter[key]=ev.target.value;draw();});}
-  host.querySelector('[name=ttDeck]')?.addEventListener('change',ev=>goCards('library',{view:'tabletop',...(ev.target.value?{deck:ev.target.value}:{})}));
+  host.querySelector('[name=ttDeck]')?.addEventListener('change',ev=>goCards(tab,{view:'tabletop',...(ev.target.value?{deck:ev.target.value}:{})}));
   if(!TT)return;
   actions['tabletop-drop']=el=>tabletopDrop(el.dataset.pile,[...ttUI.selection]);
   /* Escape is the table at rest from anywhere on the page — a redraw can leave the focus on the body, where the mat's own key handler cannot hear it. Not while a dialog or a menu is open, and not from a field. */
@@ -343,7 +351,7 @@ function tabletopDrop(pileId,ids){
 function sheet(params){
   const m=M.matrix(C.state),decks=m.decks;
   C.main.innerHTML=cardsHead(params,'library','sheet')
-   +`<div class="cm-toolbar"><label class="cm-search">Search cards<input id="cm-sheet-query" value="${e(sheetQ)}" placeholder="Card name or type"></label>${s('Show','sheetOnly',SHEET_SHOW,sheetOnly)}${s('Deck','sheetDeck',[['','All decks'],...decks.map(d=>[d.id,d.name])],sheetDeck)}${viewSwitch('sheet')}</div>`
+   +`<div class="cm-toolbar"><label class="cm-search">Search cards<input id="cm-sheet-query" value="${e(sheetQ)}" placeholder="Card name or type"></label>${s('Show','sheetOnly',SHEET_SHOW,sheetOnly)}${s('Deck','sheetDeck',[['','All decks'],...decks.map(d=>[d.id,d.name])],sheetDeck)}</div>`
    +`<p class="cm-status-line" id="cm-sheet-status"></p><div id="cm-sheet-table"></div>`;
   const host=$('#cm-sheet-table'),zero='<span class="cm-sheet-zero">0</span>',alt=i=>i%2?' cm-sheet-alt':'';
   const draw=()=>{
@@ -391,9 +399,11 @@ function sheet(params){
     if(dx||dy){const next=sheetNeighbour(cell,dx,dy);if(next){ev.preventDefault();host.querySelector(`[data-cell="${CSS.escape(next)}"]`)?.focus();}}
   });
 }
+/* The view switch keeps the tab it is on: List and Table for Library and To buy, the Sheet for the library. */
+const tabHere=()=>{const r=C.route();return r.view==='cards'&&['library','buy','orders'].includes(r.params.get('tab'))?r.params.get('tab'):'library';};
 actions['open-sheet']=()=>goCards('library',{view:'sheet'});
-actions['open-tabletop']=()=>goCards('library',{view:'tabletop'});
-actions['open-roster']=()=>goCards('library');
+actions['open-tabletop']=()=>goCards(tabHere()==='orders'?'library':tabHere(),{view:'tabletop'});
+actions['open-roster']=()=>goCards(tabHere());
 actions['sheet-add']=()=>C.cardPicker('Add a card row to the spreadsheet',c=>{$('#cm-dialog').close();sheetExtras.set(c.id,c);sheetQ=c.name;sheetOnly='';sheetDeck='';sheetFocus=cellKey(c.id,'own','');C.render();C.notice(`${c.name} has a row. Type a number into it to record copies or list it in a deck.`);});
 /* The Master's column order, so the file drops straight back into the workbook. */
 actions['sheet-csv']=()=>{const m=M.matrix(C.state),rows=sheetRows(m),decks=m.decks,cell=v=>/[",\r\n]/.test(String(v))?'"'+String(v).replace(/"/g,'""')+'"':String(v);
@@ -463,7 +473,7 @@ if(scope!==pickScope){pickScope=scope;picked.clear();}
    page is on screen. */
 if(!phoneWatch){phoneWatch=true;PHONE.addEventListener('change',()=>{if(C.route().view==='cards')C.render();});}
 const shopTools=`<div class="cm-shop-bar"><button type="button" class="v-button cm-shop-search-btn" data-action="shop-search" aria-label="Search cards" aria-expanded="${searchOpen}" title="Search cards"><span aria-hidden="true">\u{1F50D}</span></button>${b('Ready to add','pull-picker')}${b(expanded?'Hide filters':(gbGet()?'Filters •':'Filters'),'roster-filters')}${b('Tools','shop-tools',{},false,{caret:'down'})}</div><label class="cm-search cm-shop-search" id="cm-shop-search"${searchOpen?'':' hidden'}>Search cards<input id="cm-roster-query" value="${e(filter.q)}" placeholder="Name, type or rules text"></label>`;
-C.main.innerHTML=cardsHead(params,tab,'table',{tight})+(shop?'':'<div id="cm-roster-stats"></div>')+`<div class="cm-actions">${[['card','Card',params.get('card')?(C.card(params.get('card'))||C.catalog.get(params.get('card')))?.name||'Card':''],['deck','Deck',params.get('deck')?M.deck(C.state,params.get('deck')).name:''],['group','Group',params.get('group')?C.state.groups.find(g=>g.id===params.get('group'))?.name||'':'']].filter(([,,v])=>v).map(([k,l,v])=>`<span class="cm-chip cm-scope-chip">${l}: ${e(v)}<button type="button" class="cm-chip-x" data-action="clear-scope" data-key="${k}" aria-label="Remove the ${l} filter" title="Remove this filter">×</button></span>`).join('')}</div>`+(tight?shopTools:`<div class="cm-toolbar"><label class="cm-search">Search cards<input id="cm-roster-query" value="${e(filter.q)}" placeholder="Name, type or rules text"></label>${b(expanded?'Hide filters':(activeFilters().length?`Filters (${activeFilters().length})`:'Filters'),'roster-filters')}${b('Columns','roster-columns')}${b('Clear filters','clear-filters')}${s('Collection group','groupPick',[['','All groups'],...C.state.groups.map(g=>[g.id,g.name])],params.get('group')||filter.group)}${s('Group rows by','groupBy',GROUP_CHOICES,gbGet())}${shop?'':viewSwitch('table')}</div>`)+`<div id="cm-filter-chips"></div><div id="cm-filter-host"></div>${shop?'<div id="cm-shop-strip"></div>':''}<div id="cm-roster-table"></div>`;
+C.main.innerHTML=cardsHead(params,tab,'table',{tight})+(shop?'':'<div id="cm-roster-stats"></div>')+`<div class="cm-actions">${[['card','Card',params.get('card')?(C.card(params.get('card'))||C.catalog.get(params.get('card')))?.name||'Card':''],['deck','Deck',params.get('deck')?M.deck(C.state,params.get('deck')).name:''],['group','Group',params.get('group')?C.state.groups.find(g=>g.id===params.get('group'))?.name||'':'']].filter(([,,v])=>v).map(([k,l,v])=>`<span class="cm-chip cm-scope-chip">${l}: ${e(v)}<button type="button" class="cm-chip-x" data-action="clear-scope" data-key="${k}" aria-label="Remove the ${l} filter" title="Remove this filter">×</button></span>`).join('')}</div>`+(tight?shopTools:`<div class="cm-toolbar"><label class="cm-search">Search cards<input id="cm-roster-query" value="${e(filter.q)}" placeholder="Name, type or rules text"></label>${b(expanded?'Hide filters':(activeFilters().length?`Filters (${activeFilters().length})`:'Filters'),'roster-filters')}${b('Columns','roster-columns')}${b('Clear filters','clear-filters')}${s('Collection group','groupPick',[['','All groups'],...C.state.groups.map(g=>[g.id,g.name])],params.get('group')||filter.group)}${s('Group rows by','groupBy',GROUP_CHOICES,gbGet())}</div>`)+`<div id="cm-filter-chips"></div><div id="cm-filter-host"></div>${shop?'<div id="cm-shop-strip"></div>':''}<div id="cm-roster-table"></div>`;
 foldPrints=foldFor(shop);pageSize=C.state.preferences.pageSize==='all'?Infinity:(Number(C.state.preferences.pageSize)||60);
 /* FIVE FILTERS IN VIEW, THE REST ONE CLICK AWAY (search and group sit in the toolbar): type,
    mana, colour, status, deck. Subtype, mechanic, flags, offers, mana value and
@@ -529,9 +539,10 @@ const bandRow=band=>{const open=!collapsed.has(band.label),copies=band.rows.redu
 const rowHTML=r=>`<tr class="cm-row-card${isPicked(r)?' cm-row-ticked':''}" data-record="${e(r.recordId)}" data-action="card" data-card="${e(r.cardId)}">${ticks?`<td class="cm-tick-cell">${pickable(r)?`<input type="checkbox" class="cm-row-tick" data-record="${e(r.recordId)}"${isPicked(r)?' checked':''} aria-label="Tick ${e(r.card.name)}">`:''}</td>`:''}${shown.map(([k])=>`<td class="cm-col-${k}${canEdit(r,k)?' cm-cell-live':''}">${k==='name'?`<button class="cm-card-name" data-action="card" data-card="${e(r.cardId)}"><span data-art="${e(r.card.image||'')}">${e(r.card.name)}${(tight||r.kind==='fold')&&r.quantity>1?` <em>×${r.quantity}</em>`:''}</span></button>${tight?(shop?`<span class="cm-row-primary">${primary(r)}</span>`:''):`<small>${r.kind==='fold'?foldCaption(r):e(value(r,'purpose'))+(r.kind==='option'?' · Uncommitted suggestion':'')}</small>`}`:cell(r,k)}</td>`).join('')}<td class="cm-row-actions-cell">${r.kind==='fold'?`${!tight?primary(r):''}<span class="cm-muted cm-fold-note">${r.parts} records</span>`:`${!tight?primary(r):''}<button class="v-button compact cm-row-actions" data-action="row-actions" data-record="${e(r.recordId)}" aria-haspopup="menu" aria-label="Actions" title="Actions">⋯</button>`}</td></tr>`;
 const allFolded=bands.length>0&&bands.every(band=>collapsed.has(band.label));
 const foldAll=groupBy&&bands.length?` · <button type="button" class="cm-text-button" data-groups="${allFolded?'expand':'collapse'}">${allFolded?'Expand all groups':'Collapse all groups'}</button>`:'';
-const pagingHTML=()=>`<div class="cm-paging"><span>${Number.isFinite(pageSize)?`Page ${page+1} of ${Math.max(1,Math.ceil(items.length/pageSize))}`:`All ${items.length} rows`}</span><div class="cm-actions"><button class="v-button" data-page="-1" ${page===0||!Number.isFinite(pageSize)?'disabled':''}>Previous</button><button class="v-button" data-page="1" ${!Number.isFinite(pageSize)||(page+1)*pageSize>=items.length?'disabled':''}>Next</button></div></div>`;
+/* The paging line carries the records count; the fold-all button rides the top line only (the bottom one repeats the pager). */
+const pagingHTML=(fold=false)=>`<div class="cm-paging"><span>${Number.isFinite(pageSize)?`Page ${page+1} of ${Math.max(1,Math.ceil(items.length/pageSize))}`:`All ${items.length} rows`} · ${visibleRows.length.toLocaleString()} record${visibleRows.length===1?'':'s'}${fold?foldAll:''}</span><div class="cm-actions"><button class="v-button" data-page="-1" ${page===0||!Number.isFinite(pageSize)?'disabled':''}>Previous</button><button class="v-button" data-page="1" ${!Number.isFinite(pageSize)||(page+1)*pageSize>=items.length?'disabled':''}>Next</button></div></div>`;
 const longer=Number.isFinite(pageSize)&&items.length>pageSize;
-$('#cm-roster-table').innerHTML=`${ticks?batchBar():''}${longer?pagingHTML():''}<p class="cm-status-line">${visibleRows.length} record${visibleRows.length===1?'':'s'}${foldAll}</p><div class="cm-table-wrap"><table class="cm-table${tight?' cm-table-shop':''}"><thead><tr>${ticks?`<th scope="col" class="cm-tick-cell"><input type="checkbox" class="cm-tick-all"${allTicked?' checked':''} aria-label="Tick every matching record"></th>`:''}${shown.map(([k,l])=>`<th scope="col" class="cm-col-${k}" aria-sort="${sort.key===k?(sort.dir===1?'ascending':'descending'):'none'}"><button data-sort="${k}">${l}${sort.key===k?` <span aria-hidden="true">${sort.dir===1?'↑':'↓'}</span>`:tight?'':' <span class="cm-sort-idle" aria-hidden="true">↕</span>'}</button></th>`).join('')}<th scope="col">Actions</th></tr></thead><tbody>${(Number.isFinite(pageSize)?items.slice(page*pageSize,page*pageSize+pageSize):items).map(it=>it.band?bandRow(it.band):rowHTML(it.row)).join('')||`<tr><td colspan="${span}">No matching records. Add your cards or clear the filters.</td></tr>`}</tbody></table></div>${pagingHTML()}`;$('#cm-roster-table').onclick=ev=>{
+$('#cm-roster-table').innerHTML=`${ticks?batchBar():''}${longer?pagingHTML(true):`<p class="cm-status-line">${visibleRows.length.toLocaleString()} record${visibleRows.length===1?'':'s'}${foldAll}</p>`}<div class="cm-table-wrap"><table class="cm-table${tight?' cm-table-shop':''}"><thead><tr>${ticks?`<th scope="col" class="cm-tick-cell"><input type="checkbox" class="cm-tick-all"${allTicked?' checked':''} aria-label="Tick every matching record"></th>`:''}${shown.map(([k,l])=>`<th scope="col" class="cm-col-${k}" aria-sort="${sort.key===k?(sort.dir===1?'ascending':'descending'):'none'}"><button data-sort="${k}">${l}${sort.key===k?` <span aria-hidden="true">${sort.dir===1?'↑':'↓'}</span>`:tight?'':' <span class="cm-sort-idle" aria-hidden="true">↕</span>'}</button></th>`).join('')}<th scope="col">Actions</th></tr></thead><tbody>${(Number.isFinite(pageSize)?items.slice(page*pageSize,page*pageSize+pageSize):items).map(it=>it.band?bandRow(it.band):rowHTML(it.row)).join('')||`<tr><td colspan="${span}">No matching records. Add your cards or clear the filters.</td></tr>`}</tbody></table></div>${pagingHTML()}`;$('#cm-roster-table').onclick=ev=>{
     const tick=ev.target.closest('.cm-row-tick'),all=ev.target.closest('.cm-tick-all');
     if(tick||all){
       /* The row itself opens the card. Stopping here keeps a tick a tick -- the document's

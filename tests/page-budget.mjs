@@ -37,7 +37,9 @@ const DECK = "deck:live:D1";
 const PAGES = [
   ["decks", "Decks", ".cm-deck-grid", [24, 8, 4], [24, 8, 4]],
   [`decks?deck=${DECK}`, "Deck page", ".cm-deck-summary", [44, 14, 4], [44, 14, 4]],
-  ["cards", "Cards · Library", "#cm-roster-table table", [76, 22, 16], [76, 22, 16]],
+  /* Cards (14 September): the seven count chips are buttons now — Rob asked for the counts to
+     filter — and List · Sheet · Table sit on the tab row of every tab; 22 → 26, 10 → 11. */
+  ["cards", "Cards · Library", "#cm-roster-table table", [76, 26, 16], [76, 26, 16]],
   ["cards?tab=buy", "Cards · To buy", "#cm-roster-table table, .cm-shop-strip", [40, 18, 8], [16, 10, 4]],
   ["cards?view=sheet", "Cards · Sheet", "#cm-sheet-table table", [46, 16, 20], [46, 16, 20]],
   ["lab", "Build", "#cm-lab-results", [90, 16, 40], [90, 16, 40]],
@@ -46,7 +48,7 @@ const PAGES = [
   ["discover", "Discover", "#cm-graph", [330, 40, 14], [330, 40, 14]],
   [`pull?deck=${DECK}`, "Ready to add", ".cm-pull-group", [48, 8, 4], [48, 8, 4]],
   ["how", "How a deck comes together", ".cm-how-flow", [14, 3, 2], [14, 3, 2]],
-  ["cards?tab=orders", "Cards · Orders", ".cm-orders, .cm-table", [24, 10, 4], [24, 10, 4]],
+  ["cards?tab=orders", "Cards · Orders", ".cm-orders, .cm-table", [24, 11, 4], [24, 11, 4]],
 ];
 const WIDTHS = [[1400, "desktop", 3], [390, "phone", 4]];
 
