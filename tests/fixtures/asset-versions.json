@@ -66,8 +66,8 @@
       "sha": "5913d397047bdbce"
     },
     "card-classify.js": {
-      "version": 9,
-      "sha": "e1d0779470b97992"
+      "version": 10,
+      "sha": "ddfda996d17e5eee"
     },
     "card-link.js": {
       "version": 1,
@@ -98,12 +98,12 @@
       "sha": "c643e35c955e4884"
     },
     "crankmagic-app.js": {
-      "version": 146,
-      "sha": "e1f4168f6bde270b"
+      "version": 147,
+      "sha": "f22b366ffdc6e815"
     },
     "crankmagic-assets.js": {
-      "version": 20,
-      "sha": "88e4384504582fee"
+      "version": 21,
+      "sha": "be60b53590cdcc2c"
     },
     "crankmagic-brand.js": {
       "version": 3,
@@ -126,8 +126,8 @@
       "sha": "0f37e9d569d76ff4"
     },
     "crankmagic-discover.js": {
-      "version": 42,
-      "sha": "edf2f168994a5103"
+      "version": 43,
+      "sha": "67361c8a6955304c"
     },
     "crankmagic-evidence.js": {
       "version": 2,
@@ -146,8 +146,8 @@
       "sha": "52e344df8ef38d24"
     },
     "crankmagic-graph.js": {
-      "version": 15,
-      "sha": "c13f8030c4c56bb9"
+      "version": 16,
+      "sha": "51345d9c5450976d"
     },
     "crankmagic-how.js": {
       "version": 5,
@@ -156,6 +156,10 @@
     "crankmagic-lab.js": {
       "version": 43,
       "sha": "1cbe56f2ed59405f"
+    },
+    "crankmagic-loops.js": {
+      "version": 1,
+      "sha": "a0a7d8a7c5a4135f"
     },
     "crankmagic-orders.js": {
       "version": 5,
@@ -186,16 +190,16 @@
       "sha": "81ae2c4b7634afa7"
     },
     "crankmagic-sw.js": {
-      "version": 146,
-      "sha": "04e726982b9be7b3"
+      "version": 147,
+      "sha": "c84d2a761c2e310b"
     },
     "crankmagic-tour.js": {
       "version": 12,
       "sha": "58f7d2808beeb08b"
     },
     "crankmagic.css": {
-      "version": 86,
-      "sha": "37bf50d35c47a064"
+      "version": 87,
+      "sha": "27e0da606e93d161"
     },
     "custom-model.js": {
       "version": 3,
@@ -234,8 +238,8 @@
       "sha": "ee4c0aed0d1458b1"
     },
     "data/graph.json": {
-      "version": 13,
-      "sha": "3c524bb5cf693521"
+      "version": 14,
+      "sha": "36b2226005b22d0e"
     },
     "deck-import.js": {
       "version": 2,

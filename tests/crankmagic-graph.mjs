@@ -329,4 +329,57 @@ ok("every card carries a TCGplayer link to buy it by", () => {
     `${without.length} of ${graph.cards.length} cards have nowhere to buy them`);
 });
 
+/* ------------------------------------------------------------- the loop pair */
+
+ok("an untap engine is joined to the tap ability it gives another go, and the join leads", () => {
+  /* Thornbite Staff's equipped creature untaps whenever a creature dies; Krenko taps for
+     goblins. Neither shares a word with the other. The join is the loop the deck is built
+     on, and it outranks every other kind on the edge. */
+  const r = relate("Thornbite Staff", "Krenko, Mob Boss");
+  assert.ok(r, "Thornbite Staff and Krenko must be joined");
+  assert.deepEqual(r.drives, ["untap"]);
+  assert.equal(r.kind, "Loop engine → tap ability");
+  assert.match(r.reason, /untaps it for another go/);
+  const back = relate("Krenko, Mob Boss", "Thornbite Staff");
+  assert.deepEqual(back.drivenBy, ["untap"]);
+  assert.equal(back.kind, "Tap ability ← loop engine");
+  assert.ok(Graph.isLoopLink(r) && Graph.isLoopLink(back));
+});
+
+ok("copy and blink are engines too: Kiki-Jiki drives Krenko, Felidar Guardian drives Kiki-Jiki", () => {
+  assert.deepEqual(relate("Kiki-Jiki, Mirror Breaker", "Krenko, Mob Boss").drives, ["copy"]);
+  assert.deepEqual(relate("Felidar Guardian", "Kiki-Jiki, Mirror Breaker").drives, ["blink"]);
+  assert.deepEqual(relate("Zealous Conscripts", "Kiki-Jiki, Mirror Breaker").drives, ["untap"]);
+});
+
+ok("a rock is not a loop target: its tap makes mana and nothing a loop feeds on", () => {
+  /* Sol Ring has a tap ability, so without this rule every untapper would be joined to every
+     rock. Mana loops need cost accounting the graph does not do yet, and the plan says so. */
+  assert.equal(relate("Thornbite Staff", "Sol Ring"), null);
+  assert.equal(relate("Krenko, Mob Boss", "Sol Ring"), null);
+  assert.ok(!Graph.loopable(card("Sol Ring")) && Graph.loopable(card("Krenko, Mob Boss")));
+});
+
+ok("a feed is a LOOP feed only when the supply is repeatable: tokens into a sacrifice outlet", () => {
+  const r = relate("Krenko, Mob Boss", "Goblin Bombardment");
+  assert.deepEqual(r.loopFeeds, ["creatures"], "Krenko makes the bodies Bombardment eats");
+  assert.ok(Graph.isLoopLink(r));
+  const body = relate("Goblin Chieftain", "Goblin Bombardment");
+  assert.ok(body && body.feeds.includes("creatures") && !body.loopFeeds.length, "a lone body supplies a creature once; that is not a loop feed");
+});
+
+ok("loop mode's rule: events, engines and repeatable feeds continue a loop; tribes and anthems do not", () => {
+  assert.ok(Graph.isLoopLink(relate("Goblin Bombardment", "Thornbite Staff")), "a creature dying → the untap that fires on it");
+  assert.ok(Graph.isLoopLink(relate("Niv-Mizzet, Parun", "Curiosity")) && Graph.isLoopLink(relate("Curiosity", "Niv-Mizzet, Parun")), "damage → draw → damage");
+  const anthem = relate("Krenko, Mob Boss", "Coat of Arms");
+  assert.ok(!Graph.isLoopLink(anthem), `an anthem is a payoff for width, not a loop step: ${anthem && anthem.kind}`);
+  /* A lord wants bodies and Krenko makes them repeatably, so that pair IS a loop feed -- the
+     width payoff the catalogue files at depth 3 -- even though the edge's leading sentence is
+     the tribal one. Two cards that merely share a word (both Equipment) are not. */
+  const lord = relate("Krenko, Mob Boss", "Goblin Chieftain");
+  assert.ok(lord && lord.loopFeeds.includes("creatures") && Graph.isLoopLink(lord), `a lord fed by a token maker is a loop payoff: ${lord && lord.kind}`);
+  const words = relate("Thornbite Staff", "Lightning Greaves");
+  assert.ok(words && words.shared.length && !Graph.isLoopLink(words), `two Equipment sharing "equip" is a word, not a loop: ${words && words.kind}`);
+});
+
 console.log(`crankmagic-graph: ${checks} checks passed over ${graph.cards.length} cards`);
