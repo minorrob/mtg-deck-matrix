@@ -83,4 +83,18 @@ ok("the finder is deterministic and never exceeds the length it was given", () =
   assert.equal(Loops.find(d6Rows, Graph.relate, "not-a-card").length, 0);
 });
 
+ok("countThrough counts the cycles through every card over one adjacency", () => {
+  /* The trace's loop-back counters and the pane's ×n read this, so they agree with "Loops
+     this card is in": the count for Krenko is the number of cycles find() returns for him. */
+  const counts = Loops.countThrough(d6Rows, Graph.relate);
+  const krenko = d6Rows.find((c) => c.name === "Krenko, Mob Boss");
+  assert.equal(counts.get(krenko.id), Loops.find(d6Rows, Graph.relate, krenko.id).length, "the same cycles find() lists");
+  assert.ok(counts.get(krenko.id) >= 2, `Krenko sits in at least two cycles (${counts.get(krenko.id)})`);
+  const staff = d6Rows.find((c) => c.name === "Thornbite Staff");
+  assert.ok(counts.get(staff.id) >= 1, "Thornbite Staff is in a cycle");
+  const sol = d6Rows.find((c) => c.name === "Sol Ring");
+  assert.ok(!sol || !counts.has(sol.id), "Sol Ring is in none, so it has no entry");
+  assert.equal(Loops.countThrough([], Graph.relate).size, 0, "no cards, no counts");
+});
+
 console.log(`crankmagic-loops: ${checks} checks passed · D6 read as ${d6Rows.length} nonland rows`);

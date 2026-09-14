@@ -1,8 +1,8 @@
 {
  "schema": "manifest@1",
- "generatedAt": "2026-09-14T04:49:34.791Z",
+ "generatedAt": "2026-09-14T05:42:27.690Z",
  "generator": "tools/data-manifest.mjs",
- "count": 17,
+ "count": 18,
  "files": [
   {
    "file": "data/cards.json",
@@ -47,6 +47,17 @@
    "version": 3,
    "served": true,
    "cache": "precached"
+  },
+  {
+   "file": "data/commander-strategies.json",
+   "schema": "commander-strategies@1",
+   "stamp": "2026-09-14T05:32:16.071Z",
+   "generator": "tools/commander-strategies.mjs",
+   "bytes": 628748,
+   "sha256": "0bff64815e94f52b62e3fb458830f15db01dfe53b696ddc5fab6be87a7285b58",
+   "version": 1,
+   "served": true,
+   "cache": "on demand"
   },
   {
    "file": "data/flavor-names.json",

@@ -29,7 +29,7 @@ const source = await readFile(new URL("../crankmagic-graph.js", import.meta.url)
    It is run in THIS realm rather than node:vm's so the arrays it returns are ordinary
    arrays -- a cross-realm array fails deepStrictEqual on its prototype alone, which is a
    confusing way to learn nothing. It never touches the DOM until mount() is called. */
-const root = {};
+const root = {CrankStrategies: require("../crankmagic-strategies.js")};
 new Function("globalThis", "window", "self", source)(root, root, root);
 const Graph = root.CrankGraph;
 
@@ -380,6 +380,25 @@ ok("loop mode's rule: events, engines and repeatable feeds continue a loop; trib
   assert.ok(lord && lord.loopFeeds.includes("creatures") && Graph.isLoopLink(lord), `a lord fed by a token maker is a loop payoff: ${lord && lord.kind}`);
   const words = relate("Thornbite Staff", "Lightning Greaves");
   assert.ok(words && words.shared.length && !Graph.isLoopLink(words), `two Equipment sharing "equip" is a word, not a loop: ${words && words.kind}`);
+});
+
+/* ------------------------------------------------------------- what the Trace reads */
+
+ok("every relation says which strategies it serves and how strong it is", () => {
+  /* Trace T0 (docs/crankmagic-strategy-trace-plan.md §4): the vocabulary reads the same term
+     pairs the label reads, so the join's `serves` is a fact about the join, not the deck. */
+  const drive = relate("Thornbite Staff", "Krenko, Mob Boss");
+  assert.equal(drive.serves[0], "untap-loop", `an untap engine onto a tap ability serves the untap loop first: ${drive.serves}`);
+  assert.ok(drive.serves.every((id, i, a) => a.indexOf(id) === i), "each strategy once, in the vocabulary's order");
+  assert.ok(drive.strength > 0 && drive.strength <= 1, `strength is in 0–1 (${drive.strength})`);
+  const fire = relate("Krenko, Mob Boss", "Purphoros, God of the Forge");
+  assert.ok(fire.serves.includes("etb-payoff"), `a creature-enters join serves the ETB payoff: ${fire.serves}`);
+  const tribe = relate("Krenko, Mob Boss", "Goblin Chieftain");
+  assert.ok(tribe.serves.includes("tribal-payoff"), `a tribal join serves the tribe: ${tribe.serves}`);
+  const rocks = relate("Sol Ring", "Arcane Signet");
+  assert.ok(!rocks || rocks.serves.length === 0, "two mana rocks serve no strategy");
+  assert.ok(drive.strength >= tribe.strength, "the drive is the stronger join");
+  assert.equal(Graph.relate(card("Sol Ring"), card("Sol Ring")), null, "a card is not joined to itself");
 });
 
 console.log(`crankmagic-graph: ${checks} checks passed over ${graph.cards.length} cards`);

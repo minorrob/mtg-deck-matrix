@@ -17,6 +17,7 @@ export const REGISTRY = [
   {file: "data/card-facts.json", id: "card-facts@1", generator: "tools/build-card-records.mjs", checkedBy: "tools/build-card-records.mjs", main: "cards"},
   {file: "data/commander-universe.json", id: "commander-universe@1", generator: "tools/commander-universe.mjs", checkedBy: "tools/commander-universe.mjs", main: "cards"},
   {file: "data/commander-ranks.json", id: "commander-ranks@1", generator: "tools/commander-ranks.mjs", checkedBy: "tools/commander-ranks.mjs", main: "cards"},
+  {file: "data/commander-strategies.json", id: "commander-strategies@1", generator: "tools/commander-strategies.mjs", checkedBy: "tools/commander-strategies.mjs", main: "commanders"},
   {file: "data/flavor-names.json", id: "flavor-names@1", generator: "tools/flavor-names.mjs", checkedBy: "tools/flavor-names.mjs", main: "cards"},
   {file: "data/commander-glossary.json", id: "commander-glossary@1", generator: HAND, checkedBy: "tools/check-glossary.mjs", main: "entries"},
   {file: "data/deck-guides.json", id: "deck-guides@1", generator: "tools/generate-guides.mjs", checkedBy: "tools/generate-guides.mjs", main: "decks"},

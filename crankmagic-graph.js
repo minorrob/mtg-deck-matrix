@@ -251,8 +251,15 @@
         [shared.length,     'Shared mechanics / roles', shared.slice(0, 2).join(', '), 'Shared mechanics / roles · ' + shared.slice(0, 3).join(', ')]
       ];
       const [, kind, tag, reason] = cases.find((c) => c[0]) || [];
-      return {shared, feeds, fed, fires, firedBy, multiplied, multiplies, extended, extendedBy,
+      const out = {shared, feeds, fed, fires, firedBy, multiplied, multiplies, extended, extendedBy,
               tribal, tribalBy, statted, stattedBy, drives, drivenBy, loopFeeds, loopFed, score, kind, tag, reason};
+      /* THE TRACE READS TWO MORE FIELDS (docs/crankmagic-strategy-trace-plan.md §4): `serves`,
+         the strategy ids this join advances (the vocabulary decides, from the same term
+         pairs), and `strength` in 0–1, the score saturating around a drive plus a fire, so
+         beam width and pane order come from one number. */
+      out.strength = Math.min(1, score / 18);
+      out.serves = root.CrankStrategies && typeof root.CrankStrategies.servedBy === 'function' ? root.CrankStrategies.servedBy(out) : [];
+      return out;
     }
 
   root.CrankGraph = {
@@ -789,6 +796,7 @@
           drives: r && r.drives ? r.drives : none, drivenBy: r && r.drivenBy ? r.drivenBy : none,
           loopFeeds: r && r.loopFeeds ? r.loopFeeds : none, loopFed: r && r.loopFed ? r.loopFed : none,
           kind: r ? r.kind : 'EDHREC co-play',
+          serves: r && r.serves ? r.serves : none, strength: r ? r.strength : 0,
           reason: r ? r.reason : null, coPlay: co ? {decks: co.decks, inclusion: co.inclusion} : null};
       }
       function select(id, history = true) {
