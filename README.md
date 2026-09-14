@@ -111,15 +111,24 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   ledge at the back, and behind the status piles a semicircle of group piles under one grouping
   (card type, colour, deck, collection group, mechanic, role, Primary Purpose, mana value, price
   band; the choice is remembered). Every pile is a stack whose height is its count, with its
-  label and count on a paper placard; a slot stays where an emptied pile lived; ordered,
-  watched, to-buy, draft and suggested copies stand as dashed ghosts. Click a pile and its
-  cards lay out in rows and columns on the stage inside the arch (mana value then name; the
-  Bench by name; Ordered by order date), the other group piles standing back as a shelf of
-  placards, with a page strip (S · M · L card size, a page is what fits) and a tick in each
-  card's corner; click a card and the rest slide back into their pile while the chosen cards
-  stand large on the centre of the mat with name, status, price and deck beneath (shift-click
-  or the ticks choose several); right-click a card for the list's row menu; Escape or a click
-  on the mat puts the table back at rest. **Drag the selection onto a pile** and the pile says
+  label and count on a paper placard; a slot stays where an emptied pile lived; every card
+  shows its whole picture; ordered, watched, to-buy, draft and suggested copies are ghosts —
+  the picture at full strength behind a gold dashed frame, the status on the corner. Only the
+  six piles a card can be dropped on stand as piles; Draft list, Suggestion, Planned and
+  Unassigned are readings of a plan and sit as chips under the status row, to lay out and look
+  at. The Bench ledge folds to its placard (*Hide* / *Show*, remembered on the device). Click a
+  pile and its cards lay out in rows and columns on the stage inside the arch (mana value then
+  name; the Bench by name; Ordered by order date), the other group piles standing back as a
+  shelf of placards, with a page strip (S · M · L card size, a page is what fits), a caption
+  under each card and a tick in its corner; click a card and the rest slide back into their
+  pile. One chosen card stands on the stage at the picture size you choose (Card · Larger ·
+  Large · Full, Scryfall's full print, remembered on the device) with its facts beside it from
+  the same record the inspector reads — mana, type line, rules text, price — *Inspect card* and
+  *Explore connections*, and *Previous* / *Next* (or the arrow keys) through the pile it came
+  from: pick a deck, pick a card, read it, file it, next. Several chosen cards fan on the centre
+  of the mat with name, status, price and deck beneath (shift-click or the ticks choose
+  several); right-click a card for the list's row menu; Escape or a click on the mat puts the
+  table back at rest. **Drag the selection onto a pile** and the pile says
   what the drop would do before you let go — a status pile is the Status fly-out's change (Bench
   ↔ Physical deck, Ordered, Watched, Reserved, Substitute, a reservation released to To buy), a
   collection group pile files the copies, a deck pile reserves them, and a card type, colour or

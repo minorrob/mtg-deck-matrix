@@ -260,9 +260,9 @@ function sheetEdit(btn,seed=''){
    this view feeds it the rows, the filters and the reader's grouping choice. */
 let tabletopGroupBy=C.state.preferences.tabletopGroupBy||'type';
 /* The table's own state between draws: the open pile, its page and card size, the ticks while it is laid out, the selection on the stage and the pile it came from. */
-const ttUI={open:null,from:null,page:0,size:'M',ticked:new Set(),selection:new Set()};
-/* The card size is a fact about the screen it was chosen on, so it is remembered per device and not in the library. */
-try{const s=localStorage.getItem('cm-tabletop-size');if(s&&['S','M','L'].includes(s))ttUI.size=s;}catch(err){/* a private window; M then */}
+const ttUI={open:null,from:null,page:0,size:'M',ticked:new Set(),selection:new Set(),bench:'open',stageSize:'XL'};
+/* The card size, the Bench ledge's fold and the stage's picture size are facts about the screen they were chosen on, so they are remembered per device and not in the library. */
+try{const s=localStorage.getItem('cm-tabletop-size');if(s&&['S','M','L'].includes(s))ttUI.size=s;if(localStorage.getItem('cm-tabletop-bench')==='shut')ttUI.bench='shut';const z=localStorage.getItem('cm-tabletop-stage');if(z&&['L','XL','XXL','full'].includes(z))ttUI.stageSize=z;}catch(err){/* a private window; the defaults then */}
 let tabletopStatusOrder=C.state.preferences.tabletopStatusOrder==='count'?'count':'workflow';
 let ttModel=null;
 function tabletop(params,shop=false){
@@ -295,6 +295,11 @@ function tabletop(params,shop=false){
       onDrop:(pileId,ids)=>{try{tabletopDrop(pileId,ids);}catch(err){C.notice(err.message,true);}},
       onMoveTo:(ids,el)=>{const rows=ids.map(id=>findRow(id)).filter(Boolean);const piles=[ttModel.bench,...ttModel.statusPiles,...ttModel.groupPiles];
         popAt(el,`<p>Move ${rows.length} card${rows.length===1?'':'s'} to</p>${piles.map(p=>{const a=TT.accepts(p,rows);return `<button type="button" data-action="tabletop-drop" data-pile="${e(p.id)}"${a.ok?'':' disabled'} title="${e(a.ok?a.why:a.why)}">${e(p.label)}${a.ok?` <small>${e(a.label)}</small>`:''}</button>`;}).join('')}`);},
+      onBench:open=>{ttUI.bench=open?'open':'shut';try{localStorage.setItem('cm-tabletop-bench',ttUI.bench);}catch(err){/* not remembered, still applied */}draw();queueMicrotask(()=>$('#cm-tt-host [data-tt=bench-toggle]')?.focus?.({preventScroll:true}));},
+      onStageSize:z=>{ttUI.stageSize=z;try{localStorage.setItem('cm-tabletop-stage',z);}catch(err){/* not remembered, still applied */}draw();queueMicrotask(()=>$(`#cm-tt-host [data-tt=stage-size][data-size=${z}]`)?.focus?.({preventScroll:true}));},
+      /* Previous / Next on the stage: the selection moves along the pile it came from, which stays the pile to go back to. */
+      onStep:id=>{ttUI.selection=new Set([id]);draw();queueMicrotask(()=>$('#cm-tt-host .cm-tt-stage-actions [data-tt=step]:not([disabled])')?.focus?.({preventScroll:true}));},
+      detail:r=>tabletopDetail(r),
       describe:r=>({status:r.status||statusOf(r),price:r.card&&r.card.price!=null?C.money(r.card.price):'',deck:value(r,'deck')})
     },{...ttUI,viewportHeight:innerHeight});
   };
@@ -316,6 +321,13 @@ function tabletop(params,shop=false){
    says which action a pile takes for these rows; here that action becomes the same command
    the row menu and the ticked-rows bar send, through the same receipt (C.review) for anything
    that changes a deck or money, and a plain save for filing into a group. */
+/* THE CARD'S FACTS ON THE STAGE (Rob, 14 September): the same record the inspector reads (C.card),
+   the same helpers (the mana pips, the glossary's type line and rules text, the price block), and
+   the inspector's two doors — Inspect card for the full pop-up with your copies and the graph's
+   terms, Explore connections for the card on Discover. Nothing here is fetched: what the catalog
+   has cached is what shows, and Inspect card fetches the rest. */
+function tabletopDetail(r){const c=C.card(r.cardId)||r.card||{};const pt=c.power!==null&&c.power!==undefined&&c.power!==''?`${c.power}/${c.toughness}`:'';
+  return `<p class="cm-tt-info-line">${C.mana(c.manaCost)}${pt?` <b>${e(pt)}</b>`:''}${c.rarity?` <span class="cm-tt-muted">${e(String(c.rarity).replace(/^\w/,x=>x.toUpperCase()))}</span>`:''}${c.setName?` <span class="cm-tt-muted">· ${e(c.setName)}</span>`:''}</p><p>${C.glossary.html(c.typeLine||'')}</p><div class="cm-oracle">${C.glossary.html(c.oracleText||'Full rules text has not been cached for this card; Inspect card fetches it.')}</div>${C.priceBlock(c)}<div class="cm-actions">${b('Inspect card','card',{card:r.cardId},false,{cls:'compact'})}${b('Explore connections','discover-card',{card:r.cardId},false,{cls:'compact'})}</div>`;}
 function tabletopDrop(pileId,ids){
   const TT=globalThis.CrankTabletop,pile=TT.findPile(ttModel,pileId),rows=ids.map(id=>findRow(id)).filter(Boolean);
   const a=TT.accepts(pile,rows);if(!a.ok){C.notice(a.why,true);return;}

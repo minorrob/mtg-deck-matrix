@@ -176,8 +176,19 @@ Needs, all small and all worth settling in the data-model evaluation first:
   phone for the row menu (*Move to…* covers the move); the phone's page strip pinned rather
   than repeated; and folding the sheet's *Group rows by* and the tabletop's groupings into one
   module (§4).
-
-Sizing at the pace of Phases A–C: TB0 with the data-model work, TB1 two sessions, TB2 two,
+- **TB5 — Rob's notes on the shipped table (14 September).** *Shipped 14 September.* Every
+  card shows its whole picture (the frame was cropping to a strip of art; the caption now sits
+  under a laid-out card and the pile placards and captions carry the name elsewhere). Ghosts
+  were nearly transparent and hard to read; they now keep the picture at full strength behind
+  a gold dashed frame with the status on the corner. The status piles a card can never be
+  dropped on — Draft list, Suggestion, Planned, Unassigned, the `accepts` default — are
+  readings of a plan, so they sit as chips under the status row (lay out to look) instead of
+  taking pile slots (`table()` marks `target`; `TARGET` is exported). The Bench ledge folds to
+  its placard, remembered on the device. One chosen card stands on the stage at a chosen
+  picture size (Card · Larger · Large · Full — Scryfall's 488 × 680 print, narrowed to the
+  mat), its facts beside it from the record the inspector reads (the view's `detail` hook:
+  mana, type line, rules text, price, Inspect card, Explore connections), and Previous / Next
+  walk the pile it came from — the flow is pick a deck, pick a card, read it, file it, next.: TB0 with the data-model work, TB1 two sessions, TB2 two,
 TB3 two, TB4 one.
 
 ## 6. Open questions for Rob
