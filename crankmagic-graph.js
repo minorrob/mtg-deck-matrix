@@ -262,6 +262,7 @@
     /* The scoring the canvas uses, reachable without one. */
     relate: (a, b) => (a && b && a !== b ? relateTerms(termSets(a), termSets(b)) : null),
 
+    /* `owned` is CrankFacets.owns(state): has(row) joins on the oracle id, then the name. */
     mount({canvas, cards, played = [], focus, history = [], owned = null, onSelect, onNeighbors, onPick, onHit, type = 'mechanic', depth = 2, breadth = 12, loopMode = false}) {
       const ctx = canvas.getContext('2d');
       const byId = new Map(cards.map((c) => [c.id, c]));
@@ -699,7 +700,7 @@
                reader is doing -- selected, pinned, focused, which ring it sits in -- and
                owning a card is a fact about the card. Scaled with the disc so it reads as
                a band on ring 1 and still as a band out on ring 3. */
-            if (owned && owned.has(n.card.name)) {
+            if (owned && owned.has(n.card)) {
               const band = Math.max(1.5, n.r * .11);
               ctx.strokeStyle = '#f2c96b'; ctx.lineWidth = band;
               ctx.beginPath(); ctx.arc(n.x, n.y, n.r + band / 2 + 1, 0, Math.PI * 2); ctx.stroke();

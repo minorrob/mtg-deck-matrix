@@ -94,8 +94,9 @@ The commit path:
 3. The function loads the library's state and revision. If the revision matches, it applies
    the command with `collection-model.js`, inserts the command, stores the new state at
    revision + 1 and answers `200 { revision }`; the browser marks the command synced.
-4. If someone else moved first it answers `409 { revision, state }`; the browser refreshes
-   through today's "changed in another tab" path and replays the pending commands that
+4. If someone else moved first it answers `409 { revision, commands }` — the commands it
+   has not seen, not the state; the browser applies them through the same model, the way
+   today's "changed in another tab" path refreshes, and replays the pending commands that
    still apply. Rejected commands are shown for review, never dropped.
 5. Realtime tells other devices to refresh.
 
@@ -107,6 +108,38 @@ The commit path:
 - **Size.** A 2 MB library gzips to roughly a fifth and loads once per session. If libraries
   grow past a few thousand lots, the state splits into rows per lot; the command log makes
   that a migration, not a rewrite.
+
+## Commands are the exchange format
+
+The wire carries commands, never states. That one rule is what makes two devices merge
+rather than overwrite, and it costs nothing new: the model already has a journal, a revision
+on every apply, and a validator that refuses a command that no longer fits.
+
+- **What travels.** `{id, type, …args, baseRevision, device, at}` — the object `M.apply`
+  takes today, with the device that made it and the revision it was made against. A state
+  travels twice only: at first sign-in, when the guest library is uploaded whole, and as a
+  backup file, which stays the `crankmagic-backup` format that exists (schema, checksum,
+  replaced whole).
+- **How two devices merge.** By replay. A commit that is behind is answered with the commands
+  it has not seen; the device applies them locally through the same model and re-applies its
+  own pending commands on top. One that no longer applies (a lot deleted underneath it, a deck
+  finalized first) is shown for review with the summary the model already writes — never
+  dropped, never forced.
+- **Idempotent by id.** A command's id is minted on the device, so a replay after a lost
+  answer is one the server recognises and answers again rather than applies twice; the log
+  holds each command once.
+- **Order.** The server's revision order is the order. Device clocks are recorded for the
+  audit, not trusted for sequencing.
+- **Version.** A command names the model version it was made under. The server runs the same
+  model file; a browser on an older one is told to reload before its commands are accepted
+  (the `?v=` discipline above). `migrate` runs on states, at load; a command is never
+  migrated, because the model that reads it is the one that wrote it.
+- **What it buys.** History and undo are the log; the audit the app shows is the log; a
+  lot-per-row store later is a projection of the log, not a rewrite; and a backup restore is
+  one more line in it — a state that replaces the library and starts a new revision line,
+  exactly what Restore does today.
+- **What it forbids.** No endpoint accepts a state for a library that already has one, and no
+  client sends its whole library to settle a conflict.
 
 ## Hosting and the domain
 

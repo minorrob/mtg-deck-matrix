@@ -323,10 +323,35 @@ check("ownedNames is the Ownership facet's own rule, on its own", () => {
   assert.deepEqual([...Facets.ownedNames(null)], [], "an empty library owns nothing");
   const decorated = Facets.decorate([{name: "Sol Ring"}, {name: "Mana Crypt"}], state);
   for (const card of decorated) {
-    const banded = Facets.ownedNames(state).has(card.name);
+    const banded = Facets.owns(state).has(card);
     const filtered = card.__mine.owned.some((v) => v !== "not owned" && v !== "on order");
     assert.equal(banded, filtered, `${card.name}: the band and the filter disagree`);
+    assert.equal(Facets.ownedNames(state).has(card.name), banded, "and the name lens agrees where the card has no oracle id");
   }
+});
+
+/* THE JOIN KEY. A graph row's id is its oracle id; a library reference carries the same id;
+   the name is the fallback for a card saved before it had one. */
+check("the library joins the graph on the oracle id, and by name only when it has none", () => {
+  const sol = CARDS.find((c) => c.name === "Sol Ring"), krenko = CARDS.find((c) => c.name === "Krenko, Mob Boss"), signet = CARDS.find((c) => c.name === "Arcane Signet");
+  const state = {
+    cards: {a: {name: "Sol Ring (a printed name the graph does not use)", oracleId: sol.id}, b: {name: "Krenko, Mob Boss"}},
+    lots: [{cardId: "a", source: "owned", location: {kind: "bench"}}, {cardId: "b", source: "owned", location: {kind: "deck"}}],
+    decks: [{name: "Goblins", slots: [{cardId: "b"}]}],
+  };
+  const owned = Facets.owns(state);
+  assert.ok(owned.has(sol), "a saved card whose name differs from the graph's is owned, by oracle id");
+  assert.ok(owned.has(krenko), "a saved card without an oracle id is owned by name");
+  assert.ok(owned.has({name: "any printed name", oracleId: sol.id}), "a catalog card joins by its oracleId field");
+  assert.ok(!owned.has(signet), "a card the library lacks is not owned");
+  assert.ok(owned.has("Krenko, Mob Boss") && !owned.has("Sol Ring"), "a bare name is the name lens, nothing more");
+  assert.ok(!Facets.ownedNames(state).has("Sol Ring"), "ownedNames is that lens");
+  const [dSol, dKrenko, dSignet] = Facets.decorate([sol, krenko, signet], state);
+  assert.deepEqual(dSol.__mine, {owned: ["on the bench"], decks: []});
+  assert.deepEqual(dKrenko.__mine, {owned: ["in physical deck"], decks: ["Goblins"]});
+  assert.deepEqual(dSignet.__mine, {owned: ["not owned"], decks: []});
+  assert.deepEqual(Facets.apply(CARDS, {owned: ["!not owned"]}, state).map((c) => c.name).sort(), ["Krenko, Mob Boss", "Sol Ring"], "the Ownership facet finds both");
+  assert.deepEqual(Facets.values(CARDS, state).decks, [{value: "Goblins", count: 1}], "and the deck facet counts the one");
 });
 
 /* ------------------------------------------------------- counts under the filters */
@@ -352,6 +377,68 @@ check("in any mode a facet's own includes are lifted, its excludes kept", () => 
   assert.ok((all.get("U") || 0) <= (any.get("U") || 0), "all mode counts within the picked colours");
   assert.equal(any.get("W"), undefined, "an excluded colour has no cards left to count");
   assert.equal(Facets.narrowedCounts(CARDS, {}, null, "nope").size, 0, "an unknown facet counts nothing");
+});
+
+/* ------------------------------------------------------- the posting lists agree with the scan */
+
+/* matches() is the rule, written card by card; apply() and narrowedCounts() answer through the
+   posting lists. Every kind of pick the dialog can make is held to the scan here: all and any
+   mode, excludes, colour's own rule and C alone, the alternatives facets, lands, and the two
+   personal facets with and without a library. */
+const reference = (cards, sel, state, opts) => Facets.decorate(cards, state).filter((c) => Facets.matches(c, sel, opts));
+const top = (key, i = 0) => Facets.values(CARDS, null)[key][i].value;
+const LIB = {
+  cards: {a: {name: "Sol Ring", oracleId: CARDS.find((c) => c.name === "Sol Ring").id}, b: {name: "Krenko, Mob Boss"}, c: {name: "Arcane Signet"}},
+  lots: [{cardId: "a", source: "owned", location: {kind: "deck"}}, {cardId: "b", source: "ordered"}, {cardId: "c", source: "owned", location: {kind: "bench"}}],
+  decks: [{name: "Goblins", slots: [{cardId: "b"}]}],
+};
+check("every pick the dialog can make gives the scan's answer through the posting lists", () => {
+  const cases = [
+    [{roles: ["ramp"]}, null, {}],
+    [{roles: [top("roles"), top("roles", 1)]}, null, {any: true}],
+    [{roles: [top("roles"), top("roles", 1)]}, null, {any: false}],
+    [{colors: ["G"]}, null, {}],
+    [{colors: ["C"]}, null, {}],
+    [{colors: ["W", "U", "!B"]}, null, {any: true}],
+    [{colors: ["!C"], type: ["Creature"]}, null, {}],
+    [{mv: ["2", "3"], type: ["Artifact"]}, null, {any: false}],
+    [{manaKind: ["Mana rock", "Mana dork"]}, null, {}],
+    [{lands: ["lands only"], enters: ["untapped"]}, null, {}],
+    [{mechanics: ["!flying"], tribes: ["Goblin"]}, null, {}],
+    [{triggers: [top("triggers")], causes: ["!" + top("causes")]}, null, {any: true}],
+    [{owned: ["in physical deck"]}, LIB, {}],
+    [{owned: ["!not owned"], roles: ["ramp"]}, LIB, {any: true}],
+    [{decks: ["Goblins"]}, LIB, {}],
+    [{owned: ["not owned"]}, null, {}],
+    [{owned: ["!not owned"]}, null, {}],
+  ];
+  for (const [sel, state, opts] of cases) {
+    const got = Facets.apply(CARDS, sel, state, opts), want = reference(CARDS, sel, state, opts);
+    assert.deepEqual(got.map((c) => c.name), want.map((c) => c.name), `${JSON.stringify(sel)} ${JSON.stringify(opts)}: ${got.length} through the index against ${want.length} by the scan`);
+    assert.deepEqual(got.map((c) => c.__mine), want.map((c) => c.__mine), "with the same personal facts on each");
+    for (const key of ["colors", "roles", "mv", "owned", "decks"]) {
+      let lifted = sel;
+      if (opts.any && sel[key]) { const kept = sel[key].filter((v) => v.startsWith("!")); lifted = {...sel}; if (kept.length) lifted[key] = kept; else delete lifted[key]; }
+      const facet = Facets.FACETS.find((f) => f.key === key), byHand = new Map();
+      for (const c of reference(CARDS, lifted, state, opts)) for (const v of facet.from(c) || []) if (v !== "" && v !== null && v !== undefined) byHand.set(v, (byHand.get(v) || 0) + 1);
+      assert.deepEqual([...Facets.narrowedCounts(CARDS, sel, state, key, opts).entries()].sort(), [...byHand.entries()].sort(), `${key} under ${JSON.stringify(sel)}: the narrowed counts are the scan's`);
+    }
+  }
+  const whole = Facets.values(CARDS, LIB), byHand = new Map();
+  for (const c of Facets.decorate(CARDS, LIB)) for (const v of (c.ci ? String(c.ci).split("") : ["C"])) byHand.set(v, (byHand.get(v) || 0) + 1);
+  assert.deepEqual(whole.colors.map((r) => [r.value, r.count]).sort(), [...byHand.entries()].sort(), "values() reads the same totals off the lists");
+  assert.deepEqual(whole.owned.map((r) => r.value).sort(), ["in physical deck", "not owned", "on order", "on the bench"], "and the personal facet's values off the library");
+});
+
+check("the index is built once per list and again when the list grows", () => {
+  const list = CARDS.slice();
+  const before = Facets.postings(list).cardsWith("roles", "ramp").length;
+  assert.equal(before, Facets.apply(list, {roles: ["ramp"]}, null).length, "a posting list is the filter's answer");
+  assert.ok(Facets.postings(list).values("colors").includes("C"), "and the values are the terms");
+  list.push({id: "visitor", name: "Visitor", roles: ["ramp"], ci: "G", type: "Creature — Test", mv: 1});
+  assert.equal(Facets.postings(list).cardsWith("roles", "ramp").length, before + 1, "a visitor appended after the first use is indexed");
+  assert.deepEqual(Facets.postings(list).termsOf("colors", list[list.length - 1]), ["G"], "with its terms");
+  assert.ok(Facets.apply(list, {roles: ["ramp"], colors: ["G"]}, null).some((c) => c.name === "Visitor"), "and the filters see it");
 });
 
 console.log(`crankmagic-facets: ${checks} checks passed · ${Facets.available(null).length} card facets over ${CARDS.length} cards`);

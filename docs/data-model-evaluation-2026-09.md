@@ -151,10 +151,23 @@ and the plans that follow.
 12. **`oracleId` is the join key; the name key is an alias.** `card:` ids are base64 of the
     folded name today (`CrankCatalog.key`); names change with errata and flavor names, oracle
     ids do not. Every record and every lot carries `oracleId`; the resolver keeps the name
-    key as a lens for links and typed input.
+    key as a lens for links and typed input. *Shipped in #184: the catalog indexes by oracle
+    id (`get()` answers for a graph node's id as well as the name key; `oracle(id)` is the
+    direct lookup); `crankmagic-facets.js` joins the library to the graph on the oracle id with
+    the name as the fallback, written once (`owns(state)` and the two personal facets), and
+    Discover's focus-by-card, deck pick, gold band and loop list read it; `reconcileCards`
+    fills a reference that lacks the record's oracle id, and the app names those at boot. A
+    lot or slot reaches the id through its `cardId`, which is the normalised form: "every lot
+    carries it" is read as every library card identity carries it.*
 13. **Posting lists for the facets.** `narrowedCounts` scans 31,830 cards per dialog; a
     Map term → Set of ids built once at load makes every count proportional to the selection
-    and gives the Trace its adjacency for free.
+    and gives the Trace its adjacency for free. *Shipped in #184: the facets module indexes
+    each card list once (term → positions, per card facet); `apply` and `narrowedCounts` are
+    set arithmetic over the lists, the two personal facets probed on the survivors; and
+    `postings(cards)` exposes the lists (`cardsWith`, `termsOf`, `values`) for the Trace.
+    Measured on the 31,830 cards: a count under two picks 1.9 ms against 255 ms by the scan, a
+    personal-only pick 53 ms, the index 264 ms once per list. `tests/crankmagic-facets.mjs`
+    holds seventeen kinds of pick to `matches()`, the card-by-card rule.*
 14. **A generated `data/manifest.json`** (the inventory's data, machine-readable): per file
     the schema, stamp, hash and generator; the worker's DATA list and the sidebar's data-age
     line read it, `asset-versions` compares against it, and a future server serves it.
@@ -165,7 +178,11 @@ and the plans that follow.
     manifest there is the step after.*
 15. **Commands as the exchange format.** The library already has a journal and revision
     checks; the persistent plan's sync should ship commands, not states, so two devices merge
-    by replay and the backup format stays the one that exists.
+    by replay and the backup format stays the one that exists. *Shipped in #184 as a section
+    of `docs/crankmagic-persistent-plan.md` ("Commands are the exchange format"): the wire
+    carries commands; a state travels only at first sign-in and as the backup file that
+    exists; a commit that is behind is answered with the commands it missed; replay is
+    idempotent by command id.*
 16. **Sharding rule for the static site**: no served data file over 5 MB; anything larger is
     split by a stable key (first letter of the folded name for card records; commander for
     co-play) and loaded on demand. The Card record set and the co-play pairs are the two files

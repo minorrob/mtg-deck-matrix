@@ -112,10 +112,14 @@
     /* The graph plus anything in the library it does not know about -- a card imported
        from a link, or one printed after the graph snapshot -- shaped like a graph row. */
     const data = {...loaded, cards: [...loaded.cards]};
-    const names = new Set(data.cards.map((c) => c.name));
+    const names = new Set(data.cards.map((c) => c.name)), ids = new Set(data.cards.map((c) => c.id));
     for (const c of C.cards()) {
-      if (!names.has(c.name)) data.cards.push({...c, id: c.oracleId || c.id, type: c.typeLine, ci: (c.colorIdentity || []).join(''), image: c.image});
+      if (!names.has(c.name) && !(c.oracleId && ids.has(c.oracleId))) data.cards.push({...c, id: c.oracleId || c.id, type: c.typeLine, ci: (c.colorIdentity || []).join(''), image: c.image});
     }
+    /* A library or catalog card's row on the graph: by oracle id (the row's id), then by name
+       for a card saved before it had one. */
+    const byGraphId = new Map(data.cards.map((c) => [c.id, c]));
+    const rowFor = (card) => (card ? (card.oracleId && byGraphId.get(card.oracleId)) || data.cards.find((c) => c.name === card.name) || null : null);
 
     /* THE UNIVERSE, EXPLAINED ONCE. The count beside the filters is the whole format, and
        a reader is entitled to ask why that number and not another. Every figure here is
@@ -268,7 +272,7 @@
       hidePop();
       graph = CrankGraph.mount({
         canvas: $('#cm-graph'), cards, played: data.played, focus: focusId, history, depth, breadth, loopMode,
-        owned: CrankFacets.ownedNames(C.state),
+        owned: CrankFacets.owns(C.state),
         onNeighbors(c, neighbors, trailLength, info) {
           /* A new focus clears the card the list opened; a re-layout of the same focus (a
              resize, a slider) does not, or opening a row would undo itself. */
@@ -592,8 +596,8 @@
       const world = deckPicked ? lastWorld : (graph ? graph.visible() : []);
       const loopKey = c.id + '|' + world.length + '|' + world.map((x) => x.id).join(',');
       if (loopsCache.key !== loopKey) loopsCache = {key: loopKey, loops: graph && globalThis.CrankLoops ? CrankLoops.find(world, (a, b) => graph.relation(a.id, b.id), c.id) : []};
-      const owned = CrankFacets.ownedNames(C.state);
-      const loopCard = (s, extra = '') => `<button type="button" class="cm-loop-card${owned.has(s.name) ? '' : ' is-missing'}${extra}" data-action="graph-card" data-id="${e(s.id)}" title="${owned.has(s.name) ? 'You own this' : 'Not in your library'} — tap to focus it">${e(s.name)}</button>`;
+      const owned = CrankFacets.owns(C.state);
+      const loopCard = (s, extra = '') => `<button type="button" class="cm-loop-card${owned.has(s) ? '' : ' is-missing'}${extra}" data-action="graph-card" data-id="${e(s.id)}" title="${owned.has(s) ? 'You own this' : 'Not in your library'} — tap to focus it">${e(s.name)}</button>`;
       const loopsHTML = loopsCache.loops.length
         ? `<h3 class="cm-chips-head">Loops this card is in <small class="cm-muted">${loopsCache.loops.length}</small>
             <details class="cm-inline-menu cm-hint"><summary class="cm-hint-btn" aria-label="How these are found" title="How these are found">i</summary><div class="cm-menu cm-inline-menu-body cm-hint-body">A cycle of four cards or fewer through this card, over the joins a loop runs on: an untap, copy or blink onto a tap ability; a repeatable supply into a demand; an event one card causes and another fires on. A dashed card is not in your library. The second line is what turns each pass into damage, cards or mana.</div></details>
@@ -704,7 +708,7 @@
       else { graph?.destroy(); graph = null; drawCardView(null, null); }
     }
 
-    const startFocus = data.cards.find((c) => c.name === wanted?.name)
+    const startFocus = rowFor(wanted)
       || data.cards.find((c) => c.name === 'Atraxa, Praetors’ Voice' || c.name === "Atraxa, Praetors' Voice")
       || data.cards.find((c) => c.name === 'Krenko, Mob Boss')
       || data.cards[0];
@@ -790,7 +794,7 @@
     function commanderRow(deckName) {
       const deck = (C.state.decks || []).find((d) => d.name === deckName && !d.archived);
       const lead = deck && deck.commanders && C.card(deck.commanders[0]);
-      return lead ? data.cards.find((c) => c.name === lead.name) || null : null;
+      return lead ? rowFor(lead) : null;
     }
     actions['facet-term'] = (el) => {
       selection = CrankFacets.toggle(selection, el.dataset.key, el.dataset.value);

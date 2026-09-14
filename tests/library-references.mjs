@@ -56,6 +56,16 @@ ok(lot.lots.length === 1, "a lot of a referenced card is accepted");
 ok(M.counters(lot).owned >= 1 || true, "counters read through the source without throwing");
 M.setRecordSource(null);
 
+/* The oracle-id fill: a reference saved before its record carried an oracle id takes the
+   record's at reconcile, once; the join key is then on every library card the set knows. */
+M.setRecordSource((id) => (id === shipped.id ? shipped : null));
+const bare = {...M.empty(), cards: {[shipped.id]: {id: shipped.id, name: "Sol Ring", oracleId: "", shipped: true}}};
+const filled = M.apply(bare, {type: "reconcileCards", id: "rc3", ids: [shipped.id]});
+eq(filled.state.cards[shipped.id], {id: shipped.id, name: "Sol Ring", oracleId: shipped.oracleId, shipped: true}, "reconcile gives a reference the record's oracle id and nothing else");
+ok(/gained the record's oracle id/.test(filled.summary), `and says so: ${filled.summary}`);
+ok(/already/.test(M.apply(filled.state, {type: "reconcileCards", id: "rc4", ids: [shipped.id]}).summary), "and is a no-op after");
+M.setRecordSource(null);
+
 /* The catalog: the record wins over a saved copy, and the copy's identity is kept. */
 const stale = {...shipped, shipped: false, oracleText: "STALE TEXT", price: 99, roles: ["stale"], flavorName: "Sol Ring (promo)", updatedAt: "2026-01-01"};
 delete stale.shipped;

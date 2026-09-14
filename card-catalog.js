@@ -53,7 +53,7 @@
   function matchesMechanic(c,label){const entry=MECHANICS.find(([l])=>folded(l)===folded(label));if(!entry)return folded(haystack(c)).includes(folded(label));return entry[1].test(haystack(c));}
   /* The labels a card earns, for "plays as" lines and picker rows. */
   function playStyles(c){return MECHANICS.filter(([l])=>matchesMechanic(c,l)).map(([l])=>l);}
-  async function create(options){const byName=new Map(),byAlias=new Map(),byId=new Map();let graph=null,universeDate='',rankDate='',priceDate='',graphDate='',graphLoading=null,playedLoading=null;const fetcher=options.fetchImpl||fetch;
+  async function create(options){const byName=new Map(),byAlias=new Map(),byId=new Map(),byOracle=new Map();let graph=null,universeDate='',rankDate='',priceDate='',graphDate='',graphLoading=null,playedLoading=null;const fetcher=options.fetchImpl||fetch;
     /* THE NAME ON THE CARD IN YOUR HAND. byName is keyed on the ORACLE name, which is the
        name the rules use and not always the name printed on the card: a Secret Lair prints
        Jodah, the Unifier as "SpongeBob SquarePants". search() has matched flavour names
@@ -62,7 +62,10 @@
        the network, and offline it simply failed. The catalog ships all 513 of them; it
        should answer for them too. Kept in a SEPARATE map so an oracle name always wins:
        a flavour name can never shadow a real card. */
-    function add(raw){const prior=byName.get(folded(raw.name)),next=normalize(raw,prior);byName.set(folded(next.name),next);byId.set(next.id,next);
+    /* THE ORACLE ID IS THE JOIN KEY. A graph node's id, a Card record's oracleId and a library
+       reference's oracleId are one value, so byOracle answers for all three; the name key
+       stays the lens for links and typed input. get() takes either. */
+    function add(raw){const prior=byName.get(folded(raw.name)),next=normalize(raw,prior);byName.set(folded(next.name),next);byId.set(next.id,next);if(next.oracleId)byOracle.set(next.oracleId,next);
       for(const alias of next.flavorNames||[]){const a=folded(alias);if(a&&!byName.has(a))byAlias.set(a,next);}
       return next;}
     const named=name=>{const n=folded(name);return byName.get(n)||byAlias.get(n)||null;};
@@ -206,7 +209,7 @@
        graph-played.json and are fetched the first time a page needs them -- Discover's canvas
        -- never at install and never for the Lab. Joined onto the loaded card list by index. */
     async function loadPlayed(){const g=await loadGraph();if(g.played&&g.played.length)return g.played;if(!options.urls.graphPlayed||!Payload||!Payload.unpackPlayed)return g.played||[];if(!playedLoading)playedLoading=load(options.urls.graphPlayed).then(raw=>{if(typeof options.urls.expect==='function')options.urls.expect(raw,'graphPlayed');g.played=Payload.unpackPlayed(g.cards.map(c=>c.id),raw);return g.played;}).catch(error=>{playedLoading=null;throw error;});return playedLoading;}
-    return {add,overlay,search,similar,resolve,details,cheapest,hydrate,recheck,loadGraph,loadPlayed,exact:named,get:id=>byId.get(id)||named(id),all:()=>[...byId.values()],load,universeDate,rankDate,dates:()=>({catalog:universeDate,prices:priceDate,ranks:rankDate,graph:graphDate}),available:()=>byId.size};
+    return {add,overlay,search,similar,resolve,details,cheapest,hydrate,recheck,loadGraph,loadPlayed,exact:named,get:id=>byId.get(id)||byOracle.get(id)||named(id),oracle:id=>byOracle.get(id)||null,all:()=>[...byId.values()],load,universeDate,rankDate,dates:()=>({catalog:universeDate,prices:priceDate,ranks:rankDate,graph:graphDate}),available:()=>byId.size};
   }
   /* WHAT A DECK IS ABOUT, READ OFF ITS LIST. definition.mechanics is the owner's word and
      wins when it is set; when it is blank this says what the hundred cards themselves say.

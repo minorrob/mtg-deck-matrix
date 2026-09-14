@@ -372,8 +372,11 @@
       case 'cards': for(const raw of c.cards||[])addCard(raw);summary='Saved verified card data and supplemental identities';break;
       /* ONE-TIME REPAIR (schema 3): the library cards the shipped record set carries drop their
          copied facts and keep their identity. Idempotent: nothing to strip, nothing changes. */
-      case 'reconcileCards':{const ids=(c.ids||[]).filter(id=>Object.hasOwn(s.cards,id)&&s.cards[id].shipped!==true);if(!ids.length)return {state:current,summary:'Every library card already references its record.'};
-        for(const id of ids)s.cards[id]=reference(s.cards[id]);summary=`${ids.length} library card${ids.length===1?'':'s'} now reference the shipped record instead of carrying a copy`;break;}
+      /* Also the oracle-id fill: a reference saved before its record carried an oracle id takes
+         the record's, so the join key (recommendation 12) is on every library card the record
+         set knows. Idempotent: a reference with the id is left alone. */
+      case 'reconcileCards':{const rec=id=>recordSource?recordSource(id):null;const ids=(c.ids||[]).filter(id=>{if(!Object.hasOwn(s.cards,id))return false;const cur=s.cards[id];return cur.shipped!==true||(!cur.oracleId&&!!(rec(id)||{}).oracleId);});if(!ids.length)return {state:current,summary:'Every library card already references its record.'};
+        let joined=0;for(const id of ids){const cur=s.cards[id],r=rec(id),oracleId=cur.oracleId||(r&&r.oracleId)||'';if(!cur.oracleId&&oracleId)joined++;s.cards[id]=cur.shipped===true?{...cur,oracleId}:reference({...cur,oracleId});}summary=`${ids.length} library card${ids.length===1?'':'s'} now reference the shipped record instead of carrying a copy${joined?` (${joined} gained the record's oracle id)`:''}`;break;}
       /* EVERY DECK HAS A COLLECTION GROUP, AND IT IS MADE WITH THE DECK. A deck without one
          was a deck whose cards had no home in the Collection: you could filter to the deck,
          but the group -- the thing you file copies into and hand to someone -- had to be

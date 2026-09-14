@@ -62,8 +62,8 @@
       "sha": "b4cc36093b2df3e8"
     },
     "card-catalog.js": {
-      "version": 20,
-      "sha": "95104b57242d5569"
+      "version": 21,
+      "sha": "eabfa00362c63176"
     },
     "card-classify.js": {
       "version": 10,
@@ -82,8 +82,8 @@
       "sha": "cb61bc0fb5083d16"
     },
     "collection-model.js": {
-      "version": 29,
-      "sha": "65d446e60ee3d1b6"
+      "version": 30,
+      "sha": "5895d60e87219cae"
     },
     "collection-repository.js": {
       "version": 3,
@@ -98,8 +98,8 @@
       "sha": "46db16db726209b1"
     },
     "crankmagic-app.js": {
-      "version": 156,
-      "sha": "005228c9e640e977"
+      "version": 157,
+      "sha": "9702914a8edbc679"
     },
     "crankmagic-assets.js": {
       "version": 25,
@@ -126,8 +126,8 @@
       "sha": "0f37e9d569d76ff4"
     },
     "crankmagic-discover.js": {
-      "version": 46,
-      "sha": "6279bca2d5639e2b"
+      "version": 47,
+      "sha": "9cb2f1bbda1a47f4"
     },
     "crankmagic-evidence.js": {
       "version": 2,
@@ -138,16 +138,16 @@
       "sha": "7025527d5f3f9199"
     },
     "crankmagic-facets.js": {
-      "version": 13,
-      "sha": "8a6492359349f009"
+      "version": 14,
+      "sha": "4435ee146e381a16"
     },
     "crankmagic-glossary.js": {
       "version": 1,
       "sha": "52e344df8ef38d24"
     },
     "crankmagic-graph.js": {
-      "version": 17,
-      "sha": "3ad92ab9b096e7e4"
+      "version": 18,
+      "sha": "a1f4f1e3179c5c6b"
     },
     "crankmagic-groupings.js": {
       "version": 1,
@@ -194,8 +194,8 @@
       "sha": "d7bc7ed62b5a1cf5"
     },
     "crankmagic-sw.js": {
-      "version": 156,
-      "sha": "e5d7f7aae048d83b"
+      "version": 157,
+      "sha": "0d9cdbc557e9ecf4"
     },
     "crankmagic-tour.js": {
       "version": 13,
