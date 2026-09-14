@@ -45,6 +45,7 @@ Trey's Deck Matrix. Anything either session needs the other to know goes in this
 | #167 | Discover: Primary Purpose in gold, filter counts under the filters, Yours in green, a deck pick focuses its commander, the picture grows with the pane; `docs/crankmagic-discover-loop-plan.md` and `docs/crankmagic-loop-patterns.md` | A |
 | #168 | The loop vocabulary — untap, copy, blink, counter removal, extra turn, cost reduction, tap-ability — read from rules text, the whole graph re-derived, Thornbite Staff rings untap | A |
 | #170 | Phase C: loop joins (engine → tap ability, supply → demand), the cycle finder `crankmagic-loops.js`, Loops only on the depth gauge, Loops this card is in | A |
+| #171 | Option B PR 3: the deck page as five tabs (Overview · Cards · Guide · Upgrades · History) on `?tab=`, the Next line, the phone action bar; deck-page budget re-based | A |
 
 Also on 13 September: stale PRs #80, #2 and #54 closed (superseded); the 25 branches behind
 closed and merged PRs were verified safe to delete but the session's credential cannot delete
@@ -58,7 +59,7 @@ notes; it was kept.
 - `docs/crankmagic-discover-loop-plan.md` — Phases A and B shipped (#167, #168). Phase C is
   next: the three directed edges the new vocabulary allows, a cycle finder (acceptance: the
   Krenko + Thornbite Staff + Bombardment loop, Niv-Mizzet + Curiosity), and a loop-mode depth
-  gauge. Phase C shipped (#170); loop mode is on by default with a deck pick, as proposed. Phase D (the role lens) is next.
+  gauge. Phase C shipped (#170); loop mode is on by default with a deck pick, as proposed. **Phase D is held** on Rob's instruction of 14 September until the plan and mock-up for the animated strategy trace on the graph (a blank canvas, the commander in the middle, light-beam joins stepping out ring by ring along the deck's strategies, loop-backs counted in the pane) are delivered and reviewed; that plan also has to name the graph, data-model, edge and node property changes the feature needs.
 - `docs/crankmagic-persistent-plan.md` — accounts, per-user sync, crankmagic.com on Vercel +
   Supabase. Not started; nine decisions listed in the document.
 - `docs/ux-plan-2026-09-11.md` — executed by session B. Its §7 data items are still Rob's:
@@ -67,7 +68,7 @@ notes; it was kept.
 
 **Gates now:** `GEOMETRY_REQUIRED=1 PAGE_BUDGET_REQUIRED=1 bash runtests.sh -q` runs **56
 suites** (the README states the count and `tests/data-integrity.mjs` checks it);
-`tests/uat/crankmagic-journeys.mjs` is at **169 checks**; the geometry and page-budget suites
+`tests/uat/crankmagic-journeys.mjs` is at **170 checks**; the geometry and page-budget suites
 run in the browser and fail on a clipped wordmark. Walks in the sandbox show **no card art**:
 `tests/uat/scryfall-stub.mjs` answers every image with a one-pixel PNG, so panes and nodes
 fall back to their placeholder colours. That is the harness, not the app.

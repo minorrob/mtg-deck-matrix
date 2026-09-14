@@ -36,8 +36,14 @@ under **Cards** its four sub-pages (Library · To buy · Orders · Sheet, with c
 **Decks** your decks and the How page, the current one marked. Glossary underlines in rules text are off until **Show term
 definitions** (deck page More menu, card pop-up) turns them on for the library.
 
-- **Decks** (`#decks`): plans and assembly status; commander image/rules, composition, strategy,
-  structural SWOT, recommendations, game history, compare, finalize, lock and archive. Each
+- **Decks** (`#decks`): plans and assembly status. A deck page is five tabs on the route
+  (`#decks?deck=…&tab=cards|guide|upgrades|history`): **Overview** — the hero, the Progress and
+  Cost card and one *Next:* line in the order the work happens; **Cards** — the hundred by type
+  with where each copy stands, the composition at its head; **Guide** — the commander, the
+  strategy and structural SWOT; **Upgrades** — the working list and the Upgrade Path;
+  **History** — the game record and every measured run. The hero row is the work (Ready to
+  add, Buy list, Log a game, Measure, More); on a phone the three work actions are a fixed bar
+  at the foot of the screen. Compare, finalize, lock and archive as before. Each
   tile wears its stage — Defining, Building, Playable, Complete — and one caption that says
   each figure once. A plain link on the page, **How a deck comes together** (`#how`), is a one-screen
   map: six steps as a flow (the first split between building one in Build and
@@ -156,10 +162,10 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   has *Substitute*, tiles read *Playable · n substitutes* once the physical deck holds a
   hundred, and the readiness bar hatches the seats substitutes cover. Tiles wear their stage
   as a border: green while *Defining*, blue while *Building*, purple once *Playable*, gold
-  when *Complete*. The deck page's stat row shows In
+  when *Complete*. The deck page's Overview shows In
   physical deck · Substitutes · Ready to add · Ordered · To buy and $ to finish against the cap,
-  with a readiness bar; *Ready to add (n)* leads the action row when there is
-  anything ready to add. The **Upgrade Path** panel under SWOT lists the deck's linked upgrades
+  with a readiness bar and the *Next:* line; *Ready to add (n)* leads the action row when there is
+  anything ready to add. The **Upgrade Path** panel on the Upgrades tab lists the deck's linked upgrades
   as *Add · Replaces · Tier · Price · Why · Promote* with *Tuned only* and *Under $2*
   (D5–D6: $1.50) filters, `$X to Max` and `GC k / 2` in its header; *Promote* is the
   existing accept-option review, which asks first when it would be a third Game Changer.
