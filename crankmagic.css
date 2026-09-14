@@ -1574,3 +1574,9 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-glance .b0{background:#79bdff}.cm-glance .b1{background:#e2b85a}.cm-glance .b2{background:#7fd3a0}.cm-glance .b3{background:#d8807f}.cm-glance .b4{background:#b48bff}.cm-glance .b5{background:#5cc8d6}.cm-glance .b6{background:#f0a35c}.cm-glance .b7{background:#9fb2cc}
 .cm-glance-strategy{margin-top:16px;padding-top:12px;border-top:1px solid var(--v-line)}.cm-glance-strategy p{margin:0 0 6px;line-height:1.5}
 @media(max-width:760px){.cm-glance-grid{grid-template-columns:1fr;gap:14px}}
+
+/* THE TRACE'S LIMITS (Rob, 14 September): three sliders under the strategy ticks. */
+.cm-trace-limits{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin:0 0 10px;font-size:12px;color:#c9d4e6}
+.cm-trace-limits label{display:inline-flex;align-items:center;gap:6px;margin:0;font-weight:500;white-space:nowrap}
+#matrix-v2 .cm-trace-limits input[type=range],.cm-trace-limits input[type=range]{width:88px;min-height:0;height:18px;margin:0;padding:0;background:transparent;accent-color:#e2b85a}
+.cm-trace-limits output{min-width:2.4ch;text-align:right;font-variant-numeric:tabular-nums;color:#f1f6ff;font-weight:700}

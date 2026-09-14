@@ -62,13 +62,22 @@
   /* Cycles through `anchorId`, each at most `maxLen` cards, as ordered steps starting at the
      anchor. A cycle is one object however many times the walk could find it: the anchor is
      fixed, so rotations cannot repeat it, and the direction is part of what it says. */
-  function cycles(adj, anchorId, maxLen) {
+  /* A WORK BUDGET (Rob, 14 September): the walk is a depth-first search whose paths multiply
+     with `maxLen`; on a dense hundred at six cards it ran for tens of seconds and froze the
+     page. `budget` is the most steps one anchor's search may take (BUDGET by default); past it
+     the search stops and reports what it found, in the same order every time, so a long loop
+     length costs a bounded wait and never a hang. */
+  const BUDGET = 20000;
+  function cycles(adj, anchorId, maxLen, budget) {
     const found = [];
     const seen = new Set();
     if (!adj.has(anchorId)) return found;
+    let steps = 0; const cap = Number.isFinite(Number(budget)) && Number(budget) > 0 ? Number(budget) : BUDGET;
     (function walk(path) {
+      if (steps >= cap) return;
       const last = path[path.length - 1];
       for (const e of adj.get(last.id) || []) {
+        if (++steps > cap) return;
         if (e.to === anchorId) {
           if (path.length >= 2) {
             const key = path.map((p) => p.id).join(">");
@@ -92,7 +101,7 @@
     if (!byId.has(anchorId)) return [];
     const adj = adjacency(cards, relate);
     const out = [];
-    for (const steps of cycles(adj, anchorId, maxLen)) {
+    for (const steps of cycles(adj, anchorId, maxLen, options && options.budget)) {
       const members = new Set(steps.map((s) => s.id));
       const closed = steps.some((s) => s.via && s.via.kind === "resets") || steps.every((s) => s.via && s.via.kind === "fires");
       /* The events this cycle causes, and who outside it listens for them. */
@@ -134,9 +143,9 @@
     const maxLen = (options && options.maxLen) || (globalThis.CrankRules && globalThis.CrankRules.LOOP_MAX_LEN) || 4;
     const adj = adjacency(cards, relate);
     const out = new Map();
-    for (const c of cards) { const n = cycles(adj, c.id, maxLen).length; if (n) out.set(c.id, n); }
+    for (const c of cards) { const n = cycles(adj, c.id, maxLen, options && options.budget).length; if (n) out.set(c.id, n); }
     return out;
   }
 
-  return {LOOP_EVENTS, edgesOf, adjacency, find, countThrough, sentence};
+  return {LOOP_EVENTS, BUDGET, edgesOf, adjacency, find, countThrough, sentence};
 });

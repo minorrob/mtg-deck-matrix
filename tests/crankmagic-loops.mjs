@@ -97,4 +97,15 @@ ok("countThrough counts the cycles through every card over one adjacency", () =>
   assert.equal(Loops.countThrough([], Graph.relate).size, 0, "no cards, no counts");
 });
 
+ok("a work budget bounds the search without changing what a bounded search finds", () => {
+  /* The trace threads the loop finder over up to a hundred lit cards at loop length 6; without
+     a ceiling the depth-first walk froze the page. A budget never finds MORE than the full
+     search, and the same budget finds the same cycles twice, so the pane's counts stay stable. */
+  const full = Loops.countThrough(d6Rows, Graph.relate, {maxLen: 4});
+  const tiny = Loops.countThrough(d6Rows, Graph.relate, {maxLen: 4, budget: 5});
+  const sum = (m) => [...m.values()].reduce((n, k) => n + k, 0);
+  assert.ok(sum(tiny) <= sum(full), `a budget never finds more than the full search (${sum(tiny)} <= ${sum(full)})`);
+  assert.deepEqual([...tiny.entries()], [...Loops.countThrough(d6Rows, Graph.relate, {maxLen: 4, budget: 5}).entries()], "and finds the same twice");
+  assert.ok(Loops.BUDGET >= 1000, "the default budget is a real search");
+});
 console.log(`crankmagic-loops: ${checks} checks passed · D6 read as ${d6Rows.length} nonland rows`);

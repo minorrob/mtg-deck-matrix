@@ -31,6 +31,16 @@
 
   const RING_WEIGHT = [0, 3, 2, 1];
   const MAX_RING = 3;
+  /* HARD LIMITS (Rob, 14 September): a set of more than a hundred cards cannot be played, so
+     a trace never lights more than a hundred (the commander included) whatever the world
+     holds -- the strongest joins first, as the walk already orders them. A loop is only real
+     at a table up to a few cards: the loop finder closes cycles up to `maxLoop` cards (the
+     rules' LOOP_MAX_LEN, four, by default; two to six on the pane's slider -- a two-card
+     engine wins games, a four-card loop is the longest a table follows). The chain is
+     `maxRing` deep (three by default). And a card draws at most `maxReturns` loop-backs, so
+     a dense pool does not become a hairball. */
+  const MAX_CARDS = 100;
+  const LIMITS = {maxCards: MAX_CARDS, maxLoop: 4, maxRing: MAX_RING, maxReturns: 4, loopMin: 2, loopMax: 6, cardsMin: 10};
   const strategiesModule = () => (typeof globalThis !== "undefined" && globalThis.CrankStrategies) || null;
   const loopsModule = () => (typeof globalThis !== "undefined" && globalThis.CrankLoops) || null;
 
@@ -63,6 +73,10 @@
     if (!commander || !S) return null;
     const wanted = new Set(strategies && strategies.length ? strategies : S.derive(commander));
     const maxRing = Math.max(1, Math.min(MAX_RING, options.maxRing || MAX_RING));
+    const maxCards = Math.max(2, Math.min(MAX_CARDS, Number(options.maxCards) || MAX_CARDS));
+    const rules = (typeof globalThis !== "undefined" && globalThis.CrankRules) || null;
+    const maxLoop = Math.max(LIMITS.loopMin, Math.min(LIMITS.loopMax, Number(options.maxLoop) || (rules && rules.LOOP_MAX_LEN) || LIMITS.maxLoop));
+    const maxReturns = Math.max(1, Number(options.maxReturns) || LIMITS.maxReturns);
     const weights = options.weights || RING_WEIGHT;
     const purposeOf = options.purposeOf || (() => null);
     const fence = options.fence || null;
@@ -110,6 +124,17 @@
     const list = [root];
     const returns = [];
     const returned = new Set();
+    /* A loop-back is recorded once per pair and at most `maxReturns` times per card. */
+    const returnsOf = new Map();
+    const addReturn = (fromNode, toNode, j) => {
+      const key = fromNode.id + ">" + toNode.id, back = toNode.id + ">" + fromNode.id;
+      if (returned.has(key) || returned.has(back)) return false;
+      if ((returnsOf.get(fromNode.id) || 0) >= maxReturns || (returnsOf.get(toNode.id) || 0) >= maxReturns) return false;
+      returned.add(key); returnsOf.set(fromNode.id, (returnsOf.get(fromNode.id) || 0) + 1); returnsOf.set(toNode.id, (returnsOf.get(toNode.id) || 0) + 1);
+      toNode.loopBacks += 1;
+      returns.push({from: fromNode.id, to: toNode.id, via: viaOf(j.r), strategies: j.serves});
+      return true;
+    };
     let frontier = [root];
     for (let ring = 1; ring <= maxRing && frontier.length; ring += 1) {
       const reached = [];
@@ -122,11 +147,7 @@
           if (already) {
             /* A serving loop join onto a lit card that is not this node's own parent: a loop-back. */
             if (already.id === parent.from || !isLoopJoin(j.r)) continue;
-            const key = parent.id + ">" + c.id, back = c.id + ">" + parent.id;
-            if (returned.has(key) || returned.has(back)) continue;
-            returned.add(key);
-            already.loopBacks += 1;
-            returns.push({from: parent.id, to: c.id, via: viaOf(j.r), strategies: j.serves});
+            addReturn(parent, already, j);
             continue;
           }
           reached.push({card: c, parent, j});
@@ -142,11 +163,10 @@
       for (const {card, parent, j} of reached) {
         const already = placed.get(card.id);
         if (already) {
-          const key = parent.id + ">" + card.id, back = card.id + ">" + parent.id;
-          if (already.from !== parent.id && isLoopJoin(j.r) && !returned.has(key) && !returned.has(back)) { returned.add(key); already.loopBacks += 1; returns.push({from: parent.id, to: card.id, via: viaOf(j.r), strategies: j.serves}); }
+          if (already.from !== parent.id && isLoopJoin(j.r)) addReturn(parent, already, j);
           continue;
         }
-        if (placedHere >= beam) continue;
+        if (placedHere >= beam || list.length >= maxCards) continue;
         const node = {id: card.id, name: card.name, card, ring, from: parent.id, via: viaOf(j.r), strategies: j.serves, loopBacks: 0, strength: j.strength, order: list.length};
         placed.set(card.id, node);
         list.push(node); next.push(node); placedHere += 1;
@@ -159,7 +179,7 @@
     const loops = loopsMod;
     let cycles = new Map();
     if (loops && typeof loops.countThrough === "function" && list.length > 1) {
-      try { cycles = loops.countThrough(list.map((n) => n.card), relate); } catch { cycles = new Map(); }
+      try { cycles = loops.countThrough(list.map((n) => n.card), relate, {maxLen: maxLoop, budget: options.loopBudget}); } catch { cycles = new Map(); }
       for (const n of list) { const k = cycles.get(n.id) || 0; if (k) n.loopBacks += k; }
     }
 
@@ -188,6 +208,7 @@
     return {commander: {id: commander.id, name: commander.name}, strategies: S.ids().filter((id) => wanted.has(id)),
       list: rows, groups, returns, unlit, buckets, bucketLabels: BUCKET_LABEL, outsideDefinition: outside,
       score, lit: rows.length - 1, total: world.length, loopBacks: rows.reduce((n, r) => n + r.loopBacks, 0), closedLoops: closed,
+      limits: {maxCards, maxLoop, maxRing, maxReturns}, capped: world.length + 1 > maxCards && rows.length >= maxCards,
       weights: weights.slice(1, 4)};
   }
 
@@ -207,5 +228,5 @@
     return seed;
   }
 
-  return {trace, seedFrom, unlitSentence, bucketOf, strengthOf, RING_WEIGHT, MAX_RING, BUCKET_LABEL};
+  return {trace, seedFrom, unlitSentence, bucketOf, strengthOf, RING_WEIGHT, MAX_RING, MAX_CARDS, LIMITS, BUCKET_LABEL};
 });

@@ -257,7 +257,11 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   (`crankmagic-strategies.js`, sixteen tuples; `data/commander-strategies.json` for every legal
   commander), loop-backs in gold, the untouched cards ghosted; the pane plays the same list in
   order with the join that lit each card, the strategies as ticks saved with the deck (each
-  tick says what it lights on its own; *Reset to the commander's own* clears them), a tick on
+  tick says what it lights on its own; *Reset to the commander's own* clears them), three
+  limits under them kept with the library — *Cards lit* (a hundred at most: a set of more than a
+  hundred cannot be played), *Loop length* (two to six cards, four by default: a two-card
+  engine wins games and a four-card loop is the longest a table follows) and *Chain depth*
+  (one to three rings) — with no card drawing more than four loop-backs, a tick on
   every row that files the ticked cards in a Collection group, a cohesion score labelled a
   heuristic beside the measured score, and a second world — what the deck could be — over the
   library and the commander's co-play neighbours inside the definition
