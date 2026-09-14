@@ -1,4 +1,7 @@
 {
+  "schema": "deck-ratings@1",
+  "generator": "tools/sim/rate-decks.mjs",
+  "count": 6,
   "schemaVersion": 1,
   "generatedAt": "2026-09-08T16:07:00.624Z",
   "engine": "sim-engine.js",

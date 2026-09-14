@@ -52,7 +52,7 @@ async function keepPreview(next){preview=next;await C.commit({type:'preferences'
    can run the same measurement without sending the reader here. */
 let simInputsCache=null;
 let simConfig=null;   // the sim config once fetched; report targets fall back to the config defaults without it
-const simInputs=()=>(simInputsCache||=Promise.all([fetch(CrankAssets.simConfig).then(r=>r.json()),fetch(CrankAssets.simOpponents).then(r=>r.json())]).then(pair=>{simConfig=pair[0];return pair;}));
+const simInputs=()=>(simInputsCache||=Promise.all([fetch(CrankAssets.simConfig).then(r=>r.json()).then(j=>CrankAssets.expect(j,'simConfig')),fetch(CrankAssets.simOpponents).then(r=>r.json()).then(j=>CrankAssets.expect(j,'simOpponents'))]).then(pair=>{simConfig=pair[0];return pair;}));
 const pct=v=>`${(Number(v||0)*100).toFixed(1)}%`;
   /* WHAT "GOOD ENOUGH" MEANS, and the fact that a person chose it rather than measured it.
    *

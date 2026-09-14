@@ -1,6 +1,9 @@
 {
+  "schema": "sim-opponents@2",
+  "generator": "hand-maintained",
+  "count": 9,
   "schemaVersion": 2,
-  "note": "Opponent seats are parameterised archetypes, not real decklists. Each seat samples a profile from a table mix and then jitters every number, so a 500-game batch faces a spread of opponents rather than one fixed gauntlet. Damage is split: 45% of a seat's output comes at us and 55% is spread over the other seats, which is what lets a pod soften itself up. Three power-tier profiles (starter-precon/upgraded-casual/tuned-bracket3) set overall competence; six archetype profiles (combo/stax/aristocrats/voltron/tokens/group-hug) set the SHAPE of that pressure, each tuned distinctly rather than as a rescaled power level. wipeVulnerability scales how hard one of our board wipes cuts a seat's output \u2014 a wipe barely slows a combo or stax deck (no board to lose) and guts a token board.",
+  "note": "Opponent seats are parameterised archetypes, not real decklists. Each seat samples a profile from a table mix and then jitters every number, so a 500-game batch faces a spread of opponents rather than one fixed gauntlet. Damage is split: 45% of a seat's output comes at us and 55% is spread over the other seats, which is what lets a pod soften itself up. Three power-tier profiles (starter-precon/upgraded-casual/tuned-bracket3) set overall competence; six archetype profiles (combo/stax/aristocrats/voltron/tokens/group-hug) set the SHAPE of that pressure, each tuned distinctly rather than as a rescaled power level. wipeVulnerability scales how hard one of our board wipes cuts a seat's output — a wipe barely slows a combo or stax deck (no board to lose) and guts a token board.",
   "profiles": {
     "starter-precon": {
       "key": "starter-precon",
@@ -534,6 +537,6 @@
   "tableWinTurn": {
     "kitchen-table": 12.5,
     "mixed-pod": 12.7,
-    "bracket3-night": 10.0
+    "bracket3-night": 10
   }
 }

@@ -77,7 +77,7 @@ function mentions(text, p) {
 }
 
 /* ------------------------------------------------------------ the stamps */
-const STAMPS = ["generatedAt", "savedAt", "amplifiersAt", "measuredAt", "importedAt", "exportedAt", "builtAt", "createdAt", "updatedAt"];
+const STAMPS = ["generatedAt", "compiledAt", "savedAt", "amplifiersAt", "measuredAt", "importedAt", "exportedAt", "builtAt", "createdAt", "updatedAt", "revision"];
 const VERSIONS = ["schemaVersion", "exportSchema", "format", "version", "schema", "engine", "generation"];
 function describe(p) {
   const full = path.join(ROOT, p), size = statSync(full).size, ext = path.extname(p).slice(1);
@@ -102,6 +102,9 @@ function describe(p) {
    variable path, and files kept by hand. Declared here so the table says so, marked
    "(declared)"; a declared producer that no longer exists fails the check. */
 const DECLARED = {
+  "data/cards.json": ["tools/build-card-records.mjs"],
+  "data/card-facts.json": ["tools/build-card-records.mjs"],
+  "data/commander-ranks.json": ["tools/commander-ranks.mjs"],
   "data/deck-guides.json": ["tools/generate-guides.mjs", "tools/build_guide_shapes.py"],
   "data/deck-ratings.json": ["tools/sim/rate-decks.mjs"],
   "data/simulation-summary.json": ["tools/sim/rate-decks.mjs", "tools/import_summary_metrics.py"],

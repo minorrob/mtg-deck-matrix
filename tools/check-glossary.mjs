@@ -7,7 +7,7 @@ import {readFileSync,existsSync} from 'node:fs';
 import assert from 'node:assert/strict';
 const base=new URL('../',import.meta.url);
 const g=JSON.parse(readFileSync(new URL('data/commander-glossary.json',base),'utf8'));
-assert.equal(g.schemaVersion,1);assert.match(g.revision,/^\d{4}-\d{2}-\d{2}\.\d+$/);
+assert.equal(g.schema,'commander-glossary@1');assert.equal(g.generator,'hand-maintained');assert.equal(g.count,g.entries.length,'count is the number of entries');assert.equal(g.schemaVersion,1);assert.match(g.revision,/^\d{4}-\d{2}-\d{2}\.\d+$/);
 assert.ok(g.entries.length>272,'Workbook terms plus expanded terminology');
 const ids=new Set(),aliases=new Map();
 for(const e of g.entries){

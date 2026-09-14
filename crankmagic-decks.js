@@ -121,7 +121,7 @@ async function overview(d){const cards=d.slots.filter(r=>r.purpose==='main').map
    when the network is down) before it could show its own progress card. */
 const wantGuide=C.route().params.get('tab')==='guide';let offline=null;
 const leaders=wantGuide?await Promise.all(d.commanders.map(id=>C.catalog.details(C.state.cards[id],{onFail:error=>{offline=error;}}))):d.commanders.map(id=>C.state.cards[id]).filter(Boolean);
-  if(offline)C.notice('Could not reach Scryfall, so this page is showing the card facts already saved. Card data age is in User Functions.',true);let guide=null;if(wantGuide){try{const data=await C.catalog.load(CrankAssets.guides);guide=data.decks.find(g=>g.commander===leaders[0]?.name);}catch{}}if(C.route().view!=='decks'||C.route().params.get('deck')!==d.id)return;const swot=structural(d,cards);
+  if(offline)C.notice('Could not reach Scryfall, so this page is showing the card facts already saved. Card data age is in User Functions.',true);let guide=null;if(wantGuide){try{const data=CrankAssets.expect(await C.catalog.load(CrankAssets.guides),'guides');guide=data.decks.find(g=>g.commander===leaders[0]?.name);}catch{}}if(C.route().view!=='decks'||C.route().params.get('deck')!==d.id)return;const swot=structural(d,cards);
 const ready=M.readiness(C.state,d),heroArt=art(d);
 /* WHAT THE LIST COSTS AGAINST WHAT THE DEFINITION ALLOWS. The Lab drafts against the cap as
    a target rather than a wall, so a list can arrive here over it -- and the reader used to

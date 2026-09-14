@@ -1,4 +1,6 @@
 {
+  "schema": "sim-config@2",
+  "generator": "hand-maintained",
   "schemaVersion": 2,
   "gamesPerIteration": 2000,
   "batchSize": 500,
@@ -8,7 +10,7 @@
   "maxLedgerSimulations": 15000000,
   "maxWallClockMs": 300000,
   "convergence": {
-    "noiseMargin": 1.0,
+    "noiseMargin": 1,
     "relativeGain": 0.05,
     "patience": 6
   },
@@ -63,7 +65,7 @@
     "lateCmc": 6,
     "liftVeto": 0.06
   },
-  "minAcceptGain": 1.0,
+  "minAcceptGain": 1,
   "holdoutGames": 5000,
   "podFunRungScoreWeights": {
     "winRate": 0.2,
@@ -73,7 +75,7 @@
     "interaction": 0.1,
     "clock": 0.1,
     "deadCards": 0.05,
-    "fun": 0.0,
+    "fun": 0,
     "podFun": 0.2
   },
   "winRateBand": {

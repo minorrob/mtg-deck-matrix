@@ -26,12 +26,15 @@
  *   node tools/generate-guides.mjs --call           actually call, needs ANTHROPIC_API_KEY
  *   node tools/generate-guides.mjs --call --write   ...and update data/deck-guides.json
  *   node tools/generate-guides.mjs --show 5o        print the exact request body
+ *   node tools/generate-guides.mjs --check          validate data/deck-guides.json, call nothing
  */
 
 import {readFileSync, writeFileSync} from "node:fs";
 import {fileURLToPath} from "node:url";
 import {dirname, join} from "node:path";
 import {createRequire} from "node:module";
+import {stamp} from "./lib/envelope.mjs";
+import {report, readData} from "../schema/index.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const require = createRequire(import.meta.url);
@@ -45,6 +48,16 @@ const valueOf = (flag) => { const i = args.indexOf(flag); return i >= 0 ? args[i
 
 const CALL = has("--call");
 const WRITE = has("--write");
+
+/* --check: the committed file against its schema, and every guide's commander is a card the
+   universe marks as able to lead a deck. Calls nothing. */
+if (has("--check")) {
+  const file = "data/deck-guides.json", data = readData(file);
+  const leaders = new Set(JSON.parse(readFileSync(join(ROOT, "data", "commander-universe.json"), "utf8")).cards.filter((r) => r[6]).map((r) => r[0]));
+  const strays = (data.decks || []).map((g) => g.commander).filter((c) => !leaders.has(c));
+  if (strays.length) { console.error(`${file}: not commanders in the universe: ${strays.join(", ")}`); process.exit(1); }
+  process.exit(report(file, data) ? 0 : 1);
+}
 const ONLY = valueOf("--deck") || valueOf("--show");
 const SHOW = Boolean(valueOf("--show"));
 
@@ -238,5 +251,5 @@ if (!WRITE) {
 }
 const merged = guides.decks.filter((g) => !written.some((w) => w.commander === g.commander)).concat(written);
 writeFileSync(join(ROOT, "data", "deck-guides.json"),
-  JSON.stringify({...guides, generatedAt: new Date().toISOString(), decks: merged}, null, 1) + "\n");
+  JSON.stringify(stamp("deck-guides@1", "tools/generate-guides.mjs", {...guides, schemaVersion: 1, generatedAt: new Date().toISOString(), decks: merged}, {count: merged.length}), null, 1) + "\n");
 console.log(`wrote data/deck-guides.json — ${merged.length} guides.`);

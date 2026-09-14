@@ -23,6 +23,7 @@
 //
 // curl, not fetch(): the same host-allowlist note graph/ingest/01-fetch.mjs carries.
 import {existsSync} from "node:fs";
+import {stamp} from "./lib/envelope.mjs";
 import {readFile, writeFile, mkdir} from "node:fs/promises";
 import {execFile} from "node:child_process";
 import {promisify} from "node:util";
@@ -215,6 +216,8 @@ graph.amplifiersAt = new Date().toISOString();
    never touch them, only the card fields. */
 if (!(graph.played && graph.played.length) && existsSync(PLAYED)) graph.played = Payload.unpackPlayed(graph.cards.map((c) => c.id), JSON.parse(await readFile(PLAYED, "utf8")));
 const parts = Payload.split(Payload.pack(graph));
+parts.graph = stamp("graph@2", "tools/graph-amplifiers.mjs", parts.graph, {count: parts.graph.cards.length});
+parts.played = stamp("graph-played@2", "tools/graph-amplifiers.mjs", parts.played, {count: parts.played.played.length});
 await writeFile(GRAPH, JSON.stringify(parts.graph), "utf8");
 await writeFile(PLAYED, JSON.stringify(parts.played), "utf8");
 console.log(`wrote data/graph.json (${parts.graph.cards.length} cards) and data/graph-played.json (${parts.played.played.length} pairs)`);

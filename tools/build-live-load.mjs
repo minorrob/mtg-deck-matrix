@@ -167,7 +167,7 @@ export async function importWorkbook(workbook,{prior=null,adjust=null,scryfall=n
   }
   ensure(!unresolved.size,`${unresolved.size} name${unresolved.size===1?'':'s'} could not be resolved against the catalog: ${[...unresolved].join('; ')}. Fix the spelling in the workbook (exact Scryfall names) or pass --scryfall with a dump that has them.`);
 
-  const doc={format:Live.FORMAT,version:Live.VERSION,savedAt:now.toISOString().replace(/\.\d{3}Z$/,'Z'),workbook:basename(workbook),
+  const doc={schema:'live-load@1',format:Live.FORMAT,version:Live.VERSION,generator:'tools/build-live-load.mjs',count:decks.length,savedAt:now.toISOString().replace(/\.\d{3}Z$/,'Z'),workbook:basename(workbook),
     note:"Rob's live collection, built by tools/build-live-load.mjs from the Master workbook; CrankMagic → User Functions → Load Live reads this file. Card names are exact Scryfall names (double-faced cards use 'Front // Back'). decks[].cards is the 100-card target; owned.inDeck is what is physically in each deck box; owned.bench is everything else owned; ordered is in flight; buy is the outstanding shopping list; upgrades are optional ceiling cards with the slot each replaces; decks[].options are cards in the hundred flagged as the first to swap out; decks[].planned are cards meant to come into the deck that are not in its hundred yet. Rebuild from the workbook rather than editing quantities here; names, definitions, notes, options and planned lists are carried over per deck.",
     decks,owned:{inDeck,bench},ordered,buy,upgrades};
   Live.check(doc);

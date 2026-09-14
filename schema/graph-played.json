@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://minorrob.github.io/mtg-deck-matrix/schema/graph-played.json",
+  "title": "The co-play pairs of the graph as index rows into graph.json's card list: from, to, inclusion, synergy, decks",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "graph-played@2"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "generator": {
+      "type": "string",
+      "enum": [
+        "tools/graph-amplifiers.mjs",
+        "graph/ingest/07-export-app.mjs"
+      ]
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "format": {
+      "type": "integer",
+      "const": 2
+    },
+    "cards": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "played": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "minItems": 5,
+        "maxItems": 5,
+        "prefixItems": [
+          {
+            "type": "integer",
+            "minimum": 0
+          },
+          {
+            "type": "integer",
+            "minimum": 0
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "integer",
+            "minimum": 0
+          }
+        ]
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "generatedAt",
+    "generator",
+    "count",
+    "format",
+    "cards",
+    "played"
+  ],
+  "additionalProperties": false
+}

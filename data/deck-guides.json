@@ -1,4 +1,7 @@
 {
+ "schema": "deck-guides@1",
+ "generator": "tools/generate-guides.mjs",
+ "count": 1,
  "schemaVersion": 1,
  "generatedAt": "2026-09-08",
  "note": "Hand-written guides, keyed by commander name. Decks without one get a guide generated from their list and measurement by guide-measured.js. The six reference decks were archived to data/archive/deck-guides.json on the clean start.",

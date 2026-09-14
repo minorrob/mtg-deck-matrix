@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://minorrob.github.io/mtg-deck-matrix/schema/live-load.json",
+  "title": "Rob's collection in plain form, built from the Master workbook: deck targets, what is in each box, the bench, orders, the buy list, upgrades",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "live-load@1"
+    },
+    "format": {
+      "type": "string",
+      "const": "crankmagic-live-load"
+    },
+    "version": {
+      "type": "integer",
+      "const": 1
+    },
+    "savedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "generator": {
+      "type": "string",
+      "const": "tools/build-live-load.mjs"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "workbook": {
+      "type": "string"
+    },
+    "note": {
+      "type": "string"
+    },
+    "decks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "commander": {
+            "type": "string"
+          },
+          "definition": {},
+          "cards": {}
+        },
+        "required": [
+          "id",
+          "name",
+          "commander",
+          "cards"
+        ]
+      }
+    },
+    "owned": {
+      "type": "object",
+      "properties": {
+        "inDeck": {},
+        "bench": {}
+      },
+      "required": [
+        "inDeck",
+        "bench"
+      ]
+    },
+    "ordered": {},
+    "buy": {},
+    "upgrades": {}
+  },
+  "required": [
+    "schema",
+    "format",
+    "version",
+    "savedAt",
+    "generator",
+    "count",
+    "decks",
+    "owned"
+  ]
+}

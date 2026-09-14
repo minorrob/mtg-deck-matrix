@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://minorrob.github.io/mtg-deck-matrix/schema/commander-glossary.json",
+  "title": "The hand-maintained glossary: one canonical definition per term, with provenance",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "commander-glossary@1"
+    },
+    "schemaVersion": {
+      "type": "integer",
+      "const": 1
+    },
+    "generator": {
+      "type": "string",
+      "const": "hand-maintained"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "revision": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}\\.\\d+$"
+    },
+    "purpose": {
+      "type": "string"
+    },
+    "editorialBasis": {},
+    "references": {
+      "type": "object",
+      "additionalProperties": {}
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "term": {
+            "type": "string",
+            "minLength": 1
+          },
+          "category": {
+            "type": "string"
+          },
+          "definition": {
+            "type": "string",
+            "minLength": 1
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "references": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          }
+        },
+        "required": [
+          "id",
+          "term",
+          "category",
+          "definition",
+          "aliases",
+          "references"
+        ]
+      }
+    },
+    "effectCategoryRatings": {
+      "type": "object",
+      "properties": {
+        "simulationEligible": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "simulationEligible"
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "schemaVersion",
+    "generator",
+    "count",
+    "revision",
+    "purpose",
+    "editorialBasis",
+    "references",
+    "entries",
+    "effectCategoryRatings"
+  ]
+}

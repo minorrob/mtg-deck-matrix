@@ -1,3 +1,6 @@
 {
+  "schema": "sim-status@1",
+  "updatedAt": "2026-09-14T03:18:19.406Z",
+  "generator": "tools/sim/lib.mjs",
   "state": "idle"
 }

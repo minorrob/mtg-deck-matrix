@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://minorrob.github.io/mtg-deck-matrix/schema/simulation-summary.json",
+  "title": "The legacy viewer's 200-rung sweep summary: engine, weights, caveats and the per-build table",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "simulation-summary@3"
+    },
+    "schemaVersion": {
+      "type": "integer",
+      "const": 3
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "generator": {
+      "type": "string",
+      "const": "tools/sim/rate-decks.mjs"
+    },
+    "engine": {
+      "type": "string"
+    },
+    "table": {},
+    "engineNotes": {},
+    "scoreWeights": {},
+    "podFunWeights": {},
+    "builds": {}
+  },
+  "required": [
+    "schema",
+    "schemaVersion",
+    "generatedAt",
+    "generator",
+    "engine",
+    "table"
+  ]
+}

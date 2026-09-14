@@ -108,6 +108,11 @@ const CHECKABLE = [
   ["tools/flavor-names.mjs", ["--check"]],
   ["tools/graph-amplifiers.mjs", ["--check"]],
   ["tools/build-live-state.mjs", ["--check"]],
+  ["tools/commander-ranks.mjs", ["--check"]],
+  ["tools/commander-universe.mjs", ["--check"]],
+  ["tools/generate-guides.mjs", ["--check"]],
+  ["tools/sim/rate-decks.mjs", ["--check"]],
+  ["tools/build-card-records.mjs", ["--check"]],
   /* The workbook importer reads the newest data/source/*Master*.xlsx through openpyxl. Where
      Python has no openpyxl the check is skipped and says so, the way the geometry suite skips
      without a browser; the Tests and Load Live workflows install it and run the check for real. */
@@ -185,5 +190,14 @@ const offersCheck = tools
 assert.deepEqual(offersCheck.filter((f) => !listed.has(f)), [],
   "these tools accept --check and nothing runs it; add them to CHECKABLE");
 checks++;
+
+/* 3. EVERY REGISTERED DATA FILE HAS A CHECK THAT RUNS. schema/index.mjs names, per file, the
+ *    tool whose --check vouches for it; that tool has to be in CHECKABLE (or be the schemas
+ *    suite itself, for the hand-maintained files), or the declaration is decoration. */
+const {REGISTRY} = await import("../schema/index.mjs");
+for (const entry of REGISTRY) {
+  ok(entry.checkedBy === "tests/schemas.mjs" || listed.has(entry.checkedBy),
+    `${entry.file} is checked by ${entry.checkedBy}, which CHECKABLE does not run`);
+}
 
 console.log(`generators: ${checks} checks passed — ${literals} declared paths across ${tools.length} tools all resolve, and ${CHECKABLE.length} generators pass their own check.`);

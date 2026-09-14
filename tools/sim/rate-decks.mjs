@@ -37,11 +37,14 @@
  *
  *   node tools/sim/rate-decks.mjs            # measure and print, write nothing
  *   node tools/sim/rate-decks.mjs --write    # write data/deck-ratings.json
+ *   node tools/sim/rate-decks.mjs --check    # validate the committed ratings and summary, simulate nothing
  *   node tools/sim/rate-decks.mjs --games 2000 --seeds 2   # a quick look
  */
 import path from "node:path";
 import {createRequire} from "node:module";
 import {ROOT, Engine, buildTable, loadConfig, loadOpponents, readJson, writeJson, parseArgs} from "./lib.mjs";
+import {stamp} from "../lib/envelope.mjs";
+import {report, readData} from "../../schema/index.mjs";
 /* The generation is READ, never typed. Typing it is how data/deck-ratings.json came to
    say v2.7 while the engine that produced its numbers was v2.8. */
 const Sim = createRequire(import.meta.url)(path.join(ROOT, "crankmagic-sim.js"));
@@ -57,6 +60,17 @@ const FIRST_SEED = Number(args.seed || 20260904);
 const SEEDS = Array.from({length: SEED_COUNT}, (_unused, index) => FIRST_SEED + index * 7919);
 
 const RATINGS_PATH = path.join(ROOT, "data", "deck-ratings.json");
+
+/* --check: the two files this tool owns, against their schemas and the engine generation the
+   app pins, without running a game. */
+if (args.check) {
+  const ratings = readData("data/deck-ratings.json");
+  let ok = report("data/deck-ratings.json", ratings) & report("data/simulation-summary.json", readData("data/simulation-summary.json"));
+  if (ratings.generation !== Sim.ENGINE_GENERATION) { console.error(`deck-ratings.json was measured on ${ratings.generation}; crankmagic-sim.js is ${Sim.ENGINE_GENERATION}`); ok = 0; }
+  const ids = new Set(ratings.decks.map((d) => d.id));
+  if (ids.size !== ratings.decks.length) { console.error("deck-ratings.json repeats a deck id"); ok = 0; }
+  process.exit(ok ? 0 : 1);
+}
 const METHOD = "Each hundred-card list was played out GAMES times per seed, SEEDS independent seeds apiece, against a four-player pod whose three other seats are drawn from the mixed-pod table in sim/opponents.json — a spread of precon, upgraded-casual, tuned, combo, stax, aristocrats, voltron, tokens and group-hug opponents rather than one fixed gauntlet. Score is a 0–100 composite of how the deck actually played: how often it won, how often it was mana screwed or flooded, how reliably and how early the commander landed, how much interaction was in hand, how fast it closed, and how many uncastable cards were stranded. Higher is better, and a gap between two builds counts as real only when it is larger than twice the combined seed-to-seed noise.";
 
 const norm = (name) => String(name || "").split(" // ")[0].toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
@@ -281,7 +295,7 @@ decks.forEach((deck) => {
   };
 });
 
-const out = {
+const out = stamp("deck-ratings@1", "tools/sim/rate-decks.mjs", {
   schemaVersion: 1,
   generatedAt: new Date().toISOString(),
   engine: "sim-engine.js",
@@ -299,7 +313,7 @@ const out = {
   decks,
   ranking,
   notes: previous ? previous.notes : []
-};
+}, {count: decks.length});
 
 decks.forEach((deck) => {
   const line = ["v1", "tuned", "b3"].map((build) => `${build} ${scoreOf(deck, build).toFixed(2)}`).join("  ");

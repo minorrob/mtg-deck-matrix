@@ -39,6 +39,8 @@ import {writeFile, readFile, mkdir} from "node:fs/promises";
 import {existsSync} from "node:fs";
 import {createRequire} from "node:module";
 import {gunzipSync} from "node:zlib";
+import {stamp} from "./lib/envelope.mjs";
+import {report, readData} from "../schema/index.mjs";
 
 const require = createRequire(import.meta.url);
 const Classify = require("../card-classify.js");
@@ -118,6 +120,20 @@ async function oracleCards() {
   return {updatedAt: entry.updated_at, rows: text.split("\n").filter(Boolean).map((l) => JSON.parse(l))};
 }
 
+/* --check reads the committed file and fetches nothing: the envelope, the schema, and the
+   counts the file states against the rows it holds. */
+if (process.argv.includes("--check")) {
+  const data = readData(OUT), rows = data.cards || [];
+  const problems = [];
+  if (data.counts?.cards !== rows.length) problems.push(`counts.cards is ${data.counts?.cards}; ${rows.length} rows`);
+  const flagged = rows.filter((r) => r[6]).length;
+  if (data.counts?.commanders !== flagged) problems.push(`counts.commanders is ${data.counts?.commanders}; ${flagged} rows carry the flag`);
+  if (!rows.every((r, i) => !i || rows[i - 1][0].localeCompare(r[0]) <= 0)) problems.push("rows are not sorted by name");
+  if (rows.some((r) => !(r[2] in LETTER))) problems.push("a row carries a rarity letter the file does not name");
+  if (problems.length) { console.error(`${OUT}: ${problems.join("; ")}`); process.exit(1); }
+  process.exit(report(OUT, data) ? 0 : 1);
+}
+
 console.log("fetching Scryfall...");
 const [commanders, oracle] = await Promise.all([commanderNames(), oracleCards()]);
 const legal = oracle.rows.filter((c) => c.legalities?.commander === "legal");
@@ -135,8 +151,7 @@ const cards = legal
   ])
   .sort((a, b) => a[0].localeCompare(b[0]));
 
-const payload = {
-  generatedAt: new Date().toISOString(),
+const payload = stamp("commander-universe@1", "tools/commander-universe.mjs", {
   source: `Scryfall oracle_cards ${oracle.updatedAt} + is:commander legal:commander`,
   counts: {cards: cards.length, commanders: cards.filter((c) => c[6]).length},
   rarityLetters: LETTER,
@@ -144,7 +159,7 @@ const payload = {
   // is which without opening this tool.
   fields: ["name", "ci", "rarity", "mv", "type", "rank", "commander"],
   cards
-};
+}, {count: cards.length});
 await mkdir("data", {recursive: true});
 await writeFile(OUT, JSON.stringify(payload));
 console.log(`wrote ${OUT}  ${payload.counts.cards} cards, ${payload.counts.commanders} commanders, `

@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://minorrob.github.io/mtg-deck-matrix/schema/game-history.json",
+  "title": "Every game log compiled into one file by the compile-game-logs workflow",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "game-history@1"
+    },
+    "schemaVersion": {
+      "type": "integer",
+      "const": 1
+    },
+    "compiledAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "generator": {
+      "type": "string",
+      "const": "tools/compile-game-logs.mjs"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "sourceFiles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "totals": {
+      "type": "object",
+      "properties": {
+        "games": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "variantsPlayed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "winRate": {
+          "type": "number"
+        },
+        "avgPodFun": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "avgMyFun": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "games"
+      ]
+    },
+    "variants": {
+      "type": "object",
+      "additionalProperties": {}
+    },
+    "games": {
+      "type": "array",
+      "items": {}
+    }
+  },
+  "required": [
+    "schema",
+    "schemaVersion",
+    "compiledAt",
+    "generator",
+    "count",
+    "sourceFiles",
+    "totals",
+    "variants",
+    "games"
+  ]
+}
