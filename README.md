@@ -472,6 +472,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 ## Design and execution record
 
 - [Current implementation status](docs/crankmagic-build-status.md)
+- [The app inventory plan](docs/crankmagic-inventory-plan.md) — wireframes of every page and the feature register (every feature group and feature, where it lives, how it is reached, what it commits, what covers it), generated so it cannot drift; plan only, for a separate session to execute before any streamlining
 - [The persistent-app plan](docs/crankmagic-persistent-plan.md) — accounts, per-user sync and crankmagic.com on a hosted runtime; plan only, not started
 - [The Discover / loop plan](docs/crankmagic-discover-loop-plan.md) — Primary Purpose, loop vocabulary, loop edges and loop-mode depth, the role lens; PR A and B shipped, C–D planned
 - [Loop patterns](docs/crankmagic-loop-patterns.md) — the combo, loop, stacking and blink shapes the graph should recognise, in the classifier's vocabulary
