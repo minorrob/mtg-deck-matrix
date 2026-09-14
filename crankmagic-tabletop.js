@@ -15,7 +15,9 @@
  * pile laid out in rows and columns with pages and a card size, ticks and a selection that
  * stands on the centre of the mat once the rest recombine (`pileOrder`, `layout` are pure);
  * from TB3 the selection drags onto a pile under the drop-target contract (`accepts`, pure),
- * and the Move to… button lists the piles for a phone.
+ * and the Move to… button lists the piles for a phone; TB4 adds the keyboard (arrows among
+ * the piles and the cards, Space ticks, Enter chooses, PageUp and PageDown turn), the status
+ * pile order and the card size as preferences, and a pile on paper (`printSheet`, pure).
  *
  * Ghost cards are rows that are not copies yet -- ordered, to buy, a draft list -- drawn as
  * dashed outlines, never counted as held. */
@@ -96,6 +98,9 @@
       return {id: "status:" + (meta.id || label), kind: "status", label, tone: meta.tone || "", rows: list, count: count(list), ghost: GHOST.has(label), top: list[0] || null};
     });
     for (const [label, list] of byStatus) if (label !== BENCH && !statusPiles.some((p) => p.label === label)) statusPiles.push({id: "status:" + label, kind: "status", label, tone: "", rows: list, count: count(list), ghost: GHOST.has(label), top: list[0] || null});
+    /* options.statusSort: "workflow" (the model's order, the default) or "count" (fullest first,
+       the workflow order breaking ties) -- a reader's preference the view remembers. */
+    if (options.statusSort === "count") statusPiles.sort((a, b) => b.count - a.count);
     const groups = new Map();
     const none = "No " + GROUPINGS.find(([k]) => k === groupBy)[1].toLowerCase();
     for (const r of rows || []) { let band = bandOf(r, groupBy, value); if (band === undefined || band === null || String(band).trim() === "") band = none; if (!groups.has(band)) groups.set(band, []); groups.get(band).push(r); }
@@ -112,7 +117,7 @@
     }
     const benchSorted = bench.slice().sort((a, b) => String(a.card && a.card.name).localeCompare(String(b.card && b.card.name)));
     return {
-      groupBy, groupings: GROUPINGS,
+      groupBy, groupings: GROUPINGS, statusSort: options.statusSort === "count" ? "count" : "workflow",
       bench: {id: "bench", kind: "bench", label: BENCH, rows: benchSorted, count: count(benchSorted), top: benchSorted[0] || null},
       statusPiles, groupPiles,
       total: count(rows || []), rows: (rows || []).length, ghosts: (rows || []).filter(isGhost).length
@@ -257,6 +262,18 @@
     return no("Not a target.");
   }
 
+  /* ------------------------------------------------------------------ TB4: the print sheet */
+  /* A laid-out pile on paper: the whole pile, not the page on screen -- name, type, mana
+     value, status, price, deck and copies, in the pile's natural order, with the count and
+     the day. Pure HTML; the view puts it on the page for window.print() and takes it away. */
+  function printSheet(pile, {describe, now = new Date(), library = ""} = {}) {
+    const rows = pileOrder(pile), say = describe || ((r) => ({status: r.status || "", price: "", deck: ""}));
+    const copies = rows.reduce((n, r) => n + (Number(r.quantity) || 0), 0);
+    const day = now instanceof Date && !isNaN(now) ? now.toISOString().slice(0, 10) : String(now);
+    const tr = rows.map((r, i) => { const c = r.card || {}, d = say(r) || {}; return `<tr><td>${i + 1}</td><td>${esc(c.name || "")}</td><td>${esc(c.typeLine || "")}</td><td>${c.manaValue === null || c.manaValue === undefined || c.manaValue === "" ? "" : esc(c.manaValue)}</td><td>${esc(d.status || "")}</td><td>${esc(d.price || "")}</td><td>${esc(d.deck || "")}</td><td>${Number(r.quantity) || 1}</td></tr>`; }).join("");
+    return `<section class="cm-tt-printsheet"><h1>${esc(pile ? pile.label : "")}</h1><p>${rows.length.toLocaleString()} card${rows.length === 1 ? "" : "s"} · ${copies.toLocaleString()} cop${copies === 1 ? "y" : "ies"}${library ? ` · ${esc(library)}` : ""} · ${esc(day)}</p><table><thead><tr><th>#</th><th>Card</th><th>Type</th><th>MV</th><th>Status</th><th>Price</th><th>Deck</th><th>Copies</th></tr></thead><tbody>${tr}</tbody></table></section>`;
+  }
+
   /* Draw the table into `host`. The geometry is computed from the host's width. Three states,
      read from `ui`: at rest (TB1: the ledge, the arches, the status row); a pile OPEN (its
      cards in rows and columns on the stage with a page strip, the other group piles as a shelf
@@ -291,7 +308,9 @@
     const railHTML = `<div class="cm-tt-rail${benchOpen ? " is-open" : ""}"><div class="cm-tt-placard cm-tt-rail-placard"><strong>${esc(rail.label)}</strong> · ${rail.count.toLocaleString()}<small>owned, in no deck</small></div><button type="button" class="cm-tt-fan${benchOpen ? " cm-tt-home" : ""}" data-tt="open" data-pile="bench" aria-pressed="${benchOpen ? "true" : "false"}" aria-label="Bench, ${rail.count} cards">${rail.rows.slice(0, fanCount).map((r) => cardFace(r, {cls: "cm-tt-fanned"})).join("")}${rail.rows.length > fanCount ? `<span class="cm-tt-more">+${(rail.rows.length - fanCount).toLocaleString()}</span>` : ""}</button></div>`;
     const groups = model.groupPiles, gN = groups.length, sts = model.statusPiles, sN = sts.length;
     const perRow = Math.max(3, Math.floor((width - 32) / 96)), span = (width - 32 - PILE_W) / Math.max(1, perRow - 1);
-    const groupPick = (top) => `<div class="cm-tt-group-pick" style="top:${top}px"><label>Group piles by <select name="tabletopGroupBy" aria-label="Group piles by">${model.groupings.map(([k, l]) => `<option value="${esc(k)}"${k === model.groupBy ? " selected" : ""}>${esc(l)}</option>`).join("")}</select></label></div>`;
+    const groupSelect = `<select name="tabletopGroupBy" aria-label="Group piles by">${model.groupings.map(([k, l]) => `<option value="${esc(k)}"${k === model.groupBy ? " selected" : ""}>${esc(l)}</option>`).join("")}</select>`;
+    const orderSelect = `<select name="tabletopStatusOrder" aria-label="Status pile order"><option value="workflow"${model.statusSort === "count" ? "" : " selected"}>Workflow order</option><option value="count"${model.statusSort === "count" ? " selected" : ""}>Fullest first</option></select>`;
+    const groupPick = (top) => `<div class="cm-tt-group-pick" style="top:${top}px"><label>Group piles by ${groupSelect}</label><label>Status piles ${orderSelect}</label></div>`;
     let body = "", height = 0, stageHTML = "";
     if (mode === "rest") {
       let groupHTML = "", statusHTML = "", pickTop;
@@ -333,7 +352,7 @@
       /* A pile open, or a selection: the group piles become a shelf of placards along the back
          (the open one lit), the stage takes the middle, the status piles keep the front. */
       const shelfTop = railH + 22;
-      const shelfHTML = `<div class="cm-tt-shelf" style="top:${shelfTop}px"><label class="cm-tt-shelf-pick">Group piles by <select name="tabletopGroupBy" aria-label="Group piles by">${model.groupings.map(([k, l]) => `<option value="${esc(k)}"${k === model.groupBy ? " selected" : ""}>${esc(l)}</option>`).join("")}</select></label>${groups.map((p) => `<button type="button" class="cm-tt-chip${p.id === homeId ? " is-open cm-tt-home" : ""}${p.count ? "" : " is-empty"}" data-tt="open" data-pile="${esc(p.id)}" aria-pressed="${p.id === homeId ? "true" : "false"}" title="${esc(p.folded ? p.label + ": " + p.bands.join(", ") : p.label)}">${esc(p.label)} · ${p.count.toLocaleString()}</button>`).join("")}</div>`;
+      const shelfHTML = `<div class="cm-tt-shelf" style="top:${shelfTop}px"><label class="cm-tt-shelf-pick">Group piles by ${groupSelect}</label>${groups.map((p) => `<button type="button" class="cm-tt-chip${p.id === homeId ? " is-open cm-tt-home" : ""}${p.count ? "" : " is-empty"}" data-tt="open" data-pile="${esc(p.id)}" aria-pressed="${p.id === homeId ? "true" : "false"}" title="${esc(p.folded ? p.label + ": " + p.bands.join(", ") : p.label)}">${esc(p.label)} · ${p.count.toLocaleString()}</button>`).join("")}</div>`;
       const chipRows = Math.max(1, Math.ceil((gN * 132 + 200) / (width - 32)));
       const stageTop = shelfTop + 44 + (chipRows - 1) * 34 + 12;
       let stageH;
@@ -342,9 +361,9 @@
         const sz = SIZES[sizeOf(ui.size)];
         const rowsFit = narrow ? 4 : Math.min(6, Math.max(2, Math.floor((vh - 330) / (sz.h + sz.gap))));
         const l = layout(openPile, {width, size: ui.size, page: ui.page, rowsFit});
-        const strip = (pos) => `<div class="cm-tt-strip is-${pos}"><span class="cm-tt-strip-title"><strong>${esc(openPile.label)}</strong> · ${l.label}</span><span class="cm-tt-seg" role="group" aria-label="Card size">${["S", "M", "L"].map((s) => `<button type="button" data-tt="size" data-size="${s}" aria-pressed="${l.size === s ? "true" : "false"}" title="Card size ${s}">${s}</button>`).join("")}</span><span class="cm-tt-pager"><button type="button" data-tt="page" data-page="${l.page - 1}" ${l.page === 0 ? "disabled" : ""} aria-label="Previous page">‹</button><span>Page ${l.page + 1} of ${l.pages}</span><button type="button" data-tt="page" data-page="${l.page + 1}" ${l.page >= l.pages - 1 ? "disabled" : ""} aria-label="Next page">›</button></span>${ticked.size ? `<button type="button" class="cm-tt-primary" data-tt="select-ticked">Select ${ticked.size} ticked</button>` : ""}<button type="button" data-tt="open" data-pile="${esc(openPile.id)}" aria-label="Close ${esc(openPile.label)}">Close</button></div>`;
+        const strip = (pos) => `<div class="cm-tt-strip is-${pos}"><span class="cm-tt-strip-title"><strong>${esc(openPile.label)}</strong> · ${l.label}</span><span class="cm-tt-seg" role="group" aria-label="Card size">${["S", "M", "L"].map((s) => `<button type="button" data-tt="size" data-size="${s}" aria-pressed="${l.size === s ? "true" : "false"}" title="Card size ${s}">${s}</button>`).join("")}</span><span class="cm-tt-pager"><button type="button" data-tt="page" data-page="${l.page - 1}" ${l.page === 0 ? "disabled" : ""} aria-label="Previous page">‹</button><span>Page ${l.page + 1} of ${l.pages}</span><button type="button" data-tt="page" data-page="${l.page + 1}" ${l.page >= l.pages - 1 ? "disabled" : ""} aria-label="Next page">›</button></span>${ticked.size ? `<button type="button" class="cm-tt-primary" data-tt="select-ticked">Select ${ticked.size} ticked</button>` : ""}<button type="button" data-tt="print" data-pile="${esc(openPile.id)}" title="Print the whole pile as a list">Print</button><button type="button" data-tt="open" data-pile="${esc(openPile.id)}" aria-label="Close ${esc(openPile.label)}">Close</button></div>`;
         const stripH = narrow ? 84 : 44;
-        const grid = `<div class="cm-tt-grid" style="top:${stageTop + stripH}px;height:${l.height}px" data-size="${l.size}">${l.cards.map(({row, x, y}) => cardFace(row, {ghost: isGhost(row), size: l.size, tick: true, checked: ticked.has(row.recordId), big: l.size === "L", style: `left:${x}px;top:${y}px;`})).join("") || `<p class="cm-tt-empty">${esc(l.label)}</p>`}</div>`;
+        const grid = `<div class="cm-tt-grid" style="top:${stageTop + stripH}px;height:${l.height}px" data-size="${l.size}" data-cols="${l.cols}">${l.cards.map(({row, x, y}) => cardFace(row, {ghost: isGhost(row), size: l.size, tick: true, checked: ticked.has(row.recordId), big: l.size === "L", style: `left:${x}px;top:${y}px;`})).join("") || `<p class="cm-tt-empty">${esc(l.label)}</p>`}</div>`;
         stageHTML = `<div class="cm-tt-stage-strip" style="top:${stageTop}px">${strip("top")}</div>${grid}` + (narrow && l.pages > 1 ? `<div class="cm-tt-stage-strip" style="top:${stageTop + stripH + l.height + 8}px">${strip("bottom")}</div>` : "");
         stageH = stripH + Math.max(l.height, 60) + (narrow && l.pages > 1 ? stripH + 8 : 0);
       } else {
@@ -369,6 +388,7 @@
     host.innerHTML = `<div class="cm-tt-mat is-${mode}" tabindex="-1" style="height:${height}px">${railHTML}${body}<div class="cm-tt-legend">${legend}</div></div>`;
     /* Clicks, keys and the context menu, delegated once per draw. */
     const sel = host.querySelector("select[name=tabletopGroupBy]"); if (sel && hooks.onGroupBy) sel.addEventListener("change", () => hooks.onGroupBy(sel.value));
+    const ord = host.querySelector("select[name=tabletopStatusOrder]"); if (ord && hooks.onStatusOrder) ord.addEventListener("change", () => hooks.onStatusOrder(ord.value));
     host.onclick = (ev) => {
       const t = ev.target.closest("[data-tt]");
       if (!t) { if (mode !== "rest" && ev.target.closest(".cm-tt-mat") && !ev.target.closest("button, select, label, .cm-tt-card, .cm-tt-strip, .cm-tt-stage")) hooks.onClear && hooks.onClear(); return; }
@@ -382,6 +402,7 @@
       else if (kind === "select-ticked") { const ids = new Set(ticked); recombine(host, ids).then(() => hooks.onSelect && hooks.onSelect([...ids])); }
       else if (kind === "clear") { hooks.onClear && hooks.onClear(); }
       else if (kind === "moveto") { hooks.onMoveTo && hooks.onMoveTo(selected.map((r) => r.recordId), t); }
+      else if (kind === "print") { hooks.onPrint && hooks.onPrint(t.dataset.pile); }
     };
     /* DRAG THE SELECTION (plan §2.3). Pointer down on the fan and a small badge follows the
        pointer; the pile under it lights as a target or a refusal with the contract's words;
@@ -420,13 +441,45 @@
       };
       fan.addEventListener("pointerup", end); fan.addEventListener("pointercancel", end);
     }
+    /* THE KEYBOARD (plan TB4). Among the piles the arrows walk a row (the ledge, the group
+       piles or their shelf, the status piles) and step between rows; Enter opens the focused
+       pile (it is a button). In a laid-out pile the arrows walk the cards, Home and End jump,
+       PageUp and PageDown turn the page, Space ticks the card and Enter chooses it. Escape is
+       the table at rest. */
+    const focusables = (list) => list.filter((el) => el && !el.hidden);
+    const pileRows = () => [focusables([host.querySelector(".cm-tt-fan")]), focusables([...host.querySelectorAll(".cm-tt-pile.cm-tt-group, .cm-tt-chip")]), focusables([...host.querySelectorAll(".cm-tt-pile.cm-tt-status")])].filter((row) => row.length);
     host.onkeydown = (ev) => {
-      if (ev.key === "Escape" && mode !== "rest") { ev.preventDefault(); hooks.onClear && hooks.onClear(); }
-      else if ((ev.key === "Enter" || ev.key === " ") && ev.target.matches && ev.target.matches(".cm-tt-card[data-tt=card], .cm-tt-tick")) { ev.preventDefault(); ev.target.click(); }
+      const el = ev.target;
+      if (ev.key === "Escape" && mode !== "rest") { ev.preventDefault(); hooks.onClear && hooks.onClear(); return; }
+      if (el.matches && el.matches(".cm-tt-tick") && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); el.click(); return; }
+      if (el.matches && el.matches(".cm-tt-card[data-tt=card]")) {
+        const cards = [...host.querySelectorAll(".cm-tt-grid .cm-tt-card[data-tt=card]")], i = cards.indexOf(el), cols = Number(host.querySelector(".cm-tt-grid")?.dataset.cols) || 1;
+        const go = (j) => { const c = cards[Math.max(0, Math.min(cards.length - 1, j))]; if (c) c.focus({preventScroll: false}); };
+        if (ev.key === "Enter") { ev.preventDefault(); el.click(); }
+        else if (ev.key === " ") { ev.preventDefault(); hooks.onTick && hooks.onTick(el.dataset.record); }
+        else if (ev.key === "ArrowRight") { ev.preventDefault(); go(i + 1); }
+        else if (ev.key === "ArrowLeft") { ev.preventDefault(); go(i - 1); }
+        else if (ev.key === "ArrowDown") { ev.preventDefault(); go(i + cols); }
+        else if (ev.key === "ArrowUp") { ev.preventDefault(); go(i - cols); }
+        else if (ev.key === "Home") { ev.preventDefault(); go(0); }
+        else if (ev.key === "End") { ev.preventDefault(); go(cards.length - 1); }
+        else if (ev.key === "PageDown") { ev.preventDefault(); hooks.onPage && hooks.onPage((ui.page | 0) + 1); }
+        else if (ev.key === "PageUp") { ev.preventDefault(); hooks.onPage && hooks.onPage(Math.max(0, (ui.page | 0) - 1)); }
+        return;
+      }
+      if (el.matches && el.matches("[data-tt=open]") && /^Arrow/.test(ev.key)) {
+        const rows = pileRows(); const r = rows.findIndex((row) => row.includes(el)); if (r < 0) return;
+        const i = rows[r].indexOf(el); let target = null;
+        if (ev.key === "ArrowRight") target = rows[r][Math.min(rows[r].length - 1, i + 1)];
+        else if (ev.key === "ArrowLeft") target = rows[r][Math.max(0, i - 1)];
+        else if (ev.key === "ArrowDown") { const row = rows[Math.min(rows.length - 1, r + 1)]; target = row[Math.min(row.length - 1, Math.round(i * (row.length - 1) / Math.max(1, rows[r].length - 1)))]; }
+        else if (ev.key === "ArrowUp") { const row = rows[Math.max(0, r - 1)]; target = row[Math.min(row.length - 1, Math.round(i * (row.length - 1) / Math.max(1, rows[r].length - 1)))]; }
+        if (target && target !== el) { ev.preventDefault(); target.focus({preventScroll: false}); }
+      }
     };
     host.oncontextmenu = (ev) => { const c = ev.target.closest(".cm-tt-card[data-record]"); if (c && hooks.onMenu && (mode !== "rest")) { ev.preventDefault(); hooks.onMenu(c.dataset.record, c); } };
     return {width, height, piles: sN + gN + 1, mode};
   }
 
-  return {GROUPINGS, TYPE_ORDER, BENCH, GHOST, SIZES, isGhost, primaryType, bandOf, bandOrder, arcsOf, pileOrder, layout, findPile, accepts, table, mount};
+  return {GROUPINGS, TYPE_ORDER, BENCH, GHOST, SIZES, isGhost, primaryType, bandOf, bandOrder, arcsOf, pileOrder, layout, findPile, accepts, printSheet, table, mount};
 });

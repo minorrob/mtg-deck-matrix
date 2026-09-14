@@ -122,7 +122,11 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   mechanic pile says it is a reading of the card, not a place; every drop that changes a deck or
   money goes through the same receipt the fly-out shows. A ghost dropped on Ordered becomes an
   ordered copy, on the Bench an owned one. *Move to…* lists the piles with the same answers for
-  a phone (`crankmagic-tabletop.js` `accepts`, `tests/crankmagic-tabletop.mjs`).
+  a phone. The arrows walk the piles and, in a laid-out pile, the cards (Space ticks, Enter
+  chooses, PageUp and PageDown turn the page); the card size is remembered on the device, the
+  status piles' order (workflow, or fullest first) with the library; *Print* puts the whole pile
+  on paper as a numbered list (`crankmagic-tabletop.js` `accepts`, `printSheet`,
+  `tests/crankmagic-tabletop.mjs`).
 - **Discover**: navigable metadata/co-play graph, mouse-wheel zoom, keyboard neighbors,
   pan, back trail, card inspection and supplemental catalog lookup. The pane beside the
   graph has two tabs: **Card Info** (the focused card, its terms, *Add/Buy*) and **List**

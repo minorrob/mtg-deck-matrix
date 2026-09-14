@@ -140,5 +140,16 @@ const deckPile = T.table(rows, {...opts, groupBy: "deck"}).groupPiles.find((p) =
 eq(T.accepts(deckPile, ownedBench.slice(0, 1)).action, "reserve"); eq(T.accepts(deckPile, ownedBench.slice(0, 1)).label, `Reserve for ${deckPile.label}`);
 eq(T.accepts(pileBy("Physical deck"), []).ok, false); eq(T.accepts(null, ownedBench).ok, false);
 ok([t.bench, ...t.statusPiles].every((p) => { const a = T.accepts(p, ownedBench.slice(0, 1)); return typeof a.ok === "boolean" && (a.ok ? a.action && a.label : a.why); }), "every pile answers with an action or a reason");
+/* TB4: the status pile order as a preference, and a pile on paper. */
+const byCount = T.table(rows, {...opts, groupBy: "type", statusSort: "count"});
+ok(byCount.statusPiles.every((p, i, a) => i === 0 || a[i - 1].count >= p.count), "fullest first"); eq(byCount.statusSort, "count");
+eq(byCount.statusPiles.map((p) => p.label).sort(), t.statusPiles.map((p) => p.label).sort(), "the same piles, reordered"); eq(t.statusSort, "workflow");
+eq(T.table(rows, {...opts, groupBy: "type", statusSort: "nonsense"}).statusPiles.map((p) => p.label), t.statusPiles.map((p) => p.label), "an unknown order is the workflow order");
+const sheet = T.printSheet(t.statusPiles.find((p) => p.label === "Physical deck"), {describe: (r) => ({status: r.status, price: "$1.00", deck: "D"}), now: new Date("2026-09-14T12:00:00Z"), library: "Test <lib>"});
+ok(/<h1>Physical deck<\/h1>/.test(sheet) && /2026-09-14/.test(sheet) && /Test &lt;lib&gt;/.test(sheet), "the sheet names the pile, the day and the library, escaped");
+eq((sheet.match(/<tr><td>\d+<\/td>/g) || []).length, t.statusPiles.find((p) => p.label === "Physical deck").rows.length, "one row per card on the pile, the whole pile and not a page");
+ok(/<td>Physical deck<\/td><td>\$1\.00<\/td><td>D<\/td>/.test(sheet), "status, price and deck come from the caller");
+ok(/<td>1<\/td><td>/.test(sheet) && / cards · [\d,]+ copies · Test/.test(sheet), "numbered, with the count and the copies");
+eq(T.printSheet({kind: "status", label: "Watched", rows: []}).includes("0 cards · 0 copies"), true, "an empty pile prints an empty sheet");
 M.setRecordSource(null);
 console.log(`crankmagic-tabletop: ${checks} checks passed — ${t.total} copies on the table, bench ${t.bench.count}, ${t.statusPiles.length} status piles, ${T.GROUPINGS.length} groupings.`);
