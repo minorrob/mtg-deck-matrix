@@ -239,9 +239,11 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   lights a deck from its commander outward over the joins that serve its strategies
   (`crankmagic-strategies.js`, sixteen tuples; `data/commander-strategies.json` for every legal
   commander), loop-backs in gold, the untouched cards ghosted; the pane plays the same list in
-  order with the join that lit each card, the strategies as ticks saved with the deck, a
-  cohesion score labelled a heuristic beside the measured score, and a second world — what the
-  deck could be — over the library and the commander's co-play neighbours inside the definition
+  order with the join that lit each card, the strategies as ticks saved with the deck (each
+  tick says what it lights on its own; *Reset to the commander's own* clears them), a tick on
+  every row that files the ticked cards in a Collection group, a cohesion score labelled a
+  heuristic beside the measured score, and a second world — what the deck could be — over the
+  library and the commander's co-play neighbours inside the definition
   (`crankmagic-trace.js`, `tests/crankmagic-trace.mjs`, `tests/commander-strategies.mjs`).
   The Deck Lab seeds a commander's 99 from the same trace (*Seed the draft from the trace*, on
   by default; `CrankTrace.seedFrom` into `draft-builder.js`), and *Watch the trace* opens the

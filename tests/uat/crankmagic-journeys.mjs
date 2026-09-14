@@ -377,6 +377,20 @@ try{
   if(ticks>1){const first=page.locator('.cm-trace-strategies input[name=traceStrategy]:checked').first();const id=await first.getAttribute('value');await first.click();await page.waitForTimeout(1200);
    const saved=(await state()).decks.find(d=>d.id===traceDeck.id).definition.strategies||[];ok(saved.length===ticks-1&&!saved.includes(id),`the unticked strategy is saved with the deck (${saved.join(', ')})`);
    await page.locator('input[name=traceStrategy][value="'+id+'"]').click();await page.waitForTimeout(1200);}
+  /* The Speed control sits on the transport line; row ticks file cards in a group; Reset returns
+     the ticks to the commander's own and clears what the deck had saved. */
+  {const lb=await page.locator('.cm-trace-transport label').boundingBox(),sb=await page.locator('select[name=traceSpeed]').boundingBox();ok(lb&&sb&&Math.abs((lb.y+lb.height/2)-(sb.y+sb.height/2))<4,'the Speed label and its select share a line');
+   ok((await page.locator('.cm-trace-tick-strategy small').count())===(await page.locator('.cm-trace-tick-strategy').count()),'every strategy tick says what it lights on its own');
+   /* The journey's deck is small and may light nothing on its own; What it could be traces the
+      library and the commander's co-play neighbours, so it has rows to tick. */
+   let picks=Math.min(2,await page.locator('.cm-trace-pick').count());
+   if(!picks){await page.getByRole('button',{name:'What it could be',exact:true}).click();await page.waitForTimeout(3000);picks=Math.min(2,await page.locator('.cm-trace-pick').count());}
+   eq(await page.locator('#cm-trace-pickbar').count(),1,'the tick bar stands above the list');
+   if(picks>=1){for(let i=0;i<picks;i++)await page.locator('.cm-trace-pick').nth(i).check();eq((await page.locator('#cm-trace-pickbar span').innerText()).trim(),`${picks} ticked`,'the bar counts the ticked rows');
+    await page.getByRole('button',{name:'Add ticked to a group',exact:true}).click();await page.getByRole('dialog').waitFor();await page.locator('[name=name]').fill('Trace picks');await page.getByRole('button',{name:'Add to group',exact:true}).click();await page.waitForTimeout(800);
+    const g=(await state()).groups.find(x=>x.name==='Trace picks');ok(g&&g.entries.length===picks,'the ticked cards are planned entries of a new group');eq((await page.locator('#cm-trace-pickbar span').innerText()).trim(),'Tick cards to file them in a group','the ticks clear after filing');}
+   else ok(true,'nothing to tick in this library, in either world');
+   if(ticks>1){await page.getByRole('button',{name:'Reset to the commander’s own',exact:true}).click();await page.waitForTimeout(1500);eq(((await state()).decks.find(d=>d.id===traceDeck.id).definition.strategies||[]).length,0,'Reset clears the strategies saved with the deck');eq(await page.getByRole('button',{name:'Reset to the commander’s own',exact:true}).count(),0,'and the Reset button goes with them');}}
   await page.locator('.cm-pane-tab[data-tab=card]').click();await page.waitForTimeout(800);
   ok(!(await page.evaluate(()=>document.querySelector('#cm-graph').crankGraph.tracing)),'Card Info ends the trace and the graph is the neighbourhood again');
   await page.goto(BASE+'/'+ENTRY+'#discover');await page.locator('#cm-graph').waitFor({timeout:30000});await page.waitForTimeout(800);await click('Clear filters');await page.waitForTimeout(500);}
