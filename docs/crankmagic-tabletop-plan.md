@@ -3,7 +3,7 @@
 Definition and plan for the third view of the Cards page Rob described on 14 September 2026.
 The Cards page has a list and a sheet; this is the view where the cards are cards. Mock-ups:
 `docs/mockups/tabletop-piles.html` (the table at rest), `docs/mockups/tabletop-laid-out.html`
-(a pile opened, two cards selected, the selection on the felt mid-drag). Nothing is built; it
+(a pile opened, two cards selected, the selection on the mat mid-drag). Nothing is built; it
 is a major enhancement scheduled after the data-model evaluation.
 
 The app is for anyone building any deck: the piles are the statuses and groupings the model
@@ -11,7 +11,7 @@ already has, so the view needs no data of its own and works on any library.
 
 ## 1. What it is
 
-A green-felt tabletop that holds **every card the library knows about, as cards**:
+A tabletop that holds **every card the library knows about, as cards**:
 
 - every owned copy (a real card),
 - a **ghost card** for every ordered copy, and — with a deck selected — a ghost for every
@@ -31,9 +31,18 @@ label and count on a small placard.
 filters*) sit above the table and apply to every pile at once: a filtered table shows only
 the matching cards in each pile and greys the placards that go empty.
 
+**The surface.** No felt. The table is a **slate sorting mat** in the app's own palette
+(`#1c2434` falling to `#121927`), with a fine dot grid every 24 px so laid-out rows and columns
+read as placed rather than floated, one soft light from the top left, and a dark bevelled edge.
+The Bench rides on a **raised ledge** along the back edge with a brass hairline under it. Each
+pile stands in a **shallow slot** cut into the mat, so an emptied pile still shows where it
+lives. The paper placards are the one warm element; the selection stage glows gold; ghost cards
+are dashed in the muted ink. Everything else is the slate, the line and the accent the rest of
+CrankMagic already uses, so the Tabletop reads as a view of the app and not a different game.
+
 ## 2. Interaction, step by step
 
-1. **Click a pile** → its cards **lay out in straight rows and columns** across the felt
+1. **Click a pile** → its cards **lay out in straight rows and columns** across the mat
    (the other piles slide to the edges and shrink), sorted by the pile's natural order (mana
    value then name; the Bench by name; Ordered by order date). More cards than fit → **pages**
    (a page is what fits the viewport at the current card size; the page strip says *1–48 of
@@ -41,7 +50,7 @@ the matching cards in each pile and greys the placards that go empty.
 2. **Click a card to select it**; shift-click or a tick in the corner extends to
    **multi-select**. On the first selection the other cards **recombine into their pile** —
    a short animation, each card sliding back to the stack — and the **selection stays on the
-   centre of the felt**, fanned if more than one, face up, at large size, with the card's
+   centre of the mat**, fanned if more than one, face up, at large size, with the card's
    name, status pill, price and deck beneath.
 3. **Drag the selection onto any pile.** A status pile = the status change the Status
    fly-out performs today (*Physical deck*, *Bench*, *Ordered*, *Wanted*, …) — the same
@@ -53,7 +62,7 @@ the matching cards in each pile and greys the placards that go empty.
    the selection returns to where it came from.
 4. **Right-click or long-press** a selected card → the row's ⋯ menu from the list (Inspect,
    Replacements & options, Flag as option, Pin, Delete).
-5. **Escape** or click the felt → clear the selection; click the pile's placard again → close
+5. **Escape** or click the mat → clear the selection; click the pile's placard again → close
    the layout and return to the table at rest.
 
 Ghost cards can be selected and dragged like real ones; dropping a ghost onto *Ordered*
@@ -102,12 +111,12 @@ Needs, all small and all worth settling in the data-model evaluation first:
 
 - **TB0 — vocabulary and groupings** (with the data-model work): status vocabulary and
   grouping module in the model, consumed by the list and the sheet first; tests.
-- **TB1 — the table at rest.** `crankmagic-tabletop.js`: the felt, the status piles, the
+- **TB1 — the table at rest.** `crankmagic-tabletop.js`: the mat, the status piles, the
   Bench rail, the semicircle of group piles, the grouping dropdown, search and filters
   applied; counts against `readiness()` in a test; the view switch on Cards gains
   *Tabletop*. Walk at 1400 and 390.
 - **TB2 — lay out, page, select.** Click a pile → rows and columns with pages and card
-  size; select and multi-select; the recombine animation; the selection on the felt.
+  size; select and multi-select; the recombine animation; the selection on the mat.
 - **TB3 — drag to a pile.** The drop-target contract on every pile, previews through the
   existing receipt, ghosts becoming orders or copies, the phone's Move to… menu. Journeys:
   move a card Bench → Physical deck and back through the tabletop and read the same counts
