@@ -228,6 +228,28 @@ try{
   await page.keyboard.press('ArrowUp');ok(await page.evaluate(()=>document.activeElement.matches('.cm-tt-pile.cm-tt-group')),'ArrowUp climbs to the group piles');await page.keyboard.press('Enter');await page.locator('.cm-tt-grid').waitFor();await page.keyboard.press('Escape');await page.waitForTimeout(200);
   await page.locator('select[name=tabletopStatusOrder]').selectOption('count');await page.waitForTimeout(500);{const c=await pileCounts();ok(c.every((p,i)=>i===0||c[i-1].count>=p.count),'fullest first');eq((await state()).preferences.tabletopStatusOrder,'count');}
   await page.locator('select[name=tabletopStatusOrder]').selectOption('workflow');await page.waitForTimeout(400);eq((await pileCounts())[0].label,'Physical deck');}
+
+ /* PUBLISH THE TO TRADE LIST (backlog #200): a copy filed in the To Trade group and one offered for Sell / Trade
+    become a link; the page the link opens shows both with a way to ask; a visitor with an empty library sees
+    the same page from the link alone. */
+ {const free=(await state()).lots.filter(l=>l.source==='owned'&&!l.allocation&&l.location?.kind!=='deck'&&l.offer!=='held');ok(free.length>=1,'an unreserved owned copy to offer');const a=free[0],b2=free[1]||free[0],expected=free[1]?2:1;
+  await page.evaluate(async([la,lb])=>{const r=await CrankRepository.open();try{let s=await r.getState();s=(await r.commit({id:crypto.randomUUID(),type:'groupLots',groupId:'group:to-trade',lotIds:[la]},s.revision)).state;await r.commit({id:crypto.randomUUID(),type:'bulk',op:'offer',offer:'available',lotIds:[lb],confirmed:true},s.revision);}finally{r.close();}},[a.id,b2.id]);
+  await page.reload();await page.locator('#cm-main .cm-page-head').waitFor({timeout:30000});
+  await click('Share');await page.locator('#cm-share-menu:popover-open').waitFor();await click('Publish your To Trade list');await page.getByRole('dialog').waitFor();
+  const dlg=await page.getByRole('dialog').innerText();ok(/cop(y|ies) of \d+ card/.test(dlg),dlg.slice(0,120));
+  await page.locator('[name=from]').fill('Journey Rob');await page.locator('[name=contact]').fill('rob@example.com');await page.locator('[name=note]').fill('Trades welcome at the shop on Thursdays.');await click('Make the link');await page.waitForTimeout(400);
+  const linkText=await page.locator('.cm-trade-link a').getAttribute('href');ok(/#trade\?d=[A-Za-z0-9_-]+$/.test(linkText),'the link carries the list in its hash');eq((await state()).preferences.trade.from,'Journey Rob','the publisher facts are remembered');
+  await click('Open the page');await page.locator('.cm-trade-grid').waitFor();eq(await page.locator('.cm-trade-card').count(),expected);ok(/Journey Rob’s trade list/.test(await page.locator('h1').innerText()));
+  const names=await page.locator('.cm-trade-card strong').allInnerTexts();eq(names.length,expected);ok(names.every(n=>n.length>1));
+  ok((await page.locator('.cm-trade-card a').first().getAttribute('href')).startsWith('mailto:rob@example.com?subject=About%20your%20'),'each card asks the publisher by mail');
+  await page.locator('[data-trade-tick]').first().check();await page.waitForTimeout(100);ok(/Ask about 1 ticked card/.test(await page.locator('#cm-trade-ask-many').innerText()));ok((await page.locator('#cm-trade-ask-many').getAttribute('href')).startsWith('mailto:rob@example.com?subject=About%20your%20'),'the many-ask names the one ticked card');
+  ok(/Trades welcome at the shop/.test(await page.locator('.cm-trade-note').innerText()));
+  /* The visitor: a fresh context, no library, only the link. */
+  const visitor=await browser.newContext({viewport:{width:1280,height:900}});const vp=await visitor.newPage();await stubNetwork(vp,[]);
+  await vp.goto(BASE+'/'+ENTRY+linkText.slice(linkText.indexOf('#')));await vp.locator('.cm-trade-grid').waitFor({timeout:45000});eq(await vp.locator('.cm-trade-card').count(),expected,'the visitor sees the same cards from the link alone');eq((await vp.locator('.cm-trade-card strong').allInnerTexts()).sort(),names.slice().sort());
+  await vp.goto(BASE+'/'+ENTRY+'#trade?d=broken');await vp.locator('#cm-main').getByText(/does not carry a trade list/).waitFor();
+  await visitor.close();
+  await nav('Cards');await page.locator('#cm-roster-table').waitFor();}
  await nav('Cards');await page.locator('#cm-roster-table').waitFor();await click('Sheet');await page.locator('.cm-sheet').waitFor();ok((await page.locator('.cm-sheet tbody tr').count())>1);
  await page.locator('#cm-sheet-query').fill('Krenko, Mob Boss');await page.waitForTimeout(300);eq(await page.locator('.cm-sheet tbody tr').count(),1);
  current=await state();const journey=current.decks.find(d=>d.name==='Journey Goblins'),krenkoKey=CrankKey('Krenko, Mob Boss');

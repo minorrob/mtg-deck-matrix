@@ -1504,3 +1504,15 @@ button.cm-pill:hover{filter:brightness(1.15)}
   .cm-tt-printsheet table{width:100%;border-collapse:collapse;font-size:10pt}.cm-tt-printsheet th,.cm-tt-printsheet td{text-align:left;padding:3pt 6pt;border-bottom:1px solid #999;vertical-align:top}.cm-tt-printsheet th{border-bottom:2px solid #000}
   .cm-tt-printsheet tr{break-inside:avoid}
 }
+
+/* THE TRADE LIST a visitor opens from a link (crankmagic-trade.js): a grid of cards with
+   their pictures, a tick to ask about several, and the facts the publisher gave. */
+.cm-trade-note{max-width:70ch;color:#dfe7f3;white-space:pre-line}
+.cm-trade-grid{list-style:none;margin:16px 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.cm-trade-card{position:relative;display:grid;grid-template-columns:96px 1fr;gap:10px;align-items:start;background:#151b2a;border:1px solid #2b3a55;border-radius:10px;padding:10px}
+.cm-trade-card img{width:96px;height:134px;object-fit:cover;border-radius:5px;background:#0f1523;box-shadow:0 3px 8px #000a}
+.cm-trade-noart{width:96px;height:134px;border-radius:5px;background:linear-gradient(160deg,#2b2b33,#15151c);border:1px solid #0009;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;color:#9fb2cc;letter-spacing:1px}
+.cm-trade-tick{position:absolute;left:6px;top:6px;z-index:1}.cm-trade-tick input{width:18px;height:18px;min-height:0;margin:0}
+.cm-trade-facts{display:flex;flex-direction:column;gap:6px;font-size:13px;min-width:0}.cm-trade-facts strong{font-size:14px;line-height:1.25}.cm-trade-facts span{color:#c9d4e6;font-size:12px}
+.cm-trade-link{word-break:break-all;font-size:13px}
+@media(max-width:480px){.cm-trade-grid{grid-template-columns:1fr}}
