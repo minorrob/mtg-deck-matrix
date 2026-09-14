@@ -1,7 +1,85 @@
 # CrankMagic — current state and handoff
 
-Last updated 13 September 2026, late. Written so the next session can start work without
-reading a transcript. **Read the first section before anything else.**
+Last updated 14 September 2026, at session A's close-out. Written so the next session can start
+work without reading a transcript. **Read the first section before anything else.**
+
+## 14 September 2026 — session A's close-out and handoff
+
+**Rob closed session A on 14 September at about 15:10 UTC**, after PRs #196–#204 merged. The
+working branch `claude/mtg-deck-matrix-ui-fixes-f7om91` is reset onto `main` (`aae20ea`) and
+clean: nothing uncommitted, nothing in flight, no background process left on the sandbox.
+
+**Merged 14 September, in order** (all session A; every one squash-merged after green gates):
+
+| PR | What |
+|---|---|
+| #195 | Publish your To Trade list: one link that is the list, a page anyone can open and ask from |
+| #196 | Fix: a library saved before schema 3 could be read but never saved again — `commit()` and `undo()` migrate before they apply |
+| #197 | Trace pane: the Speed control on its line, what each strategy lights on its own, Reset to the commander's own, ticked rows filed in a group |
+| #198 | Cards header: the seven counts as chips that filter, List · Sheet · Table on the tab row of every tab, a Table for To buy, Owned as a status |
+| #199 | Tabletop: the whole picture on every card, ghosts you can read, readings as chips, a folding Bench, one card on the stage with its facts and next/previous |
+| #200 | Discover node pop-up: the picture at the inspector's size, the buttons stacked on its left, the mana pips on the type line |
+| #201 | Deck Overview: *The hundred at a glance* — the curve, the hundred by type and by purpose, the key strategy line in the vocabulary's words |
+| #202 | Trace limits: never more than a hundred cards lit; sliders for Cards lit (10–100, default 100), Loop length (2–6, default 4), Chain depth (1–3, default 3), saved with the library; a work budget in the loop finder so loop length 6 on a dense pool is a bounded wait, not a hang |
+| #203 | Make the change: the Change List (`#change?deck=`) — *Remove this card → Put this card in* rows, a tick is one revision, four readings held to the mana formula and the floors, Excel export and Print; `crankmagic-change.js` (pure) and `crankmagic-change-ui.js`; ways in from the deck hero, the Cards More menu and the Discover trace pane |
+| #204 | `docs/crankmagic-inventory-plan.md` — the plan the next session executes (below) |
+
+**What the next session does, in Rob's stated order**
+
+1. **Execute the inventory plan** — `docs/crankmagic-inventory-plan.md`, its §0 first. It is a
+   gathering step, not a design step: wireframes of every surface at 1400 and 390 drawn from
+   the DOM by a generator, and the feature register (every action key, view and overlay filed
+   under thirteen groups, with where it lives, how it is reached, what it commits, what covers
+   it and what else does the same job), both with a `--check` so they cannot drift. Three PRs,
+   merged when done. Rob said he executes it in a separate session; nothing in it decides a
+   redesign.
+2. **Parked by Rob's instruction, do not start:** the persistent-app plan
+   (`docs/crankmagic-persistent-plan.md`; its nine decisions are still his), and the scope of a
+   model's influence if one were added ("we'll create that plan/scope after everything else is
+   done so don't do that now"). Licensing stays parked.
+3. **A number to argue with.** The Change List's mana formula (`MANA` in
+   `crankmagic-change.js`: start at 38 lands, sub one out for every two ramp pieces at two mana
+   or less, never below 33, one back for a high curve) reads all six live decks over on lands —
+   D1 Quintorius holds 45 in the box against 35 asked, D2 Chulane 39 against 36. The numbers
+   are in one place and meant to be tuned; Rob has been asked for the count he actually
+   builds to. Change the constant, not the warning.
+4. **Small facts worth knowing.** The Make-the-change journey's tick step is conditional
+   (Journey Goblins has no row it can do at that point), so the journeys count 348 today and
+   grow by two if a later journey deck has a doable row; the tick itself was walked on D2 and
+   is held by the unit suite. The Tabletop's boundary class is `.cm-tt-mat`, the role lens's
+   `.cm-lens-head`, the node pop-up's `.cm-graph-pop`, the trade page's `.cm-trade-grid` (the
+   inventory plan's catalogue carries all of them).
+
+**Gates and the sandbox, as they are now.** `GEOMETRY_REQUIRED=1 PAGE_BUDGET_REQUIRED=1 bash
+runtests.sh -q` runs **58 suites** (the README states the count; `tests/refresh.mjs` and the
+generators check it) and `node tests/uat/crankmagic-journeys.mjs` is at **348 checks**. In the
+cloud sandbox the browser suites need the Playwright environment **exported for the whole
+run**: `UAT_PLAYWRIGHT=/opt/node22/lib/node_modules/playwright/index.js`,
+`UAT_CHROME=/opt/pw-browsers/chromium-1194/chrome-linux/chrome`,
+`UAT_BASE=http://localhost:8790`, with `python3 -m http.server 8790 --bind 127.0.0.1` serving
+the repository. Set as a prefix on `bash runtests.sh` alone they reach the runner but not the
+suites it spawns, and the geometry and page-budget suites report "REQUIRED but Playwright is not
+installed" while everything else passes — that cost one re-run on 14 September. Never edit a
+served file while a browser run is live; never run a walk beside the gates (contention shows as
+click timeouts); kill stale runs in a command of their own with anchored patterns
+(`pkill -f '^node tests/'`) — an unanchored pattern matched the shell's own command line and
+killed it, twice. Walks and gates go to a log file with an `EXIT` line and a waiter loop
+(`n=$(grep -c '^EXIT' log); n=${n:-0}`), because a command that ends by starting a background
+job loses its earlier output.
+
+**Credentials.** Rob supplied a repository-scoped fine-grained GitHub token in chat for the REST
+merge flow (`POST /pulls` as a draft, `POST /pulls/{n}/ccr/ready_for_review`, `PUT
+/pulls/{n}/merge` with `merge_method: squash` and the head sha, then `git fetch origin main &&
+git checkout -B <branch> origin/main && git push --force-with-lease`). It is stored nowhere in
+the repository or on disk and must stay that way; ask Rob for it again. The GitHub MCP tools work
+without it at a lower rate. The Master workbook is never written; `treycmload1` (Load Live) is
+public client JavaScript; `minor.rob@gmail.com` is the Subscribe address Rob asked for.
+
+**Versions at head:** app and worker 174, css 103, decks 48, collection 49, discover 53,
+trace 3, loops 4, change 1, change-ui 1, tabletop 5, strategies 2, xlsx-writer 2 —
+`tests/fixtures/asset-versions.json` is the record (88 assets).
+
+---
 
 ## 13 September 2026 — where things stand, and the two sessions
 
@@ -12,7 +90,7 @@ only shared record.
 
 | Session | Ran | Shipped | Left open |
 |---|---|---|---|
-| A — `session_01JxaMVGPFVWfBLPd3PXM1PR` (since 23 Aug, the long one) | 23 Aug → 11 Sep 04:10, then 12 Sep 20:12 → now | #133, #152–#168 | Phase C of the Discover / loop plan |
+| A — `session_01JxaMVGPFVWfBLPd3PXM1PR` (since 23 Aug, the long one) | 23 Aug → 11 Sep 04:10, then 12 Sep 20:12 → 14 Sep 15:10 (closed) | #133, #152–#168, #169–#204 | the inventory plan (#204) for a separate session; the persistent-app decisions; the model-influence scope, on Rob's call |
 | B — `session_01JomnBiZWAGVBCFXBt3QbQk` (Opus, opened when Rob said "merge #133 then I'll switch to Opus") | 11 Sep 04:15 → 12 Sep 19:44 | #134–#151, `tools/screens.mjs`, the `docs/screens/*` sets | **Licensing**: its analysis recommended a proprietary licence (BSL or dual-licence), `data/` scoped out of the grant, a Wizards Fan Content disclaimer, and it is waiting for a go-ahead to write `LICENSE`, `NOTICE` and a README section. No `LICENSE` file exists today. |
 
 A session resuming from a compaction summary sees only its own recent window. Session A's
@@ -313,7 +391,7 @@ Open and unstarted:
   `crankmagic-app.js`. Record with `node tests/asset-versions.mjs --update`. If you
   edit a file **after** bumping it, rebase the fixture:
   `git checkout origin/main -- tests/fixtures/asset-versions.json && node tests/asset-versions.mjs --update`.
-- **56 suites** (44 when this section was first written). `README.md` states the count and
+- **58 suites** (44 when this section was first written, 56 on 13 September). `README.md` states the count and
   `tests/data-integrity.mjs` checks that it matches. Adding a suite means editing the README.
 - **A score is a claim about a protocol and an exact hundred.** Never carry a result
   across an engine generation, never reweight to make an average look right, and never
