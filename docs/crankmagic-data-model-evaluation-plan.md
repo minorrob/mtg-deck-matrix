@@ -128,6 +128,13 @@ Named now so the evaluation checks them rather than rediscovers them:
   migrate-from-schema-1 fixture; a service-worker test that a `graph.json` bump evicts the
   old data cache.
 
+## 4a. Progress
+
+- **E0 shipped (14 September, PR #174):** `tools/data-inventory.mjs` generates
+  `docs/data-inventory.md` and the generators suite checks it; the findings and the ranked
+  recommendations (critical changes, improvements, the one-record-many-lenses simplification,
+  scalability and flexibility) are in `docs/data-model-evaluation-2026-09.md` §1–§3.
+
 ## 5. Sequence and sizing
 
 E0 inventory → E1 entity catalogue and schemas → E2 invariant sweep and the reliability
