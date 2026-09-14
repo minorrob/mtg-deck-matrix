@@ -50,6 +50,7 @@ Trey's Deck Matrix. Anything either session needs the other to know goes in this
 | #173 | Discover: the card pop-up is the picture, four facts, the Primary Purpose and the join, opened beside its node; the term list moves to Inspect card as "Terms the graph reads" | A |
 | #174 | E0 of the data-model evaluation: the generated data inventory (`tools/data-inventory.mjs` → `docs/data-inventory.md`, checked by the generators suite) and the report with the ranked recommendations (`docs/data-model-evaluation-2026-09.md`) | A |
 | #175 | Critical 6: the journeys answer Scryfall from the shipped catalog (the walks' stub); 180 checks in about two minutes instead of ten, and no third-party rate limit in the gate | A |
+| #176 | Graph nodes draw their card art again on the live site: the art requests no longer carry the cross-origin flag (nothing reads the canvas back), and a failed load is retried once instead of written off | A |
 
 Also on 13 September: stale PRs #80, #2 and #54 closed (superseded); the 25 branches behind
 closed and merged PRs were verified safe to delete but the session's credential cannot delete
