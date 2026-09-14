@@ -84,6 +84,24 @@ try{
   const cells=await page.evaluate(n=>[...document.querySelectorAll('#cm-roster-table tbody tr')].slice(0,8).map(tr=>(tr.children[n]||{}).textContent||''),i);
   ok(cells.length&&cells.every(t=>/^\d+\/\d+$/.test(t.trim())),`every Ownership cell is owned/wanted (${cells.join(' ')})`);}
  await click('Columns');await page.getByLabel('Ownership',{exact:true}).uncheck();await click('Apply columns');await waitDialog();
+ /* THE "?" BESIDE CARDS IS A REFERENCE PAGE (Rob, 14 September): grouped subheads, bullets,
+    and a drawing of the progression with its branch and split nodes. The definitions are the
+    glossary's own, read as the dialog opens, so a term whose definition changed in one place
+    cannot still read the old way here. */
+ await page.getByRole('button',{name:'About this page'}).first().click();await page.getByRole('dialog').waitFor();
+ {const help=page.locator('#cm-dialog .cm-help');await help.waitFor();
+  eq(await help.locator('h3').allTextContents().then(t=>t.map(x=>x.trim())),['The four tabs','How a card moves through the library','What each state means','The counts row','Finding and changing rows'],'the help is grouped under subheads');
+  ok(await help.locator('li').count()>=12,'and reads as bullets rather than paragraphs');
+  eq(await help.locator('.cm-def').count(),11,'every state the Status column can show is defined');
+  const named=await help.locator('.cm-def > b').allTextContents().then(t=>t.map(x=>x.trim()));
+  for(const term of ['Watched','Suggestion','Planned','Draft list','Reserved','Ordered','To buy','Physical deck','Substitute','Bench'])ok(named.includes(term),`${term} is defined`);
+  ok(await help.locator('.cm-def > span').first().innerText().then(t=>/filed in that deck/.test(t)),'the definition is the glossary\'s, not a second copy of it');
+  const flow=help.locator('.cm-flow svg');await flow.waitFor();
+  eq(await flow.locator('g text:nth-child(2)').allTextContents().then(t=>t.map(x=>x.trim())).then(t=>t.filter(x=>x==='Reserved').length),1,'Reserved is drawn once');
+  ok(await flow.locator('circle').count()>=2,'the merge and the split are drawn as nodes');
+  ok(await page.evaluate(()=>{const d=document.getElementById('cm-dialog');return d.scrollWidth<=d.clientWidth+1;}),'the dialog itself never scrolls sideways');
+  ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'and neither does the page under it');}
+ await click('Close dialog');await waitDialog();checks+=1;
  await click('Import list');{const one=await page.getByLabel('What does this input represent?').boundingBox(),two=await page.getByRole('dialog').getByLabel('Collection group').boundingBox();ok(one.x+one.width<=two.x+1);}await page.getByLabel('What does this input represent?').selectOption('owned');await page.getByLabel('New group name').fill('Journey inventory');await page.getByLabel('Or paste a list / CSV').fill('Card name,Quantity,Finish,Notes\nSol Ring,2,foil,exact print unknown\nArcane Signet,1,nonfoil,not reserved');await click('Parse input');await click('Resolve exact cards');await page.getByRole('heading',{name:'Review import',exact:true}).waitFor();await click('Import 2 reviewed rows');await waitDialog();current=await state();ok(current.groups.some(g=>g.name==='Journey inventory'));/* Four starter groups, the inventory this journey imported, and the group that arrived with the deck it built. */eq(current.groups.length,6);eq(current.decks.filter(d=>d.groupId).length,current.decks.length);eq(current.lots.filter(l=>l.cardId===CrankKey('Sol Ring')).reduce((n,l)=>n+l.quantity,0),2);
  await click('Clear filters');await actionsFor('Sol Ring','Owned');await click('Sell / Trade');await page.getByLabel('Copies affected').fill('1');await page.getByLabel('Availability',{exact:true}).selectOption('available');await click('Confirm change');await waitDialog();current=await state();eq(current.lots.filter(l=>l.offer==='available').reduce((n,l)=>n+l.quantity,0),1);eq(current.lots.filter(l=>l.cardId===CrankKey('Sol Ring')).reduce((n,l)=>n+l.quantity,0),2);
  // A native transaction must reject stale expected revisions, even with two

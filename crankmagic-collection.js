@@ -173,7 +173,78 @@ actions['kpi-status']=el=>{const st=el.dataset.status;if(!st)return;filter.statu
 actions['clear-scope']=el=>{const r=C.route(),extra=Object.fromEntries(r.params),tab=extra.tab||'library';delete extra.tab;delete extra[el.dataset.key];if(el.dataset.key==='group')filter.group='';goCards(tab,extra);};
 actions['roster-more']=el=>{const {tab,view,group}=el.dataset,finals=C.state.decks.filter(d=>!d.archived&&d.status==='final');
   popAt(el,`${view==='sheet'?b('Export CSV','sheet-csv'):tab==='orders'?'':b('Export view','export-view')}${group?`<hr>${b('Manage group','manage-group',{group})}${b('Add planned card','add-group-entry',{group})}${b('Edit planned list','edit-group-entries',{group})}`:''}${finals.length?`<hr><p>Ready to add for</p>${finals.map(d=>{const r=M.readiness(C.state,d),k=r.pullFromBench+r.pullFromOtherBox+r.remove;return b(`${d.name}${k?` · ${k}`:''}`,'deck-pull',{deck:d.id});}).join('')}<hr><p>Make the change for</p>${finals.map(d=>{const p=C.changePlan?C.changePlan(d):null,k=p?p.rows.filter(r=>r.available).length:0;return `<button type="button" class="v-button" data-action="deck-change" data-deck="${e(d.id)}" aria-label="Make the change for ${e(d.name)}">${e(d.name)}${k?` · ${k}`:''}</button>`;}).join('')}`:''}`);};
-C.HELP.cards={title:'Cards',body:`<p><strong>Library</strong> is every record: one row per copy lot or requirement — owned, ordered and to-buy copies with their status, deck, print and physical location. Click a row for the card; the verb beside it is the one its status calls for, and ⋯ is everything else.</p><p><strong>Status</strong> is one column: Physical deck, Substitute, Reserved and Bench for owned copies; Ordered; Watched; To buy for what a finalized deck still needs; Draft list, Suggestion and Planned for rows that are not copies yet. The colour is the state wherever it appears.</p><p>The counts row reads in the order a deck is built. On every deck <strong>Reserved = Owned + Ordered + To buy</strong>; Owned counts reserved copies; the Bench is what you own that no deck has reserved, and Sell / Trade is a flag on Bench copies. With a filter set, the row counts only what the table shows.</p><p><strong>To buy</strong> is the same table cut to what your decks still need, priced, with the cap the rules allow; Bought and Arrived are one tap on the row, and the strip above says what finishing costs. <strong>Orders</strong> is one row per order — what was paid, what has landed — with Arrived → bench and Paste receipt. <strong>Sheet</strong> is the Master spreadsheet read from the library: T is what a deck’s list claims, A what is physically in it; click a number and type.</p><p>Five filters are in view with search and group beside them; More filters holds subtype, mechanic, flags, offers, mana value and price. Paid and Quantity are cells you click and type in. Ready to add, for walking owned copies into a deck, is under More.</p>`};
+/* THE PAGE HELP IS A REFERENCE, NOT AN ESSAY (Rob, 14 September). It was five prose paragraphs
+   that asked a reader to hold eleven definitions in their head at once. Subheads and bullets
+   now, and one drawing of the progression: a plan on the left, the deck's list, the claim that
+   finalizing makes, the box on the right -- with the Bench as the lane underneath, which is
+   where every return path ends. The split node after Reserved is the identity the counts row
+   keeps (Reserved = Owned + Ordered + To buy) drawn rather than stated. Every definition is
+   read from the glossary as the dialog opens, so the drawing, the hover and this page cannot
+   drift apart. */
+const HELP_TONE={'physical-deck':'--st-inbox','substitute':'--st-standin','reserved':'--st-reserved','bench':'--st-pull','ordered':'--st-ordered','watched':'--st-watch','to-buy':'--st-buy','draft-list':'--st-draft','suggestion':'--st-draft','planned':'--st-draft','collection-group':'--st-draft'};
+const HELP_FALLBACK={'physical-deck':'#5cc98a','substitute':'#c39bff','reserved':'#8fb3ff','bench':'#4fc2c0','ordered':'#3b7dd8','watched':'#8f9bb3','to-buy':'#f0b35a'};
+const tone=id=>`var(${HELP_TONE[id]||'--st-draft'},${HELP_FALLBACK[id]||'#7f8ba0'})`;
+const HELP_GROUPS=[
+  ['Plans — nothing is committed',['watched','suggestion','planned','draft-list','collection-group']],
+  ['Claims — the seat is spoken for',['reserved','ordered','to-buy']],
+  ['Copies — where the card physically is',['physical-deck','substitute','bench']]];
+const helpTerm=id=>((C.glossary&&C.glossary.entries)||[]).find(x=>x.id===id)||null;
+const helpDefs=()=>HELP_GROUPS.map(([heading,ids])=>{
+  const rows=ids.map(id=>{const t=helpTerm(id);return t?`<div class="cm-def"><b style="--st:${tone(id)}">${e(t.term)}</b><span>${e(t.definition)}</span></div>`:'';}).join('');
+  return rows?`<section><h4>${e(heading)}</h4>${rows}</section>`:'';
+}).join('');
+/* The drawing. 124x48 nodes on five columns and three rows, the deck's box a dashed container
+   around the two states that live inside one, and the Bench a lane the full width beneath. */
+const NW=150,NH=48;
+const fNode=(x,y,name,gloss,id)=>`<g><rect x="${x}" y="${y}" width="${NW}" height="${NH}" rx="10" fill="${tone(id)}" fill-opacity=".17" stroke="${tone(id)}" stroke-width="1.5"></rect><text x="${x+NW/2}" y="${y+21}" text-anchor="middle" fill="#f2f7ff" font-size="13" font-weight="700">${e(name)}</text><text x="${x+NW/2}" y="${y+37}" text-anchor="middle" fill="#aec3dc" font-size="10">${e(gloss)}</text></g>`;
+const fEdge=(d,head=true)=>`<path d="${d}" fill="none" stroke="#7d93b2" stroke-width="1.6" stroke-linejoin="round"${head?' marker-end="url(#cm-flow-head)"':''}></path>`;
+const fLabel=(x,y,text,anchor='middle')=>`<text x="${x}" y="${y}" text-anchor="${anchor}" fill="#9db4d0" font-size="10.5">${e(text)}</text>`;
+const fDot=(x,y)=>`<circle cx="${x}" cy="${y}" r="4.5" fill="#7d93b2"></circle>`;
+const helpFlow=()=>`<figure class="cm-flow"><div class="cm-flow-scroll"><svg viewBox="0 0 1000 386" role="img" aria-label="Watched, Suggestion and Planned join a deck's draft list. Finalizing the deck turns every line of that list into a Reserved seat, and Reserved splits three ways: a copy you own is sleeved into the physical deck, a copy is on order, or the card is still to buy. To buy becomes Ordered once bought, and an order that arrives lands on the Bench. The Bench is where a reserved copy is taken from, and where a card leaving a box returns to; a Substitute sits in the box holding a seat until the real card lands."><defs><marker id="cm-flow-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#7d93b2"></path></marker></defs>`
+  +`<rect x="798" y="84" width="170" height="182" rx="14" fill="none" stroke="#55677f" stroke-width="1.4" stroke-dasharray="5 5"></rect>${fLabel(810,104,'THE DECK\u2019S BOX','start')}`
+  +fNode(16,38,'Watched','considering it for a deck','watched')
+  +fNode(16,118,'Suggestion','an option or an upgrade','suggestion')
+  +fNode(16,190,'Planned','a line on a group\u2019s list','planned')
+  +fNode(220,118,'Draft list','the hundred a deck claims','draft-list')
+  +fNode(424,118,'Reserved','a seat with your name on it','reserved')
+  +fNode(616,38,'To buy','nothing you hold fills it','to-buy')
+  +fNode(616,190,'Ordered','paid for, not arrived','ordered')
+  +fNode(808,118,'Physical deck','sleeved in the box','physical-deck')
+  +fNode(808,190,'Substitute','a bench copy holding a seat','substitute')
+  +`<rect x="16" y="310" width="952" height="56" rx="12" fill="${tone('bench')}" fill-opacity=".14" stroke="${tone('bench')}" stroke-width="1.5"></rect><text x="38" y="336" fill="#f2f7ff" font-size="13" font-weight="700">Bench</text><text x="38" y="354" fill="#aec3dc" font-size="10">cards you own that no deck has reserved \u2014 every card that leaves an order or a box lands here</text>`
+  +fEdge('M166 62 H193 V138',false)+fEdge('M166 142 H188',false)+fEdge('M166 214 H193 V146',false)+fDot(193,142)+fEdge('M193 142 H218')
+  +fEdge('M370 142 H422')+fLabel(396,134,'finalize')
+  +fEdge('M574 142 H595',false)+fDot(595,142)
+  +fEdge('M595 142 V62 H614')+fEdge('M595 142 V214 H614')
+  +fEdge('M499 118 V14 H940 V116')+fLabel(640,28,'sleeve the copy you own')
+  +fEdge('M691 86 V188')+fLabel(701,142,'buy it','start')
+  +fEdge('M691 238 V308')+fLabel(701,278,'it arrives','start')
+  +fEdge('M499 308 V168')+fLabel(509,246,'reserve it','start')
+  +`<path d="M883 166 V188" fill="none" stroke="#55677f" stroke-width="1.4" stroke-dasharray="4 4"></path>`
+  +fEdge('M883 266 V308')+fLabel(875,290,'out of the box','end')
+  +`</svg></div><figcaption>Everything on the left is a plan and reserves nothing. Finalizing a deck turns every line of its list into a Reserved seat, and the split after it is the identity the counts row keeps: <b>Reserved = Owned + Ordered + To buy</b>. Nothing ever leaves the library — a card taken out of a box, an order that arrives, a deck you archive: it all lands on the Bench.</figcaption></figure>`;
+C.HELP.cards={title:'Cards',body:()=>`<div class="cm-help cm-help-wide">`
+  +`<p class="cm-help-lede">One table of every record you hold: a copy you own, a copy on order, a seat a deck still needs, a card you are only thinking about. The four tabs cut that table four ways, and the <b>Status</b> column says which of those a row is — in the same colour wherever it appears.</p>`
+  +`<h3>The four tabs</h3><ul>`
+  +`<li><b>Library</b> — every record, one row per copy lot or requirement, with its status, deck, print and physical location. Click a row for the card; the verb beside it is the one its status calls for, and <b>⋯</b> is everything else.</li>`
+  +`<li><b>To buy</b> — the same table cut to what your finalized decks still need, priced, with the cap the rules allow. <b>Bought</b> and <b>Arrived</b> are one tap on the row; the strip above says what finishing costs.</li>`
+  +`<li><b>Orders</b> — one row per order: what was paid and what has landed, with <b>Arrived → bench</b> and <b>Paste receipt</b>.</li>`
+  +`<li><b>Sheet</b> — the Master spreadsheet, read from the library rather than kept beside it. <b>T</b> is what a deck’s list claims, <b>A</b> what is physically in its box; click a number and type.</li>`
+  +`</ul><p class="cm-help-aside"><b>List</b>, <b>Table</b> and <b>Sheet</b> beside the tabs are three ways of looking at the same records, never a separate copy of them.</p>`
+  +`<h3>How a card moves through the library</h3>`+helpFlow()
+  +`<h3>What each state means</h3><div class="cm-help-defs">`+helpDefs()+`</div>`
+  +`<h3>The counts row</h3><ul>`
+  +`<li>It reads in the order a deck is built, and every figure is a filter: click one to see only those rows.</li>`
+  +`<li>On every deck <b>Reserved = Owned + Ordered + To buy</b>, and Owned counts reserved copies only.</li>`
+  +`<li>The Bench sits outside those figures, because nothing on it is reserved. <b>Sell / Trade</b> is a flag on a Bench copy, not a status of its own.</li>`
+  +`<li>With a filter set, the row counts only what the table is showing.</li>`
+  +`</ul>`
+  +`<h3>Finding and changing rows</h3><ul>`
+  +`<li>Five filters are in view, with search and group beside them. <b>More filters</b> holds subtype, mechanic, flags, offers, mana value and price.</li>`
+  +`<li><b>Paid</b> and <b>Quantity</b> are cells: click one and type.</li>`
+  +`<li><b>Ready to add</b>, for walking owned copies into a deck, and <b>Make the change</b>, the pull-and-put list for one physical deck, are both under <b>More</b>.</li>`
+  +`<li>Every change is one entry in the library, so <b>Undo</b> takes it back and every other view agrees.</li>`
+  +`</ul></div>`};
 /* THE SPREADSHEET. Rob's Master sheet, read from the library instead of kept beside it: one
    row per card; Own, Ordered, Bench and To buy across it; and for every deck two columns --
    T, how many the list wants, and A, how many are physically in its box, with a small +n
