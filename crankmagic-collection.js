@@ -308,8 +308,22 @@ function tabletop(params,shop=false){
       onClear:()=>{rest();draw();},
       onMenu:(record,el)=>{actions['row-actions'](el);},
       onDrop:(pileId,ids)=>{try{tabletopDrop(pileId,ids);}catch(err){C.notice(err.message,true);}},
-      onMoveTo:(ids,el)=>{const rows=ids.map(id=>findRow(id)).filter(Boolean);const piles=[ttModel.bench,...ttModel.statusPiles,...ttModel.groupPiles];
-        popAt(el,`<p>Move ${rows.length} card${rows.length===1?'':'s'} to</p>${piles.map(p=>{const a=TT.accepts(p,rows);return `<button type="button" data-action="tabletop-drop" data-pile="${e(p.id)}"${a.ok?'':' disabled'} title="${e(a.ok?a.why:a.why)}">${e(p.label)}${a.ok?` <small>${e(a.label)}</small>`:''}</button>`;}).join('')}`);},
+      /* MOVE TO… LISTS ONLY WHERE THE CARD CAN GO (Rob, 14 September). It offered every pile on the
+         mat -- the six destinations, the Bench and every band of the current grouping -- and merely
+         disabled the ones that refuse. Grouped by Primary Purpose that is a scrolling menu of
+         twenty-five entries holding perhaps two a reader can use, and a band was never going to be
+         one of them: "Card draw" is a reading of the card, not a place it can go. So the menu is
+         the accepting piles only, in the order the status band uses, and when nothing accepts the
+         card it says why instead of showing a wall of grey. The drag is untouched: mid-drag a
+         refused pile ringed in red answers "can I drop here", which is the question being asked;
+         in a menu the same thing is only noise. */
+      onMoveTo:(ids,el)=>{const rows=ids.map(id=>findRow(id)).filter(Boolean);
+        const open=[...ttModel.statusPiles,ttModel.bench,...ttModel.groupPiles].map(p=>({p,a:TT.accepts(p,rows)})).filter(x=>x.a.ok);
+        /* Nothing accepts it: the Bench is the most permissive destination there is, so its refusal
+           is the fundamental one and the only sentence worth printing. */
+        popAt(el,`<p>Move ${rows.length} card${rows.length===1?'':'s'} to</p>`+(open.length
+          ?open.map(({p,a})=>`<button type="button" data-action="tabletop-drop" data-pile="${e(p.id)}" title="${e(a.why)}">${e(p.label)} <small>${e(a.label)}</small></button>`).join('')
+          :note(TT.accepts(ttModel.bench,rows).why||'There is nowhere on the table this card can be moved to.',true)));},
       onBench:open=>{ttUI.bench=open?'open':'shut';try{localStorage.setItem('cm-tabletop-bench',ttUI.bench);}catch(err){/* not remembered, still applied */}draw();queueMicrotask(()=>$('#cm-tt-host [data-tt=bench-toggle]')?.focus?.({preventScroll:true}));},
       onStageSize:z=>{ttUI.stageSize=z;try{localStorage.setItem('cm-tabletop-stage',z);}catch(err){/* not remembered, still applied */}draw();queueMicrotask(()=>$(`#cm-tt-host [data-tt=stage-size][data-size=${z}]`)?.focus?.({preventScroll:true}));},
       /* Previous / Next on the stage: the selection moves along the pile it came from, which stays the pile to go back to. */

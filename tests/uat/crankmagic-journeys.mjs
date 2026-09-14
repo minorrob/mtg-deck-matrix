@@ -270,7 +270,16 @@ try{
   await page.locator('.cm-tt-pile.cm-tt-status[aria-label^="To buy,"]').click();await page.locator('.cm-tt-grid').waitFor();await page.locator('.cm-tt-grid .cm-tt-card').first().click();await page.locator('.cm-tt-stage').waitFor();
   const needQty=Number(((await page.locator('.cm-tt-captions li').first().innerText()).match(/×(\d+)/)||[])[1]||1);eq(await page.locator('.cm-tt-captions .cm-tt-pill').first().innerText(),'To buy');
   eq(await page.locator('.cm-tt-stage .cm-tt-card.is-ghost[data-ghost="To buy"]').count(),1,'a ghost wears its status on its corner');eq(await page.locator('.cm-tt-stage .cm-tt-card.is-ghost').evaluate(el=>getComputedStyle(el,'::before').opacity),'1','and its picture is not faded');
-  await click('Move to…');await page.locator('.cm-row-menu').waitFor();ok((await page.locator('.cm-row-menu button:not([disabled])').allInnerTexts()).some(x=>/^Ordered/.test(x)),'Move to… offers Ordered');ok((await page.locator('.cm-row-menu button[disabled]').allInnerTexts()).some(x=>/^Physical deck/.test(x)),'and refuses Physical deck for a requirement');
+  /* MOVE TO… IS ONLY WHERE THE CARD CAN GO (Rob, 14 September): the menu used to list every pile
+     on the mat and grey out the refusals, so under a grouping like Primary Purpose it ran to
+     twenty-five entries holding two a reader could use. It now carries the accepting piles only —
+     no disabled rows, and never a band of the grouping, which is a reading of the card. */
+  await click('Move to…');await page.locator('.cm-row-menu').waitFor();
+  {const shown=await page.locator('.cm-row-menu button').allInnerTexts();
+   ok(shown.some(x=>/^Ordered/.test(x)),'Move to… offers Ordered for a requirement');
+   eq(await page.locator('.cm-row-menu button[disabled]').count(),0,'and offers nothing it would refuse');
+   ok(!shown.some(x=>/^Physical deck/.test(x)),'Physical deck is not offered for a requirement');
+   ok(!shown.some(x=>/^(Creature|Instant|Sorcery|Land|Artifact|Enchantment)\b/.test(x)),'and no grouping band is offered as a destination');}
   await page.locator('.cm-row-menu button:not([disabled])').filter({hasText:/^Ordered/}).click();await page.getByRole('dialog').waitFor();ok(/Set 1 record to Ordered/.test(await page.getByRole('dialog').innerText()));await click('Confirm change');await page.waitForTimeout(900);
   {const t3=await tally();eq(t3['Ordered']||0,(t0['Ordered']||0)+needQty,'an ordered copy now');eq(t3['To buy']||0,(t0['To buy']||0)-needQty,'one requirement fewer to buy');}
   await page.keyboard.press('Escape');await page.waitForTimeout(200);eq(await page.locator('.cm-tt-stage').count(),0);
