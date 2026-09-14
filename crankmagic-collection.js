@@ -253,6 +253,7 @@ function sheetEdit(btn,seed=''){
 let tabletopGroupBy=C.state.preferences.tabletopGroupBy||'type';
 /* The table's own state between draws: the open pile, its page and card size, the ticks while it is laid out, the selection on the stage and the pile it came from. */
 const ttUI={open:null,from:null,page:0,size:'M',ticked:new Set(),selection:new Set()};
+let ttModel=null;
 function tabletop(params){
   const TT=globalThis.CrankTabletop;
   C.main.innerHTML=cardsHead(params,'library','tabletop')
@@ -261,7 +262,7 @@ function tabletop(params){
   const draw=()=>{
     if(!TT){$('#cm-tt-host').innerHTML='<p class="cm-muted">The tabletop module has not loaded yet.</p>';return;}
     const all=rows(params,false).filter(matches).map(r=>({...r,status:statusOf(r)}));lastRows=all;
-    const model=TT.table(all,{groupBy:tabletopGroupBy,statuses:M.STATUS,statusOrder:M.statusOrder,value,maxGroupPiles:16});
+    const model=TT.table(all,{groupBy:tabletopGroupBy,statuses:M.STATUS,statusOrder:M.statusOrder,value,maxGroupPiles:16});ttModel=model;
     $('#cm-tt-status').textContent=`${model.total.toLocaleString()} cop${model.total===1?'y':'ies'} on the table (${model.rows.toLocaleString()} rows) · Bench ${model.bench.count.toLocaleString()} · ${model.ghosts.toLocaleString()} ghost${model.ghosts===1?'':'s'}`+(Object.values(filter).some(v=>v!=='')||params.get('deck')?' · filtered':'');
     /* A selection that the filters no longer show is dropped; an open pile that vanished (a grouping change) closes. */
     const ids=new Set(all.map(r=>r.recordId));for(const id of [...ttUI.selection])if(!ids.has(id))ttUI.selection.delete(id);for(const id of [...ttUI.ticked])if(!ids.has(id))ttUI.ticked.delete(id);
@@ -276,6 +277,9 @@ function tabletop(params){
       onSelect:list=>{ttUI.selection=new Set(list);ttUI.from=ttUI.open;ttUI.open=null;ttUI.ticked.clear();draw();queueMicrotask(()=>$('#cm-tt-host .cm-tt-stage-actions button')?.focus?.({preventScroll:true}));},
       onClear:()=>{rest();draw();},
       onMenu:(record,el)=>{actions['row-actions'](el);},
+      onDrop:(pileId,ids)=>{try{tabletopDrop(pileId,ids);}catch(err){C.notice(err.message,true);}},
+      onMoveTo:(ids,el)=>{const rows=ids.map(id=>findRow(id)).filter(Boolean);const piles=[ttModel.bench,...ttModel.statusPiles,...ttModel.groupPiles];
+        popAt(el,`<p>Move ${rows.length} card${rows.length===1?'':'s'} to</p>${piles.map(p=>{const a=TT.accepts(p,rows);return `<button type="button" data-action="tabletop-drop" data-pile="${e(p.id)}"${a.ok?'':' disabled'} title="${e(a.ok?a.why:a.why)}">${e(p.label)}${a.ok?` <small>${e(a.label)}</small>`:''}</button>`;}).join('')}`);},
       describe:r=>({status:r.status||statusOf(r),price:r.card&&r.card.price!=null?C.money(r.card.price):'',deck:value(r,'deck')})
     },{...ttUI,viewportHeight:innerHeight});
   };
@@ -285,9 +289,46 @@ function tabletop(params){
   for(const [name,key] of [['ttStatus','status'],['ttType','type'],['ttColor','color']]){host.querySelector(`[name=${name}]`)?.addEventListener('change',ev=>{filter[key]=ev.target.value;draw();});}
   host.querySelector('[name=ttDeck]')?.addEventListener('change',ev=>goCards('library',{view:'tabletop',...(ev.target.value?{deck:ev.target.value}:{})}));
   if(!TT)return;
+  actions['tabletop-drop']=el=>tabletopDrop(el.dataset.pile,[...ttUI.selection]);
   /* The mat is sized from the host's width, so a resize redraws it. */
   let last=host.clientWidth;const onResize=()=>{if(C.route().view!=='cards'||C.route().params.get('view')!=='tabletop'){removeEventListener('resize',onResize);return;}if(Math.abs(host.clientWidth-last)>40){last=host.clientWidth;draw();}};
   addEventListener('resize',onResize);
+}
+/* A DROP IS THE STATUS FLY-OUT'S COMMAND (plan §2.3): the contract in crankmagic-tabletop.js
+   says which action a pile takes for these rows; here that action becomes the same command
+   the row menu and the ticked-rows bar send, through the same receipt (C.review) for anything
+   that changes a deck or money, and a plain save for filing into a group. */
+function tabletopDrop(pileId,ids){
+  const TT=globalThis.CrankTabletop,pile=TT.findPile(ttModel,pileId),rows=ids.map(id=>findRow(id)).filter(Boolean);
+  const a=TT.accepts(pile,rows);if(!a.ok){C.notice(a.why,true);return;}
+  const lots=rows.filter(r=>r.kind==='lot'),lotIds=lots.map(r=>r.id),plans=rows.filter(r=>r.kind==='need'||r.kind==='draft');
+  const byDeck=new Map();for(const r of plans){if(!byDeck.has(r.deckId))byDeck.set(r.deckId,[]);byDeck.get(r.deckId).push(r);}
+  const n=rows.length,names=rows.slice(0,4).map(r=>r.card.name).join(', ')+(n>4?` and ${n-4} more`:'');
+  const finals=C.state.decks.filter(d=>!d.archived&&d.status==='final');
+  const [action,arg]=a.action.split(':');
+  if(action==='source'){const source=arg,label=C.source(source),commands=[];
+    if(lotIds.length)commands.push({type:'bulk',op:'source',source,lotIds,confirmed:true});
+    for(const [deckId,rowsFor] of byDeck)commands.push({type:'acquireSlots',deckId,source,slotIds:rowsFor.map(r=>r.slotId),quantities:Object.fromEntries(rowsFor.map(r=>[r.slotId,r.quantity])),confirmed:true});
+    C.review(`Set ${n} record${n===1?'':'s'} to ${label}`,note(`${names}. ${a.why}`,source!=='owned'),commands.length===1?commands[0]:{type:'batch',commands,summary:`Set ${n} records to ${label}`});return;}
+  if(action==='bench'){C.review('Move these copies to the Bench',note(`${names}. ${a.why}`,lots.some(r=>r.location?.kind==='deck')),{type:'bulk',op:'bench',lotIds});return;}
+  if(action==='release'){C.review('Release these reservations',note(`${names}. ${a.why}`,true),{type:'bulk',op:'release',lotIds});return;}
+  if(action==='place'||action==='standin'){if(!finals.length)throw Error('Finalize a deck first — a draft holds no physical copies.');
+    const standin=action==='standin',preferred=lots.map(r=>r.allocation?.deckId).find(Boolean)||'';
+    form(standin?'Substitute in a physical deck':'Put these copies in a physical deck',s('Deck','deckId',finals.map(d=>[d.id,d.name]),preferred)+f('Box label (optional)','box')+(standin?'':`<label class="cm-checkbox cm-full"><input type="checkbox" name="asStandIn"> Allow substitutes: a copy this deck's list does not call for goes in unreserved, filling a seat until the real card arrives</label>`)+note(standin?`${names} go in without a reservation; the deck counts them as substitutes and Ready to add asks for them back when the real card is ready.`:`${names}. Records where these copies physically are. Ownership does not change. A copy that is not reserved for this deck is refused by name unless substitutes are allowed; one the list calls for is reserved on the way in.`),
+      v=>C.review(standin?'Substitute in a physical deck':'Put these copies in a physical deck',note(`${names} move into ${e(M.deck(C.state,v.deckId).name)}${standin||v.asStandIn?', as substitutes where the list does not call for them':''}.`),{type:'bulk',op:'place',deckId:v.deckId,box:v.box,lotIds,...(standin||v.asStandIn?{asStandIn:true}:{})}),'Review placement');return;}
+  if(action==='reserve'){
+    const build=deckId=>{const d=M.deck(C.state,deckId),commands=[],misses=[];
+      for(const r of lots){const l=M.lot(C.state,r.id);const slot=d.slots.find(x=>x.committed&&M.compatible(l,x)&&M.shortfall(C.state,d,x)>=l.quantity);if(!slot){misses.push(r.card.name);continue;}commands.push({type:'allocate',lotId:l.id,quantity:l.quantity,deckId:d.id,slotId:slot.id,confirmed:true});}
+      if(!commands.length)throw Error(`${d.name}’s list does not call for ${misses.join(', ')}, or already has ${misses.length===1?'it':'them'}.`);
+      C.review(`Reserve ${commands.length} cop${commands.length===1?'y':'ies'} for ${d.name}`,note(`${misses.length?`Not reserved — the list does not call for them, or has them: ${misses.join(', ')}. `:''}The physical box stays unchanged; a donor deck’s shortfall shows on its page.`,true),commands.length===1?commands[0]:{type:'batch',commands,summary:`Reserved ${commands.length} copies for ${d.name}`});};
+    const fixed=pile.key==='deck'?finals.find(d=>d.name===pile.label):null;
+    if(pile.key==='deck'&&!fixed)throw Error(`${pile.label} is not a finalized deck; only a finalized deck holds reservations.`);
+    if(fixed)return build(fixed.id);
+    const decks=finals.filter(d=>lots.some(r=>{const l=M.lot(C.state,r.id);return d.slots.some(x=>x.committed&&M.compatible(l,x)&&M.shortfall(C.state,d,x)>0);}));
+    if(!decks.length)throw Error('No finalized deck has an unfulfilled requirement for these cards.');
+    form('Reserve for a deck',s('Deck','deckId',decks.map(d=>[d.id,d.name]),'')+note('Only a deck whose list calls for the card and still lacks it can take the reservation; the physical box stays unchanged.'),v=>build(v.deckId),'Review');return;}
+  if(action==='group'){const g=C.state.groups.find(g=>g.name===pile.label);if(!g)throw Error('That group is gone; refresh the view.');commit({type:'groupLots',groupId:g.id,lotIds}).catch(err=>C.notice(err.message,true));return;}
+  throw Error('That drop is not wired yet.');
 }
 function sheet(params){
   const m=M.matrix(C.state),decks=m.decks;

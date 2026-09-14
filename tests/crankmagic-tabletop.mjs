@@ -112,5 +112,33 @@ eq(T.layout(hundred, {width: 960, size: "M", rowsFit: 3}).cards[9].x, 16 + 1 * (
 eq(T.layout(hundred, {width: 960, size: "M", rowsFit: 3}).cards[9].y, 134 + 12);
 eq(T.layout(hundred, {width: 960, size: "nonsense"}).size, "M", "an unknown size is M");
 eq(T.findPile(t, "bench").label, "Bench"); eq(T.findPile(t, t.statusPiles[0].id).label, t.statusPiles[0].label); eq(T.findPile(t, "nope"), null);
+/* TB3: the drop-target contract, on the live library's rows. */
+const pileBy = (label, key) => (key ? T.table(rows, {...opts, groupBy: key}).groupPiles.find((p) => p.label === label) : t.statusPiles.find((p) => p.label === label));
+const ownedBench = rows.filter((r) => r.kind === "lot" && r.source === "owned" && !r.allocation && r.location?.kind !== "deck");
+const boxed = rows.filter((r) => r.kind === "lot" && r.source === "owned" && r.location?.kind === "deck");
+const needs = rows.filter((r) => r.kind === "need"), ordered = rows.filter((r) => r.kind === "lot" && r.source === "ordered");
+const planned = rows.filter((r) => r.kind === "entry" || r.kind === "option");
+ok(ownedBench.length > 5 && boxed.length > 5 && needs.length > 5 && ordered.length > 0 && planned.length > 0, "the live library has every kind of row the contract reads");
+eq(T.accepts(pileBy("Physical deck"), ownedBench.slice(0, 2)).action, "place", "an owned bench copy goes into a physical deck");
+eq(T.accepts(pileBy("Physical deck"), needs.slice(0, 1)).ok, false, "a To buy requirement does not go straight into a box");
+eq(T.accepts(t.bench, boxed.slice(0, 1)), {ok: true, action: "bench", label: "Move physically to the Bench", why: "Takes a copy out of its physical deck; asks first."}, "a boxed copy to the Bench asks");
+eq(T.accepts(t.bench, needs.slice(0, 2)).action, "source:owned", "a ghost on the Bench becomes an owned copy");
+eq(T.accepts(t.bench, ordered.slice(0, 1)).action, "source:owned");
+eq(T.accepts(pileBy("Ordered"), needs.slice(0, 1)).action, "source:ordered", "a ghost on Ordered becomes an ordered copy");
+ok(/asks first/.test(T.accepts(pileBy("Ordered"), boxed.slice(0, 1)).why), "an owned boxed copy marked Ordered says it loses its place");
+eq(T.accepts(pileBy("Watched"), needs.slice(0, 1)).ok, false, "a requirement cannot be Watched");
+eq(T.accepts(pileBy("To buy"), ownedBench.slice(0, 1)).ok, false, "an unreserved copy has nothing to release");
+eq(T.accepts(pileBy("To buy"), boxed.filter((r) => r.allocation).slice(0, 1)).action, "release", "a reserved copy releases to To buy");
+eq(T.accepts(pileBy("Reserved"), ownedBench.slice(0, 1)).action, "reserve");
+eq(T.accepts(pileBy("Substitute"), ownedBench.slice(0, 1)).action, "standin");
+eq(T.accepts(pileBy("Suggestion"), ownedBench.slice(0, 1)).ok, false, "a plan pile is not a target");
+for (const label of ["Physical deck", "Ordered", "Bench"]) eq(T.accepts(label === "Bench" ? t.bench : pileBy(label), planned.slice(0, 1)).ok, false, `${label}: a planned card is not a copy`);
+eq(T.accepts(pileBy("Creature", "type"), ownedBench.slice(0, 1)).ok, false, "a type pile refuses"); ok(/reading of the card/.test(T.accepts(pileBy("Creature", "type"), ownedBench.slice(0, 1)).why));
+const groupPile = T.table(rows, {...opts, groupBy: "groups"}).groupPiles.find((p) => !/^No /.test(p.label) && !p.folded);
+if (groupPile) { eq(T.accepts(groupPile, ownedBench.slice(0, 1)).action, "group"); eq(T.accepts(groupPile, needs.slice(0, 1)).ok, false, "a plan is not filed in a group"); }
+const deckPile = T.table(rows, {...opts, groupBy: "deck"}).groupPiles.find((p) => !/^No /.test(p.label));
+eq(T.accepts(deckPile, ownedBench.slice(0, 1)).action, "reserve"); eq(T.accepts(deckPile, ownedBench.slice(0, 1)).label, `Reserve for ${deckPile.label}`);
+eq(T.accepts(pileBy("Physical deck"), []).ok, false); eq(T.accepts(null, ownedBench).ok, false);
+ok([t.bench, ...t.statusPiles].every((p) => { const a = T.accepts(p, ownedBench.slice(0, 1)); return typeof a.ok === "boolean" && (a.ok ? a.action && a.label : a.why); }), "every pile answers with an action or a reason");
 M.setRecordSource(null);
 console.log(`crankmagic-tabletop: ${checks} checks passed — ${t.total} copies on the table, bench ${t.bench.count}, ${t.statusPiles.length} status piles, ${T.GROUPINGS.length} groupings.`);
