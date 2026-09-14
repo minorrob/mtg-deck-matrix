@@ -14,8 +14,9 @@
  *                 asides rather than in headings, figures or controls,
  *
  * and holds each under the number written beside the page below. The numbers are the
- * measurement on the day the trim shipped (Decks 17 words, the deck page 77, the
- * Cards Library 63, its To buy tab 28) with a little headroom, not aspirations: a page that needs
+ * measurement on the day the trim shipped (Decks 17 words, the deck page 77 — 38 once it
+ * became five tabs, its boundary the progress card — the Cards Library 63, its To buy tab 28)
+ * with a little headroom, not aspirations: a page that needs
  * more has to say so here, in the diff, where a reviewer sees it.
  *
  * WHEN THERE IS NO BROWSER it prints SKIPPED and exits 0 (see tests/uat/browser-runner.mjs);
@@ -35,7 +36,7 @@ const DECK = "deck:live:D1";
    order. Budgets are words / controls / explainer words. */
 const PAGES = [
   ["decks", "Decks", ".cm-deck-grid", [24, 8, 4], [24, 8, 4]],
-  [`decks?deck=${DECK}`, "Deck page", ".cm-grid-2", [90, 10, 24], [90, 10, 24]],
+  [`decks?deck=${DECK}`, "Deck page", ".cm-deck-summary", [44, 14, 4], [44, 14, 4]],
   ["cards", "Cards · Library", "#cm-roster-table table", [76, 22, 16], [76, 22, 16]],
   ["cards?tab=buy", "Cards · To buy", "#cm-roster-table table, .cm-shop-strip", [40, 18, 8], [16, 10, 4]],
   ["cards?view=sheet", "Cards · Sheet", "#cm-sheet-table table", [46, 16, 20], [46, 16, 20]],

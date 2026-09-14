@@ -134,6 +134,7 @@
        paper only, and the record carries that price and the set it came from. Best-effort:
        offline or rate-limited, the record keeps the price it had. */
     const CHEAPEST='Scryfall cheapest paper printing';
+    const priceTried=new Set();
     async function cheapest(c,{signal}={}){
       if(!c||!options.client?.search)return c;
       try{
@@ -147,7 +148,8 @@
     async function details(c,{signal,cheapest:wantCheapest=true,onFail}={}){
       let out=c;
       if(!(c.verified&&c.oracleText&&c.manaCost!==undefined)){try{const raw=await options.client.named(c.name,{exact:true,signal});if(raw)out=add({...raw,verified:true,source:'Scryfall exact name',updatedAt:new Date().toISOString()});}catch(error){onFail?.(error,c);return c;}}
-      if(wantCheapest&&out.verified&&out.priceSource!==CHEAPEST)out=await cheapest(out,{signal});
+      /* One cheapest-print lookup per card per session: a lookup that came back empty or failed used to run again on every render that touched the card, and each run waited the client's full timeout when Scryfall was unreachable. */
+      if(wantCheapest&&out.verified&&out.priceSource!==CHEAPEST&&!priceTried.has(out.id)){priceTried.add(out.id);out=await cheapest(out,{signal});}
       return out;
     }
     /* LEGALITY IS NOT A FACT YOU BAKE ONCE. The catalog ships the ban list as it stood the
