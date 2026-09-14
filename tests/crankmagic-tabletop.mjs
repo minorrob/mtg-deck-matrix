@@ -157,5 +157,34 @@ eq((sheet.match(/<tr><td>\d+<\/td>/g) || []).length, t.statusPiles.find((p) => p
 ok(/<td>Physical deck<\/td><td>\$1\.00<\/td><td>D<\/td>/.test(sheet), "status, price and deck come from the caller");
 ok(/<td>1<\/td><td>/.test(sheet) && / cards · [\d,]+ copies · Test/.test(sheet), "numbered, with the count and the copies");
 eq(T.printSheet({kind: "status", label: "Watched", rows: []}).includes("0 cards · 0 copies"), true, "an empty pile prints an empty sheet");
+/* THE SHELVES (Rob, 14 September; the play-space plan §2.5): the group piles stand in columns
+   down both sides of the play space, filled a column at a time and alternating sides, and the
+   sides grow by the columns they need — never so many that the middle stops being a table. */
+{
+  const seatsOf = (n, o) => T.shelfSeats(n, o).seats.map((x) => (x ? x.side[0] + x.column + ":" + x.row : "fold"));
+  /* The order: left column, right column, left column again. Four piles stand two and two. */
+  eq(seatsOf(4, {width: 1400, height: 560}), ["l0:0", "l0:1", "l0:2", "r0:0"], "a column fills before the other side starts");
+  eq(T.shelfSeats(8, {width: 1400, height: 560}).seats.map((x) => x.side), ["left", "left", "left", "right", "right", "right", "left", "left"], "and the third column goes back to the left");
+  /* Growing by the columns they need: one column a side until the count asks for more. */
+  eq(T.shelfShape(3, {width: 1400, height: 560}).columns, 1, "three piles need one column");
+  eq(T.shelfShape(6, {width: 1400, height: 560}).columns, 2, "six need two, one a side");
+  eq(T.shelfShape(16, {width: 1400, height: 560}).columns, 6, "sixteen need six");
+  /* The width caps it: the middle never drops below the play space's own minimum. */
+  for (const width of [860, 1000, 1100, 1280, 1400, 1800]) {
+    const shape = T.shelfShape(24, {width, height: 620});
+    ok(shape.columnsPerSide >= 1 && shape.columnsPerSide <= T.SHELF.maxColumns, `${width}px: between one and three columns a side`);
+    ok(width - 2 * shape.columnsPerSide * (T.SHELF.pileW + T.SHELF.gutter) >= T.SHELF.minMiddle, `${width}px: the middle keeps ${T.SHELF.minMiddle}px`);
+  }
+  /* The height caps the rows, and four is the most a side stands. */
+  eq(T.shelfShape(24, {width: 1400, height: 300}).perColumn, 2, "a short table stands two to a column");
+  eq(T.shelfShape(24, {width: 1400, height: 2000}).perColumn, T.SHELF.maxRows, "a tall one stops at four");
+  /* More piles than the shelves hold: the tail has no seat, and the caller folds it. */
+  const many = T.shelfSeats(30, {width: 900, height: 560});
+  eq(many.seats.filter(Boolean).length, many.shape.holds, "every seat the shelves hold is used");
+  ok(many.seats.slice(many.shape.holds).every((x) => x === null), "and the tail beyond them has no seat");
+  /* Pure: the same question twice is the same answer, and nothing is shared between calls. */
+  eq(JSON.stringify(T.shelfSeats(7, {width: 1400})), JSON.stringify(T.shelfSeats(7, {width: 1400})), "the placement is the same twice");
+  eq(T.shelfSeats(0, {width: 1400}).seats, [], "no piles, no seats");
+}
 M.setRecordSource(null);
 console.log(`crankmagic-tabletop: ${checks} checks passed — ${t.total} copies on the table, bench ${t.bench.count}, ${t.statusPiles.length} status piles, ${T.GROUPINGS.length} groupings.`);

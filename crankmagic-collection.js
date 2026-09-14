@@ -275,9 +275,9 @@ function sheetEdit(btn,seed=''){
    this view feeds it the rows, the filters and the reader's grouping choice. */
 let tabletopGroupBy=C.state.preferences.tabletopGroupBy||'type';
 /* The table's own state between draws: the open pile, its page and card size, the ticks while it is laid out, the selection on the stage and the pile it came from. */
-const ttUI={open:null,from:null,page:0,size:'M',ticked:new Set(),selection:new Set(),bench:'open',stageSize:'XL'};
+const ttUI={open:null,from:null,page:0,size:'M',ticked:new Set(),selection:new Set(),bench:'open',stageSize:'XL',canvas:'slate'};
 /* The card size, the Bench ledge's fold and the stage's picture size are facts about the screen they were chosen on, so they are remembered per device and not in the library. */
-try{const s=localStorage.getItem('cm-tabletop-size');if(s&&['S','M','L'].includes(s))ttUI.size=s;if(localStorage.getItem('cm-tabletop-bench')==='shut')ttUI.bench='shut';const z=localStorage.getItem('cm-tabletop-stage');if(z&&['L','XL','XXL','full'].includes(z))ttUI.stageSize=z;}catch(err){/* a private window; the defaults then */}
+try{const s=localStorage.getItem('cm-tabletop-size');if(s&&['S','M','L'].includes(s))ttUI.size=s;if(localStorage.getItem('cm-tabletop-bench')==='shut')ttUI.bench='shut';const z=localStorage.getItem('cm-tabletop-stage');if(z&&['L','XL','XXL','full'].includes(z))ttUI.stageSize=z;const c=localStorage.getItem('cm-tabletop-canvas');if(c&&globalThis.CrankTabletop&&CrankTabletop.CANVASES.some(([k])=>k===c))ttUI.canvas=c;}catch(err){/* a private window; the defaults then */}
 let tabletopStatusOrder=C.state.preferences.tabletopStatusOrder==='count'?'count':'workflow';
 let ttModel=null;
 function tabletop(params,shop=false){
@@ -325,6 +325,12 @@ function tabletop(params,shop=false){
           ?open.map(({p,a})=>`<button type="button" data-action="tabletop-drop" data-pile="${e(p.id)}" title="${e(a.why)}">${e(p.label)} <small>${e(a.label)}</small></button>`).join('')
           :note(TT.accepts(ttModel.bench,rows).why||'There is nowhere on the table this card can be moved to.',true)));},
       onBench:open=>{ttUI.bench=open?'open':'shut';try{localStorage.setItem('cm-tabletop-bench',ttUI.bench);}catch(err){/* not remembered, still applied */}draw();queueMicrotask(()=>$('#cm-tt-host [data-tt=bench-toggle]')?.focus?.({preventScroll:true}));},
+      /* THE CANVAS (Rob, 14 September): which table you are working on, remembered per device
+         because it is a fact about this screen rather than about the library. */
+      onCanvas:c=>{ttUI.canvas=CrankTabletop.canvasOf(c);try{localStorage.setItem('cm-tabletop-canvas',ttUI.canvas);}catch(err){/* not remembered, still applied */}draw();queueMicrotask(()=>$('#cm-tt-host [name=tabletopCanvas]')?.focus?.({preventScroll:true}));},
+      /* The table's own words go through the glossary, so "Primary Purpose" and "Price band" can
+         be asked about where they are read rather than in a help panel. */
+      term:text=>C.glossary?C.glossary.label(text):e(text),
       onStageSize:z=>{ttUI.stageSize=z;try{localStorage.setItem('cm-tabletop-stage',z);}catch(err){/* not remembered, still applied */}draw();queueMicrotask(()=>$(`#cm-tt-host [data-tt=stage-size][data-size=${z}]`)?.focus?.({preventScroll:true}));},
       /* Previous / Next on the stage: the selection moves along the pile it came from, which stays the pile to go back to. */
       onStep:id=>{ttUI.selection=new Set([id]);draw();queueMicrotask(()=>$('#cm-tt-host .cm-tt-stage-actions [data-tt=step]:not([disabled])')?.focus?.({preventScroll:true}));},
