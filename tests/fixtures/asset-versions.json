@@ -166,8 +166,8 @@
       "sha": "5de2d4a9a4e4577a"
     },
     "crankmagic-loops.js": {
-      "version": 3,
-      "sha": "28fe5c050e56173c"
+      "version": 4,
+      "sha": "8bc4072293739dab"
     },
     "crankmagic-orders.js": {
       "version": 6,
@@ -203,7 +203,7 @@
     },
     "crankmagic-sw.js": {
       "version": 173,
-      "sha": "e8bcb72ac51e9ff7"
+      "sha": "3347284e36dd6286"
     },
     "crankmagic-tabletop.js": {
       "version": 5,
@@ -215,7 +215,7 @@
     },
     "crankmagic-trace.js": {
       "version": 3,
-      "sha": "c6b0ef451abde681"
+      "sha": "aacb53a680b6bdd3"
     },
     "crankmagic-trade.js": {
       "version": 1,

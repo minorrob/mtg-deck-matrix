@@ -179,7 +179,7 @@
     const loops = loopsMod;
     let cycles = new Map();
     if (loops && typeof loops.countThrough === "function" && list.length > 1) {
-      try { cycles = loops.countThrough(list.map((n) => n.card), relate, {maxLen: maxLoop}); } catch { cycles = new Map(); }
+      try { cycles = loops.countThrough(list.map((n) => n.card), relate, {maxLen: maxLoop, budget: options.loopBudget}); } catch { cycles = new Map(); }
       for (const n of list) { const k = cycles.get(n.id) || 0; if (k) n.loopBacks += k; }
     }
 
