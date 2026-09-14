@@ -10,6 +10,15 @@ import path from "node:path";
 import {ROOT} from "../schema/index.mjs";
 
 const require = createRequire(import.meta.url);
+/* describe(): the deck page's strategy lines -- the tuples' own words, the commander's first, deterministic. */
+{ const S = require("../crankmagic-strategies.js");
+  const krenko = {roles: ["token-maker"], mechanics: ["tap-ability"], produces: ["token"], causes: [], triggers: [], wants: ["Goblin"]};
+  const d = S.describe(krenko, ["Goblin tribal"]);
+  assert.ok(d.lines.length >= 2 && d.lines.every((l) => l.label && l.why), "each line carries the tuple's label and why");
+  assert.ok(d.ids.includes("tribal-payoff"), "a commander that wants a tribe reads as a tribal payoff");
+  assert.deepEqual(S.describe(krenko, ["Goblin tribal"]), d, "the same card and mechanics say the same thing twice");
+  assert.deepEqual(S.describe(null, []), {ids: [], derived: [], named: [], lines: []}, "no commander, no lines");
+  assert.ok(d.lines.findIndex((l) => l.source === "mechanics") === -1 || d.lines.findIndex((l) => l.source === "mechanics") >= d.lines.filter((l) => l.source !== "mechanics").length, "the commander's own lines come first"); }
 const S = require(path.join(ROOT, "crankmagic-strategies.js"));
 const graph = require(path.join(ROOT, "graph-payload.js")).unpack(JSON.parse(readFileSync(path.join(ROOT, "data/graph.json"), "utf8")));
 const baked = JSON.parse(readFileSync(path.join(ROOT, "data/commander-strategies.json"), "utf8"));
