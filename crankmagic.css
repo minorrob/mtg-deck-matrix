@@ -118,7 +118,8 @@ button.cm-badge-link:hover{background:#35507a;color:#eaf5ff}
 /* The picture, then what it costs and where to buy it. The colour pips that used to sit
    beside the price were the mana cost said twice. */
 .cm-inspector-art{display:flex;flex-direction:column;gap:8px}
-.cm-inspector-buy{display:flex;flex-direction:column;gap:2px}
+.cm-inspector-buy{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 16px}  /* The two shops sit side by side (Rob, 14 September); the price takes the line above them. */
+.cm-inspector-buy .cm-inspector-price{flex:0 0 100%}
 .cm-inspector-price{margin:2px 0 0}
 .cm-inspector-price strong{font-size:18px}
 .cm-inspector-buy .cm-text-button{font-size:13px;padding:2px 0}
@@ -1440,7 +1441,9 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-tt-card.is-ghost{background:#0f1523;border:2px dashed #e2b85a;box-shadow:0 3px 8px #000a}.cm-tt-card.is-ghost:before{opacity:1;filter:saturate(.55)}.cm-tt-card.is-ghost .cm-tt-name{color:#c9d4e6}
 .cm-tt-card.is-ghost:after{content:attr(data-ghost);position:absolute;left:0;top:0;z-index:2;padding:1px 5px;border-radius:3px 0 5px 0;background:#e2b85a;color:#1a1204;font-size:7px;line-height:12px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap}
 .cm-tt-pile{position:absolute;width:74px;height:104px;background:none;border:0;padding:0;cursor:pointer;color:inherit;font:inherit}
-.cm-tt-slot{position:absolute;left:-7px;top:-7px;width:88px;height:118px;border-radius:9px;background:#0b1019;box-shadow:inset 0 3px 10px #000c,0 0 0 1px #2b3a55}
+.cm-tt-slot{position:absolute;left:-5px;top:-5px;width:74px;height:100px;border-radius:8px;background:#0b1019;box-shadow:inset 0 3px 10px #000c,0 0 0 1px #2b3a55}  /* THE SLOT HUGS THE CARD (Rob, 14 September): it stood 88x118 around a 64x90 card, so the
+     picture floated in the top-left with 17px of slate to its right and 21px under it and
+     read as a card that had not loaded. A 5px lip all round, and the picture fills its recess. */
 .cm-tt-stack{position:absolute;left:0;top:0;width:64px;height:90px}
 .cm-tt-stack .cm-tt-card{position:absolute;left:0;top:0;box-shadow:0 3px 8px #000a,0 var(--stack,0px) 0 -1px #0e1420,0 calc(var(--stack,0px) + 1px) 0 0 #3a4658}
 .cm-tt-status .cm-tt-card{background:linear-gradient(160deg,#3a3f4b,#1c1f28)}
@@ -1551,6 +1554,14 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-tt-stage.is-solo .cm-tt-fanL,.cm-tt-stage.is-solo .cm-tt-fanL .cm-tt-card{position:absolute}.cm-tt-card.cm-tt-solo{border-radius:12px}
 .cm-tt-info{position:absolute;overflow:auto;box-sizing:border-box;padding:10px 12px;background:#0f1523d0;border:1px solid #2b3a55;border-radius:10px;font-size:13px;line-height:1.45;color:#dfe7f3}
 .cm-tt-info .cm-tt-captions{margin:0 0 8px;max-height:none;overflow:visible}.cm-tt-info .cm-tt-captions li{white-space:normal}.cm-tt-info p{margin:0 0 6px}.cm-tt-info .cm-oracle{white-space:pre-line;margin:0 0 8px}
+/* OWNED AGAINST WANTED beside the deck name (Rob, 14 September): "D1 Quintorius Spirits | 0/1"
+   — the divider is the span's own edge, so the pair reads as a note on the deck, not a figure
+   of its own. THE BACK ARROW sits on the info pane's top right corner; it is a sibling of the
+   pane, because the pane scrolls and an arrow that scrolls away is not a corner. */
+.cm-tt-own{border-left:1px solid #3b4761;padding-left:10px;color:#dfe7f3;font-variant-numeric:tabular-nums;font-weight:600}
+.cm-tt-back{position:absolute;z-index:3;width:30px;height:30px;display:grid;place-items:center;border-radius:8px;background:#0f1523e6;border:1px solid #2b3a55;color:#dfe7f3;font-size:16px;line-height:1;cursor:pointer;padding:0}
+.cm-tt-back:hover{background:#17203a;border-color:#3b4761}
+.cm-tt-back:focus-visible{outline:2px solid #9addff;outline-offset:2px}
 .cm-tt-info .cm-price-block,.cm-tt-info .cm-inspector-price{margin:6px 0}.cm-tt-info .cm-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .cm-tt-stage-actions.is-solo{position:absolute;left:0;right:0;bottom:8px;margin:0 16px}
 @media(max-width:760px){.cm-tt-readings{font-size:10px}.cm-tt-info{font-size:12px}}

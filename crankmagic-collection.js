@@ -1,7 +1,7 @@
 /* Every roster is the same semantic table projection. Source, allocation and
  * physical box have separate columns; hiding a column cannot change the model. */
 (globalThis.CrankFeatures ||= []).push(function(C){const {M,esc:e,button:b,field:f,select:s,note,form,modal,commit,actions,views,$}=C;let foldPrints=false;let filter={q:'',type:'',subtype:'',mechanic:'',color:'',status:'',offer:'',min:'',max:'',price:'',group:'',flag:'',mana:''},sort={key:'name',dir:1},page=0,expanded=false,groupBy='',shopGroupBy='deck',visibleRows=[],lastRows=[],collapsed=new Set(),collapsedKey='';
-const columns=[['name','Card'],['type','Type'],['status','Status'],['deck','Deck'],['subtype','Subtype'],['mechanic','Mechanic'],['color','Color'],['rarity','Rarity'],['mana','Mana value'],['price','Price'],['cap','Cap'],['vendor','Vendor'],['paid','Paid'],['source','Source'],['placement','Allocation'],['box','Physical location'],['purpose','Purpose'],['quantity','Quantity'],['printing','Printing'],['offer','Sell / Trade'],['groups','Groups']];
+const columns=[['name','Card'],['type','Type'],['status','Status'],['ownership','Ownership'],['deck','Deck'],['subtype','Subtype'],['mechanic','Mechanic'],['color','Color'],['rarity','Rarity'],['mana','Mana value'],['price','Price'],['cap','Cap'],['vendor','Vendor'],['paid','Paid'],['source','Source'],['placement','Allocation'],['box','Physical location'],['purpose','Purpose'],['quantity','Quantity'],['printing','Printing'],['offer','Sell / Trade'],['groups','Groups']];
 const defaults=['name','type','status','deck','quantity','paid'];let selected=null;
 /* A column set saved before Status existed names Source and Allocation; it reads as Status
    in their place, and is only rewritten when the reader next changes columns. */
@@ -36,8 +36,23 @@ function plans(d){
    one thing: an owned copy's placement; Ordered; Watched; To buy for a requirement; Draft
    list, Suggestion or Planned for a row that is not a copy yet. The colour is the state. */
 const statusOf=M.statusOf;   // the model's status vocabulary (M.STATUS); the words are spelled there and nowhere here
-function rows(params,shop){let all=M.projection(C.state);for(const d of C.state.decks.filter(d=>!d.archived))all.push(...plans(d));const gid=params.get('group')||filter.group;for(const g of C.state.groups)all.push(...g.entries.map(r=>({...r,recordId:'entry:'+g.id+':'+r.id,kind:'entry',card:C.card(r.cardId),source:'draft',placement:'Draft list',purpose:'',offer:'none',groupIds:[g.id],deckId:'',groupId:g.id})));if(params.get('card'))all=all.filter(r=>r.cardId===params.get('card'));if(params.get('deck'))all=all.filter(r=>r.deckId===params.get('deck')||r.standInDeckId===params.get('deck'));if(gid)all=all.filter(r=>r.groupIds.includes(gid));if(shop)all=all.filter(r=>r.kind==='need'||r.kind==='lot'&&r.source!=='owned');for(const r of all)r.status=statusOf(r);return all;}
-function value(r,key){const c=r.card;return ({name:c.name,type:c.typeLine.split('—')[0].trim(),subtype:c.typeLine.split('—')[1]?.trim()||'',mechanic:(c.mechanics.length?c.mechanics:c.keywords).join(', '),color:c.colorIdentity.join(''),rarity:({common:'Common',uncommon:'Uncommon',rare:'Rare',mythic:'Mythic',special:'Special',bonus:'Bonus',c:'Common',u:'Uncommon',r:'Rare',m:'Mythic',s:'Special',b:'Bonus'})[String(c.rarity||'').toLowerCase()]||'',mana:c.manaValue,price:c.price,cap:R.capFor(c.price),vendor:r.kind==='lot'?(r.order&&r.order.vendor||r.vendor||''):'',paid:r.kind==='lot'&&Number.isFinite(r.paid)?r.paid:null,source:C.source(r.source),placement:r.placement,status:r.status||statusOf(r),deck:r.deckId?M.deck(C.state,r.deckId).name:(r.standIn&&r.standInDeckId?M.deck(C.state,r.standInDeckId).name+' · substitute':''),box:r.kind==='lot'?C.readableLocation(r):'',purpose:r.purpose==='main'?'Main deck':r.purpose==='bracket'?'Bracket option':r.purpose==='upgrade'?'Upgrade':'',quantity:r.quantity,groups:r.groupIds.map(id=>C.state.groups.find(g=>g.id===id)?.name||'').join(', '),printing:[r.printing?.set,r.printing?.collector,r.printing?.finish,r.printing?.language,r.printing?.condition].filter(Boolean).join(' · ')||'Unspecified',offer:r.offer==='none'?'':r.offer==='held'?'Pending deal':'Sell / Trade'})[key];}
+function rows(params,shop){let all=M.projection(C.state);for(const d of C.state.decks.filter(d=>!d.archived))all.push(...plans(d));const gid=params.get('group')||filter.group;for(const g of C.state.groups)all.push(...g.entries.map(r=>({...r,recordId:'entry:'+g.id+':'+r.id,kind:'entry',card:C.card(r.cardId),source:'draft',placement:'Draft list',purpose:'',offer:'none',groupIds:[g.id],deckId:'',groupId:g.id})));if(params.get('card'))all=all.filter(r=>r.cardId===params.get('card'));/* THE BENCH IS NOT A DECK'S TO HIDE (Rob, 14 September): scoping the Cards view to a deck used
+   to empty the Bench, and the question a reader is asking while working on one deck is "what do
+   I already own that could go in it". A Bench row names no deck, so it is kept beside the deck's
+   own rows -- in the table and on the Tabletop's ledge alike. The To buy tab drops them again a
+   line below, because money is not the question there. */
+  if(params.get('deck'))all=all.filter(r=>r.deckId===params.get('deck')||r.standInDeckId===params.get('deck')||(r.kind==='lot'&&r.source==='owned'&&r.placement==='Bench'));if(gid)all=all.filter(r=>r.groupIds.includes(gid));if(shop)all=all.filter(r=>r.kind==='need'||r.kind==='lot'&&r.source!=='owned');for(const r of all)r.status=statusOf(r);return all;}
+/* OWNED AGAINST WANTED, per row (Rob, 14 September). The deck the row names scopes it: a
+   commander in its box reads 1/1, a card still on the buy list 0/1; a row with no deck asks
+   the library the same question. Remembered per revision because value() runs per cell. */
+let ownCache={revision:-1,map:new Map()};
+function ownPair(r){
+  if(ownCache.revision!==C.state.revision)ownCache={revision:C.state.revision,map:new Map()};
+  const deckId=r.deckId||r.standInDeckId||'',key=r.cardId+'|'+deckId;
+  if(!ownCache.map.has(key))ownCache.map.set(key,M.ownership(C.state,r.cardId,deckId));
+  return ownCache.map.get(key);
+}
+function value(r,key){const c=r.card;return ({name:c.name,type:c.typeLine.split('—')[0].trim(),subtype:c.typeLine.split('—')[1]?.trim()||'',mechanic:(c.mechanics.length?c.mechanics:c.keywords).join(', '),color:c.colorIdentity.join(''),rarity:({common:'Common',uncommon:'Uncommon',rare:'Rare',mythic:'Mythic',special:'Special',bonus:'Bonus',c:'Common',u:'Uncommon',r:'Rare',m:'Mythic',s:'Special',b:'Bonus'})[String(c.rarity||'').toLowerCase()]||'',mana:c.manaValue,price:c.price,cap:R.capFor(c.price),vendor:r.kind==='lot'?(r.order&&r.order.vendor||r.vendor||''):'',paid:r.kind==='lot'&&Number.isFinite(r.paid)?r.paid:null,source:C.source(r.source),placement:r.placement,status:r.status||statusOf(r),ownership:(()=>{const o=ownPair(r);return `${o.owned}/${o.wanted}`;})(),deck:r.deckId?M.deck(C.state,r.deckId).name:(r.standIn&&r.standInDeckId?M.deck(C.state,r.standInDeckId).name+' · substitute':''),box:r.kind==='lot'?C.readableLocation(r):'',purpose:r.purpose==='main'?'Main deck':r.purpose==='bracket'?'Bracket option':r.purpose==='upgrade'?'Upgrade':'',quantity:r.quantity,groups:r.groupIds.map(id=>C.state.groups.find(g=>g.id===id)?.name||'').join(', '),printing:[r.printing?.set,r.printing?.collector,r.printing?.finish,r.printing?.language,r.printing?.condition].filter(Boolean).join(' · ')||'Unspecified',offer:r.offer==='none'?'':r.offer==='held'?'Pending deal':'Sell / Trade'})[key];}
 /* GROUPING IS NOT THE SAME QUESTION AS SORTING. The Color column prints a card's identity
    letters, which as a grouping would make a heading per colour pair and answer nothing:
    a reader grouping by colour wants their mono-white cards together and everything gold
@@ -75,7 +90,7 @@ function statsHTML(shown,scoped){
     if(r.placement==='Physical deck'||r.placement==='Substitute')t.physical+=r.quantity;
   }
   /* The figures as one row of chips that filter the page: a click keeps the rows in that status, a second click lets them all back. */
-  return `<div class="cm-kpis" role="group" aria-label="Counts, click to filter">${STAT_FIGURES.map(([k,l,g])=>{const st=KPI_STATUS[k];const on=!!st&&filter.status===st;return `<button type="button" class="cm-kpi cm-stat-${g}${on?' is-on':''}" data-action="kpi-status" data-status="${e(st||'')}" aria-pressed="${on}" title="${on?'Show every status':`Show only ${l}`}"><strong>${t[k].toLocaleString()}</strong><span>${l}</span></button>`;}).join('')}<span class="cm-kpi-note">${scoped?'Counting the rows this view shows.':[bench?`${bench} on the Bench${offered?` (${offered} Sell / Trade)`:''}`:'',orderedFree?`${orderedFree} ordered for no deck`:''].filter(Boolean).join(' · ')}</span></div>`;
+  return `<div class="cm-kpis" role="group" aria-label="Counts, click to filter">${STAT_FIGURES.map(([k,l,g])=>{const st=KPI_STATUS[k];const on=!!st&&filter.status===st;return `<button type="button" class="cm-kpi cm-stat-${g}${on?' is-on':''}" data-action="kpi-status" data-status="${e(st||'')}" aria-pressed="${on}" title="${on?'Show every status':`Show only ${l}`}"><strong>${t[k].toLocaleString()}</strong><span>${l}</span></button>`;}).join('')}<span class="cm-kpi-note">${scoped?`Counting the rows this view shows${bench?`; the ${bench.toLocaleString()} on the Bench are owned by no deck and are not in the figures above`:''}.`:[bench?`${bench} on the Bench${offered?` (${offered} Sell / Trade)`:''}`:'',orderedFree?`${orderedFree} ordered for no deck`:''].filter(Boolean).join(' · ')}</span></div>`;
 }
 /* TICKING ROWS. Not a mode with a button to enter and leave -- the checkboxes are simply
    in the table, and the bar saying what you can do to them appears once one is ticked.
@@ -300,7 +315,10 @@ function tabletop(params,shop=false){
       /* Previous / Next on the stage: the selection moves along the pile it came from, which stays the pile to go back to. */
       onStep:id=>{ttUI.selection=new Set([id]);draw();queueMicrotask(()=>$('#cm-tt-host .cm-tt-stage-actions [data-tt=step]:not([disabled])')?.focus?.({preventScroll:true}));},
       detail:r=>tabletopDetail(r),
-      describe:r=>({status:r.status||statusOf(r),price:r.card&&r.card.price!=null?C.money(r.card.price):'',deck:value(r,'deck')})
+      describe:r=>{const o=ownPair(r),where=value(r,'deck');
+        return {status:r.status||statusOf(r),price:r.card&&r.card.price!=null?C.money(r.card.price):'',deck:where,
+          ownership:`${o.owned}/${o.wanted}`,
+          ownershipWhy:`You own ${o.owned} of the ${o.wanted} cop${o.wanted===1?'y':'ies'} ${where?'the '+where+' list calls for':'your lists call for'}.`};}
     },{...ttUI,viewportHeight:innerHeight});
   };
   draw();
