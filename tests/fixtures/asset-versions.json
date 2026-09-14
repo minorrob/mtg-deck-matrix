@@ -98,12 +98,12 @@
       "sha": "46db16db726209b1"
     },
     "crankmagic-app.js": {
-      "version": 158,
-      "sha": "86fbf9d5d5270ac3"
+      "version": 159,
+      "sha": "5b495480721fe280"
     },
     "crankmagic-assets.js": {
-      "version": 25,
-      "sha": "ce75a7cdcf66420e"
+      "version": 26,
+      "sha": "c2f3dada7a2b9f57"
     },
     "crankmagic-brand.js": {
       "version": 3,
@@ -146,8 +146,8 @@
       "sha": "52e344df8ef38d24"
     },
     "crankmagic-graph.js": {
-      "version": 18,
-      "sha": "a1f4f1e3179c5c6b"
+      "version": 19,
+      "sha": "e2b2efbc6c0fc13e"
     },
     "crankmagic-groupings.js": {
       "version": 1,
@@ -166,8 +166,8 @@
       "sha": "5de2d4a9a4e4577a"
     },
     "crankmagic-loops.js": {
-      "version": 2,
-      "sha": "4ede3a92a7574609"
+      "version": 3,
+      "sha": "28fe5c050e56173c"
     },
     "crankmagic-orders.js": {
       "version": 6,
@@ -197,13 +197,21 @@
       "version": 18,
       "sha": "d7bc7ed62b5a1cf5"
     },
+    "crankmagic-strategies.js": {
+      "version": 1,
+      "sha": "3a50538880088e81"
+    },
     "crankmagic-sw.js": {
-      "version": 158,
-      "sha": "7f6b764a788ab0bc"
+      "version": 159,
+      "sha": "4b37e83156f7047f"
     },
     "crankmagic-tour.js": {
       "version": 13,
       "sha": "3e8db97ebdc967e3"
+    },
+    "crankmagic-trace.js": {
+      "version": 1,
+      "sha": "8cb428f29a080480"
     },
     "crankmagic.css": {
       "version": 90,
@@ -228,6 +236,10 @@
     "data/commander-ranks.json": {
       "version": 3,
       "sha": "0999201f1837990a"
+    },
+    "data/commander-strategies.json": {
+      "version": 1,
+      "sha": "0bff64815e94f52b"
     },
     "data/commander-universe.json": {
       "version": 3,

@@ -128,5 +128,15 @@
     return parts.join("") + loop.steps[0].name;
   }
 
-  return {LOOP_EVENTS, edgesOf, adjacency, find, sentence};
+  /* Cycles through EACH card, capped at `maxLen`, over one adjacency: the trace's loop-back
+     counters and the pane's "×3" read this, so they agree with "Loops this card is in". */
+  function countThrough(cards, relate, options) {
+    const maxLen = (options && options.maxLen) || (globalThis.CrankRules && globalThis.CrankRules.LOOP_MAX_LEN) || 4;
+    const adj = adjacency(cards, relate);
+    const out = new Map();
+    for (const c of cards) { const n = cycles(adj, c.id, maxLen).length; if (n) out.set(c.id, n); }
+    return out;
+  }
+
+  return {LOOP_EVENTS, edgesOf, adjacency, find, countThrough, sentence};
 });

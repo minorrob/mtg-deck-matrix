@@ -114,6 +114,7 @@ const CHECKABLE = [
   ["tools/sim/rate-decks.mjs", ["--check"]],
   ["tools/build-card-records.mjs", ["--check"]],
   ["tools/data-manifest.mjs", ["--check"]],
+  ["tools/commander-strategies.mjs", ["--check"]],
   /* The workbook importer reads the newest data/source/*Master*.xlsx through openpyxl. Where
      Python has no openpyxl the check is skipped and says so, the way the geometry suite skips
      without a browser; the Tests and Load Live workflows install it and run the check for real. */

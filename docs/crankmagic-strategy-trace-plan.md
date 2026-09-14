@@ -158,6 +158,18 @@ payoff, counters and proliferate, team quality, stat payoff, tutor chain, recurs
 extra turns). The deck's own strategies default to the intersection of the commander's and
 the deck's mechanics; the pane lets the reader tick more.
 
+*Shipped in #186 (T0): sixteen tuples in `crankmagic-strategies.js` (the twelve above plus
+tribal payoff, draw payoff, landfall and spells cast), each a `commander(card)` and a `join(r)`
+query; `tools/commander-strategies.mjs` bakes `data/commander-strategies.json` (2,746 of 3,411
+legal commanders carry at least one; on demand in the worker, `commander-strategies@1` in the
+registry with a `--check`). EDHREC themes are not in the bake: the ranks file carries no
+themes and the sandbox cannot page EDHREC; the two named sources are the live decks'
+`definition.mechanics` and the guides' archetype line. One correction: the deck's default is
+the UNION of the commander's strategies and the ones the definition names, not the
+intersection — the intersection left the Chulane landfall deck with one strategy and nothing
+lit. A strategy no join serves lights nothing and costs nothing; the pane lets the reader
+untick.*
+
 ## 4. What the graph, the data model and the properties need
 
 Found while building Phases A–C and PR 3; none is large, all are worth doing now because
@@ -214,6 +226,19 @@ live state: D6 ring 1 contains Thornbite Staff, Goblin Bombardment, Skirk Prospe
 Purphoros, Impact Tremors; ring 2 contains Thousand-Year Elixir; Sol Ring, Arcane Signet and
 every land are unlit; loop-backs on Krenko ≥ 3; determinism; the score formula; the unlit
 report's buckets. `CrankLoops.countThrough`.
+
+*Shipped in #186 with T0. `relateTerms` now returns `serves` and `strength` on every relation
+(§4). The walk lights D6's ring 1 with Thornbite Staff first (the strongest join from the
+commander), then Goblin Bombardment, Skirk Prospector, Purphoros and Impact Tremors among 43;
+Sol Ring, Arcane Signet and the lands stay dark; 50 of the 69 graph rows light, 19 never
+touched. Two things the data taught: (1) Thousand-Year Elixir is not in today's D6, so the
+ring-2 assertion names no card; (2) a return edge counts as a loop-back only when the join is
+one a loop runs on (`CrankLoops.edgesOf`: an untap onto a tap ability, a repeatable supply into
+a demand, an event caused and fired on) — counting every serving join onto a lit card made
+thirty Goblins naming each other read as five hundred loop-backs. Closed cycles through a lit
+card (`CrankLoops.countThrough`, one adjacency) add to the counter, so the pane's ×n agrees
+with "Loops this card is in". Ring 3 is empty on all six live decks: by ring 2 every card a
+strategy can reach is lit.*
 
 **T2 — the animation.** `crankmagic-graph.js` trace mode: ghosted hundred, ring placement,
 beams drawn as growing strokes with a soft glow, the rim that runs round a node and closes,

@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://minorrob.github.io/mtg-deck-matrix/schema/commander-strategies.json",
+  "title": "The strategies each legal commander offers, derived from its classified terms plus what the live decks and guides name",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "commander-strategies@1"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "generator": {
+      "type": "string",
+      "const": "tools/commander-strategies.mjs"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "source": {
+      "type": "string"
+    },
+    "vocabulary": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1
+          },
+          "why": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "why"
+        ]
+      }
+    },
+    "perStrategy": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "commanders": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "strategies": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          },
+          "derived": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "named": {
+            "type": "object",
+            "properties": {
+              "strategies": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "from": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "strategies",
+              "from"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "strategies",
+          "derived"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "generatedAt",
+    "generator",
+    "count",
+    "source",
+    "vocabulary",
+    "perStrategy",
+    "commanders"
+  ],
+  "additionalProperties": false
+}
