@@ -492,6 +492,24 @@ The mechanism, with the existing interactions moved onto it. This is the piece t
   equals the moves in order. Journeys: stage three moves, leave and come back, discard; stage
   three, confirm, one undo takes them all back.
 
+**Built, 14 September.** `crankmagic-sandbox.js` (62 Node checks) and `C.sandbox` on the app
+shell. The overlay turned out to be better as a whole state than as a per-row patch: `preview(state)`
+folds the sitting through the model's own `apply` on a copy and hands back the library as the
+sitting would leave it, and the Cards page reads *that* for its rows, its counts, its matrix and
+its ownership pairs. So List, Sheet and Table are not kept in step — they are one arithmetic, and
+the fold that draws them is the same fold that builds Confirm's batch, which is why the preview
+can never promise something Confirm would fail to do. Refusals carry the model's own sentence and
+the card's name; `hold()` keeps the sitting still while its own Confirm is in flight, so a
+succeeding batch is never reported as a sitting that was dropped.
+
+**One divergence from §2.6, stated.** The plan listed the List's **Status fly-out** under *Staged*.
+It is still immediate. The fly-out is not a move — it is a count strip that edits a record by
+quantity and can delete it, so staging it would need partial-quantity moves and a stable identity
+for a half-staged row, which is a bigger change than this PR and a worse one to rush. The two
+surfaces still agree about what a card *is*, because both read the same pending library; what
+differs is that a correction typed into the ledger takes effect at once, which is §2.6's own
+"facts are immediate" read the other way round. Worth revisiting once trays land in PR 3.
+
 ### PR 3 — The play space
 
 - The draw pile in the middle: neutral cards, the top six drawn plus a count, click to flip

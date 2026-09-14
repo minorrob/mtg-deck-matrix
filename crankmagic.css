@@ -1698,3 +1698,18 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-flow svg{display:block;min-width:660px;width:100%;height:auto;font-family:Satoshi,system-ui,sans-serif}
 .cm-flow figcaption{margin-top:12px;font-size:13px;color:#a9bdd7;line-height:1.55;max-width:80ch}
 @media(max-width:760px){.cm-def{grid-template-columns:1fr;gap:3px}.cm-def>b{padding-left:9px}#matrix-v2 .cm-help h3{margin-top:22px}}
+
+/* THE SITTING (Rob, 14 September; plan §2.6). One bar, rendered from cardsHead, so every lens on
+   the Cards page carries the same sentence and the same count: there is no view you can be on
+   where moves are staged and nothing says so. Amber rather than red — a sitting is work in
+   progress, not a fault — and the three verbs read left to right in the order they are wanted. */
+.cm-sitting{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:14px 0 4px;padding:11px 15px;border:1px solid #6b5a1e;border-left:3px solid #f0b35a;border-radius:10px;background:#2b2413;color:#f2dfb4;font-size:13px}
+.cm-sitting b{color:#ffe1a6;font-size:14px;white-space:nowrap}
+.cm-sitting>span:not(.cm-sitting-acts){min-width:0;flex:1 1 240px;color:#dcc99f;line-height:1.45}
+.cm-sitting-stale{font-style:normal;color:#ffc4be;white-space:nowrap;display:inline-flex;align-items:center;gap:7px}
+.cm-sitting-stale:before{content:'';width:7px;height:7px;border-radius:50%;background:#ef6b60;flex:0 0 7px}
+.cm-sitting-acts{display:flex;flex-wrap:wrap;gap:8px;margin-left:auto}
+#matrix-v2 .cm-sitting-acts .v-button{min-height:32px;padding:5px 11px;font-size:12px}
+.cm-sitting-list{margin:12px 0;padding-left:22px;display:grid;gap:5px;font-size:13px;max-height:280px;overflow:auto}
+.cm-badge-pending{background:#4b3d1c;color:#f6d99b}
+@media(max-width:760px){.cm-sitting-acts{margin-left:0}.cm-sitting>span:not(.cm-sitting-acts){flex-basis:100%}}

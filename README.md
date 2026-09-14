@@ -408,7 +408,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 58 Node suites:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 59 Node suites:
 
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`
@@ -432,6 +432,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `crankmagic-rules` — `tests/crankmagic-rules.mjs`
 - `crankmagic-sim` — `tests/crankmagic-sim.mjs`
 - `crankmagic-change` — `tests/crankmagic-change.mjs`
+- `crankmagic-sandbox` — `tests/crankmagic-sandbox.mjs`
 - `crankmagic-tabletop` — `tests/crankmagic-tabletop.mjs`
 - `crankmagic-trade` — `tests/crankmagic-trade.mjs`
 - `crankmagic-workbook` — `tests/crankmagic-workbook.mjs`

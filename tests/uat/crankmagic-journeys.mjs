@@ -90,9 +90,9 @@ try{
     cannot still read the old way here. */
  await page.getByRole('button',{name:'About this page'}).first().click();await page.getByRole('dialog').waitFor();
  {const help=page.locator('#cm-dialog .cm-help');await help.waitFor();
-  eq(await help.locator('h3').allTextContents().then(t=>t.map(x=>x.trim())),['The four tabs','How a card moves through the library','What each state means','The counts row','Finding and changing rows'],'the help is grouped under subheads');
+  eq(await help.locator('h3').allTextContents().then(t=>t.map(x=>x.trim())),['The four tabs','How a card moves through the library','What each state means','Moving cards, on any lens','The counts row','Finding and changing rows'],'the help is grouped under subheads');
   ok(await help.locator('li').count()>=12,'and reads as bullets rather than paragraphs');
-  eq(await help.locator('.cm-def').count(),11,'every state the Status column can show is defined');
+  eq(await help.locator('.cm-def').count(),12,'every state the Status column can show is defined, and the sitting beside them');
   const named=await help.locator('.cm-def > b').allTextContents().then(t=>t.map(x=>x.trim()));
   for(const term of ['Watched','Suggestion','Planned','Draft list','Reserved','Ordered','To buy','Physical deck','Substitute','Bench'])ok(named.includes(term),`${term} is defined`);
   ok(await help.locator('.cm-def > span').first().innerText().then(t=>/filed in that deck/.test(t)),'the definition is the glossary\'s, not a second copy of it');
@@ -276,13 +276,45 @@ try{
   await page.locator('.cm-tt-fan').click();await page.locator('.cm-tt-grid').waitFor();await page.locator('.cm-tt-grid .cm-tt-card').first().click();await page.locator('.cm-tt-stage').waitFor();const moved=await page.locator('.cm-tt-captions li strong').first().innerText();const movedQty=Number(((await page.locator('.cm-tt-captions li').first().innerText()).match(/×(\d+)/)||[])[1]||1);
   {const r=await dragTo('.cm-tt-chip[data-pile^="group:type:"]',{drop:false});ok(/reading of the card/.test(r.say),`a type pile refuses: ${r.say}`);ok(/is-refused/.test(r.cls));}
   ok(await page.locator('.cm-tt-drag').count()===0,'the drag badge is gone after the pointer is up');
+  /* A DROP IS A PROPOSAL NOW (Rob, 14 September; play-space plan §2.6–2.8). The deck dialog still
+     asks WHERE, because that is part of the proposal, but its button stages rather than saves:
+     the bar appears, the library's tallies do not move, and Confirm writes the whole sitting as
+     one revision that one Undo takes back. */
   {const r=await dragTo('.cm-tt-pile.cm-tt-status[aria-label^="Physical deck,"]');ok(/Put in a physical deck/.test(r.say));ok(/is-target/.test(r.cls));}
-  await page.getByRole('dialog').waitFor();ok(/Put these copies in a physical deck/.test(await page.getByRole('dialog').innerText()));await page.locator('[name=deckId]').selectOption(journey.id);await page.locator('[name=asStandIn]').check();await click('Review placement');await page.waitForTimeout(400);
-  ok(/Put these copies in a physical deck/.test(await page.getByRole('dialog').innerText()));await click('Confirm change');await page.waitForTimeout(900);
+  await page.getByRole('dialog').waitFor();ok(/Put these copies in a physical deck/.test(await page.getByRole('dialog').innerText()));await page.locator('[name=deckId]').selectOption(journey.id);await page.locator('[name=asStandIn]').check();await click('Stage the move');await page.waitForTimeout(500);
+  {const t1=await tally();eq(t1,t0,'staging a drop changed nothing in the library');
+   await page.locator('.cm-sitting').waitFor();ok(/1 move pending/.test(await page.locator('.cm-sitting').innerText()),'and the bar says one move is pending');
+   ok((await page.locator('.cm-tt-captions .cm-tt-pill').first().innerText())!=='Bench','the table already reads as the sitting would leave it');}
+  /* The list and the sheet are the same pending truth, from the same fold. */
+  await page.goto(BASE+'/'+ENTRY+'#cards');await page.getByRole('table').waitFor();
+  ok(/1 move pending/.test(await page.locator('.cm-sitting').innerText()),'the List carries the same bar');
+  await page.locator('#cm-roster-query').fill('Sol Ring');await page.waitForTimeout(500);
+  ok(await page.locator('.cm-badge-pending').count()>=1,'and marks the staged reading as staged');
+  ok(!/\bBench\b/.test(await page.locator('#cm-roster-table tbody').innerText()),'the List reads the staged status, not the library one');
+  await page.locator('#cm-roster-query').fill('');await page.waitForTimeout(500);
+  await page.goto(BASE+'/'+ENTRY+'#cards?view=sheet');await page.locator('.cm-sheet-wrap').waitFor({timeout:30000});
+  ok(/1 move pending/.test(await page.locator('.cm-sitting').innerText()),'the Sheet carries it too');
+  /* And it survives a reload, because a sitting is a working session, not a lost one. */
+  await page.reload();await page.locator('.cm-sitting').waitFor({timeout:30000});
+  ok(/1 move pending/.test(await page.locator('.cm-sitting').innerText()),'the sitting comes back with the page');
+  eq(await tally(),t0,'still without having touched the library');
+  await page.goto(BASE+'/'+ENTRY+'#cards?view=tabletop');await page.locator('.cm-tt-mat').waitFor({timeout:30000});
+  await click('Review and confirm');await page.getByRole('dialog').waitFor();
+  ok(/Undo takes all of it back together/.test(await page.getByRole('dialog').innerText()),'the receipt says one undo takes the lot');
+  await click('Confirm change');await page.waitForTimeout(1200);
   {const t1=await tally();eq((t1['Physical deck']||0)+(t1['Substitute']||0),(t0['Physical deck']||0)+(t0['Substitute']||0)+movedQty,'the copy is in the box');eq(t1['Bench']||0,(t0['Bench']||0)-movedQty,'and off the Bench');
-   await page.locator('.cm-tt-stage').waitFor();ok((await page.locator('.cm-tt-captions .cm-tt-pill').first().innerText())!=='Bench','the caption says where it went');
-   const r=await dragTo('.cm-tt-fan');ok(/Move physically to the Bench/.test(r.say));await page.getByRole('dialog').waitFor();ok(/Move these copies to the Bench/.test(await page.getByRole('dialog').innerText()));await click('Confirm change');await page.waitForTimeout(900);
-   const t2=await tally();eq(t2['Bench']||0,t0['Bench']||0,'back on the Bench');eq((t2['Physical deck']||0)+(t2['Substitute']||0),(t0['Physical deck']||0)+(t0['Substitute']||0));eq((await page.locator('.cm-tt-captions .cm-tt-pill').first().innerText()),'Bench');}
+   eq(await page.locator('.cm-sitting').count(),0,'and the sitting is cleared once the library has taken it');}
+  /* And the way back, as a second sitting: out of the box onto the Bench. */
+  /* The page was reloaded mid-sitting, so the stage is closed: open the pile the copy is in now.
+     A substitute is by definition the only kind of card in that pile. */
+  {const box=await page.locator('.cm-tt-pile.cm-tt-status[aria-label^="Substitute,"]').count()?'Substitute':'Physical deck';
+   await page.locator(`.cm-tt-pile.cm-tt-status[aria-label^="${box},"]`).click();await page.locator('.cm-tt-grid').waitFor({timeout:20000});
+   await page.locator('.cm-tt-grid .cm-tt-card').first().click();await page.locator('.cm-tt-stage').waitFor({timeout:20000});}
+  {const r=await dragTo('.cm-tt-fan');ok(/Move physically to the Bench/.test(r.say));await page.waitForTimeout(600);
+   await page.locator('.cm-sitting').waitFor({timeout:15000});ok(/1 move pending/.test(await page.locator('.cm-sitting').innerText()),'the way back is staged too');
+   await click('Review and confirm');await page.getByRole('dialog').waitFor();await click('Confirm change');await page.waitForTimeout(1300);
+   const t2=await tally();eq(t2['Bench']||0,t0['Bench']||0,'back on the Bench');eq((t2['Physical deck']||0)+(t2['Substitute']||0),(t0['Physical deck']||0)+(t0['Substitute']||0));
+   eq((await page.locator('.cm-tt-captions .cm-tt-pill').first().innerText()),'Bench','and the caption says so');}
   await page.keyboard.press('Escape');await page.waitForTimeout(200);
   /* A ghost onto Ordered: a To buy requirement becomes an ordered copy filed with its deck; the To buy pile shrinks and Ordered grows by the same count. */
   await page.locator('.cm-tt-pile.cm-tt-status[aria-label^="To buy,"]').click();await page.locator('.cm-tt-grid').waitFor();await page.locator('.cm-tt-grid .cm-tt-card').first().click();await page.locator('.cm-tt-stage').waitFor();
@@ -298,8 +330,21 @@ try{
    eq(await page.locator('.cm-row-menu button[disabled]').count(),0,'and offers nothing it would refuse');
    ok(!shown.some(x=>/^Physical deck/.test(x)),'Physical deck is not offered for a requirement');
    ok(!shown.some(x=>/^(Creature|Instant|Sorcery|Land|Artifact|Enchantment)\b/.test(x)),'and no grouping band is offered as a destination');}
-  await page.locator('.cm-row-menu button:not([disabled])').filter({hasText:/^Ordered/}).click();await page.getByRole('dialog').waitFor();ok(/Set 1 record to Ordered/.test(await page.getByRole('dialog').innerText()));await click('Confirm change');await page.waitForTimeout(900);
-  {const t3=await tally();eq(t3['Ordered']||0,(t0['Ordered']||0)+needQty,'an ordered copy now');eq(t3['To buy']||0,(t0['To buy']||0)-needQty,'one requirement fewer to buy');}
+  const t2=await tally();
+  await page.locator('.cm-row-menu button:not([disabled])').filter({hasText:/^Ordered/}).click();await page.waitForTimeout(600);
+  await page.locator('.cm-sitting').waitFor();ok(/1 move pending/.test(await page.locator('.cm-sitting').innerText()),'Move to… stages rather than saving');
+  eq(await tally(),t2,'and the library is untouched');
+  /* STEP BACK IS THE SANDBOX'S OWN UNDO: it costs no revision, because nothing was written. */
+  await click('Step back');await page.waitForTimeout(500);eq(await page.locator('.cm-sitting').count(),0,'step back empties the sitting');
+  await page.locator('.cm-tt-pile.cm-tt-status[aria-label^="To buy,"]').click();await page.locator('.cm-tt-grid').waitFor();await page.locator('.cm-tt-grid .cm-tt-card').first().click();await page.locator('.cm-tt-stage').waitFor();
+  await click('Move to…');await page.locator('.cm-row-menu').waitFor();await page.locator('.cm-row-menu button:not([disabled])').filter({hasText:/^Ordered/}).click();await page.waitForTimeout(600);
+  await click('Discard');await page.waitForTimeout(500);eq(await page.locator('.cm-sitting').count(),0,'discard empties it too');eq(await tally(),t2,'and neither one wrote anything');
+  await page.locator('.cm-tt-pile.cm-tt-status[aria-label^="To buy,"]').click();await page.locator('.cm-tt-grid').waitFor();await page.locator('.cm-tt-grid .cm-tt-card').first().click();await page.locator('.cm-tt-stage').waitFor();
+  await click('Move to…');await page.locator('.cm-row-menu').waitFor();await page.locator('.cm-row-menu button:not([disabled])').filter({hasText:/^Ordered/}).click();await page.waitForTimeout(600);
+  const preRevision=(await state()).revision;
+  await click('Review and confirm');await page.getByRole('dialog').waitFor();await click('Confirm change');await page.waitForTimeout(1200);
+  {const t3=await tally();eq(t3['Ordered']||0,(t2['Ordered']||0)+needQty,'an ordered copy now');eq(t3['To buy']||0,(t2['To buy']||0)-needQty,'one requirement fewer to buy');
+   eq((await state()).revision,preRevision+1,'a whole sitting is one revision, whatever it holds');}
   await page.keyboard.press('Escape');await page.waitForTimeout(200);eq(await page.locator('.cm-tt-stage').count(),0);
   /* TB4: the card size is remembered on this device; the status pile order is a preference; the arrows walk the piles and the cards, Enter opens, Space ticks; Print puts the whole pile on paper. */
   await page.locator(`.cm-tt-pile.cm-tt-status[aria-label^="${biggest.label},"]`).click();await page.locator('.cm-tt-grid').waitFor();await page.locator('.cm-tt-strip.is-top [data-tt=size][data-size=L]').click();await page.waitForTimeout(200);
