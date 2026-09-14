@@ -21,7 +21,6 @@ const buyPlans = JSON.parse(await readFile(new URL("../data/archive/buy-plans.js
 const cards = JSON.parse(await readFile(new URL("../data/cards.json", import.meta.url), "utf8"));
 const simulationSummary = JSON.parse(await readFile(new URL("../data/simulation-summary.json", import.meta.url), "utf8"));
 const rungLists = JSON.parse(await readFile(new URL("../data/archive/rung-lists.json", import.meta.url), "utf8"));
-const deckPageSource = await readFile(new URL("../deck-page.js", import.meta.url), "utf8");
 const slotModelSource = await readFile(new URL("../slot-model.js", import.meta.url), "utf8");
 const activeState = JSON.parse(await readFile(new URL("../data/archive/active-state.json", import.meta.url), "utf8"));
 const auditedByName = new Map(cards.cards.map((card) => [card.name.toLowerCase(), card]));
@@ -392,12 +391,6 @@ assert.equal(derived.length, 0,
   assert.equal(unmatched.length, 0,
     `${unmatched.length} ordered names match no owned card, e.g. ${unmatched.slice(0, 3).join(", ")}`);
 }
-
-assert.match(deckPageSource, /const SORT_BY = \[\["", "Deck order"\], \["name", "Name A–Z"\], \["name-desc", "Name Z–A"\],\n\s*\["cost-desc", "Cost high–low"\], \["cost", "Cost low–high"\]\];/,
-  "Sort by must offer both directions on name and on cost, with deck order as the way back");
-assert.match(deckPageSource, /sortSlots\(ctx, rows, \(ctx\.filters \|\| \{\}\)\.sortBy \|\| ""\)/,
-  "sorting must happen inside a group, so choosing one never undoes the grouping");
-
 
 /* Cards picked up and dropped on the bench, then offered on the slots they could fill.
    An option is only useful if it is legal, real, and not already chosen for you. */

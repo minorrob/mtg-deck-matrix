@@ -196,15 +196,9 @@ await acheck("a caller that will not take a manual card is told so plainly", asy
 
 /* --------------------------------------------------------------- it is wired in */
 
-const panel = readFileSync(new URL("../import-panel.js", import.meta.url), "utf8");
+/* The fix-the-names screen that first offered the link box (import-panel.js) was retired with the
+   legacy pages; the link ladder above is what crankmagic-app.js's card picker still runs. */
 const client = readFileSync(new URL("../scryfall-client.js", import.meta.url), "utf8");
-
-check("the fix screen offers the link box and hands the answer back", () => {
-  assert.match(panel, /data-fix-link=/);
-  assert.match(panel, /async function useLink/);
-  assert.match(panel, /opts\.resolveLink\(raw, \{name: asked\}\)/);
-  assert.match(panel, /if \(card\.manual && opts\.onManualCard\) opts\.onManualCard\(card\)/);
-});
 
 check("the Scryfall client can fetch one exact printing", () => {
   assert.match(client, /async function bySetNumber/);

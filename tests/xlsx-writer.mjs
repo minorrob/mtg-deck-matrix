@@ -14,7 +14,6 @@ import {join} from "node:path";
 
 const require = createRequire(import.meta.url);
 const Xlsx = require("../xlsx-writer.js");
-const Audit = require("../deck-audit.js");
 const run = promisify(execFile);
 
 let checks = 0;
@@ -186,60 +185,6 @@ print(json.dumps({
 
 /* ---------------- the deck workbook the app builds ---------------- */
 
-const decks = [{
-  title: "Deck 6 · Krenko",
-  commander: "Krenko, Mob Boss",
-  rungLabel: "Tuned",
-  score: 71.37,
-  scoreSource: "v2.4 sweep, 21,000 games",
-  cards: [
-    {name: "Krenko, Mob Boss", quantity: 1, type: "Legendary Creature", mv: 4, color: "R",
-     rung: "Base", where: "In the box", unit: 2.1, line: 2.1, inBox: true, why: "The commander"},
-    {name: "Mountain", quantity: 23, type: "Basic Land", mv: 0, color: "L",
-     rung: "Base", where: "In the box", unit: 0.1, line: 2.3, inBox: true, why: ""},
-    {name: "Blasphemous Act", quantity: 1, type: "Sorcery", mv: 9, color: "R",
-     rung: "Tuned", where: "To buy", unit: 6, line: 6, toBuy: true, why: "The reset button"}
-  ]
-}];
-
-check("the workbook has a summary sheet and one sheet for each deck", () => {
-  const built = Audit.workbook(decks, {date: "2026-09-05"});
-  assert.equal(built.sheets.length, 2);
-  assert.equal(built.sheets[0].name, "Summary");
-  assert.equal(built.sheets[1].name, "Deck 6 · Krenko");
-  assert.match(built.filename, /^decks-2026-09-05\.xlsx$/);
-});
-
-check("the summary counts cards, not rows", () => {
-  const [summary] = Audit.workbook(decks, {}).sheets;
-  const row = summary.rows[0];
-  assert.equal(row.cards, 25, "23 Mountains are 23 cards and one row");
-  assert.equal(row.lands, 23);
-  assert.equal(row.inBox, 24);
-  assert.equal(row.toBuy, 1);
-  assert.equal(row.toBuyCost, 6);
-  assert.equal(row.score, 71.37);
-});
-
-check("the average mana value leaves the lands out", () => {
-  // (4 + 9) / 2 = 6.5. Counting 23 Mountains at zero would report 0.52.
-  assert.equal(Audit.avgMv(decks[0].cards), 6.5);
-});
-
-check("the per-deck sheet carries the why, which is the reason to export at all", () => {
-  const sheet = Audit.workbook(decks, {}).sheets[1];
-  assert.deepEqual(sheet.columns.map((c) => c.key).slice(0, 3), ["n", "name", "quantity"]);
-  assert.equal(sheet.columns[sheet.columns.length - 1].key, "why");
-  assert.equal(sheet.rows[0].why, "The commander");
-  assert.equal(sheet.rows[2].line, 6);
-});
-
-check("the whole thing builds into a file", () => {
-  const built = Audit.workbook(decks, {});
-  const out = Xlsx.build(built);
-  assert.ok(out.length > 1000);
-  assert.deepEqual([...out.slice(0, 2)], [0x50, 0x4b]);
-});
 
 console.log(`xlsx-writer: ${checks} checks passed · ${bytes.length} byte sample, ` +
   `${book.sheets.length} sheets, header frozen`);

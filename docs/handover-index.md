@@ -136,12 +136,7 @@ is loaded by at least one page; none is dead.
 | `viewer.js` | 2,957 | *(IIFE)* | My Decks: the three tabs, the deck cards, the bench, upgrades, archive/delete, inventory upload | index |
 | `app.js` | 9,189 | *(IIFE)* | The Matrix: Compare, the tour, the dialogs, state persistence, the game log | matrix |
 | `graph-page.js` | 1,479 | *(IIFE)* | The card graph: one filter state driving a list view and an ego-centric graph view, plus the Copilot | graph |
-| `deck-page.js` | 976 | `MtgDeckPage` | The Deck step: one row per slot, expanding in place into its rung ladder | matrix |
 | `shop-page.js` | 738 | `MtgShopPage` | The Shop step: the same slots re-keyed by card name and merged across decks | matrix |
-| `import-panel.js` | 584 | `MtgImportPanel` | "Add a deck": read → resolve → preview → measure, and the only place that knows that order | index |
-| `build-panel.js` | 498 | `MtgBuildPanel` | "Build a deck": describe → generate → choose → preview | index |
-| `admin-menu.js` | 168 | `MtgAdminMenu` | The Admin popup — Export, Import, Load Active, Undo, Load default, Clear session. No page knowledge; each page hands it a list | index, matrix |
-| `shop-filters.js` | 282 | *(IIFE)* | The extra Shop filter strip (color, price, rarity, location, sort) and its own storage key | matrix |
 
 ### Data model — the shared vocabulary
 
@@ -151,7 +146,6 @@ is loaded by at least one page; none is dead.
 | `slot-model.js` | 901 | `MtgSlotModel` | Rungs, price bands, ownership state, roles, `slotFit`, `deckSlots`, `shopRows`, `withPullList` | matrix |
 | `compliance-model.js` | 121 | `MtgComplianceModel` | Commander bracket rules, shared between the page and the simulator. Exports `deriveComplianceTags`, `evaluateCardList`, `TIER3_EARLY_COMBO_PAIRS` | index, matrix |
 | `custom-model.js` | 508 | `MtgCustomModel` | Decks built on the retired Choose step: storage, card pool, slot variants, overlays | matrix |
-| `deck-store.js` | 330 | `MtgDeckStore` | The record format for an added deck, its browser storage, and the merge into the catalog. Exports `toRecord`, `merge`, `catalogRow`, `problems`, `measurable` | index |
 | `card-classify.js` | 254 | `MtgCardClassify` | The one copy of "what does this card do", read off rules text — events caused and fired on, resources made and needed, what a card multiplies, what quality it grants and what extends one. Shared with `graph/ingest/02-build-csv.mjs` so a card typed on the graph is read by the rules the corpus was baked with | graph |
 | `user-state.js` | 225 | `MtgUserState` | Every localStorage key by name, plus backup/restore/clear and the catalog-source flag | index, matrix, graph |
 
@@ -162,9 +156,6 @@ is loaded by at least one page; none is dead.
 | `sim-engine.js` | 1,482 | `MtgSimEngine` | The Monte Carlo model itself. Exports `SIMPLIFICATIONS`, `DEFAULT_WEIGHTS`, `classifyCard`, `prepareDeck`, `playGame`, `simulateGames`, `compositeScore`, `scoreParts`, `analyzeGaps`. Takes an optional `config.policy`; with none it is the pilot it has always been | index, matrix |
 | `pilot-policy.js` | 527 | `MtgPilotPolicy` | The person holding the cards. Five decisions as data, three named answers (`BALANCED` is a strict no-op), five measurable ablations, and `advise()`, which turns the gap between two runs into sentences. Exports `POLICIES`, `ABLATIONS`, `without`, `allocateCombatDamage`, `heldBackCreatures`, `manaToReserve`, `partDeltas`, `advise` | index, matrix |
 | `deck-measure.js` | 378 | `MtgDeckMeasure` | Running the engine in a browser on the published protocol. Exports `measure`, `measureLens`, `hydrate`, `seedsFor`, `lineupHash`, `FULL`, `PREVIEW`, `LENS_PLAN`. Throws at load without the engine, and refuses a lens on cards with no printed text | index, matrix |
-| `measure-report.js` | 275 | `MtgMeasureReport` | What the score is made of: the nine weighted parts, the receipt (games/seeds/ms/games-per-second), which cards carried the deck, and a before/after comparison. Newest module in the repo | index |
-| `deck-audit.js` | 248 | `MtgDeckAudit` | Whether the number on screen still describes the deck on screen — and the rule that a locally measured score is never subtracted from a published one | matrix |
-| `sim-lenses.js` | 260 | `MtgSimLenses` | Copilot findings derived from `data/deck-ratings.json` deltas — including the negative delta, an upgrade that measures worse than what you have | graph |
 | `game-record.js` | 282 | `MtgGameRecord` | Reading the Game Log back against the prediction, gated on a Wilson score interval so twelve games never becomes a claim | matrix |
 
 ### Import, resolution and external data
@@ -174,13 +165,9 @@ is loaded by at least one page; none is dead.
 | `scryfall-client.js` | 362 | `MtgScryfall` | The only Scryfall client. Request queue at 120 ms, 4 attempts with exponential backoff, 24-hour sessionStorage cache, the required User-Agent. Exports `createClient`, `parseTcgplayerUrl`, `normalizeCard` | index, matrix, graph |
 | `deck-import.js` | 312 | `MtgDeckImport` | Parsing somebody's decklist paste. The parse is the blank line — Moxfield puts the command zone in its own trailing block and does not label it | index |
 | `deck-sources.js` | 201 | `MtgDeckSources` | Loading a deck from the site it lives on. Archidekt is fetchable; Moxfield and Deckstats are not, and the module says so rather than pretending | index |
-| `card-resolve.js` | 333 | `MtgCardResolve` | The four-rung ladder for a name that is not a card: autocomplete, autocomplete-before-the-comma, fuzzy named, word search. Capped at five candidates, each carrying why | index |
 | `card-link.js` | 299 | `MtgCardLink` | Reading a URL for whatever it will give — exact printing, embedded search, TCGplayer product id, slug guess — and turning a link that resolves to nothing into a manual card | index |
-| `manual-cards.js` | 161 | `MtgManualCards` | The population of cards Scryfall does not have yet. One `/cards/collection` request for all of them, exact matches only, promotion written back into every deck holding one | index |
 | `edhrec-client.js` | 180 | `MtgEdhrec` | Per-commander inclusion and synergy from `json.edhrec.com`. Optional by design: no page means the generator ranks the way it always did | index |
 | `deck-generator.js` | 983 | `MtgDeckGenerator` | Building a hundred from nothing: role quotas, Scryfall queries per role, theme and playstyle scoring, basics allocation, a three-rung ladder, Tier 3 repair | index, matrix |
-| `deck-build.js` | 247 | `MtgDeckBuild` | Mapping what the generator produced onto the flat record `deck-store.js` defines. Refuses anything that is not a hundred cards with a commander | index |
-| `inventory-import.js` | 309 | `MtgInventoryImport` | Reading what you own out of csv, a table, or free text, and allocating it copy by copy across decks. The allocation is the hard part, not the parse | index |
 | `xlsx-reader.js` | 188 | `MtgXlsxReader` | Reading a real .xlsx: a ZIP central-directory walk plus `DecompressionStream("deflate-raw")`, and the shared-strings table | index |
 
 ### Export and shared UI
@@ -190,7 +177,6 @@ is loaded by at least one page; none is dead.
 | `docx-writer.js` | 204 | `MtgDocxWriter` | A .docx written by hand — a stored-entry ZIP plus three XML parts, about eighty lines, no CDN | index, matrix |
 | `xlsx-writer.js` | 187 | `MtgXlsxWriter` | A .xlsx the same way, borrowing the ZIP builder from `docx-writer`. Inline strings, no shared table. Handles the sheet-name rules Excel will refuse | index, matrix |
 | `shop-export.js` | 301 | `MtgShopExport` | The three lists you leave the house with: To Buy (printed), Order (TCGplayer Mass Entry), In hand (checked against the shelf) | matrix |
-| `card-table.js` | 299 | `MtgCardTable` | One filter/sort/group-by engine behind the bench, Upgrades and the Shop. Facet counts computed against what the *other* filters already allow. Pure — no DOM, no storage, no fetch | index |
 
 ### Stylesheets
 

@@ -358,7 +358,7 @@ Every data file under `data/` and `sim/` opens with `{schema, stamp, generator, 
 `schema/index.mjs` registers each one with its producer and the tool whose `--check` vouches for
 it, `schema/*.json` describes its shape, and readers pass what they fetch through
 `CrankAssets.expect()`. Changed assets require a new `?v=` everywhere referenced, then
-`node tests/asset-versions.mjs --update`. There are 65 Node suites:
+`node tests/asset-versions.mjs --update`. There are 55 Node suites:
 
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`
@@ -367,8 +367,6 @@ it, `schema/*.json` describes its shape, and readers pass what they fetch throug
 - `card-records` — `tests/card-records.mjs`
 - `card-images` — `tests/card-images.mjs`
 - `card-link` — `tests/card-link.mjs`
-- `card-resolve` — `tests/card-resolve.mjs`
-- `card-table` — `tests/card-table.mjs`
 - `collection-exchange` — `tests/collection-exchange.mjs`
 - `collection-model` — `tests/collection-model.mjs`
 - `combat` — `tests/combat.mjs`
@@ -387,30 +385,23 @@ it, `schema/*.json` describes its shape, and readers pass what they fetch throug
 - `crankmagic-workbook` — `tests/crankmagic-workbook.mjs`
 - `data-integrity` — `tests/data-integrity.mjs`
 - `data-manifest` — `tests/data-manifest.mjs`
-- `deck-audit` — `tests/deck-audit.mjs`
-- `deck-build` — `tests/deck-build.mjs`
 - `deck-generator` — `tests/deck-generator.mjs`
 - `deck-import` — `tests/deck-import.mjs`
 - `deck-measure` — `tests/deck-measure.mjs`
 - `deck-sources` — `tests/deck-sources.mjs`
-- `deck-store` — `tests/deck-store.mjs`
 - `docx-writer` — `tests/docx-writer.mjs`
 - `edhrec-client` — `tests/edhrec-client.mjs`
-- `friends-deck` — `tests/friends-deck.mjs`
 - `game-record` — `tests/game-record.mjs`
 - `generators` — `tests/generators.mjs`
 - `graph-payload` — `tests/graph-payload.mjs`
 - `guide-agent` — `tests/guide-agent.mjs`
 - `guide-measured` — `tests/guide-measured.mjs`
-- `inventory-import` — `tests/inventory-import.mjs`
 - `lab-report` — `tests/lab-report.mjs`
 - `library-references` — `tests/library-references.mjs`
 - `lineup-compliance` — `tests/lineup-compliance.mjs`
 - `live-load` — `tests/live-load.mjs`
-- `manual-cards` — `tests/manual-cards.mjs`
 - `manual-rung` — `tests/manual-rung.mjs`
 - `master-regenerates` — `tests/master-regenerates.mjs`
-- `measure-report` — `tests/measure-report.mjs`
 - `page-budget` — `tests/page-budget.mjs`
 - `pilot-policy` — `tests/pilot-policy.mjs`
 - `qr` — `tests/qr.mjs`
@@ -419,7 +410,6 @@ it, `schema/*.json` describes its shape, and readers pass what they fetch throug
 - `service-worker` — `tests/service-worker.mjs`
 - `shop-export` — `tests/shop-export.mjs`
 - `sim-engine` — `tests/sim-engine.mjs`
-- `sim-lenses` — `tests/sim-lenses.mjs`
 - `status-and-groupings` — `tests/status-and-groupings.mjs`
 - `slot-model` — `tests/slot-model.mjs`
 - `tour` — `tests/tour.mjs`

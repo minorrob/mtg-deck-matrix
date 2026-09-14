@@ -109,7 +109,7 @@ const DECLARED = {
   "data/deck-ratings.json": ["tools/sim/rate-decks.mjs"],
   "data/simulation-summary.json": ["tools/sim/rate-decks.mjs", "tools/import_summary_metrics.py"],
   "data/live-state.json": ["tools/build-live-state.mjs", ".github/workflows/live-load.yml"],
-  "data/lenses.json": ["(sim-lenses.js in a past sweep; no tool writes it today)"],
+  "data/lenses.json": ["(a past sweep wrote it for the retired Copilot lenses; no tool writes it today)"],
   "sim/status.json": ["tools/sim/lib.mjs"],
   "sim/config.json": ["(hand-maintained placeholder)"],
   "sim/opponents.json": ["(hand-maintained placeholder)"],
@@ -126,7 +126,7 @@ const READS_ONLY = {"tools/reprice-variants.mjs": ["data/cards.json"]};
 /* ------------------------------------------------------------ judgement */
 const OVERRIDES = {
   "data/game-history.json": ["tool input", "the compiled game logs the compile-game-logs workflow writes; the app reads games from the library state"],
-  "data/lenses.json": ["tool input", "sim-lenses.js reads it in Node; the pages do not load that module"],
+  "data/lenses.json": ["archive candidate", "its reader, sim-lenses.js, was swept with the retired pages; nothing reads it today"],
   "data/live-state.json": ["serve", "fetched by Load Live (User Functions), not precached: it is a backup, replaced whole"],
   "sim/status.json": ["serve", "the sweep's status placeholder the Lab reads; the run rewrites it"],
   "data/commander-glossary.json": ["serve", "hand-maintained editorial file: no generator by design; tools/check-glossary.mjs is its check"],
