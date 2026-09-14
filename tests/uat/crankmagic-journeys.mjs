@@ -108,6 +108,8 @@ try{
     My Decks. So the check is now that the 99 exists and that nothing was saved. */
  ok(!current.decks.some(d=>d.name==='Constructive run'));
  ok((current.preferences.labPreview?.slots||[]).length>1);
+ /* T4: the draft is seeded from the trace by default, and the preview says so. */
+ ok(/seeded from the trace/.test(current.preferences.labPreview?.method||''));ok((current.preferences.labPreview?.notes||[]).some(x=>/Seeded from the trace/.test(x)));
  eq(current.reports.length,0);
  /* Step 2 is ACTIVE once there is a 99 to refine -- it is the next thing you can do, and the
     run pane marks it as such. It was 'Waiting' before the pane gained an ordered sequence. */

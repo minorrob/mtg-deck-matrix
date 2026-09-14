@@ -132,8 +132,12 @@
           reached.push({card: c, parent, j});
         }
       }
-      /* Strongest join first, then name; a card reached by two parents keeps the first. */
+      /* Strongest join first, then name; a card reached by two parents keeps the first. A beam
+         (options.beam[ring]) caps how many new cards a ring may place: the Lab's pool trace
+         over the whole catalog would otherwise light thousands and take ring 2 to a crawl. */
       reached.sort((x, y) => (y.j.r.score - x.j.r.score) || String(x.card.name).localeCompare(String(y.card.name)));
+      const beam = options.beam && Number.isFinite(options.beam[ring]) ? options.beam[ring] : Infinity;
+      let placedHere = 0;
       const next = [];
       for (const {card, parent, j} of reached) {
         const already = placed.get(card.id);
@@ -142,9 +146,10 @@
           if (already.from !== parent.id && isLoopJoin(j.r) && !returned.has(key) && !returned.has(back)) { returned.add(key); already.loopBacks += 1; returns.push({from: parent.id, to: card.id, via: viaOf(j.r), strategies: j.serves}); }
           continue;
         }
+        if (placedHere >= beam) continue;
         const node = {id: card.id, name: card.name, card, ring, from: parent.id, via: viaOf(j.r), strategies: j.serves, loopBacks: 0, strength: j.strength, order: list.length};
         placed.set(card.id, node);
-        list.push(node); next.push(node);
+        list.push(node); next.push(node); placedHere += 1;
       }
       frontier = next;
     }
@@ -193,5 +198,14 @@
     return `${t.unlit.length} card${t.unlit.length === 1 ? "" : "s"} the trace never touched: ${parts.join(", ")}.`;
   }
 
-  return {trace, unlitSentence, bucketOf, strengthOf, RING_WEIGHT, MAX_RING, BUCKET_LABEL};
+  /* THE SEED FOR THE LAB: a Map card id -> bonus from a trace result, ring 1 worth the most,
+     each loop-back adding, so the draft builder's score prefers what the commander reaches. */
+  function seedFrom(result, {ring = [0, 300, 200, 100], perLoopBack = 20, keyOf = (r) => r.id} = {}) {
+    const seed = new Map();
+    if (!result) return seed;
+    for (const r of result.list) { if (!r.ring) continue; seed.set(keyOf(r), (ring[r.ring] || 0) + perLoopBack * r.loopBacks); }
+    return seed;
+  }
+
+  return {trace, seedFrom, unlitSentence, bucketOf, strengthOf, RING_WEIGHT, MAX_RING, BUCKET_LABEL};
 });

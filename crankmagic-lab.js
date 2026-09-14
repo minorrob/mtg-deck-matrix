@@ -24,7 +24,7 @@
  * colour identity as well as name, play style and rank, and inspects any of them. */
 (globalThis.CrankFeatures ||= []).push(function(C){
 const {M,esc:e,button:b,field:f,select:s,note,form,modal,actions,views,$}=C;
-let leader=null,partner=null,mode='commander',groupId='',deckId='',draftName='',definition=M.defaultDefinition(),pool='all',includeInDeck=false,includeReserved=false;
+let leader=null,partner=null,mode='commander',groupId='',deckId='',draftName='',definition=M.defaultDefinition(),pool='all',includeInDeck=false,includeReserved=false;let seedFromTrace=true;
 let preview=null;          // the drafted list that is not yet a deck
 let shownLimit=45;         // how many picker rows are drawn before "Show more"
 let pickerColors=[];       // the picker's colour-identity filter
@@ -211,6 +211,7 @@ views.lab=async()=>{
          all. Here it is a checkbox in the one section that is always open, and it means the
          same thing on both roads: the draft may only use copies you actually have. -->
     <label class="cm-checkbox cm-start-owned"><input name="ownedOnly" type="checkbox" ${pool==='owned'?'checked':''}>Use only cards I own</label>
+    <label class="cm-checkbox cm-start-seed" title="The 99 is seeded by a trace from the commander over the legal catalog inside the definition: the cards its strategies reach first, then the roles to their targets."><input name="traceSeed" type="checkbox" ${seedFromTrace?'checked':''}>Seed the draft from the trace</label>
     <p class="cm-error cm-full" id="cm-lab-error" hidden role="alert"></p></div>
     <details class="cm-lab-section" id="cm-lab-commander" ${mode==='commander'?'open':''} ${mode==='commander'?'':'hidden'}><summary class="cm-section-heading">Commander choice</summary><p class="cm-muted">Search or enter a commander from among the ${(Math.floor(C.catalog.all().filter(c=>c.commander&&c.legalities?.commander==='legal').length/100)*100).toLocaleString()}+ legal commanders in MtG. You can paste a Scryfall link instead of a name. These filters only choose the commander.</p>
     <div class="cm-form-grid">${f('Search commander name','commanderQuery',leader?.name||'',`${mode==='commander'?'required ':''}autocomplete="off" placeholder="Name, printed variant name, or a Scryfall link"`)}${s('Play style filter','commanderMechanic',[['','Any play style'],...choices],'')}${s('EDHREC rank filter','rank',[['','Any rank'],['100','Top 100'],['500','Top 500'],['1000','Top 1,000']],'')}
@@ -459,7 +460,7 @@ views.lab=async()=>{
     const v=Object.fromEntries(new FormData(lab));
     definition=M.defaultDefinition({baseBracket:Number(v.baseBracket),bracketCeiling:Number(v.bracketCeiling),budget:v.budget===''?null:Number(v.budget),perCardCap:v.perCardCap===''?null:Number(v.perCardCap),mechanics:v.mechanic?[v.mechanic]:[],playStyle:v.playStyle,speed:Number(v.speed),competitiveness:Number(v.competitiveness),saltiness:Number(v.saltiness),restrictions:v.restrictions,reuse:{includeSellTrade:!!v.sellTrade}});
     /* The existing-deck select keeps its value when the reader switches back to the commander road; it only means something on the list road. */
-    deckId=mode==='list'?v.existingDeck:'';groupId=mode==='list'?(chosenDeck()?.groupId||''):'';draftName=v.deckName;pool=v.ownedOnly?'owned':'all';includeInDeck=!!v.inDeck;includeReserved=!!v.reserved;
+    deckId=mode==='list'?v.existingDeck:'';groupId=mode==='list'?(chosenDeck()?.groupId||''):'';draftName=v.deckName;pool=v.ownedOnly?'owned':'all';seedFromTrace=!!v.traceSeed;includeInDeck=!!v.inDeck;includeReserved=!!v.reserved;
     return v;
   }
 
@@ -483,7 +484,22 @@ views.lab=async()=>{
         status.textContent='Drafting…';
         await C.catalog.loadGraph();
         const available={};for(const l of C.state.lots)if(M.eligibility(C.state,l,{includeInDeck,includeReserved,includeSellTrade:!!v.sellTrade}).eligible)available[l.cardId]=(available[l.cardId]||0)+l.quantity;
-        built=CrankDraft.build({commanders:leaders,cards:C.catalog.all(),definition,available,benchOnly:pool==='owned'});
+        /* THE TRACE SEED: a pool trace from the commander over the legal catalog inside the
+           definition (colour identity, per-card cap, legality), beamed so ring 2 stays quick,
+           handed to the builder as a bonus per card. Off when the modules are not loaded or
+           the reader unticked it; the builder then drafts as before. */
+        let seed=null;
+        if(seedFromTrace&&globalThis.CrankTrace&&globalThis.CrankStrategies&&globalThis.CrankGraph){
+          try{
+            const lead=leaders[0],identity=new Set(lead.colorIdentity||[]),cap=definition.perCardCap===null||definition.perCardCap===undefined?null:Number(definition.perCardCap);
+            const world=C.catalog.all().filter(c=>c.id!==lead.id&&c.verified&&c.legalities?.commander==='legal'&&(c.colorIdentity||[]).every(x=>identity.has(x))&&(cap===null||(Number.isFinite(c.price)&&c.price<=cap)));
+            const strategies=CrankStrategies.forDeck({commanderStrategies:CrankStrategies.derive(lead),mechanics:definition.mechanics,ticked:definition.strategies||null});
+            const traced=CrankTrace.trace(lead,world,CrankGraph.relate,strategies,{beam:{1:60,2:40,3:30}});
+            seed=CrankTrace.seedFrom(traced);
+            status.textContent=`Drafting… the trace reached ${traced.lit} cards from ${lead.name}`;
+          }catch(error){seed=null;C.notice('The trace seed could not be computed, so the draft was built from roles alone. '+error.message,true);}
+        }
+        built=CrankDraft.build({commanders:leaders,cards:C.catalog.all(),definition,available,benchOnly:pool==='owned',seed});
       }
       /* REFUSE THE EMPTY DRAFT. Zero of the 99 is an error with the builder's own reasons;
          fewer than 99 is kept as a partial preview and said out loud. */
@@ -530,6 +546,8 @@ const {missing,reachable}=await C.catalog.recheck([...built.cards,...leaders],{o
      pointer at whatever was last saved. A deck already in Decks is not touched: this
      forgets that the Lab was looking at it, which is the thing that made every new run
      start inside the last one. */
+  /* The trace of the deck just saved, on Discover's canvas: the moment the seed and the animation meet. */
+  actions['lab-trace']=el=>C.go('discover',{deck:el.dataset.deck,trace:'1'});
   actions['lab-clear']=async()=>{
     const had=preview?preview.name:null;
     leader=null;partner=null;mode='commander';groupId='';deckId='';draftName='';
@@ -972,7 +990,7 @@ function runPane(saved){
 
   const simLabel=measured?`Measured ${measured.metrics.score.value} points · ${measured.protocol}`:subject?'Not measured yet':'Build a draft first';
   const last=C.state.preferences.lastLabRun;
-  return `<aside class="v-panel cm-run-panel" id="cm-lab-run-pane"><div class="cm-actions cm-run-top"><span class="cm-pause-pill" id="cm-lab-sim-status">${e(simLabel)}</span>${leader||preview||saved?b('Clear and start again','lab-clear'):''}</div>
+  return `<aside class="v-panel cm-run-panel" id="cm-lab-run-pane"><div class="cm-actions cm-run-top"><span class="cm-pause-pill" id="cm-lab-sim-status">${e(simLabel)}</span>${saved?b('Watch the trace','lab-trace',{deck:saved.id}):''}${leader||preview||saved?b('Clear and start again','lab-clear'):''}</div>
     <p class="cm-muted cm-run-lede">Five steps, in order. A step you cannot take yet says what it is waiting for.</p>
     <ol class="cm-run-steps">${STEPS.map((label,i)=>{const st=stepState(i),spec=doFor(i);
       /* Whatever blocks the button is said ON THE PAGE, not only in its title: a title is a
