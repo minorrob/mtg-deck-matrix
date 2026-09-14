@@ -3,7 +3,7 @@
   "generator": "tools/sim/rate-decks.mjs",
   "count": 6,
   "schemaVersion": 1,
-  "generatedAt": "2026-09-08T16:07:00.624Z",
+  "generatedAt": "2026-09-14T03:59:24.208Z",
   "engine": "sim-engine.js",
   "generation": "v2.8",
   "table": "mixed-pod",
@@ -28,8 +28,8 @@
       ],
       "builds": {
         "v1": {
-          "score": 78.83,
-          "se": 0.156,
+          "score": 78.87,
+          "se": 0.163,
           "scoreParts": [
             {
               "key": "screw",
@@ -42,16 +42,6 @@
               "reads": "mana screwed in 6.9% of games, against a 10.0% target"
             },
             {
-              "key": "winRate",
-              "label": "Wins games",
-              "weight": 0.35,
-              "norm": 0.857,
-              "points": 29.98,
-              "max": 35,
-              "lost": 5.01,
-              "reads": "wins 46.2% of games against a 25% share of a four-player pod"
-            },
-            {
               "key": "clock",
               "label": "Closes the game",
               "weight": 0.1,
@@ -60,6 +50,16 @@
               "max": 10,
               "lost": 5.01,
               "reads": "wins on turn 12.0 on average; turn 8 is full marks, turn 16 is none"
+            },
+            {
+              "key": "winRate",
+              "label": "Wins games",
+              "weight": 0.35,
+              "norm": 0.857,
+              "points": 30.02,
+              "max": 35,
+              "lost": 4.98,
+              "reads": "wins 46.2% of games against a 25% share of a four-player pod"
             },
             {
               "key": "deadCards",
@@ -117,11 +117,11 @@
               "name": "Anim Pakal, Thousandth Moon",
               "isLand": false,
               "isCommander": false,
-              "drawnRate": 0.2341,
+              "drawnRate": 0.234,
               "castRate": 0.8632,
               "avgCastTurn": 8.32,
               "deadRate": 0.1368,
-              "winRateWhenCast": 0.5947,
+              "winRateWhenCast": 0.5952,
               "stuckRate": 0.3583
             },
             {
@@ -129,10 +129,10 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.2287,
-              "castRate": 0.9892,
+              "castRate": 0.9891,
               "avgCastTurn": 6.02,
-              "deadRate": 0.0108,
-              "winRateWhenCast": 0.5906,
+              "deadRate": 0.0109,
+              "winRateWhenCast": 0.5908,
               "stuckRate": 0.0265
             },
             {
@@ -143,18 +143,18 @@
               "castRate": 0.9598,
               "avgCastTurn": 5.51,
               "deadRate": 0.0402,
-              "winRateWhenCast": 0.4831,
+              "winRateWhenCast": 0.4834,
               "stuckRate": 0
             },
             {
               "name": "Sacred Peaks",
               "isLand": true,
               "isCommander": false,
-              "drawnRate": 0.241,
+              "drawnRate": 0.2409,
               "castRate": 0.9572,
               "avgCastTurn": 5.47,
               "deadRate": 0.0428,
-              "winRateWhenCast": 0.481,
+              "winRateWhenCast": 0.4811,
               "stuckRate": 0
             },
             {
@@ -165,7 +165,7 @@
               "castRate": 0.9591,
               "avgCastTurn": 5.48,
               "deadRate": 0.0409,
-              "winRateWhenCast": 0.4788,
+              "winRateWhenCast": 0.4791,
               "stuckRate": 0
             },
             {
@@ -173,10 +173,10 @@
               "isLand": true,
               "isCommander": false,
               "drawnRate": 0.7572,
-              "castRate": 0.9788,
+              "castRate": 0.9789,
               "avgCastTurn": 5.51,
-              "deadRate": 0.0212,
-              "winRateWhenCast": 0.4757,
+              "deadRate": 0.0211,
+              "winRateWhenCast": 0.4761,
               "stuckRate": 0
             },
             {
@@ -187,7 +187,7 @@
               "castRate": 0.9898,
               "avgCastTurn": 5.5,
               "deadRate": 0.0102,
-              "winRateWhenCast": 0.4686,
+              "winRateWhenCast": 0.4691,
               "stuckRate": 0
             },
             {
@@ -195,32 +195,32 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.2193,
-              "castRate": 0.7313,
+              "castRate": 0.7311,
               "avgCastTurn": 9.66,
-              "deadRate": 0.2687,
-              "winRateWhenCast": 0.6308,
-              "stuckRate": 0.5623
+              "deadRate": 0.2689,
+              "winRateWhenCast": 0.6309,
+              "stuckRate": 0.5624
             },
             {
               "name": "Archaeomancer's Map",
               "isLand": false,
               "isCommander": false,
-              "drawnRate": 0.2335,
+              "drawnRate": 0.2334,
               "castRate": 0.7966,
-              "avgCastTurn": 8.93,
+              "avgCastTurn": 8.92,
               "deadRate": 0.2034,
-              "winRateWhenCast": 0.5144,
-              "stuckRate": 0.4758
+              "winRateWhenCast": 0.5146,
+              "stuckRate": 0.4759
             },
             {
               "name": "Atsushi, the Blazing Sky",
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.2204,
-              "castRate": 0.9077,
-              "avgCastTurn": 8.15,
-              "deadRate": 0.0923,
-              "winRateWhenCast": 0.5713,
+              "castRate": 0.9078,
+              "avgCastTurn": 8.16,
+              "deadRate": 0.0922,
+              "winRateWhenCast": 0.5717,
               "stuckRate": 0.2775
             },
             {
@@ -231,18 +231,18 @@
               "castRate": 0.8676,
               "avgCastTurn": 8.22,
               "deadRate": 0.1324,
-              "winRateWhenCast": 0.5261,
-              "stuckRate": 0.3464
+              "winRateWhenCast": 0.5265,
+              "stuckRate": 0.3463
             },
             {
               "name": "Balefire Liege",
               "isLand": false,
               "isCommander": false,
-              "drawnRate": 0.2175,
-              "castRate": 0.8688,
+              "drawnRate": 0.2174,
+              "castRate": 0.8687,
               "avgCastTurn": 8.84,
-              "deadRate": 0.1312,
-              "winRateWhenCast": 0.5426,
+              "deadRate": 0.1313,
+              "winRateWhenCast": 0.5429,
               "stuckRate": 0.3696
             },
             {
@@ -250,10 +250,10 @@
               "isLand": true,
               "isCommander": false,
               "drawnRate": 0.2415,
-              "castRate": 0.9575,
+              "castRate": 0.9574,
               "avgCastTurn": 5.51,
-              "deadRate": 0.0425,
-              "winRateWhenCast": 0.4784,
+              "deadRate": 0.0426,
+              "winRateWhenCast": 0.4787,
               "stuckRate": 0
             },
             {
@@ -261,21 +261,21 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.2361,
-              "castRate": 0.9481,
+              "castRate": 0.9482,
               "avgCastTurn": 6.1,
-              "deadRate": 0.0519,
-              "winRateWhenCast": 0.5049,
-              "stuckRate": 0.0928
+              "deadRate": 0.0518,
+              "winRateWhenCast": 0.5054,
+              "stuckRate": 0.0929
             },
             {
               "name": "Cast Out",
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.2163,
-              "castRate": 0.7375,
-              "avgCastTurn": 10.27,
-              "deadRate": 0.2625,
-              "winRateWhenCast": 0.5407,
+              "castRate": 0.737,
+              "avgCastTurn": 10.26,
+              "deadRate": 0.263,
+              "winRateWhenCast": 0.5411,
               "stuckRate": 0.6581
             },
             {
@@ -286,7 +286,7 @@
               "castRate": 0.9936,
               "avgCastTurn": 5.85,
               "deadRate": 0.0064,
-              "winRateWhenCast": 0.5168,
+              "winRateWhenCast": 0.5169,
               "stuckRate": 0.0162
             },
             {
@@ -294,10 +294,10 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.2181,
-              "castRate": 0.7126,
-              "avgCastTurn": 7.96,
-              "deadRate": 0.2874,
-              "winRateWhenCast": 0.2424,
+              "castRate": 0.7125,
+              "avgCastTurn": 7.95,
+              "deadRate": 0.2875,
+              "winRateWhenCast": 0.2428,
               "stuckRate": 0.2718
             },
             {
@@ -305,21 +305,21 @@
               "isLand": true,
               "isCommander": false,
               "drawnRate": 0.2411,
-              "castRate": 0.959,
+              "castRate": 0.9591,
               "avgCastTurn": 5.51,
-              "deadRate": 0.041,
-              "winRateWhenCast": 0.4757,
+              "deadRate": 0.0409,
+              "winRateWhenCast": 0.4761,
               "stuckRate": 0
             },
             {
               "name": "Emeria, the Sky Ruin",
               "isLand": true,
               "isCommander": false,
-              "drawnRate": 0.2439,
-              "castRate": 0.9583,
-              "avgCastTurn": 5.5,
-              "deadRate": 0.0417,
-              "winRateWhenCast": 0.4724,
+              "drawnRate": 0.2438,
+              "castRate": 0.9584,
+              "avgCastTurn": 5.49,
+              "deadRate": 0.0416,
+              "winRateWhenCast": 0.4726,
               "stuckRate": 0
             },
             {
@@ -330,7 +330,7 @@
               "castRate": 0.8867,
               "avgCastTurn": 8.37,
               "deadRate": 0.1133,
-              "winRateWhenCast": 0.5534,
+              "winRateWhenCast": 0.5537,
               "stuckRate": 0.322
             },
             {
@@ -338,21 +338,21 @@
               "isLand": true,
               "isCommander": false,
               "drawnRate": 0.2428,
-              "castRate": 0.9597,
+              "castRate": 0.9596,
               "avgCastTurn": 5.48,
-              "deadRate": 0.0403,
-              "winRateWhenCast": 0.4812,
+              "deadRate": 0.0404,
+              "winRateWhenCast": 0.4817,
               "stuckRate": 0
             },
             {
               "name": "Fabled Passage",
               "isLand": true,
               "isCommander": false,
-              "drawnRate": 0.2402,
+              "drawnRate": 0.2401,
               "castRate": 0.9585,
               "avgCastTurn": 5.53,
               "deadRate": 0.0415,
-              "winRateWhenCast": 0.4826,
+              "winRateWhenCast": 0.483,
               "stuckRate": 0
             },
             {
@@ -363,18 +363,18 @@
               "castRate": 0.9589,
               "avgCastTurn": 5.5,
               "deadRate": 0.0411,
-              "winRateWhenCast": 0.4793,
+              "winRateWhenCast": 0.4796,
               "stuckRate": 0
             },
             {
               "name": "Furycalm Snarl",
               "isLand": true,
               "isCommander": false,
-              "drawnRate": 0.2414,
-              "castRate": 0.9586,
+              "drawnRate": 0.2415,
+              "castRate": 0.9585,
               "avgCastTurn": 5.51,
-              "deadRate": 0.0414,
-              "winRateWhenCast": 0.4814,
+              "deadRate": 0.0415,
+              "winRateWhenCast": 0.4818,
               "stuckRate": 0
             },
             {
@@ -385,7 +385,7 @@
               "castRate": 0.9796,
               "avgCastTurn": 5.44,
               "deadRate": 0.0204,
-              "winRateWhenCast": 0.4672,
+              "winRateWhenCast": 0.4677,
               "stuckRate": 0.0555
             },
             {
@@ -396,7 +396,7 @@
               "castRate": 0.956,
               "avgCastTurn": 5.49,
               "deadRate": 0.044,
-              "winRateWhenCast": 0.4791,
+              "winRateWhenCast": 0.4795,
               "stuckRate": 0
             },
             {
@@ -407,8 +407,8 @@
               "castRate": 0.9161,
               "avgCastTurn": 8.47,
               "deadRate": 0.0839,
-              "winRateWhenCast": 0.5606,
-              "stuckRate": 0.2766
+              "winRateWhenCast": 0.5609,
+              "stuckRate": 0.2767
             },
             {
               "name": "Karmic Guide",
@@ -418,7 +418,7 @@
               "castRate": 0.872,
               "avgCastTurn": 8.82,
               "deadRate": 0.128,
-              "winRateWhenCast": 0.5462,
+              "winRateWhenCast": 0.5467,
               "stuckRate": 0.3634
             },
             {
@@ -429,7 +429,7 @@
               "castRate": 0.8659,
               "avgCastTurn": 8.83,
               "deadRate": 0.1341,
-              "winRateWhenCast": 0.6212,
+              "winRateWhenCast": 0.6234,
               "stuckRate": 0.3769
             },
             {
@@ -440,7 +440,7 @@
               "castRate": 0.9767,
               "avgCastTurn": 5.71,
               "deadRate": 0.0233,
-              "winRateWhenCast": 0.5079,
+              "winRateWhenCast": 0.5083,
               "stuckRate": 0.053
             },
             {
@@ -451,7 +451,7 @@
               "castRate": 0.9098,
               "avgCastTurn": 7.78,
               "deadRate": 0.0902,
-              "winRateWhenCast": 0.5751,
+              "winRateWhenCast": 0.5756,
               "stuckRate": 0.2611
             },
             {
@@ -459,11 +459,11 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.218,
-              "castRate": 0.8294,
+              "castRate": 0.8295,
               "avgCastTurn": 9.18,
-              "deadRate": 0.1706,
-              "winRateWhenCast": 0.5781,
-              "stuckRate": 0.4447
+              "deadRate": 0.1705,
+              "winRateWhenCast": 0.5784,
+              "stuckRate": 0.4448
             },
             {
               "name": "Lorehold Campus",
@@ -473,19 +473,19 @@
               "castRate": 0.9584,
               "avgCastTurn": 5.52,
               "deadRate": 0.0416,
-              "winRateWhenCast": 0.482,
+              "winRateWhenCast": 0.4822,
               "stuckRate": 0
             },
             {
               "name": "Lorehold Charm",
               "isLand": false,
               "isCommander": false,
-              "drawnRate": 0.2371,
-              "castRate": 0.8912,
+              "drawnRate": 0.2372,
+              "castRate": 0.8911,
               "avgCastTurn": 7.68,
-              "deadRate": 0.1088,
-              "winRateWhenCast": 0.4929,
-              "stuckRate": 0.2829
+              "deadRate": 0.1089,
+              "winRateWhenCast": 0.4931,
+              "stuckRate": 0.2828
             },
             {
               "name": "Mistveil Plains",
@@ -495,7 +495,7 @@
               "castRate": 0.9601,
               "avgCastTurn": 5.5,
               "deadRate": 0.0399,
-              "winRateWhenCast": 0.475,
+              "winRateWhenCast": 0.4753,
               "stuckRate": 0
             },
             {
@@ -506,30 +506,30 @@
               "castRate": 0.8015,
               "avgCastTurn": 9.36,
               "deadRate": 0.1985,
-              "winRateWhenCast": 0.5984,
-              "stuckRate": 0.485
+              "winRateWhenCast": 0.5985,
+              "stuckRate": 0.4851
             },
             {
               "name": "Night Market",
               "isLand": true,
               "isCommander": false,
               "drawnRate": 0.2442,
-              "castRate": 0.9585,
+              "castRate": 0.9586,
               "avgCastTurn": 5.5,
-              "deadRate": 0.0415,
-              "winRateWhenCast": 0.4712,
+              "deadRate": 0.0414,
+              "winRateWhenCast": 0.4716,
               "stuckRate": 0
             },
             {
               "name": "Path to Exile",
               "isLand": false,
               "isCommander": false,
-              "drawnRate": 0.2346,
-              "castRate": 0.9793,
+              "drawnRate": 0.2345,
+              "castRate": 0.9792,
               "avgCastTurn": 5.94,
-              "deadRate": 0.0207,
-              "winRateWhenCast": 0.465,
-              "stuckRate": 0.0885
+              "deadRate": 0.0208,
+              "winRateWhenCast": 0.4652,
+              "stuckRate": 0.0886
             },
             {
               "name": "Primary Research",
@@ -539,7 +539,7 @@
               "castRate": 0.9507,
               "avgCastTurn": 8.15,
               "deadRate": 0.0493,
-              "winRateWhenCast": 0.5102,
+              "winRateWhenCast": 0.5103,
               "stuckRate": 0.1824
             },
             {
@@ -550,8 +550,8 @@
               "castRate": 0.8694,
               "avgCastTurn": 8.81,
               "deadRate": 0.1306,
-              "winRateWhenCast": 0.5647,
-              "stuckRate": 0.3678
+              "winRateWhenCast": 0.5651,
+              "stuckRate": 0.3679
             },
             {
               "name": "Quintorius, History Chaser",
@@ -561,7 +561,7 @@
               "castRate": 0.9753,
               "avgCastTurn": 7.22,
               "deadRate": 0.0247,
-              "winRateWhenCast": 0.515,
+              "winRateWhenCast": 0.5152,
               "stuckRate": 0.0675
             },
             {
@@ -572,7 +572,7 @@
               "castRate": 0.9875,
               "avgCastTurn": 6.64,
               "deadRate": 0.0125,
-              "winRateWhenCast": 0.4686,
+              "winRateWhenCast": 0.469,
               "stuckRate": 0
             },
             {
@@ -583,40 +583,40 @@
               "castRate": 0.9581,
               "avgCastTurn": 5.51,
               "deadRate": 0.0419,
-              "winRateWhenCast": 0.4803,
+              "winRateWhenCast": 0.4807,
               "stuckRate": 0
             },
             {
               "name": "Remorseful Cleric",
               "isLand": false,
               "isCommander": false,
-              "drawnRate": 0.235,
+              "drawnRate": 0.2349,
               "castRate": 0.9777,
               "avgCastTurn": 6.3,
               "deadRate": 0.0223,
-              "winRateWhenCast": 0.5074,
+              "winRateWhenCast": 0.508,
               "stuckRate": 0.0724
             },
             {
               "name": "Return to Dust",
               "isLand": false,
               "isCommander": false,
-              "drawnRate": 0.2167,
-              "castRate": 0.7312,
+              "drawnRate": 0.2166,
+              "castRate": 0.731,
               "avgCastTurn": 10.26,
-              "deadRate": 0.2688,
-              "winRateWhenCast": 0.54,
-              "stuckRate": 0.6605
+              "deadRate": 0.269,
+              "winRateWhenCast": 0.5401,
+              "stuckRate": 0.6606
             },
             {
               "name": "Rip Apart",
               "isLand": false,
               "isCommander": false,
-              "drawnRate": 0.2353,
-              "castRate": 0.9336,
+              "drawnRate": 0.2352,
+              "castRate": 0.9335,
               "avgCastTurn": 7.19,
-              "deadRate": 0.0664,
-              "winRateWhenCast": 0.481,
+              "deadRate": 0.0665,
+              "winRateWhenCast": 0.4813,
               "stuckRate": 0.1938
             },
             {
@@ -624,21 +624,21 @@
               "isLand": true,
               "isCommander": false,
               "drawnRate": 0.2437,
-              "castRate": 0.9585,
+              "castRate": 0.9586,
               "avgCastTurn": 5.51,
-              "deadRate": 0.0415,
-              "winRateWhenCast": 0.4816,
+              "deadRate": 0.0414,
+              "winRateWhenCast": 0.482,
               "stuckRate": 0
             },
             {
               "name": "Seize the Spoils",
               "isLand": false,
               "isCommander": false,
-              "drawnRate": 0.2282,
+              "drawnRate": 0.2281,
               "castRate": 0.9881,
               "avgCastTurn": 6.02,
               "deadRate": 0.0119,
-              "winRateWhenCast": 0.5122,
+              "winRateWhenCast": 0.5124,
               "stuckRate": 0.0277
             },
             {
@@ -646,10 +646,10 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.2359,
-              "castRate": 0.9773,
+              "castRate": 0.9774,
               "avgCastTurn": 6.32,
-              "deadRate": 0.0227,
-              "winRateWhenCast": 0.509,
+              "deadRate": 0.0226,
+              "winRateWhenCast": 0.5094,
               "stuckRate": 0.0679
             },
             {
@@ -657,10 +657,10 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.2184,
-              "castRate": 0.8952,
+              "castRate": 0.8951,
               "avgCastTurn": 8.37,
-              "deadRate": 0.1048,
-              "winRateWhenCast": 0.5553,
+              "deadRate": 0.1049,
+              "winRateWhenCast": 0.5556,
               "stuckRate": 0.3177
             },
             {
@@ -671,7 +671,7 @@
               "castRate": 0.7975,
               "avgCastTurn": 8.94,
               "deadRate": 0.2025,
-              "winRateWhenCast": 0.5156,
+              "winRateWhenCast": 0.5159,
               "stuckRate": 0.4733
             },
             {
@@ -679,10 +679,10 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.233,
-              "castRate": 0.9142,
+              "castRate": 0.9143,
               "avgCastTurn": 7.8,
-              "deadRate": 0.0858,
-              "winRateWhenCast": 0.5261,
+              "deadRate": 0.0857,
+              "winRateWhenCast": 0.5264,
               "stuckRate": 0.2594
             },
             {
@@ -693,29 +693,29 @@
               "castRate": 0.9127,
               "avgCastTurn": 7.79,
               "deadRate": 0.0873,
-              "winRateWhenCast": 0.5739,
-              "stuckRate": 0.2579
+              "winRateWhenCast": 0.5741,
+              "stuckRate": 0.258
             },
             {
               "name": "Squee, Goblin Nabob",
               "isLand": false,
               "isCommander": false,
-              "drawnRate": 0.234,
-              "castRate": 0.8644,
+              "drawnRate": 0.2339,
+              "castRate": 0.8643,
               "avgCastTurn": 8.28,
-              "deadRate": 0.1356,
-              "winRateWhenCast": 0.5168,
-              "stuckRate": 0.3522
+              "deadRate": 0.1357,
+              "winRateWhenCast": 0.5173,
+              "stuckRate": 0.3523
             },
             {
               "name": "Study Hall",
               "isLand": true,
               "isCommander": false,
               "drawnRate": 0.2441,
-              "castRate": 0.958,
+              "castRate": 0.9579,
               "avgCastTurn": 5.51,
-              "deadRate": 0.042,
-              "winRateWhenCast": 0.4839,
+              "deadRate": 0.0421,
+              "winRateWhenCast": 0.4843,
               "stuckRate": 0
             },
             {
@@ -723,21 +723,21 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.2159,
-              "castRate": 0.9133,
+              "castRate": 0.9132,
               "avgCastTurn": 8.58,
-              "deadRate": 0.0867,
-              "winRateWhenCast": 0.5652,
-              "stuckRate": 0.2873
+              "deadRate": 0.0868,
+              "winRateWhenCast": 0.5656,
+              "stuckRate": 0.2874
             },
             {
               "name": "Sunscorched Divide",
               "isLand": true,
               "isCommander": false,
-              "drawnRate": 0.2421,
+              "drawnRate": 0.242,
               "castRate": 0.9585,
               "avgCastTurn": 5.47,
               "deadRate": 0.0415,
-              "winRateWhenCast": 0.4833,
+              "winRateWhenCast": 0.4834,
               "stuckRate": 0
             },
             {
@@ -745,10 +745,10 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.2388,
-              "castRate": 0.9387,
+              "castRate": 0.9386,
               "avgCastTurn": 5.47,
-              "deadRate": 0.0613,
-              "winRateWhenCast": 0.4776,
+              "deadRate": 0.0614,
+              "winRateWhenCast": 0.4779,
               "stuckRate": 0.0928
             },
             {
@@ -759,7 +759,7 @@
               "castRate": 0.9581,
               "avgCastTurn": 5.51,
               "deadRate": 0.0419,
-              "winRateWhenCast": 0.4786,
+              "winRateWhenCast": 0.4791,
               "stuckRate": 0
             },
             {
@@ -767,21 +767,21 @@
               "isLand": true,
               "isCommander": false,
               "drawnRate": 0.2432,
-              "castRate": 0.9569,
+              "castRate": 0.957,
               "avgCastTurn": 5.56,
-              "deadRate": 0.0431,
-              "winRateWhenCast": 0.483,
+              "deadRate": 0.043,
+              "winRateWhenCast": 0.4835,
               "stuckRate": 0
             },
             {
               "name": "Teshar, Ancestor's Apostle",
               "isLand": false,
               "isCommander": false,
-              "drawnRate": 0.2205,
-              "castRate": 0.83,
+              "drawnRate": 0.2206,
+              "castRate": 0.8299,
               "avgCastTurn": 8.96,
-              "deadRate": 0.17,
-              "winRateWhenCast": 0.5566,
+              "deadRate": 0.1701,
+              "winRateWhenCast": 0.5568,
               "stuckRate": 0.4355
             },
             {
@@ -792,7 +792,7 @@
               "castRate": 0.9934,
               "avgCastTurn": 5.84,
               "deadRate": 0.0066,
-              "winRateWhenCast": 0.5141,
+              "winRateWhenCast": 0.5147,
               "stuckRate": 0.0163
             },
             {
@@ -803,18 +803,18 @@
               "castRate": 0.9911,
               "avgCastTurn": 6.46,
               "deadRate": 0.0089,
-              "winRateWhenCast": 0.4892,
+              "winRateWhenCast": 0.4894,
               "stuckRate": 0.026
             },
             {
               "name": "Turbulent Steppe",
               "isLand": true,
               "isCommander": false,
-              "drawnRate": 0.2423,
+              "drawnRate": 0.2424,
               "castRate": 0.9566,
               "avgCastTurn": 5.51,
               "deadRate": 0.0434,
-              "winRateWhenCast": 0.4786,
+              "winRateWhenCast": 0.4791,
               "stuckRate": 0
             },
             {
@@ -822,21 +822,21 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.2323,
-              "castRate": 0.7887,
+              "castRate": 0.7884,
               "avgCastTurn": 8.98,
-              "deadRate": 0.2113,
-              "winRateWhenCast": 0.518,
-              "stuckRate": 0.4811
+              "deadRate": 0.2116,
+              "winRateWhenCast": 0.5182,
+              "stuckRate": 0.4812
             },
             {
               "name": "Valorous Stance",
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.2362,
-              "castRate": 0.8859,
+              "castRate": 0.8858,
               "avgCastTurn": 8.22,
-              "deadRate": 0.1141,
-              "winRateWhenCast": 0.4912,
+              "deadRate": 0.1142,
+              "winRateWhenCast": 0.4916,
               "stuckRate": 0.3703
             },
             {
@@ -847,7 +847,7 @@
               "castRate": 0.9553,
               "avgCastTurn": 7.13,
               "deadRate": 0.0447,
-              "winRateWhenCast": 0.5238,
+              "winRateWhenCast": 0.524,
               "stuckRate": 0.1384
             },
             {
@@ -858,19 +858,19 @@
               "castRate": 0.9893,
               "avgCastTurn": 5.46,
               "deadRate": 0.0107,
-              "winRateWhenCast": 0.4826,
+              "winRateWhenCast": 0.483,
               "stuckRate": 0.0313
             },
             {
               "name": "Winds of Abandon",
               "isLand": false,
               "isCommander": false,
-              "drawnRate": 0.2362,
-              "castRate": 0.9416,
+              "drawnRate": 0.2361,
+              "castRate": 0.9415,
               "avgCastTurn": 7,
-              "deadRate": 0.0584,
-              "winRateWhenCast": 0.4761,
-              "stuckRate": 0.1723
+              "deadRate": 0.0585,
+              "winRateWhenCast": 0.4764,
+              "stuckRate": 0.1724
             },
             {
               "name": "Wind-Scarred Crag",
@@ -880,7 +880,7 @@
               "castRate": 0.9572,
               "avgCastTurn": 5.49,
               "deadRate": 0.0428,
-              "winRateWhenCast": 0.481,
+              "winRateWhenCast": 0.4813,
               "stuckRate": 0
             },
             {
@@ -891,7 +891,7 @@
               "castRate": 0.8873,
               "avgCastTurn": 8.17,
               "deadRate": 0.1127,
-              "winRateWhenCast": 0.5049,
+              "winRateWhenCast": 0.505,
               "stuckRate": 0.3689
             },
             {
@@ -899,11 +899,11 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.2145,
-              "castRate": 0.9775,
+              "castRate": 0.9774,
               "avgCastTurn": 7.25,
-              "deadRate": 0.0225,
-              "winRateWhenCast": 0.524,
-              "stuckRate": 0.0704
+              "deadRate": 0.0226,
+              "winRateWhenCast": 0.5243,
+              "stuckRate": 0.0705
             },
             {
               "name": "Faithless Looting",
@@ -913,7 +913,7 @@
               "castRate": 0.9957,
               "avgCastTurn": 5.32,
               "deadRate": 0.0043,
-              "winRateWhenCast": 0.52,
+              "winRateWhenCast": 0.5205,
               "stuckRate": 0.009
             },
             {
@@ -921,10 +921,10 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.2333,
-              "castRate": 0.792,
+              "castRate": 0.7918,
               "avgCastTurn": 9.74,
-              "deadRate": 0.208,
-              "winRateWhenCast": 0.5234,
+              "deadRate": 0.2082,
+              "winRateWhenCast": 0.5238,
               "stuckRate": 0.5976
             },
             {
@@ -932,21 +932,21 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.2174,
-              "castRate": 0.807,
+              "castRate": 0.8068,
               "avgCastTurn": 7.31,
-              "deadRate": 0.193,
-              "winRateWhenCast": 0.6495,
+              "deadRate": 0.1932,
+              "winRateWhenCast": 0.6496,
               "stuckRate": 0.2523
             },
             {
               "name": "Swords to Plowshares",
               "isLand": false,
               "isCommander": false,
-              "drawnRate": 0.2361,
+              "drawnRate": 0.236,
               "castRate": 0.9788,
               "avgCastTurn": 5.97,
               "deadRate": 0.0212,
-              "winRateWhenCast": 0.4636,
+              "winRateWhenCast": 0.464,
               "stuckRate": 0.088
             },
             {
@@ -957,7 +957,7 @@
               "castRate": 0.9937,
               "avgCastTurn": 5.86,
               "deadRate": 0.0063,
-              "winRateWhenCast": 0.5129,
+              "winRateWhenCast": 0.5133,
               "stuckRate": 0.0163
             },
             {
@@ -965,21 +965,21 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.2349,
-              "castRate": 0.9409,
+              "castRate": 0.9408,
               "avgCastTurn": 5.44,
-              "deadRate": 0.0591,
-              "winRateWhenCast": 0.4765,
+              "deadRate": 0.0592,
+              "winRateWhenCast": 0.4769,
               "stuckRate": 0.0894
             },
             {
               "name": "Mind Stone",
               "isLand": false,
               "isCommander": false,
-              "drawnRate": 0.234,
-              "castRate": 0.9953,
+              "drawnRate": 0.2339,
+              "castRate": 0.9952,
               "avgCastTurn": 5.43,
-              "deadRate": 0.0047,
-              "winRateWhenCast": 0.4941,
+              "deadRate": 0.0048,
+              "winRateWhenCast": 0.4945,
               "stuckRate": 0.0131
             },
             {
@@ -990,7 +990,7 @@
               "castRate": 0.9394,
               "avgCastTurn": 5.48,
               "deadRate": 0.0606,
-              "winRateWhenCast": 0.4778,
+              "winRateWhenCast": 0.4782,
               "stuckRate": 0.0897
             },
             {
@@ -998,10 +998,10 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.2365,
-              "castRate": 0.938,
+              "castRate": 0.9379,
               "avgCastTurn": 5.47,
-              "deadRate": 0.062,
-              "winRateWhenCast": 0.4801,
+              "deadRate": 0.0621,
+              "winRateWhenCast": 0.4805,
               "stuckRate": 0.0921
             },
             {
@@ -1012,18 +1012,18 @@
               "castRate": 0.9683,
               "avgCastTurn": 8.14,
               "deadRate": 0.0317,
-              "winRateWhenCast": 0.5263,
-              "stuckRate": 0.1863
+              "winRateWhenCast": 0.5266,
+              "stuckRate": 0.1864
             },
             {
               "name": "Unlicensed Hearse",
               "isLand": false,
               "isCommander": false,
-              "drawnRate": 0.2378,
+              "drawnRate": 0.2377,
               "castRate": 0.9061,
               "avgCastTurn": 7.4,
               "deadRate": 0.0939,
-              "winRateWhenCast": 0.4835,
+              "winRateWhenCast": 0.4839,
               "stuckRate": 0.2493
             },
             {
@@ -1031,10 +1031,10 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.235,
-              "castRate": 0.89,
-              "avgCastTurn": 7.79,
-              "deadRate": 0.11,
-              "winRateWhenCast": 0.4932,
+              "castRate": 0.8898,
+              "avgCastTurn": 7.78,
+              "deadRate": 0.1102,
+              "winRateWhenCast": 0.4934,
               "stuckRate": 0.2861
             },
             {
@@ -1042,10 +1042,10 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.22,
-              "castRate": 0.7305,
+              "castRate": 0.7301,
               "avgCastTurn": 9.63,
-              "deadRate": 0.2695,
-              "winRateWhenCast": 0.5344,
+              "deadRate": 0.2699,
+              "winRateWhenCast": 0.5345,
               "stuckRate": 0.5625
             },
             {
@@ -1053,10 +1053,10 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.2354,
-              "castRate": 0.8888,
+              "castRate": 0.8889,
               "avgCastTurn": 7.76,
-              "deadRate": 0.1112,
-              "winRateWhenCast": 0.5705,
+              "deadRate": 0.1111,
+              "winRateWhenCast": 0.571,
               "stuckRate": 0.2844
             },
             {
@@ -1067,18 +1067,18 @@
               "castRate": 0.9731,
               "avgCastTurn": 6.43,
               "deadRate": 0.0269,
-              "winRateWhenCast": 0.5086,
+              "winRateWhenCast": 0.5089,
               "stuckRate": 0.0779
             },
             {
               "name": "Unexpected Windfall",
               "isLand": false,
               "isCommander": false,
-              "drawnRate": 0.2131,
+              "drawnRate": 0.213,
               "castRate": 0.9731,
               "avgCastTurn": 7.34,
               "deadRate": 0.0269,
-              "winRateWhenCast": 0.5184,
+              "winRateWhenCast": 0.5188,
               "stuckRate": 0.0804
             },
             {
@@ -1086,15 +1086,15 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.2333,
-              "castRate": 0.9018,
+              "castRate": 0.9016,
               "avgCastTurn": 7.94,
-              "deadRate": 0.0982,
-              "winRateWhenCast": 0.5269,
+              "deadRate": 0.0984,
+              "winRateWhenCast": 0.5274,
               "stuckRate": 0.2776
             }
           ],
           "games": 120000,
-          "winRate": 0.4631,
+          "winRate": 0.4635,
           "screwPct": 0.0675,
           "floodPct": 0.025,
           "incompleteRate": 0.0066,
@@ -1103,59 +1103,59 @@
           "deadCardsAtT8": 3.51,
           "avgWinTurn": 12.01,
           "funScore": 0.9975,
-          "podFunScore": 0.7292,
+          "podFunScore": 0.729,
           "perSeedScores": [
-            78.6,
+            78.7,
             79.2,
             79,
-            79.3,
+            79.4,
             78.4,
             78.5
           ],
           "lossCauses": [
             {
               "cause": "combo combo",
-              "games": 12299,
-              "rate": 0.1025
+              "games": 12289,
+              "rate": 0.1024
             },
             {
               "cause": "tokens combo",
-              "games": 11024,
-              "rate": 0.0919
+              "games": 11020,
+              "rate": 0.0918
             },
             {
               "cause": "tuned-bracket3 combo",
-              "games": 10017,
-              "rate": 0.0835
+              "games": 10012,
+              "rate": 0.0834
             },
             {
               "cause": "damage",
-              "games": 9990,
-              "rate": 0.0833
+              "games": 9979,
+              "rate": 0.0832
             },
             {
               "cause": "aristocrats combo",
-              "games": 8843,
+              "games": 8840,
               "rate": 0.0737
             },
             {
               "cause": "voltron combo",
-              "games": 5190,
+              "games": 5185,
               "rate": 0.0432
             },
             {
               "cause": "upgraded-casual combo",
-              "games": 4565,
+              "games": 4563,
               "rate": 0.038
             },
             {
               "cause": "starter-precon combo",
-              "games": 714,
-              "rate": 0.006
+              "games": 710,
+              "rate": 0.0059
             },
             {
               "cause": "stax combo",
-              "games": 672,
+              "games": 671,
               "rate": 0.0056
             },
             {
@@ -1166,7 +1166,7 @@
           ],
           "avgIdleTurns": 2.65,
           "avgSurvivingSeats": 1,
-          "avgFirstElimination": 9.29,
+          "avgFirstElimination": 9.28,
           "interactionAvailability": 0.4782,
           "protocol": {
             "seeds": 6,
@@ -1174,7 +1174,7 @@
             "preview": false
           },
           "hash": "e6bde00fcd7ae8d1",
-          "measuredAt": "2026-09-08T16:04:21.063Z",
+          "measuredAt": "2026-09-14T03:57:18.417Z",
           "lands": 35,
           "avgMv": 3.2,
           "curve": {
@@ -1199,8 +1199,8 @@
           "sameAs": "v1"
         },
         "b3": {
-          "score": 80.02,
-          "se": 0.13,
+          "score": 80.05,
+          "se": 0.134,
           "scoreParts": [
             {
               "key": "clock",
@@ -1226,10 +1226,10 @@
               "key": "winRate",
               "label": "Wins games",
               "weight": 0.35,
-              "norm": 0.875,
-              "points": 30.63,
+              "norm": 0.876,
+              "points": 30.66,
               "max": 35,
-              "lost": 4.37,
+              "lost": 4.34,
               "reads": "wins 47.1% of games against a 25% share of a four-player pod"
             },
             {
@@ -1288,44 +1288,44 @@
               "name": "Anim Pakal, Thousandth Moon",
               "isLand": false,
               "isCommander": false,
-              "drawnRate": 0.2346,
-              "castRate": 0.8916,
+              "drawnRate": 0.2345,
+              "castRate": 0.8915,
               "avgCastTurn": 8.17,
-              "deadRate": 0.1084,
-              "winRateWhenCast": 0.5977,
+              "deadRate": 0.1085,
+              "winRateWhenCast": 0.5981,
               "stuckRate": 0.3182
             },
             {
               "name": "Boros Charm",
               "isLand": false,
               "isCommander": false,
-              "drawnRate": 0.2353,
-              "castRate": 0.8841,
+              "drawnRate": 0.2352,
+              "castRate": 0.8839,
               "avgCastTurn": 8.59,
-              "deadRate": 0.1159,
-              "winRateWhenCast": 0.5013,
+              "deadRate": 0.1161,
+              "winRateWhenCast": 0.5017,
               "stuckRate": 0.4138
             },
             {
               "name": "Fable of the Mirror-Breaker",
               "isLand": false,
               "isCommander": false,
-              "drawnRate": 0.2287,
+              "drawnRate": 0.2286,
               "castRate": 0.9882,
               "avgCastTurn": 6,
               "deadRate": 0.0118,
-              "winRateWhenCast": 0.6044,
+              "winRateWhenCast": 0.6047,
               "stuckRate": 0.0276
             },
             {
               "name": "Inspiring Vantage",
               "isLand": true,
               "isCommander": false,
-              "drawnRate": 0.2427,
-              "castRate": 0.9581,
+              "drawnRate": 0.2426,
+              "castRate": 0.9582,
               "avgCastTurn": 5.49,
-              "deadRate": 0.0419,
-              "winRateWhenCast": 0.4835,
+              "deadRate": 0.0418,
+              "winRateWhenCast": 0.4836,
               "stuckRate": 0
             },
             {
@@ -1336,7 +1336,7 @@
               "castRate": 0.9593,
               "avgCastTurn": 5.48,
               "deadRate": 0.0407,
-              "winRateWhenCast": 0.4901,
+              "winRateWhenCast": 0.4905,
               "stuckRate": 0
             },
             {
@@ -1347,7 +1347,7 @@
               "castRate": 0.9118,
               "avgCastTurn": 7.57,
               "deadRate": 0.0882,
-              "winRateWhenCast": 0.4967,
+              "winRateWhenCast": 0.4972,
               "stuckRate": 0.2573
             },
             {
@@ -1358,7 +1358,7 @@
               "castRate": 0.9588,
               "avgCastTurn": 5.5,
               "deadRate": 0.0412,
-              "winRateWhenCast": 0.4869,
+              "winRateWhenCast": 0.4874,
               "stuckRate": 0
             },
             {
@@ -1369,7 +1369,7 @@
               "castRate": 0.9592,
               "avgCastTurn": 5.48,
               "deadRate": 0.0408,
-              "winRateWhenCast": 0.4895,
+              "winRateWhenCast": 0.4897,
               "stuckRate": 0
             },
             {
@@ -1377,10 +1377,10 @@
               "isLand": true,
               "isCommander": false,
               "drawnRate": 0.2435,
-              "castRate": 0.96,
+              "castRate": 0.9599,
               "avgCastTurn": 5.5,
-              "deadRate": 0.04,
-              "winRateWhenCast": 0.4881,
+              "deadRate": 0.0401,
+              "winRateWhenCast": 0.4887,
               "stuckRate": 0
             },
             {
@@ -1391,18 +1391,18 @@
               "castRate": 0.9805,
               "avgCastTurn": 5.5,
               "deadRate": 0.0195,
-              "winRateWhenCast": 0.4827,
+              "winRateWhenCast": 0.4831,
               "stuckRate": 0
             },
             {
               "name": "Plains",
               "isLand": true,
               "isCommander": false,
-              "drawnRate": 0.9048,
+              "drawnRate": 0.9047,
               "castRate": 0.9901,
               "avgCastTurn": 5.52,
               "deadRate": 0.0099,
-              "winRateWhenCast": 0.4775,
+              "winRateWhenCast": 0.478,
               "stuckRate": 0
             },
             {
@@ -1410,21 +1410,21 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.221,
-              "castRate": 0.7767,
+              "castRate": 0.7765,
               "avgCastTurn": 9.51,
-              "deadRate": 0.2233,
-              "winRateWhenCast": 0.6343,
-              "stuckRate": 0.5304
+              "deadRate": 0.2235,
+              "winRateWhenCast": 0.6346,
+              "stuckRate": 0.5305
             },
             {
               "name": "Archaeomancer's Map",
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.2319,
-              "castRate": 0.8395,
+              "castRate": 0.8394,
               "avgCastTurn": 8.74,
-              "deadRate": 0.1605,
-              "winRateWhenCast": 0.5158,
+              "deadRate": 0.1606,
+              "winRateWhenCast": 0.5162,
               "stuckRate": 0.4299
             },
             {
@@ -1435,7 +1435,7 @@
               "castRate": 0.9139,
               "avgCastTurn": 8.16,
               "deadRate": 0.0861,
-              "winRateWhenCast": 0.5763,
+              "winRateWhenCast": 0.5768,
               "stuckRate": 0.2681
             },
             {
@@ -1446,7 +1446,7 @@
               "castRate": 0.886,
               "avgCastTurn": 8.74,
               "deadRate": 0.114,
-              "winRateWhenCast": 0.5455,
+              "winRateWhenCast": 0.5463,
               "stuckRate": 0.3465
             },
             {
@@ -1454,21 +1454,21 @@
               "isLand": true,
               "isCommander": false,
               "drawnRate": 0.2434,
-              "castRate": 0.9603,
+              "castRate": 0.9602,
               "avgCastTurn": 5.51,
-              "deadRate": 0.0397,
-              "winRateWhenCast": 0.488,
+              "deadRate": 0.0398,
+              "winRateWhenCast": 0.4885,
               "stuckRate": 0
             },
             {
               "name": "Burnished Hart",
               "isLand": false,
               "isCommander": false,
-              "drawnRate": 0.236,
+              "drawnRate": 0.2359,
               "castRate": 0.9588,
-              "avgCastTurn": 6.08,
+              "avgCastTurn": 6.07,
               "deadRate": 0.0412,
-              "winRateWhenCast": 0.5157,
+              "winRateWhenCast": 0.516,
               "stuckRate": 0.0847
             },
             {
@@ -1476,21 +1476,21 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.2193,
-              "castRate": 0.7669,
-              "avgCastTurn": 10.13,
-              "deadRate": 0.2331,
-              "winRateWhenCast": 0.5297,
+              "castRate": 0.7666,
+              "avgCastTurn": 10.12,
+              "deadRate": 0.2334,
+              "winRateWhenCast": 0.5298,
               "stuckRate": 0.6391
             },
             {
               "name": "Cathartic Reunion",
               "isLand": false,
               "isCommander": false,
-              "drawnRate": 0.2302,
+              "drawnRate": 0.2301,
               "castRate": 0.9927,
               "avgCastTurn": 5.88,
               "deadRate": 0.0073,
-              "winRateWhenCast": 0.5269,
+              "winRateWhenCast": 0.5273,
               "stuckRate": 0.0156
             },
             {
@@ -1501,7 +1501,7 @@
               "castRate": 0.7119,
               "avgCastTurn": 7.93,
               "deadRate": 0.2881,
-              "winRateWhenCast": 0.239,
+              "winRateWhenCast": 0.2397,
               "stuckRate": 0.2731
             },
             {
@@ -1509,10 +1509,10 @@
               "isLand": true,
               "isCommander": false,
               "drawnRate": 0.2438,
-              "castRate": 0.9592,
+              "castRate": 0.959,
               "avgCastTurn": 5.48,
-              "deadRate": 0.0408,
-              "winRateWhenCast": 0.4862,
+              "deadRate": 0.041,
+              "winRateWhenCast": 0.4865,
               "stuckRate": 0
             },
             {
@@ -1523,7 +1523,7 @@
               "castRate": 0.9591,
               "avgCastTurn": 5.5,
               "deadRate": 0.0409,
-              "winRateWhenCast": 0.4847,
+              "winRateWhenCast": 0.4852,
               "stuckRate": 0
             },
             {
@@ -1534,7 +1534,7 @@
               "castRate": 0.9088,
               "avgCastTurn": 8.22,
               "deadRate": 0.0912,
-              "winRateWhenCast": 0.5595,
+              "winRateWhenCast": 0.5599,
               "stuckRate": 0.2882
             },
             {
@@ -1545,7 +1545,7 @@
               "castRate": 0.9598,
               "avgCastTurn": 5.5,
               "deadRate": 0.0402,
-              "winRateWhenCast": 0.4923,
+              "winRateWhenCast": 0.4927,
               "stuckRate": 0
             },
             {
@@ -1556,7 +1556,7 @@
               "castRate": 0.9596,
               "avgCastTurn": 5.48,
               "deadRate": 0.0404,
-              "winRateWhenCast": 0.4903,
+              "winRateWhenCast": 0.4909,
               "stuckRate": 0
             },
             {
@@ -1567,7 +1567,7 @@
               "castRate": 0.9577,
               "avgCastTurn": 5.49,
               "deadRate": 0.0423,
-              "winRateWhenCast": 0.4875,
+              "winRateWhenCast": 0.488,
               "stuckRate": 0
             },
             {
@@ -1575,10 +1575,10 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.2365,
-              "castRate": 0.9819,
+              "castRate": 0.9818,
               "avgCastTurn": 5.43,
-              "deadRate": 0.0181,
-              "winRateWhenCast": 0.4745,
+              "deadRate": 0.0182,
+              "winRateWhenCast": 0.475,
               "stuckRate": 0.0548
             },
             {
@@ -1589,7 +1589,7 @@
               "castRate": 0.957,
               "avgCastTurn": 5.51,
               "deadRate": 0.043,
-              "winRateWhenCast": 0.4915,
+              "winRateWhenCast": 0.4919,
               "stuckRate": 0
             },
             {
@@ -1597,10 +1597,10 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.2182,
-              "castRate": 0.9278,
+              "castRate": 0.9279,
               "avgCastTurn": 8.37,
-              "deadRate": 0.0722,
-              "winRateWhenCast": 0.5651,
+              "deadRate": 0.0721,
+              "winRateWhenCast": 0.5657,
               "stuckRate": 0.2472
             },
             {
@@ -1608,10 +1608,10 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.2183,
-              "castRate": 0.8869,
+              "castRate": 0.887,
               "avgCastTurn": 8.7,
-              "deadRate": 0.1131,
-              "winRateWhenCast": 0.5538,
+              "deadRate": 0.113,
+              "winRateWhenCast": 0.5543,
               "stuckRate": 0.3428
             },
             {
@@ -1622,7 +1622,7 @@
               "castRate": 0.8869,
               "avgCastTurn": 8.78,
               "deadRate": 0.1131,
-              "winRateWhenCast": 0.6316,
+              "winRateWhenCast": 0.634,
               "stuckRate": 0.3519
             },
             {
@@ -1633,7 +1633,7 @@
               "castRate": 0.9811,
               "avgCastTurn": 5.69,
               "deadRate": 0.0189,
-              "winRateWhenCast": 0.5239,
+              "winRateWhenCast": 0.5242,
               "stuckRate": 0.0501
             },
             {
@@ -1641,43 +1641,43 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.2359,
-              "castRate": 0.9301,
+              "castRate": 0.93,
               "avgCastTurn": 7.7,
-              "deadRate": 0.0699,
-              "winRateWhenCast": 0.5843,
+              "deadRate": 0.07,
+              "winRateWhenCast": 0.5849,
               "stuckRate": 0.2282
             },
             {
               "name": "Lorehold Archivist // Restore Relic",
               "isLand": false,
               "isCommander": false,
-              "drawnRate": 0.2193,
-              "castRate": 0.8487,
+              "drawnRate": 0.2192,
+              "castRate": 0.8486,
               "avgCastTurn": 9.08,
-              "deadRate": 0.1513,
-              "winRateWhenCast": 0.5829,
-              "stuckRate": 0.4248
+              "deadRate": 0.1514,
+              "winRateWhenCast": 0.5831,
+              "stuckRate": 0.4249
             },
             {
               "name": "Lorehold Campus",
               "isLand": true,
               "isCommander": false,
               "drawnRate": 0.242,
-              "castRate": 0.959,
+              "castRate": 0.9591,
               "avgCastTurn": 5.5,
-              "deadRate": 0.041,
-              "winRateWhenCast": 0.4885,
+              "deadRate": 0.0409,
+              "winRateWhenCast": 0.4891,
               "stuckRate": 0
             },
             {
               "name": "Mistveil Plains",
               "isLand": true,
               "isCommander": false,
-              "drawnRate": 0.2418,
+              "drawnRate": 0.2417,
               "castRate": 0.9582,
               "avgCastTurn": 5.52,
               "deadRate": 0.0418,
-              "winRateWhenCast": 0.4851,
+              "winRateWhenCast": 0.4855,
               "stuckRate": 0
             },
             {
@@ -1688,7 +1688,7 @@
               "castRate": 0.8147,
               "avgCastTurn": 9.27,
               "deadRate": 0.1853,
-              "winRateWhenCast": 0.6077,
+              "winRateWhenCast": 0.608,
               "stuckRate": 0.4696
             },
             {
@@ -1699,7 +1699,7 @@
               "castRate": 0.9599,
               "avgCastTurn": 5.54,
               "deadRate": 0.0401,
-              "winRateWhenCast": 0.481,
+              "winRateWhenCast": 0.4814,
               "stuckRate": 0
             },
             {
@@ -1710,19 +1710,19 @@
               "castRate": 0.9808,
               "avgCastTurn": 5.99,
               "deadRate": 0.0192,
-              "winRateWhenCast": 0.4755,
+              "winRateWhenCast": 0.476,
               "stuckRate": 0.0896
             },
             {
               "name": "Quintorius, Field Historian",
               "isLand": false,
               "isCommander": false,
-              "drawnRate": 0.22,
-              "castRate": 0.8938,
+              "drawnRate": 0.2199,
+              "castRate": 0.8937,
               "avgCastTurn": 8.71,
-              "deadRate": 0.1062,
-              "winRateWhenCast": 0.572,
-              "stuckRate": 0.3402
+              "deadRate": 0.1063,
+              "winRateWhenCast": 0.5722,
+              "stuckRate": 0.3403
             },
             {
               "name": "Quintorius, History Chaser",
@@ -1730,9 +1730,9 @@
               "isCommander": false,
               "drawnRate": 0.2145,
               "castRate": 0.9791,
-              "avgCastTurn": 7.26,
+              "avgCastTurn": 7.25,
               "deadRate": 0.0209,
-              "winRateWhenCast": 0.5308,
+              "winRateWhenCast": 0.5312,
               "stuckRate": 0.0692
             },
             {
@@ -1743,7 +1743,7 @@
               "castRate": 0.9882,
               "avgCastTurn": 6.63,
               "deadRate": 0.0118,
-              "winRateWhenCast": 0.4782,
+              "winRateWhenCast": 0.4787,
               "stuckRate": 0
             },
             {
@@ -1754,7 +1754,7 @@
               "castRate": 0.9608,
               "avgCastTurn": 5.49,
               "deadRate": 0.0392,
-              "winRateWhenCast": 0.4926,
+              "winRateWhenCast": 0.4931,
               "stuckRate": 0
             },
             {
@@ -1765,40 +1765,40 @@
               "castRate": 0.9836,
               "avgCastTurn": 6.3,
               "deadRate": 0.0164,
-              "winRateWhenCast": 0.5212,
-              "stuckRate": 0.0644
+              "winRateWhenCast": 0.5217,
+              "stuckRate": 0.0645
             },
             {
               "name": "Return to Dust",
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.2183,
-              "castRate": 0.7646,
+              "castRate": 0.7642,
               "avgCastTurn": 10.16,
-              "deadRate": 0.2354,
-              "winRateWhenCast": 0.538,
-              "stuckRate": 0.6386
+              "deadRate": 0.2358,
+              "winRateWhenCast": 0.5383,
+              "stuckRate": 0.6388
             },
             {
               "name": "Rip Apart",
               "isLand": false,
               "isCommander": false,
-              "drawnRate": 0.2348,
+              "drawnRate": 0.2347,
               "castRate": 0.9443,
               "avgCastTurn": 7.2,
               "deadRate": 0.0557,
-              "winRateWhenCast": 0.4873,
+              "winRateWhenCast": 0.4877,
               "stuckRate": 0.1837
             },
             {
               "name": "Rugged Prairie",
               "isLand": true,
               "isCommander": false,
-              "drawnRate": 0.2439,
+              "drawnRate": 0.2438,
               "castRate": 0.9591,
-              "avgCastTurn": 5.55,
+              "avgCastTurn": 5.54,
               "deadRate": 0.0409,
-              "winRateWhenCast": 0.488,
+              "winRateWhenCast": 0.4883,
               "stuckRate": 0
             },
             {
@@ -1806,10 +1806,10 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.2271,
-              "castRate": 0.9889,
+              "castRate": 0.989,
               "avgCastTurn": 5.99,
-              "deadRate": 0.0111,
-              "winRateWhenCast": 0.5269,
+              "deadRate": 0.011,
+              "winRateWhenCast": 0.5273,
               "stuckRate": 0.0272
             },
             {
@@ -1820,18 +1820,18 @@
               "castRate": 0.9821,
               "avgCastTurn": 6.29,
               "deadRate": 0.0179,
-              "winRateWhenCast": 0.5161,
+              "winRateWhenCast": 0.5163,
               "stuckRate": 0.0644
             },
             {
               "name": "Serra Paragon",
               "isLand": false,
               "isCommander": false,
-              "drawnRate": 0.2198,
+              "drawnRate": 0.2197,
               "castRate": 0.9088,
-              "avgCastTurn": 8.23,
+              "avgCastTurn": 8.22,
               "deadRate": 0.0912,
-              "winRateWhenCast": 0.5603,
+              "winRateWhenCast": 0.5607,
               "stuckRate": 0.2889
             },
             {
@@ -1839,10 +1839,10 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.2347,
-              "castRate": 0.8385,
+              "castRate": 0.8384,
               "avgCastTurn": 8.73,
-              "deadRate": 0.1615,
-              "winRateWhenCast": 0.5169,
+              "deadRate": 0.1616,
+              "winRateWhenCast": 0.5173,
               "stuckRate": 0.4255
             },
             {
@@ -1853,7 +1853,7 @@
               "castRate": 0.9325,
               "avgCastTurn": 7.72,
               "deadRate": 0.0675,
-              "winRateWhenCast": 0.5313,
+              "winRateWhenCast": 0.5316,
               "stuckRate": 0.2323
             },
             {
@@ -1864,7 +1864,7 @@
               "castRate": 0.9332,
               "avgCastTurn": 7.7,
               "deadRate": 0.0668,
-              "winRateWhenCast": 0.5856,
+              "winRateWhenCast": 0.5857,
               "stuckRate": 0.2288
             },
             {
@@ -1875,7 +1875,7 @@
               "castRate": 0.8985,
               "avgCastTurn": 8.16,
               "deadRate": 0.1015,
-              "winRateWhenCast": 0.5246,
+              "winRateWhenCast": 0.5248,
               "stuckRate": 0.3171
             },
             {
@@ -1886,7 +1886,7 @@
               "castRate": 0.9263,
               "avgCastTurn": 8.5,
               "deadRate": 0.0737,
-              "winRateWhenCast": 0.5682,
+              "winRateWhenCast": 0.5684,
               "stuckRate": 0.263
             },
             {
@@ -1897,7 +1897,7 @@
               "castRate": 0.9592,
               "avgCastTurn": 5.53,
               "deadRate": 0.0408,
-              "winRateWhenCast": 0.493,
+              "winRateWhenCast": 0.4935,
               "stuckRate": 0
             },
             {
@@ -1905,10 +1905,10 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.2354,
-              "castRate": 0.9488,
-              "avgCastTurn": 5.46,
-              "deadRate": 0.0512,
-              "winRateWhenCast": 0.4818,
+              "castRate": 0.9487,
+              "avgCastTurn": 5.45,
+              "deadRate": 0.0513,
+              "winRateWhenCast": 0.4823,
               "stuckRate": 0.0872
             },
             {
@@ -1919,18 +1919,18 @@
               "castRate": 0.9593,
               "avgCastTurn": 5.49,
               "deadRate": 0.0407,
-              "winRateWhenCast": 0.4866,
+              "winRateWhenCast": 0.4869,
               "stuckRate": 0
             },
             {
               "name": "Terramorphic Expanse",
               "isLand": true,
               "isCommander": false,
-              "drawnRate": 0.2439,
+              "drawnRate": 0.2438,
               "castRate": 0.9596,
               "avgCastTurn": 5.53,
               "deadRate": 0.0404,
-              "winRateWhenCast": 0.4837,
+              "winRateWhenCast": 0.4841,
               "stuckRate": 0
             },
             {
@@ -1938,10 +1938,10 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.222,
-              "castRate": 0.8633,
+              "castRate": 0.8632,
               "avgCastTurn": 8.85,
-              "deadRate": 0.1367,
-              "winRateWhenCast": 0.5525,
+              "deadRate": 0.1368,
+              "winRateWhenCast": 0.5526,
               "stuckRate": 0.4043
             },
             {
@@ -1952,7 +1952,7 @@
               "castRate": 0.9939,
               "avgCastTurn": 5.89,
               "deadRate": 0.0061,
-              "winRateWhenCast": 0.5316,
+              "winRateWhenCast": 0.5319,
               "stuckRate": 0.0164
             },
             {
@@ -1963,29 +1963,29 @@
               "castRate": 0.992,
               "avgCastTurn": 6.51,
               "deadRate": 0.008,
-              "winRateWhenCast": 0.4992,
+              "winRateWhenCast": 0.4997,
               "stuckRate": 0.0246
             },
             {
               "name": "Turbulent Steppe",
               "isLand": true,
               "isCommander": false,
-              "drawnRate": 0.2453,
+              "drawnRate": 0.2452,
               "castRate": 0.959,
               "avgCastTurn": 5.5,
               "deadRate": 0.041,
-              "winRateWhenCast": 0.4847,
+              "winRateWhenCast": 0.4852,
               "stuckRate": 0
             },
             {
               "name": "Valakut Exploration",
               "isLand": false,
               "isCommander": false,
-              "drawnRate": 0.2334,
-              "castRate": 0.8323,
+              "drawnRate": 0.2333,
+              "castRate": 0.8321,
               "avgCastTurn": 8.8,
-              "deadRate": 0.1677,
-              "winRateWhenCast": 0.5093,
+              "deadRate": 0.1679,
+              "winRateWhenCast": 0.5096,
               "stuckRate": 0.4368
             },
             {
@@ -1993,10 +1993,10 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.2347,
-              "castRate": 0.8935,
+              "castRate": 0.8934,
               "avgCastTurn": 8.31,
-              "deadRate": 0.1065,
-              "winRateWhenCast": 0.4943,
+              "deadRate": 0.1066,
+              "winRateWhenCast": 0.4946,
               "stuckRate": 0.379
             },
             {
@@ -2007,7 +2007,7 @@
               "castRate": 0.9907,
               "avgCastTurn": 5.46,
               "deadRate": 0.0093,
-              "winRateWhenCast": 0.494,
+              "winRateWhenCast": 0.4943,
               "stuckRate": 0.0301
             },
             {
@@ -2018,7 +2018,7 @@
               "castRate": 0.9559,
               "avgCastTurn": 6.94,
               "deadRate": 0.0441,
-              "winRateWhenCast": 0.4777,
+              "winRateWhenCast": 0.4784,
               "stuckRate": 0.1522
             },
             {
@@ -2026,21 +2026,21 @@
               "isLand": true,
               "isCommander": false,
               "drawnRate": 0.2444,
-              "castRate": 0.9603,
+              "castRate": 0.9602,
               "avgCastTurn": 5.52,
-              "deadRate": 0.0397,
-              "winRateWhenCast": 0.4871,
+              "deadRate": 0.0398,
+              "winRateWhenCast": 0.4873,
               "stuckRate": 0
             },
             {
               "name": "Spectacular Tactics",
               "isLand": false,
               "isCommander": false,
-              "drawnRate": 0.2348,
-              "castRate": 0.8961,
+              "drawnRate": 0.2347,
+              "castRate": 0.8958,
               "avgCastTurn": 8.29,
-              "deadRate": 0.1039,
-              "winRateWhenCast": 0.5024,
+              "deadRate": 0.1042,
+              "winRateWhenCast": 0.5028,
               "stuckRate": 0.3778
             },
             {
@@ -2051,18 +2051,18 @@
               "castRate": 0.9775,
               "avgCastTurn": 7.26,
               "deadRate": 0.0225,
-              "winRateWhenCast": 0.5373,
+              "winRateWhenCast": 0.5377,
               "stuckRate": 0.0712
             },
             {
               "name": "Faithless Looting",
               "isLand": false,
               "isCommander": false,
-              "drawnRate": 0.2329,
+              "drawnRate": 0.2328,
               "castRate": 0.9947,
               "avgCastTurn": 5.31,
               "deadRate": 0.0053,
-              "winRateWhenCast": 0.532,
+              "winRateWhenCast": 0.5322,
               "stuckRate": 0.0098
             },
             {
@@ -2070,11 +2070,11 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.2332,
-              "castRate": 0.8159,
-              "avgCastTurn": 9.58,
-              "deadRate": 0.1841,
-              "winRateWhenCast": 0.5183,
-              "stuckRate": 0.5691
+              "castRate": 0.8156,
+              "avgCastTurn": 9.57,
+              "deadRate": 0.1844,
+              "winRateWhenCast": 0.5186,
+              "stuckRate": 0.5692
             },
             {
               "name": "Quintorius Kand",
@@ -2084,7 +2084,7 @@
               "castRate": 0.8349,
               "avgCastTurn": 7.35,
               "deadRate": 0.1651,
-              "winRateWhenCast": 0.6532,
+              "winRateWhenCast": 0.6533,
               "stuckRate": 0.2427
             },
             {
@@ -2095,7 +2095,7 @@
               "castRate": 0.9809,
               "avgCastTurn": 6,
               "deadRate": 0.0191,
-              "winRateWhenCast": 0.4794,
+              "winRateWhenCast": 0.4796,
               "stuckRate": 0.0929
             },
             {
@@ -2106,18 +2106,18 @@
               "castRate": 0.9937,
               "avgCastTurn": 5.91,
               "deadRate": 0.0063,
-              "winRateWhenCast": 0.5282,
+              "winRateWhenCast": 0.529,
               "stuckRate": 0.0164
             },
             {
               "name": "Arcane Signet",
               "isLand": false,
               "isCommander": false,
-              "drawnRate": 0.2355,
-              "castRate": 0.9509,
+              "drawnRate": 0.2354,
+              "castRate": 0.951,
               "avgCastTurn": 5.52,
-              "deadRate": 0.0491,
-              "winRateWhenCast": 0.4887,
+              "deadRate": 0.049,
+              "winRateWhenCast": 0.4894,
               "stuckRate": 0.0877
             },
             {
@@ -2128,18 +2128,18 @@
               "castRate": 0.9955,
               "avgCastTurn": 5.41,
               "deadRate": 0.0045,
-              "winRateWhenCast": 0.5047,
+              "winRateWhenCast": 0.5054,
               "stuckRate": 0.0122
             },
             {
               "name": "Fellwar Stone",
               "isLand": false,
               "isCommander": false,
-              "drawnRate": 0.2371,
+              "drawnRate": 0.237,
               "castRate": 0.9491,
               "avgCastTurn": 5.47,
               "deadRate": 0.0509,
-              "winRateWhenCast": 0.4831,
+              "winRateWhenCast": 0.4839,
               "stuckRate": 0.0862
             },
             {
@@ -2150,7 +2150,7 @@
               "castRate": 0.9476,
               "avgCastTurn": 5.53,
               "deadRate": 0.0524,
-              "winRateWhenCast": 0.4834,
+              "winRateWhenCast": 0.4838,
               "stuckRate": 0.0892
             },
             {
@@ -2158,32 +2158,32 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.214,
-              "castRate": 0.9712,
-              "avgCastTurn": 8.11,
-              "deadRate": 0.0288,
-              "winRateWhenCast": 0.5428,
+              "castRate": 0.9711,
+              "avgCastTurn": 8.1,
+              "deadRate": 0.0289,
+              "winRateWhenCast": 0.5432,
               "stuckRate": 0.1722
             },
             {
               "name": "Unlicensed Hearse",
               "isLand": false,
               "isCommander": false,
-              "drawnRate": 0.2374,
+              "drawnRate": 0.2373,
               "castRate": 0.924,
               "avgCastTurn": 7.32,
               "deadRate": 0.076,
-              "winRateWhenCast": 0.4914,
-              "stuckRate": 0.2298
+              "winRateWhenCast": 0.4917,
+              "stuckRate": 0.2299
             },
             {
               "name": "Rally the Ancestors",
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.2364,
-              "castRate": 0.9052,
+              "castRate": 0.9053,
               "avgCastTurn": 7.83,
-              "deadRate": 0.0948,
-              "winRateWhenCast": 0.5044,
+              "deadRate": 0.0947,
+              "winRateWhenCast": 0.505,
               "stuckRate": 0.2796
             },
             {
@@ -2191,10 +2191,10 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.2199,
-              "castRate": 0.7788,
+              "castRate": 0.7787,
               "avgCastTurn": 9.51,
-              "deadRate": 0.2212,
-              "winRateWhenCast": 0.5369,
+              "deadRate": 0.2213,
+              "winRateWhenCast": 0.5375,
               "stuckRate": 0.534
             },
             {
@@ -2202,11 +2202,11 @@
               "isLand": false,
               "isCommander": false,
               "drawnRate": 0.2352,
-              "castRate": 0.9028,
+              "castRate": 0.9027,
               "avgCastTurn": 7.72,
-              "deadRate": 0.0972,
-              "winRateWhenCast": 0.5705,
-              "stuckRate": 0.2702
+              "deadRate": 0.0973,
+              "winRateWhenCast": 0.5706,
+              "stuckRate": 0.2703
             },
             {
               "name": "Bloodthirsty Adversary",
@@ -2216,7 +2216,7 @@
               "castRate": 0.9774,
               "avgCastTurn": 6.44,
               "deadRate": 0.0226,
-              "winRateWhenCast": 0.5162,
+              "winRateWhenCast": 0.5169,
               "stuckRate": 0.073
             },
             {
@@ -2227,30 +2227,30 @@
               "castRate": 0.9731,
               "avgCastTurn": 7.36,
               "deadRate": 0.0269,
-              "winRateWhenCast": 0.5354,
+              "winRateWhenCast": 0.536,
               "stuckRate": 0.0833
             },
             {
               "name": "Squee, the Immortal",
               "isLand": false,
               "isCommander": false,
-              "drawnRate": 0.2348,
-              "castRate": 0.9176,
+              "drawnRate": 0.2347,
+              "castRate": 0.9175,
               "avgCastTurn": 7.9,
-              "deadRate": 0.0824,
-              "winRateWhenCast": 0.5325,
-              "stuckRate": 0.2623
+              "deadRate": 0.0825,
+              "winRateWhenCast": 0.5327,
+              "stuckRate": 0.2624
             },
             {
               "name": "Brought Back",
               "isLand": false,
               "isCommander": false,
-              "drawnRate": 0.237,
-              "castRate": 0.9051,
+              "drawnRate": 0.2369,
+              "castRate": 0.9052,
               "avgCastTurn": 7.83,
-              "deadRate": 0.0949,
-              "winRateWhenCast": 0.4991,
-              "stuckRate": 0.2791
+              "deadRate": 0.0948,
+              "winRateWhenCast": 0.4997,
+              "stuckRate": 0.2792
             },
             {
               "name": "Archivist of Oghma",
@@ -2260,12 +2260,12 @@
               "castRate": 0.9958,
               "avgCastTurn": 5.8,
               "deadRate": 0.0042,
-              "winRateWhenCast": 0.5355,
+              "winRateWhenCast": 0.536,
               "stuckRate": 0.0113
             }
           ],
           "games": 120000,
-          "winRate": 0.4731,
+          "winRate": 0.4735,
           "screwPct": 0.0637,
           "floodPct": 0.0254,
           "incompleteRate": 0.006,
@@ -2274,49 +2274,49 @@
           "deadCardsAtT8": 3.33,
           "avgWinTurn": 11.97,
           "funScore": 0.9976,
-          "podFunScore": 0.7243,
+          "podFunScore": 0.7242,
           "perSeedScores": [
             80.3,
             79.6,
-            80.3,
+            80.4,
             80.3,
             79.8,
-            79.8
+            79.9
           ],
           "lossCauses": [
             {
               "cause": "combo combo",
-              "games": 11752,
+              "games": 11744,
               "rate": 0.0979
             },
             {
               "cause": "tokens combo",
-              "games": 10815,
+              "games": 10806,
               "rate": 0.0901
             },
             {
               "cause": "damage",
-              "games": 9895,
-              "rate": 0.0825
+              "games": 9886,
+              "rate": 0.0824
             },
             {
               "cause": "tuned-bracket3 combo",
-              "games": 9855,
+              "games": 9849,
               "rate": 0.0821
             },
             {
               "cause": "aristocrats combo",
-              "games": 8800,
+              "games": 8791,
               "rate": 0.0733
             },
             {
               "cause": "voltron combo",
-              "games": 5039,
+              "games": 5036,
               "rate": 0.042
             },
             {
               "cause": "upgraded-casual combo",
-              "games": 4590,
+              "games": 4586,
               "rate": 0.0382
             },
             {
@@ -2326,12 +2326,12 @@
             },
             {
               "cause": "starter-precon combo",
-              "games": 719,
+              "games": 716,
               "rate": 0.006
             },
             {
               "cause": "group-hug combo",
-              "games": 328,
+              "games": 326,
               "rate": 0.0027
             }
           ],
@@ -2345,7 +2345,7 @@
             "preview": false
           },
           "hash": "16c78843152d5c71",
-          "measuredAt": "2026-09-08T16:04:37.320Z",
+          "measuredAt": "2026-09-14T03:57:30.753Z",
           "lands": 35,
           "avgMv": 3.12,
           "curve": {
@@ -2378,7 +2378,7 @@
       },
       "delta": {
         "v1ToB3": {
-          "score": 1.19,
+          "score": 1.18,
           "significant": true
         },
         "v1ToTuned": {
@@ -2386,7 +2386,7 @@
           "significant": false
         },
         "tunedToB3": {
-          "score": 1.19,
+          "score": 1.18,
           "significant": true
         }
       }
@@ -3438,7 +3438,7 @@
             "preview": false
           },
           "hash": "094f7d92fc75c53c",
-          "measuredAt": "2026-09-08T16:04:51.115Z",
+          "measuredAt": "2026-09-14T03:57:41.411Z",
           "lands": 35,
           "avgMv": 3,
           "curve": {
@@ -4499,7 +4499,7 @@
             "preview": false
           },
           "hash": "328e0f6e8e873ff0",
-          "measuredAt": "2026-09-08T16:05:05.068Z",
+          "measuredAt": "2026-09-14T03:57:52.535Z",
           "lands": 35,
           "avgMv": 3.09,
           "curve": {
@@ -4517,7 +4517,7 @@
             "tier": 3,
             "gameChangers": 1
           },
-          "cost": 221.48,
+          "cost": 222.39,
           "cards": 100
         }
       },
@@ -5604,7 +5604,7 @@
             "preview": false
           },
           "hash": "6b136746d247a56e",
-          "measuredAt": "2026-09-08T16:05:19.495Z",
+          "measuredAt": "2026-09-14T03:58:03.654Z",
           "lands": 35,
           "avgMv": 2.75,
           "curve": {
@@ -6676,7 +6676,7 @@
             "preview": false
           },
           "hash": "a26df12890963ce2",
-          "measuredAt": "2026-09-08T16:05:32.877Z",
+          "measuredAt": "2026-09-14T03:58:14.573Z",
           "lands": 35,
           "avgMv": 2.74,
           "curve": {
@@ -6694,7 +6694,7 @@
             "tier": 3,
             "gameChangers": 1
           },
-          "cost": 170.56,
+          "cost": 174.02,
           "cards": 100
         }
       },
@@ -7769,7 +7769,7 @@
             "preview": false
           },
           "hash": "57c1eb1b79518495",
-          "measuredAt": "2026-09-08T16:05:45.195Z",
+          "measuredAt": "2026-09-14T03:58:24.284Z",
           "lands": 35,
           "avgMv": 3.18,
           "curve": {
@@ -8830,7 +8830,7 @@
             "preview": false
           },
           "hash": "ab2cd5e8741bcd46",
-          "measuredAt": "2026-09-08T16:05:58.620Z",
+          "measuredAt": "2026-09-14T03:58:34.863Z",
           "lands": 35,
           "avgMv": 3.2,
           "curve": {
@@ -8848,7 +8848,7 @@
             "tier": 3,
             "gameChangers": 1
           },
-          "cost": 148.44,
+          "cost": 148.16,
           "cards": 100
         }
       },
@@ -9834,7 +9834,7 @@
             "preview": false
           },
           "hash": "75e9daa339698259",
-          "measuredAt": "2026-09-08T16:06:11.213Z",
+          "measuredAt": "2026-09-14T03:58:44.121Z",
           "lands": 35,
           "avgMv": 2.77,
           "curve": {
@@ -10804,7 +10804,7 @@
             "preview": false
           },
           "hash": "57a34aaa26b8ce36",
-          "measuredAt": "2026-09-08T16:06:23.808Z",
+          "measuredAt": "2026-09-14T03:58:54.157Z",
           "lands": 35,
           "avgMv": 2.8,
           "curve": {
@@ -11785,7 +11785,7 @@
             "preview": false
           },
           "hash": "1f1f09403fa76fe0",
-          "measuredAt": "2026-09-08T16:06:36.501Z",
+          "measuredAt": "2026-09-14T03:59:04.173Z",
           "lands": 35,
           "avgMv": 2.89,
           "curve": {
@@ -11803,7 +11803,7 @@
             "tier": 3,
             "gameChangers": 1
           },
-          "cost": 186.08,
+          "cost": 184.67,
           "cards": 100
         }
       },
@@ -12755,7 +12755,7 @@
             "preview": false
           },
           "hash": "41ab342ab2a24cda",
-          "measuredAt": "2026-09-08T16:06:44.364Z",
+          "measuredAt": "2026-09-14T03:59:10.890Z",
           "lands": 35,
           "avgMv": 2.71,
           "curve": {
@@ -13703,7 +13703,7 @@
             "preview": false
           },
           "hash": "db0c2fb3025c0aa1",
-          "measuredAt": "2026-09-08T16:06:52.330Z",
+          "measuredAt": "2026-09-14T03:59:17.630Z",
           "lands": 35,
           "avgMv": 2.74,
           "curve": {
@@ -14662,7 +14662,7 @@
             "preview": false
           },
           "hash": "93390fc011346006",
-          "measuredAt": "2026-09-08T16:07:00.622Z",
+          "measuredAt": "2026-09-14T03:59:24.206Z",
           "lands": 35,
           "avgMv": 2.83,
           "curve": {
@@ -14680,7 +14680,7 @@
             "tier": 3,
             "gameChangers": 1
           },
-          "cost": 211,
+          "cost": 210.53,
           "cards": 100
         }
       },
