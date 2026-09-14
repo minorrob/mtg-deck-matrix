@@ -124,18 +124,24 @@ library and the graph, and a backup that is the user's, not the catalog's.
 
 7. **One status vocabulary** in the model (`M.STATUS`: id, label, tone, order,
    `placementOf`), read by the Cards list, the pills, the readiness bar, the deck page and
-   later the Tabletop (four copies today).
+   later the Tabletop (four copies today). *Shipped in #182: `M.STATUS`, `statusOf`,
+   `statusOrder`, `statusTone`; the Cards module, the pills and the deck page read them (the
+   deck page's Reserved pill had drifted to the watch tone).*
 8. **One groupings module** (`crankmagic-groupings.js`) for the sheet's *Group rows by*,
-   the list's bands and the Tabletop's dropdown.
+   the list's bands and the Tabletop's dropdown. *Shipped in #182: `crankmagic-groupings.js`
+   (choices, colour piles, label and order) with the caller's column reader passed in.*
 9. **`crankmagic-rules.js` absorbs the literals**: `GC_LIMIT` per bracket, the "cheap line"
    (`/^D[56]/` in `crankmagic-decks.js`), the composition type order, the loop-length cap;
-   deck art moves to the deck definition or the commander's record.
+   deck art moves to the deck definition or the commander's record. *Shipped in #182:
+   `GC_LIMIT`, `UPGRADE_CHEAP_LINE` (a deck may set `definition.upgradeLine`; the D5/D6 regex is
+   gone), `TYPE_ORDER`, `LOOP_MAX_LEN` and `DECK_ART`/`deckArt` on `crankmagic-rules.js`.*
 10. **Archive the five legacy files and delete the stub** (E4): move them under
     `data/archive/` with their tools and tests repointed in the same PR; drop
     `deck-swaps.json` from the asset map and the worker.
 11. **Memoise the projections per revision.** `M.projection(C.state)` is recomputed on
     every render that needs it (the new deck-page Cards tab calls it twice); key a cache on
     `state.revision` inside the model so the Tabletop and the Trace can call it freely.
+    *Shipped in #182: one computation per state and revision; callers get fresh rows.*
 
 **Scalability and flexibility** — for the persistent plan, the Trace and the Tabletop; E3–E4
 and the plans that follow.

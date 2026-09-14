@@ -314,7 +314,7 @@ Every data file under `data/` and `sim/` opens with `{schema, stamp, generator, 
 `schema/index.mjs` registers each one with its producer and the tool whose `--check` vouches for
 it, `schema/*.json` describes its shape, and readers pass what they fetch through
 `CrankAssets.expect()`. Changed assets require a new `?v=` everywhere referenced, then
-`node tests/asset-versions.mjs --update`. There are 59 Node suites:
+`node tests/asset-versions.mjs --update`. There are 60 Node suites:
 
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`
@@ -371,6 +371,7 @@ it, `schema/*.json` describes its shape, and readers pass what they fetch throug
 - `shop-export` — `tests/shop-export.mjs`
 - `sim-engine` — `tests/sim-engine.mjs`
 - `sim-lenses` — `tests/sim-lenses.mjs`
+- `status-and-groupings` — `tests/status-and-groupings.mjs`
 - `slot-model` — `tests/slot-model.mjs`
 - `tour` — `tests/tour.mjs`
 - `user-state` — `tests/user-state.mjs`
