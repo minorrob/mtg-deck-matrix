@@ -308,21 +308,34 @@
 
       /* THE CARD ART. A node is the card, not a blue circle standing in for it. Images
          load lazily -- only the cards on the canvas, from Scryfall's small rendition --
-         and the frame repaints once each arrives. A card with no image, or one that fails,
-         keeps the plain disc, so the picture never waits on the network to be usable. */
+         and the frame repaints once each arrives. A card with no image keeps the plain disc,
+         so the picture never waits on the network to be usable.
+
+         NOT A CORS REQUEST. The images used to be asked for with crossOrigin set, which
+         makes the browser refuse any copy the CDN serves without the CORS header -- and a
+         CDN edge that cached the same picture for an ordinary <img> earlier (the Card Info
+         pane, a Cards row) hands back exactly that copy. On the live site that left most
+         nodes as their colour letters while one or two drew. Nothing here reads the canvas
+         back, so a plain image is all the disc needs; a load that still fails is retried
+         once after a pause rather than written off for the session. */
       const images = new Map();
       let repaintQueued = false;
+      const repaint = () => { if (!repaintQueued) { repaintQueued = true; setTimeout(() => { repaintQueued = false; if (!disposed) draw(); }, 60); } };
       function art(c) {
         const url = String(c.image || '');
         if (!url) return null;
         const key = c.id;
         if (images.has(key)) { const img = images.get(key); return img && img !== 'failed' && img.complete && img.naturalWidth ? img : null; }
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => { if (!repaintQueued) { repaintQueued = true; setTimeout(() => { repaintQueued = false; draw(); }, 60); } };
-        img.onerror = () => images.set(key, 'failed');
-        img.src = url.replace('/normal/', '/small/').replace('/large/', '/small/');
-        images.set(key, img);
+        const src = url.replace('/normal/', '/small/').replace('/large/', '/small/');
+        const request = (attempt) => {
+          const img = new Image();
+          img.decoding = 'async';
+          img.onload = repaint;
+          img.onerror = () => { if (attempt < 1) setTimeout(() => request(attempt + 1), 1500 + Math.random() * 1500); else images.set(key, 'failed'); };
+          img.src = src;
+          images.set(key, img);
+        };
+        request(0);
         return null;
       }
 
