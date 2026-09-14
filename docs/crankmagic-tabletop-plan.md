@@ -3,8 +3,8 @@
 Definition and plan for the third view of the Cards page Rob described on 14 September 2026.
 The Cards page has a list and a sheet; this is the view where the cards are cards. Mock-ups:
 `docs/mockups/tabletop-piles.html` (the table at rest), `docs/mockups/tabletop-laid-out.html`
-(a pile opened, two cards selected, the selection on the mat mid-drag). TB1–TB3 are built
-(the table at rest; lay out, page, select; drag to a pile — 14 September); TB4 follows.
+(a pile opened, two cards selected, the selection on the mat mid-drag). TB1–TB4 are built
+(the table at rest; lay out, page, select; drag to a pile; polish — 14 September).
 
 The app is for anyone building any deck: the piles are the statuses and groupings the model
 already has, so the view needs no data of its own and works on any library.
@@ -165,6 +165,17 @@ Needs, all small and all worth settling in the data-model evaluation first:
   list it until one is placed.
 - **TB4 — polish.** Card size memory per device, pile order preference, keyboard model
   (arrow keys between piles, Enter opens, Space selects), print of a laid-out pile.
+  *Shipped 14 September (#192).* The card size lives in `localStorage` (a fact about the
+  screen, not the library); the status piles' order — workflow or fullest first — is a
+  library preference beside the grouping; the arrows walk a row of piles (ledge, group piles
+  or their shelf, status piles) and step between rows, and in a laid-out pile walk the cards
+  with Home, End, PageUp and PageDown, Space ticking and Enter choosing; *Print* puts the whole
+  pile on paper as a numbered list with type, mana value, status, price, deck and copies
+  (`printSheet`, pure). The plan is complete. Still open after TB4, in the order they would
+  matter: the deck-legal catalogue ghosts of §1 (question 1: a deck first); long-press on a
+  phone for the row menu (*Move to…* covers the move); the phone's page strip pinned rather
+  than repeated; and folding the sheet's *Group rows by* and the tabletop's groupings into one
+  module (§4).
 
 Sizing at the pace of Phases A–C: TB0 with the data-model work, TB1 two sessions, TB2 two,
 TB3 two, TB4 one.

@@ -253,6 +253,9 @@ function sheetEdit(btn,seed=''){
 let tabletopGroupBy=C.state.preferences.tabletopGroupBy||'type';
 /* The table's own state between draws: the open pile, its page and card size, the ticks while it is laid out, the selection on the stage and the pile it came from. */
 const ttUI={open:null,from:null,page:0,size:'M',ticked:new Set(),selection:new Set()};
+/* The card size is a fact about the screen it was chosen on, so it is remembered per device and not in the library. */
+try{const s=localStorage.getItem('cm-tabletop-size');if(s&&['S','M','L'].includes(s))ttUI.size=s;}catch(err){/* a private window; M then */}
+let tabletopStatusOrder=C.state.preferences.tabletopStatusOrder==='count'?'count':'workflow';
 let ttModel=null;
 function tabletop(params){
   const TT=globalThis.CrankTabletop;
@@ -262,7 +265,7 @@ function tabletop(params){
   const draw=()=>{
     if(!TT){$('#cm-tt-host').innerHTML='<p class="cm-muted">The tabletop module has not loaded yet.</p>';return;}
     const all=rows(params,false).filter(matches).map(r=>({...r,status:statusOf(r)}));lastRows=all;
-    const model=TT.table(all,{groupBy:tabletopGroupBy,statuses:M.STATUS,statusOrder:M.statusOrder,value,maxGroupPiles:16});ttModel=model;
+    const model=TT.table(all,{groupBy:tabletopGroupBy,statuses:M.STATUS,statusOrder:M.statusOrder,value,maxGroupPiles:16,statusSort:tabletopStatusOrder});ttModel=model;
     $('#cm-tt-status').textContent=`${model.total.toLocaleString()} cop${model.total===1?'y':'ies'} on the table (${model.rows.toLocaleString()} rows) · Bench ${model.bench.count.toLocaleString()} · ${model.ghosts.toLocaleString()} ghost${model.ghosts===1?'':'s'}`+(Object.values(filter).some(v=>v!=='')||params.get('deck')?' · filtered':'');
     /* A selection that the filters no longer show is dropped; an open pile that vanished (a grouping change) closes. */
     const ids=new Set(all.map(r=>r.recordId));for(const id of [...ttUI.selection])if(!ids.has(id))ttUI.selection.delete(id);for(const id of [...ttUI.ticked])if(!ids.has(id))ttUI.ticked.delete(id);
@@ -271,9 +274,13 @@ function tabletop(params){
     TT.mount($('#cm-tt-host'),model,{
       onGroupBy:v=>{tabletopGroupBy=v;if(ttUI.open&&ttUI.open.startsWith('group:'))rest();C.commit({type:'preferences',values:{tabletopGroupBy:v}},{renderView:false}).catch(()=>{});draw();},
       onOpen:id=>{if(!id){rest();}else{ttUI.selection.clear();ttUI.ticked.clear();ttUI.from=null;if(ttUI.open!==id)ttUI.page=0;ttUI.open=id;}draw();queueMicrotask(()=>$('#cm-tt-host .cm-tt-strip button, #cm-tt-host .cm-tt-mat')?.focus?.({preventScroll:true}));},
-      onPage:n=>{ttUI.page=Math.max(0,n|0);draw();},
-      onSize:s=>{ttUI.size=s;ttUI.page=0;draw();},
-      onTick:id=>{if(ttUI.ticked.has(id))ttUI.ticked.delete(id);else ttUI.ticked.add(id);draw();},
+      onPage:n=>{ttUI.page=Math.max(0,n|0);draw();queueMicrotask(()=>$('#cm-tt-host .cm-tt-grid .cm-tt-card[data-tt=card]')?.focus?.({preventScroll:true}));},
+      onSize:s=>{ttUI.size=s;ttUI.page=0;try{localStorage.setItem('cm-tabletop-size',s);}catch(err){/* not remembered, still applied */}draw();queueMicrotask(()=>$(`#cm-tt-host [data-tt=size][data-size=${s}]`)?.focus?.({preventScroll:true}));},
+      onStatusOrder:v=>{tabletopStatusOrder=v==='count'?'count':'workflow';C.commit({type:'preferences',values:{tabletopStatusOrder}},{renderView:false}).catch(()=>{});draw();},
+      onPrint:pileId=>{const pile=TT.findPile(model,pileId);if(!pile)return;document.querySelectorAll('.cm-tt-printsheet').forEach(x=>x.remove());const wrap=document.createElement('div');wrap.innerHTML=TT.printSheet(pile,{describe:r=>({status:r.status||statusOf(r),price:r.card&&r.card.price!=null?C.money(r.card.price):'',deck:value(r,'deck')}),library:'CrankMagic'});const sheet=wrap.firstElementChild;document.body.append(sheet);document.body.classList.add('cm-tt-printing');
+        const done=()=>{document.body.classList.remove('cm-tt-printing');sheet.remove();removeEventListener('afterprint',done);};addEventListener('afterprint',done);setTimeout(()=>{if(sheet.isConnected)done();},60000);
+        try{window.print();}catch(err){done();C.notice('This browser could not open the print dialog.',true);}},
+      onTick:id=>{if(ttUI.ticked.has(id))ttUI.ticked.delete(id);else ttUI.ticked.add(id);draw();queueMicrotask(()=>$(`#cm-tt-host .cm-tt-card[data-record="${CSS.escape(id)}"]`)?.focus?.({preventScroll:true}));},
       onSelect:list=>{ttUI.selection=new Set(list);ttUI.from=ttUI.open;ttUI.open=null;ttUI.ticked.clear();draw();queueMicrotask(()=>$('#cm-tt-host .cm-tt-stage-actions button')?.focus?.({preventScroll:true}));},
       onClear:()=>{rest();draw();},
       onMenu:(record,el)=>{actions['row-actions'](el);},
@@ -290,6 +297,9 @@ function tabletop(params){
   host.querySelector('[name=ttDeck]')?.addEventListener('change',ev=>goCards('library',{view:'tabletop',...(ev.target.value?{deck:ev.target.value}:{})}));
   if(!TT)return;
   actions['tabletop-drop']=el=>tabletopDrop(el.dataset.pile,[...ttUI.selection]);
+  /* Escape is the table at rest from anywhere on the page — a redraw can leave the focus on the body, where the mat's own key handler cannot hear it. Not while a dialog or a menu is open, and not from a field. */
+  const onKey=ev=>{const r=C.route();if(r.view!=='cards'||r.params.get('view')!=='tabletop'){removeEventListener('keydown',onKey);return;}if(ev.key!=='Escape'||ev.defaultPrevented||!(ttUI.open||ttUI.selection.size))return;if(document.querySelector('dialog[open]')||[...document.querySelectorAll('[popover]')].some(p=>p.matches(':popover-open'))||ev.target.closest?.('input,select,textarea'))return;ev.preventDefault();ttUI.open=null;ttUI.from=null;ttUI.page=0;ttUI.ticked.clear();ttUI.selection.clear();draw();};
+  addEventListener('keydown',onKey);
   /* The mat is sized from the host's width, so a resize redraws it. */
   let last=host.clientWidth;const onResize=()=>{if(C.route().view!=='cards'||C.route().params.get('view')!=='tabletop'){removeEventListener('resize',onResize);return;}if(Math.abs(host.clientWidth-last)>40){last=host.clientWidth;draw();}};
   addEventListener('resize',onResize);
