@@ -155,6 +155,13 @@ Named now so the evaluation checks them rather than rediscovers them:
 - **Recommended 7, 8, 9, 11 shipped (PR #182):** the status vocabulary in the model, the
   groupings module, the deck-page and graph literals on the rules module, the projection
   memoised per revision; `tests/status-and-groupings.mjs`.
+- **Recommended 10, 14, 16 shipped (PR #183):** the five legacy files under `data/archive`
+  with their readers repointed, the swaps stub and its builder gone, `tools/data-manifest.mjs`
+  writing `data/manifest.json`, the 5 MB sharding rule in `tests/data-manifest.mjs`.
+- **Recommended 12, 13, 15 shipped (PR #184):** the oracle id as the join key (catalog,
+  facets, Discover, reconcile), posting lists behind the facets with `postings()` for the
+  Trace, "Commands are the exchange format" in the persistent plan. Section 3 of the report is
+  closed.
 
 ## 5. Sequence and sizing
 

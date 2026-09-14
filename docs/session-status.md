@@ -57,6 +57,8 @@ Trey's Deck Matrix. Anything either session needs the other to know goes in this
 | #180 | Critical 2: the library references the Card record (schema 3): a shipped card is `{id, name, oracleId, shipped}`, the catalog's `overlay()` joins the record's facts to the copy's identity, one `reconcileCards` command at boot for a schema-2 library, every module reads through `C.card(id)`; live-state 2.1 MB → 0.8 MB; `tests/library-references.mjs` | A |
 | #181 | Tabletop plan: the felt goes; a slate sorting mat with a dot grid, a raised bench ledge and slots under the piles; both mock-ups regenerated | A |
 | #182 | Recommended 7, 8, 9, 11: `M.STATUS` vocabulary (statusOf/statusOrder/statusTone) read by Cards, pills and the deck page; `crankmagic-groupings.js`; the literals (`GC_LIMIT`, `UPGRADE_CHEAP_LINE`, `TYPE_ORDER`, `LOOP_MAX_LEN`, `DECK_ART`) on the rules module; projection memoised per revision; `tests/status-and-groupings.mjs` | A |
+| #183 | Recommended 10, 14, 16: the five legacy files archived with 35 readers repointed, `deck-swaps.json` and its builder gone, `tools/data-manifest.mjs` → `data/manifest.json` (schema, stamp, generator, size, sha256, served version, cache class), `tests/data-manifest.mjs` with the 5 MB rule | A |
+| #184 | Recommended 12, 13, 15: the oracle id is the join key (`catalog.oracle()`, `CrankFacets.owns()`, Discover's focus and band, `reconcileCards` fills it); posting lists behind the facets (`postings()` for the Trace); "Commands are the exchange format" in the persistent plan. Section 3 of the evaluation report is closed | A |
 
 Also on 13 September: stale PRs #80, #2 and #54 closed (superseded); the 25 branches behind
 closed and merged PRs were verified safe to delete but the session's credential cannot delete
