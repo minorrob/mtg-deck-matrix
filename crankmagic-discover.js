@@ -101,6 +101,13 @@
 
     const loaded = await C.catalog.loadGraph();
     if (C.route().view !== 'discover') return;
+    /* The pairs are the weight of the graph and this is the one page that draws them, so
+       they load here, once, with a line that says so -- not at install for every visitor. */
+    if (!(loaded.played && loaded.played.length) && C.catalog.loadPlayed) {
+      const status = C.main.querySelector('[role=status]'); if (status) status.textContent = 'Loading the co-play links — about 20 MB, kept for next time…';
+      try { await C.catalog.loadPlayed(); } catch (error) { C.notice('The co-play links could not be loaded, so the graph draws the rules-derived joins only. ' + error.message, true); }
+      if (C.route().view !== 'discover') return;
+    }
 
     /* The graph plus anything in the library it does not know about -- a card imported
        from a link, or one printed after the graph snapshot -- shaped like a graph row. */

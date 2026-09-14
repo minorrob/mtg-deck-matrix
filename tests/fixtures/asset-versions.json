@@ -62,8 +62,8 @@
       "sha": "b4cc36093b2df3e8"
     },
     "card-catalog.js": {
-      "version": 17,
-      "sha": "e1b63f6aa0010b0b"
+      "version": 18,
+      "sha": "44ffcf7725ca53ef"
     },
     "card-classify.js": {
       "version": 10,
@@ -98,12 +98,12 @@
       "sha": "e02ecad49be64f67"
     },
     "crankmagic-app.js": {
-      "version": 150,
-      "sha": "246b735c28795d58"
+      "version": 151,
+      "sha": "bad5c80387739d62"
     },
     "crankmagic-assets.js": {
-      "version": 21,
-      "sha": "be60b53590cdcc2c"
+      "version": 22,
+      "sha": "650f24de7f2fea1e"
     },
     "crankmagic-brand.js": {
       "version": 3,
@@ -126,8 +126,8 @@
       "sha": "0f37e9d569d76ff4"
     },
     "crankmagic-discover.js": {
-      "version": 44,
-      "sha": "8cb6a540d4138d3e"
+      "version": 45,
+      "sha": "2224b1d1639fe6a3"
     },
     "crankmagic-evidence.js": {
       "version": 2,
@@ -190,8 +190,8 @@
       "sha": "81ae2c4b7634afa7"
     },
     "crankmagic-sw.js": {
-      "version": 150,
-      "sha": "42cd15b0902f7026"
+      "version": 151,
+      "sha": "3f6e1d0493384b09"
     },
     "crankmagic-tour.js": {
       "version": 13,
@@ -237,9 +237,13 @@
       "version": 2,
       "sha": "ee4c0aed0d1458b1"
     },
+    "data/graph-played.json": {
+      "version": 1,
+      "sha": "4b7f6dbbbc37046a"
+    },
     "data/graph.json": {
-      "version": 14,
-      "sha": "36b2226005b22d0e"
+      "version": 15,
+      "sha": "96bf11a11dded9af"
     },
     "deck-import.js": {
       "version": 2,
@@ -266,8 +270,8 @@
       "sha": "64ca6d7289743a4f"
     },
     "graph-payload.js": {
-      "version": 1,
-      "sha": "f92aa0002440f2e3"
+      "version": 2,
+      "sha": "932160816fc52ebc"
     },
     "guide-measured.js": {
       "version": 1,

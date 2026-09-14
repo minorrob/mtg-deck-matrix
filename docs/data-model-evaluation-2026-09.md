@@ -18,7 +18,7 @@ lenses — and how do we strengthen scalability and flexibility?* §3 answers it
 
 | Finding | Measured | Why it matters |
 |---|---|---|
-| **The worker precaches 41.6 MB of data on every install**, 36.4 MB of it `data/graph.json`. | `crankmagic-sw.js` DATA list; inventory *Precached* column | A first visit on a phone downloads the whole graph before Discover is ever opened; a bump of `graph.json` re-downloads it. The comment in the worker still says "7.1 MB". |
+| **The worker precaches 41.6 MB of data on every install**, 36.4 MB of it `data/graph.json`. | `crankmagic-sw.js` DATA list; inventory *Precached* column | A first visit on a phone downloads the whole graph before Discover is ever opened; a bump of `graph.json` re-downloads it. The comment in the worker still says "7.1 MB". *Fixed in #177: the worker precaches 5.1 MB of data; the graph (15.8 MB of card terms) and the co-play pairs (`data/graph-played.json`, 20.6 MB) are fetched on the first Discover visit behind a status line, then kept in the data cache.* |
 | **Card facts live in four shapes**: `data/cards.json` (2,025 catalog records), `data/card-facts.json`, the 31,830 `graph.json` cards, and `state.cards` inside every library. | inventory rows; `tests/…` readers | Each is produced by a different tool on a different day and none references the others. |
 | **They already disagree.** Catalog records carry **no roles** (the graph carries them for all 31,830, so the app re-derives at render through `card-classify.js`); **1,656 of 2,025** cards priced in both files show a **different price** (catalog stamped 09-10, graph 09-11); the live library's cards disagree with the graph on roles for **40 of 752** (baked before the loop vocabulary of #168 — `copy`, `cost-reduction` are missing). | `scratchpad/drift.cjs` over the committed files | A deck page's Ramp count, a Cards table price and Discover's chips can each be right by their own file and wrong by another's. Phase D's role lens would count from the stale set. |
 | **Every library duplicates the catalog.** `state.cards` holds 48 fields per card including the rules text: 122 KB of oracle text in the six-deck backup. | `data/live-state.json` payload | A ban-list, price or vocabulary change has to be re-applied inside every user's state; backups carry facts that are not the user's. |
@@ -89,7 +89,10 @@ library and the graph, and a backup that is the user's, not the catalog's.
    first-visit lazy with a progress line on Discover; the card terms block separate from the
    co-play pairs (the 701,916 pairs are the weight), pairs sharded or loaded on first graph
    draw. Test: the worker's DATA list has no file over a stated size; the service-worker
-   suite asserts the split.
+   suite asserts the split. *Shipped in #177: `graph-payload.js` `split`/`unpackPlayed`, the
+   worker's RUNTIME list (cache-first on demand, kept under the data cache key), `card-catalog.js`
+   `loadPlayed`, the Discover status line, the inventory's "on demand" column; the payload suite
+   round-trips the split and refuses a pairs file baked against a different card count.*
 4. **Envelope every generated file** (E1): `{schema, generatedAt, generator, count, …}`;
    readers check `schema`; the sidebar's "card data age" reads the Card record's stamp.
    Test: `tests/schemas.mjs` validates each committed file against `schema/*.json`.

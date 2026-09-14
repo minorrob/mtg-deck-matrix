@@ -50,6 +50,12 @@ const readers = [
   ...walk(path.join(ROOT, "tests")).map((f) => ({file: rel(f), group: "tests"})),
   ...walk(path.join(ROOT, ".github")).map((f) => ({file: rel(f), group: "workflows"})),
 ].filter((r) => r.file !== "tools/data-inventory.mjs").map((r) => ({...r, text: readFileSync(path.join(ROOT, r.file), "utf8")}));
+/* The worker's RUNTIME list is cached on demand (the graph files, fetched on the first
+   Discover visit), not at install: such a file is served but not precached. */
+const swText = (readers.find((r) => r.group === "sw") || {text: ""}).text;
+const runtimeMatch = swText.match(/const RUNTIME = \[([^\]]*)\]/);
+const runtimeCached = new Set();
+if (runtimeMatch) for (const m of runtimeMatch[1].matchAll(/'([^'?]+)(?:\?[^']*)?'/g)) runtimeCached.add(m[1]);
 const WRITES = /writeFileSync|writeFile\(|\.write\(|json\.dump|to_json|open\([^)]*["']w["']|\bOUT(?:PUT)?\b|\bout(?:put)?(?:Path|File)?\s*=/;
 /* A producer names the file within three lines of a write: a tool that reads it and writes
    something else is a reader, not its producer. */
@@ -141,17 +147,18 @@ const rows = tracked.map((p) => {
   const found = who.filter((r) => (r.group === "tools" || r.group === "workflows") && writesTo(r.text, p)).map((r) => r.file);
   const producers = [...found, ...(DECLARED[p] || []).filter((t) => !found.includes(t)).map((t) => t.startsWith("(") ? t : t + " (declared)")];
   const tests = who.filter((r) => r.group === "tests").map((r) => path.basename(r.file));
-  const precached = who.some((r) => r.group === "sw");
+  const precached = who.some((r) => r.group === "sw") && !runtimeCached.has(p);
+  const onDemand = runtimeCached.has(p);
   const app = who.filter((r) => r.group === "app").map((r) => r.file);
   const tools = who.filter((r) => r.group === "tools").map((r) => path.basename(r.file));
   const flows = who.filter((r) => r.group === "workflows").map((r) => path.basename(r.file));
   const d = disposition(a, groups);
-  return {...a, app, precached, tools, tests, flows, producers, ...d};
+  return {...a, app, precached, onDemand, tools, tests, flows, producers, ...d};
 });
 const kb = (n) => n >= 1048576 ? (n / 1048576).toFixed(1) + " MB" : n >= 1024 ? Math.round(n / 1024) + " KB" : n + " B";
 const list = (xs, max = 4) => xs.length ? xs.slice(0, max).join(", ") + (xs.length > max ? ` +${xs.length - max}` : "") : "—";
 const esc = (s) => String(s).replace(/\|/g, "\\|");
-const total = rows.reduce((n, r) => n + r.size, 0), servedBytes = rows.filter((r) => r.disposition === "serve").reduce((n, r) => n + r.size, 0), precachedBytes = rows.filter((r) => r.precached).reduce((n, r) => n + r.size, 0);
+const total = rows.reduce((n, r) => n + r.size, 0), servedBytes = rows.filter((r) => r.disposition === "serve").reduce((n, r) => n + r.size, 0), precachedBytes = rows.filter((r) => r.precached).reduce((n, r) => n + r.size, 0), onDemandBytes = rows.filter((r) => r.onDemand).reduce((n, r) => n + r.size, 0);
 const counts = {}; for (const r of rows) counts[r.disposition] = (counts[r.disposition] || 0) + 1;
 const unstamped = rows.filter((r) => r.ext === "json" && !r.stamp).map((r) => r.path);
 const unversioned = rows.filter((r) => r.ext === "json" && !r.versions.length).map((r) => r.path);
@@ -164,7 +171,8 @@ const md = `# The data inventory
 Every data artefact the repository tracks under \`data/\` and \`sim/\`, with what writes it, what
 reads it and what it carries. E0 of the [data-model evaluation](crankmagic-data-model-evaluation-plan.md).
 The served app is the scripts the pages load plus the service worker and the asset map;
-**precached** means the worker's data list carries it; **producer** is a tool or workflow that
+**precached** means the worker's data list carries it at install, **on demand** that its runtime list
+does (fetched on the first Discover visit, then kept); **producer** is a tool or workflow that
 names the file and writes; **tests** are the suites that read it.
 
 ## Summary
@@ -172,7 +180,7 @@ names the file and writes; **tests** are the suites that read it.
 | | |
 |---|---|
 | Artefacts | ${rows.length} (${rows.filter((r) => r.ext === "json").length} JSON, ${rows.filter((r) => r.ext !== "json").length} workbooks and documents) · ${kb(total)} |
-| Served to the app | ${counts.serve || 0} · ${kb(servedBytes)} (${kb(precachedBytes)} precached by the worker) |
+| Served to the app | ${counts.serve || 0} · ${kb(servedBytes)} (${kb(precachedBytes)} precached by the worker, ${kb(onDemandBytes)} cached on demand) |
 | Tool inputs | ${counts["tool input"] || 0} |
 | Source workbooks and documents | ${counts.source || 0} |
 | Archive (already, or should be) | ${counts.archive || 0} |
@@ -185,7 +193,7 @@ names the file and writes; **tests** are the suites that read it.
 
 | File | Size | Shape | Version fields | Stamp | Producer | App readers | Precached | Tools | Tests | Workflows | Disposition | Notes |
 |---|---:|---|---|---|---|---|:-:|---|---|---|---|---|
-${rows.map((r) => `| \`${r.path}\` | ${kb(r.size)} | ${esc(r.shape)} | ${esc(list(r.versions, 3))} | ${r.stamp || "—"} | ${esc(list(r.producers, 3))} | ${esc(list(r.app, 3))} | ${r.precached ? "yes" : ""} | ${esc(list(r.tools, 3))} | ${esc(list(r.tests, 3))} | ${esc(list(r.flows, 2))} | **${r.disposition}** | ${esc(r.note)} |`).join("\n")}
+${rows.map((r) => `| \`${r.path}\` | ${kb(r.size)} | ${esc(r.shape)} | ${esc(list(r.versions, 3))} | ${r.stamp || "—"} | ${esc(list(r.producers, 3))} | ${esc(list(r.app, 3))} | ${r.precached ? "yes" : r.onDemand ? "on demand" : ""} | ${esc(list(r.tools, 3))} | ${esc(list(r.tests, 3))} | ${esc(list(r.flows, 2))} | **${r.disposition}** | ${esc(r.note)} |`).join("\n")}
 
 ## How to read the dispositions
 

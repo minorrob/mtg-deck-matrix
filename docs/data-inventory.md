@@ -5,15 +5,16 @@
 Every data artefact the repository tracks under `data/` and `sim/`, with what writes it, what
 reads it and what it carries. E0 of the [data-model evaluation](crankmagic-data-model-evaluation-plan.md).
 The served app is the scripts the pages load plus the service worker and the asset map;
-**precached** means the worker's data list carries it; **producer** is a tool or workflow that
+**precached** means the worker's data list carries it at install, **on demand** that its runtime list
+does (fetched on the first Discover visit, then kept); **producer** is a tool or workflow that
 names the file and writes; **tests** are the suites that read it.
 
 ## Summary
 
 | | |
 |---|---|
-| Artefacts | 36 (28 JSON, 8 workbooks and documents) · 57.4 MB |
-| Served to the app | 15 · 44.3 MB (41.6 MB precached by the worker) |
+| Artefacts | 37 (29 JSON, 8 workbooks and documents) · 57.4 MB |
+| Served to the app | 16 · 44.3 MB (5.1 MB precached by the worker, 36.4 MB cached on demand) |
 | Tool inputs | 2 |
 | Source workbooks and documents | 8 |
 | Archive (already, or should be) | 10 |
@@ -44,7 +45,8 @@ names the file and writes; **tests** are the suites that read it.
 | `data/deck-swaps.json` | 152 B | {note, decks} | — | — | — | crankmagic-assets.js | yes | — | — | — | **review** | 152 bytes: an emptied stub since the swaps moved to data/archive, still precached by the worker; drop it from the asset map and the worker, or fold it |
 | `data/flavor-names.json` | 35 KB | {generatedAt, source, fields, counts, cards} · cards 513 | — | 2026-09-10 | tools/flavor-names.mjs | crankmagic-assets.js | yes | build-live-state.mjs, flavor-names.mjs | crankmagic-core.mjs | — | **serve** |  |
 | `data/game-history.json` | 245 B | {schemaVersion, compiledAt, sourceFiles, totals, variants, games} | schemaVersion 1 | — | tools/compile-game-logs.mjs | — |  | compile-game-logs.mjs | — | compile-game-logs.yml | **tool input** | the compiled game logs the compile-game-logs workflow writes; the app reads games from the library state |
-| `data/graph.json` | 36.4 MB | {generatedAt, scope, counts, facets, decks, cards, …} · played 701,916, cards 31,830 | format 2 | 2026-09-11 | tools/commander-universe.mjs, tools/graph-amplifiers.mjs | crankmagic-assets.js, card-classify.js, crankmagic-facets.js | yes | commander-universe.mjs, graph-amplifiers.mjs | card-classify.mjs, crankmagic-core.mjs, crankmagic-facets.mjs +6 | — | **serve** |  |
+| `data/graph-played.json` | 20.6 MB | {format, generatedAt, cards, played} · played 701,916 | format 2 | 2026-09-14 | tools/graph-amplifiers.mjs | crankmagic-assets.js, graph-payload.js, card-catalog.js | on demand | graph-amplifiers.mjs | graph-payload.mjs, service-worker.mjs | — | **serve** |  |
+| `data/graph.json` | 15.8 MB | {generatedAt, scope, counts, facets, decks, cards, …} · cards 31,830, facets 17 | format 2 | 2026-09-11 | tools/commander-universe.mjs, tools/graph-amplifiers.mjs | crankmagic-assets.js, card-classify.js, graph-payload.js +2 | on demand | commander-universe.mjs, graph-amplifiers.mjs | card-classify.mjs, crankmagic-core.mjs, crankmagic-facets.mjs +6 | — | **serve** |  |
 | `data/lenses.json` | 19 KB | {generatedAt, lenses} · lenses 10 | — | 2026-09-11 | (sim-lenses.js in a past sweep; no tool writes it today) | — |  | — | — | — | **tool input** | sim-lenses.js reads it in Node; the pages do not load that module |
 | `data/live-load.json` | 77 KB | {format, version, savedAt, workbook, note, decks, …} · upgrades 67, buy 55 | format crankmagic-live-load, version 1 | 2026-09-13 | tools/build-live-load.mjs, tools/scryfall-cache.mjs | crankmagic-exchange-ui.js |  | build-live-load.mjs, build-live-state.mjs, live-load.js +1 | live-load.mjs | live-load.yml | **serve** |  |
 | `data/live-state.json` | 2.1 MB | {format, version, createdAt, checksum, payload, note} | format crankmagic-backup, version 1 | 2026-09-13 | tools/build-live-state.mjs (declared), .github/workflows/live-load.yml (declared) | crankmagic-exchange-ui.js |  | build-live-state.mjs, screens.mjs | crankmagic-loops.mjs, live-load.mjs, browser-runner.mjs | live-load.yml | **serve** | fetched by Load Live (User Functions), not precached: it is a backup, replaced whole |

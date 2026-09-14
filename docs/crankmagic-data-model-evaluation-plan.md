@@ -134,6 +134,12 @@ Named now so the evaluation checks them rather than rediscovers them:
   `docs/data-inventory.md` and the generators suite checks it; the findings and the ranked
   recommendations (critical changes, improvements, the one-record-many-lenses simplification,
   scalability and flexibility) are in `docs/data-model-evaluation-2026-09.md` §1–§3.
+- **Critical 6 shipped (PR #175):** the journeys answer Scryfall from the shipped catalog; the
+  gate no longer depends on a third party.
+- **Critical 3 shipped (PR #177):** `data/graph.json` is out of the precache and split from
+  the co-play pairs (`data/graph-played.json`); both load on the first Discover visit behind a
+  status line and are kept by the worker on demand. The install precaches 5.1 MB of data
+  instead of 41.6 MB.
 
 ## 5. Sequence and sizing
 

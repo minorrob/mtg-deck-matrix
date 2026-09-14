@@ -130,6 +130,8 @@ const payload = {
 await mkdir(dirname(outFile), {recursive: true});
 /* Packed on the way out (see graph-payload.js): edges as index triples against the card
    list, art and buy links as the one id each is built from. card-catalog.js unpacks. */
-const text = JSON.stringify(process.argv.includes("--plain") ? payload : Payload.pack(payload));
+const plain = process.argv.includes("--plain");
+const parts = plain ? null : Payload.split(Payload.pack(payload));
+const text = JSON.stringify(plain ? payload : parts.graph);
 await writeFile(outFile, text);
 console.log(`wrote ${outFile}  (${(text.length / 1e6).toFixed(2)} MB)`);

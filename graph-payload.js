@@ -54,7 +54,25 @@
     return payload;
   }
 
-  const api = {FORMAT, pack, unpack, imageOf, buyOf};
+  /* TWO FILES, ONE BAKE. The co-play pairs are 20.6 MB of the 36 MB graph and Discover is the
+     only page that draws them; the Lab and the facets need the cards alone. split() takes a
+     packed payload apart -- the cards, facets, decks and counts stay in graph.json with a note
+     of where the pairs went; the pairs go to graph-played.json with the card count and stamp
+     they were packed against -- and unpackPlayed() joins them back onto the card list they
+     index into, refusing a pairs file baked against a different card list. */
+  function split(packed) {
+    const played = packed.played || [];
+    const stamp = packed.amplifiersAt || packed.generatedAt || '';
+    const graph = {...packed, played: [], playedIn: 'graph-played.json', playedCount: played.length};
+    return {graph, played: {format: FORMAT, generatedAt: stamp, cards: (packed.cards || []).length, played}};
+  }
+  function unpackPlayed(ids, file) {
+    if (!file || !Array.isArray(file.played)) return [];
+    if (file.cards !== undefined && file.cards !== ids.length) throw new Error(`graph-played.json was baked against ${file.cards} cards; the graph has ${ids.length}`);
+    return file.played.map((e) => Array.isArray(e) ? {from: ids[e[0]], to: ids[e[1]], inclusion: e[2], synergy: e[3], decks: e[4]} : e);
+  }
+
+  const api = {FORMAT, pack, unpack, split, unpackPlayed, imageOf, buyOf};
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (root) root.CrankGraphPayload = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
