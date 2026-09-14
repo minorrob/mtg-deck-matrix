@@ -414,6 +414,11 @@ try{
     await page.getByRole('button',{name:'Add ticked to a group',exact:true}).click();await page.getByRole('dialog').waitFor();await page.locator('[name=name]').fill('Trace picks');await page.getByRole('button',{name:'Add to group',exact:true}).click();await page.waitForTimeout(800);
     const g=(await state()).groups.find(x=>x.name==='Trace picks');ok(g&&g.entries.length===picks,'the ticked cards are planned entries of a new group');eq((await page.locator('#cm-trace-pickbar span').innerText()).trim(),'Tick cards to file them in a group','the ticks clear after filing');}
    else ok(true,'nothing to tick in this library, in either world');
+   /* The limits (Rob, 14 September): three sliders; Cards lit released at 10 keeps the list to ten and is saved with the library. */
+   eq(await page.locator('.cm-trace-limits input[type=range]').count(),3,'three limit sliders');
+   await page.locator('input[name=traceCards]').evaluate(el=>{el.value='10';el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));});await page.waitForTimeout(1500);
+   ok((await page.locator('.cm-trace-row').count())<=10,'Cards lit at 10 lights at most ten');eq((await state()).preferences.traceLimits?.cards,10,'and the limit is saved with the library');eq((await page.locator('input[name=traceCards]').inputValue()),'10','the slider shows it after the redraw');
+   await page.locator('input[name=traceCards]').evaluate(el=>{el.value='100';el.dispatchEvent(new Event('change',{bubbles:true}));});await page.waitForTimeout(1200);
    if(ticks>1){await page.getByRole('button',{name:'Reset to the commander’s own',exact:true}).click();await page.waitForTimeout(1500);eq(((await state()).decks.find(d=>d.id===traceDeck.id).definition.strategies||[]).length,0,'Reset clears the strategies saved with the deck');eq(await page.getByRole('button',{name:'Reset to the commander’s own',exact:true}).count(),0,'and the Reset button goes with them');}}
   await page.locator('.cm-pane-tab[data-tab=card]').click();await page.waitForTimeout(800);
   ok(!(await page.evaluate(()=>document.querySelector('#cm-graph').crankGraph.tracing)),'Card Info ends the trace and the graph is the neighbourhood again');

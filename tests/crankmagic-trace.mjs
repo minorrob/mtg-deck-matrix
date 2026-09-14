@@ -88,4 +88,20 @@ const alone = T.trace(commander, [], G.relate, d6.strategies, opts);
 eq([alone.lit, alone.total, alone.score], [0, 0, 0], "an empty set traces to nothing");
 eq(T.bucketOf({type: "Basic Land — Mountain"}), "land"); eq(T.bucketOf({type: "Artifact", produces: ["mana"]}), "mana"); eq(T.bucketOf({type: "Creature — Goblin"}), "body");
 
+/* THE HARD LIMITS (Rob, 14 September). A hundred cards at most whatever the world holds; the
+   pane's three sliders clamp; a card draws at most four loop-backs. */
+{ const pool = graph.cards.slice(0, 1500), {commander, strategies} = deckOf("Krenko");
+  const wide = T.trace(commander, pool, G.relate, strategies, {...opts, maxCards: 5000, beam: {1: 80, 2: 60, 3: 40}});
+  ok(wide.list.length <= T.MAX_CARDS && wide.lit <= T.MAX_CARDS - 1, `a pool of ${pool.length} lights at most ${T.MAX_CARDS} cards (${wide.list.length})`);
+  ok(wide.capped, "and says it was capped");
+  const small = T.trace(commander, pool, G.relate, strategies, {...opts, maxCards: 20, beam: {1: 80, 2: 60, 3: 40}});
+  ok(small.list.length <= 20 && small.lit >= 10, `Cards lit at 20 lights at most 20 (${small.list.length})`);
+  eq(small.limits, {maxCards: 20, maxLoop: 4, maxRing: 3, maxReturns: 4}, "the result reports its limits");
+  const shallow = run("Krenko"), ring1 = T.trace(deckOf("Krenko").commander, deckOf("Krenko").rows, G.relate, deckOf("Krenko").strategies, {...opts, maxRing: 1});
+  ok(ring1.list.every((r) => r.ring <= 1) && ring1.lit <= shallow.lit, "Chain depth 1 keeps to the commander's own joins");
+  const tight = T.trace(deckOf("Krenko").commander, deckOf("Krenko").rows, G.relate, deckOf("Krenko").strategies, {...opts, maxLoop: 2}), loose = T.trace(deckOf("Krenko").commander, deckOf("Krenko").rows, G.relate, deckOf("Krenko").strategies, {...opts, maxLoop: 6});
+  ok(tight.loopBacks <= shallow.loopBacks && shallow.loopBacks <= loose.loopBacks, `a longer loop never counts fewer loop-backs (${tight.loopBacks} ≤ ${shallow.loopBacks} ≤ ${loose.loopBacks})`);
+  const perCard = new Map(); for (const e of shallow.returns) { perCard.set(e.from, (perCard.get(e.from) || 0) + 1); perCard.set(e.to, (perCard.get(e.to) || 0) + 1); }
+  ok([...perCard.values()].every((n) => n <= 4), "no card draws more than four loop-backs");
+  ok(T.trace(commander, pool, G.relate, strategies, {...opts, maxCards: 1, maxLoop: 99, maxRing: 99}).limits.maxCards === 2, "the module clamps a silly limit"); }
 console.log(`crankmagic-trace: ${checks} checks passed — D6 lights ${d6.lit} of ${d6.total} (score ${d6.score}, ${d6.returns.length} loop-backs), Sol Ring and the lands stay dark.`);

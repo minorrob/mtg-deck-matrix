@@ -93,6 +93,12 @@
      trace mode and the pane plays the list. `traceTicks` is what the reader ticked this
      session, persisted to the deck definition as `strategies`. */
   let traceOn = false, traceWorld = 'deck', traceResult = null, traceTicks = null, wantTrace = false;
+  /* THE TRACE'S LIMITS (Rob, 14 September): cards lit (a hundred at most -- a deck's worth),
+     the longest loop the finder closes, and how deep the chain runs. A library preference,
+     read here and passed to every trace the pane runs; the module clamps them again. */
+  const traceLimits = () => { const p = (C.state.preferences && C.state.preferences.traceLimits) || {}, T = globalThis.CrankTrace, D = T ? T.LIMITS : {maxCards: 100, maxLoop: 4, maxRing: 3, loopMin: 2, loopMax: 6, cardsMin: 10};
+    const clamp = (v, lo, hi, d) => { const n = Number(v); return Number.isFinite(n) ? Math.max(lo, Math.min(hi, Math.round(n))) : d; };
+    return {maxCards: clamp(p.cards, D.cardsMin, D.maxCards, D.maxCards), maxLoop: clamp(p.loop, D.loopMin, D.loopMax, D.maxLoop), maxRing: clamp(p.rings, 1, D.maxRing, D.maxRing)}; };
   /* The cards ticked in the trace list, by name; cleared when the deck or the world changes. */
   let traceChosen = new Set();
   /* LOOPS ONLY: the depth gauge walks only the joins that continue or pay off a loop. It follows
@@ -603,9 +609,9 @@
       const owns = CrankFacets.owns(C.state), held = globalThis.CrankLens ? CrankLens.holdings(C.state) : new Map();
       const statusOf = (row) => { const rec = C.catalog.exact(row.name) || {}; const h = rec.id ? held.get(rec.id) : null; return {status: inDeck.has(row.id) ? 'in deck' : owns.has(row) ? 'owned' : h && h.ordered ? 'on order' : 'not owned', price: Number.isFinite(rec.price) ? rec.price : null}; };
       const strategies = traceStrategies(deck, commanderRow);
-      traceResult = T.trace(commanderRow, rows, CrankGraph.relate, strategies, {purposeOf: globalThis.MtgCardClassify ? MtgCardClassify.purposeOf : null, statusOf, fence});
+      traceResult = T.trace(commanderRow, rows, CrankGraph.relate, strategies, {purposeOf: globalThis.MtgCardClassify ? MtgCardClassify.purposeOf : null, statusOf, fence, ...traceLimits()});
       /* Each offered strategy on its own, so the ticks say what they light. Beamed for the pool. */
-      const aloneOpts = {statusOf, fence, beam: traceWorld === 'pool' ? {1: 60, 2: 40, 3: 30} : null};
+      const aloneOpts = {statusOf, fence, beam: traceWorld === 'pool' ? {1: 60, 2: 40, 3: 30} : null, ...traceLimits()};
       traceResult.alone = Object.fromEntries(S.ids().filter((id) => S.derive(commanderRow).includes(id) || S.fromMechanics(deck.definition.mechanics).includes(id) || strategies.includes(id)).map((id) => { const one = T.trace(commanderRow, rows, CrankGraph.relate, [id], aloneOpts); return [id, one ? one.lit : 0]; }));
       traceResult.deckId = deck.id; traceResult.deckName = deck.name; traceResult.world = traceWorld; traceResult.offered = S.ids().filter((id) => S.derive(commanderRow).includes(id) || S.fromMechanics(deck.definition.mechanics).includes(id) || strategies.includes(id));
       traceResult.measured = (C.state.reports || []).filter((r) => r.deckId === deck.id && r.origin === 'measured').slice(-1).map((r) => r.metrics && r.metrics.score && r.metrics.score.value)[0];
@@ -653,6 +659,7 @@
         <div class="cm-trace-worlds" role="group" aria-label="What to trace">${b('This deck', 'trace-world', {world: 'deck'}, r.world !== 'pool', {cls: 'compact'})}${b('What it could be', 'trace-world', {world: 'pool'}, r.world === 'pool', {cls: 'compact'})}</div>
         <p class="cm-trace-sub cm-muted">Strategies traced — a card stays lit while any ticked strategy reaches it; the small number is what a strategy lights on its own. Your ticks stay with the deck.${traceTicks || (deck.definition.strategies && deck.definition.strategies.length) ? ` ${b('Reset to the commander’s own', 'trace-reset', {}, false, {cls: 'compact'})}` : ''}</p>
         <div class="cm-trace-strategies">${strategyTicks}${moreTicks}</div>
+        ${(() => { const lim = traceLimits(), D = T.LIMITS; return `<div class="cm-trace-limits" role="group" aria-label="Trace limits"><label title="A set of more than a hundred cards cannot be played, so the trace never lights more">Cards lit <input type="range" name="traceCards" min="${D.cardsMin}" max="${D.maxCards}" step="5" value="${lim.maxCards}"><output>${lim.maxCards}</output></label><label title="A two-card engine wins games and a four-card loop is the longest a table follows; the finder closes loops up to this many cards">Loop length <input type="range" name="traceLoop" min="${D.loopMin}" max="${D.loopMax}" step="1" value="${lim.maxLoop}"><output>${lim.maxLoop}</output></label><label title="How far the chain runs from the commander: its joins, their joins, one more">Chain depth <input type="range" name="traceRings" min="1" max="${D.maxRing}" step="1" value="${lim.maxRing}"><output>${lim.maxRing}</output></label><span class="cm-muted">${r.capped ? `capped at ${lim.maxCards} · ` : ''}defaults ${D.maxCards} · ${D.maxLoop} · ${D.maxRing}</span></div>`; })()}
         <div class="cm-trace-transport"><button type="button" class="v-button compact" id="cm-trace-play" data-action="trace-ctl" data-ctl="play">${st && st.playing ? 'Pause' : st && st.done ? 'Replay' : 'Play'}</button>${b('Step', 'trace-ctl', {ctl: 'step'}, false, {cls: 'compact'})}${b('Back', 'trace-ctl', {ctl: 'back'}, false, {cls: 'compact'})}${b('End', 'trace-ctl', {ctl: 'end'}, false, {cls: 'compact'})}<label>Speed <select name="traceSpeed" aria-label="Animation speed">${[[0.5, '½×'], [1, '1×'], [2, '2×'], [4, '4×']].map(([v, l]) => `<option value="${v}"${st && st.speed === v ? ' selected' : (!st && v === 1 ? ' selected' : '')}>${l}</option>`).join('')}</select></label><span class="cm-trace-at" id="cm-trace-at">${st ? `${st.lit} of ${st.total} lit${st.playing ? ' · playing' : st.done ? '' : ' · paused'}` : `${r.lit} lit`}</span></div>
         <div class="cm-trace-score"><div><strong>${r.score}</strong><span>cohesion score · a heuristic</span>${r.measured !== undefined && r.measured !== null ? `<em>measured ${e(String(r.measured))}</em>` : '<em>not yet measured</em>'}</div><div><strong>${r.lit}</strong><span>cards lit of ${r.total}</span></div><div><strong>${r.closedLoops}</strong><span>loop-backs drawn</span></div><div><strong>${r.loopBacks}</strong><span>loop-backs counted</span></div></div>
         <h3 class="cm-chips-head">Lit in order</h3>
@@ -708,8 +715,14 @@
       C.download(`CrankMagic-trace-${String(r.deckName || 'deck').replace(/[^\w-]+/g, '_')}.csv`, lines.join('\n'), 'text/csv');
     };
     actions['trace-option'] = (el) => { const deck = tracePick(), card = C.card(el.dataset.card); if (deck && card) optionDialog(deck, card, `Trace · ${traceResult ? traceResult.strategies.map((id) => globalThis.CrankStrategies.labelOf(id)).join(', ') : ''}`); };
+    pane.addEventListener('input', (ev) => { const r = ev.target.closest('input[type=range][name^=trace]'); if (r && r.nextElementSibling && r.nextElementSibling.tagName === 'OUTPUT') r.nextElementSibling.textContent = r.value; });
     pane.addEventListener('change', (ev) => {
       const speed = ev.target.closest('select[name=traceSpeed]'); if (speed && graph && graph.tracing) { graph.traceControl('speed', speed.value); return; }
+      /* A limit slider released: the preference is saved with the library and the trace runs again under it. */
+      const lim = ev.target.closest('input[type=range][name^=trace]');
+      if (lim) { const v = (n) => Number((view.querySelector(`input[name=${n}]`) || {}).value); const next = {cards: v('traceCards'), loop: v('traceLoop'), rings: v('traceRings')};
+        /* Awaited: the trace that follows reads the limits from the library, so the save must land first. */
+        (async () => { try { await C.commit({type: 'preferences', values: {traceLimits: next}}, {renderView: false}); } catch (error) { C.notice(error.message, true); } runTrace(false); })(); return; }
       const pick = ev.target.closest('input[name=tracePick]');
       if (pick) { if (pick.checked) traceChosen.add(pick.value); else traceChosen.delete(pick.value); pick.closest('.cm-trace-row')?.classList.toggle('is-ticked', pick.checked); const bar = $('#cm-trace-pickbar'); if (bar) { bar.classList.toggle('is-empty', !traceChosen.size); bar.querySelector('span').textContent = traceChosen.size ? `${traceChosen.size} ticked` : 'Tick cards to file them in a group'; const add = bar.querySelector('[data-action=trace-add-group]'); if (add) add.classList.toggle('primary', traceChosen.size > 0); } return; }
       const tick = ev.target.closest('input[name=traceStrategy]'); if (!tick) return;
