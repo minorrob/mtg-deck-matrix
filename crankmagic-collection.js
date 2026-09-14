@@ -130,7 +130,7 @@ const TABS=[['library','Library'],['buy','To buy'],['orders','Orders']];
 const tabOf=()=>{const r=C.route();return r.view==='cards'?(r.params.get('tab')||'library'):r.view==='shop'?'buy':'library';},buyTab=()=>tabOf()==='buy';
 const goCards=(tab,extra={})=>C.go('cards',{...extra,tab:tab==='library'?'':tab});
 function tabCounts(){const all=M.projection(C.state);return {library:all.length,buy:all.filter(r=>r.kind==='need').reduce((n,r)=>n+r.quantity,0),orders:M.orders(C.state).length};}
-const viewSwitch=view=>`<div class="cm-seg" role="group" aria-label="View"><button type="button" aria-pressed="${view==='table'}"${view==='table'?'':' data-action="open-roster"'}>Table</button><button type="button" aria-pressed="${view==='sheet'}"${view==='sheet'?'':' data-action="open-sheet"'}>Sheet</button></div>`;
+const viewSwitch=view=>`<div class="cm-seg" role="group" aria-label="View"><button type="button" aria-pressed="${view==='table'}"${view==='table'?'':' data-action="open-roster"'}>Table</button><button type="button" aria-pressed="${view==='sheet'}"${view==='sheet'?'':' data-action="open-sheet"'}>Sheet</button><button type="button" aria-pressed="${view==='tabletop'}"${view==='tabletop'?'':' data-action="open-tabletop"'}>Tabletop</button></div>`;
 /* The head is the same on every tab -- Add cards, Import, one button for the tab's own work,
    More -- and the tabs under it say where you are. The phone's To buy layout keeps the tabs
    and drops the head, as it dropped the head before. */
@@ -141,7 +141,7 @@ function cardsHead(params,tab,view='table',{tight=false}={}){const n=tabCounts()
 C.cardsHead=cardsHead;
 C.SUBNAV.cards=()=>{const n=tabCounts(),r=C.route(),tab=r.view==='cards'?(r.params.get('tab')||'library'):tabOf(),sheet=r.view==='cards'&&r.params.get('view')==='sheet';
   return [{label:'Library',hash:'#cards',count:n.library,current:tab==='library'&&!sheet},{label:'To buy',hash:'#cards?tab=buy',count:n.buy,current:tab==='buy'},{label:'Orders',hash:'#cards?tab=orders',count:n.orders,current:tab==='orders'},{label:'Sheet',hash:'#cards?view=sheet',current:sheet}];};
-views.cards=params=>params.get('tab')==='buy'?show(params,true):params.get('view')==='sheet'?sheet(params):show(params,false);
+views.cards=params=>params.get('tab')==='buy'?show(params,true):params.get('view')==='sheet'?sheet(params):params.get('view')==='tabletop'?tabletop(params):show(params,false);
 views.collection=params=>{const extra=Object.fromEntries(params);delete extra.sheet;goCards('library',params.get('sheet')?{...extra,view:'sheet'}:extra);};
 views.shop=params=>{const extra=Object.fromEntries(params);delete extra.tab;goCards(params.get('tab')==='orders'?'orders':'buy',extra);};
 actions['cards-tab']=el=>goCards(el.dataset.tab);
@@ -245,6 +245,36 @@ function sheetEdit(btn,seed=''){
   });
   input.addEventListener('blur',()=>save(null));
 }
+/* THE TABLETOP (docs/crankmagic-tabletop-plan.md, TB1: the table at rest). The same rows the
+   list shows, under the same search and filters, as piles on a mat: the status piles down
+   front in the model's order, the Bench along the back, the group piles behind under one
+   grouping. crankmagic-tabletop.js computes the piles (pure, tested) and draws the mat;
+   this view feeds it the rows, the filters and the reader's grouping choice. */
+let tabletopGroupBy=C.state.preferences.tabletopGroupBy||'type';
+function tabletop(params){
+  const TT=globalThis.CrankTabletop;
+  C.main.innerHTML=cardsHead(params,'library','tabletop')
+   +`<div class="cm-toolbar"><label class="cm-search">Search cards<input id="cm-tt-query" value="${e(filter.q)}" placeholder="Card name, type or rules text"></label>${s('Status','ttStatus',[['','Any status'],...M.STATUS.map(x=>[x.label,x.label])],filter.status)}${s('Card type','ttType',[['','All types'],'Artifact','Creature','Enchantment','Instant','Land','Planeswalker','Sorcery','Battle'],filter.type)}${s('Color','ttColor',[['','Any colour'],['W','White'],['U','Blue'],['B','Black'],['R','Red'],['G','Green'],['C','Colorless']],filter.color)}${s('Deck','ttDeck',[['','Any deck'],...C.state.decks.filter(d=>!d.archived).map(d=>[d.id,d.name])],params.get('deck')||'')}${b('Clear filters','clear-filters')}</div>`
+   +`<p class="cm-status-line" id="cm-tt-status"></p><div id="cm-tt-host" class="cm-tt-host"></div>`;
+  const draw=()=>{
+    if(!TT){$('#cm-tt-host').innerHTML='<p class="cm-muted">The tabletop module has not loaded yet.</p>';return;}
+    const all=rows(params,false).filter(matches).map(r=>({...r,status:statusOf(r)}));
+    const model=TT.table(all,{groupBy:tabletopGroupBy,statuses:M.STATUS,statusOrder:M.statusOrder,value,maxGroupPiles:16});
+    $('#cm-tt-status').textContent=`${model.total.toLocaleString()} cop${model.total===1?'y':'ies'} on the table (${model.rows.toLocaleString()} rows) · Bench ${model.bench.count.toLocaleString()} · ${model.ghosts.toLocaleString()} ghost${model.ghosts===1?'':'s'}`+(Object.values(filter).some(v=>v!=='')||params.get('deck')?' · filtered':'');
+    TT.mount($('#cm-tt-host'),model,{onGroupBy:v=>{tabletopGroupBy=v;C.commit({type:'preferences',values:{tabletopGroupBy:v}},{renderView:false}).catch(()=>{});draw();}});
+  };
+  draw();
+  const host=C.main;
+  host.querySelector('#cm-tt-query')?.addEventListener('input',ev=>{filter.q=ev.target.value;draw();});
+  for(const [name,key] of [['ttStatus','status'],['ttType','type'],['ttColor','color']]){host.querySelector(`[name=${name}]`)?.addEventListener('change',ev=>{filter[key]=ev.target.value;draw();});}
+  host.querySelector('[name=ttDeck]')?.addEventListener('change',ev=>goCards('library',{view:'tabletop',...(ev.target.value?{deck:ev.target.value}:{})}));
+  /* A pile is a button; opening one is TB2. Until then a tap says what it holds. */
+  actions['tabletop-pile']=el=>{const id=el.dataset.pile;const all=rows(params,false).filter(matches).map(r=>({...r,status:statusOf(r)}));const model=TT.table(all,{groupBy:tabletopGroupBy,statuses:M.STATUS,statusOrder:M.statusOrder,value,maxGroupPiles:16});const p=id==='bench'?model.bench:[...model.statusPiles,...model.groupPiles].find(x=>x.id===id);if(!p)return;C.notice(`${p.label}${p.folded?` (${p.bands.join(', ')})`:''}: ${p.count.toLocaleString()} cop${p.count===1?'y':'ies'}${p.rows.length?` — ${p.rows.slice(0,6).map(r=>r.card.name).join(', ')}${p.rows.length>6?'…':''}`:''}. Laying a pile out comes next.`);};
+  if(!TT)return;
+  /* The mat is sized from the host's width, so a resize redraws it. */
+  let last=host.clientWidth;const onResize=()=>{if(C.route().view!=='cards'||C.route().params.get('view')!=='tabletop'){removeEventListener('resize',onResize);return;}if(Math.abs(host.clientWidth-last)>40){last=host.clientWidth;draw();}};
+  addEventListener('resize',onResize);
+}
 function sheet(params){
   const m=M.matrix(C.state),decks=m.decks;
   C.main.innerHTML=cardsHead(params,'library','sheet')
@@ -297,6 +327,7 @@ function sheet(params){
   });
 }
 actions['open-sheet']=()=>goCards('library',{view:'sheet'});
+actions['open-tabletop']=()=>goCards('library',{view:'tabletop'});
 actions['open-roster']=()=>goCards('library');
 actions['sheet-add']=()=>C.cardPicker('Add a card row to the spreadsheet',c=>{$('#cm-dialog').close();sheetExtras.set(c.id,c);sheetQ=c.name;sheetOnly='';sheetDeck='';sheetFocus=cellKey(c.id,'own','');C.render();C.notice(`${c.name} has a row. Type a number into it to record copies or list it in a deck.`);});
 /* The Master's column order, so the file drops straight back into the workbook. */

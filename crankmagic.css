@@ -1420,3 +1420,36 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-trace-out{margin:10px 0 0;font-size:12px}.cm-trace-out li{margin:2px 0}
 .cm-card-view[data-w=xs] .cm-trace-score,.cm-card-view[data-w=s] .cm-trace-score{grid-template-columns:repeat(2,1fr)}
 @media(max-width:760px){.cm-trace-score{grid-template-columns:repeat(2,1fr)}}
+
+
+/* THE TABLETOP (Cards page, third view). The agreed mock-up: a slate sorting mat in the app's
+   own palette with a dot grid every 24px, one soft light from the top left and a dark bevel;
+   the Bench on a raised ledge along the back with a brass hairline; each pile in a shallow
+   slot cut into the mat so an empty pile still shows where it lives; paper placards the one
+   warm element; ghost cards dashed in the muted ink. */
+.cm-tt-host{margin:12px 0 24px}
+.cm-tt-mat{position:relative;border-radius:14px;overflow:hidden;background:radial-gradient(ellipse at 28% 18%,#2a3650 0,transparent 55%),radial-gradient(#ffffff12 1px,transparent 1.3px) 0 0/24px 24px,linear-gradient(170deg,#1c2434,#121927);border:1px solid #3b4761;box-shadow:0 0 0 6px #0d1320,0 0 0 7px #34405a,inset 0 0 90px #0008,0 24px 48px #000a}
+.cm-tt-rail{position:absolute;left:16px;right:16px;top:14px;height:118px;border-radius:10px;background:linear-gradient(#182134,#131b2a);border:1px solid #2b3a55;border-bottom:2px solid #c6a86d77;box-shadow:inset 0 1px 0 #ffffff14,0 10px 22px #0008}
+.cm-tt-rail-placard{position:absolute;left:14px;top:10px;z-index:2}
+.cm-tt-fan{position:absolute;left:160px;right:14px;bottom:8px;height:96px;display:flex;align-items:flex-end;background:none;border:0;padding:0;cursor:pointer;overflow:hidden}
+.cm-tt-fan .cm-tt-card{margin-left:-46px;transform:rotate(-2deg);flex:0 0 auto}.cm-tt-fan .cm-tt-card:first-child{margin-left:0}.cm-tt-fan .cm-tt-card:nth-child(odd){transform:rotate(1.5deg)}
+.cm-tt-more{align-self:center;margin-left:10px;font-size:12px;font-weight:700;color:#e6effb;background:#0f1523d0;border:1px solid #2b3a55;border-radius:8px;padding:4px 8px}
+.cm-tt-card{width:64px;height:90px;border-radius:5px;background:linear-gradient(160deg,#2b2b33,#15151c);border:1px solid #0009;box-shadow:0 3px 8px #000a,inset 0 1px 0 #ffffff10;position:relative;overflow:hidden}
+.cm-tt-card:before{content:"";position:absolute;inset:4px 4px auto;height:38px;border-radius:3px;background:var(--art,linear-gradient(135deg,#3a4a64,#1d2a3a));background-size:cover;background-position:center 22%}
+.cm-tt-name{position:absolute;left:4px;right:4px;bottom:4px;font-size:8px;line-height:1.1;color:#dfe7f3;font-weight:600}
+.cm-tt-card.is-ghost{background:transparent;border:1px dashed #9fb2ccaa;box-shadow:none}.cm-tt-card.is-ghost:before{opacity:.35}.cm-tt-card.is-ghost .cm-tt-name{color:#c9d4e6}
+.cm-tt-pile{position:absolute;width:74px;height:104px;background:none;border:0;padding:0;cursor:pointer;color:inherit;font:inherit}
+.cm-tt-slot{position:absolute;left:-7px;top:-7px;width:88px;height:118px;border-radius:9px;background:#0b1019;box-shadow:inset 0 3px 10px #000c,0 0 0 1px #2b3a55}
+.cm-tt-stack{position:absolute;left:0;top:0;width:64px;height:90px}
+.cm-tt-stack .cm-tt-card{position:absolute;left:0;top:0;box-shadow:0 3px 8px #000a,0 var(--stack,0px) 0 -1px #0e1420,0 calc(var(--stack,0px) + 1px) 0 0 #3a4658}
+.cm-tt-status .cm-tt-card{background:linear-gradient(160deg,#3a3f4b,#1c1f28)}
+.cm-tt-pile.is-empty .cm-tt-stack{display:none}
+.cm-tt-pile:focus-visible .cm-tt-slot,.cm-tt-fan:focus-visible{outline:2px solid #9addff;outline-offset:3px}
+.cm-tt-placard{background:linear-gradient(#f3ead6,#e8ddc3);color:#2a1c0a;border-radius:3px;padding:3px 8px;font-size:11px;font-weight:700;box-shadow:0 2px 4px #0008,inset 0 0 0 1px #d9cba6;white-space:nowrap}
+.cm-tt-placard small{display:block;font-weight:500;font-size:10px;color:#5a4630}
+.cm-tt-pile .cm-tt-placard{position:absolute;left:50%;transform:translateX(-50%);top:116px;max-width:118px;overflow:hidden;text-overflow:ellipsis}
+.cm-tt-status .cm-tt-placard{max-width:136px}
+.cm-tt-group-pick{position:absolute;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;font-size:12px;color:#dfe7f3;z-index:2}
+.cm-tt-group-pick select{min-height:32px;padding:4px 8px;font-size:12px}
+.cm-tt-legend{position:absolute;right:16px;bottom:12px;font-size:11px;color:#c9d4e6;background:#0f1523d0;border:1px solid #2b3a55;padding:6px 10px;border-radius:8px;max-width:calc(100% - 32px)}
+@media(max-width:760px){.cm-tt-rail{height:112px}.cm-tt-fan{left:14px;right:14px;top:46px;bottom:auto;height:60px}.cm-tt-fan .cm-tt-card{width:44px;height:62px;margin-left:-30px}.cm-tt-fan .cm-tt-name{font-size:7px}.cm-tt-group-pick{white-space:nowrap}.cm-tt-legend{left:16px;right:16px;bottom:12px;max-width:none}}

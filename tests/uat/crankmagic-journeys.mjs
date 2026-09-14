@@ -162,6 +162,19 @@ try{
     the library needs. Own raised by one saves on the spot; a deck's A typed to 1 takes the
     copy from wherever it is, reserves it here and puts it in the box, through the review
     dialog, and the cell reads 1 afterwards. */
+ /* The Tabletop (docs/crankmagic-tabletop-plan.md TB1): the same rows as piles on a slate mat. The
+    status placards are the status column's tallies, the Bench rail the Bench rows, a grouping
+    change is remembered, and the list's search narrows every pile at once. */
+ await nav('Cards');await page.locator('#cm-roster-table').waitFor();await click('Tabletop');await page.locator('.cm-tt-mat').waitFor();ok(page.url().endsWith('#cards?view=tabletop'));
+ {const tallies=await page.evaluate(async()=>{const r=await CrankRepository.open();try{const s=await r.getState();const M=CrankCollection;const n={};for(const row of M.projection(s)){const st=M.statusOf(row);n[st]=(n[st]||0)+(Number(row.quantity)||0);}return n;}finally{r.close();}});
+  const placard=async label=>Number((await page.locator(`.cm-tt-pile.cm-tt-status[aria-label^="${label},"]`).getAttribute('aria-label')).match(/, (\d+) card/)[1]);
+  eq(await placard('Physical deck'),tallies['Physical deck']||0);eq(await placard('Reserved'),tallies['Reserved']||0);eq(await placard('To buy'),tallies['To buy']||0);
+  ok(/Bench, \d+ cards/.test(await page.locator('.cm-tt-fan').getAttribute('aria-label')));eq(Number((await page.locator('.cm-tt-fan').getAttribute('aria-label')).match(/(\d+)/)[1]),tallies['Bench']||0);
+  eq(await page.locator('.cm-tt-pile.cm-tt-status').count(),require('../../collection-model.js').STATUS.length-1);ok((await page.locator('.cm-tt-pile.cm-tt-group').count())>=3);
+  await page.locator('select[name=tabletopGroupBy]').selectOption('color');await page.waitForTimeout(500);ok(await page.locator('.cm-tt-pile.cm-tt-group[aria-label^="Red,"]').count()===1);eq((await state()).preferences.tabletopGroupBy,'color');
+  await page.locator('#cm-tt-query').fill('Krenko, Mob Boss');await page.waitForTimeout(400);ok(/^\d+ cop(y|ies) on the table \(\d+ rows?\) .* · filtered$/.test(await page.locator('#cm-tt-status').innerText()));eq(await page.locator('.cm-tt-pile.cm-tt-group:not(.is-empty)').count(),1);
+  await page.locator('.cm-tt-pile.cm-tt-group:not(.is-empty)').click();ok(/Krenko, Mob Boss/.test(await page.locator('#cm-notice').innerText()));
+  await page.locator('select[name=tabletopGroupBy]').selectOption('type');await page.waitForTimeout(300);}
  await nav('Cards');await page.locator('#cm-roster-table').waitFor();await click('Sheet');await page.locator('.cm-sheet').waitFor();ok((await page.locator('.cm-sheet tbody tr').count())>1);
  await page.locator('#cm-sheet-query').fill('Krenko, Mob Boss');await page.waitForTimeout(300);eq(await page.locator('.cm-sheet tbody tr').count(),1);
  current=await state();const journey=current.decks.find(d=>d.name==='Journey Goblins'),krenkoKey=CrankKey('Krenko, Mob Boss');
