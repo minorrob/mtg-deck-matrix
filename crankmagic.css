@@ -1516,3 +1516,9 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-trade-facts{display:flex;flex-direction:column;gap:6px;font-size:13px;min-width:0}.cm-trade-facts strong{font-size:14px;line-height:1.25}.cm-trade-facts span{color:#c9d4e6;font-size:12px}
 .cm-trade-link{word-break:break-all;font-size:13px}
 @media(max-width:480px){.cm-trade-grid{grid-template-columns:1fr}}
+
+/* The Trace pane (Rob, 14 September): the Speed control on the transport line, the ticks in the list. */
+.cm-trace-transport label{display:inline-flex;align-items:center;gap:6px;margin:0;font-weight:500;white-space:nowrap}
+.cm-trace-tick-strategy small{margin-left:4px;padding:0 6px;border-radius:999px;background:#1c2536;color:#9fb2cc;font-size:11px;line-height:16px}
+.cm-trace-pickbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:12px;color:#c9d4e6;margin:0 0 8px}.cm-trace-pickbar.is-empty span{color:#8fa6c4}
+.cm-trace-row{grid-template-columns:16px 22px 20px minmax(0,1fr) auto}.cm-trace-row .cm-trace-pick{width:15px;height:15px;min-height:0;margin:0;grid-row:1/3;align-self:center}.cm-trace-row .via{grid-column:4}.cm-trace-row .loop,.cm-trace-row .cm-badge{grid-column:5}.cm-trace-row.is-ticked{background:#2a2a1c}.cm-trace-row.is-ticked.is-lit{background:#33301f}

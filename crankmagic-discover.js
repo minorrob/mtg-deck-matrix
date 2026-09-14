@@ -93,6 +93,8 @@
      trace mode and the pane plays the list. `traceTicks` is what the reader ticked this
      session, persisted to the deck definition as `strategies`. */
   let traceOn = false, traceWorld = 'deck', traceResult = null, traceTicks = null, wantTrace = false;
+  /* The cards ticked in the trace list, by name; cleared when the deck or the world changes. */
+  let traceChosen = new Set();
   /* LOOPS ONLY: the depth gauge walks only the joins that continue or pay off a loop. It follows
      the deck pick -- a deck is a question about its loops, the open graph a question about
      everything -- until the reader sets it by hand, and Clear filters hands it back. */
@@ -600,6 +602,9 @@
       const statusOf = (row) => { const rec = C.catalog.exact(row.name) || {}; const h = rec.id ? held.get(rec.id) : null; return {status: inDeck.has(row.id) ? 'in deck' : owns.has(row) ? 'owned' : h && h.ordered ? 'on order' : 'not owned', price: Number.isFinite(rec.price) ? rec.price : null}; };
       const strategies = traceStrategies(deck, commanderRow);
       traceResult = T.trace(commanderRow, rows, CrankGraph.relate, strategies, {purposeOf: globalThis.MtgCardClassify ? MtgCardClassify.purposeOf : null, statusOf, fence});
+      /* Each offered strategy on its own, so the ticks say what they light. Beamed for the pool. */
+      const aloneOpts = {statusOf, fence, beam: traceWorld === 'pool' ? {1: 60, 2: 40, 3: 30} : null};
+      traceResult.alone = Object.fromEntries(S.ids().filter((id) => S.derive(commanderRow).includes(id) || S.fromMechanics(deck.definition.mechanics).includes(id) || strategies.includes(id)).map((id) => { const one = T.trace(commanderRow, rows, CrankGraph.relate, [id], aloneOpts); return [id, one ? one.lit : 0]; }));
       traceResult.deckId = deck.id; traceResult.deckName = deck.name; traceResult.world = traceWorld; traceResult.offered = S.ids().filter((id) => S.derive(commanderRow).includes(id) || S.fromMechanics(deck.definition.mechanics).includes(id) || strategies.includes(id));
       traceResult.measured = (C.state.reports || []).filter((r) => r.deckId === deck.id && r.origin === 'measured').slice(-1).map((r) => r.metrics && r.metrics.score && r.metrics.score.value)[0];
       mount([commanderRow, ...rows.filter((r) => r.id !== commanderRow.id)], commanderRow.id);
@@ -607,7 +612,7 @@
       drawTracePane();
     }
     function stopTrace() {
-      traceOn = false; traceResult = null;
+      traceOn = false; traceResult = null; traceChosen = new Set();
       if (graph && graph.tracing) graph.setTrace(null);
       refresh(currentFocus());
     }
@@ -624,7 +629,10 @@
       if (!r || !S || !T) { view.innerHTML = `<div class="cm-list-head cm-trace"><h3 class="cm-trace-head">Trace: ${e(deck.name)}</h3><p class="cm-muted">${r === null && !globalThis.CrankTrace ? 'The trace module has not loaded yet.' : 'The commander is not in the graph, so there is nothing to trace from.'}</p></div>`; sizePane(); return; }
       const st = graph && graph.tracing ? graph.traceState : null, litNow = st ? st.lit : r.lit;
       const ticked = new Set(r.strategies);
-      const strategyTicks = r.offered.map((id) => `<label class="cm-checkbox"><input type="checkbox" name="traceStrategy" value="${e(id)}"${ticked.has(id) ? ' checked' : ''}> ${e(S.labelOf(id))}</label>`).join('');
+      /* What each tick lights on its own, so unticking one is legible: a card stays lit while any
+         ticked strategy reaches it, and many joins serve several at once. */
+      const alone = r.alone || {};
+      const strategyTicks = r.offered.map((id) => `<label class="cm-checkbox cm-trace-tick-strategy"><input type="checkbox" name="traceStrategy" value="${e(id)}"${ticked.has(id) ? ' checked' : ''}> ${e(S.labelOf(id))}${alone[id] !== undefined ? `<small title="Cards this strategy lights on its own">${alone[id]}</small>` : ''}</label>`).join('');
       const more = S.ids().filter((id) => !r.offered.includes(id));
       const moreTicks = more.length ? `<details class="cm-inline-menu cm-hint"><summary class="cm-hint-btn" title="More strategies" aria-label="More strategies">+${more.length}</summary><div class="cm-menu cm-inline-menu-body cm-trace-strategies">${more.map((id) => `<label class="cm-checkbox"><input type="checkbox" name="traceStrategy" value="${e(id)}"${ticked.has(id) ? ' checked' : ''}> ${e(S.labelOf(id))}</label>`).join('')}</div></details>` : '';
       const status = {'in deck': ['In deck', ''], owned: ['Owned', 'good'], 'on order': ['On order', ''], 'not owned': ['Not owned', 'warn']};
@@ -633,7 +641,7 @@
           const key = CrankCatalog.key(x.name), act = r.world === 'pool' && x.status !== 'in deck'
             ? (deck.status === 'draft' ? `<button type="button" class="v-button compact" data-action="discover-to-deck" data-card="${e(x.name)}" data-deck="${e(deck.id)}">Add to deck</button>` : `<button type="button" class="v-button compact" data-action="trace-option" data-card="${e(key)}">Link as option</button>`) : '';
           const pill = r.world === 'pool' && x.status ? `<span class="cm-badge ${status[x.status] ? status[x.status][1] : ''}">${e(status[x.status] ? status[x.status][0] : x.status)}</span>` : '';
-          return `<li class="cm-trace-row${x.order <= litNow ? ' is-lit' : ''}" data-order="${x.order}"><span class="k">${x.order}</span><span class="cm-trace-ring r${x.ring}">${x.ring}</span><button type="button" class="cm-card-name" data-action="card" data-card="${e(key)}">${e(x.name)}${x.purpose ? `<em>${e(x.purpose)}</em>` : ''}</button>${x.loopBacks ? `<span class="loop">×${x.loopBacks} loop-back${x.loopBacks === 1 ? '' : 's'}</span>` : pill}<span class="via">${e(x.via ? x.via.says : '')}${act ? ' · ' : ''}${act}</span></li>`;
+          return `<li class="cm-trace-row${x.order <= litNow ? ' is-lit' : ''}${traceChosen.has(x.name) ? ' is-ticked' : ''}" data-order="${x.order}"><input type="checkbox" class="cm-trace-pick" name="tracePick" value="${e(x.name)}" aria-label="Tick ${e(x.name)}"${traceChosen.has(x.name) ? ' checked' : ''}><span class="k">${x.order}</span><span class="cm-trace-ring r${x.ring}">${x.ring}</span><button type="button" class="cm-card-name" data-action="card" data-card="${e(key)}">${e(x.name)}${x.purpose ? `<em>${e(x.purpose)}</em>` : ''}</button>${x.loopBacks ? `<span class="loop">×${x.loopBacks} loop-back${x.loopBacks === 1 ? '' : 's'}</span>` : pill}<span class="via">${e(x.via ? x.via.says : '')}${act ? ' · ' : ''}${act}</span></li>`;
         }).join('');
         return `<h4 class="cm-trace-group">Ring ${g.ring} · ${e(g.label)}<small>${g.ids.length}</small></h4><ol class="cm-trace-list">${rows}</ol>`;
       }).join('');
@@ -641,11 +649,12 @@
       view.innerHTML = `<div class="cm-list-head cm-trace">
         <h3 class="cm-trace-head">Trace: what ${e(deck.name)} builds from ${e(r.commander.name)}</h3>
         <div class="cm-trace-worlds" role="group" aria-label="What to trace">${b('This deck', 'trace-world', {world: 'deck'}, r.world !== 'pool', {cls: 'compact'})}${b('What it could be', 'trace-world', {world: 'pool'}, r.world === 'pool', {cls: 'compact'})}</div>
-        <p class="cm-trace-sub cm-muted">Strategies traced — untick one and the trace changes; your ticks stay with the deck.</p>
+        <p class="cm-trace-sub cm-muted">Strategies traced — a card stays lit while any ticked strategy reaches it; the small number is what a strategy lights on its own. Your ticks stay with the deck.${traceTicks || (deck.definition.strategies && deck.definition.strategies.length) ? ` ${b('Reset to the commander’s own', 'trace-reset', {}, false, {cls: 'compact'})}` : ''}</p>
         <div class="cm-trace-strategies">${strategyTicks}${moreTicks}</div>
         <div class="cm-trace-transport"><button type="button" class="v-button compact" id="cm-trace-play" data-action="trace-ctl" data-ctl="play">${st && st.playing ? 'Pause' : st && st.done ? 'Replay' : 'Play'}</button>${b('Step', 'trace-ctl', {ctl: 'step'}, false, {cls: 'compact'})}${b('Back', 'trace-ctl', {ctl: 'back'}, false, {cls: 'compact'})}${b('End', 'trace-ctl', {ctl: 'end'}, false, {cls: 'compact'})}<label>Speed <select name="traceSpeed" aria-label="Animation speed">${[[0.5, '½×'], [1, '1×'], [2, '2×'], [4, '4×']].map(([v, l]) => `<option value="${v}"${st && st.speed === v ? ' selected' : (!st && v === 1 ? ' selected' : '')}>${l}</option>`).join('')}</select></label><span class="cm-trace-at" id="cm-trace-at">${st ? `${st.lit} of ${st.total} lit${st.playing ? ' · playing' : st.done ? '' : ' · paused'}` : `${r.lit} lit`}</span></div>
         <div class="cm-trace-score"><div><strong>${r.score}</strong><span>cohesion score · a heuristic</span>${r.measured !== undefined && r.measured !== null ? `<em>measured ${e(String(r.measured))}</em>` : '<em>not yet measured</em>'}</div><div><strong>${r.lit}</strong><span>cards lit of ${r.total}</span></div><div><strong>${r.closedLoops}</strong><span>loop-backs drawn</span></div><div><strong>${r.loopBacks}</strong><span>loop-backs counted</span></div></div>
         <h3 class="cm-chips-head">Lit in order</h3>
+        <div class="cm-trace-pickbar${traceChosen.size ? '' : ' is-empty'}" id="cm-trace-pickbar"><span>${traceChosen.size ? `${traceChosen.size} ticked` : 'Tick cards to file them in a group'}</span>${b('Add ticked to a group', 'trace-add-group', {}, traceChosen.size > 0, {cls: 'compact'})}${b('Tick every lit card', 'trace-pick-all', {}, false, {cls: 'compact'})}${traceChosen.size ? b('Clear ticks', 'trace-pick-clear', {}, false, {cls: 'compact'}) : ''}</div>
         ${groups || '<p class="cm-muted">No join in this set serves a ticked strategy. Tick more strategies, or trace What it could be.</p>'}
         <p class="cm-trace-unlit"><b>${e(T.unlitSentence(r))}</b> ${r.unlit.length ? b('Open them in List', 'trace-to-list', {}, false, {cls: 'compact'}) : ''}</p>
         ${outside}
@@ -653,7 +662,35 @@
       </div>`;
       sizePane();
     }
-    actions['trace-world'] = (el) => { traceWorld = el.dataset.world === 'pool' ? 'pool' : 'deck'; runTrace(true); };
+    actions['trace-world'] = (el) => { traceWorld = el.dataset.world === 'pool' ? 'pool' : 'deck'; traceChosen = new Set(); runTrace(true); };
+    /* Reset: back to the commander's own strategies; the deck's saved ticks are cleared with it. */
+    actions['trace-reset'] = async () => {
+      const deck = tracePick(); if (!deck) return;
+      traceTicks = null;
+      /* Awaited: the redraw reads the deck's saved strategies, so it must see the cleared ones. */
+      if (deck.definition.strategies && deck.definition.strategies.length) await C.commit({type: 'editDeck', deckId: deck.id, definition: {...deck.definition, strategies: []}}, {renderView: false});
+      runTrace(true);
+    };
+    actions['trace-pick-all'] = () => { if (!traceResult) return; traceChosen = new Set(traceResult.list.filter((x) => x.ring > 0).map((x) => x.name)); drawTracePane(); };
+    actions['trace-pick-clear'] = () => { traceChosen = new Set(); drawTracePane(); };
+    /* File the ticked cards in a Collection group as planned entries — the same command the graph's
+       own Tick for a group sends, so a group filled from a trace reads like any other. */
+    actions['trace-add-group'] = () => {
+      const chosen = [...traceChosen]; if (!chosen.length) throw Error('Tick at least one card in the trace first.');
+      const deck = tracePick();
+      form(`Add ${chosen.length} card${chosen.length === 1 ? '' : 's'} from the trace to a group`,
+        `${s('Collection group', 'group', [['', 'Create a new group'], ...C.state.groups.map((g) => [g.id, g.name])], '')}${C.field('New group name', 'name', deck ? `From the trace of ${deck.name}` : 'From the trace')}<div class="cm-full">${note('Planned entries only. Nothing here says you own a copy.')}<p class="cm-muted">${e(chosen.slice(0, 8).join(', '))}${chosen.length > 8 ? ` and ${chosen.length - 8} more` : ''}</p></div>`,
+        async (v) => {
+          const cards = chosen.map((name) => C.catalog.exact(name)).filter(Boolean);
+          if (cards.length !== chosen.length) throw Error('Some cards could not be matched to the catalog. Try Inspect card on them first.');
+          const gid = v.group || 'group:' + C.uid();
+          const commands = [];
+          if (!v.group) commands.push({type: 'createGroup', groupId: gid, name: v.name || 'From the trace'});
+          commands.push({type: 'groupEntries', groupId: gid, cards, entries: cards.map((c) => ({cardId: c.id, quantity: 1, notes: deck ? `From the trace of ${deck.name}` : 'From the trace'}))});
+          await C.commit({type: 'batch', commands, summary: `Added ${cards.length} card${cards.length === 1 ? '' : 's'} from the trace to a Collection group`}, {renderView: false});
+          traceChosen = new Set(); drawTracePane();
+        }, 'Add to group');
+    };
     actions['trace-ctl'] = (el) => {
       if (!graph || !graph.tracing) { runTrace(true); return; }
       const ctl = el.dataset.ctl === 'play' && graph.traceState && graph.traceState.playing ? 'pause' : el.dataset.ctl;
@@ -671,6 +708,8 @@
     actions['trace-option'] = (el) => { const deck = tracePick(), card = C.card(el.dataset.card); if (deck && card) optionDialog(deck, card, `Trace · ${traceResult ? traceResult.strategies.map((id) => globalThis.CrankStrategies.labelOf(id)).join(', ') : ''}`); };
     pane.addEventListener('change', (ev) => {
       const speed = ev.target.closest('select[name=traceSpeed]'); if (speed && graph && graph.tracing) { graph.traceControl('speed', speed.value); return; }
+      const pick = ev.target.closest('input[name=tracePick]');
+      if (pick) { if (pick.checked) traceChosen.add(pick.value); else traceChosen.delete(pick.value); pick.closest('.cm-trace-row')?.classList.toggle('is-ticked', pick.checked); const bar = $('#cm-trace-pickbar'); if (bar) { bar.classList.toggle('is-empty', !traceChosen.size); bar.querySelector('span').textContent = traceChosen.size ? `${traceChosen.size} ticked` : 'Tick cards to file them in a group'; const add = bar.querySelector('[data-action=trace-add-group]'); if (add) add.classList.toggle('primary', traceChosen.size > 0); } return; }
       const tick = ev.target.closest('input[name=traceStrategy]'); if (!tick) return;
       const deck = tracePick(); if (!deck) return;
       traceTicks = [...view.querySelectorAll('input[name=traceStrategy]:checked')].map((x) => x.value);
