@@ -387,11 +387,51 @@ function sheetEdit(btn,seed=''){
    this view feeds it the rows, the filters and the reader's grouping choice. */
 let tabletopGroupBy=C.state.preferences.tabletopGroupBy||'type';
 /* The table's own state between draws: the open pile, its page and card size, the ticks while it is laid out, the selection on the stage and the pile it came from. */
-const ttUI={open:null,from:null,page:0,size:'M',ticked:new Set(),selection:new Set(),bench:'open',stageSize:'XL',canvas:'slate'};
+const ttUI={open:null,from:null,page:0,size:'M',ticked:new Set(),selection:new Set(),bench:'open',stageSize:'XL',canvas:'slate',trays:4,drawAt:0};
 /* The card size, the Bench ledge's fold and the stage's picture size are facts about the screen they were chosen on, so they are remembered per device and not in the library. */
-try{const s=localStorage.getItem('cm-tabletop-size');if(s&&['S','M','L'].includes(s))ttUI.size=s;if(localStorage.getItem('cm-tabletop-bench')==='shut')ttUI.bench='shut';const z=localStorage.getItem('cm-tabletop-stage');if(z&&['L','XL','XXL','full'].includes(z))ttUI.stageSize=z;const c=localStorage.getItem('cm-tabletop-canvas');if(c&&globalThis.CrankTabletop&&CrankTabletop.CANVASES.some(([k])=>k===c))ttUI.canvas=c;}catch(err){/* a private window; the defaults then */}
+try{const s=localStorage.getItem('cm-tabletop-size');if(s&&['S','M','L'].includes(s))ttUI.size=s;if(localStorage.getItem('cm-tabletop-bench')==='shut')ttUI.bench='shut';const z=localStorage.getItem('cm-tabletop-stage');if(z&&['L','XL','XXL','full'].includes(z))ttUI.stageSize=z;const c=localStorage.getItem('cm-tabletop-canvas');if(c&&globalThis.CrankTabletop&&CrankTabletop.CANVASES.some(([k])=>k===c))ttUI.canvas=c;const t=Number(localStorage.getItem('cm-tabletop-trays'));if(Number.isInteger(t)&&t>=1&&t<=4)ttUI.trays=t;}catch(err){/* a private window; the defaults then */}
 let tabletopStatusOrder=C.state.preferences.tabletopStatusOrder==='count'?'count':'workflow';
 let ttModel=null;
+/* The one keydown and the one resize the table has attached, so a redraw replaces them rather
+   than stacking another pair on top (see the note where they are registered). */
+let ttKey=null,ttResize=null;
+/* THE PLAY SPACE'S TWO QUESTIONS (plan §2.1, §2.3, §2.14), answered here because only this view
+   knows the sandbox and the model. crankmagic-tabletop.js lays the middle out; it does not decide
+   what is in your hand or do the arithmetic on the scoreboard.
+
+   WHERE A CARD IS ON THE PLAY SPACE is the sandbox's own answer: a `hold` move means the middle,
+   a `tray` move means that tray. So the middle survives a reload, shows in List and Sheet as a
+   pending row, and empties on Confirm -- all for free, because it is the same sitting everything
+   else reads (§2.6, §2.7). Nothing separate is remembered.
+
+   WHICH DECK the table is calibrating is the `deck` filter. Without one there is no group to file
+   a lifted card into and no list for a tray to build, so the middle says so rather than pretending
+   -- shelf mode, where the destinations are collection groups instead, is PR 4 (§2.15). */
+function playDeck(params){const id=params.get('deck');if(!id)return null;const d=C.state.decks.find(x=>x.id===id&&!x.archived);return d&&d.groupId?d:null;}
+function playSpec(params){
+  const d=playDeck(params),sb=C.sandbox;
+  return {deck:d?{id:d.id,name:d.name,groupId:d.groupId}:null,trays:ttUI.trays,at:ttUI.drawAt,
+    seatOf:r=>{if(!sb||!sb.open)return '';const mv=sb.pendingFor(r.recordId);if(!mv)return '';
+      return mv.action==='hold'?'hand':mv.action==='tray'?'tray:'+(mv.tray||1):'';}};
+}
+/* THE LIVE SCOREBOARD (plan §2.14, §2.3). The deck page's own `readiness`, computed on the
+   sandbox's preview rather than the library -- so it reads where the reader WILL be if they
+   confirm, which is the only number worth watching while cards are moving. The list's ceiling is
+   the one figure that turns amber: a tray may take the hundred past a hundred while you think,
+   and confirming over is the thing that gets flagged. */
+function scoreboard(model){
+  const P=model&&model.play;if(!P||!P.deck)return [];
+  let d,r;try{d=M.deck(lens(),P.deck.id);r=M.readiness(lens(),d);}catch(err){return [];}
+  const over=r.target>100,short=r.target<100&&r.target>0;
+  return [
+    {value:`${r.target} of 100`,label:'on the list',tone:over?'amber':short?'muted':'good',
+     why:over?`${P.deck.name}'s list is ${r.target-100} over a hundred. Confirming leaves it over.`:short?`${100-r.target} more to name.`:'A hundred cards named.'},
+    {value:r.owned,label:'reserved',why:'Owned copies held for a seat in this list.'},
+    {value:r.standIns,label:`substitute${r.standIns===1?'':'s'}`,why:'Owned copies in the box that the list does not call for.'},
+    {value:r.toBuy,label:'to buy',tone:r.toBuy?'amber':'',why:'Seats with no copy owned and none ordered.'},
+    {value:C.money(r.costToFinish),label:'to finish',why:'List price of every seat still short.'},
+  ];
+}
 function tabletop(params,shop=false){
   const TT=globalThis.CrankTabletop,tab=shop?'buy':'library';
   C.main.innerHTML=cardsHead(params,tab,'tabletop')
@@ -400,7 +440,7 @@ function tabletop(params,shop=false){
   const draw=()=>{
     if(!TT){$('#cm-tt-host').innerHTML='<p class="cm-muted">The tabletop module has not loaded yet.</p>';return;}
     const all=rows(params,shop).filter(matches).map(r=>({...r,status:statusOf(r)}));lastRows=all;
-    const model=TT.table(all,{groupBy:tabletopGroupBy,statuses:M.STATUS,statusOrder:M.statusOrder,value,maxGroupPiles:16,statusSort:tabletopStatusOrder});ttModel=model;
+    const model=TT.table(all,{groupBy:tabletopGroupBy,statuses:M.STATUS,statusOrder:M.statusOrder,value,maxGroupPiles:16,statusSort:tabletopStatusOrder,play:playSpec(params)});ttModel=model;
     $('#cm-tt-status').textContent=`${model.total.toLocaleString()} cop${model.total===1?'y':'ies'} on the table (${model.rows.toLocaleString()} rows) · Bench ${model.bench.count.toLocaleString()} · ${model.ghosts.toLocaleString()} ghost${model.ghosts===1?'':'s'}`+(Object.values(filter).some(v=>v!=='')||params.get('deck')?' · filtered':'');
     /* A selection that the filters no longer show is dropped; an open pile that vanished (a grouping change) closes. */
     const ids=new Set(all.map(r=>r.recordId));for(const id of [...ttUI.selection])if(!ids.has(id))ttUI.selection.delete(id);for(const id of [...ttUI.ticked])if(!ids.has(id))ttUI.ticked.delete(id);
@@ -446,12 +486,26 @@ function tabletop(params,shop=false){
       onStageSize:z=>{ttUI.stageSize=z;try{localStorage.setItem('cm-tabletop-stage',z);}catch(err){/* not remembered, still applied */}draw();queueMicrotask(()=>$(`#cm-tt-host [data-tt=stage-size][data-size=${z}]`)?.focus?.({preventScroll:true}));},
       /* Previous / Next on the stage: the selection moves along the pile it came from, which stays the pile to go back to. */
       onStep:id=>{ttUI.selection=new Set([id]);draw();queueMicrotask(()=>$('#cm-tt-host .cm-tt-stage-actions [data-tt=step]:not([disabled])')?.focus?.({preventScroll:true}));},
+      /* THE PLAY SPACE (plan §2.1, §2.3, §2.4). Stepping the draw pile moves an index and
+         nothing else -- a stack of three hundred is a number, not three hundred pictures (§2.9).
+         The tray count is a fact about this screen, so it is remembered per device. Restoring
+         unstages: the move never happened, so there is nothing to undo and no revision to spend. */
+      onDrawAt:n=>{ttUI.drawAt=Math.max(0,n|0);draw();queueMicrotask(()=>$('#cm-tt-host .cm-tt-draw-step button:not([disabled])')?.focus?.({preventScroll:true}));},
+      onTrays:n=>{ttUI.trays=Math.max(1,Math.min(TT.TRAYS_MAX,n|0));try{localStorage.setItem('cm-tabletop-trays',String(ttUI.trays));}catch(err){/* not remembered, still applied */}draw();queueMicrotask(()=>$('#cm-tt-host .cm-tt-tray-count button:not([disabled])')?.focus?.({preventScroll:true}));},
+      onRestore:ids=>{const sb=C.sandbox;if(!sb)return;
+        const play=ttModel&&ttModel.play,on=play?[...play.seats.keys()]:[];
+        const take=ids?ids.filter(id=>play&&play.seats.has(id)):on;
+        let n=0;for(const id of take){const mv=sb.pendingFor(id);if(mv&&sb.remove(mv.id))n+=1;}
+        if(!n){C.notice('There was nothing to put back.',true);return;}
+        ttUI.drawAt=0;
+        C.notice(ids&&n===1?`Put back where it came from. ${sb.size} move${sb.size===1?'':'s'} still staged.`:`${n} card${n===1?'':'s'} put back. ${sb.size?`${sb.size} move${sb.size===1?'':'s'} still staged.`:'Nothing is staged now.'}`);
+        C.render();},
       detail:r=>tabletopDetail(r),
       describe:r=>{const o=ownPair(r),where=value(r,'deck');
         return {status:r.status||statusOf(r),price:r.card&&r.card.price!=null?C.money(r.card.price):'',deck:where,
           ownership:`${o.owned}/${o.wanted}`,
           ownershipWhy:`You own ${o.owned} of the ${o.wanted} cop${o.wanted===1?'y':'ies'} ${where?'the '+where+' list calls for':'your lists call for'}.`};}
-    },{...ttUI,viewportHeight:innerHeight});
+    },{...ttUI,viewportHeight:innerHeight,score:scoreboard(model)});
   };
   draw();
   const host=C.main;
@@ -460,12 +514,19 @@ function tabletop(params,shop=false){
   host.querySelector('[name=ttDeck]')?.addEventListener('change',ev=>goCards(tab,{view:'tabletop',...(ev.target.value?{deck:ev.target.value}:{})}));
   if(!TT)return;
   actions['tabletop-drop']=el=>tabletopDrop(el.dataset.pile,[...ttUI.selection]);
+  /* ONE TABLE, ONE PAIR OF LISTENERS (found building PR 3b). These two remove themselves when the
+     reader leaves the table -- but the table redraws itself in place all the time, and every
+     redraw ran this function again and left the previous pair attached. Twenty renders in, one
+     Escape ran twenty handlers, each redrawing through ITS OWN captured `params`: the last one to
+     run won, so the table could come back scoped to a filter the reader had left behind. Only the
+     current pair stands now, and the previous pair goes when it does. */
+  removeEventListener('keydown',ttKey);removeEventListener('resize',ttResize);
   /* Escape is the table at rest from anywhere on the page — a redraw can leave the focus on the body, where the mat's own key handler cannot hear it. Not while a dialog or a menu is open, and not from a field. */
   const onKey=ev=>{const r=C.route();if(r.view!=='cards'||r.params.get('view')!=='tabletop'){removeEventListener('keydown',onKey);return;}if(ev.key!=='Escape'||ev.defaultPrevented||!(ttUI.open||ttUI.selection.size))return;if(document.querySelector('dialog[open]')||[...document.querySelectorAll('[popover]')].some(p=>p.matches(':popover-open'))||ev.target.closest?.('input,select,textarea'))return;ev.preventDefault();ttUI.open=null;ttUI.from=null;ttUI.page=0;ttUI.ticked.clear();ttUI.selection.clear();draw();};
-  addEventListener('keydown',onKey);
+  ttKey=onKey;addEventListener('keydown',onKey);
   /* The mat is sized from the host's width, so a resize redraws it. */
   let last=host.clientWidth;const onResize=()=>{if(C.route().view!=='cards'||C.route().params.get('view')!=='tabletop'){removeEventListener('resize',onResize);return;}if(Math.abs(host.clientWidth-last)>40){last=host.clientWidth;draw();}};
-  addEventListener('resize',onResize);
+  ttResize=onResize;addEventListener('resize',onResize);
 }
 /* A DROP IS THE STATUS FLY-OUT'S COMMAND (plan §2.3): the contract in crankmagic-tabletop.js
    says which action a pile takes for these rows; here that action becomes the same command
@@ -492,7 +553,7 @@ function stageRows(rows,intent){
     try{sb.stage({rowId:r.recordId,cardId:r.cardId,cardName:r.card.name,quantity:r.quantity,kind:r.kind,
       lotId:r.kind==='lot'?r.id:'',slotId:r.slotId||'',
       deckId:intent.deckId||r.deckId||'',deckName:intent.deckName||'',
-      action:intent.action,arg:intent.arg||'',box:intent.box||'',asStandIn:!!intent.asStandIn,
+      action:intent.action,arg:intent.arg||'',box:intent.box||'',asStandIn:!!intent.asStandIn,tray:intent.tray||0,
       from:r.status||statusOf(r),to:intent.to,toStatus:intent.toStatus===undefined?intent.to:intent.toStatus});
       done.push(r.card.name);}
     catch(err){refused.push(`${r.card.name}: ${err.message}`);}
@@ -512,6 +573,23 @@ function tabletopDrop(pileId,ids){
   if(action==='release')return stageRows(rows,{action:'release',to:'Bench'});
   if(action==='group'){const g=C.state.groups.find(g=>g.name===pile.label);if(!g)throw Error('That group is gone; refresh the view.');
     return stageRows(rows,{action:'group',arg:g.id,to:g.name,toStatus:''});}
+  /* PICKING A CARD UP (plan §2.1). No form and no question: the middle commits to nothing, which
+     is what makes it worth having. The deck's group travels with the move so the fold knows what
+     the card is being considered FOR — that is what turns it Watched rather than loose. */
+  if(action==='hold'){const P=ttModel&&ttModel.play;if(!P||!P.deck)throw Error('Pick a deck at the top of the table first; the middle holds cards you are considering for a deck.');
+    ttUI.drawAt=0;
+    return stageRows(rows,{action:'hold',arg:P.deck.groupId,deckId:P.deck.id,deckName:P.deck.name,to:TT.HAND,toStatus:'Watched'});}
+  /* A TRAY EDITS THE DECK (plan §2.3), so unlike the middle it says so before it is staged: the
+     receipt at Confirm names the list change, and this is where a reader can still say no. */
+  if(action==='tray'){const P=ttModel&&ttModel.play;if(!P||!P.deck)throw Error('Pick a deck at the top of the table first; a tray reserves copies for the deck being calibrated.');
+    const n=pile.tray||1,d=M.deck(C.state,P.deck.id);
+    const already=new Set(d.slots.filter(x=>x.purpose==='main').map(x=>x.cardId));
+    const adds=rows.filter(r=>!already.has(r.cardId)).length,target=d.slots.filter(x=>x.purpose==='main').reduce((k,x)=>k+x.quantity,0);
+    const after=target+rows.filter(r=>!already.has(r.cardId)).reduce((k,r)=>k+(Number(r.quantity)||1),0);
+    form(`Tray ${n}: reserve for ${d.name}`,
+      note(`${names}. ${adds?`${adds} of these ${adds===1?'is':'are'} not on ${d.name}'s list yet, so confirming adds ${adds===1?'it':'them'} — the list goes from ${target} to ${after}${after>100?`, ${after-100} over a hundred`:''}.`:`Every one of these is already on ${d.name}'s list; confirming reserves your copies for the seats they fill.`}`,after>100)
+      +note('Staged, not saved: this joins the sitting and is written when you confirm.'),
+      ()=>stageRows(rows,{action:'tray',tray:n,deckId:d.id,deckName:d.name,to:`Tray ${n}`,toStatus:'Reserved'}),'Stage the move');return;}
   if(action==='place'||action==='standin'){if(!finals.length)throw Error('Finalize a deck first — a draft holds no physical copies.');
     const standin=action==='standin',preferred=rows.map(r=>r.allocation?.deckId).find(Boolean)||'';
     form(standin?'Substitute in a physical deck':'Put these copies in a physical deck',s('Deck','deckId',finals.map(d=>[d.id,d.name]),preferred)+f('Box label (optional)','box')+(standin?'':`<label class="cm-checkbox cm-full"><input type="checkbox" name="asStandIn"> Allow substitutes: a copy this deck's list does not call for goes in unreserved, filling a seat until the real card arrives</label>`)+note(standin?`${names} go in without a reservation; the deck counts them as substitutes and Ready to add asks for them back when the real card is ready.`:`${names}. Records where these copies physically are. Ownership does not change. A copy that is not reserved for this deck is refused by name unless substitutes are allowed; one the list calls for is reserved on the way in.`)+note('Staged, not saved: this joins the sitting and is written when you confirm.'),

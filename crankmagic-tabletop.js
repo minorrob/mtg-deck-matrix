@@ -87,10 +87,15 @@
   /* THE TABLE. rows: projection rows with `status` (the caller reads M.statusOf and filters).
      options.groupBy: a GROUPINGS key; options.value(row, key): the list's column reader;
      options.statuses: M.STATUS; options.statusOrder: M.statusOrder. */
-  function table(rows, options = {}) {
+  function table(all, options = {}) {
     const statuses = options.statuses || [];
     const value = options.value || ((r, k) => (r.card ? r.card[k] : undefined));
     const groupBy = options.groupBy && GROUPINGS.some(([k]) => k === options.groupBy) ? options.groupBy : "type";
+    /* A CARD ON THE PLAY SPACE IS IN YOUR HAND, so it leaves the shelves and the status piles
+       rather than standing in two places at once (plan §2.1). The play space is built from the
+       whole table first, and everything it holds comes out of what follows. */
+    const playModel = play(all, options.play);
+    const rows = playModel && playModel.seats.size ? (all || []).filter((r) => !playModel.seats.has(r.recordId)) : all;
     const byStatus = new Map();
     for (const r of rows || []) { const s = r.status || "Unassigned"; if (!byStatus.has(s)) byStatus.set(s, []); byStatus.get(s).push(r); }
     const count = (list) => list.reduce((n, r) => n + (Number(r.quantity) || 0), 0);
@@ -123,10 +128,56 @@
     return {
       groupBy, groupings: GROUPINGS, statusSort: options.statusSort === "count" ? "count" : "workflow",
       bench: {id: "bench", kind: "bench", label: BENCH, rows: benchSorted, count: count(benchSorted), top: benchSorted[0] || null},
-      statusPiles, groupPiles,
-      total: count(rows || []), rows: (rows || []).length, ghosts: (rows || []).filter(isGhost).length
+      statusPiles, groupPiles, play: playModel,
+      total: count(all || []), rows: (all || []).length, ghosts: (all || []).filter(isGhost).length
     };
   }
+
+  /* ------------------------------------------------------------------ PR 3b: the play space */
+  /* THE MIDDLE OF THE TABLE (plan §2.1, §2.3, §2.4, §2.9). A draw pile and up to four trays,
+     built the same way every other pile is -- so a click lays one out, a drag drops onto one,
+     `accepts` says what a drop would mean, and the keyboard walks them. One table, one kind of
+     object, no second implementation.
+
+     `options.play.seatOf(row)` is the caller's answer to "where is this card on the play space",
+     and the caller reads it off the sandbox: "hand" for a card in the middle, "tray:1".."tray:4"
+     for one in a tray, "" for everything else. A card on the play space is IN YOUR HAND, so it
+     comes out of the shelves and the status piles rather than standing in two places at once.
+
+     THE DRAW PILE IS A NUMBER, NOT THREE HUNDRED PICTURES (§2.9): `top` is the six faces the mat
+     draws from `at`, the index the arrows step, and `count` is the rest. */
+  const TRAYS_MAX = 4;
+  const HAND = "In hand";
+  const DRAW_FACES = 6;
+  function play(rows, spec) {
+    if (!spec || typeof spec.seatOf !== "function") return null;
+    const trays = Math.max(1, Math.min(TRAYS_MAX, Number(spec.trays) || 1));
+    const deck = spec.deck && spec.deck.id ? {id: String(spec.deck.id), name: String(spec.deck.name || "this deck"), groupId: spec.deck.groupId || ""} : null;
+    const hand = [], inTray = Array.from({length: trays}, () => []), seats = new Map();
+    for (const r of rows || []) {
+      const seat = String(spec.seatOf(r) || "");
+      if (!seat) continue;
+      if (seat === "hand") { hand.push(r); seats.set(r.recordId, "hand"); continue; }
+      const n = Number(String(seat).split(":")[1]);
+      if (!Number.isInteger(n) || n < 1 || n > trays) continue;
+      inTray[n - 1].push(r); seats.set(r.recordId, "tray:" + n);
+    }
+    const byName = (list) => list.slice().sort((a, b) => String(a.card && a.card.name).localeCompare(String(b.card && b.card.name)));
+    const copies = (list) => list.reduce((n, r) => n + (Number(r.quantity) || 0), 0);
+    const held = byName(hand);
+    const at = held.length ? Math.max(0, Math.min(held.length - 1, Number(spec.at) || 0)) : 0;
+    /* The faces the mat draws: `at` on top, the five behind it, wrapping, so the arrows step a
+       stack rather than paging a list. */
+    const faces = held.length ? Array.from({length: Math.min(DRAW_FACES, held.length)}, (v, i) => held[(at + i) % held.length]) : [];
+    return {
+      deck, trays, seats, at,
+      draw: {id: "play:draw", kind: "play", label: HAND, rows: held, count: copies(held), top: faces[0] || null, faces, target: true},
+      trayPiles: inTray.map((list, i) => { const sorted = byName(list); return {id: "play:tray:" + (i + 1), kind: "tray", tray: i + 1, label: "Tray " + (i + 1), rows: sorted, count: copies(sorted), top: sorted[0] || null, target: true}; }),
+      count: copies(held) + inTray.reduce((n, list) => n + copies(list), 0),
+    };
+  }
+  /* Every pile the play space owns, for findPile and the keyboard. */
+  const playPiles = (model) => (model && model.play ? [model.play.draw, ...model.play.trayPiles] : []);
 
   /* ------------------------------------------------------------------ the mat (DOM) */
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"})[c]);
@@ -231,8 +282,8 @@
     return {cards, cols, lines, perPage, pages, page: p, from, to, total, size: sizeOf(size), w: sz.w, h: sz.h, gap: sz.gap, cap: sz.cap, height: lines * pitch - sz.gap,
       copies, label: total ? `${(from + 1).toLocaleString()}–${to.toLocaleString()} of ${total.toLocaleString()}${copies !== total ? ` · ${copies.toLocaleString()} copies` : ""}` : "Nothing on this pile"};
   }
-  const findPile = (model, id) => (id === "bench" ? model.bench : [...model.statusPiles, ...model.groupPiles].find((p) => p.id === id) || null);
-  const rowsById = (model) => { const m = new Map(); for (const p of [model.bench, ...model.statusPiles]) for (const r of p.rows) m.set(r.recordId, r); return m; };
+  const findPile = (model, id) => (id === "bench" ? model.bench : [...model.statusPiles, ...model.groupPiles, ...playPiles(model)].find((p) => p.id === id) || null);
+  const rowsById = (model) => { const m = new Map(); for (const p of [model.bench, ...model.statusPiles, ...playPiles(model)]) for (const r of p.rows) m.set(r.recordId, r); return m; };
 
   /* The recombine (plan §2.2): the cards not selected slide back into their pile, transforms
      only, sixty at most in motion and the rest fading; reduced motion skips it. Resolves when
@@ -305,6 +356,23 @@
           return no(`${pile.label} is a reading of a deck's plan, not a place a card can be put.`);
       }
     }
+    /* THE PLAY SPACE'S TWO DESTINATIONS (plan §2.1, §2.3). The middle takes any copy: picking a
+       card up is the one gesture that is always allowed, because it commits to nothing. A tray
+       takes an owned copy and BUILDS THE LIST, which is why its words say so -- the drag's label
+       is the only warning a reader gets before the receipt. */
+    if (pile.kind === "play") {
+      if (others || plans.length) return no("A suggestion or a planned card is not a copy you can pick up; it is a line on a list.");
+      if (!lots.length) return no("Nothing here is a copy record.");
+      if (lots.some((r) => r.source === "watching")) return no("A watched card is one you are considering, not a copy you can pick up.");
+      const held = lots.filter((r) => r.allocation || inBox(r)).length;
+      return yes("hold", "Pick up — in hand", held ? `Lets go of ${held === lots.length ? "" : held + " "}whatever holds ${held === 1 ? "the copy" : "the copies"} and keeps ${held === 1 ? "it" : "them"} in view for this deck.` : "Keeps the copy in view for this deck. Nothing is reserved and nothing leaves a box.");
+    }
+    if (pile.kind === "tray") {
+      if (others || plans.length) return no("A tray holds copies; a suggestion or a planned card is a line on a list.");
+      if (!lots.length) return no("Nothing here is a copy record.");
+      if (lots.some((r) => r.source !== "owned")) return no("A tray reserves a copy you hold; record an ordered card as arrived first.");
+      return yes("tray", `${pile.label} — on the list and reserved`, "Adds the card to this deck's list where the list does not name it yet, then reserves your copy for that seat.");
+    }
     if (pile.kind === "group") {
       if (pile.key === "groups") {
         if (pile.folded || /^No /.test(pile.label)) return no("Choose a named group.");
@@ -341,7 +409,8 @@
      caller through hooks: onOpen(pileId|null), onPage(n), onSize(S|M|L), onTick(recordId),
      onSelect([recordId]), onClear(), onMenu(recordId, element), onGroupBy(key),
      onDrop(pileId, [recordId]) when the selection is dropped on an accepting pile,
-     onMoveTo([recordId], element) for the Move to… button. */
+     onMoveTo([recordId], element) for the Move to… button, and for the play space (PR 3b)
+     onDrawAt(index), onTrays(1..4) and onRestore([recordId] | null for all). */
   function mount(host, model, hooks = {}, ui = {}) {
     if (!host) return null;
     const width = Math.max(320, host.clientWidth || 960), narrow = width < 760;
@@ -392,6 +461,68 @@
        about where they are read (Rob, 14 September). `hooks.term(text)` is the caller's glossary;
        without one the label is printed plain. */
     const term = (text) => (hooks.term ? hooks.term(text) : esc(text));
+    /* ------------------------------------------------------------ PR 3b: the middle, drawn */
+    /* THE DRAW PILE, THE TRAYS AND THE SCOREBOARD (plan §2.1, §2.3, §2.4, §2.9, §2.14). Between
+       the shelves, in the space the three zones left for it. The draw pile is the cards in your
+       hand: six faces and a count, never three hundred pictures. The arrows UNDER it step the
+       stack one card at a time, which is what makes flipping a control a finger can find rather
+       than a gesture to discover -- and a click on the pile itself lays it out, the same meaning
+       a click has on every other pile of the table.
+
+       The trays are Reserved (§2.3), and their words say what that costs: a tray builds the
+       deck's list. The counter beside them is 1-4, because four is as many hands as a table has.
+
+       The scoreboard is the caller's -- the same `readiness` the deck page reads, computed on the
+       sandbox's preview, so it shows where the reader WILL be if they confirm rather than where
+       they are (§2.14). This module lays it out and colours it; it does not do the arithmetic. */
+    const PLAY = {drawW: 96, drawH: 134, trayW: 78, trayH: 110, gap: 12};
+    const score = Array.isArray(ui.score) ? ui.score : [];
+    function playHTML(x, y, w) {
+      const P = model.play;
+      if (!P) return {html: "", height: 0};
+      const head = `<div class="cm-tt-play-head"><strong>The play space</strong>${P.deck ? `<span>calibrating <b>${esc(P.deck.name)}</b></span>` : `<span class="cm-tt-muted">no deck picked</span>`}${P.count ? `<button type="button" class="cm-tt-restore-all" data-tt="restore-all">Restore all ${P.count}</button>` : ""}</div>`;
+      if (!P.deck) {
+        const html = `<div class="cm-tt-play" style="left:${x}px;top:${y}px;width:${w}px;height:120px">${head}<p class="cm-tt-play-invite">Pick a deck at the top of the table and the middle becomes its play space: lift cards here to consider them, drop them in a tray to put them on the list, and confirm once.</p></div>`;
+        return {html, height: 120};
+      }
+      const at = P.at, n = P.draw.rows.length, on = n ? P.draw.rows[at] : null;
+      /* Six faces, the front one last so it sits on top, each stepped back and up a little. */
+      const faces = P.draw.faces.map((r, i) => cardFace(r, {cls: "cm-tt-drawn", style: `left:${(P.draw.faces.length - 1 - i) * 7}px;top:${(P.draw.faces.length - 1 - i) * 5}px;z-index:${P.draw.faces.length - i};`})).reverse().join("");
+      const drawOpen = homeId === "play:draw";
+      const pileBtn = `<button type="button" class="cm-tt-draw${n ? "" : " is-empty"}${drawOpen ? " is-open cm-tt-home" : ""}" data-tt="open" data-pile="play:draw" aria-pressed="${drawOpen ? "true" : "false"}" aria-label="In hand, ${n} card${n === 1 ? "" : "s"}${n ? "; lay them out" : ""}"><span class="cm-tt-slot"></span><span class="cm-tt-draw-stack">${faces || `<span class="cm-tt-draw-empty">Drag a card here to pick it up</span>`}</span></button>`;
+      /* The per-card restore arrow (§2.1): the card on top of the stack goes back where it came
+         from. It is the arrow, not a menu, because putting one card down is one gesture. */
+      const restore = on ? `<button type="button" class="cm-tt-restore" data-tt="restore-one" data-record="${esc(on.recordId)}" title="Put ${esc(nameOf(on))} back where it came from" aria-label="Put ${esc(nameOf(on))} back where it came from">&#8634;</button>` : "";
+      const step = (to, label, glyph) => `<button type="button" data-tt="draw-step" data-at="${to}" ${n > 1 ? "" : "disabled"} aria-label="${label}">${glyph}</button>`;
+      const arrows = `<div class="cm-tt-draw-step">${step((at - 1 + Math.max(1, n)) % Math.max(1, n), "Previous card in hand", "&#8249;")}<span>${n ? `${esc(nameOf(on))} <small>${at + 1} of ${n}</small>` : "nothing in hand"}</span>${step((at + 1) % Math.max(1, n), "Next card in hand", "&#8250;")}</div>`;
+      const trayBtn = (t) => {
+        const open = homeId === t.id, top = t.rows[0];
+        return `<button type="button" class="cm-tt-tray${t.count ? "" : " is-empty"}${open ? " is-open cm-tt-home" : ""}" data-tt="open" data-pile="${esc(t.id)}" aria-pressed="${open ? "true" : "false"}" aria-label="${esc(t.label)}, ${t.count} card${t.count === 1 ? "" : "s"}"><span class="cm-tt-tray-slot">${top ? cardFace(top, {cls: "cm-tt-trayed"}) : ""}${t.count > 1 ? `<span class="cm-tt-tray-more">+${t.count - 1}</span>` : ""}</span><span class="cm-tt-tray-name">${esc(t.label)}${t.count ? ` · ${t.count}` : ""}</span></button>`;
+      };
+      const trays = `<div class="cm-tt-trays">${P.trayPiles.map(trayBtn).join("")}</div>`;
+      const counter = `<div class="cm-tt-tray-count" role="group" aria-label="How many trays"><button type="button" data-tt="trays" data-n="${P.trays - 1}" ${P.trays > 1 ? "" : "disabled"} aria-label="One tray fewer">&#8249;</button><span>${P.trays} tray${P.trays === 1 ? "" : "s"}</span><button type="button" data-tt="trays" data-n="${P.trays + 1}" ${P.trays < TRAYS_MAX ? "" : "disabled"} aria-label="One tray more">&#8250;</button></div>`;
+      const board = score.length ? `<div class="cm-tt-score" role="status">${score.map((f) => `<span class="cm-tt-score-fig${f.tone ? " is-" + f.tone : ""}"${f.why ? ` title="${esc(f.why)}"` : ""}><b>${esc(f.value)}</b> ${esc(f.label)}</span>`).join("")}</div>` : "";
+      const height = 30 + PLAY.drawH + 34 + PLAY.trayH + 26 + 30 + (board ? 38 : 0);
+      const html = `<div class="cm-tt-play" style="left:${x}px;top:${y}px;width:${w}px;height:${height}px">${head}<div class="cm-tt-draw-wrap">${pileBtn}${restore}</div>${arrows}${trays}${counter}${board}</div>`;
+      return {html, height};
+    }
+    /* THE PLAY SPACE WHEN THE STAGE HAS THE MIDDLE. A card is dragged from the selection on the
+       stage, and the stage stands where the play space stands -- so with a pile laid out or a
+       card chosen, the middle's destinations become a row of chips above the status band. Same
+       ids, same `accepts`, same drop: the drag can always reach the hand and the trays, which is
+       the whole point of picking a card up. */
+    function playBar(y, w) {
+      const P = model.play;
+      /* Not on a phone: the play space is not offered there at all (plan §2.5), so its
+         destinations must not appear only because a card happens to be selected. */
+      if (!P || !P.deck || narrow) return {html: "", height: 0};
+      const chip = (p, label) => `<button type="button" class="cm-tt-playchip${p.count ? "" : " is-empty"}${p.id === homeId ? " is-open cm-tt-home" : ""}" data-tt="open" data-pile="${esc(p.id)}" aria-pressed="${p.id === homeId ? "true" : "false"}" aria-label="${esc(label)}, ${p.count} card${p.count === 1 ? "" : "s"}">${esc(label)}${p.count ? ` · ${p.count}` : ""}</button>`;
+      const board = score.length ? `<span class="cm-tt-score is-bar">${score.map((f) => `<span class="cm-tt-score-fig${f.tone ? " is-" + f.tone : ""}"${f.why ? ` title="${esc(f.why)}"` : ""}><b>${esc(f.value)}</b> ${esc(f.label)}</span>`).join("")}</span>` : "";
+      const lines = Math.max(1, Math.ceil((200 + (P.trays + 1) * 110 + score.length * 120) / Math.max(280, w - 24)));
+      const height = lines * 34 + 12;
+      const html = `<div class="cm-tt-playbar" style="top:${y}px;height:${height}px"><span class="cm-tt-playbar-say">The play space</span>${chip(P.draw, HAND)}${P.trayPiles.map((t) => chip(t, t.label)).join("")}${P.count ? `<button type="button" class="cm-tt-restore-all" data-tt="restore-all">Restore all ${P.count}</button>` : ""}${board}</div>`;
+      return {html, height};
+    }
     const canvasSelect = `<select name="tabletopCanvas" data-tt="canvas" aria-label="Choose canvas">${CANVASES.map(([k, l]) => `<option value="${k}"${k === canvasOf(ui.canvas) ? " selected" : ""}>${esc(l)}</option>`).join("")}</select>`;
     const groupPick = (top) => `<div class="cm-tt-group-pick" style="top:${top}px"><label>${term("Group piles by")} ${groupSelect}</label><label>${term("Status piles")} ${orderSelect}</label><label>Choose canvas ${canvasSelect}</label></div>`;
     let body = "", height = 0, stageHTML = "";
@@ -415,7 +546,11 @@
            destinations in their own band at the foot. Sources, workspace, destinations: three
            surfaces, three roles, legible before a word is read. */
         pickTop = 146;
-        const shelfTop = 196;
+        /* The pick row's three labelled selects come to about 740px; where the mat is narrower
+           than that they wrap, and the shelves and the play space have to start below however
+           many lines that takes -- the same measured-not-assumed rule the readings line follows. */
+        const pickLines = Math.max(1, Math.ceil(740 / Math.max(280, width - 32)));
+        const shelfTop = 196 + (pickLines - 1) * 34;
         const room = Math.max(300, (Number(ui.viewportHeight) || 900) - 430);
         const {shape, seats} = shelfSeats(gN, {width, height: room});
         const colW = SHELF.pileW + SHELF.gutter;
@@ -432,7 +567,13 @@
         /* The shelves' own surfaces, behind the piles, so each zone says what it is. */
         const zonesHTML = (leftW ? `<div class="cm-tt-zone is-left" style="top:${shelfTop - 16}px;left:6px;width:${leftW + 10}px;height:${shelfH + 12}px" aria-hidden="true"></div>` : "")
           + (rightW ? `<div class="cm-tt-zone is-right" style="top:${shelfTop - 16}px;right:6px;width:${rightW + 10}px;height:${shelfH + 12}px" aria-hidden="true"></div>` : "");
-        const statusTop = Math.round(shelfTop + shelfH + 40);
+        /* THE MIDDLE IS THE SPACE THE SHELVES LEFT (PR 3b). It stands between the two zones and
+           takes whichever is taller for the band below, so the destinations never ride up over
+           the trays. */
+        const midX = 16 + leftW + (leftW ? 12 : 0), midW = Math.max(300, width - 32 - leftW - rightW - (leftW ? 12 : 0) - (rightW ? 12 : 0));
+        const laid = playHTML(midX, shelfTop - 16, midW);
+        groupHTML += laid.html;
+        const statusTop = Math.round(shelfTop + Math.max(shelfH, laid.height - 16) + 40);
         const EDGE = Math.min(96, Math.max(16, Math.round((width - 32 - PILE_W) / 12)));
         const sSpan = (width - 2 * EDGE - PILE_W) / Math.max(1, sN - 1);
         statusHTML = `<div class="cm-tt-band" style="top:${statusTop - 22}px;height:${ROW + READ_GAP + readH + 12}px" aria-hidden="true"></div>`
@@ -454,7 +595,7 @@
         const sz = SIZES[sizeOf(ui.size)];
         const rowsFit = narrow ? 4 : Math.min(6, Math.max(2, Math.floor((vh - 330) / (sz.h + sz.gap))));
         const l = layout(openPile, {width, size: ui.size, page: ui.page, rowsFit});
-        const strip = (pos) => `<div class="cm-tt-strip is-${pos}"><span class="cm-tt-strip-title"><strong>${esc(openPile.label)}</strong> · ${l.label}</span><span class="cm-tt-seg" role="group" aria-label="Card size">${["S", "M", "L"].map((s) => `<button type="button" data-tt="size" data-size="${s}" aria-pressed="${l.size === s ? "true" : "false"}" title="Card size ${s}">${s}</button>`).join("")}</span><span class="cm-tt-pager"><button type="button" data-tt="page" data-page="${l.page - 1}" ${l.page === 0 ? "disabled" : ""} aria-label="Previous page">‹</button><span>Page ${l.page + 1} of ${l.pages}</span><button type="button" data-tt="page" data-page="${l.page + 1}" ${l.page >= l.pages - 1 ? "disabled" : ""} aria-label="Next page">›</button></span>${ticked.size ? `<button type="button" class="cm-tt-primary" data-tt="select-ticked">Select ${ticked.size} ticked</button>` : ""}<button type="button" data-tt="print" data-pile="${esc(openPile.id)}" title="Print the whole pile as a list">Print</button><button type="button" data-tt="open" data-pile="${esc(openPile.id)}" aria-label="Close ${esc(openPile.label)}">Close</button></div>`;
+        const strip = (pos) => `<div class="cm-tt-strip is-${pos}"><span class="cm-tt-strip-title"><strong>${esc(openPile.label)}</strong> · ${l.label}</span><span class="cm-tt-seg" role="group" aria-label="Card size">${["S", "M", "L"].map((s) => `<button type="button" data-tt="size" data-size="${s}" aria-pressed="${l.size === s ? "true" : "false"}" title="Card size ${s}">${s}</button>`).join("")}</span><span class="cm-tt-pager"><button type="button" data-tt="page" data-page="${l.page - 1}" ${l.page === 0 ? "disabled" : ""} aria-label="Previous page">‹</button><span>Page ${l.page + 1} of ${l.pages}</span><button type="button" data-tt="page" data-page="${l.page + 1}" ${l.page >= l.pages - 1 ? "disabled" : ""} aria-label="Next page">›</button></span>${ticked.size ? `<button type="button" class="cm-tt-primary" data-tt="select-ticked">Select ${ticked.size} ticked</button>` : ""}<button type="button" data-tt="print" data-pile="${esc(openPile.id)}" title="Print the whole pile as a list">Print</button><button type="button" class="cm-tt-back is-strip" data-tt="open" data-pile="${esc(openPile.id)}" title="Back to the table" aria-label="Back to the table from ${esc(openPile.label)}">&#8592;</button></div>`;
         const stripH = narrow ? 84 : 44;
         const grid = `<div class="cm-tt-grid" style="top:${stageTop + stripH}px;height:${l.height}px" data-size="${l.size}" data-cols="${l.cols}">${l.cards.map(({row, x, y}) => cardFace(row, {ghost: isGhost(row), size: l.size, tick: true, checked: ticked.has(row.recordId), big: l.size === "L", style: `left:${x}px;top:${y}px;`})).join("") || `<p class="cm-tt-empty">${esc(l.label)}</p>`}</div>`;
         stageHTML = `<div class="cm-tt-stage-strip" style="top:${stageTop}px">${strip("top")}</div>${grid}` + (narrow && l.pages > 1 ? `<div class="cm-tt-stage-strip" style="top:${stageTop + stripH + l.height + 8}px">${strip("bottom")}</div>` : "");
@@ -473,7 +614,7 @@
         const stepBtn = (row, dir, label) => `<button type="button" data-tt="step" data-record="${esc(row ? row.recordId : "")}" ${row ? "" : "disabled"} aria-label="${dir} card in ${esc(from ? from.label : "the pile")}">${label}</button>`;
         const actH = narrow ? 176 : width < 1180 ? 84 : 48;  /* the action row wraps to four lines on a phone, two on a narrow mat */
         stageH = (side ? h : h + 12 + panelH) + 24 + actH;
-        stageHTML = `<div class="cm-tt-stage is-solo" style="top:${stageTop}px;height:${stageH}px"><div class="cm-tt-fanL is-solo" style="left:16px;top:12px;width:${w}px;height:${h}px">${cardFace(r, {ghost: isGhost(r), big: true, cls: "cm-tt-chosen cm-tt-solo", style: `left:0;top:0;width:${w}px;height:${h}px;`})}</div><div class="cm-tt-info" style="${side ? `left:${w + 32}px;top:12px;width:${panelW}px;height:${h}px` : `left:16px;top:${h + 24}px;width:${panelW}px;height:${panelH}px`}">${caption}${hooks.detail ? hooks.detail(r) || "" : ""}</div>${from ? `<button type="button" class="cm-tt-back" data-tt="back" data-pile="${esc(from.id)}" style="${side ? `left:${w + 32 + panelW - 38}px;top:20px` : `left:${16 + panelW - 38}px;top:${h + 32}px`}" title="Back to ${esc(from.label)}" aria-label="Back to ${esc(from.label)}">&#8592;</button>` : ""}<div class="cm-tt-stage-actions is-solo">${sizeSeg}${stepBtn(prev, "Previous", "‹ Previous")}${stepBtn(next, "Next", "Next ›")}<span class="cm-tt-muted">${from && at >= 0 ? `${at + 1} of ${order.length} in ${esc(from.label)} · ` : ""}drag onto a pile, or</span><button type="button" data-tt="moveto" class="cm-tt-primary">Move to…</button>${from ? `<button type="button" data-tt="back" data-pile="${esc(from.id)}">Back to ${esc(from.label)}</button>` : ""}<button type="button" data-tt="clear">Clear selection</button></div></div>`;
+        stageHTML = `<div class="cm-tt-stage is-solo" style="top:${stageTop}px;height:${stageH}px"><div class="cm-tt-fanL is-solo" style="left:16px;top:12px;width:${w}px;height:${h}px">${cardFace(r, {ghost: isGhost(r), big: true, cls: "cm-tt-chosen cm-tt-solo", style: `left:0;top:0;width:${w}px;height:${h}px;`})}</div><div class="cm-tt-info" style="${side ? `left:${w + 32}px;top:12px;width:${panelW}px;height:${h}px` : `left:16px;top:${h + 24}px;width:${panelW}px;height:${panelH}px`}">${caption}${hooks.detail ? hooks.detail(r) || "" : ""}</div>${from ? `<button type="button" class="cm-tt-back" data-tt="back" data-pile="${esc(from.id)}" style="${side ? `left:${w + 32 + panelW - 38}px;top:20px` : `left:${16 + panelW - 38}px;top:${h + 32}px`}" title="Back to ${esc(from.label)}" aria-label="Back to ${esc(from.label)}">&#8592;</button>` : ""}<div class="cm-tt-stage-actions is-solo">${sizeSeg}${stepBtn(prev, "Previous", "‹ Previous")}${stepBtn(next, "Next", "Next ›")}<span class="cm-tt-muted">${from && at >= 0 ? `${at + 1} of ${order.length} in ${esc(from.label)} · ` : ""}drag onto a pile, or</span><button type="button" data-tt="moveto" class="cm-tt-primary">Move to…</button><button type="button" data-tt="clear">Clear selection</button></div></div>`;
       } else {
         /* The selection (plan §2.2): on the centre of the mat, fanned if more than one, large,
            with name, status, price and deck beneath. */
@@ -484,14 +625,20 @@
         const captions = `<ul class="cm-tt-captions">${selected.map((r) => { const d = say(r) || {}; return `<li><strong>${esc(nameOf(r))}</strong>${d.status ? ` <span class="cm-tt-pill${isGhost(r) ? " is-ghost" : ""}">${esc(d.status)}</span>` : ""}${d.price ? ` <span>${esc(d.price)}</span>` : ""}${d.deck ? ` <span class="cm-tt-muted">${esc(d.deck)}</span>` : ""}${d.ownership ? ` <span class="cm-tt-own"${d.ownershipWhy ? ` title="${esc(d.ownershipWhy)}"` : ""}>${esc(d.ownership)}</span>` : ""}${(Number(r.quantity) || 1) > 1 ? ` <span class="cm-tt-muted">×${r.quantity}</span>` : ""}</li>`; }).join("")}</ul>`;
         const from = homeId ? findPile(model, homeId) : null;
         const capH = Math.min(6, n) * 24 + 16;
-        stageHTML = `<div class="cm-tt-stage" style="top:${stageTop}px;height:${L.h + 30 + capH + 48}px"><div class="cm-tt-fanL" style="height:${L.h + 24}px">${fan}</div>${captions}<div class="cm-tt-stage-actions"><span class="cm-tt-muted">${n} selected · drag onto a pile, or</span><button type="button" data-tt="moveto" class="cm-tt-primary">Move to…</button>${from ? `<button type="button" data-tt="back" data-pile="${esc(from.id)}">Back to ${esc(from.label)}</button>` : ""}<button type="button" data-tt="clear">Clear selection</button></div></div>`;
+        /* A BACK ARROW AT EVERY LEVEL (plan §2.4): the laid-out pile, the selection and the single
+           card each carry one, in the same corner, and it is the ONLY way back -- the "Back to
+           <pile>" button that used to sit in the action row beside it said the same thing twice,
+           which is one control too many for a gesture the plan wanted to be one place. */
+        const backArrow = from ? `<button type="button" class="cm-tt-back is-corner" data-tt="back" data-pile="${esc(from.id)}" title="Back to ${esc(from.label)}" aria-label="Back to ${esc(from.label)}">&#8592;</button>` : "";
+        stageHTML = `<div class="cm-tt-stage" style="top:${stageTop}px;height:${L.h + 30 + capH + 48}px">${backArrow}<div class="cm-tt-fanL" style="height:${L.h + 24}px">${fan}</div>${captions}<div class="cm-tt-stage-actions"><span class="cm-tt-muted">${n} selected · drag onto a pile, or</span><button type="button" data-tt="moveto" class="cm-tt-primary">Move to…</button><button type="button" data-tt="clear">Clear selection</button></div></div>`;
         stageH = L.h + 30 + capH + 48;
       }
-      const statusTop = stageTop + stageH + 34, sSpan = narrow ? span : (width - 32 - PILE_W) / Math.max(1, sN - 1);
+      const bar = playBar(stageTop + stageH + 12, width - 32);
+      const statusTop = stageTop + stageH + 34 + bar.height, sSpan = narrow ? span : (width - 32 - PILE_W) / Math.max(1, sN - 1);
       const statusRows = narrow ? Math.ceil(sN / perRow) : 1;
       const statusHTML = (narrow ? sts.map((p, i) => pile(p, Math.round(16 + (i % perRow) * span), statusTop + Math.floor(i / perRow) * ROW, "status")).join("") : sts.map((p, i) => pile(p, Math.round(16 + i * sSpan), statusTop, "status")).join("")) + readingsHTML(statusTop + statusRows * ROW);
       height = statusTop + statusRows * ROW + readH + (narrow ? 86 : 44);
-      body = shelfHTML + stageHTML + statusHTML;
+      body = shelfHTML + stageHTML + bar.html + statusHTML;
     }
     const legend = `${model.total.toLocaleString()} cards on the table · ${model.ghosts.toLocaleString()} ghost${model.ghosts === 1 ? "" : "s"} (ordered, to buy, a draft list — not held) · ${sN} status piles · ${gN} ${esc(model.groupings.find(([k]) => k === model.groupBy)[1].toLowerCase())} piles`;
     host.innerHTML = `<div class="cm-tt-mat is-${mode} cm-canvas-${canvasOf(ui.canvas)}" tabindex="-1" style="height:${height}px">${railHTML}${body}<div class="cm-tt-legend">${legend}</div></div>`;
@@ -516,6 +663,12 @@
       else if (kind === "bench-toggle") { hooks.onBench && hooks.onBench(benchShut); }
       else if (kind === "stage-size") { hooks.onStageSize && hooks.onStageSize(t.dataset.size); }
       else if (kind === "step") { if (t.dataset.record) hooks.onStep && hooks.onStep(t.dataset.record); }
+      /* The play space (PR 3b). Stepping the draw pile is a view change and never leaves the
+         module's caller a decision; the other three are the caller's, because they unstage. */
+      else if (kind === "draw-step") { hooks.onDrawAt && hooks.onDrawAt(Number(t.dataset.at) || 0); }
+      else if (kind === "trays") { hooks.onTrays && hooks.onTrays(Number(t.dataset.n) || 1); }
+      else if (kind === "restore-one") { hooks.onRestore && hooks.onRestore([t.dataset.record]); }
+      else if (kind === "restore-all") { hooks.onRestore && hooks.onRestore(null); }
     };
     /* DRAG THE SELECTION (plan §2.3). Pointer down on the fan and a small badge follows the
        pointer; the pile under it lights as a target or a refusal with the contract's words;
@@ -560,7 +713,7 @@
        PageUp and PageDown turn the page, Space ticks the card and Enter chooses it. Escape is
        the table at rest. */
     const focusables = (list) => list.filter((el) => el && !el.hidden);
-    const pileRows = () => [focusables([host.querySelector(".cm-tt-fan")]), focusables([...host.querySelectorAll(".cm-tt-pile.cm-tt-group, .cm-tt-chip")]), focusables([...host.querySelectorAll(".cm-tt-pile.cm-tt-status, .cm-tt-reading")])].filter((row) => row.length);
+    const pileRows = () => [focusables([host.querySelector(".cm-tt-fan")]), focusables([...host.querySelectorAll(".cm-tt-pile.cm-tt-group, .cm-tt-chip")]), focusables([...host.querySelectorAll(".cm-tt-draw, .cm-tt-tray, .cm-tt-playchip")]), focusables([...host.querySelectorAll(".cm-tt-pile.cm-tt-status, .cm-tt-reading")])].filter((row) => row.length);
     host.onkeydown = (ev) => {
       const el = ev.target;
       if (ev.key === "Escape" && mode !== "rest") { ev.preventDefault(); hooks.onClear && hooks.onClear(); return; }
@@ -599,5 +752,5 @@
     return {width, height, piles: sN + gN + 1, readings: readings.length, mode};
   }
 
-  return {GROUPINGS, TYPE_ORDER, BENCH, GHOST, TARGET, SIZES, STAGE, SHELF, CANVASES, canvasOf, shelfShape, shelfSeats, isGhost, primaryType, bandOf, bandOrder, arcsOf, pileOrder, layout, findPile, accepts, printSheet, table, mount};
+  return {GROUPINGS, TYPE_ORDER, BENCH, GHOST, TARGET, SIZES, STAGE, SHELF, CANVASES, TRAYS_MAX, HAND, DRAW_FACES, canvasOf, shelfShape, shelfSeats, isGhost, primaryType, bandOf, bandOrder, arcsOf, pileOrder, layout, findPile, playPiles, play, accepts, printSheet, table, mount};
 });

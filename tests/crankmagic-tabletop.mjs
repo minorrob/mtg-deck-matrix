@@ -186,5 +186,55 @@ eq(T.printSheet({kind: "status", label: "Watched", rows: []}).includes("0 cards 
   eq(JSON.stringify(T.shelfSeats(7, {width: 1400})), JSON.stringify(T.shelfSeats(7, {width: 1400})), "the placement is the same twice");
   eq(T.shelfSeats(0, {width: 1400}).seats, [], "no piles, no seats");
 }
+/* ---- PR 3b: the play space in the middle (plan §2.1, §2.3, §2.9) ----
+   A draw pile and up to four trays, built the way every other pile is: same shape, same ids,
+   same `accepts` contract, same `findPile`. A card in your hand leaves the shelves, because you
+   are holding it -- that is the one rule the rest of the table has to obey. */
+{
+  const deck = state.decks.find((d) => !d.archived && d.status === "final" && d.groupId);
+  const pickable = rows.filter((r) => r.kind === "lot" && r.source === "owned").slice(0, 5);
+  ok(pickable.length >= 3, `enough owned copies to play with (${pickable.length})`);
+  const seat = new Map([[pickable[0].recordId, "hand"], [pickable[1].recordId, "hand"], [pickable[2].recordId, "tray:2"]]);
+  const withPlay = T.table(rows, {groupBy: "type", statuses: M.STATUS, statusOrder: M.statusOrder, value, maxGroupPiles: 16,
+    play: {deck: {id: deck.id, name: deck.name, groupId: deck.groupId}, trays: 4, at: 0, seatOf: (r) => seat.get(r.recordId) || ""}});
+  const P = withPlay.play;
+  ok(P, "the table carries a play space when the caller describes one");
+  eq(P.draw.rows.length, 2, "two cards in hand");
+  eq(P.trayPiles.length, 4, "four trays stand");
+  eq(P.trayPiles[1].rows.length, 1, "and the third card is in tray 2");
+  eq(P.trayPiles.map((t) => t.id), ["play:tray:1", "play:tray:2", "play:tray:3", "play:tray:4"], "each tray has its own id");
+  /* A card in your hand is nowhere else on the table. */
+  const elsewhere = [withPlay.bench, ...withPlay.statusPiles, ...withPlay.groupPiles].flatMap((p) => p.rows.map((r) => r.recordId));
+  ok([...seat.keys()].every((id) => !elsewhere.includes(id)), "a card on the play space is on no other pile");
+  eq(withPlay.total, T.table(rows, {groupBy: "type", statuses: M.STATUS, statusOrder: M.statusOrder, value, maxGroupPiles: 16}).total,
+    "and the table's total still counts every copy, wherever it is standing");
+  /* Six faces and a count, never three hundred pictures (§2.9). */
+  ok(P.draw.faces.length <= T.DRAW_FACES, `the draw pile draws at most ${T.DRAW_FACES} faces`);
+  const many = new Map(rows.filter((r) => r.kind === "lot").slice(0, 60).map((r) => [r.recordId, "hand"]));
+  const big = T.table(rows, {groupBy: "type", statuses: M.STATUS, statusOrder: M.statusOrder, value, play: {deck: {id: deck.id, name: deck.name, groupId: deck.groupId}, trays: 1, at: 3, seatOf: (r) => many.get(r.recordId) || ""}});
+  eq(big.play.draw.faces.length, T.DRAW_FACES, "sixty in hand still draws six");
+  eq(big.play.draw.rows.length, 60, "though the pile knows it holds sixty");
+  eq(big.play.at, 3, "the arrows' index is where the caller left it");
+  eq(big.play.draw.faces[0].recordId, big.play.draw.rows[3].recordId, "and the face on top is the card the index names");
+  eq(big.play.trayPiles.length, 1, "one tray when one is asked for");
+  /* findPile reaches them, so a click lays one out like any other pile. */
+  eq(T.findPile(withPlay, "play:draw").label, T.HAND, "findPile reaches the draw pile");
+  eq(T.findPile(withPlay, "play:tray:2").label, "Tray 2", "and each tray");
+  eq(T.playPiles(withPlay).length, 5, "the play space owns five piles when four trays stand");
+  eq(T.playPiles(T.table(rows, {groupBy: "type", statuses: M.STATUS, statusOrder: M.statusOrder, value})), [], "and none when no play space was asked for");
+  /* The drop contract. The middle takes any copy; a tray takes an owned one and says what it costs. */
+  const owned = rows.filter((r) => r.kind === "lot" && r.source === "owned").slice(0, 2);
+  const ordered = rows.filter((r) => r.kind === "lot" && r.source === "ordered").slice(0, 1);
+  const plan = rows.filter((r) => r.kind === "need").slice(0, 1);
+  eq(T.accepts(P.draw, owned).action, "hold", "the middle takes an owned copy");
+  ok(T.accepts(P.draw, ordered).ok, "and an ordered one — picking a card up claims nothing about it");
+  ok(!T.accepts(P.draw, plan).ok, "but not a seat on a list, which is not a copy");
+  eq(T.accepts(P.trayPiles[0], owned).action, "tray", "a tray takes an owned copy");
+  ok(/list/.test(T.accepts(P.trayPiles[0], owned).label + T.accepts(P.trayPiles[0], owned).why), "and says it builds the list before anything is staged");
+  ok(!T.accepts(P.trayPiles[0], ordered).ok, "an ordered copy is not one you hold, so no tray takes it");
+  /* Pure: the same rows twice are the same play space, and none of it touched the library. */
+  eq(P.count, 3, "three cards on the play space");
+  eq(T.table(rows, {groupBy: "type", statuses: M.STATUS, statusOrder: M.statusOrder, value, play: {deck: null, trays: 4, seatOf: () => ""}}).play.deck, null, "no deck picked, no deck on the play space");
+}
 M.setRecordSource(null);
 console.log(`crankmagic-tabletop: ${checks} checks passed — ${t.total} copies on the table, bench ${t.bench.count}, ${t.statusPiles.length} status piles, ${T.GROUPINGS.length} groupings.`);
