@@ -92,5 +92,25 @@ eq(T.table(rows, {...opts, groupBy: "type", maxGroupPiles: 16}).groupPiles.some(
 /* The arches: sizes sum to the pile count, no pile on two arches, each inner arch narrower. */
 eq(T.arcsOf(7, 12), [7]); eq(T.arcsOf(16, 12), [12, 4]); eq(T.arcsOf(30, 12), [12, 10, 8]); eq(T.arcsOf(0, 12), []); eq(T.arcsOf(5, 3), [3, 2]);
 for (const n of [1, 9, 16, 25, 40]) { const s = T.arcsOf(n, 11); eq(s.reduce((a, b) => a + b, 0), n, `${n} piles land on the arches once`); ok(s.every((x, i) => i === 0 || x <= s[i - 1]), "inner arches are no wider"); }
+/* TB2: a pile's natural order and its pages. */
+const mk = (name, mv, extra = {}) => ({recordId: "r:" + name, quantity: 1, card: {name, manaValue: mv, typeLine: "Creature"}, ...extra});
+eq(T.pileOrder({kind: "group", label: "Creature", rows: [mk("Zed", 3), mk("Abe", 3), mk("Cat", 1), mk("Nix", null)]}).map((r) => r.card.name), ["Cat", "Abe", "Zed", "Nix"], "mana value then name, no cost last");
+eq(T.pileOrder({kind: "bench", label: "Bench", rows: [mk("Zed", 1), mk("Abe", 5)]}).map((r) => r.card.name), ["Abe", "Zed"], "the Bench by name");
+eq(T.pileOrder({kind: "status", label: "Ordered", rows: [mk("Late", 1, {order: {placed: "2026-09-10"}}), mk("Early", 9, {order: {placed: "2026-08-01"}})]}).map((r) => r.card.name), ["Early", "Late"], "Ordered by order date");
+const hundred = {kind: "status", label: "Physical deck", rows: Array.from({length: 100}, (_, i) => mk("Card " + String(i).padStart(3, "0"), i % 8))};
+let l = T.layout(hundred, {width: 960, size: "M", page: 0, rowsFit: 3});
+eq([l.cols, l.perPage, l.pages, l.from, l.to, l.cards.length, l.label], [8, 24, 5, 0, 24, 24, "1\u201324 of 100"], "eight across at M on 960, three rows to a page");
+l = T.layout(hundred, {width: 960, size: "M", page: 99, rowsFit: 3});
+eq([l.page, l.from, l.to, l.cards.length, l.label, l.lines], [4, 96, 100, 4, "97\u2013100 of 100", 1], "a page past the end clamps to the last");
+eq(T.layout(hundred, {width: 390, size: "M", rowsFit: 4}).cols, 3, "three across on a phone at M");
+eq(T.layout(hundred, {width: 1400, size: "L", rowsFit: 2}).cols, 8, "eight across at L on 1400");
+eq(T.layout(hundred, {width: 1400, size: "S", rowsFit: 2}).cols, 18, "eighteen across at S on 1400");
+eq(T.layout({kind: "status", label: "Watched", rows: []}, {width: 960}).label, "Nothing on this pile");
+eq(T.layout({kind: "status", label: "Physical deck", count: 12, rows: [mk("A", 1, {quantity: 10}), mk("B", 2, {quantity: 2})]}, {width: 960}).label, "1–2 of 2 · 12 copies", "the strip counts rows, and copies when they differ");
+ok(T.layout(hundred, {width: 960, size: "M", rowsFit: 3}).cards.every((c, i, a) => i === 0 || a[i - 1].index + 1 === c.index), "cards carry their index in the pile");
+eq(T.layout(hundred, {width: 960, size: "M", rowsFit: 3}).cards[9].x, 16 + 1 * (96 + 12), "the tenth card starts the second column of the second row");
+eq(T.layout(hundred, {width: 960, size: "M", rowsFit: 3}).cards[9].y, 134 + 12);
+eq(T.layout(hundred, {width: 960, size: "nonsense"}).size, "M", "an unknown size is M");
+eq(T.findPile(t, "bench").label, "Bench"); eq(T.findPile(t, t.statusPiles[0].id).label, t.statusPiles[0].label); eq(T.findPile(t, "nope"), null);
 M.setRecordSource(null);
 console.log(`crankmagic-tabletop: ${checks} checks passed — ${t.total} copies on the table, bench ${t.bench.count}, ${t.statusPiles.length} status piles, ${T.GROUPINGS.length} groupings.`);

@@ -108,8 +108,14 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   (card type, colour, deck, collection group, mechanic, role, Primary Purpose, mana value, price
   band; the choice is remembered). Every pile is a stack whose height is its count, with its
   label and count on a paper placard; a slot stays where an emptied pile lived; ordered,
-  watched, to-buy, draft and suggested copies stand as dashed ghosts. A tap on a pile says what
-  it holds; laying a pile out, selecting and dragging come in the next two steps of
+  watched, to-buy, draft and suggested copies stand as dashed ghosts. Click a pile and its
+  cards lay out in rows and columns on the stage inside the arch (mana value then name; the
+  Bench by name; Ordered by order date), the other group piles standing back as a shelf of
+  placards, with a page strip (S · M · L card size, a page is what fits) and a tick in each
+  card's corner; click a card and the rest slide back into their pile while the chosen cards
+  stand large on the centre of the mat with name, status, price and deck beneath (shift-click
+  or the ticks choose several); right-click a card for the list's row menu; Escape or a click
+  on the mat puts the table back at rest. Dragging the selection to a pile is the next step of
   `docs/crankmagic-tabletop-plan.md` (`crankmagic-tabletop.js`, `tests/crankmagic-tabletop.mjs`).
 - **Discover**: navigable metadata/co-play graph, mouse-wheel zoom, keyboard neighbors,
   pan, back trail, card inspection and supplemental catalog lookup. The pane beside the
