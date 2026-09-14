@@ -251,6 +251,8 @@ function sheetEdit(btn,seed=''){
    grouping. crankmagic-tabletop.js computes the piles (pure, tested) and draws the mat;
    this view feeds it the rows, the filters and the reader's grouping choice. */
 let tabletopGroupBy=C.state.preferences.tabletopGroupBy||'type';
+/* The table's own state between draws: the open pile, its page and card size, the ticks while it is laid out, the selection on the stage and the pile it came from. */
+const ttUI={open:null,from:null,page:0,size:'M',ticked:new Set(),selection:new Set()};
 function tabletop(params){
   const TT=globalThis.CrankTabletop;
   C.main.innerHTML=cardsHead(params,'library','tabletop')
@@ -258,18 +260,30 @@ function tabletop(params){
    +`<p class="cm-status-line" id="cm-tt-status"></p><div id="cm-tt-host" class="cm-tt-host"></div>`;
   const draw=()=>{
     if(!TT){$('#cm-tt-host').innerHTML='<p class="cm-muted">The tabletop module has not loaded yet.</p>';return;}
-    const all=rows(params,false).filter(matches).map(r=>({...r,status:statusOf(r)}));
+    const all=rows(params,false).filter(matches).map(r=>({...r,status:statusOf(r)}));lastRows=all;
     const model=TT.table(all,{groupBy:tabletopGroupBy,statuses:M.STATUS,statusOrder:M.statusOrder,value,maxGroupPiles:16});
     $('#cm-tt-status').textContent=`${model.total.toLocaleString()} cop${model.total===1?'y':'ies'} on the table (${model.rows.toLocaleString()} rows) · Bench ${model.bench.count.toLocaleString()} · ${model.ghosts.toLocaleString()} ghost${model.ghosts===1?'':'s'}`+(Object.values(filter).some(v=>v!=='')||params.get('deck')?' · filtered':'');
-    TT.mount($('#cm-tt-host'),model,{onGroupBy:v=>{tabletopGroupBy=v;C.commit({type:'preferences',values:{tabletopGroupBy:v}},{renderView:false}).catch(()=>{});draw();}});
+    /* A selection that the filters no longer show is dropped; an open pile that vanished (a grouping change) closes. */
+    const ids=new Set(all.map(r=>r.recordId));for(const id of [...ttUI.selection])if(!ids.has(id))ttUI.selection.delete(id);for(const id of [...ttUI.ticked])if(!ids.has(id))ttUI.ticked.delete(id);
+    if(ttUI.open&&!TT.findPile(model,ttUI.open))ttUI.open=null;if(ttUI.from&&!TT.findPile(model,ttUI.from))ttUI.from=null;
+    const rest=()=>{ttUI.open=null;ttUI.from=null;ttUI.page=0;ttUI.ticked.clear();ttUI.selection.clear();};
+    TT.mount($('#cm-tt-host'),model,{
+      onGroupBy:v=>{tabletopGroupBy=v;if(ttUI.open&&ttUI.open.startsWith('group:'))rest();C.commit({type:'preferences',values:{tabletopGroupBy:v}},{renderView:false}).catch(()=>{});draw();},
+      onOpen:id=>{if(!id){rest();}else{ttUI.selection.clear();ttUI.ticked.clear();ttUI.from=null;if(ttUI.open!==id)ttUI.page=0;ttUI.open=id;}draw();queueMicrotask(()=>$('#cm-tt-host .cm-tt-strip button, #cm-tt-host .cm-tt-mat')?.focus?.({preventScroll:true}));},
+      onPage:n=>{ttUI.page=Math.max(0,n|0);draw();},
+      onSize:s=>{ttUI.size=s;ttUI.page=0;draw();},
+      onTick:id=>{if(ttUI.ticked.has(id))ttUI.ticked.delete(id);else ttUI.ticked.add(id);draw();},
+      onSelect:list=>{ttUI.selection=new Set(list);ttUI.from=ttUI.open;ttUI.open=null;ttUI.ticked.clear();draw();queueMicrotask(()=>$('#cm-tt-host .cm-tt-stage-actions button')?.focus?.({preventScroll:true}));},
+      onClear:()=>{rest();draw();},
+      onMenu:(record,el)=>{actions['row-actions'](el);},
+      describe:r=>({status:r.status||statusOf(r),price:r.card&&r.card.price!=null?C.money(r.card.price):'',deck:value(r,'deck')})
+    },{...ttUI,viewportHeight:innerHeight});
   };
   draw();
   const host=C.main;
   host.querySelector('#cm-tt-query')?.addEventListener('input',ev=>{filter.q=ev.target.value;draw();});
   for(const [name,key] of [['ttStatus','status'],['ttType','type'],['ttColor','color']]){host.querySelector(`[name=${name}]`)?.addEventListener('change',ev=>{filter[key]=ev.target.value;draw();});}
   host.querySelector('[name=ttDeck]')?.addEventListener('change',ev=>goCards('library',{view:'tabletop',...(ev.target.value?{deck:ev.target.value}:{})}));
-  /* A pile is a button; opening one is TB2. Until then a tap says what it holds. */
-  actions['tabletop-pile']=el=>{const id=el.dataset.pile;const all=rows(params,false).filter(matches).map(r=>({...r,status:statusOf(r)}));const model=TT.table(all,{groupBy:tabletopGroupBy,statuses:M.STATUS,statusOrder:M.statusOrder,value,maxGroupPiles:16});const p=id==='bench'?model.bench:[...model.statusPiles,...model.groupPiles].find(x=>x.id===id);if(!p)return;C.notice(`${p.label}${p.folded?` (${p.bands.join(', ')})`:''}: ${p.count.toLocaleString()} cop${p.count===1?'y':'ies'}${p.rows.length?` — ${p.rows.slice(0,6).map(r=>r.card.name).join(', ')}${p.rows.length>6?'…':''}`:''}. Laying a pile out comes next.`);};
   if(!TT)return;
   /* The mat is sized from the host's width, so a resize redraws it. */
   let last=host.clientWidth;const onResize=()=>{if(C.route().view!=='cards'||C.route().params.get('view')!=='tabletop'){removeEventListener('resize',onResize);return;}if(Math.abs(host.clientWidth-last)>40){last=host.clientWidth;draw();}};

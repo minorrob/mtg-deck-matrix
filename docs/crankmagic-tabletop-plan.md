@@ -3,8 +3,8 @@
 Definition and plan for the third view of the Cards page Rob described on 14 September 2026.
 The Cards page has a list and a sheet; this is the view where the cards are cards. Mock-ups:
 `docs/mockups/tabletop-piles.html` (the table at rest), `docs/mockups/tabletop-laid-out.html`
-(a pile opened, two cards selected, the selection on the mat mid-drag). TB1 is built (the
-table at rest, 14 September); TB2–TB4 follow.
+(a pile opened, two cards selected, the selection on the mat mid-drag). TB1 and TB2 are built
+(the table at rest; lay out, page, select — 14 September); TB3 and TB4 follow.
 
 The app is for anyone building any deck: the piles are the statuses and groupings the model
 already has, so the view needs no data of its own and works on any library.
@@ -128,6 +128,20 @@ Needs, all small and all worth settling in the data-model evaluation first:
   a pile names its top six cards; laying it out is TB2.
 - **TB2 — lay out, page, select.** Click a pile → rows and columns with pages and card
   size; select and multi-select; the recombine animation; the selection on the mat.
+  *Shipped 14 September (#190).* `pileOrder` and `layout` are pure (the test holds the pages
+  to the pile: eight across at M on 960, three across on a phone, a page past the end clamps).
+  When a pile is open the group piles stand back as a shelf of placards under the ledge
+  rather than sliding to the edges — the arch has no room to shrink into and the shelf keeps
+  every pile one click away; the status piles keep the front because TB3 drops onto them.
+  A tick in the corner or shift-click extends the selection while the pile stays laid out;
+  a plain click chooses (with whatever is ticked) and the rest recombine — transforms only,
+  sixty in motion, the rest fading, skipped under reduced motion — before the selection
+  stands on the stage at L size with name, status, price and deck beneath. *Back to ‹pile›*
+  reopens the layout; Escape or a click on the mat is the table at rest. Right-click opens
+  the list's row menu; long-press on a phone waits for TB3 with *Move to…*, and the phone's
+  page strip sits above the grid (and again below when there is more than one page) rather
+  than pinned, which TB4 can revisit. The recombine's home is the open pile's own element
+  (its slot, its shelf placard, or the ledge).
 - **TB3 — drag to a pile.** The drop-target contract on every pile, previews through the
   existing receipt, ghosts becoming orders or copies, the phone's Move to… menu. Journeys:
   move a card Bench → Physical deck and back through the tabletop and read the same counts
