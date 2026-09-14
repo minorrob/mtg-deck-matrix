@@ -115,6 +115,10 @@ const CHECKABLE = [
   ["tools/build-card-records.mjs", ["--check"]],
   ["tools/data-manifest.mjs", ["--check"]],
   ["tools/commander-strategies.mjs", ["--check"]],
+  /* The refresh runner's --check runs every check above in turn (an hour with the fetching
+     ones); here its --plan proves the runner loads and its plan resolves every tool it names.
+     tests/refresh.mjs holds the plan to the registry. */
+  ["tools/refresh.mjs", ["--plan"]],
   /* The workbook importer reads the newest data/source/*Master*.xlsx through openpyxl. Where
      Python has no openpyxl the check is skipped and says so, the way the geometry suite skips
      without a browser; the Tests and Load Live workflows install it and run the check for real. */
