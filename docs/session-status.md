@@ -46,6 +46,7 @@ Trey's Deck Matrix. Anything either session needs the other to know goes in this
 | #168 | The loop vocabulary — untap, copy, blink, counter removal, extra turn, cost reduction, tap-ability — read from rules text, the whole graph re-derived, Thornbite Staff rings untap | A |
 | #170 | Phase C: loop joins (engine → tap ability, supply → demand), the cycle finder `crankmagic-loops.js`, Loops only on the depth gauge, Loops this card is in | A |
 | #171 | Option B PR 3: the deck page as five tabs (Overview · Cards · Guide · Upgrades · History) on `?tab=`, the Next line, the phone action bar; deck-page budget re-based | A |
+| #172 | Three plans, nothing built: the Trace on the graph (`docs/crankmagic-strategy-trace-plan.md` + mock-up), the Tabletop view of Cards (`docs/crankmagic-tabletop-plan.md` + two mock-ups), and the data-model evaluation that comes first (`docs/crankmagic-data-model-evaluation-plan.md`) | A |
 
 Also on 13 September: stale PRs #80, #2 and #54 closed (superseded); the 25 branches behind
 closed and merged PRs were verified safe to delete but the session's credential cannot delete
@@ -59,7 +60,7 @@ notes; it was kept.
 - `docs/crankmagic-discover-loop-plan.md` — Phases A and B shipped (#167, #168). Phase C is
   next: the three directed edges the new vocabulary allows, a cycle finder (acceptance: the
   Krenko + Thornbite Staff + Bombardment loop, Niv-Mizzet + Curiosity), and a loop-mode depth
-  gauge. Phase C shipped (#170); loop mode is on by default with a deck pick, as proposed. **Phase D is held** on Rob's instruction of 14 September until the plan and mock-up for the animated strategy trace on the graph (a blank canvas, the commander in the middle, light-beam joins stepping out ring by ring along the deck's strategies, loop-backs counted in the pane) are delivered and reviewed; that plan also has to name the graph, data-model, edge and node property changes the feature needs.
+  gauge. Phase C shipped (#170); loop mode is on by default with a deck pick, as proposed. **Phase D is held** on Rob's instruction of 14 September. The order of work he set: the data-model evaluation first (`docs/crankmagic-data-model-evaluation-plan.md`, E0–E5), then the two major enhancements as their own phases — the Trace (`docs/crankmagic-strategy-trace-plan.md`, T0–T4, mock-up in `docs/mockups/strategy-trace.html`) and the Tabletop (`docs/crankmagic-tabletop-plan.md`, TB0–TB4, mock-ups in `docs/mockups/`) — then Phase D. All three plans shipped in #172 and await Rob's review; the small Discover pop-up change (a larger pop-up to the right with the card image, core metadata and connection tags, the rest to Inspect card) is queued as its own PR.
 - `docs/crankmagic-persistent-plan.md` — accounts, per-user sync, crankmagic.com on Vercel +
   Supabase. Not started; nine decisions listed in the document.
 - `docs/ux-plan-2026-09-11.md` — executed by session B. Its §7 data items are still Rob's:
