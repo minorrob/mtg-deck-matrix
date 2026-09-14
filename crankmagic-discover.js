@@ -362,17 +362,19 @@
            full term list -- a dozen chips that made the pop-up a wall -- now lives under
            Inspect card, where the rules text it comes from is. */
         const rec = C.catalog.exact(hit.card.name) || {}, image = rec.image || hit.card.image || '', p = purposeOf(hit.card);
-        const facts = [rec.manaCost ? C.mana(rec.manaCost) : '', rec.rarity ? e(rec.rarity) : '', rec.setName || rec.set || hit.card.set ? e(rec.setName || rec.set || hit.card.set) : '', Number.isFinite(rec.price) ? e(C.money(rec.price)) : Number.isFinite(hit.card.price) ? e(C.money(hit.card.price)) : ''].filter(Boolean);
+        const facts = [rec.rarity ? e(rec.rarity) : '', rec.setName || rec.set || hit.card.set ? e(rec.setName || rec.set || hit.card.set) : '', Number.isFinite(rec.price) ? e(C.money(rec.price)) : Number.isFinite(hit.card.price) ? e(C.money(hit.card.price)) : ''].filter(Boolean);
         const initials = String(hit.card.name).split(/[\s,]+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join('');
         pop.classList.add('cm-pop-card');
+        /* The picture at the inspector's size, the three buttons stacked on its left, the mana
+           pips on the type line, and a narrower column for the rest (Rob, 14 September). */
         pop.innerHTML = `<header><strong>${e(hit.card.name)}</strong><button type="button" class="cm-pop-close" data-action="graph-pop-close" aria-label="Close">×</button></header>
-          <div class="cm-pop-body"><div class="cm-pop-art">${image ? `<img src="${e(image)}" alt="" loading="lazy">` : `<div class="cm-pop-noart" aria-hidden="true">${e(initials)}</div>`}</div><div class="cm-pop-meta">
-          <p class="cm-muted">${e(rec.typeLine || hit.card.type || '')}${hit.pinned ? ' · where you came from' : ''}</p>
+          <div class="cm-pop-body"><div class="cm-pop-side">${b('Focus here', 'graph-card', {id: hit.card.id}, true, {cls: 'compact'})}${b('Inspect card', 'card', {card: CrankCatalog.key(hit.card.name)}, false, {cls: 'compact'})}<button type="button" class="v-button compact${picked.has(hit.card.id) ? ' is-on' : ''}" data-action="graph-tick" data-id="${e(hit.card.id)}">${picked.has(hit.card.id) ? 'Ticked ✓' : 'Tick for a group'}</button></div>
+          <div class="cm-pop-art">${image ? `<img src="${e(image)}" alt="" loading="lazy">` : `<div class="cm-pop-noart" aria-hidden="true">${e(initials)}</div>`}</div><div class="cm-pop-meta">
+          <p class="cm-pop-type">${rec.manaCost ? C.mana(rec.manaCost) : ''}<span class="cm-muted">${e(rec.typeLine || hit.card.type || '')}${hit.pinned ? ' · where you came from' : ''}</span></p>
           ${facts.length ? `<p class="cm-pop-facts">${facts.join(' · ')}</p>` : ''}
           ${p ? `<div class="cm-term-chips">${termChip(p.key, p.value, p)}</div>` : ''}
           ${focus && focus.id !== hit.card.id ? `<h4>Joined to ${e(focus.name)} by</h4>${relationHTML(hit.relation, hit.card, focus)}` : '<p class="cm-muted">This is the focus. Tap another card to read how it joins.</p>'}
-          </div></div>
-          <div class="cm-actions">${b('Focus here', 'graph-card', {id: hit.card.id}, true)}${b('Inspect card', 'card', {card: CrankCatalog.key(hit.card.name)})}<button type="button" class="v-button${picked.has(hit.card.id) ? ' is-on' : ''}" data-action="graph-tick" data-id="${e(hit.card.id)}">${picked.has(hit.card.id) ? 'Ticked ✓' : 'Tick for a group'}</button></div>`;
+          </div></div>`;
         graph?.setHighlight(focus ? [focus.id, hit.card.id] : null);
       } else {
         pop.classList.remove('cm-pop-card');

@@ -1554,3 +1554,13 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-tt-info .cm-price-block,.cm-tt-info .cm-inspector-price{margin:6px 0}.cm-tt-info .cm-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .cm-tt-stage-actions.is-solo{position:absolute;left:0;right:0;bottom:8px;margin:0 16px}
 @media(max-width:760px){.cm-tt-readings{font-size:10px}.cm-tt-info{font-size:12px}}
+
+/* THE NODE POP-UP, again (Rob, 14 September): the picture at the inspector's 230px, the three buttons stacked
+   down its left, the mana pips on the type line, the rest in a narrower column. */
+.cm-graph-pop.cm-pop-card{width:min(620px,calc(100% - 16px))}
+.cm-pop-body{grid-template-columns:106px 230px minmax(0,1fr);gap:12px}
+.cm-pop-side{display:flex;flex-direction:column;gap:6px;min-width:0}
+#matrix-v2 .cm-pop-side .v-button{width:100%;min-height:30px;padding:4px 6px;font-size:12px;line-height:1.2;white-space:normal;text-align:center;margin:0}
+.cm-pop-type{margin:0 0 6px;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;font-size:13px}.cm-pop-type .cm-mana img{width:17px;height:17px}
+.cm-pop-meta{font-size:12px}.cm-pop-meta h4{font-size:11px}
+@media(max-width:760px){.cm-pop-body{grid-template-columns:1fr;gap:10px}.cm-pop-art{width:min(230px,100%);margin:0 auto}.cm-pop-side{flex-direction:row;flex-wrap:wrap;order:3}#matrix-v2 .cm-pop-side .v-button{width:auto;flex:1 1 auto}}
