@@ -49,6 +49,7 @@ Trey's Deck Matrix. Anything either session needs the other to know goes in this
 | #172 | Three plans, nothing built: the Trace on the graph (`docs/crankmagic-strategy-trace-plan.md` + mock-up), the Tabletop view of Cards (`docs/crankmagic-tabletop-plan.md` + two mock-ups), and the data-model evaluation that comes first (`docs/crankmagic-data-model-evaluation-plan.md`) | A |
 | #173 | Discover: the card pop-up is the picture, four facts, the Primary Purpose and the join, opened beside its node; the term list moves to Inspect card as "Terms the graph reads" | A |
 | #174 | E0 of the data-model evaluation: the generated data inventory (`tools/data-inventory.mjs` → `docs/data-inventory.md`, checked by the generators suite) and the report with the ranked recommendations (`docs/data-model-evaluation-2026-09.md`) | A |
+| #175 | Critical 6: the journeys answer Scryfall from the shipped catalog (the walks' stub); 180 checks in about two minutes instead of ten, and no third-party rate limit in the gate | A |
 
 Also on 13 September: stale PRs #80, #2 and #54 closed (superseded); the 25 branches behind
 closed and merged PRs were verified safe to delete but the session's credential cannot delete
@@ -71,7 +72,7 @@ notes; it was kept.
 
 **Gates now:** `GEOMETRY_REQUIRED=1 PAGE_BUDGET_REQUIRED=1 bash runtests.sh -q` runs **56
 suites** (the README states the count and `tests/data-integrity.mjs` checks it);
-`tests/uat/crankmagic-journeys.mjs` is at **180 checks**; the geometry and page-budget suites
+`tests/uat/crankmagic-journeys.mjs` is at **180 checks** (Scryfall stubbed since #175; the offline step is the one live-network step); the geometry and page-budget suites
 run in the browser and fail on a clipped wordmark. Walks in the sandbox show **no card art**:
 `tests/uat/scryfall-stub.mjs` answers every image with a one-pixel PNG, so panes and nodes
 fall back to their placeholder colours. That is the harness, not the app.
