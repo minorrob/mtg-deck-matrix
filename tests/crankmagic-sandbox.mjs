@@ -191,6 +191,72 @@ const moveFor = (r, extra) => Object.assign({
   ok(sb.LIMIT < 100, "the limit leaves room under the model's hundred-command batch");
 }
 
+/* ---- PR 3b: the middle of the table, and the trays ----
+   The play space's two destinations. `hold` is a card in your hand: it lets go of whatever held
+   the copy and files it in the deck's group, which is what makes it Watched FOR that deck --
+   the definition PR 3a shipped. `tray` is Reserved, and it builds the deck's list to do it. */
+{
+  const deck = live.decks.find((d) => !d.archived && d.status === "final" && d.groupId);
+  ok(deck, `a finalized deck with a group to calibrate (${deck && deck.name})`);
+  const inThisBox = rows.find((r) => r.kind === "lot" && r.source === "owned" && r.allocation && r.allocation.deckId === deck.id);
+  ok(inThisBox, "and a reserved copy of its own to pick up");
+
+  /* Picking a reserved copy up: the reservation goes, the box goes, the deck's group stays. */
+  const sb = make();
+  sb.stage(moveFor(inThisBox, {action: "hold", arg: deck.groupId, deckId: deck.id, deckName: deck.name, to: "In hand", toStatus: "Watched"}));
+  const held = sb.build(live);
+  eq(held.refusals, [], "picking up a reserved copy is never refused");
+  eq(JSON.stringify(live), frozen, "and it did not touch the library");
+  ok(held.commands.some((c) => c.op === "release"), "the reservation is let go of");
+  ok(held.commands.some((c) => c.type === "groupLots" && c.groupId === deck.groupId), "and the copy is filed in the deck's group");
+  const lifted = M.projection(sb.preview(live)).find((r) => r.id === inThisBox.id);
+  ok(lifted && !lifted.allocation, "in the preview the copy is reserved for nothing");
+  eq(M.statusOf(lifted), "Watched", "and it reads as Watched — considered for this deck, held by it no longer");
+
+  /* A tray is Reserved, and it puts the card on the list to make the seat. */
+  const offList = rows.find((r) => r.kind === "lot" && r.source === "owned" && !r.allocation && r.placement === "Bench"
+    && !deck.slots.some((x) => x.cardId === r.cardId)
+    && !(live.cards[r.cardId].colorIdentity || []).some((c) => !new Set(deck.commanders.flatMap((id) => live.cards[id].colorIdentity || [])).has(c)));
+  ok(offList, `a bench copy in colour that ${deck.name}'s list does not name (${offList && name(offList.cardId)})`);
+  const tray = make();
+  tray.stage(moveFor(offList, {action: "tray", tray: 2, deckId: deck.id, deckName: deck.name, to: "Tray 2", toStatus: "Reserved"}));
+  const built = tray.build(live);
+  eq(built.refusals, [], "a tray card the list does not name is not refused — the tray builds the list");
+  eq(built.commands.map((c) => c.type), ["target"], "with one command: the deck's list now names it");
+  const was = M.readiness(live, deck), now = M.readiness(tray.preview(live), M.deck(tray.preview(live), deck.id));
+  eq(now.target, was.target + offList.quantity, `the list grows by the copy (${was.target} → ${now.target})`);
+  const seated = M.projection(tray.preview(live)).find((r) => r.id === offList.id);
+  eq(M.statusOf(seated), "Reserved", "and the copy is reserved for the seat the tray just made");
+  eq(JSON.stringify(live), frozen, "the library is still untouched");
+
+  /* Where the list already calls for the card and still lacks it, the tray reserves and leaves
+     the list alone: the same drop, the smaller change. */
+  const wanted = rows.find((r) => r.kind === "lot" && r.source === "owned" && !r.allocation && r.placement === "Bench"
+    && deck.slots.some((x) => x.committed && x.cardId === r.cardId && M.shortfall(live, deck, x) >= r.quantity));
+  if (wanted) {
+    const t2 = make();
+    t2.stage(moveFor(wanted, {action: "tray", tray: 1, deckId: deck.id, deckName: deck.name, to: "Tray 1", toStatus: "Reserved"}));
+    eq(t2.build(live).commands.map((c) => c.type), ["allocate"], "an open seat is filled without touching the list");
+  } else ok(true, "no open seat on the bench to fill without a list change today");
+
+  /* The guards. A watched card is not a copy you can pick up or reserve; a plan row is a line. */
+  const watching = rows.find((r) => r.kind === "lot" && r.source === "watching");
+  if (watching) {
+    const w = make();
+    w.stage(moveFor(watching, {action: "hold", arg: deck.groupId, deckId: deck.id, deckName: deck.name, to: "In hand"}));
+    ok(w.build(live).refusals.length === 1, "a watched card cannot be picked up — it is not a copy");
+  } else ok(true, "no watched card in the live library today");
+  const need = make();
+  need.stage(moveFor(needs[0], {action: "tray", tray: 1, deckId: deck.id, deckName: deck.name, to: "Tray 1"}));
+  eq(need.build(need.preview(live)).refusals.length, 1, "a To buy seat is not a copy a tray can hold");
+
+  /* The tray number travels with the move, because the middle has four of them. */
+  eq(tray.moves[0].tray, 2, "a staged tray move remembers which tray");
+  eq(make().stage({rowId: "r", action: "hold", lotId: "l"}).tray, 0, "and a card in hand is in no tray");
+  ok(/tray 2/i.test(S.describe(tray.moves[0])), "the sentence says which tray");
+  ok(/in hand/i.test(S.describe(sb.moves[0])), "and a card in the middle says it is in hand");
+}
+
 /* ---- the sentence every surface uses for a move ---- */
 {
   const said = S.describe({cardName: "Sol Ring", action: "reserve", deckName: "Goblins", to: "Reserved"});

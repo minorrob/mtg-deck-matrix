@@ -42,7 +42,13 @@
   const VERSION = 1;
   const KEY = "cm-sandbox";
   const LIMIT = 90;   /* the model's batch takes 100; leave room for a move that needs two commands */
-  const ACTIONS = new Set(["source", "bench", "release", "place", "standin", "reserve", "group"]);
+  /* `hold` and `tray` are the play space's two (plan §2.1, §2.3): the middle of the table, and one
+     of the four trays beside it. They are separate verbs from `release` and `reserve` rather than
+     the same ones with a flag, because they mean different things. Dropping a card in the middle
+     takes it out of whatever held it AND files it in the deck's group, which is what makes it
+     Watched for that deck; dropping one in a tray BUILDS THE DECK'S LIST as well as reserving the
+     copy, which plain Reserved must never do. */
+  const ACTIONS = new Set(["source", "bench", "release", "place", "standin", "reserve", "group", "hold", "tray"]);
 
   /* The one place a move's destination is spelled, so the pile, the badge and the receipt
      cannot disagree about what a drop meant. */
@@ -152,6 +158,7 @@
           quantity: Number(mv.quantity) || 1, kind: mv.kind || "lot", lotId: mv.lotId || "",
           deckId: mv.deckId || "", deckName: mv.deckName || "", slotId: mv.slotId || "",
           action: mv.action, arg: mv.arg || "", box: mv.box || "", asStandIn: !!mv.asStandIn,
+          tray: Math.max(0, Math.min(4, Number(mv.tray) || 0)),
           from: mv.from || "", to: mv.to || "", toStatus: mv.toStatus === undefined ? mv.to || "" : mv.toStatus,
           label: mv.label || "", at,
         };
@@ -271,6 +278,48 @@
         if (!group) throw Error(`The group ${mv.to || "you chose"} is gone.`);
         return [{ type: "groupLots", groupId: group.id, lotIds: [lotOf(model, state, mv)] }];
       }
+      /* THE MIDDLE OF THE TABLE (plan §2.1). "All statuses except owned are cleared" is not a
+         field you can set -- status is derived from the copy's source, its reservation and where
+         it physically sits. Read as the physical truth it describes, picking a card up means:
+         let go of whatever claimed it, take it out of the box it was in, and keep it in view for
+         the deck being calibrated. That last part is what the group does -- an owned, unreserved,
+         unboxed copy filed in a deck's group IS Watched for that deck (§2.2, shipped in 3a) --
+         so the card in your hand reads as considered rather than as nothing at all.
+
+         An ordered copy keeps saying Ordered and a reserved one keeps saying Reserved until the
+         release lands: the middle never claims a card arrived that has not (§2.1's second row),
+         because filing changes no source. */
+      case "hold": {
+        const lot = model.lot(state, lotOf(model, state, mv));
+        if (lot.source === "watching") throw Error(`${mv.cardName} is a card you are considering, not a copy you can pick up.`);
+        const out = [];
+        if (lot.allocation) out.push({ type: "bulk", op: "release", lotIds: [lot.id] });
+        if (lot.location && lot.location.kind === "deck") out.push({ type: "bulk", op: "bench", lotIds: [lot.id] });
+        if (!mv.arg) {
+          if (!out.length) throw Error(`${mv.cardName} is already free — there is nothing to let go of.`);
+          return out;
+        }
+        const group = (state.groups || []).find((g) => g.id === mv.arg);
+        if (!group) throw Error(`The group ${mv.to || "this deck keeps"} is gone.`);
+        out.push({ type: "groupLots", groupId: group.id, lotIds: [lot.id] });
+        return out;
+      }
+      /* A TRAY BUILDS THE LIST (plan §2.3). Reserving needs a seat, and while a hundred is being
+         assembled most tray cards are ones the list does not name yet -- so a tray does two
+         things where plain Reserved does one: put the card on the deck's main list, then hold
+         your copy for that seat. The second half comes free: `target` on a finalized deck runs
+         the model's own `satisfy`, which reserves an eligible copy for the seat it just made.
+         Where a seat already stands open the copy goes straight into it and the list is left
+         alone -- the same drop, the smaller change. */
+      case "tray": {
+        const deck = deckOf(model, state, mv);
+        const lot = model.lot(state, lotOf(model, state, mv));
+        const seat = deck.slots.find((x) => x.committed && model.compatible(lot, x) && model.shortfall(state, deck, x) >= lot.quantity);
+        if (seat) return [{ type: "allocate", lotId: lot.id, quantity: lot.quantity, deckId: deck.id, slotId: seat.id }];
+        if (lot.source === "watching") throw Error(`${mv.cardName} is a card you are considering, not a copy that can be reserved.`);
+        const listed = deck.slots.find((x) => x.purpose === "main" && x.cardId === lot.cardId);
+        return [{ type: "target", deckId: deck.id, cardId: lot.cardId, quantity: (listed ? listed.quantity : 0) + lot.quantity, confirmed: true }];
+      }
       default: throw Error("That destination is not one a card can be moved to.");
     }
   }
@@ -298,6 +347,8 @@
       case "standin": return `${mv.cardName} → ${mv.deckName || "a physical deck"} as a substitute`;
       case "reserve": return `${mv.cardName} → reserved for ${mv.deckName || "a deck"}`;
       case "group": return `${mv.cardName} → ${mv.to || "a group"}`;
+      case "hold": return `${mv.cardName} → in hand${mv.deckName ? `, watched for ${mv.deckName}` : ""}`;
+      case "tray": return `${mv.cardName} → tray ${mv.tray || 1}: on ${mv.deckName || "the deck"}’s list and reserved`;
       default: return `${mv.cardName} → ${mv.to}`;
     }
   }

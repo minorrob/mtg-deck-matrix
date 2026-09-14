@@ -544,8 +544,40 @@ there was no such category until now. What shipped:
   pins that zero, so the day it stops being true the check says so rather than a status changing
   under Rob quietly.
 
-**3b, still to build:** the draw pile and its arrows, one click to lay out, the back arrow at
-every level, the per-card restore and Restore all, the trays, and the live scoreboard.
+**PR 3b — the play space itself — built, 14 September.** The middle of the table is live, and it
+is built out of the pieces the table already had rather than a second implementation: the draw
+pile and the four trays are *piles*, with ids, a `top` card, an `accepts()` verdict and a place in
+`findPile`, so a click lays one out, a drag drops onto one and the arrow keys walk them, all
+without a line of new machinery.
+
+- **The middle stages, it does not mutate (§2.1).** Dropping a card there stages a `hold` move on
+  the sandbox: let go of whatever reserved it, take it out of the box it was in, and file it in
+  the deck's collection group. Nothing is written until Confirm — and because the group *is* the
+  Watched definition 3a shipped, a card left in the middle at Confirm becomes **Watched for the
+  deck being calibrated**, which is exactly what §2.2 asked for and what the journey now proves.
+  An ordered copy keeps saying Ordered: filing changes no source, so the middle can never claim a
+  card arrived that has not.
+- **A tray builds the list (§2.3).** A `tray` move reserves the copy where the list already has an
+  open seat, and where it does not, it puts the card **on the deck's main list** and lets the
+  model's own `satisfy` reserve the copy for the seat it just made. The form says so before the
+  move is staged, naming the list's size before and after and flagging a hundred going over.
+- **Arrows under the pile, one click to lay out, a back arrow at every level (§2.4).** The arrows
+  step an index rather than a list — six faces and a count, never three hundred pictures (§2.9).
+  The back arrow is now the *only* way back: the "Back to <pile>" button that sat beside it in the
+  action row said the same thing twice.
+- **The scoreboard (§2.14)** is `readiness()` computed on the sandbox's preview, so it reads where
+  Confirm would leave the deck: *100 of 100 on the list · n reserved · n substitutes · n to buy ·
+  $ to finish*, with the list's ceiling in amber past a hundred.
+- **Not on a phone (§2.5):** below 760px the middle is not offered, at rest or with a card chosen.
+
+**Two bugs the play space exposed, both older than it.** Every redraw of the table attached
+another `keydown` and `resize` listener without removing the last, so twenty renders in, one
+Escape ran twenty handlers and the last one to finish redrew the table through *its* captured
+filters — the table could come back scoped to something the reader had left behind. And the
+grouping row was `left:50%` with a translate back, which centres it but leaves an absolutely
+positioned box shrinking to fit only the space from its left edge to the mat's right edge: three
+labelled selects were laying out in half the table and wrapping to two lines on a mat wide enough
+for one. Both fixed here.
 
 ### PR 4 — Shelf mode
 

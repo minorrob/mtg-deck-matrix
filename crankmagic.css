@@ -1453,7 +1453,12 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-tt-placard small{display:block;font-weight:500;font-size:10px;color:#5a4630}
 .cm-tt-pile .cm-tt-placard{position:absolute;left:50%;transform:translateX(-50%);top:116px;max-width:118px;overflow:hidden;text-overflow:ellipsis}
 .cm-tt-status .cm-tt-placard{max-width:136px}
-.cm-tt-group-pick{position:absolute;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;font-size:12px;color:#dfe7f3;z-index:2}
+/* THE PICK ROW GETS THE WHOLE MAT (found building PR 3b). It was `left:50%` with a translate
+   back, which centres it — but an absolutely positioned box shrinks to fit the space from its
+   `left` edge to the containing block's right edge, so three labelled selects were laying out in
+   HALF the mat and wrapping to two lines on a table wide enough for one. Stretched edge to edge
+   and centred by the flexbox instead, it takes one line wherever one fits. */
+.cm-tt-group-pick{position:absolute;left:16px;right:16px;display:flex;gap:8px;justify-content:center;align-items:center;font-size:12px;color:#dfe7f3;z-index:2}
 .cm-tt-group-pick select{min-height:32px;padding:4px 8px;font-size:12px}.cm-tt-group-pick label{display:flex;gap:6px;align-items:center;white-space:nowrap}.cm-tt-group-pick{gap:14px}
 .cm-tt-legend{position:absolute;right:16px;bottom:12px;font-size:11px;color:#c9d4e6;background:#0f1523d0;border:1px solid #2b3a55;padding:6px 10px;border-radius:8px;max-width:calc(100% - 32px)}
 @media(max-width:760px){.cm-tt-rail{height:112px}.cm-tt-fan{left:14px;right:14px;top:46px;bottom:auto;height:60px}.cm-tt-fan .cm-tt-card{width:44px;height:62px;margin-left:-30px}.cm-tt-fan .cm-tt-name{font-size:7px}.cm-tt-group-pick{white-space:nowrap}.cm-tt-legend{left:16px;right:16px;bottom:12px;max-width:none}}
@@ -1668,7 +1673,7 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-tt-mat.cm-canvas-parchment .cm-tt-zone{background:#5a4e3822;border-color:#00000018;box-shadow:inset 0 1px 0 #ffffff55,inset 0 -18px 26px #00000012}
 .cm-tt-mat.cm-canvas-parchment .cm-tt-band{background:linear-gradient(#5a4e3818,#5a4e3826);border-color:#00000018;border-top-color:#8a7752}
 .cm-tt-mat.cm-canvas-parchment .cm-tt-readings,.cm-tt-mat.cm-canvas-parchment .cm-tt-group-pick{color:#3b3222}
-.cm-tt-group-pick{flex-wrap:wrap;justify-content:center;max-width:calc(100% - 32px)}
+.cm-tt-group-pick{flex-wrap:wrap}
 .cm-tt-group-pick select[name=tabletopCanvas]{min-width:118px}
 .cm-tt-group-pick .v-term{color:inherit}
 
@@ -1713,3 +1718,62 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-sitting-list{margin:12px 0;padding-left:22px;display:grid;gap:5px;font-size:13px;max-height:280px;overflow:auto}
 .cm-badge-pending{background:#4b3d1c;color:#f6d99b}
 @media(max-width:760px){.cm-sitting-acts{margin-left:0}.cm-sitting>span:not(.cm-sitting-acts){flex-basis:100%}}
+
+/* ------------------------------------------------------------------ THE PLAY SPACE (PR 3b)
+   Rob, 14 September; docs/crankmagic-playspace-plan.md §2.1, §2.3, §2.4, §2.9, §2.14.
+
+   The middle of the table, between the two shelves. A draw pile of the cards in your hand, the
+   arrows that step it, four trays, and the scoreboard that says where confirming would leave the
+   deck. Everything here is the same kind of object as the piles either side of it -- a click lays
+   one out, a drag drops onto one -- so nothing needs its own vocabulary. */
+.cm-tt-play{position:absolute;z-index:1;display:flex;flex-direction:column;align-items:center;gap:0;border-radius:14px;padding:8px 12px 12px;background:radial-gradient(ellipse at 50% 0,#ffffff0a,transparent 70%),#0b101966;border:1px dashed #c6a86d3d;box-shadow:inset 0 1px 0 #ffffff0d}
+.cm-tt-play-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;justify-content:center;width:100%;min-height:22px;font-size:12px;color:var(--v-muted)}
+.cm-tt-play-head strong{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#c6a86d}
+.cm-tt-play-head b{color:var(--v-ink);font-weight:600}
+.cm-tt-play-invite{margin:10px 16px 0;max-width:52ch;text-align:center;font-size:12.5px;line-height:1.5;color:var(--v-muted)}
+.cm-tt-draw-wrap{position:relative;width:110px;height:140px;margin-top:4px}
+.cm-tt-draw{position:absolute;left:0;top:0;width:110px;height:140px;background:none;border:0;padding:0;cursor:pointer;color:inherit;font:inherit}
+.cm-tt-draw .cm-tt-slot{left:0;top:0;width:110px;height:140px;border-radius:10px}
+.cm-tt-draw-stack{position:absolute;left:7px;top:7px;width:96px;height:126px}
+.cm-tt-draw-stack .cm-tt-card{position:absolute;width:88px;height:123px}
+.cm-tt-draw.is-open .cm-tt-slot,.cm-tt-draw:focus-visible .cm-tt-slot{box-shadow:inset 0 3px 10px #000c,0 0 0 2px #c6a86d}
+.cm-tt-draw-empty{position:absolute;inset:6px;display:grid;place-items:center;text-align:center;font-size:10.5px;line-height:1.35;color:#7f8ea6}
+.cm-tt-restore{position:absolute;right:-10px;top:-8px;width:26px;height:26px;min-height:0;padding:0;border-radius:50%;display:grid;place-items:center;font-size:15px;line-height:1;background:#1b2436;border:1px solid #c6a86d66;color:#e6d5aa;cursor:pointer}
+.cm-tt-restore:hover{background:#243250}
+.cm-tt-draw-step{display:flex;align-items:center;justify-content:center;gap:8px;height:30px;font-size:12px;color:var(--v-ink)}
+.cm-tt-draw-step small{color:var(--v-muted);font-variant-numeric:tabular-nums}
+.cm-tt-draw-step button,.cm-tt-tray-count button{width:26px;height:24px;min-height:0;padding:0;border-radius:6px;background:#1b2436;border:1px solid var(--v-line);color:var(--v-ink);font-size:15px;line-height:1;cursor:pointer}
+.cm-tt-draw-step button:disabled,.cm-tt-tray-count button:disabled{opacity:.4;cursor:not-allowed}
+.cm-tt-trays{display:flex;align-items:flex-end;justify-content:center;gap:12px;height:110px;margin-top:4px}
+.cm-tt-tray{position:relative;width:78px;height:110px;background:none;border:0;padding:0;cursor:pointer;color:inherit;font:inherit;display:flex;flex-direction:column;align-items:center;gap:3px}
+.cm-tt-tray-slot{position:relative;width:78px;height:86px;border-radius:8px;border:1px dashed #5a6c8a;background:#0b101988;display:grid;place-items:center}
+.cm-tt-tray-slot .cm-tt-card{width:58px;height:81px}
+.cm-tt-tray.is-open .cm-tt-tray-slot,.cm-tt-tray:focus-visible .cm-tt-tray-slot{border-style:solid;border-color:#c6a86d;box-shadow:0 0 0 1px #c6a86d66}
+.cm-tt-tray:not(.is-empty) .cm-tt-tray-slot{border-style:solid;border-color:#7fa8d9}
+.cm-tt-tray-more{position:absolute;right:3px;bottom:3px;font-size:10px;font-weight:700;padding:1px 5px;border-radius:9px;background:#0f1726d8;border:1px solid #ffffff22;color:#cfe0f5}
+.cm-tt-tray-name{font-size:10.5px;color:var(--v-muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.cm-tt-tray-count{display:flex;align-items:center;justify-content:center;gap:8px;height:26px;margin-top:2px;font-size:11.5px;color:var(--v-muted)}
+.cm-tt-restore-all{min-height:0;padding:2px 9px;border-radius:12px;font-size:11px;background:#1b2436;border:1px solid var(--v-line);color:var(--v-ink);cursor:pointer}
+/* The scoreboard reads the sandbox, not the library: where confirming would leave the deck. */
+.cm-tt-score{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:center;gap:4px 14px;margin-top:6px;font-size:11.5px;color:var(--v-muted)}
+.cm-tt-score-fig b{font-size:14px;font-weight:700;color:var(--v-ink);font-variant-numeric:tabular-nums}
+.cm-tt-score-fig.is-good b{color:#7fd39a}
+.cm-tt-score-fig.is-amber b{color:#e2b85a}
+.cm-tt-score-fig.is-muted b{color:var(--v-muted)}
+/* With a pile laid out the stage takes the middle, so the play space becomes a row of chips
+   above the destinations — the drag can always reach the hand and the trays. */
+.cm-tt-playbar{position:absolute;left:16px;right:16px;z-index:1;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:4px 10px;border-radius:12px;background:#0b101966;border:1px dashed #c6a86d3d}
+.cm-tt-playbar-say{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#c6a86d}
+.cm-tt-playchip{min-height:0;padding:3px 10px;border-radius:12px;font-size:11.5px;background:#1b2436;border:1px solid var(--v-line);color:var(--v-ink);cursor:pointer;white-space:nowrap}
+.cm-tt-playchip.is-empty{color:var(--v-muted);border-style:dashed}
+.cm-tt-playchip.is-open{border-color:#c6a86d;background:#2a2213}
+.cm-tt-playbar .cm-tt-score{margin:0 0 0 auto}
+/* A BACK ARROW AT EVERY LEVEL (§2.4): the same corner on a laid-out pile and on a selection. */
+.cm-tt-back.is-strip,.cm-tt-back.is-corner{width:28px;height:26px;min-height:0;padding:0;display:grid;place-items:center;font-size:15px;line-height:1;border-radius:7px;background:#1b2436;border:1px solid var(--v-line);color:var(--v-ink);cursor:pointer}
+.cm-tt-back.is-corner{position:absolute;right:12px;top:10px;z-index:2}
+/* The middle keeps at least SHELF.minMiddle whatever the shelves take, so the play space is
+   never squeezed; below 760px it is not offered at all (plan §2.5) and nothing here applies. */
+@media(max-width:1180px){.cm-tt-trays{gap:8px}.cm-tt-tray,.cm-tt-tray-slot{width:70px}}
+@media(prefers-reduced-motion:no-preference){
+  .cm-tt-restore,.cm-tt-playchip,.cm-tt-tray-slot{transition:background .12s ease,border-color .12s ease,box-shadow .12s ease}
+}

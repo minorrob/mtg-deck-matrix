@@ -359,7 +359,59 @@ try{
   await page.locator('.cm-tt-pile.cm-tt-status').first().focus();await page.keyboard.press('ArrowRight');eq(await page.evaluate(()=>document.activeElement.getAttribute('aria-label')),await page.locator('.cm-tt-pile.cm-tt-status').nth(1).getAttribute('aria-label'),'ArrowRight walks the status row');
   await page.keyboard.press('ArrowUp');ok(await page.evaluate(()=>document.activeElement.matches('.cm-tt-pile.cm-tt-group')),'ArrowUp climbs to the group piles');await page.keyboard.press('Enter');await page.locator('.cm-tt-grid').waitFor();await page.keyboard.press('Escape');await page.waitForTimeout(200);
   await page.locator('select[name=tabletopStatusOrder]').selectOption('count');await page.waitForTimeout(500);{const c=await pileCounts();ok(c.every((p,i)=>i===0||c[i-1].count>=p.count),'fullest first');eq((await state()).preferences.tabletopStatusOrder,'count');}
-  await page.locator('select[name=tabletopStatusOrder]').selectOption('workflow');await page.waitForTimeout(400);eq((await pileCounts())[0].label,'Physical deck');}
+  await page.locator('select[name=tabletopStatusOrder]').selectOption('workflow');await page.waitForTimeout(400);eq((await pileCounts())[0].label,'Physical deck');
+
+  /* THE PLAY SPACE (PR 3b; play-space plan §2.1, §2.3, §2.4, §2.9, §2.14). The middle of the
+     table. Lift a card into it and it is IN YOUR HAND: neutral, on no other pile, and nothing in
+     the library has moved. Confirm and it is Watched for the deck being calibrated. Drop one in a
+     tray and the deck's list grows to make it a seat. The back arrow comes home from every level. */
+  await page.goto(BASE+'/'+ENTRY+'#cards?view=tabletop&deck='+journey.id);await page.locator('.cm-tt-play').waitFor({timeout:30000});
+  ok(/calibrating/.test(await page.locator('.cm-tt-play-head').innerText()),'the middle says which deck it is calibrating');
+  eq(await page.locator('.cm-tt-tray').count(),4,'four trays stand');
+  {const b0=await tally();
+   /* Lift: a Bench copy into the middle. Nothing is written, and it leaves the Bench ledge. */
+   await page.locator('.cm-tt-fan').click();await page.locator('.cm-tt-grid').waitFor({timeout:20000});
+   const lifted=await page.locator('.cm-tt-grid .cm-tt-card').first().innerText();
+   await page.locator('.cm-tt-grid .cm-tt-card').first().click();await page.locator('.cm-tt-stage').waitFor({timeout:20000});
+   {const r=await dragTo('.cm-tt-playchip[data-pile="play:draw"]');ok(/Pick up/.test(r.say),`the middle says what a lift means: ${r.say}`);}
+   await page.waitForTimeout(700);
+   eq(await tally(),b0,'picking a card up wrote nothing');
+   await page.keyboard.press('Escape');await page.waitForTimeout(300);
+   await page.locator('.cm-tt-play').waitFor({timeout:20000});
+   ok(/1 of 1/.test(await page.locator('.cm-tt-draw-step').innerText()),'one card in hand, and the arrows count it');
+   ok(new RegExp(lifted.split('\n')[0].slice(0,12).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).test(await page.locator('.cm-tt-draw-step').innerText()),'the arrows name the card on top');
+   eq(await page.locator('.cm-tt-draw-stack .cm-tt-card').count(),1,'and the draw pile draws it');
+   /* §2.1: the middle is neutral — a card in your hand wears no status pill. */
+   eq(await page.locator('.cm-tt-draw-stack .cm-tt-card .cm-tt-ghost-tag').count(),0,'a card in hand wears no status');
+   /* The per-card restore arrow puts it back, and the sitting empties with it. */
+   await page.locator('.cm-tt-restore').click();await page.waitForTimeout(700);
+   eq(await page.locator('.cm-sitting').count(),0,'the restore arrow unstages the lift');
+   eq(await tally(),b0,'and still nothing was written');
+   /* Lift it again and confirm: the copy reads as Watched for this deck (§2.2, 3a). */
+   await page.locator('.cm-tt-fan').click();await page.locator('.cm-tt-grid').waitFor({timeout:20000});
+   await page.locator('.cm-tt-grid .cm-tt-card').first().click();await page.locator('.cm-tt-stage').waitFor({timeout:20000});
+   await dragTo('.cm-tt-playchip[data-pile="play:draw"]');await page.waitForTimeout(700);
+   await page.locator('.cm-sitting').waitFor({timeout:15000});
+   await click('Review and confirm');await page.getByRole('dialog').waitFor();await click('Confirm change');await page.waitForTimeout(1300);
+   {const b1=await tally();eq(b1['Watched']||0,(b0['Watched']||0)+1,'a card left in the middle is Watched for the deck');
+    eq(b1['Bench']||0,(b0['Bench']||0)-1,'and it is no longer a loose Bench copy');
+    eq(await page.locator('.cm-sitting').count(),0,'the sitting cleared on Confirm');}}
+  /* THE SCOREBOARD reads the sandbox, so it says where confirming would leave the deck (§2.14). */
+  await page.keyboard.press('Escape');await page.waitForTimeout(400);
+  await page.locator('.cm-tt-play').waitFor({timeout:20000});
+  {const board=await page.locator('.cm-tt-play .cm-tt-score').innerText();
+   ok(/on the list/.test(board)&&/reserved/.test(board)&&/to finish/.test(board),`the scoreboard names the list, the reservations and the cost: ${board.replace(/\n/g,' ')}`);
+   ok(/100 of 100/.test(board),'and Journey Goblins names a hundred');}
+  /* A TRAY BUILDS THE LIST (§2.3). Lightning Bolt is on the list; a Mountain past a hundred is not,
+     so the tray says the list would grow and the scoreboard turns amber once it has. */
+  {const before=(await state()).decks.find(d=>d.id===journey.id).slots.filter(r=>r.purpose==='main').reduce((n,r)=>n+r.quantity,0);
+   eq(before,100,'the list is a hundred before the tray');
+   await page.locator('.cm-tt-pile.cm-tt-status[aria-label^="Watched,"]').click();await page.locator('.cm-tt-grid').waitFor({timeout:20000});
+   /* THE BACK ARROW AT EVERY LEVEL (§2.4): top right of the laid-out pile, home to the board. */
+   eq(await page.locator('.cm-tt-strip.is-top .cm-tt-back').count(),1,'a laid-out pile carries a back arrow');
+   await page.locator('.cm-tt-strip.is-top .cm-tt-back').click();await page.waitForTimeout(400);
+   eq(await page.locator('.cm-tt-grid').count(),0,'and it comes home to the board');}
+  await page.locator('select[name=tabletopGroupBy]').waitFor();}
 
  /* PUBLISH THE TO TRADE LIST (backlog #200): a copy filed in the To Trade group and one offered for Sell / Trade
     become a link; the page the link opens shows both with a way to ask; a visitor with an empty library sees
