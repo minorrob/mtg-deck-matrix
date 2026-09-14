@@ -1671,3 +1671,30 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-tt-group-pick{flex-wrap:wrap;justify-content:center;max-width:calc(100% - 32px)}
 .cm-tt-group-pick select[name=tabletopCanvas]{min-width:118px}
 .cm-tt-group-pick .v-term{color:inherit}
+
+/* THE CARDS HELP IS A REFERENCE PAGE (Rob, 14 September): subheads, bullets and one drawing
+   instead of five paragraphs of prose. It is wider than the other dialogs because the flow
+   drawing wants the room -- `:has` keeps that to the pages that opt in, rather than widening
+   every form in the app. The drawing scrolls inside its own frame on a phone, so the dialog
+   itself never scrolls sideways. */
+#matrix-v2 dialog#cm-dialog:has(.cm-help-wide){width:min(1040px,calc(100vw - 24px))}
+.cm-help{font-size:14px;line-height:1.6}
+#matrix-v2 .cm-help h3{margin:26px 0 10px;font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:#bdd6f2}
+#matrix-v2 .cm-help h3:first-of-type{margin-top:18px}
+#matrix-v2 .cm-help p{margin:0 0 12px}
+.cm-help-lede{font-size:15px;color:#eef4ff;max-width:70ch}
+.cm-help ul{margin:0;padding-left:20px;display:grid;gap:8px}
+.cm-help li{line-height:1.55}
+.cm-help li b,.cm-help p b,.cm-help figcaption b{color:#f1f6ff}
+#matrix-v2 .cm-help p.cm-help-aside{margin:16px 0 0;font-size:13px;color:#a9bdd7}
+.cm-help-defs{display:grid;gap:18px}
+.cm-help-defs section{display:grid;gap:9px}
+.cm-help-defs h4{margin:0;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:#9fc3e8}
+.cm-def{display:grid;grid-template-columns:158px minmax(0,1fr);gap:4px 16px;align-items:baseline}
+.cm-def>b{border-left:3px solid var(--st,#7f8ba0);padding-left:10px;color:#f1f6ff}
+.cm-def>span{color:#c6d7ec;font-size:13px;line-height:1.55;max-width:74ch}
+.cm-flow{margin:0}
+.cm-flow-scroll{overflow-x:auto;border:1px solid #33415a;border-radius:12px;background:#131a27;padding:14px}
+.cm-flow svg{display:block;min-width:660px;width:100%;height:auto;font-family:Satoshi,system-ui,sans-serif}
+.cm-flow figcaption{margin-top:12px;font-size:13px;color:#a9bdd7;line-height:1.55;max-width:80ch}
+@media(max-width:760px){.cm-def{grid-template-columns:1fr;gap:3px}.cm-def>b{padding-left:9px}#matrix-v2 .cm-help h3{margin-top:22px}}

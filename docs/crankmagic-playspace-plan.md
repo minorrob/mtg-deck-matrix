@@ -527,6 +527,12 @@ decide first whether that is a search box on the table or a *Send to the table* 
 - The tour gains the play space; the README and the help entry describe it; the page-budget and
   geometry numbers are re-recorded with reasons; `docs/crankmagic-tabletop-plan.md` is updated
   so one document describes the table.
+- **Already done, ahead of the sweep (Rob, 14 September).** The Cards "?" was rewritten from five
+  prose paragraphs into grouped subheads, bullets and one drawing of the progression — the plan
+  states on the left, the deck's list, the claim finalizing makes, the box, and the Bench as the
+  lane every return path ends in, with a merge node before the list and a split node after
+  Reserved. Its eleven definitions are read from the glossary as the dialog opens, so this PR
+  adds the play space to that page rather than rewriting it.
 
 ---
 
