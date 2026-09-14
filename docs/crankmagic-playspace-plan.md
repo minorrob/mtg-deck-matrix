@@ -35,7 +35,10 @@ right and should not be redesigned — only re-roled.
 
 ---
 
-## 2. Critical assessment: where the brief needs a decision
+## 2. Critical assessment, and the decisions it produced
+
+*Revised 14 September with Rob's answers. Items marked **Decided** carry his call; §6 is the
+summary table if you want it in one place.*
 
 Each item states the instruction, what goes wrong if taken literally, and the recommendation.
 
@@ -61,61 +64,98 @@ records only *lifted from <where it was>* and renders it neutral — no status p
 is in your hand. Nothing in the library changes. This is both the physical truth and the safe
 one, and it makes the per-card restore arrow trivial: put it back where it came from.
 
-### 2.2 "Tag them watched to the deck they were in" cannot be literal for a copy you own
+### 2.2 Watched has to cover a card you own — and the mechanism is already there, unnamed
 
-**The problem.** Watched is `source === 'watching'` — a card you are considering and do not
-own. Applying it to an owned copy would erase the fact that you own it.
+**Rob's question, 14 September.** *"If the card is owned and in the middle, what category
+indicates I'm considering a card I own for the deck but haven't yet chosen to move it into the
+physical 100? We need that category or a definition of a category, like Watched expanded to
+include owned."*
 
-**Recommendation.** Decide the outcome by what the card is, and say so in the Confirm receipt:
+**The gap is real.** Reserved is the nearest thing, but a reservation attaches a copy to a
+*slot*, so the deck's list has to name the card already — and a card you are merely considering
+is precisely one the list does not name yet. Meanwhile `source: 'watching'` means *you hold no
+copy*, so it cannot describe a card you own. Between them there is no way to say "I own this and
+I am thinking about it for this deck."
 
-| Left in the middle at Confirm | Becomes |
-|---|---|
-| an owned copy | goes to the **Bench**, and a **Watched entry is filed in that deck's collection group**, so the consideration is remembered without lying about ownership |
-| a To buy need, a Suggestion, a Planned line | **Watched** for that deck — which is exactly what Watched means |
-| an ordered copy | **unchanged**, with a line in the receipt: an order in flight is not something the table can put back |
+**But the app already has the mechanism, without a name for it.** Every deck owns a collection
+group, and `readiness()` already counts a deck's watched cards as three things: its non-main
+slots (options and upgrades), the planned entries in its group, and the `watching` copies filed
+in that group. *Filed in this deck's group* is therefore already how the app says "this card
+belongs to this deck's world without being in its hundred."
 
-"The deck they were in" is the deck the card was lifted from; if it was lifted from the Bench,
-the deck the table is scoped to; if neither, it simply returns to the Bench.
+**So the category is a definition, not a new field:**
 
-### 2.3 "Wanted" is not a status in this app
+> **Watched** — a card you are considering for a deck: filed in that deck's collection group,
+> reserving nothing and moving nothing. You may own a copy or you may not.
 
-**The problem.** The brief tags the think-pile cards "wanted". The model's statuses are
-Physical deck, Substitute, Reserved, Bench, Ordered, Watched, To buy, Draft list, Suggestion,
-Planned, Unassigned. There is no Wanted.
+Two small changes give it effect, with no schema change and no migration:
 
-**Recommendation.** Rob's own step 1 is "the target (reserved) 100 cards", so **wanted =
-Reserved**. Name the think piles something physical — **trays** — and let their outcome be
-Reserved for the scoped deck. Inventing an eleventh status for the same idea is exactly the
-duplication he is complaining about.
+1. `statusOf` returns **Watched** for an owned copy that is on the Bench and filed in a deck's
+   group. Reserved, Substitute and Physical deck still win — those are commitments, and this is
+   deliberately not one.
+2. `readiness().watched` counts those owned copies as well, beside the planned entries and the
+   watching copies it counts today.
 
-### 2.4 Single click and double click on the same pile cannot both work
+**What it costs on the day it ships: nothing.** In the live library 260 owned Bench rows (568
+copies) sit in no deck group at all, so not one card changes status. The category starts empty
+and fills only as he uses it. It also sharpens Bench, which becomes *owned, reserved by no deck
+and shortlisted for none* — genuinely spare cards.
 
-**The instruction.** Clicking a pile flips to the next card; double-clicking any pile opens the
-side-by-side card view. Today a single click lays a pile out.
+**And it settles the middle.** An owned card left in the middle at Confirm becomes **Watched for
+the deck the table is calibrating**: filed in its group, still on the Bench, still owned,
+reserving nothing. That replaces the Bench-plus-a-group-entry workaround this plan carried
+before, which was a way around the missing category rather than the category itself.
 
-**The problem.** A double click always fires a single click first. Resolving it with a delay
-makes every click feel broken, which is the opposite of play.
+### 2.3 The trays mean Reserved — and confirming one edits the deck's list
 
-**Recommendation.** Put the two gestures on different objects, following the physical metaphor:
+**Decided:** "Wanted" is **Reserved**.
 
-- **single click a pile** → lay it out (today's behaviour; it is what a person does)
-- **double click a card** → the two-up card view (you pick a card up to look at it closely)
-- **single click the draw pile in the middle** → flip to the next card, because that is what a
-  stack of cards does, and the draw pile has nothing to lay out
+**The consequence to be clear about.** A reservation needs a seat: `allocate()` refuses unless
+the deck's list has an unfulfilled slot for that card. While he is *building* the hundred, most
+tray cards will be ones the list does not name yet. So confirming a tray does two things, not
+one:
 
-No gesture then has two meanings.
+> add the card to the deck's main list, then reserve your copy for that seat.
 
-### 2.5 Three columns a side eats the table
+That is the right reading of "calibrate a deck visually" — the table is where the list gets built
+— but the receipt has to say it, because it changes the deck and not only the copy:
 
-**The instruction.** 3 columns × 3 rows each side, up to 4 rows, max 24 piles.
+> *Adds 4 cards to D1's list and reserves your copies. D1's list goes from 98 to 102 — two over
+> a hundred.*
 
-**The problem, in numbers.** A pile with its placard is about 104px wide with gaps; three
+The scoreboard carries the same ceiling: past 100 the count reads **101 of 100** in amber, and
+`M.legality` names the breach in the receipt. A tray is a proposal like everything else on the
+table, so going over while thinking is fine; confirming over is the thing that gets flagged.
+
+### 2.4 Navigation: arrows under the stack, one click to lay out, a back arrow at every level
+
+**Decided**, and it replaces what this plan proposed (moving the two-up view onto the card):
+
+- **Left and right arrows sit directly under the draw pile's picture** and step through the stack
+  one card at a time. Flipping is an explicit control, not a click on the picture.
+- **A single click on any pile** opens its tabular presentation — the laid-out rows and columns
+  the table already has.
+- **Every level carries a back arrow in its top right corner**: the laid-out pile back to the
+  board, the single card back to its pile (shipped in #206).
+- **No double click anywhere.**
+
+This is better than the proposal it replaces. A click keeps one meaning everywhere on the table,
+the gesture conflict disappears instead of being arbitrated, and the flip becomes a control a
+finger can find rather than a gesture to discover.
+
+### 2.5 The sides grow by the number of columns they need
+
+**Confirmed by Rob**, and reading the brief as a fixed 3 × 3 was my error: the sides were always
+meant to grow with the number of piles. The numbers below are why it matters that they grow
+rather than standing at three.
+
+**The arithmetic.** A pile with its placard is about 104px wide with gaps; three
 columns is ~312px, two sides ~624px. The middle must hold a draw pile (~140px) plus up to four
 trays (~440px) plus margins. At 1400px the middle gets ~700px and only just fits; at 1250px it
 stops fitting; on a laptop at 1152px it is unusable. Meanwhile the common groupings produce
 5–8 piles, so three columns a side would stand mostly empty on the default view.
 
-**Recommendation.** Columns **grow on demand**: one column per side until the count needs more,
+**How it works.** Columns **grow on demand**: one column per side until the count needs more,
 capped by what the width allows, filling in Rob's order (left column 1, right column 1, left
 column 2, right column 2 …). Below about 1100px the sides collapse to a single scrolling shelf
 across the top and the whole rest of the canvas becomes the play space. Below 760px (the
@@ -124,36 +164,54 @@ cards between three zones with a thumb is not a thing worth building.
 
 Keep the 16-pile cap with the existing "folded" tail pile rather than 24 empty spots.
 
-### 2.6 Staging across Table, Sheet and List is three different problems
+### 2.6 One sandbox, three lenses, never out of step
 
-**The instruction.** "No moves lock in while on the table, sheet or list view until pressed."
+**Decided:** *moves are staged, facts are immediate.*
 
-**The problem.** The Table's drops are moves. The Sheet's cells and the List's inline fields
-are *edits* — a price, a paid amount, a box label, a quantity. Making a price correction wait
-for a Confirm is friction with no upside, and it puts two different meanings behind one button.
+- **Staged** — anything that moves a card between the destinations, on any lens: a drop, a Status
+  fly-out, a batch-bar status change, a tray, the middle.
+- **Immediate** — field edits: price, paid, notes, box label, print details. A price correction
+  waiting on a Confirm would be friction with no upside, and it would put two meanings behind one
+  button.
 
-**Recommendation.** One rule, easy to say: **moves are staged, facts are immediate.**
+**And a sharpening from Rob that decides the architecture:** *"I want to avoid List, Sheet and
+Table not always being in agreement with each other; never independently manipulated out of sync
+with one another. We're, after all, always talking about the same cards and decks, just different
+lenses, states and positioning."*
 
-- **Staged** (the sandbox): anything that moves a card between the seven destinations, on any
-  of the three views — a drop, a Status fly-out, a batch-bar status change.
-- **Immediate**: field edits — price, paid, notes, box label, print details.
+So the sandbox is **one object owned by the app, not one per view**. Concretely:
 
-One bar, on all three views: *N moves pending · Review and confirm · Discard*. It is the same
-bar in the same place whichever view he is in, so the sandbox is one idea, not three.
+- it lives on the app shell (`C.sandbox`), beside the state and the catalog, not inside the
+  tabletop module;
+- **every lens reads the library through it**. One function — the projection with the pending
+  moves laid over it — and List, Sheet and Table all call it. Nothing is allowed to read the raw
+  projection while a sitting is open, which is what makes divergence impossible rather than
+  merely unlikely;
+- the pending bar is the same bar in the same place on all three: *N moves pending · Review and
+  confirm · Discard*;
+- switching lens mid-sitting changes nothing but the drawing. The Table, the Sheet and the List
+  are three ways of looking at one pending truth.
 
-### 2.7 Never write the sandbox to the library
+### 2.7 The sitting survives a reload, and still never touches the library
 
-**The problem.** "Edit the data entries for each card for the user, until after they press
-Confirm" could be read as writing and then undoing. That would pollute the audit trail, fight
-the cross-tab revision check, and leave a half-applied library if the tab dies.
+**Decided:** it persists.
 
-**Recommendation.** The sandbox is **an in-memory list of intended commands**, applied to a
-*copy* of the projection for display only. Consequences to accept deliberately:
+The two requirements pull against each other — survive a reload, never half-apply to the library
+— so they are met separately:
 
-- a reload loses the sitting and the library is untouched — the safe failure
-- a second tab shows the real library, because it is the real library
-- leaving the page with pending moves warns first
-- Discard is always available and always instant
+- the sitting is **a list of intended moves**, never applied to the library until Confirm (§2.8);
+- it is written to **`localStorage`**, not to the library's store, so a crash, a reload or a
+  closed tab can never leave the library partly changed. The same place card size and the Bench
+  fold already live;
+- it is stamped with **the library revision it was staged against**. On load, if the library has
+  moved on — another tab confirmed something, a backup was restored — every staged move is
+  re-validated and the ones that no longer apply are dropped, with a line naming them. Silent
+  loss is the thing to avoid, not loss;
+- a **Discard** is always one click away, and leaving the page with moves pending warns first.
+
+The honest cost: a sitting is per device and per browser, because `localStorage` is. That matches
+how the rest of the app already treats per-device facts, and a sitting is a working session
+rather than a record.
 
 ### 2.8 Confirm has to re-validate, and it is one undo
 
@@ -259,6 +317,37 @@ Each is cheap and each serves "as though one were physically doing it":
 4. **Pick up several.** Dragging one card at a time through a hundred is the slow part; a
    selection should move as a unit, which the code already supports for selection.
 
+### 2.15 The table has two modes, and they want different destinations
+
+**Rob, 14 September:** *"There are 2 use cases with the table; 1) calibrate a deck visually
+(requires a deck be selected), and 2) play with the bench and unreserved ordered and unreserved
+other cards in the MtG Commander legal universe; sorting into piles I may want to then save as a
+defined group in library (independent of any deck)."*
+
+These are not one screen with a filter on it. They differ in what the destinations *are*, so the
+bottom band changes with the mode and everything else stays put.
+
+| | **Deck mode** | **Shelf mode** |
+|---|---|---|
+| Entered by | picking a deck (`#cards?view=tabletop&deck=…`) | no deck picked |
+| Source shelves | that deck's cards, plus the whole Bench (shipped in #206) | the Bench, unreserved ordered copies, and anything searched in from the Commander-legal catalog |
+| Destinations along the bottom | the six statuses: Physical deck · Substitute · Reserved · Ordered · Watched · To buy | **collection groups** — the groups that exist, plus *New group…* |
+| The trays mean | Reserved for that deck (§2.3) | members of a group you are assembling |
+| A card left in the middle at Confirm | Watched for that deck (§2.2) | nothing — it goes back where it came from, because there is no deck to consider it for |
+| The scoreboard reads | Reserved *n* of 100 · Substitutes · To buy · $ to finish | the size of each group you are filling |
+
+**The one thing shelf mode needs that does not exist.** "The MtG Commander legal universe" is
+31,830 printings. It cannot be dealt onto a table. Shelf mode therefore needs a way to **bring
+cards in**: the table's existing search and filters, run against the catalog rather than the
+library, with the matches arriving as a source pile. Without that, shelf mode is only the Bench,
+which is a useful half but not what was asked for. It is the single largest unbuilt piece in
+this plan and it belongs in its own PR.
+
+**What stays identical between the modes:** the three zones, the canvas, the draw pile, the
+trays, the arrows and back arrows, the sandbox, and Confirm. Only the band at the bottom and the
+words in the receipt change. That is the test of whether the design is right — one table, two
+jobs, no second implementation.
+
 ---
 
 ## 3. Speed is the requirement; motion is a choice
@@ -360,7 +449,7 @@ once is a toy; a table where only the card you are touching changes is an instru
 
 ## 4. What gets built, in order
 
-Five pull requests. Each is merged green before the next starts, and each is usable on its own.
+Six pull requests. Each is merged green before the next starts, and each is usable on its own.
 
 ### PR 1 — The board
 
@@ -394,6 +483,9 @@ The mechanism, with the existing interactions moved onto it. This is the piece t
 - The bar on Table, Sheet and List: *N moves pending · Review and confirm · Discard* (§2.6).
 - Confirm builds one batch, re-validates through the model on a copy, shows one receipt naming
   what will change and what it refuses, and applies as a single undoable revision (§2.8).
+- **The sitting persists** in `localStorage`, stamped with its revision and re-validated on load,
+  dropping what no longer applies and naming it (§2.7).
+- **One overlay every lens reads through**, so List, Sheet and Table cannot diverge (§2.6).
 - Step back inside the sandbox; a warning when leaving the page with moves pending (§2.14).
 - Checks: a new pure module `crankmagic-sandbox.js` with a Node suite — staging never mutates,
   the same move twice is idempotent, a refused move is reported and not applied, Confirm's batch
@@ -404,21 +496,33 @@ The mechanism, with the existing interactions moved onto it. This is the piece t
 
 - The draw pile in the middle: neutral cards, the top six drawn plus a count, click to flip
   (§2.1, §2.4, §2.9).
+- Left and right arrows under the draw pile; one click lays a pile out; a back arrow top right at
+  every level (§2.4).
 - The per-card restore arrow and **Restore all** in the top right (§2.1).
 - Trays: a 1–4 counter with left/right arrows, card outlines, drag between trays, the draw pile
   and any destination (§2.3).
-- Double click a card for the two-up view (§2.4).
 - The live scoreboard on the sandbox (§2.14).
-- Checks: journeys for lift → neutral → restore; lift → confirm → Bench plus a watched entry;
-  tray → confirm → Reserved.
+- **Watched, expanded**: `statusOf` returns Watched for an owned Bench copy filed in a deck's
+  group, and `readiness().watched` counts it (§2.2). The model change is small enough to ride
+  here because the middle's Confirm depends on it.
+- Checks: model suite for the Watched definition (it changes nothing in the live library today);
+  journeys for lift → neutral → restore; lift → confirm → Watched for the deck; tray → confirm →
+  the card joins the list and the copy is reserved, with the receipt naming both.
 
-### PR 4 — The substitute's partner
+### PR 4 — Shelf mode
+
+The table's second job (§2.15): no deck picked, collection groups along the bottom, the trays as
+group buckets. Its one hard part is bringing cards in from the catalog rather than the library —
+decide first whether that is a search box on the table or a *Send to the table* from Discover
+(§6, still open 1), because it changes what this PR is.
+
+### PR 5 — The substitute's partner
 
 - `standInFor` on the lot, set on the drop, shown on the card, read by the Change List (§2.12).
 - Checks: the model suite; the Change List suite reads the recorded pairing in preference to the
   inferred one.
 
-### PR 5 — The sweep
+### PR 6 — The sweep
 
 - The tour gains the play space; the README and the help entry describe it; the page-budget and
   geometry numbers are re-recorded with reasons; `docs/crankmagic-tabletop-plan.md` is updated
@@ -440,14 +544,35 @@ The mechanism, with the existing interactions moved onto it. This is the piece t
 
 ---
 
-## 6. Two questions only Rob can answer
+## 6. Decided, 14 September — and what is still open
 
-1. **Does a sitting survive a reload?** The recommendation is no — in memory, so a crash can
-   never leave the library half-changed. If he wants a sitting to survive the browser closing,
-   that is a persisted draft and a bigger piece: it needs its own store, its own migration, and
-   an answer for what happens when the library changes underneath it.
-2. **Is Confirm per deck or per table?** If he works one deck at a time, the receipt is simple
-   and the scoreboard means something. If one sitting can move cards for three decks, the
-   receipt has to be grouped by deck and the scoreboard needs a deck picker. The plan above
-   assumes **per table, grouped by deck in the receipt**, which costs nothing now and keeps both
-   doors open.
+Rob answered the open questions and revised three of the recommendations. Everything in this
+table is settled; the sections named carry the reasoning.
+
+| Question | Decided | Where |
+|---|---|---|
+| What holds a card in the middle? | It **holds**, it does not mutate. Nothing changes until Confirm | §2.1 |
+| What category is "I own this and I'm considering it for this deck"? | **Watched, expanded to cover owned copies** — defined as *filed in that deck's collection group*, which the app already counts and had never named. No new field, and nothing in the live library changes status on the day it ships | §2.2 |
+| What do the trays tag? | **Reserved** — and confirming one **adds the card to the deck's list** as well as reserving the copy, which the receipt must say | §2.3 |
+| How do the gestures work? | **Arrows under the draw pile** step through it; **one click on a pile** lays it out; **a back arrow top right at every level**; no double click anywhere | §2.4 |
+| How wide are the sides? | They **grow by the number of columns needed** — always the instruction; reading it as a fixed 3 × 3 was my error | §2.5 |
+| What is staged? | **Moves are staged, facts are immediate** — and the sandbox is **one object all three lenses read through**, so List, Sheet and Table can never be manipulated out of sync | §2.6 |
+| Does a sitting survive a reload? | **Yes.** Persisted in `localStorage`, never in the library, stamped with the revision it was staged against and re-validated on load | §2.7 |
+| Is Confirm per deck or per table? | **Per table** | §2.8 |
+| How many jobs does the table have? | **Two**: calibrate a deck (a deck is picked) and sort the shelf into groups (no deck) | §2.15 |
+| Do animations matter? | Optional. **Speed is the requirement**; feedback is built, decoration is judged later against the real table | §3 |
+
+### Still open, and worth deciding before PR 3
+
+1. **How cards are searched into shelf mode.** §2.15 names the gap: the Commander-legal catalog
+   cannot be dealt onto a table, so shelf mode needs a way to bring matches in. Is that the
+   table's existing search box pointed at the catalog, or the Discover graph's selection sent
+   over ("take these twelve to the table")? The second fits the workflow he describes — Lab, then
+   the tracer, then the table — and costs a button rather than a search UI.
+2. **What happens to a sitting when the library changes underneath it.** The plan re-validates
+   and drops what no longer applies, naming it. The alternative is to refuse to load the sitting
+   at all and keep it for inspection. The first is friendlier; the second never surprises.
+3. **Whether the deck's list may grow past 100 on the table.** The plan allows it while thinking
+   and flags it at Confirm (§2.3). The stricter alternative refuses the 101st tray card outright.
+   Allowing it matches a physical table, where you can hold more than a hundred cards while you
+   decide which to put down.
