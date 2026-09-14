@@ -480,4 +480,63 @@ M.validate(s);checks++;
   assert.ok(all.wanted >= one.wanted && all.owned >= one.owned, "the library's pair covers the deck's"); checks++;
   assert.deepEqual(M.ownership(live, "card:not-a-card", ""), {owned: 0, wanted: 0}, "a card nothing holds and no list wants"); checks++;
 }
-console.log(`collection-model: ${checks} checks passed; planned cards never become owned without acquisition.`);
+/* WATCHED, EXPANDED (Rob, 14 September; play-space plan §2.2): a card you are considering for a
+   deck is one filed in that deck's collection group, reserving nothing and moving nothing —
+   whether or not you own a copy. The category is a definition over the group mechanism that was
+   already there, so what it must NOT do is move anything that is committed, and what it must not
+   cost is a single status in the library as it stands. Both are asserted here. */
+{
+  let w = M.empty();
+  const put = (type, args = {}) => { w = M.apply(w, {type, id: "watched" + (++serial), at: "2026-09-14T00:00:00Z", ...args}).state; };
+  put("cards", {cards});
+  put("createDeck", {deckId: "wd", name: "The watched deck", commanders: ["leader"],
+    slots: [{id: "wcmd", cardId: "leader", quantity: 1}, {id: "wland", cardId: "land", quantity: 98}, {id: "wring", cardId: "ring", quantity: 1}]});
+  put("finalize", {deckId: "wd"});
+  const deck = M.deck(w, "wd");
+  assert.ok(deck.groupId, "a deck owns a collection group"); checks++;
+
+  /* Four copies of one card, each put in a different place, then all four filed in the deck's
+     group. Only the free one is Watched; a reservation, a box and a physical deck each win. */
+  put("acquire", {lot: {id: "free", cardId: "ring", quantity: 1}});
+  put("acquire", {lot: {id: "held", cardId: "ring", quantity: 1, printing: {set: "a", finish: "nonfoil"}}, deckId: "wd", slotId: "wring"});
+  put("acquire", {lot: {id: "boxed", cardId: "ring", quantity: 1, printing: {set: "b", finish: "nonfoil"}}});
+  put("place", {lotId: "boxed", deckId: "wd", asStandIn: true});
+  put("groupLots", {groupId: deck.groupId, lotIds: ["free", "held", "boxed"]});
+
+  const by = Object.fromEntries(M.projection(w).filter((r) => r.kind === "lot").map((r) => [r.id, r]));
+  assert.equal(M.statusOf(by.free), "Watched", "a free owned copy filed in the deck's group reads as Watched"); checks++;
+  assert.equal(by.free.shortlistedFor, "wd", "and names the deck that shortlisted it"); checks++;
+  assert.equal(M.statusOf(by.held), "Reserved", "a reservation is a commitment and still wins"); checks++;
+  assert.equal(M.statusOf(by.boxed), "Substitute", "a copy in the box still wins"); checks++;
+  assert.equal(by.held.shortlistedFor, "", "a committed copy is not a shortlist"); checks++;
+  assert.equal(by.boxed.shortlistedFor, "", "nor is one in a box"); checks++;
+
+  /* It reserves nothing and moves nothing: the deck's own progress is untouched. */
+  const r = M.readiness(w, M.deck(w, "wd"));
+  assert.equal(r.owned, 1, "only the reserved copy counts toward the hundred"); checks++;
+  assert.ok(r.watched >= 1, "and the free one is counted as watched for the deck"); checks++;
+
+  /* Moving it out of the deck's group takes the status back, and a group that belongs to no deck
+     is not a shortlist — so Bench stays Bench. Nothing but the membership was ever written. */
+  const before = JSON.stringify(w.lots.find((l) => l.id === "free"));
+  put("createGroup", {groupId: "plain", name: "Just a group"});
+  put("groupLots", {groupId: "plain", lotIds: ["free"], moveFrom: deck.groupId});
+  const after = M.projection(w).find((x) => x.id === "free");
+  assert.equal(M.statusOf(after), "Bench", "filed in a group that is not a deck's, it is a Bench copy again"); checks++;
+  assert.equal(after.shortlistedFor, "", "and no deck has shortlisted it"); checks++;
+  const strip = (t) => t.replace(/"groupIds":\[[^\]]*\]/, "G");
+  assert.equal(strip(JSON.stringify(w.lots.find((l) => l.id === "free"))), strip(before),
+    "nothing but its group membership ever changed"); checks++;
+}
+
+/* AND IT COSTS NOTHING ON THE DAY IT SHIPS. The live library's owned Bench rows sit in no deck
+   group at all, so not one card changes status. If that ever stops being true the number below
+   moves and this check says so, rather than a status quietly changing under Rob. */
+{
+  const live = JSON.parse(readFileSync(new URL("../data/live-state.json", import.meta.url), "utf8")).payload.state;
+  const shortlisted = M.projection(live).filter((r) => r.shortlistedFor);
+  assert.equal(shortlisted.length, 0,
+    `the live library has ${shortlisted.length} owned copies shortlisted for a deck; it had 0 when Watched was expanded`); checks++;
+}
+
+console.log(`collection-model: ${checks} checks passed; planned cards never become owned without acquisition, and Watched covers a card you own.`);
