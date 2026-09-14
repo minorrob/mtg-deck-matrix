@@ -76,6 +76,14 @@ try{
  await page.reload();await page.getByRole('table').waitFor();eq((await state()).lots.filter(l=>l.source==='owned')[0].quantity,8);
  await click('Clear filters');await page.locator('.cm-chip').waitFor({state:'detached'});eq(await page.locator('.cm-chip').count(),0);await click('Columns');await page.getByLabel('Color',{exact:true}).check();await page.getByLabel('Source',{exact:true}).uncheck();await click('Apply columns');await waitDialog();ok((await state()).preferences.columns.includes('color'));eq(await page.getByRole('columnheader',{name:'Source'}).count(),0);eq(await page.locator('th, td').evaluateAll(els=>els.every(el=>getComputedStyle(el).textAlign==='left')),true);
  await click('Columns');await page.getByLabel('Source',{exact:true}).check();await click('Apply columns');await waitDialog();
+ /* OWNERSHIP IS A COLUMN (Rob, 14 September): owned against what the row's deck wants, "1/1"
+    where the copy is reserved to it and "0/1" where the card is still to buy. */
+ await click('Columns');await page.getByLabel('Ownership',{exact:true}).check();await click('Apply columns');await waitDialog();
+ ok((await state()).preferences.columns.includes('ownership'),'Ownership is remembered with the column set');
+ {const i=await page.evaluate(()=>[...document.querySelectorAll('#cm-roster-table th')].findIndex(h=>/^Ownership/.test(h.textContent.trim())));ok(i>0,'the Ownership column is on the table');
+  const cells=await page.evaluate(n=>[...document.querySelectorAll('#cm-roster-table tbody tr')].slice(0,8).map(tr=>(tr.children[n]||{}).textContent||''),i);
+  ok(cells.length&&cells.every(t=>/^\d+\/\d+$/.test(t.trim())),`every Ownership cell is owned/wanted (${cells.join(' ')})`);}
+ await click('Columns');await page.getByLabel('Ownership',{exact:true}).uncheck();await click('Apply columns');await waitDialog();
  await click('Import list');{const one=await page.getByLabel('What does this input represent?').boundingBox(),two=await page.getByRole('dialog').getByLabel('Collection group').boundingBox();ok(one.x+one.width<=two.x+1);}await page.getByLabel('What does this input represent?').selectOption('owned');await page.getByLabel('New group name').fill('Journey inventory');await page.getByLabel('Or paste a list / CSV').fill('Card name,Quantity,Finish,Notes\nSol Ring,2,foil,exact print unknown\nArcane Signet,1,nonfoil,not reserved');await click('Parse input');await click('Resolve exact cards');await page.getByRole('heading',{name:'Review import',exact:true}).waitFor();await click('Import 2 reviewed rows');await waitDialog();current=await state();ok(current.groups.some(g=>g.name==='Journey inventory'));/* Four starter groups, the inventory this journey imported, and the group that arrived with the deck it built. */eq(current.groups.length,6);eq(current.decks.filter(d=>d.groupId).length,current.decks.length);eq(current.lots.filter(l=>l.cardId===CrankKey('Sol Ring')).reduce((n,l)=>n+l.quantity,0),2);
  await click('Clear filters');await actionsFor('Sol Ring','Owned');await click('Sell / Trade');await page.getByLabel('Copies affected').fill('1');await page.getByLabel('Availability',{exact:true}).selectOption('available');await click('Confirm change');await waitDialog();current=await state();eq(current.lots.filter(l=>l.offer==='available').reduce((n,l)=>n+l.quantity,0),1);eq(current.lots.filter(l=>l.cardId===CrankKey('Sol Ring')).reduce((n,l)=>n+l.quantity,0),2);
  // A native transaction must reject stale expected revisions, even with two
@@ -210,7 +218,35 @@ try{
    const n0=await page.locator('.cm-tt-captions li strong').first().innerText();const next=page.locator('[data-tt=step][aria-label^="Next"]');if(!(await next.isDisabled())){await next.click();await page.waitForTimeout(250);ok((await page.locator('.cm-tt-captions li strong').first().innerText())!==n0,'Next steps to the next card in the pile');eq(await page.locator('.cm-tt-stage.is-solo').count(),1);await page.keyboard.press('ArrowLeft');await page.waitForTimeout(250);eq(await page.locator('.cm-tt-captions li strong').first().innerText(),n0,'ArrowLeft steps back');}
    await click('Inspect card');await page.getByRole('dialog').waitFor();ok((await page.getByRole('dialog').innerText()).includes(n0),'Inspect card opens the inspector on the card');await page.keyboard.press('Escape');await page.waitForTimeout(200);eq(await page.getByRole('dialog').count(),0);
    await page.locator('[data-tt=stage-size][data-size=XL]').click();await page.waitForTimeout(200);}
+   /* THE INFO PANE (Rob, 14 September): the two shops share a row, the pair after the deck name
+      says what is owned of what that deck wants, and the arrow on the pane's top right corner
+      does what "Back to <pile>" does. */
+   {const links=page.locator('.cm-tt-info .cm-inspector-buy a');eq(await links.count(),2,'two places to buy');
+    const a=await links.nth(0).boundingBox(),b=await links.nth(1).boundingBox();eq(Math.round(a.y),Math.round(b.y),'the two shops share a row');
+    const own=page.locator('.cm-tt-info .cm-tt-own');if(await own.count()){ok(/^\d+\/\d+$/.test((await own.innerText()).trim()),'owned against wanted reads as a pair');ok(/You own/.test(await own.getAttribute('title')));}
+    const arrow=page.locator('.cm-tt-back'),pane=await page.locator('.cm-tt-info').boundingBox(),ab=await arrow.boundingBox();
+    ok(Math.abs((ab.x+ab.width)-(pane.x+pane.width))<=14&&Math.abs(ab.y-pane.y)<=16,'the arrow sits on the pane top right');
+    ok(/^Back to /.test(await arrow.getAttribute('aria-label')));
+    await arrow.click();await page.waitForTimeout(400);eq(await page.locator('.cm-tt-info').count(),0,'the arrow closes the card view');
+    await page.locator('.cm-tt-grid .cm-tt-card').nth(0).click();await page.locator('.cm-tt-stage.is-solo').waitFor({timeout:5000});}
   await page.keyboard.press('Escape');await page.waitForTimeout(200);eq(await page.locator('.cm-tt-stage').count(),0);eq(await page.locator('.cm-tt-grid').count(),0);ok((await page.locator('.cm-tt-pile.cm-tt-group').count())>=3);
+  /* THE MAT AT REST (Rob, 14 September): a pile's picture fills its slot rather than floating in
+     the corner of it, every placard is inside the mat, and the readings line stands clear of the
+     status placards with the whole of it on the mat. */
+  {const m=await page.evaluate(()=>{const box=el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height};};
+     const mat=box(document.querySelector('.cm-tt-mat')),pile=document.querySelector('.cm-tt-pile.cm-tt-group');
+     const slot=box(pile.querySelector('.cm-tt-slot')),card=box(pile.querySelector('.cm-tt-card'));
+     const placards=[...document.querySelectorAll('.cm-tt-pile .cm-tt-placard')].map(box);
+     const read=document.querySelector('.cm-tt-readings'),r=read?box(read):null;
+     const statusP=[...document.querySelectorAll('.cm-tt-pile.cm-tt-status .cm-tt-placard')].map(box);
+     return {lip:[card.x-slot.x,card.y-slot.y,slot.x+slot.w-card.x-card.w,slot.y+slot.h-card.y-card.h],
+       inside:placards.every(p=>p.x>=mat.x-1&&p.x+p.w<=mat.x+mat.w+1),
+       readInside:r?r.y+r.h<=mat.y+mat.h:true,
+       clear:r&&statusP.length?Math.min(...statusP.map(p=>r.y-(p.y+p.h))):99};});
+   ok(m.lip.every(v=>v>=0&&v<=8),`the picture fills its slot (lip ${m.lip.join(',')})`);
+   ok(m.inside,'every placard is inside the mat');
+   ok(m.readInside,'the readings line is inside the mat');
+   ok(m.clear>=20,`the readings line stands clear of the status placards (${m.clear}px)`);}
   /* TB5: the Bench ledge folds to its placard and stays folded on this device. */
   await page.locator('[data-tt=bench-toggle]').click();await page.waitForTimeout(250);eq(await page.locator('.cm-tt-rail.is-shut').count(),1,'Hide folds the ledge');eq(await page.locator('.cm-tt-fan .cm-tt-card').count(),0);
   await page.reload();await page.locator('.cm-tt-mat').waitFor({timeout:30000});eq(await page.locator('.cm-tt-rail.is-shut').count(),1,'the fold survives a reload');await page.locator('[data-tt=bench-toggle]').click();await page.waitForTimeout(250);eq(await page.locator('.cm-tt-rail.is-shut').count(),0,'Show unfolds it');
@@ -321,6 +357,22 @@ try{
  await nav('Cards');await page.locator('#cm-roster-table').waitFor();await click('More');await page.getByRole('button',{name:'Make the change for Journey Goblins'}).click();await page.locator('.cm-change').waitFor();
  /* The roster's search is shared with the Shop, so it is cleared before the Shop steps read money. */
  await nav('Cards');await page.locator('#cm-roster-table').waitFor();await click('Clear filters');await page.waitForTimeout(300);
+ /* THE BENCH SURVIVES A DECK SCOPE (Rob, 14 September): working on one deck, what you already
+    own and no deck has reserved is exactly what you want in front of you. The To buy tab still
+    drops it, because money is not the question there. */
+ {const deck=(await state()).decks.find(d=>d.status==='final'&&!d.archived);
+  if(deck){await page.goto(BASE+'/'+ENTRY+'#cards?deck='+encodeURIComponent(deck.id));await page.locator('#cm-roster-table table').waitFor({timeout:30000});await page.waitForTimeout(400);
+   const statuses=await page.evaluate(()=>{const h=[...document.querySelectorAll('#cm-roster-table th')].map(x=>x.textContent.trim().split(/\s/)[0]),i=h.indexOf('Status');
+     return [...document.querySelectorAll('#cm-roster-table tbody tr')].map(tr=>((tr.children[i]||{}).textContent||'').trim().split('\n')[0]);});
+   ok(statuses.includes('Bench'),'a deck scope keeps the Bench in the table');
+   ok(/Bench/.test(await page.locator('#cm-roster-stats').innerText()),'and the counts row says the Bench is not in its figures');
+   await page.goto(BASE+'/'+ENTRY+'#cards?view=tabletop&deck='+encodeURIComponent(deck.id));await page.locator('.cm-tt-mat').waitFor({timeout:30000});await page.waitForTimeout(500);
+   ok(/Bench . [1-9]/.test((await page.locator('.cm-tt-rail-placard').innerText()).replace(/\s+/g,' ')),'and the ledge still holds cards');
+   await page.goto(BASE+'/'+ENTRY+'#cards?tab=buy&deck='+encodeURIComponent(deck.id));await page.locator('#cm-roster-table table, .cm-shop-strip').first().waitFor({timeout:30000});await page.waitForTimeout(400);
+   const buy=await page.evaluate(()=>{const h=[...document.querySelectorAll('#cm-roster-table th')].map(x=>x.textContent.trim().split(/\s/)[0]),i=h.indexOf('Status');
+     return [...document.querySelectorAll('#cm-roster-table tbody tr')].map(tr=>((tr.children[i]||{}).textContent||'').trim().split('\n')[0]);});
+   ok(!buy.includes('Bench'),'To buy keeps the Bench out');
+   await page.goto(BASE+'/'+ENTRY+'#cards');await page.locator('#cm-roster-table table').waitFor({timeout:30000});}}
  /* MONEY ON THE BUY LIST. The Shop opens grouped by deck with a strip above the table: the
     total at sheet prices equals the sum of the band headers' subtotals, and Bought on a row
     is one tap that records the copy and stamps the sheet price as what was paid. */

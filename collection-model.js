@@ -104,6 +104,25 @@
      this deck that the list no longer asks for. The three money figures follow the
      same rule as everything else here: a price is the catalog's, `paid` is per copy, and a
      copy with no price contributes nothing rather than a guess. */
+  /* OWNED AGAINST WANTED, for one card (Rob, 14 September). With a deck, the copies of that
+     card its main list calls for and the owned copies reserved to that deck -- so a commander
+     already in the box reads 1/1 and a card still on the buy list reads 0/1. Without a deck,
+     every unarchived deck's call against every owned copy, which is the same question asked
+     of the whole library. A substitute is not counted as owned against the seat it fills: it
+     is a different card standing in, and the seat is still wanted. */
+  function ownership(s,cardId,deckId){
+    let owned=0,wanted=0;
+    for(const d of s.decks||[]){
+      if(d.archived||(deckId&&d.id!==deckId))continue;
+      for(const r of d.slots||[])if(r.cardId===cardId&&r.purpose==='main')wanted+=Number(r.quantity)||0;
+    }
+    for(const l of s.lots||[]){
+      if(l.source!=='owned'||l.cardId!==cardId)continue;
+      if(deckId){if(l.allocation&&l.allocation.deckId===deckId)owned+=Number(l.quantity)||0;}
+      else owned+=Number(l.quantity)||0;
+    }
+    return {owned,wanted};
+  }
   function readiness(s,d){const rows=d.slots.filter(r=>r.purpose==='main'),target=rows.reduce((n,r)=>n+r.quantity,0);let owned=0,ordered=0,placed=0,pullFromBench=0,pullFromOtherBox=0,paid=0,marketValue=0;
     for(const l of s.lots.filter(l=>l.allocation?.deckId===d.id&&rows.some(r=>r.id===l.allocation.slotId))){if(l.source==='owned')owned+=l.quantity;if(l.source==='ordered')ordered+=l.quantity;
       if(inDeck(s,l))placed+=l.quantity;else if(l.source==='owned'){if(l.location?.kind==='deck')pullFromOtherBox+=l.quantity;else pullFromBench+=l.quantity;}
@@ -543,5 +562,5 @@
   function fingerprint(d){return JSON.stringify({commanders:[...d.commanders].sort(),slots:d.slots.filter(r=>r.purpose==='main').map(r=>[r.cardId,r.quantity]).sort((a,b)=>a[0].localeCompare(b[0]))});}
   /* THE ORDERS, READ BACK: one row per order id across the lots that carry it. */
   function orders(s){const by=new Map();for(const l of s.lots){if(!l.order)continue;const o=by.get(l.order.id)||{id:l.order.id,vendor:l.order.vendor,ref:l.order.ref,expectedBy:l.order.expectedBy,placedAt:l.order.placedAt,lots:[],copies:0,arrived:0,paid:0,shipping:0};o.lots.push(l);o.copies+=l.quantity;if(l.source==='owned')o.arrived+=l.quantity;if(Number.isFinite(l.paid))o.paid+=l.paid*l.quantity;o.shipping+=(l.order.shipShare||0)*l.quantity;by.set(o.id,o);}return [...by.values()].map(o=>({...o,paid:Math.round(o.paid*100)/100,shipping:Math.round(o.shipping*100)/100})).sort((a,b)=>String(b.placedAt).localeCompare(String(a.placedAt)));}
-  return {VERSION,SOURCES,PLANNED,CHANNELS,STATUS,statusOf,statusOrder,statusTone,setRecordSource,migrate,empty,starterGroups,clone,text,quantity,print,compatible,validate,apply,defaultDefinition,legality,definitionIssues,projection,counters,readiness,eligibility,fingerprint,shortfall,deck,slot,lot,inDeck,orders,maxCopies,matrix,plan};
+  return {VERSION,SOURCES,PLANNED,CHANNELS,STATUS,statusOf,statusOrder,statusTone,setRecordSource,migrate,empty,starterGroups,clone,text,quantity,print,compatible,validate,apply,defaultDefinition,legality,definitionIssues,projection,counters,readiness,ownership,eligibility,fingerprint,shortfall,deck,slot,lot,inDeck,orders,maxCopies,matrix,plan};
 });

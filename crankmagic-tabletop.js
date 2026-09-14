@@ -327,7 +327,15 @@
     /* The status piles that take a drop stand as piles; the readings of a plan that hold
        anything are chips on a line under them, to lay out and look at. */
     const sts = model.statusPiles.filter((p) => p.target !== false), sN = sts.length, readings = model.statusPiles.filter((p) => p.target === false && p.count > 0);
-    const readH = readings.length ? (narrow ? 66 : 40) : 0;
+    /* THE READINGS LINE (Rob, 14 September): the Suggestion chip sat 11px under the status
+       placards, on a row whose height was budgeted at one line -- a second line, or one more
+       reading than the mat is wide, ran past the mat's edge and `overflow:hidden` ate it. So
+       the line is measured: the sentence plus every chip over the width it has, and the mat
+       grows to whatever that comes to. READ_GAP stands it clear of the placards above. */
+    const READ_GAP = 26;
+    const readWidth = 310 + readings.reduce((n, p) => n + Math.min(170, String(p.label).length * 7 + 46) + 8, 0);
+    const readLines = readings.length ? Math.max(1, Math.ceil(readWidth / Math.max(240, width - 32))) : 0;
+    const readH = readings.length ? readLines * 26 + 14 : 0;
     const readingsHTML = (top) => readings.length ? `<div class="cm-tt-readings" style="top:${top}px"><span>Readings of a plan, not places for a card — lay one out to look:</span>${readings.map((p) => `<button type="button" class="cm-tt-chip cm-tt-reading${p.id === homeId ? " is-open cm-tt-home" : ""}" data-tt="open" data-pile="${esc(p.id)}" aria-pressed="${p.id === homeId ? "true" : "false"}" aria-label="${esc(p.label)}, ${p.count} card${p.count === 1 ? "" : "s"}">${esc(p.label)} · ${p.count.toLocaleString()}</button>`).join("")}</div>` : "";
     const perRow = Math.max(3, Math.floor((width - 32) / 96)), span = (width - 32 - PILE_W) / Math.max(1, perRow - 1);
     const groupSelect = `<select name="tabletopGroupBy" aria-label="Group piles by">${model.groupings.map(([k, l]) => `<option value="${esc(k)}"${k === model.groupBy ? " selected" : ""}>${esc(l)}</option>`).join("")}</select>`;
@@ -340,8 +348,8 @@
         /* The phone (plan §3): the status piles first as rows under the ledge, then the grouping
            and its piles; a strip is a grid here, because a grid says how many there are. */
         const statusTop = railH + 24;
-        statusHTML = sts.map((p, i) => pile(p, Math.round(16 + (i % perRow) * span), statusTop + Math.floor(i / perRow) * ROW, "status")).join("") + readingsHTML(statusTop + Math.ceil(sN / perRow) * ROW);
-        pickTop = statusTop + Math.ceil(sN / perRow) * ROW + readH + 4;
+        statusHTML = sts.map((p, i) => pile(p, Math.round(16 + (i % perRow) * span), statusTop + Math.floor(i / perRow) * ROW, "status")).join("") + readingsHTML(statusTop + Math.ceil(sN / perRow) * ROW + READ_GAP);
+        pickTop = statusTop + Math.ceil(sN / perRow) * ROW + READ_GAP + readH + 8;
         const groupTop = pickTop + 48;
         groupHTML = groups.map((p, i) => pile(p, Math.round(16 + (i % perRow) * span), groupTop + Math.floor(i / perRow) * ROW, "group")).join("");
         height = groupTop + Math.ceil(gN / perRow) * ROW + 86;
@@ -365,9 +373,14 @@
           });
         });
         pickTop = 146;
-        const statusTop = Math.round(bottom + 36), sSpan = (width - 32 - PILE_W) / Math.max(1, sN - 1);
-        statusHTML = sts.map((p, i) => pile(p, Math.round(16 + i * sSpan), statusTop, "status")).join("") + readingsHTML(statusTop + ROW);
-        height = statusTop + ROW + readH + 44;
+        /* THE STATUS ROW KEEPS ITS PLACARDS (Rob, 14 September): the row ran from 16px to the
+           far edge, and a placard is centred on its pile and wider than it -- so "Physical
+           deck - 96" at the left foot and "To buy" at the right were cut off by the mat. The
+           row is inset by half the widest status placard instead, and every word fits. */
+        const EDGE = Math.min(96, Math.max(16, Math.round((width - 32 - PILE_W) / 12)));
+        const statusTop = Math.round(bottom + 36), sSpan = (width - 2 * EDGE - PILE_W) / Math.max(1, sN - 1);
+        statusHTML = sts.map((p, i) => pile(p, Math.round(EDGE + i * sSpan), statusTop, "status")).join("") + readingsHTML(statusTop + ROW + READ_GAP);
+        height = statusTop + ROW + READ_GAP + readH + 30;
       }
       body = groupPick(pickTop) + groupHTML + statusHTML;
     } else {
@@ -397,12 +410,12 @@
         const side = width - w - 48 >= 300, panelW = side ? width - w - 48 : width - 32, panelH = side ? h : 380;  /* under the picture on a phone: tall enough for the facts and the two buttons */
         const from = homeId ? findPile(model, homeId) : null, order = from ? pileOrder(from) : [], at = order.findIndex((x) => x.recordId === r.recordId);
         const prev = at > 0 ? order[at - 1] : null, next = at >= 0 && at < order.length - 1 ? order[at + 1] : null;
-        const caption = `<ul class="cm-tt-captions"><li><strong>${esc(nameOf(r))}</strong>${d.status ? ` <span class="cm-tt-pill${isGhost(r) ? " is-ghost" : ""}">${esc(d.status)}</span>` : ""}${d.price ? ` <span>${esc(d.price)}</span>` : ""}${d.deck ? ` <span class="cm-tt-muted">${esc(d.deck)}</span>` : ""}${(Number(r.quantity) || 1) > 1 ? ` <span class="cm-tt-muted">×${r.quantity}</span>` : ""}</li></ul>`;
+        const caption = `<ul class="cm-tt-captions"><li><strong>${esc(nameOf(r))}</strong>${d.status ? ` <span class="cm-tt-pill${isGhost(r) ? " is-ghost" : ""}">${esc(d.status)}</span>` : ""}${d.price ? ` <span>${esc(d.price)}</span>` : ""}${d.deck ? ` <span class="cm-tt-muted">${esc(d.deck)}</span>` : ""}${d.ownership ? ` <span class="cm-tt-own"${d.ownershipWhy ? ` title="${esc(d.ownershipWhy)}"` : ""}>${esc(d.ownership)}</span>` : ""}${(Number(r.quantity) || 1) > 1 ? ` <span class="cm-tt-muted">×${r.quantity}</span>` : ""}</li></ul>`;
         const sizeSeg = `<span class="cm-tt-seg" role="group" aria-label="Picture size">${[["L", "Card"], ["XL", "Larger"], ["XXL", "Large"], ["full", "Full"]].map(([k, l]) => `<button type="button" data-tt="stage-size" data-size="${k}" aria-pressed="${stageOf(ui.stageSize) === k ? "true" : "false"}" title="Picture ${k === "full" ? "at full size" : "size " + k}">${l}</button>`).join("")}</span>`;
         const stepBtn = (row, dir, label) => `<button type="button" data-tt="step" data-record="${esc(row ? row.recordId : "")}" ${row ? "" : "disabled"} aria-label="${dir} card in ${esc(from ? from.label : "the pile")}">${label}</button>`;
         const actH = narrow ? 176 : width < 1180 ? 84 : 48;  /* the action row wraps to four lines on a phone, two on a narrow mat */
         stageH = (side ? h : h + 12 + panelH) + 24 + actH;
-        stageHTML = `<div class="cm-tt-stage is-solo" style="top:${stageTop}px;height:${stageH}px"><div class="cm-tt-fanL is-solo" style="left:16px;top:12px;width:${w}px;height:${h}px">${cardFace(r, {ghost: isGhost(r), big: true, cls: "cm-tt-chosen cm-tt-solo", style: `left:0;top:0;width:${w}px;height:${h}px;`})}</div><div class="cm-tt-info" style="${side ? `left:${w + 32}px;top:12px;width:${panelW}px;height:${h}px` : `left:16px;top:${h + 24}px;width:${panelW}px;height:${panelH}px`}">${caption}${hooks.detail ? hooks.detail(r) || "" : ""}</div><div class="cm-tt-stage-actions is-solo">${sizeSeg}${stepBtn(prev, "Previous", "‹ Previous")}${stepBtn(next, "Next", "Next ›")}<span class="cm-tt-muted">${from && at >= 0 ? `${at + 1} of ${order.length} in ${esc(from.label)} · ` : ""}drag onto a pile, or</span><button type="button" data-tt="moveto" class="cm-tt-primary">Move to…</button>${from ? `<button type="button" data-tt="back" data-pile="${esc(from.id)}">Back to ${esc(from.label)}</button>` : ""}<button type="button" data-tt="clear">Clear selection</button></div></div>`;
+        stageHTML = `<div class="cm-tt-stage is-solo" style="top:${stageTop}px;height:${stageH}px"><div class="cm-tt-fanL is-solo" style="left:16px;top:12px;width:${w}px;height:${h}px">${cardFace(r, {ghost: isGhost(r), big: true, cls: "cm-tt-chosen cm-tt-solo", style: `left:0;top:0;width:${w}px;height:${h}px;`})}</div><div class="cm-tt-info" style="${side ? `left:${w + 32}px;top:12px;width:${panelW}px;height:${h}px` : `left:16px;top:${h + 24}px;width:${panelW}px;height:${panelH}px`}">${caption}${hooks.detail ? hooks.detail(r) || "" : ""}</div>${from ? `<button type="button" class="cm-tt-back" data-tt="back" data-pile="${esc(from.id)}" style="${side ? `left:${w + 32 + panelW - 38}px;top:20px` : `left:${16 + panelW - 38}px;top:${h + 32}px`}" title="Back to ${esc(from.label)}" aria-label="Back to ${esc(from.label)}">&#8592;</button>` : ""}<div class="cm-tt-stage-actions is-solo">${sizeSeg}${stepBtn(prev, "Previous", "‹ Previous")}${stepBtn(next, "Next", "Next ›")}<span class="cm-tt-muted">${from && at >= 0 ? `${at + 1} of ${order.length} in ${esc(from.label)} · ` : ""}drag onto a pile, or</span><button type="button" data-tt="moveto" class="cm-tt-primary">Move to…</button>${from ? `<button type="button" data-tt="back" data-pile="${esc(from.id)}">Back to ${esc(from.label)}</button>` : ""}<button type="button" data-tt="clear">Clear selection</button></div></div>`;
       } else {
         /* The selection (plan §2.2): on the centre of the mat, fanned if more than one, large,
            with name, status, price and deck beneath. */
@@ -410,7 +423,7 @@
         const fanW = L.w + step * (n - 1), x0 = Math.max(16, (width - fanW) / 2);
         const say = hooks.describe || ((r) => ({status: r.status || "", price: r.card && r.card.price != null ? "$" + Number(r.card.price).toFixed(2) : "", deck: ""}));
         const fan = selected.map((r, i) => { const d = say(r) || {}; return cardFace(r, {ghost: isGhost(r), size: "L", big: true, cls: "cm-tt-chosen", style: `left:${Math.round(x0 + i * step)}px;top:${Math.round(Math.abs(i - (n - 1) / 2) * 6)}px;transform:rotate(${((i - (n - 1) / 2) * 3).toFixed(1)}deg);z-index:${i + 1};`}) + ""; }).join("");
-        const captions = `<ul class="cm-tt-captions">${selected.map((r) => { const d = say(r) || {}; return `<li><strong>${esc(nameOf(r))}</strong>${d.status ? ` <span class="cm-tt-pill${isGhost(r) ? " is-ghost" : ""}">${esc(d.status)}</span>` : ""}${d.price ? ` <span>${esc(d.price)}</span>` : ""}${d.deck ? ` <span class="cm-tt-muted">${esc(d.deck)}</span>` : ""}${(Number(r.quantity) || 1) > 1 ? ` <span class="cm-tt-muted">×${r.quantity}</span>` : ""}</li>`; }).join("")}</ul>`;
+        const captions = `<ul class="cm-tt-captions">${selected.map((r) => { const d = say(r) || {}; return `<li><strong>${esc(nameOf(r))}</strong>${d.status ? ` <span class="cm-tt-pill${isGhost(r) ? " is-ghost" : ""}">${esc(d.status)}</span>` : ""}${d.price ? ` <span>${esc(d.price)}</span>` : ""}${d.deck ? ` <span class="cm-tt-muted">${esc(d.deck)}</span>` : ""}${d.ownership ? ` <span class="cm-tt-own"${d.ownershipWhy ? ` title="${esc(d.ownershipWhy)}"` : ""}>${esc(d.ownership)}</span>` : ""}${(Number(r.quantity) || 1) > 1 ? ` <span class="cm-tt-muted">×${r.quantity}</span>` : ""}</li>`; }).join("")}</ul>`;
         const from = homeId ? findPile(model, homeId) : null;
         const capH = Math.min(6, n) * 24 + 16;
         stageHTML = `<div class="cm-tt-stage" style="top:${stageTop}px;height:${L.h + 30 + capH + 48}px"><div class="cm-tt-fanL" style="height:${L.h + 24}px">${fan}</div>${captions}<div class="cm-tt-stage-actions"><span class="cm-tt-muted">${n} selected · drag onto a pile, or</span><button type="button" data-tt="moveto" class="cm-tt-primary">Move to…</button>${from ? `<button type="button" data-tt="back" data-pile="${esc(from.id)}">Back to ${esc(from.label)}</button>` : ""}<button type="button" data-tt="clear">Clear selection</button></div></div>`;

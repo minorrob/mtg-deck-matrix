@@ -2,6 +2,7 @@
 // real user operations. Expected totals come from receipts, not UI projections.
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
+import {readFileSync} from 'node:fs';
 const require=createRequire(import.meta.url),M=require('../collection-model.js');
 let s=M.empty(),serial=0,checks=0;
 function run(type,args={}){const before=JSON.stringify(s),result=M.apply(s,{type,id:'test'+(++serial),at:'2026-09-07T00:00:00Z',...args});assert.equal(JSON.stringify(s),before,'Pure operation');s=result.state;checks++;return result;}
@@ -449,5 +450,34 @@ M.validate(s);checks++;
   run('batch',{commands:[{type:'createDeck',deckId:'B',name:'Deck A · 50 pts',commanders:['leader'],cards:[],slots:list.map(x=>({...x,purpose:'main'})),definition:M.deck(s,'A').definition},{type:'finalize',deckId:'B'},{type:'report',deckId:'B',report:{...r,id:undefined,deckId:undefined,importedAt:undefined,spunOffFrom:{deckId:'A',reportId:r.id}}}]});
   const b=M.deck(s,'B');assert.equal(b.status,'final');assert.equal(b.slots.reduce((n,x)=>n+x.quantity,0),100);const copy=s.reports.find(x=>x.deckId==='B');assert.equal(copy.spunOffFrom.reportId,r.id);assert.equal(copy.origin,'measured');assert.notEqual(copy.id,r.id);assert.equal(M.deck(s,'A').status,'final');checks+=6;
   s=saved;
+}
+/* OWNED AGAINST WANTED (Rob, 14 September): the pair the Cards table's Ownership column and
+   the Tabletop's stage caption both print. Held to the committed live library, where the
+   answer is checkable by hand: a commander in its box is 1/1, a card still on the buy list
+   is 0/1, and a card no list calls for wants nothing. */
+{
+  const live = JSON.parse(readFileSync(new URL("../data/live-state.json", import.meta.url), "utf8")).payload.state;
+  const d = live.decks.find((x) => x.status === "final" && !x.archived);
+  const commander = M.ownership(live, d.commanders[0], d.id);
+  assert.deepEqual(commander, {owned: 1, wanted: 1}, `${d.name}: its commander is owned and wanted once`); checks++;
+  /* Every main slot of every final deck: wanted is what the list asks, owned never exceeds it. */
+  for (const deck of live.decks.filter((x) => x.status === "final" && !x.archived)) {
+    const want = new Map();
+    for (const r of deck.slots) if (r.purpose === "main") want.set(r.cardId, (want.get(r.cardId) || 0) + r.quantity);
+    for (const [cardId, n] of want) {
+      const o = M.ownership(live, cardId, deck.id);
+      assert.equal(o.wanted, n, `${deck.name}: the list's own count for ${cardId}`);
+      assert.ok(o.owned <= o.wanted, `${deck.name}: ${cardId} reads ${o.owned}/${o.wanted}, never more owned than wanted`);
+    }
+    checks++;
+    /* What the deck still needs reads 0 owned of what it wants, which is the "0/1" on the stage. */
+    const need = M.projection(live).find((r) => r.kind === "need" && r.deckId === deck.id);
+    if (need) { const o = M.ownership(live, need.cardId, deck.id); assert.equal(o.owned, 0, `${deck.name}: a To buy card is owned none`); assert.ok(o.wanted >= 1); checks++; }
+  }
+  /* Without a deck the question is the library's: every deck's call, every owned copy. */
+  const anyCard = d.slots.find((r) => r.purpose === "main").cardId;
+  const all = M.ownership(live, anyCard, ""), one = M.ownership(live, anyCard, d.id);
+  assert.ok(all.wanted >= one.wanted && all.owned >= one.owned, "the library's pair covers the deck's"); checks++;
+  assert.deepEqual(M.ownership(live, "card:not-a-card", ""), {owned: 0, wanted: 0}, "a card nothing holds and no list wants"); checks++;
 }
 console.log(`collection-model: ${checks} checks passed; planned cards never become owned without acquisition.`);
