@@ -196,6 +196,13 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   body written and the To line left blank, and *Show a QR code* draws the app link as a QR
   code in the page (`crankmagic-qr.js`, no network, checked module for module against segno
   in `tests/qr.mjs`) for a phone to scan at the table.
+  **The role lens** (List tab, with a deck picked under Yours, or `#discover?lens=Removal&deck=<id>`
+  from the deck page's More menu) reads one role — Removal, Board wipe, Protection, Loop, Tutor,
+  Ramp or Draw — as two lists: the deck's cards that carry it, counted against the house
+  minimum in `crankmagic-rules.js`, and the candidates that could join them (bench, buy list,
+  linked upgrades, the commander's co-play neighbours) ranked by co-play, then owned before
+  ordered before not owned; *Swap for…* links a candidate as an uncommitted upgrade option
+  (`crankmagic-lens.js`, `tests/crankmagic-lens.mjs`).
 
 ### Load Live
 
@@ -314,7 +321,7 @@ Every data file under `data/` and `sim/` opens with `{schema, stamp, generator, 
 `schema/index.mjs` registers each one with its producer and the tool whose `--check` vouches for
 it, `schema/*.json` describes its shape, and readers pass what they fetch through
 `CrankAssets.expect()`. Changed assets require a new `?v=` everywhere referenced, then
-`node tests/asset-versions.mjs --update`. There are 61 Node suites:
+`node tests/asset-versions.mjs --update`. There are 62 Node suites:
 
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`
@@ -334,6 +341,7 @@ it, `schema/*.json` describes its shape, and readers pass what they fetch throug
 - `crankmagic-facets` — `tests/crankmagic-facets.mjs`
 - `crankmagic-graph` — `tests/crankmagic-graph.mjs`
 - `crankmagic-loops` — `tests/crankmagic-loops.mjs`
+- `crankmagic-lens` — `tests/crankmagic-lens.mjs`
 - `crankmagic-rules` — `tests/crankmagic-rules.mjs`
 - `crankmagic-sim` — `tests/crankmagic-sim.mjs`
 - `crankmagic-workbook` — `tests/crankmagic-workbook.mjs`

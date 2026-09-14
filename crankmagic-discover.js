@@ -84,6 +84,10 @@
      is remembered across focus changes; the pane widens while it is open and the canvas
      keeps the rest. */
   let paneTab = 'card', listSort = {key: 'ring', dir: 1}, listPage = 0, listCard = null, lastFocusId = null, landRows = [], revealCard = false;
+  /* THE ROLE LENS (Phase D): a mode of the List tab, on only while a deck is picked under
+     Yours. `lensId` is one of CrankLens.LENSES or '' for the plain list; the route can set it
+     (#discover?lens=Removal&deck=<id>) and the select in the list head changes it. */
+  let lensId = '';
   /* LOOPS ONLY: the depth gauge walks only the joins that continue or pay off a loop. It follows
      the deck pick -- a deck is a question about its loops, the open graph a question about
      everything -- until the reader sets it by hand, and Clear filters hands it back. */
@@ -502,8 +506,53 @@
       if (!graph) return [];
       return graph.reach(3, 30).map((n) => rowOf(n.card, n.depth, n.tag || n.kind || '', n.parent || null));
     }
+    /* The deck picked under Yours, as the lens needs it. */
+    function pickedDeck() {
+      const name = (selection.decks || []).find((v) => !String(v).startsWith(CrankFacets.NOT));
+      return name ? (C.state.decks || []).find((d) => d.name === name && !d.archived) || null : null;
+    }
+    const lensSelect = () => {
+      const deck = pickedDeck(); if (!deck || !globalThis.CrankLens) return '';
+      return `<label class="cm-lens-pick">Lens <select name="lens" aria-label="Role lens">${[['', 'None — the whole list'], ...CrankLens.LENSES.map((l) => [l.id, l.id])].map(([v, label]) => `<option value="${e(v)}"${v === lensId ? ' selected' : ''}>${e(label)}</option>`).join('')}</select></label>`;
+    };
+    /* The commander's co-play row, from the pairs the page already holds. Cached per commander. */
+    const coCache = new Map();
+    function coPlayOf(oid) {
+      if (!oid || !Array.isArray(data.played) || !data.played.length) return null;
+      if (!coCache.has(oid)) {
+        const m = new Map();
+        for (const p of data.played) { if (p.from === oid) m.set(p.to, p); else if (p.to === oid) m.set(p.from, p); }
+        coCache.set(oid, m);
+      }
+      return coCache.get(oid);
+    }
+    function lensResult() {
+      const deck = pickedDeck(); if (!deck || !lensId || !globalThis.CrankLens) return null;
+      return CrankLens.lens(C.state, deck, lensId, {cardOf: (id) => C.card(id), coPlay: coPlayOf, byOracle: (oid) => (C.catalog.oracle ? C.catalog.oracle(oid) : null)});
+    }
+    /* THE LENS, DRAWN. Left: the deck's cards in the role, the count against the house minimum
+       in the warning treatment when under. Right: the candidates, ranked, one Swap for... each.
+       Both lists are the pure module's rows; nothing is computed here. */
+    function drawLens(r) {
+      const badge = `<span class="cm-badge ${r.under ? 'warn' : 'good'} cm-lens-count">${r.count}${r.min !== null ? ` / ${r.min}` : ''}</span>`;
+      const own = {owned: 'Owned', ordered: 'Ordered', none: 'Not owned'};
+      const src = {bench: 'bench', ordered: 'on order', buy: 'buy list', upgrade: 'linked upgrade', played: 'co-play'};
+      const haveRows = r.have.map((h) => `<li class="cm-lens-row"><button type="button" class="cm-card-name" data-action="card" data-card="${e(h.cardId)}">${e(h.name)}</button><span class="cm-muted">${h.quantity > 1 ? `×${h.quantity} · ` : ''}${e(h.roles.join(', '))}${h.option ? ' · Option' : ''}</span><span class="cm-lens-price">${h.price === null ? '' : C.money(h.price)}</span></li>`).join('');
+      const candRows = r.candidates.slice(0, 40).map((c) => `<li class="cm-lens-row cm-lens-cand"><button type="button" class="cm-card-name" data-action="card" data-card="${e(c.cardId)}">${e(c.name)}</button><span class="cm-muted">${e(own[c.owned])} · ${e(c.sources.map((s) => src[s] || s).join(', '))}${c.coPlay ? ` · ${Math.round(c.coPlay.inclusion * 100)}% of ${e(r.commander ? r.commander.name : 'the commander')}'s decks` : ''}</span><span class="cm-lens-price">${c.price === null ? '' : C.money(c.price)}</span>${r.deck.status === 'final' || r.deck.status === 'draft' ? `<button type="button" class="v-button compact" data-action="lens-swap" data-card="${e(c.cardId)}">Swap for…</button>` : ''}</li>`).join('');
+      view.innerHTML = `<div class="cm-list-head cm-lens">${lensSelect()}
+        <h3 class="cm-lens-head">${e(r.lens)} in ${e(r.deck.name)} ${badge}</h3>
+        ${r.under ? note(`Under the house minimum: ${r.min - r.count} more to reach ${r.min}. The minimums are the rules module's (crankmagic-rules.js).`, true) : `<p class="cm-muted">${r.min !== null ? `At or over the house minimum of ${r.min}.` : 'No house minimum for this role; the count is shown plain.'}</p>`}
+        <div class="cm-lens-cols">
+          <section><h4>In the deck <small>${r.have.length}</small></h4>${haveRows ? `<ul class="cm-lens-list">${haveRows}</ul>` : '<p class="cm-muted">No card in the hundred carries this role.</p>'}</section>
+          <section><h4>Could join it <small>${r.candidates.length}</small></h4>${candRows ? `<ul class="cm-lens-list">${candRows}</ul>${r.candidates.length > 40 ? `<p class="cm-muted">${r.candidates.length - 40} more, further down the ranking.</p>` : ''}` : '<p class="cm-muted">Nothing outside the hundred carries this role inside the deck\'s colours — not the bench, the buy list, the linked upgrades or the commander\'s co-play neighbours.</p>'}
+            <p class="cm-muted cm-lens-foot">Ranked by how often the commander\'s real decks run the card, then owned before ordered before not owned. <em>Swap for…</em> links the card as an uncommitted upgrade option on a slot you choose; the hundred does not change.</p></section>
+        </div></div>`;
+      $('#cm-graph-size').textContent = lastInfo && lastInfo.total ? `${lastInfo.total} on canvas · lens: ${r.lens}` : '';
+      sizePane();
+    }
     function drawList() {
       const focus = graph?.current();
+      if (lensId && !landsOnly()) { const r = lensResult(); if (r) { drawLens(r); return; } }
       const all = listRows();
       const key = listSort.key, dir = listSort.dir;
       all.sort((x, y) => { if (key === 'ring') return (x.depth - y.depth) * dir || x.name.localeCompare(y.name); const val = (r) => key === 'color' ? r.ci.length + r.ci : r[key]; const a = val(x), b = val(y); if (a === null || a === undefined) return 1; if (b === null || b === undefined) return -1; return (typeof a === 'number' ? a - b : String(a).localeCompare(String(b))) * dir || x.name.localeCompare(y.name); });
@@ -516,7 +565,7 @@
       const allTicked = rows.length > 0 && rows.every((r) => picked.has(r.id));
       const pickedRows = all.filter((r) => picked.has(r.id));
       const paging = `<div class="cm-paging cm-list-paging"><span>${all.length} card${all.length === 1 ? '' : 's'}${pages > 1 ? ` · page ${listPage + 1} of ${pages}` : ''}</span><div class="cm-actions"><button type="button" class="v-button compact" data-action="list-page" data-step="-1" ${listPage === 0 ? 'disabled' : ''}>Previous</button><button type="button" class="v-button compact" data-action="list-page" data-step="1" ${listPage + 1 >= pages ? 'disabled' : ''}>Next</button></div></div>`;
-      view.innerHTML = `<div class="cm-list-head"><p class="cm-muted">${lands ? `<strong>${all.length.toLocaleString()} land${all.length === 1 ? '' : 's'}</strong> pass the filters. Sort by a column heading; a row opens the card.` : focus ? `Everything <strong>${e(focus.name)}</strong> reaches at depth 3, breadth 30 — the whole neighbourhood, whatever the sliders say. Filters still apply.` : 'Nothing in focus.'}</p>
+      view.innerHTML = `<div class="cm-list-head">${lands ? '' : lensSelect()}<p class="cm-muted">${lands ? `<strong>${all.length.toLocaleString()} land${all.length === 1 ? '' : 's'}</strong> pass the filters. Sort by a column heading; a row opens the card.` : focus ? `Everything <strong>${e(focus.name)}</strong> reaches at depth 3, breadth 30 — the whole neighbourhood, whatever the sliders say. Filters still apply.` : 'Nothing in focus.'}</p>
         ${pickedRows.length ? `<div class="cm-actions cm-pick-actions">${b(`Add ${pickedRows.length} selected to a group…`, 'results-group', {}, true)}<details class="cm-inline-menu"><summary class="v-button compact cm-card-view-menu-btn">With ${pickedRows.length} selected</summary><div class="cm-menu cm-inline-menu-body"><p>Add to a draft deck</p>${(C.state.decks || []).filter((d) => !d.archived && d.status === 'draft').map((d) => `<button type="button" data-action="list-to-deck" data-deck="${e(d.id)}">${e(d.name)}</button>`).join('') || '<p class="cm-muted">No draft decks.</p>'}</div></details>${b('Clear selection', 'results-clear')}</div>` : ''}</div>
         ${paging}
         <div class="cm-table-wrap cm-list-wrap"><table class="cm-table cm-list-table"><thead><tr><th scope="col" class="cm-tick-cell"><input type="checkbox" class="cm-list-tick-all" ${allTicked ? 'checked' : ''} aria-label="Tick every card on this page"></th>${cols.map(([k, l]) => `<th scope="col" class="cm-col-${k}" aria-sort="${key === k ? (dir === 1 ? 'ascending' : 'descending') : 'none'}"><button type="button" data-action="list-sort" data-key="${k}">${l}${key === k ? ` <span aria-hidden="true">${dir === 1 ? '↑' : '↓'}</span>` : ' <span class="cm-sort-idle" aria-hidden="true">↕</span>'}</button></th>`).join('')}${stage ? '' : '<th scope="col" class="cm-col-buy"><span class="cm-visually-hidden">Add/Buy</span></th>'}</tr></thead><tbody>${rows.map((r) => `<tr class="cm-list-row${listCard && listCard.id === r.id ? ' is-on' : ''}${picked.has(r.id) ? ' cm-row-ticked' : ''}" data-id="${e(r.id)}"><td class="cm-tick-cell"><input type="checkbox" class="cm-list-tick" data-id="${e(r.id)}" ${picked.has(r.id) ? 'checked' : ''} aria-label="Tick ${e(r.name)}"></td>${cols.map(([k]) => k === 'name' ? `<td class="cm-list-namecell"><button type="button" class="cm-card-name cm-list-name" data-action="list-card" data-id="${e(r.id)}" aria-expanded="${listCard && listCard.id === r.id ? 'true' : 'false'}">${e(r.name)}</button></td>` : k === 'link' ? `<td class="cm-list-link" title="${e(r.link)}">${e(r.link)}</td>` : k === 'color' ? `<td class="cm-list-color">${colorPip(r.ci)}</td>` : `<td class="cm-price">${r.price !== null ? C.money(r.price) : '<span class="cm-muted">—</span>'}</td>`).join('')}${stage ? '' : `<td class="cm-list-buy">${buyMenu(r.card, r.rec, true)}</td>`}</tr>${listCard && listCard.id === r.id ? `<tr class="cm-list-detail"><td colspan="${cols.length + (stage ? 1 : 2)}">${rowDetailHTML(r)}</td></tr>` : ''}`).join('') || `<tr><td colspan="${cols.length + 2}">Nothing reaches from here under these filters.</td></tr>`}</tbody></table></div>${rows.length > 12 ? paging : ''}`;
@@ -551,6 +600,18 @@
       if (ev.target.closest('[data-action], .cm-tick-cell, .cm-list-buy, a, input, summary, details')) return;
       actions['list-card']({dataset: {id: row.dataset.id}});
     });
+    /* SWAP FOR...: the candidate becomes a linked, uncommitted upgrade option on a main slot the
+       reader chooses -- the slots in the lens's role first, then the rest of the hundred. The
+       command is the module's; the model keeps the hundred as it was. */
+    actions['lens-swap'] = (el) => {
+      const r = lensResult(); if (!r) return;
+      const deck = C.M.deck(C.state, r.deck.id), card = C.card(el.dataset.card);
+      if (!card) throw Error('That card is not in the catalog.');
+      const inRole = new Set(r.have.map((h) => h.slotId));
+      const slots = deck.slots.filter((x) => x.purpose === 'main').map((x) => [x.id, `${C.card(x.cardId)?.name || x.cardId}${inRole.has(x.id) ? ` — ${r.lens}` : ''}`]).sort((a, b) => (inRole.has(a[0]) ? 0 : 1) - (inRole.has(b[0]) ? 0 : 1) || a[1].localeCompare(b[1]));
+      form(`Swap for ${card.name}`, s('Replaces (a main-deck slot)', 'slot', slots, slots[0] && slots[0][0]) + note(`${card.name} is linked to the slot as an upgrade option, uncommitted. ${deck.name}'s hundred does not change until you accept the option on the deck page.`),
+        async (v) => { await C.commit(CrankLens.swapCommand(deck, v.slot, card, r.lens), {renderView: false}); C.notice(`${card.name} linked as an upgrade option in ${deck.name}.`); drawList(); });
+    };
     actions['list-to-deck'] = async (el) => {
       const deck = C.M.deck(C.state, el.dataset.deck);
       if (deck.status !== 'draft') throw Error('Only a draft list can take cards this way.');
@@ -564,6 +625,8 @@
       C.notice(`${cards.length} card${cards.length === 1 ? '' : 's'} added to ${deck.name}.`);
     };
     pane.addEventListener('change', (ev) => {
+      const lensSel = ev.target.closest('select[name=lens]');
+      if (lensSel) { lensId = lensSel.value; listCard = null; drawList(); return; }
       const one = ev.target.closest('.cm-list-tick'), all = ev.target.closest('.cm-list-tick-all');
       if (!one && !all) return;
       if (one) { if (one.checked) picked.add(one.dataset.id); else picked.delete(one.dataset.id); }
@@ -708,7 +771,15 @@
       else { graph?.destroy(); graph = null; drawCardView(null, null); }
     }
 
-    const startFocus = rowFor(wanted)
+    /* #discover?deck=<id>&lens=<role>: the deck is picked under Yours as the facet would pick
+       it, the pane opens on the List tab in the lens, and the commander is the focus. */
+    const lensDeck = params.get('deck') ? (C.state.decks || []).find((d) => d.id === params.get('deck') && !d.archived) || null : null;
+    if (lensDeck) {
+      selection = {...selection, decks: [lensDeck.name]};
+      const wantedLens = globalThis.CrankLens ? CrankLens.lensOf(params.get('lens')) : null;
+      if (wantedLens) { lensId = wantedLens.id; paneTab = 'list'; applyTab(); }
+    }
+    const startFocus = rowFor(wanted) || (lensDeck ? commanderRow(lensDeck.name) : null)
       || data.cards.find((c) => c.name === 'Atraxa, Praetors’ Voice' || c.name === "Atraxa, Praetors' Voice")
       || data.cards.find((c) => c.name === 'Krenko, Mob Boss')
       || data.cards[0];
@@ -804,7 +875,7 @@
       if (el.dataset.key === 'decks' && CrankFacets.stateOf(selection, 'decks', el.dataset.value) === 'include') { const lead = commanderRow(el.dataset.value); if (lead) focusId = lead.id; }
       redrawTicks(); refresh(focusId); updateFacetCounts();
     };
-    actions['facet-clear'] = () => { selection = {}; loopTouched = false; redrawTicks(); refresh(currentFocus()); updateFacetCounts(); };
+    actions['facet-clear'] = () => { selection = {}; loopTouched = false; lensId = ''; redrawTicks(); refresh(currentFocus()); updateFacetCounts(); };
     actions['facet-done'] = () => { document.querySelector('dialog[open]')?.close(); };
     /* A FACET OPENS IN A DIALOG: its options A to Z (mana value lowest first), a search box when
        there are many, the same three-state picks as the chips, the all/any rule, Clear for this

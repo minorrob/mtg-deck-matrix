@@ -34,9 +34,14 @@
   const UPGRADE_CHEAP_LINE=2;                        // the "cheap" filter on the Upgrade Path: at or under this many dollars
   const TYPE_ORDER=['Commander','Creature','Planeswalker','Battle','Instant','Sorcery','Artifact','Enchantment','Land','Other'];
   const LOOP_MAX_LEN=4;                              // the longest cycle the loop finder closes
+  /* THE HOUSE MINIMUMS BY ROLE: what a hundred should carry before the role lens stops warning.
+     Removal and the two engines of a Commander deck's economy are the ones the house has a
+     number for; the other lenses show their count plain. The Lab's draft targets read the same
+     figures for ramp and draw. */
+  const ROLE_MINIMUMS={removal:8,wipe:2,ramp:10,draw:10};
   /* Presentation data: the art a deck tile shows for a commander, by a word of its name; a
      commander without one shows the record's own image. */
   const DECK_ART={atraxa:'assets/crankmagic/commander-atraxa.webp?v=1',krenko:'assets/crankmagic/commander-krenko.webp?v=1',shadrix:'assets/crankmagic/commander-shadrix.webp?v=1',chulane:'assets/crankmagic/commander-chulane.webp?v=1'};
   const deckArt=commanderName=>{const n=String(commanderName||'').toLowerCase();for(const [word,src] of Object.entries(DECK_ART))if(n.includes(word))return src;return '';};
-  return {RULES,capFor,localOnly,BANDS,bandOf,warnings,round,GC_LIMIT,UPGRADE_CHEAP_LINE,TYPE_ORDER,LOOP_MAX_LEN,DECK_ART,deckArt};
+  return {RULES,capFor,localOnly,BANDS,bandOf,warnings,round,GC_LIMIT,UPGRADE_CHEAP_LINE,TYPE_ORDER,LOOP_MAX_LEN,ROLE_MINIMUMS,DECK_ART,deckArt};
 });
