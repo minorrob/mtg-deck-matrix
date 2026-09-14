@@ -81,6 +81,16 @@
      join: (r) => hit(r.fires, ["cast-instant-sorcery", "cast-spell"]) || hit(r.firedBy, ["cast-instant-sorcery", "cast-spell"])}
   ];
   const byId = new Map(STRATEGIES.map((s) => [s.id, s]));
+  /* Sources 1 and 2 as lines for a deck page (Rob, 14 September): what the commander's own
+     text offers and what the deck's mechanics name, in the tuples' own words — label and why —
+     the commander's first. Deterministic: the same card and mechanics always say the same
+     thing, and no model is consulted. */
+  function describe(card, mechanics) {
+    const derived = card ? derive(card) : [], named = fromMechanics(mechanics || []);
+    const ids = [...new Set([...derived, ...named])];
+    const lines = ids.map((id) => ({id, label: byId.get(id).label, why: byId.get(id).why, source: derived.includes(id) ? (named.includes(id) ? "both" : "commander") : "mechanics"}));
+    return {ids, derived, named, lines};
+  }
   const ids = () => STRATEGIES.map((s) => s.id);
   const labelOf = (id) => (byId.get(id) ? byId.get(id).label : String(id));
 
@@ -135,5 +145,5 @@
     return sort([...commanderStrategies, ...named]);
   }
 
-  return {STRATEGIES, ids, labelOf, derive, servedBy, fromMechanics, fromWords, forDeck, MECHANIC_LABELS};
+  return {STRATEGIES, ids, labelOf, derive, describe, servedBy, fromMechanics, fromWords, forDeck, MECHANIC_LABELS};
 });

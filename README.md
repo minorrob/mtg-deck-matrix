@@ -42,7 +42,11 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
 
 - **Decks** (`#decks`): plans and assembly status. A deck page is five tabs on the route
   (`#decks?deck=…&tab=cards|guide|upgrades|history`): **Overview** — the hero, the Progress and
-  Cost card and one *Next:* line in the order the work happens; **Cards** — the hundred by type
+  Cost card, one *Next:* line in the order the work happens, and *The hundred at a glance* —
+  the curve and type counts, the hundred by card type and by Primary Purpose as two keyed
+  bars, and the key strategy in the strategy vocabulary's own words, read off the commander's
+  rules text and the deck's named mechanics (`CrankStrategies.describe`, deterministic, no
+  model); **Cards** — the hundred by type
   with where each copy stands, the composition at its head; **Guide** — the commander, the
   strategy and structural SWOT; **Upgrades** — the working list and the Upgrade Path;
   **History** — the game record and every measured run. The hero row is the work (Ready to

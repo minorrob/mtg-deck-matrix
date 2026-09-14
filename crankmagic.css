@@ -1564,3 +1564,13 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-pop-type{margin:0 0 6px;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;font-size:13px}.cm-pop-type .cm-mana img{width:17px;height:17px}
 .cm-pop-meta{font-size:12px}.cm-pop-meta h4{font-size:11px}
 @media(max-width:760px){.cm-pop-body{grid-template-columns:1fr;gap:10px}.cm-pop-art{width:min(230px,100%);margin:0 auto}.cm-pop-side{flex-direction:row;flex-wrap:wrap;order:3}#matrix-v2 .cm-pop-side .v-button{width:auto;flex:1 1 auto}}
+
+/* THE HUNDRED AT A GLANCE (deck Overview, Rob, 14 September): the composition, two breakdown bars, the strategy lines. */
+.cm-glance{margin:0 0 20px}.cm-glance h2{margin:0 0 12px}.cm-glance-grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr);gap:18px 26px;align-items:start}
+.cm-glance .cm-deck-composition{margin:0}.cm-glance-bar h4,.cm-glance-strategy h4{margin:0 0 8px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#9fc3e8}
+.cm-breakdown{display:flex;height:14px;border-radius:7px;overflow:hidden;background:#2a3448;gap:1px}.cm-breakdown i{display:block;min-width:2px;height:100%}
+.cm-breakdown-key{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:#c9d4e6}.cm-breakdown-key i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.cm-breakdown-key strong{color:#f2f6fb;font-variant-numeric:tabular-nums;margin-left:2px}
+.cm-glance .b0{background:#79bdff}.cm-glance .b1{background:#e2b85a}.cm-glance .b2{background:#7fd3a0}.cm-glance .b3{background:#d8807f}.cm-glance .b4{background:#b48bff}.cm-glance .b5{background:#5cc8d6}.cm-glance .b6{background:#f0a35c}.cm-glance .b7{background:#9fb2cc}
+.cm-glance-strategy{margin-top:16px;padding-top:12px;border-top:1px solid var(--v-line)}.cm-glance-strategy p{margin:0 0 6px;line-height:1.5}
+@media(max-width:760px){.cm-glance-grid{grid-template-columns:1fr;gap:14px}}
