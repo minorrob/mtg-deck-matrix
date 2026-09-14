@@ -88,6 +88,11 @@
      Yours. `lensId` is one of CrankLens.LENSES or '' for the plain list; the route can set it
      (#discover?lens=Removal&deck=<id>) and the select in the list head changes it. */
   let lensId = '';
+  /* THE TRACE (T2/T3 of docs/crankmagic-strategy-trace-plan.md): the pane's third tab. With a
+     deck picked, the graph is remounted over the deck's hundred (or the candidate pool) in
+     trace mode and the pane plays the list. `traceTicks` is what the reader ticked this
+     session, persisted to the deck definition as `strategies`. */
+  let traceOn = false, traceWorld = 'deck', traceResult = null, traceTicks = null, wantTrace = false;
   /* LOOPS ONLY: the depth gauge walks only the joins that continue or pay off a loop. It follows
      the deck pick -- a deck is a question about its loops, the open graph a question about
      everything -- until the reader sets it by hand, and Clear filters hands it back. */
@@ -100,7 +105,7 @@
   const FOLD_TAIL = 12;
 
   views.discover = async (params) => {
-    C.HELP.discover = {title: 'Discover', body: '<p>The connected card catalog: follow a card into the cards it is joined to, inspect the evidence for each link, and take what you find into a group or a deck.</p><p>Structural links (shared mechanics and roles) and observed co-play (EDHREC) are different kinds of evidence. Neither claims a simulated improvement.</p><p>In the card pane and the pop-ups, the term with the gold ring is the card’s <strong>Primary Purpose</strong>: the one job it is in a deck for, decided by a fixed ladder (finisher, extra turn, board wipe, multiplier, untap engine, copier, blink, team quality, tutor, sacrifice outlet, removal, draw, ramp, token maker, payoff, and so on down to its body and its tribe). In a filter dialog the count beside an option is what you would have under the filters already applied; the whole-graph figure is on the hover. Picking a deck under <strong>Yours</strong> puts its commander in focus, and dragging the divider beside the graph grows the card picture up to 70%.</p><p><strong>Loops only</strong>, on by default when a deck is picked, walks only the joins that continue or pay off a loop: an untap, copy or blink onto a tap ability worth another go, a repeatable supply into a demand, an event one card causes and another fires on. <strong>Loops this card is in</strong> lists every cycle of four cards or fewer through the focus, each step named and the missing pieces dashed, with the cards that turn each pass into damage, cards or mana.</p>'};
+    C.HELP.discover = {title: 'Discover', body: '<p>The connected card catalog: follow a card into the cards it is joined to, inspect the evidence for each link, and take what you find into a group or a deck.</p><p><strong>Trace</strong> (the pane\'s third tab, with a deck picked under Yours, or <em>Trace</em> on the deck page) lights the deck from its commander outward: only the joins that serve the deck\'s strategies, loop-backs in gold, the cards it never touches ghosted on the outer band. The list in the pane is the product; the animation shows how it was chosen. The trace score is a heuristic and is labelled one; the measured score beside it is the simulator\'s.</p><p>Structural links (shared mechanics and roles) and observed co-play (EDHREC) are different kinds of evidence. Neither claims a simulated improvement.</p><p>In the card pane and the pop-ups, the term with the gold ring is the card’s <strong>Primary Purpose</strong>: the one job it is in a deck for, decided by a fixed ladder (finisher, extra turn, board wipe, multiplier, untap engine, copier, blink, team quality, tutor, sacrifice outlet, removal, draw, ramp, token maker, payoff, and so on down to its body and its tribe). In a filter dialog the count beside an option is what you would have under the filters already applied; the whole-graph figure is on the hover. Picking a deck under <strong>Yours</strong> puts its commander in focus, and dragging the divider beside the graph grows the card picture up to 70%.</p><p><strong>Loops only</strong>, on by default when a deck is picked, walks only the joins that continue or pay off a loop: an untap, copy or blink onto a tap ability worth another go, a repeatable supply into a demand, an event one card causes and another fires on. <strong>Loops this card is in</strong> lists every cycle of four cards or fewer through the focus, each step named and the missing pieces dashed, with the cards that turn each pass into damage, cards or mana.</p>'};
     C.main.innerHTML = C.pageHead('Discover') + '<p role="status">Loading graph metadata…</p>';
 
     const loaded = await C.catalog.loadGraph();
@@ -201,7 +206,7 @@
           </div>
         </div>
         <div class="cm-pane-gutter" id="cm-pane-gutter" role="separator" aria-orientation="vertical" tabindex="0" aria-label="Resize the card pane. Drag it, or use the arrow keys. Double-click to reset." title="Drag to resize · double-click to reset"><i></i></div>
-        <aside class="v-panel cm-card-view" id="cm-card-view" aria-live="polite"><div class="cm-pane-tabs" role="tablist" aria-label="Card pane">${tabButton('card', 'Card Info')}${tabButton('list', 'List')}</div><div id="cm-pane-body"></div></aside>
+        <aside class="v-panel cm-card-view" id="cm-card-view" aria-live="polite"><div class="cm-pane-tabs" role="tablist" aria-label="Card pane">${tabButton('card', 'Card Info')}${tabButton('list', 'List')}${tabButton('trace', 'Trace')}</div><div id="cm-pane-body"></div></aside>
       </div>`;
 
     applyStage();
@@ -286,7 +291,8 @@
           if (graph) { graph.setMode(gmode); graph.setSelected(picked); }
         },
         onPick(card, ids) { picked = ids; drawCardView(graph.current(), null, true); },
-        onHit: showPop
+        onHit: showPop,
+        onTrace(state) { if (state === null && traceOn) { traceOn = false; traceResult = null; if (paneTab === 'trace') { paneTab = 'card'; applyTab(); } return; } updateTraceProgress(state); }
       });
       graph.setMode(gmode); graph.setSelected(picked);
     }
@@ -470,9 +476,14 @@
     function tabButton(id, label) { return `<button type="button" role="tab" class="cm-pane-tab${paneTab === id ? ' is-on' : ''}" aria-selected="${paneTab === id}" data-action="pane-tab" data-tab="${id}">${label}</button>`; }
     function applyTab() {
       for (const t of document.querySelectorAll('.cm-pane-tab')) { const on = t.dataset.tab === paneTab; t.classList.toggle('is-on', on); t.setAttribute('aria-selected', String(on)); }
-      document.querySelector('.cm-graph-grid')?.classList.toggle('cm-list-open', paneTab === 'list');
+      document.querySelector('.cm-graph-grid')?.classList.toggle('cm-list-open', paneTab === 'list' || paneTab === 'trace');
     }
-    actions['pane-tab'] = (el) => { paneTab = el.dataset.tab; listCard = null; applyTab(); lastDrawn = ''; drawCardView(listCard || graph?.current(), null, true); requestAnimationFrame(() => { sizePane(); dispatchEvent(new Event('resize')); }); };
+    actions['pane-tab'] = (el) => {
+      const was = paneTab; paneTab = el.dataset.tab; listCard = null; applyTab(); lastDrawn = '';
+      if (paneTab === 'trace') { traceOn = true; runTrace(true); }
+      else { if (was === 'trace') stopTrace(); else drawCardView(listCard || graph?.current(), null, true); }
+      requestAnimationFrame(() => { sizePane(); dispatchEvent(new Event('resize')); });
+    };
     /* THE LIST. graph.reach() at the widest setting, over the filtered world the graph is
        mounted on, so every filter still applies and only the sliders do not. */
     const LIST_COLS = [['name', 'Card'], ['link', 'Link'], ['color', 'Color'], ['price', 'Price']];
@@ -550,6 +561,124 @@
       $('#cm-graph-size').textContent = lastInfo && lastInfo.total ? `${lastInfo.total} on canvas · lens: ${r.lens}` : '';
       sizePane();
     }
+    /* ------------------------------------------------------------------ THE TRACE
+       The deck picked under Yours is the subject. `traceRows` is the set walked: the hundred
+       as graph rows (This deck), or the hundred plus the candidates -- the library, the deck's
+       linked options and the commander's co-play neighbours -- inside the definition's fence
+       (What it could be). CrankTrace walks it; the graph plays it; this pane lists it. */
+    const tracePick = () => pickedDeck();
+    function traceStrategies(deck, commanderRow) {
+      const S = globalThis.CrankStrategies;
+      return S.forDeck({commanderStrategies: S.derive(commanderRow), mechanics: deck.definition.mechanics, ticked: traceTicks || (deck.definition.strategies && deck.definition.strategies.length ? deck.definition.strategies : null)});
+    }
+    function traceRows(deck, commanderRow) {
+      const seen = new Set([commanderRow.id]), hundred = [];
+      for (const r of deck.slots.filter((x) => x.purpose === 'main')) { const row = rowFor(C.card(r.cardId)); if (row && !seen.has(row.id)) { seen.add(row.id); hundred.push(row); } }
+      if (traceWorld !== 'pool') return {rows: hundred, fence: null, inDeck: new Set(hundred.map((r) => r.id))};
+      const inDeck = new Set(hundred.map((r) => r.id)), pool = [...hundred];
+      const add = (row) => { if (row && !seen.has(row.id)) { seen.add(row.id); pool.push(row); } };
+      for (const c of C.cards()) add(rowFor(c));
+      for (const r of deck.slots.filter((x) => x.purpose !== 'main')) add(rowFor(C.card(r.cardId)));
+      const lead = C.card(deck.commanders[0]), co = coPlayOf(lead && lead.oracleId);
+      if (co) for (const oid of [...co.keys()].sort((a, b) => co.get(b).inclusion - co.get(a).inclusion).slice(0, 200)) add(byGraphId.get(oid));
+      const identity = new Set((lead && lead.colorIdentity) || []), cap = deck.definition.perCardCap;
+      const fence = (row) => {
+        if (inDeck.has(row.id)) return {ok: true};
+        if (String(row.ci || '').split('').some((x) => x && !identity.has(x))) return {ok: false, why: 'outside the colour identity'};
+        const rec = C.catalog.exact(row.name);
+        if (cap !== null && cap !== undefined && rec && Number.isFinite(rec.price) && rec.price > cap) return {ok: false, why: `over the per-card cap (${C.money(rec.price)})`};
+        return {ok: true};
+      };
+      return {rows: pool, fence, inDeck};
+    }
+    function runTrace(autoplay) {
+      const deck = tracePick(), T = globalThis.CrankTrace, S = globalThis.CrankStrategies;
+      const lead = deck && C.card(deck.commanders[0]), commanderRow = lead ? rowFor(lead) : null;
+      if (!deck || !T || !S || !commanderRow) { traceResult = null; drawTracePane(); return; }
+      const {rows, fence, inDeck} = traceRows(deck, commanderRow);
+      const owns = CrankFacets.owns(C.state), held = globalThis.CrankLens ? CrankLens.holdings(C.state) : new Map();
+      const statusOf = (row) => { const rec = C.catalog.exact(row.name) || {}; const h = rec.id ? held.get(rec.id) : null; return {status: inDeck.has(row.id) ? 'in deck' : owns.has(row) ? 'owned' : h && h.ordered ? 'on order' : 'not owned', price: Number.isFinite(rec.price) ? rec.price : null}; };
+      const strategies = traceStrategies(deck, commanderRow);
+      traceResult = T.trace(commanderRow, rows, CrankGraph.relate, strategies, {purposeOf: globalThis.MtgCardClassify ? MtgCardClassify.purposeOf : null, statusOf, fence});
+      traceResult.deckId = deck.id; traceResult.deckName = deck.name; traceResult.world = traceWorld; traceResult.offered = S.ids().filter((id) => S.derive(commanderRow).includes(id) || S.fromMechanics(deck.definition.mechanics).includes(id) || strategies.includes(id));
+      traceResult.measured = (C.state.reports || []).filter((r) => r.deckId === deck.id && r.origin === 'measured').slice(-1).map((r) => r.metrics && r.metrics.score && r.metrics.score.value)[0];
+      mount([commanderRow, ...rows.filter((r) => r.id !== commanderRow.id)], commanderRow.id);
+      graph.setTrace(traceResult, {autoplay});
+      drawTracePane();
+    }
+    function stopTrace() {
+      traceOn = false; traceResult = null;
+      if (graph && graph.tracing) graph.setTrace(null);
+      refresh(currentFocus());
+    }
+    function updateTraceProgress(state) {
+      if (!state || paneTab !== 'trace') return;
+      const at = $('#cm-trace-at'); if (at) at.textContent = `${state.lit} of ${state.total} lit${state.playing ? ' · playing' : state.done ? '' : ' · paused'}`;
+      const play = $('#cm-trace-play'); if (play) play.textContent = state.playing ? 'Pause' : state.done ? 'Replay' : 'Play';
+      for (const row of view.querySelectorAll('.cm-trace-row[data-order]')) row.classList.toggle('is-lit', Number(row.dataset.order) <= state.lit);
+    }
+    function drawTracePane() {
+      const deck = tracePick(), S = globalThis.CrankStrategies, T = globalThis.CrankTrace;
+      if (!deck) { view.innerHTML = `<div class="cm-list-head cm-trace"><h3 class="cm-trace-head">Trace</h3><p class="cm-muted">Pick a deck under <strong>Yours</strong> and the trace lights it from the commander outward: the joins that serve its strategies, the loops that come back, the cards it never touches. Or open a deck page and press <em>Trace</em>.</p></div>`; sizePane(); return; }
+      const r = traceResult;
+      if (!r || !S || !T) { view.innerHTML = `<div class="cm-list-head cm-trace"><h3 class="cm-trace-head">Trace: ${e(deck.name)}</h3><p class="cm-muted">${r === null && !globalThis.CrankTrace ? 'The trace module has not loaded yet.' : 'The commander is not in the graph, so there is nothing to trace from.'}</p></div>`; sizePane(); return; }
+      const st = graph && graph.tracing ? graph.traceState : null, litNow = st ? st.lit : r.lit;
+      const ticked = new Set(r.strategies);
+      const strategyTicks = r.offered.map((id) => `<label class="cm-checkbox"><input type="checkbox" name="traceStrategy" value="${e(id)}"${ticked.has(id) ? ' checked' : ''}> ${e(S.labelOf(id))}</label>`).join('');
+      const more = S.ids().filter((id) => !r.offered.includes(id));
+      const moreTicks = more.length ? `<details class="cm-inline-menu cm-hint"><summary class="cm-hint-btn" title="More strategies" aria-label="More strategies">+${more.length}</summary><div class="cm-menu cm-inline-menu-body cm-trace-strategies">${more.map((id) => `<label class="cm-checkbox"><input type="checkbox" name="traceStrategy" value="${e(id)}"${ticked.has(id) ? ' checked' : ''}> ${e(S.labelOf(id))}</label>`).join('')}</div></details>` : '';
+      const status = {'in deck': ['In deck', ''], owned: ['Owned', 'good'], 'on order': ['On order', ''], 'not owned': ['Not owned', 'warn']};
+      const groups = r.groups.map((g) => {
+        const rows = g.ids.map((id) => r.list.find((x) => x.id === id)).map((x) => {
+          const key = CrankCatalog.key(x.name), act = r.world === 'pool' && x.status !== 'in deck'
+            ? (deck.status === 'draft' ? `<button type="button" class="v-button compact" data-action="discover-to-deck" data-card="${e(x.name)}" data-deck="${e(deck.id)}">Add to deck</button>` : `<button type="button" class="v-button compact" data-action="trace-option" data-card="${e(key)}">Link as option</button>`) : '';
+          const pill = r.world === 'pool' && x.status ? `<span class="cm-badge ${status[x.status] ? status[x.status][1] : ''}">${e(status[x.status] ? status[x.status][0] : x.status)}</span>` : '';
+          return `<li class="cm-trace-row${x.order <= litNow ? ' is-lit' : ''}" data-order="${x.order}"><span class="k">${x.order}</span><span class="cm-trace-ring r${x.ring}">${x.ring}</span><button type="button" class="cm-card-name" data-action="card" data-card="${e(key)}">${e(x.name)}${x.purpose ? `<em>${e(x.purpose)}</em>` : ''}</button>${x.loopBacks ? `<span class="loop">×${x.loopBacks} loop-back${x.loopBacks === 1 ? '' : 's'}</span>` : pill}<span class="via">${e(x.via ? x.via.says : '')}${act ? ' · ' : ''}${act}</span></li>`;
+        }).join('');
+        return `<h4 class="cm-trace-group">Ring ${g.ring} · ${e(g.label)}<small>${g.ids.length}</small></h4><ol class="cm-trace-list">${rows}</ol>`;
+      }).join('');
+      const outside = r.outsideDefinition.length ? `<div class="cm-trace-out"><strong>Would help, outside the definition:</strong><ul>${r.outsideDefinition.slice(0, 12).map((o) => `<li>${e(o.name)} — ${e(o.why)}</li>`).join('')}${r.outsideDefinition.length > 12 ? `<li>and ${r.outsideDefinition.length - 12} more</li>` : ''}</ul></div>` : '';
+      view.innerHTML = `<div class="cm-list-head cm-trace">
+        <h3 class="cm-trace-head">Trace: what ${e(deck.name)} builds from ${e(r.commander.name)}</h3>
+        <div class="cm-trace-worlds" role="group" aria-label="What to trace">${b('This deck', 'trace-world', {world: 'deck'}, r.world !== 'pool', {cls: 'compact'})}${b('What it could be', 'trace-world', {world: 'pool'}, r.world === 'pool', {cls: 'compact'})}</div>
+        <p class="cm-trace-sub cm-muted">Strategies traced — untick one and the trace changes; your ticks stay with the deck.</p>
+        <div class="cm-trace-strategies">${strategyTicks}${moreTicks}</div>
+        <div class="cm-trace-transport"><button type="button" class="v-button compact" id="cm-trace-play" data-action="trace-ctl" data-ctl="play">${st && st.playing ? 'Pause' : st && st.done ? 'Replay' : 'Play'}</button>${b('Step', 'trace-ctl', {ctl: 'step'}, false, {cls: 'compact'})}${b('Back', 'trace-ctl', {ctl: 'back'}, false, {cls: 'compact'})}${b('End', 'trace-ctl', {ctl: 'end'}, false, {cls: 'compact'})}<label>Speed <select name="traceSpeed" aria-label="Animation speed">${[[0.5, '½×'], [1, '1×'], [2, '2×'], [4, '4×']].map(([v, l]) => `<option value="${v}"${st && st.speed === v ? ' selected' : (!st && v === 1 ? ' selected' : '')}>${l}</option>`).join('')}</select></label><span class="cm-trace-at" id="cm-trace-at">${st ? `${st.lit} of ${st.total} lit${st.playing ? ' · playing' : st.done ? '' : ' · paused'}` : `${r.lit} lit`}</span></div>
+        <div class="cm-trace-score"><div><strong>${r.score}</strong><span>cohesion score · a heuristic</span>${r.measured !== undefined && r.measured !== null ? `<em>measured ${e(String(r.measured))}</em>` : '<em>not yet measured</em>'}</div><div><strong>${r.lit}</strong><span>cards lit of ${r.total}</span></div><div><strong>${r.closedLoops}</strong><span>loop-backs drawn</span></div><div><strong>${r.loopBacks}</strong><span>loop-backs counted</span></div></div>
+        <h3 class="cm-chips-head">Lit in order</h3>
+        ${groups || '<p class="cm-muted">No join in this set serves a ticked strategy. Tick more strategies, or trace What it could be.</p>'}
+        <p class="cm-trace-unlit"><b>${e(T.unlitSentence(r))}</b> ${r.unlit.length ? b('Open them in List', 'trace-to-list', {}, false, {cls: 'compact'}) : ''}</p>
+        ${outside}
+        <p class="cm-trace-foot">${b('Export the list (CSV)', 'trace-export', {}, false, {cls: 'compact'})} The list is the walk's order: ring 1 from the commander, ring 2 from ring 1, strongest join first. Gold counts are loop-backs — joins that come back onto a lit card, plus the cycles through it. The cohesion score says how much of the deck the commander's strategies reach and how tightly it loops; it is not power — over 206 measured lists it does not track the simulator's score (rank correlation 0.2), so read the measured figure for that.</p>
+      </div>`;
+      sizePane();
+    }
+    actions['trace-world'] = (el) => { traceWorld = el.dataset.world === 'pool' ? 'pool' : 'deck'; runTrace(true); };
+    actions['trace-ctl'] = (el) => {
+      if (!graph || !graph.tracing) { runTrace(true); return; }
+      const ctl = el.dataset.ctl === 'play' && graph.traceState && graph.traceState.playing ? 'pause' : el.dataset.ctl;
+      graph.traceControl(ctl);
+    };
+    actions['trace-to-list'] = () => { paneTab = 'list'; lensId = ''; applyTab(); drawList(); };
+    actions['trace-export'] = () => {
+      const r = traceResult; if (!r) return;
+      const q = (v) => `"${String(v === null || v === undefined ? '' : v).replace(/"/g, '""')}"`;
+      const lines = [['order', 'ring', 'card', 'strategy', 'strategies', 'lit by', 'join', 'loop-backs', 'purpose', 'status', 'price'].join(',')];
+      for (const x of r.list) lines.push([x.order, x.ring, x.name, x.groupLabel, x.strategies.join(' '), x.from ? (r.list.find((y) => y.id === x.from) || {}).name || '' : '', x.via ? x.via.says : '', x.loopBacks, x.purpose, x.status, x.price === null ? '' : x.price].map(q).join(','));
+      for (const u of r.unlit) lines.push(['', '', u.name, '', '', '', 'unlit', '', u.bucket, '', ''].map(q).join(','));
+      C.download(`CrankMagic-trace-${String(r.deckName || 'deck').replace(/[^\w-]+/g, '_')}.csv`, lines.join('\n'), 'text/csv');
+    };
+    actions['trace-option'] = (el) => { const deck = tracePick(), card = C.card(el.dataset.card); if (deck && card) optionDialog(deck, card, `Trace · ${traceResult ? traceResult.strategies.map((id) => globalThis.CrankStrategies.labelOf(id)).join(', ') : ''}`); };
+    pane.addEventListener('change', (ev) => {
+      const speed = ev.target.closest('select[name=traceSpeed]'); if (speed && graph && graph.tracing) { graph.traceControl('speed', speed.value); return; }
+      const tick = ev.target.closest('input[name=traceStrategy]'); if (!tick) return;
+      const deck = tracePick(); if (!deck) return;
+      traceTicks = [...view.querySelectorAll('input[name=traceStrategy]:checked')].map((x) => x.value);
+      /* Persisted with the deck, so a trace run twice agrees with itself and the Lab can read it. */
+      C.commit({type: 'editDeck', deckId: deck.id, definition: {...deck.definition, strategies: traceTicks}}, {renderView: false}).catch((error) => C.notice(error.message, true));
+      runTrace(false);
+    });
+
     function drawList() {
       const focus = graph?.current();
       if (lensId && !landsOnly()) { const r = lensResult(); if (r) { drawLens(r); return; } }
@@ -603,14 +732,18 @@
     /* SWAP FOR...: the candidate becomes a linked, uncommitted upgrade option on a main slot the
        reader chooses -- the slots in the lens's role first, then the rest of the hundred. The
        command is the module's; the model keeps the hundred as it was. */
+    /* The option dialog the lens and the trace share: a main slot to replace, the role's or the
+       strategy's slots first, and the uncommitted `option` command on submit. */
+    function optionDialog(deck, card, why, firstSlots = new Set()) {
+      const slots = deck.slots.filter((x) => x.purpose === 'main').map((x) => [x.id, `${C.card(x.cardId)?.name || x.cardId}${firstSlots.has(x.id) ? ' — in the role' : ''}`]).sort((a, b) => (firstSlots.has(a[0]) ? 0 : 1) - (firstSlots.has(b[0]) ? 0 : 1) || a[1].localeCompare(b[1]));
+      form(`Swap for ${card.name}`, s('Replaces (a main-deck slot)', 'slot', slots, slots[0] && slots[0][0]) + note(`${card.name} is linked to the slot as an upgrade option, uncommitted. ${deck.name}'s hundred does not change until you accept the option on the deck page.`),
+        async (v) => { await C.commit(CrankLens.swapCommand(deck, v.slot, card, why), {renderView: false}); C.notice(`${card.name} linked as an upgrade option in ${deck.name}.`); if (paneTab === 'trace') runTrace(false); else drawList(); });
+    }
     actions['lens-swap'] = (el) => {
       const r = lensResult(); if (!r) return;
       const deck = C.M.deck(C.state, r.deck.id), card = C.card(el.dataset.card);
       if (!card) throw Error('That card is not in the catalog.');
-      const inRole = new Set(r.have.map((h) => h.slotId));
-      const slots = deck.slots.filter((x) => x.purpose === 'main').map((x) => [x.id, `${C.card(x.cardId)?.name || x.cardId}${inRole.has(x.id) ? ` — ${r.lens}` : ''}`]).sort((a, b) => (inRole.has(a[0]) ? 0 : 1) - (inRole.has(b[0]) ? 0 : 1) || a[1].localeCompare(b[1]));
-      form(`Swap for ${card.name}`, s('Replaces (a main-deck slot)', 'slot', slots, slots[0] && slots[0][0]) + note(`${card.name} is linked to the slot as an upgrade option, uncommitted. ${deck.name}'s hundred does not change until you accept the option on the deck page.`),
-        async (v) => { await C.commit(CrankLens.swapCommand(deck, v.slot, card, r.lens), {renderView: false}); C.notice(`${card.name} linked as an upgrade option in ${deck.name}.`); drawList(); });
+      optionDialog(deck, card, r.lens, new Set(r.have.map((h) => h.slotId)));
     };
     actions['list-to-deck'] = async (el) => {
       const deck = C.M.deck(C.state, el.dataset.deck);
@@ -635,6 +768,7 @@
     });
     function drawCardView(c, info, keepInfo) {
       if (!keepInfo) lastInfo = info;
+      if (paneTab === 'trace') { drawTracePane(); return; }
       if (paneTab === 'list') { drawList(); return; }
       if (listCard && (!c || c.id !== listCard.id)) c = listCard;
       /* Same card, same picture, same picks: leave the pane alone. Rewriting it moves the
@@ -723,6 +857,8 @@
     const isLand = (c) => c.isLand === true || /\bLand\b/.test(String(c.type || ''));
     const landsOnly = () => CrankFacets.stateOf(selection, 'lands', 'lands only') === 'include';
     function refresh(keepFocus) {
+      /* A filter change narrows the world; the trace is the deck's, so it ends here. */
+      if (traceOn) { traceOn = false; traceResult = null; if (paneTab === 'trace') { paneTab = 'card'; applyTab(); } }
       /* Enters is a question about lands, so it only means anything in Lands only; off the
          mode it would empty the graph (no spell enters tapped or untapped). Dropped here,
          so leaving the mode by any door -- the chip, Clear, picking a spell -- clears it. */
@@ -778,12 +914,14 @@
       selection = {...selection, decks: [lensDeck.name]};
       const wantedLens = globalThis.CrankLens ? CrankLens.lensOf(params.get('lens')) : null;
       if (wantedLens) { lensId = wantedLens.id; paneTab = 'list'; applyTab(); }
+      if (params.get('trace') === '1') wantTrace = true;
     }
     const startFocus = rowFor(wanted) || (lensDeck ? commanderRow(lensDeck.name) : null)
       || data.cards.find((c) => c.name === 'Atraxa, Praetors’ Voice' || c.name === "Atraxa, Praetors' Voice")
       || data.cards.find((c) => c.name === 'Krenko, Mob Boss')
       || data.cards[0];
     refresh(startFocus?.id);
+    if (wantTrace) { wantTrace = false; paneTab = 'trace'; applyTab(); traceOn = true; runTrace(true); }
 
     const currentFocus = () => graph?.current()?.id;
 

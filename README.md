@@ -203,6 +203,14 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   linked upgrades, the commander's co-play neighbours) ranked by co-play, then owned before
   ordered before not owned; *Swap for…* links a candidate as an uncommitted upgrade option
   (`crankmagic-lens.js`, `tests/crankmagic-lens.mjs`).
+  **Trace** (the pane's third tab, or *Trace* on the deck page, `#discover?deck=<id>&trace=1`)
+  lights a deck from its commander outward over the joins that serve its strategies
+  (`crankmagic-strategies.js`, sixteen tuples; `data/commander-strategies.json` for every legal
+  commander), loop-backs in gold, the untouched cards ghosted; the pane plays the same list in
+  order with the join that lit each card, the strategies as ticks saved with the deck, a
+  cohesion score labelled a heuristic beside the measured score, and a second world — what the
+  deck could be — over the library and the commander's co-play neighbours inside the definition
+  (`crankmagic-trace.js`, `tests/crankmagic-trace.mjs`, `tests/commander-strategies.mjs`).
 
 ### Load Live
 

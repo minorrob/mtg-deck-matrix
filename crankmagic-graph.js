@@ -270,7 +270,7 @@
     relate: (a, b) => (a && b && a !== b ? relateTerms(termSets(a), termSets(b)) : null),
 
     /* `owned` is CrankFacets.owns(state): has(row) joins on the oracle id, then the name. */
-    mount({canvas, cards, played = [], focus, history = [], owned = null, onSelect, onNeighbors, onPick, onHit, type = 'mechanic', depth = 2, breadth = 12, loopMode = false}) {
+    mount({canvas, cards, played = [], focus, history = [], owned = null, onSelect, onNeighbors, onPick, onHit, onTrace, type = 'mechanic', depth = 2, breadth = 12, loopMode = false}) {
       const ctx = canvas.getContext('2d');
       const byId = new Map(cards.map((c) => [c.id, c]));
       /* The path walked so far. A filter remounts the graph over a narrower set of cards;
@@ -589,7 +589,109 @@
         }
         return {c, nodes, edges, direct};
       }
+      /* ------------------------------------------------------------- the trace mode
+         (docs/crankmagic-strategy-trace-plan.md T2). A trace result from CrankTrace replaces
+         the breadth walk: the commander at the centre, the lit cards on their rings in the
+         order the walk placed them, each ring-2 or ring-3 card inside its parent's sector, the
+         cards the trace never touched ghosted on an outer band. The animation plays the list
+         in order -- a beam leaves the parent, reaches the child, then a rim runs round the
+         child and closes; a return edge appears in gold once both its ends are lit. Reduced
+         motion opens on the finished still. Play, pause, step, restart and speed are on the
+         API; the pane draws the controls. */
+      const BEAM = '#ee735f', BEAM_DIM = '#ee735f99', GOLD = '#e0b660', GHOST_RING = 1.28;
+      let traceRun = null;   // {result, at, step, playing, speed, last, total, order: [nodes]}
+      const reducedMotion = () => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } };
+      function buildTrace(result) {
+        const c = byId.get(result.commander.id);
+        const nodes = [], edges = [];
+        if (!c) return {c: null, nodes, edges, direct: []};
+        const root = {card: c, x: 0, y: 0, r: radius(0), depth: 0, angle: 0, span: Math.PI * 2, order: 0, strategies: result.strategies, loopBacks: result.list[0] ? result.list[0].loopBacks : 0, via: null};
+        nodes.push(root);
+        const byRow = new Map([[c.id, root]]);
+        const rows = result.list.filter((r) => r.ring > 0 && byId.has(r.id));
+        const ring1 = rows.filter((r) => r.ring === 1);
+        ring1.forEach((r, i) => {
+          const angle = -Math.PI / 2 + (i / Math.max(1, ring1.length)) * Math.PI * 2, span = Math.PI * 2 / Math.max(1, ring1.length);
+          const n = {card: byId.get(r.id), depth: 1, parent: root, angle, span, x: Math.cos(angle) * ring(1), y: Math.sin(angle) * ring(1), r: radius(1), order: r.order, via: r.via, strategies: r.strategies, loopBacks: r.loopBacks, strength: r.strength, kind: r.via && r.via.kind, tag: r.via && r.via.term, reason: r.via && r.via.says};
+          nodes.push(n); byRow.set(r.id, n); edges.push({a: root, b: n, tree: true, kind: n.kind, strength: r.strength, serves: r.strategies});
+        });
+        for (const d of [2, 3]) {
+          const layer = rows.filter((r) => r.ring === d);
+          const byParent = new Map();
+          for (const r of layer) { if (!byParent.has(r.from)) byParent.set(r.from, []); byParent.get(r.from).push(r); }
+          for (const [pid, kids] of byParent) {
+            const parent = byRow.get(pid); if (!parent) continue;
+            const usable = parent.span * .82;
+            kids.forEach((r, i) => {
+              const angle = parent.angle - usable / 2 + (kids.length === 1 ? usable / 2 : (i / (kids.length - 1)) * usable);
+              const n = {card: byId.get(r.id), depth: d, parent, angle, span: usable / Math.max(1, kids.length), x: Math.cos(angle) * ring(d), y: Math.sin(angle) * ring(d), r: radius(d), order: r.order, via: r.via, strategies: r.strategies, loopBacks: r.loopBacks, strength: r.strength, kind: r.via && r.via.kind, tag: r.via && r.via.term, reason: r.via && r.via.says};
+              nodes.push(n); byRow.set(r.id, n); edges.push({a: parent, b: n, tree: true, kind: n.kind, strength: r.strength, serves: r.strategies});
+            });
+          }
+        }
+        /* The return edges, gold, once both ends are lit. */
+        for (const e of result.returns) { const a = byRow.get(e.from), b = byRow.get(e.to); if (a && b) edges.push({a, b, tree: false, ret: true, kind: e.via && e.via.kind, serves: e.strategies}); }
+        /* The cards the trace never touched: a faint outer band, in the list's order. */
+        const ghosts = result.unlit.filter((u) => byId.has(u.id));
+        ghosts.forEach((u, i) => {
+          const angle = -Math.PI / 2 + (i / Math.max(1, ghosts.length)) * Math.PI * 2;
+          nodes.push({card: byId.get(u.id), depth: 4, ghost: true, bucket: u.bucket, parent: null, angle, span: 0, x: Math.cos(angle) * ring(3) * GHOST_RING, y: Math.sin(angle) * ring(3) * GHOST_RING, r: 6, order: Infinity, strategies: [], loopBacks: 0});
+        });
+        const direct = ring1.map((r) => ({card: byId.get(r.id), kind: r.via && r.via.kind, tag: r.via && r.via.term, reason: r.via && r.via.says}));
+        return {c, nodes, edges, direct};
+      }
+      /* Where a node stands in the animation: 1 lit, 0 dark, in between while its step runs. */
+      const traceProgress = (n) => !traceRun ? 1 : n.ghost ? 0 : n.depth === 0 ? 1 : n.order < traceRun.at ? 1 : n.order === traceRun.at ? traceRun.step : 0;
+      function traceTick(ts) {
+        if (!traceRun || !traceRun.playing || disposed) return;
+        const dur = 520 / (traceRun.speed || 1);
+        if (!traceRun.last) traceRun.last = ts;
+        traceRun.step = Math.min(1, (ts - traceRun.last) / dur);
+        if (traceRun.step >= 1) {
+          traceRun.at += 1; traceRun.step = 0; traceRun.last = ts;
+          if (traceRun.at > traceRun.total) { traceRun.at = traceRun.total; traceRun.step = 1; traceRun.playing = false; }
+          onTrace && onTrace(traceState());
+        }
+        draw();
+        if (traceRun.playing) requestAnimationFrame(traceTick);
+      }
+      function traceState() {
+        if (!traceRun) return null;
+        const litNow = traceRun.at >= traceRun.total ? traceRun.total : Math.max(0, traceRun.at - 1);
+        return {at: Math.min(traceRun.at, traceRun.total), total: traceRun.total, playing: traceRun.playing, speed: traceRun.speed, done: traceRun.at >= traceRun.total && traceRun.step >= 1, lit: litNow};
+      }
+      function setTrace(result, {autoplay = true} = {}) {
+        if (!result) { traceRun = null; layout(); fit(); draw(); onTrace && onTrace(null); return; }
+        const total = result.list.filter((r) => r.ring > 0 && byId.has(r.id)).length;
+        const still = reducedMotion() || !autoplay;
+        traceRun = {result, total, at: still ? total : 1, step: still ? 1 : 0, playing: false, speed: traceRun ? traceRun.speed : 1, last: 0};
+        if (byId.has(result.commander.id)) center = result.commander.id;
+        layout(); fit(); draw();
+        onTrace && onTrace(traceState());
+        if (!still) traceControl('play');
+      }
+      function traceControl(action, value) {
+        if (!traceRun) return null;
+        if (action === 'play') { if (traceRun.at >= traceRun.total && traceRun.step >= 1) { traceRun.at = 1; traceRun.step = 0; } traceRun.playing = true; traceRun.last = 0; requestAnimationFrame(traceTick); }
+        else if (action === 'pause') traceRun.playing = false;
+        else if (action === 'step') { traceRun.playing = false; traceRun.at = Math.min(traceRun.total, traceRun.at + (traceRun.step > 0 && traceRun.step < 1 ? 0 : 1)); traceRun.step = traceRun.at >= traceRun.total ? 1 : 0; if (traceRun.at < traceRun.total) { traceRun.at += 0; } }
+        else if (action === 'back') { traceRun.playing = false; traceRun.at = Math.max(1, traceRun.at - 1); traceRun.step = 0; }
+        else if (action === 'restart') { traceRun.playing = false; traceRun.at = 1; traceRun.step = 0; }
+        else if (action === 'end') { traceRun.playing = false; traceRun.at = traceRun.total; traceRun.step = 1; }
+        else if (action === 'speed') traceRun.speed = Math.max(.25, Math.min(8, Number(value) || 1));
+        draw(); onTrace && onTrace(traceState());
+        return traceState();
+      }
+
       function layout() {
+        if (traceRun) {
+          const built = buildTrace(traceRun.result);
+          nodes = built.nodes; edges = built.edges;
+          if (!built.c) { onNeighbors && onNeighbors(null, [], trail.length, {total: 0, byDepth: [], trace: true}); draw(); return; }
+          const byDepth = [1, 2, 3].map((d) => nodes.filter((n) => n.depth === d).length);
+          onNeighbors && onNeighbors(built.c, built.direct, trail.length, {total: nodes.filter((n) => !n.ghost).length, byDepth, crossLinks: edges.filter((e) => e.ret).length, trace: true});
+          draw(); return;
+        }
         const built = build(depth, breadth, true);
         nodes = built.nodes; edges = built.edges;
         if (!built.c) { onNeighbors && onNeighbors(null, [], trail.length, {total: 0, byDepth: []}); draw(); return; }
@@ -625,19 +727,39 @@
           ctx.scale(scale, scale);
           const played = type === 'played';
 
+          const pOf = traceProgress;
+          if (traceRun) {
+            /* THE BEAMS. Each tree edge grows from parent to child over the first half of the
+               child's step, then the rim runs round the child; a lit beam stays, dimmer. The
+               gold return arcs bow off the straight line so they read apart from the tree. */
+            for (const e of edges) {
+              if (e.ret) continue;
+              const p = Math.min(1, pOf(e.b) / .55); if (p <= 0) continue;
+              const x = e.a.x + (e.b.x - e.a.x) * p, y = e.a.y + (e.b.y - e.a.y) * p;
+              ctx.save(); ctx.shadowColor = BEAM; ctx.shadowBlur = (p < 1 ? 14 : 6) * Math.max(.6, scale);
+              ctx.strokeStyle = p < 1 ? BEAM : BEAM_DIM; ctx.lineWidth = 1 + (e.strength || .3) * 2;
+              ctx.beginPath(); ctx.moveTo(e.a.x, e.a.y); ctx.lineTo(x, y); ctx.stroke(); ctx.restore();
+            }
+            for (const e of edges) {
+              if (!e.ret || pOf(e.a) < 1 || pOf(e.b) < 1) continue;
+              const mx = (e.a.x + e.b.x) / 2, my = (e.a.y + e.b.y) / 2, dx = e.b.x - e.a.x, dy = e.b.y - e.a.y;
+              ctx.save(); ctx.strokeStyle = GOLD; ctx.lineWidth = 1.5; ctx.shadowColor = GOLD; ctx.shadowBlur = 5;
+              ctx.beginPath(); ctx.moveTo(e.a.x, e.a.y); ctx.quadraticCurveTo(mx - dy * .18, my + dx * .18, e.b.x, e.b.y); ctx.stroke(); ctx.restore();
+            }
+          }
           // cross-links first and faintest, so the tree reads on top of the web -- the whole
           // web only while it is small; otherwise just the hovered or inspected card's own
-          const crossCount = edges.reduce((n, e) => n + (e.tree ? 0 : 1), 0);
+          const crossCount = traceRun ? 0 : edges.reduce((n, e) => n + (e.tree ? 0 : 1), 0);
           const focusId = hover ? hover.card.id : highlight ? highlight[1] : null;
           for (const e of edges) {
-            if (e.tree) continue;
+            if (e.tree || traceRun) continue;
             const own = focusId && (e.a.card.id === focusId || e.b.card.id === focusId);
             if (crossCount > WEB_LIMIT && !own) continue;
             ctx.beginPath(); ctx.moveTo(e.a.x, e.a.y); ctx.lineTo(e.b.x, e.b.y);
             ctx.strokeStyle = own ? (played ? '#e6cf9d99' : '#8fc3f2aa') : (played ? '#c6a86d2e' : '#5384b62e'); ctx.lineWidth = own ? 1.4 : 1; ctx.stroke();
           }
           for (const e of edges) {
-            if (!e.tree) continue;
+            if (!e.tree || traceRun) continue;
             ctx.beginPath(); ctx.moveTo(e.a.x, e.a.y); ctx.lineTo(e.b.x, e.b.y);
             ctx.strokeStyle = played ? (e.b.depth === 1 ? '#c6a86d99' : '#c6a86d55') : (e.b.depth === 1 ? '#5384b699' : '#5384b655');
             ctx.lineWidth = e.b.depth === 1 ? 1.2 : 1; ctx.stroke();
@@ -646,7 +768,7 @@
              reader just took in amber, the connection they asked about in gold. */
           for (const e of edges) {
             const lit = highlight && ((e.a.card.id === highlight[0] && e.b.card.id === highlight[1]) || (e.a.card.id === highlight[1] && e.b.card.id === highlight[0]));
-            if (!e.b.pinned && !lit) continue;
+            if ((!e.b.pinned && !lit) || (traceRun && !lit)) continue;
             ctx.beginPath(); ctx.moveTo(e.a.x, e.a.y); ctx.lineTo(e.b.x, e.b.y);
             ctx.strokeStyle = lit ? '#ffd166' : '#e0b660bb'; ctx.lineWidth = lit ? 2.6 : 2.2; ctx.stroke();
           }
@@ -664,7 +786,7 @@
              enough to carry the words: the focus's own spokes from about two-thirds zoom,
              and ring 2's when it holds few nodes or the reader has zoomed in. Lettering a
              crowded ring would bury the picture under its own captions. */
-          const labelRing1 = scale >= .6 && spacing(1) >= 56, labelRing2 = spacing(2) >= 84 && scale >= .9;
+          const labelRing1 = !traceRun && scale >= .6 && spacing(1) >= 56, labelRing2 = !traceRun && spacing(2) >= 84 && scale >= .9;
           if (labelRing1 || labelRing2) {
             for (const n of nodes) {
               if (!((n.depth === 1 && labelRing1) || (n.depth === 2 && labelRing2))) continue;
@@ -684,6 +806,14 @@
           const order = [...nodes].sort((a, b) => b.depth - a.depth);
           for (const n of order) {
             const focus = n.depth === 0;
+            /* A GHOST: a card the trace never touched, a dashed outline on the outer band. */
+            if (n.ghost) {
+              ctx.save(); ctx.globalAlpha = .34; ctx.fillStyle = '#16233a'; ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2); ctx.fill();
+              ctx.strokeStyle = '#6f93bd'; ctx.lineWidth = .9; ctx.setLineDash([2, 3]); ctx.stroke(); ctx.restore();
+              continue;
+            }
+            const tp = pOf(n);
+            if (traceRun && tp <= 0) ctx.globalAlpha = .18;
             const glow = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.r + (focus ? 12 : 6));
             glow.addColorStop(0, focus ? '#638abd' : n.depth === 1 ? '#385b83' : '#2b4666');
             glow.addColorStop(1, '#263c5700');
@@ -707,7 +837,7 @@
                reader is doing -- selected, pinned, focused, which ring it sits in -- and
                owning a card is a fact about the card. Scaled with the disc so it reads as
                a band on ring 1 and still as a band out on ring 3. */
-            if (owned && owned.has(n.card)) {
+            if (owned && owned.has(n.card) && !(traceRun && tp <= 0)) {
               const band = Math.max(1.5, n.r * .11);
               ctx.strokeStyle = '#f2c96b'; ctx.lineWidth = band;
               ctx.beginPath(); ctx.arc(n.x, n.y, n.r + band / 2 + 1, 0, Math.PI * 2); ctx.stroke();
@@ -724,7 +854,20 @@
             }
             /* Names per ring, gated on zoom: ring 1 always, ring 2 from 0.8, ring 3 from
                1.3. Below those the text would be a smaller smear than the circle it labels. */
-            const showName = n.depth === 0 || n.pinned || (roomy(n.depth) && (n.depth === 1 || (n.depth === 2 && scale >= .8) || (n.depth === 3 && scale >= 1.3)));
+            ctx.globalAlpha = 1;
+            /* THE RIM AND THE COUNTER: the second half of a card's step runs a ring round it;
+               once it has closed, a card in a loop wears its loop-back count in gold. */
+            if (traceRun && n.depth > 0 && tp > 0) {
+              const rp = Math.max(0, (tp - .55) / .45);
+              if (rp > 0) { ctx.save(); ctx.shadowColor = BEAM; ctx.shadowBlur = rp < 1 ? 14 : 4; ctx.strokeStyle = rp < 1 ? BEAM : BEAM_DIM; ctx.lineWidth = rp < 1 ? 2.4 : 1.4; ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 3, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * rp); ctx.stroke(); ctx.restore(); }
+              if (tp >= 1 && n.loopBacks) {
+                const label = '×' + n.loopBacks; ctx.font = 'bold 9px Satoshi, sans-serif'; ctx.textAlign = 'center';
+                const w = ctx.measureText(label).width + 8, bx = n.x + n.r * .75, by = n.y - n.r * .75;
+                ctx.fillStyle = GOLD; ctx.beginPath(); ctx.roundRect(bx - w / 2, by - 7, w, 14, 7); ctx.fill();
+                ctx.fillStyle = '#1b1408'; ctx.fillText(label, bx, by + 3.2);
+              }
+            }
+            const showName = (n.depth === 0 || n.pinned || (roomy(n.depth) && (n.depth === 1 || (n.depth === 2 && scale >= .8) || (n.depth === 3 && scale >= 1.3)))) && !(traceRun && tp <= 0);
             if (showName) {
               const name = (n.pinned ? '◀ ' : '') + n.card.name;
               const max = n.depth === 0 ? 28 : n.depth === 1 ? 24 : 18;
@@ -801,6 +944,7 @@
       }
       function select(id, history = true) {
         if (!byId.has(id)) return;
+        if (traceRun) { traceRun = null; onTrace && onTrace(null); }
         if (history && id !== center) trail.push(center);
         center = id; touched = false;
         layout(); fit(); draw();
@@ -867,7 +1011,7 @@
           if (n && mode === 'select') {
             if (selected.has(n.card.id)) selected.delete(n.card.id); else selected.add(n.card.id);
             draw(); onPick && onPick(n.card, new Set(selected));
-          } else if (n && mode === 'inspect') {
+          } else if (n && (mode === 'inspect' || traceRun)) {
             const at = screenOf(n);
             onHit && onHit({kind: 'node', card: n.card, depth: n.depth, pinned: !!n.pinned, relation: relation(center, n.card.id), x: at.x, y: at.y + at.r});
           } else if (n) select(n.card.id);
@@ -936,7 +1080,11 @@
         visible() { return nodes.map((n) => n.card); },
         /* Where each node is on the canvas right now, in CSS pixels -- what a pop-up
            anchors to, and what a test clicks. */
-        positions() { return nodes.map((n) => ({id: n.card.id, name: n.card.name, depth: n.depth, pinned: !!n.pinned, parent: n.parent ? n.parent.card.id : null, x: width / 2 + pan.x + n.x * scale, y: height / 2 + pan.y + n.y * scale, r: n.r * scale})); },
+        positions() { return nodes.map((n) => ({id: n.card.id, name: n.card.name, depth: n.depth, pinned: !!n.pinned, parent: n.parent ? n.parent.card.id : null, x: width / 2 + pan.x + n.x * scale, y: height / 2 + pan.y + n.y * scale, r: n.r * scale,
+          ghost: !!n.ghost, parentEdge: n.via || null, loopBacks: n.loopBacks || 0, strategies: n.strategies || [], progress: traceRun ? traceProgress(n) : 1})); },
+        /* THE TRACE MODE: a CrankTrace result replaces the breadth walk until select() or
+           setTrace(null). Controls: play · pause · step · back · restart · end · speed. */
+        setTrace, traceControl, get traceState() { return traceState(); }, get tracing() { return Boolean(traceRun); },
         current() { return byId.get(center) || null; },
         /* Every card the focus reaches at the widest setting, in the order the layout would
            place them, with the ring each sits on. The canvas is not redrawn. */

@@ -246,6 +246,37 @@ gold return arcs with counters, play / pause / step / speed, `prefers-reduced-mo
 to the finished still. `positions()` gains the node fields above. Weight calibration against
 the simulator on the 50 variants; the result written into the plan doc.
 
+*Shipped in #187. `mount()` takes `onTrace`; `setTrace(result)` replaces the breadth walk with
+the trace's rings (ring 1 evenly round the commander in the walk's order, ring 2 and 3 inside
+the parent's sector, the untouched cards ghosted on an outer band), beams grow from parent to
+child over the first half of a step and the rim runs round the child over the second, return
+edges bow in gold once both ends are lit, a lit card in a loop wears its ×n; `traceControl`
+takes play · pause · step · back · restart · end · speed; reduced motion opens on the finished
+still; a tap in trace mode inspects instead of re-centring; `select()` ends the trace.
+`positions()` carries `ghost`, `parentEdge`, `loopBacks`, `strategies`, `progress`.*
+
+*The calibration (`tools/trace-calibrate.mjs`, over the 200 measured rungs and the six live
+decks, Spearman's ρ against the measured score, and within each variant the share of rung
+pairs the trace orders the way the simulator did):*
+
+| scoring | ρ vs measured | ladder agreement |
+|---|---|---|
+| plan (3 · 2 · 1 × (1 + loop-backs) × strategies) | 0.20 | 27% |
+| log-damped loop-backs | 0.22 | 28% |
+| no loop-backs | 0.22 | 27% |
+| lit share | 0.14 | 27% |
+| lit count | 0.19 | 27% |
+
+*None tracks the measured score, and inside a variant the trace orders the ladder the wrong
+way more often than not (a Base rung is a cheap, creature-dense shell with more serving joins
+than the Max rung's Game Changers and mana). So, as the plan's rule says, the weights did not
+change the claim: the number is shown as a **cohesion score** — how much of the deck the
+commander's strategies reach and how tightly it loops — labelled a heuristic, with the
+measured score beside it and a line under the list saying it is not power (ρ 0.2). The plan
+formula stays, since no alternative did better than noise. What would make the number
+predictive is outside this plan: a per-card value the walk does not have (the simulator's
+per-card impact, `docs/simulation-fidelity.md`), or scoring each lit set with the engine.*
+
 **T3 — the Trace pane and the deck entry.** Discover's third pane tab: the score strip
 (trace score beside the measured score, cards lit, closed loops, loop-backs), the grouped
 list (ring → strategy, every row tagged and with its status), the strategy ticks, the unlit
@@ -257,6 +288,21 @@ page: *Trace* in the hero row and on the Guide tab; the deck definition keeps th
 strategies. Export the list as a sheet. Tour step; help text; page budget for Discover
 re-measured (the tab adds one control).
 
+*Shipped in #187: the Trace tab (Card Info · List · Trace), the score strip (cohesion score
+with the measured score beside it, cards lit of N, loop-backs drawn and counted), the list
+grouped ring → strategy with the join that lit each card, its Primary Purpose and its
+loop-backs, the strategy ticks (the offered set inline, the rest behind +n) persisted as
+`definition.strategies` through `editDeck`, the transport (Play/Pause, Step, Back, End, speed),
+the two worlds — This deck, and What it could be over the library, the deck's linked options
+and the commander's two hundred most-played neighbours inside the colour identity and the
+per-card cap, with "Would help, outside the definition" beneath; a pool row is *Add to deck*
+on a draft and *Link as option* (the lens's uncommitted option) on a finalized deck. The unlit
+sentence with *Open them in List*; the list as CSV; `Trace` in the deck page's hero row;
+route `#discover?deck=<id>&trace=1`; a tour step; the help text. A filter change ends the
+trace (the trace is the deck's; the filters narrow the world). The pool world's cohesion
+score is large by construction (three hundred cards, many loops) and is not compared with the
+deck's.*
+
 **T4 — the Lab seed (after T3 has been used for a week).** `draft-builder.js` gains a
 trace-seeded mode: the same pool trace, over the whole legal catalogue inside the
 definition, seeds the 99 — ring 1 and ring 2 first, then payoffs, then roles to the rules
@@ -267,6 +313,11 @@ halves of the idea meet.
 Sizing, at the pace of Phases A–C: T0 and T1 one session each, T2 two, T3 one, T4 one.
 
 ## 6. Questions for Rob, with a recommendation each
+
+*Adopted as recommended in #187, on Rob's instruction to complete the plan: 1 yes, 2 yes,
+3 yes (and after the calibration the number is a cohesion score, never a power claim), 4
+ghosted, 5 overridden — T4 ships with the rest rather than waiting a week, with the caveat
+in its own note.*
 
 1. *Discover Trace tab, reached from the deck page* — recommended over a top tab or a Lab-only
    home (§1). **Yes / no.**
