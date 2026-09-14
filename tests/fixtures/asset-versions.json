@@ -62,8 +62,8 @@
       "sha": "b4cc36093b2df3e8"
     },
     "card-catalog.js": {
-      "version": 18,
-      "sha": "44ffcf7725ca53ef"
+      "version": 19,
+      "sha": "8f242bb2f7a5e6d9"
     },
     "card-classify.js": {
       "version": 10,
@@ -78,8 +78,8 @@
       "sha": "69c6c3344328f132"
     },
     "collection-exchange.js": {
-      "version": 5,
-      "sha": "b132595c538a3f02"
+      "version": 6,
+      "sha": "cb61bc0fb5083d16"
     },
     "collection-model.js": {
       "version": 27,
@@ -98,12 +98,12 @@
       "sha": "e02ecad49be64f67"
     },
     "crankmagic-app.js": {
-      "version": 151,
-      "sha": "bad5c80387739d62"
+      "version": 152,
+      "sha": "2c8f3ebeabaefd52"
     },
     "crankmagic-assets.js": {
-      "version": 22,
-      "sha": "650f24de7f2fea1e"
+      "version": 23,
+      "sha": "6642c913f773b732"
     },
     "crankmagic-brand.js": {
       "version": 3,
@@ -118,8 +118,8 @@
       "sha": "22c05201ef7ac4b6"
     },
     "crankmagic-decks.js": {
-      "version": 41,
-      "sha": "327becb5c4b93e95"
+      "version": 42,
+      "sha": "69e6b431f75664d3"
     },
     "crankmagic-design.css": {
       "version": 5,
@@ -154,8 +154,8 @@
       "sha": "dddcd6bfaa9e3cd6"
     },
     "crankmagic-lab.js": {
-      "version": 43,
-      "sha": "1cbe56f2ed59405f"
+      "version": 44,
+      "sha": "07b22dc02ab0e756"
     },
     "crankmagic-loops.js": {
       "version": 1,
@@ -190,8 +190,8 @@
       "sha": "81ae2c4b7634afa7"
     },
     "crankmagic-sw.js": {
-      "version": 151,
-      "sha": "3f6e1d0493384b09"
+      "version": 152,
+      "sha": "20671c92181978e9"
     },
     "crankmagic-tour.js": {
       "version": 13,
@@ -206,44 +206,44 @@
       "sha": "4c2b2793f05a10be"
     },
     "data/card-facts.json": {
-      "version": 2,
-      "sha": "e18f2884aab1613f"
+      "version": 3,
+      "sha": "dc44b961fdcc1c45"
     },
     "data/cards.json": {
-      "version": 5,
-      "sha": "f246fa6da2f2384c"
+      "version": 6,
+      "sha": "5837bb474b845278"
     },
     "data/commander-glossary.json": {
-      "version": 1,
-      "sha": "3bca78d0b852572a"
+      "version": 2,
+      "sha": "53a48ee6727fe50d"
     },
     "data/commander-ranks.json": {
-      "version": 2,
-      "sha": "acc5637923b81bd0"
+      "version": 3,
+      "sha": "0999201f1837990a"
     },
     "data/commander-universe.json": {
-      "version": 2,
-      "sha": "208f78afdcb0efef"
+      "version": 3,
+      "sha": "f098aaa241b32b67"
     },
     "data/deck-guides.json": {
-      "version": 3,
-      "sha": "395de95bd103a897"
+      "version": 4,
+      "sha": "37c351c5b3741d08"
     },
     "data/deck-swaps.json": {
       "version": 2,
       "sha": "de8605e0cccb1014"
     },
     "data/flavor-names.json": {
-      "version": 2,
-      "sha": "ee4c0aed0d1458b1"
+      "version": 3,
+      "sha": "1f4d85f1a875107b"
     },
     "data/graph-played.json": {
-      "version": 1,
-      "sha": "4b7f6dbbbc37046a"
+      "version": 2,
+      "sha": "0d59ce296060e722"
     },
     "data/graph.json": {
-      "version": 15,
-      "sha": "96bf11a11dded9af"
+      "version": 16,
+      "sha": "d6c73a533d578aab"
     },
     "deck-import.js": {
       "version": 2,
@@ -270,8 +270,8 @@
       "sha": "64ca6d7289743a4f"
     },
     "graph-payload.js": {
-      "version": 2,
-      "sha": "932160816fc52ebc"
+      "version": 3,
+      "sha": "a9af14c18e5973fd"
     },
     "guide-measured.js": {
       "version": 1,
@@ -302,12 +302,12 @@
       "sha": "d1858fe31518cf4e"
     },
     "sim/config.json": {
-      "version": 1,
-      "sha": "1c1040245521cd80"
+      "version": 2,
+      "sha": "d11878e4eace6c31"
     },
     "sim/opponents.json": {
-      "version": 2,
-      "sha": "d98c8cccb4861914"
+      "version": 3,
+      "sha": "430f8d11c990e544"
     },
     "user-state.js": {
       "version": 5,

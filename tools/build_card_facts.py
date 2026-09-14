@@ -180,8 +180,10 @@ def main():
     blank = sorted(n for n, f in facts.items() if not f.get("normal"))
     dest = os.path.join(ROOT, "data", "card-facts.json")
     with open(dest, "w", encoding="utf-8") as fh:
-        json.dump({"generatedAt": __import__("datetime").datetime.now(
+        json.dump({"schema": "card-facts@1",
+            "generatedAt": __import__("datetime").datetime.now(
             __import__("datetime").timezone.utc).isoformat(timespec="seconds"),
+            "generator": "tools/build-card-records.mjs", "count": len(facts),
             "cards": facts}, fh, ensure_ascii=False, separators=(",", ":"))
         fh.write("\n")
     size = os.path.getsize(dest) / 1024

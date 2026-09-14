@@ -24,8 +24,10 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Compile the game history
-        run: node tools/compile-game-logs.mjs
+      # The tool's own --check ignores the stamp, so a run that changes nothing but compiledAt
+      # writes nothing and commits nothing; only a stale history is rebuilt.
+      - name: Compile the game history when it is stale
+        run: node tools/compile-game-logs.mjs --check || node tools/compile-game-logs.mjs
 
       - name: Commit the updated history
         run: |

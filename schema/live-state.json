@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://minorrob.github.io/mtg-deck-matrix/schema/live-state.json",
+  "title": "A complete CrankMagic backup (the shape Save a backup file writes and Restore reads) built from live-load.json; Load Live fetches it",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "live-state@1"
+    },
+    "format": {
+      "type": "string",
+      "const": "crankmagic-backup"
+    },
+    "version": {
+      "type": "integer",
+      "const": 1
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "generator": {
+      "type": "string",
+      "const": "tools/build-live-state.mjs"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "checksum": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "type": "object",
+          "properties": {
+            "decks": {
+              "type": "array",
+              "items": {}
+            },
+            "cards": {}
+          },
+          "required": [
+            "decks",
+            "cards"
+          ]
+        },
+        "history": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "required": [
+        "state",
+        "history"
+      ]
+    },
+    "note": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema",
+    "format",
+    "version",
+    "createdAt",
+    "generator",
+    "count",
+    "checksum",
+    "payload"
+  ]
+}

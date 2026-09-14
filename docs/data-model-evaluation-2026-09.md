@@ -22,8 +22,9 @@ lenses — and how do we strengthen scalability and flexibility?* §3 answers it
 | **Card facts live in four shapes**: `data/cards.json` (2,025 catalog records), `data/card-facts.json`, the 31,830 `graph.json` cards, and `state.cards` inside every library. | inventory rows; `tests/…` readers | Each is produced by a different tool on a different day and none references the others. |
 | **They already disagree.** Catalog records carry **no roles** (the graph carries them for all 31,830, so the app re-derives at render through `card-classify.js`); **1,656 of 2,025** cards priced in both files show a **different price** (catalog stamped 09-10, graph 09-11); the live library's cards disagree with the graph on roles for **40 of 752** (baked before the loop vocabulary of #168 — `copy`, `cost-reduction` are missing). | `scratchpad/drift.cjs` over the committed files | A deck page's Ramp count, a Cards table price and Discover's chips can each be right by their own file and wrong by another's. Phase D's role lens would count from the stale set. |
 | **Every library duplicates the catalog.** `state.cards` holds 48 fields per card including the rules text: 122 KB of oracle text in the six-deck backup. | `data/live-state.json` payload | A ban-list, price or vocabulary change has to be re-applied inside every user's state; backups carry facts that are not the user's. |
-| **12 JSON files carry no version field, 9 no timestamp**, among them the served `cards.json`, `card-facts.json`, `commander-ranks.json`, `commander-universe.json`, `flavor-names.json`. | inventory summary | A reader cannot tell what shape it has, or how old it is; "Card data 3 days old" in the sidebar is read from one file's stamp. |
-| **Producers were not declared.** The scan finds a writing tool for 9 of the 15 served files by proximity of a write call; six (`deck-guides`, `deck-ratings`, `simulation-summary`, `live-state`, `sim/*`) write through a `--write` flag and a variable path or are kept by hand, and had to be declared in the inventory tool to appear at all; `deck-swaps.json` has none. Of 68 tools, 7 have a check mode the generators suite can run. | inventory *Producer* column; `tests/generators.mjs` CHECKABLE | The generators suite exists because a committed number whose generator cannot run is a number nobody can reproduce; most served files are still in that state. |
+| **12 JSON files carry no version field, 9 no timestamp**, among them the served `cards.json`, `card-facts.json`, `commander-ranks.json`, `commander-universe.json`, `flavor-names.json`. | inventory summary | A reader cannot tell what shape it has, or how old it is; "Card data 3 days old" in the sidebar is read from one file's stamp. *Fixed in #178: all seventeen registered files open with `{schema, stamp, generator, count}` and validate against `schema/*.json`; the five left without a version field are the archive and the stub recommendation 10 removes.* |
+| **106 of the 668 `card-facts.json` entries name cards `cards.json` does not carry** (and 5 more name a double-faced card by its front face). | `tools/build-card-records.mjs --check` (#178) | The two files were never one record: the facts file was keyed by the legacy viewer and kept cards the catalog never took in, so a name can open a picture pop-up and still be unknown to the Lab and the Cards page. Critical 1 builds both from one record; until then the check reports the count on every run. |
+| **Producers were not declared.** The scan finds a writing tool for 9 of the 15 served files by proximity of a write call; six (`deck-guides`, `deck-ratings`, `simulation-summary`, `live-state`, `sim/*`) write through a `--write` flag and a variable path or are kept by hand, and had to be declared in the inventory tool to appear at all; `deck-swaps.json` has none. Of 68 tools, 7 have a check mode the generators suite can run. | inventory *Producer* column; `tests/generators.mjs` CHECKABLE | The generators suite exists because a committed number whose generator cannot run is a number nobody can reproduce; most served files are still in that state. *Fixed in #178: `schema/index.mjs` names the producer and the checking tool of every registered file, `generator` is written into each file, and the generators suite runs every check.* |
 | **Five legacy files sit beside the live ones** (`active-state.json`, `buy-plans.json` 7.9 MB, `my-load.json`, `base-rebuild.json`, `pull-list.json`) and one served file is an empty stub (`deck-swaps.json`, 152 bytes, precached). | inventory dispositions | Clone weight, and a reader has to know which of two similar names is live. |
 | **The journeys hit the real Scryfall API.** No stub was installed; a full run saw a 429 and every deck-page render waited the client's 10 s timeout. *Fixed in #175: the journeys use the walks' stub; 180 checks in 132 s instead of ten minutes.* | #171's diagnosis | The gate that guards every PR depended on a third party's rate limit. |
 
@@ -95,11 +96,19 @@ library and the graph, and a backup that is the user's, not the catalog's.
    round-trips the split and refuses a pairs file baked against a different card count.*
 4. **Envelope every generated file** (E1): `{schema, generatedAt, generator, count, …}`;
    readers check `schema`; the sidebar's "card data age" reads the Card record's stamp.
-   Test: `tests/schemas.mjs` validates each committed file against `schema/*.json`.
+   Test: `tests/schemas.mjs` validates each committed file against `schema/*.json`. *Shipped in
+   #178: every served or workflow-written file opens with `{schema, stamp, generator, count}`;
+   `schema/index.mjs` is the registry, `schema/validate.mjs` the dependency-free validator,
+   `tools/lib/envelope.mjs` the stamp every producer writes; the asset map's `expect()` is the
+   check each reader makes.*
 5. **Every served file has a declared producer with a `--check`** (E1/E4): add the check
    mode to the builders of `deck-guides`, `deck-ratings`, `simulation-summary`,
    `live-state` (exists), `sim/*`; declare hand-maintained files as such in the inventory's
-   OVERRIDES. Test: the generators suite's CHECKABLE grows to cover every *serve* row.
+   OVERRIDES. Test: the generators suite's CHECKABLE grows to cover every *serve* row. *Shipped
+   in #178: `--check` on `commander-ranks`, `commander-universe`, `generate-guides`,
+   `sim/rate-decks` (ratings and summary) and the new `build-card-records` (the Card record's
+   declared producer, check-only until Critical 1); the generators suite asserts every
+   registered file's `checkedBy` is a tool it runs.*
 6. **Stub Scryfall in the journeys** (E2): the same stub the walks use, so the gate never
    depends on a third party's rate limit; one deliberate live-network test stays, marked.
 

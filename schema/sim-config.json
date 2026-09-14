@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://minorrob.github.io/mtg-deck-matrix/schema/sim-config.json",
+  "title": "The simulator's run parameters and targets, kept by hand",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "sim-config@2"
+    },
+    "schemaVersion": {
+      "type": "integer",
+      "const": 2
+    },
+    "generator": {
+      "type": "string",
+      "const": "hand-maintained"
+    },
+    "gamesPerIteration": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "batchSize": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "maxIterations": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "maxTurns": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "table": {
+      "type": "string"
+    },
+    "targets": {},
+    "scoreWeights": {}
+  },
+  "required": [
+    "schema",
+    "schemaVersion",
+    "generator",
+    "gamesPerIteration",
+    "batchSize",
+    "maxIterations",
+    "table"
+  ]
+}

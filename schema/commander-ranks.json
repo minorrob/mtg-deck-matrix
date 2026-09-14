@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://minorrob.github.io/mtg-deck-matrix/schema/commander-ranks.json",
+  "title": "EDHREC's thousand most-played commanders of the year, with deck counts",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "commander-ranks@1"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "generator": {
+      "type": "string",
+      "const": "tools/commander-ranks.mjs"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 100,
+      "maximum": 1000
+    },
+    "source": {
+      "type": "string"
+    },
+    "period": {
+      "type": "string"
+    },
+    "pages": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "note": {
+      "type": "string"
+    },
+    "cards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rank": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          },
+          "decks": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "rank",
+          "decks",
+          "url"
+        ]
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "generatedAt",
+    "generator",
+    "count",
+    "source",
+    "period",
+    "pages",
+    "note",
+    "cards"
+  ],
+  "additionalProperties": false
+}

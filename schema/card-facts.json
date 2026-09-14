@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://minorrob.github.io/mtg-deck-matrix/schema/card-facts.json",
+  "title": "Per-card display facts keyed by name: type line, rules text, images, a price",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "card-facts@1"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "generator": {
+      "type": "string",
+      "const": "tools/build-card-records.mjs"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "cards": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "manaCost": {
+            "type": "string"
+          },
+          "typeLine": {
+            "type": "string"
+          },
+          "power": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "toughness": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "oracleText": {
+            "type": "string"
+          },
+          "keywords": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "colorIdentity": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "rarity": {
+            "type": "string"
+          },
+          "setName": {
+            "type": "string"
+          },
+          "setCode": {
+            "type": "string"
+          },
+          "small": {
+            "type": "string"
+          },
+          "normal": {
+            "type": "string"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "typeLine",
+          "colorIdentity"
+        ]
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "generatedAt",
+    "generator",
+    "count",
+    "cards"
+  ]
+}

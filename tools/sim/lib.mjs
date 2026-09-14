@@ -451,7 +451,7 @@ export async function recordGames(requestId, games) {
 }
 
 export async function writeStatus(status) {
-  return writeJson(STATUS_PATH, {...status, updatedAt: new Date().toISOString()});
+  return writeJson(STATUS_PATH, {schema: "sim-status@1", generator: "tools/sim/lib.mjs", ...status, updatedAt: new Date().toISOString()});
 }
 
 export function requestIdFor(variantId, stamp) {

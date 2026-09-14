@@ -9,6 +9,7 @@
 import {readFile, writeFile, readdir} from "node:fs/promises";
 import path from "node:path";
 import {fileURLToPath} from "node:url";
+import {stamp} from "./lib/envelope.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const LOG_DIR = path.join(ROOT, "data/game-logs");
@@ -85,7 +86,7 @@ for (const [variantId, record] of Object.entries(byVariant)) {
   };
 }
 
-const history = {
+const history = stamp("game-history@1", "tools/compile-game-logs.mjs", {
   schemaVersion: 1,
   compiledAt: new Date().toISOString(),
   sourceFiles: files,
@@ -98,7 +99,7 @@ const history = {
   },
   variants,
   games
-};
+}, {count: games.length});
 
 const next = `${JSON.stringify(history, null, 2)}\n`;
 

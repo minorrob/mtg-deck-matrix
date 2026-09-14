@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://minorrob.github.io/mtg-deck-matrix/schema/deck-guides.json",
+  "title": "Hand-checked how-to-play guides per commander, merged by tools/generate-guides.mjs",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "deck-guides@1"
+    },
+    "schemaVersion": {
+      "type": "integer",
+      "const": 1
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "generator": {
+      "type": "string",
+      "const": "tools/generate-guides.mjs"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "note": {
+      "type": "string"
+    },
+    "decks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "commander": {
+            "type": "string",
+            "minLength": 1
+          },
+          "nickname": {
+            "type": "string"
+          },
+          "hook": {
+            "type": "string",
+            "minLength": 1
+          },
+          "colorIdentity": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "archetype": {
+            "type": "string"
+          },
+          "difficulty": {},
+          "whatItDoes": {},
+          "howItWins": {},
+          "turns": {},
+          "mulligan": {},
+          "keyCards": {},
+          "watchFor": {},
+          "shape": {},
+          "upgradePath": {}
+        },
+        "required": [
+          "id",
+          "commander",
+          "hook",
+          "whatItDoes",
+          "howItWins"
+        ]
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "generatedAt",
+    "generator",
+    "count",
+    "decks"
+  ]
+}

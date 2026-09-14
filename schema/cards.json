@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://minorrob.github.io/mtg-deck-matrix/schema/cards.json",
+  "title": "The card catalog the app boots from: one entry per card the six decks and the Lab can name",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "cards@1"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "generator": {
+      "type": "string",
+      "const": "tools/build-card-records.mjs"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "source": {
+      "type": "string"
+    },
+    "cards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "manaCost": {
+            "type": "string"
+          },
+          "typeLine": {
+            "type": "string"
+          },
+          "power": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "toughness": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "oracleText": {
+            "type": "string"
+          },
+          "keywords": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "colorIdentity": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "W",
+                "U",
+                "B",
+                "R",
+                "G"
+              ]
+            }
+          },
+          "legalities": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "rarity": {
+            "type": "string"
+          },
+          "setName": {
+            "type": "string"
+          },
+          "setCode": {
+            "type": "string"
+          },
+          "image": {
+            "type": "string"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "priceUpdated": {
+            "type": "string"
+          },
+          "tcgplayerUrl": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "typeLine",
+          "colorIdentity",
+          "rarity"
+        ]
+      }
+    },
+    "missing": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "generatedAt",
+    "generator",
+    "count",
+    "source",
+    "cards",
+    "missing"
+  ]
+}

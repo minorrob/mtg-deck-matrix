@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://minorrob.github.io/mtg-deck-matrix/schema/sim-opponents.json",
+  "title": "Opponent seats as parameterised archetypes, and the table mixes that sample them, kept by hand",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "sim-opponents@2"
+    },
+    "schemaVersion": {
+      "type": "integer",
+      "const": 2
+    },
+    "generator": {
+      "type": "string",
+      "const": "hand-maintained"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "note": {
+      "type": "string"
+    },
+    "profiles": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "winTurn": {},
+          "jitter": {}
+        },
+        "required": [
+          "key",
+          "label"
+        ]
+      }
+    },
+    "tables": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {}
+      }
+    },
+    "defaultTable": {
+      "type": "string"
+    },
+    "tableWinTurn": {}
+  },
+  "required": [
+    "schema",
+    "schemaVersion",
+    "generator",
+    "count",
+    "profiles",
+    "tables",
+    "defaultTable"
+  ]
+}

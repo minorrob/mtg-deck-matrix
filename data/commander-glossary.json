@@ -1,4 +1,7 @@
 {
+  "schema": "commander-glossary@1",
+  "generator": "hand-maintained",
+  "count": 335,
   "schemaVersion": 1,
   "revision": "2026-09-07.3",
   "purpose": "Canonical UI glossary. Definitions are explanations, not executable rules or simulation weights.",

@@ -303,8 +303,11 @@ reporting a pass when a browser or server is missing. Node tests need no runtime
 installation. Workbook tests optionally use `XLSX_PYTHON` with openpyxl for independent
 spreadsheet verification. See [tests/uat/README.md](tests/uat/README.md).
 
-Changed assets require a new `?v=` everywhere referenced, then
-`node tests/asset-versions.mjs --update`. There are 56 Node suites:
+Every data file under `data/` and `sim/` opens with `{schema, stamp, generator, count}`;
+`schema/index.mjs` registers each one with its producer and the tool whose `--check` vouches for
+it, `schema/*.json` describes its shape, and readers pass what they fetch through
+`CrankAssets.expect()`. Changed assets require a new `?v=` everywhere referenced, then
+`node tests/asset-versions.mjs --update`. There are 57 Node suites:
 
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`
@@ -354,6 +357,7 @@ Changed assets require a new `?v=` everywhere referenced, then
 - `pilot-policy` — `tests/pilot-policy.mjs`
 - `qr` — `tests/qr.mjs`
 - `scryfall-timeout` — `tests/scryfall-timeout.mjs`
+- `schemas` — `tests/schemas.mjs`
 - `service-worker` — `tests/service-worker.mjs`
 - `shop-export` — `tests/shop-export.mjs`
 - `sim-engine` — `tests/sim-engine.mjs`

@@ -1,7 +1,10 @@
 {
+ "schema": "live-load@1",
  "format": "crankmagic-live-load",
  "version": 1,
- "savedAt": "2026-09-13T03:24:03Z",
+ "generator": "tools/build-live-load.mjs",
+ "count": 6,
+ "savedAt": "2026-09-14T03:18:19Z",
  "workbook": "Treys_MtG_Master_v13.xlsx",
  "note": "Rob's live collection, built by tools/build-live-load.mjs from the Master workbook; CrankMagic → User Functions → Load Live reads this file. Card names are exact Scryfall names (double-faced cards use 'Front // Back'). decks[].cards is the 100-card target; owned.inDeck is what is physically in each deck box; owned.bench is everything else owned; ordered is in flight; buy is the outstanding shopping list; upgrades are optional ceiling cards with the slot each replaces; decks[].options are cards in the hundred flagged as the first to swap out; decks[].planned are cards meant to come into the deck that are not in its hundred yet. Rebuild from the workbook rather than editing quantities here; names, definitions, notes, options and planned lists are carried over per deck.",
  "decks": [

@@ -64,7 +64,7 @@
     const played = packed.played || [];
     const stamp = packed.amplifiersAt || packed.generatedAt || '';
     const graph = {...packed, played: [], playedIn: 'graph-played.json', playedCount: played.length};
-    return {graph, played: {format: FORMAT, generatedAt: stamp, cards: (packed.cards || []).length, played}};
+    return {graph, played: {schema: 'graph-played@2', format: FORMAT, generatedAt: stamp, cards: (packed.cards || []).length, played}};
   }
   function unpackPlayed(ids, file) {
     if (!file || !Array.isArray(file.played)) return [];

@@ -1,6 +1,9 @@
 {
+  "schema": "game-history@1",
+  "generator": "tools/compile-game-logs.mjs",
+  "count": 0,
   "schemaVersion": 1,
-  "compiledAt": "2026-08-24T22:51:15.407Z",
+  "compiledAt": "2026-09-14T03:27:05.508Z",
   "sourceFiles": [],
   "totals": {
     "games": 0,

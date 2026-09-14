@@ -23,6 +23,7 @@
 import {writeFile} from "node:fs/promises";
 import {execFile} from "node:child_process";
 import {promisify} from "node:util";
+import {stamp} from "./lib/envelope.mjs";
 
 const run = promisify(execFile);
 const OUT = new URL("../data/flavor-names.json", import.meta.url);
@@ -61,11 +62,10 @@ console.log(`\n${rows.length} flavour names over ${total} printings`);
 console.log(rows.slice(0, 6).map(([f, o]) => `  ${f} = ${o}`).join("\n"));
 
 if (check) process.exit(0);
-await writeFile(OUT, JSON.stringify({
-  generatedAt: new Date().toISOString(),
+await writeFile(OUT, JSON.stringify(stamp("flavor-names@1", "tools/flavor-names.mjs", {
   source: `Scryfall /cards/search q=${QUERY} unique=prints`,
   fields: ["flavorName", "name", "printedIn"],
   counts: {names: rows.length, printings: total},
   cards: rows
-}), "utf8");
+}, {count: rows.length})), "utf8");
 console.log("wrote data/flavor-names.json");

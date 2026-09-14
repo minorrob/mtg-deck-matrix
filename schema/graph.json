@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://minorrob.github.io/mtg-deck-matrix/schema/graph.json",
+  "title": "The connected card catalog without its co-play pairs: every card's classifier terms, the facet vocabularies, the deck memberships",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "graph@2"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "generator": {
+      "type": "string",
+      "enum": [
+        "tools/graph-amplifiers.mjs",
+        "graph/ingest/07-export-app.mjs"
+      ]
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "format": {
+      "type": "integer",
+      "const": 2
+    },
+    "scope": {
+      "type": "string"
+    },
+    "counts": {
+      "type": "object",
+      "properties": {
+        "cards": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "playedWith": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "cards",
+        "playedWith"
+      ]
+    },
+    "facets": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "decks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      }
+    },
+    "cards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "mv": {
+            "type": "number"
+          },
+          "ci": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[WUBRG]*$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "type": {
+            "type": "string"
+          },
+          "rarity": {
+            "type": "string"
+          },
+          "rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "isLand": {
+            "type": "boolean"
+          },
+          "isCommander": {
+            "type": "boolean"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "mechanics": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "tribes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "type"
+        ]
+      }
+    },
+    "played": {
+      "type": "array",
+      "items": {},
+      "maxItems": 0
+    },
+    "playedIn": {
+      "type": "string",
+      "const": "graph-played.json"
+    },
+    "playedCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "amplifiersAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "schema",
+    "generatedAt",
+    "generator",
+    "count",
+    "format",
+    "counts",
+    "facets",
+    "cards",
+    "played",
+    "playedIn",
+    "playedCount"
+  ]
+}

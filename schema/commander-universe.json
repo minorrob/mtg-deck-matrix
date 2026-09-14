@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://minorrob.github.io/mtg-deck-matrix/schema/commander-universe.json",
+  "title": "Every Commander-legal card as a seven-column row: name, colour identity, rarity letter, mana value, primary type, EDHREC rank, commander flag",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "commander-universe@1"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "generator": {
+      "type": "string",
+      "const": "tools/commander-universe.mjs"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "source": {
+      "type": "string"
+    },
+    "counts": {
+      "type": "object",
+      "properties": {
+        "cards": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "commanders": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "cards",
+        "commanders"
+      ]
+    },
+    "rarityLetters": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "fields": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 7,
+      "maxItems": 7
+    },
+    "cards": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "minItems": 7,
+        "maxItems": 7,
+        "prefixItems": [
+          {
+            "type": "string",
+            "minLength": 1
+          },
+          {
+            "type": "string",
+            "pattern": "^[WUBRG]*$"
+          },
+          {
+            "type": "string",
+            "minLength": 1,
+            "maxItems": 1
+          },
+          {
+            "type": "integer",
+            "minimum": 0
+          },
+          {
+            "type": "string"
+          },
+          {
+            "type": "integer",
+            "minimum": 0
+          },
+          {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "generatedAt",
+    "generator",
+    "count",
+    "source",
+    "counts",
+    "rarityLetters",
+    "fields",
+    "cards"
+  ],
+  "additionalProperties": false
+}

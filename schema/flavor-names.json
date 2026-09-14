@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://minorrob.github.io/mtg-deck-matrix/schema/flavor-names.json",
+  "title": "Printed names that differ from the rules name (a Secret Lair's SpongeBob is Jodah): flavour name, oracle name, the sets it was printed in",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "flavor-names@1"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "generator": {
+      "type": "string",
+      "const": "tools/flavor-names.mjs"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "source": {
+      "type": "string"
+    },
+    "fields": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "counts": {
+      "type": "object",
+      "properties": {
+        "names": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "printings": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "names",
+        "printings"
+      ]
+    },
+    "cards": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "minItems": 3,
+        "maxItems": 3,
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "generatedAt",
+    "generator",
+    "count",
+    "source",
+    "fields",
+    "counts",
+    "cards"
+  ],
+  "additionalProperties": false
+}

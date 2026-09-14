@@ -32,6 +32,7 @@
 import {writeFile, mkdir} from "node:fs/promises";
 import {dirname} from "node:path";
 import {createRequire} from "node:module";
+import {stamp} from "../../tools/lib/envelope.mjs";
 const Payload = createRequire(import.meta.url)("../../graph-payload.js");
 
 const outFile = arg("--out") || "data/graph.json";
@@ -132,6 +133,10 @@ await mkdir(dirname(outFile), {recursive: true});
    list, art and buy links as the one id each is built from. card-catalog.js unpacks. */
 const plain = process.argv.includes("--plain");
 const parts = plain ? null : Payload.split(Payload.pack(payload));
+if (parts) {
+  parts.graph = stamp("graph@2", "graph/ingest/07-export-app.mjs", parts.graph, {count: parts.graph.cards.length});
+  parts.played = stamp("graph-played@2", "graph/ingest/07-export-app.mjs", parts.played, {count: parts.played.played.length});
+}
 const text = JSON.stringify(plain ? payload : parts.graph);
 await writeFile(outFile, text);
 console.log(`wrote ${outFile}  (${(text.length / 1e6).toFixed(2)} MB)`);

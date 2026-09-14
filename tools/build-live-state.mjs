@@ -48,7 +48,10 @@ export async function buildFile(source=SOURCE,{scryfall=null}={}){
   const doc=JSON.parse(await readFile(source,'utf8'));
   const lookup=await bundledLookup({scryfall});
   const built=Live.build(doc,{Model,lookup});
-  const backup=await Exchange.backup({state:built.state,history:[]});
+  const built_backup=await Exchange.backup({state:built.state,history:[]});
+  /* The envelope: schema first, then the backup as the app wrote it. The checksum covers the
+     payload alone, so the wrapper keys do not disturb it. */
+  const backup={schema:'live-state@1',...built_backup,generator:'tools/build-live-state.mjs',count:built.state.decks.length};
   backup.note=`Built from data/live-load.json (saved ${doc.savedAt||'undated'}) by tools/build-live-state.mjs. Restore it in CrankMagic with User Functions → Restore from a backup file, or Load Live.`;
   return {...built,doc,backup};
 }

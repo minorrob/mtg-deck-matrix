@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://minorrob.github.io/mtg-deck-matrix/schema/sim-status.json",
+  "title": "The sweep's status placeholder the Lab reads; a run rewrites it",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "sim-status@1"
+    },
+    "generator": {
+      "type": "string",
+      "const": "tools/sim/lib.mjs"
+    },
+    "state": {
+      "type": "string",
+      "minLength": 1
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "schema",
+    "generator",
+    "state"
+  ]
+}

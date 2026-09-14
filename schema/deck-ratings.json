@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://minorrob.github.io/mtg-deck-matrix/schema/deck-ratings.json",
+  "title": "The six decks measured on the simulator: three builds each, scores with standard errors, the ranking",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "deck-ratings@1"
+    },
+    "schemaVersion": {
+      "type": "integer",
+      "const": 1
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "generator": {
+      "type": "string",
+      "const": "tools/sim/rate-decks.mjs"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "engine": {
+      "type": "string"
+    },
+    "generation": {
+      "type": "string"
+    },
+    "table": {
+      "type": "string"
+    },
+    "seeds": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "minItems": 1
+    },
+    "gamesPerSeed": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "method": {
+      "type": "string"
+    },
+    "decks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "commander": {
+            "type": "string"
+          },
+          "colorIdentity": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "builds": {
+            "type": "object",
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "score": {
+                      "type": "number"
+                    },
+                    "se": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "score",
+                    "se"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "sameAs": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "sameAs"
+                  ]
+                }
+              ]
+            }
+          },
+          "rank": {},
+          "delta": {}
+        },
+        "required": [
+          "id",
+          "commander",
+          "builds"
+        ]
+      }
+    },
+    "ranking": {},
+    "notes": {
+      "type": "array",
+      "items": {}
+    }
+  },
+  "required": [
+    "schema",
+    "generatedAt",
+    "generator",
+    "count",
+    "engine",
+    "generation",
+    "decks"
+  ]
+}

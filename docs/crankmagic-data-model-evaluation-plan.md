@@ -140,6 +140,10 @@ Named now so the evaluation checks them rather than rediscovers them:
   the co-play pairs (`data/graph-played.json`); both load on the first Discover visit behind a
   status line and are kept by the worker on demand. The install precaches 5.1 MB of data
   instead of 41.6 MB.
+- **Critical 4 and 5 shipped (PR #178):** the envelope `{schema, stamp, generator, count}` on
+  all seventeen registered data files, `schema/*.json` with a dependency-free validator and
+  `tests/schemas.mjs`; readers check the schema through the asset map's `expect()`; five more
+  producers gained `--check` and the generators suite runs every registered check.
 
 ## 5. Sequence and sizing
 
