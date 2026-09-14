@@ -53,7 +53,7 @@
   function matchesMechanic(c,label){const entry=MECHANICS.find(([l])=>folded(l)===folded(label));if(!entry)return folded(haystack(c)).includes(folded(label));return entry[1].test(haystack(c));}
   /* The labels a card earns, for "plays as" lines and picker rows. */
   function playStyles(c){return MECHANICS.filter(([l])=>matchesMechanic(c,l)).map(([l])=>l);}
-  async function create(options){const byName=new Map(),byAlias=new Map(),byId=new Map();let graph=null,universeDate='',rankDate='',priceDate='',graphDate='',graphLoading=null;const fetcher=options.fetchImpl||fetch;
+  async function create(options){const byName=new Map(),byAlias=new Map(),byId=new Map();let graph=null,universeDate='',rankDate='',priceDate='',graphDate='',graphLoading=null,playedLoading=null;const fetcher=options.fetchImpl||fetch;
     /* THE NAME ON THE CARD IN YOUR HAND. byName is keyed on the ORACLE name, which is the
        name the rules use and not always the name printed on the card: a Secret Lair prints
        Jodah, the Unifier as "SpongeBob SquarePants". search() has matched flavour names
@@ -195,7 +195,11 @@
       return {hydrated,missing};
     }
     async function loadGraph(){if(graph)return graph;if(!graphLoading)graphLoading=load(options.urls.graph).then(raw=>{const data=Payload?Payload.unpack(raw):raw;graph=data;graphDate=data.generatedAt||'';/* The catalog's own price wins over the bake's: data/cards.json is refreshed on its own schedule and every total in the app reads it, so a bake with a different day's prices must not move the Shop strip under a deck that was priced before the graph loaded. */for(const c of data.cards){const prior=byName.get(folded(c.name));const keep=prior&&Number.isFinite(prior.price)&&prior.price>0?{price:prior.price,priceFoil:prior.priceFoil,priceUpdated:prior.priceUpdated,priceSource:prior.priceSource,cheapestSet:prior.cheapestSet}:{};add({...c,...keep,oracleId:c.id,legalities:prior?.legalities||{commander:'legal'},verified:true});}return data;}).catch(error=>{graphLoading=null;throw error;});return graphLoading;}
-    return {add,search,similar,resolve,details,cheapest,hydrate,recheck,loadGraph,exact:named,get:id=>byId.get(id)||named(id),all:()=>[...byId.values()],load,universeDate,rankDate,dates:()=>({catalog:universeDate,prices:priceDate,ranks:rankDate,graph:graphDate}),available:()=>byId.size};
+    /* THE CO-PLAY PAIRS, ON DEMAND. graph.json carries the cards; the 700,000 pairs live in
+       graph-played.json and are fetched the first time a page needs them -- Discover's canvas
+       -- never at install and never for the Lab. Joined onto the loaded card list by index. */
+    async function loadPlayed(){const g=await loadGraph();if(g.played&&g.played.length)return g.played;if(!options.urls.graphPlayed||!Payload||!Payload.unpackPlayed)return g.played||[];if(!playedLoading)playedLoading=load(options.urls.graphPlayed).then(raw=>{g.played=Payload.unpackPlayed(g.cards.map(c=>c.id),raw);return g.played;}).catch(error=>{playedLoading=null;throw error;});return playedLoading;}
+    return {add,search,similar,resolve,details,cheapest,hydrate,recheck,loadGraph,loadPlayed,exact:named,get:id=>byId.get(id)||named(id),all:()=>[...byId.values()],load,universeDate,rankDate,dates:()=>({catalog:universeDate,prices:priceDate,ranks:rankDate,graph:graphDate}),available:()=>byId.size};
   }
   /* WHAT A DECK IS ABOUT, READ OFF ITS LIST. definition.mechanics is the owner's word and
      wins when it is set; when it is blank this says what the hundred cards themselves say.

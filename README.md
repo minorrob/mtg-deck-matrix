@@ -272,7 +272,8 @@ Multi-tab revisions, atomic writes/undo, import previews, duplicate-batch checks
 backups and a separate damaged-record recovery path protect against silent inventory drift.
 A backup is still necessary: browser deletion/eviction is outside the app's control.
 The app works offline after its public assets are cached; uncached lookups/images require
-connectivity. New installations of the offline cache wait for old tabs to close.
+connectivity. The graph (about 37 MB: the card terms and the co-play pairs) is not part of the
+install: Discover fetches it on its first visit behind a status line, and the worker keeps it. New installations of the offline cache wait for old tabs to close.
 
 EDHREC commander ranks are a separately dated [Top Commanders](https://edhrec.com/commanders)
 **Past 2 Years** snapshot, distinct from Scryfall card rank. `tools/commander-ranks.mjs`

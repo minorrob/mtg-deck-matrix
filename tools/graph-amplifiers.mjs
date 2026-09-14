@@ -22,6 +22,7 @@
 // whatever the previous run gave it rather than silently losing its fields.
 //
 // curl, not fetch(): the same host-allowlist note graph/ingest/01-fetch.mjs carries.
+import {existsSync} from "node:fs";
 import {readFile, writeFile, mkdir} from "node:fs/promises";
 import {execFile} from "node:child_process";
 import {promisify} from "node:util";
@@ -32,6 +33,7 @@ const require = createRequire(import.meta.url);
 const Classify = require("../card-classify.js");
 
 const GRAPH = new URL("../data/graph.json", import.meta.url);
+const PLAYED = new URL("../data/graph-played.json", import.meta.url);
 const CACHE_DIR = new URL("../graph/.cache/", import.meta.url);
 const CACHE = new URL("oracle-text.json", CACHE_DIR);
 /* offersStat is deliberately NOT here. It is a function of power and toughness, which the
@@ -209,5 +211,10 @@ for (const field of FIELDS) {
   }
 }
 graph.amplifiersAt = new Date().toISOString();
-await writeFile(GRAPH, JSON.stringify(packed ? Payload.pack(graph) : graph), "utf8");
-console.log(`wrote data/graph.json`);
+/* The pairs are read back from their own file so the split survives a re-bake: the amplifiers
+   never touch them, only the card fields. */
+if (!(graph.played && graph.played.length) && existsSync(PLAYED)) graph.played = Payload.unpackPlayed(graph.cards.map((c) => c.id), JSON.parse(await readFile(PLAYED, "utf8")));
+const parts = Payload.split(Payload.pack(graph));
+await writeFile(GRAPH, JSON.stringify(parts.graph), "utf8");
+await writeFile(PLAYED, JSON.stringify(parts.played), "utf8");
+console.log(`wrote data/graph.json (${parts.graph.cards.length} cards) and data/graph-played.json (${parts.played.played.length} pairs)`);

@@ -8,8 +8,14 @@
  * authority for user records; backups are user files, never service-worker data.
  * A failed installation leaves the prior complete cache available.
  *
+ * THE GRAPH IS NOT PRECACHED. data/graph.json (the cards, 16 MB) and data/graph-played.json
+ * (the co-play pairs, 21 MB) are in RUNTIME: served cache-first and kept in the data cache
+ * once a page has asked for them, but never fetched by install -- a first visit on a phone
+ * used to download 41 MB of data before Discover was ever opened. Only Discover asks for
+ * the pairs; the Lab and the facets ask for the cards.
+ *
  * TWO CACHES, KEYED SEPARATELY, because one cache keyed on this file's own ?v= threw
- * everything away on every change. data/graph.json alone is 7.1 MB; a one-line CSS fix
+ * everything away on every change. The graph was the weight of it; a one-line CSS fix
  * bumped the worker, invalidated the cache, and made the next visit re-download all of
  * it. So the shell (pages, styles, modules, fonts, art) and the data files each get their
  * own cache, and each is keyed on a hash of ITS OWN list rather than on the worker's
@@ -18,11 +24,12 @@
  * moves when the other list does, which is the whole point. */
 const SHELL = ['index.html', 'crankmagic.html', 'graph.html', 'crankmagic-route.js?v=1', 'crankmagic-design.css?v=5', 'crankmagic.css?v=89',
  'lineup-model.js?v=5', 'scryfall-client.js?v=9', 'card-link.js?v=1', 'deck-import.js?v=2', 'deck-sources.js?v=1', 'docx-writer.js?v=1', 'xlsx-writer.js?v=2', 'xlsx-reader.js?v=2', 'user-state.js?v=5',
- 'crankmagic-assets.js?v=21', 'crankmagic-card-client.js?v=1', 'collection-model.js?v=27', 'collection-repository.js?v=3', 'collection-exchange.js?v=5', 'card-classify.js?v=10', 'graph-payload.js?v=1', 'card-catalog.js?v=17', 'draft-builder.js?v=5', 'crankmagic-glossary.js?v=1', 'guide-measured.js?v=1', 'crankmagic-graph.js?v=17', 'crankmagic-rules.js?v=1', 'game-record.js?v=1', 'shop-export.js?v=1', 'crankmagic-decks.js?v=41', 'crankmagic-pull.js?v=11', 'crankmagic-how.js?v=5', 'crankmagic-qr.js?v=1', 'crankmagic-collection.js?v=40', 'crankmagic-exchange-ui.js?v=9', 'crankmagic-orders.js?v=5', 'crankmagic-sim.js?v=17', 'crankmagic-lab.js?v=43', 'crankmagic-tour.js?v=13', 'crankmagic-facets.js?v=13', 'crankmagic-loops.js?v=1', 'crankmagic-discover.js?v=44', 'custom-model.js?v=3', 'crankmagic-advisor.js?v=7', 'collection-evidence.js?v=1', 'crankmagic-evidence.js?v=2', 'crankmagic-plan-editor.js?v=1', 'crankmagic-app.js?v=150', 'crankmagic-brand.js?v=3',
+ 'crankmagic-assets.js?v=22', 'crankmagic-card-client.js?v=1', 'collection-model.js?v=27', 'collection-repository.js?v=3', 'collection-exchange.js?v=5', 'card-classify.js?v=10', 'graph-payload.js?v=2', 'card-catalog.js?v=18', 'draft-builder.js?v=5', 'crankmagic-glossary.js?v=1', 'guide-measured.js?v=1', 'crankmagic-graph.js?v=17', 'crankmagic-rules.js?v=1', 'game-record.js?v=1', 'shop-export.js?v=1', 'crankmagic-decks.js?v=41', 'crankmagic-pull.js?v=11', 'crankmagic-how.js?v=5', 'crankmagic-qr.js?v=1', 'crankmagic-collection.js?v=40', 'crankmagic-exchange-ui.js?v=9', 'crankmagic-orders.js?v=5', 'crankmagic-sim.js?v=17', 'crankmagic-lab.js?v=43', 'crankmagic-tour.js?v=13', 'crankmagic-facets.js?v=13', 'crankmagic-loops.js?v=1', 'crankmagic-discover.js?v=45', 'custom-model.js?v=3', 'crankmagic-advisor.js?v=7', 'collection-evidence.js?v=1', 'crankmagic-evidence.js?v=2', 'crankmagic-plan-editor.js?v=1', 'crankmagic-app.js?v=151', 'crankmagic-brand.js?v=3',
  'assets/mana/W.svg?v=1', 'assets/mana/U.svg?v=1', 'assets/mana/B.svg?v=1', 'assets/mana/R.svg?v=1', 'assets/mana/G.svg?v=1', 'assets/mana/2.svg?v=1', 'assets/mana/3.svg?v=1', 'assets/crankmagic/crankmagic-logo-wand-v3-256.webp?v=1', 'assets/crankmagic/satoshi-400.woff2?v=1', 'assets/crankmagic/satoshi-500.woff2?v=1', 'assets/crankmagic/satoshi-700.woff2?v=1',
  'assets/crankmagic/commander-atraxa.webp?v=1', 'assets/crankmagic/commander-krenko.webp?v=1', 'assets/crankmagic/commander-shadrix.webp?v=1', 'assets/crankmagic/commander-chulane.webp?v=1'];
-const DATA = ['data/commander-ranks.json?v=2', 'data/commander-glossary.json?v=1', 'data/commander-universe.json?v=2', 'data/flavor-names.json?v=2', 'data/cards.json?v=5', 'data/card-facts.json?v=2', 'data/graph.json?v=14', 'data/deck-guides.json?v=3', 'data/deck-swaps.json?v=2'];
-const FILES = SHELL.concat(DATA);
+const DATA = ['data/commander-ranks.json?v=2', 'data/commander-glossary.json?v=1', 'data/commander-universe.json?v=2', 'data/flavor-names.json?v=2', 'data/cards.json?v=5', 'data/card-facts.json?v=2', 'data/deck-guides.json?v=3', 'data/deck-swaps.json?v=2'];
+const RUNTIME = ['data/graph.json?v=15', 'data/graph-played.json?v=1'];
+const FILES = SHELL.concat(DATA, RUNTIME);
 
 const PREFIX = 'crankmagic-public:' + new URL('./', self.location).pathname + ':';
 // FNV-1a over the list. Not a security hash: it only has to change when the list does,
@@ -37,9 +44,9 @@ const keyFor = (name, list) => {
   return PREFIX + name + ':' + h.toString(36);
 };
 const SHELL_CACHE = keyFor('shell', SHELL);
-const DATA_CACHE = keyFor('data', DATA);
+const DATA_CACHE = keyFor('data', DATA.concat(RUNTIME));
 const CURRENT = [SHELL_CACHE, DATA_CACHE];
-const cacheFor = (relative) => (DATA.includes(relative) ? DATA_CACHE : SHELL_CACHE);
+const cacheFor = (relative) => (DATA.includes(relative) || RUNTIME.includes(relative) ? DATA_CACHE : SHELL_CACHE);
 
 /* Installed as two addAll calls rather than one, so a data file that 404s during a
    deploy cannot cost the shell its cache -- and the other way round. Either failure

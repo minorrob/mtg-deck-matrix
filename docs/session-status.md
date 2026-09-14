@@ -51,6 +51,7 @@ Trey's Deck Matrix. Anything either session needs the other to know goes in this
 | #174 | E0 of the data-model evaluation: the generated data inventory (`tools/data-inventory.mjs` → `docs/data-inventory.md`, checked by the generators suite) and the report with the ranked recommendations (`docs/data-model-evaluation-2026-09.md`) | A |
 | #175 | Critical 6: the journeys answer Scryfall from the shipped catalog (the walks' stub); 180 checks in about two minutes instead of ten, and no third-party rate limit in the gate | A |
 | #176 | Graph nodes draw their card art again on the live site: the art requests no longer carry the cross-origin flag (nothing reads the canvas back), and a failed load is retried once instead of written off | A |
+| #177 | Critical 3: `data/graph.json` out of the precache and split from the 701,916 co-play pairs (`data/graph-played.json`, 20.6 MB); both fetched on the first Discover visit behind a status line and kept by the worker on demand; install precaches 5.1 MB of data instead of 41.6 MB; the inventory gains an "on demand" column | A |
 
 Also on 13 September: stale PRs #80, #2 and #54 closed (superseded); the 25 branches behind
 closed and merged PRs were verified safe to delete but the session's credential cannot delete

@@ -170,4 +170,23 @@ await ok("every precached file names a version, so a change can never be served 
     "these precached files carry no ?v=, so the cache would keep an old copy forever:\n  " + unversioned.join("\n  "));
 });
 
+
+/* THE GRAPH IS NOT PRECACHED. 41.6 MB of data used to be fetched by install, 36 MB of it the
+   graph, before Discover was ever opened. The two graph files sit in RUNTIME: served from the
+   data cache once a page has asked for them, never by addAll. The precached data list stays
+   under a stated size so the weight cannot creep back one file at a time. */
+await ok("the graph files are runtime-cached, not precached, and the precached data stays small", async () => {
+  const {statSync} = await import("node:fs");
+  const list = (name) => { const m = SOURCE.match(new RegExp(`const ${name} = \\[([^\\]]*)\\]`)); return m ? [...m[1].matchAll(/'([^']+)'/g)].map((x) => x[1]) : []; };
+  const data = list("DATA"), runtime = list("RUNTIME");
+  assert.ok(runtime.some((f) => f.startsWith("data/graph.json?v=")), "data/graph.json must be in RUNTIME");
+  assert.ok(runtime.some((f) => f.startsWith("data/graph-played.json?v=")), "data/graph-played.json must be in RUNTIME");
+  assert.deepEqual(data.filter((f) => /graph/.test(f)), [], "a graph file is back in the precache list");
+  const precached = [...first.caches.get(dataName)];
+  assert.deepEqual(precached.filter((f) => /graph/.test(f)), [], "install precached a graph file");
+  const bytes = data.reduce((n, f) => n + statSync(new URL(f.split("?")[0], ROOT)).size, 0);
+  assert.ok(bytes < 8 * 1024 * 1024, `the precached data is ${(bytes / 1048576).toFixed(1)} MB; the line is 8 MB`);
+  assert.match(SOURCE, /RUNTIME\.includes\(relative\)/, "the fetch handler must send a RUNTIME file to the data cache");
+});
+
 console.log(`service-worker: ${checks} checks passed — shell ${first.caches.get(shellName).size} files, data ${first.caches.get(dataName).size} files, each keyed on its own list.`);

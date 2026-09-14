@@ -57,3 +57,21 @@ ok("an edge to a card outside the list is dropped rather than mis-indexed", () =
 });
 
 console.log(`graph-payload: ${checks} checks passed`);
+
+/* SPLIT AND JOIN. The pairs travel in their own file, indexed against the card list they were
+   packed with; joining them back yields the same edges, and a pairs file baked against a
+   different card list is refused rather than mis-joined. */
+{
+  const packed = P.pack(payload);
+  const parts = P.split(packed);
+  assert.deepEqual(parts.graph.played, [], "the graph half carries no pairs");
+  assert.equal(parts.graph.playedIn, "graph-played.json");
+  assert.equal(parts.graph.playedCount, 2);
+  assert.equal(parts.played.cards, 3);
+  assert.equal(parts.played.format, P.FORMAT);
+  const ids = P.unpack(JSON.parse(JSON.stringify(parts.graph))).cards.map((c) => c.id);
+  assert.deepEqual(P.unpackPlayed(ids, JSON.parse(JSON.stringify(parts.played))), played, "join gives the edges back");
+  assert.throws(() => P.unpackPlayed(ids.slice(0, 2), parts.played), /baked against 3 cards/);
+  assert.deepEqual(P.unpackPlayed(ids, null), []);
+  console.log("graph-payload: split and join round-trip, and a mismatched pairs file is refused");
+}
