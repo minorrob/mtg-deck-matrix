@@ -3,8 +3,8 @@
 Definition and plan for the third view of the Cards page Rob described on 14 September 2026.
 The Cards page has a list and a sheet; this is the view where the cards are cards. Mock-ups:
 `docs/mockups/tabletop-piles.html` (the table at rest), `docs/mockups/tabletop-laid-out.html`
-(a pile opened, two cards selected, the selection on the mat mid-drag). TB1 and TB2 are built
-(the table at rest; lay out, page, select — 14 September); TB3 and TB4 follow.
+(a pile opened, two cards selected, the selection on the mat mid-drag). TB1–TB3 are built
+(the table at rest; lay out, page, select; drag to a pile — 14 September); TB4 follows.
 
 The app is for anyone building any deck: the piles are the statuses and groupings the model
 already has, so the view needs no data of its own and works on any library.
@@ -146,6 +146,23 @@ Needs, all small and all worth settling in the data-model evaluation first:
   existing receipt, ghosts becoming orders or copies, the phone's Move to… menu. Journeys:
   move a card Bench → Physical deck and back through the tabletop and read the same counts
   on the list; drop a ghost on Ordered and see it on the Orders tab.
+  *Shipped 14 September (#191).* `CrankTabletop.accepts(pile, rows)` is the contract, pure and
+  held to the live library's rows in the test: an action id (`source:owned`, `source:ordered`,
+  `source:watching`, `place`, `standin`, `bench`, `reserve`, `release`, `group`), the words the
+  drag's badge and the Move to… menu show, or the reason a pile is not a target. The Cards page
+  turns the action into the command the row menu and the ticked-rows bar already send — the
+  same `bulk`, `acquireSlots`, `allocate` and `groupLots` — through `C.review` for anything that
+  changes a deck or money (question 3 answered: a copy dragged out of a physical deck asks), a
+  plain save for filing into a group. Ghosts: a To buy requirement or a draft-list row dropped
+  on Ordered or the Bench becomes a copy filed with its deck, as *Set status* does; the deck-legal
+  catalogue ghosts of §1 are still not drawn (question 1 stands: a deck first, and that is TB4
+  or later). A suggestion or a planned group entry is never a copy here; its row menu sets its
+  status. The drag is pointer events (mouse, pen, finger) on the stage's fan with an eight-pixel
+  slop, a badge with the count and the contract's words, green for a target and red for a
+  refusal; the phone's *Move to…* button is on the stage for every screen. The journey drops a
+  ghost on Ordered and reads the Ordered and To buy piles rather than the Orders tab: an
+  ordered copy without an order record is not an order, so the Orders tab is right not to
+  list it until one is placed.
 - **TB4 — polish.** Card size memory per device, pile order preference, keyboard model
   (arrow keys between piles, Enter opens, Space selects), print of a laid-out pile.
 

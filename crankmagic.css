@@ -1482,3 +1482,13 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-tt-stage-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:8px 16px 0;font-size:12px;color:#dfe7f3}.cm-tt-stage-actions button{min-height:30px;padding:3px 12px;font-size:12px;background:#182134;color:#e6effb;border:1px solid #2b3a55;border-radius:6px;cursor:pointer}
 @media(prefers-reduced-motion:reduce){.cm-tt-grid .cm-tt-card{transition:none!important}}
 @media(max-width:760px){.cm-tt-captions{max-height:120px}.cm-tt-fanL .cm-tt-card{box-shadow:0 6px 14px #000c}}
+
+/* TB3: the drag and its targets. */
+.cm-tt-fanL{touch-action:none}.cm-tt-fanL .cm-tt-card{cursor:grab}.cm-tt-host.is-dragging,.cm-tt-host.is-dragging *{cursor:grabbing!important}
+.cm-tt-drag{position:fixed;z-index:60;pointer-events:none;transform:translate(-50%,-120%);display:flex;align-items:center;gap:8px;max-width:min(360px,80vw)}
+.cm-tt-drag-count{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;padding:0 8px;border-radius:17px;background:#e2b85a;color:#1a1204;font-weight:800;font-size:14px;box-shadow:0 6px 16px #000c}
+.cm-tt-drag-say{font-size:12px;line-height:1.3;background:#0f1523f0;color:#dfe7f3;border:1px solid #2b3a55;border-radius:8px;padding:5px 9px;white-space:normal}.cm-tt-drag-say:empty{display:none}
+.cm-tt-drag-say.is-ok{border-color:#7fd3a0;color:#d9ffe6}.cm-tt-drag-say.is-no{border-color:#d8807f;color:#ffd3cd}
+.cm-tt-pile.is-target .cm-tt-slot,.cm-tt-fan.is-target,.cm-tt-chip.is-target{box-shadow:inset 0 3px 10px #000c,0 0 0 3px #7fd3a0,0 0 22px #7fd3a088}
+.cm-tt-pile.is-refused .cm-tt-slot,.cm-tt-fan.is-refused,.cm-tt-chip.is-refused{box-shadow:inset 0 3px 10px #000c,0 0 0 3px #d8807f}
+.cm-row-menu button small{display:block;font-weight:400;font-size:11px;opacity:.8}

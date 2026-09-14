@@ -115,8 +115,14 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   card's corner; click a card and the rest slide back into their pile while the chosen cards
   stand large on the centre of the mat with name, status, price and deck beneath (shift-click
   or the ticks choose several); right-click a card for the list's row menu; Escape or a click
-  on the mat puts the table back at rest. Dragging the selection to a pile is the next step of
-  `docs/crankmagic-tabletop-plan.md` (`crankmagic-tabletop.js`, `tests/crankmagic-tabletop.mjs`).
+  on the mat puts the table back at rest. **Drag the selection onto a pile** and the pile says
+  what the drop would do before you let go — a status pile is the Status fly-out's change (Bench
+  ↔ Physical deck, Ordered, Watched, Reserved, Substitute, a reservation released to To buy), a
+  collection group pile files the copies, a deck pile reserves them, and a card type, colour or
+  mechanic pile says it is a reading of the card, not a place; every drop that changes a deck or
+  money goes through the same receipt the fly-out shows. A ghost dropped on Ordered becomes an
+  ordered copy, on the Bench an owned one. *Move to…* lists the piles with the same answers for
+  a phone (`crankmagic-tabletop.js` `accepts`, `tests/crankmagic-tabletop.mjs`).
 - **Discover**: navigable metadata/co-play graph, mouse-wheel zoom, keyboard neighbors,
   pan, back trail, card inspection and supplemental catalog lookup. The pane beside the
   graph has two tabs: **Card Info** (the focused card, its terms, *Add/Buy*) and **List**

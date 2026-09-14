@@ -13,8 +13,9 @@
  * `mount(host, model, hooks, ui)` draws the mat: the slate, the dot grid, the ledge, the slots,
  * the placards -- the agreed mock-up (docs/mockups/tabletop-piles.html) -- and, from TB2, a
  * pile laid out in rows and columns with pages and a card size, ticks and a selection that
- * stands on the centre of the mat once the rest recombine (`pileOrder`, `layout` are pure).
- * Dragging the selection to a pile (TB3) comes after.
+ * stands on the centre of the mat once the rest recombine (`pileOrder`, `layout` are pure);
+ * from TB3 the selection drags onto a pile under the drop-target contract (`accepts`, pure),
+ * and the Move to… button lists the piles for a phone.
  *
  * Ghost cards are rows that are not copies yet -- ordered, to buy, a draft list -- drawn as
  * dashed outlines, never counted as held. */
@@ -188,13 +189,83 @@
     return new Promise((resolve) => setTimeout(resolve, 470));
   }
 
+  /* ------------------------------------------------------------------ TB3: drag to a pile */
+  /* THE DROP-TARGET CONTRACT (plan §4). accepts(pile, rows) says what dropping `rows` on `pile`
+     would do -- as an action id the view turns into the model's command, with the words the
+     drag's label and the Move to… menu show -- or why the pile is not a target. Pure, so the
+     test can hold it to the library's rows. Actions: source:<owned|ordered|watching> (copy
+     records change source; a To buy requirement or a draft-list row becomes a copy filed with
+     its deck), place (into a physical deck), standin (into a deck as a substitute), bench
+     (physically to the Bench), reserve (for a deck), release (the requirement back to To buy),
+     group (file into a collection group). A suggestion or a planned card is never a copy here:
+     its status is set from its row menu. */
+  const isLot = (r) => !!r && r.kind === "lot";
+  const isPlan = (r) => !!r && (r.kind === "need" || r.kind === "draft");
+  const inBox = (r) => !!(r && r.location && r.location.kind === "deck");
+  function accepts(pile, rows) {
+    const list = (rows || []).filter(Boolean);
+    const no = (why) => ({ok: false, why});
+    const yes = (action, label, why = "") => ({ok: true, action, label, why});
+    if (!pile) return no("Not a pile.");
+    if (!list.length) return no("Nothing is selected.");
+    const lots = list.filter(isLot), plans = list.filter(isPlan), others = list.length - lots.length - plans.length;
+    const owned = lots.filter((r) => r.source === "owned");
+    const NOT_COPY = "A suggestion or a planned card is not a copy; set its status from its row menu.";
+    if (pile.kind === "bench" || pile.label === BENCH) {
+      if (others) return no(NOT_COPY);
+      if (owned.length === lots.length && !plans.length) return yes("bench", "Move physically to the Bench", owned.some(inBox) ? "Takes a copy out of its physical deck; asks first." : "Records the Bench as where the copies are; reservations are untouched.");
+      return yes("source:owned", "Record as owned copies on the Bench", "An ordered or watched copy becomes owned; a To buy requirement or a draft-list row becomes an owned copy filed with its deck.");
+    }
+    if (pile.kind === "status") {
+      switch (pile.label) {
+        case "Physical deck":
+          if (others || plans.length || lots.some((r) => r.source !== "owned")) return no("Only an owned copy goes into a physical deck; drop it on the Bench first to record it as owned.");
+          return yes("place", "Put in a physical deck", "Asks which deck; a copy the list does not call for is refused unless substitutes are allowed.");
+        case "Substitute":
+          if (others || plans.length || lots.some((r) => r.source !== "owned")) return no("Only an owned copy can stand in for another card.");
+          return yes("standin", "Put in a physical deck as a substitute", "Asks which deck; goes in without a reservation, and Ready to add asks for it back when the real card is ready.");
+        case "Reserved":
+          if (others || plans.length || lots.some((r) => r.source === "watching")) return no("Only an owned or ordered copy can be reserved for a deck.");
+          return yes("reserve", "Reserve for a deck", "Asks which deck; only a deck whose list calls for the card and still lacks it.");
+        case "Ordered":
+          if (others) return no(NOT_COPY);
+          return yes("source:ordered", "Mark as Ordered", lots.some((r) => r.source === "owned" && (r.allocation || inBox(r))) ? "An owned copy in a box or reserved loses that; asks first." : "A To buy requirement or a draft-list row becomes an ordered copy filed with its deck.");
+        case "Watched":
+          if (others) return no(NOT_COPY);
+          if (plans.some((r) => r.kind === "need")) return no("A To buy requirement cannot be Watched; it is what a deck asks for.");
+          return yes("source:watching", "Mark as Watched", "A watched card is one you are considering, not a copy; a reservation is released.");
+        case "To buy":
+          if (others || plans.length || !lots.length || lots.some((r) => !r.allocation)) return no("To buy is what a deck asks for; only a reserved copy can be released to send its requirement back.");
+          return yes("release", "Release the reservation → To buy", "The copy stays owned in the same place; the deck's requirement returns to To buy.");
+        default:
+          return no(`${pile.label} is a reading of a deck's plan, not a place a card can be put.`);
+      }
+    }
+    if (pile.kind === "group") {
+      if (pile.key === "groups") {
+        if (pile.folded || /^No /.test(pile.label)) return no("Choose a named group.");
+        if (others || plans.length) return no("Only copy records are filed in a group; a plan is filed with its deck.");
+        return lots.length ? yes("group", `File in ${pile.label}`, "Nothing leaves a group it is already in.") : no("Nothing here is a copy record.");
+      }
+      if (pile.key === "deck") {
+        if (pile.folded || /^No /.test(pile.label)) return no("Choose a deck pile.");
+        if (others || plans.length || !lots.length || lots.some((r) => r.source === "watching")) return no("Only an owned or ordered copy can be reserved for a deck.");
+        return yes("reserve", `Reserve for ${pile.label}`, "Only if the deck's list calls for the card and still lacks it.");
+      }
+      return no(`A ${pile.label} pile is a reading of the card, not a place it can go.`);
+    }
+    return no("Not a target.");
+  }
+
   /* Draw the table into `host`. The geometry is computed from the host's width. Three states,
      read from `ui`: at rest (TB1: the ledge, the arches, the status row); a pile OPEN (its
      cards in rows and columns on the stage with a page strip, the other group piles as a shelf
      of placards along the back, the status piles still down front); a SELECTION (the chosen
      cards on the centre of the stage, large, with their facts beneath). Clicks reach the
      caller through hooks: onOpen(pileId|null), onPage(n), onSize(S|M|L), onTick(recordId),
-     onSelect([recordId]), onClear(), onMenu(recordId, element), onGroupBy(key). */
+     onSelect([recordId]), onClear(), onMenu(recordId, element), onGroupBy(key),
+     onDrop(pileId, [recordId]) when the selection is dropped on an accepting pile,
+     onMoveTo([recordId], element) for the Move to… button. */
   function mount(host, model, hooks = {}, ui = {}) {
     if (!host) return null;
     const width = Math.max(320, host.clientWidth || 960), narrow = width < 760;
@@ -286,7 +357,7 @@
         const captions = `<ul class="cm-tt-captions">${selected.map((r) => { const d = say(r) || {}; return `<li><strong>${esc(nameOf(r))}</strong>${d.status ? ` <span class="cm-tt-pill${isGhost(r) ? " is-ghost" : ""}">${esc(d.status)}</span>` : ""}${d.price ? ` <span>${esc(d.price)}</span>` : ""}${d.deck ? ` <span class="cm-tt-muted">${esc(d.deck)}</span>` : ""}${(Number(r.quantity) || 1) > 1 ? ` <span class="cm-tt-muted">×${r.quantity}</span>` : ""}</li>`; }).join("")}</ul>`;
         const from = homeId ? findPile(model, homeId) : null;
         const capH = Math.min(6, n) * 24 + 16;
-        stageHTML = `<div class="cm-tt-stage" style="top:${stageTop}px;height:${L.h + 30 + capH + 48}px"><div class="cm-tt-fanL" style="height:${L.h + 24}px">${fan}</div>${captions}<div class="cm-tt-stage-actions"><span class="cm-tt-muted">${n} selected · drag to a pile comes next</span>${from ? `<button type="button" data-tt="back" data-pile="${esc(from.id)}">Back to ${esc(from.label)}</button>` : ""}<button type="button" data-tt="clear">Clear selection</button></div></div>`;
+        stageHTML = `<div class="cm-tt-stage" style="top:${stageTop}px;height:${L.h + 30 + capH + 48}px"><div class="cm-tt-fanL" style="height:${L.h + 24}px">${fan}</div>${captions}<div class="cm-tt-stage-actions"><span class="cm-tt-muted">${n} selected · drag onto a pile, or</span><button type="button" data-tt="moveto" class="cm-tt-primary">Move to…</button>${from ? `<button type="button" data-tt="back" data-pile="${esc(from.id)}">Back to ${esc(from.label)}</button>` : ""}<button type="button" data-tt="clear">Clear selection</button></div></div>`;
         stageH = L.h + 30 + capH + 48;
       }
       const statusTop = stageTop + stageH + 34, sSpan = narrow ? span : (width - 32 - PILE_W) / Math.max(1, sN - 1);
@@ -310,7 +381,45 @@
       else if (kind === "card") { const id = t.dataset.record; if (ev.shiftKey) { hooks.onTick && hooks.onTick(id); return; } const ids = new Set(ticked); ids.add(id); recombine(host, ids).then(() => hooks.onSelect && hooks.onSelect([...ids])); }
       else if (kind === "select-ticked") { const ids = new Set(ticked); recombine(host, ids).then(() => hooks.onSelect && hooks.onSelect([...ids])); }
       else if (kind === "clear") { hooks.onClear && hooks.onClear(); }
+      else if (kind === "moveto") { hooks.onMoveTo && hooks.onMoveTo(selected.map((r) => r.recordId), t); }
     };
+    /* DRAG THE SELECTION (plan §2.3). Pointer down on the fan and a small badge follows the
+       pointer; the pile under it lights as a target or a refusal with the contract's words;
+       up on a target hands the drop to the caller, anywhere else the selection stays. Pointer
+       events, so a mouse, a pen and a finger all work; a touch that has not moved eight
+       pixels is a tap. */
+    if (mode === "selected" && hooks.onDrop) {
+      const fan = host.querySelector(".cm-tt-fanL"); let drag = null;
+      const clearMarks = () => host.querySelectorAll(".is-target, .is-refused").forEach((el) => el.classList.remove("is-target", "is-refused"));
+      fan.addEventListener("pointerdown", (ev) => {
+        if ((ev.button !== undefined && ev.button !== 0) || !ev.target.closest(".cm-tt-card")) return;
+        ev.preventDefault(); try { fan.setPointerCapture(ev.pointerId); } catch (e) { /* capture is a courtesy */ }
+        drag = {id: ev.pointerId, x0: ev.clientX, y0: ev.clientY, el: null, over: null, ok: false, moved: false};
+      });
+      fan.addEventListener("pointermove", (ev) => {
+        if (!drag || ev.pointerId !== drag.id) return;
+        if (!drag.moved) {
+          if (Math.hypot(ev.clientX - drag.x0, ev.clientY - drag.y0) < 8) return;
+          drag.moved = true; host.classList.add("is-dragging");
+          drag.el = document.createElement("div"); drag.el.className = "cm-tt-drag"; drag.el.innerHTML = `<span class="cm-tt-drag-count">${selected.length}</span><span class="cm-tt-drag-say"></span>`; document.body.append(drag.el);
+        }
+        drag.el.style.left = ev.clientX + "px"; drag.el.style.top = ev.clientY + "px";
+        const under = document.elementFromPoint(ev.clientX, ev.clientY), pileEl = under && under.closest("[data-tt=open][data-pile]");
+        const id = pileEl ? pileEl.dataset.pile : null;
+        if (id !== drag.over) {
+          clearMarks(); drag.over = id; drag.ok = false;
+          const say = drag.el.querySelector(".cm-tt-drag-say");
+          if (pileEl) { const a = accepts(findPile(model, id), selected); pileEl.classList.add(a.ok ? "is-target" : "is-refused"); say.textContent = a.ok ? a.label : a.why; say.className = "cm-tt-drag-say " + (a.ok ? "is-ok" : "is-no"); drag.ok = a.ok; }
+          else { say.textContent = ""; say.className = "cm-tt-drag-say"; }
+        }
+      });
+      const end = (ev) => {
+        if (!drag || ev.pointerId !== drag.id) return;
+        const d = drag; drag = null; host.classList.remove("is-dragging"); if (d.el) d.el.remove(); clearMarks();
+        if (d.moved && d.over && d.ok && ev.type === "pointerup") hooks.onDrop(d.over, selected.map((r) => r.recordId));
+      };
+      fan.addEventListener("pointerup", end); fan.addEventListener("pointercancel", end);
+    }
     host.onkeydown = (ev) => {
       if (ev.key === "Escape" && mode !== "rest") { ev.preventDefault(); hooks.onClear && hooks.onClear(); }
       else if ((ev.key === "Enter" || ev.key === " ") && ev.target.matches && ev.target.matches(".cm-tt-card[data-tt=card], .cm-tt-tick")) { ev.preventDefault(); ev.target.click(); }
@@ -319,5 +428,5 @@
     return {width, height, piles: sN + gN + 1, mode};
   }
 
-  return {GROUPINGS, TYPE_ORDER, BENCH, GHOST, SIZES, isGhost, primaryType, bandOf, bandOrder, arcsOf, pileOrder, layout, findPile, table, mount};
+  return {GROUPINGS, TYPE_ORDER, BENCH, GHOST, SIZES, isGhost, primaryType, bandOf, bandOrder, arcsOf, pileOrder, layout, findPile, accepts, table, mount};
 });
