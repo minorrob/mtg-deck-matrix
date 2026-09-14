@@ -28,7 +28,7 @@
     {id:'unassigned',label:'Unassigned',tone:'draft',order:10}];
   const statusByLabel=new Map(STATUS.map(s=>[s.label,s]));
   /* The status a projection row wears: a need is To buy, a plan a Draft list, an option a Suggestion, a group entry Planned, then the copy's own source or placement. */
-  const statusOf=r=>r.kind==='need'?'To buy':r.kind==='draft'?'Draft list':r.kind==='option'?'Suggestion':r.kind==='entry'?'Planned':r.source==='watching'?'Watched':r.source==='ordered'?'Ordered':r.placement;
+  const statusOf=r=>r.kind==='need'?'To buy':r.kind==='draft'?'Draft list':r.kind==='option'?'Suggestion':r.kind==='entry'?'Planned':r.source==='watching'?'Watched':r.source==='ordered'?'Ordered':r.placement==='Bench'&&r.shortlistedFor?'Watched':r.placement;
   const statusOrder=label=>{const s=statusByLabel.get(label);return s?s.order:STATUS.length;};
   const statusTone=label=>{const s=statusByLabel.get(label);return s?s.tone:'draft';};
   const VERSION=3, SOURCES=['owned','ordered','watching'], PLANNED=['watching'], CHANNELS=['bought','trade'], PURPOSES=['main','upgrade','bracket'];
@@ -137,7 +137,7 @@
     const gap=Math.max(0,target-placed),covered=Math.min(standIns,gap),surplus=standIns-covered,swapReady=Math.min(covered,pullFromBench+pullFromOtherBox),remove=surplus+swapReady,sleeved=placed+standIns;
     /* WATCHED, for a deck: the cards being considered for it -- its upgrade and bracket options,
        its planned list, and any watched copy filed in its group. */
-    const g=d.groupId?s.groups.find(x=>x.id===d.groupId):null,watched=d.slots.filter(r=>r.purpose!=='main').reduce((n,r)=>n+r.quantity,0)+(g?g.entries.reduce((n,r)=>n+r.quantity,0):0)+(g?s.lots.filter(l=>l.source==='watching'&&l.groupIds.includes(g.id)).reduce((n,l)=>n+l.quantity,0):0);
+    const g=d.groupId?s.groups.find(x=>x.id===d.groupId):null,watched=d.slots.filter(r=>r.purpose!=='main').reduce((n,r)=>n+r.quantity,0)+(g?g.entries.reduce((n,r)=>n+r.quantity,0):0)+(g?s.lots.filter(l=>l.groupIds.includes(g.id)&&(l.source==='watching'||(l.source==='owned'&&!l.allocation&&l.location?.kind!=='deck'))).reduce((n,l)=>n+l.quantity,0):0);
     let costToFinish=0;if(d.status==='final'&&!d.archived)for(const r of rows){const need=shortfall(s,d,r),c=resolve(s.cards[r.cardId]);if(need&&c&&Number.isFinite(c.price))costToFinish+=c.price*need;}
     return {target,owned,ordered,placed,toBuy:Math.max(0,target-owned-ordered),ready:d.status==='final'&&!d.archived&&target===100&&owned===target,boxed:target>0&&placed===target,
       inBox:placed,pullFromBench,pullFromOtherBox,remove,standIns,covered,surplus,swapReady,sleeved,playable:d.status==='final'&&!d.archived&&target>0&&sleeved>=target,complete:d.status==='final'&&!d.archived&&target===100&&placed===target,
@@ -150,6 +150,26 @@
      ones and its outstanding To buy requirements, always current, stored once. */
   const withDeckGroup=(s,row)=>{const d=row.deckId?s.decks.find(x=>x.id===row.deckId):null;
     return d&&d.groupId&&!row.groupIds.includes(d.groupId)?{...row,groupIds:[...row.groupIds,d.groupId]}:row;};
+  /* WATCHED, EXPANDED (Rob, 14 September; play-space plan §2.2). "If the card is owned and in the
+     middle, what category indicates I'm considering a card I own for the deck but haven't yet
+     chosen to move it into the physical 100?" Reserved cannot say it -- a reservation needs a seat,
+     and a card being considered is precisely one the list does not name yet -- and `watching` means
+     you hold no copy. But the mechanism was already here without a name: every deck owns a
+     collection group, and FILED IN THIS DECK'S GROUP is how the app already says "this belongs to
+     that deck's world without being in its hundred". So Watched is a definition, not a field:
+
+         a card you are considering for a deck: filed in that deck's collection group,
+         reserving nothing and moving nothing -- you may own a copy or you may not.
+
+     Only a free copy qualifies. A reservation, a box and a physical deck are commitments and each
+     of them wins; this deliberately is not one. On the day it shipped it changed nothing in the
+     live library: 260 owned Bench rows sit in no deck group at all. It also sharpens Bench, which
+     becomes "owned, reserved by no deck and shortlisted for none" -- genuinely spare. */
+  const deckGroupIndex=s=>{const m=new Map();for(const d of s.decks)if(!d.archived&&d.groupId&&!m.has(d.groupId))m.set(d.groupId,d.id);return m;};
+  const shortlistOf=(l,index)=>{
+    if(l.source!=='owned'||l.allocation||l.location?.kind==='deck')return '';
+    for(const id of l.groupIds||[])if(index.has(id))return index.get(id);
+    return '';};
   /* MEMOISED PER REVISION. Every page that needs the matrix asked for it again on every render
      (the deck page's Cards tab twice). One computation per state; callers get fresh row objects
      so a page that annotates a row cannot leak into the next. */
@@ -158,7 +178,7 @@
     if(projected.state!==s||projected.revision!==s.revision){projected={state:s,revision:s.revision,rows:projectionOf(s)};}
     return projected.rows.map(r=>({...r}));
   }
-  function projectionOf(s){const rows=s.lots.map(l=>{const sl=l.allocation?slot(s,l.allocation.deckId,l.allocation.slotId):null;return withDeckGroup(s,{...clone(l),recordId:l.id,kind:'lot',card:card(s,l.cardId),deckId:l.allocation?.deckId||'',purpose:sl?sl.purpose:'',pinned:!!sl?.pinned,option:!!sl?.option,optionWhy:sl?.optionWhy||'',placement:inDeck(s,l)?'Physical deck':l.allocation?'Reserved':l.source==='owned'?(l.location?.kind==='deck'?'Substitute':'Bench'):'Unassigned',physical:physical(l),standIn:l.source==='owned'&&l.location?.kind==='deck'&&l.allocation?.deckId!==l.location.deckId,standInDeckId:l.source==='owned'&&l.location?.kind==='deck'&&l.allocation?.deckId!==l.location.deckId?l.location.deckId:''});});for(const d of s.decks.filter(d=>d.status==='final'&&!d.archived))for(const r of d.slots.filter(r=>r.committed)){const need=shortfall(s,d,r);if(need)rows.push(withDeckGroup(s,{recordId:`need:${d.id}:${r.id}`,kind:'need',deckId:d.id,slotId:r.id,cardId:r.cardId,card:card(s,r.cardId),source:'to-buy',quantity:need,purpose:r.purpose,pinned:!!r.pinned,option:!!r.option,optionWhy:r.optionWhy||'',printing:clone(r.printing||{}),placement:'Reserved',physical:'Not acquired',offer:'none',groupIds:[]}));}return rows;}
+  function projectionOf(s){const deckGroups=deckGroupIndex(s);const rows=s.lots.map(l=>{const sl=l.allocation?slot(s,l.allocation.deckId,l.allocation.slotId):null;return withDeckGroup(s,{...clone(l),recordId:l.id,kind:'lot',shortlistedFor:shortlistOf(l,deckGroups),card:card(s,l.cardId),deckId:l.allocation?.deckId||'',purpose:sl?sl.purpose:'',pinned:!!sl?.pinned,option:!!sl?.option,optionWhy:sl?.optionWhy||'',placement:inDeck(s,l)?'Physical deck':l.allocation?'Reserved':l.source==='owned'?(l.location?.kind==='deck'?'Substitute':'Bench'):'Unassigned',physical:physical(l),standIn:l.source==='owned'&&l.location?.kind==='deck'&&l.allocation?.deckId!==l.location.deckId,standInDeckId:l.source==='owned'&&l.location?.kind==='deck'&&l.allocation?.deckId!==l.location.deckId?l.location.deckId:''});});for(const d of s.decks.filter(d=>d.status==='final'&&!d.archived))for(const r of d.slots.filter(r=>r.committed)){const need=shortfall(s,d,r);if(need)rows.push(withDeckGroup(s,{recordId:`need:${d.id}:${r.id}`,kind:'need',deckId:d.id,slotId:r.id,cardId:r.cardId,card:card(s,r.cardId),source:'to-buy',quantity:need,purpose:r.purpose,pinned:!!r.pinned,option:!!r.option,optionWhy:r.optionWhy||'',printing:clone(r.printing||{}),placement:'Reserved',physical:'Not acquired',offer:'none',groupIds:[]}));}return rows;}
   /* THE MATRIX. One row per card the library knows anything about -- a copy at any status,
      a slot in a deck, a planned entry -- and per deck the four numbers a spreadsheet cell
      needs: t (the list's count), a (copies assigned: reserved to that slot from any source),

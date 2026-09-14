@@ -527,6 +527,26 @@ differs is that a correction typed into the ledger takes effect at once, which i
   journeys for lift → neutral → restore; lift → confirm → Watched for the deck; tray → confirm →
   the card joins the list and the copy is reserved, with the receipt naming both.
 
+**Split, 14 September. PR 3a — Watched, expanded — is built and merged; 3b is the play space
+itself.** The model change went first because the middle's Confirm is defined in terms of it:
+an owned card left in the middle becomes *Watched for the deck the table is calibrating*, and
+there was no such category until now. What shipped:
+
+- `shortlistOf(lot, deckGroupIndex)` derives, for a free owned copy, which deck's group has
+  shortlisted it; the projection stamps it as `shortlistedFor`, and `statusOf` reads **Watched**
+  from `placement === 'Bench' && shortlistedFor`. Reserved, Substitute and Physical deck are
+  commitments and each still wins, which is §2.2's rule exactly.
+- `readiness().watched` counts those owned copies beside the planned entries and the `watching`
+  copies it already counted.
+- No schema change, no migration, and **no status moved in the live library**: the counts before
+  and after are byte-identical (514 Physical deck · 75 Substitute · 568 Bench · 11 Reserved ·
+  13 Ordered · 66 To buy), because all 260 owned Bench rows sit in no deck group. The model suite
+  pins that zero, so the day it stops being true the check says so rather than a status changing
+  under Rob quietly.
+
+**3b, still to build:** the draw pile and its arrows, one click to lay out, the back arrow at
+every level, the per-card restore and Restore all, the trays, and the live scoreboard.
+
 ### PR 4 — Shelf mode
 
 The table's second job (§2.15): no deck picked, collection groups along the bottom, the trays as
