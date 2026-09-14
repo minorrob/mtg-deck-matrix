@@ -250,6 +250,17 @@ try{
   await page.locator('#cm-loop-mode').uncheck();await page.waitForTimeout(1000);ok(await page.evaluate(()=>document.querySelector('#cm-graph').crankGraph.loopMode===false),'the toggle turns loop mode off');ok(!/loops only/.test(await page.locator('#cm-graph-size').innerText()),'and the count no longer says so');
   const off=await g();ok(off.near.length>=on.near.length,`${off.near.length} within two steps off loop mode, ${on.near.length} on`);eq(await page.locator('#cm-pane-body .cm-loops-none').count(),0,'off loop mode the no-loop note is gone');
   await click('Clear filters');ok(!(await page.locator('#cm-loop-mode').isChecked()),'clearing the filters clears loop mode');}
+ /* THE CARD POP-UP: in Inspect mode a tap on a node opens the card and its join -- the
+    picture, the four facts, the Primary Purpose and "Joined to <focus> by" -- to the right of
+    the node, and nothing else; its full term list lives under Inspect card now. */
+ {await page.locator('#cm-graph-query').fill('Krenko, Mob Boss');await page.locator('#cm-pane-body h2').filter({hasText:'Krenko'}).waitFor();await page.waitForTimeout(500);
+  await click('Inspect');const target=await page.evaluate(()=>{const g=document.querySelector('#cm-graph').crankGraph;const c=g.current();return g.positions().find(n=>n.depth===1&&n.id!==c.id);});ok(target,'a ring-one node to tap');
+  const box=await page.locator('#cm-graph').boundingBox();await page.mouse.click(box.x+target.x,box.y+target.y);await page.locator('#cm-graph-pop:not([hidden])').waitFor({timeout:8000});
+  const pop=await page.evaluate(()=>{const p=document.querySelector('#cm-graph-pop');const r=p.getBoundingClientRect();return {card:p.classList.contains('cm-pop-card'),art:!!p.querySelector('.cm-pop-art img, .cm-pop-noart'),joined:/Joined to Krenko/.test(p.textContent),own:/Its own terms/.test(p.textContent),primary:p.querySelectorAll('.cm-chip-primary').length,left:parseFloat(p.style.left),width:r.width};});
+  ok(pop.card&&pop.art,'the pop-up carries the card picture');ok(pop.joined,'and how the card joins the focus');ok(!pop.own,'the term wall is gone from the pop-up');eq(pop.primary,1,'one Primary Purpose chip');ok(pop.width>=400,`the pop-up is wider (${pop.width})`);ok(pop.left>target.x||pop.left+pop.width<target.x,`the pop-up sits beside the node, not over it (node x ${target.x.toFixed(0)}, pop ${pop.left.toFixed(0)}–${(pop.left+pop.width).toFixed(0)})`);
+  await page.locator('#cm-graph-pop').getByRole('button',{name:'Inspect card',exact:true}).click();await page.locator('#cm-dialog[open] .cm-inspector-terms').waitFor({timeout:20000});
+  ok(await page.locator('#cm-dialog .cm-inspector-terms-row').count()>=2,'Inspect card lists the terms the graph reads');eq(await page.locator('#cm-dialog .cm-inspector-terms .cm-chip-primary').count(),1,'with the Primary Purpose ringed');
+  await page.keyboard.press('Escape');await page.locator('#cm-dialog[open]').waitFor({state:'hidden'});await page.keyboard.press('Escape');ok(await page.locator('#cm-graph-pop').isHidden(),'Escape closes the pop-up');await click('Navigate');}
  /* GRAPH NAVIGATION, through the controls the graph actually has now. This used to scroll to
     zoom and click a row in a neighbours list; that list was removed when the graph gained
     node and edge pop-ups, and #cm-graph-neighbors has not existed since -- the only trace
