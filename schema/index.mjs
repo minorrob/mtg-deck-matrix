@@ -22,14 +22,15 @@ export const REGISTRY = [
   {file: "data/deck-guides.json", id: "deck-guides@1", generator: "tools/generate-guides.mjs", checkedBy: "tools/generate-guides.mjs", main: "decks"},
   {file: "data/deck-ratings.json", id: "deck-ratings@1", generator: "tools/sim/rate-decks.mjs", checkedBy: "tools/sim/rate-decks.mjs", main: "decks"},
   {file: "data/simulation-summary.json", id: "simulation-summary@3", generator: "tools/sim/rate-decks.mjs", checkedBy: "tools/sim/rate-decks.mjs", main: null},
-  {file: "data/graph.json", id: "graph@2", generator: "tools/graph-amplifiers.mjs", checkedBy: "tools/graph-amplifiers.mjs", main: "cards"},
-  {file: "data/graph-played.json", id: "graph-played@2", generator: "tools/graph-amplifiers.mjs", checkedBy: "tools/graph-amplifiers.mjs", main: "played"},
+  {file: "data/graph.json", id: "graph@2", generator: "tools/graph-amplifiers.mjs", checkedBy: "tools/graph-amplifiers.mjs", main: "cards", large: "on demand; shard by the folded name's first letter when the Trace needs it"},
+  {file: "data/graph-played.json", id: "graph-played@2", generator: "tools/graph-amplifiers.mjs", checkedBy: "tools/graph-amplifiers.mjs", main: "played", large: "on demand; shard by commander when the Trace needs it"},
   {file: "data/live-load.json", id: "live-load@1", generator: "tools/build-live-load.mjs", checkedBy: "tools/build-live-load.mjs", main: "decks"},
   {file: "data/live-state.json", id: "live-state@1", generator: "tools/build-live-state.mjs", checkedBy: "tools/build-live-state.mjs", main: "payload.state.decks"},
   {file: "data/game-history.json", id: "game-history@1", generator: "tools/compile-game-logs.mjs", checkedBy: "tools/compile-game-logs.mjs", main: "games"},
   {file: "sim/config.json", id: "sim-config@2", generator: HAND, checkedBy: "tests/schemas.mjs", main: null},
   {file: "sim/opponents.json", id: "sim-opponents@2", generator: HAND, checkedBy: "tests/schemas.mjs", main: "profiles"},
   {file: "sim/status.json", id: "sim-status@1", generator: "tools/sim/lib.mjs", checkedBy: "tests/schemas.mjs", main: null},
+  {file: "data/manifest.json", id: "manifest@1", generator: "tools/data-manifest.mjs", checkedBy: "tools/data-manifest.mjs", main: "files"},
 ];
 
 export const byFile = (file) => REGISTRY.find((r) => r.file === file);

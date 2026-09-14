@@ -1,6 +1,6 @@
 import {readFile, writeFile} from "node:fs/promises";
 
-const plansUrl = new URL("../data/buy-plans.json", import.meta.url);
+const plansUrl = new URL("../data/archive/buy-plans.json", import.meta.url);
 const cardsUrl = new URL("../data/cards.json", import.meta.url);
 const plans = JSON.parse(await readFile(plansUrl, "utf8"));
 const audited = JSON.parse(await readFile(cardsUrl, "utf8"));

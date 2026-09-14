@@ -1,6 +1,6 @@
 import {readFile, writeFile} from "node:fs/promises";
 
-const file = new URL("../data/buy-plans.json", import.meta.url);
+const file = new URL("../data/archive/buy-plans.json", import.meta.url);
 const catalog = JSON.parse(await readFile(file, "utf8"));
 const corrected = [];
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Post-process data/buy-plans.json after tools/import_budget_plan.py: neutralize any new
+// Post-process data/archive/buy-plans.json after tools/import_budget_plan.py: neutralize any new
 // (tuned2/enhance2/max2/funTuned/funMax/altTuned/altMax) item whose `replaces` name is
 // ambiguous across categories.
 //
@@ -28,7 +28,7 @@ import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const Lineup = require("../lineup-model.js");
 
-const PLANS_PATH = new URL("../data/buy-plans.json", import.meta.url);
+const PLANS_PATH = new URL("../data/archive/buy-plans.json", import.meta.url);
 const doc = JSON.parse(readFileSync(PLANS_PATH, "utf8"));
 
 // category -> its expected immediate predecessor category ("shell" covers both the literal

@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, "..");
-const PLANS_PATH = path.join(ROOT, "data", "buy-plans.json");
+const PLANS_PATH = path.join(ROOT, "data", "archive", "buy-plans.json");
 const CARDS_PATH = path.join(ROOT, "data", "cards.json");
 
 const data = JSON.parse(fs.readFileSync(PLANS_PATH, "utf8"));

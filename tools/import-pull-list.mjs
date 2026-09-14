@@ -1,5 +1,5 @@
 /**
- * Turns the card pull list Rob takes to a shop into data/pull-list.json.
+ * Turns the card pull list Rob takes to a shop into data/archive/pull-list.json.
  *
  * WHY THIS IS NOT DERIVED. Every other number in the Shop falls out of one subtraction:
  * what the decks want, minus what the ledger says you own. This list does not. Forty-nine
@@ -26,8 +26,8 @@ import fs from "node:fs";
 import zlib from "node:zlib";
 
 const SOURCE = new URL("../data/source/CardPullList-2026-09-06-rev2.docx", import.meta.url);
-const LEDGER = new URL("../data/active-state.json", import.meta.url);
-const OUT = new URL("../data/pull-list.json", import.meta.url);
+const LEDGER = new URL("../data/archive/active-state.json", import.meta.url);
+const OUT = new URL("../data/archive/pull-list.json", import.meta.url);
 const DRY = process.argv.includes("--dry");
 const OFFLINE = process.argv.includes("--offline");
 

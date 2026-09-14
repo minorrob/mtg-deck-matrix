@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Import the Win/Fun/Alt-commander build-variant ladders from MTGDeckDecisionMatrix.xlsx
-into data/buy-plans.json, and write tests/fixtures/budget-plan-configs.json for validation.
+into data/archive/buy-plans.json, and write tests/fixtures/budget-plan-configs.json for validation.
 
 Reads data/source/MTGDeckDecisionMatrix.xlsx (python3 stdlib only -- no openpyxl).
 Patches (wholesale-replaces) seven arrays per plan: tuned2, enhance2, max2, funTuned,

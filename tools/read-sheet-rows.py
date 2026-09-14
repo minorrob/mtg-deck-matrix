@@ -1,7 +1,7 @@
 """Dump one worksheet as JSON rows, so a Node tool can read a workbook.
 
 The repository already splits this work in two: Python reads .xlsx (openpyxl),
-and the tool that writes data/active-state.json is JavaScript, because the keys
+and the tool that writes data/archive/active-state.json is JavaScript, because the keys
 it writes come from slot-model.js and reimplementing ownedKey in a second
 language is how two spellings of the same card start to drift apart.
 

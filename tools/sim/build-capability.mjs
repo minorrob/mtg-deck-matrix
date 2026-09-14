@@ -1,7 +1,7 @@
 // Builds the two ladder rungs the sweep could not produce, and measures them.
 //
 //   node tools/sim/build-capability.mjs           # report what would change
-//   node tools/sim/build-capability.mjs --write   # write data/buy-plans.json
+//   node tools/sim/build-capability.mjs --write   # write data/archive/buy-plans.json
 //
 // Why this file exists. The sweep optimizes each rung against the one below it
 // and stops when no further swap clears the convergence bar. At Tier 2 that bar
@@ -471,8 +471,8 @@ if (args.write) {
     // The audit count is a claim about the catalog, so it moves with it.
     if (buyPlans.cardAudit) buyPlans.cardAudit.cardsVerified = cardData.cards.length;
   }
-  await writeJson(path.join(ROOT, "data/buy-plans.json"), buyPlans);
-  console.log(`written to data/buy-plans.json${newlyAudited.size ? " and data/cards.json" : ""}`);
+  await writeJson(path.join(ROOT, "data/archive/buy-plans.json"), buyPlans);
+  console.log(`written to data/archive/buy-plans.json${newlyAudited.size ? " and data/cards.json" : ""}`);
 } else {
   console.log("(dry run — pass --write to save)");
 }

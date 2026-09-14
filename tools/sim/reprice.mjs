@@ -1,7 +1,7 @@
 // Re-prices every variant against the cards it actually contains.
 //
 //   node tools/sim/reprice.mjs            # report what would change
-//   node tools/sim/reprice.mjs --write    # write data/archive/variants.json and data/buy-plans.json
+//   node tools/sim/reprice.mjs --write    # write data/archive/variants.json and data/archive/buy-plans.json
 //
 // The published cost figures were computed before the ladders were consolidated
 // and before Base was rebuilt, so they had drifted a long way from the truth --
@@ -80,8 +80,8 @@ console.log(`\n${rows.length} variants · ${inBudget} Tuned builds under $${BUDG
 
 if (args.write) {
   await writeJson(path.join(ROOT, "data/archive/variants.json"), variants);
-  await writeJson(path.join(ROOT, "data/buy-plans.json"), buyPlans);
-  console.log("written to data/archive/variants.json and data/buy-plans.json");
+  await writeJson(path.join(ROOT, "data/archive/buy-plans.json"), buyPlans);
+  console.log("written to data/archive/variants.json and data/archive/buy-plans.json");
 } else {
   console.log("(dry run — pass --write to save)");
 }

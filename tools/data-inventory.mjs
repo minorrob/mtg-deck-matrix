@@ -115,7 +115,7 @@ const DECLARED = {
   "sim/opponents.json": ["(hand-maintained placeholder)"],
   "data/commander-glossary.json": ["(hand-maintained; tools/check-glossary.mjs checks it)"],
   "data/archive/deck-guides.json": ["(frozen copy)"], "data/archive/deck-swaps.json": ["(frozen copy)"], "data/archive/variants.json": ["(frozen copy)"],
-  "data/base-rebuild.json": ["(the retired ladder's builder; not in tools/ any more)"],
+  "data/archive/active-state.json": ["(the retired viewer's state, frozen)"], "data/archive/buy-plans.json": ["(the retired ladder's plans, frozen)"], "data/archive/my-load.json": ["(an early Load Live shape, frozen)"], "data/archive/base-rebuild.json": ["(the retired ladder's base rebuild, frozen)"], "data/archive/pull-list.json": ["(the pull sheet before it was a page, frozen)"],
 };
 for (const [file, list] of Object.entries(DECLARED)) for (const t of list) if (!t.startsWith("(") && !existsSync(path.join(ROOT, t))) { console.error(`data-inventory: ${file} declares producer ${t}, which is not in the tree`); process.exit(1); }
 
@@ -125,17 +125,11 @@ const READS_ONLY = {"tools/reprice-variants.mjs": ["data/cards.json"]};
 
 /* ------------------------------------------------------------ judgement */
 const OVERRIDES = {
-  "data/active-state.json": ["archive", "the retired viewer's state; read by tools and tests only, never fetched by a page since the legacy pages were retired"],
-  "data/buy-plans.json": ["archive", "8 MB of the retired ladder's buy plans; slot-model.js (not served) is its only module reader"],
-  "data/my-load.json": ["archive", "an early Load Live shape superseded by live-load.json"],
-  "data/base-rebuild.json": ["archive", "the base-rung rebuild the ladder work produced; nothing served reads it"],
-  "data/pull-list.json": ["archive", "the pull sheet before it became a page; superseded by the Ready to add route"],
   "data/game-history.json": ["tool input", "the compiled game logs the compile-game-logs workflow writes; the app reads games from the library state"],
   "data/lenses.json": ["tool input", "sim-lenses.js reads it in Node; the pages do not load that module"],
   "data/live-state.json": ["serve", "fetched by Load Live (User Functions), not precached: it is a backup, replaced whole"],
   "sim/status.json": ["serve", "the sweep's status placeholder the Lab reads; the run rewrites it"],
   "data/commander-glossary.json": ["serve", "hand-maintained editorial file: no generator by design; tools/check-glossary.mjs is its check"],
-  "data/deck-swaps.json": ["review", "152 bytes: an emptied stub since the swaps moved to data/archive, still precached by the worker; drop it from the asset map and the worker, or fold it"],
 };
 function disposition(a, groups) {
   const o = OVERRIDES[a.path]; if (o) return {disposition: o[0], note: o[1]};

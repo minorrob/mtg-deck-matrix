@@ -1,5 +1,5 @@
 /**
- * Imports the "App Assignment Handoff" workbook into data/active-state.json.
+ * Imports the "App Assignment Handoff" workbook into data/archive/active-state.json.
  *
  * The workbook is one row per (slot, choice type) across the six live decks: an Active
  * card, an Assigned card that on first import is the same card, and up to five
@@ -32,9 +32,9 @@ const require = createRequire(import.meta.url);
 const Slot = require("../slot-model.js");
 const Lineup = require("../lineup-model.js");
 
-const STATE = new URL("../data/active-state.json", import.meta.url);
+const STATE = new URL("../data/archive/active-state.json", import.meta.url);
 const doc = JSON.parse(fs.readFileSync(STATE, "utf8"));
-const plans = JSON.parse(fs.readFileSync(new URL("../data/buy-plans.json", import.meta.url), "utf8")).plans;
+const plans = JSON.parse(fs.readFileSync(new URL("../data/archive/buy-plans.json", import.meta.url), "utf8")).plans;
 const catalog = JSON.parse(fs.readFileSync(new URL("../data/cards.json", import.meta.url), "utf8")).cards;
 
 const VARIANT = {Felothar: "1b", Atraxa: "2c", Obuun: "3o", Roon: "4e", Quintorius: "5o", Danitha: "7e"};
@@ -200,4 +200,4 @@ if (refused.length) {
   [...seen].slice(0, 10).forEach(([k, why]) => console.log(`  ${k} - ${why}`));
 }
 if (unplaced.length) console.log(`\nno app slot for ${unplaced.length}: ${unplaced.slice(0, 5).join(", ")}`);
-console.log(write ? "\nwritten to data/active-state.json" : "\n(dry run - pass --write to save)");
+console.log(write ? "\nwritten to data/archive/active-state.json" : "\n(dry run - pass --write to save)");

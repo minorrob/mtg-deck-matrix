@@ -4,9 +4,9 @@ import {readFile} from "node:fs/promises";
 
 const require = createRequire(import.meta.url);
 const Lineup = require("../lineup-model.js");
-const buyPlans = JSON.parse(await readFile(new URL("../data/buy-plans.json", import.meta.url), "utf8"));
+const buyPlans = JSON.parse(await readFile(new URL("../data/archive/buy-plans.json", import.meta.url), "utf8"));
 const cards = JSON.parse(await readFile(new URL("../data/cards.json", import.meta.url), "utf8"));
-const baseRebuild = JSON.parse(await readFile(new URL("../data/base-rebuild.json", import.meta.url), "utf8"));
+const baseRebuild = JSON.parse(await readFile(new URL("../data/archive/base-rebuild.json", import.meta.url), "utf8"));
 const audited = new Map(cards.cards.map((card) => [Lineup.normalizeName(card.name), card]));
 const BASIC_NAMES = new Set(["plains", "island", "swamp", "mountain", "forest", "wastes", "snow covered plains", "snow covered island", "snow covered swamp", "snow covered mountain", "snow covered forest"]);
 const LADDER_PREREQS = {enhance2: ["tuned2"], max2: ["tuned2", "enhance2"], funMax: ["funTuned"], altMax: ["altTuned"]};

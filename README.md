@@ -314,7 +314,7 @@ Every data file under `data/` and `sim/` opens with `{schema, stamp, generator, 
 `schema/index.mjs` registers each one with its producer and the tool whose `--check` vouches for
 it, `schema/*.json` describes its shape, and readers pass what they fetch through
 `CrankAssets.expect()`. Changed assets require a new `?v=` everywhere referenced, then
-`node tests/asset-versions.mjs --update`. There are 60 Node suites:
+`node tests/asset-versions.mjs --update`. There are 61 Node suites:
 
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`
@@ -338,6 +338,7 @@ it, `schema/*.json` describes its shape, and readers pass what they fetch throug
 - `crankmagic-sim` — `tests/crankmagic-sim.mjs`
 - `crankmagic-workbook` — `tests/crankmagic-workbook.mjs`
 - `data-integrity` — `tests/data-integrity.mjs`
+- `data-manifest` — `tests/data-manifest.mjs`
 - `deck-audit` — `tests/deck-audit.mjs`
 - `deck-build` — `tests/deck-build.mjs`
 - `deck-generator` — `tests/deck-generator.mjs`

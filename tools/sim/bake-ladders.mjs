@@ -1,7 +1,7 @@
 // Writes the sweep's optimized hundreds back into the buy plans as ladder items.
 //
 //   node tools/sim/bake-ladders.mjs           # report what would change
-//   node tools/sim/bake-ladders.mjs --write   # write data/buy-plans.json
+//   node tools/sim/bake-ladders.mjs --write   # write data/archive/buy-plans.json
 //
 // Without this the sweep's work never reaches the page. Decks 7 through 10 in
 // particular had no Tuned ladder at all -- zero required purchases across all
@@ -422,7 +422,7 @@ if (args.write) {
     // The audit count is a claim about the catalog, so it moves with it.
     if (buyPlans.cardAudit) buyPlans.cardAudit.cardsVerified = cardData.cards.length;
   }
-  await writeJson(path.join(ROOT, "data/buy-plans.json"), buyPlans);
+  await writeJson(path.join(ROOT, "data/archive/buy-plans.json"), buyPlans);
   // The measured hundreds, committed. bake-ladders checks composition against
   // the sweep before writing, but the sweep's own records are working files that
   // never reach the repository -- so the check would be unrepeatable and a later
@@ -434,7 +434,7 @@ if (args.write) {
     note: "The exact hundred measured for each rung. Composing the plan through lineup-model.js must reproduce these lists card for card.",
     variants: Object.fromEntries(measuredLists)
   });
-  console.log(`written to data/buy-plans.json${newlyAudited.size ? " and data/cards.json" : ""}`);
+  console.log(`written to data/archive/buy-plans.json${newlyAudited.size ? " and data/cards.json" : ""}`);
 } else {
   console.log("(dry run — pass --write to save)");
 }

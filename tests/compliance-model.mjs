@@ -5,7 +5,7 @@ import {readFile} from "node:fs/promises";
 const require = createRequire(import.meta.url);
 const Lineup = require("../lineup-model.js");
 const Compliance = require("../compliance-model.js");
-const buyPlans = JSON.parse(await readFile(new URL("../data/buy-plans.json", import.meta.url), "utf8"));
+const buyPlans = JSON.parse(await readFile(new URL("../data/archive/buy-plans.json", import.meta.url), "utf8"));
 const cards = JSON.parse(await readFile(new URL("../data/cards.json", import.meta.url), "utf8"));
 const audited = new Map(cards.cards.map((card) => [Lineup.normalizeName(card.name), card]));
 const resolveMeta = (item) => audited.get(Lineup.normalizeName(item.name)) || {};

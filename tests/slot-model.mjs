@@ -5,7 +5,7 @@ import {readFile} from "node:fs/promises";
 const require = createRequire(import.meta.url);
 const Lineup = require("../lineup-model.js");
 const Slot = require("../slot-model.js");
-const buyPlans = JSON.parse(await readFile(new URL("../data/buy-plans.json", import.meta.url), "utf8"));
+const buyPlans = JSON.parse(await readFile(new URL("../data/archive/buy-plans.json", import.meta.url), "utf8"));
 
 const planIds = Object.keys(buyPlans.plans);
 let checks = 0;
@@ -223,7 +223,7 @@ const cardsPayload = JSON.parse(await readFile(new URL("../data/cards.json", imp
 const cards = {};
 (cardsPayload.cards || []).forEach((c) => { if (c && c.name) cards[Lineup.normalizeName(c.name)] = c; });
 
-const activePayload = JSON.parse(await readFile(new URL("../data/active-state.json", import.meta.url), "utf8"));
+const activePayload = JSON.parse(await readFile(new URL("../data/archive/active-state.json", import.meta.url), "utf8"));
 const activeState = activePayload.state || activePayload;
 
 ok("a starting-shell card with no price of its own falls back to the catalog", () => {
@@ -736,7 +736,7 @@ ok("the same card written twice on the list is one row asking for both copies", 
 });
 
 /* ---------- the committed list, against the real ledger ---------- */
-const pullList = JSON.parse(await readFile(new URL("../data/pull-list.json", import.meta.url), "utf8"));
+const pullList = JSON.parse(await readFile(new URL("../data/archive/pull-list.json", import.meta.url), "utf8"));
 
 ok("the committed pull list reproduces its own totals", () => {
   const copies = pullList.cards.reduce((n, c) => n + c.quantity, 0);

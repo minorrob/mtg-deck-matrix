@@ -54,8 +54,8 @@ console.log(`${itemsFixed} ladder item(s) corrected`);
 
 if (args.write) {
   await writeJson(path.join(ROOT, "data/cards.json"), cardData);
-  await writeJson(path.join(ROOT, "data/buy-plans.json"), buyPlans);
-  console.log("written to data/cards.json and data/buy-plans.json");
+  await writeJson(path.join(ROOT, "data/archive/buy-plans.json"), buyPlans);
+  console.log("written to data/cards.json and data/archive/buy-plans.json");
 } else {
   console.log("(dry run — pass --write to save)");
 }

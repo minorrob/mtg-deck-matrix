@@ -1205,7 +1205,7 @@ def write_json(path: Path, data: dict) -> None:
 def main() -> None:
     write_json(DATA_DIR / "variants.json", extract_compare())
     write_json(DATA_DIR / "buy-plans.json", extract_buy_plans())
-    print("Wrote data/variants.json and data/buy-plans.json")
+    print("Wrote data/variants.json and data/archive/buy-plans.json")
 
 
 if __name__ == "__main__":

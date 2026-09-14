@@ -181,10 +181,10 @@ for (const row of report) {
 console.log(`${repinned} variant(s) re-pinned in data/archive/rung-lists.json`);
 
 if (args.write) {
-  await writeJson(path.join(ROOT, "data/buy-plans.json"), buyPlans);
+  await writeJson(path.join(ROOT, "data/archive/buy-plans.json"), buyPlans);
   rungLists.generatedAt = new Date().toISOString();
   await writeJson(path.join(ROOT, "data/archive/rung-lists.json"), rungLists);
-  console.log("written to data/buy-plans.json and data/archive/rung-lists.json");
+  console.log("written to data/archive/buy-plans.json and data/archive/rung-lists.json");
 } else {
   console.log("(dry run — pass --write to save)");
 }

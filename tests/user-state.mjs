@@ -167,7 +167,7 @@ check("a file that is not a backup is refused rather than half-applied", () => {
 });
 
 check("the committed default load is a real backup of nothing but named keys", async () => {
-  const file = JSON.parse(await readFile(new URL("../data/my-load.json", import.meta.url), "utf8"));
+  const file = JSON.parse(await readFile(new URL("../data/archive/my-load.json", import.meta.url), "utf8"));
   assert.equal(file.kind, "mtg-deck-matrix-browser-backup", "Load default reads it through restore()");
   const known = new Set(User.keys());
   const strangers = Object.keys(file.values).filter((k) => !known.has(k));

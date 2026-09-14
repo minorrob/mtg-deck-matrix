@@ -73,7 +73,7 @@ function nameIndex(state) {
   return index;
 }
 
-const doc = JSON.parse(fs.readFileSync(new URL("../data/active-state.json", import.meta.url), "utf8"));
+const doc = JSON.parse(fs.readFileSync(new URL("../data/archive/active-state.json", import.meta.url), "utf8"));
 const state = doc.state;
 const index = nameIndex(state);
 
@@ -107,7 +107,7 @@ for (const [key, acc] of spend) {
 
 state.purchasePrices = prices;
 doc.exportedAt = new Date().toISOString();
-fs.writeFileSync(new URL("../data/active-state.json", import.meta.url), JSON.stringify(doc, null, 2) + "\n");
+fs.writeFileSync(new URL("../data/archive/active-state.json", import.meta.url), JSON.stringify(doc, null, 2) + "\n");
 
 const total = [...spend.values()].reduce((n, a) => n + a.cents, 0) / 100;
 console.log(`priced rows: ${priced} · blank rows left on target: ${skipped} · cards priced: ${Object.keys(prices).length}`);

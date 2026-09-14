@@ -383,7 +383,7 @@ if (args.write) {
     await writeJson(path.join(ROOT, "data/cards.json"), cardData);
     if (buyPlans.cardAudit) buyPlans.cardAudit.cardsVerified = cardData.cards.length;
   }
-  await writeJson(path.join(ROOT, "data/buy-plans.json"), buyPlans);
+  await writeJson(path.join(ROOT, "data/archive/buy-plans.json"), buyPlans);
 
   // The pinned hundred moves with the deck, or the published score stops
   // describing what is printed underneath it.

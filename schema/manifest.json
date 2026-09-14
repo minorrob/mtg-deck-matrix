@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://minorrob.github.io/mtg-deck-matrix/schema/manifest.json",
+  "title": "The data manifest: every registered data file with its schema, stamp, generator, size, hash, served version and cache class",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "manifest@1"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "generator": {
+      "type": "string",
+      "const": "tools/data-manifest.mjs"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "minLength": 1
+          },
+          "schema": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "stamp": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "generator": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "served": {
+            "type": "boolean"
+          },
+          "cache": {
+            "type": "string",
+            "enum": [
+              "precached",
+              "on demand",
+              "fetched by Load Live",
+              "not served"
+            ]
+          }
+        },
+        "required": [
+          "file",
+          "schema",
+          "stamp",
+          "generator",
+          "bytes",
+          "sha256",
+          "version",
+          "served",
+          "cache"
+        ]
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "generatedAt",
+    "generator",
+    "count",
+    "files"
+  ],
+  "additionalProperties": false
+}

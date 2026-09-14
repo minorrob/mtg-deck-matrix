@@ -1,7 +1,7 @@
 // The Manual rung: cards the owner puts in a slot by hand, from Salvage or a pasted
 // TCGplayer link.
 //
-// lineup-compliance.mjs cannot cover this. It composes data/buy-plans.json, and manual
+// lineup-compliance.mjs cannot cover this. It composes data/archive/buy-plans.json, and manual
 // cards are deliberately NOT written there -- the buy catalog is regenerated from the
 // build kit, so anything stored in it is lost on the next rebuild. They live in
 // state.manualCards and the app grafts them onto each plan at runtime. So the invariant
@@ -16,9 +16,9 @@ import {readFile} from "node:fs/promises";
 const require = createRequire(import.meta.url);
 const Lineup = require("../lineup-model.js");
 const Slot = require("../slot-model.js");
-const buyPlans = JSON.parse(await readFile(new URL("../data/buy-plans.json", import.meta.url), "utf8"));
+const buyPlans = JSON.parse(await readFile(new URL("../data/archive/buy-plans.json", import.meta.url), "utf8"));
 const cards = JSON.parse(await readFile(new URL("../data/cards.json", import.meta.url), "utf8"));
-const activeState = JSON.parse(await readFile(new URL("../data/active-state.json", import.meta.url), "utf8"));
+const activeState = JSON.parse(await readFile(new URL("../data/archive/active-state.json", import.meta.url), "utf8"));
 
 const audited = new Map(cards.cards.map((card) => [Lineup.normalizeName(card.name), card]));
 const manualCards = activeState.state?.manualCards || {};
@@ -34,7 +34,7 @@ ok("the seeded options are filed against real variants", () => {
   for (const id of variantIds) assert.ok(buyPlans.plans[id], `${id} has manual cards but no buy plan`);
 });
 
-ok("data/buy-plans.json carries no manual cards of its own", () => {
+ok("data/archive/buy-plans.json carries no manual cards of its own", () => {
   // If they ever land here they are lost on the next rebuild of the buy catalog,
   // which is the durability problem this rung was built to avoid.
   const leaked = Object.entries(buyPlans.plans).filter(([, plan]) => (plan.manual || []).length);
