@@ -148,6 +148,10 @@ Named now so the evaluation checks them rather than rediscovers them:
   records) with `tools/build-card-records.mjs` as its one producer; `data/card-facts.json` and
   the graph's card block are lenses it writes; the four tools that wrote them by hand are
   retired; `tests/card-records.mjs` pins that the lenses equal the record.
+- **Critical 2 shipped (PR #180):** the library references the Card record (schema 3): a
+  shipped card is stored as its identity, the catalog joins the record's facts, a schema-2
+  library is reconciled once at boot, every module reads through `C.card(id)`, and the
+  committed live state is 0.8 MB instead of 2.1 MB.
 
 ## 5. Sequence and sizing
 

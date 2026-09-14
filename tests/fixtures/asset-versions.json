@@ -62,8 +62,8 @@
       "sha": "b4cc36093b2df3e8"
     },
     "card-catalog.js": {
-      "version": 19,
-      "sha": "8f242bb2f7a5e6d9"
+      "version": 20,
+      "sha": "95104b57242d5569"
     },
     "card-classify.js": {
       "version": 10,
@@ -82,8 +82,8 @@
       "sha": "cb61bc0fb5083d16"
     },
     "collection-model.js": {
-      "version": 27,
-      "sha": "ea8cf110b5e062fd"
+      "version": 28,
+      "sha": "b40d6dd229866bba"
     },
     "collection-repository.js": {
       "version": 3,
@@ -94,12 +94,12 @@
       "sha": "218a98465449d00c"
     },
     "crankmagic-advisor.js": {
-      "version": 7,
-      "sha": "e02ecad49be64f67"
+      "version": 8,
+      "sha": "cac11ca669926cb2"
     },
     "crankmagic-app.js": {
-      "version": 153,
-      "sha": "9ba3d8c065b09c0f"
+      "version": 154,
+      "sha": "ad0af65da22c0ad6"
     },
     "crankmagic-assets.js": {
       "version": 24,
@@ -114,20 +114,20 @@
       "sha": "4c937886d914b612"
     },
     "crankmagic-collection.js": {
-      "version": 40,
-      "sha": "22c05201ef7ac4b6"
+      "version": 41,
+      "sha": "551a2fdd3b0066ba"
     },
     "crankmagic-decks.js": {
-      "version": 42,
-      "sha": "69e6b431f75664d3"
+      "version": 43,
+      "sha": "2a87d0b4e7e996bb"
     },
     "crankmagic-design.css": {
       "version": 5,
       "sha": "0f37e9d569d76ff4"
     },
     "crankmagic-discover.js": {
-      "version": 45,
-      "sha": "2224b1d1639fe6a3"
+      "version": 46,
+      "sha": "6279bca2d5639e2b"
     },
     "crankmagic-evidence.js": {
       "version": 2,
@@ -154,20 +154,20 @@
       "sha": "dddcd6bfaa9e3cd6"
     },
     "crankmagic-lab.js": {
-      "version": 44,
-      "sha": "07b22dc02ab0e756"
+      "version": 45,
+      "sha": "b1b90282a2874043"
     },
     "crankmagic-loops.js": {
       "version": 1,
       "sha": "a0a7d8a7c5a4135f"
     },
     "crankmagic-orders.js": {
-      "version": 5,
-      "sha": "9de2c7bf4a5b3c9e"
+      "version": 6,
+      "sha": "d6509a95e324b1b9"
     },
     "crankmagic-plan-editor.js": {
-      "version": 1,
-      "sha": "6b97ae1d80fb6e5a"
+      "version": 2,
+      "sha": "4eb23f2843c5410f"
     },
     "crankmagic-pull.js": {
       "version": 11,
@@ -186,12 +186,12 @@
       "sha": "578e5850de7179e3"
     },
     "crankmagic-sim.js": {
-      "version": 17,
-      "sha": "81ae2c4b7634afa7"
+      "version": 18,
+      "sha": "d7bc7ed62b5a1cf5"
     },
     "crankmagic-sw.js": {
-      "version": 153,
-      "sha": "232ce537d0e71d33"
+      "version": 154,
+      "sha": "2101003abd7acc3e"
     },
     "crankmagic-tour.js": {
       "version": 13,

@@ -16,7 +16,7 @@
      reserved to a slot; it becomes ordered or owned by the same 'source' correction the
      other kinds use, and a reserved copy corrected down to it gives its deck the requirement
      back. 'ordered' carries a channel: bought from a vendor, or a trade arranged. */
-  const VERSION=2, SOURCES=['owned','ordered','watching'], PLANNED=['watching'], CHANNELS=['bought','trade'], PURPOSES=['main','upgrade','bracket'];
+  const VERSION=3, SOURCES=['owned','ordered','watching'], PLANNED=['watching'], CHANNELS=['bought','trade'], PURPOSES=['main','upgrade','bracket'];
   const clone=value=>JSON.parse(JSON.stringify(value));
   const text=(value,max=500)=>String(value??'').trim().slice(0,max);
   const quantity=value=>{const n=Number(value);if(!Number.isSafeInteger(n)||n<1||n>1000000)throw Error('Quantity must be a whole number between 1 and 1,000,000.');return n;};
@@ -36,16 +36,33 @@
      copy offered for Sell / Trade is never reserved, so an offered copy that still filled a
      claim keeps the claim and drops the offer. Repository loads and backup reads run this
      before validating, so a library or a file from schema 1 opens without a word. */
-  function migrate(raw){if(!raw||raw.schemaVersion!==1)return raw;const s=clone(raw);
-    for(const l of s.lots){if(l.source==='wanted'){l.source='watching';l.notes=[l.notes,'Was Wanted before Wanted and Watched became one status.'].filter(Boolean).join(' ').slice(0,5000);}
+  /* SCHEMA 3. A library card is a reference to the Card record: for a card the shipped record
+     set carries, state.cards[id] holds its identity (id, name, oracleId) and nothing else,
+     and every fact is read off the record at the catalog. A card the record set does not
+     carry keeps its whole fetched record here, because this is the only copy. The strip
+     itself needs the shipped set, which the model does not know, so 2 → 3 bumps the version
+     and the app files a reconcileCards command once at boot for the cards it can resolve. */
+  function migrate(raw){if(!raw||!(raw.schemaVersion===1||raw.schemaVersion===2))return raw;const s=clone(raw);
+    if(s.schemaVersion===1){for(const l of s.lots){if(l.source==='wanted'){l.source='watching';l.notes=[l.notes,'Was Wanted before Wanted and Watched became one status.'].filter(Boolean).join(' ').slice(0,5000);}
       if(l.source==='incoming'){l.source='ordered';l.channel='trade';}if(l.source==='ordered'&&!l.channel)l.channel='bought';if(l.offer!=='none'&&l.allocation)l.offer='none';}
-    s.schemaVersion=2;return s;}
+    s.schemaVersion=2;}
+    if(s.schemaVersion===2)s.schemaVersion=3;
+    return s;}
+  /* The identity a shipped card keeps in the library. */
+  const reference=c=>({id:c.id,name:text(c.name,250),oracleId:c.oracleId||'',shipped:true,...(c.flavorName?{flavorName:c.flavorName}:{}),...(c.updatedAt?{updatedAt:c.updatedAt}:{})});
   function empty(){return {schemaVersion:VERSION,revision:0,cards:{},decks:[],lots:[],groups:starterGroups(),reports:[],games:[],advice:[],imports:[],preferences:{starterGroups:true},legacy:null,createdAt:null,updatedAt:null};}
   const deck=(s,id)=>{const d=s.decks.find(d=>d.id===id);ensure(d,'Deck not found. Reload and try again.');return d;};
   const slot=(s,did,sid)=>{const d=deck(s,did),r=d.slots.find(r=>r.id===sid);ensure(r,'That deck slot no longer exists.');return r;};
   const lot=(s,id)=>{const r=s.lots.find(r=>r.id===id);ensure(r,'That card record no longer exists.');return r;};
   const group=(s,id)=>{const g=s.groups.find(g=>g.id===id);ensure(g,'Collection group not found.');return g;};
-  const card=(s,id)=>{const c=Object.hasOwn(s.cards,id)?s.cards[id]:null;ensure(c,'Resolve the card identity first.');return c;};
+  /* THE RECORD SOURCE. A shipped card is a reference in the library (schema 3); its facts --
+     type line, colour identity, legality, price -- live on the Card record. The host installs
+     the record source once (the app: the catalog; the live-state builder: the bundled records)
+     and every rule here reads a card through it. The model never stores those facts again. */
+  let recordSource=null;
+  function setRecordSource(fn){recordSource=typeof fn==='function'?fn:null;}
+  const resolve=c=>{if(c&&c.shipped===true&&recordSource){const r=recordSource(c.id);if(r)return {...r,...c};}return c;};
+  const card=(s,id)=>{const c=Object.hasOwn(s.cards,id)?s.cards[id]:null;ensure(c,'Resolve the card identity first.');return resolve(c);};
   function print(raw={}){return {id:text(raw.id,100),set:text(raw.set,30).toLowerCase(),collector:text(raw.collector,40),finish:text(raw.finish,30),language:text(raw.language,30),condition:text(raw.condition,50),signed:!!raw.signed,altered:!!raw.altered};}
   function compatible(l,r){return l.cardId===r.cardId&&Object.entries(r.printing||{}).every(([k,v])=>!v||l.printing?.[k]===v);}
   function countFor(s,did,sid){return s.lots.filter(l=>l.allocation?.deckId===did&&l.allocation.slotId===sid).reduce((n,l)=>n+l.quantity,0);}
@@ -75,7 +92,7 @@
   function readiness(s,d){const rows=d.slots.filter(r=>r.purpose==='main'),target=rows.reduce((n,r)=>n+r.quantity,0);let owned=0,ordered=0,placed=0,pullFromBench=0,pullFromOtherBox=0,paid=0,marketValue=0;
     for(const l of s.lots.filter(l=>l.allocation?.deckId===d.id&&rows.some(r=>r.id===l.allocation.slotId))){if(l.source==='owned')owned+=l.quantity;if(l.source==='ordered')ordered+=l.quantity;
       if(inDeck(s,l))placed+=l.quantity;else if(l.source==='owned'){if(l.location?.kind==='deck')pullFromOtherBox+=l.quantity;else pullFromBench+=l.quantity;}
-      if(Number.isFinite(l.paid))paid+=l.paid*l.quantity;if(l.source==='owned'){const c=s.cards[l.cardId];if(c&&Number.isFinite(c.price))marketValue+=c.price*l.quantity;}}
+      if(Number.isFinite(l.paid))paid+=l.paid*l.quantity;if(l.source==='owned'){const c=resolve(s.cards[l.cardId]);if(c&&Number.isFinite(c.price))marketValue+=c.price*l.quantity;}}
     /* SUBSTITUTES. An owned copy physically in this box that the list does not call for -- not
        reserved to this deck -- is a substitute: it fills a seat while the real card is bought,
        ordered or still on the bench. It leaves when a real copy is ready to take a seat
@@ -87,7 +104,7 @@
     /* WATCHED, for a deck: the cards being considered for it -- its upgrade and bracket options,
        its planned list, and any watched copy filed in its group. */
     const g=d.groupId?s.groups.find(x=>x.id===d.groupId):null,watched=d.slots.filter(r=>r.purpose!=='main').reduce((n,r)=>n+r.quantity,0)+(g?g.entries.reduce((n,r)=>n+r.quantity,0):0)+(g?s.lots.filter(l=>l.source==='watching'&&l.groupIds.includes(g.id)).reduce((n,l)=>n+l.quantity,0):0);
-    let costToFinish=0;if(d.status==='final'&&!d.archived)for(const r of rows){const need=shortfall(s,d,r),c=s.cards[r.cardId];if(need&&c&&Number.isFinite(c.price))costToFinish+=c.price*need;}
+    let costToFinish=0;if(d.status==='final'&&!d.archived)for(const r of rows){const need=shortfall(s,d,r),c=resolve(s.cards[r.cardId]);if(need&&c&&Number.isFinite(c.price))costToFinish+=c.price*need;}
     return {target,owned,ordered,placed,toBuy:Math.max(0,target-owned-ordered),ready:d.status==='final'&&!d.archived&&target===100&&owned===target,boxed:target>0&&placed===target,
       inBox:placed,pullFromBench,pullFromOtherBox,remove,standIns,covered,surplus,swapReady,sleeved,playable:d.status==='final'&&!d.archived&&target>0&&sleeved>=target,complete:d.status==='final'&&!d.archived&&target===100&&placed===target,
       reserved:target,substitutes:standIns,inPhysicalDeck:sleeved,watched,costToFinish:Math.round(costToFinish*100)/100,paid:Math.round(paid*100)/100,marketValue:Math.round(marketValue*100)/100};}
@@ -239,7 +256,7 @@
   function acceptance(s,d){return [...legality(s,d),...definitionIssues(s,d)];}
   function apply(current,command){
     validate(current);ensure(command&&safeId(command.id),'Every change needs a unique operation ID.');const s=clone(current),c=clone(command),now=c.at||new Date().toISOString();let serial=0,summary='';const id=prefix=>`${prefix}:${c.id}:${++serial}`;
-    function addCard(raw){ensure(raw&&safeId(raw.id),'Invalid card identity.');s.cards[raw.id]={...s.cards[raw.id],...clone(raw),name:text(raw.name,250)};return card(s,raw.id);}
+    function addCard(raw){ensure(raw&&safeId(raw.id),'Invalid card identity.');if(raw.shipped===true){s.cards[raw.id]=reference(raw);return card(s,raw.id);}const {shipped,...rest}=clone(raw);s.cards[raw.id]={...s.cards[raw.id],...rest,name:text(raw.name,250)};return card(s,raw.id);}
     function split(l,n){n=quantity(n??l.quantity);ensure(n<=l.quantity,'That quantity exceeds the available copies.');if(n===l.quantity)return l;const part={...clone(l),id:id('lot'),quantity:n};l.quantity-=n;s.lots.push(part);return part;}
     function warning(l){if(l.allocation||l.location?.kind==='deck'||l.offer==='held')ensure(c.confirmed===true,'Review and confirm the affected deck, physical location or pending deal before changing this copy.');}
     function version(d){d.versions.push({id:id('version'),at:now,slots:clone(d.slots),commanders:[...d.commanders],definition:clone(d.definition)});d.version=(d.version||0)+1;}
@@ -330,6 +347,10 @@
          The two flags exclude each other, and a card that is replaced takes its flag with it. */
       case 'flag':{const d=deck(s,c.deckId),r=slot(s,d.id,c.slotId);ensure(!d.archived,'Restore the deck first.');ensure(r.purpose==='main','Flag a card in the main list; suggestions are already outside it.');r.option=!!c.option;r.optionWhy=r.option?text(c.why,300):'';if(r.option)r.pinned=false;summary=r.option?`Flagged ${card(s,r.cardId).name} as an option to swap out of ${d.name}`:`Cleared the option flag on ${card(s,r.cardId).name} in ${d.name}`;break;}
       case 'cards': for(const raw of c.cards||[])addCard(raw);summary='Saved verified card data and supplemental identities';break;
+      /* ONE-TIME REPAIR (schema 3): the library cards the shipped record set carries drop their
+         copied facts and keep their identity. Idempotent: nothing to strip, nothing changes. */
+      case 'reconcileCards':{const ids=(c.ids||[]).filter(id=>Object.hasOwn(s.cards,id)&&s.cards[id].shipped!==true);if(!ids.length)return {state:current,summary:'Every library card already references its record.'};
+        for(const id of ids)s.cards[id]=reference(s.cards[id]);summary=`${ids.length} library card${ids.length===1?'':'s'} now reference the shipped record instead of carrying a copy`;break;}
       /* EVERY DECK HAS A COLLECTION GROUP, AND IT IS MADE WITH THE DECK. A deck without one
          was a deck whose cards had no home in the Collection: you could filter to the deck,
          but the group -- the thing you file copies into and hand to someone -- had to be
@@ -496,5 +517,5 @@
   function fingerprint(d){return JSON.stringify({commanders:[...d.commanders].sort(),slots:d.slots.filter(r=>r.purpose==='main').map(r=>[r.cardId,r.quantity]).sort((a,b)=>a[0].localeCompare(b[0]))});}
   /* THE ORDERS, READ BACK: one row per order id across the lots that carry it. */
   function orders(s){const by=new Map();for(const l of s.lots){if(!l.order)continue;const o=by.get(l.order.id)||{id:l.order.id,vendor:l.order.vendor,ref:l.order.ref,expectedBy:l.order.expectedBy,placedAt:l.order.placedAt,lots:[],copies:0,arrived:0,paid:0,shipping:0};o.lots.push(l);o.copies+=l.quantity;if(l.source==='owned')o.arrived+=l.quantity;if(Number.isFinite(l.paid))o.paid+=l.paid*l.quantity;o.shipping+=(l.order.shipShare||0)*l.quantity;by.set(o.id,o);}return [...by.values()].map(o=>({...o,paid:Math.round(o.paid*100)/100,shipping:Math.round(o.shipping*100)/100})).sort((a,b)=>String(b.placedAt).localeCompare(String(a.placedAt)));}
-  return {VERSION,SOURCES,PLANNED,CHANNELS,migrate,empty,starterGroups,clone,text,quantity,print,compatible,validate,apply,defaultDefinition,legality,definitionIssues,projection,counters,readiness,eligibility,fingerprint,shortfall,deck,slot,lot,inDeck,orders,maxCopies,matrix,plan};
+  return {VERSION,SOURCES,PLANNED,CHANNELS,setRecordSource,migrate,empty,starterGroups,clone,text,quantity,print,compatible,validate,apply,defaultDefinition,legality,definitionIssues,projection,counters,readiness,eligibility,fingerprint,shortfall,deck,slot,lot,inDeck,orders,maxCopies,matrix,plan};
 });
