@@ -44,6 +44,10 @@ eq(t.statusPiles.reduce((n, p) => n + p.count, 0) + t.bench.count, t.total, "no 
 ok(t.statusPiles.find((p) => p.label === "Physical deck").count > 400, "the six decks' boxes are on the Physical deck pile");
 ok(t.statusPiles.find((p) => p.label === "To buy").ghost && t.statusPiles.find((p) => p.label === "Ordered").ghost && !t.statusPiles.find((p) => p.label === "Physical deck").ghost, "to-buy and ordered piles are ghosts; a box is not");
 eq(t.ghosts, rows.filter((r) => T.isGhost(r)).length, "ghost rows are counted once");
+/* TB5: the piles a card can be dropped on are marked; the rest are readings of a plan. */
+eq(t.statusPiles.filter((p) => p.target).map((p) => p.label).join(","), "Physical deck,Substitute,Reserved,Ordered,Watched,To buy", "six status piles take a drop, in workflow order");
+ok(t.statusPiles.filter((p) => p.target === false).every((p) => /^(Draft list|Suggestion|Planned|Unassigned)$/.test(p.label)), "the readings are Draft list, Suggestion, Planned and Unassigned");
+eq(T.TARGET.size, 6); eq(T.STAGE.full.w, 488); eq(T.STAGE.full.h, 680, "the stage's full size is Scryfall's normal print");
 ok(t.statusPiles.every((p) => !p.count || (p.top && p.top.card)), "a pile with cards has a top card to show");
 ok(t.statusPiles.every((p) => p.rows.every((r, i, a) => i === 0 || String(a[i - 1].card.name).localeCompare(String(r.card.name)) <= 0)), "a pile's rows are by name");
 
@@ -109,7 +113,9 @@ eq(T.layout({kind: "status", label: "Watched", rows: []}, {width: 960}).label, "
 eq(T.layout({kind: "status", label: "Physical deck", count: 12, rows: [mk("A", 1, {quantity: 10}), mk("B", 2, {quantity: 2})]}, {width: 960}).label, "1–2 of 2 · 12 copies", "the strip counts rows, and copies when they differ");
 ok(T.layout(hundred, {width: 960, size: "M", rowsFit: 3}).cards.every((c, i, a) => i === 0 || a[i - 1].index + 1 === c.index), "cards carry their index in the pile");
 eq(T.layout(hundred, {width: 960, size: "M", rowsFit: 3}).cards[9].x, 16 + 1 * (96 + 12), "the tenth card starts the second column of the second row");
-eq(T.layout(hundred, {width: 960, size: "M", rowsFit: 3}).cards[9].y, 134 + 12);
+eq(T.layout(hundred, {width: 960, size: "M", rowsFit: 3}).cards[9].y, 134 + T.SIZES.M.cap + 12, "the second row starts under the first row's caption");
+eq(T.layout(hundred, {width: 960, size: "M", rowsFit: 3}).height, 3 * (134 + T.SIZES.M.cap + 12) - 12, "the page's height counts the captions");
+ok(T.SIZES.S.cap < T.SIZES.M.cap && T.SIZES.M.cap < T.SIZES.L.cap, "a bigger card carries a bigger caption");
 eq(T.layout(hundred, {width: 960, size: "nonsense"}).size, "M", "an unknown size is M");
 eq(T.findPile(t, "bench").label, "Bench"); eq(T.findPile(t, t.statusPiles[0].id).label, t.statusPiles[0].label); eq(T.findPile(t, "nope"), null);
 /* TB3: the drop-target contract, on the live library's rows. */

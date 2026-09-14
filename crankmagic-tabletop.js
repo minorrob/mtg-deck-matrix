@@ -33,6 +33,10 @@
   const CL = () => (typeof globalThis !== "undefined" && globalThis.MtgCardClassify) || null;
   const BENCH = "Bench";
   const GHOST = new Set(["Ordered", "Watched", "To buy", "Draft list", "Suggestion", "Planned"]);
+  /* The status piles a card can be dropped on — accepts() below has a case for each. The rest
+     (Draft list, Suggestion, Planned, Unassigned) are readings of a deck's plan, not places a
+     card can be put; the mat shows those as chips to lay out, not as piles (Rob, 14 September). */
+  const TARGET = new Set(["Physical deck", "Substitute", "Reserved", "Ordered", "Watched", "To buy"]);
   /* The Card type piles are the eight primary types, a reader's order: an Artifact Creature
      is on the Creature pile, a Legendary Land on the Land pile. The list groups by the whole
      type line (thirty bands on the live library); a table has room for eight piles. */
@@ -95,9 +99,9 @@
     const statusPiles = order.filter((label) => label !== BENCH).map((label) => {
       const list = (byStatus.get(label) || []).slice().sort((a, b) => String(a.card && a.card.name).localeCompare(String(b.card && b.card.name)));
       const meta = statuses.find((s) => s.label === label) || {};
-      return {id: "status:" + (meta.id || label), kind: "status", label, tone: meta.tone || "", rows: list, count: count(list), ghost: GHOST.has(label), top: list[0] || null};
+      return {id: "status:" + (meta.id || label), kind: "status", label, tone: meta.tone || "", rows: list, count: count(list), ghost: GHOST.has(label), target: TARGET.has(label), top: list[0] || null};
     });
-    for (const [label, list] of byStatus) if (label !== BENCH && !statusPiles.some((p) => p.label === label)) statusPiles.push({id: "status:" + label, kind: "status", label, tone: "", rows: list, count: count(list), ghost: GHOST.has(label), top: list[0] || null});
+    for (const [label, list] of byStatus) if (label !== BENCH && !statusPiles.some((p) => p.label === label)) statusPiles.push({id: "status:" + label, kind: "status", label, tone: "", rows: list, count: count(list), ghost: GHOST.has(label), target: TARGET.has(label), top: list[0] || null});
     /* options.statusSort: "workflow" (the model's order, the default) or "count" (fullest first,
        the workflow order breaking ties) -- a reader's preference the view remembers. */
     if (options.statusSort === "count") statusPiles.sort((a, b) => b.count - a.count);
@@ -126,13 +130,18 @@
 
   /* ------------------------------------------------------------------ the mat (DOM) */
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"})[c]);
+  /* What a ghost's corner says: its status, shortened where the word is long. */
+  const GHOST_TAG = {"Draft list": "Draft", Suggestion: "Suggested"};
   const cardFace = (row, {ghost = false, cls = "", size = "", tick = false, checked = false, style = "", big = false} = {}) => {
     const c = (row && row.card) || {};
     /* The small print of the picture (Scryfall's 146px) is what a 64px card needs; a card laid
-       out large or standing on the stage takes the normal size. */
+       out large or standing on the stage takes the normal size. The picture is the whole card
+       (Rob, 14 September): the face is the printed card, the caption under it in a laid-out
+       grid is a courtesy, and a card with no picture shows its name in the frame instead. */
     const src = c.image ? (big ? String(c.image) : String(c.image).replace("cards.scryfall.io/normal/", "cards.scryfall.io/small/")) : "";
     const art = src ? `--art:url('${esc(src)}');` : "";
-    return `<div class="cm-tt-card${ghost ? " is-ghost" : ""}${size ? " is-" + size : ""}${checked ? " is-ticked" : ""}${cls ? " " + cls : ""}" data-record="${esc(row && row.recordId)}" data-n="${esc(c.name || "")}"${(art || style) ? ` style="${art}${style}"` : ""}${tick ? ` data-tt="card" role="button" tabindex="0" aria-label="${esc(c.name || "")}"` : ""}>${tick ? `<span class="cm-tt-tick" data-tt="tick" role="checkbox" aria-checked="${checked ? "true" : "false"}" aria-label="Tick ${esc(c.name || "")}" tabindex="0"></span>` : ""}<span class="cm-tt-name">${esc(c.name || "")}</span></div>`;
+    const tag = ghost ? ` data-ghost="${esc(GHOST_TAG[row && row.status] || (row && row.status) || "Not held")}"` : "";
+    return `<div class="cm-tt-card${ghost ? " is-ghost" : ""}${src ? "" : " no-art"}${size ? " is-" + size : ""}${checked ? " is-ticked" : ""}${cls ? " " + cls : ""}" data-record="${esc(row && row.recordId)}" data-n="${esc(c.name || "")}"${tag}${(art || style) ? ` style="${art}${style}"` : ""}${tick ? ` data-tt="card" role="button" tabindex="0" aria-label="${esc(c.name || "")}"` : ""}>${tick ? `<span class="cm-tt-tick" data-tt="tick" role="checkbox" aria-checked="${checked ? "true" : "false"}" aria-label="Tick ${esc(c.name || "")}" tabindex="0"></span>` : ""}<span class="cm-tt-name">${esc(c.name || "")}</span></div>`;
   };
   const placard = (label, count, sub) => `<div class="cm-tt-placard"><strong>${esc(label)}</strong> · ${count.toLocaleString()}${sub ? `<small>${esc(sub)}</small>` : ""}</div>`;
 
@@ -145,7 +154,11 @@
   }
 
   /* ------------------------------------------------------------------ TB2: lay out, page, select */
-  const SIZES = {S: {w: 64, h: 90, gap: 10}, M: {w: 96, h: 134, gap: 12}, L: {w: 140, h: 196, gap: 14}};
+  const SIZES = {S: {w: 64, h: 90, gap: 10, cap: 14}, M: {w: 96, h: 134, gap: 12, cap: 18}, L: {w: 140, h: 196, gap: 14, cap: 20}};
+  /* The one card on the stage: the picture at the size the reader chose, up to Scryfall's
+     normal print (488 × 680), narrowed to the mat where the mat is narrower. */
+  const STAGE = {L: {w: 140, h: 196}, XL: {w: 244, h: 341}, XXL: {w: 366, h: 512}, full: {w: 488, h: 680}};
+  const stageOf = (s) => (STAGE[s] ? s : "XL");
   const sizeOf = (s) => (SIZES[s] ? s : "M");
   const mvOf = (r) => { const v = r && r.card ? r.card.manaValue : null; const n = v === null || v === undefined || v === "" ? NaN : Number(v); return Number.isFinite(n) ? n : 99; };
   const nameOf = (r) => String((r && r.card && r.card.name) || "");
@@ -167,9 +180,10 @@
     const cols = Math.max(1, Math.floor((width - inset * 2 + sz.gap) / (sz.w + sz.gap)));
     const perPage = cols * Math.max(1, rowsFit | 0), pages = Math.max(1, Math.ceil(total / perPage));
     const p = Math.min(Math.max(0, page | 0), pages - 1), from = p * perPage, to = Math.min(total, from + perPage);
-    const cards = rows.slice(from, to).map((row, i) => ({row, x: inset + (i % cols) * (sz.w + sz.gap), y: Math.floor(i / cols) * (sz.h + sz.gap), index: from + i}));
+    const pitch = sz.h + sz.cap + sz.gap;  /* the picture, its caption, the gap */
+    const cards = rows.slice(from, to).map((row, i) => ({row, x: inset + (i % cols) * (sz.w + sz.gap), y: Math.floor(i / cols) * pitch, index: from + i}));
     const lines = Math.max(1, Math.ceil(cards.length / cols));
-    return {cards, cols, lines, perPage, pages, page: p, from, to, total, size: sizeOf(size), w: sz.w, h: sz.h, gap: sz.gap, height: lines * (sz.h + sz.gap) - sz.gap,
+    return {cards, cols, lines, perPage, pages, page: p, from, to, total, size: sizeOf(size), w: sz.w, h: sz.h, gap: sz.gap, cap: sz.cap, height: lines * pitch - sz.gap,
       copies, label: total ? `${(from + 1).toLocaleString()}–${to.toLocaleString()} of ${total.toLocaleString()}${copies !== total ? ` · ${copies.toLocaleString()} copies` : ""}` : "Nothing on this pile"};
   }
   const findPile = (model, id) => (id === "bench" ? model.bench : [...model.statusPiles, ...model.groupPiles].find((p) => p.id === id) || null);
@@ -303,10 +317,18 @@
     };
     /* The Bench along the back: a fan of as many cards as the ledge is wide, and a count of
        the rest. */
-    const rail = model.bench, railH = narrow ? 112 : 118, benchOpen = homeId === "bench";
+    const rail = model.bench, benchShut = ui.bench === "shut", railH = benchShut ? 46 : narrow ? 112 : 118, benchOpen = homeId === "bench";
     const fanCount = Math.max(0, Math.min(rail.rows.length, narrow ? Math.floor((width - 60) / 24) : Math.floor((width - 220) / 26)));
-    const railHTML = `<div class="cm-tt-rail${benchOpen ? " is-open" : ""}"><div class="cm-tt-placard cm-tt-rail-placard"><strong>${esc(rail.label)}</strong> · ${rail.count.toLocaleString()}<small>owned, in no deck</small></div><button type="button" class="cm-tt-fan${benchOpen ? " cm-tt-home" : ""}" data-tt="open" data-pile="bench" aria-pressed="${benchOpen ? "true" : "false"}" aria-label="Bench, ${rail.count} cards">${rail.rows.slice(0, fanCount).map((r) => cardFace(r, {cls: "cm-tt-fanned"})).join("")}${rail.rows.length > fanCount ? `<span class="cm-tt-more">+${(rail.rows.length - fanCount).toLocaleString()}</span>` : ""}</button></div>`;
-    const groups = model.groupPiles, gN = groups.length, sts = model.statusPiles, sN = sts.length;
+    /* The ledge folds to its placard on request (Rob, 14 September) and stays folded on this
+       device; folded, the Bench is still a pile — the chip lays it out. */
+    const fanHTML = benchShut ? `<span class="cm-tt-more">Lay out</span>` : `${rail.rows.slice(0, fanCount).map((r) => cardFace(r, {cls: "cm-tt-fanned"})).join("")}${rail.rows.length > fanCount ? `<span class="cm-tt-more">+${(rail.rows.length - fanCount).toLocaleString()}</span>` : ""}`;
+    const railHTML = `<div class="cm-tt-rail${benchOpen ? " is-open" : ""}${benchShut ? " is-shut" : ""}"><div class="cm-tt-placard cm-tt-rail-placard"><strong>${esc(rail.label)}</strong> · ${rail.count.toLocaleString()}<small>owned, in no deck</small></div><button type="button" class="cm-tt-rail-toggle" data-tt="bench-toggle" aria-expanded="${benchShut ? "false" : "true"}" aria-label="${benchShut ? "Show the Bench's cards" : "Hide the Bench's cards"}">${benchShut ? "Show" : "Hide"}</button><button type="button" class="cm-tt-fan${benchOpen ? " cm-tt-home" : ""}" data-tt="open" data-pile="bench" aria-pressed="${benchOpen ? "true" : "false"}" aria-label="Bench, ${rail.count} cards">${fanHTML}</button></div>`;
+    const groups = model.groupPiles, gN = groups.length;
+    /* The status piles that take a drop stand as piles; the readings of a plan that hold
+       anything are chips on a line under them, to lay out and look at. */
+    const sts = model.statusPiles.filter((p) => p.target !== false), sN = sts.length, readings = model.statusPiles.filter((p) => p.target === false && p.count > 0);
+    const readH = readings.length ? (narrow ? 66 : 40) : 0;
+    const readingsHTML = (top) => readings.length ? `<div class="cm-tt-readings" style="top:${top}px"><span>Readings of a plan, not places for a card — lay one out to look:</span>${readings.map((p) => `<button type="button" class="cm-tt-chip cm-tt-reading${p.id === homeId ? " is-open cm-tt-home" : ""}" data-tt="open" data-pile="${esc(p.id)}" aria-pressed="${p.id === homeId ? "true" : "false"}" aria-label="${esc(p.label)}, ${p.count} card${p.count === 1 ? "" : "s"}">${esc(p.label)} · ${p.count.toLocaleString()}</button>`).join("")}</div>` : "";
     const perRow = Math.max(3, Math.floor((width - 32) / 96)), span = (width - 32 - PILE_W) / Math.max(1, perRow - 1);
     const groupSelect = `<select name="tabletopGroupBy" aria-label="Group piles by">${model.groupings.map(([k, l]) => `<option value="${esc(k)}"${k === model.groupBy ? " selected" : ""}>${esc(l)}</option>`).join("")}</select>`;
     const orderSelect = `<select name="tabletopStatusOrder" aria-label="Status pile order"><option value="workflow"${model.statusSort === "count" ? "" : " selected"}>Workflow order</option><option value="count"${model.statusSort === "count" ? " selected" : ""}>Fullest first</option></select>`;
@@ -318,8 +340,8 @@
         /* The phone (plan §3): the status piles first as rows under the ledge, then the grouping
            and its piles; a strip is a grid here, because a grid says how many there are. */
         const statusTop = railH + 24;
-        statusHTML = sts.map((p, i) => pile(p, Math.round(16 + (i % perRow) * span), statusTop + Math.floor(i / perRow) * ROW, "status")).join("");
-        pickTop = statusTop + Math.ceil(sN / perRow) * ROW + 4;
+        statusHTML = sts.map((p, i) => pile(p, Math.round(16 + (i % perRow) * span), statusTop + Math.floor(i / perRow) * ROW, "status")).join("") + readingsHTML(statusTop + Math.ceil(sN / perRow) * ROW);
+        pickTop = statusTop + Math.ceil(sN / perRow) * ROW + readH + 4;
         const groupTop = pickTop + 48;
         groupHTML = groups.map((p, i) => pile(p, Math.round(16 + (i % perRow) * span), groupTop + Math.floor(i / perRow) * ROW, "group")).join("");
         height = groupTop + Math.ceil(gN / perRow) * ROW + 86;
@@ -344,8 +366,8 @@
         });
         pickTop = 146;
         const statusTop = Math.round(bottom + 36), sSpan = (width - 32 - PILE_W) / Math.max(1, sN - 1);
-        statusHTML = sts.map((p, i) => pile(p, Math.round(16 + i * sSpan), statusTop, "status")).join("");
-        height = statusTop + ROW + 44;
+        statusHTML = sts.map((p, i) => pile(p, Math.round(16 + i * sSpan), statusTop, "status")).join("") + readingsHTML(statusTop + ROW);
+        height = statusTop + ROW + readH + 44;
       }
       body = groupPick(pickTop) + groupHTML + statusHTML;
     } else {
@@ -366,6 +388,21 @@
         const grid = `<div class="cm-tt-grid" style="top:${stageTop + stripH}px;height:${l.height}px" data-size="${l.size}" data-cols="${l.cols}">${l.cards.map(({row, x, y}) => cardFace(row, {ghost: isGhost(row), size: l.size, tick: true, checked: ticked.has(row.recordId), big: l.size === "L", style: `left:${x}px;top:${y}px;`})).join("") || `<p class="cm-tt-empty">${esc(l.label)}</p>`}</div>`;
         stageHTML = `<div class="cm-tt-stage-strip" style="top:${stageTop}px">${strip("top")}</div>${grid}` + (narrow && l.pages > 1 ? `<div class="cm-tt-stage-strip" style="top:${stageTop + stripH + l.height + 8}px">${strip("bottom")}</div>` : "");
         stageH = stripH + Math.max(l.height, 60) + (narrow && l.pages > 1 ? stripH + 8 : 0);
+      } else if (selected.length === 1) {
+        /* ONE CARD ON THE STAGE (Rob, 14 September): the whole picture at the size the reader
+           chose, its facts beside it from the same record the inspector reads, and Previous /
+           Next through the pile it came from — pick a deck, pick a card, read it, file it, next. */
+        const r = selected[0], say = hooks.describe || ((x) => ({status: x.status || "", price: x.card && x.card.price != null ? "$" + Number(x.card.price).toFixed(2) : "", deck: ""})), d = say(r) || {};
+        const Z = STAGE[stageOf(ui.stageSize)], w = Math.min(Z.w, width - 32), h = Math.round(w * 680 / 488);
+        const side = width - w - 48 >= 300, panelW = side ? width - w - 48 : width - 32, panelH = side ? h : 280;
+        const from = homeId ? findPile(model, homeId) : null, order = from ? pileOrder(from) : [], at = order.findIndex((x) => x.recordId === r.recordId);
+        const prev = at > 0 ? order[at - 1] : null, next = at >= 0 && at < order.length - 1 ? order[at + 1] : null;
+        const caption = `<ul class="cm-tt-captions"><li><strong>${esc(nameOf(r))}</strong>${d.status ? ` <span class="cm-tt-pill${isGhost(r) ? " is-ghost" : ""}">${esc(d.status)}</span>` : ""}${d.price ? ` <span>${esc(d.price)}</span>` : ""}${d.deck ? ` <span class="cm-tt-muted">${esc(d.deck)}</span>` : ""}${(Number(r.quantity) || 1) > 1 ? ` <span class="cm-tt-muted">×${r.quantity}</span>` : ""}</li></ul>`;
+        const sizeSeg = `<span class="cm-tt-seg" role="group" aria-label="Picture size">${[["L", "Card"], ["XL", "Larger"], ["XXL", "Large"], ["full", "Full"]].map(([k, l]) => `<button type="button" data-tt="stage-size" data-size="${k}" aria-pressed="${stageOf(ui.stageSize) === k ? "true" : "false"}" title="Picture ${k === "full" ? "at full size" : "size " + k}">${l}</button>`).join("")}</span>`;
+        const stepBtn = (row, dir, label) => `<button type="button" data-tt="step" data-record="${esc(row ? row.recordId : "")}" ${row ? "" : "disabled"} aria-label="${dir} card in ${esc(from ? from.label : "the pile")}">${label}</button>`;
+        const actH = narrow ? 176 : width < 1180 ? 84 : 48;  /* the action row wraps to four lines on a phone, two on a narrow mat */
+        stageH = (side ? h : h + 12 + panelH) + 24 + actH;
+        stageHTML = `<div class="cm-tt-stage is-solo" style="top:${stageTop}px;height:${stageH}px"><div class="cm-tt-fanL is-solo" style="left:16px;top:12px;width:${w}px;height:${h}px">${cardFace(r, {ghost: isGhost(r), big: true, cls: "cm-tt-chosen cm-tt-solo", style: `left:0;top:0;width:${w}px;height:${h}px;`})}</div><div class="cm-tt-info" style="${side ? `left:${w + 32}px;top:12px;width:${panelW}px;height:${h}px` : `left:16px;top:${h + 24}px;width:${panelW}px;height:${panelH}px`}">${caption}${hooks.detail ? hooks.detail(r) || "" : ""}</div><div class="cm-tt-stage-actions is-solo">${sizeSeg}${stepBtn(prev, "Previous", "‹ Previous")}${stepBtn(next, "Next", "Next ›")}<span class="cm-tt-muted">${from && at >= 0 ? `${at + 1} of ${order.length} in ${esc(from.label)} · ` : ""}drag onto a pile, or</span><button type="button" data-tt="moveto" class="cm-tt-primary">Move to…</button>${from ? `<button type="button" data-tt="back" data-pile="${esc(from.id)}">Back to ${esc(from.label)}</button>` : ""}<button type="button" data-tt="clear">Clear selection</button></div></div>`;
       } else {
         /* The selection (plan §2.2): on the centre of the mat, fanned if more than one, large,
            with name, status, price and deck beneath. */
@@ -380,8 +417,9 @@
         stageH = L.h + 30 + capH + 48;
       }
       const statusTop = stageTop + stageH + 34, sSpan = narrow ? span : (width - 32 - PILE_W) / Math.max(1, sN - 1);
-      const statusHTML = narrow ? sts.map((p, i) => pile(p, Math.round(16 + (i % perRow) * span), statusTop + Math.floor(i / perRow) * ROW, "status")).join("") : sts.map((p, i) => pile(p, Math.round(16 + i * sSpan), statusTop, "status")).join("");
-      height = statusTop + (narrow ? Math.ceil(sN / perRow) : 1) * ROW + (narrow ? 86 : 44);
+      const statusRows = narrow ? Math.ceil(sN / perRow) : 1;
+      const statusHTML = (narrow ? sts.map((p, i) => pile(p, Math.round(16 + (i % perRow) * span), statusTop + Math.floor(i / perRow) * ROW, "status")).join("") : sts.map((p, i) => pile(p, Math.round(16 + i * sSpan), statusTop, "status")).join("")) + readingsHTML(statusTop + statusRows * ROW);
+      height = statusTop + statusRows * ROW + readH + (narrow ? 86 : 44);
       body = shelfHTML + stageHTML + statusHTML;
     }
     const legend = `${model.total.toLocaleString()} cards on the table · ${model.ghosts.toLocaleString()} ghost${model.ghosts === 1 ? "" : "s"} (ordered, to buy, a draft list — not held) · ${sN} status piles · ${gN} ${esc(model.groupings.find(([k]) => k === model.groupBy)[1].toLowerCase())} piles`;
@@ -403,6 +441,9 @@
       else if (kind === "clear") { hooks.onClear && hooks.onClear(); }
       else if (kind === "moveto") { hooks.onMoveTo && hooks.onMoveTo(selected.map((r) => r.recordId), t); }
       else if (kind === "print") { hooks.onPrint && hooks.onPrint(t.dataset.pile); }
+      else if (kind === "bench-toggle") { hooks.onBench && hooks.onBench(benchShut); }
+      else if (kind === "stage-size") { hooks.onStageSize && hooks.onStageSize(t.dataset.size); }
+      else if (kind === "step") { if (t.dataset.record) hooks.onStep && hooks.onStep(t.dataset.record); }
     };
     /* DRAG THE SELECTION (plan §2.3). Pointer down on the fan and a small badge follows the
        pointer; the pile under it lights as a target or a refusal with the contract's words;
@@ -447,10 +488,15 @@
        PageUp and PageDown turn the page, Space ticks the card and Enter chooses it. Escape is
        the table at rest. */
     const focusables = (list) => list.filter((el) => el && !el.hidden);
-    const pileRows = () => [focusables([host.querySelector(".cm-tt-fan")]), focusables([...host.querySelectorAll(".cm-tt-pile.cm-tt-group, .cm-tt-chip")]), focusables([...host.querySelectorAll(".cm-tt-pile.cm-tt-status")])].filter((row) => row.length);
+    const pileRows = () => [focusables([host.querySelector(".cm-tt-fan")]), focusables([...host.querySelectorAll(".cm-tt-pile.cm-tt-group, .cm-tt-chip")]), focusables([...host.querySelectorAll(".cm-tt-pile.cm-tt-status, .cm-tt-reading")])].filter((row) => row.length);
     host.onkeydown = (ev) => {
       const el = ev.target;
       if (ev.key === "Escape" && mode !== "rest") { ev.preventDefault(); hooks.onClear && hooks.onClear(); return; }
+      if (mode === "selected" && selected.length === 1 && (ev.key === "ArrowLeft" || ev.key === "ArrowRight") && !(el.matches && el.matches("input, select, textarea, [data-tt=open]"))) {
+        const btn = host.querySelector(`.cm-tt-stage-actions [data-tt=step][aria-label^="${ev.key === "ArrowLeft" ? "Previous" : "Next"}"]`);
+        if (btn && !btn.disabled) { ev.preventDefault(); btn.click(); }
+        return;
+      }
       if (el.matches && el.matches(".cm-tt-tick") && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); el.click(); return; }
       if (el.matches && el.matches(".cm-tt-card[data-tt=card]")) {
         const cards = [...host.querySelectorAll(".cm-tt-grid .cm-tt-card[data-tt=card]")], i = cards.indexOf(el), cols = Number(host.querySelector(".cm-tt-grid")?.dataset.cols) || 1;
@@ -478,8 +524,8 @@
       }
     };
     host.oncontextmenu = (ev) => { const c = ev.target.closest(".cm-tt-card[data-record]"); if (c && hooks.onMenu && (mode !== "rest")) { ev.preventDefault(); hooks.onMenu(c.dataset.record, c); } };
-    return {width, height, piles: sN + gN + 1, mode};
+    return {width, height, piles: sN + gN + 1, readings: readings.length, mode};
   }
 
-  return {GROUPINGS, TYPE_ORDER, BENCH, GHOST, SIZES, isGhost, primaryType, bandOf, bandOrder, arcsOf, pileOrder, layout, findPile, accepts, printSheet, table, mount};
+  return {GROUPINGS, TYPE_ORDER, BENCH, GHOST, TARGET, SIZES, STAGE, isGhost, primaryType, bandOf, bandOrder, arcsOf, pileOrder, layout, findPile, accepts, printSheet, table, mount};
 });
