@@ -250,6 +250,18 @@ try{
   await vp.goto(BASE+'/'+ENTRY+'#trade?d=broken');await vp.locator('#cm-main').getByText(/does not carry a trade list/).waitFor();
   await visitor.close();
   await nav('Cards');await page.locator('#cm-roster-table').waitFor();}
+
+ /* AN OLDER LIBRARY AFTER AN UPGRADE (schema 2 still in IndexedDB): the app read it migrated but saved against the
+    raw copy, so every save failed with "Unsupported collection schema." — the toast Rob saw at boot and on a strategy
+    tick. Now the first save migrates the stored copy and succeeds. */
+ {await page.evaluate(()=>new Promise((res,rej)=>{const r=indexedDB.open('crankmagic-library',1);r.onsuccess=()=>{const db=r.result,tx=db.transaction('state','readwrite'),st=tx.objectStore('state'),g=st.get('current');g.onsuccess=()=>{const s=g.result;s.schemaVersion=2;st.put(s,'current');};tx.oncomplete=()=>{db.close();res();};tx.onerror=()=>rej(tx.error);};r.onerror=()=>rej(r.error);}));
+  await page.reload();await page.locator('#cm-main .cm-page-head').waitFor({timeout:30000});await page.waitForTimeout(800);
+  ok(!/Unsupported collection schema|could not be reconciled/.test(await page.locator('#cm-notice').innerText().catch(()=>'')),'no schema toast at boot');
+  eq((await state()).schemaVersion,3,'the library is read migrated');
+  await page.evaluate(async()=>{const r=await CrankRepository.open();try{const s=await r.getState();await r.commit({id:crypto.randomUUID(),type:'preferences',values:{schemaProbe:true}},s.revision);}finally{r.close();}});
+  const stored=await page.evaluate(()=>new Promise((res,rej)=>{const r=indexedDB.open('crankmagic-library',1);r.onsuccess=()=>{const db=r.result,g=db.transaction('state').objectStore('state').get('current');g.onsuccess=()=>{const v=g.result.schemaVersion;db.close();res(v);};g.onerror=()=>rej(g.error);};r.onerror=()=>rej(r.error);}));
+  eq(stored,3,'the first save after the upgrade stored the migrated library');eq((await state()).preferences.schemaProbe,true,'and the save itself went through');
+  await page.evaluate(async()=>{const r=await CrankRepository.open();try{const s=await r.getState();await r.undo(s.revision);}finally{r.close();}});eq((await state()).preferences.schemaProbe,undefined,'undo of that save works on the migrated copy too');}
  await nav('Cards');await page.locator('#cm-roster-table').waitFor();await click('Sheet');await page.locator('.cm-sheet').waitFor();ok((await page.locator('.cm-sheet tbody tr').count())>1);
  await page.locator('#cm-sheet-query').fill('Krenko, Mob Boss');await page.waitForTimeout(300);eq(await page.locator('.cm-sheet tbody tr').count(),1);
  current=await state();const journey=current.decks.find(d=>d.name==='Journey Goblins'),krenkoKey=CrankKey('Krenko, Mob Boss');
