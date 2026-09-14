@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CrankMagic: the game — plan for review</title>
+<style>
+:root{
+  --ground:#0f1521;--panel:#151d2b;--panel2:#1a2333;--line:#2b3a55;--line2:#3a4a64;
+  --ink:#e6effb;--ink2:#f5f9ff;--muted:#9fb2cc;--muted2:#7d93b2;
+  --accent:#79bdff;--gold:#c6a86d;
+  --inbox:#5cc98a;--standin:#c39bff;--reserved:#8fb3ff;--pull:#4fc2c0;
+  --ordered:#3b7dd8;--watch:#8f9bb3;--buy:#f0b35a;--draft:#7f8ba0;--remove:#ef6b60;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--ground);color:var(--ink);
+  font:15px/1.6 Satoshi,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+/* ---- shell ---- */
+.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+  padding:11px 22px;border-bottom:1px solid var(--line);background:#111827f2;backdrop-filter:blur(6px)}
+.brand{font-weight:800;font-size:19px;letter-spacing:-.025em;white-space:nowrap}
+.brand span{color:var(--accent)}
+.brand small{display:block;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted2);font-weight:600}
+.tocnav{display:flex;gap:4px;flex-wrap:wrap;font-size:12px}
+.tocnav a{color:var(--muted);text-decoration:none;padding:5px 9px;border-radius:7px}
+.tocnav a:hover{background:#1f2b40;color:var(--ink2)}
+.localnote{margin-left:auto;font-size:11px;color:var(--gold);border:1px solid #5a4a2a;border-radius:20px;padding:4px 11px;white-space:nowrap}
+.page{max-width:1120px;margin:0 auto;padding:26px 22px 90px}
+/* ---- type ---- */
+h1{font-size:clamp(30px,4vw,44px);line-height:1.05;letter-spacing:-.03em;margin:14px 0 8px;text-wrap:balance}
+h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:56px 0 4px;font-weight:700}
+h2 + .lede{margin-top:0}
+h3{font-size:21px;letter-spacing:-.015em;margin:26px 0 8px;text-wrap:balance}
+h4{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:700}
+p{margin:0 0 13px;max-width:74ch}
+.lede{font-size:17px;color:#cfe0f5;max-width:70ch;margin-bottom:22px}
+.muted{color:var(--muted)}
+.tiny{font-size:12.5px;color:var(--muted)}
+b,strong{color:var(--ink2);font-weight:700}
+code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:.88em;
+  background:#1d2739;border:1px solid #2e3c55;border-radius:5px;padding:1px 5px;color:#cfe3ff}
+blockquote{margin:0 0 20px;padding:14px 20px;border-left:3px solid var(--gold);
+  background:#1b1a14;border-radius:0 10px 10px 0;color:#e8dcc0;font-size:15px;max-width:76ch}
+blockquote p:last-child{margin:0}
+hr{border:0;border-top:1px solid var(--line);margin:44px 0}
+ul{margin:0 0 14px;padding-left:20px;max-width:74ch}li{margin:5px 0}
+/* ---- panels ---- */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:19px 21px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.hard{border-left:3px solid var(--remove)}
+.hard .n{font-size:11px;letter-spacing:.1em;color:var(--remove);font-weight:700;text-transform:uppercase}
+.hard h3{margin:4px 0 8px;font-size:17px}
+.hard p{font-size:13.5px;margin:0}
+.win{border-left:3px solid var(--inbox)}
+.win h3{margin:0 0 8px;font-size:17px;color:#bdf0d3}
+.win p{font-size:13.5px;margin:0}
+/* ---- tables ---- */
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin:0 0 14px}
+th{text-align:left;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);
+  padding:9px 11px;border-bottom:1px solid var(--line2);font-weight:700;white-space:nowrap}
+td{padding:10px 11px;border-bottom:1px solid #223049;vertical-align:top}
+tr:last-child td{border-bottom:0}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+.wrap table{margin:0}
+/* ---- pills ---- */
+.pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
+.p-code{background:#1e3149;color:#bddeff;border:1px solid #455a76}
+.p-ok{background:#1b3527;color:#a9e6c3;border:1px solid #2f6a4a}
+.p-warn{background:#2f2713;color:#f2d3a7;border:1px solid #6b5a1e}
+.p-no{background:#3a2226;color:#ffc4be;border:1px solid #7a3b3b}
+.p-model{background:#241e3a;color:#d3c4ff;border:1px solid #4c3f7a}
+.p-code2{background:#14262f;color:#9fe4e0;border:1px solid #2c5a58}
+.ci{display:inline-flex;gap:3px;vertical-align:middle}
+.ci i{width:12px;height:12px;border-radius:50%;display:inline-block;box-shadow:0 0 0 1px #ffffff22}
+.W{background:#fff0b4}.U{background:#53acff}.B{background:#696076}.R{background:#ee735f}.G{background:#66b889}.C{background:#b9b3a8}
+/* ---- lobby ---- */
+.lobby{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(260px,1fr);gap:14px;align-items:start}
+.lobby>*{min-width:0}
+.seatgrid{display:grid;gap:9px}
+.seat{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:11px;align-items:center;
+  padding:10px 12px;border:1px solid var(--line2);border-radius:10px;background:var(--panel2);cursor:pointer}
+.seat:hover{border-color:#5a7ba8}
+.seat.is-you{border-color:var(--accent);background:#17263c;box-shadow:inset 3px 0 0 var(--accent)}
+.seat.is-off{opacity:.45}
+.seat .badge{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;
+  font-weight:800;font-size:12px;background:#22314a;color:#bddeff}
+.seat.is-you .badge{background:var(--accent);color:#0c1420}
+.seat .nm{display:block;font-weight:700;font-size:14px;line-height:1.25}
+.seat .sub{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
+.seat .sc{font-variant-numeric:tabular-nums;font-weight:800;font-size:17px;text-align:right}
+.controls{display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin:0 0 14px;font-size:13px}
+.controls label{display:flex;gap:7px;align-items:center;color:var(--muted)}
+select,input[type=number]{background:#1b2436;color:var(--ink);border:1px solid var(--line2);
+  border-radius:8px;padding:6px 9px;font:inherit;font-size:13px}
+.readout{border:1px solid var(--line);border-radius:12px;background:var(--panel2);padding:16px 18px}
+.readout .big{font-size:30px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
+.readout .verdict{font-size:14px;margin:6px 0 14px;color:#cfe0f5}
+.bar{height:7px;border-radius:4px;background:#22304a;overflow:hidden;margin:3px 0 11px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,#4fc2c0,#79bdff)}
+.legal{display:grid;gap:7px;font-size:12.5px;margin-top:4px}
+.legal>div{display:flex;gap:8px;align-items:flex-start}
+.legal>.foot{display:block;margin-top:6px;color:var(--muted2)}
+/* ---- roles diagram ---- */
+figure{margin:0 0 6px}
+.figwrap{overflow-x:auto;border:1px solid var(--line);border-radius:13px;background:#131a27;padding:15px}
+.figwrap svg{display:block;min-width:660px;width:100%;height:auto;font-family:inherit}
+figcaption{font-size:12.5px;color:var(--muted);margin-top:10px;line-height:1.5;max-width:82ch}
+/* ---- code block ---- */
+pre{margin:0 0 14px;padding:15px 17px;background:#0e1520;border:1px solid var(--line);
+  border-radius:11px;overflow-x:auto;font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  font-size:12.5px;line-height:1.6;color:#c9dcf3}
+pre b{color:#9fe4b8;font-weight:600}
+pre i{color:var(--muted2);font-style:normal}
+/* ---- roadmap ---- */
+.rail{display:grid;gap:9px}
+.rung{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:13px;align-items:start;
+  padding:12px 14px;border:1px solid var(--line);border-radius:11px;background:var(--panel)}
+.rung .id{font-weight:800;font-size:14px;color:var(--accent);padding-top:1px}
+.rung .t{display:block;font-weight:700;font-size:14.5px;margin-bottom:3px}
+.rung .d{display:block;font-size:13px;color:var(--muted)}
+.rung .tags{display:flex;gap:5px;flex-direction:column;align-items:flex-end}
+.rung.pole{border-color:#6b5a1e;background:#1d1a12}
+/* ---- decisions ---- */
+.q{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:17px 19px;margin:0 0 12px}
+.q h4{color:var(--accent);font-size:12px;margin-bottom:4px}
+.q .ask{font-weight:700;font-size:15.5px;margin:0 0 4px;color:var(--ink2)}
+.q .why{font-size:13px;color:var(--muted);margin:0 0 12px;max-width:78ch}
+.opts{display:grid;gap:7px}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:9px 12px;border:1px solid var(--line2);
+  border-radius:9px;background:var(--panel2);cursor:pointer;font-size:13.5px}
+.opt:hover{border-color:#5a7ba8}
+.opt input{margin:3px 0 0;accent-color:var(--accent);flex:0 0 auto}
+.opt .ot{font-weight:700;color:var(--ink2)}
+.opt .od{color:var(--muted);font-size:12.5px}
+.opt.rec{border-color:#2f6a4a}
+.opt.rec .ot:after{content:" · recommended";color:#7fd6a4;font-weight:600;font-size:11px;letter-spacing:.03em}
+.opt:has(input:checked){border-color:var(--accent);background:#17263c}
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:18px 0 0}
+button{font:inherit;font-size:13px;font-weight:700;border-radius:9px;padding:9px 16px;cursor:pointer;
+  border:1px solid var(--line2);background:#1f2b40;color:var(--ink)}
+button:hover{background:#2b3d5c}
+button.primary{background:var(--accent);border-color:var(--accent);color:#0c1420}
+button.primary:hover{background:#96cbff}
+#answers{width:100%;min-height:150px;margin-top:13px;background:#0e1520;color:#c9dcf3;
+  border:1px solid var(--line);border-radius:11px;padding:14px;font-family:ui-monospace,Menlo,Consolas,monospace;
+  font-size:12.5px;line-height:1.55;resize:vertical}
+.said{font-size:12.5px;color:#7fd6a4}
+/* ---- misc ---- */
+.kpi{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 16px}
+.kpi div{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:10px 15px;min-width:118px}
+.kpi b{display:block;font-size:23px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.kpi span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+footer{margin-top:60px;padding-top:22px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted2)}
+@media(max-width:820px){.lobby{grid-template-columns:minmax(0,1fr)}.tocnav{display:none}}
+@media print{.top{position:static}body{background:#fff;color:#000}.panel,.wrap,.q,.rung{break-inside:avoid}}
+</style></head>
+<body>
+
+<header class="top">
+  <div class="brand">Crank<span>Magic</span><small>The game · plan for review</small></div>
+  <nav class="tocnav">
+    <a href="#hard">The hard parts</a><a href="#edge">Our edge</a><a href="#shape">The shape</a>
+    <a href="#lobby">The lobby</a><a href="#ladder">Cards</a><a href="#playbook">Playbook</a>
+    <a href="#cost">Cost</a><a href="#roadmap">Roadmap</a><a href="#decide">Your call</a>
+  </nav>
+  <div class="localnote">Local file · nothing is sent anywhere</div>
+</header>
+
+<main class="page">
+
+<p class="tiny" style="letter-spacing:.1em;text-transform:uppercase;color:var(--gold)">14 September 2026 · a plan, not a build</p>
+<h1>An actual four-player Commander game, played on the table we already built.</h1>
+<p class="lede">Your deck against one, two or three opponents piloted by Claude. Decks from your library, an
+Archidekt link, a paste, or built by the simulator. One bracket and Game Changer cap every seat adheres to.
+This page is the plan — and where it can, it runs against your <b>real six decks</b> so you can see what it
+would actually feel like rather than take my word for it.</p>
+
+<blockquote><p>From the table background, I select an active deck out of any of my decks and I choose the number
+of AI opponents… I can set the bracket and Game Changer limits all decks adhere to. Then, using the Claude API
+and either Haiku or Sonnet, those models are given play style instructions, or they generate play style
+instructions for those decks, leveraging the graph and the chains and loops that we've defined and designed…
+Those models then play as the AI for my competition. Period. We're creating the game online here.</p></blockquote>
+
+<h2 id="hard">Four hard problems, named first</h2>
+<p class="lede">These decide the architecture. The feature list does not.</p>
+<div class="grid2">
+  <div class="panel hard"><div class="n">1 · The engine</div><h3>There is no rules engine</h3>
+    <p><code>sim-engine.js</code> opens with <i>“A Monte Carlo model of a four-player Commander game, not a rules
+    engine”</i> and publishes its own simplifications: no stack, no blocking assignment, tokens modelled as extra
+    power, opponents as nine parameterised curves. It is excellent at comparing two versions of one deck. It
+    cannot play a game. <b>A board has to be built, and it is the long pole.</b></p></div>
+  <div class="panel hard"><div class="n">2 · The key</div><h3>A static page can't hold an API key</h3>
+    <p>CrankMagic is zero-dependency, static, on GitHub Pages, with no server. A key in client JavaScript is
+    readable by anyone who opens the page. Three options weighed below — <b>your key in your browser now</b>, a
+    key-holding Worker the day someone else plays, and a no-key floor that always works.</p></div>
+  <div class="panel hard"><div class="n">3 · The cards</div><h3>30,000 cards can't be hand-written</h3>
+    <p>No plan that needs an implementation per card is a plan. A <b>three-tier ladder</b> answers it: the referee
+    runs the rules, the classifier runs the common effect shapes, and a model adjudicates the rest into deltas the
+    referee validates. That is what makes an arbitrary Archidekt deck playable on day one.</p></div>
+  <div class="panel hard"><div class="n">4 · The wait</div><h3>A model per decision is unplayable</h3>
+    <p>Send every choice to Claude and a game is ~400 calls — minutes of spinner and a bill that scales with how
+    long you play. Asking the model for <b>judgment</b> and leaving <b>bookkeeping</b> to code is
+    <b>~35 calls and about $0.25 a game</b>. That is not a compromise; it is what makes it shippable.</p></div>
+</div>
+
+<h2 id="edge">What CrankMagic brings that nothing else has</h2>
+<div class="grid2">
+  <div class="panel win"><h3>The graph</h3><p>For any deck we already know its loops (untap → tap ability → payoff),
+    its chains (a card that <i>causes</i> what another <i>triggers</i> on), every card's <b>Primary Purpose</b>, its
+    role coverage, and the commander's strategies with per-edge strength. An opponent told <i>“this deck has a
+    four-card untap loop; here are the pieces and the two tutors that find them”</i> plays differently from one
+    handed a hundred card texts. <b>This is the differentiator.</b></p></div>
+  <div class="panel win"><h3>The simulator's ratings</h3><p>Before the pod sits down we can say whether it is a fair
+    table. Your six decks measure <b id="spread"></b> — that spread is real, and it is what the lobby reads.</p></div>
+  <div class="panel win"><h3>Bracket compliance that already works</h3><p><code>compliance-model.js</code> validates
+    Game Changer counts, mass land denial, extra-turn chains and tutor density against a bracket. “All decks adhere
+    to bracket N” is <b>a function to call</b>, not a feature to build.</p></div>
+</div>
+
+<h2 id="shape">The shape: a referee, a pilot, an adjudicator</h2>
+<p class="lede">Which role is code and which is a model is the whole design.</p>
+<figure><div class="figwrap"><svg viewBox="0 0 960 330" role="img" aria-label="A referee in code owns the rules and validates everything; an adjudicator model answers what an unknown card does; a pilot plays each seat from a playbook and escalates to a model only at genuine forks.">
+  <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#7d93b2"/></marker></defs>
+  <rect x="16" y="26" width="392" height="96" rx="12" fill="#4fc2c0" fill-opacity=".14" stroke="#4fc2c0" stroke-width="1.6"/>
+  <text x="34" y="52" fill="#f2f7ff" font-size="15" font-weight="700">THE REFEREE</text>
+  <text x="34" y="72" fill="#9fe4e0" font-size="11.5">code, always · crankmagic-board.js</text>
+  <text x="34" y="94" fill="#c9dcf3" font-size="12">zones · turn structure · mana · costs · combat</text>
+  <text x="34" y="111" fill="#c9dcf3" font-size="12">state-based actions · legality · commander damage</text>
+  <rect x="16" y="196" width="392" height="86" rx="12" fill="#c39bff" fill-opacity=".15" stroke="#c39bff" stroke-width="1.6"/>
+  <text x="34" y="222" fill="#f2f7ff" font-size="15" font-weight="700">THE ADJUDICATOR</text>
+  <text x="34" y="242" fill="#d3c4ff" font-size="11.5">Haiku 4.5 · rarely · ~25 calls a game</text>
+  <text x="34" y="266" fill="#c9dcf3" font-size="12">card text + board → deltas the referee validates</text>
+  <path d="M212 122 V196" fill="none" stroke="#7d93b2" stroke-width="1.6" marker-end="url(#a)"/>
+  <path d="M252 196 V122" fill="none" stroke="#7d93b2" stroke-width="1.6" marker-end="url(#a)"/>
+  <text x="224" y="152" fill="#9db4d0" font-size="10.5">“what does</text><text x="224" y="166" fill="#9db4d0" font-size="10.5">this card do?”</text>
+  <text x="262" y="152" fill="#9db4d0" font-size="10.5">deltas, then</text><text x="262" y="166" fill="#9db4d0" font-size="10.5">checked</text>
+  <rect x="552" y="26" width="392" height="256" rx="12" fill="#8fb3ff" fill-opacity=".13" stroke="#8fb3ff" stroke-width="1.6"/>
+  <text x="572" y="52" fill="#f2f7ff" font-size="15" font-weight="700">THE PILOT</text>
+  <text x="572" y="72" fill="#bdd6ff" font-size="11.5">code from a playbook · a model at the forks</text>
+  <rect x="572" y="90" width="352" height="54" rx="9" fill="#0f1521" fill-opacity=".55" stroke="#4a5f85"/>
+  <text x="588" y="112" fill="#e6effb" font-size="12.5" font-weight="600">Playbook (Sonnet 5, once per deck)</text>
+  <text x="588" y="131" fill="#9fb2cc" font-size="11">identity · mulligan · curve plan · priorities · combos</text>
+  <rect x="572" y="156" width="352" height="54" rx="9" fill="#0f1521" fill-opacity=".55" stroke="#4a5f85"/>
+  <text x="588" y="178" fill="#e6effb" font-size="12.5" font-weight="600">Every turn: deterministic</text>
+  <text x="588" y="197" fill="#9fb2cc" font-size="11">land · main phase · attacks · blocks — no API call</text>
+  <rect x="572" y="222" width="352" height="46" rx="9" fill="#2f2713" stroke="#6b5a1e"/>
+  <text x="588" y="243" fill="#f2d3a7" font-size="12.5" font-weight="600">Escalation (Sonnet 5, ~8 a game)</text>
+  <text x="588" y="260" fill="#dcc99f" font-size="11">only when two lines are genuinely close</text>
+  <path d="M408 74 H550" fill="none" stroke="#7d93b2" stroke-width="1.6" marker-end="url(#a)"/>
+  <text x="479" y="66" text-anchor="middle" fill="#9db4d0" font-size="10.5">legal moves only</text>
+  <path d="M550 246 H470 V300 H212" fill="none" stroke="#7d93b2" stroke-width="1.6" stroke-linejoin="round" stroke-dasharray="5 5"/>
+  <text x="479" y="302" text-anchor="middle" fill="#9db4d0" font-size="10.5">the pilot only ever proposes; the referee decides</text>
+</svg></div>
+<figcaption><b>The referee never guesses.</b> It owns every fact that can be computed, and nothing a model says may
+violate it — you cannot draw from an empty library, put a permanent you never had onto the battlefield, or gain
+life the card does not mention. A refused delta is logged and the card resolves as a no-op with a visible note,
+rather than corrupting the game. That split is what gets a game to ~35 calls instead of ~400.</figcaption></figure>
+
+<h2 id="lobby">The lobby, against your real decks</h2>
+<p class="lede">This is live. Pick a seat, change the count, move the bracket — the numbers are your six decks'
+actual measured scores and actual contents, read out of <code>data/deck-ratings.json</code> and
+<code>data/live-state.json</code>.</p>
+
+<div class="controls">
+  <label>Opponents <select id="oppCount"><option value="1">1 · two players</option><option value="2">2 · three players</option><option value="3" selected>3 · four players</option></select></label>
+  <label>Bracket <select id="bracket"><option value="1">1 · Exhibition</option><option value="2">2 · Core</option><option value="3" selected>3 · Upgraded</option><option value="4">4 · Optimised</option></select></label>
+  <label>Game Changer cap <input id="gcCap" type="number" min="0" max="10" value="3" style="width:64px"></label>
+  <span class="tiny">Click a row to take that seat as <b>you</b>.</span>
+</div>
+
+<div class="lobby">
+  <div class="panel"><h4>The pod</h4><div class="seatgrid" id="seats"></div></div>
+  <div class="readout">
+    <h4>Before you sit</h4>
+    <div class="big" id="podAvg">—</div>
+    <div class="tiny" style="margin-top:-3px">pod average, measured</div>
+    <div class="bar"><i id="youBar" style="width:0"></i></div>
+    <div class="verdict" id="verdict"></div>
+    <h4 style="margin-top:6px">Bracket check</h4>
+    <div class="legal" id="legal"></div>
+  </div>
+</div>
+<p class="tiny" style="margin-top:12px"><b>A real finding from your library:</b> <span id="gcFinding"></span></p>
+
+<h2 id="ladder">The three-tier card ladder</h2>
+<p class="lede">This is how an arbitrary decklist becomes playable without writing 30,000 card implementations.</p>
+<div class="wrap"><table>
+<thead><tr><th style="width:74px">Tier</th><th style="width:150px">Resolved by</th><th>How</th><th style="width:150px">Coverage</th></tr></thead>
+<tbody>
+<tr><td><span class="pill p-code2">1 · rules</span></td><td>the referee, always</td>
+  <td>zones, turn structure, mana and colour identity, casting cost and commander tax, summoning sickness,
+  attacking and blocking, first/double strike, flying, menace, trample, deathtouch, lifelink, vigilance, haste,
+  lethal damage, the legend rule, commander damage, 0 life</td><td class="muted">every card</td></tr>
+<tr><td><span class="pill p-code">2 · shapes</span></td><td>the referee, from <code>card-classify.js</code></td>
+  <td>the effect vocabulary the classifier already extracts — draw N, ramp N, destroy target, exile, wrath, make N
+  tokens, counter target spell, gain N, mill N, tutor, untap, blink, copy, extra turn, damage N — executed
+  deterministically</td><td class="muted">most cards in a typical deck</td></tr>
+<tr><td><span class="pill p-model">3 · the rest</span></td><td>the adjudicator, validated by the referee</td>
+  <td>the card's oracle text, the board, and a closed delta schema; <b>every returned delta checked against tier 1</b>
+  and written into the game log with the card text</td><td class="muted">everything else, including cards printed
+  after the catalog was baked</td></tr>
+</tbody></table></div>
+<p class="tiny">A tier-3 resolution is exactly the moment at a kitchen table when someone reads a card aloud and the
+group agrees what it does. The engine's job is to stop the group agreeing something impossible. A card that comes
+up often gets promoted to tier 2 by teaching the classifier.</p>
+
+<h2 id="playbook">The deck brief, and the playbook it produces</h2>
+<p class="lede">The model is not handed a hundred card texts. It is handed what the graph already knows — which is
+why an opponent here plays like it read the deck rather than like it skimmed a list.</p>
+<div class="grid2">
+<div>
+<h4>What goes in — assembled by code</h4>
+<pre><b>COMMANDER</b>   <i>name · colour identity · cost · oracle · its 3 strategies</i>
+<b>THE HUNDRED</b> <i>by Primary Purpose, with mana value and a
+             one-line effect from the classifier</i>
+<b>LOOPS</b>       <i>every cycle of ≤4 cards, each step named, with the
+             missing pieces and the tutors that find them</i>
+<b>CHAINS</b>      <i>cause → trigger pairs and multiplier edges</i>
+<b>SHAPE</b>       <i>curve, lands, ramp/draw/removal counts vs the floors</i>
+<b>MEASURED</b>    <i>the simulator's score and its weakest readings</i></pre>
+<p class="tiny">~12–18k tokens, and <b>stable for the life of the deck</b> — which is exactly what makes the caching
+below work. For <b>D6 Krenko Goblins</b> the SHAPE block would read:
+<span id="d6shape" class="muted"></span></p>
+</div>
+<div>
+<h4>What comes back — one per deck, cached, yours to overrule</h4>
+<pre>{
+  <b>"identity"</b>: <i>what this deck is trying to do and how it wins</i>,
+  <b>"mulligan"</b>: { keep: […], ship: […] },
+  <b>"curve_plan"</b>: [ "T1: …", "T2: …", "T3: …" ],
+  <b>"priorities"</b>: [ { when, do, why } ],
+  <b>"combo_watch"</b>: [ { pieces, assemble_when, hold_until } ],
+  <b>"threat_assessment"</b>: { kill_first: […], ignore: […] },
+  <b>"politics"</b>: <i>quiet | deal-maker | archenemy-baiter | vengeful</i>,
+  <b>"interaction"</b>: { counter, save, never_waste_on },
+  <b>"voice"</b>: <i>how this pilot talks at the table</i>
+}</pre>
+<p class="tiny"><b>With no API key the game still plays.</b> The pilot falls back to a heuristic playbook derived
+from the graph alone — a weaker opponent, but a real one. That floor is why every automated test runs offline and
+free.</p>
+</div>
+</div>
+
+<h2 id="cost">What a game costs</h2>
+<p class="lede">Move the sliders. Prices are the current Anthropic first-party rates; cache reads are a tenth of
+input price, which is the whole reason this is cents rather than dollars.</p>
+<div class="lobby">
+<div class="panel">
+  <div class="controls" style="margin-bottom:6px">
+    <label>Opponents <input id="cOpp" type="number" min="1" max="3" value="3" style="width:58px"></label>
+    <label>Adjudications <input id="cAdj" type="number" min="0" max="200" value="25" style="width:64px"></label>
+    <label>Escalations <input id="cEsc" type="number" min="0" max="50" value="8" style="width:58px"></label>
+    <label><input id="cCold" type="checkbox" checked style="accent-color:var(--accent)"> new decks (cold playbooks)</label>
+  </div>
+  <div class="wrap"><table id="costTable">
+    <thead><tr><th>Step</th><th>Model</th><th class="num">Calls</th><th class="num">Cost</th></tr></thead>
+    <tbody></tbody>
+  </table></div>
+  <p class="tiny" style="margin:0">A cost meter in the corner shows the running total for the game and the session,
+  because a number you cannot see is a number you cannot control. Playbooks generated at deck-save time rather than
+  at the table can go through the <b>Batch API at 50%</b>.</p>
+</div>
+<div class="readout">
+  <h4>Per game</h4>
+  <div class="big" id="costTotal">—</div>
+  <div class="tiny" style="margin-top:-3px"><span id="costCalls"></span> model calls</div>
+  <div class="verdict" id="costVerdict" style="margin-top:14px"></div>
+  <h4>The naïve alternative</h4>
+  <div class="tiny">A model at every decision: <b id="naive"></b> — and minutes of spinner.</div>
+</div>
+</div>
+<div class="wrap" style="margin-top:14px"><table>
+<thead><tr><th>Model</th><th>ID</th><th class="num">Context</th><th class="num">In $/M</th><th class="num">Out $/M</th><th>Used for</th></tr></thead>
+<tbody>
+<tr><td>Claude Haiku 4.5</td><td><code>claude-haiku-4-5</code></td><td class="num">200K</td><td class="num">$1</td><td class="num">$5</td><td>adjudication — high volume, narrow question, schema-constrained</td></tr>
+<tr><td>Claude Sonnet 5</td><td><code>claude-sonnet-5</code></td><td class="num">1M</td><td class="num">$2</td><td class="num">$10</td><td>playbooks and escalations — judgment, low volume</td></tr>
+</tbody></table></div>
+<p class="tiny">You named Haiku and Sonnet and that split is right: adjudication is a reading task with a closed
+answer; escalation is a judgment call. Opus is available and would be better at escalations — it is 2.5× Sonnet's
+price and worth measuring before spending.</p>
+
+<h2 id="roadmap">The build, in order</h2>
+<p class="lede">Each one ships something true on its own. The rows are <b>not</b> the same size — G3 is several
+sessions and everything else is one or two.</p>
+<div class="rail" id="rail"></div>
+<p class="tiny" style="margin-top:14px">A first playable game against a real AI opponent is <b>G0 → G6</b>. The
+midpoint worth aiming at is <b>G4 + G5</b>: a complete game, four seats, real rules, real opponents,
+<b>zero API spend</b>.</p>
+
+<h2>What I would not build, and why</h2>
+<div class="grid2">
+<div class="panel"><h4>A rules-complete engine</h4><p class="tiny">Split second, layers, replacement-effect ordering,
+a full priority window on every object — this is where every homebrew Magic engine dies. The referee runs a
+<b>simplified stack</b>: priority passes only when something is on the stack and a seat holds an instant, flash
+permanent or activated ability. That covers counterspells and removal responses and nothing else. Said once in the
+UI, not buried in a tooltip.</p></div>
+<div class="panel"><h4>Multiplayer against other humans</h4><p class="tiny">Server, accounts, reconnection. It
+belongs with the persistent-app plan, not here.</p></div>
+<div class="panel"><h4>Hiding information by pretending</h4><p class="tiny">A pilot sees exactly what a player at
+the table sees: every battlefield, graveyard and exile, its own hand, and card <i>counts</i> for the rest. Not your
+hand. Not the top of your library. Enforced by the referee assembling the prompt — not by asking the model to be
+fair.</p></div>
+<div class="panel"><h4>Scraping Moxfield · shipping a key</h4><p class="tiny">Moxfield answers a deck API request
+with 403 to a server and a browser alike, and the paste path is better anyway. And your key stays in your browser
+until there is a proxy.</p></div>
+</div>
+
+<h2 id="decide">Five decisions — your call</h2>
+<p class="lede">Answer these and G0 starts. Nothing is sent from this page; the button copies your answers so you
+can paste them back to me.</p>
+<div id="questions"></div>
+<div class="actions">
+  <button class="primary" id="copyBtn">Copy my answers</button>
+  <button id="recBtn">Take all my recommendations</button>
+  <button id="clearBtn">Clear</button>
+  <span class="said" id="said"></span>
+</div>
+<textarea id="answers" readonly placeholder="Pick an option in each block and the summary appears here."></textarea>
+
+<footer>
+  <p><b>CrankMagic · the game.</b> This page is a local review copy of <code>docs/crankmagic-game-plan.md</code>.
+  Deck names, commanders, colour identities, measured scores, land counts, curves, role coverage and readiness
+  figures are read from the committed <code>data/deck-ratings.json</code>, <code>data/live-state.json</code> and
+  <code>data/cards.json</code> as of this build — they are your decks, not examples. Everything about the game
+  itself is a proposal. Nothing here has been built.</p>
+  <p class="tiny">No network requests. No analytics. Open it, read it, close it.</p>
+</footer>
+</main>
+
+<script>
+/* ------------------------------------------------------------------ data */
+const DECKS = [{"code":"D1","short":"Quintorius Spirits","commander":"Quintorius, Loremaster","ci":["R","W"],"score":78.9,"lands":41,"gc":[],"curve":{"1":6,"2":15,"3":13,"4":10,"5":10,"6":1,"7":2},"roles":[["ramp",13],["draw",13],["recursion",11],["graveyard",10],["removal",9],["counters",4]],"ready":{"inBox":96,"pullBench":0,"ordered":0,"toBuy":4,"subs":4,"watched":10,"target":100}},{"code":"D2","short":"Chulane Value Loop","commander":"Chulane, Teller of Tales","ci":["G","U","W"],"score":58.7,"lands":35,"gc":[],"curve":{"1":4,"2":18,"3":19,"4":5,"5":9,"6":3,"7":1},"roles":[["ramp",12],["draw",9],["removal",8],["blink",7],["protection",5],["counters",4]],"ready":{"inBox":88,"pullBench":2,"ordered":0,"toBuy":10,"subs":9,"watched":11,"target":100}},{"code":"D3","short":"Atraxa Proliferate","commander":"Atraxa, Praetors' Voice","ci":["B","G","U","W"],"score":78.6,"lands":31,"gc":[],"curve":{"0":2,"1":2,"2":20,"3":21,"4":10,"5":5},"roles":[["ramp",12],["removal",11],["draw",9],["counters",9],["protection",7],["recursion",3]],"ready":{"inBox":72,"pullBench":8,"ordered":4,"toBuy":16,"subs":20,"watched":13,"target":100}},{"code":"D4","short":"Felothar Walls","commander":"Felothar the Steadfast","ci":["B","G","W"],"score":70.7,"lands":38,"gc":[],"curve":{"1":5,"2":17,"3":17,"4":10,"5":7,"6":3,"7":1},"roles":[["ramp",13],["removal",10],["draw",9],["counters",6],["protection",5],["sac-outlet",3]],"ready":{"inBox":86,"pullBench":1,"ordered":5,"toBuy":8,"subs":14,"watched":20,"target":100}},{"code":"D5","short":"Shadrix Aristocrats","commander":"Shadrix Silverquill","ci":["B","W"],"score":81.9,"lands":38,"gc":[],"curve":{"1":5,"2":22,"3":20,"4":8,"5":2,"6":2,"7":1},"roles":[["draw",12],["ramp",9],["removal",5],["sac-outlet",4],["recursion",2],["protection",2]],"ready":{"inBox":84,"pullBench":0,"ordered":0,"toBuy":16,"subs":16,"watched":13,"target":100}},{"code":"D6","short":"Krenko Goblins","commander":"Krenko, Mob Boss","ci":["R"],"score":68.7,"lands":36,"gc":[],"curve":{"1":11,"2":17,"3":19,"4":11,"5":2,"6":1},"roles":[["removal",12],["ramp",6],["sac-outlet",6],["draw",6],["graveyard",3],["counters",2]],"ready":{"inBox":88,"pullBench":0,"ordered":0,"toBuy":12,"subs":12,"watched":13,"target":100}}];
+
+const CI = c => '<span class="ci">' + (c.length?c:['C']).map(x=>'<i class="'+x+'"></i>').join('') + '</span>';
+const el = id => document.getElementById(id);
+const money = n => '$' + (n<1 ? n.toFixed(2) : n.toFixed(2));
+
+/* ------------------------------------------------------------------ lobby */
+let youIdx = 5;                       /* Krenko by default — the one with a real loop story */
+const scores = DECKS.map(d=>d.score);
+el('spread').textContent = Math.min(...scores).toFixed(1) + ' to ' + Math.max(...scores).toFixed(1);
+
+function seated(){
+  const n = Number(el('oppCount').value) + 1;
+  const others = DECKS.map((d,i)=>i).filter(i=>i!==youIdx);
+  return [youIdx, ...others.slice(0, n-1)];
+}
+function drawLobby(){
+  const inPod = new Set(seated());
+  el('seats').innerHTML = DECKS.map((d,i)=>{
+    const you = i===youIdx, on = inPod.has(i);
+    return '<div class="seat '+(you?'is-you':'')+' '+(on?'':'is-off')+'" data-i="'+i+'" role="button" tabindex="0">'
+      + '<span class="badge">'+(you?'YOU':d.code)+'</span>'
+      + '<span><span class="nm">'+d.short+' '+CI(d.ci)+'</span>'
+      + '<span class="sub">'+d.commander+' · '+d.lands+' lands · '+(d.gc.length||'no')+' Game Changer'+(d.gc.length===1?'':'s')+'</span></span>'
+      + '<span class="sc">'+d.score.toFixed(1)+'</span></div>';
+  }).join('');
+  el('seats').querySelectorAll('.seat').forEach(s=>{
+    const go = ()=>{ youIdx = Number(s.dataset.i); drawLobby(); };
+    s.addEventListener('click', go);
+    s.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go(); } });
+  });
+
+  const pod = seated().map(i=>DECKS[i]);
+  const avg = pod.reduce((a,d)=>a+d.score,0)/pod.length;
+  const you = DECKS[youIdx], gap = you.score - avg;
+  el('podAvg').textContent = avg.toFixed(1);
+  el('youBar').style.width = Math.max(4, Math.min(100, you.score)) + '%';
+  el('verdict').innerHTML = Math.abs(gap) < 4
+    ? 'You measure <b>'+you.score.toFixed(1)+'</b> against a pod average of <b>'+avg.toFixed(1)+'</b>. <b style="color:#7fd6a4">A fair table.</b>'
+    : gap > 0
+      ? 'You measure <b>'+you.score.toFixed(1)+'</b>, <b>'+gap.toFixed(1)+'</b> above the pod. <b style="color:#f2d3a7">You are the deck to beat — expect to be archenemy.</b>'
+      : 'You measure <b>'+you.score.toFixed(1)+'</b>, <b>'+Math.abs(gap).toFixed(1)+'</b> below the pod. <b style="color:#f2d3a7">You are the underdog.</b>';
+
+  const cap = Number(el('gcCap').value), br = el('bracket').value;
+  el('legal').innerHTML = pod.map(d=>{
+    const n = d.gc.length, ok = n <= cap;
+    return '<div><span class="pill '+(ok?'p-ok':'p-no')+'">'+(ok?'legal':'over')+'</span>'
+      + '<span>'+d.short+' — '+(n?n+' Game Changer'+(n===1?'':'s'):'no Game Changers')
+      + (ok?'':' · bracket '+br+' allows '+cap)+'</span></div>';
+  }).join('') + '<div class="foot tiny">A deck over the cap gets <b>Trim</b> — drop the excess, lowest measured '
+    + 'delta first — or <b>Change the bracket</b>.</div>';
+}
+['oppCount','bracket','gcCap'].forEach(id=>el(id).addEventListener('input',drawLobby));
+el('bracket').addEventListener('change',()=>{ el('gcCap').value = ({'1':0,'2':0,'3':3,'4':10})[el('bracket').value]; drawLobby(); });
+drawLobby();
+
+const anyGC = DECKS.some(d=>d.gc.length);
+el('gcFinding').innerHTML = anyGC
+  ? 'some of your decks carry Game Changers, so the bracket cap bites immediately.'
+  : 'not one of your six decks carries a Game Changer. So the cap sits quietly at bracket 3 and only bites when you '
+  + 'seat an <b>Archidekt deck</b> that is above it — which is exactly when you want to be told, and exactly what '
+  + 'the lobby is for. It also means all six are bracket 1–2 territory as built: a genuinely casual pod.';
+
+const d6 = DECKS.find(d=>d.code==='D6');
+el('d6shape').innerHTML = '<b>' + d6.lands + ' lands</b>, curve '
+  + [1,2,3,4,5,6,7].map(k=>(d6.curve[k]||0)).join('/') + ' at mana value 1–7, and role coverage '
+  + d6.roles.map(r=>r[0]+' '+r[1]).join(' · ') + '.';
+
+/* ------------------------------------------------------------------ cost */
+const PRICE = { haiku:{in:1,out:5}, sonnet:{in:2,out:10} };
+const per = (m, freshIn, cachedIn, out) =>
+  (freshIn/1e6)*PRICE[m].in + (cachedIn/1e6)*PRICE[m].in*0.1 + (out/1e6)*PRICE[m].out;
+
+function drawCost(){
+  const opp = Math.max(1, Math.min(3, Number(el('cOpp').value)||1));
+  const adj = Math.max(0, Number(el('cAdj').value)||0);
+  const esc = Math.max(0, Number(el('cEsc').value)||0);
+  const cold = el('cCold').checked;
+  const book = cold ? per('sonnet', 15000, 0, 1500) : per('sonnet', 600, 15000, 1500);
+  const rows = [
+    ['Playbooks — one per opponent' + (cold?' (cold)':' (cached, deck seen before)'), 'Sonnet 5', opp, book*opp],
+    ['Adjudications — an unknown card resolves', 'Haiku 4.5', adj, per('haiku', 2000, 20000, 300)*adj],
+    ['Escalations — two lines genuinely close', 'Sonnet 5', esc, per('sonnet', 2000, 20000, 400)*esc]
+  ];
+  const total = rows.reduce((a,r)=>a+r[3],0), calls = rows.reduce((a,r)=>a+r[2],0);
+  el('costTable').querySelector('tbody').innerHTML = rows.map(r=>
+    '<tr><td>'+r[0]+'</td><td><span class="pill '+(r[1][0]==='H'?'p-code2':'p-model')+'">'+r[1]+'</span></td>'
+    + '<td class="num">'+r[2]+'</td><td class="num">'+money(r[3])+'</td></tr>').join('');
+  el('costTotal').textContent = money(total);
+  el('costCalls').textContent = calls;
+  el('costVerdict').innerHTML = total < 0.5
+    ? 'Under fifty cents. You could play <b>' + Math.floor(20/total) + ' games for $20</b>.'
+    : 'Worth a per-game cap at this shape.';
+  const naiveCalls = (opp+1) * 12 * 8;
+  el('naive').textContent = '~' + naiveCalls + ' calls, ' + money(per('sonnet', 2000, 20000, 400) * naiveCalls);
+}
+['cOpp','cAdj','cEsc','cCold'].forEach(id=>el(id).addEventListener('input',drawCost));
+drawCost();
+
+/* ------------------------------------------------------------------ roadmap */
+const RAIL = [
+  ['G0','The lobby','Pick your deck, seat 1–3 opponents from your decks / an Archidekt link / a paste / a generated deck, set the bracket and cap, validate every seat, read the pod balance. No game yet.',[['p-code','no AI'],['p-code','no board']],false],
+  ['G1','The call','crankmagic-claude.js — the key pane, one call shape, the cache layout, structured outputs, the cost meter, and a fixture mode that answers from recorded JSON so every later suite runs offline and free.',[['p-model','the API']],false],
+  ['G2','The playbook','The deck brief from the graph, the playbook back, cached per deck and bracket, editable, with a heuristic fallback that needs no key.',[['p-model','Sonnet']],false],
+  ['G3a','The board — zones and turns','Tier 1, part one: zones, turn structure, mana and colour identity, casting and commander tax, the legend rule, state-based actions. Pure module, Node suite of scripted games.',[['p-warn','long pole']],true],
+  ['G3b','The board — combat','Declare attackers and blockers, the combat keywords, damage, commander damage, and the loss conditions.',[['p-warn','long pole']],true],
+  ['G4','The table','The play space canvas becomes the game table: four seats, your hand, each battlefield, the stack, life totals, the log. You play all four seats by hand — this is what proves the board is real.',[['p-code','no AI']],false],
+  ['G5','The pilot','A seat played from its playbook with tier-2 effects, deterministically. The game is now playable against opponents with no API calls at all.',[['p-ok','playable']],false],
+  ['G6','The adjudicator','Tier 3: unknown card text → Haiku → deltas the referee validates. Plus escalation at the forks. This is the point at which the brief is delivered.',[['p-model','Haiku']],false],
+  ['G7','The table, alive','Table talk in each pilot’s voice, threat assessment made visible, politics, and the post-game report — fed back into the deck page’s game record, where a real game log already lives.',[['p-model','both']],false]
+];
+el('rail').innerHTML = RAIL.map(r =>
+  '<div class="rung '+(r[4]?'pole':'')+'"><span class="id">'+r[0]+'</span>'
+  + '<span><span class="t">'+r[1]+'</span><span class="d">'+r[2]+'</span></span>'
+  + '<span class="tags">'+r[3].map(t=>'<span class="pill '+t[0]+'">'+t[1]+'</span>').join('')+'</span></div>').join('');
+
+/* ------------------------------------------------------------------ decisions */
+const QS = [
+  {id:'key', h:'Decision 1', ask:'How does the game reach the Claude API?',
+   why:'Nothing about starting with your own key blocks the proxy later — one module owns the call and its endpoint is a setting.',
+   opts:[
+     ['Your key, your browser','Pasted into a settings pane, kept in localStorage on this machine. Fastest to start; unusable the moment a second person plays.',true],
+     ['A key-holding Worker now','~40 lines on Cloudflare or Vercel. The first server CrankMagic has ever had, but the only thing that lets anyone else play.',false],
+     ['No key at all for now','Ship G0–G5 only: a complete game against playbook-driven opponents with zero API spend.',false]]},
+  {id:'rules', h:'Decision 2', ask:'How much rules fidelity?',
+   why:'This one changes the size of everything after it. I would most like your answer here.',
+   opts:[
+     ['Kitchen table with a judge','Simplified stack, adjudicated cards, a visible log of every ruling. Ships. The log is what makes the simplification honest.',true],
+     ['Strict','Layers, replacement ordering, full priority. Much longer build, and the place homebrew engines go to die.',false]]},
+  {id:'spend', h:'Decision 3', ask:'How is spend controlled?',
+   why:'Every architecture here is cheap; the question is what happens when it is not.',
+   opts:[
+     ['Per-game cap plus the meter','Stop and fall back to the no-API pilot when hit. The game never just stops working.',true],
+     ['Per-session cap','One budget for an evening.',false],
+     ['Just the meter','Show the number, trust yourself.',false]]},
+  {id:'log', h:'Decision 4', ask:'Does a finished game write back to the library?',
+   why:'A finished game already has somewhere to go: the deck page’s game record and history.',
+   opts:[
+     ['Logged, and marked as an AI game','The simulator wants that data, and a real game record is worth more than a clean one.',true],
+     ['Logged, indistinguishable','Counts as any other game.',false],
+     ['Not logged','The game stays out of the library entirely.',false]]},
+  {id:'gen', h:'Decision 5', ask:'When a seat is built by the simulator, what is it built to?',
+   why:'The other two are a dropdown away whichever you pick as the default.',
+   opts:[
+     ['Matched to your deck’s score','A fair fight, and the more interesting game.',true],
+     ['To the bracket','A legal fight, power wherever it lands.',false],
+     ['To a budget','What a real person could afford to build.',false]]}
+];
+el('questions').innerHTML = QS.map(q =>
+  '<div class="q"><h4>'+q.h+'</h4><p class="ask">'+q.ask+'</p><p class="why">'+q.why+'</p><div class="opts">'
+  + q.opts.map((o,i)=>'<label class="opt '+(o[2]?'rec':'')+'"><input type="radio" name="'+q.id+'" value="'+i+'">'
+      + '<span><span class="ot">'+o[0]+'</span><br><span class="od">'+o[1]+'</span></span></label>').join('')
+  + '</div></div>').join('');
+
+function summarise(){
+  const lines = QS.map(q=>{
+    const hit = document.querySelector('input[name="'+q.id+'"]:checked');
+    return q.ask + '\n  → ' + (hit ? q.opts[Number(hit.value)][0] : '(not answered)');
+  });
+  el('answers').value = 'CrankMagic — the game: my five decisions\n\n' + lines.join('\n\n')
+    + '\n\n(from docs/mockups/game-plan-review.html)';
+}
+el('questions').addEventListener('change', summarise);
+el('recBtn').addEventListener('click', ()=>{
+  QS.forEach(q=>{ const i = q.opts.findIndex(o=>o[2]); if(i>=0)
+    document.querySelector('input[name="'+q.id+'"][value="'+i+'"]').checked = true; });
+  summarise(); el('said').textContent = 'All five set to my recommendation.';
+});
+el('clearBtn').addEventListener('click', ()=>{
+  document.querySelectorAll('#questions input').forEach(i=>i.checked=false);
+  summarise(); el('said').textContent = '';
+});
+el('copyBtn').addEventListener('click', async ()=>{
+  summarise();
+  try { await navigator.clipboard.writeText(el('answers').value); el('said').textContent = 'Copied — paste it back to me.'; }
+  catch(e){ el('answers').select(); el('said').textContent = 'Select-all and copy from the box below.'; }
+});
+summarise();
+</script>
+</body></html>
