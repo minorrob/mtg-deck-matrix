@@ -195,7 +195,7 @@ suite. No dates; the order is the point.
 | **2 · Accounts** | Sign in / out / Account in User Functions; guest mode; the `libraries` table with row-level security; first sign-in uploads the local library. Nothing else changes yet. | 2 | Claude |
 | **3 · Sync** | `CrankRemoteRepository`; `/api/commit` running the model; the command log; the pending queue and offline replay; realtime refresh; conflict review. Load Live and its password retire. | 3 | Claude |
 | **4 · Operations** | Rate limits; backups (Supabase daily plus the app's export); account deletion; error and uptime reporting; a privacy and terms page; the API suite against a local Supabase; journeys against a preview deployment. | 1–2 | Claude |
-| **5 · What accounts unlock** | Later, each its own plan: read-only deck links (`crankmagic.com/d/…`), several libraries per account, the To Trade group published, Subscribe as a real list, playgroups. | — | later |
+| **5 · What accounts unlock** | Later, each its own plan: read-only deck links (`crankmagic.com/d/…`), several libraries per account, the To Trade group published as a hosted page (the link version shipped without an account in #195: `crankmagic-trade.js`, the list in the hash), Subscribe as a real list, playgroups. | — | later |
 
 Phase 1 is worth doing the week the domain arrives: one small pull request, and the address
 is in use from then on. Phases 2 and 3 are the revision proper, about five pull requests.

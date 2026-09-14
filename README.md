@@ -221,7 +221,13 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   asking to be added to the update list, *Share by e-mail* opens a draft with the subject and
   body written and the To line left blank, and *Show a QR code* draws the app link as a QR
   code in the page (`crankmagic-qr.js`, no network, checked module for module against segno
-  in `tests/qr.mjs`) for a phone to scan at the table.
+  in `tests/qr.mjs`) for a phone to scan at the table. **Publish your To Trade list** (the same
+  menu) turns the copies marked Sell / Trade and whatever is filed in the To Trade group into
+  one link that *is* the list — deflated into the hash, with your name, a way to reach you and
+  a note — so anyone who opens it sees the cards with their pictures and can ask about one or
+  several from their own mail client; nothing is stored on a server, a new list is a new
+  link, and the QR code is offered when the link is short enough for the one the app draws
+  (`crankmagic-trade.js`, `tests/crankmagic-trade.mjs`).
   **The role lens** (List tab, with a deck picked under Yours, or `#discover?lens=Removal&deck=<id>`
   from the deck page's More menu) reads one role — Removal, Board wipe, Protection, Loop, Tutor,
   Ramp or Draw — as two lists: the deck's cards that carry it, counted against the house
@@ -363,7 +369,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 56 Node suites:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 57 Node suites:
 
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`
@@ -387,6 +393,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `crankmagic-rules` — `tests/crankmagic-rules.mjs`
 - `crankmagic-sim` — `tests/crankmagic-sim.mjs`
 - `crankmagic-tabletop` — `tests/crankmagic-tabletop.mjs`
+- `crankmagic-trade` — `tests/crankmagic-trade.mjs`
 - `crankmagic-workbook` — `tests/crankmagic-workbook.mjs`
 - `data-integrity` — `tests/data-integrity.mjs`
 - `data-manifest` — `tests/data-manifest.mjs`
