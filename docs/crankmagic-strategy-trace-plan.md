@@ -310,6 +310,17 @@ minimums — and the Lab's report shows the trace score of the draft beside its 
 score. The Lab plays the animation of the seed it just built, which is the moment the two
 halves of the idea meet.
 
+*Shipped in #188, on Rob's instruction to complete the plan rather than wait the week. The
+Lab's Starting point gains **Seed the draft from the trace** (on by default): a pool trace from
+the commander over the legal catalog inside the definition — colour identity, per-card cap,
+legality — beamed to 60 · 40 · 30 new cards per ring so ring 2 stays quick, turned into a
+bonus per card (`CrankTrace.seedFrom`: ring 1 300, ring 2 200, ring 3 100, +20 per loop-back)
+that joins the builder's score; the roles still fill to their targets and every cap holds. The
+draft's method and notes say how many of the chosen cards the trace reached; once the deck is
+saved, **Watch the trace** in the run pane opens it on Discover's canvas. The measured score
+stays the simulator's; after the calibration in T2 the trace figure is a cohesion score and
+the Lab does not print it beside the measurement as if it were one.*
+
 Sizing, at the pace of Phases A–C: T0 and T1 one session each, T2 two, T3 one, T4 one.
 
 ## 6. Questions for Rob, with a recommendation each

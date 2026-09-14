@@ -40,7 +40,13 @@
      eight, then no share limit at all (the reserve rule still holds). */
   const SHARES=[3,8,null];
 
-  function build({commanders,cards,definition,available={},benchOnly=false,pinned=[]}){
+  /* THE TRACE SEED (docs/crankmagic-strategy-trace-plan.md T4). `seed` is a Map cardId -> bonus
+     the Lab computes from a pool trace over the legal catalog inside the definition: ring 1
+     first, then ring 2, then the payoffs, each with its loop-backs -- so the 99 is seeded by
+     what the commander's strategies reach rather than by role slots alone. The bonus joins the
+     score; the roles still fill to their targets, the caps still hold, and a card the trace
+     never lit is chosen as before when the lit ones run out. */
+  function build({commanders,cards,definition,available={},benchOnly=false,pinned=[],seed=null}){
     const colors=new Set(commanders.flatMap(c=>c.colorIdentity||[])),issues=[],chosen=new Map(),all=new Map(cards.map(c=>[c.id,c]));
     let spend=0,relaxed=0,gameChangers=0,assumedBasics=0,splurged=0,nonbasics=0;
     const budget=definition.budget===null||definition.budget===undefined?null:Number(definition.budget);
@@ -113,7 +119,8 @@
     /* Under a cap, the same score is worth more when it costs less: each even share of the
        cap a card costs above the first takes two points, up to thirty -- enough to prefer
        the cheaper of two similar cards, not enough to bury a staple the deck is built on. */
-    const rawScore=c=>desired.filter(x=>text(c).includes(x)).length*100+(available[c.id]?30:0)+rankBonus(c)-Number(c.manaValue||0);
+    const seedBonus=c=>seed&&seed.size&&seed.has(c.id)?seed.get(c.id):0;
+    const rawScore=c=>desired.filter(x=>text(c).includes(x)).length*100+(available[c.id]?30:0)+rankBonus(c)-Number(c.manaValue||0)+seedBonus(c);
     const score=c=>rawScore(c)-(evenShare!==null&&price(c)!==null?Math.min(30,Math.max(0,price(c)-evenShare)/evenShare*2):0);
     const pool=cards.filter(c=>legal(c)&&!commanders.some(x=>x.id===c.id)).sort((a,b)=>score(b)-score(a)||a.name.localeCompare(b.name));
     const basics=(()=>{const names=colors.size?[...colors].map(x=>({W:'Plains',U:'Island',B:'Swamp',R:'Mountain',G:'Forest'})[x]):['Wastes'];return names.map(n=>cards.find(c=>c.name===n)).filter(Boolean);})();
@@ -178,7 +185,9 @@
     }
 
     const result=[...chosen].map(([cardId,quantity])=>({cardId,quantity,purpose:'main',pinned:pinned.some(r=>r.cardId===cardId)}));
+    const seeded=seed&&seed.size?result.filter(r=>seed.has(r.cardId)).length:0;
     const notes=['36 lands, 10 ramp, 10 draw and 10 interaction are starting targets, with overlapping abilities counted once.'];
+    if(seed&&seed.size)notes.push(`Seeded from the trace: ${seeded} of the chosen cards are ones the commander's strategies reach (ring 1 first, then ring 2, then the payoffs, each weighed by its loop-backs); the rest filled the roles to their targets.`);
     if(budget!==null){
       notes.push(`Total cap $${budget}: this list prices at about $${spend.toFixed(2)}`+(assumedBasics?`, counting ${assumedBasics} basic lands at $${BASIC_PRICE.toFixed(2)} each where no price is recorded`:'')+'.'
         +(splurged?` About $${splurged.toFixed(2)} of it went to cards above $${(SHARES[0]*evenShare).toFixed(2)}, the deck's staples.`:'')
@@ -187,8 +196,8 @@
     }
     if(maxGameChangers!==Infinity)notes.push(`Bracket ceiling ${ceiling}: ${maxGameChangers===0?'no Game Changers were chosen':'at most three Game Changers were chosen ('+gameChangers+' in this list)'}.`);
     notes.push('Play style, speed, competitiveness and saltiness require your review. This initial pass does not steer by them and does not certify them.');
-    return {slots:result,cards:[...new Set([...chosen.keys()])].map(lookup),issues,estimatedPrice:spend,relaxed,gameChangers,splurged,nonbasics,upgrades,
-      unknownPrices:result.filter(r=>price(lookup(r.cardId))===null).length,method:'Constructive metadata draft; not simulated',notes};
+    return {slots:result,cards:[...new Set([...chosen.keys()])].map(lookup),issues,estimatedPrice:spend,relaxed,gameChangers,splurged,nonbasics,upgrades,seeded,
+      unknownPrices:result.filter(r=>price(lookup(r.cardId))===null).length,method:seed&&seed.size?'Constructive draft seeded from the trace; not simulated':'Constructive metadata draft; not simulated',notes};
   }
   return {build,role,BASIC_PRICE};
 });

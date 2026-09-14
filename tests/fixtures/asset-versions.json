@@ -98,8 +98,8 @@
       "sha": "46db16db726209b1"
     },
     "crankmagic-app.js": {
-      "version": 160,
-      "sha": "65ce5ecf8ccf8123"
+      "version": 161,
+      "sha": "0bbcb28941821312"
     },
     "crankmagic-assets.js": {
       "version": 26,
@@ -158,8 +158,8 @@
       "sha": "dddcd6bfaa9e3cd6"
     },
     "crankmagic-lab.js": {
-      "version": 45,
-      "sha": "b1b90282a2874043"
+      "version": 46,
+      "sha": "f318b245240d6396"
     },
     "crankmagic-lens.js": {
       "version": 1,
@@ -202,16 +202,16 @@
       "sha": "3a50538880088e81"
     },
     "crankmagic-sw.js": {
-      "version": 160,
-      "sha": "1f09f80a020963ce"
+      "version": 161,
+      "sha": "b448fc0340c909d1"
     },
     "crankmagic-tour.js": {
       "version": 14,
       "sha": "f0e8e35c810f8415"
     },
     "crankmagic-trace.js": {
-      "version": 1,
-      "sha": "8cb428f29a080480"
+      "version": 2,
+      "sha": "a80d887914da7525"
     },
     "crankmagic.css": {
       "version": 91,
@@ -278,8 +278,8 @@
       "sha": "b6aff451bbef0894"
     },
     "draft-builder.js": {
-      "version": 5,
-      "sha": "98e77f94e37fc012"
+      "version": 6,
+      "sha": "381f3035f76fd943"
     },
     "game-record.js": {
       "version": 1,

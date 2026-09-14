@@ -211,6 +211,9 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   cohesion score labelled a heuristic beside the measured score, and a second world — what the
   deck could be — over the library and the commander's co-play neighbours inside the definition
   (`crankmagic-trace.js`, `tests/crankmagic-trace.mjs`, `tests/commander-strategies.mjs`).
+  The Deck Lab seeds a commander's 99 from the same trace (*Seed the draft from the trace*, on
+  by default; `CrankTrace.seedFrom` into `draft-builder.js`), and *Watch the trace* opens the
+  saved deck on the canvas.
 
 ### Load Live
 
