@@ -1580,3 +1580,56 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-trace-limits label{display:inline-flex;align-items:center;gap:6px;margin:0;font-weight:500;white-space:nowrap}
 #matrix-v2 .cm-trace-limits input[type=range],.cm-trace-limits input[type=range]{width:88px;min-height:0;height:18px;margin:0;padding:0;background:transparent;accent-color:#e2b85a}
 .cm-trace-limits output{min-width:2.4ch;text-align:right;font-variant-numeric:tabular-nums;color:#f1f6ff;font-weight:700}
+/* MAKE THE CHANGE (Rob, 14 September): the change list -- readings, then one physical swap per row. */
+.cm-change-head{align-items:flex-start}
+.cm-change-counts{display:flex;flex-wrap:wrap;gap:4px 6px;font-size:13px;color:#b4c3d9}
+.cm-change-counts span{white-space:nowrap}
+.cm-change-formula{margin:0 0 10px;font-size:13px;color:#9db8d8;line-height:1.5}
+.cm-change-reading-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px;margin:0 0 22px}
+.cm-change-reading{background:#1a2131;border:1px solid var(--v-line);border-radius:10px;padding:12px 14px}
+.cm-change-reading.has-warnings{border-color:#8a6a2a}
+.cm-change-reading h3{margin:0 0 2px;font-size:14px}
+.cm-change-reading>.cm-muted{margin:0 0 8px;font-size:12px}
+.cm-change-reading dl{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px 8px;margin:0}
+.cm-change-fig{min-width:0}
+.cm-change-fig dt{font-size:10px;letter-spacing:.02em;text-transform:uppercase;color:var(--v-muted);line-height:1.15;min-height:2.3em}
+.cm-change-fig dd{margin:0;font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cm-change-fig dd small{display:block;font-size:10px;font-weight:500;color:var(--v-muted);line-height:1.1}
+.cm-change-fig.is-warn dd{color:#e2b85a}
+.cm-change-warnings{margin:8px 0 0;padding:0 0 0 16px;font-size:12px;line-height:1.5;color:#e2b85a}
+.cm-change-ok{margin:8px 0 0;font-size:12px;color:#7fd39a}
+.cm-change-list{list-style:none;margin:0 0 22px;padding:0;counter-reset:none}
+.cm-change-row{display:grid;grid-template-columns:28px 34px minmax(0,1fr) 22px minmax(0,1fr) minmax(0,.9fr);align-items:center;gap:10px;min-height:52px;padding:6px 0;border-bottom:1px solid #222b3c}
+.cm-change-row.is-done{opacity:.45}
+.cm-change-row.is-done .cm-change-name{text-decoration:line-through}
+.cm-change-row.is-waiting{opacity:.72}
+.cm-change-step{font-size:12px;font-weight:600;color:var(--v-muted);text-align:right;font-variant-numeric:tabular-nums}
+.cm-change-tick{display:grid;place-items:center;width:34px;height:34px;cursor:pointer}
+#matrix-v2 .cm-change-tick input{width:18px;height:18px;min-height:0;margin:0;padding:0;accent-color:#5cc98a;cursor:pointer}
+#matrix-v2 .cm-change-tick input:disabled{cursor:not-allowed;accent-color:#5a6478}
+.cm-change-out em,.cm-change-in em{font-style:normal;font-size:11px;letter-spacing:.02em;text-transform:uppercase;color:var(--v-muted);margin-right:6px}
+.cm-change-out,.cm-change-in{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;min-width:0}
+.cm-change-arrow{text-align:center;color:#e2b85a;font-weight:700}
+.cm-change-why{font-size:12px;color:#9db8d8;line-height:1.4}
+.cm-change-staying h2{display:flex;align-items:center;gap:10px;margin:0 0 6px;padding-bottom:6px;border-bottom:1px solid var(--v-line)}
+.cm-change-n{font-size:13px;font-weight:600;color:var(--v-muted);background:#232c40;border-radius:12px;padding:2px 9px}
+.cm-change-staying ul{list-style:none;margin:0;padding:0}
+.cm-change-staying li{padding:6px 0;border-bottom:1px solid #222b3c}
+@media(max-width:760px){
+  .cm-change-row{grid-template-columns:28px 34px minmax(0,1fr);grid-template-rows:auto auto auto;row-gap:4px}
+  .cm-change-out{grid-column:3;grid-row:1}
+  .cm-change-arrow{display:none}
+  .cm-change-in{grid-column:3;grid-row:2}
+  .cm-change-why{grid-column:3;grid-row:3}
+  .cm-change-step,.cm-change-tick{grid-row:1/4}
+  .cm-change-reading dl{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+@media print{
+  .cm-change{color:#000}
+  .cm-change-counts,.cm-change-formula,.cm-change-row,.cm-change-name,.cm-change-why,.cm-change-reading,.cm-change-fig dt,.cm-change-fig dd,.cm-change-warnings{color:#000!important;font-size:11pt}
+  .cm-change-reading{background:none;border:1px solid #000;break-inside:avoid}
+  .cm-change-tick{width:14px;height:14px;border:1px solid #000;border-radius:1px}
+  .cm-change-tick input,.cm-change-head .cm-actions{display:none!important}
+  .cm-change-row.is-done .cm-change-tick{background:#000}
+  .cm-change-in .cm-pill{background:none!important;border:1px solid #000}
+}
