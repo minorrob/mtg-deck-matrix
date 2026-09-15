@@ -1,5 +1,7 @@
 import {defaultPlaymat,resolvePlaymat,readMatPreferences,paintMat} from '/playmats.mjs';
 import {openGameSetup} from '/setup.mjs';
+// Earlier running hosts do not advertise this module until their next restart.
+const {manaStatus,manaColors}=await import('/mana-status.mjs').catch(()=>({manaStatus:null,manaColors:[]}));
 import '/handoff.mjs';
 import '/app/card-classify.js';
 import '/app/crankmagic-facets.js';
@@ -13,6 +15,7 @@ window.addEventListener('message',event=>{if(event.origin===location.origin&&eve
 
 const data=await fetch('/match.json').then(r=>r.ok?r.json():{frames:[],log:[],pod:{seats:[]}}).catch(()=>({frames:[],log:[],pod:{seats:[]}}));
 let resizingBoard=false,boardWidth=null,draggingCard=null,suppressClickUntil=0,pendingPlay=null,lastTurnName='',live=null,livePolling=false,gameToken=null,lastState='',choiceId=null,actionBusy=false,noticeUntil=0,lastDecision='';
+const pendingCasts=new Map(),handPositions=new Map();let appliedRevision=-1,appliedMatch=null,paymentAttempt=null,paymentNotice='',yieldTurn=null;
 try{const saved=Number(localStorage.getItem('crankmagic-board-width'));if(saved>=320&&saved<=2400)boardWidth=saved;}catch{}
 const names=['You · Chulane','Krenko','Atraxa','Shadrix'];
 const levels=new Map([[1,3],[2,3],[3,3]]);
@@ -37,6 +40,7 @@ function notifyAction(text){$('notice').textContent=text;noticeUntil=Date.now()+
 function playRestriction(c){
   if(!live)return 'Connect to your live table first.';
   if(live.ui.choice||live.ui.nativeFallback)return 'Finish the current card choice first.';
+  if(live.ui.ok==='Auto'&&humanPlayer()?.zones.Hand.cards.some(h=>h.cardId===c.cardId))return 'Finish the current mana payment or cancel it before playing another card.';
   if(humanPlayer()?.zones.Hand.cards.some(h=>h.cardId===c.cardId)&&c.typeLine?.split('—')[0].includes('Land')){
     const owner=turnPlayer();if(owner&&owner.playerId!==0)return `It is ${owner.name}’s turn. Play this land during your main phase.`;
     if(!['MAIN1','MAIN2'].includes(frame().phase)||frame().stackSize>0)return 'Play a land during your main phase, with an empty stack.';
@@ -44,9 +48,42 @@ function playRestriction(c){
   return '';
 }
 async function playCard(c){
+  if(actionBusy){notifyAction('Your previous action is still being submitted.');return;}
+  if(pendingCasts.has(c.cardId)){notifyAction(`${c.name} is already being played. Its progress is shown on your mat.`);return;}
   const reason=playRestriction(c);if(reason){notifyAction(reason);return;}
-  pendingPlay={cardId:c.cardId,expires:Date.now()+10000};
-  if(!await gameAction({kind:'card',targetId:c.cardId}))pendingPlay=null;
+  const fromZone=['Hand','Command'].find(z=>humanPlayer()?.zones[z].cards.some(h=>h.cardId===c.cardId));
+  if(fromZone){pendingPlay={cardId:c.cardId,card:{...c},fromZone,started:Date.now(),stage:'Submitting play…',leftSource:false,autoPaid:false};pendingCasts.set(c.cardId,pendingPlay);refreshBoards();}
+  if(!await gameAction({kind:'card',targetId:c.cardId})){pendingCasts.delete(c.cardId);if(pendingPlay?.cardId===c.cardId)pendingPlay=null;refreshBoards();}
+}
+function updatePendingCasts(){
+  const ui=live.ui,players=frame().players,now=Date.now();
+  for(const [id,cast]of pendingCasts){
+    const location=players.flatMap(p=>Object.entries(p.zones).map(([zone,z])=>({zone,card:z.cards.find(c=>c.cardId===id)}))).find(item=>item.card);
+    const inSource=humanPlayer()?.zones[cast.fromZone].cards.some(c=>c.cardId===id);
+    let finished='';
+    if(location&&location.zone!==cast.fromZone)finished=`${cast.card.name} ${location.zone==='Battlefield'?'entered the battlefield.':'moved to '+location.zone.toLowerCase()+'.'}`;
+    else if(cast.leftSource&&inSource&&!ui.choice&&ui.ok!=='Auto')finished=`${cast.card.name} returned to your ${cast.fromZone.toLowerCase()}.`;
+    else if(!ui.choice&&/^Action was not completed:|^That action is unavailable/.test(ui.prompt))finished=ui.prompt;
+    else if(inSource&&!ui.choice&&ui.ok!=='Auto'&&now-cast.started>5000)finished=`${cast.card.name} is still in your ${cast.fromZone.toLowerCase()}. Check timing, costs and remaining land plays.`;
+    else if(!location&&cast.leftSource&&frame().stackSize===0&&!ui.choice&&ui.ok!=='Auto'&&now-cast.started>15000)finished=`${cast.card.name} is no longer in a visible zone. Check History for the result.`;
+    if(finished){pendingCasts.delete(id);if(pendingPlay===cast)pendingPlay=null;notifyAction(finished);continue;}
+    if(!inSource)cast.leftSource=true;
+    cast.stage=ui.nativeFallback?'Choice needed in engine window':pendingPlay===cast&&ui.choice?'Choose how to play':pendingPlay===cast&&ui.ok==='Auto'?(ui.okEnabled?'Paying available mana…':'Mana payment needed'):!inSource&&frame().stackSize>0?'On the stack · awaiting responses':!inSource?'Finishing the cast…':'Submitting play…';
+  }
+}
+function castingPreview(){
+  const tray=el('section','casting-tray');tray.setAttribute('aria-label','Cards being played');
+  const announced=(frame().stack||[]).filter(item=>!pendingCasts.has(item.cardId)).map(item=>({cardId:item.cardId,card:{...item,name:item.name||'Face-down spell'},stage:item.stage==='casting'?'Mana payment needed':'On the stack · awaiting responses'}));
+  for(const cast of [...pendingCasts.values(),...announced]){
+    const row=el('div','casting-card');row.dataset.pendingCard=cast.cardId;
+    const art=button('',()=>inspect(cast.card),'casting-art');art.setAttribute('aria-label','Inspect pending '+cast.card.name);if(cast.card.art){const img=el('img');img.src=cast.card.art;img.alt=cast.card.name;art.append(img);}else art.textContent=cast.card.name;
+    const info=el('div');info.append(el('small','','CASTING'),el('strong','',cast.card.name),el('span','casting-status',cast.stage));
+    if(cast.stage.startsWith('On the stack')){info.append(el('small','','Enters play after the spell resolves.'));if(hasPriority()&&!live.ui.choice){const next=button('Pass priority',()=>gameAction({kind:'ok'},fresh=>fresh.ui.ok==='OK'&&fresh.ui.okEnabled&&!fresh.ui.choice&&fresh.state.stackSize>0&&fresh.state.priorityPlayerId===0),'primary-action');info.append(next);}}
+    else if(live.ui.ok==='Auto'&&!live.ui.okEnabled)info.append(el('small','','Not enough available mana for automatic payment. Use a mana source or cancel below.'));
+    else if(live.ui.choice||live.ui.nativeFallback)info.append(button('Show choice',()=>{mountControls();controls.scrollIntoView({block:'nearest',behavior:'smooth'});}));
+    row.append(art,info);tray.append(row);
+  }
+  return tray;
 }
 let selectedCardId=null,cardMenu=null;
 function highlightSelection(id){selectedCardId=id;for(const node of document.querySelectorAll('.card[data-card-id]'))node.classList.toggle('selected-card',Number(node.dataset.cardId)===id);}
@@ -73,9 +110,9 @@ function handCarousel(cards,id){
   previous.setAttribute('aria-controls',id);next.setAttribute('aria-controls',id);
   function move(direction){track.scrollBy({left:direction*Math.max(140,track.clientWidth*.8),behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'instant':'smooth'});}
   function update(){previous.disabled=track.scrollLeft<=1;next.disabled=track.scrollLeft+track.clientWidth>=track.scrollWidth-2;}
-  track.addEventListener('scroll',update,{passive:true});track.addEventListener('keydown',e=>{if(e.target!==track)return;if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();move(e.key==='ArrowLeft'?-1:1);}});
+  track.addEventListener('scroll',()=>{handPositions.set(id,track.scrollLeft);update();},{passive:true});track.addEventListener('keydown',e=>{if(e.target!==track)return;if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();move(e.key==='ArrowLeft'?-1:1);}});
   for(const card of cards)track.append(cardButton(card));if(!cards.length)track.append(el('p','empty','Your hand is empty.'));
-  shell.append(previous,track,next);requestAnimationFrame(update);
+  shell.append(previous,track,next);requestAnimationFrame(()=>{track.scrollLeft=handPositions.get(id)||0;update();});
   // Observe this mounted carousel only; disconnect when its host is re-rendered.
   const observer=new ResizeObserver(()=>{if(shell.isConnected)update();});observer.observe(track);shell.dispose=()=>observer.disconnect();
   return shell;
@@ -134,8 +171,11 @@ async function deckView(){
 const pileZones=[['Command','Command zone','mat-command'],['Exile','Exile','mat-exile'],['Library','Library','mat-library'],['Graveyard','Graveyard','mat-graveyard']];
 function pileButton(p,zone,label,cls){
   const z=p.zones[zone],face=zone==='Command'?z.cards[0]:z.cards.at(-1),pile=button('',()=>{
+    if(Date.now()<suppressClickUntil)return;
+    if(zone==='Command'&&p.playerId===0&&face&&live){cardActions(face,pile);return;}
     if(zone==='Library')notifyAction(`${z.count} cards remain.${p.playerId===0?' Double-click to take your pending draw-step draw.':''}`);else zoneView(p,zone);
   },cls);
+  if(zone==='Command'&&p.playerId===0&&face&&live){enableHandDrag(pile,face);pile.addEventListener('dblclick',()=>{closeCardMenu();playCard(face);});pile.title='Drag your commander onto your mat to cast; mana and commander tax are paid automatically.';}
   if(zone==='Library'&&p.playerId===0){pile.addEventListener('dblclick',drawStepCard);if(live?.ui.choice?.mode==='draw')pile.classList.add('draw-ready');pile.title='Double-click to take your pending draw-step draw';}
   pile.setAttribute('aria-label',`${names[p.playerId]} ${label}, ${z.count} cards`);
   if(zone==='Library'&&z.count){const back=el('span','library-back');back.append(el('span','','✦'));pile.append(back);}
@@ -157,7 +197,7 @@ function cardButton(c,count=1){
   if(c.counters&&Object.keys(c.counters).length){const dice=el('span','counter-dice');for(const [type,n] of Object.entries(c.counters))dice.append(el('span','die',`${type} ${n}`));b.append(dice);}
   if(live&&!c.deckEntry){
     b.draggable=false;
-    if(humanPlayer()?.zones.Hand.cards.some(card=>card.cardId===c.cardId))enableHandDrag(b,c);
+    if(['Hand','Command'].some(z=>humanPlayer()?.zones[z].cards.some(card=>card.cardId===c.cardId)))enableHandDrag(b,c);
     b.addEventListener('dblclick',()=>{if(!Object.values(humanPlayer()?.zones||{}).some(z=>z.cards.some(card=>card.cardId===c.cardId)))return;closeCardMenu();if($('card-detail').open)$('card-detail').close();playCard(c);});
     b.addEventListener('contextmenu',event=>{event.preventDefault();cardActions(c,b);});
     if(live.ui.selectables.includes(c.cardId))b.classList.add('selectable');
@@ -167,7 +207,7 @@ function cardButton(c,count=1){
 function enableHandDrag(node,card){
   node.classList.add('hand-draggable');
   node.addEventListener('pointerdown',down=>{
-    if(down.button!==0)return;const x=down.clientX,y=down.clientY;let ghost=null,target=null;node.setPointerCapture(down.pointerId);
+    if(down.button!==0)return;const x=down.clientX,y=down.clientY;let ghost=null,target=null;draggingCard=card.cardId;node.setPointerCapture(down.pointerId);
     const move=event=>{
       if(!ghost&&Math.hypot(event.clientX-x,event.clientY-y)<6)return;
       event.preventDefault();
@@ -177,7 +217,8 @@ function enableHandDrag(node,card){
     };
     const finish=event=>{
       node.removeEventListener('pointermove',move);node.removeEventListener('pointerup',finish);node.removeEventListener('pointercancel',finish);
-      if(ghost){suppressClickUntil=Date.now()+400;ghost.remove();target?.classList.remove('drop-ready');draggingCard=null;document.body.classList.remove('dragging-hand');if(event.type==='pointerup'&&target)playCard(card);refreshBoards();}
+      draggingCard=null;
+      if(ghost){suppressClickUntil=Date.now()+400;ghost.remove();target?.classList.remove('drop-ready');document.body.classList.remove('dragging-hand');target=document.elementFromPoint(event.clientX,event.clientY)?.closest('.player-mat[data-human-drop]');if(event.type==='pointerup'&&target)playCard(card);refreshBoards();}
     };
     node.addEventListener('pointermove',move);node.addEventListener('pointerup',finish,{once:true});node.addEventListener('pointercancel',finish,{once:true});
   });
@@ -214,11 +255,11 @@ function focusBoard(p){
   const dialog=$('focus');dialog.className='focus-dialog tone-'+p.playerId;dialog.dataset.seat=p.playerId;
   $('focus-title').textContent=names[p.playerId];
   $('focus-status').replaceChildren(el('strong','',turnLabel()),button('Life '+p.health.life+' · Poison '+p.health.poison+'/10',()=>showHealth(p)));
-  const content=$('focus-content');disposeCarousels(content);content.replaceChildren();
+  const content=$('focus-content'),scrollTop=content.scrollTop;disposeCarousels(content);content.replaceChildren();
   const stage=el('div','focus-mat-stage');stage.append(matView(p,true));content.append(stage);
   if(p.playerId===0){const hand=el('section','focus-hand');hand.id='focus-hand';const heading=el('div','hand-label');heading.append(el('strong','','Your hand'),el('span','',p.zones.Hand.count+' cards'));hand.append(heading,handCarousel(p.zones.Hand.cards,'focus-hand-cards'));content.append(hand);}
   else content.append(el('p','fine','Opponent hand: '+p.zones.Hand.count+' cards · hidden'));
-  if(!dialog.open)dialog.showModal();syncModalViewport();mountControls();
+  if(!dialog.open)dialog.showModal();content.scrollTop=scrollTop;syncModalViewport();mountControls();
 }
 function seatMat(id){const appearance=live?.appearance?.find(s=>s.seatId===id),preference=readMatPreferences()[id];const requested=appearance?.playmat&&(!preference||preference===appearance.playmatChoice)?appearance.playmat:preference||defaultPlaymat(id);return resolvePlaymat(requested,live?.matchId||data.pod.podHash||'preview',id);}
 window.addEventListener('crankmagic-playmat',()=>{if(live||data.frames.length){render();if($('focus').open)focusBoard(frame().players.find(p=>p.playerId===Number($('focus').dataset.seat)));}});
@@ -249,6 +290,7 @@ function matView(p,focused=false){
   const life=button('',()=>showHealth(p),'mat-life');life.setAttribute('aria-label',`${names[p.playerId]} life ${p.health.life}; inspect counters`);
   life.append(el('small','','Life'),el('strong','',p.health.life));mat.append(life);
   for(const [zone,label,cls] of pileZones)mat.append(pileButton(p,zone,label,`mat-pile ${cls}`));
+  if(p.playerId===0&&(pendingCasts.size||frame().stack?.length))mat.append(castingPreview());
   return mat;
 }
 function attachBoardResize(box){
@@ -267,7 +309,11 @@ function renderSeat(p){
   const box=$(`seat-${p.playerId}`);box.replaceChildren();const active=turnPlayer()?.playerId===p.playerId;box.classList.toggle('active-turn',active);if(active)box.setAttribute('aria-label',names[p.playerId]+' · active turn');else box.removeAttribute('aria-label');
   const head=el('div','seat-heading');const title=el('div');title.append(el('div','seat-label',live?(p.playerId===0?'YOU · HUMAN':'AI · LOCAL PILOT'):(p.playerId===0?'YOUR DECK · RECORDED NATIVE PILOT':'AI OPPONENT · NATIVE PROBE')),el('div','seat-title',names[p.playerId]));
   if(active)title.append(el('span','turn-badge','● TURN'));const health=button('',()=>showHealth(p),'seat-health');health.append(el('strong','',p.health.life),el('small','',`☣ ${p.health.poison}/10 · CMD ${p.health.commanderDamageMax}/21${p.health.status==='out'?' · OUT':''}`));health.setAttribute('aria-label',`${names[p.playerId]} life ${p.health.life}, poison ${p.health.poison}, commander damage ${p.health.commanderDamageMax}`);head.append(title,health,el('span','seat-hand-count',`Hand ${p.zones.Hand.count}`),button('Focus board',()=>focusBoard(p)));box.append(head,matView(p));if(p.playerId===0)attachBoardResize(box);
-  if(p.mana?.length){const gems=el('div','mana-gems');gems.setAttribute('aria-label','Floating mana');for(const m of p.mana){const gem=el('span','mana-gem',m.color);gem.title=`Source ${m.sourceId}${m.restricted?' · restricted mana':''}`;gems.append(gem);}box.append(gems);}
+  const identity=p.playerId===0?[...new Set((data.pod.seats[0]?.mechanics?.cards||[]).filter(c=>data.pod.seats[0].deck.commanders.some(cmd=>cmd.name===c.name)).flatMap(c=>c.colorIdentity||[]))]:p.zones.Command.cards.flatMap(c=>c.colorIdentity||[]);
+  if(!manaStatus)return;
+  const status=manaStatus(p,frame().players,identity),mana=el('div','mana-status');mana.setAttribute('aria-label',names[p.playerId]+' mana sources');
+  for(const color of manaColors){const n=status.counts[color],gem=el('span','mana-source mana-'+color);gem.append(el('b','',color),el('span','',`${n.untapped} / ${n.tapped}`),el('small','',`Pool ${n.floating}`));gem.title=`${color}: ${n.untapped} untapped sources, ${n.tapped} tapped sources; ${n.floating} floating mana. Source count is not mana quantity or guaranteed availability.`;mana.append(gem);}
+  mana.append(el('small','mana-legend','Untapped / tapped sources · Pool = floating mana'+(status.shared?' · Multicolor sources appear under each color.':'')));box.append(mana);
 }
 function showHealth(p){
   const h=p.health,body=el('div'),metrics=el('div','metrics');
@@ -341,16 +387,41 @@ const prompt=el('p'),decisionArt=el('div','decision-art'),options=el('div','live
 function mountControls(){const host=$('focus').open&&$('focus').dataset.seat==='0'?$('focus-hand'):matchMedia('(min-width:1201px)').matches?actionDock:document.querySelector('.hand');if(host&&controls.parentElement!==host)host.prepend(controls);}
 window.addEventListener('resize',mountControls);
 function drawStepCard(){const q=live?.ui.choice;if(q?.mode==='draw')gameAction({kind:'answer',choiceId:q.id,indices:[]});else notifyAction(frame()?.phase==='DRAW'?'This draw step has already been handled by the engine.':'Your library can be drawn from when your draw-step draw is pending.');}
-async function gameAction(action){
+async function gameAction(action,guard){
   if(actionBusy||!live)return false;actionBusy=true;
   try{if(!gameToken)gameToken=(await fetch('/api/setup').then(r=>r.json())).token;
     const freshResponse=await fetch('/api/game-view'),fresh=await freshResponse.json();if(!freshResponse.ok)throw Error(fresh.error);live=fresh;
+    if(guard&&!guard(fresh))return false;
     const response=await fetch('/api/game-action',{method:'POST',headers:{'Content-Type':'application/json','X-Commander-Token':gameToken},body:JSON.stringify({...action,revision:fresh.revision,actionId:crypto.randomUUID()})});
     const result=await response.json();if(!response.ok)throw Error(result.error);return true;
-  }catch(error){notifyAction(error.message);return false;}finally{actionBusy=false;}
+  }catch(error){notifyAction(error.message);return false;}finally{actionBusy=false;if(livePolling)setTimeout(()=>refreshLiveView().catch(error=>notifyAction(error.message)),50);}
 }
 function renderDecision(){
-  mountControls();controls.hidden=false;const ui=live.ui;const decisionKey=JSON.stringify(ui);if(decisionKey===lastDecision)return;lastDecision=decisionKey;
+  mountControls();controls.hidden=false;const ui=live.ui;
+  if(yieldTurn!==frame().turn)yieldTurn=null;
+  const ordinaryPriority=!ui.choice&&!ui.nativeFallback&&ui.ok==='OK'&&ui.okEnabled&&/^Priority:/m.test(ui.prompt);
+  const opponentTurn=turnPlayer()&&turnPlayer().playerId!==0;
+  const safeToContinue=ordinaryPriority&&hasPriority()&&opponentTurn&&frame().stackSize===0&&(yieldTurn===frame().turn||!['END_OF_TURN','CLEANUP'].includes(frame().phase));
+  if(safeToContinue){
+    prompt.textContent='Following '+turnPlayer().name+'’s turn…';options.replaceChildren();buttons.replaceChildren();decisionArt.replaceChildren();lastDecision='';
+    if(!actionBusy){const turn=frame().turn;gameAction({kind:'ok'},fresh=>fresh.state.turn===turn&&fresh.state.turnPlayerId!==0&&fresh.state.priorityPlayerId===0&&fresh.state.stackSize===0&&!fresh.ui.choice&&!fresh.ui.nativeFallback&&fresh.ui.ok==='OK'&&fresh.ui.okEnabled);}
+    return;
+  }
+  // An active cost-payment input already represents an explicitly requested cast/activation.
+  // This also resumes payment after a reload. Never activate sources at ordinary priority.
+  const paying=ui.ok==='Auto'&&!ui.choice&&!ui.nativeFallback&&/pay mana cost/i.test(ui.prompt);
+  if(!paying){paymentAttempt=null;paymentNotice='';}
+  if(paying&&ui.okEnabled&&paymentAttempt!==ui.prompt&&!actionBusy){
+    const payment=ui.prompt;paymentAttempt=payment;
+    gameAction({kind:'ok'},fresh=>fresh.ui.ok==='Auto'&&fresh.ui.okEnabled&&!fresh.ui.choice&&!fresh.ui.nativeFallback&&fresh.ui.prompt===payment).then(ok=>{if(!ok)paymentAttempt=null;});
+  }
+  if(paying&&!ui.okEnabled&&paymentNotice!==ui.prompt){
+    paymentNotice=ui.prompt;notifyAction('Cannot pay '+(ui.prompt.match(/Pay Mana Cost:\s*([^\n]+)/i)?.[1]||'this cost')+' automatically with currently usable mana sources. Cancel to return the card, or use an available mana ability.');
+  }
+  if(paying&&ui.okEnabled){
+    prompt.textContent='Paying mana…';decisionArt.replaceChildren();options.replaceChildren();buttons.replaceChildren();lastDecision='';return;
+  }
+  const decisionKey=JSON.stringify([ui,frame()?.stackSize,pendingPlay?.cardId]);if(decisionKey===lastDecision)return;lastDecision=decisionKey;
   const priority=/^Priority:/m.test(ui.prompt);
   prompt.textContent=ui.nativeFallback||ui.choice?.title||(priority?(hasPriority()?(turnPlayer()?.playerId===0?'Your action · play a card or use a board ability.':'You may respond before play continues.'):'Waiting for the active player…'):ui.prompt);
   buttons.replaceChildren();decisionArt.replaceChildren();
@@ -359,22 +430,22 @@ function renderDecision(){
     if(card?.art){const img=el('img');img.src=card.art;img.alt=card.name;decisionArt.append(img);}
     // Compatibility with running adapters: Forge takes a sole offered ability for browser card selections.
     if(q.title==='Choose an ability'&&q.options.length===1&&q.autoSelect!==false){
-      pendingPlay=null;options.replaceChildren();prompt.textContent='Playing your card…';gameAction({kind:'answer',choiceId:q.id,indices:[q.options[0].index]}).then(ok=>{if(!ok)lastDecision='';});return;
+      options.replaceChildren();prompt.textContent='Playing your card…';gameAction({kind:'answer',choiceId:q.id,indices:[q.options[0].index]}).then(ok=>{if(!ok)lastDecision='';});return;
     }
     if(choiceId!==q.id){choiceId=q.id;options.replaceChildren();
       if(q.mode==='draw')options.append(button('Draw card',drawStepCard,'primary-action'));
       else if(q.mode==='integer'){const n=el('input');n.type='number';n.min=q.min;n.max=q.max;n.value=q.min;n.id='choice-number';n.setAttribute('aria-label',q.title);options.append(n);}
-      else if(['one','boolean','index'].includes(q.mode))for(const option of q.options)options.append(button(option.label,()=>{pendingPlay=null;gameAction({kind:'answer',choiceId:q.id,indices:[option.index]});},'ability-option'));
+      else if(['one','boolean','index'].includes(q.mode))for(const option of q.options)options.append(button(option.label,()=>gameAction({kind:'answer',choiceId:q.id,indices:[option.index]}),'ability-option'));
       else for(const option of q.options){const label=el('label','choice-option'),input=el('input');input.type='checkbox';input.name='game-choice';input.value=option.index;if(q.mode!=='ack')label.append(input);label.append(el('span','',option.label));options.append(label);}
     }
     if(q.mode==='integer')buttons.append(button('Apply amount',()=>gameAction({kind:'answer',choiceId:q.id,value:Number($('choice-number').value)})));
     else if(q.mode==='ack')buttons.append(button('Continue',()=>gameAction({kind:'answer',choiceId:q.id,indices:[]})));
     else if(q.mode==='many')buttons.append(button('Done selecting',()=>gameAction({kind:'answer',choiceId:q.id,indices:[...options.querySelectorAll('input:checked')].map(n=>Number(n.value))})));
-    else if(q.min===0&&q.mode!=='draw')buttons.append(button('Cancel',()=>{pendingPlay=null;gameAction({kind:'answer',choiceId:q.id,indices:[]});}));
+    else if(q.min===0&&q.mode!=='draw')buttons.append(button('Cancel',()=>gameAction({kind:'answer',choiceId:q.id,indices:[]})));
   }else{
     choiceId=null;options.replaceChildren();
     const confirm=button(priority&&ui.ok==='OK'?(turnPlayer()?.playerId===0&&frame().stackSize===0?'Continue from '+String(frame().phase).replaceAll('_',' ').toLowerCase():'Pass priority'):ui.ok||'Continue',()=>gameAction({kind:'ok'}));confirm.title=priority?'Finish acting for now and let the other players respond.':'';confirm.disabled=!ui.okEnabled||!!ui.nativeFallback;buttons.append(confirm);
-    if(ui.cancelEnabled){const cancel=button(priority&&ui.cancel==='End Turn'?(turnPlayer()?.playerId===0?'End my turn':'Yield through this turn'):ui.cancel||'Cancel',()=>gameAction({kind:'cancel'}));cancel.disabled=!!ui.nativeFallback;buttons.append(cancel);}
+    if(ui.cancelEnabled){const yielding=priority&&ui.cancel==='End Turn'&&turnPlayer()?.playerId!==0;const cancel=button(priority&&ui.cancel==='End Turn'?(turnPlayer()?.playerId===0?'End my turn':'Yield through this turn'):ui.cancel||'Cancel',()=>{if(yielding){yieldTurn=frame().turn;gameAction({kind:'ok'});}else gameAction({kind:'cancel'});});cancel.title=yielding?'Skip empty stops this turn. Spells, abilities and required choices still allow a response.':'';cancel.disabled=!!ui.nativeFallback;buttons.append(cancel);}
     if(ui.selectables.length)buttons.append(el('span','fine','Select highlighted cards on the playmat.'));
     // Player selection belongs to an explicit target/defender prompt, never ordinary priority.
     const startingPlayer=/who would you like to start|starting player|start this game/i.test(ui.prompt);
@@ -382,16 +453,23 @@ function renderDecision(){
   }
 }
 async function startLive(){if(livePolling)return;livePolling=true;liveButton.disabled=true;await pollLive();}
-async function pollLive(){
-  if(!livePolling)return;
-  try{const response=await fetch('/api/game-view');const value=await response.json();if(!response.ok)throw Error(value.error);
-    if(value.state?.players?.length){live=value;data.pod=value.pod;for(const p of value.state.players)names[p.playerId]=p.playerId===0?`You · ${p.name}`:p.name;
+async function refreshLiveView(){
+  const response=await fetch('/api/game-view');const value=await response.json();if(!response.ok)throw Error(value.error);
+    if(value.state?.players?.length){
+      if(appliedMatch===value.matchId&&value.revision<appliedRevision)return;
+      if(appliedMatch&&appliedMatch!==value.matchId){pendingCasts.clear();pendingPlay=null;}
+      appliedMatch=value.matchId;appliedRevision=value.revision;live=value;data.pod=value.pod;for(const p of value.state.players)names[p.playerId]=p.playerId===0?`You · ${p.name}`:p.name;
+      updatePendingCasts();
       document.body.classList.add('online-live');document.body.dataset.seats=value.state.players.length;document.querySelector('.preview').textContent='LIVE TABLE · LOCAL AI';document.querySelector('.scrubber').hidden=true;
-      const key=JSON.stringify([value.state,value.ui.selectables,value.ui.prompt]);if(key!==lastState&&draggingCard===null&&!resizingBoard){lastState=key;for(const id of [0,1,2,3])$(`seat-${id}`).hidden=!value.state.players.some(p=>p.playerId===id);render();if($('focus').open)focusBoard(frame().players.find(p=>p.playerId===Number($('focus').dataset.seat)));}
+      const key=JSON.stringify([value.state,value.ui.selectables,value.ui.prompt,[...pendingCasts.values()].map(c=>[c.cardId,c.stage])]);if(key!==lastState&&draggingCard===null&&!resizingBoard){lastState=key;for(const id of [0,1,2,3])$(`seat-${id}`).hidden=!value.state.players.some(p=>p.playerId===id);render();if($('focus').open)focusBoard(frame().players.find(p=>p.playerId===Number($('focus').dataset.seat)));}
       renderDecision();renderHistory();if(trackerTab==='tracker')renderTracker();liveButton.textContent='Live table connected';if(Date.now()>noticeUntil)$('notice').textContent='Drag from hand to play. Select your card for actions; inspect for a larger view. History records public activity.';
     }
+}
+async function pollLive(){
+  if(!livePolling)return;
+  try{await refreshLiveView();
   }catch(error){$('notice').textContent=error.message;liveButton.disabled=false;livePolling=false;return;}
-  setTimeout(pollLive,750);
+  setTimeout(pollLive,pendingCasts.size?250:750);
 }
 window.addEventListener('crankmagic-game-ready',()=>{document.body.classList.remove('setup-screen');$('game-setup').close();if(window.parent!==window)window.parent.postMessage({type:'crankmagic-live'},location.origin);reportCanvasSize();startLive();});
 if(new URLSearchParams(location.search).has('embedded'))document.body.classList.add('embedded');

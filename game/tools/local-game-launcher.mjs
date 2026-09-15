@@ -61,6 +61,9 @@ export async function browserBridge(operation,body){
     for(const p of value.state.players)for(const z of Object.values(p.zones))for(const c of z.cards){const fact=facts.get(c.name);if(fact){c.art=fact.art?.normal;c.typeLine=fact.typeLine;}}
     value.pod={seats:[pod.seats[0]]};value.matchId=pod.podHash;value.appearance=pod.seats.map(s=>({seatId:s.seatId,playmat:s.playmat,playmatChoice:s.playmatChoice}));
     value.telemetry=matchTelemetry(state.directory,value.state);
+    const rules=new Map(pod.seats.flatMap(s=>(s.mechanics?.cards||[]).map(c=>[c.name,c])));
+    for(const p of value.state.players)for(const z of Object.values(p.zones))for(const c of z.cards)if(c.name&&!c.faceDown){c.oracleText=rules.get(c.name)?.oracleText||'';c.colorIdentity=facts.get(c.name)?.colorIdentity||[];}
+    value.state.stack=value.telemetry.stack.map(item=>({...item,...(!item.faceDown&&item.name?{art:facts.get(item.name)?.art?.normal,typeLine:facts.get(item.name)?.typeLine}: {})}));
   }
   return value;
 }

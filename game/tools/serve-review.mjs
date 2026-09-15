@@ -7,9 +7,13 @@ import {execFileSync} from 'node:child_process';
 import {setupCatalog,prepareSetup,importWorkshopDeck} from './setup-catalog.mjs';
 import {launchLocalGame,liveStatus,browserBridge,resumeLocalGame} from './local-game-launcher.mjs';
 if(process.env.COMMANDER_RESUME)await resumeLocalGame(process.env.COMMANDER_RESUME);
+const port=Number(process.env.COMMANDER_PORT||8768);
+if(!Number.isInteger(port)||port<1024||port>65535)throw Error('Invalid local port');
+const authority='127.0.0.1:'+port,origin='http://'+authority;
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../..');
 const files=new Map([['/',['game/ui/review.html','text/html']],['/review.css',['game/ui/review.css','text/css']],['/review.mjs',['game/ui/review.mjs','text/javascript']],['/match.json',['game/.local/review/match.json','application/json']]]);
 files.set('/playmats.mjs',['game/ui/playmats.mjs','text/javascript']);
+files.set('/mana-status.mjs',['game/ui/mana-status.mjs','text/javascript']);
 for(const name of ['moonlit-tree','golden-lotus','sunlit-familiar','shadow-forest','mountain-horizon','spirit-warrior','violet-bloom'])files.set('/playmats/'+name+'.png',['game/ui/assets/playmats/'+name+'.png','image/png']);
 files.set('/mats.css',['game/ui/mats.css','text/css']);
 files.set('/rob-playmat.png',['game/ui/assets/rob-playmat.png','image/png']);
@@ -28,11 +32,11 @@ createServer(async(req,res)=>{
   const pathname=new URL(req.url,'http://127.0.0.1').pathname;
   const reply=(status,value)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(value));};
   if(pathname.startsWith('/api/')){
-    if(req.headers.host!=='127.0.0.1:8768')return reply(403,{error:'Use the local 127.0.0.1 address'});
+    if(req.headers.host!==authority)return reply(403,{error:'Use the local 127.0.0.1 address'});
     if(req.method==='GET'&&pathname==='/api/setup')return reply(200,{...setupCatalog(),token});
     if(req.method==='GET'&&pathname==='/api/live')return reply(200,liveStatus());
     if(req.method==='GET'&&pathname==='/api/game-view'){try{return reply(200,await browserBridge('view'));}catch(e){return reply(409,{error:e.message});}}
-    if(req.method!=='POST'||req.headers.origin!=='http://127.0.0.1:8768'||req.headers['x-commander-token']!==token)return reply(403,{error:'Invalid local session'});
+    if(req.method!=='POST'||req.headers.origin!==origin||req.headers['x-commander-token']!==token)return reply(403,{error:'Invalid local session'});
     try{
       let text='';for await(const chunk of req){text+=chunk;if(text.length>64000)throw Error('Setup request too large');}const body=JSON.parse(text);
       if(pathname==='/api/game-action')return reply(200,await browserBridge('action',body));
@@ -53,4 +57,4 @@ createServer(async(req,res)=>{
   try {const body=await readFile(resolve(root,entry[0]));res.writeHead(200,{'Content-Type':entry[1]+'; charset=utf-8','Cache-Control':'no-store',
     ...(pathname.startsWith('/app/')?{}:{'Content-Security-Policy':"default-src 'self'; img-src 'self' https://cards.scryfall.io; style-src 'self'; script-src 'self'; connect-src 'self'; object-src 'none'; frame-ancestors 'self'"})});res.end(body);}
   catch{res.writeHead(404);res.end('Build the local replay preview first.');}
-}).listen(8768,'127.0.0.1',()=>console.log('Commander replay preview: http://127.0.0.1:8768'));
+}).listen(port,'127.0.0.1',()=>console.log('Commander replay preview: '+origin));

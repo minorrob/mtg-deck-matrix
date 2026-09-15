@@ -1,5 +1,6 @@
 import {readFileSync,statSync} from 'node:fs';
 import {resolve} from 'node:path';
+import {publicStack} from './public-stack.mjs';
 
 // Never return raw journal payloads: they include draws, private choices and library order.
 export function summarizeEvents(events,visibleCards){
@@ -39,5 +40,5 @@ export function matchTelemetry(directory,state){
     if(['manifest','mechanic-choice-completed','GameEventTurnPhase','GameEventPlayerLivesChanged'].includes(event.kind))entry.accepted.push(event);
     else if(source&&!source.faceDown&&visible.has(source.cardId)){entry.known.set(source.cardId,visible.get(source.cardId));entry.accepted.push(event);}
   }
-  return summarizeEvents(entry.accepted,[...entry.known.values()]);
+  return {...summarizeEvents(entry.accepted,[...entry.known.values()]),stack:publicStack(entry.events)};
 }

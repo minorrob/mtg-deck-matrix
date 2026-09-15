@@ -1,7 +1,7 @@
 (globalThis.CrankFeatures ||= []).push(function(C){
   const {esc:e}=C;
   C.views.game=async()=>{
-    const local=location.hostname==='127.0.0.1'&&location.port==='8768';
+    const local=location.hostname==='127.0.0.1'&&['8768','8769'].includes(location.port);
     const decks=C.state.decks.filter(d=>!d.archived);
     const layout=C.main.closest('.cm-layout');layout.classList.add('cm-play-collapsed');
     if(local){
