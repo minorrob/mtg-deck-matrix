@@ -34,6 +34,18 @@ createServer(async(req,res)=>{
   const reply=(status,value)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(value));};
   if(pathname.startsWith('/api/')){
     if(req.headers.host!==authority)return reply(403,{error:'Use the local 127.0.0.1 address'});
+    // Public launch checks reveal no session token, deck, or engine position.
+    if(pathname==='/api/health'){
+      if(['https://minorrob.github.io','http://localhost:'+port].includes(req.headers.origin)){
+        res.setHeader('Access-Control-Allow-Origin',req.headers.origin);
+        res.setHeader('Vary','Origin');
+        res.setHeader('Access-Control-Allow-Methods','GET');
+        res.setHeader('Access-Control-Allow-Private-Network','true');
+      }
+      if(req.method==='OPTIONS'){res.writeHead(204);return res.end();}
+      if(req.method==='GET')return reply(200,{product:'CrankMagic Online',protocol:1});
+      return reply(405,{error:'Read-only health check'});
+    }
     if(req.method==='GET'&&pathname==='/api/setup')return reply(200,{...setupCatalog(),token});
     if(req.method==='GET'&&pathname==='/api/live')return reply(200,liveStatus());
     if(req.method==='GET'&&pathname==='/api/game-view'){try{return reply(200,await browserBridge('view'));}catch(e){return reply(409,{error:e.message});}}

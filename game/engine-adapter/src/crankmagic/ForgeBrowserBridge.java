@@ -110,6 +110,7 @@ public final class ForgeBrowserBridge {
     }
     static final Object DELEGATE=new Object();
     Object choice(String method,Object[] a)throws Exception{
+        if(method.equals("assignCombatDamage"))return assignCombatDamage(a);
         // Only intercept decision methods whose full return contract is represented here.
         List<?> options=null;int min=1,max=1;String title="Choose";String mode="one";
         switch(method){
@@ -159,6 +160,50 @@ public final class ForgeBrowserBridge {
         if(mode.equals("index"))return submitted.getAsJsonArray("indices").get(0).getAsInt();
         return selected.isEmpty()?null:selected.get(0);
     }
+    /** Mirrors the pinned Forge damage dialog contract, including its null defender key. */
+    Object assignCombatDamage(Object[] a)throws Exception{
+        CardView source=(CardView)a[0];List<CardView> targets=new ArrayList<>((List<CardView>)a[1]);
+        int total=(int)a[2];boolean override=(boolean)a[4],maySkip=(boolean)a[5];
+        if(total<=0)return Collections.emptyMap();
+        boolean divide=source.getCurrentState().hasDivideDamage()&&override;
+        if(a[3]!=null&&(source.getCurrentState().hasTrample()||divide))targets.add(null);
+        List<Map<String,Object>> options=new ArrayList<>();
+        for(int i=0;i<targets.size();i++){
+            CardView target=targets.get(i);int lethal=0;
+            if(target!=null){lethal=Math.max(0,target.getLethalDamage());if(target.getCurrentState().isPlaneswalker())lethal=Integer.parseInt(target.getCurrentState().getLoyalty());else if(source.getCurrentState().hasDeathtouch())lethal=Math.min(lethal,1);}
+            String label=target==null?String.valueOf(a[3]):target.getCurrentState().getName();
+            options.add(ForgeProbe.obj("index",i,"label",label,"cardId",target==null?null:target.getId(),"lethal",lethal,"defender",target==null));
+        }
+        JsonObject submitted;
+        synchronized(this){
+            if(pending!=null)throw new IllegalStateException("Overlapping browser choice");
+            pending=ForgeProbe.obj("id",UUID.randomUUID().toString(),"title","Assign "+total+" combat damage from "+source.getCurrentState().getName(),"mode","damage","min",0,"max",total,"total",total,"cardId",source.getId(),"options",options,"overrideOrder",override,"divide",divide,"maySkip",maySkip);
+            answer=null;revision++;journal.append("browser-choice-offered",pending);
+            while(answer==null)wait();submitted=answer;answer=null;pending=null;revision++;
+        }
+        if(submitted.has("skip")&&submitted.get("skip").getAsBoolean())return null;
+        Map<CardView,Integer> result=new LinkedHashMap<>();JsonArray amounts=submitted.getAsJsonArray("amounts");
+        for(int i=0;i<targets.size();i++)result.put(targets.get(i),amounts.get(i).getAsInt());
+        journal.append("combat-damage-assigned",ForgeProbe.obj("sourceCardId",source.getId(),"total",total,"amounts",amounts));
+        return result;
+    }
+    static void validateCombatDamage(Map<String,Object> decision,JsonObject request){
+        if(request.has("skip")&&request.get("skip").getAsBoolean()){
+            if(!Boolean.TRUE.equals(decision.get("maySkip")))throw new IllegalArgumentException("This damage assignment cannot be skipped");return;
+        }
+        List<Map<String,Object>> targets=(List<Map<String,Object>>)decision.get("options");
+        JsonArray amounts=request.getAsJsonArray("amounts");
+        if(amounts==null||amounts.size()!=targets.size())throw new IllegalArgumentException("Assign damage to each listed recipient");
+        long sum=0;boolean priorNeedsLethal=false;
+        for(int i=0;i<targets.size();i++){
+            double amount=amounts.get(i).getAsDouble();
+            if(!Double.isFinite(amount)||amount!=Math.rint(amount)||amount<0||amount>(int)decision.get("total"))throw new IllegalArgumentException("Use whole, nonnegative damage amounts");
+            Map<String,Object> target=targets.get(i);
+            if(amount>0&&priorNeedsLethal&&!Boolean.TRUE.equals(decision.get("divide"))&&(!Boolean.TRUE.equals(decision.get("overrideOrder"))||Boolean.TRUE.equals(target.get("defender"))))throw new IllegalArgumentException("Assign lethal damage to the required blockers before assigning damage onward");
+            priorNeedsLethal|=amount<(int)target.get("lethal");sum+=(long)amount;
+        }
+        if(sum!=(int)decision.get("total"))throw new IllegalArgumentException("Assign exactly "+decision.get("total")+" damage before confirming");
+    }
     Map<String,Object> action(JsonObject request)throws Exception{
         final String id=request.get("actionId").getAsString(),kind=request.get("kind").getAsString();
         final long queuedRevision;
@@ -169,7 +214,8 @@ public final class ForgeBrowserBridge {
             if(kind.equals("answer")){
                 if(pending==null||answer!=null||!Objects.equals(pending.get("id"),request.get("choiceId").getAsString()))throw new IllegalArgumentException("This choice has expired");
                 int min=(int)pending.get("min"),max=(int)pending.get("max");
-                if(pending.get("mode").equals("integer")){
+                if(pending.get("mode").equals("damage"))validateCombatDamage(pending,request);
+                else if(pending.get("mode").equals("integer")){
                     double value=request.get("value").getAsDouble();if(!Double.isFinite(value)||value!=Math.rint(value)||value<min||value>max)throw new IllegalArgumentException("Number outside allowed range");
                 }else{
                     JsonArray indices=request.getAsJsonArray("indices");int size=((List<?>)pending.get("options")).size();Set<Integer> seen=new HashSet<>();
