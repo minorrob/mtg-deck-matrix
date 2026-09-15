@@ -1,6 +1,8 @@
-# Commander companion — engine proof and table preview
+# CrankMagic Online — local browser play
 
-This checkpoint of the [accepted plan](../docs/commander-simulator-plan-2026-09-15.md) provides a recorded browser table and Game Setup that launches a human-versus-native-AI match in standalone Forge. **The custom browser table remains a replay; API pilots are not implemented.** [Evidence and remaining gates](docs/c0-evidence.md).
+See the current [browser play checkpoint](docs/browser-play-checkpoint.md) and [AI card audit](docs/ai-card-support.md). The implementation now includes setup-first Play integration and a live browser bridge with native fallback; API pilots remain pending. The historical replay/proof instructions below describe the earlier checkpoint.
+
+This earlier checkpoint of the [accepted plan](../docs/commander-simulator-plan-2026-09-15.md) provides a recorded browser table and Game Setup that launches a human-versus-native-AI match in standalone Forge. **The custom browser table remains a replay; API pilots are not implemented.** [Evidence and remaining gates](docs/c0-evidence.md).
 
 [Table preview image](docs/table-preview.png) · [Grouped Focus preview](docs/focus-board-preview.png). The local branch includes merged website PRs #220 and #221; the engine fixture preserves its original #219 data provenance.
 
@@ -13,7 +15,7 @@ node game/tools/build-probe-review.mjs
 node game/tools/serve-review.mjs
 ```
 
-Open **http://127.0.0.1:8768**. The server binds only to loopback. It serves eight explicit asset/replay routes and local setup/status APIs; authenticated same-origin POSTs prepare decks and launch Forge. It makes no AI API calls. Its replay input is the local `health-full-42` run; another checkout must generate a run first or supply its run directory to `build-probe-review.mjs`. Do not expose this diagnostic server to other players.
+Open **http://127.0.0.1:8768/app/#game** for the current game. Use **http://127.0.0.1:8768/?replay=1** for the historical replay. The server binds only to loopback. It serves eight explicit asset/replay routes and local setup/status APIs; authenticated same-origin POSTs prepare decks and launch Forge. It makes no AI API calls. Its replay input is the local `health-full-42` run; another checkout must generate a run first or supply its run directory to `build-probe-review.mjs`. Do not expose this diagnostic server to other players.
 
 ## Start a personal game
 

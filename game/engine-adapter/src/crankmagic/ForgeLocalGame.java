@@ -22,7 +22,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.swing.SwingUtilities;
 
-/** Real human play through Forge's complete native choice UI. The web table remains a replay. */
+/** Human browser decisions backed by Forge, with native fallback for complex prompts. */
 public final class ForgeLocalGame {
     public static void main(String[] args) throws Exception {
         if(args.length!=2)throw new IllegalArgumentException("pod.json output-directory");
@@ -41,11 +41,13 @@ public final class ForgeLocalGame {
         prefs.setPref(FPref.CHECK_SNAPSHOT_AT_STARTUP,false);prefs.setPref(FPref.PLAYER_NAME,humanName);
         prefs.setPref(FPref.FILTERED_HANDS,false);prefs.setPref(FPref.UI_ENABLE_AI_CHEATS,false);
         prefs.setPref(FPref.MULLIGAN_RULE,"London");
+        forge.gui.download.CdnUuidCache.markBulkSyncPromptAnswered();
         Singletons.getControl().initialize();
         SwingUtilities.invokeAndWait(()->{});
         ForgeProbe.TapeRandom rng=new ForgeProbe.TapeRandom(pod.get("seed").getAsLong(),null);
         ForgeProbe.activeRandom=rng;MyRandom.setRandom(rng);
         var journal=new ForgeProbe.Journal(out.resolve("events.ndjson"));
+        var browserBridge=new ForgeBrowserBridge(out,journal);
         AtomicBoolean closed=new AtomicBoolean();
         Runtime.getRuntime().addShutdownHook(new Thread(()->{try{if(closed.compareAndSet(false,true))journal.close();}catch(Exception e){e.printStackTrace();}}));
         List<RegisteredPlayer> players=new ArrayList<>();List<Object> coverage=new ArrayList<>();RegisteredPlayer human=null;
@@ -63,16 +65,22 @@ public final class ForgeLocalGame {
         IGuiGame[] gui=new IGuiGame[1];SwingUtilities.invokeAndWait(()->{
             IGuiGame nativeGui=GuiBase.getInterface().getNewGuiGame();
             gui[0]=(IGuiGame)Proxy.newProxyInstance(IGuiGame.class.getClassLoader(),new Class<?>[]{IGuiGame.class},(proxy,method,arguments)->{
+              if(method.isDefault())return java.lang.reflect.InvocationHandler.invokeDefault(proxy,method,arguments);
+              Object[] values=arguments==null?new Object[0]:arguments;
+              browserBridge.observe(method.getName(),values);
               if(method.getName().equals("openView")){
                 // Attach before HostedMatch schedules opening draws and mulligan choices.
                 journal.game=hosted.getGame();journal.game.subscribeToEvents(journal);
+                browserBridge.attach(hosted.getGame());
                 journal.append("manifest",ForgeProbe.obj("engineCommit",ForgeProbe.ENGINE,"mode","human-vs-native-ai","measured",false,"podHash",pod.get("podHash").getAsString()));
               }
+              Object choice=browserBridge.choice(method.getName(),values);
+              if(choice!=ForgeBrowserBridge.DELEGATE)return choice;
               try{return method.invoke(nativeGui,arguments);}catch(InvocationTargetException e){throw e.getCause();}
             });
         });
         hosted.setStartGameHook(()->{
-            try{ForgeProbe.save(out.resolve("live-status.json"),ForgeProbe.obj("status","playing","humanSeats",1,"aiSeats",players.size()-1,"interface","forge-native","apiPilots",false));}catch(Exception e){throw new RuntimeException(e);}
+            try{ForgeProbe.save(out.resolve("live-status.json"),ForgeProbe.obj("status","playing","humanSeats",1,"aiSeats",players.size()-1,"interface","browser-with-native-fallback","apiPilots",false));}catch(Exception e){throw new RuntimeException(e);}
             System.out.println("COMMANDER_LIVE_READY");System.out.flush();
         });
         hosted.setEndGameHook(()->{try{

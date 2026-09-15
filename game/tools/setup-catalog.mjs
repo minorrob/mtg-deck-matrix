@@ -4,6 +4,7 @@ import {fileURLToPath} from 'node:url';
 import {resolve,dirname} from 'node:path';
 import {randomInt,randomUUID} from 'node:crypto';
 import {snapshotLibraryDeck,canonical,sha256} from '../contracts/deck-snapshot.mjs';
+import {compatibility} from './ai-compatibility.mjs';
 const require=createRequire(import.meta.url),Builder=require('../../draft-builder.js'),Sources=require('../../deck-sources.js');
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../..'),read=p=>JSON.parse(readFileSync(resolve(root,p)));
 const state=read('data/live-state.json').payload.state,cardFile=read('data/cards.json'),identities=read('game/fixtures/live-identities.json').cards;
@@ -31,6 +32,17 @@ export function assess(deck,config){
   if(gc>cap)problems.push(`${gc} Game Changers exceed bracket ${config.bracket}'s cap`);
   const missing=rows.filter(c=>!c.oracleId);if(missing.length)problems.push(`Unresolved identities: ${missing.map(c=>c.name).join(', ')}`);
   return {ok:!problems.length,problems,total:count,cost:Math.round(cost*100)/100,gameChangers:gc,priceAsOf:cardFile.generatedAt};
+}
+export async function importWorkshopDeck(input){
+  if(input?.schema!=='CrankMagicDeckHandoff@1'||typeof input.name!=='string'||input.name.length>180||!Array.isArray(input.rows)||input.rows.length>100||!Array.isArray(input.commanders)||input.commanders.length<1||input.commanders.length>2)throw Error('Invalid CrankMagic deck snapshot');
+  const rows=[...input.rows,...input.commanders.map(name=>({name,quantity:1}))];
+  if(rows.some(c=>typeof c.name!=='string'||!c.name.trim()||c.name.length>200||!Number.isSafeInteger(c.quantity)||c.quantity<1||c.quantity>100)||rows.reduce((n,c)=>n+c.quantity,0)!==100)throw Error('Your snapshot must contain exactly 100 cards including commander(s)');
+  if(new Set(input.commanders).size!==input.commanders.length||input.rows.some(c=>input.commanders.includes(c.name)))throw Error('Commander appears twice in the snapshot');
+  const merged=new Map();for(const row of rows)merged.set(row.name,(merged.get(row.name)||0)+row.quantity);
+  const normalized=[...merged].map(([name,quantity])=>({name,quantity}));await hydrate(normalized);
+  const d={id:`handoff:${randomUUID()}`,source:'library',name:input.name,commander:input.commanders[0],commanders:[...input.commanders],rows:normalized};
+  d.snapshot=snapshot(d);decks.push(d);
+  return {id:d.id,name:d.name,commander:d.commander,deckHash:d.snapshot.gameplayHash};
 }
 export function setupCatalog(){return {schema:'CommanderSetupCatalog@1',variantCount:variants.length,rungCount:decks.filter(d=>d.source==='preloaded').length,priceAsOf:cardFile.generatedAt,
   commanders:[...byName.values()].filter(c=>c.isCommander||c.commander||decks.some(d=>d.commander===c.name)).map(c=>({name:c.name,image:c.image,colors:c.colorIdentity||[]})).sort((a,b)=>a.name.localeCompare(b.name)),
@@ -103,6 +115,7 @@ export async function prepareSetup(config){
     }
     await hydrate(d.rows);const check=assess(d,config);if(!check.ok)throw Error(`${s.name}: ${check.problems.join('; ')}`);
     const frozen=snapshot(d),mechanics=mechanicsSnapshot(frozen);
+    s.aiCompatibility=compatibility(frozen,resolve(root,'../forge'));
     seats.push({...s,deck:frozen,mechanics,check,sourceUrl:d.url||null,sourceNotes:d.notes||[],pilot:s.seatId?{kind:'forge-native',profile:s.nativeProfile,difficultyRequested:s.difficulty,difficultyApplied:false}:{kind:'human'}});
   }
   return {schema:'CommanderPodPack@1',capturedAt:new Date().toISOString(),seed,settings:config,seats,podHash:sha256(canonical({seed,bracket:config.bracket,maxCost:config.maxCost,seats:seats.map(s=>({seatId:s.seatId,deckHash:s.deck.gameplayHash,mechanicsHash:s.mechanics.hash,pilot:s.pilot}))})),measured:false,bracketStatus:'catalog-count-check; strategy agreement and engine legality still required',priceAsOf:cardFile.generatedAt};

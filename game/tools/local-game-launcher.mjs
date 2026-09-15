@@ -18,7 +18,7 @@ export async function launchLocalGame(pod){
   const commit=execFileSync('git',['-c',`safe.directory=${forge.replaceAll('\\','/')}`,'-C',forge,'rev-parse','HEAD'],{encoding:'utf8',windowsHide:true}).trim();
   if(commit!==lock.commit)throw Error('Pinned Forge revision mismatch');
   const jar=resolve(forge,`forge-gui-desktop/target/forge-gui-desktop-${lock.version}-jar-with-dependencies.jar`),classes=resolve(root,'game/.local/classes');mkdirSync(classes,{recursive:true});
-  const sources=['ForgeProbe.java','ForgeLocalGame.java'].map(f=>resolve(root,'game/engine-adapter/src/crankmagic',f));
+  const sources=['ForgeProbe.java','ForgeLocalGame.java','ForgeBrowserBridge.java'].map(f=>resolve(root,'game/engine-adapter/src/crankmagic',f));
   execFileSync(resolve(jdk,'bin/javac.exe'),['-encoding','UTF-8','-cp',jar,'-d',classes,...sources],{encoding:'utf8',windowsHide:true});
   const directory=resolve(root,'game/.local/games',new Date().toISOString().replace(/[^\w-]/g,'-')),profile=resolve(directory,'forge-profile');mkdirSync(profile,{recursive:true});
   writeFileSync(resolve(directory,'pod.json'),JSON.stringify(pod,null,2));
@@ -37,4 +37,18 @@ export async function launchLocalGame(pod){
   child.on('error',e=>{running.status='error';running.error=e.message;log.end();});
   child.on('exit',code=>{running.status=code===0?'closed':'error';running.exitCode=code;log.end();});
   return liveStatus();
+}
+export async function browserBridge(operation,body){
+  const state=liveStatus();if(!state.directory||!running?.child||running.child.exitCode!==null)throw Error('No local game is running');
+  const file=resolve(state.directory,'browser-bridge.json');if(!existsSync(file))throw Error('This match uses the earlier desktop adapter. Start a new match to use browser controls.');
+  const connection=JSON.parse(readFileSync(file));if(!Number.isSafeInteger(connection.port)||connection.port<1||connection.port>65535)throw Error('Invalid local bridge');
+  const response=await fetch(`http://127.0.0.1:${connection.port}/${operation}`,{method:body?'POST':'GET',headers:{'X-CrankMagic-Bridge':connection.token,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(5000)});
+  const value=await response.json();if(!response.ok)throw Error(value.error||'Engine action failed');
+  if(operation==='view'&&value.state?.players){
+    const pod=JSON.parse(readFileSync(resolve(state.directory,'pod.json'))),facts=new Map();
+    for(const s of pod.seats)for(const c of [...s.deck.commanders,...s.deck.library])facts.set(c.name,c);
+    for(const p of value.state.players)for(const z of Object.values(p.zones))for(const c of z.cards){const fact=facts.get(c.name);if(fact){c.art=fact.art?.normal;c.typeLine=fact.typeLine;}}
+    value.pod={seats:[pod.seats[0]]};
+  }
+  return value;
 }

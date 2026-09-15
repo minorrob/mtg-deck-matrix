@@ -419,3 +419,8 @@ Defer accounts/cloud sync, monetization, an independent second deck editor, broa
 - The initial planning pass did not build an engine. The subsequent C0 work built pinned Forge, ran actual four-deck games, checked full-game replay, exercised pending-opening-choice recovery, and created the interactive table preview. Validation details and limitations live in the evidence report.
 - Companion deliverables: `commander-table-concept.png`, an illustrated HTML review, and `mockup-prompt.txt`. The concept was generated with the built-in image-generation tool. It is not a rules-accurate screenshot or an implemented UI.
 - No repository push, PR creation, production deployment, collection edit, or paid gameplay API call was performed.
+
+
+## CrankMagic Online integration checkpoint — 2026-09-15
+
+The product entry is the existing **Play** route (#game), inside the CrankMagic shell. The sidebar collapses by default. Screen one is Game Setup; screen two contains two, three, or four participating playmats and the shared center life manager. See [current implementation and remaining gates](../game/docs/browser-play-checkpoint.md) and the [native AI card audit](../game/docs/ai-card-support.md). The live browser bridge is a solo beta with explicit native fallback; it does not complete the API pilot, causal telemetry, or remote-human milestones.
