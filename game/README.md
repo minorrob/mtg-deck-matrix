@@ -1,40 +1,29 @@
 # CrankMagic Online — local browser play
 
-See the current [browser play checkpoint](docs/browser-play-checkpoint.md) and [AI card audit](docs/ai-card-support.md). The implementation now includes setup-first Play integration and a live browser bridge with native fallback; API pilots remain pending. The historical replay/proof instructions below describe the earlier checkpoint.
+Open the **Play** tab in CrankMagic. The public site offers **Open game setup**, which opens the local companion at http://127.0.0.1:8768/app/#game. The local service and pinned Forge runtime must be running on this computer.
 
-This earlier checkpoint of the [accepted plan](../docs/commander-simulator-plan-2026-09-15.md) provides a recorded browser table and Game Setup that launches a human-versus-native-AI match in standalone Forge. **The custom browser table remains a replay; API pilots are not implemented.** [Evidence and remaining gates](docs/c0-evidence.md).
-
-[Table preview image](docs/table-preview.png) · [Grouped Focus preview](docs/focus-board-preview.png). The local branch includes merged website PRs #220 and #221; the engine fixture preserves its original #219 data provenance.
-
-## Open the table
-
-From the repository root:
+From this repository:
 
 ```powershell
-node game/tools/build-probe-review.mjs
 node game/tools/serve-review.mjs
 ```
 
-Open **http://127.0.0.1:8768/app/#game** for the current game. Use **http://127.0.0.1:8768/?replay=1** for the historical replay. The server binds only to loopback. It serves eight explicit asset/replay routes and local setup/status APIs; authenticated same-origin POSTs prepare decks and launch Forge. It makes no AI API calls. Its replay input is the local `health-full-42` run; another checkout must generate a run first or supply its run directory to `build-probe-review.mjs`. Do not expose this diagnostic server to other players.
+## Start and play
 
-## Start a personal game
+1. Choose your saved deck, a preloaded variation, a Lab starting list, or a public Archidekt deck.
+2. Set bracket and budget, then choose one to three native AI opponents and their commanders/decks.
+3. **Prepare decks**, review the resolved hundred and compatibility notes, then **Launch game**.
+4. Keep or mulligan the opening hand. Double-click the library for your pending draw-step draw. Drag a land/spell from hand or your commander onto your mat.
+5. Forge pays a legal mana cost automatically when its planner can pay it. Targets, optional effects and non-mana decisions remain yours. Unpayable costs produce a notification; cancel returns the card through the engine.
+6. Use the image-based card action panel, phase controls, and response windows. Empty opponent priority stops are skipped; effect responses and end-step opportunities remain. Yield skips empty stops through that turn and still stops for stack effects and required choices.
+7. Use **View options** to follow the active player or hide either side pane. **Show board** swaps a seat into the main canvas; **My board** returns yours. Focus remains available separately.
+8. Cards spread out until crowded. Drag battlefield cards together to group them, or drag a card out onto empty mat space. These arrangements never change game state. Layout groups currently last for the browser session.
+9. **History** supports card/event search, phase filtering and more events. **Tracker** includes mana sources by color, observed mechanics, current rules and notes.
+10. **Game setup → End current game** ends the engine position while retaining the private local journal. Ending a position is not a resumable save.
 
-Choose **Game setup**, select the table bracket and maximum recorded USD deck cost, then configure your deck and 1–3 AI opponents. Sources include the six saved decks, 50 archived variations with four lists each, the existing Lab starting-list builder, and a bounded Archidekt search or explicit public URL. Select an AI commander or choose random. Prepare resolves the exact hundred and caches card definitions before showing the commanders, costs and source for review. Forge performs the final legality check.
+Only one human plus native Forge AI is implemented. API-powered pilots, remote human seats/QR invitations, durable engine checkpoints and complete browser handling of every complex card choice remain future work. Some choices still require the Forge window. Native AI compatibility warnings remain visible before launch. Card text is not a guarantee that native AI supports every strategy.
 
-**Start standalone game** opens Forge's native game window, with the human hand and native rules prompts. Keep or mulligan your opening hand there. The web replay does not track this live match. Native play styles use Forge profiles; saved Difficulty 1–5 applies only to the future API pilot. Extra human seats are scoped for C8. The current price/known-Game-Changer checks are not full bracket certification, and a Lab starting list is not simulation-optimized.
-
-Each launch uses a separate `game/.local/games/<timestamp>/` profile, deck pack, mechanics snapshot, engine/adapter manifest, console log and private event journal. The launcher uses the pinned Forge desktop module-access flags required on Java 17. A new launch is blocked while the previous child is open. Close Forge before preparing another match in that server session. No remote crash-report initializer is invoked by the custom entry point.
-
-[Player controls and hosting requirements](../docs/commander-controls-and-hosting.md) specify contextual ability buttons, automatic mana payment, physical counter visuals, complete mechanics telemetry and the infrastructure for browser multiplayer. These custom live controls and complete causal reports remain implementation work.
-
-The phone-shaped counter sits between all four boards. Each board follows Rob's reference mat: battlefield upper left, lands below, Command / Exile over Library / Graveyard on the right. The human seat uses the supplied floating-cube mat artwork. Lands remain battlefield objects; the split is presentation only. Library piles show a back and count.
-
-The desktop overview sizes the four mats and hand to the viewport. Your hand has left/right arrows in overview and Focus. Focus also shows visual Command / Exile / Library / Graveyard piles. **Your deck** browses the saved starting list, never shuffled library order. Drag-to-play is required in solo hardening but cannot mutate this read-only replay; it awaits the live legal-decision bridge. The [follow-up scope](../docs/commander-human-play-and-multiplayer.md) specifies that bridge interaction and the later C8 phase for 2–4 humans plus optional AI seats, with two-column CSV deck imports.
-
-Select a player counter for life, poison, damage from every commander, remaining thresholds, and the recorded loss reason. Select a card for actual artwork; **View hand**, **Focus board**, and zone piles provide larger views. Focus fills the window with wrapping groups for creatures, artifacts, enchantments, planeswalkers, battles, other permanents, and mana / lands. Its slider sizes cards from 120–260 px; empty groups collapse to a summary. Life counters, public zones, and a shortcut to your hand remain in its header. Card and zone inspection opens above Focus and returns to the same board. Opponent hands remain hidden. The small life display on each mat mirrors the central counter. Use the timeline to inspect recorded phases. Game Setup saves each opponent's intended Difficulty 1–5; those settings do not change the native pilots that produced this recording.
-
-Card images currently load directly from Scryfall. The seven missing non-token image references were resolved from the public committed fixture. Token artwork, offline caching, selectable faces, full stack presentation, and attachment-aware grouping are later UI work. Focus assigns each permanent to one group using the replay's card-facts type line: creatures take precedence, then lands, then artifacts and enchantments. Mana rocks stay under Artifacts; face-down or missing-type objects stay under Other permanents. This is a visual partition, not current-type adjudication. The preview groups matching recorded attributes; its projection does not yet include attachments and all continuous effects.
-
+See [browser play checkpoint](docs/browser-play-checkpoint.md), [latest validation](docs/play-ux-validation-2026-09-15.md), and [AI card audit](docs/ai-card-support.md). The remaining instructions below reproduce the earlier engine proof, not the current interactive UI.
 ## Reproduce the engine proof
 
 Prerequisites: Node 24, Git, a JDK 17, Maven 3.9.11, and the Forge checkout at `game/engine-adapter/forge.lock.json`'s commit. The Windows runtime used here is Temurin 17.0.20.1+1. Forge is GPL-3.0-or-later; the Java adapter source carries that license notice. Redistributing a bundled release will require its corresponding source and notices.

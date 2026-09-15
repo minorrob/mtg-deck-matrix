@@ -22,6 +22,13 @@ export function liveStatus(){
   if(running.child&&running.child.exitCode!==null&&!existsSync(resolve(running.directory,'summary.json')))status.status=running.status;
   return status;
 }
+export async function closeLocalGame(){
+  if(!running?.child||running.child.exitCode!==null)throw Error('This host does not own an active engine. Close the original engine window.');
+  const child=running.child;
+  await new Promise((resolve,reject)=>{const timeout=setTimeout(()=>reject(Error('The engine has not closed yet')),5000);child.once('exit',()=>{clearTimeout(timeout);resolve();});if(!child.kill()){clearTimeout(timeout);reject(Error('Could not close the engine'));}});
+  running.status='closed';delete running.error;
+  return liveStatus();
+}
 export async function launchLocalGame(pod){
   if(running?.resumed){try{await browserBridge('view');throw Error('The resumed match is still running. Finish it before launching another.');}catch(error){if(!['closed','finished'].includes(liveStatus().status))throw error;}}
   if(running?.child&&running.child.exitCode===null)throw Error('A standalone match is already running. Finish or close its Forge window first.');
@@ -61,6 +68,7 @@ export async function browserBridge(operation,body){
     for(const p of value.state.players)for(const z of Object.values(p.zones))for(const c of z.cards){const fact=facts.get(c.name);if(fact){c.art=fact.art?.normal;c.typeLine=fact.typeLine;}}
     value.pod={seats:[pod.seats[0]]};value.matchId=pod.podHash;value.appearance=pod.seats.map(s=>({seatId:s.seatId,playmat:s.playmat,playmatChoice:s.playmatChoice}));
     value.telemetry=matchTelemetry(state.directory,value.state);
+    for(const p of value.state.players)p.commanderIdentity=[...new Set(pod.seats.find(s=>s.seatId===p.playerId)?.deck.commanders.flatMap(c=>c.colorIdentity||[])||[])];
     const rules=new Map(pod.seats.flatMap(s=>(s.mechanics?.cards||[]).map(c=>[c.name,c])));
     for(const p of value.state.players)for(const z of Object.values(p.zones))for(const c of z.cards)if(c.name&&!c.faceDown){c.oracleText=rules.get(c.name)?.oracleText||'';c.colorIdentity=facts.get(c.name)?.colorIdentity||[];}
     value.state.stack=value.telemetry.stack.map(item=>({...item,...(!item.faceDown&&item.name?{art:facts.get(item.name)?.art?.normal,typeLine:facts.get(item.name)?.typeLine}: {})}));

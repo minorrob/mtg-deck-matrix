@@ -137,6 +137,7 @@ public final class ForgeProbe {
         if (v instanceof StackItemView s) return obj("stackId",s.getId(),"source",capture(s.getSourceCard()),"actor",capture(s.getActivatingPlayer()),"isTrigger",s.isTrigger());
         if (v instanceof Card c) return capture(c.getView());
         if (v instanceof Player p) return capture(p.getView());
+        if (v instanceof com.google.common.collect.Multimap<?,?> multimap) return capture(multimap.asMap());
         if (v instanceof Map<?,?> map) {
             List<Object> entries=new ArrayList<>();
             map.forEach((k,value)->entries.add(obj("key",capture(k),"value",capture(value))));

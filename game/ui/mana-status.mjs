@@ -16,7 +16,7 @@ export function sourceColors(card,identity=[],opponentColors=[]){
   return [...colors];
 }
 export function manaStatus(player,players,identity=[]){
-  const opposing=[...new Set(players.filter(p=>p.playerId!==player.playerId).flatMap(p=>p.zones.Battlefield.cards.filter(c=>c.typeLine?.includes('Land')).flatMap(c=>sourceColors(c))))];
+  const opposing=[...new Set(players.filter(p=>p.playerId!==player.playerId).flatMap(p=>p.zones.Battlefield.cards.filter(c=>c.typeLine?.includes('Land')).flatMap(c=>sourceColors(c,p.commanderIdentity||[]))))];
   const counts=Object.fromEntries(manaColors.map(c=>[c,{untapped:0,tapped:0,floating:0}]));let shared=0;
   for(const card of player.zones.Battlefield.cards){const colors=sourceColors(card,identity,opposing);if(colors.length>1)shared++;for(const color of colors)if(counts[color])counts[color][card.tapped?'tapped':'untapped']++;}
   for(const mana of player.mana||[])if(counts[mana.color])counts[mana.color].floating++;

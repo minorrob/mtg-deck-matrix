@@ -67,7 +67,9 @@ export async function openGameSetup(imported){
   const matPreferences=readMatPreferences();for(const s of config.seats)s.playmat=validPlaymat(matPreferences[s.seatId])?matPreferences[s.seatId]:validPlaymat(s.playmat)?s.playmat:defaultPlaymat(s.seatId);
   const current=await fetch('/api/live').then(r=>r.json());
   head.querySelector('.setup-resume')?.remove();
+  head.querySelector('.setup-end')?.remove();
   render(imported?'Your current CrankMagic deck has been received. Prepare the table to check costs and mechanics.':'');if(['ready','playing'].includes(current.status)){const resume=e('button','setup-resume','Resume current table');resume.addEventListener('click',()=>window.dispatchEvent(new Event('crankmagic-game-ready')));head.insertBefore(resume,close);}
+  if(['ready','playing'].includes(current.status)&&!current.resumed){const end=e('button','setup-end','End current game');end.addEventListener('click',async()=>{if(end.dataset.confirm!=='yes'){end.dataset.confirm='yes';end.textContent='End game · keep journal';render('Ending this game keeps its local journal, but the live position cannot be resumed. Click End game again to return to a fresh setup.');return;}try{end.disabled=true;await post('/api/close-game',{});window.dispatchEvent(new Event('crankmagic-game-closed'));await openGameSetup();}catch(error){end.disabled=false;render(error.message);}});head.insertBefore(end,close);}
   document.body.classList.add('setup-screen');if(window.parent!==window)window.parent.postMessage({type:'crankmagic-mode',mode:'setup'},location.origin);
   if(!dialog.open)dialog.show();
 }

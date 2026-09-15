@@ -1,7 +1,7 @@
 import {defaultPlaymat,resolvePlaymat,readMatPreferences,paintMat} from '/playmats.mjs';
 import {openGameSetup} from '/setup.mjs';
 // Earlier running hosts do not advertise this module until their next restart.
-const {manaStatus,manaColors}=await import('/mana-status.mjs').catch(()=>({manaStatus:null,manaColors:[]}));
+const {manaStatus,manaColors,sourceColors}=await import('/mana-status.mjs').catch(()=>({manaStatus:null,manaColors:[]}));
 import '/handoff.mjs';
 import '/app/card-classify.js';
 import '/app/crankmagic-facets.js';
@@ -17,6 +17,7 @@ const data=await fetch('/match.json').then(r=>r.ok?r.json():{frames:[],log:[],po
 let resizingBoard=false,boardWidth=null,draggingCard=null,suppressClickUntil=0,pendingPlay=null,lastTurnName='',live=null,livePolling=false,gameToken=null,lastState='',choiceId=null,actionBusy=false,noticeUntil=0,lastDecision='';
 const pendingCasts=new Map(),handPositions=new Map();let appliedRevision=-1,appliedMatch=null,paymentAttempt=null,paymentNotice='',yieldTurn=null;
 let primarySeat=0,followActive=false,followedTurn=null;const visualGroups=new Map(),freePositions=new Map();
+let hideOpponents=false,hideInformation=false;
 try{const saved=Number(localStorage.getItem('crankmagic-board-width'));if(saved>=320&&saved<=2400)boardWidth=saved;}catch{}
 const names=['You · Chulane','Krenko','Atraxa','Shadrix'];
 const levels=new Map([[1,3],[2,3],[3,3]]);
@@ -36,7 +37,8 @@ function turnPlayer(){
   return rememberedTurn===f.turn?f.players.find(p=>p.name===lastTurnName):null;
 }
 function hasPriority(){if(Number.isInteger(frame()?.priorityPlayerId))return frame().priorityPlayerId===0;return live?.ui.prompt?.match(/^Priority:\s*([^\n]+)/)?.[1]===humanPlayer()?.name;}
-function turnLabel(){const p=turnPlayer(),phase=frame()?.phase;return `${p?.playerId===0?'YOUR TURN':p?`${p.name}’s turn`:frame()?.turn===0?'SETTING UP':'TURN OWNER UNAVAILABLE'} · Turn ${frame()?.turn??0} · ${String(phase&&phase!=='null'?phase:'Setup').replaceAll('_',' ').toLowerCase()}`;}
+function phaseName(phase){return ({MAIN1:'main phase 1',MAIN2:'main phase 2',END_OF_TURN:'end step',COMBAT_DECLARE_ATTACKERS:'declare attackers',COMBAT_DECLARE_BLOCKERS:'declare blockers'})[String(phase).toUpperCase()]||String(phase&&phase!=='null'?phase:'Setup').replaceAll('_',' ').toLowerCase();}
+function turnLabel(){const p=turnPlayer(),phase=frame()?.phase;return `${p?.playerId===0?'YOUR TURN':p?`${p.name}’s turn`:frame()?.turn===0?'SETTING UP':'TURN OWNER UNAVAILABLE'} · Turn ${frame()?.turn??0} · ${phaseName(phase)}`;}
 function notifyAction(text){$('notice').textContent=text;noticeUntil=Date.now()+6500;let toast=$('action-notice');if(!toast){toast=el('div','action-notice');toast.id='action-notice';toast.setAttribute('role','status');document.body.append(toast);}(($('focus').open)?$('focus'):document.body).append(toast);toast.textContent=text;toast.hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>toast.hidden=true,6500);}
 function playRestriction(c){
   if(!live)return 'Connect to your live table first.';
@@ -78,8 +80,8 @@ function castingPreview(){
   for(const cast of [...pendingCasts.values(),...announced]){
     const row=el('div','casting-card');row.dataset.pendingCard=cast.cardId;
     const art=button('',()=>inspect(cast.card),'casting-art');art.setAttribute('aria-label','Inspect pending '+cast.card.name);if(cast.card.art){const img=el('img');img.src=cast.card.art;img.alt=cast.card.name;art.append(img);}else art.textContent=cast.card.name;
-    const info=el('div');info.append(el('small','','CASTING'),el('strong','',cast.card.name),el('span','casting-status',cast.stage));
-    if(cast.stage.startsWith('On the stack')){info.append(el('small','','Enters play after the spell resolves.'));if(hasPriority()&&!live.ui.choice){const next=button('Pass priority',()=>gameAction({kind:'ok'},fresh=>fresh.ui.ok==='OK'&&fresh.ui.okEnabled&&!fresh.ui.choice&&fresh.state.stackSize>0&&fresh.state.priorityPlayerId===0),'primary-action');info.append(next);}}
+    const info=el('div');info.append(el('small','',cast.card.kind&&cast.card.kind!=='spell'?'ABILITY':'SPELL'),el('strong','',cast.card.name),el('span','casting-status',cast.stage));
+    if(cast.stage.startsWith('On the stack')){info.append(el('small','',cast.card.kind&&cast.card.kind!=='spell'?'The ability resolves after responses.':/Creature|Artifact|Enchantment|Planeswalker|Battle/.test(cast.card.typeLine||'')?'Enters play after the spell resolves.':'Resolves after players finish responding.'));if(hasPriority()&&!live.ui.choice&&/^Priority:/m.test(live.ui.prompt)){const next=button('Pass priority',()=>gameAction({kind:'ok'},fresh=>fresh.ui.ok==='OK'&&fresh.ui.okEnabled&&!fresh.ui.choice&&fresh.state.stackSize>0&&fresh.state.priorityPlayerId===0),'primary-action');info.append(next);}}
     else if(live.ui.ok==='Auto'&&!live.ui.okEnabled)info.append(el('small','','Not enough available mana for automatic payment. Use a mana source or cancel below.'));
     else if(live.ui.choice||live.ui.nativeFallback)info.append(button('Show choice',()=>{mountControls();controls.scrollIntoView({block:'nearest',behavior:'smooth'});}));
     row.append(art,info);tray.append(row);
@@ -184,7 +186,7 @@ function pileButton(p,zone,label,cls){
   if(zone==='Library'&&p.playerId===0){pile.addEventListener('dblclick',drawStepCard);if(live?.ui.choice?.mode==='draw')pile.classList.add('draw-ready');pile.title='Double-click to take your pending draw-step draw';}
   pile.setAttribute('aria-label',`${names[p.playerId]} ${label}, ${z.count} cards`);
   if(zone==='Library'&&z.count){const back=el('span','library-back');back.append(el('span','','✦'));pile.append(back);}
-  else if(face?.art){const art=el('img');art.src=face.art;art.alt=face.name;art.loading='lazy';pile.append(art);}else pile.append(el('span','pile-empty',z.count?'◇':'—'));
+  else if(face?.art){const art=el('img');art.draggable=false;art.src=face.art;art.alt=face.name;art.loading='lazy';pile.append(art);}else pile.append(el('span','pile-empty',z.count?'◇':'—'));
   pile.append(el('span','pile-count',z.count),el('span','mat-zone-label',label));return pile;
 }
 function groups(cards){
@@ -302,7 +304,7 @@ function matView(p,focused=false){
   const life=button('',()=>showHealth(p),'mat-life');life.setAttribute('aria-label',`${names[p.playerId]} life ${p.health.life}; inspect counters`);
   life.append(el('small','','Life'),el('strong','',p.health.life));mat.append(life);
   for(const [zone,label,cls] of pileZones)mat.append(pileButton(p,zone,label,`mat-pile ${cls}`));
-  if(p.playerId===0&&(pendingCasts.size||frame().stack?.length))mat.append(castingPreview());
+  if((p.playerId===primarySeat||focused)&&(pendingCasts.size||frame().stack?.length))mat.append(castingPreview());
   return mat;
 }
 function attachBoardResize(box){
@@ -320,8 +322,8 @@ function attachBoardResize(box){
 function renderSeat(p){
   const box=$(`seat-${p.playerId}`);box.replaceChildren();const active=turnPlayer()?.playerId===p.playerId;box.classList.toggle('active-turn',active);if(active)box.setAttribute('aria-label',names[p.playerId]+' · active turn');else box.removeAttribute('aria-label');
   const head=el('div','seat-heading');const title=el('div');title.append(el('div','seat-label',live?(p.playerId===0?'YOU · HUMAN':'AI · LOCAL PILOT'):(p.playerId===0?'YOUR DECK · RECORDED NATIVE PILOT':'AI OPPONENT · NATIVE PROBE')),el('div','seat-title',names[p.playerId]));
-  if(active)title.append(el('span','turn-badge','● TURN'));const health=button('',()=>showHealth(p),'seat-health');health.append(el('strong','',p.health.life),el('small','',`☣ ${p.health.poison}/10 · CMD ${p.health.commanderDamageMax}/21${p.health.status==='out'?' · OUT':''}`));health.setAttribute('aria-label',`${names[p.playerId]} life ${p.health.life}, poison ${p.health.poison}, commander damage ${p.health.commanderDamageMax}`);head.append(title,health,el('span','seat-hand-count',`Hand ${p.zones.Hand.count}`),button('Focus board',()=>focusBoard(p)));box.append(head,matView(p));if(p.playerId===0)attachBoardResize(box);
-  const identity=p.playerId===0?[...new Set((data.pod.seats[0]?.mechanics?.cards||[]).filter(c=>data.pod.seats[0].deck.commanders.some(cmd=>cmd.name===c.name)).flatMap(c=>c.colorIdentity||[]))]:p.zones.Command.cards.flatMap(c=>c.colorIdentity||[]);
+  if(active)title.append(el('span','turn-badge','● TURN'));const health=button('',()=>showHealth(p),'seat-health');health.append(el('strong','',p.health.life),el('small','',`☣ ${p.health.poison}/10 · CMD ${p.health.commanderDamageMax}/21${p.health.status==='out'?' · OUT':''}`));health.setAttribute('aria-label',`${names[p.playerId]} life ${p.health.life}, poison ${p.health.poison}, commander damage ${p.health.commanderDamageMax}`);head.append(title,health,el('span','seat-hand-count',`Hand ${p.zones.Hand.count}`),button('Focus board',()=>focusBoard(p)));box.append(head,matView(p));if(p.playerId===primarySeat)attachBoardResize(box);
+  const identity=p.commanderIdentity||(p.playerId===0?data.pod.seats[0]?.deck.commanders.flatMap(c=>c.colorIdentity||[]):p.zones.Command.cards.flatMap(c=>c.colorIdentity||[]))||[];
   if(!manaStatus)return;
   const status=manaStatus(p,frame().players,identity),mana=el('div','mana-status');mana.setAttribute('aria-label',names[p.playerId]+' mana sources');
   for(const color of manaColors){const n=status.counts[color],gem=el('span','mana-source mana-'+color);gem.append(el('b','',color),el('span','',`${n.untapped} / ${n.tapped}`),el('small','',`Pool ${n.floating}`));gem.title=`${color}: ${n.untapped} untapped sources, ${n.tapped} tapped sources; ${n.floating} floating mana. Source count is not mana quantity or guaranteed availability.`;mana.append(gem);}
@@ -345,11 +347,13 @@ const tracker=el('section','tracker-pane');tracker.id='tracker-pane';tracker.set
 $('inspector').setAttribute('role','tabpanel');$('inspector').setAttribute('aria-labelledby','tab-info');$('events').setAttribute('role','tabpanel');$('events').setAttribute('aria-labelledby','tab-history');tabs.append(infoTab,statsTab,historyTab);sidebar.prepend(tabs);sidebar.append(tracker);
 function selectPane(value){trackerTab=value;for(const [b,id]of [[infoTab,'info'],[statsTab,'tracker'],[historyTab,'history']])b.setAttribute('aria-selected',String(value===id));for(const n of sidebar.querySelectorAll('.aside-title,#inspector'))n.hidden=value!=='info';for(const n of sidebar.querySelectorAll('.log-header,#events'))n.hidden=value!=='history';tracker.hidden=value!=='tracker';if(value==='tracker')renderTracker(true);if(value==='history')renderHistory();}
 function historyRows(){if(!frame())return [];return live?(live.telemetry?.recent||[]):data.log.filter(e=>e.sequence<=frame().sequence).slice(-80).reverse().map(e=>({id:e.eventId,turn:e.turn,label:logText(e),name:''}));}
-function historyContent(){const body=el('div','history-feed'),rows=historyRows();body.append(el('p','fine','Recent recorded public card activity · newest first. Private draws and choices are hidden.'));
-  for(const e of rows){const row=el('div','history-row');row.append(el('small','',`TURN ${e.turn??'?'}${e.playerId!=null?' · '+names[e.playerId]:''}`),el('strong','',e.label),el('span','',e.name||''));body.append(row);}
-  if(!rows.length)body.append(el('p','empty',live?.telemetry?'No public card activity recorded yet. Plays and abilities will appear here.':'History is unavailable from this host.'));return body;}
+let historyQuery='',historyLimit=80,historyPhases=false;
+function historyContent(){const body=el('div','history-feed'),rows=historyRows();body.append(el('p','fine','Recorded public activity · newest first. Private draws and choices are hidden.'));
+  const search=el('input');search.type='search';search.placeholder='Find a card or event…';search.setAttribute('aria-label','Search game history');search.value=historyQuery;const phaseLabel=el('label','fine'),phaseToggle=el('input');phaseToggle.type='checkbox';phaseToggle.checked=historyPhases;phaseLabel.append(phaseToggle,document.createTextNode(' Include phase changes'));const list=el('div'),more=button('Show more events',()=>{historyLimit+=80;draw();});
+  function draw(){list.replaceChildren();const visible=rows.filter(e=>(historyPhases||!/^(untap|upkeep|draw|main1|main2|combat .+|end of turn|cleanup)$/.test(e.label))&&(!historyQuery||[e.label,e.name,names[e.playerId]].join(' ').toLowerCase().includes(historyQuery.toLowerCase())));for(const e of visible.slice(0,historyLimit)){const row=el('div','history-row');row.append(el('small','',`TURN ${e.turn??'?'}${e.playerId!=null?' · '+names[e.playerId]:''}`),el('strong','',/^(main1|main2)$/i.test(e.label)?phaseName(e.label):e.label),el('span','',e.name||''));list.append(row);}if(!visible.length)list.append(el('p','empty',rows.length?'No matching events.':'Public activity will appear here as the game progresses.'));more.hidden=visible.length<=historyLimit;}
+  search.addEventListener('input',()=>{historyQuery=search.value;draw();});phaseToggle.addEventListener('change',()=>{historyPhases=phaseToggle.checked;draw();});body.append(search,phaseLabel,list,more);draw();return body;}
 let historyKey='';
-function renderHistory(){const rows=historyRows(),key=JSON.stringify(rows);if(key===historyKey)return;historyKey=key;$('event-count').textContent=rows.length+' recent events';$('events').replaceChildren(historyContent());if($('detail').open&&$('detail').dataset.history==='true')$('detail-body').replaceChildren(historyContent());}
+function renderHistory(){if(document.activeElement?.matches('input[aria-label="Search game history"]'))return;const rows=historyRows(),key=JSON.stringify(rows);if(key===historyKey)return;historyKey=key;$('event-count').textContent=rows.length+' events';$('events').replaceChildren(historyContent());if($('detail').open&&$('detail').dataset.history==='true')$('detail-body').replaceChildren(historyContent());}
 function openHistory(){showDialog('Game history',historyContent());$('detail').dataset.history='true';}
 const historyShortcut=button('History',openHistory);document.querySelector('header').append(historyShortcut);$('close-focus').before(button('History',openHistory));
 $('detail').addEventListener('close',()=>delete $('detail').dataset.history);
@@ -358,6 +362,10 @@ function renderTracker(force=false){
   if(!trackerFacts){trackerFacts=new Map();fetch('/app/data/cards.json').then(r=>r.json()).then(d=>{for(const c of d.cards)trackerFacts.set(c.name,c);renderTracker(true);}).catch(()=>{});}
   const chooser=el('select');chooser.setAttribute('aria-label','Track player');for(const p of frame().players){const o=el('option','',names[p.playerId]);o.value=p.playerId;chooser.append(o);}chooser.value=trackerPlayer;chooser.addEventListener('change',()=>{trackerPlayer=Number(chooser.value);renderTracker(true);});tracker.append(chooser);
   const p=frame().players.find(p=>p.playerId===trackerPlayer)||humanPlayer(),rows=(t?.cards||[]).filter(c=>c.controller===p.playerId),sum=k=>rows.reduce((n,c)=>n+(c[k]||0),0);
+  if(manaStatus){
+    const identity=p.commanderIdentity||(p.playerId===0?data.pod.seats[0]?.deck.commanders.flatMap(c=>c.colorIdentity||[]):p.zones.Command.cards.flatMap(c=>c.colorIdentity||[]))||[],mana=manaStatus(p,frame().players,identity),section=el('section');section.append(el('h3','','Mana by color'));const table=el('table','mana-breakdown'),head=el('tr');for(const label of ['Color','Untapped','Tapped','Pool'])head.append(el('th','',label));table.append(head);for(const color of manaColors){const row=el('tr'),n=mana.counts[color];for(const value of [color,n.untapped,n.tapped,n.floating])row.append(el('td','',value));table.append(row);}section.append(table,el('p','fine','Source counts include lands, mana dorks and rocks. Multicolor sources appear in each color; counts cannot be added together. Restrictions, summoning sickness and mana quantity are checked by the engine when paying.'));
+    const sources=el('details');sources.append(el('summary','','Mana sources on this board'));for(const card of p.zones.Battlefield.cards){const fact={...card,oracleText:card.oracleText||trackerFacts.get(card.name)?.oracleText||''};if(!sourceColors(fact,identity,manaColors.slice(0,5)).length)continue;const kind=card.typeLine?.includes('Land')?'Land':card.typeLine?.includes('Creature')?'Mana dork':'Mana rock / permanent';sources.append(el('p','fine',`${card.name} · ${kind} · ${card.tapped?'tapped':'untapped'}`));}section.append(sources);tracker.append(section);
+  }
   const metrics=el('div','tracker-metrics');
   for(const [label,value]of [['Life',p.health.life],['Poison',p.health.poison],['Hand',p.zones.Hand.count],['Lands played',t?sum('lands'):'—'],['Tap events',t?sum('taps'):'—'],['Counters added',t?sum('countersAdded'):'—'],['Spells cast',t?.classified?sum('spells'):'—'],['Activated on stack',t?.classified?sum('abilities'):'—'],['Triggers stacked',t?.classified?sum('triggers'):'—'],['Proliferate selections',t?.proliferateInstrumented&&p.playerId===0?t.counts.proliferateChoices:'—']]){const box=el('div');box.append(el('strong','',value),el('small','',label));metrics.append(box);}tracker.append(metrics);
   tracker.append(el('p','fine',t?'Recorded events for visible sources, including actions later undone. Tap events include mana, attacks and costs. Ability counts cover stack entries; mana activations can bypass the stack. Proliferate selections count choices, not counters added. A dash means instrumentation is unavailable.':'The event tracker is waiting for the updated local host. Current board rules are available below.'));
@@ -383,6 +391,9 @@ function render(){
   renderHistory();
 }
 const follow=button('Follow active player: off',()=>{followActive=!followActive;followedTurn=null;follow.textContent='Follow active player: '+(followActive?'on':'off');refreshBoards();});$('view-deck').before(follow,button('My board',()=>{primarySeat=0;followActive=false;follow.textContent='Follow active player: off';refreshBoards();}));
+const viewOptions=el('div','view-options');viewOptions.setAttribute('popover','auto');viewOptions.id='table-view-options';viewOptions.append(follow);
+const hideOthers=button('Hide other boards',()=>{hideOpponents=!hideOpponents;document.body.classList.toggle('hide-opponents',hideOpponents);hideOthers.textContent=hideOpponents?'Show other boards':'Hide other boards';refreshBoards();});
+const hideInfo=button('Hide information pane',()=>{hideInformation=!hideInformation;document.body.classList.toggle('hide-information',hideInformation);hideInfo.textContent=hideInformation?'Show information pane':'Hide information pane';mountControls();refreshBoards();});viewOptions.append(hideOthers,hideInfo);document.body.append(viewOptions);const viewButton=button('View options',()=>viewOptions.togglePopover());$('view-deck').before(viewButton);
 $('timeline').max=data.frames.length-1;$('timeline').addEventListener('input',e=>{index=+e.target.value;render();});$('prev').addEventListener('click',()=>{index=Math.max(0,index-1);render();});$('next').addEventListener('click',()=>{index=Math.min(data.frames.length-1,index+1);render();});
 $('close-detail').addEventListener('click',()=>$('detail').close());$('clear-inspect').addEventListener('click',()=>$('inspector').replaceChildren(el('p','empty','Select any visible card to inspect it.')));
 $('card-detail').addEventListener('click',()=>$('card-detail').close());
@@ -401,7 +412,7 @@ const liveButton=button('Join live table',startLive,'join-live');document.queryS
 const controls=el('section','live-controls');controls.hidden=true;controls.setAttribute('aria-label','Your game decision');document.querySelector('.hand').prepend(controls);
 const actionDock=el('div','action-dock');sidebar.prepend(actionDock);
 const prompt=el('p'),decisionArt=el('div','decision-art'),options=el('div','live-options'),buttons=el('div','live-buttons');controls.append(prompt,decisionArt,options,buttons);
-function mountControls(){const host=$('focus').open&&$('focus').dataset.seat==='0'?$('focus-hand'):matchMedia('(min-width:1201px)').matches?actionDock:document.querySelector('.hand');if(host&&controls.parentElement!==host)host.prepend(controls);}
+function mountControls(){const host=$('focus').open&&$('focus').dataset.seat==='0'?$('focus-hand'):matchMedia('(min-width:1201px)').matches&&!hideInformation?actionDock:document.querySelector('.hand');if(host&&controls.parentElement!==host)host.prepend(controls);}
 window.addEventListener('resize',mountControls);
 function drawStepCard(){const q=live?.ui.choice;if(q?.mode==='draw')gameAction({kind:'answer',choiceId:q.id,indices:[]});else notifyAction(frame()?.phase==='DRAW'?'This draw step has already been handled by the engine.':'Your library can be drawn from when your draw-step draw is pending.');}
 async function gameAction(action,guard){
@@ -468,7 +479,7 @@ function renderDecision(){
     else if(q.min===0&&q.mode!=='draw')buttons.append(button('Cancel',()=>gameAction({kind:'answer',choiceId:q.id,indices:[]})));
   }else{
     choiceId=null;options.replaceChildren();
-    const confirm=button(priority&&ui.ok==='OK'?(turnPlayer()?.playerId===0&&frame().stackSize===0?'Continue from '+String(frame().phase).replaceAll('_',' ').toLowerCase():'Pass priority'):ui.ok||'Continue',()=>gameAction({kind:'ok'}));confirm.title=priority?'Finish acting for now and let the other players respond.':'';confirm.disabled=!ui.okEnabled||!!ui.nativeFallback;buttons.append(confirm);
+    const confirm=button(priority&&ui.ok==='OK'?(turnPlayer()?.playerId===0&&frame().stackSize===0?'Continue from '+phaseName(frame().phase):'Pass priority'):ui.ok||'Continue',()=>gameAction({kind:'ok'}));confirm.title=priority?'Finish acting for now and let the other players respond.':'';confirm.disabled=!ui.okEnabled||!!ui.nativeFallback;buttons.append(confirm);
     if(ui.cancelEnabled){const yielding=priority&&ui.cancel==='End Turn'&&turnPlayer()?.playerId!==0;const cancel=button(priority&&ui.cancel==='End Turn'?(turnPlayer()?.playerId===0?'End my turn':'Yield through this turn'):ui.cancel||'Cancel',()=>{if(yielding){yieldTurn=frame().turn;gameAction({kind:'ok'});}else gameAction({kind:'cancel'});});cancel.title=yielding?'Skip empty stops this turn. Spells, abilities and required choices still allow a response.':'';cancel.disabled=!!ui.nativeFallback;buttons.append(cancel);}
     if(ui.selectables.length)buttons.append(el('span','fine','Select highlighted cards on the playmat.'));
     // Player selection belongs to an explicit target/defender prompt, never ordinary priority.
@@ -495,7 +506,8 @@ async function pollLive(){
   }catch(error){$('notice').textContent=error.message;liveButton.disabled=false;livePolling=false;return;}
   setTimeout(pollLive,pendingCasts.size?250:750);
 }
-window.addEventListener('crankmagic-game-ready',()=>{document.body.classList.remove('setup-screen');$('game-setup').close();if(window.parent!==window)window.parent.postMessage({type:'crankmagic-live'},location.origin);reportCanvasSize();startLive();});
+window.addEventListener('crankmagic-game-ready',async()=>{await startLive();if(!live)return;document.body.classList.remove('setup-screen');$('game-setup').close();if(window.parent!==window)window.parent.postMessage({type:'crankmagic-live'},location.origin);reportCanvasSize();});
+window.addEventListener('crankmagic-game-closed',()=>{livePolling=false;live=null;gameToken=null;lastState='';lastDecision='';pendingCasts.clear();pendingPlay=null;visualGroups.clear();freePositions.clear();});
 if(new URLSearchParams(location.search).has('embedded')){document.body.classList.add('embedded');const heading=el('strong','embedded-title','CrankMagic Online'),sidebar=button('☰ Sidebar',()=>window.parent.postMessage({type:'crankmagic-sidebar'},location.origin)),editor=button('Deck editor',()=>window.parent.postMessage({type:'crankmagic-exit'},location.origin));document.querySelector('header').prepend(heading,sidebar,editor);}
 if(!new URLSearchParams(location.search).has('replay')){document.body.classList.add('setup-screen');await openGameSetup();}
 window.addEventListener('message',event=>{if(event.origin!==location.origin||event.source!==window.parent||window.parent===window)return;if(event.data?.type==='crankmagic-setup')openGameSetup(event.data.imported).catch(error=>{$('notice').textContent=error.message;});});

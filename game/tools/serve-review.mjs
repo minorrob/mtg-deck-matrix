@@ -5,7 +5,7 @@ import {fileURLToPath} from 'node:url';
 import {randomUUID} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import {setupCatalog,prepareSetup,importWorkshopDeck} from './setup-catalog.mjs';
-import {launchLocalGame,liveStatus,browserBridge,resumeLocalGame} from './local-game-launcher.mjs';
+import {launchLocalGame,liveStatus,browserBridge,resumeLocalGame,closeLocalGame} from './local-game-launcher.mjs';
 if(process.env.COMMANDER_RESUME)await resumeLocalGame(process.env.COMMANDER_RESUME);
 const port=Number(process.env.COMMANDER_PORT||8768);
 if(!Number.isInteger(port)||port<1024||port>65535)throw Error('Invalid local port');
@@ -40,6 +40,7 @@ createServer(async(req,res)=>{
     try{
       let text='';for await(const chunk of req){text+=chunk;if(text.length>64000)throw Error('Setup request too large');}const body=JSON.parse(text);
       if(pathname==='/api/game-action')return reply(200,await browserBridge('action',body));
+      if(pathname==='/api/close-game')return reply(200,await closeLocalGame());
       if(pathname==='/api/import-deck')return reply(200,await importWorkshopDeck(body));
       if(pathname==='/api/prepare'){
         if(preparing)throw Error('A deck preparation is already running');preparing=true;

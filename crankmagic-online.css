@@ -4,6 +4,7 @@
 
 
 #matrix-v2 .cm-playing>.cm-online-toolbar{display:none}
+.cm-online-toolbar:has(#online-use:disabled){display:none}
 #matrix-v2 .cm-playing>.cm-page-head{display:none}
 #matrix-v2 .cm-playing>.cm-page-head h1{font-size:24px}
 #matrix-v2 .cm-game-frame{display:block;width:100%;min-height:0;height:600px;border:0;border-radius:0;overflow:hidden;background:transparent}
