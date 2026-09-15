@@ -285,6 +285,12 @@ C.HELP.cards={title:'Cards',body:()=>`<div class="cm-help cm-help-wide">`
   +`<li><b>Paid</b> and <b>Quantity</b> are cells: click one and type.</li>`
   +`<li><b>Ready to add</b>, for walking owned copies into a deck, and <b>Make the change</b>, the pull-and-put list for one physical deck, are both under <b>More</b>.</li>`
   +`<li>Every change is one entry in the library, so <b>Undo</b> takes it back and every other view agrees.</li>`
+  +`</ul><h3>The Table is a table you play on</h3>`
+  +`<p><b>Table</b> lays the same rows out as piles on a mat, and it has two jobs depending on one thing: whether a deck is picked.</p><ul>`
+  +`<li><b>Pick a deck</b> and the middle becomes its play space. Lift a card into it to consider it; drop one in a tray to put it on the deck's list and reserve your copy; the scoreboard reads where confirming would leave the deck. The band along the bottom is the six statuses.</li>`
+  +`<li><b>Pick none</b> and it sorts your shelf: the band becomes your collection groups and a door to a new one, each tray fills the group you bind it to, and the statuses move up to a line of chips — still one click from being laid out, still somewhere a card can be dropped.</li>`
+  +`<li><b>Nothing is written until you confirm.</b> A move on the table joins a sitting; the bar says how many are pending, the receipt says what each one changes, and one <b>Undo</b> takes the whole sitting back. A sitting survives a reload.</li>`
+  +`<li>Cards from <b>Discover</b> arrive here with <i>Send to the table</i>, marked <i>Sent from Discover</i>. They are cards you are considering, never copies you own: file one in a group and it becomes a planned entry.</li>`
   +`</ul></div>`};
 /* THE SPREADSHEET. Rob's Master sheet, read from the library instead of kept beside it: one
    row per card; Own, Ordered, Bench and To buy across it; and for every deck two columns --

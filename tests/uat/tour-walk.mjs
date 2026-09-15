@@ -101,13 +101,22 @@ try {
     await page.locator("#cm-tour-layer").waitFor({state: "visible", timeout: 15000});
     for (let step = 0; step < 40; step += 1) {
       await page.waitForTimeout(1300);
-      const seen = await page.evaluate(() => {
+      /* The engine keeps trying to find and measure its target while a view is still loading
+         (Discover waits on its graph data), so this waits for the spotlight to settle rather
+         than sampling once and blaming the tour for the page's latency. What it must not do is
+         wait forever: a step that never resolves is exactly the rot this walk exists to catch. */
+      const read = () => page.evaluate(() => {
         const layer = document.getElementById("cm-tour-layer");
         const box = document.getElementById("cm-tour-spotlight").getBoundingClientRect();
         return {hit: layer.dataset.tourHit, title: document.getElementById("cm-tour-title").textContent,
           width: box.width, height: box.height,
           last: document.getElementById("cm-tour-next").textContent === "Done"};
       });
+      let seen = await read();
+      for (let wait = 0; wait < 12 && seen.hit !== "finish" && (seen.width < 10 || seen.height < 10); wait += 1) {
+        await page.waitForTimeout(1000);
+        seen = await read();
+      }
       if (seen.hit === "none") await fail(`${id}: step "${seen.title}" points at nothing`);
       if (seen.hit !== "finish" && (seen.width < 10 || seen.height < 10)) {
         await fail(`${id}: step "${seen.title}" matched ${seen.hit} but measured ${Math.round(seen.width)}x${Math.round(seen.height)}`);

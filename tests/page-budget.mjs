@@ -51,6 +51,11 @@ const PAGES = [
   [`pull?deck=${DECK}`, "Ready to add", ".cm-pull-group", [48, 8, 4], [48, 8, 4]],
   ["how", "How a deck comes together", ".cm-how-flow", [14, 3, 2], [14, 3, 2]],
   ["cards?tab=orders", "Cards · Orders", ".cm-orders, .cm-table", [24, 11, 4], [24, 11, 4]],
+  /* Cards · Table (15 September, play space PR 6). Everything above the mat is the page head,
+     the three tabs, the view switch and the five filters — the mat itself carries no prose, which
+     is the point of it: the words are on the cards. 40 words, 17 controls, and the same at both
+     widths because the phone gets the same toolbar over a narrower mat. */
+  ["cards?view=tabletop", "Cards · Table", ".cm-tt-mat", [40, 17, 16], [40, 17, 16]],
 ];
 const WIDTHS = [[1400, "desktop", 3], [390, "phone", 4]];
 

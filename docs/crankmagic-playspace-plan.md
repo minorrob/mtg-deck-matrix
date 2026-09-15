@@ -691,11 +691,45 @@ without naming a seat, so `pair()` now tries four things in order: the recorded 
 slot that names it, the same primary type, the nearest mana value. Only the first is a fact, and
 the row says which one it used.
 
-### PR 6 — The sweep
+### PR 6 — The sweep — **built, 15 September**
 
 - The tour gains the play space; the README and the help entry describe it; the page-budget and
   geometry numbers are re-recorded with reasons; `docs/crankmagic-tabletop-plan.md` is updated
   so one document describes the table.
+
+**The tour gained six steps and lost four lies.** Six new steps carry the play space: two on
+*Organize what you own* for shelf mode (the band is your groups; a tray is bound to one), two on
+*Buy what a deck still needs* for deck mode (the middle is the deck's play space; a tray puts the
+card on the list), and one on *Find cards you didn't know about* for *Send to the table*. No
+eighth journey: seven were specified and seven is what the chooser offers.
+
+**And the walk found real rot, which is what a sweep is for.** `tests/uat/tour-walk.mjs` had not
+been green in some time, and every failure was a step pointing at something that had moved:
+
+| Step | Was | Now |
+|---|---|---|
+| *Start from a card you already play* | the bare `#cm-graph-query` input, which collapses to nothing while the graph loads | the labelled search box around it |
+| *The report is where the detail lives* | two buttons that do not exist on a deck with no runs yet | falls back to the history panel itself |
+| *The shape, before any simulation* | the deck's Overview, where the curve is not | the deck's **Cards** tab, where it is |
+| *And what to do about it* | the Overview again | the **Guide** tab, where the recommendations live |
+| *Take it with you* | `export-view`, which moved behind the page's **More** menu | opens the menu first, like the other menu steps |
+
+Two timing fixes came with them. The engine's find-and-measure budget went from six seconds to
+twelve, because Discover renders after its graph data lands and on a cold cache that outlasted the
+old budget — leaving a step pointing at the middle of the screen with a one-pixel spotlight, which
+reads exactly like a step whose target is gone. And the walk now waits for the spotlight to settle
+rather than sampling once, so it blames the tour for the tour's faults and not for the page's
+latency.
+
+**The numbers, re-recorded with reasons.** `Cards · Table` joins the page budget at 40 words, 17
+controls and 16 of those words explainers, the same at 1400 and at 390 — everything above the mat
+is the page head, the tabs, the view switch and the five filters, and the mat itself carries no
+prose, which is rather the point of it: the words are on the cards.
+
+**One document describes the table.** `docs/crankmagic-tabletop-plan.md` now opens by saying so
+and pointing here. It is kept rather than deleted because the reasoning in it is still the
+reasoning the table rests on — why the piles are the model's own statuses and groupings, why a
+ghost is never counted as held, and why the view needs no data of its own.
 - **Already done, ahead of the sweep (Rob, 14 September).** The Cards "?" was rewritten from five
   prose paragraphs into grouped subheads, bullets and one drawing of the progression — the plan
   states on the left, the deck's list, the claim finalizing makes, the box, and the Bench as the
