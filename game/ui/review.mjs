@@ -1,3 +1,4 @@
+import {openGameSetup} from '/setup.mjs';
 const $=id=>document.getElementById(id);
 const data=await fetch('/match.json').then(r=>{if(!r.ok) throw new Error('No local replay found');return r.json();});
 const names=['You · Chulane','Krenko','Atraxa','Shadrix'];
@@ -173,13 +174,6 @@ $('focus-size').addEventListener('input',e=>{$('focus').style.setProperty('--foc
 $('view-hand').addEventListener('click',()=>zoneView(frame().players.find(p=>p.playerId===0),'Hand'));
 $('view-deck').addEventListener('click',deckView);
 $('notice').textContent='Real recorded engine states · Native AI proof · Human play, API pilots and measured reports are still being built.';
-$('setup').addEventListener('click',()=>{
-  const body=el('div');body.append(el('p','fine','Choose the intended difficulty for each API opponent. These settings export with your pod; the recorded proof used Forge-native pilots. The API pilots are not connected yet.'));
-  for(const id of [1,2,3]){const row=el('div','pilot-row');const label=el('div');label.append(el('strong','',names[id]),el('small','',data.pod.seats[id].deck.name));const select=el('select');select.setAttribute('aria-label',`${names[id]} AI difficulty`);for(const p of data.difficulties){const option=el('option','',`${p.level} · ${p.label}`);option.value=p.level;select.append(option);}select.value=levels.get(id);select.addEventListener('change',()=>levels.set(id,+select.value));row.append(label,select);body.append(row);}
-  body.append(el('p','fine','1 Learner → 5 Expert increases planning effort. Every level uses the same rules and sees only its own permitted information. Reassess after each draw; take actions only at legal decision points.'));
-  const actions=el('div','setup-actions');actions.append(button('Export pod settings',()=>{
-    const pod=structuredClone(data.pod);for(const seat of pod.seats)seat.pilot=seat.seatId===0?{kind:'human'}:{kind:'api',difficulty:levels.get(seat.seatId)};
-    const url=URL.createObjectURL(new Blob([JSON.stringify(pod,null,2)],{type:'application/json'}));const a=el('a');a.href=url;a.download='commander-pod-settings.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
-  }));body.append(actions);showDialog('Your pod · AI difficulty',body);
-});
+$('setup').textContent='Game setup';
+$('setup').addEventListener('click',()=>openGameSetup().catch(error=>showDialog('Game setup',el('p','fine',error.message))));
 render();const c=data.pod.seats[0].deck.commanders[0];inspect({name:c.name,art:c.art.normal,typeLine:c.typeLine,cardId:'commander'},1,true);

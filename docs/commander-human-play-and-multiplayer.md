@@ -2,6 +2,8 @@
 
 Status: accepted product direction; interaction work belongs to solo hardening, multiplayer is a later phase. This extends the [Commander plan](commander-simulator-plan-2026-09-15.md), not a replacement engine or another deck editor.
 
+The [controls, mechanics evidence, and hosting specification](commander-controls-and-hosting.md) adds Rob's requested dice/gems, legal ability menus, automatic mana payment with human choices, and concrete LAN/private-remote/browser-only hosting options. Internet hosting is now scoped as an optional later C8 deployment, rather than enabled in the current local server.
+
 ## 1. Finish Rob's game first: C2–C7
 
 ### Table and Focus

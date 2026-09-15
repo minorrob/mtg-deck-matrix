@@ -2,9 +2,11 @@
 
 **Accepted direction · C0 implementation in progress**  
 Reviewed September 14, 2026, evening in New York / September 15 UTC.  
-Initial research and game-fixture baseline: [`e2bf018`](https://github.com/minorrob/mtg-deck-matrix/commit/e2bf018b96e7a6ecae702abdd963f450501ace38), including #219. Implementation has since rebased onto main at `f98a8f6`, including merged [#220 Shelf mode](https://github.com/minorrob/mtg-deck-matrix/pull/220) and [#221 substitute pairing](https://github.com/minorrob/mtg-deck-matrix/pull/221). Rob authorized execution after reviewing this direction. The isolated `codex/commander-engine-c0` branch contains an executable Forge proof and a recorded-game table preview. See [the evidence and remaining gates](../game/docs/c0-evidence.md). The human/API game is not yet playable.
+Initial research and game-fixture baseline: [`e2bf018`](https://github.com/minorrob/mtg-deck-matrix/commit/e2bf018b96e7a6ecae702abdd963f450501ace38), including #219. Implementation has since rebased onto main at `f98a8f6`, including merged [#220 Shelf mode](https://github.com/minorrob/mtg-deck-matrix/pull/220) and [#221 substitute pairing](https://github.com/minorrob/mtg-deck-matrix/pull/221). Rob authorized execution after reviewing this direction. The isolated `codex/commander-engine-c0` branch contains an executable Forge proof and a recorded-game table preview. See [the evidence and remaining gates](../game/docs/c0-evidence.md). The custom browser game and API pilots remain incomplete; standalone human play is now available through Game Setup.
 
 ## 1. Recommended outcome
+
+Latest checkpoint: Game Setup prepares saved, archived, Lab, or Archidekt decks with per-deck mechanics snapshots and launches one human plus native Forge AI in a separate desktop window. A four-seat opening hand has been verified. This does not complete the custom web decision bridge or API pilots. See [controls and hosting](commander-controls-and-hosting.md) for the refined physical-table interactions, payment policy, telemetry and later human multiplayer infrastructure.
 
 Build **CrankMagic Commander as a local game companion**, connected to the existing website. Keep the website as the place to build and refine decks. Open the companion to play your exact list against three independently piloted AI decks, inspect all four battlefields, enjoy the card art, and return a detailed report to that deck's History and card table.
 

@@ -85,7 +85,21 @@ Browser checks confirmed hand scrolling to its disabled right boundary and back,
 
 The [human interaction and C8 scope](../../docs/commander-human-play-and-multiplayer.md) makes engine-authorized drag-to-play a solo-hardening prerequisite. No drag action or live game command is implemented in this read-only renderer. C8 follows C7 and scopes CSV import, mixed human/AI seats, server-filtered views, reconnection, and telemetry; no network hosting or CSV upload endpoint has been enabled.
 
-### Remaining engine and integration work
+### Game Setup and standalone human launch checkpoint
+
+Game Setup now resolves saved decks, the fifty archived variations / two hundred rung lists, Lab starting lists, or bounded public Archidekt candidates. It applies the recorded-price cap to the complete hundred, checks known Game Changer counts, and saves exact deck and card-definition hashes. Native profile selection is active; API difficulty is explicitly future-only. Extra human seats remain disabled pending C8.
+
+The supplied `2026-09-14-00.txt` showed an XStream conversion failure loading a bundled gauntlet during desktop initialization. The custom classpath launcher omitted Forge's `addopen.java.args`; it now reads and validates those arguments from the pinned desktop POM. The next retry exposed match-view creation off the Swing event dispatch thread, corrected with `invokeAndWait`. No engine checkout modification or user-profile cleanup was needed.
+
+Observed native result: a four-player match with Rob, Krenko, Atraxa and Shadrix, a seven-card human hand, 40 life, and a Keep / Mulligan prompt. That game was left for Rob. This is human play in Forge's native UI, not live play through the custom web mats, API pilots, or proof of a completed human match.
+
+A separate smoke run (`2026-09-15T03-28-40-114Z`) verified the updated adapter attaches its private journal before opening setup: status `ready`, 21 initial events including four shuffles, no startup exception. It was closed without playing. The earlier hand-verification run uses the earlier post-mulligan journal hook; its opening events are not complete. The final player-name adjustment compiled successfully. Full decision-answer logging and causal telemetry are still required before measured runs.
+
+Validation: four setup contract tests; six-deck snapshot tests; pilot-policy tests; final Java compilation; JavaScript syntax and whitespace checks. Default four-deck preparation succeeded. A random archived Depala Base list resolved to 100 cards at $102.16 with 76 distinct card definitions. Lab preparation produced a 100-card Krenko starting list at $201.65. A public Archidekt Krenko import exercised hydration but was rejected for missing prices on Warren Instigator and Pandemonium; successful end-to-end Archidekt launch is not claimed. An unauthenticated launch request returned 403. Browser inspection confirmed the setup fields and usable narrow-window layout. Fields lock during preparation so configuration cannot change underneath an accepted result.
+
+The [controls and hosting specification](../../docs/commander-controls-and-hosting.md) adds player-driven contextual abilities, physical counter overlays, engine-validated automatic payment, causal telemetry requirements, and infrastructure for later browser multiplayer. These controls are scoped, not implemented in the replay renderer.
+
+### Remaining engine and integration work (unchanged gates)
 
 1. Bridge a scripted spell/response sequence through real targets and payment, plus simultaneous trigger ordering, attack/block assignment, and a choice during resolution. Record every accepted answer.
 2. Kill and recover that scenario with an unresolved stack choice. Prove identical resulting state and no duplicate application.
