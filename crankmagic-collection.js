@@ -406,7 +406,7 @@ let tabletopStatusOrder=C.state.preferences.tabletopStatusOrder==='count'?'count
 let ttModel=null;
 /* The one keydown and the one resize the table has attached, so a redraw replaces them rather
    than stacking another pair on top (see the note where they are registered). */
-let ttKey=null,ttResize=null;
+let ttKey=null,ttResize=null,ttEscShielded=false;
 /* THE PLAY SPACE'S TWO QUESTIONS (plan §2.1, §2.3, §2.14), answered here because only this view
    knows the sandbox and the model. crankmagic-tabletop.js lays the middle out; it does not decide
    what is in your hand or do the arithmetic on the scoreboard.
@@ -537,7 +537,7 @@ function tabletop(params,shop=false){
         try{window.print();}catch(err){done();C.notice('This browser could not open the print dialog.',true);}},
       onTick:id=>{if(ttUI.ticked.has(id))ttUI.ticked.delete(id);else ttUI.ticked.add(id);draw();queueMicrotask(()=>$(`#cm-tt-host .cm-tt-card[data-record="${CSS.escape(id)}"]`)?.focus?.({preventScroll:true}));},
       onSelect:list=>{ttUI.selection=new Set(list);ttUI.from=ttUI.open;ttUI.open=null;ttUI.ticked.clear();draw();queueMicrotask(()=>$('#cm-tt-host .cm-tt-stage-actions button')?.focus?.({preventScroll:true}));},
-      onClear:()=>{rest();draw();},
+      onClear:why=>{if(why==='escape'&&ttEscShielded){ttEscShielded=false;return false;}rest();draw();},
       onMenu:(record,el)=>{actions['row-actions'](el);},
       onDrop:(pileId,ids)=>{try{tabletopDrop(pileId,ids);}catch(err){C.notice(err.message,true);}},
       /* MOVE TO… LISTS ONLY WHERE THE CARD CAN GO (Rob, 14 September). It offered every pile on the
@@ -616,9 +616,9 @@ function tabletop(params,shop=false){
      Escape ran twenty handlers, each redrawing through ITS OWN captured `params`: the last one to
      run won, so the table could come back scoped to a filter the reader had left behind. Only the
      current pair stands now, and the previous pair goes when it does. */
-  removeEventListener('keydown',ttKey);removeEventListener('resize',ttResize);
+  removeEventListener('keydown',ttKey);removeEventListener('resize',ttResize);ttEscShielded=false;
   /* Escape is the table at rest from anywhere on the page — a redraw can leave the focus on the body, where the mat's own key handler cannot hear it. Not while a dialog or a menu is open, and not from a field. */
-  const onKey=ev=>{const r=C.route();if(r.view!=='cards'||r.params.get('view')!=='tabletop'){removeEventListener('keydown',onKey);return;}if(ev.key!=='Escape'||ev.defaultPrevented||!(ttUI.open||ttUI.selection.size))return;if(document.querySelector('dialog[open]')||[...document.querySelectorAll('[popover]')].some(p=>p.matches(':popover-open'))||ev.target.closest?.('input,select,textarea'))return;ev.preventDefault();ttUI.open=null;ttUI.from=null;ttUI.page=0;ttUI.ticked.clear();ttUI.selection.clear();draw();};
+  const onKey=ev=>{const r=C.route();if(r.view!=='cards'||r.params.get('view')!=='tabletop'){removeEventListener('keydown',onKey);return;}if(ev.key!=='Escape')return;if(ttEscShielded){ttEscShielded=false;return;}if(ev.defaultPrevented||!(ttUI.open||ttUI.selection.size))return;if(document.querySelector('dialog[open]')||[...document.querySelectorAll('[popover]')].some(p=>p.matches(':popover-open'))||ev.target.closest?.('input,select,textarea'))return;ev.preventDefault();ttUI.open=null;ttUI.from=null;ttUI.page=0;ttUI.ticked.clear();ttUI.selection.clear();draw();};
   ttKey=onKey;addEventListener('keydown',onKey);
   /* The mat is sized from the host's width, so a resize redraws it. */
   let last=host.clientWidth;const onResize=()=>{if(C.route().view!=='cards'||C.route().params.get('view')!=='tabletop'){removeEventListener('resize',onResize);return;}if(Math.abs(host.clientWidth-last)>40){last=host.clientWidth;draw();}};
@@ -772,7 +772,7 @@ function fileInGroup(rows,g,tray){
 function sheet(params){
   const m=M.matrix(lens()),decks=m.decks;
   C.main.innerHTML=cardsHead(params,'library','sheet')
-   +`<div class="cm-toolbar"><label class="cm-search">Search cards<input id="cm-sheet-query" value="${e(sheetQ)}" placeholder="Card name or type"></label>${s('Show','sheetOnly',SHEET_SHOW,sheetOnly)}${s('Deck','sheetDeck',[['','All decks'],...decks.map(d=>[d.id,d.name])],sheetDeck)}</div>`
+   +`<div class="cm-toolbar"><label class="cm-search">Search cards<input id="cm-sheet-query" value="${e(sheetQ)}" placeholder="Card name or type"></label>${s('Show','sheetOnly',SHEET_SHOW,sheetOnly)}${s('Deck','sheetDeck',[['','All decks'],...decks.map(d=>[d.id,d.name])],sheetDeck)}${b('Return to the Table','open-tabletop')}</div>`
    +`<p class="cm-status-line" id="cm-sheet-status"></p><div id="cm-sheet-table"></div>`;
   const host=$('#cm-sheet-table'),zero='<span class="cm-sheet-zero">0</span>',alt=i=>i%2?' cm-sheet-alt':'';
   const draw=()=>{
@@ -894,7 +894,7 @@ if(scope!==pickScope){pickScope=scope;picked.clear();}
    page is on screen. */
 if(!phoneWatch){phoneWatch=true;PHONE.addEventListener('change',()=>{if(C.route().view==='cards')C.render();});}
 const shopTools=`<div class="cm-shop-bar"><button type="button" class="v-button cm-shop-search-btn" data-action="shop-search" aria-label="Search cards" aria-expanded="${searchOpen}" title="Search cards"><span aria-hidden="true">\u{1F50D}</span></button>${b('Ready to add','pull-picker')}${b(expanded?'Hide filters':(gbGet()?'Filters •':'Filters'),'roster-filters')}${b('Tools','shop-tools',{},false,{caret:'down'})}</div><label class="cm-search cm-shop-search" id="cm-shop-search"${searchOpen?'':' hidden'}>Search cards<input id="cm-roster-query" value="${e(filter.q)}" placeholder="Name, type or rules text"></label>`;
-C.main.innerHTML=cardsHead(params,tab,'table',{tight})+(shop?'':'<div id="cm-roster-stats"></div>')+`<div class="cm-actions">${[['card','Card',params.get('card')?(C.card(params.get('card'))||C.catalog.get(params.get('card')))?.name||'Card':''],['deck','Deck',params.get('deck')?M.deck(C.state,params.get('deck')).name:''],['group','Group',params.get('group')?C.state.groups.find(g=>g.id===params.get('group'))?.name||'':'']].filter(([,,v])=>v).map(([k,l,v])=>`<span class="cm-chip cm-scope-chip">${l}: ${e(v)}<button type="button" class="cm-chip-x" data-action="clear-scope" data-key="${k}" aria-label="Remove the ${l} filter" title="Remove this filter">×</button></span>`).join('')}</div>`+(tight?shopTools:`<div class="cm-toolbar"><label class="cm-search">Search cards<input id="cm-roster-query" value="${e(filter.q)}" placeholder="Name, type or rules text"></label>${b(expanded?'Hide filters':(activeFilters().length?`Filters (${activeFilters().length})`:'Filters'),'roster-filters')}${b('Columns','roster-columns')}${b('Clear filters','clear-filters')}${s('Collection group','groupPick',[['','All groups'],...C.state.groups.map(g=>[g.id,g.name])],params.get('group')||filter.group)}${s('Group rows by','groupBy',GROUP_CHOICES,gbGet())}</div>`)+`<div id="cm-filter-chips"></div><div id="cm-filter-host"></div>${shop?'<div id="cm-shop-strip"></div>':''}<div id="cm-roster-table"></div>`;
+C.main.innerHTML=cardsHead(params,tab,'table',{tight})+(shop?'':'<div id="cm-roster-stats"></div>')+`<div class="cm-actions">${[['card','Card',params.get('card')?(C.card(params.get('card'))||C.catalog.get(params.get('card')))?.name||'Card':''],['deck','Deck',params.get('deck')?M.deck(C.state,params.get('deck')).name:''],['group','Group',params.get('group')?C.state.groups.find(g=>g.id===params.get('group'))?.name||'':'']].filter(([,,v])=>v).map(([k,l,v])=>`<span class="cm-chip cm-scope-chip">${l}: ${e(v)}<button type="button" class="cm-chip-x" data-action="clear-scope" data-key="${k}" aria-label="Remove the ${l} filter" title="Remove this filter">×</button></span>`).join('')}</div>`+(tight?shopTools:`<div class="cm-toolbar"><label class="cm-search">Search cards<input id="cm-roster-query" value="${e(filter.q)}" placeholder="Name, type or rules text"></label>${b(expanded?'Hide filters':(activeFilters().length?`Filters (${activeFilters().length})`:'Filters'),'roster-filters')}${b('Columns','roster-columns')}${b('Clear filters','clear-filters')}${b('Return to the Table','open-tabletop')}${s('Collection group','groupPick',[['','All groups'],...C.state.groups.map(g=>[g.id,g.name])],params.get('group')||filter.group)}${s('Group rows by','groupBy',GROUP_CHOICES,gbGet())}</div>`)+`<div id="cm-filter-chips"></div><div id="cm-filter-host"></div>${shop?'<div id="cm-shop-strip"></div>':''}<div id="cm-roster-table"></div>`;
 foldPrints=foldFor(shop);pageSize=C.state.preferences.pageSize==='all'?Infinity:(Number(C.state.preferences.pageSize)||60);
 /* FIVE FILTERS IN VIEW, THE REST ONE CLICK AWAY (search and group sit in the toolbar): type,
    mana, colour, status, deck. Subtype, mechanic, flags, offers, mana value and
@@ -1075,7 +1075,7 @@ const foldCaption=r=>{const decks=[...new Set(r.partRows.map(p=>p.deckId?shortDe
 actions['pull-picker']=el=>{const decks=C.state.decks.filter(d=>!d.archived&&d.status==='final');if(!decks.length)throw Error('Finalize a deck first — Ready to add lists a finalized deck’s owned, reserved copies.');popAt(el,`<p>Ready to add for</p>${decks.map(d=>{const r=M.readiness(C.state,d),n=r.pullFromBench+r.pullFromOtherBox+r.remove;return b(`${d.name}${n?` · ${n} ready to add`:''}`,'deck-pull',{deck:d.id});}).join('')}`);};
 /* The phone toolbar's menus. Each one is the control the desktop shows inline, folded
    into a tap so the bar stays one row on a 375px screen. */
-actions['shop-tools']=el=>popAt(el,`<p>Cards</p>${b('Add cards','add-card')}${b('Import a list or library','import-list')}${b('Export this view (CSV)','export-view')}${b('Print buy list','print-buy-list')}${b('Columns','roster-columns')}<hr><p>Phone and computer</p>${b('Load an e-mailed backup…','restore')}${b('Send this library to e-mail…','share-export')}<hr>${b('Clear filters','clear-filters')}`);
+actions['shop-tools']=el=>popAt(el,`<p>Cards</p>${b('Add cards','add-card')}${b('Import a list or library','import-list')}${b('Export this view (CSV)','export-view')}${b('Print buy list','print-buy-list')}${b('Columns','roster-columns')}<hr><p>Phone and computer</p>${b('Load an e-mailed backup…','restore')}${b('Send this library to e-mail…','share-export')}<hr>${b('Clear filters','clear-filters')}${b('Return to the Table','open-tabletop')}`);
 /* The search field stays in the DOM whether or not it is showing, so the listener bound
    at render time keeps working and a typed query survives the toggle. */
 actions['shop-search']=el=>{const row=$('#cm-shop-search');if(!row)return;searchOpen=row.hidden;row.hidden=!searchOpen;el.setAttribute('aria-expanded',String(searchOpen));if(searchOpen)$('#cm-roster-query').focus();};
@@ -1335,7 +1335,13 @@ actions['row-actions']=el=>{const r=findRow(el.dataset.record);if(!r)throw Error
     +section('Plan',[r.kind==='lot'&&!M.PLANNED.includes(r.source)?b('Reserve for a deck','reserve-row',{record:r.recordId}):'',r.kind==='lot'&&r.allocation?b('Release reservation → To buy','release-row',{record:r.recordId}):'',r.deckId&&slotId?b('Replacements & options','replacement',{deck:r.deckId,slot:slotId}):'',r.deckId&&slotId?slotFlagButtons(r.deckId,slotId):''])
     +section('Record',[r.kind==='lot'?b('Edit print & details','edit-row',{record:r.recordId}):'',b('Add another copy','add-card',{card:r.cardId}),r.kind==='lot'?b('Add / move to group','group-row',{record:r.recordId}):'',r.kind==='entry'?b('Move / copy to group','group-entry-row',{record:r.recordId}):''])
     +(owned?`<hr>${b('Sell / Trade','offer-row',{record:r.recordId})}`:'');
-  document.body.append(menu);menu.showPopover();const place=()=>{if(!el.isConnected){if(menu.matches(':popover-open'))menu.hidePopover();return;}const rect=el.getBoundingClientRect();if(rect.bottom<0||rect.top>innerHeight){if(menu.matches(':popover-open'))menu.hidePopover();return;}menu.style.left=Math.max(8,Math.min(innerWidth-menu.offsetWidth-8,rect.right-menu.offsetWidth))+'px';menu.style.top=Math.max(8,Math.min(innerHeight-menu.offsetHeight-8,rect.bottom+5))+'px';menu.dispatchEvent(new Event('cm-moved'));};place();C.followAnchor(menu,place);
+  /* ESCAPE CLOSES ONE THING (Rob, 15 September). This menu opens over the Table too, and the
+     Table treats Escape as "back to the table at rest" from anywhere on the page. Chrome closes
+     a popover before any keydown listener runs, so asking "is a menu open?" inside that handler
+     always answers no -- and one Escape both dismissed the menu and swept the card off the
+     stage. The menu says so itself instead: the flag is set here and cleared by `toggle`, which
+     is queued and so lands after the keypress the Table is about to read. */
+  document.body.append(menu);menu.showPopover();ttEscShielded=true;menu.addEventListener('toggle',ev=>{if(ev.newState==='closed')ttEscShielded=false;});const place=()=>{if(!el.isConnected){if(menu.matches(':popover-open'))menu.hidePopover();return;}const rect=el.getBoundingClientRect();if(rect.bottom<0||rect.top>innerHeight){if(menu.matches(':popover-open'))menu.hidePopover();return;}menu.style.left=Math.max(8,Math.min(innerWidth-menu.offsetWidth-8,rect.right-menu.offsetWidth))+'px';menu.style.top=Math.max(8,Math.min(innerHeight-menu.offsetHeight-8,rect.bottom+5))+'px';menu.dispatchEvent(new Event('cm-moved'));};place();C.followAnchor(menu,place);
   wireSubmenu(menu,'cm-status-submenu');wireSubmenu(menu,'cm-put-submenu');wireSubmenu(menu,'cm-standin-submenu');
   menu.addEventListener('click',ev=>{const hit=ev.target.closest('[data-action]');if(hit&&hit.dataset.action!=='row-count')menu.hidePopover();});};
 /* THE ONE MOVE THAT LOSES SOMETHING. An owned copy sitting in a physical deck, or reserved to a

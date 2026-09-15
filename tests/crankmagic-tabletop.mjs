@@ -338,6 +338,13 @@ eq(T.printSheet({kind: "status", label: "Watched", rows: []}).includes("0 cards 
      row's piles are a dead end once the arrows reach them. */
   const ttSrc = readFileSync(path.join(ROOT, "crankmagic-tabletop.js"), "utf8");
   ok(!/cm-tt-chip cm-tt-allchip/.test(ttSrc), "Select all is not a pile chip");
+  /* ESCAPE IS ASKED FOR, NOT TAKEN. A control on the mat can open something of the host's own --
+     the row menu behind Status\u2026 -- and Chrome closes a popover before any listener runs, so the
+     table cannot tell whose Escape it is. It asks, and only swallows the key if the host did not
+     decline: a preventDefault before the answer cancels the popover's own close watcher and the
+     menu sticks open, which is how this was found. */
+  ok(/onClear\("escape"\) !== false\) ev\.preventDefault\(\)/.test(ttSrc),
+    "Escape is only swallowed once the host has not declined it");
   ok(/matches\("\[data-tt=open\], \[data-tt=deck-pick\]"\)\s*&&\s*\/\^Arrow\//.test(ttSrc),
     "and the arrows walk the back row's picks as well as the piles");
 }

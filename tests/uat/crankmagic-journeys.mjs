@@ -204,6 +204,12 @@ try{
   await page.locator('.cm-kpi.is-on').click();await page.waitForTimeout(400);eq(await page.locator('.cm-kpi.is-on').count(),0,'clicked again it lets every row back');
   await page.goto(BASE+'/'+ENTRY+'#cards?view=tabletop&tab=buy');await page.locator('.cm-tt-mat').waitFor({timeout:30000});ok(/ghost/.test(await page.locator('#cm-tt-status').innerText()),'the To buy tab has a Table of its ghosts');ok(await page.locator('select[name=ttStatus] option[value=owned]').count()===1,'Owned is a status on the Table too');
   await page.goto(BASE+'/'+ENTRY+'#cards');await page.locator('#cm-roster-table').waitFor();}
+ /* A WAY BACK FROM EVERY OTHER CARDS SCREEN (Rob, 15 September). The view switch in the head
+    already says Table, but it is a three-way segment in the page head; the toolbar is where a
+    reader who has just filtered something is looking. */
+ {const back=page.getByRole('button',{name:'Return to the Table',exact:true});eq(await back.count(),1,'the list offers a way back to the Table');
+  await back.click();await page.locator('.cm-tt-mat').waitFor();ok(/view=tabletop/.test(page.url()),'and it lands on the mat');
+  await page.goto(BASE+'/'+ENTRY+'#cards');await page.locator('#cm-roster-table').waitFor();}
  await click('Table');await page.locator('.cm-tt-mat').waitFor();ok(page.url().endsWith('#cards?view=tabletop'));
  {const tallies=await page.evaluate(async()=>{const r=await CrankRepository.open();try{const s=await r.getState();const M=CrankCollection;const n={};for(const row of M.projection(s)){const st=M.statusOf(row);n[st]=(n[st]||0)+(Number(row.quantity)||0);}return n;}finally{r.close();}});
   /* THE BAND ALONG THE BOTTOM IS THE MODE (play-space plan §2.15). With a deck picked the six
@@ -321,6 +327,20 @@ try{
    eq(await page.locator('.cm-tt-allchip.cm-tt-chip').count(),0,'and Select all is not a pile chip');
    await page.locator('.cm-tt-backrow .cm-tt-pile.cm-tt-bench').focus();await page.keyboard.press('ArrowRight');
    ok(await page.evaluate(()=>document.activeElement.matches('.cm-tt-backrow .cm-tt-pile.cm-tt-deckpile, .cm-tt-allchip')),'the arrows walk the back row too');}
+  /* STATUS FROM THE TABLE (Rob, 15 September). A drop answers "where does this copy go"; a plan,
+     a suggestion and a To buy line have no pile to be dropped on, and `accepts` had been telling
+     readers to "set its status from its row menu" on a board whose only row menu was a
+     right-click, which a phone does not have. The button opens the SAME menu the list uses, so
+     there is one status vocabulary and one set of confirmations. */
+  {await page.locator('.cm-tt-pile.cm-tt-bench').click();await page.locator('.cm-tt-grid').waitFor();
+   await page.locator('.cm-tt-grid .cm-tt-card').first().click();await page.locator('.cm-tt-stage').waitFor();
+   const st=page.locator('.cm-tt-stage-actions [data-tt=status]');eq(await st.count(),1,'a staged card offers Status\u2026');
+   await st.click();const menu=page.locator('.cm-row-menu');await menu.waitFor({timeout:8000});
+   eq(await menu.locator('#cm-status-submenu-toggle').count(),1,'and it is the list\'s own row menu, Status fly-out and all');
+   await page.keyboard.press('Escape');await page.waitForTimeout(250);
+   eq(await page.locator('.cm-row-menu:visible').count(),0,'Escape closes the menu');
+   ok((await page.locator('.cm-tt-stage').count())>=1,'and leaves the card on the stage');
+   await page.keyboard.press('Escape');await page.waitForTimeout(300);}
   {const bench=Number((await page.locator('.cm-tt-pile.cm-tt-bench').getAttribute('aria-label')).match(/(\d+)/)[1]);if(bench>0){await page.locator('.cm-tt-pile.cm-tt-bench').click();await page.locator('.cm-tt-grid').waitFor();ok(/^Bench · 1–/.test(await strip()));await page.locator('.cm-tt-pile.cm-tt-bench').click();await page.waitForTimeout(200);eq(await page.locator('.cm-tt-grid').count(),0);}else{ok(true,'no bench to open in this library');}}
   /* TB3: drag the selection to a pile. A Bench copy into a physical deck (as a substitute, through the deck dialog and the receipt) and back to the Bench, the tallies moving with it; a type pile refuses while the pointer is over it; a To buy requirement dropped on Ordered becomes an ordered copy; Move to… lists the piles with the same answers. */
   const journey=(await state()).decks.find(d=>d.name==='Journey Goblins'&&d.status==='final');ok(!!journey,'the finalized journey deck exists');const t0=await page.evaluate(async()=>{const r=await CrankRepository.open();try{const s=await r.getState();const M=CrankCollection;const n={};for(const row of M.projection(s)){const st=M.statusOf(row);n[st]=(n[st]||0)+(Number(row.quantity)||0);}return n;}finally{r.close();}});
