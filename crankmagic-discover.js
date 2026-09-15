@@ -749,7 +749,7 @@
       const pickedRows = all.filter((r) => picked.has(r.id));
       const paging = `<div class="cm-paging cm-list-paging"><span>${all.length} card${all.length === 1 ? '' : 's'}${pages > 1 ? ` · page ${listPage + 1} of ${pages}` : ''}</span><div class="cm-actions"><button type="button" class="v-button compact" data-action="list-page" data-step="-1" ${listPage === 0 ? 'disabled' : ''}>Previous</button><button type="button" class="v-button compact" data-action="list-page" data-step="1" ${listPage + 1 >= pages ? 'disabled' : ''}>Next</button></div></div>`;
       view.innerHTML = `<div class="cm-list-head">${lands ? '' : lensSelect()}<p class="cm-muted">${lands ? `<strong>${all.length.toLocaleString()} land${all.length === 1 ? '' : 's'}</strong> pass the filters. Sort by a column heading; a row opens the card.` : focus ? `Everything <strong>${e(focus.name)}</strong> reaches at depth 3, breadth 30 — the whole neighbourhood, whatever the sliders say. Filters still apply.` : 'Nothing in focus.'}</p>
-        ${pickedRows.length ? `<div class="cm-actions cm-pick-actions">${b(`Add ${pickedRows.length} selected to a group…`, 'results-group', {}, true)}<details class="cm-inline-menu"><summary class="v-button compact cm-card-view-menu-btn">With ${pickedRows.length} selected</summary><div class="cm-menu cm-inline-menu-body"><p>Add to a draft deck</p>${(C.state.decks || []).filter((d) => !d.archived && d.status === 'draft').map((d) => `<button type="button" data-action="list-to-deck" data-deck="${e(d.id)}">${e(d.name)}</button>`).join('') || '<p class="cm-muted">No draft decks.</p>'}</div></details>${b('Clear selection', 'results-clear')}</div>` : ''}</div>
+        ${pickedRows.length ? `<div class="cm-actions cm-pick-actions">${b(`Add ${pickedRows.length} selected to a group…`, 'results-group', {}, true)}${b('Send to the table', 'results-table')}<details class="cm-inline-menu"><summary class="v-button compact cm-card-view-menu-btn">With ${pickedRows.length} selected</summary><div class="cm-menu cm-inline-menu-body"><p>Add to a draft deck</p>${(C.state.decks || []).filter((d) => !d.archived && d.status === 'draft').map((d) => `<button type="button" data-action="list-to-deck" data-deck="${e(d.id)}">${e(d.name)}</button>`).join('') || '<p class="cm-muted">No draft decks.</p>'}</div></details>${b('Clear selection', 'results-clear')}</div>` : ''}</div>
         ${paging}
         <div class="cm-table-wrap cm-list-wrap"><table class="cm-table cm-list-table"><thead><tr><th scope="col" class="cm-tick-cell"><input type="checkbox" class="cm-list-tick-all" ${allTicked ? 'checked' : ''} aria-label="Tick every card on this page"></th>${cols.map(([k, l]) => `<th scope="col" class="cm-col-${k}" aria-sort="${key === k ? (dir === 1 ? 'ascending' : 'descending') : 'none'}"><button type="button" data-action="list-sort" data-key="${k}">${l}${key === k ? ` <span aria-hidden="true">${dir === 1 ? '↑' : '↓'}</span>` : ' <span class="cm-sort-idle" aria-hidden="true">↕</span>'}</button></th>`).join('')}${stage ? '' : '<th scope="col" class="cm-col-buy"><span class="cm-visually-hidden">Add/Buy</span></th>'}</tr></thead><tbody>${rows.map((r) => `<tr class="cm-list-row${listCard && listCard.id === r.id ? ' is-on' : ''}${picked.has(r.id) ? ' cm-row-ticked' : ''}" data-id="${e(r.id)}"><td class="cm-tick-cell"><input type="checkbox" class="cm-list-tick" data-id="${e(r.id)}" ${picked.has(r.id) ? 'checked' : ''} aria-label="Tick ${e(r.name)}"></td>${cols.map(([k]) => k === 'name' ? `<td class="cm-list-namecell"><button type="button" class="cm-card-name cm-list-name" data-action="list-card" data-id="${e(r.id)}" aria-expanded="${listCard && listCard.id === r.id ? 'true' : 'false'}">${e(r.name)}</button></td>` : k === 'link' ? `<td class="cm-list-link" title="${e(r.link)}">${e(r.link)}</td>` : k === 'color' ? `<td class="cm-list-color">${colorPip(r.ci)}</td>` : `<td class="cm-price">${r.price !== null ? C.money(r.price) : '<span class="cm-muted">—</span>'}</td>`).join('')}${stage ? '' : `<td class="cm-list-buy">${buyMenu(r.card, r.rec, true)}</td>`}</tr>${listCard && listCard.id === r.id ? `<tr class="cm-list-detail"><td colspan="${cols.length + (stage ? 1 : 2)}">${rowDetailHTML(r)}</td></tr>` : ''}`).join('') || `<tr><td colspan="${cols.length + 2}">Nothing reaches from here under these filters.</td></tr>`}</tbody></table></div>${rows.length > 12 ? paging : ''}`;
       $('#cm-graph-size').textContent = lands ? '' : lastInfo && lastInfo.total ? `${lastInfo.total} on canvas · ${all.length} in reach${loopMode ? ' · loops only' : ''}` : '';
@@ -895,7 +895,7 @@
         <!-- NO ORACLE BOX. The card image above is the whole card, rules text included, so
              reprinting it underneath said the same thing twice and pushed the terms -- the
              part of this pane you cannot get from the picture -- below the fold. -->
-        ${picked.size ? `<div class="cm-actions cm-pick-actions">${b(`Add ${picked.size} selected to a group…`, 'results-group', {}, true)}${b('Clear selection', 'results-clear')}</div>` : (gmode === 'select' ? '<p class="cm-muted">Tap cards on the graph to tick them. Tap again to untick.</p>' : '')}
+        ${picked.size ? `<div class="cm-actions cm-pick-actions">${b(`Add ${picked.size} selected to a group…`, 'results-group', {}, true)}${b('Send to the table', 'results-table')}${b('Clear selection', 'results-clear')}</div>` : (gmode === 'select' ? '<p class="cm-muted">Tap cards on the graph to tick them. Tap again to untick.</p>' : '')}
         ${loopsHTML}
         ${chips.length ? `<h3 class="cm-chips-head">Joined to other cards by
           <details class="cm-inline-menu cm-hint"><summary class="cm-hint-btn" aria-label="How these work" title="How these work">i</summary><div class="cm-menu cm-inline-menu-body cm-hint-body">Tap once for only the cards that share it, again to hide them instead, a third time to clear. They stack. The gold ring is the card’s Primary Purpose: the one term it is in a deck for.</div></details>
@@ -1139,6 +1139,28 @@
           await C.commit({type: 'batch', commands, summary: `Added ${cards.length} card${cards.length === 1 ? '' : 's'} to a Collection group`}, {renderView: false});
           picked = new Set(); graph?.setSelected(picked); drawCardView(graph?.current(), null, true);
         }, 'Add to group');
+    };
+
+    /* SEND THE CARDS TO THE TABLE (plan §2.15; decided 15 September). Shelf mode needs a way to
+       reach the catalog, and this is it: not a second search surface on the table, which would be
+       a second Discover to keep in step with this one, but one button and one direction of travel.
+       The ids go to this device, the table reads them as rows, and nothing is written to the
+       library until the reader files them in a group there. */
+    actions['results-table'] = () => {
+      const chosen = [...picked].map((id) => data.cards.find((c) => c.id === id)).filter(Boolean);
+      if (!chosen.length) throw Error('Tick at least one card first.');
+      const ids = chosen.map((c) => { const k = C.catalog.exact(c.name); return k ? k.id : null; }).filter(Boolean);
+      if (!ids.length) throw Error('None of these could be matched to the catalog. Try Inspect card on them first.');
+      let had = [];
+      try { const v = JSON.parse(localStorage.getItem('cm-table-sent') || '[]'); if (Array.isArray(v)) had = v.filter((x) => typeof x === 'string'); } catch (err) { had = []; }
+      /* A table is a table: four hundred cards is already more than anyone deals out, and the
+         cap is what stops a stray Select all from making the mat unusable. */
+      const list = [...new Set([...had, ...ids])].slice(0, 400);
+      try { localStorage.setItem('cm-table-sent', JSON.stringify(list)); }
+      catch (err) { throw Error('This browser would not store the cards, so they could not be sent to the table.'); }
+      picked = new Set(); graph?.setSelected(picked);
+      C.notice(`${ids.length} card${ids.length === 1 ? '' : 's'} sent to the table${list.length > ids.length ? `, ${list.length} waiting there now` : ''}. Pick no deck and the table sorts them into collection groups.`);
+      C.go('cards', {view: 'tabletop'});
     };
 
     function redrawTicks() {

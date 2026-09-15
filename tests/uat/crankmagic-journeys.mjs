@@ -206,10 +206,23 @@ try{
   await page.goto(BASE+'/'+ENTRY+'#cards');await page.locator('#cm-roster-table').waitFor();}
  await click('Table');await page.locator('.cm-tt-mat').waitFor();ok(page.url().endsWith('#cards?view=tabletop'));
  {const tallies=await page.evaluate(async()=>{const r=await CrankRepository.open();try{const s=await r.getState();const M=CrankCollection;const n={};for(const row of M.projection(s)){const st=M.statusOf(row);n[st]=(n[st]||0)+(Number(row.quantity)||0);}return n;}finally{r.close();}});
-  const placard=async label=>Number((await page.locator(`.cm-tt-pile.cm-tt-status[aria-label^="${label},"]`).getAttribute('aria-label')).match(/, (\d+) card/)[1]);
+  /* THE BAND ALONG THE BOTTOM IS THE MODE (play-space plan §2.15). With a deck picked the six
+     statuses stand there as piles; with none the collection groups do and the statuses become
+     chips on the line above — same aria-label, same `data-tt=open`, and both still take a drop,
+     so the journey asks for "the status called X" rather than for a pile in a fixed place. */
+  const stPile=label=>`.cm-tt-pile.cm-tt-status[aria-label^="${label},"], .cm-tt-reading[aria-label^="${label},"]`;
+  const bandPile='.cm-tt-pile.cm-tt-status, .cm-tt-pile.cm-tt-shelfgroup, .cm-tt-pile.cm-tt-shelfnew';
+  const placard=async label=>Number((await page.locator(stPile(label)).first().getAttribute('aria-label')).match(/, (\d+) card/)[1]);
   eq(await placard('Physical deck'),tallies['Physical deck']||0);eq(await placard('Reserved'),tallies['Reserved']||0);eq(await placard('To buy'),tallies['To buy']||0);
   ok(/Bench, \d+ cards/.test(await page.locator('.cm-tt-fan').getAttribute('aria-label')));eq(Number((await page.locator('.cm-tt-fan').getAttribute('aria-label')).match(/(\d+)/)[1]),tallies['Bench']||0);
-  eq(await page.locator('.cm-tt-pile.cm-tt-status').count(),6,'six status piles are places a card can go');eq(await page.locator('.cm-tt-pile.cm-tt-status[aria-label^="Suggestion,"], .cm-tt-pile.cm-tt-status[aria-label^="Planned,"], .cm-tt-pile.cm-tt-status[aria-label^="Draft list,"]').count(),0,'the readings of a plan are not piles');ok((await page.locator('.cm-tt-reading').count())<=4,'at most four reading chips');ok((await page.locator('.cm-tt-pile.cm-tt-group').count())>=3);
+  /* No deck picked, so this is shelf mode: the band is the collection groups and a door to a new
+     one, and every status that holds anything is a chip on the line above — still one click from
+     being laid out, still a drop target, no longer the job the table is doing. */
+  eq(await page.locator('.cm-tt-pile.cm-tt-status').count(),0,'with no deck picked the statuses are not the band');
+  ok((await page.locator('.cm-tt-pile.cm-tt-shelfgroup').count())>=3,'the collection groups are');
+  eq(await page.locator('.cm-tt-pile.cm-tt-shelfnew').count(),1,'with one door to a new group');
+  for (const label of ['Physical deck','Reserved','To buy']) eq(await page.locator(`.cm-tt-reading[aria-label^="${label},"]`).count(),1,`${label} is a chip while you sort`);
+  ok((await page.locator('.cm-tt-pile.cm-tt-group').count())>=3);
   await page.locator('select[name=tabletopGroupBy]').selectOption('color');await page.waitForTimeout(500);ok(await page.locator('.cm-tt-pile.cm-tt-group[aria-label^="Red,"]').count()===1);eq((await state()).preferences.tabletopGroupBy,'color');
   await page.locator('#cm-tt-query').fill('Krenko, Mob Boss');await page.waitForTimeout(400);ok(/^\d+ cop(y|ies) on the table \(\d+ rows?\) .* · filtered$/.test(await page.locator('#cm-tt-status').innerText()));eq(await page.locator('.cm-tt-pile.cm-tt-group:not(.is-empty)').count(),1);
   await page.locator('.cm-tt-pile.cm-tt-group:not(.is-empty)').click();await page.locator('.cm-tt-grid').waitFor();ok((await page.locator('.cm-tt-grid .cm-tt-card').count())>=1);
@@ -217,9 +230,9 @@ try{
   await page.keyboard.press('Escape');await page.waitForTimeout(200);eq(await page.locator('.cm-tt-grid').count(),0);
   await page.locator('#cm-tt-query').fill('');await page.locator('select[name=tabletopGroupBy]').selectOption('type');await page.waitForTimeout(300);
   /* TB2: open the fullest status pile — rows and columns, a page strip, a card size; tick two and pick a third, the rest recombine and the three stand on the stage; Escape puts the table back at rest. The journey library is small, so the pile is whichever holds the most and the paging asserts only what that count allows. */
-  const pileCounts=async()=>(await page.locator('.cm-tt-pile.cm-tt-status').evaluateAll(els=>els.map(e=>e.getAttribute('aria-label')))).map(l=>{const m=l.match(/^(.*), (\d+) cards?$/);return {label:m[1],count:Number(m[2])};});
+  const pileCounts=async()=>(await page.locator('.cm-tt-pile.cm-tt-status, .cm-tt-reading').evaluateAll(els=>els.map(e=>e.getAttribute('aria-label')))).map(l=>{const m=l.match(/^(.*), (\d+) cards?$/);return m?{label:m[1],count:Number(m[2])}:null;}).filter(Boolean);
   const biggest=(await pileCounts()).sort((a,b)=>b.count-a.count)[0];ok(biggest.count>=3,`a status pile holds three or more (${biggest.label} ${biggest.count})`);
-  await page.locator(`.cm-tt-pile.cm-tt-status[aria-label^="${biggest.label},"]`).click();await page.locator('.cm-tt-grid').waitFor();
+  await page.locator(stPile(biggest.label)).click();await page.locator('.cm-tt-grid').waitFor();
   const strip=()=>page.locator('.cm-tt-strip.is-top .cm-tt-strip-title').innerText();ok(new RegExp(`^${biggest.label} · 1–\\d+ of \\d+( · [\\d,]+ copies)?$`).test(await strip()),await strip());const perPageM=await page.locator('.cm-tt-grid .cm-tt-card').count();ok(perPageM>=3&&perPageM<=biggest.count);
   await page.locator('.cm-tt-strip.is-top [data-tt=size][data-size=L]').click();await page.waitForTimeout(200);ok((await page.locator('.cm-tt-grid .cm-tt-card').count())<=perPageM);ok(await page.locator('.cm-tt-grid .cm-tt-card.is-L').count()>0);
   await page.locator('.cm-tt-strip.is-top [data-tt=size][data-size=M]').click();await page.waitForTimeout(200);
@@ -256,7 +269,7 @@ try{
      const slot=box(pile.querySelector('.cm-tt-slot')),card=box(pile.querySelector('.cm-tt-card'));
      const placards=[...document.querySelectorAll('.cm-tt-pile .cm-tt-placard')].map(box);
      const read=document.querySelector('.cm-tt-readings'),r=read?box(read):null;
-     const statusP=[...document.querySelectorAll('.cm-tt-pile.cm-tt-status .cm-tt-placard')].map(box);
+     const statusP=[...document.querySelectorAll('.cm-tt-pile.cm-tt-status .cm-tt-placard, .cm-tt-pile.cm-tt-shelfgroup .cm-tt-placard, .cm-tt-pile.cm-tt-shelfnew .cm-tt-placard')].map(box);
      return {lip:[card.x-slot.x,card.y-slot.y,slot.x+slot.w-card.x-card.w,slot.y+slot.h-card.y-card.h],
        inside:placards.every(p=>p.x>=mat.x-1&&p.x+p.w<=mat.x+mat.w+1),
        readInside:r?r.y+r.h<=mat.y+mat.h:true,
@@ -280,7 +293,7 @@ try{
      asks WHERE, because that is part of the proposal, but its button stages rather than saves:
      the bar appears, the library's tallies do not move, and Confirm writes the whole sitting as
      one revision that one Undo takes back. */
-  {const r=await dragTo('.cm-tt-pile.cm-tt-status[aria-label^="Physical deck,"]');ok(/Put in a physical deck/.test(r.say));ok(/is-target/.test(r.cls));}
+  {const r=await dragTo(stPile('Physical deck'));ok(/Put in a physical deck/.test(r.say));ok(/is-target/.test(r.cls));}
   await page.getByRole('dialog').waitFor();ok(/Put these copies in a physical deck/.test(await page.getByRole('dialog').innerText()));await page.locator('[name=deckId]').selectOption(journey.id);await page.locator('[name=asStandIn]').check();await click('Stage the move');await page.waitForTimeout(500);
   {const t1=await tally();eq(t1,t0,'staging a drop changed nothing in the library');
    await page.locator('.cm-sitting').waitFor();ok(/1 move pending/.test(await page.locator('.cm-sitting').innerText()),'and the bar says one move is pending');
@@ -307,8 +320,8 @@ try{
   /* And the way back, as a second sitting: out of the box onto the Bench. */
   /* The page was reloaded mid-sitting, so the stage is closed: open the pile the copy is in now.
      A substitute is by definition the only kind of card in that pile. */
-  {const box=await page.locator('.cm-tt-pile.cm-tt-status[aria-label^="Substitute,"]').count()?'Substitute':'Physical deck';
-   await page.locator(`.cm-tt-pile.cm-tt-status[aria-label^="${box},"]`).click();await page.locator('.cm-tt-grid').waitFor({timeout:20000});
+  {const box=await page.locator(stPile('Substitute')).count()?'Substitute':'Physical deck';
+   await page.locator(stPile(box)).click();await page.locator('.cm-tt-grid').waitFor({timeout:20000});
    await page.locator('.cm-tt-grid .cm-tt-card').first().click();await page.locator('.cm-tt-stage').waitFor({timeout:20000});}
   {const r=await dragTo('.cm-tt-fan');ok(/Move physically to the Bench/.test(r.say));await page.waitForTimeout(600);
    await page.locator('.cm-sitting').waitFor({timeout:15000});ok(/1 move pending/.test(await page.locator('.cm-sitting').innerText()),'the way back is staged too');
@@ -317,7 +330,7 @@ try{
    eq((await page.locator('.cm-tt-captions .cm-tt-pill').first().innerText()),'Bench','and the caption says so');}
   await page.keyboard.press('Escape');await page.waitForTimeout(200);
   /* A ghost onto Ordered: a To buy requirement becomes an ordered copy filed with its deck; the To buy pile shrinks and Ordered grows by the same count. */
-  await page.locator('.cm-tt-pile.cm-tt-status[aria-label^="To buy,"]').click();await page.locator('.cm-tt-grid').waitFor();await page.locator('.cm-tt-grid .cm-tt-card').first().click();await page.locator('.cm-tt-stage').waitFor();
+  await page.locator(stPile('To buy')).click();await page.locator('.cm-tt-grid').waitFor();await page.locator('.cm-tt-grid .cm-tt-card').first().click();await page.locator('.cm-tt-stage').waitFor();
   const needQty=Number(((await page.locator('.cm-tt-captions li').first().innerText()).match(/×(\d+)/)||[])[1]||1);eq(await page.locator('.cm-tt-captions .cm-tt-pill').first().innerText(),'To buy');
   eq(await page.locator('.cm-tt-stage .cm-tt-card.is-ghost[data-ghost="To buy"]').count(),1,'a ghost wears its status on its corner');eq(await page.locator('.cm-tt-stage .cm-tt-card.is-ghost').evaluate(el=>getComputedStyle(el,'::before').opacity),'1','and its picture is not faded');
   /* MOVE TO… IS ONLY WHERE THE CARD CAN GO (Rob, 14 September): the menu used to list every pile
@@ -336,10 +349,10 @@ try{
   eq(await tally(),t2,'and the library is untouched');
   /* STEP BACK IS THE SANDBOX'S OWN UNDO: it costs no revision, because nothing was written. */
   await click('Step back');await page.waitForTimeout(500);eq(await page.locator('.cm-sitting').count(),0,'step back empties the sitting');
-  await page.locator('.cm-tt-pile.cm-tt-status[aria-label^="To buy,"]').click();await page.locator('.cm-tt-grid').waitFor();await page.locator('.cm-tt-grid .cm-tt-card').first().click();await page.locator('.cm-tt-stage').waitFor();
+  await page.locator(stPile('To buy')).click();await page.locator('.cm-tt-grid').waitFor();await page.locator('.cm-tt-grid .cm-tt-card').first().click();await page.locator('.cm-tt-stage').waitFor();
   await click('Move to…');await page.locator('.cm-row-menu').waitFor();await page.locator('.cm-row-menu button:not([disabled])').filter({hasText:/^Ordered/}).click();await page.waitForTimeout(600);
   await click('Discard');await page.waitForTimeout(500);eq(await page.locator('.cm-sitting').count(),0,'discard empties it too');eq(await tally(),t2,'and neither one wrote anything');
-  await page.locator('.cm-tt-pile.cm-tt-status[aria-label^="To buy,"]').click();await page.locator('.cm-tt-grid').waitFor();await page.locator('.cm-tt-grid .cm-tt-card').first().click();await page.locator('.cm-tt-stage').waitFor();
+  await page.locator(stPile('To buy')).click();await page.locator('.cm-tt-grid').waitFor();await page.locator('.cm-tt-grid .cm-tt-card').first().click();await page.locator('.cm-tt-stage').waitFor();
   await click('Move to…');await page.locator('.cm-row-menu').waitFor();await page.locator('.cm-row-menu button:not([disabled])').filter({hasText:/^Ordered/}).click();await page.waitForTimeout(600);
   const preRevision=(await state()).revision;
   await click('Review and confirm');await page.getByRole('dialog').waitFor();await click('Confirm change');await page.waitForTimeout(1200);
@@ -347,8 +360,8 @@ try{
    eq((await state()).revision,preRevision+1,'a whole sitting is one revision, whatever it holds');}
   await page.keyboard.press('Escape');await page.waitForTimeout(200);eq(await page.locator('.cm-tt-stage').count(),0);
   /* TB4: the card size is remembered on this device; the status pile order is a preference; the arrows walk the piles and the cards, Enter opens, Space ticks; Print puts the whole pile on paper. */
-  await page.locator(`.cm-tt-pile.cm-tt-status[aria-label^="${biggest.label},"]`).click();await page.locator('.cm-tt-grid').waitFor();await page.locator('.cm-tt-strip.is-top [data-tt=size][data-size=L]').click();await page.waitForTimeout(200);
-  await page.reload();await page.locator('.cm-tt-mat').waitFor({timeout:30000});await page.locator(`.cm-tt-pile.cm-tt-status[aria-label^="${biggest.label},"]`).click();await page.locator('.cm-tt-grid').waitFor();eq(await page.locator('.cm-tt-strip.is-top [data-tt=size][aria-pressed=true]').innerText(),'L','the card size survived a reload');
+  await page.locator(stPile(biggest.label)).click();await page.locator('.cm-tt-grid').waitFor();await page.locator('.cm-tt-strip.is-top [data-tt=size][data-size=L]').click();await page.waitForTimeout(200);
+  await page.reload();await page.locator('.cm-tt-mat').waitFor({timeout:30000});await page.locator(stPile(biggest.label)).click();await page.locator('.cm-tt-grid').waitFor();eq(await page.locator('.cm-tt-strip.is-top [data-tt=size][aria-pressed=true]').innerText(),'L','the card size survived a reload');
   await page.locator('.cm-tt-strip.is-top [data-tt=size][data-size=M]').click();await page.waitForTimeout(200);
   await page.evaluate(()=>{window.__printed=0;window.print=()=>{window.__printed++;};});await click('Print');await page.waitForTimeout(200);eq(await page.evaluate(()=>window.__printed),1);
   ok(await page.evaluate(()=>document.body.classList.contains('cm-tt-printing')));eq(await page.locator('.cm-tt-printsheet h1').innerText(),biggest.label);ok((await page.locator('.cm-tt-printsheet tbody tr').count())>=3,'the sheet lists the whole pile');ok((await page.locator('.cm-tt-printsheet tbody tr').count())>=(await page.locator('.cm-tt-grid .cm-tt-card').count()),'the whole pile, not the page');
@@ -356,8 +369,12 @@ try{
   await page.locator('.cm-tt-grid .cm-tt-card[data-tt=card]').first().focus();await page.keyboard.press('ArrowRight');eq(await page.evaluate(()=>document.activeElement.dataset.n),await page.locator('.cm-tt-grid .cm-tt-card').nth(1).getAttribute('data-n'),'ArrowRight walks to the next card');
   await page.keyboard.press(' ');await page.waitForTimeout(200);eq(await page.locator('.cm-tt-grid .cm-tt-card.is-ticked').count(),1,'Space ticks');ok(await page.evaluate(()=>document.activeElement.matches('.cm-tt-card')||true));
   await page.keyboard.press('Escape');await page.waitForTimeout(200);eq(await page.locator('.cm-tt-grid').count(),0);
-  await page.locator('.cm-tt-pile.cm-tt-status').first().focus();await page.keyboard.press('ArrowRight');eq(await page.evaluate(()=>document.activeElement.getAttribute('aria-label')),await page.locator('.cm-tt-pile.cm-tt-status').nth(1).getAttribute('aria-label'),'ArrowRight walks the status row');
-  await page.keyboard.press('ArrowUp');ok(await page.evaluate(()=>document.activeElement.matches('.cm-tt-pile.cm-tt-group')),'ArrowUp climbs to the group piles');await page.keyboard.press('Enter');await page.locator('.cm-tt-grid').waitFor();await page.keyboard.press('Escape');await page.waitForTimeout(200);
+  await page.locator(bandPile).first().focus();await page.keyboard.press('ArrowRight');eq(await page.evaluate(()=>document.activeElement.getAttribute('aria-label')),await page.locator(bandPile).nth(1).getAttribute('aria-label'),'ArrowRight walks the band along the bottom');
+  /* Up from the band is the play space, and up from that the shelves: three rows, bottom to top,
+     which is the order the three zones stand in. (Before shelf mode the middle was empty with no
+     deck picked, so this step skipped it; now the middle is always there to walk through.) */
+  await page.keyboard.press('ArrowUp');ok(await page.evaluate(()=>document.activeElement.matches('.cm-tt-draw, .cm-tt-tray, .cm-tt-playchip')),'ArrowUp climbs to the play space');
+  await page.keyboard.press('ArrowUp');ok(await page.evaluate(()=>document.activeElement.matches('.cm-tt-pile.cm-tt-group, .cm-tt-chip')),'and again to the group piles');await page.keyboard.press('Enter');await page.locator('.cm-tt-grid').waitFor();await page.keyboard.press('Escape');await page.waitForTimeout(200);
   await page.locator('select[name=tabletopStatusOrder]').selectOption('count');await page.waitForTimeout(500);{const c=await pileCounts();ok(c.every((p,i)=>i===0||c[i-1].count>=p.count),'fullest first');eq((await state()).preferences.tabletopStatusOrder,'count');}
   await page.locator('select[name=tabletopStatusOrder]').selectOption('workflow');await page.waitForTimeout(400);eq((await pileCounts())[0].label,'Physical deck');
 
@@ -406,7 +423,7 @@ try{
      so the tray says the list would grow and the scoreboard turns amber once it has. */
   {const before=(await state()).decks.find(d=>d.id===journey.id).slots.filter(r=>r.purpose==='main').reduce((n,r)=>n+r.quantity,0);
    eq(before,100,'the list is a hundred before the tray');
-   await page.locator('.cm-tt-pile.cm-tt-status[aria-label^="Watched,"]').click();await page.locator('.cm-tt-grid').waitFor({timeout:20000});
+   await page.locator(stPile('Watched')).click();await page.locator('.cm-tt-grid').waitFor({timeout:20000});
    /* THE BACK ARROW AT EVERY LEVEL (§2.4): top right of the laid-out pile, home to the board. */
    eq(await page.locator('.cm-tt-strip.is-top .cm-tt-back').count(),1,'a laid-out pile carries a back arrow');
    await page.locator('.cm-tt-strip.is-top .cm-tt-back').click();await page.waitForTimeout(400);
@@ -699,6 +716,49 @@ try{
  const firstName=await page.locator('.cm-list-name').first().innerText();await page.locator('.cm-list-name').first().click();await page.locator('.cm-list-detail').waitFor();ok(await page.locator('.cm-list-detail').innerText().then(t=>/Focus here/.test(t)));eq(await page.locator('.cm-list-name[aria-expanded=true]').innerText(),firstName);ok(await page.locator('.cm-pane-tab.is-on').innerText().then(t=>/List/.test(t)));await page.locator('.cm-list-name').first().click();eq(await page.locator('.cm-list-detail').count(),0);ok(await page.locator('.cm-list-table th').allInnerTexts().then(t=>t.some(x=>/Link/.test(x))&&t.some(x=>/Color/.test(x))&&!t.some(x=>/Ring|Type|Mana/.test(x))));
  {const g=page.locator('#cm-pane-gutter');const box=await g.boundingBox();const width=()=>page.locator('#cm-card-view').evaluate(e=>e.clientWidth);const before=await width();await page.mouse.move(box.x+box.width/2,box.y+200);await page.mouse.down();await page.mouse.move(box.x-160,box.y+200,{steps:8});await page.mouse.up();const after=await width();ok(after>before+120,`pane widened from ${before} to ${after}`);ok(await page.evaluate(()=>Number(localStorage.getItem('crankmagic:paneWidth:default'))>0));eq(await page.locator('#cm-card-view').getAttribute('data-w'),'l');const b2=await g.boundingBox();await page.mouse.move(b2.x+b2.width/2,b2.y+200);await page.mouse.down();await page.mouse.move(b2.x+340,b2.y+200,{steps:8});await page.mouse.up();ok(await width()<300,'pane narrowed');ok(await page.locator('.cm-list-table th.cm-col-link').isHidden());await g.dblclick();ok(Math.abs(await width()-before)<4,'double-click resets');eq(await page.evaluate(()=>localStorage.getItem('crankmagic:paneWidth:default')),null);}
  await page.getByRole('tab',{name:'List'}).click();await page.locator('.cm-list-tick').first().check();await page.locator('.cm-pick-actions').waitFor();await click('Clear selection');
+ /* SHELF MODE (play space PR 4; plan §2.15). The table's second job. The catalog reaches it by
+    selection rather than by a second search surface: tick a card on Discover, Send to the table,
+    and it arrives as a row the library has never seen. With no deck picked the band along the
+    bottom is the collection groups, a tray is bound to one of them, and confirming files the card
+    as a PLANNED entry — a plan, never a claim that a copy was bought. */
+ {await page.getByRole('tab',{name:'List'}).click();await page.locator('.cm-list-table').waitFor({timeout:45000});
+  const sentName=(await page.locator('.cm-list-name').first().innerText()).trim();
+  await page.locator('.cm-list-tick').first().check();await page.locator('.cm-pick-actions').waitFor();
+  await click('Send to the table');await page.locator('.cm-tt-mat').waitFor({timeout:45000});
+  ok(page.url().endsWith('#cards?view=tabletop'),'Send to the table lands on the table, with no deck picked');
+  ok(/sent from Discover/.test(await page.locator('#cm-tt-status').innerText()),'and the table says how many are waiting there');
+  eq(await page.locator('.cm-tt-pile.cm-tt-status').count(),0,'the band is shelf mode, not the statuses');
+  const gid=await page.locator('.cm-tt-pile.cm-tt-shelfgroup').first().getAttribute('data-pile');
+  const groupName=(await page.locator('.cm-tt-pile.cm-tt-shelfgroup .cm-tt-placard strong').first().innerText()).trim();
+  /* A tray is bound to a group, and says so by taking its name. */
+  await page.locator('.cm-tt-tray-bind[data-n="1"]').selectOption(gid.replace(/^shelf:/,''));await page.waitForTimeout(500);
+  ok((await page.locator('.cm-tt-tray').first().getAttribute('aria-label')).startsWith(groupName+','),`a bound tray takes its group's name (${groupName})`);
+  ok(new RegExp(groupName.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).test(await page.locator('.cm-tt-play .cm-tt-score').innerText()),'and the scoreboard reads that group\'s size');
+  /* The sent card is on the table, as a ghost that says where it came from. */
+  await page.locator('#cm-tt-query').fill(sentName);await page.waitForTimeout(600);
+  await page.locator('.cm-tt-pile.cm-tt-group:not(.is-empty)').first().click();await page.locator('.cm-tt-grid').waitFor({timeout:20000});
+  eq(await page.locator('.cm-tt-grid .cm-tt-card[data-record^="catalog:"]').count(),1,'the sent card is a row of its own on the table');
+  eq(await page.locator('.cm-tt-grid .cm-tt-card[data-record^="catalog:"]').getAttribute('data-ghost'),'Sent from Discover','a ghost, because nothing about it is held');
+  await page.locator('.cm-tt-grid .cm-tt-card[data-record^="catalog:"]').click();await page.locator('.cm-tt-stage').waitFor({timeout:20000});
+  /* Move to… offers the groups and nothing that claims a copy. */
+  await click('Move to…');await page.locator('.cm-row-menu').waitFor();
+  eq(await page.locator(`.cm-row-menu button[data-pile="${gid}"]`).count(),1,'the collection group is offered');
+  eq(await page.locator('.cm-row-menu button[data-pile^="status:"]').count(),0,'no status is — a card sent from Discover is not a copy you hold');
+  eq(await page.locator('.cm-row-menu button[data-pile=bench]').count(),0,'and neither is the Bench');
+  const before=(await state()).groups.find(g=>g.id===gid.replace(/^shelf:/,''));
+  await page.locator(`.cm-row-menu button[data-pile="${gid}"]`).click();await page.waitForTimeout(700);
+  await page.locator('.cm-sitting').waitFor({timeout:15000});ok(/1 move pending/.test(await page.locator('.cm-sitting').innerText()),'filing a sent card stages rather than saving');
+  await click('Review and confirm');await page.getByRole('dialog').waitFor();
+  ok(/planned in/.test(await page.getByRole('dialog').innerText()),'the receipt says planned, not owned');
+  await click('Confirm change');await page.waitForTimeout(1400);
+  {const st=await state(),after=st.groups.find(g=>g.id===gid.replace(/^shelf:/,''));
+   eq(after.entries.length,before.entries.length+1,`${groupName} gained a planned entry`);
+   const planned=after.entries[after.entries.length-1];
+   ok(!st.lots.some(l=>l.cardId===planned.cardId),'and nothing anywhere says a copy of it is owned');
+   ok(!!st.cards[planned.cardId],'the card record came with the move, so the library knows what was planned');}
+  await page.evaluate(()=>localStorage.removeItem('cm-table-sent'));
+  /* Back to Discover, which is where the rest of this journey stands. */
+  await page.goto(BASE+'/'+ENTRY+'#discover');await page.locator('#cm-graph').waitFor({timeout:45000});await page.waitForTimeout(800);}
  await page.unroute('**://api.scryfall.com/**');await page.evaluate(()=>navigator.serviceWorker.ready);await context.setOffline(true);await page.reload();await page.locator('#cm-graph').waitFor({timeout:45000});await nav('Cards');await page.getByRole('table').waitFor();eq((await state()).lots,afterLab.lots);await context.setOffline(false);
  await page.setViewportSize({width:390,height:844});await nav('Decks');await page.getByRole('heading',{name:'Decks',level:1}).waitFor();ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await page.evaluate(()=>scrollTo(0,document.body.scrollHeight));const navBox=await page.getByRole('navigation',{name:'Main pages'}).boundingBox();ok(navBox.y>=0&&navBox.y<844);await nav('Cards');await page.getByRole('table').waitFor();ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
  eq(errors,[]);console.log(`crankmagic-journeys: ${checks} checks passed across real deck assembly, imports, printing lots, corrections, concurrency, quota abort, backup restore, initial construction, graph navigation, offline and mobile.`);

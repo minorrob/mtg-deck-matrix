@@ -236,5 +236,64 @@ eq(T.printSheet({kind: "status", label: "Watched", rows: []}).includes("0 cards 
   eq(P.count, 3, "three cards on the play space");
   eq(T.table(rows, {groupBy: "type", statuses: M.STATUS, statusOrder: M.statusOrder, value, play: {deck: null, trays: 4, seatOf: () => ""}}).play.deck, null, "no deck picked, no deck on the play space");
 }
+
+/* ------------------------------------------------------- SHELF MODE (PR 4, plan §2.15) */
+/* The table's second job: no deck picked, the collection groups along the bottom, the trays as
+   group buckets, and cards sent over from Discover as rows the library has never seen. What is
+   pinned here is the difference and nothing else — the three zones, the canvas, the draw pile,
+   the arrows and Confirm are the same objects doing the same thing, which is the whole claim. */
+{
+  const groups = state.groups.slice(0, 3).map((g) => ({id: g.id, name: g.name}));
+  ok(groups.length === 3, `three collection groups to sort into (${groups.length})`);
+  const spec = {deck: null, trays: 4, at: 0, groups, trayGroups: [groups[0].id, "", "", ""],
+    groupOf: (r) => r.groupIds || [], seatOf: () => ""};
+  const shelfT = T.table(rows, {...opts, groupBy: "type", play: spec});
+  const P = shelfT.play;
+  eq(P.mode, "shelf", "no deck picked is shelf mode");
+  eq(T.table(rows, {...opts, groupBy: "type", play: {deck: {id: "d", name: "A deck", groupId: "g"}, trays: 1, seatOf: () => ""}}).play.mode,
+    "deck", "and a deck picked is deck mode — one fact decides it");
+  /* The band along the bottom: the groups that exist, and a door to a new one. */
+  eq(shelfT.shelfPiles.length, groups.length + 1, "the band is the groups plus New group…");
+  eq(shelfT.shelfPiles[groups.length].kind, "shelfnew", "and the door is last");
+  eq(shelfT.shelfPiles[0].label, groups[0].name, "each pile is named for its group");
+  eq(shelfT.shelfPiles[0].count, rows.filter((r) => (r.groupIds || []).includes(groups[0].id)).reduce((n, r) => n + r.quantity, 0),
+    "and holds the copies the library files there");
+  eq(T.findPile(shelfT, shelfT.shelfPiles[0].id).groupId, groups[0].id, "findPile reaches the band, so a click lays one out");
+  eq(T.table(rows, {...opts, groupBy: "type"}).shelfPiles, [], "no play space, no band — the model says nothing it was not asked");
+  /* The trays are bound to groups, and an unbound one refuses by saying so. */
+  eq(P.trayPiles[0].label, groups[0].name, "a bound tray takes its group's name");
+  eq(P.trayPiles[1].label, "Tray 2", "an unbound one is still just a tray");
+  const owned = rows.filter((r) => r.kind === "lot" && r.source === "owned").slice(0, 2);
+  eq(T.accepts(P.trayPiles[0], owned).action, "shelf", "a bound tray files what is dropped in it");
+  ok(!T.accepts(P.trayPiles[1], owned).ok, "an unbound one refuses");
+  ok(/group/.test(T.accepts(P.trayPiles[1], owned).why), "and says the binding is what it wants");
+  /* The middle stages nothing here: "it goes back where it came from" is that nothing was staged. */
+  eq(T.accepts(P.draw, owned).action, "lift", "shelf mode's middle lifts rather than holds");
+  ok(/nothing is staged/i.test(T.accepts(P.draw, owned).why), "and says so before the card is picked up");
+  /* A card sent over from Discover is a card, not a copy. */
+  const catalogRow = {recordId: "catalog:sol-ring", id: "catalog:sol-ring", kind: "catalog", cardId: "sol-ring",
+    card: {name: "Sol Ring", typeLine: "Artifact", manaValue: 1, colorIdentity: [], price: 2.5},
+    quantity: 1, source: "watching", groupIds: [], status: T.SENT};
+  ok(T.GHOST.has(T.SENT), "a sent card is a ghost: nothing here is held");
+  eq(T.accepts(shelfT.shelfPiles[0], [catalogRow]).action, "shelf", "a group pile takes it");
+  ok(/planned/i.test(T.accepts(shelfT.shelfPiles[0], [catalogRow]).why), "and says it becomes a planned entry, claiming no ownership");
+  eq(T.accepts(shelfT.shelfPiles[0], [...owned, catalogRow]).action, "shelf",
+    "one drop can carry copies you hold and cards you do not — that is what sorting a shelf is");
+  eq(T.accepts(shelfT.shelfPiles[groups.length], [catalogRow]).action, "shelfnew", "the door takes it too");
+  /* And every destination that is a claim about a COPY refuses it, by name. */
+  for (const p of [shelfT.bench, ...shelfT.statusPiles.filter((x) => x.target)]) {
+    const a = T.accepts(p, [catalogRow]);
+    ok(!a.ok, `${p.label} refuses a card sent from Discover`);
+    ok(/not a copy you hold/.test(a.why), `${p.label} says why in the same words`);
+  }
+  const deckPile = T.table(rows, {...opts, groupBy: "deck", play: spec}).groupPiles.find((p) => !/^No /.test(p.label) && !p.folded);
+  ok(deckPile && !T.accepts(deckPile, [catalogRow]).ok, "and a deck pile will not reserve a card you do not own");
+  /* Deck mode is untouched by any of it. */
+  const d0 = state.decks.find((x) => !x.archived && x.groupId);
+  const deckT = T.table(rows, {...opts, groupBy: "type", play: {deck: {id: d0.id, name: d0.name, groupId: d0.groupId}, trays: 4, at: 0, seatOf: () => ""}});
+  eq(T.accepts(deckT.play.draw, owned).action, "hold", "with a deck picked the middle still holds");
+  eq(T.accepts(deckT.play.trayPiles[0], owned).action, "tray", "and a tray still reserves");
+  ok(!T.accepts(deckT.play.draw, [catalogRow]).ok, "a sent card is not a copy you can pick up for a deck");
+}
 M.setRecordSource(null);
 console.log(`crankmagic-tabletop: ${checks} checks passed — ${t.total} copies on the table, bench ${t.bench.count}, ${t.statusPiles.length} status piles, ${T.GROUPINGS.length} groupings.`);

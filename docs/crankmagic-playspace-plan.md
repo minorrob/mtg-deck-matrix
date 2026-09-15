@@ -579,12 +579,53 @@ positioned box shrinking to fit only the space from its left edge to the mat's r
 labelled selects were laying out in half the table and wrapping to two lines on a mat wide enough
 for one. Both fixed here.
 
-### PR 4 — Shelf mode
+### PR 4 — Shelf mode — **built, 15 September**
 
 The table's second job (§2.15): no deck picked, collection groups along the bottom, the trays as
-group buckets. Its one hard part is bringing cards in from the catalog rather than the library —
-decide first whether that is a search box on the table or a *Send to the table* from Discover
-(§6, still open 1), because it changes what this PR is.
+group buckets, and the catalog reaching the table by selection from Discover rather than by a
+second search surface (§6, decided 15 September).
+
+**One fact decides the mode.** `play()` reads `spec.deck`: with one it is deck mode, without one
+it is shelf mode, and the mode travels on the piles themselves because `accepts()` is pure and
+sees only a pile. Everything the plan said stays identical does: the three zones, the canvas, the
+draw pile, the arrows, the back arrows, the sandbox and Confirm are the same objects doing the
+same thing. What changes is the band along the bottom and what a drop means.
+
+**The band is the destinations.** `table()` builds `model.shelfPiles` from the caller's group list
+— one pile per collection group, plus a *New group…* door — and the mat draws them where the six
+statuses stand in deck mode. The statuses do not vanish: every one that holds anything moves up to
+the line of chips, still one click from being laid out, no longer a place to drop a card because
+in shelf mode it is not one. The band wraps to a second row when there are more groups than fit,
+which the six statuses never needed.
+
+**The middle stages nothing here, and that is the finding.** §2.15's table says a card left in the
+middle at Confirm means *nothing — it goes back where it came from*. Read literally that is not a
+rule to enforce; it is a description of a move that was never staged. So in shelf mode the hand is
+view state (`ttUI.hand`, remembered per device) and lifting a card is `lift`, not `hold`. In deck
+mode the same gesture still stages, because there a lifted card *does* mean something — Watched
+for that deck (§2.2). One gesture, two honest meanings, decided by the one fact that differs.
+
+**A tray is bound to a group.** A select under each tray says which, remembered per device. A bound
+tray takes the same drop the band takes; an unbound one refuses and says the binding is what it
+wants. The scoreboard then reads the size of each bound group as the sitting would leave it.
+
+**One drop, two kinds of row.** Sorting the shelf against the catalog means copies you hold and
+cards you do not, dropped together. `accepts()` returns one action, `shelf`, and the caller splits
+by row: a copy is **filed** (`groupLots`), a card is **planned** (`groupEntries`). The sandbox
+gained one verb for the second, `plan`, and it is the only move whose card record travels with it,
+because `groupEntries` must add the card before it can file an entry for it.
+
+**The catalog arrives by hand-off.** Discover's pick bar gained *Send to the table*: the ticked
+cards' ids go to this device and the table reads them as rows with the status *Sent from Discover*
+— ghosts, because nothing there is held. Every destination that is a claim about a copy refuses
+them in the same sentence; a group pile plans them. The table's status line says how many are
+waiting and offers to send them back, which writes nothing either way. That is the piece §2.15
+called "the single largest unbuilt piece of this plan", built as a button and a hand-off rather
+than a second implementation of Discover.
+
+**A group is a fact, not a move** (§2.6). The *New group…* door makes the group at once — through
+`createGroup`, its own revision — and then stages the filings into it like any other move. Clicking
+the door at rest makes an empty group, which is the other half of the same gesture.
 
 ### PR 5 — The substitute's partner
 

@@ -48,7 +48,10 @@
      takes it out of whatever held it AND files it in the deck's group, which is what makes it
      Watched for that deck; dropping one in a tray BUILDS THE DECK'S LIST as well as reserving the
      copy, which plain Reserved must never do. */
-  const ACTIONS = new Set(["source", "bench", "release", "place", "standin", "reserve", "group", "hold", "tray"]);
+  /* `plan` is shelf mode's (plan §2.15): a card from the catalog filed into a collection group as
+     a PLANNED entry rather than a copy. It is the one move whose card the library has never seen,
+     so the record travels with it. */
+  const ACTIONS = new Set(["source", "bench", "release", "place", "standin", "reserve", "group", "hold", "tray", "plan"]);
 
   /* The one place a move's destination is spelled, so the pile, the badge and the receipt
      cannot disagree about what a drop meant. */
@@ -159,6 +162,9 @@
           deckId: mv.deckId || "", deckName: mv.deckName || "", slotId: mv.slotId || "",
           action: mv.action, arg: mv.arg || "", box: mv.box || "", asStandIn: !!mv.asStandIn,
           tray: Math.max(0, Math.min(4, Number(mv.tray) || 0)),
+          /* Only a `plan` move carries this: the catalog record for a card the library does not
+             hold yet, because `groupEntries` has to add it before it can file an entry for it. */
+          card: mv.card ? Object.assign({}, mv.card) : null,
           from: mv.from || "", to: mv.to || "", toStatus: mv.toStatus === undefined ? mv.to || "" : mv.toStatus,
           label: mv.label || "", at,
         };
@@ -304,6 +310,23 @@
         out.push({ type: "groupLots", groupId: group.id, lotIds: [lot.id] });
         return out;
       }
+      /* A CARD YOU DO NOT OWN, IN A GROUP YOU ARE ASSEMBLING (plan §2.15). Shelf mode's whole
+         point is sorting the Commander-legal universe into piles worth keeping, and most of what
+         you sort there is not a copy — it is a card you are considering. The model already has
+         the shape for that: a planned entry on a group, which the Cards page shows as Planned and
+         which claims no ownership. The record travels with the move because the library has never
+         seen this card and `groupEntries` must add it before it can file an entry. */
+      case "plan": {
+        const group = (state.groups || []).find((g) => g.id === mv.arg);
+        if (!group) throw Error(`The group ${mv.to || "you chose"} is gone.`);
+        if (!mv.cardId) throw Error(`${mv.cardName} has no card record to file.`);
+        const known = state.cards && state.cards[mv.cardId];
+        if (!known && !mv.card) throw Error(`${mv.cardName} is not a card this library knows, and the move carries no record of it.`);
+        if ((group.entries || []).some((r) => r.cardId === mv.cardId)) throw Error(`${group.name} already plans ${mv.cardName}.`);
+        const command = { type: "groupEntries", groupId: group.id, entries: [{ cardId: mv.cardId, quantity: mv.quantity, purpose: "main" }] };
+        if (!known) command.cards = [mv.card];
+        return [command];
+      }
       /* A TRAY BUILDS THE LIST (plan §2.3). Reserving needs a seat, and while a hundred is being
          assembled most tray cards are ones the list does not name yet -- so a tray does two
          things where plain Reserved does one: put the card on the deck's main list, then hold
@@ -347,6 +370,7 @@
       case "standin": return `${mv.cardName} → ${mv.deckName || "a physical deck"} as a substitute`;
       case "reserve": return `${mv.cardName} → reserved for ${mv.deckName || "a deck"}`;
       case "group": return `${mv.cardName} → ${mv.to || "a group"}`;
+      case "plan": return `${mv.cardName} → planned in ${mv.to || "a group"}`;
       case "hold": return `${mv.cardName} → in hand${mv.deckName ? `, watched for ${mv.deckName}` : ""}`;
       case "tray": return `${mv.cardName} → tray ${mv.tray || 1}: on ${mv.deckName || "the deck"}’s list and reserved`;
       default: return `${mv.cardName} → ${mv.to}`;

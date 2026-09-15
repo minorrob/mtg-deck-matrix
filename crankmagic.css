@@ -1773,7 +1773,21 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-tt-back.is-corner{position:absolute;right:12px;top:10px;z-index:2}
 /* The middle keeps at least SHELF.minMiddle whatever the shelves take, so the play space is
    never squeezed; below 760px it is not offered at all (plan §2.5) and nothing here applies. */
-@media(max-width:1180px){.cm-tt-trays{gap:8px}.cm-tt-tray,.cm-tt-tray-slot{width:70px}}
+/* ---------------------------------------------------------------- SHELF MODE (play space PR 4)
+   docs/crankmagic-playspace-plan.md §2.15. With no deck picked the band along the bottom is the
+   collection groups instead of the six statuses, each tray is bound to one of them, and a group
+   pile is the same object a status pile is — so almost nothing here is new: a tint that says
+   "your shelf, not the workflow", and a door that reads as a door rather than as an empty pile. */
+.cm-tt-shelfgroup .cm-tt-card{background:linear-gradient(160deg,#3b4436,#1b2119)}
+.cm-tt-shelfgroup .cm-tt-placard{max-width:136px}
+.cm-tt-shelfnew .cm-tt-slot{background:#0b10194d;box-shadow:inset 0 3px 10px #0007,0 0 0 1px #6f8a5f;border-radius:8px}
+.cm-tt-newmark{font-size:30px;line-height:1;font-weight:300;color:#9bb88a}
+.cm-tt-shelfnew .cm-tt-placard{background:linear-gradient(#e7edda,#d9e2c7);color:#27301c;box-shadow:0 2px 4px #0008,inset 0 0 0 1px #c3ceae}
+.cm-tt-trays.is-shelf{align-items:flex-start;height:auto}
+.cm-tt-tray-cell{display:flex;flex-direction:column;align-items:center;gap:4px}
+.cm-tt-tray-bind{min-height:26px;max-width:86px;padding:2px 4px;font-size:10.5px;border-radius:6px;background:#1b2436;border:1px solid var(--v-line);color:var(--v-ink)}
+.cm-tt-mat.cm-canvas-parchment .cm-tt-newmark{color:#6b7a58}
+@media(max-width:1180px){.cm-tt-trays{gap:8px}.cm-tt-tray,.cm-tt-tray-slot{width:70px}.cm-tt-tray-bind{max-width:78px}}
 @media(prefers-reduced-motion:no-preference){
   .cm-tt-restore,.cm-tt-playchip,.cm-tt-tray-slot{transition:background .12s ease,border-color .12s ease,box-shadow .12s ease}
 }
