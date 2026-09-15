@@ -567,7 +567,17 @@
     if (!host) return null;
     const width = Math.max(320, host.clientWidth || 960), narrow = width < 760;
     const PILE_W = 74, PILE_H = 130 /* the stack and its placard */, ROW = 150;
-    const openPile = ui.open ? findPile(model, ui.open) : null;
+    /* A PILE YOU EMPTIED IS STILL THE PILE YOU OPENED (Rob, 15 September). Drag the last card out
+       of a band and the band leaves the model, because a group pile is made from the rows that are
+       in it -- and the drawer, which is where the reader is standing, would snap shut and send them
+       back to the board to find a pile that is no longer drawn. A group id carries its band's name,
+       so the drawer keeps its heading and says there is nothing on it. Status piles never need
+       this: they are built from the status list and stand at zero. */
+    const emptyBand = (id) => {
+      const m = /^group:([^:]*):([\s\S]*)$/.exec(id || "");
+      return m ? {id, kind: "group", key: m[1], label: m[2], rows: [], count: 0, ghosts: 0, top: null, order: ""} : null;
+    };
+    const openPile = ui.open ? (findPile(model, ui.open) || emptyBand(ui.open)) : null;
     const selection = ui.selection instanceof Set ? ui.selection : new Set(ui.selection || []);
     const ticked = ui.ticked instanceof Set ? ui.ticked : new Set(ui.ticked || []);
     const byId = selection.size ? rowsById(model) : null;
@@ -854,7 +864,16 @@
     const ord = host.querySelector("select[name=tabletopStatusOrder]"); if (ord && hooks.onStatusOrder) ord.onchange = () => hooks.onStatusOrder(ord.value);
     const can = host.querySelector("select[name=tabletopCanvas]"); if (can && hooks.onCanvas) can.onchange = () => hooks.onCanvas(can.value);
     for (const bind of host.querySelectorAll("select[data-tt=tray-group]")) bind.onchange = () => hooks.onTrayGroup && hooks.onTrayGroup(Number(bind.dataset.n) || 1, bind.value);
+    /* THE CLICK THAT FOLLOWS A DRAG IS NOT A CLICK (Rob, 15 September). `preventDefault` on a
+       pointermove does not suppress the click that a completed press-and-release still produces,
+       and the capture taken mid-drag retargets it to the strip the cards came from -- which the
+       branch below reads as "clicked away" and puts the pile down. So every card dragged anywhere
+       that was not a pile shut the drawer, and the reader had to go and find the pile again. The
+       drag stamps when it ended; a click landing within a few frames of that is the tail of the
+       gesture and is swallowed here rather than acted on. */
+    let draggedAt = 0;
     host.onclick = (ev) => {
+      if (draggedAt && performance.now() - draggedAt < 400) { draggedAt = 0; ev.stopPropagation(); return; }
       const t = ev.target.closest("[data-tt]");
       if (!t) { if (mode !== "rest" && ev.target.closest(".cm-tt-mat") && !ev.target.closest("button, select, label, .cm-tt-card, .cm-tt-strip, .cm-tt-stage")) hooks.onClear && hooks.onClear(); return; }
       const kind = t.dataset.tt;
@@ -945,6 +964,7 @@
       const end = (ev) => {
         if (!drag || ev.pointerId !== drag.id) return;
         const d = drag; drag = null; host.classList.remove("is-dragging"); if (d.el) d.el.remove(); clearMarks();
+        if (d.moved) draggedAt = performance.now();
         if (d.moved && d.over && d.ok && ev.type === "pointerup") hooks.onDrop(d.over, held.map((r) => r.recordId));
       };
       /* Properties, not listeners: the source survives a patch now (§3.1), and a handler added on
