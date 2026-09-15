@@ -295,5 +295,78 @@ eq(T.printSheet({kind: "status", label: "Watched", rows: []}).includes("0 cards 
   eq(T.accepts(deckT.play.trayPiles[0], owned).action, "tray", "and a tray still reserves");
   ok(!T.accepts(deckT.play.draw, [catalogRow]).ok, "a sent card is not a copy you can pick up for a deck");
 }
+/* ------------------------------------------------- THE DECKS ON THE BACK ROW (Rob, 15 September) */
+/* Six deck groups standing in the destination band read as the same kind of thing as the
+   collection groups and crowded them out. A deck is a source and a place, like the Bench beside
+   it, so it belongs on the back row: one pile each, a click filters, a drop seats the copy. */
+{
+  const live6 = state.decks.filter((d) => !d.archived).slice(0, 3);
+  ok(live6.length >= 2, `decks to shelve (${live6.length})`);
+  const needsOf = (d) => new Set(d.slots.filter((r) => r.committed && r.purpose === "main" && M.shortfall(state, d, r) > 0).map((r) => r.cardId));
+  const shelf = live6.map((d) => ({id: d.id, name: d.name, needs: needsOf(d)}));
+  const t6 = T.table(rows, {...opts, groupBy: "type", decks: shelf});
+  eq(t6.deckPiles.length, shelf.length, "one pile per deck");
+  eq(t6.deckPiles[0].label, live6[0].name, "named for the deck");
+  eq(t6.deckPiles[0].count, rows.filter((r) => r.deckId === live6[0].id || r.standInDeckId === live6[0].id).reduce((n, r) => n + r.quantity, 0),
+    "and holding the rows that name it, which is what makes the count predict the filter");
+  eq(T.findPile(t6, t6.deckPiles[0].id).deckId, live6[0].id, "findPile reaches it, so the drag and the keyboard do too");
+  eq(T.table(rows, {...opts, groupBy: "type"}).deckPiles, [], "no decks given, no shelf — the model says nothing it was not asked");
+  /* The drop seats the copy: reserved for the seat it fills, and in that deck's box. */
+  const pile6 = t6.deckPiles.find((p) => p.needs.size) || t6.deckPiles[0];
+  const owned = rows.filter((r) => r.kind === "lot" && r.source === "owned");
+  const wanted = owned.filter((r) => pile6.needs.has(r.cardId)).slice(0, 1);
+  if (wanted.length) {
+    const a = T.accepts(pile6, wanted);
+    eq(a.action, "seat", "a copy the deck's list still wants is seated");
+    ok(/Reserve for .* and put it in the box/.test(a.label), `and the label says both halves: ${a.label}`);
+  } else ok(true, "this library has no owned copy any of these decks is still short of");
+  const unwanted = owned.filter((r) => !pile6.needs.has(r.cardId)).slice(0, 1);
+  if (unwanted.length) {
+    const a = T.accepts(pile6, unwanted);
+    eq(a.action, "seat", "a copy it does not want is still a drop");
+    ok(/Substitute/.test(a.why), "but the words say it will be refused unless it goes in as a substitute");
+  } else ok(true, "every owned copy is wanted by this deck today");
+  const ordered = rows.filter((r) => r.kind === "lot" && r.source === "ordered").slice(0, 1);
+  if (ordered.length) ok(!T.accepts(pile6, ordered).ok, "an ordered copy cannot go into a box before it arrives");
+  else ok(true, "no ordered copy in the live library today");
+  const need = rows.filter((r) => r.kind === "need").slice(0, 1);
+  ok(!T.accepts(pile6, need).ok, "and a seat on a list is not a copy");
+  /* Two properties of the source that the DOM would only fail at quite far from their cause.
+     A chip on this table is a pile you can lay out, and the keyboard model walks the chips as
+     the group row — so "Select all", which is a filter, must not wear that class or Enter on it
+     opens nothing; and the arrow model has to read `deck-pick` as well as `open`, or the back
+     row's piles are a dead end once the arrows reach them. */
+  const ttSrc = readFileSync(path.join(ROOT, "crankmagic-tabletop.js"), "utf8");
+  ok(!/cm-tt-chip cm-tt-allchip/.test(ttSrc), "Select all is not a pile chip");
+  /* ESCAPE IS ASKED FOR, NOT TAKEN. A control on the mat can open something of the host's own --
+     the row menu behind Status\u2026 -- and Chrome closes a popover before any listener runs, so the
+     table cannot tell whose Escape it is. It asks, and only swallows the key if the host did not
+     decline: a preventDefault before the answer cancels the popover's own close watcher and the
+     menu sticks open, which is how this was found. */
+  ok(/onClear\("escape"\) !== false\) ev\.preventDefault\(\)/.test(ttSrc),
+    "Escape is only swallowed once the host has not declined it");
+  ok(/matches\("\[data-tt=open\], \[data-tt=deck-pick\]"\)\s*&&\s*\/\^Arrow\//.test(ttSrc),
+    "and the arrows walk the back row's picks as well as the piles");
+}
+
+/* ------------------------------------------------ §3.1: paint once, patch thereafter (source) */
+/* The mat is a string the module builds and then APPLIES AS A PATCH, so a node that has not
+   changed is never destroyed — which is what keeps focus, scroll and decoded pictures. Two rules
+   make that safe, and both are properties of the source rather than of any one library, so they
+   are asserted here where a reader will find them beside the model they belong to. */
+{
+  const src = readFileSync(path.join(ROOT, "crankmagic-tabletop.js"), "utf8");
+  ok(!/host\.innerHTML\s*=/.test(src), "the mat is painted, never written over with innerHTML");
+  ok(/function patch\(old, next\)[\s\S]{0,120}isEqualNode/.test(src),
+    "and the first thing the patch does is leave a byte-identical subtree alone — the rule that does the work");
+  /* A node that survives a redraw must not collect a handler per redraw. Everything bound to a
+     surviving node is assigned as a property, which replaces; `addEventListener` inside `mount`
+     would stack, which is the bug PR 3b found on the page's own keydown one level up. */
+  const mountSrc = src.slice(src.indexOf("function mount(host, model"));
+  const added = mountSrc.match(/\.addEventListener\(/g) || [];
+  eq(added.length, 0, `nothing inside mount() adds a listener (${added.length} found); handlers are properties, so a patched node never stacks them`);
+  for (const on of ["onchange", "onpointerdown", "onpointermove", "onpointerup", "onpointercancel"])
+    ok(new RegExp("\\." + on + "\\s*=").test(mountSrc), `${on} is assigned as a property`);
+}
 M.setRecordSource(null);
 console.log(`crankmagic-tabletop: ${checks} checks passed — ${t.total} copies on the table, bench ${t.bench.count}, ${t.statusPiles.length} status piles, ${T.GROUPINGS.length} groupings.`);

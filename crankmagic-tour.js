@@ -113,7 +113,9 @@ const TOURS=[
    promise:'Cards found by how they interact, not by remembering them.',
    have:'Cards in your deck that you found by how they interact rather than by recalling them — and a recorded reason each one is in there.',
    steps:[
-    {view:'discover',selectors:['#cm-graph-query'],
+    /* The bare input collapses to nothing while the graph is still loading, so the step points at
+       the labelled search box around it — found in the sweep, PR 6. */
+    {view:'discover',selectors:['.cm-toolbar .cm-search','#cm-graph-query','.cm-toolbar'],
      title:'Start from a card you already play',
      copy:'Every Commander-legal card is in here, including printings that carry a different name on the front.'},
     {view:'discover',selectors:['#cm-graph'],
@@ -139,7 +141,10 @@ const TOURS=[
      copy:'With a deck picked, Trace lights its cards from the commander outward — only the joins that serve its strategies, the loops that come back in gold, the cards it never touches ghosted on the outer band. Untick a strategy and the deck changes in front of you; the list in the pane is the same walk, in order.'},
     {view:'discover',selectors:['[data-action=add-card]'],
      title:'Take it with you',
-     copy:'Add straight to a deck’s plan, a collection group, or your wish list, without leaving the graph.'}]},
+     copy:'Add straight to a deck’s plan, a collection group, or your wish list, without leaving the graph.'},
+    {view:'discover',selectors:['.cm-pick-actions','.cm-pane-tab[data-tab=list]','#cm-card-view'],
+     title:'Or send them to the table',
+     copy:'Tick cards on the graph or in the List tab and Send to the table carries them to Cards → Table, where they arrive as cards you are considering — never as copies you own. Sort them into a group there and they become planned entries.'}]},
 
   {id:'collect',name:'Organize what you own',icon:'🜃',
    job:'Get my collection into the app, and into groups that match how I store it.',
@@ -166,7 +171,13 @@ const TOURS=[
      copy:'And what it shows is what an export carries — set the columns once and every export matches.'},
     {view:'cards',selectors:['[data-action=add-card]'],
      title:'One card at a time',
-     copy:'Including cards you do not own yet: add them marked as Watched and they turn up on the To buy tab.'}]},
+     copy:'Including cards you do not own yet: add them marked as Watched and they turn up on the To buy tab.'},
+    {view:'cards',params:{view:'tabletop'},selectors:['.cm-tt-mat','.cm-view-switch'],
+     title:'Or sort it like a real table',
+     copy:'Table lays the same rows out as piles on a mat: your cards down both sides, the middle to work in, and a band of destinations along the bottom. With no deck picked that band is your collection groups, and there is a door to a new one.'},
+    {view:'cards',params:{view:'tabletop'},selectors:['.cm-tt-trays','.cm-tt-play'],
+     title:'Four trays, four groups',
+     copy:'Bind each tray to a group and drop cards into it while you sort; the scoreboard reads how big each group is getting. Nothing is written until you confirm, so you can change your mind as often as you like.'}]},
 
   {id:'perform',name:'Read a deck’s performance',icon:'🜔',
    job:'Is this deck good — and good at what?',
@@ -183,13 +194,18 @@ const TOURS=[
     {view:'decks',params:firstDeck,selectors:['.cm-deck-summary','.cm-deck-next'],
      title:'What the score is',
      copy:'Points on a fixed protocol: six seeds of 20,000 games against sampled opponents. Comparable only with another score from that same protocol, and the app says so when two differ.'},
-    {view:'decks',params:()=>({...firstDeck(),tab:'history'}),selectors:['[data-action=deck-evidence]','[data-action=compare-reports]'],
+    /* A deck with no runs yet shows the panel's empty state, where neither button exists — so the
+       step falls back to the panel itself rather than pointing at nothing (sweep, PR 6). */
+    {view:'decks',params:()=>({...firstDeck(),tab:'history'}),selectors:['[data-action=deck-evidence]','[data-action=compare-reports]','#cm-sec-history'],
      title:'The report is where the detail lives',
      copy:'How often you win, how fast, how much you cast in a turn, the turn the games ended — and the per-card cast rates. A card cast in 2% of games is a card to replace, and that list is the one the refiner works from.'},
-    {view:'decks',params:firstDeck,selectors:['.cm-curve','.cm-count-list','.cm-grid-2'],
+    /* The curve and the counts live on the deck's Cards tab, not its Overview — the step used to
+       land on Overview and point at nothing (sweep, PR 6). */
+    {view:'decks',params:()=>({...firstDeck(),tab:'cards'}),selectors:['.cm-curve','.cm-count-list','#cm-sec-cards'],
      title:'The shape, before any simulation',
      copy:'The curve and the counts tell you things a score cannot: too few lands, nothing to do on turn two, or eleven cards that all want the same slot.'},
-    {view:'decks',params:firstDeck,selectors:['[data-action=deck-suggestions]','[data-action=compare-decks]'],
+    /* And the recommendations live on the Guide tab, for the same reason. */
+    {view:'decks',params:()=>({...firstDeck(),tab:'guide'}),selectors:['[data-action=deck-suggestions]','#cm-sec-swot','[data-action=compare-decks]'],
      title:'And what to do about it',
      copy:'Recommendations read the report and the card graph together, so a suggested swap comes with the measurement that argued for it.'}]},
 
@@ -211,12 +227,18 @@ const TOURS=[
     {view:'cards',params:{tab:'buy'},selectors:['[data-action=shop-buy]','.cm-row-actions','#cm-roster-table'],
      title:'Buy marks it owned',
      copy:'And assigns it to the deck that was waiting for it. On a phone this is the whole interface: name, colour, type, rarity, price, Buy.'},
-    {view:'cards',params:{tab:'buy'},selectors:['[data-action=export-view]'],
+    {view:'cards',params:{tab:'buy'},selectors:['[data-action=export-view]','[data-action=roster-more]'],act:'openMore',
      title:'Take it with you',
      copy:'Export exactly what you are looking at — the filters, the grouping and the columns — as a list you can print or hand to a shop.'},
     {view:'cards',params:{tab:'buy'},selectors:['.cm-user-menu','#cm-user-functions'],
      title:'Or mail it to yourself',
-     copy:'Which is how the list gets from the desktop you built on into the pocket you shop with.'}]},
+     copy:'Which is how the list gets from the desktop you built on into the pocket you shop with.'},
+    {view:'cards',params:{view:'tabletop'},selectors:['.cm-tt-play','.cm-tt-mat'],
+     title:'And when the cards arrive, a table to build on',
+     copy:'Pick a deck at the top of Table and the middle becomes its play space. Lift a card into it to consider it, and the scoreboard reads where confirming would leave the deck: how many of the hundred are named, reserved, substituted, still to buy, and what finishing costs.'},
+    {view:'cards',params:{view:'tabletop'},selectors:['.cm-tt-trays','.cm-tt-tray'],
+     title:'A tray puts it on the list',
+     copy:'Drop a card in a tray and confirming does two things — it adds the card to the deck’s hundred and reserves your copy for that seat. The receipt says both before anything is written, and one undo takes the whole sitting back.'}]},
 
   {id:'portable',name:'Move your library between devices',icon:'🜍',
    job:'Back it up, take it to a convention, and bring the changes home.',
@@ -272,6 +294,9 @@ const ACTS={
   openCommander(){const d=$('#cm-lab-commander');if(d&&!d.hidden)d.open=true;},
   openDefinition(){const d=$('#cm-lab-definition');if(d)d.open=true;},
   openFilters(){const p=$('#cm-filter-host');if(p&&!p.children.length)$('[data-action=roster-filters]')?.click();},
+  /* Export and the other page tools moved behind the Cards page's More menu, so a step about
+     one has to open it first (sweep, PR 6). Opening an open menu is a no-op. */
+  openMore(){if(!$('[data-action=export-view]'))$('[data-action=roster-more]')?.click();raise();},
   openMenu(){
     const m=$('#cm-user-menu');
     try{if(m&&!m.matches(':popover-open'))m.showPopover();}catch{/* unsupported, or already open */}
@@ -371,7 +396,12 @@ function place(step,index){
       return;
     }
     centre();
-    if((tries+=1)<30)setTimeout(attempt,200);
+    /* Twelve seconds, not six (found in the sweep, PR 6). Discover renders after its graph data
+       lands, and on a cold cache that can outlast the old budget — after which the step was
+       left pointing at the middle of the screen with a one-pixel spotlight and no way to tell
+       that from a step whose target is genuinely gone. A found target returns on the first
+       attempt, so a longer budget costs a reader nothing. */
+    if((tries+=1)<60)setTimeout(attempt,200);
   };
   requestAnimationFrame(()=>requestAnimationFrame(attempt));
 }

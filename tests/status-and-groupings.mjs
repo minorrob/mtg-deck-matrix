@@ -49,6 +49,20 @@ for (const f of ["crankmagic-decks.js", "crankmagic-loops.js"]) {
   const text = readFileSync(path.join(ROOT, f), "utf8");
   ok(!/const GC_LIMIT=2;|\/\^D\[56\]|'atraxa','krenko'/.test(text), `${f} no longer carries the literal`);
 }
+/* THE UPGRADE PATH HAS TWO ANSWERS (Rob, 15 September). Promote was the only verb, so a card you
+   had looked at and ruled out stayed on the list to be read again next time; Decline removes the
+   option and nothing else. And because Promote is the screen where the buy is decided, it names
+   both shops rather than one cached price — checked here, at the source, because the deck page
+   only draws this table for a library that has linked options. */
+{
+  const decks = readFileSync(path.join(ROOT, "crankmagic-decks.js"), "utf8");
+  ok(/<th scope="col">Promote<\/th><th scope="col">Decline<\/th>/.test(decks), "Decline stands beside Promote in the table");
+  ok(/actions\['decline-option'\][\s\S]{0,400}type:'removeOption'/.test(decks), "and it removes the option, nothing else");
+  ok(/actions\['decline-option'\][\s\S]{0,400}keeps the slot/.test(decks), "saying so before it asks");
+  const promote = decks.slice(decks.indexOf("actions['promote-option']"), decks.indexOf("actions['decline-option']"));
+  ok(/C\.buyLink\(c\)/.test(promote) && /C\.kingdomLink\(c\)/.test(promote), "and the Promote receipt names both shops");
+  ok(/colspan="7"/.test(decks), "the empty row spans the column that was added");
+}
 
 /* The projection: one computation per revision, fresh rows every call. */
 let n = 0;

@@ -41,7 +41,11 @@ const PAGES = [
   [`decks?deck=${DECK}`, "Deck page", ".cm-deck-summary", [48, 15, 4], [48, 15, 4]],
   /* Cards (14 September): the seven count chips are buttons now — Rob asked for the counts to
      filter — and List · Sheet · Table sit on the tab row of every tab; 22 → 26, 10 → 11. */
-  ["cards", "Cards · Library", "#cm-roster-table table", [76, 26, 16], [76, 26, 16]],
+  /* 27, not 26: "Return to the Table" is the one control Rob asked for by name after losing his
+     way back from a filtered list (15 September). The view switch in the page head says Table
+     too, but a three-way segment up there is not where a reader who has just filtered something
+     is looking. Raised deliberately; the next control on this page has to argue for itself. */
+  ["cards", "Cards · Library", "#cm-roster-table table", [76, 27, 16], [76, 27, 16]],
   ["cards?tab=buy", "Cards · To buy", "#cm-roster-table table, .cm-shop-strip", [40, 18, 8], [16, 10, 4]],
   ["cards?view=sheet", "Cards · Sheet", "#cm-sheet-table table", [46, 16, 20], [46, 16, 20]],
   ["lab", "Build", "#cm-lab-results", [90, 16, 40], [90, 16, 40]],
@@ -51,6 +55,11 @@ const PAGES = [
   [`pull?deck=${DECK}`, "Ready to add", ".cm-pull-group", [48, 8, 4], [48, 8, 4]],
   ["how", "How a deck comes together", ".cm-how-flow", [14, 3, 2], [14, 3, 2]],
   ["cards?tab=orders", "Cards · Orders", ".cm-orders, .cm-table", [24, 11, 4], [24, 11, 4]],
+  /* Cards · Table (15 September, play space PR 6). Everything above the mat is the page head,
+     the three tabs, the view switch and the five filters — the mat itself carries no prose, which
+     is the point of it: the words are on the cards. 40 words, 17 controls, and the same at both
+     widths because the phone gets the same toolbar over a narrower mat. */
+  ["cards?view=tabletop", "Cards · Table", ".cm-tt-mat", [40, 17, 16], [40, 17, 16]],
 ];
 const WIDTHS = [[1400, "desktop", 3], [390, "phone", 4]];
 

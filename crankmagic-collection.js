@@ -285,6 +285,12 @@ C.HELP.cards={title:'Cards',body:()=>`<div class="cm-help cm-help-wide">`
   +`<li><b>Paid</b> and <b>Quantity</b> are cells: click one and type.</li>`
   +`<li><b>Ready to add</b>, for walking owned copies into a deck, and <b>Make the change</b>, the pull-and-put list for one physical deck, are both under <b>More</b>.</li>`
   +`<li>Every change is one entry in the library, so <b>Undo</b> takes it back and every other view agrees.</li>`
+  +`</ul><h3>The Table is a table you play on</h3>`
+  +`<p><b>Table</b> lays the same rows out as piles on a mat, and it has two jobs depending on one thing: whether a deck is picked.</p><ul>`
+  +`<li><b>Pick a deck</b> and the middle becomes its play space. Lift a card into it to consider it; drop one in a tray to put it on the deck's list and reserve your copy; the scoreboard reads where confirming would leave the deck. The band along the bottom is the six statuses.</li>`
+  +`<li><b>Pick none</b> and it sorts your shelf: the band becomes your collection groups and a door to a new one, each tray fills the group you bind it to, and the statuses move up to a line of chips — still one click from being laid out, still somewhere a card can be dropped.</li>`
+  +`<li><b>Nothing is written until you confirm.</b> A move on the table joins a sitting; the bar says how many are pending, the receipt says what each one changes, and one <b>Undo</b> takes the whole sitting back. A sitting survives a reload.</li>`
+  +`<li>Cards from <b>Discover</b> arrive here with <i>Send to the table</i>, marked <i>Sent from Discover</i>. They are cards you are considering, never copies you own: file one in a group and it becomes a planned entry.</li>`
   +`</ul></div>`};
 /* THE SPREADSHEET. Rob's Master sheet, read from the library instead of kept beside it: one
    row per card; Own, Ordered, Bench and To buy across it; and for every deck two columns --
@@ -387,9 +393,9 @@ function sheetEdit(btn,seed=''){
    this view feeds it the rows, the filters and the reader's grouping choice. */
 let tabletopGroupBy=C.state.preferences.tabletopGroupBy||'type';
 /* The table's own state between draws: the open pile, its page and card size, the ticks while it is laid out, the selection on the stage and the pile it came from. */
-const ttUI={open:null,from:null,page:0,size:'M',ticked:new Set(),selection:new Set(),bench:'open',stageSize:'XL',canvas:'slate',trays:4,drawAt:0,hand:new Set(),trayGroups:['','','','']};
+const ttUI={open:null,from:null,page:0,size:'M',ticked:new Set(),selection:new Set(),stageSize:'XL',canvas:'slate',trays:4,drawAt:0,hand:new Set(),trayGroups:['','','','']};
 /* The card size, the Bench ledge's fold and the stage's picture size are facts about the screen they were chosen on, so they are remembered per device and not in the library. */
-try{const s=localStorage.getItem('cm-tabletop-size');if(s&&['S','M','L'].includes(s))ttUI.size=s;if(localStorage.getItem('cm-tabletop-bench')==='shut')ttUI.bench='shut';const z=localStorage.getItem('cm-tabletop-stage');if(z&&['L','XL','XXL','full'].includes(z))ttUI.stageSize=z;const c=localStorage.getItem('cm-tabletop-canvas');if(c&&globalThis.CrankTabletop&&CrankTabletop.CANVASES.some(([k])=>k===c))ttUI.canvas=c;const t=Number(localStorage.getItem('cm-tabletop-trays'));if(Number.isInteger(t)&&t>=1&&t<=4)ttUI.trays=t;
+try{const s=localStorage.getItem('cm-tabletop-size');if(s&&['S','M','L'].includes(s))ttUI.size=s;localStorage.removeItem('cm-tabletop-bench');const z=localStorage.getItem('cm-tabletop-stage');if(z&&['L','XL','XXL','full'].includes(z))ttUI.stageSize=z;const c=localStorage.getItem('cm-tabletop-canvas');if(c&&globalThis.CrankTabletop&&CrankTabletop.CANVASES.some(([k])=>k===c))ttUI.canvas=c;const t=Number(localStorage.getItem('cm-tabletop-trays'));if(Number.isInteger(t)&&t>=1&&t<=4)ttUI.trays=t;
   /* Shelf mode's hand and its tray bindings are the same kind of fact: about this screen, not
      about the library. Nothing here is a staged move, so nothing here is written to the sitting. */
   const h=JSON.parse(localStorage.getItem('cm-tabletop-hand')||'[]');if(Array.isArray(h))ttUI.hand=new Set(h.filter(x=>typeof x==='string').slice(0,200));
@@ -400,7 +406,7 @@ let tabletopStatusOrder=C.state.preferences.tabletopStatusOrder==='count'?'count
 let ttModel=null;
 /* The one keydown and the one resize the table has attached, so a redraw replaces them rather
    than stacking another pair on top (see the note where they are registered). */
-let ttKey=null,ttResize=null;
+let ttKey=null,ttResize=null,ttEscShielded=false;
 /* THE PLAY SPACE'S TWO QUESTIONS (plan §2.1, §2.3, §2.14), answered here because only this view
    knows the sandbox and the model. crankmagic-tabletop.js lays the middle out; it does not decide
    what is in your hand or do the arithmetic on the scoreboard.
@@ -414,6 +420,17 @@ let ttKey=null,ttResize=null;
    a lifted card into and no list for a tray to build, so the middle says so rather than pretending
    -- shelf mode, where the destinations are collection groups instead, is PR 4 (§2.15). */
 function playDeck(params){const id=params.get('deck');if(!id)return null;const d=C.state.decks.find(x=>x.id===id&&!x.archived);return d&&d.groupId?d:null;}
+/* THE DECKS ON THE BACK ROW (Rob, 15 September). Each finalized, unarchived deck, with the set of
+   cards its list still lacks a copy for — which is what lets the drop say, before anything is
+   staged, how many of what you are holding that deck can actually seat. */
+function deckShelf(){
+  const st=lens();
+  return st.decks.filter(d=>!d.archived).map(d=>{
+    const needs=new Set();
+    try{for(const r of M.deck(st,d.id).slots)if(r.committed&&r.purpose==='main'&&M.shortfall(st,d,r)>0)needs.add(r.cardId);}catch(err){/* a deck mid-edit still gets a pile */}
+    return {id:d.id,name:d.name,needs};
+  });
+}
 function playSpec(params){
   const d=playDeck(params),sb=C.sandbox,shelf=!d;
   return {deck:d?{id:d.id,name:d.name,groupId:d.groupId}:null,trays:ttUI.trays,at:ttUI.drawAt,
@@ -421,7 +438,10 @@ function playSpec(params){
        collection groups, the trays are buckets bound to one each, and a group's membership is
        what the row already carries -- so the module lays them out and this view answers only
        the two questions it alone can: which groups exist, and which ones this row is in. */
-    groups:shelf?C.state.groups.map(g=>({id:g.id,name:g.name})):[],
+    /* A deck's own group is the deck, and the deck is a pile on the back row now — so it is not
+       also a destination in the band, where six of them crowded out the groups being sorted into
+       (Rob, 15 September, with the screenshot that made the case). */
+    groups:shelf?C.state.groups.filter(g=>!C.state.decks.some(d=>d.groupId===g.id)).map(g=>({id:g.id,name:g.name})):[],
     trayGroups:shelf?ttUI.trayGroups:[],
     groupOf:r=>r.groupIds||[],
     /* The sandbox answers first, because a staged move is a claim and the hand is not: in deck
@@ -493,7 +513,7 @@ function tabletop(params,shop=false){
     const have=new Set(base.map(r=>r.cardId));
     const sent=sentRows().filter(r=>!have.has(r.cardId)&&matches(r));
     const all=base.concat(sent);lastRows=all;
-    const model=TT.table(all,{groupBy:tabletopGroupBy,statuses:M.STATUS,statusOrder:M.statusOrder,value,maxGroupPiles:16,statusSort:tabletopStatusOrder,play:playSpec(params)});ttModel=model;
+    const model=TT.table(all,{groupBy:tabletopGroupBy,statuses:M.STATUS,statusOrder:M.statusOrder,value,maxGroupPiles:16,statusSort:tabletopStatusOrder,decks:deckShelf(),play:playSpec(params)});ttModel=model;
     $('#cm-tt-status').innerHTML=e(`${model.total.toLocaleString()} cop${model.total===1?'y':'ies'} on the table (${model.rows.toLocaleString()} rows) · Bench ${model.bench.count.toLocaleString()} · ${model.ghosts.toLocaleString()} ghost${model.ghosts===1?'':'s'}`+(Object.values(filter).some(v=>v!=='')||params.get('deck')?' · filtered':''))
       +(sent.length?` · ${sent.length} sent from Discover <button type="button" class="cm-text-button" data-action="table-clear-sent">Send them back</button>`:'');
     /* A selection that the filters no longer show is dropped; an open pile that vanished (a grouping change) closes. */
@@ -517,7 +537,7 @@ function tabletop(params,shop=false){
         try{window.print();}catch(err){done();C.notice('This browser could not open the print dialog.',true);}},
       onTick:id=>{if(ttUI.ticked.has(id))ttUI.ticked.delete(id);else ttUI.ticked.add(id);draw();queueMicrotask(()=>$(`#cm-tt-host .cm-tt-card[data-record="${CSS.escape(id)}"]`)?.focus?.({preventScroll:true}));},
       onSelect:list=>{ttUI.selection=new Set(list);ttUI.from=ttUI.open;ttUI.open=null;ttUI.ticked.clear();draw();queueMicrotask(()=>$('#cm-tt-host .cm-tt-stage-actions button')?.focus?.({preventScroll:true}));},
-      onClear:()=>{rest();draw();},
+      onClear:why=>{if(why==='escape'&&ttEscShielded){ttEscShielded=false;return false;}rest();draw();},
       onMenu:(record,el)=>{actions['row-actions'](el);},
       onDrop:(pileId,ids)=>{try{tabletopDrop(pileId,ids);}catch(err){C.notice(err.message,true);}},
       /* MOVE TO… LISTS ONLY WHERE THE CARD CAN GO (Rob, 14 September). It offered every pile on the
@@ -530,13 +550,16 @@ function tabletop(params,shop=false){
          refused pile ringed in red answers "can I drop here", which is the question being asked;
          in a menu the same thing is only noise. */
       onMoveTo:(ids,el)=>{const rows=ids.map(id=>findRow(id)).filter(Boolean);
-        const open=[...ttModel.statusPiles,...(ttModel.shelfPiles||[]),ttModel.bench,...ttModel.groupPiles].map(p=>({p,a:TT.accepts(p,rows)})).filter(x=>x.a.ok);
+        const open=[...ttModel.statusPiles,...(ttModel.shelfPiles||[]),...(ttModel.deckPiles||[]),ttModel.bench,...ttModel.groupPiles].map(p=>({p,a:TT.accepts(p,rows)})).filter(x=>x.a.ok);
         /* Nothing accepts it: the Bench is the most permissive destination there is, so its refusal
            is the fundamental one and the only sentence worth printing. */
         popAt(el,`<p>Move ${rows.length} card${rows.length===1?'':'s'} to</p>`+(open.length
           ?open.map(({p,a})=>`<button type="button" data-action="tabletop-drop" data-pile="${e(p.id)}" title="${e(a.why)}">${e(p.label)} <small>${e(a.label)}</small></button>`).join('')
           :note(TT.accepts(ttModel.bench,rows).why||'There is nowhere on the table this card can be moved to.',true)));},
-      onBench:open=>{ttUI.bench=open?'open':'shut';try{localStorage.setItem('cm-tabletop-bench',ttUI.bench);}catch(err){/* not remembered, still applied */}draw();queueMicrotask(()=>$('#cm-tt-host [data-tt=bench-toggle]')?.focus?.({preventScroll:true}));},
+      /* A DECK'S PILE IS THE DECK FILTER (Rob, 15 September), which is the same control the Deck
+         select in the toolbar drives — so it goes through the route, and picking one also puts
+         the middle into that deck's play space, because that is what picking a deck means here. */
+      onDeckPick:id=>goCards(tab,{view:'tabletop',...(id?{deck:id}:{})}),
       /* THE CANVAS (Rob, 14 September): which table you are working on, remembered per device
          because it is a fact about this screen rather than about the library. */
       onCanvas:c=>{ttUI.canvas=CrankTabletop.canvasOf(c);try{localStorage.setItem('cm-tabletop-canvas',ttUI.canvas);}catch(err){/* not remembered, still applied */}draw();queueMicrotask(()=>$('#cm-tt-host [name=tabletopCanvas]')?.focus?.({preventScroll:true}));},
@@ -575,7 +598,7 @@ function tabletop(params,shop=false){
         return {status:r.status||statusOf(r),price:r.card&&r.card.price!=null?C.money(r.card.price):'',deck:where,
           ownership:`${o.owned}/${o.wanted}`,
           ownershipWhy:`You own ${o.owned} of the ${o.wanted} cop${o.wanted===1?'y':'ies'} ${where?'the '+where+' list calls for':'your lists call for'}.`};}
-    },{...ttUI,viewportHeight:innerHeight,score:scoreboard(model)});
+    },{...ttUI,deck:params.get('deck')||'',viewportHeight:innerHeight,score:scoreboard(model)});
   };
   draw();
   const host=C.main;
@@ -593,9 +616,9 @@ function tabletop(params,shop=false){
      Escape ran twenty handlers, each redrawing through ITS OWN captured `params`: the last one to
      run won, so the table could come back scoped to a filter the reader had left behind. Only the
      current pair stands now, and the previous pair goes when it does. */
-  removeEventListener('keydown',ttKey);removeEventListener('resize',ttResize);
+  removeEventListener('keydown',ttKey);removeEventListener('resize',ttResize);ttEscShielded=false;
   /* Escape is the table at rest from anywhere on the page — a redraw can leave the focus on the body, where the mat's own key handler cannot hear it. Not while a dialog or a menu is open, and not from a field. */
-  const onKey=ev=>{const r=C.route();if(r.view!=='cards'||r.params.get('view')!=='tabletop'){removeEventListener('keydown',onKey);return;}if(ev.key!=='Escape'||ev.defaultPrevented||!(ttUI.open||ttUI.selection.size))return;if(document.querySelector('dialog[open]')||[...document.querySelectorAll('[popover]')].some(p=>p.matches(':popover-open'))||ev.target.closest?.('input,select,textarea'))return;ev.preventDefault();ttUI.open=null;ttUI.from=null;ttUI.page=0;ttUI.ticked.clear();ttUI.selection.clear();draw();};
+  const onKey=ev=>{const r=C.route();if(r.view!=='cards'||r.params.get('view')!=='tabletop'){removeEventListener('keydown',onKey);return;}if(ev.key!=='Escape')return;if(ttEscShielded){ttEscShielded=false;return;}if(ev.defaultPrevented||!(ttUI.open||ttUI.selection.size))return;if(document.querySelector('dialog[open]')||[...document.querySelectorAll('[popover]')].some(p=>p.matches(':popover-open'))||ev.target.closest?.('input,select,textarea'))return;ev.preventDefault();ttUI.open=null;ttUI.from=null;ttUI.page=0;ttUI.ticked.clear();ttUI.selection.clear();draw();};
   ttKey=onKey;addEventListener('keydown',onKey);
   /* The mat is sized from the host's width, so a resize redraws it. */
   let last=host.clientWidth;const onResize=()=>{if(C.route().view!=='cards'||C.route().params.get('view')!=='tabletop'){removeEventListener('resize',onResize);return;}if(Math.abs(host.clientWidth-last)>40){last=host.clientWidth;draw();}};
@@ -685,6 +708,12 @@ function tabletopDrop(pileId,ids){
       note(`${names}. ${adds?`${adds} of these ${adds===1?'is':'are'} not on ${d.name}'s list yet, so confirming adds ${adds===1?'it':'them'} — the list goes from ${target} to ${after}${after>100?`, ${after-100} over a hundred`:''}.`:`Every one of these is already on ${d.name}'s list; confirming reserves your copies for the seats they fill.`}`,after>100)
       +note('Staged, not saved: this joins the sitting and is written when you confirm.'),
       ()=>stageRows(rows,{action:'tray',tray:n,deckId:d.id,deckName:d.name,to:`Tray ${n}`,toStatus:'Reserved'}),'Stage the move');return;}
+  /* A DECK'S OWN PILE (Rob, 15 September). The deck is known, so there is no form to fill: one
+     `place` reserves the copy for the seat it fills and records it as physically in that box,
+     which is what "reserved and in physical deck" means in the model's own words. A copy the list
+     does not call for is refused by name at Confirm, with the model's sentence. */
+  if(action==='seat'){const d=M.deck(C.state,pile.deckId);
+    return stageRows(rows,{action:'place',deckId:d.id,deckName:d.name,to:'Physical deck'});}
   if(action==='place'||action==='standin'){if(!finals.length)throw Error('Finalize a deck first — a draft holds no physical copies.');
     const standin=action==='standin',preferred=rows.map(r=>r.allocation?.deckId).find(Boolean)||'';
     const chosen=preferred||(finals[0]||{}).id||'';
@@ -743,7 +772,7 @@ function fileInGroup(rows,g,tray){
 function sheet(params){
   const m=M.matrix(lens()),decks=m.decks;
   C.main.innerHTML=cardsHead(params,'library','sheet')
-   +`<div class="cm-toolbar"><label class="cm-search">Search cards<input id="cm-sheet-query" value="${e(sheetQ)}" placeholder="Card name or type"></label>${s('Show','sheetOnly',SHEET_SHOW,sheetOnly)}${s('Deck','sheetDeck',[['','All decks'],...decks.map(d=>[d.id,d.name])],sheetDeck)}</div>`
+   +`<div class="cm-toolbar"><label class="cm-search">Search cards<input id="cm-sheet-query" value="${e(sheetQ)}" placeholder="Card name or type"></label>${s('Show','sheetOnly',SHEET_SHOW,sheetOnly)}${s('Deck','sheetDeck',[['','All decks'],...decks.map(d=>[d.id,d.name])],sheetDeck)}${b('Return to the Table','open-tabletop')}</div>`
    +`<p class="cm-status-line" id="cm-sheet-status"></p><div id="cm-sheet-table"></div>`;
   const host=$('#cm-sheet-table'),zero='<span class="cm-sheet-zero">0</span>',alt=i=>i%2?' cm-sheet-alt':'';
   const draw=()=>{
@@ -865,7 +894,7 @@ if(scope!==pickScope){pickScope=scope;picked.clear();}
    page is on screen. */
 if(!phoneWatch){phoneWatch=true;PHONE.addEventListener('change',()=>{if(C.route().view==='cards')C.render();});}
 const shopTools=`<div class="cm-shop-bar"><button type="button" class="v-button cm-shop-search-btn" data-action="shop-search" aria-label="Search cards" aria-expanded="${searchOpen}" title="Search cards"><span aria-hidden="true">\u{1F50D}</span></button>${b('Ready to add','pull-picker')}${b(expanded?'Hide filters':(gbGet()?'Filters •':'Filters'),'roster-filters')}${b('Tools','shop-tools',{},false,{caret:'down'})}</div><label class="cm-search cm-shop-search" id="cm-shop-search"${searchOpen?'':' hidden'}>Search cards<input id="cm-roster-query" value="${e(filter.q)}" placeholder="Name, type or rules text"></label>`;
-C.main.innerHTML=cardsHead(params,tab,'table',{tight})+(shop?'':'<div id="cm-roster-stats"></div>')+`<div class="cm-actions">${[['card','Card',params.get('card')?(C.card(params.get('card'))||C.catalog.get(params.get('card')))?.name||'Card':''],['deck','Deck',params.get('deck')?M.deck(C.state,params.get('deck')).name:''],['group','Group',params.get('group')?C.state.groups.find(g=>g.id===params.get('group'))?.name||'':'']].filter(([,,v])=>v).map(([k,l,v])=>`<span class="cm-chip cm-scope-chip">${l}: ${e(v)}<button type="button" class="cm-chip-x" data-action="clear-scope" data-key="${k}" aria-label="Remove the ${l} filter" title="Remove this filter">×</button></span>`).join('')}</div>`+(tight?shopTools:`<div class="cm-toolbar"><label class="cm-search">Search cards<input id="cm-roster-query" value="${e(filter.q)}" placeholder="Name, type or rules text"></label>${b(expanded?'Hide filters':(activeFilters().length?`Filters (${activeFilters().length})`:'Filters'),'roster-filters')}${b('Columns','roster-columns')}${b('Clear filters','clear-filters')}${s('Collection group','groupPick',[['','All groups'],...C.state.groups.map(g=>[g.id,g.name])],params.get('group')||filter.group)}${s('Group rows by','groupBy',GROUP_CHOICES,gbGet())}</div>`)+`<div id="cm-filter-chips"></div><div id="cm-filter-host"></div>${shop?'<div id="cm-shop-strip"></div>':''}<div id="cm-roster-table"></div>`;
+C.main.innerHTML=cardsHead(params,tab,'table',{tight})+(shop?'':'<div id="cm-roster-stats"></div>')+`<div class="cm-actions">${[['card','Card',params.get('card')?(C.card(params.get('card'))||C.catalog.get(params.get('card')))?.name||'Card':''],['deck','Deck',params.get('deck')?M.deck(C.state,params.get('deck')).name:''],['group','Group',params.get('group')?C.state.groups.find(g=>g.id===params.get('group'))?.name||'':'']].filter(([,,v])=>v).map(([k,l,v])=>`<span class="cm-chip cm-scope-chip">${l}: ${e(v)}<button type="button" class="cm-chip-x" data-action="clear-scope" data-key="${k}" aria-label="Remove the ${l} filter" title="Remove this filter">×</button></span>`).join('')}</div>`+(tight?shopTools:`<div class="cm-toolbar"><label class="cm-search">Search cards<input id="cm-roster-query" value="${e(filter.q)}" placeholder="Name, type or rules text"></label>${b(expanded?'Hide filters':(activeFilters().length?`Filters (${activeFilters().length})`:'Filters'),'roster-filters')}${b('Columns','roster-columns')}${b('Clear filters','clear-filters')}${b('Return to the Table','open-tabletop')}${s('Collection group','groupPick',[['','All groups'],...C.state.groups.map(g=>[g.id,g.name])],params.get('group')||filter.group)}${s('Group rows by','groupBy',GROUP_CHOICES,gbGet())}</div>`)+`<div id="cm-filter-chips"></div><div id="cm-filter-host"></div>${shop?'<div id="cm-shop-strip"></div>':''}<div id="cm-roster-table"></div>`;
 foldPrints=foldFor(shop);pageSize=C.state.preferences.pageSize==='all'?Infinity:(Number(C.state.preferences.pageSize)||60);
 /* FIVE FILTERS IN VIEW, THE REST ONE CLICK AWAY (search and group sit in the toolbar): type,
    mana, colour, status, deck. Subtype, mechanic, flags, offers, mana value and
@@ -1046,7 +1075,7 @@ const foldCaption=r=>{const decks=[...new Set(r.partRows.map(p=>p.deckId?shortDe
 actions['pull-picker']=el=>{const decks=C.state.decks.filter(d=>!d.archived&&d.status==='final');if(!decks.length)throw Error('Finalize a deck first — Ready to add lists a finalized deck’s owned, reserved copies.');popAt(el,`<p>Ready to add for</p>${decks.map(d=>{const r=M.readiness(C.state,d),n=r.pullFromBench+r.pullFromOtherBox+r.remove;return b(`${d.name}${n?` · ${n} ready to add`:''}`,'deck-pull',{deck:d.id});}).join('')}`);};
 /* The phone toolbar's menus. Each one is the control the desktop shows inline, folded
    into a tap so the bar stays one row on a 375px screen. */
-actions['shop-tools']=el=>popAt(el,`<p>Cards</p>${b('Add cards','add-card')}${b('Import a list or library','import-list')}${b('Export this view (CSV)','export-view')}${b('Print buy list','print-buy-list')}${b('Columns','roster-columns')}<hr><p>Phone and computer</p>${b('Load an e-mailed backup…','restore')}${b('Send this library to e-mail…','share-export')}<hr>${b('Clear filters','clear-filters')}`);
+actions['shop-tools']=el=>popAt(el,`<p>Cards</p>${b('Add cards','add-card')}${b('Import a list or library','import-list')}${b('Export this view (CSV)','export-view')}${b('Print buy list','print-buy-list')}${b('Columns','roster-columns')}<hr><p>Phone and computer</p>${b('Load an e-mailed backup…','restore')}${b('Send this library to e-mail…','share-export')}<hr>${b('Clear filters','clear-filters')}${b('Return to the Table','open-tabletop')}`);
 /* The search field stays in the DOM whether or not it is showing, so the listener bound
    at render time keeps working and a typed query survives the toggle. */
 actions['shop-search']=el=>{const row=$('#cm-shop-search');if(!row)return;searchOpen=row.hidden;row.hidden=!searchOpen;el.setAttribute('aria-expanded',String(searchOpen));if(searchOpen)$('#cm-roster-query').focus();};
@@ -1306,7 +1335,13 @@ actions['row-actions']=el=>{const r=findRow(el.dataset.record);if(!r)throw Error
     +section('Plan',[r.kind==='lot'&&!M.PLANNED.includes(r.source)?b('Reserve for a deck','reserve-row',{record:r.recordId}):'',r.kind==='lot'&&r.allocation?b('Release reservation → To buy','release-row',{record:r.recordId}):'',r.deckId&&slotId?b('Replacements & options','replacement',{deck:r.deckId,slot:slotId}):'',r.deckId&&slotId?slotFlagButtons(r.deckId,slotId):''])
     +section('Record',[r.kind==='lot'?b('Edit print & details','edit-row',{record:r.recordId}):'',b('Add another copy','add-card',{card:r.cardId}),r.kind==='lot'?b('Add / move to group','group-row',{record:r.recordId}):'',r.kind==='entry'?b('Move / copy to group','group-entry-row',{record:r.recordId}):''])
     +(owned?`<hr>${b('Sell / Trade','offer-row',{record:r.recordId})}`:'');
-  document.body.append(menu);menu.showPopover();const place=()=>{if(!el.isConnected){if(menu.matches(':popover-open'))menu.hidePopover();return;}const rect=el.getBoundingClientRect();if(rect.bottom<0||rect.top>innerHeight){if(menu.matches(':popover-open'))menu.hidePopover();return;}menu.style.left=Math.max(8,Math.min(innerWidth-menu.offsetWidth-8,rect.right-menu.offsetWidth))+'px';menu.style.top=Math.max(8,Math.min(innerHeight-menu.offsetHeight-8,rect.bottom+5))+'px';menu.dispatchEvent(new Event('cm-moved'));};place();C.followAnchor(menu,place);
+  /* ESCAPE CLOSES ONE THING (Rob, 15 September). This menu opens over the Table too, and the
+     Table treats Escape as "back to the table at rest" from anywhere on the page. Chrome closes
+     a popover before any keydown listener runs, so asking "is a menu open?" inside that handler
+     always answers no -- and one Escape both dismissed the menu and swept the card off the
+     stage. The menu says so itself instead: the flag is set here and cleared by `toggle`, which
+     is queued and so lands after the keypress the Table is about to read. */
+  document.body.append(menu);menu.showPopover();ttEscShielded=true;menu.addEventListener('toggle',ev=>{if(ev.newState==='closed')ttEscShielded=false;});const place=()=>{if(!el.isConnected){if(menu.matches(':popover-open'))menu.hidePopover();return;}const rect=el.getBoundingClientRect();if(rect.bottom<0||rect.top>innerHeight){if(menu.matches(':popover-open'))menu.hidePopover();return;}menu.style.left=Math.max(8,Math.min(innerWidth-menu.offsetWidth-8,rect.right-menu.offsetWidth))+'px';menu.style.top=Math.max(8,Math.min(innerHeight-menu.offsetHeight-8,rect.bottom+5))+'px';menu.dispatchEvent(new Event('cm-moved'));};place();C.followAnchor(menu,place);
   wireSubmenu(menu,'cm-status-submenu');wireSubmenu(menu,'cm-put-submenu');wireSubmenu(menu,'cm-standin-submenu');
   menu.addEventListener('click',ev=>{const hit=ev.target.closest('[data-action]');if(hit&&hit.dataset.action!=='row-count')menu.hidePopover();});};
 /* THE ONE MOVE THAT LOSES SOMETHING. An owned copy sitting in a physical deck, or reserved to a
@@ -1321,7 +1356,58 @@ actions['drop-slot']=el=>{const r=findRow(el.dataset.record);if(!r||r.kind!=='dr
   C.review(`Remove ${r.card.name} from ${d.name}`,note(`${d.name} is a draft, so this edits the plan only; no copies change hands.`),{type:'editDeck',deckId:d.id,slots:d.slots.filter(x=>x.id!==r.slotId&&x.replaces!==r.slotId)});};
 const printFields=p=>f('Set code','set',p?.set||'','maxlength="30"')+f('Collector number','collector',p?.collector||'','maxlength="40"')+s('Finish','finish',[['','Unspecified'],['nonfoil','Nonfoil'],['foil','Foil'],['etched','Etched']],p?.finish||'')+f('Language','language',p?.language||'')+f('Condition','condition',p?.condition||'')+`<label class="cm-checkbox"><input type="checkbox" name="signed" ${p?.signed?'checked':''}>Signed</label><label class="cm-checkbox"><input type="checkbox" name="altered" ${p?.altered?'checked':''}>Altered</label>`;
 function printing(v,prior={}){return {...prior,set:v.set,collector:v.collector,finish:v.finish,language:v.language,condition:v.condition,signed:!!v.signed,altered:!!v.altered};}
-async function acquire(c,{row,initialSource='owned'}={}){form('Record '+c.name,`<div class="cm-full">${note(row?'These copies will fulfill this deck requirement. Physical placement remains Bench until you confirm Put in deck.':'Record copies you own, ordered or arranged to receive — or mark a card Watched while you decide. A deck plan alone creates no ownership.')}</div>`+f('Quantity','quantity',row?.quantity||1,'type="number" min="1" max="1000000" required')+s('Source','source',[['owned','Owned'],['ordered','Ordered'],['watching','Watched — considering it']],initialSource)+printFields(row?.printing)+f('Box / location when owned','box')+f('Purchase cost (optional)','paid','','type="number" min="0" step="0.01"')+`<label class="cm-full">Notes<textarea name="notes"></textarea></label>`,async v=>{let exact=c,p=printing(v);if(p.set&&p.collector){exact=await C.catalog.resolve(c.name,{printing:p});if(!exact)throw Error('No exact printing found. Check the set and collector number.');p.id=exact.scryfallId;}await commit({type:'acquire',cards:[exact],lot:{cardId:exact.id,quantity:Number(v.quantity),source:v.source,printing:p,location:{kind:'bench',box:v.box},notes:v.notes,paid:v.paid===''?null:Number(v.paid)},...(row?{deckId:row.deckId,slotId:row.slotId}: {})});},'Record copies');}
+/* ADD COPIES IS A COUNT, NOT A FORM (Rob, 15 September: "currently too heavy an input form").
+   Recording what turned up in a box is two facts -- which state, and how many -- and it used
+   to ask for six, four of them blank nine times out of ten. So the dialog is rows of exactly
+   those two, with a link that adds another row for the common case of three copies where only
+   one is in hand. Printing, box, price and notes stay, but folded away and only offered once a
+   row says Owned: an ordered card has no box and a watched one has no price paid.
+
+   Each row is its own `acquire`; several go as one `batch`, so three rows are one revision and
+   one undo rather than three. The model merges a row into an existing record of the same card,
+   source and printing, which is what makes "two more owned" read as one record of five. */
+const COPY_MAX = 6;
+const copyRow = (i, source = 'owned', qty = 1) => `<div class="cm-copy-row" data-i="${i}">`
+  +`<select name="source${i}" data-copy="source" aria-label="What these copies are">${[['owned','Owned'],['ordered','Ordered'],['watching','Watched']].map(([k,l])=>`<option value="${k}"${k===source?' selected':''}>${l}</option>`).join('')}</select>`
+  +`<span class="cm-copy-count" role="group" aria-label="How many copies">`
+  +`<button type="button" data-copy="less" data-i="${i}" aria-label="One fewer">&#8249;</button>`
+  +`<input type="number" name="qty${i}" value="${qty}" min="1" max="1000000" required aria-label="Copies">`
+  +`<button type="button" data-copy="more" data-i="${i}" aria-label="One more">&#8250;</button></span>`
+  +`<button type="button" class="cm-copy-drop" data-copy="drop" data-i="${i}" aria-label="Remove this row" title="Remove this row">&#215;</button></div>`;
+async function acquire(c){
+  const f2=form('Add copies of '+c.name,
+    `<div class="cm-full cm-copies"><div class="cm-copy-rows">${copyRow(0)}</div>`
+    +`<button type="button" class="cm-text-button cm-copy-more" data-copy="row">+ row</button></div>`
+    +`<div class="cm-full cm-copy-extras" hidden><details><summary>Printing, box, price and notes (optional)</summary>`
+    +`<div class="cm-form-grid">${printFields()}${f('Box / location','box')}${f('Price paid','paid','','type="number" min="0" step="0.01"')}`
+    +`<label class="cm-full">Notes<textarea name="notes"></textarea></label></div></details></div>`,
+    async v=>{
+      const rows=[];
+      for(let i=0;i<COPY_MAX;i++){const src=v['source'+i];if(!src)continue;const q=Number(v['qty'+i]);if(!Number.isFinite(q)||q<1)throw Error('Every row needs at least one copy. Remove the row or raise its count.');rows.push({source:src,quantity:q});}
+      if(!rows.length)throw Error('Add at least one row.');
+      let exact=c,p=printing(v);
+      if(p.set&&p.collector){exact=await C.catalog.resolve(c.name,{printing:p});if(!exact)throw Error('No exact printing found. Check the set and collector number.');p.id=exact.scryfallId;}
+      const one=r=>({type:'acquire',cards:[exact],lot:{cardId:exact.id,quantity:r.quantity,source:r.source,printing:p,location:{kind:'bench',box:v.box},notes:v.notes,paid:v.paid===''?null:Number(v.paid)}});
+      const say=rows.map(r=>`${r.quantity} ${C.source(r.source).toLowerCase()}`).join(', ');
+      await commit(rows.length===1?one(rows[0]):{type:'batch',commands:rows.map(one),summary:`Recorded ${say} ${exact.name}`});
+    },'Add copies');
+  /* One listener for the whole dialog: the rows are rebuilt as the reader adds and drops them,
+     so nothing is bound per row. The extras open themselves the moment a row says Owned. */
+  const rowsEl=$('.cm-copy-rows',f2),extras=$('.cm-copy-extras',f2);
+  const ownedShowsExtras=()=>{extras.hidden=![...rowsEl.querySelectorAll('[data-copy=source]')].some(el=>el.value==='owned');};
+  const renumber=()=>{[...rowsEl.children].forEach((el,i)=>{el.dataset.i=i;$('select',el).name='source'+i;$('input',el).name='qty'+i;for(const b of el.querySelectorAll('[data-i]'))b.dataset.i=i;});
+    for(const b of rowsEl.querySelectorAll('.cm-copy-drop'))b.hidden=rowsEl.children.length<2;
+    $('.cm-copy-more',f2).hidden=rowsEl.children.length>=COPY_MAX;};
+  f2.addEventListener('click',ev=>{const t=ev.target.closest('[data-copy]');if(!t||t.tagName!=='BUTTON')return;
+    const kind=t.dataset.copy;
+    if(kind==='row'){if(rowsEl.children.length>=COPY_MAX)return;rowsEl.insertAdjacentHTML('beforeend',copyRow(rowsEl.children.length,'ordered',1));renumber();ownedShowsExtras();return;}
+    const row=t.closest('.cm-copy-row');if(!row)return;
+    if(kind==='drop'){if(rowsEl.children.length<2)return;row.remove();renumber();ownedShowsExtras();return;}
+    const box=$('input',row),n=Number(box.value)||1;box.value=String(Math.max(1,Math.min(1000000,n+(kind==='more'?1:-1))));});
+  f2.addEventListener('change',ev=>{if(ev.target.matches('[data-copy=source]'))ownedShowsExtras();});
+  renumber();ownedShowsExtras();
+}
+
 actions['add-card']=el=>el.dataset.card?acquire(C.card(el.dataset.card)||C.catalog.get(el.dataset.card)):C.cardPicker('Add to your library',c=>acquire(c));
 function quantityAction(el,title,extra,build){const r=findRow(el.dataset.record);if(!r||r.kind!=='lot')throw Error('Select a physical or pending card record.');const l=M.lot(C.state,r.id);return form(title,`<div class="cm-full">${note(C.affected(l),!!l.allocation||l.location?.kind==='deck')}</div>`+f('Copies affected','quantity',l.quantity,`type="number" min="1" max="${l.quantity}" required`)+extra(l),v=>commit({...build(l,v),lotId:l.id,quantity:Number(v.quantity),confirmed:true}),'Confirm change');}
 actions['place-row']=el=>quantityAction(el,el.dataset.deck?'Put in '+M.deck(C.state,el.dataset.deck).name:'Move physically to Bench',()=>f('Box label (optional)','box'),(_,v)=>({type:'place',deckId:el.dataset.deck||undefined,box:v.box}));
