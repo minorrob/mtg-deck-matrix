@@ -23,3 +23,6 @@ tests/uat/crankmagic-failure.png
 
 # Rules text pulled for a rebake. Regenerable; the bake it feeds is committed.
 graph/.cache/
+
+# Local Commander engine, decks, private journals and toolchains.
+game/.local/

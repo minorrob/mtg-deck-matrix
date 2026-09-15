@@ -1,0 +1,21 @@
+import {spawnSync,execFileSync} from 'node:child_process';
+import {readFileSync,mkdirSync,writeFileSync} from 'node:fs';
+import {resolve,delimiter,dirname} from 'node:path';
+import {fileURLToPath} from 'node:url';
+const [forgeArg,javaArg]=process.argv.slice(2);if(!forgeArg||!javaArg) throw new Error('Usage: node game/tools/run-forge-rules.mjs forge-source jdk-directory');
+const root=resolve(dirname(fileURLToPath(import.meta.url)),'../..'),forge=resolve(forgeArg),jdk=resolve(javaArg);
+const lock=JSON.parse(readFileSync(resolve(root,'game/engine-adapter/forge.lock.json')));
+const commit=execFileSync('git',['-c',`safe.directory=${forge.replaceAll('\\','/')}`,'-C',forge,'rev-parse','HEAD'],{encoding:'utf8'}).trim();
+if(commit!==lock.commit) throw new Error('Wrong Forge revision');
+const jar=resolve(forge,`forge-gui-desktop/target/forge-gui-desktop-${lock.version}-jar-with-dependencies.jar`);
+const out=resolve(root,'game/.local/rules'),classes=resolve(out,'classes'),profile=resolve(out,'profile');
+mkdirSync(classes,{recursive:true});mkdirSync(profile,{recursive:true});
+const ext=process.platform==='win32'?'.exe':'';
+const sources=['ForgeProbe','RulesProbe'].map(n=>resolve(root,`game/engine-adapter/src/crankmagic/${n}.java`));
+const compile=spawnSync(resolve(jdk,'bin/javac'+ext),['-encoding','UTF-8','-cp',jar,'-d',classes,...sources],{encoding:'utf8',windowsHide:true});
+if(compile.status!==0||compile.error||compile.stderr?.includes('exception has occurred')) throw new Error(compile.error?.message||compile.stderr);
+const run=spawnSync(resolve(jdk,'bin/java'+ext),['-Djava.awt.headless=true',`-Duser.home=${profile}`,`-Dcrankmagic.forgeAssets=${resolve(forge,'forge-gui').replaceAll('\\','/')}/`,
+  '-cp',[classes,jar].join(delimiter),'crankmagic.RulesProbe',out],{cwd:forge,encoding:'utf8',timeout:60000,windowsHide:true,env:{...process.env,APPDATA:profile,LOCALAPPDATA:profile}});
+writeFileSync(resolve(out,'console.log'),(run.stdout||'')+(run.stderr||''));
+if(run.status!==0||run.error) throw new Error(run.error?.message||run.stderr||'Rules regression failed');
+console.log(readFileSync(resolve(out,'loss-rules.json'),'utf8'));

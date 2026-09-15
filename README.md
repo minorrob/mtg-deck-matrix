@@ -427,7 +427,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 60 Node suites:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 62 Node suites:
 
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`
@@ -439,6 +439,8 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `collection-exchange` — `tests/collection-exchange.mjs`
 - `collection-model` — `tests/collection-model.mjs`
 - `combat` — `tests/combat.mjs`
+- `commander-pilots` — `tests/commander-pilots.mjs`
+- `commander-snapshots` — `tests/commander-snapshots.mjs`
 - `compliance-model` — `tests/compliance-model.mjs`
 - `copy-merge` — `tests/copy-merge.mjs`
 - `crankmagic-core` — `tests/crankmagic-core.mjs`
@@ -492,6 +494,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 
 ## Design and execution record
 
+- [Commander companion: current plan](docs/commander-simulator-plan-2026-09-15.md) — accepted local-first successor to the game and fidelity plans, including the central four-player counter, independent AI difficulty, exact deck snapshots, rules-engine reuse, and the play/refine/replay loop. [Run the engine proof and table preview](game/README.md); [C0 evidence and remaining gates](game/docs/c0-evidence.md). The current preview replays a real game; human play and API pilots are still pending.
 - [Current implementation status](docs/crankmagic-build-status.md)
 - [The Table as a play space](docs/crankmagic-playspace-plan.md) — the sandbox (moves are proposals until Confirm, one overlay all three lenses read through, the sitting persisting across a reload), the three zones, the draw pile and trays, the table's two jobs (calibrate a deck · sort the shelf into groups), Watched redefined to cover a card you own and are considering, canvases, and the speed budget; plan only, six PRs, decisions recorded in §6
 - [The app inventory plan](docs/crankmagic-inventory-plan.md) — wireframes of every page and the feature register (every feature group and feature, where it lives, how it is reached, what it commits, what covers it), generated so it cannot drift; plan only, for a separate session to execute before any streamlining
