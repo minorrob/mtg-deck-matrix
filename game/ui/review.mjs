@@ -1,7 +1,16 @@
 import {defaultPlaymat,resolvePlaymat,readMatPreferences,paintMat} from '/playmats.mjs';
 import {openGameSetup} from '/setup.mjs';
 import '/handoff.mjs';
+import '/app/card-classify.js';
+import '/app/crankmagic-facets.js';
 const $=id=>document.getElementById(id);
+document.body.classList.add('table-view');
+const opponents=document.createElement('div');opponents.className='opponent-boards';opponents.setAttribute('aria-label','Opponent boards');
+$('seat-1').before(opponents);for(const id of [1,2,3])opponents.append($('seat-'+id));
+function reportCanvasSize(){if(window.parent!==window)window.parent.postMessage({type:'crankmagic-canvas-size',height:Math.ceil(document.body.getBoundingClientRect().height)},location.origin);}
+new ResizeObserver(reportCanvasSize).observe(document.body);
+window.addEventListener('message',event=>{if(event.origin===location.origin&&event.source===window.parent&&event.data?.type==='crankmagic-viewport'&&Number.isFinite(event.data.height))document.body.style.setProperty('--table-viewport',Math.max(400,Math.min(4000,event.data.height))+'px');});
+
 const data=await fetch('/match.json').then(r=>r.ok?r.json():{frames:[],log:[],pod:{seats:[]}}).catch(()=>({frames:[],log:[],pod:{seats:[]}}));
 let live=null,livePolling=false,gameToken=null,lastState='',choiceId=null,actionBusy=false,noticeUntil=0,lastDecision='';
 const names=['You · Chulane','Krenko','Atraxa','Shadrix'];
@@ -26,10 +35,55 @@ function handCarousel(cards,id){
   return shell;
 }
 function disposeCarousels(host){for(const shell of host.querySelectorAll('.hand-carousel'))shell.dispose?.();}
-function deckView(){
-  const deck=data.pod.seats[0].deck,body=el('div');body.append(el('p','fine',`${deck.name} · ${deck.total} cards in the starting deck. This is the saved deck list, not library order or remaining-card information.`));
-  for(const [label,entries] of [['Commander',deck.commanders],['Main deck',deck.library]]){const section=el('section'),list=el('div','cards');section.append(el('h3','',label));for(const c of [...entries].sort((a,b)=>a.name.localeCompare(b.name)))list.append(cardButton({...c,deckEntry:true,art:c.art?.normal||visibleArtwork.get(c.name)},c.quantity||1));section.append(list);body.append(section);}
-  showDialog('Your deck · starting list',body);
+let deckFacts;
+async function deckView(){
+  const seat=data.pod.seats[0],deck=seat?.deck,body=el('div','deck-browser');
+  if(!deck){showDialog('Your deck',el('p','fine','Your deck will be available after the table connects.'));return;}
+  body.append(el('p','fine',`${deck.name} · ${deck.total} cards in your starting list. Filters describe card abilities; fired mechanics are recorded separately during play.`));
+  const loading=el('p','fine','Loading card filters…');body.append(loading);showDialog('Your deck · starting list',body);$('detail').classList.add('deck-dialog');
+  // Reuse the app's public classifications. Never join historical ownership/deck flags.
+  deckFacts??=Promise.all(['/app/data/cards.json','/app/data/graph.json'].map(url=>fetch(url).then(r=>{if(!r.ok)throw Error('Card catalog unavailable');return r.json();}))).catch(()=>{deckFacts=null;return null;});
+  const facts=await deckFacts;if(!body.isConnected)return;loading.remove();
+  const lookup=cards=>{const m=new Map();for(const c of cards){if(c.oracleId||c.id)m.set(c.oracleId||c.id,c);m.set(c.name,c);}return m;};
+  const catalog=lookup(facts?.[0]?.cards||[]),graph=lookup(facts?.[1]?.cards||[]),snapshot=lookup(seat.mechanics?.cards||[]);
+  const facets=globalThis.CrankFacets.FACETS.filter(f=>!f.mine&&!['colors','mv','lands'].includes(f.key));
+  const rows=[...deck.commanders.map(c=>({...c,section:'Commander'})),...deck.library.map(c=>({...c,section:'Main deck'}))].map(entry=>{
+    const find=m=>m.get(entry.oracleId)||m.get(entry.name)||{},raw={...find(catalog),...find(snapshot),...entry},g=find(graph);
+    const tags=globalThis.MtgCardClassify.classify({typeLine:raw.typeLine,oracleText:raw.oracleText,keywords:raw.keywords||[],card_faces:raw.faces||[]});
+    const row={...raw,...tags,type:raw.typeLine,mv:raw.manaValue??g.mv??null,rarity:raw.rarity||g.rarity||'',deckEntry:true,art:entry.art?.normal||visibleArtwork.get(entry.name)};
+    for(const f of facets)if(Array.isArray(tags[f.key])||Array.isArray(raw[f.key])||Array.isArray(g[f.key]))row[f.key]=[...new Set([...(tags[f.key]||[]),...(raw[f.key]||[]),...(g[f.key]||[])])];
+    return row;
+  });
+  if(!facts)body.append(el('p','fine','Public catalog unavailable. Using the saved deck mechanics; some price and mana-value filters may have incomplete coverage.'));
+  const controls=el('div','deck-filters'),primary=el('div','deck-filter-grid'),more=el('details','deck-more'),advanced=el('div','deck-filter-grid');more.append(el('summary','','More filters · triggers, mechanics, tribes and mana value'),advanced);
+  const inputs=new Map(),selected={};
+  function field(label,key,choices,host=primary){
+    const wrap=el('label','deck-filter'),input=el(choices?'select':'input');wrap.append(el('span','',label),input);input.setAttribute('aria-label',label);
+    if(choices){const all=el('option','','All');all.value='';input.append(all);for(const value of choices){const option=el('option','',value);option.value=value;input.append(option);}}
+    else{input.type=['min','max','price'].includes(key)?'number':'search';if(input.type==='number'){input.min='0';input.step='any';}}
+    inputs.set(key,input);input.addEventListener(choices?'change':'input',()=>{selected[key]=input.value;draw();});host.append(wrap);
+  }
+  field('Search name or rules','q');
+  for(const key of ['type','manaKind']){const f=facets.find(f=>f.key===key);field(f.label,key,[...new Set(rows.flatMap(f.from))].sort());}
+  field('Color identity','color',['W','U','B','R','G','C']);field('Mechanic / keyword','keyword');
+  for(const f of facets.filter(f=>!['type','manaKind'].includes(f.key)))field(f.label,f.key,[...new Set(rows.flatMap(f.from))].sort(),advanced);
+  field('Subtype','subtype',null,advanced);field('Minimum mana value','min',null,advanced);field('Maximum mana value','max',null,advanced);field('Maximum price · USD','price',null,advanced);
+  const count=el('p','deck-result-count');count.setAttribute('aria-live','polite');const results=el('div','deck-results');
+  const reset=button('Clear filters',()=>{for(const [key,input]of inputs){input.value='';delete selected[key];}draw();});
+  controls.append(primary,more,reset,count);body.append(controls,results);
+  function draw(){
+    const includes=(value,q)=>String(value||'').toLowerCase().includes(String(q||'').trim().toLowerCase());
+    const visible=rows.filter(c=>{
+      if(!includes(c.name+' '+(c.oracleText||''),selected.q)||!includes(c.typeLine,selected.subtype)||!includes([c.oracleText,...(c.keywords||[]),...(c.mechanics||[])].join(' '),selected.keyword))return false;
+      if(selected.color&&(selected.color==='C'?(c.colorIdentity||[]).length:!(c.colorIdentity||[]).includes(selected.color)))return false;
+      for(const [key,value,comparison]of [['min',c.mv,(a,b)=>a>=b],['max',c.mv,(a,b)=>a<=b],['price',c.price,(a,b)=>a<=b]])if(selected[key]!==undefined&&selected[key]!==''&&(value==null||!Number.isFinite(Number(value))||!comparison(Number(value),Number(selected[key]))))return false;
+      return facets.every(f=>!selected[f.key]||f.from(c).includes(selected[f.key]));
+    });
+    count.textContent=`${visible.reduce((n,c)=>n+(c.quantity||1),0)} of ${deck.total} cards · ${visible.length} distinct entries`;results.replaceChildren();
+    for(const label of ['Commander','Main deck']){const entries=visible.filter(c=>c.section===label);if(!entries.length)continue;const section=el('section'),list=el('div','cards');section.append(el('h3','',label));for(const c of entries.sort((a,b)=>a.name.localeCompare(b.name)))list.append(cardButton(c,c.quantity||1));section.append(list);results.append(section);}
+    if(!visible.length)results.append(el('p','empty','No cards match these filters. Clear a filter to broaden the list.'));
+  }
+  draw();
 }
 const pileZones=[['Command','Command zone','mat-command'],['Exile','Exile','mat-exile'],['Library','Library','mat-library'],['Graveyard','Graveyard','mat-graveyard']];
 function pileButton(p,zone,label,cls){
@@ -74,9 +128,11 @@ function inspect(c,count=1,initial=false){
     $('card-detail-body').replaceChildren(...[...box.children].map(n=>n.cloneNode(true)));
     $('card-detail-body').querySelector('.use-card')?.addEventListener('click',()=>{$('card-detail').close();gameAction({kind:'card',targetId:c.cardId});});
     $('card-detail').showModal();
+    syncModalViewport();
   }
 }
-function showDialog(title,body){$('detail').classList.remove('mat-dialog');$('detail-title').textContent=title;$('detail-body').replaceChildren(body);if(!$('detail').open)$('detail').showModal();}
+function syncModalViewport(){if(window.parent!==window)window.parent.postMessage({type:'crankmagic-focus',open:!!document.querySelector('dialog[open]:not(#game-setup)')},location.origin);}
+function showDialog(title,body){$('detail').classList.remove('mat-dialog','deck-dialog');$('detail-title').textContent=title;$('detail-body').replaceChildren(body);if(!$('detail').open)$('detail').showModal();syncModalViewport();}
 function zoneView(p,zone){const body=el('div');const z=p.zones[zone];body.append(el('p','fine',`${z.count} cards · recorded turn ${frame().turn}`));const cards=el('div','cards');for(const {card,count} of groups(z.cards))cards.append(cardButton(card,count));if(!z.cards.length)cards.append(el('p','empty','This zone has no visible cards.'));body.append(cards);showDialog(`${names[p.playerId]} · ${zone}`,body);}
 // A presentation partition, not a rules classification. Each permanent appears once.
 // Use only the type portion, so subtypes such as Enchantment don't misclassify a card.
@@ -135,7 +191,7 @@ window.addEventListener('crankmagic-playmat',()=>{if(live||data.frames.length){r
 window.addEventListener('storage',event=>{if(event.key==='crankmagic-playmats-v1')window.dispatchEvent(new Event('crankmagic-playmat'));});
 function matView(p){
   const mat=el('div',`player-mat${p.playerId===0?' personal-mat':' plain-mat'}`);
-  paintMat(mat,seatMat(p.playerId));
+  paintMat(mat,seatMat(p.playerId));mat.addEventListener('click',event=>{if(!event.target.closest('button'))focusBoard(p);});
   mat.setAttribute('aria-label',`${names[p.playerId]} playmat`);
   if(live&&p.playerId===0){mat.addEventListener('dragover',e=>e.preventDefault());mat.addEventListener('drop',e=>{e.preventDefault();const raw=e.dataTransfer.getData('application/x-crankmagic-card');if(/^\d+$/.test(raw))gameAction({kind:'card',targetId:Number(raw)});});}
   const lands=p.zones.Battlefield.cards.filter(c=>c.typeLine?.split('—')[0].includes('Land'));
@@ -192,7 +248,7 @@ $('timeline').max=data.frames.length-1;$('timeline').addEventListener('input',e=
 $('close-detail').addEventListener('click',()=>$('detail').close());$('clear-inspect').addEventListener('click',()=>$('inspector').replaceChildren(el('p','empty','Select any visible card to inspect it.')));
 $('close-card').addEventListener('click',()=>$('card-detail').close());
 $('close-focus').addEventListener('click',()=>$('focus').close());
-$('focus').addEventListener('close',()=>{if(window.parent!==window)window.parent.postMessage({type:'crankmagic-focus',open:false},location.origin);});
+for(const id of ['focus','detail','card-detail'])$(id).addEventListener('close',syncModalViewport);
 $('focus-size').addEventListener('input',e=>{$('focus').style.setProperty('--focus-card-width',`${e.target.value}px`);$('focus-size-value').textContent=`${e.target.value} px`;});
 $('view-hand').addEventListener('click',()=>zoneView(frame().players.find(p=>p.playerId===0),'Hand'));
 $('view-deck').addEventListener('click',deckView);
@@ -237,7 +293,7 @@ async function pollLive(){
   }catch(error){$('notice').textContent=error.message;liveButton.disabled=false;livePolling=false;return;}
   setTimeout(pollLive,750);
 }
-window.addEventListener('crankmagic-game-ready',()=>{document.body.classList.remove('setup-screen');$('game-setup').close();if(window.parent!==window)window.parent.postMessage({type:'crankmagic-live'},location.origin);startLive();});
+window.addEventListener('crankmagic-game-ready',()=>{document.body.classList.remove('setup-screen');$('game-setup').close();if(window.parent!==window)window.parent.postMessage({type:'crankmagic-live'},location.origin);reportCanvasSize();startLive();});
 if(new URLSearchParams(location.search).has('embedded'))document.body.classList.add('embedded');
 if(!new URLSearchParams(location.search).has('replay')){document.body.classList.add('setup-screen');await openGameSetup();}
 window.addEventListener('message',event=>{if(event.origin!==location.origin||event.source!==window.parent||window.parent===window)return;if(event.data?.type==='crankmagic-setup')openGameSetup(event.data.imported).catch(error=>{$('notice').textContent=error.message;});});

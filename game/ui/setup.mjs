@@ -7,6 +7,7 @@ const head=e('div','setup-heading');head.append(e('div','', 'GAME SETUP · COMMA
 function exitSetup(){if(window.parent===window)location.href='/app/#decks';else window.parent.postMessage({type:'crankmagic-exit'},location.origin);}
 const close=e('button','','Close setup ×');close.addEventListener('click',()=>{if(document.body.classList.contains('setup-screen'))exitSetup();else dialog.close();});head.append(close);dialog.append(head);
 dialog.addEventListener('cancel',event=>{if(document.body.classList.contains('setup-screen')){event.preventDefault();exitSetup();}});
+const actions=e('div','setup-actions');head.append(actions);
 const content=e('div','setup-content');dialog.append(content);
 function select(label,value,options,onChange){const box=e('label','setup-field');box.append(e('span','',label));const s=e('select');s.setAttribute('aria-label',label);for(const [id,text,disabled]of options){const o=e('option','',text);o.value=id;o.disabled=!!disabled;s.append(o);}s.value=value;s.addEventListener('change',()=>onChange(s.value));box.append(s);return box;}
 function input(label,value,type,onChange){const box=e('label','setup-field');box.append(e('span','',label));const field=e('input');field.type=type;field.value=value;field.setAttribute('aria-label',label);if(type==='number'){field.min=1;field.max=10000;}field.addEventListener('change',()=>onChange(type==='number'?Number(field.value):field.value));box.append(field);return box;}
@@ -17,7 +18,7 @@ function matPicker(s){
   for(const mat of [{id:'random',name:'Random',image:null},...PLAYMATS]){
     const label=e('label','mat-choice'),radio=e('input');radio.type='radio';radio.name='playmat-'+s.seatId;radio.value=mat.id;radio.checked=mat.id===selected;radio.setAttribute('aria-label',(s.seatId?'AI '+s.seatId:'Your')+' playmat: '+mat.name);
     if(mat.image){const img=e('img');img.src=mat.image;img.alt='';img.loading='lazy';label.append(img);}else label.append(e('span','mat-swatch',mat.id==='random'?'⚄':'✦'));
-    radio.addEventListener('change',()=>{s.playmat=mat.id;saveMatPreference(s.seatId,mat.id);prepared=null;try{localStorage.setItem('commander-setup-v1',JSON.stringify(config));}catch{}picker.querySelector('summary').textContent='Playmat · '+mat.name;content.querySelector('.setup-result').replaceChildren();content.querySelector('.setup-start').disabled=true;});
+    radio.addEventListener('change',()=>{s.playmat=mat.id;saveMatPreference(s.seatId,mat.id);prepared=null;try{localStorage.setItem('commander-setup-v1',JSON.stringify(config));}catch{}picker.querySelector('summary').textContent='Playmat · '+mat.name;content.querySelector('.setup-result').replaceChildren();actions.querySelector('.setup-start').disabled=true;});
     label.append(radio,e('span','',mat.name));grid.append(label);
   }
   picker.append(grid);return picker;
@@ -52,11 +53,11 @@ function render(message=''){
   content.append(seats,e('p','setup-note','Playable now: browser controls backed by local Forge, with one human and native AI. Complex choices may still require the engine window. Play style selects a real Forge profile. API difficulty is saved for the future API pilot and does not change native AI. Extra human seats unlock in C8.'));
   const result=e('div','setup-result');result.setAttribute('aria-live','polite');if(message)result.append(e('p','setup-message',message));
   if(prepared){result.append(e('h2','','Your prepared pod'));for(const seat of prepared.pod.seats){const row=e('div','prepared-seat'),art=seat.deck.commanders[0].art.normal;if(art){const img=e('img');img.src=art;img.alt=seat.deck.commanders[0].name;row.append(img);}row.append(e('div','',`${seat.name} · ${seat.deck.commanders.map(c=>c.name).join(' + ')}\n${seat.deck.name}\n${seat.check.total} cards · ${money(seat.check.cost)} · ${seat.check.gameChangers} Game Changers\n${seat.seatId?`Native AI · ${seat.nativeProfile}`:'Human'} · ${seat.source}`));result.append(row);}result.append(e('p','setup-note','Forge performs the final Commander legality check before opening the match. Native AI is not yet certified against hidden-information tests. This session is recorded as human vs native AI, not an API-piloted simulation.'));}
-  content.append(result);const actions=e('div','setup-actions');
+  content.append(result);actions.replaceChildren();
   if(prepared)for(const seat of prepared.pod.seats.filter(s=>s.seatId&&s.aiCompatibility?.warnings.length)){const warning=e('p','compatibility-note',`${seat.name} · Native AI limitations: ${seat.aiCompatibility.warnings.join(', ')}. These cards stay in the deck; Forge flags its own AI decision support. Its normal casting and activation choices exclude these flagged cards. Card rules and mandatory triggers can still work.`);result.append(warning);}
   const prepare=e('button','',busy?'Working…':'Prepare decks');prepare.disabled=busy||(['library','preloaded'].includes(config.seats[0].source)&&!config.seats[0].deckId);prepare.addEventListener('click',async()=>{busy=true;render('Resolving decks and checking this table…');try{prepared=await post('/api/prepare',{...config,seats:config.seats.slice(0,config.ais+1)});busy=false;render('Decks prepared. Review the resolved commanders and costs below.');content.querySelector('.setup-result').scrollIntoView({block:'start'});}catch(error){busy=false;prepared=null;render(error.message);}});
-  const start=e('button','setup-start','Start CrankMagic Online');start.disabled=busy||!prepared;start.addEventListener('click',async()=>{busy=true;render('Starting the local rules engine and CrankMagic Online…');try{await post('/api/start',{id:prepared.id});prepared=null;pollStatus();}catch(error){busy=false;render(error.message);}});
-  actions.append(prepare,start);content.append(actions);
+  const start=e('button','setup-start','Launch game');start.disabled=busy||!prepared;start.addEventListener('click',async()=>{busy=true;render('Starting the local rules engine and CrankMagic Online…');try{await post('/api/start',{id:prepared.id});prepared=null;pollStatus();}catch(error){busy=false;render(error.message);}});
+  actions.append(prepare,start);
   if(busy)for(const field of content.querySelectorAll('input,select'))field.disabled=true;
 }
 async function pollStatus(){try{const s=await fetch('/api/live').then(r=>r.json());if(s.status==='starting'){render('Forge is loading the card database and game window…');setTimeout(pollStatus,2000);}else{busy=false;if(['ready','playing'].includes(s.status))window.dispatchEvent(new Event('crankmagic-game-ready'));render(['ready','playing'].includes(s.status)?'Your live browser table is ready. Complex prompts may require the engine window.':`Game status: ${s.status}${s.error?` · ${s.error}`:''}`);}}catch(error){busy=false;render(error.message);}}
@@ -67,5 +68,6 @@ export async function openGameSetup(imported){
   const current=await fetch('/api/live').then(r=>r.json());
   head.querySelector('.setup-resume')?.remove();
   render(imported?'Your current CrankMagic deck has been received. Prepare the table to check costs and mechanics.':'');if(['ready','playing'].includes(current.status)){const resume=e('button','setup-resume','Resume current table');resume.addEventListener('click',()=>window.dispatchEvent(new Event('crankmagic-game-ready')));head.insertBefore(resume,close);}
-  if(!dialog.open)dialog.showModal();
+  document.body.classList.add('setup-screen');if(window.parent!==window)window.parent.postMessage({type:'crankmagic-mode',mode:'setup'},location.origin);
+  if(!dialog.open)dialog.show();
 }
