@@ -12,7 +12,7 @@ import {createRequire} from "node:module";
 import {readFile} from "node:fs/promises";
 import {existsSync} from "node:fs";
 import path from "node:path";
-import {fileURLToPath} from "node:url";
+import {fileURLToPath, pathToFileURL} from "node:url";
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 
@@ -67,7 +67,7 @@ export async function openBrowser({name, flag}) {
   };
   const entry = findPlaywright();
   if (!entry) skip("Playwright is not installed");
-  const module_ = await import(entry.startsWith("/") ? `file://${entry}` : entry);
+  const module_ = await import(path.isAbsolute(entry) ? pathToFileURL(entry).href : entry);
   const chromium = module_.chromium || (module_.default && module_.default.chromium);
   if (!chromium) skip("the Playwright entry point exposes no chromium");
 

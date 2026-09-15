@@ -1,5 +1,7 @@
 # CrankMagic — a simulation that earns its recommendations
 
+> **Implementation successor:** [Commander companion plan](../../docs/commander-simulator-plan-2026-09-15.md). It preserves this plan's fidelity requirements and replaces the proposed new rules kernel with a pinned-engine integration. [C0 evidence](../../game/docs/c0-evidence.md) distinguishes demonstrated capabilities from release gates.
+
 **An Intelligent MtG: Commander Deck Creator & Card Libary**
 
 Review and proposed implementation plan · 7 September 2026 · approval pending

@@ -74,7 +74,7 @@ for (const file of tools) {
   for (const rel of named) {
     if (!REPO_SHAPED.test(rel)) continue;
     literals++;
-    const label = `${path.relative(ROOT, file)} -> ${rel}`;
+    const label = `${path.relative(ROOT, file).split(path.sep).join("/")} -> ${rel}`;
     if (DELIBERATELY_ABSENT.has(label)) continue;
     const tries = [
       path.resolve(path.dirname(file), rel),
@@ -192,7 +192,7 @@ for (const [tool, args, opts = {}] of CHECKABLE) {
 const listed = new Set(CHECKABLE.map(([tool]) => tool));
 const offersCheck = tools
   .filter((f) => /"--check"|'--check'/.test(readFileSync(f, "utf8")))
-  .map((f) => path.relative(ROOT, f));
+  .map((f) => path.relative(ROOT, f).split(path.sep).join("/"));
 assert.deepEqual(offersCheck.filter((f) => !listed.has(f)), [],
   "these tools accept --check and nothing runs it; add them to CHECKABLE");
 checks++;

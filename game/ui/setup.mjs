@@ -1,0 +1,75 @@
+import {PLAYMATS,defaultPlaymat,validPlaymat,readMatPreferences,saveMatPreference} from '/playmats.mjs';
+let catalog,config,prepared,busy=false;
+const e=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n;};
+const money=n=>`$${Number(n).toFixed(2)}`;
+const dialog=e('dialog','game-setup');dialog.id='game-setup';dialog.setAttribute('aria-label','Game setup');document.body.append(dialog);
+const head=e('div','setup-heading');head.append(e('div','', 'GAME SETUP · COMMANDER'));
+function exitSetup(){if(window.parent===window)location.href='/app/#decks';else window.parent.postMessage({type:'crankmagic-exit'},location.origin);}
+const close=e('button','','Close setup ×');close.addEventListener('click',()=>{if(document.body.classList.contains('setup-screen'))exitSetup();else dialog.close();});head.append(close);dialog.append(head);
+dialog.addEventListener('cancel',event=>{if(document.body.classList.contains('setup-screen')){event.preventDefault();exitSetup();}});
+const actions=e('div','setup-actions');head.append(actions);
+const content=e('div','setup-content');dialog.append(content);
+function select(label,value,options,onChange){const box=e('label','setup-field');box.append(e('span','',label));const s=e('select');s.setAttribute('aria-label',label);for(const [id,text,disabled]of options){const o=e('option','',text);o.value=id;o.disabled=!!disabled;s.append(o);}s.value=value;s.addEventListener('change',()=>onChange(s.value));box.append(s);return box;}
+function input(label,value,type,onChange){const box=e('label','setup-field');box.append(e('span','',label));const field=e('input');field.type=type;field.value=value;field.setAttribute('aria-label',label);if(type==='number'){field.min=1;field.max=10000;}field.addEventListener('change',()=>onChange(type==='number'?Number(field.value):field.value));box.append(field);return box;}
+function matPicker(s){
+  const selected=s.playmat||defaultPlaymat(s.seatId),picker=e('details','mat-picker');
+  picker.append(e('summary','', 'Playmat · '+(selected==='random'?'Random':PLAYMATS.find(m=>m.id===selected)?.name||'Runic cube')));
+  const grid=e('fieldset','mat-choices');grid.append(e('legend','',s.seatId?'Choose this AI player’s playmat':'Choose your playmat'));
+  for(const mat of [{id:'random',name:'Random',image:null},...PLAYMATS]){
+    const label=e('label','mat-choice'),radio=e('input');radio.type='radio';radio.name='playmat-'+s.seatId;radio.value=mat.id;radio.checked=mat.id===selected;radio.setAttribute('aria-label',(s.seatId?'AI '+s.seatId:'Your')+' playmat: '+mat.name);
+    if(mat.image){const img=e('img');img.src=mat.image;img.alt='';img.loading='lazy';label.append(img);}else label.append(e('span','mat-swatch',mat.id==='random'?'⚄':'✦'));
+    radio.addEventListener('change',()=>{s.playmat=mat.id;saveMatPreference(s.seatId,mat.id);prepared=null;try{localStorage.setItem('commander-setup-v1',JSON.stringify(config));}catch{}picker.querySelector('summary').textContent='Playmat · '+mat.name;content.querySelector('.setup-result').replaceChildren();actions.querySelector('.setup-start').disabled=true;});
+    label.append(radio,e('span','',mat.name));grid.append(label);
+  }
+  picker.append(grid);return picker;
+}
+function invalidate(){prepared=null;try{localStorage.setItem('commander-setup-v1',JSON.stringify(config));}catch{}render();}
+function setSource(s,value){s.source=value;s.archidektUrl='';s.deckId='';const first=catalog.decks.find(d=>d.source===value&&d.commander===s.commander&&d.cost<=config.maxCost)||catalog.decks.find(d=>d.source===value&&d.ok&&d.cost<=config.maxCost);if(first){s.deckId=first.id;s.commander=first.commander;}invalidate();}
+async function post(path,body){const response=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json','X-Commander-Token':catalog.token},body:JSON.stringify(body)});const value=await response.json();if(!response.ok)throw Error(value.error||'Request failed');return value;}
+function render(message=''){
+  content.replaceChildren();const lead=e('div','setup-intro');lead.append(e('h1','','Build your table'),e('p','',`You choose the opponents, their commanders, and where each hundred comes from. ${catalog.variantCount} archived variations · ${catalog.rungCount} complete Base / Tuned / Fun / Max lists available.`));content.append(lead);
+  const global=e('div','setup-globals');
+  global.append(select('Table bracket',config.bracket,[[1,'1 · Exhibition'],[2,'2 · Core'],[3,'3 · Upgraded'],[4,'4 · Optimized'],[5,'5 · cEDH']],v=>{config.bracket=+v;invalidate();}),input('Maximum deck cost · USD · every player',config.maxCost,'number',v=>{config.maxCost=v;invalidate();}),select('Human players',config.humans,[[1,'1 · You'],[2,'2 · Friends phase C8',true],[3,'3 · Friends phase C8',true],[4,'4 · Friends phase C8',true]],v=>{config.humans=+v;invalidate();}),select('AI players',config.ais,[[1,'1 AI'],[2,'2 AI'],[3,'3 AI']],v=>{config.ais=+v;invalidate();}));content.append(global);
+  content.append(e('p','setup-note',`Budget includes all 100 cards and the commander, using recorded USD estimates dated ${catalog.priceAsOf.slice(0,10)}; missing prices block preparation. Bracket checks include known Game Changers; play-pattern restrictions still require a table agreement. Bracket and AI difficulty are different settings.`));
+  const seats=e('div','setup-seats');
+  for(const s of config.seats.slice(0,config.ais+1)){
+    const card=e('section',`setup-seat setup-seat-${s.seatId}`),title=e('div','setup-seat-title');title.append(e('h2','',s.seatId?`AI player ${s.seatId}`:'You · human player'));card.append(title);
+    const seatLabel=s.seatId?`AI ${s.seatId}`:'Your';
+    const fields=e('div','setup-fields');fields.append(input(`${seatLabel} name`,s.name,'text',v=>{s.name=v;invalidate();}));
+    fields.append(select(`${seatLabel} deck source`,s.source,[['library','Your saved decks'],['preloaded','Preloaded variations · 200 lists'],['lab','Deck Lab · build a starting list'],['archidekt','Archidekt · find a matching deck']],v=>setSource(s,v)));
+    const savedSource=['library','preloaded'].includes(s.source);
+    const commanders=savedSource?[...new Set(catalog.decks.filter(d=>d.source===s.source).map(d=>d.commander))].sort():catalog.commanders.map(c=>c.name);
+    if(s.seatId||!savedSource)fields.append(select(`${seatLabel} commander`,s.commanderMode==='random'?'__random__':s.commander,[...(s.seatId?[['__random__','Random commander']]:[]),...commanders.map(n=>[n,n])],v=>{s.commanderMode=v==='__random__'?'random':'selected';if(s.commanderMode==='selected')s.commander=v;s.deckId='';invalidate();}));
+    if(s.commanderMode==='selected'&&savedSource){
+      const available=catalog.decks.filter(d=>d.source===s.source&&(!s.seatId||d.commander===s.commander));
+      fields.append(select(`${seatLabel} deck list`,s.deckId||'',[['',s.seatId?'Choose a matching list for me':'Select your deck',!s.seatId],...available.map(d=>[d.id,`${d.name} · ${money(d.cost)}${d.ok?'':' · needs validation'}`])],v=>{s.deckId=v;const selected=available.find(d=>d.id===v);if(selected)s.commander=selected.commander;invalidate();}));
+      if(!s.seatId)fields.append(e('p','setup-note',`Commander: ${s.commander}. Your deck supplies its commander.`));
+    }else if(s.commanderMode==='random')fields.append(e('p','setup-note','Random choices are drawn from the selected source. Saved lists are filtered by bracket and budget first; the resolved commander is shown before launch.'));
+    if(s.source==='lab')fields.append(e('p','setup-note','Uses the existing Lab draft builder and your catalog. This produces a starting hundred; simulation optimization is not connected yet.'));
+    if(s.source==='archidekt')fields.append(input(`${seatLabel} Archidekt URL · optional`,s.archidektUrl||'','url',v=>{s.archidektUrl=v;invalidate();}),e('p','setup-note','Search checks up to 12 public candidates, then verifies commander, quantity, known identities, bracket counts, and budget. No match is reported explicitly; sources are never silently substituted.'));
+    if(s.seatId){fields.append(select(`AI ${s.seatId} play style`,s.nativeProfile,[['Default','Balanced · Forge Default'],['Cautious','Cautious · Forge profile'],['Reckless','Reckless · Forge profile']],v=>{s.nativeProfile=v;invalidate();}),select(`AI ${s.seatId} API difficulty · future pilot`,s.difficulty,[[1,'1 · Learner'],[2,'2 · Casual'],[3,'3 · Focused'],[4,'4 · Advanced'],[5,'5 · Expert']],v=>{s.difficulty=+v;invalidate();}));}
+    card.append(fields,matPicker(s));seats.append(card);
+  }
+  content.append(seats,e('p','setup-note','Playable now: browser controls backed by local Forge, with one human and native AI. Complex choices may still require the engine window. Play style selects a real Forge profile. API difficulty is saved for the future API pilot and does not change native AI. Extra human seats unlock in C8.'));
+  const result=e('div','setup-result');result.setAttribute('aria-live','polite');if(message)result.append(e('p','setup-message',message));
+  if(prepared){result.append(e('h2','','Your prepared pod'));for(const seat of prepared.pod.seats){const row=e('div','prepared-seat'),art=seat.deck.commanders[0].art.normal;if(art){const img=e('img');img.src=art;img.alt=seat.deck.commanders[0].name;row.append(img);}row.append(e('div','',`${seat.name} · ${seat.deck.commanders.map(c=>c.name).join(' + ')}\n${seat.deck.name}\n${seat.check.total} cards · ${money(seat.check.cost)} · ${seat.check.gameChangers} Game Changers\n${seat.seatId?`Native AI · ${seat.nativeProfile}`:'Human'} · ${seat.source}`));result.append(row);}result.append(e('p','setup-note','Forge performs the final Commander legality check before opening the match. Native AI is not yet certified against hidden-information tests. This session is recorded as human vs native AI, not an API-piloted simulation.'));}
+  content.append(result);actions.replaceChildren();
+  if(prepared)for(const seat of prepared.pod.seats.filter(s=>s.seatId&&s.aiCompatibility?.warnings.length)){const warning=e('p','compatibility-note',`${seat.name} · Native AI limitations: ${seat.aiCompatibility.warnings.join(', ')}. These cards stay in the deck; Forge flags its own AI decision support. Its normal casting and activation choices exclude these flagged cards. Card rules and mandatory triggers can still work.`);result.append(warning);}
+  const prepare=e('button','',busy?'Working…':'Prepare decks');prepare.disabled=busy||(['library','preloaded'].includes(config.seats[0].source)&&!config.seats[0].deckId);prepare.addEventListener('click',async()=>{busy=true;render('Resolving decks and checking this table…');try{prepared=await post('/api/prepare',{...config,seats:config.seats.slice(0,config.ais+1)});busy=false;render('Decks prepared. Review the resolved commanders and costs below.');content.querySelector('.setup-result').scrollIntoView({block:'start'});}catch(error){busy=false;prepared=null;render(error.message);}});
+  const start=e('button','setup-start','Launch game');start.disabled=busy||!prepared;start.addEventListener('click',async()=>{busy=true;render('Starting the local rules engine and CrankMagic Online…');try{await post('/api/start',{id:prepared.id});prepared=null;pollStatus();}catch(error){busy=false;render(error.message);}});
+  actions.append(prepare,start);
+  if(busy)for(const field of content.querySelectorAll('input,select'))field.disabled=true;
+}
+async function pollStatus(){try{const s=await fetch('/api/live').then(r=>r.json());if(s.status==='starting'){render('Forge is loading the card database and game window…');setTimeout(pollStatus,2000);}else{busy=false;if(['ready','playing'].includes(s.status))window.dispatchEvent(new Event('crankmagic-game-ready'));render(['ready','playing'].includes(s.status)?'Your live browser table is ready. Complex prompts may require the engine window.':`Game status: ${s.status}${s.error?` · ${s.error}`:''}`);}}catch(error){busy=false;render(error.message);}}
+export async function openGameSetup(imported){
+  if(!catalog){catalog=await fetch('/api/setup').then(r=>{if(!r.ok)throw Error('Restart the local server to load Game Setup');return r.json();});config=structuredClone(catalog.defaults);try{const saved=JSON.parse(localStorage.getItem('commander-setup-v1'));if(saved?.seats?.length===4&&saved?.humans===1)config=saved;}catch{}}
+  if(imported){catalog=await fetch('/api/setup').then(r=>r.json());Object.assign(config.seats[0],{source:'library',deckId:imported.id,commander:imported.commander,commanderMode:'selected'});prepared=null;}
+  const matPreferences=readMatPreferences();for(const s of config.seats)s.playmat=validPlaymat(matPreferences[s.seatId])?matPreferences[s.seatId]:validPlaymat(s.playmat)?s.playmat:defaultPlaymat(s.seatId);
+  const current=await fetch('/api/live').then(r=>r.json());
+  head.querySelector('.setup-resume')?.remove();
+  head.querySelector('.setup-end')?.remove();
+  render(imported?'Your current CrankMagic deck has been received. Prepare the table to check costs and mechanics.':'');if(['ready','playing'].includes(current.status)){const resume=e('button','setup-resume','Resume current table');resume.addEventListener('click',()=>window.dispatchEvent(new Event('crankmagic-game-ready')));head.insertBefore(resume,close);}
+  if(['ready','playing'].includes(current.status)&&!current.resumed){const end=e('button','setup-end','End current game');end.addEventListener('click',async()=>{if(end.dataset.confirm!=='yes'){end.dataset.confirm='yes';end.textContent='End game · keep journal';render('Ending this game keeps its local journal, but the live position cannot be resumed. Click End game again to return to a fresh setup.');return;}try{end.disabled=true;await post('/api/close-game',{});window.dispatchEvent(new Event('crankmagic-game-closed'));await openGameSetup();}catch(error){end.disabled=false;render(error.message);}});head.insertBefore(end,close);}
+  document.body.classList.add('setup-screen');if(window.parent!==window)window.parent.postMessage({type:'crankmagic-mode',mode:'setup'},location.origin);
+  if(!dialog.open)dialog.show();
+}
