@@ -397,7 +397,7 @@ function renderCombat(force=false){
   if(!live||decisionPointer||(!force&&trackerTab!=='combat'))return;
   const current=frame().combat,previous=live.telemetry?.combats?.at(-1),combat=current?.attacks?.length?current:previous,rows=historyRows().filter(e=>e.turn===(combat?.turn??frame().turn)&&(/COMBAT/.test(e.phase||'')||/combat damage|infect damage/.test(e.label)));
   const key=JSON.stringify([combat,rows,live.ui.cardActions,live.ui.highlightedCards,live.ui.prompt]);if(!force&&key===combatKey)return;combatKey=key;combatPane.replaceChildren();
-  combatPane.append(el('h3','',`Combat · turn ${combat?.turn??frame().turn}`));
+  combatPane.append(el('h3','',`${current?"Combat":"Last combat"} · turn ${combat?.turn??frame().turn}`));
   const picking=attackSelection()||blockSelection();
   if(picking){combatPane.append(el('p','fine',attackSelection()?'Choose the defender above, then toggle your creatures here. Selecting a different defender affects the next creature you select.':'Choose an attacking creature, then toggle your creatures to assign blockers.'));
     const candidates=frame().players.flatMap(p=>p.zones.Battlefield.cards).filter(c=>canSelectCard(c));
@@ -470,7 +470,7 @@ function renderDecision(){
   if(yieldTurn!==frame().turn)yieldTurn=null;
   const ordinaryPriority=!ui.choice&&!ui.nativeFallback&&ui.ok==='OK'&&ui.okEnabled&&/^Priority:/m.test(ui.prompt);
   const opponentTurn=turnPlayer()&&turnPlayer().playerId!==0;
-  const safeToContinue=ordinaryPriority&&hasPriority()&&opponentTurn&&frame().stackSize===0&&(yieldTurn===frame().turn||!['COMBAT_DECLARE_BLOCKERS','COMBAT_DAMAGE','COMBAT_END','END_OF_TURN','CLEANUP'].includes(frame().phase));
+  const safeToContinue=ordinaryPriority&&hasPriority()&&opponentTurn&&frame().stackSize===0&&(yieldTurn===frame().turn||!['COMBAT_DECLARE_BLOCKERS','COMBAT_DAMAGE','COMBAT_END','END_OF_TURN'].includes(frame().phase));
   if(safeToContinue){
     prompt.textContent='Following '+turnPlayer().name+'’s turn…';options.replaceChildren();buttons.replaceChildren();decisionArt.replaceChildren();lastDecision='';
     if(!actionBusy){const turn=frame().turn;gameAction({kind:'ok'},fresh=>fresh.state.turn===turn&&fresh.state.turnPlayerId!==0&&fresh.state.priorityPlayerId===0&&fresh.state.stackSize===0&&!fresh.ui.choice&&!fresh.ui.nativeFallback&&fresh.ui.ok==='OK'&&fresh.ui.okEnabled);}
@@ -531,7 +531,7 @@ function renderDecision(){
 }
 async function startLive(){if(livePolling)return;livePolling=true;liveButton.disabled=true;await pollLive();}
 async function refreshLiveView(){
-  const response=await fetch('/api/game-view');const value=await response.json();if(!response.ok)throw Error(value.error);
+  const response=await fetch('/api/game-view');const value=await response.json();if(!response.ok)throw Error(value.error);if(!livePolling)return;
     if(value.state?.players?.length){
       if(appliedMatch===value.matchId&&value.revision<appliedRevision)return;
       if(appliedMatch&&appliedMatch!==value.matchId){pendingCasts.clear();pendingPlay=null;}

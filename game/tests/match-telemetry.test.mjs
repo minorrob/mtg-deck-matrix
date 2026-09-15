@@ -6,6 +6,13 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 const visible=[{cardId:1,name:'Public permanent',owner:0,controller:0},{cardId:2,name:null,faceDown:true,owner:1,controller:1}];
 const event=(kind,fields,sequence=1)=>({kind,eventId:`event:${sequence}`,data:{turn:2,fields}});
+test('Forge unblocked sentinel is not reported as a creature blocking itself',()=>{
+ const attacker={cardId:1},blocker={cardId:3};
+ const fields={defendingPlayer:{playerId:1,name:'Krenko'},blockers:[{key:{playerId:1},value:[{key:attacker,value:[attacker]}]}]};
+ assert.match(summarizeEvents([event('GameEventBlockersDeclared',fields)],visible).recent[0].label,/Public permanent · no blockers/);
+ fields.blockers[0].value[0].value=[blocker];
+ assert.match(summarizeEvents([event('GameEventBlockersDeclared',fields)],[...visible,{cardId:3,name:'Goblin token'}]).recent[0].label,/Public permanent blocked by Goblin token/);
+});
 test('telemetry excludes hidden sources, private draws and raw descriptions',()=>{
   const result=summarizeEvents([
     event('GameEventSpellAbilityCast',{sa:{host:{cardId:2,name:'Secret morph'},description:'Secret library card'},si:{actor:{playerId:1}}}),

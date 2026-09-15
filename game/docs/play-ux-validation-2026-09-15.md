@@ -21,7 +21,7 @@ History retains observed public identities after a card/token leaves play. It re
 - The missing Inkling was hit for 4 by Krenko's Cinder Strike on turn 25 and moved to the graveyard. A regression test now reconstructs this history even when no current visible card remains and the browser/host reloads.
 - Opening shuffle events exist for all four players. The Atraxa library contains 17 creature front faces among 99 cards; the chance of seeing none in the first 13 cards is approximately 7.21%. No draw smoothing or creature/land injection is applied.
 - `ShuffleAudit` verified 100 successive 99-card shuffles against standard Java Random, with no lost/duplicated cards and no reset to the previous order. Fresh preparation uses a cryptographic random seed; subsequent engine shuffles advance the seeded stream.
-- Eighteen companion tests pass. The Java adapter and shuffle audit compile against the pinned Forge jar. The first PR CI run passed all required repository suites; later changes require a fresh passing run before merge.
+- Twenty-four companion tests pass. The Java adapter and shuffle audit compile against the pinned Forge jar. The first PR CI run passed all required repository suites; later changes require a fresh passing run before merge.
 
 ## Remaining limits
 
@@ -35,4 +35,4 @@ Local Forge and its host must remain running. Journals are not durable game-posi
 - Empty combat review windows are retained unless the human yields through the turn. Effects on the stack still stop a yield.
 - New combat assignment telemetry requires a game launched with the updated adapter; older saved journals retain their existing events but cannot recover assignments that were never recorded.
 
-Validation: 22 companion tests passed, including coaching privacy, phase gating, combat totals and a retained combat recap. Adapter compilation passed. Fresh-game browser validation is in progress.
+Validation: 24 companion tests passed, including coaching privacy, phase gating, combat totals, retained combat recap, Forge’s unblocked sentinel and signal-terminated engine lifecycle. Adapter compilation passed. A fresh four-player browser game completed mulligan, draw, land drag, automatic creature payment, resolution, defender switching, attacker assignment and confirmation, unblocked damage and retained recap in main phase 2. Foundry Street Denizen dealt 1 combat damage to Krenko (40 → 39). Blocked combat and complex combat-damage assignment still need broader live coverage.
