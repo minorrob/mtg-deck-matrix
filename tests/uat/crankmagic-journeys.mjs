@@ -207,7 +207,7 @@ try{
  /* A WAY BACK FROM EVERY OTHER CARDS SCREEN (Rob, 15 September). The view switch in the head
     already says Table, but it is a three-way segment in the page head; the toolbar is where a
     reader who has just filtered something is looking. */
- {const back=page.getByRole('button',{name:'Return to the Table',exact:true});eq(await back.count(),1,'the list offers a way back to the Table');
+ {const back=page.getByRole('button',{name:'Back to Play Space',exact:true});eq(await back.count(),1,'the list offers a way back to the Table, in the words the mat uses');
   await back.click();await page.locator('.cm-tt-mat').waitFor();ok(/view=tabletop/.test(page.url()),'and it lands on the mat');
   await page.goto(BASE+'/'+ENTRY+'#cards');await page.locator('#cm-roster-table').waitFor();}
  await click('Table');await page.locator('.cm-tt-mat').waitFor();ok(page.url().endsWith('#cards?view=tabletop'));
@@ -327,6 +327,22 @@ try{
    await page.locator('.cm-tt-drawer-strip .cm-tt-card').first().locator('.cm-tt-tick').click();await page.waitForTimeout(300);
    eq(await page.locator('.cm-tt-drawer-strip .cm-tt-card.is-ticked').count(),1,'ticking a card in the drawer keeps the pile open');
    await page.locator('.cm-tt-drawer-strip .cm-tt-card').first().locator('.cm-tt-tick').click();await page.waitForTimeout(200);
+   /* AND A DRAG THAT ENDS ANYWHERE IS NOT A CLICK EITHER (Rob, 15 September). The tick fix moved
+      the pointer capture off the press and onto the first 8px of travel, which cured the tick but
+      not the drag: a completed press-and-release still leaves a click behind, the capture retargets
+      it to the strip, and the mat read that as clicking away — so every card he dragged and let go
+      anywhere that was not a pile put the pile down and sent him back to the board to find it. */
+   {const drawer=()=>page.evaluate(()=>({shut:!!document.querySelector('.cm-tt-drawer.is-shut'),
+      head:(document.querySelector('.cm-tt-drawer-head strong')||{}).textContent||'',
+      cards:document.querySelectorAll('.cm-tt-drawer-strip .cm-tt-card').length,
+      stage:document.querySelectorAll('.cm-tt-stage').length}));
+    const before=await drawer();
+    const box=await page.locator('.cm-tt-drawer-strip .cm-tt-card').first().boundingBox();
+    await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();
+    await page.mouse.move(box.x+box.width/2+20,box.y+box.height/2+20,{steps:5});
+    await page.mouse.move(box.x+box.width*2.4,box.y+box.height/2,{steps:10});
+    await page.mouse.up();await page.waitForTimeout(600);
+    eq(await drawer(),before,'a card dragged and let go back in the drawer leaves the pile exactly as it was');}
    await page.getByRole('button',{name:'Back to Play Space',exact:true}).click();await page.waitForTimeout(400);
    eq(await page.locator('.cm-tt-drawer.is-shut').count(),1,'and Back to Play Space puts it away');}
   /* STATUS FROM THE TABLE (Rob, 15 September). A drop answers "where does this copy go"; a plan,

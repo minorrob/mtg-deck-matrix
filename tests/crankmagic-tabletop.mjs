@@ -309,6 +309,26 @@ eq(T.printSheet({kind: "status", label: "Watched", rows: []}).includes("0 cards 
   ok(/const dragFrom = host\.querySelector\(mode === "selected" \? "\.cm-tt-fanL" : "\.cm-tt-drawer-strip"\)/.test(ttSrc),
     "and a drag starts from the drawer as well as the selection, which is the whole point of it");
   ok(/cm-tt-grid is-drawer/.test(ttSrc), "the drawer keeps the class the laid-out pile wore, so the keyboard and the selectors still find the cards");
+  /* THE DRAWER STAYS OPEN WHILE YOU WORK OUT OF IT (Rob, 15 September). Two ways it used to shut
+     on him, both fixed at the source because both are about how the module binds rather than what
+     the model holds: the click a completed drag leaves behind, which the mat read as a click on
+     the empty slate, and the band leaving the model when the last card was dragged out of it. */
+  ok(/if \(d\.moved\) draggedAt = performance\.now\(\);/.test(ttSrc),
+    "a drag that moved stamps when it ended");
+  ok(/if \(draggedAt && performance\.now\(\) - draggedAt < 400\) \{[^}]*ev\.stopPropagation\(\); return; \}/.test(ttSrc),
+    "and the click that follows it is swallowed, not read as clicking away from the pile");
+  ok(/const openPile = ui\.open \? \(findPile\(model, ui\.open\) \|\| emptyBand\(ui\.open\)\) : null;/.test(ttSrc),
+    "an open band that emptied is still the pile the reader opened");
+  {
+    /* The band's NAME rides in its id, which is what lets the drawer keep its heading over an
+       empty strip. Nothing here draws (see the file's opening note), so the claim is made against
+       the ids the model builds and the expression the module reads them with; the drawer standing
+       open through a drag is walked in the browser, in tests/uat/crankmagic-journeys.mjs. */
+    const band = T.table(rows, {...opts, groupBy: "type"}).groupPiles[0];
+    const m = /^group:([^:]*):([\s\S]*)$/.exec(band.id);
+    ok(m && m[1] === "type" && m[2] === band.label, `a group id carries its grouping and its band (${band.id})`);
+    ok(/Nothing on this pile\./.test(ttSrc), "and the drawer has a line for a pile with nothing on it");
+  }
 }
 
 /* ------------------------------------------------ §3.1: paint once, patch thereafter (source) */
