@@ -31,6 +31,7 @@ export async function closeLocalGame(){
   return liveStatus();
 }
 export async function launchLocalGame(pod){
+  if(childIsRunning(running?.child)&&liveStatus().status==='finished')await closeLocalGame();
   if(running?.resumed){try{await browserBridge('view');throw Error('The resumed match is still running. Finish it before launching another.');}catch(error){if(!['closed','finished'].includes(liveStatus().status))throw error;}}
   if(childIsRunning(running?.child))throw Error('A standalone match is already running. Finish or close its Forge window first.');
   const forge=resolve(root,'../forge'),jdk=resolve(root,'../commander-runtime/jdk-17.0.20.1+1'),lock=JSON.parse(readFileSync(resolve(root,'game/engine-adapter/forge.lock.json')));
@@ -66,7 +67,7 @@ export async function browserBridge(operation,body){
   if(operation==='view'&&value.state?.players){
     const pod=JSON.parse(readFileSync(resolve(state.directory,'pod.json'))),facts=new Map();
     for(const s of pod.seats)for(const c of [...s.deck.commanders,...s.deck.library])facts.set(c.name,c);
-    for(const p of value.state.players)for(const z of Object.values(p.zones))for(const c of z.cards){const fact=facts.get(c.name);if(fact){c.art=fact.art?.normal;c.typeLine=fact.typeLine;}}
+    for(const p of value.state.players)for(const z of Object.values(p.zones))for(const c of z.cards){const fact=facts.get(c.name);if(fact){c.art=fact.art?.normal;c.typeLine??=fact.typeLine;}}
     value.pod={seats:[pod.seats[0]]};value.matchId=pod.podHash;value.appearance=pod.seats.map(s=>({seatId:s.seatId,playmat:s.playmat,playmatChoice:s.playmatChoice}));
     value.telemetry=matchTelemetry(state.directory,value.state);
     for(const p of value.state.players)p.commanderIdentity=[...new Set(pod.seats.find(s=>s.seatId===p.playerId)?.deck.commanders.flatMap(c=>c.colorIdentity||[])||[])];

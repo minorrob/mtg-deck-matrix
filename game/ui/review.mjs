@@ -95,7 +95,7 @@ function castingPreview(){
 }
 let selectedCardId=null,cardMenu=null;
 function highlightSelection(id){selectedCardId=id;for(const node of document.querySelectorAll('.card[data-card-id]'))node.classList.toggle('selected-card',Number(node.dataset.cardId)===id);}
-function closeCardMenu(){if(cardMenu){cardMenu.hidePopover();cardMenu.remove();cardMenu=null;}highlightSelection(null);}
+function closeCardMenu(){if(cardMenu){cardMenu.hidePopover();cardMenu.remove();cardMenu=null;}highlightSelection(null);lastDecision='';}
 function cardActions(c,anchor){
   if(canSelectCard(c)){gameAction({kind:'card',targetId:c.cardId});return;}
   closeCardMenu();highlightSelection(c.cardId);
@@ -111,7 +111,7 @@ function cardActions(c,anchor){
   ($('focus').open?$('focus'):document.body).append(body);body.showPopover();
   const r=anchor?.getBoundingClientRect()||{right:innerWidth/2,left:innerWidth/2,top:innerHeight/2};
   body.style.left=Math.max(8,Math.min(innerWidth-body.offsetWidth-8,r.right+10))+'px';body.style.top=Math.max(8,Math.min(innerHeight-body.offsetHeight-8,r.top))+'px';
-  body.addEventListener('toggle',event=>{if(event.newState==='closed'&&cardMenu===body){cardMenu=null;body.remove();highlightSelection(null);}});
+  body.addEventListener('toggle',event=>{if(event.newState==='closed'&&cardMenu===body){cardMenu=null;body.remove();highlightSelection(null);lastDecision='';}});
   (body.querySelector('.primary-action:not(:disabled)')||body.querySelector('button'))?.focus();
 }
 function refreshBoards(){if(draggingCard!==null||resizingBoard||!frame())return;render();if($('focus').open)focusBoard(frame().players.find(p=>p.playerId===Number($('focus').dataset.seat)));}
@@ -297,7 +297,7 @@ function matView(p,focused=false){
   for(const [name,cls,cards] of [['Battlefield','mat-battlefield',nonlands],['Lands','mat-lands',lands]]) {
     const zone=el('section',`mat-zone ${cls}`);zone.setAttribute('aria-label',`${names[p.playerId]} ${name}`);
     const list=el('div','cards mat-cards');
-    const grouped=new Map(),capacity=name==='Lands'?7:4,crowded=cards.filter(c=>!freePositions.has(c.cardId)).length>capacity;
+    const grouped=new Map(),capacity=name==='Lands'?6:3,crowded=cards.filter(c=>!freePositions.has(c.cardId)).length>capacity;
     for(const card of cards.filter(c=>!freePositions.has(c.cardId))){const mana=/^[^\n:]*:\s*Add\b/im.test(card.oracleText||''),types=card.typeLine||'';const label=card.token?'Tokens':types.includes('Land')?'Lands':mana&&types.includes('Creature')?'Mana dorks':mana&&types.includes('Artifact')?'Mana rocks':types.includes('Creature')?'Creatures':types.includes('Artifact')?'Artifacts':types.includes('Enchantment')?'Enchantments':'Other';const key=visualGroups.get(card.cardId)||label;if(!grouped.has(key))grouped.set(key,{manual:key.startsWith('group:'),label:key.startsWith('group:')?'Your group':label,cards:[]});grouped.get(key).cards.push(card);}
     for(const group of grouped.values()){const stacked=crowded||group.manual,stack=el('div','battlefield-group'+(stacked?'':' expanded-group'));stack.append(el('small','group-label',group.label));const fan=el('div','card-fan'+(stacked?'':' spread-cards'));for(const card of group.cards)fan.append(cardButton(card));stack.append(fan);list.append(stack);}
     if(!cards.length)list.append(el('span','mat-empty',p.health?.status==='out'?'Eliminated':'Empty'));
@@ -401,10 +401,12 @@ function renderCombat(force=false){
   const picking=attackSelection()||blockSelection();
   if(picking){combatPane.append(el('p','fine',attackSelection()?'Choose the defender above, then toggle your creatures here. Selecting a different defender affects the next creature you select.':'Select the attacker you want to block, then select your blockers. Only blockers currently allowed by the engine are offered. Flying requires flying or reach; trample may carry excess damage through. Review each pairing before Confirm blockers.'));
     const candidates=frame().players.flatMap(p=>p.zones.Battlefield.cards).filter(c=>canSelectCard(c));
+    const attackers=new Set(current?.attacks.map(a=>a.attacker.cardId)||[]);if(blockSelection())candidates.sort((a,b)=>Number(attackers.has(b.cardId))-Number(attackers.has(a.cardId)));
+    if(blockSelection()&&!candidates.some(c=>!attackers.has(c.cardId)))combatPane.append(el('p','combat-total','No legal blockers for the selected attacker. Choose another attacker or confirm your blocks.'));
     const choices=el('div','combat-candidates');for(const c of candidates){const b=button('',()=>gameAction({kind:'card',targetId:c.cardId}),'combat-card-choice');if(c.art){const img=el('img');img.src=c.art;img.alt=c.name;b.append(img);}b.append(el('span','',c.name),el('small','',live.ui.cardActions?.[c.cardId]||'Select creature'));const isAttacker=!!current?.attacks.some(a=>a.attacker.cardId===c.cardId);const selected=blockSelection()&&isAttacker?live.ui.highlightedCards?.includes(c.cardId):!!current?.attacks.some(a=>a.attacker.cardId===c.cardId||a.blockers.some(b=>b.cardId===c.cardId));if(blockSelection()&&isAttacker)b.append(el('small','',selected?'SELECTED ATTACKER · choose blockers below':'Choose blockers for this attacker'));b.classList.toggle('combat-assigned',selected);b.setAttribute('aria-pressed',String(selected));choices.append(b);}combatPane.append(choices);}
   if(!combat?.attacks?.length)combatPane.append(el('p','fine','No attackers assigned yet. Your confirmed attack and block assignments will appear here.'));
-  for(const total of combatTotals(combat?.attacks))combatPane.append(el('div','combat-total',`${total.name} ← ${total.power} attacking power · ${total.unblockedPower} currently unblocked${total.commanderPower?' · '+total.commanderPower+' commander power':''}${total.infectPower?' · '+total.infectPower+' infect power':''}`));
-  if(combat?.attacks?.length)combatPane.append(el('p','fine','Power totals are not final damage: blockers, first/double strike, prevention, trample and responses can change the result. Infect and commander power overlap other totals.'));
+  for(const total of combatTotals(combat?.attacks))combatPane.append(el('div','combat-total',`${total.name} ← ${total.power} attacking power · ${total.unblockedPower} currently unblocked · ${total.flyingPower} flying / ${total.groundPower} ground${total.tramplePower?' · '+total.tramplePower+' trample power':''}${total.commanderPower?' · '+total.commanderPower+' commander power':''}${total.infectPower?' · '+total.infectPower+' infect power':''}`));
+  if(combat?.attacks?.length)combatPane.append(el('p','fine','Power totals are not final damage: blockers, first/double strike, prevention, trample and responses can change the result. Trample, infect and commander power can overlap flying or ground power.'));
   for(const row of combat?.attacks||[]){const item=el('article','combat-assignment');item.append(el('strong','',`${row.attacker.name} ${row.attacker.power}/${row.attacker.toughness} → ${row.defender?.name||'Defender'}`),el('p','fine',[...(row.attacker.keywords||[]),...(row.attacker.commander?['commander']:[])].join(' · ')||'Normal combat damage'),el('p','',row.blockers.length?'Blocked by '+row.blockers.map(b=>`${b.name} ${b.power}/${b.toughness}${b.keywords?.length?' ('+b.keywords.join(', ')+')':''}`).join(' + '):row.blocked?'Blocked; blocker has left combat':'No blocker assigned'));combatPane.append(item);}
   combatPane.append(el('h4','','Responses & results'));
   if(!rows.length)combatPane.append(el('p','fine','No recorded combat results yet. Damage, spells, abilities and departing creatures will be listed here as they happen.'));
@@ -459,6 +461,11 @@ async function gameAction(action,guard){
   }catch(error){notifyAction(error.message);return false;}finally{actionBusy=false;if(livePolling)setTimeout(()=>refreshLiveView().catch(error=>notifyAction(error.message)),50);}
 }
 function renderDecision(){
+  if(live&&frame().gameOver){
+    mountControls();controls.hidden=false;const winners=frame().players.filter(p=>p.health?.status==='won').map(p=>names[p.playerId]);
+    prompt.textContent=winners.length?'Game complete · '+winners.join(' and ')+' won.':'Game complete · review the final result in History.';
+    options.replaceChildren();decisionArt.replaceChildren();buttons.replaceChildren(button('Review game history',()=>selectPane('history')),button('Set up next game',()=>openGameSetup()));return;
+  }
   if(decisionPointer)return;
   mountControls();controls.hidden=false;const ui=live.ui;const combatInput=(attackSelection()?'attack':blockSelection()?'block':'')+frame().turn;if(combatInput!==lastCombatInput){lastCombatInput=combatInput;if((attackSelection()||blockSelection())&&!hideInformation)selectPane('combat');}
   if(ui.ok==='Auto'&&/pay mana cost/i.test(ui.prompt)&&ui.choice?.title==='Select Mana to Produce'){
@@ -490,12 +497,18 @@ function renderDecision(){
   if(paying&&ui.okEnabled){
     prompt.textContent='Paying mana…';decisionArt.replaceChildren();options.replaceChildren();buttons.replaceChildren();lastDecision='';return;
   }
-  const decisionKey=JSON.stringify([ui,frame()?.stackSize,pendingPlay?.cardId,frame()?.combat]);if(decisionKey===lastDecision)return;lastDecision=decisionKey;
+  const decisionKey=JSON.stringify([ui,frame()?.stackSize,pendingPlay?.cardId,frame()?.combat]);if(decisionKey===lastDecision){controls.hidden=!!(cardMenu&&ui.choice?.title==='Choose an ability'&&ui.choice.options.length>1);return;}lastDecision=decisionKey;
   const priority=/^Priority:/m.test(ui.prompt);
   prompt.textContent=ui.nativeFallback||ui.choice?.title||(priority?(hasPriority()?(turnPlayer()?.playerId===0?'Your action · play a card or use a board ability.':'You may respond before play continues.'):'Waiting for the active player…'):ui.prompt);
   buttons.replaceChildren();decisionArt.replaceChildren();
   if(ui.choice){const q=ui.choice;
-    if(q.title==='Choose an ability'&&cardMenu){const choices=cardMenu.querySelector('.quick-ability-options');choices.replaceChildren(...q.options.map(option=>button(option.label,()=>{closeCardMenu();gameAction({kind:'answer',choiceId:q.id,indices:[option.index]});},'ability-option')));}
+    if(q.title==='Choose an ability'&&cardMenu&&q.options.length>1){
+      const choices=cardMenu.querySelector('.quick-ability-options');
+      choices.replaceChildren(...q.options.map(option=>button(option.label,()=>{closeCardMenu();gameAction({kind:'answer',choiceId:q.id,indices:[option.index]});},'ability-option')));
+      if(q.min===0)choices.append(button('Cancel',()=>{closeCardMenu();gameAction({kind:'answer',choiceId:q.id,indices:[]});}));
+      cardMenu.querySelector('.primary-action')?.setAttribute('hidden','');
+      options.replaceChildren();controls.hidden=true;return;
+    }
     const card=frame().players.flatMap(p=>Object.values(p.zones).flatMap(z=>z.cards)).find(c=>c.cardId===(q.cardId??selectedCardId));
     if(card?.art){const img=el('img');img.src=card.art;img.alt=card.name;decisionArt.append(img);}
     // Compatibility with running adapters: Forge takes a sole offered ability for browser card selections.
@@ -504,6 +517,10 @@ function renderDecision(){
     }
     if(choiceId!==q.id){choiceId=q.id;options.replaceChildren();
       if(q.mode==='draw')options.append(button('Draw card',drawStepCard,'primary-action'));
+      else if(q.mode==='order'){
+        options.append(el('p','fine',q.min===q.max?'Arrange all items in the requested order, then confirm.':`Choose ${q.min}–${q.max} items and arrange their order, then confirm.`));
+        for(const option of q.options){const row=el('div','ordered-choice');row.dataset.index=option.index;const selected=el('input');selected.type='checkbox';selected.checked=q.min===q.options.length;selected.disabled=q.min===q.options.length;selected.setAttribute('aria-label','Include '+option.label);row.append(selected,el('span','',option.label));row.append(button('↑',()=>{const previous=row.previousElementSibling;if(previous?.classList.contains('ordered-choice'))options.insertBefore(row,previous);}),button('↓',()=>{const next=row.nextElementSibling;if(next?.classList.contains('ordered-choice'))options.insertBefore(next,row);}));row.querySelectorAll('button').forEach((b,i)=>b.setAttribute('aria-label',`Move ${option.label} ${i?'down':'up'}`));options.append(row);}
+      }
       else if(q.mode==='damage'){
         options.append(el('p','fine','Assign this creature’s damage. Lethal is the amount required for assignment, before prevention or replacement effects.'));
         for(const recipient of q.options){const label=el('label','damage-recipient'),n=el('input');n.type='number';n.min=0;n.max=q.total;n.step=1;n.value=0;n.dataset.recipient=recipient.index;n.setAttribute('aria-label','Damage to '+recipient.label);label.append(el('span','',recipient.label+(recipient.defender?' · defender':' · lethal '+recipient.lethal)),n);options.append(label);}
@@ -513,7 +530,8 @@ function renderDecision(){
       else if(['one','boolean','index'].includes(q.mode))for(const option of q.options)options.append(button(option.label,()=>gameAction({kind:'answer',choiceId:q.id,indices:[option.index]}),'ability-option'));
       else for(const option of q.options){const label=el('label','choice-option'),input=el('input');input.type='checkbox';input.name='game-choice';input.value=option.index;if(q.mode!=='ack')label.append(input);label.append(el('span','',option.label));options.append(label);}
     }
-    if(q.mode==='damage'){
+    if(q.mode==='order')buttons.append(button('Confirm order',()=>gameAction({kind:'answer',choiceId:q.id,indices:[...options.querySelectorAll('.ordered-choice')].filter(row=>row.querySelector('input').checked).map(row=>Number(row.dataset.index))})));
+    else if(q.mode==='damage'){
       buttons.append(button('Confirm damage assignment',()=>gameAction({kind:'answer',choiceId:q.id,amounts:[...options.querySelectorAll('input[data-recipient]')].map(n=>Number(n.value))})));
       if(q.maySkip)buttons.append(button('Skip this assignment',()=>gameAction({kind:'answer',choiceId:q.id,skip:true})));
     }

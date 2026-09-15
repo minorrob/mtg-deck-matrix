@@ -118,3 +118,14 @@ body.table-view .action-dock .live-controls{margin:0;padding:14px;border:0;borde
 body.table-view .table{margin:0;align-self:start}
 
 body.setup-screen>.recommended-actions{display:none!important}
+/* Use the available mat height for readable cards; miniature opponents keep their compact scale. */
+.primary-seat .mat-battlefield .card-fan,.focus-mat-stage .mat-battlefield .card-fan{--fan-card-width:clamp(70px,19cqw,240px)}
+.primary-seat .mat-battlefield .battlefield-group:not(.expanded-group),.focus-mat-stage .mat-battlefield .battlefield-group:not(.expanded-group){width:clamp(70px,19cqw,240px)}
+.primary-seat .mat-lands .card-fan,.focus-mat-stage .mat-lands .card-fan{--fan-card-width:clamp(40px,9cqw,125px)}
+.primary-seat .mat-lands .battlefield-group:not(.expanded-group),.focus-mat-stage .mat-lands .battlefield-group:not(.expanded-group){width:clamp(40px,9cqw,125px)}
+.primary-seat .free-card,.focus-mat-stage .free-card{width:19cqw}
+.ordered-choice{display:grid;grid-template-columns:22px minmax(0,1fr) 36px 36px;gap:6px;align-items:center;padding:10px 0;border-bottom:1px solid #35566b}.ordered-choice button{padding:6px}.ordered-choice input{accent-color:#42c8ff}
+/* A fanned card's hit area is its visible name strip, never a hidden full-card rectangle. */
+.card-fan:not(.spread-cards)>.card:not(:last-child){height:calc(var(--fan-card-width)*.24);aspect-ratio:auto;overflow:hidden;min-height:0}
+.card-fan:not(.spread-cards)>.card:not(:last-child)>img{height:auto;max-height:none;object-fit:initial;align-self:start}
+.card-fan:not(.spread-cards)>.card+.card{margin-top:0}

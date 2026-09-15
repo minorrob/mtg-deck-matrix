@@ -35,6 +35,7 @@ public final class ForgeBrowserBridge {
     Map<String,Object> lastAction;
     JsonObject answer;
     final Map<String,Map<String,Object>> receipts=new LinkedHashMap<>();
+    final Map<String,String> receiptPayloads=new HashMap<>();
 
     ForgeBrowserBridge(Path out,ForgeProbe.Journal journal)throws Exception{
         this.journal=journal;
@@ -118,6 +119,17 @@ public final class ForgeBrowserBridge {
             case "message":case "showErrorDialog":title=String.valueOf(a[0]);options=List.of();min=0;max=0;mode="ack";break;
             case "one":case "oneOrNone":title=String.valueOf(a[0]);options=(List<?>)a[1];min=method.equals("oneOrNone")?0:1;break;
             case "getChoices":title=String.valueOf(a[0]);min=(int)a[1];max=(int)a[2];options=(List<?>)a[3];mode="many";break;
+            case "order":
+                title=String.valueOf(a[0])+" · "+String.valueOf(a[1]);mode="order";
+                if(a.length==4){options=(List<?>)a[2];min=options.size();max=options.size();}
+                else {
+                    if((boolean)a[7])return DELEGATE; // Sideboarding is not an in-game decision.
+                    List<Object> all=new ArrayList<>();if(a[5]!=null)all.addAll((List<?>)a[5]);all.addAll((List<?>)a[4]);options=all;
+                    int remainingMin=(int)a[2],remainingMax=(int)a[3];
+                    min=remainingMax<0?0:Math.max(0,all.size()-remainingMax);max=remainingMin<0?all.size():all.size()-remainingMin;
+                }
+                if(options.isEmpty())return a.length==9?new forge.gui.interfaces.IGuiGame.OrderResult<>(List.of(),false):List.of();
+                break;
             case "chooseEntitiesForEffect":
                 // Only the public proliferate-target contract is supported here. Other effect choices retain native reveal handling.
                 if(!String.valueOf(a[0]).equals(forge.util.Localizer.getInstance().getMessage("lblChooseProliferateTarget"))){synchronized(this){fallback="Finish this effect choice in the engine window.";revision++;}return DELEGATE;}
@@ -156,6 +168,7 @@ public final class ForgeBrowserBridge {
             if(method.equals("chooseEntitiesForEffect"))journal.append("mechanic-choice-completed",ForgeProbe.obj("mechanic","Proliferate","playerId",0,"turn",game.getPhaseHandler().getTurn()));
             return selected;
         }
+        if(mode.equals("order"))return a.length==9?new forge.gui.interfaces.IGuiGame.OrderResult<>(selected,false):selected;
         if(mode.equals("boolean"))return submitted.getAsJsonArray("indices").get(0).getAsInt()==0;
         if(mode.equals("index"))return submitted.getAsJsonArray("indices").get(0).getAsInt();
         return selected.isEmpty()?null:selected.get(0);
@@ -209,7 +222,10 @@ public final class ForgeBrowserBridge {
         final long queuedRevision;
         synchronized(this){
             if(!id.matches("[a-fA-F0-9-]{36}"))throw new IllegalArgumentException("Invalid action id");
-            if(receipts.containsKey(id))return receipts.get(id);
+            if(receipts.containsKey(id)){
+                if(!Objects.equals(receiptPayloads.get(id),request.toString()))throw new IllegalArgumentException("Action id was reused with different content");
+                return receipts.get(id);
+            }
             if(request.get("revision").getAsLong()!=revision)throw new IllegalArgumentException("The board changed. Review the refreshed choice and try again.");
             if(kind.equals("answer")){
                 if(pending==null||answer!=null||!Objects.equals(pending.get("id"),request.get("choiceId").getAsString()))throw new IllegalArgumentException("This choice has expired");
@@ -222,13 +238,13 @@ public final class ForgeBrowserBridge {
                     if(indices.size()<min||indices.size()>max)throw new IllegalArgumentException("Select the required number of options");
                     for(JsonElement n:indices){double value=n.getAsDouble();if(value!=Math.rint(value)||value<0||value>=size||!seen.add((int)value))throw new IllegalArgumentException("Invalid selection");}
                 }
-                journal.append("browser-choice-answered",request);answer=request.deepCopy();revision++;notifyAll();return receipt(id);
+                journal.append("browser-choice-answered",request);answer=request.deepCopy();revision++;notifyAll();receiptPayloads.put(id,request.toString());return receipt(id);
             }
             if(actionInFlight||pending!=null||controller==null||!fallback.isEmpty())throw new IllegalArgumentException("Complete the current decision first");
             if(kind.equals("ok")&&!okEnabled||kind.equals("cancel")&&!cancelEnabled)throw new IllegalArgumentException("Button is unavailable");
             if(!Set.of("ok","cancel","card","player").contains(kind))throw new IllegalArgumentException("Unsupported action");
             // Reserve before scheduling: retries cannot apply a second payment or selection.
-            receipt(id);queuedRevision=++revision;actionInFlight=true;lastAction=ForgeProbe.obj("id",id,"status","pending");
+            receiptPayloads.put(id,request.toString());receipt(id);queuedRevision=++revision;actionInFlight=true;lastAction=ForgeProbe.obj("id",id,"status","pending");
         }
         SwingUtilities.invokeLater(()->{
             try{
@@ -237,7 +253,7 @@ public final class ForgeBrowserBridge {
                     case "ok":controller.selectButtonOk();break;
                     case "cancel":controller.selectButtonCancel();break;
                     case "player":
-                        int playerId=request.get("targetId").getAsInt();game.getRegisteredPlayers().stream().filter(p->p.getId()==playerId).findFirst().ifPresent(p->controller.selectPlayer(p.getView(),null));break;
+                        int playerId=request.get("targetId").getAsInt();var target=game.getRegisteredPlayers().stream().filter(p->p.getId()==playerId).findFirst().orElseThrow(()->new IllegalArgumentException("Player is not in this match"));controller.selectPlayer(target.getView(),null);break;
                     case "card":
                         int cardId=request.get("targetId").getAsInt();Card found=null;
                         for(var p:game.getRegisteredPlayers())for(ZoneType zone:List.of(ZoneType.Hand,ZoneType.Battlefield,ZoneType.Command,ZoneType.Exile,ZoneType.Graveyard))for(Card card:p.getCardsIn(zone))if(card.getId()==cardId&&card.getView().canBeShownTo(game.getRegisteredPlayers().get(0).getView()))found=card;
@@ -251,5 +267,5 @@ public final class ForgeBrowserBridge {
         });
         synchronized(this){return receipts.get(id);}
     }
-    private Map<String,Object> receipt(String id){Map<String,Object> value=ForgeProbe.obj("accepted",true,"actionId",id);receipts.put(id,value);if(receipts.size()>1024)receipts.remove(receipts.keySet().iterator().next());return value;}
+    private Map<String,Object> receipt(String id){Map<String,Object> value=ForgeProbe.obj("accepted",true,"actionId",id);receipts.put(id,value);if(receipts.size()>1024){String oldest=receipts.keySet().iterator().next();receipts.remove(oldest);receiptPayloads.remove(oldest);}return value;}
 }

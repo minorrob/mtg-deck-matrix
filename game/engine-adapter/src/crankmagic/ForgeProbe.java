@@ -177,7 +177,7 @@ public final class ForgeProbe {
                         "token",c.isToken(),"commander",c.isCommander(),"engineEffect",c.isImmutable(),
                         "controller",c.getController().getId(),"owner",c.getOwner().getId(),"tapped",c.isTapped(),
                         "faceDown",c.isFaceDown(),"damage",c.getDamage(),"counters",capture(c.getCounters()));
-                    if (faceVisible) { data.put("power",c.getNetPower()); data.put("toughness",c.getNetToughness()); }
+                    if (faceVisible) { data.put("power",c.getNetPower()); data.put("toughness",c.getNetToughness()); data.put("typeLine",c.getType().toString()); }
                     cards.add(data);
                 }
                 zones.put(zone.name(),obj("count",count,"hiddenCount",hidden,"cards",cards));
