@@ -243,9 +243,13 @@ The concept image accompanies this plan. It communicates visual direction; gener
 
 ### Views
 
+**Per-player mat layout (Rob's supplied references):** each seat has the large battlefield area at upper left and a separate lower row for lands. On the right, Command Zone / Exile sit above Library / Graveyard; a turn-sequence reminder and a small synchronized life display sit above those piles. Lands remain in the engine's battlefield zone—this separation is visual. The shared four-player counter remains in the middle of the entire table.
+
+Use Rob's supplied floating-cube mat image for the human seat, retaining its recognizable artwork and zone placement. Other seats use a restrained dark mat with the same geometry. Table overview shows four mats around the shared counter; **Focus mat** expands a selected mat, and individual card inspection enlarges its artwork further. Libraries display backs and counts, never an unrevealed top card. Public piles open their full visible contents. Mat life displays mirror the central counter's engine state.
+
 | View | What the player sees |
 |---|---|
-| **Table** | Opponent battlefields above and to either side of the central four-player counter; your larger battlefield and hand below; stack/inspector at the right. All four seats remain present. |
+| **Table** | Four player mats in two rows around the central four-player counter; your seat at lower left and your hand below; stack/inspector at the right. All four seats remain present. Each mat follows the supplied zone layout. |
 | **Focus a seat** | Expand one battlefield while retaining a compact strip for the other seats, your hand, and the stack. Scroll/zoom dense boards locally. |
 | **Inspect a zone** | Large-card grid for a public graveyard/exile/command zone, with filters, ordering, and return to table. Hidden zones show counts/backs unless an effect permits viewing. |
 | **Expand hand / card showcase** | Straighten the hand into a readable gallery; enlarge a selected card, switch faces, pin it, and compare another. |

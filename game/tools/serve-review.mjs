@@ -4,6 +4,8 @@ import {resolve,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../..');
 const files=new Map([['/',['game/ui/review.html','text/html']],['/review.css',['game/ui/review.css','text/css']],['/review.mjs',['game/ui/review.mjs','text/javascript']],['/match.json',['game/.local/review/match.json','application/json']]]);
+files.set('/mats.css',['game/ui/mats.css','text/css']);
+files.set('/rob-playmat.png',['game/ui/assets/rob-playmat.png','image/png']);
 createServer(async(req,res)=>{
   const entry=files.get(new URL(req.url,'http://127.0.0.1').pathname);
   if(req.method!=='GET'||!entry){res.writeHead(404);res.end();return;}

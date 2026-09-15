@@ -65,6 +65,14 @@ The RNG-prefix restart demonstrates a durable pending opening choice. Forge's ex
 
 ## Next implementation gate
 
+### Mat-layout follow-up
+
+The replay UI now follows Rob's two supplied mat references: nonland battlefield above the lands row, Command / Exile above Library / Graveyard on the right, and a turn reminder with a synchronized life display. Rob's unmodified supplied artwork is local to the human seat. Four mats surround the shared counter; Focus mat opens a larger mat and card inspection opens above it. Lands remain engine battlefield objects.
+
+Browser checks confirmed four mats, correct separated land counts (4 / 4 / 4 / 5 in the turn-18 fixture), card inspection from the focused battlefield, a library dialog that exposes only its count, and no horizontal document overflow at the checked 1366px desktop width. JavaScript syntax and whitespace checks pass. This is a renderer change; the recorded engine proof is unchanged. [Focused personal mat screenshot](player-mat-preview.png).
+
+### Remaining engine and integration work
+
 1. Bridge a scripted spell/response sequence through real targets and payment, plus simultaneous trigger ordering, attack/block assignment, and a choice during resolution. Record every accepted answer.
 2. Kill and recover that scenario with an unresolved stack choice. Prove identical resulting state and no duplicate application.
 3. Certify the seat observation boundary using hidden-state permutations, reveals, face-down objects, and control changes. Replace or constrain native fallback paths that inspect hidden data.

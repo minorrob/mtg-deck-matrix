@@ -3,7 +3,6 @@ const data=await fetch('/match.json').then(r=>{if(!r.ok) throw new Error('No loc
 const names=['You · Chulane','Krenko','Atraxa','Shadrix'];
 const levels=new Map([[1,3],[2,3],[3,3]]);
 let index=Math.max(0,data.frames.findIndex(f=>f.turn>=18 && f.phase==='MAIN1'));
-let focused=null;
 function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;}
 function button(text,fn,cls){const b=el('button',cls,text);b.type='button';b.addEventListener('click',fn);return b;}
 function frame(){return data.frames[index];}
@@ -32,18 +31,42 @@ function inspect(c,count=1,initial=false){
     $('card-detail').showModal();
   }
 }
-function showDialog(title,body){$('detail-title').textContent=title;$('detail-body').replaceChildren(body);$('detail').showModal();}
+function showDialog(title,body){$('detail').classList.remove('mat-dialog');$('detail-title').textContent=title;$('detail-body').replaceChildren(body);if(!$('detail').open)$('detail').showModal();}
 function zoneView(p,zone){const body=el('div');const z=p.zones[zone];body.append(el('p','fine',`${z.count} cards · recorded turn ${frame().turn}`));const cards=el('div','cards');for(const {card,count} of groups(z.cards))cards.append(cardButton(card,count));if(!z.cards.length)cards.append(el('p','empty','This zone has no visible cards.'));body.append(cards);showDialog(`${names[p.playerId]} · ${zone}`,body);}
+function matView(p){
+  const mat=el('div',`player-mat${p.playerId===0?' personal-mat':' plain-mat'}`);
+  mat.setAttribute('aria-label',`${names[p.playerId]} playmat`);
+  const lands=p.zones.Battlefield.cards.filter(c=>c.typeLine?.split('—')[0].includes('Land'));
+  const nonlands=p.zones.Battlefield.cards.filter(c=>!lands.includes(c));
+  for(const [name,cls,cards] of [['Battlefield','mat-battlefield',nonlands],['Lands','mat-lands',lands]]) {
+    const zone=el('section',`mat-zone ${cls}`);zone.setAttribute('aria-label',`${names[p.playerId]} ${name}`);
+    const list=el('div','cards mat-cards');
+    for(const {card,count} of groups(cards))list.append(cardButton(card,count));
+    if(!cards.length)list.append(el('span','mat-empty',p.health?.status==='out'?'Eliminated':'Empty'));
+    zone.append(list,el('span','mat-zone-label',`${name} · ${cards.length}`));mat.append(zone);
+  }
+  const guide=el('div','mat-turn-guide');guide.setAttribute('aria-label','Turn sequence reminder');
+  for(const phase of ['1. Untap','2. Upkeep','3. Draw','4. Main phase 1','5. Combat','6. Main phase 2','7. End / cleanup'])guide.append(el('span','',phase));
+  mat.append(guide);
+  const life=button('',()=>showHealth(p),'mat-life');life.setAttribute('aria-label',`${names[p.playerId]} life ${p.health.life}; inspect counters`);
+  life.append(el('small','','Life'),el('strong','',p.health.life));mat.append(life);
+  for(const [zone,label,cls] of [['Command','Command zone','mat-command'],['Exile','Exile','mat-exile'],['Library','Library','mat-library'],['Graveyard','Graveyard','mat-graveyard']]) {
+    const z=p.zones[zone],face=zone==='Command'?z.cards[0]:z.cards.at(-1),pile=button('',()=>{
+      if(zone==='Library') {const body=el('p','fine',`${z.count} cards remain. Library order and the top card are hidden.`);showDialog(`${names[p.playerId]} · Library`,body);}
+      else zoneView(p,zone);
+    },`mat-pile ${cls}`);
+    pile.setAttribute('aria-label',`${names[p.playerId]} ${label}, ${z.count} cards`);
+    if(zone==='Library'&&z.count) {const back=el('span','library-back');back.append(el('span','','✦'));pile.append(back);}
+    else if(face?.art) {const art=el('img');art.src=face.art;art.alt=face.name;art.loading='lazy';pile.append(art);}
+    else pile.append(el('span','pile-empty',z.count?'◇':'—'));
+    pile.append(el('span','pile-count',z.count),el('span','mat-zone-label',label));mat.append(pile);
+  }
+  return mat;
+}
 function renderSeat(p){
-  const box=$(`seat-${p.playerId}`);box.replaceChildren();box.classList.toggle('focused',focused===p.playerId);
+  const box=$(`seat-${p.playerId}`);box.replaceChildren();
   const head=el('div','seat-heading');const title=el('div');title.append(el('div','seat-label',p.playerId===0?'YOUR DECK · RECORDED NATIVE PILOT':'AI OPPONENT · NATIVE PROBE'),el('div','seat-title',names[p.playerId]));
-  head.append(title,button(focused===p.playerId?'Return':'Focus',()=>{focused=focused===p.playerId?null:p.playerId;render();}));box.append(head);
-  const meta=el('div','seat-meta');meta.append(el('span','',`Library ${p.zones.Library.count}`),el('span','',`Hand ${p.zones.Hand.count}`));
-  for(const z of ['Graveyard','Exile','Command'])meta.append(button(`${z==='Graveyard'?'Grave':z} ${p.zones[z].count}`,()=>zoneView(p,z)));
-  box.append(meta);const board=el('div','cards battlefield');
-  for(const {card,count} of groups(p.zones.Battlefield.cards))board.append(cardButton(card,count));
-  if(!p.zones.Battlefield.cards.length)board.append(el('p','empty',p.health?.status==='out'?'Player eliminated.':'Battlefield is empty.'));
-  box.append(board);
+  head.append(title,el('span','seat-hand-count',`Hand ${p.zones.Hand.count}`),button('Focus mat',()=>{showDialog(`${names[p.playerId]} · playmat`,matView(p));$('detail').classList.add('mat-dialog');}));box.append(head,matView(p));
 }
 function showHealth(p){
   const h=p.health,body=el('div'),metrics=el('div','metrics');

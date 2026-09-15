@@ -1,0 +1,39 @@
+/* Mat geometry follows Rob's supplied references. Lands remain battlefield objects. */
+.arena{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto 128px auto;gap:12px}
+.west{grid-column:1;grid-row:1}.north{grid-column:2;grid-row:1}.south{grid-column:1;grid-row:3}.east{grid-column:2;grid-row:3}
+.seat{padding:8px;background:#111a27;overflow:visible;align-self:start}
+.seat-heading{margin-bottom:8px}.seat-title{font-size:12px}.seat-label{font-size:8px}.seat-hand-count{margin-left:auto;font-size:10px;color:var(--muted)}.seat-heading button{margin-left:0;white-space:nowrap}
+.player-mat{position:relative;container-type:inline-size;aspect-ratio:1020/603;border:2px solid #566570;border-radius:12px;overflow:hidden;isolation:isolate;background:#060909;box-shadow:inset 0 0 0 3px #141d23,0 8px 14px #0005}
+.personal-mat{background-image:linear-gradient(#06131a33,#06131a33),url('/rob-playmat.png');background-size:100% 100%;border-color:#77a99f}
+.plain-mat{background:radial-gradient(ellipse at top,#182026,#050708 75%)}
+.mat-zone{position:absolute;left:3.6%;width:64%;border:1px dashed #b9c6c388;border-radius:4px;background:#06101940}
+.mat-battlefield{top:5.5%;height:54%}.mat-lands{top:69%;height:24%}
+.personal-mat .mat-zone{border:0;background:#05101926}
+.mat-zone-label{position:absolute;bottom:2px;left:4px;right:2px;font-family:Georgia,serif;font-size:clamp(8px,1.6cqw,18px);color:#fff;text-shadow:0 1px 3px #000,0 0 5px #000;background:#07101bc9;width:fit-content;border-radius:3px;padding:1px 4px;line-height:1.15;pointer-events:none}
+.mat-cards{position:absolute;inset:3% 2% 16%;display:flex;flex-wrap:wrap;gap:5px;overflow:auto;align-content:start;padding:3px;scrollbar-width:thin}
+.player-mat .mat-cards .card{width:clamp(36px,11cqw,145px);height:auto;min-height:0;max-height:none;aspect-ratio:488/680}
+.player-mat .mat-cards{padding:3px}
+.player-mat .mat-lands .mat-cards{inset:1% 1% 14%;flex-wrap:nowrap;align-items:start;overflow-y:hidden;padding:1px 3px}
+.player-mat .mat-lands .card{width:clamp(29px,7.6cqw,106px)}
+.player-mat .card .badge{font-size:clamp(7px,1.6cqw,12px);padding:1px 3px;right:1px;bottom:1px}
+.player-mat .card .count{font-size:clamp(7px,1.6cqw,12px);padding:1px;min-width:16px;right:1px;top:1px}
+.player-mat .card .fallback{font-size:clamp(7px,1.3cqw,12px);padding:4px}.player-mat .card .fallback b{font-size:14px}
+.mat-empty{font-size:clamp(8px,1.5cqw,13px);color:#c2cece80;padding:5px;text-shadow:0 1px 3px #000}
+.mat-turn-guide{position:absolute;left:72%;top:6%;width:13%;height:26%;display:flex;flex-direction:column;justify-content:space-around;background:#081119ee;padding:2px 3px;border-radius:4px;font-family:Georgia,serif;font-size:clamp(6px,1.35cqw,14px);line-height:1.15;color:#d2dddd}
+.mat-life{position:absolute;left:86%;top:6%;width:11%;height:17%;padding:2px;background:#08131cef;border:1px dashed #b9c6c388;color:#e5fff8;display:flex;align-items:center;justify-content:center;flex-direction:column}
+.mat-life small{font:clamp(7px,1.4cqw,16px) Georgia,serif}.mat-life strong{font-size:clamp(16px,4cqw,36px);line-height:1.1}
+.mat-pile{position:absolute;width:11.5%;height:24%;padding:0;border:1px dashed #b9c6c388;border-radius:4px;background:#06101985;overflow:visible;display:flex;align-items:center;justify-content:center}
+.mat-command{left:73%;top:38%}.mat-exile{left:86%;top:38%}.mat-library{left:73%;top:70%}.mat-graveyard{left:86%;top:70%}
+.mat-pile>img{height:88%;width:auto;max-width:92%;object-fit:contain;border-radius:3px;align-self:start;margin-top:2px}
+.mat-pile .mat-zone-label{font-size:clamp(7px,1.35cqw,15px);left:-2px;bottom:-3px;white-space:nowrap}
+.pile-count{position:absolute;right:0;top:0;background:#07121cee;color:#fff;border-radius:4px;padding:1px 4px;font-size:clamp(8px,1.5cqw,15px)}
+.pile-empty{font-size:clamp(16px,3cqw,30px);color:#b8c5c5a8}
+.library-back{display:grid;place-items:center;width:86%;height:85%;border:2px solid #405b64;border-radius:4px;background:repeating-linear-gradient(45deg,#142635 0 7px,#1d3946 7px 8px);box-shadow:2px 2px 0 #617a80,4px 4px 0 #152e39}.library-back span{font-size:clamp(16px,3cqw,34px);color:#a3d4cc}
+.center-counter{grid-column:1/3;grid-row:2;width:min(540px,90%);padding:7px 10px;border-radius:20px}
+.counter-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.counter-tile{padding:5px 9px}.counter-tile .life{font-size:30px}.phone-label{padding:0 3px 5px}.phone-bottom{padding-top:4px}
+.mat-dialog{width:min(1160px,96vw);max-height:96dvh;overflow:auto}.mat-dialog .player-mat{width:100%}.mat-dialog .mat-cards{max-height:none}.mat-dialog .mat-pile{max-height:none}
+.mat-dialog .dialog-head{margin-bottom:10px}
+@media(min-width:1600px){.arena{grid-template-columns:repeat(2,minmax(0,1fr))}.center-counter{width:540px}.hand-cards .card{width:140px}}
+@media(max-width:1200px){.arena{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.center-counter{width:min(540px,96%)}.seat-label{font-size:7px}.seat-hand-count{font-size:9px}}
+@media(max-width:940px){.arena{grid-template-columns:repeat(2,minmax(0,1fr))}.center-counter{width:min(540px,96%)}}
+@media(max-width:620px){.arena{grid-template-columns:1fr;grid-template-rows:auto auto 128px auto auto}.west{grid-column:1;grid-row:1}.north{grid-column:1;grid-row:2}.center-counter{grid-column:1;grid-row:3;width:100%}.south{grid-column:1;grid-row:4}.east{grid-column:1;grid-row:5}.counter-tile .life{font-size:26px}.counter-tile .who{font-size:8px}.counter-tile .subtotals{font-size:8px}.seat-label{font-size:8px}.seat-hand-count{font-size:10px}.mat-dialog{padding:10px}.mat-dialog .dialog-head h2{font-size:15px}}
