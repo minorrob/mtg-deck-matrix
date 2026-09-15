@@ -387,9 +387,15 @@ function sheetEdit(btn,seed=''){
    this view feeds it the rows, the filters and the reader's grouping choice. */
 let tabletopGroupBy=C.state.preferences.tabletopGroupBy||'type';
 /* The table's own state between draws: the open pile, its page and card size, the ticks while it is laid out, the selection on the stage and the pile it came from. */
-const ttUI={open:null,from:null,page:0,size:'M',ticked:new Set(),selection:new Set(),bench:'open',stageSize:'XL',canvas:'slate',trays:4,drawAt:0};
+const ttUI={open:null,from:null,page:0,size:'M',ticked:new Set(),selection:new Set(),bench:'open',stageSize:'XL',canvas:'slate',trays:4,drawAt:0,hand:new Set(),trayGroups:['','','','']};
 /* The card size, the Bench ledge's fold and the stage's picture size are facts about the screen they were chosen on, so they are remembered per device and not in the library. */
-try{const s=localStorage.getItem('cm-tabletop-size');if(s&&['S','M','L'].includes(s))ttUI.size=s;if(localStorage.getItem('cm-tabletop-bench')==='shut')ttUI.bench='shut';const z=localStorage.getItem('cm-tabletop-stage');if(z&&['L','XL','XXL','full'].includes(z))ttUI.stageSize=z;const c=localStorage.getItem('cm-tabletop-canvas');if(c&&globalThis.CrankTabletop&&CrankTabletop.CANVASES.some(([k])=>k===c))ttUI.canvas=c;const t=Number(localStorage.getItem('cm-tabletop-trays'));if(Number.isInteger(t)&&t>=1&&t<=4)ttUI.trays=t;}catch(err){/* a private window; the defaults then */}
+try{const s=localStorage.getItem('cm-tabletop-size');if(s&&['S','M','L'].includes(s))ttUI.size=s;if(localStorage.getItem('cm-tabletop-bench')==='shut')ttUI.bench='shut';const z=localStorage.getItem('cm-tabletop-stage');if(z&&['L','XL','XXL','full'].includes(z))ttUI.stageSize=z;const c=localStorage.getItem('cm-tabletop-canvas');if(c&&globalThis.CrankTabletop&&CrankTabletop.CANVASES.some(([k])=>k===c))ttUI.canvas=c;const t=Number(localStorage.getItem('cm-tabletop-trays'));if(Number.isInteger(t)&&t>=1&&t<=4)ttUI.trays=t;
+  /* Shelf mode's hand and its tray bindings are the same kind of fact: about this screen, not
+     about the library. Nothing here is a staged move, so nothing here is written to the sitting. */
+  const h=JSON.parse(localStorage.getItem('cm-tabletop-hand')||'[]');if(Array.isArray(h))ttUI.hand=new Set(h.filter(x=>typeof x==='string').slice(0,200));
+  const g=JSON.parse(localStorage.getItem('cm-tabletop-traygroups')||'[]');if(Array.isArray(g))ttUI.trayGroups=[0,1,2,3].map(i=>typeof g[i]==='string'?g[i]:'');
+}catch(err){/* a private window; the defaults then */}
+const saveHand=()=>{try{if(ttUI.hand.size)localStorage.setItem('cm-tabletop-hand',JSON.stringify([...ttUI.hand]));else localStorage.removeItem('cm-tabletop-hand');}catch(err){/* not remembered, still in hand */}};
 let tabletopStatusOrder=C.state.preferences.tabletopStatusOrder==='count'?'count':'workflow';
 let ttModel=null;
 /* The one keydown and the one resize the table has attached, so a redraw replaces them rather
@@ -409,10 +415,36 @@ let ttKey=null,ttResize=null;
    -- shelf mode, where the destinations are collection groups instead, is PR 4 (§2.15). */
 function playDeck(params){const id=params.get('deck');if(!id)return null;const d=C.state.decks.find(x=>x.id===id&&!x.archived);return d&&d.groupId?d:null;}
 function playSpec(params){
-  const d=playDeck(params),sb=C.sandbox;
+  const d=playDeck(params),sb=C.sandbox,shelf=!d;
   return {deck:d?{id:d.id,name:d.name,groupId:d.groupId}:null,trays:ttUI.trays,at:ttUI.drawAt,
-    seatOf:r=>{if(!sb||!sb.open)return '';const mv=sb.pendingFor(r.recordId);if(!mv)return '';
-      return mv.action==='hold'?'hand':mv.action==='tray'?'tray:'+(mv.tray||1):'';}};
+    /* SHELF MODE'S DESTINATIONS (plan §2.15). With no deck the band along the bottom is the
+       collection groups, the trays are buckets bound to one each, and a group's membership is
+       what the row already carries -- so the module lays them out and this view answers only
+       the two questions it alone can: which groups exist, and which ones this row is in. */
+    groups:shelf?C.state.groups.map(g=>({id:g.id,name:g.name})):[],
+    trayGroups:shelf?ttUI.trayGroups:[],
+    groupOf:r=>r.groupIds||[],
+    /* The sandbox answers first, because a staged move is a claim and the hand is not: in deck
+       mode both seats come from it, in shelf mode the trays do and the middle is view state. */
+    seatOf:r=>{const mv=sb&&sb.open?sb.pendingFor(r.recordId):null;
+      if(mv)return mv.action==='hold'?'hand':mv.tray?'tray:'+mv.tray:'';
+      return shelf&&ttUI.hand.has(r.recordId)?'hand':'';}};
+}
+/* CARDS SENT OVER FROM DISCOVER (plan §2.15; decided 15 September). Shelf mode needed a way to
+   reach the 31,830-printing catalog, and the answer is not a second search surface: Discover
+   already has the search, the filters and the graph, so the catalog travels one way. Tick cards
+   there, press Send to the table, and they arrive here as rows -- cards, not copies. The only
+   thing that can be done with one is file it in a collection group, where it becomes a planned
+   entry exactly as an imported list does. The ids live per device, because a card you are
+   considering is not a fact about the library until you file it. */
+const SENT_KEY='cm-table-sent';
+function sentIds(){try{const v=JSON.parse(localStorage.getItem(SENT_KEY)||'[]');return Array.isArray(v)?v.filter(x=>typeof x==='string'):[];}catch(err){return [];}}
+function setSentIds(list){try{if(list.length)localStorage.setItem(SENT_KEY,JSON.stringify(list));else localStorage.removeItem(SENT_KEY);}catch(err){/* not remembered; still on the table this session */}}
+function sentRows(){
+  const TT=globalThis.CrankTabletop;if(!TT||!C.catalog)return [];
+  return sentIds().map(id=>{const card=C.catalog.get?C.catalog.get(id):null;if(!card)return null;
+    return {recordId:'catalog:'+id,id:'catalog:'+id,kind:'catalog',cardId:id,card,quantity:1,source:'watching',
+      placement:'',purpose:'',offer:'none',groupIds:[],deckId:'',groupId:'',printing:null,paid:null,status:TT.SENT};}).filter(Boolean);
 }
 /* THE LIVE SCOREBOARD (plan §2.14, §2.3). The deck page's own `readiness`, computed on the
    sandbox's preview rather than the library -- so it reads where the reader WILL be if they
@@ -420,7 +452,22 @@ function playSpec(params){
    the one figure that turns amber: a tray may take the hundred past a hundred while you think,
    and confirming over is the thing that gets flagged. */
 function scoreboard(model){
-  const P=model&&model.play;if(!P||!P.deck)return [];
+  const P=model&&model.play;if(!P)return [];
+  /* SHELF MODE'S SCOREBOARD (plan §2.15): the size of each group you are filling. Read off the
+     same preview the deck's figures are, so a tray's cards are already counted in -- that is the
+     number a reader watches while sorting, not the number the library holds this second. */
+  if(P.mode==='shelf'){
+    const st=lens(),size=gid=>{const g=st.groups.find(x=>x.id===gid);if(!g)return null;
+      return (g.entries||[]).length+(st.lots||[]).filter(l=>(l.groupIds||[]).includes(gid)).length;};
+    const seen=new Set(),out=[];
+    for(const t of P.trayPiles){const g=t.group;if(!g||seen.has(g.id))continue;seen.add(g.id);
+      const n=size(g.id);if(n===null)continue;
+      out.push({value:n,label:g.name,why:`${g.name} holds ${n} card${n===1?'':'s'} — copies filed and cards planned — as this sitting would leave it.`});}
+    if(out.length)return out;
+    return [{value:P.groups.length,label:`group${P.groups.length===1?'':'s'} on the table`,tone:'muted',
+      why:'Bind a tray to a group and its size shows here while you sort.'}];
+  }
+  if(!P.deck)return [];
   let d,r;try{d=M.deck(lens(),P.deck.id);r=M.readiness(lens(),d);}catch(err){return [];}
   const over=r.target>100,short=r.target<100&&r.target>0;
   return [
@@ -439,16 +486,29 @@ function tabletop(params,shop=false){
    +`<p class="cm-status-line" id="cm-tt-status"></p><div id="cm-tt-host" class="cm-tt-host"></div>`;
   const draw=()=>{
     if(!TT){$('#cm-tt-host').innerHTML='<p class="cm-muted">The tabletop module has not loaded yet.</p>';return;}
-    const all=rows(params,shop).filter(matches).map(r=>({...r,status:statusOf(r)}));lastRows=all;
+    /* The library's rows, and then the cards sent over from Discover -- minus any the library
+       already holds a record of, because a card is never both a copy you have and a card you are
+       considering; the copy is the truer row and it is already on the table. */
+    const base=rows(params,shop).filter(matches).map(r=>({...r,status:statusOf(r)}));
+    const have=new Set(base.map(r=>r.cardId));
+    const sent=sentRows().filter(r=>!have.has(r.cardId)&&matches(r));
+    const all=base.concat(sent);lastRows=all;
     const model=TT.table(all,{groupBy:tabletopGroupBy,statuses:M.STATUS,statusOrder:M.statusOrder,value,maxGroupPiles:16,statusSort:tabletopStatusOrder,play:playSpec(params)});ttModel=model;
-    $('#cm-tt-status').textContent=`${model.total.toLocaleString()} cop${model.total===1?'y':'ies'} on the table (${model.rows.toLocaleString()} rows) · Bench ${model.bench.count.toLocaleString()} · ${model.ghosts.toLocaleString()} ghost${model.ghosts===1?'':'s'}`+(Object.values(filter).some(v=>v!=='')||params.get('deck')?' · filtered':'');
+    $('#cm-tt-status').innerHTML=e(`${model.total.toLocaleString()} cop${model.total===1?'y':'ies'} on the table (${model.rows.toLocaleString()} rows) · Bench ${model.bench.count.toLocaleString()} · ${model.ghosts.toLocaleString()} ghost${model.ghosts===1?'':'s'}`+(Object.values(filter).some(v=>v!=='')||params.get('deck')?' · filtered':''))
+      +(sent.length?` · ${sent.length} sent from Discover <button type="button" class="cm-text-button" data-action="table-clear-sent">Send them back</button>`:'');
     /* A selection that the filters no longer show is dropped; an open pile that vanished (a grouping change) closes. */
     const ids=new Set(all.map(r=>r.recordId));for(const id of [...ttUI.selection])if(!ids.has(id))ttUI.selection.delete(id);for(const id of [...ttUI.ticked])if(!ids.has(id))ttUI.ticked.delete(id);
     if(ttUI.open&&!TT.findPile(model,ttUI.open))ttUI.open=null;if(ttUI.from&&!TT.findPile(model,ttUI.from))ttUI.from=null;
     const rest=()=>{ttUI.open=null;ttUI.from=null;ttUI.page=0;ttUI.ticked.clear();ttUI.selection.clear();};
     TT.mount($('#cm-tt-host'),model,{
       onGroupBy:v=>{tabletopGroupBy=v;if(ttUI.open&&ttUI.open.startsWith('group:'))rest();C.commit({type:'preferences',values:{tabletopGroupBy:v}},{renderView:false}).catch(()=>{});draw();},
-      onOpen:id=>{if(!id){rest();}else{ttUI.selection.clear();ttUI.ticked.clear();ttUI.from=null;if(ttUI.open!==id)ttUI.page=0;ttUI.open=id;}draw();queueMicrotask(()=>$('#cm-tt-host .cm-tt-strip button, #cm-tt-host .cm-tt-mat')?.focus?.({preventScroll:true}));},
+      onOpen:id=>{
+        /* The New group tile is a door, not a pile: clicking it at rest makes a group to sort
+           into, which is the other half of the gesture the drop performs. */
+        if(id==='shelf:new'){form('Make a collection group',f('Group name','name','','required maxlength="60" placeholder="Ramp I keep meaning to buy"')
+          +note('Empty to begin with. It joins the band along the bottom of the table, and a tray can be bound to it.'),
+          async v=>{await C.commit({type:'createGroup',groupId:'group:'+C.uid(),name:(v.name||'').trim()||'New group'},{renderView:false});draw();},'Make the group');return;}
+        if(!id){rest();}else{ttUI.selection.clear();ttUI.ticked.clear();ttUI.from=null;if(ttUI.open!==id)ttUI.page=0;ttUI.open=id;}draw();queueMicrotask(()=>$('#cm-tt-host .cm-tt-strip button, #cm-tt-host .cm-tt-mat')?.focus?.({preventScroll:true}));},
       onPage:n=>{ttUI.page=Math.max(0,n|0);draw();queueMicrotask(()=>$('#cm-tt-host .cm-tt-grid .cm-tt-card[data-tt=card]')?.focus?.({preventScroll:true}));},
       onSize:s=>{ttUI.size=s;ttUI.page=0;try{localStorage.setItem('cm-tabletop-size',s);}catch(err){/* not remembered, still applied */}draw();queueMicrotask(()=>$(`#cm-tt-host [data-tt=size][data-size=${s}]`)?.focus?.({preventScroll:true}));},
       onStatusOrder:v=>{tabletopStatusOrder=v==='count'?'count':'workflow';C.commit({type:'preferences',values:{tabletopStatusOrder}},{renderView:false}).catch(()=>{});draw();},
@@ -470,7 +530,7 @@ function tabletop(params,shop=false){
          refused pile ringed in red answers "can I drop here", which is the question being asked;
          in a menu the same thing is only noise. */
       onMoveTo:(ids,el)=>{const rows=ids.map(id=>findRow(id)).filter(Boolean);
-        const open=[...ttModel.statusPiles,ttModel.bench,...ttModel.groupPiles].map(p=>({p,a:TT.accepts(p,rows)})).filter(x=>x.a.ok);
+        const open=[...ttModel.statusPiles,...(ttModel.shelfPiles||[]),ttModel.bench,...ttModel.groupPiles].map(p=>({p,a:TT.accepts(p,rows)})).filter(x=>x.a.ok);
         /* Nothing accepts it: the Bench is the most permissive destination there is, so its refusal
            is the fundamental one and the only sentence worth printing. */
         popAt(el,`<p>Move ${rows.length} card${rows.length===1?'':'s'} to</p>`+(open.length
@@ -491,14 +551,24 @@ function tabletop(params,shop=false){
          The tray count is a fact about this screen, so it is remembered per device. Restoring
          unstages: the move never happened, so there is nothing to undo and no revision to spend. */
       onDrawAt:n=>{ttUI.drawAt=Math.max(0,n|0);draw();queueMicrotask(()=>$('#cm-tt-host .cm-tt-draw-step button:not([disabled])')?.focus?.({preventScroll:true}));},
+      /* WHICH GROUP A TRAY IS FILLING (plan §2.15). A binding, not a move: it says where the
+         tray's cards are headed, and it is a fact about this screen, so it is remembered here. */
+      onTrayGroup:(n,gid)=>{ttUI.trayGroups=ttUI.trayGroups.slice();ttUI.trayGroups[Math.max(0,Math.min(3,n-1))]=gid||'';
+        try{localStorage.setItem('cm-tabletop-traygroups',JSON.stringify(ttUI.trayGroups));}catch(err){/* not remembered, still bound */}
+        draw();queueMicrotask(()=>$(`#cm-tt-host [data-tt=tray-group][data-n="${n}"]`)?.focus?.({preventScroll:true}));},
       onTrays:n=>{ttUI.trays=Math.max(1,Math.min(TT.TRAYS_MAX,n|0));try{localStorage.setItem('cm-tabletop-trays',String(ttUI.trays));}catch(err){/* not remembered, still applied */}draw();queueMicrotask(()=>$('#cm-tt-host .cm-tt-tray-count button:not([disabled])')?.focus?.({preventScroll:true}));},
-      onRestore:ids=>{const sb=C.sandbox;if(!sb)return;
+      onRestore:ids=>{const sb=C.sandbox;
         const play=ttModel&&ttModel.play,on=play?[...play.seats.keys()]:[];
         const take=ids?ids.filter(id=>play&&play.seats.has(id)):on;
-        let n=0;for(const id of take){const mv=sb.pendingFor(id);if(mv&&sb.remove(mv.id))n+=1;}
+        /* Two ways a card leaves the play space, because there are two ways it got there. A
+           staged move is unstaged; a card merely lifted in shelf mode is forgotten, which is all
+           "it goes back where it came from" ever meant there — nothing was written down. */
+        let n=0;for(const id of take){if(ttUI.hand.delete(id)){n+=1;continue;}const mv=sb&&sb.pendingFor(id);if(mv&&sb.remove(mv.id))n+=1;}
+        saveHand();
         if(!n){C.notice('There was nothing to put back.',true);return;}
         ttUI.drawAt=0;
-        C.notice(ids&&n===1?`Put back where it came from. ${sb.size} move${sb.size===1?'':'s'} still staged.`:`${n} card${n===1?'':'s'} put back. ${sb.size?`${sb.size} move${sb.size===1?'':'s'} still staged.`:'Nothing is staged now.'}`);
+        const still=sb&&sb.size?`${sb.size} move${sb.size===1?'':'s'} still staged.`:'Nothing is staged now.';
+        C.notice(ids&&n===1?`Put back where it came from. ${still}`:`${n} card${n===1?'':'s'} put back. ${still}`);
         C.render();},
       detail:r=>tabletopDetail(r),
       describe:r=>{const o=ownPair(r),where=value(r,'deck');
@@ -514,6 +584,9 @@ function tabletop(params,shop=false){
   host.querySelector('[name=ttDeck]')?.addEventListener('change',ev=>goCards(tab,{view:'tabletop',...(ev.target.value?{deck:ev.target.value}:{})}));
   if(!TT)return;
   actions['tabletop-drop']=el=>tabletopDrop(el.dataset.pile,[...ttUI.selection]);
+  /* Sent cards are the reader's holding pen, not a record: clearing them writes nothing. */
+  actions['table-clear-sent']=()=>{const n=sentIds().length;setSentIds([]);for(const id of [...ttUI.hand])if(id.startsWith('catalog:'))ttUI.hand.delete(id);saveHand();
+    C.notice(`${n} card${n===1?'':'s'} sent back to Discover. Nothing was saved and nothing was lost — tick them again there whenever you like.`);draw();};
   /* ONE TABLE, ONE PAIR OF LISTENERS (found building PR 3b). These two remove themselves when the
      reader leaves the table -- but the table redraws itself in place all the time, and every
      redraw ran this function again and left the previous pair attached. Twenty renders in, one
@@ -546,15 +619,20 @@ function tabletopDetail(r){const c=C.card(r.cardId)||r.card||{};const pt=c.power
    is a staged move. The two that need to know WHERE still ask here, because the answer is part
    of the proposal; the command they would have sent is built later, against the library as the
    moves before it leave it, by crankmagic-sandbox.js. Confirm sends them as one batch. */
+/* `intent` may be a function of the row: one drop on a group can carry copies you hold and cards
+   you do not, and those are two different commands (plan §2.15). One call, one notice, one render. */
 function stageRows(rows,intent){
   const sb=C.sandbox;if(!sb)throw Error('The sandbox has not loaded yet; reload the page before moving cards.');
   const done=[],refused=[];
   for(const r of rows){
+    const it=typeof intent==='function'?intent(r):intent;
     try{sb.stage({rowId:r.recordId,cardId:r.cardId,cardName:r.card.name,quantity:r.quantity,kind:r.kind,
       lotId:r.kind==='lot'?r.id:'',slotId:r.slotId||'',
-      deckId:intent.deckId||r.deckId||'',deckName:intent.deckName||'',
-      action:intent.action,arg:intent.arg||'',box:intent.box||'',asStandIn:!!intent.asStandIn,tray:intent.tray||0,
-      from:r.status||statusOf(r),to:intent.to,toStatus:intent.toStatus===undefined?intent.to:intent.toStatus});
+      deckId:it.deckId||r.deckId||'',deckName:it.deckName||'',
+      action:it.action,arg:it.arg||'',box:it.box||'',asStandIn:!!it.asStandIn,tray:it.tray||0,
+      /* A card the library has never seen travels with its record, so the fold can add it. */
+      card:r.kind==='catalog'?r.card:null,
+      from:r.status||statusOf(r),to:it.to,toStatus:it.toStatus===undefined?it.to:it.toStatus});
       done.push(r.card.name);}
     catch(err){refused.push(`${r.card.name}: ${err.message}`);}
   }
@@ -573,6 +651,23 @@ function tabletopDrop(pileId,ids){
   if(action==='release')return stageRows(rows,{action:'release',to:'Bench'});
   if(action==='group'){const g=C.state.groups.find(g=>g.name===pile.label);if(!g)throw Error('That group is gone; refresh the view.');
     return stageRows(rows,{action:'group',arg:g.id,to:g.name,toStatus:''});}
+  /* SHELF MODE'S THREE DESTINATIONS (plan §2.15). The middle stages nothing, a group pile or a
+     bound tray files what you hold and plans what you do not, and the door makes the group first
+     because a group is a fact and facts are immediate (§2.6). */
+  if(action==='lift'){for(const r of rows)ttUI.hand.add(r.recordId);saveHand();ttUI.drawAt=0;
+    ttUI.selection.clear();ttUI.ticked.clear();ttUI.from=null;
+    C.notice(`${n} card${n===1?'':'s'} in hand — ${names}. Nothing is staged: with no deck picked, a card in the middle means nothing until you put it in a group.`);
+    C.render();return;}
+  if(action==='shelf'){const g=shelfGroup(pile);if(!g)throw Error('That group is gone; refresh the view.');
+    return fileInGroup(rows,g,pile.tray||0);}
+  if(action==='shelfnew'){
+    form('File these cards in a new group',
+      f('Group name','name','','required maxlength="60" placeholder="Ramp I keep meaning to buy"')
+      +note(`${names}. The group is made as soon as you press the button — a group is a fact, not a move — and the filings join the sitting like every other move, to be written when you confirm.`),
+      async v=>{const gid='group:'+C.uid();
+        await C.commit({type:'createGroup',groupId:gid,name:(v.name||'').trim()||'New group'},{renderView:false});
+        const g=C.state.groups.find(x=>x.id===gid);if(!g)throw Error('The group could not be made.');
+        fileInGroup(rows,g,0);},'Make the group and stage');return;}
   /* PICKING A CARD UP (plan §2.1). No form and no question: the middle commits to nothing, which
      is what makes it worth having. The deck's group travels with the move so the fold knows what
      the card is being considered FOR — that is what turns it Watched rather than loose. */
@@ -603,6 +698,21 @@ function tabletopDrop(pileId,ids){
     if(!decks.length)throw Error('No finalized deck has an unfulfilled requirement for these cards.');
     form('Reserve for a deck',s('Deck','deckId',decks.map(d=>[d.id,d.name]),'')+note('Only a deck whose list calls for the card and still lacks it can take the reservation; the physical box stays unchanged.')+note('Staged, not saved: this joins the sitting and is written when you confirm.'),v=>put(v.deckId),'Stage the move');return;}
   throw Error('That destination is not one a card can be moved to.');
+}
+/* Which group a shelf-mode drop means: the band names its group by id, a tray carries the group
+   it is bound to, and the Collection-group shelf on the sides still names it by its label. */
+function shelfGroup(pile){
+  const id=pile.groupId||(pile.group&&pile.group.id)||'';
+  return (id?C.state.groups.find(g=>g.id===id):C.state.groups.find(g=>g.name===pile.label))||null;
+}
+/* ONE DROP, TWO KINDS OF ROW (plan §2.15). Sorting the shelf against the catalog means a handful
+   of copies you hold and a handful of cards you do not, dropped together: a copy is FILED in the
+   group, a card is PLANNED in it. Two commands, one gesture, one receipt. */
+function fileInGroup(rows,g,tray){
+  for(const r of rows)ttUI.hand.delete(r.recordId);saveHand();
+  return stageRows(rows,r=>r.kind==='catalog'
+    ?{action:'plan',arg:g.id,to:g.name,toStatus:'Planned',tray}
+    :{action:'group',arg:g.id,to:g.name,toStatus:'',tray});
 }
 function sheet(params){
   const m=M.matrix(lens()),decks=m.decks;

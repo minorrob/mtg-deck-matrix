@@ -144,6 +144,19 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   status piles' order (workflow, or fullest first) with the library; *Print* puts the whole pile
   on paper as a numbered list (`crankmagic-tabletop.js` `accepts`, `printSheet`,
   `tests/crankmagic-tabletop.mjs`).
+  **The table has two jobs, and which one it is doing is whether a deck is picked.** With a deck
+  (`#cards?view=tabletop&deck=…`) the middle is that deck's play space — a draw pile of the cards
+  in your hand, up to four trays, and a scoreboard reading where confirming would leave the deck;
+  the band along the bottom is the six statuses. With no deck it is **shelf mode**: the band
+  becomes your collection groups plus *New group…*, each tray is bound to a group it is filling,
+  the scoreboard reads those groups' sizes, and every status that holds anything moves up to the
+  line of chips — still one click from being laid out and still a place a card can be dropped,
+  just no longer the job the table is doing. A card lifted into the middle in shelf mode stages
+  nothing: with no deck to consider it for, it means nothing until you put it in a group, and
+  putting it back is simply forgetting it. The catalog reaches the table from Discover: tick cards
+  in the graph or the List tab and press **Send to the table**, and they arrive as rows marked
+  *Sent from Discover* — ghosts, because nothing about them is held. One drop on a group can carry
+  copies you hold and cards you do not: a copy is filed in the group, a card is planned in it.
 - **Discover**: navigable metadata/co-play graph, mouse-wheel zoom, keyboard neighbors,
   pan, back trail, card inspection and supplemental catalog lookup. The pane beside the
   graph has two tabs: **Card Info** (the focused card, its terms, *Add/Buy*) and **List**

@@ -257,6 +257,51 @@ const moveFor = (r, extra) => Object.assign({
   ok(/in hand/i.test(S.describe(sb.moves[0])), "and a card in the middle says it is in hand");
 }
 
+/* ---- shelf mode's move: a card the library has never seen, planned into a group (PR 4) ---- */
+{
+  const group = live.groups[0];
+  ok(group, "the live library has a collection group to sort into");
+  /* A card in the catalog but not in this library. The move carries the record, because
+     `groupEntries` has to add it before it can file an entry for it. */
+  const record = {id: "sandbox-test-card", name: "A Card This Library Has Never Seen", typeLine: "Artifact",
+    manaValue: 2, colorIdentity: [], oracleText: "", keywords: [], legalities: {commander: "legal"}, price: 1.5};
+  ok(!live.cards[record.id], "and does not already hold it");
+  const sb = make();
+  sb.stage({rowId: "catalog:" + record.id, cardId: record.id, cardName: record.name, quantity: 1, kind: "catalog",
+    action: "plan", arg: group.id, to: group.name, toStatus: "Planned", card: record});
+  const built = sb.build(live);
+  eq(built.refusals, [], "a catalog card files into a group without a refusal");
+  eq(built.commands.length, 1, "as one command");
+  eq(built.commands[0].type, "groupEntries", "the model's own planned-entry command");
+  eq(built.commands[0].cards.length, 1, "carrying the card record, because the library has never seen it");
+  eq(built.commands[0].entries[0].cardId, record.id, "and an entry for it");
+  const after = built.state.groups.find((g) => g.id === group.id);
+  ok(after.entries.some((r) => r.cardId === record.id), "the preview shows it planned in the group");
+  ok(!built.state.lots.some((l) => l.cardId === record.id), "and nothing anywhere claims a copy is owned");
+  ok(/planned in/.test(S.describe(sb.moves[0])), "the sentence says planned, not owned");
+  /* Twice is refused by name rather than filed twice. */
+  const twice = make();
+  twice.stage({rowId: "catalog:a", cardId: record.id, cardName: record.name, quantity: 1, kind: "catalog", action: "plan", arg: group.id, to: group.name, card: record});
+  twice.stage({rowId: "catalog:b", cardId: record.id, cardName: record.name, quantity: 1, kind: "catalog", action: "plan", arg: group.id, to: group.name, card: record});
+  eq(twice.build(live).refusals.length, 1, "filing the same card in the same group twice is refused once, by name");
+  ok(/already plans/.test(twice.build(live).refusals[0].why), "and says the group already plans it");
+  /* A card with no record and no library entry is refused rather than invented. */
+  const blind = make();
+  blind.stage({rowId: "catalog:x", cardId: "no-such-card-anywhere", cardName: "Nothing", quantity: 1, kind: "catalog", action: "plan", arg: group.id, to: group.name});
+  eq(blind.build(live).refusals.length, 1, "a card with no record is refused, not guessed at");
+  /* A gone group is named rather than silently skipped. */
+  const gone = make();
+  gone.stage({rowId: "catalog:y", cardId: record.id, cardName: record.name, quantity: 1, kind: "catalog", action: "plan", arg: "group:gone", to: "Old shelf", card: record});
+  ok(/Old shelf/.test(gone.build(live).refusals[0].why), "and a group that is gone is named in the refusal");
+  /* Shelf mode's trays ride on the ordinary group move: the tray number travels, the command does not change. */
+  const lot = benched[0];
+  const trayed = make();
+  trayed.stage(moveFor(lot, {action: "group", arg: group.id, to: group.name, tray: 3}));
+  eq(trayed.moves[0].tray, 3, "a group move remembers which tray it was dropped in");
+  eq(trayed.build(live).commands[0].type, "groupLots", "and is still the same filing command");
+  ok(S.ACTIONS.has("plan"), "plan is one of the destinations a sitting can hold");
+}
+
 /* ---- the sentence every surface uses for a move ---- */
 {
   const said = S.describe({cardName: "Sol Ring", action: "reserve", deckName: "Goblins", to: "Reserved"});

@@ -32,7 +32,11 @@
   const R = () => (typeof globalThis !== "undefined" && globalThis.CrankRules) || null;
   const CL = () => (typeof globalThis !== "undefined" && globalThis.MtgCardClassify) || null;
   const BENCH = "Bench";
-  const GHOST = new Set(["Ordered", "Watched", "To buy", "Draft list", "Suggestion", "Planned"]);
+  /* SHELF MODE'S IMPORT (plan §2.15, PR 4). A card ticked on Discover and sent over arrives as a
+     row the library has never seen: no copy, no lot, no deck asking for it. It is a ghost like
+     every other not-held row, and it says where it came from rather than pretending to a status. */
+  const SENT = "Sent from Discover";
+  const GHOST = new Set(["Ordered", "Watched", "To buy", "Draft list", "Suggestion", "Planned", SENT]);
   /* The status piles a card can be dropped on — accepts() below has a case for each. The rest
      (Draft list, Suggestion, Planned, Unassigned) are readings of a deck's plan, not places a
      card can be put; the mat shows those as chips to lay out, not as piles (Rob, 14 September). */
@@ -124,11 +128,28 @@
       const rest = groupPiles.filter((p) => !kept.has(p.label)), list = rest.flatMap((p) => p.rows);
       groupPiles = [...groupPiles.filter((p) => kept.has(p.label)), {id: "group:" + groupBy + ":__other", kind: "group", key: groupBy, label: "Other", rows: list, count: count(list), ghosts: list.filter(isGhost).length, top: list[0] || null, order: "\uffff\uffff", folded: rest.length, bands: rest.map((p) => p.label)}];
     }
+    /* THE DESTINATIONS SHELF MODE PUTS ALONG THE BOTTOM (plan §2.15): the collection groups that
+       exist, and a door to a new one. They are the same kind of object the status band holds --
+       a pile with a count and a top card -- so the drag, the keyboard, the lay-out and the print
+       need nothing new. Only what a drop MEANS changes, and that is `accepts`'s business.
+       `options.play.groupOf(row)` is the caller's answer to "which groups is this row filed in",
+       the same shape as `seatOf`: the module lays the band out, the caller knows the library. */
+    let shelfPiles = [];
+    if (playModel && playModel.mode === "shelf" && playModel.groups.length) {
+      const groupOf = typeof (options.play || {}).groupOf === "function" ? options.play.groupOf : () => [];
+      const held = new Map(playModel.groups.map((g) => [g.id, []]));
+      for (const r of rows || []) for (const id of groupOf(r) || []) if (held.has(id)) held.get(id).push(r);
+      shelfPiles = playModel.groups.map((g) => {
+        const list = held.get(g.id).sort((a, b) => String(a.card && a.card.name).localeCompare(String(b.card && b.card.name)));
+        return {id: "shelf:" + g.id, kind: "shelfgroup", groupId: g.id, label: g.name, rows: list, count: count(list), ghosts: list.filter(isGhost).length, top: list[0] || null, target: true};
+      });
+      shelfPiles.push({id: "shelf:new", kind: "shelfnew", label: "New group…", rows: [], count: 0, top: null, target: true});
+    }
     const benchSorted = bench.slice().sort((a, b) => String(a.card && a.card.name).localeCompare(String(b.card && b.card.name)));
     return {
       groupBy, groupings: GROUPINGS, statusSort: options.statusSort === "count" ? "count" : "workflow",
       bench: {id: "bench", kind: "bench", label: BENCH, rows: benchSorted, count: count(benchSorted), top: benchSorted[0] || null},
-      statusPiles, groupPiles, play: playModel,
+      statusPiles, groupPiles, shelfPiles, play: playModel,
       total: count(all || []), rows: (all || []).length, ghosts: (all || []).filter(isGhost).length
     };
   }
@@ -153,6 +174,17 @@
     if (!spec || typeof spec.seatOf !== "function") return null;
     const trays = Math.max(1, Math.min(TRAYS_MAX, Number(spec.trays) || 1));
     const deck = spec.deck && spec.deck.id ? {id: String(spec.deck.id), name: String(spec.deck.name || "this deck"), groupId: spec.deck.groupId || ""} : null;
+    /* THE TABLE'S TWO JOBS (plan §2.15). A deck is picked or it is not, and that one fact is the
+       mode: with a deck the destinations are the six statuses and a tray reserves; without one
+       the destinations are the collection groups and a tray fills the group it is bound to.
+       Everything else -- the zones, the canvas, the draw pile, the arrows, the sandbox, Confirm
+       -- is the same object doing the same thing, which is the test of whether the design is one
+       table or two. The piles carry the mode because `accepts` is pure and sees only a pile. */
+    const mode = deck ? "deck" : "shelf";
+    const groups = (spec.groups || []).filter((g) => g && g.id).map((g) => ({id: String(g.id), name: String(g.name || "Group")}));
+    const byGroup = new Map(groups.map((g) => [g.id, g]));
+    /* Which group each tray is filling, the reader's binding, remembered by the caller. */
+    const trayGroups = Array.from({length: trays}, (v, i) => byGroup.get(String((spec.trayGroups || [])[i] || "")) || null);
     const hand = [], inTray = Array.from({length: trays}, () => []), seats = new Map();
     for (const r of rows || []) {
       const seat = String(spec.seatOf(r) || "");
@@ -170,9 +202,9 @@
        stack rather than paging a list. */
     const faces = held.length ? Array.from({length: Math.min(DRAW_FACES, held.length)}, (v, i) => held[(at + i) % held.length]) : [];
     return {
-      deck, trays, seats, at,
-      draw: {id: "play:draw", kind: "play", label: HAND, rows: held, count: copies(held), top: faces[0] || null, faces, target: true},
-      trayPiles: inTray.map((list, i) => { const sorted = byName(list); return {id: "play:tray:" + (i + 1), kind: "tray", tray: i + 1, label: "Tray " + (i + 1), rows: sorted, count: copies(sorted), top: sorted[0] || null, target: true}; }),
+      deck, mode, groups, trays, trayGroups, seats, at,
+      draw: {id: "play:draw", kind: "play", mode, label: HAND, rows: held, count: copies(held), top: faces[0] || null, faces, target: true},
+      trayPiles: inTray.map((list, i) => { const sorted = byName(list), g = trayGroups[i]; return {id: "play:tray:" + (i + 1), kind: "tray", mode, tray: i + 1, group: g, label: mode === "shelf" ? (g ? g.name : "Tray " + (i + 1)) : "Tray " + (i + 1), rows: sorted, count: copies(sorted), top: sorted[0] || null, target: true}; }),
       count: copies(held) + inTray.reduce((n, list) => n + copies(list), 0),
     };
   }
@@ -194,7 +226,9 @@
     const tag = ghost ? ` data-ghost="${esc(GHOST_TAG[row && row.status] || (row && row.status) || "Not held")}"` : "";
     return `<div class="cm-tt-card${ghost ? " is-ghost" : ""}${src ? "" : " no-art"}${size ? " is-" + size : ""}${checked ? " is-ticked" : ""}${cls ? " " + cls : ""}" data-record="${esc(row && row.recordId)}" data-n="${esc(c.name || "")}"${tag}${(art || style) ? ` style="${art}${style}"` : ""}${tick ? ` data-tt="card" role="button" tabindex="0" aria-label="${esc(c.name || "")}"` : ""}>${tick ? `<span class="cm-tt-tick" data-tt="tick" role="checkbox" aria-checked="${checked ? "true" : "false"}" aria-label="Tick ${esc(c.name || "")}" tabindex="0"></span>` : ""}<span class="cm-tt-name">${esc(c.name || "")}</span></div>`;
   };
-  const placard = (label, count, sub) => `<div class="cm-tt-placard"><strong>${esc(label)}</strong> · ${count.toLocaleString()}${sub ? `<small>${esc(sub)}</small>` : ""}</div>`;
+  /* `count === null` prints the name alone: the New group tile is a door, not a pile, and
+     "New group… · 0" reads as an empty pile rather than as somewhere to drop a card. */
+  const placard = (label, count, sub) => `<div class="cm-tt-placard"><strong>${esc(label)}</strong>${count === null || count === undefined ? "" : ` · ${count.toLocaleString()}`}${sub ? `<small>${esc(sub)}</small>` : ""}</div>`;
 
   /* How many group piles each arch holds, outer first: a full arch, then one two piles
      narrower inside it, and so on; the sizes sum to n and no pile is on two arches. */
@@ -282,7 +316,7 @@
     return {cards, cols, lines, perPage, pages, page: p, from, to, total, size: sizeOf(size), w: sz.w, h: sz.h, gap: sz.gap, cap: sz.cap, height: lines * pitch - sz.gap,
       copies, label: total ? `${(from + 1).toLocaleString()}–${to.toLocaleString()} of ${total.toLocaleString()}${copies !== total ? ` · ${copies.toLocaleString()} copies` : ""}` : "Nothing on this pile"};
   }
-  const findPile = (model, id) => (id === "bench" ? model.bench : [...model.statusPiles, ...model.groupPiles, ...playPiles(model)].find((p) => p.id === id) || null);
+  const findPile = (model, id) => (id === "bench" ? model.bench : [...model.statusPiles, ...model.groupPiles, ...(model.shelfPiles || []), ...playPiles(model)].find((p) => p.id === id) || null);
   const rowsById = (model) => { const m = new Map(); for (const p of [model.bench, ...model.statusPiles, ...playPiles(model)]) for (const r of p.rows) m.set(r.recordId, r); return m; };
 
   /* The recombine (plan §2.2): the cards not selected slide back into their pile, transforms
@@ -316,22 +350,34 @@
      its status is set from its row menu. */
   const isLot = (r) => !!r && r.kind === "lot";
   const isPlan = (r) => !!r && (r.kind === "need" || r.kind === "draft");
+  /* A row sent over from Discover: a card, not a copy. It can be planned into a group and
+     nothing else, because every other destination on the table is a claim about a copy. */
+  const isCatalog = (r) => !!r && r.kind === "catalog";
   const inBox = (r) => !!(r && r.location && r.location.kind === "deck");
+  const shelfWhy = (lots, cats, name) => (lots.length && cats.length
+    ? `Your copies are filed in ${name}; the cards you hold no copy of join it as planned entries.`
+    : cats.length ? `Planned entries on ${name}. Nothing here says you own a copy.`
+      : "Nothing leaves a group it is already in.");
   function accepts(pile, rows) {
     const list = (rows || []).filter(Boolean);
     const no = (why) => ({ok: false, why});
     const yes = (action, label, why = "") => ({ok: true, action, label, why});
     if (!pile) return no("Not a pile.");
     if (!list.length) return no("Nothing is selected.");
-    const lots = list.filter(isLot), plans = list.filter(isPlan), others = list.length - lots.length - plans.length;
+    const lots = list.filter(isLot), plans = list.filter(isPlan), cats = list.filter(isCatalog);
+    const others = list.length - lots.length - plans.length - cats.length;
     const owned = lots.filter((r) => r.source === "owned");
     const NOT_COPY = "A suggestion or a planned card is not a copy; set its status from its row menu.";
+    const NOT_HELD = "A card sent from Discover is not a copy you hold; file it in a collection group and it becomes a planned entry.";
+    const NOT_MINE = "Only a card record is filed in a group; a deck's plan is filed with its deck.";
     if (pile.kind === "bench" || pile.label === BENCH) {
       if (others) return no(NOT_COPY);
+      if (cats.length) return no(NOT_HELD);
       if (owned.length === lots.length && !plans.length) return yes("bench", "Move physically to the Bench", owned.some(inBox) ? "Takes a copy out of its physical deck; asks first." : "Records the Bench as where the copies are; reservations are untouched.");
       return yes("source:owned", "Record as owned copies on the Bench", "An ordered or watched copy becomes owned; a To buy requirement or a draft-list row becomes an owned copy filed with its deck.");
     }
     if (pile.kind === "status") {
+      if (cats.length) return no(NOT_HELD);
       switch (pile.label) {
         case "Physical deck":
           if (others || plans.length || lots.some((r) => r.source !== "owned")) return no("Only an owned copy goes into a physical deck; drop it on the Bench first to record it as owned.");
@@ -362,25 +408,62 @@
        is the only warning a reader gets before the receipt. */
     if (pile.kind === "play") {
       if (others || plans.length) return no("A suggestion or a planned card is not a copy you can pick up; it is a line on a list.");
+      /* SHELF MODE'S MIDDLE STAGES NOTHING (plan §2.15: "a card left in the middle at Confirm
+         means nothing — it goes back where it came from"). With no deck there is nothing the
+         card is being considered FOR, so lifting it records no move at all: it is view state,
+         and "it goes back where it came from" is simply that nothing was ever staged. In deck
+         mode the same gesture DOES mean something — Watched for that deck — so there it stays
+         a staged move. One gesture, two honest meanings, decided by the one fact that differs. */
+      if (pile.mode === "shelf") {
+        if (!lots.length && !cats.length) return no("Nothing here is a card you can pick up.");
+        return yes("lift", "Pick up — in hand", "Nothing is staged and nothing changes: a card in your hand here means nothing until you put it in a group.");
+      }
+      if (cats.length) return no(NOT_HELD);
       if (!lots.length) return no("Nothing here is a copy record.");
       if (lots.some((r) => r.source === "watching")) return no("A watched card is one you are considering, not a copy you can pick up.");
       const held = lots.filter((r) => r.allocation || inBox(r)).length;
       return yes("hold", "Pick up — in hand", held ? `Lets go of ${held === lots.length ? "" : held + " "}whatever holds ${held === 1 ? "the copy" : "the copies"} and keeps ${held === 1 ? "it" : "them"} in view for this deck.` : "Keeps the copy in view for this deck. Nothing is reserved and nothing leaves a box.");
     }
     if (pile.kind === "tray") {
-      if (others || plans.length) return no("A tray holds copies; a suggestion or a planned card is a line on a list.");
+      if (others || plans.length) return no("A tray holds cards; a suggestion or a planned card is a line on a list.");
+      /* A TRAY IN SHELF MODE IS A GROUP BUCKET (plan §2.15). It fills the group it is bound to,
+         which is the same drop the band along the bottom takes -- the tray is only the place you
+         pile them up while you decide. Unbound it refuses, because a bucket with no name on it
+         cannot say where its cards are going. */
+      if (pile.mode === "shelf") {
+        if (!pile.group) return no("Choose which group this tray is filling first.");
+        if (!lots.length && !cats.length) return no("Nothing here is a card that can go in a group.");
+        return yes("shelf", `${pile.group.name} — fill the tray`, shelfWhy(lots, cats, pile.group.name));
+      }
+      if (cats.length) return no(NOT_HELD);
       if (!lots.length) return no("Nothing here is a copy record.");
       if (lots.some((r) => r.source !== "owned")) return no("A tray reserves a copy you hold; record an ordered card as arrived first.");
       return yes("tray", `${pile.label} — on the list and reserved`, "Adds the card to this deck's list where the list does not name it yet, then reserves your copy for that seat.");
     }
+    /* THE BOTTOM BAND IN SHELF MODE (plan §2.15): the collection groups, and a door to a new one.
+       One drop can mix copies you hold with cards you do not -- the whole point of sorting the
+       shelf against the catalog -- so the action is one word and the caller splits by row: a copy
+       is filed, a card is planned. */
+    if (pile.kind === "shelfgroup") {
+      if (others || plans.length) return no(NOT_MINE);
+      if (!lots.length && !cats.length) return no("Nothing here is a card record.");
+      return yes("shelf", `File in ${pile.label}`, shelfWhy(lots, cats, pile.label));
+    }
+    if (pile.kind === "shelfnew") {
+      if (others || plans.length) return no(NOT_MINE);
+      if (!lots.length && !cats.length) return no("Nothing here is a card record.");
+      return yes("shelfnew", "File in a new group…", "Asks for a name and makes the group at once — a group is a fact, not a move — then stages the filings like every other move.");
+    }
     if (pile.kind === "group") {
       if (pile.key === "groups") {
         if (pile.folded || /^No /.test(pile.label)) return no("Choose a named group.");
-        if (others || plans.length) return no("Only copy records are filed in a group; a plan is filed with its deck.");
-        return lots.length ? yes("group", `File in ${pile.label}`, "Nothing leaves a group it is already in.") : no("Nothing here is a copy record.");
+        if (others || plans.length) return no(NOT_MINE);
+        if (!lots.length && !cats.length) return no("Nothing here is a card record.");
+        return yes(cats.length ? "shelf" : "group", `File in ${pile.label}`, shelfWhy(lots, cats, pile.label));
       }
       if (pile.key === "deck") {
         if (pile.folded || /^No /.test(pile.label)) return no("Choose a deck pile.");
+        if (cats.length) return no(NOT_HELD);
         if (others || plans.length || !lots.length || lots.some((r) => r.source === "watching")) return no("Only an owned or ordered copy can be reserved for a deck.");
         return yes("reserve", `Reserve for ${pile.label}`, "Only if the deck's list calls for the card and still lacks it.");
       }
@@ -427,7 +510,8 @@
       const n = p.count, h = stackHeight(n), isOpen = p.id === homeId;
       const faces = p.top ? cardFace(p.top, {ghost: p.ghost || (kind === "group" && p.rows.length && p.rows.every(isGhost))}) : "";
       const title = p.folded ? `${p.label}: ${p.bands.join(", ")}` : p.label;
-      return `<button type="button" class="cm-tt-pile cm-tt-${kind}${n ? "" : " is-empty"}${isOpen ? " is-open cm-tt-home" : ""}" data-tt="open" data-pile="${esc(p.id)}" aria-pressed="${isOpen ? "true" : "false"}" style="left:${x}px;top:${y}px;--stack:${h}px" title="${esc(title)}" aria-label="${esc(title)}, ${n} card${n === 1 ? "" : "s"}"><span class="cm-tt-slot"></span><span class="cm-tt-stack">${faces}</span>${placard(p.label, n, "")}</button>`;
+      const door = p.kind === "shelfnew";
+      return `<button type="button" class="cm-tt-pile cm-tt-${kind}${n ? "" : " is-empty"}${isOpen ? " is-open cm-tt-home" : ""}" data-tt="open" data-pile="${esc(p.id)}" aria-pressed="${isOpen ? "true" : "false"}" style="left:${x}px;top:${y}px;--stack:${h}px" title="${esc(door ? "Drop cards here to make a group for them" : title)}" aria-label="${esc(title)}${door ? "" : `, ${n} card${n === 1 ? "" : "s"}`}"><span class="cm-tt-slot">${door ? "<span class=\"cm-tt-newmark\" aria-hidden=\"true\">+</span>" : ""}</span><span class="cm-tt-stack">${faces}</span>${placard(p.label, door ? null : n, "")}</button>`;
     };
     /* The Bench along the back: a fan of as many cards as the ledge is wide, and a count of
        the rest. */
@@ -438,19 +522,28 @@
     const fanHTML = benchShut ? `<span class="cm-tt-more">Lay out</span>` : `${rail.rows.slice(0, fanCount).map((r) => cardFace(r, {cls: "cm-tt-fanned"})).join("")}${rail.rows.length > fanCount ? `<span class="cm-tt-more">+${(rail.rows.length - fanCount).toLocaleString()}</span>` : ""}`;
     const railHTML = `<div class="cm-tt-rail${benchOpen ? " is-open" : ""}${benchShut ? " is-shut" : ""}"><div class="cm-tt-placard cm-tt-rail-placard"><strong>${esc(rail.label)}</strong> · ${rail.count.toLocaleString()}<small>owned, in no deck</small></div><button type="button" class="cm-tt-rail-toggle" data-tt="bench-toggle" aria-expanded="${benchShut ? "false" : "true"}" aria-label="${benchShut ? "Show the Bench's cards" : "Hide the Bench's cards"}">${benchShut ? "Show" : "Hide"}</button><button type="button" class="cm-tt-fan${benchOpen ? " cm-tt-home" : ""}" data-tt="open" data-pile="bench" aria-pressed="${benchOpen ? "true" : "false"}" aria-label="Bench, ${rail.count} cards">${fanHTML}</button></div>`;
     const groups = model.groupPiles, gN = groups.length;
+    /* THE BAND ALONG THE BOTTOM IS THE MODE (plan §2.15). With a deck picked it is the six
+       statuses a card can be put into; with none it is the collection groups and a door to a new
+       one, and EVERY status pile that holds something moves up to the line of chips -- still one
+       click from being laid out, no longer a place to drop a card, because in shelf mode it is
+       not one. Nothing else about the table changes: same zones, same canvas, same middle, same
+       Confirm. That is the test of whether this is one table doing two jobs or two tables. */
+    const shelf = !!(model.play && model.play.mode === "shelf" && (model.shelfPiles || []).length);
     /* The status piles that take a drop stand as piles; the readings of a plan that hold
        anything are chips on a line under them, to lay out and look at. */
-    const sts = model.statusPiles.filter((p) => p.target !== false), sN = sts.length, readings = model.statusPiles.filter((p) => p.target === false && p.count > 0);
+    const sts = shelf ? model.shelfPiles : model.statusPiles.filter((p) => p.target !== false), sN = sts.length;
+    const readings = shelf ? model.statusPiles.filter((p) => p.count > 0) : model.statusPiles.filter((p) => p.target === false && p.count > 0);
+    const bandKind = (p) => (shelf ? p.kind : "status");
     /* THE READINGS LINE (Rob, 14 September): the Suggestion chip sat 11px under the status
        placards, on a row whose height was budgeted at one line -- a second line, or one more
        reading than the mat is wide, ran past the mat's edge and `overflow:hidden` ate it. So
        the line is measured: the sentence plus every chip over the width it has, and the mat
        grows to whatever that comes to. READ_GAP stands it clear of the placards above. */
     const READ_GAP = 26;
-    const readWidth = 310 + readings.reduce((n, p) => n + Math.min(170, String(p.label).length * 7 + 46) + 8, 0);
+    const readWidth = (shelf ? 480 : 310) + readings.reduce((n, p) => n + Math.min(170, String(p.label).length * 7 + 46) + 8, 0);
     const readLines = readings.length ? Math.max(1, Math.ceil(readWidth / Math.max(240, width - 32))) : 0;
     const readH = readings.length ? readLines * 26 + 14 : 0;
-    const readingsHTML = (top) => readings.length ? `<div class="cm-tt-readings" style="top:${top}px"><span>Readings of a plan, not places for a card — lay one out to look:</span>${readings.map((p) => `<button type="button" class="cm-tt-chip cm-tt-reading${p.id === homeId ? " is-open cm-tt-home" : ""}" data-tt="open" data-pile="${esc(p.id)}" aria-pressed="${p.id === homeId ? "true" : "false"}" aria-label="${esc(p.label)}, ${p.count} card${p.count === 1 ? "" : "s"}">${esc(p.label)} · ${p.count.toLocaleString()}</button>`).join("")}</div>` : "";
+    const readingsHTML = (top) => readings.length ? `<div class="cm-tt-readings" style="top:${top}px"><span>${shelf ? "The statuses — lay one out to look at it. In shelf mode the places to put a card are your groups:" : "Readings of a plan, not places for a card — lay one out to look:"}</span>${readings.map((p) => `<button type="button" class="cm-tt-chip cm-tt-reading${p.id === homeId ? " is-open cm-tt-home" : ""}" data-tt="open" data-pile="${esc(p.id)}" aria-pressed="${p.id === homeId ? "true" : "false"}" aria-label="${esc(p.label)}, ${p.count} card${p.count === 1 ? "" : "s"}">${esc(p.label)} · ${p.count.toLocaleString()}</button>`).join("")}</div>` : "";
     const perRow = Math.max(3, Math.floor((width - 32) / 96)), span = (width - 32 - PILE_W) / Math.max(1, perRow - 1);
     const groupSelect = `<select name="tabletopGroupBy" aria-label="Group piles by">${model.groupings.map(([k, l]) => `<option value="${esc(k)}"${k === model.groupBy ? " selected" : ""}>${esc(l)}</option>`).join("")}</select>`;
     /* A grouping's name is a term as well: what "Primary Purpose" or "Price band" means is a
@@ -480,10 +573,10 @@
     function playHTML(x, y, w) {
       const P = model.play;
       if (!P) return {html: "", height: 0};
-      const head = `<div class="cm-tt-play-head"><strong>The play space</strong>${P.deck ? `<span>calibrating <b>${esc(P.deck.name)}</b></span>` : `<span class="cm-tt-muted">no deck picked</span>`}${P.count ? `<button type="button" class="cm-tt-restore-all" data-tt="restore-all">Restore all ${P.count}</button>` : ""}</div>`;
-      if (!P.deck) {
-        const html = `<div class="cm-tt-play" style="left:${x}px;top:${y}px;width:${w}px;height:120px">${head}<p class="cm-tt-play-invite">Pick a deck at the top of the table and the middle becomes its play space: lift cards here to consider them, drop them in a tray to put them on the list, and confirm once.</p></div>`;
-        return {html, height: 120};
+      const head = `<div class="cm-tt-play-head"><strong>The play space</strong>${P.deck ? `<span>calibrating <b>${esc(P.deck.name)}</b></span>` : shelf ? `<span>sorting the shelf into <b>collection groups</b></span>` : `<span class="cm-tt-muted">no deck picked</span>`}${P.count ? `<button type="button" class="cm-tt-restore-all" data-tt="restore-all">Restore all ${P.count}</button>` : ""}</div>`;
+      if (!P.deck && !shelf) {
+        const html = `<div class="cm-tt-play" style="left:${x}px;top:${y}px;width:${w}px;height:136px">${head}<p class="cm-tt-play-invite">Pick a deck at the top of the table and the middle becomes its play space: lift cards here to consider them, drop them in a tray to put them on the list, and confirm once. With no deck it sorts the shelf into collection groups instead — make a group on the Cards list and the band along the bottom becomes your groups.</p></div>`;
+        return {html, height: 136};
       }
       const at = P.at, n = P.draw.rows.length, on = n ? P.draw.rows[at] : null;
       /* Six faces, the front one last so it sits on top, each stepped back and up a little. */
@@ -499,10 +592,16 @@
         const open = homeId === t.id, top = t.rows[0];
         return `<button type="button" class="cm-tt-tray${t.count ? "" : " is-empty"}${open ? " is-open cm-tt-home" : ""}" data-tt="open" data-pile="${esc(t.id)}" aria-pressed="${open ? "true" : "false"}" aria-label="${esc(t.label)}, ${t.count} card${t.count === 1 ? "" : "s"}"><span class="cm-tt-tray-slot">${top ? cardFace(top, {cls: "cm-tt-trayed"}) : ""}${t.count > 1 ? `<span class="cm-tt-tray-more">+${t.count - 1}</span>` : ""}</span><span class="cm-tt-tray-name">${esc(t.label)}${t.count ? ` · ${t.count}` : ""}</span></button>`;
       };
-      const trays = `<div class="cm-tt-trays">${P.trayPiles.map(trayBtn).join("")}</div>`;
+      /* A TRAY IN SHELF MODE IS BOUND TO A GROUP (plan §2.15: "the trays mean members of a group
+         you are assembling"). The binding is the reader's, so it is a select under the tray rather
+         than a rule -- four groups side by side is the whole gesture of sorting a shelf. */
+      const bindSel = (t) => `<select class="cm-tt-tray-bind" data-tt="tray-group" data-n="${t.tray}" aria-label="Which group tray ${t.tray} is filling"><option value="">Group…</option>${P.groups.map((g) => `<option value="${esc(g.id)}"${t.group && t.group.id === g.id ? " selected" : ""}>${esc(g.name)}</option>`).join("")}</select>`;
+      const trays = shelf
+        ? `<div class="cm-tt-trays is-shelf">${P.trayPiles.map((t) => `<div class="cm-tt-tray-cell">${trayBtn(t)}${bindSel(t)}</div>`).join("")}</div>`
+        : `<div class="cm-tt-trays">${P.trayPiles.map(trayBtn).join("")}</div>`;
       const counter = `<div class="cm-tt-tray-count" role="group" aria-label="How many trays"><button type="button" data-tt="trays" data-n="${P.trays - 1}" ${P.trays > 1 ? "" : "disabled"} aria-label="One tray fewer">&#8249;</button><span>${P.trays} tray${P.trays === 1 ? "" : "s"}</span><button type="button" data-tt="trays" data-n="${P.trays + 1}" ${P.trays < TRAYS_MAX ? "" : "disabled"} aria-label="One tray more">&#8250;</button></div>`;
       const board = score.length ? `<div class="cm-tt-score" role="status">${score.map((f) => `<span class="cm-tt-score-fig${f.tone ? " is-" + f.tone : ""}"${f.why ? ` title="${esc(f.why)}"` : ""}><b>${esc(f.value)}</b> ${esc(f.label)}</span>`).join("")}</div>` : "";
-      const height = 30 + PLAY.drawH + 34 + PLAY.trayH + 26 + 30 + (board ? 38 : 0);
+      const height = 30 + PLAY.drawH + 34 + PLAY.trayH + 26 + 30 + (board ? 38 : 0) + (shelf ? 36 : 0);
       const html = `<div class="cm-tt-play" style="left:${x}px;top:${y}px;width:${w}px;height:${height}px">${head}<div class="cm-tt-draw-wrap">${pileBtn}${restore}</div>${arrows}${trays}${counter}${board}</div>`;
       return {html, height};
     }
@@ -515,7 +614,7 @@
       const P = model.play;
       /* Not on a phone: the play space is not offered there at all (plan §2.5), so its
          destinations must not appear only because a card happens to be selected. */
-      if (!P || !P.deck || narrow) return {html: "", height: 0};
+      if (!P || narrow || (!P.deck && !shelf)) return {html: "", height: 0};
       const chip = (p, label) => `<button type="button" class="cm-tt-playchip${p.count ? "" : " is-empty"}${p.id === homeId ? " is-open cm-tt-home" : ""}" data-tt="open" data-pile="${esc(p.id)}" aria-pressed="${p.id === homeId ? "true" : "false"}" aria-label="${esc(label)}, ${p.count} card${p.count === 1 ? "" : "s"}">${esc(label)}${p.count ? ` · ${p.count}` : ""}</button>`;
       const board = score.length ? `<span class="cm-tt-score is-bar">${score.map((f) => `<span class="cm-tt-score-fig${f.tone ? " is-" + f.tone : ""}"${f.why ? ` title="${esc(f.why)}"` : ""}><b>${esc(f.value)}</b> ${esc(f.label)}</span>`).join("")}</span>` : "";
       const lines = Math.max(1, Math.ceil((200 + (P.trays + 1) * 110 + score.length * 120) / Math.max(280, w - 24)));
@@ -532,7 +631,7 @@
         /* The phone (plan §3): the status piles first as rows under the ledge, then the grouping
            and its piles; a strip is a grid here, because a grid says how many there are. */
         const statusTop = railH + 24;
-        statusHTML = sts.map((p, i) => pile(p, Math.round(16 + (i % perRow) * span), statusTop + Math.floor(i / perRow) * ROW, "status")).join("") + readingsHTML(statusTop + Math.ceil(sN / perRow) * ROW + READ_GAP);
+        statusHTML = sts.map((p, i) => pile(p, Math.round(16 + (i % perRow) * span), statusTop + Math.floor(i / perRow) * ROW, bandKind(p))).join("") + readingsHTML(statusTop + Math.ceil(sN / perRow) * ROW + READ_GAP);
         pickTop = statusTop + Math.ceil(sN / perRow) * ROW + READ_GAP + readH + 8;
         const groupTop = pickTop + 48;
         groupHTML = groups.map((p, i) => pile(p, Math.round(16 + (i % perRow) * span), groupTop + Math.floor(i / perRow) * ROW, "group")).join("");
@@ -574,11 +673,14 @@
         const laid = playHTML(midX, shelfTop - 16, midW);
         groupHTML += laid.html;
         const statusTop = Math.round(shelfTop + Math.max(shelfH, laid.height - 16) + 40);
+        /* Six statuses fit one row at any width the play space is offered at; a shelf of groups
+           does not, so the band wraps and grows rather than squeezing the piles into each other. */
+        const bandRows = Math.max(1, Math.ceil(sN / perRow));
         const EDGE = Math.min(96, Math.max(16, Math.round((width - 32 - PILE_W) / 12)));
-        const sSpan = (width - 2 * EDGE - PILE_W) / Math.max(1, sN - 1);
-        statusHTML = `<div class="cm-tt-band" style="top:${statusTop - 22}px;height:${ROW + READ_GAP + readH + 12}px" aria-hidden="true"></div>`
-          + sts.map((p, i) => pile(p, Math.round(EDGE + i * sSpan), statusTop, "status")).join("") + readingsHTML(statusTop + ROW + READ_GAP);
-        height = statusTop + ROW + READ_GAP + readH + 30;
+        const sSpan = bandRows > 1 ? span : (width - 2 * EDGE - PILE_W) / Math.max(1, sN - 1);
+        statusHTML = `<div class="cm-tt-band" style="top:${statusTop - 22}px;height:${bandRows * ROW + READ_GAP + readH + 12}px" aria-hidden="true"></div>`
+          + sts.map((p, i) => pile(p, bandRows > 1 ? Math.round(16 + (i % perRow) * span) : Math.round(EDGE + i * sSpan), statusTop + (bandRows > 1 ? Math.floor(i / perRow) * ROW : 0), bandKind(p))).join("") + readingsHTML(statusTop + bandRows * ROW + READ_GAP);
+        height = statusTop + bandRows * ROW + READ_GAP + readH + 30;
         groupHTML = zonesHTML + groupHTML;
       }
       body = groupPick(pickTop) + groupHTML + statusHTML;
@@ -636,16 +738,17 @@
       const bar = playBar(stageTop + stageH + 12, width - 32);
       const statusTop = stageTop + stageH + 34 + bar.height, sSpan = narrow ? span : (width - 32 - PILE_W) / Math.max(1, sN - 1);
       const statusRows = narrow ? Math.ceil(sN / perRow) : 1;
-      const statusHTML = (narrow ? sts.map((p, i) => pile(p, Math.round(16 + (i % perRow) * span), statusTop + Math.floor(i / perRow) * ROW, "status")).join("") : sts.map((p, i) => pile(p, Math.round(16 + i * sSpan), statusTop, "status")).join("")) + readingsHTML(statusTop + statusRows * ROW);
+      const statusHTML = (narrow ? sts.map((p, i) => pile(p, Math.round(16 + (i % perRow) * span), statusTop + Math.floor(i / perRow) * ROW, bandKind(p))).join("") : sts.map((p, i) => pile(p, Math.round(16 + i * sSpan), statusTop, bandKind(p))).join("")) + readingsHTML(statusTop + statusRows * ROW);
       height = statusTop + statusRows * ROW + readH + (narrow ? 86 : 44);
       body = shelfHTML + stageHTML + bar.html + statusHTML;
     }
-    const legend = `${model.total.toLocaleString()} cards on the table · ${model.ghosts.toLocaleString()} ghost${model.ghosts === 1 ? "" : "s"} (ordered, to buy, a draft list — not held) · ${sN} status piles · ${gN} ${esc(model.groupings.find(([k]) => k === model.groupBy)[1].toLowerCase())} piles`;
+    const legend = `${model.total.toLocaleString()} cards on the table · ${model.ghosts.toLocaleString()} ghost${model.ghosts === 1 ? "" : "s"} (ordered, to buy, a draft list — not held) · ${shelf ? `${sN - 1} collection group${sN === 2 ? "" : "s"}` : `${sN} status piles`} · ${gN} ${esc(model.groupings.find(([k]) => k === model.groupBy)[1].toLowerCase())} piles`;
     host.innerHTML = `<div class="cm-tt-mat is-${mode} cm-canvas-${canvasOf(ui.canvas)}" tabindex="-1" style="height:${height}px">${railHTML}${body}<div class="cm-tt-legend">${legend}</div></div>`;
     /* Clicks, keys and the context menu, delegated once per draw. */
     const sel = host.querySelector("select[name=tabletopGroupBy]"); if (sel && hooks.onGroupBy) sel.addEventListener("change", () => hooks.onGroupBy(sel.value));
     const ord = host.querySelector("select[name=tabletopStatusOrder]"); if (ord && hooks.onStatusOrder) ord.addEventListener("change", () => hooks.onStatusOrder(ord.value));
     const can = host.querySelector("select[name=tabletopCanvas]"); if (can && hooks.onCanvas) can.addEventListener("change", () => hooks.onCanvas(can.value));
+    for (const bind of host.querySelectorAll("select[data-tt=tray-group]")) bind.addEventListener("change", () => hooks.onTrayGroup && hooks.onTrayGroup(Number(bind.dataset.n) || 1, bind.value));
     host.onclick = (ev) => {
       const t = ev.target.closest("[data-tt]");
       if (!t) { if (mode !== "rest" && ev.target.closest(".cm-tt-mat") && !ev.target.closest("button, select, label, .cm-tt-card, .cm-tt-strip, .cm-tt-stage")) hooks.onClear && hooks.onClear(); return; }
@@ -713,7 +816,7 @@
        PageUp and PageDown turn the page, Space ticks the card and Enter chooses it. Escape is
        the table at rest. */
     const focusables = (list) => list.filter((el) => el && !el.hidden);
-    const pileRows = () => [focusables([host.querySelector(".cm-tt-fan")]), focusables([...host.querySelectorAll(".cm-tt-pile.cm-tt-group, .cm-tt-chip")]), focusables([...host.querySelectorAll(".cm-tt-draw, .cm-tt-tray, .cm-tt-playchip")]), focusables([...host.querySelectorAll(".cm-tt-pile.cm-tt-status, .cm-tt-reading")])].filter((row) => row.length);
+    const pileRows = () => [focusables([host.querySelector(".cm-tt-fan")]), focusables([...host.querySelectorAll(".cm-tt-pile.cm-tt-group, .cm-tt-chip")]), focusables([...host.querySelectorAll(".cm-tt-draw, .cm-tt-tray, .cm-tt-playchip")]), focusables([...host.querySelectorAll(".cm-tt-pile.cm-tt-status, .cm-tt-pile.cm-tt-shelfgroup, .cm-tt-pile.cm-tt-shelfnew, .cm-tt-reading")])].filter((row) => row.length);
     host.onkeydown = (ev) => {
       const el = ev.target;
       if (ev.key === "Escape" && mode !== "rest") { ev.preventDefault(); hooks.onClear && hooks.onClear(); return; }
@@ -752,5 +855,5 @@
     return {width, height, piles: sN + gN + 1, readings: readings.length, mode};
   }
 
-  return {GROUPINGS, TYPE_ORDER, BENCH, GHOST, TARGET, SIZES, STAGE, SHELF, CANVASES, TRAYS_MAX, HAND, DRAW_FACES, canvasOf, shelfShape, shelfSeats, isGhost, primaryType, bandOf, bandOrder, arcsOf, pileOrder, layout, findPile, playPiles, play, accepts, printSheet, table, mount};
+  return {GROUPINGS, TYPE_ORDER, BENCH, GHOST, TARGET, SIZES, STAGE, SHELF, CANVASES, TRAYS_MAX, HAND, SENT, DRAW_FACES, canvasOf, shelfShape, shelfSeats, isGhost, primaryType, bandOf, bandOrder, arcsOf, pileOrder, layout, findPile, playPiles, play, accepts, printSheet, table, mount};
 });
