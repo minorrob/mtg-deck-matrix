@@ -59,7 +59,10 @@ const PAGES = [
      the three tabs, the view switch and the five filters — the mat itself carries no prose, which
      is the point of it: the words are on the cards. 40 words, 17 controls, and the same at both
      widths because the phone gets the same toolbar over a narrower mat. */
-  ["cards?view=tabletop", "Cards · Table", ".cm-tt-mat", [40, 17, 16], [40, 17, 16]],
+  /* 44 / 18, not 40 / 17: "Back to Play Space" is the control Rob asked for by name after the
+     corner arrow ended up wherever the open pile had pushed it (15 September). Raised
+     deliberately; the next control on this page has to argue for itself. */
+  ["cards?view=tabletop", "Cards · Table", ".cm-tt-mat", [44, 18, 16], [44, 18, 16]],
 ];
 const WIDTHS = [[1400, "desktop", 3], [390, "phone", 4]];
 

@@ -305,36 +305,30 @@ try{
       in tests/crankmagic-tabletop.mjs, because it is a rule about how the module binds. */
    await page.locator('[name=tabletopCanvas]').selectOption('slate');await page.waitForTimeout(500);
    ok(/cm-canvas-slate/.test(await page.locator('.cm-tt-mat').getAttribute('class')),'a select that survived the patch still changes the board');}
-  /* THE BACK ROW (Rob, 15 September): the Bench and the decks, side by side, both as piles. The
-     ledge used to fan out as many cards as it was wide — and a fanned card could not be clicked,
-     dragged or read, so it was three hundred pictures decorating a count. A click on a deck's pile
-     filters the table to it (which is also what puts the middle into that deck's play space); a
-     drop on it seats the copy; Select all clears the filter. */
+  /* THE BACK ROW IS THE BENCH AND THE DRAWER (Rob, 15 September). Six deck piles held it until he
+     used it — "too big for this" — and they duplicated the Deck dropdown in the toolbar and the
+     Physical deck pile down front. The room goes to the open pile instead, and the point of that
+     is the thing asserted hardest here: opening a pile leaves the whole board standing, so every
+     pile is still a drop target while he reads one. */
   {eq(await page.locator('.cm-tt-fan').count(),0,'the fanned ledge is gone');
    eq(await page.locator('.cm-tt-backrow .cm-tt-pile.cm-tt-bench').count(),1,'the Bench is a pile on the back row');
-   const decks=await page.locator('.cm-tt-backrow .cm-tt-pile.cm-tt-deckpile').count();
-   ok(decks>=1,`and every deck stands beside it (${decks})`);
-   eq(await page.locator('.cm-tt-allchip').count(),1,'with one Select all');
-   const first=page.locator('.cm-tt-backrow .cm-tt-pile.cm-tt-deckpile').first();
-   const label=(await first.getAttribute('aria-label')).split(',')[0];
-   await first.click();await page.waitForTimeout(700);
-   ok(/deck=/.test(page.url()),`clicking ${label} filters the table to it`);
-   ok(/calibrating/.test(await page.locator('.cm-tt-play-head').innerText()),'and the middle becomes that deck\'s play space');
-   await page.locator('.cm-tt-allchip').click();await page.waitForTimeout(700);
-   ok(!/deck=/.test(page.url()),'Select all clears the filter');
-   /* A chip on this table is a pile you can lay out, and the arrow model walks the chips as the
-      group row; Select all is a filter on the back row, so it must not wear that class. */
-   eq(await page.locator('.cm-tt-allchip.cm-tt-chip').count(),0,'and Select all is not a pile chip');
-   await page.locator('.cm-tt-backrow .cm-tt-pile.cm-tt-bench').focus();await page.keyboard.press('ArrowRight');
-   ok(await page.evaluate(()=>document.activeElement.matches('.cm-tt-backrow .cm-tt-pile.cm-tt-deckpile, .cm-tt-allchip')),'the arrows walk the back row too');
-   /* Rob, 15 September, with a screenshot: the six deck names sat half-behind the filter row,
-      because the back row was shorter than the piles standing on it and the row below was drawn
-      at a number chosen before this row existed. Both are measured here, at the size they ship. */
-   {const fit=await page.evaluate(()=>{const r=e=>e.getBoundingClientRect();
-     const row=document.querySelector('.cm-tt-deckrow'),plac=document.querySelector('.cm-tt-deckpile .cm-tt-placard'),pick=document.querySelector('.cm-tt-group-pick');
-     return {clipped:Math.round(r(plac).bottom-r(row).bottom),gap:Math.round(r(pick).top-r(plac).bottom)};});
-    ok(fit.clipped<=0,`a deck's name fits inside the shelf (${fit.clipped}px past it)`);
-    ok(fit.gap>0,`and the filter row starts below it, not across it (${fit.gap}px)`);}}
+   eq(await page.locator('.cm-tt-deckpile').count(),0,'the deck piles are gone; the toolbar dropdown is the deck filter');
+   eq(await page.locator('select[name=ttDeck]').count(),1,'and it is there');
+   eq(await page.locator('.cm-tt-drawer.is-shut').count(),1,'the drawer waits, shut, until a pile is opened');
+   const standing=()=>page.evaluate(()=>({play:document.querySelectorAll('.cm-tt-play-head').length,
+     groups:document.querySelectorAll('.cm-tt-pile.cm-tt-group').length,
+     band:document.querySelectorAll('.cm-tt-pile.cm-tt-shelfgroup,.cm-tt-pile.cm-tt-status').length}));
+   const before=await standing();
+   await page.locator('.cm-tt-pile.cm-tt-group').first().click();await page.locator('.cm-tt-drawer-strip .cm-tt-card').first().waitFor();
+   eq(await standing(),before,'opening a pile leaves the play space, the group piles and the band exactly where they were');
+   ok((await page.locator('.cm-tt-drawer-strip .cm-tt-card').count())>0,'and its cards are in the drawer');
+   /* A tick in the drawer is a tick, not a click on the mat: a pointer captured on press used to
+      retarget the click to the strip, which the mat read as "clicked away" and put the pile down. */
+   await page.locator('.cm-tt-drawer-strip .cm-tt-card').first().locator('.cm-tt-tick').click();await page.waitForTimeout(300);
+   eq(await page.locator('.cm-tt-drawer-strip .cm-tt-card.is-ticked').count(),1,'ticking a card in the drawer keeps the pile open');
+   await page.locator('.cm-tt-drawer-strip .cm-tt-card').first().locator('.cm-tt-tick').click();await page.waitForTimeout(200);
+   await page.getByRole('button',{name:'Back to Play Space',exact:true}).click();await page.waitForTimeout(400);
+   eq(await page.locator('.cm-tt-drawer.is-shut').count(),1,'and Back to Play Space puts it away');}
   /* STATUS FROM THE TABLE (Rob, 15 September). A drop answers "where does this copy go"; a plan,
      a suggestion and a To buy line have no pile to be dropped on, and `accepts` had been telling
      readers to "set its status from its row menu" on a board whose only row menu was a

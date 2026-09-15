@@ -420,17 +420,6 @@ let ttKey=null,ttResize=null,ttEscShielded=false;
    a lifted card into and no list for a tray to build, so the middle says so rather than pretending
    -- shelf mode, where the destinations are collection groups instead, is PR 4 (§2.15). */
 function playDeck(params){const id=params.get('deck');if(!id)return null;const d=C.state.decks.find(x=>x.id===id&&!x.archived);return d&&d.groupId?d:null;}
-/* THE DECKS ON THE BACK ROW (Rob, 15 September). Each finalized, unarchived deck, with the set of
-   cards its list still lacks a copy for — which is what lets the drop say, before anything is
-   staged, how many of what you are holding that deck can actually seat. */
-function deckShelf(){
-  const st=lens();
-  return st.decks.filter(d=>!d.archived).map(d=>{
-    const needs=new Set();
-    try{for(const r of M.deck(st,d.id).slots)if(r.committed&&r.purpose==='main'&&M.shortfall(st,d,r)>0)needs.add(r.cardId);}catch(err){/* a deck mid-edit still gets a pile */}
-    return {id:d.id,name:d.name,needs};
-  });
-}
 function playSpec(params){
   const d=playDeck(params),sb=C.sandbox,shelf=!d;
   return {deck:d?{id:d.id,name:d.name,groupId:d.groupId}:null,trays:ttUI.trays,at:ttUI.drawAt,
@@ -502,7 +491,7 @@ function scoreboard(model){
 function tabletop(params,shop=false){
   const TT=globalThis.CrankTabletop,tab=shop?'buy':'library';
   C.main.innerHTML=cardsHead(params,tab,'tabletop')
-   +`<div class="cm-toolbar"><label class="cm-search">Search cards<input id="cm-tt-query" value="${e(filter.q)}" placeholder="Card name, type or rules text"></label>${s('Status','ttStatus',[['','Any status'],['owned','Owned (any)'],...M.STATUS.map(x=>[x.label,x.label])],filter.status)}${s('Card type','ttType',[['','All types'],'Artifact','Creature','Enchantment','Instant','Land','Planeswalker','Sorcery','Battle'],filter.type)}${s('Color','ttColor',[['','Any colour'],['W','White'],['U','Blue'],['B','Black'],['R','Red'],['G','Green'],['C','Colorless']],filter.color)}${s('Deck','ttDeck',[['','Any deck'],...C.state.decks.filter(d=>!d.archived).map(d=>[d.id,d.name])],params.get('deck')||'')}${b('Clear filters','clear-filters')}</div>`
+   +`<div class="cm-toolbar"><label class="cm-search">Search cards<input id="cm-tt-query" value="${e(filter.q)}" placeholder="Card name, type or rules text"></label>${s('Status','ttStatus',[['','Any status'],['owned','Owned (any)'],...M.STATUS.map(x=>[x.label,x.label])],filter.status)}${s('Card type','ttType',[['','All types'],'Artifact','Creature','Enchantment','Instant','Land','Planeswalker','Sorcery','Battle'],filter.type)}${s('Color','ttColor',[['','Any colour'],['W','White'],['U','Blue'],['B','Black'],['R','Red'],['G','Green'],['C','Colorless']],filter.color)}${s('Deck','ttDeck',[['','Any deck'],...C.state.decks.filter(d=>!d.archived).map(d=>[d.id,d.name])],params.get('deck')||'')}${b('Clear filters','clear-filters')}${b('Back to Play Space','tt-rest')}</div>`
    +`<p class="cm-status-line" id="cm-tt-status"></p><div id="cm-tt-host" class="cm-tt-host"></div>`;
   const draw=()=>{
     if(!TT){$('#cm-tt-host').innerHTML='<p class="cm-muted">The tabletop module has not loaded yet.</p>';return;}
@@ -513,7 +502,7 @@ function tabletop(params,shop=false){
     const have=new Set(base.map(r=>r.cardId));
     const sent=sentRows().filter(r=>!have.has(r.cardId)&&matches(r));
     const all=base.concat(sent);lastRows=all;
-    const model=TT.table(all,{groupBy:tabletopGroupBy,statuses:M.STATUS,statusOrder:M.statusOrder,value,maxGroupPiles:16,statusSort:tabletopStatusOrder,decks:deckShelf(),play:playSpec(params)});ttModel=model;
+    const model=TT.table(all,{groupBy:tabletopGroupBy,statuses:M.STATUS,statusOrder:M.statusOrder,value,maxGroupPiles:16,statusSort:tabletopStatusOrder,play:playSpec(params)});ttModel=model;
     $('#cm-tt-status').innerHTML=e(`${model.total.toLocaleString()} cop${model.total===1?'y':'ies'} on the table (${model.rows.toLocaleString()} rows) · Bench ${model.bench.count.toLocaleString()} · ${model.ghosts.toLocaleString()} ghost${model.ghosts===1?'':'s'}`+(Object.values(filter).some(v=>v!=='')||params.get('deck')?' · filtered':''))
       +(sent.length?` · ${sent.length} sent from Discover <button type="button" class="cm-text-button" data-action="table-clear-sent">Send them back</button>`:'');
     /* A selection that the filters no longer show is dropped; an open pile that vanished (a grouping change) closes. */
@@ -559,7 +548,6 @@ function tabletop(params,shop=false){
       /* A DECK'S PILE IS THE DECK FILTER (Rob, 15 September), which is the same control the Deck
          select in the toolbar drives — so it goes through the route, and picking one also puts
          the middle into that deck's play space, because that is what picking a deck means here. */
-      onDeckPick:id=>goCards(tab,{view:'tabletop',...(id?{deck:id}:{})}),
       /* THE CANVAS (Rob, 14 September): which table you are working on, remembered per device
          because it is a fact about this screen rather than about the library. */
       onCanvas:c=>{ttUI.canvas=CrankTabletop.canvasOf(c);try{localStorage.setItem('cm-tabletop-canvas',ttUI.canvas);}catch(err){/* not remembered, still applied */}draw();queueMicrotask(()=>$('#cm-tt-host [name=tabletopCanvas]')?.focus?.({preventScroll:true}));},
@@ -712,8 +700,6 @@ function tabletopDrop(pileId,ids){
      `place` reserves the copy for the seat it fills and records it as physically in that box,
      which is what "reserved and in physical deck" means in the model's own words. A copy the list
      does not call for is refused by name at Confirm, with the model's sentence. */
-  if(action==='seat'){const d=M.deck(C.state,pile.deckId);
-    return stageRows(rows,{action:'place',deckId:d.id,deckName:d.name,to:'Physical deck'});}
   if(action==='place'||action==='standin'){if(!finals.length)throw Error('Finalize a deck first — a draft holds no physical copies.');
     const standin=action==='standin',preferred=rows.map(r=>r.allocation?.deckId).find(Boolean)||'';
     const chosen=preferred||(finals[0]||{}).id||'';
@@ -1058,6 +1044,10 @@ actions['batch-group']=()=>{
   form(`Add ${lotIds.length} record${lotIds.length===1?'':'s'} to a group`,s('Collection group','groupId',C.state.groups.map(g=>[g.id,g.name]),'')+note('Adds the ticked records to this group. Nothing leaves a group it is already in, and no ownership changes.'),
     v=>commit({type:'groupLots',groupId:v.groupId,lotIds}),'Add to group');
 };
+/* BACK TO THE PLAY SPACE (Rob, 15 September). The corner arrow that used to be the only way
+   back sat wherever the open pile had pushed it; this is in the toolbar, where the rest of
+   the page's controls are. It is the same move Escape makes: nothing open, nothing picked. */
+actions['tt-rest']=()=>{ttUI.open=null;ttUI.from=null;ttUI.page=0;ttUI.ticked.clear();ttUI.selection.clear();C.render();};
 actions['roster-filters']=()=>{expanded=!expanded;C.render();};actions['clear-filters']=()=>{for(const k of Object.keys(filter))filter[k]='';page=0;const buy=buyTab();if(buy)shopGroupBy='deck';else groupBy='';goCards(buy?'buy':'library');};
 actions['roster-columns']=()=>{const shop=buyTab(),current=shop?shopSelected:selected;form('Choose table columns',`<div class="cm-full cm-columns-grid">${columns.map(([k,l])=>`<label class="cm-checkbox"><input type="checkbox" name="${k}" ${current.includes(k)?'checked':''} ${k==='name'?'disabled':''}>${l}</label>`).join('')}</div><label class="cm-checkbox cm-full"><input type="checkbox" name="__fold" ${foldFor(shop)?'checked':''}>One row per card, whatever the print or deck</label>${s('Rows per page','__pageSize',[['60','60'],['120','120'],['all','All']],C.state.preferences.pageSize||'60')}`,async data=>{const next=['name',...columns.filter(([k])=>k!=='name'&&data[k]).map(([k])=>k)];const values={pageSize:data.__pageSize,[shop?'shopFold':'foldPrints']:!!data.__fold};if(shop){shopSelected=next;values.shopColumns=next;}else{selected=next;values.columns=next;}page=0;await commit({type:'preferences',values});},'Apply columns');};
 /* ACTIVE FILTERS AS CHIPS under the search: each one removable on its own, Clear all beside

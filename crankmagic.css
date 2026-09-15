@@ -1457,28 +1457,24 @@ button.cm-pill:hover{filter:brightness(1.15)}
    ledge used to fan out as many cards as it was wide, and a fanned card could not be clicked,
    dragged or read — three hundred pictures decorating a count, in the room the deck shelf needed. */
 .cm-tt-backrow{position:absolute;left:16px;right:16px;top:14px;display:flex;gap:12px;align-items:stretch;z-index:1}
-.cm-tt-rail,.cm-tt-decks{border-radius:10px;background:linear-gradient(#182134,#131b2a);border:1px solid #2b3a55;border-top-color:#3b4d6d;box-shadow:inset 0 1px 0 #ffffff10,0 6px 14px #0006;padding:8px 12px 10px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.cm-tt-rail,.cm-tt-drawer{border-radius:10px;background:linear-gradient(#182134,#131b2a);border:1px solid #2b3a55;border-top-color:#3b4d6d;box-shadow:inset 0 1px 0 #ffffff10,0 6px 14px #0006;padding:8px 12px 10px;display:flex;flex-direction:column;gap:6px;min-width:0}
 .cm-tt-rail{flex:0 0 auto;align-items:center;padding-top:26px}
-.cm-tt-decks{flex:1 1 auto;overflow:hidden}
+.cm-tt-drawer{flex:1 1 auto;overflow:hidden}
 .cm-tt-rail-head{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#c6a86d;display:flex;align-items:center;gap:8px;white-space:nowrap}
-/* "Select all" stands on its own rather than borrowing .cm-tt-chip: a chip on this table is a
-   pile you can lay out, and the keyboard model walks the chips as that row. This is a filter
-   control on the back row, so it gets its own look and stays out of that row. */
-.cm-tt-allchip{border:1px solid #3b4d6d;border-radius:11px;padding:2px 9px;background:#1d2840;color:#c9d6ea;font:inherit;font-size:10.5px;font-weight:700;line-height:1.5;cursor:pointer}
-.cm-tt-allchip:hover{background:#25324e}
-/* `#matrix-v2 :is(button,input,select){color:inherit}` outranks a bare class, so the chip would
-   take the rail head's gold and read as part of that label rather than as a control. */
-#matrix-v2 .cm-tt-allchip,.cm-tt-mat .cm-tt-allchip{color:#c9d6ea}
-.cm-tt-allchip.is-on{border-color:#9addff;background:#16303f}
-#matrix-v2 .cm-tt-allchip.is-on,.cm-tt-mat .cm-tt-allchip.is-on{color:#dcefff}
-.cm-tt-allchip:focus-visible{outline:2px solid #9addff;outline-offset:2px}
-/* The shelf scrolls sideways rather than wrapping: a deck is a place, and places stay in a row. */
-.cm-tt-deckrow{display:flex;gap:14px;align-items:flex-start;overflow-x:auto;overflow-y:hidden;padding:2px 2px 4px;scrollbar-width:thin}
+/* The drawer's head is a working strip, not a label: the pile's name and count, the card size,
+   the pager for a pile deeper than one row, Print, and the way out. */
+#matrix-v2 .cm-tt-drawer-head{position:static;flex:0 0 auto;font-size:12px}
+.cm-tt-drawer-head strong{color:#f1f6ff;font-size:13px}
+#matrix-v2 .cm-tt-drawer-print{margin-left:auto;min-height:26px;padding:2px 10px;font-size:11px;border:1px solid #3b4d6d;border-radius:7px;background:#1d2840;color:#c9d6ea}
+#matrix-v2 .cm-tt-drawer-shut{min-height:26px;width:26px;padding:0;border:1px solid #3b4d6d;border-radius:7px;background:#1d2840;color:#c9d6ea;font-size:15px;line-height:1}
+#matrix-v2 .cm-tt-drawer-print:hover,#matrix-v2 .cm-tt-drawer-shut:hover{background:#25324e;filter:none}
+/* The cards scroll sideways: a pile is read along a row, which is the gesture the pictures ask
+   for, and the pager is only there for a pile deeper than the forty a page holds. */
+.cm-tt-drawer-strip{flex:1 1 auto;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;min-height:0}
+.cm-tt-grid.is-drawer{position:relative;top:auto;left:auto}
+.cm-tt-drawer.is-shut .cm-tt-play-invite{margin:0;max-width:56ch}
 .cm-tt-pile.is-flow{position:relative;left:auto;top:auto;flex:0 0 auto;width:74px;height:126px}
 .cm-tt-pile.is-flow .cm-tt-placard{top:auto;bottom:0;max-width:96px}
-.cm-tt-deckpile .cm-tt-card{background:linear-gradient(160deg,#3b3550,#1e1a2b)}
-.cm-tt-pile.cm-tt-deckpile.is-on .cm-tt-slot{box-shadow:inset 0 3px 10px #000c,0 0 0 2px #9addff,0 0 16px #9addff55}
-.cm-tt-pile.cm-tt-deckpile.is-on .cm-tt-placard{background:linear-gradient(#dcefff,#c6e2fb);color:#10202e}
 .cm-tt-card{width:64px;height:90px;border-radius:5px;background:linear-gradient(160deg,#2b2b33,#15151c);border:1px solid #0009;box-shadow:0 3px 8px #000a,inset 0 1px 0 #ffffff10;position:relative;overflow:hidden}
 .cm-tt-card:before{content:"";position:absolute;inset:0;border-radius:inherit;background:var(--art,linear-gradient(135deg,#3a4a64,#1d2a3a));background-size:cover;background-position:center}
 .cm-tt-name{display:none;position:absolute;left:4px;right:4px;bottom:4px;font-size:8px;line-height:1.1;color:#dfe7f3;font-weight:600}.cm-tt-card.no-art .cm-tt-name{display:block}
@@ -1505,7 +1501,7 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-tt-group-pick{position:absolute;left:16px;right:16px;display:flex;gap:8px;justify-content:center;align-items:center;font-size:12px;color:#dfe7f3;z-index:2}
 .cm-tt-group-pick select{min-height:32px;padding:4px 8px;font-size:12px}.cm-tt-group-pick label{display:flex;gap:6px;align-items:center;white-space:nowrap}.cm-tt-group-pick{gap:14px}
 .cm-tt-legend{position:absolute;right:16px;bottom:12px;font-size:11px;color:#c9d4e6;background:#0f1523d0;border:1px solid #2b3a55;padding:6px 10px;border-radius:8px;max-width:calc(100% - 32px)}
-@media(max-width:760px){.cm-tt-backrow{gap:8px}.cm-tt-rail,.cm-tt-decks{padding:6px 8px 8px}.cm-tt-group-pick{white-space:nowrap}.cm-tt-legend{left:16px;right:16px;bottom:12px;max-width:none}}
+@media(max-width:760px){.cm-tt-backrow{gap:8px}.cm-tt-rail,.cm-tt-drawer{padding:6px 8px 8px}.cm-tt-group-pick{white-space:nowrap}.cm-tt-legend{left:16px;right:16px;bottom:12px;max-width:none}}
 
 /* TB2: a pile laid out, the page strip, the ticks, the selection on the stage. */
 .cm-tt-mat:focus{outline:none}.cm-tt-mat:focus-visible{outline:2px solid #9addff;outline-offset:-4px}
