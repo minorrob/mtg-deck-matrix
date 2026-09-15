@@ -638,17 +638,17 @@ table is settled; the sections named carry the reasoning.
 | How many jobs does the table have? | **Two**: calibrate a deck (a deck is picked) and sort the shelf into groups (no deck) | §2.15 |
 | Do animations matter? | Optional. **Speed is the requirement**; feedback is built, decoration is judged later against the real table | §3 |
 
-### Still open, and worth deciding before PR 3
+### Decided, 15 September
 
-1. **How cards are searched into shelf mode.** §2.15 names the gap: the Commander-legal catalog
-   cannot be dealt onto a table, so shelf mode needs a way to bring matches in. Is that the
-   table's existing search box pointed at the catalog, or the Discover graph's selection sent
-   over ("take these twelve to the table")? The second fits the workflow he describes — Lab, then
-   the tracer, then the table — and costs a button rather than a search UI.
-2. **What happens to a sitting when the library changes underneath it.** The plan re-validates
-   and drops what no longer applies, naming it. The alternative is to refuse to load the sitting
-   at all and keep it for inspection. The first is friendlier; the second never surprises.
-3. **Whether the deck's list may grow past 100 on the table.** The plan allows it while thinking
-   and flags it at Confirm (§2.3). The stricter alternative refuses the 101st tray card outright.
-   Allowing it matches a physical table, where you can hold more than a hundred cards while you
-   decide which to put down.
+| Question | Decided | Where |
+|---|---|---|
+| How cards are searched into shelf mode | **Send to the table, from Discover.** Select cards on the graph and one button sends them over as a source pile. It fits the workflow Rob described — Lab, then the tracer, then the table — and costs a button rather than a second search surface to keep in step with Discover's own | §2.15, PR 4 |
+| What happens to a sitting when the library changes underneath it | **Re-validate and drop what no longer applies, by name** — which is what PR 2 built. The alternative, refusing to load the sitting at all, never surprises anyone but throws away work for one stale move | §2.7 |
+| Whether the deck's list may grow past 100 on the table | **Yes while thinking; flagged at Confirm** — which is what PR 3b built. The scoreboard reads *101 of 100* in amber and the receipt names the breach. It matches a physical table, where you can hold more than a hundred cards while deciding which to put down | §2.3, §2.14 |
+
+**What this settles for PR 4.** Shelf mode is not getting a search box. Discover already has the
+search, the filters and the graph; what it lacks is a way out. So the catalog reaches the table by
+selection: tick cards on Discover, press *Send to the table*, and they arrive as a source pile in
+shelf mode. One search surface in the app, one direction of travel, and the piece §2.15 called
+"the single largest unbuilt piece of this plan" becomes a button and a hand-off rather than a
+second implementation of Discover.
