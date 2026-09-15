@@ -629,6 +629,11 @@ button.cm-badge-link:hover{background:#35507a;color:#eaf5ff}
 .cm-copy-extras>details{border:1px solid #38465e;border-radius:8px;padding:0 14px;background:#1a2333}
 .cm-copy-extras>details>summary{cursor:pointer;min-height:0;padding:11px 0;font-size:13px;color:#b7cbe6}
 .cm-copy-extras>details[open]{padding-bottom:14px}
+/* Decline sits beside Promote on every upgrade row, so it reads as the other answer to the same
+   question rather than as a delete: quiet until you are over it. */
+#matrix-v2 .cm-up-decline{background:none;border-color:#4a3a44;color:#d9b7bd}
+#matrix-v2 .cm-up-decline:hover{background:#3a2a30;border-color:#7d5560;color:#ffd7d2;filter:none}
+.cm-up-buy{margin:12px 0 0;font-size:13px;color:#b4c3d9;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}
 .cm-menu.cm-step input:focus-visible{outline:2px solid #9addff;outline-offset:1px}
 /* The browser's own spinner is a third and fourth arrow inside a control that already has
    two, pointing the other way. */
