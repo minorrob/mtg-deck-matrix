@@ -23,3 +23,13 @@ test('hidden card identities and private descriptions are excluded',()=>{
 test('a trigger zone notification does not invent a casting permanent',()=>{
   assert.deepEqual(publicStack([event('GameEventZone',{zoneType:'Stack',mode:'Added',card,sa:{isSpell:false}})]),[]);
 });
+
+test('stack targets preserve exact identities and hide private target names',()=>{
+  const result=publicStack([event('GameEventSpellAbilityCast',{sa:{host:card,isSpell:true,abilityId:8},si:{stackId:2,targets:[
+    {kind:'card',cardId:7,name:'Beetleback Chief',hidden:false},
+    {kind:'card',cardId:8,name:'Private name',hidden:true,description:'Private description'},
+    {kind:'player',playerId:1,name:'Opponent'}
+  ]}})]);
+  assert.deepEqual(result[0].targets,[{kind:'card',cardId:7,name:'Beetleback Chief',hidden:false},{kind:'card',cardId:8,name:null,hidden:true},{kind:'player',playerId:1,name:'Opponent'}]);
+  assert.doesNotMatch(JSON.stringify(result),/Private/);
+});

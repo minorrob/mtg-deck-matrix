@@ -118,3 +118,22 @@ body.table-view .action-dock .live-controls{margin:0;padding:14px;border:0;borde
 body.table-view .table{margin:0;align-self:start}
 
 body.setup-screen>.recommended-actions{display:none!important}
+/* Use the available mat height for readable cards; miniature opponents keep their compact scale. */
+.primary-seat .mat-battlefield .card-fan,.focus-mat-stage .mat-battlefield .card-fan{--fan-card-width:clamp(70px,19cqw,240px)}
+.primary-seat .mat-battlefield .battlefield-group:not(.expanded-group),.focus-mat-stage .mat-battlefield .battlefield-group:not(.expanded-group){width:clamp(70px,19cqw,240px)}
+.primary-seat .mat-lands .card-fan,.focus-mat-stage .mat-lands .card-fan{--fan-card-width:clamp(40px,9cqw,125px)}
+.primary-seat .mat-lands .battlefield-group:not(.expanded-group),.focus-mat-stage .mat-lands .battlefield-group:not(.expanded-group){width:clamp(40px,9cqw,125px)}
+.primary-seat .free-card,.focus-mat-stage .free-card{width:19cqw}
+.ordered-choice{display:grid;grid-template-columns:22px minmax(0,1fr) 36px 36px;gap:6px;align-items:center;padding:10px 0;border-bottom:1px solid #35566b}.ordered-choice button{padding:6px}.ordered-choice input{accent-color:#42c8ff}
+/* A fanned card's hit area is its visible name strip, never a hidden full-card rectangle. */
+.card-fan:not(.spread-cards)>.card:not(:last-child){height:calc(var(--fan-card-width)*.24);aspect-ratio:auto;overflow:hidden;min-height:0}
+.card-fan:not(.spread-cards)>.card:not(:last-child)>img{height:auto;max-height:none;object-fit:initial;align-self:start}
+.card-fan:not(.spread-cards)>.card+.card{margin-top:0}
+.casting-targets{display:grid;gap:3px;font-size:12px;color:#b9edff}
+.card-zoom-control{display:grid;gap:7px;min-width:240px}.card-zoom-control input{width:100%;accent-color:#42c8ff}.card-zoom-control output{font-size:12px;color:#a6e8ff}
+.player-mat .mat-cards.zoom-card-grid{display:grid;grid-template-columns:repeat(var(--card-columns,3),minmax(0,1fr));gap:5px;align-content:start;justify-items:start;overflow:auto}
+.player-mat .zoom-card-grid .battlefield-group,.player-mat .zoom-card-grid .battlefield-group.expanded-group{width:var(--grid-card-width);max-width:none;min-width:0}
+.player-mat .zoom-card-grid .card-fan{--fan-card-width:var(--grid-card-width)}
+.player-mat .zoom-card-grid .group-label{height:16px;box-sizing:border-box;overflow:hidden;padding:0 2px;line-height:16px;font-size:10px}
+.primary-seat .free-card,.focus-mat-stage .free-card{width:var(--free-card-width,19cqw)}
+.zoom-card-grid .counter-dice{left:1px;bottom:16%;gap:1px;max-width:95%}.zoom-card-grid .die{font-size:clamp(5px,.7cqw,9px);padding:0 1px;line-height:1.2}.zoom-card-grid .badge{font-size:clamp(7px,1.2cqw,13px);padding:1px 3px}

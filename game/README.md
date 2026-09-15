@@ -5,8 +5,10 @@ Open the **Play** tab in CrankMagic. The public site offers **Open game setup**,
 From this repository:
 
 ```powershell
-node game/tools/serve-review.mjs
+./game/tools/start-crankmagic.ps1
 ```
+
+The Windows helper starts a hidden, persistent host, writes startup logs to ignored `game/.local/host/`, and preserves an existing running game. In Codex, use `$start-crankmagic` after installing the skill from `game/skills/start-crankmagic/`. The public launch dialog checks the host and offers startup/retry instructions before transferring a deck. Forge starts automatically when you launch the prepared table.
 
 ## Start and play
 

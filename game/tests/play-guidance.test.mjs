@@ -18,3 +18,9 @@ test('combat power distinguishes defenders, infect, commander and already-blocke
  const rows=[{attacker:{power:4,commander:true,keywords:['infect','double strike']},defender:{kind:'player',id:1,name:'A'},blocked:false,blockers:[]},{attacker:{power:3},defender:{kind:'player',id:1,name:'A'},blocked:true,blockers:[]},{attacker:{power:2},defender:{kind:'player',id:2,name:'B'},blocked:false,blockers:[{cardId:9}]}];
  assert.deepEqual(combatTotals(rows).map(x=>[x.id,x.power,x.unblockedPower,x.commanderPower,x.infectPower]),[[1,7,4,4,4],[2,2,0,0,0]]);
 });
+test('flying and ground power partition the attack while trample remains overlapping',()=>{
+ const defender={kind:'player',id:0,name:'Rob'};
+ const rows=[{power:10,keywords:['flying','trample']},{power:5,keywords:['trample']},{power:5}].map(attacker=>({attacker,defender,blockers:[],blocked:false}));
+ const [total]=combatTotals(rows);
+ assert.deepEqual([total.power,total.flyingPower,total.groundPower,total.tramplePower],[20,10,10,15]);
+});
