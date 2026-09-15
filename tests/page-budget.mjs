@@ -41,10 +41,12 @@ const PAGES = [
   [`decks?deck=${DECK}`, "Deck page", ".cm-deck-summary", [48, 15, 4], [48, 15, 4]],
   /* Cards (14 September): the seven count chips are buttons now — Rob asked for the counts to
      filter — and List · Sheet · Table sit on the tab row of every tab; 22 → 26, 10 → 11. */
-  /* 27, not 26: "Return to the Table" is the one control Rob asked for by name after losing his
+  /* 27, not 26: "Back to Play Space" is the one control Rob asked for by name after losing his
      way back from a filtered list (15 September). The view switch in the page head says Table
      too, but a three-way segment up there is not where a reader who has just filtered something
-     is looking. Raised deliberately; the next control on this page has to argue for itself. */
+     is looking. Raised deliberately; the next control on this page has to argue for itself.
+     It read "Return to the Table" until he chose between the two names this button and the mat's
+     own way out were using; his words won, in both places. */
   ["cards", "Cards · Library", "#cm-roster-table table", [76, 27, 16], [76, 27, 16]],
   ["cards?tab=buy", "Cards · To buy", "#cm-roster-table table, .cm-shop-strip", [40, 18, 8], [16, 10, 4]],
   ["cards?view=sheet", "Cards · Sheet", "#cm-sheet-table table", [46, 16, 20], [46, 16, 20]],
