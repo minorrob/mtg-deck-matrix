@@ -623,7 +623,13 @@
        The Bench used to fan out as many cards as the ledge was wide — and a fanned card could not
        be clicked, dragged or read, so it was three hundred pictures decorating a count. One pile
        says the same thing in a tenth of the room, and the room is what the deck shelf needed. */
-    const rail = model.bench, decks = model.deckPiles || [], railH = narrow ? 150 : 162;
+    /* THE BACK ROW IS AS TALL AS WHAT STANDS ON IT (Rob, 15 September, with a screenshot of the
+       six deck names half-hidden behind the filter row). A flow pile is 126px including its
+       placard, and the container adds a heading, a gap and its own padding around that -- 176
+       at a desk, 172 on a phone. It was 162, so every deck's name was clipped AND the row
+       below was drawn across it, because that row's top was a number from before this row
+       existed. Both are derived from railH now, so the next change to a pile moves them. */
+    const rail = model.bench, decks = model.deckPiles || [], railH = narrow ? 172 : 176;
     /* The Bench container carries no heading: its pile's placard already names it, and a second
        label over one pile is the kind of thing that makes a board feel wordy. */
     const benchHTML = `<div class="cm-tt-rail">${pile(rail, 0, 0, "bench", true)}</div>`;
@@ -754,13 +760,13 @@
            growing by the columns they need (§2.5) -- with the play space between them and the
            destinations in their own band at the foot. Sources, workspace, destinations: three
            surfaces, three roles, legible before a word is read. */
-        pickTop = 146;
+        pickTop = railH + 28;
         /* The pick row's three labelled selects come to about 740px; where the mat is narrower
            than that they wrap, and the shelves and the play space have to start below however
            many lines that takes -- the same measured-not-assumed rule the readings line follows. */
         const pickLines = Math.max(1, Math.ceil(740 / Math.max(280, width - 32)));
-        const shelfTop = 196 + (pickLines - 1) * 34;
-        const room = Math.max(300, (Number(ui.viewportHeight) || 900) - 430);
+        const shelfTop = pickTop + 50 + (pickLines - 1) * 34;
+        const room = Math.max(300, (Number(ui.viewportHeight) || 900) - (shelfTop + 234));
         const {shape, seats} = shelfSeats(gN, {width, height: room});
         const colW = SHELF.pileW + SHELF.gutter;
         const used = (side) => seats.reduce((n, x) => (x && x.side === side ? Math.max(n, x.column + 1) : n), 0);
