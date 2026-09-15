@@ -413,6 +413,47 @@ try{
    eq(await page.locator('.cm-tt-grid').count(),0,'and it comes home to the board');}
   await page.locator('select[name=tabletopGroupBy]').waitFor();}
 
+ /* THE LOBBY (game G0; docs/crankmagic-game-plan.md §5.1). Pick your deck, seat an opponent, and
+    one bracket judges every seat: a list that is not a hundred is refused BY NUMBER and the game
+    cannot start until it is out. Nothing here writes to the library — a table being set up is not
+    a fact about your collection. */
+ {await nav('Play');await page.locator('.cm-lobby-rules').waitFor({timeout:30000});
+  const before=(await state()).revision;
+  eq(await page.locator('.cm-lobby-empty').count(),1,'the lobby opens with nobody seated');
+  eq(await page.locator('[name=lobbyBracket]').inputValue(),'3','and at bracket 3, the upgraded table');
+  await click('Seat your deck');await page.getByRole('dialog').waitFor();
+  await page.locator('#cm-dialog [name=deckId]').selectOption({index:0});await click('Seat it');await waitDialog();
+  await page.locator('.cm-lobby-seat').waitFor({timeout:15000});
+  {const seat=await page.locator('.cm-lobby-seat').first().innerText();
+   ok(/100 of 100/.test(seat),'a real deck seats as a hundred');
+   ok(/0 of 3/.test(seat),'and carries no Game Changers against the bracket\'s three');
+   ok(/Ready to sit/.test(seat),'so it can sit');}
+  /* A pasted list: the names are read, and six cards is not a deck. */
+  await click('Seat an opponent');await page.getByRole('dialog').waitFor();
+  await page.locator('#cm-dialog [name=from]').selectOption('paste');
+  await page.locator('#cm-dialog [name=name]').fill('Pasted Pod');
+  await page.locator('#cm-dialog [name=paste]').fill('1 Krenko, Mob Boss\n\n1 Sol Ring\n4 Mountain');
+  await click('Seat it');await waitDialog();
+  await page.waitForTimeout(600);
+  eq(await page.locator('.cm-lobby-seat').count(),2,'the pasted list takes the second seat');
+  ok(/6 cards, not 100/.test((await page.locator('.cm-lobby-issue').allTextContents()).join(' ')),'and is refused by number');
+  ok(await page.locator('[data-action=lobby-start]').isDisabled(),'a seat that cannot sit stops the game');
+  /* Take it out and the table is ready; the seating is a seed, so a replay is a seed. */
+  await page.locator('.cm-lobby-seat').nth(1).getByRole('button',{name:'Take this seat out',exact:true}).click();await page.waitForTimeout(500);
+  await click('Seat an opponent');await page.getByRole('dialog').waitFor();
+  await page.locator('#cm-dialog [name=deckId]').selectOption({index:0});await click('Seat it');await waitDialog();
+  await page.waitForTimeout(600);
+  ok(!(await page.locator('[data-action=lobby-start]').isDisabled()),'two real decks are ready to play');
+  await page.locator('[name=lobbySeed]').fill('journey-7');await page.locator('[name=lobbySeed]').blur();await page.waitForTimeout(500);
+  const order=await page.locator('.cm-lobby-read .cm-muted').first().innerText();
+  ok(/Turn order: 1\./.test(order)&&/journey-7/.test(order),`the turn order names the seats and the seed: ${order.replace(/\n/g,' ')}`);
+  await page.reload();await page.locator('.cm-lobby-rules').waitFor({timeout:30000});
+  eq(await page.locator('.cm-lobby-seat').count(),2,'the table survives a reload');
+  eq(await page.locator('[name=lobbySeed]').inputValue(),'journey-7','with its seed');
+  eq((await state()).revision,before,'and setting a game up never touched the library');
+  await click('Clear the table');await page.waitForTimeout(500);
+  eq(await page.locator('.cm-lobby-empty').count(),1,'Clear the table empties it');}
+
  /* PUBLISH THE TO TRADE LIST (backlog #200): a copy filed in the To Trade group and one offered for Sell / Trade
     become a link; the page the link opens shows both with a way to ask; a visitor with an empty library sees
     the same page from the link alone. */
