@@ -2,7 +2,7 @@
 
 This is the first executable checkpoint of the [accepted plan](../docs/commander-simulator-plan-2026-09-15.md). It runs the committed decks through pinned Forge and displays an actual recorded match. **It is not yet a human-playable or API-piloted game.** [Evidence and remaining gates](docs/c0-evidence.md).
 
-[Table preview image](docs/table-preview.png) · [Rob's focused mat](docs/player-mat-preview.png). The local branch includes merged website PRs #220 and #221; the engine fixture preserves its original #219 data provenance.
+[Table preview image](docs/table-preview.png) · [Grouped Focus preview](docs/focus-board-preview.png). The local branch includes merged website PRs #220 and #221; the engine fixture preserves its original #219 data provenance.
 
 ## Open the table
 
@@ -17,9 +17,9 @@ Open **http://127.0.0.1:8768**. The review server binds only to loopback and ser
 
 The phone-shaped counter sits between all four boards. Each board follows Rob's reference mat: battlefield upper left, lands below, Command / Exile over Library / Graveyard on the right. The human seat uses the supplied floating-cube mat artwork. Lands remain battlefield objects; the split is presentation only. Library piles show a back and count.
 
-Select a player counter for life, poison, damage from every commander, remaining thresholds, and the recorded loss reason. Select a card for actual artwork; **View hand**, **Focus mat**, and zone piles provide larger views. The small life display on each mat mirrors the central counter. Use the timeline to inspect recorded phases. Pod setup exports each opponent's intended Difficulty 1–5; those settings do not change the native pilots that produced this recording.
+Select a player counter for life, poison, damage from every commander, remaining thresholds, and the recorded loss reason. Select a card for actual artwork; **View hand**, **Focus board**, and zone piles provide larger views. Focus fills the window with wrapping groups for creatures, artifacts, enchantments, planeswalkers, battles, other permanents, and mana / lands. Its slider sizes cards from 120–260 px; empty groups collapse to a summary. Life counters, public zones, and a shortcut to your hand remain in its header. Card and zone inspection opens above Focus and returns to the same board. Opponent hands remain hidden. The small life display on each mat mirrors the central counter. Use the timeline to inspect recorded phases. Pod setup exports each opponent's intended Difficulty 1–5; those settings do not change the native pilots that produced this recording.
 
-Card images currently load directly from Scryfall. The seven missing non-token image references were resolved from the public committed fixture. Token artwork, offline caching, selectable faces, full stack presentation, and final dense-board grouping are later UI work. The preview groups matching recorded attributes; its projection does not yet include attachments and all continuous effects.
+Card images currently load directly from Scryfall. The seven missing non-token image references were resolved from the public committed fixture. Token artwork, offline caching, selectable faces, full stack presentation, and attachment-aware grouping are later UI work. Focus assigns each permanent to one group using the replay's card-facts type line: creatures take precedence, then lands, then artifacts and enchantments. Mana rocks stay under Artifacts; face-down or missing-type objects stay under Other permanents. This is a visual partition, not current-type adjudication. The preview groups matching recorded attributes; its projection does not yet include attachments and all continuous effects.
 
 ## Reproduce the engine proof
 

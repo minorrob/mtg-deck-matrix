@@ -26,13 +26,60 @@ function inspect(c,count=1,initial=false){
   if(c.typeLine)box.append(el('p','',c.typeLine));
   box.append(el('p','',`${count>1?`${count} permanents with matching recorded attributes shown together. `:''}${c.tapped?'Tapped. ':''}${c.damage?`${c.damage} damage marked. `:''}Card instance ${c.cardId??'commander'}.`));
   box.append(el('p','',c.art?'Actual card printing. Rules state comes from the engine.':'This preview has no cached artwork for this token or card.'));
-  if(!initial && ($('detail').open||matchMedia('(max-width:940px)').matches)) {
+  if(!initial && ($('focus').open||$('detail').open||matchMedia('(max-width:940px)').matches)) {
     $('card-detail-body').replaceChildren(...[...box.children].map(n=>n.cloneNode(true)));
     $('card-detail').showModal();
   }
 }
 function showDialog(title,body){$('detail').classList.remove('mat-dialog');$('detail-title').textContent=title;$('detail-body').replaceChildren(body);if(!$('detail').open)$('detail').showModal();}
 function zoneView(p,zone){const body=el('div');const z=p.zones[zone];body.append(el('p','fine',`${z.count} cards · recorded turn ${frame().turn}`));const cards=el('div','cards');for(const {card,count} of groups(z.cards))cards.append(cardButton(card,count));if(!z.cards.length)cards.append(el('p','empty','This zone has no visible cards.'));body.append(cards);showDialog(`${names[p.playerId]} · ${zone}`,body);}
+// A presentation partition, not a rules classification. Each permanent appears once.
+// Use only the type portion, so subtypes such as Enchantment don't misclassify a card.
+function boardGroups(cards){
+  const buckets=new Map(['Creatures','Artifacts','Enchantments','Planeswalkers','Battles','Other permanents','Mana · lands'].map(name=>[name,[]]));
+  for(const card of cards){
+    const types=(card.typeLine||'').split(/—|\s-\s/)[0].split(/\s+/);
+    const name=card.faceDown?'Other permanents':types.includes('Creature')?'Creatures':types.includes('Land')?'Mana · lands':types.includes('Artifact')?'Artifacts':types.includes('Enchantment')?'Enchantments':types.includes('Planeswalker')?'Planeswalkers':types.includes('Battle')?'Battles':'Other permanents';
+    buckets.get(name).push(card);
+  }
+  return [...buckets];
+}
+function focusBoard(p){
+  const dialog=$('focus');dialog.className=`focus-dialog tone-${p.playerId}`;
+  $('focus-title').textContent=names[p.playerId];
+  const status=$('focus-status');status.replaceChildren();
+  const h=p.health;
+  status.append(button(`${h.status==='out'?'OUT · ':''}Life ${h.life} · Poison ${h.poison}/10 · Commander ${h.commanderDamageMax}/21`,()=>showHealth(p),'focus-health'));
+  status.append(el('span','',`Turn ${frame().turn} · ${frame().phase.replaceAll('_',' ').toLowerCase()}`));
+  for(const zone of ['Command','Library','Graveyard','Exile'])status.append(button(`${zone} ${p.zones[zone].count}`,()=>{
+    if(zone==='Library')showDialog(`${names[p.playerId]} · Library`,el('p','fine',`${p.zones.Library.count} cards remain. Library order and the top card are hidden.`));
+    else zoneView(p,zone);
+  },'focus-zone-link'));
+  status.append(button(`Your hand ${frame().players.find(player=>player.playerId===0).zones.Hand.count}`,()=>{$('focus-hand').scrollIntoView({behavior:'instant',block:'start'});},'focus-zone-link'));
+  if(p.playerId!==0)status.append(el('span','',`Opponent hand ${p.zones.Hand.count} · hidden`));
+  const content=$('focus-content');content.replaceChildren();
+  const board=el('div','focus-board');board.setAttribute('aria-label',`${names[p.playerId]} grouped battlefield`);
+  const empty=[];
+  for(const [name,cards] of boardGroups(p.zones.Battlefield.cards)){
+    if(!cards.length){empty.push(name);continue;}
+    const entries=groups(cards),section=el('section',`focus-group${name==='Mana · lands'?' focus-mana':''}`);
+    section.style.flexGrow=Math.min(entries.length,4);section.style.flexBasis=`calc(${Math.min(entries.length,4)} * (var(--focus-card-width) + 16px) + 24px)`;
+    section.setAttribute('aria-label',name);
+    const heading=el('div','focus-group-heading');heading.append(el('h3','',name),el('span','',`${cards.length} ${cards.length===1?'permanent':'permanents'}`));
+    const list=el('div','cards focus-cards');for(const {card,count} of entries)list.append(cardButton(card,count));
+    section.append(heading,list);board.append(section);
+  }
+  if(!p.zones.Battlefield.cards.length)board.append(el('p','empty',h.status==='out'?'This player has been eliminated.':'No permanents on this battlefield yet.'));
+  content.append(board);
+  if(empty.length)content.append(el('p','focus-empty-groups',`Empty: ${empty.join(' · ')}`));
+  content.append(el('p','focus-group-note','Grouped by recorded card type. Multi-type creatures stay with creatures; other artifacts stay with artifacts. Mana rocks appear under Artifacts.'));
+  const you=frame().players.find(player=>player.playerId===0),hand=el('section','focus-hand');hand.id='focus-hand';hand.setAttribute('aria-label','Your hand');
+  const heading=el('div','focus-group-heading');heading.append(el('h3','','Your hand'),el('span','',`${you.zones.Hand.count} cards · visible only to you`));
+  const cards=el('div','cards focus-cards');for(const card of you.zones.Hand.cards)cards.append(cardButton(card));
+  if(!you.zones.Hand.cards.length)cards.append(el('p','empty','Your hand is empty.'));
+  hand.append(heading,cards);content.append(hand);
+  dialog.showModal();content.scrollTop=0;
+}
 function matView(p){
   const mat=el('div',`player-mat${p.playerId===0?' personal-mat':' plain-mat'}`);
   mat.setAttribute('aria-label',`${names[p.playerId]} playmat`);
@@ -66,7 +113,7 @@ function matView(p){
 function renderSeat(p){
   const box=$(`seat-${p.playerId}`);box.replaceChildren();
   const head=el('div','seat-heading');const title=el('div');title.append(el('div','seat-label',p.playerId===0?'YOUR DECK · RECORDED NATIVE PILOT':'AI OPPONENT · NATIVE PROBE'),el('div','seat-title',names[p.playerId]));
-  head.append(title,el('span','seat-hand-count',`Hand ${p.zones.Hand.count}`),button('Focus mat',()=>{showDialog(`${names[p.playerId]} · playmat`,matView(p));$('detail').classList.add('mat-dialog');}));box.append(head,matView(p));
+  head.append(title,el('span','seat-hand-count',`Hand ${p.zones.Hand.count}`),button('Focus board',()=>focusBoard(p)));box.append(head,matView(p));
 }
 function showHealth(p){
   const h=p.health,body=el('div'),metrics=el('div','metrics');
@@ -97,6 +144,8 @@ function render(){
 $('timeline').max=data.frames.length-1;$('timeline').addEventListener('input',e=>{index=+e.target.value;render();});$('prev').addEventListener('click',()=>{index=Math.max(0,index-1);render();});$('next').addEventListener('click',()=>{index=Math.min(data.frames.length-1,index+1);render();});
 $('close-detail').addEventListener('click',()=>$('detail').close());$('clear-inspect').addEventListener('click',()=>$('inspector').replaceChildren(el('p','empty','Select any visible card to inspect it.')));
 $('close-card').addEventListener('click',()=>$('card-detail').close());
+$('close-focus').addEventListener('click',()=>$('focus').close());
+$('focus-size').addEventListener('input',e=>{$('focus').style.setProperty('--focus-card-width',`${e.target.value}px`);$('focus-size-value').textContent=`${e.target.value} px`;});
 $('view-hand').addEventListener('click',()=>zoneView(frame().players.find(p=>p.playerId===0),'Hand'));
 $('notice').textContent='Real recorded engine states · Native AI proof · Human play, API pilots and measured reports are still being built.';
 $('setup').addEventListener('click',()=>{

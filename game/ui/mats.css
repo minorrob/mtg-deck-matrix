@@ -33,6 +33,25 @@
 .counter-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.counter-tile{padding:5px 9px}.counter-tile .life{font-size:30px}.phone-label{padding:0 3px 5px}.phone-bottom{padding-top:4px}
 .mat-dialog{width:min(1160px,96vw);max-height:96dvh;overflow:auto}.mat-dialog .player-mat{width:100%}.mat-dialog .mat-cards{max-height:none}.mat-dialog .mat-pile{max-height:none}
 .mat-dialog .dialog-head{margin-bottom:10px}
+/* Focus fills the viewport; only the content scrolls, and card rows always wrap. */
+.focus-dialog{--focus-card-width:180px;position:fixed;inset:0;margin:0;width:100vw;height:100dvh;max-width:none;max-height:none;padding:0;border:0;border-top:3px solid var(--seat);border-radius:0;background:radial-gradient(ellipse at top left,#213c414d,transparent 65%),#0c1520;overflow:hidden}
+.focus-dialog[open]{display:flex;flex-direction:column}
+body:has(.focus-dialog[open]){overflow:hidden}
+.focus-header{display:flex;align-items:center;gap:22px;flex-wrap:wrap;padding:15px 22px;background:#111e2aed;border-bottom:1px solid #34505d}
+.focus-eyebrow{font-size:10px;letter-spacing:1.7px;color:var(--seat)}.focus-header h2{font-size:23px;margin:4px 0 0}.focus-header>button{margin-left:auto;white-space:nowrap}
+.focus-size{margin-left:auto;display:flex;align-items:center;gap:10px;color:#b9ccd6;font-size:12px}.focus-size input{width:140px;accent-color:var(--seat)}.focus-size output{width:46px;font-variant-numeric:tabular-nums}
+.focus-status{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 22px;background:#111e2a;color:#aabfcf;font-size:12px;border-bottom:1px solid #294151}.focus-status button{padding:6px 9px;font-size:12px}.focus-health{color:var(--seat);border-color:#4b7277}.focus-status>span{margin-right:10px}
+.focus-content{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:16px 22px 24px}
+.focus-board{display:flex;flex-wrap:wrap;align-items:stretch;gap:14px}
+.focus-group{min-width:0;max-width:100%;padding:12px;border:1px solid #304852;border-radius:12px;background:linear-gradient(125deg,#182937cc,#111e29bb);box-shadow:0 4px 15px #0002}
+.focus-group.focus-mana{flex-basis:100%!important;background:linear-gradient(120deg,#16313299,#121f2aaa);border-color:#345550}
+.focus-group-heading{display:flex;align-items:center;gap:12px;margin:0 0 12px}.focus-group-heading h3{font-size:14px;margin:0;color:#eef7f9}.focus-group-heading>span{font-size:11px;color:#94adbd}
+.focus-dialog .focus-cards{display:flex;flex-wrap:wrap;align-items:start;align-content:start;gap:16px;max-height:none;overflow:visible;padding:6px}
+.focus-dialog .focus-cards .card{width:min(var(--focus-card-width),100%);height:auto;max-height:none;aspect-ratio:488/680}.focus-dialog .card .badge{font-size:14px}.focus-dialog .card .fallback{min-height:0}
+.focus-dialog .card.tapped{transform:none}.focus-dialog .card.tapped:hover{transform:translateY(-3px)}.focus-dialog .card.tapped::after{content:'TAPPED';position:absolute;bottom:8px;left:6px;padding:3px 5px;background:#15212fee;color:#f1cb87;border:1px solid #a98550;border-radius:4px;font-size:10px;letter-spacing:.8px}
+.focus-empty-groups,.focus-group-note{font-size:11px;color:#94aabb;line-height:1.5;margin:12px 2px}.focus-group-note{color:#8096a6}
+.focus-hand{margin-top:18px;border-top:2px solid #5cbdb0;padding:16px 12px;background:#172b3580;border-radius:0 0 12px 12px;scroll-margin-top:10px}
+@media(max-width:700px){.focus-header{padding:12px;gap:10px}.focus-header h2{font-size:19px}.focus-size{order:3;width:100%;margin:0}.focus-size input{flex:1}.focus-header>button{font-size:12px}.focus-status{padding:8px 12px;gap:6px}.focus-content{padding:12px}.focus-group{padding:10px}.focus-dialog .focus-cards{gap:14px}.focus-group-heading{flex-wrap:wrap;gap:6px}}
 @media(min-width:1600px){.arena{grid-template-columns:repeat(2,minmax(0,1fr))}.center-counter{width:540px}.hand-cards .card{width:140px}}
 @media(max-width:1200px){.arena{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.center-counter{width:min(540px,96%)}.seat-label{font-size:7px}.seat-hand-count{font-size:9px}}
 @media(max-width:940px){.arena{grid-template-columns:repeat(2,minmax(0,1fr))}.center-counter{width:min(540px,96%)}}

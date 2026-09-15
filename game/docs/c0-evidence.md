@@ -71,6 +71,12 @@ The replay UI now follows Rob's two supplied mat references: nonland battlefield
 
 Browser checks confirmed four mats, correct separated land counts (4 / 4 / 4 / 5 in the turn-18 fixture), card inspection from the focused battlefield, a library dialog that exposes only its count, and no horizontal document overflow at the checked 1366px desktop width. JavaScript syntax and whitespace checks pass. This is a renderer change; the recorded engine proof is unchanged. [Focused personal mat screenshot](player-mat-preview.png).
 
+### Grouped Focus follow-up
+
+Focus board supersedes the fixed-aspect Focus mat dialog. It fills the viewport, wraps cards in populated type groups, places mana / lands below, and includes the human hand within its scrollable content. A persistent header provides 120–260 px card sizing, life / poison / commander details, public-zone counts, a hand shortcut, and Return to table. Inspection dialogs retain the underlying Focus view. Tapped cards use a clear badge in Focus to avoid rotation clipping at large sizes; overview mats retain their existing treatment.
+
+Validation: all 1,840 recorded player battlefields conserve permanent references through grouping; artifact creatures, enchantment creatures, artifact lands, and face-down classification checks pass. Browser checks exercised the turn-30 Atraxa board with three creatures, Fellwar Stone under Artifacts, and seven lands; opponent hand identities remained absent. Resizing, nested card inspection, library privacy, return navigation, and the own-hand shortcut worked. At 1536×1000 and 360×800 CSS pixels, Focus filled the viewport without horizontal content overflow, including 260 px cards at the narrow size. JavaScript syntax / diff whitespace checks pass; no browser console errors observed. [Normal-window screenshot](focus-board-preview.png). Engine evidence is unchanged.
+
 ### Remaining engine and integration work
 
 1. Bridge a scripted spell/response sequence through real targets and payment, plus simultaneous trigger ordering, attack/block assignment, and a choice during resolution. Record every accepted answer.
