@@ -237,6 +237,10 @@ run('game',{deckId:'d1',outcome:'win',playedAt:'2026-09-10',finish:1,pod:4,brack
 expectFailure('game',{deckId:'d1',outcome:'loss',finish:5,pod:4},/place in the pod/);
 expectFailure('game',{deckId:'d1',outcome:'loss',mvpCardId:'nope'},/Resolve the card/);
 run('game',{deckId:'d1',outcome:'loss'});assert.equal(s.games[s.games.length-1].pod,null);checks++;
+const online={schema:'CrankMagicOnlineMatchReport@1',matchId:'match-online-1',seatId:0,outcome:'win',deck:{gameplayHash:'hash-one',source:{deckId:'d1',deckVersion:2}},telemetry:{counts:{spells:4}}};
+run('game',{gameId:'game:online:match-online-1:0',deckId:'d1',outcome:'win',pod:4,finish:1,online});
+{const g=s.games[s.games.length-1];assert.equal(g.online.matchId,'match-online-1');assert.equal(g.deckVersion,2);checks+=2;}
+expectFailure('game',{deckId:'d2',outcome:'win',online},/does not match/);
 
 // A planned entry is fulfilled a few copies at a time.
 run('createGroup',{groupId:'plans',name:'Plans'});run('groupEntries',{groupId:'plans',entries:[{cardId:'gem',quantity:3}]});

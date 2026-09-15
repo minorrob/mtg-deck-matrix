@@ -31,6 +31,7 @@ public final class ForgeBrowserBridge {
     String prompt="Opening CrankMagic Online…",ok="OK",cancel="Cancel",fallback="";
     boolean okEnabled=false,cancelEnabled=false,actionInFlight=false;
     List<Integer> selectables=List.of();
+    List<Map<String,Object>> selectableCards=List.of();
     final Set<Integer> highlightedPlayers=new HashSet<>(),highlightedCards=new HashSet<>();
     Map<String,Object> pending;
     Map<String,Object> lastAction;
@@ -52,6 +53,7 @@ public final class ForgeBrowserBridge {
             try{
                 if(!token.equals(exchange.getRequestHeaders().getFirst("X-CrankMagic-Bridge")))throw new IllegalArgumentException("Invalid bridge session");
                 if(exchange.getRequestMethod().equals("GET")&&exchange.getRequestURI().getPath().equals("/view"))result=view();
+                else if(exchange.getRequestMethod().equals("POST")&&exchange.getRequestURI().getPath().equals("/concede"))result=concede();
                 else if(exchange.getRequestMethod().equals("POST")&&exchange.getRequestURI().getPath().equals("/action")){
                     byte[] bytes=exchange.getRequestBody().readNBytes(65537);if(bytes.length>65536)throw new IllegalArgumentException("Action too large");
                     result=action(JsonParser.parseString(new String(bytes,StandardCharsets.UTF_8)).getAsJsonObject());
@@ -75,9 +77,15 @@ public final class ForgeBrowserBridge {
                 try{String action=human.getActivateDescription(card.getView());if(action!=null&&!action.isBlank())actions.put(card.getId(),action);}catch(RuntimeException ignored){}
             }
         }
-        return ForgeProbe.obj("viewerSeatId",seatId,"viewerPlayerId",viewer()==null?null:viewer().getId(),"revision",revision,"state",projection,"ui",ForgeProbe.obj("prompt",prompt,"ok",ok,"cancel",cancel,"okEnabled",okEnabled&&activeInput,"cancelEnabled",cancelEnabled&&activeInput,"selectables",selectables,"choice",pending,"nativeFallback",fallback,"inputType",inputType,"payment",payment,"cardActions",actions,"highlightedPlayers",new ArrayList<>(highlightedPlayers),"highlightedCards",new ArrayList<>(highlightedCards),"actionInFlight",actionInFlight,"lastAction",lastAction));
+        return ForgeProbe.obj("viewerSeatId",seatId,"viewerPlayerId",viewer()==null?null:viewer().getId(),"revision",revision,"state",projection,"ui",ForgeProbe.obj("prompt",prompt,"ok",ok,"cancel",cancel,"okEnabled",okEnabled&&activeInput,"cancelEnabled",cancelEnabled&&activeInput,"selectables",selectables,"selectableCards",selectableCards,"choice",pending,"nativeFallback",fallback,"inputType",inputType,"payment",payment,"cardActions",actions,"highlightedPlayers",new ArrayList<>(highlightedPlayers),"highlightedCards",new ArrayList<>(highlightedCards),"actionInFlight",actionInFlight,"lastAction",lastAction));
     }
     forge.game.player.Player viewer(){return controller instanceof forge.player.PlayerControllerHuman h?h.getPlayer():null;}
+    synchronized Map<String,Object> concede(){
+        if(controller==null||viewer()==null)throw new IllegalArgumentException("This seat is not ready to concede");
+        if(viewer().conceded())return ForgeProbe.obj("accepted",true,"conceded",true);
+        SwingUtilities.invokeLater(()->{controller.concede();record("browser-seat-conceded",ForgeProbe.obj("playerId",viewer()==null?seatId:viewer().getId()));snapshot();});
+        return ForgeProbe.obj("accepted",true,"conceded",true);
+    }
     void record(String kind,Object value){
         JsonObject payload=ForgeProbe.JSON.toJsonTree(value).getAsJsonObject();
         payload.addProperty("seatId",seatId);if(viewer()!=null)payload.addProperty("viewerPlayerId",viewer().getId());
@@ -122,8 +130,16 @@ public final class ForgeBrowserBridge {
                 if(args.length==6){ok=String.valueOf(args[1]);cancel=String.valueOf(args[2]);okEnabled=(boolean)args[3];cancelEnabled=(boolean)args[4];}
                 else {okEnabled=(boolean)args[1];cancelEnabled=(boolean)args[2];}
                 revision++;break;
-            case "setSelectables": List<Integer> ids=new ArrayList<>();for(Object c:(Iterable<?>)args[0])ids.add(((CardView)c).getId());selectables=ids;revision++;break;
-            case "clearSelectables":selectables=List.of();revision++;break;
+            case "setSelectables":
+                List<Integer> ids=new ArrayList<>();List<Map<String,Object>> cards=new ArrayList<>();
+                for(Object value:(Iterable<?>)args[0]){
+                    CardView card=(CardView)value;ids.add(card.getId());
+                    // Forge deliberately supplied these private candidates to this seat. Publish
+                    // only the minimum face identity needed to make hidden-zone choices usable.
+                    cards.add(ForgeProbe.obj("cardId",card.getId(),"name",card.getCurrentState().getName(),"faceDown",card.isFaceDown()));
+                }
+                selectables=ids;selectableCards=cards;revision++;break;
+            case "clearSelectables":selectables=List.of();selectableCards=List.of();revision++;break;
             case "setHighlighted":
                 for(Object entity:(Iterable<?>)args[0]){Set<Integer> set=null;int id=-1;if(entity instanceof PlayerView p){set=highlightedPlayers;id=p.getId();}else if(entity instanceof CardView c){set=highlightedCards;id=c.getId();}if(set!=null){if((boolean)args[1])set.add(id);else set.remove(id);}}revision++;break;
             case "flashIncorrectAction":prompt="That action is unavailable. Check the current prompt, targets and available mana.";revision++;break;
@@ -132,8 +148,9 @@ public final class ForgeBrowserBridge {
     static final Object DELEGATE=new Object();
     Object choice(String method,Object[] a)throws Exception{
         if(method.equals("assignCombatDamage"))return assignCombatDamage(a);
+        if(method.equals("assignGenericAmount"))return assignGenericAmount(a);
         // Only intercept decision methods whose full return contract is represented here.
-        List<?> options=null;int min=1,max=1;String title="Choose";String mode="one";
+        List<?> options=null;int min=1,max=1;String title="Choose";String mode="one";List<Integer> selectedIndices=List.of();
         switch(method){
             case "reveal":title=String.valueOf(a[0]);options=(List<?>)a[1];min=0;max=0;mode="ack";break;
             case "message":case "showErrorDialog":title=String.valueOf(a[0]);options=List.of();min=0;max=0;mode="ack";break;
@@ -150,10 +167,23 @@ public final class ForgeBrowserBridge {
                 }
                 if(options.isEmpty())return a.length==9?new forge.gui.interfaces.IGuiGame.OrderResult<>(List.of(),false):List.of();
                 break;
+            case "many":
+                title=String.valueOf(a[0])+" · "+String.valueOf(a[1]);
+                List<Object> manyItems=new ArrayList<>();List<?> prior=(List<?>)a[5];
+                if(prior!=null)manyItems.addAll(prior);int priorCount=manyItems.size();manyItems.addAll((List<?>)a[4]);options=manyItems;
+                min=priorCount+(int)a[2];max=(int)a[3]<0?manyItems.size():priorCount+(int)a[3];
+                selectedIndices=new ArrayList<>();for(int i=0;i<priorCount;i++)selectedIndices.add(i);
+                mode=max==1?"one":"order";break;
+            case "insertInList":title=String.valueOf(a[0]);options=(List<?>)a[2];min=0;max=1;mode="one";break;
+            case "chooseSingleEntityForEffect":
+                title=String.valueOf(a[0]);options=(List<?>)a[1];min=(boolean)a[3]?0:1;max=1;mode="one";break;
             case "chooseEntitiesForEffect":
-                // Only the public proliferate-target contract is supported here. Other effect choices retain native reveal handling.
-                if(!String.valueOf(a[0]).equals(forge.util.Localizer.getInstance().getMessage("lblChooseProliferateTarget"))){synchronized(this){fallback="Finish this effect choice in the engine window.";revision++;}return DELEGATE;}
-                title=String.valueOf(a[0]);options=(List<?>)a[1];min=(int)a[2];max=(int)a[3];mode="many";break;
+                title=String.valueOf(a[0]);options=(List<?>)a[1];min=(int)a[2];max=(int)a[3];mode="order";break;
+            case "showInputDialog":
+                title=String.valueOf(a[1])+" · "+String.valueOf(a[0]);options=a[4]==null?List.of():(List<?>)a[4];min=0;max=0;mode="text";break;
+            case "manipulateCardList":
+                title=String.valueOf(a[0]);options=new ArrayList<>();for(Object card:(Iterable<?>)a[1])((List<Object>)options).add(card);
+                min=options.size();max=options.size();mode="order";break;
             case "getAbilityToPlay":
                 title="Choose an ability";options=(List<?>)a[1];min=0;
                 // Match CMatchUI: a non-mouse selection with one offered ability needs no menu.
@@ -170,29 +200,72 @@ public final class ForgeBrowserBridge {
                 return DELEGATE;
         }
         if(mode.equals("many")&&max<0)max=options.size();
-        if(options.isEmpty()&&!mode.equals("integer")&&!mode.equals("ack")&&!method.equals("chooseEntitiesForEffect"))return mode.equals("many")?List.of():null;
+        if(options.isEmpty()&&!mode.equals("integer")&&!mode.equals("ack")&&!mode.equals("text")&&!method.equals("chooseEntitiesForEffect"))return mode.equals("many")?List.of():method.equals("insertInList")?List.of(a[1]):null;
         String id=UUID.randomUUID().toString();List<Map<String,Object>> labels=new ArrayList<>();
-        for(int i=0;i<options.size();i++){Object item=options.get(i);String label=String.valueOf(item);if(item instanceof CardView c)label=c.getCurrentState().getName();labels.add(ForgeProbe.obj("index",i,"label",label));}
+        Set<Object> movable=new HashSet<>();if(method.equals("manipulateCardList"))for(Object item:(Iterable<?>)a[2])movable.add(item);
+        for(int i=0;i<options.size();i++){Object item=options.get(i);String label=String.valueOf(item);if(item instanceof CardView c)label=c.getCurrentState().getName();else if(item instanceof PlayerView p)label=p.getName();Map<String,Object> shown=ForgeProbe.obj("index",i,"label",label);if(method.equals("manipulateCardList"))shown.put("movable",movable.contains(item));labels.add(shown);}
         JsonObject submitted;
         synchronized(this){
             if(pending!=null)throw new IllegalStateException("Overlapping browser choice");
             pending=ForgeProbe.obj("id",id,"title",title,"mode",mode,"min",min,"max",max,"options",labels);answer=null;revision++;
+            if(!selectedIndices.isEmpty())pending.put("selectedIndices",selectedIndices);
+            if(method.equals("showInputDialog")){pending.put("initial",a[3]==null?"":String.valueOf(a[3]));pending.put("numeric",(boolean)a[5]);}
+            if(method.equals("manipulateCardList")){pending.put("choiceKind","manipulate");pending.put("toTop",(boolean)a[3]);pending.put("toBottom",(boolean)a[4]);pending.put("toAnywhere",(boolean)a[5]);}
             if(method.equals("getAbilityToPlay")&&a[0] instanceof CardView card){pending.put("cardId",card.getId());pending.put("autoSelect",a[2]==null);}
             record("browser-choice-offered",pending);
             while(answer==null)wait();submitted=answer;answer=null;pending=null;revision++;
         }
         if(mode.equals("integer"))return submitted.get("value").getAsInt();
         if(mode.equals("ack"))return null;
+        if(mode.equals("text"))return submitted.has("cancel")&&submitted.get("cancel").getAsBoolean()?null:submitted.get("text").getAsString();
         List<Object> selected=new ArrayList<>();for(JsonElement index:submitted.getAsJsonArray("indices"))selected.add(options.get(index.getAsInt()));
-        if(mode.equals("many")){
-            if(method.equals("chooseEntitiesForEffect"))journal.append("mechanic-choice-completed",ForgeProbe.obj("mechanic","Proliferate","playerId",viewer().getId(),"turn",game.getPhaseHandler().getTurn()));
-            return selected;
+        if(method.equals("chooseEntitiesForEffect")){
+            journal.append("effect-choice-completed",ForgeProbe.obj("prompt",title,"playerId",viewer().getId(),"selectedCount",selected.size(),"turn",game.getPhaseHandler().getTurn()));
+            if(title.equals(forge.util.Localizer.getInstance().getMessage("lblChooseProliferateTarget")))journal.append("mechanic-choice-completed",ForgeProbe.obj("mechanic","Proliferate","playerId",viewer().getId(),"selectedCount",selected.size(),"turn",game.getPhaseHandler().getTurn()));
         }
+        if(mode.equals("many"))return selected;
         if(mode.equals("order"))return a.length==9?new forge.gui.interfaces.IGuiGame.OrderResult<>(selected,false):selected;
         if(mode.equals("boolean"))return submitted.getAsJsonArray("indices").get(0).getAsInt()==0;
         if(mode.equals("index"))return submitted.getAsJsonArray("indices").get(0).getAsInt();
+        if(method.equals("insertInList")){List<Object> result=new ArrayList<>((List<?>)a[2]);int at=selected.isEmpty()?0:result.indexOf(selected.get(0))+1;result.add(at,a[1]);return result;}
         return selected.isEmpty()?null:selected.get(0);
     }
+    Object assignGenericAmount(Object[] a)throws Exception{
+        Map<Object,Integer> targets=(Map<Object,Integer>)a[1];int total=(int)a[2];boolean atLeastOne=(boolean)a[3];
+        if(total<=0)return Collections.emptyMap();
+        List<Object> keys=new ArrayList<>(targets.keySet());List<Map<String,Object>> options=new ArrayList<>();
+        for(int i=0;i<keys.size();i++){Object item=keys.get(i);String label=String.valueOf(item);if(item instanceof CardView c)label=c.getCurrentState().getName();else if(item instanceof PlayerView p)label=p.getName();Integer cap=targets.get(item);options.add(ForgeProbe.obj("index",i,"label",label,"max",cap==null?total:cap));}
+        JsonObject submitted;
+        synchronized(this){
+            if(pending!=null)throw new IllegalStateException("Overlapping browser choice");
+            pending=ForgeProbe.obj("id",UUID.randomUUID().toString(),"title","Assign "+total+" "+String.valueOf(a[4]),"mode","amount","min",0,"max",total,"total",total,"minEach",atLeastOne?1:0,"options",options);
+            answer=null;revision++;record("browser-choice-offered",pending);while(answer==null)wait();submitted=answer;answer=null;pending=null;revision++;
+        }
+        Map<Object,Integer> result=new LinkedHashMap<>();JsonArray amounts=submitted.getAsJsonArray("amounts");for(int i=0;i<keys.size();i++)result.put(keys.get(i),amounts.get(i).getAsInt());return result;
+    }
+    static void validateGenericAmount(Map<String,Object> decision,JsonObject request){
+        List<Map<String,Object>> targets=(List<Map<String,Object>>)decision.get("options");JsonArray amounts=request.getAsJsonArray("amounts");
+        if(amounts==null||amounts.size()!=targets.size())throw new IllegalArgumentException("Assign an amount to each listed recipient");
+        long sum=0;int minimum=(int)decision.get("minEach");for(int i=0;i<targets.size();i++){double amount=amounts.get(i).getAsDouble();int cap=(int)targets.get(i).get("max");if(!Double.isFinite(amount)||amount!=Math.rint(amount)||amount<minimum||amount>cap)throw new IllegalArgumentException("Use whole amounts within each recipient's allowed range");sum+=(long)amount;}
+        if(sum!=(int)decision.get("total"))throw new IllegalArgumentException("Assign the complete amount before confirming");
+    }
+    static void validateManipulateOrder(Map<String,Object> decision,JsonObject request){
+        List<Map<String,Object>> options=(List<Map<String,Object>>)decision.get("options");JsonArray submitted=request.getAsJsonArray("indices");
+        List<Integer> originalFixed=new ArrayList<>(),submittedFixed=new ArrayList<>();int firstFixed=options.size(),lastFixed=-1;
+        for(int i=0;i<options.size();i++)if(!Boolean.TRUE.equals(options.get(i).get("movable")))originalFixed.add(i);
+        for(int position=0;position<submitted.size();position++){
+            int index=submitted.get(position).getAsInt();if(!Boolean.TRUE.equals(options.get(index).get("movable"))){submittedFixed.add(index);firstFixed=Math.min(firstFixed,position);lastFixed=Math.max(lastFixed,position);}
+        }
+        if(!submittedFixed.equals(originalFixed))throw new IllegalArgumentException("Cards that cannot move must remain in their original order");
+        if(Boolean.TRUE.equals(decision.get("toAnywhere")))return;
+        boolean toTop=Boolean.TRUE.equals(decision.get("toTop")),toBottom=Boolean.TRUE.equals(decision.get("toBottom"));
+        for(int position=0;position<submitted.size();position++){
+            int index=submitted.get(position).getAsInt();if(!Boolean.TRUE.equals(options.get(index).get("movable")))continue;
+            boolean legal=toTop&&position<firstFixed||toBottom&&position>lastFixed||!toTop&&!toBottom&&position==index;
+            if(!legal)throw new IllegalArgumentException("Move selectable cards only to the allowed top or bottom area");
+        }
+    }
+    synchronized boolean isSelecting(){return !selectables.isEmpty();}
     /** Mirrors the pinned Forge damage dialog contract, including its null defender key. */
     Object assignCombatDamage(Object[] a)throws Exception{
         CardView source=(CardView)a[0];List<CardView> targets=new ArrayList<>((List<CardView>)a[1]);
@@ -251,12 +324,16 @@ public final class ForgeBrowserBridge {
                 if(pending==null||answer!=null||!Objects.equals(pending.get("id"),request.get("choiceId").getAsString()))throw new IllegalArgumentException("This choice has expired");
                 int min=(int)pending.get("min"),max=(int)pending.get("max");
                 if(pending.get("mode").equals("damage"))validateCombatDamage(pending,request);
+                else if(pending.get("mode").equals("amount"))validateGenericAmount(pending,request);
                 else if(pending.get("mode").equals("integer")){
                     double value=request.get("value").getAsDouble();if(!Double.isFinite(value)||value!=Math.rint(value)||value<min||value>max)throw new IllegalArgumentException("Number outside allowed range");
+                }else if(pending.get("mode").equals("text")){
+                    boolean cancel=request.has("cancel")&&request.get("cancel").getAsBoolean();if(!cancel){if(!request.has("text")||!request.get("text").isJsonPrimitive()||!request.get("text").getAsJsonPrimitive().isString()||request.get("text").getAsString().length()>1000)throw new IllegalArgumentException("Enter a response of at most 1000 characters");if(Boolean.TRUE.equals(pending.get("numeric"))&&!request.get("text").getAsString().matches("[0-9]+"))throw new IllegalArgumentException("Enter a whole number");}
                 }else{
                     JsonArray indices=request.getAsJsonArray("indices");int size=((List<?>)pending.get("options")).size();Set<Integer> seen=new HashSet<>();
                     if(indices.size()<min||indices.size()>max)throw new IllegalArgumentException("Select the required number of options");
                     for(JsonElement n:indices){double value=n.getAsDouble();if(value!=Math.rint(value)||value<0||value>=size||!seen.add((int)value))throw new IllegalArgumentException("Invalid selection");}
+                    if(Objects.equals(pending.get("choiceKind"),"manipulate"))validateManipulateOrder(pending,request);
                 }
                 record("browser-choice-answered",request);answer=request.deepCopy();revision++;notifyAll();receiptPayloads.put(id,request.toString());return receipt(id);
             }
@@ -272,7 +349,17 @@ public final class ForgeBrowserBridge {
                 synchronized(this){if(revision!=queuedRevision||pending!=null||!fallback.isEmpty())throw new IllegalArgumentException("The decision changed before this action could be applied");}
                 switch(kind){
                     case "ok":controller.selectButtonOk();break;
-                    case "cancel":controller.selectButtonCancel();break;
+                    case "cancel":{
+                        Map<String,Object> cancelled=null;
+                        if(controller instanceof forge.player.PlayerControllerHuman human){
+                            var paid=human.getPlayer().getPaidForSA();
+                            if(paid!=null&&paid.getRootAbility().isSpell()){
+                                Card card=paid.getHostCard();String cost=prompt.replaceFirst("(?s)^.*Pay Mana Cost:\\s*","").trim();
+                                cancelled=ForgeProbe.obj("playerId",human.getPlayer().getId(),"turn",game.getPhaseHandler().getTurn(),"phase",String.valueOf(game.getPhaseHandler().getPhase()),"card",ForgeProbe.obj("cardId",card.getId(),"name",card.getName(),"faceDown",card.getView().isFaceDown()),"cost",cost);
+                            }
+                        }
+                        controller.selectButtonCancel();if(cancelled!=null)record("browser-cast-cancelled",cancelled);break;
+                    }
                     case "player":
                         int playerId=request.get("targetId").getAsInt();var target=game.getRegisteredPlayers().stream().filter(p->p.getId()==playerId).findFirst().orElseThrow(()->new IllegalArgumentException("Player is not in this match"));controller.selectPlayer(target.getView(),null);break;
                     case "card":

@@ -64,6 +64,21 @@ public final class BridgeProtocolCheck {
                 if(client.send(wire,HttpResponse.BodyHandlers.ofString()).statusCode()!=200||bridge.revision!=applied)throw new AssertionError("HTTP retry applied twice");checks++;
                 HttpRequest unauthenticated=HttpRequest.newBuilder(endpoint).timeout(Duration.ofSeconds(3)).POST(HttpRequest.BodyPublishers.ofString(httpDraw.toString())).build();
                 if(client.send(unauthenticated,HttpResponse.BodyHandlers.ofString()).statusCode()==200||bridge.revision!=applied)throw new AssertionError("Unauthenticated HTTP action was accepted");checks++;
+
+                Map<String,Object> amountDecision=ForgeProbe.obj("total",3,"minEach",0,"options",List.of(ForgeProbe.obj("max",2),ForgeProbe.obj("max",3)));
+                JsonObject badAmount=new JsonObject();badAmount.add("amounts",ForgeProbe.JSON.toJsonTree(List.of(2,2)));rejected(()->ForgeBrowserBridge.validateGenericAmount(amountDecision,badAmount));
+                JsonObject cappedAmount=new JsonObject();cappedAmount.add("amounts",ForgeProbe.JSON.toJsonTree(List.of(3,0)));rejected(()->ForgeBrowserBridge.validateGenericAmount(amountDecision,cappedAmount));
+                JsonObject exactAmount=new JsonObject();exactAmount.add("amounts",ForgeProbe.JSON.toJsonTree(List.of(1,2)));ForgeBrowserBridge.validateGenericAmount(amountDecision,exactAmount);checks++;
+
+                List<Map<String,Object>> orderOptions=List.of(ForgeProbe.obj("index",0,"label","movable","movable",true),ForgeProbe.obj("index",1,"label","fixed one","movable",false),ForgeProbe.obj("index",2,"label","fixed two","movable",false));
+                bridge.answer=null;bridge.pending=ForgeProbe.obj("id","move-1","mode","order","min",3,"max",3,"choiceKind","manipulate","toTop",true,"toBottom",false,"toAnywhere",false,"options",orderOptions);
+                rejected(()->bridge.action(answer(bridge,"move-1",1,0,2)));
+                rejected(()->bridge.action(answer(bridge,"move-1",0,2,1)));
+                JsonObject validMove=answer(bridge,"move-1",0,1,2);bridge.action(validMove);if(!bridge.answer.equals(validMove))throw new AssertionError("Validated card order changed in transit");checks++;
+
+                bridge.answer=null;bridge.pending=ForgeProbe.obj("id","text-1","mode","text","min",0,"max",0,"numeric",true,"options",List.of());
+                JsonObject invalidText=answer(bridge,"text-1");invalidText.addProperty("text","not a number");rejected(()->bridge.action(invalidText));
+                JsonObject validText=answer(bridge,"text-1");validText.addProperty("text","12");bridge.action(validText);if(!bridge.answer.equals(validText))throw new AssertionError("Text answer changed in transit");checks++;
             } finally { bridge.server.stop(0); }
         }
         System.out.println(checks+" browser–Forge protocol checks passed; isolated artifacts: "+directory);

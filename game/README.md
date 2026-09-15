@@ -8,12 +8,12 @@ From this repository:
 ./game/tools/start-crankmagic.ps1
 ```
 
-The Windows helper starts a hidden, persistent host, writes startup logs to ignored `game/.local/host/`, and preserves an existing running game. In Codex, use `$start-crankmagic` after installing the skill from `game/skills/start-crankmagic/`. The public launch dialog checks the host and offers startup/retry instructions before transferring a deck. Forge starts automatically when you launch the prepared table.
+The Windows helper starts a hidden, persistent host, writes startup logs to ignored `game/.local/host/`, and preserves an existing running game. It looks for the generic Windows Credential Manager entry `crankmagic_openai_api`; when present, setup offers the OpenAI pilot without putting the key in the page, URL, files, or logs. GPT-5.6 Luna is the default and GPT-5.6 Terra is the stronger manual fallback. Pass `-OpenAiCredential ''` to disable stored-key loading for that host. In Codex, use `$start-crankmagic` after installing the skill from `game/skills/start-crankmagic/`. The public launch dialog checks the host and offers startup/retry instructions before transferring a deck. Forge starts automatically when you launch the prepared table.
 
 ## Start and play
 
 1. Choose your saved deck, a preloaded variation, a Lab starting list, or a public Archidekt deck.
-2. Set bracket and budget, then choose one to three native AI opponents and their commanders/decks.
+2. Set bracket and budget, then choose one to three AI opponents and their commanders/decks. Select Forge native AI or the OpenAI pilot; the stored-key path starts with GPT-5.6 Luna.
 3. **Prepare decks**, review the resolved hundred and compatibility notes, then **Launch game**.
 4. Keep or mulligan the opening hand. Double-click the library for your pending draw-step draw. Drag a land/spell from hand or your commander onto your mat.
 5. Forge pays a legal mana cost automatically when its planner can pay it. Targets, optional effects and non-mana decisions remain yours. Unpayable costs produce a notification; cancel returns the card through the engine.
@@ -23,7 +23,7 @@ The Windows helper starts a hidden, persistent host, writes startup logs to igno
 9. **History** supports card/event search, phase filtering and more events. **Tracker** includes mana sources by color, observed mechanics, current rules and notes.
 10. **Game setup → End current game** ends the engine position while retaining the private local journal. Ending a position is not a resumable save.
 
-Only one human plus native Forge AI is implemented. API-powered pilots, remote human seats/QR invitations, durable engine checkpoints and complete browser handling of every complex card choice remain future work. Some choices still require the Forge window. Native AI compatibility warnings remain visible before launch. Card text is not a guarantee that native AI supports every strategy.
+The Phase B implementation supports two to four mixed human/API/native-AI seats, expiring QR invitations, durable lobby membership, reconnect/rematch flows, per-seat private projections, public history, and deck-linked match reports. External friend access still requires the documented HTTPS ingress or cloud deployment; loopback guest links are local-machine test links. Some choices still require the Forge window. Native AI compatibility warnings remain visible before launch. Card text is not a guarantee that native AI supports every strategy.
 
 See [browser play checkpoint](docs/browser-play-checkpoint.md), [latest validation](docs/play-ux-validation-2026-09-15.md), and [AI card audit](docs/ai-card-support.md). The remaining instructions below reproduce the earlier engine proof, not the current interactive UI.
 ## Reproduce the engine proof

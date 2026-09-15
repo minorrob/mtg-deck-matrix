@@ -12,6 +12,10 @@ test('counts and pilot choices are validated before accepting a game',()=>{
   for(const ais of [1,2,3])validateSetup({...catalog.defaults,ais,seats:catalog.defaults.seats.slice(0,ais+1)});
   for(const patch of [{humans:2},{ais:0},{ais:4},{maxCost:NaN},{maxCost:0},{bracket:0},{bracket:6},{seats:[]}])assert.throws(()=>validateSetup({...catalog.defaults,...patch}));
   const config=structuredClone(catalog.defaults);config.seats[1].nativeProfile='invented-profile';assert.throws(()=>validateSetup(config));
+  const provider=structuredClone(catalog.defaults);provider.seats[1].aiProvider='invented-provider';assert.throws(()=>validateSetup(provider));
+  const api=structuredClone(catalog.defaults);api.seats[1].aiProvider='openai';api.seats[1].aiModel='gpt-5.6-luna';assert.doesNotThrow(()=>validateSetup(api));
+  api.seats[1].aiModel='gpt-5.6-terra';assert.doesNotThrow(()=>validateSetup(api));
+  api.seats[1].aiModel='claude-haiku-4-5-20251001';assert.throws(()=>validateSetup(api));
 });
 test('missing prices, missing identities, and over-budget decks cannot pass',()=>{
   const missing=assess({rows:[{name:'No such card',quantity:100}]},{bracket:3,maxCost:225});

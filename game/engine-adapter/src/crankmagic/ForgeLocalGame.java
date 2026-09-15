@@ -7,6 +7,7 @@ import forge.Singletons;
 import forge.ai.LobbyPlayerAi;
 import forge.deck.Deck;
 import forge.game.*;
+import forge.game.player.Player;
 import forge.game.player.RegisteredPlayer;
 import forge.gamemodes.match.HostedMatch;
 import forge.gui.GuiBase;
@@ -20,6 +21,7 @@ import forge.util.MyRandom;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.swing.SwingUtilities;
 
 /** Human browser decisions backed by Forge, with native fallback for complex prompts. */
@@ -70,12 +72,20 @@ public final class ForgeLocalGame {
             players.add(rp);
         }
         ForgeProbe.save(out.resolve("coverage.json"),coverage);
+        int humanSeatCount=0,aiSeatCount=0;boolean hasApiPilots=false;
+        for(JsonElement entry:pod.getAsJsonArray("seats")){
+            JsonObject seat=entry.getAsJsonObject();String kind=seat.has("kind")?seat.get("kind").getAsString():"human";
+            if(kind.equals("ai")){aiSeatCount++;if(seat.has("pilot")&&seat.getAsJsonObject("pilot").has("kind")&&seat.getAsJsonObject("pilot").get("kind").getAsString().equals("api"))hasApiPilots=true;}
+            else humanSeatCount++;
+        }
+        final int reportedHumanSeats=humanSeatCount,reportedAiSeats=aiSeatCount;final boolean reportedApiPilots=hasApiPilots;
         HostedMatch hosted=GuiBase.getInterface().hostMatch();
         if(humanBridges.isEmpty())throw new IllegalArgumentException("At least one browser seat required");
         Map<RegisteredPlayer,IGuiGame> guis=new LinkedHashMap<>();AtomicBoolean attached=new AtomicBoolean();
         SwingUtilities.invokeAndWait(()->{for(var entry:humanBridges.entrySet()){
             var browserBridge=entry.getValue();
             IGuiGame nativeGui=GuiBase.getInterface().getNewGuiGame();
+            AtomicReference<forge.game.GameView> browserGameView=new AtomicReference<>();
             IGuiGame gui=(IGuiGame)Proxy.newProxyInstance(IGuiGame.class.getClassLoader(),new Class<?>[]{IGuiGame.class},(proxy,method,arguments)->{
               if(method.getName().equals("hashCode"))return System.identityHashCode(proxy);
               if(method.getName().equals("equals"))return proxy==arguments[0];
@@ -86,24 +96,43 @@ public final class ForgeLocalGame {
                 // Attach before HostedMatch schedules opening draws and mulligan choices.
                 if(attached.compareAndSet(false,true)){
                   journal.game=hosted.getGame();journal.game.subscribeToEvents(journal);
-                  journal.append("manifest",ForgeProbe.obj("engineCommit",ForgeProbe.ENGINE,"mode","browser-seats-native-ai","telemetryVersion",2,"measured",false,"podHash",pod.get("podHash").getAsString()));
+                  journal.append("manifest",ForgeProbe.obj("engineCommit",ForgeProbe.ENGINE,"mode","browser-seats-native-ai","telemetryVersion",3,"measured",false,"matchId",pod.get("matchId").getAsString(),"podHash",pod.get("podHash").getAsString(),"seed",pod.get("seed").getAsLong()));
                 }
                 browserBridge.attach(hosted.getGame());
               }
               Object choice=browserBridge.choice(method.getName(),values);
               if(choice!=ForgeBrowserBridge.DELEGATE)return choice;
+              if(browserBridge.seatId!=0){
+                // Remote/API seats need Forge's controller lifecycle without opening a second
+                // desktop match view. State setters and render notifications are represented by
+                // the bridge; unrepresented value-returning calls still fail closed.
+                switch(method.getName()){
+                  case "setGameView":browserGameView.set(values.length==0?null:(forge.game.GameView)values[0]);return null;
+                  case "getGameView":return browserGameView.get();
+                  case "getGamestate":return null;
+                  case "isSelecting":return browserBridge.isSelecting();
+                  case "isGamePaused":case "isUiSetToSkipPhase":case "isNetGame":return false;
+                  case "getGameSpeed":return forge.gui.control.PlaybackSpeed.NORMAL;
+                  case "getDayTime":return null;
+                  case "tempShowZones":return values[1];
+                }
+                if(method.getReturnType()==Void.TYPE)return null;
+                throw new UnsupportedOperationException("This invited seat received a Forge choice that CrankMagic Online cannot yet represent safely: "+method.getName());
+              }
               try{return method.invoke(nativeGui,arguments);}catch(InvocationTargetException e){throw e.getCause();}
             });
             guis.put(entry.getKey(),gui);
         }});
         hosted.setStartGameHook(()->{
-            try{ForgeProbe.save(out.resolve("live-status.json"),ForgeProbe.obj("status","playing","humanSeats",bridges.size(),"aiSeats",players.size()-bridges.size(),"interface","browser-with-native-fallback","apiPilots",false));}catch(Exception e){throw new RuntimeException(e);}
+            try{ForgeProbe.save(out.resolve("live-status.json"),ForgeProbe.obj("status","playing","humanSeats",reportedHumanSeats,"aiSeats",reportedAiSeats,"interface","browser-with-native-fallback","apiPilots",reportedApiPilots));}catch(Exception e){throw new RuntimeException(e);}
             System.out.println("COMMANDER_LIVE_READY");System.out.flush();
         });
         hosted.setEndGameHook(()->{try{
             Game g=hosted.getGame();journal.durable();
             ForgeProbe.save(out.resolve("rng.json"),rng.tape);
-            ForgeProbe.save(out.resolve("summary.json"),ForgeProbe.obj("status",g.isGameOver()?"finished":"incomplete","measured",false,"mode","human-vs-native-ai","outcome",g.getOutcome()==null?null:g.getOutcome().getOutcomeStrings(),"eventCount",journal.sequence));
+            ForgeProbe.save(out.resolve("final-projection.json"),ForgeProbe.projection(g,null));
+            for(Player p:g.getRegisteredPlayers())ForgeProbe.save(out.resolve("seat-"+p.getId()+".json"),ForgeProbe.projection(g,p));
+            ForgeProbe.save(out.resolve("summary.json"),ForgeProbe.obj("status",g.isGameOver()?"finished":"incomplete","completedAt",java.time.Instant.now().toString(),"measured",false,"mode",reportedApiPilots?"browser-with-api-pilots":"human-vs-native-ai","outcome",g.getOutcome()==null?null:g.getOutcome().getOutcomeStrings(),"eventCount",journal.sequence));
         }catch(Exception e){throw new RuntimeException(e);}});
         GameRules rules=new GameRules(GameType.Commander);rules.setGamesPerMatch(1);rules.setAllowCheatShuffle(false);
         SwingUtilities.invokeAndWait(()->hosted.startMatch(rules,EnumSet.of(GameType.Commander),players,guis,null));
@@ -116,6 +145,6 @@ public final class ForgeLocalGame {
             ForgeProbe.save(out.resolve("proof-inputs.json"),inputs);Thread.sleep(1000);
           }}catch(Exception ignored){}},"proof-diagnostic");diagnostic.setDaemon(true);diagnostic.start();
         }
-        if(!Files.exists(out.resolve("live-status.json")))ForgeProbe.save(out.resolve("live-status.json"),ForgeProbe.obj("status","ready","humanSeats",bridges.size(),"aiSeats",players.size()-bridges.size(),"interface","forge-native","apiPilots",false));
+        if(!Files.exists(out.resolve("live-status.json")))ForgeProbe.save(out.resolve("live-status.json"),ForgeProbe.obj("status","ready","humanSeats",reportedHumanSeats,"aiSeats",reportedAiSeats,"interface","browser-with-native-fallback","apiPilots",reportedApiPilots));
     }
 }

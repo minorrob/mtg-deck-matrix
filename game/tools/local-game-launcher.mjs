@@ -1,4 +1,5 @@
 import {spawn,execFileSync} from 'node:child_process';
+import {randomUUID} from 'node:crypto';
 import {readFileSync,writeFileSync,mkdirSync,createWriteStream,existsSync} from 'node:fs';
 import {resolve,dirname,delimiter,relative,isAbsolute} from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -7,6 +8,10 @@ import {matchTelemetry} from './match-telemetry.mjs';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../..');
 let running=null;
 export function childIsRunning(child){return !!child&&child.exitCode===null&&child.signalCode===null;}
+export function bridgeConnectionPath(directory,seatId=0){
+  if(!Number.isSafeInteger(seatId)||seatId<0||seatId>3)throw Error('Invalid seat');
+  return resolve(directory,seatId===0?'browser-bridge.json':`seats/${seatId}/browser-bridge.json`);
+}
 export async function resumeLocalGame(directory){
   const base=resolve(root,'game/.local/games'),target=resolve(directory),path=relative(base,target);
   if(!path||path.startsWith('..')||isAbsolute(path))throw Error('Resume directory is outside the local games folder');
@@ -19,6 +24,7 @@ export async function resumeLocalGame(directory){
 export function liveStatus(){
   if(!running)return {status:'idle'};
   let status={...running};delete status.child;
+  if(existsSync(resolve(running.directory,'manifest.json')))status.matchId=JSON.parse(readFileSync(resolve(running.directory,'manifest.json'))).matchId;
   for(const file of ['live-status.json','error.json','summary.json'])if(existsSync(resolve(running.directory,file)))status={...status,...JSON.parse(readFileSync(resolve(running.directory,file))),...(file==='error.json'?{status:'error'}:{})};
   if(running.child&&!childIsRunning(running.child)&&!existsSync(resolve(running.directory,'summary.json')))status.status=running.status;
   return status;
@@ -40,10 +46,11 @@ export async function launchLocalGame(pod){
   const jar=resolve(forge,`forge-gui-desktop/target/forge-gui-desktop-${lock.version}-jar-with-dependencies.jar`),classes=resolve(root,'game/.local/classes');mkdirSync(classes,{recursive:true});
   const sources=['ForgeProbe.java','ForgeLocalGame.java','ForgeBrowserBridge.java'].map(f=>resolve(root,'game/engine-adapter/src/crankmagic',f));
   execFileSync(resolve(jdk,'bin/javac.exe'),['-encoding','UTF-8','-cp',jar,'-d',classes,...sources],{encoding:'utf8',windowsHide:true});
+  pod={...pod,matchId:pod.matchId||randomUUID()};
   const directory=resolve(root,'game/.local/games',new Date().toISOString().replace(/[^\w-]/g,'-')),profile=resolve(directory,'forge-profile');mkdirSync(profile,{recursive:true});
   writeFileSync(resolve(directory,'pod.json'),JSON.stringify(pod,null,2));
   writeFileSync(resolve(directory,'card-mechanics.json'),JSON.stringify({schema:'CommanderMatchMechanics@1',podHash:pod.podHash,seats:pod.seats.map(s=>({seatId:s.seatId,...s.mechanics}))},null,2));
-  writeFileSync(resolve(directory,'manifest.json'),JSON.stringify({engineCommit:commit,jarHash:sha256(readFileSync(jar)),adapterHashes:sources.map(f=>[f,sha256(readFileSync(f))]),mode:'human-vs-native-ai',apiPilots:false,measured:false},null,2));
+  writeFileSync(resolve(directory,'manifest.json'),JSON.stringify({matchId:pod.matchId,engineCommit:commit,jarHash:sha256(readFileSync(jar)),adapterHashes:sources.map(f=>[f,sha256(readFileSync(f))]),mode:pod.seats.filter(s=>s.engineController==='browser').length>1?'multi-browser':'human-vs-native-ai',apiPilots:pod.seats.some(s=>s.engineController==='browser'&&s.kind==='ai'),measured:false},null,2));
   const args=['-Xmx2g','-Djava.awt.headless=false',`-Duser.home=${profile}`,`-Dcrankmagic.forgeAssets=${resolve(forge,'forge-gui').replaceAll('\\','/')}/`,'-cp',[classes,jar].join(delimiter),'crankmagic.ForgeLocalGame',resolve(directory,'pod.json'),directory];
   // Match the pinned desktop launcher's Java 17 reflective-access requirements.
   const pom=readFileSync(resolve(forge,'forge-gui-desktop/pom.xml'),'utf8');
@@ -59,8 +66,16 @@ export async function launchLocalGame(pod){
   return liveStatus();
 }
 export async function browserBridge(operation,body){
+  return browserBridgeForSeat(0,operation,body);
+}
+export function livePod(){
+  const state=liveStatus();if(!state.directory)throw Error('No local game is running');
+  const file=resolve(state.directory,'pod.json');if(!existsSync(file))throw Error('The active game has no recoverable pod');
+  return JSON.parse(readFileSync(file));
+}
+export async function browserBridgeForSeat(seatId,operation,body){
   const state=liveStatus();if(!state.directory||(!running.resumed&&!childIsRunning(running.child)))throw Error('No local game is running');
-  const file=resolve(state.directory,'browser-bridge.json');if(!existsSync(file))throw Error('This match uses the earlier desktop adapter. Start a new match to use browser controls.');
+  const file=bridgeConnectionPath(state.directory,seatId);if(!existsSync(file))throw Error('This seat does not have browser controls in the active match.');
   const connection=JSON.parse(readFileSync(file));if(!Number.isSafeInteger(connection.port)||connection.port<1||connection.port>65535)throw Error('Invalid local bridge');
   const response=await fetch(`http://127.0.0.1:${connection.port}/${operation}`,{method:body?'POST':'GET',headers:{'X-CrankMagic-Bridge':connection.token,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(5000)});
   const value=await response.json();if(!response.ok)throw Error(value.error||'Engine action failed');
@@ -68,8 +83,11 @@ export async function browserBridge(operation,body){
     const pod=JSON.parse(readFileSync(resolve(state.directory,'pod.json'))),facts=new Map();
     for(const s of pod.seats)for(const c of [...s.deck.commanders,...s.deck.library])facts.set(c.name,c);
     for(const p of value.state.players)for(const z of Object.values(p.zones))for(const c of z.cards){const fact=facts.get(c.name);if(fact){c.art=fact.art?.normal;c.typeLine??=fact.typeLine;}}
-    value.pod={seats:[pod.seats[0]]};value.matchId=pod.podHash;value.appearance=pod.seats.map(s=>({seatId:s.seatId,playmat:s.playmat,playmatChoice:s.playmatChoice}));
-    value.telemetry=matchTelemetry(state.directory,value.state);
+    for(const c of value.ui?.selectableCards||[]){const fact=facts.get(c.name);if(fact){c.art=fact.art?.normal;c.typeLine=fact.typeLine;c.manaCost=fact.manaCost;c.oracleText=fact.oracleText;}}
+    value.pod={seats:[pod.seats[seatId]]};value.matchId=pod.matchId;
+    value.seats=pod.seats.map(s=>({seatId:s.seatId,kind:s.kind,pilot:s.pilot?.kind||null,name:s.name}));
+    value.appearance=pod.seats.map(s=>({seatId:s.seatId,playmat:s.playmat,playmatChoice:s.playmatChoice}));
+    value.telemetry=matchTelemetry(state.directory,value.state,seatId);
     for(const p of value.state.players)p.commanderIdentity=[...new Set(pod.seats.find(s=>s.seatId===p.playerId)?.deck.commanders.flatMap(c=>c.colorIdentity||[])||[])];
     const rules=new Map(pod.seats.flatMap(s=>(s.mechanics?.cards||[]).map(c=>[c.name,c])));
     for(const p of value.state.players)for(const z of Object.values(p.zones))for(const c of z.cards)if(c.name&&!c.faceDown){c.oracleText=rules.get(c.name)?.oracleText||'';c.colorIdentity=facts.get(c.name)?.colorIdentity||[];}

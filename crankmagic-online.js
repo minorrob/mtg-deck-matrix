@@ -1,7 +1,15 @@
 (globalThis.CrankFeatures ||= []).push(function(C){
   const {esc:e}=C;
+  async function attachMatchReport(report){
+    if(report?.schema!=='CrankMagicOnlineMatchReport@1'||typeof report.matchId!=='string'||!Number.isInteger(report.seatId))throw Error('The game returned an invalid match report.');
+    const deckId=report.deck?.source?.deckId,deck=C.state.decks.find(d=>d.id===deckId&&!d.archived);if(!deck)throw Error('The deck used for this match is no longer in this library.');
+    if(C.state.games.some(game=>game.online?.matchId===report.matchId&&game.online?.seatId===report.seatId))return 'already attached';
+    const opponents=(report.opponents||[]).map(item=>(item.commanders||[]).join(' + ')+(item.kind==='ai'&&item.difficulty?` · AI difficulty ${item.difficulty}`:'')).join('; ');
+    await C.commit({type:'game',gameId:`game:online:${report.matchId}:${report.seatId}`,deckId,outcome:report.outcome,playedAt:report.completedAt,finish:report.finish,pod:report.podSize,bracket:report.bracket,turns:report.turns,seat:report.seatId+1,opponents,notes:report.playerFeedback?.notes||'CrankMagic Online match. Open the report from game history for event telemetry and deck signals.',online:report});
+    C.notice('Online game report attached to '+deck.name+'.');return 'attached';
+  }
   C.views.game=async()=>{
-    const local=location.hostname==='127.0.0.1'&&['8768','8769'].includes(location.port);
+    const local=location.hostname==='127.0.0.1';
     const decks=C.state.decks.filter(d=>!d.archived);
     const layout=C.main.closest('.cm-layout');layout.classList.add('cm-play-collapsed');
     if(local){
@@ -14,11 +22,11 @@
       C.main.querySelector('#online-setup').addEventListener('click',()=>frame.contentWindow.postMessage({type:'crankmagic-setup'},location.origin));
       C.main.querySelector('#online-use').addEventListener('click',async()=>{
         const deck=C.state.decks.find(d=>d.id===C.main.querySelector('#online-deck').value);if(!deck)return;
-        const commanderIds=new Set(deck.commanders),payload={schema:'CrankMagicDeckHandoff@1',name:deck.name,sourceDeckId:deck.id,sourceRevision:C.state.revision,commanders:deck.commanders.map(id=>C.card(id)?.name),rows:deck.slots.filter(r=>r.purpose==='main'&&!commanderIds.has(r.cardId)).map(r=>({name:C.card(r.cardId)?.name,quantity:r.quantity}))};
+        const commanderIds=new Set(deck.commanders),payload={schema:'CrankMagicDeckHandoff@1',name:deck.name,sourceDeckId:deck.id,sourceDeckVersion:deck.version,sourceRevision:C.state.revision,commanders:deck.commanders.map(id=>C.card(id)?.name),rows:deck.slots.filter(r=>r.purpose==='main'&&!commanderIds.has(r.cardId)).map(r=>({name:C.card(r.cardId)?.name,quantity:r.quantity}))};
         status.textContent='Resolving the cards in your selected hundred…';
         try{const session=await fetch('/api/setup').then(r=>r.json()),response=await fetch('/api/import-deck',{method:'POST',headers:{'Content-Type':'application/json','X-Commander-Token':session.token},body:JSON.stringify(payload)}),result=await response.json();if(!response.ok)throw Error(result.error);frame.contentWindow.postMessage({type:'crankmagic-setup',imported:result},location.origin);status.textContent='Snapshot ready. Finish configuring the table below.';}catch(error){status.textContent=error.message;}
       });
-      const onMessage=event=>{if(event.origin!==location.origin||event.source!==frame.contentWindow)return;if(event.data?.type==='crankmagic-live'){C.main.classList.add('cm-playing');C.main.classList.remove('cm-setting-up');}if(event.data?.type==='crankmagic-mode'&&event.data.mode==='setup'){C.main.classList.remove('cm-playing');C.main.classList.add('cm-setting-up');}if(event.data?.type==='crankmagic-canvas-size'&&Number.isFinite(event.data.height)){frame.style.height=Math.max(300,Math.min(25000,event.data.height+2))+'px';}if(event.data?.type==='crankmagic-focus')frame.classList.toggle('cm-game-expanded',!!event.data.open);if(event.data?.type==='crankmagic-sidebar')C.main.querySelector('#online-sidebar').click();if(event.data?.type==='crankmagic-exit')location.hash='decks';};
+      const onMessage=event=>{if(event.origin!==location.origin||event.source!==frame.contentWindow)return;if(event.data?.type==='crankmagic-live'){C.main.classList.add('cm-playing');C.main.classList.remove('cm-setting-up');}if(event.data?.type==='crankmagic-mode'&&event.data.mode==='setup'){C.main.classList.remove('cm-playing');C.main.classList.add('cm-setting-up');}if(event.data?.type==='crankmagic-canvas-size'&&Number.isFinite(event.data.height)){frame.style.height=Math.max(300,Math.min(25000,event.data.height+2))+'px';}if(event.data?.type==='crankmagic-focus')frame.classList.toggle('cm-game-expanded',!!event.data.open);if(event.data?.type==='crankmagic-sidebar')C.main.querySelector('#online-sidebar').click();if(event.data?.type==='crankmagic-exit')location.hash='decks';if(event.data?.type==='crankmagic-match-report')attachMatchReport(event.data.report).then(result=>frame.contentWindow.postMessage({type:'crankmagic-match-report-saved',matchId:event.data.report.matchId,result},location.origin)).catch(error=>frame.contentWindow.postMessage({type:'crankmagic-match-report-error',matchId:event.data.report?.matchId,error:error.message},location.origin));};
       const resizeAfterMode=event=>{if(event.origin===location.origin&&event.source===frame.contentWindow&&['crankmagic-live','crankmagic-mode'].includes(event.data?.type))requestAnimationFrame(reportViewport);};
       window.addEventListener('message',resizeAfterMode);
       window.addEventListener('message',onMessage);return()=>{window.removeEventListener('message',onMessage);window.removeEventListener('message',resizeAfterMode);window.removeEventListener('resize',reportViewport);layout.classList.remove('cm-play-collapsed');C.main.classList.remove('cm-playing','cm-setting-up');};
@@ -55,12 +63,14 @@
       nonce=crypto.randomUUID();expiry=Date.now()+120000;
       popup=window.open('http://127.0.0.1:8768/#handoff='+nonce,'crankmagic-online');
       if(!popup){status.textContent='Allow this requested game window to open, then try again.';return;}
-      pending={schema:'CrankMagicDeckHandoff@1',name:deck.name,sourceDeckId:deck.id,sourceRevision:C.state.revision,commanders,rows};
+      pending={schema:'CrankMagicDeckHandoff@1',name:deck.name,sourceDeckId:deck.id,sourceDeckVersion:deck.version,sourceRevision:C.state.revision,commanders,rows};
       status.textContent='Transferring your deck snapshot…';dialog.close();clearTimeout(launchTimer);
       launchTimer=setTimeout(()=>{pending=null;status.textContent='The deck transfer timed out. Keep this tab open and try again; your saved deck is unchanged.';},120000);
     };
     let pending;
-    const receive=event=>{if(event.origin!=='http://127.0.0.1:8768'||event.source!==popup||Date.now()>expiry||event.data?.nonce!==nonce)return;
+    const receive=event=>{if(event.origin!=='http://127.0.0.1:8768'||event.source!==popup||event.data?.nonce!==nonce)return;
+      if(event.data?.type==='crankmagic-match-report'){attachMatchReport(event.data.report).then(result=>popup.postMessage({type:'crankmagic-match-report-saved',matchId:event.data.report.matchId,result},event.origin)).catch(error=>popup.postMessage({type:'crankmagic-match-report-error',matchId:event.data.report?.matchId,error:error.message},event.origin));return;}
+      if(Date.now()>expiry)return;
       if(event.data?.type==='crankmagic-ready'){popup.postMessage({type:'crankmagic-deck',nonce,deck:pending},event.origin);}
       if(event.data?.type==='crankmagic-imported'){status.textContent='Deck snapshot received. Finish setup in CrankMagic Online.';pending=null;clearTimeout(launchTimer);}
       if(event.data?.type==='crankmagic-import-error'){status.textContent='Deck import: '+event.data.error;pending=null;clearTimeout(launchTimer);}

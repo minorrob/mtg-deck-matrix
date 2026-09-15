@@ -113,7 +113,7 @@ public final class ForgeProbe {
             try {
                 String type=event.getClass().getSimpleName();
                 counts.merge(type,1,Integer::sum);
-                Map<String,Object> data=obj("turn",game.getPhaseHandler().getTurn(),"phase",String.valueOf(game.getPhaseHandler().getPhase()),"fields",capture(event));
+                Map<String,Object> data=obj("turn",game.getPhaseHandler().getTurn(),"phase",String.valueOf(game.getPhaseHandler().getPhase()),"eventOrdinal",counts.get(type),"fields",capture(event));
                 if (event instanceof GameEventSpellResolved e) data.put("castEventId",castEvents.get(e.spell().getId()));
                 String id=append(type,data);
                 if(event instanceof forge.game.event.GameEventCombatUpdate || event instanceof forge.game.event.GameEventAttackersDeclared || event instanceof forge.game.event.GameEventBlockersDeclared)
@@ -177,7 +177,7 @@ public final class ForgeProbe {
                         "token",c.isToken(),"commander",c.isCommander(),"engineEffect",c.isImmutable(),
                         "controller",c.getController().getId(),"owner",c.getOwner().getId(),"tapped",c.isTapped(),
                         "faceDown",c.isFaceDown(),"damage",c.getDamage(),"counters",capture(c.getCounters()));
-                    if (faceVisible) { data.put("power",c.getNetPower()); data.put("toughness",c.getNetToughness()); data.put("typeLine",c.getType().toString()); }
+                    if (faceVisible) { data.put("power",c.getNetPower()); data.put("toughness",c.getNetToughness()); data.put("typeLine",c.getType().toString()); data.put("manaCost",c.getManaCost().toString()); }
                     cards.add(data);
                 }
                 zones.put(zone.name(),obj("count",count,"hiddenCount",hidden,"cards",cards));

@@ -1,9 +1,9 @@
 /** Pure authoritative table transitions. Transport authenticates actor; clients never set time/IDs. */
-export function createTable({tableId,seats}) {
+export function createTable({tableId,seats,settings}) {
   if(!tableId||seats.length<2||seats.length>4||!seats.some(s=>s.kind==='human'))throw Error('A table needs 2–4 seats and a human');
   if(seats.some((s,i)=>s.seatId!==i||!['human','ai'].includes(s.kind)))throw Error('Invalid seats');
-  return {schema:'CrankMagicTable@1',tableId,revision:0,phase:'selecting',generation:0,countdownAt:null,launchId:null,matchId:null,
-    seats:seats.map(s=>({...s,occupied:s.kind==='ai'||!!s.occupied,connected:s.kind==='ai'||!!s.occupied,ready:false,deckVersion:null,rematch:null,disconnectedAt:null}))};
+  return {schema:'CrankMagicTable@1',tableId,revision:0,phase:'selecting',generation:0,countdownAt:null,launchId:null,matchId:null,...(settings?{settings:structuredClone(settings)}:{}),
+    seats:seats.map(s=>({...s,occupied:s.kind==='ai'||!!s.occupied,connected:s.kind==='ai'||!!s.occupied,ready:false,deckVersion:null,rematch:null,disconnectedAt:null,conceded:false}))};
 }
 export function transitionTable(previous,event,{now,launchId}={}) {
   if(!Number.isSafeInteger(now))throw Error('Authoritative clock required');
@@ -13,7 +13,7 @@ export function transitionTable(previous,event,{now,launchId}={}) {
   const member=()=>{if(!seat?.occupied)throw Error('Seat is unoccupied');};
   const cancel=()=>{t.countdownAt=null;if(t.phase==='countdown')t.phase='selecting';};
   switch(event.type){
-    case 'join':editable();if(!seat||seat.kind!=='human'||seat.occupied)throw Error('Seat unavailable');Object.assign(seat,{occupied:true,connected:true,ready:false,rematch:null,disconnectedAt:null});cancel();break;
+    case 'join':editable();if(!seat||seat.kind!=='human'||seat.occupied)throw Error('Seat unavailable');Object.assign(seat,{occupied:true,connected:true,ready:false,rematch:null,disconnectedAt:null,conceded:false});cancel();break;
     case 'deck':editable();member();if(!event.deckVersion)throw Error('Validated deck version required');seat.deckVersion=event.deckVersion;seat.ready=false;cancel();break;
     case 'ready':editable();member();if(!seat.deckVersion||!seat.connected)throw Error('Connected seat and validated deck required');seat.ready=!!event.ready;cancel();break;
     case 'disconnect':member();seat.connected=false;seat.ready=false;seat.disconnectedAt=now;cancel();break;
@@ -22,7 +22,10 @@ export function transitionTable(previous,event,{now,launchId}={}) {
       member();if(seat.kind!=='human')throw Error('AI does not exit through membership');
       if(event.type==='expire'&&(seat.connected||seat.disconnectedAt===null||now-seat.disconnectedAt<60000))throw Error('Reconnect grace has not expired');
       if(['playing','starting'].includes(t.phase))throw Error('Resolve active-match departure through engine policy first');
-      Object.assign(seat,{occupied:false,connected:false,ready:false,deckVersion:null,rematch:null,disconnectedAt:null});cancel();break;
+      Object.assign(seat,{occupied:false,connected:false,ready:false,deckVersion:null,rematch:null,disconnectedAt:null,conceded:false});cancel();break;
+    case 'concede':
+      member();if(seat.kind!=='human'||t.phase!=='playing')throw Error('No active human player can concede');
+      Object.assign(seat,{occupied:false,connected:false,ready:false,deckVersion:null,rematch:null,disconnectedAt:null,conceded:true});break;
     case 'countdown':
       if(t.phase!=='selecting'||!t.seats.every(s=>s.occupied&&s.connected&&s.ready&&s.deckVersion))throw Error('Every seat must be ready');
       t.phase='countdown';t.countdownAt=now+10000;break;
