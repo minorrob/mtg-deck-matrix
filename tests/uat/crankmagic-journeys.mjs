@@ -214,7 +214,7 @@ try{
   const bandPile='.cm-tt-pile.cm-tt-status, .cm-tt-pile.cm-tt-shelfgroup, .cm-tt-pile.cm-tt-shelfnew';
   const placard=async label=>Number((await page.locator(stPile(label)).first().getAttribute('aria-label')).match(/, (\d+) card/)[1]);
   eq(await placard('Physical deck'),tallies['Physical deck']||0);eq(await placard('Reserved'),tallies['Reserved']||0);eq(await placard('To buy'),tallies['To buy']||0);
-  ok(/Bench, \d+ cards/.test(await page.locator('.cm-tt-fan').getAttribute('aria-label')));eq(Number((await page.locator('.cm-tt-fan').getAttribute('aria-label')).match(/(\d+)/)[1]),tallies['Bench']||0);
+  ok(/^Bench, \d+ cards?$/.test(await page.locator('.cm-tt-pile.cm-tt-bench').getAttribute('aria-label')),'the Bench reads as one pile with a count');eq(Number((await page.locator('.cm-tt-pile.cm-tt-bench').getAttribute('aria-label')).match(/(\d+)/)[1]),tallies['Bench']||0);
   /* No deck picked, so this is shelf mode: the band is the collection groups and a door to a new
      one, and every status that holds anything is a chip on the line above — still one click from
      being laid out, still a drop target, no longer the job the table is doing. */
@@ -299,15 +299,34 @@ try{
       in tests/crankmagic-tabletop.mjs, because it is a rule about how the module binds. */
    await page.locator('[name=tabletopCanvas]').selectOption('slate');await page.waitForTimeout(500);
    ok(/cm-canvas-slate/.test(await page.locator('.cm-tt-mat').getAttribute('class')),'a select that survived the patch still changes the board');}
-  /* TB5: the Bench ledge folds to its placard and stays folded on this device. */
-  await page.locator('[data-tt=bench-toggle]').click();await page.waitForTimeout(250);eq(await page.locator('.cm-tt-rail.is-shut').count(),1,'Hide folds the ledge');eq(await page.locator('.cm-tt-fan .cm-tt-card').count(),0);
-  await page.reload();await page.locator('.cm-tt-mat').waitFor({timeout:30000});eq(await page.locator('.cm-tt-rail.is-shut').count(),1,'the fold survives a reload');await page.locator('[data-tt=bench-toggle]').click();await page.waitForTimeout(250);eq(await page.locator('.cm-tt-rail.is-shut').count(),0,'Show unfolds it');
-  {const bench=Number((await page.locator('.cm-tt-fan').getAttribute('aria-label')).match(/(\d+)/)[1]);if(bench>0){await page.locator('.cm-tt-fan').click();await page.locator('.cm-tt-grid').waitFor();ok(/^Bench · 1–/.test(await strip()));await page.locator('.cm-tt-fan').click();await page.waitForTimeout(200);eq(await page.locator('.cm-tt-grid').count(),0);}else{ok(true,'no bench to open in this library');}}
+  /* THE BACK ROW (Rob, 15 September): the Bench and the decks, side by side, both as piles. The
+     ledge used to fan out as many cards as it was wide — and a fanned card could not be clicked,
+     dragged or read, so it was three hundred pictures decorating a count. A click on a deck's pile
+     filters the table to it (which is also what puts the middle into that deck's play space); a
+     drop on it seats the copy; Select all clears the filter. */
+  {eq(await page.locator('.cm-tt-fan').count(),0,'the fanned ledge is gone');
+   eq(await page.locator('.cm-tt-backrow .cm-tt-pile.cm-tt-bench').count(),1,'the Bench is a pile on the back row');
+   const decks=await page.locator('.cm-tt-backrow .cm-tt-pile.cm-tt-deckpile').count();
+   ok(decks>=1,`and every deck stands beside it (${decks})`);
+   eq(await page.locator('.cm-tt-allchip').count(),1,'with one Select all');
+   const first=page.locator('.cm-tt-backrow .cm-tt-pile.cm-tt-deckpile').first();
+   const label=(await first.getAttribute('aria-label')).split(',')[0];
+   await first.click();await page.waitForTimeout(700);
+   ok(/deck=/.test(page.url()),`clicking ${label} filters the table to it`);
+   ok(/calibrating/.test(await page.locator('.cm-tt-play-head').innerText()),'and the middle becomes that deck\'s play space');
+   await page.locator('.cm-tt-allchip').click();await page.waitForTimeout(700);
+   ok(!/deck=/.test(page.url()),'Select all clears the filter');
+   /* A chip on this table is a pile you can lay out, and the arrow model walks the chips as the
+      group row; Select all is a filter on the back row, so it must not wear that class. */
+   eq(await page.locator('.cm-tt-allchip.cm-tt-chip').count(),0,'and Select all is not a pile chip');
+   await page.locator('.cm-tt-backrow .cm-tt-pile.cm-tt-bench').focus();await page.keyboard.press('ArrowRight');
+   ok(await page.evaluate(()=>document.activeElement.matches('.cm-tt-backrow .cm-tt-pile.cm-tt-deckpile, .cm-tt-allchip')),'the arrows walk the back row too');}
+  {const bench=Number((await page.locator('.cm-tt-pile.cm-tt-bench').getAttribute('aria-label')).match(/(\d+)/)[1]);if(bench>0){await page.locator('.cm-tt-pile.cm-tt-bench').click();await page.locator('.cm-tt-grid').waitFor();ok(/^Bench · 1–/.test(await strip()));await page.locator('.cm-tt-pile.cm-tt-bench').click();await page.waitForTimeout(200);eq(await page.locator('.cm-tt-grid').count(),0);}else{ok(true,'no bench to open in this library');}}
   /* TB3: drag the selection to a pile. A Bench copy into a physical deck (as a substitute, through the deck dialog and the receipt) and back to the Bench, the tallies moving with it; a type pile refuses while the pointer is over it; a To buy requirement dropped on Ordered becomes an ordered copy; Move to… lists the piles with the same answers. */
   const journey=(await state()).decks.find(d=>d.name==='Journey Goblins'&&d.status==='final');ok(!!journey,'the finalized journey deck exists');const t0=await page.evaluate(async()=>{const r=await CrankRepository.open();try{const s=await r.getState();const M=CrankCollection;const n={};for(const row of M.projection(s)){const st=M.statusOf(row);n[st]=(n[st]||0)+(Number(row.quantity)||0);}return n;}finally{r.close();}});
   const tally=()=>page.evaluate(async()=>{const r=await CrankRepository.open();try{const s=await r.getState();const M=CrankCollection;const n={};for(const row of M.projection(s)){const st=M.statusOf(row);n[st]=(n[st]||0)+(Number(row.quantity)||0);}return n;}finally{r.close();}});
   const dragTo=async(sel,{drop=true}={})=>{await page.locator('.cm-tt-mat').evaluate(e=>e.scrollIntoView({block:'start'}));await page.waitForTimeout(150);const from=await page.locator('.cm-tt-fanL .cm-tt-card').first().boundingBox();const to=await page.locator(sel).first().boundingBox();await page.mouse.move(from.x+from.width/2,from.y+from.height/2);await page.mouse.down();await page.mouse.move(from.x+from.width/2+30,from.y+30,{steps:4});await page.mouse.move(to.x+to.width/2,to.y+Math.min(to.height/2,40),{steps:10});await page.waitForTimeout(150);const say=await page.locator('.cm-tt-drag-say').innerText();const cls=await page.locator(sel).first().getAttribute('class');if(drop){await page.mouse.up();}else{await page.mouse.move(from.x+from.width/2,from.y+from.height/2,{steps:6});await page.waitForTimeout(100);await page.mouse.up();}await page.waitForTimeout(200);return {say,cls};};
-  await page.locator('.cm-tt-fan').click();await page.locator('.cm-tt-grid').waitFor();await page.locator('.cm-tt-grid .cm-tt-card').first().click();await page.locator('.cm-tt-stage').waitFor();const moved=await page.locator('.cm-tt-captions li strong').first().innerText();const movedQty=Number(((await page.locator('.cm-tt-captions li').first().innerText()).match(/×(\d+)/)||[])[1]||1);
+  await page.locator('.cm-tt-pile.cm-tt-bench').click();await page.locator('.cm-tt-grid').waitFor();await page.locator('.cm-tt-grid .cm-tt-card').first().click();await page.locator('.cm-tt-stage').waitFor();const moved=await page.locator('.cm-tt-captions li strong').first().innerText();const movedQty=Number(((await page.locator('.cm-tt-captions li').first().innerText()).match(/×(\d+)/)||[])[1]||1);
   {const r=await dragTo('.cm-tt-chip[data-pile^="group:type:"]',{drop:false});ok(/reading of the card/.test(r.say),`a type pile refuses: ${r.say}`);ok(/is-refused/.test(r.cls));}
   ok(await page.locator('.cm-tt-drag').count()===0,'the drag badge is gone after the pointer is up');
   /* A DROP IS A PROPOSAL NOW (Rob, 14 September; play-space plan §2.6–2.8). The deck dialog still
@@ -368,7 +387,7 @@ try{
   {const box=await page.locator(stPile('Substitute')).count()?'Substitute':'Physical deck';
    await page.locator(stPile(box)).click();await page.locator('.cm-tt-grid').waitFor({timeout:20000});
    await page.locator('.cm-tt-grid .cm-tt-card').first().click();await page.locator('.cm-tt-stage').waitFor({timeout:20000});}
-  {const r=await dragTo('.cm-tt-fan');ok(/Move physically to the Bench/.test(r.say));await page.waitForTimeout(600);
+  {const r=await dragTo('.cm-tt-pile.cm-tt-bench');ok(/Move physically to the Bench/.test(r.say));await page.waitForTimeout(600);
    await page.locator('.cm-sitting').waitFor({timeout:15000});ok(/1 move pending/.test(await page.locator('.cm-sitting').innerText()),'the way back is staged too');
    await click('Review and confirm');await page.getByRole('dialog').waitFor();await click('Confirm change');await page.waitForTimeout(1300);
    const t2=await tally();eq(t2['Bench']||0,t0['Bench']||0,'back on the Bench');eq((t2['Physical deck']||0)+(t2['Substitute']||0),(t0['Physical deck']||0)+(t0['Substitute']||0));
@@ -432,7 +451,7 @@ try{
   eq(await page.locator('.cm-tt-tray').count(),4,'four trays stand');
   {const b0=await tally();
    /* Lift: a Bench copy into the middle. Nothing is written, and it leaves the Bench ledge. */
-   await page.locator('.cm-tt-fan').click();await page.locator('.cm-tt-grid').waitFor({timeout:20000});
+   await page.locator('.cm-tt-pile.cm-tt-bench').click();await page.locator('.cm-tt-grid').waitFor({timeout:20000});
    const lifted=await page.locator('.cm-tt-grid .cm-tt-card').first().innerText();
    await page.locator('.cm-tt-grid .cm-tt-card').first().click();await page.locator('.cm-tt-stage').waitFor({timeout:20000});
    {const r=await dragTo('.cm-tt-playchip[data-pile="play:draw"]');ok(/Pick up/.test(r.say),`the middle says what a lift means: ${r.say}`);}
@@ -450,7 +469,7 @@ try{
    eq(await page.locator('.cm-sitting').count(),0,'the restore arrow unstages the lift');
    eq(await tally(),b0,'and still nothing was written');
    /* Lift it again and confirm: the copy reads as Watched for this deck (§2.2, 3a). */
-   await page.locator('.cm-tt-fan').click();await page.locator('.cm-tt-grid').waitFor({timeout:20000});
+   await page.locator('.cm-tt-pile.cm-tt-bench').click();await page.locator('.cm-tt-grid').waitFor({timeout:20000});
    await page.locator('.cm-tt-grid .cm-tt-card').first().click();await page.locator('.cm-tt-stage').waitFor({timeout:20000});
    await dragTo('.cm-tt-playchip[data-pile="play:draw"]');await page.waitForTimeout(700);
    await page.locator('.cm-sitting').waitFor({timeout:15000});
@@ -594,7 +613,7 @@ try{
    ok(statuses.includes('Bench'),'a deck scope keeps the Bench in the table');
    ok(/Bench/.test(await page.locator('#cm-roster-stats').innerText()),'and the counts row says the Bench is not in its figures');
    await page.goto(BASE+'/'+ENTRY+'#cards?view=tabletop&deck='+encodeURIComponent(deck.id));await page.locator('.cm-tt-mat').waitFor({timeout:30000});await page.waitForTimeout(500);
-   ok(/Bench . [1-9]/.test((await page.locator('.cm-tt-rail-placard').innerText()).replace(/\s+/g,' ')),'and the ledge still holds cards');
+   ok(/Bench . [1-9]/.test((await page.locator('.cm-tt-pile.cm-tt-bench .cm-tt-placard').innerText()).replace(/\s+/g,' ')),'and the Bench pile still holds cards');
    await page.goto(BASE+'/'+ENTRY+'#cards?tab=buy&deck='+encodeURIComponent(deck.id));await page.locator('#cm-roster-table table, .cm-shop-strip').first().waitFor({timeout:30000});await page.waitForTimeout(400);
    const buy=await page.evaluate(()=>{const h=[...document.querySelectorAll('#cm-roster-table th')].map(x=>x.textContent.trim().split(/\s/)[0]),i=h.indexOf('Status');
      return [...document.querySelectorAll('#cm-roster-table tbody tr')].map(tr=>((tr.children[i]||{}).textContent||'').trim().split('\n')[0]);});

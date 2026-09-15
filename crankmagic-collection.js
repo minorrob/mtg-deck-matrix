@@ -393,9 +393,9 @@ function sheetEdit(btn,seed=''){
    this view feeds it the rows, the filters and the reader's grouping choice. */
 let tabletopGroupBy=C.state.preferences.tabletopGroupBy||'type';
 /* The table's own state between draws: the open pile, its page and card size, the ticks while it is laid out, the selection on the stage and the pile it came from. */
-const ttUI={open:null,from:null,page:0,size:'M',ticked:new Set(),selection:new Set(),bench:'open',stageSize:'XL',canvas:'slate',trays:4,drawAt:0,hand:new Set(),trayGroups:['','','','']};
+const ttUI={open:null,from:null,page:0,size:'M',ticked:new Set(),selection:new Set(),stageSize:'XL',canvas:'slate',trays:4,drawAt:0,hand:new Set(),trayGroups:['','','','']};
 /* The card size, the Bench ledge's fold and the stage's picture size are facts about the screen they were chosen on, so they are remembered per device and not in the library. */
-try{const s=localStorage.getItem('cm-tabletop-size');if(s&&['S','M','L'].includes(s))ttUI.size=s;if(localStorage.getItem('cm-tabletop-bench')==='shut')ttUI.bench='shut';const z=localStorage.getItem('cm-tabletop-stage');if(z&&['L','XL','XXL','full'].includes(z))ttUI.stageSize=z;const c=localStorage.getItem('cm-tabletop-canvas');if(c&&globalThis.CrankTabletop&&CrankTabletop.CANVASES.some(([k])=>k===c))ttUI.canvas=c;const t=Number(localStorage.getItem('cm-tabletop-trays'));if(Number.isInteger(t)&&t>=1&&t<=4)ttUI.trays=t;
+try{const s=localStorage.getItem('cm-tabletop-size');if(s&&['S','M','L'].includes(s))ttUI.size=s;localStorage.removeItem('cm-tabletop-bench');const z=localStorage.getItem('cm-tabletop-stage');if(z&&['L','XL','XXL','full'].includes(z))ttUI.stageSize=z;const c=localStorage.getItem('cm-tabletop-canvas');if(c&&globalThis.CrankTabletop&&CrankTabletop.CANVASES.some(([k])=>k===c))ttUI.canvas=c;const t=Number(localStorage.getItem('cm-tabletop-trays'));if(Number.isInteger(t)&&t>=1&&t<=4)ttUI.trays=t;
   /* Shelf mode's hand and its tray bindings are the same kind of fact: about this screen, not
      about the library. Nothing here is a staged move, so nothing here is written to the sitting. */
   const h=JSON.parse(localStorage.getItem('cm-tabletop-hand')||'[]');if(Array.isArray(h))ttUI.hand=new Set(h.filter(x=>typeof x==='string').slice(0,200));
@@ -420,6 +420,17 @@ let ttKey=null,ttResize=null;
    a lifted card into and no list for a tray to build, so the middle says so rather than pretending
    -- shelf mode, where the destinations are collection groups instead, is PR 4 (§2.15). */
 function playDeck(params){const id=params.get('deck');if(!id)return null;const d=C.state.decks.find(x=>x.id===id&&!x.archived);return d&&d.groupId?d:null;}
+/* THE DECKS ON THE BACK ROW (Rob, 15 September). Each finalized, unarchived deck, with the set of
+   cards its list still lacks a copy for — which is what lets the drop say, before anything is
+   staged, how many of what you are holding that deck can actually seat. */
+function deckShelf(){
+  const st=lens();
+  return st.decks.filter(d=>!d.archived).map(d=>{
+    const needs=new Set();
+    try{for(const r of M.deck(st,d.id).slots)if(r.committed&&r.purpose==='main'&&M.shortfall(st,d,r)>0)needs.add(r.cardId);}catch(err){/* a deck mid-edit still gets a pile */}
+    return {id:d.id,name:d.name,needs};
+  });
+}
 function playSpec(params){
   const d=playDeck(params),sb=C.sandbox,shelf=!d;
   return {deck:d?{id:d.id,name:d.name,groupId:d.groupId}:null,trays:ttUI.trays,at:ttUI.drawAt,
@@ -427,7 +438,10 @@ function playSpec(params){
        collection groups, the trays are buckets bound to one each, and a group's membership is
        what the row already carries -- so the module lays them out and this view answers only
        the two questions it alone can: which groups exist, and which ones this row is in. */
-    groups:shelf?C.state.groups.map(g=>({id:g.id,name:g.name})):[],
+    /* A deck's own group is the deck, and the deck is a pile on the back row now — so it is not
+       also a destination in the band, where six of them crowded out the groups being sorted into
+       (Rob, 15 September, with the screenshot that made the case). */
+    groups:shelf?C.state.groups.filter(g=>!C.state.decks.some(d=>d.groupId===g.id)).map(g=>({id:g.id,name:g.name})):[],
     trayGroups:shelf?ttUI.trayGroups:[],
     groupOf:r=>r.groupIds||[],
     /* The sandbox answers first, because a staged move is a claim and the hand is not: in deck
@@ -499,7 +513,7 @@ function tabletop(params,shop=false){
     const have=new Set(base.map(r=>r.cardId));
     const sent=sentRows().filter(r=>!have.has(r.cardId)&&matches(r));
     const all=base.concat(sent);lastRows=all;
-    const model=TT.table(all,{groupBy:tabletopGroupBy,statuses:M.STATUS,statusOrder:M.statusOrder,value,maxGroupPiles:16,statusSort:tabletopStatusOrder,play:playSpec(params)});ttModel=model;
+    const model=TT.table(all,{groupBy:tabletopGroupBy,statuses:M.STATUS,statusOrder:M.statusOrder,value,maxGroupPiles:16,statusSort:tabletopStatusOrder,decks:deckShelf(),play:playSpec(params)});ttModel=model;
     $('#cm-tt-status').innerHTML=e(`${model.total.toLocaleString()} cop${model.total===1?'y':'ies'} on the table (${model.rows.toLocaleString()} rows) · Bench ${model.bench.count.toLocaleString()} · ${model.ghosts.toLocaleString()} ghost${model.ghosts===1?'':'s'}`+(Object.values(filter).some(v=>v!=='')||params.get('deck')?' · filtered':''))
       +(sent.length?` · ${sent.length} sent from Discover <button type="button" class="cm-text-button" data-action="table-clear-sent">Send them back</button>`:'');
     /* A selection that the filters no longer show is dropped; an open pile that vanished (a grouping change) closes. */
@@ -536,13 +550,16 @@ function tabletop(params,shop=false){
          refused pile ringed in red answers "can I drop here", which is the question being asked;
          in a menu the same thing is only noise. */
       onMoveTo:(ids,el)=>{const rows=ids.map(id=>findRow(id)).filter(Boolean);
-        const open=[...ttModel.statusPiles,...(ttModel.shelfPiles||[]),ttModel.bench,...ttModel.groupPiles].map(p=>({p,a:TT.accepts(p,rows)})).filter(x=>x.a.ok);
+        const open=[...ttModel.statusPiles,...(ttModel.shelfPiles||[]),...(ttModel.deckPiles||[]),ttModel.bench,...ttModel.groupPiles].map(p=>({p,a:TT.accepts(p,rows)})).filter(x=>x.a.ok);
         /* Nothing accepts it: the Bench is the most permissive destination there is, so its refusal
            is the fundamental one and the only sentence worth printing. */
         popAt(el,`<p>Move ${rows.length} card${rows.length===1?'':'s'} to</p>`+(open.length
           ?open.map(({p,a})=>`<button type="button" data-action="tabletop-drop" data-pile="${e(p.id)}" title="${e(a.why)}">${e(p.label)} <small>${e(a.label)}</small></button>`).join('')
           :note(TT.accepts(ttModel.bench,rows).why||'There is nowhere on the table this card can be moved to.',true)));},
-      onBench:open=>{ttUI.bench=open?'open':'shut';try{localStorage.setItem('cm-tabletop-bench',ttUI.bench);}catch(err){/* not remembered, still applied */}draw();queueMicrotask(()=>$('#cm-tt-host [data-tt=bench-toggle]')?.focus?.({preventScroll:true}));},
+      /* A DECK'S PILE IS THE DECK FILTER (Rob, 15 September), which is the same control the Deck
+         select in the toolbar drives — so it goes through the route, and picking one also puts
+         the middle into that deck's play space, because that is what picking a deck means here. */
+      onDeckPick:id=>goCards(tab,{view:'tabletop',...(id?{deck:id}:{})}),
       /* THE CANVAS (Rob, 14 September): which table you are working on, remembered per device
          because it is a fact about this screen rather than about the library. */
       onCanvas:c=>{ttUI.canvas=CrankTabletop.canvasOf(c);try{localStorage.setItem('cm-tabletop-canvas',ttUI.canvas);}catch(err){/* not remembered, still applied */}draw();queueMicrotask(()=>$('#cm-tt-host [name=tabletopCanvas]')?.focus?.({preventScroll:true}));},
@@ -581,7 +598,7 @@ function tabletop(params,shop=false){
         return {status:r.status||statusOf(r),price:r.card&&r.card.price!=null?C.money(r.card.price):'',deck:where,
           ownership:`${o.owned}/${o.wanted}`,
           ownershipWhy:`You own ${o.owned} of the ${o.wanted} cop${o.wanted===1?'y':'ies'} ${where?'the '+where+' list calls for':'your lists call for'}.`};}
-    },{...ttUI,viewportHeight:innerHeight,score:scoreboard(model)});
+    },{...ttUI,deck:params.get('deck')||'',viewportHeight:innerHeight,score:scoreboard(model)});
   };
   draw();
   const host=C.main;
@@ -691,6 +708,12 @@ function tabletopDrop(pileId,ids){
       note(`${names}. ${adds?`${adds} of these ${adds===1?'is':'are'} not on ${d.name}'s list yet, so confirming adds ${adds===1?'it':'them'} — the list goes from ${target} to ${after}${after>100?`, ${after-100} over a hundred`:''}.`:`Every one of these is already on ${d.name}'s list; confirming reserves your copies for the seats they fill.`}`,after>100)
       +note('Staged, not saved: this joins the sitting and is written when you confirm.'),
       ()=>stageRows(rows,{action:'tray',tray:n,deckId:d.id,deckName:d.name,to:`Tray ${n}`,toStatus:'Reserved'}),'Stage the move');return;}
+  /* A DECK'S OWN PILE (Rob, 15 September). The deck is known, so there is no form to fill: one
+     `place` reserves the copy for the seat it fills and records it as physically in that box,
+     which is what "reserved and in physical deck" means in the model's own words. A copy the list
+     does not call for is refused by name at Confirm, with the model's sentence. */
+  if(action==='seat'){const d=M.deck(C.state,pile.deckId);
+    return stageRows(rows,{action:'place',deckId:d.id,deckName:d.name,to:'Physical deck'});}
   if(action==='place'||action==='standin'){if(!finals.length)throw Error('Finalize a deck first — a draft holds no physical copies.');
     const standin=action==='standin',preferred=rows.map(r=>r.allocation?.deckId).find(Boolean)||'';
     const chosen=preferred||(finals[0]||{}).id||'';

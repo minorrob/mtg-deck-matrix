@@ -145,11 +145,27 @@
       });
       shelfPiles.push({id: "shelf:new", kind: "shelfnew", label: "New group…", rows: [], count: 0, top: null, target: true});
     }
+    /* THE DECKS ARE NOT DESTINATIONS ALONG THE BOTTOM, THEY ARE A SHELF AT THE BACK (Rob, 15
+       September). Six deck groups standing in the band with the collection groups read as the
+       same kind of thing and crowded out the groups he was actually sorting into. A deck is a
+       source and a place, like the Bench beside it, so it belongs on the back row: one pile each,
+       a click filters the table to it, and a drop seats the copy — reserved and in the box.
+
+       `options.decks` is the caller's list, `[{id, name, needs}]`, where `needs` is the set of
+       card ids that deck's list still lacks a copy for. The pile holds the rows that name it,
+       which is what makes a click a filter a reader can predict from the count under the pile. */
+    const deckPiles = (options.decks || []).filter((d) => d && d.id).map((d) => {
+      const list = (rows || []).filter((r) => r.deckId === d.id || r.standInDeckId === d.id)
+        .sort((a, b) => String(a.card && a.card.name).localeCompare(String(b.card && b.card.name)));
+      return {id: "deckpile:" + d.id, kind: "deckpile", deckId: String(d.id), label: String(d.name || "A deck"),
+        needs: d.needs instanceof Set ? d.needs : new Set(d.needs || []),
+        rows: list, count: count(list), top: list[0] || null, target: true};
+    });
     const benchSorted = bench.slice().sort((a, b) => String(a.card && a.card.name).localeCompare(String(b.card && b.card.name)));
     return {
       groupBy, groupings: GROUPINGS, statusSort: options.statusSort === "count" ? "count" : "workflow",
       bench: {id: "bench", kind: "bench", label: BENCH, rows: benchSorted, count: count(benchSorted), top: benchSorted[0] || null},
-      statusPiles, groupPiles, shelfPiles, play: playModel,
+      statusPiles, groupPiles, shelfPiles, deckPiles, play: playModel,
       total: count(all || []), rows: (all || []).length, ghosts: (all || []).filter(isGhost).length
     };
   }
@@ -316,7 +332,7 @@
     return {cards, cols, lines, perPage, pages, page: p, from, to, total, size: sizeOf(size), w: sz.w, h: sz.h, gap: sz.gap, cap: sz.cap, height: lines * pitch - sz.gap,
       copies, label: total ? `${(from + 1).toLocaleString()}–${to.toLocaleString()} of ${total.toLocaleString()}${copies !== total ? ` · ${copies.toLocaleString()} copies` : ""}` : "Nothing on this pile"};
   }
-  const findPile = (model, id) => (id === "bench" ? model.bench : [...model.statusPiles, ...model.groupPiles, ...(model.shelfPiles || []), ...playPiles(model)].find((p) => p.id === id) || null);
+  const findPile = (model, id) => (id === "bench" ? model.bench : [...model.statusPiles, ...model.groupPiles, ...(model.shelfPiles || []), ...(model.deckPiles || []), ...playPiles(model)].find((p) => p.id === id) || null);
   const rowsById = (model) => { const m = new Map(); for (const p of [model.bench, ...model.statusPiles, ...playPiles(model)]) for (const r of p.rows) m.set(r.recordId, r); return m; };
 
   /* The recombine (plan §2.2): the cards not selected slide back into their pile, transforms
@@ -454,6 +470,21 @@
       if (!lots.length && !cats.length) return no("Nothing here is a card record.");
       return yes("shelfnew", "File in a new group…", "Asks for a name and makes the group at once — a group is a fact, not a move — then stages the filings like every other move.");
     }
+    /* A DECK'S OWN PILE (Rob, 15 September): dropping a copy on it seats the card — reserved for
+       the seat it fills and recorded as physically in that deck's box. One `place` does both,
+       because the model reserves a copy on the way in when the deck's list calls for it. */
+    if (pile.kind === "deckpile") {
+      if (others || plans.length) return no("Only a copy goes into a deck's box; a plan is filed with its deck.");
+      if (cats.length) return no(NOT_HELD);
+      if (!lots.length) return no("Nothing here is a copy record.");
+      if (lots.some((r) => r.source !== "owned")) return no("Only an owned copy can go into a box; record an ordered card as arrived first.");
+      const wanted = lots.filter((r) => pile.needs && pile.needs.has(r.cardId)).length;
+      return yes("seat", `Reserve for ${pile.label} and put it in the box`, wanted === lots.length
+        ? `Reserves the copy for the seat it fills and records it as physically in ${pile.label}'s box.`
+        : wanted
+          ? `${wanted} of ${lots.length} are on ${pile.label}'s list and still short; the rest are refused at Confirm unless you put them in as substitutes.`
+          : `${pile.label}'s list does not call for ${lots.length === 1 ? "this card" : "these cards"}, or already has ${lots.length === 1 ? "it" : "them"} — drop ${lots.length === 1 ? "it" : "them"} on Substitute instead.`);
+    }
     if (pile.kind === "group") {
       if (pile.key === "groups") {
         if (pile.folded || /^No /.test(pile.label)) return no("Choose a named group.");
@@ -575,21 +606,31 @@
     const mode = selected.length ? "selected" : openPile ? "open" : "rest";
     const homeId = mode === "selected" ? ui.from || ui.open : mode === "open" ? ui.open : null;
     const stackHeight = (n) => Math.min(14, Math.ceil(Math.sqrt(Math.max(0, n))) * 1.5);
-    const pile = (p, x, y, kind) => {
+    const pile = (p, x, y, kind, flow = false) => {
       const n = p.count, h = stackHeight(n), isOpen = p.id === homeId;
       const faces = p.top ? cardFace(p.top, {ghost: p.ghost || (kind === "group" && p.rows.length && p.rows.every(isGhost))}) : "";
       const title = p.folded ? `${p.label}: ${p.bands.join(", ")}` : p.label;
-      const door = p.kind === "shelfnew";
-      return `<button type="button" class="cm-tt-pile cm-tt-${kind}${n ? "" : " is-empty"}${isOpen ? " is-open cm-tt-home" : ""}" data-tt="open" data-pile="${esc(p.id)}" aria-pressed="${isOpen ? "true" : "false"}" style="left:${x}px;top:${y}px;--stack:${h}px" title="${esc(door ? "Drop cards here to make a group for them" : title)}" aria-label="${esc(title)}${door ? "" : `, ${n} card${n === 1 ? "" : "s"}`}"><span class="cm-tt-slot">${door ? "<span class=\"cm-tt-newmark\" aria-hidden=\"true\">+</span>" : ""}</span><span class="cm-tt-stack">${faces}</span>${placard(p.label, door ? null : n, "")}</button>`;
+      const door = p.kind === "shelfnew", deck = p.kind === "deckpile";
+      /* A deck's pile is a FILTER, not a pile to lay out (Rob, 15 September) — so its verb is its
+         own. It keeps `data-pile`, because that is what makes it a drop target and what findPile
+         reads; only the click means something different. */
+      const tt = deck ? "deck-pick" : "open";
+      const extra = deck ? ` data-deck="${esc(p.deckId)}"` : "";
+      const place = flow ? `--stack:${h}px` : `left:${x}px;top:${y}px;--stack:${h}px`;
+      return `<button type="button" class="cm-tt-pile cm-tt-${kind}${flow ? " is-flow" : ""}${n ? "" : " is-empty"}${isOpen ? " is-open cm-tt-home" : ""}${deck && ui.deck === p.deckId ? " is-on" : ""}" data-tt="${tt}"${extra} data-pile="${esc(p.id)}" aria-pressed="${deck ? (ui.deck === p.deckId ? "true" : "false") : isOpen ? "true" : "false"}" style="${place}" title="${esc(door ? "Drop cards here to make a group for them" : deck ? `Show only ${p.label}'s cards` : title)}" aria-label="${esc(title)}${door ? "" : `, ${n} card${n === 1 ? "" : "s"}`}"><span class="cm-tt-slot">${door ? "<span class=\"cm-tt-newmark\" aria-hidden=\"true\">+</span>" : ""}</span><span class="cm-tt-stack">${faces}</span>${placard(p.label, door ? null : n, "")}</button>`;
     };
-    /* The Bench along the back: a fan of as many cards as the ledge is wide, and a count of
-       the rest. */
-    const rail = model.bench, benchShut = ui.bench === "shut", railH = benchShut ? 46 : narrow ? 112 : 118, benchOpen = homeId === "bench";
-    const fanCount = Math.max(0, Math.min(rail.rows.length, narrow ? Math.floor((width - 60) / 24) : Math.floor((width - 220) / 26)));
-    /* The ledge folds to its placard on request (Rob, 14 September) and stays folded on this
-       device; folded, the Bench is still a pile — the chip lays it out. */
-    const fanHTML = benchShut ? `<span class="cm-tt-more">Lay out</span>` : `${rail.rows.slice(0, fanCount).map((r) => cardFace(r, {cls: "cm-tt-fanned"})).join("")}${rail.rows.length > fanCount ? `<span class="cm-tt-more">+${(rail.rows.length - fanCount).toLocaleString()}</span>` : ""}`;
-    const railHTML = `<div class="cm-tt-rail${benchOpen ? " is-open" : ""}${benchShut ? " is-shut" : ""}"><div class="cm-tt-placard cm-tt-rail-placard"><strong>${esc(rail.label)}</strong> · ${rail.count.toLocaleString()}<small>owned, in no deck</small></div><button type="button" class="cm-tt-rail-toggle" data-tt="bench-toggle" aria-expanded="${benchShut ? "false" : "true"}" aria-label="${benchShut ? "Show the Bench's cards" : "Hide the Bench's cards"}">${benchShut ? "Show" : "Hide"}</button><button type="button" class="cm-tt-fan${benchOpen ? " cm-tt-home" : ""}" data-tt="open" data-pile="bench" aria-pressed="${benchOpen ? "true" : "false"}" aria-label="Bench, ${rail.count} cards">${fanHTML}</button></div>`;
+    /* THE BACK ROW (Rob, 15 September): the Bench and the decks, side by side, both as piles.
+       The Bench used to fan out as many cards as the ledge was wide — and a fanned card could not
+       be clicked, dragged or read, so it was three hundred pictures decorating a count. One pile
+       says the same thing in a tenth of the room, and the room is what the deck shelf needed. */
+    const rail = model.bench, decks = model.deckPiles || [], railH = narrow ? 150 : 162;
+    /* The Bench container carries no heading: its pile's placard already names it, and a second
+       label over one pile is the kind of thing that makes a board feel wordy. */
+    const benchHTML = `<div class="cm-tt-rail">${pile(rail, 0, 0, "bench", true)}</div>`;
+    /* One pile per deck, scrolling sideways when there are more than the mat is wide, and a
+       Select all that clears the filter rather than choosing a seventh deck. */
+    const deckHTML = `<div class="cm-tt-decks"><span class="cm-tt-rail-head">Decks<button type="button" class="cm-tt-allchip${ui.deck ? "" : " is-on"}" data-tt="deck-pick" data-deck="" aria-pressed="${ui.deck ? "false" : "true"}" title="Show every deck's cards">Select all</button></span>${decks.length ? `<div class="cm-tt-deckrow">${decks.map((d) => pile(d, 0, 0, "deckpile", true)).join("")}</div>` : `<p class="cm-tt-play-invite">No decks yet. Build one and it stands here — a click filters the table to it, a drop seats a copy in its box.</p>`}</div>`;
+    const railHTML = `<div class="cm-tt-backrow" style="height:${railH}px">${benchHTML}${deckHTML}</div>`;
     const groups = model.groupPiles, gN = groups.length;
     /* THE BAND ALONG THE BOTTOM IS THE MODE (plan §2.15). With a deck picked it is the six
        statuses a card can be put into; with none it is the collection groups and a door to a new
@@ -835,7 +876,9 @@
       else if (kind === "clear") { hooks.onClear && hooks.onClear(); }
       else if (kind === "moveto") { hooks.onMoveTo && hooks.onMoveTo(selected.map((r) => r.recordId), t); }
       else if (kind === "print") { hooks.onPrint && hooks.onPrint(t.dataset.pile); }
-      else if (kind === "bench-toggle") { hooks.onBench && hooks.onBench(benchShut); }
+      /* A deck's pile filters the table to that deck (and with it, puts the middle into that
+         deck's play space); Select all sends an empty id, which clears the filter. */
+      else if (kind === "deck-pick") { hooks.onDeckPick && hooks.onDeckPick(t.dataset.deck || ""); }
       else if (kind === "stage-size") { hooks.onStageSize && hooks.onStageSize(t.dataset.size); }
       else if (kind === "step") { if (t.dataset.record) hooks.onStep && hooks.onStep(t.dataset.record); }
       /* The play space (PR 3b). Stepping the draw pile is a view change and never leaves the
@@ -866,7 +909,7 @@
           drag.el = document.createElement("div"); drag.el.className = "cm-tt-drag"; drag.el.innerHTML = `<span class="cm-tt-drag-count">${selected.length}</span><span class="cm-tt-drag-say"></span>`; document.body.append(drag.el);
         }
         drag.el.style.left = ev.clientX + "px"; drag.el.style.top = ev.clientY + "px";
-        const under = document.elementFromPoint(ev.clientX, ev.clientY), pileEl = under && under.closest("[data-tt=open][data-pile]");
+        const under = document.elementFromPoint(ev.clientX, ev.clientY), pileEl = under && under.closest("[data-pile]");
         const id = pileEl ? pileEl.dataset.pile : null;
         if (id !== drag.over) {
           clearMarks(); drag.over = id; drag.ok = false;
@@ -890,7 +933,7 @@
        PageUp and PageDown turn the page, Space ticks the card and Enter chooses it. Escape is
        the table at rest. */
     const focusables = (list) => list.filter((el) => el && !el.hidden);
-    const pileRows = () => [focusables([host.querySelector(".cm-tt-fan")]), focusables([...host.querySelectorAll(".cm-tt-pile.cm-tt-group, .cm-tt-chip")]), focusables([...host.querySelectorAll(".cm-tt-draw, .cm-tt-tray, .cm-tt-playchip")]), focusables([...host.querySelectorAll(".cm-tt-pile.cm-tt-status, .cm-tt-pile.cm-tt-shelfgroup, .cm-tt-pile.cm-tt-shelfnew, .cm-tt-reading")])].filter((row) => row.length);
+    const pileRows = () => [focusables([...host.querySelectorAll(".cm-tt-backrow .cm-tt-pile, .cm-tt-allchip")]), focusables([...host.querySelectorAll(".cm-tt-pile.cm-tt-group, .cm-tt-chip")]), focusables([...host.querySelectorAll(".cm-tt-draw, .cm-tt-tray, .cm-tt-playchip")]), focusables([...host.querySelectorAll(".cm-tt-pile.cm-tt-status, .cm-tt-pile.cm-tt-shelfgroup, .cm-tt-pile.cm-tt-shelfnew, .cm-tt-reading")])].filter((row) => row.length);
     host.onkeydown = (ev) => {
       const el = ev.target;
       if (ev.key === "Escape" && mode !== "rest") { ev.preventDefault(); hooks.onClear && hooks.onClear(); return; }
@@ -915,7 +958,9 @@
         else if (ev.key === "PageUp") { ev.preventDefault(); hooks.onPage && hooks.onPage(Math.max(0, (ui.page | 0) - 1)); }
         return;
       }
-      if (el.matches && el.matches("[data-tt=open]") && /^Arrow/.test(ev.key)) {
+      /* The back row walks with the arrows too, though a deck pile and "Select all" are picks
+         rather than piles to lay out — so the arrow model reads both verbs, not just `open`. */
+      if (el.matches && el.matches("[data-tt=open], [data-tt=deck-pick]") && /^Arrow/.test(ev.key)) {
         const rows = pileRows(); const r = rows.findIndex((row) => row.includes(el)); if (r < 0) return;
         const i = rows[r].indexOf(el); let target = null;
         if (ev.key === "ArrowRight") target = rows[r][Math.min(rows[r].length - 1, i + 1)];
