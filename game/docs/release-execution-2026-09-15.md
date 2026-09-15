@@ -8,6 +8,8 @@ PR #232 was merged as `d4eed7c` after CI and local checks. On 2026-09-15 the dep
 
 The user subsequently authorized **Phase A (Astra foundation before Sol implementation)**. See [Phase A / Sol handoff](phase-a-sol-handoff.md) for the architecture, contracts, bounded real-engine proofs and ordered implementation tickets. Final 13-milestone proof and mobile work remain later.
 
+Phase A is complete for handoff: separate Forge controllers, private projections, exact-action transport proof, lifecycle/access contracts and ordered S1–S10 implementation tickets are ready. On 2026-09-15 the owner explicitly moved the live-provider test to Phase C. No live API requests were made. This deferral does not waive the full API pilot evaluation or final desktop acceptance gates.
+
 ## Stage 1 — launch and solo play (merged; remaining acceptance boundaries below)
 
 - Base: main `e29e7b4` (includes PRs #230 and #231). Branch: `codex/online-launch-uat`.

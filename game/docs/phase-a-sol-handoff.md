@@ -1,6 +1,6 @@
 # Phase A — foundation and Sol execution contract
 
-Status: foundation implemented; real three-controller opening/draw/land proof and native-AI turn passed. Live-provider check awaits owner key entry. This document does not certify multiplayer release or the final acceptance walkthrough.
+Status: Phase A complete for handoff. Real three-controller opening/draw/land proof and native-AI turn passed. The owner explicitly deferred the live-provider test to Phase C on 2026-09-15; no live API request was made. This document does not certify multiplayer release or the final acceptance walkthrough.
 
 ## Decisions that implementation must preserve
 
@@ -107,6 +107,8 @@ For the first personal remote proof, a scoped HTTPS tunnel or equivalent ingress
 
 Sol hands back commit/PR IDs, passing commands, browser evidence, full-game journal references (kept private), known limitations and the revised startup guide draft. Astra independently reviews the cross-component implementation and failure cases, fixes findings, then executes the 13 final milestones only after all earlier work is complete. Landscape mobile follows that proof.
 
+**Deferred Phase C prerequisite:** run the bounded live-provider proof with the owner's chosen provider and memory-only key entry. Record provider/model, accepted legal decision, exact Forge application, private-view checks and engine cleanup. Then independently evaluate the complete S6 pilot, difficulty behavior and provider failures. Passing mocked adapters or native Forge AI does not satisfy either live API gate. Complete these checks before the final 13-milestone walkthrough.
+
 ## Phase A evidence and reproduction
 
 - Public HTTPS Play → Check again → Continue transferred the selected deck into local Play on 2026-09-15. Health returned product/protocol and exact public-origin CORS. Earlier failure was not reproduced; no browser permission or security setting was changed. Cold/error recovery still belongs in S1.
@@ -115,5 +117,7 @@ Sol hands back commit/PR IDs, passing commands, browser evidence, full-game jour
 - Expanded final-adapter run: `game/.local/games/2026-09-15T17-12-46-960Z/phase-a-result.json`; 282 private-view checks, all six cross-seat token combinations rejected, each human drew and played a land, native AI played its land, returned to the first human at turn 5. Passed and test process closed. This verifies more than opening configuration; it still is not a full game or tactical AI evaluation.
 - `node --test game/tests/*.test.mjs`: 37 passing tests at the first foundation checkpoint. Java `BridgeProtocolCheck`: 16 passing checks; `CombatAssignmentCheck`: 10 passing checks.
 - Full repository regression: all 62 suites passed after the foundation changes.
-- `node game/tools/phase-a-api-host.mjs` serves a temporary form at `http://127.0.0.1:8771/`. The owner enters their key directly and explicitly starts the live test. Provider test uses synthetic game data, Sol, at most three requests and 512 output tokens per request. No configured key existed when Phase A began. A mock response test is not evidence of a live OpenAI call; the latter stays pending until the owner runs it.
+- `node game/tools/phase-a-api-host.mjs` serves a temporary form at `http://127.0.0.1:8771/`. The owner enters their key directly and explicitly starts the live test. The form supports Anthropic Claude Haiku 4.5 (default) and OpenAI GPT-5.6 Sol, synthetic game data, at most three requests and 512 output tokens per request. No configured key existed when Phase A began. Windows Credential Manager was checked at the owner's request; no Anthropic/Claude target was found and no credential values were read. The owner deferred live verification to Phase C; the idle form was stopped without making a provider request. Mocked adapter tests do not certify a live provider call.
+- Anthropic uses the official [Messages API](https://platform.claude.com/docs/en/api/messages/create) and [structured output contract](https://platform.claude.com/docs/en/build-with-claude/structured-outputs). Both adapters independently reject unavailable indices, extra fields, invalid JSON, incomplete/refused output and HTTP failures. No model can directly mutate Forge state. Game tests now total 39 passing checks after adding Anthropic adapter coverage.
+- GitHub Actions Tests run 543 passed for foundation commit `9a4a0fa`. Expanded-run journal audit found one manifest, 1,413 events, 46 browser actions/answers attributed to the three seats, unique sequences and unique applied action IDs despite exact retries.
 - No actual friend participation, internet lobby, API strategic competency, complete multiplayer match, deck-report integration, cloud deployment or final 13-milestone acceptance is certified by this checkpoint.
