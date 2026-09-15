@@ -6,7 +6,7 @@ import {randomUUID} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import {setupCatalog,prepareSetup,importWorkshopDeck} from './setup-catalog.mjs';
 import {launchLocalGame,liveStatus,browserBridge,resumeLocalGame,closeLocalGame} from './local-game-launcher.mjs';
-if(process.env.COMMANDER_RESUME)await resumeLocalGame(process.env.COMMANDER_RESUME);
+if(process.env.COMMANDER_RESUME)try{await resumeLocalGame(process.env.COMMANDER_RESUME);}catch{console.warn('Previous Forge match is unavailable. Game logs are retained; open Game setup to start a new match.');}
 const port=Number(process.env.COMMANDER_PORT||8768);
 if(!Number.isInteger(port)||port<1024||port>65535)throw Error('Invalid local port');
 const authority='127.0.0.1:'+port,origin='http://'+authority;
@@ -15,6 +15,8 @@ const files=new Map([['/',['game/ui/review.html','text/html']],['/review.css',['
 files.set('/playmats.mjs',['game/ui/playmats.mjs','text/javascript']);
 files.set('/mana-status.mjs',['game/ui/mana-status.mjs','text/javascript']);
 files.set('/play-guidance.mjs',['game/ui/play-guidance.mjs','text/javascript']);
+files.set('/action-policy.mjs',['game/ui/action-policy.mjs','text/javascript']);
+files.set('/card-layout.mjs',['game/ui/card-layout.mjs','text/javascript']);
 for(const name of ['moonlit-tree','golden-lotus','sunlit-familiar','shadow-forest','mountain-horizon','spirit-warrior','violet-bloom'])files.set('/playmats/'+name+'.png',['game/ui/assets/playmats/'+name+'.png','image/png']);
 files.set('/mats.css',['game/ui/mats.css','text/css']);
 files.set('/rob-playmat.png',['game/ui/assets/rob-playmat.png','image/png']);
@@ -34,6 +36,18 @@ createServer(async(req,res)=>{
   const reply=(status,value)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(value));};
   if(pathname.startsWith('/api/')){
     if(req.headers.host!==authority)return reply(403,{error:'Use the local 127.0.0.1 address'});
+    // Public launch checks reveal no session token, deck, or engine position.
+    if(pathname==='/api/health'){
+      if(['https://minorrob.github.io','http://localhost:'+port].includes(req.headers.origin)){
+        res.setHeader('Access-Control-Allow-Origin',req.headers.origin);
+        res.setHeader('Vary','Origin');
+        res.setHeader('Access-Control-Allow-Methods','GET');
+        res.setHeader('Access-Control-Allow-Private-Network','true');
+      }
+      if(req.method==='OPTIONS'){res.writeHead(204);return res.end();}
+      if(req.method==='GET')return reply(200,{product:'CrankMagic Online',protocol:1});
+      return reply(405,{error:'Read-only health check'});
+    }
     if(req.method==='GET'&&pathname==='/api/setup')return reply(200,{...setupCatalog(),token});
     if(req.method==='GET'&&pathname==='/api/live')return reply(200,liveStatus());
     if(req.method==='GET'&&pathname==='/api/game-view'){try{return reply(200,await browserBridge('view'));}catch(e){return reply(409,{error:e.message});}}

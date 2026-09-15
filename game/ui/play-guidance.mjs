@@ -2,6 +2,7 @@
 const board=p=>p?.zones?.Battlefield?.cards||[];
 const creatures=p=>board(p).filter(c=>c.typeLine?.includes('Creature'));
 export function recommendedActions(state,ui,history=[]){
+  if(state?.gameOver)return [];
   const you=state?.players?.find(p=>p.playerId===0);if(!you||state.turnPlayerId!==0)return [];
   const rows=[],add=(title,reason,cardId)=>rows.push({title,reason,...(cardId!=null?{cardId}:{})});
   const phase=state.phase,hand=you.zones.Hand.cards,opponents=state.players.filter(p=>p.playerId!==0&&p.health?.status!=='out');
@@ -43,6 +44,6 @@ export function recommendedActions(state,ui,history=[]){
 
 export function combatTotals(attacks=[]){
   const defenders=new Map();
-  for(const row of attacks){if(!row.defender)continue;const key=row.defender.kind+':'+row.defender.id;let total=defenders.get(key);if(!total){total={...row.defender,power:0,unblockedPower:0,commanderPower:0,infectPower:0};defenders.set(key,total);}const power=Math.max(0,Number(row.attacker.power)||0);total.power+=power;if(!row.blocked&&!row.blockers.length)total.unblockedPower+=power;if(row.attacker.commander)total.commanderPower+=power;if(row.attacker.keywords?.includes('infect'))total.infectPower+=power;}
+  for(const row of attacks){if(!row.defender)continue;const key=row.defender.kind+':'+row.defender.id;let total=defenders.get(key);if(!total){total={...row.defender,power:0,unblockedPower:0,commanderPower:0,infectPower:0,flyingPower:0,tramplePower:0,groundPower:0};defenders.set(key,total);}const power=Math.max(0,Number(row.attacker.power)||0);total.power+=power;if(!row.blocked&&!row.blockers.length)total.unblockedPower+=power;if(row.attacker.commander)total.commanderPower+=power;if(row.attacker.keywords?.includes('infect'))total.infectPower+=power;if(row.attacker.keywords?.includes('flying'))total.flyingPower+=power;else total.groundPower+=power;if(row.attacker.keywords?.includes('trample'))total.tramplePower+=power;}
   return [...defenders.values()];
 }

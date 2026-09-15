@@ -136,7 +136,7 @@ public final class ForgeProbe {
         if (v instanceof CardView c) return obj("cardId",c.getId(),"name",c.getCurrentState().getName(),"faceDown",c.isFaceDown());
         if (v instanceof PlayerView p) return obj("playerId",p.getId(),"name",p.getName());
         if (v instanceof SpellAbilityView s) return obj("abilityId",s.getId(),"host",capture(s.getHostCard()),"description",s.getDescription(),"isSpell",s.isSpell());
-        if (v instanceof StackItemView s) return obj("stackId",s.getId(),"source",capture(s.getSourceCard()),"actor",capture(s.getActivatingPlayer()),"isTrigger",s.isTrigger());
+        if (v instanceof StackItemView s) return obj("stackId",s.getId(),"source",capture(s.getSourceCard()),"actor",capture(s.getActivatingPlayer()),"isTrigger",s.isTrigger(),"targets",stackTargets(s,null));
         if (v instanceof Card c) return capture(c.getView());
         if (v instanceof Player p) return capture(p.getView());
         if (v instanceof com.google.common.collect.Multimap<?,?> multimap) return capture(multimap.asMap());
@@ -177,7 +177,7 @@ public final class ForgeProbe {
                         "token",c.isToken(),"commander",c.isCommander(),"engineEffect",c.isImmutable(),
                         "controller",c.getController().getId(),"owner",c.getOwner().getId(),"tapped",c.isTapped(),
                         "faceDown",c.isFaceDown(),"damage",c.getDamage(),"counters",capture(c.getCounters()));
-                    if (faceVisible) { data.put("power",c.getNetPower()); data.put("toughness",c.getNetToughness()); }
+                    if (faceVisible) { data.put("power",c.getNetPower()); data.put("toughness",c.getNetToughness()); data.put("typeLine",c.getType().toString()); }
                     cards.add(data);
                 }
                 zones.put(zone.name(),obj("count",count,"hiddenCount",hidden,"cards",cards));
@@ -192,7 +192,33 @@ public final class ForgeProbe {
             "turnPlayerId",game.getPhaseHandler().getPlayerTurn()==null?null:game.getPhaseHandler().getPlayerTurn().getId(),
             "priorityPlayerId",game.getPhaseHandler().getPriorityPlayer()==null?null:game.getPhaseHandler().getPriorityPlayer().getId(),
             "phase",String.valueOf(game.getPhaseHandler().getPhase()),"players",players,
-            "combat",combatView(game),"stackSize",game.getStack().size(),"gameOver",game.isGameOver());
+            "combat",combatView(game),"stack",stackView(game,viewer),"stackSize",game.getStack().size(),"gameOver",game.isGameOver());
+    }
+
+    static List<Object> stackTargets(StackItemView root,Player viewer) {
+        List<Object> targets=new ArrayList<>();
+        for(StackItemView part=root;part!=null;part=part.getSubInstance()) {
+            if(part.getTargetCards()!=null)for(CardView card:part.getTargetCards()) {
+                boolean visible=!card.isFaceDown()&&(viewer!=null?card.canBeShownTo(viewer.getView()):
+                    List.of(ZoneType.Battlefield,ZoneType.Graveyard,ZoneType.Exile,ZoneType.Stack,ZoneType.Command).contains(card.getZone()));
+                targets.add(obj("kind","card","cardId",card.getId(),"name",visible?card.getCurrentState().getName():null,"hidden",!visible));
+            }
+            if(part.getTargetPlayers()!=null)for(PlayerView player:part.getTargetPlayers())targets.add(obj("kind","player","playerId",player.getId(),"name",player.getName()));
+        }
+        return targets;
+    }
+
+    static List<Object> stackView(Game game,Player viewer) {
+        List<Object> stack=new ArrayList<>();
+        for(var instance:game.getStack()) {
+            var view=instance.getView();var card=view.getSourceCard();var ability=instance.getSpellAbility();
+            boolean visible=card!=null&&!card.isFaceDown()&&(viewer==null||card.canBeShownTo(viewer.getView()));
+            stack.add(obj("stackId",view.getId(),"abilityId",ability.getId(),"cardId",card==null?null:card.getId(),
+                "name",visible?card.getCurrentState().getName():null,"faceDown",card!=null&&card.isFaceDown(),
+                "playerId",view.getActivatingPlayer()==null?null:view.getActivatingPlayer().getId(),
+                "kind",ability.isSpell()?"spell":view.isTrigger()?"trigger":"ability","stage","stack","targets",stackTargets(view,viewer)));
+        }
+        return stack;
     }
 
     static Map<String,Object> combatView(Game game) {

@@ -1,5 +1,7 @@
 import {defaultPlaymat,resolvePlaymat,readMatPreferences,paintMat} from '/playmats.mjs';
 import {openGameSetup} from '/setup.mjs';
+import {validateActionRevision,paymentMayAutoResolve} from '/action-policy.mjs';
+import {cardGridMetrics,arrangeCardGroups} from '/card-layout.mjs';
 // Earlier running hosts do not advertise this module until their next restart.
 const {manaStatus,manaColors,sourceColors}=await import('/mana-status.mjs').catch(()=>({manaStatus:null,manaColors:[]}));
 const {recommendedActions,combatTotals}=await import('/play-guidance.mjs').catch(()=>({recommendedActions:()=>[],combatTotals:()=>[]}));
@@ -16,9 +18,12 @@ window.addEventListener('message',event=>{if(event.origin===location.origin&&eve
 
 const data=await fetch('/match.json').then(r=>r.ok?r.json():{frames:[],log:[],pod:{seats:[]}}).catch(()=>({frames:[],log:[],pod:{seats:[]}}));
 let resizingBoard=false,boardWidth=null,draggingCard=null,suppressClickUntil=0,pendingPlay=null,lastTurnName='',live=null,livePolling=false,gameToken=null,lastState='',choiceId=null,actionBusy=false,noticeUntil=0,lastDecision='';
-const pendingCasts=new Map(),handPositions=new Map();let appliedRevision=-1,appliedMatch=null,paymentAttempt=null,paymentNotice='',yieldTurn=null;
+const pendingCasts=new Map(),handPositions=new Map();let appliedRevision=-1,appliedMatch=null,paymentAttempt=null,paymentNotice='',approvedPayment=null,yieldTurn=null;
 let primarySeat=0,followActive=false,followedTurn=null;const visualGroups=new Map(),freePositions=new Map();
 let hideOpponents=false,hideInformation=false;
+let cardZoom=100;try{const saved=Number(localStorage.getItem('crankmagic-card-zoom'));if(saved>=32&&saved<=140)cardZoom=saved;}catch{}
+const zoneLayouts=new Map(),cardLayoutObserver=new ResizeObserver(entries=>{for(const {target}of entries)zoneLayouts.get(target)?.();});
+function releaseCardLayouts(root){for(const zone of root.querySelectorAll('.mat-zone')){cardLayoutObserver.unobserve(zone);zoneLayouts.delete(zone);}}
 let lastActionError='';
 try{const saved=Number(localStorage.getItem('crankmagic-board-width'));if(saved>=320&&saved<=2400)boardWidth=saved;}catch{}
 const names=['You · Chulane','Krenko','Atraxa','Shadrix'];
@@ -81,11 +86,13 @@ function updatePendingCasts(){
 }
 function castingPreview(){
   const tray=el('section','casting-tray');tray.setAttribute('aria-label','Cards being played');
-  const announced=(frame().stack||[]).filter(item=>!pendingCasts.has(item.cardId)).map(item=>({cardId:item.cardId,card:{...item,name:item.name||'Face-down spell'},stage:item.stage==='casting'?'Mana payment needed':'On the stack · awaiting responses'}));
+  const announced=(frame().stack||[]).filter(item=>item.kind!=='spell'||!pendingCasts.has(item.cardId)).map(item=>({cardId:item.cardId,card:{...item,name:item.name||'Face-down spell'},stage:item.stage==='casting'?'Mana payment needed':'On the stack · awaiting responses'}));
   for(const cast of [...pendingCasts.values(),...announced]){
     const row=el('div','casting-card');row.dataset.pendingCard=cast.cardId;
     const art=button('',()=>inspect(cast.card),'casting-art');art.setAttribute('aria-label','Inspect pending '+cast.card.name);if(cast.card.art){const img=el('img');img.src=cast.card.art;img.alt=cast.card.name;art.append(img);}else art.textContent=cast.card.name;
     const info=el('div');info.append(el('small','',cast.card.kind&&cast.card.kind!=='spell'?'ABILITY':'SPELL'),el('strong','',cast.card.name),el('span','casting-status',cast.stage));
+    const stackItem=(frame().stack||[]).find(item=>cast.card.stackId!=null?item.stackId===cast.card.stackId:item.cardId===cast.cardId&&item.kind==='spell');
+    if(stackItem?.targets?.length){const list=el('div','casting-targets');list.append(el('strong','','Targets'));for(const target of stackItem.targets)list.append(el('span','',target.name||(target.kind==='player'?'Player '+target.playerId:'Hidden card #'+target.cardId)));info.append(list);}
     if(cast.stage.startsWith('On the stack')){info.append(el('small','',cast.card.kind&&cast.card.kind!=='spell'?'The ability resolves after responses.':/Creature|Artifact|Enchantment|Planeswalker|Battle/.test(cast.card.typeLine||'')?'Enters play after the spell resolves.':'Resolves after players finish responding.'));if(hasPriority()&&!live.ui.choice&&/^Priority:/m.test(live.ui.prompt)){const next=button('Pass priority',()=>gameAction({kind:'ok'},fresh=>fresh.ui.ok==='OK'&&fresh.ui.okEnabled&&!fresh.ui.choice&&fresh.state.stackSize>0&&fresh.state.priorityPlayerId===0),'primary-action');info.append(next);}}
     else if(live.ui.ok==='Auto'&&!live.ui.okEnabled)info.append(el('small','','Not enough available mana for automatic payment. Use a mana source or cancel below.'));
     else if(live.ui.choice||live.ui.nativeFallback)info.append(button('Show choice',()=>{mountControls();controls.scrollIntoView({block:'nearest',behavior:'smooth'});}));
@@ -95,7 +102,7 @@ function castingPreview(){
 }
 let selectedCardId=null,cardMenu=null;
 function highlightSelection(id){selectedCardId=id;for(const node of document.querySelectorAll('.card[data-card-id]'))node.classList.toggle('selected-card',Number(node.dataset.cardId)===id);}
-function closeCardMenu(){if(cardMenu){cardMenu.hidePopover();cardMenu.remove();cardMenu=null;}highlightSelection(null);}
+function closeCardMenu(){if(cardMenu){cardMenu.hidePopover();cardMenu.remove();cardMenu=null;}highlightSelection(null);lastDecision='';}
 function cardActions(c,anchor){
   if(canSelectCard(c)){gameAction({kind:'card',targetId:c.cardId});return;}
   closeCardMenu();highlightSelection(c.cardId);
@@ -111,7 +118,7 @@ function cardActions(c,anchor){
   ($('focus').open?$('focus'):document.body).append(body);body.showPopover();
   const r=anchor?.getBoundingClientRect()||{right:innerWidth/2,left:innerWidth/2,top:innerHeight/2};
   body.style.left=Math.max(8,Math.min(innerWidth-body.offsetWidth-8,r.right+10))+'px';body.style.top=Math.max(8,Math.min(innerHeight-body.offsetHeight-8,r.top))+'px';
-  body.addEventListener('toggle',event=>{if(event.newState==='closed'&&cardMenu===body){cardMenu=null;body.remove();highlightSelection(null);}});
+  body.addEventListener('toggle',event=>{if(event.newState==='closed'&&cardMenu===body){cardMenu=null;body.remove();highlightSelection(null);lastDecision='';}});
   (body.querySelector('.primary-action:not(:disabled)')||body.querySelector('button'))?.focus();
 }
 function refreshBoards(){if(draggingCard!==null||resizingBoard||!frame())return;render();if($('focus').open)focusBoard(frame().players.find(p=>p.playerId===Number($('focus').dataset.seat)));}
@@ -272,7 +279,7 @@ function focusBoard(p){
   const dialog=$('focus');dialog.className='focus-dialog tone-'+p.playerId;dialog.dataset.seat=p.playerId;
   $('focus-title').textContent=names[p.playerId];
   $('focus-status').replaceChildren(el('strong','',turnLabel()),button('Life '+p.health.life+' · Poison '+p.health.poison+'/10',()=>showHealth(p)));
-  const content=$('focus-content'),scrollTop=content.scrollTop;disposeCarousels(content);content.replaceChildren();
+  const content=$('focus-content'),scrollTop=content.scrollTop;disposeCarousels(content);releaseCardLayouts(content);content.replaceChildren();
   const stage=el('div','focus-mat-stage');stage.append(matView(p,true));content.append(stage);
   if(p.playerId===0){const hand=el('section','focus-hand');hand.id='focus-hand';const heading=el('div','hand-label');heading.append(el('strong','','Your hand'),el('span','',p.zones.Hand.count+' cards'));hand.append(heading,handCarousel(p.zones.Hand.cards,'focus-hand-cards'));content.append(hand);}
   else content.append(el('p','fine','Opponent hand: '+p.zones.Hand.count+' cards · hidden'));
@@ -297,10 +304,12 @@ function matView(p,focused=false){
   for(const [name,cls,cards] of [['Battlefield','mat-battlefield',nonlands],['Lands','mat-lands',lands]]) {
     const zone=el('section',`mat-zone ${cls}`);zone.setAttribute('aria-label',`${names[p.playerId]} ${name}`);
     const list=el('div','cards mat-cards');
-    const grouped=new Map(),capacity=name==='Lands'?7:4,crowded=cards.filter(c=>!freePositions.has(c.cardId)).length>capacity;
+    const grouped=new Map(),capacity=name==='Lands'?6:3,crowded=cards.filter(c=>!freePositions.has(c.cardId)).length>capacity;
     for(const card of cards.filter(c=>!freePositions.has(c.cardId))){const mana=/^[^\n:]*:\s*Add\b/im.test(card.oracleText||''),types=card.typeLine||'';const label=card.token?'Tokens':types.includes('Land')?'Lands':mana&&types.includes('Creature')?'Mana dorks':mana&&types.includes('Artifact')?'Mana rocks':types.includes('Creature')?'Creatures':types.includes('Artifact')?'Artifacts':types.includes('Enchantment')?'Enchantments':'Other';const key=visualGroups.get(card.cardId)||label;if(!grouped.has(key))grouped.set(key,{manual:key.startsWith('group:'),label:key.startsWith('group:')?'Your group':label,cards:[]});grouped.get(key).cards.push(card);}
-    for(const group of grouped.values()){const stacked=crowded||group.manual,stack=el('div','battlefield-group'+(stacked?'':' expanded-group'));stack.append(el('small','group-label',group.label));const fan=el('div','card-fan'+(stacked?'':' spread-cards'));for(const card of group.cards)fan.append(cardButton(card));stack.append(fan);list.append(stack);}
-    if(!cards.length)list.append(el('span','mat-empty',p.health?.status==='out'?'Eliminated':'Empty'));
+    const large=focused||p.playerId===primarySeat;
+    const drawGroups=groups=>{list.replaceChildren();for(const group of groups){const stacked=group.stacked,stack=el('div','battlefield-group'+(stacked?'':' expanded-group'));const label=el('small','group-label',group.label);if(group.showLabel===false)label.style.visibility='hidden';stack.append(label);const fan=el('div','card-fan'+(stacked?'':' spread-cards'));for(const card of group.cards)fan.append(cardButton(card));stack.append(fan);list.append(stack);}if(!cards.length)list.append(el('span','mat-empty',p.health?.status==='out'?'Eliminated':'Empty'));};
+    if(large){list.classList.add('zoom-card-grid');let layoutKey='';const layout=()=>{if(!zone.isConnected||draggingCard!==null)return;const m=cardGridMetrics({width:list.clientWidth,height:list.clientHeight,matWidth:mat.clientWidth,zoom:cardZoom,lands:name==='Lands'});list.style.setProperty('--grid-card-width',m.cardWidth+'px');list.style.setProperty('--card-columns',m.columns);list.dataset.columns=m.columns;list.dataset.rows=m.rows;mat.style.setProperty('--free-card-width',cardGridMetrics({width:mat.clientWidth*.64,height:mat.clientHeight*.5,matWidth:mat.clientWidth,zoom:cardZoom}).cardWidth+'px');const key=m.capacity+':'+cardZoom;if(key!==layoutKey){layoutKey=key;drawGroups(arrangeCardGroups([...grouped.values()],m.capacity));}};zoneLayouts.set(zone,layout);cardLayoutObserver.observe(zone);}
+    else drawGroups([...grouped.values()].map(group=>({...group,stacked:crowded||group.manual})));
     zone.append(list,el('span','mat-zone-label',`${name} · ${cards.length}`));mat.append(zone);
   }
   for(const card of p.zones.Battlefield.cards.filter(c=>freePositions.has(c.cardId))){const position=freePositions.get(card.cardId),piece=el('div','free-card');piece.style.left=position.x*100+'%';piece.style.top=position.y*100+'%';piece.append(cardButton(card));mat.append(piece);}
@@ -327,7 +336,7 @@ function attachBoardResize(box){
   handle.addEventListener('dblclick',()=>{boardWidth=null;try{localStorage.removeItem('crankmagic-board-width');}catch{}box.style.removeProperty('max-width');});box.append(handle);
 }
 function renderSeat(p){
-  const box=$(`seat-${p.playerId}`);box.replaceChildren();const active=turnPlayer()?.playerId===p.playerId;box.classList.toggle('active-turn',active);if(active)box.setAttribute('aria-label',names[p.playerId]+' · active turn');else box.removeAttribute('aria-label');
+  const box=$(`seat-${p.playerId}`);releaseCardLayouts(box);box.replaceChildren();const active=turnPlayer()?.playerId===p.playerId;box.classList.toggle('active-turn',active);if(active)box.setAttribute('aria-label',names[p.playerId]+' · active turn');else box.removeAttribute('aria-label');
   const head=el('div','seat-heading');const title=el('div');title.append(el('div','seat-label',live?(p.playerId===0?'YOU · HUMAN':'AI · LOCAL PILOT'):(p.playerId===0?'YOUR DECK · RECORDED NATIVE PILOT':'AI OPPONENT · NATIVE PROBE')),el('div','seat-title',names[p.playerId]));
   if(active)title.append(el('span','turn-badge','● TURN'));const health=button('',()=>showHealth(p),'seat-health');health.append(el('strong','',p.health.life),el('small','',`☣ ${p.health.poison}/10 · CMD ${p.health.commanderDamageMax}/21${p.health.status==='out'?' · OUT':''}`));health.setAttribute('aria-label',`${names[p.playerId]} life ${p.health.life}, poison ${p.health.poison}, commander damage ${p.health.commanderDamageMax}`);head.append(title,health,el('span','seat-hand-count',`Hand ${p.zones.Hand.count}`),button('Focus board',()=>focusBoard(p)));box.append(head,matView(p));if(p.playerId===primarySeat)attachBoardResize(box);
   const identity=p.commanderIdentity||(p.playerId===0?data.pod.seats[0]?.deck.commanders.flatMap(c=>c.colorIdentity||[]):p.zones.Command.cards.flatMap(c=>c.colorIdentity||[]))||[];
@@ -395,16 +404,18 @@ function renderGuidance(){
 }
 function renderCombat(force=false){
   if(!live||decisionPointer||(!force&&trackerTab!=='combat'))return;
-  const current=frame().combat,previous=live.telemetry?.combats?.at(-1),combat=current?.attacks?.length?current:previous,rows=historyRows().filter(e=>e.turn===(combat?.turn??frame().turn)&&(/COMBAT/.test(e.phase||'')||/combat damage|infect damage/.test(e.label)));
+  const current=frame().combat,previous=live.telemetry?.combats?.at(-1),combat=/COMBAT/.test(frame().phase)?(current||{turn:frame().turn,attacks:[]}):previous,rows=historyRows().filter(e=>e.turn===(combat?.turn??frame().turn)&&(/COMBAT/.test(e.phase||'')||/combat damage|infect damage/.test(e.label)));
   const key=JSON.stringify([combat,rows,live.ui.cardActions,live.ui.highlightedCards,live.ui.prompt]);if(!force&&key===combatKey)return;combatKey=key;combatPane.replaceChildren();
-  combatPane.append(el('h3','',`${current?"Combat":"Last combat"} · turn ${combat?.turn??frame().turn}`));
+  combatPane.append(el('h3','',`${/COMBAT/.test(frame().phase)?"Combat":"Last combat"} · turn ${combat?.turn??frame().turn}`));
   const picking=attackSelection()||blockSelection();
-  if(picking){combatPane.append(el('p','fine',attackSelection()?'Choose the defender above, then toggle your creatures here. Selecting a different defender affects the next creature you select.':'Choose an attacking creature, then toggle your creatures to assign blockers.'));
+  if(picking){combatPane.append(el('p','fine',attackSelection()?'Choose the defender above, then toggle your creatures here. Selecting a different defender affects the next creature you select.':'Select the attacker you want to block, then select your blockers. Only blockers currently allowed by the engine are offered. Flying requires flying or reach; trample may carry excess damage through. Review each pairing before Confirm blockers.'));
     const candidates=frame().players.flatMap(p=>p.zones.Battlefield.cards).filter(c=>canSelectCard(c));
-    const choices=el('div','combat-candidates');for(const c of candidates){const b=button('',()=>gameAction({kind:'card',targetId:c.cardId}),'combat-card-choice');if(c.art){const img=el('img');img.src=c.art;img.alt=c.name;b.append(img);}b.append(el('span','',c.name),el('small','',live.ui.cardActions?.[c.cardId]||'Select creature'));const selected=!!current?.attacks.some(a=>a.attacker.cardId===c.cardId||a.blockers.some(b=>b.cardId===c.cardId));b.classList.toggle('combat-assigned',selected);b.setAttribute('aria-pressed',String(selected));choices.append(b);}combatPane.append(choices);}
+    const attackers=new Set(current?.attacks.map(a=>a.attacker.cardId)||[]);if(blockSelection())candidates.sort((a,b)=>Number(attackers.has(b.cardId))-Number(attackers.has(a.cardId)));
+    if(blockSelection()&&!candidates.some(c=>!attackers.has(c.cardId)))combatPane.append(el('p','combat-total','No legal blockers for the selected attacker. Choose another attacker or confirm your blocks.'));
+    const choices=el('div','combat-candidates');for(const c of candidates){const b=button('',()=>gameAction({kind:'card',targetId:c.cardId}),'combat-card-choice');b.dataset.cardId=c.cardId;if(c.art){const img=el('img');img.src=c.art;img.alt=c.name;b.append(img);}b.append(el('span','',c.name),el('small','',live.ui.cardActions?.[c.cardId]||'Select creature'));const isAttacker=!!current?.attacks.some(a=>a.attacker.cardId===c.cardId);const selected=blockSelection()&&isAttacker?live.ui.highlightedCards?.includes(c.cardId):!!current?.attacks.some(a=>a.attacker.cardId===c.cardId||a.blockers.some(b=>b.cardId===c.cardId));if(blockSelection()&&isAttacker)b.append(el('small','',selected?'SELECTED ATTACKER · choose blockers below':'Choose blockers for this attacker'));b.classList.toggle('combat-assigned',selected);b.setAttribute('aria-pressed',String(selected));choices.append(b);}combatPane.append(choices);}
   if(!combat?.attacks?.length)combatPane.append(el('p','fine','No attackers assigned yet. Your confirmed attack and block assignments will appear here.'));
-  for(const total of combatTotals(combat?.attacks))combatPane.append(el('div','combat-total',`${total.name} ← ${total.power} attacking power · ${total.unblockedPower} currently unblocked${total.commanderPower?' · '+total.commanderPower+' commander power':''}${total.infectPower?' · '+total.infectPower+' infect power':''}`));
-  if(combat?.attacks?.length)combatPane.append(el('p','fine','Power totals are not final damage: blockers, first/double strike, prevention, trample and responses can change the result. Infect and commander power overlap other totals.'));
+  for(const total of combatTotals(combat?.attacks))combatPane.append(el('div','combat-total',`${total.name} ← ${total.power} attacking power · ${total.unblockedPower} currently unblocked · ${total.flyingPower} flying / ${total.groundPower} ground${total.tramplePower?' · '+total.tramplePower+' trample power':''}${total.commanderPower?' · '+total.commanderPower+' commander power':''}${total.infectPower?' · '+total.infectPower+' infect power':''}`));
+  if(combat?.attacks?.length)combatPane.append(el('p','fine','Power totals are not final damage: blockers, first/double strike, prevention, trample and responses can change the result. Trample, infect and commander power can overlap flying or ground power.'));
   for(const row of combat?.attacks||[]){const item=el('article','combat-assignment');item.append(el('strong','',`${row.attacker.name} ${row.attacker.power}/${row.attacker.toughness} → ${row.defender?.name||'Defender'}`),el('p','fine',[...(row.attacker.keywords||[]),...(row.attacker.commander?['commander']:[])].join(' · ')||'Normal combat damage'),el('p','',row.blockers.length?'Blocked by '+row.blockers.map(b=>`${b.name} ${b.power}/${b.toughness}${b.keywords?.length?' ('+b.keywords.join(', ')+')':''}`).join(' + '):row.blocked?'Blocked; blocker has left combat':'No blocker assigned'));combatPane.append(item);}
   combatPane.append(el('h4','','Responses & results'));
   if(!rows.length)combatPane.append(el('p','fine','No recorded combat results yet. Damage, spells, abilities and departing creatures will be listed here as they happen.'));
@@ -425,6 +436,7 @@ function render(){
 }
 const follow=button('Follow active player: off',()=>{followActive=!followActive;followedTurn=null;follow.textContent='Follow active player: '+(followActive?'on':'off');refreshBoards();});$('view-deck').before(follow,button('My board',()=>{primarySeat=0;followActive=false;follow.textContent='Follow active player: off';refreshBoards();}));
 const viewOptions=el('div','view-options');viewOptions.setAttribute('popover','auto');viewOptions.id='table-view-options';viewOptions.append(follow);
+const zoomControl=el('label','card-zoom-control','Card size '),zoomSlider=el('input'),zoomOutput=el('output','',cardZoom+'%');zoomSlider.type='range';zoomSlider.min='32';zoomSlider.max='140';zoomSlider.step='1';zoomSlider.value=cardZoom;zoomSlider.setAttribute('aria-label','Board card size');zoomControl.append(zoomSlider,zoomOutput);const setCardZoom=value=>{cardZoom=Math.max(32,Math.min(140,Number(value)));zoomSlider.value=cardZoom;zoomOutput.textContent=cardZoom===32?'Compact · 6 × 3':cardZoom+'%';try{localStorage.setItem('crankmagic-card-zoom',cardZoom);}catch{}for(const layout of zoneLayouts.values())layout();};zoomSlider.addEventListener('input',()=>setCardZoom(zoomSlider.value));viewOptions.append(zoomControl,button('Compact cards · 6 × 3',()=>setCardZoom(32)),button('Reset card size',()=>setCardZoom(100)));
 const hideOthers=button('Hide other boards',()=>{hideOpponents=!hideOpponents;document.body.classList.toggle('hide-opponents',hideOpponents);hideOthers.textContent=hideOpponents?'Show other boards':'Hide other boards';refreshBoards();});
 const hideInfo=button('Hide information pane',()=>{hideInformation=!hideInformation;document.body.classList.toggle('hide-information',hideInformation);hideInfo.textContent=hideInformation?'Show information pane':'Hide information pane';mountControls();refreshBoards();});viewOptions.append(hideOthers,hideInfo);document.body.append(viewOptions);const viewButton=button('View options',()=>viewOptions.togglePopover());$('view-deck').before(viewButton);
 $('timeline').max=data.frames.length-1;$('timeline').addEventListener('input',e=>{index=+e.target.value;render();});$('prev').addEventListener('click',()=>{index=Math.max(0,index-1);render();});$('next').addEventListener('click',()=>{index=Math.min(data.frames.length-1,index+1);render();});
@@ -451,17 +463,27 @@ window.addEventListener('resize',mountControls);
 function drawStepCard(){const q=live?.ui.choice;if(q?.mode==='draw')gameAction({kind:'answer',choiceId:q.id,indices:[]});else notifyAction(frame()?.phase==='DRAW'?'This draw step has already been handled by the engine.':'Your library can be drawn from when your draw-step draw is pending.');}
 async function gameAction(action,guard){
   if(!live)return false;if(actionBusy){notifyAction("Your previous selection is still being applied. Please try again in a moment.");return false;}actionBusy=true;
+  const observedRevision=live.revision;
   try{if(!gameToken)gameToken=(await fetch('/api/setup').then(r=>r.json())).token;
     const freshResponse=await fetch('/api/game-view'),fresh=await freshResponse.json();if(!freshResponse.ok)throw Error(fresh.error);live=fresh;
     if(guard&&!guard(fresh))return false;
+    validateActionRevision(observedRevision,fresh,action.kind,!!guard);
     const response=await fetch('/api/game-action',{method:'POST',headers:{'Content-Type':'application/json','X-Commander-Token':gameToken},body:JSON.stringify({...action,revision:fresh.revision,actionId:crypto.randomUUID()})});
     const result=await response.json();if(!response.ok)throw Error(result.error);return true;
   }catch(error){notifyAction(error.message);return false;}finally{actionBusy=false;if(livePolling)setTimeout(()=>refreshLiveView().catch(error=>notifyAction(error.message)),50);}
 }
 function renderDecision(){
+  if(live&&frame().gameOver){
+    mountControls();controls.hidden=false;const winners=frame().players.filter(p=>p.health?.status==='won').map(p=>names[p.playerId]);
+    const completedKey=JSON.stringify(['complete',live.matchId,winners]);if(lastDecision===completedKey)return;lastDecision=completedKey;
+    prompt.textContent=winners.length?'Game complete · '+winners.join(' and ')+' won.':'Game complete · review the final result in History.';
+    options.replaceChildren();decisionArt.replaceChildren();buttons.replaceChildren(button('Review game history',()=>selectPane('history')),button('Set up next game',()=>openGameSetup()));return;
+  }
   if(decisionPointer)return;
   mountControls();controls.hidden=false;const ui=live.ui;const combatInput=(attackSelection()?'attack':blockSelection()?'block':'')+frame().turn;if(combatInput!==lastCombatInput){lastCombatInput=combatInput;if((attackSelection()||blockSelection())&&!hideInformation)selectPane('combat');}
-  if(ui.ok==='Auto'&&/pay mana cost/i.test(ui.prompt)&&ui.choice?.title==='Select Mana to Produce'){
+  if(ui.ok!=='Auto')approvedPayment=null;
+  const paymentId=ui.payment?.abilityId??ui.prompt,paymentApproved=paymentMayAutoResolve(ui,!!pendingPlay,approvedPayment);
+  if(paymentApproved&&ui.ok==='Auto'&&/pay mana cost/i.test(ui.prompt)&&ui.choice?.title==='Select Mana to Produce'){
     const q=ui.choice,symbols={WHITE:'W',BLUE:'U',BLACK:'B',RED:'R',GREEN:'G',COLORLESS:'C'},cost=ui.prompt.match(/Pay Mana Cost:\s*([^\n]+)/i)?.[1]||'',counts=manaStatus?.(humanPlayer(),frame().players).counts;
     const optionsByNeed=q.options.filter(o=>symbols[o.label]&&cost.includes('{'+symbols[o.label]+'}')).sort((a,b)=>(counts?.[symbols[a.label]]?.untapped??0)-(counts?.[symbols[b.label]]?.untapped??0));
     const choice=optionsByNeed[0]||q.options.find(o=>o.label==='COLORLESS')||q.options[0];
@@ -476,9 +498,9 @@ function renderDecision(){
     if(!actionBusy){const turn=frame().turn;gameAction({kind:'ok'},fresh=>fresh.state.turn===turn&&fresh.state.turnPlayerId!==0&&fresh.state.priorityPlayerId===0&&fresh.state.stackSize===0&&!fresh.ui.choice&&!fresh.ui.nativeFallback&&fresh.ui.ok==='OK'&&fresh.ui.okEnabled);}
     return;
   }
-  // An active cost-payment input already represents an explicitly requested cast/activation.
-  // This also resumes payment after a reload. Never activate sources at ordinary priority.
-  const paying=ui.ok==='Auto'&&!ui.choice&&!ui.nativeFallback&&/pay mana cost/i.test(ui.prompt);
+  // Forge identifies the payment's originating ability. Triggered/other-player costs
+  // require a human Pay cost choice; they must not inherit casting automation.
+  const paying=paymentApproved&&ui.ok==='Auto'&&!ui.choice&&!ui.nativeFallback&&/pay mana cost/i.test(ui.prompt);
   if(!paying){paymentAttempt=null;paymentNotice='';}
   if(paying&&ui.okEnabled&&paymentAttempt!==ui.prompt&&!actionBusy){
     const payment=ui.prompt;paymentAttempt=payment;
@@ -490,12 +512,18 @@ function renderDecision(){
   if(paying&&ui.okEnabled){
     prompt.textContent='Paying mana…';decisionArt.replaceChildren();options.replaceChildren();buttons.replaceChildren();lastDecision='';return;
   }
-  const decisionKey=JSON.stringify([ui,frame()?.stackSize,pendingPlay?.cardId,frame()?.combat]);if(decisionKey===lastDecision)return;lastDecision=decisionKey;
+  const decisionKey=JSON.stringify([ui,frame()?.stackSize,pendingPlay?.cardId,frame()?.combat]);if(decisionKey===lastDecision){controls.hidden=!!(cardMenu&&ui.choice?.title==='Choose an ability'&&ui.choice.options.length>1);return;}lastDecision=decisionKey;
   const priority=/^Priority:/m.test(ui.prompt);
   prompt.textContent=ui.nativeFallback||ui.choice?.title||(priority?(hasPriority()?(turnPlayer()?.playerId===0?'Your action · play a card or use a board ability.':'You may respond before play continues.'):'Waiting for the active player…'):ui.prompt);
   buttons.replaceChildren();decisionArt.replaceChildren();
   if(ui.choice){const q=ui.choice;
-    if(q.title==='Choose an ability'&&cardMenu){const choices=cardMenu.querySelector('.quick-ability-options');choices.replaceChildren(...q.options.map(option=>button(option.label,()=>{closeCardMenu();gameAction({kind:'answer',choiceId:q.id,indices:[option.index]});},'ability-option')));}
+    if(q.title==='Choose an ability'&&cardMenu&&q.options.length>1){
+      const choices=cardMenu.querySelector('.quick-ability-options');
+      choices.replaceChildren(...q.options.map(option=>button(option.label,()=>{closeCardMenu();gameAction({kind:'answer',choiceId:q.id,indices:[option.index]});},'ability-option')));
+      if(q.min===0)choices.append(button('Cancel',()=>{closeCardMenu();gameAction({kind:'answer',choiceId:q.id,indices:[]});}));
+      cardMenu.querySelector('.primary-action')?.setAttribute('hidden','');
+      options.replaceChildren();controls.hidden=true;return;
+    }
     const card=frame().players.flatMap(p=>Object.values(p.zones).flatMap(z=>z.cards)).find(c=>c.cardId===(q.cardId??selectedCardId));
     if(card?.art){const img=el('img');img.src=card.art;img.alt=card.name;decisionArt.append(img);}
     // Compatibility with running adapters: Forge takes a sole offered ability for browser card selections.
@@ -504,17 +532,31 @@ function renderDecision(){
     }
     if(choiceId!==q.id){choiceId=q.id;options.replaceChildren();
       if(q.mode==='draw')options.append(button('Draw card',drawStepCard,'primary-action'));
+      else if(q.mode==='order'){
+        options.append(el('p','fine',q.min===q.max?'Arrange all items in the requested order, then confirm.':`Choose ${q.min}–${q.max} items and arrange their order, then confirm.`));
+        for(const option of q.options){const row=el('div','ordered-choice');row.dataset.index=option.index;const selected=el('input');selected.type='checkbox';selected.checked=q.min===q.options.length;selected.disabled=q.min===q.options.length;selected.setAttribute('aria-label','Include '+option.label);row.append(selected,el('span','',option.label));row.append(button('↑',()=>{const previous=row.previousElementSibling;if(previous?.classList.contains('ordered-choice'))options.insertBefore(row,previous);}),button('↓',()=>{const next=row.nextElementSibling;if(next?.classList.contains('ordered-choice'))options.insertBefore(next,row);}));row.querySelectorAll('button').forEach((b,i)=>b.setAttribute('aria-label',`Move ${option.label} ${i?'down':'up'}`));options.append(row);}
+      }
+      else if(q.mode==='damage'){
+        options.append(el('p','fine','Assign this creature’s damage. Lethal is the amount required for assignment, before prevention or replacement effects.'));
+        for(const recipient of q.options){const label=el('label','damage-recipient'),n=el('input');n.type='number';n.min=0;n.max=q.total;n.step=1;n.value=0;n.dataset.recipient=recipient.index;n.setAttribute('aria-label','Damage to '+recipient.label);label.append(el('span','',recipient.label+(recipient.defender?' · defender':' · lethal '+recipient.lethal)),n);options.append(label);}
+        const remaining=el('p','damage-remaining');const update=()=>{const assigned=[...options.querySelectorAll('input')].reduce((sum,n)=>sum+Number(n.value),0);remaining.textContent=`${assigned} / ${q.total} assigned · ${q.total-assigned} remaining`;};options.oninput=update;options.append(remaining);update();
+      }
       else if(q.mode==='integer'){const n=el('input');n.type='number';n.min=q.min;n.max=q.max;n.value=q.min;n.id='choice-number';n.setAttribute('aria-label',q.title);options.append(n);}
       else if(['one','boolean','index'].includes(q.mode))for(const option of q.options)options.append(button(option.label,()=>gameAction({kind:'answer',choiceId:q.id,indices:[option.index]}),'ability-option'));
       else for(const option of q.options){const label=el('label','choice-option'),input=el('input');input.type='checkbox';input.name='game-choice';input.value=option.index;if(q.mode!=='ack')label.append(input);label.append(el('span','',option.label));options.append(label);}
     }
-    if(q.mode==='integer')buttons.append(button('Apply amount',()=>gameAction({kind:'answer',choiceId:q.id,value:Number($('choice-number').value)})));
+    if(q.mode==='order')buttons.append(button('Confirm order',()=>gameAction({kind:'answer',choiceId:q.id,indices:[...options.querySelectorAll('.ordered-choice')].filter(row=>row.querySelector('input').checked).map(row=>Number(row.dataset.index))})));
+    else if(q.mode==='damage'){
+      buttons.append(button('Confirm damage assignment',()=>gameAction({kind:'answer',choiceId:q.id,amounts:[...options.querySelectorAll('input[data-recipient]')].map(n=>Number(n.value))})));
+      if(q.maySkip)buttons.append(button('Skip this assignment',()=>gameAction({kind:'answer',choiceId:q.id,skip:true})));
+    }
+    else if(q.mode==='integer')buttons.append(button('Apply amount',()=>gameAction({kind:'answer',choiceId:q.id,value:Number($('choice-number').value)})));
     else if(q.mode==='ack')buttons.append(button('Continue',()=>gameAction({kind:'answer',choiceId:q.id,indices:[]})));
     else if(q.mode==='many')buttons.append(button('Done selecting',()=>gameAction({kind:'answer',choiceId:q.id,indices:[...options.querySelectorAll('input:checked')].map(n=>Number(n.value))})));
     else if(q.min===0&&q.mode!=='draw')buttons.append(button('Cancel',()=>gameAction({kind:'answer',choiceId:q.id,indices:[]})));
   }else{
     choiceId=null;options.replaceChildren();
-    const confirm=button(priority&&ui.ok==='OK'?(turnPlayer()?.playerId===0&&frame().stackSize===0?'Continue from '+phaseName(frame().phase):'Pass priority'):ui.ok||'Continue',()=>gameAction({kind:'ok'}));confirm.title=priority?'Finish acting for now and let the other players respond.':'';confirm.disabled=!ui.okEnabled||!!ui.nativeFallback;buttons.append(confirm);
+    const confirm=button(priority&&ui.ok==='OK'?(turnPlayer()?.playerId===0&&frame().stackSize===0?'Continue from '+phaseName(frame().phase):'Pass priority'):ui.ok==='Auto'?'Pay cost':ui.ok||'Continue',()=>{if(ui.ok==='Auto')approvedPayment=paymentId;gameAction({kind:'ok'});});confirm.title=priority?'Finish acting for now and let the other players respond.':'';confirm.disabled=!ui.okEnabled||!!ui.nativeFallback;buttons.append(confirm);
     if(ui.cancelEnabled){const yielding=priority&&ui.cancel==='End Turn'&&turnPlayer()?.playerId!==0;const cancel=button(priority&&ui.cancel==='End Turn'?(turnPlayer()?.playerId===0?'End my turn':'Yield through this turn'):ui.cancel||'Cancel',()=>{if(yielding){yieldTurn=frame().turn;gameAction({kind:'ok'});}else gameAction({kind:'cancel'});});cancel.title=yielding?'Skip empty stops this turn. Spells, abilities and required choices still allow a response.':'';cancel.disabled=!!ui.nativeFallback;buttons.append(cancel);}
     if(ui.selectables.length)buttons.append(el('span','fine','Select highlighted cards on the playmat.'));
     // Player selection belongs to an explicit target/defender prompt, never ordinary priority.
@@ -522,6 +564,7 @@ function renderDecision(){
     if(attackSelection()){
       prompt.textContent='Choose a defender, then select your attackers. Review Combat before confirming.';
       confirm.textContent='Confirm attackers';
+      if(ui.cancel==='Alpha Strike'){const all=buttons.querySelectorAll('button')[1];if(all){all.textContent='Attack with all';all.title='Forge assigns all eligible attackers. Restrictions can require another defender; review every destination before confirming.';}}
       const targets=frame().combat?.defenders||frame().players.filter(p=>p.playerId!==0&&p.health.status!=='out').map(p=>({kind:'player',id:p.playerId,name:p.name}));
       for(const target of targets){const selected=target.kind==='player'?(ui.highlightedPlayers?.includes(target.id)||ui.prompt.includes('attack '+target.name+' ')):ui.highlightedCards?.includes(target.id);const b=button((selected?'✓ Attacking ':'Attack ')+target.name,()=>gameAction({kind:target.kind,targetId:target.id}),'defender-choice');b.setAttribute('aria-pressed',String(!!selected));buttons.append(b);}
       buttons.append(button('Review attackers & blockers',()=>selectPane('combat')));
