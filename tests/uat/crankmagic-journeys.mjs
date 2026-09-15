@@ -326,7 +326,15 @@ try{
       group row; Select all is a filter on the back row, so it must not wear that class. */
    eq(await page.locator('.cm-tt-allchip.cm-tt-chip').count(),0,'and Select all is not a pile chip');
    await page.locator('.cm-tt-backrow .cm-tt-pile.cm-tt-bench').focus();await page.keyboard.press('ArrowRight');
-   ok(await page.evaluate(()=>document.activeElement.matches('.cm-tt-backrow .cm-tt-pile.cm-tt-deckpile, .cm-tt-allchip')),'the arrows walk the back row too');}
+   ok(await page.evaluate(()=>document.activeElement.matches('.cm-tt-backrow .cm-tt-pile.cm-tt-deckpile, .cm-tt-allchip')),'the arrows walk the back row too');
+   /* Rob, 15 September, with a screenshot: the six deck names sat half-behind the filter row,
+      because the back row was shorter than the piles standing on it and the row below was drawn
+      at a number chosen before this row existed. Both are measured here, at the size they ship. */
+   {const fit=await page.evaluate(()=>{const r=e=>e.getBoundingClientRect();
+     const row=document.querySelector('.cm-tt-deckrow'),plac=document.querySelector('.cm-tt-deckpile .cm-tt-placard'),pick=document.querySelector('.cm-tt-group-pick');
+     return {clipped:Math.round(r(plac).bottom-r(row).bottom),gap:Math.round(r(pick).top-r(plac).bottom)};});
+    ok(fit.clipped<=0,`a deck's name fits inside the shelf (${fit.clipped}px past it)`);
+    ok(fit.gap>0,`and the filter row starts below it, not across it (${fit.gap}px)`);}}
   /* STATUS FROM THE TABLE (Rob, 15 September). A drop answers "where does this copy go"; a plan,
      a suggestion and a To buy line have no pile to be dropped on, and `accepts` had been telling
      readers to "set its status from its row menu" on a board whose only row menu was a
@@ -659,7 +667,6 @@ try{
  const revBefore=current.revision;await page.getByRole('tab',{name:/^Orders/}).click();await page.locator('.cm-orders').waitFor();eq(await page.locator('.cm-order-row').count(),1);
  await click('Arrived → bench');await click('Confirm change');await waitDialog();await page.waitForTimeout(900);current=await state();eq(current.revision,revBefore+1);eq(CrankOrders(current)[0].arrived,CrankOrders(current)[0].copies);
  await page.getByRole('tab',{name:/^To buy/}).click();await page.locator('#cm-shop-total').waitFor();await click('Clear filters');
- const afterLab=await state();
  await nav('Discover');await page.locator('#cm-graph').waitFor({timeout:45000});
  /* ENTER FOCUSES THE BEST MATCH: a prefix is enough, and the exact name wins over a longer
     one that starts the same way. */
@@ -843,7 +850,41 @@ try{
   await page.evaluate(()=>localStorage.removeItem('cm-table-sent'));
   /* Back to Discover, which is where the rest of this journey stands. */
   await page.goto(BASE+'/'+ENTRY+'#discover');await page.locator('#cm-graph').waitFor({timeout:45000});await page.waitForTimeout(800);}
- await page.unroute('**://api.scryfall.com/**');await page.evaluate(()=>navigator.serviceWorker.ready);await context.setOffline(true);await page.reload();await page.locator('#cm-graph').waitFor({timeout:45000});await nav('Cards');await page.getByRole('table').waitFor();eq((await state()).lots,afterLab.lots);await context.setOffline(false);
+ /* ADD COPIES IS A COUNT, NOT A FORM (Rob, 15 September). Two facts per row -- what these
+    copies are and how many -- a link that adds a row for the box where three arrived but only
+    one is in hand, and the printing, box, price and notes folded away until a row says Owned.
+    Several rows go as one batch, so three rows are one revision and one undo. */
+ {await page.goto(BASE+'/'+ENTRY+'#cards');await page.locator('#cm-roster-table').waitFor();
+  await click('Add cards');await page.getByRole('dialog').waitFor();
+  await page.getByLabel('Card name or a Scryfall link').fill('Wastes');
+  await page.locator('[data-pick-card]').filter({has:page.getByText('Wastes',{exact:true})}).first().click();
+  await page.locator('.cm-copy-row').first().waitFor();
+  eq(await page.locator('.cm-copy-row').count(),1,'one row to start');
+  eq(await page.locator('.cm-copy-extras').evaluate(el=>el.hidden),false,'Owned offers the optional fields');
+  await page.locator('.cm-copy-row').first().locator('select').selectOption('ordered');await page.waitForTimeout(200);
+  eq(await page.locator('.cm-copy-extras').evaluate(el=>el.hidden),true,'an ordered card has no box and no price paid, so they are not asked for');
+  await page.locator('.cm-copy-row').first().locator('select').selectOption('owned');await page.waitForTimeout(200);
+  await page.locator('.cm-copy-row').first().locator('[data-copy=more]').click();
+  eq(await page.locator('.cm-copy-row').first().locator('input').inputValue(),'2','the arrow counts');
+  await page.locator('.cm-copy-more').click();await page.waitForTimeout(200);
+  eq(await page.locator('.cm-copy-row').count(),2,'+ row adds a second');
+  await page.locator('.cm-copy-row').nth(1).locator('select').selectOption('watching');await page.waitForTimeout(200);
+  const was=await state(),rev=was.revision;
+  const owned0=was.lots.filter(l=>l.cardId===wastesKey&&l.source==='owned').reduce((n,l)=>n+l.quantity,0);
+  const watched0=was.lots.filter(l=>l.cardId===wastesKey&&l.source==='watching').reduce((n,l)=>n+l.quantity,0);
+  await click('Add copies');await waitDialog();await page.waitForTimeout(1000);
+  const now=await state();
+  eq(now.revision,rev+1,'two rows are one revision, so one undo takes both back');
+  eq(now.lots.filter(l=>l.cardId===wastesKey&&l.source==='owned').reduce((n,l)=>n+l.quantity,0),owned0+2,'two owned');
+  eq(now.lots.filter(l=>l.cardId===wastesKey&&l.source==='watching').reduce((n,l)=>n+l.quantity,0),watched0+1,'and one watched, from the same dialog');
+  /* Back to Discover: the offline step below reloads whatever page is showing and waits for the
+     graph, so a journey that wanders off and does not come back breaks it a screen later. */
+  await page.goto(BASE+'/'+ENTRY+'#discover');await page.locator('#cm-graph').waitFor({timeout:45000});await page.waitForTimeout(800);}
+ /* Going offline changes nothing: the comparison is against the library as it stands one line
+    earlier, not a snapshot from the Lab run half a journey ago — anything recorded in between
+    is a real change and would read here as an offline fault. */
+ const beforeOffline=await state();
+ await page.unroute('**://api.scryfall.com/**');await page.evaluate(()=>navigator.serviceWorker.ready);await context.setOffline(true);await page.reload();await page.locator('#cm-graph').waitFor({timeout:45000});await nav('Cards');await page.getByRole('table').waitFor();eq((await state()).lots,beforeOffline.lots);await context.setOffline(false);
  await page.setViewportSize({width:390,height:844});await nav('Decks');await page.getByRole('heading',{name:'Decks',level:1}).waitFor();ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await page.evaluate(()=>scrollTo(0,document.body.scrollHeight));const navBox=await page.getByRole('navigation',{name:'Main pages'}).boundingBox();ok(navBox.y>=0&&navBox.y<844);await nav('Cards');await page.getByRole('table').waitFor();ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
  eq(errors,[]);console.log(`crankmagic-journeys: ${checks} checks passed across real deck assembly, imports, printing lots, corrections, concurrency, quota abort, backup restore, initial construction, graph navigation, offline and mobile.`);
 }catch(error){console.error(error);console.error('url:',page.url(),'| selected tab:',await page.evaluate(()=>document.querySelector('[role=tab][aria-selected=true]')?.textContent?.trim()||'(none)'));console.error((await page.locator('body').innerText()).slice(0,8500));await page.screenshot({path:'tests/uat/crankmagic-failure.png',fullPage:true});process.exitCode=1;}finally{await browser.close();}

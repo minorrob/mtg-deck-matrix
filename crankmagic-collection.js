@@ -1356,7 +1356,58 @@ actions['drop-slot']=el=>{const r=findRow(el.dataset.record);if(!r||r.kind!=='dr
   C.review(`Remove ${r.card.name} from ${d.name}`,note(`${d.name} is a draft, so this edits the plan only; no copies change hands.`),{type:'editDeck',deckId:d.id,slots:d.slots.filter(x=>x.id!==r.slotId&&x.replaces!==r.slotId)});};
 const printFields=p=>f('Set code','set',p?.set||'','maxlength="30"')+f('Collector number','collector',p?.collector||'','maxlength="40"')+s('Finish','finish',[['','Unspecified'],['nonfoil','Nonfoil'],['foil','Foil'],['etched','Etched']],p?.finish||'')+f('Language','language',p?.language||'')+f('Condition','condition',p?.condition||'')+`<label class="cm-checkbox"><input type="checkbox" name="signed" ${p?.signed?'checked':''}>Signed</label><label class="cm-checkbox"><input type="checkbox" name="altered" ${p?.altered?'checked':''}>Altered</label>`;
 function printing(v,prior={}){return {...prior,set:v.set,collector:v.collector,finish:v.finish,language:v.language,condition:v.condition,signed:!!v.signed,altered:!!v.altered};}
-async function acquire(c,{row,initialSource='owned'}={}){form('Record '+c.name,`<div class="cm-full">${note(row?'These copies will fulfill this deck requirement. Physical placement remains Bench until you confirm Put in deck.':'Record copies you own, ordered or arranged to receive — or mark a card Watched while you decide. A deck plan alone creates no ownership.')}</div>`+f('Quantity','quantity',row?.quantity||1,'type="number" min="1" max="1000000" required')+s('Source','source',[['owned','Owned'],['ordered','Ordered'],['watching','Watched — considering it']],initialSource)+printFields(row?.printing)+f('Box / location when owned','box')+f('Purchase cost (optional)','paid','','type="number" min="0" step="0.01"')+`<label class="cm-full">Notes<textarea name="notes"></textarea></label>`,async v=>{let exact=c,p=printing(v);if(p.set&&p.collector){exact=await C.catalog.resolve(c.name,{printing:p});if(!exact)throw Error('No exact printing found. Check the set and collector number.');p.id=exact.scryfallId;}await commit({type:'acquire',cards:[exact],lot:{cardId:exact.id,quantity:Number(v.quantity),source:v.source,printing:p,location:{kind:'bench',box:v.box},notes:v.notes,paid:v.paid===''?null:Number(v.paid)},...(row?{deckId:row.deckId,slotId:row.slotId}: {})});},'Record copies');}
+/* ADD COPIES IS A COUNT, NOT A FORM (Rob, 15 September: "currently too heavy an input form").
+   Recording what turned up in a box is two facts -- which state, and how many -- and it used
+   to ask for six, four of them blank nine times out of ten. So the dialog is rows of exactly
+   those two, with a link that adds another row for the common case of three copies where only
+   one is in hand. Printing, box, price and notes stay, but folded away and only offered once a
+   row says Owned: an ordered card has no box and a watched one has no price paid.
+
+   Each row is its own `acquire`; several go as one `batch`, so three rows are one revision and
+   one undo rather than three. The model merges a row into an existing record of the same card,
+   source and printing, which is what makes "two more owned" read as one record of five. */
+const COPY_MAX = 6;
+const copyRow = (i, source = 'owned', qty = 1) => `<div class="cm-copy-row" data-i="${i}">`
+  +`<select name="source${i}" data-copy="source" aria-label="What these copies are">${[['owned','Owned'],['ordered','Ordered'],['watching','Watched']].map(([k,l])=>`<option value="${k}"${k===source?' selected':''}>${l}</option>`).join('')}</select>`
+  +`<span class="cm-copy-count" role="group" aria-label="How many copies">`
+  +`<button type="button" data-copy="less" data-i="${i}" aria-label="One fewer">&#8249;</button>`
+  +`<input type="number" name="qty${i}" value="${qty}" min="1" max="1000000" required aria-label="Copies">`
+  +`<button type="button" data-copy="more" data-i="${i}" aria-label="One more">&#8250;</button></span>`
+  +`<button type="button" class="cm-copy-drop" data-copy="drop" data-i="${i}" aria-label="Remove this row" title="Remove this row">&#215;</button></div>`;
+async function acquire(c){
+  const f2=form('Add copies of '+c.name,
+    `<div class="cm-full cm-copies"><div class="cm-copy-rows">${copyRow(0)}</div>`
+    +`<button type="button" class="cm-text-button cm-copy-more" data-copy="row">+ row</button></div>`
+    +`<div class="cm-full cm-copy-extras" hidden><details><summary>Printing, box, price and notes (optional)</summary>`
+    +`<div class="cm-form-grid">${printFields()}${f('Box / location','box')}${f('Price paid','paid','','type="number" min="0" step="0.01"')}`
+    +`<label class="cm-full">Notes<textarea name="notes"></textarea></label></div></details></div>`,
+    async v=>{
+      const rows=[];
+      for(let i=0;i<COPY_MAX;i++){const src=v['source'+i];if(!src)continue;const q=Number(v['qty'+i]);if(!Number.isFinite(q)||q<1)throw Error('Every row needs at least one copy. Remove the row or raise its count.');rows.push({source:src,quantity:q});}
+      if(!rows.length)throw Error('Add at least one row.');
+      let exact=c,p=printing(v);
+      if(p.set&&p.collector){exact=await C.catalog.resolve(c.name,{printing:p});if(!exact)throw Error('No exact printing found. Check the set and collector number.');p.id=exact.scryfallId;}
+      const one=r=>({type:'acquire',cards:[exact],lot:{cardId:exact.id,quantity:r.quantity,source:r.source,printing:p,location:{kind:'bench',box:v.box},notes:v.notes,paid:v.paid===''?null:Number(v.paid)}});
+      const say=rows.map(r=>`${r.quantity} ${C.source(r.source).toLowerCase()}`).join(', ');
+      await commit(rows.length===1?one(rows[0]):{type:'batch',commands:rows.map(one),summary:`Recorded ${say} ${exact.name}`});
+    },'Add copies');
+  /* One listener for the whole dialog: the rows are rebuilt as the reader adds and drops them,
+     so nothing is bound per row. The extras open themselves the moment a row says Owned. */
+  const rowsEl=$('.cm-copy-rows',f2),extras=$('.cm-copy-extras',f2);
+  const ownedShowsExtras=()=>{extras.hidden=![...rowsEl.querySelectorAll('[data-copy=source]')].some(el=>el.value==='owned');};
+  const renumber=()=>{[...rowsEl.children].forEach((el,i)=>{el.dataset.i=i;$('select',el).name='source'+i;$('input',el).name='qty'+i;for(const b of el.querySelectorAll('[data-i]'))b.dataset.i=i;});
+    for(const b of rowsEl.querySelectorAll('.cm-copy-drop'))b.hidden=rowsEl.children.length<2;
+    $('.cm-copy-more',f2).hidden=rowsEl.children.length>=COPY_MAX;};
+  f2.addEventListener('click',ev=>{const t=ev.target.closest('[data-copy]');if(!t||t.tagName!=='BUTTON')return;
+    const kind=t.dataset.copy;
+    if(kind==='row'){if(rowsEl.children.length>=COPY_MAX)return;rowsEl.insertAdjacentHTML('beforeend',copyRow(rowsEl.children.length,'ordered',1));renumber();ownedShowsExtras();return;}
+    const row=t.closest('.cm-copy-row');if(!row)return;
+    if(kind==='drop'){if(rowsEl.children.length<2)return;row.remove();renumber();ownedShowsExtras();return;}
+    const box=$('input',row),n=Number(box.value)||1;box.value=String(Math.max(1,Math.min(1000000,n+(kind==='more'?1:-1))));});
+  f2.addEventListener('change',ev=>{if(ev.target.matches('[data-copy=source]'))ownedShowsExtras();});
+  renumber();ownedShowsExtras();
+}
+
 actions['add-card']=el=>el.dataset.card?acquire(C.card(el.dataset.card)||C.catalog.get(el.dataset.card)):C.cardPicker('Add to your library',c=>acquire(c));
 function quantityAction(el,title,extra,build){const r=findRow(el.dataset.record);if(!r||r.kind!=='lot')throw Error('Select a physical or pending card record.');const l=M.lot(C.state,r.id);return form(title,`<div class="cm-full">${note(C.affected(l),!!l.allocation||l.location?.kind==='deck')}</div>`+f('Copies affected','quantity',l.quantity,`type="number" min="1" max="${l.quantity}" required`)+extra(l),v=>commit({...build(l,v),lotId:l.id,quantity:Number(v.quantity),confirmed:true}),'Confirm change');}
 actions['place-row']=el=>quantityAction(el,el.dataset.deck?'Put in '+M.deck(C.state,el.dataset.deck).name:'Move physically to Bench',()=>f('Box label (optional)','box'),(_,v)=>({type:'place',deckId:el.dataset.deck||undefined,box:v.box}));

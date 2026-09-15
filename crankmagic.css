@@ -611,6 +611,24 @@ button.cm-badge-link:hover{background:#35507a;color:#eaf5ff}
 .cm-menu.cm-step .cm-step-ok:hover{background:#3a9963}
 .cm-menu.cm-step input{width:58px;height:34px;min-height:0;margin:0;padding:0 6px;text-align:center;
   background:#2d3543;border:1px solid #5a677c;border-radius:8px;color:#eef4fd;font:inherit;font-size:14px}
+/* ADD COPIES (Rob, 15 September). Two facts per row -- what these copies are, and how many --
+   and a link that adds a row for the box where three arrived but only one is in hand. The
+   counter borrows the step control's shape so a count reads the same everywhere in the app. */
+.cm-copies{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.cm-copy-rows{display:flex;flex-direction:column;gap:8px;width:100%}
+.cm-copy-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+/* `#matrix-v2 .cm-form-grid select{width:100%}` sits later in this sheet at the same weight, so
+   a row's controls have to out-specify it or the select eats the line and the counter wraps. */
+#matrix-v2 .cm-form-grid .cm-copy-row select{width:auto;min-width:150px;flex:0 0 auto;margin:0}
+.cm-copy-count{display:inline-flex;align-items:center;gap:6px}
+#matrix-v2 .cm-copy-count button{display:inline-grid;place-items:center;width:34px;height:34px;min-height:0;padding:0;border:1px solid #4b5975;border-radius:8px;background:#2a3448;color:#eef4fd;font:inherit;font-size:15px;line-height:1}
+#matrix-v2 .cm-copy-count button:hover{background:#354464}
+#matrix-v2 .cm-form-grid .cm-copy-count input{width:62px;height:34px;min-height:0;margin:0;padding:0 6px;text-align:center;font-variant-numeric:tabular-nums}
+#matrix-v2 .cm-copy-drop{width:30px;height:30px;min-height:0;padding:0;border:0;border-radius:8px;background:none;color:#b7c6dd;font-size:17px;line-height:1}
+#matrix-v2 .cm-copy-drop:hover{background:#3a2a30;color:#ffc4be}
+.cm-copy-extras>details{border:1px solid #38465e;border-radius:8px;padding:0 14px;background:#1a2333}
+.cm-copy-extras>details>summary{cursor:pointer;min-height:0;padding:11px 0;font-size:13px;color:#b7cbe6}
+.cm-copy-extras>details[open]{padding-bottom:14px}
 .cm-menu.cm-step input:focus-visible{outline:2px solid #9addff;outline-offset:1px}
 /* The browser's own spinner is a third and fourth arrow inside a control that already has
    two, pointing the other way. */
