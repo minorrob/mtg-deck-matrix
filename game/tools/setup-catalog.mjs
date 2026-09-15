@@ -1,3 +1,4 @@
+import {defaultPlaymat,validPlaymat,resolvePlaymat} from '../ui/playmats.mjs';
 import {readFileSync,existsSync,writeFileSync,mkdirSync} from 'node:fs';
 import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
@@ -101,7 +102,7 @@ async function archidekt(s,c){
 }
 export async function prepareSetup(config){
   validateSetup(config);const seed=randomInt(1,2147483647),seats=[];
-  for(const request of config.seats){const s={...request};let d;
+  for(const request of config.seats){const s={...request};if(s.playmat!==undefined&&!validPlaymat(s.playmat))throw Error('Unknown playmat');s.playmatChoice=s.playmat||defaultPlaymat(s.seatId);s.playmat=resolvePlaymat(s.playmatChoice,seed,s.seatId).id;let d;
     if(['library','preloaded'].includes(s.source)){
       let eligible=decks.filter(d=>d.source===s.source&&assess(d,config).ok);
       if(s.commanderMode==='selected')eligible=eligible.filter(d=>d.commander===s.commander);

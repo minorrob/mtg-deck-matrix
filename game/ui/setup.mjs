@@ -1,3 +1,4 @@
+import {PLAYMATS,defaultPlaymat,validPlaymat,readMatPreferences,saveMatPreference} from '/playmats.mjs';
 let catalog,config,prepared,busy=false;
 const e=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n;};
 const money=n=>`$${Number(n).toFixed(2)}`;
@@ -9,6 +10,18 @@ dialog.addEventListener('cancel',event=>{if(document.body.classList.contains('se
 const content=e('div','setup-content');dialog.append(content);
 function select(label,value,options,onChange){const box=e('label','setup-field');box.append(e('span','',label));const s=e('select');s.setAttribute('aria-label',label);for(const [id,text,disabled]of options){const o=e('option','',text);o.value=id;o.disabled=!!disabled;s.append(o);}s.value=value;s.addEventListener('change',()=>onChange(s.value));box.append(s);return box;}
 function input(label,value,type,onChange){const box=e('label','setup-field');box.append(e('span','',label));const field=e('input');field.type=type;field.value=value;field.setAttribute('aria-label',label);if(type==='number'){field.min=1;field.max=10000;}field.addEventListener('change',()=>onChange(type==='number'?Number(field.value):field.value));box.append(field);return box;}
+function matPicker(s){
+  const selected=s.playmat||defaultPlaymat(s.seatId),picker=e('details','mat-picker');
+  picker.append(e('summary','', 'Playmat · '+(selected==='random'?'Random':PLAYMATS.find(m=>m.id===selected)?.name||'Runic cube')));
+  const grid=e('fieldset','mat-choices');grid.append(e('legend','',s.seatId?'Choose this AI player’s playmat':'Choose your playmat'));
+  for(const mat of [{id:'random',name:'Random',image:null},...PLAYMATS]){
+    const label=e('label','mat-choice'),radio=e('input');radio.type='radio';radio.name='playmat-'+s.seatId;radio.value=mat.id;radio.checked=mat.id===selected;radio.setAttribute('aria-label',(s.seatId?'AI '+s.seatId:'Your')+' playmat: '+mat.name);
+    if(mat.image){const img=e('img');img.src=mat.image;img.alt='';img.loading='lazy';label.append(img);}else label.append(e('span','mat-swatch',mat.id==='random'?'⚄':'✦'));
+    radio.addEventListener('change',()=>{s.playmat=mat.id;saveMatPreference(s.seatId,mat.id);prepared=null;try{localStorage.setItem('commander-setup-v1',JSON.stringify(config));}catch{}picker.querySelector('summary').textContent='Playmat · '+mat.name;content.querySelector('.setup-result').replaceChildren();content.querySelector('.setup-start').disabled=true;});
+    label.append(radio,e('span','',mat.name));grid.append(label);
+  }
+  picker.append(grid);return picker;
+}
 function invalidate(){prepared=null;try{localStorage.setItem('commander-setup-v1',JSON.stringify(config));}catch{}render();}
 function setSource(s,value){s.source=value;s.archidektUrl='';s.deckId='';const first=catalog.decks.find(d=>d.source===value&&d.commander===s.commander&&d.cost<=config.maxCost)||catalog.decks.find(d=>d.source===value&&d.ok&&d.cost<=config.maxCost);if(first){s.deckId=first.id;s.commander=first.commander;}invalidate();}
 async function post(path,body){const response=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json','X-Commander-Token':catalog.token},body:JSON.stringify(body)});const value=await response.json();if(!response.ok)throw Error(value.error||'Request failed');return value;}
@@ -34,7 +47,7 @@ function render(message=''){
     if(s.source==='lab')fields.append(e('p','setup-note','Uses the existing Lab draft builder and your catalog. This produces a starting hundred; simulation optimization is not connected yet.'));
     if(s.source==='archidekt')fields.append(input(`${seatLabel} Archidekt URL · optional`,s.archidektUrl||'','url',v=>{s.archidektUrl=v;invalidate();}),e('p','setup-note','Search checks up to 12 public candidates, then verifies commander, quantity, known identities, bracket counts, and budget. No match is reported explicitly; sources are never silently substituted.'));
     if(s.seatId){fields.append(select(`AI ${s.seatId} play style`,s.nativeProfile,[['Default','Balanced · Forge Default'],['Cautious','Cautious · Forge profile'],['Reckless','Reckless · Forge profile']],v=>{s.nativeProfile=v;invalidate();}),select(`AI ${s.seatId} API difficulty · future pilot`,s.difficulty,[[1,'1 · Learner'],[2,'2 · Casual'],[3,'3 · Focused'],[4,'4 · Advanced'],[5,'5 · Expert']],v=>{s.difficulty=+v;invalidate();}));}
-    card.append(fields);seats.append(card);
+    card.append(fields,matPicker(s));seats.append(card);
   }
   content.append(seats,e('p','setup-note','Playable now: browser controls backed by local Forge, with one human and native AI. Complex choices may still require the engine window. Play style selects a real Forge profile. API difficulty is saved for the future API pilot and does not change native AI. Extra human seats unlock in C8.'));
   const result=e('div','setup-result');result.setAttribute('aria-live','polite');if(message)result.append(e('p','setup-message',message));
@@ -50,6 +63,7 @@ async function pollStatus(){try{const s=await fetch('/api/live').then(r=>r.json(
 export async function openGameSetup(imported){
   if(!catalog){catalog=await fetch('/api/setup').then(r=>{if(!r.ok)throw Error('Restart the local server to load Game Setup');return r.json();});config=structuredClone(catalog.defaults);try{const saved=JSON.parse(localStorage.getItem('commander-setup-v1'));if(saved?.seats?.length===4&&saved?.humans===1)config=saved;}catch{}}
   if(imported){catalog=await fetch('/api/setup').then(r=>r.json());Object.assign(config.seats[0],{source:'library',deckId:imported.id,commander:imported.commander,commanderMode:'selected'});prepared=null;}
+  const matPreferences=readMatPreferences();for(const s of config.seats)s.playmat=validPlaymat(matPreferences[s.seatId])?matPreferences[s.seatId]:validPlaymat(s.playmat)?s.playmat:defaultPlaymat(s.seatId);
   const current=await fetch('/api/live').then(r=>r.json());
   head.querySelector('.setup-resume')?.remove();
   render(imported?'Your current CrankMagic deck has been received. Prepare the table to check costs and mechanics.':'');if(['ready','playing'].includes(current.status)){const resume=e('button','setup-resume','Resume current table');resume.addEventListener('click',()=>window.dispatchEvent(new Event('crankmagic-game-ready')));head.insertBefore(resume,close);}

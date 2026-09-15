@@ -1,3 +1,4 @@
+import {defaultPlaymat,resolvePlaymat,readMatPreferences,paintMat} from '/playmats.mjs';
 import {openGameSetup} from '/setup.mjs';
 import '/handoff.mjs';
 const $=id=>document.getElementById(id);
@@ -91,7 +92,7 @@ function boardGroups(cards){
 function focusBoard(p){
   if(window.parent!==window)window.parent.postMessage({type:'crankmagic-focus',open:true},location.origin);
   const dialog=$('focus');dialog.className=`focus-dialog tone-${p.playerId}`;
-  dialog.dataset.seat=p.playerId;
+  dialog.dataset.seat=p.playerId;paintMat(dialog,seatMat(p.playerId));
   $('focus-title').textContent=names[p.playerId];
   const status=$('focus-status');status.replaceChildren();
   const h=p.health;
@@ -129,8 +130,12 @@ function focusBoard(p){
   hand.append(heading,cards);content.append(hand);
   if(!dialog.open){dialog.showModal();content.scrollTop=0;}
 }
+function seatMat(id){const appearance=live?.appearance?.find(s=>s.seatId===id),preference=readMatPreferences()[id];const requested=appearance?.playmat&&(!preference||preference===appearance.playmatChoice)?appearance.playmat:preference||defaultPlaymat(id);return resolvePlaymat(requested,live?.matchId||data.pod.podHash||'preview',id);}
+window.addEventListener('crankmagic-playmat',()=>{if(live||data.frames.length){render();if($('focus').open)focusBoard(frame().players.find(p=>p.playerId===Number($('focus').dataset.seat)));}});
+window.addEventListener('storage',event=>{if(event.key==='crankmagic-playmats-v1')window.dispatchEvent(new Event('crankmagic-playmat'));});
 function matView(p){
   const mat=el('div',`player-mat${p.playerId===0?' personal-mat':' plain-mat'}`);
+  paintMat(mat,seatMat(p.playerId));
   mat.setAttribute('aria-label',`${names[p.playerId]} playmat`);
   if(live&&p.playerId===0){mat.addEventListener('dragover',e=>e.preventDefault());mat.addEventListener('drop',e=>{e.preventDefault();const raw=e.dataTransfer.getData('application/x-crankmagic-card');if(/^\d+$/.test(raw))gameAction({kind:'card',targetId:Number(raw)});});}
   const lands=p.zones.Battlefield.cards.filter(c=>c.typeLine?.split('—')[0].includes('Land'));

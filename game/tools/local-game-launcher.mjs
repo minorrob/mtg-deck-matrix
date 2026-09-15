@@ -48,7 +48,7 @@ export async function browserBridge(operation,body){
     const pod=JSON.parse(readFileSync(resolve(state.directory,'pod.json'))),facts=new Map();
     for(const s of pod.seats)for(const c of [...s.deck.commanders,...s.deck.library])facts.set(c.name,c);
     for(const p of value.state.players)for(const z of Object.values(p.zones))for(const c of z.cards){const fact=facts.get(c.name);if(fact){c.art=fact.art?.normal;c.typeLine=fact.typeLine;}}
-    value.pod={seats:[pod.seats[0]]};
+    value.pod={seats:[pod.seats[0]]};value.matchId=pod.podHash;value.appearance=pod.seats.map(s=>({seatId:s.seatId,playmat:s.playmat,playmatChoice:s.playmatChoice}));
   }
   return value;
 }

@@ -66,3 +66,31 @@ body:has(.focus-dialog[open]){overflow:hidden}
   .hand{padding-top:8px}.hand-label{margin-bottom:3px}.hand-track .card{width:88px}.hand-track{padding-bottom:6px}footer{padding-top:7px;padding-bottom:8px}
 }
 @media(max-width:620px){#view-deck{font-size:11px;padding:7px}.focus-piles{gap:9px;padding:8px}.focus-pile{width:calc((100% - 27px)/4);height:112px}.focus-pile .mat-zone-label{font-size:9px}.deck-list-link{margin-left:0}.hand-carousel{grid-template-columns:28px minmax(0,1fr) 28px;gap:5px}}
+/* Supplied artwork remains unchanged; these coordinates align playable zones to its printing. */
+.player-mat.illustrated-mat{background-image:linear-gradient(#06131a26,#06131a26),var(--playmat-image);background-size:100% 100%;background-position:center}
+.player-mat.illustrated-mat .mat-zone{border:0;background:#05101930}
+.player-mat.unmarked-mat .mat-zone{border:1px dashed #d3e4dfaa;background:#07121b66}
+.player-mat[data-mat="plain"]{background:radial-gradient(ellipse at top,#182026,#050708 75%)}
+.player-mat[data-layout="moon"] .mat-battlefield{left:4%;top:5%;width:64.5%;height:57%}
+.player-mat[data-layout="moon"] .mat-lands{left:4%;top:70%;width:64.5%;height:26%}
+.player-mat[data-layout="moon"] .mat-command{top:35%;height:27%}.player-mat[data-layout="moon"] .mat-exile{top:35%;height:27%}
+.player-mat[data-layout="gold"] .mat-battlefield{left:3.8%;top:6%;width:60%;height:56%}
+.player-mat[data-layout="gold"] .mat-lands{left:3.8%;top:65%;width:60%;height:29%}
+.player-mat[data-layout="gold"] .mat-turn-guide{left:70%;top:6%;width:14%}
+.player-mat[data-layout="gold"] .mat-life{left:85%;top:6%;width:12%;height:22%}
+.player-mat[data-layout="gold"] .mat-pile{width:14%;height:28%}
+.player-mat[data-layout="gold"] .mat-command{left:70%;top:33%}.player-mat[data-layout="gold"] .mat-exile{left:85%;top:33%}
+.player-mat[data-layout="gold"] .mat-library{left:70%;top:65%}.player-mat[data-layout="gold"] .mat-graveyard{left:85%;top:65%}
+.player-mat[data-layout="lotus"] .mat-battlefield{left:2%;top:6.5%;width:70%;height:62%}
+.player-mat[data-layout="lotus"] .mat-lands{left:2%;top:70%;width:70%;height:26%}
+.player-mat[data-layout="lotus"] .mat-turn-guide{display:none}
+.player-mat[data-layout="lotus"] .mat-life{left:85%;top:7%;width:12%;height:35%}
+.player-mat[data-layout="lotus"] .mat-command{left:73%;top:18%;width:12%;height:25%}
+.player-mat[data-layout="lotus"] .mat-library{left:73%;top:44%;width:12%;height:25%}
+.player-mat[data-layout="lotus"] .mat-exile{left:73%;top:71%;width:12%;height:25%}
+.player-mat[data-layout="lotus"] .mat-graveyard{left:85%;top:44%;width:12%;height:52%}
+.player-mat[data-layout="violet"] .mat-battlefield{left:3%;top:6%;width:64%;height:57%}
+.player-mat[data-layout="violet"] .mat-lands{left:3%;top:68%;width:64%;height:28%}
+.player-mat[data-layout="violet"] .mat-command{left:71%;top:34%;width:12%;height:28%}.player-mat[data-layout="violet"] .mat-exile{left:85%;top:34%;width:12%;height:28%}
+.player-mat[data-layout="violet"] .mat-library{left:71%;top:68%;width:12%;height:28%}.player-mat[data-layout="violet"] .mat-graveyard{left:85%;top:68%;width:12%;height:28%}
+.focus-dialog.illustrated-mat .focus-content{background-image:linear-gradient(#0c1520e8,#0c1520ed),var(--playmat-image);background-size:cover;background-position:center}

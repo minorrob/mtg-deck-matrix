@@ -39,3 +39,11 @@ A remote deployment needs HTTPS/WSS, a reachable authoritative rules host, per-s
 ### Seat ownership and commander selection
 
 Each AI seat has one Commander dropdown containing Random and explicit commanders. The host chooses this. A human chooses their own deck; the commander is derived from that deck. Invited human seats must show only invitation/readiness status to the host until the friend claims the seat and chooses or imports a deck. The host must not receive an AI-style commander selector for a reserved human seat. Remote claiming remains phase C8.
+
+## Per-seat playmats — 2026-09-15
+
+Game Setup now offers a thumbnail picker for each current seat: the seven newly supplied images, the original Runic cube, Classic black, and Random. Preferences persist locally; AI seats default to Random and the human defaults to Runic cube. The prepared pod retains the selected and resolved mat IDs. Cosmetic random selection uses an independent deterministic hash, not the engine RNG. The public view includes only seat appearance metadata, with no additional opponent deck information.
+
+Artwork-specific CSS aligns the printed zones, especially Golden Lotus. Spirit Warrior receives app-drawn zone boundaries. Focus uses a subdued version of the selected image behind its grouped cards. Changing a mat can update the browser appearance without moving cards or changing rules state. Invited humans will choose their own mat after claiming their seat in the later multiplayer phase.
+
+Validation: eight illustrated assets return successfully; Random is stable for a given match and seat; preparation preserves the explicit mat, resolves Random, and keeps all decks at 100 cards. Browser checks covered thumbnail rendering, selection persistence, and the Golden Lotus board/pile layout. Seven existing tests pass. The previous smoke match was unavailable after the local server reload, so the review page is at Setup; its logs remain preserved.

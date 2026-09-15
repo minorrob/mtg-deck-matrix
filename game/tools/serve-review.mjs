@@ -8,6 +8,8 @@ import {setupCatalog,prepareSetup,importWorkshopDeck} from './setup-catalog.mjs'
 import {launchLocalGame,liveStatus,browserBridge} from './local-game-launcher.mjs';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../..');
 const files=new Map([['/',['game/ui/review.html','text/html']],['/review.css',['game/ui/review.css','text/css']],['/review.mjs',['game/ui/review.mjs','text/javascript']],['/match.json',['game/.local/review/match.json','application/json']]]);
+files.set('/playmats.mjs',['game/ui/playmats.mjs','text/javascript']);
+for(const name of ['moonlit-tree','golden-lotus','sunlit-familiar','shadow-forest','mountain-horizon','spirit-warrior','violet-bloom'])files.set('/playmats/'+name+'.png',['game/ui/assets/playmats/'+name+'.png','image/png']);
 files.set('/mats.css',['game/ui/mats.css','text/css']);
 files.set('/rob-playmat.png',['game/ui/assets/rob-playmat.png','image/png']);
 files.set('/setup.mjs',['game/ui/setup.mjs','text/javascript']);
