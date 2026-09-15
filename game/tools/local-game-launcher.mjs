@@ -1,18 +1,29 @@
 import {spawn,execFileSync} from 'node:child_process';
 import {readFileSync,writeFileSync,mkdirSync,createWriteStream,existsSync} from 'node:fs';
-import {resolve,dirname,delimiter} from 'node:path';
+import {resolve,dirname,delimiter,relative,isAbsolute} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {sha256} from '../contracts/deck-snapshot.mjs';
+import {matchTelemetry} from './match-telemetry.mjs';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../..');
 let running=null;
+export async function resumeLocalGame(directory){
+  const base=resolve(root,'game/.local/games'),target=resolve(directory),path=relative(base,target);
+  if(!path||path.startsWith('..')||isAbsolute(path))throw Error('Resume directory is outside the local games folder');
+  const connection=JSON.parse(readFileSync(resolve(target,'browser-bridge.json')));
+  if(!Number.isInteger(connection.port)||connection.port<1||connection.port>65535)throw Error('Invalid bridge port');
+  const response=await fetch(`http://127.0.0.1:${connection.port}/view`,{headers:{'X-CrankMagic-Bridge':connection.token},signal:AbortSignal.timeout(3000)});
+  if(!response.ok||!(await response.json()).state?.players?.length)throw Error('The recorded engine is no longer available');
+  running={status:'playing',directory:target,resumed:true};
+}
 export function liveStatus(){
   if(!running)return {status:'idle'};
   let status={...running};delete status.child;
   for(const file of ['live-status.json','error.json','summary.json'])if(existsSync(resolve(running.directory,file)))status={...status,...JSON.parse(readFileSync(resolve(running.directory,file))),...(file==='error.json'?{status:'error'}:{})};
-  if(running.child.exitCode!==null&&!existsSync(resolve(running.directory,'summary.json')))status.status=running.status;
+  if(running.child&&running.child.exitCode!==null&&!existsSync(resolve(running.directory,'summary.json')))status.status=running.status;
   return status;
 }
 export async function launchLocalGame(pod){
+  if(running?.resumed){try{await browserBridge('view');throw Error('The resumed match is still running. Finish it before launching another.');}catch(error){if(!['closed','finished'].includes(liveStatus().status))throw error;}}
   if(running?.child&&running.child.exitCode===null)throw Error('A standalone match is already running. Finish or close its Forge window first.');
   const forge=resolve(root,'../forge'),jdk=resolve(root,'../commander-runtime/jdk-17.0.20.1+1'),lock=JSON.parse(readFileSync(resolve(root,'game/engine-adapter/forge.lock.json')));
   const commit=execFileSync('git',['-c',`safe.directory=${forge.replaceAll('\\','/')}`,'-C',forge,'rev-parse','HEAD'],{encoding:'utf8',windowsHide:true}).trim();
@@ -39,7 +50,7 @@ export async function launchLocalGame(pod){
   return liveStatus();
 }
 export async function browserBridge(operation,body){
-  const state=liveStatus();if(!state.directory||!running?.child||running.child.exitCode!==null)throw Error('No local game is running');
+  const state=liveStatus();if(!state.directory||(!running.resumed&&(!running.child||running.child.exitCode!==null)))throw Error('No local game is running');
   const file=resolve(state.directory,'browser-bridge.json');if(!existsSync(file))throw Error('This match uses the earlier desktop adapter. Start a new match to use browser controls.');
   const connection=JSON.parse(readFileSync(file));if(!Number.isSafeInteger(connection.port)||connection.port<1||connection.port>65535)throw Error('Invalid local bridge');
   const response=await fetch(`http://127.0.0.1:${connection.port}/${operation}`,{method:body?'POST':'GET',headers:{'X-CrankMagic-Bridge':connection.token,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(5000)});
@@ -49,6 +60,7 @@ export async function browserBridge(operation,body){
     for(const s of pod.seats)for(const c of [...s.deck.commanders,...s.deck.library])facts.set(c.name,c);
     for(const p of value.state.players)for(const z of Object.values(p.zones))for(const c of z.cards){const fact=facts.get(c.name);if(fact){c.art=fact.art?.normal;c.typeLine=fact.typeLine;}}
     value.pod={seats:[pod.seats[0]]};value.matchId=pod.podHash;value.appearance=pod.seats.map(s=>({seatId:s.seatId,playmat:s.playmat,playmatChoice:s.playmatChoice}));
+    value.telemetry=matchTelemetry(state.directory,value.state);
   }
   return value;
 }

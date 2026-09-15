@@ -12,7 +12,8 @@ new ResizeObserver(reportCanvasSize).observe(document.body);
 window.addEventListener('message',event=>{if(event.origin===location.origin&&event.source===window.parent&&event.data?.type==='crankmagic-viewport'&&Number.isFinite(event.data.height))document.body.style.setProperty('--table-viewport',Math.max(400,Math.min(4000,event.data.height))+'px');});
 
 const data=await fetch('/match.json').then(r=>r.ok?r.json():{frames:[],log:[],pod:{seats:[]}}).catch(()=>({frames:[],log:[],pod:{seats:[]}}));
-let live=null,livePolling=false,gameToken=null,lastState='',choiceId=null,actionBusy=false,noticeUntil=0,lastDecision='';
+let resizingBoard=false,boardWidth=null,draggingCard=null,suppressClickUntil=0,pendingPlay=null,lastTurnName='',live=null,livePolling=false,gameToken=null,lastState='',choiceId=null,actionBusy=false,noticeUntil=0,lastDecision='';
+try{const saved=Number(localStorage.getItem('crankmagic-board-width'));if(saved>=320&&saved<=2400)boardWidth=saved;}catch{}
 const names=['You · Chulane','Krenko','Atraxa','Shadrix'];
 const levels=new Map([[1,3],[2,3],[3,3]]);
 const visibleArtwork=new Map();for(const f of data.frames)for(const p of f.players)for(const z of Object.values(p.zones))for(const c of z.cards)if(c.name&&c.art)visibleArtwork.set(c.name,c.art);
@@ -20,6 +21,51 @@ let index=Math.max(0,data.frames.findIndex(f=>f.turn>=18 && f.phase==='MAIN1'));
 function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;}
 function button(text,fn,cls){const b=el('button',cls,text);b.type='button';b.addEventListener('click',fn);return b;}
 function frame(){return live?.state?.players?live.state:data.frames[index];}
+function humanPlayer(){return frame()?.players.find(p=>p.playerId===0);}
+let rememberedTurn=-1;
+function turnPlayer(){
+  const f=frame();if(!f)return null;
+  if(Number.isInteger(f.turnPlayerId))return f.players.find(p=>p.playerId===f.turnPlayerId);
+  // Compatibility with an already-running adapter, which exposes turn ownership in its prompt.
+  const match=live?.ui.prompt?.match(/Turn:\s*(\d+)\s*\(([^\n]+)\)/);
+  if(match&&Number(match[1])===f.turn){lastTurnName=match[2];rememberedTurn=f.turn;}
+  return rememberedTurn===f.turn?f.players.find(p=>p.name===lastTurnName):null;
+}
+function hasPriority(){if(Number.isInteger(frame()?.priorityPlayerId))return frame().priorityPlayerId===0;return live?.ui.prompt?.match(/^Priority:\s*([^\n]+)/)?.[1]===humanPlayer()?.name;}
+function turnLabel(){const p=turnPlayer(),phase=frame()?.phase;return `${p?.playerId===0?'YOUR TURN':p?`${p.name}’s turn`:frame()?.turn===0?'SETTING UP':'TURN OWNER UNAVAILABLE'} · Turn ${frame()?.turn??0} · ${String(phase&&phase!=='null'?phase:'Setup').replaceAll('_',' ').toLowerCase()}`;}
+function notifyAction(text){$('notice').textContent=text;noticeUntil=Date.now()+6500;let toast=$('action-notice');if(!toast){toast=el('div','action-notice');toast.id='action-notice';toast.setAttribute('role','status');document.body.append(toast);}(($('focus').open)?$('focus'):document.body).append(toast);toast.textContent=text;toast.hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>toast.hidden=true,6500);}
+function playRestriction(c){
+  if(!live)return 'Connect to your live table first.';
+  if(live.ui.choice||live.ui.nativeFallback)return 'Finish the current card choice first.';
+  if(humanPlayer()?.zones.Hand.cards.some(h=>h.cardId===c.cardId)&&c.typeLine?.split('—')[0].includes('Land')){
+    const owner=turnPlayer();if(owner&&owner.playerId!==0)return `It is ${owner.name}’s turn. Play this land during your main phase.`;
+    if(!['MAIN1','MAIN2'].includes(frame().phase)||frame().stackSize>0)return 'Play a land during your main phase, with an empty stack.';
+  }
+  return '';
+}
+async function playCard(c){
+  const reason=playRestriction(c);if(reason){notifyAction(reason);return;}
+  pendingPlay={cardId:c.cardId,expires:Date.now()+10000};
+  if(!await gameAction({kind:'card',targetId:c.cardId}))pendingPlay=null;
+}
+let selectedCardId=null,cardMenu=null;
+function highlightSelection(id){selectedCardId=id;for(const node of document.querySelectorAll('.card[data-card-id]'))node.classList.toggle('selected-card',Number(node.dataset.cardId)===id);}
+function closeCardMenu(){if(cardMenu){cardMenu.hidePopover();cardMenu.remove();cardMenu=null;}highlightSelection(null);}
+function cardActions(c,anchor){
+  if(live?.ui.selectables.includes(c.cardId)){gameAction({kind:'card',targetId:c.cardId});return;}
+  closeCardMenu();highlightSelection(c.cardId);
+  const body=el('div','card-quick-actions');body.setAttribute('popover','auto');body.setAttribute('role','dialog');body.setAttribute('aria-label',c.name+' actions');cardMenu=body;
+  const heading=el('div','quick-action-heading');heading.append(el('strong','',c.name),button('×',closeCardMenu));body.append(heading);
+  const own=humanPlayer();const zone=Object.keys(own?.zones||{}).find(z=>own.zones[z].cards.some(card=>card.cardId===c.cardId));
+  if(zone){const reason=playRestriction(c),action=button(zone==='Hand'?(c.typeLine?.includes('Land')?'Play land':'Cast card'):zone==='Command'?'Cast commander':'Use ability →',()=>{closeCardMenu();highlightSelection(c.cardId);playCard(c);},'primary-action');action.disabled=!!reason;action.title=reason||'Show this card’s engine-offered actions, including mana and other costs.';body.append(action);if(reason)body.append(el('p','fine',reason));else if(zone==='Battlefield')body.append(el('small','',c.tapped?'Tapped · an effect is needed to untap. Other abilities may still be usable.':'Untapped · tap costs are paid when you use an ability.'));}
+  body.append(button('Inspect card',()=>{closeCardMenu();inspect(c);}));
+  ($('focus').open?$('focus'):document.body).append(body);body.showPopover();
+  const r=anchor?.getBoundingClientRect()||{right:innerWidth/2,left:innerWidth/2,top:innerHeight/2};
+  body.style.left=Math.max(8,Math.min(innerWidth-body.offsetWidth-8,r.right+10))+'px';body.style.top=Math.max(8,Math.min(innerHeight-body.offsetHeight-8,r.top))+'px';
+  body.addEventListener('toggle',event=>{if(event.newState==='closed'&&cardMenu===body){cardMenu=null;body.remove();highlightSelection(null);}});
+  (body.querySelector('.primary-action:not(:disabled)')||body.querySelector('button'))?.focus();
+}
+function refreshBoards(){if(draggingCard!==null||resizingBoard||!frame())return;render();if($('focus').open)focusBoard(frame().players.find(p=>p.playerId===Number($('focus').dataset.seat)));}
 function handCarousel(cards,id){
   const shell=el('div','hand-carousel'),track=el('div','cards hand-track');track.id=id;track.tabIndex=0;track.setAttribute('aria-label','Your hand cards');
   const previous=button('‹',()=>move(-1),'hand-arrow'),next=button('›',()=>move(1),'hand-arrow');
@@ -88,8 +134,9 @@ async function deckView(){
 const pileZones=[['Command','Command zone','mat-command'],['Exile','Exile','mat-exile'],['Library','Library','mat-library'],['Graveyard','Graveyard','mat-graveyard']];
 function pileButton(p,zone,label,cls){
   const z=p.zones[zone],face=zone==='Command'?z.cards[0]:z.cards.at(-1),pile=button('',()=>{
-    if(zone==='Library')showDialog(`${names[p.playerId]} · Library`,el('p','fine',`${z.count} cards remain. Library order and the top card are hidden.`));else zoneView(p,zone);
+    if(zone==='Library')notifyAction(`${z.count} cards remain.${p.playerId===0?' Double-click to take your pending draw-step draw.':''}`);else zoneView(p,zone);
   },cls);
+  if(zone==='Library'&&p.playerId===0){pile.addEventListener('dblclick',drawStepCard);if(live?.ui.choice?.mode==='draw')pile.classList.add('draw-ready');pile.title='Double-click to take your pending draw-step draw';}
   pile.setAttribute('aria-label',`${names[p.playerId]} ${label}, ${z.count} cards`);
   if(zone==='Library'&&z.count){const back=el('span','library-back');back.append(el('span','','✦'));pile.append(back);}
   else if(face?.art){const art=el('img');art.src=face.art;art.alt=face.name;art.loading='lazy';pile.append(art);}else pile.append(el('span','pile-empty',z.count?'◇':'—'));
@@ -102,19 +149,38 @@ function groups(cards){
   return [...m.values()];
 }
 function cardButton(c,count=1){
-  const b=button('',()=>live&&!c.deckEntry&&live.ui.selectables.includes(c.cardId)?gameAction({kind:'card',targetId:c.cardId}):inspect(c,count),'card'+(c.tapped?' tapped':''));b.setAttribute('aria-label',`${c.name||'Face-down card'}${count>1?`, ${count} copies`:''}${c.tapped?', tapped':''}`);
+  const b=button('',()=>{if(Date.now()<suppressClickUntil)return;if(live&&!c.deckEntry&&live.ui.selectables.includes(c.cardId))gameAction({kind:'card',targetId:c.cardId});else if(live&&!c.deckEntry&&Object.values(humanPlayer()?.zones||{}).some(z=>z.cards.some(card=>card.cardId===c.cardId)))cardActions(c,b);else inspect(c,count);},'card'+(c.tapped?' tapped':''));b.setAttribute('aria-label',`${c.name||'Face-down card'}${count>1?`, ${count} copies`:''}${c.tapped?', tapped':''}`);if(c.cardId!=null){b.dataset.cardId=c.cardId;b.classList.toggle('selected-card',c.cardId===selectedCardId);}
   const fallback=()=>{const box=el('span','fallback');box.append(el('strong','',c.name||'Face-down card'),el('b','',c.token?'✦':'◇'),el('small','',c.token?'TOKEN':'Card image unavailable'));b.replaceChildren(box);};
-  if(c.art){const image=el('img');image.src=c.art;image.alt=c.name||'Face-down card';image.loading='lazy';image.addEventListener('error',fallback,{once:true});b.append(image);}else fallback();
+  if(c.art){const image=el('img');image.src=c.art;image.alt=c.name||'Face-down card';image.loading='lazy';image.draggable=false;image.addEventListener('error',fallback,{once:true});b.append(image);}else fallback();
   if(count>1)b.append(el('span','count','×'+count));
   if((c.typeLine?.includes('Creature')||c.token)&&(c.power!==undefined||c.toughness!==undefined))b.append(el('span','badge',`${c.power??'?'}/${c.toughness??'?'}`));
   if(c.counters&&Object.keys(c.counters).length){const dice=el('span','counter-dice');for(const [type,n] of Object.entries(c.counters))dice.append(el('span','die',`${type} ${n}`));b.append(dice);}
   if(live&&!c.deckEntry){
-    b.draggable=true;b.addEventListener('dragstart',event=>event.dataTransfer.setData('application/x-crankmagic-card',String(c.cardId)));
-    b.addEventListener('dblclick',()=>gameAction({kind:'card',targetId:c.cardId}));
-    b.addEventListener('contextmenu',event=>{event.preventDefault();inspect(c,count);});
+    b.draggable=false;
+    if(humanPlayer()?.zones.Hand.cards.some(card=>card.cardId===c.cardId))enableHandDrag(b,c);
+    b.addEventListener('dblclick',()=>{if(!Object.values(humanPlayer()?.zones||{}).some(z=>z.cards.some(card=>card.cardId===c.cardId)))return;closeCardMenu();if($('card-detail').open)$('card-detail').close();playCard(c);});
+    b.addEventListener('contextmenu',event=>{event.preventDefault();cardActions(c,b);});
     if(live.ui.selectables.includes(c.cardId))b.classList.add('selectable');
   }
   return b;
+}
+function enableHandDrag(node,card){
+  node.classList.add('hand-draggable');
+  node.addEventListener('pointerdown',down=>{
+    if(down.button!==0)return;const x=down.clientX,y=down.clientY;let ghost=null,target=null;node.setPointerCapture(down.pointerId);
+    const move=event=>{
+      if(!ghost&&Math.hypot(event.clientX-x,event.clientY-y)<6)return;
+      event.preventDefault();
+      if(!ghost){draggingCard=card.cardId;document.body.classList.add('dragging-hand');ghost=node.cloneNode(true);ghost.removeAttribute('aria-label');ghost.setAttribute('aria-hidden','true');ghost.className='card drag-ghost';ghost.style.width=node.clientWidth+'px';($('focus').open?$('focus'):document.body).append(ghost);}
+      ghost.style.left=(event.clientX-node.clientWidth/2)+'px';ghost.style.top=(event.clientY-35)+'px';
+      target?.classList.remove('drop-ready');target=document.elementFromPoint(event.clientX,event.clientY)?.closest('.player-mat[data-human-drop]');target?.classList.add('drop-ready');
+    };
+    const finish=event=>{
+      node.removeEventListener('pointermove',move);node.removeEventListener('pointerup',finish);node.removeEventListener('pointercancel',finish);
+      if(ghost){suppressClickUntil=Date.now()+400;ghost.remove();target?.classList.remove('drop-ready');draggingCard=null;document.body.classList.remove('dragging-hand');if(event.type==='pointerup'&&target)playCard(card);refreshBoards();}
+    };
+    node.addEventListener('pointermove',move);node.addEventListener('pointerup',finish,{once:true});node.addEventListener('pointercancel',finish,{once:true});
+  });
 }
 function inspect(c,count=1,initial=false){
   const box=$('inspector');box.replaceChildren();
@@ -123,16 +189,14 @@ function inspect(c,count=1,initial=false){
   if(c.typeLine)box.append(el('p','',c.typeLine));
   box.append(el('p','',c.deckEntry?`${count} ${count===1?'copy':'copies'} in your saved starting deck. This does not indicate which cards remain in the library.`:`${count>1?`${count} permanents with matching recorded attributes shown together. `:''}${c.tapped?'Tapped. ':''}${c.damage?`${c.damage} damage marked. `:''}Card instance ${c.cardId??'commander'}.`));
   box.append(el('p','',c.art?'Actual card printing. Rules state comes from the engine.':'This preview has no cached artwork for this token or card.'));
-  if(live&&!c.deckEntry&&Number.isInteger(c.cardId))box.append(button('Play / activate / select',()=>{$('card-detail').close();gameAction({kind:'card',targetId:c.cardId});},'use-card'));
   if(!initial) {
     $('card-detail-body').replaceChildren(...[...box.children].map(n=>n.cloneNode(true)));
-    $('card-detail-body').querySelector('.use-card')?.addEventListener('click',()=>{$('card-detail').close();gameAction({kind:'card',targetId:c.cardId});});
     $('card-detail').showModal();
     syncModalViewport();
   }
 }
 function syncModalViewport(){if(window.parent!==window)window.parent.postMessage({type:'crankmagic-focus',open:!!document.querySelector('dialog[open]:not(#game-setup)')},location.origin);}
-function showDialog(title,body){$('detail').classList.remove('mat-dialog','deck-dialog');$('detail-title').textContent=title;$('detail-body').replaceChildren(body);if(!$('detail').open)$('detail').showModal();syncModalViewport();}
+function showDialog(title,body){delete $('detail').dataset.history;$('detail').classList.remove('mat-dialog','deck-dialog');$('detail-title').textContent=title;$('detail-body').replaceChildren(body);if(!$('detail').open)$('detail').showModal();syncModalViewport();}
 function zoneView(p,zone){const body=el('div');const z=p.zones[zone];body.append(el('p','fine',`${z.count} cards · recorded turn ${frame().turn}`));const cards=el('div','cards');for(const {card,count} of groups(z.cards))cards.append(cardButton(card,count));if(!z.cards.length)cards.append(el('p','empty','This zone has no visible cards.'));body.append(cards);showDialog(`${names[p.playerId]} · ${zone}`,body);}
 // A presentation partition, not a rules classification. Each permanent appears once.
 // Use only the type portion, so subtypes such as Enchantment don't misclassify a card.
@@ -146,54 +210,29 @@ function boardGroups(cards){
   return [...buckets];
 }
 function focusBoard(p){
-  if(window.parent!==window)window.parent.postMessage({type:'crankmagic-focus',open:true},location.origin);
-  const dialog=$('focus');dialog.className=`focus-dialog tone-${p.playerId}`;
-  dialog.dataset.seat=p.playerId;paintMat(dialog,seatMat(p.playerId));
+  if(!p)return;
+  const dialog=$('focus');dialog.className='focus-dialog tone-'+p.playerId;dialog.dataset.seat=p.playerId;
   $('focus-title').textContent=names[p.playerId];
-  const status=$('focus-status');status.replaceChildren();
-  const h=p.health;
-  status.append(button(`${h.status==='out'?'OUT · ':''}Life ${h.life} · Poison ${h.poison}/10 · Commander ${h.commanderDamageMax}/21`,()=>showHealth(p),'focus-health'));
-  status.append(el('span','',`Turn ${frame().turn} · ${frame().phase.replaceAll('_',' ').toLowerCase()}`));
-  for(const zone of ['Command','Library','Graveyard','Exile'])status.append(button(`${zone} ${p.zones[zone].count}`,()=>{
-    if(zone==='Library')showDialog(`${names[p.playerId]} · Library`,el('p','fine',`${p.zones.Library.count} cards remain. Library order and the top card are hidden.`));
-    else zoneView(p,zone);
-  },'focus-zone-link'));
-  status.append(button(`Your hand ${frame().players.find(player=>player.playerId===0).zones.Hand.count}`,()=>{$('focus-hand').scrollIntoView({behavior:'instant',block:'start'});},'focus-zone-link'));
-  if(p.playerId!==0)status.append(el('span','',`Opponent hand ${p.zones.Hand.count} · hidden`));
+  $('focus-status').replaceChildren(el('strong','',turnLabel()),button('Life '+p.health.life+' · Poison '+p.health.poison+'/10',()=>showHealth(p)));
   const content=$('focus-content');disposeCarousels(content);content.replaceChildren();
-  const piles=el('section','focus-piles');piles.setAttribute('aria-label',`${names[p.playerId]} zone piles`);
-  for(const [zone,label] of pileZones)piles.append(pileButton(p,zone,label,'focus-pile'));
-  if(p.playerId===0)piles.append(button('Browse your starting deck',deckView,'deck-list-link'));
-  content.append(piles);
-  const board=el('div','focus-board');board.setAttribute('aria-label',`${names[p.playerId]} grouped battlefield`);
-  const empty=[];
-  for(const [name,cards] of boardGroups(p.zones.Battlefield.cards)){
-    if(!cards.length){empty.push(name);continue;}
-    const entries=groups(cards),section=el('section',`focus-group${name==='Mana · lands'?' focus-mana':''}`);
-    section.style.flexGrow=Math.min(entries.length,4);section.style.flexBasis=`calc(${Math.min(entries.length,4)} * (var(--focus-card-width) + 16px) + 24px)`;
-    section.setAttribute('aria-label',name);
-    const heading=el('div','focus-group-heading');heading.append(el('h3','',name),el('span','',`${cards.length} ${cards.length===1?'permanent':'permanents'}`));
-    const list=el('div','cards focus-cards');for(const {card,count} of entries)list.append(cardButton(card,count));
-    section.append(heading,list);board.append(section);
-  }
-  if(!p.zones.Battlefield.cards.length)board.append(el('p','empty',h.status==='out'?'This player has been eliminated.':'No permanents on this battlefield yet.'));
-  content.append(board);
-  if(empty.length)content.append(el('p','focus-empty-groups',`Empty: ${empty.join(' · ')}`));
-  content.append(el('p','focus-group-note','Grouped by recorded card type. Multi-type creatures stay with creatures; other artifacts stay with artifacts. Mana rocks appear under Artifacts.'));
-  const you=frame().players.find(player=>player.playerId===0),hand=el('section','focus-hand');hand.id='focus-hand';hand.setAttribute('aria-label','Your hand');
-  const heading=el('div','focus-group-heading');heading.append(el('h3','','Your hand'),el('span','',`${you.zones.Hand.count} cards · visible only to you`));
-  const cards=handCarousel(you.zones.Hand.cards,'focus-hand-cards');
-  hand.append(heading,cards);content.append(hand);
-  if(!dialog.open){dialog.showModal();content.scrollTop=0;}
+  const stage=el('div','focus-mat-stage');stage.append(matView(p,true));content.append(stage);
+  if(p.playerId===0){const hand=el('section','focus-hand');hand.id='focus-hand';const heading=el('div','hand-label');heading.append(el('strong','','Your hand'),el('span','',p.zones.Hand.count+' cards'));hand.append(heading,handCarousel(p.zones.Hand.cards,'focus-hand-cards'));content.append(hand);}
+  else content.append(el('p','fine','Opponent hand: '+p.zones.Hand.count+' cards · hidden'));
+  if(!dialog.open)dialog.showModal();syncModalViewport();mountControls();
 }
 function seatMat(id){const appearance=live?.appearance?.find(s=>s.seatId===id),preference=readMatPreferences()[id];const requested=appearance?.playmat&&(!preference||preference===appearance.playmatChoice)?appearance.playmat:preference||defaultPlaymat(id);return resolvePlaymat(requested,live?.matchId||data.pod.podHash||'preview',id);}
 window.addEventListener('crankmagic-playmat',()=>{if(live||data.frames.length){render();if($('focus').open)focusBoard(frame().players.find(p=>p.playerId===Number($('focus').dataset.seat)));}});
 window.addEventListener('storage',event=>{if(event.key==='crankmagic-playmats-v1')window.dispatchEvent(new Event('crankmagic-playmat'));});
-function matView(p){
+function matView(p,focused=false){
   const mat=el('div',`player-mat${p.playerId===0?' personal-mat':' plain-mat'}`);
-  paintMat(mat,seatMat(p.playerId));mat.addEventListener('click',event=>{if(!event.target.closest('button'))focusBoard(p);});
+  paintMat(mat,seatMat(p.playerId));mat.addEventListener('click',event=>{if(!focused&&!event.target.closest('button')&&!draggingCard&&Date.now()>=suppressClickUntil)focusBoard(p);});
   mat.setAttribute('aria-label',`${names[p.playerId]} playmat`);
-  if(live&&p.playerId===0){mat.addEventListener('dragover',e=>e.preventDefault());mat.addEventListener('drop',e=>{e.preventDefault();const raw=e.dataTransfer.getData('application/x-crankmagic-card');if(/^\d+$/.test(raw))gameAction({kind:'card',targetId:Number(raw)});});}
+  if(live&&p.playerId===0){
+    mat.dataset.humanDrop='true';
+    mat.addEventListener('dragover',event=>{if(draggingCard!==null){event.preventDefault();event.dataTransfer.dropEffect='move';mat.classList.add('drop-ready');}});
+    mat.addEventListener('dragleave',event=>{if(!mat.contains(event.relatedTarget))mat.classList.remove('drop-ready');});
+    mat.addEventListener('drop',event=>{event.preventDefault();event.stopPropagation();mat.classList.remove('drop-ready');const raw=event.dataTransfer.getData('application/x-crankmagic-card');const id=/^\d+$/.test(raw)?Number(raw):draggingCard;const card=humanPlayer()?.zones.Hand.cards.find(c=>c.cardId===id);if(card)playCard(card);});
+  }
   const lands=p.zones.Battlefield.cards.filter(c=>c.typeLine?.split('—')[0].includes('Land'));
   const nonlands=p.zones.Battlefield.cards.filter(c=>!lands.includes(c));
   for(const [name,cls,cards] of [['Battlefield','mat-battlefield',nonlands],['Lands','mat-lands',lands]]) {
@@ -204,17 +243,30 @@ function matView(p){
     zone.append(list,el('span','mat-zone-label',`${name} · ${cards.length}`));mat.append(zone);
   }
   const guide=el('div','mat-turn-guide');guide.setAttribute('aria-label','Turn sequence reminder');
-  for(const phase of ['1. Untap','2. Upkeep','3. Draw','4. Main phase 1','5. Combat','6. Main phase 2','7. End / cleanup'])guide.append(el('span','',phase));
+  const phaseGroups=[['UNTAP'],['UPKEEP'],['DRAW'],['MAIN1'],['COMBAT_BEGIN','COMBAT_DECLARE_ATTACKERS','COMBAT_DECLARE_BLOCKERS','COMBAT_FIRST_STRIKE_DAMAGE','COMBAT_DAMAGE','COMBAT_END'],['MAIN2'],['END_OF_TURN','CLEANUP']];
+  ['1. Untap','2. Upkeep','3. Draw','4. Main phase 1','5. Combat','6. Main phase 2','7. End / cleanup'].forEach((phase,i)=>{const current=turnPlayer()?.playerId===p.playerId&&phaseGroups[i].includes(frame().phase),step=el('span',current?'current-phase':'',phase);if(current)step.setAttribute('aria-current','step');guide.append(step);});
   mat.append(guide);
   const life=button('',()=>showHealth(p),'mat-life');life.setAttribute('aria-label',`${names[p.playerId]} life ${p.health.life}; inspect counters`);
   life.append(el('small','','Life'),el('strong','',p.health.life));mat.append(life);
   for(const [zone,label,cls] of pileZones)mat.append(pileButton(p,zone,label,`mat-pile ${cls}`));
   return mat;
 }
+function attachBoardResize(box){
+  if(boardWidth)box.style.maxWidth=boardWidth+'px';else box.style.removeProperty('max-width');
+  const handle=el('button','board-resize','⤡');handle.type='button';handle.setAttribute('aria-label','Resize your board');handle.title='Drag to resize your board. Arrow keys adjust size; double-click resets.';
+  function save(width){const table=box.closest('.table'),columns=getComputedStyle(table).gridTemplateColumns.split(' ').map(parseFloat),limit=columns.at(-1)||table.clientWidth;boardWidth=Math.round(Math.max(Math.min(320,limit),Math.min(limit,width)));box.style.maxWidth=boardWidth+'px';try{localStorage.setItem('crankmagic-board-width',boardWidth);}catch{}handle.setAttribute('aria-valuetext',boardWidth+' pixels wide');}
+  handle.addEventListener('pointerdown',event=>{if(event.button!==0)return;event.preventDefault();event.stopPropagation();resizingBoard=true;const x=event.clientX,y=event.clientY,w=box.clientWidth,ratio=box.querySelector('.player-mat').clientWidth/box.querySelector('.player-mat').clientHeight;handle.setPointerCapture(event.pointerId);
+    const move=e=>{const dx=e.clientX-x,dy=(e.clientY-y)*ratio;save(w+(Math.abs(dx)>Math.abs(dy)?dx:dy));};
+    const done=()=>{resizingBoard=false;handle.removeEventListener('pointermove',move);handle.removeEventListener('pointerup',done);handle.removeEventListener('pointercancel',done);refreshBoards();};
+    handle.addEventListener('pointermove',move);handle.addEventListener('pointerup',done,{once:true});handle.addEventListener('pointercancel',done,{once:true});
+  });
+  handle.addEventListener('keydown',event=>{if(['ArrowLeft','ArrowDown','ArrowRight','ArrowUp'].includes(event.key)){event.preventDefault();save(box.clientWidth+(['ArrowLeft','ArrowDown'].includes(event.key)?-30:30));}});
+  handle.addEventListener('dblclick',()=>{boardWidth=null;try{localStorage.removeItem('crankmagic-board-width');}catch{}box.style.removeProperty('max-width');});box.append(handle);
+}
 function renderSeat(p){
-  const box=$(`seat-${p.playerId}`);box.replaceChildren();
+  const box=$(`seat-${p.playerId}`);box.replaceChildren();const active=turnPlayer()?.playerId===p.playerId;box.classList.toggle('active-turn',active);if(active)box.setAttribute('aria-label',names[p.playerId]+' · active turn');else box.removeAttribute('aria-label');
   const head=el('div','seat-heading');const title=el('div');title.append(el('div','seat-label',live?(p.playerId===0?'YOU · HUMAN':'AI · LOCAL PILOT'):(p.playerId===0?'YOUR DECK · RECORDED NATIVE PILOT':'AI OPPONENT · NATIVE PROBE')),el('div','seat-title',names[p.playerId]));
-  head.append(title,el('span','seat-hand-count',`Hand ${p.zones.Hand.count}`),button('Focus board',()=>focusBoard(p)));box.append(head,matView(p));
+  if(active)title.append(el('span','turn-badge','● TURN'));const health=button('',()=>showHealth(p),'seat-health');health.append(el('strong','',p.health.life),el('small','',`☣ ${p.health.poison}/10 · CMD ${p.health.commanderDamageMax}/21${p.health.status==='out'?' · OUT':''}`));health.setAttribute('aria-label',`${names[p.playerId]} life ${p.health.life}, poison ${p.health.poison}, commander damage ${p.health.commanderDamageMax}`);head.append(title,health,el('span','seat-hand-count',`Hand ${p.zones.Hand.count}`),button('Focus board',()=>focusBoard(p)));box.append(head,matView(p));if(p.playerId===0)attachBoardResize(box);
   if(p.mana?.length){const gems=el('div','mana-gems');gems.setAttribute('aria-label','Floating mana');for(const m of p.mana){const gem=el('span','mana-gem',m.color);gem.title=`Source ${m.sourceId}${m.restricted?' · restricted mana':''}`;gems.append(gem);}box.append(gems);}
 }
 function showHealth(p){
@@ -226,59 +278,107 @@ function showHealth(p){
   body.append(el('p','fine',`Combined commander damage: ${h.commanderDamageTotal}. Standard Commander tracks each commander separately. Life gain does not erase this damage history.`));
   showDialog(`${names[p.playerId]} · life and counters`,body);
 }
-function renderCounter(){
-  const counter=$('counter');counter.replaceChildren();
-  for(const id of [1,2,0,3]){
-    const p=frame().players.find(p=>p.playerId===id);if(!p)continue;const h=p.health;
-    const b=button('',()=>showHealth(p),`counter-tile tone-${id}${h.status==='out'?' out':''}`);
-    b.setAttribute('aria-label',`${names[id]} life ${h.life}, poison ${h.poison} of 10, commander damage ${h.commanderDamageMax} of 21`);
-    b.append(el('span','who',names[id]),el('strong','life',h.life));const sub=el('span','subtotals');sub.append(el('span','',`☣ ${h.poison}/10`),el('span','',`CMD ${h.commanderDamageMax}/21`));b.append(sub);
-    if(h.status==='out')b.append(el('span','out-label','OUT'));counter.append(b);
-  }
-}
 function logText(e){const f=e.fields;switch(e.kind){case'GameEventSpellAbilityCast':return f.sa?.description||f.sa?.host?.name||'Spell or ability put on stack';case'GameEventSpellResolved':return `${f.spell?.host?.name||'Ability'} resolved${f.hasFizzled?' without effect':''}.`;case'GameEventPlayerDamaged':return `${f.source?.name} dealt ${f.amount} ${f.combat?'combat ':''}${f.infect?'infect ':''}damage to ${f.target?.name}.`;case'GameEventPlayerPoisoned':return `${f.receiver?.name||f.player?.name||'Player'} received poison.`;case'GameEventLandPlayed':return `${f.player?.name} played ${f.land?.name}.`;default:return e.kind;}}
+let trackerTab='info',trackerPlayer=0,trackerFacts=null,trackerKey='';
+const sidebar=document.querySelector('aside'),tabs=el('div','inspector-tabs');tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','Card information and deck tracker');
+const infoTab=button('Card',()=>selectPane('info')),statsTab=button('Tracker',()=>selectPane('tracker')),historyTab=button('History',()=>selectPane('history'));
+for(const [b,id]of [[infoTab,'info'],[statsTab,'tracker'],[historyTab,'history']]){b.setAttribute('role','tab');b.id='tab-'+id;b.setAttribute('aria-controls',id==='info'?'inspector':id==='history'?'events':'tracker-pane');}
+const tracker=el('section','tracker-pane');tracker.id='tracker-pane';tracker.setAttribute('role','tabpanel');tracker.setAttribute('aria-labelledby','tab-tracker');
+$('inspector').setAttribute('role','tabpanel');$('inspector').setAttribute('aria-labelledby','tab-info');$('events').setAttribute('role','tabpanel');$('events').setAttribute('aria-labelledby','tab-history');tabs.append(infoTab,statsTab,historyTab);sidebar.prepend(tabs);sidebar.append(tracker);
+function selectPane(value){trackerTab=value;for(const [b,id]of [[infoTab,'info'],[statsTab,'tracker'],[historyTab,'history']])b.setAttribute('aria-selected',String(value===id));for(const n of sidebar.querySelectorAll('.aside-title,#inspector'))n.hidden=value!=='info';for(const n of sidebar.querySelectorAll('.log-header,#events'))n.hidden=value!=='history';tracker.hidden=value!=='tracker';if(value==='tracker')renderTracker(true);if(value==='history')renderHistory();}
+function historyRows(){if(!frame())return [];return live?(live.telemetry?.recent||[]):data.log.filter(e=>e.sequence<=frame().sequence).slice(-80).reverse().map(e=>({id:e.eventId,turn:e.turn,label:logText(e),name:''}));}
+function historyContent(){const body=el('div','history-feed'),rows=historyRows();body.append(el('p','fine','Recent recorded public card activity · newest first. Private draws and choices are hidden.'));
+  for(const e of rows){const row=el('div','history-row');row.append(el('small','',`TURN ${e.turn??'?'}${e.playerId!=null?' · '+names[e.playerId]:''}`),el('strong','',e.label),el('span','',e.name||''));body.append(row);}
+  if(!rows.length)body.append(el('p','empty',live?.telemetry?'No public card activity recorded yet. Plays and abilities will appear here.':'History is unavailable from this host.'));return body;}
+let historyKey='';
+function renderHistory(){const rows=historyRows(),key=JSON.stringify(rows);if(key===historyKey)return;historyKey=key;$('event-count').textContent=rows.length+' recent events';$('events').replaceChildren(historyContent());if($('detail').open&&$('detail').dataset.history==='true')$('detail-body').replaceChildren(historyContent());}
+function openHistory(){showDialog('Game history',historyContent());$('detail').dataset.history='true';}
+const historyShortcut=button('History',openHistory);document.querySelector('header').append(historyShortcut);$('close-focus').before(button('History',openHistory));
+$('detail').addEventListener('close',()=>delete $('detail').dataset.history);
+function renderTracker(force=false){
+  if(!frame())return;const t=live?.telemetry,key=JSON.stringify([trackerPlayer,t,frame().players]);if(!force&&key===trackerKey)return;trackerKey=key;tracker.replaceChildren();
+  if(!trackerFacts){trackerFacts=new Map();fetch('/app/data/cards.json').then(r=>r.json()).then(d=>{for(const c of d.cards)trackerFacts.set(c.name,c);renderTracker(true);}).catch(()=>{});}
+  const chooser=el('select');chooser.setAttribute('aria-label','Track player');for(const p of frame().players){const o=el('option','',names[p.playerId]);o.value=p.playerId;chooser.append(o);}chooser.value=trackerPlayer;chooser.addEventListener('change',()=>{trackerPlayer=Number(chooser.value);renderTracker(true);});tracker.append(chooser);
+  const p=frame().players.find(p=>p.playerId===trackerPlayer)||humanPlayer(),rows=(t?.cards||[]).filter(c=>c.controller===p.playerId),sum=k=>rows.reduce((n,c)=>n+(c[k]||0),0);
+  const metrics=el('div','tracker-metrics');
+  for(const [label,value]of [['Life',p.health.life],['Poison',p.health.poison],['Hand',p.zones.Hand.count],['Lands played',t?sum('lands'):'—'],['Tap events',t?sum('taps'):'—'],['Counters added',t?sum('countersAdded'):'—'],['Spells cast',t?.classified?sum('spells'):'—'],['Activated on stack',t?.classified?sum('abilities'):'—'],['Triggers stacked',t?.classified?sum('triggers'):'—'],['Proliferate selections',t?.proliferateInstrumented&&p.playerId===0?t.counts.proliferateChoices:'—']]){const box=el('div');box.append(el('strong','',value),el('small','',label));metrics.append(box);}tracker.append(metrics);
+  tracker.append(el('p','fine',t?'Recorded events for visible sources, including actions later undone. Tap events include mana, attacks and costs. Ability counts cover stack entries; mana activations can bypass the stack. Proliferate selections count choices, not counters added. A dash means instrumentation is unavailable.':'The event tracker is waiting for the updated local host. Current board rules are available below.'));
+  const rules=el('section');rules.append(el('h3','','Rules currently on this board'));
+  for(const c of p.zones.Battlefield.cards){const fact=trackerFacts.get(c.name)||data.pod.seats[0]?.mechanics?.cards?.find(f=>f.name===c.name),row=el('details','board-rule');row.append(el('summary','',c.name+(c.tapped?' · tapped':'')));
+    row.append(el('p','',fact?.oracleText||'Rules text is not cached for this object.'),button('Inspect',()=>inspect(c)));rules.append(row);}
+  if(!p.zones.Battlefield.cards.length)rules.append(el('p','fine','No permanents yet. Trigger conditions, static rules and activated abilities appear here as cards enter.'));tracker.append(rules);
+  const activity=el('section');activity.append(el('h3','','Card activity'));for(const c of rows.sort((a,b)=>b.stackEntries-a.stackEntries).slice(0,15))activity.append(el('p','tracker-card-row',c.name+' · '+c.stackEntries+' stack entries · '+c.taps+' taps · '+c.countersAdded+' counters added'));if(!rows.length)activity.append(el('p','fine','No recorded activity for visible cards in this seat yet.'));tracker.append(activity);
+  const log=el('details','tracker-log');log.append(el('summary','','Recent events'));for(const event of (t?.recent||[]).filter(e=>e.playerId===p.playerId).slice(0,20))log.append(el('p','fine','Turn '+(event.turn??'?')+' · '+event.name+' · '+event.label));tracker.append(log);
+  if(p.playerId===0){const review=el('section');review.append(el('h3','','Deck review notes'),el('p','fine','Watch for cards held without a use, colors you could not produce, triggers you could not exploit, and opposing effects that disrupted your plan. Counts alone are not a reason to cut a card.'));
+    const notes=el('textarea');notes.setAttribute('aria-label','Deck review notes');notes.placeholder='Cards to reconsider, missed synergies, interaction to add…';const key='crankmagic-review-'+(live?.matchId||'replay');try{notes.value=localStorage.getItem(key)||'';}catch{}notes.addEventListener('input',()=>{try{localStorage.setItem(key,notes.value);}catch{}});review.append(notes,button('Export tracker report',()=>{const report={schema:'CrankMagicTracker@1',matchId:live?.matchId,turn:frame().turn,deck:data.pod.seats[0]?.deck.name,telemetry:t||null,notes:notes.value,limitations:['Only observed visible sources are summarized.','Missing instrumentation is unknown, not zero.','Causal loop detection and exact mana-efficiency attribution are not implemented.']};const url=URL.createObjectURL(new Blob([JSON.stringify(report,null,2)],{type:'application/json'})),a=el('a');a.href=url;a.download='crankmagic-tracker.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}));tracker.append(review);}
+}
+selectPane('history');
 function render(){
   document.querySelector('.focus-eyebrow').textContent=live?'FOCUSED BOARD · LIVE GAME':'FOCUSED BOARD · REPLAY';
-  const f=frame();$('phase').textContent=`Turn ${f.turn} · ${String(!f.phase||f.phase==='null'?'Setup':f.phase).replaceAll('_',' ').toLowerCase()}`;$('position').textContent=live?'Live game':`Recorded phase ${index+1} / ${data.frames.length}`;$('timeline').value=index;
+  const f=frame();$('phase').textContent=turnLabel();$('position').textContent=live?'Live game':`Recorded phase ${index+1} / ${data.frames.length}`;$('timeline').value=index;
   $('prev').disabled=index===0;$('next').disabled=index===data.frames.length-1;
-  for(const p of f.players)renderSeat(p);renderCounter();const you=f.players.find(p=>p.playerId===0);disposeCarousels($('hand-host'));$('hand-host').replaceChildren(handCarousel(you.zones.Hand.cards,'hand'));$('hand-count').textContent=`${you.zones.Hand.count} cards`;
-  const events=live?[]:data.log.filter(e=>e.sequence<=f.sequence).slice(-16).reverse();$('event-count').textContent=live?'Private journal active':`${data.log.length} recorded`;$('events').replaceChildren(...events.map(e=>{const row=el('div','log-row');row.append(el('small','',`TURN ${e.turn} · ${e.eventId}`),el('span','',logText(e)));return row;}));
+  for(const p of f.players)renderSeat(p);const you=f.players.find(p=>p.playerId===0);disposeCarousels($('hand-host'));$('hand-host').replaceChildren(handCarousel(you.zones.Hand.cards,'hand'));$('hand-count').textContent=`${you.zones.Hand.count} cards`;
+  renderHistory();
 }
 $('timeline').max=data.frames.length-1;$('timeline').addEventListener('input',e=>{index=+e.target.value;render();});$('prev').addEventListener('click',()=>{index=Math.max(0,index-1);render();});$('next').addEventListener('click',()=>{index=Math.min(data.frames.length-1,index+1);render();});
 $('close-detail').addEventListener('click',()=>$('detail').close());$('clear-inspect').addEventListener('click',()=>$('inspector').replaceChildren(el('p','empty','Select any visible card to inspect it.')));
-$('close-card').addEventListener('click',()=>$('card-detail').close());
+$('card-detail').addEventListener('click',()=>$('card-detail').close());
 $('close-focus').addEventListener('click',()=>$('focus').close());
+$('focus').addEventListener('close',mountControls);
 for(const id of ['focus','detail','card-detail'])$(id).addEventListener('close',syncModalViewport);
-$('focus-size').addEventListener('input',e=>{$('focus').style.setProperty('--focus-card-width',`${e.target.value}px`);$('focus-size-value').textContent=`${e.target.value} px`;});
+$('focus-size').addEventListener('input',e=>{$('focus').style.setProperty('--focus-zoom',e.target.value+'%');$('focus').style.setProperty('--focus-scale',e.target.value/100);$('focus-size-value').textContent=e.target.value+'%';});
 $('view-hand').addEventListener('click',()=>zoneView(frame().players.find(p=>p.playerId===0),'Hand'));
 $('view-deck').addEventListener('click',deckView);
 $('notice').textContent='Real recorded engine states · Native AI proof · Human play, API pilots and measured reports are still being built.';
 $('setup').textContent='Game setup';
 $('setup').addEventListener('click',()=>openGameSetup().catch(error=>showDialog('Game setup',el('p','fine',error.message))));
-if(data.frames.length){render();const c=data.pod.seats[0]?.deck.commanders[0];if(c)inspect({name:c.name,art:c.art.normal,typeLine:c.typeLine,cardId:'commander'},1,true);}
+if(data.frames.length){render();const c=data.pod.seats[0]?.deck.commanders[0];if(c&&new URLSearchParams(location.search).has('replay'))inspect({name:c.name,art:c.art.normal,typeLine:c.typeLine,cardId:'commander'},1,true);else $('inspector').replaceChildren(el('p','fine','Select any visible card to inspect it.'));}
 
 const liveButton=button('Join live table',startLive,'join-live');document.querySelector('header').append(liveButton);
-const controls=el('section','live-controls');controls.hidden=true;controls.setAttribute('aria-label','Your game decision');document.querySelector('.replaybar').after(controls);
-const prompt=el('p'),options=el('div','live-options'),buttons=el('div','live-buttons');controls.append(prompt,options,buttons);
+const controls=el('section','live-controls');controls.hidden=true;controls.setAttribute('aria-label','Your game decision');document.querySelector('.hand').prepend(controls);
+const actionDock=el('div','action-dock');sidebar.prepend(actionDock);
+const prompt=el('p'),decisionArt=el('div','decision-art'),options=el('div','live-options'),buttons=el('div','live-buttons');controls.append(prompt,decisionArt,options,buttons);
+function mountControls(){const host=$('focus').open&&$('focus').dataset.seat==='0'?$('focus-hand'):matchMedia('(min-width:1201px)').matches?actionDock:document.querySelector('.hand');if(host&&controls.parentElement!==host)host.prepend(controls);}
+window.addEventListener('resize',mountControls);
+function drawStepCard(){const q=live?.ui.choice;if(q?.mode==='draw')gameAction({kind:'answer',choiceId:q.id,indices:[]});else notifyAction(frame()?.phase==='DRAW'?'This draw step has already been handled by the engine.':'Your library can be drawn from when your draw-step draw is pending.');}
 async function gameAction(action){
-  if(actionBusy||!live)return;actionBusy=true;
+  if(actionBusy||!live)return false;actionBusy=true;
   try{if(!gameToken)gameToken=(await fetch('/api/setup').then(r=>r.json())).token;
-    const response=await fetch('/api/game-action',{method:'POST',headers:{'Content-Type':'application/json','X-Commander-Token':gameToken},body:JSON.stringify({...action,revision:live.revision,actionId:crypto.randomUUID()})});
-    const result=await response.json();if(!response.ok)throw Error(result.error);$('notice').textContent='Action sent to the rules engine.';
-  }catch(error){$('notice').textContent=error.message;noticeUntil=Date.now()+6000;}finally{actionBusy=false;}
+    const freshResponse=await fetch('/api/game-view'),fresh=await freshResponse.json();if(!freshResponse.ok)throw Error(fresh.error);live=fresh;
+    const response=await fetch('/api/game-action',{method:'POST',headers:{'Content-Type':'application/json','X-Commander-Token':gameToken},body:JSON.stringify({...action,revision:fresh.revision,actionId:crypto.randomUUID()})});
+    const result=await response.json();if(!response.ok)throw Error(result.error);return true;
+  }catch(error){notifyAction(error.message);return false;}finally{actionBusy=false;}
 }
 function renderDecision(){
-  controls.hidden=false;const ui=live.ui;const decisionKey=JSON.stringify(ui);if(decisionKey===lastDecision)return;lastDecision=decisionKey;prompt.textContent=ui.nativeFallback||ui.choice?.title||ui.prompt;
-  buttons.replaceChildren();
+  mountControls();controls.hidden=false;const ui=live.ui;const decisionKey=JSON.stringify(ui);if(decisionKey===lastDecision)return;lastDecision=decisionKey;
+  const priority=/^Priority:/m.test(ui.prompt);
+  prompt.textContent=ui.nativeFallback||ui.choice?.title||(priority?(hasPriority()?(turnPlayer()?.playerId===0?'Your action · play a card or use a board ability.':'You may respond before play continues.'):'Waiting for the active player…'):ui.prompt);
+  buttons.replaceChildren();decisionArt.replaceChildren();
   if(ui.choice){const q=ui.choice;
-    if(choiceId!==q.id){choiceId=q.id;options.replaceChildren();
-      if(q.mode==='integer'){const n=el('input');n.type='number';n.min=q.min;n.max=q.max;n.value=q.min;n.id='choice-number';n.setAttribute('aria-label',q.title);options.append(n);}
-      else for(const option of q.options){const label=el('label','choice-option'),input=el('input');input.type=q.max===1?'radio':'checkbox';input.name='game-choice';input.value=option.index;if(q.mode!=='ack')label.append(input);label.append(el('span','',option.label));options.append(label);}
+    const card=frame().players.flatMap(p=>Object.values(p.zones).flatMap(z=>z.cards)).find(c=>c.cardId===(q.cardId??selectedCardId));
+    if(card?.art){const img=el('img');img.src=card.art;img.alt=card.name;decisionArt.append(img);}
+    // Compatibility with running adapters: Forge takes a sole offered ability for browser card selections.
+    if(q.title==='Choose an ability'&&q.options.length===1&&q.autoSelect!==false){
+      pendingPlay=null;options.replaceChildren();prompt.textContent='Playing your card…';gameAction({kind:'answer',choiceId:q.id,indices:[q.options[0].index]}).then(ok=>{if(!ok)lastDecision='';});return;
     }
-    buttons.append(button('Confirm choice',()=>{if(q.mode==='integer')gameAction({kind:'answer',choiceId:q.id,value:Number($('choice-number').value)});else gameAction({kind:'answer',choiceId:q.id,indices:[...options.querySelectorAll('input:checked')].map(n=>Number(n.value))});}));
-  }else{choiceId=null;options.replaceChildren();const confirm=button(ui.ok||'OK',()=>gameAction({kind:'ok'})),cancel=button(ui.cancel||'Cancel',()=>gameAction({kind:'cancel'}));confirm.disabled=!ui.okEnabled||!!ui.nativeFallback;cancel.disabled=!ui.cancelEnabled||!!ui.nativeFallback;buttons.append(confirm,cancel);
-    if(ui.selectables.length)buttons.append(el('span','fine','Highlighted cards can be selected.'));
-    buttons.append(button('Choose a player',()=>{const body=el('div','live-buttons');for(const p of frame().players)body.append(button(names[p.playerId],()=>{$('detail').close();gameAction({kind:'player',targetId:p.playerId});}));showDialog('Select a player for the current decision',body);}));
+    if(choiceId!==q.id){choiceId=q.id;options.replaceChildren();
+      if(q.mode==='draw')options.append(button('Draw card',drawStepCard,'primary-action'));
+      else if(q.mode==='integer'){const n=el('input');n.type='number';n.min=q.min;n.max=q.max;n.value=q.min;n.id='choice-number';n.setAttribute('aria-label',q.title);options.append(n);}
+      else if(['one','boolean','index'].includes(q.mode))for(const option of q.options)options.append(button(option.label,()=>{pendingPlay=null;gameAction({kind:'answer',choiceId:q.id,indices:[option.index]});},'ability-option'));
+      else for(const option of q.options){const label=el('label','choice-option'),input=el('input');input.type='checkbox';input.name='game-choice';input.value=option.index;if(q.mode!=='ack')label.append(input);label.append(el('span','',option.label));options.append(label);}
+    }
+    if(q.mode==='integer')buttons.append(button('Apply amount',()=>gameAction({kind:'answer',choiceId:q.id,value:Number($('choice-number').value)})));
+    else if(q.mode==='ack')buttons.append(button('Continue',()=>gameAction({kind:'answer',choiceId:q.id,indices:[]})));
+    else if(q.mode==='many')buttons.append(button('Done selecting',()=>gameAction({kind:'answer',choiceId:q.id,indices:[...options.querySelectorAll('input:checked')].map(n=>Number(n.value))})));
+    else if(q.min===0&&q.mode!=='draw')buttons.append(button('Cancel',()=>{pendingPlay=null;gameAction({kind:'answer',choiceId:q.id,indices:[]});}));
+  }else{
+    choiceId=null;options.replaceChildren();
+    const confirm=button(priority&&ui.ok==='OK'?(turnPlayer()?.playerId===0&&frame().stackSize===0?'Continue from '+String(frame().phase).replaceAll('_',' ').toLowerCase():'Pass priority'):ui.ok||'Continue',()=>gameAction({kind:'ok'}));confirm.title=priority?'Finish acting for now and let the other players respond.':'';confirm.disabled=!ui.okEnabled||!!ui.nativeFallback;buttons.append(confirm);
+    if(ui.cancelEnabled){const cancel=button(priority&&ui.cancel==='End Turn'?(turnPlayer()?.playerId===0?'End my turn':'Yield through this turn'):ui.cancel||'Cancel',()=>gameAction({kind:'cancel'}));cancel.disabled=!!ui.nativeFallback;buttons.append(cancel);}
+    if(ui.selectables.length)buttons.append(el('span','fine','Select highlighted cards on the playmat.'));
+    // Player selection belongs to an explicit target/defender prompt, never ordinary priority.
+    const startingPlayer=/who would you like to start|starting player|start this game/i.test(ui.prompt);
+    if(!priority&&(startingPlayer||(/select|choose|target|attack/i.test(ui.prompt)&&/player|opponent|defend/i.test(ui.prompt))))for(const p of frame().players.filter(p=>p.health.status!=='out'))buttons.append(button((startingPlayer?'Start with ':'Target ')+names[p.playerId],()=>gameAction({kind:'player',targetId:p.playerId})));
   }
 }
 async function startLive(){if(livePolling)return;livePolling=true;liveButton.disabled=true;await pollLive();}
@@ -287,8 +387,8 @@ async function pollLive(){
   try{const response=await fetch('/api/game-view');const value=await response.json();if(!response.ok)throw Error(value.error);
     if(value.state?.players?.length){live=value;data.pod=value.pod;for(const p of value.state.players)names[p.playerId]=p.playerId===0?`You · ${p.name}`:p.name;
       document.body.classList.add('online-live');document.body.dataset.seats=value.state.players.length;document.querySelector('.preview').textContent='LIVE TABLE · LOCAL AI';document.querySelector('.scrubber').hidden=true;
-      const key=JSON.stringify([value.state,value.ui.selectables]);if(key!==lastState){lastState=key;for(const id of [0,1,2,3])$(`seat-${id}`).hidden=!value.state.players.some(p=>p.playerId===id);render();if($('focus').open)focusBoard(frame().players.find(p=>p.playerId===Number($('focus').dataset.seat)));}
-      renderDecision();liveButton.textContent='Live table connected';if(Date.now()>noticeUntil)$('notice').textContent='Drag a hand card onto your mat, double-click to use it, or right-click for its action. Complex choices may open in the engine window.';
+      const key=JSON.stringify([value.state,value.ui.selectables,value.ui.prompt]);if(key!==lastState&&draggingCard===null&&!resizingBoard){lastState=key;for(const id of [0,1,2,3])$(`seat-${id}`).hidden=!value.state.players.some(p=>p.playerId===id);render();if($('focus').open)focusBoard(frame().players.find(p=>p.playerId===Number($('focus').dataset.seat)));}
+      renderDecision();renderHistory();if(trackerTab==='tracker')renderTracker();liveButton.textContent='Live table connected';if(Date.now()>noticeUntil)$('notice').textContent='Drag from hand to play. Select your card for actions; inspect for a larger view. History records public activity.';
     }
   }catch(error){$('notice').textContent=error.message;liveButton.disabled=false;livePolling=false;return;}
   setTimeout(pollLive,750);

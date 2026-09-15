@@ -56,7 +56,24 @@ public final class ForgeBrowserBridge {
     }
     synchronized Map<String,Object> view(){return ForgeProbe.obj("revision",revision,"state",projection,"ui",ForgeProbe.obj("prompt",prompt,"ok",ok,"cancel",cancel,"okEnabled",okEnabled,"cancelEnabled",cancelEnabled,"selectables",selectables,"choice",pending,"nativeFallback",fallback));}
     void attach(Game value){game=value;game.subscribeToEvents(this);snapshot();}
-    @Subscribe public void event(GameEvent event){snapshot();}
+    @Subscribe public void event(GameEvent event){
+        snapshot();
+        // This synchronous event is emitted after phase replacement checks and before
+        // PhaseHandler.onPhaseBegin performs the normal draw. Never draw a card here.
+        if(event instanceof forge.game.event.GameEventTurnPhase phase
+                && phase.phase()==forge.game.phase.PhaseType.DRAW && phase.playerTurn().getId()==0
+                && !phase.phaseDesc().equals("dev")
+                && !(game.getPhaseHandler().getTurn()==1&&game.getPlayers().size()==2)){
+            synchronized(this){
+                if(pending!=null)throw new IllegalStateException("A choice is already pending before the draw step");
+                pending=ForgeProbe.obj("id",UUID.randomUUID().toString(),"title","Double-click your library to draw","mode","draw","min",0,"max",0,"options",List.of());
+                answer=null;revision++;journal.append("browser-choice-offered",pending);
+                try{while(answer==null)wait();}
+                catch(InterruptedException interrupted){Thread.currentThread().interrupt();throw new IllegalStateException("Draw confirmation interrupted",interrupted);}
+                finally{answer=null;pending=null;revision++;}
+            }
+        }
+    }
     void snapshot(){
         if(game==null)return;
         try{
@@ -86,7 +103,15 @@ public final class ForgeBrowserBridge {
             case "message":case "showErrorDialog":title=String.valueOf(a[0]);options=List.of();min=0;max=0;mode="ack";break;
             case "one":case "oneOrNone":title=String.valueOf(a[0]);options=(List<?>)a[1];min=method.equals("oneOrNone")?0:1;break;
             case "getChoices":title=String.valueOf(a[0]);min=(int)a[1];max=(int)a[2];options=(List<?>)a[3];mode="many";break;
-            case "getAbilityToPlay":title="Choose an ability";options=(List<?>)a[1];min=0;break;
+            case "chooseEntitiesForEffect":
+                // Only the public proliferate-target contract is supported here. Other effect choices retain native reveal handling.
+                if(!String.valueOf(a[0]).equals(forge.util.Localizer.getInstance().getMessage("lblChooseProliferateTarget"))){synchronized(this){fallback="Finish this effect choice in the engine window.";revision++;}return DELEGATE;}
+                title=String.valueOf(a[0]);options=(List<?>)a[1];min=(int)a[2];max=(int)a[3];mode="many";break;
+            case "getAbilityToPlay":
+                title="Choose an ability";options=(List<?>)a[1];min=0;
+                // Match CMatchUI: a non-mouse selection with one offered ability needs no menu.
+                if(options.size()==1&&a[2]==null)return options.get(0);
+                break;
             case "confirm":title=String.valueOf(a[1]);options=(List<?>)a[a.length-1];mode="boolean";break;
             case "showConfirmDialog":title=String.valueOf(a[0]);options=List.of(a[2],a[3]);mode="boolean";break;
             case "showOptionDialog":title=String.valueOf(a[0]);options=(List<?>)a[3];mode="index";break;
@@ -98,20 +123,24 @@ public final class ForgeBrowserBridge {
                 return DELEGATE;
         }
         if(mode.equals("many")&&max<0)max=options.size();
-        if(options.isEmpty()&&!mode.equals("integer")&&!mode.equals("ack"))return mode.equals("many")?List.of():null;
+        if(options.isEmpty()&&!mode.equals("integer")&&!mode.equals("ack")&&!method.equals("chooseEntitiesForEffect"))return mode.equals("many")?List.of():null;
         String id=UUID.randomUUID().toString();List<Map<String,Object>> labels=new ArrayList<>();
         for(int i=0;i<options.size();i++){Object item=options.get(i);String label=String.valueOf(item);if(item instanceof CardView c)label=c.getCurrentState().getName();labels.add(ForgeProbe.obj("index",i,"label",label));}
         JsonObject submitted;
         synchronized(this){
             if(pending!=null)throw new IllegalStateException("Overlapping browser choice");
             pending=ForgeProbe.obj("id",id,"title",title,"mode",mode,"min",min,"max",max,"options",labels);answer=null;revision++;
+            if(method.equals("getAbilityToPlay")&&a[0] instanceof CardView card){pending.put("cardId",card.getId());pending.put("autoSelect",a[2]==null);}
             journal.append("browser-choice-offered",pending);
             while(answer==null)wait();submitted=answer;answer=null;pending=null;revision++;
         }
         if(mode.equals("integer"))return submitted.get("value").getAsInt();
         if(mode.equals("ack"))return null;
         List<Object> selected=new ArrayList<>();for(JsonElement index:submitted.getAsJsonArray("indices"))selected.add(options.get(index.getAsInt()));
-        if(mode.equals("many"))return selected;
+        if(mode.equals("many")){
+            if(method.equals("chooseEntitiesForEffect"))journal.append("mechanic-choice-completed",ForgeProbe.obj("mechanic","Proliferate","playerId",0,"turn",game.getPhaseHandler().getTurn()));
+            return selected;
+        }
         if(mode.equals("boolean"))return submitted.getAsJsonArray("indices").get(0).getAsInt()==0;
         if(mode.equals("index"))return submitted.getAsJsonArray("indices").get(0).getAsInt();
         return selected.isEmpty()?null:selected.get(0);
@@ -152,7 +181,8 @@ public final class ForgeBrowserBridge {
                     case "card":
                         int cardId=request.get("targetId").getAsInt();Card found=null;
                         for(var p:game.getRegisteredPlayers())for(ZoneType zone:List.of(ZoneType.Hand,ZoneType.Battlefield,ZoneType.Command,ZoneType.Exile,ZoneType.Graveyard))for(Card card:p.getCardsIn(zone))if(card.getId()==cardId&&card.getView().canBeShownTo(game.getRegisteredPlayers().get(0).getView()))found=card;
-                        if(found==null)throw new IllegalArgumentException("Card is not visible");controller.selectCard(found.getView(),List.of(),null);break;
+                        if(found==null)throw new IllegalArgumentException("Card is not visible");
+                        if(!controller.selectCard(found.getView(),List.of(),null))throw new IllegalArgumentException("This card has no available action now. Check timing, costs, targets and land plays remaining.");break;
                 }
                 journal.append("browser-action-submitted",request);
             }catch(Exception e){synchronized(this){prompt="Action was not completed: "+e.getMessage();revision++;}}

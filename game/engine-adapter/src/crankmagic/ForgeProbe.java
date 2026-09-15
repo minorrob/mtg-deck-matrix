@@ -131,10 +131,10 @@ public final class ForgeProbe {
     static Object capture(Object v) {
         if (v==null || v instanceof String || v instanceof Number || v instanceof Boolean) return v;
         if (v instanceof Enum<?>) return v.toString();
-        if (v instanceof CardView c) return obj("cardId",c.getId(),"name",c.getCurrentState().getName());
+        if (v instanceof CardView c) return obj("cardId",c.getId(),"name",c.getCurrentState().getName(),"faceDown",c.isFaceDown());
         if (v instanceof PlayerView p) return obj("playerId",p.getId(),"name",p.getName());
-        if (v instanceof SpellAbilityView s) return obj("abilityId",s.getId(),"host",capture(s.getHostCard()),"description",s.getDescription());
-        if (v instanceof StackItemView s) return obj("stackId",s.getId(),"source",capture(s.getSourceCard()),"actor",capture(s.getActivatingPlayer()));
+        if (v instanceof SpellAbilityView s) return obj("abilityId",s.getId(),"host",capture(s.getHostCard()),"description",s.getDescription(),"isSpell",s.isSpell());
+        if (v instanceof StackItemView s) return obj("stackId",s.getId(),"source",capture(s.getSourceCard()),"actor",capture(s.getActivatingPlayer()),"isTrigger",s.isTrigger());
         if (v instanceof Card c) return capture(c.getView());
         if (v instanceof Player p) return capture(p.getView());
         if (v instanceof Map<?,?> map) {
@@ -186,6 +186,8 @@ public final class ForgeProbe {
                 "counters",capture(p.getCounters()),"mana",mana,"zones",zones));
         }
         return obj("schema","CommanderProbeProjection@1","turn",game.getPhaseHandler().getTurn(),
+            "turnPlayerId",game.getPhaseHandler().getPlayerTurn()==null?null:game.getPhaseHandler().getPlayerTurn().getId(),
+            "priorityPlayerId",game.getPhaseHandler().getPriorityPlayer()==null?null:game.getPhaseHandler().getPriorityPlayer().getId(),
             "phase",String.valueOf(game.getPhaseHandler().getPhase()),"players",players,
             "stackSize",game.getStack().size(),"gameOver",game.isGameOver());
     }

@@ -17,7 +17,7 @@ body.table-view>.replaybar{padding:8px 16px}
 body.table-view main{display:grid;grid-template-columns:minmax(0,1fr) 240px;padding:12px 16px 0;gap:16px;height:auto;min-height:0;overflow:visible}
 body.table-view .table{display:grid;grid-template-columns:clamp(160px,16vw,190px) minmax(0,1fr);grid-template-rows:auto auto;align-items:start;gap:14px;width:100%}
 body.table-view .arena{display:contents}
-body.table-view .opponent-boards{grid-column:1;grid-row:1;display:flex;flex-direction:column;gap:12px;min-width:0}
+body.table-view .opponent-boards{grid-column:1;grid-row:1/3;display:flex;flex-direction:column;gap:12px;min-width:0}
 body.table-view .seat{width:100%;height:auto;min-height:0;padding:7px;position:relative;align-self:start}
 body.table-view .seat[hidden]{display:none}
 body.table-view #seat-0{grid-column:2;grid-row:1;max-width:clamp(440px,calc((var(--table-viewport,100dvh) - 310px)*1.69),1100px);justify-self:center}
@@ -40,9 +40,64 @@ body.table-view .hand-track .card{width:110px}
 .deck-filter input,.deck-filter select{width:100%;min-width:0;padding:10px;border:1px solid #40536b;border-radius:7px;background:#122030;color:#eef5fc}
 .deck-more{padding:10px 0;border-top:1px solid #35445b;margin-top:14px}.deck-more summary{cursor:pointer;color:#8ad9cb}
 .deck-result-count{font-size:13px;color:#82dfca}.deck-results .cards{max-height:none;overflow:visible;gap:14px}.deck-results .card{width:clamp(125px,13vw,185px)}
-body.table-view aside{position:sticky;top:12px;max-height:85vh;overflow:auto}
+.seat.active-turn{box-shadow:0 0 0 2px var(--seat),0 0 22px color-mix(in srgb,var(--seat) 22%,transparent)}
+.turn-badge{display:inline-block;font-size:10px;font-weight:700;color:var(--seat);letter-spacing:1px;margin-top:3px}
+#phase{font-size:15px;color:#f1e5b1}.action-notice{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);max-width:min(600px,90vw);padding:14px 20px;background:#23344b;color:#fff;border:1px solid #7995b5;border-radius:10px;box-shadow:0 5px 30px #0008;z-index:5000;pointer-events:none}
+.player-mat.drop-ready{outline:3px solid #71ecb8;outline-offset:3px}.dragging-hand #seat-0 .mat-zone,.dragging-hand #focus .mat-zone{border:2px dashed #71ecb8;background:#1f604b44}
+.player-mat .card img,.hand-track .card img{pointer-events:none;user-select:none;-webkit-user-drag:none}
+body.table-view .hand .live-controls,.focus-hand .live-controls{margin:0 0 10px;padding:12px;background:#152233;border:1px solid #354c66;box-shadow:none;border-radius:10px;flex-wrap:wrap;gap:10px}
+.live-controls>p{flex-basis:100%;margin:0;font-size:12px;color:#b8cee2}.live-options{max-height:none}.ability-option{text-align:left;white-space:normal;max-width:500px}
+.focus-dialog.illustrated-mat .focus-content,.focus-content{background:#0c1520;padding:12px 20px;overflow:auto}
+.focus-mat-stage{width:var(--focus-zoom,100%);min-width:100%;max-width:none;margin:0 auto 12px}
+.focus-mat-stage .player-mat{max-width:min(1400px,calc((100dvh - 270px)*1.69*var(--focus-scale,1)));margin:auto;cursor:default}
+.focus-mat-stage .mat-cards .card{width:clamp(44px,11cqw,180px)}
+.focus-hand{max-width:1400px;margin:auto}.focus-dialog .hand-track .card{width:105px}
+.focus-dialog .focus-mat-stage .card.tapped{transform:rotate(7deg);opacity:.82}.focus-dialog .focus-mat-stage .card.tapped::after{content:none}
+.focus-mat-stage:has(.player-mat) .player-mat{min-width:400px}
+.card-dialog{cursor:zoom-out}.card-actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.mat-turn-guide .current-phase{font-weight:800;color:#fff2b4;background:#163d4fe8;outline:1px solid #ffe49b;border-radius:3px;text-shadow:0 1px 2px #000;padding:2px 3px}
+body.table-view .opponent-boards .seat-label{display:block;font-size:8px}
+.inspector-tabs{display:flex;gap:6px;padding:10px;position:sticky;top:0;background:#111c2b;z-index:2}.inspector-tabs button{flex:1;padding:9px 6px;font-size:12px}.inspector-tabs [aria-selected=true]{border-color:#72dfd0;background:#224447}
+aside [hidden]{display:none!important}.tracker-pane{padding:12px;overflow:auto;font-size:12px}.tracker-pane h3{font-size:14px;margin:18px 0 10px}.tracker-pane>select{width:100%}
+.tracker-metrics{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:12px}.tracker-metrics>div{padding:9px;background:#1b2a3c;border-radius:7px}.tracker-metrics strong{display:block;font-size:22px;color:#9ee0ce}.tracker-metrics small{font-size:10px;color:#b0bfd0}
+.board-rule{border-bottom:1px solid #304257;padding:10px 0}.board-rule summary{cursor:pointer;color:#b7e2d7}.board-rule p{white-space:pre-line;line-height:1.5}.tracker-card-row{border-bottom:1px solid #2b3f53;padding-bottom:8px;line-height:1.5}.tracker-pane textarea{width:100%;min-height:100px;background:#132032;color:#fff;border:1px solid #4c657a;border-radius:7px;padding:9px;font:inherit;margin-bottom:10px}
+@media(max-width:1200px){body.table-view aside{display:flex;position:static;max-height:600px}}
+body.table-view aside{display:flex;position:sticky;top:12px;max-height:85vh;overflow:auto;align-self:start}
 body.table-view .live-controls{margin:5px 16px;padding:10px 14px;min-height:50px}
 body.table-view .mana-gems{margin:5px 0 0}
 body.table-view footer{padding:12px 16px}
-@media(max-width:1200px){body.table-view main{grid-template-columns:1fr}body.table-view aside{display:none}}
+@media(max-width:1200px){body.table-view main{grid-template-columns:1fr}body.table-view aside{display:flex;position:static;max-height:600px}}
 @media(max-width:720px){body.table-view .table{grid-template-columns:1fr}body.table-view #seat-0{grid-column:1;grid-row:1;max-width:none}body.table-view .hand{grid-column:1;grid-row:2}body.table-view .center-counter{grid-column:1;grid-row:3}body.table-view .counter-grid{grid-template-columns:repeat(4,minmax(0,1fr))}body.table-view .opponent-boards{grid-column:1;grid-row:4;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}body.table-view main{padding:8px}body.table-view .hand-track .card{width:95px}}
+
+.board-resize{position:absolute;right:2px;bottom:2px;width:29px;height:29px;padding:0;border-radius:8px 0 8px 0;background:#244b56ed;color:#a1ffee;font-size:22px;cursor:nwse-resize;touch-action:none;z-index:3}
+.hand-draggable{touch-action:none;cursor:grab;user-select:none}.dragging-hand{cursor:grabbing}.drag-ghost{position:fixed!important;pointer-events:none!important;z-index:6000;opacity:.85;transform:rotate(-4deg);box-shadow:0 15px 35px #0008}
+
+/* Physical mats with a legible blue game HUD. */
+:root{--action-blue:#39cfff;--muted:#9bb9ce}
+body.table-view{background:radial-gradient(ellipse at 50% 0,#122d40,#080f19 70%)}
+body.table-view .center-counter{display:none}
+.seat-health{margin-left:auto;display:flex;align-items:center;gap:9px;padding:3px 7px;background:transparent;border-color:transparent}
+.seat-health strong{font-size:30px;line-height:1;color:#bce8ff;font-variant-numeric:tabular-nums}.seat-health small{font-size:9px;max-width:95px;text-align:left;color:#9bc8df}
+body.table-view .opponent-boards .seat-health strong{font-size:25px}.opponent-boards .seat-health small{font-size:8px}
+body.table-view .seat{background:linear-gradient(120deg,#112434e8,#0a141fee);border-color:#30566e;border-top-color:var(--seat)}
+.seat.active-turn{box-shadow:0 0 0 1px #44c8fc,0 0 20px #10adf72b}.turn-badge,#phase{color:#68dcff}
+.replaybar{background:linear-gradient(90deg,#0a1b29,#15364b,#0a1b29);border-block:1px solid #2c536b}
+body.table-view .hand-track .card,.focus-dialog .hand-track .card{width:clamp(112px,10vw,152px)}
+.player-mat .mat-battlefield .card{width:clamp(44px,13cqw,175px)}
+.focus-mat-stage .mat-battlefield .card{width:clamp(52px,13cqw,195px)}
+.card.selected-card,.card.selectable{outline:2px solid var(--action-blue);outline-offset:2px;box-shadow:0 0 16px #00c4ff9c}
+.card:focus-visible{outline:2px solid #80e1ff;outline-offset:3px}
+.player-mat.drop-ready,.mat-pile.draw-ready{outline:3px solid var(--action-blue);box-shadow:0 0 18px #00c4ff77}
+.card-quick-actions{position:fixed;inset:auto;margin:0;width:270px;max-width:calc(100vw - 16px);padding:12px;color:#dfedf8;background:linear-gradient(135deg,#15354b,#0c1a29);border:1px solid #48bbef;border-radius:10px;box-shadow:0 12px 35px #0009;overflow:auto;max-height:80dvh}
+.card-quick-actions::backdrop{background:transparent;backdrop-filter:none}
+.quick-action-heading{display:flex;align-items:center;gap:8px;margin-bottom:10px}.quick-action-heading strong{flex:1;font-size:14px}.quick-action-heading button{padding:2px 7px}
+.card-quick-actions>button{display:block;width:100%;margin-top:7px;text-align:left}.card-quick-actions>small{display:block;color:#a5c5d8;font-size:11px;line-height:1.5;margin:9px 0}
+.primary-action,.live-options .ability-option{background:linear-gradient(#147fab,#145679);border-color:#41bdee;color:#fff;box-shadow:inset 0 1px #b5f3ff33}
+.primary-action:disabled{opacity:.5}.live-buttons button:first-child{border-color:#37abd4}
+.inspector-tabs [aria-selected=true]{border-color:#48c8fa;background:#133e58;box-shadow:inset 0 -2px #48c8fa}
+.history-feed{padding:12px}.history-feed>.fine{margin-top:0}.history-row{display:grid;gap:5px;padding:12px 10px 12px 15px;margin-left:5px;border-left:2px solid #248bb5;border-bottom:1px solid #254053;position:relative}.history-row:before{content:'';position:absolute;left:-5px;top:18px;width:8px;height:8px;border-radius:50%;background:#58d3ff;box-shadow:0 0 8px #27c4ff66}.history-row small{font-size:10px;color:#8cb3cf}.history-row strong{font-size:13px;color:#e2f2ff}.history-row span{font-size:12px;color:#a7ccdf}
+@media(min-width:1201px){body.table-view main{grid-template-columns:minmax(0,1fr) clamp(260px,20vw,340px)}}
+@media(max-width:720px){.seat-health strong{font-size:26px}.card-quick-actions{width:250px}}
+.decision-art:empty,.action-dock:empty{display:none}.decision-art img{display:block;width:125px;max-height:190px;object-fit:contain;border-radius:7px;margin:auto}
+body.table-view .action-dock .live-controls{margin:0;padding:14px;border:0;border-bottom:1px solid #345a72;border-radius:0;background:linear-gradient(120deg,#14364b,#0b1a29);display:flex;flex-direction:column;align-items:stretch}
+.action-dock .live-options,.action-dock .live-buttons{display:grid;grid-template-columns:1fr}.action-dock .decision-art img{width:170px;max-height:245px}.action-dock .live-controls>p{font-size:13px;color:#bfefff}

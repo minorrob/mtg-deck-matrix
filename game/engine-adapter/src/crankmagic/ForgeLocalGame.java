@@ -72,7 +72,7 @@ public final class ForgeLocalGame {
                 // Attach before HostedMatch schedules opening draws and mulligan choices.
                 journal.game=hosted.getGame();journal.game.subscribeToEvents(journal);
                 browserBridge.attach(hosted.getGame());
-                journal.append("manifest",ForgeProbe.obj("engineCommit",ForgeProbe.ENGINE,"mode","human-vs-native-ai","measured",false,"podHash",pod.get("podHash").getAsString()));
+                journal.append("manifest",ForgeProbe.obj("engineCommit",ForgeProbe.ENGINE,"mode","human-vs-native-ai","telemetryVersion",2,"measured",false,"podHash",pod.get("podHash").getAsString()));
               }
               Object choice=browserBridge.choice(method.getName(),values);
               if(choice!=ForgeBrowserBridge.DELEGATE)return choice;
