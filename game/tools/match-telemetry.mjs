@@ -9,6 +9,7 @@ export function summarizeEvents(events,visibleCards){
   let classified=events.some(e=>e.kind==='manifest'&&e.data?.telemetryVersion>=2),proliferateInstrumented=classified;const recent=[],cards=new Map();
   for(const e of events){
     const f=e.data?.fields||{},kind=e.kind;let source,actor,label,metric;
+    if(kind==='GameEventShuffle'){if(Number.isInteger(f.player?.playerId))recent.push({id:e.eventId,turn:e.data?.turn??null,cardId:null,name:f.player.name||'Player',playerId:f.player.playerId,label:'Library shuffled'});continue;}
     if(kind==='GameEventTurnPhase'||kind==='GameEventPlayerLivesChanged'){
       const player=kind==='GameEventTurnPhase'?f.playerTurn:f.player;
       if(Number.isInteger(player?.playerId))recent.push({id:e.eventId,turn:e.data?.turn??null,cardId:null,name:player.name||'Player',playerId:player.playerId,label:kind==='GameEventTurnPhase'?String(f.phase).replaceAll('_',' ').toLowerCase():`Life ${f.oldLives} → ${f.newLives}`});continue;
@@ -37,7 +38,7 @@ export function matchTelemetry(directory,state){
   const visible=new Map();for(const p of state.players)for(const zone of Object.values(p.zones))for(const c of zone.cards)if(c.name&&!c.faceDown)visible.set(c.cardId,c);
   for(const event of entry.events){if(event.sequence<=entry.last)continue;entry.last=event.sequence;
     const f=event.data?.fields||{},source=f.land||f.card||f.sa?.host||f.spell?.host;
-    if(['manifest','mechanic-choice-completed','GameEventTurnPhase','GameEventPlayerLivesChanged'].includes(event.kind))entry.accepted.push(event);
+    if(['manifest','mechanic-choice-completed','GameEventTurnPhase','GameEventPlayerLivesChanged','GameEventShuffle'].includes(event.kind))entry.accepted.push(event);
     else if(source&&!source.faceDown&&visible.has(source.cardId)){entry.known.set(source.cardId,visible.get(source.cardId));entry.accepted.push(event);}
   }
   return {...summarizeEvents(entry.accepted,[...entry.known.values()]),stack:publicStack(entry.events)};

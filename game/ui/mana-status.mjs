@@ -8,7 +8,7 @@ export function sourceColors(card,identity=[],opponentColors=[]){
   for(const line of (card.oracleText||'').split('\n')){
     if(!/^[^:]*:\s*Add\b/i.test(line)||/create|[“"]|whenever|when |at the /i.test(line.slice(0,line.indexOf(':'))))continue;
     const effect=line.slice(line.indexOf(':')+1);
-    if(/opponent|opponents/.test(effect))opponentColors.forEach(c=>colors.add(c));
+    if(/opponent|opponents/.test(effect))opponentColors.filter(c=>c!=='C').forEach(c=>colors.add(c));
     else if(/commander.s color identity/.test(effect))identity.forEach(c=>colors.add(c));
     else if(/any color|any one color|any combination of colors/.test(effect))manaColors.slice(0,5).forEach(c=>colors.add(c));
     else for(const match of effect.matchAll(/\{([WUBRGC])\}/g))colors.add(match[1]);

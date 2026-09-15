@@ -51,3 +51,5 @@ jobs:
 
       - name: Run every suite
         run: bash runtests.sh -q
+      - name: Commander companion tests
+        run: node --test game/tests/*.test.mjs

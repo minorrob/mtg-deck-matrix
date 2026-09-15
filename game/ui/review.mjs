@@ -16,6 +16,7 @@ window.addEventListener('message',event=>{if(event.origin===location.origin&&eve
 const data=await fetch('/match.json').then(r=>r.ok?r.json():{frames:[],log:[],pod:{seats:[]}}).catch(()=>({frames:[],log:[],pod:{seats:[]}}));
 let resizingBoard=false,boardWidth=null,draggingCard=null,suppressClickUntil=0,pendingPlay=null,lastTurnName='',live=null,livePolling=false,gameToken=null,lastState='',choiceId=null,actionBusy=false,noticeUntil=0,lastDecision='';
 const pendingCasts=new Map(),handPositions=new Map();let appliedRevision=-1,appliedMatch=null,paymentAttempt=null,paymentNotice='',yieldTurn=null;
+let primarySeat=0,followActive=false,followedTurn=null;const visualGroups=new Map(),freePositions=new Map();
 try{const saved=Number(localStorage.getItem('crankmagic-board-width'));if(saved>=320&&saved<=2400)boardWidth=saved;}catch{}
 const names=['You · Chulane','Krenko','Atraxa','Shadrix'];
 const levels=new Map([[1,3],[2,3],[3,3]]);
@@ -93,9 +94,13 @@ function cardActions(c,anchor){
   closeCardMenu();highlightSelection(c.cardId);
   const body=el('div','card-quick-actions');body.setAttribute('popover','auto');body.setAttribute('role','dialog');body.setAttribute('aria-label',c.name+' actions');cardMenu=body;
   const heading=el('div','quick-action-heading');heading.append(el('strong','',c.name),button('×',closeCardMenu));body.append(heading);
+  if(c.art){const image=el('img','quick-card-image');image.src=c.art;image.alt=c.name;image.draggable=false;body.append(image);}
   const own=humanPlayer();const zone=Object.keys(own?.zones||{}).find(z=>own.zones[z].cards.some(card=>card.cardId===c.cardId));
-  if(zone){const reason=playRestriction(c),action=button(zone==='Hand'?(c.typeLine?.includes('Land')?'Play land':'Cast card'):zone==='Command'?'Cast commander':'Use ability →',()=>{closeCardMenu();highlightSelection(c.cardId);playCard(c);},'primary-action');action.disabled=!!reason;action.title=reason||'Show this card’s engine-offered actions, including mana and other costs.';body.append(action);if(reason)body.append(el('p','fine',reason));else if(zone==='Battlefield')body.append(el('small','',c.tapped?'Tapped · an effect is needed to untap. Other abilities may still be usable.':'Untapped · tap costs are paid when you use an ability.'));}
-  body.append(button('Inspect card',()=>{closeCardMenu();inspect(c);}));
+  if(zone){const reason=playRestriction(c),action=button(zone==='Hand'?(c.typeLine?.includes('Land')?'Play land':'Cast card'):zone==='Command'?'Cast commander':'Use ability →',()=>{if(zone!=='Battlefield')closeCardMenu();highlightSelection(c.cardId);playCard(c);},'primary-action');action.disabled=!!reason;action.title=reason||'Show this card’s engine-offered actions, including mana and other costs.';body.append(action);if(reason)body.append(el('p','fine',reason));else if(zone==='Battlefield')body.append(el('small','',c.tapped?'Tapped · an effect is needed to untap. Other abilities may still be usable.':'Untapped · tap costs are paid when you use an ability.'));}
+  if(visualGroups.has(c.cardId))body.append(button('Ungroup this card',()=>{visualGroups.delete(c.cardId);closeCardMenu();refreshBoards();}));
+  if(freePositions.has(c.cardId))body.append(button('Return to automatic layout',()=>{freePositions.delete(c.cardId);closeCardMenu();refreshBoards();}));
+  body.append(el('div','quick-ability-options'));
+  if(c.oracleText)body.append(el('p','quick-rules',c.oracleText));
   ($('focus').open?$('focus'):document.body).append(body);body.showPopover();
   const r=anchor?.getBoundingClientRect()||{right:innerWidth/2,left:innerWidth/2,top:innerHeight/2};
   body.style.left=Math.max(8,Math.min(innerWidth-body.offsetWidth-8,r.right+10))+'px';body.style.top=Math.max(8,Math.min(innerHeight-body.offsetHeight-8,r.top))+'px';
@@ -198,13 +203,14 @@ function cardButton(c,count=1){
   if(live&&!c.deckEntry){
     b.draggable=false;
     if(['Hand','Command'].some(z=>humanPlayer()?.zones[z].cards.some(card=>card.cardId===c.cardId)))enableHandDrag(b,c);
+    else if(frame().players.some(p=>p.zones.Battlefield.cards.some(card=>card.cardId===c.cardId)))enableHandDrag(b,c,true);
     b.addEventListener('dblclick',()=>{if(!Object.values(humanPlayer()?.zones||{}).some(z=>z.cards.some(card=>card.cardId===c.cardId)))return;closeCardMenu();if($('card-detail').open)$('card-detail').close();playCard(c);});
     b.addEventListener('contextmenu',event=>{event.preventDefault();cardActions(c,b);});
     if(live.ui.selectables.includes(c.cardId))b.classList.add('selectable');
   }
   return b;
 }
-function enableHandDrag(node,card){
+function enableHandDrag(node,card,battlefield=false){
   node.classList.add('hand-draggable');
   node.addEventListener('pointerdown',down=>{
     if(down.button!==0)return;const x=down.clientX,y=down.clientY;let ghost=null,target=null;draggingCard=card.cardId;node.setPointerCapture(down.pointerId);
@@ -218,7 +224,9 @@ function enableHandDrag(node,card){
     const finish=event=>{
       node.removeEventListener('pointermove',move);node.removeEventListener('pointerup',finish);node.removeEventListener('pointercancel',finish);
       draggingCard=null;
-      if(ghost){suppressClickUntil=Date.now()+400;ghost.remove();target?.classList.remove('drop-ready');document.body.classList.remove('dragging-hand');target=document.elementFromPoint(event.clientX,event.clientY)?.closest('.player-mat[data-human-drop]');if(event.type==='pointerup'&&target)playCard(card);refreshBoards();}
+      if(ghost){suppressClickUntil=Date.now()+400;ghost.remove();target?.classList.remove('drop-ready');document.body.classList.remove('dragging-hand');const hit=document.elementFromPoint(event.clientX,event.clientY);target=hit?.closest('.player-mat[data-human-drop]');
+        if(event.type==='pointerup'&&battlefield){const onto=Number(hit?.closest('.card[data-card-id]')?.dataset.cardId),player=frame().players.find(p=>p.zones.Battlefield.cards.some(c=>c.cardId===card.cardId)),mat=hit?.closest('.player-mat');if(onto!==card.cardId&&player?.zones.Battlefield.cards.some(c=>c.cardId===onto)){const group=visualGroups.get(onto)||'group:'+onto;visualGroups.set(onto,group);visualGroups.set(card.cardId,group);freePositions.delete(onto);freePositions.delete(card.cardId);notifyAction('Cards grouped visually. Game state is unchanged.');}else if(mat&&Number(mat.dataset.seat)===player?.playerId){const r=mat.getBoundingClientRect();visualGroups.delete(card.cardId);freePositions.set(card.cardId,{x:Math.max(0,Math.min(.83,(event.clientX-r.left)/r.width-.065)),y:Math.max(0,Math.min(.64,(event.clientY-r.top)/r.height-.04))});}}
+        else if(event.type==='pointerup'&&target)playCard(card);refreshBoards();}
     };
     node.addEventListener('pointermove',move);node.addEventListener('pointerup',finish,{once:true});node.addEventListener('pointercancel',finish,{once:true});
   });
@@ -266,7 +274,8 @@ window.addEventListener('crankmagic-playmat',()=>{if(live||data.frames.length){r
 window.addEventListener('storage',event=>{if(event.key==='crankmagic-playmats-v1')window.dispatchEvent(new Event('crankmagic-playmat'));});
 function matView(p,focused=false){
   const mat=el('div',`player-mat${p.playerId===0?' personal-mat':' plain-mat'}`);
-  paintMat(mat,seatMat(p.playerId));mat.addEventListener('click',event=>{if(!focused&&!event.target.closest('button')&&!draggingCard&&Date.now()>=suppressClickUntil)focusBoard(p);});
+  mat.dataset.seat=p.playerId;
+  paintMat(mat,seatMat(p.playerId));mat.addEventListener('click',event=>{if(!focused&&!event.target.closest('button')&&!draggingCard&&Date.now()>=suppressClickUntil){primarySeat=p.playerId;followActive=false;refreshBoards();}});
   mat.setAttribute('aria-label',`${names[p.playerId]} playmat`);
   if(live&&p.playerId===0){
     mat.dataset.humanDrop='true';
@@ -279,10 +288,13 @@ function matView(p,focused=false){
   for(const [name,cls,cards] of [['Battlefield','mat-battlefield',nonlands],['Lands','mat-lands',lands]]) {
     const zone=el('section',`mat-zone ${cls}`);zone.setAttribute('aria-label',`${names[p.playerId]} ${name}`);
     const list=el('div','cards mat-cards');
-    for(const {card,count} of groups(cards))list.append(cardButton(card,count));
+    const grouped=new Map(),capacity=name==='Lands'?7:4,crowded=cards.filter(c=>!freePositions.has(c.cardId)).length>capacity;
+    for(const card of cards.filter(c=>!freePositions.has(c.cardId))){const mana=/^[^\n:]*:\s*Add\b/im.test(card.oracleText||''),types=card.typeLine||'';const label=card.token?'Tokens':types.includes('Land')?'Lands':mana&&types.includes('Creature')?'Mana dorks':mana&&types.includes('Artifact')?'Mana rocks':types.includes('Creature')?'Creatures':types.includes('Artifact')?'Artifacts':types.includes('Enchantment')?'Enchantments':'Other';const key=visualGroups.get(card.cardId)||label;if(!grouped.has(key))grouped.set(key,{manual:key.startsWith('group:'),label:key.startsWith('group:')?'Your group':label,cards:[]});grouped.get(key).cards.push(card);}
+    for(const group of grouped.values()){const stacked=crowded||group.manual,stack=el('div','battlefield-group'+(stacked?'':' expanded-group'));stack.append(el('small','group-label',group.label));const fan=el('div','card-fan'+(stacked?'':' spread-cards'));for(const card of group.cards)fan.append(cardButton(card));stack.append(fan);list.append(stack);}
     if(!cards.length)list.append(el('span','mat-empty',p.health?.status==='out'?'Eliminated':'Empty'));
     zone.append(list,el('span','mat-zone-label',`${name} · ${cards.length}`));mat.append(zone);
   }
+  for(const card of p.zones.Battlefield.cards.filter(c=>freePositions.has(c.cardId))){const position=freePositions.get(card.cardId),piece=el('div','free-card');piece.style.left=position.x*100+'%';piece.style.top=position.y*100+'%';piece.append(cardButton(card));mat.append(piece);}
   const guide=el('div','mat-turn-guide');guide.setAttribute('aria-label','Turn sequence reminder');
   const phaseGroups=[['UNTAP'],['UPKEEP'],['DRAW'],['MAIN1'],['COMBAT_BEGIN','COMBAT_DECLARE_ATTACKERS','COMBAT_DECLARE_BLOCKERS','COMBAT_FIRST_STRIKE_DAMAGE','COMBAT_DAMAGE','COMBAT_END'],['MAIN2'],['END_OF_TURN','CLEANUP']];
   ['1. Untap','2. Upkeep','3. Draw','4. Main phase 1','5. Combat','6. Main phase 2','7. End / cleanup'].forEach((phase,i)=>{const current=turnPlayer()?.playerId===p.playerId&&phaseGroups[i].includes(frame().phase),step=el('span',current?'current-phase':'',phase);if(current)step.setAttribute('aria-current','step');guide.append(step);});
@@ -363,9 +375,14 @@ function render(){
   document.querySelector('.focus-eyebrow').textContent=live?'FOCUSED BOARD · LIVE GAME':'FOCUSED BOARD · REPLAY';
   const f=frame();$('phase').textContent=turnLabel();$('position').textContent=live?'Live game':`Recorded phase ${index+1} / ${data.frames.length}`;$('timeline').value=index;
   $('prev').disabled=index===0;$('next').disabled=index===data.frames.length-1;
-  for(const p of f.players)renderSeat(p);const you=f.players.find(p=>p.playerId===0);disposeCarousels($('hand-host'));$('hand-host').replaceChildren(handCarousel(you.zones.Hand.cards,'hand'));$('hand-count').textContent=`${you.zones.Hand.count} cards`;
+  follow.textContent='Follow active player: '+(followActive?'on':'off');
+  if(followActive&&followedTurn!==f.turn&&turnPlayer()){primarySeat=turnPlayer().playerId;followedTurn=f.turn;}
+  for(const p of f.players){const seat=$('seat-'+p.playerId);seat.classList.toggle('primary-seat',p.playerId===primarySeat);if(p.playerId===primarySeat)opponents.after(seat);else opponents.append(seat);renderSeat(p);}
+  for(const p of f.players.filter(p=>p.playerId!==primarySeat)){const seat=$('seat-'+p.playerId);seat.querySelector('.seat-heading').append(button('Show board',()=>{primarySeat=p.playerId;followActive=false;refreshBoards();}));}
+  const you=f.players.find(p=>p.playerId===0);disposeCarousels($('hand-host'));$('hand-host').replaceChildren(handCarousel(you.zones.Hand.cards,'hand'));$('hand-count').textContent=`${you.zones.Hand.count} cards`;
   renderHistory();
 }
+const follow=button('Follow active player: off',()=>{followActive=!followActive;followedTurn=null;follow.textContent='Follow active player: '+(followActive?'on':'off');refreshBoards();});$('view-deck').before(follow,button('My board',()=>{primarySeat=0;followActive=false;follow.textContent='Follow active player: off';refreshBoards();}));
 $('timeline').max=data.frames.length-1;$('timeline').addEventListener('input',e=>{index=+e.target.value;render();});$('prev').addEventListener('click',()=>{index=Math.max(0,index-1);render();});$('next').addEventListener('click',()=>{index=Math.min(data.frames.length-1,index+1);render();});
 $('close-detail').addEventListener('click',()=>$('detail').close());$('clear-inspect').addEventListener('click',()=>$('inspector').replaceChildren(el('p','empty','Select any visible card to inspect it.')));
 $('card-detail').addEventListener('click',()=>$('card-detail').close());
@@ -398,6 +415,12 @@ async function gameAction(action,guard){
 }
 function renderDecision(){
   mountControls();controls.hidden=false;const ui=live.ui;
+  if(ui.ok==='Auto'&&/pay mana cost/i.test(ui.prompt)&&ui.choice?.title==='Select Mana to Produce'){
+    const q=ui.choice,symbols={WHITE:'W',BLUE:'U',BLACK:'B',RED:'R',GREEN:'G',COLORLESS:'C'},cost=ui.prompt.match(/Pay Mana Cost:\s*([^\n]+)/i)?.[1]||'',counts=manaStatus?.(humanPlayer(),frame().players).counts;
+    const optionsByNeed=q.options.filter(o=>symbols[o.label]&&cost.includes('{'+symbols[o.label]+'}')).sort((a,b)=>(counts?.[symbols[a.label]]?.untapped??0)-(counts?.[symbols[b.label]]?.untapped??0));
+    const choice=optionsByNeed[0]||q.options.find(o=>o.label==='COLORLESS')||q.options[0];
+    if(choice&&!actionBusy){prompt.textContent='Choosing mana for the unpaid cost…';options.replaceChildren();buttons.replaceChildren();closeCardMenu();gameAction({kind:'answer',choiceId:q.id,indices:[choice.index]},fresh=>fresh.ui.choice?.id===q.id);return;}
+  }
   if(yieldTurn!==frame().turn)yieldTurn=null;
   const ordinaryPriority=!ui.choice&&!ui.nativeFallback&&ui.ok==='OK'&&ui.okEnabled&&/^Priority:/m.test(ui.prompt);
   const opponentTurn=turnPlayer()&&turnPlayer().playerId!==0;
@@ -426,6 +449,7 @@ function renderDecision(){
   prompt.textContent=ui.nativeFallback||ui.choice?.title||(priority?(hasPriority()?(turnPlayer()?.playerId===0?'Your action · play a card or use a board ability.':'You may respond before play continues.'):'Waiting for the active player…'):ui.prompt);
   buttons.replaceChildren();decisionArt.replaceChildren();
   if(ui.choice){const q=ui.choice;
+    if(q.title==='Choose an ability'&&cardMenu){const choices=cardMenu.querySelector('.quick-ability-options');choices.replaceChildren(...q.options.map(option=>button(option.label,()=>{closeCardMenu();gameAction({kind:'answer',choiceId:q.id,indices:[option.index]});},'ability-option')));}
     const card=frame().players.flatMap(p=>Object.values(p.zones).flatMap(z=>z.cards)).find(c=>c.cardId===(q.cardId??selectedCardId));
     if(card?.art){const img=el('img');img.src=card.art;img.alt=card.name;decisionArt.append(img);}
     // Compatibility with running adapters: Forge takes a sole offered ability for browser card selections.
@@ -472,6 +496,6 @@ async function pollLive(){
   setTimeout(pollLive,pendingCasts.size?250:750);
 }
 window.addEventListener('crankmagic-game-ready',()=>{document.body.classList.remove('setup-screen');$('game-setup').close();if(window.parent!==window)window.parent.postMessage({type:'crankmagic-live'},location.origin);reportCanvasSize();startLive();});
-if(new URLSearchParams(location.search).has('embedded'))document.body.classList.add('embedded');
+if(new URLSearchParams(location.search).has('embedded')){document.body.classList.add('embedded');const heading=el('strong','embedded-title','CrankMagic Online'),sidebar=button('☰ Sidebar',()=>window.parent.postMessage({type:'crankmagic-sidebar'},location.origin)),editor=button('Deck editor',()=>window.parent.postMessage({type:'crankmagic-exit'},location.origin));document.querySelector('header').prepend(heading,sidebar,editor);}
 if(!new URLSearchParams(location.search).has('replay')){document.body.classList.add('setup-screen');await openGameSetup();}
 window.addEventListener('message',event=>{if(event.origin!==location.origin||event.source!==window.parent||window.parent===window)return;if(event.data?.type==='crankmagic-setup')openGameSetup(event.data.imported).catch(error=>{$('notice').textContent=error.message;});});
