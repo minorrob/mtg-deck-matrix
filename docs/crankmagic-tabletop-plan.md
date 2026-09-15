@@ -1,5 +1,16 @@
 # CrankMagic Tabletop: the collection as piles on a table
 
+> **Read [The Table as a play space](crankmagic-playspace-plan.md) first — it is the document that
+> describes the table today.** This one is the TB1–TB4 record: what the third view of the Cards
+> page was defined to be on 14 September 2026, and what shipped under that definition. Everything
+> after it — the three zones, the sandbox, the draw pile and trays, the table's two jobs, the
+> substitute's recorded seat, and the render that patches rather than rebuilds — is in the play
+> space plan, and where the two disagree the play space plan is right. Kept because the reasoning
+> here is still the reasoning the table rests on: why the piles are the model's own statuses and
+> groupings, why a ghost is never counted as held, and why the view needs no data of its own.
+>
+> *Folded in 15 September 2026, play space PR 6 — the sweep.*
+
 Definition and plan for the third view of the Cards page Rob described on 14 September 2026.
 The Cards page has a list and a sheet; this is the view where the cards are cards. Mock-ups:
 `docs/mockups/tabletop-piles.html` (the table at rest), `docs/mockups/tabletop-laid-out.html`

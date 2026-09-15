@@ -90,7 +90,7 @@ try{
     cannot still read the old way here. */
  await page.getByRole('button',{name:'About this page'}).first().click();await page.getByRole('dialog').waitFor();
  {const help=page.locator('#cm-dialog .cm-help');await help.waitFor();
-  eq(await help.locator('h3').allTextContents().then(t=>t.map(x=>x.trim())),['The four tabs','How a card moves through the library','What each state means','Moving cards, on any lens','The counts row','Finding and changing rows'],'the help is grouped under subheads');
+  eq(await help.locator('h3').allTextContents().then(t=>t.map(x=>x.trim())),['The four tabs','How a card moves through the library','What each state means','Moving cards, on any lens','The counts row','Finding and changing rows','The Table is a table you play on'],'the help is grouped under subheads');
   ok(await help.locator('li').count()>=12,'and reads as bullets rather than paragraphs');
   eq(await help.locator('.cm-def').count(),12,'every state the Status column can show is defined, and the sitting beside them');
   const named=await help.locator('.cm-def > b').allTextContents().then(t=>t.map(x=>x.trim()));
