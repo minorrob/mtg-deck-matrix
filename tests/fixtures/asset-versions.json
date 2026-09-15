@@ -98,8 +98,8 @@
       "sha": "46db16db726209b1"
     },
     "crankmagic-app.js": {
-      "version": 191,
-      "sha": "401927efadd4ea00"
+      "version": 192,
+      "sha": "4ce6d32b6b2017b7"
     },
     "crankmagic-assets.js": {
       "version": 26,
@@ -122,8 +122,8 @@
       "sha": "860a367f343bf895"
     },
     "crankmagic-collection.js": {
-      "version": 59,
-      "sha": "84ea7f132f19e6cf"
+      "version": 60,
+      "sha": "dbd2ebcf0c679507"
     },
     "crankmagic-decks.js": {
       "version": 49,
@@ -222,12 +222,12 @@
       "sha": "9f7f7f7b84fc59c0"
     },
     "crankmagic-sw.js": {
-      "version": 191,
-      "sha": "9597236f9f86fae6"
+      "version": 192,
+      "sha": "3789363b7d5fa3f2"
     },
     "crankmagic-tabletop.js": {
-      "version": 11,
-      "sha": "5ed8e2d9f232fd31"
+      "version": 12,
+      "sha": "c4a69b8e8b07c61e"
     },
     "crankmagic-tour.js": {
       "version": 15,

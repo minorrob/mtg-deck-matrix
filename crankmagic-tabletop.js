@@ -826,7 +826,7 @@
         const stepBtn = (row, dir, label) => `<button type="button" data-tt="step" data-record="${esc(row ? row.recordId : "")}" ${row ? "" : "disabled"} aria-label="${dir} card in ${esc(from ? from.label : "the pile")}">${label}</button>`;
         const actH = narrow ? 176 : width < 1180 ? 84 : 48;  /* the action row wraps to four lines on a phone, two on a narrow mat */
         stageH = (side ? h : h + 12 + panelH) + 24 + actH;
-        stageHTML = `<div class="cm-tt-stage is-solo" style="top:${stageTop}px;height:${stageH}px"><div class="cm-tt-fanL is-solo" style="left:16px;top:12px;width:${w}px;height:${h}px">${cardFace(r, {ghost: isGhost(r), big: true, cls: "cm-tt-chosen cm-tt-solo", style: `left:0;top:0;width:${w}px;height:${h}px;`})}</div><div class="cm-tt-info" style="${side ? `left:${w + 32}px;top:12px;width:${panelW}px;height:${h}px` : `left:16px;top:${h + 24}px;width:${panelW}px;height:${panelH}px`}">${caption}${hooks.detail ? hooks.detail(r) || "" : ""}</div>${from ? `<button type="button" class="cm-tt-back" data-tt="back" data-pile="${esc(from.id)}" style="${side ? `left:${w + 32 + panelW - 38}px;top:20px` : `left:${16 + panelW - 38}px;top:${h + 32}px`}" title="Back to ${esc(from.label)}" aria-label="Back to ${esc(from.label)}">&#8592;</button>` : ""}<div class="cm-tt-stage-actions is-solo">${sizeSeg}${stepBtn(prev, "Previous", "‹ Previous")}${stepBtn(next, "Next", "Next ›")}<span class="cm-tt-muted">${from && at >= 0 ? `${at + 1} of ${order.length} in ${esc(from.label)} · ` : ""}drag onto a pile, or</span><button type="button" data-tt="moveto" class="cm-tt-primary">Move to…</button><button type="button" data-tt="clear">Clear selection</button></div></div>`;
+        stageHTML = `<div class="cm-tt-stage is-solo" style="top:${stageTop}px;height:${stageH}px"><div class="cm-tt-fanL is-solo" style="left:16px;top:12px;width:${w}px;height:${h}px">${cardFace(r, {ghost: isGhost(r), big: true, cls: "cm-tt-chosen cm-tt-solo", style: `left:0;top:0;width:${w}px;height:${h}px;`})}</div><div class="cm-tt-info" style="${side ? `left:${w + 32}px;top:12px;width:${panelW}px;height:${h}px` : `left:16px;top:${h + 24}px;width:${panelW}px;height:${panelH}px`}">${caption}${hooks.detail ? hooks.detail(r) || "" : ""}</div>${from ? `<button type="button" class="cm-tt-back" data-tt="back" data-pile="${esc(from.id)}" style="${side ? `left:${w + 32 + panelW - 38}px;top:20px` : `left:${16 + panelW - 38}px;top:${h + 32}px`}" title="Back to ${esc(from.label)}" aria-label="Back to ${esc(from.label)}">&#8592;</button>` : ""}<div class="cm-tt-stage-actions is-solo">${sizeSeg}${stepBtn(prev, "Previous", "‹ Previous")}${stepBtn(next, "Next", "Next ›")}<span class="cm-tt-muted">${from && at >= 0 ? `${at + 1} of ${order.length} in ${esc(from.label)} · ` : ""}drag onto a pile, or</span><button type="button" data-tt="moveto" class="cm-tt-primary">Move to…</button>${isCatalog(r) ? "" : `<button type="button" data-tt="status" data-record="${esc(r.recordId)}">Status…</button>`}<button type="button" data-tt="clear">Clear selection</button></div></div>`;
       } else {
         /* The selection (plan §2.2): on the centre of the mat, fanned if more than one, large,
            with name, status, price and deck beneath. */
@@ -875,6 +875,15 @@
       else if (kind === "select-ticked") { const ids = new Set(ticked); recombine(host, ids).then(() => hooks.onSelect && hooks.onSelect([...ids])); }
       else if (kind === "clear") { hooks.onClear && hooks.onClear(); }
       else if (kind === "moveto") { hooks.onMoveTo && hooks.onMoveTo(selected.map((r) => r.recordId), t); }
+      /* STATUS FROM THE TABLE (Rob, 15 September). A drop answers "where does this copy go";
+         a plan, a suggestion and a To buy line have no pile to be dropped on, and `accepts`
+         has been telling readers to "set its status from its row menu" on a board that had
+         no visible row menu -- only a right-click, which a phone does not have. This is that
+         menu, reached by a button: the SAME menu the list uses, so there is one status
+         vocabulary and one set of confirmations, not a second one drawn on the mat. It sits
+         on the single-card stage because the menu is about one row; several rows still move
+         together through Move to… . */
+      else if (kind === "status") { hooks.onMenu && hooks.onMenu(t.dataset.record, t); }
       else if (kind === "print") { hooks.onPrint && hooks.onPrint(t.dataset.pile); }
       /* A deck's pile filters the table to that deck (and with it, puts the middle into that
          deck's play space); Select all sends an empty id, which clears the filter. */
@@ -936,7 +945,13 @@
     const pileRows = () => [focusables([...host.querySelectorAll(".cm-tt-backrow .cm-tt-pile, .cm-tt-allchip")]), focusables([...host.querySelectorAll(".cm-tt-pile.cm-tt-group, .cm-tt-chip")]), focusables([...host.querySelectorAll(".cm-tt-draw, .cm-tt-tray, .cm-tt-playchip")]), focusables([...host.querySelectorAll(".cm-tt-pile.cm-tt-status, .cm-tt-pile.cm-tt-shelfgroup, .cm-tt-pile.cm-tt-shelfnew, .cm-tt-reading")])].filter((row) => row.length);
     host.onkeydown = (ev) => {
       const el = ev.target;
-      if (ev.key === "Escape" && mode !== "rest") { ev.preventDefault(); hooks.onClear && hooks.onClear(); return; }
+      /* ESCAPE SAYS WHERE IT CAME FROM. A control on the mat can open something of the host's
+         own -- the row menu behind Status… -- and the reader's first Escape belongs to that,
+         not to the table. The browser closes a popover before any listener runs, so the host
+         is the only one who can still tell; it gets the reason and decides. Returning false
+         declines the key, and the table must not have swallowed it by then -- a preventDefault
+         cancels the popover's own close watcher, which would leave the menu stuck open. */
+      if (ev.key === "Escape" && mode !== "rest") { if (!hooks.onClear || hooks.onClear("escape") !== false) ev.preventDefault(); return; }
       if (mode === "selected" && selected.length === 1 && (ev.key === "ArrowLeft" || ev.key === "ArrowRight") && !(el.matches && el.matches("input, select, textarea, [data-tt=open]"))) {
         const btn = host.querySelector(`.cm-tt-stage-actions [data-tt=step][aria-label^="${ev.key === "ArrowLeft" ? "Previous" : "Next"}"]`);
         if (btn && !btn.disabled) { ev.preventDefault(); btn.click(); }
