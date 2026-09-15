@@ -113,7 +113,7 @@
     const subsSorted = subs.slice().sort((a, b) => nameOf(a).localeCompare(nameOf(b)));
     /* One copy per row (a lot of three basics is three rows), so every row is one physical swap. */
     let out = ready.remove; const removeNow = [], removeLater = [];
-    for (const r of subsSorted) for (let k = 0; k < r.quantity; k += 1) { const unit = {lotId: r.id, cardId: r.cardId, card: factsOf(r), name: nameOf(r), quantity: 1}; if (out > 0) { removeNow.push({...unit, why: "a substitute the list does not call for"}); out -= 1; } else removeLater.push({...unit, why: "a substitute until the real card arrives"}); }
+    for (const r of subsSorted) for (let k = 0; k < r.quantity; k += 1) { const unit = {lotId: r.id, cardId: r.cardId, card: factsOf(r), name: nameOf(r), quantity: 1, standInFor: r.standInFor || ""}; if (out > 0) { removeNow.push({...unit, why: "a substitute the list does not call for"}); out -= 1; } else removeLater.push({...unit, why: "a substitute until the real card arrives"}); }
     const where = (r) => r.location && r.location.kind === "deck" ? (options.deckName ? options.deckName(r.location.deckId) : "another deck") + "'s box" : r.location && r.location.box ? `Bench · ${r.location.box}` : "Bench";
     const units = (list, make) => list.flatMap((r) => Array.from({length: Math.max(1, num(r.quantity) || 1)}, () => make(r)));
     const additions = [
@@ -123,16 +123,22 @@
     ].sort((a, b) => Number(b.available) - Number(a.available) || a.name.localeCompare(b.name));
     /* PAIRING. A removal now pairs with an addition available now; a substitute that stays
        pairs with the ordered or to-buy card whose seat it fills, so the row reads "remove
-       this when that arrives". Within each: the option slot that names the seat first, then
-       the same primary type, then the nearest mana value. What cannot pair stands alone. */
+       this when that arrives". Within each: THE SEAT THE SUBSTITUTE WAS RECORDED AGAINST first
+       (play-space plan §2.12 — `standInFor`, set when the copy went into the box, which turns
+       this from a guess into a fact), then the option slot that names the seat, then the same
+       primary type, then the nearest mana value. What cannot pair stands alone.
+
+       Everything after the first is still inference and still needed: nothing recorded a pairing
+       before §2.12 shipped, and a copy can be dropped in as a substitute without naming a seat. */
     const replacedBy = new Map();
     for (const r of deck.slots) if (r.purpose !== "main" && r.replaces && slotById.has(r.replaces)) replacedBy.set(slotById.get(r.replaces).cardId, r.cardId);
     const free = additions.slice(), rowsOut = [];
     const take = (pred) => { const i = free.findIndex(pred); return i >= 0 ? free.splice(i, 1)[0] : null; };
     const pair = (rem, wantAvailable) => {
       const named = replacedBy.get(rem.cardId), pool = (a) => a.available === wantAvailable;
-      const add = (named && take((a) => pool(a) && a.cardId === named)) || take((a) => pool(a) && typeOf(a.card) === typeOf(rem.card)) || (() => { let best = null, gap = Infinity; for (const a of free) { if (!pool(a)) continue; const g = Math.abs(mv(a.card) - mv(rem.card)); if (g < gap) { gap = g; best = a; } } return best ? take((a) => a === best) : null; })();
-      return {add, why: add ? (named === add.cardId ? "the option slot names this seat" : typeOf(add.card) === typeOf(rem.card) ? `both ${typeOf(rem.card).toLowerCase()}s` : "the nearest mana value") : ""};
+      const recorded = rem.standInFor ? take((a) => pool(a) && a.slotId === rem.standInFor) : null;
+      const add = recorded || (named && take((a) => pool(a) && a.cardId === named)) || take((a) => pool(a) && typeOf(a.card) === typeOf(rem.card)) || (() => { let best = null, gap = Infinity; for (const a of free) { if (!pool(a)) continue; const g = Math.abs(mv(a.card) - mv(rem.card)); if (g < gap) { gap = g; best = a; } } return best ? take((a) => a === best) : null; })();
+      return {add, why: add ? (add === recorded ? "recorded when the substitute went in" : named === add.cardId ? "the option slot names this seat" : typeOf(add.card) === typeOf(rem.card) ? `both ${typeOf(rem.card).toLowerCase()}s` : "the nearest mana value") : ""};
     };
     for (const rem of removeNow) { const {add, why} = pair(rem, true); rowsOut.push({action: add ? "swap" : "remove", out: rem, in: add, available: true, why: add ? why : "more substitutes than the list has seats for"}); }
     const staying = [];

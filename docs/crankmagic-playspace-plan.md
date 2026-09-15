@@ -627,11 +627,38 @@ than a second implementation of Discover.
 `createGroup`, its own revision — and then stages the filings into it like any other move. Clicking
 the door at rest makes an empty group, which is the other half of the same gesture.
 
-### PR 5 — The substitute's partner
+### PR 5 — The substitute's partner — **built, 15 September**
 
 - `standInFor` on the lot, set on the drop, shown on the card, read by the Change List (§2.12).
 - Checks: the model suite; the Change List suite reads the recorded pairing in preference to the
   inferred one.
+
+**Recorded where it is true, validated where it is read.** `place` (and the bulk `place`) take a
+`standInFor` and record it only when the slot is a **committed seat of that deck that is still
+short** — you do not stand in for a seat whose real copy is already reserved. Anything else
+deletes the field rather than keeping a pairing that has stopped being one, and so do benching the
+copy and reserving it for the deck it was standing in for: a stale tag is worse than no tag,
+because the list would read it.
+
+**The read is deliberately laxer than the write**, and this is the one subtlety worth stating.
+Reading requires only that the seat still be a committed line on that deck's list — not that it
+still be short. The moment the real copy *is* reserved is precisely when the pairing matters most:
+that is the row the Change List draws as *take this out, put that in*. Validation happens in
+`standInSeat()` on the projection, so no consumer can read a pairing that has stopped being one,
+and no mutation site has to remember to clear it.
+
+**Where it is asked and where it shows.** The seat select sits in both substitute paths — the
+table's drop form (where the seats follow the deck select, because they belong to the deck) and
+the row menu's *Substitute in …* (where the deck is already known). It is optional by design and
+says so: leave it blank and the Change List infers exactly as before. It shows in the Deck column
+as *Purphoros · substitute for Sol Ring*, which one expression feeds to the list, the sheet, the
+table's caption and the print sheet; and on the deck's own list as a **held by** pill on the seat,
+which is the reading a builder actually wants — not a count on the substitute's own line.
+
+**The inference stays.** Nothing recorded a pairing before this shipped, and a copy can still go in
+without naming a seat, so `pair()` now tries four things in order: the recorded seat, the option
+slot that names it, the same primary type, the nearest mana value. Only the first is a fact, and
+the row says which one it used.
 
 ### PR 6 — The sweep
 

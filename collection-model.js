@@ -178,7 +178,23 @@
     if(projected.state!==s||projected.revision!==s.revision){projected={state:s,revision:s.revision,rows:projectionOf(s)};}
     return projected.rows.map(r=>({...r}));
   }
-  function projectionOf(s){const deckGroups=deckGroupIndex(s);const rows=s.lots.map(l=>{const sl=l.allocation?slot(s,l.allocation.deckId,l.allocation.slotId):null;return withDeckGroup(s,{...clone(l),recordId:l.id,kind:'lot',shortlistedFor:shortlistOf(l,deckGroups),card:card(s,l.cardId),deckId:l.allocation?.deckId||'',purpose:sl?sl.purpose:'',pinned:!!sl?.pinned,option:!!sl?.option,optionWhy:sl?.optionWhy||'',placement:inDeck(s,l)?'Physical deck':l.allocation?'Reserved':l.source==='owned'?(l.location?.kind==='deck'?'Substitute':'Bench'):'Unassigned',physical:physical(l),standIn:l.source==='owned'&&l.location?.kind==='deck'&&l.allocation?.deckId!==l.location.deckId,standInDeckId:l.source==='owned'&&l.location?.kind==='deck'&&l.allocation?.deckId!==l.location.deckId?l.location.deckId:''});});for(const d of s.decks.filter(d=>d.status==='final'&&!d.archived))for(const r of d.slots.filter(r=>r.committed)){const need=shortfall(s,d,r);if(need)rows.push(withDeckGroup(s,{recordId:`need:${d.id}:${r.id}`,kind:'need',deckId:d.id,slotId:r.id,cardId:r.cardId,card:card(s,r.cardId),source:'to-buy',quantity:need,purpose:r.purpose,pinned:!!r.pinned,option:!!r.option,optionWhy:r.optionWhy||'',printing:clone(r.printing||{}),placement:'Reserved',physical:'Not acquired',offer:'none',groupIds:[]}));}return rows;}
+  /* THE SEAT A SUBSTITUTE IS FILLING, read back (play-space plan §2.12). Recorded on the lot by
+     `place`; validated here rather than trusted, so a tag that has stopped being true never
+     reaches a reader. A pairing holds while the copy is still a substitute in that deck and the
+     seat is still a committed line on its list.
+
+     Note the asymmetry with the write, which is deliberate. Recording demands the seat still be
+     SHORT -- you do not stand in for a seat whose real copy is already reserved. Reading does
+     not, because the moment the real copy IS reserved is exactly when the pairing matters most:
+     that is the row the Change List draws as "take this out, put that in". */
+  function standInSeat(s,l){
+    if(!l.standInFor)return {standInFor:'',standInForCardId:''};
+    if(l.source!=='owned'||l.location?.kind!=='deck'||l.allocation?.deckId===l.location.deckId)return {standInFor:'',standInForCardId:''};
+    const d=s.decks.find(x=>x.id===l.location.deckId);
+    const r=d&&d.slots.find(x=>x.id===l.standInFor&&x.committed);
+    return r?{standInFor:r.id,standInForCardId:r.cardId}:{standInFor:'',standInForCardId:''};
+  }
+  function projectionOf(s){const deckGroups=deckGroupIndex(s);const rows=s.lots.map(l=>{const sl=l.allocation?slot(s,l.allocation.deckId,l.allocation.slotId):null;return withDeckGroup(s,{...clone(l),recordId:l.id,kind:'lot',shortlistedFor:shortlistOf(l,deckGroups),card:card(s,l.cardId),deckId:l.allocation?.deckId||'',purpose:sl?sl.purpose:'',pinned:!!sl?.pinned,option:!!sl?.option,optionWhy:sl?.optionWhy||'',placement:inDeck(s,l)?'Physical deck':l.allocation?'Reserved':l.source==='owned'?(l.location?.kind==='deck'?'Substitute':'Bench'):'Unassigned',physical:physical(l),standIn:l.source==='owned'&&l.location?.kind==='deck'&&l.allocation?.deckId!==l.location.deckId,standInDeckId:l.source==='owned'&&l.location?.kind==='deck'&&l.allocation?.deckId!==l.location.deckId?l.location.deckId:'',...standInSeat(s,l)});});for(const d of s.decks.filter(d=>d.status==='final'&&!d.archived))for(const r of d.slots.filter(r=>r.committed)){const need=shortfall(s,d,r);if(need)rows.push(withDeckGroup(s,{recordId:`need:${d.id}:${r.id}`,kind:'need',deckId:d.id,slotId:r.id,cardId:r.cardId,card:card(s,r.cardId),source:'to-buy',quantity:need,purpose:r.purpose,pinned:!!r.pinned,option:!!r.option,optionWhy:r.optionWhy||'',printing:clone(r.printing||{}),placement:'Reserved',physical:'Not acquired',offer:'none',groupIds:[]}));}return rows;}
   /* THE MATRIX. One row per card the library knows anything about -- a copy at any status,
      a slot in a deck, a planned entry -- and per deck the four numbers a spreadsheet cell
      needs: t (the list's count), a (copies assigned: reserved to that slot from any source),
@@ -348,7 +364,26 @@
        paidAt is when it was recorded, which is what the season's pool counts against. */
     function orderRecord(raw={}){return {id:raw.id,vendor:text(raw.vendor,100),ref:text(raw.ref,100),expectedBy:text(raw.expectedBy,40),placedAt:raw.placedAt||now,...(raw.shipShare!==undefined?{shipShare:raw.shipShare}:{})};}
     function stampPaid(l,amount,how){ensure(amount===null||Number.isFinite(amount)&&amount>=0,'Purchase cost must be a nonnegative number or unknown.');l.paid=amount;if(amount===null){delete l.paidSource;delete l.paidAt;return;}l.paidSource=['catalog','receipt','typed'].includes(how)?how:'typed';l.paidAt=now;}
-    function allocate(l,d,r,n){ensure(!PLANNED.includes(l.source),'A Watched card is one you are considering, not a copy. Mark it Ordered or Owned before reserving it.');ensure(!d.archived&&d.status==='final','Finalize this deck before reserving copies.');ensure(compatible(l,r),'That printing does not match this requirement.');ensure(l.offer==='none','Take it off Sell / Trade before it fills a deck\'s claim.');const amount=quantity(n??Math.min(l.quantity,shortfall(s,d,r)));ensure(amount<=shortfall(s,d,r),'That slot is already fulfilled.');const part=split(l,amount);part.allocation={deckId:d.id,slotId:r.id};return part;}
+    function allocate(l,d,r,n){ensure(!PLANNED.includes(l.source),'A Watched card is one you are considering, not a copy. Mark it Ordered or Owned before reserving it.');ensure(!d.archived&&d.status==='final','Finalize this deck before reserving copies.');ensure(compatible(l,r),'That printing does not match this requirement.');ensure(l.offer==='none','Take it off Sell / Trade before it fills a deck\'s claim.');const amount=quantity(n??Math.min(l.quantity,shortfall(s,d,r)));ensure(amount<=shortfall(s,d,r),'That slot is already fulfilled.');const part=split(l,amount);part.allocation={deckId:d.id,slotId:r.id};delete part.standInFor;return part;}
+    /* WHICH SEAT A SUBSTITUTE IS FILLING (play-space plan §2.12). Rob's step 3: "the necessary
+       temp substitutes (and tag which card they'll get replaced by when that card comes in)."
+       Nothing recorded it, so the Change List inferred the pairing from the option slot, the
+       primary type and the nearest mana value -- a good guess, and still a guess. `standInFor`
+       is the slot id the substitute is filling, set when the copy goes into the box and read
+       back by the Change List in preference to its own inference.
+
+       It is recorded only where it is true: the slot has to be a committed seat of THAT deck
+       that is still short. Anything else deletes it rather than keeping a pairing that has
+       stopped being one -- a stale tag is worse than no tag, because the list would read it. */
+    function pairSeat(l,d,slotId){
+      delete l.standInFor;
+      if(!slotId)return;
+      const r=d.slots.find(x=>x.id===slotId);
+      ensure(!!r,'That seat is not on this deck\'s list.');
+      ensure(r.committed,'A substitute stands in for a seat the list has committed to.');
+      ensure(shortfall(s,d,r)>0,`${card(s,r.cardId).name} is already filled; a substitute stands in for a seat that is still short.`);
+      l.standInFor=r.id;
+    }
     /* A DECK CAN BE ATTACHED TO A COLLECTION GROUP, and this is what the attachment does:
        when two copies could fill the same requirement, the one already filed under the
        deck's group is reserved first. Owned still beats unreceived -- the group only breaks
@@ -466,8 +501,9 @@
           if(l.allocation?.deckId!==d.id){const r=c.slotId?slot(s,d.id,c.slotId):d.slots.find(r=>compatible(l,r)&&shortfall(s,d,r)>=l.quantity);
             if(r){warning(l);l.allocation=null;allocate(l,d,r,l.quantity);}
             else{ensure(c.asStandIn===true,'This deck has no matching unfulfilled requirement. Put it in as a substitute, choose a replacement or acquire a second copy.');ensure(d.status==='final','Finalize the deck before putting a substitute in it.');if(l.allocation)warning(l);standIn=true;}}
-          l.location={kind:'deck',deckId:d.id,box:text(c.box,300)||d.name};}
-        else l.location={kind:'bench',box:text(c.box,300)};
+          l.location={kind:'deck',deckId:d.id,box:text(c.box,300)||d.name};
+          if(standIn)pairSeat(l,d,c.standInFor||'');else delete l.standInFor;}
+        else{l.location={kind:'bench',box:text(c.box,300)};delete l.standInFor;}
         summary=standIn?`${card(s,l.cardId).name} is in ${deck(s,c.deckId).name} as a substitute`:`Confirmed physical placement: ${c.deckId?deck(s,c.deckId).name:'Bench'}`;break;}
       /* THE SAME CHANGE, TO A HANDFUL OF RECORDS. Coming back from a convention with eleven
          cards to mark received meant eleven dialogs, eleven revisions and eleven things to
@@ -485,8 +521,9 @@
           if(c.op==='source'){ensure(SOURCES.includes(c.source),'Choose Owned, Ordered or Watched.');if((l.source==='owned'&&c.source!=='owned')||(l.allocation&&PLANNED.includes(c.source)))warning(l);l.source=c.source;if(l.source==='ordered')l.channel=c.channel==='trade'?'trade':(l.channel||'bought');if(l.source==='owned'){l.location=l.location||{kind:'bench',box:''};l.receivedAt=now;}else{l.location=null;l.offer='none';}if(PLANNED.includes(l.source))l.allocation=null;
             /* A batch may stamp each copy's sheet price as what was paid, where nothing was recorded yet. */
             if(c.paidByLot&&Object.hasOwn(c.paidByLot,lotId)&&!Number.isFinite(l.paid))stampPaid(l,c.paidByLot[lotId],c.paidSource);}
-          else if(c.op==='place'){const d=deck(s,c.deckId);ensure(!d.archived,'Archived decks cannot receive cards.');ensure(l.source==='owned','Record receipt or purchase before putting this card in a deck.');if(l.allocation?.deckId!==d.id){const r=c.asStandIn===true?d.slots.find(r=>compatible(l,r)&&shortfall(s,d,r)>=l.quantity):null;if(r){warning(l);l.allocation=null;allocate(l,d,r,l.quantity);}else{ensure(c.asStandIn===true,`${card(s,l.cardId).name} is not reserved for ${d.name}. Reserve it first, put it in the deck it is reserved for, or put it in as a substitute.`);ensure(d.status==='final','Finalize the deck before putting substitutes in it.');if(l.allocation)warning(l);}}if(l.location?.kind==='deck'&&l.location.deckId!==d.id)warning(l);l.location={kind:'deck',deckId:d.id,box:text(c.box,300)||d.name};}
-          else if(c.op==='bench'){ensure(l.source==='owned','Record receipt or purchase before moving this card.');if(l.location?.kind==='deck')warning(l);l.location={kind:'bench',box:text(c.box,300)};}
+          else if(c.op==='place'){const d=deck(s,c.deckId);ensure(!d.archived,'Archived decks cannot receive cards.');ensure(l.source==='owned','Record receipt or purchase before putting this card in a deck.');if(l.allocation?.deckId!==d.id){const r=c.asStandIn===true?d.slots.find(r=>compatible(l,r)&&shortfall(s,d,r)>=l.quantity):null;if(r){warning(l);l.allocation=null;allocate(l,d,r,l.quantity);}else{ensure(c.asStandIn===true,`${card(s,l.cardId).name} is not reserved for ${d.name}. Reserve it first, put it in the deck it is reserved for, or put it in as a substitute.`);ensure(d.status==='final','Finalize the deck before putting substitutes in it.');if(l.allocation)warning(l);}}if(l.location?.kind==='deck'&&l.location.deckId!==d.id)warning(l);l.location={kind:'deck',deckId:d.id,box:text(c.box,300)||d.name};
+            if(l.allocation?.deckId===d.id)delete l.standInFor;else pairSeat(l,d,c.standInFor||'');}
+          else if(c.op==='bench'){ensure(l.source==='owned','Record receipt or purchase before moving this card.');if(l.location?.kind==='deck')warning(l);l.location={kind:'bench',box:text(c.box,300)};delete l.standInFor;}
           else if(c.op==='release'){warning(l);release(l,'bench');}
           else if(c.op==='offer'){ensure(l.source==='owned','Only owned copies can be offered.');ensure(['none','available','held'].includes(c.offer),'Invalid Sell / Trade state.');if(c.offer==='held'){warning(l);l.allocation=null;}l.offer=c.offer;}
           else ensure(false,'Unknown bulk operation.');

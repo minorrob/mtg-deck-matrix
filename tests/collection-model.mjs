@@ -374,6 +374,26 @@ M.validate(s);checks++;
   {const l=M.lot(s,'g1');assert.equal(l.location.deckId,'A');assert.equal(l.allocation,null);const r=A();assert.deepEqual([r.inBox,r.standIns,r.covered,r.surplus,r.swapReady,r.remove,r.sleeved,r.playable],[0,1,1,0,0,0,1,false]);checks+=3;
    const row=M.projection(s).find(x=>x.recordId==='g1');assert.equal(row.placement,'Substitute');assert.equal(row.standIn,true);assert.equal(row.standInDeckId,'A');assert.equal(row.physical,'Physical deck');checks+=4;
    const m=M.matrix(s),x=m.rows.find(x=>x.cardId==='gem');assert.deepEqual([x.own,x.inBox,x.subs,x.bench,x.perDeck.A.sub,x.perDeck.B.sub,m.totals.A.sub],[1,0,1,0,1,0,1]);checks++;}
+  /* WHICH SEAT THE SUBSTITUTE IS FILLING (play-space plan §2.12). `standInFor` turns the Change
+     List's inference into a recorded fact — so it is recorded only where it is one, validated on
+     the way back out, and cleared the moment the copy stops being a substitute in that deck. */
+  {const d=M.deck(s,'A'),seat=d.slots.find(r=>r.committed&&r.purpose==='main'&&M.shortfall(s,d,r)>0);
+   assert.ok(seat,'deck A still has a seat to stand in for');checks++;
+   expectFailure('place',{lotId:'g1',deckId:'A',quantity:1,asStandIn:true,standInFor:'no-such-seat'},/not on this deck/);
+   run('place',{lotId:'g1',deckId:'A',quantity:1,asStandIn:true,standInFor:seat.id});
+   assert.equal(M.lot(s,'g1').standInFor,seat.id,'the seat is recorded on the lot');checks++;
+   const row=()=>M.projection(s).find(x=>x.recordId==='g1');
+   assert.equal(row().standInFor,seat.id,'and read back on the projection');checks++;
+   assert.equal(row().standInForCardId,seat.cardId,'with the card the seat asks for');checks++;
+   /* Dropped in again without naming a seat, the old pairing goes rather than lingering. */
+   run('place',{lotId:'g1',deckId:'A',quantity:1,asStandIn:true});
+   assert.equal(M.lot(s,'g1').standInFor,undefined,'placing again without a seat clears the pairing');checks++;
+   assert.equal(row().standInFor,'','and the projection says so');checks++;
+   /* Recorded again, then benched: a copy on the Bench is standing in for nothing. */
+   run('place',{lotId:'g1',deckId:'A',quantity:1,asStandIn:true,standInFor:seat.id});
+   run('batch',{commands:[{type:'bulk',op:'bench',lotIds:['g1'],confirmed:true}]});
+   assert.equal(M.lot(s,'g1').standInFor,undefined,'benching clears it');checks++;
+   run('place',{lotId:'g1',deckId:'A',quantity:1,asStandIn:true,standInFor:seat.id});}
   // A real copy arriving on the bench makes the substitute swappable; putting it in leaves the
   // substitute covering another empty seat.
   run('acquire',{lot:{id:'r1',cardId:'ring',quantity:1}});run('fulfill',{deckId:'A'});

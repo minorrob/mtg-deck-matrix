@@ -294,7 +294,18 @@ try{
      the bar appears, the library's tallies do not move, and Confirm writes the whole sitting as
      one revision that one Undo takes back. */
   {const r=await dragTo(stPile('Physical deck'));ok(/Put in a physical deck/.test(r.say));ok(/is-target/.test(r.cls));}
-  await page.getByRole('dialog').waitFor();ok(/Put these copies in a physical deck/.test(await page.getByRole('dialog').innerText()));await page.locator('[name=deckId]').selectOption(journey.id);await page.locator('[name=asStandIn]').check();await click('Stage the move');await page.waitForTimeout(500);
+  await page.getByRole('dialog').waitFor();ok(/Put these copies in a physical deck/.test(await page.getByRole('dialog').innerText()));await page.locator('[name=deckId]').selectOption(journey.id);await page.waitForTimeout(250);
+  /* WHICH SEAT THE SUBSTITUTE IS FILLING (PR 5; play-space plan §2.12). Rob's step 3 — "tag which
+     card they'll get replaced by when that card comes in" — and the seats offered are the ones
+     this deck still lacks a copy for, which only exist once the deck is chosen. */
+  let heldSeat='';
+  {const seats=await page.locator('[name=standInFor] option').evaluateAll(o=>o.map(x=>({v:x.value,t:x.textContent.trim()})));
+   ok(seats.length>=1,'the substitute form offers a seat to stand in for');
+   eq(seats[0].v,'','and leaving it blank is the first option, because naming it is optional');
+   const pick=seats.find(x=>x.v);
+   if(pick){heldSeat=pick.t;await page.locator('[name=standInFor]').selectOption(pick.v);}
+   else ok(true,'this deck needs no card it does not already have');}
+  await page.locator('[name=asStandIn]').check();await click('Stage the move');await page.waitForTimeout(500);
   {const t1=await tally();eq(t1,t0,'staging a drop changed nothing in the library');
    await page.locator('.cm-sitting').waitFor();ok(/1 move pending/.test(await page.locator('.cm-sitting').innerText()),'and the bar says one move is pending');
    ok((await page.locator('.cm-tt-captions .cm-tt-pill').first().innerText())!=='Bench','the table already reads as the sitting would leave it');}
@@ -317,6 +328,19 @@ try{
   await click('Confirm change');await page.waitForTimeout(1200);
   {const t1=await tally();eq((t1['Physical deck']||0)+(t1['Substitute']||0),(t0['Physical deck']||0)+(t0['Substitute']||0)+movedQty,'the copy is in the box');eq(t1['Bench']||0,(t0['Bench']||0)-movedQty,'and off the Bench');
    eq(await page.locator('.cm-sitting').count(),0,'and the sitting is cleared once the library has taken it');}
+  /* THE PAIRING IS NOW A FACT (PR 5). The seat named at the drop is on the lot, the deck's list
+     says who is holding it, and the Change List reads the record rather than inferring. */
+  if(heldSeat){
+    const st=await state(),lot=st.lots.find(l=>l.standInFor);
+    ok(!!lot,'the seat is recorded on the copy that went in as a substitute');
+    const d=st.decks.find(x=>x.id===journey.id),seat=d.slots.find(r=>r.id===lot.standInFor);
+    ok(!!seat,'and it names a seat on the deck it went into');
+    eq((st.cards[seat.cardId]||{}).name,heldSeat,'the seat the form offered');
+    await page.goto(BASE+'/'+ENTRY+'#decks?deck='+encodeURIComponent(journey.id)+'&tab=cards');
+    await page.locator('.cm-deck-cards').waitFor({timeout:30000});
+    ok(/held by /.test(await page.locator('.cm-deck-cards').innerText()),'the deck\'s list says the seat is held by the substitute');
+    await page.goto(BASE+'/'+ENTRY+'#cards?view=tabletop');await page.locator('.cm-tt-mat').waitFor({timeout:30000});
+  } else ok(true,'no seat to record on this deck today');
   /* And the way back, as a second sitting: out of the box onto the Bench. */
   /* The page was reloaded mid-sitting, so the stage is closed: open the pile the copy is in now.
      A substitute is by definition the only kind of card in that pile. */
