@@ -6,7 +6,7 @@ import {randomUUID} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import {setupCatalog,prepareSetup,importWorkshopDeck} from './setup-catalog.mjs';
 import {launchLocalGame,liveStatus,browserBridge,resumeLocalGame,closeLocalGame} from './local-game-launcher.mjs';
-if(process.env.COMMANDER_RESUME)await resumeLocalGame(process.env.COMMANDER_RESUME);
+if(process.env.COMMANDER_RESUME)try{await resumeLocalGame(process.env.COMMANDER_RESUME);}catch{console.warn('Previous Forge match is unavailable. Game logs are retained; open Game setup to start a new match.');}
 const port=Number(process.env.COMMANDER_PORT||8768);
 if(!Number.isInteger(port)||port<1024||port>65535)throw Error('Invalid local port');
 const authority='127.0.0.1:'+port,origin='http://'+authority;
@@ -15,6 +15,8 @@ const files=new Map([['/',['game/ui/review.html','text/html']],['/review.css',['
 files.set('/playmats.mjs',['game/ui/playmats.mjs','text/javascript']);
 files.set('/mana-status.mjs',['game/ui/mana-status.mjs','text/javascript']);
 files.set('/play-guidance.mjs',['game/ui/play-guidance.mjs','text/javascript']);
+files.set('/action-policy.mjs',['game/ui/action-policy.mjs','text/javascript']);
+files.set('/card-layout.mjs',['game/ui/card-layout.mjs','text/javascript']);
 for(const name of ['moonlit-tree','golden-lotus','sunlit-familiar','shadow-forest','mountain-horizon','spirit-warrior','violet-bloom'])files.set('/playmats/'+name+'.png',['game/ui/assets/playmats/'+name+'.png','image/png']);
 files.set('/mats.css',['game/ui/mats.css','text/css']);
 files.set('/rob-playmat.png',['game/ui/assets/rob-playmat.png','image/png']);

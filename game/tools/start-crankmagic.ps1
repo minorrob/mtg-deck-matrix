@@ -20,10 +20,13 @@ $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 $env:COMMANDER_PORT = "$Port"
 $child = Start-Process -FilePath $nodePath -ArgumentList 'game/tools/serve-review.mjs' -WorkingDirectory $repoRoot -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $logDir "$stamp-out.log") -RedirectStandardError (Join-Path $logDir "$stamp-error.log")
 for ($attempt = 0; $attempt -lt 30; $attempt++) {
+    if ($child.HasExited) { throw "Host exited during startup. Inspect $logDir/$stamp-error.log." }
     try {
         $health = Invoke-RestMethod "$hostUrl/api/health" -TimeoutSec 1
         if ($health.product -eq 'CrankMagic Online' -and $health.protocol -eq 1) {
-            @{pid=$child.Id; port=$Port; startedAt=(Get-Date).ToString('o'); root=$repoRoot} | ConvertTo-Json | Set-Content (Join-Path $logDir 'host.json')
+            $record = @{pid=$child.Id; port=$Port; startedAt=(Get-Date).ToString('o'); root=$repoRoot} | ConvertTo-Json
+            $record | Set-Content (Join-Path $logDir "host-$Port.json")
+            if ($Port -eq 8768) { $record | Set-Content (Join-Path $logDir 'host.json') }
             Write-Output "Ready: $hostUrl/app/#game"
             exit 0
         }

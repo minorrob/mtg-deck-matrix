@@ -4,6 +4,9 @@ import com.google.gson.*;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.net.URI;
+import java.net.http.*;
+import java.time.Duration;
 
 /** Exercises the live bridge's real answer validation without changing a user's match. */
 public final class BridgeProtocolCheck {
@@ -51,6 +54,16 @@ public final class BridgeProtocolCheck {
                     List<?> ordered=wrapped?((forge.gui.interfaces.IGuiGame.OrderResult<?>)value).ordered():(List<?>)value;
                     if(ordered.get(0)!=second||ordered.get(1)!=first)throw new AssertionError("Choice identity/order was lost behind identical labels");checks++;
                 }
+                bridge.pending=ForgeProbe.obj("id","http-draw","mode","draw","min",0,"max",0,"options",List.of());
+                JsonObject httpDraw=answer(bridge,"http-draw");
+                HttpClient client=HttpClient.newHttpClient();URI endpoint=URI.create("http://127.0.0.1:"+bridge.server.getAddress().getPort()+"/action");
+                HttpRequest wire=HttpRequest.newBuilder(endpoint).timeout(Duration.ofSeconds(3)).header("X-CrankMagic-Bridge",bridge.token).POST(HttpRequest.BodyPublishers.ofString(httpDraw.toString())).build();
+                HttpResponse<String> response=client.send(wire,HttpResponse.BodyHandlers.ofString());
+                if(response.statusCode()!=200||!bridge.answer.equals(httpDraw))throw new AssertionError("HTTP serialization changed the answer");checks++;
+                long applied=bridge.revision;
+                if(client.send(wire,HttpResponse.BodyHandlers.ofString()).statusCode()!=200||bridge.revision!=applied)throw new AssertionError("HTTP retry applied twice");checks++;
+                HttpRequest unauthenticated=HttpRequest.newBuilder(endpoint).timeout(Duration.ofSeconds(3)).POST(HttpRequest.BodyPublishers.ofString(httpDraw.toString())).build();
+                if(client.send(unauthenticated,HttpResponse.BodyHandlers.ofString()).statusCode()==200||bridge.revision!=applied)throw new AssertionError("Unauthenticated HTTP action was accepted");checks++;
             } finally { bridge.server.stop(0); }
         }
         System.out.println(checks+" browser–Forge protocol checks passed; isolated artifacts: "+directory);

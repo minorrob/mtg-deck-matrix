@@ -129,3 +129,11 @@ body.setup-screen>.recommended-actions{display:none!important}
 .card-fan:not(.spread-cards)>.card:not(:last-child){height:calc(var(--fan-card-width)*.24);aspect-ratio:auto;overflow:hidden;min-height:0}
 .card-fan:not(.spread-cards)>.card:not(:last-child)>img{height:auto;max-height:none;object-fit:initial;align-self:start}
 .card-fan:not(.spread-cards)>.card+.card{margin-top:0}
+.casting-targets{display:grid;gap:3px;font-size:12px;color:#b9edff}
+.card-zoom-control{display:grid;gap:7px;min-width:240px}.card-zoom-control input{width:100%;accent-color:#42c8ff}.card-zoom-control output{font-size:12px;color:#a6e8ff}
+.player-mat .mat-cards.zoom-card-grid{display:grid;grid-template-columns:repeat(var(--card-columns,3),minmax(0,1fr));gap:5px;align-content:start;justify-items:start;overflow:auto}
+.player-mat .zoom-card-grid .battlefield-group,.player-mat .zoom-card-grid .battlefield-group.expanded-group{width:var(--grid-card-width);max-width:none;min-width:0}
+.player-mat .zoom-card-grid .card-fan{--fan-card-width:var(--grid-card-width)}
+.player-mat .zoom-card-grid .group-label{height:16px;box-sizing:border-box;overflow:hidden;padding:0 2px;line-height:16px;font-size:10px}
+.primary-seat .free-card,.focus-mat-stage .free-card{width:var(--free-card-width,19cqw)}
+.zoom-card-grid .counter-dice{left:1px;bottom:16%;gap:1px;max-width:95%}.zoom-card-grid .die{font-size:clamp(5px,.7cqw,9px);padding:0 1px;line-height:1.2}.zoom-card-grid .badge{font-size:clamp(7px,1.2cqw,13px);padding:1px 3px}

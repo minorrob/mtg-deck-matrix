@@ -5,7 +5,7 @@
     const decks=C.state.decks.filter(d=>!d.archived);
     const layout=C.main.closest('.cm-layout');layout.classList.add('cm-play-collapsed');
     if(local){
-      C.main.innerHTML=C.pageHead('',`<button class="v-button" id="online-sidebar" aria-expanded="false">☰ Show sidebar</button><a class="v-button" href="#decks">Deck editor</a><button class="v-button" id="online-setup">Game setup</button>`)+
+      C.main.innerHTML=`<header class="cm-page-head"><div class="cm-actions"><button class="v-button" id="online-sidebar" aria-expanded="false">☰ Show sidebar</button><a class="v-button" href="#decks">Deck editor</a><button class="v-button" id="online-setup">Game setup</button></div></header>`+
         `<div class="cm-online-toolbar"><label>Your CrankMagic deck <select id="online-deck">${decks.map(d=>`<option value="${e(d.id)}">${e(d.name)}</option>`).join('')}</select></label><button class="v-button" id="online-use" ${decks.length?'':'disabled'}>Use this deck</button><p id="online-status" role="status">${decks.length?'Your edits are copied into the next game when you select Use this deck.':'This browser has no saved decks yet. Game setup also offers the host’s saved decks for testing.'}</p></div><iframe class="cm-game-frame" title="CrankMagic Online game table" src="/?embedded=1" allow="fullscreen"></iframe>`;
       const frame=C.main.querySelector('iframe'),status=C.main.querySelector('#online-status');
       const reportViewport=()=>{if(!frame.classList.contains('cm-game-expanded'))frame.contentWindow.postMessage({type:'crankmagic-viewport',height:Math.max(400,window.innerHeight-(frame.getBoundingClientRect().top+window.scrollY))},location.origin);};

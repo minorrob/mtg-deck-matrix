@@ -58,15 +58,16 @@ public final class ForgeBrowserBridge {
         server.start();ForgeProbe.save(out.resolve("browser-bridge.json"),ForgeProbe.obj("port",server.getAddress().getPort(),"token",token));
     }
     synchronized Map<String,Object> view(){
-        String inputType="";Map<Integer,String> actions=new TreeMap<>();
+        String inputType="";Map<Integer,String> actions=new TreeMap<>();Map<String,Object> payment=null;
         if(controller instanceof forge.player.PlayerControllerHuman human){
             var input=human.getInputQueue().getInput();if(input!=null)inputType=input.getClass().getSimpleName();
+            if(input instanceof forge.gamemodes.match.input.InputPayMana){var paid=human.getPlayer().getPaidForSA();if(paid!=null){var root=paid.getRootAbility();payment=ForgeProbe.obj("abilityId",paid.getId(),"sourceId",paid.getHostCard().getId(),"triggered",root.isTrigger(),"automaticEligible",root.getActivatingPlayer()==human.getPlayer()&&!root.isTrigger()&&(root.isSpell()||root.isActivatedAbility()));}}
             if(pending==null&&!actionInFlight&&game!=null)for(var p:game.getRegisteredPlayers())for(ZoneType zone:List.of(ZoneType.Hand,ZoneType.Battlefield,ZoneType.Command))for(Card card:p.getCardsIn(zone)){
                 if(!card.getView().canBeShownTo(human.getPlayer().getView()))continue;
                 try{String action=human.getActivateDescription(card.getView());if(action!=null&&!action.isBlank())actions.put(card.getId(),action);}catch(RuntimeException ignored){}
             }
         }
-        return ForgeProbe.obj("revision",revision,"state",projection,"ui",ForgeProbe.obj("prompt",prompt,"ok",ok,"cancel",cancel,"okEnabled",okEnabled,"cancelEnabled",cancelEnabled,"selectables",selectables,"choice",pending,"nativeFallback",fallback,"inputType",inputType,"cardActions",actions,"highlightedPlayers",new ArrayList<>(highlightedPlayers),"highlightedCards",new ArrayList<>(highlightedCards),"actionInFlight",actionInFlight,"lastAction",lastAction));
+        return ForgeProbe.obj("revision",revision,"state",projection,"ui",ForgeProbe.obj("prompt",prompt,"ok",ok,"cancel",cancel,"okEnabled",okEnabled,"cancelEnabled",cancelEnabled,"selectables",selectables,"choice",pending,"nativeFallback",fallback,"inputType",inputType,"payment",payment,"cardActions",actions,"highlightedPlayers",new ArrayList<>(highlightedPlayers),"highlightedCards",new ArrayList<>(highlightedCards),"actionInFlight",actionInFlight,"lastAction",lastAction));
     }
     void attach(Game value){game=value;game.subscribeToEvents(this);snapshot();}
     @Subscribe public void event(GameEvent event){

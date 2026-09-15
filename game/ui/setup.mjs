@@ -10,7 +10,7 @@ dialog.addEventListener('cancel',event=>{if(document.body.classList.contains('se
 const actions=e('div','setup-actions');head.append(actions);
 const content=e('div','setup-content');dialog.append(content);
 function select(label,value,options,onChange){const box=e('label','setup-field');box.append(e('span','',label));const s=e('select');s.setAttribute('aria-label',label);for(const [id,text,disabled]of options){const o=e('option','',text);o.value=id;o.disabled=!!disabled;s.append(o);}s.value=value;s.addEventListener('change',()=>onChange(s.value));box.append(s);return box;}
-function input(label,value,type,onChange){const box=e('label','setup-field');box.append(e('span','',label));const field=e('input');field.type=type;field.value=value;field.setAttribute('aria-label',label);if(type==='number'){field.min=1;field.max=10000;}field.addEventListener('change',()=>onChange(type==='number'?Number(field.value):field.value));box.append(field);return box;}
+function input(label,value,type,onChange){const box=e('label','setup-field');box.append(e('span','',label));const field=e('input');field.type=type;field.value=value;field.setAttribute('aria-label',label);if(type==='number'){field.min=1;field.max=10000;}field.addEventListener('input',()=>onChange(type==='number'?Number(field.value):field.value));box.append(field);return box;}
 function matPicker(s){
   const selected=s.playmat||defaultPlaymat(s.seatId),picker=e('details','mat-picker');
   picker.append(e('summary','', 'Playmat · '+(selected==='random'?'Random':PLAYMATS.find(m=>m.id===selected)?.name||'Runic cube')));
@@ -23,19 +23,19 @@ function matPicker(s){
   }
   picker.append(grid);return picker;
 }
-function invalidate(){prepared=null;try{localStorage.setItem('commander-setup-v1',JSON.stringify(config));}catch{}render();}
+function invalidate(redraw=true){prepared=null;try{localStorage.setItem('commander-setup-v1',JSON.stringify(config));}catch{}if(redraw)render();else{content.querySelector('.setup-result')?.replaceChildren();const start=actions.querySelector('.setup-start');if(start)start.disabled=true;}}
 function setSource(s,value){s.source=value;s.archidektUrl='';s.deckId='';const first=catalog.decks.find(d=>d.source===value&&d.commander===s.commander&&d.cost<=config.maxCost)||catalog.decks.find(d=>d.source===value&&d.ok&&d.cost<=config.maxCost);if(first){s.deckId=first.id;s.commander=first.commander;}invalidate();}
 async function post(path,body){const response=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json','X-Commander-Token':catalog.token},body:JSON.stringify(body)});const value=await response.json();if(!response.ok)throw Error(value.error||'Request failed');return value;}
 function render(message=''){
   content.replaceChildren();const lead=e('div','setup-intro');lead.append(e('h1','','Build your table'),e('p','',`You choose the opponents, their commanders, and where each hundred comes from. ${catalog.variantCount} archived variations · ${catalog.rungCount} complete Base / Tuned / Fun / Max lists available.`));content.append(lead);
   const global=e('div','setup-globals');
-  global.append(select('Table bracket',config.bracket,[[1,'1 · Exhibition'],[2,'2 · Core'],[3,'3 · Upgraded'],[4,'4 · Optimized'],[5,'5 · cEDH']],v=>{config.bracket=+v;invalidate();}),input('Maximum deck cost · USD · every player',config.maxCost,'number',v=>{config.maxCost=v;invalidate();}),select('Human players',config.humans,[[1,'1 · You'],[2,'2 · Friends phase C8',true],[3,'3 · Friends phase C8',true],[4,'4 · Friends phase C8',true]],v=>{config.humans=+v;invalidate();}),select('AI players',config.ais,[[1,'1 AI'],[2,'2 AI'],[3,'3 AI']],v=>{config.ais=+v;invalidate();}));content.append(global);
+  global.append(select('Table bracket',config.bracket,[[1,'1 · Exhibition'],[2,'2 · Core'],[3,'3 · Upgraded'],[4,'4 · Optimized'],[5,'5 · cEDH']],v=>{config.bracket=+v;invalidate();}),input('Maximum deck cost · USD · every player',config.maxCost,'number',v=>{config.maxCost=v;invalidate(false);}),select('Human players',config.humans,[[1,'1 · You'],[2,'2 · Friends phase C8',true],[3,'3 · Friends phase C8',true],[4,'4 · Friends phase C8',true]],v=>{config.humans=+v;invalidate();}),select('AI players',config.ais,[[1,'1 AI'],[2,'2 AI'],[3,'3 AI']],v=>{config.ais=+v;invalidate();}));content.append(global);
   content.append(e('p','setup-note',`Budget includes all 100 cards and the commander, using recorded USD estimates dated ${catalog.priceAsOf.slice(0,10)}; missing prices block preparation. Bracket checks include known Game Changers; play-pattern restrictions still require a table agreement. Bracket and AI difficulty are different settings.`));
   const seats=e('div','setup-seats');
   for(const s of config.seats.slice(0,config.ais+1)){
     const card=e('section',`setup-seat setup-seat-${s.seatId}`),title=e('div','setup-seat-title');title.append(e('h2','',s.seatId?`AI player ${s.seatId}`:'You · human player'));card.append(title);
     const seatLabel=s.seatId?`AI ${s.seatId}`:'Your';
-    const fields=e('div','setup-fields');fields.append(input(`${seatLabel} name`,s.name,'text',v=>{s.name=v;invalidate();}));
+    const fields=e('div','setup-fields');fields.append(input(`${seatLabel} name`,s.name,'text',v=>{s.name=v;invalidate(false);}));
     fields.append(select(`${seatLabel} deck source`,s.source,[['library','Your saved decks'],['preloaded','Preloaded variations · 200 lists'],['lab','Deck Lab · build a starting list'],['archidekt','Archidekt · find a matching deck']],v=>setSource(s,v)));
     const savedSource=['library','preloaded'].includes(s.source);
     const commanders=savedSource?[...new Set(catalog.decks.filter(d=>d.source===s.source).map(d=>d.commander))].sort():catalog.commanders.map(c=>c.name);
@@ -46,7 +46,7 @@ function render(message=''){
       if(!s.seatId)fields.append(e('p','setup-note',`Commander: ${s.commander}. Your deck supplies its commander.`));
     }else if(s.commanderMode==='random')fields.append(e('p','setup-note','Random choices are drawn from the selected source. Saved lists are filtered by bracket and budget first; the resolved commander is shown before launch.'));
     if(s.source==='lab')fields.append(e('p','setup-note','Uses the existing Lab draft builder and your catalog. This produces a starting hundred; simulation optimization is not connected yet.'));
-    if(s.source==='archidekt')fields.append(input(`${seatLabel} Archidekt URL · optional`,s.archidektUrl||'','url',v=>{s.archidektUrl=v;invalidate();}),e('p','setup-note','Search checks up to 12 public candidates, then verifies commander, quantity, known identities, bracket counts, and budget. No match is reported explicitly; sources are never silently substituted.'));
+    if(s.source==='archidekt')fields.append(input(`${seatLabel} Archidekt URL · optional`,s.archidektUrl||'','url',v=>{s.archidektUrl=v;invalidate(false);}),e('p','setup-note','Search checks up to 12 public candidates, then verifies commander, quantity, known identities, bracket counts, and budget. No match is reported explicitly; sources are never silently substituted.'));
     if(s.seatId){fields.append(select(`AI ${s.seatId} play style`,s.nativeProfile,[['Default','Balanced · Forge Default'],['Cautious','Cautious · Forge profile'],['Reckless','Reckless · Forge profile']],v=>{s.nativeProfile=v;invalidate();}),select(`AI ${s.seatId} API difficulty · future pilot`,s.difficulty,[[1,'1 · Learner'],[2,'2 · Casual'],[3,'3 · Focused'],[4,'4 · Advanced'],[5,'5 · Expert']],v=>{s.difficulty=+v;invalidate();}));}
     card.append(fields,matPicker(s));seats.append(card);
   }
