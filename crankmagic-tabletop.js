@@ -494,6 +494,75 @@
      onDrop(pileId, [recordId]) when the selection is dropped on an accepting pile,
      onMoveTo([recordId], element) for the Move to… button, and for the play space (PR 3b)
      onDrawAt(index), onTrays(1..4) and onRestore([recordId] | null for all). */
+  /* ------------------------------------------------------ §3.1: paint once, patch thereafter */
+  /* THE BOARD DOES NOT REBUILD ITSELF (plan §3.1). `mount` wrote the whole mat with one
+     `innerHTML` on every draw, and on a view where a card moves every few seconds that is the
+     wrong shape for three practical reasons the plan names: every node is destroyed and recreated
+     so FOCUS AND SCROLL ARE LOST on each move; every picture is RE-DECODED, which is the visible
+     stutter; and the work grows with the size of the table rather than the size of the change.
+
+     The renderer still produces one string -- that is what keeps the layout arithmetic in one
+     readable place -- and this applies it as a patch. The rule that does the work is the first
+     line of `patch`: a subtree that is byte-identical to the one already standing is left alone,
+     pictures and focus and all. On a typical move that is every pile but two, the whole Bench
+     ledge, the zones and the pick row; what actually changes is a couple of counts, a class, a
+     position and the play space in the middle.
+
+     KEYS. Piles carry `data-pile`, so a pile keeps its node across a redraw even when the piles
+     are reordered (Fullest first) or the grouping changes. Everything else keys on its class,
+     which is stable for the mat's fixed furniture.
+
+     WHY A NODE'S CONTENTS CAN STILL BE REBUILT. Where the element children of a node no longer
+     line up -- different keys, a different count, or different text around them -- this replaces
+     that ONE node's `innerHTML` rather than trying to be clever. It is local, it is correct, and
+     it is the case the byte-identical test has already excluded from everywhere else. */
+  const keyOf = (el) => el.dataset.pile || el.dataset.tt || el.className || el.tagName;
+  /* The text a node holds directly, between its element children: if that changed, the children
+     cannot be matched positionally without moving the words around them. */
+  const ownText = (el) => { let t = ""; for (const n of el.childNodes) if (n.nodeType === 3) t += n.nodeValue; return t; };
+  function patch(old, next) {
+    if (old.isEqualNode(next)) return;
+    for (const a of [...old.attributes]) if (!next.hasAttribute(a.name)) old.removeAttribute(a.name);
+    for (const a of next.attributes) if (old.getAttribute(a.name) !== a.value) old.setAttribute(a.name, a.value);
+    const oldKids = [...old.children], newKids = [...next.children];
+    if (!newKids.length || oldKids.length !== newKids.length
+      || oldKids.some((el, i) => keyOf(el) !== keyOf(newKids[i]))
+      || ownText(old) !== ownText(next)) { if (old.innerHTML !== next.innerHTML) old.innerHTML = next.innerHTML; return; }
+    for (let i = 0; i < oldKids.length; i += 1) patch(oldKids[i], newKids[i]);
+  }
+  /* The mat's children are keyed and can be reordered, so they are matched by key rather than by
+     position -- a status band that moves down the mat keeps its piles' nodes. */
+  function patchMat(old, next) {
+    for (const a of [...old.attributes]) if (!next.hasAttribute(a.name)) old.removeAttribute(a.name);
+    for (const a of next.attributes) if (old.getAttribute(a.name) !== a.value) old.setAttribute(a.name, a.value);
+    const before = [...old.children], pool = new Map();
+    for (const el of before) { const k = keyOf(el); if (!pool.has(k)) pool.set(k, []); pool.get(k).push(el); }
+    const kept = new Set(); let at = null;
+    for (const want of next.children) {
+      const found = (pool.get(keyOf(want)) || []).shift();
+      const node = found || want.cloneNode(true);
+      if (found) { patch(found, want); kept.add(found); }
+      /* Where this child should stand. Asking `node.previousElementSibling !== at` looks
+         equivalent and is not: a freshly cloned node is detached, so its previous sibling is
+         null, and when `at` is null too the test reads "already in place" and the node is never
+         inserted at all. Compare against what is actually standing in the slot instead. */
+      const here = at ? at.nextElementSibling : old.firstElementChild;
+      if (here !== node) { if (at) at.after(node); else old.prepend(node); }
+      at = node;
+    }
+    for (const el of before) if (!kept.has(el)) el.remove();
+  }
+  function paint(host, html) {
+    const fresh = document.createElement("div");
+    fresh.innerHTML = html;
+    const next = fresh.firstElementChild, live = host.firstElementChild;
+    if (!live || !next || !live.classList.contains("cm-tt-mat")) { host.replaceChildren(...fresh.childNodes); return; }
+    /* Which node had the keyboard, so it can be given back if its own subtree was rebuilt. */
+    const had = document.activeElement, mark = had && host.contains(had) ? (had.dataset.pile ? `[data-pile="${CSS.escape(had.dataset.pile)}"]` : had.dataset.record ? `.cm-tt-card[data-record="${CSS.escape(had.dataset.record)}"]` : "") : "";
+    patchMat(live, next);
+    if (mark && document.activeElement !== had && !host.contains(document.activeElement)) host.querySelector(mark)?.focus?.({preventScroll: true});
+  }
+
   function mount(host, model, hooks = {}, ui = {}) {
     if (!host) return null;
     const width = Math.max(320, host.clientWidth || 960), narrow = width < 760;
@@ -743,12 +812,15 @@
       body = shelfHTML + stageHTML + bar.html + statusHTML;
     }
     const legend = `${model.total.toLocaleString()} cards on the table · ${model.ghosts.toLocaleString()} ghost${model.ghosts === 1 ? "" : "s"} (ordered, to buy, a draft list — not held) · ${shelf ? `${sN - 1} collection group${sN === 2 ? "" : "s"}` : `${sN} status piles`} · ${gN} ${esc(model.groupings.find(([k]) => k === model.groupBy)[1].toLowerCase())} piles`;
-    host.innerHTML = `<div class="cm-tt-mat is-${mode} cm-canvas-${canvasOf(ui.canvas)}" tabindex="-1" style="height:${height}px">${railHTML}${body}<div class="cm-tt-legend">${legend}</div></div>`;
-    /* Clicks, keys and the context menu, delegated once per draw. */
-    const sel = host.querySelector("select[name=tabletopGroupBy]"); if (sel && hooks.onGroupBy) sel.addEventListener("change", () => hooks.onGroupBy(sel.value));
-    const ord = host.querySelector("select[name=tabletopStatusOrder]"); if (ord && hooks.onStatusOrder) ord.addEventListener("change", () => hooks.onStatusOrder(ord.value));
-    const can = host.querySelector("select[name=tabletopCanvas]"); if (can && hooks.onCanvas) can.addEventListener("change", () => hooks.onCanvas(can.value));
-    for (const bind of host.querySelectorAll("select[data-tt=tray-group]")) bind.addEventListener("change", () => hooks.onTrayGroup && hooks.onTrayGroup(Number(bind.dataset.n) || 1, bind.value));
+    paint(host, `<div class="cm-tt-mat is-${mode} cm-canvas-${canvasOf(ui.canvas)}" tabindex="-1" style="height:${height}px">${railHTML}${body}<div class="cm-tt-legend">${legend}</div></div>`);
+    /* Clicks, keys and the context menu, delegated once per draw. The selects are assigned as
+       PROPERTIES rather than added as listeners: a select that survives a patch (§3.1) would
+       otherwise collect one handler per redraw, which is the listener-stacking bug PR 3b found
+       on the page's own keydown, reappearing one level down. */
+    const sel = host.querySelector("select[name=tabletopGroupBy]"); if (sel && hooks.onGroupBy) sel.onchange = () => hooks.onGroupBy(sel.value);
+    const ord = host.querySelector("select[name=tabletopStatusOrder]"); if (ord && hooks.onStatusOrder) ord.onchange = () => hooks.onStatusOrder(ord.value);
+    const can = host.querySelector("select[name=tabletopCanvas]"); if (can && hooks.onCanvas) can.onchange = () => hooks.onCanvas(can.value);
+    for (const bind of host.querySelectorAll("select[data-tt=tray-group]")) bind.onchange = () => hooks.onTrayGroup && hooks.onTrayGroup(Number(bind.dataset.n) || 1, bind.value);
     host.onclick = (ev) => {
       const t = ev.target.closest("[data-tt]");
       if (!t) { if (mode !== "rest" && ev.target.closest(".cm-tt-mat") && !ev.target.closest("button, select, label, .cm-tt-card, .cm-tt-strip, .cm-tt-stage")) hooks.onClear && hooks.onClear(); return; }
@@ -781,12 +853,12 @@
     if (mode === "selected" && hooks.onDrop) {
       const fan = host.querySelector(".cm-tt-fanL"); let drag = null;
       const clearMarks = () => host.querySelectorAll(".is-target, .is-refused").forEach((el) => el.classList.remove("is-target", "is-refused"));
-      fan.addEventListener("pointerdown", (ev) => {
+      fan.onpointerdown = (ev) => {
         if ((ev.button !== undefined && ev.button !== 0) || !ev.target.closest(".cm-tt-card")) return;
         ev.preventDefault(); try { fan.setPointerCapture(ev.pointerId); } catch (e) { /* capture is a courtesy */ }
         drag = {id: ev.pointerId, x0: ev.clientX, y0: ev.clientY, el: null, over: null, ok: false, moved: false};
-      });
-      fan.addEventListener("pointermove", (ev) => {
+      };
+      fan.onpointermove = (ev) => {
         if (!drag || ev.pointerId !== drag.id) return;
         if (!drag.moved) {
           if (Math.hypot(ev.clientX - drag.x0, ev.clientY - drag.y0) < 8) return;
@@ -802,13 +874,15 @@
           if (pileEl) { const a = accepts(findPile(model, id), selected); pileEl.classList.add(a.ok ? "is-target" : "is-refused"); say.textContent = a.ok ? a.label : a.why; say.className = "cm-tt-drag-say " + (a.ok ? "is-ok" : "is-no"); drag.ok = a.ok; }
           else { say.textContent = ""; say.className = "cm-tt-drag-say"; }
         }
-      });
+      };
       const end = (ev) => {
         if (!drag || ev.pointerId !== drag.id) return;
         const d = drag; drag = null; host.classList.remove("is-dragging"); if (d.el) d.el.remove(); clearMarks();
         if (d.moved && d.over && d.ok && ev.type === "pointerup") hooks.onDrop(d.over, selected.map((r) => r.recordId));
       };
-      fan.addEventListener("pointerup", end); fan.addEventListener("pointercancel", end);
+      /* Properties, not listeners: the fan survives a patch now (§3.1), and a handler added on
+         every redraw would fire the drop once per draw since the selection appeared. */
+      fan.onpointerup = end; fan.onpointercancel = end;
     }
     /* THE KEYBOARD (plan TB4). Among the piles the arrows walk a row (the ledge, the group
        piles or their shelf, the status piles) and step between rows; Enter opens the focused

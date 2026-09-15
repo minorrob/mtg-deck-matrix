@@ -278,6 +278,27 @@ try{
    ok(m.inside,'every placard is inside the mat');
    ok(m.readInside,'the readings line is inside the mat');
    ok(m.clear>=20,`the readings line stands clear of the status placards (${m.clear}px)`);}
+  /* THE BOARD MUTATES, IT DOES NOT REBUILD (play-space plan §3.1). `mount` used to write the
+     whole mat with one innerHTML on every draw: focus and scroll lost on each move, every picture
+     re-decoded, and the work growing with the table rather than the change. It paints once and
+     patches thereafter now, and this is the assertion that says so — stamp every node on the mat,
+     cause a redraw, and count how many of the same objects are still standing. */
+  {const stamp=()=>page.evaluate(()=>{let n=0;for(const el of document.querySelectorAll('#cm-tt-host .cm-tt-mat *')){el.__keep=true;n++;}return n;});
+   const survived=()=>page.evaluate(()=>{let kept=0,total=0;for(const el of document.querySelectorAll('#cm-tt-host .cm-tt-mat *')){total++;if(el.__keep)kept++;}return {kept,total};});
+   const n0=await stamp();ok(n0>40,`the mat is worth patching (${n0} nodes)`);
+   /* A redraw that changes one class on the mat and nothing else: every node should survive. */
+   await page.locator('[name=tabletopCanvas]').selectOption('felt');await page.waitForTimeout(400);
+   {const r=await survived();eq(r.kept,r.total,`a canvas change rebuilds nothing (${r.kept} of ${r.total} nodes stand)`);}
+   /* A redraw that changes what the piles hold: most of the mat is still the same objects, which
+      is what keeps the pictures from being decoded again. */
+   await stamp();await page.locator('#cm-tt-query').fill('a');await page.waitForTimeout(600);
+   {const r=await survived();ok(r.kept>=r.total*0.5,`a filtered redraw keeps most of the board (${r.kept} of ${r.total})`);}
+   await page.locator('#cm-tt-query').fill('');await page.waitForTimeout(500);
+   /* A control that survived the patch still works, and the canvas it names is the one drawn —
+      that a surviving node carries ONE handler rather than one per draw is asserted at the source
+      in tests/crankmagic-tabletop.mjs, because it is a rule about how the module binds. */
+   await page.locator('[name=tabletopCanvas]').selectOption('slate');await page.waitForTimeout(500);
+   ok(/cm-canvas-slate/.test(await page.locator('.cm-tt-mat').getAttribute('class')),'a select that survived the patch still changes the board');}
   /* TB5: the Bench ledge folds to its placard and stays folded on this device. */
   await page.locator('[data-tt=bench-toggle]').click();await page.waitForTimeout(250);eq(await page.locator('.cm-tt-rail.is-shut').count(),1,'Hide folds the ledge');eq(await page.locator('.cm-tt-fan .cm-tt-card').count(),0);
   await page.reload();await page.locator('.cm-tt-mat').waitFor({timeout:30000});eq(await page.locator('.cm-tt-rail.is-shut').count(),1,'the fold survives a reload');await page.locator('[data-tt=bench-toggle]').click();await page.waitForTimeout(250);eq(await page.locator('.cm-tt-rail.is-shut').count(),0,'Show unfolds it');

@@ -295,5 +295,24 @@ eq(T.printSheet({kind: "status", label: "Watched", rows: []}).includes("0 cards 
   eq(T.accepts(deckT.play.trayPiles[0], owned).action, "tray", "and a tray still reserves");
   ok(!T.accepts(deckT.play.draw, [catalogRow]).ok, "a sent card is not a copy you can pick up for a deck");
 }
+/* ------------------------------------------------ §3.1: paint once, patch thereafter (source) */
+/* The mat is a string the module builds and then APPLIES AS A PATCH, so a node that has not
+   changed is never destroyed — which is what keeps focus, scroll and decoded pictures. Two rules
+   make that safe, and both are properties of the source rather than of any one library, so they
+   are asserted here where a reader will find them beside the model they belong to. */
+{
+  const src = readFileSync(path.join(ROOT, "crankmagic-tabletop.js"), "utf8");
+  ok(!/host\.innerHTML\s*=/.test(src), "the mat is painted, never written over with innerHTML");
+  ok(/function patch\(old, next\)[\s\S]{0,120}isEqualNode/.test(src),
+    "and the first thing the patch does is leave a byte-identical subtree alone — the rule that does the work");
+  /* A node that survives a redraw must not collect a handler per redraw. Everything bound to a
+     surviving node is assigned as a property, which replaces; `addEventListener` inside `mount`
+     would stack, which is the bug PR 3b found on the page's own keydown one level up. */
+  const mountSrc = src.slice(src.indexOf("function mount(host, model"));
+  const added = mountSrc.match(/\.addEventListener\(/g) || [];
+  eq(added.length, 0, `nothing inside mount() adds a listener (${added.length} found); handlers are properties, so a patched node never stacks them`);
+  for (const on of ["onchange", "onpointerdown", "onpointermove", "onpointerup", "onpointercancel"])
+    ok(new RegExp("\\." + on + "\\s*=").test(mountSrc), `${on} is assigned as a property`);
+}
 M.setRecordSource(null);
 console.log(`crankmagic-tabletop: ${checks} checks passed — ${t.total} copies on the table, bench ${t.bench.count}, ${t.statusPiles.length} status piles, ${T.GROUPINGS.length} groupings.`);

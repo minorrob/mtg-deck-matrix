@@ -362,7 +362,7 @@ decision. **Motion and extra visualizations are optional**, and nothing in the e
 depends on them: the board is fully usable with every transition turned off, which is also
 exactly what a reader with reduced-motion preferences gets.
 
-### 3.1 The render has to stop rebuilding the table — for speed, not for looks
+### 3.1 The render has to stop rebuilding the table — for speed, not for looks — **built, 15 September**
 
 Today `mount()` writes the whole mat with one `innerHTML` on every draw. For a view where a card
 moves every few seconds that is the wrong shape, and the costs are all practical ones:
@@ -379,6 +379,37 @@ possible later is a bonus, not the reason.
 It is also the second argument for the sandbox (§2.7): a staged move is an array push and a
 style change. Committing through the model would mean a command, a re-projection and a full
 redraw for every card picked up — the thing that makes the table feel heavy today.
+
+**How it was built, and the one thing worth knowing.** The renderer still produces the mat as one
+string — that is what keeps the layout arithmetic in a single readable place, and rewriting it as
+a component tree would have been a different PR with no extra speed in it. What changed is how
+that string is applied: `paint()` parses it into a detached node and reconciles, and **the first
+line of `patch()` is the whole idea** — a subtree byte-identical to the one already standing is
+left alone, pictures, focus and all. On a typical move that is every pile but two, the whole Bench
+ledge, the zones and the pick row. Where a node's children no longer line up — different keys, a
+different count, or different text between them — that one node's `innerHTML` is replaced, which
+is local and correct and is exactly the case the identity test has already excluded everywhere
+else. The mat's own children are matched by key rather than by position (`data-pile`, then
+`data-tt`, then the class), so a pile keeps its node when the band moves down the mat or the piles
+are reordered *Fullest first*.
+
+**And the rule it forces.** A node that survives a redraw must not collect a handler per redraw,
+so everything bound inside `mount` is assigned as a **property** (`onchange`, `onpointerdown`,
+…) rather than added as a listener. That is the listener-stacking bug PR 3b found on the page's
+own keydown, reappearing one level down, and it is asserted at the source in
+`tests/crankmagic-tabletop.mjs` because it is a rule about how the module binds rather than about
+any one library.
+
+**One bug this cost, recorded because it is subtle.** The insertion test was first written as
+`node.previousElementSibling !== at`, which looks equivalent to "is it already in the right place"
+and is not: a freshly cloned node is detached, so its previous sibling is `null`, and where `at`
+is also `null` — the first child — the test reads *already in place* and the node is never
+inserted. The Bench ledge vanished the first time its class changed. It compares against what is
+actually standing in the slot now.
+
+**Measured.** A redraw that changes only the mat's class keeps every node on the board; a redraw
+that changes what the piles hold keeps most of them. Both are asserted in the journeys, on a real
+library, by stamping every node and counting the survivors.
 
 ### 3.2 The board at rest is about twenty pictures, not a thousand
 
