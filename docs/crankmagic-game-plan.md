@@ -175,6 +175,43 @@ Entered from the play-space table: **Play a game** beside the canvas chooser.
 Nothing in step 1–5 needs the API, the board or a single line of AI. **This is PR G0 and it ships
 on its own.**
 
+**Built, 15 September.** `crankmagic-lobby.js` is the arithmetic — pure, UMD, held by a Node suite
+to the six committed decks — and `crankmagic-game.js` is the screen, reached from **Play** in the
+sidebar. What shipped, and the three places the plan met the code:
+
+- **One seat shape, four sources.** A library deck, an Archidekt link, a paste and a generated
+  list all normalise to `{commanders, cards, score}` before anything looks at them, so `validate`,
+  `trim`, the pod read and the seating are one implementation rather than four.
+- **The score is the deck's own measured run, not a ratings file.** The plan said "each deck's
+  measured score"; the ratings file is keyed to six commanders by name, which would have scored a
+  deck by what someone else's build of that commander measured. The library already keeps every
+  report the engine files, so the lobby reads those — preferring one made on the current list and
+  saying which — and a deck that has never been measured carries no score at all. The pod read
+  then says the read is **partial** rather than guessing, and *Measure this deck* on the deck page
+  is what fills it in.
+- **The field excludes you.** Comparing your score to the pod average *including yourself* pulls
+  the number toward you: one strong deck against three weak ones reads as nearly fair, which it is
+  not. The read compares you to the rest of the pod, so a 100 against three 60s reads *you are the
+  deck to beat, by 40*.
+- **Trim is a swap, not a cut.** Dropping the excess Game Changers leaves ninety-nine, which is not
+  a legal deck, so each one is replaced by a basic in the colour the deck leans on hardest. The
+  order is the measured delta where the sweep measured one, else the least-played by EDHREC rank,
+  else alphabetically — and the receipt says which rule decided and that a basic is plainly worse
+  than what it replaced. It changes the seat, never the deck in the library.
+- **The cap is the only bracket rule counted, and the lobby says so.** Mass land denial, chained
+  extra turns and two-card infinite combos are judgements about how a deck plays rather than
+  counts; the bracket's own words state what it expects and the page says plainly that keeping to
+  them is the reader's, not the app's.
+- **The seating is a seeded shuffle**, so "fixed for a replay" is a seed you can write down rather
+  than a saved list.
+- **Nothing is written to the library.** A table being set up is not a fact about a collection, so
+  it lives in `localStorage` beside the table's canvas and the sandbox's sitting — the journey
+  checks the revision is unmoved after a whole table is assembled.
+
+**The zero that matters, pinned.** All six of Rob's decks carry no Game Changers, so the cap only
+ever bites on an imported list; the suite asserts that, and the day one of them does carry one the
+check says so rather than the lobby quietly refusing a seat.
+
 ### 5.2 The deck brief — what the model is given
 
 Assembled by code from what the repo already computes, **not** by pasting a hundred card texts:
@@ -293,7 +330,7 @@ Each of these is a PR that ships something true on its own.
 
 | PR | What | Needs AI? | Needs the board? |
 |---|---|---|---|
-| **G0 — The lobby** | Pick your deck, seat 1–3 opponents from your decks / an Archidekt link / a paste / a generated deck, set the bracket and Game Changer cap, validate every seat, read the pod's measured balance. No game yet. | no | no |
+| **G0 — The lobby** ✅ | Pick your deck, seat 1–3 opponents from your decks / an Archidekt link / a paste / a generated deck, set the bracket and Game Changer cap, validate every seat, read the pod's measured balance. No game yet. **Built 15 September** — `crankmagic-lobby.js`, `crankmagic-game.js`, `tests/crankmagic-lobby.mjs`; §5.1 records what met the code. | no | no |
 | **G1 — The call** | `crankmagic-claude.js`: the key pane, one call shape, the cache layout, structured outputs, the cost meter, and a **fixture mode** that answers from recorded JSON so every later suite runs offline and free. | — | no |
 | **G2 — The playbook** | `crankmagic-playbook.js`: the deck brief from the graph (§5.2), the playbook back (§5.3), cached per deck and bracket, editable, with a heuristic fallback that needs no key. | yes | no |
 | **G3a — The board: zones and turns** | `crankmagic-board.js` tier 1, part one: zones, turn structure, mana and colour identity, casting and commander tax, the legend rule, state-based actions. Pure module, Node suite of scripted games. | no | — |
@@ -363,4 +400,6 @@ and it does not block it. It reuses, without changing them: `deck-sources.js`, `
 `crankmagic-claude.js`, `crankmagic-playbook.js`, `crankmagic-board.js`, `crankmagic-pilot.js`
 and `crankmagic-adjudicator.js`.
 
-Nothing here starts until the play-space PRs 3–6 are done, unless Rob says otherwise.
+Nothing here starts until the play-space PRs 3–6 are done, unless Rob says otherwise. **Rob said
+otherwise on 15 September** — G0 is built alongside the play space, and G1 still waits on the five
+decisions in §9.
