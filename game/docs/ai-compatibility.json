@@ -1,0 +1,4735 @@
+[
+  {
+    "seat": "Rob",
+    "schema": "CrankMagicAiCompatibility@1",
+    "deckHash": "044cc6ff491c18f6a847d3080a95f412d0fffa4c2de5fbcf1039c088b6f8dd92",
+    "cards": [
+      {
+        "name": "Chulane, Teller of Tales",
+        "oracleId": "ebf7ce9b-9e5e-4557-9e28-76556997f0ee",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Draw",
+          "ChangeZone"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/c/chulane_teller_of_tales.txt",
+        "castOrActivationEventsInSeed42": 3
+      },
+      {
+        "name": "Glacial Fortress",
+        "oracleId": "027dd013-baa7-4111-b3c9-f4d1414e9c45",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/g/glacial_fortress.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Reclamation Sage",
+        "oracleId": "032ec6e2-6cc3-4a97-9cc7-3233f5e11904",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Destroy"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/r/reclamation_sage.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Freed from the Real",
+        "oracleId": "03d32ace-dd99-48c6-bcae-9b915d041aef",
+        "status": "definition-found",
+        "nativeAiWarning": true,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "Untap"
+        ],
+        "hints": [
+          "SVar:AttachAILogic:Pump",
+          "AI:RemoveDeck:All"
+        ],
+        "script": "forge-gui/res/cardsfolder/f/freed_from_the_real.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Tatyova, Benthic Druid",
+        "oracleId": "0715e860-3b3b-4331-9718-207973e94fee",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "GainLife",
+          "Draw"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/t/tatyova_benthic_druid.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Command Tower",
+        "oracleId": "0895c9b7-ae7d-4bb3-af17-3b75deb50a25",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": true,
+        "abilities": [
+          "Mana"
+        ],
+        "hints": [
+          "AI:RemoveDeck:NonCommander"
+        ],
+        "script": "forge-gui/res/cardsfolder/c/command_tower.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Bant Panorama",
+        "oracleId": "0a1d817d-dce8-4e83-a380-909f7c9eee46",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana",
+          "ChangeZone"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/b/bant_panorama.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Arcane Signet",
+        "oracleId": "0bc7f093-bef0-4f1a-852c-4b75ebf54838",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": true,
+        "abilities": [
+          "Mana"
+        ],
+        "hints": [
+          "AI:RemoveDeck:NonCommander"
+        ],
+        "script": "forge-gui/res/cardsfolder/a/arcane_signet.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Peregrine Drake",
+        "oracleId": "0bd67481-6bd9-48d6-92bd-8933b5ea1eae",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Untap"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/p/peregrine_drake.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Deputy of Detention",
+        "oracleId": "0e4150db-ac43-48b4-9791-0d874906acf5",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Pump",
+          "ChangeZoneAll"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/d/deputy_of_detention.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Ephemerate",
+        "oracleId": "0fd57894-b917-41c8-a394-360d1d31b236",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone",
+          "Cleanup"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/e/ephemerate.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Azorius Chancery",
+        "oracleId": "189fc8f4-17ac-4f1d-82c8-8401445bdaf4",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "Mana",
+          "ChangeZone"
+        ],
+        "hints": [
+          "SVar:TrigReturn:DB$ ChangeZone | Origin$ Battlefield | Destination$ Hand | Hidden$ True | Mandatory$ True | ChangeType$ Land.YouCtrl | AILogic$ NeverBounceItself | SpellDescription$ Return a land you control to its owner's hand."
+        ],
+        "script": "forge-gui/res/cardsfolder/a/azorius_chancery.txt",
+        "castOrActivationEventsInSeed42": 1
+      },
+      {
+        "name": "Shinestriker",
+        "oracleId": "1b94ee87-a2f4-47f1-9fc7-4a167cad1b3b",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Draw"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/s/shinestriker.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Terramorphic Expanse",
+        "oracleId": "1bd3e453-aa21-4ee6-95c2-d6d920ee8e7a",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/t/terramorphic_expanse.txt",
+        "castOrActivationEventsInSeed42": 1
+      },
+      {
+        "name": "Intruder Alarm",
+        "oracleId": "1e943e04-e213-4781-b1a7-935aad8790e1",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": true,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "UntapAll"
+        ],
+        "hints": [
+          "AI:RemoveDeck:Random"
+        ],
+        "script": "forge-gui/res/cardsfolder/i/intruder_alarm.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Valorous Stance",
+        "oracleId": "1f938353-9081-4dc1-b8e7-d18ece038bd4",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Pump",
+          "Destroy"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/v/valorous_stance.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Fell the Mighty",
+        "oracleId": "1fbb2a7c-8093-4729-b8fe-cf032d99470f",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [
+          "A:SP$ DestroyAll | ValidCards$ Creature.powerGTX | ValidTgts$ Creature | AILogic$ FellTheMighty | SpellDescription$ Destroy all creatures with power greater than target creature's power."
+        ],
+        "script": "forge-gui/res/cardsfolder/f/fell_the_mighty.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "The Eternal Wanderer",
+        "oracleId": "20a1671d-e8a4-4cf1-87a7-f2f6319f4b9e",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone",
+          "DelayedTrigger",
+          "Cleanup",
+          "Token",
+          "RepeatEach",
+          "ChooseCard",
+          "SacrificeAll"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/t/the_eternal_wanderer.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Fertilid",
+        "oracleId": "21f1c6d7-8289-44b2-b88f-c09e202be200",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/f/fertilid.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Kiora's Follower",
+        "oracleId": "22c044ad-77d7-4c93-953d-e2daa9686ff7",
+        "status": "definition-found",
+        "nativeAiWarning": true,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Untap"
+        ],
+        "hints": [
+          "AI:RemoveDeck:All"
+        ],
+        "script": "forge-gui/res/cardsfolder/k/kioras_follower.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Mulldrifter",
+        "oracleId": "24d0f5e7-0d9e-4b76-900e-a7274e80312d",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Draw"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/m/mulldrifter.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Dundoolin Weaver",
+        "oracleId": "28564d10-bfc5-4beb-b0e2-b9aa5c03f740",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/d/dundoolin_weaver.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Sylvan Ranger",
+        "oracleId": "29a90fda-541e-4923-b3ed-e2b35d02c74b",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/s/sylvan_ranger.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Shrieking Drake",
+        "oracleId": "2a8e14be-6f93-428d-a204-e2399dc93797",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone"
+        ],
+        "hints": [
+          "SVar:TrigChange:DB$ ChangeZone | Origin$ Battlefield | Destination$ Hand | Hidden$ True | Mandatory$ True | ChangeType$ Creature.YouCtrl | AILogic$ NeverBounceItself"
+        ],
+        "script": "forge-gui/res/cardsfolder/s/shrieking_drake.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Seaside Citadel",
+        "oracleId": "2ae77795-6a80-498b-bf69-6fd612f601e4",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/s/seaside_citadel.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Meandering River",
+        "oracleId": "2d9663be-c466-4191-85e2-a69ce0965432",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/m/meandering_river.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Eternal Witness",
+        "oracleId": "30b24e8e-3b0e-4d8e-90f3-f66eb7c1858c",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/e/eternal_witness.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Negate",
+        "oracleId": "3407fe41-fdd3-4119-8f70-4bc4590a379f",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/n/negate.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Skyshroud Claim",
+        "oracleId": "376c9d3f-21d3-4251-bb6a-026fa9e1b0e1",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/s/skyshroud_claim.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Mistmeadow Witch",
+        "oracleId": "38e274e2-bd04-48de-a1df-44f0ee987ba8",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone",
+          "DelayedTrigger",
+          "Cleanup"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/m/mistmeadow_witch.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Ancient Greenwarden",
+        "oracleId": "3bcf090c-e890-4a9f-a8aa-6079e4ec9947",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/a/ancient_greenwarden.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Yavimaya Coast",
+        "oracleId": "40b36bc6-c185-4bda-99e7-0118953c2c97",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana",
+          "DealDamage"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/y/yavimaya_coast.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Simic Signet",
+        "oracleId": "44503105-3e13-408d-a44f-37d503c61d72",
+        "status": "definition-found",
+        "nativeAiWarning": true,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana"
+        ],
+        "hints": [
+          "AI:RemoveDeck:All"
+        ],
+        "script": "forge-gui/res/cardsfolder/s/simic_signet.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Blossoming Sands",
+        "oracleId": "45429b2c-be3b-4b2e-9bab-a059ccbda8cd",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "GainLife",
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/b/blossoming_sands.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Farseek",
+        "oracleId": "495e52e6-4c2b-4574-9474-eadbdcc8b4ac",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": true,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [
+          "AI:RemoveDeck:Random"
+        ],
+        "script": "forge-gui/res/cardsfolder/f/farseek.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Farhaven Elf",
+        "oracleId": "4ce2357f-93e6-40ca-beca-8f4e15adc464",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/f/farhaven_elf.txt",
+        "castOrActivationEventsInSeed42": 5
+      },
+      {
+        "name": "Reflector Mage",
+        "oracleId": "5398362d-c45e-4d56-a622-8be1124730b9",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone",
+          "Effect",
+          "Cleanup"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/r/reflector_mage.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Brushland",
+        "oracleId": "5eb8b497-ec9a-4a89-ad29-1ec3ca82da7c",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana",
+          "DealDamage"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/b/brushland.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Mirkwood Nurturer",
+        "oracleId": "66630640-9605-44da-afdf-eb9d458d056f",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone",
+          "PutCounter",
+          "Cleanup"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/m/mirkwood_nurturer.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Man-o'-War",
+        "oracleId": "67a3541c-8408-40c8-b44f-90035b860f57",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/m/man_o_war.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Llanowar Elves",
+        "oracleId": "68954295-54e3-4303-a6bc-fc4547a4e3a3",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/l/llanowar_elves.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Coiling Oracle",
+        "oracleId": "69fd4ddf-9ed8-4c56-bef3-9944daf05e4f",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Dig"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/c/coiling_oracle.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Sol Ring",
+        "oracleId": "6ad8011d-3471-4369-9d68-b264cc027487",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/s/sol_ring.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Dream Stalker",
+        "oracleId": "6e67551b-1f6e-4ef4-9baf-520607b8cb61",
+        "status": "definition-found",
+        "nativeAiWarning": true,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone"
+        ],
+        "hints": [
+          "AI:RemoveDeck:All"
+        ],
+        "script": "forge-gui/res/cardsfolder/d/dream_stalker.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Faeburrow Elder",
+        "oracleId": "70a6f08e-854d-4e2f-9d8c-c45ec3231157",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/f/faeburrow_elder.txt",
+        "castOrActivationEventsInSeed42": 1
+      },
+      {
+        "name": "Selesnya Guildgate",
+        "oracleId": "75b235d3-595a-4859-be45-9559d8445db5",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/s/selesnya_guildgate.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Song of the Dryads",
+        "oracleId": "7c3944fa-7c86-4979-85a9-86196aa94594",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [
+          "SVar:AttachAILogic:Curse"
+        ],
+        "script": "forge-gui/res/cardsfolder/s/song_of_the_dryads.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Yavimaya Elder",
+        "oracleId": "7fd4c452-07f2-492c-9c78-d1c6362d9eec",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone",
+          "Draw"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/y/yavimaya_elder.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Wood Elves",
+        "oracleId": "8973bd99-20f8-4867-90ef-50392147ee1b",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/w/wood_elves.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Temple of Enlightenment",
+        "oracleId": "89f43e27-790b-4ca1-8ba7-0882b31e0783",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "Scry",
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/t/temple_of_enlightenment.txt",
+        "castOrActivationEventsInSeed42": 1
+      },
+      {
+        "name": "Bofur, Reliable Guardian // Concerted Care",
+        "oracleId": "8a0e35ac-6c03-4922-b3b4-e419419fe3d7",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/b/bofur_reliable_guardian_concerted_care.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Cultivate",
+        "oracleId": "8b755881-a72d-4e21-a369-d2924eb4585a",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone",
+          "Cleanup"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/c/cultivate.txt",
+        "castOrActivationEventsInSeed42": 1
+      },
+      {
+        "name": "Temur Sabertooth",
+        "oracleId": "8bf8e846-9d10-4dbc-a379-df37bb9fb6d4",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone",
+          "Pump",
+          "Cleanup"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/t/temur_sabertooth.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Soulherder",
+        "oracleId": "92019547-f6db-4ea6-8356-d0a90ace5662",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": true,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "PutCounter",
+          "ChangeZone",
+          "Cleanup"
+        ],
+        "hints": [
+          "AI:RemoveDeck:Random"
+        ],
+        "script": "forge-gui/res/cardsfolder/s/soulherder.txt",
+        "castOrActivationEventsInSeed42": 7
+      },
+      {
+        "name": "Unbreakable Formation",
+        "oracleId": "97435e03-2fff-4fe0-8fa9-69ab0a046a33",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "PumpAll",
+          "PutCounterAll"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/u/unbreakable_formation.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Tranquil Expanse",
+        "oracleId": "a5478263-47c9-447f-9c7a-c77ce0752947",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/t/tranquil_expanse.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Evolving Wilds",
+        "oracleId": "a75445d3-1303-4bb5-89ad-26ea93fecd48",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/e/evolving_wilds.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Zendikar's Roil",
+        "oracleId": "a842cc2b-52eb-4dc5-86c6-6575c2ed913d",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Token"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/z/zendikars_roil.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Tireless Provisioner",
+        "oracleId": "ab8d5f5c-1976-4f77-8ed2-8d28ee666741",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "GenericChoice",
+          "Token"
+        ],
+        "hints": [
+          "SVar:TrigTokenChoice:DB$ GenericChoice | Defined$ You | Choices$ Food,Treasure | AILogic$ FoodOrTreasure | SpellDescription$ Whenever a land you control enters, create a Food token or a Treasure token."
+        ],
+        "script": "forge-gui/res/cardsfolder/t/tireless_provisioner.txt",
+        "castOrActivationEventsInSeed42": 1
+      },
+      {
+        "name": "Azorius Guildgate",
+        "oracleId": "ad1712d8-809f-410c-8b91-ffe6fb8a69a1",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/a/azorius_guildgate.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Island",
+        "oracleId": "b2c6aa39-2d2a-459c-a555-fb48ba993373",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/i/island.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Stonecloaker",
+        "oracleId": "b2d597f4-162f-4adc-9dc9-6d44815b7a68",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone"
+        ],
+        "hints": [
+          "SVar:TrigChange:DB$ ChangeZone | Origin$ Battlefield | Destination$ Hand | Hidden$ True | Mandatory$ True | ChangeType$ Creature.YouCtrl | ChangeNum$ 1 | AILogic$ NeverBounceItself"
+        ],
+        "script": "forge-gui/res/cardsfolder/s/stonecloaker.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Forest",
+        "oracleId": "b34bb2dc-c1af-4d77-b0b3-a0fb342a5fc6",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/f/forest.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Fblthp, the Lost",
+        "oracleId": "ba5a7ac0-b625-42e9-af05-2680a01a95ed",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Draw",
+          "ChangeZone"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/f/fblthp_the_lost.txt",
+        "castOrActivationEventsInSeed42": 2
+      },
+      {
+        "name": "Plains",
+        "oracleId": "bc71ebf6-2056-41f7-be35-b2e5c34afa99",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/p/plains.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Reliquary Tower",
+        "oracleId": "c23e5b80-08d2-4e24-9908-fe2aa4f30f6f",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/r/reliquary_tower.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Knight of Autumn",
+        "oracleId": "c4212ba4-8c43-40ca-aa36-b3b535659fa8",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Charm",
+          "PutCounter",
+          "Destroy",
+          "GainLife"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/k/knight_of_autumn.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Charming Prince",
+        "oracleId": "c48d844c-3976-4fa5-8e0d-3f0e535e7619",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Charm",
+          "Scry",
+          "GainLife",
+          "ChangeZone",
+          "DelayedTrigger",
+          "Cleanup"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/c/charming_prince.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Elvish Visionary",
+        "oracleId": "c6a3a882-a127-4590-93d7-679ef4313efe",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Draw"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/e/elvish_visionary.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Counterspell",
+        "oracleId": "cc187110-1148-4090-bbb8-e205694a39f5",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/c/counterspell.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Wavesifter",
+        "oracleId": "d1ec1e4e-faa6-4afc-9e00-a3327105c11b",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Investigate"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/w/wavesifter.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Adarkar Wastes",
+        "oracleId": "d5ad26cc-2bdb-46b7-b8bf-dd099d5fa09b",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana",
+          "DealDamage"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/a/adarkar_wastes.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Restoration Angel",
+        "oracleId": "dfbd3afc-9905-4cff-a4f4-df08a4d0a7fa",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/r/restoration_angel.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Approach of the Second Sun",
+        "oracleId": "e4125377-34c0-4b54-bdf8-4e88f5d24565",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Effect",
+          "WinsGame",
+          "GainLife",
+          "ChangeZone"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/a/approach_of_the_second_sun.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Simic Guildgate",
+        "oracleId": "e8705df9-6439-4930-91b6-229f818559af",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/s/simic_guildgate.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Whitemane Lion",
+        "oracleId": "e8d6084b-9b72-438e-a30a-851b888f3e4d",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone"
+        ],
+        "hints": [
+          "SVar:TrigChange:DB$ ChangeZone | Origin$ Battlefield | Destination$ Hand | Hidden$ True | Mandatory$ True | ChangeType$ Creature.YouCtrl | ChangeNum$ 1 | AILogic$ NeverBounceItself"
+        ],
+        "script": "forge-gui/res/cardsfolder/w/whitemane_lion.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Kami of Ancient Law",
+        "oracleId": "e937e0f5-ca35-4dce-9f05-8f2075731628",
+        "status": "definition-found",
+        "nativeAiWarning": true,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Destroy"
+        ],
+        "hints": [
+          "AI:RemoveDeck:All"
+        ],
+        "script": "forge-gui/res/cardsfolder/k/kami_of_ancient_law.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Satyr Wayfinder",
+        "oracleId": "ead4c01a-e2ae-49c9-95d9-651d81005907",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Dig"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/s/satyr_wayfinder.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Thornwood Falls",
+        "oracleId": "ec96cde2-f1e6-495c-94e2-3e8ae79e556c",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "GainLife",
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/t/thornwood_falls.txt",
+        "castOrActivationEventsInSeed42": 1
+      },
+      {
+        "name": "Cloudblazer",
+        "oracleId": "f84d1291-1f82-4b67-a26e-b79624b4ce1d",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "GainLife",
+          "Draw"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/c/cloudblazer.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Cast Out",
+        "oracleId": "f90b00f6-36e0-4988-9409-57297483a952",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/c/cast_out.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Bilbo Baggins, Burglar // Take a Glance",
+        "oracleId": "fa85f9e6-69ff-4669-b70a-440aa7b16c97",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Draw"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/b/bilbo_baggins_burglar_take_a_glance.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Hinterland Harbor",
+        "oracleId": "fb5a3403-7f0b-406c-8c4f-d693be010ca6",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/h/hinterland_harbor.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Roon of the Hidden Realm",
+        "oracleId": "fd336830-4a11-42b8-9fc7-d7526f569124",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone",
+          "DelayedTrigger",
+          "Cleanup"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/r/roon_of_the_hidden_realm.txt",
+        "castOrActivationEventsInSeed42": 0
+      }
+    ],
+    "warnings": [
+      "Freed from the Real",
+      "Kiora's Follower",
+      "Simic Signet",
+      "Dream Stalker",
+      "Kami of Ancient Law"
+    ],
+    "interpretation": "RemoveDeck:All excludes proactive casting and activation candidates in the pinned native AI. Definitions and mandatory triggers can still work. No cards removed from the deck."
+  },
+  {
+    "seat": "Krenko",
+    "schema": "CrankMagicAiCompatibility@1",
+    "deckHash": "dec2969dd0ffd4e1dc012e6187530cea72b486ef0129a9f56ce24d346f895e79",
+    "cards": [
+      {
+        "name": "Krenko, Mob Boss",
+        "oracleId": "68418069-f615-40ef-ae0d-764192acae00",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Token"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/k/krenko_mob_boss.txt",
+        "castOrActivationEventsInSeed42": 3
+      },
+      {
+        "name": "Goblin Gathering",
+        "oracleId": "01f06642-015f-40b4-a940-af576ad9e82c",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/g/goblin_gathering.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Goblin Trashmaster",
+        "oracleId": "0283bf5e-ddf2-4a4a-a7cf-d3e27eed7e7d",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Destroy"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/g/goblin_trashmaster.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Massive Raid",
+        "oracleId": "032367fd-e869-463e-aa0f-65e3c6567e60",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/m/massive_raid.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Chaos Warp",
+        "oracleId": "07a0cba9-8768-4fd9-a3d5-b0f83b4bf8e8",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Dig"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/c/chaos_warp.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Chancellor of the Forge",
+        "oracleId": "0aedf049-db6b-420e-80e7-591ed38d4fba",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Token",
+          "Reveal",
+          "Effect"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/c/chancellor_of_the_forge.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Arcane Signet",
+        "oracleId": "0bc7f093-bef0-4f1a-852c-4b75ebf54838",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": true,
+        "abilities": [
+          "Mana"
+        ],
+        "hints": [
+          "AI:RemoveDeck:NonCommander"
+        ],
+        "script": "forge-gui/res/cardsfolder/a/arcane_signet.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Legion Warboss",
+        "oracleId": "0ccb9af3-6902-4130-a59c-4c882dc3a2fd",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Token",
+          "Effect",
+          "Cleanup"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/l/legion_warboss.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Goblin Matron",
+        "oracleId": "145737a7-c597-4dec-b752-207c2d0501e3",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/g/goblin_matron.txt",
+        "castOrActivationEventsInSeed42": 2
+      },
+      {
+        "name": "Raid Bombardment",
+        "oracleId": "1734e777-d34a-4526-ae24-ef034f147cc5",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "DealDamage"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/r/raid_bombardment.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Thrill of Possibility",
+        "oracleId": "1cb0610b-a731-42c2-b93f-0a29f63cebf4",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/t/thrill_of_possibility.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Goblin Rabblemaster",
+        "oracleId": "24661b81-6bee-4ad8-b3ab-53cb65005c51",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Token",
+          "Pump"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/g/goblin_rabblemaster.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Quest for the Goblin Lord",
+        "oracleId": "2e19baba-2d66-4e3a-b2bf-cb27dce89f44",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "PutCounter"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/q/quest_for_the_goblin_lord.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Witty Roastmaster",
+        "oracleId": "34edbf1b-0826-49f1-a04d-15cc8c543b22",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "DealDamage"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/w/witty_roastmaster.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Vandalblast",
+        "oracleId": "3567c3c8-b3c7-45b7-935b-b1fdbc973720",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/v/vandalblast.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Buried Ruin",
+        "oracleId": "3644f316-f9a3-46c9-9b1e-747f86cf4ead",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana",
+          "ChangeZone"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/b/buried_ruin.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Goblin Chieftain",
+        "oracleId": "368b4052-174e-4458-a6e6-eaf8093aa0fe",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/g/goblin_chieftain.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Goblin Warchief",
+        "oracleId": "39882df0-c20f-469d-94ba-1617224e71a1",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/g/goblin_warchief.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Empty the Warrens",
+        "oracleId": "3a59c882-8bb8-49ba-862f-125020dd5bec",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/e/empty_the_warrens.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Faithless Looting",
+        "oracleId": "3d6fa57a-aa53-4b5c-b8af-a7612c823117",
+        "status": "definition-found",
+        "nativeAiWarning": true,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Discard"
+        ],
+        "hints": [
+          "AI:RemoveDeck:All"
+        ],
+        "script": "forge-gui/res/cardsfolder/f/faithless_looting.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Goblin Ringleader",
+        "oracleId": "4100e486-0d27-436c-8429-76bc2c1a26ab",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Dig"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/g/goblin_ringleader.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Hobgoblin Bandit Lord",
+        "oracleId": "43fea418-db6f-4953-89d1-6873b2ca41a8",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "DealDamage"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/h/hobgoblin_bandit_lord.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Battle Hymn",
+        "oracleId": "4b977117-741c-4157-8fcf-719e475a8a4c",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [
+          "A:SP$ Mana | Produced$ R | Amount$ X | AILogic$ ManaRitual | AINoRecursiveCheck$ True | SpellDescription$ Add {R} for each creature you control."
+        ],
+        "script": "forge-gui/res/cardsfolder/b/battle_hymn.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Goblin Piledriver",
+        "oracleId": "4d74d12b-1ffb-482f-8bac-635a8d4d32e9",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Pump"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/g/goblin_piledriver.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Thousand-Year Elixir",
+        "oracleId": "4dc5726e-2f7e-4c2b-9616-c3301d212f78",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Untap"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/t/thousand_year_elixir.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Patchwork Banner",
+        "oracleId": "4fb00dbe-1f82-4ba6-b18c-97e816d10d3a",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChooseType",
+          "Mana"
+        ],
+        "hints": [
+          "SVar:ChooseCT:DB$ ChooseType | Defined$ You | Type$ Creature | SpellDescription$ As CARDNAME enters, choose a creature type. | AILogic$ MostProminentInComputerDeck"
+        ],
+        "script": "forge-gui/res/cardsfolder/p/patchwork_banner.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Reckless Bushwhacker",
+        "oracleId": "4fb83127-00cf-4ce7-aedf-cb0b2740c66f",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "PumpAll"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/r/reckless_bushwhacker.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Purphoros, God of the Forge",
+        "oracleId": "4fdbbec2-e921-4b63-958d-f9ba1e417197",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "DealDamage",
+          "PumpAll"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/p/purphoros_god_of_the_forge.txt",
+        "castOrActivationEventsInSeed42": 15
+      },
+      {
+        "name": "Cinder Strike",
+        "oracleId": "54421e69-d79e-4c2e-8ce6-96994d168835",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/c/cinder_strike.txt",
+        "castOrActivationEventsInSeed42": 1
+      },
+      {
+        "name": "Gundabad Opportunist",
+        "oracleId": "61773534-8da8-48fa-b51a-73c0a9a751c4",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Dig",
+          "Effect",
+          "Cleanup"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/g/gundabad_opportunist.txt",
+        "castOrActivationEventsInSeed42": 2
+      },
+      {
+        "name": "Skullclamp",
+        "oracleId": "65986c1b-8e51-4604-b685-d82fa7d1263a",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Draw"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/s/skullclamp.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Sol Ring",
+        "oracleId": "6ad8011d-3471-4369-9d68-b264cc027487",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/s/sol_ring.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Sourbread Auntie",
+        "oracleId": "6b087ae1-1412-4dd9-9b96-3b45be52d386",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Token"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/s/sourbread_auntie.txt",
+        "castOrActivationEventsInSeed42": 2
+      },
+      {
+        "name": "Kher Keep",
+        "oracleId": "79638767-fbc7-451a-b29f-d93f2ac6f102",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana",
+          "Token"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/k/kher_keep.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Mogg War Marshal",
+        "oracleId": "7b8f4879-578e-40e4-863a-41d0c32c6bdd",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Token"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/m/mogg_war_marshal.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Skirk Fire Marshal",
+        "oracleId": "87105cdf-c28e-4fd9-83d0-0fef1704b174",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": true,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "DamageAll"
+        ],
+        "hints": [
+          "AI:RemoveDeck:Random"
+        ],
+        "script": "forge-gui/res/cardsfolder/s/skirk_fire_marshal.txt",
+        "castOrActivationEventsInSeed42": 3
+      },
+      {
+        "name": "Goblin Instigator",
+        "oracleId": "8b022754-6d16-470e-b754-4df6e4f4709e",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Token"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/g/goblin_instigator.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Light Up the Stage",
+        "oracleId": "8d286376-f386-43ab-a9bd-8478fb9e2497",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Effect",
+          "Cleanup"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/l/light_up_the_stage.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Castle Embereth",
+        "oracleId": "91fbb25b-8521-483f-88b0-77778d25f7fd",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "Mana",
+          "PumpAll"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/c/castle_embereth.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Impact Tremors",
+        "oracleId": "9242cd3e-1a71-4700-8182-9c1005616033",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "DealDamage"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/i/impact_tremors.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Tweeze",
+        "oracleId": "9a294cbd-df18-4ee0-acaa-e31390a7f508",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Draw"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/t/tweeze.txt",
+        "castOrActivationEventsInSeed42": 1
+      },
+      {
+        "name": "Krenko's Command",
+        "oracleId": "9cfe86ae-eebe-44aa-a956-4b3e9e621105",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/k/krenkos_command.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Shared Animosity",
+        "oracleId": "a27445db-33f2-4571-98b5-83206b797484",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": true,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Pump"
+        ],
+        "hints": [
+          "AI:RemoveDeck:Random"
+        ],
+        "script": "forge-gui/res/cardsfolder/s/shared_animosity.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Mountain",
+        "oracleId": "a3fb7228-e76b-4e96-a40e-20b5fed75685",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/m/mountain.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Hordeling Outburst",
+        "oracleId": "a6450b8e-eb18-431c-9eb7-7daf107978b2",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/h/hordeling_outburst.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Evolving Wilds",
+        "oracleId": "a75445d3-1303-4bb5-89ad-26ea93fecd48",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/e/evolving_wilds.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Goblin Burrows",
+        "oracleId": "ad65bb8e-57de-49f3-ba7c-be62cf3fe3df",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana",
+          "Pump"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/g/goblin_burrows.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Pashalik Mons",
+        "oracleId": "bdb94ccd-1bb5-4bb7-9539-e1b1c97c19c5",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "DealDamage",
+          "Token"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/p/pashalik_mons.txt",
+        "castOrActivationEventsInSeed42": 2
+      },
+      {
+        "name": "Skirk Prospector",
+        "oracleId": "c18013e4-0b99-44e3-a2b2-027ace68723a",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/s/skirk_prospector.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Idol of Oblivion",
+        "oracleId": "c232d974-9c65-4bce-b045-e5a7cc0c62e0",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Draw",
+          "Token"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/i/idol_of_oblivion.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Naktamun Lorespinner // Wheel of Fortune",
+        "oracleId": "c78783e5-868d-4a8b-a4f8-95a92853cf0a",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "AlterAttribute"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/n/naktamun_lorespinner_wheel_of_fortune.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Ogre Battledriver",
+        "oracleId": "c834c4b5-c122-4c63-81c7-884ca4c0dc3b",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Pump"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/o/ogre_battledriver.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Swiftfoot Boots",
+        "oracleId": "c8b143ad-43ec-4e0d-a440-e348daa31391",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/s/swiftfoot_boots.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Mind Stone",
+        "oracleId": "c97361b5-af16-4a7b-af85-a429dbaf4ad2",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana",
+          "Draw"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/m/mind_stone.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Lightning Greaves",
+        "oracleId": "ca204b66-8d0c-431a-8d34-282f7c2d17da",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/l/lightning_greaves.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Voldaren Epicure",
+        "oracleId": "cef82674-1f61-407b-801b-a76a3803e598",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "DealDamage",
+          "Token"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/v/voldaren_epicure.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Dragon Fodder",
+        "oracleId": "d0d2c45b-b6e3-4999-bdab-976e8f0d6617",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/d/dragon_fodder.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Fanatical Firebrand",
+        "oracleId": "d36e11f1-6ab3-4273-8114-a8fbbe21c1c3",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "DealDamage"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/f/fanatical_firebrand.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Barrage of Expendables",
+        "oracleId": "da7600f6-5d4c-46bf-936a-9e0f0d508e19",
+        "status": "definition-found",
+        "nativeAiWarning": true,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "DealDamage"
+        ],
+        "hints": [
+          "AI:RemoveDeck:All"
+        ],
+        "script": "forge-gui/res/cardsfolder/b/barrage_of_expendables.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Thornbite Staff",
+        "oracleId": "dae4815e-9025-4993-ab46-52a3f1a7219e",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "DealDamage",
+          "Untap",
+          "Attach"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/t/thornbite_staff.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Siege-Gang Commander",
+        "oracleId": "ddc7f59a-bbb1-4ba1-82c8-6813fd191940",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "DealDamage",
+          "Token"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/s/siege_gang_commander.txt",
+        "castOrActivationEventsInSeed42": 2
+      },
+      {
+        "name": "Krenko, Tin Street Kingpin",
+        "oracleId": "e8065e1d-e937-4b56-8011-78f0d07328a0",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "PutCounter",
+          "Token"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/k/krenko_tin_street_kingpin.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Foundry Street Denizen",
+        "oracleId": "e8148616-9f0b-4d4e-8d6d-18251a84e5e8",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Pump"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/f/foundry_street_denizen.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Anger",
+        "oracleId": "eaabd151-2160-4bff-82c0-3fa88659be98",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/a/anger.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Outpost Siege",
+        "oracleId": "ebb24fc7-dc71-4712-8c2a-b5920f78e55d",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "GenericChoice",
+          "Pump",
+          "Dig",
+          "Effect",
+          "Cleanup",
+          "DealDamage"
+        ],
+        "hints": [
+          "SVar:SiegeChoice:DB$ GenericChoice | Choices$ Khans,Dragons | Defined$ You | SetChosenMode$ True | AILogic$ Khans | ShowChoice$ ExceptSelf | SpellDescription$ As CARDNAME enters, choose Khans or Dragons."
+        ],
+        "script": "forge-gui/res/cardsfolder/o/outpost_siege.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Goblin Bombardment",
+        "oracleId": "edad60c6-80de-4033-af1b-a703ac332983",
+        "status": "definition-found",
+        "nativeAiWarning": true,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "DealDamage"
+        ],
+        "hints": [
+          "AI:RemoveDeck:All"
+        ],
+        "script": "forge-gui/res/cardsfolder/g/goblin_bombardment.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Den of the Bugbear",
+        "oracleId": "f451b8f0-1ff5-4e8d-9f30-9352d83ed687",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "Mana",
+          "Animate",
+          "Token"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/d/den_of_the_bugbear.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Beetleback Chief",
+        "oracleId": "f5c5f64c-6911-430c-a825-b32b96d39c7d",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Token"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/b/beetleback_chief.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Conspicuous Snoop",
+        "oracleId": "f5d1bd3c-0e65-4999-a810-881b2389b40e",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": true,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [
+          "AI:RemoveDeck:Random"
+        ],
+        "script": "forge-gui/res/cardsfolder/c/conspicuous_snoop.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Abrade",
+        "oracleId": "f9db72dc-9a5b-48a4-a86e-7464d9a2166a",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "DealDamage",
+          "Destroy"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/a/abrade.txt",
+        "castOrActivationEventsInSeed42": 0
+      }
+    ],
+    "warnings": [
+      "Faithless Looting",
+      "Barrage of Expendables",
+      "Goblin Bombardment"
+    ],
+    "interpretation": "RemoveDeck:All excludes proactive casting and activation candidates in the pinned native AI. Definitions and mandatory triggers can still work. No cards removed from the deck."
+  },
+  {
+    "seat": "Atraxa",
+    "schema": "CrankMagicAiCompatibility@1",
+    "deckHash": "2606ea121c238974ed4304ef823fdecf0bf816c14746b0684c93fd4f5d97a12d",
+    "cards": [
+      {
+        "name": "Atraxa, Praetors' Voice",
+        "oracleId": "7e6b9b59-cd68-4e3c-827b-38833c92d6eb",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Proliferate"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/a/atraxa_praetors_voice.txt",
+        "castOrActivationEventsInSeed42": 7
+      },
+      {
+        "name": "Rootborn Defenses",
+        "oracleId": "04046ae4-5c51-434b-930c-f3b1d348bf4b",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "PumpAll"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/r/rootborn_defenses.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Vraska, Betrayal's Sting",
+        "oracleId": "05d09c55-f551-4cb4-a8d2-4811dccc848d",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Draw",
+          "LoseLife",
+          "Proliferate",
+          "Animate",
+          "Mana",
+          "Poison"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/v/vraska_betrayals_sting.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Command Tower",
+        "oracleId": "0895c9b7-ae7d-4bb3-af17-3b75deb50a25",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": true,
+        "abilities": [
+          "Mana"
+        ],
+        "hints": [
+          "AI:RemoveDeck:NonCommander"
+        ],
+        "script": "forge-gui/res/cardsfolder/c/command_tower.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Everflowing Chalice",
+        "oracleId": "0a79237e-0811-4a8a-bd4d-db3ca91bff22",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/e/everflowing_chalice.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Arcane Signet",
+        "oracleId": "0bc7f093-bef0-4f1a-852c-4b75ebf54838",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": true,
+        "abilities": [
+          "Mana"
+        ],
+        "hints": [
+          "AI:RemoveDeck:NonCommander"
+        ],
+        "script": "forge-gui/res/cardsfolder/a/arcane_signet.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Lotus Field",
+        "oracleId": "134d5b82-7940-4b33-a922-7f9d1f403e50",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "Sacrifice",
+          "Mana"
+        ],
+        "hints": [
+          "SVar:TrigSac:DB$ Sacrifice | Amount$ 2 | Defined$ You | SacValid$ Land | AILogic$ ExceptSelf"
+        ],
+        "script": "forge-gui/res/cardsfolder/l/lotus_field.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Origin of Metalbending",
+        "oracleId": "177113f8-1188-4e5e-8ad7-34a7bb8ca7f1",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Destroy",
+          "PutCounter",
+          "Pump"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/o/origin_of_metalbending.txt",
+        "castOrActivationEventsInSeed42": 1
+      },
+      {
+        "name": "Astral Cornucopia",
+        "oracleId": "1bc42024-52da-4d93-8b47-544f0a4a72a1",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/a/astral_cornucopia.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Grand Coliseum",
+        "oracleId": "1cea9b82-d2e9-4758-8ec8-729fcf4bb7d7",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana",
+          "DealDamage",
+          "Tap"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/g/grand_coliseum.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Valorous Stance",
+        "oracleId": "1f938353-9081-4dc1-b8e7-d18ece038bd4",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Pump",
+          "Destroy"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/v/valorous_stance.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Fertilid",
+        "oracleId": "21f1c6d7-8289-44b2-b88f-c09e202be200",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/f/fertilid.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Plaguemaw Beast",
+        "oracleId": "22252186-15d0-468f-8cab-c74db9b71439",
+        "status": "definition-found",
+        "nativeAiWarning": true,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Proliferate"
+        ],
+        "hints": [
+          "AI:RemoveDeck:All"
+        ],
+        "script": "forge-gui/res/cardsfolder/p/plaguemaw_beast.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Exotic Orchard",
+        "oracleId": "27b047e3-0d41-45e2-98e9-9391d7923a1e",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ManaReflected"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/e/exotic_orchard.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Branching Evolution",
+        "oracleId": "28fe909b-06e0-424c-9f75-c824a25f5865",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ReplaceCounter"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/b/branching_evolution.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Aetheric Amplifier",
+        "oracleId": "295cd8e1-0830-46c1-9957-556afd4bcee6",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana",
+          "Charm",
+          "MultiplyCounter"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/a/aetheric_amplifier.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Meandering River",
+        "oracleId": "2d9663be-c466-4191-85e2-a69ce0965432",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/m/meandering_river.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Strixhaven Stadium",
+        "oracleId": "2ed0c6fc-b8b4-47da-a04b-1d995bdeecb0",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana",
+          "PutCounter",
+          "RemoveCounter",
+          "Branch",
+          "LosesGame"
+        ],
+        "hints": [
+          "A:AB$ Mana | Cost$ T | Produced$ C | SubAbility$ DBPutCounter | AILogic$ AtOppEOT | SpellDescription$ Add {C}. Put a point counter on CARDNAME."
+        ],
+        "script": "forge-gui/res/cardsfolder/s/strixhaven_stadium.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Forgotten Ancient",
+        "oracleId": "2ef75cf3-30dc-4852-a6d1-1d6391fad022",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "PutCounter",
+          "MoveCounter"
+        ],
+        "hints": [
+          "SVar:TrigMoveCounter:DB$ MoveCounter | Source$ Self | ValidDefined$ Creature.Other | CounterType$ P1P1 | CounterNum$ Any | AILogic$ ToValid | StackDescription$ You may move any number of +1/+1 counters from CARDNAME onto other creatures."
+        ],
+        "script": "forge-gui/res/cardsfolder/f/forgotten_ancient.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Go for the Throat",
+        "oracleId": "2f092562-9e17-43cd-aeb8-d0567f99363e",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/g/go_for_the_throat.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Contentious Plan",
+        "oracleId": "2fc6de19-9d04-422b-90bc-eee2f9f8c84c",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Draw"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/c/contentious_plan.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Llanowar Wastes",
+        "oracleId": "32116127-cf96-4a1b-8896-a1ebc087b597",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana",
+          "DealDamage"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/l/llanowar_wastes.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Caves of Koilos",
+        "oracleId": "33de01e9-ce5a-42d4-afcb-343cd54a6d80",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana",
+          "DealDamage"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/c/caves_of_koilos.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Viral Drake",
+        "oracleId": "3b1647d1-9aec-454f-a215-e28633cb7a2d",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Proliferate"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/v/viral_drake.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Prologue to Phyresis",
+        "oracleId": "3f661b58-e8ca-412c-bdac-af151162de12",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Draw"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/p/prologue_to_phyresis.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Sunpetal Grove",
+        "oracleId": "402ec768-76fb-474e-ae74-babc90d833c4",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/s/sunpetal_grove.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Yavimaya Coast",
+        "oracleId": "40b36bc6-c185-4bda-99e7-0118953c2c97",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana",
+          "DealDamage"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/y/yavimaya_coast.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Inexorable Tide",
+        "oracleId": "40ec0a47-badf-4074-b0a8-749bb7c17b95",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Proliferate"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/i/inexorable_tide.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Contagion Clasp",
+        "oracleId": "43f2d81e-aa01-4fa9-9046-6a27a05dbd2d",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Proliferate",
+          "PutCounter"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/c/contagion_clasp.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Simic Signet",
+        "oracleId": "44503105-3e13-408d-a44f-37d503c61d72",
+        "status": "definition-found",
+        "nativeAiWarning": true,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana"
+        ],
+        "hints": [
+          "AI:RemoveDeck:All"
+        ],
+        "script": "forge-gui/res/cardsfolder/s/simic_signet.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Tekuthal, Inquiry Dominus",
+        "oracleId": "4716ab91-30e6-4c63-8389-a9db8f9414d8",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ReplaceEffect",
+          "PutCounter"
+        ],
+        "hints": [
+          "R:Event$ Proliferate | ActiveZones$ Battlefield | ValidPlayer$ You | ReplaceWith$ ProlifTwice | AILogic$ DoubleLife | Description$ If you would proliferate, proliferate twice instead."
+        ],
+        "script": "forge-gui/res/cardsfolder/t/tekuthal_inquiry_dominus.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Magistrate's Scepter",
+        "oracleId": "487485a6-cf79-48c0-bea9-0ec6b3ee253c",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "PutCounter",
+          "AddTurn"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/m/magistrates_scepter.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Chromatic Lantern",
+        "oracleId": "539f5396-d99a-417d-a84c-dff7930b5900",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/c/chromatic_lantern.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Swamp",
+        "oracleId": "56719f6a-1a6c-4c0a-8d21-18f7d7350b68",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/s/swamp.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Orzhov Guildgate",
+        "oracleId": "57b37df5-fee4-4720-931f-f0cb0a8b338c",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/o/orzhov_guildgate.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Bitterthorn, Nissa's Animus",
+        "oracleId": "5a57fba3-01e3-4852-8c45-7c910502bd03",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/b/bitterthorn_nissas_animus.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Throne of Geth",
+        "oracleId": "5a5f39ab-21b4-415f-aa1f-d8fad420d372",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": true,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Proliferate"
+        ],
+        "hints": [
+          "AI:RemoveDeck:Random"
+        ],
+        "script": "forge-gui/res/cardsfolder/t/throne_of_geth.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Merfolk Skydiver",
+        "oracleId": "5d2ccaa4-4815-4987-889f-d08c4d1e7a8e",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "PutCounter",
+          "Proliferate"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/m/merfolk_skydiver.txt",
+        "castOrActivationEventsInSeed42": 2
+      },
+      {
+        "name": "Brushland",
+        "oracleId": "5eb8b497-ec9a-4a89-ad29-1ec3ca82da7c",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana",
+          "DealDamage"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/b/brushland.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Infectious Inquiry",
+        "oracleId": "66051196-53ea-4461-b241-205df9395b3b",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "LoseLife",
+          "Poison"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/i/infectious_inquiry.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Fuel for the Cause",
+        "oracleId": "667cffdd-8951-4223-8895-fa46e9f14b96",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Proliferate"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/f/fuel_for_the_cause.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Sol Ring",
+        "oracleId": "6ad8011d-3471-4369-9d68-b264cc027487",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/s/sol_ring.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Troll Negotiations",
+        "oracleId": "6e275711-eb76-4924-ba38-c38a36d9d82a",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Fight"
+        ],
+        "hints": [
+          "A:SP$ PutCounter | ValidTgts$ Creature.YouCtrl | ValidTgtsDesc$ creature you control | CounterType$ P1P1 | CounterNum$ 2 | AILogic$ Fight | SubAbility$ DBFight | SpellDescription$ Put two +1/+1 counters on target creature you control. Then it fights target creature an opponent controls. (Each deals damage equal to its power to the other.)",
+          "SVar:DBFight:DB$ Fight | Defined$ ParentTarget | ValidTgts$ Creature.OppCtrl | ValidTgtsDesc$ creature an opponent controls | AILogic$ Always"
+        ],
+        "script": "forge-gui/res/cardsfolder/t/troll_negotiations.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Octopus Form",
+        "oracleId": "6fec368d-374d-4318-861b-ff478ba51a3c",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Untap"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/o/octopus_form.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Selesnya Guildgate",
+        "oracleId": "75b235d3-595a-4859-be45-9559d8445db5",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/s/selesnya_guildgate.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Nature's Lore",
+        "oracleId": "78826359-fe63-44ad-adc4-a17ffcd710e4",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/n/natures_lore.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Arcane Sanctum",
+        "oracleId": "7d7cf15c-06b9-4062-a1eb-32614c458a3b",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/a/arcane_sanctum.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Night's Whisper",
+        "oracleId": "7ffae8f8-3006-4969-a339-6d30678f87ea",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "LoseLife"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/n/nights_whisper.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Drowned Catacomb",
+        "oracleId": "819fc966-434e-470f-91e9-a38df974ad17",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/d/drowned_catacomb.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Flux Channeler",
+        "oracleId": "83874e60-291b-47a7-ba9f-69437fa7e3c7",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Proliferate"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/f/flux_channeler.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Underground River",
+        "oracleId": "857febd9-cdd7-4f8e-a852-d88084b0cfbc",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana",
+          "DealDamage"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/u/underground_river.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Dismal Backwater",
+        "oracleId": "865a2194-fca0-446e-aae3-ca475cd66e00",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "GainLife",
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/d/dismal_backwater.txt",
+        "castOrActivationEventsInSeed42": 1
+      },
+      {
+        "name": "Wall of Resurgence",
+        "oracleId": "8771e241-e69b-4e21-9108-223a9488e9c7",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "PutCounter",
+          "Animate",
+          "Cleanup"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/w/wall_of_resurgence.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Tragic Arrogance",
+        "oracleId": "8a29bd35-33ef-4317-9fe5-8aaff5d7d64d",
+        "status": "definition-found",
+        "nativeAiWarning": true,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChooseCard",
+          "SacrificeAll",
+          "Cleanup"
+        ],
+        "hints": [
+          "AI:RemoveDeck:All"
+        ],
+        "script": "forge-gui/res/cardsfolder/t/tragic_arrogance.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Innkeeper's Talent",
+        "oracleId": "915b75d1-b5e3-4aca-a54c-beaccef0a2e4",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "PutCounter",
+          "ReplaceCounter"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/i/innkeepers_talent.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Fellwar Stone",
+        "oracleId": "95560508-7ac9-4be9-8a3f-3c7d5b52807b",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ManaReflected"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/f/fellwar_stone.txt",
+        "castOrActivationEventsInSeed42": 1
+      },
+      {
+        "name": "Unbreakable Formation",
+        "oracleId": "97435e03-2fff-4fe0-8fa9-69ab0a046a33",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "PumpAll",
+          "PutCounterAll"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/u/unbreakable_formation.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Long Goodbye",
+        "oracleId": "9d63ba8a-a5cd-4fdb-bba3-95612be0077c",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/l/long_goodbye.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "The Restoration of Eiganjo // Architect of Restoration",
+        "oracleId": "9d9b52b2-2edc-4f7f-a8d9-e024b1398847",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone",
+          "ImmediateTrigger",
+          "Cleanup",
+          "Token"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/t/the_restoration_of_eiganjo_architect_of_restoration.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Karn's Bastion",
+        "oracleId": "9fb8cd81-403a-4988-8f1c-b8eccf8abd9c",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana",
+          "Proliferate"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/k/karns_bastion.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Ichormoon Gauntlet",
+        "oracleId": "9fc7aba7-eda2-4134-9c10-31ee35201b72",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Proliferate",
+          "AddTurn",
+          "PutCounter"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/i/ichormoon_gauntlet.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Tranquil Expanse",
+        "oracleId": "a5478263-47c9-447f-9c7a-c77ce0752947",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/t/tranquil_expanse.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Evolving Wilds",
+        "oracleId": "a75445d3-1303-4bb5-89ad-26ea93fecd48",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/e/evolving_wilds.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Anguished Unmaking",
+        "oracleId": "ad09b3c3-c8e7-481c-8c45-e7f234935117",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "LoseLife"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/a/anguished_unmaking.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Azorius Guildgate",
+        "oracleId": "ad1712d8-809f-410c-8b91-ffe6fb8a69a1",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/a/azorius_guildgate.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Island",
+        "oracleId": "b2c6aa39-2d2a-459c-a555-fb48ba993373",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/i/island.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Tezzeret's Gambit",
+        "oracleId": "b33d2b77-f068-4fdc-a1a8-0353a35e3973",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Proliferate"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/t/tezzerets_gambit.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Forest",
+        "oracleId": "b34bb2dc-c1af-4d77-b0b3-a0fb342a5fc6",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/f/forest.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Evolution Sage",
+        "oracleId": "b45fdeab-00cc-4422-af9f-66f30a880a7c",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Proliferate"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/e/evolution_sage.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Repel Calamity",
+        "oracleId": "ba58f508-8036-496c-8a2f-c1e410165e93",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/r/repel_calamity.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Plains",
+        "oracleId": "bc71ebf6-2056-41f7-be35-b2e5c34afa99",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/p/plains.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Despark",
+        "oracleId": "bd16434d-55ea-4c5a-a9ef-752971a4af16",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/d/despark.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Fynn, the Fangbearer",
+        "oracleId": "c0b1fba1-4338-4671-934b-098689ad2085",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Poison"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/f/fynn_the_fangbearer.txt",
+        "castOrActivationEventsInSeed42": 2
+      },
+      {
+        "name": "Tome of Legends",
+        "oracleId": "cada2a1c-5db2-4702-9a57-cbe7da1bf208",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": true,
+        "abilities": [
+          "PutCounter",
+          "Draw"
+        ],
+        "hints": [
+          "AI:RemoveDeck:NonCommander"
+        ],
+        "script": "forge-gui/res/cardsfolder/t/tome_of_legends.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Mirkwood",
+        "oracleId": "cd49aa99-bf84-4edd-aecc-6dae78b73412",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "Mana",
+          "PutCounter"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/m/mirkwood.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Reaping Willow",
+        "oracleId": "ce60402c-34cd-44fe-ae1d-4a5404298f5b",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/r/reaping_willow.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Blight Rot",
+        "oracleId": "cf5b1cf9-dcd3-44d1-b8b2-338651ebb2a1",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/b/blight_rot.txt",
+        "castOrActivationEventsInSeed42": 1
+      },
+      {
+        "name": "Ezuri, Stalker of Spheres",
+        "oracleId": "cffec16f-373b-43e7-a04c-4452987d7e02",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Proliferate",
+          "Draw"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/e/ezuri_stalker_of_spheres.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Steady Progress",
+        "oracleId": "d2145ad3-fe7e-459b-b155-1b3ed089e936",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Draw"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/s/steady_progress.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Adarkar Wastes",
+        "oracleId": "d5ad26cc-2bdb-46b7-b8bf-dd099d5fa09b",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana",
+          "DealDamage"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/a/adarkar_wastes.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Guardian Scalelord",
+        "oracleId": "d6c7d7a6-2d38-4c06-ab83-bee9cc18de52",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Animate",
+          "ChangeZone"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/g/guardian_scalelord.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Fall of the First Civilization",
+        "oracleId": "dd0494f5-58bf-46ae-ad69-90b063f6f660",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Draw",
+          "ChangeZone",
+          "RepeatEach",
+          "ChooseCard",
+          "DestroyAll",
+          "Cleanup"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/f/fall_of_the_first_civilization.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Deepglow Skate",
+        "oracleId": "debce64a-18bd-42f5-9e85-158c2242e9e9",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "MultiplyCounter"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/d/deepglow_skate.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Azorius Signet",
+        "oracleId": "e018773f-95b3-49a3-9674-6f04ddef2092",
+        "status": "definition-found",
+        "nativeAiWarning": true,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana"
+        ],
+        "hints": [
+          "AI:RemoveDeck:All"
+        ],
+        "script": "forge-gui/res/cardsfolder/a/azorius_signet.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Temple of Silence",
+        "oracleId": "e6e6fce8-0f6a-4b84-865e-d4e4a4182f9f",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "Scry",
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/t/temple_of_silence.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Tidus, Yuna's Guardian",
+        "oracleId": "e8fbcafd-3617-4cd7-b55d-457fb7b60162",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "MoveCounter",
+          "Draw",
+          "Proliferate"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/t/tidus_yunas_guardian.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Thrummingbird",
+        "oracleId": "eac94269-4baa-4b8e-a0fd-d6b227d1cde3",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Proliferate"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/t/thrummingbird.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Thornwood Falls",
+        "oracleId": "ec96cde2-f1e6-495c-94e2-3e8ae79e556c",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "GainLife",
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/t/thornwood_falls.txt",
+        "castOrActivationEventsInSeed42": 1
+      },
+      {
+        "name": "Grateful Apparition",
+        "oracleId": "f1b3e0fc-1dc3-4eba-bd54-557f036f5ea9",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Proliferate"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/g/grateful_apparition.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Cast Out",
+        "oracleId": "f90b00f6-36e0-4988-9409-57297483a952",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/c/cast_out.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Golgari Guildgate",
+        "oracleId": "fa2da325-6859-45bb-b185-35526b01bcc1",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/g/golgari_guildgate.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Mortify",
+        "oracleId": "faa01ed1-ccfa-4e58-951f-cd81f9068027",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/m/mortify.txt",
+        "castOrActivationEventsInSeed42": 0
+      }
+    ],
+    "warnings": [
+      "Plaguemaw Beast",
+      "Simic Signet",
+      "Tragic Arrogance",
+      "Azorius Signet"
+    ],
+    "interpretation": "RemoveDeck:All excludes proactive casting and activation candidates in the pinned native AI. Definitions and mandatory triggers can still work. No cards removed from the deck."
+  },
+  {
+    "seat": "Shadrix",
+    "schema": "CrankMagicAiCompatibility@1",
+    "deckHash": "d1f500e2b2184f50d8f72ba4b6d19c78c8a089e523a25343823227457284dc02",
+    "cards": [
+      {
+        "name": "Shadrix Silverquill",
+        "oracleId": "2143f413-7baa-4fd6-a7ca-32f52bfa553f",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Charm",
+          "Token",
+          "Draw",
+          "LoseLife",
+          "PutCounterAll"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/s/shadrix_silverquill.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Rootborn Defenses",
+        "oracleId": "04046ae4-5c51-434b-930c-f3b1d348bf4b",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "PumpAll"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/r/rootborn_defenses.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Mirkwood Bats",
+        "oracleId": "0636b6c3-0662-420a-b30d-f0a14e7c512d",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "LoseLife"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/m/mirkwood_bats.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Command Tower",
+        "oracleId": "0895c9b7-ae7d-4bb3-af17-3b75deb50a25",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": true,
+        "abilities": [
+          "Mana"
+        ],
+        "hints": [
+          "AI:RemoveDeck:NonCommander"
+        ],
+        "script": "forge-gui/res/cardsfolder/c/command_tower.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Lingering Souls",
+        "oracleId": "0b8c3337-04dd-4798-8203-6d8b8cfb936b",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/l/lingering_souls.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Arcane Signet",
+        "oracleId": "0bc7f093-bef0-4f1a-852c-4b75ebf54838",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": true,
+        "abilities": [
+          "Mana"
+        ],
+        "hints": [
+          "AI:RemoveDeck:NonCommander"
+        ],
+        "script": "forge-gui/res/cardsfolder/a/arcane_signet.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Staff of the Storyteller",
+        "oracleId": "0c4e2c90-c17b-42cc-b4d7-cf75970fbe90",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Token",
+          "PutCounter",
+          "Draw"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/s/staff_of_the_storyteller.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Corpse Knight",
+        "oracleId": "0c77b805-728d-4ae4-88a9-223f4b7b52e0",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "LoseLife"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/c/corpse_knight.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Genesis Chamber",
+        "oracleId": "150ab025-5cc3-4468-a724-bbba8838445d",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": true,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Token"
+        ],
+        "hints": [
+          "AI:RemoveDeck:Random"
+        ],
+        "script": "forge-gui/res/cardsfolder/g/genesis_chamber.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Indulging Patrician",
+        "oracleId": "189131b7-ed59-4750-a4ed-453e4497a5c8",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "LoseLife"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/i/indulging_patrician.txt",
+        "castOrActivationEventsInSeed42": 1
+      },
+      {
+        "name": "Earth Kingdom Jailer",
+        "oracleId": "1b799c30-4a43-403d-b822-0555bd513913",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/e/earth_kingdom_jailer.txt",
+        "castOrActivationEventsInSeed42": 2
+      },
+      {
+        "name": "Sevinne's Reclamation",
+        "oracleId": "1b9f9f5b-8712-4f00-90cb-1b7b9970eccc",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": true,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "CopySpellAbility"
+        ],
+        "hints": [
+          "AI:RemoveDeck:Random"
+        ],
+        "script": "forge-gui/res/cardsfolder/s/sevinnes_reclamation.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Priest of Forgotten Gods",
+        "oracleId": "2ad8ff62-d090-4835-9274-3b755ba0f8e6",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "LoseLife",
+          "Sacrifice",
+          "Mana",
+          "Draw"
+        ],
+        "hints": [
+          "SVar:DBMana:DB$ Mana | Produced$ B | Amount$ 2 | AILogic$ Always | SubAbility$ DBDraw"
+        ],
+        "script": "forge-gui/res/cardsfolder/p/priest_of_forgotten_gods.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Concealed Courtyard",
+        "oracleId": "2d899466-b1eb-4901-b626-1f2fb09b786d",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/c/concealed_courtyard.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Blood Artist",
+        "oracleId": "310f141c-7f37-4729-aed6-dd9c09db448d",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "LoseLife",
+          "GainLife"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/b/blood_artist.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Caves of Koilos",
+        "oracleId": "33de01e9-ce5a-42d4-afcb-343cd54a6d80",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana",
+          "DealDamage"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/c/caves_of_koilos.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Village Rites",
+        "oracleId": "365548fb-5acc-4a8a-b20b-26d28b7d029f",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/v/village_rites.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Spectral Procession",
+        "oracleId": "376271a6-80f0-47a6-990a-5ec5517aae42",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/s/spectral_procession.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Nadier's Nightblade",
+        "oracleId": "391978f6-0bbc-41e8-9246-f7d0e21c7900",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "LoseLife",
+          "GainLife"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/n/nadiers_nightblade.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Woe Strider",
+        "oracleId": "3adbd963-e85d-4569-963a-4472594f06f9",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Token",
+          "Scry"
+        ],
+        "hints": [
+          "A:AB$ Scry | Cost$ Sac<1/Creature.Other/another creature> | ScryNum$ 1 | AILogic$ AtOppEOT | SpellDescription$ Scry 1."
+        ],
+        "script": "forge-gui/res/cardsfolder/w/woe_strider.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Cruel Celebrant",
+        "oracleId": "3ee78cfc-0e9e-4737-a7e2-b42f94228040",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "LoseLife",
+          "GainLife"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/c/cruel_celebrant.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Deadly Dispute",
+        "oracleId": "457af74a-02b3-4659-846d-63e482667f34",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Token"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/d/deadly_dispute.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Smuggler's Copter",
+        "oracleId": "49136bdc-bc50-49a2-999a-1ef9c16ea130",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Discard"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/s/smugglers_copter.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Keeper of the Accord",
+        "oracleId": "49b9a3ac-d245-431a-bf40-64d1b8dc2b91",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Token",
+          "ChangeZone"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/k/keeper_of_the_accord.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Anointer Priest",
+        "oracleId": "4e0b9273-6614-41a8-9738-959349c0717b",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "GainLife"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/a/anointer_priest.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Angel of Indemnity",
+        "oracleId": "4f57a320-b6b5-49de-af0a-f2e2649758a7",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/a/angel_of_indemnity.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Clachan Festival",
+        "oracleId": "5396045d-744b-435e-8324-a1bfbb03449d",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Token"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/c/clachan_festival.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Ophiomancer",
+        "oracleId": "55eca80c-dcd8-4c2f-aa0f-fb0aec7b80f7",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Token"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/o/ophiomancer.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Swamp",
+        "oracleId": "56719f6a-1a6c-4c0a-8d21-18f7d7350b68",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/s/swamp.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Raise the Alarm",
+        "oracleId": "5b2364d7-a811-4595-a1b4-224c70555ffa",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/r/raise_the_alarm.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Welcoming Vampire",
+        "oracleId": "605c1ee0-5e8a-4e0a-a99b-42a38873f822",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Draw"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/w/welcoming_vampire.txt",
+        "castOrActivationEventsInSeed42": 1
+      },
+      {
+        "name": "Kambal, Profiteering Mayor",
+        "oracleId": "619e0686-e88c-4238-8364-75395e733533",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "CopyPermanent",
+          "LoseLife",
+          "GainLife"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/k/kambal_profiteering_mayor.txt",
+        "castOrActivationEventsInSeed42": 3
+      },
+      {
+        "name": "Teysa Karlov",
+        "oracleId": "644eeefd-e684-4ca8-8aef-a892ca130c07",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/t/teysa_karlov.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Skullclamp",
+        "oracleId": "65986c1b-8e51-4604-b685-d82fa7d1263a",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Draw"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/s/skullclamp.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Sol Ring",
+        "oracleId": "6ad8011d-3471-4369-9d68-b264cc027487",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/s/sol_ring.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Windborn Muse",
+        "oracleId": "75e09ac6-d789-4c4d-9aca-845d68f3899f",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/w/windborn_muse.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Zulaport Cutthroat",
+        "oracleId": "76b003e0-15af-4f22-bdf2-1ade5430964a",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "LoseLife",
+          "GainLife"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/z/zulaport_cutthroat.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Isolated Chapel",
+        "oracleId": "7e5d9efe-48a9-434b-bb09-056e0e09cc9a",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/i/isolated_chapel.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Night's Whisper",
+        "oracleId": "7ffae8f8-3006-4969-a339-6d30678f87ea",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "LoseLife"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/n/nights_whisper.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Marauding Blight-Priest",
+        "oracleId": "814b87fe-2a75-4ff2-8637-7e69e3fb285b",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "LoseLife"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/m/marauding_blight_priest.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Unbreakable Formation",
+        "oracleId": "97435e03-2fff-4fe0-8fa9-69ab0a046a33",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "PumpAll",
+          "PutCounterAll"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/u/unbreakable_formation.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Pawn of Ulamog",
+        "oracleId": "9bcaf141-1f1f-491f-aced-13dc093b9e2c",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Token"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/p/pawn_of_ulamog.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Elas il-Kor, Sadistic Pilgrim",
+        "oracleId": "a4d33e21-d3fe-4d5b-903c-b75e859d6f7f",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "GainLife",
+          "LoseLife"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/e/elas_il_kor_sadistic_pilgrim.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Pitiless Plunderer",
+        "oracleId": "a784481f-eccb-4112-bb38-04a659319660",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Token"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/p/pitiless_plunderer.txt",
+        "castOrActivationEventsInSeed42": 1
+      },
+      {
+        "name": "Orzhov Basilica",
+        "oracleId": "aa00ae0b-7c0f-427e-8102-ce0e2a6af5df",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "ChangeZone",
+          "Mana"
+        ],
+        "hints": [
+          "SVar:TrigReturn:DB$ ChangeZone | Origin$ Battlefield | Destination$ Hand | Hidden$ True | Mandatory$ True | ChangeType$ Land.YouCtrl | AILogic$ NeverBounceItself | SpellDescription$ Return a land you control to its owner's hand."
+        ],
+        "script": "forge-gui/res/cardsfolder/o/orzhov_basilica.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Boggart Mischief",
+        "oracleId": "ac65ed8c-abe8-4044-9ce5-70b1370d0e19",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": true,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Token",
+          "LoseLife",
+          "GainLife"
+        ],
+        "hints": [
+          "AI:RemoveDeck:Random"
+        ],
+        "script": "forge-gui/res/cardsfolder/b/boggart_mischief.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Anguished Unmaking",
+        "oracleId": "ad09b3c3-c8e7-481c-8c45-e7f234935117",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "LoseLife"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/a/anguished_unmaking.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Swords to Plowshares",
+        "oracleId": "b1544f21-7e98-461b-aed5-e748b0168c52",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "GainLife"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/s/swords_to_plowshares.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Filigree Familiar",
+        "oracleId": "b544f690-e4bf-4a5b-984d-9256518fd574",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Draw",
+          "GainLife"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/f/filigree_familiar.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Plains",
+        "oracleId": "bc71ebf6-2056-41f7-be35-b2e5c34afa99",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/p/plains.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Lethal Scheme",
+        "oracleId": "c4660b3c-a234-4a3e-83e7-e2fa9d556685",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Connive"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/l/lethal_scheme.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Myr Battlesphere",
+        "oracleId": "c53ba31a-ba27-4e17-9a92-311acb1cab29",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Token",
+          "Pump",
+          "DealDamage"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/m/myr_battlesphere.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Impassioned Orator",
+        "oracleId": "c7107a2d-2dcf-42e9-9ea9-d0fc0d6d2ec6",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "GainLife"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/i/impassioned_orator.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Bastion of Remembrance",
+        "oracleId": "c7f33cea-2ec8-4081-9208-a5b1d86721b3",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Token",
+          "LoseLife",
+          "GainLife"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/b/bastion_of_remembrance.txt",
+        "castOrActivationEventsInSeed42": 2
+      },
+      {
+        "name": "Tithe Taker",
+        "oracleId": "c916b81f-700e-4a1a-8c8e-c4685ceaecd2",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/t/tithe_taker.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Mind Stone",
+        "oracleId": "c97361b5-af16-4a7b-af85-a429dbaf4ad2",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana",
+          "Draw"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/m/mind_stone.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Shineshadow Snarl",
+        "oracleId": "c9fc13d6-bd10-47bc-b2b6-7f67a1f3371e",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/s/shineshadow_snarl.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Blight Rot",
+        "oracleId": "cf5b1cf9-dcd3-44d1-b8b2-338651ebb2a1",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/b/blight_rot.txt",
+        "castOrActivationEventsInSeed42": 1
+      },
+      {
+        "name": "Intangible Virtue",
+        "oracleId": "d21c3c8f-d105-4ba9-bf69-e5f26f0f8ec5",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": true,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [
+          "AI:RemoveDeck:Random"
+        ],
+        "script": "forge-gui/res/cardsfolder/i/intangible_virtue.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Scoured Barrens",
+        "oracleId": "d37f858e-03c8-4594-9b92-cd03699a1591",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "GainLife",
+          "Mana"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/s/scoured_barrens.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Emptiness",
+        "oracleId": "dc5dd7f7-375e-4d51-85cb-1abf16ca3854",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone",
+          "PutCounter"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/e/emptiness.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Orzhov Signet",
+        "oracleId": "de3dcb5d-775a-479f-99f5-d1883ed9b1b5",
+        "status": "definition-found",
+        "nativeAiWarning": true,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana"
+        ],
+        "hints": [
+          "AI:RemoveDeck:All"
+        ],
+        "script": "forge-gui/res/cardsfolder/o/orzhov_signet.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Promise of Loyalty",
+        "oracleId": "e1d294e8-67b1-4a4a-86b8-f98f28a327d9",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "PutCounter",
+          "SacrificeAll",
+          "Effect",
+          "Cleanup"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/p/promise_of_loyalty.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Ossification",
+        "oracleId": "e29bfd62-286f-4982-813f-7086573c333b",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "ChangeZone"
+        ],
+        "hints": [
+          "SVar:AttachAILogic:Pump"
+        ],
+        "script": "forge-gui/res/cardsfolder/o/ossification.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Phyrexian Arena",
+        "oracleId": "ee579a32-a048-4335-b966-231ba731cdea",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Draw",
+          "LoseLife"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/p/phyrexian_arena.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Combat Calligrapher",
+        "oracleId": "ee7ebbc1-2f9e-4867-a522-424869b6d772",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Token"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/c/combat_calligrapher.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Vault of the Archangel",
+        "oracleId": "eeaac65a-3480-475a-bb28-e6375d53f487",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Mana",
+          "PumpAll"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/v/vault_of_the_archangel.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Fracture",
+        "oracleId": "f21d0319-0509-4ac1-b6e3-10955a26fd7a",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/f/fracture.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Hidden Stockpile",
+        "oracleId": "f5ded323-75c8-471e-a516-238b9d6b06d3",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Token",
+          "Scry"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/h/hidden_stockpile.txt",
+        "castOrActivationEventsInSeed42": 1
+      },
+      {
+        "name": "Viscera Seer",
+        "oracleId": "f82a4e85-526d-4456-b700-7760043a31be",
+        "status": "definition-found",
+        "nativeAiWarning": true,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Scry"
+        ],
+        "hints": [
+          "AI:RemoveDeck:All"
+        ],
+        "script": "forge-gui/res/cardsfolder/v/viscera_seer.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Castle Ardenvale",
+        "oracleId": "f8f4fc60-725d-46d8-8e8f-e68e00d20589",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Tap",
+          "Mana",
+          "Token"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/c/castle_ardenvale.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Elspeth, Sun's Nemesis",
+        "oracleId": "faf296b0-59e5-4ec9-9912-e5e21c0ce9f5",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "Pump",
+          "Token",
+          "GainLife"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/e/elspeth_suns_nemesis.txt",
+        "castOrActivationEventsInSeed42": 0
+      },
+      {
+        "name": "Yahenni, Undying Partisan",
+        "oracleId": "fdba89eb-1cf5-46e6-9d09-1adb9bc40fcd",
+        "status": "definition-found",
+        "nativeAiWarning": false,
+        "randomDeckWarning": false,
+        "nonCommanderOnly": false,
+        "abilities": [
+          "PutCounter",
+          "Pump"
+        ],
+        "hints": [],
+        "script": "forge-gui/res/cardsfolder/y/yahenni_undying_partisan.txt",
+        "castOrActivationEventsInSeed42": 14
+      }
+    ],
+    "warnings": [
+      "Orzhov Signet",
+      "Viscera Seer"
+    ],
+    "interpretation": "RemoveDeck:All excludes proactive casting and activation candidates in the pinned native AI. Definitions and mandatory triggers can still work. No cards removed from the deck."
+  }
+]

@@ -1,0 +1,12 @@
+{
+  "schema": "CommanderEngineLock@1",
+  "engine": "Forge",
+  "repository": "https://github.com/Card-Forge/forge.git",
+  "commit": "58bcd59062a3b44019195a3c25d6ab41a7fe2f61",
+  "version": "2.0.15-SNAPSHOT",
+  "javaMajor": 17,
+  "mavenVersion": "3.9.11",
+  "license": "GPL-3.0-or-later",
+  "adapterStatus": "C0-experimental",
+  "measuredPlayEnabled": false
+}

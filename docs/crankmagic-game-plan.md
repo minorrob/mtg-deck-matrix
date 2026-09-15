@@ -1,5 +1,7 @@
 # CrankMagic: the game
 
+> **Successor accepted:** [Commander companion implementation plan](commander-simulator-plan-2026-09-15.md). The lobby below remains useful; the successor replaces the AI referee/card-support ladder, key-storage recommendation, cost assumptions, and build sequence. See [C0 evidence](../game/docs/c0-evidence.md) for actual implementation status.
+
 **An actual four-player Commander game, played on the table we already built, against opponents
 piloted by Claude.** Rob's brief, 14 September:
 

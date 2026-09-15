@@ -1,0 +1,12 @@
+#matrix-v2 .cm-online-hero{display:flex;align-items:center;gap:24px;padding:36px 20px 40px;background:radial-gradient(ellipse at 20% 50%,#38b9a318,transparent 70%);border-bottom:1px solid var(--v-border,#35414b)}#matrix-v2 .cm-online-hero h1{font-size:clamp(30px,4vw,58px);letter-spacing:-2px;margin:8px 0}#matrix-v2 .cm-online-hero em{font-style:normal;color:#71e0c7}#matrix-v2 .cm-online-hero p{color:var(--v-muted,#a4b3bd)}#matrix-v2 .cm-online-layout{display:grid;grid-template-columns:1.2fr 1fr;gap:22px;margin-top:24px}#matrix-v2 .cm-online-panel{padding:26px;border-radius:16px}#matrix-v2 .cm-online-panel p{line-height:1.7;color:var(--v-muted,#a4b3bd)}#matrix-v2 .cm-online-panel label{display:grid;gap:10px;margin:25px 0}#matrix-v2 .cm-online-panel select{padding:12px;border:1px solid #48635f;border-radius:8px;background:#132522;color:#e9f4ef}@media(max-width:800px){#matrix-v2 .cm-online-layout{grid-template-columns:1fr}#matrix-v2 .cm-online-hero{gap:12px;padding:24px 0}#matrix-v2 .cm-online-hero img{width:65px;height:65px}}
+.cm-online-toolbar{display:flex;gap:16px;align-items:center;margin-bottom:14px;font-size:12px}.cm-online-toolbar label{display:flex;align-items:center;gap:10px}.cm-online-toolbar select{max-width:300px}.cm-online-toolbar p{margin:0;color:#97acc1;flex:1}.cm-game-frame{display:block;width:100%;height:calc(100dvh - 250px);min-height:630px;border:1px solid #344a55;border-radius:14px;background:#0a111b}.cm-game-frame.cm-game-expanded{position:fixed;inset:0;width:100vw;height:100dvh;min-height:0;border:0;border-radius:0;z-index:2000}@media(max-width:800px){.cm-online-toolbar{flex-wrap:wrap}.cm-game-frame{height:850px}}
+#matrix-v2 .cm-layout.cm-play-collapsed{grid-template-columns:minmax(0,1fr)}#matrix-v2 .cm-play-collapsed>.cm-sidebar{display:none}
+
+
+#matrix-v2 .cm-playing>.cm-online-toolbar{display:none}
+.cm-online-toolbar:has(#online-use:disabled){display:none}
+#matrix-v2 .cm-playing>.cm-page-head{display:none}
+#matrix-v2 .cm-playing>.cm-page-head h1{font-size:24px}
+#matrix-v2 .cm-game-frame{display:block;width:100%;min-height:0;height:600px;border:0;border-radius:0;overflow:hidden;background:transparent}
+#matrix-v2 .cm-game-frame.cm-game-expanded{position:fixed;inset:0;height:100dvh!important;width:100vw;z-index:2000}
+#matrix-v2 #cm-main:has(.cm-game-frame){padding-bottom:16px}
