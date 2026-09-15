@@ -79,3 +79,9 @@ node tests/commander-pilots.mjs
 The focused Java rules command above checks actual Forge behavior. The full-game replay verifier compares random requests, every diagnostic projection hash, cast/resolution links, and the fixture's opening hands/seat visibility. See the evidence report for exact counts and qualifications.
 
 Windows checkout note: existing asset/data hashes and some source-slicing tests require the committed LF bytes. Clone with `git -c core.autocrlf=false clone ...`; converting unchanged files back to their committed LF representation fixes those checkout artifacts without changing source. The existing `browser-geometry` and `page-budget` suites currently fail at their Unix-oriented Playwright import on Windows, before browser assertions. The new companion UI was separately exercised through the browser controls.
+
+### Combat and recommendations
+
+Use **Combat** beside Card / Tracker / History to review attack assignments, blockers, damage types and the combat event recap. Selecting a defender highlights it; choosing creatures assigns them to that defender. Review the assignments, then **Confirm attackers**. Attack power is shown separately from damage actually dealt.
+
+**Recommended actions** appears during your turn and can be collapsed. It provides local, explainable suggestions using your hand and public boards; reviewing a suggestion opens the card's actions. It does not spend mana or play cards for you. Recommendations are heuristic, and the engine still validates timing, costs and targets.

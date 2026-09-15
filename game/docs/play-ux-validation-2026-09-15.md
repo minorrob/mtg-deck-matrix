@@ -26,3 +26,13 @@ History retains observed public identities after a card/token leaves play. It re
 ## Remaining limits
 
 Local Forge and its host must remain running. Journals are not durable game-position checkpoints. Native AI is available; API pilots and invited human seats are not implemented. Some complex engine decisions still use the native window. Token artwork and conditional mana-source reporting are incomplete; exact rules and payment restrictions remain enforced by Forge.
+
+## Combat and coaching update
+
+- Combat uses the engine's selected defender and legal card action labels. The defender is highlighted; each creature shows its attack or block assignment. Confirmation is labeled **Confirm attackers** or **Confirm blockers**.
+- The **Combat** pane shows attacker/defender/blocker pairs and attacking power, including overlapping commander and infect power. These are explicitly not a damage prediction. Its recap records spells, abilities, actual damage, life/poison changes and battlefield exits during combat, and retains the final declaration after combat ends.
+- **Recommended actions** is an optional, collapsible local coaching panel for the human's turn. It reacts to phases, pending choices, the human hand, engine-offered actions and public boards. It explains suggestions; it does not execute them or claim optimal play. It never reads opposing hands or hidden library order. API coaching is not connected.
+- Empty combat review windows are retained unless the human yields through the turn. Effects on the stack still stop a yield.
+- New combat assignment telemetry requires a game launched with the updated adapter; older saved journals retain their existing events but cannot recover assignments that were never recorded.
+
+Validation: 22 companion tests passed, including coaching privacy, phase gating, combat totals and a retained combat recap. Adapter compilation passed. Fresh-game browser validation is in progress.

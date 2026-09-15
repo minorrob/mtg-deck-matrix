@@ -30,7 +30,9 @@ public final class ForgeBrowserBridge {
     String prompt="Opening CrankMagic Online…",ok="OK",cancel="Cancel",fallback="";
     boolean okEnabled=false,cancelEnabled=false,actionInFlight=false;
     List<Integer> selectables=List.of();
+    final Set<Integer> highlightedPlayers=new HashSet<>(),highlightedCards=new HashSet<>();
     Map<String,Object> pending;
+    Map<String,Object> lastAction;
     JsonObject answer;
     final Map<String,Map<String,Object>> receipts=new LinkedHashMap<>();
 
@@ -54,7 +56,17 @@ public final class ForgeBrowserBridge {
         });
         server.start();ForgeProbe.save(out.resolve("browser-bridge.json"),ForgeProbe.obj("port",server.getAddress().getPort(),"token",token));
     }
-    synchronized Map<String,Object> view(){return ForgeProbe.obj("revision",revision,"state",projection,"ui",ForgeProbe.obj("prompt",prompt,"ok",ok,"cancel",cancel,"okEnabled",okEnabled,"cancelEnabled",cancelEnabled,"selectables",selectables,"choice",pending,"nativeFallback",fallback));}
+    synchronized Map<String,Object> view(){
+        String inputType="";Map<Integer,String> actions=new TreeMap<>();
+        if(controller instanceof forge.player.PlayerControllerHuman human){
+            var input=human.getInputQueue().getInput();if(input!=null)inputType=input.getClass().getSimpleName();
+            if(pending==null&&!actionInFlight&&game!=null)for(var p:game.getRegisteredPlayers())for(ZoneType zone:List.of(ZoneType.Hand,ZoneType.Battlefield,ZoneType.Command))for(Card card:p.getCardsIn(zone)){
+                if(!card.getView().canBeShownTo(human.getPlayer().getView()))continue;
+                try{String action=human.getActivateDescription(card.getView());if(action!=null&&!action.isBlank())actions.put(card.getId(),action);}catch(RuntimeException ignored){}
+            }
+        }
+        return ForgeProbe.obj("revision",revision,"state",projection,"ui",ForgeProbe.obj("prompt",prompt,"ok",ok,"cancel",cancel,"okEnabled",okEnabled,"cancelEnabled",cancelEnabled,"selectables",selectables,"choice",pending,"nativeFallback",fallback,"inputType",inputType,"cardActions",actions,"highlightedPlayers",new ArrayList<>(highlightedPlayers),"highlightedCards",new ArrayList<>(highlightedCards),"actionInFlight",actionInFlight,"lastAction",lastAction));
+    }
     void attach(Game value){game=value;game.subscribeToEvents(this);snapshot();}
     @Subscribe public void event(GameEvent event){
         snapshot();
@@ -91,6 +103,8 @@ public final class ForgeBrowserBridge {
                 revision++;break;
             case "setSelectables": List<Integer> ids=new ArrayList<>();for(Object c:(Iterable<?>)args[0])ids.add(((CardView)c).getId());selectables=ids;revision++;break;
             case "clearSelectables":selectables=List.of();revision++;break;
+            case "setHighlighted":
+                for(Object entity:(Iterable<?>)args[0]){Set<Integer> set=null;int id=-1;if(entity instanceof PlayerView p){set=highlightedPlayers;id=p.getId();}else if(entity instanceof CardView c){set=highlightedCards;id=c.getId();}if(set!=null){if((boolean)args[1])set.add(id);else set.remove(id);}}revision++;break;
             case "flashIncorrectAction":prompt="That action is unavailable. Check the current prompt, targets and available mana.";revision++;break;
         }
     }
@@ -168,7 +182,7 @@ public final class ForgeBrowserBridge {
             if(kind.equals("ok")&&!okEnabled||kind.equals("cancel")&&!cancelEnabled)throw new IllegalArgumentException("Button is unavailable");
             if(!Set.of("ok","cancel","card","player").contains(kind))throw new IllegalArgumentException("Unsupported action");
             // Reserve before scheduling: retries cannot apply a second payment or selection.
-            receipt(id);queuedRevision=++revision;actionInFlight=true;
+            receipt(id);queuedRevision=++revision;actionInFlight=true;lastAction=ForgeProbe.obj("id",id,"status","pending");
         }
         SwingUtilities.invokeLater(()->{
             try{
@@ -185,8 +199,9 @@ public final class ForgeBrowserBridge {
                         if(!controller.selectCard(found.getView(),List.of(),null))throw new IllegalArgumentException("This card has no available action now. Check timing, costs, targets and land plays remaining.");break;
                 }
                 journal.append("browser-action-submitted",request);
-            }catch(Exception e){synchronized(this){prompt="Action was not completed: "+e.getMessage();revision++;}}
-            finally{synchronized(this){actionInFlight=false;}}
+                synchronized(this){lastAction=ForgeProbe.obj("id",id,"status","completed");revision++;}
+            }catch(Exception e){synchronized(this){lastAction=ForgeProbe.obj("id",id,"status","error","message",e.getMessage());revision++;}}
+            finally{snapshot();synchronized(this){actionInFlight=false;}}
         });
         synchronized(this){return receipts.get(id);}
     }

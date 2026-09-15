@@ -113,9 +113,11 @@ public final class ForgeProbe {
             try {
                 String type=event.getClass().getSimpleName();
                 counts.merge(type,1,Integer::sum);
-                Map<String,Object> data=obj("turn",game.getPhaseHandler().getTurn(),"fields",capture(event));
+                Map<String,Object> data=obj("turn",game.getPhaseHandler().getTurn(),"phase",String.valueOf(game.getPhaseHandler().getPhase()),"fields",capture(event));
                 if (event instanceof GameEventSpellResolved e) data.put("castEventId",castEvents.get(e.spell().getId()));
                 String id=append(type,data);
+                if(event instanceof forge.game.event.GameEventCombatUpdate || event instanceof forge.game.event.GameEventAttackersDeclared || event instanceof forge.game.event.GameEventBlockersDeclared)
+                    append("combat-state",obj("turn",game.getPhaseHandler().getTurn(),"phase",String.valueOf(game.getPhaseHandler().getPhase()),"combat",combatView(game)));
                 if (event instanceof GameEventSpellAbilityCast e) castEvents.put(e.sa().getId(),id);
                 if (event instanceof GameEventPlayerPriority || event instanceof GameEventTurnPhase || event instanceof GameEventGameOutcome) {
                     Map<String,Object> state=projection(game,null);
@@ -172,7 +174,7 @@ public final class ForgeProbe {
                     if (viewer!=null && !cv.canBeShownTo(viewer.getView())) { hidden++; continue; }
                     boolean faceVisible=viewer==null || cv.canFaceDownBeShownTo(viewer.getView());
                     Map<String,Object> data=obj("cardId",c.getId(),"name",faceVisible?c.getName():null,
-                        "token",c.isToken(),"engineEffect",c.isImmutable(),
+                        "token",c.isToken(),"commander",c.isCommander(),"engineEffect",c.isImmutable(),
                         "controller",c.getController().getId(),"owner",c.getOwner().getId(),"tapped",c.isTapped(),
                         "faceDown",c.isFaceDown(),"damage",c.getDamage(),"counters",capture(c.getCounters()));
                     if (faceVisible) { data.put("power",c.getNetPower()); data.put("toughness",c.getNetToughness()); }
@@ -190,7 +192,28 @@ public final class ForgeProbe {
             "turnPlayerId",game.getPhaseHandler().getPlayerTurn()==null?null:game.getPhaseHandler().getPlayerTurn().getId(),
             "priorityPlayerId",game.getPhaseHandler().getPriorityPlayer()==null?null:game.getPhaseHandler().getPriorityPlayer().getId(),
             "phase",String.valueOf(game.getPhaseHandler().getPhase()),"players",players,
-            "stackSize",game.getStack().size(),"gameOver",game.isGameOver());
+            "combat",combatView(game),"stackSize",game.getStack().size(),"gameOver",game.isGameOver());
+    }
+
+    static Map<String,Object> combatView(Game game) {
+        var combat=game.getCombat();if(combat==null)return null;
+        List<Object> defenders=new ArrayList<>(),attacks=new ArrayList<>();
+        for(var defender:combat.getDefenders())defenders.add(combatEntity(defender));
+        for(Card attacker:combat.getAttackers()){
+            List<Object> blockers=new ArrayList<>();for(Card blocker:combat.getBlockers(attacker))blockers.add(combatCard(blocker));
+            attacks.add(obj("attacker",combatCard(attacker),"defender",combatEntity(combat.getDefenderByAttacker(attacker)),"blocked",combat.isBlocked(attacker),"blockers",blockers));
+        }
+        return obj("turn",game.getPhaseHandler().getTurn(),"attackingPlayerId",combat.getAttackingPlayer().getId(),"defenders",defenders,"attacks",attacks);
+    }
+    static Map<String,Object> combatEntity(forge.game.GameEntity entity) {
+        if(entity instanceof Player p)return obj("kind","player","id",p.getId(),"name",p.getName());
+        if(entity instanceof Card c)return obj("kind","card","id",c.getId(),"name",c.isFaceDown()?"Face-down card":c.getName());
+        return null;
+    }
+    static Map<String,Object> combatCard(Card c) {
+        List<String> keywords=new ArrayList<>();
+        if(!c.isFaceDown())for(var keyword:List.of(forge.game.keyword.Keyword.FLYING,forge.game.keyword.Keyword.REACH,forge.game.keyword.Keyword.TRAMPLE,forge.game.keyword.Keyword.FIRST_STRIKE,forge.game.keyword.Keyword.DOUBLE_STRIKE,forge.game.keyword.Keyword.DEATHTOUCH,forge.game.keyword.Keyword.LIFELINK,forge.game.keyword.Keyword.INFECT,forge.game.keyword.Keyword.WITHER))if(c.hasKeyword(keyword))keywords.add(keyword.name().toLowerCase().replace('_',' '));
+        return obj("cardId",c.getId(),"name",c.isFaceDown()?"Face-down card":c.getName(),"power",c.getNetPower(),"toughness",c.getNetToughness(),"damage",c.getDamage(),"commander",c.isCommander(),"keywords",keywords);
     }
 
     /** Display engine-authoritative results; thresholds alone cannot override 'can't lose' effects. */

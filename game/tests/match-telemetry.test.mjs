@@ -39,3 +39,10 @@ test('history includes phase, life and resolution without copying hidden descrip
   assert.deepEqual(result.recent.map(e=>e.label),['Resolved','Life 40 → 41','main1']);
   assert.equal(result.counts.taps,0);assert.doesNotMatch(JSON.stringify(result),/Secret|undefined/);
 });
+
+test('combat recap retains assignments and actual damage types after combat ends',()=>{
+  const attacker={cardId:1,name:'Commander',power:4,commander:true,keywords:['infect']};
+  const combat={turn:2,attacks:[{attacker,defender:{kind:'player',id:1,name:'Krenko'},blockers:[{cardId:2,name:'Blocker'}],blocked:true}]};
+  const result=summarizeEvents([{kind:'combat-state',eventId:'combat:1',data:{turn:2,phase:'COMBAT_DECLARE_BLOCKERS',combat}}, {...event('GameEventPlayerDamaged',{source:{cardId:1},target:{playerId:1,name:'Krenko'},amount:2,combat:true,infect:true},2),data:{turn:2,phase:'COMBAT_DAMAGE',fields:{source:{cardId:1},target:{playerId:1,name:'Krenko'},amount:2,combat:true,infect:true}}}, {kind:'combat-state',eventId:'combat:3',data:{turn:2,phase:'COMBAT_END',combat:{turn:2,attacks:[]}}}], [attacker]);
+  assert.equal(result.combats[0].attacks[0].blockers[0].name,'Blocker');assert.match(result.recent[0].label,/2 combat infect damage to Krenko.*commander/);assert.equal(result.recent[0].phase,'COMBAT_DAMAGE');
+});
