@@ -6,7 +6,7 @@
  * WHAT IT HOLDS. An ordered list of intended moves, one per row at most:
  *
  *   {id, rowId, cardId, cardName, quantity, kind, lotId, deckId, slotId,
- *    action, arg, box, asStandIn, from, to, toStatus, label, at}
+ *    action, arg, box, asStandIn, standInFor, from, to, toStatus, label, at}
  *
  * `action` is the verb the drop target named (the same seven `accepts()` returns), `arg` its
  * argument, and `from`/`to` are what the reader sees. Staging the same row again REPLACES its
@@ -95,7 +95,7 @@
     let cache = null;          /* {signature, state, commands, refusals} */
 
     const signature = (state) =>
-      String(state && state.revision) + "|" + moves.map((m) => m.id + ":" + m.action + ":" + (m.arg || "") + ":" + (m.deckId || "")).join(",");
+      String(state && state.revision) + "|" + moves.map((m) => m.id + ":" + m.action + ":" + (m.arg || "") + ":" + (m.deckId || "") + ":" + (m.standInFor || "")).join(",");
 
     /* THE FOLD. One pass, in order, over a working copy: build each move's commands against the
        state the moves before it produced, apply them, and keep going. A throw anywhere in a move
@@ -161,6 +161,9 @@
           quantity: Number(mv.quantity) || 1, kind: mv.kind || "lot", lotId: mv.lotId || "",
           deckId: mv.deckId || "", deckName: mv.deckName || "", slotId: mv.slotId || "",
           action: mv.action, arg: mv.arg || "", box: mv.box || "", asStandIn: !!mv.asStandIn,
+          /* Which seat a substitute is filling (plan §2.12): recorded on the drop, carried to
+             the fold, and validated by the model when the batch lands. */
+          standInFor: mv.standInFor || "", standInForName: mv.standInForName || "",
           tray: Math.max(0, Math.min(4, Number(mv.tray) || 0)),
           /* Only a `plan` move carries this: the catalog record for a card the library does not
              hold yet, because `groupEntries` has to add it before it can file an entry for it. */
@@ -269,7 +272,7 @@
       case "standin": {
         const deck = deckOf(model, state, mv);
         const command = { type: "bulk", op: "place", deckId: deck.id, box: mv.box || "", lotIds: [lotOf(model, state, mv)] };
-        if (mv.action === "standin" || mv.asStandIn) command.asStandIn = true;
+        if (mv.action === "standin" || mv.asStandIn) { command.asStandIn = true; if (mv.standInFor) command.standInFor = mv.standInFor; }
         return [command];
       }
       case "reserve": {
@@ -367,7 +370,7 @@
       case "bench": return `${mv.cardName} → the Bench`;
       case "release": return `${mv.cardName} → reservation released`;
       case "place": return `${mv.cardName} → ${mv.deckName || "a physical deck"}`;
-      case "standin": return `${mv.cardName} → ${mv.deckName || "a physical deck"} as a substitute`;
+      case "standin": return `${mv.cardName} → ${mv.deckName || "a physical deck"} as a substitute${mv.standInForName ? `, standing in for ${mv.standInForName}` : ""}`;
       case "reserve": return `${mv.cardName} → reserved for ${mv.deckName || "a deck"}`;
       case "group": return `${mv.cardName} → ${mv.to || "a group"}`;
       case "plan": return `${mv.cardName} → planned in ${mv.to || "a group"}`;

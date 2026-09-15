@@ -217,7 +217,13 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   deck holds more substitutes than empty seats) and which fill seats until their cards arrive;
   *Mark all found* puts the ready copies in and takes exactly that many substitutes out. The
   Collection puts a copy in as a substitute from **Actions → Put in a physical deck as a substitute**
-  (a copy the list does call for is reserved on the way in instead), the *Allocation* filter
+  (a copy the list does call for is reserved on the way in instead). Both substitute paths — that
+  one and the table's drop — ask **which seat it is standing in for**, offering the cards the deck
+  still lacks a copy of; naming it is optional and it is what turns the Change List's pairing from
+  a guess into a record. The copy then reads *Purphoros · substitute for Sol Ring* wherever the
+  Deck column appears, and the deck's own list marks that seat **held by** its substitute. Left
+  blank, the Change List pairs as it always has: the option slot that names the seat, then the same
+  primary type, then the nearest mana value. The *Allocation* filter
   has *Substitute*, tiles read *Playable · n substitutes* once the physical deck holds a
   hundred, and the readiness bar hatches the seats substitutes cover. Tiles wear their stage
   as a border: green while *Defining*, blue while *Building*, purple once *Playable*, gold

@@ -56,4 +56,44 @@ ok(CH.judge([...hundred(38, 0).slice(0, 98), spell(1, 3), spell(1, 3)], {rules: 
 ok(CH.judge(hundred(38, 0), {rules: R}).warnings.some((w) => w.kind === "ramp" || w.kind === "draw"), "a hundred with no ramp or draw is warned against the floors");
 ok(!CH.judge(hundred(38, 0), {rules: R}).warnings.some((w) => w.kind === "gameChangers"), "no Game Changers, no warning");
 ok(CH.judge(hundred(38, 0).map((x, i) => i < 3 ? {card: {...x.card, gameChanger: true}, quantity: 1} : x), {rules: R}).warnings.some((w) => w.kind === "gameChangers"), "three Game Changers over a limit of two is warned");
+/* THE RECORDED PAIRING BEATS THE INFERRED ONE (play-space plan §2.12). Before `standInFor` the
+   Change List guessed which seat a substitute was holding from the option slot, the primary type
+   and the nearest mana value — a good guess on a curve of similar cards and a wrong one often
+   enough to matter. Now the seat is recorded when the proxy goes into the box, and this is the
+   assertion that the record is what the list reads: the same library, one lot tagged, and the
+   pairing moves to the seat the tag names with the reason saying so. */
+{
+  const frozen = JSON.stringify(live);
+  const deck = finals.find((d) => {
+    const p = CH.plan(live, d, opts);
+    return p.rows.some((x) => x.out && x.in && x.in.slotId);
+  });
+  ok(!!deck, "a deck whose change list pairs a substitute with a seat");
+  const before = CH.plan(live, deck, opts);
+  const paired = before.rows.find((x) => x.out && x.in && x.in.slotId);
+  /* A seat the inference did NOT choose, so the test cannot pass by accident. */
+  const other = before.rows.find((x) => x.out && x.in && x.in.slotId && x.in.slotId !== paired.in.slotId);
+  if (other) {
+    const tagged = JSON.parse(JSON.stringify(live));
+    const lot = tagged.lots.find((l) => l.id === paired.out.lotId);
+    ok(!!lot, "the substitute's lot is in the library");
+    lot.standInFor = other.in.slotId;
+    const after = CH.plan(tagged, deck, {...opts, cardOf: (id) => { const c = tagged.cards[id]; return c ? cardOf(id) : null; }});
+    const row = after.rows.find((x) => x.out && x.out.lotId === lot.id);
+    ok(!!row && !!row.in, "the tagged substitute still pairs");
+    eq(row.in.slotId, other.in.slotId, "with the seat the record names, not the one inference chose");
+    ok(row.why.startsWith("recorded when the substitute went in"), `and the row says the pairing was recorded: "${row.why}"`);
+  } else ok(true, "this library has only one pairable seat per substitute today; the record and the inference agree");
+  /* A tag naming a seat that is not on the list is ignored rather than trusted — the projection
+     validates it, so nothing downstream can read a pairing that has stopped being one. */
+  const stale = JSON.parse(JSON.stringify(live));
+  const anyStandIn = M.projection(stale).find((r) => r.standIn && r.standInDeckId);
+  if (anyStandIn) {
+    stale.lots.find((l) => l.id === anyStandIn.id).standInFor = "slot:does-not-exist";
+    const row = M.projection(stale).find((r) => r.recordId === anyStandIn.recordId);
+    eq(row.standInFor, "", "a seat that is not on the deck's list reads as no pairing at all");
+  } else ok(true, "no substitute in the live library today");
+  eq(JSON.stringify(live), frozen, "and none of this touched the library it read");
+}
+
 console.log(`crankmagic-change: ${checks} checks passed — ${totalRows} change rows across the six decks.`);

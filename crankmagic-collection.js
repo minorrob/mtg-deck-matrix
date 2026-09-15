@@ -65,7 +65,7 @@ function ownPair(r){
   if(!ownCache.map.has(key))ownCache.map.set(key,M.ownership(st,r.cardId,deckId));
   return ownCache.map.get(key);
 }
-function value(r,key){const c=r.card;return ({name:c.name,type:c.typeLine.split('—')[0].trim(),subtype:c.typeLine.split('—')[1]?.trim()||'',mechanic:(c.mechanics.length?c.mechanics:c.keywords).join(', '),color:c.colorIdentity.join(''),rarity:({common:'Common',uncommon:'Uncommon',rare:'Rare',mythic:'Mythic',special:'Special',bonus:'Bonus',c:'Common',u:'Uncommon',r:'Rare',m:'Mythic',s:'Special',b:'Bonus'})[String(c.rarity||'').toLowerCase()]||'',mana:c.manaValue,price:c.price,cap:R.capFor(c.price),vendor:r.kind==='lot'?(r.order&&r.order.vendor||r.vendor||''):'',paid:r.kind==='lot'&&Number.isFinite(r.paid)?r.paid:null,source:C.source(r.source),placement:r.placement,status:r.status||statusOf(r),ownership:(()=>{const o=ownPair(r);return `${o.owned}/${o.wanted}`;})(),deck:r.deckId?M.deck(C.state,r.deckId).name:(r.standIn&&r.standInDeckId?M.deck(C.state,r.standInDeckId).name+' · substitute':''),box:r.kind==='lot'?C.readableLocation(r):'',purpose:r.purpose==='main'?'Main deck':r.purpose==='bracket'?'Bracket option':r.purpose==='upgrade'?'Upgrade':'',quantity:r.quantity,groups:r.groupIds.map(id=>C.state.groups.find(g=>g.id===id)?.name||'').join(', '),printing:[r.printing?.set,r.printing?.collector,r.printing?.finish,r.printing?.language,r.printing?.condition].filter(Boolean).join(' · ')||'Unspecified',offer:r.offer==='none'?'':r.offer==='held'?'Pending deal':'Sell / Trade'})[key];}
+function value(r,key){const c=r.card;return ({name:c.name,type:c.typeLine.split('—')[0].trim(),subtype:c.typeLine.split('—')[1]?.trim()||'',mechanic:(c.mechanics.length?c.mechanics:c.keywords).join(', '),color:c.colorIdentity.join(''),rarity:({common:'Common',uncommon:'Uncommon',rare:'Rare',mythic:'Mythic',special:'Special',bonus:'Bonus',c:'Common',u:'Uncommon',r:'Rare',m:'Mythic',s:'Special',b:'Bonus'})[String(c.rarity||'').toLowerCase()]||'',mana:c.manaValue,price:c.price,cap:R.capFor(c.price),vendor:r.kind==='lot'?(r.order&&r.order.vendor||r.vendor||''):'',paid:r.kind==='lot'&&Number.isFinite(r.paid)?r.paid:null,source:C.source(r.source),placement:r.placement,status:r.status||statusOf(r),ownership:(()=>{const o=ownPair(r);return `${o.owned}/${o.wanted}`;})(),deck:r.deckId?M.deck(C.state,r.deckId).name:(r.standIn&&r.standInDeckId?M.deck(C.state,r.standInDeckId).name+' · substitute'+(r.standInForCardId?` for ${(C.card(r.standInForCardId)||{}).name||''}`:''):''),box:r.kind==='lot'?C.readableLocation(r):'',purpose:r.purpose==='main'?'Main deck':r.purpose==='bracket'?'Bracket option':r.purpose==='upgrade'?'Upgrade':'',quantity:r.quantity,groups:r.groupIds.map(id=>C.state.groups.find(g=>g.id===id)?.name||'').join(', '),printing:[r.printing?.set,r.printing?.collector,r.printing?.finish,r.printing?.language,r.printing?.condition].filter(Boolean).join(' · ')||'Unspecified',offer:r.offer==='none'?'':r.offer==='held'?'Pending deal':'Sell / Trade'})[key];}
 /* GROUPING IS NOT THE SAME QUESTION AS SORTING. The Color column prints a card's identity
    letters, which as a grouping would make a heading per colour pair and answer nothing:
    a reader grouping by colour wants their mono-white cards together and everything gold
@@ -629,7 +629,7 @@ function stageRows(rows,intent){
     try{sb.stage({rowId:r.recordId,cardId:r.cardId,cardName:r.card.name,quantity:r.quantity,kind:r.kind,
       lotId:r.kind==='lot'?r.id:'',slotId:r.slotId||'',
       deckId:it.deckId||r.deckId||'',deckName:it.deckName||'',
-      action:it.action,arg:it.arg||'',box:it.box||'',asStandIn:!!it.asStandIn,tray:it.tray||0,
+      action:it.action,arg:it.arg||'',box:it.box||'',asStandIn:!!it.asStandIn,standInFor:it.standInFor||'',standInForName:it.standInForName||'',tray:it.tray||0,
       /* A card the library has never seen travels with its record, so the fold can add it. */
       card:r.kind==='catalog'?r.card:null,
       from:r.status||statusOf(r),to:it.to,toStatus:it.toStatus===undefined?it.to:it.toStatus});
@@ -687,8 +687,12 @@ function tabletopDrop(pileId,ids){
       ()=>stageRows(rows,{action:'tray',tray:n,deckId:d.id,deckName:d.name,to:`Tray ${n}`,toStatus:'Reserved'}),'Stage the move');return;}
   if(action==='place'||action==='standin'){if(!finals.length)throw Error('Finalize a deck first — a draft holds no physical copies.');
     const standin=action==='standin',preferred=rows.map(r=>r.allocation?.deckId).find(Boolean)||'';
-    form(standin?'Substitute in a physical deck':'Put these copies in a physical deck',s('Deck','deckId',finals.map(d=>[d.id,d.name]),preferred)+f('Box label (optional)','box')+(standin?'':`<label class="cm-checkbox cm-full"><input type="checkbox" name="asStandIn"> Allow substitutes: a copy this deck's list does not call for goes in unreserved, filling a seat until the real card arrives</label>`)+note(standin?`${names} go in without a reservation; the deck counts them as substitutes and Ready to add asks for them back when the real card is ready.`:`${names}. Records where these copies physically are. Ownership does not change. A copy that is not reserved for this deck is refused by name unless substitutes are allowed; one the list calls for is reserved on the way in.`)+note('Staged, not saved: this joins the sitting and is written when you confirm.'),
-      v=>stageRows(rows,{action:standin||v.asStandIn?'standin':'place',deckId:v.deckId,deckName:M.deck(C.state,v.deckId).name,box:v.box,asStandIn:standin||!!v.asStandIn,to:standin||v.asStandIn?'Substitute':'Physical deck'}),'Stage the move');return;}
+    const chosen=preferred||(finals[0]||{}).id||'';
+    followDeck(form(standin?'Substitute in a physical deck':'Put these copies in a physical deck',s('Deck','deckId',finals.map(d=>[d.id,d.name]),preferred)+f('Box label (optional)','box')+seatField(chosen)+(standin?'':`<label class="cm-checkbox cm-full"><input type="checkbox" name="asStandIn"> Allow substitutes: a copy this deck's list does not call for goes in unreserved, filling a seat until the real card arrives</label>`)+note(standin?`${names} go in without a reservation; the deck counts them as substitutes and Ready to add asks for them back when the real card is ready.`:`${names}. Records where these copies physically are. Ownership does not change. A copy that is not reserved for this deck is refused by name unless substitutes are allowed; one the list calls for is reserved on the way in.`)+note('Naming the seat is optional and it is what the Change List reads: without it the pairing is worked out from the option slot, the type and the mana value.')+note('Staged, not saved: this joins the sitting and is written when you confirm.'),
+      v=>{const d=M.deck(C.state,v.deckId),seat=v.standInFor?d.slots.find(x=>x.id===v.standInFor):null;
+        return stageRows(rows,{action:standin||v.asStandIn?'standin':'place',deckId:v.deckId,deckName:d.name,box:v.box,asStandIn:standin||!!v.asStandIn,
+          standInFor:v.standInFor||'',standInForName:seat?((C.card(seat.cardId)||{}).name||''):'',
+          to:standin||v.asStandIn?'Substitute':'Physical deck'});},'Stage the move'));return;}
   if(action==='reserve'){
     const fixed=pile.key==='deck'?finals.find(d=>d.name===pile.label):null;
     if(pile.key==='deck'&&!fixed)throw Error(`${pile.label} is not a finalized deck; only a finalized deck holds reservations.`);
@@ -699,6 +703,28 @@ function tabletopDrop(pileId,ids){
     form('Reserve for a deck',s('Deck','deckId',decks.map(d=>[d.id,d.name]),'')+note('Only a deck whose list calls for the card and still lacks it can take the reservation; the physical box stays unchanged.')+note('Staged, not saved: this joins the sitting and is written when you confirm.'),v=>put(v.deckId),'Stage the move');return;}
   throw Error('That destination is not one a card can be moved to.');
 }
+/* WHICH SEAT A SUBSTITUTE IS FILLING (play-space plan §2.12). Rob's step 3 was "the necessary
+   temp substitutes, and tag which card they'll get replaced by when that card comes in", and
+   nothing recorded it — the Change List inferred the pairing from the option slot, the primary
+   type and the nearest mana value. The seats offered are the ones the deck still lacks a copy
+   for, named by the card the list asks for, which is what a reader has in mind at the moment
+   they put a proxy in the box. Optional by design: leaving it blank records no pairing and the
+   Change List infers exactly as it did before. */
+function shortSeats(deckId){
+  if(!deckId)return [];
+  let d;try{d=M.deck(C.state,deckId);}catch(err){return [];}
+  return d.slots.filter(r=>r.committed&&r.purpose==='main'&&M.shortfall(C.state,d,r)>0)
+    .map(r=>({id:r.id,name:(C.card(r.cardId)||{}).name||r.cardId}))
+    .sort((a,b)=>a.name.localeCompare(b.name));
+}
+const seatOptions=(deckId,value='')=>{const list=shortSeats(deckId);
+  return `<option value="">${list.length?'Not recorded — the Change List will work it out':'This deck needs no card it does not have'}</option>`
+    +list.map(x=>`<option value="${e(x.id)}"${x.id===value?' selected':''}>${e(x.name)}</option>`).join('');};
+const seatField=deckId=>`<label class="cm-full">Standing in for<select name="standInFor">${seatOptions(deckId)}</select></label>`;
+/* The seat list follows the deck select, because the seats belong to the deck and a form that
+   offered another deck's seats would record a pairing that is not one. */
+function followDeck(fm){const deck=fm.querySelector('[name=deckId]'),seat=fm.querySelector('[name=standInFor]');
+  if(deck&&seat)deck.addEventListener('change',()=>{seat.innerHTML=seatOptions(deck.value);});return fm;}
 /* Which group a shelf-mode drop means: the band names its group by id, a tray carries the group
    it is bound to, and the Collection-group shelf on the sides still names it by its label. */
 function shelfGroup(pile){
@@ -1302,7 +1328,7 @@ actions['place-row']=el=>quantityAction(el,el.dataset.deck?'Put in '+M.deck(C.st
 /* A SUBSTITUTE fills a seat while the real card is bought or on its way: the copy goes into the
    box without a reservation, the deck counts it, and Ready to add asks for it back when a
    real copy is ready. A copy the list does call for is reserved on the way in instead. */
-actions['standin-row']=el=>{const d=M.deck(C.state,el.dataset.deck);return quantityAction(el,'Substitute in '+d.name,()=>`<div class="cm-full">${note(`Goes into ${e(d.name)} without a reservation, filling a seat while the real card is bought or on its way. ${e(d.name)} counts it as a substitute and Ready to add asks for it back when a real copy is ready. If the list does call for this card, it is reserved on the way in instead.`)}</div>`+f('Box label (optional)','box'),(_,v)=>({type:'place',deckId:d.id,box:v.box,asStandIn:true}));};
+actions['standin-row']=el=>{const d=M.deck(C.state,el.dataset.deck);return quantityAction(el,'Substitute in '+d.name,()=>`<div class="cm-full">${note(`Goes into ${e(d.name)} without a reservation, filling a seat while the real card is bought or on its way. ${e(d.name)} counts it as a substitute and Ready to add asks for it back when a real copy is ready. If the list does call for this card, it is reserved on the way in instead.`)}</div>`+f('Box label (optional)','box')+seatField(d.id)+`<div class="cm-full">${note('Naming the seat is optional and it is what the Change List reads: without it the pairing is worked out from the option slot, the type and the mana value.')}</div>`,(_,v)=>({type:'place',deckId:d.id,box:v.box,asStandIn:true,standInFor:v.standInFor||''}));};
 actions['reserve-row']=el=>quantityAction(el,'Reserve copies for a deck',l=>s('Target deck','deck',C.state.decks.filter(d=>d.status==='final'&&!d.archived&&d.slots.some(r=>r.committed&&M.compatible(l,r)&&M.shortfall(C.state,d,r)>0)).map(d=>[d.id,d.name]),'')+note('This changes the reservation and exposes any donor deck shortfall. The physical box stays unchanged. Locked and In deck donors require this explicit confirmation.',true),(l,v)=>{if(!v.deck)throw Error('No finalized deck has a compatible unfulfilled requirement. Accept a matching replacement first.');const d=M.deck(C.state,v.deck),r=d.slots.find(r=>r.committed&&M.compatible(l,r)&&M.shortfall(C.state,d,r)>=Number(v.quantity));if(!r)throw Error('This quantity exceeds the matching requirement. Reduce the quantity or choose another deck.');return {type:'allocate',deckId:d.id,slotId:r.id};});
 actions['release-row']=el=>quantityAction(el,'Release these copies',()=>note('The reservation becomes unfulfilled (To buy). Owned copies remain owned, with the same last confirmed physical location.'),()=>({type:'release',destination:'bench'}));
 actions['offer-row']=el=>quantityAction(el,'Sell / Trade collection',l=>s('Availability','offer',[['none','Remove from Sell / Trade'],['available','Available for sale / trade'],['held','Held for a pending deal']],l.offer)+note('Available offers remain candidates for builds. A pending deal releases a deck allocation and protects the copy from automatic reuse.'),(_,v)=>({type:'offer',offer:v.offer}));
