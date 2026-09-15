@@ -21,6 +21,12 @@ test('disconnect cancels readiness; grace precedes release; stale updates reject
   go({type:'disconnect',seatId:0},100000);go({type:'expire',seatId:0},160000);assert.equal(t.seats[0].occupied,false);
   assert.throws(()=>transitionTable(t,{type:'join',seatId:0,revision:0},{now:160000}),/Stale/);
 });
+test('an active human can concede without changing another seat',()=>{
+  let t=initial();const go=(event,now=0)=>t=transitionTable(t,{...event,revision:t.revision},{now,launchId:'launch-1'});
+  go({type:'join',seatId:1});for(let seatId=0;seatId<3;seatId++){go({type:'deck',seatId,deckVersion:'deck-'+seatId});go({type:'ready',seatId,ready:true});}
+  go({type:'countdown'});go({type:'tick'},10000);go({type:'engine-started',launchId:'launch-1',matchId:'match'});go({type:'concede',seatId:1},10001);
+  assert.equal(t.seats[1].occupied,false);assert.equal(t.seats[1].conceded,true);assert.equal(t.seats[0].occupied,true);assert.equal(t.phase,'playing');
+});
 test('invitations are single-use, scoped, revocable and never let the caller choose another seat',()=>{
   const access=new SeatAccess(),context={tableId:'a',generation:0,now:0};
   const first=access.invite({...context,seatId:1});const second=access.invite({...context,seatId:1});

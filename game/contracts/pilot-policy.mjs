@@ -2,11 +2,11 @@
  * These versioned budgets are for the API pilot; the C0 Forge-native driver is explicitly uncertified.
  */
 const PRESETS = [
-  {level:1,label:'Learner',candidateLimit:3,rolloutLimit:0,depth:1},
-  {level:2,label:'Casual',candidateLimit:5,rolloutLimit:16,depth:1},
-  {level:3,label:'Focused',candidateLimit:8,rolloutLimit:64,depth:2},
-  {level:4,label:'Advanced',candidateLimit:12,rolloutLimit:128,depth:3},
-  {level:5,label:'Expert',candidateLimit:20,rolloutLimit:256,depth:4}
+  {level:1,label:'Learner',candidateLimit:3,rolloutLimit:0,depth:1,opponentAttention:0,threatLimit:0,modelCallBudget:60},
+  {level:2,label:'Casual',candidateLimit:5,rolloutLimit:16,depth:1,opponentAttention:.2,threatLimit:2,modelCallBudget:120},
+  {level:3,label:'Focused',candidateLimit:8,rolloutLimit:64,depth:2,opponentAttention:.55,threatLimit:5,modelCallBudget:240},
+  {level:4,label:'Advanced',candidateLimit:12,rolloutLimit:128,depth:3,opponentAttention:.8,threatLimit:8,modelCallBudget:400},
+  {level:5,label:'Expert',candidateLimit:20,rolloutLimit:256,depth:4,opponentAttention:1,threatLimit:12,modelCallBudget:640}
 ].map(Object.freeze);
 export const DIFFICULTIES=Object.freeze(PRESETS);
 export function pilotPolicy(level=3) {
@@ -14,7 +14,7 @@ export function pilotPolicy(level=3) {
   return Object.freeze({schema:'CommanderPilotPolicy@1',...PRESETS[level-1],
     observation:'seat-filtered',replan:'after-each-draw-and-relevant-state-change',
     objective:'survival-then-win-probability-and-deck-strategy',budgetOverflow:'bounded-local-choice',
-    implementation:'api-pilot-pending'});
+    implementation:'api-pilot@1'});
 }
 
 /** Invalidate a plan on each individual draw, without allowing a new action during resolution.

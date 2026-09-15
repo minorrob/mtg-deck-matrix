@@ -1,0 +1,41 @@
+const status=document.querySelector('#status'),host=document.querySelector('#table'),sessionKey='crankmagic-seat-session';let session,tableState,pollTimer;
+const deckDraft={source:'upload',name:'',csv:'',deckId:'',commander:'',archidektCommander:'',url:''};
+const el=(tag,cls,text)=>{const node=document.createElement(tag);if(cls)node.className=cls;if(text!==undefined)node.textContent=text;return node;};
+const button=(text,fn,cls='')=>{const node=el('button',cls,text);node.type='button';node.addEventListener('click',fn);return node;};
+function message(text,error=false){status.textContent=text;status.className=error?'error':'notice';status.hidden=false;}
+async function api(path,{method='GET',body}={}){
+  const response=await fetch(path,{method,headers:{...(session?{Authorization:'Bearer '+session.capability}:{}),...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{})}),value=await response.json();if(!response.ok)throw Error(value.error||'Table request failed');return value;
+}
+async function redeem(){
+  try{session=JSON.parse(sessionStorage.getItem(sessionKey)||'null');}catch{session=null;}
+  const params=new URLSearchParams(location.hash.slice(1)),invite=params.get('invite'),tableId=params.get('table');
+  if(invite&&tableId){session=await api('/table/join',{method:'POST',body:{invite,tableId}});sessionStorage.setItem(sessionKey,JSON.stringify(session));history.replaceState(null,'',location.pathname);}
+  if(!session)throw Error('This invitation is missing, expired, or has already been used. Ask the host for a new QR code.');
+}
+function deckPanel(table,seat){
+  const panel=el('div','deck panel'),title=el('h2','',seat.deckVersion?'Choose this deck again or replace it':'Choose your deck');panel.append(title);
+  const source=el('select');source.setAttribute('aria-label','Deck source');for(const [value,label]of [['upload','Upload Moxfield two-column CSV'],['preloaded','Use a preloaded CrankMagic deck'],['lab','Build from a commander with Deck Lab'],['archidekt','Load an Archidekt deck']]){const option=el('option','',label);option.value=value;source.append(option);}
+  source.value=deckDraft.source;const name=el('input');name.placeholder='Deck name';name.setAttribute('aria-label','Deck name');name.value=deckDraft.name;name.addEventListener('input',()=>deckDraft.name=name.value);
+  const upload=el('div','choice'),file=el('input');file.type='file';file.accept='.csv,text/csv';file.setAttribute('aria-label','Moxfield deck CSV');const csv=el('textarea');csv.placeholder='Card Name,Count\nForest,99\n\nCommander Name,1';csv.setAttribute('aria-label','Deck CSV contents');csv.value=deckDraft.csv;csv.addEventListener('input',()=>deckDraft.csv=csv.value);file.addEventListener('change',async()=>{csv.value=file.files[0]?await file.files[0].text():'';deckDraft.csv=csv.value;});upload.append(file,csv,el('p','fine','Use two columns: card name and count. Put one blank line between the 99-card library and commander.'));
+  const catalog=el('div','choice'),saved=el('select');saved.setAttribute('aria-label','Preloaded deck');for(const d of table.catalog?.decks||[]){const option=el('option','',`${d.name} · ${d.commander}`);option.value=d.id;option.dataset.commander=d.commander;saved.append(option);}if(deckDraft.deckId)saved.value=deckDraft.deckId;saved.addEventListener('change',()=>deckDraft.deckId=saved.value);catalog.append(saved);
+  const build=el('div','choice'),commander=el('input');commander.placeholder='Commander name';commander.setAttribute('aria-label','Commander name');commander.value=deckDraft.commander;commander.addEventListener('input',()=>deckDraft.commander=commander.value);build.append(commander);
+  const archidekt=el('div','choice'),archidektCommander=el('input'),url=el('input');archidektCommander.placeholder='Commander name';archidektCommander.setAttribute('aria-label','Archidekt commander name');archidektCommander.value=deckDraft.archidektCommander;archidektCommander.addEventListener('input',()=>deckDraft.archidektCommander=archidektCommander.value);url.type='url';url.placeholder='https://archidekt.com/decks/…';url.setAttribute('aria-label','Archidekt deck URL');url.value=deckDraft.url;url.addEventListener('input',()=>deckDraft.url=url.value);archidekt.append(archidektCommander,url);
+  const choices={upload,catalog,build,archidekt},showSource=()=>{for(const n of Object.values(choices))n.classList.remove('active');choices[source.value==='preloaded'?'catalog':source.value==='lab'?'build':source.value].classList.add('active');};source.addEventListener('change',()=>{deckDraft.source=source.value;showSource();});showSource();
+  const save=button('Validate and use this deck',async()=>{try{save.disabled=true;message('Resolving all 100 cards, mechanics, bracket and table budget…');let input={source:deckDraft.source,name:deckDraft.name};if(deckDraft.source==='upload')input.csv=deckDraft.csv;else if(deckDraft.source==='preloaded'){input.deckId=saved.value;input.commander=saved.selectedOptions[0]?.dataset.commander;deckDraft.deckId=saved.value;}else if(deckDraft.source==='lab')input.commander=deckDraft.commander;else{input.commander=deckDraft.archidektCommander;input.archidektUrl=deckDraft.url;}await api('/table/deck',{method:'POST',body:input});await refresh();message('Deck validated. Press Ready when you are finished choosing.');}catch(error){message(error.message,true);}finally{save.disabled=false;}},'primary');
+  panel.append(el('div','deck-fields'),source,name,upload,catalog,build,archidekt,save);return panel;
+}
+function render(value){
+  tableState=value.table;status.hidden=true;host.hidden=false;host.replaceChildren();const rules=el('div','panel');rules.append(el('h1','',`Table · bracket ${tableState.settings?.bracket??'—'}`),el('p','',`Maximum deck cost: $${tableState.settings?.maxCost??'—'} · ${tableState.seats.length} seats`));host.append(rules);
+  const seats=el('div','seats');for(const seat of tableState.seats){const card=el('div','seat'+(seat.seatId===session.seatId?' you':''));card.append(el('strong','',seat.seatId===session.seatId?'You':seat.name||`Seat ${seat.seatId+1}`),el('span','',seat.kind==='ai'?'AI player':'Human player'),el('small','',!seat.occupied?'Waiting for player':seat.ready?'Ready':seat.connected?'Choosing a deck':'Disconnected'),...(seat.commander?[el('small','',seat.commander)]:[]));seats.append(card);}host.append(seats);
+  const own=tableState.seats.find(s=>s.seatId===session.seatId),actions=el('div','actions');
+  if(tableState.phase==='selecting'||tableState.phase==='countdown'){
+    host.append(deckPanel(value,own));const ready=button(own.ready?'Not ready':'Ready to play',async()=>{try{await api('/table/ready',{method:'POST',body:{ready:!own.ready}});await refresh();}catch(error){message(error.message,true);}},own.ready?'':'primary');ready.disabled=!own.deckVersion;actions.append(ready);
+  }
+  if(tableState.phase==='countdown'){const seconds=Math.max(0,Math.ceil((tableState.countdownAt-Date.now())/1000));actions.append(el('strong','countdown',`Starting in ${seconds}`));}
+  if(tableState.phase==='playing')actions.append(button('Enter the game',()=>location.assign('/play'),'primary'));
+  if(tableState.phase==='rematch'){if(own.rematch===true)actions.append(el('strong','waiting','Waiting for the other players…'));else actions.append(button('Yes, play another game',async()=>{await api('/table/rematch',{method:'POST',body:{accept:true}});await refresh();},'primary'),button('No',async()=>{await api('/table/rematch',{method:'POST',body:{accept:false}});await refresh();}));}
+  actions.append(button('Exit the table',async()=>{try{await api('/table/exit',{method:'POST',body:{}});sessionStorage.removeItem(sessionKey);session=null;host.hidden=true;message('You left the table.');clearTimeout(pollTimer);}catch(error){message(error.message,true);}}));host.append(actions);
+}
+async function refresh(){try{render(await api('/table'));}catch(error){message(error.message,true);}}
+async function heartbeat(){if(!session)return;try{await api('/table/heartbeat',{method:'POST',body:{}});await refresh();}catch(error){message(error.message,true);}pollTimer=setTimeout(heartbeat,10000);}
+try{await redeem();await refresh();heartbeat();}catch(error){message(error.message,true);}

@@ -5,7 +5,9 @@ import {fileURLToPath} from 'node:url';
 import {resolve,dirname} from 'node:path';
 import {randomInt,randomUUID} from 'node:crypto';
 import {snapshotLibraryDeck,canonical,sha256} from '../contracts/deck-snapshot.mjs';
+import {parseMoxfieldTwoColumn} from '../contracts/moxfield-import.mjs';
 import {compatibility} from './ai-compatibility.mjs';
+import {OPENAI_MODELS} from './windows-credential.mjs';
 const require=createRequire(import.meta.url),Builder=require('../../draft-builder.js'),Sources=require('../../deck-sources.js');
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../..'),read=p=>JSON.parse(readFileSync(resolve(root,p)));
 const state=read('data/live-state.json').payload.state,cardFile=read('data/cards.json'),identities=read('game/fixtures/live-identities.json').cards;
@@ -36,27 +38,32 @@ export function assess(deck,config){
 }
 export async function importWorkshopDeck(input){
   if(input?.schema!=='CrankMagicDeckHandoff@1'||typeof input.name!=='string'||input.name.length>180||!Array.isArray(input.rows)||input.rows.length>100||!Array.isArray(input.commanders)||input.commanders.length<1||input.commanders.length>2)throw Error('Invalid CrankMagic deck snapshot');
+  if(input.sourceDeckId!==undefined&&(typeof input.sourceDeckId!=='string'||!input.sourceDeckId||input.sourceDeckId.length>300))throw Error('Invalid source deck identity');
+  if(input.sourceRevision!==undefined&&(!Number.isSafeInteger(input.sourceRevision)||input.sourceRevision<0))throw Error('Invalid source deck revision');
+  if(input.sourceDeckVersion!==undefined&&(!Number.isSafeInteger(input.sourceDeckVersion)||input.sourceDeckVersion<1))throw Error('Invalid source deck version');
   const rows=[...input.rows,...input.commanders.map(name=>({name,quantity:1}))];
   if(rows.some(c=>typeof c.name!=='string'||!c.name.trim()||c.name.length>200||!Number.isSafeInteger(c.quantity)||c.quantity<1||c.quantity>100)||rows.reduce((n,c)=>n+c.quantity,0)!==100)throw Error('Your snapshot must contain exactly 100 cards including commander(s)');
   if(new Set(input.commanders).size!==input.commanders.length||input.rows.some(c=>input.commanders.includes(c.name)))throw Error('Commander appears twice in the snapshot');
   const merged=new Map();for(const row of rows)merged.set(row.name,(merged.get(row.name)||0)+row.quantity);
   const normalized=[...merged].map(([name,quantity])=>({name,quantity}));await hydrate(normalized);
-  const d={id:`handoff:${randomUUID()}`,source:'library',name:input.name,commander:input.commanders[0],commanders:[...input.commanders],rows:normalized};
+  const d={id:`handoff:${randomUUID()}`,source:'library',name:input.name,commander:input.commanders[0],commanders:[...input.commanders],rows:normalized,sourceDeckId:input.sourceDeckId||null,sourceRevision:input.sourceRevision??null,sourceDeckVersion:input.sourceDeckVersion??null};
   d.snapshot=snapshot(d);decks.push(d);
   return {id:d.id,name:d.name,commander:d.commander,deckHash:d.snapshot.gameplayHash};
 }
 export function setupCatalog(){return {schema:'CommanderSetupCatalog@1',variantCount:variants.length,rungCount:decks.filter(d=>d.source==='preloaded').length,priceAsOf:cardFile.generatedAt,
   commanders:[...byName.values()].filter(c=>c.isCommander||c.commander||decks.some(d=>d.commander===c.name)).map(c=>({name:c.name,image:c.image,colors:c.colorIdentity||[]})).sort((a,b)=>a.name.localeCompare(b.name)),
   decks:decks.map(d=>({id:d.id,name:d.name,source:d.source,commander:d.commander,rung:d.rung||null,...assess(d,{bracket:5,maxCost:10000})})),
-  defaults:{bracket:3,maxCost:225,humans:1,ais:3,seats:[{seatId:0,deckId:'deck:live:D2',source:'library',commanderMode:'selected',commander:'Chulane, Teller of Tales',name:'Rob'},...['D6','D3','D5'].map((id,i)=>({seatId:i+1,deckId:`deck:live:${id}`,source:'library',commanderMode:'selected',commander:decks.find(d=>d.id.endsWith(':'+id))?.commander,name:['Krenko','Atraxa','Shadrix'][i],nativeProfile:'Default',difficulty:3}))]}};}
+  defaults:{bracket:3,maxCost:225,humans:1,ais:3,seats:[{seatId:0,kind:'human',deckId:'deck:live:D2',source:'library',commanderMode:'selected',commander:'Chulane, Teller of Tales',name:'Rob'},...['D6','D3','D5'].map((id,i)=>({seatId:i+1,kind:'ai',deckId:`deck:live:${id}`,source:'library',commanderMode:'selected',commander:decks.find(d=>d.id.endsWith(':'+id))?.commander,name:['Krenko','Atraxa','Shadrix'][i],nativeProfile:'Default',difficulty:3}))]}};}
 export function validateSetup(c){
   if(!c||!Number.isInteger(c.bracket)||c.bracket<1||c.bracket>5)throw Error('Select a bracket from 1–5');
   if(!Number.isFinite(c.maxCost)||c.maxCost<1||c.maxCost>10000)throw Error('Deck cost cap must be $1–$10,000');
-  if(c.humans!==1||!Number.isInteger(c.ais)||c.ais<1||c.ais>3)throw Error('The playable local release supports one human plus 1–3 AI; additional human seats are phase C8');
-  if(!Array.isArray(c.seats)||c.seats.length!==c.ais+1)throw Error('Seat count does not match the selected player counts');
+  if(!Number.isInteger(c.humans)||c.humans<1||c.humans>4||!Number.isInteger(c.ais)||c.ais<0||c.ais>3||c.humans+c.ais<2||c.humans+c.ais>4)throw Error('Commander needs 2–4 total players with at least one human');
+  if(!Array.isArray(c.seats)||c.seats.length!==c.ais+c.humans)throw Error('Seat count does not match the selected player counts');
   for(const [i,s]of c.seats.entries()){
     if(s.seatId!==i||!['library','preloaded','lab','archidekt'].includes(s.source)||!['selected','random'].includes(s.commanderMode))throw Error('Invalid seat or deck source');
-    if(i&&(!['Default','Cautious','Reckless'].includes(s.nativeProfile)||!Number.isInteger(s.difficulty)||s.difficulty<1||s.difficulty>5))throw Error('Invalid AI profile or difficulty');
+    const kind=s.kind||(i<c.humans?'human':'ai');if(kind!==(i<c.humans?'human':'ai'))throw Error('Seat type does not match player counts');
+    const validModel=s.aiProvider==='openai'?OPENAI_MODELS.includes(s.aiModel):s.aiProvider==='anthropic'?s.aiModel==='claude-haiku-4-5-20251001':s.aiModel===undefined||s.aiModel===null;
+    if(kind==='ai'&&(!['Default','Cautious','Reckless'].includes(s.nativeProfile)||!Number.isInteger(s.difficulty)||s.difficulty<1||s.difficulty>5||![undefined,null,'openai','anthropic'].includes(s.aiProvider)||!validModel))throw Error('Invalid AI profile, provider, model, or difficulty');
     if(typeof s.name!=='string'||s.name.length>100||/[\r\n]/.test(s.name))throw Error('Invalid player name');
   }
 }
@@ -100,9 +107,8 @@ async function archidekt(s,c){
   }
   throw Error(`No verified Archidekt match in ${ids.length} candidates. ${rejected.slice(0,2).join(' ')} Choose another source or supply a deck URL.`);
 }
-export async function prepareSetup(config){
-  validateSetup(config);const seed=randomInt(1,2147483647),seats=[];
-  for(const request of config.seats){const s={...request};if(s.playmat!==undefined&&!validPlaymat(s.playmat))throw Error('Unknown playmat');s.playmatChoice=s.playmat||defaultPlaymat(s.seatId);s.playmat=resolvePlaymat(s.playmatChoice,seed,s.seatId).id;let d;
+async function prepareSeat(request,config,seed){
+    const s={...request},kind=s.kind||(s.seatId<config.humans?'human':'ai');if(!['human','ai'].includes(kind))throw Error('Unknown seat type');s.kind=kind;if(s.playmat!==undefined&&!validPlaymat(s.playmat))throw Error('Unknown playmat');s.playmatChoice=s.playmat||defaultPlaymat(s.seatId);s.playmat=resolvePlaymat(s.playmatChoice,seed,s.seatId).id;let d;
     if(['library','preloaded'].includes(s.source)){
       let eligible=decks.filter(d=>d.source===s.source&&assess(d,config).ok);
       if(s.commanderMode==='selected')eligible=eligible.filter(d=>d.commander===s.commander);
@@ -117,7 +123,30 @@ export async function prepareSetup(config){
     await hydrate(d.rows);const check=assess(d,config);if(!check.ok)throw Error(`${s.name}: ${check.problems.join('; ')}`);
     const frozen=snapshot(d),mechanics=mechanicsSnapshot(frozen);
     s.aiCompatibility=compatibility(frozen,resolve(root,'../forge'));
-    seats.push({...s,deck:frozen,mechanics,check,sourceUrl:d.url||null,sourceNotes:d.notes||[],pilot:s.seatId?{kind:'forge-native',profile:s.nativeProfile,difficultyRequested:s.difficulty,difficultyApplied:false}:{kind:'human'}});
-  }
-  return {schema:'CommanderPodPack@1',capturedAt:new Date().toISOString(),seed,settings:config,seats,podHash:sha256(canonical({seed,bracket:config.bracket,maxCost:config.maxCost,seats:seats.map(s=>({seatId:s.seatId,deckHash:s.deck.gameplayHash,mechanicsHash:s.mechanics.hash,pilot:s.pilot}))})),measured:false,bracketStatus:'catalog-count-check; strategy agreement and engine legality still required',priceAsOf:cardFile.generatedAt};
+    const pilot=kind==='ai'?{kind:s.aiProvider?'api':'forge-native',profile:s.nativeProfile,difficultyRequested:s.difficulty,difficultyApplied:s.difficulty,provider:s.aiProvider||null,model:s.aiModel||null}:{kind:'human'};
+    const sourceDeck={kind:d.source==='library'?'crankmagic-library':d.source,deckId:d.sourceDeckId||frozen.deckId||null,deckVersion:d.sourceDeckVersion??frozen.deckVersion??null,sourceRevision:d.sourceRevision??frozen.source?.revision??null};
+    return {...s,engineController:kind==='human'||s.aiProvider?'browser':'native-ai',deck:frozen,sourceDeck,mechanics,check,sourceUrl:d.url||null,sourceNotes:d.notes||[],pilot};
+}
+export async function prepareGuestDeck(member,input,settings){
+  if(!member||!Number.isSafeInteger(member.seatId)||member.seatId<0||member.seatId>3)throw Error('Human seat required');
+  if(!settings||!Number.isInteger(settings.bracket)||!Number.isFinite(settings.maxCost))throw Error('Table rules required');
+  let request={seatId:member.seatId,kind:'human',name:String(input?.name||`Player ${member.seatId+1}`).slice(0,100),commanderMode:'selected',playmat:input?.playmat};
+  if(input?.source==='upload'){
+    const parsed=parseMoxfieldTwoColumn(input.csv,{name:input.name||`Player ${member.seatId+1} deck`}),created=await importWorkshopDeck(parsed);request={...request,source:'library',deckId:created.id,commander:created.commander};
+  }else if(input?.source==='preloaded'||(input?.source==='library'&&member.seatId===0))request={...request,source:input.source,deckId:input.deckId,commander:input.commander};
+  else if(['lab','archidekt'].includes(input?.source))request={...request,source:input.source,commander:input.commander,archidektUrl:input.archidektUrl};
+  else throw Error('Choose an uploaded, saved, preloaded, Deck Lab or Archidekt deck');
+  const seed=randomInt(1,2147483647),seat=await prepareSeat(request,{...settings,humans:Math.max(member.seatId+1,settings.humans||1)},seed);
+  return {id:`deck-version:${randomUUID()}`,validated:true,commander:seat.deck.commanders.map(c=>c.name).join(' + '),snapshot:seat,deckHash:seat.deck.gameplayHash,createdAt:new Date().toISOString()};
+}
+export async function prepareSetup(config){
+  validateSetup(config);const seed=randomInt(1,2147483647),seats=[];
+  for(const request of config.seats)seats.push(await prepareSeat(request,config,seed));
+  return podPack(config,seed,seats);
+}
+function podPack(config,seed,seats){return {schema:'CommanderPodPack@1',capturedAt:new Date().toISOString(),seed,settings:config,seats,podHash:sha256(canonical({seed,bracket:config.bracket,maxCost:config.maxCost,seats:seats.map(s=>({seatId:s.seatId,deckHash:s.deck.gameplayHash,mechanicsHash:s.mechanics.hash,pilot:s.pilot}))})),measured:false,bracketStatus:'catalog-count-check; strategy agreement and engine legality still required',priceAsOf:cardFile.generatedAt};}
+export async function prepareLobby(config){
+  validateSetup(config);const seed=randomInt(1,2147483647),seats=[];
+  for(const request of config.seats){const kind=request.kind||(request.seatId<config.humans?'human':'ai');if(kind==='ai'||request.seatId===0)seats.push(await prepareSeat(request,config,seed));}
+  return {...podPack(config,seed,seats),schema:'CommanderLobbyPack@1',reservedHumanSeats:config.seats.filter(s=>(s.kind||(s.seatId<config.humans?'human':'ai'))==='human'&&s.seatId!==0).map(s=>({seatId:s.seatId,name:s.name}))};
 }

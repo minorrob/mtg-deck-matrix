@@ -24,6 +24,7 @@ test('Anthropic malformed, invented, truncated, refused and HTTP error responses
 test('provider receives an offered choice and returns only a valid index with bounded calls',async()=>{
   let sent;const provider=createOpenAIChoiceProvider({apiKey:'test-only',maxCalls:1,fetchImpl:async(url,options)=>{assert.equal(url,'https://api.openai.com/v1/responses');sent=JSON.parse(options.body);return response('{"index":1}');}});
   assert.equal(await provider(ticket),1);assert.equal(sent.store,false);assert.deepEqual(sent.text.format.schema.properties.index.enum,[0,1]);
+  assert.equal(sent.model,'gpt-5.6-luna');
   assert.ok(!JSON.stringify(sent).includes('test-only'));await assert.rejects(provider(ticket),/limit/);
 });
 test('invalid, extra, incomplete, refused and provider-error answers cannot become engine actions',async()=>{
