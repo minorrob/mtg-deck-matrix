@@ -12,7 +12,10 @@
  * Now a cap is planned, not merely obeyed:
  *   - A basic land with no recorded price is priced at a dime. It is the one card the
  *     catalog can vouch for without a number.
- *   - THE UPGRADE PASS: once the hundred is full, what is left of the cap buys upgrades --
+ *   - THE BRACKET FIT (`definition.fitBracket`): once the hundred is full, the bracket's Game
+ *     Changer allowance is SPENT before anything else is -- it is structural, what the deck is,
+ *     rather than an improvement. Runs first for that reason; see the note where it lives.
+ *   - THE UPGRADE PASS: then what is left of the cap buys upgrades --
  *     the best-scored cards not yet in the list replace the weakest of the same role, one
  *     swap at a time, while the money lasts. A $100 list should cost about $100.
  *   - THE RESERVE RULE: a card is taken only if, after it, what remains of the cap can
@@ -27,6 +30,8 @@
  *   - Lands: a mono-colour deck wants basics, not fourteen utility lands with a rank.
  *     Nonbasic lands are capped by colour count and basics fill the rest.
  *   - Game Changers follow the bracket: none at a ceiling of 1-2, three at 3, any at 4-5.
+ *     That is a CEILING. `definition.fitBracket` turns it into a target as well, so a deck
+ *     generated for a bracket 3 table actually plays at bracket 3 rather than merely under it.
  *
  * Play style, speed, competitiveness and saltiness do not steer this pass and the notes
  * say so; pretending a slider changed the list would be worse than admitting it did not. */
@@ -139,13 +144,64 @@
       }
     }
 
+    /* What both of the passes below may take out of the list: one copy of a card that is not the
+       commander, not pinned and not a basic land. */
+    const swappable=id=>{const c=lookup(id);return c&&!commanders.some(x=>x.id===id)&&!pinned.some(r=>r.cardId===id)&&!isBasic(c)&&(chosen.get(id)||0)===1;};
+    let upgrades=0;
+
+    /* FITTING THE BRACKET, NOT MERELY OBEYING IT (Rob, 15 September; game plan §9).
+       `bracketCeiling` is exactly that -- a ceiling. Every pass above refuses to cross it and
+       none of them ever aims at it, so a bracket 3 deck built to a budget lands wherever the
+       price list happens to leave it: the first generated opponent came out carrying ONE of its
+       three allowed Game Changers, which plays like bracket 2 while the seat says bracket 3.
+       A deck generated for a bracket 3 table has to BE a bracket 3 deck.
+
+       So `fitBracket` adds one more pass that deliberately spends the allowance: the
+       strongest-scoring Game Changers the budget can still afford come in, each taking the seat
+       of the weakest same-role card that is not a basic, a commander or pinned. The +5 margin
+       the upgrade pass insists on is NOT applied here -- that pass is looking for a marginal
+       improvement, this one is filling a quota the bracket set, and a Game Changer that scores
+       no better than what it replaces still changes what bracket the deck plays at.
+
+       The ceiling is never crossed and the budget is never exceeded, so where the money runs out
+       first the list simply comes up short -- and `bracketFit` reports the shortfall by number
+       rather than letting the deck read as a bracket it does not play at. Opt-in, because the
+       Lab drafts a list for a person to edit and should not spend their money on Game Changers
+       they did not ask for; the lobby, generating an opponent, always asks for it.
+
+       IT RUNS BEFORE THE UPGRADE PASS, and that ordering is the whole difference between working
+       and not. Run after, it competed for money the upgrades had already spent: on the full
+       31,835-card pool a $225 Krenko finished the upgrade pass with $1.22 left and every one of
+       its six affordable Game Changers priced out, so the deck carried none of the three its
+       bracket allows. The bracket's allowance is structural — it is what the deck IS — and a
+       marginal same-role upgrade is what you do with the change afterwards. First the deck is
+       made a bracket 3 deck; then whatever is left over improves it. */
+    let bracketFit=null;
+    if(definition.fitBracket&&maxGameChangers!==Infinity&&maxGameChangers>0&&count()===100){
+      const want=maxGameChangers-gameChangers;
+      /* A card the catalog has no price for is not free, and the upgrade pass above already
+         refuses those for exactly that reason: several real Game Changers carry a recorded 0,
+         and letting them in would build a "$60" deck around three cards worth hundreds. */
+      const changers=pool.filter(c=>c.gameChanger&&!chosen.has(c.id)&&!isBasic(c)&&price(c)!==null&&(perCardCap===null||price(c)<=perCardCap)).sort((a,b)=>rawScore(b)-rawScore(a));
+      let added=0,blocked=0;
+      for(const cand of changers){
+        if(added>=want)break;
+        const p=price(cand)||0,r=role(cand);
+        const weakest=[...chosen.keys()].filter(id=>swappable(id)&&!lookup(id).gameChanger&&role(lookup(id))===r).map(lookup).sort((a,b)=>rawScore(a)-rawScore(b))[0];
+        if(!weakest)continue;
+        const wp=price(weakest)||0;
+        if(budget!==null&&spend-wp+p>budget+1e-9){blocked+=1;continue;}
+        chosen.delete(weakest.id);chosen.set(cand.id,1);spend+=p-wp;gameChangers+=1;added+=1;
+      }
+      bracketFit={allowed:maxGameChangers,carried:gameChangers,added,short:maxGameChangers-gameChangers,blockedByBudget:blocked};
+    }
+
+
     /* THE UPGRADE PASS. The fill above is cautious by construction; this spends what the
        caution left over. Same-role swaps keep the balance the targets set; the commander,
        pinned cards and basics are never swapped out; the splurge limit still bounds how
        much of the cap the staples may take. */
-    let upgrades=0;
     if(budget!==null&&count()===100){
-      const swappable=id=>{const c=lookup(id);return c&&!commanders.some(x=>x.id===id)&&!pinned.some(r=>r.cardId===id)&&!isBasic(c)&&(chosen.get(id)||0)===1;};
       const candidates=pool.filter(c=>!chosen.has(c.id)&&price(c)!==null&&!isBasic(c)&&(perCardCap===null||price(c)<=perCardCap)).sort((a,b)=>rawScore(b)-rawScore(a));
       for(const cand of candidates){
         if(upgrades>=30||spend>=budget*.97)break;
@@ -194,9 +250,12 @@
         +(upgrades?` ${upgrades} of the first picks were then upgraded with what the cap had left.`:'')
         +(relaxed?` To fill it, the per-card share of the cap was loosened ${relaxed===1?'once':'twice'}; the cap itself was never exceeded.`:''));
     }
-    if(maxGameChangers!==Infinity)notes.push(`Bracket ceiling ${ceiling}: ${maxGameChangers===0?'no Game Changers were chosen':'at most three Game Changers were chosen ('+gameChangers+' in this list)'}.`);
+    if(bracketFit)notes.push(`Fitted to bracket ${ceiling}: ${bracketFit.carried} of the ${bracketFit.allowed} Game Changers it allows`
+      +(bracketFit.added?`, ${bracketFit.added} of them brought in to spend the allowance`:'')
+      +(bracketFit.short?`. ${bracketFit.short} short of the allowance${bracketFit.blockedByBudget?` — the budget would not stretch to ${bracketFit.short===1?'another':'more'}`:' — the catalog holds no more in these colours'}, so this deck plays under its bracket rather than at it.`:'.'));
+    else if(maxGameChangers!==Infinity)notes.push(`Bracket ceiling ${ceiling}: ${maxGameChangers===0?'no Game Changers were chosen':'at most three Game Changers were chosen ('+gameChangers+' in this list)'}.`);
     notes.push('Play style, speed, competitiveness and saltiness require your review. This initial pass does not steer by them and does not certify them.');
-    return {slots:result,cards:[...new Set([...chosen.keys()])].map(lookup),issues,estimatedPrice:spend,relaxed,gameChangers,splurged,nonbasics,upgrades,seeded,
+    return {slots:result,cards:[...new Set([...chosen.keys()])].map(lookup),issues,estimatedPrice:spend,relaxed,gameChangers,bracketFit,splurged,nonbasics,upgrades,seeded,
       unknownPrices:result.filter(r=>price(lookup(r.cardId))===null).length,method:seed&&seed.size?'Constructive draft seeded from the trace; not simulated':'Constructive metadata draft; not simulated',notes};
   }
   return {build,role,BASIC_PRICE};

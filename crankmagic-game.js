@@ -12,10 +12,10 @@
  *   - an Archidekt link, through deck-sources.js, which brings full oracle data on arrival;
  *   - a Moxfield or Deckstats paste, because those sites answer a deck request with 403 to a
  *     browser and a server alike, so the export is the honest path;
- *   - a list drafted from a commander by draft-builder.js, built to TWO constraints (§9, decided
+ *   - a list drafted from a commander by draft-builder.js, FITTED to two constraints (§9, decided
  *     15 September) rather than matched to your score: the table's bracket, which binds every seat
- *     alike, and a price cap, which is this seat's own. Both are limits the real world imposes, so
- *     the result means something outside this app.
+ *     alike, and a price cap, which is this seat's own. Fitted, not merely kept under — a deck
+ *     that sits below its bracket is a weaker opponent wearing the bracket's name.
  *
  * THE LOBBY IS NOT SAVED TO THE LIBRARY. A table being set up is not a fact about your
  * collection, so it lives in memory and in localStorage under its own key, the way the table's
@@ -181,7 +181,7 @@
       + `<label class="cm-full">Decklist<textarea name="paste" rows="8" maxlength="20000" placeholder="1 Krenko, Mob Boss&#10;&#10;1 Sol Ring&#10;30 Mountain…"></textarea></label>`
       + f("Commander to build from", "commander", "", 'maxlength="160" placeholder="Krenko, Mob Boss"')
       + f("Budget for the generated deck", "budget", String(BUDGET), 'type="number" min="10" max="5000" step="5"')
-      + note(`A generated deck is built to two constraints, not one: this table's bracket ${L.bracketOf(lobby.bracket).n}, ${L.bracketOf(lobby.bracket).name} — which caps it at ${L.capOf(L.bracketOf(lobby.bracket), lobby.cap === "" ? undefined : lobby.cap) === Infinity ? "no" : L.capOf(L.bracketOf(lobby.bracket), lobby.cap === "" ? undefined : lobby.cap)} Game Changers — and the budget above. The bracket is the table's and applies to every seat; only the budget is this seat's own.`)
+      + note(`A generated deck is FITTED to two constraints, not merely kept under them: this table's bracket ${L.bracketOf(lobby.bracket).n}, ${L.bracketOf(lobby.bracket).name} — whose ${L.capOf(L.bracketOf(lobby.bracket), lobby.cap === "" ? undefined : lobby.cap) === Infinity ? "unlimited Game Changers it uses freely" : `${L.capOf(L.bracketOf(lobby.bracket), lobby.cap === "" ? undefined : lobby.cap)} Game Changers it aims to actually carry`} — and the budget above, which it spends. A deck that sat under its bracket would be a weaker opponent wearing the bracket's name. The bracket is the table's and applies to every seat; only the budget is this seat's own.`)
       + note("Every seat is judged by this table's bracket the moment it sits, and what fails is named by card. A pasted list keeps its names; where the catalog knows a card, its colours, its Game Changer flag and how often it is played come with it."),
       async (v) => { await addSeat(v, you); }, "Seat it");
   };
@@ -260,16 +260,23 @@
        colour identity and legality itself, and it reads the bracket's Game Changer cap from the
        same ceiling the lobby set. */
     const pool = C.catalog.all();
-    const cap = globalThis.CrankRules ? globalThis.CrankRules.RULES.perCardMax : null;
-    const built = B.build({commanders: [found], cards: pool, definition: {bracketCeiling: lobby.bracket, budget, perCardCap: cap}});
+    /* NO PER-CARD CAP ON AN OPPONENT. The house's $30 rule is Rob's buying rule, and applying it
+       to a deck someone else is imagined to own would refuse this table exactly the cards that
+       make a bracket what it is. The total budget is the realistic constraint — what this player
+       spent — and the builder's own splurge limit already stops one card eating half of it.
+       `fitBracket` is what makes the bracket a target rather than a ceiling. */
+    const built = B.build({commanders: [found], cards: pool, definition: {bracketCeiling: lobby.bracket, budget, perCardCap: null, fitBracket: true}});
     const byId = new Map(pool.map((c) => [c.id, c]));
     const cards = (built.slots || []).map((r) => { const c = byId.get(r.cardId) || {}; return {
       name: c.name || r.cardId, quantity: r.quantity || 1, cardId: r.cardId, gameChanger: !!c.gameChanger,
       colorIdentity: c.colorIdentity || [], typeLine: c.typeLine || "", edhrecRank: c.edhrecRank, price: c.price}; });
-    const bracket = L.bracketOf(lobby.bracket);
+    const bracket = L.bracketOf(lobby.bracket), fit = built.bracketFit;
+    /* A deck that could not reach its bracket says so at the moment it is seated rather than
+       leaving the reader to notice the Game Changer count on the card. */
+    if (fit && fit.short) C.notice(`${found.name} was built to fit bracket ${bracket.n}, but ${C.money(budget)} only reached ${fit.carried} of the ${fit.allowed} Game Changers it allows. Raise the budget for a fuller bracket ${bracket.n} opponent.`);
     return L.seat({name: `${found.name} (generated · bracket ${bracket.n} · ${C.money(budget)})`, kind: "generated", you,
       commanders: [{name: found.name, cardId: found.id, colorIdentity: found.colorIdentity || []}],
-      cards, score: null, scoreWhy: `Built to bracket ${bracket.n} (${bracket.name}) and ${C.money(budget)}, never measured: the simulator has not played this list.`});
+      cards, score: null, scoreWhy: `Built to fit bracket ${bracket.n} (${bracket.name}) and ${C.money(budget)}${fit && fit.short ? `, though it came up ${fit.short} Game Changer${fit.short === 1 ? "" : "s"} short of the bracket's allowance` : ""}. Never measured: the simulator has not played this list.`});
   }
 
   /* ---------------------------------------------------------------- the two ways forward */
@@ -305,7 +312,7 @@
     <li><strong>What it does not check.</strong> Mass land denial, chained extra turns and two-card infinite combos are judgements about how a deck plays rather than counts. The bracket's own words say what it expects; keeping to them is yours.</li>
     <li><strong>Trim</strong> cuts the excess Game Changers and puts basics in their place, so the hundred still stands. It changes the seat, never the deck in your library.</li>
     <li><strong>The read</strong> compares your measured score to the rest of the pod, not to the pod including you — a table of one strong deck and three weak ones should not read as nearly fair.</li>
-    <li><strong>A generated seat is built to a budget and this table's bracket</strong>, not matched to your score. The bracket binds every seat alike; the budget is that seat's own. A deck built around you is a sparring partner — a deck built to real limits is the kind of opponent a real table produces, so beating it means something.</li>
+    <li><strong>A generated seat is fitted to a budget and this table's bracket</strong>, not matched to your score. Fitted, not merely kept under: it spends the bracket's Game Changer allowance as well as the money, because a deck sitting below its bracket is a weaker opponent wearing the bracket's name. Where the budget will not reach the allowance, the lobby says so when the seat is taken.</li>
     <li><strong>The seating</strong> is a seeded shuffle. Write the seed down and the same table deals again.</li>
   </ul>`;
 });

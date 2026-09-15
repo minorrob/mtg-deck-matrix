@@ -175,6 +175,70 @@ ok(decks.length >= 4, `the live library has decks to seat (${decks.length})`);
   ok(/1 seat cannot sit yet/.test(blocked.why), "and the table counts them");
 }
 
+/* ---- a generated seat FITS its bracket, it does not merely sit under it (game plan §9) ----
+   `bracketCeiling` is a ceiling: every pass in the builder refuses to cross it and none of them
+   aims at it, so a bracket 3 deck built to a budget lands wherever the price list leaves it. The
+   first generated opponent came out carrying ONE of its three allowed Game Changers — a deck that
+   plays like bracket 2 while the seat says bracket 3. `fitBracket` is what closes that. */
+{
+  const B = require(path.join(ROOT, "draft-builder.js"));
+  /* The committed catalog as the builder wants it: `verified` is the flag the app's own catalog
+     stamps when it normalises a record, and every row in cards.json came from Scryfall, so
+     stamping it here is a statement of fact rather than a convenience. */
+  const catalog = JSON.parse(readFileSync(path.join(ROOT, "data/cards.json"), "utf8")).cards.map((c, i) => ({...c, id: c.oracleId || "card" + i, verified: true, edhrecRank: c.rank}));
+  const commander = catalog.find((c) => c.name === "Krenko, Mob Boss");
+  ok(commander, "the catalog holds a commander to draft from");
+  const definition = {bracketCeiling: 3, budget: 400, perCardCap: null};
+  const capped = B.build({commanders: [commander], cards: catalog, definition});
+  const fitted = B.build({commanders: [commander], cards: catalog, definition: {...definition, fitBracket: true}});
+  ok(capped.gameChangers <= 3, `a ceiling is never crossed (${capped.gameChangers} of 3)`);
+  ok(fitted.gameChangers <= 3, `and fitting never crosses it either (${fitted.gameChangers} of 3)`);
+  ok(fitted.gameChangers >= capped.gameChangers, `fitting never carries fewer (${capped.gameChangers} → ${fitted.gameChangers})`);
+  ok(fitted.gameChangers > capped.gameChangers, `and on this catalog it carries more: obeying the bracket gave ${capped.gameChangers}, fitting it gave ${fitted.gameChangers}`);
+  eq(capped.bracketFit, null, "a plain build reports no fit, because it was not asked for one");
+  eq(fitted.bracketFit.allowed, 3, "a fitted build says what the bracket allowed");
+  eq(fitted.bracketFit.carried, fitted.gameChangers, "and what it ended up carrying");
+  eq(fitted.slots.reduce((n, r) => n + r.quantity, 0), 100, "the fit keeps the ninety-nine at ninety-nine");
+  ok(fitted.estimatedPrice <= 400 + 1e-6, `and inside the budget ($${fitted.estimatedPrice.toFixed(2)} of $400)`);
+  ok(fitted.notes.some((n) => /Fitted to bracket 3/.test(n)), "the notes say it was fitted rather than merely capped");
+  /* Brackets 1 and 2 allow none, so fitting them is a no-op rather than a licence. */
+  const none = B.build({commanders: [commander], cards: catalog, definition: {...definition, bracketCeiling: 2, fitBracket: true}});
+  eq(none.gameChangers, 0, "bracket 2 allows none, and fitting it still carries none");
+  eq(none.bracketFit, null, "there is no allowance to fit, so nothing is reported");
+  /* A budget too small to reach the allowance comes up short and says so rather than pretending. */
+  const poor = B.build({commanders: [commander], cards: catalog, definition: {...definition, budget: 40, fitBracket: true}});
+  if (poor.bracketFit && poor.bracketFit.short) {
+    ok(poor.notes.some((n) => /short of the allowance/.test(n)), `a budget that cannot reach the bracket says so: ${poor.bracketFit.carried} of ${poor.bracketFit.allowed}`);
+    ok(poor.estimatedPrice <= 40 + 1e-6, "and it still never spends past the budget");
+  } else ok(true, "even $40 reached the allowance on today's prices");
+  /* THE FIT RUNS BEFORE THE UPGRADE PASS, and that ordering is the whole difference between
+     working and not: run after, it competed for money the upgrades had already spent. On the full
+     31,835-card pool a $225 Krenko finished the upgrade pass with $1.22 left and every affordable
+     Game Changer priced out, so the deck carried none of its three. Pinned here as the shape the
+     bug had — a fitted deck reaches the allowance AND costs no more than the unfitted one, because
+     it bought three sensible Game Changers instead of one expensive card plus marginal swaps. */
+  const tight = {bracketCeiling: 3, budget: 225, perCardCap: null};
+  const loose = B.build({commanders: [commander], cards: catalog, definition: tight});
+  const tightFit = B.build({commanders: [commander], cards: catalog, definition: {...tight, fitBracket: true}});
+  eq(tightFit.gameChangers, 3, `a $225 deck still reaches all three (it carried ${loose.gameChangers} before the fit)`);
+  ok(tightFit.estimatedPrice <= loose.estimatedPrice + 1e-6,
+    `and costs no more for it ($${tightFit.estimatedPrice.toFixed(2)} fitted against $${loose.estimatedPrice.toFixed(2)} unfitted) — the allowance is bought before the change is spent on marginal swaps`);
+  eq(tightFit.slots.reduce((n, r) => n + r.quantity, 0), 100, "and it is still a hundred");
+  {
+    const order = readFileSync(path.join(ROOT, "draft-builder.js"), "utf8");
+    ok(order.indexOf("/* FITTING THE BRACKET") < order.indexOf("/* THE UPGRADE PASS."),
+      "the fit pass is written before the upgrade pass, which is what makes the money reach it");
+  }
+
+  /* The seat the lobby builds from a fitted list is a legal bracket 3 deck. */
+  const seat = L.seat({name: "Generated", kind: "generated",
+    commanders: [{name: commander.name, colorIdentity: commander.colorIdentity}],
+    cards: fitted.slots.filter((r) => r.cardId !== commander.id).map((r) => { const c = catalog.find((x) => x.id === r.cardId) || {}; return {name: c.name, quantity: r.quantity, gameChanger: !!c.gameChanger, colorIdentity: c.colorIdentity || [], typeLine: c.typeLine}; })});
+  const check = L.validate(seat, {bracket: 3});
+  eq(check.gameChangers, fitted.gameChangers, "the lobby counts the same Game Changers the builder chose");
+  ok(check.ok, `and a fitted bracket 3 deck can sit at a bracket 3 table${check.ok ? "" : ": " + check.issues.map((i) => i.why).join(" ")}`);
+}
+
 /* ---- pure ---- */
 {
   const before = JSON.stringify(live);

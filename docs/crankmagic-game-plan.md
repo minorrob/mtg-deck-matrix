@@ -388,6 +388,28 @@ actually imposes, and a deck built under them is a deck someone could really hav
 result means something outside this app, and the pod read can say *you are the deck to beat by 12*
 and be describing a real gap rather than a knob that was set to zero.
 
+**Fitted, not merely kept under.** `bracketCeiling` was exactly that — a ceiling. Every pass in
+the draft builder refused to cross it and none of them ever aimed at it, so a bracket 3 deck built
+to a budget landed wherever the price list happened to leave it: the first generated opponent came
+out carrying **one** of its three allowed Game Changers, which plays like bracket 2 while the seat
+says bracket 3. `definition.fitBracket` makes the allowance a target: the strongest-scoring Game
+Changers the budget can afford come in, each taking the seat of the weakest same-role card, with
+no minimum-improvement margin — this pass is filling a quota the bracket set, not looking for a
+marginal gain.
+
+**And it runs before the upgrade pass, which is the whole difference between working and not.**
+Run after, it competed for money the upgrades had already spent: on the full 31,835-card pool a
+$225 Krenko finished the upgrade pass with **$1.22** left and every one of its six affordable Game
+Changers priced out. The allowance is structural — it is what the deck *is* — and a marginal
+same-role upgrade is what you do with the change. First the deck is made a bracket 3 deck; then
+whatever is left improves it. Fitted first, that same $225 Krenko carries **3 of 3** and costs
+*less* ($218 against $223), because it bought three sensible Game Changers instead of one expensive
+card and a handful of marginal swaps.
+
+Where the budget genuinely cannot reach the allowance the list comes up short and **says so by
+number**, on the seat and in a notice when it is taken, rather than reading as a bracket it does
+not play at.
+
 **They are different kinds of constraint, and the lobby treats them differently.**
 
 - **The bracket is the table's** and binds every seat alike — it is what caps the Game Changers,
