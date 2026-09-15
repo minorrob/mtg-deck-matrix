@@ -1,6 +1,6 @@
 # C0 engine feasibility — executable checkpoint
 
-September 15, 2026 UTC. Baseline website source: `e2bf018b96e7a6ecae702abdd963f450501ace38` (#219). Isolated branch: `codex/commander-engine-c0`. Forge: [`58bcd59062a3b44019195a3c25d6ab41a7fe2f61`](https://github.com/Card-Forge/forge/tree/58bcd59062a3b44019195a3c25d6ab41a7fe2f61), 2.0.15-SNAPSHOT, Java 17. No upstream Forge edits.
+September 15, 2026 UTC. Game-fixture baseline: `e2bf018b96e7a6ecae702abdd963f450501ace38` (#219). The isolated `codex/commander-engine-c0` branch has since rebased onto main `f98a8f6`, including merged #220 and #221. Forge: [`58bcd59062a3b44019195a3c25d6ab41a7fe2f61`](https://github.com/Card-Forge/forge/tree/58bcd59062a3b44019195a3c25d6ab41a7fe2f61), 2.0.15-SNAPSHOT, Java 17. No upstream Forge edits.
 
 ## Decision
 
@@ -59,7 +59,8 @@ The RNG-prefix restart demonstrates a durable pending opening choice. Forge's ex
 - Engine jar SHA-256: `16a3e58be182ec32dd9291c29f5a4ba2fb192ab47bdd305f65fcfe42b07a5ee0`. Run manifests record jar, adapter, and pod hashes. Rebuild hashes may differ because the upstream build embeds build metadata.
 - Maven reactor build passed with upstream tests and Checkstyle skipped. The explicit Java loss fixtures and Node replay checks above were run separately; this is not a full upstream Forge regression run.
 - All 62 existing/new root Node suites were attempted on Windows. After correcting unchanged checkout line endings, documenting the two new suites, regenerating data-inventory readers, and fixing two Windows path comparisons in `tests/generators.mjs`, 60 suites pass. The existing `browser-geometry` and `page-budget` suites fail at a Windows absolute-module import before any browser assertions. The generator suite also reports its existing `build-live-load` check skipped because its `python3` lacks openpyxl.
-- Companion UI checked independently through the browser: counter breakdown, finished-game totals/out states, per-opponent difficulty selection, hand gallery, large card inspection, and card-image repair. No browser console errors observed during those checks.
+- Companion UI checked independently through the browser: counter breakdown, finished-game totals/out states, per-opponent difficulty selection, board focus, hand gallery, large card inspection, and card-image repair. At 390, 1366, and 1920 CSS-pixel widths there is no document overflow horizontally. Large-card views handle short viewports. No browser console errors observed. [Implemented preview screenshot](table-preview.png).
+- After the clean rebase onto #220/#221, the collection-model, change, sandbox, tabletop, snapshot, pilot, asset-version, and data-integrity suites pass; the generated data inventory matches. The committed card fixture did not change, so the recorded engine match retains its original fixture provenance.
 - Website production modules and both pre-existing working checkouts remain unchanged. No report has been imported as measured evidence. No key was requested and no paid AI call was made.
 
 ## Next implementation gate
@@ -68,6 +69,6 @@ The RNG-prefix restart demonstrates a durable pending opening choice. Forge's ex
 2. Kill and recover that scenario with an unresolved stack choice. Prove identical resulting state and no duplicate application.
 3. Certify the seat observation boundary using hidden-state permutations, reveals, face-down objects, and control changes. Replace or constrain native fallback paths that inspect hidden data.
 4. Add source/ability/cause IDs for triggers, mana produced/spent, replacements, and repeated lines; reconcile expected totals independently.
-5. Reconcile #220's final shared UI changes before website integration. It remained unavailable at the C0 baseline check; the game-specific files are isolated so its Shelf work can continue.
+5. Wire the existing lobby/export path to the now-reconciled website baseline. Preserve #220's Shelf destinations and #221's physical substitute pairing; a game snapshot uses the selected hundred, independently of where physical copies currently sit.
 
 Only after those gates should C2 be described as a playable core. The phone-counter layout and difficulty controls are retained as UI requirements throughout the remaining work.

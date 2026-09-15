@@ -2,6 +2,8 @@
 
 This is the first executable checkpoint of the [accepted plan](../docs/commander-simulator-plan-2026-09-15.md). It runs the committed decks through pinned Forge and displays an actual recorded match. **It is not yet a human-playable or API-piloted game.** [Evidence and remaining gates](docs/c0-evidence.md).
 
+[Table preview image](docs/table-preview.png). The local branch includes merged website PRs #220 and #221; the engine fixture preserves its original #219 data provenance.
+
 ## Open the table
 
 From the repository root:

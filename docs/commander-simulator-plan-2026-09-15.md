@@ -2,7 +2,7 @@
 
 **Accepted direction · C0 implementation in progress**  
 Reviewed September 14, 2026, evening in New York / September 15 UTC.  
-Baseline: main at [`e2bf018`](https://github.com/minorrob/mtg-deck-matrix/commit/e2bf018b96e7a6ecae702abdd963f450501ace38), including merged PR #219. Rob authorized execution after reviewing this direction. The isolated `codex/commander-engine-c0` branch now contains an executable Forge proof and a recorded-game table preview. See [the implementation evidence and remaining gates](../game/docs/c0-evidence.md). The human/API game is not yet playable.
+Initial research and game-fixture baseline: [`e2bf018`](https://github.com/minorrob/mtg-deck-matrix/commit/e2bf018b96e7a6ecae702abdd963f450501ace38), including #219. Implementation has since rebased onto main at `f98a8f6`, including merged [#220 Shelf mode](https://github.com/minorrob/mtg-deck-matrix/pull/220) and [#221 substitute pairing](https://github.com/minorrob/mtg-deck-matrix/pull/221). Rob authorized execution after reviewing this direction. The isolated `codex/commander-engine-c0` branch contains an executable Forge proof and a recorded-game table preview. See [the evidence and remaining gates](../game/docs/c0-evidence.md). The human/API game is not yet playable.
 
 ## 1. Recommended outcome
 
@@ -31,7 +31,7 @@ This is the most consequential change to the existing game plan. A schema-valid 
 | Existing work | Verified baseline and treatment |
 |---|---|
 | [`docs/crankmagic-game-plan.md`](https://github.com/minorrob/mtg-deck-matrix/blob/e2bf018b96e7a6ecae702abdd963f450501ace38/docs/crankmagic-game-plan.md) | Retain G0 lobby, four deck sources, common table settings, graph-derived playbooks, AI-game labeling, cost controls, and deterministic fallback. Replace the proposed AI adjudicator and revise G1–G7 sequencing below. Section 9 already records five decisions; the README and final paragraph still saying those decisions are pending are stale. |
-| [`docs/crankmagic-playspace-plan.md`](https://github.com/minorrob/mtg-deck-matrix/blob/e2bf018b96e7a6ecae702abdd963f450501ace38/docs/crankmagic-playspace-plan.md) | Preserve its staged deck/collection moves, shared List/Sheet/Table projection, artwork, single-click inspection, and performance goals. Its **PR 4 is Shelf mode**, expected by Rob to become GitHub #220. That is separate from the game plan's G4. |
+| [`docs/crankmagic-playspace-plan.md`](crankmagic-playspace-plan.md) | Preserve staged deck/collection moves, shared List/Sheet/Table projection, artwork, inspection, and performance goals. Its PR 4 Shelf mode shipped as #220; PR 5 substitute pairing shipped as #221. Those are separate from this game's C0–C7 milestones. |
 | [`design/crankmagic/simulation-fidelity-plan.md`](https://github.com/minorrob/mtg-deck-matrix/blob/e2bf018b96e7a6ecae702abdd963f450501ace38/design/crankmagic/simulation-fidelity-plan.md) | Carry forward one rules authority, actual decks at every seat, information isolation, tested card support, replay evidence, versioned protocols, and cautious interpretation of results. Replace its proposed new UMD rules kernel with a reuse-first engine decision. |
 | [`docs/simulator-enhancement-plan.md`](https://github.com/minorrob/mtg-deck-matrix/blob/e2bf018b96e7a6ecae702abdd963f450501ace38/docs/simulator-enhancement-plan.md) | Preserve completed typed-mana, opening-hand, ramp-accounting, and reporting work. Do not reopen those as missing work. The new game gets its own engine/protocol identity. |
 | `sim-engine.js`, `combat.js` | The default simulator still uses profile opponents and simplified effects. An opt-in `combat: "board"` path and combat tests now exist; saying there is no combat implementation anywhere would be wrong. Neither path provides the complete four-deck game/priority foundation needed here. Preserve them as versioned historical estimators and useful test references. |
@@ -41,7 +41,7 @@ This is the most consequential change to the existing game plan. A schema-valid 
 
 PR [#219](https://github.com/minorrob/mtg-deck-matrix/pull/219) is merged. It fits generated opponents to their budget and Game Changer target before spending the remaining budget on upgrades. Preserve this behavior. The Game Changer count is a builder setting and one bracket constraint; it does not by itself prove a deck's actual playing strength or full bracket compliance.
 
-GitHub returned no PR #220 at the baseline check. Treat its scope as **in progress per Rob**, not delivered. Before implementation, read its final diff, rebase onto the merged main, and refresh the shared-module inventory. This planning package was created in a separate source snapshot; neither active local checkout was edited.
+At the initial check #220 was in progress. It and #221 merged during C0 and have now been reconciled: Shelf mode uses collection-group destinations and Discover handoff; substitute pairing records `standInFor` on physical lots. The companion branch rebased cleanly onto both. The snapshot still reads the deck's chosen main list, not substitute lots or transient Shelf rows; neither new physical-collection feature changes its hundred. Snapshot, collection, change, sandbox, table, and asset regressions passed after the rebase. Both other working checkouts remain untouched.
 
 ### Changes proposed for review
 
@@ -369,7 +369,7 @@ Use new game milestone IDs below; they are not promised GitHub PR numbers. Do no
 
 | Milestone | Deliverable | Acceptance gate | Estimate |
 |---|---|---|---|
-| **C0 — Reconcile and prove engine adapter** | Reconcile merged #220; inventory shared UI; Forge spike; recorded engine decision | Four lists load; complex choice round trip; event causes; replay/restart; hidden-information audit; written go/no-go | 5–8 days |
+| **C0 — Reconcile and prove engine adapter** | Reconcile #220/#221 (done); Forge spike and recorded decision (proof implemented); finish adapter gates | Four lists load; complex choice round trip; event causes; replay/restart; hidden-information audit; written go/no-go | 5–8 days |
 | **C1 — Snapshots and local shell** | Pack contracts, support report, launcher/service, immutable decks, journal foundations | Round-trip every deck source; valid one/two-commander opening; no collection mutation; duplicate/stale pack handling | 4–7 |
 | **C2 — Four-deck playable core** | Engine choices, local pilots, basic four-seat board, save/resume/replay | Full games finish legally; all choices reachable; deterministic recovery mid-stack; unsupported paths stop honestly | 8–15 |
 | **C3 — Card-first game table** | Table/Focus/zone/hand views, targeting, payments, stops, keyboard and art cache | Full user journey at 1920×1080 and 1366×768; dense-board performance; no hidden cards exposed | 6–10 |
@@ -380,7 +380,7 @@ Use new game milestone IDs below; they are not promised GitHub PR numbers. Do no
 
 **Total estimate: 45–76 focused engineering days, roughly 9–15 working weeks for one developer after plan acceptance.** A first useful local game arrives at C2; the visual API-backed alpha at C4; the requested end-to-end refinement loop at C6. Card-support gaps, engine adaptation, and recovery can extend the range. Re-estimate after C0 using measured evidence.
 
-Map to the earlier game plan: G0 is retained; G1 becomes C1/C4; G2 becomes C4; G3a/G3b become the engine integration in C0–C2; G4 becomes C2/C3; G5 becomes C2/C4; **G6's AI adjudicator is removed**; G7's reporting begins at C1 and becomes C5/C6. Personality polish can follow C6. Play-space PR5/PR6 continue on their own ownership track; game-specific code need not wait for unrelated collection polish once shared contracts are agreed.
+Map to the earlier game plan: G0 is retained; G1 becomes C1/C4; G2 becomes C4; G3a/G3b become the engine integration in C0–C2; G4 becomes C2/C3; G5 becomes C2/C4; **G6's AI adjudicator is removed**; G7's reporting begins at C1 and becomes C5/C6. Personality polish can follow C6. Play-space PR5 is delivered in #221; its PR6 sweep continues separately. Game-specific code need not wait for unrelated collection polish once shared contracts are agreed.
 
 ### Tests that determine whether this is a simulator
 
