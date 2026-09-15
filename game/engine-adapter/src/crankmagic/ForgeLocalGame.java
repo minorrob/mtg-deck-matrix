@@ -47,40 +47,57 @@ public final class ForgeLocalGame {
         ForgeProbe.TapeRandom rng=new ForgeProbe.TapeRandom(pod.get("seed").getAsLong(),null);
         ForgeProbe.activeRandom=rng;MyRandom.setRandom(rng);
         var journal=new ForgeProbe.Journal(out.resolve("events.ndjson"));
-        var browserBridge=new ForgeBrowserBridge(out,journal);
+        List<ForgeBrowserBridge> bridges=new ArrayList<>();
         AtomicBoolean closed=new AtomicBoolean();
         Runtime.getRuntime().addShutdownHook(new Thread(()->{try{if(closed.compareAndSet(false,true))journal.close();}catch(Exception e){e.printStackTrace();}}));
-        List<RegisteredPlayer> players=new ArrayList<>();List<Object> coverage=new ArrayList<>();RegisteredPlayer human=null;
+        List<RegisteredPlayer> players=new ArrayList<>();List<Object> coverage=new ArrayList<>();
+        Map<RegisteredPlayer,ForgeBrowserBridge> humanBridges=new LinkedHashMap<>();
         for(JsonElement entry:pod.getAsJsonArray("seats")){
             JsonObject seat=entry.getAsJsonObject();Deck deck=ForgeProbe.deck(seat.getAsJsonObject("deck"),coverage);
             String problem=GameType.Commander.getDeckFormat().getDeckConformanceProblem(deck);
             if(problem!=null)throw new IllegalArgumentException(deck.getName()+": "+problem);
             RegisteredPlayer rp=RegisteredPlayer.forCommander(deck);
-            if(seat.get("seatId").getAsInt()==0){rp.setPlayer(new LobbyPlayerHuman(humanName));human=rp;}
+            int seatId=seat.get("seatId").getAsInt();
+            if(seatId!=players.size())throw new IllegalArgumentException("Seats must have contiguous ordered IDs");
+            String control=seat.has("engineController")?seat.get("engineController").getAsString():(seatId==0?"browser":"native-ai");
+            if(!Set.of("browser","native-ai").contains(control))throw new IllegalArgumentException("Unknown engine controller");
+            if(control.equals("browser")){
+                rp.setPlayer(new LobbyPlayerHuman(seat.get("name").getAsString()));
+                var bridge=new ForgeBrowserBridge(seatId==0?out:out.resolve("seats/"+seatId),journal,seatId);
+                humanBridges.put(rp,bridge);bridges.add(bridge);
+            }
             else{LobbyPlayerAi ai=new LobbyPlayerAi(seat.get("name").getAsString(),Set.of());ai.setAiProfile(seat.get("nativeProfile").getAsString());rp.setPlayer(ai);}
             players.add(rp);
         }
         ForgeProbe.save(out.resolve("coverage.json"),coverage);
         HostedMatch hosted=GuiBase.getInterface().hostMatch();
-        IGuiGame[] gui=new IGuiGame[1];SwingUtilities.invokeAndWait(()->{
+        if(humanBridges.isEmpty())throw new IllegalArgumentException("At least one browser seat required");
+        Map<RegisteredPlayer,IGuiGame> guis=new LinkedHashMap<>();AtomicBoolean attached=new AtomicBoolean();
+        SwingUtilities.invokeAndWait(()->{for(var entry:humanBridges.entrySet()){
+            var browserBridge=entry.getValue();
             IGuiGame nativeGui=GuiBase.getInterface().getNewGuiGame();
-            gui[0]=(IGuiGame)Proxy.newProxyInstance(IGuiGame.class.getClassLoader(),new Class<?>[]{IGuiGame.class},(proxy,method,arguments)->{
+            IGuiGame gui=(IGuiGame)Proxy.newProxyInstance(IGuiGame.class.getClassLoader(),new Class<?>[]{IGuiGame.class},(proxy,method,arguments)->{
+              if(method.getName().equals("hashCode"))return System.identityHashCode(proxy);
+              if(method.getName().equals("equals"))return proxy==arguments[0];
               if(method.isDefault())return java.lang.reflect.InvocationHandler.invokeDefault(proxy,method,arguments);
               Object[] values=arguments==null?new Object[0]:arguments;
               browserBridge.observe(method.getName(),values);
               if(method.getName().equals("openView")){
                 // Attach before HostedMatch schedules opening draws and mulligan choices.
-                journal.game=hosted.getGame();journal.game.subscribeToEvents(journal);
+                if(attached.compareAndSet(false,true)){
+                  journal.game=hosted.getGame();journal.game.subscribeToEvents(journal);
+                  journal.append("manifest",ForgeProbe.obj("engineCommit",ForgeProbe.ENGINE,"mode","browser-seats-native-ai","telemetryVersion",2,"measured",false,"podHash",pod.get("podHash").getAsString()));
+                }
                 browserBridge.attach(hosted.getGame());
-                journal.append("manifest",ForgeProbe.obj("engineCommit",ForgeProbe.ENGINE,"mode","human-vs-native-ai","telemetryVersion",2,"measured",false,"podHash",pod.get("podHash").getAsString()));
               }
               Object choice=browserBridge.choice(method.getName(),values);
               if(choice!=ForgeBrowserBridge.DELEGATE)return choice;
               try{return method.invoke(nativeGui,arguments);}catch(InvocationTargetException e){throw e.getCause();}
             });
-        });
+            guis.put(entry.getKey(),gui);
+        }});
         hosted.setStartGameHook(()->{
-            try{ForgeProbe.save(out.resolve("live-status.json"),ForgeProbe.obj("status","playing","humanSeats",1,"aiSeats",players.size()-1,"interface","browser-with-native-fallback","apiPilots",false));}catch(Exception e){throw new RuntimeException(e);}
+            try{ForgeProbe.save(out.resolve("live-status.json"),ForgeProbe.obj("status","playing","humanSeats",bridges.size(),"aiSeats",players.size()-bridges.size(),"interface","browser-with-native-fallback","apiPilots",false));}catch(Exception e){throw new RuntimeException(e);}
             System.out.println("COMMANDER_LIVE_READY");System.out.flush();
         });
         hosted.setEndGameHook(()->{try{
@@ -89,8 +106,16 @@ public final class ForgeLocalGame {
             ForgeProbe.save(out.resolve("summary.json"),ForgeProbe.obj("status",g.isGameOver()?"finished":"incomplete","measured",false,"mode","human-vs-native-ai","outcome",g.getOutcome()==null?null:g.getOutcome().getOutcomeStrings(),"eventCount",journal.sequence));
         }catch(Exception e){throw new RuntimeException(e);}});
         GameRules rules=new GameRules(GameType.Commander);rules.setGamesPerMatch(1);rules.setAllowCheatShuffle(false);
-        RegisteredPlayer humanSeat=human;
-        SwingUtilities.invokeAndWait(()->hosted.startMatch(rules,EnumSet.of(GameType.Commander),players,humanSeat,gui[0]));
-        if(!Files.exists(out.resolve("live-status.json")))ForgeProbe.save(out.resolve("live-status.json"),ForgeProbe.obj("status","ready","humanSeats",1,"aiSeats",players.size()-1,"interface","forge-native","apiPilots",false));
+        SwingUtilities.invokeAndWait(()->hosted.startMatch(rules,EnumSet.of(GameType.Commander),players,guis,null));
+        if(pod.has("testFixture")&&pod.get("testFixture").getAsBoolean()){
+          Thread diagnostic=new Thread(()->{try{while(true){
+            List<Object> inputs=new ArrayList<>();for(var p:hosted.getGame().getRegisteredPlayers())if(p.getController() instanceof forge.player.PlayerControllerHuman h){
+              var bridge=bridges.stream().filter(b->b.seatId==p.getId()).findFirst().orElseThrow();
+              inputs.add(ForgeProbe.obj("seat",p.getId(),"sameController",h==bridge.controller,"sameGui",h.getGui()==guis.get(p.getRegisteredPlayer()),"input",String.valueOf(h.getInputQueue().getInput()),"proxyInput",String.valueOf(h.getInputProxy().getInput())));
+            }
+            ForgeProbe.save(out.resolve("proof-inputs.json"),inputs);Thread.sleep(1000);
+          }}catch(Exception ignored){}},"proof-diagnostic");diagnostic.setDaemon(true);diagnostic.start();
+        }
+        if(!Files.exists(out.resolve("live-status.json")))ForgeProbe.save(out.resolve("live-status.json"),ForgeProbe.obj("status","ready","humanSeats",bridges.size(),"aiSeats",players.size()-bridges.size(),"interface","forge-native","apiPilots",false));
     }
 }

@@ -2,7 +2,15 @@
 
 Requested sequence: solo launch and complete-game browser UAT → mixed human/AI games → owned-deck telemetry → full-app QA and documentation → cloud execution design. Each implementation stage is merged only after its stated verification. Cloud deployment is not part of this request.
 
-## Stage 1 — launch and solo play (in progress)
+## Current checkpoint
+
+PR #232 was merged as `d4eed7c` after CI and local checks. On 2026-09-15 the deployed HTTPS Play page detected the local host and successfully handed off the selected deck. The previous health failure was not reproduced; no browser security settings were changed. Earlier chronological notes below are retained as evidence, not current PR status.
+
+The user subsequently authorized **Phase A (Astra foundation before Sol implementation)**. See [Phase A / Sol handoff](phase-a-sol-handoff.md) for the architecture, contracts, bounded real-engine proofs and ordered implementation tickets. Final 13-milestone proof and mobile work remain later.
+
+Phase A is complete for handoff: separate Forge controllers, private projections, exact-action transport proof, lifecycle/access contracts and ordered S1–S10 implementation tickets are ready. On 2026-09-15 the owner explicitly moved the live-provider test to Phase C. No live API requests were made. This deferral does not waive the full API pilot evaluation or final desktop acceptance gates.
+
+## Stage 1 — launch and solo play (merged; remaining acceptance boundaries below)
 
 - Base: main `e29e7b4` (includes PRs #230 and #231). Branch: `codex/online-launch-uat`.
 - Fixed public Play duplicate heading and decorative logo. App-wide brand remains.
@@ -14,7 +22,7 @@ Requested sequence: solo launch and complete-game browser UAT → mixed human/AI
 
 ### UAT progress and communication gate
 
-- Draft PR #232; initial CI passed. Later UAT fixes are still under review, and the PR is not merged.
+- PR #232 merged after final CI passed; subsequent Phase A work is tracked separately.
 - Verified public deck handoff into local Play, commander drag/cast with automatic payment, manual draw, token creation, floating mana, and refresh/resume without losing the match.
 - Turn 19: four Goblins blocked a 4/4 Krenko and two blocked a 2/2 Chieftain. Six tokens and both attackers died; Rob stayed at 40 life and zero commander damage. The history retained damage, deaths and the command-zone move.
 - Turn 21: selecting a flying Vampire correctly offered no ground-only blockers. Nine unblocked damage reduced Rob from 40 to 31; every source appeared in History. Added explicit no-legal-blocker feedback and separate flying/ground power totals, with trample shown as overlapping power.
@@ -25,7 +33,7 @@ Requested sequence: solo launch and complete-game browser UAT → mixed human/AI
 
 **Release gate:** browser actions, Node transport, Forge choices and resulting projections must agree. Check action identity/exactly-once application; legal option cardinality and ordering; selected targets; costs, floating mana and tapped sources; stack/zone transitions; combat pairings, damage and deaths; counters/triggers; monotonic revisions and reconnects. Log any unsupported native prompt explicitly. A failed comparison or an unexplained missing event blocks release. Complete-game outcome, fresh-engine ordering and the damage-allocation bridge contract passed; distinguish natural gameplay, synthetic integration and unit-test coverage in release notes.
 
-## Stage 2 — mixed players (not started)
+## Stage 2 — mixed players (Phase A foundation in progress; guest product not implemented)
 
 Use one authoritative Forge match with a separate bridge/controller and filtered view for every human. Reserve expiring invitation seats, accept each guest's CSV deck, revoke readiness on edits, start 2–4 seats in any human/AI mix, reconnect to pending decisions. No guest may read another hand, deck order, credential or private journal. Test separate browser sessions through a complete game and test spoofing/replay/disconnect boundaries before merging. LAN exposure must be opt-in; public cloud execution remains the final documentation stage.
 
