@@ -77,6 +77,14 @@ Focus board supersedes the fixed-aspect Focus mat dialog. It fills the viewport,
 
 Validation: all 1,840 recorded player battlefields conserve permanent references through grouping; artifact creatures, enchantment creatures, artifact lands, and face-down classification checks pass. Browser checks exercised the turn-30 Atraxa board with three creatures, Fellwar Stone under Artifacts, and seven lands; opponent hand identities remained absent. Resizing, nested card inspection, library privacy, return navigation, and the own-hand shortcut worked. At 1536×1000 and 360×800 CSS pixels, Focus filled the viewport without horizontal content overflow, including 260 px cards at the narrow size. JavaScript syntax / diff whitespace checks pass; no browser console errors observed. [Normal-window screenshot](focus-board-preview.png). Engine evidence is unchanged.
 
+### Hand, piles, and multiplayer scope follow-up
+
+The renderer now has left/right hand arrows in overview and Focus, visible Focus zone piles, and an own starting-deck gallery. The desktop overview fits all four mats, the central counter, and the hand at the checked 1366×768 and 1920×1080 sizes; the final 1366px layout has no horizontal/vertical document overflow and no pile rectangles intersecting the counter. Smaller viewports retain scrolling and full-window Focus.
+
+Browser checks confirmed hand scrolling to its disabled right boundary and back, preserved own-hand access, opening the three-card graveyard from its visible Focus pile, and a starting-deck gallery labeled as the saved hundred rather than library order. Card metadata without recorded power/toughness no longer displays a fictitious state badge. JavaScript syntax / whitespace checks pass; no browser console errors observed. [Pile screenshot](focus-piles-preview.png).
+
+The [human interaction and C8 scope](../../docs/commander-human-play-and-multiplayer.md) makes engine-authorized drag-to-play a solo-hardening prerequisite. No drag action or live game command is implemented in this read-only renderer. C8 follows C7 and scopes CSV import, mixed human/AI seats, server-filtered views, reconnection, and telemetry; no network hosting or CSV upload endpoint has been enabled.
+
 ### Remaining engine and integration work
 
 1. Bridge a scripted spell/response sequence through real targets and payment, plus simultaneous trigger ordering, attack/block assignment, and a choice during resolution. Record every accepted answer.

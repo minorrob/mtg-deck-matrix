@@ -381,6 +381,7 @@ Use new game milestone IDs below; they are not promised GitHub PR numbers. Do no
 | **C5 — Mechanics and disruption analysis** | Complete telemetry enrichment, loop accounting, causal report, evidence-linked findings | Hand-audited event totals reconcile; interrupted and shortcut loops count correctly; no shared-payoff double counting | 6–10 |
 | **C6 — Refine and replay in CrankMagic** | History/result import, deck-table evidence, staged swaps, version comparison, small batch runner | Play v1 → inspect report → confirm swaps → save v2 → play v2; historical evidence remains attached to v1 | 5–8 |
 | **C7 — Reliable personal release** | Six-deck certification, additional archetypes, packaged runtime, backup/recovery, optional paired bridge | Soak/crash/recovery and regression gates; cold install/launch; accurate unsupported-card report; user playthrough | 6–10 |
+| **C8 — Friends and mixed seats (after C7)** | Two-column Moxfield CSV import/review, 2–4 human seats, optional remaining AI seats, host-authoritative network play | Legal mixed-seat full games; seat isolation; reconnect during a choice; exact deck snapshots; correctly classified reports | Re-estimate after C7; excluded below |
 
 **Total estimate: 45–76 focused engineering days, roughly 9–15 working weeks for one developer after plan acceptance.** A first useful local game arrives at C2; the visual API-backed alpha at C4; the requested end-to-end refinement loop at C6. Card-support gaps, engine adaptation, and recovery can extend the range. Re-estimate after C0 using measured evidence.
 
@@ -406,7 +407,9 @@ Rob approved execution of the **local-first, website-integrated, engine-reuse** 
 
 Preserve these preferences: one human plus three AI seats by default; library/Lab/Archidekt imports; budget-and-bracket opponents; user-supplied API key; visible spending limit; local fallback; AI games recorded as such; beautiful large cards; and the existing table as the place to refine the hundred.
 
-Defer multiplayer networking, accounts/cloud sync, monetization, an independent second deck editor, broad MTGO integration, and elaborate table-talk features until the core play-and-refine loop is dependable. Arbitrary card coverage expands through verified support, not a promise of automatic interpretation on day one.
+Multiplayer networking is now an explicitly requested **C8 phase after personal hardening**: 2–4 humans can each import a two-column Moxfield deck CSV, with a blank separator before the commander block, and fill remaining seats with independently configured AI. See the [human-play requirements and multiplayer scope](commander-human-play-and-multiplayer.md) for import, privacy, recovery, telemetry, and acceptance details. C2/C3 must first deliver engine-authorized drag-to-play, visible per-seat piles/deck backs, the compact four-mat table, full-screen Focus, and hand arrows. The replay renderer does not fulfill the live-play gate.
+
+Defer accounts/cloud sync, monetization, an independent second deck editor, broad MTGO integration, and elaborate table-talk features until the core play-and-refine loop is dependable. Arbitrary card coverage expands through verified support, not a promise of automatic interpretation on day one.
 
 ### Review package and provenance
 
