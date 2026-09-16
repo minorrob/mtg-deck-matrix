@@ -94,8 +94,8 @@ const fan=fanSrc.length?`<div class="cm-cardfan" aria-hidden="true">${fanSrc.map
    are the page. The showcase -- the fan and "Build it. Make it yours." -- is the welcome a
    fresh library gets, and the only place the slogan is spoken. */
 const anyDecks=C.state.decks.length>0,howLink=`<a class="cm-how-link" href="#how">How a deck comes together</a>`,compare=`<button type="button" class="v-button" data-action="compare-decks"${picks.length<2?' disabled':''} title="${picks.length<2?'Tick at least two decks to compare them':'Compare the ticked decks'}">Compare selected${picks.length?` (${picks.length})`:''}</button>`;
-C.main.innerHTML=(anyDecks?C.pageHead('Decks',b('Create a deck','new-deck',{},true)+b('Build a deck','open-lab')+compare,'decks')+`<div class="cm-toolbar cm-toolbar-split">${howLink}<label class="cm-checkbox cm-show-archived"><input id="cm-show-archived" type="checkbox" ${showArchived?'checked':''}>Show archived</label></div>`
-  :`<section class="cm-showcase"><div><h1>Build it.<br><span>Make it yours.</span></h1><div class="cm-actions">${b('Create a deck','new-deck',{},true)}${b('Build a deck','open-lab')}${b('Import a list','import-list')}${b('Import a backup','restore')}</div><p class="cm-sub">${howLink}</p></div>${fan}</section>`)+(decks.length?`<div class="cm-deck-grid">${decks.map(d=>{const r=M.readiness(C.state,d);/* THE TILE. The compare tick lives in the top-right corner, always present, so comparing is
+C.main.innerHTML=(anyDecks?C.pageHead('Decks',b('New deck','new-deck',{},true)+compare,'decks')+`<div class="cm-toolbar cm-toolbar-split">${howLink}<label class="cm-checkbox cm-show-archived"><input id="cm-show-archived" type="checkbox" ${showArchived?'checked':''}>Show archived</label></div>`
+  :`<section class="cm-showcase"><div><h1>Build it.<br><span>Make it yours.</span></h1><div class="cm-actions">${b('New deck','new-deck',{},true)}${b('Import a backup','restore')}</div><p class="cm-sub">${howLink}</p></div>${fan}</section>`)+(decks.length?`<div class="cm-deck-grid">${decks.map(d=>{const r=M.readiness(C.state,d);/* THE TILE. The compare tick lives in the top-right corner, always present, so comparing is
    a tick and the Compare button rather than a link to find in each footer. The mana pips sit
    on their own row under the mechanic; the footer -- bracket, latest score, hand count --
    used to wrap around them. */
@@ -310,7 +310,27 @@ function groupDeck(groupId){
    you upload a file or paste a list; the cards land in the new group and the deck is built from
    them without a second trip. The line under the selects names the road each pair takes before
    you press anything, so no combination has to be tried to find out what it does. */
+/* UNIFIED NEW DECK WIZARD (Phase 1 PR3). One entry from Decks with three peer paths: Create, Import, Lab. */
 actions['new-deck']=()=>{
+  modal('New deck',`<div class="cm-new-deck-wizard"><p class="cm-muted">Choose how you want to start your deck:</p>
+    <div class="cm-wizard-paths">
+      <button type="button" class="cm-wizard-path" data-action="wizard-create">
+        <strong>Create</strong>
+        <span>Pick a commander and build the 99 from there</span>
+      </button>
+      <button type="button" class="cm-wizard-path" data-action="wizard-import">
+        <strong>Import</strong>
+        <span>Upload or paste a decklist from Archidekt or any source</span>
+      </button>
+      <button type="button" class="cm-wizard-path" data-action="wizard-lab">
+        <strong>Lab</strong>
+        <span>Auto-build with constraints: budget, owned cards, play style</span>
+      </button>
+    </div></div>`);
+};
+/* CREATE PATH: commander picker and manual building */
+actions['wizard-create']=()=>{
+  dialog.close();
   const sources=filledGroups();
   if(!sources.length)return commanderDeck();
   const road=(how,groupId)=>{
@@ -319,10 +339,10 @@ actions['new-deck']=()=>{
       :'Continue opens the commander picker. A collection group is made with the deck and named after it.';
     if(!g)return 'Continue opens the import: upload a CSV, TSV, TXT or XLSX file, or paste a list. The cards land in a new collection group and the deck is built from them.';
     const rows=groupRows(g),copies=rows.reduce((n,r)=>n+r.quantity,0);
-    return rows.length?`Continue brings ${copies} card${copies===1?'':'s'} across from ${g.name} as the deck’s list, and the deck stays attached to that group.`
+    return rows.length?`Continue brings ${copies} card${copies===1?'':'s'} across from ${g.name} as the deck's list, and the deck stays attached to that group.`
       :`${g.name} holds no cards yet. Choose a group that does, ask for a new one and import a list into it, or start from a commander.`;
   };
-  const dialog=form('Start a new deck',
+  const wiz=form('Create a deck from a commander',
     `<div class="cm-full">${s('Start from','how',[['commander','A commander — build the 99 from there'],['group','The cards in a collection group']],'commander')}</div>`
     +`<div class="cm-full">${s('Collection group','groupId',[['','Create a new collection group'],...C.state.groups.map(g=>[g.id,g.name])],'')}</div>`
     +`<div class="cm-full" id="cm-new-deck-road">${note(road('commander',''))}</div>`,
@@ -332,11 +352,29 @@ actions['new-deck']=()=>{
       if(!C.importList)throw Error('The import module is not loaded, so a list cannot be read in. Start from a commander, or reload the page.');
       return C.importList({name:'New deck list',after:gid=>groupDeck(gid)});
     },'Continue');
-  dialog.addEventListener('change',()=>{
-    const v=Object.fromEntries(new FormData(dialog)),box=dialog.querySelector('#cm-new-deck-road');
+  wiz.addEventListener('change',()=>{
+    const v=Object.fromEntries(new FormData(wiz)),box=wiz.querySelector('#cm-new-deck-road');
     if(box)box.innerHTML=note(road(v.how,v.groupId));
   });
-  return dialog;
+  return wiz;
+};
+/* IMPORT PATH: file/paste import */
+actions['wizard-import']=()=>{
+  dialog.close();
+  if(!C.importList)throw Error('The import module is not loaded. Reload the page.');
+  C.importList({name:'New deck list',after:gid=>{
+    const g=C.state.groups.find(x=>x.id===gid);
+    if(g){
+      const rows=groupRows(g);
+      if(rows.length)return groupDeck(gid);
+    }
+    C.notice('Import completed. Create a deck from the imported cards in the Cards page.');
+  }});
+};
+/* LAB PATH: navigate to Lab for auto-build */
+actions['wizard-lab']=()=>{
+  dialog.close();
+  go('lab');
 };
 actions['edit-deck']=el=>{const d=M.deck(C.state,el.dataset.deck);form('Deck Definition',f('Deck name','name',d.name,'required maxlength="160"')+f('Core mechanics (comma separated)','mechanics',d.definition.mechanics.join(', '),`placeholder="${e(mechanicsOf(d).derived?mechanicsOf(d).list.join(', '):'')}"`)+s('Base bracket','baseBracket',[1,2,3,4,5],d.definition.baseBracket)+s('Bracket ceiling','bracketCeiling',[1,2,3,4,5],d.definition.bracketCeiling)+f('Total price cap ($)','budget',d.definition.budget??'',`type="number" min="0" step="0.01" placeholder="${C.RULES?C.RULES.deckCap:225}"`)+f('Per-card price cap ($)','perCardCap',d.definition.perCardCap??'',`type="number" min="0" step="0.01" placeholder="${C.RULES?C.RULES.perCardMax:30}"`)+s('Collection group this deck draws from','groupId',C.state.groups.map(g=>[g.id,g.name]),d.groupId||(C.state.groups[0]&&C.state.groups[0].id)||'')+`<label class="cm-full">Deck notes<textarea name="notes">${e(d.notes)}</textarea></label>`,data=>commit({type:'editDeck',deckId:d.id,name:data.name,notes:data.notes,groupId:data.groupId||null,definition:{...d.definition,baseBracket:Number(data.baseBracket),bracketCeiling:Number(data.bracketCeiling),mechanics:data.mechanics.split(',').map(x=>x.trim()).filter(Boolean),/* BLANK MEANS THE HOUSE RULE. The caps used to be blank on every live deck, so nothing was
        ever over anything. The form shows the standing figures as placeholders and writes them
