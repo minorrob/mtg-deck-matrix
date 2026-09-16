@@ -153,6 +153,130 @@
         : `<p><strong>${total.toLocaleString()} cards</strong> — this build's scope is <em>${e(g.scope || 'unknown')}</em>: cards that were owned, named by a deck, linked by EDHREC to those decks' commanders, or able to lead a deck (${commanders.toLocaleString()}). Any other legal card can still be typed into Find a card and brought in as a visitor.</p>`;
       return `<details class="cm-inline-menu cm-hint cm-universe-hint"><summary class="cm-hint-btn" aria-label="What is this universe of cards?" title="What is this universe of cards?">?</summary><div class="cm-menu cm-inline-menu-body cm-hint-body cm-universe-body"><h4>The universe</h4>${body}${when ? `<p class="cm-muted">Refreshed ${e(when)}.</p>` : ''}</div></details>`;
     }
+    /* EXPLORE SCOPE: query contract for scoped entry into Discover.
+     * Support deck=<deckId>, commander=<name>, card=<name>, gap=<slot|role|purpose token>.
+     * When none are present, show a chooser instead of auto-loading the full graph. */
+    const RECENTS_KEY = 'crankmagic:discover:recents:v1';
+    function getRecentScopes() {
+      try {
+        const stored = localStorage.getItem(RECENTS_KEY);
+        if (!stored) return [];
+        const parsed = JSON.parse(stored);
+        return Array.isArray(parsed) ? parsed.slice(0, 8) : [];
+      } catch { return []; }
+    }
+    function saveRecentScope(scope) {
+      try {
+        const recents = getRecentScopes().filter((r) => !(r.type === scope.type && r.id === scope.id));
+        recents.unshift(scope);
+        localStorage.setItem(RECENTS_KEY, JSON.stringify(recents.slice(0, 8)));
+      } catch { /* localStorage unavailable */ }
+    }
+    function clearRecentScopes() {
+      try { localStorage.removeItem(RECENTS_KEY); } catch { /* localStorage unavailable */ }
+    }
+
+    const scopeParams = {
+      deck: params.get('deck'),
+      commander: params.get('commander'),
+      card: params.get('card'),
+      gap: params.get('gap')
+    };
+    const hasScope = !!(scopeParams.deck || scopeParams.commander || scopeParams.card);
+
+    /* If no scope params, show the chooser instead of entering the graph. */
+    if (!hasScope) {
+      const recents = getRecentScopes();
+      C.main.innerHTML = C.pageHead('Discover', '', 'discover')
+        + `<div class="cm-explore-chooser">
+          <p class="cm-explore-intro">Explore cards from one of three doors:</p>
+          <div class="cm-explore-doors">
+            <button type="button" class="v-button cm-explore-door" data-action="explore-from-deck">
+              <strong>From a deck gap</strong>
+              <span>Find cards to fill a need in one of your decks</span>
+            </button>
+            <button type="button" class="v-button cm-explore-door" data-action="explore-from-commander">
+              <strong>From a commander</strong>
+              <span>Discover cards that fit a specific commander</span>
+            </button>
+            <button type="button" class="v-button cm-explore-door" data-action="explore-from-card">
+              <strong>From a card</strong>
+              <span>Explore connections from any card in the catalog</span>
+            </button>
+          </div>
+          ${recents.length ? `<div class="cm-explore-recents">
+            <p class="cm-muted">Recent scopes</p>
+            <div class="cm-explore-recent-chips">${recents.map((r) => `<button type="button" class="cm-chip" data-action="explore-recent" data-recent="${e(JSON.stringify(r))}">${e(r.label)}</button>`).join('')}
+            <button type="button" class="cm-text-button compact" data-action="explore-clear-recents">Clear</button></div>
+          </div>` : ''}
+        </div>`;
+
+      actions['explore-from-deck'] = () => {
+        const decks = C.state.decks.filter((d) => !d.archived);
+        if (!decks.length) { C.notice('You have no decks yet. Create one from the Decks page first.'); return; }
+        C.modal('Explore from a deck gap', `<form class="cm-form">
+          <div class="cm-form-grid">${C.select('Deck', 'deck', decks.map((d) => [d.id, d.name]), decks[0].id, 'required')}
+          ${C.field('Gap (optional)', 'gap', '', 'placeholder="e.g. Removal, Ramp, Draw"')}
+          <div class="cm-full"><p class="cm-muted">The gap param is recorded for future use but does not affect Discover behavior in slice A.</p></div></div>
+          <div class="cm-form-footer">${b('Cancel', 'close')}<button class="v-button primary" type="submit">Explore deck</button></div>
+        </form>`).querySelector('form').addEventListener('submit', (ev) => {
+          ev.preventDefault();
+          const fd = new FormData(ev.target);
+          const deckId = fd.get('deck'), gap = fd.get('gap');
+          const deck = C.state.decks.find((d) => d.id === deckId);
+          if (deck) {
+            saveRecentScope({type: 'deck', id: deckId, label: deck.name + (gap ? ` (${gap})` : ''), gap: gap || undefined});
+            C.$('#cm-dialog').close();
+            C.go('discover', {deck: deckId, ...(gap ? {gap} : {})});
+          }
+        });
+      };
+
+      actions['explore-from-commander'] = () => {
+        const commanders = data.cards.filter((c) => c.isCommander).sort((a, b) => String(a.name).localeCompare(String(b.name)));
+        C.modal('Explore from a commander', `<form class="cm-form">
+          <div class="cm-form-grid"><label>Commander name<input name="commander" list="cm-commander-list" placeholder="Type a commander name" required autocomplete="off"></label>
+          <datalist id="cm-commander-list">${commanders.slice(0, 200).map((c) => `<option value="${e(c.name)}"></option>`).join('')}</datalist>
+          <div class="cm-full"><p class="cm-muted">${commanders.length.toLocaleString()} commanders in the catalog.</p></div></div>
+          <div class="cm-form-footer">${b('Cancel', 'close')}<button class="v-button primary" type="submit">Explore commander</button></div>
+        </form>`).querySelector('form').addEventListener('submit', (ev) => {
+          ev.preventDefault();
+          const fd = new FormData(ev.target);
+          const name = (fd.get('commander') || '').trim();
+          const card = data.cards.find((c) => c.name.toLowerCase() === name.toLowerCase() && c.isCommander);
+          if (!card) { C.notice(`"${name}" is not a commander in the catalog.`, true); return; }
+          saveRecentScope({type: 'commander', id: card.name, label: card.name});
+          C.$('#cm-dialog').close();
+          C.go('discover', {commander: card.name});
+        });
+      };
+
+      actions['explore-from-card'] = () => {
+        C.cardPicker('Explore from a card', async (c) => {
+          if (!C.state.cards[c.id]) await C.commit({type: 'cards', cards: [c]}, {renderView: false});
+          saveRecentScope({type: 'card', id: c.name, label: c.name});
+          C.$('#cm-dialog').close();
+          C.go('discover', {card: c.name});
+        });
+      };
+
+      actions['explore-recent'] = (el) => {
+        try {
+          const scope = JSON.parse(el.dataset.recent);
+          if (scope.type === 'deck') C.go('discover', {deck: scope.id, ...(scope.gap ? {gap: scope.gap} : {})});
+          else if (scope.type === 'commander') C.go('discover', {commander: scope.id});
+          else if (scope.type === 'card') C.go('discover', {card: scope.id});
+        } catch (err) { C.notice('Could not restore that recent scope.', true); }
+      };
+
+      actions['explore-clear-recents'] = () => {
+        clearRecentScopes();
+        C.render();
+      };
+
+      return () => {};
+    }
+
     const wanted = C.catalog.get(params.get('card'));
     const facets = CrankFacets.available(C.state);
     const values = CrankFacets.values(data.cards, C.state);
@@ -1014,8 +1138,11 @@
       else { graph?.destroy(); graph = null; drawCardView(null, null); }
     }
 
-    /* #discover?deck=<id>&lens=<role>: the deck is picked under Yours as the facet would pick
-       it, the pane opens on the List tab in the lens, and the commander is the focus. */
+    /* SCOPE QUERY CONTRACT: #discover?deck=<id>&gap=<token> | commander=<name> | card=<name>
+       deck= picks that deck under Yours and focuses its commander; gap= is recorded for later CTAs.
+       commander= focuses that commander without filtering to a deck.
+       card= focuses that card by name (matched case-insensitively).
+       lens= and trace= continue to work with deck= as before. */
     const lensDeck = params.get('deck') ? (C.state.decks || []).find((d) => d.id === params.get('deck') && !d.archived) || null : null;
     if (lensDeck) {
       selection = {...selection, decks: [lensDeck.name]};
@@ -1023,10 +1150,23 @@
       if (wantedLens) { lensId = wantedLens.id; paneTab = 'list'; applyTab(); }
       if (params.get('trace') === '1') wantTrace = true;
     }
-    const startFocus = rowFor(wanted) || (lensDeck ? commanderRow(lensDeck.name) : null)
-      || data.cards.find((c) => c.name === 'Atraxa, Praetors’ Voice' || c.name === "Atraxa, Praetors' Voice")
+    const gapIntent = params.get('gap'); /* gap is recorded but not yet acted on in slice A */
+    const commanderName = params.get('commander');
+    const commanderCard = commanderName ? data.cards.find((c) => c.name.toLowerCase() === commanderName.toLowerCase() && c.isCommander) : null;
+    const cardName = params.get('card');
+    const namedCard = cardName ? data.cards.find((c) => c.name.toLowerCase() === cardName.toLowerCase()) : null;
+
+    const startFocus = (commanderCard || namedCard || rowFor(wanted) || (lensDeck ? commanderRow(lensDeck.name) : null)
+      || data.cards.find((c) => c.name === 'Atraxa, Praetors' Voice' || c.name === "Atraxa, Praetors' Voice")
       || data.cards.find((c) => c.name === 'Krenko, Mob Boss')
-      || data.cards[0];
+      || data.cards[0]);
+
+    /* Show gap intent in the page if present, without building buy flows (out of scope for A). */
+    if (gapIntent && lensDeck) {
+      const subtitle = C.$('.cm-page-head h1');
+      if (subtitle) subtitle.insertAdjacentHTML('afterend', `<p class="cm-muted cm-gap-intent">Gap: ${e(gapIntent)}</p>`);
+    }
+
     refresh(startFocus?.id);
     if (wantTrace) { wantTrace = false; paneTab = 'trace'; applyTab(); traceOn = true; runTrace(true); }
 
