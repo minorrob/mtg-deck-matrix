@@ -98,6 +98,12 @@ createServer(async(req,res)=>{
     try{
       let text='';for await(const chunk of req){text+=chunk;if(text.length>64000)throw Error('Setup request too large');}const body=JSON.parse(text);text='';
       if(pathname==='/api/game-action')return reply(200,await browserBridge('action',body));
+      if(pathname==='/api/ai-pilots/prompt'){
+        if(!soloPilotRunner)throw Error('No API-controlled AI player is running in this local game');
+        const result=soloPilotRunner.nudge(Number.isInteger(body.seatId)?body.seatId:null);
+        if(!result.prompted)throw Error('That AI seat is not running');
+        return reply(200,{ok:true,...result});
+      }
       if(pathname==='/api/match-feedback'){const engine=liveStatus();if(!engine.directory)throw Error('No completed match report is available');return reply(200,tableRuntime?await tableRuntime.feedback(body):saveMatchFeedback(engine.directory,loadMatchReport(engine.directory,0),body));}
       if(pathname==='/api/ai-session'){
         if(!['openai','anthropic'].includes(body.provider))throw Error('Choose a supported provider');
