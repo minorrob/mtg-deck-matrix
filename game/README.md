@@ -2,7 +2,9 @@
 
 Open the **Play** tab in CrankMagic. The public site offers **Open game setup**, which opens the local companion at http://127.0.0.1:8768/app/#game. The local service and pinned Forge runtime must be running on this computer.
 
-For the complete cold-start walkthrough, see [How to start CrankMagic Online](docs/HOW-TO-START-CRANKMAGIC-ONLINE.md). The [CrankMagic Online overview](docs/crankmagic-online-overview.html) is a standalone product summary.
+For the shortest checklist, see [CrankMagic Online quick start](docs/CRANKMAGIC-ONLINE-QUICK-START.md). For the complete cold-start walkthrough and troubleshooting, see [How to start CrankMagic Online](docs/HOW-TO-START-CRANKMAGIC-ONLINE.md). The [CrankMagic Online overview](docs/crankmagic-online-overview.html) is a standalone product summary.
+
+The startup guide includes both supported paths: one human against three AI players on this computer, and mixed human/AI tables using private HTTPS invitations.
 
 From this repository:
 

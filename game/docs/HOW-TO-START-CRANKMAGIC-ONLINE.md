@@ -70,6 +70,28 @@ Running the startup command again is safe. It retains a healthy host and any act
 
 If CrankMagic opens an existing table, choose **Return to game** to resume it. To deliberately replace it, use **Game setup → End current game**, then configure the new table. Ending a game is final and should only be used when you no longer need that position.
 
+## Play alone against three AI players
+
+Solo play is ready to use. It does not need the remote-guest tunnel, so you can start the local host with:
+
+```powershell
+cd "C:\Users\robmi\OneDrive\Documents\My Games\MtG\work\commander-phase-c"
+.\game\tools\start-crankmagic.ps1
+```
+
+Then open [CrankMagic Online](http://127.0.0.1:8768/app/#game) and:
+
+1. Open **Game setup**.
+2. Set **Human players** to **1** and **AI players** to **3**.
+3. Choose your deck, bracket, and maximum deck cost.
+4. For each AI seat, choose its commander/deck or select the random commander option. Set its play style and difficulty independently.
+5. Select **OpenAI** and **GPT-5.6 Luna** for API-powered opponents. The app reads `crankmagic_openai_api` from Windows Credential Manager; the key is not sent to the browser. Use Terra only when you want stronger reasoning at higher cost. You can instead select native Forge AI for seats that should not use the API.
+6. Select **Prepare decks**. Review any budget, legality, or native-AI compatibility messages and resolve blocking issues.
+7. Select **Launch game**. CrankMagic starts Forge, applies a fresh random seed to every 99-card library, seats all three AI players, and opens your board.
+8. Keep or mulligan your opening hand, then play from the browser. The AI seats take their turns automatically at the selected difficulty; required human choices and response windows appear in the game UI.
+
+When the game ends, save the match feedback and deck report if prompted. For an early stop, use **Game setup → End current game → End game · keep journal**, then run `.\game\tools\stop-crankmagic.ps1` from the repository folder.
+
 ## Set up a four-player game and email the invitations
 
 1. In **Game setup**, choose the total mix you want. For two people and two bots, select **2 human players** and **2 AI players**. You can instead use three or four human seats.
