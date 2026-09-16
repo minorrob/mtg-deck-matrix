@@ -1,0 +1,22 @@
+/** Actual Forge controller regression, isolated from live matches and profiles. */
+import {spawnSync,execFileSync} from 'node:child_process';
+import {readFileSync,mkdirSync,writeFileSync} from 'node:fs';
+import {resolve,delimiter,dirname} from 'node:path';
+import {fileURLToPath} from 'node:url';
+const [forgeArg,javaArg]=process.argv.slice(2);
+if(!forgeArg||!javaArg)throw Error('Usage: node game/tools/check-forge-hidden-selection.mjs forge-source jdk-directory');
+const root=resolve(dirname(fileURLToPath(import.meta.url)),'../..'),forge=resolve(forgeArg),jdk=resolve(javaArg);
+const lock=JSON.parse(readFileSync(resolve(root,'game/engine-adapter/forge.lock.json')));
+const commit=execFileSync('git',['-c',`safe.directory=${forge.replaceAll('\\','/')}`,'-C',forge,'rev-parse','HEAD'],{encoding:'utf8'}).trim();
+if(commit!==lock.commit)throw Error('Wrong Forge revision');
+const jar=resolve(forge,`forge-gui-desktop/target/forge-gui-desktop-${lock.version}-jar-with-dependencies.jar`);
+const out=resolve(root,'game/.local/hidden-selection'),classes=resolve(out,'classes'),profile=resolve(out,'profile');
+mkdirSync(classes,{recursive:true});mkdirSync(profile,{recursive:true});
+const ext=process.platform==='win32'?'.exe':'';
+const sources=['ForgeProbe','ForgeBrowserBridge','RulesProbe','HiddenSelectionCheck'].map(n=>resolve(root,`game/engine-adapter/src/crankmagic/${n}.java`));
+const compile=spawnSync(resolve(jdk,'bin/javac'+ext),['-encoding','UTF-8','-cp',jar,'-d',classes,...sources],{encoding:'utf8',windowsHide:true});
+if(compile.status!==0||compile.error||compile.stderr?.includes('exception has occurred'))throw Error(compile.error?.message||compile.stderr);
+const run=spawnSync(resolve(jdk,'bin/java'+ext),['-Djava.awt.headless=true',`-Duser.home=${profile}`,`-Dcrankmagic.forgeAssets=${resolve(forge,'forge-gui').replaceAll('\\','/')}/`,'-cp',[classes,jar].join(delimiter),'crankmagic.HiddenSelectionCheck',out],{cwd:forge,encoding:'utf8',timeout:60000,windowsHide:true,env:{...process.env,APPDATA:profile,LOCALAPPDATA:profile}});
+writeFileSync(resolve(out,'console.log'),(run.stdout||'')+(run.stderr||''));
+if(run.status!==0||run.error)throw Error(run.error?.message||run.stderr||run.stdout||'Hidden-selection regression failed');
+console.log(readFileSync(resolve(out,'hidden-selection.json'),'utf8'));

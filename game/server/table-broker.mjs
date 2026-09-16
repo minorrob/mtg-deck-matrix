@@ -55,11 +55,14 @@ export class TableBroker{
     if(typeof this.#resolveDeck!=='function')throw Error('Host deck validation is unavailable');
     const version=await this.#resolveDeck(member,safeClone(input));if(!version||typeof version.id!=='string'||!version.validated||!version.snapshot)throw Error('Validated deck version required');
     this.#state.deckSnapshots[version.id]=safeClone(version);const table=this.#transition({type:'deck',seatId:member.seatId,deckVersion:version.id});
-    table.seats[member.seatId].commander=version.commander;if(version.snapshot?.name)table.seats[member.seatId].name=String(version.snapshot.name).slice(0,100);this.#save();return {table:publicTable(table,member)};
+    table.seats[member.seatId].commander=version.commander;this.#save();return {table:publicTable(table,member)};
   }
   async ready(member,input){const table=this.#transition({type:'ready',seatId:member.seatId,ready:input?.ready===true});return {table:publicTable(table,member)};}
   async heartbeat(member){
     const seat=this.#state.table.seats[member.seatId];if(!seat.connected)this.#transition({type:'reconnect',seatId:member.seatId});
+    // Game views already poll frequently. Persist presence at most every ten
+    // seconds, rather than rewriting the table for every board refresh.
+    if(seat.connected&&this.#clock()-(this.#state.presence[member.seatId]?.lastSeen??-Infinity)<10000)return {connected:true,revision:this.#state.table.revision};
     this.#state.presence[member.seatId]={lastSeen:this.#clock()};this.#save();return {connected:true,revision:this.#state.table.revision};
   }
   async exit(member){

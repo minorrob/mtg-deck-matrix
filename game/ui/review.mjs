@@ -1,7 +1,8 @@
 import {defaultPlaymat,resolvePlaymat,readMatPreferences,paintMat} from '/playmats.mjs';
 import {openGameSetup} from '/setup.mjs';
-import {validateActionRevision,paymentMayAutoResolve} from '/action-policy.mjs';
+import {validateActionRevision,paymentMayAutoResolve,mayAutoPassPriority} from '/action-policy.mjs';
 import {cardGridMetrics,arrangeCardGroups} from '/card-layout.mjs';
+import {createLivePoller} from '/live-poll.mjs';
 // Earlier running hosts do not advertise this module until their next restart.
 const {manaStatus,manaColors,sourceColors}=await import('/mana-status.mjs').catch(()=>({manaStatus:null,manaColors:[]}));
 const {recommendedActions,combatTotals}=await import('/play-guidance.mjs').catch(()=>({recommendedActions:()=>[],combatTotals:()=>[]}));
@@ -399,10 +400,10 @@ function renderTracker(force=false){
   if(p.playerId===viewerSeatId){const review=el('section');review.append(el('h3','','Deck review notes'),el('p','fine','Watch for cards held without a use, colors you could not produce, triggers you could not exploit, and opposing effects that disrupted your plan. Counts alone are not a reason to cut a card.'));
     const notes=el('textarea');notes.setAttribute('aria-label','Deck review notes');notes.placeholder='Cards to reconsider, missed synergies, interaction to add…';const key='crankmagic-review-'+(live?.matchId||'replay');try{notes.value=localStorage.getItem(key)||'';}catch{}notes.addEventListener('input',()=>{try{localStorage.setItem(key,notes.value);}catch{}});review.append(notes,button('Export tracker report',()=>{const report={schema:'CrankMagicTracker@1',matchId:live?.matchId,turn:frame().turn,deck:data.pod.seats[0]?.deck.name,telemetry:t||null,notes:notes.value,limitations:['Only observed visible sources are summarized.','Missing instrumentation is unknown, not zero.','Causal loop detection and exact mana-efficiency attribution are not implemented.']};const url=URL.createObjectURL(new Blob([JSON.stringify(report,null,2)],{type:'application/json'})),a=el('a');a.href=url;a.download='crankmagic-tracker.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}));tracker.append(review);}
 }
-const guidance=el('details','recommended-actions');guidance.open=true;guidance.hidden=true;const guidanceTitle=el('summary','','Recommended actions'),guidanceBody=el('div','recommendation-list');guidance.append(guidanceTitle,guidanceBody);document.querySelector('.replaybar').after(guidance);
+const guidance=el('details','recommended-actions');guidance.hidden=true;const guidanceTitle=el('summary','','Recommended actions'),guidanceBody=el('div','recommendation-list');guidance.append(guidanceTitle,guidanceBody);document.querySelector('.replaybar').after(guidance);
 let guidanceKey='',combatKey='';
 function renderGuidance(){
-  const rows=live?recommendedActions(frame(),live.ui,historyRows()):[];guidance.hidden=!rows.length;const key=JSON.stringify(rows);if(key===guidanceKey)return;guidanceKey=key;guidanceTitle.textContent='Recommended actions · '+phaseName(frame().phase);guidanceBody.replaceChildren();
+  const rows=live?recommendedActions(frame(),live.ui,historyRows(),viewerSeatId):[];guidance.hidden=!rows.length;const key=JSON.stringify(rows);if(key===guidanceKey)return;guidanceKey=key;guidanceTitle.textContent='Recommended actions · '+phaseName(frame().phase);guidanceBody.replaceChildren();
   for(const row of rows){const item=el('article');item.append(el('strong','',row.title),el('p','fine',row.reason));if(row.cardId!=null){const card=Object.values(humanPlayer().zones).flatMap(z=>z.cards).find(c=>c.cardId===row.cardId);if(card)item.append(button('Review card',e=>cardActions(card,e.currentTarget)));}guidanceBody.append(item);}
   guidanceBody.append(el('small','coaching-note','Local coaching · suggestions, not a guaranteed best line. Costs and targets are validated when you act.'));
 }
@@ -517,12 +518,10 @@ function renderDecision(){
     if(choice&&!actionBusy){prompt.textContent='Choosing mana for the unpaid cost…';options.replaceChildren();buttons.replaceChildren();closeCardMenu();gameAction({kind:'answer',choiceId:q.id,indices:[choice.index]},fresh=>fresh.ui.choice?.id===q.id);return;}
   }
   if(yieldTurn!==frame().turn)yieldTurn=null;
-  const ordinaryPriority=!ui.choice&&!ui.nativeFallback&&ui.ok==='OK'&&ui.okEnabled&&/^Priority:/m.test(ui.prompt);
-  const opponentTurn=turnPlayer()&&turnPlayer().playerId!==viewerSeatId;
-  const safeToContinue=ordinaryPriority&&hasPriority()&&opponentTurn&&frame().stackSize===0&&(yieldTurn===frame().turn||!['COMBAT_DECLARE_BLOCKERS','COMBAT_DAMAGE','COMBAT_END','END_OF_TURN'].includes(frame().phase));
+  const safeToContinue=mayAutoPassPriority(live,viewerSeatId,yieldTurn);
   if(safeToContinue){
     prompt.textContent='Following '+turnPlayer().name+'’s turn…';options.replaceChildren();buttons.replaceChildren();decisionArt.replaceChildren();lastDecision='';
-    if(!actionBusy){const turn=frame().turn;gameAction({kind:'ok'},fresh=>fresh.state.turn===turn&&fresh.state.turnPlayerId!==viewerSeatId&&fresh.state.priorityPlayerId===viewerSeatId&&fresh.state.stackSize===0&&!fresh.ui.choice&&!fresh.ui.nativeFallback&&fresh.ui.ok==='OK'&&fresh.ui.okEnabled);}
+    if(!actionBusy){const turn=frame().turn;gameAction({kind:'ok'},fresh=>fresh.state.turn===turn&&mayAutoPassPriority(fresh,viewerSeatId,yieldTurn));}
     return;
   }
   // Forge identifies the payment's originating ability. Triggered/other-player costs
@@ -622,9 +621,20 @@ function renderDecision(){
     else if(!priority&&(startingPlayer||(/select|choose|target/i.test(ui.prompt)&&/player|opponent/i.test(ui.prompt))))for(const p of frame().players.filter(p=>p.health.status!=='out'))buttons.append(button((startingPlayer?'Start with ':'Target ')+names[p.playerId],()=>gameAction({kind:'player',targetId:p.playerId})));
   }
 }
-async function startLive(){if(livePolling)return;livePolling=true;liveButton.disabled=true;await pollLive();}
-async function refreshLiveView(){
-  const response=await fetch(guestMode?'/match/view':'/api/game-view',{headers:guestMode?{Authorization:'Bearer '+seatSession?.capability}:{}});const value=await response.json();if(!response.ok)throw Error(value.error);if(!livePolling)return;
+const livePoller=createLivePoller({
+  read:async signal=>{
+    const response=await fetch(guestMode?'/match/view':'/api/game-view',{signal,headers:guestMode?{Authorization:'Bearer '+seatSession?.capability}:{}});
+    const value=await response.json();if(!response.ok)throw Object.assign(Error(value.error||'Unable to read the table'),{status:response.status});return value;
+  },apply:applyLiveView,interval:()=>pendingCasts.size?250:750,
+  onError:(error,{fatal})=>{
+    liveButton.textContent=fatal?'Table access ended':'Reconnecting…';liveButton.disabled=!fatal;
+    $('notice').textContent=fatal?error.message+' Return to the table lobby.':'Connection interrupted. Reconnecting to the live table…';
+    if(fatal)livePolling=false;
+  }
+});
+async function startLive(){if(livePolling)return;livePolling=true;liveButton.disabled=true;await livePoller.start();}
+async function refreshLiveView(){await livePoller.refresh();}
+function applyLiveView(value){
     if(value.state?.players?.length){
       if(appliedMatch===value.matchId&&value.revision<appliedRevision)return;
       if(appliedMatch&&appliedMatch!==value.matchId){pendingCasts.clear();pendingPlay=null;completionReport=null;completionLoading=false;completionFeedbackSaved=false;completionStatus='';}
@@ -636,14 +646,8 @@ async function refreshLiveView(){
       renderDecision();renderHistory();renderGuidance();renderCombat();if(trackerTab==='tracker')renderTracker();liveButton.textContent='Live table connected';if(Date.now()>noticeUntil)$('notice').textContent='Drag from hand to play. Select your card for actions; inspect for a larger view. History records public activity.';
     }
 }
-async function pollLive(){
-  if(!livePolling)return;
-  try{await refreshLiveView();
-  }catch(error){$('notice').textContent=error.message;liveButton.disabled=false;livePolling=false;return;}
-  setTimeout(pollLive,pendingCasts.size?250:750);
-}
 window.addEventListener('crankmagic-game-ready',async()=>{await startLive();if(!live)return;document.body.classList.remove('setup-screen');$('game-setup').close();if(window.parent!==window)window.parent.postMessage({type:'crankmagic-live'},location.origin);reportCanvasSize();});
-window.addEventListener('crankmagic-game-closed',()=>{livePolling=false;live=null;gameToken=null;lastState='';lastDecision='';completionReport=null;completionLoading=false;completionFeedbackSaved=false;completionStatus='';pendingCasts.clear();pendingPlay=null;visualGroups.clear();freePositions.clear();});
+window.addEventListener('crankmagic-game-closed',()=>{livePolling=false;livePoller.stop();live=null;gameToken=null;lastState='';lastDecision='';completionReport=null;completionLoading=false;completionFeedbackSaved=false;completionStatus='';pendingCasts.clear();pendingPlay=null;visualGroups.clear();freePositions.clear();});
 if(new URLSearchParams(location.search).has('embedded')){document.body.classList.add('embedded');document.querySelector('.brand')?.remove();const sidebar=button('☰ Sidebar',()=>window.parent.postMessage({type:'crankmagic-sidebar'},location.origin)),editor=button('Deck editor',()=>window.parent.postMessage({type:'crankmagic-exit'},location.origin));document.querySelector('header').prepend(sidebar,editor);}
 if(guestMode){document.querySelector('.brand')?.remove();document.querySelector('.workshop-link')?.remove();$('setup').textContent='Table lobby';}
 if(!new URLSearchParams(location.search).has('replay')){if(guestMode){document.body.classList.remove('setup-screen');await startLive();}else{document.body.classList.add('setup-screen');await openGameSetup();}}
