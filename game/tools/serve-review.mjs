@@ -68,6 +68,7 @@ catch(error){tableRuntime=null;console.warn('Multiplayer table recovery needs at
 const guestService={};for(const method of ['authenticate','join','table','deck','ready','heartbeat','exit','rematch','view','action','report','feedback'])guestService[method]=(...args)=>{if(!tableRuntime)throw Object.assign(Error('This table is not accepting players'),{status:409});return tableRuntime.guest[method](...args);};
 const guestGateway=createGuestGateway({host:guestHost,port:guestPort,publicOrigin:process.env.COMMANDER_GUEST_PUBLIC_ORIGIN||undefined,service:guestService,readPublicFile:async name=>{const path=guestAssets.get(name);if(!path)throw Error('Unknown public file');return readFile(resolve(root,path));}});
 const guestInfo=await guestGateway.listen();
+const remoteGuestsAvailable=/^https:\/\//.test(guestInfo.origin);
 const token=randomUUID(),prepared=new Map();let preparing=false,launching=false;
 createServer(async(req,res)=>{
   const pathname=new URL(req.url,'http://127.0.0.1').pathname;
@@ -125,6 +126,7 @@ createServer(async(req,res)=>{
         if(launching)throw Error('Launch already in progress');const pod=prepared.get(body.id);if(!pod)throw Error('Prepare and review this pod before starting');requireAiSession(pod);launching=true;
         try{
           if(pod.schema==='CommanderLobbyPack@1'){
+            if(pod.reservedHumanSeats.length&& !remoteGuestsAvailable)throw Error('Remote guests are unavailable. Restart CrankMagic Online with Remote Guests enabled before creating a human lobby.');
             if(tableRuntime&&!['selecting','rematch'].includes(tableRuntime.view().phase))throw Error('Finish the current multiplayer table before opening another');
             tableRuntime?.close();tableRuntime=createLocalTableRuntime({...runtimeOptions,lobby:pod});
             await tableRuntime.ready(true);hostInvitations=pod.reservedHumanSeats.map(({seatId})=>{const issued=tableRuntime.invite(seatId,14_400_000);return {seatId,expiresIn:issued.expiresIn,link:`${guestInfo.origin}/#table=${encodeURIComponent(issued.tableId)}&invite=${encodeURIComponent(issued.invite)}`};});
@@ -137,6 +139,7 @@ createServer(async(req,res)=>{
       if(pathname==='/api/lobby-deck'){if(!tableRuntime)throw Error('No multiplayer lobby is open');const value=await tableRuntime.deck(body);return reply(200,{table:value.table});}
       if(pathname==='/api/lobby-rematch'){if(!tableRuntime)throw Error('No multiplayer lobby is open');await tableRuntime.rematch(body.accept===true);return reply(200,{table:tableRuntime.view()});}
       if(pathname==='/api/lobby-invite'){
+        if(!remoteGuestsAvailable)throw Error('Remote guests are unavailable. Restart CrankMagic Online with Remote Guests enabled before creating an invitation.');
         if(!tableRuntime)throw Error('No multiplayer lobby is open');const issued=tableRuntime.invite(body.seatId,14_400_000),value={seatId:issued.seatId,expiresIn:issued.expiresIn,link:`${guestInfo.origin}/#table=${encodeURIComponent(issued.tableId)}&invite=${encodeURIComponent(issued.invite)}`};hostInvitations=hostInvitations.filter(x=>x.seatId!==value.seatId);hostInvitations.push(value);return reply(200,value);
       }
       if(pathname==='/api/lobby-close'){if(!tableRuntime)throw Error('No multiplayer lobby is open');if(!['selecting','rematch'].includes(tableRuntime.view().phase))throw Error('Finish the active match before closing its table');tableRuntime.abandon();tableRuntime=null;hostInvitations=[];return reply(200,{closed:true});}
