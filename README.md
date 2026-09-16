@@ -511,3 +511,24 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 
 Work stays on a branch. Release review uses a draft pull request; nothing merges into main
 automatically. Application test success is not a claim of human-calibrated simulation.
+
+## License, fan content and third-party material
+
+**CrankMagic is source-available, not open source.** The repository is public so the work can be
+seen; all commercial rights are reserved. You may read it, run your own copy for personal
+non-commercial use, and fork it to experiment. Hosting it as a service, putting any part of it in
+a product, or any other commercial use needs written permission — see [LICENSE](LICENSE) §2, and
+§3 for commercial and acquisition enquiries.
+
+`game/engine-adapter/` is the exception: it links Forge and is **GPL-3.0-or-later**, kept in its
+own directory with nothing in CrankMagic depending on it so the boundary stays clean.
+
+**CrankMagic is unofficial Fan Content permitted under the Wizards of the Coast Fan Content Policy.
+Not approved or endorsed by Wizards. Portions of the materials used are property of Wizards of the
+Coast. ©Wizards of the Coast LLC.** Card data and images come from Scryfall, commander ranks from
+EDHREC; neither is affiliated with this project. Card art, playmat images and the Satoshi typeface
+are **not** redistributable with a fork.
+
+Read [DISCLAIMER.md](DISCLAIMER.md) for the warranty, liability, trademark and indemnity terms, and
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) for every third-party source and what is known
+about its terms.

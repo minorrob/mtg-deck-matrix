@@ -1,0 +1,152 @@
+CrankMagic — Source-Available License
+Copyright (c) 2026 Rob Minor. All rights reserved.
+
+READ THIS FIRST. This repository is public so that the work can be SEEN. It is
+not open source, and publishing it here grants you almost nothing. The author
+retains every commercial right, deliberately, so that the project can be
+licensed or sold on terms of his choosing later.
+
+Parts of this repository are NOT the author's to license at all. Section 4 says
+which. THIRD-PARTY-NOTICES.md records every third-party source and its terms;
+DISCLAIMER.md carries the warranty, liability, trademark and indemnity
+statements that apply to all of it.
+
+================================================================================
+1. WHAT YOU MAY DO
+================================================================================
+
+Subject to every other section of this License, you are granted a worldwide,
+royalty-free, non-exclusive, non-transferable, revocable license to:
+
+  a) READ the source code and documentation in this repository;
+  b) RUN your own copy of the Software for your own PERSONAL, NON-COMMERCIAL
+     use — managing your own card collection, playing your own games;
+  c) MODIFY your own copy, and FORK this repository, for personal,
+     non-commercial experimentation, study or evaluation;
+  d) SUBMIT a contribution back to this project, on the terms in Section 5.
+
+"Non-commercial" means use that is not intended for or directed toward
+commercial advantage or monetary compensation, by you or by anyone else.
+
+================================================================================
+2. WHAT YOU MAY NOT DO WITHOUT WRITTEN PERMISSION
+================================================================================
+
+All of the following require the author's prior written permission:
+
+  a) Any COMMERCIAL use of the Software, in whole or in part;
+  b) HOSTING or operating the Software, or any derivative of it, as a service
+     available to anyone other than yourself, whether paid or free;
+  c) INCORPORATING the Software or any part of it — including its data model,
+     its card-relationship graph, its simulator, or its user interface — into
+     any product, service or offering, whether or not that offering is paid;
+  d) REDISTRIBUTING the Software or a derivative of it to third parties;
+  e) SUBLICENSING any right in the Software;
+  f) Using the Software to TRAIN a machine-learning model intended for
+     commercial deployment;
+  g) Removing or obscuring this License, DISCLAIMER.md, THIRD-PARTY-NOTICES.md
+     or the attribution notices in the application.
+
+================================================================================
+3. RESERVATION OF RIGHTS
+================================================================================
+
+All rights not expressly granted in Section 1 are reserved to the author. This
+License does not transfer ownership of anything. The author remains free to
+license the Software to anyone on any terms, exclusively or otherwise, and to
+sell, assign or otherwise dispose of it in whole or in part, without notice to
+you and without any obligation arising from your use under Section 1.
+
+This License is revocable. Nothing here is perpetual or irrevocable.
+
+COMMERCIAL AND ACQUISITION ENQUIRIES are welcome. Open an issue at
+https://github.com/minorrob/mtg-deck-matrix or contact the author through the
+repository. A commercial license, an OEM license or an acquisition can be
+discussed on terms; none of them is granted by this file.
+
+================================================================================
+4. WHAT THIS LICENSE DOES NOT COVER
+================================================================================
+
+The author does not own, and does not license to you, any of the following.
+Each is governed by its own terms, recorded in THIRD-PARTY-NOTICES.md:
+
+  a) game/engine-adapter/ — GPL-3.0-or-later. These Java sources link against
+     Forge (https://github.com/Card-Forge/forge), which is GPL-3.0-or-later,
+     and each file carries its own SPDX-License-Identifier. They are a
+     derivative work of Forge and are distributed under the GPL. Sections 1 and
+     2 of this License do not apply to that directory, and this License cannot
+     be used to relicense it. It is kept in its own directory, with no
+     CrankMagic source depending on it, so that the boundary stays clean.
+
+  b) Magic: The Gathering card names, rules text, mana symbols, card images,
+     set data and other game content, wherever it appears — including in data/,
+     assets/mana/, assets/crankmagic/ and docs/screens/. This is the property
+     of Wizards of the Coast LLC. See DISCLAIMER.md §1. CrankMagic is unofficial
+     Fan Content; that policy PROHIBITS commercialising fan content, which is a
+     constraint on the card content and NOT on the author's own software.
+
+  c) Card and metadata sets obtained from Scryfall, EDHREC and comparable
+     services, and any file derived from them.
+
+  d) Fonts under assets/crankmagic/ and design/crankmagic/. Oxanium is under
+     the SIL Open Font License 1.1 (assets/crankmagic/oxanium-OFL.txt). Satoshi
+     is under its foundry's own license and may not be redistributable with a
+     fork.
+
+  e) Artwork not originated by this project — the playmat images under
+     game/ui/assets/, the commander images under assets/crankmagic/, and any
+     card art reproduced in docs/screens/. Supplied or retrieved for personal
+     use; rights remain with their creators; NO redistribution or commercial
+     right in them is granted here.
+
+The CrankMagic name, wand logo and wordmark are marks of this project and are
+not licensed by Section 1. See DISCLAIMER.md §5.
+
+================================================================================
+5. CONTRIBUTIONS
+================================================================================
+
+If you submit a contribution to this project, you represent that it is your own
+work and that you have the right to submit it, and you grant the author a
+perpetual, worldwide, irrevocable, royalty-free license to use, reproduce,
+modify, distribute, sublicense and RELICENSE your contribution as part of the
+Software, under this License or under any other terms, including commercial and
+exclusive terms.
+
+This keeps the project's copyright title clean and in one place. If you are not
+willing to grant that, please open an issue describing the change instead of
+submitting the code.
+
+================================================================================
+6. NO WARRANTY; LIABILITY; INDEMNITY
+================================================================================
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE, ACCURACY, TITLE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+The warranty disclaimer, limitation of liability and indemnification terms in
+DISCLAIMER.md §4 and §6 are incorporated into this License by reference and
+apply to every use permitted by Section 1.
+
+================================================================================
+7. TERMINATION
+================================================================================
+
+Your rights under Section 1 end automatically if you breach any term of this
+License. On termination you must stop using the Software and destroy your
+copies. Sections 3, 5 and 6 survive.
+
+================================================================================
+8. NO GRANT BY IMPLICATION
+================================================================================
+
+No right is granted by implication, estoppel or otherwise. The presence of a
+file in this repository is not a representation that it may be redistributed.
+If you intend to use any part of this repository beyond Section 1, you are
+responsible for obtaining permission — from the author for his work, and from
+the relevant rights holder for everything in Section 4.
