@@ -64,6 +64,11 @@
     aria-expanded="${tools}" aria-controls="cm-facet-bar"
     aria-label="${tools ? 'Hide search and filters' : 'Show search and filters'}"
     title="${tools ? 'Hide search and filters' : 'Show search and filters'}">${TOOLS_ICON}</button>`;
+  /* PROGRESSIVE DISCLOSURE (Explore B): toggle for advanced tools (Filters, Trace, Lens) */
+  const advancedToolsButton = () => `<button type="button" class="cm-advanced-tools-toggle" data-action="toggle-advanced-tools"
+    aria-expanded="${advancedToolsOpen}" aria-controls="cm-advanced-tools-panel"
+    aria-label="${advancedToolsOpen ? 'Hide advanced tools' : 'Show advanced tools'}"
+    title="${advancedToolsOpen ? 'Hide Filters, Trace, and Lens' : 'Show Filters, Trace, and Lens'}">${advancedToolsOpen ? '▼' : '▶'} ${advancedToolsOpen ? 'Hide' : 'Show'} Advanced Tools</button>`;
   const applyStage = () => {
     const root = document.getElementById('matrix-v2');
     root?.classList.toggle('cm-stage', stage);
@@ -93,6 +98,10 @@
      trace mode and the pane plays the list. `traceTicks` is what the reader ticked this
      session, persisted to the deck definition as `strategies`. */
   let traceOn = false, traceWorld = 'deck', traceResult = null, traceTicks = null, wantTrace = false;
+  /* PROGRESSIVE DISCLOSURE (Explore B): Advanced tools (Facet Filters, Trace, Lens) are
+     collapsed by default to emphasize loops-first discovery. Deep links like ?trace=1 or
+     ?lens=<role> force them open. State persists per device in localStorage. */
+  let advancedToolsOpen = false;
   /* THE TRACE'S LIMITS (Rob, 14 September): cards lit (a hundred at most -- a deck's worth),
      the longest loop the finder closes, and how deep the chain runs. A library preference,
      read here and passed to every trace the pane runs; the module clamps them again. */
@@ -111,6 +120,11 @@
      hide four rows is noise. Mechanic has 304 of them; everything shorter is left whole.
      Module scope, because the panel's markup reads it long before the view's body runs. */
   const FOLD_TAIL = 12;
+
+  /* ADVANCED TOOLS DISCLOSURE (Explore B): localStorage key and helpers */
+  const advancedToolsKey = 'crankmagic:discover:advancedTools:v1';
+  function getAdvancedToolsState() { try { return localStorage.getItem(advancedToolsKey) === 'open'; } catch { return false; } }
+  function setAdvancedToolsState(open) { try { localStorage.setItem(advancedToolsKey, open ? 'open' : 'closed'); } catch { /* private mode */ } }
 
   views.discover = async (params) => {
     C.HELP.discover = {title: 'Discover', body: '<p>The connected card catalog: follow a card into the cards it is joined to, inspect the evidence for each link, and take what you find into a group or a deck.</p><p><strong>Trace</strong> (the pane\'s third tab, with a deck picked under Yours, or <em>Trace</em> on the deck page) lights the deck from its commander outward: only the joins that serve the deck\'s strategies, loop-backs in gold, the cards it never touches ghosted on the outer band. The list in the pane is the product; the animation shows how it was chosen. The trace score is a heuristic and is labelled one; the measured score beside it is Measure\'s.</p><p>Structural links (shared mechanics and roles) and observed co-play (EDHREC) are different kinds of evidence. Neither claims a simulated improvement.</p><p>In the card pane and the pop-ups, the term with the gold ring is the card’s <strong>Primary Purpose</strong>: the one job it is in a deck for, decided by a fixed ladder (finisher, extra turn, board wipe, multiplier, untap engine, copier, blink, team quality, tutor, sacrifice outlet, removal, draw, ramp, token maker, payoff, and so on down to its body and its tribe). In a filter dialog the count beside an option is what you would have under the filters already applied; the whole-graph figure is on the hover. Picking a deck under <strong>Yours</strong> puts its commander in focus, and dragging the divider beside the graph grows the card picture up to 70%.</p><p><strong>Loops only</strong>, on by default when a deck is picked, walks only the joins that continue or pay off a loop: an untap, copy or blink onto a tap ability worth another go, a repeatable supply into a demand, an event one card causes and another fires on. <strong>Loops this card is in</strong> lists every cycle of four cards or fewer through the focus, each step named and the missing pieces dashed, with the cards that turn each pass into damage, cards or mana.</p>'};
@@ -311,10 +325,16 @@
     C.main.innerHTML = C.pageHead('Discover', toolsButton(), 'discover')
       + `<div class="cm-toolbar"><label class="cm-search">Find a card<input id="cm-graph-query" placeholder="Card name" list="cm-graph-names"><datalist id="cm-graph-names"></datalist></label>${C.select('Connections', 'edgeType', [['mechanic', 'Shared mechanics / roles'], ['played', 'EDHREC co-play']], 'mechanic')}${b('Search catalog / link', 'graph-lookup')}${b('Back', 'graph-back')}${b('Reset view', 'graph-reset')}</div>
 
-      <div class="cm-facet-bar" id="cm-facet-bar" role="group" aria-label="Filters">
-        <span class="cm-facet-bar-head"><strong>Filters</strong> <span id="cm-facet-summary" class="cm-muted"></span></span>
-        ${facetBar()}
-        <span class="cm-facet-drop-tools">${b('Clear all', 'facet-clear', {}, false, {cls: 'compact'})}</span>
+      <div class="cm-advanced-tools-disclosure">
+        ${advancedToolsButton()}
+      </div>
+
+      <div class="cm-advanced-tools-panel" id="cm-advanced-tools-panel"${advancedToolsOpen ? '' : ' hidden'}>
+        <div class="cm-facet-bar" id="cm-facet-bar" role="group" aria-label="Filters">
+          <span class="cm-facet-bar-head"><strong>Filters</strong> <span id="cm-facet-summary" class="cm-muted"></span></span>
+          ${facetBar()}
+          <span class="cm-facet-drop-tools">${b('Clear all', 'facet-clear', {}, false, {cls: 'compact'})}</span>
+        </div>
       </div>
 
       <div class="cm-facet-status">
@@ -1105,7 +1125,9 @@
       document.getElementById('matrix-v2')?.classList.toggle('cm-lands', lands);
       $('#cm-facet-count').textContent = picks
         ? `${shown.length.toLocaleString()} of ${data.cards.length.toLocaleString()} cards match ${picks} filter${picks === 1 ? '' : 's'}${picks > 1 ? ` (${mode} within a facet)` : ''}.`
-        : `${data.cards.length.toLocaleString()} cards. Narrow them with Filters, with the focused card's own terms, or search for one by name.`;
+        : (deckPicked && loopMode 
+          ? `${data.cards.length.toLocaleString()} cards. Explore loops in ${loopMode ? 'this deck' : 'the graph'}, or use Advanced Tools to filter further.`
+          : `${data.cards.length.toLocaleString()} cards. Narrow them with Filters, with the focused card's own terms, or search for one by name.`);
       $('#cm-facet-summary').textContent = picks ? `· ${picks} applied · ${shown.length.toLocaleString()} cards` : '· none applied';
       $('#cm-facet-chips').innerHTML = CrankFacets.chips(selection)
         .map((chip) => `<button class="cm-chip${chip.exclude ? ' is-not' : ''}" data-action="facet-drop" data-key="${e(chip.key)}" data-value="${e(chip.value)}">${chip.exclude ? '<span aria-hidden="true">−</span> ' : ''}${e(chip.label)}: ${e(chip.value)}${chip.exclude ? '<span class="cm-visually-hidden"> — excluded</span>' : ''} <span aria-hidden="true">×</span><span class="cm-visually-hidden"> — remove this filter</span></button>`)
@@ -1156,6 +1178,9 @@
     const cardName = params.get('card');
     const namedCard = cardName ? data.cards.find((c) => c.name.toLowerCase() === cardName.toLowerCase()) : null;
 
+    /* PROGRESSIVE DISCLOSURE: Open advanced tools if deep link forces it, else restore from localStorage */
+    const forceOpenTools = params.get('trace') === '1' || !!params.get('lens');
+    advancedToolsOpen = forceOpenTools || getAdvancedToolsState();
     const startFocus = (commanderCard || namedCard || rowFor(wanted) || (lensDeck ? commanderRow(lensDeck.name) : null)
       || data.cards.find((c) => c.name === 'Atraxa, Praetors' Voice' || c.name === "Atraxa, Praetors' Voice")
       || data.cards.find((c) => c.name === 'Krenko, Mob Boss')
@@ -1309,6 +1334,14 @@
     actions['graph-tools'] = (el) => { tools = !tools; applyStage();
       el.outerHTML = toolsButton();
       requestAnimationFrame(() => { sizePane(); dispatchEvent(new Event('resize')); }); };
+    actions['toggle-advanced-tools'] = (el) => {
+      advancedToolsOpen = !advancedToolsOpen;
+      setAdvancedToolsState(advancedToolsOpen);
+      const panel = $('#cm-advanced-tools-panel');
+      if (panel) panel.hidden = !advancedToolsOpen;
+      el.outerHTML = advancedToolsButton();
+      requestAnimationFrame(() => { sizePane(); dispatchEvent(new Event('resize')); });
+    };
     actions['graph-pop-close'] = () => hidePop();
     actions['graph-tick'] = (el) => { const id = el.dataset.id; if (picked.has(id)) picked.delete(id); else picked.add(id); graph?.setSelected(picked); el.classList.toggle('is-on', picked.has(id)); el.textContent = picked.has(id) ? 'Ticked ✓' : 'Tick for a group'; drawCardView(graph?.current(), null, true); };
     actions['results-clear'] = () => { picked = new Set(); graph?.setSelected(picked); drawCardView(graph?.current(), null, true); };
