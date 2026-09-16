@@ -57,6 +57,8 @@ The OpenAI key is read from the Windows Credential Manager entry `crankmagic_ope
 
 ## 2B. Start a game with friends
 
+Friends need only a current web browser. They do **not** install Cloudflare, CrankMagic, Forge, Java, or an extension.
+
 1. Confirm you used the `-RemoteGuests` startup command.
 2. Select **Game setup**.
 3. Set the number of human and AI seats. Example: **2 humans** and **2 AI players**.
@@ -67,7 +69,7 @@ The OpenAI key is read from the Windows Credential Manager entry `crankmagic_ope
    - Enter their email address beside the reserved human seat.
    - Select **Email invitation**.
    - Review the prepared message in your default email app and press **Send**.
-8. Each friend opens their private link, claims the seat, chooses or uploads a deck, validates it, and selects **Ready**.
+8. Each friend clicks their private HTTPS link, claims the seat in their browser, chooses or uploads a deck, validates it, and selects **Ready**.
 9. Mark yourself ready if the lobby asks you to do so.
 10. When every human is ready, wait for the shared ten-second countdown.
 11. Forge launches automatically. Each person selects **Enter the game** and keeps or mulligans their private opening hand.
