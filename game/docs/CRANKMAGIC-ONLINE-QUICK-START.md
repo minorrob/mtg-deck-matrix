@@ -81,7 +81,7 @@ Friends need only a current web browser. They do **not** install Cloudflare, Cra
    - Review the prepared message in your default email app and press **Send**.
 8. Each friend clicks their private HTTPS link, claims the seat in their browser, chooses or uploads a deck, validates it, and selects **Ready**.
 9. Mark yourself ready if the lobby asks you to do so.
-10. When every human is ready, wait for the shared ten-second countdown.
+10. When every human is ready, wait for the shared five-second countdown.
 11. Forge launches automatically. Each person selects **Enter the game** and keeps or mulligans their private opening hand.
 
 Keep the host computer on and connected for the whole match. Each invitation is private, single-use, and expires after about four hours.

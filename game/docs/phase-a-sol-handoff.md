@@ -48,7 +48,7 @@ Action envelope: `{matchId, actionId, revision, kind, choiceId?, targetId?, indi
 
 `selecting → countdown → starting → playing → rematch → selecting`
 
-Every occupied seat must have a validated deck and be ready. All human seats must be connected. Show a shared 10-second deadline. Deck edits, unreadiness or disconnect cancel the countdown. On expiry, persist a unique launch command before spawning Java. Repeated ticks cannot launch another game. Recovery retries that same launch ID; it never silently creates a second engine. Engine failure returns to selecting with readiness cleared.
+Every occupied seat must have a validated deck and be ready. All human seats must be connected. Show a shared 5-second deadline. Deck edits, unreadiness or disconnect cancel the countdown. On expiry, persist a unique launch command before spawning Java. Repeated ticks cannot launch another game. Recovery retries that same launch ID; it never silently creates a second engine. Engine failure returns to selecting with readiness cleared.
 
 On completion every human votes. Yes shows Waiting for other players. Unanimous yes returns everyone to deck selection with the previous deck available but nobody ready. Allow same/upload/saved/Deck Lab choices. No new invitations for existing members. A no leaves the table waiting for that person to exit or reconsider; do not silently expel them.
 

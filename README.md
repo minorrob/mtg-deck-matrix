@@ -29,7 +29,7 @@ The approved standalone mockup remains under `design/crankmagic/` for design ref
 
 Every page opens on its name, with one primary action and at most three beside it; the
 rest of a page's actions sit under **More**, and what the page does and how its figures are
-counted sit behind its **?**. The nav reads **Decks · Cards · Build · Discover**: Collection
+counted sit behind its **?**. The nav reads **Decks · Cards · Build · Discover · Play**: Collection
 and Shop are one page, **Cards**, with tabs *Library · To buy · Orders* and three views on the
 tab row under *More* — **List · Sheet · Table** (the rows, the Master sheet, the tabletop; a
 view a tab lacks shows disabled with the reason, and the switch keeps the tab it is on) —
