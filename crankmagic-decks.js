@@ -149,7 +149,7 @@ const tab=DECK_TABS.some(([id])=>id===requestedTab)?requestedTab:'overview';
 const work=d.archived?[b('Restore as draft','restore-deck',{deck:d.id},true),b('Delete permanently','delete-deck',{deck:d.id})]
   :d.status==='final'?[b(pullCount(ready)+ready.remove>0?`Ready to add (${pullCount(ready)+ready.remove})`:'Ready to add','deck-pull',{deck:d.id},true),b(`Buy list (${ready.toBuy})`,'deck-buy-list',{deck:d.id}),b('Log a game','log-game',{deck:d.id})]
   :[b('Edit card list','edit-list',{deck:d.id},true),b('Finalize & reserve','finalize',{deck:d.id}),b('Log a game','log-game',{deck:d.id})];
-const measure=d.archived||!cards.length?'':b(latest?'Measure again':'Measure','measure-deck',{deck:d.id});
+const measure=d.archived||!cards.length?'':`<button type="button" class="v-button" data-action="measure-deck" data-deck="${e(d.id)}" title="Compare lists under the browser simulation model — not a full rules-engine game.">${latest?'Measure again':'Measure'}</button>`;
 /* THE TRACE: the deck's strategy lit from the commander outward, on Discover's canvas. */
 const traceBtn=d.archived||!cards.length?'':b('Trace','deck-trace',{deck:d.id});
 /* THE CHANGE LIST (Rob, 14 September): what to pull from the physical deck and what to put in,
