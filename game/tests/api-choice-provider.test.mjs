@@ -10,7 +10,7 @@ test('Anthropic adapter constrains choices and keeps credentials out of request 
     assert.equal(options.headers['anthropic-version'],'2023-06-01');sent=JSON.parse(options.body);
     return {ok:true,json:async()=>({stop_reason:'end_turn',content:[{type:'text',text:'{"index":1}'}]})};
   }});
-  assert.equal(await provider(ticket),1);assert.equal(sent.max_tokens,512);
+  assert.equal(await provider(ticket),1);assert.equal(sent.max_tokens,64);
   assert.deepEqual(sent.output_config.format.schema.properties.index.enum,[0,1]);
   assert.ok(!JSON.stringify(sent).includes('test-only'));await assert.rejects(provider(ticket),/limit/);
 });

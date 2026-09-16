@@ -3,7 +3,9 @@ import {pilotPolicy} from '../contracts/pilot-policy.mjs';
 
 const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const cardText=card=>[card?.name,card?.typeLine,card?.oracleText].filter(Boolean).join(' · ');
+const clip=(value,max=360)=>String(value||'').slice(0,max);
 const pilotCard=card=>({cardId:card.cardId,name:card.name,manaCost:card.manaCost,typeLine:card.typeLine,oracleText:card.oracleText});
+const publicPilotCard=card=>({cardId:card.cardId,name:card.name,manaCost:card.manaCost,typeLine:card.typeLine,tapped:card.tapped,power:card.power,toughness:card.toughness,counters:card.counters});
 const unique=values=>[...new Set(values)];
 
 export function publicThreatAssessment(state,seatId,difficulty=3){
@@ -31,7 +33,7 @@ export function compactPilotObservation(view,seatId,difficulty=3){
     // They are legal offered choices, not a projection of any hidden zone or deck order.
     offeredCards:(view.ui?.selectableCards||[]).map(pilotCard),
     decision:{prompt:view.ui?.prompt,inputType:view.ui?.inputType,choice:view.ui?.choice,selectedCardIds:view.ui?.highlightedCards||[],selectedPlayerIds:view.ui?.highlightedPlayers||[]},
-    opponents:(state.players||[]).filter(p=>p.playerId!==seatId).map(p=>({playerId:p.playerId,name:p.name,health:p.health,handCount:p.zones?.Hand?.count,battlefield:p.zones?.Battlefield?.cards?.filter(c=>!c.faceDown).map(c=>({cardId:c.cardId,name:c.name,manaCost:c.manaCost,typeLine:c.typeLine,oracleText:c.oracleText,tapped:c.tapped,power:c.power,toughness:c.toughness,counters:c.counters}))||[]})),
+    opponents:(state.players||[]).filter(p=>p.playerId!==seatId).map(p=>({playerId:p.playerId,name:p.name,health:p.health,handCount:p.zones?.Hand?.count,battlefield:p.zones?.Battlefield?.cards?.filter(c=>!c.faceDown).map(publicPilotCard)||[]})),
     threats:publicThreatAssessment(state,seatId,difficulty),policy:pilotPolicy(difficulty)};
 }
 
@@ -85,7 +87,7 @@ export function buildPilotCandidates(view,seatId,difficulty=3){
     }
   }else if(ui.payment?.automaticEligible&&ui.ok==='Auto'&&ui.okEnabled)result=[{label:'Pay the offered mana cost automatically',action:{kind:'ok'},automatic:true}];
   else{
-    for(const [id,description]of Object.entries(ui.cardActions||{})){const card=cards.get(Number(id));result.push({label:`Use ${card?.name||'card '+id}: ${description}${card?.oracleText?' · '+card.oracleText:''}`,action:{kind:'card',targetId:Number(id)}});}
+    for(const [id,description]of Object.entries(ui.cardActions||{})){const card=cards.get(Number(id));result.push({label:`Use ${card?.name||'card '+id}: ${description}${card?.oracleText?' · '+clip(card.oracleText):''}`,action:{kind:'card',targetId:Number(id)}});}
     for(const id of ui.selectables||[]){const card=cards.get(id);if(!result.some(c=>c.action.kind==='card'&&c.action.targetId===id))result.push({label:`Select ${card?.name||'card '+id}${card?.typeLine?' · '+card.typeLine:''}${card?.manaCost?' · '+card.manaCost:''}${card?.oracleText?' · '+card.oracleText:''}`,action:{kind:'card',targetId:id}});}
     let players=ui.inputType?(ui.highlightedPlayers||[]):[];
     const choosingStart=/who would you like to start|starting player|start this game/i.test(ui.prompt||'');
@@ -108,7 +110,7 @@ export function buildPilotCandidates(view,seatId,difficulty=3){
 
 function localFallback(candidates){return candidates.findIndex(c=>!/(cancel|pass priority|end turn|choose none)/i.test(c.label));}
 
-export function createApiPilotRunner({seats,bridge,providerForSeat,onEvent=()=>{},pollMs=180}){
+export function createApiPilotRunner({seats,bridge,providerForSeat,onEvent=()=>{},pollMs=100}){
   let stopped=false;const abort=new AbortController();
   const state=new Map(seats.map(seat=>[seat.seatId,{seat,policy:pilotPolicy(seat.pilot.difficultyRequested||3),calls:0,lastRevision:-1,errors:0,rejected:new Set(),context:null,pending:null,paused:false}]));
   const actionKey=action=>JSON.stringify(action);
@@ -150,7 +152,7 @@ export function createApiPilotRunner({seats,bridge,providerForSeat,onEvent=()=>{
         entry.pending=null;onEvent({kind:'ai-action-completed',seatId:seat.seatId,actionId:pending.request.actionId,label:pending.label});
       }else{
         if(pending.uncertain&&Date.now()>=pending.retryAt&&pending.attempts<3&&!view.ui?.actionInFlight){await submit(entry,pending);return;}
-        if(Date.now()-pending.startedAt>30000){entry.paused=true;onEvent({kind:'ai-pilot-paused',seatId:seat.seatId,reason:'Forge has not confirmed the last action; inspect the pending decision before resuming.',actionId:pending.request.actionId});}
+        if(Date.now()-pending.startedAt>8000){entry.paused=true;onEvent({kind:'ai-pilot-paused',seatId:seat.seatId,reason:'Forge has not confirmed the last action; inspect the pending decision before resuming.',actionId:pending.request.actionId});}
         return;
       }
     }
@@ -165,6 +167,6 @@ export function createApiPilotRunner({seats,bridge,providerForSeat,onEvent=()=>{
     const chosen=candidates[selected];
     await submit(entry,{...chosen,request:{...chosen.action,revision:view.revision,actionId:randomUUID()},context,source,startedAt:Date.now(),attempts:0});
   }
-  const done=(async()=>{while(!stopped){for(const entry of state.values())try{await step(entry);}catch(error){entry.errors++;onEvent({kind:'ai-pilot-error',seatId:entry.seat.seatId,message:String(error.message||error)});}await wait(pollMs);}})();
+  const done=(async()=>{while(!stopped){await Promise.all([...state.values()].map(async entry=>{try{await step(entry);}catch(error){entry.errors++;onEvent({kind:'ai-pilot-error',seatId:entry.seat.seatId,message:String(error.message||error)});}}));await wait(pollMs);}})();
   return {stop(){stopped=true;abort.abort();},done,status(){return [...state.values()].map(x=>({seatId:x.seat.seatId,difficulty:x.policy.level,providerCalls:x.calls,errors:x.errors,paused:x.paused,pendingActionId:x.pending?.request.actionId}));}};
 }

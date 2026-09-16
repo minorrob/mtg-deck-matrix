@@ -13,11 +13,11 @@ export function paymentMayAutoResolve(ui,pendingCast=false,approvedPayment=null)
   return pendingCast;
 }
 
-export function mayAutoPassPriority(view,viewerPlayerId,yieldTurn=null){
+export function mayAutoPassPriority(view,viewerPlayerId,yieldTurn=null,holdResponsesTurn=null){
   const state=view.state||{},ui=view.ui||{};
+  // Passing priority is the default while somebody else acts. A player who wants
+  // to keep instant-speed interaction available deliberately holds this turn.
   if(state.gameOver||state.turnPlayerId===viewerPlayerId||state.priorityPlayerId!==viewerPlayerId||ui.actionInFlight||ui.choice||ui.nativeFallback||ui.ok!=='OK'||!ui.okEnabled||!/^Priority:/m.test(ui.prompt||''))return false;
-  if((state.stackSize??state.stack?.length??0)>0)return false;
-  if(yieldTurn===state.turn)return true;
-  if(state.phase==='END_OF_TURN')return false;
-  return !(String(state.phase).startsWith('COMBAT')&&state.combat?.attacks?.length);
+  if(holdResponsesTurn===state.turn)return false;
+  return true;
 }
