@@ -113,12 +113,21 @@ const pct=v=>`${(Number(v||0)*100).toFixed(1)}%`;
     const targets=r.targets||targetsFor(rawFrom(m),def||definition,simConfig);
     const row=(label,metric,suffix)=>metric&&metric.value!==null&&metric.value!==undefined
       ? `<span>${e(label)} <strong>${e(String(metric.value))}${e(suffix||metric.unit&&(' '+metric.unit)||'')}</strong></span>` : '';
+    /* Match the protocol by id prefix to look up human-readable label and game count.
+       CrankSim may not be available in test contexts, so fall back gracefully. */
+    const protocolMatch=r.protocol&&typeof CrankSim!=='undefined'&&CrankSim.PROTOCOLS?Object.values(CrankSim.PROTOCOLS).find(p=>p.id===r.protocol):null;
+    const protocolLabel=protocolMatch?protocolMatch.label:'Unknown protocol';
+    const totalGames=(protocolMatch?.seedCount||0)*(protocolMatch?.games||0);
+    const protocolChip=protocolMatch?`${e(protocolLabel)} · ${totalGames.toLocaleString()} games`+(protocolMatch.label!=='Published protocol'?' · not a published rating':''):e(r.protocol||'Unknown');
+    /* FIDELITY BANNER: what the simulation model is and is not. This appears BEFORE the
+       score so a reader who scrolls to a number meets the honesty first. */
+    const fidelityBanner=note(`This score compares lists under a browser simulation model (profile opponents, simplified rules). It is not a full rules-engine game and does not predict a real evening.`,true);
     /* SAID BEFORE THE SCORE, NOT AFTER IT. A reader who scrolls to a number and stops
        has to meet this first, because it is the sentence that says what the number
        leaves out. */
     const blind=(m.winPathsTheEngineCannotWatch&&m.winPathsTheEngineCannotWatch.value)||0;
     const blindNote=blind?note(`This list carries ${blind} card${blind===1?'':'s'} that say "you win the game"${(r.unwatchedWinCards||[]).length?' — '+(r.unwatchedWinCards||[]).join(', '):''}. The engine reads the card and not the condition on it, so the way this deck really wins is not in the score below; it is scored as the creatures and spells around that card. Rank it against another combo list, not against a creature deck.`,true):'';
-    return blindNote+`<div class="cm-count-list">
+    return fidelityBanner+blindNote+`<div class="cm-count-list">
         ${row('Score',m.score)}${row('Standard error',m.scoreStandardError)}${row('Win rate',m.winRate)}
         ${row('Average winning turn',m.averageWinTurn)}${row('Commander cast rate',m.commanderCastRate)}
         ${row('Average commander turn',m.averageCommanderTurn)}${row('Turn-capped games',m.incompleteGames)}
@@ -128,7 +137,7 @@ const pct=v=>`${(Number(v||0)*100).toFixed(1)}%`;
         ${row('First elimination',m.firstEliminationTurn)}${row('Spells cast per game',m.spellsCastPerGame)}
         ${row('Biggest turn',m.biggestTurn)}${row('Cards the engine could read',m.cardsTheEngineCouldRead)}
       </div>
-      <p class="cm-muted">${e(r.protocol)} · ${(r.conditions&&r.conditions.seedCount)||'?'} seeds of ${((r.conditions&&r.conditions.gamesPerSeed)||0).toLocaleString()} games · ${((r.run&&r.run.games)||0).toLocaleString()} games in ${(((r.run&&r.run.elapsedMs)||0)/1000).toFixed(1)}s</p>
+      <p class="cm-muted"><strong>${protocolChip}</strong><br><small title="${e(r.protocol||'')}">${e(r.protocol||'')} · ${((r.run&&r.run.games)||0).toLocaleString()} games in ${(((r.run&&r.run.elapsedMs)||0)/1000).toFixed(1)}s</small></p>
       ${(r.scoreParts||[]).length?`<h3 class="cm-section-heading">How the score was made</h3>
         <div class="cm-table-wrap"><table class="cm-table"><thead><tr><th>What it measures</th><th>Scored</th><th>Of</th><th>What the engine saw</th></tr></thead><tbody>${r.scoreParts.map(x=>`<tr><td>${e(x.label)}</td><td>${e(String(x.points))}</td><td>${e(String(x.max))}</td><td class="cm-muted">${e(x.reads||'')}</td></tr>`).join('')}</tbody></table></div>
         <p class="cm-muted">Ordered by points lost, so the row that costs this deck the most is first. These are the nine terms the composite is built from; nothing else moves the number.</p>`:''}
@@ -643,8 +652,8 @@ actions['lab-discard']=async()=>{await keepPreview(null);C.notice('Draft discard
    *   whether it worked     a measurement. A swap is kept only when the new score beats
    *                         the old by more than that run's own standard error.
    *
-   * ON THE PROTOCOL. The search runs on `preview` -- one seed of 2,000 games -- because
-   * `published` is 120,000 games a try and a search needs dozens of tries. Preview scores
+   * ON THE PROTOCOL. The search runs on `refine` -- three seeds of 4,000 games -- because
+   * `published` is 120,000 games a try and a search needs dozens of tries. Refine scores
    * are not comparable with published ones and the protocol name says so; nothing here
    * writes a published number. Measure again when the list settles.
    *
@@ -1007,9 +1016,9 @@ function runPane(saved){
     <div id="cm-lab-result">${preview?`<h3>${e(preview.name)} <span class="cm-badge">Draft · not saved</span></h3>${note(preview.method)}<p>${count} of 100 cards${preview.estimatedPrice!==null&&preview.estimatedPrice!==undefined?` · about ${e(C.money(preview.estimatedPrice))} at recorded prices`:''}${preview.unknownPrices?` · ${preview.unknownPrices} without a price`:''}.</p>${preview.definition&&preview.definition.budget!==null&&preview.definition.budget!==undefined&&preview.estimatedPrice>preview.definition.budget?note(`About ${C.money(preview.estimatedPrice)} against the ${C.money(preview.definition.budget)} total cap in Deck Definition: the builder treats the cap as a target and could not get under it with these limits. Save the deck and Finalize will offer to raise or remove the cap, or trim the list first.`,true):''}${(preview.issues||[]).map(x=>`<p class="cm-muted">${e(x)}</p>`).join('')}<div class="cm-actions">${b('Review draft cards','lab-review')}${preview.report&&preview.fromDeckId&&C.state.decks.some(d=>d.id===preview.fromDeckId)?b(`File report with ${C.state.decks.find(d=>d.id===preview.fromDeckId).name}`,'lab-file-report',{},true):''}${b('Discard draft','lab-discard')}</div>`
       :saved?`<h3>${e(saved.name)} <span class="cm-badge good">Saved</span></h3>${note(last.method)}${(last.issues||[]).map(x=>`<p class="cm-muted">${e(x)}</p>`).join('')}<div class="cm-actions">${b('Open in Decks','deck',{deck:saved.id})}${b('Review deck cards','deck-cards',{deck:saved.id})}${b('Reports & advice','deck-evidence',{deck:saved.id})}</div>`
       :'<p class="cm-muted">Run initial draft builds a list you can review and measure here. Nothing reaches Decks until you choose Save this deck; no cards are purchased, owned or reserved by any step.</p>'}</div>
-    <p class="cm-muted">Measuring runs the engine in the background on the published protocol — six seeds of 20,000 games — and stores a report you can compare with another run of the same protocol. Refining searches on the quick protocol instead (one seed of 2,000 games, fast enough to try dozens of swaps and too small to publish): it drops the cards the engine drew and could not cast, tries cards the graph joins to your commander, and keeps a swap only when the score beats the old one by more than that run's own error. A kept swap changes the hundred, so the published report is dropped with it — measure again when the list settles. Finalize the saved list in Decks when you accept it.</p></aside>`;
+    <p class="cm-muted">Measuring runs the engine in the background on the published protocol — six seeds of 20,000 games (120,000 total) — and stores a report you can compare with another run of the same protocol. Refining searches on the refinement protocol instead (three seeds of 4,000 games, 12,000 per try, fast enough to search and too small to publish): it drops the cards the engine drew and could not cast, tries cards the graph joins to your commander, and keeps a swap only when the score beats the old one by more than that run's own error. A kept swap changes the hundred, so the published report is dropped with it — measure again when the list settles. Finalize the saved list in Decks when you accept it.</p></aside>`;
 }
 
-C.HELP.lab={title:'Build',body:`<p>Start with a commander or an existing list. Define the deck, draft the initial cards, measure them, then save what you decide to keep.</p><h3>Built around your game</h3><p>Choose a commander from the legal catalog — every one of them, by name, printed variant name, play style, colour identity or rank — or begin with a list you already have. Deck Definition records your hard limits and play preferences.</p><p><strong>Run initial draft</strong> builds a starting list from card metadata and keeps it here as a preview; a total price cap is planned so the list completes, or it tells you what cap would. <strong>Measure</strong> runs the simulator on the preview or a saved deck — real games, in the background, on the same protocol as every published rating — fetching any card text the engine lacks first. <strong>Save this deck</strong> is the only step that writes to Decks, and it works from the commander alone.</p><p>The simulator's three opponents are sampled archetype profiles, not four real decks with hands and boards, so a score compares lists under one model rather than predicting an evening. Every report carries that caveat with it.</p>${note('No AI API key or paid model call is required for current workflows. Reports belong to the exact list they describe.')}`};
+C.HELP.lab={title:'Build',body:`<p>Start with a commander or an existing list. Define the deck, draft the initial cards, measure them, then save what you decide to keep.</p><h3>Built around your game</h3><p>Choose a commander from the legal catalog — every one of them, by name, printed variant name, play style, colour identity or rank — or begin with a list you already have. Deck Definition records your hard limits and play preferences.</p><p><strong>Run initial draft</strong> builds a starting list from card metadata and keeps it here as a preview; a total price cap is planned so the list completes, or it tells you what cap would. <strong>Measure</strong> runs the simulator on the preview or a saved deck — simulated games under this model, in the background, on the same protocol as every published rating — fetching any card text the engine lacks first. <strong>Save this deck</strong> is the only step that writes to Decks, and it works from the commander alone.</p><p>The simulator's three opponents are sampled archetype profiles, not four real decks with hands and boards, so a score compares lists under one model rather than predicting an evening. Every report carries that caveat with it.</p>${note('No AI API key or paid model call is required for current workflows. Reports belong to the exact list they describe.')}`};
 actions['lab-help']=()=>actions['page-help']({dataset:{help:'lab'}});
 });
