@@ -2,6 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {recommendedActions,combatTotals} from '../ui/play-guidance.mjs';
 const player=(id,hand=[],battlefield=[])=>({playerId:id,name:'Seat '+id,health:{life:30,status:'active'},zones:{Hand:{cards:hand},Command:{cards:[]},Battlefield:{cards:battlefield}}});
+
+test('invited players receive coaching for their own turn and private hand',()=>{
+ const state={turnPlayerId:2,phase:'MAIN1',stackSize:0,players:[player(0),player(2,[{cardId:22,name:'Forest',typeLine:'Basic Land'}])]};
+ Object.defineProperty(state.players[0].zones,'Hand',{get(){throw Error('Host private hand read');}});
+ assert.equal(recommendedActions(state,{cardActions:{22:'Play land'}},[],2)[0].cardId,22);
+ assert.deepEqual(recommendedActions({...state,turnPlayerId:0},{},[],2),[]);
+});
 test('coaching is phase aware and does not read opposing hands or libraries',()=>{
  const state={turnPlayerId:0,phase:'MAIN1',stackSize:0,players:[player(0,[{cardId:1,name:'Forest',typeLine:'Basic Land'}]),player(1)]};
  Object.defineProperty(state.players[1].zones,'Hand',{get(){throw Error('Private opponent hand read');}});

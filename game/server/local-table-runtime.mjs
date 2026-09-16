@@ -23,7 +23,7 @@ export function createLocalTableRuntime({directory,lobby,tableId=randomUUID(),br
   const broker=new TableBroker({file:resolve(directory,table.tableId+'.json'),table,clock,catalog,initialDeckVersions,report,
     resolveDeck:(member,input)=>resolveGuestDeck(member,input,settings),bridge,
     launch:async({table,decks,launchId,matchId})=>{
-      const finalSeats=table.seats.map(seat=>decks[seat.deckVersion]?.snapshot);if(finalSeats.some(s=>!s))throw Error('A validated seat deck is missing');
+      const finalSeats=table.seats.map(seat=>{const snapshot=decks[seat.deckVersion]?.snapshot;return snapshot?{...snapshot,name:seat.name}:null;});if(finalSeats.some(s=>!s))throw Error('A validated seat deck is missing');
       const pod={...lobby,schema:'CommanderPodPack@1',matchId,seats:finalSeats,podHash:sha256(canonical({seed:lobby.seed,launchId,matchId,seats:finalSeats.map(s=>({seatId:s.seatId,deckHash:s.deck.gameplayHash,mechanicsHash:s.mechanics.hash,pilot:s.pilot}))}))};activePod=pod;saveRuntime(activeFile,{schema:'CrankMagicLocalTableRuntime@1',tableId,lobby,activePod,closed:false});
       let engine=status();if(engine.matchId!==matchId||!['starting','ready','playing'].includes(engine.status))await launch(pod);
       const deadline=Date.now()+240000;while(Date.now()<deadline){engine=status();if(engine.matchId===matchId&&['ready','playing'].includes(engine.status)){pilotRunner?.stop();pilotRunner=createPilots?.(pod)||null;return matchId;}if(['error','closed','incomplete'].includes(engine.status))throw Error(engine.error||`Forge stopped during launch (${engine.status})`);await delay(300);}throw Error('Forge did not become ready within four minutes');
@@ -50,7 +50,7 @@ export function createLocalTableRuntime({directory,lobby,tableId=randomUUID(),br
     heartbeat:(member,input)=>broker.heartbeat(member,input),
     exit:(member,input)=>broker.exit(member,input),
     async rematch(member,input){const result=await broker.rematch(member,input);if(result.table.phase==='selecting'){for(const seat of result.table.seats.filter(s=>s.kind==='ai'))await broker.ready({seatId:seat.seatId},{ready:true});}await scheduleIfReady();return broker.table(member);},
-    async view(member){await runtime.poll();return broker.view(member);},action:(member,input)=>broker.action(member,input),report:member=>broker.report(member),feedback:(member,input)=>broker.feedback(member,input)
+    async view(member){await broker.heartbeat(member);await runtime.poll();return broker.view(member);},action:(member,input)=>broker.action(member,input),report:member=>broker.report(member),feedback:(member,input)=>broker.feedback(member,input)
   };
   runtime={
     broker,

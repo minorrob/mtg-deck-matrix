@@ -21,6 +21,11 @@ test('mixed lobby joins, validates its own deck, counts down once and routes its
   assert.equal(runtime.view().phase,'countdown');assert.equal(runtime.view().countdownAt,10100);
   now=10100;await runtime.poll();await runtime.poll();assert.equal(runtime.view().phase,'playing');assert.equal(launches,1);assert.equal(launchedPod.seats.length,3);assert.equal(launchedPod.seats[1].seatId,1);
   assert.equal((await runtime.guest.view(member)).viewerSeatId,1);
+  // Remaining on /play is presence even after the lobby heartbeat stops.
+  for(let second=15;second<=135;second+=15){now=second*1000;await runtime.guest.view(member);assert.equal(runtime.view().seats[1].connected,true);}
+  assert.equal((await runtime.guest.authenticate(session.capability)).seatId,1);
+  // Closing that tab still allows the normal disconnect/release policy to run.
+  now+=31000;await runtime.poll();assert.equal(runtime.view().seats[1].connected,false);
 });
 
 test('unanimous rematch keeps capabilities and prior deck versions while clearing readiness',async t=>{

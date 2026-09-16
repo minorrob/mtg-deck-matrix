@@ -363,8 +363,8 @@ public final class ForgeBrowserBridge {
                     case "player":
                         int playerId=request.get("targetId").getAsInt();var target=game.getRegisteredPlayers().stream().filter(p->p.getId()==playerId).findFirst().orElseThrow(()->new IllegalArgumentException("Player is not in this match"));controller.selectPlayer(target.getView(),null);break;
                     case "card":
-                        int cardId=request.get("targetId").getAsInt();Card found=null;
-                        for(var p:game.getRegisteredPlayers())for(ZoneType zone:List.of(ZoneType.Hand,ZoneType.Battlefield,ZoneType.Command,ZoneType.Exile,ZoneType.Graveyard))for(Card card:p.getCardsIn(zone))if(card.getId()==cardId&&viewer()!=null&&card.getView().canBeShownTo(viewer().getView()))found=card;
+                        int cardId=request.get("targetId").getAsInt();Card found=offeredCard(cardId);
+                        if(found==null)for(var p:game.getRegisteredPlayers())for(ZoneType zone:List.of(ZoneType.Hand,ZoneType.Battlefield,ZoneType.Command,ZoneType.Exile,ZoneType.Graveyard))for(Card card:p.getCardsIn(zone))if(card.getId()==cardId&&viewer()!=null&&card.getView().canBeShownTo(viewer().getView()))found=card;
                         if(found==null)throw new IllegalArgumentException("Card is not visible");
                         if(!controller.selectCard(found.getView(),List.of(),null))throw new IllegalArgumentException("This card has no available action now. Check timing, costs, targets and land plays remaining.");break;
                 }
@@ -374,6 +374,17 @@ public final class ForgeBrowserBridge {
             finally{snapshot();synchronized(this){actionInFlight=false;}}
         });
         synchronized(this){return receipts.get(id);}
+    }
+    // A search can offer a card that normal zone visibility deliberately hides.
+    // Resolve only the exact objects in this controller's current Forge decision;
+    // never broaden library visibility or trust IDs from the browser/old snapshot.
+    private Card offeredCard(int id){
+        if(controller instanceof forge.player.PlayerControllerHuman human
+                && human.getInputQueue().getInput() instanceof forge.gamemodes.match.input.InputSelectEntitiesFromList<?> input
+                && human.getInputProxy().getInput()==input){
+            for(var entity:input.getValidChoices())if(entity instanceof Card card&&card.getId()==id)return card;
+        }
+        return null;
     }
     private Map<String,Object> receipt(String id){Map<String,Object> value=ForgeProbe.obj("accepted",true,"actionId",id);receipts.put(id,value);if(receipts.size()>1024){String oldest=receipts.keySet().iterator().next();receipts.remove(oldest);receiptPayloads.remove(oldest);}return value;}
 }

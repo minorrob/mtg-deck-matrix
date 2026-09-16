@@ -1,4 +1,4 @@
-const status=document.querySelector('#status'),host=document.querySelector('#table'),sessionKey='crankmagic-seat-session';let session,tableState,pollTimer;
+const status=document.querySelector('#status'),host=document.querySelector('#table'),sessionKey='crankmagic-seat-session';let session,tableState,pollTimer,lastRendered='';
 const deckDraft={source:'upload',name:'',csv:'',deckId:'',commander:'',archidektCommander:'',url:''};
 const el=(tag,cls,text)=>{const node=document.createElement(tag);if(cls)node.className=cls;if(text!==undefined)node.textContent=text;return node;};
 const button=(text,fn,cls='')=>{const node=el('button',cls,text);node.type='button';node.addEventListener('click',fn);return node;};
@@ -25,6 +25,9 @@ function deckPanel(table,seat){
   panel.append(el('div','deck-fields'),source,name,upload,catalog,build,archidekt,save);return panel;
 }
 function render(value){
+  const renderKey=JSON.stringify(value);
+  if(renderKey===lastRendered){const countdown=host.querySelector('.countdown');if(countdown)countdown.textContent='Starting in '+Math.max(0,Math.ceil((value.table.countdownAt-Date.now())/1000));return;}
+  lastRendered=renderKey;
   tableState=value.table;status.hidden=true;host.hidden=false;host.replaceChildren();const rules=el('div','panel');rules.append(el('h1','',`Table · bracket ${tableState.settings?.bracket??'—'}`),el('p','',`Maximum deck cost: $${tableState.settings?.maxCost??'—'} · ${tableState.seats.length} seats`));host.append(rules);
   const seats=el('div','seats');for(const seat of tableState.seats){const card=el('div','seat'+(seat.seatId===session.seatId?' you':''));card.append(el('strong','',seat.seatId===session.seatId?'You':seat.name||`Seat ${seat.seatId+1}`),el('span','',seat.kind==='ai'?'AI player':'Human player'),el('small','',!seat.occupied?'Waiting for player':seat.ready?'Ready':seat.connected?'Choosing a deck':'Disconnected'),...(seat.commander?[el('small','',seat.commander)]:[]));seats.append(card);}host.append(seats);
   const own=tableState.seats.find(s=>s.seatId===session.seatId),actions=el('div','actions');
@@ -37,5 +40,5 @@ function render(value){
   actions.append(button('Exit the table',async()=>{try{await api('/table/exit',{method:'POST',body:{}});sessionStorage.removeItem(sessionKey);session=null;host.hidden=true;message('You left the table.');clearTimeout(pollTimer);}catch(error){message(error.message,true);}}));host.append(actions);
 }
 async function refresh(){try{render(await api('/table'));}catch(error){message(error.message,true);}}
-async function heartbeat(){if(!session)return;try{await api('/table/heartbeat',{method:'POST',body:{}});await refresh();}catch(error){message(error.message,true);}pollTimer=setTimeout(heartbeat,10000);}
+async function heartbeat(){if(!session)return;try{await api('/table/heartbeat',{method:'POST',body:{}});await refresh();}catch(error){message(error.message,true);}pollTimer=setTimeout(heartbeat,tableState?.phase==='countdown'?1000:2000);}
 try{await redeem();await refresh();heartbeat();}catch(error){message(error.message,true);}

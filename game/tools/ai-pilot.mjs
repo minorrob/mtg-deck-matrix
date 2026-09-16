@@ -3,6 +3,7 @@ import {pilotPolicy} from '../contracts/pilot-policy.mjs';
 
 const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const cardText=card=>[card?.name,card?.typeLine,card?.oracleText].filter(Boolean).join(' · ');
+const pilotCard=card=>({cardId:card.cardId,name:card.name,manaCost:card.manaCost,typeLine:card.typeLine,oracleText:card.oracleText});
 const unique=values=>[...new Set(values)];
 
 export function publicThreatAssessment(state,seatId,difficulty=3){
@@ -25,7 +26,11 @@ export function publicThreatAssessment(state,seatId,difficulty=3){
 export function compactPilotObservation(view,seatId,difficulty=3){
   const state=view.state||{},own=state.players?.find(p=>p.playerId===seatId);
   return {schema:'CrankMagicPilotObservation@1',seatId,revision:view.revision,turn:state.turn,phase:state.phase,turnPlayerId:state.turnPlayerId,priorityPlayerId:state.priorityPlayerId,stack:state.stack||[],combat:state.combat||null,
-    own:own?{life:own.life,health:own.health,mana:own.mana,hand:own.zones?.Hand?.cards?.map(c=>({cardId:c.cardId,name:c.name,manaCost:c.manaCost,typeLine:c.typeLine,oracleText:c.oracleText}))||[],battlefield:own.zones?.Battlefield?.cards?.map(c=>({cardId:c.cardId,name:c.name,manaCost:c.manaCost,typeLine:c.typeLine,oracleText:c.oracleText,tapped:c.tapped,power:c.power,toughness:c.toughness,counters:c.counters}))||[]}:null,
+    own:own?{life:own.life,health:own.health,mana:own.mana,hand:own.zones?.Hand?.cards?.map(pilotCard)||[],battlefield:own.zones?.Battlefield?.cards?.map(c=>({...pilotCard(c),tapped:c.tapped,power:c.power,toughness:c.toughness,counters:c.counters}))||[]}:null,
+    // Forge publishes these private search/tutor candidates only in this seat's view.
+    // They are legal offered choices, not a projection of any hidden zone or deck order.
+    offeredCards:(view.ui?.selectableCards||[]).map(pilotCard),
+    decision:{prompt:view.ui?.prompt,inputType:view.ui?.inputType,choice:view.ui?.choice,selectedCardIds:view.ui?.highlightedCards||[],selectedPlayerIds:view.ui?.highlightedPlayers||[]},
     opponents:(state.players||[]).filter(p=>p.playerId!==seatId).map(p=>({playerId:p.playerId,name:p.name,health:p.health,handCount:p.zones?.Hand?.count,battlefield:p.zones?.Battlefield?.cards?.filter(c=>!c.faceDown).map(c=>({cardId:c.cardId,name:c.name,manaCost:c.manaCost,typeLine:c.typeLine,oracleText:c.oracleText,tapped:c.tapped,power:c.power,toughness:c.toughness,counters:c.counters}))||[]})),
     threats:publicThreatAssessment(state,seatId,difficulty),policy:pilotPolicy(difficulty)};
 }
@@ -61,8 +66,12 @@ function isPureManaActivation(candidate,cards,ui){
   return lines.length>0&&lines.every(isManaAbilityText);
 }
 export function buildPilotCandidates(view,seatId,difficulty=3){
-  const ui=view.ui||{},rawChoice=ui.choice,policy=pilotPolicy(difficulty),cards=new Map((view.state?.players||[]).flatMap(p=>Object.values(p.zones||{}).flatMap(z=>z.cards||[])).map(c=>[c.cardId,c]));
-  const q=rawChoice&&!ui.payment&&['one','boolean','index','many','order'].includes(rawChoice.mode)?{...rawChoice,options:(rawChoice.options||[]).filter(option=>!isManaAbilityText(option.label))}:rawChoice;
+  if(view.state?.gameOver)return [];
+  const ui=view.ui||{},rawChoice=ui.choice,policy=pilotPolicy(difficulty),cards=new Map([
+    ...(view.state?.players||[]).flatMap(p=>Object.values(p.zones||{}).flatMap(z=>z.cards||[])),
+    ...(ui.selectableCards||[])
+  ].map(c=>[c.cardId,c]));
+  const q=rawChoice&&!ui.payment&&rawChoice.title==='Choose an ability'?{...rawChoice,options:(rawChoice.options||[]).filter(option=>!isManaAbilityText(option.label))}:rawChoice;
   let result=[];
   if(q){
     if(['draw','ack'].includes(q.mode))result=[{label:q.mode==='draw'?'Take the required draw':'Continue after reviewing the message',action:{kind:'answer',choiceId:q.id,indices:[]},automatic:true}];
@@ -77,7 +86,7 @@ export function buildPilotCandidates(view,seatId,difficulty=3){
   }else if(ui.payment?.automaticEligible&&ui.ok==='Auto'&&ui.okEnabled)result=[{label:'Pay the offered mana cost automatically',action:{kind:'ok'},automatic:true}];
   else{
     for(const [id,description]of Object.entries(ui.cardActions||{})){const card=cards.get(Number(id));result.push({label:`Use ${card?.name||'card '+id}: ${description}${card?.oracleText?' · '+card.oracleText:''}`,action:{kind:'card',targetId:Number(id)}});}
-    for(const id of ui.selectables||[]){const card=cards.get(id);if(!result.some(c=>c.action.kind==='card'&&c.action.targetId===id))result.push({label:`Select ${card?.name||'card '+id}`,action:{kind:'card',targetId:id}});}
+    for(const id of ui.selectables||[]){const card=cards.get(id);if(!result.some(c=>c.action.kind==='card'&&c.action.targetId===id))result.push({label:`Select ${card?.name||'card '+id}${card?.typeLine?' · '+card.typeLine:''}${card?.manaCost?' · '+card.manaCost:''}${card?.oracleText?' · '+card.oracleText:''}`,action:{kind:'card',targetId:id}});}
     let players=ui.inputType?(ui.highlightedPlayers||[]):[];
     const choosingStart=/who would you like to start|starting player|start this game/i.test(ui.prompt||'');
     if(!players.length&&ui.inputType&&(choosingStart||/player|opponent|defender|attack/i.test(ui.prompt||''))){
@@ -89,23 +98,73 @@ export function buildPilotCandidates(view,seatId,difficulty=3){
   result=result.filter(candidate=>!isPureManaActivation(candidate,cards,ui));
   const failedThisTurn=new Set((view.telemetry?.recent||[]).filter(event=>event.kind==='browser-cast-cancelled'&&event.turn===view.state?.turn).map(event=>event.cardId));
   if(failedThisTurn.size)result=result.filter(candidate=>candidate.action.kind!=='card'||!failedThisTurn.has(candidate.action.targetId));
-  if(result.length===1&&result[0].action.kind==='ok'&&ui.ok==='OK'&&/^Priority:/m.test(ui.prompt||''))result[0].automatic=true;
-  return result.slice(0,Math.max(1,policy.candidateLimit));
+  if(result.length&&result.every(c=>['ok','cancel'].includes(c.action.kind))&&ui.ok==='OK'&&/^Priority:/m.test(ui.prompt||'')){
+    const pass=result.find(c=>c.action.kind==='ok');if(pass)return [{...pass,automatic:true}];
+  }
+  // Competency limits search effort, not access to Forge's legal choices. Truncating
+  // here hid Confirm/Cancel and later tutor targets behind the first few cards.
+  return result;
 }
 
 function localFallback(candidates){return candidates.findIndex(c=>!/(cancel|pass priority|end turn|choose none)/i.test(c.label));}
 
 export function createApiPilotRunner({seats,bridge,providerForSeat,onEvent=()=>{},pollMs=180}){
-  let stopped=false;const state=new Map(seats.map(seat=>[seat.seatId,{seat,policy:pilotPolicy(seat.pilot.difficultyRequested||3),calls:0,lastRevision:-1,errors:0}]));
+  let stopped=false;const abort=new AbortController();
+  const state=new Map(seats.map(seat=>[seat.seatId,{seat,policy:pilotPolicy(seat.pilot.difficultyRequested||3),calls:0,lastRevision:-1,errors:0,rejected:new Set(),context:null,pending:null,paused:false}]));
+  const actionKey=action=>JSON.stringify(action);
+  const contextKey=view=>JSON.stringify([view.state,view.ui?.prompt,view.ui?.inputType,view.ui?.choice,view.ui?.selectables,view.ui?.cardActions,view.ui?.highlightedCards,view.ui?.highlightedPlayers,view.ui?.okEnabled,view.ui?.cancelEnabled]);
+  const changedDecision=error=>/board changed|decision changed|choice.*expired|no active decision|current decision|button is unavailable/i.test(error.message||'');
+  const transportFailure=error=>error.name==='TimeoutError'||error.name==='AbortError'||/fetch failed|failed to fetch|network|timed? ?out|ECONN|HTTP 50[234]/i.test(error.message||'');
+  function failedAction(entry,pending,message){
+    entry.errors++;entry.rejected.add(actionKey(pending.action));entry.lastRevision=-1;entry.pending=null;
+    onEvent({kind:'ai-action-rejected',seatId:entry.seat.seatId,actionId:pending.request.actionId,message,label:pending.label});
+  }
+  async function submit(entry,pending){
+    pending.attempts++;pending.retryAt=Date.now()+500;entry.pending=pending;
+    try{
+      await bridge(entry.seat.seatId,'action',pending.request);
+      pending.uncertain=false;
+      onEvent({kind:'ai-action-submitted',seatId:entry.seat.seatId,revision:pending.request.revision,actionId:pending.request.actionId,source:pending.source,label:pending.label,difficulty:entry.policy.level});
+      // Answers are validated/stored synchronously by Forge; card/button clicks
+      // are queued on its UI thread and require the separate final outcome.
+      if(pending.action.kind==='answer'){entry.answeredChoiceId=pending.action.choiceId;entry.pending=null;}
+    }catch(error){
+      if(stopped)return;
+      if(transportFailure(error)){pending.uncertain=true;return;}
+      if(changedDecision(error)){entry.pending=null;entry.lastRevision=-1;return;}
+      failedAction(entry,pending,String(error.message||error));
+    }
+  }
   async function step(entry){
-    const {seat,policy}=entry,view=await bridge(seat.seatId,'view');if(view.revision===entry.lastRevision||view.ui?.actionInFlight)return;const candidates=buildPilotCandidates(view,seat.seatId,policy.level);if(!candidates.length)return;
+    if(stopped||entry.paused)return;
+    const {seat,policy}=entry,view=await bridge(seat.seatId,'view');if(stopped||view.state?.gameOver)return;
+    const context=contextKey(view);
+    if(context!==entry.context){entry.context=context;entry.rejected.clear();}
+    if(entry.pending){
+      const pending=entry.pending,result=view.ui?.lastAction;
+      if(result?.id===pending.request.actionId&&result.status==='error'){
+        // Ignore rejected actions only while the actual decision is unchanged.
+        if(context===pending.context)failedAction(entry,pending,result.message||'Forge rejected the action');
+        else{entry.pending=null;entry.lastRevision=-1;onEvent({kind:'ai-action-rejected',seatId:seat.seatId,actionId:pending.request.actionId,message:result.message});}
+      }else if(result?.id===pending.request.actionId&&result.status==='completed'){
+        entry.pending=null;onEvent({kind:'ai-action-completed',seatId:seat.seatId,actionId:pending.request.actionId,label:pending.label});
+      }else{
+        if(pending.uncertain&&Date.now()>=pending.retryAt&&pending.attempts<3&&!view.ui?.actionInFlight){await submit(entry,pending);return;}
+        if(Date.now()-pending.startedAt>30000){entry.paused=true;onEvent({kind:'ai-pilot-paused',seatId:seat.seatId,reason:'Forge has not confirmed the last action; inspect the pending decision before resuming.',actionId:pending.request.actionId});}
+        return;
+      }
+    }
+    if(view.revision===entry.lastRevision||view.ui?.actionInFlight||entry.answeredChoiceId&&entry.answeredChoiceId===view.ui?.choice?.id)return;
+    const candidates=buildPilotCandidates(view,seat.seatId,policy.level).filter(c=>!entry.rejected.has(actionKey(c.action)));if(!candidates.length)return;
     entry.lastRevision=view.revision;let selected=0,source='automatic';
     if(!(candidates.length===1&&candidates[0].automatic)){
-      source='provider';try{if(entry.calls>=policy.modelCallBudget)throw Error('AI model call budget reached');entry.provider??=providerForSeat(seat,policy);onEvent({kind:'ai-provider-requested',seatId:seat.seatId,revision:view.revision,candidateCount:candidates.length,difficulty:policy.level});selected=await entry.provider({seatId:seat.seatId,revision:view.revision,choice:{mode:'one',min:1,max:1,options:candidates.map((c,index)=>({index,label:c.label}))},observation:compactPilotObservation(view,seat.seatId,policy.level)});entry.calls++;entry.errors=0;}
+      source='provider';try{if(entry.calls>=policy.modelCallBudget)throw Error('AI model call budget reached');entry.provider??=providerForSeat(seat,policy);onEvent({kind:'ai-provider-requested',seatId:seat.seatId,revision:view.revision,candidateCount:candidates.length,difficulty:policy.level});entry.calls++;selected=await entry.provider({seatId:seat.seatId,revision:view.revision,choice:{mode:'one',min:1,max:1,options:candidates.map((c,index)=>({index,label:c.label}))},observation:compactPilotObservation(view,seat.seatId,policy.level),signal:abort.signal});if(!Number.isInteger(selected)||!candidates[selected])throw Error('AI provider selected an unavailable action');entry.errors=0;}
       catch(error){entry.errors++;source='bounded-local-fallback';selected=Math.max(0,localFallback(candidates));onEvent({kind:'ai-provider-failure',seatId:seat.seatId,revision:view.revision,message:String(error.message||error),fallback:candidates[selected].label});}
     }
-    const chosen=candidates.find((_,index)=>index===selected)||candidates[0];await bridge(seat.seatId,'action',{...chosen.action,revision:view.revision,actionId:randomUUID()});onEvent({kind:'ai-action-submitted',seatId:seat.seatId,revision:view.revision,source,label:chosen.label,difficulty:policy.level});
+    if(stopped)return;
+    const chosen=candidates[selected];
+    await submit(entry,{...chosen,request:{...chosen.action,revision:view.revision,actionId:randomUUID()},context,source,startedAt:Date.now(),attempts:0});
   }
   const done=(async()=>{while(!stopped){for(const entry of state.values())try{await step(entry);}catch(error){entry.errors++;onEvent({kind:'ai-pilot-error',seatId:entry.seat.seatId,message:String(error.message||error)});}await wait(pollMs);}})();
-  return {stop(){stopped=true;},done,status(){return [...state.values()].map(x=>({seatId:x.seat.seatId,difficulty:x.policy.level,providerCalls:x.calls,errors:x.errors}));}};
+  return {stop(){stopped=true;abort.abort();},done,status(){return [...state.values()].map(x=>({seatId:x.seat.seatId,difficulty:x.policy.level,providerCalls:x.calls,errors:x.errors,paused:x.paused,pendingActionId:x.pending?.request.actionId}));}};
 }

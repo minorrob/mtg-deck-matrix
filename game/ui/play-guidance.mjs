@@ -1,11 +1,11 @@
 // Local, explainable coaching. Only the human hand and public battlefield are read.
 const board=p=>p?.zones?.Battlefield?.cards||[];
 const creatures=p=>board(p).filter(c=>c.typeLine?.includes('Creature'));
-export function recommendedActions(state,ui,history=[]){
+export function recommendedActions(state,ui,history=[],viewerPlayerId=0){
   if(state?.gameOver)return [];
-  const you=state?.players?.find(p=>p.playerId===0);if(!you||state.turnPlayerId!==0)return [];
+  const you=state?.players?.find(p=>p.playerId===viewerPlayerId);if(!you||state.turnPlayerId!==viewerPlayerId)return [];
   const rows=[],add=(title,reason,cardId)=>rows.push({title,reason,...(cardId!=null?{cardId}:{})});
-  const phase=state.phase,hand=you.zones.Hand.cards,opponents=state.players.filter(p=>p.playerId!==0&&p.health?.status!=='out');
+  const phase=state.phase,hand=you.zones.Hand.cards,opponents=state.players.filter(p=>p.playerId!==viewerPlayerId&&p.health?.status!=='out');
   if(ui.nativeFallback){add('Complete the pending choice',ui.nativeFallback);return rows;}
   if(ui.choice){add(ui.choice.mode==='draw'?'Draw your card':'Resolve the current choice',ui.choice.mode==='draw'?'Double-click your library. Suggestions update after the card reaches your hand.':ui.choice.title);return rows;}
   if(state.stackSize){
