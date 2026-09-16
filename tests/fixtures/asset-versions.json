@@ -98,12 +98,12 @@
       "sha": "46db16db726209b1"
     },
     "crankmagic-app.js": {
-      "version": 199,
-      "sha": "06c8d85e4aa908a7"
+      "version": 201,
+      "sha": "1c2a661eb31efa44"
     },
     "crankmagic-assets.js": {
-      "version": 26,
-      "sha": "c2f3dada7a2b9f57"
+      "version": 27,
+      "sha": "edb5eade7073d663"
     },
     "crankmagic-brand.js": {
       "version": 3,
@@ -134,8 +134,8 @@
       "sha": "0f37e9d569d76ff4"
     },
     "crankmagic-discover.js": {
-      "version": 54,
-      "sha": "1e37868e83abb0f4"
+      "version": 55,
+      "sha": "576448ca892b999b"
     },
     "crankmagic-evidence.js": {
       "version": 2,
@@ -230,8 +230,8 @@
       "sha": "9f7f7f7b84fc59c0"
     },
     "crankmagic-sw.js": {
-      "version": 199,
-      "sha": "1e188a2b857999c3"
+      "version": 201,
+      "sha": "3742d5bb9c363394"
     },
     "crankmagic-tabletop.js": {
       "version": 15,
@@ -250,20 +250,20 @@
       "sha": "1eb8517f3293129f"
     },
     "crankmagic.css": {
-      "version": 115,
-      "sha": "6ee8c01cc3e0f2b5"
+      "version": 116,
+      "sha": "125adbd4f32e141a"
     },
     "custom-model.js": {
       "version": 3,
       "sha": "4c2b2793f05a10be"
     },
     "data/card-facts.json": {
-      "version": 4,
-      "sha": "db3d0362512c8115"
+      "version": 5,
+      "sha": "a525e52ebde1ec82"
     },
     "data/cards.json": {
-      "version": 7,
-      "sha": "d5c67cce69da8ab6"
+      "version": 8,
+      "sha": "0511505015aa92bb"
     },
     "data/commander-glossary.json": {
       "version": 2,
@@ -294,8 +294,8 @@
       "sha": "0d59ce296060e722"
     },
     "data/graph.json": {
-      "version": 17,
-      "sha": "aa0f1343e2ed327e"
+      "version": 18,
+      "sha": "ccb7bd8107a7ef3b"
     },
     "deck-import.js": {
       "version": 2,
