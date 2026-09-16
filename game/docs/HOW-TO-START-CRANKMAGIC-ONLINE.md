@@ -41,7 +41,7 @@ The tunnel exposes only the restricted guest gateway. CrankMagic's admin/setup s
 
    ```powershell
    cd "C:\Users\robmi\OneDrive\Documents\My Games\MtG\work\commander-phase-c"
-   .\game\tools\start-crankmagic.ps1 -RemoteGuests
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\game\tools\start-crankmagic.ps1" -RemoteGuests
    ```
 
 3. Wait for this message:
@@ -78,7 +78,7 @@ Solo play is ready to use. It does not need the remote-guest tunnel, so you can 
 
 ```powershell
 cd "C:\Users\robmi\OneDrive\Documents\My Games\MtG\work\commander-phase-c"
-.\game\tools\start-crankmagic.ps1
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\game\tools\start-crankmagic.ps1"
 ```
 
 Then open [CrankMagic Online](http://127.0.0.1:8768/app/#game) and:
@@ -92,7 +92,7 @@ Then open [CrankMagic Online](http://127.0.0.1:8768/app/#game) and:
 7. Select **Launch game**. CrankMagic starts Forge, applies a fresh random seed to every 99-card library, seats all three AI players, and opens your board.
 8. Keep or mulligan your opening hand, then play from the browser. The AI seats take their turns automatically at the selected difficulty; required human choices and response windows appear in the game UI.
 
-When the game ends, save the match feedback and deck report if prompted. For an early stop, use **Game setup → End current game → End game · keep journal**, then run `.\game\tools\stop-crankmagic.ps1` from the repository folder.
+When the game ends, save the match feedback and deck report if prompted. For an early stop, use **Game setup → End current game → End game · keep journal**, then run `powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\game\tools\stop-crankmagic.ps1"` from the repository folder.
 
 ## Set up a four-player game and email the invitations
 
@@ -138,7 +138,7 @@ These files are ignored by Git. They can contain local runtime details and shoul
 
    ```powershell
    cd "C:\Users\robmi\OneDrive\Documents\My Games\MtG\work\commander-phase-c"
-   .\game\tools\stop-crankmagic.ps1
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\game\tools\stop-crankmagic.ps1"
    ```
 
 5. Wait for `CrankMagic Online and its guest tunnel are stopped.`
@@ -146,3 +146,5 @@ These files are ignored by Git. They can contain local runtime details and shoul
 The stop helper refuses to terminate a live Forge match. If it reports an active game, return to the Play screen and use **End current game** first. Do not kill Node, Forge, Java, or cloudflared in Task Manager during a match; that leaves an interrupted position instead of a completed game record.
 
 Closing only the browser intentionally leaves the host running so players can reconnect. Use the sequence above when the table is finished for the day.
+
+The `-ExecutionPolicy Bypass` option applies only to the single startup or shutdown process. It does not permanently change the Windows execution policy.

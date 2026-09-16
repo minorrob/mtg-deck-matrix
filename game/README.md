@@ -9,7 +9,7 @@ The startup guide includes both supported paths: one human against three AI play
 From this repository:
 
 ```powershell
-./game/tools/start-crankmagic.ps1
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\game\tools\start-crankmagic.ps1"
 ```
 
 The Windows helper starts a hidden, persistent host, writes startup logs to ignored `game/.local/host/`, and preserves an existing running game. It looks for the generic Windows Credential Manager entry `crankmagic_openai_api`; when present, setup offers the OpenAI pilot without putting the key in the page, URL, files, or logs. GPT-5.6 Luna is the default and GPT-5.6 Terra is the stronger manual fallback. Pass `-OpenAiCredential ''` to disable stored-key loading for that host. In Codex, use `$start-crankmagic` after installing the skill from `game/skills/start-crankmagic/`. The public launch dialog checks the host and offers startup/retry instructions before transferring a deck. Forge starts automatically when you launch the prepared table.

@@ -16,13 +16,13 @@ Use this checklist to start a game without Codex.
    **Playing alone against three AI players:**
 
    ```powershell
-   .\game\tools\start-crankmagic.ps1
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\game\tools\start-crankmagic.ps1"
    ```
 
    **Inviting friends over the internet:**
 
    ```powershell
-   .\game\tools\start-crankmagic.ps1 -RemoteGuests
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\game\tools\start-crankmagic.ps1" -RemoteGuests
    ```
 
 4. Wait until PowerShell displays:
@@ -95,7 +95,7 @@ Keep the host computer on and connected for the whole match. Each invitation is 
 
    ```powershell
    cd "C:\Users\robmi\OneDrive\Documents\My Games\MtG\work\commander-phase-c"
-   .\game\tools\stop-crankmagic.ps1
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\game\tools\stop-crankmagic.ps1"
    ```
 
 7. Wait for:
@@ -105,3 +105,5 @@ Keep the host computer on and connected for the whole match. Each invitation is 
    ```
 
 Do not terminate Node, Java, Forge, or cloudflared in Task Manager during a match. Closing only the browser leaves the table running so players can reconnect.
+
+The `-ExecutionPolicy Bypass` option applies only to that one PowerShell process. It does not weaken or permanently change the computer's execution policy.
