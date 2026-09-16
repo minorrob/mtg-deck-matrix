@@ -914,6 +914,47 @@ try{
   /* Back to Discover: the offline step below reloads whatever page is showing and waits for the
      graph, so a journey that wanders off and does not come back breaks it a screen later. */
   await page.goto(BASE+'/'+ENTRY+'#discover');await page.locator('#cm-graph').waitFor({timeout:45000});await page.waitForTimeout(800);}
+ /* WANTED (Design C): Add copies with Wanted row files a planned entry in To Buy group, shows on
+    Table as Wanted pile, Bought button acquires owned copy AND removes entry in one revision. */
+ {await page.goto(BASE+'/'+ENTRY+'#cards');await page.locator('#cm-roster-table').waitFor();
+  await click('Add cards');await page.getByRole('dialog').waitFor();
+  await page.getByLabel('Card name or a Scryfall link').fill('Lightning Bolt');
+  await page.locator('[data-pick-card]').filter({has:page.getByText('Lightning Bolt',{exact:true})}).first().click();
+  await page.locator('.cm-copy-row').first().waitFor();
+  await page.locator('.cm-copy-row').first().locator('select').selectOption('wanted');await page.waitForTimeout(200);
+  await page.locator('.cm-copy-row').first().locator('input').fill('2');
+  const beforeWanted=await state(),revBefore=beforeWanted.revision;
+  const toBuyGroup=beforeWanted.groups.find(g=>g.id==='group:to-buy');
+  const entriesBefore=(toBuyGroup?.entries||[]).filter(e=>e.cardId===CrankKey('Lightning Bolt')).reduce((n,e)=>n+e.quantity,0);
+  await click('Add copies');await waitDialog();await page.waitForTimeout(1000);
+  const afterWanted=await state();
+  eq(afterWanted.revision,revBefore+1,'adding wanted entries is one revision');
+  const toBuyAfter=afterWanted.groups.find(g=>g.id==='group:to-buy');
+  ok(toBuyAfter,'To Buy group exists');
+  const entriesAfter=(toBuyAfter?.entries||[]).filter(e=>e.cardId===CrankKey('Lightning Bolt')).reduce((n,e)=>n+e.quantity,0);
+  eq(entriesAfter,entriesBefore+2,'2 wanted entries filed in To Buy group');
+  eq(afterWanted.lots.filter(l=>l.cardId===CrankKey('Lightning Bolt')&&l.source==='owned').reduce((n,l)=>n+l.quantity,0),0,'wanted entries do not create owned lots');
+  /* Wanted pile on Table shows the entry, Bought consumes it atomically. */
+  await page.goto(BASE+'/'+ENTRY+'#cards?view=tabletop');await page.locator('.cm-tt-mat').waitFor({timeout:30000});
+  const wantedPile=page.locator('.cm-tt-pile.cm-tt-status[aria-label^="Wanted,"], .cm-tt-reading[aria-label^="Wanted,"]');
+  ok(await wantedPile.count()>0,'Wanted pile or reading exists on Table');
+  await page.goto(BASE+'/'+ENTRY+'#cards');await page.locator('#cm-roster-table').waitFor();
+  const boltRow=row('Lightning Bolt','Wanted');
+  ok(await boltRow.count()>0,'Lightning Bolt Wanted entry shows in roster');
+  const boughtButton=boltRow.getByRole('button',{name:'Bought',exact:true});
+  ok(await boughtButton.count()>0,'Wanted entry has Bought button');
+  const beforeBought=await state(),revBeforeBought=beforeBought.revision;
+  const ownedBefore=beforeBought.lots.filter(l=>l.cardId===CrankKey('Lightning Bolt')&&l.source==='owned').reduce((n,l)=>n+l.quantity,0);
+  const entriesBeforeBought=(beforeBought.groups.find(g=>g.id==='group:to-buy')?.entries||[]).filter(e=>e.cardId===CrankKey('Lightning Bolt')).reduce((n,e)=>n+e.quantity,0);
+  await boughtButton.click();await page.waitForTimeout(1000);
+  const afterBought=await state();
+  eq(afterBought.revision,revBeforeBought+1,'Bought is one atomic revision (acquire + remove entry)');
+  const ownedAfter=afterBought.lots.filter(l=>l.cardId===CrankKey('Lightning Bolt')&&l.source==='owned').reduce((n,l)=>n+l.quantity,0);
+  const entriesAfterBought=(afterBought.groups.find(g=>g.id==='group:to-buy')?.entries||[]).filter(e=>e.cardId===CrankKey('Lightning Bolt')).reduce((n,e)=>n+e.quantity,0);
+  eq(ownedAfter,ownedBefore+2,'Bought created 2 owned copies');
+  eq(entriesAfterBought,entriesBeforeBought-2,'and consumed 2 wanted entries');
+  ok(ownedAfter>0&&entriesAfterBought>=0,'owned exists, entry gone or reduced');
+  await page.goto(BASE+'/'+ENTRY+'#discover');await page.locator('#cm-graph').waitFor({timeout:45000});await page.waitForTimeout(800);}
  /* Going offline changes nothing: the comparison is against the library as it stands one line
     earlier, not a snapshot from the Lab run half a journey ago — anything recorded in between
     is a real change and would read here as an offline fault. */

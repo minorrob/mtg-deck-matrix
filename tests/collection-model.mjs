@@ -47,6 +47,24 @@ run('fulfill',{deckId:'box'});
 const boxed=()=>M.readiness(s,M.deck(s,'box'));
 assert.equal(boxed().owned,100,'Buying the hundred covers the hundred');assert.equal(boxed().placed,0,'A reservation is not a physical move');checks+=2;
 assert.equal(boxed().ready,true,'Ready means you own the hundred, not that you confirmed it card by card');checks++;
+
+// WANTED STATUS: entries in To Buy group read Wanted; entries elsewhere read Planned (Design C).
+const toBuyGroup=s.groups.find(g=>g.id==='group:to-buy');
+if(!toBuyGroup){run('createGroup',{groupId:'group:to-buy',name:'To Buy'});}
+const otherGroup='other-group';run('createGroup',{groupId:otherGroup,name:'Other Group'});
+run('groupEntries',{groupId:'group:to-buy',cards:[{id:'stone',name:'Mind Stone',typeLine:'Artifact',verified:true,colorIdentity:[],legalities:{commander:'legal'}}],entries:[{cardId:'stone',quantity:3,notes:'Want list entry'}]});
+run('groupEntries',{groupId:otherGroup,entries:[{cardId:'stone',quantity:2,notes:'Other plan'}]});
+// statusOf only examines kind and groupId for entries, so minimal objects suffice
+const wantedEntry={kind:'entry',groupId:'group:to-buy'};
+const plannedEntry={kind:'entry',groupId:otherGroup};
+assert.equal(M.statusOf(wantedEntry),'Wanted','Entry in To Buy group has Wanted status');checks++;
+assert.equal(M.statusOf(plannedEntry),'Planned','Entry in other group has Planned status');checks++;
+assert.ok(M.STATUS.find(st=>st.label==='Wanted'),'STATUS array includes Wanted');checks++;
+const wantedStatus=M.STATUS.find(st=>st.label==='Wanted');
+const watchedStatus=M.STATUS.find(st=>st.label==='Watched');
+const buyStatus=M.STATUS.find(st=>st.label==='To buy');
+assert.ok(wantedStatus.order>watchedStatus.order&&wantedStatus.order<buyStatus.order,'Wanted is between Watched and To buy in order');checks++;
+
 const reservedForBox=s.lots.filter(l=>l.allocation?.deckId==='box').map(l=>l.id);
 run('bulk',{op:'place',deckId:'box',lotIds:reservedForBox,confirmed:true});
 assert.equal(boxed().placed,100,'Ticked copies go into the box together');assert.equal(boxed().boxed,true);checks+=2;
