@@ -152,3 +152,12 @@ test('failed provider attempts consume the budget and use a declared fallback',a
   await until(()=>events.some(e=>e.kind==='ai-action-completed'));assert.equal(runner.status()[0].providerCalls,1);
   assert.ok(events.some(e=>e.kind==='ai-action-submitted'&&e.source==='bounded-local-fallback'));
 });
+
+test('nudge cancels a stalled model request and immediately uses the bounded local fallback',async t=>{
+  let started=false,request;const actions=[],events=[];
+  const runner=createApiPilotRunner({seats:[seat],pollMs:5,onEvent:event=>events.push(event),providerForSeat:()=>async value=>{request=value;started=true;return new Promise((_,reject)=>value.signal.addEventListener('abort',()=>reject(new DOMException('Aborted','AbortError')),{once:true}));},bridge:async(_,operation,body)=>{
+    if(operation==='view')return view;actions.push(body);return {accepted:true};
+  }});t.after(async()=>{runner.stop();await runner.done;});
+  await until(()=>started);assert.deepEqual(runner.nudge(1),{prompted:1,waitingForForge:0});await until(()=>actions.length===1);
+  assert.equal(request.signal.aborted,true);assert.ok(events.some(event=>event.kind==='ai-pilot-prompted'&&event.action==='cancelled-model-request'));assert.ok(events.some(event=>event.kind==='ai-action-submitted'&&event.source==='bounded-local-fallback'));
+});
