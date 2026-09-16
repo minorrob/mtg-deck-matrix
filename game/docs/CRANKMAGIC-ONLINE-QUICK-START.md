@@ -4,6 +4,16 @@ Use this checklist to start a game without Codex.
 
 ## 1. Start CrankMagic Online
 
+### Desktop shortcut
+
+Run this once to add **CrankMagic Online - Start Game** to your Desktop:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\game\tools\install-crankmagic-desktop-launcher.ps1"
+```
+
+Double-clicking the shortcut starts the local host with remote guests enabled, opens Play in your default browser, and shows a green, yellow, or red connectivity result.
+
 1. Open **Windows PowerShell** from the Start menu.
 2. Run:
 
