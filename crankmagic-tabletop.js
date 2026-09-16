@@ -36,11 +36,11 @@
      row the library has never seen: no copy, no lot, no deck asking for it. It is a ghost like
      every other not-held row, and it says where it came from rather than pretending to a status. */
   const SENT = "Sent from Discover";
-  const GHOST = new Set(["Ordered", "Watched", "To buy", "Draft list", "Suggestion", "Planned", SENT]);
+  const GHOST = new Set(["Ordered", "Watched", "Wanted", "To buy", "Draft list", "Suggestion", "Planned", SENT]);
   /* The status piles a card can be dropped on — accepts() below has a case for each. The rest
      (Draft list, Suggestion, Planned, Unassigned) are readings of a deck's plan, not places a
      card can be put; the mat shows those as chips to lay out, not as piles (Rob, 14 September). */
-  const TARGET = new Set(["Physical deck", "Substitute", "Reserved", "Ordered", "Watched", "To buy"]);
+  const TARGET = new Set(["Physical deck", "Substitute", "Reserved", "Ordered", "Watched", "Wanted", "To buy"]);
   /* The Card type piles are the eight primary types, a reader's order: an Artifact Creature
      is on the Creature pile, a Legendary Land on the Land pile. The list groups by the whole
      type line (thirty bands on the live library); a table has room for eight piles. */
@@ -395,6 +395,12 @@
           if (others) return no(NOT_COPY);
           if (plans.some((r) => r.kind === "need")) return no("A To buy requirement cannot be Watched; it is what a deck asks for.");
           return yes("source:watching", "Mark as Watched", "A watched card is one you are considering, not a copy; a reservation is released.");
+        case "Wanted":
+          if (others) return no(NOT_COPY);
+          if (cats.length) return yes("wanted:catalog", "Add to your want list", "Creates a planned entry in the To Buy group — the want list.");
+          if (owned.length) return no("Wanted is the want list (planned entries in To Buy); an owned copy is already yours. Release its reservation or file it in another group.");
+          if (plans.some((r) => r.kind === "need")) return no("A To buy requirement is what a deck asks for; Wanted is what you want.");
+          return yes("wanted:plan", "Add to your want list", "Files the planned entry or watched copy into the To Buy group — the want list.");
         case "To buy":
           if (others || plans.length || !lots.length || lots.some((r) => !r.allocation)) return no("To buy is what a deck asks for; only a reserved copy can be released to send its requirement back.");
           return yes("release", "Release the reservation → To buy", "The copy stays owned in the same place; the deck's requirement returns to To buy.");
