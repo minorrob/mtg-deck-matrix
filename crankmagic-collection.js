@@ -169,9 +169,9 @@ const viewSwitch=(view,tab='library')=>{const has={table:true,sheet:tab==='libra
    and drops the head, as it dropped the head before. */
 function cardsHead(params,tab,view='table',{tight=false}={}){const n=tabCounts(),group=params.get('group')||'';
   const third=tab==='buy'?b('Print buy list','print-buy-list',{},false,{cls:'compact'}):tab==='orders'?b('Paste receipt','paste-receipt',{},false,{cls:'compact'}):view==='sheet'?b('Add a card row','sheet-add',{},false,{cls:'compact'}):b('New group','new-group',{},false,{cls:'compact'});
-  const tabs=`<div class="cm-tabs cm-cards-tabs" role="tablist" aria-label="Cards">${TABS.map(([id,label])=>`<button type="button" role="tab" aria-selected="${id===tab}" data-action="cards-tab" data-tab="${id}">${label} <small>${n[id].toLocaleString()}</small></button>`).join('')}<div class="cm-tabs-views">${viewSwitch(view,tab)}</div></div>`;
+  const tabs=`<div class="cm-tabs cm-cards-tabs" role="tablist" aria-label="Library">${TABS.map(([id,label])=>`<button type="button" role="tab" aria-selected="${id===tab}" data-action="cards-tab" data-tab="${id}">${label} <small>${n[id].toLocaleString()}</small></button>`).join('')}<div class="cm-tabs-views">${viewSwitch(view,tab)}</div></div>`;
   /* Add cards is the one thing done often, so it is the primary; Import and New group are done sometimes. All four are compact — the page's buttons share a row and a height (the geometry suite holds them to it), and Rob asked for smaller ones. */
-  return (tight?'':C.pageHead('Cards',b('Add cards','add-card',{},true,{cls:'compact'})+b('Import list','import-list',{},false,{cls:'compact'})+third+b('More','roster-more',{tab,view,group},false,{caret:'down',cls:'compact'}),'cards'))+tabs+sittingBar();}
+  return (tight?'':C.pageHead('Library',b('Add cards','add-card',{},true,{cls:'compact'})+b('Import list','import-list',{},false,{cls:'compact'})+third+b('More','roster-more',{tab,view,group},false,{caret:'down',cls:'compact'}),'cards'))+tabs+sittingBar();}
 /* THE SITTING, IN ONE BAR IN ONE PLACE (plan §2.6). It is rendered from cardsHead, so List, To
    buy, Orders, the Sheet and the Table all carry the same bar saying the same number: there is
    no lens you can be on where a sitting is open and invisible. */
@@ -264,7 +264,7 @@ const helpFlow=()=>`<figure class="cm-flow"><div class="cm-flow-scroll"><svg vie
   +`<path d="M883 166 V188" fill="none" stroke="#55677f" stroke-width="1.4" stroke-dasharray="4 4"></path>`
   +fEdge('M883 266 V308')+fLabel(875,290,'out of the box','end')
   +`</svg></div><figcaption>Everything on the left is a plan and reserves nothing. Finalizing a deck turns every line of its list into a Reserved seat, and the split after it is the identity the counts row keeps: <b>Reserved = Owned + Ordered + To buy</b>. Nothing ever leaves the library — a card taken out of a box, an order that arrives, a deck you archive: it all lands on the Bench.</figcaption></figure>`;
-C.HELP.cards={title:'Cards',body:()=>`<div class="cm-help cm-help-wide">`
+C.HELP.cards={title:'Library',body:()=>`<div class="cm-help cm-help-wide">`
   +`<p class="cm-help-lede">One table of every record you hold: a copy you own, a copy on order, a seat a deck still needs, a card you are only thinking about. The four tabs cut that table four ways, and the <b>Status</b> column says which of those a row is — in the same colour wherever it appears.</p>`
   +`<h3>The four tabs</h3><ul>`
   +`<li><b>Library</b> — every record, one row per copy lot or requirement, with its status, deck, print and physical location. Click a row for the card; the verb beside it is the one its status calls for, and <b>⋯</b> is everything else.</li>`
@@ -290,7 +290,7 @@ C.HELP.cards={title:'Cards',body:()=>`<div class="cm-help cm-help-wide">`
   +`<li><b>Pick a deck</b> and the middle becomes its play space. Lift a card into it to consider it; drop one in a tray to put it on the deck's list and reserve your copy; the scoreboard reads where confirming would leave the deck. The band along the bottom is the six statuses.</li>`
   +`<li><b>Pick none</b> and it sorts your shelf: the band becomes your collection groups and a door to a new one, each tray fills the group you bind it to, and the statuses move up to a line of chips — still one click from being laid out, still somewhere a card can be dropped.</li>`
   +`<li><b>Nothing is written until you confirm.</b> A move on the table joins a sitting; the bar says how many are pending, the receipt says what each one changes, and one <b>Undo</b> takes the whole sitting back. A sitting survives a reload.</li>`
-  +`<li>Cards from <b>Discover</b> arrive here with <i>Send to the table</i>, marked <i>Sent from Discover</i>. They are cards you are considering, never copies you own: file one in a group and it becomes a planned entry.</li>`
+  +`<li>Cards from <b>Explore</b> arrive here with <i>Send to the table</i>, marked <i>Sent from Explore</i>. They are cards you are considering, never copies you own: file one in a group and it becomes a planned entry.</li>`
   +`</ul></div>`};
 /* THE SPREADSHEET. Rob's Master sheet, read from the library instead of kept beside it: one
    row per card; Own, Ordered, Bench and To buy across it; and for every deck two columns --
@@ -603,7 +603,7 @@ function tabletop(params,shop=false){
   actions['tabletop-drop']=el=>tabletopDrop(el.dataset.pile,[...ttUI.selection]);
   /* Sent cards are the reader's holding pen, not a record: clearing them writes nothing. */
   actions['table-clear-sent']=()=>{const n=sentIds().length;setSentIds([]);for(const id of [...ttUI.hand])if(id.startsWith('catalog:'))ttUI.hand.delete(id);saveHand();
-    C.notice(`${n} card${n===1?'':'s'} sent back to Discover. Nothing was saved and nothing was lost — tick them again there whenever you like.`);draw();};
+    C.notice(`${n} card${n===1?'':'s'} sent back to Explore. Nothing was saved and nothing was lost — tick them again there whenever you like.`);draw();};
   /* ONE TABLE, ONE PAIR OF LISTENERS (found building PR 3b). These two remove themselves when the
      reader leaves the table -- but the table redraws itself in place all the time, and every
      redraw ran this function again and left the previous pair attached. Twenty renders in, one
@@ -625,7 +625,7 @@ function tabletop(params,shop=false){
 /* THE CARD'S FACTS ON THE STAGE (Rob, 14 September): the same record the inspector reads (C.card),
    the same helpers (the mana pips, the glossary's type line and rules text, the price block), and
    the inspector's two doors — Inspect card for the full pop-up with your copies and the graph's
-   terms, Explore connections for the card on Discover. Nothing here is fetched: what the catalog
+   terms, Explore connections for the card on Explore. Nothing here is fetched: what the catalog
    has cached is what shows, and Inspect card fetches the rest. */
 function tabletopDetail(r){const c=C.card(r.cardId)||r.card||{};const pt=c.power!==null&&c.power!==undefined&&c.power!==''?`${c.power}/${c.toughness}`:'';
   return `<p class="cm-tt-info-line">${C.mana(c.manaCost)}${pt?` <b>${e(pt)}</b>`:''}${c.rarity?` <span class="cm-tt-muted">${e(String(c.rarity).replace(/^\w/,x=>x.toUpperCase()))}</span>`:''}${c.setName?` <span class="cm-tt-muted">· ${e(c.setName)}</span>`:''}</p><p>${C.glossary.html(c.typeLine||'')}</p><div class="cm-oracle">${C.glossary.html(c.oracleText||'Full rules text has not been cached for this card; Inspect card fetches it.')}</div>${C.priceBlock(c)}<div class="cm-actions">${b('Inspect card','card',{card:r.cardId},false,{cls:'compact'})}${b('Explore connections','discover-card',{card:r.cardId},false,{cls:'compact'})}</div>`;}
@@ -1071,7 +1071,7 @@ const foldCaption=r=>{const decks=[...new Set(r.partRows.map(p=>p.deckId?shortDe
 actions['pull-picker']=el=>{const decks=C.state.decks.filter(d=>!d.archived&&d.status==='final');if(!decks.length)throw Error('Finalize a deck first — Ready to add lists a finalized deck’s owned, reserved copies.');popAt(el,`<p>Ready to add for</p>${decks.map(d=>{const r=M.readiness(C.state,d),n=r.pullFromBench+r.pullFromOtherBox+r.remove;return b(`${d.name}${n?` · ${n} ready to add`:''}`,'deck-pull',{deck:d.id});}).join('')}`);};
 /* The phone toolbar's menus. Each one is the control the desktop shows inline, folded
    into a tap so the bar stays one row on a 375px screen. */
-actions['shop-tools']=el=>popAt(el,`<p>Cards</p>${b('Add cards','add-card')}${b('Import a list or library','import-list')}${b('Export this view (CSV)','export-view')}${b('Print buy list','print-buy-list')}${b('Columns','roster-columns')}<hr><p>Phone and computer</p>${b('Load an e-mailed backup…','restore')}${b('Send this library to e-mail…','share-export')}<hr>${b('Clear filters','clear-filters')}${b('Back to Play Space','open-tabletop')}`);
+actions['shop-tools']=el=>popAt(el,`<p>Library</p>${b('Add cards','add-card')}${b('Import a list or library','import-list')}${b('Export this view (CSV)','export-view')}${b('Print buy list','print-buy-list')}${b('Columns','roster-columns')}<hr><p>Phone and computer</p>${b('Load an e-mailed backup…','restore')}${b('Send this library to e-mail…','share-export')}<hr>${b('Clear filters','clear-filters')}${b('Back to Play Space','open-tabletop')}`);
 /* The search field stays in the DOM whether or not it is showing, so the listener bound
    at render time keeps working and a typed query survives the toggle. */
 actions['shop-search']=el=>{const row=$('#cm-shop-search');if(!row)return;searchOpen=row.hidden;row.hidden=!searchOpen;el.setAttribute('aria-expanded',String(searchOpen));if(searchOpen)$('#cm-roster-query').focus();};
