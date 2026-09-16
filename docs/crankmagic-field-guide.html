@@ -1,0 +1,486 @@
+<title>CrankMagic Field Guide</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;0,800;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* ── The mat. CrankMagic's board is dark slate with a brass band around any card you already
+        own; this page is built from those two facts and nothing borrowed. ─────────────────── */
+  :root{
+    --mat:#171c24; --felt:#1e2530; --edge:#2b3442; --raise:#232c39;
+    --chalk:#e9ebef; --mute:#939cab; --faint:#6d7685;
+    --brass:#cb9a41; --jade:#4f9d87; --rust:#c9694a; --sky:#7aa7d4; --lilac:#9a92dd;
+    --sans:"IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    --serif:"Spectral", Georgia, "Times New Roman", serif;
+    --mono:"IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  :root[data-theme="light"]{
+    --mat:#f2f1ed; --felt:#ffffff; --edge:#ddd9d0; --raise:#faf9f6;
+    --chalk:#191d24; --mute:#5d6470; --faint:#797f8a;
+    --brass:#8a6415; --jade:#2f7361; --rust:#9d462a; --sky:#35608c; --lilac:#5a55a8;
+  }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]){
+      --mat:#f2f1ed; --felt:#ffffff; --edge:#ddd9d0; --raise:#faf9f6;
+      --chalk:#191d24; --mute:#5d6470; --faint:#797f8a;
+      --brass:#8a6415; --jade:#2f7361; --rust:#9d462a; --sky:#35608c; --lilac:#5a55a8;
+    }
+  }
+
+  *{box-sizing:border-box}
+  body{background:var(--mat); color:var(--chalk); font-family:var(--sans); font-size:16px; line-height:1.6;
+       -webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px; margin:0 auto; padding-inline:20px; padding-block:0}
+  h1,h2,h3{font-family:var(--serif); text-wrap:balance; margin:0}
+  p{margin:0}
+  a{color:var(--brass)}
+  a:focus-visible{outline:2px solid var(--brass); outline-offset:3px; border-radius:3px}
+  .prose{max-width:66ch; display:flex; flex-direction:column; gap:14px}
+  .eyebrow{font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--faint)}
+  .lede{font-size:19px; line-height:1.55}
+  .muted{color:var(--mute)}
+  .caption{font-size:12.5px; color:var(--faint); max-width:78ch}
+
+  header.top{border-bottom:1px solid var(--edge); background:var(--felt)}
+  .topbar{display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; padding-block:14px}
+  .brand{display:flex; align-items:baseline; gap:10px}
+  .brand b{font-family:var(--serif); font-weight:800; font-size:20px; letter-spacing:-.01em}
+  .brand span{font-family:var(--mono); font-size:11px; color:var(--faint); letter-spacing:.1em; text-transform:uppercase}
+  .navlinks{display:flex; gap:15px; flex-wrap:wrap; font-size:13px}
+  .navlinks a{color:var(--mute); text-decoration:none; border-bottom:1px solid transparent; padding-bottom:2px}
+  .navlinks a:hover{color:var(--chalk); border-bottom-color:var(--brass)}
+
+  .hero{padding-block:52px 40px; display:grid; gap:26px}
+  h1{font-size:clamp(34px,6vw,56px); line-height:1.05; font-weight:800; letter-spacing:-.022em}
+  h1 em{font-style:italic; color:var(--brass)}
+
+  section{padding-block:46px; border-top:1px solid var(--edge)}
+  h2{font-size:clamp(24px,3.4vw,33px); font-weight:600; letter-spacing:-.015em; line-height:1.15}
+  .sechead{display:flex; flex-direction:column; gap:9px; margin-bottom:26px}
+
+  /* ── Diagrams, drawn the way the app's own "?" help draws them ─────────────────────────── */
+  figure{margin:0}
+  .flow{overflow-x:auto; border:1px solid var(--edge); border-radius:10px; background:var(--raise); padding:16px}
+  .flow svg{display:block; min-width:620px; width:100%; height:auto; font-family:var(--sans)}
+  .n-name{font-size:13px; font-weight:700; fill:var(--chalk)}
+  .n-gloss{font-size:10px; fill:var(--mute)}
+  .e-label{font-size:10.5px; fill:var(--faint); font-family:var(--mono); letter-spacing:.03em}
+  .lane-label{font-size:11px; font-weight:700; fill:var(--chalk); letter-spacing:.06em}
+  figcaption{margin-top:12px; font-size:13px; color:var(--mute); line-height:1.55; max-width:80ch}
+
+  /* ── Doors: the two ways in ───────────────────────────────────────────────────────────── */
+  .doors{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1px;
+         background:var(--edge); border:1px solid var(--edge); border-radius:6px; overflow:hidden}
+  .door{background:var(--felt); padding:22px 20px; display:flex; flex-direction:column; gap:10px}
+  .door h3{font-size:19px; font-weight:600}
+  .door .tag{font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--brass)}
+  .door p{font-size:14.5px; color:var(--mute); line-height:1.58}
+  .door ol{margin:2px 0 0; padding-left:0; list-style:none; counter-reset:s; display:flex; flex-direction:column; gap:8px}
+  .door li{counter-increment:s; font-size:14px; color:var(--mute); padding-left:26px; position:relative; line-height:1.5}
+  .door li::before{content:counter(s); position:absolute; left:0; top:1px; width:18px; height:18px; border-radius:50%;
+    border:1px solid var(--edge); background:var(--raise); color:var(--faint); font-family:var(--mono); font-size:10px;
+    display:grid; place-items:center}
+  .door li b{color:var(--chalk); font-weight:500}
+
+  /* ── Stops ────────────────────────────────────────────────────────────────────────────── */
+  .stops{display:flex; flex-direction:column; gap:1px; background:var(--edge); border:1px solid var(--edge);
+         border-radius:6px; overflow:hidden}
+  .stop{background:var(--felt); display:grid; grid-template-columns:auto 1fr; gap:18px; padding:22px 20px; align-items:start}
+  .pip{width:32px; height:32px; border-radius:50%; display:grid; place-items:center; font-family:var(--mono);
+       font-size:12.5px; font-weight:500; color:#141414; flex:0 0 auto; box-shadow:inset 0 -2px 4px rgba(0,0,0,.28)}
+  .pip.w{background:#f4efdc} .pip.u{background:#a4cde4} .pip.b{background:#b0a7a2}
+  .pip.r{background:#e8a38a} .pip.g{background:#9ccfa5}
+  .stop h3{font-size:19px; font-weight:600; letter-spacing:-.01em; margin-bottom:4px}
+  .stop h3 span{font-family:var(--mono); font-size:11px; color:var(--faint); letter-spacing:.1em;
+                text-transform:uppercase; margin-left:9px; vertical-align:2px}
+  .stop p{font-size:14.5px; color:var(--mute); line-height:1.6; max-width:64ch}
+  .stop ul{margin:11px 0 0; padding-left:0; list-style:none; display:flex; flex-direction:column; gap:7px}
+  .stop li{font-size:14px; color:var(--mute); padding-left:16px; position:relative; line-height:1.5}
+  .stop li::before{content:"·"; position:absolute; left:4px; color:var(--brass); font-weight:700}
+  .stop li b{color:var(--chalk); font-weight:500}
+
+  /* ── Stage ladder ─────────────────────────────────────────────────────────────────────── */
+  .ladder{display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:1px;
+          background:var(--edge); border:1px solid var(--edge); border-radius:6px; overflow:hidden}
+  .rung{background:var(--felt); padding:16px 16px 15px; display:flex; flex-direction:column; gap:5px}
+  .rung b{font-family:var(--serif); font-size:17px; font-weight:600}
+  .rung small{font-size:13px; color:var(--mute); line-height:1.5}
+  .rung i{display:block; height:3px; border-radius:2px; background:var(--edge); margin-bottom:9px; overflow:hidden}
+  .rung i em{display:block; height:100%; background:var(--brass)}
+
+  /* ── Board strip ──────────────────────────────────────────────────────────────────────── */
+  .board{margin-top:16px; background:var(--raise); border:1px solid var(--edge); border-radius:6px;
+         padding:14px; display:flex; gap:9px; overflow-x:auto; scrollbar-width:thin}
+  .tile{flex:0 0 auto; width:76px; aspect-ratio:5/7; border-radius:4px; border:1px solid var(--edge);
+        background:linear-gradient(160deg, var(--felt), var(--mat)); display:flex; flex-direction:column;
+        justify-content:flex-end; padding:6px; gap:2px}
+  .tile.owned{border-color:var(--brass); box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--brass) 45%, transparent)}
+  .tile b{font-size:10px; line-height:1.15; font-weight:500; color:var(--chalk)}
+  .tile small{font-family:var(--mono); font-size:9px; color:var(--faint)}
+
+  .grid2{display:grid; grid-template-columns:repeat(auto-fit,minmax(255px,1fr)); gap:22px}
+  .note{border-left:2px solid var(--brass); padding:2px 0 2px 16px; display:flex; flex-direction:column; gap:6px}
+  .note h3{font-size:16px; font-weight:600}
+  .note p{font-size:14px; color:var(--mute); line-height:1.55}
+  .kbd{font-family:var(--mono); font-size:12px; background:var(--raise); border:1px solid var(--edge);
+       border-radius:3px; padding:1px 6px; color:var(--chalk); white-space:nowrap}
+  footer{border-top:1px solid var(--edge); padding-block:30px 44px}
+  footer p{font-size:13px; color:var(--faint); max-width:74ch}
+  @media (prefers-reduced-motion: reduce){ *{animation:none !important; transition:none !important} }
+</style>
+
+<header class="top">
+  <div class="wrap topbar">
+    <div class="brand"><b>CrankMagic</b><span>Field Guide</span></div>
+    <nav class="navlinks">
+      <a href="#why">Why</a><a href="#in">Two ways in</a><a href="#states">The states</a>
+      <a href="#cards">Cards</a><a href="#deck">A deck</a><a href="#discover">Discover</a>
+      <a href="#play">Play</a><a href="#start">Start</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="hero">
+    <div class="prose">
+      <p class="eyebrow">An intelligent Commander deck creator &amp; card library</p>
+      <h1>A collection is not a list. It is a set of <em>claims</em>.</h1>
+      <p class="lede">One copy of Sol Ring; four decks that want it. A spreadsheet holds the number — it cannot hold
+        the argument. CrankMagic knows which deck has a claim on each copy you own, which card is sitting in a sleeve
+        standing in for one you have not bought yet, and what the rest would cost to finish.</p>
+      <p class="muted">Everything runs in your browser. No account, no server holding your collection, and the whole
+        app works offline once it has loaded.</p>
+    </div>
+  </div>
+
+  <section id="why">
+    <div class="sechead">
+      <p class="eyebrow">What it is for</p>
+      <h2>Four questions a deck box cannot answer.</h2>
+    </div>
+    <div class="grid2">
+      <div class="note"><h3>Do I own this?</h3><p>Every card carries its counts — owned, reserved, ordered, watched —
+        and the decks that have a claim on it, or the words <em>Not assigned</em> when none do. The same line appears
+        on the card page, in the graph's pop-up and on the table.</p></div>
+      <div class="note"><h3>Why is that card in my deck?</h3><p>Because it is standing in. A card in the box that the
+        list does not call for is a <b>Substitute</b>: it holds the seat until the real one lands. CrankMagic counts
+        them and says which seat each is keeping warm.</p></div>
+      <div class="note"><h3>What do I still need to buy?</h3><p>Derived, not typed: the deck's targets, minus what you
+        own, minus what is already in the post. Priced, sorted, printable, and it shrinks the moment a parcel arrives.</p></div>
+      <div class="note"><h3>Would something I own do instead?</h3><p>A card on your bench that fills the same slot is
+        offered beside the one you were about to buy, with the saving attached. Owning beats buying whenever the swap
+        is straight.</p></div>
+    </div>
+  </section>
+
+  <section id="in">
+    <div class="sechead">
+      <p class="eyebrow">Step one</p>
+      <h2>Two ways in.</h2>
+      <div class="prose"><p class="muted">Start from nothing and let the app build you a hundred, or start from the
+        cards you already own. Both end in the same place: a deck with a list, and a library that knows where every
+        copy is.</p></div>
+    </div>
+
+    <div class="doors">
+      <div class="door">
+        <span class="tag">Build → the Lab</span>
+        <h3>Draft a deck from a commander</h3>
+        <p>You have an idea and no list. The Lab drafts one, then measures it.</p>
+        <ol>
+          <li>Pick a <b>commander</b> — any that can legally lead a deck, not a shortlist. Inspect one before you
+            commit to it.</li>
+          <li>Set the <b>starting point</b>, a <b>budget cap</b> and a <b>bracket</b>. The cap warns while you draft
+            and offers a way through at the end rather than silently refusing to finish.</li>
+          <li><b>Run a draft.</b> It previews; nothing is saved until you press <b>Save this deck</b>.</li>
+          <li><b>Measure it.</b> The simulator plays it out and reports what it saw — and says plainly when it
+            cannot see how the deck wins, which is more useful than a number it invented.</li>
+        </ol>
+      </div>
+      <div class="door">
+        <span class="tag">Cards → Import</span>
+        <h3>Bring in what you already own</h3>
+        <p>You have shoeboxes and a spreadsheet. Import turns them into a library.</p>
+        <ol>
+          <li><b>Import a list or library</b> — a CSV, an .xlsx, or a block of names pasted from anywhere.</li>
+          <li>Names resolve against the real card catalogue, so a flavour name finds the card it actually is. Anything
+            ambiguous comes to a <b>fix-names</b> screen where you can paste a link instead.</li>
+          <li>Everything that is not claimed by a deck becomes your <b>Bench</b>.</li>
+          <li>Already have a list for a deck? Make the deck, paste its hundred, and <b>Finalize</b> — that is the
+            moment the app starts reserving your copies against it.</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section id="states">
+    <div class="sechead">
+      <p class="eyebrow">The spine</p>
+      <h2>Where a card can be, and how it moves.</h2>
+      <div class="prose"><p class="muted">This is the diagram the app shows behind the <b>?</b> on the Cards page.
+        Learn it once and every screen reads the same way.</p></div>
+    </div>
+
+    <figure>
+      <div class="flow">
+        <svg viewBox="0 0 1000 360" role="img" aria-label="Watched, Suggestion and Planned join a deck's draft list. Finalizing the deck turns every line of that list into a Reserved seat, and Reserved splits three ways: a copy you own is sleeved into the physical deck, a copy is on order, or the card is still to buy. To buy becomes Ordered once bought, and an order that arrives lands on the Bench. The Bench is where a reserved copy is taken from, and where a card leaving a box returns to; a Substitute sits in the box holding a seat until the real card lands.">
+          <defs>
+            <marker id="fh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+              <path d="M0 0 L10 5 L0 10 z" fill="currentColor"></path>
+            </marker>
+          </defs>
+          <g color="#7d93b2" stroke="#7d93b2" stroke-width="1.6" fill="none" stroke-linejoin="round">
+            <path d="M166 62 H196 V142 H214" marker-end="url(#fh)"></path>
+            <path d="M166 142 H214" marker-end="url(#fh)"></path>
+            <path d="M166 214 H196 V142 H214" marker-end="url(#fh)"></path>
+            <path d="M370 142 H418" marker-end="url(#fh)"></path>
+            <path d="M574 142 H596 V62 H610" marker-end="url(#fh)"></path>
+            <path d="M574 142 H596 V214 H610" marker-end="url(#fh)"></path>
+            <path d="M574 130 H790" marker-end="url(#fh)"></path>
+            <path d="M766 62 V96 H700 V114" marker-end="url(#fh)"></path>
+            <path d="M766 238 V286 H120 V262" marker-end="url(#fh)"></path>
+            <path d="M420 262 V200 H500 V142" marker-end="url(#fh)"></path>
+            <path d="M880 166 V286 H820" marker-end="url(#fh)"></path>
+            <path d="M880 238 V262" marker-end="url(#fh)"></path>
+          </g>
+          <!-- the three ways a card becomes a candidate -->
+          <g>
+            <rect x="16" y="38" width="150" height="48" rx="10" fill="#9a92dd" fill-opacity=".17" stroke="#9a92dd" stroke-width="1.5"></rect>
+            <text x="91" y="59" text-anchor="middle" class="n-name">Watched</text>
+            <text x="91" y="75" text-anchor="middle" class="n-gloss">considering it for a deck</text>
+          </g>
+          <g>
+            <rect x="16" y="118" width="150" height="48" rx="10" fill="#9a92dd" fill-opacity=".17" stroke="#9a92dd" stroke-width="1.5"></rect>
+            <text x="91" y="139" text-anchor="middle" class="n-name">Suggestion</text>
+            <text x="91" y="155" text-anchor="middle" class="n-gloss">an option or an upgrade</text>
+          </g>
+          <g>
+            <rect x="16" y="190" width="150" height="48" rx="10" fill="#9a92dd" fill-opacity=".17" stroke="#9a92dd" stroke-width="1.5"></rect>
+            <text x="91" y="211" text-anchor="middle" class="n-name">Planned</text>
+            <text x="91" y="227" text-anchor="middle" class="n-gloss">a line on a group's list</text>
+          </g>
+          <!-- the list, and the moment it becomes real -->
+          <g>
+            <rect x="220" y="118" width="150" height="48" rx="10" fill="#7aa7d4" fill-opacity=".17" stroke="#7aa7d4" stroke-width="1.5"></rect>
+            <text x="295" y="139" text-anchor="middle" class="n-name">Draft list</text>
+            <text x="295" y="155" text-anchor="middle" class="n-gloss">the hundred a deck claims</text>
+          </g>
+          <text x="394" y="134" text-anchor="middle" class="e-label">FINALIZE</text>
+          <g>
+            <rect x="424" y="118" width="150" height="48" rx="10" fill="#cb9a41" fill-opacity=".17" stroke="#cb9a41" stroke-width="1.5"></rect>
+            <text x="499" y="139" text-anchor="middle" class="n-name">Reserved</text>
+            <text x="499" y="155" text-anchor="middle" class="n-gloss">a seat with your name on it</text>
+          </g>
+          <!-- what fills the seat -->
+          <g>
+            <rect x="610" y="38" width="150" height="48" rx="10" fill="#c9694a" fill-opacity=".17" stroke="#c9694a" stroke-width="1.5"></rect>
+            <text x="685" y="59" text-anchor="middle" class="n-name">To buy</text>
+            <text x="685" y="75" text-anchor="middle" class="n-gloss">nothing you hold fills it</text>
+          </g>
+          <text x="742" y="88" text-anchor="start" class="e-label">BOUGHT</text>
+          <g>
+            <rect x="610" y="190" width="150" height="48" rx="10" fill="#7aa7d4" fill-opacity=".17" stroke="#7aa7d4" stroke-width="1.5"></rect>
+            <text x="685" y="211" text-anchor="middle" class="n-name">Ordered</text>
+            <text x="685" y="227" text-anchor="middle" class="n-gloss">paid for, not arrived</text>
+          </g>
+          <text x="700" y="278" text-anchor="middle" class="e-label">ARRIVED</text>
+          <g>
+            <rect x="790" y="106" width="150" height="48" rx="10" fill="#4f9d87" fill-opacity=".17" stroke="#4f9d87" stroke-width="1.5"></rect>
+            <text x="865" y="127" text-anchor="middle" class="n-name">Physical deck</text>
+            <text x="865" y="143" text-anchor="middle" class="n-gloss">sleeved in the box</text>
+          </g>
+          <g>
+            <rect x="790" y="190" width="150" height="48" rx="10" fill="#cb9a41" fill-opacity=".17" stroke="#cb9a41" stroke-width="1.5"></rect>
+            <text x="865" y="211" text-anchor="middle" class="n-name">Substitute</text>
+            <text x="865" y="227" text-anchor="middle" class="n-gloss">a bench copy holding a seat</text>
+          </g>
+          <!-- the bench runs under everything -->
+          <rect x="16" y="300" width="924" height="44" rx="10" fill="#4f9d87" fill-opacity=".10" stroke="#4f9d87" stroke-width="1.5" stroke-dasharray="5 4"></rect>
+          <text x="40" y="327" class="lane-label">BENCH</text>
+          <text x="118" y="327" class="n-gloss">every copy you own that no deck has taken — where reserved copies come from, and where a card leaving a box goes back to</text>
+        </svg>
+      </div>
+      <figcaption><b>Reading it:</b> a card becomes a candidate three ways, joins a deck's draft list, and only turns
+        into a <b>Reserved</b> seat when you finalize that deck. A reserved seat is then filled by a copy you own, a
+        copy in the post, or money you have not spent yet. The <b>Bench</b> runs underneath all of it: it is the pool
+        reservations draw from, and the place a card returns to when it leaves a box.</figcaption>
+    </figure>
+  </section>
+
+  <section id="cards">
+    <div class="sechead">
+      <p class="eyebrow">Step two</p>
+      <h2>Cards</h2>
+    </div>
+
+    <div class="stops">
+      <div class="stop">
+        <div class="pip u">U</div>
+        <div>
+          <h3>Four tabs, three lenses <span>Cards</span></h3>
+          <p>The tabs are <b>Library</b>, <b>To buy</b> and <b>Orders</b> — the states from the diagram above, each
+            with its own page. The switch beside them changes how you look at whichever tab you are on; the data does
+            not change, only the instrument.</p>
+          <ul>
+            <li><b>List</b> — sortable, filterable rows with a status on each and an Add/Buy menu. The one for
+              “find the thing”.</li>
+            <li><b>Sheet</b> — the spreadsheet you came from, editable in place, for fixing a price or a count
+              without opening a dialog.</li>
+            <li><b>Table</b> — the physical one. Your cards as piles on a slate mat, grouped by status or by
+              anything else. Click a pile and it fans out into a drawer along the back row; drag a card out of the
+              drawer onto any pile to move it, and the board stays put while you do.</li>
+          </ul>
+          <div class="board" role="img" aria-label="A row of card tiles as the Table view stacks them: five with a brass band meaning you own a copy, two without.">
+            <div class="tile owned"><b>Commander</b><small>reserved</small></div>
+            <div class="tile owned"><b>Ramp</b><small>×1 · 3 decks</small></div>
+            <div class="tile owned"><b>Removal</b><small>bench</small></div>
+            <div class="tile owned"><b>Draw</b><small>substitute</small></div>
+            <div class="tile owned"><b>Land</b><small>×4 · bench</small></div>
+            <div class="tile"><b>Finisher</b><small>to buy</small></div>
+            <div class="tile"><b>Tutor</b><small>ordered</small></div>
+          </div>
+          <p class="caption" style="margin-top:9px">A brass band means you own a copy. That single rule is used
+            everywhere — in the Table, in Discover, in the Shop — so browsing turns into shopping without a legend.</p>
+        </div>
+      </div>
+
+      <div class="stop">
+        <div class="pip b">B</div>
+        <div>
+          <h3>Nothing is written until you confirm <span>Staging</span></h3>
+          <p>Moving cards — on any lens — stages the move rather than performing it. The staged list sits in one
+            overlay with <b>Step back</b>, <b>Discard</b> and a single <b>Review and confirm</b>. After that, every
+            change is still a command in a log: <b>Undo last change</b> and <b>See every change…</b> are in User
+            Functions, always.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="deck">
+    <div class="sechead">
+      <p class="eyebrow">Step three</p>
+      <h2>A deck, from defining to complete.</h2>
+      <div class="prose"><p class="muted">Every deck sits at one of four stages. The tile's bar is its hundred,
+        split by where each copy actually is.</p></div>
+    </div>
+
+    <div class="ladder">
+      <div class="rung"><i><em style="width:28%"></em></i><b>Defining</b><small>The list is still being written.
+        No reservations yet — a draft claims nothing.</small></div>
+      <div class="rung"><i><em style="width:62%"></em></i><b>Building</b><small>Finalized. Cards are still to buy or
+        still to walk in from the bench.</small></div>
+      <div class="rung"><i><em style="width:88%"></em></i><b>Playable</b><small>Substitutes make up the hundred.
+        You can sit down with it tonight.</small></div>
+      <div class="rung"><i><em style="width:100%"></em></i><b>Complete</b><small>Every reserved copy is the real
+        card, in the box.</small></div>
+    </div>
+
+    <div class="stops" style="margin-top:22px">
+      <div class="stop">
+        <div class="pip w">W</div>
+        <div>
+          <h3>Five tabs on a deck page <span>Decks</span></h3>
+          <p>The header is the summary — commander, stage, bracket, mechanics, latest measured score. The row beside
+            it is the work: add what you own, buy what you do not, log the game, measure.</p>
+          <ul>
+            <li><b>Overview</b> — Progress counts the physical deck, ready to add, ordered and to buy; Cost is what
+              finishing would cost against your cap; the <b>Next</b> line says what to do first.</li>
+            <li><b>Cards</b> — the hundred by type, with where each copy stands.</li>
+            <li><b>Guide</b> — commander, strategy and a SWOT. Marked as structural: it is text matching, not
+              modelled availability, and the page says so rather than letting you assume otherwise.</li>
+            <li><b>Upgrades</b> — the working list and the Upgrade Path, each row naming the slot it replaces, its
+              price and why. <b>Promote</b> takes it; <b>Decline</b> retires it so it stops being offered.</li>
+            <li><b>History</b> — the game record and every measured run.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="discover">
+    <div class="sechead">
+      <p class="eyebrow">Step four</p>
+      <h2>Discover</h2>
+      <div class="prose"><p class="muted">The part that is not a spreadsheet at all.</p></div>
+    </div>
+    <div class="stops">
+      <div class="stop">
+        <div class="pip g">G</div>
+        <div>
+          <h3>The connected card catalogue <span>Discover</span></h3>
+          <p>Every card is a node; every join is a claim you can open and read. Not “these get played together” —
+            <em>this one untaps that one</em>, <em>this one causes the trigger that one fires on</em>. Follow it
+            outward and the deck you did not know you were building appears.</p>
+          <ul>
+            <li><b>Three modes.</b> Navigate re-centres on a card. Inspect opens a pop-up with the card, its counts,
+              the decks that claim it and an Add/Buy menu — tap the same card again to put it down. Select ticks
+              cards for a group.</li>
+            <li><b>Primary Purpose</b> is the term with the gold ring: the one job a card is in a deck for, decided
+              by a fixed ladder from finisher and extra turn down through removal, draw and ramp to its body and its
+              tribe.</li>
+            <li><b>Loops only</b> walks just the joins that continue or pay off a loop; <b>Loops this card is in</b>
+              lists every cycle of four cards or fewer through the focus, each step named and the missing pieces
+              dashed.</li>
+            <li><b>Trace</b> lights a deck from its commander outward: only the joins that serve its strategies,
+              loop-backs in gold, the cards it never touches ghosted on the outer band.</li>
+          </ul>
+          <p class="caption" style="margin-top:11px">Structural links (shared mechanics and roles) and observed
+            co-play (EDHREC) are different kinds of evidence, and the app keeps them apart. Neither claims a
+            simulated improvement.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="play">
+    <div class="sechead">
+      <p class="eyebrow">Step five</p>
+      <h2>Play</h2>
+    </div>
+    <div class="stops">
+      <div class="stop">
+        <div class="pip r">R</div>
+        <div>
+          <h3>The play space, and the lobby <span>Play</span></h3>
+          <p>A board with three zones and shelves down both sides, where moving cards between decks, bench and
+            groups is dragging them rather than filling in a form. Set a table: pick a deck, seat opponents, choose a
+            bracket, and one bracket judges every seat — a list that is not a hundred is refused by number, and the
+            game cannot start until it is out.</p>
+          <ul>
+            <li>Nothing here writes to your library. A table being set up is not a fact about your collection.</li>
+            <li>Log a game when you are done and it lands in the deck's <b>History</b>, beside the measured runs.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="start">
+    <div class="sechead">
+      <p class="eyebrow">Start here</p>
+      <h2>Ten minutes to a library that knows where everything is.</h2>
+    </div>
+
+    <div class="grid2">
+      <div class="note"><h3>1 · Come in through one of the two doors</h3><p>Draft a deck in the <b>Build</b> tab, or
+        import what you own from <b>Cards</b>. Either works first; most people end up doing both.</p></div>
+      <div class="note"><h3>2 · Finalize one deck</h3><p>A hundred cards and a commander is enough. Finalizing is the
+        moment reservations start, and the moment the app can tell you what is short.</p></div>
+      <div class="note"><h3>3 · Press <span class="kbd">?</span></h3><p>Every page has help behind the question mark,
+        written for the page you are on — including the diagram above. <b>Take a Tour</b> in the header walks seven
+        journeys, each step pointing at something real on screen.</p></div>
+      <div class="note"><h3>4 · Back it up, on purpose</h3><p><b>User Functions → Save a backup file</b>, or e-mail
+        the export to yourself from a phone. Your data lives in your browser — which means it is yours, and means
+        nobody else is keeping a copy.</p></div>
+    </div>
+
+    <div class="prose" style="margin-top:30px">
+      <p class="muted">Works offline once loaded — app, card records and deck data are all cached, so it opens at a
+        convention with no signal. <span class="kbd">Esc</span> puts down whatever you picked up.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="wrap">
+  <p>CrankMagic is a static page with no framework and no dependencies. The states, stages and flow described here are
+    the app's own — the diagram in <em>The spine</em> is the one it shows behind the question mark on the Cards page.</p>
+</footer>
