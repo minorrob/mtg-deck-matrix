@@ -8,7 +8,26 @@
     await C.commit({type:'game',gameId:`game:online:${report.matchId}:${report.seatId}`,deckId,outcome:report.outcome,playedAt:report.completedAt,finish:report.finish,pod:report.podSize,bracket:report.bracket,turns:report.turns,seat:report.seatId+1,opponents,notes:report.playerFeedback?.notes||'CrankMagic Online match. Open the report from game history for event telemetry and deck signals.',online:report});
     C.notice('Online game report attached to '+deck.name+'.');return 'attached';
   }
+  const lobbyView=C.views.game;
+  let hostStatus={checked:false,available:false};
+  async function checkLocalHost(){
+    if(location.hostname!=='127.0.0.1'){hostStatus={checked:true,available:false};return;}
+    try{
+      const response=await fetch('http://127.0.0.1:8768/api/health',{signal:AbortSignal.timeout(2500),cache:'no-store'}),result=await response.json();
+      hostStatus={checked:true,available:response.ok&&result.product==='CrankMagic Online'&&result.protocol===1};
+    }catch{hostStatus={checked:true,available:false};}
+  }
   C.views.game=async()=>{
+    if(!hostStatus.checked)await checkLocalHost();
+    if(lobbyView)await lobbyView();
+    if(location.hostname==='127.0.0.1'&&!hostStatus.available){
+      const banner=document.createElement('div');banner.className='cm-host-offline-banner';
+      banner.innerHTML=`<div class="v-panel cm-host-status"><h3>Local host offline</h3><p>The CrankMagic Online helper is not running. Start it to enable online multiplayer games.</p><p><strong>To start:</strong> Run the PowerShell helper script or use Codex with: <code>Use $start-crankmagic to start my local game host</code></p><button class="v-button" id="host-recheck">Check again</button><a class="v-button" href="#online">Online setup →</a></div>`;
+      C.main.insertBefore(banner,C.main.firstChild);
+      banner.querySelector('#host-recheck').addEventListener('click',async()=>{hostStatus.checked=false;C.render();});
+    }
+  };
+  C.views.online=async()=>{
     const local=location.hostname==='127.0.0.1';
     const decks=C.state.decks.filter(d=>!d.archived);
     const layout=C.main.closest('.cm-layout');layout.classList.add('cm-play-collapsed');

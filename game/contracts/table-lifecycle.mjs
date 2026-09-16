@@ -28,7 +28,7 @@ export function transitionTable(previous,event,{now,launchId}={}) {
       Object.assign(seat,{occupied:false,connected:false,ready:false,deckVersion:null,rematch:null,disconnectedAt:null,conceded:true});break;
     case 'countdown':
       if(t.phase!=='selecting'||!t.seats.every(s=>s.occupied&&s.connected&&s.ready&&s.deckVersion))throw Error('Every seat must be ready');
-      t.phase='countdown';t.countdownAt=now+10000;break;
+      t.phase='countdown';t.countdownAt=now+5000;break;
     case 'tick':
       if(t.phase!=='countdown'||now<t.countdownAt)throw Error('Countdown has not completed');
       if(!launchId)throw Error('Launch identity required');t.phase='starting';t.launchId=launchId;t.generation++;t.countdownAt=null;break;

@@ -101,7 +101,7 @@ When the game ends, save the match feedback and deck report if prompted. For an 
 3. Each unclaimed human seat shows a QR code, private invitation link, and email-address field. Enter that friend's address and select **Email invitation**.
 4. Your default email app opens a prepared message containing that seat's private link. Review it and press **Send**.
 5. Your friend clicks the link in Chrome, Edge, Safari, or another current browser. No installation or Cloudflare account is required. The single-use link claims only that reserved seat, then disappears from the browser address. It expires after about four hours and should not be forwarded.
-6. Each friend chooses or uploads their own deck and presses **Ready**. When every occupied human seat is ready, the shared ten-second countdown begins and Forge launches the game.
+6. Each friend chooses or uploads their own deck and presses **Ready**. When every occupied human seat is ready, the shared five-second countdown begins and Forge launches the game.
 
 The invitation screen clearly identifies local-only links. If an email button is disabled or a link starts with `127.0.0.1`, shut down cleanly and restart with `-RemoteGuests` before sending it. A new quick-tunnel address is created on each remote startup, so use invitations from the current lobby only.
 
