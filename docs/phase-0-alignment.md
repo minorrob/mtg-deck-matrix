@@ -1,7 +1,54 @@
 # Phase 0 UX Alignment (LOCKED)
 
 **Status:** Locked as of September 16, 2026  
-**Purpose:** Canonical record of Phase 0 decisions for future agents and implementation
+**Purpose:** Canonical record of Phase 0 decisions for future agents and implementation  
+**OpenAI Package Reconciliation:** September 16, 2026 — incorporated as supporting authority and Phase 1+ guidance
+
+---
+
+## OpenAI Astra Review Package (Supporting Authority)
+
+On September 7, 2026, Robert Minor commissioned an OpenAI Astra review package assessing the application and proposing a complete redesign. This package is **incorporated as supporting authority and Phase 1+ guidance**, with Phase 0 locked decisions taking precedence on conflicts.
+
+### Primary Documents (design/crankmagic/)
+
+- **`improvement-plan.md`** — Complete implementation proposal with visual redesign, collection integrity, ownership invariants, and delivery sequence
+- **`collection-workflow.md`** — Detailed domain contract for Source, Purpose, Allocation, Physical placement; the authoritative specification for copy accounting and acquisition paths
+- **`end-to-end-plan.md`** — Journey acceptance gates and complete feature verification matrix
+- **`simulation-fidelity-plan.md`** — Simulator correctness boundaries, human validation gates, coverage assessment (deferred to later phase per Phase 0)
+- **`mtg-facelift-mockup.html`** — Visual design study (Satoshi, dark-only, wand mark, sticky rail) serving as design reference for Phase 1 facelift
+
+### Reconciliation with Phase 0 Locked Decisions
+
+**Where Phase 0 and OpenAI package conflict, Phase 0 wins:**
+
+| Aspect | OpenAI Package | Phase 0 (LOCKED) |
+|--------|----------------|------------------|
+| **Top Nav** | My Decks · Collection · Play Lab · Discover · Shop | **Decks · Library · Explore · Play** (Lab not top-nav peer) |
+| **Play Structure** | Not specified | **Lobby-first on #game** (Online = host gate + post-Start) |
+| **Wanted Design** | Not specified | **Design C** (To Buy group labeled "Wanted"; watched = 1 month) |
+| **Terminology** | Various | Phase 0 copy glossary (see below) |
+
+**Where OpenAI package extends or aligns with Phase 0, adopt as Phase 1+ guidance:**
+
+1. **Ownership invariants** — Never infer Owned from decklist/auto-build; planned ≠ owned; explicit acquisition path required
+2. **Dimensional separation** — Source (Owned/Ordered/To buy) vs Purpose vs Allocation/Reserved vs Physical In deck are independent facts tracked separately
+3. **Journey matrix** — End-to-end acceptance criteria become Phase 1 implementation gates when surfaces exist
+4. **Visual direction** — Satoshi typography, dark-only, wand mark, sticky rail, graphite surfaces, blue accents remain Phase 1 facelift reference
+5. **Collection workflow detail** — OpenAI `collection-workflow.md` is the authoritative domain contract for copy accounting, released-copy reuse, protected donor transfers, and acquisition state machines
+
+### Naming Drift Resolved
+
+OpenAI package uses: My Decks / Collection / Play Lab / Discover / Shop  
+Phase 0 renames to: **Decks / Library / Explore / Play** (Lab folded into New deck wizard)
+
+Phase 0 terminology is **locked**. OpenAI package principles apply with Phase 0 names.
+
+### Deferred: Simulation Fidelity Human Calibration
+
+OpenAI `simulation-fidelity-plan.md` proposes staged human dataset collection, prospective validation, and calibrated uncertainty. This work remains **explicitly deferred** to a later phase. Application tests passing does not constitute human calibration; the simulator's current approximate model (profile-based opponents, not four actual decks) is acknowledged.
+
+Phase 0 documents the UX decisions. Simulation correctness improvements follow the gates in `simulation-fidelity-plan.md` when resourced.
 
 ---
 
@@ -208,6 +255,109 @@ For context, the Phase 1 work following Phase 0 includes:
 
 ---
 
+## Phase 1+ Guidance from OpenAI Package
+
+The following principles from the OpenAI Astra review extend Phase 0 decisions and guide future implementation:
+
+### Ownership Invariants (Never Violate)
+
+From `improvement-plan.md` §1 and `collection-workflow.md`:
+
+1. **Never infer Owned from a decklist** — Auto-build, import, or generation creates a **planned deck**, not owned cards
+2. **Explicit acquisition path required** — Only "these are physical cards I own" workflow creates holdings, after preview
+3. **Planned ≠ Owned** — A deck list proves intent; receipt/purchase proves possession
+4. **Orders stay orders until received** — Ordered copy cannot be treated as available bench inventory
+5. **Physical location persists** — Last confirmed location remains until explicitly moved
+6. **One copy cannot occupy two physical decks** — Reservations may create shortfalls; they don't duplicate copies
+
+### Dimensional Model (Separate Independent Facts)
+
+From `collection-workflow.md` §1 — the authoritative domain contract:
+
+| Dimension | Values | Independence |
+|-----------|--------|--------------|
+| **Source** | Owned, Ordered, To buy, (Incoming trade) | Acquisition state |
+| **Purpose** | Main deck, Upgrade (linked to slot), Bracket bump (with base/target) | Why committed |
+| **Allocation** | Reserved to deck + purpose, or Bench | Where committed |
+| **Physical placement** | In deck (named), Storage box, Bench, (none for non-owned) | Actual location |
+| **List state** | Draft, Finalized, Archived (with version history) | Deck lifecycle |
+| **Collection membership** | User groups, Sell/Trade designation | Organization |
+| **Reuse policy** | Visibility (all owned visible) vs Eligibility (optimizer pool) | Protection |
+
+**Key principle:** A card can be **Owned + Reserved while on bench**, or **Owned + In deck**. Source and Physical placement are NOT mutually exclusive. The Actions menu may combine acquisition and placement actions (grouped/labeled), but the data model must never collapse these dimensions into one status field.
+
+### Released-Copy Reuse (Automatic Fulfillment)
+
+From `collection-workflow.md` §2:
+
+When accepting a replacement that releases an owned copy:
+1. Find still-unfulfilled committed To buy requirements in other decks (not draft suggestions)
+2. Match card identity + destination printing requirements (Unknown metadata cannot satisfy specific constraints)
+3. For one compatible need: auto-reserve, change fulfillment Owned, remove from purchase queue
+4. For multiple compatible needs: visible priority (user deck priority → main deck before upgrades → oldest commitment)
+5. With no compatible need: assign to Bench (physical location persists as "move pending from [deck]")
+6. Present one receipt; one Undo reverses entire transaction
+
+**Exception handling:** Sell/Trade-designated copies cannot be auto-consumed. Locked donor requires explicit per-copy override after hard warning (doesn't unlock entire deck).
+
+### Journey Acceptance Matrix
+
+From `end-to-end-plan.md` — use these as Phase 1 implementation gates:
+
+**Critical journeys requiring new surfaces:**
+- First use with empty storage → Zero owned until explicit record
+- Select Commander → Auto-build 99 → Zero owned; explicit finalize creates reservations + To buy requirements
+- Import owned cards → Preview, validate, commit workflow (idempotent repeated import)
+- Finalize plan → Link owned/ordered; create only unmet To buy requirements
+- Incremental acquisition → Ordered/Received/In deck as separate state transitions
+- Replacement → release → Automatic fulfillment or Bench (as specified above)
+- Protected donor choice → All owned visible; hard warning on locked; per-copy override
+
+**Verification invariants (must hold):**
+- Physical copies conserved across reservations/transfers
+- Received and disposed quantities account for ownership changes
+- Plans never assert receipt
+- One copy cannot occupy two physical decks simultaneously
+- Reserved order ≠ available stock
+- Archived destinations cannot receive allocations
+- All page projections agree at same revision
+
+### Visual Design Direction (Phase 1 Facelift Reference)
+
+From `improvement-plan.md` §2 and `mtg-facelift-mockup.html`:
+
+- **Typography:** Satoshi (interface), Oxanium 700 (wordmark)
+- **Color:** Dark-only (no light mode, theme selector, or system inheritance)
+- **Palette:** Graphite surfaces, clear blue accents, small amber highlights
+- **Brand mark:** Transparent wand variant (blue C-shaped gear, five mana glyphs, wand crossing cards)
+- **Aether animation:** Fuzzy diffuse helix around subline; translucent front/rear layers; pause control; reduced-motion still
+- **Status indicators:** Six stable labels, blue flame (active), green Forest orbs (complete), neutral (pending)
+- **Sticky rail:** Navigation remains reachable while scrolling (on desktop and phone)
+
+**Do not re-litigate brand in future PRs** — these decisions are locked by OpenAI package acceptance.
+
+### Simulation Boundaries (Acknowledged, Deferred)
+
+From `simulation-fidelity-plan.md`:
+
+Current model limitations:
+- Profile-based opponents (not four actual lists)
+- No full legal-action/priority stack
+- Zero human game data in committed history
+- Partial held-answer correction
+- Resource/information-access gaps
+
+**Gates for human calibration (deferred):**
+- Staged human dataset collection
+- Prospective validation (not retroactive fitting)
+- Calibrated uncertainty quantification
+- Cohort failure analysis
+- No universal realism percentage claim
+
+Passing application tests ≠ proven human calibration. The current approximate model remains useful for relative deck comparison within its coverage boundary.
+
+---
+
 ## Implementation Constraints
 
 When implementing Phase 0 decisions:
@@ -255,8 +405,16 @@ Phase 0 implementation is complete when:
 
 **Why this document exists:** Phase 0 decisions were hard-fought and represent careful product thinking. Before changing anything captured here, understand the reasoning behind the locked decision.
 
+**OpenAI package reconciliation (2026-09-16):** The OpenAI Astra review package (`design/crankmagic/`) was incorporated AFTER Phase 0 lock as supporting authority and Phase 1+ guidance. On conflicts, Phase 0 wins (top nav structure, Play lobby-first, Wanted design, terminology). The OpenAI package provides:
+- Authoritative domain contract for ownership/acquisition (`collection-workflow.md`)
+- Journey acceptance gates for Phase 1 (`end-to-end-plan.md`)
+- Visual design reference for facelift (`mtg-facelift-mockup.html`)
+- Simulation fidelity gates (deferred to later phase)
+
 **The Play amendment specifically** reflects that the lobby is not "setup for the real thing" — it IS the thing. The online/multiplayer infrastructure enhances the lobby; it doesn't replace it.
 
-**Terminology matters:** The glossary terms are chosen deliberately. "The hundred" emphasizes the full deck including commander. "Library" better communicates collection management than "Cards."
+**Terminology matters:** The glossary terms are chosen deliberately. "The hundred" emphasizes the full deck including commander. "Library" better communicates collection management than "Cards." The OpenAI package used different names (My Decks/Collection/Play Lab/Discover); Phase 0 renames won and are locked.
 
-**When in doubt:** If a decision seems arbitrary, it probably isn't. Check related docs, ask in context, or flag for review before deviating from Phase 0 alignment.
+**Ownership invariants are sacred:** Never infer Owned from a decklist. Planned ≠ owned. Explicit acquisition path required. Orders stay orders until received. See "Phase 1+ Guidance from OpenAI Package" section for the complete dimensional model.
+
+**When in doubt:** If a decision seems arbitrary, it probably isn't. Check related docs (including OpenAI package in `design/crankmagic/`), ask in context, or flag for review before deviating from Phase 0 alignment.
