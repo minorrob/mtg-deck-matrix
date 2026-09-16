@@ -24,7 +24,33 @@ $listener = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction Sil
 if ($listener) { throw "Port $Port is occupied. Inspect the existing host before restarting; a game may be active." }
 $guestListener = Get-NetTCPConnection -LocalPort $GuestPort -State Listen -ErrorAction SilentlyContinue
 if ($guestListener) { throw "Guest port $GuestPort is occupied. Inspect the existing process before starting CrankMagic Online." }
-$nodePath = (Get-Command node -ErrorAction Stop).Source
+function Resolve-CrankMagicNode {
+    $command = Get-Command node.exe -ErrorAction SilentlyContinue
+    if ($command) { return $command.Source }
+
+    $candidates = @(
+        $env:CRANKMAGIC_NODE,
+        $env:NVM_SYMLINK,
+        (Join-Path $env:ProgramFiles 'nodejs\node.exe'),
+        (Join-Path ${env:ProgramFiles(x86)} 'nodejs\node.exe'),
+        (Join-Path $env:LOCALAPPDATA 'Programs\nodejs\node.exe'),
+        (Join-Path $env:LOCALAPPDATA 'Microsoft\WinGet\Links\node.exe'),
+        (Join-Path $env:USERPROFILE '.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe')
+    )
+    foreach ($candidate in $candidates) {
+        if (-not $candidate) { continue }
+        $path = if ((Test-Path -LiteralPath $candidate -PathType Container)) { Join-Path $candidate 'node.exe' } else { $candidate }
+        if (Test-Path -LiteralPath $path -PathType Leaf) { return (Resolve-Path -LiteralPath $path).Path }
+    }
+
+    throw @'
+CrankMagic Online needs Node.js on the host computer, but node.exe was not found.
+Install the current Node.js LTS once with:
+  winget install --id OpenJS.NodeJS.LTS --exact
+Then close and reopen PowerShell and run this launcher again.
+'@
+}
+$nodePath = Resolve-CrankMagicNode
 $logDir = Join-Path $repoRoot 'game/.local/host'
 New-Item -ItemType Directory -Force -Path $logDir | Out-Null
 $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
