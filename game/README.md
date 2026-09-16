@@ -2,6 +2,8 @@
 
 Open the **Play** tab in CrankMagic. The public site offers **Open game setup**, which opens the local companion at http://127.0.0.1:8768/app/#game. The local service and pinned Forge runtime must be running on this computer.
 
+For the complete cold-start walkthrough, see [How to start CrankMagic Online](docs/HOW-TO-START-CRANKMAGIC-ONLINE.md). The [CrankMagic Online overview](docs/crankmagic-online-overview.html) is a standalone product summary.
+
 From this repository:
 
 ```powershell
@@ -23,7 +25,7 @@ The Windows helper starts a hidden, persistent host, writes startup logs to igno
 9. **History** supports card/event search, phase filtering and more events. **Tracker** includes mana sources by color, observed mechanics, current rules and notes.
 10. **Game setup → End current game** ends the engine position while retaining the private local journal. Ending a position is not a resumable save.
 
-The Phase B implementation supports two to four mixed human/API/native-AI seats, expiring QR invitations, durable lobby membership, reconnect/rematch flows, per-seat private projections, public history, and deck-linked match reports. External friend access still requires the documented HTTPS ingress or cloud deployment; loopback guest links are local-machine test links. Some choices still require the Forge window. Native AI compatibility warnings remain visible before launch. Card text is not a guarantee that native AI supports every strategy.
+The current implementation supports two to four mixed human/API/native-AI seats, expiring QR invitations, durable lobby membership, reconnect/rematch flows, per-seat private projections, public history, and deck-linked match reports. Start with `-RemoteGuests` to create a temporary scoped HTTPS guest gateway; loopback links remain local-machine test links. Some complex choices still require the Forge window. Native AI compatibility warnings remain visible before launch. Card text is not a guarantee that native AI supports every strategy.
 
 See [browser play checkpoint](docs/browser-play-checkpoint.md), [latest validation](docs/play-ux-validation-2026-09-15.md), and [AI card audit](docs/ai-card-support.md). The remaining instructions below reproduce the earlier engine proof, not the current interactive UI.
 ## Reproduce the engine proof

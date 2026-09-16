@@ -12,3 +12,12 @@ export function paymentMayAutoResolve(ui,pendingCast=false,approvedPayment=null)
   // An older running adapter can only inherit an explicit outstanding cast.
   return pendingCast;
 }
+
+export function mayAutoPassPriority(view,viewerPlayerId,yieldTurn=null){
+  const state=view.state||{},ui=view.ui||{};
+  if(state.gameOver||state.turnPlayerId===viewerPlayerId||state.priorityPlayerId!==viewerPlayerId||ui.actionInFlight||ui.choice||ui.nativeFallback||ui.ok!=='OK'||!ui.okEnabled||!/^Priority:/m.test(ui.prompt||''))return false;
+  if((state.stackSize??state.stack?.length??0)>0)return false;
+  if(yieldTurn===state.turn)return true;
+  if(state.phase==='END_OF_TURN')return false;
+  return !(String(state.phase).startsWith('COMBAT')&&state.combat?.attacks?.length);
+}

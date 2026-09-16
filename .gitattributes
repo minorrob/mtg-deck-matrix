@@ -1,0 +1,3 @@
+# Byte-based asset versions and data manifests must match on Windows and CI.
+# Binary assets remain untouched; text files use the repository's canonical LF.
+* text=auto eol=lf
